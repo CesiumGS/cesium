@@ -1,0 +1,499 @@
+{
+  "extensionsUsed": ["EXT_structural_metadata", "EXT_mesh_features", "KHR_draco_mesh_compression"],
+  "extensionsRequired": ["KHR_draco_mesh_compression"],
+  "accessors": [{
+      "componentType": 5123,
+      "count": 55950,
+      "type": "SCALAR"
+    }, {
+      "componentType": 5123,
+      "count": 9336,
+      "type": "SCALAR"
+    }, {
+      "componentType": 5121,
+      "count": 38586,
+      "type": "SCALAR"
+    }, {
+      "componentType": 5126,
+      "count": 38586,
+      "type": "VEC3",
+      "max": [3.019627094268799, 1.0620567798614502, 5.005459785461426],
+      "min": [-3.019627094268799, -1.0620567798614502, -5.005459785461426]
+    }, {
+      "componentType": 5126,
+      "count": 38586,
+      "type": "VEC3"
+    }, {
+      "componentType": 5126,
+      "count": 38586,
+      "type": "VEC4"
+    }, {
+      "componentType": 5121,
+      "count": 7514,
+      "type": "SCALAR"
+    }, {
+      "componentType": 5126,
+      "count": 7514,
+      "type": "VEC3",
+      "max": [2.8160152435302734, 1.041473627090454, 2.5184082984924316],
+      "min": [-2.8777358531951904, -0.1843627542257309, -4.973708629608154]
+    }, {
+      "componentType": 5126,
+      "count": 7514,
+      "type": "VEC3"
+    }, {
+      "componentType": 5126,
+      "count": 7514,
+      "type": "VEC4"
+    }],
+  "asset": {
+    "version": "2.1"
+  },
+  "buffers": [{
+      "uri": "2_0.bin",
+      "byteLength": 175310
+    }],
+  "bufferViews": [{
+      "buffer": 0,
+      "byteLength": 328
+    }, {
+      "buffer": 0,
+      "byteOffset": 328,
+      "byteLength": 768
+    }, {
+      "buffer": 0,
+      "byteOffset": 1096,
+      "byteLength": 166
+    }, {
+      "buffer": 0,
+      "byteOffset": 1264,
+      "byteLength": 328
+    }, {
+      "buffer": 0,
+      "byteOffset": 1592,
+      "byteLength": 1804
+    }, {
+      "buffer": 0,
+      "byteOffset": 3400,
+      "byteLength": 166
+    }, {
+      "buffer": 0,
+      "byteOffset": 3568,
+      "byteLength": 3899
+    }, {
+      "buffer": 0,
+      "byteOffset": 7472,
+      "byteLength": 166
+    }, {
+      "buffer": 0,
+      "byteOffset": 7640,
+      "byteLength": 328
+    }, {
+      "buffer": 0,
+      "byteOffset": 7968,
+      "byteLength": 18
+    }, {
+      "buffer": 0,
+      "byteOffset": 7992,
+      "byteLength": 83
+    }, {
+      "buffer": 0,
+      "byteOffset": 8080,
+      "byteLength": 656
+    }, {
+      "buffer": 0,
+      "byteOffset": 8736,
+      "byteLength": 656
+    }, {
+      "buffer": 0,
+      "byteOffset": 9392,
+      "byteLength": 328
+    }, {
+      "buffer": 0,
+      "byteOffset": 9720,
+      "byteLength": 708
+    }, {
+      "buffer": 0,
+      "byteOffset": 10432,
+      "byteLength": 166
+    }, {
+      "buffer": 0,
+      "byteOffset": 10600,
+      "byteLength": 2
+    }, {
+      "buffer": 0,
+      "byteOffset": 10608,
+      "byteLength": 83
+    }, {
+      "buffer": 0,
+      "byteOffset": 10696,
+      "byteLength": 26
+    }, {
+      "buffer": 0,
+      "byteOffset": 10728,
+      "byteLength": 83
+    }, {
+      "buffer": 0,
+      "byteOffset": 10816,
+      "byteLength": 6
+    }, {
+      "buffer": 0,
+      "byteOffset": 10824,
+      "byteLength": 83
+    }, {
+      "buffer": 0,
+      "byteOffset": 10912,
+      "byteLength": 1
+    }, {
+      "buffer": 0,
+      "byteOffset": 10920,
+      "byteLength": 83
+    }, {
+      "buffer": 0,
+      "byteOffset": 11008,
+      "byteLength": 18
+    }, {
+      "buffer": 0,
+      "byteOffset": 11032,
+      "byteLength": 83
+    }, {
+      "buffer": 0,
+      "byteOffset": 11120,
+      "byteLength": 1836
+    }, {
+      "buffer": 0,
+      "byteOffset": 12960,
+      "byteLength": 166
+    }, {
+      "buffer": 0,
+      "byteOffset": 13128,
+      "byteLength": 44
+    }, {
+      "buffer": 0,
+      "byteOffset": 13176,
+      "byteLength": 83
+    }, {
+      "buffer": 0,
+      "byteOffset": 13264,
+      "byteLength": 56
+    }, {
+      "buffer": 0,
+      "byteOffset": 13320,
+      "byteLength": 83
+    }, {
+      "buffer": 0,
+      "byteOffset": 13408,
+      "byteLength": 1609
+    }, {
+      "buffer": 0,
+      "byteOffset": 15024,
+      "byteLength": 166
+    }, {
+      "buffer": 0,
+      "byteOffset": 15192,
+      "byteLength": 656
+    }, {
+      "buffer": 0,
+      "byteOffset": 15848,
+      "byteLength": 656
+    }, {
+      "buffer": 0,
+      "byteOffset": 16504,
+      "byteLength": 18
+    }, {
+      "buffer": 0,
+      "byteOffset": 16528,
+      "byteLength": 83
+    }, {
+      "buffer": 0,
+      "byteOffset": 16616,
+      "byteLength": 108
+    }, {
+      "buffer": 0,
+      "byteOffset": 16728,
+      "byteLength": 83
+    }, {
+      "buffer": 0,
+      "byteOffset": 16816,
+      "byteLength": 31
+    }, {
+      "buffer": 0,
+      "byteOffset": 16848,
+      "byteLength": 83
+    }, {
+      "buffer": 0,
+      "byteOffset": 16936,
+      "byteLength": 1
+    }, {
+      "buffer": 0,
+      "byteOffset": 16944,
+      "byteLength": 83
+    }, {
+      "buffer": 0,
+      "byteOffset": 17032,
+      "byteLength": 1
+    }, {
+      "buffer": 0,
+      "byteOffset": 17040,
+      "byteLength": 83
+    }, {
+      "buffer": 0,
+      "byteOffset": 17128,
+      "byteLength": 1
+    }, {
+      "buffer": 0,
+      "byteOffset": 17136,
+      "byteLength": 83
+    }, {
+      "buffer": 0,
+      "byteOffset": 17224,
+      "byteLength": 31
+    }, {
+      "buffer": 0,
+      "byteOffset": 17256,
+      "byteLength": 83
+    }, {
+      "buffer": 0,
+      "byteOffset": 17344,
+      "byteLength": 328
+    }, {
+      "buffer": 0,
+      "byteOffset": 17672,
+      "byteLength": 569
+    }, {
+      "buffer": 0,
+      "byteOffset": 18248,
+      "byteLength": 166
+    }, {
+      "buffer": 0,
+      "byteOffset": 18416,
+      "byteLength": 133236
+    }, {
+      "buffer": 0,
+      "byteOffset": 151656,
+      "byteLength": 23654
+    }],
+  "materials": [{
+      "pbrMetallicRoughness": {
+        "metallicFactor": 0.0
+      }
+    }, {
+      "pbrMetallicRoughness": {
+        "metallicFactor": 0.0
+      },
+      "alphaMode": "BLEND"
+    }],
+  "meshes": [{
+      "primitives": [{
+          "attributes": {
+            "_FEATURE_ID_0": 2,
+            "POSITION": 3,
+            "NORMAL": 4,
+            "COLOR_0": 5
+          },
+          "indices": 0,
+          "material": 0,
+          "extensions": {
+            "KHR_draco_mesh_compression": {
+              "bufferView": 53,
+              "attributes": {
+                "COLOR_0": 3,
+                "NORMAL": 2,
+                "POSITION": 1,
+                "_FEATURE_ID_0": 0
+              }
+            },
+            "EXT_mesh_features": {
+              "featureIds": [{
+                  "featureCount": 64,
+                  "attribute": 0,
+                  "propertyTable": 0
+                }]
+            }
+          }
+        }, {
+          "attributes": {
+            "_FEATURE_ID_0": 6,
+            "POSITION": 7,
+            "NORMAL": 8,
+            "COLOR_0": 9
+          },
+          "indices": 1,
+          "material": 1,
+          "extensions": {
+            "KHR_draco_mesh_compression": {
+              "bufferView": 54,
+              "attributes": {
+                "COLOR_0": 3,
+                "NORMAL": 2,
+                "POSITION": 1,
+                "_FEATURE_ID_0": 0
+              }
+            },
+            "EXT_mesh_features": {
+              "featureIds": [{
+                  "featureCount": 23,
+                  "attribute": 0,
+                  "propertyTable": 0
+                }]
+            }
+          }
+        }]
+    }],
+  "nodes": [{
+      "matrix": [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, -12.145316876878496, 11.875534076316399, 16.009661931574698, 1.0],
+      "mesh": 0
+    }],
+  "scene": 0,
+  "scenes": [{
+      "nodes": [0]
+    }],
+  "extensions": {
+    "EXT_structural_metadata": {
+      "schemaUri": "../../../../schema.json",
+      "propertyTables": [{
+          "class": "merged",
+          "count": 82,
+          "properties": {
+            "ownerHistory": {
+              "values": 13
+            },
+            "psetBuildingElementProxyCommonIsExternal": {
+              "values": 16,
+              "stringOffsets": 17,
+              "stringOffsetType": "UINT8"
+            },
+            "overallWidth": {
+              "values": 12
+            },
+            "psetDoorCommonIsExternal": {
+              "values": 22,
+              "stringOffsets": 23,
+              "stringOffsetType": "UINT8"
+            },
+            "overallHeight": {
+              "values": 11
+            },
+            "tag": {
+              "values": 51,
+              "stringOffsets": 52,
+              "stringOffsetType": "UINT16"
+            },
+            "psetBuildingElementProxyCommonReference": {
+              "values": 18,
+              "stringOffsets": 19,
+              "stringOffsetType": "UINT8"
+            },
+            "operationType": {
+              "values": 9,
+              "stringOffsets": 10,
+              "stringOffsetType": "UINT8"
+            },
+            "psetMemberCommonSlope": {
+              "values": 34
+            },
+            "objectPlacement": {
+              "values": 8
+            },
+            "name_1": {
+              "values": 6,
+              "stringOffsets": 7,
+              "stringOffsetType": "UINT16"
+            },
+            "globalId": {
+              "values": 4,
+              "stringOffsets": 5,
+              "stringOffsetType": "UINT16"
+            },
+            "expressId": {
+              "values": 3
+            },
+            "psetMemberCommonIsExternal": {
+              "values": 30,
+              "stringOffsets": 31,
+              "stringOffsetType": "UINT8"
+            },
+            "psetDoorCommonFireRating": {
+              "values": 20,
+              "stringOffsets": 21,
+              "stringOffsetType": "UINT8"
+            },
+            "classId": {
+              "values": 0
+            },
+            "psetDoorCommonReference": {
+              "values": 24,
+              "stringOffsets": 25,
+              "stringOffsetType": "UINT8"
+            },
+            "predefinedType": {
+              "values": 14,
+              "stringOffsets": 15,
+              "stringOffsetType": "UINT16"
+            },
+            "psetWallCommonIsExternal": {
+              "values": 44,
+              "stringOffsets": 45,
+              "stringOffsetType": "UINT8"
+            },
+            "psetEnvironmentalImpactIndicatorsReference": {
+              "values": 26,
+              "stringOffsets": 27,
+              "stringOffsetType": "UINT16"
+            },
+            "className": {
+              "values": 1,
+              "stringOffsets": 2,
+              "stringOffsetType": "UINT16"
+            },
+            "psetLightFixtureTypeCommonReference": {
+              "values": 28,
+              "stringOffsets": 29,
+              "stringOffsetType": "UINT8"
+            },
+            "psetMemberCommonReference": {
+              "values": 32,
+              "stringOffsets": 33,
+              "stringOffsetType": "UINT16"
+            },
+            "psetPlateCommonReference": {
+              "values": 38,
+              "stringOffsets": 39,
+              "stringOffsetType": "UINT8"
+            },
+            "psetReinforcementBarPitchOfWallReference": {
+              "values": 40,
+              "stringOffsets": 41,
+              "stringOffsetType": "UINT8"
+            },
+            "psetWallCommonExtendToStructure": {
+              "values": 42,
+              "stringOffsets": 43,
+              "stringOffsetType": "UINT8"
+            },
+            "psetPlateCommonIsExternal": {
+              "values": 36,
+              "stringOffsets": 37,
+              "stringOffsetType": "UINT8"
+            },
+            "psetWallCommonReference": {
+              "values": 48,
+              "stringOffsets": 49,
+              "stringOffsetType": "UINT8"
+            },
+            "representation": {
+              "values": 50
+            },
+            "psetMemberCommonSpan": {
+              "values": 35
+            },
+            "psetWallCommonLoadBearing": {
+              "values": 46,
+              "stringOffsets": 47,
+              "stringOffsetType": "UINT8"
+            }
+          }
+        }]
+    }
+  }
+}

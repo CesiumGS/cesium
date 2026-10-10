@@ -1,0 +1,289 @@
+{
+  "extensionsUsed": ["EXT_structural_metadata", "EXT_mesh_features", "KHR_draco_mesh_compression"],
+  "extensionsRequired": ["KHR_draco_mesh_compression"],
+  "accessors": [{
+      "componentType": 5123,
+      "count": 25500,
+      "type": "SCALAR"
+    }, {
+      "componentType": 5123,
+      "count": 3900,
+      "type": "SCALAR"
+    }, {
+      "componentType": 5121,
+      "count": 17364,
+      "type": "SCALAR"
+    }, {
+      "componentType": 5126,
+      "count": 17364,
+      "type": "VEC3",
+      "max": [1.4937927722930908, 2.4337074756622314, 2.1947176456451416],
+      "min": [-1.3157353401184082, -2.256397247314453, -2.1947176456451416]
+    }, {
+      "componentType": 5126,
+      "count": 17364,
+      "type": "VEC3"
+    }, {
+      "componentType": 5126,
+      "count": 17364,
+      "type": "VEC4"
+    }, {
+      "componentType": 5121,
+      "count": 2446,
+      "type": "SCALAR"
+    }, {
+      "componentType": 5126,
+      "count": 2446,
+      "type": "VEC3",
+      "max": [1.468398928642273, 2.3705832958221436, 2.1883673667907715],
+      "min": [-1.4937927722930908, -2.4337074756622314, -2.193129777908325]
+    }, {
+      "componentType": 5126,
+      "count": 2446,
+      "type": "VEC3"
+    }, {
+      "componentType": 5126,
+      "count": 2446,
+      "type": "VEC4"
+    }],
+  "asset": {
+    "version": "2.1"
+  },
+  "buffers": [{
+      "uri": "3_0.bin",
+      "byteLength": 71072
+    }],
+  "bufferViews": [{
+      "buffer": 0,
+      "byteLength": 52
+    }, {
+      "buffer": 0,
+      "byteOffset": 56,
+      "byteLength": 186
+    }, {
+      "buffer": 0,
+      "byteOffset": 248,
+      "byteLength": 14
+    }, {
+      "buffer": 0,
+      "byteOffset": 264,
+      "byteLength": 52
+    }, {
+      "buffer": 0,
+      "byteOffset": 320,
+      "byteLength": 286
+    }, {
+      "buffer": 0,
+      "byteOffset": 608,
+      "byteLength": 28
+    }, {
+      "buffer": 0,
+      "byteOffset": 640,
+      "byteLength": 598
+    }, {
+      "buffer": 0,
+      "byteOffset": 1240,
+      "byteLength": 28
+    }, {
+      "buffer": 0,
+      "byteOffset": 1272,
+      "byteLength": 52
+    }, {
+      "buffer": 0,
+      "byteOffset": 1328,
+      "byteLength": 52
+    }, {
+      "buffer": 0,
+      "byteOffset": 1384,
+      "byteLength": 120
+    }, {
+      "buffer": 0,
+      "byteOffset": 1504,
+      "byteLength": 14
+    }, {
+      "buffer": 0,
+      "byteOffset": 1520,
+      "byteLength": 160
+    }, {
+      "buffer": 0,
+      "byteOffset": 1680,
+      "byteLength": 14
+    }, {
+      "buffer": 0,
+      "byteOffset": 1696,
+      "byteLength": 33
+    }, {
+      "buffer": 0,
+      "byteOffset": 1736,
+      "byteLength": 14
+    }, {
+      "buffer": 0,
+      "byteOffset": 1752,
+      "byteLength": 118
+    }, {
+      "buffer": 0,
+      "byteOffset": 1872,
+      "byteLength": 14
+    }, {
+      "buffer": 0,
+      "byteOffset": 1888,
+      "byteLength": 52
+    }, {
+      "buffer": 0,
+      "byteOffset": 1944,
+      "byteLength": 87
+    }, {
+      "buffer": 0,
+      "byteOffset": 2032,
+      "byteLength": 14
+    }, {
+      "buffer": 0,
+      "byteOffset": 2048,
+      "byteLength": 60186
+    }, {
+      "buffer": 0,
+      "byteOffset": 62240,
+      "byteLength": 8832
+    }],
+  "materials": [{
+      "pbrMetallicRoughness": {
+        "metallicFactor": 0.0
+      }
+    }, {
+      "pbrMetallicRoughness": {
+        "metallicFactor": 0.0
+      },
+      "alphaMode": "BLEND"
+    }],
+  "meshes": [{
+      "primitives": [{
+          "attributes": {
+            "_FEATURE_ID_0": 2,
+            "POSITION": 3,
+            "NORMAL": 4,
+            "COLOR_0": 5
+          },
+          "indices": 0,
+          "material": 0,
+          "extensions": {
+            "KHR_draco_mesh_compression": {
+              "bufferView": 21,
+              "attributes": {
+                "COLOR_0": 3,
+                "NORMAL": 2,
+                "POSITION": 1,
+                "_FEATURE_ID_0": 0
+              }
+            },
+            "EXT_mesh_features": {
+              "featureIds": [{
+                  "featureCount": 13,
+                  "attribute": 0,
+                  "propertyTable": 0
+                }]
+            }
+          }
+        }, {
+          "attributes": {
+            "_FEATURE_ID_0": 6,
+            "POSITION": 7,
+            "NORMAL": 8,
+            "COLOR_0": 9
+          },
+          "indices": 1,
+          "material": 1,
+          "extensions": {
+            "KHR_draco_mesh_compression": {
+              "bufferView": 22,
+              "attributes": {
+                "COLOR_0": 3,
+                "NORMAL": 2,
+                "POSITION": 1,
+                "_FEATURE_ID_0": 0
+              }
+            },
+            "EXT_mesh_features": {
+              "featureIds": [{
+                  "featureCount": 7,
+                  "attribute": 0,
+                  "propertyTable": 0
+                }]
+            }
+          }
+        }]
+    }],
+  "nodes": [{
+      "matrix": [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 5.065527649363503, 4.026085402278113, 9.286007571087808, 1.0],
+      "mesh": 0
+    }],
+  "scene": 0,
+  "scenes": [{
+      "nodes": [0]
+    }],
+  "extensions": {
+    "EXT_structural_metadata": {
+      "schemaUri": "../../../../schema.json",
+      "propertyTables": [{
+          "class": "merged",
+          "count": 13,
+          "properties": {
+            "tag": {
+              "values": 19,
+              "stringOffsets": 20,
+              "stringOffsetType": "UINT8"
+            },
+            "representation": {
+              "values": 18
+            },
+            "psetLightFixtureTypeCommonReference": {
+              "values": 16,
+              "stringOffsets": 17,
+              "stringOffsetType": "UINT8"
+            },
+            "psetFurnitureTypeCommonReference": {
+              "values": 14,
+              "stringOffsets": 15,
+              "stringOffsetType": "UINT8"
+            },
+            "ownerHistory": {
+              "values": 9
+            },
+            "objectPlacement": {
+              "values": 8
+            },
+            "name_1": {
+              "values": 6,
+              "stringOffsets": 7,
+              "stringOffsetType": "UINT16"
+            },
+            "globalId": {
+              "values": 4,
+              "stringOffsets": 5,
+              "stringOffsetType": "UINT16"
+            },
+            "predefinedType": {
+              "values": 10,
+              "stringOffsets": 11,
+              "stringOffsetType": "UINT8"
+            },
+            "expressId": {
+              "values": 3
+            },
+            "psetEnvironmentalImpactIndicatorsReference": {
+              "values": 12,
+              "stringOffsets": 13,
+              "stringOffsetType": "UINT8"
+            },
+            "className": {
+              "values": 1,
+              "stringOffsets": 2,
+              "stringOffsetType": "UINT8"
+            },
+            "classId": {
+              "values": 0
+            }
+          }
+        }]
+    }
+  }
+}
