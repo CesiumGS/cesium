@@ -55,6 +55,7 @@ import { isHeightReferenceClamp } from "./HeightReference.js";
 import ImplicitTileset from "./ImplicitTileset.js";
 import ImplicitTileCoordinates from "./ImplicitTileCoordinates.js";
 import LabelCollection from "./LabelCollection.js";
+import ModelUtility from "./Model/ModelUtility.js";
 import PointCloudEyeDomeLighting from "./PointCloudEyeDomeLighting.js";
 import PointCloudShading from "./PointCloudShading.js";
 import ResourceCache from "./ResourceCache.js";
@@ -225,6 +226,7 @@ function Cesium3DTileset(options) {
   this._extensions = undefined;
   this._modelUpAxis = undefined;
   this._modelForwardAxis = undefined;
+  this._tilesetUpAxis = undefined; // Up axis of a glTF tileset, applied to the root tile transform
   this._cache = new Cesium3DTilesetCache();
   this._processingQueue = [];
   this._selectedTiles = [];
@@ -2409,7 +2411,9 @@ Cesium3DTileset.fromGltf = async function (url, options) {
   tileset._properties = gltfJson.properties;
   tileset._extensionsUsed = gltfJson.extensionsUsed;
   tileset._extensions = gltfJson.extensions;
-  tileset._modelUpAxis = modelUpAxis;
+  tileset._tilesetUpAxis = modelUpAxis;
+  // The root tile transform converts the tileset to z-up, so contents are already z-up
+  tileset._modelUpAxis = Axis.Z;
   tileset._modelForwardAxis = modelForwardAxis;
 
   tileset._root = tileset.loadTilesetFromGltf(resource, gltfJson);
@@ -2723,7 +2727,9 @@ function makeTileFromGltfNode(
   }
 
   const tileHeader = {
-    transform: getNodeTransform(nodeJson),
+    transform: defined(parentTile)
+      ? getNodeTransform(nodeJson)
+      : getRootTransform(tileset._tilesetUpAxis, nodeJson),
     content: {
       boundingVolume: contentBoundingVolume,
     },
@@ -2797,6 +2803,39 @@ function makeTileFromGltfNode(
   tile.implicitTileset = implicitTileset;
   tile.implicitCoordinates = rootCoordinates;
   return tile;
+}
+
+/**
+ * Get the transform of the root tile of a glTF tileset, including the
+ * conversion of the tileset's up axis to z-up.
+ *
+ * @param {Axis} upAxis The up axis of the tileset
+ * @param {object} nodeJson The glTF node of the root tile
+ * @returns {number[]|undefined} The column-major transform, or <code>undefined</code> if it is the identity
+ *
+ * @private
+ */
+function getRootTransform(upAxis, nodeJson) {
+  const nodeTransform = getNodeTransform(nodeJson);
+  if (upAxis === Axis.Z) {
+    return nodeTransform;
+  }
+
+  const axisCorrection = ModelUtility.getAxisCorrectionMatrix(
+    upAxis,
+    Axis.X,
+    new Matrix4(),
+  );
+  if (!defined(nodeTransform)) {
+    return Matrix4.pack(axisCorrection, new Array(16));
+  }
+
+  const rootTransform = Matrix4.multiplyTransformation(
+    axisCorrection,
+    Matrix4.unpack(nodeTransform),
+    new Matrix4(),
+  );
+  return Matrix4.pack(rootTransform, new Array(16));
 }
 
 /**
