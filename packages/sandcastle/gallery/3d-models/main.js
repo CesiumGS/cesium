@@ -88,6 +88,12 @@ const options = [
     },
   },
   {
+    text: "Unlit Box - glTF 2.1",
+    onselect: function () {
+      createModel("../../SampleData/models/BoxUnlit/BoxUnlit-21.gltf", 10.0);
+    },
+  },
+  {
     text: "Draco Compressed Model",
     onselect: function () {
       createModel(
