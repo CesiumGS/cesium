@@ -51,4 +51,6 @@ Sandcastle.addToolbarMenu([
   createSampleOption("0_0_2-1_1_4"),
   createSampleOption("0_2_0-1_4_1"),
   createSampleOption("2_0_0-4_1_1"),
+  createSampleOption("tileset0000"),
+  createSampleOption("tileset0001"),
 ]);

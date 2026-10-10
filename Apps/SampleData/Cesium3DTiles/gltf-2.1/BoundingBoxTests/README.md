@@ -4,7 +4,7 @@ Sample tilesets for 3D Tiles 2.0 that embed single, simple glTF models as extern
 
 ## Structure
 
-The directory contains six different tilesets, each with a single external glTF asset. The assets and directories are named based on the bounding volumes of the models, given as the minimum- and maximum points:
+The directory contains eight different tilesets. Six of them each have a single external glTF asset. The assets and directories are named based on the bounding volumes of the models, given as the minimum- and maximum points:
 
 - (0,0,0) - (1,1,2)
 - (0,0,0) - (1,2,1)
@@ -12,6 +12,11 @@ The directory contains six different tilesets, each with a single external glTF 
 - (0,0,2) - (1,1,4)
 - (0,2,0) - (1,4,1)
 - (2,0,0) - (4,1,1)
+
+Two additional tilesets use a unit cube (0,0,0) - (1,1,1) as the bounding volume of the model:
+
+- `tileset0000`: a single node with a single external glTF asset (`content.glb`).
+- `tileset0001`: a parent node with two child nodes, translated by -1 and +1 along the x-axis, each with its own external glTF asset (`contentA.glb` and `contentB.glb`).
 
 ## Sandcastle Code
 

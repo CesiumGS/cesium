@@ -2730,16 +2730,22 @@ function makeTileFromGltfNode(
     transform: defined(parentTile)
       ? getNodeTransform(nodeJson)
       : getRootTransform(tileset._tilesetUpAxis, nodeJson),
-    content: {
-      boundingVolume: contentBoundingVolume,
-    },
     geometricError: tilesetExtension.geometricError,
     refine: tilesetExtension.refine,
     boundingVolume: boundingVolume,
     children: nodeJson.children,
   };
 
-  if (!hasExtension(nodeJson, "3DTILES_implicit_tiling")) {
+  const hasImplicitTiling = hasExtension(nodeJson, "3DTILES_implicit_tiling");
+  if (!hasImplicitTiling && !defined(nodeJson.externalAsset)) {
+    return new Cesium3DTile(tileset, baseResource, tileHeader, parentTile);
+  }
+
+  tileHeader.content = {
+    boundingVolume: contentBoundingVolume,
+  };
+
+  if (!hasImplicitTiling) {
     const externalAsset = gltfJson.externalAssets[nodeJson.externalAsset];
     tileHeader.content.uri = gltfJson.files[externalAsset.file].uri;
     return new Cesium3DTile(tileset, baseResource, tileHeader, parentTile);
