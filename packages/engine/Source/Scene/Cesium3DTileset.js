@@ -2441,6 +2441,18 @@ Cesium3DTileset.fromGltf = async function (url, options) {
     tileset._initialClippingPlanesOriginMatrix =
       FixedFrameTransforms.eastNorthUpToFixedFrame(clippingPlanesOrigin);
   }
+  // The root tile transform includes the up axis correction, but the
+  // clipping planes origin matrix must describe a z-up frame
+  const upAxisCorrection = ModelUtility.getAxisCorrectionMatrix(
+    tileset._tilesetUpAxis,
+    Axis.X,
+    new Matrix4(),
+  );
+  tileset._initialClippingPlanesOriginMatrix = Matrix4.multiplyTransformation(
+    Matrix4.inverseTransformation(upAxisCorrection, new Matrix4()),
+    tileset._initialClippingPlanesOriginMatrix,
+    new Matrix4(),
+  );
   tileset._clippingPlanesOriginMatrix = Matrix4.clone(
     tileset._initialClippingPlanesOriginMatrix,
   );
