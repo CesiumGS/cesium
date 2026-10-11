@@ -27,7 +27,8 @@ import BoundingVolumeSemantics from "./BoundingVolumeSemantics.js";
  * <p>
  * Implements the {@link Cesium3DTileContent} interface.
  * </p>
- * This object is normally not instantiated directly, use {@link Implicit3DTileContent.fromSubtreeJson}.
+ * This object is normally not instantiated directly, use {@link Implicit3DTileContent.fromSubtreeJson},
+ * {@link Implicit3DTileContent.fromSubtreeGltf}, or {@link Implicit3DTileContent.fromSubtreeGlb}.
  *
  * @implements Cesium3DTileContent
  * @private
@@ -211,13 +212,73 @@ class Implicit3DTileContent {
       implicitCoordinates,
     );
 
-    const content = new Implicit3DTileContent(tileset, tile, resource);
+    return createContentFromSubtree(tileset, tile, resource, subtree);
+  }
 
-    content._implicitSubtree = subtree;
-    expandSubtree(content, subtree);
-    content._ready = true;
+  /**
+   * Initialize the implicit content from a subtree stored as glTF JSON with the
+   * <code>3DTILES_subtree</code> extension.
+   *
+   * @param {Cesium3DTileset} tileset The tileset this content belongs to
+   * @param {Cesium3DTile} tile The tile this content belongs to.
+   * @param {Resource} resource The resource for the tileset
+   * @param {object} gltf The glTF JSON containing the subtree. All of its buffers must have a <code>uri</code>.
+   * @return {Promise<Implicit3DTileContent>}
+   *
+   * @private
+   */
+  static async fromSubtreeGltf(tileset, tile, resource, gltf) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("tile.implicitTileset", tile.implicitTileset);
+    Check.defined("tile.implicitCoordinates", tile.implicitCoordinates);
+    Check.typeOf.object("gltf", gltf);
+    //>>includeEnd('debug');
 
-    return content;
+    const subtree = await ImplicitSubtree.fromSubtreeGltf(
+      resource,
+      gltf,
+      tile.implicitTileset,
+      tile.implicitCoordinates,
+    );
+
+    return createContentFromSubtree(tileset, tile, resource, subtree);
+  }
+
+  /**
+   * Initialize the implicit content from a subtree stored as a binary glTF (glb)
+   * with the <code>3DTILES_subtree</code> extension.
+   *
+   * @param {Cesium3DTileset} tileset The tileset this content belongs to
+   * @param {Cesium3DTile} tile The tile this content belongs to.
+   * @param {Resource} resource The resource for the tileset
+   * @param {ArrayBuffer} arrayBuffer The ArrayBuffer containing the glb
+   * @param {number} [byteOffset=0] The byte offset into the arrayBuffer
+   * @return {Promise<Implicit3DTileContent>}
+   *
+   * @private
+   */
+  static async fromSubtreeGlb(
+    tileset,
+    tile,
+    resource,
+    arrayBuffer,
+    byteOffset,
+  ) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("tile.implicitTileset", tile.implicitTileset);
+    Check.defined("tile.implicitCoordinates", tile.implicitCoordinates);
+    Check.typeOf.object("arrayBuffer", arrayBuffer);
+    //>>includeEnd('debug');
+
+    const glbView = new Uint8Array(arrayBuffer, byteOffset ?? 0);
+    const subtree = await ImplicitSubtree.fromSubtreeGlb(
+      resource,
+      glbView,
+      tile.implicitTileset,
+      tile.implicitCoordinates,
+    );
+
+    return createContentFromSubtree(tileset, tile, resource, subtree);
   }
 
   /**
@@ -255,6 +316,26 @@ class Implicit3DTileContent {
       this._implicitSubtree && this._implicitSubtree.destroy();
     return destroyObject(this);
   }
+}
+
+/**
+ * Create the content for a parsed subtree and expand the subtree into tiles.
+ *
+ * @param {Cesium3DTileset} tileset The tileset this content belongs to
+ * @param {Cesium3DTile} tile The tile this content belongs to.
+ * @param {Resource} resource The resource for the tileset
+ * @param {ImplicitSubtree} subtree The parsed subtree
+ * @return {Implicit3DTileContent}
+ * @private
+ */
+function createContentFromSubtree(tileset, tile, resource, subtree) {
+  const content = new Implicit3DTileContent(tileset, tile, resource);
+
+  content._implicitSubtree = subtree;
+  expandSubtree(content, subtree);
+  content._ready = true;
+
+  return content;
 }
 
 /**

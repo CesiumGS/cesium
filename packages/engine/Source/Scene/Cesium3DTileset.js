@@ -2741,7 +2741,8 @@ function makeTileFromGltfNode(
     children: nodeJson.children,
   };
 
-  if (!defined(nodeJson.externalAsset)) {
+  const hasImplicitTiling = hasExtension(nodeJson, "3DTILES_implicit_tiling");
+  if (!hasImplicitTiling && !defined(nodeJson.externalAsset)) {
     return new Cesium3DTile(tileset, baseResource, tileHeader, parentTile);
   }
 
@@ -2749,9 +2750,69 @@ function makeTileFromGltfNode(
     boundingVolume: contentBoundingVolume,
   };
 
-  const externalAsset = gltfJson.externalAssets[nodeJson.externalAsset];
-  tileHeader.content.uri = gltfJson.files[externalAsset.file].uri;
-  return new Cesium3DTile(tileset, baseResource, tileHeader, parentTile);
+  if (!hasImplicitTiling) {
+    const externalAsset = gltfJson.externalAssets[nodeJson.externalAsset];
+    tileHeader.content.uri = gltfJson.files[externalAsset.file].uri;
+    return new Cesium3DTile(tileset, baseResource, tileHeader, parentTile);
+  }
+
+  const implicitTilingExtension =
+    nodeJson.extensions["3DTILES_implicit_tiling"];
+  const { contentUri, subtreeUri } = implicitTilingExtension;
+  tileHeader.content.uri = contentUri
+    .replace("{right}", "{x}")
+    .replace("{forward}", "{y}")
+    .replace("{up}", "{z}");
+  tileHeader.implicitTiling = implicitTilingExtension;
+  tileHeader.implicitTiling.subtrees = {
+    uri: subtreeUri
+      .replace("{right}", "{x}")
+      .replace("{forward}", "{y}")
+      .replace("{up}", "{z}"),
+  };
+
+  const implicitTileset = new ImplicitTileset(
+    baseResource,
+    tileHeader,
+    undefined,
+  );
+  const rootCoordinates = new ImplicitTileCoordinates({
+    subdivisionScheme: implicitTileset.subdivisionScheme,
+    subtreeLevels: implicitTileset.subtreeLevels,
+    level: 0,
+    x: 0,
+    y: 0,
+    // The constructor will only use this for octrees.
+    z: 0,
+  });
+
+  // Create a placeholder Cesium3DTile that has an ImplicitTileset
+  // object and whose content will resolve to an Implicit3DTileContent
+  const derivedContentUri =
+    implicitTileset.subtreeUriTemplate.getDerivedResource({
+      templateValues: rootCoordinates.getTemplateValues(),
+    }).url;
+
+  const deepCopy = true;
+  const tileJson = clone(tileHeader, deepCopy);
+  // Replace contents with the subtree
+  tileJson.contents = [
+    {
+      uri: derivedContentUri,
+    },
+  ];
+
+  delete tileJson.content;
+
+  // The placeholder tile does not have any extensions. If there are any
+  // extensions beyond 3DTILES_implicit_tiling, Implicit3DTileContent will
+  // copy them to the transcoded tiles.
+  delete tileJson.extensions;
+
+  const tile = new Cesium3DTile(tileset, baseResource, tileJson, parentTile);
+  tile.implicitTileset = implicitTileset;
+  tile.implicitCoordinates = rootCoordinates;
+  return tile;
 }
 
 /**
@@ -4092,6 +4153,7 @@ Cesium3DTileset.checkSupportedExtensions = function (extensionsRequired) {
 
 Cesium3DTileset.supportedGltfExtensions = {
   "3DTILES_tileset": true,
+  "3DTILES_implicit_tiling": true,
   EXT_geospatial_crs: true,
   EXT_geospatial_crs_wkid: true,
 };

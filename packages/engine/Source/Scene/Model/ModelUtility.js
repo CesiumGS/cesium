@@ -346,6 +346,7 @@ ModelUtility.sanitizeGlslIdentifier = function (identifier) {
 };
 
 ModelUtility.supportedExtensions = {
+  "3DTILES_subtree": true,
   AGI_articulations: true,
   CESIUM_mesh_vector: true,
   CESIUM_primitive_outline: true,
