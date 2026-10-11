@@ -1,0 +1,87 @@
+{
+  "asset": {
+    "version": "2.1"
+  },
+  "extensions": {
+    "EXT_structural_metadata": {
+      "schema": {
+        "id": "voxel",
+        "classes": {
+          "voxel": {
+            "properties": {
+              "a": {
+                "type": "VEC4",
+                "componentType": "FLOAT32"
+              }
+            }
+          }
+        }
+      },
+      "statistics": {
+        "classes": {
+          "voxel": {
+            "count": 24,
+            "properties": {
+              "a": {
+                "min": [0.0, 0.0, 0.0, 1.0],
+                "max": [1.0, 1.0, 1.0, 1.0]
+              }
+            }
+          }
+        }
+      }
+    },
+    "3DTILES_tileset": {
+      "geometricError": 16.0
+    },
+    "3DTILES_tileset_voxels": {
+      "dimensions": [2, 4, 3],
+      "class": "voxel"
+    }
+  },
+  "extensionsRequired": [
+    "3DTILES_tileset",
+    "3DTILES_implicit_tiling",
+    "3DTILES_tileset_voxels",
+    "EXT_structural_metadata"
+  ],
+  "extensionsUsed": [
+    "3DTILES_tileset",
+    "3DTILES_implicit_tiling",
+    "3DTILES_tileset_voxels",
+    "EXT_structural_metadata"
+  ],
+  "scenes": [
+    {
+      "nodes": [0]
+    }
+  ],
+  "nodes": [
+    {
+      "extensions": {
+        "3DTILES_tileset": {
+          "geometricError": 16.0,
+          "refine": "REPLACE"
+        },
+        "3DTILES_implicit_tiling": {
+          "contentUri": "content/{level}/{right}/{forward}/{up}.gltf",
+          "subtreeUri": "subtrees/{level}/{right}/{forward}/{up}.subtree.gltf",
+          "subdivisionScheme": "OCTREE",
+          "availableLevels": 1,
+          "subtreeLevels": 1
+        }
+      },
+      "boundingVolume": {
+        "shape": 0
+      }
+    }
+  ],
+  "shapes": [
+    {
+      "type": "box",
+      "box": {
+        "size": [12756274.0, 12756274.0, 12756274.0]
+      }
+    }
+  ]
+}
