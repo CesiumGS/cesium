@@ -1,0 +1,344 @@
+{
+  "extensionsUsed": ["KHR_mesh_primitive_restart", "EXT_mesh_features", "EXT_structural_metadata", "EXT_mesh_polygon"],
+  "extensionsRequired": ["KHR_mesh_primitive_restart"],
+  "accessors": [{
+      "bufferView": 0,
+      "componentType": 5125,
+      "count": 15849,
+      "type": "SCALAR"
+    }, {
+      "bufferView": 1,
+      "componentType": 5125,
+      "count": 5356,
+      "type": "SCALAR"
+    }, {
+      "bufferView": 2,
+      "componentType": 5125,
+      "count": 24,
+      "type": "SCALAR"
+    }, {
+      "bufferView": 3,
+      "componentType": 5125,
+      "count": 24,
+      "type": "SCALAR"
+    }, {
+      "bufferView": 4,
+      "componentType": 5126,
+      "count": 5332,
+      "type": "VEC3",
+      "max": [2380.0498046875, 2131.328857421875, 1065.833251953125],
+      "min": [-2850.118408203125, -1896.3875732421875, -2627.970458984375]
+    }, {
+      "bufferView": 28,
+      "componentType": 5126,
+      "count": 5332,
+      "type": "SCALAR"
+    }],
+  "asset": {
+    "version": "2.1"
+  },
+  "buffers": [{
+      "uri": "4_0.bin",
+      "byteLength": 216664
+    }],
+  "bufferViews": [{
+      "buffer": 0,
+      "byteLength": 63396,
+      "target": 34963
+    }, {
+      "buffer": 0,
+      "byteOffset": 63400,
+      "byteLength": 21424
+    }, {
+      "buffer": 0,
+      "byteOffset": 84824,
+      "byteLength": 96
+    }, {
+      "buffer": 0,
+      "byteOffset": 84920,
+      "byteLength": 96
+    }, {
+      "buffer": 0,
+      "byteOffset": 85016,
+      "byteLength": 63984
+    }, {
+      "buffer": 0,
+      "byteOffset": 149000,
+      "byteLength": 42656
+    }, {
+      "buffer": 0,
+      "byteOffset": 191656,
+      "byteLength": 192
+    }, {
+      "buffer": 0,
+      "byteOffset": 191848,
+      "byteLength": 48
+    }, {
+      "buffer": 0,
+      "byteOffset": 191896,
+      "byteLength": 100
+    }, {
+      "buffer": 0,
+      "byteOffset": 192000,
+      "byteLength": 192
+    }, {
+      "buffer": 0,
+      "byteOffset": 192192,
+      "byteLength": 192
+    }, {
+      "buffer": 0,
+      "byteOffset": 192384,
+      "byteLength": 648
+    }, {
+      "buffer": 0,
+      "byteOffset": 193032,
+      "byteLength": 100
+    }, {
+      "buffer": 0,
+      "byteOffset": 193136,
+      "byteLength": 192
+    }, {
+      "buffer": 0,
+      "byteOffset": 193328,
+      "byteLength": 168
+    }, {
+      "buffer": 0,
+      "byteOffset": 193496,
+      "byteLength": 100
+    }, {
+      "buffer": 0,
+      "byteOffset": 193600,
+      "byteLength": 192
+    }, {
+      "buffer": 0,
+      "byteOffset": 193792,
+      "byteLength": 24
+    }, {
+      "buffer": 0,
+      "byteOffset": 193816,
+      "byteLength": 100
+    }, {
+      "buffer": 0,
+      "byteOffset": 193920,
+      "byteLength": 192
+    }, {
+      "buffer": 0,
+      "byteOffset": 194112,
+      "byteLength": 447
+    }, {
+      "buffer": 0,
+      "byteOffset": 194560,
+      "byteLength": 100
+    }, {
+      "buffer": 0,
+      "byteOffset": 194664,
+      "byteLength": 0
+    }, {
+      "buffer": 0,
+      "byteOffset": 194664,
+      "byteLength": 100
+    }, {
+      "buffer": 0,
+      "byteOffset": 194768,
+      "byteLength": 192
+    }, {
+      "buffer": 0,
+      "byteOffset": 194960,
+      "byteLength": 100
+    }, {
+      "buffer": 0,
+      "byteOffset": 195064,
+      "byteLength": 168
+    }, {
+      "buffer": 0,
+      "byteOffset": 195232,
+      "byteLength": 100
+    }, {
+      "buffer": 0,
+      "byteOffset": 195336,
+      "byteLength": 21328
+    }],
+  "meshes": [{
+      "primitives": [{
+          "attributes": {
+            "_FEATURE_ID_0": 5,
+            "POSITION": 4
+          },
+          "indices": 0,
+          "extensions": {
+            "EXT_mesh_features": {
+              "featureIds": [{
+                  "featureCount": 5332,
+                  "attribute": 0,
+                  "propertyTable": 0
+                }]
+            },
+            "EXT_mesh_polygon": {
+              "count": 24,
+              "loopIndices": 1,
+              "loopIndicesOffsets": 2,
+              "indicesOffsets": 3
+            }
+          }
+        }]
+    }],
+  "nodes": [{
+      "matrix": [-0.11474028156368271, 0.9933955243439981, 0.0, 0.0, -0.7263195040626637, -0.08389216818384383, 0.6822185002882729, 0.0, 0.6777128048110448, 0.07827794281102977, 0.7311483555780044, 0.0, 4330384.807954863, 500172.9522306328, 4640547.253711879, 1.0],
+      "mesh": 0
+    }],
+  "scene": 0,
+  "scenes": [{
+      "nodes": [0]
+    }],
+  "extensions": {
+    "EXT_structural_metadata": {
+      "schema": {
+        "id": "schema_id",
+        "name": "schema_name",
+        "description": "description_vector",
+        "version": "version",
+        "classes": {
+          "vector_polygon": {
+            "name": "vector_polygon",
+            "description": "description",
+            "properties": {
+              "Hex_color": {
+                "name": "Hex_color",
+                "description": "attribute description",
+                "type": "STRING"
+              },
+              "Horizon": {
+                "name": "Horizon",
+                "description": "attribute description",
+                "type": "SCALAR",
+                "componentType": "INT64"
+              },
+              "Tafelnumme": {
+                "name": "Tafelnumme",
+                "description": "attribute description",
+                "type": "STRING"
+              },
+              "_id": {
+                "name": "_id",
+                "description": "attribute description",
+                "type": "SCALAR",
+                "componentType": "INT64"
+              },
+              "B": {
+                "name": "B",
+                "description": "attribute description",
+                "type": "SCALAR",
+                "componentType": "INT64"
+              },
+              "CS_ID": {
+                "name": "CS_ID",
+                "description": "attribute description",
+                "type": "STRING"
+              },
+              "R": {
+                "name": "R",
+                "description": "attribute description",
+                "type": "SCALAR",
+                "componentType": "INT64"
+              },
+              "Category": {
+                "name": "Category",
+                "description": "attribute description",
+                "type": "STRING"
+              },
+              "G": {
+                "name": "G",
+                "description": "attribute description",
+                "type": "SCALAR",
+                "componentType": "INT64"
+              },
+              "Profilnumm": {
+                "name": "Profilnumm",
+                "description": "attribute description",
+                "type": "STRING"
+              },
+              "Q__countSe": {
+                "name": "Q__countSe",
+                "description": "attribute description",
+                "type": "SCALAR",
+                "componentType": "INT64"
+              },
+              "F_Style": {
+                "name": "F_Style",
+                "description": "attribute description",
+                "type": "STRING"
+              },
+              "Q__timesta": {
+                "name": "Q__timesta",
+                "description": "attribute description",
+                "type": "STRING"
+              },
+              "GeolCode": {
+                "name": "GeolCode",
+                "description": "attribute description",
+                "type": "STRING"
+              }
+            }
+          }
+        }
+      },
+      "propertyTables": [{
+          "name": "vector_polygon",
+          "class": "vector_polygon",
+          "count": 24,
+          "properties": {
+            "Hex_color": {
+              "values": 26,
+              "stringOffsets": 27
+            },
+            "Horizon": {
+              "values": 6
+            },
+            "Tafelnumme": {
+              "values": 7,
+              "stringOffsets": 8
+            },
+            "_id": {
+              "values": 9
+            },
+            "B": {
+              "values": 10
+            },
+            "CS_ID": {
+              "values": 11,
+              "stringOffsets": 12
+            },
+            "R": {
+              "values": 13
+            },
+            "Category": {
+              "values": 14,
+              "stringOffsets": 15
+            },
+            "G": {
+              "values": 16
+            },
+            "Profilnumm": {
+              "values": 17,
+              "stringOffsets": 18
+            },
+            "Q__countSe": {
+              "values": 19
+            },
+            "F_Style": {
+              "values": 20,
+              "stringOffsets": 21
+            },
+            "Q__timesta": {
+              "values": 22,
+              "stringOffsets": 23
+            },
+            "GeolCode": {
+              "values": 24,
+              "stringOffsets": 25
+            }
+          }
+        }]
+    }
+  }
+}

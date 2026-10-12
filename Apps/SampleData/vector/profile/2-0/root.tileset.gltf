@@ -1,0 +1,82 @@
+{
+  "asset": {
+    "version": "2.1"
+  },
+  "extensionsUsed": ["3DTILES_tileset", "3DTILES_implicit_tiling", "3DTILES_shape_ellipsoid_region", "EXT_geospatial_crs", "EXT_geospatial_crs_wkid", "3DTILES_tileset_vectors"],
+  "extensionsRequired": ["3DTILES_tileset", "3DTILES_implicit_tiling", "3DTILES_shape_ellipsoid_region", "EXT_geospatial_crs", "EXT_geospatial_crs_wkid"],
+  "scene": 0,
+  "scenes": [{
+      "nodes": [1]
+    }],
+  "shapes": [{
+      "type": "ellipsoid region",
+      "extensions": {
+        "3DTILES_shape_ellipsoid_region": {
+          "minimumHeight": -2503.070493016315,
+          "maximumHeight": 3225.6959531739144,
+          "minimumLongitude": 0.11218515261209601,
+          "maximumLongitude": 0.16585169097510402,
+          "minimumLatitude": 0.816337456871558,
+          "maximumLatitude": 0.829811358044813
+        }
+      }
+    }, {
+      "type": "ellipsoid region",
+      "extensions": {
+        "3DTILES_shape_ellipsoid_region": {
+          "minimumHeight": -2503.070493016315,
+          "maximumHeight": 3225.6959531739144,
+          "minimumLongitude": 0.11218515261209601,
+          "maximumLongitude": 0.16585169097510402,
+          "minimumLatitude": 0.816337456871558,
+          "maximumLatitude": 0.829811358044813
+        }
+      }
+    }],
+  "nodes": [{
+      "boundingVolume": {
+        "shape": 0
+      },
+      "extensions": {
+        "3DTILES_tileset": {
+          "geometricError": 25599.164170239448,
+          "refine": "REPLACE"
+        },
+        "3DTILES_implicit_tiling": {
+          "contentUri": "0/tiles/{level}/{longitude}/{latitude}.gltf",
+          "subtreeUri": "0/subtrees/{level}/{longitude}/{latitude}.subtree.glb",
+          "subdivisionScheme": "QUADTREE",
+          "availableLevels": 6,
+          "subtreeLevels": 5
+        }
+      }
+    }, {
+      "children": [0],
+      "boundingVolume": {
+        "shape": 1
+      },
+      "extensions": {
+        "3DTILES_tileset": {
+          "geometricError": 51198.328340478896,
+          "refine": "REPLACE"
+        }
+      }
+    }],
+  "extensions": {
+    "3DTILES_tileset": {
+      "geometricError": 102396.65668095779
+    },
+    "EXT_geospatial_crs": {
+      "format": "wkid",
+      "extensions": {
+        "EXT_geospatial_crs_wkid": {
+          "authority": "EPSG",
+          "wkid": 4978
+        }
+      }
+    },
+    "3DTILES_tileset_vectors": {
+      "clip": false
+    }
+  }
+}
