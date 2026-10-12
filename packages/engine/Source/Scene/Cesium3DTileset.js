@@ -2762,16 +2762,10 @@ function makeTileFromGltfNode(
   const implicitTilingExtension =
     nodeJson.extensions["3DTILES_implicit_tiling"];
   const { contentUri, subtreeUri } = implicitTilingExtension;
-  tileHeader.content.uri = contentUri
-    .replace("{right}", "{x}")
-    .replace("{forward}", "{y}")
-    .replace("{up}", "{z}");
+  tileHeader.content.uri = convertImplicitUriTemplate(contentUri);
   tileHeader.implicitTiling = implicitTilingExtension;
   tileHeader.implicitTiling.subtrees = {
-    uri: subtreeUri
-      .replace("{right}", "{x}")
-      .replace("{forward}", "{y}")
-      .replace("{up}", "{z}"),
+    uri: convertImplicitUriTemplate(subtreeUri),
   };
 
   const implicitTileset = new ImplicitTileset(
@@ -2816,6 +2810,25 @@ function makeTileFromGltfNode(
   tile.implicitTileset = implicitTileset;
   tile.implicitCoordinates = rootCoordinates;
   return tile;
+}
+
+/**
+ * Convert the axis variables of a <code>3DTILES_implicit_tiling</code> URI template,
+ * for both box and ellipsoid region subdivision, to <code>{x}</code>, <code>{y}</code>, and <code>{z}</code>.
+ *
+ * @param {string} uriTemplate The URI template
+ * @returns {string} The URI template using <code>{x}</code>, <code>{y}</code>, and <code>{z}</code>
+ *
+ * @private
+ */
+function convertImplicitUriTemplate(uriTemplate) {
+  return uriTemplate
+    .replace("{right}", "{x}")
+    .replace("{forward}", "{y}")
+    .replace("{up}", "{z}")
+    .replace("{longitude}", "{x}")
+    .replace("{latitude}", "{y}")
+    .replace("{height}", "{z}");
 }
 
 /**
@@ -4157,6 +4170,7 @@ Cesium3DTileset.checkSupportedExtensions = function (extensionsRequired) {
 Cesium3DTileset.supportedGltfExtensions = {
   "3DTILES_tileset": true,
   "3DTILES_implicit_tiling": true,
+  "3DTILES_shape_ellipsoid_region": true,
   EXT_geospatial_crs: true,
   EXT_geospatial_crs_wkid: true,
 };
