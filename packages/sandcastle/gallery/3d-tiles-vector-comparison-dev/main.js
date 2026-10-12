@@ -7,20 +7,36 @@ viewer.scene.globe.translucency.enabled = true;
 viewer.scene.globe.translucency.frontFaceAlpha = 0.5;
 viewer.scene.screenSpaceCameraController.enableCollisionDetection = false;
 
+const style = new Cesium.Cesium3DTileStyle({
+  color: "color(${Hex_color})",
+});
+
 try {
   const left = await Cesium.Cesium3DTileset.fromUrl(
     "../../SampleData/vector/profile/1-1/tileset.json",
   );
   viewer.scene.primitives.add(left);
   left.splitDirection = Cesium.SplitDirection.LEFT;
+  left.style = style;
 
   const right = await Cesium.Cesium3DTileset.fromGltf(
     "../../SampleData/vector/profile/2-0/root.tileset.gltf",
   );
   viewer.scene.primitives.add(right);
   right.splitDirection = Cesium.SplitDirection.RIGHT;
+  right.style = style;
 
-  await viewer.zoomTo(left);
+  // Heading is nearly perpendicular to the profiles in this area, which run SE-NW.
+  const center = Cesium.Cartesian3.fromDegrees(6.68, 46.96, -500.0);
+  const boundingSphere = new Cesium.BoundingSphere(center, 10000.0);
+  viewer.camera.flyToBoundingSphere(boundingSphere, {
+    offset: new Cesium.HeadingPitchRange(
+      Cesium.Math.toRadians(45.0),
+      Cesium.Math.toRadians(-45.0),
+      30000.0,
+    ),
+    duration: 0.0,
+  });
 } catch (error) {
   console.log(`Error loading tileset: ${error}`);
 }
