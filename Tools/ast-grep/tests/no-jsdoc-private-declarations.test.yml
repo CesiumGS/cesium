@@ -1,0 +1,39 @@
+id: no-jsdoc-private-declarations
+valid:
+  - >
+    class MyClass {
+      /** @private */
+      fn() {}
+    }
+  - >
+    class MyClass {
+      /** @private */
+      prop = 123;
+    }
+  - >
+    /** @ignore */
+    function fn() {}
+  - >
+    /** @ignore */
+    const foo = 123;
+invalid:
+  - >
+    /** @private */
+    function fn() {}
+  - >
+    /** @private */
+    const foo = 123;
+  - >
+    class MyClass {
+      fn() {
+        /** @private */
+        function fn2() {}
+      }
+    }
+  - >
+    class MyClass {
+      fn() {
+        /** @private */
+        const foo = 123;
+      }
+    }

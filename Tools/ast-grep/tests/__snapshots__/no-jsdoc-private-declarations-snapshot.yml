@@ -1,0 +1,74 @@
+id: no-jsdoc-private-declarations
+snapshots:
+  ? |
+    /** @private */ const foo = 123;
+  : fixed: |
+      /** @ignore */ const foo = 123;
+    labels:
+    - source: /** @private */
+      style: primary
+      start: 0
+      end: 15
+    - source: const foo = 123;
+      style: secondary
+      start: 16
+      end: 32
+  ? |
+    /** @private */ function fn() {}
+  : fixed: |
+      /** @ignore */ function fn() {}
+    labels:
+    - source: /** @private */
+      style: primary
+      start: 0
+      end: 15
+    - source: function fn() {}
+      style: secondary
+      start: 16
+      end: 32
+  ? |
+    class MyClass {
+      fn() {
+        /** @private */
+        const foo = 123;
+      }
+    }
+  : fixed: |
+      class MyClass {
+        fn() {
+          /** @ignore */
+          const foo = 123;
+        }
+      }
+    labels:
+    - source: /** @private */
+      style: primary
+      start: 29
+      end: 44
+    - source: const foo = 123;
+      style: secondary
+      start: 49
+      end: 65
+  ? |
+    class MyClass {
+      fn() {
+        /** @private */
+        function fn2() {}
+      }
+    }
+  : fixed: |
+      class MyClass {
+        fn() {
+          /** @ignore */
+          function fn2() {}
+        }
+      }
+    labels:
+    - source: /** @private */
+      style: primary
+      start: 29
+      end: 44
+    - source: function fn2() {}
+      style: secondary
+      start: 49
+      end: 66

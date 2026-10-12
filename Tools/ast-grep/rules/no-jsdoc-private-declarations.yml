@@ -1,0 +1,22 @@
+id: no-jsdoc-private-declarations
+message: >
+  JSDoc @private tags should be used only to describe member visibility within
+  a class hierarchy. To remove an API from documentation and external type
+  definitions, use @ignore.
+severity: error
+language: JavaScript
+files:
+  - packages/*/Source/**/*.js
+rule:
+  kind: comment
+  regex: "@private"
+  pattern: $COMMENT
+  precedes:
+    any:
+      - kind: class_declaration
+      - kind: function_declaration
+      - kind: variable_declaration
+      - kind: lexical_declaration
+transform:
+  COMMENT_FIX: replace($COMMENT, replace="@private", by="@ignore")
+fix: '$COMMENT_FIX'
