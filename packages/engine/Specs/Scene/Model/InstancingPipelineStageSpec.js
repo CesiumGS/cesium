@@ -197,6 +197,33 @@ describe(
       });
     });
 
+    it("computes instancing scale max when instances are rotated or scaled", async function () {
+      const gltfLoader = await loadGltf(boxInstanced);
+      const node = gltfLoader.components.nodes[0];
+      const scales = ModelUtility.getAttributeBySemantic(
+        node.instances,
+        InstanceAttributeSemantic.SCALE,
+      ).typedArray;
+      const expectedScaleMax = Math.max(...Array.from(scales, Math.abs));
+
+      const renderResources = mockRenderResources(node);
+      InstancingPipelineStage.process(renderResources, node, scene.frameState);
+
+      expect(renderResources.runtimeNode.instancingScaleMax).toEqual(
+        expectedScaleMax,
+      );
+    });
+
+    it("does not compute instancing scale max for translation-only instances", async function () {
+      const gltfLoader = await loadGltf(boxInstancedTranslationMinMax);
+      const node = gltfLoader.components.nodes[0];
+
+      const renderResources = mockRenderResources(node);
+      InstancingPipelineStage.process(renderResources, node, scene.frameState);
+
+      expect(renderResources.runtimeNode.instancingScaleMax).toBeUndefined();
+    });
+
     it("sets instancing TRANSLATION min and max from attributes", function () {
       return loadGltf(boxInstancedTranslationMinMax).then(
         function (gltfLoader) {
