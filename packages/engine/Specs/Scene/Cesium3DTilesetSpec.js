@@ -443,6 +443,17 @@ describe(
       expect(tileset.hasExtension("3DTILES_nonexistant_extension")).toBe(false);
     });
 
+    it("isVectorTileset returns true for the 1.1 and 2.0 vector extensions", async function () {
+      const tileset = await Cesium3DTileset.fromUrl(tilesetUrl, options);
+      expect(tileset.isVectorTileset()).toBe(false);
+
+      tileset._extensionsUsed = ["3DTILES_content_gltf_vector"];
+      expect(tileset.isVectorTileset()).toBe(true);
+
+      tileset._extensionsUsed = ["3DTILES_tileset_vectors"];
+      expect(tileset.isVectorTileset()).toBe(true);
+    });
+
     it("passes version in query string to tiles", async function () {
       const tileset = await Cesium3DTilesTester.loadTileset(scene, tilesetUrl);
       expect(tileset.root.content._resource.url).toEqual(
