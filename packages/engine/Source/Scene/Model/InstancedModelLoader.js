@@ -153,13 +153,19 @@ const scratchTranslation = new Cartesian3();
 const scratchRotation = new Matrix3();
 const scratchQuaternion = new Quaternion();
 const scratchScale = new Cartesian3();
-const scratchCenterTransform = new Matrix4();
 
 function addInstances(components, transforms) {
   const count = transforms.length;
+  const componentTransform = components.transform;
 
   const translations = new Array(count);
   for (let i = 0; i < count; i++) {
+    // The glTF's own transform, e.g. CESIUM_RTC, applies inside each instance.
+    Matrix4.multiplyTransformation(
+      transforms[i],
+      componentTransform,
+      transforms[i],
+    );
     translations[i] = Matrix4.getTranslation(transforms[i], new Cartesian3());
   }
 
@@ -190,11 +196,7 @@ function addInstances(components, transforms) {
     Cartesian3.pack(scale, scaleTypedArray, i * 3);
   }
 
-  components.transform = Matrix4.multiplyTransformation(
-    Matrix4.fromTranslation(center, scratchCenterTransform),
-    components.transform,
-    components.transform,
-  );
+  components.transform = Matrix4.fromTranslation(center, componentTransform);
 
   const nodes = components.nodes;
   for (let i = 0; i < nodes.length; i++) {

@@ -1,7 +1,9 @@
 import {
   Check,
+  DeveloperError,
   Event,
   Frozen,
+  Matrix3,
   Matrix4,
   defined,
   destroyObject,
@@ -12,6 +14,8 @@ import InstancedModelLoader from "./InstancedModelLoader.js";
 import Model from "./Model.js";
 import ModelType from "./ModelType.js";
 import ModelUtility from "./ModelUtility.js";
+
+const scratchRotationScale = new Matrix3();
 
 /**
  * <div class="notice">
@@ -86,6 +90,18 @@ class ModelInstanceCollection {
    */
   get readyEvent() {
     return this._readyEvent;
+  }
+
+  /**
+   * Gets an event that is raised when the collection encounters an
+   * asynchronous loading or rendering error. Event listeners are passed the
+   * error.
+   *
+   * @type {Event}
+   * @readonly
+   */
+  get errorEvent() {
+    return this._model.errorEvent;
   }
 
   /**
@@ -191,6 +207,17 @@ class ModelInstanceCollection {
       instances.length,
       0,
     );
+    for (let i = 0; i < instances.length; i++) {
+      const rotationScale = Matrix4.getMatrix3(
+        instances[i].modelMatrix,
+        scratchRotationScale,
+      );
+      if (Matrix3.determinant(rotationScale) <= 0.0) {
+        throw new DeveloperError(
+          `options.instances[${i}].modelMatrix must have a positive scale on every axis.`,
+        );
+      }
+    }
     //>>includeEnd('debug');
 
     const instanceTransforms = new Array(instances.length);
@@ -238,7 +265,7 @@ class ModelInstanceCollection {
 
 /**
  * @typedef {object} ModelInstanceCollection.Instance
- * @property {Matrix4} modelMatrix The 4x4 transformation matrix that transforms the instance from model to world coordinates.
+ * @property {Matrix4} modelMatrix The 4x4 transformation matrix that transforms the instance from model to world coordinates. Must have a positive scale on every axis.
  */
 
 export default ModelInstanceCollection;

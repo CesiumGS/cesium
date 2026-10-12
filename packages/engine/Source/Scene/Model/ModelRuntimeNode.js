@@ -142,9 +142,9 @@ function ModelRuntimeNode(options) {
   this.instancingTranslationMax = undefined;
 
   /**
-   * The largest absolute scale component of the instances. Defined only when
-   * the instances are rotated or scaled. This value is set by
-   * InstancingPipelineStage.
+   * The largest absolute scale component of the instances. Undefined when the
+   * instances are only translated, or when their scales are only stored on
+   * the GPU. This value is set by InstancingPipelineStage.
    *
    * @type {number}
    *

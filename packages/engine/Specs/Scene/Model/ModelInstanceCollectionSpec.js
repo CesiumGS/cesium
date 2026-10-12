@@ -10,6 +10,7 @@ import {
 import {
   Model,
   ModelInstanceCollection,
+  Resource,
   ResourceCache,
 } from "../../../index.js";
 import createScene from "../../../../../Specs/createScene.js";
@@ -21,6 +22,8 @@ describe(
     const boxUrl = "./Data/Models/glTF-2.0/Box/glTF/Box.gltf";
     const boxWithOffsetUrl =
       "./Data/Models/glTF-2.0/BoxWithOffset/glTF/BoxWithOffset.gltf";
+    const boxCesiumRtcUrl =
+      "./Data/Models/glTF-2.0/BoxCesiumRtc/glTF/BoxCesiumRtc.gltf";
 
     const time = JulianDate.fromDate(new Date("January 1, 2014 12:00:00 UTC"));
     const background = [0, 0, 0, 255];
@@ -62,6 +65,30 @@ describe(
       ).toBeRejectedWithDeveloperError();
     });
 
+    it("rejects instances without a positive scale on every axis", async function () {
+      await expectAsync(
+        ModelInstanceCollection.fromGltfAsync({
+          url: boxUrl,
+          instances: [
+            {
+              modelMatrix: Matrix4.fromScale(new Cartesian3(1.0, 0.0, 1.0)),
+            },
+          ],
+        }),
+      ).toBeRejectedWithDeveloperError();
+
+      await expectAsync(
+        ModelInstanceCollection.fromGltfAsync({
+          url: boxUrl,
+          instances: [
+            {
+              modelMatrix: Matrix4.fromScale(new Cartesian3(-1.0, 1.0, 1.0)),
+            },
+          ],
+        }),
+      ).toBeRejectedWithDeveloperError();
+    });
+
     it("rejects when the glTF fails to load", async function () {
       await expectAsync(
         ModelInstanceCollection.fromGltfAsync({
@@ -69,6 +96,36 @@ describe(
           instances: [{ modelMatrix: Matrix4.IDENTITY }],
         }),
       ).toBeRejectedWithError(RuntimeError);
+    });
+
+    it("raises errorEvent when an external buffer fails to load", async function () {
+      const gltf = await Resource.fetchJson(boxUrl);
+      gltf.buffers[0].uri = new URL(
+        "./Data/Models/glTF-2.0/DoesNotExist.bin",
+        window.location.href,
+      ).href;
+
+      const collection = await ModelInstanceCollection.fromGltfAsync({
+        url: `data:model/gltf+json;base64,${btoa(JSON.stringify(gltf))}`,
+        instances: [
+          {
+            modelMatrix:
+              FixedFrameTransforms.eastNorthUpToFixedFrame(positionA),
+          },
+        ],
+      });
+      let error;
+      collection.errorEvent.addEventListener(function (value) {
+        error = value;
+      });
+      scene.primitives.add(collection);
+      await pollToPromise(function () {
+        scene.renderForSpecs();
+        return error !== undefined;
+      });
+
+      expect(error).toBeInstanceOf(RuntimeError);
+      expect(collection.ready).toBe(false);
     });
 
     it("renders each instance", async function () {
@@ -174,6 +231,41 @@ describe(
 
       const collection = await ModelInstanceCollection.fromGltfAsync({
         url: boxWithOffsetUrl,
+        instances: [{ modelMatrix }],
+      });
+      scene.primitives.add(collection);
+      await pollToPromise(function () {
+        scene.renderForSpecs();
+        return collection.ready;
+      });
+
+      expect(collection.boundingSphere.center).toEqualEpsilon(
+        expectedCenter,
+        CesiumMath.EPSILON9,
+      );
+
+      scene.camera.lookAt(expectedCenter, new HeadingPitchRange(0.0, 0.0, 4.0));
+      expect({ scene, time }).notToRender(background);
+    });
+
+    it("applies the glTF transform inside each instance", async function () {
+      const modelMatrix =
+        FixedFrameTransforms.eastNorthUpToFixedFrame(positionA);
+
+      const model = await Model.fromGltfAsync({
+        url: boxCesiumRtcUrl,
+        modelMatrix,
+      });
+      scene.primitives.add(model);
+      await pollToPromise(function () {
+        scene.renderForSpecs();
+        return model.ready;
+      });
+      const expectedCenter = Cartesian3.clone(model.boundingSphere.center);
+      scene.primitives.remove(model);
+
+      const collection = await ModelInstanceCollection.fromGltfAsync({
+        url: boxCesiumRtcUrl,
         instances: [{ modelMatrix }],
       });
       scene.primitives.add(collection);

@@ -10,7 +10,7 @@
 
 #### Fixes :wrench:
 
-- Fixed instanced models being clipped or culled when their instances are rotated or scaled, because their bounding volume ignored instance rotation and scale.
+- Fixed instanced models being clipped or culled when their instances are rotated, because their bounding volume ignored instance rotation and scale.
 
 ## 1.146 - 2026-10-01
 
