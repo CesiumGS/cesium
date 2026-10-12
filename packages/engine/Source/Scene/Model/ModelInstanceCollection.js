@@ -20,16 +20,16 @@ import ModelUtility from "./ModelUtility.js";
  * Draws many copies of one glTF model with GPU instancing. The model's
  * geometry and textures are loaded once and shared by every instance.
  *
- * @alias ModelInstanceCollection
  * @internalConstructor
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
- *
- * @privateParam {Model} model The instanced model.
- * @privateParam {number} length The number of instances.
  *
  * @see ModelInstanceCollection.fromGltfAsync
  */
 class ModelInstanceCollection {
+  /**
+   * @privateParam {Model} model The instanced model.
+   * @privateParam {number} length The number of instances.
+   */
   constructor(model, length) {
     this._model = model;
     this._length = length;
