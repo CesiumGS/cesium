@@ -2871,6 +2871,7 @@ function loadNode(loader, gltfNode, frameState) {
   const instancingExtension = nodeExtensions.EXT_mesh_gpu_instancing;
   const articulationsExtension = nodeExtensions.AGI_articulations;
   const meshVectorExtension = nodeExtensions.CESIUM_mesh_vector;
+  const voxelsExtension = nodeExtensions.EXT_voxels;
 
   if (defined(instancingExtension)) {
     if (loader._loadForClassification) {
@@ -2887,6 +2888,13 @@ function loadNode(loader, gltfNode, frameState) {
 
   if (defined(meshVectorExtension)) {
     node.meshVector = meshVectorExtension;
+  }
+
+  // EXT_voxels defines its attributes and extensions the same way a primitive does.
+  if (defined(voxelsExtension)) {
+    node.primitives.push(
+      loadPrimitive(loader, voxelsExtension, false, frameState),
+    );
   }
 
   const meshId = gltfNode.mesh;
