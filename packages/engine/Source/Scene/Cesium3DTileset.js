@@ -4047,6 +4047,21 @@ Cesium3DTileset.prototype.hasExtension = function (extensionName) {
 };
 
 /**
+ * <code>true</code> if the tileset declares its content as vector data with
+ * <code>3DTILES_content_gltf_vector</code> (3D Tiles 1.1) or <code>3DTILES_tileset_vectors</code> (3D Tiles 2.0).
+ *
+ * @returns {boolean} <code>true</code> if the tileset is a vector tileset; otherwise, <code>false</code>.
+ *
+ * @private
+ */
+Cesium3DTileset.prototype.isVectorTileset = function () {
+  return (
+    this.hasExtension("3DTILES_content_gltf_vector") ||
+    this.hasExtension("3DTILES_tileset_vectors")
+  );
+};
+
+/**
  * Returns true if this object was destroyed; otherwise, false.
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
