@@ -3,6 +3,10 @@ import * as Cesium from "cesium";
 const terrain = await Cesium.Terrain.fromWorldTerrain();
 const viewer = new Cesium.Viewer("cesiumContainer", { terrain });
 
+viewer.scene.globe.translucency.enabled = true;
+viewer.scene.globe.translucency.frontFaceAlpha = 0.5;
+viewer.scene.screenSpaceCameraController.enableCollisionDetection = false;
+
 try {
   const left = await Cesium.Cesium3DTileset.fromUrl(
     "../../SampleData/vector/profile/1-1/tileset.json",
