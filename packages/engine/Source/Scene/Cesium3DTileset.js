@@ -2718,7 +2718,10 @@ function makeTileFromGltfNode(
   parentTile,
 ) {
   const nodeJson = gltfJson.nodes[nodeIndex];
-  const tilesetExtension = nodeJson.extensions["3DTILES_tileset"];
+  const tilesetExtension = nodeJson.extensions?.["3DTILES_tileset"];
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("3DTILES_tileset extension", tilesetExtension);
+  //>>includeEnd('debug');
   const boundingVolume = constructBoundingVolumeJson(
     nodeJson.boundingVolume,
     gltfJson.shapes,
