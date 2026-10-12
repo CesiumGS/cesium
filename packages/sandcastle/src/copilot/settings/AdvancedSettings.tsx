@@ -1,17 +1,32 @@
 import { useState, useContext } from "react";
 import { Button, Text, Field, TextBox } from "@stratakit/bricks";
 import { CopilotSettingsContext } from "./CopilotSettingsContext";
+import { ApiKeyManager } from "../ai/clients/ApiKeyManager";
+import { useModel } from "../contexts/useModel";
 
 export function AdvancedSettings() {
   const [showConfirmReset, setShowConfirmReset] = useState(false);
-  const { settings, updateSettings } = useContext(CopilotSettingsContext);
+  const { settings, updateSettings, resetSettings } = useContext(
+    CopilotSettingsContext,
+  );
+  const { resetModelSelection } = useModel();
 
   const handleResetData = () => {
     if (!showConfirmReset) {
       setShowConfirmReset(true);
       return;
     }
-    localStorage.clear();
+    // Clear only the Copilot's own data, not everything stored for the origin.
+    // The keys and settings are in sessionStorage, which survives a reload,
+    // and the reload itself can be cancelled from the unsaved changes prompt,
+    // so reset both the stored values and the in-memory state before it.
+    // Keys go first so the model list is refreshed without them.
+    ApiKeyManager.clearApiKey();
+    ApiKeyManager.clearAnthropicApiKey();
+    ApiKeyManager.clearVertexServiceAccount();
+    resetModelSelection();
+    resetSettings();
+    setShowConfirmReset(false);
     window.location.reload();
   };
 
@@ -45,7 +60,8 @@ export function AdvancedSettings() {
       ) : (
         <div className="reset-confirmation">
           <Text variant="body-md" className="reset-warning">
-            Are you sure? This will delete all your settings and API keys.
+            Are you sure? This will delete all your Copilot settings and API
+            keys.
           </Text>
           <div className="reset-actions">
             <Button variant="solid" onClick={handleResetData}>

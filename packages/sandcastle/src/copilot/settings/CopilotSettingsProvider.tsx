@@ -86,12 +86,27 @@ export function CopilotSettingsProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
+  const resetSettings = useCallback(() => {
+    // Remove the stored value right away rather than relying on the persist
+    // effect above, which may not run before a page reload.
+    try {
+      storage?.removeItem(STORAGE_KEY);
+    } catch (error) {
+      console.warn(
+        "Failed to clear Copilot settings from sessionStorage:",
+        error,
+      );
+    }
+    setSettings(initialCopilotSettings);
+  }, []);
+
   const contextValue = useMemo(
     () => ({
       settings,
       updateSettings: mergeSettings,
+      resetSettings,
     }),
-    [settings, mergeSettings],
+    [settings, mergeSettings, resetSettings],
   );
 
   return (
