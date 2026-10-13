@@ -8,6 +8,10 @@ import MetadataTester from "./MetadataTester.js";
  */
 function ImplicitTilingTester() {}
 
+const GLB_MAGIC = 0x46546c67; // ASCII 'glTF' as a little-endian uint32_t
+const GLB_JSON_CHUNK_TYPE = 0x4e4f534a;
+const GLB_BINARY_CHUNK_TYPE = 0x004e4942;
+
 /**
  * Description of a single availability bitstream
  * @typedef {object} AvailabilityDescription
@@ -118,6 +122,139 @@ ImplicitTilingTester.generateSubtreeBuffers = function (
     externalBuffer: buffersU8.external,
   };
 };
+
+/**
+ * Results of procedurally generating a subtree stored as glTF.
+ * @typedef {object} GeneratedSubtreeGltf
+ * @property {object} gltf The glTF JSON with the <code>3DTILES_subtree</code> extension, as it would appear in a parsed .gltf file.
+ * @property {Uint8Array} glb The subtree as a glb. Internal buffers are stored in its binary chunk.
+ * @property {Uint8Array} externalBuffer A typed array representing an external .bin file. This is always returned, but it may be an empty typed array.
+ */
+
+/**
+ * Generate a subtree stored as a glTF with the <code>3DTILES_subtree</code>
+ * extension, both as glTF JSON and as a glb. Only one content and one content
+ * property table are supported.
+ * <p>
+ * <code>gltf</code> is conformant to the extension only when every entry in the
+ * description has <code>isInternal: false</code> or <code>constantOnly</code>
+ * is true, because glTF JSON cannot have an internal buffer.
+ * </p>
+ *
+ * @param {SubtreeDescription} subtreeDescription A JSON description of the subtree's structure and values
+ * @param {boolean} constantOnly true if all the bitstreams are constant, i.e. no buffers/bufferViews are needed.
+ * @return {GeneratedSubtreeGltf} The procedurally generated subtree and an external buffer.
+ *
+ * @private
+ */
+ImplicitTilingTester.generateSubtreeGltf = function (
+  subtreeDescription,
+  constantOnly,
+) {
+  constantOnly = constantOnly ?? false;
+
+  let subtreeJson = {};
+  if (!constantOnly) {
+    subtreeJson = {
+      buffers: [],
+      bufferViews: [],
+    };
+  }
+
+  const bufferViewsU8 = makeBufferViews(subtreeDescription, subtreeJson);
+  const buffersU8 = makeBuffers(bufferViewsU8, subtreeJson);
+
+  const metadata = subtreeDescription.metadata;
+  const schema = defined(metadata) ? metadata.propertyTables.schema : undefined;
+  const gltf = makeSubtreeGltfJson(subtreeJson, schema);
+
+  return {
+    gltf: gltf,
+    glb: ImplicitTilingTester.makeGlb(gltf, buffersU8.internal),
+    externalBuffer: buffersU8.external,
+  };
+};
+
+/**
+ * Pack glTF JSON and an optional binary chunk into a glb.
+ *
+ * @param {object} gltf The glTF JSON
+ * @param {Uint8Array} [binaryChunk] The contents of the glb's binary chunk. No binary chunk is written if this is undefined or empty.
+ * @return {Uint8Array} The glb
+ *
+ * @private
+ */
+ImplicitTilingTester.makeGlb = function (gltf, binaryChunk) {
+  const jsonChunk = makeJsonChunk(gltf);
+  const chunks = [makeGlbChunkHeader(jsonChunk.length, GLB_JSON_CHUNK_TYPE)];
+  chunks.push(jsonChunk);
+
+  if (defined(binaryChunk) && binaryChunk.length > 0) {
+    const paddedBinaryChunk = padUint8Array(binaryChunk);
+    chunks.push(
+      makeGlbChunkHeader(paddedBinaryChunk.length, GLB_BINARY_CHUNK_TYPE),
+    );
+    chunks.push(paddedBinaryChunk);
+  }
+
+  const chunksByteLength = chunks.reduce(function (sum, chunk) {
+    return sum + chunk.length;
+  }, 0);
+
+  const header = new Uint8Array(12);
+  const dataView = new DataView(header.buffer);
+  const littleEndian = true;
+  dataView.setUint32(0, GLB_MAGIC, littleEndian);
+  dataView.setUint32(4, 2, littleEndian);
+  dataView.setUint32(8, header.length + chunksByteLength, littleEndian);
+
+  return concatTypedArrays([header].concat(chunks));
+};
+
+function makeGlbChunkHeader(chunkByteLength, chunkType) {
+  const header = new Uint8Array(8);
+  const dataView = new DataView(header.buffer);
+  dataView.setUint32(0, chunkByteLength, true);
+  dataView.setUint32(4, chunkType, true);
+  return header;
+}
+
+function makeSubtreeGltfJson(subtreeJson, schema) {
+  const subtreeExtension = {
+    tileAvailability: subtreeJson.tileAvailability,
+    contentAvailability: subtreeJson.contentAvailability,
+    childSubtreeAvailability: subtreeJson.childSubtreeAvailability,
+    tileProperties: subtreeJson.tileMetadata,
+  };
+
+  if (defined(subtreeJson.contentMetadata)) {
+    subtreeExtension.contentProperties = subtreeJson.contentMetadata[0];
+  }
+
+  const gltf = {
+    asset: {
+      version: "2.1",
+    },
+    extensionsUsed: ["3DTILES_subtree"],
+    extensionsRequired: ["3DTILES_subtree"],
+    buffers: subtreeJson.buffers,
+    bufferViews: subtreeJson.bufferViews,
+    extensions: {
+      "3DTILES_subtree": subtreeExtension,
+    },
+  };
+
+  if (defined(subtreeJson.propertyTables)) {
+    gltf.extensionsUsed.push("EXT_structural_metadata");
+    gltf.extensions.EXT_structural_metadata = {
+      schema: schema,
+      propertyTables: subtreeJson.propertyTables,
+    };
+  }
+
+  // Drop undefined properties, as when parsing a file
+  return JSON.parse(JSON.stringify(gltf));
+}
 
 function makeBufferViews(subtreeDescription, subtreeJson) {
   // Content availability is optional.

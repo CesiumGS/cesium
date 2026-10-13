@@ -11,6 +11,7 @@ import {
   RuntimeError,
   defined,
 } from "@cesium/core";
+import { parseGlb } from "@cesium/gltf";
 import Cesium3DTilesTerrainData from "./Cesium3DTilesTerrainData.js";
 import Credit from "./Credit.js";
 import DoubleEndedPriorityQueue from "./DoubleEndedPriorityQueue.js";
@@ -23,7 +24,6 @@ import loadImageFromTypedArray from "./loadImageFromTypedArray.js";
 import MetadataSchema from "../Scene/MetadataSchema.js";
 import MetadataSchemaLoader from "../Scene/MetadataSchemaLoader.js";
 import MetadataSemantic from "../Scene/MetadataSemantic.js";
-import parseGlb from "../Scene/GltfPipeline/parseGlb.js";
 import Resource from "./Resource.js";
 import ResourceCache from "../Scene/ResourceCache.js";
 import TerrainProvider from "./TerrainProvider.js";

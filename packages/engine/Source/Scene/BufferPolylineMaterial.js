@@ -84,7 +84,7 @@ class BufferPolylineMaterial extends BufferPrimitiveMaterial {
    * is not memory-efficient, and should generally be used for debugging and
    * testing.
    *
-   * @returns {Object} JSON-serializable object.
+   * @returns {object} JSON-serializable object.
    */
   toJSON() {
     return { ...super.toJSON(), width: this.width };

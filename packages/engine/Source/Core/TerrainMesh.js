@@ -351,8 +351,8 @@ TerrainMesh.prototype.pick = function (ray, cullBackFaces, mode, projection) {
 
 /**
  * Updates the terrain mesh to account for changes in vertical exaggeration.
- * @param {Number} exaggeration A scalar used to exaggerate terrain.
- * @param {Number} exaggerationRelativeHeight The relative height from which terrain is exaggerated.
+ * @param {number} exaggeration A scalar used to exaggerate terrain.
+ * @param {number} exaggerationRelativeHeight The relative height from which terrain is exaggerated.
  * @ignore
  */
 TerrainMesh.prototype.updateExaggeration = function (

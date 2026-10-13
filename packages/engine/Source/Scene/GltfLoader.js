@@ -15,15 +15,17 @@ import {
   defined,
   oneTimeWarning,
 } from "@cesium/core";
+import {
+  getAccessorByteStride,
+  getComponentReader,
+  numberOfComponentsForType,
+} from "@cesium/gltf";
 import ArticulationStageType from "../Core/ArticulationStageType.js";
 import Credit from "../Core/Credit.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
 import Sampler from "../Renderer/Sampler.js";
 import TextureMagnificationFilter from "../Renderer/TextureMagnificationFilter.js";
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
-import getAccessorByteStride from "./GltfPipeline/getAccessorByteStride.js";
-import getComponentReader from "./GltfPipeline/getComponentReader.js";
-import numberOfComponentsForType from "./GltfPipeline/numberOfComponentsForType.js";
 import GltfStructuralMetadataLoader from "./GltfStructuralMetadataLoader.js";
 import Axis from "./Axis.js";
 import GltfLoaderUtil from "./GltfLoaderUtil.js";
@@ -809,13 +811,7 @@ function getPackedTypedArray(gltf, accessor, bufferViewTypedArray) {
   byteOffset = bufferViewTypedArray.byteOffset + byteOffset;
 
   for (let i = 0; i < count; ++i) {
-    componentReader(
-      dataView,
-      byteOffset,
-      componentCount,
-      componentByteLength,
-      components,
-    );
+    componentReader(dataView, byteOffset, componentCount, components);
     for (let j = 0; j < componentCount; ++j) {
       accessorTypedArray[i * componentCount + j] = components[j];
     }
@@ -2875,6 +2871,7 @@ function loadNode(loader, gltfNode, frameState) {
   const instancingExtension = nodeExtensions.EXT_mesh_gpu_instancing;
   const articulationsExtension = nodeExtensions.AGI_articulations;
   const meshVectorExtension = nodeExtensions.CESIUM_mesh_vector;
+  const voxelsExtension = nodeExtensions.EXT_voxels;
 
   if (defined(instancingExtension)) {
     if (loader._loadForClassification) {
@@ -2891,6 +2888,13 @@ function loadNode(loader, gltfNode, frameState) {
 
   if (defined(meshVectorExtension)) {
     node.meshVector = meshVectorExtension;
+  }
+
+  // EXT_voxels defines its attributes and extensions the same way a primitive does.
+  if (defined(voxelsExtension)) {
+    node.primitives.push(
+      loadPrimitive(loader, voxelsExtension, false, frameState),
+    );
   }
 
   const meshId = gltfNode.mesh;

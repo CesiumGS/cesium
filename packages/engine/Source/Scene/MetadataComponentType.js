@@ -544,7 +544,7 @@ MetadataComponentType.toComponentDatatype = function (type) {
  *
  * @param {DataView} view The DataView.
  * @param {MetadataComponentType} componentType The component type.
- * @returns {Object} An object containing the getter and setter functions.
+ * @returns {object} An object containing the getter and setter functions.
  *
  * @private
  */
