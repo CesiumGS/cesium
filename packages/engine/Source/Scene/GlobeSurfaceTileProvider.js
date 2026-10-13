@@ -3185,6 +3185,9 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     // trim texture array to the used length so we don't end up using old textures
     // which might get destroyed eventually
     uniformMapProperties.dayTextures.length = numberOfDayTextures;
+    // Vectors draw over all imagery, so only the final blended pass applies them.
+    const applyVectors =
+      imageryIndex >= imageryLen && surfaceTile.vectorData?.show === true;
     uniformMapProperties.waterMask = waterMaskTexture;
     Cartesian4.clone(
       waterMaskTranslationAndScale,
@@ -3272,6 +3275,7 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     surfaceShaderSetOptions.colorToAlpha = applyColorToAlpha;
     surfaceShaderSetOptions.showUndergroundColor = showUndergroundColor;
     surfaceShaderSetOptions.translucent = translucent;
+    surfaceShaderSetOptions.applyVectors = applyVectors;
 
     let count = surfaceTile.renderedMesh.indices.length;
     if (!showSkirts) {
@@ -3282,7 +3286,7 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
       surfaceShaderSetOptions,
     );
     // Draped vectors are picked through the surface; zero elsewhere keeps the globe unpickable.
-    command.pickId = surfaceTile.vectorData?.show
+    command.pickId = applyVectors
       ? "vectorPickColorOver(vec4(0.0))"
       : undefined;
     command.castShadows = castShadows;

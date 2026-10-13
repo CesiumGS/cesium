@@ -12,6 +12,7 @@ import {
 import {
   BufferPolygon,
   BufferPolygonCollection,
+  BufferPolygonMaterial,
   BufferPolyline,
   BufferPolylineCollection,
   CesiumTerrainProvider,
@@ -963,6 +964,7 @@ describe(
       expect(scene).notToRender([0, 0, 0, 255]);
 
       let vectorTileCount = 0;
+      const commandsByTile = new Map();
       for (const command of scene.frameState.commandList) {
         if (!(command.owner instanceof QuadtreeTile)) {
           continue;
@@ -970,14 +972,93 @@ describe(
         const vectorTextureCount = VectorProvider.getTextureCount(
           command.owner.data.vectorData,
         );
-        if (vectorTextureCount > 0) {
-          vectorTileCount++;
-        }
         expect(
           command.uniformMap.u_dayTextures().length + vectorTextureCount,
         ).toBeLessThanOrEqual(ContextLimits.maximumTextureImageUnits);
+        if (!commandsByTile.has(command.owner)) {
+          commandsByTile.set(command.owner, []);
+        }
+        commandsByTile.get(command.owner).push(command);
+      }
+
+      for (const [tile, commands] of commandsByTile) {
+        if (VectorProvider.getTextureCount(tile.data.vectorData) === 0) {
+          continue;
+        }
+        vectorTileCount++;
+        expect(commands.length).toBeGreaterThan(1);
+        commands.forEach((command, i) => {
+          const isFinalPass = i === commands.length - 1;
+          const defines = command.shaderProgram.fragmentShaderSource.defines;
+          expect(defines.includes("HAS_VECTOR_LAYER")).toBe(isFinalPass);
+          expect(defined(command.pickId)).toBe(isFinalPass);
+        });
       }
       expect(vectorTileCount).toBeGreaterThan(0);
+    });
+
+    it("composites a translucent draped vector once across imagery passes", async function () {
+      const red = await SingleTileImageryProvider.fromUrl(
+        "Data/Images/Red16x16.png",
+      );
+      scene.imageryLayers.addImageryProvider(red);
+
+      const polygons = new BufferPolygonCollection({
+        heightReference: HeightReference.CLAMP_TO_TERRAIN,
+      });
+      polygons.add(
+        {
+          positions: Cartesian3.packArray(
+            Cartesian3.fromDegreesArray([0, 0, 0.2, 0, 0.2, 0.2, 0, 0.2]),
+            new Float64Array(12),
+          ),
+          triangles: new Uint16Array([0, 1, 2, 0, 2, 3]),
+          material: new BufferPolygonMaterial({
+            color: Color.BLUE.withAlpha(0.5),
+          }),
+        },
+        new BufferPolygon(),
+      );
+      scene.primitives.add(polygons);
+
+      switchViewMode(
+        SceneMode.SCENE3D,
+        new GeographicProjection(Ellipsoid.WGS84),
+      );
+      await updateUntilDone(scene.globe);
+
+      let singlePassColor;
+      expect(scene).toRenderAndCall((rgba) => {
+        singlePassColor = Array.from(rgba);
+      });
+
+      // Fully transparent layers force extra imagery passes without adding color.
+      const canvas = document.createElement("canvas");
+      canvas.width = canvas.height = 1;
+      const transparent = await SingleTileImageryProvider.fromUrl(
+        canvas.toDataURL(),
+      );
+      for (let i = 0; i < ContextLimits.maximumTextureImageUnits; ++i) {
+        scene.imageryLayers.addImageryProvider(transparent);
+      }
+      await updateUntilDone(scene.globe);
+
+      expect(scene).toRenderAndCall((rgba) => {
+        for (let i = 0; i < 4; i++) {
+          expect(Math.abs(rgba[i] - singlePassColor[i])).toBeLessThanOrEqual(3);
+        }
+      });
+
+      const passCounts = new Map();
+      for (const command of scene.frameState.commandList) {
+        if (command.owner instanceof QuadtreeTile) {
+          passCounts.set(
+            command.owner,
+            (passCounts.get(command.owner) ?? 0) + 1,
+          );
+        }
+      }
+      expect(Math.max(...passCounts.values())).toBeGreaterThan(1);
     });
 
     it("adds terrain and imagery credits to the CreditDisplay", async function () {
