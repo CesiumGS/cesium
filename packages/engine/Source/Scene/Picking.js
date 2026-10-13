@@ -823,6 +823,7 @@ Picking.prototype.pickPosition = function (scene, windowPosition, result) {
  * @param {object[]} pickedPrimitives
  * @param {object[]} pickedAttributes
  * @param {object[]} pickedFeatures
+ * @param {Set<object>} pickedObjects
  * @returns {boolean} whether picking should end
  * @ignore
  */
@@ -833,6 +834,7 @@ function addDrillPickedResults(
   pickedPrimitives,
   pickedAttributes,
   pickedFeatures,
+  pickedObjects,
 ) {
   for (const pickedResult of pickedResults) {
     const object = pickedResult.object;
@@ -847,6 +849,12 @@ function addDrillPickedResults(
     if (!defined(object) || !defined(object.primitive)) {
       return true;
     }
+
+    // Hiding does not remove draped vectors from baked surface data.
+    if (pickedObjects.has(object)) {
+      return true;
+    }
+    pickedObjects.add(object);
 
     if (!exclude) {
       results.push(pickedResult);
@@ -902,6 +910,7 @@ function drillPick(pickCallback, limit) {
   const pickedPrimitives = [];
   const pickedAttributes = [];
   const pickedFeatures = [];
+  const pickedObjects = new Set();
   if (!defined(limit)) {
     limit = Number.MAX_VALUE;
   }
@@ -915,6 +924,7 @@ function drillPick(pickCallback, limit) {
       pickedPrimitives,
       pickedAttributes,
       pickedFeatures,
+      pickedObjects,
     );
     if (complete) {
       break;
