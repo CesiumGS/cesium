@@ -1,5 +1,13 @@
 # Change Log
 
+## 1.147 - 2026-11-02
+
+### @cesium/engine
+
+#### Fixes :wrench:
+
+- Fixed globe rendering failing with "texture image units count exceeds MAX_TEXTURE_IMAGE_UNITS" when vector data is clamped to terrain alongside many imagery layers. [#13922](https://github.com/CesiumGS/cesium/pull/13922)
+
 ## 1.146 - 2026-10-01
 
 ### Major Announcements :loudspeaker:
