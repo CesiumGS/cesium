@@ -30,6 +30,7 @@ import {
   destroyObject,
 } from "@cesium/core";
 import TerrainQuantization from "../Core/TerrainQuantization.js";
+import VectorProvider from "../Core/VectorProvider.js";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
 import ContextLimits from "../Renderer/ContextLimits.js";
@@ -66,7 +67,7 @@ import TileSelectionResult from "./TileSelectionResult.js";
 /** @import TerrainMesh from "../Core/TerrainMesh.js"; */
 /** @import TerrainProvider from "../Core/TerrainProvider.js"; */
 /** @import TilingScheme from "../Core/TilingScheme.js"; */
-/** @import VectorProvider, { VectorTileData } from "../Core/VectorProvider.js"; */
+/** @import { VectorTileData } from "../Core/VectorProvider.js"; */
 /** @import { GlobeSurfaceShaderSetOptions } from "./GlobeSurfaceShaderSet.js"; */
 
 /**
@@ -2638,7 +2639,10 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     maxTextures -= 3;
   }
 
+  maxTextures -= VectorProvider.getTextureCount(surfaceTile.vectorData);
   maxTextures -= globeTranslucencyState.numberOfTextureUniforms;
+
+  maxTextures = Math.max(maxTextures, 1);
 
   const mesh = surfaceTile.renderedMesh;
   let rtc = mesh.center;

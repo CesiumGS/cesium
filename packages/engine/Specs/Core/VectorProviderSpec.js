@@ -124,6 +124,38 @@ describe("Core/VectorProvider", function () {
     return minV;
   }
 
+  it("counts the texture samplers used by vector data", function () {
+    expect(VectorProvider.getTextureCount(undefined)).toBe(0);
+    expect(
+      VectorProvider.getTextureCount({
+        show: false,
+        hasPolylines: true,
+        hasPolygons: true,
+      }),
+    ).toBe(0);
+    expect(
+      VectorProvider.getTextureCount({
+        show: true,
+        hasPolylines: true,
+        hasPolygons: false,
+      }),
+    ).toBe(6);
+    expect(
+      VectorProvider.getTextureCount({
+        show: true,
+        hasPolylines: false,
+        hasPolygons: true,
+      }),
+    ).toBe(5);
+    expect(
+      VectorProvider.getTextureCount({
+        show: true,
+        hasPolylines: true,
+        hasPolygons: true,
+      }),
+    ).toBe(9);
+  });
+
   it("returns hidden vector data with no collections", function () {
     const provider = new VectorProvider({ tilingScheme });
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
