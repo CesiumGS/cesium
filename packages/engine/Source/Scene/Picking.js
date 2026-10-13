@@ -850,7 +850,7 @@ function addDrillPickedResults(
       return true;
     }
 
-    // Hiding does not remove draped vectors from baked surface data.
+    // Hidden draped vectors stay in baked surface data until the next render.
     if (pickedObjects.has(object)) {
       return true;
     }
