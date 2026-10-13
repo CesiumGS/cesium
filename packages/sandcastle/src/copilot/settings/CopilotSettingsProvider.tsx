@@ -87,8 +87,8 @@ export function CopilotSettingsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const resetSettings = useCallback(() => {
-    // Remove the stored value right away rather than relying on the persist
-    // effect above, which may not run before a page reload.
+    // Remove the stored value synchronously. The persistence effect can then
+    // save defaults rather than retaining the previous custom prompt.
     try {
       storage?.removeItem(STORAGE_KEY);
     } catch (error) {

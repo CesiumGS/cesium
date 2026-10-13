@@ -4,7 +4,7 @@ import { CopilotSettingsContext } from "./CopilotSettingsContext";
 import { ApiKeyManager } from "../ai/clients/ApiKeyManager";
 import { useModel } from "../contexts/useModel";
 
-export function AdvancedSettings() {
+export function AdvancedSettings({ onResetData }: { onResetData: () => void }) {
   const [showConfirmReset, setShowConfirmReset] = useState(false);
   const { settings, updateSettings, resetSettings } = useContext(
     CopilotSettingsContext,
@@ -16,18 +16,15 @@ export function AdvancedSettings() {
       setShowConfirmReset(true);
       return;
     }
-    // Clear only the Copilot's own data, not everything stored for the origin.
-    // The keys and settings are in sessionStorage, which survives a reload,
-    // and the reload itself can be cancelled from the unsaved changes prompt,
-    // so reset both the stored values and the in-memory state before it.
-    // Keys go first so the model list is refreshed without them.
+    // Stop the chat before clearing credentials. Reset in place so unsaved
+    // editor changes never need to be discarded to finish clearing Copilot.
+    onResetData();
     ApiKeyManager.clearApiKey();
     ApiKeyManager.clearAnthropicApiKey();
     ApiKeyManager.clearVertexServiceAccount();
     resetModelSelection();
     resetSettings();
     setShowConfirmReset(false);
-    window.location.reload();
   };
 
   return (
@@ -61,7 +58,7 @@ export function AdvancedSettings() {
         <div className="reset-confirmation">
           <Text variant="body-md" className="reset-warning">
             Are you sure? This will delete all your Copilot settings and API
-            keys.
+            keys, and clear the current chat. Your code will be preserved.
           </Text>
           <div className="reset-actions">
             <Button variant="solid" onClick={handleResetData}>
