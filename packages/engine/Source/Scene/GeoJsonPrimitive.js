@@ -411,18 +411,16 @@ class GeoJsonPrimitive {
     }
 
     if (defined(polylines)) {
+      polylines.update(frameState);
       if (defined(vectorProvider)) {
         vectorProvider.markForFrame(polylines, frameNumber, heightReference);
-      } else {
-        polylines.update(frameState);
       }
     }
 
     if (defined(polygons)) {
+      polygons.update(frameState);
       if (defined(vectorProvider)) {
         vectorProvider.markForFrame(polygons, frameNumber, heightReference);
-      } else {
-        polygons.update(frameState);
       }
     }
   }
