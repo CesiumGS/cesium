@@ -1,15 +1,17 @@
-import BoundingSphere from "./BoundingSphere.js";
-import Cartesian3 from "./Cartesian3.js";
-import Check from "./Check.js";
-import Frozen from "./Frozen.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
-import GeographicProjection from "./GeographicProjection.js";
+import {
+  BoundingSphere,
+  Cartesian3,
+  Check,
+  DeveloperError,
+  Frozen,
+  GeographicProjection,
+  Math as CesiumMath,
+  OrientedBoundingBox,
+  Rectangle,
+  defined,
+} from "@cesium/core";
 import HeightmapEncoding from "./HeightmapEncoding.js";
 import HeightmapTessellator from "./HeightmapTessellator.js";
-import CesiumMath from "./Math.js";
-import OrientedBoundingBox from "./OrientedBoundingBox.js";
-import Rectangle from "./Rectangle.js";
 import TaskProcessor from "./TaskProcessor.js";
 import TerrainData from "./TerrainData.js";
 import TerrainEncoding from "./TerrainEncoding.js";

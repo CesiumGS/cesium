@@ -1,18 +1,20 @@
-import Cartesian2 from "../../Core/Cartesian2.js";
-import Cartesian3 from "../../Core/Cartesian3.js";
-import Check from "../../Core/Check.js";
-import defined from "../../Core/defined.js";
-import Ellipsoid from "../../Core/Ellipsoid.js";
-import Frozen from "../../Core/Frozen.js";
-import getTimestamp from "../../Core/getTimestamp.js";
+import {
+  Cartesian2,
+  Cartesian3,
+  Check,
+  Ellipsoid,
+  FixedFrameTransforms,
+  Frozen,
+  Math as CesiumMath,
+  Matrix3,
+  Matrix4,
+  Quaternion,
+  TimeConstants,
+  defined,
+  getTimestamp,
+} from "@cesium/core";
 import KeyboardEventModifier from "../../Core/KeyboardEventModifier.js";
-import CesiumMath from "../../Core/Math.js";
-import Matrix3 from "../../Core/Matrix3.js";
-import Matrix4 from "../../Core/Matrix4.js";
 import ScreenSpaceEventHandler from "../../Core/ScreenSpaceEventHandler.js";
-import Quaternion from "../../Core/Quaternion.js";
-import TimeConstants from "../../Core/TimeConstants.js";
-import FixedFrameTransforms from "../../Core/FixedFrameTransforms.js";
 import defaultPickWorldPosition from "./defaultPickWorldPosition.js";
 import ScreenSpaceInputBindings from "./ScreenSpaceInputBindings.js";
 import MouseButton from "./MouseButton.js";

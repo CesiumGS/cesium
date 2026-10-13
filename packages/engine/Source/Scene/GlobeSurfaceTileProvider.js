@@ -1,33 +1,35 @@
-import BoundingSphere from "../Core/BoundingSphere.js";
-import BoxOutlineGeometry from "../Core/BoxOutlineGeometry.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartesian4 from "../Core/Cartesian4.js";
-import Cartographic from "../Core/Cartographic.js";
-import clone from "../Core/clone.js";
-import Color from "../Core/Color.js";
-import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
-import combine from "../Core/combine.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Event from "../Core/Event.js";
-import GeometryInstance from "../Core/GeometryInstance.js";
-import GeometryPipeline from "../Core/GeometryPipeline.js";
-import IndexDatatype from "../Core/IndexDatatype.js";
-import Intersect from "../Core/Intersect.js";
-import CesiumMath from "../Core/Math.js";
-import Matrix4 from "../Core/Matrix4.js";
-import NearFarScalar from "../Core/NearFarScalar.js";
-import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
-import OrthographicFrustum from "../Core/OrthographicFrustum.js";
-import PrimitiveType from "../Core/PrimitiveType.js";
-import Rectangle from "../Core/Rectangle.js";
-import SphereOutlineGeometry from "../Core/SphereOutlineGeometry.js";
-import VerticalExaggeration from "../Core/VerticalExaggeration.js";
+import {
+  BoundingSphere,
+  BoxOutlineGeometry,
+  Cartesian2,
+  Cartesian3,
+  Cartesian4,
+  Cartographic,
+  Color,
+  ColorGeometryInstanceAttribute,
+  DeveloperError,
+  Event,
+  GeometryInstance,
+  GeometryPipeline,
+  IndexDatatype,
+  Intersect,
+  Math as CesiumMath,
+  Matrix4,
+  NearFarScalar,
+  OrientedBoundingBox,
+  OrthographicFrustum,
+  PrimitiveType,
+  Rectangle,
+  SphereOutlineGeometry,
+  VerticalExaggeration,
+  Visibility,
+  WebMercatorProjection,
+  clone,
+  combine,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import TerrainQuantization from "../Core/TerrainQuantization.js";
-import Visibility from "../Core/Visibility.js";
-import WebMercatorProjection from "../Core/WebMercatorProjection.js";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
 import ContextLimits from "../Renderer/ContextLimits.js";
@@ -54,7 +56,7 @@ import TileBoundingRegion from "./TileBoundingRegion.js";
 import TileSelectionResult from "./TileSelectionResult.js";
 
 /** @import Context from "../Renderer/Context.js"; */
-/** @import EllipsoidalOccluder from "../Core/EllipsoidalOccluder.js"; */
+/** @import { EllipsoidalOccluder } from "@cesium/core"; */
 /** @import FrameState from "./FrameState.js"; */
 /** @import GlobeSurfaceShaderSet from "./GlobeSurfaceShaderSet.js"; */
 /** @import ImageryLayerCollection from "./ImageryLayerCollection.js"; */

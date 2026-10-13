@@ -4,13 +4,15 @@ import {
   Cartesian3,
   Cartographic,
   Color,
-  defined,
   Iso8601,
   JulianDate,
   Math as CesiumMath,
   PolygonHierarchy,
   Rectangle,
   TimeInterval,
+  defined,
+} from "@cesium/core";
+import {
   CallbackProperty,
   ColorMaterialProperty,
   Entity,

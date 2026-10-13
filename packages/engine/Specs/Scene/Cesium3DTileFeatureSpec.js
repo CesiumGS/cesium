@@ -1,12 +1,12 @@
 import {
   Cartesian3,
   Cartesian4,
-  Cesium3DTileFeature,
   Ellipsoid,
   HeadingPitchRange,
   Math as CesiumMath,
   Rectangle,
-} from "../../index.js";
+} from "@cesium/core";
+import { Cesium3DTileFeature } from "../../index.js";
 import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
 import createScene from "../../../../Specs/createScene.js";
 

@@ -1,12 +1,10 @@
+import { BoundingRectangle, Color } from "@cesium/core";
 import {
-  BoundingRectangle,
-  Color,
   ClearCommand,
   Framebuffer,
   RenderState,
   Texture,
 } from "../../index.js";
-
 import createContext from "../../../../Specs/createContext.js";
 
 describe(

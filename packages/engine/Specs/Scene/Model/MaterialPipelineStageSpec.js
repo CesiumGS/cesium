@@ -1,13 +1,10 @@
+import { Cartesian3, Cartesian4, Matrix3, combine } from "@cesium/core";
 import {
   _shadersMaterialStageFS,
   AlphaMode,
-  Cartesian4,
-  Cartesian3,
   ClassificationType,
-  combine,
   GltfLoader,
   LightingModel,
-  Matrix3,
   MaterialPipelineStage,
   ModelAlphaOptions,
   ModelStatistics,

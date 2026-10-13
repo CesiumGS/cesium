@@ -5,10 +5,8 @@ import {
   Intersect,
   Math as CesiumMath,
   Plane,
-  S2Cell,
-  TileBoundingS2Cell,
-} from "../../index.js";
-
+} from "@cesium/core";
+import { S2Cell, TileBoundingS2Cell } from "../../index.js";
 import createFrameState from "../../../../Specs/createFrameState.js";
 
 describe("Scene/TileBoundingS2Cell", function () {

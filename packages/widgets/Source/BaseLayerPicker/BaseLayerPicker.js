@@ -1,10 +1,5 @@
-import {
-  defined,
-  destroyObject,
-  DeveloperError,
-  FeatureDetection,
-  getElement,
-} from "@cesium/engine";
+import { DeveloperError, defined, destroyObject } from "@cesium/core";
+import { FeatureDetection, getElement } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
 import BaseLayerPickerViewModel from "./BaseLayerPickerViewModel.js";
 

@@ -1,11 +1,11 @@
 import {
   Cartesian3,
   Frozen,
-  defined,
   GeographicProjection,
   Matrix4,
-  Camera,
-} from "@cesium/engine";
+  defined,
+} from "@cesium/core";
+import { Camera } from "@cesium/engine";
 
 function MockScene(canvas) {
   canvas = canvas ?? {

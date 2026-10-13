@@ -2,11 +2,13 @@ import {
   Cartesian3,
   Ellipsoid,
   Event,
-  GeographicTilingScheme,
   Matrix4,
   Ray,
   Rectangle,
   WebMercatorProjection,
+} from "@cesium/core";
+import {
+  GeographicTilingScheme,
   WebMercatorTilingScheme,
   Globe,
   ImageryLayer,
@@ -14,7 +16,6 @@ import {
   ImageryLayerFeatureInfo,
   ImageryProvider,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 

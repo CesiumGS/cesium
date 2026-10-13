@@ -1,6 +1,5 @@
+import { Cartesian3, PrimitiveType } from "@cesium/core";
 import {
-  Cartesian3,
-  PrimitiveType,
   Buffer,
   BufferUsage,
   DrawCommand,
@@ -8,7 +7,6 @@ import {
   ShaderProgram,
   VertexArray,
 } from "../../index.js";
-
 import createContext from "../../../../Specs/createContext.js";
 
 describe(

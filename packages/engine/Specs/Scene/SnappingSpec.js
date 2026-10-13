@@ -1,12 +1,5 @@
-import {
-  Cartesian2,
-  Cartesian3,
-  EdgeDisplayMode,
-  Pass,
-  Ray,
-  Snapping,
-} from "../../index.js";
-
+import { Cartesian2, Cartesian3, Ray } from "@cesium/core";
+import { EdgeDisplayMode, Pass, Snapping } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
 import createCanvas from "../../../../Specs/createCanvas.js";
 import loadAndZoomToModelAsync from "./Model/loadAndZoomToModelAsync.js";

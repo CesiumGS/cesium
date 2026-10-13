@@ -1,7 +1,4 @@
-import Frozen from "./Frozen.js";
-import defined from "./defined.js";
-import Ellipsoid from "./Ellipsoid.js";
-import Event from "./Event.js";
+import { Ellipsoid, Event, Frozen, defined } from "@cesium/core";
 import GeographicTilingScheme from "./GeographicTilingScheme.js";
 import HeightmapTerrainData from "./HeightmapTerrainData.js";
 import TerrainProvider from "./TerrainProvider.js";

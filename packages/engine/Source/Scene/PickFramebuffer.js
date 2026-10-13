@@ -1,13 +1,15 @@
-import BoundingRectangle from "../Core/BoundingRectangle.js";
-import Color from "../Core/Color.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
+import {
+  BoundingRectangle,
+  Color,
+  PixelDatatype,
+  PixelFormat,
+  RuntimeError,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import FramebufferManager from "../Renderer/FramebufferManager.js";
 import PassState from "../Renderer/PassState.js";
-import PixelDatatype from "../Renderer/PixelDatatype.js";
-import PixelFormat from "../Core/PixelFormat.js";
 import Sync from "../Renderer/Sync.js";
-import RuntimeError from "../Core/RuntimeError.js";
 
 /**
  * @private

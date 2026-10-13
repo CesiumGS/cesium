@@ -1,8 +1,10 @@
-import Check from "../Core/Check.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import getAbsoluteUri from "../Core/getAbsoluteUri.js";
+import {
+  Check,
+  DeveloperError,
+  Frozen,
+  defined,
+  getAbsoluteUri,
+} from "@cesium/core";
 import findMeshoptExtension from "./findMeshoptExtension.js";
 import GltfLoaderUtil from "./GltfLoaderUtil.js";
 

@@ -1,14 +1,16 @@
-import BoundingSphere from "../../Core/BoundingSphere.js";
-import Cartesian3 from "../../Core/Cartesian3.js";
-import Cartographic from "../../Core/Cartographic.js";
-import Check from "../../Core/Check.js";
-import defined from "../../Core/defined.js";
-import Ellipsoid from "../../Core/Ellipsoid.js";
-import IntersectionTests from "../../Core/IntersectionTests.js";
-import Matrix4 from "../../Core/Matrix4.js";
-import Ray from "../../Core/Ray.js";
-import VerticalExaggeration from "../../Core/VerticalExaggeration.js";
-import AttributeType from "../AttributeType.js";
+import {
+  AttributeType,
+  BoundingSphere,
+  Cartesian3,
+  Cartographic,
+  Check,
+  Ellipsoid,
+  IntersectionTests,
+  Matrix4,
+  Ray,
+  VerticalExaggeration,
+  defined,
+} from "@cesium/core";
 import SceneMode from "../SceneMode.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import ModelReader from "./ModelReader.js";

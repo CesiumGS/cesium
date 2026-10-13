@@ -1,11 +1,13 @@
-import Check from "../Core/Check.js";
-import createGuid from "../Core/createGuid.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import IndexDatatype from "../Core/IndexDatatype.js";
-import WebGLConstants from "../Core/WebGLConstants.js";
+import {
+  Check,
+  DeveloperError,
+  Frozen,
+  IndexDatatype,
+  WebGLConstants,
+  createGuid,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import BufferUsage from "./BufferUsage.js";
 
 /**

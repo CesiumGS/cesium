@@ -1,24 +1,25 @@
 import {
   Cartesian2,
   Cartesian3,
-  combine,
   Ellipsoid,
-  FeatureDetection,
+  FixedFrameTransforms,
   GeographicProjection,
   IntersectionTests,
-  KeyboardEventModifier,
   Math as CesiumMath,
   OrthographicFrustum,
   OrthographicOffCenterFrustum,
   Ray,
-  FixedFrameTransforms,
+  combine,
+} from "@cesium/core";
+import {
+  FeatureDetection,
+  KeyboardEventModifier,
   Camera,
   CameraEventType,
   MapMode2D,
   SceneMode,
   ScreenSpaceCameraController,
 } from "../../index.js";
-
 import createCamera from "../../../../Specs/createCamera.js";
 import createCanvas from "../../../../Specs/createCanvas.js";
 import DomEventSimulator from "../../../../Specs/DomEventSimulator.js";

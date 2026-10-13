@@ -1,11 +1,13 @@
 import {
   Cartesian3,
   Color,
-  Credit,
   Event,
   JulianDate,
   PolygonHierarchy,
   RuntimeError,
+} from "@cesium/core";
+import {
+  Credit,
   CallbackProperty,
   ConstantProperty,
   EntityCollection,

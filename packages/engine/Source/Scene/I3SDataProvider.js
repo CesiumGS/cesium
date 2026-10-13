@@ -1,3 +1,14 @@
+import {
+  Cartesian2,
+  Cartographic,
+  Check,
+  Frozen,
+  Rectangle,
+  RuntimeError,
+  WebMercatorProjection,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 /*
  * Esri Contribution: This code implements support for I3S (Indexed 3D Scene Layers), an OGC Community Standard.
  * Co-authored-by: Alexandre Jean-Claude ajeanclaude@spiria.com
@@ -46,21 +57,13 @@
  * to avoid requiring bloated look up files. The source Data used in this transcoding service was compiled from https://earth-info.nga.mil/#tab_wgs84-data and is based on
  * EGM2008 Gravity Model. The sandcastle examples show how to set the terrain provider service if required.
  */
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartographic from "../Core/Cartographic.js";
-import Check from "../Core/Check.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
+
 import HeightmapEncoding from "../Core/HeightmapEncoding.js";
 import Resource from "../Core/Resource.js";
-import RuntimeError from "../Core/RuntimeError.js";
-import WebMercatorProjection from "../Core/WebMercatorProjection.js";
 import I3SLayer from "./I3SLayer.js";
 import I3SStatistics from "./I3SStatistics.js";
 import I3SSublayer from "./I3SSublayer.js";
 import Lerc from "lerc";
-import Rectangle from "../Core/Rectangle.js";
 
 /**
  * @typedef {object} I3SDataProvider.ConstructorOptions
