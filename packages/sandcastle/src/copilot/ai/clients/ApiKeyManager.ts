@@ -141,8 +141,13 @@ export class ApiKeyManager {
     return !!this.getOpenAIApiKey();
   }
 
-  static clearOpenAIApiKey(): void {
-    storage?.removeItem(OPENAI_API_KEY_STORAGE_KEY);
+  static clearOpenAIApiKey(): boolean {
+    try {
+      storage?.removeItem(OPENAI_API_KEY_STORAGE_KEY);
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   /** Check for a nonempty credential; the API validates key format and access. */

@@ -601,47 +601,49 @@ export function ChatPanel({
                     attachments,
                   );
 
-                  const initialHistory: ConversationHistory = isGemini
-                    ? [
-                        {
-                          role: "user" as const,
-                          parts: userPromptParts,
-                        },
-                        {
-                          role: "model" as const,
-                          parts: [
-                            ...(accumulatedText
-                              ? [{ text: accumulatedText }]
-                              : []),
-                            buildGeminiFunctionCallPart(chunk.toolCall),
-                          ],
-                        },
-                      ]
-                    : [
-                        {
-                          role: "user" as const,
-                          content: userPromptContent,
-                        },
-                        {
-                          role: "assistant" as const,
-                          content: [
-                            ...(accumulatedText
-                              ? [
-                                  {
-                                    type: "text" as const,
-                                    text: accumulatedText,
-                                  },
-                                ]
-                              : []),
-                            {
-                              type: "tool_use" as const,
-                              id: chunk.toolCall.id,
-                              name: chunk.toolCall.name,
-                              input: chunk.toolCall.input,
-                            },
-                          ],
-                        },
-                      ];
+                  const initialHistory: ConversationHistory = isOpenAI
+                    ? []
+                    : isGemini
+                      ? [
+                          {
+                            role: "user" as const,
+                            parts: userPromptParts,
+                          },
+                          {
+                            role: "model" as const,
+                            parts: [
+                              ...(accumulatedText
+                                ? [{ text: accumulatedText }]
+                                : []),
+                              buildGeminiFunctionCallPart(chunk.toolCall),
+                            ],
+                          },
+                        ]
+                      : [
+                          {
+                            role: "user" as const,
+                            content: userPromptContent,
+                          },
+                          {
+                            role: "assistant" as const,
+                            content: [
+                              ...(accumulatedText
+                                ? [
+                                    {
+                                      type: "text" as const,
+                                      text: accumulatedText,
+                                    },
+                                  ]
+                                : []),
+                              {
+                                type: "tool_use" as const,
+                                id: chunk.toolCall.id,
+                                name: chunk.toolCall.name,
+                                input: chunk.toolCall.input,
+                              },
+                            ],
+                          },
+                        ];
 
                   await continueToolChain(
                     chunk.toolCall,
@@ -764,6 +766,7 @@ export function ChatPanel({
       settings.customPromptAddendum,
       settings.extendedThinking.enabled,
       settings.extendedThinking.budget,
+      settings.openaiReasoningEffort,
       addMessage,
       updateMessage,
       appendToolCallToMessage,

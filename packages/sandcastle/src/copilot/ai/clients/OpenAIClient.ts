@@ -17,6 +17,7 @@ import {
   postStreamRequest,
 } from "./streamUtils";
 
+// Supported efforts: https://developers.openai.com/api/docs/guides/latest-model
 const REASONING_EFFORTS: readonly OpenAIReasoningEffort[] = [
   "low",
   "medium",
@@ -83,15 +84,22 @@ export function buildOpenAIHistory(
     }
     if (message.role === "assistant" && message.openAIOutput) {
       const results = (message.toolCalls ?? []).filter((entry) => entry.result);
-      // A stopped chain can leave an unanswered call. Omit that call rather
-      // than sending an invalid history to the next request.
+      // Reasoning items and their following calls are a unit. Dropping only
+      // an unanswered call leaves invalid native history for the next turn.
       const resultIds = new Set(results.map((entry) => entry.toolCall.id));
-      return [
-        ...message.openAIOutput.filter(
+      if (
+        message.openAIOutput.some(
           (item) =>
-            item.type !== "function_call" ||
-            resultIds.has(item.call_id as string),
-        ),
+            item.type === "function_call" &&
+            !resultIds.has(item.call_id as string),
+        )
+      ) {
+        return message.content.trim()
+          ? [{ role: "assistant", content: message.content }]
+          : [];
+      }
+      return [
+        ...message.openAIOutput,
         ...results.map((entry) =>
           openAIToolResult(entry.toolCall, entry.result!),
         ),
@@ -181,14 +189,25 @@ export class OpenAIClient {
     call: ToolCall,
     result: ToolResult,
     systemPrompt: string,
-    conversationHistory: OpenAIConversationItem[],
+    _conversationHistory: OpenAIConversationItem[],
     tools?: ToolDefinition[],
     abortSignal?: AbortSignal,
   ): AsyncGenerator<StreamChunk> {
-    this.history = [
-      ...(this.history.length ? this.history : conversationHistory),
-      openAIToolResult(call, result),
-    ];
+    // Continuations belong to the instance that received the native response.
+    // Reject a fresh client rather than replaying another provider's history.
+    if (
+      !this.history.some(
+        (item) => item.type === "function_call" && item.call_id === call.id,
+      )
+    ) {
+      yield {
+        type: "error",
+        error:
+          "No matching OpenAI tool call is available. Please resend your message.",
+      };
+      return;
+    }
+    this.history = [...this.history, openAIToolResult(call, result)];
     yield* this.send(systemPrompt, tools, abortSignal);
   }
 
@@ -245,6 +264,7 @@ export class OpenAIClient {
       reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
+      let hasSummaryText = false;
       while (!completed) {
         const { done, value } = await reader.read();
         timeout.reset();
@@ -266,12 +286,22 @@ export class OpenAIClient {
             continue;
           }
           const event = JSON.parse(data) as OpenAIStreamEvent;
-          if (event.type === "response.output_text.delta" && event.delta) {
+          if (
+            event.type === "response.reasoning_summary_part.added" &&
+            hasSummaryText
+          ) {
+            yield { type: "reasoning", reasoning: "\n\n" };
+            hasSummaryText = false;
+          } else if (
+            event.type === "response.output_text.delta" &&
+            event.delta
+          ) {
             yield { type: "text", text: event.delta };
           } else if (
             event.type === "response.reasoning_summary_text.delta" &&
             event.delta
           ) {
+            hasSummaryText = true;
             yield { type: "reasoning", reasoning: event.delta };
           } else if (event.type === "response.refusal.delta" && event.delta) {
             yield { type: "text", text: event.delta };

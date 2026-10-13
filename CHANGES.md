@@ -1,13 +1,5 @@
 # Change Log
 
-## Unreleased
-
-### @cesium/sandcastle
-
-#### Additions :tada:
-
-- Added OpenAI API key support in Copilot for GPT-6 Luna, GPT-6.1 Sol, and GPT-6 Astra, including all supported reasoning efforts, image attachments, and code-editing tools.
-
 ## 1.146 - 2026-10-01
 
 ### Major Announcements :loudspeaker:
@@ -62,6 +54,12 @@ import { Cartesian3, Color } from "@cesium/core";
   `ArcType`, `AssociativeArray`, `AxisAlignedBoundingBox`, `BoundingRectangle`, `BoundingSphere`, `BoxGeometry`, `BoxOutlineGeometry`, `Cartesian2`, `Cartesian3`, `Cartesian4`, `Cartographic`, `CatmullRomSpline`, `Check`, `CircleGeometry`, `CircleOutlineGeometry`, `Clock`, `ClockRange`, `ClockStep`, `Color`, `ColorGeometryInstanceAttribute`, `ComponentDatatype`, `ConstantSpline`, `CoplanarPolygonGeometry`, `CoplanarPolygonOutlineGeometry`, `CornerType`, `CorridorGeometry`, `CorridorOutlineGeometry`, `CubicRealPolynomial`, `CullingVolume`, `CylinderGeometry`, `CylinderOutlineGeometry`, `DeveloperError`, `DistanceDisplayCondition`, `DistanceDisplayConditionGeometryInstanceAttribute`, `EllipseGeometry`, `EllipseOutlineGeometry`, `Ellipsoid`, `EllipsoidGeodesic`, `EllipsoidGeometry`, `EllipsoidOutlineGeometry`, `EllipsoidRhumbLine`, `EllipsoidTangentPlane`, `Event`, `EventHelper`, `ExtrapolationType`, `Frozen`, `GeographicProjection`, `Geometry`, `GeometryAttribute`, `GeometryAttributes`, `GeometryFactory`, `GeometryInstance`, `GeometryInstanceAttribute`, `GeometryPipeline`, `GregorianDate`, `HeadingPitchRange`, `HeadingPitchRoll`, `HermitePolynomialApproximation`, `HermiteSpline`, `IndexDatatype`, `Intersect`, `IntersectionTests`, `Intersections2D`, `Interval`, `Iso8601`, `JulianDate`, `LagrangePolynomialApproximation`, `LeapSecond`, `LinearApproximation`, `LinearSpline`, `MapProjection`, `Math`, `Matrix2`, `Matrix3`, `Matrix4`, `MorphWeightSpline`, `NearFarScalar`, `Occluder`, `OrientedBoundingBox`, `OrthographicFrustum`, `OrthographicOffCenterFrustum`, `Packable`, `PackableForInterpolation`, `PerspectiveFrustum`, `PerspectiveOffCenterFrustum`, `PixelDatatype`, `PixelFormat`, `Plane`, `PlaneGeometry`, `PlaneOutlineGeometry`, `PolygonGeometry`, `PolygonHierarchy`, `PolygonOutlineGeometry`, `PolylineGeometry`, `PolylineVolumeGeometry`, `PolylineVolumeOutlineGeometry`, `PrimitiveType`, `QuadraticRealPolynomial`, `QuarticRealPolynomial`, `Quaternion`, `QuaternionSpline`, `Queue`, `Ray`, `Rectangle`, `RectangleGeometry`, `RectangleOutlineGeometry`, `ReferenceFrame`, `RuntimeError`, `ShowGeometryInstanceAttribute`, `SimplePolylineGeometry`, `SphereGeometry`, `SphereOutlineGeometry`, `Spherical`, `Spline`, `SteppedSpline`, `Stereographic`, `TimeInterval`, `TimeIntervalCollection`, `TimeStandard`, `TrackingReferenceFrame`, `TranslationRotationScale`, `TridiagonalSystemSolver`, `VertexFormat`, `Visibility`, `WallGeometry`, `WallOutlineGeometry`, `WebGLConstants`, `WebMercatorProjection`, `WindingOrder`, `barycentricCoordinates`, `binarySearch`, `clone`, `combine`, `createGuid`, `defined`, `destroyObject`, `formatError`, `getAbsoluteUri`, `getBaseUri`, `getExtensionFromUri`, `getFilenameFromUri`, `getTimestamp`, `isLeapYear`, `mergeSort`, `objectToQuery`, `pointInsideTriangle`, `queryToObject`, `srgbToLinear`, `subdivideArray`
 
   </details>
+
+### @cesium/sandcastle
+
+#### Additions :tada:
+
+- Added OpenAI API key support in Copilot for GPT-6 Luna, GPT-6.1 Sol, and GPT-6 Astra, including all supported reasoning efforts, image attachments, and code-editing tools.
 
 ## 1.145 - 2026-09-02
 

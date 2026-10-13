@@ -186,6 +186,9 @@ export function useToolChainExecution({
       tools?: ToolDefinition[],
       abortSignal?: AbortSignal,
     ) => {
+      const isOpenAIModel =
+        AIClientFactory.getProviderForModel(selectedModel as AIModel) ===
+        "openai";
       const isGeminiModel =
         AIClientFactory.getProviderForModel(selectedModel as AIModel) ===
         "gemini";
@@ -448,7 +451,7 @@ export function useToolChainExecution({
               ],
             },
           ];
-        } else {
+        } else if (!isOpenAIModel) {
           historyBeforeToolResult = [
             ...historyBeforeToolResult,
             buildToolResultMessage(currentCall, currentResult),

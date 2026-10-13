@@ -304,7 +304,12 @@ function ApiKeyDialogBody({
               <Button
                 variant="ghost"
                 onClick={() => {
-                  ApiKeyManager.clearOpenAIApiKey();
+                  if (!ApiKeyManager.clearOpenAIApiKey()) {
+                    setOpenaiError(
+                      "Unable to remove your OpenAI API key from session storage.",
+                    );
+                    return;
+                  }
                   refreshModels();
                   onSuccess();
                   onClose();

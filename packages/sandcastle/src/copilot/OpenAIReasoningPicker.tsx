@@ -38,10 +38,12 @@ export function OpenAIReasoningPicker({
       />
       <DropdownMenu.Content>
         {getOpenAIReasoningEfforts(model).map((value) => (
-          <DropdownMenu.Item
+          <DropdownMenu.CheckboxItem
             key={value}
+            name="openai-reasoning-effort"
             label={labels[value]}
-            onClick={() => onChange(value)}
+            checked={value === resolveOpenAIReasoningEffort(model, effort)}
+            onChange={() => onChange(value)}
           />
         ))}
       </DropdownMenu.Content>

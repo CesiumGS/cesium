@@ -18,11 +18,14 @@ const { outputFiles } = await build({
   write: false,
 });
 const saved = new Map();
-globalThis.sessionStorage = {
-  getItem: (key) => saved.get(key) ?? null,
-  setItem: (key, value) => saved.set(key, value),
-  removeItem: (key) => saved.delete(key),
-};
+Object.defineProperty(globalThis, "sessionStorage", {
+  configurable: true,
+  value: {
+    getItem: (key) => saved.get(key) ?? null,
+    setItem: (key, value) => saved.set(key, value),
+    removeItem: (key) => saved.delete(key),
+  },
+});
 const {
   OpenAIClient,
   getOpenAIReasoningEfforts,
@@ -403,4 +406,101 @@ test("reasoning menus expose every documented API effort", () => {
   ]);
   assert.deepEqual(getOpenAIReasoningEfforts("gpt-6.1-sol"), reasoning);
   assert.deepEqual(getOpenAIReasoningEfforts("gpt-6-astra"), reasoning);
+});
+
+test("unanswered calls discard their required reasoning together", () => {
+  assert.deepEqual(
+    buildOpenAIHistory([
+      { role: "assistant", content: "", openAIOutput: [reasoning, call] },
+    ]),
+    [],
+  );
+  assert.deepEqual(
+    buildOpenAIHistory([
+      {
+        role: "assistant",
+        content: "I tried to edit.",
+        openAIOutput: [reasoning, call],
+      },
+    ]),
+    [{ role: "assistant", content: "I tried to edit." }],
+  );
+});
+
+test("a fresh client rejects tool continuation instead of replaying foreign history", async () => {
+  globalThis.fetch = async () => {
+    assert.fail("Must not send an invalid continuation");
+  };
+  const chunks = await collect(
+    new OpenAIClient("test").submitToolResult(
+      { id: "call_1", name: "apply_diff", input: {} },
+      { status: "success", output: "OK" },
+      "System",
+      [{ role: "assistant", content: [{ type: "tool_use" }] }],
+      tools,
+    ),
+  );
+  assert.match(chunks[0].error, /No matching OpenAI tool call/);
+});
+
+test("reasoning summary parts are separated", async () => {
+  globalThis.fetch = async () =>
+    stream([
+      { type: "response.reasoning_summary_part.added", summary_index: 0 },
+      { type: "response.reasoning_summary_text.delta", delta: "First." },
+      { type: "response.reasoning_summary_part.added", summary_index: 1 },
+      { type: "response.reasoning_summary_text.delta", delta: "Second." },
+      terminal(),
+    ]);
+  const chunks = await collect(
+    new OpenAIClient("test").generateWithContext("Hello", context),
+  );
+  assert.equal(
+    chunks
+      .filter((c) => c.type === "reasoning")
+      .map((c) => c.reasoning)
+      .join(""),
+    "First.\n\nSecond.",
+  );
+});
+
+test("key-removal failure is returned for user-visible feedback", () => {
+  const remove = globalThis.sessionStorage.removeItem;
+  globalThis.sessionStorage.removeItem = () => {
+    throw new Error("Storage unavailable");
+  };
+  try {
+    assert.equal(ApiKeyManager.clearOpenAIApiKey(), false);
+  } finally {
+    globalThis.sessionStorage.removeItem = remove;
+  }
+});
+
+test("summary separation also works when a new reasoning item resets the part index", async () => {
+  globalThis.fetch = async () =>
+    stream([
+      {
+        type: "response.reasoning_summary_part.added",
+        summary_index: 0,
+        item_id: "rs_1",
+      },
+      { type: "response.reasoning_summary_text.delta", delta: "First." },
+      {
+        type: "response.reasoning_summary_part.added",
+        summary_index: 0,
+        item_id: "rs_2",
+      },
+      { type: "response.reasoning_summary_text.delta", delta: "Second." },
+      terminal(),
+    ]);
+  const chunks = await collect(
+    new OpenAIClient("test").generateWithContext("Hello", context),
+  );
+  assert.equal(
+    chunks
+      .filter((c) => c.type === "reasoning")
+      .map((c) => c.reasoning)
+      .join(""),
+    "First.\n\nSecond.",
+  );
 });
