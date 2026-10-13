@@ -5,6 +5,7 @@ const credentialKeys = [
   "sandcastle_anthropic_api_key",
   "sandcastle_vertex_service_account",
   "sandcastle_vertex_region",
+  "sandcastle_openai_api_key",
 ];
 const modelStorageKey = "cesium-copilot-last-model-selection";
 const settingsStorageKey = "sandcastle/copilot-settings";
@@ -20,6 +21,22 @@ test.beforeEach(async ({ page }) => {
       ? route.continue()
       : route.abort();
   });
+  // Exercise the real Copilot/editor lifecycle without unrelated WebGL work.
+  await page.route("**/templates/bucket.html", (route) =>
+    route.fulfill({
+      contentType: "text/html",
+      body: `<!doctype html><script>
+      const origin = new URL(document.referrer).origin;
+      const send = (type) => parent.postMessage({ id: "sandcastle-bridge", message: { type } }, origin);
+      addEventListener("message", (event) => {
+        if (event.source !== parent || event.origin !== origin || event.data?.id !== "sandcastle-bridge") return;
+        if (event.data.message.type === "reload") send("bucketReady");
+        if (event.data.message.type === "runCode") send("runComplete");
+      });
+      send("bucketReady");
+    </script>`,
+    }),
+  );
   await page.addInitScript(
     ({ credentialKeys, modelStorageKey, settingsStorageKey, dummyKey }) => {
       if (
@@ -39,6 +56,7 @@ test.beforeEach(async ({ page }) => {
           private_key: "-----BEGIN PRIVATE KEY-----\nDUMMY-NOT-A-KEY",
         }),
         "us-central1",
+        "dummy-openai-reset-regression-key",
       ];
       credentialKeys.forEach((key, i) =>
         sessionStorage.setItem(key, values[i]),
@@ -55,6 +73,7 @@ test.beforeEach(async ({ page }) => {
           customPromptAddendum: "Reset this custom prompt",
           extendedThinking: { enabled: false, budget: 1234 },
           autoFixEnabled: false,
+          openaiReasoningEffort: "max",
         }),
       );
       localStorage.setItem("unrelated-local", "keep-local");
@@ -101,7 +120,7 @@ async function expectCleared(page) {
   );
   const { settings, ...otherStorage } = stored;
   expect(otherStorage).toEqual({
-    credentials: [null, null, null, null],
+    credentials: credentialKeys.map(() => null),
     localModel: null,
     legacyModel: null,
     unrelatedLocal: "keep-local",
@@ -110,11 +129,14 @@ async function expectCleared(page) {
   // A repeated reset may remove the already-default stored value without a
   // state change. Missing settings and persisted defaults are both valid.
   if (settings !== null) {
-    expect(settings).toEqual({
+    expect(settings).toMatchObject({
       customPromptAddendum: "",
       extendedThinking: { enabled: true, budget: 2048 },
       autoFixEnabled: true,
     });
+    if ("openaiReasoningEffort" in settings) {
+      expect(settings.openaiReasoningEffort).toBe("medium");
+    }
   }
   await expect(
     page.getByRole("switch", { name: "Toggle Extended Thinking" }),
@@ -145,12 +167,14 @@ async function editorCode(page) {
 
 async function editCode(page) {
   await page.getByRole("button", { name: "Editor", exact: true }).click();
-  await page.locator(".monaco-editor textarea.inputarea").first().focus();
+  const editor = page.locator(".monaco-editor .view-lines").first();
+  await expect(editor).toContainText("Cesium");
+  const input = page.getByRole("textbox", { name: "Editor content" });
+  await input.focus();
+  await expect(input).toBeFocused();
   await page.keyboard.press("ControlOrMeta+End");
   await page.keyboard.insertText("\n// UNSAVED_RESET_TEST");
-  await expect(
-    page.locator(".monaco-editor .view-lines").first(),
-  ).toContainText("UNSAVED_RESET_TEST");
+  await expect(editor).toContainText("UNSAVED_RESET_TEST");
   return editorCode(page);
 }
 
@@ -296,6 +320,12 @@ test("cancelling confirmation preserves credentials, settings and draft", async 
   ).toBe(dummyKey);
   expect(
     await page.evaluate(
+      (keys) => keys.every((key) => sessionStorage.getItem(key) !== null),
+      credentialKeys,
+    ),
+  ).toBe(true);
+  expect(
+    await page.evaluate(
       () =>
         JSON.parse(sessionStorage.getItem("sandcastle/copilot-settings"))
           .customPromptAddendum,
@@ -378,6 +408,11 @@ for (const continuation of [false, true]) {
       (count) => window.resetTestRequests.length === count,
       index + 1,
     );
+    if (continuation) {
+      await expect(
+        page.locator(".monaco-editor .view-lines").first(),
+      ).toContainText("BEFORE_RESET_EDIT");
+    }
     const codeBefore = await editorCode(page);
     await resetData(page);
     await expectCleared(page);

@@ -19,9 +19,7 @@ export function AdvancedSettings({ onResetData }: { onResetData: () => void }) {
     // Stop the chat before clearing credentials. Reset in place so unsaved
     // editor changes never need to be discarded to finish clearing Copilot.
     onResetData();
-    ApiKeyManager.clearApiKey();
-    ApiKeyManager.clearAnthropicApiKey();
-    ApiKeyManager.clearVertexServiceAccount();
+    ApiKeyManager.clearAllCredentials();
     resetModelSelection();
     resetSettings();
     setShowConfirmReset(false);
