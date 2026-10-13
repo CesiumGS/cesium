@@ -32,12 +32,24 @@ interface ApiKeyDialogProps {
   open: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  onBeforeRemoveOpenAIKey: () => void;
 }
 
-export function ApiKeyDialog({ open, onClose, onSuccess }: ApiKeyDialogProps) {
+export function ApiKeyDialog({
+  open,
+  onClose,
+  onSuccess,
+  onBeforeRemoveOpenAIKey,
+}: ApiKeyDialogProps) {
   return (
     <SandcastleDialog open={open} onClose={onClose} title="API Configuration">
-      {open && <ApiKeyDialogBody onClose={onClose} onSuccess={onSuccess} />}
+      {open && (
+        <ApiKeyDialogBody
+          onClose={onClose}
+          onSuccess={onSuccess}
+          onBeforeRemoveOpenAIKey={onBeforeRemoveOpenAIKey}
+        />
+      )}
     </SandcastleDialog>
   );
 }
@@ -45,6 +57,7 @@ export function ApiKeyDialog({ open, onClose, onSuccess }: ApiKeyDialogProps) {
 function ApiKeyDialogBody({
   onClose,
   onSuccess,
+  onBeforeRemoveOpenAIKey,
 }: Omit<ApiKeyDialogProps, "open">) {
   const { refreshModels } = useModel();
   const hasVertexCredentials = ApiKeyManager.hasVertexServiceAccount();
@@ -304,6 +317,7 @@ function ApiKeyDialogBody({
               <Button
                 variant="ghost"
                 onClick={() => {
+                  onBeforeRemoveOpenAIKey();
                   if (!ApiKeyManager.clearOpenAIApiKey()) {
                     setOpenaiError(
                       "Unable to remove your OpenAI API key from session storage.",

@@ -504,3 +504,73 @@ test("summary separation also works when a new reasoning item resets the part in
     "First.\n\nSecond.",
   );
 });
+
+test("aborted responses reject late buffered tool output even when transport ignores abort", async () => {
+  const abort = new AbortController();
+  let streamController;
+  let reading;
+  const readStarted = new Promise((resolve) => {
+    reading = resolve;
+  });
+  globalThis.fetch = async () => {
+    const body = new ReadableStream({
+      start(controller) {
+        streamController = controller;
+      },
+    });
+    const getReader = body.getReader.bind(body);
+    body.getReader = () => {
+      const reader = getReader();
+      const read = reader.read.bind(reader);
+      reader.read = () => {
+        reading();
+        return read();
+      };
+      return reader;
+    };
+    return new Response(body);
+  };
+  const result = collect(
+    new OpenAIClient("test").generateWithContext(
+      "Edit",
+      context,
+      undefined,
+      tools,
+      [],
+      undefined,
+      abort.signal,
+    ),
+  );
+  await readStarted;
+  abort.abort();
+  streamController.enqueue(
+    new TextEncoder().encode(
+      `data: ${JSON.stringify(terminal([reasoning, call]))}\n\n`,
+    ),
+  );
+  streamController.close();
+  const chunks = await result;
+  assert.deepEqual(chunks, [
+    { type: "error", error: "Request stopped by user" },
+  ]);
+});
+
+test("stopping after native output is delivered prevents a queued tool call", async () => {
+  globalThis.fetch = async () => stream([terminal([reasoning, call])]);
+  const abort = new AbortController();
+  const response = new OpenAIClient("test").generateWithContext(
+    "Edit",
+    context,
+    undefined,
+    tools,
+    [],
+    undefined,
+    abort.signal,
+  );
+  assert.equal((await response.next()).value.type, "openai_output");
+  abort.abort();
+  const remaining = await collect(response);
+  assert.deepEqual(remaining, [
+    { type: "error", error: "Request stopped by user" },
+  ]);
+});

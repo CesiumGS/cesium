@@ -266,13 +266,6 @@ export function useToolChainExecution({
             tools,
             abortSignal,
           )) {
-            if (rchunk.type === "openai_output") {
-              ensureContMsg({});
-              updateMessage(contMsgId!, { openAIOutput: rchunk.output });
-            }
-            if (rchunk.type === "usage" && contMsgId) {
-              updateMessage(contMsgId, { thoughtTokens: rchunk.thoughtTokens });
-            }
             if (rchunk.type === "reasoning") {
               contReasoning += rchunk.reasoning;
               ensureContMsg({ reasoning: contReasoning });
@@ -304,6 +297,13 @@ export function useToolChainExecution({
                   ],
                 });
               }
+            }
+            if (rchunk.type === "openai_output") {
+              ensureContMsg({});
+              updateMessage(contMsgId!, { openAIOutput: rchunk.output });
+            }
+            if (rchunk.type === "usage" && contMsgId) {
+              updateMessage(contMsgId, { thoughtTokens: rchunk.thoughtTokens });
             }
             if (rchunk.type === "error") {
               if (rchunk.error === "Request stopped by user") {

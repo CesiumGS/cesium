@@ -1324,6 +1324,7 @@ Add a DOM-based overlay to the #toolbar showing the current sites's name, countr
         open={showApiKeyDialog}
         onClose={handleApiKeyDialogClose}
         onSuccess={handleApiKeySuccess}
+        onBeforeRemoveOpenAIKey={handleStop}
       />
     </>
   );

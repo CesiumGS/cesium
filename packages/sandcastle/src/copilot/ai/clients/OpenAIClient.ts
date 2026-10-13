@@ -218,6 +218,17 @@ export class OpenAIClient {
   ): AsyncGenerator<StreamChunk> {
     const controller = new AbortController();
     const stop = () => controller.abort();
+    const stopped = () => controller.signal.aborted || !!abortSignal?.aborted;
+    const stoppedChunk = () =>
+      formatStreamError(
+        new DOMException("Request aborted", "AbortError"),
+        abortSignal,
+      );
+    const throwIfStopped = () => {
+      if (stopped()) {
+        throw new DOMException("Request aborted", "AbortError");
+      }
+    };
     if (abortSignal?.aborted) {
       yield { type: "error", error: "Request stopped by user" };
       return;
@@ -257,6 +268,7 @@ export class OpenAIClient {
         controller,
         timeout,
       );
+      throwIfStopped();
       if ("error" in response) {
         yield { type: "error", error: response.error };
         return;
@@ -267,6 +279,9 @@ export class OpenAIClient {
       let hasSummaryText = false;
       while (!completed) {
         const { done, value } = await reader.read();
+        // An aborted transport can still deliver bytes that were already
+        // buffered. Never turn those late bytes into text or editor actions.
+        throwIfStopped();
         timeout.reset();
         buffer += done
           ? decoder.decode()
@@ -275,6 +290,7 @@ export class OpenAIClient {
         buffer = buffer.replace(/\r\n/g, "\n");
         let separator: number;
         while ((separator = buffer.indexOf("\n\n")) !== -1) {
+          throwIfStopped();
           const frame = buffer.slice(0, separator);
           buffer = buffer.slice(separator + 2);
           const data = frame
@@ -358,6 +374,10 @@ export class OpenAIClient {
       abortSignal?.removeEventListener("abort", stop);
     }
 
+    if (stopped()) {
+      yield stoppedChunk();
+      return;
+    }
     const output = completed.output;
     const calls = output.filter((item) => item.type === "function_call");
     // Parse every call before yielding any, so truncated/invalid output never
@@ -398,6 +418,10 @@ export class OpenAIClient {
     }
     this.history = [...this.history, ...output];
     yield { type: "openai_output", output };
+    if (stopped()) {
+      yield stoppedChunk();
+      return;
+    }
     if (completed.usage) {
       yield {
         type: "usage",
@@ -408,6 +432,10 @@ export class OpenAIClient {
       };
     }
     for (const toolCall of parsed) {
+      if (stopped()) {
+        yield stoppedChunk();
+        return;
+      }
       yield { type: "tool_call", toolCall };
     }
   }

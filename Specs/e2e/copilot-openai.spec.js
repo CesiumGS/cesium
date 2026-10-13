@@ -35,6 +35,16 @@ function message(text) {
   };
 }
 async function openCopilot(page) {
+  // Keep dummy credentials and application data inside this local test.
+  await page.route("**/*", (route) => {
+    const url = new URL(route.request().url());
+    if (url.hostname === "localhost" || url.hostname === "127.0.0.1") {
+      return route.continue();
+    }
+    return url.href === "https://api.openai.com/v1/responses"
+      ? route.fallback()
+      : route.abort();
+  });
   // These tests exercise Copilot and the real editor. Stub only the viewer's
   // ready/completion messages so unrelated WebGL rendering cannot stall them.
   await page.route("**/templates/bucket.html", (route) =>
@@ -53,7 +63,9 @@ async function openCopilot(page) {
     }),
   );
   await page.addInitScript(() => {
-    sessionStorage.setItem("sandcastle_openai_api_key", "test-key");
+    if (window === window.top) {
+      sessionStorage.setItem("sandcastle_openai_api_key", "test-key");
+    }
   });
   await page.goto("/Apps/Sandcastle2/");
   await page
@@ -177,4 +189,210 @@ test("two code-edit continuations replay native history on a later user turn", a
       .filter((item) => item.type === "reasoning")
       .every((item) => item.encrypted_content === "test-reasoning"),
   ).toBe(true);
+});
+
+// Ignore the transport's AbortSignal deliberately. Cancellation must also
+// reject late buffered response items before they can edit the real editor.
+async function mockDelayedOpenAI(page, continuation = false) {
+  await page.evaluate((continuation) => {
+    const realFetch = window.fetch.bind(window);
+    const encoder = new TextEncoder();
+    const requests = [];
+    window.openAIKeyRemovalRequests = requests;
+    window.fetch = (input, init) => {
+      if (String(input) !== "https://api.openai.com/v1/responses") {
+        return realFetch(input, init);
+      }
+      const request = { signal: init.signal, finished: false };
+      requests.push(request);
+      const index = requests.length;
+      const body = new ReadableStream({
+        start(controller) {
+          const packet = (event) =>
+            encoder.encode(`data: ${JSON.stringify(event)}\n\n`);
+          const complete = (output) => {
+            controller.enqueue(
+              packet({
+                type: "response.completed",
+                response: {
+                  status: "completed",
+                  output,
+                  usage: { input_tokens: 20, output_tokens: 10 },
+                },
+              }),
+            );
+            controller.close();
+          };
+          request.release = (replace = "const LATE_KEY_REMOVAL_EDIT = 1;") =>
+            complete([
+              {
+                type: "reasoning",
+                id: `rs_key_${index}`,
+                summary: [],
+                encrypted_content: "test-reasoning",
+              },
+              {
+                type: "function_call",
+                id: `fc_key_${index}`,
+                call_id: `call_key_${index}`,
+                name: "apply_diff",
+                status: "completed",
+                arguments: JSON.stringify({
+                  file: "javascript",
+                  search: "",
+                  replace,
+                }),
+              },
+            ]);
+          request.finish = () => {
+            const text = "Completed normally";
+            controller.enqueue(
+              packet({ type: "response.output_text.delta", delta: text }),
+            );
+            complete([
+              {
+                type: "message",
+                id: `msg_key_${index}`,
+                role: "assistant",
+                status: "completed",
+                phase: "final_answer",
+                content: [{ type: "output_text", text, annotations: [] }],
+              },
+            ]);
+          };
+          if (continuation && index === 1) {
+            request.release("const BEFORE_KEY_REMOVAL_EDIT = 1;");
+          }
+        },
+      });
+      const getReader = body.getReader.bind(body);
+      body.getReader = (...args) => {
+        const reader = getReader(...args);
+        const releaseLock = reader.releaseLock.bind(reader);
+        reader.releaseLock = () => {
+          request.finished = true;
+          releaseLock();
+        };
+        return reader;
+      };
+      return Promise.resolve(
+        new Response(body, {
+          headers: { "Content-Type": "text/event-stream" },
+        }),
+      );
+    };
+  }, continuation);
+}
+
+async function removeOpenAIKey(page) {
+  await page
+    .getByRole("button", { name: "Open API key settings", exact: true })
+    .click();
+  await page.getByRole("tab", { name: "OpenAI", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Remove OpenAI key", exact: true })
+    .click();
+  expect(
+    await page.evaluate(() =>
+      sessionStorage.getItem("sandcastle_openai_api_key"),
+    ),
+  ).toBeNull();
+}
+
+for (const continuation of [false, true]) {
+  test(`removing the OpenAI key aborts ${continuation ? "a continuation" : "an initial response"} and rejects late edits`, async ({
+    page,
+  }) => {
+    await openCopilot(page);
+    await page.getByRole("button", { name: "Editor", exact: true }).click();
+    await mockDelayedOpenAI(page, continuation);
+    await page
+      .getByRole("textbox", { name: "Chat message input" })
+      .fill("Apply a code edit.");
+    await page
+      .getByRole("button", { name: "Send message", exact: true })
+      .click();
+    const index = continuation ? 1 : 0;
+    await page.waitForFunction(
+      (count) => window.openAIKeyRemovalRequests.length === count,
+      index + 1,
+    );
+    await removeOpenAIKey(page);
+    expect(
+      await page.evaluate(
+        (i) => window.openAIKeyRemovalRequests[i].signal.aborted,
+        index,
+      ),
+    ).toBe(true);
+    await page.evaluate(
+      (i) => window.openAIKeyRemovalRequests[i].release(),
+      index,
+    );
+    await page.waitForFunction(
+      (i) => window.openAIKeyRemovalRequests[i].finished,
+      index,
+    );
+    await expect(
+      page.getByRole("button", { name: "Stop generating", exact: true }),
+    ).toHaveCount(0);
+    expect(
+      await page.evaluate(() => window.openAIKeyRemovalRequests.length),
+    ).toBe(index + 1);
+    await expect(
+      page
+        .locator(".monaco-editor .view-lines")
+        .filter({ hasText: "LATE_KEY_REMOVAL_EDIT" }),
+    ).toHaveCount(0);
+    if (continuation) {
+      await expect(
+        page.locator(".monaco-editor .view-lines").first(),
+      ).toContainText("BEFORE_KEY_REMOVAL_EDIT");
+    }
+    await expect(
+      page.getByRole("textbox", { name: "Chat message input" }),
+    ).toBeDisabled();
+  });
+}
+
+test("cancelling the key dialog leaves the active OpenAI response running", async ({
+  page,
+}) => {
+  await openCopilot(page);
+  await mockDelayedOpenAI(page);
+  await page
+    .getByRole("textbox", { name: "Chat message input" })
+    .fill("Apply a code edit.");
+  await page.getByRole("button", { name: "Send message", exact: true }).click();
+  await page.waitForFunction(
+    () => window.openAIKeyRemovalRequests.length === 1,
+  );
+  await page
+    .getByRole("button", { name: "Open API key settings", exact: true })
+    .click();
+  await page.getByRole("tab", { name: "OpenAI", exact: true }).click();
+  await page.getByRole("button", { name: "Cancel", exact: true }).click();
+  expect(
+    await page.evaluate(
+      () => window.openAIKeyRemovalRequests[0].signal.aborted,
+    ),
+  ).toBe(false);
+  expect(
+    await page.evaluate(() =>
+      sessionStorage.getItem("sandcastle_openai_api_key"),
+    ),
+  ).toBe("test-key");
+  await page.evaluate(() =>
+    window.openAIKeyRemovalRequests[0].release("const NORMAL_KEY_EDIT = 1;"),
+  );
+  await page.waitForFunction(
+    () => window.openAIKeyRemovalRequests.length === 2,
+  );
+  await page.evaluate(() => window.openAIKeyRemovalRequests[1].finish());
+  await expect(
+    page.getByRole("textbox", { name: "Chat message input" }),
+  ).toBeEnabled({ timeout: 15000 });
+  await page.getByRole("button", { name: "Editor", exact: true }).click();
+  await expect(
+    page.locator(".monaco-editor .view-lines").first(),
+  ).toContainText("NORMAL_KEY_EDIT");
 });
