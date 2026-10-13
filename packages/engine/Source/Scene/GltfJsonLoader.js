@@ -175,7 +175,7 @@ function handleError(gltfJsonLoader, error) {
 async function upgradeVersion(gltfJsonLoader, gltf) {
   if (
     defined(gltf.asset) &&
-    gltf.asset.version === "2.0" &&
+    (gltf.asset.version === "2.1" || gltf.asset.version === "2.0") &&
     !usesExtension(gltf, "KHR_techniques_webgl") &&
     !usesExtension(gltf, "KHR_materials_common")
   ) {
@@ -264,7 +264,7 @@ async function processGltfJson(gltfJsonLoader, gltf) {
     removePipelineExtras(gltf);
 
     const version = gltf.asset.version;
-    if (version !== "1.0" && version !== "2.0") {
+    if (version !== "1.0" && version !== "2.0" && version !== "2.1") {
       throw new RuntimeError(`Unsupported glTF version: ${version}`);
     }
 

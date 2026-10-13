@@ -11,6 +11,9 @@ import {
   RuntimeError,
   defined,
 } from "@cesium/core";
+import { constructBoundingVolumeJson, getNodeTransform } from "@cesium/gltf";
+import Axis from "./Axis.js";
+import Cesium3DTileContentType from "./Cesium3DTileContentType.js";
 import Cesium3DTilesetMetadata from "./Cesium3DTilesetMetadata.js";
 import hasExtension from "./hasExtension.js";
 import ImplicitSubtree from "./ImplicitSubtree.js";
@@ -54,7 +57,7 @@ import VoxelShapeType from "./VoxelShapeType.js";
  * Implements the {@link VoxelProvider} interface.
  * </p>
  * <div class="notice">
- * This object is normally not instantiated directly, use {@link Cesium3DTilesVoxelProvider.fromUrl}.
+ * This object is normally not instantiated directly, use {@link Cesium3DTilesVoxelProvider.fromUrl} or {@link Cesium3DTilesVoxelProvider.fromGltf}.
  * </div>
  *
  * @alias Cesium3DTilesVoxelProvider
@@ -64,6 +67,7 @@ import VoxelShapeType from "./VoxelShapeType.js";
  * @param {Cesium3DTilesVoxelProvider.ConstructorOptions} options An object describing initialization options
  *
  * @see Cesium3DTilesVoxelProvider.fromUrl
+ * @see Cesium3DTilesVoxelProvider.fromGltf
  * @see VoxelProvider
  * @see VoxelPrimitive
  * @see VoxelShapeType
@@ -412,7 +416,7 @@ Cesium3DTilesVoxelProvider.fromUrl = async function (url) {
   const className = voxel.class;
 
   const providerOptions = getAttributeInfo(tilesetMetadata, className);
-  Object.assign(providerOptions, getShape(root));
+  Object.assign(providerOptions, getShape(root.boundingVolume));
   if (defined(root.transform)) {
     providerOptions.globalTransform = Matrix4.unpack(root.transform);
   } else {
@@ -441,6 +445,167 @@ Cesium3DTilesVoxelProvider.fromUrl = async function (url) {
 
   return provider;
 };
+
+/**
+ * Creates a {@link Cesium3DTilesVoxelProvider} that fetches voxel data from a 3D Tiles 2.0 tileset stored as glTF.
+ *
+ * @param {Resource|string} url The URL to a glTF file with the <code>3DTILES_tileset</code> and <code>3DTILES_tileset_voxels</code> extensions
+ * @returns {Promise<Cesium3DTilesVoxelProvider>} The created provider
+ *
+ * @exception {RuntimeError} Tileset must have the 3DTILES_tileset_voxels extension
+ * @exception {RuntimeError} Root tile must have implicit tiling
+ * @exception {RuntimeError} Tileset must have a metadata schema
+ * @exception {DeveloperError} Only box shapes are supported for the bounding volume.
+ *
+ * @example
+ * try {
+ *   const voxelProvider = await Cesium3DTilesVoxelProvider.fromGltf(
+ *     "http://localhost:8002/tilesets/voxel/voxels.tileset.gltf"
+ *   );
+ *   const voxelPrimitive = new VoxelPrimitive({ provider: voxelProvider });
+ *   scene.primitives.add(voxelPrimitive);
+ * } catch (error) {
+ *   console.error(`Error creating voxel primitive: ${error}`);
+ * }
+ *
+ * @see {@link VoxelPrimitive}
+ */
+Cesium3DTilesVoxelProvider.fromGltf = async function (url) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("url", url);
+  //>>includeEnd('debug');
+
+  const resource = Resource.createIfNeeded(url);
+  const gltfJson = await resource.fetchJson();
+
+  const rootNode = getGltfRootNode(gltfJson);
+  validateGltf(gltfJson, rootNode);
+
+  const metadataJson = gltfJson.extensions.EXT_structural_metadata;
+  const schemaLoader = getMetadataSchemaLoader(metadataJson, resource);
+  await schemaLoader.load();
+
+  const tilesetMetadata = new Cesium3DTilesetMetadata({
+    metadataJson: metadataJson,
+    schema: schemaLoader.schema,
+  });
+
+  const voxels = gltfJson.extensions["3DTILES_tileset_voxels"];
+  const providerOptions = getAttributeInfo(tilesetMetadata, voxels.class);
+
+  const boundingVolume = constructBoundingVolumeJson(
+    rootNode.boundingVolume,
+    gltfJson.shapes,
+  );
+  Object.assign(providerOptions, getGltfBoxShape(boundingVolume));
+
+  const nodeTransform = getNodeTransform(rootNode);
+  providerOptions.globalTransform = Matrix4.multiplyTransformation(
+    Axis.Y_UP_TO_Z_UP,
+    defined(nodeTransform) ? Matrix4.unpack(nodeTransform) : Matrix4.IDENTITY,
+    new Matrix4(),
+  );
+
+  providerOptions.dimensions = Cartesian3.unpack(voxels.dimensions);
+  providerOptions.maximumTileCount = getTileCount(tilesetMetadata);
+
+  if (defined(voxels.padding)) {
+    providerOptions.paddingBefore = Cartesian3.unpack(voxels.padding.before);
+    providerOptions.paddingAfter = Cartesian3.unpack(voxels.padding.after);
+  }
+
+  const provider = new Cesium3DTilesVoxelProvider(providerOptions);
+  provider._metadataOrder = VoxelMetadataOrder.Z_UP;
+
+  const implicitTileset = new ImplicitTileset(
+    resource,
+    getImplicitTileHeader(rootNode, boundingVolume),
+    schemaLoader.schema,
+  );
+  provider._implicitTileset = implicitTileset;
+  provider._availableLevels = implicitTileset.availableLevels;
+
+  ResourceCache.unload(schemaLoader);
+
+  return provider;
+};
+
+function getGltfRootNode(gltf) {
+  const rootNodeIndex = gltf.scenes?.[0]?.nodes?.[0];
+  if (!defined(rootNodeIndex)) {
+    throw new RuntimeError("Tileset must have a scene with a root node");
+  }
+  return gltf.nodes[rootNodeIndex];
+}
+
+function validateGltf(gltf, rootNode) {
+  if (!hasExtension(gltf, "3DTILES_tileset_voxels")) {
+    throw new RuntimeError(
+      "Tileset must have the 3DTILES_tileset_voxels extension",
+    );
+  }
+
+  if (!hasExtension(rootNode, "3DTILES_implicit_tiling")) {
+    throw new RuntimeError("Root tile must have implicit tiling");
+  }
+
+  const metadataJson = gltf.extensions.EXT_structural_metadata;
+  if (!defined(metadataJson?.schema) && !defined(metadataJson?.schemaUri)) {
+    throw new RuntimeError("Tileset must have a metadata schema");
+  }
+}
+
+function toXyzTemplate(uri) {
+  return uri
+    .replace("{right}", "{x}")
+    .replace("{forward}", "{y}")
+    .replace("{up}", "{z}");
+}
+
+function getImplicitTileHeader(rootNode, boundingVolume) {
+  const { geometricError, refine } = rootNode.extensions["3DTILES_tileset"];
+  const {
+    contentUri,
+    subtreeUri,
+    subdivisionScheme,
+    subtreeLevels,
+    availableLevels,
+  } = rootNode.extensions["3DTILES_implicit_tiling"];
+
+  return {
+    geometricError,
+    refine,
+    boundingVolume,
+    content: { uri: toXyzTemplate(contentUri) },
+    implicitTiling: {
+      subdivisionScheme,
+      subtreeLevels,
+      availableLevels,
+      subtrees: { uri: toXyzTemplate(subtreeUri) },
+    },
+  };
+}
+
+// The EXT_voxels box axes (right, forward, up) are glTF (-x, +z, +y).
+const voxelFrameToGltf = Matrix4.fromRotationTranslation(
+  new Matrix3(-1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0),
+);
+
+function getGltfBoxShape(boundingVolume) {
+  const { shape, minBounds, maxBounds, shapeTransform } =
+    getShape(boundingVolume);
+
+  return {
+    shape,
+    minBounds: new Cartesian3(minBounds.x, minBounds.z, minBounds.y),
+    maxBounds: new Cartesian3(maxBounds.x, maxBounds.z, maxBounds.y),
+    shapeTransform: Matrix4.multiplyTransformation(
+      shapeTransform,
+      voxelFrameToGltf,
+      new Matrix4(),
+    ),
+  };
+}
 
 function getTileCount(metadata) {
   if (!defined(metadata.tileset)) {
@@ -481,9 +646,7 @@ function validate(tileset) {
   }
 }
 
-function getShape(tile) {
-  const boundingVolume = tile.boundingVolume;
-
+function getShape(boundingVolume) {
   if (defined(boundingVolume.box)) {
     return getBoxShape(boundingVolume.box);
   } else if (defined(boundingVolume.region)) {
@@ -669,14 +832,31 @@ async function getSubtree(provider, subtreeCoord) {
     return subtree;
   }
 
-  const preprocessed = preprocess3DTileContent(arrayBuffer);
-  subtree = await ImplicitSubtree.fromSubtreeJson(
-    subtreeResource,
-    preprocessed.jsonPayload,
-    preprocessed.binaryPayload,
-    implicitTileset,
-    subtreeCoord,
-  );
+  const { contentType, jsonPayload, binaryPayload } =
+    preprocess3DTileContent(arrayBuffer);
+  if (contentType === Cesium3DTileContentType.IMPLICIT_SUBTREE_GLTF) {
+    subtree = await ImplicitSubtree.fromSubtreeGltf(
+      subtreeResource,
+      jsonPayload,
+      implicitTileset,
+      subtreeCoord,
+    );
+  } else if (contentType === Cesium3DTileContentType.IMPLICIT_SUBTREE_GLB) {
+    subtree = await ImplicitSubtree.fromSubtreeGlb(
+      subtreeResource,
+      binaryPayload,
+      implicitTileset,
+      subtreeCoord,
+    );
+  } else {
+    subtree = await ImplicitSubtree.fromSubtreeJson(
+      subtreeResource,
+      jsonPayload,
+      binaryPayload,
+      implicitTileset,
+      subtreeCoord,
+    );
+  }
   subtreeCache.addSubtree(subtree);
   return subtree;
 }
