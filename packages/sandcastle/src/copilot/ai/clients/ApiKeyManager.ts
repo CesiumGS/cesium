@@ -1,3 +1,4 @@
+const OPENAI_API_KEY_STORAGE_KEY = "sandcastle_openai_api_key";
 const API_KEY_STORAGE_KEY = "sandcastle_gemini_api_key";
 const ANTHROPIC_API_KEY_STORAGE_KEY = "sandcastle_anthropic_api_key";
 const VERTEX_SERVICE_ACCOUNT_STORAGE_KEY = "sandcastle_vertex_service_account";
@@ -114,6 +115,40 @@ export class ApiKeyManager {
     return (
       trimmed.length > MIN_ANTHROPIC_KEY_LENGTH && trimmed.startsWith("sk-ant-")
     );
+  }
+
+  static saveOpenAIApiKey(apiKey: string): void {
+    if (!this.validateOpenAIApiKeyFormat(apiKey)) {
+      throw new Error("Please enter a valid OpenAI API key.");
+    }
+    if (!storage) {
+      throw new Error(
+        "Session storage is unavailable. The API key cannot be saved.",
+      );
+    }
+    storage.setItem(OPENAI_API_KEY_STORAGE_KEY, apiKey.trim());
+  }
+
+  static getOpenAIApiKey(): string | null {
+    try {
+      return storage?.getItem(OPENAI_API_KEY_STORAGE_KEY) ?? null;
+    } catch {
+      return null;
+    }
+  }
+
+  static hasOpenAIApiKey(): boolean {
+    return !!this.getOpenAIApiKey();
+  }
+
+  static clearOpenAIApiKey(): void {
+    storage?.removeItem(OPENAI_API_KEY_STORAGE_KEY);
+  }
+
+  /** Check for a nonempty credential; the API validates key format and access. */
+  static validateOpenAIApiKeyFormat(apiKey: string): boolean {
+    const trimmed = apiKey.trim();
+    return trimmed.length > 0 && !/\s/.test(trimmed);
   }
 
   static saveVertexServiceAccount(json: string): void {
@@ -267,6 +302,7 @@ export class ApiKeyManager {
 
   static hasAnyCredentials(): boolean {
     return (
+      this.hasOpenAIApiKey() ||
       this.hasApiKey() ||
       this.hasAnthropicApiKey() ||
       this.hasVertexServiceAccount()
