@@ -6,7 +6,7 @@
 
 #### Fixes :wrench:
 
-- Fixed picking for clamped vector tilesets and `GeoJsonPrimitive` polylines and polygons. [#13817](https://github.com/CesiumGS/cesium/issues/13817)
+- Fixed picking for clamped vector tilesets and `GeoJsonPrimitive` polylines and polygons. [#13917](https://github.com/CesiumGS/cesium/pull/13917)
 
 ## 1.146 - 2026-10-01
 
