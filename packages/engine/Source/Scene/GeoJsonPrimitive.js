@@ -22,6 +22,7 @@ import BufferPolygon from "./BufferPolygon.js";
 import BufferPolygonCollection from "./BufferPolygonCollection.js";
 import BufferPolyline from "./BufferPolyline.js";
 import BufferPolylineCollection from "./BufferPolylineCollection.js";
+import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 
 /** @import FrameState from "./FrameState.js"; */
 /** @import Scene from "./Scene.js"; */
@@ -411,16 +412,21 @@ class GeoJsonPrimitive {
     }
 
     if (defined(polylines)) {
-      polylines.update(frameState);
       if (defined(vectorProvider)) {
+        // Updates pick IDs and bounds without drawing the collection in 3D.
+        BufferPrimitiveCollection.prototype.update.call(polylines, frameState);
         vectorProvider.markForFrame(polylines, frameNumber, heightReference);
+      } else {
+        polylines.update(frameState);
       }
     }
 
     if (defined(polygons)) {
-      polygons.update(frameState);
       if (defined(vectorProvider)) {
+        BufferPrimitiveCollection.prototype.update.call(polygons, frameState);
         vectorProvider.markForFrame(polygons, frameNumber, heightReference);
+      } else {
+        polygons.update(frameState);
       }
     }
   }
