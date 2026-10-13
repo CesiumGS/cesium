@@ -1,5 +1,6 @@
 import Cesium3DTilesTerrainGeometryProcessor from "../Core/Cesium3DTilesTerrainGeometryProcessor.js";
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
+import { MeshoptDecoder } from "meshoptimizer/decoder";
 
 /**
  * @private
@@ -8,7 +9,18 @@ import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
  * @param {ArrayBuffer[]} transferableObjects An array of buffers that can be transferred back to the main thread.
  * @returns {Promise<object>} A promise that resolves to an object containing selected info from the created TerrainMesh.
  */
-function createVerticesFromCesium3DTilesTerrain(options, transferableObjects) {
+async function createVerticesFromCesium3DTilesTerrain(
+  options,
+  transferableObjects,
+) {
+  const hasMeshoptCompression = options.gltf.extensionsRequired?.includes(
+    "EXT_meshopt_compression",
+  );
+  if (hasMeshoptCompression) {
+    await MeshoptDecoder.ready;
+    options.meshoptDecoder = MeshoptDecoder;
+  }
+
   const meshPromise = Cesium3DTilesTerrainGeometryProcessor.createMesh(options);
   return meshPromise.then(function (mesh) {
     const verticesBuffer = mesh.vertices.buffer;
