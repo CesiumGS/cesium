@@ -1,9 +1,9 @@
 // @ts-check
 
+import { globSync } from "node:fs";
 import path from "node:path";
 
 import { mkdirp } from "mkdirp";
-import { globby } from "globby";
 
 import {
   createIndexJs,
@@ -14,8 +14,8 @@ import {
 
 /** @import {CesiumBundles} from "../../../scripts/build-utilities.js"; */
 
-export const sourceGlobs = ["packages/gltf/Source/*.js"];
-export const specGlobs = ["packages/gltf/Specs/*Spec.js"];
+export const sourceGlobs = { patterns: ["Source/*.js"] };
+export const specGlobs = { patterns: ["Specs/*Spec.js"] };
 
 /**
  * Builds the gltf workspace.
@@ -53,9 +53,9 @@ export const buildGltf = async (options) => {
   });
 
   // Create SpecList.js
-  const specFiles = await globby(specGlobs);
+  const specFiles = globSync(specGlobs.patterns, { cwd: "packages/gltf" });
   const specListFile = path.join("packages/gltf/Specs", "SpecList.js");
-  await createSpecListForWorkspace(specFiles, "gltf", specListFile);
+  await createSpecListForWorkspace(specFiles, specListFile);
 
   await bundleSpecs({
     incremental: incremental,

@@ -1,11 +1,11 @@
 // @ts-check
 
 import { readFile, writeFile } from "node:fs/promises";
+import { globSync } from "node:fs";
 import { EOL } from "node:os";
 import path from "node:path";
 
 import esbuild from "esbuild";
-import { globby } from "globby";
 import { mkdirp } from "mkdirp";
 import { rimraf } from "rimraf";
 
@@ -31,7 +31,7 @@ import { copyWidgetsAssets } from "../packages/widgets/scripts/build.js";
 const scope = "cesium";
 
 /**
- * Source and spec file globs for each workspace bundled into the combined CesiumJS build.
+ * Source and spec files, relative to each workspace directory, for each workspace bundled into the combined CesiumJS build.
  * @returns {Promise<{sourceFiles: Partial<Record<Workspace, string[]>>, specFiles: Partial<Record<Workspace, string[]>>}>}
  */
 async function getCombinedWorkspaceFiles() {
@@ -47,9 +47,16 @@ async function getCombinedWorkspaceFiles() {
     const { sourceGlobs, combinedSourceGlobs, specGlobs } = await import(
       `../packages/${directory}/scripts/build.js`
     );
-    sourceFiles[/** @type {Workspace} */ (directory)] =
-      combinedSourceGlobs ?? sourceGlobs;
-    specFiles[/** @type {Workspace} */ (directory)] = specGlobs;
+    const sourceGlobsForCombined = combinedSourceGlobs ?? sourceGlobs;
+    const cwd = `packages/${directory}`;
+    sourceFiles[/** @type {Workspace} */ (directory)] = globSync(
+      sourceGlobsForCombined.patterns,
+      { cwd: cwd, exclude: sourceGlobsForCombined.exclude },
+    );
+    specFiles[/** @type {Workspace} */ (directory)] = globSync(
+      specGlobs.patterns,
+      { cwd: cwd, exclude: specGlobs.exclude },
+    );
   }
 
   return { sourceFiles, specFiles };
@@ -203,11 +210,10 @@ export async function createCesiumJs() {
   // Iterate over each workspace and generate declarations for each file.
   const { sourceFiles } = await getCombinedWorkspaceFiles();
   for (const workspace of Object.keys(sourceFiles)) {
-    const sources = sourceFiles[/** @type {Workspace} */ (workspace)];
-    if (!sources) {
+    const files = sourceFiles[/** @type {Workspace} */ (workspace)];
+    if (!files) {
       continue;
     }
-    const files = await globby(sources);
     const declarations = files.map((file) =>
       generateDeclaration(workspace, file),
     );
@@ -229,13 +235,13 @@ export async function createCombinedSpecList() {
 
   const { specFiles } = await getCombinedWorkspaceFiles();
   for (const workspace of Object.keys(specFiles)) {
-    const sources = specFiles[/** @type {Workspace} */ (workspace)];
-    if (!sources) {
+    const files = specFiles[/** @type {Workspace} */ (workspace)];
+    if (!files) {
       continue;
     }
-    const files = await globby(sources);
-    for (const file of files) {
-      contents += `import '../${file}';\n`;
+    const moduleIds = files.map(filePathToModuleId).sort();
+    for (const moduleId of moduleIds) {
+      contents += `import '../packages/${workspace}/${moduleId}.js';\n`;
     }
   }
 
@@ -332,7 +338,7 @@ export async function bundleTestWorkers(options) {
 
   const build = options.incremental ? esbuild.context : esbuild.build;
 
-  const workers = await globby(["Specs/TestWorkers/**.js"]);
+  const workers = globSync("Specs/TestWorkers/*.js");
   return build({
     entryPoints: workers,
     bundle: true,
@@ -357,7 +363,7 @@ export async function bundleTestWorkers(options) {
 async function bundleCSS(options) {
   // Configure options for esbuild.
   const esBuildOptions = defaultESBuildOptions();
-  esBuildOptions.entryPoints = await globby(options.filePaths);
+  esBuildOptions.entryPoints = globSync(options.filePaths);
   esBuildOptions.loader = {
     ".gif": "text",
     ".png": "text",

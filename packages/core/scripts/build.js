@@ -1,9 +1,9 @@
 // @ts-check
 
+import { globSync } from "node:fs";
 import path from "node:path";
 
 import { mkdirp } from "mkdirp";
-import { globby } from "globby";
 
 import {
   createIndexJs,
@@ -14,11 +14,11 @@ import {
 
 /** @import {CesiumBundles} from "../../../scripts/build-utilities.js"; */
 
-export const sourceGlobs = [
-  "packages/core/Source/*.js",
-  "!packages/core/Source/typedArrayTypes.js",
-];
-export const specGlobs = ["packages/core/Specs/*Spec.js"];
+export const sourceGlobs = {
+  patterns: ["Source/*.js"],
+  exclude: ["Source/typedArrayTypes.js"],
+};
+export const specGlobs = { patterns: ["Specs/*Spec.js"] };
 
 /**
  * Builds the core workspace.
@@ -57,9 +57,9 @@ export const buildCore = async (options) => {
   });
 
   // Create SpecList.js
-  const specFiles = await globby(specGlobs);
+  const specFiles = globSync(specGlobs.patterns, { cwd: "packages/core" });
   const specListFile = path.join("packages/core/Specs", "SpecList.js");
-  await createSpecListForWorkspace(specFiles, "core", specListFile);
+  await createSpecListForWorkspace(specFiles, specListFile);
 
   await bundleSpecs({
     incremental: incremental,
