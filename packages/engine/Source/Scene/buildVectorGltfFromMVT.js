@@ -829,7 +829,7 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
         byteLength: binaryChunk.byteLength,
       },
     ],
-    extensions: /** @type {Object|undefined} */ (undefined),
+    extensions: /** @type {object|undefined} */ (undefined),
   };
 
   if (defined(structuralMetadata)) {

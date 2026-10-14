@@ -65,7 +65,7 @@ class TerrainPicker {
     this._inverseTransform = new Matrix4(); // Compute as-needed on rebuild
     /**
      * Whether or not to reset this terrain mesh's picker on the next ray intersection.
-     * @type {Boolean}
+     * @type {boolean}
      */
     this._needsRebuild = true;
     /**
@@ -91,7 +91,7 @@ class TerrainPicker {
    * Determines the point on the mesh where the given ray intersects.
    * @param {Ray} ray The ray to test.
    * @param {Matrix4} tileTransform The terrain mesh tile's transform from local space to world space.
-   * @param {Boolean} cullBackFaces Whether to consider back-facing triangles as intersections.
+   * @param {boolean} cullBackFaces Whether to consider back-facing triangles as intersections.
    * @param {SceneMode} mode The scene mode (2D/3D/Columbus View).
    * @param {MapProjection} projection The map projection.
    * @returns {Cartesian3 | undefined} result The intersection point, or undefined if there is no intersection.
@@ -175,7 +175,7 @@ class TerrainPickerNode {
     this.children = [];
     /**
      * Whether or not this node is currently building its children on a worker.
-     * @type {Boolean}
+     * @type {boolean}
      */
     this.buildingChildren = false;
   }
@@ -312,7 +312,7 @@ function packTriangleBuffers(
 }
 
 /**
- * @typedef {Object} IntersectingNode
+ * @typedef {object} IntersectingNode
  * @property {TerrainPickerNode} node - The intersecting quadtree node.
  * @property {Interval} interval - The interval along the ray where the intersection occurs.
  * @private
@@ -518,7 +518,7 @@ const scratchCartographic = new Cartographic();
  * @param {MapProjection} projection The map projection.
  * @param {Ray} ray The pick ray being tested (used here as a reference to resolve antimeridian wrapping in 2D/Columbus View).
  * @param {Float64Array} vertices The terrain mesh's vertex buffer.
- * @param {Number} index The index of the vertex to get.
+ * @param {number} index The index of the vertex to get.
  * @param {Cartesian3} result The decoded, exaggerated, and possibly projected vertex position.
  * @returns {Cartesian3} The result vertex position.
  * @private

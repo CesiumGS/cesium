@@ -52,8 +52,9 @@
   ],
   "dependencies": {
     "@cesium/core": "^0.1.0",
-    "@cesium/engine": "^26.4.0",
-    "@cesium/widgets": "^16.3.0",
+    "@cesium/gltf": "^0.1.0",
+    "@cesium/engine": "^26.3.0",
+    "@cesium/widgets": "^16.2.0",
     "protobufjs": "^8.8.0"
   },
   "devDependencies": {
@@ -67,6 +68,7 @@
     "esbuild": "^0.28.2",
     "eslint": "~10.10.0",
     "eslint-plugin-html": "^8.2.0",
+    "eslint-plugin-jsdoc": "^65.2.1",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.5",
     "eslint-seatbelt": "^0.1.3",
@@ -161,6 +163,7 @@
   },
   "workspaces": [
     "packages/core",
+    "packages/gltf",
     "packages/engine",
     "packages/widgets",
     "packages/sandcastle"

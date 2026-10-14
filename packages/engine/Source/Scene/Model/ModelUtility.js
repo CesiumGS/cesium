@@ -345,6 +345,7 @@ ModelUtility.sanitizeGlslIdentifier = function (identifier) {
   return sanitizedIdentifier;
 };
 
+// Keep the list of supported extensions in the Model.js class docstring in sync with this object.
 ModelUtility.supportedExtensions = {
   AGI_articulations: true,
   CESIUM_mesh_vector: true,
@@ -362,6 +363,7 @@ ModelUtility.supportedExtensions = {
   EXT_primitive_voxels: true,
   EXT_structural_metadata: true,
   EXT_texture_webp: true,
+  EXT_voxels: true,
   KHR_blend: true,
   KHR_draco_mesh_compression: true,
   KHR_implicit_shapes: true,
