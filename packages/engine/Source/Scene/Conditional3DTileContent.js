@@ -975,8 +975,8 @@ class ContentHandle {
           console.log(
             `ContentHandle: Content creation for ${uri} caused error ${error}`,
           );
-          this._failed = true;
         }
+        this._failed = true;
 
         // The promise is only intended for testing, and may not be awaited,
         // so it cannot be rejected without causing an uncaught error.
@@ -1895,6 +1895,9 @@ class Conditional3DTileContent {
    * @param {FrameState} frameState The frame state.
    */
   update(tileset, frameState) {
+    // TODO Comment why this is called here, and its implications!
+    this._unloadOldContent();
+
     // Call update for all contents
     for (const contentHandle of this._contentHandles.values()) {
       contentHandle.updateContent(tileset, frameState);
@@ -1953,13 +1956,10 @@ class Conditional3DTileContent {
         );
       }
     }
-    this._unloadOldContent();
   }
 
   /**
    * Unload the least-recently used content.
-   *
-   * This is called at the end of the "update" function.
    *
    * It will ensure that the "_loadedContentHandlesMaximumSize" is
    * at least as large as the number of contents that are currently
