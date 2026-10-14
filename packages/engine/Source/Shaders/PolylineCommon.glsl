@@ -103,7 +103,7 @@ vec4 getPolylineWindowCoordinatesEC(vec4 positionEC, vec4 prevEC, vec4 nextEC, f
     vec4 clippedPositionWC, clippedPositionEC;
     clipLineSegmentToNearPlane(positionEC.xyz, usePrevious ? prevEC.xyz : nextEC.xyz, clippedPositionWC, segmentClipped, segmentCulled, clippedPositionEC);
 
-    if (segmentCulled)
+    if (prevSegmentCulled && nextSegmentCulled)
     {
         return vec4(0.0, 0.0, 0.0, 1.0);
     }
