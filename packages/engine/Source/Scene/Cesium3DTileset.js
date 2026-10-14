@@ -39,7 +39,7 @@ import BlendOption from "./BlendOption.js";
 import Cesium3DTile from "./Cesium3DTile.js";
 import Cesium3DTileColorBlendMode from "./Cesium3DTileColorBlendMode.js";
 import Cesium3DTileContentState from "./Cesium3DTileContentState.js";
-import Cesium3DTilesetLayerCollection from "./Cesium3DTilesetLayerCollection.js";
+import Cesium3DTilesetDataLayerCollection from "./Cesium3DTilesetDataLayerCollection.js";
 import Cesium3DTilesetMetadata from "./Cesium3DTilesetMetadata.js";
 import Cesium3DTileOptimizations from "./Cesium3DTileOptimizations.js";
 import Cesium3DTilePass from "./Cesium3DTilePass.js";
@@ -1127,7 +1127,7 @@ function Cesium3DTileset(options) {
   // like tileset.metadata and tileset.schema will delegate to this object.
   this._metadataExtension = undefined;
 
-  this._layers = new Cesium3DTilesetLayerCollection();
+  this._dataLayers = new Cesium3DTilesetDataLayerCollection();
 
   this._customShader = options.customShader;
 
@@ -1485,18 +1485,19 @@ Object.defineProperties(Cesium3DTileset.prototype, {
   },
 
   /**
-   * The tileset's layers. Hide a layer to skip loading and rendering its
-   * tiles. Currently created from 3D Tiles 1.1 groups.
+   * The tileset's data layers: named parts of the tileset as defined by its data,
+   * not rendering or styling layers. Hide a layer to skip loading and rendering
+   * its tiles. Currently created from 3D Tiles 1.1 groups.
    *
    * @memberof Cesium3DTileset.prototype
-   * @type {Cesium3DTilesetLayerCollection}
+   * @type {Cesium3DTilesetDataLayerCollection}
    * @readonly
    *
    * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
    */
-  layers: {
+  dataLayers: {
     get: function () {
-      return this._layers;
+      return this._dataLayers;
     },
   },
 
@@ -2316,7 +2317,7 @@ Cesium3DTileset.fromUrl = async function (url, options) {
   tileset._basePath = basePath;
   tileset._metadataExtension = metadataExtension;
   // Layers must exist before tiles are created so tiles can resolve them.
-  tileset._layers._addGroups(metadataExtension);
+  tileset._dataLayers._addGroups(metadataExtension);
   // TODO(#13900): add layers for each external tileset JSON's own groups.
   // Set these before loading the tileset since _geometricError
   // and _scaledGeometricError get accessed during tile creation

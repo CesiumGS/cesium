@@ -4,20 +4,21 @@ import MetadataSemantic from "./MetadataSemantic.js";
 /** @import GroupMetadata from "./GroupMetadata.js"; */
 
 /**
- * A layer of a {@link Cesium3DTileset}. Currently backed by a 3D Tiles 1.1 group.
+ * A data layer of a {@link Cesium3DTileset}: a named part of the tileset as defined
+ * by its data, not a rendering or styling layer. Currently backed by a 3D Tiles 1.1 group.
  * <p>
- * Do not construct this directly. Access layers through {@link Cesium3DTileset#layers}.
+ * Do not construct this directly. Access layers through {@link Cesium3DTileset#dataLayers}.
  * </p>
  *
  * @internalConstructor
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
-class Cesium3DTilesetLayer {
+class Cesium3DTilesetDataLayer {
   /**
-   * @param {object} options An object with the following properties:
-   * @param {object} options.metadata The {@link GroupMetadata} backing this layer.
-   * @param {number} options.index The index of the group in its tileset JSON.
+   * @privateParam {object} options An object with the following properties:
+   * @privateParam {GroupMetadata} options.metadata The group metadata backing this layer.
+   * @privateParam {number} options.index The index of the group in its tileset JSON.
    */
   constructor(options) {
     //>>includeStart('debug', pragmas.debug);
@@ -93,4 +94,4 @@ function getDefaultName(metadata) {
     : undefined;
 }
 
-export default Cesium3DTilesetLayer;
+export default Cesium3DTilesetDataLayer;

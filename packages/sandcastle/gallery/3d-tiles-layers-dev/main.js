@@ -22,7 +22,7 @@ function findLayerIndex(tile) {
     const group = t.content?.group;
     if (Cesium.defined(group)) {
       const name = group.metadata.getPropertyBySemantic("NAME");
-      return tileset.layers.getByName(name)[0].index;
+      return tileset.dataLayers.getByName(name)[0].index;
     }
   }
   return undefined;
@@ -39,7 +39,7 @@ async function loadTileset(format) {
 
   // Root layers exist as soon as fromUrl resolves, before any content is requested.
   // Hide the SE layer now: its external tileset won't be fetched until it's shown.
-  tileset.layers.get(3).show = false;
+  tileset.dataLayers.get(3).show = false;
 
   // Tint each content by layer, and log loads to show hidden layers aren't requested.
   const loaded = [];
@@ -55,8 +55,8 @@ async function loadTileset(format) {
     logElement.textContent = `Loaded content:\n${loaded.join("\n")}`;
   });
 
-  for (let i = 0; i < tileset.layers.length; i++) {
-    const layer = tileset.layers.get(i);
+  for (let i = 0; i < tileset.dataLayers.length; i++) {
+    const layer = tileset.dataLayers.get(i);
     Sandcastle.addToggleButton(
       `${layer.name} (${layerColors[i].toLowerCase()})`,
       layer.show,

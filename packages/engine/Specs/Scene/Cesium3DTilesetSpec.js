@@ -6236,7 +6236,7 @@ describe(
         );
       });
 
-      describe("layers", function () {
+      describe("dataLayers", function () {
         const tilesetWithLayersUrl =
           "Data/Cesium3DTiles/Metadata/Layers/tileset.json";
 
@@ -6245,7 +6245,7 @@ describe(
             scene,
             tilesetWithLayersUrl,
           );
-          const layers = tileset.layers;
+          const layers = tileset.dataLayers;
           const groups = tileset.metadataExtension.groups;
           expect(layers.length).toBe(2);
           expect(layers.get(0).name).toBe("Layer A");
@@ -6255,6 +6255,8 @@ describe(
           expect(layers.get(1).name).toBe("Layer B");
           expect(layers.getByName("Layer B")).toEqual([layers.get(1)]);
           expect(layers.getByName("Missing")).toEqual([]);
+          expect(layers.contains(layers.get(1))).toBe(true);
+          expect(layers.contains(undefined)).toBe(false);
         });
 
         it("has no layers without groups", async function () {
@@ -6262,12 +6264,12 @@ describe(
             scene,
             tilesetUrl,
           );
-          expect(tileset.layers.length).toBe(0);
+          expect(tileset.dataLayers.length).toBe(0);
         });
 
         it("does not load hidden layers until shown", async function () {
           const tileset = await Cesium3DTileset.fromUrl(tilesetWithLayersUrl);
-          tileset.layers.getByName("Layer B")[0].show = false;
+          tileset.dataLayers.getByName("Layer B")[0].show = false;
           scene.primitives.add(tileset);
           await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
 
@@ -6277,7 +6279,7 @@ describe(
           expect(tileB.contentUnloaded).toBe(true);
           expect(tileB.children.length).toBe(0);
 
-          tileset.layers.get(1).show = true;
+          tileset.dataLayers.get(1).show = true;
           await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
           expect(tileB.children.length).toBe(1);
           expect(tileB.children[0].contentReady).toBe(true);
@@ -6294,7 +6296,7 @@ describe(
             contentB,
           );
 
-          tileset.layers.get(1).show = false;
+          tileset.dataLayers.get(1).show = false;
           scene.renderForSpecs();
           const selected = tileset._selectedTiles.map((t) => t.content);
           expect(selected).toContain(contentA);

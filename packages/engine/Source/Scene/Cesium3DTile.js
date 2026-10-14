@@ -556,10 +556,10 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
 
   // Layer from this tile's single content's group. Tiles with multiple
   // contents get no layer yet (needs per-content hiding).
-  const layers = tileset.layers;
+  const dataLayers = tileset.dataLayers;
   this._layer =
-    defined(layers) && defined(contentHeader) && !hasMultipleContents
-      ? layers._getByGroup(findGroupMetadata(tileset, contentHeader))
+    defined(dataLayers) && defined(contentHeader) && !hasMultipleContents
+      ? dataLayers._getByGroup(findGroupMetadata(tileset, contentHeader))
       : undefined;
 }
 
