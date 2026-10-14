@@ -863,6 +863,11 @@ function addDrillPickedResults(
       }
     }
 
+    // Hiding a draped vector only dirties its collection, forcing a needless re-bake.
+    if (pickedResult.draped) {
+      return true;
+    }
+
     const primitive = object.primitive;
     let hasShowAttribute = false;
 
@@ -971,6 +976,9 @@ Picking.prototype.drillPick = function (
       object: object,
       position: undefined,
       exclude: false,
+      draped:
+        defined(object.collection) &&
+        scene.vectorProvider?.has(object.collection) === true,
     }));
   };
   const objects = drillPick(pickCallback, limit);
