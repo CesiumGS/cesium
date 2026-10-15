@@ -31,6 +31,7 @@ import {
   Cesium3DTilePass,
   Cesium3DTilePassState,
   Cesium3DTileRefine,
+  Cesium3DTilesetBaseTraversal,
   Cesium3DTileset,
   Cesium3DTileStyle,
   ClearCommand,
@@ -5130,6 +5131,135 @@ describe(
       viewAllTiles();
       scene.renderForSpecs();
       expect(tileset._requestedTilesInFlight.length).toEqual(0); // Big camera delta so no fetches should occur.
+    });
+
+    describe("idle ticks in requestRenderMode", function () {
+      // A display tick on which nothing asked for a render.
+      function idleTick() {
+        scene.initializeFrame();
+        scene.render();
+      }
+
+      function startIdle() {
+        scene.requestRenderMode = true;
+        scene.maximumRenderTimeChange = Infinity;
+        // The first render after switching mode is a requested one.
+        idleTick();
+      }
+
+      afterEach(function () {
+        scene.requestRenderMode = false;
+      });
+
+      it("do not traverse a tileset with nothing left to load", async function () {
+        const tileset = await Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetUniform,
+          { cullRequestsWhileMoving: true },
+        );
+        await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+        startIdle();
+        for (let i = 0; i < 5; ++i) {
+          idleTick();
+        }
+
+        const selectTiles = spyOn(
+          Cesium3DTilesetBaseTraversal,
+          "selectTiles",
+        ).and.callThrough();
+        for (let i = 0; i < 10; ++i) {
+          idleTick();
+        }
+        expect(selectTiles).not.toHaveBeenCalled();
+      });
+
+      it("still request tiles culled while the camera was moving", async function () {
+        viewNothing();
+        const tileset = await Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetUniform,
+          { cullRequestsWhileMoving: true },
+        );
+        viewAllTiles();
+        scene.renderForSpecs();
+        expect(tileset._requestedTilesInFlight.length).toEqual(0);
+
+        startIdle();
+        await pollToPromise(function () {
+          idleTick();
+          return tileset.statistics.numberOfPendingRequests > 0;
+        });
+        await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+      });
+
+      it("still request foveated-deferred tiles after the time delay", async function () {
+        viewNothing();
+        const tileset = await Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetRefinementMix,
+        );
+        tileset.foveatedScreenSpaceError = true;
+        tileset.foveatedConeSize = 0;
+        tileset.maximumScreenSpaceError = 8;
+        tileset.foveatedTimeDelay = 0.1;
+        viewAllTiles();
+        scene.camera.moveLeft(205.0);
+        scene.camera.moveDown(205.0);
+        scene.renderForSpecs();
+        expect(tileset._requestedTilesInFlight.length).toBe(0);
+
+        startIdle();
+        await pollToPromise(function () {
+          idleTick();
+          return tileset._requestedTilesInFlight.some(
+            (tile) => tile.priorityDeferred,
+          );
+        });
+        await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+      });
+
+      it("still notice expired content", async function () {
+        const tileset = await Cesium3DTilesTester.loadTileset(
+          scene,
+          batchedExpirationUrl,
+          { cullRequestsWhileMoving: true },
+        );
+        await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+        startIdle();
+        idleTick();
+
+        const tile = tileset.root;
+        tile.expireDate = JulianDate.addSeconds(
+          JulianDate.now(),
+          -1.0,
+          new JulianDate(),
+        );
+        await pollToPromise(function () {
+          idleTick();
+          return (
+            tile.contentExpired ||
+            tileset.statistics.numberOfPendingRequests > 0
+          );
+        });
+      });
+
+      it("still notice downloads that complete", async function () {
+        viewNothing();
+        const tileset = await Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetUniform,
+          { cullRequestsWhileMoving: false, foveatedTimeDelay: 0 },
+        );
+        viewAllTiles();
+        scene.renderForSpecs();
+        expect(tileset.statistics.numberOfPendingRequests).toBeGreaterThan(0);
+
+        startIdle();
+        await pollToPromise(function () {
+          idleTick();
+          return tileset.tilesLoaded;
+        });
+      });
     });
 
     it("does not apply cullRequestWhileMoving optimization if tileset is moving", async function () {

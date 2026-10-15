@@ -1,5 +1,13 @@
 # Change Log
 
+## 1.147 - 2026-11-02
+
+### @cesium/engine
+
+#### Fixes :wrench:
+
+- With `requestRenderMode` enabled, 3D Tilesets are no longer traversed on every frame that is not rendered unless a deferred request, expiring content, or memory pressure could change something. A still scene with 3D Tiles no longer keeps the main thread busy. [#13929](https://github.com/CesiumGS/cesium/pull/13929)
+
 ## 1.146 - 2026-10-01
 
 ### Major Announcements :loudspeaker:
