@@ -1,4 +1,4 @@
-import defined from "../Core/defined.js";
+import { defined } from "@cesium/core";
 import Cesium3DTileContentFactory from "./Cesium3DTileContentFactory.js";
 import findContentMetadata from "./findContentMetadata.js";
 import findGroupMetadata from "./findGroupMetadata.js";

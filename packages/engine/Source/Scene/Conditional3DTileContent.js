@@ -1,17 +1,18 @@
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
+import {
+  Cartesian3,
+  DeveloperError,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import Request from "../Core/Request.js";
 import RequestState from "../Core/RequestState.js";
 import RequestType from "../Core/RequestType.js";
 import preprocess3DTileContent from "./preprocess3DTileContent.js";
 import finishContent from "./finishContent.js";
 import defer from "../Core/defer.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import Cesium3DTileStyle from "./Cesium3DTileStyle.js";
 
-/** @import Ray from "../Core/Ray.js"; */
-/** @import Color from "../Core/Color.js"; */
+/** @import { Ray, Color } from "@cesium/core"; */
 /** @import Cesium3DTile from "./Cesium3DTile.js"; */
 /** @import Cesium3DTileset from "./Cesium3DTileset.js"; */
 /** @import Cesium3DTileFeature from "./Cesium3DTileFeature.js"; */
