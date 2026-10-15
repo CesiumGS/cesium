@@ -1,8 +1,7 @@
-import { Sync, WebGLConstants } from "../../index.js";
-
+import { RuntimeError, WebGLConstants } from "@cesium/core";
+import { Sync } from "../../index.js";
 import createContext from "../../../../Specs/createContext.js";
 import createWebglVersionHelper from "../createWebglVersionHelper.js";
-import { RuntimeError } from "@cesium/engine";
 
 describe(
   "Renderer/Sync",

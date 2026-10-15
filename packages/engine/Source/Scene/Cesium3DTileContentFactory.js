@@ -1,3 +1,4 @@
+import { RuntimeError } from "@cesium/core";
 import Composite3DTileContent from "./Composite3DTileContent.js";
 import Geometry3DTileContent from "./Geometry3DTileContent.js";
 import Implicit3DTileContent from "./Implicit3DTileContent.js";
@@ -6,8 +7,11 @@ import Tileset3DTileContent from "./Tileset3DTileContent.js";
 import Vector3DTileContent from "./Vector3DTileContent.js";
 import VectorGltf3DTileContent from "./VectorGltf3DTileContent.js";
 import GaussianSplat3DTileContent from "./GaussianSplat3DTileContent.js";
+<<<<<<< HEAD
 import RuntimeError from "../Core/RuntimeError.js";
 import Conditional3DTileContent from "./Conditional3DTileContent.js";
+=======
+>>>>>>> origin/main
 
 /**
  * Maps a tile's magic field in its header to a new content object for the tile's payload.
@@ -89,6 +93,18 @@ const Cesium3DTileContentFactory = {
   },
   subtreeJson: function (tileset, tile, resource, json) {
     return Implicit3DTileContent.fromSubtreeJson(tileset, tile, resource, json);
+  },
+  subtreeGltf: function (tileset, tile, resource, gltf) {
+    return Implicit3DTileContent.fromSubtreeGltf(tileset, tile, resource, gltf);
+  },
+  subtreeGlb: function (tileset, tile, resource, arrayBuffer, byteOffset) {
+    return Implicit3DTileContent.fromSubtreeGlb(
+      tileset,
+      tile,
+      resource,
+      arrayBuffer,
+      byteOffset,
+    );
   },
   glb: function (tileset, tile, resource, arrayBuffer, byteOffset) {
     const arrayBufferByteLength = arrayBuffer.byteLength;

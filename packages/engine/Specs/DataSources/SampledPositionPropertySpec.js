@@ -6,9 +6,8 @@ import {
   LinearApproximation,
   ReferenceFrame,
   TimeInterval,
-  PositionProperty,
-  SampledPositionProperty,
-} from "../../index.js";
+} from "@cesium/core";
+import { PositionProperty, SampledPositionProperty } from "../../index.js";
 
 describe("DataSources/SampledPositionProperty", function () {
   it("constructor sets expected defaults", function () {

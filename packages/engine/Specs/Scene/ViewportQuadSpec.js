@@ -1,12 +1,5 @@
-import {
-  BoundingRectangle,
-  Color,
-  Resource,
-  Texture,
-  Material,
-  ViewportQuad,
-} from "../../index.js";
-
+import { BoundingRectangle, Color } from "@cesium/core";
+import { Resource, Texture, Material, ViewportQuad } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
 
 describe(

@@ -1,4 +1,4 @@
-import defined from "./defined.js";
+import { defined } from "@cesium/core";
 import isBitSet from "./isBitSet.js";
 
 // Bitmask for checking tile properties

@@ -1,20 +1,23 @@
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartographic from "../Core/Cartographic.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Event from "../Core/Event.js";
-import getTimestamp from "../Core/getTimestamp.js";
-import CesiumMath from "../Core/Math.js";
-import Matrix4 from "../Core/Matrix4.js";
-import OrthographicFrustum from "../Core/OrthographicFrustum.js";
-import OrthographicOffCenterFrustum from "../Core/OrthographicOffCenterFrustum.js";
-import Ray from "../Core/Ray.js";
-import Rectangle from "../Core/Rectangle.js";
-import Visibility from "../Core/Visibility.js";
+import {
+  Cartesian3,
+  Cartographic,
+  DeveloperError,
+  Event,
+  Math as CesiumMath,
+  Matrix4,
+  OrthographicFrustum,
+  OrthographicOffCenterFrustum,
+  Ray,
+  Rectangle,
+  Visibility,
+  defined,
+  getTimestamp,
+} from "@cesium/core";
 import QuadtreeOccluders from "./QuadtreeOccluders.js";
 import QuadtreeTile from "./QuadtreeTile.js";
 import QuadtreeTileLoadState from "./QuadtreeTileLoadState.js";
 import SceneMode from "./SceneMode.js";
+import SceneTransforms from "./SceneTransforms.js";
 import TileReplacementQueue from "./TileReplacementQueue.js";
 import TileSelectionResult from "./TileSelectionResult.js";
 
@@ -1444,15 +1447,18 @@ function updateHeights(primitive, frameState) {
         defined(terrainData) && terrainData.wasCreatedByUpsampling();
 
       if (tile.level > data.level && !upsampledGeometryFromParent) {
-        let position;
-        // find cached entry
+        let positionCarto;
+        // Cached as a cartographic (converted below). A cartographic is
+        // inherently mode-independent, so a single entry is valid in every
+        // scene mode (the raw pick is ECEF in 3D but projected in 2D/CV).
         const cachedData = tile.getPositionCacheEntry(
           data.positionCartographic,
           primitive.maximumScreenSpaceError,
         );
         if (defined(cachedData)) {
-          // cache hit
-          position = cachedData;
+          // cache hit; clone into a scratch so the callback can never mutate
+          // the cached entry (which would corrupt it for every other tile).
+          positionCarto = Cartographic.clone(cachedData, scratchCartographic);
         } else {
           if (!defined(data.positionOnEllipsoidSurface)) {
             // cartesian has to be on the ellipsoid surface for `ellipsoid.geodeticSurfaceNormal`
@@ -1518,7 +1524,7 @@ function updateHeights(primitive, frameState) {
             Cartesian3.clone(Cartesian3.UNIT_X, scratchRay.direction);
           }
 
-          position = tile.data.pick(
+          const position = tile.data.pick(
             scratchRay,
             mode,
             projection,
@@ -1527,21 +1533,26 @@ function updateHeights(primitive, frameState) {
           );
 
           if (defined(position)) {
-            // `pick` wrote into the module-level `scratchPosition`, so `position`
-            // aliases it — clone before caching or the next pick mutates every entry.
-            tile.setPositionCacheEntry(
-              data.positionCartographic,
-              primitive.maximumScreenSpaceError,
-              Cartesian3.clone(position),
-            );
+            // Convert the mode-frame pick result to a mode-independent
+            // cartographic before caching, so a cached entry is valid in every
+            // scene mode.
+            positionCarto =
+              SceneTransforms.actualEllipsoidPositionToCartographic(
+                frameState,
+                position,
+                scratchCartographic,
+              );
+            if (defined(positionCarto)) {
+              tile.setPositionCacheEntry(
+                data.positionCartographic,
+                primitive.maximumScreenSpaceError,
+                Cartographic.clone(positionCarto),
+              );
+            }
           }
         }
-        if (defined(position)) {
+        if (defined(positionCarto)) {
           if (defined(data.callback)) {
-            const positionCarto = ellipsoid.cartesianToCartographic(
-              position,
-              scratchCartographic,
-            );
             data.callback(positionCarto);
           }
           data.level = tile.level;

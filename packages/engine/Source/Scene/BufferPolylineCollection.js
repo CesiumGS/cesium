@@ -1,21 +1,20 @@
 // @ts-check
 
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Frozen from "../Core/Frozen.js";
+import { assert, DeveloperError, Frozen, defined } from "@cesium/core";
 import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 import BufferPolyline from "./BufferPolyline.js";
 import renderPolylines from "./renderBufferPolylineCollection.js";
 import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
 
-/** @import { TypedArray } from "../Core/globalTypes.js"; */
-/** @import Matrix4 from "../Core/Matrix4.js"; */
-/** @import BoundingSphere from "../Core/BoundingSphere.js"; */
-/** @import ComponentDatatype from "../Core/ComponentDatatype.js"; */
+/** @import { BoundingSphere, ComponentDatatype, Matrix4, TypedArray } from "@cesium/core"; */
 /** @import BlendOption from "./BlendOption.js"; */
 /** @import HeightReference from "./HeightReference.js"; */
 /** @import FrameState from "./FrameState.js" */
 /** @import { BufferPrimitiveCollectionOptions } from "./BufferPrimitiveCollection.js"; */
+
+const { DirtyFlags } = BufferPrimitiveCollection;
+
+const polylineScratch = new BufferPolyline();
 
 /**
  * @typedef {object} BufferPolylineOptions
@@ -188,6 +187,48 @@ class BufferPolylineCollection extends BufferPrimitiveCollection {
         this._renderContext,
       );
     }
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // ACCESSORS
+
+  /**
+   * Updates vertex positions over the specified range of primitives. For
+   * position-only updates to many primitives, `setPositions()` is more
+   * efficient than updating each primitive individually.
+   *
+   * Argument `positions` must contain the same total number of vertices as the
+   * target primitive range; vertices cannot be added/removed by this method.
+   *
+   * @param {TypedArray} positions
+   * @param {number} primitiveOffset
+   * @param {number} primitiveCount
+   */
+  setPositions(positions, primitiveOffset, primitiveCount) {
+    const polyline = polylineScratch;
+
+    this.get(primitiveOffset, polyline);
+    const vertexOffset = polyline.vertexOffset;
+
+    this.get(primitiveOffset + primitiveCount - 1, polyline);
+    const vertexCount =
+      polyline.vertexOffset + polyline.vertexCount - vertexOffset;
+
+    //>>includeStart('debug', pragmas.debug);
+    const srcConstructor = positions.constructor;
+    const dstConstructor = this._positionView.constructor;
+    assert(dstConstructor === srcConstructor, "Invalid array type");
+    assert(vertexCount * 3 === positions.length, "Invalid array length");
+    assert(
+      primitiveOffset + primitiveCount <= this._primitiveCount,
+      "Invalid primitive range",
+    );
+    //>>includeEnd('debug');
+
+    this._positionView.set(positions, vertexOffset * 3);
+
+    this._makeDirty(DirtyFlags.GEOMETRY, primitiveOffset, primitiveCount);
+    this._makeDirtyBoundingVolume();
   }
 }
 

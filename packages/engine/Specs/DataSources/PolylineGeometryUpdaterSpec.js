@@ -1,19 +1,21 @@
 import {
-  ApproximateTerrainHeights,
   ArcType,
   BoundingSphere,
   Cartesian3,
   Color,
   ColorGeometryInstanceAttribute,
-  defined,
   DistanceDisplayCondition,
   DistanceDisplayConditionGeometryInstanceAttribute,
-  GroundPolylineGeometry,
   JulianDate,
   PolylinePipeline,
   ShowGeometryInstanceAttribute,
   TimeInterval,
   TimeIntervalCollection,
+  defined,
+} from "@cesium/core";
+import {
+  ApproximateTerrainHeights,
+  GroundPolylineGeometry,
   BoundingSphereState,
   CallbackProperty,
   ColorMaterialProperty,
@@ -30,7 +32,6 @@ import {
   GroundPolylinePrimitive,
   ShadowMode,
 } from "../../index.js";
-
 import createDynamicProperty from "../../../../Specs/createDynamicProperty.js";
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";

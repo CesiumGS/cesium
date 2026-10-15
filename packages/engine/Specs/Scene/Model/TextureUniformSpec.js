@@ -1,6 +1,5 @@
+import { PixelDatatype, PixelFormat } from "@cesium/core";
 import {
-  PixelDatatype,
-  PixelFormat,
   Resource,
   Sampler,
   TextureMagnificationFilter,

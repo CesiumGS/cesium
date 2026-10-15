@@ -1,14 +1,16 @@
-import Cartesian3 from "../Core/Cartesian3.js";
-import Check from "../Core/Check.js";
-import createGuid from "../Core/createGuid.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import PixelFormat from "../Core/PixelFormat.js";
+import {
+  Cartesian3,
+  Check,
+  DeveloperError,
+  Frozen,
+  PixelDatatype,
+  PixelFormat,
+  createGuid,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import ContextLimits from "./ContextLimits.js";
 import MipmapHint from "./MipmapHint.js";
-import PixelDatatype from "./PixelDatatype.js";
 import Sampler from "./Sampler.js";
 import TextureMagnificationFilter from "./TextureMagnificationFilter.js";
 import TextureMinificationFilter from "./TextureMinificationFilter.js";
@@ -100,7 +102,7 @@ function Texture3D(options) {
   const internalFormat = PixelFormat.toInternalFormat(
     pixelFormat,
     pixelDatatype,
-    context,
+    context.webgl2,
   );
 
   const isCompressed = PixelFormat.isCompressedFormat(internalFormat);
@@ -305,7 +307,7 @@ function loadBufferSource(texture3D, source) {
     height,
     depth,
     pixelFormat,
-    PixelDatatype.toWebGLConstant(pixelDatatype, context),
+    PixelDatatype.toWebGLConstant(pixelDatatype, context.webgl2),
     arrayBufferView,
   );
 
@@ -327,7 +329,7 @@ function loadBufferSource(texture3D, source) {
         mipHeight,
         mipDepth,
         pixelFormat,
-        PixelDatatype.toWebGLConstant(pixelDatatype, context),
+        PixelDatatype.toWebGLConstant(pixelDatatype, context.webgl2),
         source.mipLevels[i],
       );
     }
@@ -487,7 +489,7 @@ function loadPartialBufferSource(
     height,
     depth,
     pixelFormat,
-    PixelDatatype.toWebGLConstant(pixelDatatype, context),
+    PixelDatatype.toWebGLConstant(pixelDatatype, context.webgl2),
     arrayBufferView,
   );
 }
@@ -524,7 +526,7 @@ function loadNull(texture3D) {
     texture3D._depth,
     0,
     texture3D._pixelFormat,
-    PixelDatatype.toWebGLConstant(texture3D._pixelDatatype, context),
+    PixelDatatype.toWebGLConstant(texture3D._pixelDatatype, context.webgl2),
     null,
   );
 }

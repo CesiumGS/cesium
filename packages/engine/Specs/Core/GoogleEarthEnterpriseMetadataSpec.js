@@ -1,11 +1,10 @@
+import { Math as CesiumMath, RuntimeError } from "@cesium/core";
 import {
   decodeGoogleEarthEnterpriseData,
   GoogleEarthEnterpriseMetadata,
   GoogleEarthEnterpriseTileInformation,
-  Math as CesiumMath,
   Request,
   Resource,
-  RuntimeError,
 } from "../../index.js";
 
 describe("Core/GoogleEarthEnterpriseMetadata", function () {

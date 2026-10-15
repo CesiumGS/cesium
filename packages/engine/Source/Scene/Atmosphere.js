@@ -1,5 +1,4 @@
-import Cartesian3 from "../Core/Cartesian3.js";
-import CesiumMath from "../Core/Math.js";
+import { Cartesian3, Math as CesiumMath } from "@cesium/core";
 import DynamicAtmosphereLightingType from "./DynamicAtmosphereLightingType.js";
 
 /**

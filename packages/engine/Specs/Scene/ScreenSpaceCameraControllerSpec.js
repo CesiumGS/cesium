@@ -1,24 +1,25 @@
 import {
   Cartesian2,
   Cartesian3,
-  combine,
   Ellipsoid,
-  FeatureDetection,
+  FixedFrameTransforms,
   GeographicProjection,
   IntersectionTests,
-  KeyboardEventModifier,
   Math as CesiumMath,
   OrthographicFrustum,
   OrthographicOffCenterFrustum,
   Ray,
-  Transforms,
+  combine,
+} from "@cesium/core";
+import {
+  FeatureDetection,
+  KeyboardEventModifier,
   Camera,
   CameraEventType,
   MapMode2D,
   SceneMode,
   ScreenSpaceCameraController,
 } from "../../index.js";
-
 import createCamera from "../../../../Specs/createCamera.js";
 import createCanvas from "../../../../Specs/createCanvas.js";
 import DomEventSimulator from "../../../../Specs/DomEventSimulator.js";
@@ -931,7 +932,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
     const origin = Cartesian3.fromDegrees(-72.0, 40.0);
     camera.lookAtTransform(
-      Transforms.eastNorthUpToFixedFrame(origin),
+      FixedFrameTransforms.eastNorthUpToFixedFrame(origin),
       new Cartesian3(1.0, 0.0, 0.0),
     );
 
@@ -984,7 +985,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
     setUpCV();
 
     const origin = Cartesian3.fromDegrees(-72.0, 40.0);
-    camera._transform = Transforms.eastNorthUpToFixedFrame(origin);
+    camera._transform = FixedFrameTransforms.eastNorthUpToFixedFrame(origin);
 
     const position = Cartesian3.clone(camera.position);
     const startPosition = new Cartesian2(
@@ -1007,7 +1008,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
     setUpCV();
 
     const origin = Cartesian3.fromDegrees(-72.0, 40.0);
-    camera._transform = Transforms.eastNorthUpToFixedFrame(origin);
+    camera._transform = FixedFrameTransforms.eastNorthUpToFixedFrame(origin);
 
     const position = Cartesian3.clone(camera.position);
 
@@ -1234,11 +1235,14 @@ describe("Scene/ScreenSpaceCameraController", function () {
     updateController();
 
     const origin = Cartesian3.fromDegrees(-72.0, 40.0, 1.0);
-    camera.lookAtTransform(Transforms.eastNorthUpToFixedFrame(origin), {
-      heading: 0,
-      pitch: 0,
-      range: 10,
-    });
+    camera.lookAtTransform(
+      FixedFrameTransforms.eastNorthUpToFixedFrame(origin),
+      {
+        heading: 0,
+        pitch: 0,
+        range: 10,
+      },
+    );
 
     updateController();
 
@@ -1267,11 +1271,14 @@ describe("Scene/ScreenSpaceCameraController", function () {
     updateController();
 
     const origin = Cartesian3.fromDegrees(-72.0, 40.0, 1.0);
-    camera.lookAtTransform(Transforms.eastNorthUpToFixedFrame(origin), {
-      heading: 0,
-      pitch: 0,
-      range: 10,
-    });
+    camera.lookAtTransform(
+      FixedFrameTransforms.eastNorthUpToFixedFrame(origin),
+      {
+        heading: 0,
+        pitch: 0,
+        range: 10,
+      },
+    );
 
     updateController();
 
@@ -1290,11 +1297,14 @@ describe("Scene/ScreenSpaceCameraController", function () {
       Cartesian3.magnitude(resultNoPick),
     );
 
-    camera.lookAtTransform(Transforms.eastNorthUpToFixedFrame(origin), {
-      heading: 0,
-      pitch: 0,
-      range: 10,
-    });
+    camera.lookAtTransform(
+      FixedFrameTransforms.eastNorthUpToFixedFrame(origin),
+      {
+        heading: 0,
+        pitch: 0,
+        range: 10,
+      },
+    );
     updateController();
 
     scene.pickPositionWorldCoordinates = () =>

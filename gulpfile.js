@@ -1,4 +1,10 @@
-import { writeFileSync, copyFileSync, readFileSync, existsSync } from "fs";
+import {
+  writeFileSync,
+  copyFileSync,
+  readFileSync,
+  existsSync,
+  globSync,
+} from "fs";
 import { readFile, writeFile } from "fs/promises";
 import { join, basename, resolve, dirname } from "path";
 import { exec, execSync } from "child_process";
@@ -7,7 +13,6 @@ import { createRequire } from "module";
 import { finished } from "stream/promises";
 
 import gulp from "gulp";
-import { globby } from "globby";
 import open from "open";
 import { rimraf } from "rimraf";
 import karma from "karma";
@@ -16,12 +21,20 @@ import typeScript from "typescript";
 import { build as esbuild } from "esbuild";
 import { createInstrumenter } from "istanbul-lib-instrument";
 
+import { buildCore } from "./packages/core/scripts/build.js";
+import { buildGltf } from "./packages/gltf/scripts/build.js";
+import { buildEngine } from "./packages/engine/scripts/build.js";
+import { buildWidgets } from "./packages/widgets/scripts/build.js";
+import {
+  bundleWorkers,
+  createCoverageFilter,
+  getWorkspaces,
+  glslToJavaScript,
+  shaderFiles,
+} from "./scripts/build-utilities.js";
 import {
   buildCesium,
-  buildEngine,
-  buildWidgets,
-  bundleWorkers,
-  glslToJavaScript,
+  bundleTestWorkers,
   createCombinedSpecList,
 } from "./scripts/build.js";
 
@@ -36,15 +49,28 @@ if (/\.0$/.test(version)) {
   version = version.substring(0, version.length - 2);
 }
 const karmaConfigFile = resolve("./Specs/karma.conf.cjs");
-function getWorkspaces(onlyDependencies = false) {
-  const dependencies = Object.keys(packageJson.dependencies);
-  return onlyDependencies
-    ? packageJson.workspaces.filter((workspace) => {
-        return dependencies.includes(
-          workspace.replace("packages", `@${scope}`),
-        );
-      })
-    : packageJson.workspaces;
+
+/**
+ * Strips the "@cesium/" scope and/or "packages/" prefix from a user-supplied --workspace CLI argument.
+ * @param {string} workspace e.g. "@cesium/engine", "packages/engine", or "engine".
+ * @returns {string} The bare workspace directory name, e.g. "engine".
+ */
+function normalizeWorkspaceArg(workspace) {
+  return workspace.replace(`@${scope}/`, "").replace(`packages/`, "");
+}
+
+/**
+ * Loads the karma runtime-asset file patterns a workspace declares it needs at
+ * test time (e.g. widgets needs engine's Workers/Assets/ThirdParty/CSS).
+ * Workspaces that don't need any simply don't export this.
+ * @param {string} workspace The workspace directory name, e.g. "engine" or "widgets".
+ * @returns {Promise<object[]>}
+ */
+async function getRuntimeTestAssetFiles(workspace) {
+  const { runtimeTestAssetFiles } = await import(
+    `./packages/${workspace}/scripts/build.js`
+  );
+  return runtimeTestAssetFiles ?? [];
 }
 
 const devDeployUrl = process.env.DEPLOYED_URL;
@@ -57,6 +83,8 @@ const sourceFiles = [
   "!packages/engine/Source/*.js",
   "packages/widgets/Source/**/*.js",
   "!packages/widgets/Source/*.js",
+  "packages/core/Source/*.js",
+  "packages/gltf/Source/*.js",
   "!packages/engine/Source/Shaders/**",
   "!packages/engine/Source/ThirdParty/Workers/**",
   "!packages/engine/Source/ThirdParty/google-earth-dbroot-parser.js",
@@ -68,14 +96,18 @@ const watchedSpecFiles = [
   "!packages/engine/Specs/SpecList.js",
   "packages/widgets/Specs/**/*Spec.js",
   "!packages/widgets/Specs/SpecList.js",
+  "packages/core/Specs/*Spec.js",
+  "packages/gltf/Specs/*Spec.js",
   "Specs/*.js",
   "!Specs/SpecList.js",
   "Specs/TestWorkers/*.js",
 ];
-const shaderFiles = [
-  "packages/engine/Source/Shaders/**/*.glsl",
-  "packages/engine/Source/ThirdParty/Shaders/*.glsl",
-];
+
+/**
+ * TypeScript projects (directories containing tsconfig.json) that are NOT
+ * already listed as workspaces. Included when running `npm run tsc`.
+ */
+const nonWorkspaceTsProjects = ["packages/sandcastle/gallery"];
 
 export async function build() {
   // Configure build options from command line arguments.
@@ -95,12 +127,18 @@ export async function build() {
   // Configure build target.
   const workspace = argv.workspace ? argv.workspace : undefined;
 
-  if (workspace === `@${scope}/engine`) {
+  if (workspace === `@${scope}/core`) {
+    return buildCore(buildOptions);
+  } else if (workspace === `@${scope}/gltf`) {
+    return buildGltf(buildOptions);
+  } else if (workspace === `@${scope}/engine`) {
     return buildEngine(buildOptions);
   } else if (workspace === `@${scope}/widgets`) {
     return buildWidgets(buildOptions);
   }
 
+  await buildCore(buildOptions);
+  await buildGltf(buildOptions);
   await buildEngine(buildOptions);
   await buildWidgets(buildOptions);
   await buildCesium(buildOptions);
@@ -218,17 +256,21 @@ export async function buildTs() {
   // Generate types for passed packages in order.
   const importModules = {};
   for (const workspace of workspaces) {
-    const directory = workspace
-      .replace(`@${scope}/`, "")
-      .replace(`packages/`, "");
+    const directory = normalizeWorkspaceArg(workspace);
     const workspaceModules = await generateTypeScriptDefinitions(
       directory,
       `packages/${directory}/index.d.ts`,
       `packages/${directory}/tsd-conf.json`,
-      // The engine package needs additional processing for its enum strings
-      directory === "engine" ? processEngineSource : undefined,
-      // Handle engine's module naming exceptions
-      directory === "engine" ? processEngineModules : undefined,
+      // The core package needs additional processing for its enum strings
+      // (WebGLConstants and its aliasing enums, e.g. ComponentDatatype, live there now).
+      // The engine package still needs its own Viewer circular-dependency workaround.
+      directory === "core"
+        ? processTypescriptSource
+        : directory === "engine"
+          ? processEngineSource
+          : undefined,
+      // Handle core's module naming exceptions (Math.js's barrel export)
+      directory === "core" ? processMathModule : undefined,
       importModules,
     );
     importModules[directory] = workspaceModules;
@@ -243,24 +285,23 @@ export async function buildTs() {
 }
 
 export async function tsc() {
-  let workspaces;
+  let projects;
   if (argv.workspace && !Array.isArray(argv.workspace)) {
-    workspaces = [argv.workspace];
+    projects = [argv.workspace];
   } else if (argv.workspace) {
-    workspaces = argv.workspace;
+    projects = argv.workspace;
   } else {
     execSync(
       `npm exec --package=typescript --offline -- tsc --project tsconfig.json`,
       { stdio: "inherit" },
     );
 
-    workspaces = getWorkspaces(true);
+    projects = getWorkspaces(true);
+    projects.push(...nonWorkspaceTsProjects);
   }
 
-  for (const workspace of workspaces) {
-    const directory = workspace
-      .replace(`@${scope}/`, "")
-      .replace(`packages/`, "");
+  for (const project of projects) {
+    const directory = normalizeWorkspaceArg(project);
 
     const tsconfigPath = `packages/${directory}/tsconfig.json`;
     if (existsSync(tsconfigPath)) {
@@ -286,7 +327,7 @@ const filesToClean = [
 
 export async function clean() {
   await rimraf("Build");
-  const files = await globby(filesToClean);
+  const files = globSync(filesToClean);
   return Promise.all(files.map((file) => rimraf(file)));
 }
 
@@ -298,7 +339,7 @@ async function clocSource() {
     cmdLine =
       "npx cloc" +
       " --quiet --progress-rate=0" +
-      " packages/engine/Source/ packages/widgets/Source --exclude-dir=Assets,ThirdParty,Workers";
+      " packages/engine/Source/ packages/widgets/Source packages/core/Source packages/gltf/Source --exclude-dir=Assets,ThirdParty,Workers";
 
     exec(cmdLine, function (error, stdout, stderr) {
       if (error) {
@@ -317,7 +358,7 @@ async function clocSource() {
     cmdLine =
       "npx cloc" +
       " --quiet --progress-rate=0" +
-      " Specs/ packages/engine/Specs packages/widget/Specs --exclude-dir=Data --not-match-f=SpecList.js --not-match-f=eslint.config.js";
+      " Specs/ packages/engine/Specs packages/widgets/Specs packages/core/Specs packages/gltf/Specs --exclude-dir=Data --not-match-f=SpecList.js --not-match-f=eslint.config.js";
     exec(cmdLine, function (error, stdout, stderr) {
       if (error) {
         console.log(stderr);
@@ -362,10 +403,9 @@ export async function prepare() {
   );
 
   // Copy jasmine runner files into Specs
-  const files = await globby([
-    "node_modules/jasmine-core/lib/jasmine-core",
-    "!node_modules/jasmine-core/lib/jasmine-core/example",
-  ]);
+  const files = globSync(["node_modules/jasmine-core/lib/jasmine-core/**"], {
+    exclude: ["node_modules/jasmine-core/lib/jasmine-core/example/**"],
+  });
 
   const stream = gulp.src(files).pipe(gulp.dest("Specs/jasmine"));
   await finished(stream);
@@ -378,14 +418,21 @@ export const cloc = gulp.series(clean, clocSource);
 export async function buildDocs() {
   const generatePrivateDocumentation = argv.private ? "--private" : "";
 
+  const env = Object.assign({}, process.env, {
+    CESIUM_VERSION: version,
+    CESIUM_PACKAGES: getWorkspaces(true),
+  });
+  // --private already makes jsdoc reveal @private symbols; skip hiding
+  // @internal ones too in that case, so --private shows everything.
+  if (!argv.private) {
+    env.CESIUM_HIDE_INTERNAL = "true";
+  }
+
   execSync(
     `npx jsdoc --configure Tools/jsdoc/conf.json --pedantic ${generatePrivateDocumentation}`,
     {
       stdio: "inherit",
-      env: Object.assign({}, process.env, {
-        CESIUM_VERSION: version,
-        CESIUM_PACKAGES: getWorkspaces(true),
-      }),
+      env,
     },
   );
 
@@ -404,6 +451,8 @@ export async function buildDocsWatch() {
 }
 
 export const websiteRelease = gulp.series(
+  buildCore,
+  buildGltf,
   buildEngine,
   buildWidgets,
   function websiteReleaseBuild() {
@@ -433,6 +482,8 @@ export const websiteRelease = gulp.series(
 );
 
 export const buildRelease = gulp.series(
+  buildCore,
+  buildGltf,
   buildEngine,
   buildWidgets,
   // Generate Build/CesiumUnminified
@@ -465,23 +516,24 @@ export const postversion = async function () {
   if (!workspace) {
     return;
   }
-  const directory = workspace.replaceAll(`@${scope}/`, ``);
+  const directory = normalizeWorkspaceArg(workspace);
   const workspacePackageJson = require(`./packages/${directory}/package.json`);
   const version = workspacePackageJson.version;
 
   // Iterate through all package JSONs that may depend on the updated package and
   // update the version of the updated workspace.
-  const packageJsons = await globby([
+  const packageJsons = globSync([
     "./package.json",
     "./packages/*/package.json",
   ]);
   const promises = packageJsons.map(async (packageJsonPath) => {
+    const fullPackageJsonPath = resolve(packageJsonPath);
     // Ensure that we don't check the updated workspace itself.
     if (basename(dirname(packageJsonPath)) === directory) {
       return;
     }
     // Ensure that we only update workspaces where the dependency to the updated workspace already exists.
-    const packageJson = require(packageJsonPath);
+    const packageJson = JSON.parse(readFileSync(fullPackageJsonPath, "utf-8"));
     if (!Object.hasOwn(packageJson.dependencies, workspace)) {
       console.log(
         `Skipping update for ${workspace} as it is not a dependency.`,
@@ -490,7 +542,10 @@ export const postversion = async function () {
     }
     // Update the version for the updated workspace.
     packageJson.dependencies[workspace] = `^${version}`;
-    await writeFile(packageJsonPath, JSON.stringify(packageJson, undefined, 2));
+    await writeFile(
+      fullPackageJsonPath,
+      `${JSON.stringify(packageJson, undefined, 2)}\n`,
+    );
   });
   return Promise.all(promises);
 };
@@ -500,7 +555,10 @@ export async function deploySetVersion() {
   if (buildVersion) {
     // NPM versions can only contain alphanumeric and hyphen characters
     packageJson.version += `-${buildVersion.replace(/[^[0-9A-Za-z-]/g, "")}`;
-    return writeFile("package.json", JSON.stringify(packageJson, undefined, 2));
+    return writeFile(
+      "package.json",
+      `${JSON.stringify(packageJson, undefined, 2)}\n`,
+    );
   }
 }
 
@@ -657,9 +715,10 @@ export async function runCoverage(options) {
     { pattern: "Build/Specs/TestWorkers/**.js", included: false },
   ];
 
-  let proxies;
   if (workspace) {
-    // Setup files and proxies for the engine package first, since it is the lowest level dependency.
+    // Include the workspace's declared runtime assets, since some packages
+    // (e.g. widgets) depend on another package's assets at runtime.
+    const assetFiles = await getRuntimeTestAssetFiles(workspace);
     files = [
       {
         pattern: karmaBundle,
@@ -673,23 +732,9 @@ export async function runCoverage(options) {
       },
       { pattern: "Specs/Data/**", included: false },
       { pattern: "Specs/TestWorkers/**/*.wasm", included: false },
-      { pattern: "packages/engine/Build/Workers/**", included: false },
-      { pattern: "packages/engine/Source/Assets/**", included: false },
-      { pattern: "packages/engine/Source/ThirdParty/**", included: false },
-      { pattern: "packages/engine/Source/Widget/*.css", included: false },
+      ...assetFiles,
       { pattern: "Build/Specs/TestWorkers/**.js", included: false },
     ];
-
-    proxies = {
-      "/base/Build/CesiumUnminified/Assets/":
-        "/base/packages/engine/Source/Assets/",
-      "/base/Build/CesiumUnminified/ThirdParty/":
-        "/base/packages/engine/Source/ThirdParty/",
-      "/base/Build/CesiumUnminified/Widgets/CesiumWidget/":
-        "/base/packages/engine/Source/Widget/",
-      "/base/Build/CesiumUnminified/Workers/":
-        "/base/packages/engine/Build/Workers/",
-    };
   }
 
   // Setup Karma config.
@@ -706,7 +751,6 @@ export async function runCoverage(options) {
         suppressSkipped: true,
       },
       files: files,
-      proxies: proxies,
       reporters: ["spec", "coverage"],
       coverageReporter: {
         dir: options.coverageDirectory,
@@ -763,26 +807,15 @@ export async function runCoverage(options) {
 export async function coverage() {
   let workspace = argv.workspace;
   if (workspace) {
-    workspace = workspace.replaceAll(`@${scope}/`, ``);
+    workspace = normalizeWorkspaceArg(workspace);
   }
 
-  if (workspace === "engine") {
+  if (workspace) {
     return runCoverage({
-      outputDirectory: "packages/engine/Build/Instrumented",
-      coverageDirectory: "packages/engine/Build/Coverage",
-      specList: "packages/engine/Specs/SpecList.js",
-      filter: /packages(\\|\/)engine(\\|\/)Source((\\|\/)\w+)+\.js$/,
-      webglStub: argv.webglStub,
-      suppressPassed: argv.suppressPassed,
-      failTaskOnError: argv.failTaskOnError,
-      workspace: workspace,
-    });
-  } else if (workspace === "widgets") {
-    return runCoverage({
-      outputDirectory: "packages/widgets/Build/Instrumented",
-      coverageDirectory: "packages/widgets/Build/Coverage",
-      specList: "packages/widgets/Specs/SpecList.js",
-      filter: /packages(\\|\/)widgets(\\|\/)Source((\\|\/)\w+)+\.js$/,
+      outputDirectory: `packages/${workspace}/Build/Instrumented`,
+      coverageDirectory: `packages/${workspace}/Build/Coverage`,
+      specList: `packages/${workspace}/Specs/SpecList.js`,
+      filter: createCoverageFilter(workspace),
       webglStub: argv.webglStub,
       suppressPassed: argv.suppressPassed,
       failTaskOnError: argv.failTaskOnError,
@@ -790,11 +823,14 @@ export async function coverage() {
     });
   }
 
+  const directories = getWorkspaces(true);
   return runCoverage({
     outputDirectory: "Build/Instrumented",
     coverageDirectory: "Build/Coverage",
     specList: "Specs/SpecList.js",
-    filter: /packages(\\|\/)(engine|widgets)(\\|\/)Source((\\|\/)\w+)+\.js$/,
+    filter: new RegExp(
+      String.raw`packages(\\|\/)(${directories.join("|")})(\\|\/)Source((\\|\/)\w+)+\.js$`,
+    ),
     webglStub: argv.webglStub,
     suppressPassed: argv.suppressPassed,
     failTaskOnError: argv.failTaskOnError,
@@ -820,14 +856,25 @@ export async function test() {
 
   let workspace = argv.workspace;
   if (workspace) {
-    workspace = workspace.replaceAll(`@${scope}/`, ``);
+    workspace = normalizeWorkspaceArg(workspace);
   }
 
+  // --release always tests the combined build; --workspace is not supported alongside it.
   if (!isProduction && !release) {
     console.log("Building specs...");
-    await buildCesium({
-      iife: true,
-    });
+    if (workspace === "core") {
+      await buildCore({ iife: true });
+    } else if (workspace === "gltf") {
+      await buildGltf({ iife: true });
+    } else if (workspace === "engine") {
+      await buildEngine({ iife: true });
+      // Engine's TaskProcessor specs need these workers. TODO: why not do this inside buildEngine?
+      await bundleTestWorkers();
+    } else if (workspace === "widgets") {
+      await buildWidgets({ iife: true });
+    } else {
+      await buildCesium({ iife: true });
+    }
   }
 
   let browsers = debug ? ["ChromeDebugging"] : ["Chrome"];
@@ -846,9 +893,10 @@ export async function test() {
     { pattern: "Build/Specs/TestWorkers/**.js", included: false },
   ];
 
-  let proxies;
   if (workspace) {
-    // Setup files and proxies for the engine package first, since it is the lowest level dependency.
+    // Include the workspace's declared runtime assets, since some packages
+    // (e.g. widgets) depend on another package's assets at runtime.
+    const assetFiles = await getRuntimeTestAssetFiles(workspace);
     files = [
       {
         pattern: `packages/${workspace}/Build/Specs/karma-main.js`,
@@ -862,23 +910,9 @@ export async function test() {
       },
       { pattern: "Specs/Data/**", included: false },
       { pattern: "Specs/TestWorkers/**/*.wasm", included: false },
-      { pattern: "packages/engine/Build/Workers/**", included: false },
-      { pattern: "packages/engine/Source/Assets/**", included: false },
-      { pattern: "packages/engine/Source/ThirdParty/**", included: false },
-      { pattern: "packages/engine/Source/Widget/*.css", included: false },
+      ...assetFiles,
       { pattern: "Build/Specs/TestWorkers/**.js", included: false },
     ];
-
-    proxies = {
-      "/base/Build/CesiumUnminified/Assets/":
-        "/base/packages/engine/Source/Assets/",
-      "/base/Build/CesiumUnminified/ThirdParty/":
-        "/base/packages/engine/Source/ThirdParty/",
-      "/base/Build/CesiumUnminified/Widgets/CesiumWidget/":
-        "/base/packages/engine/Source/Widget/",
-      "/base/Build/CesiumUnminified/Workers/":
-        "/base/packages/engine/Build/Workers/",
-    };
   }
 
   if (release) {
@@ -912,7 +946,6 @@ export async function test() {
       },
       logLevel: verbose ? karma.constants.LOG_INFO : karma.constants.LOG_ERROR,
       files: files,
-      proxies: proxies,
       client: {
         captureConsole: verbose,
         args: [
@@ -952,51 +985,51 @@ export async function test() {
  * - Fix up the WebGLConstants aliasing by simply unquoting the strings.
 
  * @param {string} source
+ * @param {boolean} includeKnockout Whether to append the knockout type definition
  * @returns The modified source
  */
-function fixTypescriptDefinitionsSource(source) {
-  return (
-    source
-      .replace(/^declare /gm, "export ")
-      .replace(/module "Math"/gm, "namespace Math")
-      .replace(/CesiumMath/gm, "Math")
-      .replace(/Number\[]/gm, "number[]") // Workaround https://github.com/englercj/tsd-jsdoc/issues/117
-      .replace(/String\[]/gm, "string[]")
-      .replace(/Boolean\[]/gm, "boolean[]")
-      .replace(/Object\[]/gm, "object[]")
-      .replace(/<Number>/gm, "<number>")
-      .replace(/<String>/gm, "<string>")
-      .replace(/<Boolean>/gm, "<boolean>")
-      .replace(/<Object>/gm, "<object>")
-      .replace(
-        /= "WebGLConstants\.(.+)"/gm,
-        // eslint-disable-next-line no-unused-vars
-        (match, p1) => `= WebGLConstants.${p1}`,
-      )
-      // Strip const enums which can cause errors - https://www.typescriptlang.org/docs/handbook/enums.html#const-enum-pitfalls
-      .replace(/^(\s*)(export )?const enum (\S+) {(\s*)$/gm, "$1$2enum $3 {$4")
-      // Replace JSDoc generation version of defined with an improved version using TS type predicates
-      .replace(
-        /\n?export function defined\(value: any\): boolean;/gm,
-        `\n${readFileSync("./packages/engine/Source/Core/defined.d.ts")
-          .toString()
-          .replace(/\n*\/\*.*?\*\/\n*/gms, "")
-          .replace("export default", "export")}`,
-      )
-      // Replace JSDoc generation version of Check with one that asserts the type of variables after called
-      .replace(
-        /\/\*\*[\*\s\w]*?\*\/\nexport const Check: any;/m,
-        `\n${readFileSync("./packages/engine/Source/Core/Check.d.ts")
-          .toString()
-          .replace(/export default.*\n?/, "")
-          .replace("const Check", "export const Check")}`,
-      )
-      // Fix https://github.com/CesiumGS/cesium/issues/10498 so we can use the rest parameter expand tuple
-      .replace(
-        "raiseEvent(...arguments: Parameters<Listener>[]): void;",
-        "raiseEvent(...arguments: Parameters<Listener>): void;",
-      )
-  );
+function fixTypescriptDefinitionsSource(source, includeKnockout) {
+  let fixedSource = source
+    .replace(/^declare /gm, "export ")
+    .replace(/module "Math"/gm, "namespace Math")
+    .replace(/CesiumMath/gm, "Math")
+    .replace(
+      /= "WebGLConstants\.(.+)"/gm,
+      // eslint-disable-next-line no-unused-vars
+      (match, p1) => `= WebGLConstants.${p1}`,
+    )
+    // Strip const enums which can cause errors - https://www.typescriptlang.org/docs/handbook/enums.html#const-enum-pitfalls
+    .replace(/^(\s*)(export )?const enum (\S+) {(\s*)$/gm, "$1$2enum $3 {$4")
+    // Replace JSDoc generation version of defined with an improved version using TS type predicates
+    .replace(
+      /\n?export function defined\(value: any\): boolean;/gm,
+      `\n${readFileSync("./packages/core/Source/defined.d.ts")
+        .toString()
+        .replace(/\n*\/\*.*?\*\/\n*/gms, "")
+        .replace("export default", "export")}`,
+    )
+    // Replace JSDoc generation version of Check with one that asserts the type of variables after called
+    .replace(
+      /\/\*\*[\*\s\w]*?\*\/\nexport const Check: any;/m,
+      `\n${readFileSync("./packages/core/Source/Check.d.ts")
+        .toString()
+        .replace(/export default.*\n?/, "")
+        .replace("const Check", "export const Check")}`,
+    )
+    // Fix https://github.com/CesiumGS/cesium/issues/10498 so we can use the rest parameter expand tuple
+    .replace(
+      "raiseEvent(...arguments: Parameters<Listener>[]): void;",
+      "raiseEvent(...arguments: Parameters<Listener>): void;",
+    );
+
+  if (includeKnockout) {
+    fixedSource += readFileSync("./packages/widgets/Source/knockout.d.ts")
+      .toString()
+      .replace(/^\/\/.*\n/gm, "")
+      .replace(/export default knockout;\n?/, "");
+  }
+
+  return fixedSource;
 }
 
 /**
@@ -1032,7 +1065,8 @@ function generateTypeScriptDefinitions(
   // The next step is to find the list of Cesium modules exported by the Cesium API
   // So that we can map these modules with a link back to their original source file.
 
-  const regex = /^declare[ const ]*(function|class|namespace|enum) (.+)/gm;
+  const regex =
+    /^declare (?:const )?(function|class|namespace|enum|interface|type) (.+)/gm;
   let matches;
   let publicModules = new Set();
 
@@ -1045,7 +1079,7 @@ function generateTypeScriptDefinitions(
     publicModules = processModulesFunc(publicModules);
   }
 
-  source = fixTypescriptDefinitionsSource(source);
+  source = fixTypescriptDefinitionsSource(source, workspaceName === "widgets");
 
   if (importModules) {
     let imports = "";
@@ -1070,12 +1104,18 @@ ${source}
   // Write the final source file back out
   writeFileSync(definitionsPath, source);
 
+  // Use tsc to compile it and make sure it is valid
+  execSync(`npx tsc -p packages/${workspaceName}/tsconfig.types.json`, {
+    stdio: "inherit",
+  });
+
   return Promise.resolve(publicModules);
 }
 
-function processEngineModules(modules) {
-  // Math shows up as "Math" because of it's aliasing from CesiumMath and namespace collision with actual Math
-  // It fails the above regex so just add it directly here.
+function processMathModule(modules) {
+  // Math shows up as "CesiumMath" (its declared name) because of its aliasing from
+  // Math.js and namespace collision with the native Math; add its real barrel export
+  // name ("Math") directly, since it fails the regex used to detect module names.
   modules.add("Math");
   return modules;
 }
@@ -1090,18 +1130,19 @@ function processEngineModules(modules) {
  * @returns The new source
  */
 function processTypescriptSource(definitionsPath, source) {
-  // All of our enum assignments that alias to WebGLConstants, such as PixelDatatype.js
+  // All enum assignments that alias to WebGLConstants, such as PixelDatatype.js
   // end up as enum strings instead of actually mapping values to WebGLConstants.
   // We fix this with a simple regex replace later on, but it means the
   // WebGLConstants constants enum needs to be defined in the file before it can
-  // be used.  This block of code reads in the TS file, finds the WebGLConstants
-  // declaration, and then writes the file back out (in memory to source) with
-  // WebGLConstants being the first module.
+  // be used.
+
+  // Read in the source file
   const node = typeScript.createSourceFile(
     definitionsPath,
     source,
     typeScript.ScriptTarget.Latest,
   );
+  // Find the WebGLConstants declaration
   let firstNode;
   node.forEachChild((child) => {
     if (
@@ -1112,30 +1153,32 @@ function processTypescriptSource(definitionsPath, source) {
     }
   });
 
+  // Write back out (in memory) with WebGLConstants as the first module
   const printer = typeScript.createPrinter({
     removeComments: false,
     newLine: typeScript.NewLineKind.LineFeed,
   });
-
   let newSource = "";
-  newSource += printer.printNode(
-    typeScript.EmitHint.Unspecified,
-    firstNode,
-    node,
-  );
-  newSource += "\n\n";
+  // Not every workspace's declarations include WebGLConstants,
+  // so only reorder if found.
+  if (firstNode) {
+    newSource += printer.printNode(
+      typeScript.EmitHint.Unspecified,
+      firstNode,
+      node,
+    );
+    newSource += "\n\n";
+  }
   node.forEachChild((child) => {
-    if (
-      typeScript.SyntaxKind[child.kind] !== "EnumDeclaration" ||
-      child.name.escapedText !== "WebGLConstants"
-    ) {
-      newSource += printer.printNode(
-        typeScript.EmitHint.Unspecified,
-        child,
-        node,
-      );
-      newSource += "\n\n";
+    if (child === firstNode) {
+      return;
     }
+    newSource += printer.printNode(
+      typeScript.EmitHint.Unspecified,
+      child,
+      node,
+    );
+    newSource += "\n\n";
   });
   return newSource;
 }
@@ -1153,35 +1196,60 @@ function processEngineSource(definitionsPath, source) {
   };
   `;
 
+  // Each name gets its own @deprecated tag; a plain re-export wouldn't show it in hover.
+  // Renaming on export avoids conflicting with a plain import of the same name elsewhere in engine's declarations.
+  const deprecatedExports = readCoreReExportShimNames()
+    .map((name) => {
+      const comment = `/**
+ * @deprecated ${name} has been moved from cesium/engine to cesium/core in CesiumJS 1.146, and will be removed from cesium/engine in 1.150. Import from cesium/core instead.
+ */`;
+      // MapProjection is the only moved name that's an interface with no runtime value.
+      const declaration =
+        name === "MapProjection"
+          ? `type _${name}Shim = _${name};`
+          : `declare const _${name}Shim: typeof _${name};`;
+      return `import { ${name} as _${name} } from "@cesium/core";\n${comment}\n${declaration}\nexport { _${name}Shim as ${name} };`;
+    })
+    .join("\n");
+  newSource = `${deprecatedExports}\n\n${newSource}`;
+
   return newSource;
+}
+
+/**
+ * Reads the reviewed "NEEDS SHIM" list written by scripts/listCoreReExportShims.js,
+ * the same list scripts/generateCoreReExportShims.js uses to generate the
+ * packages/engine/Source/Core/Deprecated/ shim files.
+ * @returns {string[]}
+ */
+function readCoreReExportShimNames() {
+  const candidatesPath = "scripts/core-reexport-shim-candidates.txt";
+  const text = readFileSync(candidatesPath, "utf-8");
+  const section = text.split("\n\n").find((s) => s.startsWith("NEEDS SHIM"));
+  if (!section) {
+    throw new Error(
+      `Could not find a "NEEDS SHIM" section in ${candidatesPath}`,
+    );
+  }
+  return section
+    .split("\n")
+    .slice(1)
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
 }
 
 function createTypeScriptDefinitions() {
   // Run jsdoc with tsd-jsdoc to generate an initial Cesium.d.ts file.
+  // @internal symbols must stay out of the combined "cesium" package's API.
   execSync("npx jsdoc --configure Tools/jsdoc/ts-conf.json", {
     stdio: "inherit",
+    env: { ...process.env, CESIUM_HIDE_INTERNAL: "true" },
   });
 
   let source = readFileSync("Source/Cesium.d.ts").toString();
   source = processTypescriptSource("Source/Cesium.d.ts", source);
 
-  // The next step is to find the list of Cesium modules exported by the Cesium API
-  // So that we can map these modules with a link back to their original source file.
-
-  const regex = /^declare (function|class|namespace|enum) (.+)/gm;
-  let matches;
-  const publicModules = new Set();
-
-  while ((matches = regex.exec(source))) {
-    const moduleName = matches[2].match(/([^<\s|\(]+)/);
-    publicModules.add(moduleName[1]);
-  }
-
-  // Math shows up as "Math" because of it's aliasing from CesiumMath and namespace collision with actual Math
-  // It fails the above regex so just add it directly here.
-  publicModules.add("Math");
-
-  source = fixTypescriptDefinitionsSource(source);
+  source = fixTypescriptDefinitionsSource(source, true);
 
   // Wrap the source to actually be inside of a declared cesium module
   // and add any workaround and private utility types.
@@ -1237,7 +1305,9 @@ async function getLicenseDataFromThirdPartyExtra(path, discoveredDependencies) {
 
         // Recursively check the workspaces
         for (const workspace of getWorkspaces(true)) {
-          const workspacePackageJson = require(`./${workspace}/package.json`);
+          const workspacePackageJson = require(
+            `./packages/${workspace}/package.json`,
+          );
           result = await getLicenseDataFromPackage(
             workspacePackageJson,
             module.name,

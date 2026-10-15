@@ -1,15 +1,16 @@
 // @ts-check
 
-import Cartesian2 from "./Cartesian2.js";
-import Cartesian3 from "./Cartesian3.js";
-import Cartographic from "./Cartographic.js";
-import Frozen from "./Frozen.js";
-import defined from "./defined.js";
-import Ellipsoid from "./Ellipsoid.js";
-import Rectangle from "./Rectangle.js";
-import WebMercatorProjection from "./WebMercatorProjection.js";
-
-/** @import MapProjection from "./MapProjection.js"; */
+import {
+  Cartesian2,
+  Cartesian3,
+  Cartographic,
+  Ellipsoid,
+  Frozen,
+  Rectangle,
+  WebMercatorProjection,
+  defined,
+} from "@cesium/core";
+/** @import { MapProjection } from "@cesium/core"; */
 /** @import TilingScheme from "./TilingScheme.js"; */
 
 const southwestScratch = new Cartographic();

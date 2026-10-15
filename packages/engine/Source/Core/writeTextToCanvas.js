@@ -1,7 +1,4 @@
-import Color from "./Color.js";
-import Frozen from "./Frozen.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
+import { Color, DeveloperError, Frozen, defined } from "@cesium/core";
 
 /**
  * Computes dimensions for text, based on current canvas state.

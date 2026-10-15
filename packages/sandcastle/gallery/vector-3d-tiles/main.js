@@ -88,7 +88,9 @@ function styleHighlightTall() {
 
 // ── Toolbar ──────────────────────────────────────────────────────────────────
 
-const dropdown = document.getElementById("dropdown");
+const dropdown = /** @type {HTMLSelectElement} */ (
+  document.getElementById("dropdown")
+);
 dropdown.addEventListener("change", () => {
   switch (dropdown.value) {
     case "year":

@@ -1,9 +1,11 @@
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Event from "../Core/Event.js";
-import JulianDate from "../Core/JulianDate.js";
-import ReferenceFrame from "../Core/ReferenceFrame.js";
-import TimeIntervalCollection from "../Core/TimeIntervalCollection.js";
+import {
+  DeveloperError,
+  Event,
+  JulianDate,
+  ReferenceFrame,
+  TimeIntervalCollection,
+  defined,
+} from "@cesium/core";
 import PositionProperty from "./PositionProperty.js";
 import Property from "./Property.js";
 

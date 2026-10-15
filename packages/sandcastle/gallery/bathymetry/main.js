@@ -69,7 +69,9 @@ const d = (height) => (height - minHeight) / range;
 
 // Create a color ramp based on https://matplotlib.org/cmocean/#deep
 function getColorRamp() {
-  const ramp = document.getElementById("colorRamp");
+  const ramp = /** @type {HTMLCanvasElement} */ (
+    document.getElementById("colorRamp")
+  );
   ramp.width = 100;
   ramp.height = 15;
   const ctx = ramp.getContext("2d");

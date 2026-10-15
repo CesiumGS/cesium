@@ -1,5 +1,6 @@
 // @ts-check
 
+import { DeveloperError, Matrix4, defined, destroyObject } from "@cesium/core";
 import BufferPoint from "./BufferPoint.js";
 import BufferPointCollection from "./BufferPointCollection.js";
 import BufferPointMaterial from "./BufferPointMaterial.js";
@@ -10,29 +11,25 @@ import BufferPolyline from "./BufferPolyline.js";
 import BufferPolylineCollection from "./BufferPolylineCollection.js";
 import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
 import Cesium3DTileStyle from "./Cesium3DTileStyle.js";
-import Matrix4 from "../Core/Matrix4.js";
 import Model from "./Model/Model.js";
 import ModelUtility from "./Model/ModelUtility.js";
 import Pass from "../Renderer/Pass.js";
 import VectorProvider from "../Core/VectorProvider.js";
 import createVectorTileBuffersFromModelComponents from "./Model/createVectorTileBuffersFromModelComponents.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import { isHeightReferenceClamp } from "./HeightReference.js";
 
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */
 /** @import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js"; */
-/** @import Cartesian3 from "../Core/Cartesian3.js"; */
+/** @import { Cartesian3 } from "@cesium/core"; */
 /** @import Cesium3DContentGroup from "./Cesium3DContentGroup.js"; */
 /** @import Cesium3DTile from "./Cesium3DTile.js"; */
 /** @import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js"; */
 /** @import Cesium3DTileVectorFeature from "./Cesium3DTileVectorFeature.js";*/
 /** @import Cesium3DTileset from "./Cesium3DTileset.js"; */
-/** @import Color from "../Core/Color.js"; */
+/** @import { Color } from "@cesium/core"; */
 /** @import FrameState from "./FrameState.js"; */
 /** @import ImplicitMetadataView from "./ImplicitMetadataView.js"; */
-/** @import Ray from "../Core/Ray.js"; */
+/** @import { Ray } from "@cesium/core"; */
 /** @import Resource from "../Core/Resource.js"; */
 
 /** @ignore */

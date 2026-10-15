@@ -1,4 +1,4 @@
-import DeveloperError from "./DeveloperError.js";
+import { DeveloperError } from "@cesium/core";
 
 /**
  * Base class for proxying requested made by {@link Resource}.

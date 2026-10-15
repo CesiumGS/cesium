@@ -1,12 +1,14 @@
-import Check from "../Core/Check.js";
-import Color from "../Core/Color.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
-import Event from "../Core/Event.js";
-import Iso8601 from "../Core/Iso8601.js";
-import oneTimeWarning from "../Core/oneTimeWarning.js";
+import {
+  Check,
+  Color,
+  DeveloperError,
+  DistanceDisplayCondition,
+  Event,
+  Iso8601,
+  defined,
+  destroyObject,
+  oneTimeWarning,
+} from "@cesium/core";
 import ClassificationType from "../Scene/ClassificationType.js";
 import ShadowMode from "../Scene/ShadowMode.js";
 import ColorMaterialProperty from "./ColorMaterialProperty.js";

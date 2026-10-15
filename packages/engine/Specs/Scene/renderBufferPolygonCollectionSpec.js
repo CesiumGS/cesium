@@ -1,17 +1,13 @@
+import { Cartesian3, Color, ComponentDatatype, Matrix4 } from "@cesium/core";
 import {
   BlendOption,
   BufferPolygon,
   BufferPolygonCollection,
   BufferPolygonMaterial,
   Camera,
-  Cartesian3,
-  Color,
-  ComponentDatatype,
   HeightReference,
-  Matrix4,
   SceneMode,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 
 describe(

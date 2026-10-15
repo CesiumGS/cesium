@@ -1,8 +1,11 @@
 import {
   Color,
+  PixelDatatype,
   PixelFormat,
   PrimitiveType,
   WebGLConstants,
+} from "@cesium/core";
+import {
   Buffer,
   BufferUsage,
   ClearCommand,
@@ -10,7 +13,6 @@ import {
   CubeMap,
   DrawCommand,
   Framebuffer,
-  PixelDatatype,
   Renderbuffer,
   RenderbufferFormat,
   RenderState,
@@ -18,7 +20,6 @@ import {
   Texture,
   VertexArray,
 } from "../../index.js";
-
 import createContext from "../../../../Specs/createContext.js";
 
 describe(

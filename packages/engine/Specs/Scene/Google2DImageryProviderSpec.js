@@ -1,6 +1,5 @@
+import { Math as CesiumMath, Rectangle } from "@cesium/core";
 import {
-  Math as CesiumMath,
-  Rectangle,
   Request,
   RequestScheduler,
   Resource,
@@ -11,7 +10,6 @@ import {
   ImageryState,
   Google2DImageryProvider,
 } from "../../index.js";
-
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe("Scene/Google2DImageryProvider", function () {

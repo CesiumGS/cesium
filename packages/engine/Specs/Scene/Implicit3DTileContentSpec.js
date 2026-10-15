@@ -1,20 +1,22 @@
 import {
   Cartesian3,
+  Ellipsoid,
+  HeadingPitchRange,
+  Math as CesiumMath,
+  Matrix3,
+  Matrix4,
+} from "@cesium/core";
+import {
   Cesium3DContentGroup,
   Cesium3DTile,
   Cesium3DTileRefine,
   Cesium3DTileset,
   Cesium3DTilesetStatistics,
-  Ellipsoid,
   GroupMetadata,
-  HeadingPitchRange,
   Implicit3DTileContent,
   ImplicitSubdivisionScheme,
   ImplicitTileCoordinates,
   ImplicitTileset,
-  Math as CesiumMath,
-  Matrix3,
-  Matrix4,
   MetadataClass,
   Model3DTileContent,
   Multiple3DTileContent,
@@ -215,6 +217,69 @@ describe(
         expect(tiles[i].children.length).toEqual(expectedChildrenCounts[i]);
       }
       expect(mockTileset.statistics.numberOfTilesTotal).toBe(tiles.length);
+    });
+
+    it("derives children only when they are requested", async function () {
+      await Implicit3DTileContent.fromSubtreeJson(
+        mockTileset,
+        mockPlaceholderTile,
+        tilesetResource,
+        undefined,
+        quadtreeBuffer,
+        0,
+      );
+      const subtreeRootTile = mockPlaceholderTile.children[0];
+      expect(subtreeRootTile._children.length).toBe(0);
+      expect(mockTileset.statistics.numberOfTilesTotal).toBe(1);
+
+      const children = subtreeRootTile.children;
+      expect(children.length).toBe(2);
+      expect(mockTileset.statistics.numberOfTilesTotal).toBe(3);
+      expect(children[0]._children.length).toBe(0);
+      expect(children[1]._children.length).toBe(0);
+    });
+
+    it("derives child subtree placeholders only when they are requested", async function () {
+      await Implicit3DTileContent.fromSubtreeJson(
+        mockTileset,
+        mockPlaceholderTile,
+        tilesetResource,
+        undefined,
+        quadtreeBuffer,
+        0,
+      );
+      const templateUri = implicitTileset.subtreeUriTemplate;
+      const bottomTile = mockPlaceholderTile.children[0].children[0];
+      expect(bottomTile._children.length).toBe(0);
+
+      const placeholderTiles = bottomTile.children;
+      expect(placeholderTiles.length).toBe(4);
+      for (let i = 0; i < placeholderTiles.length; i++) {
+        const placeholderTile = placeholderTiles[i];
+        const expectedResource = templateUri.getDerivedResource({
+          templateValues:
+            placeholderTile.implicitCoordinates.getTemplateValues(),
+        });
+        expect(placeholderTile._contentResource.url).toEqual(
+          expectedResource.url,
+        );
+        expect(placeholderTile.implicitTileset).toBeDefined();
+        expect(placeholderTile._children.length).toBe(0);
+      }
+    });
+
+    it("does not derive children of a destroyed tile", async function () {
+      await Implicit3DTileContent.fromSubtreeJson(
+        mockTileset,
+        mockPlaceholderTile,
+        tilesetResource,
+        undefined,
+        quadtreeBuffer,
+        0,
+      );
+      const subtreeRootTile = mockPlaceholderTile.children[0];
+      subtreeRootTile.destroy();
+      expect(subtreeRootTile.children.length).toBe(0);
     });
 
     it("sets tile coordinates on each tile", async function () {
@@ -539,6 +604,110 @@ describe(
       tiles = [];
       gatherTilesPreorder(subtreeRootTile, 0, 2, tiles);
       expect(mockTileset.statistics.numberOfTilesTotal).toBe(tiles.length);
+    });
+
+    function expectExpandedQuadtree() {
+      const expectedChildrenCounts = [2, 4, 0, 0, 0, 0, 4, 0, 0, 0, 0];
+      const subtreeRootTile = mockPlaceholderTile.children[0];
+      const tiles = [];
+      gatherTilesPreorder(subtreeRootTile, 0, 2, tiles);
+      expect(tiles.length).toEqual(expectedChildrenCounts.length);
+      for (let i = 0; i < tiles.length; i++) {
+        expect(tiles[i].children.length).toEqual(expectedChildrenCounts[i]);
+      }
+      expect(mockTileset.statistics.numberOfTilesTotal).toBe(tiles.length);
+
+      const expectedPlaceholderCoordinates = [
+        [2, 0, 0],
+        [2, 1, 0],
+        [2, 0, 1],
+        [2, 1, 1],
+        [2, 0, 2],
+        [2, 1, 2],
+        [2, 0, 3],
+        [2, 1, 3],
+      ];
+      const placeholderTiles = [];
+      gatherTilesPreorder(subtreeRootTile, 2, 2, placeholderTiles);
+      expect(placeholderTiles.length).toEqual(
+        expectedPlaceholderCoordinates.length,
+      );
+      for (let i = 0; i < placeholderTiles.length; i++) {
+        const expected = expectedPlaceholderCoordinates[i];
+        const coordinates = new ImplicitTileCoordinates({
+          subdivisionScheme: implicitTileset.subdivisionScheme,
+          subtreeLevels: implicitTileset.subtreeLevels,
+          level: expected[0],
+          x: expected[1],
+          y: expected[2],
+        });
+        const expectedResource =
+          implicitTileset.subtreeUriTemplate.getDerivedResource({
+            templateValues: coordinates.getTemplateValues(),
+          });
+        expect(placeholderTiles[i].implicitCoordinates).toEqual(coordinates);
+        expect(placeholderTiles[i]._contentResource.url).toEqual(
+          expectedResource.url,
+        );
+      }
+    }
+
+    function makeQuadtreeSubtreeDescription(isInternal) {
+      return {
+        tileAvailability: {
+          descriptor: "11010",
+          lengthBits: 5,
+          isInternal: isInternal,
+        },
+        contentAvailability: [
+          {
+            descriptor: "01010",
+            lengthBits: 5,
+            isInternal: isInternal,
+          },
+        ],
+        childSubtreeAvailability: {
+          descriptor: "1111000011110000",
+          lengthBits: 16,
+          isInternal: isInternal,
+        },
+      };
+    }
+
+    it("loads subtree from glTF JSON", async function () {
+      const results = ImplicitTilingTester.generateSubtreeGltf(
+        makeQuadtreeSubtreeDescription(false),
+      );
+      spyOn(ResourceCache, "getExternalBufferLoader").and.returnValue({
+        typedArray: results.externalBuffer,
+        load: async () => {},
+        isDestroyed: () => false,
+      });
+
+      await Implicit3DTileContent.fromSubtreeGltf(
+        mockTileset,
+        mockPlaceholderTile,
+        tilesetResource,
+        results.gltf,
+      );
+
+      expectExpandedQuadtree();
+    });
+
+    it("loads subtree from glb", async function () {
+      const results = ImplicitTilingTester.generateSubtreeGltf(
+        makeQuadtreeSubtreeDescription(true),
+      );
+
+      await Implicit3DTileContent.fromSubtreeGlb(
+        mockTileset,
+        mockPlaceholderTile,
+        tilesetResource,
+        results.glb.buffer,
+        0,
+      );
+
+      expectExpandedQuadtree();
     });
 
     it("propagates refine down the tree", async function () {
@@ -931,6 +1100,77 @@ describe(
 
         const result = deriveBoundingRegion(tile, 1, 1, 0);
         expect(result).toEqualEpsilon(expected, CesiumMath.EPSILON9);
+      });
+    });
+
+    describe("releasing implicit tiles", function () {
+      const implicitTilesetUrl =
+        "Data/Cesium3DTiles/Implicit/ImplicitTileset/tileset_1.1.json";
+
+      function viewSky() {
+        const center = Cartesian3.fromRadians(
+          centerLongitude,
+          centerLatitude,
+          100,
+        );
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, 1.57, 10.0));
+      }
+
+      it("releases implicit tiles once their content is unloaded", async function () {
+        const tileset = await Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitTilesetUrl,
+        );
+        const statistics = tileset._statistics;
+        const subtreeRootTile = tileset.root.children[0];
+        const derivedTileCount = statistics.numberOfTilesTotal;
+        expect(subtreeRootTile._children.length).toBeGreaterThan(0);
+
+        viewSky();
+        tileset.cacheBytes = 0;
+        tileset.trimLoadedTiles();
+        scene.renderForSpecs();
+        scene.renderForSpecs();
+
+        expect(subtreeRootTile._children.length).toBe(0);
+        expect(subtreeRootTile._implicitChildrenCreated).toBe(false);
+        expect(statistics.numberOfTilesTotal).toBeLessThan(derivedTileCount);
+      });
+
+      it("creates released tiles again when they are requested", async function () {
+        const tileset = await Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitTilesetUrl,
+        );
+        const subtreeRootTile = tileset.root.children[0];
+        const derivedChildCount = subtreeRootTile.children.length;
+
+        viewSky();
+        tileset.cacheBytes = 0;
+        tileset.trimLoadedTiles();
+        scene.renderForSpecs();
+        scene.renderForSpecs();
+        expect(subtreeRootTile._children.length).toBe(0);
+
+        expect(subtreeRootTile.children.length).toBe(derivedChildCount);
+        expect(subtreeRootTile._implicitChildrenCreated).toBe(true);
+      });
+
+      it("keeps implicit tiles whose content is still loaded", async function () {
+        const tileset = await Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitTilesetUrl,
+        );
+        const statistics = tileset._statistics;
+        const subtreeRootTile = tileset.root.children[0];
+        const derivedTileCount = statistics.numberOfTilesTotal;
+
+        viewSky();
+        scene.renderForSpecs();
+        scene.renderForSpecs();
+
+        expect(subtreeRootTile._children.length).toBeGreaterThan(0);
+        expect(statistics.numberOfTilesTotal).toBe(derivedTileCount);
       });
     });
 

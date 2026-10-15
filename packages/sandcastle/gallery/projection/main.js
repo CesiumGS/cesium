@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import * as Cesium from "cesium";
 
 // Click the projection picker to switch between orthographic and perspective projections.

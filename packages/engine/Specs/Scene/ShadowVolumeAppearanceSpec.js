@@ -4,11 +4,13 @@ import {
   ComponentDatatype,
   Ellipsoid,
   EncodedCartesian3,
+  FixedFrameTransforms,
   Math as CesiumMath,
   Matrix4,
   Rectangle,
-  Transforms,
   WebMercatorProjection,
+} from "@cesium/core";
+import {
   Material,
   MaterialAppearance,
   PerInstanceColorAppearance,
@@ -177,7 +179,7 @@ describe("Scene/ShadowVolumeAppearance", function () {
       Rectangle.center(smallTestRectangle),
       unitSphereEllipsoid,
     );
-    const enuMatrix = Transforms.eastNorthUpToFixedFrame(
+    const enuMatrix = FixedFrameTransforms.eastNorthUpToFixedFrame(
       smallRectangleCenter,
       unitSphereEllipsoid,
     );

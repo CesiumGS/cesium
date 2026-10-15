@@ -1,5 +1,4 @@
-import defined from "../../Core/defined.js";
-import PrimitiveType from "../../Core/PrimitiveType.js";
+import { PrimitiveType, defined } from "@cesium/core";
 import ModelComponents from "../ModelComponents.js";
 import ModelUtility from "./ModelUtility.js";
 

@@ -5,6 +5,8 @@ import {
   JulianDate,
   TimeInterval,
   TimeIntervalCollection,
+} from "@cesium/core";
+import {
   ConstantProperty,
   Entity,
   PolylineVolumeGeometryUpdater,
@@ -12,7 +14,6 @@ import {
   TimeIntervalCollectionProperty,
   PrimitiveCollection,
 } from "../../index.js";
-
 import createDynamicGeometryUpdaterSpecs from "../../../../Specs/createDynamicGeometryUpdaterSpecs.js";
 import createDynamicProperty from "../../../../Specs/createDynamicProperty.js";
 import createGeometryUpdaterSpecs from "../../../../Specs/createGeometryUpdaterSpecs.js";

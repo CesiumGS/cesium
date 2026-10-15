@@ -1,12 +1,12 @@
 import {
-  MetadataType,
   Cartesian2,
   Cartesian3,
   Cartesian4,
   Matrix2,
   Matrix3,
   Matrix4,
-} from "../../index.js";
+} from "@cesium/core";
+import { MetadataType } from "../../index.js";
 
 describe("Scene/MetadataType", function () {
   it("isVectorType works", function () {

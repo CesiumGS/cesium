@@ -1,4 +1,4 @@
-import { Check } from "@cesium/engine";
+import { Check } from "@cesium/core";
 import VoxelInspector from "../VoxelInspector/VoxelInspector.js";
 
 /**
