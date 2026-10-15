@@ -647,10 +647,20 @@ function createCommandLists(
 
             ++commandIndex;
 
-            uniformMap = combine(
-              uniformCallback(currentMaterial._uniforms),
-              polylineCollection._uniformMap,
-            );
+            if (
+              command._polylineUniformMapMaterial !== currentMaterial ||
+              command._polylineUniformMapBatchTable !== batchTable ||
+              command._polylineUniformMapBase !== polylineCollection._uniformMap
+            ) {
+              command._polylineUniformMapMaterial = currentMaterial;
+              command._polylineUniformMapBatchTable = batchTable;
+              command._polylineUniformMapBase = polylineCollection._uniformMap;
+              command._polylineUniformMap = combine(
+                uniformCallback(currentMaterial._uniforms),
+                polylineCollection._uniformMap,
+              );
+            }
+            uniformMap = command._polylineUniformMap;
 
             command.boundingVolume = BoundingSphere.clone(
               boundingSphereScratch,
@@ -739,10 +749,20 @@ function createCommandLists(
 
         ++commandIndex;
 
-        uniformMap = combine(
-          uniformCallback(currentMaterial._uniforms),
-          polylineCollection._uniformMap,
-        );
+        if (
+          command._polylineUniformMapMaterial !== currentMaterial ||
+          command._polylineUniformMapBatchTable !== batchTable ||
+          command._polylineUniformMapBase !== polylineCollection._uniformMap
+        ) {
+          command._polylineUniformMapMaterial = currentMaterial;
+          command._polylineUniformMapBatchTable = batchTable;
+          command._polylineUniformMapBase = polylineCollection._uniformMap;
+          command._polylineUniformMap = combine(
+            uniformCallback(currentMaterial._uniforms),
+            polylineCollection._uniformMap,
+          );
+        }
+        uniformMap = command._polylineUniformMap;
 
         command.boundingVolume = BoundingSphere.clone(
           boundingSphereScratch,
@@ -1134,6 +1154,71 @@ const scratchUniformArray = [];
 function createMaterialId(material) {
   const uniforms = Material._uniformList[material.type];
   const length = uniforms.length;
+  const cached = material._polylineMaterialId;
+  if (
+    defined(cached) &&
+    uniformValuesUnchanged(material, uniforms, cached.values)
+  ) {
+    return cached.id;
+  }
+
+  const id = computeMaterialId(material, uniforms, length);
+  const values = snapshotUniformValues(material, uniforms);
+  material._polylineMaterialId = defined(values)
+    ? { id: id, values: values }
+    : undefined;
+  return id;
+}
+
+// A uniform value the cache can compare: a primitive, or an object with equals and clone.
+function isComparableUniformValue(value) {
+  return (
+    value === null ||
+    typeof value !== "object" ||
+    (typeof value.equals === "function" && typeof value.clone === "function")
+  );
+}
+
+// Copies the current uniform values, or returns undefined if any of them cannot be
+// compared later, in which case the id is recomputed every frame as before.
+function snapshotUniformValues(material, uniforms) {
+  const values = new Array(uniforms.length);
+  for (let i = 0; i < uniforms.length; ++i) {
+    const value = material._uniforms[uniforms[i]]();
+    if (!isComparableUniformValue(value)) {
+      return undefined;
+    }
+    values[i] =
+      typeof value === "object" && value !== null ? value.clone() : value;
+  }
+  return values;
+}
+
+function uniformValuesUnchanged(material, uniforms, values) {
+  if (values.length !== uniforms.length) {
+    return false;
+  }
+  for (let i = 0; i < uniforms.length; ++i) {
+    const value = material._uniforms[uniforms[i]]();
+    const previous = values[i];
+    if (value === previous) {
+      continue;
+    }
+    if (
+      value !== null &&
+      typeof value === "object" &&
+      typeof value.equals === "function" &&
+      value.equals(previous)
+    ) {
+      continue;
+    }
+    // NaN never equals itself, so it always recomputes, which is safe.
+    return false;
+  }
+  return true;
+}
+
+function computeMaterialId(material, uniforms, length) {
   scratchUniformArray.length = 2.0 * length;
 
   let index = 0;

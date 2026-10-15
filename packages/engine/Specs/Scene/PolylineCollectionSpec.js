@@ -431,6 +431,162 @@ describe(
       expect(polylines.contains(new Cartesian3())).toEqual(false);
     });
 
+    describe("changes after rendering", function () {
+      // Each scenario renders once, so anything cached per frame is cached,
+      // then changes something and renders again.
+      beforeEach(function () {
+        scene.primitives.add(polylines);
+      });
+
+      // A wide line through the origin, which the one pixel sees.
+      const throughCentre = [
+        new Cartesian3(0.0, -1000000.0, 0.0),
+        new Cartesian3(0.0, 1000000.0, 0.0),
+      ];
+
+      // A line far behind the camera, which nothing sees.
+      function behindCamera() {
+        const camera = scene.camera;
+        const behind = Cartesian3.add(
+          camera.position,
+          Cartesian3.multiplyByScalar(
+            camera.direction,
+            -2000000.0,
+            new Cartesian3(),
+          ),
+          new Cartesian3(),
+        );
+        const up = Cartesian3.multiplyByScalar(
+          camera.up,
+          100000.0,
+          new Cartesian3(),
+        );
+        return [
+          Cartesian3.add(behind, up, new Cartesian3()),
+          Cartesian3.subtract(behind, up, new Cartesian3()),
+        ];
+      }
+
+      function colour(color) {
+        // A copy: the Color constants are frozen and some scenarios change it in place.
+        return Material.fromType(Material.ColorType, { color: color.clone() });
+      }
+
+      function add(positions, color) {
+        return polylines.add({
+          positions: positions,
+          width: 5,
+          material: colour(color),
+        });
+      }
+
+      it("keeps drawing after a polyline is added to a collection that has rendered", function () {
+        add(throughCentre, Color.RED);
+        expect(scene).toRender([255, 0, 0, 255]);
+
+        add(behindCamera(), Color.BLUE);
+        expect(scene).toRender([255, 0, 0, 255]);
+        add(behindCamera(), Color.GREEN);
+        expect(scene).toRender([255, 0, 0, 255]);
+      });
+
+      it("keeps drawing after a polyline is removed from a collection that has rendered", function () {
+        const hidden = add(behindCamera(), Color.BLUE);
+        add(throughCentre, Color.RED);
+        expect(scene).toRender([255, 0, 0, 255]);
+
+        polylines.remove(hidden);
+        expect(scene).toRender([255, 0, 0, 255]);
+      });
+
+      it("draws a colour assigned to a material after rendering", function () {
+        const line = add(throughCentre, Color.RED);
+        expect(scene).toRender([255, 0, 0, 255]);
+
+        line.material.uniforms.color = Color.BLUE.clone();
+        expect(scene).toRender([0, 0, 255, 255]);
+      });
+
+      it("draws a colour changed in place after rendering", function () {
+        const line = add(throughCentre, Color.RED);
+        expect(scene).toRender([255, 0, 0, 255]);
+
+        Color.clone(Color.LIME, line.material.uniforms.color);
+        expect(scene).toRender([0, 255, 0, 255]);
+      });
+
+      it("draws a replaced material", function () {
+        const line = add(throughCentre, Color.RED);
+        expect(scene).toRender([255, 0, 0, 255]);
+
+        line.material = colour(Color.BLUE);
+        expect(scene).toRender([0, 0, 255, 255]);
+      });
+
+      it("draws a material made translucent after rendering", function () {
+        const line = add(throughCentre, Color.RED);
+        expect(scene).toRender([255, 0, 0, 255]);
+
+        line.material.uniforms.color = new Color(1.0, 0.0, 0.0, 0.5);
+        expect(scene).toRenderAndCall(function (rgba) {
+          expect(rgba[0]).toBeGreaterThan(64);
+          expect(rgba[0]).toBeLessThan(250);
+          expect(rgba[1]).toEqual(0);
+          expect(rgba[2]).toEqual(0);
+        });
+      });
+
+      it("updates every polyline sharing a material changed in place", function () {
+        const shared = colour(Color.RED);
+        polylines.add({
+          positions: behindCamera(),
+          width: 5,
+          material: shared,
+        });
+        const second = polylines.add({
+          positions: throughCentre,
+          width: 5,
+          material: shared,
+        });
+        expect(scene).toRender([255, 0, 0, 255]);
+
+        Color.clone(Color.BLUE, shared.uniforms.color);
+        expect(scene).toRender([0, 0, 255, 255]);
+
+        // A polyline destroys its material with it; give the second its own so
+        // the shared one is destroyed once.
+        second.material = colour(Color.WHITE);
+      });
+
+      it("does not cull a line whose material came to match an off-screen line's", function () {
+        // The first line of the batch is off screen. Once the two materials become
+        // equal they draw as one batch, and that batch must still be drawn.
+        const offScreen = add(behindCamera(), Color.RED);
+        const onScreen = add(throughCentre, Color.BLUE);
+        expect(scene).toRender([0, 0, 255, 255]);
+
+        Color.clone(
+          offScreen.material.uniforms.color,
+          onScreen.material.uniforms.color,
+        );
+        expect(scene).toRender([255, 0, 0, 255]);
+      });
+
+      it("still draws once the merged batch splits again", function () {
+        const offScreen = add(behindCamera(), Color.RED);
+        const onScreen = add(throughCentre, Color.RED);
+        expect(scene).toRender([255, 0, 0, 255]);
+
+        Color.clone(Color.BLUE, onScreen.material.uniforms.color);
+        expect(scene).toRender([0, 0, 255, 255]);
+        Color.clone(
+          offScreen.material.uniforms.color,
+          onScreen.material.uniforms.color,
+        );
+        expect(scene).toRender([255, 0, 0, 255]);
+      });
+    });
+
     it("does not render when constructed", function () {
       expect(scene).toRender([0, 0, 0, 255]);
 
