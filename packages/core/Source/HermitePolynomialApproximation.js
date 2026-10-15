@@ -323,7 +323,7 @@ function fillCoefficientList(
 ) {
   let j;
   let index;
-  let highestNonZero = -1;
+  let highestNonZero = 0;
   const zIndiceslength = zIndices.length;
   const tmp = (zIndiceslength * (zIndiceslength + 1)) / 2;
 
