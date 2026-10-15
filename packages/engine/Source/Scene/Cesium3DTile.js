@@ -24,12 +24,6 @@ import RequestScheduler from "../Core/RequestScheduler.js";
 import RequestState from "../Core/RequestState.js";
 import RequestType from "../Core/RequestType.js";
 import Resource from "../Core/Resource.js";
-<<<<<<< HEAD
-import RuntimeError from "../Core/RuntimeError.js";
-=======
-import Cesium3DContentGroup from "./Cesium3DContentGroup.js";
-import Cesium3DTileContentFactory from "./Cesium3DTileContentFactory.js";
->>>>>>> origin/main
 import Cesium3DTileContentState from "./Cesium3DTileContentState.js";
 import Cesium3DTileContentType from "./Cesium3DTileContentType.js";
 import Cesium3DTileOptimizationHint from "./Cesium3DTileOptimizationHint.js";
@@ -47,12 +41,8 @@ import TileBoundingS2Cell from "./TileBoundingS2Cell.js";
 import TileBoundingSphere from "./TileBoundingSphere.js";
 import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
 import Pass from "../Renderer/Pass.js";
-<<<<<<< HEAD
-import VerticalExaggeration from "../Core/VerticalExaggeration.js";
 import finishContent from "./finishContent.js";
 import Dynamic3DTileContent from "./Conditional3DTileContent.js";
-=======
->>>>>>> origin/main
 
 /**
  * A tile in a {@link Cesium3DTileset}.  When a tile is first created, its content is not loaded;
@@ -72,24 +62,8 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   this._tileset = tileset;
   this._header = header;
 
-<<<<<<< HEAD
-=======
-  const hasContentsArray = defined(header.contents);
-  const hasMultipleContents =
-    (hasContentsArray && header.contents.length > 1) ||
-    hasExtension(header, "3DTILES_multiple_contents");
-
-  // In the 1.0 schema, content is stored in tile.content instead of tile.contents
-  const contentHeader =
-    hasContentsArray && !hasMultipleContents
-      ? header.contents[0]
-      : header.content;
-
-  this._contentHeader = contentHeader;
-
   const hasTransform = defined(header.transform);
 
->>>>>>> origin/main
   /**
    * The local transform of this tile.
    * @type {Matrix4}

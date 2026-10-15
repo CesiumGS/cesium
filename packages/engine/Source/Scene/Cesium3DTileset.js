@@ -228,13 +228,7 @@ function Cesium3DTileset(options) {
   this._modelForwardAxis = undefined;
   this._tilesetUpAxis = undefined; // Up axis of a glTF tileset, applied to the root tile transform
   this._cache = new Cesium3DTilesetCache();
-<<<<<<< HEAD
-
-=======
   this._releaseCandidateTiles = new Set();
-  this._processingQueue = [];
-  this._selectedTiles = [];
->>>>>>> origin/main
   this._emptyTiles = [];
 
   /**
@@ -2692,7 +2686,6 @@ Cesium3DTileset.prototype.loadTileset = function (
 };
 
 /**
-<<<<<<< HEAD
  * XXX_CONDITIONAL A draft for a convenience function for the conditional content
  * URI condition. It simply sets URIs as "active" when their keys match
  * the given required keys.
@@ -2713,7 +2706,9 @@ Cesium3DTileset.prototype.setSimpleConditionalContentUriCondition = function (
     return true;
   };
   this.conditionalContentUriCondition = conditionalContentUriCondition;
-=======
+};
+
+/**
  * Loads the main root.tileset.gltf JSON file.
  *
  * @exception {RuntimeError} When the glTF asset version is not 2.1,
@@ -2786,7 +2781,6 @@ Cesium3DTileset.prototype.loadTilesetFromGltf = function (
   }
 
   return rootTile;
->>>>>>> origin/main
 };
 
 /**
