@@ -30,6 +30,18 @@ import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 /** @import { BufferPrimitiveChangeTracker } from "./BufferPrimitiveCollection.js"; */
 /** @import {TypedArray} from "@cesium/core"; */
 
+/**
+ * Style applied to every point in the collection, in place of per-point materials.
+ *
+ * @typedef {object} BufferPointStyle
+ * @property {number} radius Radius of the fill, in pixels.
+ * @property {Color} color
+ * @property {Color} outlineColor
+ * @property {number} outlineWidth Width of the outline, in pixels.
+ * @property {BlendOption} blendOption
+ * @ignore
+ */
+
 const { DirtyFlags } = BufferPrimitiveCollection;
 
 /**
@@ -69,6 +81,7 @@ const BufferPointAttributeLocations = {
  * @property {Record<string, TypedArray>} [attributeArrays]
  * @property {RenderState} [renderState]
  * @property {ShaderProgram} [shaderProgram]
+ * @property {Record<string, function(): *>} [uniformMap]
  * @property {DrawCommand} [command]
  * @property {BufferPointCollection} [collection]
  * @property {BufferPrimitiveChangeTracker} [changeTracker]
@@ -87,10 +100,16 @@ const encodedCartesian = new EncodedCartesian3();
  * @param {BufferPointCollection} collection
  * @param {FrameState} frameState
  * @param {BufferPointRenderContext} [renderContext]
+ * @param {BufferPointStyle} [style] Must be the same object on every call with a given render context.
  * @returns {BufferPointRenderContext}
  * @ignore
  */
-function renderBufferPointCollection(collection, frameState, renderContext) {
+function renderBufferPointCollection(
+  collection,
+  frameState,
+  renderContext,
+  style,
+) {
   const context = frameState.context;
   renderContext = renderContext || {
     destroy: destroyRenderContext,
@@ -135,7 +154,6 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
         continue;
       }
 
-      point.getMaterial(material);
       Color.fromRgba(point._pickId, pickColor);
 
       pickColorArray[i * 4] = Color.floatToByte(pickColor.red);
@@ -144,6 +162,13 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
       pickColorArray[i * 4 + 3] = Color.floatToByte(pickColor.alpha);
 
       showSizeColorAlphaArray[i * 4] = point.show ? 1 : 0;
+
+      // A style supplies size and colors as uniforms, so materials are not read.
+      if (defined(style)) {
+        continue;
+      }
+
+      point.getMaterial(material);
       showSizeColorAlphaArray[i * 4 + 1] = material.size;
       showSizeColorAlphaArray[i * 4 + 2] = AttributeCompression.encodeRGB8(
         material.color,
@@ -294,10 +319,11 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
     }
   }
 
+  const blendOption = defined(style)
+    ? style.blendOption
+    : collection._blendOption;
   const pass =
-    collection._blendOption === BlendOption.OPAQUE
-      ? Pass.OPAQUE
-      : Pass.TRANSLUCENT;
+    blendOption === BlendOption.OPAQUE ? Pass.OPAQUE : Pass.TRANSLUCENT;
 
   if (defined(renderContext.command) && renderContext.command.pass !== pass) {
     RenderState.removeFromCache(renderContext.renderState);
@@ -316,11 +342,25 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
   }
 
   if (!defined(renderContext.shaderProgram)) {
+    const vertexDefines = [];
+    if (useFloat64) {
+      vertexDefines.push("USE_FLOAT64");
+    }
+    if (defined(style)) {
+      vertexDefines.push("USE_STYLE");
+      renderContext.uniformMap = {
+        u_color: () => style.color,
+        u_outlineColor: () => style.outlineColor,
+        u_pixelSize: () => 2.0 * style.radius,
+        u_outlineWidth: () => style.outlineWidth,
+      };
+    }
+
     renderContext.shaderProgram = ShaderProgram.fromCache({
       context,
       vertexShaderSource: new ShaderSource({
         sources: [BufferPointMaterialVS],
-        defines: useFloat64 ? ["USE_FLOAT64"] : [],
+        defines: vertexDefines,
       }),
       fragmentShaderSource: new ShaderSource({
         sources: [BufferPointMaterialFS],
@@ -334,6 +374,7 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
       vertexArray: renderContext.vertexArray,
       renderState: renderContext.renderState,
       shaderProgram: renderContext.shaderProgram,
+      uniformMap: renderContext.uniformMap,
       primitiveType: PrimitiveType.POINTS,
       pass,
       pickId: collection._allowPicking ? "v_pickColor" : undefined,
