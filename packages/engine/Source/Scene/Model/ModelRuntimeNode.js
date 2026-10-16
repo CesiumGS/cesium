@@ -142,6 +142,17 @@ function ModelRuntimeNode(options) {
   this.instancingTranslationMax = undefined;
 
   /**
+   * The largest absolute scale component of the instances. Undefined when the
+   * instances are only translated, or when their scales are only stored on
+   * the GPU. This value is set by InstancingPipelineStage.
+   *
+   * @type {number}
+   *
+   * @private
+   */
+  this.instancingScaleMax = undefined;
+
+  /**
    * A buffer containing the instanced transforms. The memory is managed
    * by Model; this is just a reference.
    *
