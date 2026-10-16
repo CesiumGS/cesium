@@ -54,6 +54,28 @@ class VectorLayer {
      * @ignore
      */
     this._renderContext = undefined;
+
+    /**
+     * Visual properties, each a value or a per-primitive callback.
+     * @type {Record<string, *>}
+     * @protected
+     * @ignore
+     */
+    this._style = {};
+
+    /**
+     * @type {boolean}
+     * @ignore
+     */
+    this._hasStyleCallbacks = false;
+
+    /**
+     * Incremented whenever a visual property changes; renderers compare it to
+     * decide when to re-evaluate per-primitive callbacks.
+     * @type {number}
+     * @ignore
+     */
+    this._styleVersion = 0;
   }
 
   /**
@@ -65,6 +87,54 @@ class VectorLayer {
    */
   get collection() {
     return this._collection;
+  }
+
+  /**
+   * Marks the visual properties as dirty, so per-primitive callbacks are
+   * evaluated again on the next frame. Callbacks are otherwise evaluated only
+   * when a primitive changes or a property is assigned, so call this after
+   * changing data that a callback reads.
+   */
+  makeStyleDirty() {
+    this._styleVersion++;
+  }
+
+  /**
+   * @param {string} name
+   * @returns {*}
+   * @protected
+   * @ignore
+   */
+  _getStyle(name) {
+    return this._style[name];
+  }
+
+  /**
+   * @param {string} name
+   * @param {*} value
+   * @protected
+   * @ignore
+   */
+  _setStyle(name, value) {
+    this._style[name] = value;
+    this._hasStyleCallbacks = Object.values(this._style).some(
+      (styleValue) => typeof styleValue === "function",
+    );
+    this._styleVersion++;
+  }
+
+  /**
+   * Returns the value of a visual property for a primitive, calling it if it
+   * is a callback.
+   *
+   * @param {*} value
+   * @param {BufferPrimitive} primitive
+   * @returns {*}
+   * @protected
+   * @ignore
+   */
+  static _evaluate(value, primitive) {
+    return typeof value === "function" ? value(primitive) : value;
   }
 
   /**
