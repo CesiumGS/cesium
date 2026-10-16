@@ -1,9 +1,12 @@
+import { OpenAIClient } from "./OpenAIClient";
 import { GeminiClient } from "./GeminiClient";
 import { AnthropicClient } from "./AnthropicClient";
 import { VertexAIClient } from "./VertexAIClient";
 import { ApiKeyManager } from "./ApiKeyManager";
 import type {
   AIModel,
+  OpenAIModel,
+  OpenAIClientOptions,
   AIProvider,
   AIRoute,
   GeminiModel,
@@ -32,10 +35,19 @@ const CLAUDE_MODELS: readonly ClaudeModel[] = [
   "claude-haiku-4-5-20251001",
 ] as const;
 
+const OPENAI_MODELS: readonly OpenAIModel[] = [
+  "gpt-6.1-sol",
+  "gpt-6-luna",
+  "gpt-6-astra",
+];
+
 const DEFAULT_GEMINI_MODEL: GeminiModel = "gemini-3-flash-preview";
 const DEFAULT_CLAUDE_MODEL: ClaudeModel = "claude-opus-4-8";
 
 const MODEL_DISPLAY_NAMES: Record<AIModel, string> = {
+  "gpt-6-luna": "GPT-6 Luna",
+  "gpt-6.1-sol": "GPT-6.1 Sol",
+  "gpt-6-astra": "GPT-6 Astra",
   "claude-opus-4-8": "Claude Opus 4.8",
   "claude-sonnet-4-6": "Claude Sonnet 4.6",
   "claude-haiku-4-5-20251001": "Claude Haiku 4.5",
@@ -96,6 +108,9 @@ export class AIClientFactory {
   }
 
   static isVertexRegionSupported(model: AIModel, region: string): boolean {
+    if (this.getProviderForModel(model) === "openai") {
+      return false;
+    }
     const allowlist = this.getSupportedVertexRegions(model);
     if (!allowlist) {
       return true;
@@ -112,11 +127,17 @@ export class AIClientFactory {
       return "anthropic";
     }
 
+    if ((OPENAI_MODELS as readonly string[]).includes(model)) {
+      return "openai";
+    }
+
     throw new Error(`Unknown model: ${model}`);
   }
 
   static hasCredentialsForProvider(provider: AIProvider): boolean {
     switch (provider) {
+      case "openai":
+        return ApiKeyManager.hasOpenAIApiKey();
       case "gemini":
         return ApiKeyManager.hasApiKey();
       case "anthropic":
@@ -130,6 +151,7 @@ export class AIClientFactory {
   static createClient(
     model: AIModel,
     options?: {
+      openaiOptions?: OpenAIClientOptions;
       geminiOptions?: GeminiClientOptions;
       anthropicOptions?: AnthropicClientOptions;
     },
@@ -137,6 +159,19 @@ export class AIClientFactory {
     const provider = this.getProviderForModel(model);
 
     switch (provider) {
+      case "openai": {
+        const apiKey = ApiKeyManager.getOpenAIApiKey();
+        if (!apiKey) {
+          throw new Error(
+            "OpenAI API key not found. Please configure your API key in settings.",
+          );
+        }
+        return new OpenAIClient(
+          apiKey,
+          model as OpenAIModel,
+          options?.openaiOptions,
+        );
+      }
       case "gemini": {
         const apiKey = ApiKeyManager.getApiKey();
         if (!apiKey) {
@@ -170,13 +205,13 @@ export class AIClientFactory {
     }
   }
 
-  /** Claude first, then Gemini. */
+  /** Keep existing provider order, then OpenAI. */
   static getAllModelIds(): AIModel[] {
-    return [...CLAUDE_MODELS, ...GEMINI_MODELS];
+    return [...CLAUDE_MODELS, ...GEMINI_MODELS, ...OPENAI_MODELS];
   }
 
   /**
-   * Claude first, then Gemini. When a model is available via both direct
+   * Claude, Gemini, then OpenAI. When a model is available via both direct
    * and vertex routes, both entries are emitted with display suffixes.
    */
   static getAvailableModelEntries(): ModelEntry[] {
@@ -241,6 +276,7 @@ export class AIClientFactory {
   static createClientForRoute(
     selection: ModelSelection,
     options?: {
+      openaiOptions?: OpenAIClientOptions;
       geminiOptions?: GeminiClientOptions;
       anthropicOptions?: AnthropicClientOptions;
     },
@@ -275,7 +311,7 @@ export class AIClientFactory {
     return this.createClient(selection.model, options);
   }
 
-  /** Prefers direct Claude > direct Gemini > vertex Claude > vertex Gemini. */
+  /** Prefers direct Claude, Gemini, OpenAI, then supported Vertex models. */
   static getDefaultModelSelection(): ModelSelection | null {
     if (ApiKeyManager.hasAnthropicApiKey()) {
       return { model: DEFAULT_CLAUDE_MODEL, route: "direct" };
@@ -283,6 +319,10 @@ export class AIClientFactory {
 
     if (ApiKeyManager.hasApiKey()) {
       return { model: DEFAULT_GEMINI_MODEL, route: "direct" };
+    }
+
+    if (ApiKeyManager.hasOpenAIApiKey()) {
+      return { model: "gpt-6.1-sol", route: "direct" };
     }
 
     if (ApiKeyManager.hasVertexServiceAccount()) {

@@ -141,6 +141,7 @@
     "website-release": "gulp websiteRelease",
     "test": "gulp test",
     "test-all": "gulp test --all",
+    "test-copilot": "node --test Specs/copilot/*.spec.js",
     "test-webgl": "gulp test --include WebGL",
     "test-non-webgl": "gulp test --exclude WebGL",
     "test-webgl-validation": "gulp test --webglValidation",
