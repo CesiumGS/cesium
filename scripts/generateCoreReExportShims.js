@@ -10,9 +10,9 @@
  * Usage: node scripts/generateCoreReExportShims.js [--dry-run]
  */
 
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-
+import { readNeedsShimList } from "./readNeedsShimList.js";
 import { repoRoot, formatWithPrettier, dryRun } from "./coreMigrationShared.js";
 
 const DEPRECATED_SINCE_VERSION = "1.146";
@@ -23,25 +23,6 @@ const candidatesPath = join(
   repoRoot,
   "scripts/core-reexport-shim-candidates.txt",
 );
-
-/**
- * Reads the reviewed "NEEDS SHIM" section written by listCoreReExportShims.js.
- * @returns {Promise<string[]>}
- */
-async function readNeedsShimList() {
-  const text = await readFile(candidatesPath, "utf-8");
-  const section = text.split("\n\n").find((s) => s.startsWith("NEEDS SHIM"));
-  if (!section) {
-    throw new Error(
-      `Could not find a "NEEDS SHIM" section in ${candidatesPath}`,
-    );
-  }
-  return section
-    .split("\n")
-    .slice(1)
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0);
-}
 
 /**
  * @param {string} name
@@ -61,7 +42,7 @@ export default deprecatedCoreExport(${nameLiteral}, ${name});
 }
 
 async function main() {
-  const needsShim = await readNeedsShimList();
+  const needsShim = readNeedsShimList(candidatesPath);
 
   console.log(
     `Generating ${needsShim.length} shims${dryRun ? " (dry run)" : ""}`,
