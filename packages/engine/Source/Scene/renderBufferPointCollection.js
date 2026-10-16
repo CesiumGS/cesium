@@ -31,14 +31,29 @@ import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 /** @import {TypedArray} from "@cesium/core"; */
 
 /**
- * Style applied to every point in the collection, in place of per-point materials.
+ * Style applied to the points of a collection, in place of per-point materials.
+ * Global values are passed as uniforms; when any property is a callback, every
+ * property is evaluated per point and stored as vertex attributes.
  *
  * @typedef {object} BufferPointStyle
- * @property {number} radius Radius of the fill, in pixels.
+ * @property {number|function(BufferPoint): number} radius Radius of the fill, in pixels.
+ * @property {Color|function(BufferPoint): Color} color
+ * @property {Color|function(BufferPoint): Color} outlineColor
+ * @property {number|function(BufferPoint): number} outlineWidth Width of the outline, in pixels.
+ * @property {BlendOption} blendOption
+ * @property {boolean} _hasStyleCallbacks
+ * @property {number} _styleVersion
+ * @property {function(BufferPoint, BufferPointStyleResult): BufferPointStyleResult} _evaluatePoint
+ * @ignore
+ */
+
+/**
+ * @typedef {object} BufferPointStyleResult
+ * @property {boolean} show
+ * @property {number} radius
  * @property {Color} color
  * @property {Color} outlineColor
- * @property {number} outlineWidth Width of the outline, in pixels.
- * @property {BlendOption} blendOption
+ * @property {number} outlineWidth
  * @ignore
  */
 
@@ -82,6 +97,8 @@ const BufferPointAttributeLocations = {
  * @property {RenderState} [renderState]
  * @property {ShaderProgram} [shaderProgram]
  * @property {Record<string, function(): *>} [uniformMap]
+ * @property {boolean} [useStyleUniforms]
+ * @property {number} [styleVersion]
  * @property {DrawCommand} [command]
  * @property {BufferPointCollection} [collection]
  * @property {BufferPrimitiveChangeTracker} [changeTracker]
@@ -92,6 +109,13 @@ const BufferPointAttributeLocations = {
 // Scratch variables.
 const point = new BufferPoint();
 const material = new BufferPointMaterial();
+const pointStyle = {
+  show: true,
+  radius: 0,
+  color: Color.WHITE,
+  outlineColor: Color.WHITE,
+  outlineWidth: 0,
+};
 const pickColor = new Color();
 const cartesian = new Cartesian3();
 const encodedCartesian = new EncodedCartesian3();
@@ -121,6 +145,23 @@ function renderBufferPointCollection(
   const attributeLocations = useFloat64
     ? BufferPointAttributeLocationsFloat64
     : BufferPointAttributeLocations;
+  const useStyleUniforms = defined(style) && !style._hasStyleCallbacks;
+  const useStyleAttributes = defined(style) && style._hasStyleCallbacks;
+
+  // Re-evaluates every point for this render context only; other consumers of
+  // the collection keep their own change trackers.
+  const styleModeChanged =
+    defined(renderContext.useStyleUniforms) &&
+    renderContext.useStyleUniforms !== useStyleUniforms;
+  const styleChanged =
+    useStyleAttributes && renderContext.styleVersion !== style._styleVersion;
+  if (styleModeChanged || styleChanged) {
+    tracker.offset = 0;
+    tracker.count = collection.primitiveCount;
+    tracker.flags |= DirtyFlags.PROPERTIES;
+    tracker.full = true;
+  }
+  renderContext.styleVersion = style?._styleVersion;
 
   if (!defined(renderContext.attributeArrays)) {
     const featureCountMax = collection.primitiveCountMax;
@@ -161,30 +202,44 @@ function renderBufferPointCollection(
       pickColorArray[i * 4 + 2] = Color.floatToByte(pickColor.blue);
       pickColorArray[i * 4 + 3] = Color.floatToByte(pickColor.alpha);
 
-      showSizeColorAlphaArray[i * 4] = point.show ? 1 : 0;
-
-      // A style supplies size and colors as uniforms, so materials are not read.
-      if (defined(style)) {
+      // Global style values are uniforms, so only visibility is stored per point.
+      if (useStyleUniforms) {
+        showSizeColorAlphaArray[i * 4] = point.show ? 1 : 0;
         continue;
       }
 
-      point.getMaterial(material);
-      showSizeColorAlphaArray[i * 4 + 1] = material.size;
-      showSizeColorAlphaArray[i * 4 + 2] = AttributeCompression.encodeRGB8(
-        material.color,
-      );
-      showSizeColorAlphaArray[i * 4 + 3] = material.color.alpha;
+      let show, size, color, outlineColor, outlineWidth;
+      if (useStyleAttributes) {
+        style._evaluatePoint(point, pointStyle);
+        show = pointStyle.show;
+        size = 2.0 * pointStyle.radius;
+        color = pointStyle.color;
+        outlineColor = pointStyle.outlineColor;
+        outlineWidth = pointStyle.outlineWidth;
+      } else {
+        point.getMaterial(material);
+        show = point.show;
+        size = material.size;
+        color = material.color;
+        outlineColor = material.outlineColor;
+        outlineWidth = material.outlineWidth;
+      }
 
-      outlineWidthColorAlphaArray[i * 3] = material.outlineWidth;
-      outlineWidthColorAlphaArray[i * 3 + 1] = AttributeCompression.encodeRGB8(
-        // When outlineWidth=0, overwrite outlineColor to prevent subpixel bleeding.
-        material.outlineWidth > 0 ? material.outlineColor : material.color,
-      );
-      outlineWidthColorAlphaArray[i * 3 + 2] =
-        // When outlineWidth=0, overwrite outlineAlpha to prevent subpixel bleeding.
-        material.outlineWidth > 0
-          ? material.outlineColor.alpha
-          : material.color.alpha;
+      // When outlineWidth=0, use the fill color to prevent subpixel bleeding.
+      if (outlineWidth <= 0) {
+        outlineColor = color;
+      }
+
+      showSizeColorAlphaArray[i * 4] = show ? 1 : 0;
+      showSizeColorAlphaArray[i * 4 + 1] = size;
+      showSizeColorAlphaArray[i * 4 + 2] =
+        AttributeCompression.encodeRGB8(color);
+      showSizeColorAlphaArray[i * 4 + 3] = color.alpha;
+
+      outlineWidthColorAlphaArray[i * 3] = outlineWidth;
+      outlineWidthColorAlphaArray[i * 3 + 1] =
+        AttributeCompression.encodeRGB8(outlineColor);
+      outlineWidthColorAlphaArray[i * 3 + 2] = outlineColor.alpha;
     }
   }
 
@@ -341,20 +396,31 @@ function renderBufferPointCollection(
     });
   }
 
+  if (
+    defined(renderContext.shaderProgram) &&
+    renderContext.useStyleUniforms !== useStyleUniforms
+  ) {
+    renderContext.shaderProgram.destroy();
+    renderContext.shaderProgram = undefined;
+    renderContext.uniformMap = undefined;
+    renderContext.command = undefined;
+  }
+
   if (!defined(renderContext.shaderProgram)) {
     const vertexDefines = [];
     if (useFloat64) {
       vertexDefines.push("USE_FLOAT64");
     }
-    if (defined(style)) {
+    if (useStyleUniforms) {
       vertexDefines.push("USE_STYLE");
       renderContext.uniformMap = {
         u_color: () => style.color,
         u_outlineColor: () => style.outlineColor,
-        u_pixelSize: () => 2.0 * style.radius,
+        u_pixelSize: () => 2.0 * /** @type {number} */ (style.radius),
         u_outlineWidth: () => style.outlineWidth,
       };
     }
+    renderContext.useStyleUniforms = useStyleUniforms;
 
     renderContext.shaderProgram = ShaderProgram.fromCache({
       context,
