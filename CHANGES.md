@@ -1,5 +1,13 @@
 # Change Log
 
+## 1.147 - 2026-11-02
+
+### @cesium/engine
+
+#### Additions :tada:
+
+- Added experimental `VectorLayer`, `CircleLayer`, and `Scene.vectorLayers`. A layer draws a `BufferPrimitiveCollection` with styling held by the layer instead of per-primitive materials, and several layers may draw the same collection. `CircleLayer` draws points with a radius, fill color, and outline. [#13932](https://github.com/CesiumGS/cesium/pull/13932)
+
 ## 1.146 - 2026-10-01
 
 ### Major Announcements :loudspeaker:
