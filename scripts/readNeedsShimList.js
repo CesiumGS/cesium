@@ -9,7 +9,7 @@ import { readFileSync } from "fs";
 export function readNeedsShimList(candidatesPath) {
   const text = readFileSync(candidatesPath, "utf-8");
   const section = text
-    .split("/\r?\n\r?\n/")
+    .split(/\r?\n\r?\n/)
     .find((s) => s.startsWith("NEEDS SHIM"));
   if (!section) {
     throw new Error(
@@ -17,7 +17,7 @@ export function readNeedsShimList(candidatesPath) {
     );
   }
   return section
-    .split("/\r?\n/")
+    .split(/\r?\n/)
     .slice(1)
     .map((line) => line.trim())
     .filter((line) => line.length > 0);
