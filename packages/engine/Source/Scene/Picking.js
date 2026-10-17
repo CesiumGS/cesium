@@ -766,7 +766,8 @@ Picking.prototype.pickPositionWorldCoordinates = function (
       if (scene.mode === SceneMode.SCENE2D) {
         height2D = camera.position.z;
         camera.position.z = height2D - renderedFrustum.near + 1.0;
-        frustum.far = Math.max(1.0, renderedFrustum.far - renderedFrustum.near);
+        // The near plane is one meter in front of the camera, so the far plane is one meter beyond the frustum depth.
+        frustum.far = renderedFrustum.far - renderedFrustum.near + 1.0;
         frustum.near = 1.0;
         uniformState.update(frameState);
         uniformState.updateFrustum(frustum);

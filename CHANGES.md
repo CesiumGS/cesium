@@ -1,5 +1,13 @@
 # Change Log
 
+## 1.147 - 2026-11-02
+
+### @cesium/engine
+
+#### Fixes :wrench:
+
+- Fixed geometry within one meter above a frustum boundary not being rendered in 2D. The far plane of each 2D frustum was one meter short of the frustum's depth. [#13905](https://github.com/CesiumGS/cesium/issues/13905)
+
 ## 1.146 - 2026-10-01
 
 ### Major Announcements :loudspeaker:
