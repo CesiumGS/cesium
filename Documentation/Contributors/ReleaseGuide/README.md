@@ -5,6 +5,7 @@ We release CesiumJS on the first workday of every month.
 - [**Release Schedule**](./ReleaseSchedule.md): The upcoming monthly release schedule and the developer responsible for managing each release
 - [**Patch Release Guide**](./PatchReleases/README.md): If and how to publish a patch release[^1] ahead of the regular monthly release, typically used in the case of a significant regression or an issue with published dependency versions.
 - [**Prerelease Guide**](./Prereleases/README.md): If and how to publish a tagged prerelease[^2] ahead of the regular monthly release, typically used for internal testing.
+- [**Sandcastle-only Release Guide**](./SandcastleReleases/README.md): How to selectively deploy Sandcastle updates to production outside the monthly CesiumJS release, while preserving release safeguards.
 
 [^1]: See ["About semantic versioning" on docs.npmjs.com](https://docs.npmjs.com/about-semantic-versioning)
 
