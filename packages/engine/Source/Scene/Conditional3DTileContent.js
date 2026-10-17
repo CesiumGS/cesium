@@ -1937,19 +1937,17 @@ class Conditional3DTileContent {
     // Show only the active contents.
     const activeContents = this._activeLoadedContents;
     for (const activeContent of activeContents) {
-      activeContent.show = false;
-      if (defined(this._lastStyle)) {
-        // TODO This may trigger some rebuild of some draw commands or
-        // whatnot. It shouldn't, if the style is identical to the
-        // previous one, but assuming that 'applyStyle' is implemented
-        // properly for all content types is naive. It will likely be
-        // necessary to store and maintain the last style of each
-        // content somewhere else, and skip this call, working around
-        // the flaws of the existing implementations (and causing bugs
-        // and inconsistencies that will require further workarounds).
-        // Also see 'featurePropertiesDirty'.
-        activeContent.applyStyle(this._lastStyle);
-      }
+      activeContent.show = true;
+      // TODO This may trigger some rebuild of some draw commands or
+      // whatnot. It shouldn't, if the style is identical to the
+      // previous one, but assuming that 'applyStyle' is implemented
+      // properly for all content types is naive. It will likely be
+      // necessary to store and maintain the last style of each
+      // content somewhere else, and skip this call, working around
+      // the flaws of the existing implementations (and causing bugs
+      // and inconsistencies that will require further workarounds).
+      // Also see 'featurePropertiesDirty'.
+      activeContent.applyStyle(this._lastStyle);
     }
 
     // Assign debug settings to all active contents
