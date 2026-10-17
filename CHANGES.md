@@ -1,5 +1,13 @@
 # Change Log
 
+## 1.147 - 2026-11-02
+
+### @cesium/engine
+
+#### Fixes :wrench:
+
+- Improved `PolylineCollection` performance when nothing changes between frames: material ids are cached per material and draw commands are no longer marked dirty every frame. [#13930](https://github.com/CesiumGS/cesium/pull/13930)
+
 ## 1.146 - 2026-10-01
 
 ### Major Announcements :loudspeaker:
