@@ -1,0 +1,139 @@
+{
+  "conditionalContents": [
+    {
+      "uri": "content-2025-09-25-revision0.glb",
+      "keys": {
+        "exampleTimeStamp": "2025-09-25",
+        "exampleRevision": "revision0"
+      },
+      "metadata": {
+        "class": "exampleContentMetadataClass",
+        "properties": {
+          "exampleFloatProperty": 0.0,
+          "exampleStringProperty": "Example_0_0"
+        }
+      },
+      "group": 0
+    },
+    {
+      "uri": "content-2025-09-26-revision0.glb",
+      "keys": {
+        "exampleTimeStamp": "INVALID_EXAMPLE_TIME_STAMP_FOR_SPEC",
+        "exampleRevision": "revision0"
+      },
+      "metadata": {
+        "class": "exampleContentMetadataClass",
+        "properties": {
+          "exampleFloatProperty": 0.1,
+          "exampleStringProperty": "Example_0_1"
+        }
+      },
+      "group": 1
+    },
+    {
+      "uri": "INVALID-URI-FOR-content-2025-09-27-revision0.glb-FOR-SPEC",
+      "keys": {
+        "exampleTimeStamp": "2025-09-27",
+        "exampleRevision": "revision0"
+      },
+      "metadata": {
+        "class": "exampleContentMetadataClass",
+        "properties": {
+          "exampleFloatProperty": 0.2,
+          "exampleStringProperty": "Example_0_2"
+        }
+      },
+      "group": 2
+    },
+    {
+      "uri": "content-2025-09-25-revision1.glb",
+      "keys": {
+        "exampleTimeStamp": "2025-09-25",
+        "exampleRevision": "revision1"
+      },
+      "metadata": {
+        "class": "exampleContentMetadataClass",
+        "properties": {
+          "exampleFloatProperty": 1.0,
+          "exampleStringProperty": "Example_1_0"
+        }
+      },
+      "group": 0
+    },
+    {
+      "uri": "content-2025-09-26-revision1.glb",
+      "keys": {
+        "exampleTimeStamp": "2025-09-26",
+        "exampleRevision": "revision1"
+      },
+      "metadata": {
+        "class": "exampleContentMetadataClass",
+        "properties": {
+          "exampleFloatProperty": 1.1,
+          "exampleStringProperty": "Example_1_1"
+        }
+      },
+      "group": 1
+    },
+    {
+      "uri": "content-2025-09-27-revision1.glb",
+      "keys": {
+        "exampleTimeStamp": "2025-09-27",
+        "exampleRevision": "revision1"
+      },
+      "metadata": {
+        "class": "exampleContentMetadataClass",
+        "properties": {
+          "exampleFloatProperty": 1.2,
+          "exampleStringProperty": "Example_1_2"
+        }
+      },
+      "group": 0
+    },
+    {
+      "uri": "content-2025-09-25-revision2.glb",
+      "keys": {
+        "exampleTimeStamp": "2025-09-25",
+        "exampleRevision": "revision2"
+      },
+      "metadata": {
+        "class": "exampleContentMetadataClass",
+        "properties": {
+          "exampleFloatProperty": 2.0,
+          "exampleStringProperty": "Example_2_0"
+        }
+      },
+      "group": 0
+    },
+    {
+      "uri": "content-2025-09-26-revision2.glb",
+      "keys": {
+        "exampleTimeStamp": "2025-09-26",
+        "exampleRevision": "revision2"
+      },
+      "metadata": {
+        "class": "exampleContentMetadataClass",
+        "properties": {
+          "exampleFloatProperty": 2.1,
+          "exampleStringProperty": "Example_2_1"
+        }
+      },
+      "group": 1
+    },
+    {
+      "uri": "content-2025-09-27-revision2.glb",
+      "keys": {
+        "exampleTimeStamp": "2025-09-27",
+        "exampleRevision": "revision2"
+      },
+      "metadata": {
+        "class": "exampleContentMetadataClass",
+        "properties": {
+          "exampleFloatProperty": 2.3,
+          "exampleStringProperty": "Example_2_3"
+        }
+      },
+      "group": 2
+    }
+  ]
+}
