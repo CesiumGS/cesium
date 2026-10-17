@@ -8,14 +8,14 @@ import {
 
 /**
  * Converts the <code>boundingVolume</code> of a glTF node using the <code>3DTILES_tileset</code>
- * extension to the box or sphere bounding volume format of a 3D Tiles tileset JSON.
- * Only box and sphere shapes are supported.
+ * extension to the box, sphere, or region bounding volume format of a 3D Tiles tileset JSON.
+ * Only box, sphere, and <code>3DTILES_shape_ellipsoid_region</code> shapes are supported.
  *
- * @param {object} boundingVolumeJson The glTF bounding volume, with a <code>shape</code> index and an optional <code>translation</code>, <code>rotation</code>, and <code>scale</code>.
+ * @param {object} boundingVolumeJson The glTF bounding volume, with a <code>shape</code> index and an optional <code>translation</code>, <code>rotation</code>, and <code>scale</code>. The transform is not applied to ellipsoid regions.
  * @param {object[]} shapes The <code>shapes</code> array of the glTF.
- * @returns {{box: number[]}|{sphere: number[]}} The bounding volume in tileset JSON format, with either the box center followed by its half axes, or the sphere center followed by its radius.
+ * @returns {{box: number[]}|{sphere: number[]}|{region: number[]}} The bounding volume in tileset JSON format, with either the box center followed by its half axes, the sphere center followed by its radius, or the region west, south, east, north, minimum height, and maximum height.
  *
- * @exception {DeveloperError} Only box and sphere shapes are supported for the bounding volume.
+ * @exception {DeveloperError} Only box, sphere, and ellipsoid region shapes are supported for the bounding volume.
  *
  * @internal
  */
@@ -26,16 +26,41 @@ function constructBoundingVolumeJson(boundingVolumeJson, shapes) {
     rotation,
     scale,
   } = boundingVolumeJson;
-  const { box, sphere } = shapes[shape];
+  const { box, sphere, extensions } = shapes[shape];
   if (defined(box)) {
     return constructBox(box, translation, rotation, scale);
   }
   if (defined(sphere)) {
     return constructSphere(sphere, translation, scale);
   }
+  const ellipsoidRegion = extensions?.["3DTILES_shape_ellipsoid_region"];
+  if (defined(ellipsoidRegion)) {
+    return constructRegion(ellipsoidRegion);
+  }
   throw new DeveloperError(
-    "Only box and sphere shapes are supported for the bounding volume.",
+    "Only box, sphere, and ellipsoid region shapes are supported for the bounding volume.",
   );
+}
+
+function constructRegion(ellipsoidRegion) {
+  const {
+    minimumLongitude = -Math.PI,
+    minimumLatitude = -Math.PI / 2.0,
+    maximumLongitude = Math.PI,
+    maximumLatitude = Math.PI / 2.0,
+    minimumHeight,
+    maximumHeight,
+  } = ellipsoidRegion;
+  return {
+    region: [
+      minimumLongitude,
+      minimumLatitude,
+      maximumLongitude,
+      maximumLatitude,
+      minimumHeight,
+      maximumHeight,
+    ],
+  };
 }
 
 function constructBox(box, translation, rotation, scale) {
