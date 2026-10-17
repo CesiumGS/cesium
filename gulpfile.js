@@ -37,6 +37,7 @@ import {
   bundleTestWorkers,
   createCombinedSpecList,
 } from "./scripts/build.js";
+import { readNeedsShimList } from "./scripts/readNeedsShimList.js";
 
 // Determines the scope of the workspace packages. If the scope is set to cesium, the workspaces should be @cesium/engine.
 // This should match the scope of the dependencies of the root level package.json.
@@ -1198,7 +1199,9 @@ function processEngineSource(definitionsPath, source) {
 
   // Each name gets its own @deprecated tag; a plain re-export wouldn't show it in hover.
   // Renaming on export avoids conflicting with a plain import of the same name elsewhere in engine's declarations.
-  const deprecatedExports = readCoreReExportShimNames()
+  const deprecatedExports = readNeedsShimList(
+    "scripts/core-reexport-shim-candidates.txt",
+  )
     .map((name) => {
       const comment = `/**
  * @deprecated ${name} has been moved from cesium/engine to cesium/core in CesiumJS 1.146, and will be removed from cesium/engine in 1.150. Import from cesium/core instead.
@@ -1214,28 +1217,6 @@ function processEngineSource(definitionsPath, source) {
   newSource = `${deprecatedExports}\n\n${newSource}`;
 
   return newSource;
-}
-
-/**
- * Reads the reviewed "NEEDS SHIM" list written by scripts/listCoreReExportShims.js,
- * the same list scripts/generateCoreReExportShims.js uses to generate the
- * packages/engine/Source/Core/Deprecated/ shim files.
- * @returns {string[]}
- */
-function readCoreReExportShimNames() {
-  const candidatesPath = "scripts/core-reexport-shim-candidates.txt";
-  const text = readFileSync(candidatesPath, "utf-8");
-  const section = text.split("\n\n").find((s) => s.startsWith("NEEDS SHIM"));
-  if (!section) {
-    throw new Error(
-      `Could not find a "NEEDS SHIM" section in ${candidatesPath}`,
-    );
-  }
-  return section
-    .split("\n")
-    .slice(1)
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0);
 }
 
 function createTypeScriptDefinitions() {
