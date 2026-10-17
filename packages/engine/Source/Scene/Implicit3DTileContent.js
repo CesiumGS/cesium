@@ -60,6 +60,7 @@ class Implicit3DTileContent {
     this._tileset = tileset;
     this._tile = tile;
     this._resource = resource;
+    this._show = true;
 
     this._metadata = undefined;
 
@@ -161,6 +162,16 @@ class Implicit3DTileContent {
 
   set group(value) {
     this._group = value;
+  }
+
+  /** @inheritdoc */
+  get show() {
+    // TODO CONTENT_SHOW Not clear how to implement this...
+    return this._show;
+  }
+
+  set show(value) {
+    this._show = value;
   }
 
   /**

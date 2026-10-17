@@ -209,6 +209,20 @@ class Cesium3DTileContent {
   group;
 
   /**
+   * Whether this content is currently shown.<br>
+   * <br>
+   * Setting this to <code>true</code> will make this content (and all its
+   * inner contents, if applicable) visible. It will return <code>true</code>
+   * if this conetnt and all its inner contents are currently visible.
+   *
+   * @type {boolean}
+   *
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   */
+  show;
+
+  /**
    * Returns whether the feature has this property.
    *
    * @param {number} batchId The batchId for the feature.
