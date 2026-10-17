@@ -24,6 +24,7 @@ class Geometry3DTileContent {
     this._tile = tile;
     this._resource = resource;
     this._geometries = undefined;
+    this._show = true;
 
     this._metadata = undefined;
 
@@ -119,6 +120,16 @@ class Geometry3DTileContent {
 
   set group(value) {
     this._group = value;
+  }
+
+  /** @inheritdoc */
+  get show() {
+    // TODO CONTENT_SHOW Not clear how to implement this...
+    return this._show;
+  }
+
+  set show(value) {
+    this._show = value;
   }
 
   hasProperty(batchId, name) {

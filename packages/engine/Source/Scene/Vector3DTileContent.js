@@ -35,7 +35,7 @@ class Vector3DTileContent {
     this._tileset = tileset;
     this._tile = tile;
     this._resource = resource;
-
+    this._show = true;
     this._polygons = undefined;
     this._polylines = undefined;
     this._points = undefined;
@@ -148,6 +148,16 @@ class Vector3DTileContent {
 
   set group(value) {
     this._group = value;
+  }
+
+  /** @inheritdoc */
+  get show() {
+    // TODO CONTENT_SHOW Not clear how to implement this...
+    return this._show;
+  }
+
+  set show(value) {
+    this._show = value;
   }
 
   hasProperty(batchId, name) {
