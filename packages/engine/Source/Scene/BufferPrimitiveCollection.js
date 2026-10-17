@@ -4,6 +4,7 @@ import {
   AttributeCompression,
   AttributeType,
   BoundingSphere,
+  Cartesian2,
   Cartesian3,
   Check,
   ComponentDatatype,
@@ -25,6 +26,12 @@ import PickId from "../Renderer/PickId.js";
 /** @import FrameState from "./FrameState.js"; */
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */
 /** @import BufferPrimitiveMaterial from "./BufferPrimitiveMaterial.js"; */
+
+// Normals are oct-encoded into two 16-bit components.
+const NORMAL_RANGE_MAX = 65535;
+
+const scratchNormal = new Cartesian3();
+const scratchEncodedNormal = new Cartesian2();
 
 /**
  * @typedef {object} BufferPrimitiveOptions
@@ -53,6 +60,8 @@ import PickId from "../Renderer/PickId.js";
  *    manually, and updating it only as needed, will improve performance for larger dynamic collections.
  * @property {boolean} [debugShowBoundingVolume=false]
  * @property {BlendOption} [blendOption=BlendOption.TRANSLUCENT] Determines how primitives in the collection are blended with the scene. Must be {@link BlendOption.OPAQUE} or {@link BlendOption.TRANSLUCENT}; {@link BlendOption.OPAQUE_AND_TRANSLUCENT} is not supported.
+ * @property {boolean} [hasNormals=false] When <code>true</code>, the collection stores a normal vector, in model
+ *   coordinates, for every vertex.
  * @property {HeightReference} [options.heightReference=HeightReference.NONE] When set to a clamping value, the
  *   collection is draped onto the surfaces selected by the value: {@link HeightReference.CLAMP_TO_TERRAIN} drapes
  *   onto the globe, {@link HeightReference.CLAMP_TO_3D_TILE} drapes onto 3D Tiles, and
@@ -87,6 +96,7 @@ class BufferPrimitiveCollection {
     ERR_MULTIPLE_OF_FOUR:
       "BufferPrimitive byte length must be a multiple of 4.",
     ERR_OUT_OF_RANGE: "BufferPrimitive buffer access out of range.",
+    ERR_NORMALS: "BufferPrimitiveCollection requires hasNormals: true.",
   };
 
   /** @ignore */
@@ -252,6 +262,19 @@ class BufferPrimitiveCollection {
     this._positionNormalized = options.positionNormalized ?? false;
 
     /**
+     * @type {boolean}
+     * @ignore
+     */
+    this._hasNormals = options.hasNormals ?? false;
+
+    /**
+     * Oct-encoded normals, two components per vertex. Null unless <code>hasNormals</code> is set.
+     * @type {Uint16Array}
+     * @ignore
+     */
+    this._normalView = null;
+
+    /**
      * @type {DataView<ArrayBuffer>}
      * @ignore
      */
@@ -304,6 +327,7 @@ class BufferPrimitiveCollection {
 
     this._allocatePrimitiveBuffer();
     this._allocatePositionBuffer();
+    this._allocateNormalBuffer();
     this._allocateMaterialBuffer();
   }
 
@@ -365,6 +389,18 @@ class BufferPrimitiveCollection {
       this._positionDatatype,
       this._positionCountMax * 3,
     );
+  }
+
+  /**
+   * @private
+   * @ignore
+   */
+  _allocateNormalBuffer() {
+    if (!this._hasNormals) {
+      return;
+    }
+
+    this._normalView = new Uint16Array(this._positionCountMax * 2);
   }
 
   /**
@@ -503,6 +539,14 @@ class BufferPrimitiveCollection {
       collection.vertexCount * 3,
     );
 
+    if (collection._hasNormals && result._hasNormals) {
+      this._copySubArray(
+        collection._normalView,
+        result._normalView,
+        collection.vertexCount * 2,
+      );
+    }
+
     this._copySubDataView(
       collection._materialView,
       result._materialView,
@@ -628,6 +672,7 @@ class BufferPrimitiveCollection {
       vertexCountMax: this.vertexCountMax,
       positionDatatype: this.positionDatatype,
       positionNormalized: this.positionNormalized,
+      hasNormals: this._hasNormals,
       modelMatrix: this._modelMatrix,
       show: this.show,
       debugShowBoundingVolume: this.debugShowBoundingVolume,
@@ -669,6 +714,7 @@ class BufferPrimitiveCollection {
   static _replaceBuffers(src, dst) {
     dst._primitiveView = src._primitiveView;
     dst._positionView = src._positionView;
+    dst._normalView = src._normalView;
     dst._materialView = src._materialView;
   }
 
@@ -956,6 +1002,7 @@ class BufferPrimitiveCollection {
     return (
       this._primitiveView.byteLength +
       this._positionView.byteLength +
+      (this._hasNormals ? this._normalView.byteLength : 0) +
       this._materialView.byteLength
     );
   }
@@ -1026,6 +1073,17 @@ class BufferPrimitiveCollection {
   }
 
   /**
+   * When <code>true</code>, the collection stores a normal vector, in model
+   * coordinates, for every vertex.
+   * @type {boolean}
+   * @readonly
+   * @default false
+   */
+  get hasNormals() {
+    return this._hasNormals;
+  }
+
+  /**
    * Determines which surfaces the collection is draped onto, in addition to
    * being drawn as standalone geometry. Draping requires that the collection
    * has been added to {@link Scene#primitives}.
@@ -1082,6 +1140,91 @@ class BufferPrimitiveCollection {
    */
   setPositions(positions, primitiveOffset, primitiveCount) {
     DeveloperError.throwInstantiationError();
+  }
+
+  /**
+   * @param {number} vertexIndex
+   * @param {Cartesian3} [result]
+   * @returns {Cartesian3}
+   * @ignore
+   */
+  _getNormal(vertexIndex, result = new Cartesian3()) {
+    //>>includeStart('debug', pragmas.debug);
+    assert(this._hasNormals, BufferPrimitiveCollection.Error.ERR_NORMALS);
+    //>>includeEnd('debug');
+
+    return AttributeCompression.octDecodeInRange(
+      this._normalView[vertexIndex * 2],
+      this._normalView[vertexIndex * 2 + 1],
+      NORMAL_RANGE_MAX,
+      result,
+    );
+  }
+
+  /**
+   * Stores the normal at the given vertex. Input need not be unit length.
+   *
+   * @param {number} vertexIndex
+   * @param {Cartesian3} normal
+   * @ignore
+   */
+  _setNormal(vertexIndex, normal) {
+    //>>includeStart('debug', pragmas.debug);
+    assert(this._hasNormals, BufferPrimitiveCollection.Error.ERR_NORMALS);
+    //>>includeEnd('debug');
+
+    const encoded = AttributeCompression.octEncodeInRange(
+      Cartesian3.normalize(normal, scratchNormal),
+      NORMAL_RANGE_MAX,
+      scratchEncodedNormal,
+    );
+    this._normalView[vertexIndex * 2] = encoded.x;
+    this._normalView[vertexIndex * 2 + 1] = encoded.y;
+  }
+
+  /**
+   * Writes the normals of a vertex range to 'result', three components per vertex.
+   *
+   * @param {number} vertexOffset
+   * @param {number} vertexCount
+   * @param {TypedArray} [result]
+   * @returns {TypedArray}
+   * @ignore
+   */
+  _getNormals(vertexOffset, vertexCount, result) {
+    result = result ?? new Float32Array(vertexCount * 3);
+
+    for (let i = 0; i < vertexCount; i++) {
+      const normal = this._getNormal(vertexOffset + i, scratchNormal);
+      result[i * 3] = normal.x;
+      result[i * 3 + 1] = normal.y;
+      result[i * 3 + 2] = normal.z;
+    }
+    return result;
+  }
+
+  /**
+   * Stores the normals of a vertex range, three components per vertex.
+   *
+   * @param {number} vertexOffset
+   * @param {number} vertexCount
+   * @param {TypedArray} normals
+   * @ignore
+   */
+  _setNormals(vertexOffset, vertexCount, normals) {
+    //>>includeStart('debug', pragmas.debug);
+    assert(normals.length === vertexCount * 3, "Invalid array length");
+    //>>includeEnd('debug');
+
+    for (let i = 0; i < vertexCount; i++) {
+      const normal = Cartesian3.fromElements(
+        normals[i * 3],
+        normals[i * 3 + 1],
+        normals[i * 3 + 2],
+        scratchNormal,
+      );
+      this._setNormal(vertexOffset + i, normal);
+    }
   }
 
   /////////////////////////////////////////////////////////////////////////////
