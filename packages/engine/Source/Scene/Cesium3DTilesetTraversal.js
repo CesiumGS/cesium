@@ -136,12 +136,14 @@ Cesium3DTilesetTraversal.loadTile = function (tile, frameState) {
   }
 
   if (!isOnScreenLongEnough(tile, frameState)) {
+    tileset._requestsDeferred = true;
     return;
   }
 
   const cameraHasNotStoppedMovingLongEnough =
     frameState.camera.timeSinceMoved < tileset.foveatedTimeDelay;
   if (tile.priorityDeferred && cameraHasNotStoppedMovingLongEnough) {
+    tileset._requestsDeferred = true;
     return;
   }
 

@@ -418,6 +418,10 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    */
   this.expireDate = expireDate;
 
+  if (defined(expireDuration) || defined(expireDate)) {
+    tileset._hasExpiringContent = true;
+  }
+
   /**
    * The time when a style was last applied to this tile.
    *
@@ -1120,6 +1124,9 @@ Cesium3DTile.prototype.updateVisibility = function (frameState) {
  * @private
  */
 Cesium3DTile.prototype.updateExpiration = function () {
+  if (defined(this.expireDate)) {
+    this.tileset._hasExpiringContent = true;
+  }
   if (
     defined(this.expireDate) &&
     this.contentReady &&

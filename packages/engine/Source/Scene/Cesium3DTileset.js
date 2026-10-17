@@ -256,6 +256,19 @@ function Cesium3DTileset(options) {
   this._maximumScreenSpaceError = options.maximumScreenSpaceError ?? 16;
   this._memoryAdjustedScreenSpaceError = this._maximumScreenSpaceError;
 
+  /**
+   * Whether the last render or idle traversal deferred a request that time alone
+   * can release. Read by the requestRenderMode idle check.
+   * @private
+   */
+  this._requestsDeferred = false;
+
+  /**
+   * Whether any tile of this tileset has expiring content.
+   * @private
+   */
+  this._hasExpiringContent = false;
+
   this._cacheBytes = options.cacheBytes ?? 512 * 1024 * 1024;
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number.greaterThanOrEquals("cacheBytes", this._cacheBytes, 0);
@@ -3054,6 +3067,25 @@ function sortTilesByPriority(a, b) {
 }
 
 /**
+ * Whether an idle tick in requestRenderMode can change anything for this tileset.
+ * Only work the last traversal deferred (culled while moving, or foveated),
+ * expiring content, or a memory-adjusted screen space error that is still
+ * relaxing can be released by time alone; load progress and events are handled
+ * every tick by postPassesUpdate regardless.
+ *
+ * @private
+ * @param {Cesium3DTileset} tileset
+ * @returns {boolean}
+ */
+function needsIdleTraversal(tileset) {
+  return (
+    tileset._requestsDeferred ||
+    tileset._hasExpiringContent ||
+    tileset._memoryAdjustedScreenSpaceError > tileset._maximumScreenSpaceError
+  );
+}
+
+/**
  * Perform any pass invariant tasks here. Called after the render pass.
  * @ignore
  * @param {FrameState} frameState
@@ -3943,6 +3975,14 @@ function update(tileset, frameState, passStatistics, passOptions) {
   // Update any tracked min max values
   resetMinimumMaximum(tileset);
 
+  const pass = passOptions.pass;
+  if (
+    pass === Cesium3DTilePass.RENDER ||
+    pass === Cesium3DTilePass.REQUEST_RENDER_MODE_DEFER_CHECK
+  ) {
+    tileset._requestsDeferred = false;
+  }
+
   detectModelMatrixChanged(tileset, frameState);
   tileset._cullRequestsWhileMoving =
     tileset.cullRequestsWhileMoving && !tileset._modelMatrixChanged;
@@ -4059,7 +4099,8 @@ Cesium3DTileset.prototype.updateForPass = function (
         (!this.show && !this.preloadWhenHidden))) ||
     (pass === Cesium3DTilePass.REQUEST_RENDER_MODE_DEFER_CHECK &&
       ((!this._cullRequestsWhileMoving && this.foveatedTimeDelay <= 0) ||
-        !this.show))
+        !this.show ||
+        !needsIdleTraversal(this)))
   ) {
     return;
   }
