@@ -11,9 +11,13 @@ import {
   BufferPolygonCollection,
   BufferPolygonMaterial,
   Cesium3DTileStyle,
+  GeographicTilingScheme,
+  HeightReference,
   SceneMode,
   VectorGltf3DTileContent,
+  VectorProvider,
 } from "../../index.js";
+import createContext from "../../../../Specs/createContext.js";
 
 const scratchPoint = new BufferPoint();
 const scratchPolyline = new BufferPolyline();
@@ -299,6 +303,53 @@ describe("Scene/VectorGltf3DTileContent", () => {
     tileset._vectorBlendOption = BlendOption.TRANSLUCENT;
     content.update(tileset, frameState);
     expect(points.blendOption).toBe(BlendOption.TRANSLUCENT);
+  });
+
+  it("update assigns pick IDs to draped collections", () => {
+    const context = createContext();
+    const vectorProvider = new VectorProvider({
+      tilingScheme: new GeographicTilingScheme(),
+    });
+    const tileset = {
+      _vectorBlendOption: BlendOption.OPAQUE,
+      _heightReference: HeightReference.CLAMP_TO_GROUND,
+      _scene: { vectorProvider },
+    };
+    const tile = {
+      computedTransform: Matrix4.clone(Matrix4.IDENTITY),
+      _selectedFrame: 0,
+    };
+    content = new VectorGltf3DTileContent(tileset, tile, {});
+    content._ready = true;
+
+    const lines = new BufferPolylineCollection({ allowPicking: true });
+    lines.add(
+      {
+        positions: new Float64Array([
+          ...Cartesian3.pack(Cartesian3.fromDegrees(-95.0, 40.0), []),
+          ...Cartesian3.pack(Cartesian3.fromDegrees(-90.0, 40.0), []),
+        ]),
+      },
+      scratchPolyline,
+    );
+    content._collections = [lines];
+    content._collectionLocalMatrices = [Matrix4.clone(Matrix4.IDENTITY)];
+
+    content.update(tileset, {
+      mode: SceneMode.SCENE3D,
+      passes: { render: true },
+      frameNumber: 0,
+      context,
+    });
+
+    const pickId = lines.get(0, scratchPolyline)._pickId;
+    expect(vectorProvider.has(lines)).toBe(true);
+    expect(context.getObjectByPickColor(pickId)).toEqual(
+      jasmine.objectContaining({ collection: lines, index: 0 }),
+    );
+    expect(lines._renderContext).toBeNull();
+
+    context.destroyForSpecs();
   });
 });
 
