@@ -10,7 +10,6 @@ import RequestType from "../Core/RequestType.js";
 import preprocess3DTileContent from "./preprocess3DTileContent.js";
 import finishContent from "./finishContent.js";
 import defer from "../Core/defer.js";
-import Cesium3DTileStyle from "./Cesium3DTileStyle.js";
 
 /** @import { Ray, Color } from "@cesium/core"; */
 /** @import Cesium3DTile from "./Cesium3DTile.js"; */
@@ -515,7 +514,7 @@ class RequestHandle {
           );
         }
         this._requestPromise = undefined;
-        const rejectionError = new Error("Request was cancelled");
+        const rejectionError = new Error("Request was cancelled internally");
         rejectionError.code = RequestState.CANCELLED;
         this._deferred.reject(rejectionError);
         this._fireRequestCancelled();
@@ -1119,15 +1118,6 @@ class ContentHandle {
   }
 }
 
-// XXX_CONDITIONAL See where to put these. Should be static
-// properties, but eslint complains about that.
-const CONDITIONAL_CONTENT_HIDE_STYLE = new Cesium3DTileStyle({
-  show: false,
-});
-const CONDITIONAL_CONTENT_SHOW_STYLE = new Cesium3DTileStyle({
-  show: true,
-});
-
 /**
  * XXX_CONDITIONAL
  *
@@ -1306,7 +1296,8 @@ class Conditional3DTileContent {
      *
      * This will be filled in the 'update' function, evicting
      * the least recently used content handles if necessary,
-     * and calling 'loadedContentHandleEvicted' for them.
+     * and calling 'loadedContentHandleEvicted' for them, and
+     * destroy that that content by calling 'reset'.
      *
      * It is initialized with a maximum size of +Infinity.
      * The maximum size will be ensured by calling its
@@ -1341,7 +1332,7 @@ class Conditional3DTileContent {
      *
      * @type {Cesium3DTileStyle|undefined}
      */
-    this._lastStyle = CONDITIONAL_CONTENT_SHOW_STYLE;
+    this._lastStyle = undefined;
   }
 
   /**
@@ -1553,7 +1544,7 @@ class Conditional3DTileContent {
    *
    * XXX_CONDITIONAL: This is offered by each Cesium3DTileContent, with varying
    * degrees of enthusiasm about how meaningful it is. It is only used in
-   * Cesium3DTilesetTraversal.selectTile, where it dertermines whether
+   * Cesium3DTilesetTraversal.selectTile, where it determines whether
    * tiles go into the tileset._selectedTilesToStyle, which seems to be
    * some sort of optimization attempt to only style "changed" tiles
    * (and not all selected tiles). It's quickly getting convoluted from
@@ -1896,7 +1887,11 @@ class Conditional3DTileContent {
    * @param {FrameState} frameState The frame state.
    */
   update(tileset, frameState) {
-    // TODO Comment why this is called here, and its implications!
+    // Update the _loadedContentHandles cache. This will put all
+    // content handles that are currently "loaded" into the cache,
+    // and evict content handles that are not active and not
+    // recently used, by calling "reset" on these handles,
+    // destroying the content and its associated resources.
     this._unloadOldContent();
 
     // Call update for all contents
@@ -1936,12 +1931,22 @@ class Conditional3DTileContent {
     // Hide all contents.
     const allLoadedContents = this._allLoadedContents;
     for (const content of allLoadedContents) {
-      content.applyStyle(CONDITIONAL_CONTENT_HIDE_STYLE);
+      content.show = false;
     }
 
     // Show only the active contents.
     const activeContents = this._activeLoadedContents;
     for (const activeContent of activeContents) {
+      activeContent.show = true;
+      // TODO This may trigger some rebuild of some draw commands or
+      // whatnot. It shouldn't, if the style is identical to the
+      // previous one, but assuming that 'applyStyle' is implemented
+      // properly for all content types is naive. It will likely be
+      // necessary to store and maintain the last style of each
+      // content somewhere else, and skip this call, working around
+      // the flaws of the existing implementations (and causing bugs
+      // and inconsistencies that will require further workarounds).
+      // Also see 'featurePropertiesDirty'.
       activeContent.applyStyle(this._lastStyle);
     }
 

@@ -356,6 +356,21 @@ class GaussianSplat3DTileContent {
     this._group = value;
   }
 
+  /** @inheritdoc */
+  get show() {
+    // TODO CONTENT_SHOW: There is no reasonable way to show
+    // or hide a single gaussian splat content. The contents
+    // are mushed together into a GaussianSplatPrimitive that
+    // is part of a tileset. This is broken on several levels
+    // anyhow, so no need to bother here: Just use the 'show'
+    // flag of the tileset.
+    return this._tileset.show;
+  }
+
+  set show(value) {
+    this._tileset.show = value;
+  }
+
   /**
    * Get the transformed positions of this tile's Gaussian splats.
    * @type {undefined|Float32Array}
