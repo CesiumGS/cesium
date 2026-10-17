@@ -515,7 +515,7 @@ class RequestHandle {
           );
         }
         this._requestPromise = undefined;
-        const rejectionError = new Error("Request was cancelled");
+        const rejectionError = new Error("Request was cancelled internally");
         rejectionError.code = RequestState.CANCELLED;
         this._deferred.reject(rejectionError);
         this._fireRequestCancelled();
@@ -1306,7 +1306,8 @@ class Conditional3DTileContent {
      *
      * This will be filled in the 'update' function, evicting
      * the least recently used content handles if necessary,
-     * and calling 'loadedContentHandleEvicted' for them.
+     * and calling 'loadedContentHandleEvicted' for them, and
+     * destroy that that content by calling 'reset'.
      *
      * It is initialized with a maximum size of +Infinity.
      * The maximum size will be ensured by calling its
@@ -1896,7 +1897,11 @@ class Conditional3DTileContent {
    * @param {FrameState} frameState The frame state.
    */
   update(tileset, frameState) {
-    // TODO Comment why this is called here, and its implications!
+    // Update the _loadedContentHandles cache. This will put all
+    // content handles that are currently "loaded" into the cache,
+    // and evict content handles that are not active and not
+    // recently used, by calling "reset" on these handles,
+    // destroying the content and its associated resources.
     this._unloadOldContent();
 
     // Call update for all contents
