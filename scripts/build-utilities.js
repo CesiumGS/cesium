@@ -468,7 +468,7 @@ export async function bundleWorkers(options) {
   const workers = await globby(["packages/engine/Source/Workers/**"]);
   const workerConfig = defaultESBuildOptions();
   workerConfig.bundle = true;
-  workerConfig.external = ["fs", "path"];
+  workerConfig.external = ["fs", "path", "node:fs", "node:path"];
 
   if (options.iife) {
     let contents = ``;
