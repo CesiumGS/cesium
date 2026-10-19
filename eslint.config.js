@@ -121,7 +121,7 @@ export default [
   },
   {
     // Sources in a package may only import packages declared in that package's
-    // own package.json, since hoisting in the workspace hides missing dependencies.
+    // own package.json. Published files may not import devDependencies.
     files: ["packages/**/*.{js,mjs,cjs,ts,tsx}"],
     ignores: [
       "**/*.d.ts",
@@ -131,6 +131,7 @@ export default [
     plugins: { n: nodePlugin },
     rules: {
       "n/no-extraneous-import": "error",
+      "n/no-unpublished-import": "error",
     },
   },
   {
