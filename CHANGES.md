@@ -1,5 +1,13 @@
 # Change Log
 
+## 1.147 - 2026-11-02
+
+### @cesium/engine
+
+#### Fixes :wrench:
+
+- Fixed `Scene.pickVoxel` returning the wrong cell for tiles with more than 65,280 samples, and returning a cell when no voxel sample was rendered at the pick position. [#13950](https://github.com/CesiumGS/cesium/issues/13950)
+
 ## 1.146 - 2026-10-01
 
 ### Major Announcements :loudspeaker:
