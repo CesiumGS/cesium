@@ -19,7 +19,7 @@ import {
 
 export const sourceGlobs = {
   patterns: [
-    "Source/{Core,DataSources,Renderer,Scene,Shaders,Widget}/**/*.js",
+    "Source/!(Workers|ThirdParty)/**/*.js",
     "Source/ThirdParty/Shaders/*.js",
     "Source/Workers/createTaskProcessorWorker.js",
   ],
