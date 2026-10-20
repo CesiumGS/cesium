@@ -2890,6 +2890,8 @@ function loadNode(loader, gltfNode, frameState) {
     node.meshVector = meshVectorExtension;
   }
 
+  node.nodeVisibility = nodeExtensions.KHR_node_visibility;
+
   // EXT_voxels defines its attributes and extensions the same way a primitive does.
   if (defined(voxelsExtension)) {
     node.primitives.push(
