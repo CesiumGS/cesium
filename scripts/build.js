@@ -1,12 +1,11 @@
 // @ts-check
 
 import { readFile, writeFile } from "node:fs/promises";
-import { globSync, rmSync } from "node:fs";
+import { globSync, mkdirSync, rmSync } from "node:fs";
 import { EOL } from "node:os";
 import path from "node:path";
 
 import esbuild from "esbuild";
-import { mkdirp } from "mkdirp";
 
 import {
   bundleWorkers,
@@ -407,7 +406,7 @@ export async function buildCesium(options) {
   const write = options.write ?? true;
 
   // Generate Build folder to place build artifacts.
-  mkdirp.sync("Build");
+  mkdirSync("Build", { recursive: true });
   const outputDirectory =
     options.outputDirectory ??
     path.join("Build", `Cesium${!minify ? "Unminified" : ""}`);
