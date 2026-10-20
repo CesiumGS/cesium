@@ -7,6 +7,7 @@ import {
   Matrix4,
   addAllToArray,
   defined,
+  oneTimeWarning,
 } from "@cesium/core";
 import SceneMode from "../SceneMode.js";
 import SplitDirection from "../SplitDirection.js";
@@ -30,7 +31,6 @@ import ModelType from "./ModelType.js";
 import NodeRenderResources from "./NodeRenderResources.js";
 import PrimitiveRenderResources from "./PrimitiveRenderResources.js";
 import ModelDrawCommands from "./ModelDrawCommands.js";
-import oneTimeWarning from "../../Core/oneTimeWarning.js";
 
 /**
  * An in memory representation of the scene graph for a {@link Model}
