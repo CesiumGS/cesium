@@ -32,5 +32,7 @@ vec4 czm_textureCube(samplerCube sampler, vec3 p, float lod) {
     return textureLod(sampler, p, lod);
 #elif defined(GL_EXT_shader_texture_lod)
     return textureCubeLodEXT(sampler, p, lod);
+#else
+    return textureCube(sampler, p);
 #endif
 }
