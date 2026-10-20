@@ -21,10 +21,14 @@ import {
   Cesium3DTileStyle,
   EllipsoidSurfaceAppearance,
   Globe,
+  MetadataComponentType,
+  MetadataType,
   PointPrimitiveCollection,
   Primitive,
   SceneMode,
+  VoxelContent,
   VoxelPrimitive,
+  VoxelShapeType,
   Sync,
 } from "../../index.js";
 import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
@@ -355,12 +359,238 @@ describe(
           expect(scene).toPickAndCall(function (result) {
             expect(result.primitive).toBe(primitive);
           });
-          expect(scene).toPickVoxelAndCall(function (voxelCell) {
-            expect(voxelCell.tileIndex).toBe(0);
-            expect(voxelCell.sampleIndex).toBe(0);
-            expect(voxelCell.hasProperty("a")).toBe(true);
-            expect(voxelCell.getProperty("a")).toEqual(new Float32Array(1));
+          // Sample 3 of the 2 x 2 x 2 tile is rendered at the canvas center
+          expect(scene).toPickVoxelAndCall(
+            function (voxelCell) {
+              expect(voxelCell.tileIndex).toBe(0);
+              expect(voxelCell.sampleIndex).toBe(3);
+              expect(voxelCell.hasProperty("a")).toBe(true);
+              expect(voxelCell.getProperty("a")).toEqual(new Float32Array(1));
+            },
+            new Cartesian2(5, 5),
+          );
+        });
+
+        // A single tile of procedural data in a 2 km x 2 km x 20 m box. Each
+        // sample stores its own sample index.
+        const voxelTransform = Matrix4.multiplyByScale(
+          FixedFrameTransforms.eastNorthUpToFixedFrame(
+            Cartesian3.fromDegrees(0.0, 0.0),
+          ),
+          new Cartesian3(1000.0, 1000.0, 10.0),
+          new Matrix4(),
+        );
+        const canvasCenter = new Cartesian2(5, 5);
+
+        function createSingleTileProvider(options) {
+          const {
+            dimensions,
+            paddingBefore = Cartesian3.ZERO,
+            paddingAfter = Cartesian3.ZERO,
+            componentType = MetadataComponentType.FLOAT32,
+          } = options;
+          const { x, y, z } = Cartesian3.add(
+            Cartesian3.add(dimensions, paddingBefore, new Cartesian3()),
+            paddingAfter,
+            new Cartesian3(),
+          );
+          return {
+            shape: VoxelShapeType.BOX,
+            dimensions,
+            paddingBefore,
+            paddingAfter,
+            names: ["index"],
+            types: [MetadataType.SCALAR],
+            componentTypes: [componentType],
+            globalTransform: voxelTransform,
+            maximumTileCount: 1,
+            requestData: function () {
+              const sampleCount = x * y * z;
+              const data =
+                componentType === MetadataComponentType.UINT8
+                  ? new Uint8Array(sampleCount)
+                  : new Float32Array(sampleCount);
+              for (let i = 0; i < sampleCount; i++) {
+                data[i] = i;
+              }
+              return Promise.resolve(VoxelContent.fromMetadataArray([data]));
+            },
+          };
+        }
+
+        async function addSingleTilePrimitive(options) {
+          const primitive = new VoxelPrimitive({
+            provider: createSingleTileProvider(options),
           });
+          primitive.nearestSampling = true;
+          scene.primitives.add(primitive);
+          await pollToPromise(function () {
+            scene.renderForSpecs();
+            const traversal = primitive._traversal;
+            return traversal.isRenderable(traversal.rootNode);
+          });
+          return primitive;
+        }
+
+        // Looks straight down at the top face of a cell from 2 m above it, so
+        // the cell fills the whole canvas.
+        function lookAtCell(dimensions, x, y) {
+          const local = new Cartesian3(
+            (2.0 * (x + 0.5)) / dimensions.x - 1.0,
+            (2.0 * (y + 0.5)) / dimensions.y - 1.0,
+            1.2,
+          );
+          camera.setView({
+            destination: Matrix4.multiplyByPoint(
+              voxelTransform,
+              local,
+              new Cartesian3(),
+            ),
+            orientation: {
+              heading: 0.0,
+              pitch: -CesiumMath.PI_OVER_TWO,
+              roll: 0.0,
+            },
+          });
+        }
+
+        // The pick pass output for a given pick id, most significant byte first
+        function pickIdToBytes(pickId) {
+          return new Uint8Array([
+            pickId >>> 24,
+            (pickId >>> 16) & 0xff,
+            (pickId >>> 8) & 0xff,
+            pickId & 0xff,
+          ]);
+        }
+
+        it("picks sample indices that do not fit in 16 bits", async function () {
+          if (!scene.context.webgl2) {
+            return;
+          }
+          const dimensions = new Cartesian3(300, 300, 1);
+          const primitive = await addSingleTilePrimitive({ dimensions });
+          const cells = [
+            [0, 0],
+            [179, 217], // 65279
+            [180, 217], // 65280
+            [135, 218], // 65535
+            [136, 218], // 65536
+            [299, 299], // 89999
+          ];
+          for (const [x, y] of cells) {
+            const sampleIndex = x + y * dimensions.x;
+            lookAtCell(dimensions, x, y);
+            expect(scene).toPickVoxelAndCall(function (voxelCell) {
+              expect(voxelCell).toBeDefined();
+              expect(voxelCell.primitive).toBe(primitive);
+              expect(voxelCell.tileIndex).toBe(0);
+              expect(voxelCell.sampleIndex).toBe(sampleIndex);
+              expect(voxelCell.getProperty("index")).toEqual(
+                new Float32Array([sampleIndex]),
+              );
+            }, canvasCenter);
+          }
+        });
+
+        it("picks sample indices that do not fit in 24 bits", async function () {
+          if (!scene.context.webgl2) {
+            return;
+          }
+          // The top layer starts at sample index 2^24
+          const dimensions = new Cartesian3(512, 512, 65);
+          await addSingleTilePrimitive({
+            dimensions,
+            componentType: MetadataComponentType.UINT8,
+          });
+          const topLayer = 64 * dimensions.x * dimensions.y;
+          for (const [x, y] of [
+            [0, 0],
+            [511, 511],
+          ]) {
+            const sampleIndex = topLayer + x + y * dimensions.x;
+            lookAtCell(dimensions, x, y);
+            expect(scene).toPickVoxelAndCall(function (voxelCell) {
+              expect(voxelCell).toBeDefined();
+              expect(voxelCell.sampleIndex).toBe(sampleIndex);
+            }, canvasCenter);
+          }
+        });
+
+        it("picks sample indices in padded tiles", async function () {
+          if (!scene.context.webgl2) {
+            return;
+          }
+          const dimensions = new Cartesian3(300, 300, 1);
+          const padding = new Cartesian3(1, 1, 0);
+          await addSingleTilePrimitive({
+            dimensions,
+            paddingBefore: padding,
+            paddingAfter: padding,
+          });
+          for (const [x, y] of [
+            [0, 0],
+            [299, 299],
+          ]) {
+            // Sample indices count the padding: the tile is 302 x 302 x 1
+            const sampleIndex = x + 1 + (y + 1) * (dimensions.x + 2);
+            lookAtCell(dimensions, x, y);
+            expect(scene).toPickVoxelAndCall(function (voxelCell) {
+              expect(voxelCell).toBeDefined();
+              expect(voxelCell.sampleIndex).toBe(sampleIndex);
+              expect(voxelCell.getProperty("index")).toEqual(
+                new Float32Array([sampleIndex]),
+              );
+            }, canvasCenter);
+          }
+        });
+
+        it("decodes the tile index from the pick", async function () {
+          if (!scene.context.webgl2) {
+            return;
+          }
+          const dimensions = new Cartesian3(300, 300, 1);
+          const primitive = await addSingleTilePrimitive({ dimensions });
+          const traversal = primitive._traversal;
+          const keyframeNode = traversal.findKeyframeNode(0);
+          const findKeyframeNode = spyOn(
+            traversal,
+            "findKeyframeNode",
+          ).and.returnValue(keyframeNode);
+          // Tile 200 would not fit in this megatexture, but the decoding does
+          // not depend on it, and the pick id is above 2^24.
+          const tileIndex = 200;
+          const sampleIndex = 89999;
+          const pickId = tileIndex * 90000 + sampleIndex + 1;
+          spyOn(scene, "pick").and.returnValue({ primitive });
+          spyOn(scene._picking, "pickVoxelCoordinate").and.returnValue(
+            pickIdToBytes(pickId),
+          );
+
+          const voxelCell = scene.pickVoxel(canvasCenter);
+          expect(findKeyframeNode).toHaveBeenCalledWith(tileIndex);
+          expect(voxelCell.tileIndex).toBe(tileIndex);
+          expect(voxelCell.sampleIndex).toBe(sampleIndex);
+        });
+
+        it("returns undefined when no voxel sample is rendered at the pick position", async function () {
+          if (!scene.context.webgl2) {
+            return;
+          }
+          const primitive = await addSingleTilePrimitive({
+            dimensions: new Cartesian3(300, 300, 1),
+          });
+          const findKeyframeNode = spyOn(
+            primitive._traversal,
+            "findKeyframeNode",
+          ).and.callThrough();
+          spyOn(scene, "pick").and.returnValue({ primitive });
+          spyOn(scene._picking, "pickVoxelCoordinate").and.returnValue(
+            new Uint8Array(4),
+          );
+
+          expect(scene.pickVoxel(canvasCenter)).toBeUndefined();
+          expect(findKeyframeNode).not.toHaveBeenCalled();
         });
       });
 

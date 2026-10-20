@@ -41,6 +41,8 @@ function VoxelTraversal(
   const { provider, dimensions, inputDimensions } = primitive;
   const { types, componentTypes } = provider;
 
+  // The 512 MiB limit also keeps voxel pick ids (one per sample, at least one
+  // byte each) within a signed 32-bit int. See VoxelFS.glsl.
   if (defined(maximumTextureMemoryByteLength)) {
     maximumTextureMemoryByteLength = Math.min(
       Math.max(0, maximumTextureMemoryByteLength),
