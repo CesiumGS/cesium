@@ -8,7 +8,6 @@ import {
 import { readFile, rm, writeFile } from "fs/promises";
 import { join, basename, resolve, dirname } from "path";
 import { exec, execSync } from "child_process";
-import fetch from "node-fetch";
 import { createRequire } from "module";
 import { finished } from "stream/promises";
 
@@ -614,7 +613,7 @@ async function setStatus(state, targetUrl, description, context) {
   const response = await fetch(
     `https://api.github.com/repos/${process.env.GITHUB_REPO}/statuses/${process.env.GITHUB_SHA}`,
     {
-      method: "post",
+      method: "POST",
       body: JSON.stringify(body),
       headers: {
         "Content-Type": "application/json",
