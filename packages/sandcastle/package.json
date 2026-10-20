@@ -44,7 +44,6 @@
     "@types/react-dom": "^19.2.5",
     "@vitejs/plugin-react": "^6.1.1",
     "pagefind": "^1.3.0",
-    "rimraf": "^6.0.1",
     "vite": "8.0.16",
     "vite-plugin-static-copy": "^4.1.0",
     "yaml": "^2.9.0"
