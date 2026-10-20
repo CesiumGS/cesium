@@ -1,12 +1,11 @@
 // @ts-check
 
-import DeveloperError from "./DeveloperError.js";
-
-/** @import Cartesian2 from "./Cartesian2.js"; */
-/** @import Cartographic from "./Cartographic.js"; */
-/** @import Ellipsoid from "./Ellipsoid.js"; */
-/** @import MapProjection from "./MapProjection.js"; */
-/** @import Rectangle from "./Rectangle.js"; */
+import { DeveloperError } from "@cesium/core";
+/** @import { Cartesian2 } from "@cesium/core"; */
+/** @import { Cartographic } from "@cesium/core"; */
+/** @import { Ellipsoid } from "@cesium/core"; */
+/** @import { MapProjection } from "@cesium/core"; */
+/** @import { Rectangle } from "@cesium/core"; */
 
 /**
  * A tiling scheme for geometry or imagery on the surface of an ellipsoid.  At level-of-detail zero,

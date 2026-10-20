@@ -1,7 +1,5 @@
+import { Cartesian2, Cartesian4, Color } from "@cesium/core";
 import {
-  Cartesian2,
-  Cartesian4,
-  Color,
   Resource,
   Cesium3DTileStyle,
   ConditionsExpression,

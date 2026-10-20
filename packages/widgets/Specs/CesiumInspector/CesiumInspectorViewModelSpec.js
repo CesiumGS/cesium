@@ -1,19 +1,19 @@
 import {
-  defined,
   GeometryInstance,
+  Math as CesiumMath,
   Rectangle,
   RectangleGeometry,
+  defined,
+} from "@cesium/core";
+import {
   WebMercatorTilingScheme,
   EllipsoidSurfaceAppearance,
   Globe,
   GlobeSurfaceTile,
   Primitive,
   QuadtreeTile,
-  Math as CesiumMath,
 } from "@cesium/engine";
-
 import { CesiumInspectorViewModel } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 
 describe(

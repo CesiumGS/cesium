@@ -1,13 +1,10 @@
+import { Cartesian3, Matrix3, Matrix4, Quaternion } from "@cesium/core";
 import {
   Axis,
-  Cartesian3,
   InstancingPipelineStage,
-  Matrix3,
-  Matrix4,
   ModelRuntimeNode,
   ModelMatrixUpdateStage,
   NodeStatisticsPipelineStage,
-  Quaternion,
 } from "../../../index.js";
 
 describe("Scene/Model/ModelRuntimeNode", function () {

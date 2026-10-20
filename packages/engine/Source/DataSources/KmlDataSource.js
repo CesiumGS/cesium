@@ -1,41 +1,43 @@
-import ArcType from "../Core/ArcType.js";
-import AssociativeArray from "../Core/AssociativeArray.js";
-import BoundingRectangle from "../Core/BoundingRectangle.js";
+import {
+  ArcType,
+  AssociativeArray,
+  BoundingRectangle,
+  Cartesian2,
+  Cartesian3,
+  Cartographic,
+  ClockRange,
+  ClockStep,
+  Color,
+  DeveloperError,
+  Ellipsoid,
+  Event,
+  Frozen,
+  HeadingPitchRange,
+  HeadingPitchRoll,
+  Iso8601,
+  JulianDate,
+  Math as CesiumMath,
+  NearFarScalar,
+  PolygonHierarchy,
+  Rectangle,
+  RuntimeError,
+  TimeInterval,
+  TimeIntervalCollection,
+  clone,
+  createGuid,
+  defined,
+  getExtensionFromUri,
+  getFilenameFromUri,
+  getTimestamp,
+  objectToQuery,
+  oneTimeWarning,
+  queryToObject,
+} from "@cesium/core";
 import buildModuleUrl from "../Core/buildModuleUrl.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartographic from "../Core/Cartographic.js";
-import ClockRange from "../Core/ClockRange.js";
-import ClockStep from "../Core/ClockStep.js";
-import clone from "../Core/clone.js";
-import Color from "../Core/Color.js";
-import createGuid from "../Core/createGuid.js";
 import Credit from "../Core/Credit.js";
-import Frozen from "../Core/Frozen.js";
 import defer from "../Core/defer.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
-import Event from "../Core/Event.js";
-import getExtensionFromUri from "../Core/getExtensionFromUri.js";
-import getFilenameFromUri from "../Core/getFilenameFromUri.js";
-import getTimestamp from "../Core/getTimestamp.js";
-import HeadingPitchRange from "../Core/HeadingPitchRange.js";
-import HeadingPitchRoll from "../Core/HeadingPitchRoll.js";
-import Iso8601 from "../Core/Iso8601.js";
-import JulianDate from "../Core/JulianDate.js";
-import CesiumMath from "../Core/Math.js";
-import NearFarScalar from "../Core/NearFarScalar.js";
-import objectToQuery from "../Core/objectToQuery.js";
-import oneTimeWarning from "../Core/oneTimeWarning.js";
 import PinBuilder from "../Core/PinBuilder.js";
-import PolygonHierarchy from "../Core/PolygonHierarchy.js";
-import queryToObject from "../Core/queryToObject.js";
-import Rectangle from "../Core/Rectangle.js";
 import Resource from "../Core/Resource.js";
-import RuntimeError from "../Core/RuntimeError.js";
-import TimeInterval from "../Core/TimeInterval.js";
-import TimeIntervalCollection from "../Core/TimeIntervalCollection.js";
 import HeightReference from "../Scene/HeightReference.js";
 import HorizontalOrigin from "../Scene/HorizontalOrigin.js";
 import LabelStyle from "../Scene/LabelStyle.js";

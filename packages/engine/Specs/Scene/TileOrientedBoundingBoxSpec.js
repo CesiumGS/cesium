@@ -5,9 +5,8 @@ import {
   Math as CesiumMath,
   Matrix3,
   Plane,
-  TileOrientedBoundingBox,
-} from "../../index.js";
-
+} from "@cesium/core";
+import { TileOrientedBoundingBox } from "../../index.js";
 import createFrameState from "../../../../Specs/createFrameState.js";
 
 describe("Scene/TileOrientedBoundingBox", function () {

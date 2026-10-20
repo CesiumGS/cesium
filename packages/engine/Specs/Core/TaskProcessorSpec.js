@@ -1,10 +1,9 @@
+import { RuntimeError } from "@cesium/core";
 import {
   buildModuleUrl,
   FeatureDetection,
-  RuntimeError,
   TaskProcessor,
 } from "../../index.js";
-
 import absolutize from "../../../../Specs/absolutize.js";
 
 describe("Core/TaskProcessor", function () {

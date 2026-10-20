@@ -1,15 +1,16 @@
 import {
-  CesiumTerrainProvider,
+  Cartesian3,
+  Color,
+  HeadingPitchRoll,
+  JulianDate,
+  NearFarScalar,
   Rectangle,
+} from "@cesium/core";
+import {
+  CesiumTerrainProvider,
   Globe,
   SingleTileImageryProvider,
-  Color,
-  Cartesian3,
-  HeadingPitchRoll,
-  NearFarScalar,
-  JulianDate,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 

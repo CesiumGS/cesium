@@ -4,6 +4,8 @@ import {
   ExtrapolationType,
   JulianDate,
   Math as CesiumMath,
+} from "@cesium/core";
+import {
   CallbackProperty,
   ConstantPositionProperty,
   SampledPositionProperty,

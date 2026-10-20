@@ -2,14 +2,16 @@ import {
   Cartesian3,
   Color,
   DeveloperError,
-  EntityCollection,
   Event,
-  GpxDataSource,
-  HeightReference,
   Iso8601,
   JulianDate,
-  RequestErrorEvent,
   RuntimeError,
+} from "@cesium/core";
+import {
+  EntityCollection,
+  GpxDataSource,
+  HeightReference,
+  RequestErrorEvent,
   VerticalOrigin,
 } from "../../index.js";
 

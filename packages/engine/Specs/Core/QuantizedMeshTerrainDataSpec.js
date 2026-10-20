@@ -1,9 +1,11 @@
 import {
   BoundingSphere,
   Cartesian3,
-  defined,
-  GeographicTilingScheme,
   Math as CesiumMath,
+  defined,
+} from "@cesium/core";
+import {
+  GeographicTilingScheme,
   QuantizedMeshTerrainData,
   TerrainData,
   TerrainMesh,

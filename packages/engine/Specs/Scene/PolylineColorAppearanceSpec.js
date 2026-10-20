@@ -5,11 +5,8 @@ import {
   ColorGeometryInstanceAttribute,
   GeometryInstance,
   PolylineGeometry,
-  Appearance,
-  PolylineColorAppearance,
-  Primitive,
-} from "../../index.js";
-
+} from "@cesium/core";
+import { Appearance, PolylineColorAppearance, Primitive } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
 
 describe(

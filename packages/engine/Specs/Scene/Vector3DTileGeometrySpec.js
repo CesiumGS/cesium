@@ -3,14 +3,16 @@ import {
   Cartesian3,
   Color,
   ColorGeometryInstanceAttribute,
-  combine,
-  destroyObject,
   Ellipsoid,
+  FixedFrameTransforms,
   GeometryInstance,
   Matrix4,
   Rectangle,
   RectangleGeometry,
-  FixedFrameTransforms,
+  combine,
+  destroyObject,
+} from "@cesium/core";
+import {
   Pass,
   RenderState,
   Cesium3DTileBatchTable,
@@ -21,7 +23,6 @@ import {
   StencilConstants,
   Vector3DTileGeometry,
 } from "../../index.js";
-
 import createWebglVersionHelper from "../createWebglVersionHelper.js";
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";

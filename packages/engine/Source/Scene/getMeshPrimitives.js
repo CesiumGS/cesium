@@ -1,7 +1,4 @@
-import addAllToArray from "../Core/addAllToArray.js";
-import defined from "../Core/defined.js";
-import Frozen from "../Core/Frozen.js";
-import WebGLConstants from "../Core/WebGLConstants.js";
+import { Frozen, WebGLConstants, addAllToArray, defined } from "@cesium/core";
 
 /**
  * Get an array of primitives for a given mesh. If the EXT_mesh_primitive_restart extension is present, use it to combine groups of primitives.

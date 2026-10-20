@@ -1,20 +1,22 @@
-import Cartesian3 from "../Core/Cartesian3.js";
-import Check from "../Core/Check.js";
-import deprecationWarning from "../Core/deprecationWarning.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Event from "../Core/Event.js";
-import Intersect from "../Core/Intersect.js";
-import Rectangle from "../Core/Rectangle.js";
-import RuntimeError from "../Core/RuntimeError.js";
+import {
+  Cartesian3,
+  Check,
+  DeveloperError,
+  Ellipsoid,
+  Event,
+  Frozen,
+  Intersect,
+  Math as CesiumMath,
+  Rectangle,
+  RuntimeError,
+  defined,
+  deprecationWarning,
+  destroyObject,
+} from "@cesium/core";
 import ClippingPolygon from "./ClippingPolygon.js";
 import BufferPolygonCollection from "./BufferPolygonCollection.js";
 import BufferPolygon from "./BufferPolygon.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
 import VectorPipeline from "../Core/VectorPipeline.js";
-import CesiumMath from "../Core/Math.js";
 
 /** @import { VectorCollectionData } from "../Core/VectorPipeline.js" */
 

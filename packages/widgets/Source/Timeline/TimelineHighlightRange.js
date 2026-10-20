@@ -1,4 +1,4 @@
-import { JulianDate } from "@cesium/engine";
+import { JulianDate } from "@cesium/core";
 
 /**
  * @private

@@ -1,12 +1,9 @@
+import { Color, JulianDate, Matrix4 } from "@cesium/core";
 import {
-  Color,
-  JulianDate,
-  Matrix4,
   Cesium3DTile,
   Cesium3DTileContentState,
   Cesium3DTilesetHeatmap,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 
 describe("Scene/Cesium3DTilesetHeatmap", function () {

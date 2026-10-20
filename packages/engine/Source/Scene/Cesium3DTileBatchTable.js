@@ -1,14 +1,17 @@
-import Cartesian2 from "../Core/Cartesian2.js";
-import Check from "../Core/Check.js";
-import clone from "../Core/clone.js";
-import Color from "../Core/Color.js";
-import combine from "../Core/combine.js";
-import defined from "../Core/defined.js";
-import deprecationWarning from "../Core/deprecationWarning.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import CesiumMath from "../Core/Math.js";
-import RuntimeError from "../Core/RuntimeError.js";
+import {
+  Cartesian2,
+  Check,
+  Color,
+  DeveloperError,
+  Math as CesiumMath,
+  RuntimeError,
+  addAllToArray,
+  clone,
+  combine,
+  defined,
+  deprecationWarning,
+  destroyObject,
+} from "@cesium/core";
 import ContextLimits from "../Renderer/ContextLimits.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
 import Pass from "../Renderer/Pass.js";
@@ -23,7 +26,6 @@ import getBinaryAccessor from "./getBinaryAccessor.js";
 import StencilConstants from "./StencilConstants.js";
 import StencilFunction from "./StencilFunction.js";
 import StencilOperation from "./StencilOperation.js";
-import addAllToArray from "../Core/addAllToArray.js";
 
 const DEFAULT_COLOR_VALUE = BatchTexture.DEFAULT_COLOR_VALUE;
 const DEFAULT_SHOW_VALUE = BatchTexture.DEFAULT_SHOW_VALUE;

@@ -1,4 +1,4 @@
-import { Ellipsoid, Event } from "@cesium/engine";
+import { Ellipsoid, Event } from "@cesium/core";
 
 function createGlobe(ellipsoid) {
   ellipsoid = ellipsoid ?? Ellipsoid.WGS84;

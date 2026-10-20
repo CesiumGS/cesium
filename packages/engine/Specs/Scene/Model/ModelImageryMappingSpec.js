@@ -1,16 +1,18 @@
 import {
-  Rectangle,
-  MappedPositions,
-  Ellipsoid,
-  Matrix4,
-  Cartographic,
-  ModelImageryMapping,
-  Cartesian3,
-  BoundingRectangle,
-  Math as CesiumMath,
-  Cartesian2,
-  WebMercatorProjection,
   AttributeType,
+  BoundingRectangle,
+  Cartesian2,
+  Cartesian3,
+  Cartographic,
+  Ellipsoid,
+  Math as CesiumMath,
+  Matrix4,
+  Rectangle,
+  WebMercatorProjection,
+} from "@cesium/core";
+import {
+  MappedPositions,
+  ModelImageryMapping,
   VertexAttributeSemantic,
 } from "../../../index.js";
 

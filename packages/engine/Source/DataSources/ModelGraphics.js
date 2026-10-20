@@ -1,7 +1,4 @@
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Event from "../Core/Event.js";
+import { DeveloperError, Event, Frozen, defined } from "@cesium/core";
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 import NodeTransformationProperty from "./NodeTransformationProperty.js";
 import PropertyBag from "./PropertyBag.js";

@@ -1,12 +1,25 @@
-import Frozen from "../Core/Frozen.js";
-import Matrix4 from "../Core/Matrix4.js";
-import Matrix3 from "../Core/Matrix3.js";
+import {
+  AttributeType,
+  Cartesian3,
+  ComponentDatatype,
+  DeveloperError,
+  FixedFrameTransforms,
+  Frozen,
+  Geometry,
+  GeometryAttribute,
+  Matrix3,
+  Matrix4,
+  PixelDatatype,
+  PixelFormat,
+  PrimitiveType,
+  Quaternion,
+  clone,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import ModelUtility from "./Model/ModelUtility.js";
 import GaussianSplatSorter from "./GaussianSplatSorter.js";
 import GaussianSplatTextureGenerator from "./GaussianSplatTextureGenerator.js";
-import ComponentDatatype from "../Core/ComponentDatatype.js";
-import PixelDatatype from "../Renderer/PixelDatatype.js";
-import PixelFormat from "../Core/PixelFormat.js";
 import Sampler from "../Renderer/Sampler.js";
 import Texture from "../Renderer/Texture.js";
 import GaussianSplatRenderResources from "./GaussianSplatRenderResources.js";
@@ -15,26 +28,16 @@ import Pass from "../Renderer/Pass.js";
 import ShaderDestination from "../Renderer/ShaderDestination.js";
 import GaussianSplatVS from "../Shaders/PrimitiveGaussianSplatVS.js";
 import GaussianSplatFS from "../Shaders/PrimitiveGaussianSplatFS.js";
-import PrimitiveType from "../Core/PrimitiveType.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
-import Geometry from "../Core/Geometry.js";
-import GeometryAttribute from "../Core/GeometryAttribute.js";
 import VertexArray from "../Renderer/VertexArray.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
 import RenderState from "../Renderer/RenderState.js";
-import clone from "../Core/clone.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
-import AttributeType from "./AttributeType.js";
 import ModelComponents from "./ModelComponents.js";
 import Axis from "./Axis.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Quaternion from "../Core/Quaternion.js";
 import SplitDirection from "./SplitDirection.js";
-import destroyObject from "../Core/destroyObject.js";
 import ContextLimits from "../Renderer/ContextLimits.js";
-import FixedFrameTransforms from "../Core/FixedFrameTransforms.js";
+
 const scratchMatrix4A = new Matrix4();
 const scratchMatrix4C = new Matrix4();
 const scratchMatrix4D = new Matrix4();

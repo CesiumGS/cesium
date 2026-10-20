@@ -1,4 +1,4 @@
-import combine from "../../Core/combine.js";
+import { combine } from "@cesium/core";
 
 /**
  * The batch texture stage is responsible for setting up the batch texture for the primitive.

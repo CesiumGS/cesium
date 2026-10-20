@@ -4,8 +4,8 @@ import {
   Matrix3,
   Matrix4,
   Plane,
-  ClippingPlane,
-} from "../../index.js";
+} from "@cesium/core";
+import { ClippingPlane } from "../../index.js";
 
 describe("Scene/ClippingPlane", function () {
   it("constructs", function () {

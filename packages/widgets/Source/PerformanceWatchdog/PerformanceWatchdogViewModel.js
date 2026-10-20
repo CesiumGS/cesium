@@ -1,9 +1,5 @@
-import {
-  defined,
-  destroyObject,
-  DeveloperError,
-  FrameRateMonitor,
-} from "@cesium/engine";
+import { DeveloperError, defined, destroyObject } from "@cesium/core";
+import { FrameRateMonitor } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
 import createCommand from "../createCommand.js";
 

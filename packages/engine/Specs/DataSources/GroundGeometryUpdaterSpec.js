@@ -1,6 +1,6 @@
+import { GeometryOffsetAttribute } from "@cesium/core";
 import {
   ApproximateTerrainHeights,
-  GeometryOffsetAttribute,
   GroundGeometryUpdater,
   HeightReference,
 } from "../../index.js";

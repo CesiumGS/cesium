@@ -1,7 +1,5 @@
+import { Cartesian2, Cartesian3, Matrix2 } from "@cesium/core";
 import {
-  Cartesian2,
-  Cartesian3,
-  Matrix2,
   CustomShader,
   CustomShaderMode,
   CustomShaderTranslucencyMode,

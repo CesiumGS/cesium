@@ -4,8 +4,8 @@ import {
   Matrix4,
   PrimitiveType,
   VertexFormat,
-  createTangentSpaceDebugPrimitive,
-} from "../../index.js";
+} from "@cesium/core";
+import { createTangentSpaceDebugPrimitive } from "../../index.js";
 
 describe("Scene/createTangentSpaceDebugPrimitive", function () {
   it("computes all attributes", function () {

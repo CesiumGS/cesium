@@ -1,9 +1,11 @@
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import {
+  DeveloperError,
+  Frozen,
+  WebMercatorProjection,
+  defined,
+} from "@cesium/core";
 import GeographicTilingScheme from "../Core/GeographicTilingScheme.js";
 import Resource from "../Core/Resource.js";
-import WebMercatorProjection from "../Core/WebMercatorProjection.js";
 import GetFeatureInfoFormat from "./GetFeatureInfoFormat.js";
 import TimeDynamicImagery from "./TimeDynamicImagery.js";
 import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";

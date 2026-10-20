@@ -1,13 +1,10 @@
+import { Color, JulianDate, TimeInterval } from "@cesium/core";
 import {
-  Color,
-  JulianDate,
-  TimeInterval,
   ConstantProperty,
   StripeMaterialProperty,
   StripeOrientation,
   TimeIntervalCollectionProperty,
 } from "../../index.js";
-
 import testDefinitionChanged from "../../../../Specs/testDefinitionChanged.js";
 
 describe("DataSources/StripeMaterialProperty", function () {

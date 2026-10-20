@@ -1,6 +1,5 @@
+import { Math as CesiumMath, Rectangle } from "@cesium/core";
 import {
-  Math as CesiumMath,
-  Rectangle,
   Request,
   RequestScheduler,
   Resource,
@@ -11,7 +10,6 @@ import {
   ImageryState,
   Azure2DImageryProvider,
 } from "../../index.js";
-
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe("Scene/Azure2DImageryProvider", function () {

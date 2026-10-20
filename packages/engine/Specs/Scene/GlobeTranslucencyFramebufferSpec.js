@@ -1,12 +1,10 @@
+import { BoundingRectangle, PixelDatatype } from "@cesium/core";
 import {
-  BoundingRectangle,
   Framebuffer,
   GlobeTranslucencyFramebuffer,
   PassState,
-  PixelDatatype,
   Texture,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 
 describe("Scene/GlobeTranslucencyFramebuffer", function () {

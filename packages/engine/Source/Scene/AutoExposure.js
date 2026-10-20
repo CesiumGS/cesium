@@ -1,10 +1,12 @@
-import Cartesian2 from "../Core/Cartesian2.js";
-import Color from "../Core/Color.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
+import {
+  Cartesian2,
+  Color,
+  PixelDatatype,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import ClearCommand from "../Renderer/ClearCommand.js";
 import FramebufferManager from "../Renderer/FramebufferManager.js";
-import PixelDatatype from "../Renderer/PixelDatatype.js";
 
 /**
  * A post process stage that will get the luminance value at each pixel and

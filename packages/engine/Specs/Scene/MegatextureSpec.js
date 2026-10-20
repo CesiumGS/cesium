@@ -1,9 +1,8 @@
+import { Cartesian3, RuntimeError } from "@cesium/core";
 import {
-  Cartesian3,
   ContextLimits,
   Megatexture,
   MetadataComponentType,
-  RuntimeError,
 } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
 

@@ -1,6 +1,6 @@
 // @ts-check
 
-/** @import Color from "../Core/Color.js"; */
+/** @import { Color } from "@cesium/core"; */
 /** @import {Destroyable} from "../Core/globalTypes.js"; */
 
 /**

@@ -1,8 +1,5 @@
-import {
-  AssociativeArray,
-  BatchTexture,
-  ModelStatistics,
-} from "../../../index.js";
+import { AssociativeArray } from "@cesium/core";
+import { BatchTexture, ModelStatistics } from "../../../index.js";
 
 describe("Scene/Model/ModelStatistics", function () {
   const emptyMap = new AssociativeArray();

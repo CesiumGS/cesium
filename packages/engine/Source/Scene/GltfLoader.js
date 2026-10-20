@@ -1,26 +1,32 @@
+import {
+  AttributeType,
+  Cartesian2,
+  Cartesian3,
+  Cartesian4,
+  Check,
+  ComponentDatatype,
+  Frozen,
+  InterpolationType,
+  Matrix4,
+  PrimitiveType,
+  Quaternion,
+  RuntimeError,
+  addAllToArray,
+  defined,
+  oneTimeWarning,
+} from "@cesium/core";
+import {
+  getAccessorByteStride,
+  getComponentReader,
+  numberOfComponentsForType,
+} from "@cesium/gltf";
 import ArticulationStageType from "../Core/ArticulationStageType.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartesian4 from "../Core/Cartesian4.js";
-import Check from "../Core/Check.js";
-import ComponentDatatype from "../Core/ComponentDatatype.js";
 import Credit from "../Core/Credit.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
-import InterpolationType from "../Core/InterpolationType.js";
-import Matrix4 from "../Core/Matrix4.js";
-import PrimitiveType from "../Core/PrimitiveType.js";
-import Quaternion from "../Core/Quaternion.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import Sampler from "../Renderer/Sampler.js";
 import TextureMagnificationFilter from "../Renderer/TextureMagnificationFilter.js";
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
-import getAccessorByteStride from "./GltfPipeline/getAccessorByteStride.js";
-import getComponentReader from "./GltfPipeline/getComponentReader.js";
-import numberOfComponentsForType from "./GltfPipeline/numberOfComponentsForType.js";
 import GltfStructuralMetadataLoader from "./GltfStructuralMetadataLoader.js";
-import AttributeType from "./AttributeType.js";
 import Axis from "./Axis.js";
 import GltfLoaderUtil from "./GltfLoaderUtil.js";
 import hasExtension from "./hasExtension.js";
@@ -33,8 +39,6 @@ import SupportedImageFormats from "./SupportedImageFormats.js";
 import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 import GltfGpmLoader from "./Model/Extensions/Gpm/GltfGpmLoader.js";
 import GltfMeshPrimitiveGpmLoader from "./Model/Extensions/Gpm/GltfMeshPrimitiveGpmLoader.js";
-import oneTimeWarning from "../Core/oneTimeWarning.js";
-import addAllToArray from "../Core/addAllToArray.js";
 import getMeshPrimitives from "./getMeshPrimitives.js";
 
 const {
@@ -807,13 +811,7 @@ function getPackedTypedArray(gltf, accessor, bufferViewTypedArray) {
   byteOffset = bufferViewTypedArray.byteOffset + byteOffset;
 
   for (let i = 0; i < count; ++i) {
-    componentReader(
-      dataView,
-      byteOffset,
-      componentCount,
-      componentByteLength,
-      components,
-    );
+    componentReader(dataView, byteOffset, componentCount, components);
     for (let j = 0; j < componentCount; ++j) {
       accessorTypedArray[i * componentCount + j] = components[j];
     }
@@ -2873,6 +2871,7 @@ function loadNode(loader, gltfNode, frameState) {
   const instancingExtension = nodeExtensions.EXT_mesh_gpu_instancing;
   const articulationsExtension = nodeExtensions.AGI_articulations;
   const meshVectorExtension = nodeExtensions.CESIUM_mesh_vector;
+  const voxelsExtension = nodeExtensions.EXT_voxels;
 
   if (defined(instancingExtension)) {
     if (loader._loadForClassification) {
@@ -2892,6 +2891,13 @@ function loadNode(loader, gltfNode, frameState) {
   }
 
   node.nodeVisibility = nodeExtensions.KHR_node_visibility;
+
+  // EXT_voxels defines its attributes and extensions the same way a primitive does.
+  if (defined(voxelsExtension)) {
+    node.primitives.push(
+      loadPrimitive(loader, voxelsExtension, false, frameState),
+    );
+  }
 
   const meshId = gltfNode.mesh;
   if (defined(meshId)) {
