@@ -100,6 +100,9 @@ export const makeZip = gulp.series(
     const corePackageJsonSrc = await pruneScriptsForZip(
       "packages/core/package.json",
     );
+    const gltfPackageJsonSrc = await pruneScriptsForZip(
+      "packages/gltf/package.json",
+    );
     const enginePackageJsonSrc = await pruneScriptsForZip(
       "packages/engine/package.json",
     );
@@ -117,6 +120,7 @@ export const makeZip = gulp.series(
         }),
       )
       .pipe(corePackageJsonSrc)
+      .pipe(gltfPackageJsonSrc)
       .pipe(enginePackageJsonSrc)
       .pipe(widgetsPackageJsonSrc)
       .pipe(packageJsonSrc)
@@ -136,11 +140,13 @@ export const makeZip = gulp.series(
             "Build/Specs/**",
             "Build/package.json",
             "packages/core/Build/**",
+            "packages/gltf/Build/**",
             "packages/engine/Build/**",
             "packages/widgets/Build/**",
             "!Build/Specs/e2e/**",
             "!Build/InlineWorkers.js",
             "!packages/core/Build/Specs/**",
+            "!packages/gltf/Build/Specs/**",
             "!packages/engine/Build/Specs/**",
             "!packages/widgets/Build/Specs/**",
             "!packages/engine/Build/minifyShaders.state",
@@ -161,6 +167,12 @@ export const makeZip = gulp.series(
             "packages/core/README.md",
             "packages/core/scripts/**",
             "packages/core/Source/**",
+            "packages/gltf/index.js",
+            "packages/gltf/index.d.ts",
+            "packages/gltf/LICENSE.md",
+            "packages/gltf/README.md",
+            "packages/gltf/scripts/**",
+            "packages/gltf/Source/**",
             "packages/engine/index.js",
             "packages/engine/index.d.ts",
             "packages/engine/LICENSE.md",
@@ -213,6 +225,7 @@ export const makeZip = gulp.series(
 
     rimraf.sync("./package.noprepare.json");
     rimraf.sync("./packages/core/package.noprepare.json");
+    rimraf.sync("./packages/gltf/package.noprepare.json");
     rimraf.sync("./packages/engine/package.noprepare.json");
     rimraf.sync("./packages/widgets/package.noprepare.json");
 

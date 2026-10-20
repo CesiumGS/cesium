@@ -6,7 +6,7 @@ message: >
 severity: error
 language: JavaScript
 files:
-  - packages/engine/Source/**/*.js
+  - packages/*/Source/**/*.js
 rule:
   # Match all declarations at module scope that are preceded immediately by a
   # JSDoc comment. Exclude JSDoc comments containing tags that would exclude

@@ -346,7 +346,194 @@ ImplicitSubtree.fromSubtreeJson = async function (
     chunks = parseSubtreeChunks(subtreeView);
   }
 
-  const subtreeJson = chunks.json;
+  await parseSubtree(
+    subtree,
+    chunks.json,
+    chunks.binary,
+    implicitTileset,
+    implicitTileset.metadataSchema,
+  );
+  return subtree;
+};
+
+/**
+ * Parse all relevant information out of a subtree stored as glTF JSON with the
+ * <code>3DTILES_subtree</code> extension. This fetches any external buffers and
+ * the metadata schema if one is referenced.
+ *
+ * @param {Resource} resource The resource for this subtree. This is used for fetching external buffers and schemas as needed.
+ * @param {object} gltf The glTF JSON object for this subtree. All of its buffers must have a <code>uri</code>.
+ * @param {ImplicitTileset} implicitTileset The implicit tileset this subtree belongs to.
+ * @param {ImplicitTileCoordinates} implicitCoordinates The coordinates of the subtree's root tile.
+ * @return {Promise<ImplicitSubtree>} The created subtree
+ * @private
+ */
+ImplicitSubtree.fromSubtreeGltf = async function (
+  resource,
+  gltf,
+  implicitTileset,
+  implicitCoordinates,
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("resource", resource);
+  Check.typeOf.object("gltf", gltf);
+  Check.typeOf.object("implicitTileset", implicitTileset);
+  Check.typeOf.object("implicitCoordinates", implicitCoordinates);
+  //>>includeEnd('debug');
+
+  const subtree = new ImplicitSubtree(
+    resource,
+    implicitTileset,
+    implicitCoordinates,
+  );
+
+  const { subtreeJson, metadataSchema } = await convertGltfToSubtreeJson(
+    resource,
+    gltf,
+  );
+  await parseSubtree(
+    subtree,
+    subtreeJson,
+    undefined,
+    implicitTileset,
+    metadataSchema,
+  );
+  return subtree;
+};
+
+/**
+ * Parse all relevant information out of a subtree stored as a binary glTF (glb)
+ * with the <code>3DTILES_subtree</code> extension. This fetches any external
+ * buffers and the metadata schema if one is referenced.
+ *
+ * @param {Resource} resource The resource for this subtree. This is used for fetching external buffers and schemas as needed.
+ * @param {Uint8Array} glbView The contents of the glb
+ * @param {ImplicitTileset} implicitTileset The implicit tileset this subtree belongs to.
+ * @param {ImplicitTileCoordinates} implicitCoordinates The coordinates of the subtree's root tile.
+ * @return {Promise<ImplicitSubtree>} The created subtree
+ * @private
+ */
+ImplicitSubtree.fromSubtreeGlb = async function (
+  resource,
+  glbView,
+  implicitTileset,
+  implicitCoordinates,
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("resource", resource);
+  Check.typeOf.object("glbView", glbView);
+  Check.typeOf.object("implicitTileset", implicitTileset);
+  Check.typeOf.object("implicitCoordinates", implicitCoordinates);
+  //>>includeEnd('debug');
+
+  const subtree = new ImplicitSubtree(
+    resource,
+    implicitTileset,
+    implicitCoordinates,
+  );
+
+  const chunks = parseGlbChunks(glbView);
+  const { subtreeJson, metadataSchema } = await convertGltfToSubtreeJson(
+    resource,
+    chunks.json,
+  );
+  await parseSubtree(
+    subtree,
+    subtreeJson,
+    chunks.binary,
+    implicitTileset,
+    metadataSchema,
+  );
+  return subtree;
+};
+
+/**
+ * Convert the JSON of a glTF with the <code>3DTILES_subtree</code> extension
+ * into subtree JSON, and load the metadata schema from the glTF's
+ * <code>EXT_structural_metadata</code> extension.
+ *
+ * @param {Resource} resource The resource for the glTF. This is used for fetching an external schema.
+ * @param {object} gltf The glTF JSON
+ * @returns {Promise<{subtreeJson: object, metadataSchema: (MetadataSchema|undefined)}>} The subtree JSON and the schema, which is undefined when the glTF does not define one.
+ * @private
+ */
+async function convertGltfToSubtreeJson(resource, gltf) {
+  const subtreeExtension = gltf.extensions["3DTILES_subtree"];
+  const subtreeJson = {
+    tileAvailability: subtreeExtension.tileAvailability,
+    contentAvailability: subtreeExtension.contentAvailability,
+    childSubtreeAvailability: subtreeExtension.childSubtreeAvailability,
+    buffers: gltf.buffers,
+    bufferViews: gltf.bufferViews,
+  };
+
+  if (defined(subtreeExtension.tileProperties)) {
+    subtreeJson.tileMetadata = subtreeExtension.tileProperties;
+  }
+
+  if (defined(subtreeExtension.contentProperties)) {
+    subtreeJson.contentMetadata = [subtreeExtension.contentProperties];
+  }
+
+  let metadataSchema;
+  if (hasExtension(gltf, "EXT_structural_metadata")) {
+    const metadataJson = gltf.extensions["EXT_structural_metadata"];
+    subtreeJson.propertyTables = metadataJson.propertyTables;
+    metadataSchema = await loadMetadataSchema(resource, metadataJson);
+  }
+
+  return { subtreeJson, metadataSchema };
+}
+
+/**
+ * Load the schema of an <code>EXT_structural_metadata</code> extension, which
+ * is either defined inline or stored in an external file.
+ *
+ * @param {Resource} resource The resource used to resolve an external schema URI.
+ * @param {object} metadataJson The <code>EXT_structural_metadata</code> extension JSON
+ * @returns {Promise<MetadataSchema|undefined>} The schema, or <code>undefined</code> if the extension does not define one.
+ * @private
+ */
+async function loadMetadataSchema(resource, metadataJson) {
+  let schemaLoader;
+  if (defined(metadataJson.schemaUri)) {
+    const schemaResource = resource.getDerivedResource({
+      url: metadataJson.schemaUri,
+    });
+    schemaLoader = ResourceCache.getSchemaLoader({ resource: schemaResource });
+  } else if (defined(metadataJson.schema)) {
+    schemaLoader = ResourceCache.getSchemaLoader({
+      schema: metadataJson.schema,
+    });
+  } else {
+    return undefined;
+  }
+
+  await schemaLoader.load();
+  const schema = schemaLoader.schema;
+  ResourceCache.unload(schemaLoader);
+  return schema;
+}
+
+/**
+ * Parse the availability, buffers, and metadata of a subtree, and store the
+ * results in the subtree.
+ *
+ * @param {ImplicitSubtree} subtree The subtree to populate
+ * @param {object} subtreeJson The subtree JSON
+ * @param {Uint8Array} [internalBuffer] The internal buffer of the subtree. This is undefined when the subtree has no internal buffer.
+ * @param {ImplicitTileset} implicitTileset The implicit tileset this subtree belongs to.
+ * @param {MetadataSchema} [metadataSchema] The schema that the subtree's metadata classes are looked up in.
+ * @returns {Promise<void>}
+ * @private
+ */
+async function parseSubtree(
+  subtree,
+  subtreeJson,
+  internalBuffer,
+  implicitTileset,
+  metadataSchema,
+) {
   subtree._subtreeJson = subtreeJson;
 
   let tilePropertyTableJson;
@@ -369,11 +556,10 @@ ImplicitSubtree.fromSubtreeJson = async function (
   }
 
   let metadata;
-  const schema = implicitTileset.metadataSchema;
   const subtreeMetadata = subtreeJson.subtreeMetadata;
   if (defined(subtreeMetadata)) {
     const metadataClass = subtreeMetadata.class;
-    const subtreeMetadataClass = schema.classes[metadataClass];
+    const subtreeMetadataClass = metadataSchema.classes[metadataClass];
     metadata = new ImplicitSubtreeMetadata({
       subtreeMetadata: subtreeMetadata,
       class: subtreeMetadataClass,
@@ -429,22 +615,21 @@ ImplicitSubtree.fromSubtreeJson = async function (
   const buffersU8 = await requestActiveBuffers(
     subtree,
     bufferHeaders,
-    chunks.binary,
+    internalBuffer,
   );
   const bufferViewsU8 = parseActiveBufferViews(bufferViewHeaders, buffersU8);
   parseAvailability(subtree, subtreeJson, implicitTileset, bufferViewsU8);
 
   if (defined(tilePropertyTableJson)) {
-    parseTileMetadataTable(subtree, implicitTileset, bufferViewsU8);
+    parseTileMetadataTable(subtree, metadataSchema, bufferViewsU8);
     makeTileJumpBuffer(subtree);
   }
 
-  parseContentMetadataTables(subtree, implicitTileset, bufferViewsU8);
+  parseContentMetadataTables(subtree, metadataSchema, bufferViewsU8);
   makeContentJumpBuffers(subtree);
 
   subtree._ready = true;
-  return subtree;
-};
+}
 
 /**
  * A helper object for storing the two parts of the subtree binary
@@ -494,6 +679,56 @@ function parseSubtreeChunks(subtreeView) {
   return {
     json: subtreeJson,
     binary: subtreeBinary,
+  };
+}
+
+const glbJsonChunkType = 0x4e4f534a;
+const glbBinaryChunkType = 0x004e4942;
+
+/**
+ * Given the binary contents of a glb, split into JSON and binary chunks
+ *
+ * @param {Uint8Array} glbView The glb binary
+ * @returns {{json: object, binary: (Uint8Array|undefined)}} An object containing the JSON chunk and the binary chunk, which is undefined if the glb has none.
+ * @private
+ */
+function parseGlbChunks(glbView) {
+  const littleEndian = true;
+  const glbReader = new DataView(
+    glbView.buffer,
+    glbView.byteOffset,
+    glbView.byteLength,
+  );
+
+  // Skip the magic and version to read the total byte length
+  const glbByteLength = Math.min(
+    glbReader.getUint32(8, littleEndian),
+    glbView.byteLength,
+  );
+  let byteOffset = 12;
+
+  let json;
+  let binary;
+  while (byteOffset + 8 <= glbByteLength) {
+    const chunkByteLength = glbReader.getUint32(byteOffset, littleEndian);
+    const chunkType = glbReader.getUint32(byteOffset + 4, littleEndian);
+    byteOffset += 8;
+
+    if (chunkType === glbJsonChunkType) {
+      json = getJsonFromTypedArray(glbView, byteOffset, chunkByteLength);
+    } else if (chunkType === glbBinaryChunkType) {
+      binary = glbView.subarray(byteOffset, byteOffset + chunkByteLength);
+    }
+    byteOffset += chunkByteLength;
+  }
+
+  if (!defined(json)) {
+    throw new RuntimeError("Invalid glb: no JSON chunk found.");
+  }
+
+  return {
+    json: json,
+    binary: binary,
   };
 }
 
@@ -874,14 +1109,13 @@ function parseAvailabilityBitstream(
  * in the subtree.
  *
  * @param {ImplicitSubtree} subtree The subtree
- * @param {ImplicitTileset} implicitTileset The implicit tileset this subtree belongs to.
+ * @param {MetadataSchema} metadataSchema The schema that contains the tile metadata class.
  * @param {object} bufferViewsU8 A dictionary of bufferView index to its Uint8Array contents.
  * @private
  */
-function parseTileMetadataTable(subtree, implicitTileset, bufferViewsU8) {
+function parseTileMetadataTable(subtree, metadataSchema, bufferViewsU8) {
   const tilePropertyTableJson = subtree._tilePropertyTableJson;
   const tileCount = subtree._tileAvailability.availableCount;
-  const metadataSchema = implicitTileset.metadataSchema;
 
   const tileMetadataClassName = tilePropertyTableJson.class;
   const tileMetadataClass = metadataSchema.classes[tileMetadataClassName];
@@ -899,14 +1133,13 @@ function parseTileMetadataTable(subtree, implicitTileset, bufferViewsU8) {
  * {@link MetadataTable}s in the subtree.
  *
  * @param {ImplicitSubtree} subtree The subtree
- * @param {ImplicitTileset} implicitTileset The implicit tileset this subtree belongs to.
+ * @param {MetadataSchema} metadataSchema The schema that contains the content metadata classes.
  * @param {object} bufferViewsU8 A dictionary of bufferView index to its Uint8Array contents.
  * @private
  */
-function parseContentMetadataTables(subtree, implicitTileset, bufferViewsU8) {
+function parseContentMetadataTables(subtree, metadataSchema, bufferViewsU8) {
   const contentPropertyTableJsons = subtree._contentPropertyTableJsons;
   const contentAvailabilityBitstreams = subtree._contentAvailabilityBitstreams;
-  const metadataSchema = implicitTileset.metadataSchema;
 
   const contentMetadataTables = subtree._contentMetadataTables;
   for (let i = 0; i < contentPropertyTableJsons.length; i++) {

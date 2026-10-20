@@ -660,7 +660,7 @@ export class Primitive {
     /**
      * Data loaded from the EXT_mesh_primitive_edge_visibility extension.
      *
-     * @type {Object}
+     * @type {object}
      * @ignore
      */
     this.edgeVisibility = undefined;
@@ -747,7 +747,7 @@ export class Node {
     /**
      * The name of the node.
      *
-     * @type {string}
+     * @type {string|undefined}
      * @ignore
      */
     this.name = undefined;
@@ -756,7 +756,7 @@ export class Node {
      * The index of the node in the glTF. This is useful for finding the nodes
      * that belong to a skin after they have been instantiated at runtime.
      *
-     * @type {number}
+     * @type {number|undefined}
      * @ignore
      */
     this.index = undefined;
@@ -780,7 +780,7 @@ export class Node {
     /**
      * Instances of this node.
      *
-     * @type {Instances}
+     * @type {Instances|undefined}
      * @ignore
      */
     this.instances = undefined;
@@ -788,7 +788,7 @@ export class Node {
     /**
      * The skin.
      *
-     * @type {Skin}
+     * @type {Skin|undefined}
      * @ignore
      */
     this.skin = undefined;
@@ -798,7 +798,7 @@ export class Node {
      * rotation, and scale must be undefined. When matrix is undefined
      * translation, rotation, and scale must all be defined.
      *
-     * @type {Matrix4}
+     * @type {Matrix4|undefined}
      * @ignore
      */
     this.matrix = undefined;
@@ -806,7 +806,7 @@ export class Node {
     /**
      * The local translation.
      *
-     * @type {Cartesian3}
+     * @type {Cartesian3|undefined}
      * @ignore
      */
     this.translation = undefined;
@@ -814,7 +814,7 @@ export class Node {
     /**
      * The local rotation.
      *
-     * @type {Quaternion}
+     * @type {Quaternion|undefined}
      * @ignore
      */
     this.rotation = undefined;
@@ -822,7 +822,7 @@ export class Node {
     /**
      * The local scale.
      *
-     * @type {Cartesian3}
+     * @type {Cartesian3|undefined}
      * @ignore
      */
     this.scale = undefined;
@@ -840,7 +840,7 @@ export class Node {
      * The name of the articulation affecting this node, as defined by the
      * AGI_articulations extension.
      *
-     * @type {string}
+     * @type {string|undefined}
      * @ignore
      */
     this.articulationName = undefined;
@@ -848,10 +848,18 @@ export class Node {
     /**
      * The CESIUM_mesh_vector extension data for this node.
      *
-     * @type {object}
+     * @type {object|undefined}
      * @ignore
      */
     this.meshVector = undefined;
+
+    /**
+     * The KHR_node_visibility extension data for this node.
+     *
+     * @type {object|undefined}
+     * @ignore
+     */
+    this.nodeVisibility = undefined;
   }
 }
 

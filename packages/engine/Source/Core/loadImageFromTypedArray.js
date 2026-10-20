@@ -3,7 +3,7 @@ import Resource from "./Resource.js";
 
 /**
  * Loads an image from a typed array.
- * @param {Object} options An object containing the following properties:
+ * @param {object} options An object containing the following properties:
  * @param {Uint8Array} options.uint8Array The typed array containing the image data.
  * @param {string} options.format The MIME format of the image (e.g., "image/png").
  * @param {Request} [options.request] The request object to use to fetch the image.

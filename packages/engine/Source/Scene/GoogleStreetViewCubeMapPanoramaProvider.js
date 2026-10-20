@@ -183,7 +183,7 @@ GoogleStreetViewCubeMapPanoramaProvider.prototype.loadPanorama =
  * @param {Cartographic} position The position to search for the nearest panoId.
  * @param {number} [radius=50] The radius in meters to search for the nearest panoId.
  * 
- * @returns {Object} an object containing a panoId, latitude, and longitude of the closest panorama
+ * @returns {object} an object containing a panoId, latitude, and longitude of the closest panorama
  * 
  * @example
  * 
