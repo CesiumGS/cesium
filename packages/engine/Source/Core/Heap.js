@@ -193,6 +193,7 @@ Heap.prototype.insert = function (element) {
 
   if (defined(maximumLength) && this._length > maximumLength) {
     removedElement = array[maximumLength];
+    array[maximumLength] = undefined; // Remove trailing reference
     this._length = maximumLength;
   }
 
