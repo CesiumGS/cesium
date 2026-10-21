@@ -1254,16 +1254,15 @@ function processEmissiveStrengthUniforms(
 ) {
   const emissiveStrengthValue = emissiveStrength.emissiveStrength;
 
-  shaderBuilder.addDefine(
-    "HAS_EMISSIVE_STRENGTH",
-    undefined,
-    ShaderDestination.FRAGMENT,
-  );
-
   if (
     defined(emissiveStrengthValue) &&
     emissiveStrengthValue !== EmissiveStrength.DEFAULT_EMISSIVE_STRENGTH
   ) {
+    shaderBuilder.addDefine(
+      "HAS_EMISSIVE_STRENGTH",
+      undefined,
+      ShaderDestination.FRAGMENT,
+    );
     shaderBuilder.addUniform(
       "float",
       "u_emissiveStrength",
