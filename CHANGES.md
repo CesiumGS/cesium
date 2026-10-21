@@ -1,5 +1,13 @@
 # Change Log
 
+## 1.147 - 2026-11-02
+
+### @cesium/engine
+
+#### Fixes :wrench:
+
+- Fixed the globe keeping every destroyed `Scene` in memory. Terrain index buffers were stored on the index arrays that terrain providers share and cache for the whole session, so each destroyed context, its canvas and its scene stayed reachable.
+
 ## 1.146 - 2026-10-01
 
 ### Major Announcements :loudspeaker:

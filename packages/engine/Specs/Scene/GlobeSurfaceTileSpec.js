@@ -1,4 +1,4 @@
-import { Cartesian4 } from "@cesium/core";
+import { Cartesian4, ComponentDatatype } from "@cesium/core";
 import {
   GeographicTilingScheme,
   GlobeSurfaceTile,
@@ -11,6 +11,7 @@ import {
 import MockImageryProvider from "../../../../Specs/MockImageryProvider.js";
 import MockTerrainProvider from "../../../../Specs/MockTerrainProvider.js";
 import TerrainTileProcessor from "../../../../Specs/TerrainTileProcessor.js";
+import createContext from "../../../../Specs/createContext.js";
 
 describe("Scene/GlobeSurfaceTile", function () {
   let frameState;
@@ -389,4 +390,111 @@ describe("Scene/GlobeSurfaceTile", function () {
       });
     });
   });
+
+  describe(
+    "_createVertexArrayForMesh",
+    function () {
+      let context;
+      let otherContext;
+
+      beforeAll(function () {
+        context = createContext();
+        otherContext = createContext();
+      });
+
+      afterAll(function () {
+        context.destroyForSpecs();
+        otherContext.destroyForSpecs();
+      });
+
+      function createMesh(indices) {
+        return {
+          vertices: new Float32Array(9),
+          indices: indices,
+          encoding: {
+            getAttributes: function (buffer) {
+              return [
+                {
+                  index: 0,
+                  vertexBuffer: buffer,
+                  componentsPerAttribute: 3,
+                  componentDatatype: ComponentDatatype.FLOAT,
+                },
+              ];
+            },
+          },
+        };
+      }
+
+      it("does not store index buffers on the shared terrain indices", function () {
+        const indices = new Uint16Array([0, 1, 2]);
+
+        const vertexArray = GlobeSurfaceTile._createVertexArrayForMesh(
+          context,
+          createMesh(indices),
+        );
+
+        expect(indices.indexBuffers).toBeUndefined();
+        GlobeSurfaceTile._freeVertexArray(vertexArray);
+      });
+
+      it("shares an index buffer between meshes with the same indices", function () {
+        const indices = new Uint16Array([0, 1, 2]);
+
+        const first = GlobeSurfaceTile._createVertexArrayForMesh(
+          context,
+          createMesh(indices),
+        );
+        const second = GlobeSurfaceTile._createVertexArrayForMesh(
+          context,
+          createMesh(indices),
+        );
+
+        expect(second.indexBuffer).toBe(first.indexBuffer);
+        expect(first.indexBuffer.referenceCount).toBe(2);
+        GlobeSurfaceTile._freeVertexArray(first);
+        GlobeSurfaceTile._freeVertexArray(second);
+      });
+
+      it("creates a separate index buffer for each context", function () {
+        const indices = new Uint16Array([0, 1, 2]);
+
+        const first = GlobeSurfaceTile._createVertexArrayForMesh(
+          context,
+          createMesh(indices),
+        );
+        const second = GlobeSurfaceTile._createVertexArrayForMesh(
+          otherContext,
+          createMesh(indices),
+        );
+
+        expect(second.indexBuffer).not.toBe(first.indexBuffer);
+        expect(first.indexBuffer.referenceCount).toBe(1);
+        expect(second.indexBuffer.referenceCount).toBe(1);
+        GlobeSurfaceTile._freeVertexArray(first);
+        GlobeSurfaceTile._freeVertexArray(second);
+      });
+
+      it("creates a new index buffer once the shared one was destroyed", function () {
+        const indices = new Uint16Array([0, 1, 2]);
+        const freed = GlobeSurfaceTile._createVertexArrayForMesh(
+          context,
+          createMesh(indices),
+        );
+        const freedIndexBuffer = freed.indexBuffer;
+        GlobeSurfaceTile._freeVertexArray(freed);
+
+        const vertexArray = GlobeSurfaceTile._createVertexArrayForMesh(
+          context,
+          createMesh(indices),
+        );
+
+        expect(freedIndexBuffer.isDestroyed()).toBe(true);
+        expect(vertexArray.indexBuffer).not.toBe(freedIndexBuffer);
+        expect(vertexArray.indexBuffer.isDestroyed()).toBe(false);
+        GlobeSurfaceTile._freeVertexArray(vertexArray);
+      });
+    },
+    "WebGL",
+  );
 });

@@ -493,10 +493,17 @@ class GlobeSurfaceTile {
     });
     const attributes = mesh.encoding.getAttributes(buffer);
 
-    const indexBuffers = mesh.indices.indexBuffers || {};
-    let indexBuffer = indexBuffers[context.id];
+    // Terrain providers share index arrays between tiles and keep them in module-level
+    // caches, so the buffers are looked up per context instead of being stored on the
+    // arrays. Otherwise every destroyed context would stay reachable through them.
+    let indexBuffers = context.cache.globeSurfaceTile_indexBuffers;
+    if (!defined(indexBuffers)) {
+      indexBuffers = new WeakMap();
+      context.cache.globeSurfaceTile_indexBuffers = indexBuffers;
+    }
+    const indices = mesh.indices;
+    let indexBuffer = indexBuffers.get(indices);
     if (!defined(indexBuffer) || indexBuffer.isDestroyed()) {
-      const indices = mesh.indices;
       indexBuffer = Buffer.createIndexBuffer({
         context: context,
         typedArray: indices,
@@ -506,8 +513,7 @@ class GlobeSurfaceTile {
       });
       indexBuffer.vertexArrayDestroyable = false;
       indexBuffer.referenceCount = 1;
-      indexBuffers[context.id] = indexBuffer;
-      mesh.indices.indexBuffers = indexBuffers;
+      indexBuffers.set(indices, indexBuffer);
     } else {
       ++indexBuffer.referenceCount;
     }
