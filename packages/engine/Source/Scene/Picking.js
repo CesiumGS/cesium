@@ -823,6 +823,7 @@ Picking.prototype.pickPosition = function (scene, windowPosition, result) {
  * @param {object[]} pickedPrimitives
  * @param {object[]} pickedAttributes
  * @param {object[]} pickedFeatures
+ * @param {Set<object>} pickedObjects
  * @returns {boolean} whether picking should end
  * @ignore
  */
@@ -833,6 +834,7 @@ function addDrillPickedResults(
   pickedPrimitives,
   pickedAttributes,
   pickedFeatures,
+  pickedObjects,
 ) {
   for (const pickedResult of pickedResults) {
     const object = pickedResult.object;
@@ -848,11 +850,22 @@ function addDrillPickedResults(
       return true;
     }
 
+    // Hidden draped vectors stay in baked surface data until the next render.
+    if (pickedObjects.has(object)) {
+      return true;
+    }
+    pickedObjects.add(object);
+
     if (!exclude) {
       results.push(pickedResult);
       if (results.length >= limit) {
         return true;
       }
+    }
+
+    // Hiding a draped vector only dirties its collection, forcing a needless re-bake.
+    if (pickedResult.draped) {
+      return true;
     }
 
     const primitive = object.primitive;
@@ -902,6 +915,7 @@ function drillPick(pickCallback, limit) {
   const pickedPrimitives = [];
   const pickedAttributes = [];
   const pickedFeatures = [];
+  const pickedObjects = new Set();
   if (!defined(limit)) {
     limit = Number.MAX_VALUE;
   }
@@ -915,6 +929,7 @@ function drillPick(pickCallback, limit) {
       pickedPrimitives,
       pickedAttributes,
       pickedFeatures,
+      pickedObjects,
     );
     if (complete) {
       break;
@@ -961,6 +976,9 @@ Picking.prototype.drillPick = function (
       object: object,
       position: undefined,
       exclude: false,
+      draped:
+        defined(object.collection) &&
+        scene.vectorProvider?.has(object.collection) === true,
     }));
   };
   const objects = drillPick(pickCallback, limit);
