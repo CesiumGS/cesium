@@ -1,5 +1,13 @@
 # Change Log
 
+## 1.147 - 2026-11-02
+
+### @cesium/engine
+
+#### Fixes :wrench:
+
+- Fixed the page hanging, or polylines being drawn with the wrong translucency, when the color of polylines with different depth fail materials changed between opaque and translucent. [#13952](https://github.com/CesiumGS/cesium/issues/13952)
+
 ## 1.146 - 2026-10-01
 
 ### Major Announcements :loudspeaker:

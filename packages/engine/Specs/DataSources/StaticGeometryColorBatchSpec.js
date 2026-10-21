@@ -1,6 +1,7 @@
 import {
   Cartesian3,
   Color,
+  defined,
   DistanceDisplayCondition,
   JulianDate,
   Math as CesiumMath,
@@ -509,5 +510,120 @@ describe("DataSources/StaticGeometryColorBatch", function () {
 
         batch.removeAllPrimitives();
       });
+  });
+
+  describe("moves updaters whose color changes translucency", function () {
+    // Polylines with different depth fail materials are kept in separate
+    // batches, so each polyline below gets a batch of its own.
+    const depthFailColors = [Color.RED, Color.GREEN, Color.BLUE];
+
+    function createPolylines(alphas) {
+      return alphas.map(function (alpha, i) {
+        const color = Color.WHITE.withAlpha(alpha);
+        const entity = new Entity({
+          polyline: {
+            positions: [
+              Cartesian3.fromDegrees(i, 0.0),
+              Cartesian3.fromDegrees(i, 1.0),
+            ],
+            material: new ColorMaterialProperty(
+              new CallbackProperty(function () {
+                return color;
+              }, false),
+            ),
+            depthFailMaterial: depthFailColors[i],
+          },
+        });
+        return {
+          entity: entity,
+          color: color,
+          updater: new PolylineGeometryUpdater(entity, scene),
+        };
+      });
+    }
+
+    function renderUntilUpdated(batch) {
+      return pollToPromise(function () {
+        scene.initializeFrame();
+        const isUpdated = batch.update(time);
+        scene.render(time);
+        return isUpdated;
+      });
+    }
+
+    // Moving updaters happens synchronously inside batch.update, so neither
+    // pollToPromise nor the spec timeout can stop it if it never returns.
+    function failAfterAddCalls(batch, maximumCalls) {
+      const add = batch.add;
+      let calls = 0;
+      spyOn(batch, "add").and.callFake(function (time, updater) {
+        if (++calls > maximumCalls) {
+          throw new Error(
+            `StaticGeometryColorBatch.add was called more than ${maximumCalls} times`,
+          );
+        }
+        return add.call(batch, time, updater);
+      });
+    }
+
+    function isInTranslucentPrimitive(entity) {
+      const primitives = scene.primitives;
+      for (let i = 0; i < primitives.length; i++) {
+        const primitive = primitives.get(i);
+        if (defined(primitive.getGeometryInstanceAttributes(entity))) {
+          return primitive.appearance.translucent;
+        }
+      }
+      return undefined;
+    }
+
+    async function changeAlphas(initialAlphas, finalAlphas) {
+      const batch = new StaticGeometryColorBatch(
+        scene.primitives,
+        PolylineColorAppearance,
+        PolylineColorAppearance,
+        false,
+        ShadowMode.DISABLED,
+      );
+      const polylines = createPolylines(initialAlphas);
+      for (const polyline of polylines) {
+        batch.add(time, polyline.updater);
+      }
+
+      try {
+        await renderUntilUpdated(batch);
+        expect(scene.primitives.length).toEqual(polylines.length);
+
+        polylines.forEach(function (polyline, i) {
+          polyline.color.alpha = finalAlphas[i];
+        });
+        failAfterAddCalls(batch, polylines.length);
+        await renderUntilUpdated(batch);
+
+        polylines.forEach(function (polyline, i) {
+          expect(isInTranslucentPrimitive(polyline.entity))
+            .withContext(`polyline ${i}`)
+            .toBe(finalAlphas[i] < 1.0);
+        });
+      } finally {
+        batch.removeAllPrimitives();
+      }
+    }
+
+    it("from several batches that become translucent", function () {
+      return changeAlphas([1.0, 1.0, 1.0], [0.5, 0.5, 1.0]);
+    });
+
+    it("from several batches that become opaque", function () {
+      return changeAlphas([0.5, 0.5, 0.5], [1.0, 1.0, 0.5]);
+    });
+
+    it("from a later batch that becomes translucent", function () {
+      return changeAlphas([1.0, 1.0, 1.0], [1.0, 1.0, 0.5]);
+    });
+
+    it("from a later batch that becomes opaque", function () {
+      return changeAlphas([0.5, 0.5, 0.5], [0.5, 0.5, 1.0]);
+    });
   });
 });
