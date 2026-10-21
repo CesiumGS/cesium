@@ -528,6 +528,7 @@ function getInstanceTransformsAsMatrices(instances, count, renderResources) {
     Number.MAX_VALUE,
     Number.MAX_VALUE,
   );
+  let instancingScaleMax = 0.0;
 
   const hasTranslation = defined(translationAttribute);
   const hasRotation = defined(rotationAttribute);
@@ -596,6 +597,12 @@ function getInstanceTransformsAsMatrices(instances, count, renderResources) {
       scaleTypedArray[i * 3 + 2],
       scaleScratch,
     );
+    instancingScaleMax = Math.max(
+      instancingScaleMax,
+      Math.abs(scale.x),
+      Math.abs(scale.y),
+      Math.abs(scale.z),
+    );
 
     const transform = Matrix4.fromTranslationQuaternionRotationScale(
       translation,
@@ -610,6 +617,9 @@ function getInstanceTransformsAsMatrices(instances, count, renderResources) {
   const runtimeNode = renderResources.runtimeNode;
   runtimeNode.instancingTranslationMin = instancingTranslationMin;
   runtimeNode.instancingTranslationMax = instancingTranslationMax;
+  if (hasRotation || hasScale) {
+    runtimeNode.instancingScaleMax = instancingScaleMax;
+  }
 
   // Unload the typed arrays. These are just pointers to the arrays
   // in the vertex buffer loader.

@@ -1,5 +1,17 @@
 # Change Log
 
+## 1.147 - 2026-11-02
+
+### @cesium/engine
+
+#### Additions :tada:
+
+- Added experimental `ModelInstanceCollection` for drawing many copies of a glTF model with GPU instancing. [#13915](https://github.com/CesiumGS/cesium/pull/13915)
+
+#### Fixes :wrench:
+
+- Fixed instanced models being clipped or culled when their instances are rotated, because their bounding volume ignored instance rotation and scale.
+
 ## 1.146 - 2026-10-01
 
 ### Major Announcements :loudspeaker:
