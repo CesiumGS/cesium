@@ -1894,6 +1894,7 @@ function loadMaterial(loader, gltfMaterial, frameState) {
   const pbrClearcoat = extensions.KHR_materials_clearcoat;
   const pbrMetallicRoughness = gltfMaterial.pbrMetallicRoughness;
   const planarFill = extensions.BENTLEY_materials_planar_fill;
+  const pbrEmissiveStrength = extensions.KHR_materials_emissive_strength;
 
   material.unlit = defined(extensions.KHR_materials_unlit);
 
@@ -1946,6 +1947,11 @@ function loadMaterial(loader, gltfMaterial, frameState) {
     );
   }
   material.emissiveFactor = fromArray(Cartesian3, gltfMaterial.emissiveFactor);
+
+  if (defined(pbrEmissiveStrength)) {
+    material.emissiveStrength = pbrEmissiveStrength;
+  }
+
   material.alphaMode = gltfMaterial.alphaMode;
   material.alphaCutoff = gltfMaterial.alphaCutoff;
   material.doubleSided = gltfMaterial.doubleSided;

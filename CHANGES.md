@@ -1,5 +1,13 @@
 # Change Log
 
+## 1.147 - 2026-11-01
+
+### @cesium/engine
+
+#### Additions :tada:
+
+- Added support for glTF models with the [KHR_materials_emissive_strength extension](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_emissive_strength). [#13961](https://github.com/CesiumGS/cesium/pull/13961)
+
 ## 1.146 - 2026-10-01
 
 ### Major Announcements :loudspeaker:
