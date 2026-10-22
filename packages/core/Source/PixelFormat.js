@@ -213,6 +213,11 @@ const PixelFormat = {
 };
 
 /**
+ * Get the number of components in a pixel format.
+ *
+ * @param {PixelFormat} pixelFormat The pixel format.
+ * @returns {number} The number of components in the pixel format.
+ *
  * @private
  */
 PixelFormat.componentsLength = function (pixelFormat) {
@@ -238,6 +243,11 @@ PixelFormat.componentsLength = function (pixelFormat) {
 };
 
 /**
+ * Determine whether a value is a valid pixel format.
+ *
+ * @param {PixelFormat} pixelFormat The pixel format.
+ * @returns {boolean} <code>true</code> if the pixel format is valid; otherwise, <code>false</code>.
+ *
  * @private
  */
 PixelFormat.validate = function (pixelFormat) {
@@ -272,6 +282,11 @@ PixelFormat.validate = function (pixelFormat) {
 };
 
 /**
+ * Determine whether a pixel format is a color format.
+ *
+ * @param {PixelFormat} pixelFormat The pixel format.
+ * @returns {boolean} <code>true</code> if the pixel format is a color format; otherwise, <code>false</code>.
+ *
  * @private
  */
 PixelFormat.isColorFormat = function (pixelFormat) {
@@ -286,6 +301,11 @@ PixelFormat.isColorFormat = function (pixelFormat) {
 };
 
 /**
+ * Determine whether a pixel format is a depth format.
+ *
+ * @param {PixelFormat} pixelFormat The pixel format.
+ * @returns {boolean} <code>true</code> if the pixel format is a depth format; otherwise, <code>false</code>.
+ *
  * @private
  */
 PixelFormat.isDepthFormat = function (pixelFormat) {
@@ -296,6 +316,11 @@ PixelFormat.isDepthFormat = function (pixelFormat) {
 };
 
 /**
+ * Determine whether a pixel format is a compressed texture format.
+ *
+ * @param {PixelFormat} pixelFormat The pixel format.
+ * @returns {boolean} <code>true</code> if the pixel format is a compressed format; otherwise, <code>false</code>.
+ *
  * @private
  */
 PixelFormat.isCompressedFormat = function (pixelFormat) {
@@ -317,6 +342,11 @@ PixelFormat.isCompressedFormat = function (pixelFormat) {
 };
 
 /**
+ * Determine whether a pixel format is a DXT compressed format.
+ *
+ * @param {PixelFormat} pixelFormat The pixel format.
+ * @returns {boolean} <code>true</code> if the pixel format is a DXT format; otherwise, <code>false</code>.
+ *
  * @private
  */
 PixelFormat.isDXTFormat = function (pixelFormat) {
@@ -329,6 +359,11 @@ PixelFormat.isDXTFormat = function (pixelFormat) {
 };
 
 /**
+ * Determine whether a pixel format is a PVRTC compressed format.
+ *
+ * @param {PixelFormat} pixelFormat The pixel format.
+ * @returns {boolean} <code>true</code> if the pixel format is a PVRTC format; otherwise, <code>false</code>.
+ *
  * @private
  */
 PixelFormat.isPVRTCFormat = function (pixelFormat) {
@@ -341,6 +376,11 @@ PixelFormat.isPVRTCFormat = function (pixelFormat) {
 };
 
 /**
+ * Determine whether a pixel format is an ASTC compressed format.
+ *
+ * @param {PixelFormat} pixelFormat The pixel format.
+ * @returns {boolean} <code>true</code> if the pixel format is an ASTC format; otherwise, <code>false</code>.
+ *
  * @private
  */
 PixelFormat.isASTCFormat = function (pixelFormat) {
@@ -348,6 +388,11 @@ PixelFormat.isASTCFormat = function (pixelFormat) {
 };
 
 /**
+ * Determine whether a pixel format is an ETC1 compressed format.
+ *
+ * @param {PixelFormat} pixelFormat The pixel format.
+ * @returns {boolean} <code>true</code> if the pixel format is an ETC1 format; otherwise, <code>false</code>.
+ *
  * @private
  */
 PixelFormat.isETC1Format = function (pixelFormat) {
@@ -355,6 +400,11 @@ PixelFormat.isETC1Format = function (pixelFormat) {
 };
 
 /**
+ * Determine whether a pixel format is an ETC2 compressed format.
+ *
+ * @param {PixelFormat} pixelFormat The pixel format.
+ * @returns {boolean} <code>true</code> if the pixel format is an ETC2 format; otherwise, <code>false</code>.
+ *
  * @private
  */
 PixelFormat.isETC2Format = function (pixelFormat) {
@@ -365,6 +415,11 @@ PixelFormat.isETC2Format = function (pixelFormat) {
 };
 
 /**
+ * Determine whether a pixel format is a BC7 compressed format.
+ *
+ * @param {PixelFormat} pixelFormat The pixel format.
+ * @returns {boolean} <code>true</code> if the pixel format is a BC7 format; otherwise, <code>false</code>.
+ *
  * @private
  */
 PixelFormat.isBC7Format = function (pixelFormat) {
@@ -452,6 +507,13 @@ PixelFormat.texture3DSizeInBytes = function (
 };
 
 /**
+ * Get the row alignment, in bytes, for a texture with the given pixel format, pixel datatype, and width.
+ *
+ * @param {PixelFormat} pixelFormat The pixel format.
+ * @param {PixelDatatype} pixelDatatype The pixel datatype.
+ * @param {number} width The width of the texture in pixels.
+ * @returns {number} The row alignment in bytes, which is 1, 2, or 4.
+ *
  * @private
  */
 PixelFormat.alignmentInBytes = function (pixelFormat, pixelDatatype, width) {
