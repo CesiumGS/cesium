@@ -18,7 +18,7 @@ import Texture from "./Texture.js";
 
 /**
  * A texture that stores a 1D array of elements, one texel each, in row-major
- * order. Used for emulating texture buffers (e.g. NEAREST filtering, no mipmaps).
+ * order. Used for emulating texture buffers (that's why it uses NEAREST filtering, no mipmaps, etc).
  *
  * To use in a shader, read element `i` via `ivec2(i % width, i / width)`,
  * where width comes from the `textureSize` builtin.
