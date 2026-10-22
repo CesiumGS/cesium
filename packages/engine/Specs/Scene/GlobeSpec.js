@@ -322,6 +322,64 @@ describe(
       });
     });
 
+    describe("without vertex normals", function () {
+      async function lightEllipsoid() {
+        globe.enableLighting = true;
+        // Light at every camera distance, rather than fading out close up.
+        globe.lightingFadeOutDistance = 0.0;
+        globe.lightingFadeInDistance = 1.0;
+
+        const layerCollection = globe.imageryLayers;
+        layerCollection.removeAll();
+        const imageryProvider = await SingleTileImageryProvider.fromUrl(
+          "Data/Images/Red16x16.png",
+        );
+        layerCollection.addImageryProvider(imageryProvider);
+
+        scene.camera.setView({
+          destination: new Rectangle(0.0001, 0.0001, 0.0025, 0.0025),
+        });
+        await updateUntilDone(globe);
+      }
+
+      it("renders with dayNightLambertDiffuseMultiplier", async function () {
+        const renderOptions = {
+          scene: scene,
+          time: new JulianDate(2557522.0),
+        };
+        await lightEllipsoid();
+
+        let initialRgba;
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          initialRgba = rgba;
+          expect(renderOptions).notToRender([0, 0, 0, 255]);
+          globe.dayNightLambertDiffuseMultiplier = 0.0;
+          expect(renderOptions).notToRender(initialRgba);
+        });
+      });
+
+      it("renders with vertexShadowDarkness", async function () {
+        const renderOptions = {
+          scene: scene,
+          time: new JulianDate(2557522.0),
+        };
+        await lightEllipsoid();
+        // Only the floor lights the surface: nothing else adds light to it.
+        globe.dayNightLambertDiffuseMultiplier = 0.0;
+        globe.showGroundAtmosphere = false;
+        const fogEnabled = scene.fog.enabled;
+        scene.fog.enabled = false;
+
+        try {
+          expect(renderOptions).notToRender([0, 0, 0, 255]);
+          globe.vertexShadowDarkness = 0.0;
+          expect(renderOptions).toRender([0, 0, 0, 255]);
+        } finally {
+          scene.fog.enabled = fogEnabled;
+        }
+      });
+    });
+
     it("renders with hue shift", async function () {
       const layerCollection = globe.imageryLayers;
       layerCollection.removeAll();

@@ -170,12 +170,26 @@ function Globe(ellipsoid) {
   /**
    * A multiplier to adjust terrain lambert lighting.
    * This number is multiplied by the result of <code>czm_getLambertDiffuse</code> in GlobeFS.glsl.
-   * This only takes effect when <code>enableLighting</code> is <code>true</code>.
+   * This only takes effect when <code>enableLighting</code> is <code>true</code> and the
+   * terrain has vertex normals; without them, see {@link Globe#dayNightLambertDiffuseMultiplier}.
    *
    * @type {number}
    * @default 0.9
    */
   this.lambertDiffuseMultiplier = 0.9;
+
+  /**
+   * A multiplier to adjust lambert lighting when the terrain has no vertex normals,
+   * such as the {@link EllipsoidTerrainProvider}, or terrain requested without
+   * <code>requestVertexNormals</code>. The globe is then lit by the ellipsoid's normal,
+   * and this number is multiplied by the result of <code>czm_getLambertDiffuse</code>
+   * in GlobeFS.glsl, in place of {@link Globe#lambertDiffuseMultiplier}.
+   * This only takes effect when <code>enableLighting</code> is <code>true</code>.
+   *
+   * @type {number}
+   * @default 5.0
+   */
+  this.dayNightLambertDiffuseMultiplier = 5.0;
 
   /**
    * Enable dynamic lighting effects on atmosphere and fog. This only takes effect
@@ -372,7 +386,8 @@ function Globe(ellipsoid) {
   this._zoomedOutOceanSpecularIntensity = undefined;
 
   /**
-   * Determines the darkness of the vertex shadow.
+   * Determines the darkness of the vertex shadow: the lighting's floor on the side away
+   * from the light. It applies with or without vertex normals.
    * This only takes effect when <code>enableLighting</code> is <code>true</code>.
    *
    * @type {number}
@@ -1077,6 +1092,8 @@ Globe.prototype.beginFrame = function (frameState) {
     tileProvider.undergroundColorAlphaByDistance =
       this._undergroundColorAlphaByDistance;
     tileProvider.lambertDiffuseMultiplier = this.lambertDiffuseMultiplier;
+    tileProvider.dayNightLambertDiffuseMultiplier =
+      this.dayNightLambertDiffuseMultiplier;
 
     surface.beginFrame(frameState);
   }
