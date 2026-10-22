@@ -63,6 +63,12 @@ import { Cartesian3, Color } from "@cesium/core";
 
   </details>
 
+### @cesium/sandcastle
+
+#### Additions :tada:
+
+- Added OpenAI API key support in Copilot for GPT-6 Luna, GPT-6.1 Sol, and GPT-6 Astra, including all supported reasoning efforts, image attachments, and code-editing tools.
+
 ## 1.145 - 2026-09-02
 
 ### @cesium/engine
