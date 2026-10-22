@@ -48,6 +48,11 @@ PixelDatatype.toWebGLConstant = function (pixelDatatype, webgl2) {
 };
 
 /**
+ * Determine whether a pixel datatype packs multiple components into a single value.
+ *
+ * @param {PixelDatatype} pixelDatatype The pixel datatype.
+ * @returns {boolean} <code>true</code> if the pixel datatype is packed; otherwise, <code>false</code>.
+ *
  * @private
  */
 PixelDatatype.isPacked = function (pixelDatatype) {
@@ -60,6 +65,11 @@ PixelDatatype.isPacked = function (pixelDatatype) {
 };
 
 /**
+ * Get the size, in bytes, of a pixel datatype.
+ *
+ * @param {PixelDatatype} pixelDatatype The pixel datatype.
+ * @returns {number} The size of the pixel datatype in bytes.
+ *
  * @private
  */
 PixelDatatype.sizeInBytes = function (pixelDatatype) {
@@ -80,6 +90,11 @@ PixelDatatype.sizeInBytes = function (pixelDatatype) {
 };
 
 /**
+ * Determine whether a value is a valid pixel datatype.
+ *
+ * @param {PixelDatatype} pixelDatatype The pixel datatype.
+ * @returns {boolean} <code>true</code> if the pixel datatype is valid; otherwise, <code>false</code>.
+ *
  * @private
  */
 PixelDatatype.validate = function (pixelDatatype) {
