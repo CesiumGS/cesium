@@ -2,6 +2,9 @@
   "include": ["Source/**/*.js"],
   "extends": ["../../tsconfig.json"],
   "compilerOptions": {
+    // Enabled by default. Individual JS files may opt out of type checking
+    // by including a `// @ts-nocheck` comment at the top of the file.
+    "checkJs": true,
     // The "strict mode" family of options is turned off by default to ease
     // incremental adoption. Over time, we may want to enable more of its
     // sub-options, and then to enable it by default, with exceptions for
