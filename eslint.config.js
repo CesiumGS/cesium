@@ -1,6 +1,7 @@
 import globals from "globals";
 import html from "eslint-plugin-html";
 import jsdoc from "eslint-plugin-jsdoc";
+import nodePlugin from "eslint-plugin-n";
 import configCesium from "@cesium/eslint-config";
 import reactHooks from "eslint-plugin-react-hooks";
 import { reactRefresh } from "eslint-plugin-react-refresh";
@@ -116,6 +117,21 @@ export default [
       ],
       // Disallow e.g. `new Cartesian3.fromDegrees(...)`; invalid with ES6 classes.
       "new-cap": ["error", { capIsNew: true }],
+    },
+  },
+  {
+    // Sources in a package may only import packages declared in that package's
+    // own package.json. Published files may not import devDependencies.
+    files: ["packages/**/*.{js,mjs,cjs,ts,tsx}"],
+    ignores: [
+      "**/*.d.ts",
+      // Build scripts are run from the repo root, so use its devDependencies
+      "packages/*/scripts/**/*",
+    ],
+    plugins: { n: nodePlugin },
+    rules: {
+      "n/no-extraneous-import": "error",
+      "n/no-unpublished-import": "error",
     },
   },
   {

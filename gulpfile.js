@@ -1091,6 +1091,9 @@ function generateWorkspaceTypeScriptDefinitions(
       const usedExports = Array.from(dependencyExports[workspace]).filter(
         (exportName) => source.indexOf(exportName) !== -1,
       );
+      if (usedExports.length === 0) {
+        return;
+      }
       imports += `import { ${usedExports.join(
         ",\n",
       )} } from "@${scope}/${workspace}";\n`;

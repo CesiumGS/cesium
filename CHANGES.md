@@ -2,6 +2,12 @@
 
 ## 1.147 - 2026-11-01
 
+### @cesium/core
+
+#### Fixes :wrench:
+
+- Fixed undeclared dependencies `earcut`, `mersenne-twister`, and `urijs`. [#13955](https://github.com/CesiumGS/cesium/issues/13955)
+
 ### @cesium/engine
 
 #### Additions :tada:
