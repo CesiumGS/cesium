@@ -19,6 +19,7 @@ npm install cesium-core*.tgz
 npm install cesium-gltf*.tgz
 npm install cesium-engine*.tgz
 npm install cesium-widgets*.tgz
+npm install cesium-edit*.tgz
 npm install cesium-1.*.tgz
 NODE_ENV=development node test.cjs
 NODE_ENV=production node test.cjs
