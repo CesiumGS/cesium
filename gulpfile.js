@@ -5,16 +5,14 @@ import {
   existsSync,
   globSync,
 } from "fs";
-import { readFile, writeFile } from "fs/promises";
+import { readFile, rm, writeFile } from "fs/promises";
 import { join, basename, resolve, dirname } from "path";
 import { exec, execSync } from "child_process";
-import fetch from "node-fetch";
 import { createRequire } from "module";
 import { finished } from "stream/promises";
 
 import gulp from "gulp";
 import open from "open";
-import { rimraf } from "rimraf";
 import karma from "karma";
 import yargs from "yargs";
 import typeScript from "typescript";
@@ -340,9 +338,11 @@ const filesToClean = [
 ];
 
 export async function clean() {
-  await rimraf("Build");
+  await rm("Build", { recursive: true, force: true });
   const files = globSync(filesToClean);
-  return Promise.all(files.map((file) => rimraf(file)));
+  return Promise.all(
+    files.map((file) => rm(file, { recursive: true, force: true })),
+  );
 }
 
 async function clocSource() {
@@ -613,7 +613,7 @@ async function setStatus(state, targetUrl, description, context) {
   const response = await fetch(
     `https://api.github.com/repos/${process.env.GITHUB_REPO}/statuses/${process.env.GITHUB_SHA}`,
     {
-      method: "post",
+      method: "POST",
       body: JSON.stringify(body),
       headers: {
         "Content-Type": "application/json",
