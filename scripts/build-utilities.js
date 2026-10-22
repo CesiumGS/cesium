@@ -220,7 +220,7 @@ export function filePathToModuleId(moduleId) {
   return moduleId.substring(0, moduleId.lastIndexOf(".")).replace(/\\/g, "/");
 }
 
-/** @typedef {'core'|'gltf'|'engine'|'widgets'} Workspace */
+/** @typedef {'core'|'gltf'|'engine'|'widgets'|'edit'} Workspace */
 
 /**
  * @typedef {object} FileGlobs
