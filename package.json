@@ -52,6 +52,7 @@
   ],
   "dependencies": {
     "@cesium/core": "^0.1.1",
+    "@cesium/edit": "^0.1.0",
     "@cesium/engine": "^26.5.0",
     "@cesium/gltf": "^0.1.1",
     "@cesium/widgets": "^16.3.1",
@@ -172,6 +173,7 @@
     "packages/gltf",
     "packages/engine",
     "packages/widgets",
+    "packages/edit",
     "packages/sandcastle"
   ],
   "overrides": {
