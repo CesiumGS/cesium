@@ -15,6 +15,7 @@
 - Added experimental `Cesium3DTileset` option `vectorGeoJson`, which loads `MAXAR_content_geojson` tile content as vector primitives with filled polygons, instead of as a model. [#14007](https://github.com/CesiumGS/cesium/pull/14007)
 - Added support for Custom Shaders in Gaussian Splat tilesets. [#13418](https://github.com/CesiumGS/cesium/pull/13418)
 - Added `ControllerHost.controllers` to get the controllers registered to a scene. [#14036](https://github.com/CesiumGS/cesium/pull/14036)
+- Adds new accessors to facilitate traversal of the glTF node hierarchy in the Model class. This now includes unnamed nodes, as well. [#13970](https://github.com/CesiumGS/cesium/pull/13970)
 
 #### Fixes :wrench:
 
