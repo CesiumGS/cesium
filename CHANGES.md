@@ -14,6 +14,7 @@
 
 - Added support for glTF models with the [KHR_materials_emissive_strength extension](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_emissive_strength). [#13961](https://github.com/CesiumGS/cesium/pull/13961)
 - Adds new accessors to facilitate traversal of the glTF node hierarchy in the Model class. This now includes unnamed nodes, as well. Also adds `ModelNode.computeWorldMatrix` to get a node's local-to-world transform. [#13970](https://github.com/CesiumGS/cesium/pull/13970)
+- Added `ModelPrimitive` and `ModelNode.primitives` for programmatic access to a model's primitives, including a per-primitive `show` flag. [#13971](https://github.com/CesiumGS/cesium/pull/13971)
 
 ## 1.146 - 2026-10-01
 

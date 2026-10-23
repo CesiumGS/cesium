@@ -70,6 +70,17 @@ function ModelRuntimePrimitive(options) {
   this.primitive = primitive;
 
   /**
+   * Whether this primitive is shown. Unlike a node's show, this only affects
+   * this single primitive, not its node or siblings.
+   *
+   * @type {boolean}
+   * @default true
+   *
+   * @private
+   */
+  this.show = true;
+
+  /**
    * A reference to the node this primitive belongs to.
    *
    * @type {ModelComponents.Node}
