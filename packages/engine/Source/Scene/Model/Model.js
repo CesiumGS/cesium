@@ -569,6 +569,26 @@ function Model(options) {
   this._nodesByName = new Map();
 
   /**
+   * The nodes of this model, indexed by their glTF node index. Entries
+   * are undefined for glTF nodes that are not reachable from the model's glTF
+   * scene.
+   *
+   * @type {Array<ModelNode|undefined>}
+   * @private
+   * @readonly
+   */
+  this._nodes = [];
+
+  /**
+   * The public root nodes of the model's glTF scene, in glTF scene order.
+   *
+   * @type {ModelNode[]}
+   * @private
+   * @readonly
+   */
+  this._rootNodes = [];
+
+  /**
    * Used for picking primitives that wrap a model.
    *
    * @private
@@ -1217,6 +1237,66 @@ Object.defineProperties(Model.prototype, {
       updateBoundingSphere(this, modelMatrix);
 
       return this._boundingSphere;
+    },
+  },
+
+  /**
+   * The nodes of the model's glTF, indexed by their glTF node index. This
+   * provides access to every node, including unnamed nodes.
+   * <p>
+   * The length of this array matches the number of nodes in the glTF,
+   * but entries are <code>undefined</code> for glTF nodes that
+   * are not reachable from the model's glTF scene (not part of any hierarchy).
+   * </p>
+   *
+   * @memberof Model.prototype
+   *
+   * @type {Array<ModelNode|undefined>}
+   * @readonly
+   *
+   * @exception {DeveloperError} The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.
+   *
+   * @see Model#rootNodes
+   * @see Model#getNode
+   */
+  nodes: {
+    get: function () {
+      //>>includeStart('debug', pragmas.debug);
+      if (!this._ready) {
+        throw new DeveloperError(
+          "The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.",
+        );
+      }
+      //>>includeEnd('debug');
+
+      return this._nodes;
+    },
+  },
+
+  /**
+   * The root nodes of the model's glTF scene, in glTF scene order. Use this
+   * together with {@link ModelNode#children} to walk the node hierarchy.
+   *
+   * @memberof Model.prototype
+   *
+   * @type {ModelNode[]}
+   * @readonly
+   *
+   * @exception {DeveloperError} The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.
+   *
+   * @see Model#nodes
+   */
+  rootNodes: {
+    get: function () {
+      //>>includeStart('debug', pragmas.debug);
+      if (!this._ready) {
+        throw new DeveloperError(
+          "The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.",
+        );
+      }
+      //>>includeEnd('debug');
+
+      return this._rootNodes;
     },
   },
 
@@ -1898,10 +1978,16 @@ Model.prototype.getRectangle = function (ellipsoid) {
  * If there are multiple nodes with the same <code>name</code> in the glTF,
  * then the returned node is unspecified.
  *
+ * The returned node is the same instance found in {@link Model#nodes}. To access
+ * every node, including unnamed nodes, use {@link Model#nodes} or
+ * {@link Model#rootNodes} instead.
+ *
  * @param {string} name The name of the node in the glTF.
  * @returns {ModelNode} The node, or <code>undefined</code> if no node with the <code>name</code> exists.
  *
  * @exception {DeveloperError} The model is not loaded.  Use Model.readyEvent or wait for Model.ready to be true.
+ *
+ * @see Model#nodes
  *
  * @example
  * // Apply non-uniform scale to node "Hand"

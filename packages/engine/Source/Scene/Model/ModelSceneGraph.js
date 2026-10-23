@@ -266,6 +266,7 @@ function initialize(sceneGraph) {
   // only nodes reachable from the scene's root node will be populated, the
   // rest will be undefined
   sceneGraph._runtimeNodes = new Array(nodesLength);
+  model._nodes = new Array(nodesLength);
 
   const rootNodes = scene.nodes;
   const rootNodesLength = rootNodes.length;
@@ -280,6 +281,7 @@ function initialize(sceneGraph) {
     );
 
     sceneGraph._rootNodes.push(rootNodeIndex);
+    model._rootNodes.push(model._nodes[rootNodeIndex]);
   }
 
   // Handle skins after all runtime nodes are created
@@ -435,11 +437,25 @@ function traverseAndCreateSceneGraph(sceneGraph, node, transformToRoot) {
     sceneGraph._skinnedNodes.push(index);
   }
 
-  // Create and store the public version of the runtime node.
+  // Create the public version of the node for every glTF node, and link it
+  // into the node hierarchy. The traversal is post-order, so this node's
+  // children have already been created and stored in model._nodes.
+  const model = sceneGraph._model;
+  const publicNode = new ModelNode(model, runtimeNode);
+  model._nodes[index] = publicNode;
+
+  const numChildren = childrenIndices.length;
+  const children =
+    numChildren > 0 ? new Array(numChildren) : publicNode._children;
+  for (let i = 0; i < numChildren; i++) {
+    const childNode = model._nodes[childrenIndices[i]];
+    childNode._parent = publicNode;
+    children[i] = childNode;
+  }
+  publicNode._children = children;
+
   const name = node.name;
   if (defined(name)) {
-    const model = sceneGraph._model;
-    const publicNode = new ModelNode(model, runtimeNode);
     if (model._nodesByName.has(name)) {
       oneTimeWarning(
         "gltf-node-names-duplicate",
