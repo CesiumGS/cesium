@@ -1,4 +1,4 @@
-import { Check, Matrix4 } from "@cesium/core";
+import { Check } from "@cesium/core";
 
 /**
  * <div class="notice">
@@ -62,27 +62,5 @@ Object.defineProperties(ModelPrimitive.prototype, {
     },
   },
 });
-
-/**
- * Computes this primitive's transform from its local coordinates to the world
- * (ECEF) coordinates of the scene, taking the model's transform and the node
- * hierarchy into account. This is only supported in 3D.
- *
- * @param {Matrix4} result The object onto which to store the result.
- * @returns {Matrix4} The modified result parameter.
- */
-ModelPrimitive.prototype.computeWorldMatrix = function (result) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("result", result);
-  //>>includeEnd('debug');
-
-  const computedModelMatrix = this._model.sceneGraph.computedModelMatrix;
-  const computedTransform = this._node._runtimeNode.computedTransform;
-  return Matrix4.multiplyTransformation(
-    computedModelMatrix,
-    computedTransform,
-    result,
-  );
-};
 
 export default ModelPrimitive;
