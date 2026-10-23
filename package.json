@@ -55,6 +55,7 @@
     "@cesium/gltf": "^0.1.0",
     "@cesium/engine": "^26.3.0",
     "@cesium/widgets": "^16.2.0",
+    "@cesium/edit": "^0.1.0",
     "protobufjs": "^8.8.0"
   },
   "devDependencies": {
@@ -159,6 +160,7 @@
     "packages/gltf",
     "packages/engine",
     "packages/widgets",
+    "packages/edit",
     "packages/sandcastle"
   ],
   "overrides": {

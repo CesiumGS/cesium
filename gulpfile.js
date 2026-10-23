@@ -23,6 +23,7 @@ import { buildCore } from "./packages/core/scripts/build.js";
 import { buildGltf } from "./packages/gltf/scripts/build.js";
 import { buildEngine } from "./packages/engine/scripts/build.js";
 import { buildWidgets } from "./packages/widgets/scripts/build.js";
+import { buildEdit } from "./packages/edit/scripts/build.js";
 import {
   bundleWorkers,
   createCoverageFilter,
@@ -84,6 +85,8 @@ const sourceFiles = [
   "!packages/widgets/Source/*.js",
   "packages/core/Source/*.js",
   "packages/gltf/Source/*.js",
+  "packages/edit/Source/**/*.js",
+  "!packages/edit/Source/*.js",
   "!packages/engine/Source/Shaders/**",
   "!packages/engine/Source/ThirdParty/Workers/**",
   "!packages/engine/Source/ThirdParty/google-earth-dbroot-parser.js",
@@ -97,6 +100,8 @@ const watchedSpecFiles = [
   "!packages/widgets/Specs/SpecList.js",
   "packages/core/Specs/*Spec.js",
   "packages/gltf/Specs/*Spec.js",
+  "packages/edit/Specs/**/*Spec.js",
+  "!packages/edit/Specs/SpecList.js",
   "Specs/*.js",
   "!Specs/SpecList.js",
   "Specs/TestWorkers/*.js",
@@ -134,12 +139,15 @@ export async function build() {
     return buildEngine(buildOptions);
   } else if (workspace === `@${scope}/widgets`) {
     return buildWidgets(buildOptions);
+  } else if (workspace === `@${scope}/edit`) {
+    return buildEdit(buildOptions);
   }
 
   await buildCore(buildOptions);
   await buildGltf(buildOptions);
   await buildEngine(buildOptions);
   await buildWidgets(buildOptions);
+  await buildEdit(buildOptions);
   await buildCesium(buildOptions);
 }
 export default build;
@@ -469,6 +477,7 @@ export const websiteRelease = gulp.series(
   buildGltf,
   buildEngine,
   buildWidgets,
+  buildEdit,
   function websiteReleaseBuild() {
     return buildCesium({
       minify: false,
@@ -500,6 +509,7 @@ export const buildRelease = gulp.series(
   buildGltf,
   buildEngine,
   buildWidgets,
+  buildEdit,
   // Generate Build/CesiumUnminified
   function buildCesiumForNode() {
     return buildCesium({
@@ -886,6 +896,8 @@ export async function test() {
       await bundleTestWorkers();
     } else if (workspace === "widgets") {
       await buildWidgets({ iife: true });
+    } else if (workspace === "edit") {
+      await buildEdit({ iife: true });
     } else {
       await buildCesium({ iife: true });
     }
