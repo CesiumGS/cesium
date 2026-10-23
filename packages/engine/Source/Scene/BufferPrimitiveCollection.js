@@ -19,7 +19,7 @@ import BlendOption from "../Scene/BlendOption.js";
 import HeightReference, { isHeightReferenceClamp } from "./HeightReference.js";
 import PickId from "../Renderer/PickId.js";
 
-/** @import { Destroyable } from "../Core/globalTypes.js"; */
+/** @import { Destroyable } from "../Core/Destroyable.js"; */
 /** @import { TypedArray } from "@cesium/core"; */
 /** @import Context from "../Renderer/Context.js"; */
 /** @import FrameState from "./FrameState.js"; */

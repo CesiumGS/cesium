@@ -1,8 +1,4 @@
 /**
- * @typedef {{destroy: Function}} Destroyable
- */
-
-/**
  * A GeoJSON position expressed as [longitude, latitude] or [longitude, latitude, altitude].
  * @typedef {Array.<number>} GeoJsonPosition
  */

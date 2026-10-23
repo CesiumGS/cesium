@@ -1,7 +1,7 @@
 // @ts-check
 
 /** @import { Color } from "@cesium/core"; */
-/** @import {Destroyable} from "../Core/globalTypes.js"; */
+/** @import { Destroyable } from "../Core/Destroyable.js"; */
 
 /**
  * Represents a pickable object with a unique integer ID and picking color.

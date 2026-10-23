@@ -69,7 +69,7 @@ const BufferPolygonAttributeLocations = {
  * @property {RenderState} [renderState]
  * @property {ShaderProgram} [shaderProgram]
  * @property {DrawCommand} [command]
- * @property {Function} destroy
+ * @property {function(): void} destroy
  * @ignore
  */
 
