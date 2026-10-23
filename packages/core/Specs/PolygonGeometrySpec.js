@@ -317,6 +317,26 @@ describe("Core/PolygonGeometry", function () {
     expect(p.indices.length).toEqual(numTriangles * 3);
   });
 
+  it("computes texture coordinates for a wide polygon crossing the equator", function () {
+    const p = PolygonGeometry.createGeometry(
+      PolygonGeometry.fromPositions({
+        vertexFormat: VertexFormat.POSITION_AND_ST,
+        perPositionHeight: true,
+        positions: Cartesian3.fromDegreesArray([
+          -179, -10, -90, -60, 0, -10, 90, -60, 179, -10, 179, 10, 90, 60, 0,
+          10, -90, 60,
+        ]),
+      }),
+    );
+
+    const st = p.attributes.st.values;
+    expect(st.length).toEqual((p.attributes.position.values.length / 3) * 2);
+    for (let i = 0; i < st.length; i++) {
+      expect(st[i]).toBeGreaterThanOrEqual(0.0);
+      expect(st[i]).toBeLessThanOrEqual(1.0);
+    }
+  });
+
   it("creates a polygon from hierarchy", function () {
     const hierarchy = {
       positions: Cartesian3.fromDegreesArray([
