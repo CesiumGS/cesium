@@ -175,6 +175,25 @@ class Composite3DTileContent {
     }
   }
 
+  /** @inheritdoc */
+  get show() {
+    let result = true;
+    const contents = this._contents;
+    const length = contents.length;
+    for (let i = 0; i < length; ++i) {
+      result = result & contents[i].show;
+    }
+    return result;
+  }
+
+  set show(value) {
+    const contents = this._contents;
+    const length = contents.length;
+    for (let i = 0; i < length; ++i) {
+      contents[i].show = value;
+    }
+  }
+
   static async fromTileType(
     tileset,
     tile,
