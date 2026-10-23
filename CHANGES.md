@@ -13,6 +13,11 @@
 #### Additions :tada:
 
 - Added support for glTF models with the [KHR_materials_emissive_strength extension](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_emissive_strength). [#13961](https://github.com/CesiumGS/cesium/pull/13961)
+- Added `Globe.dayNightLambertDiffuseMultiplier`, the multiplier of the globe's lighting when its terrain has no vertex normals, such as the `EllipsoidTerrainProvider`. It defaults to `5.0`, the value that was hard-coded. [#13974](https://github.com/CesiumGS/cesium/pull/13974)
+
+#### Fixes :wrench:
+
+- Fixed `Globe.vertexShadowDarkness` having no effect on terrain without vertex normals, such as the `EllipsoidTerrainProvider`, where the globe's night side was always lit at 30%. Its default is `0.3`, the value that was hard-coded, so the default look is unchanged. [#13974](https://github.com/CesiumGS/cesium/pull/13974)
 
 ## 1.146 - 2026-10-01
 
