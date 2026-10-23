@@ -318,6 +318,37 @@ export async function tsc() {
   }
 }
 
+/**
+ * Emits declarations with tsc for each workspace, and type checks the emitted declarations.
+ */
+export async function checkDeclarations() {
+  let projects;
+  if (argv.workspace && !Array.isArray(argv.workspace)) {
+    projects = [argv.workspace];
+  } else if (argv.workspace) {
+    projects = argv.workspace;
+  } else {
+    projects = getWorkspaces(true);
+  }
+
+  for (const project of projects) {
+    const directory = normalizeWorkspaceArg(project);
+
+    const checkPath = `packages/${directory}/tsconfig.declarationsCheck.json`;
+    if (!existsSync(checkPath)) {
+      continue;
+    }
+
+    const declarationsPath = `packages/${directory}/tsconfig.declarations.json`;
+    for (const tsconfigPath of [declarationsPath, checkPath]) {
+      execSync(
+        `npm exec --package=typescript --offline -- tsc --project ${tsconfigPath}`,
+        { stdio: "inherit" },
+      );
+    }
+  }
+}
+
 const filesToClean = [
   "Source/Cesium.js",
   "Source/Shaders/**/*.js",

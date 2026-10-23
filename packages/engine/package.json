@@ -18,6 +18,7 @@
     "Source",
     "Build/**",
     "!Build/Specs/**",
+    "!Build/Types/**",
     "!Build/minifyShaders.state",
     "!Build/Unminified/**",
     "README.md",
@@ -60,6 +61,7 @@
   "scripts": {
     "build": "gulp build --workspace @cesium/engine",
     "build-ts": "gulp buildTs --workspace @cesium/engine",
+    "check-declarations": "gulp checkDeclarations --workspace @cesium/engine",
     "coverage": "gulp coverage --workspace @cesium/engine",
     "tsc": "gulp tsc --workspace @cesium/engine",
     "test": "gulp test --workspace @cesium/engine",

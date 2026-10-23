@@ -32,6 +32,7 @@
   "scripts": {
     "build": "gulp build --workspace @cesium/gltf",
     "build-ts": "gulp buildTs --workspace @cesium/gltf",
+    "check-declarations": "gulp checkDeclarations --workspace @cesium/gltf",
     "coverage": "gulp coverage --workspace @cesium/gltf",
     "tsc": "gulp tsc --workspace @cesium/gltf",
     "test": "gulp test --workspace @cesium/gltf",
