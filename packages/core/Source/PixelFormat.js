@@ -218,7 +218,7 @@ const PixelFormat = {
  * @param {PixelFormat} pixelFormat The pixel format.
  * @returns {number} The number of components in the pixel format.
  *
- * @private
+ * @internal
  */
 PixelFormat.componentsLength = function (pixelFormat) {
   switch (pixelFormat) {
@@ -248,7 +248,7 @@ PixelFormat.componentsLength = function (pixelFormat) {
  * @param {PixelFormat} pixelFormat The pixel format.
  * @returns {boolean} <code>true</code> if the pixel format is valid; otherwise, <code>false</code>.
  *
- * @private
+ * @internal
  */
 PixelFormat.validate = function (pixelFormat) {
   return (
@@ -287,7 +287,7 @@ PixelFormat.validate = function (pixelFormat) {
  * @param {PixelFormat} pixelFormat The pixel format.
  * @returns {boolean} <code>true</code> if the pixel format is a color format; otherwise, <code>false</code>.
  *
- * @private
+ * @internal
  */
 PixelFormat.isColorFormat = function (pixelFormat) {
   return (
@@ -306,7 +306,7 @@ PixelFormat.isColorFormat = function (pixelFormat) {
  * @param {PixelFormat} pixelFormat The pixel format.
  * @returns {boolean} <code>true</code> if the pixel format is a depth format; otherwise, <code>false</code>.
  *
- * @private
+ * @internal
  */
 PixelFormat.isDepthFormat = function (pixelFormat) {
   return (
@@ -321,7 +321,7 @@ PixelFormat.isDepthFormat = function (pixelFormat) {
  * @param {PixelFormat} pixelFormat The pixel format.
  * @returns {boolean} <code>true</code> if the pixel format is a compressed format; otherwise, <code>false</code>.
  *
- * @private
+ * @internal
  */
 PixelFormat.isCompressedFormat = function (pixelFormat) {
   return (
@@ -347,7 +347,7 @@ PixelFormat.isCompressedFormat = function (pixelFormat) {
  * @param {PixelFormat} pixelFormat The pixel format.
  * @returns {boolean} <code>true</code> if the pixel format is a DXT format; otherwise, <code>false</code>.
  *
- * @private
+ * @internal
  */
 PixelFormat.isDXTFormat = function (pixelFormat) {
   return (
@@ -364,7 +364,7 @@ PixelFormat.isDXTFormat = function (pixelFormat) {
  * @param {PixelFormat} pixelFormat The pixel format.
  * @returns {boolean} <code>true</code> if the pixel format is a PVRTC format; otherwise, <code>false</code>.
  *
- * @private
+ * @internal
  */
 PixelFormat.isPVRTCFormat = function (pixelFormat) {
   return (
@@ -381,7 +381,7 @@ PixelFormat.isPVRTCFormat = function (pixelFormat) {
  * @param {PixelFormat} pixelFormat The pixel format.
  * @returns {boolean} <code>true</code> if the pixel format is an ASTC format; otherwise, <code>false</code>.
  *
- * @private
+ * @internal
  */
 PixelFormat.isASTCFormat = function (pixelFormat) {
   return pixelFormat === PixelFormat.RGBA_ASTC;
@@ -393,7 +393,7 @@ PixelFormat.isASTCFormat = function (pixelFormat) {
  * @param {PixelFormat} pixelFormat The pixel format.
  * @returns {boolean} <code>true</code> if the pixel format is an ETC1 format; otherwise, <code>false</code>.
  *
- * @private
+ * @internal
  */
 PixelFormat.isETC1Format = function (pixelFormat) {
   return pixelFormat === PixelFormat.RGB_ETC1;
@@ -405,7 +405,7 @@ PixelFormat.isETC1Format = function (pixelFormat) {
  * @param {PixelFormat} pixelFormat The pixel format.
  * @returns {boolean} <code>true</code> if the pixel format is an ETC2 format; otherwise, <code>false</code>.
  *
- * @private
+ * @internal
  */
 PixelFormat.isETC2Format = function (pixelFormat) {
   return (
@@ -420,14 +420,14 @@ PixelFormat.isETC2Format = function (pixelFormat) {
  * @param {PixelFormat} pixelFormat The pixel format.
  * @returns {boolean} <code>true</code> if the pixel format is a BC7 format; otherwise, <code>false</code>.
  *
- * @private
+ * @internal
  */
 PixelFormat.isBC7Format = function (pixelFormat) {
   return pixelFormat === PixelFormat.RGBA_BC7;
 };
 
 /**
- * @private
+ * @internal
  */
 PixelFormat.compressedTextureSizeInBytes = function (
   pixelFormat,
@@ -466,7 +466,7 @@ PixelFormat.compressedTextureSizeInBytes = function (
 };
 
 /**
- * @private
+ * @internal
  */
 PixelFormat.textureSizeInBytes = function (
   pixelFormat,
@@ -484,7 +484,7 @@ PixelFormat.textureSizeInBytes = function (
 };
 
 /**
- * @private
+ * @internal
  */
 PixelFormat.texture3DSizeInBytes = function (
   pixelFormat,
@@ -514,7 +514,7 @@ PixelFormat.texture3DSizeInBytes = function (
  * @param {number} width The width of the texture in pixels.
  * @returns {number} The row alignment in bytes, which is 1, 2, or 4.
  *
- * @private
+ * @internal
  */
 PixelFormat.alignmentInBytes = function (pixelFormat, pixelDatatype, width) {
   const mod =
@@ -523,7 +523,7 @@ PixelFormat.alignmentInBytes = function (pixelFormat, pixelDatatype, width) {
 };
 
 /**
- * @private
+ * @internal
  * @param {PixelFormat} pixelFormat The pixel format.
  * @param {PixelDatatype} pixelDatatype The pixel datatype.
  * @param {number} width The width of the texture.
@@ -542,7 +542,7 @@ PixelFormat.createTypedArray = function (
 };
 
 /**
- * @private
+ * @internal
  */
 PixelFormat.flipY = function (
   bufferView,
@@ -577,7 +577,7 @@ PixelFormat.flipY = function (
  * @param {PixelDatatype} pixelDatatype The pixel datatype.
  * @param {boolean} webgl2 True if using WebGL 2, false otherwise.
  * @returns {PixelFormat} The internal format.
- * @private
+ * @internal
  */
 PixelFormat.toInternalFormat = function (pixelFormat, pixelDatatype, webgl2) {
   // WebGL 1 requires internalFormat to be the same as PixelFormat
