@@ -1,4 +1,4 @@
-import { Check, defined } from "@cesium/core";
+import { Check, Matrix4, defined } from "@cesium/core";
 
 /**
  * The shared, immutable children array used by nodes with no children, to avoid
@@ -169,5 +169,27 @@ Object.defineProperties(ModelNode.prototype, {
     },
   },
 });
+
+/**
+ * Computes this node's transform from its local coordinates to the world
+ * (ECEF) coordinates of the scene, taking the model's transform and the node
+ * hierarchy into account. This is only supported in 3D.
+ *
+ * @param {Matrix4} result The object onto which to store the result.
+ * @returns {Matrix4} The modified result parameter.
+ */
+ModelNode.prototype.computeWorldMatrix = function (result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
+
+  const computedModelMatrix = this._model.sceneGraph.computedModelMatrix;
+  const computedTransform = this._runtimeNode.computedTransform;
+  return Matrix4.multiplyTransformation(
+    computedModelMatrix,
+    computedTransform,
+    result,
+  );
+};
 
 export default ModelNode;

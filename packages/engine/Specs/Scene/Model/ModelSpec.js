@@ -4753,6 +4753,25 @@ describe(
         const node = model.getNode("Root");
         expect(node).toBe(model.nodes[node.id]);
       });
+
+      it("computeWorldMatrix returns the node's world transform", async function () {
+        const model = await loadAndZoomToModelAsync(
+          { gltf: boxArticulationsUrl },
+          scene,
+        );
+        const node = model.getNode("Mesh");
+
+        const result = new Matrix4();
+        const returned = node.computeWorldMatrix(result);
+        expect(returned).toBe(result);
+
+        const expected = Matrix4.multiplyTransformation(
+          model.sceneGraph.computedModelMatrix,
+          node._runtimeNode.computedTransform,
+          new Matrix4(),
+        );
+        expect(returned).toEqual(expected);
+      });
     });
 
     describe("fog", function () {
