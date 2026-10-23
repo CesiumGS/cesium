@@ -1081,6 +1081,10 @@ ModelSceneGraph.prototype.pushDrawCommands = function (frameState) {
 
 // Callback is defined here to avoid allocating a closure in the render loop
 function pushPrimitiveDrawCommands(runtimePrimitive, options) {
+  if (!runtimePrimitive.show) {
+    return;
+  }
+
   const frameState = options.frameState;
   const hasSilhouette = options.hasSilhouette;
 
