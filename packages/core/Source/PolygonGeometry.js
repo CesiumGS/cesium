@@ -171,7 +171,7 @@ function computeAttributes(options) {
             scratchPosition,
           );
           p = ellipsoid.scaleToGeodeticSurface(p, p);
-          const st = projectTo2d([p], appendTextureCoordinatesCartesian2)[0];
+          const st = projectTo2d(p, appendTextureCoordinatesCartesian2);
           Cartesian2.subtract(st, origin, st);
 
           const stx = CesiumMath.clamp(st.x / boundingRectangle.width, 0, 1);
@@ -1221,7 +1221,7 @@ function createProjectPositionTo2d(rectangle, outerRing, ellipsoid) {
   const tangentPlane = EllipsoidTangentPlane.fromPoints(outerRing, ellipsoid);
   return (position, result) => {
     // Use a local tangent plane for smaller extents
-    return tangentPlane.projectPointsOntoPlane(position, result);
+    return tangentPlane.projectPointOntoPlane(position, result);
   };
 }
 
