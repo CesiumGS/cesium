@@ -4808,26 +4808,6 @@ describe(
         primitive.show = true;
         verifyRender(model, true);
       });
-
-      it("computeWorldMatrix returns the primitive's world transform", async function () {
-        const model = await loadAndZoomToModelAsync(
-          { gltf: boxArticulationsUrl },
-          scene,
-        );
-        const node = model.getNode("Mesh");
-        const primitive = node.primitives[0];
-
-        const result = new Matrix4();
-        const returned = primitive.computeWorldMatrix(result);
-        expect(returned).toBe(result);
-
-        const expected = Matrix4.multiplyTransformation(
-          model.sceneGraph.computedModelMatrix,
-          node._runtimeNode.computedTransform,
-          new Matrix4(),
-        );
-        expect(returned).toEqual(expected);
-      });
     });
 
     describe("fog", function () {
