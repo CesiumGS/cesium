@@ -41,6 +41,7 @@ import {
   JobScheduler,
   Model,
   ModelFeature,
+  ModelPrimitive,
   ModelSceneGraph,
   ModelUtility,
   Pass,
@@ -4763,6 +4764,61 @@ describe(
 
         const result = new Matrix4();
         const returned = node.computeWorldMatrix(result);
+        expect(returned).toBe(result);
+
+        const expected = Matrix4.multiplyTransformation(
+          model.sceneGraph.computedModelMatrix,
+          node._runtimeNode.computedTransform,
+          new Matrix4(),
+        );
+        expect(returned).toEqual(expected);
+      });
+    });
+
+    describe("primitives", function () {
+      it("exposes a node's primitives", async function () {
+        const model = await loadAndZoomToModelAsync(
+          { gltf: boxArticulationsUrl },
+          scene,
+        );
+
+        // In BoxArticulations, "Mesh" owns the geometry and "Root" is a
+        // transform-only parent.
+        const meshNode = model.getNode("Mesh");
+        expect(meshNode.primitives.length).toBe(1);
+        expect(meshNode.primitives[0]).toBeInstanceOf(ModelPrimitive);
+        expect(meshNode.primitives[0].node).toBe(meshNode);
+
+        const rootNode = model.getNode("Root");
+        expect(rootNode.primitives.length).toBe(0);
+      });
+
+      it("hiding a primitive hides only that primitive", async function () {
+        const model = await loadAndZoomToModelAsync(
+          { gltf: boxArticulationsUrl },
+          scene,
+        );
+        const primitive = model.getNode("Mesh").primitives[0];
+        expect(primitive.show).toBe(true);
+        verifyRender(model, true);
+
+        primitive.show = false;
+        verifyRender(model, false);
+
+        primitive.show = true;
+        verifyRender(model, true);
+      });
+
+      it("computeWorldMatrix returns the primitive's world transform", async function () {
+        const model = await loadAndZoomToModelAsync(
+          { gltf: boxArticulationsUrl },
+          scene,
+        );
+        const node = model.getNode("Mesh");
+        const primitive = node.primitives[0];
+
+        const result = new Matrix4();
+        const returned = primitive.computeWorldMatrix(result);
         expect(returned).toBe(result);
 
         const expected = Matrix4.multiplyTransformation(
