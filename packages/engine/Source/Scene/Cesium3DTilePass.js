@@ -2,7 +2,7 @@
  * The pass in which a 3D Tileset is updated.
  *
  * @enum {number}
- * @private
+ * @internal
  */
 const Cesium3DTilePass = {
   RENDER: 0,

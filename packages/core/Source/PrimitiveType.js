@@ -83,7 +83,7 @@ PrimitiveType.isLines = function (primitiveType) {
 };
 
 /**
- * @private
+ * @internal
  * @param {PrimitiveType} primitiveType
  */
 // @ts-expect-error https://github.com/CesiumGS/cesium/issues/13420
@@ -96,7 +96,7 @@ PrimitiveType.isTriangles = function (primitiveType) {
 };
 
 /**
- * @private
+ * @internal
  * @param {PrimitiveType} primitiveType
  */
 // @ts-expect-error https://github.com/CesiumGS/cesium/issues/13420
