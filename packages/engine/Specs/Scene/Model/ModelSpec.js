@@ -4669,6 +4669,92 @@ describe(
       });
     });
 
+    describe("nodes", function () {
+      it("nodes throws when model is not ready", async function () {
+        const model = await Model.fromGltfAsync({
+          gltf: boxArticulationsUrl,
+        });
+
+        expect(function () {
+          return model.nodes;
+        }).toThrowDeveloperError();
+      });
+
+      it("rootNodes throws when model is not ready", async function () {
+        const model = await Model.fromGltfAsync({
+          gltf: boxArticulationsUrl,
+        });
+
+        expect(function () {
+          return model.rootNodes;
+        }).toThrowDeveloperError();
+      });
+
+      it("exposes every node, including unnamed nodes", async function () {
+        const model = await loadAndZoomToModelAsync(
+          { gltf: dracoCesiumManUrl },
+          scene,
+        );
+        const nodes = model.nodes;
+
+        // CesiumMan's nodes are all unnamed.
+        expect(nodes.length).toBe(22);
+        for (let i = 0; i < nodes.length; i++) {
+          expect(nodes[i].id).toBe(i);
+          expect(nodes[i].name).toBeUndefined();
+        }
+      });
+
+      it("builds the node hierarchy with parent and children", async function () {
+        const model = await loadAndZoomToModelAsync(
+          { gltf: dracoCesiumManUrl },
+          scene,
+        );
+        const rootNodes = model.rootNodes;
+        expect(rootNodes.length).toBe(1);
+        expect(rootNodes[0].parent).toBeUndefined();
+
+        // Walking from the roots reaches every node exactly once, and each
+        // child points back to its parent.
+        const visited = new Set();
+        const stack = [...rootNodes];
+        while (stack.length > 0) {
+          const node = stack.pop();
+          expect(visited.has(node)).toBe(false);
+          visited.add(node);
+          for (const child of node.children) {
+            expect(child.parent).toBe(node);
+            stack.push(child);
+          }
+        }
+        expect(visited.size).toBe(model.nodes.length);
+      });
+
+      it("exposes multiple root nodes in scene order", async function () {
+        const model = await loadAndZoomToModelAsync(
+          { gltf: boxUnlitUrl },
+          scene,
+        );
+        const rootNodes = model.rootNodes;
+
+        expect(rootNodes.length).toBe(2);
+        expect(rootNodes[0].name).toBe("Orange Object");
+        expect(rootNodes[1].name).toBe("Blue Object");
+        expect(rootNodes[0].parent).toBeUndefined();
+        expect(rootNodes[1].parent).toBeUndefined();
+      });
+
+      it("getNode returns the same instance as nodes", async function () {
+        const model = await loadAndZoomToModelAsync(
+          { gltf: boxArticulationsUrl },
+          scene,
+        );
+
+        const node = model.getNode("Root");
+        expect(node).toBe(model.nodes[node.id]);
+      });
+    });
+
     describe("fog", function () {
       const sunnyDate = JulianDate.fromIso8601("2024-01-11T15:00:00Z");
       const darkDate = JulianDate.fromIso8601("2024-01-11T00:00:00Z");
