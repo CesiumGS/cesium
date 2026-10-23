@@ -25,6 +25,7 @@
 - Added experimental feature layers for showing and hiding named sets of features: `Cesium3DTileset.featureLayers` for tilesets (using 3D Tiles 1.1 groups), and `GeoJsonFeatureLayerProvider` (a `FeatureLayerProvider`) for standalone GeoJSON layers. [#13921](https://github.com/CesiumGS/cesium/pull/13921)
 - Added experimental `MVTDataProvider.featureLayers`, with one feature layer per MVT source layer. [#14055](https://github.com/CesiumGS/cesium/pull/14055)
 - Added `ControllerHost.controllers` to get the controllers registered to a scene. [#14036](https://github.com/CesiumGS/cesium/pull/14036)
+- Adds new accessors to facilitate traversal of the glTF node hierarchy in the Model class. This now includes unnamed nodes, as well. [#13970](https://github.com/CesiumGS/cesium/pull/13970)
 
 #### Fixes :wrench:
 
