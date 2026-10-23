@@ -14,6 +14,10 @@
 
 - Added support for glTF models with the [KHR_materials_emissive_strength extension](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_emissive_strength). [#13961](https://github.com/CesiumGS/cesium/pull/13961)
 
+#### Fixes :wrench:
+
+- Fixed `Scene.pickPosition` executing the commands of the previous frame again when `Scene.pickTranslucentDepth` is `true`, leading to the error: "This object was destroyed" [#13979](https://github.com/CesiumGS/cesium/pull/13979)
+
 ## 1.146 - 2026-10-01
 
 ### Major Announcements :loudspeaker:
