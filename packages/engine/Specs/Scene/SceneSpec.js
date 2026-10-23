@@ -27,6 +27,7 @@ import {
   CesiumTerrainProvider,
   RequestScheduler,
   TaskProcessor,
+  ComputeCommand,
   DrawCommand,
   Framebuffer,
   Pass,
@@ -1862,6 +1863,73 @@ describe(
         const position = scene.pickPosition(windowPosition);
         expect(position).toBeDefined();
       });
+    });
+
+    it("pickPosition with pickTranslucentDepth does not execute compute commands of the last frame again", function () {
+      if (!scene.pickPositionSupported) {
+        return;
+      }
+
+      // Compute commands are pushed for a single frame only, like the ones of
+      // DynamicEnvironmentMapManager or ImageryLayer reprojection.
+      const computeCommand = new ComputeCommand();
+      spyOn(computeCommand, "execute");
+      let isQueued = false;
+      scene.primitives.add({
+        update: function (frameState) {
+          if (!isQueued && frameState.passes.render) {
+            frameState.commandList.push(computeCommand);
+            isQueued = true;
+          }
+        },
+        isDestroyed: function () {
+          return false;
+        },
+        destroy: function () {},
+      });
+
+      scene.pickTranslucentDepth = true;
+      scene.renderForSpecs();
+      expect(computeCommand.execute).toHaveBeenCalledTimes(1);
+
+      const windowPosition = new Cartesian2(
+        scene.canvas.clientWidth / 2,
+        scene.canvas.clientHeight / 2,
+      );
+      scene.pickPosition(windowPosition);
+      expect(computeCommand.execute).toHaveBeenCalledTimes(1);
+    });
+
+    it("pickPosition with pickTranslucentDepth does not execute draw commands of primitives destroyed since the last frame", function () {
+      if (!scene.pickPositionSupported) {
+        return;
+      }
+
+      const rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+      scene.camera.setView({
+        destination: rectangle,
+      });
+
+      const canvas = scene.canvas;
+      const windowPosition = new Cartesian2(
+        canvas.clientWidth / 2,
+        canvas.clientHeight / 2,
+      );
+
+      const rectanglePrimitive = scene.primitives.add(
+        createRectangle(rectangle),
+      );
+      scene.pickTranslucentDepth = true;
+      scene.renderForSpecs();
+
+      // Removing the primitive destroys it, including its vertex arrays.
+      scene.primitives.remove(rectanglePrimitive);
+
+      let position;
+      expect(function () {
+        position = scene.pickPosition(windowPosition);
+      }).not.toThrow();
+      expect(position).toBeUndefined();
     });
 
     it("pickPosition caches results per frame", function () {
