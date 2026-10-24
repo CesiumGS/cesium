@@ -1,12 +1,14 @@
-import Cartesian3 from "../Core/Cartesian3.js";
-import Color from "../Core/Color.js";
-import ComponentDatatype from "../Core/ComponentDatatype.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import IndexDatatype from "../Core/IndexDatatype.js";
-import Matrix4 from "../Core/Matrix4.js";
-import PrimitiveType from "../Core/PrimitiveType.js";
+import {
+  Cartesian3,
+  Color,
+  ComponentDatatype,
+  Frozen,
+  IndexDatatype,
+  Matrix4,
+  PrimitiveType,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
@@ -507,7 +509,8 @@ function copyIndicesCPU(
   batchIds,
   batchIdLookUp,
 ) {
-  const sizeInBytes = indices.constructor.BYTES_PER_ELEMENT;
+  const IndicesConstructor = indices.constructor;
+  const sizeInBytes = IndicesConstructor.BYTES_PER_ELEMENT;
 
   const batchedIdsLength = batchIds.length;
   for (let j = 0; j < batchedIdsLength; ++j) {
@@ -516,7 +519,7 @@ function copyIndicesCPU(
     const offset = offsets[index];
     const count = counts[index];
 
-    const subarray = new indices.constructor(
+    const subarray = new IndicesConstructor(
       indices.buffer,
       sizeInBytes * offset,
       count,
@@ -536,7 +539,8 @@ function rebatchCPU(primitive, batchedIndices) {
   const indexCounts = primitive._indexCounts;
   const batchIdLookUp = primitive._batchIdLookUp;
 
-  const newIndices = new indices.constructor(indices.length);
+  const IndicesConstructor = indices.constructor;
+  const newIndices = new IndicesConstructor(indices.length);
 
   let current = batchedIndices.pop();
   const newBatchedIndices = [current];

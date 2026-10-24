@@ -1,11 +1,13 @@
-import combine from "../../Core/combine.js";
+import {
+  Cartesian2,
+  Math as CesiumMath,
+  Rectangle,
+  combine,
+} from "@cesium/core";
 import ModelClippingPolygonsStageFS from "../../Shaders/Model/ModelClippingPolygonsStageFS.js";
 import ModelClippingPolygonsStageVS from "../../Shaders/Model/ModelClippingPolygonsStageVS.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import VectorCommon from "../../Shaders/VectorCommon.js";
-import Cartesian2 from "../../Core/Cartesian2.js";
-import CesiumMath from "../../Core/Math.js";
-import Rectangle from "../../Core/Rectangle.js";
 
 /**
  * The model clipping planes stage is responsible for applying clipping planes to the model.
@@ -81,20 +83,23 @@ ModelClippingPolygonsPipelineStage.process = function (
   shaderBuilder.addFragmentLines(ModelClippingPolygonsStageFS);
 
   const uniformMap = {
-    // The UV coordinates of the camera within the model's clipping rectangle.
+    // The UV coordinates of the eye within the model's clipping rectangle.
     u_clippingCameraUv: function () {
       const rectangle =
         model._clippingPolygonData?.rectangle ?? defaultRectangle;
       const halfWidth = rectangle.width * 0.5;
       const centerLongitude = rectangle.west + halfWidth;
-      const carto = frameState.camera.positionCartographic;
+      // The vertex shader adds a delta measured from the eye of the pass being
+      // rendered, so read that same eye here rather than the scene camera. They
+      // differ whenever the scene is rendered from another point of view, such
+      // as when casting shadows.
+      const eye = frameState.context.uniformState.eyeCartographic;
 
       const longitudeOffset =
-        CesiumMath.negativePiToPi(carto.longitude - centerLongitude) +
-        halfWidth;
+        CesiumMath.negativePiToPi(eye.x - centerLongitude) + halfWidth;
       return Cartesian2.fromElements(
         longitudeOffset / rectangle.width,
-        (carto.latitude - rectangle.south) / rectangle.height,
+        (eye.y - rectangle.south) / rectangle.height,
         scratchCameraUv,
       );
     },

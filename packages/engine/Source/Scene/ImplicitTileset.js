@@ -1,8 +1,5 @@
-import Check from "../Core/Check.js";
-import clone from "../Core/clone.js";
-import defined from "../Core/defined.js";
+import { Check, RuntimeError, clone, defined } from "@cesium/core";
 import Resource from "../Core/Resource.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import hasExtension from "./hasExtension.js";
 import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
 

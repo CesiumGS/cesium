@@ -1,9 +1,6 @@
+import { DeveloperError, Event, Frozen, defined } from "@cesium/core";
 import {
   CzmlDataSource,
-  Frozen,
-  defined,
-  DeveloperError,
-  Event,
   GeoJsonDataSource,
   getElement,
   GpxDataSource,

@@ -1,8 +1,10 @@
-import defined from "./defined.js";
+import {
+  JulianDate,
+  Math as CesiumMath,
+  TimeConstants,
+  defined,
+} from "@cesium/core";
 import IauOrientationParameters from "./IauOrientationParameters.js";
-import JulianDate from "./JulianDate.js";
-import CesiumMath from "./Math.js";
-import TimeConstants from "./TimeConstants.js";
 
 /**
  * This is a collection of the orientation information available for central bodies.

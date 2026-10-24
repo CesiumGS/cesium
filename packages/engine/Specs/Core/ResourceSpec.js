@@ -1,9 +1,8 @@
+import { defined, queryToObject } from "@cesium/core";
 import Uri from "urijs";
 import {
   DefaultProxy,
   defer,
-  defined,
-  queryToObject,
   Request,
   RequestErrorEvent,
   RequestScheduler,

@@ -1,11 +1,13 @@
-import BoundingRectangle from "../Core/BoundingRectangle.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import CullingVolume from "../Core/CullingVolume.js";
-import defined from "../Core/defined.js";
-import getTimestamp from "../Core/getTimestamp.js";
-import Interval from "../Core/Interval.js";
-import CesiumMath from "../Core/Math.js";
-import Matrix4 from "../Core/Matrix4.js";
+import {
+  BoundingRectangle,
+  Cartesian3,
+  CullingVolume,
+  Interval,
+  Math as CesiumMath,
+  Matrix4,
+  defined,
+  getTimestamp,
+} from "@cesium/core";
 import ClearCommand from "../Renderer/ClearCommand.js";
 import Pass from "../Renderer/Pass.js";
 import PassState from "../Renderer/PassState.js";

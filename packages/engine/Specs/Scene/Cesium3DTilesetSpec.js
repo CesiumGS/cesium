@@ -1,10 +1,30 @@
 import {
-  Axis,
-  Camera,
   Cartesian2,
   Cartesian3,
   Cartesian4,
   Cartographic,
+  Color,
+  CullingVolume,
+  Ellipsoid,
+  FixedFrameTransforms,
+  HeadingPitchRange,
+  HeadingPitchRoll,
+  Intersect,
+  JulianDate,
+  Math as CesiumMath,
+  Matrix4,
+  PerspectiveFrustum,
+  PrimitiveType,
+  Ray,
+  RuntimeError,
+  defined,
+  getAbsoluteUri,
+  getJsonFromTypedArray,
+} from "@cesium/core";
+import {
+  Axis,
+  BlendOption,
+  Camera,
   Cesium3DTile,
   Cesium3DTileColorBlendMode,
   Cesium3DTileContentState,
@@ -18,41 +38,24 @@ import {
   ClippingPlaneCollection,
   ClippingPolygon,
   ClippingPolygonCollection,
-  Color,
   ContextLimits,
   Credit,
   CullFace,
-  CullingVolume,
   defer,
-  defined,
   findTileMetadata,
   findContentMetadata,
-  getAbsoluteUri,
-  getJsonFromTypedArray,
-  HeadingPitchRange,
-  HeadingPitchRoll,
   HeightReference,
   ImageBasedLighting,
-  Intersect,
-  JulianDate,
-  Math as CesiumMath,
-  Matrix4,
-  PerspectiveFrustum,
-  PrimitiveType,
-  Ray,
   RequestScheduler,
   Resource,
   ResourceCache,
-  RuntimeError,
   TileBoundingRegion,
   TileOrientedBoundingBox,
-  Transforms,
 } from "../../index.js";
 import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
 import createScene from "../../../../Specs/createScene.js";
 import generateJsonBuffer from "../../../../Specs/generateJsonBuffer.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
-import Ellipsoid from "../../Source/Core/Ellipsoid.js";
 
 const JASMINE_DEFAULT_TIMEOUT = jasmine.DEFAULT_TIMEOUT_INTERVAL;
 
@@ -312,6 +315,16 @@ describe(
           heightReference: HeightReference.CLAMP_TO_GROUND,
         });
       }).toThrowDeveloperError();
+    });
+
+    it("vectorBlendOption", function () {
+      expect(new Cesium3DTileset().vectorBlendOption).toBe(
+        BlendOption.TRANSLUCENT,
+      );
+      expect(
+        new Cesium3DTileset({ vectorBlendOption: BlendOption.OPAQUE })
+          .vectorBlendOption,
+      ).toBe(BlendOption.OPAQUE);
     });
 
     it("fromUrl throws with unsupported version", async function () {
@@ -680,7 +693,7 @@ describe(
       // convention. Apply a model matrix and configure the tileset to interpret
       // the glTF data as +z up.
       const tilesetOptions = {
-        modelMatrix: Transforms.eastNorthUpToFixedFrame(center),
+        modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(center),
         modelUpAxis: Axis.Z,
         modelForwardAxis: Axis.X,
       };
@@ -4461,9 +4474,10 @@ describe(
         tileset.clippingPlanesOriginMatrix,
         new Matrix4(),
       );
-      let boundingSphereEastNorthUp = Transforms.eastNorthUpToFixedFrame(
-        tileset.root.boundingSphere.center,
-      );
+      let boundingSphereEastNorthUp =
+        FixedFrameTransforms.eastNorthUpToFixedFrame(
+          tileset.root.boundingSphere.center,
+        );
       expect(Matrix4.equals(offsetMatrix, boundingSphereEastNorthUp)).toBe(
         true,
       );
@@ -4475,7 +4489,7 @@ describe(
         Matrix4.equals(offsetMatrix, tileset.clippingPlanesOriginMatrix),
       ).toBe(false);
 
-      boundingSphereEastNorthUp = Transforms.eastNorthUpToFixedFrame(
+      boundingSphereEastNorthUp = FixedFrameTransforms.eastNorthUpToFixedFrame(
         tileset.root.boundingSphere.center,
       );
       offsetMatrix = tileset.clippingPlanesOriginMatrix;

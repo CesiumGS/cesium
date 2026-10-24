@@ -1,21 +1,24 @@
-import BoundingSphere from "../../Core/BoundingSphere.js";
-import Cartesian3 from "../../Core/Cartesian3.js";
-import Cartographic from "../../Core/Cartographic.js";
-import Check from "../../Core/Check.js";
+import {
+  BoundingSphere,
+  Cartesian3,
+  Cartographic,
+  Check,
+  Color,
+  DeveloperError,
+  DistanceDisplayCondition,
+  Ellipsoid,
+  Event,
+  Frozen,
+  Matrix3,
+  Matrix4,
+  Rectangle,
+  RuntimeError,
+  defined,
+  destroyObject,
+  oneTimeWarning,
+} from "@cesium/core";
 import Credit from "../../Core/Credit.js";
-import Color from "../../Core/Color.js";
-import defined from "../../Core/defined.js";
-import Frozen from "../../Core/Frozen.js";
-import DeveloperError from "../../Core/DeveloperError.js";
-import destroyObject from "../../Core/destroyObject.js";
-import DistanceDisplayCondition from "../../Core/DistanceDisplayCondition.js";
-import Ellipsoid from "../../Core/Ellipsoid.js";
-import Event from "../../Core/Event.js";
-import Matrix3 from "../../Core/Matrix3.js";
-import Matrix4 from "../../Core/Matrix4.js";
-import Rectangle from "../../Core/Rectangle.js";
 import Resource from "../../Core/Resource.js";
-import RuntimeError from "../../Core/RuntimeError.js";
 import Pass from "../../Renderer/Pass.js";
 import ClippingPlaneCollection from "../ClippingPlaneCollection.js";
 import ClippingPolygonCollection from "../ClippingPolygonCollection.js";
@@ -41,7 +44,6 @@ import ModelSceneGraph from "./ModelSceneGraph.js";
 import ModelStatistics from "./ModelStatistics.js";
 import ModelType from "./ModelType.js";
 import ModelUtility from "./ModelUtility.js";
-import oneTimeWarning from "../../Core/oneTimeWarning.js";
 import PntsLoader from "./PntsLoader.js";
 import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
 import pickModel from "./pickModel.js";
@@ -73,13 +75,12 @@ import ModelImagery from "./ModelImagery.js";
  *  {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_mesh_features|EXT_mesh_features}
  *  </li>
  *  <li>
- *  {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/EXT_mesh_gpu_instancing|EXT_mesh_gpu_instancing}
- *  </li>
+ *  {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/EXT_mesh_gpu_instancing|EXT_mesh_gpu_instancing} *  </li>
  *  <li>
  *  {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/EXT_mesh_primitive_restart|EXT_mesh_primitive_restart}
  *  </li>
  *  <li>
- *  {@link https://github.com/KhronosGroup/glTF/pull/2479|EXT_mesh_primitive_edge_visibility}
+ *  {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/EXT_mesh_primitive_edge_visibility|EXT_mesh_primitive_edge_visibility}
  *  (edges are hidden by default; set {@link EdgeDisplayMode} via
  *  {@link Model#edgeDisplayMode} or {@link Cesium3DTileset#edgeDisplayMode} to display them)
  *  </li>
@@ -93,16 +94,31 @@ import ModelImagery from "./ModelImagery.js";
  *  {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/EXT_texture_webp|EXT_texture_webp}
  *  </li>
  *  <li>
+ *  {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-2.0/extensions/2.1/Vendor/EXT_voxels|EXT_voxels} (experimental)
+ *  </li>
+ *  <li>
  *  {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_draco_mesh_compression/README.md|KHR_draco_mesh_compression}
  *  </li>
  *  <li>
+ *  {@link https://github.com/CesiumGS/glTF/tree/draft-splat-spz/extensions/2.0/Khronos/KHR_gaussian_splatting|KHR_gaussian_splatting} (experimental)
+ *  </li>
+ *  <li>
  *  {@link https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Archived/KHR_techniques_webgl/README.md|KHR_techniques_webgl}
+ *  </li>
+ *  <li>
+ *  {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_anisotropy|KHR_materials_anisotropy}
+ *  </li>
+ *  <li>
+ *  {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_clearcoat|KHR_materials_clearcoat}
  *  </li>
  *  <li>
  *  {@link https://github.com/KhronosGroup/glTF/blob/main/extensions/1.0/Khronos/KHR_materials_common/README.md|KHR_materials_common}
  *  </li>
  *  <li>
  *  {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Archived/KHR_materials_pbrSpecularGlossiness|KHR_materials_pbrSpecularGlossiness}
+ *  </li>
+ *  <li>
+ *  {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_specular|KHR_materials_specular}
  *  </li>
  *  <li>
  *  {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_unlit/README.md|KHR_materials_unlit}
@@ -167,7 +183,7 @@ import ModelImagery from "./ModelImagery.js";
  * @privateParam {Color} [options.color] A color that blends with the model's rendered color.
  * @privateParam {ColorBlendMode} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] Defines how the color blends with the model.
  * @privateParam {number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
- * @privateParam {EdgeDisplayMode} [options.edgeDisplayMode=EdgeDisplayMode.SURFACES_ONLY] Controls how edges from the {@link https://github.com/KhronosGroup/glTF/pull/2479|EXT_mesh_primitive_edge_visibility} extension are rendered relative to surface geometry.
+ * @privateParam {EdgeDisplayMode} [options.edgeDisplayMode=EdgeDisplayMode.SURFACES_ONLY] Controls how edges from the {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/EXT_mesh_primitive_edge_visibility|EXT_mesh_primitive_edge_visibility} extension are rendered relative to surface geometry.
  * @privateParam {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
  * @privateParam {number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
  * @privateParam {boolean} [options.enableShowOutline=true] Whether to enable outlines for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set to false to avoid the additional processing of geometry at load time. When false, the showOutlines and outlineColor options are ignored.
@@ -460,6 +476,11 @@ function Model(options) {
   this._debugWireframe = options.debugWireframe ?? false;
   this._edgeDisplayMode =
     options.edgeDisplayMode ?? EdgeDisplayMode.SURFACES_ONLY;
+  // Edge geometry is built lazily; see updateEdgeGeometryNeeded.
+  this._edgeGeometryNeeded =
+    this._edgeDisplayMode !== EdgeDisplayMode.SURFACES_ONLY;
+  this._edgeGeometryNeededForSnapping = false;
+  this._hasEdgeVisibilityData = undefined;
 
   // Warning for improper setup of debug wireframe
   if (
@@ -533,7 +554,19 @@ function Model(options) {
   this._texturesReadyEvent = new Event();
 
   this._sceneGraph = undefined;
-  this._nodesByName = {}; // Stores the nodes by their names in the glTF.
+
+  /**
+   * Stores the nodes by their names in the glTF.
+   *
+   * The glTF nodes that don't have their 'name' property set are not
+   * contained in this map. When there are duplicate names in the
+   * input, then the node that is stored here is unspecified, so...
+   * better make sure to not have duplicate names...
+   *
+   * @private
+   * @readonly
+   */
+  this._nodesByName = new Map();
 
   /**
    * Used for picking primitives that wrap a model.
@@ -1249,7 +1282,7 @@ Object.defineProperties(Model.prototype, {
 
   /**
    * Controls how edges from the
-   * {@link https://github.com/KhronosGroup/glTF/pull/2479|EXT_mesh_primitive_edge_visibility}
+   * {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/EXT_mesh_primitive_edge_visibility|EXT_mesh_primitive_edge_visibility}
    * glTF extension are rendered relative to surface geometry. Primitives that
    * do not declare the extension are unaffected by this setting.
    *
@@ -1258,8 +1291,6 @@ Object.defineProperties(Model.prototype, {
    * @type {EdgeDisplayMode}
    *
    * @default EdgeDisplayMode.SURFACES_ONLY
-   *
-   * @experimental This feature is using part of the glTF spec that is not yet final and is subject to change without Cesium's standard deprecation policy.
    */
   edgeDisplayMode: {
     get: function () {
@@ -1864,6 +1895,9 @@ Model.prototype.getRectangle = function (ellipsoid) {
  * Returns the node with the given <code>name</code> in the glTF. This is used to
  * modify a node's transform for user-defined animation.
  *
+ * If there are multiple nodes with the same <code>name</code> in the glTF,
+ * then the returned node is unspecified.
+ *
  * @param {string} name The name of the node in the glTF.
  * @returns {ModelNode} The node, or <code>undefined</code> if no node with the <code>name</code> exists.
  *
@@ -1884,7 +1918,7 @@ Model.prototype.getNode = function (name) {
   Check.typeOf.string("name", name);
   //>>includeEnd('debug');
 
-  return this._nodesByName[name];
+  return this._nodesByName.get(name);
 };
 
 /**
@@ -2092,6 +2126,7 @@ Model.prototype.update = function (frameState) {
   updateSceneMode(this, frameState);
   updateFog(this, frameState);
   updateVerticalExaggeration(this, frameState);
+  updateEdgeGeometryNeeded(this, frameState);
 
   this._defaultTexture = frameState.context.defaultTexture;
 
@@ -2458,6 +2493,34 @@ function updateVerticalExaggeration(model, frameState) {
     model.resetDrawCommands(); //if verticalExaggeration was on, reset.
     model._hasVerticalExaggeration = false;
   }
+}
+
+// Edge geometry is built only when edges are displayed, or once a snapping
+// pass has touched this model (snapping targets edges even in SURFACES_ONLY).
+function updateEdgeGeometryNeeded(model, frameState) {
+  if (frameState.passes.snap) {
+    model._edgeGeometryNeededForSnapping = true;
+  }
+
+  const needed =
+    model._edgeDisplayMode !== EdgeDisplayMode.SURFACES_ONLY ||
+    model._edgeGeometryNeededForSnapping;
+  if (needed !== model._edgeGeometryNeeded) {
+    model._edgeGeometryNeeded = needed;
+    if (hasEdgeVisibilityData(model)) {
+      model.resetDrawCommands();
+    }
+  }
+}
+
+function hasEdgeVisibilityData(model) {
+  if (!defined(model._hasEdgeVisibilityData)) {
+    model._hasEdgeVisibilityData = model._sceneGraph.components.nodes.some(
+      (node) =>
+        node.primitives.some((primitive) => defined(primitive.edgeVisibility)),
+    );
+  }
+  return model._hasEdgeVisibilityData;
 }
 
 function buildDrawCommands(model, frameState) {
@@ -3201,7 +3264,7 @@ Model.prototype.destroyModelResources = function () {
  * @param {Color} [options.color] A color that blends with the model's rendered color.
  * @param {ColorBlendMode} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] Defines how the color blends with the model.
  * @param {number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
- * @param {EdgeDisplayMode} [options.edgeDisplayMode=EdgeDisplayMode.SURFACES_ONLY] Controls how edges from the {@link https://github.com/KhronosGroup/glTF/pull/2479|EXT_mesh_primitive_edge_visibility} extension are rendered relative to surface geometry.
+ * @param {EdgeDisplayMode} [options.edgeDisplayMode=EdgeDisplayMode.SURFACES_ONLY] Controls how edges from the {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/EXT_mesh_primitive_edge_visibility|EXT_mesh_primitive_edge_visibility} extension are rendered relative to surface geometry.
  * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
  * @param {number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
  * @param {boolean} [options.enableShowOutline=true] Whether to enable outlines for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set false to avoid post-processing geometry at load time. When false, the showOutlines and outlineColor options are ignored.

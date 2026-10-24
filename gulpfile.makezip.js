@@ -1,12 +1,14 @@
+// @ts-check
+
 import { dirname, join } from "path";
 import gulp from "gulp";
 import gulpTap from "gulp-tap";
 import gulpZip from "gulp-zip";
 import gulpRename from "gulp-rename";
-import { glslToJavaScript } from "./scripts/build.js";
+import { glslToJavaScript } from "./scripts/build-utilities.js";
 import { release } from "./gulpfile.js";
+import { rmSync } from "fs";
 import { readFile, writeFile } from "fs/promises";
-import { rimraf } from "rimraf";
 import { finished } from "stream/promises";
 import { createRequire } from "module";
 import { buildSandcastleApp } from "./scripts/buildSandcastle.js";
@@ -27,7 +29,7 @@ if (/\.0$/.test(version)) {
  */
 async function pruneScriptsForZip(packageJsonPath) {
   // Read the contents of the file.
-  const contents = await readFile(packageJsonPath);
+  const contents = await readFile(packageJsonPath, "utf8");
   const contentsJson = JSON.parse(contents);
 
   const scripts = contentsJson.scripts;
@@ -58,7 +60,6 @@ async function pruneScriptsForZip(packageJsonPath) {
 
   // Set server tasks to use production flag
   scripts["start"] = "node server.js --production";
-  scripts["start-public"] = "node server.js --public --production";
   scripts["start-public"] = "node server.js --public --production";
   scripts["test"] = "gulp test --production";
   scripts["test-all"] = "gulp test --all --production";
@@ -96,6 +97,12 @@ export const makeZip = gulp.series(
     await glslToJavaScript(false, "Build/minifyShaders.state", "engine");
 
     const packageJsonSrc = await pruneScriptsForZip("package.json");
+    const corePackageJsonSrc = await pruneScriptsForZip(
+      "packages/core/package.json",
+    );
+    const gltfPackageJsonSrc = await pruneScriptsForZip(
+      "packages/gltf/package.json",
+    );
     const enginePackageJsonSrc = await pruneScriptsForZip(
       "packages/engine/package.json",
     );
@@ -112,6 +119,8 @@ export const makeZip = gulp.series(
           }
         }),
       )
+      .pipe(corePackageJsonSrc)
+      .pipe(gltfPackageJsonSrc)
       .pipe(enginePackageJsonSrc)
       .pipe(widgetsPackageJsonSrc)
       .pipe(packageJsonSrc)
@@ -130,10 +139,14 @@ export const makeZip = gulp.series(
             "Build/Documentation/**",
             "Build/Specs/**",
             "Build/package.json",
+            "packages/core/Build/**",
+            "packages/gltf/Build/**",
             "packages/engine/Build/**",
             "packages/widgets/Build/**",
             "!Build/Specs/e2e/**",
             "!Build/InlineWorkers.js",
+            "!packages/core/Build/Specs/**",
+            "!packages/gltf/Build/Specs/**",
             "!packages/engine/Build/Specs/**",
             "!packages/widgets/Build/Specs/**",
             "!packages/engine/Build/minifyShaders.state",
@@ -148,15 +161,29 @@ export const makeZip = gulp.series(
         gulp.src(
           [
             "Apps/**",
+            "packages/core/index.js",
+            "packages/core/index.d.ts",
+            "packages/core/LICENSE.md",
+            "packages/core/README.md",
+            "packages/core/scripts/**",
+            "packages/core/Source/**",
+            "packages/gltf/index.js",
+            "packages/gltf/index.d.ts",
+            "packages/gltf/LICENSE.md",
+            "packages/gltf/README.md",
+            "packages/gltf/scripts/**",
+            "packages/gltf/Source/**",
             "packages/engine/index.js",
             "packages/engine/index.d.ts",
             "packages/engine/LICENSE.md",
             "packages/engine/README.md",
+            "packages/engine/scripts/**",
             "packages/engine/Source/**",
             "packages/widgets/index.js",
             "packages/widgets/index.d.ts",
             "packages/widgets/LICENSE.md",
             "packages/widgets/README.md",
+            "packages/widgets/scripts/**",
             "packages/widgets/Source/**",
             "Source/**",
             "Specs/**",
@@ -186,7 +213,7 @@ export const makeZip = gulp.series(
           // Work around an issue with gulp-zip where archives generated on Windows do
           // not properly have their directory executable mode set.
           // see https://github.com/sindresorhus/gulp-zip/issues/64#issuecomment-205324031
-          if (file.isDirectory()) {
+          if (file.isDirectory() && file.stat) {
             file.stat.mode = parseInt("40777", 8);
           }
         }),
@@ -196,9 +223,11 @@ export const makeZip = gulp.series(
 
     await finished(src);
 
-    rimraf.sync("./package.noprepare.json");
-    rimraf.sync("./packages/engine/package.noprepare.json");
-    rimraf.sync("./packages/widgets/package.noprepare.json");
+    rmSync("./package.noprepare.json", { force: true });
+    rmSync("./packages/core/package.noprepare.json", { force: true });
+    rmSync("./packages/gltf/package.noprepare.json", { force: true });
+    rmSync("./packages/engine/package.noprepare.json", { force: true });
+    rmSync("./packages/widgets/package.noprepare.json", { force: true });
 
     return src;
   },

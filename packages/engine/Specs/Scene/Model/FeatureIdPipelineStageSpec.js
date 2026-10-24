@@ -1,6 +1,5 @@
+import { ComponentDatatype, combine } from "@cesium/core";
 import {
-  combine,
-  ComponentDatatype,
   FeatureIdPipelineStage,
   GltfLoader,
   ModelStatistics,

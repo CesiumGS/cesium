@@ -1,10 +1,9 @@
 import {
   Cartesian3,
   Color,
-  CallbackProperty,
-  CzmlDataSource,
   DistanceDisplayCondition,
   JulianDate,
+  LinearSpline,
   Math as CesiumMath,
   Matrix3,
   Matrix4,
@@ -12,6 +11,10 @@ import {
   ReferenceFrame,
   TimeInterval,
   TimeIntervalCollection,
+} from "@cesium/core";
+import {
+  CallbackProperty,
+  CzmlDataSource,
   CompositePositionProperty,
   CompositeMaterialProperty,
   ConstantPositionProperty,
@@ -28,13 +31,11 @@ import {
   SampledProperty,
   SampledPositionProperty,
   CallbackPositionProperty,
-  LinearSpline,
   ScaledPositionProperty,
-  Transforms,
+  CelestialFrameTransforms,
   TimeIntervalCollectionPositionProperty,
   SceneMode,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 
 describe(
@@ -1243,9 +1244,12 @@ describe(
       const satellite1 = entityCollection.getById("someEntityId1");
       const polylineCollection = scene.primitives.get(0);
       const primitive = polylineCollection.get(0);
-      let toFixed = Transforms.computeIcrfToFixedMatrix(time, new Matrix3());
+      let toFixed = CelestialFrameTransforms.computeIcrfToFixedMatrix(
+        time,
+        new Matrix3(),
+      );
       if (!toFixed) {
-        toFixed = Transforms.computeTemeToPseudoFixedMatrix(
+        toFixed = CelestialFrameTransforms.computeTemeToPseudoFixedMatrix(
           time,
           new Matrix3(),
         );

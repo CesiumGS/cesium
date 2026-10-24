@@ -1,11 +1,13 @@
-import Cartesian3 from "../../Core/Cartesian3.js";
-import Check from "../../Core/Check.js";
-import Frozen from "../../Core/Frozen.js";
-import defined from "../../Core/defined.js";
-import DeveloperError from "../../Core/DeveloperError.js";
-import Matrix4 from "../../Core/Matrix4.js";
-import TranslationRotationScale from "../../Core/TranslationRotationScale.js";
-import Quaternion from "../../Core/Quaternion.js";
+import {
+  Cartesian3,
+  Check,
+  DeveloperError,
+  Frozen,
+  Matrix4,
+  Quaternion,
+  TranslationRotationScale,
+  defined,
+} from "@cesium/core";
 import InstancingPipelineStage from "./InstancingPipelineStage.js";
 import ModelMatrixUpdateStage from "./ModelMatrixUpdateStage.js";
 import NodeStatisticsPipelineStage from "./NodeStatisticsPipelineStage.js";
@@ -63,17 +65,25 @@ function ModelRuntimeNode(options) {
   this._runtimeSkin = undefined;
   this._computedJointMatrices = [];
 
+  // Set the 'show' flag of the runtime node based on the 'visible'
+  // property of the KHR_node_visibility extension.
+  // The 'show' flag should only be set to 'false' when the 'visible'
+  // flag is set to 'false' EXPLICITLY. Everything else (particularly,
+  // 'undefined') should default to 'show=true'.
+  let doShow = true;
+  const nodeVisibility = node.nodeVisibility;
+  if (defined(nodeVisibility)) {
+    doShow = nodeVisibility.visible !== false;
+  }
+
   /**
    * Whether or not to show this node and its children. This can be toggled
    * by the user through {@link ModelNode}.
    *
    * @type {boolean}
-   *
-   * @default true
-   *
    * @private
    */
-  this.show = true;
+  this.show = doShow;
 
   /**
    * Whether or not this node is animated by the user. This is set by the

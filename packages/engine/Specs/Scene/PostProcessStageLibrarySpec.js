@@ -1,11 +1,10 @@
 import {
   Cartesian3,
-  HeadingPitchRoll,
+  FixedFrameTransforms,
   HeadingPitchRange,
-  Transforms,
-  PostProcessStageLibrary,
-} from "../../index.js";
-
+  HeadingPitchRoll,
+} from "@cesium/core";
+import { PostProcessStageLibrary } from "../../index.js";
 import createCanvas from "../../../../Specs/createCanvas.js";
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
@@ -301,7 +300,7 @@ describe(
       }
 
       const origin = Cartesian3.fromDegrees(-123.0744619, 44.0503706, 100.0);
-      const modelMatrix = Transforms.headingPitchRollToFixedFrame(
+      const modelMatrix = FixedFrameTransforms.headingPitchRollToFixedFrame(
         origin,
         new HeadingPitchRoll(),
       );
@@ -413,7 +412,7 @@ describe(
 
     it("bloom", function () {
       const origin = Cartesian3.fromDegrees(-123.0744619, 44.0503706, 100.0);
-      const modelMatrix = Transforms.headingPitchRollToFixedFrame(
+      const modelMatrix = FixedFrameTransforms.headingPitchRollToFixedFrame(
         origin,
         new HeadingPitchRoll(),
       );

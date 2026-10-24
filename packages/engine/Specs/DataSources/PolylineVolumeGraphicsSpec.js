@@ -1,13 +1,10 @@
+import { Color, CornerType, DistanceDisplayCondition } from "@cesium/core";
 import {
-  Color,
-  CornerType,
-  DistanceDisplayCondition,
   ColorMaterialProperty,
   ConstantProperty,
   PolylineVolumeGraphics,
   ShadowMode,
 } from "../../index.js";
-
 import testDefinitionChanged from "../../../../Specs/testDefinitionChanged.js";
 import testMaterialDefinitionChanged from "../../../../Specs/testMaterialDefinitionChanged.js";
 

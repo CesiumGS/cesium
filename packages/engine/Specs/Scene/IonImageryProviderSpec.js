@@ -1,9 +1,9 @@
+import { RuntimeError } from "@cesium/core";
 import {
   Credit,
   IonResource,
   RequestScheduler,
   Resource,
-  RuntimeError,
   ArcGisMapServerImageryProvider,
   BingMapsImageryProvider,
   GoogleEarthEnterpriseMapsProvider,

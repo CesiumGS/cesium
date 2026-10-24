@@ -1,4 +1,4 @@
-import DeveloperError from "../Core/DeveloperError.js";
+import { DeveloperError } from "@cesium/core";
 
 /**
  * Provides imagery to be displayed on the surface of an ellipsoid.  This type describes an

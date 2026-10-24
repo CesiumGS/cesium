@@ -1,11 +1,13 @@
 import {
   Cartesian4,
-  Buffer,
-  BufferUsage,
   ComponentDatatype,
   IndexDatatype,
   Math as CesiumMath,
   PrimitiveType,
+} from "@cesium/core";
+import {
+  Buffer,
+  BufferUsage,
   ResourceCache,
   ShaderBuilder,
   VertexAttributeSemantic,
@@ -127,6 +129,9 @@ describe("Scene/Model/EdgeVisibilityPipelineStage", function () {
       uniformMap: {},
       runtimePrimitive: {
         primitive: primitive,
+      },
+      model: {
+        _pipelineResources: [],
       },
     };
   }

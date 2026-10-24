@@ -1,12 +1,14 @@
-import Check from "../Core/Check.js";
+import {
+  Check,
+  Event,
+  Frozen,
+  Rectangle,
+  RuntimeError,
+  defined,
+} from "@cesium/core";
 import Credit from "../Core/Credit.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import Event from "../Core/Event.js";
 import GeographicTilingScheme from "../Core/GeographicTilingScheme.js";
-import Rectangle from "../Core/Rectangle.js";
 import Resource from "../Core/Resource.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import TileProviderError from "../Core/TileProviderError.js";
 import ImageryProvider from "./ImageryProvider.js";
 

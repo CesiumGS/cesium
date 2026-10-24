@@ -1,13 +1,15 @@
 import {
   AttributeType,
-  Axis,
   Cartesian3,
-  CullFace,
-  InstanceAttributeSemantic,
   Matrix4,
-  ModelUtility,
   PrimitiveType,
   Quaternion,
+} from "@cesium/core";
+import {
+  Axis,
+  CullFace,
+  InstanceAttributeSemantic,
+  ModelUtility,
   VertexAttributeSemantic,
 } from "../../../index.js";
 

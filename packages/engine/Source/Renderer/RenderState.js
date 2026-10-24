@@ -1,10 +1,12 @@
-import BoundingRectangle from "../Core/BoundingRectangle.js";
-import Color from "../Core/Color.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import WebGLConstants from "../Core/WebGLConstants.js";
-import WindingOrder from "../Core/WindingOrder.js";
+import {
+  BoundingRectangle,
+  Color,
+  DeveloperError,
+  Frozen,
+  WebGLConstants,
+  WindingOrder,
+  defined,
+} from "@cesium/core";
 import ContextLimits from "./ContextLimits.js";
 import freezeRenderState from "./freezeRenderState.js";
 

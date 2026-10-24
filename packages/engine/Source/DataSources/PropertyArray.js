@@ -1,7 +1,4 @@
-import defined from "../Core/defined.js";
-import Event from "../Core/Event.js";
-import EventHelper from "../Core/EventHelper.js";
-import JulianDate from "../Core/JulianDate.js";
+import { Event, EventHelper, JulianDate, defined } from "@cesium/core";
 import Property from "./Property.js";
 
 /**

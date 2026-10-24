@@ -1,8 +1,5 @@
-import {
-  Cartesian3,
-  defined,
-  PrimitiveOutlineGenerator,
-} from "../../../index.js";
+import { Cartesian3, defined } from "@cesium/core";
+import { PrimitiveOutlineGenerator } from "../../../index.js";
 import createContext from "../../../../../Specs/createContext.js";
 
 describe(

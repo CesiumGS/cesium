@@ -1,7 +1,5 @@
-import { defined, TimeInterval } from "@cesium/engine";
-
+import { TimeInterval, defined } from "@cesium/core";
 import { viewerDragDropMixin } from "../../index.js";
-
 import createViewer from "../createViewer.js";
 import DomEventSimulator from "../../../../Specs/DomEventSimulator.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";

@@ -3,11 +3,13 @@ import {
   Cartesian3,
   Cartesian4,
   ComponentDatatype,
+  RuntimeError,
+} from "@cesium/core";
+import {
   parseBatchTable,
   MetadataClass,
   MetadataComponentType,
   MetadataType,
-  RuntimeError,
 } from "../../index.js";
 
 describe("Scene/parseBatchTable", function () {

@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import * as Cesium from "cesium";
 
 const boxSize = 25;
@@ -26,10 +28,10 @@ function createMaterialAppearance() {
 
                     czm_material czm_getMaterial(czm_materialInput materialInput) {
                         czm_material material = czm_getDefaultMaterial(materialInput);
-                        
+
                         // Within the Material fabric source, you can directly use the uniform names as declared.
                         // material.alpha = 0.33 + (sin(time * 0.03) + 1.0)  / 3.0;
-                        
+
                         return material;
                     }
                     `,
@@ -61,8 +63,8 @@ function createMaterialAppearance() {
                     float c = cos(angle);
                     float s = sin(angle);
                     return mat3(
-                        c, -s, 0.0,   
-                        s,  c, 0.0,  
+                        c, -s, 0.0,
+                        s,  c, 0.0,
                         0.0, 0.0, 1.0
                     );
                 }
@@ -83,7 +85,7 @@ function createMaterialAppearance() {
                     // Restore to coordinates relative to the camera.
                     originMC = originMC - cameraPositionMC;
                     p.xyz = originMC;
-                    
+
                     v_positionEC = (czm_modelViewRelativeToEye * p).xyz;
                     v_normalEC = czm_normal * normal;
                     v_st = st;
@@ -95,9 +97,9 @@ function createMaterialAppearance() {
                 in vec3 v_normalEC;
                 in vec2 v_st;
                 in vec3 v_position;
-                
+
                 // The variables passed by appearance.uniforms need to be explicitly declared.
-                uniform vec3 customColor; 
+                uniform vec3 customColor;
                 uniform float boxSize;
 
                 void main()
@@ -114,19 +116,19 @@ function createMaterialAppearance() {
                     materialInput.positionToEyeEC = positionToEyeEC;
                     materialInput.st = v_st;
                     czm_material material = czm_getMaterial(materialInput);
-                    
+
                     // Use uniform customColor from Appearance to change color
-                    material.diffuse  = customColor; 
+                    material.diffuse  = customColor;
 
                     // Two random transparent bright lines that are far apart from each other.
                     // The value of the uniform variable in Material.uniforms can be obtained through the helper function in Material here.
                     int uniformOfMaterial = int(getUniformTimeOfMaterial() * 4.0);
-                    float s1 =  boxSize / 10.0; 
+                    float s1 =  boxSize / 10.0;
                     float delta = abs(abs(v_position.z) - float(uniformOfMaterial % int((boxSize / 2.0 - s1) * 100.0)) / 100.0);
                     if(delta < s1)
                     {
                         float scale = 1.0 - delta / s1;
-                        material.diffuse  = vec3(1.0) * scale; 
+                        material.diffuse  = vec3(1.0) * scale;
                         material.alpha = scale;
                     }
 
@@ -134,7 +136,7 @@ function createMaterialAppearance() {
                     out_FragColor = vec4(material.diffuse + material.emission, material.alpha);
                 #else
                     out_FragColor = czm_phong(normalize(positionToEyeEC), material, czm_lightDirectionEC);
-                #endif              
+                #endif
                 }
                 `,
     materialCacheKey: "my-box-material-appearance",

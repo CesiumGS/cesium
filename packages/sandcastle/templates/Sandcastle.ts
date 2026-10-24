@@ -14,7 +14,7 @@ declare global {
 
 type SelectOption = {
   text: string;
-  value: string;
+  value?: string;
   onselect: () => void;
 };
 
@@ -249,7 +249,7 @@ const Sandcastle = {
     for (let i = 0, len = options.length; i < len; ++i) {
       const option = document.createElement("option");
       option.textContent = options[i].text;
-      option.value = options[i].value;
+      option.value = options[i].value ?? options[i].text;
       menu.appendChild(option);
     }
   },

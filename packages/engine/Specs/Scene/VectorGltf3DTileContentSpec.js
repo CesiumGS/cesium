@@ -1,4 +1,6 @@
+import { Cartesian3, Color, Matrix4 } from "@cesium/core";
 import {
+  BlendOption,
   BufferPoint,
   BufferPointCollection,
   BufferPointMaterial,
@@ -8,9 +10,8 @@ import {
   BufferPolygon,
   BufferPolygonCollection,
   BufferPolygonMaterial,
-  Cartesian3,
   Cesium3DTileStyle,
-  Color,
+  SceneMode,
   VectorGltf3DTileContent,
 } from "../../index.js";
 
@@ -278,6 +279,26 @@ describe("Scene/VectorGltf3DTileContent", () => {
         "#ff000080",
       );
     }
+  });
+
+  it("update syncs blendOption from the tileset", () => {
+    const tileset = { _vectorBlendOption: BlendOption.OPAQUE };
+    const tile = { computedTransform: Matrix4.clone(Matrix4.IDENTITY) };
+    content = new VectorGltf3DTileContent(tileset, tile, {});
+    content._ready = true;
+
+    const points = createBufferPointCollection();
+    content._collections = [points];
+    content._collectionLocalMatrices = [Matrix4.clone(Matrix4.IDENTITY)];
+
+    const frameState = { mode: SceneMode.SCENE3D, passes: {}, frameNumber: 0 };
+
+    content.update(tileset, frameState);
+    expect(points.blendOption).toBe(BlendOption.OPAQUE);
+
+    tileset._vectorBlendOption = BlendOption.TRANSLUCENT;
+    content.update(tileset, frameState);
+    expect(points.blendOption).toBe(BlendOption.TRANSLUCENT);
   });
 });
 

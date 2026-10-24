@@ -1,18 +1,20 @@
 // @ts-check
 
+import { assert, Cartesian3, Frozen } from "@cesium/core";
 import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 import BufferPoint from "./BufferPoint.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Frozen from "../Core/Frozen.js";
 import renderPoints from "./renderBufferPointCollection.js";
 import BufferPointMaterial from "./BufferPointMaterial.js";
 
 /** @import BlendOption from "./BlendOption.js"; */
-/** @import BoundingSphere from "../Core/BoundingSphere.js"; */
-/** @import ComponentDatatype from "../Core/ComponentDatatype.js"; */
-/** @import Matrix4 from "../Core/Matrix4.js"; */
+/** @import { BoundingSphere } from "@cesium/core"; */
+/** @import { ComponentDatatype } from "@cesium/core"; */
+/** @import { Matrix4 } from "@cesium/core"; */
 /** @import FrameState from "./FrameState.js"; */
 /** @import { BufferPrimitiveCollectionOptions } from "./BufferPrimitiveCollection.js"; */
+/** @import { TypedArray } from "@cesium/core"; */
+
+const { DirtyFlags } = BufferPrimitiveCollection;
 
 /**
  * @typedef {object} BufferPointOptions
@@ -70,7 +72,7 @@ class BufferPointCollection extends BufferPrimitiveCollection {
    *    specified, users are responsible for updating bounding volume as needed. Pre-computing the bounding volume
    *    manually, and updating it only as needed, will improve performance for larger dynamic collections.
    * @param {boolean} [options.debugShowBoundingVolume=false]
-   * @param {BlendOption} [options.blendOption=BlendOption.TRANSLUCENT]
+   * @param {BlendOption} [options.blendOption=BlendOption.TRANSLUCENT] Determines how primitives in the collection are blended with the scene. Must be {@link BlendOption.OPAQUE} or {@link BlendOption.TRANSLUCENT}; {@link BlendOption.OPAQUE_AND_TRANSLUCENT} is not supported.
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
     super({ ...options, vertexCountMax: options.primitiveCountMax });
@@ -142,6 +144,39 @@ class BufferPointCollection extends BufferPrimitiveCollection {
     if (this.show && (passes.render || passes.pick)) {
       this._renderContext = renderPoints(this, frameState, this._renderContext);
     }
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // ACCESSORS
+
+  /**
+   * Updates vertex positions over the specified range of primitives. For
+   * position-only updates to many primitives, `setPositions()` is more
+   * efficient than updating each primitive individually.
+   *
+   * Argument `positions` must contain the same total number of vertices as the
+   * target primitive range; vertices cannot be added/removed by this method.
+   *
+   * @param {TypedArray} positions
+   * @param {number} primitiveOffset
+   * @param {number} primitiveCount
+   */
+  setPositions(positions, primitiveOffset, primitiveCount) {
+    //>>includeStart('debug', pragmas.debug);
+    const srcConstructor = positions.constructor;
+    const dstConstructor = this._positionView.constructor;
+    assert(dstConstructor === srcConstructor, "Invalid array type");
+    assert(primitiveCount * 3 === positions.length, "Invalid array length");
+    assert(
+      primitiveOffset + primitiveCount <= this._primitiveCount,
+      "Invalid primitive range",
+    );
+    //>>includeEnd('debug');
+
+    this._positionView.set(positions, primitiveOffset * 3);
+
+    this._makeDirty(DirtyFlags.GEOMETRY, primitiveOffset, primitiveCount);
+    this._makeDirtyBoundingVolume();
   }
 }
 

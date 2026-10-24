@@ -1,9 +1,11 @@
 import {
   ColorGeometryInstanceAttribute,
-  defined,
   GeometryInstance,
   Rectangle,
   RectangleGeometry,
+  defined,
+} from "@cesium/core";
+import {
   HorizontalOrigin,
   LabelCollection,
   PerInstanceColorAppearance,
@@ -11,7 +13,6 @@ import {
   PrimitiveCollection,
   VerticalOrigin,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 

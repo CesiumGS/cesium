@@ -1,11 +1,9 @@
+import { Event, RuntimeError, defined } from "@cesium/core";
 import createTileKey from "./createTileKey.js";
 import runLater from "./runLater.js";
 import {
-  defined,
-  Event,
   GeographicTilingScheme,
   HeightmapTerrainData,
-  RuntimeError,
   TerrainProvider,
 } from "@cesium/engine";
 

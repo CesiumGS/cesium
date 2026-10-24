@@ -2,10 +2,12 @@ import {
   Cartesian2,
   Cartesian3,
   Cartesian4,
-  clone,
   Matrix2,
   Matrix3,
   Matrix4,
+  clone,
+} from "@cesium/core";
+import {
   FeatureDetection,
   MetadataClassProperty,
   MetadataComponentType,

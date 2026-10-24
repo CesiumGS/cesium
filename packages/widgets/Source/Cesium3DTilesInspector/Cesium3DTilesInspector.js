@@ -1,4 +1,5 @@
-import { Check, destroyObject, getElement } from "@cesium/engine";
+import { Check, destroyObject } from "@cesium/core";
+import { getElement } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
 import InspectorShared from "../InspectorShared.js";
 import Cesium3DTilesInspectorViewModel from "./Cesium3DTilesInspectorViewModel.js";

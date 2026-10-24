@@ -1,4 +1,4 @@
-import Intersect from "../Core/Intersect.js";
+import { Intersect } from "@cesium/core";
 import ManagedArray from "../Core/ManagedArray.js";
 import Cesium3DTileRefine from "./Cesium3DTileRefine.js";
 import Cesium3DTilesetTraversal from "./Cesium3DTilesetTraversal.js";

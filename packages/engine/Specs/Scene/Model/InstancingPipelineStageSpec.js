@@ -1,13 +1,10 @@
+import { Cartesian3, Math as CesiumMath, Matrix4, combine } from "@cesium/core";
 import {
   Axis,
-  Cartesian3,
-  combine,
   GltfLoader,
   I3dmLoader,
   InstanceAttributeSemantic,
   InstancingPipelineStage,
-  Matrix4,
-  Math as CesiumMath,
   ModelUtility,
   ModelStatistics,
   Resource,

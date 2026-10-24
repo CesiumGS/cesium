@@ -1,9 +1,11 @@
 import {
   JulianDate,
-  Matrix3,
   Math as CesiumMath,
+  Matrix3,
   TimeStandard,
-  Transforms,
+} from "@cesium/core";
+import {
+  CelestialFrameTransforms,
   Simon1994PlanetaryPositions as PlanetaryPositions,
 } from "../../index.js";
 
@@ -82,10 +84,11 @@ describe("Core/Simon1994PlanetaryPositions", function () {
     }
     const angles = [];
     for (i = 0; i < 24; i++) {
-      transformMatrix = Transforms.computeIcrfToCentralBodyFixedMatrix(
-        timesOfDay[i],
-        transformMatrix,
-      );
+      transformMatrix =
+        CelestialFrameTransforms.computeIcrfToCentralBodyFixedMatrix(
+          timesOfDay[i],
+          transformMatrix,
+        );
       const position =
         PlanetaryPositions.computeSunPositionInEarthInertialFrame(
           timesOfDay[i],

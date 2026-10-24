@@ -24,17 +24,20 @@
 
 **/*.min.js
 
-packages/engine/Build/**
-packages/engine/index.js
-packages/engine/Source/Scene/GltfPipeline/**
+packages/*/Build/**
+packages/*/index.js
+packages/*/index.d.ts
+packages/*/Specs/SpecList.js
+
 packages/engine/Source/Shaders/**/*.js
 packages/engine/Source/ThirdParty/**
 
-packages/widgets/Build/**
-packages/widgets/index.js
 packages/widgets/Source/ThirdParty/**
 
 packages/sandcastle/node_modules/**
+packages/sandcastle/templates/Sandcastle.d.ts
+packages/sandcastle/templates/Sandcastle.js
+
 Apps/Sandcastle2/**
 
 Specs/jasmine/**
@@ -42,4 +45,3 @@ Specs/jasmine/**
 Tools/jsdoc/cesium_template/static/javascript/prism.js
 Tools/jsdoc/cesium_template/static/styles/prism.css
 **/LICENSE.md
-

@@ -1,35 +1,41 @@
+import {
+  BoundingSphere,
+  Cartesian2,
+  Cartesian3,
+  Cartographic,
+  Check,
+  Color,
+  DeveloperError,
+  Ellipsoid,
+  Event,
+  FixedFrameTransforms,
+  Frozen,
+  IntersectionTests,
+  Interval,
+  JulianDate,
+  Math as CesiumMath,
+  Matrix3,
+  Matrix4,
+  Ray,
+  RuntimeError,
+  clone,
+  defined,
+  deprecationWarning,
+  destroyObject,
+  oneTimeWarning,
+} from "@cesium/core";
+import { constructBoundingVolumeJson, getNodeTransform } from "@cesium/gltf";
 import ApproximateTerrainHeights from "../Core/ApproximateTerrainHeights.js";
-import BoundingSphere from "../Core/BoundingSphere.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartographic from "../Core/Cartographic.js";
-import Check from "../Core/Check.js";
-import clone from "../Core/clone.js";
-import Color from "../Core/Color.js";
 import Credit from "../Core/Credit.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import deprecationWarning from "../Core/deprecationWarning.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
-import Event from "../Core/Event.js";
 import ImageBasedLighting from "./ImageBasedLighting.js";
-import Interval from "../Core/Interval.js";
-import IntersectionTests from "../Core/IntersectionTests.js";
 import IonResource from "../Core/IonResource.js";
-import JulianDate from "../Core/JulianDate.js";
 import ManagedArray from "../Core/ManagedArray.js";
-import CesiumMath from "../Core/Math.js";
-import Matrix3 from "../Core/Matrix3.js";
-import Matrix4 from "../Core/Matrix4.js";
 import Resource from "../Core/Resource.js";
-import RuntimeError from "../Core/RuntimeError.js";
-import Transforms from "../Core/Transforms.js";
 import ClearCommand from "../Renderer/ClearCommand.js";
 import Pass from "../Renderer/Pass.js";
 import RenderState from "../Renderer/RenderState.js";
 import Axis from "./Axis.js";
+import BlendOption from "./BlendOption.js";
 import Cesium3DTile from "./Cesium3DTile.js";
 import Cesium3DTileColorBlendMode from "./Cesium3DTileColorBlendMode.js";
 import Cesium3DTileContentState from "./Cesium3DTileContentState.js";
@@ -49,7 +55,7 @@ import { isHeightReferenceClamp } from "./HeightReference.js";
 import ImplicitTileset from "./ImplicitTileset.js";
 import ImplicitTileCoordinates from "./ImplicitTileCoordinates.js";
 import LabelCollection from "./LabelCollection.js";
-import oneTimeWarning from "../Core/oneTimeWarning.js";
+import ModelUtility from "./Model/ModelUtility.js";
 import PointCloudEyeDomeLighting from "./PointCloudEyeDomeLighting.js";
 import PointCloudShading from "./PointCloudShading.js";
 import ResourceCache from "./ResourceCache.js";
@@ -63,7 +69,6 @@ import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
 import Cesium3DTilesetMostDetailedTraversal from "./Cesium3DTilesetMostDetailedTraversal.js";
 import Cesium3DTilesetBaseTraversal from "./Cesium3DTilesetBaseTraversal.js";
 import Cesium3DTilesetSkipTraversal from "./Cesium3DTilesetSkipTraversal.js";
-import Ray from "../Core/Ray.js";
 import DynamicEnvironmentMapManager from "./DynamicEnvironmentMapManager.js";
 import ImageryLayerCollection from "./ImageryLayerCollection.js";
 
@@ -118,6 +123,7 @@ import ImageryLayerCollection from "./ImageryLayerCollection.js";
  * @property {Color} [outlineColor=Color.BLACK] The color to use when rendering outlines.
  * @property {boolean} [vectorClassificationOnly=false] Indicates that only the tileset's vector tiles should be used for classification.
  * @property {boolean} [vectorKeepDecodedPositions=false] Whether vector tiles should keep decoded positions in memory. This is used with {@link Cesium3DTileFeature.getPolylinePositions}.
+ * @property {BlendOption} [vectorBlendOption=BlendOption.TRANSLUCENT] Determines how vector primitives in the tileset are blended with the scene. Must be {@link BlendOption.OPAQUE} or {@link BlendOption.TRANSLUCENT}; {@link BlendOption.OPAQUE_AND_TRANSLUCENT} is not supported.
  * @property {string|number} [featureIdLabel="featureId_0"] Label of the feature ID set to use for picking and styling. For EXT_mesh_features, this is the feature ID's label property, or "featureId_N" (where N is the index in the featureIds array) when not specified. EXT_feature_metadata did not have a label field, so such feature ID sets are always labeled "featureId_N" where N is the index in the list of all feature Ids, where feature ID attributes are listed before feature ID textures. If featureIdLabel is an integer N, it is converted to the string "featureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @property {string|number} [instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @property {boolean} [showCreditsOnScreen=false] Whether to display the credits of this tileset on screen.
@@ -131,7 +137,7 @@ import ImageryLayerCollection from "./ImageryLayerCollection.js";
  * @property {boolean} [debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
  * @property {boolean} [enableDebugWireframe=false] For debugging only. This must be true for debugWireframe to work in WebGL1. This cannot be set after the tileset has been created.
  * @property {boolean} [debugWireframe=false] For debugging only. When true, render's each tile's content as a wireframe.
- * @property {EdgeDisplayMode} [edgeDisplayMode=EdgeDisplayMode.SURFACES_ONLY] Controls how edges from the {@link https://github.com/KhronosGroup/glTF/pull/2479|EXT_mesh_primitive_edge_visibility} glTF extension are rendered relative to surface geometry.
+ * @property {EdgeDisplayMode} [edgeDisplayMode=EdgeDisplayMode.SURFACES_ONLY] Controls how edges from the {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/EXT_mesh_primitive_edge_visibility|EXT_mesh_primitive_edge_visibility} glTF extension are rendered relative to surface geometry.
  * @property {boolean} [debugShowBoundingVolume=false] For debugging only. When true, renders the bounding volume for each tile.
  * @property {boolean} [debugShowContentBoundingVolume=false] For debugging only. When true, renders the bounding volume for each tile's content.
  * @property {boolean} [debugShowViewerRequestVolume=false] For debugging only. When true, renders the viewer request volume for each tile.
@@ -220,7 +226,9 @@ function Cesium3DTileset(options) {
   this._extensions = undefined;
   this._modelUpAxis = undefined;
   this._modelForwardAxis = undefined;
+  this._tilesetUpAxis = undefined; // Up axis of a glTF tileset, applied to the root tile transform
   this._cache = new Cesium3DTilesetCache();
+  this._releaseCandidateTiles = new Set();
   this._processingQueue = [];
   this._selectedTiles = [];
   this._emptyTiles = [];
@@ -364,6 +372,9 @@ function Cesium3DTileset(options) {
 
   this._vectorKeepDecodedPositions =
     options.vectorKeepDecodedPositions ?? false;
+
+  this._vectorBlendOption =
+    options.vectorBlendOption ?? BlendOption.TRANSLUCENT;
 
   /**
    * The collection of <code>ImageryLayer</code> objects providing 2D georeferenced
@@ -1000,14 +1011,12 @@ function Cesium3DTileset(options) {
 
   /**
    * Controls how edges from the
-   * {@link https://github.com/KhronosGroup/glTF/pull/2479|EXT_mesh_primitive_edge_visibility}
+   * {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/EXT_mesh_primitive_edge_visibility|EXT_mesh_primitive_edge_visibility}
    * glTF extension are rendered relative to surface geometry. Tile content
    * primitives that do not declare the extension are unaffected.
    *
    * @type {EdgeDisplayMode}
    * @default EdgeDisplayMode.SURFACES_ONLY
-   *
-   * @experimental This feature is using part of the glTF spec that is not yet final and is subject to change without Cesium's standard deprecation policy.
    */
   this.edgeDisplayMode =
     options.edgeDisplayMode ?? EdgeDisplayMode.SURFACES_ONLY;
@@ -2072,6 +2081,27 @@ Object.defineProperties(Cesium3DTileset.prototype, {
   },
 
   /**
+   * Determines how vector primitives in the tileset are blended with the scene.
+   * Must be {@link BlendOption.OPAQUE} or {@link BlendOption.TRANSLUCENT};
+   * {@link BlendOption.OPAQUE_AND_TRANSLUCENT} is not supported.
+   *
+   * @memberof Cesium3DTileset.prototype
+   *
+   * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+   *
+   * @type {BlendOption}
+   * @default BlendOption.TRANSLUCENT
+   */
+  vectorBlendOption: {
+    get: function () {
+      return this._vectorBlendOption;
+    },
+    set: function (value) {
+      this._vectorBlendOption = value;
+    },
+  },
+
+  /**
    * Determines whether the credits of the tileset will be displayed on the screen
    *
    * @memberof Cesium3DTileset.prototype
@@ -2108,7 +2138,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    *
    * @memberof Cesium3DTileset.prototype
    *
-   * @type {string}
+   * @type {string|number}
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   featureIdLabel: {
@@ -2140,7 +2170,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    *
    * @memberof Cesium3DTileset.prototype
    *
-   * @type {string}
+   * @type {string|number}
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   instanceFeatureIdLabel: {
@@ -2312,8 +2342,114 @@ Cesium3DTileset.fromUrl = async function (url, options) {
       ApproximateTerrainHeights._defaultMinTerrainHeight
   ) {
     tileset._initialClippingPlanesOriginMatrix =
-      Transforms.eastNorthUpToFixedFrame(clippingPlanesOrigin);
+      FixedFrameTransforms.eastNorthUpToFixedFrame(clippingPlanesOrigin);
   }
+  tileset._clippingPlanesOriginMatrix = Matrix4.clone(
+    tileset._initialClippingPlanesOriginMatrix,
+  );
+
+  return tileset;
+};
+
+/**
+ * Creates a {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification|3D Tiles tileset},
+ * used for streaming massive heterogeneous 3D geospatial datasets.
+ *
+ * @param {Resource|string} url The url to a tileset JSON file.
+ * @param {Cesium3DTileset.ConstructorOptions} [options] An object describing initialization options
+ * @returns {Promise<Cesium3DTileset>}
+ *
+ * @exception {RuntimeError} When the tileset asset version is not 0.0, 1.0, or 1.1,
+ * or when the tileset contains a required extension that is not supported.
+ *
+ * @see Cesium3DTileset#fromIonAssetId
+ *
+ */
+Cesium3DTileset.fromGltf = async function (url, options) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("url", url);
+  //>>includeEnd('debug');
+
+  options = options ?? Frozen.EMPTY_OBJECT;
+
+  const resource = Resource.createIfNeeded(url);
+  let basePath;
+  if (resource.extension === "json") {
+    basePath = resource.getBaseUri(true);
+  } else if (resource.isDataUri) {
+    basePath = "";
+  }
+
+  const gltfJson = await Cesium3DTileset.loadJson(resource);
+
+  if (!hasExtension(gltfJson, "3DTILES_tileset")) {
+    throw new DeveloperError("3DTILES_tileset extension is required.");
+  }
+
+  const tileset = new Cesium3DTileset(options);
+
+  tileset._resource = resource;
+  tileset._url = resource.url;
+  tileset._basePath = basePath;
+  // Set these before loading the tileset since _geometricError
+  // and _scaledGeometricError get accessed during tile creation
+  const tilesetExtension = gltfJson.extensions["3DTILES_tileset"];
+  tileset._geometricError = tilesetExtension.geometricError;
+  tileset._scaledGeometricError = tilesetExtension.geometricError;
+  tileset._asset = gltfJson.asset;
+  tileset._extras = gltfJson.extras;
+
+  const gltfUpAxis = hasExtension(gltfJson, "EXT_geospatial_crs")
+    ? Axis.Z
+    : Axis.Y;
+  const modelUpAxis = options.modelUpAxis ?? gltfUpAxis;
+  const modelForwardAxis = options.modelForwardAxis ?? Axis.X;
+
+  tileset._properties = gltfJson.properties;
+  tileset._extensionsUsed = gltfJson.extensionsUsed;
+  tileset._extensions = gltfJson.extensions;
+  tileset._tilesetUpAxis = modelUpAxis;
+  // The root tile transform converts the tileset to z-up, so contents are already z-up
+  tileset._modelUpAxis = Axis.Z;
+  tileset._modelForwardAxis = modelForwardAxis;
+
+  tileset._root = tileset.loadTilesetFromGltf(resource, gltfJson);
+
+  // Save the original, untransformed bounding volume position so we can apply
+  // the tile transform and model matrix at run time
+  const rootNodeIndex = gltfJson.scenes[0].nodes[0];
+  const boundingVolumeJson = gltfJson.nodes[rootNodeIndex].boundingVolume;
+  const boundingVolume = tileset._root.createBoundingVolume(
+    constructBoundingVolumeJson(boundingVolumeJson, gltfJson.shapes),
+    Matrix4.IDENTITY,
+  );
+  const clippingPlanesOrigin = boundingVolume.boundingSphere.center;
+  // If this origin is above the surface of the earth
+  // we want to apply an ENU orientation as our best guess of orientation.
+  // Otherwise, we assume it gets its position/orientation completely from the
+  // root tile transform and the tileset's model matrix
+  const originCartographic =
+    tileset._ellipsoid.cartesianToCartographic(clippingPlanesOrigin);
+  if (
+    defined(originCartographic) &&
+    originCartographic.height >
+      ApproximateTerrainHeights._defaultMinTerrainHeight
+  ) {
+    tileset._initialClippingPlanesOriginMatrix =
+      FixedFrameTransforms.eastNorthUpToFixedFrame(clippingPlanesOrigin);
+  }
+  // The root tile transform includes the up axis correction, but the
+  // clipping planes origin matrix must describe a z-up frame
+  const upAxisCorrection = ModelUtility.getAxisCorrectionMatrix(
+    tileset._tilesetUpAxis,
+    Axis.X,
+    new Matrix4(),
+  );
+  tileset._initialClippingPlanesOriginMatrix = Matrix4.multiplyTransformation(
+    Matrix4.inverseTransformation(upAxisCorrection, new Matrix4()),
+    tileset._initialClippingPlanesOriginMatrix,
+    new Matrix4(),
+  );
   tileset._clippingPlanesOriginMatrix = Matrix4.clone(
     tileset._initialClippingPlanesOriginMatrix,
   );
@@ -2420,6 +2556,81 @@ Cesium3DTileset.prototype.loadTileset = function (
 };
 
 /**
+ * Loads the main root.tileset.gltf JSON file.
+ *
+ * @exception {RuntimeError} When the glTF asset version is not 2.1,
+ * or when the tileset contains a required extension that is not supported.
+ *
+ * @private
+ */
+Cesium3DTileset.prototype.loadTilesetFromGltf = function (
+  resource,
+  gltfJson,
+  parentTile,
+) {
+  const asset = gltfJson.asset;
+  if (!defined(asset)) {
+    throw new RuntimeError("Tileset must have an asset property.");
+  }
+  if (asset.version !== "2.1") {
+    throw new RuntimeError("The glTF asset must be version 2.1");
+  }
+  if (defined(gltfJson.extensionsRequired)) {
+    Cesium3DTileset.checkSupportedGltfExtensions(gltfJson.extensionsRequired);
+  }
+
+  const statistics = this._statistics;
+
+  const rootNodeIndex = gltfJson.scenes[0].nodes[0];
+  const rootTile = makeTileFromGltfNode(
+    this,
+    resource,
+    gltfJson,
+    rootNodeIndex,
+    parentTile,
+  );
+
+  // If there is a parentTile, add the root of the currently loading tileset
+  // to parentTile's children, and update its _depth.
+  if (defined(parentTile)) {
+    parentTile.children.push(rootTile);
+    rootTile._depth = parentTile._depth + 1;
+  }
+
+  const stack = [];
+  stack.push(rootTile);
+
+  while (stack.length > 0) {
+    const tile = stack.pop();
+    ++statistics.numberOfTilesTotal;
+    this._allTilesAdditive =
+      this._allTilesAdditive && tile.refine === Cesium3DTileRefine.ADD;
+    const children = tile._header.children;
+    if (defined(children)) {
+      for (let i = 0; i < children.length; ++i) {
+        const childIndex = children[i];
+        const childTile = makeTileFromGltfNode(
+          this,
+          resource,
+          gltfJson,
+          childIndex,
+          tile,
+        );
+        tile.children.push(childTile);
+        childTile._depth = tile._depth + 1;
+        stack.push(childTile);
+      }
+    }
+
+    if (this._cullWithChildrenBounds) {
+      Cesium3DTileOptimizations.checkChildrenWithinParent(tile);
+    }
+  }
+
+  return rootTile;
+};
+
+/**
  * Make a {@link Cesium3DTile} for a specific tile. If the tile's header has implicit
  * tiling (3D Tiles 1.1) or uses the <code>3DTILES_implicit_tiling</code> extension,
  * it creates a placeholder tile instead for lazy evaluation of the implicit tileset.
@@ -2484,6 +2695,161 @@ function makeTile(tileset, baseResource, tileHeader, parentTile) {
   tile.implicitTileset = implicitTileset;
   tile.implicitCoordinates = rootCoordinates;
   return tile;
+}
+
+/**
+ * Make a {@link Cesium3DTile} for a specific tile. If the tile's header has implicit
+ * tiling (3D Tiles 1.1) or uses the <code>3DTILES_implicit_tiling</code> extension,
+ * it creates a placeholder tile instead for lazy evaluation of the implicit tileset.
+ *
+ * @param {Cesium3DTileset} tileset The tileset
+ * @param {Resource} baseResource The base resource for the tileset
+ * @param {object} gltfJson The JSON for the tileset
+ * @param {number} nodeIndex The index of the node within the glTF file
+ * @param {Cesium3DTile} [parentTile] The parent tile of the new tile
+ * @returns {Cesium3DTile} The newly created tile
+ *
+ * @private
+ */
+function makeTileFromGltfNode(
+  tileset,
+  baseResource,
+  gltfJson,
+  nodeIndex,
+  parentTile,
+) {
+  const nodeJson = gltfJson.nodes[nodeIndex];
+  const tilesetExtension = nodeJson.extensions?.["3DTILES_tileset"];
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("3DTILES_tileset extension", tilesetExtension);
+  //>>includeEnd('debug');
+  const boundingVolume = constructBoundingVolumeJson(
+    nodeJson.boundingVolume,
+    gltfJson.shapes,
+  );
+  let contentBoundingVolume;
+  if (tilesetExtension.content?.boundingVolume) {
+    contentBoundingVolume = constructBoundingVolumeJson(
+      tilesetExtension.content.boundingVolume,
+      gltfJson.shapes,
+    );
+  }
+
+  const tileHeader = {
+    transform: defined(parentTile)
+      ? getNodeTransform(nodeJson)
+      : getRootTransform(tileset._tilesetUpAxis, nodeJson),
+    geometricError: tilesetExtension.geometricError,
+    refine: tilesetExtension.refine,
+    boundingVolume: boundingVolume,
+    children: nodeJson.children,
+  };
+
+  const hasImplicitTiling = hasExtension(nodeJson, "3DTILES_implicit_tiling");
+  if (!hasImplicitTiling && !defined(nodeJson.externalAsset)) {
+    return new Cesium3DTile(tileset, baseResource, tileHeader, parentTile);
+  }
+
+  tileHeader.content = {
+    boundingVolume: contentBoundingVolume,
+  };
+
+  if (!hasImplicitTiling) {
+    const externalAsset = gltfJson.externalAssets[nodeJson.externalAsset];
+    tileHeader.content.uri = gltfJson.files[externalAsset.file].uri;
+    return new Cesium3DTile(tileset, baseResource, tileHeader, parentTile);
+  }
+
+  const implicitTilingExtension =
+    nodeJson.extensions["3DTILES_implicit_tiling"];
+  const { contentUri, subtreeUri } = implicitTilingExtension;
+  tileHeader.content.uri = contentUri
+    .replace("{right}", "{x}")
+    .replace("{forward}", "{y}")
+    .replace("{up}", "{z}");
+  tileHeader.implicitTiling = implicitTilingExtension;
+  tileHeader.implicitTiling.subtrees = {
+    uri: subtreeUri
+      .replace("{right}", "{x}")
+      .replace("{forward}", "{y}")
+      .replace("{up}", "{z}"),
+  };
+
+  const implicitTileset = new ImplicitTileset(
+    baseResource,
+    tileHeader,
+    undefined,
+  );
+  const rootCoordinates = new ImplicitTileCoordinates({
+    subdivisionScheme: implicitTileset.subdivisionScheme,
+    subtreeLevels: implicitTileset.subtreeLevels,
+    level: 0,
+    x: 0,
+    y: 0,
+    // The constructor will only use this for octrees.
+    z: 0,
+  });
+
+  // Create a placeholder Cesium3DTile that has an ImplicitTileset
+  // object and whose content will resolve to an Implicit3DTileContent
+  const derivedContentUri =
+    implicitTileset.subtreeUriTemplate.getDerivedResource({
+      templateValues: rootCoordinates.getTemplateValues(),
+    }).url;
+
+  const deepCopy = true;
+  const tileJson = clone(tileHeader, deepCopy);
+  // Replace contents with the subtree
+  tileJson.contents = [
+    {
+      uri: derivedContentUri,
+    },
+  ];
+
+  delete tileJson.content;
+
+  // The placeholder tile does not have any extensions. If there are any
+  // extensions beyond 3DTILES_implicit_tiling, Implicit3DTileContent will
+  // copy them to the transcoded tiles.
+  delete tileJson.extensions;
+
+  const tile = new Cesium3DTile(tileset, baseResource, tileJson, parentTile);
+  tile.implicitTileset = implicitTileset;
+  tile.implicitCoordinates = rootCoordinates;
+  return tile;
+}
+
+/**
+ * Get the transform of the root tile of a glTF tileset, including the
+ * conversion of the tileset's up axis to z-up.
+ *
+ * @param {Axis} upAxis The up axis of the tileset
+ * @param {object} nodeJson The glTF node of the root tile
+ * @returns {number[]|undefined} The column-major transform, or <code>undefined</code> if it is the identity
+ *
+ * @private
+ */
+function getRootTransform(upAxis, nodeJson) {
+  const nodeTransform = getNodeTransform(nodeJson);
+  if (upAxis === Axis.Z) {
+    return nodeTransform;
+  }
+
+  const axisCorrection = ModelUtility.getAxisCorrectionMatrix(
+    upAxis,
+    Axis.X,
+    new Matrix4(),
+  );
+  if (!defined(nodeTransform)) {
+    return Matrix4.pack(axisCorrection, new Array(16));
+  }
+
+  const rootTransform = Matrix4.multiplyTransformation(
+    axisCorrection,
+    Matrix4.unpack(nodeTransform),
+    new Matrix4(),
+  );
+  return Matrix4.pack(rootTransform, new Array(16));
 }
 
 /**
@@ -2700,6 +3066,7 @@ Cesium3DTileset.prototype.postPassesUpdate = function (frameState) {
   cancelOutOfViewRequests(this, frameState);
   raiseLoadProgressEvent(this, frameState);
   this._cache.unloadTiles(this, unloadTile);
+  releaseImplicitTiles(this, frameState);
 
   // If the style wasn't able to be applied this frame (for example,
   // the tileset was hidden), keep it dirty so the engine can try
@@ -3318,7 +3685,7 @@ function destroySubtree(tileset, tile) {
   stack.push(tile);
   while (stack.length > 0) {
     tile = stack.pop();
-    const children = tile.children;
+    const children = tile._children;
     for (let i = 0; i < children.length; ++i) {
       stack.push(children[i]);
     }
@@ -3331,6 +3698,89 @@ function destroySubtree(tileset, tile) {
 }
 
 /**
+ * Releases every implicit tile below the given tile, unless any of them has
+ * content loaded or loading. The given tile is kept: its parent still lists it,
+ * and it creates its children again if the traversal returns to it.
+ *
+ * @private
+ * @param {Cesium3DTileset} tileset
+ * @param {Cesium3DTile} tile
+ * @returns {boolean} Whether the tiles were released.
+ */
+function releaseDescendantsIfUnused(tileset, tile) {
+  const descendants = tile._children.slice();
+  for (let i = 0; i < descendants.length; ++i) {
+    const descendant = descendants[i];
+    const state = descendant._contentState;
+    // Empty tiles are READY without holding any content.
+    const hasContent =
+      !descendant.hasEmptyContent &&
+      (state === Cesium3DTileContentState.LOADING ||
+        state === Cesium3DTileContentState.PROCESSING ||
+        state === Cesium3DTileContentState.READY ||
+        state === Cesium3DTileContentState.EXPIRED);
+    if (hasContent) {
+      return false;
+    }
+    const children = descendant._children;
+    for (let j = 0; j < children.length; ++j) {
+      descendants.push(children[j]);
+    }
+  }
+
+  for (let i = 0; i < descendants.length; ++i) {
+    destroyTile(tileset, descendants[i]);
+  }
+  tileset._statistics.numberOfTilesTotal -= descendants.length;
+  tile._children.length = 0;
+  tile._implicitChildrenCreated = false;
+  return true;
+}
+
+/**
+ * Releases the implicit tiles below the branches whose content the cache
+ * unloaded. They are created again if the traversal returns to them.
+ *
+ * @private
+ * @param {Cesium3DTileset} tileset
+ * @param {FrameState} frameState
+ */
+function releaseImplicitTiles(tileset, frameState) {
+  const candidates = tileset._releaseCandidateTiles;
+  const retained = [];
+  for (const tile of candidates) {
+    candidates.delete(tile);
+    // The tile may have been released or destroyed since it was added.
+    if (!tile._implicitChildrenCreated) {
+      continue;
+    }
+
+    // A branch the traversal visited this frame is checked again next frame.
+    const visitedThisFrame = tile._children.some(
+      (child) => child._touchedFrame === frameState.frameNumber,
+    );
+    if (visitedThisFrame) {
+      retained.push(tile);
+      continue;
+    }
+
+    const parent = tile.parent;
+    if (
+      releaseDescendantsIfUnused(tileset, tile) &&
+      defined(parent) &&
+      parent._implicitChildrenCreated
+    ) {
+      // Releasing this branch may leave the level above it releasable too.
+      candidates.add(parent);
+    }
+  }
+
+  for (const tile of retained) {
+    candidates.add(tile);
+  }
+}
+
+/**
  * @private
  * @param {Cesium3DTileset} tileset
  * @param {Cesium3DTile} tile
@@ -3340,6 +3790,12 @@ function unloadTile(tileset, tile) {
   tileset._statistics.decrementLoadCounts(tile.content);
   --tileset._statistics.numberOfTilesWithContentReady;
   tile.unloadContent();
+
+  // Explicit tiles never create implicit children, so they are never candidates.
+  const parent = tile.parent;
+  if (defined(parent) && parent._implicitChildrenCreated) {
+    tileset._releaseCandidateTiles.add(parent);
+  }
 }
 
 /**
@@ -3784,6 +4240,31 @@ Cesium3DTileset.checkSupportedExtensions = function (extensionsRequired) {
     if (!Cesium3DTileset.supportedExtensions[extensionsRequired[i]]) {
       throw new RuntimeError(
         `Unsupported 3D Tiles Extension: ${extensionsRequired[i]}`,
+      );
+    }
+  }
+};
+
+Cesium3DTileset.supportedGltfExtensions = {
+  "3DTILES_tileset": true,
+  "3DTILES_implicit_tiling": true,
+  EXT_geospatial_crs: true,
+  EXT_geospatial_crs_wkid: true,
+};
+
+/**
+ * Checks to see if a given extension is supported by Cesium3DTileset.fromGltf.
+ * If the extension is not supported by Cesium3DTileset.fromGltf, it throws a RuntimeError.
+ *
+ * @param {object} extensionsRequired The extensions we wish to check
+ *
+ * @private
+ */
+Cesium3DTileset.checkSupportedGltfExtensions = function (extensionsRequired) {
+  for (let i = 0; i < extensionsRequired.length; i++) {
+    if (!Cesium3DTileset.supportedGltfExtensions[extensionsRequired[i]]) {
+      throw new RuntimeError(
+        `Unsupported 3D Tiles GLTF Extension: ${extensionsRequired[i]}`,
       );
     }
   }

@@ -3,14 +3,16 @@ import {
   Cartesian3,
   Color,
   ColorGeometryInstanceAttribute,
-  destroyObject,
   Ellipsoid,
+  FixedFrameTransforms,
   GeometryInstance,
   PolygonGeometry,
   Rectangle,
   RectangleGeometry,
   ShowGeometryInstanceAttribute,
-  Transforms,
+  destroyObject,
+} from "@cesium/core";
+import {
   Pass,
   RenderState,
   ClassificationPrimitive,
@@ -21,7 +23,6 @@ import {
   Primitive,
   StencilConstants,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
@@ -139,7 +140,7 @@ describe(
 
       const center = Rectangle.center(rectangle);
       const origin = ellipsoid.cartographicToCartesian(center);
-      const modelMatrix = Transforms.eastNorthUpToFixedFrame(origin);
+      const modelMatrix = FixedFrameTransforms.eastNorthUpToFixedFrame(origin);
 
       const dimensions = new Cartesian3(1000000.0, 1000000.0, 1000000.0);
 
@@ -433,7 +434,7 @@ describe(
       const origin = ellipsoid.cartographicToCartesian(center);
 
       const origin1 = Cartesian3.add(origin, direction, new Cartesian3());
-      let modelMatrix = Transforms.eastNorthUpToFixedFrame(origin1);
+      let modelMatrix = FixedFrameTransforms.eastNorthUpToFixedFrame(origin1);
 
       const dimensions = new Cartesian3(500000.0, 1000000.0, 1000000.0);
 
@@ -453,7 +454,7 @@ describe(
 
       Cartesian3.negate(direction, direction);
       const origin2 = Cartesian3.add(origin, direction, new Cartesian3());
-      modelMatrix = Transforms.eastNorthUpToFixedFrame(origin2);
+      modelMatrix = FixedFrameTransforms.eastNorthUpToFixedFrame(origin2);
 
       const boxInstance2 = new GeometryInstance({
         geometry: BoxGeometry.fromDimensions({
@@ -841,7 +842,7 @@ describe(
       const origin = ellipsoid.cartographicToCartesian(center);
 
       const origin1 = Cartesian3.add(origin, direction, new Cartesian3());
-      let modelMatrix = Transforms.eastNorthUpToFixedFrame(origin1);
+      let modelMatrix = FixedFrameTransforms.eastNorthUpToFixedFrame(origin1);
 
       const dimensions = new Cartesian3(500000.0, 1000000.0, 1000000.0);
 
@@ -863,7 +864,7 @@ describe(
 
       Cartesian3.negate(direction, direction);
       const origin2 = Cartesian3.add(origin, direction, new Cartesian3());
-      modelMatrix = Transforms.eastNorthUpToFixedFrame(origin2);
+      modelMatrix = FixedFrameTransforms.eastNorthUpToFixedFrame(origin2);
 
       const boxInstance2 = new GeometryInstance({
         geometry: BoxGeometry.fromDimensions({
@@ -908,7 +909,7 @@ describe(
       const origin = ellipsoid.cartographicToCartesian(center);
 
       const origin1 = Cartesian3.add(origin, direction, new Cartesian3());
-      let modelMatrix = Transforms.eastNorthUpToFixedFrame(origin1);
+      let modelMatrix = FixedFrameTransforms.eastNorthUpToFixedFrame(origin1);
 
       const dimensions = new Cartesian3(500000.0, 1000000.0, 1000000.0);
 
@@ -930,7 +931,7 @@ describe(
 
       Cartesian3.negate(direction, direction);
       const origin2 = Cartesian3.add(origin, direction, new Cartesian3());
-      modelMatrix = Transforms.eastNorthUpToFixedFrame(origin2);
+      modelMatrix = FixedFrameTransforms.eastNorthUpToFixedFrame(origin2);
 
       const boxInstance2 = new GeometryInstance({
         geometry: BoxGeometry.fromDimensions({
@@ -970,7 +971,7 @@ describe(
       const origin = ellipsoid.cartographicToCartesian(center);
 
       const origin1 = Cartesian3.add(origin, direction, new Cartesian3());
-      const modelMatrix = Transforms.eastNorthUpToFixedFrame(origin1);
+      const modelMatrix = FixedFrameTransforms.eastNorthUpToFixedFrame(origin1);
 
       const dimensions = new Cartesian3(500000.0, 1000000.0, 1000000.0);
 

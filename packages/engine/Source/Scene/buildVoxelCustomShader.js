@@ -1,9 +1,8 @@
 // @ts-check
 
-import Color from "../Core/Color.js";
+import { Color, defined } from "@cesium/core";
 import createColorRamp from "../Core/createColorRamp.js";
 import CustomShader from "./Model/CustomShader.js";
-import defined from "../Core/defined.js";
 import MetadataComponentType from "./MetadataComponentType.js";
 import MetadataType from "./MetadataType.js";
 import TextureUniform from "./Model/TextureUniform.js";

@@ -1,14 +1,15 @@
 import {
   BoundingSphere,
   Color,
-  defined,
   Ellipsoid,
   Matrix3,
+  defined,
+} from "@cesium/core";
+import {
   Simon1994PlanetaryPositions,
-  Transforms,
+  CelestialFrameTransforms,
   Moon,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 
 describe(
@@ -28,8 +29,15 @@ describe(
 
     function lookAtMoon(camera, date) {
       const icrfToFixed = new Matrix3();
-      if (!defined(Transforms.computeIcrfToFixedMatrix(date, icrfToFixed))) {
-        Transforms.computeTemeToPseudoFixedMatrix(date, icrfToFixed);
+      if (
+        !defined(
+          CelestialFrameTransforms.computeIcrfToFixedMatrix(date, icrfToFixed),
+        )
+      ) {
+        CelestialFrameTransforms.computeTemeToPseudoFixedMatrix(
+          date,
+          icrfToFixed,
+        );
       }
 
       const moonPosition =
