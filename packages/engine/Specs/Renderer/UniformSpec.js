@@ -495,6 +495,37 @@ describe(
       }).contextToRender();
     });
 
+    it("does not set a uniform array whose elements have no location", function () {
+      // Some drivers list an active uniform array but return a null location for every element.
+      const gl = context._gl;
+      const getUniformLocation = gl.getUniformLocation;
+      spyOn(gl, "getUniformLocation").and.callFake(function (program, name) {
+        return name.startsWith("u[")
+          ? null
+          : getUniformLocation.call(gl, program, name);
+      });
+      spyOn(gl, "uniform3fv").and.callThrough();
+
+      const uniformMap = {
+        u: function () {
+          return [Cartesian3.UNIT_X, Cartesian3.UNIT_Y];
+        },
+      };
+
+      const fs =
+        "uniform vec3 u[2];" +
+        "void main() { " +
+        "  out_FragColor = vec4((u[0] == vec3(0.0)) && (u[1] == vec3(0.0))); " +
+        "}";
+
+      expect({
+        context: context,
+        fragmentShader: fs,
+        uniformMap: uniformMap,
+      }).contextToRender();
+      expect(gl.uniform3fv).not.toHaveBeenCalled();
+    });
+
     it("sets vec4 uniform array", function () {
       const uniformMap = {
         u: function () {

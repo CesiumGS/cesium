@@ -14,6 +14,10 @@
 
 - Added support for glTF models with the [KHR_materials_emissive_strength extension](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_emissive_strength). [#13961](https://github.com/CesiumGS/cesium/pull/13961)
 
+#### Fixes :wrench:
+
+- Fixed `WebGL: INVALID_VALUE: uniform3fv: no array` errors on drivers that report an active uniform array without element locations, such as AMD radeonsi with shadows and a translucent glTF model. [#13980](https://github.com/CesiumGS/cesium/issues/13980)
+
 ## 1.146 - 2026-10-01
 
 ### Major Announcements :loudspeaker:
