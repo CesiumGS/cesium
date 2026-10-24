@@ -2418,7 +2418,7 @@ describe(
 
     ["control", "listener", "getters"].forEach(function (observation) {
       it(
-        "stays idle in requestRenderMode with camera " + observation,
+        `stays idle in requestRenderMode with camera ${observation}`,
         function () {
           scene.globe = undefined;
           scene.skyBox = undefined;

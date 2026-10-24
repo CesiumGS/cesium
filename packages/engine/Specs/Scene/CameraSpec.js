@@ -256,7 +256,7 @@ describe("Scene/Camera", function () {
       const frame = useReferenceFrame ? "local reference frame" : "fixed frame";
       ["heading", "pitch", "roll"].forEach(function (property) {
         it(
-          "reads " + property + " without moving the camera in a " + frame,
+          `reads ${property} without moving the camera in a ${frame}`,
           function () {
             setPose(useReferenceFrame);
             const before = snapshot(camera);
@@ -274,7 +274,7 @@ describe("Scene/Camera", function () {
         );
       });
 
-      it("does not move for a changed listener in a " + frame, function () {
+      it(`does not move for a changed listener in a ${frame}`, function () {
         setPose(useReferenceFrame);
         const listener = jasmine.createSpy("changed");
         const removeListener = camera.changed.addEventListener(listener);
@@ -296,7 +296,7 @@ describe("Scene/Camera", function () {
         [MapMode2D.INFINITE_SCROLL, MapMode2D.ROTATE].forEach(
           function (mapMode) {
             it(
-              "preserves the pose in mode " + mode + " and map mode " + mapMode,
+              `preserves the pose in mode ${mode} and map mode ${mapMode}`,
               function () {
                 scene.mapMode2D = mapMode;
                 scene.mapProjection = new GeographicProjection(
@@ -352,8 +352,7 @@ describe("Scene/Camera", function () {
 
     [false, true].forEach(function (useReferenceFrame) {
       it(
-        "does not report getter-induced camera motion with local frame " +
-          useReferenceFrame,
+        `does not report getter-induced camera motion with local frame ${useReferenceFrame}`,
         function () {
           setPose(useReferenceFrame);
           scene.cameraEventWaitTime = 500.0;
