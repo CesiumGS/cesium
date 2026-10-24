@@ -3473,7 +3473,7 @@ function load(dataSource, entityCollection, data, options) {
  *
  * Initialization options for the `load` method.
  *
- * @property {string} [sourceUri] Overrides the url to use for resolving relative links and other KML network features.
+ * @property {Resource|string} [sourceUri] Overrides the url to use for resolving relative links and other KML network features.
  * @property {boolean} [clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground.
  * @property {Ellipsoid} [ellipsoid=Ellipsoid.default] The global ellipsoid used for geographical calculations.
  * @property {Element|string} [screenOverlayContainer] A container for ScreenOverlay images.
@@ -3488,7 +3488,7 @@ function load(dataSource, entityCollection, data, options) {
  * @property {HTMLCanvasElement} [canvas] The canvas that is used for sending viewer properties to network links.
  * @property {Credit|string} [credit] A credit for the data source, which is displayed on the canvas.
  *
- * @property {string} [sourceUri] Overrides the url to use for resolving relative links and other KML network features.
+ * @property {Resource|string} [sourceUri] Overrides the url to use for resolving relative links and other KML network features.
  * @property {boolean} [clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground.
  * @property {Ellipsoid} [ellipsoid=Ellipsoid.default] The global ellipsoid used for geographical calculations.
  * @property {Element|string} [screenOverlayContainer] A container for ScreenOverlay images.
