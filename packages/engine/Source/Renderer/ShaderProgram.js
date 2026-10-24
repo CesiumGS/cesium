@@ -386,6 +386,13 @@ function findUniforms(gl, program) {
               locations.push(loc);
             }
           }
+
+          // Some drivers report an active uniform array but return null for
+          // every element location.  Skip it like a single uniform above.
+          if (locations.length === 0) {
+            continue;
+          }
+
           uniformArray = createUniformArray(
             gl,
             activeUniform,
