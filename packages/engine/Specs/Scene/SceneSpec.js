@@ -2416,6 +2416,86 @@ describe(
       expect(globe.material).toBeUndefined();
     });
 
+    ["control", "listener", "getters"].forEach(function (observation) {
+      it(
+        "stays idle in requestRenderMode with camera " + observation,
+        function () {
+          scene.globe = undefined;
+          scene.skyBox = undefined;
+          scene.skyAtmosphere = undefined;
+          scene.sun = undefined;
+          scene.moon = undefined;
+          scene.screenSpaceCameraController.enableInputs = false;
+          scene.requestRenderMode = true;
+          scene.maximumRenderTimeChange = Infinity;
+          const time = JulianDate.fromIso8601("2026-01-01T00:00:00Z");
+          const camera = scene.camera;
+          camera.setView({
+            destination: Cartesian3.fromDegrees(-75.0, 30.0, 1000000.0),
+            orientation: { heading: 0.3, pitch: -0.7, roll: 0.0 },
+          });
+          if (observation === "listener") {
+            camera.changed.addEventListener(function () {});
+          }
+          function tick() {
+            if (observation === "getters") {
+              void camera.heading;
+              void camera.pitch;
+              void camera.roll;
+            }
+            scene.renderForSpecs(time);
+          }
+          for (let i = 0; i < 20; ++i) {
+            tick();
+          }
+          const postRender = jasmine.createSpy("postRender");
+          scene.postRender.addEventListener(postRender);
+          let frameNumber = scene.frameState.frameNumber;
+          for (let i = 0; i < 600; ++i) {
+            tick();
+          }
+          expect(postRender).not.toHaveBeenCalled();
+          expect(scene.frameState.frameNumber).toEqual(frameNumber);
+
+          // Real camera and explicit render requests must still draw, then settle.
+          const changes = [
+            function () {
+              camera.moveLeft(1.0);
+            },
+            function () {
+              camera.lookRight(0.01);
+            },
+            function () {
+              camera.zoomIn(1.0);
+            },
+            function () {
+              camera.frustum.near *= 1.1;
+            },
+            function () {
+              scene.requestRender();
+            },
+            function () {
+              scene.morphToColumbusView(0.0);
+            },
+          ];
+          changes.forEach(function (change) {
+            postRender.calls.reset();
+            change();
+            tick();
+            expect(postRender).toHaveBeenCalled();
+            expect(scene.frameState.frameNumber).not.toEqual(frameNumber);
+            frameNumber = scene.frameState.frameNumber;
+            postRender.calls.reset();
+            for (let i = 0; i < 20; ++i) {
+              tick();
+            }
+            expect(postRender).not.toHaveBeenCalled();
+            expect(scene.frameState.frameNumber).toEqual(frameNumber);
+          });
+        },
+      );
+    });
+
     const scratchTime = new JulianDate();
 
     it("doesn't render scene if requestRenderMode is enabled", function () {

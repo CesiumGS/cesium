@@ -14,6 +14,10 @@
 
 - Added support for glTF models with the [KHR_materials_emissive_strength extension](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_emissive_strength). [#13961](https://github.com/CesiumGS/cesium/pull/13961)
 
+#### Fixes :wrench:
+
+- Fixed camera heading, pitch, and roll getters introducing roundoff drift and spurious camera movement events when repeatedly observed. [#12546](https://github.com/CesiumGS/cesium/issues/12546)
+
 ## 1.146 - 2026-10-01
 
 ### Major Announcements :loudspeaker:
