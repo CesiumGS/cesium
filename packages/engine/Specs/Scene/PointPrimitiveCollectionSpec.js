@@ -674,6 +674,87 @@ describe(
       expect(scene).toRender([255, 0, 0, 255]);
     });
 
+    const sparseUpdates = [
+      { name: "consecutive", indices: [3, 4, 5], ranges: [[3, 3]] },
+      { name: "single", indices: [5], ranges: [[5, 1]] },
+      {
+        name: "separated",
+        indices: [3, 4, 8, 9, 14],
+        ranges: [
+          [3, 2],
+          [8, 2],
+          [14, 1],
+        ],
+      },
+      {
+        name: "out-of-order",
+        indices: [7, 3, 4, 6],
+        ranges: [
+          [7, 1],
+          [3, 2],
+          [6, 1],
+        ],
+      },
+      { name: "last", indices: [99], ranges: [[99, 1]] },
+      {
+        name: "first and last",
+        indices: [0, 1, 99],
+        ranges: [
+          [0, 2],
+          [99, 1],
+        ],
+      },
+      {
+        name: "exactly 10 percent",
+        indices: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+        ranges: [[0, 10]],
+      },
+    ];
+    sparseUpdates.forEach(function (testCase) {
+      it(`uploads ${testCase.name} sparse point updates`, function () {
+        const visibleIndex = testCase.indices[testCase.indices.length - 1];
+        for (let i = 0; i < 100; ++i) {
+          pointPrimitives.add({
+            position: Cartesian3.ZERO,
+            show: i === visibleIndex,
+            id: i,
+          });
+        }
+        scene.renderForSpecs();
+
+        function changePoints(color, size) {
+          testCase.indices.forEach(function (index) {
+            const point = pointPrimitives.get(index);
+            point.color = color;
+            point.pixelSize = size;
+          });
+        }
+
+        // The first edit changes the buffer usage and recreates the vertex array.
+        changePoints(Color.RED, 9.0);
+        expect(scene).toRender([255, 0, 0, 255]);
+        const subCommit = spyOn(
+          pointPrimitives._vaf,
+          "subCommit",
+        ).and.callThrough();
+
+        changePoints(Color.LIME, 8.0);
+        expect(scene).toRender([0, 255, 0, 255]);
+        expect(subCommit.calls.allArgs()).toEqual(testCase.ranges);
+        expect(pointPrimitives._pointPrimitivesToUpdateIndex).toEqual(0);
+        testCase.indices.forEach(function (index) {
+          expect(pointPrimitives.get(index)._dirty).toEqual(false);
+        });
+        expect(scene).toPickAndCall(function (result) {
+          expect(result.id).toEqual(visibleIndex);
+        });
+
+        subCommit.calls.reset();
+        expect(scene).toRender([0, 255, 0, 255]);
+        expect(subCommit).not.toHaveBeenCalled();
+      });
+    });
+
     it("renders more than 64K pointPrimitives", function () {
       for (let i = 0; i < 64 * 1024; ++i) {
         pointPrimitives.add({
