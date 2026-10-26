@@ -1,17 +1,20 @@
 // @ts-check
 
-import { Check, DeveloperError, defined } from "@cesium/core";
+import { AttributeType, Check, DeveloperError, defined } from "@cesium/core";
 import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 
 /**
  * Identifies a vertex attribute of a geometry by its semantic and set index,
- * for example <code>TEXCOORD_1</code>, and describes how many values it has
- * per vertex. Two descriptors are equal when their semantic and set index
- * match.
+ * for example <code>TEXCOORD_1</code>, and describes the type of its values,
+ * such as {@link AttributeType.VEC2}. Two descriptors are equal when their
+ * semantic and set index match.
  *
  * <p>
  * The semantic is either a {@link VertexAttributeSemantic} or a custom
- * semantic, such as <code>_TEMPERATURE</code>.
+ * semantic, such as <code>_TEMPERATURE</code>. Custom semantics are
+ * identified by their full name and have no set index, so
+ * <code>_TEMPERATURE_0</code> and <code>_TEMPERATURE_1</code> are two
+ * different semantics.
  * </p>
  *
  * @see GeometryReader
@@ -24,22 +27,22 @@ import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
  *
  * const temperature = new Cesium.GeometryAttributeDescriptor({
  *   semantic: "_TEMPERATURE",
- *   componentCount: 1,
+ *   type: Cesium.AttributeType.SCALAR,
  * });
  */
 class GeometryAttributeDescriptor {
   #semantic;
   #setIndex;
-  #componentCount;
+  #type;
 
   /**
    * @param {object} options Object with the following properties:
    * @param {VertexAttributeSemantic|string} options.semantic The built-in or custom attribute semantic.
-   * @param {number} [options.setIndex] The set index. For built-in semantics that have one, such as {@link VertexAttributeSemantic.TEXCOORD}, this defaults to 0; for other built-in semantics, it's ignored. For custom semantics, leave undefined if the attribute has no set index.
-   * @param {number} [options.componentCount] The number of values per vertex. Required for custom semantics. Derived for built-in semantics.
+   * @param {number} [options.setIndex] The set index, for built-in semantics that have one, such as {@link VertexAttributeSemantic.TEXCOORD}. Defaults to 0. Ignored for other semantics, including custom semantics.
+   * @param {AttributeType} [options.type] The type of the values. Required for custom semantics. Derived for built-in semantics.
    *
-   * @exception {DeveloperError} options.componentCount is required for custom semantics.
-   * @exception {DeveloperError} options.componentCount doesn't match the built-in semantic.
+   * @exception {DeveloperError} options.type is required for custom semantics.
+   * @exception {DeveloperError} options.type doesn't match the built-in semantic.
    */
   constructor(options) {
     //>>includeStart('debug', pragmas.debug);
@@ -54,17 +57,17 @@ class GeometryAttributeDescriptor {
     }
     //>>includeEnd('debug');
 
-    const { semantic, setIndex, componentCount } = options;
-    const builtInComponentCount =
-      GeometryAttributeDescriptor.#getBuiltInComponentCount(semantic);
+    const { semantic, setIndex, type } = options;
+    const builtInType = GeometryAttributeDescriptor.#getBuiltInType(semantic);
 
     this.#semantic = semantic;
+    this.#setIndex = undefined;
 
-    if (defined(builtInComponentCount)) {
+    if (defined(builtInType)) {
       //>>includeStart('debug', pragmas.debug);
-      if (defined(componentCount) && componentCount !== builtInComponentCount) {
+      if (defined(type) && type !== builtInType) {
         throw new DeveloperError(
-          `options.componentCount must be ${builtInComponentCount} for semantic ${semantic}.`,
+          `options.type must be ${builtInType} for semantic ${semantic}.`,
         );
       }
       //>>includeEnd('debug');
@@ -74,21 +77,16 @@ class GeometryAttributeDescriptor {
       ).hasSetIndex(semantic);
 
       this.#setIndex = hasSetIndex ? (setIndex ?? 0) : undefined;
-      this.#componentCount = builtInComponentCount;
+      this.#type = builtInType;
 
       return;
     }
 
     //>>includeStart('debug', pragmas.debug);
-    Check.typeOf.number.greaterThan(
-      "options.componentCount",
-      componentCount,
-      0,
-    );
+    Check.typeOf.string("options.type", type);
     //>>includeEnd('debug');
 
-    this.#setIndex = setIndex;
-    this.#componentCount = /** @type {number} */ (componentCount);
+    this.#type = /** @type {AttributeType} */ (type);
   }
 
   /**
@@ -112,21 +110,34 @@ class GeometryAttributeDescriptor {
   }
 
   /**
+   * The type of the values returned by a {@link GeometryAttributeReader} for
+   * this attribute. For example, {@link AttributeType.VEC3} for positions and
+   * {@link AttributeType.VEC2} for texture coordinates. Colors are always
+   * {@link AttributeType.VEC4}; RGB colors read with an alpha of 1.
+   *
+   * @type {AttributeType}
+   * @readonly
+   */
+  get type() {
+    return this.#type;
+  }
+
+  /**
    * The number of values per vertex returned by a {@link GeometryAttributeReader}
-   * for this attribute. For example, 3 for positions and 2 for texture coordinates.
-   * Colors always have 4 values; RGB colors read with an alpha of 1.
+   * for this attribute, derived from {@link GeometryAttributeDescriptor#type}.
+   * Matrices are read in column-major order.
    *
    * @type {number}
    * @readonly
    */
   get componentCount() {
-    return this.#componentCount;
+    return /** @type {any} */ (AttributeType).getNumberOfComponents(this.#type);
   }
 
   /**
    * Returns <code>true</code> if the other descriptor has the same semantic and
-   * set index. The component count isn't compared, since a geometry can't
-   * have two attributes with the same semantic and set index.
+   * set index. The type isn't compared, since a geometry can't have two
+   * attributes with the same semantic and set index.
    *
    * @param {GeometryAttributeDescriptor} [other] The descriptor to compare against.
    * @returns {boolean} <code>true</code> if the descriptors are equal, <code>false</code> otherwise.
@@ -142,25 +153,26 @@ class GeometryAttributeDescriptor {
 
   /**
    * @param {string} semantic
-   * @returns {number|undefined} The component count, or undefined for custom semantics.
+   * @returns {AttributeType|undefined} The type, or undefined for custom semantics.
+   * @ignore
    */
-  static #getBuiltInComponentCount(semantic) {
+  static #getBuiltInType(semantic) {
     switch (semantic) {
       case VertexAttributeSemantic.FEATURE_ID:
       case VertexAttributeSemantic.CUMULATIVE_DISTANCE:
-        return 1;
+        return AttributeType.SCALAR;
       case VertexAttributeSemantic.TEXCOORD:
-        return 2;
+        return AttributeType.VEC2;
       case VertexAttributeSemantic.POSITION:
       case VertexAttributeSemantic.NORMAL:
       case VertexAttributeSemantic.SCALE:
-        return 3;
+        return AttributeType.VEC3;
       case VertexAttributeSemantic.TANGENT:
       case VertexAttributeSemantic.COLOR:
       case VertexAttributeSemantic.JOINTS:
       case VertexAttributeSemantic.WEIGHTS:
       case VertexAttributeSemantic.ROTATION:
-        return 4;
+        return AttributeType.VEC4;
     }
     return undefined;
   }

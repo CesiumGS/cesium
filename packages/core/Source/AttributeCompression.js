@@ -432,33 +432,7 @@ AttributeCompression.dequantize = function (
 
   const componentsPerAttribute = AttributeType.getNumberOfComponents(type);
 
-  let divisor;
-  switch (componentDatatype) {
-    case ComponentDatatype.BYTE:
-      divisor = 127.0;
-      break;
-    case ComponentDatatype.UNSIGNED_BYTE:
-      divisor = 255.0;
-      break;
-    case ComponentDatatype.SHORT:
-      divisor = 32767.0;
-      break;
-    case ComponentDatatype.UNSIGNED_SHORT:
-      divisor = 65535.0;
-      break;
-    case ComponentDatatype.INT:
-      divisor = 2147483647.0;
-      break;
-    case ComponentDatatype.UNSIGNED_INT:
-      divisor = 4294967295.0;
-      break;
-    //>>includeStart('debug', pragmas.debug);
-    default:
-      throw new DeveloperError(
-        `Cannot dequantize component datatype: ${componentDatatype}`,
-      );
-    //>>includeEnd('debug');
-  }
+  const divisor = ComponentDatatype.getNormalizationDivisor(componentDatatype);
 
   const dequantizedTypedArray = new Float32Array(
     count * componentsPerAttribute,
