@@ -5,16 +5,24 @@ import { Check, DeveloperError, defined } from "@cesium/core";
 /** @import GeometryReadSession from "./GeometryReadSession.js"; */
 
 /**
- * Creates a read session that stages the requested attributes.
+ * The data a read session stages for reading.
+ *
+ * @typedef {object} GeometryReadSessionOptions
+ * @property {GeometryAttributeDescriptor[]} [attributes=[]] The attributes to read.
+ * @property {boolean} [primitives=false] Whether to read the vertex indices of the primitives.
+ */
+
+/**
+ * Creates a read session that stages the requested data.
  *
  * @callback CreateGeometryReadSessionCallback
- * @param {GeometryAttributeDescriptor[]} requestedAttributes The attributes to stage. All are available.
+ * @param {Required<GeometryReadSessionOptions>} options The data to stage. All requested attributes are available.
  * @returns {GeometryReadSession} The new session.
  */
 
 /**
  * Reads the vertices and primitives of a geometry, so geometry can be read
- * the same way regardless of which class owns it.
+ * the same way regardless of which class owns it or how it is stored.
  * <p>
  * Data is read within a {@link GeometryReadSession}, which stages only the
  * requested attributes and frees them when the session ends. Classes that own
@@ -31,7 +39,7 @@ class GeometryReader {
   /**
    * @param {object} options Object with the following properties:
    * @param {GeometryAttributeDescriptor[]} options.availableAttributes The vertex attributes of the geometry.
-   * @param {CreateGeometryReadSessionCallback} options.createReadSession Creates a session that stages the requested attributes.
+   * @param {CreateGeometryReadSessionCallback} options.createReadSession Creates a session that stages the requested data.
    */
   constructor(options) {
     //>>includeStart('debug', pragmas.debug);
@@ -66,23 +74,27 @@ class GeometryReader {
   }
 
   /**
-   * Creates a read session for the requested attributes, invokes the callback
-   * with it, then destroys the session, even if the callback throws.
+   * Creates a read session for the requested data, invokes the callback with
+   * it, then destroys the session, even if the callback throws.
    *
    * @template T
-   * @param {GeometryAttributeDescriptor[]} requestedAttributes The attributes to stage for reading.
+   * @param {GeometryReadSessionOptions} options The data to stage for reading.
    * @param {function(GeometryReadSession): T} callback The function that reads from the session.
    * @returns {T} The value returned by the callback.
    *
    * @exception {DeveloperError} A requested attribute is not available.
-   * @exception {DeveloperError} A requested attribute's component count doesn't match the available attribute.
+   * @exception {DeveloperError} A requested attribute's type doesn't match the available attribute.
    */
-  withReadSession(requestedAttributes, callback) {
+  withReadSession(options, callback) {
     //>>includeStart('debug', pragmas.debug);
-    Check.defined("requestedAttributes", requestedAttributes);
+    Check.typeOf.object("options", options);
     Check.typeOf.func("callback", callback);
+    //>>includeEnd('debug');
 
-    for (const descriptor of requestedAttributes) {
+    const { attributes = [], primitives = false } = options;
+
+    //>>includeStart('debug', pragmas.debug);
+    for (const descriptor of attributes) {
       const available = this.#availableAttributes.find((attribute) =>
         attribute.equals(descriptor),
       );
@@ -97,15 +109,15 @@ class GeometryReader {
         );
       }
 
-      if (available.componentCount !== descriptor.componentCount) {
+      if (available.type !== descriptor.type) {
         throw new DeveloperError(
-          `Attribute ${descriptor.semantic}${setIndex} has ${available.componentCount} components, but ${descriptor.componentCount} were requested.`,
+          `Attribute ${descriptor.semantic}${setIndex} has type ${available.type}, but ${descriptor.type} was requested.`,
         );
       }
     }
     //>>includeEnd('debug');
 
-    const session = this.#createReadSession(requestedAttributes);
+    const session = this.#createReadSession({ attributes, primitives });
     try {
       return callback(session);
     } finally {

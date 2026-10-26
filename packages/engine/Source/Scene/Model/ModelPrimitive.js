@@ -102,7 +102,7 @@ Object.defineProperties(ModelPrimitive.prototype, {
    * });
    *
    * const positions = primitive.geometryReader.withReadSession(
-   *   [position],
+   *   { attributes: [position] },
    *   (session) => {
    *     const result = new Float32Array(session.vertexCount() * 3);
    *     const readPosition = session.vertexAttributeReader(position);
