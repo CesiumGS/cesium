@@ -1,6 +1,4 @@
-import Cartesian4 from "../Core/Cartesian4.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
+import { Cartesian4, defined, destroyObject } from "@cesium/core";
 import FramebufferManager from "../Renderer/FramebufferManager.js";
 import RenderState from "../Renderer/RenderState.js";
 

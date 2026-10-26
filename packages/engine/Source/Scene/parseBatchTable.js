@@ -1,9 +1,12 @@
-import Check from "../Core/Check.js";
-import ComponentDatatype from "../Core/ComponentDatatype.js";
-import defined from "../Core/defined.js";
-import deprecationWarning from "../Core/deprecationWarning.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import RuntimeError from "../Core/RuntimeError.js";
+import {
+  Check,
+  ComponentDatatype,
+  DeveloperError,
+  RuntimeError,
+  defined,
+  deprecationWarning,
+  oneTimeWarning,
+} from "@cesium/core";
 import BatchTableHierarchy from "./BatchTableHierarchy.js";
 import StructuralMetadata from "./StructuralMetadata.js";
 import PropertyAttribute from "./PropertyAttribute.js";
@@ -15,7 +18,6 @@ import MetadataSchema from "./MetadataSchema.js";
 import MetadataTable from "./MetadataTable.js";
 import ModelComponents from "./ModelComponents.js";
 import ModelUtility from "./Model/ModelUtility.js";
-import oneTimeWarning from "../Core/oneTimeWarning.js";
 
 /**
  * An object that parses the the 3D Tiles 1.0 batch table and transcodes it to

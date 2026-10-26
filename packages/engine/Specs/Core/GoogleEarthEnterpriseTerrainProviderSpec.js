@@ -1,18 +1,15 @@
+import { Ellipsoid, Math as CesiumMath, RuntimeError } from "@cesium/core";
 import {
-  Ellipsoid,
   GeographicTilingScheme,
   GoogleEarthEnterpriseMetadata,
   GoogleEarthEnterpriseTerrainData,
   GoogleEarthEnterpriseTerrainProvider,
   GoogleEarthEnterpriseTileInformation,
-  Math as CesiumMath,
   Request,
   RequestScheduler,
   Resource,
-  RuntimeError,
   TerrainProvider,
 } from "../../index.js";
-
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe("Core/GoogleEarthEnterpriseTerrainProvider", function () {

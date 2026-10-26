@@ -1,4 +1,4 @@
-import { defined, Event } from "@cesium/engine";
+import { Event, defined } from "@cesium/core";
 import knockout from "../ThirdParty/knockout.js";
 
 const cameraEnabledPath =

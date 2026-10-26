@@ -6,23 +6,25 @@ import {
   ClockRange,
   ClockStep,
   Color,
-  combine,
-  Credit,
-  defer,
   Ellipsoid,
   Event,
   HeadingPitchRange,
   HeadingPitchRoll,
-  isDataUri,
   Iso8601,
   JulianDate,
   Math as CesiumMath,
   NearFarScalar,
   PerspectiveFrustum,
   Rectangle,
+  RuntimeError,
+  combine,
+} from "@cesium/core";
+import {
+  Credit,
+  defer,
+  isDataUri,
   RequestErrorEvent,
   Resource,
-  RuntimeError,
   ColorMaterialProperty,
   EntityCollection,
   ImageMaterialProperty,
@@ -38,7 +40,6 @@ import {
   LabelStyle,
   SceneMode,
 } from "../../index.js";
-
 import createCamera from "../../../../Specs/createCamera.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 

@@ -1,12 +1,11 @@
 import {
-  defined,
-  destroyObject,
   DeveloperError,
   EventHelper,
-  Fullscreen,
-  getElement,
   OrthographicFrustum,
-} from "@cesium/engine";
+  defined,
+  destroyObject,
+} from "@cesium/core";
+import { Fullscreen, getElement } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
 import NoSleep from "nosleep.js";
 import createCommand from "../createCommand.js";

@@ -1,12 +1,14 @@
 import {
   Cartesian3,
-  CartographicGeocoderService,
-  CesiumWidget,
   Clock,
-  CreditDisplay,
-  EllipsoidTerrainProvider,
   Rectangle,
   WebMercatorProjection,
+} from "@cesium/core";
+import {
+  CartographicGeocoderService,
+  CesiumWidget,
+  CreditDisplay,
+  EllipsoidTerrainProvider,
   ConstantPositionProperty,
   ConstantProperty,
   DataSourceCollection,
@@ -21,7 +23,6 @@ import {
   IonGeocodeProviderType,
   IonGeocoderService,
 } from "@cesium/engine";
-
 import {
   Animation,
   BaseLayerPicker,
@@ -35,7 +36,6 @@ import {
   SelectionIndicator,
   Timeline,
 } from "../../index.js";
-
 import createViewer from "../createViewer.js";
 import DomEventSimulator from "../../../../Specs/DomEventSimulator.js";
 import MockDataSource from "../../../../Specs/MockDataSource.js";

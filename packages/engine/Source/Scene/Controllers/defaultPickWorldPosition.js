@@ -1,10 +1,12 @@
-import Cartesian3 from "../../Core/Cartesian3.js";
-import Cartesian2 from "../../Core/Cartesian2.js";
-import Check from "../../Core/Check.js";
-import defined from "../../Core/defined.js";
-import IntersectionTests from "../../Core/IntersectionTests.js";
-import Plane from "../../Core/Plane.js";
-import Ray from "../../Core/Ray.js";
+import {
+  Cartesian2,
+  Cartesian3,
+  Check,
+  IntersectionTests,
+  Plane,
+  Ray,
+  defined,
+} from "@cesium/core";
 
 const scratchSurfaceCartesian = new Cartesian3();
 const scratchPlane = new Plane(Cartesian3.UNIT_X, 0.0);

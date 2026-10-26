@@ -1,8 +1,10 @@
-import addAllToArray from "../../Core/addAllToArray.js";
-import BoundingSphere from "../../Core/BoundingSphere.js";
-import Check from "../../Core/Check.js";
-import Frozen from "../../Core/Frozen.js";
-import Matrix4 from "../../Core/Matrix4.js";
+import {
+  BoundingSphere,
+  Check,
+  Frozen,
+  Matrix4,
+  addAllToArray,
+} from "@cesium/core";
 import DrawCommand from "../../Renderer/DrawCommand.js";
 import Pass from "../../Renderer/Pass.js";
 import RenderState from "../../Renderer/RenderState.js";

@@ -1,11 +1,5 @@
-import {
-  JulianDate,
-  ModelAnimationLoop,
-  Model,
-  ResourceCache,
-  Math as CesiumMath,
-} from "../../../index.js";
-
+import { JulianDate, Math as CesiumMath } from "@cesium/core";
+import { ModelAnimationLoop, Model, ResourceCache } from "../../../index.js";
 import createScene from "../../../../../Specs/createScene.js";
 import loadAndZoomToModelAsync from "./loadAndZoomToModelAsync.js";
 import pollToPromise from "../../../../../Specs/pollToPromise.js";

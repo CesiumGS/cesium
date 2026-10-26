@@ -1,5 +1,4 @@
 import {
-  ApproximateTerrainHeights,
   Cartesian2,
   Cartesian3,
   Color,
@@ -8,6 +7,9 @@ import {
   Math as CesiumMath,
   TimeInterval,
   TimeIntervalCollection,
+} from "@cesium/core";
+import {
+  ApproximateTerrainHeights,
   ConstantProperty,
   EllipseGeometryUpdater,
   EllipseGraphics,
@@ -21,7 +23,6 @@ import {
   GeometryVisualizer,
   EntityCollection,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 

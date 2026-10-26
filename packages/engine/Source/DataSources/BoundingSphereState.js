@@ -8,18 +8,21 @@ const BoundingSphereState = Object.freeze({
    * The BoundingSphere has been computed.
    * @type BoundingSphereState
    * @constant
+   * @private
    */
   DONE: 0,
   /**
    * The BoundingSphere is still being computed.
    * @type BoundingSphereState
    * @constant
+   * @private
    */
   PENDING: 1,
   /**
    * The BoundingSphere does not exist.
    * @type BoundingSphereState
    * @constant
+   * @private
    */
   FAILED: 2,
 });

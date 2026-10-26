@@ -1,21 +1,23 @@
 import {
-  Axis,
   BoundingSphere,
   Cartesian3,
   Cartographic,
-  Cesium3DTilesTerrainData,
-  defined,
-  GeographicTilingScheme,
+  EllipsoidalOccluder,
+  FixedFrameTransforms,
   Math as CesiumMath,
   Matrix4,
+  OrientedBoundingBox,
   Rectangle,
+  defined,
+} from "@cesium/core";
+import { parseGlb } from "@cesium/gltf";
+import {
+  Axis,
+  Cesium3DTilesTerrainData,
+  GeographicTilingScheme,
   TerrainData,
   TerrainMesh,
   TerrainProvider,
-  FixedFrameTransforms,
-  OrientedBoundingBox,
-  parseGlb,
-  EllipsoidalOccluder,
 } from "../../index.js";
 
 /**

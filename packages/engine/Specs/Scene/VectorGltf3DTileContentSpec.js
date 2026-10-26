@@ -1,3 +1,4 @@
+import { Cartesian3, Color, Matrix4 } from "@cesium/core";
 import {
   BlendOption,
   BufferPoint,
@@ -9,10 +10,7 @@ import {
   BufferPolygon,
   BufferPolygonCollection,
   BufferPolygonMaterial,
-  Cartesian3,
   Cesium3DTileStyle,
-  Color,
-  Matrix4,
   SceneMode,
   VectorGltf3DTileContent,
 } from "../../index.js";

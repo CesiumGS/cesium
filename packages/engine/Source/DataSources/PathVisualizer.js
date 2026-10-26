@@ -1,15 +1,19 @@
-import AssociativeArray from "../Core/AssociativeArray.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import CesiumMath from "../Core/Math.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import {
+  AssociativeArray,
+  Cartesian3,
+  DeveloperError,
+  JulianDate,
+  Math as CesiumMath,
+  Matrix3,
+  Matrix4,
+  Quaternion,
+  ReferenceFrame,
+  TimeInterval,
+  arrayRemoveDuplicates,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import Entity from "./Entity.js";
-import JulianDate from "../Core/JulianDate.js";
-import Matrix3 from "../Core/Matrix3.js";
-import Matrix4 from "../Core/Matrix4.js";
-import ReferenceFrame from "../Core/ReferenceFrame.js";
-import TimeInterval from "../Core/TimeInterval.js";
 import CelestialFrameTransforms from "../Core/CelestialFrameTransforms.js";
 import PolylineCollection from "../Scene/PolylineCollection.js";
 import SceneMode from "../Scene/SceneMode.js";
@@ -23,8 +27,6 @@ import ReferenceProperty from "./ReferenceProperty.js";
 import SampledPositionProperty from "./SampledPositionProperty.js";
 import ScaledPositionProperty from "./ScaledPositionProperty.js";
 import TimeIntervalCollectionPositionProperty from "./TimeIntervalCollectionPositionProperty.js";
-import Quaternion from "../Core/Quaternion.js";
-import arrayRemoveDuplicates from "../Core/arrayRemoveDuplicates.js";
 
 const update3DMatrix3Scratch1 = new Matrix3();
 const update3DMatrix3Scratch2 = new Matrix3();
@@ -49,6 +51,7 @@ const transformRotationScratch = new Matrix3();
  * @param {Entity} refEntity The reference entity whose frame to transform into.
  * @param {Cartesian3} result The object onto which to store the result.
  * @returns {Cartesian3 | undefined} The transformed position in the reference entity's local frame, or undefined if either input position is undefined.
+ * @ignore
  */
 function transformToEntityFrame(
   time,
@@ -103,6 +106,7 @@ function transformToEntityFrame(
  * @param {PositionProperty} positionProperty The position to compute the VVLH frame for.
  * @param {Matrix4} result The object onto which to store the result.
  * @returns {Matrix4} The VVLH transform.
+ * @ignore
  */
 function computeVvlhTransform(time, positionProperty, result) {
   const cartesian = positionProperty.getValue(time, update3DCartesian3Scratch0);

@@ -1,5 +1,8 @@
 /*global __karma__*/
 import customizeJasmine from "./customizeJasmine.js";
+import { createBaseMatchers } from "./createBaseMatchers.js";
+import { createRendererMatchers } from "./createRendererMatchers.js";
+import { createAsyncMatchers } from "./createAsyncMatchers.js";
 
 let includeCategory = "";
 let excludeCategory = "";
@@ -26,8 +29,17 @@ if (release) {
 }
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000;
-customizeJasmine(
-  jasmine.getEnv(),
+
+const env = jasmine.getEnv();
+env.beforeEach(function () {
+  const debug = !release;
+  env.addMatchers({
+    ...createBaseMatchers(debug),
+    ...createRendererMatchers(),
+  });
+  env.addAsyncMatchers(createAsyncMatchers(debug));
+});
+customizeJasmine(env, {
   includeCategory,
   excludeCategory,
   webglValidation,
@@ -35,4 +47,4 @@ customizeJasmine(
   release,
   debugCanvasWidth,
   debugCanvasHeight,
-);
+});

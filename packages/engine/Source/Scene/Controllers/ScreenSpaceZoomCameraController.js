@@ -1,14 +1,16 @@
-import Cartesian2 from "../../Core/Cartesian2.js";
-import Cartesian3 from "../../Core/Cartesian3.js";
-import defined from "../../Core/defined.js";
-import Frozen from "../../Core/Frozen.js";
-import getTimestamp from "../../Core/getTimestamp.js";
-import CesiumMath from "../../Core/Math.js";
+import {
+  Cartesian2,
+  Cartesian3,
+  Frozen,
+  Math as CesiumMath,
+  TimeConstants,
+  defined,
+  getTimestamp,
+} from "@cesium/core";
 import ScreenSpaceEventHandler from "../../Core/ScreenSpaceEventHandler.js";
 import ScreenSpaceEventType from "../../Core/ScreenSpaceEventType.js";
 import defaultPickWorldPosition from "./defaultPickWorldPosition.js";
 import ScreenSpaceInputBindings from "./ScreenSpaceInputBindings.js";
-import TimeConstants from "../../Core/TimeConstants.js";
 import MouseButton from "./MouseButton.js";
 
 /**

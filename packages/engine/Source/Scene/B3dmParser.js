@@ -1,7 +1,9 @@
-import Check from "../Core/Check.js";
-import deprecationWarning from "../Core/deprecationWarning.js";
-import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
-import RuntimeError from "../Core/RuntimeError.js";
+import {
+  Check,
+  RuntimeError,
+  deprecationWarning,
+  getJsonFromTypedArray,
+} from "@cesium/core";
 
 /**
  * Handles parsing of a Batched 3D Model.

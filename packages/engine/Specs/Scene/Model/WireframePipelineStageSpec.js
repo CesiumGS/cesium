@@ -1,8 +1,7 @@
+import { PrimitiveType, combine } from "@cesium/core";
 import {
-  combine,
   GltfLoader,
   ModelStatistics,
-  PrimitiveType,
   Resource,
   ResourceCache,
   ShaderBuilder,

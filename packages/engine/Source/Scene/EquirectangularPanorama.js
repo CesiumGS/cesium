@@ -1,16 +1,18 @@
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import {
+  Cartesian2,
+  DeveloperError,
+  Frozen,
+  GeometryInstance,
+  Matrix4,
+  SphereGeometry,
+  VertexFormat,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import Credit from "../Core/Credit.js";
-import Matrix4 from "../Core/Matrix4.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import SphereGeometry from "../Core/SphereGeometry.js";
-import GeometryInstance from "../Core/GeometryInstance.js";
 import Material from "./Material.js";
 import MaterialAppearance from "./MaterialAppearance.js";
 import Primitive from "./Primitive.js";
-import VertexFormat from "../Core/VertexFormat.js";
-import destroyObject from "../Core/destroyObject.js";
 
 const DEFAULT_RADIUS = 100000.0;
 

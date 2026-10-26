@@ -1,10 +1,12 @@
 import {
-  Frozen,
   Cartesian2,
   Cartesian3,
   Cartesian4,
+  Frozen,
   Matrix2,
   Matrix3,
+} from "@cesium/core";
+import {
   MetadataClassProperty,
   MetadataComponentType,
   MetadataTableProperty,

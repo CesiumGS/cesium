@@ -1,9 +1,6 @@
+import { Cartesian3, Math as CesiumMath, Matrix3, Matrix4 } from "@cesium/core";
 import {
   ArticulationStageType,
-  Cartesian3,
-  Math as CesiumMath,
-  Matrix3,
-  Matrix4,
   ModelArticulationStage,
 } from "../../../index.js";
 

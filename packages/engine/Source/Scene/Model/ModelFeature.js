@@ -1,5 +1,4 @@
-import Color from "../../Core/Color.js";
-import defined from "../../Core/defined.js";
+import { Color, defined } from "@cesium/core";
 
 /**
  * A feature of a {@link Model}.

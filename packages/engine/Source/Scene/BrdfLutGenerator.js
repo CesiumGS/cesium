@@ -1,9 +1,11 @@
-import BoundingRectangle from "../Core/BoundingRectangle.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import PixelFormat from "../Core/PixelFormat.js";
+import {
+  BoundingRectangle,
+  PixelDatatype,
+  PixelFormat,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import Framebuffer from "../Renderer/Framebuffer.js";
-import PixelDatatype from "../Renderer/PixelDatatype.js";
 import RenderState from "../Renderer/RenderState.js";
 import Sampler from "../Renderer/Sampler.js";
 import Texture from "../Renderer/Texture.js";

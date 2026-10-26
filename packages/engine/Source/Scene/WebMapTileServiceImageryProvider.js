@@ -1,8 +1,4 @@
-import combine from "../Core/combine.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Event from "../Core/Event.js";
+import { DeveloperError, Event, Frozen, combine, defined } from "@cesium/core";
 import Resource from "../Core/Resource.js";
 import WebMercatorTilingScheme from "../Core/WebMercatorTilingScheme.js";
 import TimeDynamicImagery from "./TimeDynamicImagery.js";

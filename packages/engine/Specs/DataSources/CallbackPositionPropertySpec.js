@@ -1,10 +1,5 @@
-import {
-  JulianDate,
-  CallbackPositionProperty,
-  Cartesian3,
-  PositionProperty,
-  ReferenceFrame,
-} from "../../index.js";
+import { Cartesian3, JulianDate, ReferenceFrame } from "@cesium/core";
+import { CallbackPositionProperty, PositionProperty } from "../../index.js";
 
 describe("DataSources/CallbackPositionProperty", function () {
   let time;

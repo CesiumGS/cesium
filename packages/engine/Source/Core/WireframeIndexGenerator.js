@@ -1,6 +1,4 @@
-import defined from "./defined.js";
-import IndexDatatype from "./IndexDatatype.js";
-import PrimitiveType from "./PrimitiveType.js";
+import { IndexDatatype, PrimitiveType, defined } from "@cesium/core";
 
 /**
  * Functions for generating indices for model wireframes. The indices are

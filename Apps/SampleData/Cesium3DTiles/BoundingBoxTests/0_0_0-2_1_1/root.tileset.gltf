@@ -1,0 +1,43 @@
+{
+  "extensions" : {
+    "3DTILES_tileset" : {
+      "geometricError" : 1048576.0
+    }
+  },
+  "extensionsUsed" : [ "3DTILES_tileset" ],
+  "extensionsRequired" : [ "3DTILES_tileset" ],
+  "asset" : {
+    "generator" : "JglTF from https://github.com/javagl/JglTF",
+    "version" : "2.1"
+  },
+  "externalAssets" : [ {
+    "file" : 0
+  } ],
+  "files" : [ {
+    "mimeType" : "model/gltf-binary",
+    "uri" : "0_0_0-2_1_1.glb"
+  } ],
+  "nodes" : [ {
+    "extensions" : {
+      "3DTILES_tileset" : {
+        "geometricError" : 16.0,
+        "refine" : "ADD"
+      }
+    },
+    "boundingVolume" : {
+      "shape" : 0,
+      "translation" : [ 1.0, 0.5, 0.5 ]
+    },
+    "externalAsset" : 0
+  } ],
+  "scene" : 0,
+  "scenes" : [ {
+    "nodes" : [ 0 ]
+  } ],
+  "shapes" : [ {
+    "type" : "box",
+    "box" : {
+      "size" : [ 2.0, 1.0, 1.0 ]
+    }
+  } ]
+}

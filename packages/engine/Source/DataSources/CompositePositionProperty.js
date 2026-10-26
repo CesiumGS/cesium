@@ -1,8 +1,10 @@
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Event from "../Core/Event.js";
-import JulianDate from "../Core/JulianDate.js";
-import ReferenceFrame from "../Core/ReferenceFrame.js";
+import {
+  DeveloperError,
+  Event,
+  JulianDate,
+  ReferenceFrame,
+  defined,
+} from "@cesium/core";
 import CompositeProperty from "./CompositeProperty.js";
 import Property from "./Property.js";
 

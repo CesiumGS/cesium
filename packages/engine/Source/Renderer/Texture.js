@@ -1,16 +1,18 @@
-import Cartesian2 from "../Core/Cartesian2.js";
-import Check from "../Core/Check.js";
-import Color from "../Core/Color.js";
-import createGuid from "../Core/createGuid.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import CesiumMath from "../Core/Math.js";
-import PixelFormat from "../Core/PixelFormat.js";
+import {
+  Cartesian2,
+  Check,
+  Color,
+  DeveloperError,
+  Frozen,
+  Math as CesiumMath,
+  PixelDatatype,
+  PixelFormat,
+  createGuid,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import ContextLimits from "./ContextLimits.js";
 import MipmapHint from "./MipmapHint.js";
-import PixelDatatype from "./PixelDatatype.js";
 import Sampler from "./Sampler.js";
 import TextureMagnificationFilter from "./TextureMagnificationFilter.js";
 import TextureMinificationFilter from "./TextureMinificationFilter.js";

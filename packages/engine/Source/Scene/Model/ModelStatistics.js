@@ -1,5 +1,4 @@
-import AssociativeArray from "../../Core/AssociativeArray.js";
-import Check from "../../Core/Check.js";
+import { AssociativeArray, Check } from "@cesium/core";
 
 /**
  * Rendering statistics for a single model.

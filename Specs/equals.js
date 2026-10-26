@@ -1,9 +1,5 @@
-import { FeatureDetection } from "@cesium/engine";
-
 function isTypedArray(o) {
-  return FeatureDetection.typedArrayTypes.some(function (type) {
-    return o instanceof type;
-  });
+  return ArrayBuffer.isView(o) && !(o instanceof DataView);
 }
 
 function typedArrayToArray(array) {
