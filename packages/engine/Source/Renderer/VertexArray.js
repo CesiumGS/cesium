@@ -185,7 +185,7 @@ function bind(gl, attributes, indexBuffer) {
  * @param {object} options Object with the following properties:
  * @param {Context} options.context The context in which the VertexArray gets created.
  * @param {object[]} options.attributes An array of attributes.
- * @param {IndexBuffer} [options.indexBuffer] An optional index buffer.
+ * @param {Buffer} [options.indexBuffer] An optional index buffer.
  *
  * @returns {VertexArray} The vertex array, ready for use with drawing.
  *
