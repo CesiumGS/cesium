@@ -349,23 +349,38 @@ ComponentDatatype.fromName = function (name) {
  * const floatValue = Cesium.ComponentDatatype.dequantize(32767, Cesium.ComponentDatatype.SHORT); // 1.0
  */
 ComponentDatatype.dequantize = function (value, componentDatatype) {
+  const divisor = ComponentDatatype.getNormalizationDivisor(componentDatatype);
+  return Math.max(value / divisor, -1.0);
+};
+
+/**
+ * Gets the divisor that converts a normalized integer of the given datatype
+ * to a floating-point value, e.g. 255 for UNSIGNED_BYTE. To match WebGL,
+ * divide by it, then clamp at -1; the clamp only affects signed types.
+ *
+ * @param {ComponentDatatype} componentDatatype An integer component datatype.
+ * @returns {number} The normalization divisor.
+ *
+ * @private
+ */
+ComponentDatatype.getNormalizationDivisor = function (componentDatatype) {
   switch (componentDatatype) {
     case ComponentDatatype.BYTE:
-      return Math.max(value / 127.0, -1.0);
+      return 127.0;
     case ComponentDatatype.UNSIGNED_BYTE:
-      return value / 255.0;
+      return 255.0;
     case ComponentDatatype.SHORT:
-      return Math.max(value / 32767.0, -1.0);
+      return 32767.0;
     case ComponentDatatype.UNSIGNED_SHORT:
-      return value / 65535.0;
+      return 65535.0;
     case ComponentDatatype.INT:
-      return Math.max(value / 2147483647.0, -1.0);
+      return 2147483647.0;
     case ComponentDatatype.UNSIGNED_INT:
-      return value / 4294967295.0;
+      return 4294967295.0;
     //>>includeStart('debug', pragmas.debug);
     default:
       throw new DeveloperError(
-        "componentDatatype is not a valid integer type for dequantization.",
+        "componentDatatype is not a valid integer type for normalization.",
       );
     //>>includeEnd('debug');
   }

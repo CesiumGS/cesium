@@ -16,6 +16,17 @@ import { DeveloperError } from "@cesium/core";
  */
 
 /**
+ * Reads the vertex indices of one primitive. Get one from
+ * {@link GeometryReadSession#primitiveReader}.
+ *
+ * @callback GeometryPrimitiveReader
+ * @param {number} primitiveIndex The index of the primitive to read.
+ * @param {number[]|TypedArray} result The array to write the {@link GeometryReadSession#primitiveVertexCount} vertex indices into.
+ * @param {number} [offset=0] The index in <code>result</code> at which to write the first vertex index.
+ * @returns {number[]|TypedArray} The result array.
+ */
+
+/**
  * Read access to a geometry's vertices and primitives, staged by
  * {@link GeometryReader#withReadSession} and valid only until that callback
  * returns.
@@ -72,14 +83,13 @@ class GeometryReadSession {
   }
 
   /**
-   * Writes the vertex indices of a primitive into <code>result</code>.
+   * Gets a function that reads the vertex indices of a primitive.
    *
-   * @param {number} primitiveIndex The index of the primitive.
-   * @param {number[]|TypedArray} result The array to write the {@link GeometryReadSession#primitiveVertexCount} vertex indices into.
-   * @param {number} [offset=0] The index in <code>result</code> at which to write the first vertex index.
-   * @returns {number[]|TypedArray} The result array.
+   * @returns {GeometryPrimitiveReader} The primitive reader.
+   *
+   * @exception {DeveloperError} Primitives were not requested for this session.
    */
-  getPrimitive(primitiveIndex, result, offset) {
+  primitiveReader() {
     DeveloperError.throwInstantiationError();
   }
 
