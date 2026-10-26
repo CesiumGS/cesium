@@ -18,7 +18,7 @@ function ConeEmitter(angle) {
 Object.defineProperties(ConeEmitter.prototype, {
   /**
    * The angle of the cone in radians.
-   * @memberof CircleEmitter.prototype
+   * @memberof ConeEmitter.prototype
    * @type {number}
    * @default Cesium.Math.toRadians(30.0)
    */
