@@ -1,0 +1,69 @@
+<style>
+  @import url(../templates/bucket.css);
+
+  #treePanel {
+    position: absolute;
+    top: 0;
+    left: 5px;
+    width: 600px;
+    max-width: calc(100vw - 10px);
+    max-height: calc(100% - 100px);
+    background: rgba(38, 38, 38, 0.92);
+    color: #eee;
+    border-radius: 6px;
+    padding: 10px;
+    font-size: 13px;
+    overflow: auto;
+  }
+  #treePanel h4 {
+    margin: 0 0 6px;
+    font-size: 13px;
+    color: #8cf;
+  }
+  #treeRoot,
+  .treeChildren {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .treeChildren {
+    display: none;
+    padding-left: 16px;
+  }
+  .treeNode.expanded > .treeChildren {
+    display: block;
+  }
+  .treeRow {
+    display: flex;
+    align-items: center;
+    padding: 1px 0;
+  }
+  .treeToggle {
+    flex: 0 0 auto;
+    width: 16px;
+    text-align: center;
+    color: #8cf;
+    cursor: pointer;
+    user-select: none;
+  }
+  .treeLabel {
+    flex: 1 1 auto;
+    padding: 2px 4px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .treeLabel:hover {
+    background: #3a3a3a;
+  }
+  .treeLabel.selected {
+    background: #2a5;
+    color: #000;
+  }
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="treePanel">
+  <h4>Element tree</h4>
+  <ul id="treeRoot"></ul>
+</div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>

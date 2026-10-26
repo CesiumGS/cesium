@@ -1,0 +1,7 @@
+title: Design Model – Element Tree
+description: Browse the hierarchical element tree of an architectural design model with the Cesium ion Asset Elements API using Cesium.IonAssetElementService. Expanding a node fetches its children on demand; clicking a node highlights and flies to it.
+labels:
+  - Showcases
+  - 3D Tiles
+  - Metadata
+thumbnail: thumbnail.jpg
