@@ -49,15 +49,13 @@ function renderAndReadPixels(options) {
   if (defined(options.scene)) {
     scene = options.scene;
     const time = options.time;
-    scene.initializeFrame();
     if (defined(options.primeShadowMap)) {
-      scene.render(time);
+      scene.renderForSpecs(time);
     }
-    scene.render(time);
+    scene.renderForSpecs(time);
   } else {
     scene = options;
-    scene.initializeFrame();
-    scene.render();
+    scene.renderForSpecs();
   }
 
   return scene.context.readPixels();

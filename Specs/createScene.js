@@ -1,7 +1,11 @@
-import { Cartesian2, clone, defined } from "@cesium/core";
+import { Cartesian2, JulianDate, clone, defined } from "@cesium/core";
 import { Scene } from "@cesium/engine";
 import createCanvas from "./createCanvas.js";
 import getWebGLStub from "./getWebGLStub.js";
+
+// Render specs at a fixed time, so time-dependent results such as the sun
+// direction are the same on every run.
+const defaultRenderTime = Object.freeze(new JulianDate(2457522.154792));
 
 function createScene(options) {
   options = options ?? {};
@@ -58,7 +62,7 @@ function createScene(options) {
 
   scene.renderForSpecs = function (time) {
     this.initializeFrame();
-    this.render(time);
+    this.render(time ?? defaultRenderTime);
   };
 
   scene.pickForSpecs = function () {
