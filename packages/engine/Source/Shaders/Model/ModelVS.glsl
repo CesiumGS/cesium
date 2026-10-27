@@ -170,7 +170,7 @@ void main()
     edgeVisibilityStageVS();
     #endif
 
-    #ifdef HAS_POINT_CLOUD_SHOW_STYLE
+    #if defined(HAS_POINT_CLOUD_SHOW_STYLE) || defined(HAS_POINT_CLOUD_BACK_FACE_CULLING)
     v_pointCloudShow = show;
     #endif
 }
