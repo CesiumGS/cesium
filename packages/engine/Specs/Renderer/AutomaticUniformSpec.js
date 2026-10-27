@@ -2040,6 +2040,48 @@ describe(
       }).contextToRender();
     });
 
+    it("has czm_pass and czm_passCesium3DTileEdges", function () {
+      const us = context.uniformState;
+      us.updatePass(Pass.CESIUM_3D_TILE_EDGES);
+
+      const fs =
+        "void main() { " +
+        "  out_FragColor = vec4(czm_pass == czm_passCesium3DTileEdges);" +
+        "}";
+      expect({
+        context: context,
+        fragmentShader: fs,
+      }).contextToRender();
+    });
+
+    it("has czm_pass and czm_passCesium3DTilePlanarFillId", function () {
+      const us = context.uniformState;
+      us.updatePass(Pass.CESIUM_3D_TILE_PLANAR_FILL_ID);
+
+      const fs =
+        "void main() { " +
+        "  out_FragColor = vec4(czm_pass == czm_passCesium3DTilePlanarFillId);" +
+        "}";
+      expect({
+        context: context,
+        fragmentShader: fs,
+      }).contextToRender();
+    });
+
+    it("has czm_pass and czm_passCesium3DTile", function () {
+      const us = context.uniformState;
+      us.updatePass(Pass.CESIUM_3D_TILE);
+
+      const fs =
+        "void main() { " +
+        "  out_FragColor = vec4(czm_pass == czm_passCesium3DTile);" +
+        "}";
+      expect({
+        context: context,
+        fragmentShader: fs,
+      }).contextToRender();
+    });
+
     it("has czm_pass and czm_passCesium3DTileClassification", function () {
       const us = context.uniformState;
       us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
@@ -2047,6 +2089,20 @@ describe(
       const fs =
         "void main() { " +
         "  out_FragColor = vec4(czm_pass == czm_passCesium3DTileClassification);" +
+        "}";
+      expect({
+        context: context,
+        fragmentShader: fs,
+      }).contextToRender();
+    });
+
+    it("has czm_pass and czm_passCesium3DTileClassificationIgnoreShow", function () {
+      const us = context.uniformState;
+      us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW);
+
+      const fs =
+        "void main() { " +
+        "  out_FragColor = vec4(czm_pass == czm_passCesium3DTileClassificationIgnoreShow);" +
         "}";
       expect({
         context: context,
@@ -2075,6 +2131,48 @@ describe(
       const fs =
         "void main() { " +
         "  out_FragColor = vec4(czm_pass == czm_passTranslucent);" +
+        "}";
+      expect({
+        context: context,
+        fragmentShader: fs,
+      }).contextToRender();
+    });
+
+    it("has czm_pass and czm_passVoxels", function () {
+      const us = context.uniformState;
+      us.updatePass(Pass.VOXELS);
+
+      const fs =
+        "void main() { " +
+        "  out_FragColor = vec4(czm_pass == czm_passVoxels);" +
+        "}";
+      expect({
+        context: context,
+        fragmentShader: fs,
+      }).contextToRender();
+    });
+
+    it("has czm_pass and czm_passGaussianSplats", function () {
+      const us = context.uniformState;
+      us.updatePass(Pass.GAUSSIAN_SPLATS);
+
+      const fs =
+        "void main() { " +
+        "  out_FragColor = vec4(czm_pass == czm_passGaussianSplats);" +
+        "}";
+      expect({
+        context: context,
+        fragmentShader: fs,
+      }).contextToRender();
+    });
+
+    it("has czm_pass and czm_passCesium3DTileEdgesDirect", function () {
+      const us = context.uniformState;
+      us.updatePass(Pass.CESIUM_3D_TILE_EDGES_DIRECT);
+
+      const fs =
+        "void main() { " +
+        "  out_FragColor = vec4(czm_pass == czm_passCesium3DTileEdgesDirect);" +
         "}";
       expect({
         context: context,
