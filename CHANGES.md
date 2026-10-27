@@ -14,6 +14,10 @@
 
 - Added support for glTF models with the [KHR_materials_emissive_strength extension](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_emissive_strength). [#13961](https://github.com/CesiumGS/cesium/pull/13961)
 
+#### Fixes :wrench:
+
+- Fixed `czm_passOverlay` and `czm_passCesium3DTileEdgesDirect` GLSL constants not matching `czm_pass` during their respective passes. Removed the unused `czm_passClassification` constant. [#13657](https://github.com/CesiumGS/cesium/issues/13657)
+
 ## 1.146 - 2026-10-01
 
 ### Major Announcements :loudspeaker:
