@@ -123,24 +123,27 @@ Cesium3DTilesTester.waitForTileContentReady = function (scene, tile) {
 };
 
 // A white ambient light with low intensity
-const defaultIbl = new ImageBasedLighting({
-  sphericalHarmonicCoefficients: [
-    new Cartesian3(0.4, 0.4, 0.4),
-    Cartesian3.ZERO,
-    Cartesian3.ZERO,
-    Cartesian3.ZERO,
-    Cartesian3.ZERO,
-    Cartesian3.ZERO,
-    Cartesian3.ZERO,
-    Cartesian3.ZERO,
-    Cartesian3.ZERO,
-  ],
-});
+function createDefaultImageBasedLighting() {
+  return new ImageBasedLighting({
+    sphericalHarmonicCoefficients: [
+      new Cartesian3(0.4, 0.4, 0.4),
+      Cartesian3.ZERO,
+      Cartesian3.ZERO,
+      Cartesian3.ZERO,
+      Cartesian3.ZERO,
+      Cartesian3.ZERO,
+      Cartesian3.ZERO,
+      Cartesian3.ZERO,
+      Cartesian3.ZERO,
+    ],
+  });
+}
 
 Cesium3DTilesTester.loadTileset = async function (scene, url, options) {
   options = options ?? {};
   options.cullRequestsWhileMoving = options.cullRequestsWhileMoving ?? false;
-  options.imageBasedLighting = options.imageBasedLighting ?? defaultIbl;
+  options.imageBasedLighting =
+    options.imageBasedLighting ?? createDefaultImageBasedLighting();
   options.environmentMapOptions = {
     enabled: false, // disable other diffuse lighting by default
     ...options.environmentMapOptions,
