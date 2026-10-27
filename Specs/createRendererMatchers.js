@@ -43,6 +43,17 @@ function countRenderedPixels(rgba) {
   return count;
 }
 
+// Scenes from createScene render at their own spec render time. Other scenes,
+// such as ones constructed directly in a spec, render at the current time.
+function renderScene(scene, time) {
+  if (defined(scene.renderForSpecs)) {
+    scene.renderForSpecs(time);
+    return;
+  }
+  scene.initializeFrame();
+  scene.render(time);
+}
+
 function renderAndReadPixels(options) {
   let scene;
 
@@ -50,12 +61,12 @@ function renderAndReadPixels(options) {
     scene = options.scene;
     const time = options.time;
     if (defined(options.primeShadowMap)) {
-      scene.renderForSpecs(time);
+      renderScene(scene, time);
     }
-    scene.renderForSpecs(time);
+    renderScene(scene, time);
   } else {
     scene = options;
-    scene.renderForSpecs();
+    renderScene(scene);
   }
 
   return scene.context.readPixels();

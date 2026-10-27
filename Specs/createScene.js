@@ -1,11 +1,14 @@
-import { Cartesian2, JulianDate, clone, defined } from "@cesium/core";
+import {
+  Cartesian2,
+  Clock,
+  ClockStep,
+  clone,
+  defined,
+  JulianDate,
+} from "@cesium/core";
 import { Scene } from "@cesium/engine";
 import createCanvas from "./createCanvas.js";
 import getWebGLStub from "./getWebGLStub.js";
-
-// Render specs at a fixed time, so time-dependent results such as the sun
-// direction are the same on every run.
-const defaultRenderTime = Object.freeze(new JulianDate(2457522.154792));
 
 function createScene(options) {
   options = options ?? {};
@@ -60,9 +63,19 @@ function createScene(options) {
     document.body.removeChild(canvas);
   };
 
+  // Starts at a fixed time and advances one 60 fps frame per render, so
+  // time-dependent results such as the sun direction do not depend on when
+  // the specs run.
+  const clock = new Clock({
+    currentTime: new JulianDate(2457522.154792),
+    clockStep: ClockStep.TICK_DEPENDENT,
+    multiplier: 1.0 / 60.0,
+    shouldAnimate: true,
+  });
   scene.renderForSpecs = function (time) {
     this.initializeFrame();
-    this.render(time ?? defaultRenderTime);
+    this.render(time ?? clock.currentTime);
+    clock.tick();
   };
 
   scene.pickForSpecs = function () {
