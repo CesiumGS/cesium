@@ -4,7 +4,7 @@ import DeveloperError from "./DeveloperError.js";
 import Matrix4 from "./Matrix4.js";
 
 /**
- * Geometry instancing allows one {@link Geometry} object to be positions in several
+ * Geometry instancing allows one {@link Geometry} object to be positioned in several
  * different locations and colored uniquely.  For example, one {@link BoxGeometry} can
  * be instanced several times, each with a different <code>modelMatrix</code> to change
  * its position, rotation, and scale.
