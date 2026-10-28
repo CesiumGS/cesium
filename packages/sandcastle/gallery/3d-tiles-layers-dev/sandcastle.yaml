@@ -1,0 +1,7 @@
+title: 3D Tiles Layers — Development
+description: Toggle layers of a 3D Tileset backed by 3D Tiles 1.1 groups. Hidden layers are not requested or rendered.
+labels:
+  - 3D Tiles
+  - Metadata
+  - Development
+development: true

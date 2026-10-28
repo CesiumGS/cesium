@@ -561,6 +561,14 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   this._colorDirty = false;
 
   this._request = undefined;
+
+  // Layer from this tile's single content's group. Tiles with multiple
+  // contents get no layer yet (needs per-content hiding).
+  const dataLayers = tileset.dataLayers;
+  this._layer =
+    defined(dataLayers) && defined(contentHeader) && !hasMultipleContents
+      ? dataLayers._getByGroup(findGroupMetadata(tileset, contentHeader))
+      : undefined;
 }
 
 // This can be overridden for testing purposes
@@ -1100,6 +1108,11 @@ Cesium3DTile.prototype.updateVisibility = function (frameState) {
     parentVisibilityPlaneMask,
   ); // Use parent's plane mask to speed up visibility test
   this._visible = this._visibilityPlaneMask !== CullingVolume.MASK_OUTSIDE;
+  // Culling a tile in a hidden layer also prunes its subtree, e.g. an external tileset.
+  // TODO: hide only this content, not its children, when it isn't an external tileset.
+  if (defined(this._layer) && !this._layer.show) {
+    this._visible = false;
+  }
   this._inRequestVolume = this.insideViewerRequestVolume(frameState);
   this._priorityReverseScreenSpaceError = getPriorityReverseScreenSpaceError(
     tileset,

@@ -1,0 +1,96 @@
+{
+  "asset": {
+    "version": "1.1"
+  },
+  "schema": {
+    "id": "LayersSample",
+    "classes": {
+      "layer": {
+        "properties": {
+          "name": {
+            "type": "STRING",
+            "semantic": "NAME"
+          }
+        }
+      }
+    }
+  },
+  "groups": [
+    {
+      "class": "layer",
+      "properties": {
+        "name": "Buildings West"
+      }
+    },
+    {
+      "class": "layer",
+      "properties": {
+        "name": "Buildings East"
+      }
+    }
+  ],
+  "geometricError": 240,
+  "root": {
+    "boundingVolume": {
+      "region": [
+        -1.3197209591796106,
+        0.6988424218,
+        -1.3196390408203893,
+        0.6989055782,
+        0,
+        88
+      ]
+    },
+    "geometricError": 70,
+    "refine": "ADD",
+    "content": {
+      "uri": "../../Tilesets/Tileset/parent.b3dm",
+      "boundingVolume": {
+        "region": [
+          -1.3197004795898053,
+          0.6988582109,
+          -1.3196595204101946,
+          0.6988897891,
+          0,
+          88
+        ]
+      }
+    },
+    "children": [
+      {
+        "boundingVolume": {
+          "region": [
+            -1.3197209591796106,
+            0.6988424218,
+            -1.31968,
+            0.6989055782,
+            0,
+            20
+          ]
+        },
+        "geometricError": 70,
+        "content": {
+          "uri": "layer_west.json",
+          "group": 0
+        }
+      },
+      {
+        "boundingVolume": {
+          "region": [
+            -1.31968,
+            0.6988424218,
+            -1.3196390408203893,
+            0.6989055782,
+            0,
+            20
+          ]
+        },
+        "geometricError": 70,
+        "content": {
+          "uri": "layer_east.json",
+          "group": 1
+        }
+      }
+    ]
+  }
+}

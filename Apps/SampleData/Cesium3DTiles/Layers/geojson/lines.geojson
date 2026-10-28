@@ -1,0 +1,103 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Main St",
+        "kind": "road"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -75.611977,
+            40.0434353,
+            2.0
+          ],
+          [
+            -75.6109209,
+            40.0435257,
+            2.0
+          ],
+          [
+            -75.6098649,
+            40.0434353,
+            2.0
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Oak Ave",
+        "kind": "road"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -75.6109209,
+            40.0426211,
+            2.0
+          ],
+          [
+            -75.6110383,
+            40.0434353,
+            2.0
+          ],
+          [
+            -75.6109209,
+            40.0442494,
+            2.0
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Park path 1",
+        "kind": "path"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -75.6118596,
+            40.0427115,
+            2.0
+          ],
+          [
+            -75.6112729,
+            40.0431639,
+            2.0
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Park path 2",
+        "kind": "path"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -75.6105689,
+            40.0437067,
+            2.0
+          ],
+          [
+            -75.6099822,
+            40.044159,
+            2.0
+          ]
+        ]
+      }
+    }
+  ]
+}

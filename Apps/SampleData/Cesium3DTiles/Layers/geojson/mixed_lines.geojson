@@ -1,0 +1,32 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Fence",
+        "kind": "fence"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -75.6118596,
+            40.0423497,
+            2.0
+          ],
+          [
+            -75.6099822,
+            40.0423497,
+            2.0
+          ],
+          [
+            -75.6099822,
+            40.0409022,
+            2.0
+          ]
+        ]
+      }
+    }
+  ]
+}
