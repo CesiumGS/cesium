@@ -22,8 +22,8 @@ if (__karma__.config.args) {
   debugCanvasHeight = __karma__.config.args[6];
 }
 
-// Edit has no runtime assets of its own; resolve engine's instead.
-window.CESIUM_BASE_URL = "base/packages/engine/Build";
+// Edit's build output includes engine's runtime assets alongside its own.
+window.CESIUM_BASE_URL = "base/packages/edit/Build";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000;
 

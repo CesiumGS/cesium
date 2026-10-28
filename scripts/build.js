@@ -21,6 +21,7 @@ import {
 } from "./build-utilities.js";
 import { copyEngineAssets } from "../packages/engine/scripts/build.js";
 import { copyWidgetsAssets } from "../packages/widgets/scripts/build.js";
+import { copyEditAssets } from "../packages/edit/scripts/build.js";
 
 /** @import { CesiumBundles, Workspace } from "./build-utilities.js"; */
 
@@ -486,10 +487,12 @@ export async function buildCesium(options) {
 
   await copyEngineAssets(outputDirectory);
   await copyWidgetsAssets(path.join(outputDirectory, "Widgets"));
+  await copyEditAssets(outputDirectory);
 
   // Copy static assets to Source folder.
 
   await copyEngineAssets("Source");
+  await copyEditAssets("Source");
   await copyFiles(
     ["packages/engine/Source/ThirdParty/**/*.js"],
     "Source/ThirdParty",
