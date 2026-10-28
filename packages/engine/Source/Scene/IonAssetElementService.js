@@ -9,6 +9,7 @@ import {
 import Ion from "../Core/Ion.js";
 import IonResource from "../Core/IonResource.js";
 import Resource from "../Core/Resource.js";
+import ElementService from "./ElementService.js";
 
 function checkPositiveInteger(name, value, maximum = Infinity) {
   if (
@@ -219,6 +220,7 @@ function treeNodeFromResponse(response) {
  *
  * This object is normally not instantiated directly, use {@link IonAssetElementService.fromAssetId}.
  *
+ * @extends ElementService
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  *
  * @see Ion
@@ -231,13 +233,14 @@ function treeNodeFromResponse(response) {
  * });
  * console.log(`${page.items.length} of ${page.total} elements`);
  */
-class IonAssetElementService {
+class IonAssetElementService extends ElementService {
   /**
    * @param {object} options Object with the following properties:
    * @param {number} options.assetId The ion asset id.
    * @param {Resource} options.resource The asset's ion API resource.
    */
   constructor(options) {
+    super();
     this._assetId = options.assetId;
     this._resource = options.resource;
     this._v1Resource = options.v1Resource;
@@ -299,7 +302,7 @@ class IonAssetElementService {
    * <code>location</code>, suitable for framing the camera with
    * {@link Camera#flyToBoundingSphere} or {@link Viewer#zoomTo}.
    *
-   * @param {IonAssetElementService.Element|IonAssetElementService.SearchResult} element An element returned by {@link IonAssetElementService#getElement}, {@link IonAssetElementService#listElements}, or the iterators.
+   * @param {IonAssetElementService.Element} element An element returned by {@link IonAssetElementService#getElement} or {@link IonAssetElementService#listElements}.
    * @returns {BoundingSphere|undefined} A bounding sphere for the element, or <code>undefined</code> if the element has no valid location.
    *
    * @example
@@ -575,8 +578,8 @@ class IonAssetElementService {
    *
    * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
    *
-   * @param {string} elementId The element id as a decimal string, e.g. <code>"3298534886898"</code> or hexadecimal string, e.g. <code>"0x30000000df2"</code>.
-   * @returns {Promise<{path: IonAssetElementService.ElementTreePathEntry[]}|undefined>} A promise that resolves to the root-first path. The promise rejects with a {@link RequestErrorEvent} if the request fails or no path exists.
+   * @param {string} elementId The element id as a decimal string, e.g. <code>"3298534886898"</code> or hexadecimal string, e.g. <code>"0x30000000df2"</code>.  
+   * @returns {Promise<{path: IonAssetElementService.ElementTreePathEntry[]}>} A promise that resolves to the root-first path. The promise rejects with a {@link RequestErrorEvent} if the request fails or no path exists.
    * @exception {DeveloperError} <code>elementId</code> must be a string.
    *
    * @example
