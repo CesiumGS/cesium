@@ -416,6 +416,11 @@ export async function prepare() {
     "node_modules/@zip.js/zip.js/dist/zip-module.wasm",
     "packages/engine/Source/ThirdParty/zip-module.wasm",
   );
+  // Copy the mesh editor wasm module into Source
+  copyFileSync(
+    "node_modules/@cesium/mesh-editor/mesh-editor_bg.wasm",
+    "packages/edit/Source/ThirdParty/mesh-editor_bg.wasm",
+  );
 
   // Copy prism.js and prism.css files into Tools
   copyFileSync(
