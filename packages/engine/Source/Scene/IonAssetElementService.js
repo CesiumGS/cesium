@@ -240,6 +240,7 @@ class IonAssetElementService {
   constructor(options) {
     this._assetId = options.assetId;
     this._resource = options.resource;
+    this._v1Resource = options.v1Resource;
   }
 
   /**
@@ -274,16 +275,22 @@ class IonAssetElementService {
 
     const resourceOptions = {
       // Trailing slash so derived resource urls resolve under the asset id.
-      url: `v1/assets/${assetId}/`,
+      url: `assets/${assetId}/`,
       headers: IonResource._addClientHeaders(),
     };
     if (defined(accessToken)) {
       resourceOptions.queryParameters = { access_token: accessToken };
     }
     const resource = server.getDerivedResource(resourceOptions);
+
+    const v1Resource = server.getDerivedResource({
+      ...resourceOptions,
+      url: `v1/assets/${assetId}/`,
+    });
     return new IonAssetElementService({
       assetId: assetId,
       resource: resource,
+      v1Resource: v1Resource,
     });
   }
 
@@ -405,7 +412,7 @@ class IonAssetElementService {
           : JSON.stringify(options.filter);
     }
 
-    const response = await this._resource
+    const response = await this._v1Resource
       .getDerivedResource({
         url: "elements",
         queryParameters: queryParameters,
@@ -434,7 +441,7 @@ class IonAssetElementService {
     Check.typeOf.string("elementId", elementId);
     //>>includeEnd('debug');
 
-    const response = await this._resource
+    const response = await this._v1Resource
       .getDerivedResource({
         url: `elements/${encodeURIComponent(elementId)}`,
       })
@@ -496,7 +503,7 @@ class IonAssetElementService {
           : JSON.stringify(options.filter);
     }
 
-    const response = await this._resource
+    const response = await this._v1Resource
       .getDerivedResource({
         url: "elements/aggregate",
         queryParameters: queryParameters,
@@ -553,7 +560,7 @@ class IonAssetElementService {
       queryParameters.nodeKey = options.nodeKey;
     }
 
-    const response = await this._resource
+    const response = await this._v1Resource
       .getDerivedResource({
         url: "tree/children",
         queryParameters: queryParameters,
@@ -586,7 +593,7 @@ class IonAssetElementService {
     Check.typeOf.string("elementId", elementId);
     //>>includeEnd('debug');
 
-    const response = await this._resource
+    const response = await this._v1Resource
       .getDerivedResource({
         url: "tree/parents",
         queryParameters: { elementId },
@@ -612,8 +619,11 @@ class IonAssetElementService {
    * @param {object} [options] Object with the following properties:
    * @param {number} [options.limit=1000] The maximum number of property names to return, between 1 and 1000.
    * @param {number} [options.page=1] The 1-based page number to return.
-   * @returns {Promise<IonAssetElementService.PropertyNamePage>} A page of property names.
+   * @returns {Promise<IonAssetElementService.PropertyNamePage>} A promise that resolves to a page of property names. The promise rejects with a {@link RequestErrorEvent} if the request fails.
+   * @exception {DeveloperError} <code>options.limit</code> must be an integer between 1 and 1000.
+   * @exception {DeveloperError} <code>options.page</code> must be a positive integer.
    */
+
   async listPropertyNames(options) {
     options = options ?? Frozen.EMPTY_OBJECT;
 
@@ -654,8 +664,11 @@ class IonAssetElementService {
    * @param {object} [options] Object with the following properties:
    * @param {number} [options.limit=1000] The maximum number of values to return, between 1 and 1000.
    * @param {number} [options.page=1] The 1-based page number to return.
-   * @returns {Promise<IonAssetElementService.PropertyValuePage>} A page of distinct values.
+   * @returns {Promise<IonAssetElementService.PropertyValuePage>} A promise that resolves to a page of distinct values. The promise rejects with a {@link RequestErrorEvent} if the request fails.
+   * @exception {DeveloperError} <code>options.limit</code> must be an integer between 1 and 1000.
+   * @exception {DeveloperError} <code>options.page</code> must be a positive integer.
    */
+
   async listPropertyValues(propertyName, options) {
     //>>includeStart('debug', pragmas.debug);
     Check.typeOf.string("propertyName", propertyName);
@@ -681,7 +694,7 @@ class IonAssetElementService {
         queryParameters: queryParameters,
       })
       .fetchJson();
-    return { items: response.items.slice(), total: response.total };
+    return { items: response.items, total: response.total };
   }
 }
 
