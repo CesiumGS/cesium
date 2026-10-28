@@ -38,20 +38,30 @@ let selectedElementId;
 let activeSelection = 0;
 
 const style = new Cesium.Cesium3DTileStyle();
+/**
+ * @param {Cesium.Cesium3DTileFeature} feature
+ * @param {Cesium.Color} [result]
+ * @returns {Cesium.Color}
+ */
+function evaluateElementColor(feature, result) {
+  if (!Cesium.defined(selectedElementId)) {
+    return Cesium.Color.clone(Cesium.Color.WHITE, result);
+  }
+
+  const id = Cesium.IonAssetElementService.getElementId(feature);
+  return id === selectedElementId
+    ? Cesium.Color.clone(Cesium.Color.LIME, result)
+    : Cesium.Color.clone(Cesium.Color.WHITE.withAlpha(0.05), result);
+}
+
 style.color = {
-  evaluateColor: function (feature, result) {
-    if (!Cesium.defined(selectedElementId)) {
-      return Cesium.Color.clone(Cesium.Color.WHITE, result);
-    }
-    const id = Cesium.IonAssetElementService.getElementId(feature);
-    return id === selectedElementId
-      ? Cesium.Color.clone(Cesium.Color.LIME, result)
-      : Cesium.Color.clone(Cesium.Color.WHITE.withAlpha(0.05), result);
-  },
+  evaluate: evaluateElementColor,
+  evaluateColor: evaluateElementColor,
 };
 tileset.style = style;
 
 const treeRoot = document.getElementById("treeRoot");
+const toolbar = document.getElementById("toolbar");
 const resetViewButton = document.getElementById("resetViewButton");
 const treeNodesByKey = new Map();
 
@@ -81,7 +91,7 @@ function collapseTree() {
 resetViewButton.addEventListener("click", function () {
   clearSelection();
   collapseTree();
-  resetViewButton.hidden = true;
+  toolbar.hidden = true;
   viewer.zoomTo(tileset).catch(console.error);
 });
 
@@ -102,7 +112,7 @@ async function selectElement(elementId, selection) {
   const boundingSphere =
     Cesium.IonAssetElementService.getBoundingSphere(element);
   if (Cesium.defined(boundingSphere)) {
-    resetViewButton.hidden = false;
+    toolbar.hidden = false;
     viewer.camera.flyToBoundingSphere(boundingSphere, {
       offset: new Cesium.HeadingPitchRange(0, Cesium.Math.toRadians(-30), 0),
       duration: 1.5,
