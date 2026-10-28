@@ -1,21 +1,23 @@
 import {
-  TranslucentTileClassification,
-  ApproximateTerrainHeights,
   Cartesian3,
   Color,
   ColorGeometryInstanceAttribute,
-  defined,
-  destroyObject,
   Ellipsoid,
   GeometryInstance,
-  GroundPolylineGeometry,
+  PixelDatatype,
   PixelFormat,
   Rectangle,
   RectangleGeometry,
+  defined,
+  destroyObject,
+} from "@cesium/core";
+import {
+  TranslucentTileClassification,
+  ApproximateTerrainHeights,
+  GroundPolylineGeometry,
   ClearCommand,
   Framebuffer,
   Pass,
-  PixelDatatype,
   RenderState,
   Texture,
   ClassificationType,
@@ -24,7 +26,6 @@ import {
   Primitive,
   StencilConstants,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 
 describe(

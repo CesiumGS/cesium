@@ -1,16 +1,11 @@
+import { Cartesian3, Color, Frozen, JulianDate, defined } from "@cesium/core";
 import {
-  Cartesian3,
-  Color,
-  Frozen,
-  defined,
-  JulianDate,
   ImageBasedLighting,
   Resource,
   Cesium3DTileContentFactory,
   Cesium3DTileset,
   TileBoundingSphere,
 } from "@cesium/engine";
-
 import pollToPromise from "./pollToPromise.js";
 
 const mockTile = {

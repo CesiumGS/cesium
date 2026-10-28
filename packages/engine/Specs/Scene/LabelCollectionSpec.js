@@ -5,11 +5,13 @@ import {
   Cartesian3,
   Cartographic,
   Color,
-  defined,
   DistanceDisplayCondition,
   Math as CesiumMath,
   NearFarScalar,
   Rectangle,
+  defined,
+} from "@cesium/core";
+import {
   BlendOption,
   Globe,
   HeightReference,
@@ -19,7 +21,6 @@ import {
   LabelStyle,
   VerticalOrigin,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 

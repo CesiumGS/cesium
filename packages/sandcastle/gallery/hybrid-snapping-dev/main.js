@@ -38,7 +38,7 @@ import Sandcastle from "Sandcastle";
 // account with the asset elements feature enabled, and, for the client-side
 // half of hybrid snapping to work fully, that tileset must be exported with
 // edge visibility data, as described in this glTF extension:
-// https://github.com/KhronosGroup/glTF/pull/2479
+// https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/EXT_mesh_primitive_edge_visibility
 
 // The id (numeric) of an ion asset backed by a BIM/CAD Database model, on an
 // account with the asset elements feature enabled.

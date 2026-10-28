@@ -1,9 +1,11 @@
-import BoundingSphere from "../Core/BoundingSphere.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Color from "../Core/Color.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import Matrix4 from "../Core/Matrix4.js";
+import {
+  BoundingSphere,
+  Cartesian3,
+  Color,
+  Matrix4,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import TaskProcessor from "../Core/TaskProcessor.js";
 import ClassificationType from "./ClassificationType.js";
 import Vector3DTileBatch from "./Vector3DTileBatch.js";

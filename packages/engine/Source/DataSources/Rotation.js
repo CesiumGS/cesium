@@ -1,6 +1,4 @@
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import CesiumMath from "../Core/Math.js";
+import { DeveloperError, Math as CesiumMath, defined } from "@cesium/core";
 
 /**
  * Represents a {@link Packable} number that always interpolates values

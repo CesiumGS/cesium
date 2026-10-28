@@ -1,5 +1,4 @@
-import { Clock } from "@cesium/engine";
-
+import { Clock } from "@cesium/core";
 import { Timeline } from "../../index.js";
 
 describe("Widgets/Timeline/Timeline", function () {

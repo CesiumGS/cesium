@@ -8,7 +8,8 @@
     ],
     "exclude": [
       "packages/engine/Source/ThirdParty",
-      "packages/engine/Source/Workers"
+      "packages/engine/Source/Workers",
+      "packages/engine/Source/Core/Deprecated"
     ],
     "includePattern": ".+\\.js(doc)?$",
     "excludePattern": "(^|\\/|\\\\)_"

@@ -6,8 +6,7 @@ import {
   Ellipsoid,
   EncodedCartesian3,
   Matrix4,
-} from "../../index.js";
-
+} from "@cesium/core";
 import createCamera from "../../../../Specs/createCamera.js";
 import createContext from "../../../../Specs/createContext.js";
 import createFrameState from "../../../../Specs/createFrameState.js";

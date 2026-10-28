@@ -1,5 +1,5 @@
+import { Cartographic } from "@cesium/core";
 import {
-  Cartographic,
   CesiumTerrainProvider,
   createWorldTerrainAsync,
   sampleTerrainMostDetailed,

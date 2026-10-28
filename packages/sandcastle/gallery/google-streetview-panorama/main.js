@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import * as Cesium from "cesium";
 
 const HEIGHT_THRESHOLD = 7000;

@@ -2,10 +2,12 @@ import {
   Cartesian2,
   Cartesian3,
   Color,
-  CustomShader,
   DistanceDisplayCondition,
   JulianDate,
   Quaternion,
+} from "@cesium/core";
+import {
+  CustomShader,
   ConstantProperty,
   ModelGraphics,
   NodeTransformationProperty,

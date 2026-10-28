@@ -1,13 +1,11 @@
+import { Color, DistanceDisplayCondition } from "@cesium/core";
 import {
-  Color,
-  DistanceDisplayCondition,
   ColorMaterialProperty,
   ConstantProperty,
   EllipseGraphics,
   ClassificationType,
   ShadowMode,
 } from "../../index.js";
-
 import testDefinitionChanged from "../../../../Specs/testDefinitionChanged.js";
 import testMaterialDefinitionChanged from "../../../../Specs/testMaterialDefinitionChanged.js";
 

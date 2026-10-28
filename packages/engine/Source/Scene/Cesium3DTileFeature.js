@@ -1,5 +1,4 @@
-import Color from "../Core/Color.js";
-import defined from "../Core/defined.js";
+import { Color, defined } from "@cesium/core";
 
 /** @import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js"; */
 /** @import Cesium3DTileContent from "./Cesium3DTileContent.js"; */

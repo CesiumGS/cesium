@@ -1,9 +1,11 @@
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import {
+  DeveloperError,
+  Frozen,
+  WebMercatorProjection,
+  defined,
+} from "@cesium/core";
 import GeographicTilingScheme from "../Core/GeographicTilingScheme.js";
 import Resource from "../Core/Resource.js";
-import WebMercatorProjection from "../Core/WebMercatorProjection.js";
 import GetFeatureInfoFormat from "./GetFeatureInfoFormat.js";
 import TimeDynamicImagery from "./TimeDynamicImagery.js";
 import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
@@ -12,6 +14,7 @@ import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
  * EPSG codes known to include reverse axis orders, but are not within 4000-5000.
  *
  * @type {number[]}
+ * @ignore
  */
 const includesReverseAxis = [
   3034, // ETRS89-extended / LCC Europe
@@ -25,6 +28,7 @@ const includesReverseAxis = [
  * EPSG codes known to not include reverse axis orders, and are within 4000-5000.
  *
  * @type {number[]}
+ * @ignore
  */
 const excludesReverseAxis = [
   4471, // Mayotte

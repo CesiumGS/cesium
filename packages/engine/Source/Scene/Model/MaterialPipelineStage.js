@@ -1,9 +1,12 @@
-import defined from "../../Core/defined.js";
-import Cartesian3 from "../../Core/Cartesian3.js";
-import Cartesian4 from "../../Core/Cartesian4.js";
-import Matrix3 from "../../Core/Matrix3.js";
-import Matrix4 from "../../Core/Matrix4.js";
-import FixedFrameTransforms from "../../Core/FixedFrameTransforms.js";
+import {
+  Cartesian3,
+  Cartesian4,
+  FixedFrameTransforms,
+  Matrix3,
+  Matrix4,
+  PrimitiveType,
+  defined,
+} from "@cesium/core";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import Pass from "../../Renderer/Pass.js";
 import MaterialStageFS from "../../Shaders/Model/MaterialStageFS.js";
@@ -12,12 +15,17 @@ import ConstantLodStageFS from "../../Shaders/Model/ConstantLodStageFS.js";
 import AlphaMode from "../AlphaMode.js";
 import ModelComponents from "../ModelComponents.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
-import PrimitiveType from "../../Core/PrimitiveType.js";
 import LightingModel from "./LightingModel.js";
 import ModelUtility from "./ModelUtility.js";
 
-const { Material, MetallicRoughness, SpecularGlossiness, Specular, Clearcoat } =
-  ModelComponents;
+const {
+  Material,
+  MetallicRoughness,
+  SpecularGlossiness,
+  Specular,
+  Clearcoat,
+  EmissiveStrength,
+} = ModelComponents;
 
 /**
  * The material pipeline stage processes textures and other uniforms needed
@@ -148,6 +156,16 @@ MaterialPipelineStage.process = function (
         shaderBuilder,
         defaultTexture,
         disableTextures,
+      );
+    }
+    if (
+      defined(material.emissiveStrength) &&
+      ModelUtility.supportedExtensions.KHR_materials_emissive_strength
+    ) {
+      processEmissiveStrengthUniforms(
+        material.emissiveStrength,
+        uniformMap,
+        shaderBuilder,
       );
     }
     processMetallicRoughnessUniforms(
@@ -1218,6 +1236,41 @@ function processClearcoatUniforms(
       "CLEARCOAT_NORMAL",
       defaultTexture,
     );
+  }
+}
+
+/**
+ * Add uniforms and defines for the KHR_materials_emissive_strength extension
+ *
+ * @param {ModelComponents.EmissiveStrength} emissiveStrength
+ * @param {Object<string, Function>} uniformMap The uniform map to modify.
+ * @param {ShaderBuilder} shaderBuilder
+ * @private
+ */
+function processEmissiveStrengthUniforms(
+  emissiveStrength,
+  uniformMap,
+  shaderBuilder,
+) {
+  const emissiveStrengthValue = emissiveStrength.emissiveStrength;
+
+  if (
+    defined(emissiveStrengthValue) &&
+    emissiveStrengthValue !== EmissiveStrength.DEFAULT_EMISSIVE_STRENGTH
+  ) {
+    shaderBuilder.addDefine(
+      "HAS_EMISSIVE_STRENGTH",
+      undefined,
+      ShaderDestination.FRAGMENT,
+    );
+    shaderBuilder.addUniform(
+      "float",
+      "u_emissiveStrength",
+      ShaderDestination.FRAGMENT,
+    );
+    uniformMap.u_emissiveStrength = function () {
+      return emissiveStrength.emissiveStrength;
+    };
   }
 }
 

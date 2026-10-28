@@ -1,26 +1,28 @@
+import {
+  Cartesian3,
+  Color,
+  ColorGeometryInstanceAttribute,
+  Ellipsoid,
+  GeometryInstance,
+  Math as CesiumMath,
+  Rectangle,
+  RectangleGeometry,
+  RuntimeError,
+  destroyObject,
+} from "@cesium/core";
 import createScene from "../../../../Specs/createScene.js";
 import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
 import {
-  Cartesian3,
   Cesium3DTileFeature,
   Cesium3DTilePointFeature,
   Cesium3DTileset,
   Cesium3DTileStyle,
   ClassificationType,
   HeightReference,
-  Color,
-  ColorGeometryInstanceAttribute,
-  destroyObject,
-  Ellipsoid,
-  GeometryInstance,
-  Math as CesiumMath,
   Pass,
   PerInstanceColorAppearance,
   Primitive,
-  Rectangle,
-  RectangleGeometry,
   RenderState,
-  RuntimeError,
   StencilConstants,
 } from "../../index.js";
 

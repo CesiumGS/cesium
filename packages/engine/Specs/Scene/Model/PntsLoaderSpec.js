@@ -3,15 +3,17 @@ import {
   Color,
   ComponentDatatype,
   Frozen,
-  DracoLoader,
   Matrix4,
+  RuntimeError,
+} from "@cesium/core";
+import {
+  DracoLoader,
   MetadataClass,
   MetadataComponentType,
   MetadataType,
   PntsLoader,
   Resource,
   ResourceCache,
-  RuntimeError,
   VertexAttributeSemantic,
 } from "../../../index.js";
 import createScene from "../../../../../Specs/createScene.js";

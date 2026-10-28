@@ -4,6 +4,8 @@ import {
   JulianDate,
   Plane,
   TimeIntervalCollection,
+} from "@cesium/core";
+import {
   ConstantPositionProperty,
   ConstantProperty,
   Entity,
@@ -11,7 +13,6 @@ import {
   PlaneGraphics,
   PrimitiveCollection,
 } from "../../index.js";
-
 import createDynamicGeometryUpdaterSpecs from "../../../../Specs/createDynamicGeometryUpdaterSpecs.js";
 import createDynamicProperty from "../../../../Specs/createDynamicProperty.js";
 import createGeometryUpdaterSpecs from "../../../../Specs/createGeometryUpdaterSpecs.js";

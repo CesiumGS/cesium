@@ -1,10 +1,10 @@
 import {
   Cartesian3,
-  ClippingPolygon,
   Ellipsoid,
   Math as CesiumMath,
   Rectangle,
-} from "../../index.js";
+} from "@cesium/core";
+import { ClippingPolygon } from "../../index.js";
 
 describe("Scene/ClippingPolygon", function () {
   it("constructs", function () {

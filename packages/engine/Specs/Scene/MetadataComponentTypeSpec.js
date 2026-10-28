@@ -1,8 +1,5 @@
-import {
-  ComponentDatatype,
-  FeatureDetection,
-  MetadataComponentType,
-} from "../../index.js";
+import { ComponentDatatype } from "@cesium/core";
+import { FeatureDetection, MetadataComponentType } from "../../index.js";
 import { ScalarCategories } from "../../Source/Scene/MetadataComponentType.js";
 
 describe("Scene/MetadataComponentType", function () {

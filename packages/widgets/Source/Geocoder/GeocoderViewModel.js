@@ -1,16 +1,18 @@
 import {
-  computeFlyToLocationForRectangle,
-  defined,
   DeveloperError,
-  destroyObject,
   Event,
+  Math as CesiumMath,
+  Matrix4,
+  Rectangle,
+  defined,
+  destroyObject,
+} from "@cesium/core";
+import {
+  computeFlyToLocationForRectangle,
   GeocoderService,
   GeocodeType,
   getElement,
   IonGeocoderService,
-  Math as CesiumMath,
-  Matrix4,
-  Rectangle,
   sampleTerrainMostDetailed,
 } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";

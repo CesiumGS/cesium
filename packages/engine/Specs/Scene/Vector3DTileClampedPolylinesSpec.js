@@ -1,19 +1,20 @@
 import {
   Cartesian3,
-  ClassificationType,
   Color,
   ColorGeometryInstanceAttribute,
-  destroyObject,
   Ellipsoid,
   GeometryInstance,
   Rectangle,
   RectangleGeometry,
+  destroyObject,
+} from "@cesium/core";
+import {
+  ClassificationType,
   Pass,
   PerInstanceColorAppearance,
   Primitive,
   Vector3DTileClampedPolylines,
 } from "../../index.js";
-
 import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
 import createScene from "../../../../Specs/createScene.js";
 

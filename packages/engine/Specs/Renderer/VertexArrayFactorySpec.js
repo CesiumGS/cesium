@@ -5,14 +5,15 @@ import {
   GeometryPipeline,
   IndexDatatype,
   PrimitiveType,
+  RuntimeError,
+} from "@cesium/core";
+import {
   BufferUsage,
   ClearCommand,
   DrawCommand,
   ShaderProgram,
-  RuntimeError,
   VertexArray,
 } from "../../index.js";
-
 import createContext from "../../../../Specs/createContext.js";
 
 describe(

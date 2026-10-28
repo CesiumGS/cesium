@@ -1,3 +1,5 @@
+// @ts-check
+
 import fs from "fs";
 import path from "path";
 import { performance } from "perf_hooks";
@@ -12,14 +14,18 @@ import ContextCache from "./scripts/ContextCache.js";
 import createRoute from "./scripts/createRoute.js";
 
 import {
-  createCesiumJs,
-  createCombinedSpecList,
   glslToJavaScript,
   createIndexJs,
+  getWorkspaces,
+} from "./scripts/build-utilities.js";
+import {
+  createCesiumJs,
+  createCombinedSpecList,
   buildCesium,
-  buildEngine,
-  buildWidgets,
 } from "./scripts/build.js";
+
+/** @import {BuildContext} from "esbuild"; */
+/** @import {CesiumBundles, Workspace} from "./scripts/build-utilities.js"; */
 
 const argv = await yargs(process.argv)
   .options({
@@ -50,36 +56,65 @@ const { getSandcastleConfig, buildSandcastleGallery, buildSandcastleApp } =
 
 const outputDirectory = path.join("Build", "CesiumDev");
 
+/**
+ * Formats the time elapsed since the given start time in seconds.
+ * @private
+ * @param {number} start The start time in milliseconds.
+ * @returns {number} The time since the start in seconds, rounded to the nearest tenth.
+ */
 function formatTimeSinceInSeconds(start) {
   return Math.ceil((performance.now() - start) / 100) / 10;
 }
 
 /**
+ * Bundles for the CesiumJS development build. Fields are narrowed to BuildContext since
+ * incremental:true guarantees live contexts here rather than one-off BuildResults.
+ * @typedef {object} DevelopmentBuildContexts
+ * @property {BuildContext} esm
+ * @property {BuildContext} iife
+ * @property {BuildContext} [iifeWorkers]
+ * @property {BuildContext} workers
+ * @property {BuildContext} specs
+ * @property {BuildContext} testWorkers
+ * @property {Record<string, CesiumBundles>} packages Bundles for each published workspace package, keyed by workspace name.
+ * @property {Record<string, string[]>} packageSourceGlobs Each published workspace's Source globs, keyed by workspace name.
+ */
+
+/**
  * Returns CesiumJS bundles configured for development.
  *
- * @returns {Bundles} The bundles.
+ * @returns {Promise<DevelopmentBuildContexts>} The bundles.
  */
 async function generateDevelopmentBuild() {
   const startTime = performance.now();
 
-  // Build @cesium/engine index.js
-  console.log("[1/3] Building @cesium/engine...");
-  const engineContexts = await buildEngine({
-    incremental: true,
-    minify: false,
-    write: false,
-  });
+  const workspaces = getWorkspaces(true);
 
-  // Build @cesium/widgets index.js
-  console.log("[2/3] Building @cesium/widgets...");
-  const widgetContexts = await buildWidgets({
-    incremental: true,
-    minify: false,
-    write: false,
-  });
+  /** @type {Record<string, CesiumBundles>} */
+  const packageContexts = {};
+  /** @type {Record<string, string[]>} */
+  const packageSourceGlobs = {};
+  for (let i = 0; i < workspaces.length; i++) {
+    const workspace = workspaces[i];
+    console.log(
+      `[${i + 1}/${workspaces.length + 1}] Building @cesium/${workspace}...`,
+    );
+    const buildName = `build${workspace.charAt(0).toUpperCase()}${workspace.slice(1)}`;
+    const packageModule = await import(
+      `./packages/${workspace}/scripts/build.js`
+    );
+    packageSourceGlobs[workspace] = packageModule.sourceGlobs;
+    packageContexts[workspace] = await packageModule[buildName]({
+      incremental: true,
+      minify: false,
+      write: false,
+    });
+  }
 
   // Build CesiumJS and save returned contexts for rebuilding upon request
-  console.log("[3/3] Building CesiumJS...");
+  console.log(
+    `[${workspaces.length + 1}/${workspaces.length + 1}] Building CesiumJS...`,
+  );
   const contexts = await buildCesium({
     iife: true,
     incremental: true,
@@ -95,13 +130,21 @@ async function generateDevelopmentBuild() {
     `Cesium built in ${formatTimeSinceInSeconds(startTime)} seconds.`,
   );
 
-  return { ...contexts, engine: engineContexts, widgets: widgetContexts };
+  // Cast needed because the upstream build functions type their bundles loosely,
+  // but passing incremental:true above guarantees BuildContext instances here.
+  return /** @type {DevelopmentBuildContexts} */ ({
+    ...contexts,
+    packages: packageContexts,
+    packageSourceGlobs: packageSourceGlobs,
+  });
 }
 
 // Delay execution of the callback until a short time has elapsed since it was last invoked, preventing
 // calls to the same function in quick succession from triggering multiple builds.
 const throttleDelay = 500;
+/** @param {() => Promise<void>} callback */
 const throttle = (callback) => {
+  /** @type {NodeJS.Timeout|undefined} */
   let timeout;
   return () =>
     new Promise((resolve) => {
@@ -118,6 +161,7 @@ const throttle = (callback) => {
   const gzipHeader = Buffer.from("1F8B08", "hex");
   const production = argv.production;
 
+  /** @type {DevelopmentBuildContexts|undefined} */
   let contexts;
   if (!production) {
     contexts = await generateDevelopmentBuild();
@@ -149,6 +193,7 @@ const throttle = (callback) => {
 
   app.use(function (req, res, next) {
     // *NOTE* Any changes you make here must be mirrored in web.config.
+    /** @type {Record<string, string>} */
     const extensionToMimeType = {
       ".czml": "application/json",
       ".json": "application/json",
@@ -185,6 +230,12 @@ const throttle = (callback) => {
     next();
   });
 
+  /**
+   * Checks whether the requested file is gzip-compressed and sets the Content-Encoding header accordingly.
+   * @param {express.Request} req The incoming request.
+   * @param {express.Response} res The outgoing response.
+   * @param {express.NextFunction} next Callback to pass control to the next handler.
+   */
   function checkGzipAndNext(req, res, next) {
     const baseURL = `${req.protocol}://${req.headers.host}/`;
     const reqUrl = new URL(req.url, baseURL);
@@ -196,7 +247,7 @@ const throttle = (callback) => {
       next();
     });
 
-    readStream.on("data", function (chunk) {
+    readStream.on("data", function (/** @type {Buffer} */ chunk) {
       if (chunk.equals(gzipHeader)) {
         res.header("Content-Encoding", "gzip");
       }
@@ -218,6 +269,13 @@ const throttle = (callback) => {
   app.get(knownTilesetFormats, checkGzipAndNext);
 
   if (!production) {
+    if (!contexts) {
+      throw new Error("Development build contexts were not initialized.");
+    }
+    // iife:true was passed to buildCesium above, so iifeWorkers is always built.
+    if (!contexts.iifeWorkers) {
+      throw new Error("Development build did not produce iifeWorkers.");
+    }
     const iifeWorkersCache = new ContextCache(contexts.iifeWorkers);
     const iifeCache = createRoute(
       app,
@@ -238,52 +296,6 @@ const throttle = (callback) => {
       "/Build/CesiumUnminified/Workers/*file.js",
       contexts.workers,
     );
-    const engineBundleCache = createRoute(
-      app,
-      "packages/engine/Build/Unminified/index.js",
-      "/packages/engine/Build/Unminified/index.js{.map}",
-      contexts.engine.esm,
-    );
-    const widgetsBundleCache = createRoute(
-      app,
-      "packages/widgets/Build/Unminified/index.js",
-      "/packages/widgets/Build/Unminified/index.js{.map}",
-      contexts.widgets.esm,
-    );
-
-    const glslWatcher = chokidar.watch("packages/engine/Source/Shaders", {
-      ignored: (path, stats) => {
-        return !!stats?.isFile() && !path.endsWith(".glsl");
-      },
-      ignoreInitial: true,
-    });
-    glslWatcher.on("all", async () => {
-      await glslToJavaScript(false, "Build/minifyShaders.state", "engine");
-      esmCache.clear();
-      engineBundleCache.clear();
-      iifeCache.clear();
-    });
-
-    const engineSourceWatcher = chokidar.watch(["packages/engine/Source"], {
-      ignored: [
-        "packages/engine/Source/Shaders",
-        "packages/engine/Source/ThirdParty",
-        (path, stats) => {
-          return !!stats?.isFile() && !path.endsWith(".js");
-        },
-      ],
-      ignoreInitial: true,
-    });
-    const widgetsSourceWatcher = chokidar.watch(["packages/widgets/Source"], {
-      ignored: [
-        "packages/widgets/Source/ThirdParty",
-        (path, stats) => {
-          return !!stats?.isFile() && !path.endsWith(".js");
-        },
-      ],
-      ignoreInitial: true,
-    });
-
     function clearTopLevelCaches() {
       esmCache.clear();
       iifeCache.clear();
@@ -291,21 +303,62 @@ const throttle = (callback) => {
       iifeWorkersCache.clear();
     }
 
-    engineSourceWatcher.on("all", async () => {
-      clearTopLevelCaches();
-      engineBundleCache.clear();
+    const workspaces = getWorkspaces(true);
 
-      await createIndexJs("engine");
-      await createCesiumJs();
-    });
+    /** @type {Record<string, ContextCache>} */
+    const packageBundleCaches = {};
+    for (const workspace of workspaces) {
+      packageBundleCaches[workspace] = createRoute(
+        app,
+        `packages/${workspace}/Build/Unminified/index.js`,
+        `/packages/${workspace}/Build/Unminified/index.js{.map}`,
+        contexts.packages[workspace].esm,
+      );
+    }
 
-    widgetsSourceWatcher.on("all", async () => {
-      clearTopLevelCaches();
-      widgetsBundleCache.clear();
+    for (const workspace of workspaces) {
+      if (fs.existsSync(`packages/${workspace}/Source/Shaders`)) {
+        const glslWatcher = chokidar.watch(
+          `packages/${workspace}/Source/Shaders`,
+          {
+            ignored: (path, stats) => {
+              return !!stats?.isFile() && !path.endsWith(".glsl");
+            },
+            ignoreInitial: true,
+          },
+        );
+        glslWatcher.on("all", async () => {
+          await glslToJavaScript(
+            false,
+            "Build/minifyShaders.state",
+            /** @type {Workspace} */ (workspace),
+          );
+          clearTopLevelCaches();
+          packageBundleCaches[workspace].clear();
+        });
+      }
 
-      await createIndexJs("widgets");
-      await createCesiumJs();
-    });
+      const sourceWatcher = chokidar.watch([`packages/${workspace}/Source`], {
+        ignored: [
+          `packages/${workspace}/Source/Shaders`,
+          `packages/${workspace}/Source/ThirdParty`,
+          (path, stats) => {
+            return !!stats?.isFile() && !path.endsWith(".js");
+          },
+        ],
+        ignoreInitial: true,
+      });
+      sourceWatcher.on("all", async () => {
+        clearTopLevelCaches();
+        packageBundleCaches[workspace].clear();
+
+        await createIndexJs(
+          /** @type {Workspace} */ (workspace),
+          contexts.packageSourceGlobs[workspace],
+        );
+        await createCesiumJs();
+      });
+    }
 
     const testWorkersCache = createRoute(
       app,
@@ -324,11 +377,15 @@ const throttle = (callback) => {
       contexts.specs,
     );
     const specWatcher = chokidar.watch(
-      ["packages/engine/Specs", "packages/widgets/Specs", "Specs"],
+      [
+        ...workspaces.map((workspace) => `packages/${workspace}/Specs`),
+        "Specs",
+      ],
       {
         ignored: [
-          "packages/engine/Specs/SpecList.js",
-          "packages/widgets/Specs/SpecList.js",
+          ...workspaces.map(
+            (workspace) => `packages/${workspace}/Specs/SpecList.js`,
+          ),
           "Specs/SpecList.js",
           "Specs/e2e",
           (path, stats) => {
@@ -349,7 +406,7 @@ const throttle = (callback) => {
     if (!production && getSandcastleConfig && buildSandcastleGallery) {
       const { configPath, root, gallery } = await getSandcastleConfig();
       const baseDirectory = path.relative(root, path.dirname(configPath));
-      const galleryFiles = gallery.files.map((pattern) =>
+      const galleryFiles = gallery.files.map((/** @type {string} */ pattern) =>
         path.join(baseDirectory, pattern),
       );
       const galleryWatcher = chokidar.watch(galleryFiles, {
@@ -385,21 +442,23 @@ const throttle = (callback) => {
 
   app.use(express.static(path.resolve(".")));
 
-  const server = app.listen(
-    argv.port,
-    argv.public ? undefined : "localhost",
-    function () {
-      if (argv.public) {
-        console.log(
-          `Cesium development server running publicly.  Connect to http://localhost:${server.address()?.port}/`,
-        );
-      } else {
-        console.log(
-          `Cesium development server running locally.  Connect to http://localhost:${server.address()?.port}/`,
-        );
-      }
-    },
-  );
+  const server = argv.public
+    ? app.listen(argv.port)
+    : app.listen(argv.port, "localhost");
+
+  server.on("listening", function () {
+    const address = server.address();
+    const port = typeof address === "string" ? undefined : address?.port;
+    if (argv.public) {
+      console.log(
+        `Cesium development server running publicly.  Connect to http://localhost:${port}/`,
+      );
+    } else {
+      console.log(
+        `Cesium development server running locally.  Connect to http://localhost:${port}/`,
+      );
+    }
+  });
 
   server.on("error", function (/** @type {NodeJS.ErrnoException} */ e) {
     if (e.code === "EADDRINUSE") {
@@ -457,6 +516,9 @@ const throttle = (callback) => {
       console.log("\nCesium development servers shutting down.");
 
       if (!production) {
+        if (!contexts) {
+          throw new Error("Development build contexts were not initialized.");
+        }
         contexts.esm.dispose();
         contexts.iife.dispose();
         contexts.workers.dispose();

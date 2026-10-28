@@ -1,25 +1,22 @@
 // @ts-check
 
+import { Cartesian3, Cartesian4, Matrix3, Matrix4 } from "@cesium/core";
 import AlphaMode from "./AlphaMode.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartesian4 from "../Core/Cartesian4.js";
-import Matrix3 from "../Core/Matrix3.js";
-import Matrix4 from "../Core/Matrix4.js";
 
-/** @import { TypedArray } from "../Core/typedArrayTypes.js"; */
+/** @import { TypedArray } from "@cesium/core"; */
 /** @import ArticulationStageType from "../Core/ArticulationStageType.js"; */
-/** @import AttributeType from "./AttributeType.js"; */
+/** @import { AttributeType } from "@cesium/core"; */
 /** @import Axis from "./Axis.js"; */
-/** @import Cartesian2 from "../Core/Cartesian2.js"; */
-/** @import ComponentDatatype from "../Core/ComponentDatatype.js"; */
+/** @import { Cartesian2 } from "@cesium/core"; */
+/** @import { ComponentDatatype } from "@cesium/core"; */
 /** @import Credit from "../Core/Credit.js"; */
-/** @import IndexDatatype from "../Core/IndexDatatype.js"; */
+/** @import { IndexDatatype } from "@cesium/core"; */
 /** @import InstanceAttributeSemantic from "./InstanceAttributeSemantic.js"; */
-/** @import InterpolationType from "../Core/InterpolationType.js"; */
-/** @import Matrix2 from "../Core/Matrix2.js"; */
+/** @import { InterpolationType } from "@cesium/core"; */
+/** @import { Matrix2 } from "@cesium/core"; */
 /** @import ModelPrimitiveImagery from "./Model/ModelPrimitiveImagery.js"; */
-/** @import PrimitiveType from "../Core/PrimitiveType.js"; */
-/** @import Quaternion from "../Core/Quaternion.js"; */
+/** @import { PrimitiveType } from "@cesium/core"; */
+/** @import { Quaternion } from "@cesium/core"; */
 /** @import StructuralMetadata from "./StructuralMetadata.js"; */
 /** @import Texture from "../Renderer/Texture.js"; */
 /** @import VertexAttributeSemantic from "./VertexAttributeSemantic.js"; */
@@ -663,7 +660,7 @@ export class Primitive {
     /**
      * Data loaded from the EXT_mesh_primitive_edge_visibility extension.
      *
-     * @type {Object}
+     * @type {object}
      * @ignore
      */
     this.edgeVisibility = undefined;
@@ -750,7 +747,7 @@ export class Node {
     /**
      * The name of the node.
      *
-     * @type {string}
+     * @type {string|undefined}
      * @ignore
      */
     this.name = undefined;
@@ -759,7 +756,7 @@ export class Node {
      * The index of the node in the glTF. This is useful for finding the nodes
      * that belong to a skin after they have been instantiated at runtime.
      *
-     * @type {number}
+     * @type {number|undefined}
      * @ignore
      */
     this.index = undefined;
@@ -783,7 +780,7 @@ export class Node {
     /**
      * Instances of this node.
      *
-     * @type {Instances}
+     * @type {Instances|undefined}
      * @ignore
      */
     this.instances = undefined;
@@ -791,7 +788,7 @@ export class Node {
     /**
      * The skin.
      *
-     * @type {Skin}
+     * @type {Skin|undefined}
      * @ignore
      */
     this.skin = undefined;
@@ -801,7 +798,7 @@ export class Node {
      * rotation, and scale must be undefined. When matrix is undefined
      * translation, rotation, and scale must all be defined.
      *
-     * @type {Matrix4}
+     * @type {Matrix4|undefined}
      * @ignore
      */
     this.matrix = undefined;
@@ -809,7 +806,7 @@ export class Node {
     /**
      * The local translation.
      *
-     * @type {Cartesian3}
+     * @type {Cartesian3|undefined}
      * @ignore
      */
     this.translation = undefined;
@@ -817,7 +814,7 @@ export class Node {
     /**
      * The local rotation.
      *
-     * @type {Quaternion}
+     * @type {Quaternion|undefined}
      * @ignore
      */
     this.rotation = undefined;
@@ -825,7 +822,7 @@ export class Node {
     /**
      * The local scale.
      *
-     * @type {Cartesian3}
+     * @type {Cartesian3|undefined}
      * @ignore
      */
     this.scale = undefined;
@@ -843,7 +840,7 @@ export class Node {
      * The name of the articulation affecting this node, as defined by the
      * AGI_articulations extension.
      *
-     * @type {string}
+     * @type {string|undefined}
      * @ignore
      */
     this.articulationName = undefined;
@@ -851,10 +848,18 @@ export class Node {
     /**
      * The CESIUM_mesh_vector extension data for this node.
      *
-     * @type {object}
+     * @type {object|undefined}
      * @ignore
      */
     this.meshVector = undefined;
+
+    /**
+     * The KHR_node_visibility extension data for this node.
+     *
+     * @type {object|undefined}
+     * @ignore
+     */
+    this.nodeVisibility = undefined;
   }
 }
 
@@ -1551,6 +1556,24 @@ export class Clearcoat {
   }
 }
 
+export class EmissiveStrength {
+  /**
+   * @ignore
+   */
+  static DEFAULT_EMISSIVE_STRENGTH = 1.0;
+
+  constructor() {
+    /**
+     * The strength adjustment to be multiplied with the material's emissive value
+     *
+     * @type {number}
+     * @default 1.0
+     * @ignore
+     */
+    this.emissiveStrength = EmissiveStrength.DEFAULT_EMISSIVE_STRENGTH;
+  }
+}
+
 /**
  * Material properties for the BENTLEY_materials_line_style extension.
  *
@@ -1690,6 +1713,14 @@ export class Material {
      * @ignore
      */
     this.clearcoat = undefined;
+
+    /**
+     * Material properties for KHR_materials_emissive_strength
+     *
+     * @type {EmissiveStrength|undefined}
+     * @ignore
+     */
+    this.emissiveStrength = undefined;
 
     /**
      * The emissive texture reader.
@@ -1869,6 +1900,7 @@ ModelComponents.SpecularGlossiness = SpecularGlossiness;
 ModelComponents.Specular = Specular;
 ModelComponents.Anisotropy = Anisotropy;
 ModelComponents.Clearcoat = Clearcoat;
+ModelComponents.EmissiveStrength = EmissiveStrength;
 ModelComponents.PlanarFill = PlanarFill;
 ModelComponents.LineStyle = LineStyle;
 ModelComponents.Material = Material;
