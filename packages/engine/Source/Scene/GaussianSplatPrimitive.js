@@ -3,6 +3,7 @@ import {
   Cartesian3,
   ComponentDatatype,
   DeveloperError,
+  Event,
   FixedFrameTransforms,
   Frozen,
   Geometry,
@@ -16,6 +17,7 @@ import {
   clone,
   defined,
   destroyObject,
+  oneTimeWarning,
 } from "@cesium/core";
 import ModelUtility from "./Model/ModelUtility.js";
 import GaussianSplatSorter from "./GaussianSplatSorter.js";
@@ -36,10 +38,7 @@ import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 import ModelComponents from "./ModelComponents.js";
 import Axis from "./Axis.js";
 import SplitDirection from "./SplitDirection.js";
-import Event from "../Core/Event.js";
 import ContextLimits from "../Renderer/ContextLimits.js";
-
-import oneTimeWarning from "../Core/oneTimeWarning.js";
 import CustomShader from "./Model/CustomShader.js";
 import CustomShaderTranslucencyMode from "./Model/CustomShaderTranslucencyMode.js";
 const scratchMatrix4A = new Matrix4();

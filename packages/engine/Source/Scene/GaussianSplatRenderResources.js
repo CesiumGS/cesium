@@ -1,3 +1,4 @@
+import { combine, defined } from "@cesium/core";
 import ShaderBuilder from "../Renderer/ShaderBuilder.js";
 import RenderState from "../Renderer/RenderState.js";
 import DepthFunction from "../Scene/DepthFunction.js";
@@ -5,8 +6,6 @@ import ModelAlphaOptions from "./Model/ModelAlphaOptions.js";
 import ShaderDestination from "../Renderer/ShaderDestination.js";
 import Pass from "../Renderer/Pass.js";
 import BlendingState from "./BlendingState.js";
-import combine from "../Core/combine.js";
-import defined from "../Core/defined.js";
 
 const customFragmentShaderStructs = `
 struct Attributes {

@@ -3,6 +3,7 @@ import {
   defined,
   deprecationWarning,
   destroyObject,
+  oneTimeWarning,
 } from "@cesium/core";
 import Resource from "../Core/Resource.js";
 import GltfLoader from "./GltfLoader.js";
@@ -10,7 +11,6 @@ import Axis from "./Axis.js";
 import GaussianSplatPrimitive from "./GaussianSplatPrimitive.js";
 import ModelUtility from "./Model/ModelUtility.js";
 import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
-import oneTimeWarning from "../Core/oneTimeWarning.js";
 
 /** @import Cesium3DTileContent from "./Cesium3DTileContent.js"; */
 
