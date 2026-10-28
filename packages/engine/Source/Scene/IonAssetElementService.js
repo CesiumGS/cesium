@@ -236,12 +236,10 @@ class IonAssetElementService {
    * @param {object} options Object with the following properties:
    * @param {number} options.assetId The ion asset id.
    * @param {Resource} options.resource The asset's ion API resource.
-   * @param {Resource} options.treeResource The asset's versioned tree API resource.
    */
   constructor(options) {
     this._assetId = options.assetId;
     this._resource = options.resource;
-    this._treeResource = options.treeResource;
   }
 
   /**
@@ -276,24 +274,16 @@ class IonAssetElementService {
 
     const resourceOptions = {
       // Trailing slash so derived resource urls resolve under the asset id.
-      url: `assets/${assetId}/`,
+      url: `v1/assets/${assetId}/`,
       headers: IonResource._addClientHeaders(),
     };
     if (defined(accessToken)) {
       resourceOptions.queryParameters = { access_token: accessToken };
     }
     const resource = server.getDerivedResource(resourceOptions);
-    // TODO: Unify the resource bases once endpoint versioning is consistent.
-    // Tree endpoints use /v1/assets/; other element endpoints use /assets/.
-    const treeResource = server.getDerivedResource({
-      ...resourceOptions,
-      url: `v1/assets/${assetId}/`,
-    });
-
     return new IonAssetElementService({
       assetId: assetId,
       resource: resource,
-      treeResource: treeResource,
     });
   }
 
@@ -362,7 +352,9 @@ class IonAssetElementService {
     if (!defined(feature) || typeof feature.getProperty !== "function") {
       return undefined;
     }
-    return toIdString(feature.getProperty("element"));
+    // 3D Tile feature properties store element IDs as BigInt values (e.g. 8589934767n)
+    const elementId = feature.getProperty("element");
+    return toIdString(elementId);
   }
 
   /**
@@ -372,11 +364,15 @@ class IonAssetElementService {
    * passing the returned <code>continuationToken</code> as
    * <code>options.continuationToken</code> until it is <code>undefined</code>.
    *
+   * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+   *
    * @param {object} [options] Object with the following properties:
    * @param {number} [options.top=100] The maximum number of elements to return per page.
    * @param {string} [options.continuationToken] A token returned from a previous call to retrieve the next page of results.
    * @param {object|string} [options.filter] A <a href="https://www.mongodb.com/docs/manual/reference/operator/query/">MongoDB-style</a> filter, as an object (recommended) or a JSON string.
-   * @returns {Promise<IonAssetElementService.ElementPage>} A page of elements.
+   * @returns {Promise<IonAssetElementService.ElementPage>} A promise that resolves to a page of elements. The promise rejects with a {@link RequestErrorEvent} if the request fails.
+   * @exception {DeveloperError} <code>options.top</code> must be a positive integer.
+   * @exception {DeveloperError} <code>options.continuationToken</code> must be a string.
    *
    * @example
    * const page = await elements.listElements({
@@ -398,7 +394,7 @@ class IonAssetElementService {
     }
     //>>includeEnd('debug');
 
-    const queryParameters = { engine: "search", top: options.top ?? 100 };
+    const queryParameters = { top: options.top ?? 100 };
     if (defined(options.continuationToken)) {
       queryParameters.continuationToken = options.continuationToken;
     }
@@ -425,31 +421,25 @@ class IonAssetElementService {
   /**
    * Retrieves metadata and location information for a single element.
    *
+   * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+   *
    * Use {@link IonAssetElementService.getElementId} to obtain the id from a
    * picked {@link Cesium3DTileFeature}.
    *
-   * @param {string} elementId The element id as a decimal string, e.g. <code>"3298534886898"</code>.
-   * @returns {Promise<IonAssetElementService.Element|undefined>} The element, or <code>undefined</code> if no element with that id exists in the asset.
+   * @param {string} elementId The element id as a decimal string, e.g. <code>"3298534886898"</code> or hexadecimal string, e.g. <code>"0x30000000df2"</code>.
+   * @returns {Promise<IonAssetElementService.Element>} A promise that resolves to the requested element. The promise rejects with a {@link RequestErrorEvent} if the request fails or the element does not exist.
    */
   async getElement(elementId) {
     //>>includeStart('debug', pragmas.debug);
     Check.typeOf.string("elementId", elementId);
     //>>includeEnd('debug');
 
-    try {
-      const response = await this._resource
-        .getDerivedResource({
-          url: `elements/${encodeURIComponent(elementId)}`,
-          queryParameters: { engine: "search" },
-        })
-        .fetchJson();
-      return defined(response) ? elementFromResponse(response) : undefined;
-    } catch (error) {
-      if (error?.statusCode === 404) {
-        return undefined;
-      }
-      throw error;
-    }
+    const response = await this._resource
+      .getDerivedResource({
+        url: `elements/${encodeURIComponent(elementId)}`,
+      })
+      .fetchJson();
+    return elementFromResponse(response);
   }
 
   /**
@@ -462,13 +452,19 @@ class IonAssetElementService {
    * @param {object} options Object with the following properties:
    * @param {string[]} options.propertyKeys The qualified property keys to aggregate. At least one is required.
    * @param {object|string} [options.filter] A <a href="https://www.mongodb.com/docs/manual/reference/operator/query/">MongoDB-style</a> filter, as an object (recommended) or a JSON string.
-   * @returns {Promise<IonAssetElementService.AggregateResult>} The aggregate statistics, one entry per requested property key, and the number of matched elements.
+   * @returns {Promise<IonAssetElementService.AggregateResult>} A promise that resolves to the aggregate statistics. The promise rejects with a {@link RequestErrorEvent} if the request fails.
+   * @exception {DeveloperError} <code>options.propertyKeys</code> must be a non-empty array of strings.
    *
    * @example
-   * const { aggregations, total } = await elements.aggregate({
-   *   propertyKeys: ["Volume Aspect.Net Volume"],
-   *   filter: { "IFC Class Name": "ifcwall" },
-   * });
+   * try {
+   *   const result = await elements.aggregate({
+   *     propertyKeys: ["Volume Aspect.Net Volume"],
+   *     filter: { "IFC Class Name": "ifcwall" },
+   *   });
+   *   console.log(result.aggregations, result.total);
+   * } catch (error) {
+   *   console.error(error.statusCode, error.response);
+   * };
    */
   async aggregate(options) {
     //>>includeStart('debug', pragmas.debug);
@@ -529,13 +525,19 @@ class IonAssetElementService {
    *
    * @param {object} [options] Object with the following properties:
    * @param {string} [options.nodeKey] The opaque node key returned by the endpoint. Omit it to list root nodes.
-   * @returns {Promise<{nodes: IonAssetElementService.ElementTreeNode[]}>} The child nodes. A key for a node that does not exist yields an empty <code>nodes</code> array.
+   * @returns {Promise<{nodes: IonAssetElementService.ElementTreeNode[]}>} A promise that resolves to the child nodes. The promise rejects with a {@link RequestErrorEvent} if the request fails or a key for a node that does not exist is provided.
+   * @exception {DeveloperError} <code>options.nodeKey</code> must be a string.
    *
    * @example
-   * const { nodes } = await elements.getElementTreeChildren();
-   * const { nodes: children } = await elements.getElementTreeChildren({
-   *   nodeKey: nodes[0].key,
-   * });
+   * try {
+   *   const { nodes } = await elements.getElementTreeChildren();
+   *   const { nodes: children } = await elements.getElementTreeChildren({
+   *     nodeKey: nodes[0].key,
+   *   });
+   *   console.log(nodes);
+   * } catch (error) {
+   *   console.error(error.statusCode, error.response);
+   * }
    */
   async getElementTreeChildren(options) {
     options = options ?? Frozen.EMPTY_OBJECT;
@@ -551,7 +553,7 @@ class IonAssetElementService {
       queryParameters.nodeKey = options.nodeKey;
     }
 
-    const response = await this._treeResource
+    const response = await this._resource
       .getDerivedResource({
         url: "tree/children",
         queryParameters: queryParameters,
@@ -566,35 +568,35 @@ class IonAssetElementService {
    *
    * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
    *
-   * @param {string} elementId The element id as a decimal string, e.g. <code>"3298534886898"</code>.
-   * @returns {Promise<{path: IonAssetElementService.ElementTreePathEntry[]}|undefined>} The root-first path, or <code>undefined</code> if no path is available.
+   * @param {string} elementId The element id as a decimal string, e.g. <code>"3298534886898"</code> or hexadecimal string, e.g. <code>"0x30000000df2"</code>.
+   * @returns {Promise<{path: IonAssetElementService.ElementTreePathEntry[]}|undefined>} A promise that resolves to the root-first path. The promise rejects with a {@link RequestErrorEvent} if the request fails or no path exists.
+   * @exception {DeveloperError} <code>elementId</code> must be a string.
    *
    * @example
-   * const { path } = await elements.getElementTreeParents(elementId);
+   * try {
+   *   const { path } = await elements.getElementTreeParents(elementId);
+   *   console.log(path);
+   * } catch (error) {
+   *   console.error(error.statusCode, error.response);
+   * }
+   *
    */
   async getElementTreeParents(elementId) {
     //>>includeStart('debug', pragmas.debug);
     Check.typeOf.string("elementId", elementId);
     //>>includeEnd('debug');
 
-    try {
-      const response = await this._treeResource
-        .getDerivedResource({
-          url: "tree/parents",
-          queryParameters: { elementId: elementId },
-        })
-        .fetchJson();
-      return {
-        path: response.path.map(function (entry) {
-          return { kind: entry.kind, id: toIdString(entry.id) };
-        }),
-      };
-    } catch (error) {
-      if (error?.statusCode === 404) {
-        return undefined;
-      }
-      throw error;
-    }
+    const response = await this._resource
+      .getDerivedResource({
+        url: "tree/parents",
+        queryParameters: { elementId },
+      })
+      .fetchJson();
+    return {
+      path: response.path.map(function (entry) {
+        return { kind: entry.kind, id: toIdString(entry.id) };
+      }),
+    };
   }
 
   /**

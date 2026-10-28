@@ -1,5 +1,4 @@
 import * as Cesium from "cesium";
-import Sandcastle from "Sandcastle";
 
 // Click any part of an architectural design model to read that element's
 // metadata from the Cesium ion Asset Elements API using
@@ -19,21 +18,6 @@ const ASSET_ID = 3784; // Snowdon Towers Sample Structural
 
 // A service bound to the asset that talks to the ion Asset Elements API.
 const elementService = Cesium.IonAssetElementService.fromAssetId(ASSET_ID);
-let useSearchEngine = true;
-
-// Request the legacy properties endpoint, which does not use engine=search.
-const legacyElementsResource = Cesium.Resource.createIfNeeded(
-  Cesium.Ion.defaultServer,
-);
-legacyElementsResource.appendForwardSlash();
-async function getLegacyElement(elementId) {
-  return legacyElementsResource
-    .getDerivedResource({
-      url: `assets/${ASSET_ID}/elements/${encodeURIComponent(String(elementId))}`,
-      queryParameters: { access_token: ION_ACCESS_TOKEN },
-    })
-    .fetchJson();
-}
 
 const viewer = new Cesium.Viewer("cesiumContainer", {
   timeline: false,
@@ -63,14 +47,6 @@ tileset.style = new Cesium.Cesium3DTileStyle({
 
 // An entity used only to display the fetched properties in the InfoBox.
 const infoEntity = viewer.entities.add(new Cesium.Entity({ show: false }));
-
-Sandcastle.addToggleButton(
-  "Use new method (engine=search)",
-  useSearchEngine,
-  (enabled) => {
-    useSearchEngine = enabled;
-  },
-);
 
 function propertiesTable(properties) {
   const rows = Object.entries(properties)
@@ -106,9 +82,7 @@ viewer.screenSpaceEventHandler.setInputAction(async function (movement) {
   viewer.selectedEntity = infoEntity;
 
   try {
-    const element = useSearchEngine
-      ? await elementService.getElement(elementId)
-      : await getLegacyElement(elementId);
+    const element = await elementService.getElement(elementId);
     if (selection !== activeSelection) {
       return;
     }

@@ -59,6 +59,11 @@
     background: #2a5;
     color: #000;
   }
+  #toolbar {
+    top: auto;
+    right: 10px;
+    bottom: 10px;
+  }
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="treePanel">
@@ -66,4 +71,8 @@
   <ul id="treeRoot"></ul>
 </div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar"></div>
+<div id="toolbar">
+  <button id="resetViewButton" class="cesium-button" type="button" hidden>
+    View full model
+  </button>
+</div>

@@ -6,15 +6,16 @@ import * as Cesium from "cesium";
 // fetches its children on demand. Click a 3D element to reveal its ancestors in
 // the tree, highlight it, and fly the camera to it.
 
+// Asset 3784
 const ION_ACCESS_TOKEN =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IlNkLUQtbnFaQ2xfZy1sYS0iLCJqdGkiOiIyNWQxMzRhZS0zNTlkLTRkZmYtOGEwMS1mZTUxOTQ5YzIxMjMiLCJpZCI6MjM1LCJzdWIiOiJydmVlbnN0cmErZWFzdHVzIiwiaXNzIjoiaHR0cHM6Ly9hcGkuaW9uLWRldmVsb3BtZW50LmNlc2l1bS5jb20iLCJhdWQiOiJNb2RlbCBUcmVlIEFQSSBXcmFwcGVyIiwiaWF0IjoxNzkyMDU4NDAzfQ.Yq-7Qos2FYszCLD_Ws8tB4BugPwSOu9CU_2w39nZJus";
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IndWd3ZVWWtlMXdfYVd3ZFYiLCJqdGkiOiJjNmU5NWIyMS0zOGRhLTQ2MTQtYmYxMi03ZDBjOWQyMmIzNGEiLCJpZCI6MjM1LCJzdWIiOiJydmVlbnN0cmErZWFzdHVzIiwiaXNzIjoiaHR0cHM6Ly9hcGkuaW9uLWRldmVsb3BtZW50LmNlc2l1bS5jb20iLCJhdWQiOiJRdWVyeWluZyBBUEkgV3JhcHBlciBEZW1vIiwiaWF0IjoxNzkyNDk2MjUxfQ.u1N6cRr7Wi24IxeNnkXllwbHPwZyfjtsHgRlWsiq3B8";
 Cesium.Ion.defaultAccessToken = ION_ACCESS_TOKEN;
 
 Cesium.Ion.defaultServer = new Cesium.Resource({
   url: "https://api.ion-development.cesium.com/",
 });
 
-const ASSET_ID = 2078;
+const ASSET_ID = 3784; // Snowdon Towers Sample Structural
 
 // A service bound to the asset that talks to the ion Asset Elements API.
 const elementService = Cesium.IonAssetElementService.fromAssetId(ASSET_ID);
@@ -23,6 +24,7 @@ const viewer = new Cesium.Viewer("cesiumContainer", {
   timeline: false,
   animation: false,
   baseLayerPicker: false,
+  infoBox: false,
 });
 
 const tileset = viewer.scene.primitives.add(
@@ -50,6 +52,7 @@ style.color = {
 tileset.style = style;
 
 const treeRoot = document.getElementById("treeRoot");
+const resetViewButton = document.getElementById("resetViewButton");
 const treeNodesByKey = new Map();
 
 function selectTreeLabel(label) {
@@ -69,13 +72,29 @@ function clearSelection() {
     .forEach((selectedLabel) => selectedLabel.classList.remove("selected"));
 }
 
+function collapseTree() {
+  for (const treeNode of treeNodesByKey.values()) {
+    treeNode.collapse();
+  }
+}
+
+resetViewButton.addEventListener("click", function () {
+  clearSelection();
+  collapseTree();
+  resetViewButton.hidden = true;
+  viewer.zoomTo(tileset).catch(console.error);
+});
+
 // Highlight an element and fly the camera to its location when available.
 async function selectElement(elementId, selection) {
-  elementId = BigInt(elementId);
   selectedElementId = elementId;
   tileset.makeStyleDirty();
-
-  const element = await elementService.getElement(elementId);
+  let element;
+  try {
+    element = await elementService.getElement(elementId);
+  } catch (error) {
+    console.error("Failed to fetch element:", error);
+  }
   if (selection !== activeSelection || !Cesium.defined(element)) {
     return;
   }
@@ -83,6 +102,7 @@ async function selectElement(elementId, selection) {
   const boundingSphere =
     Cesium.IonAssetElementService.getBoundingSphere(element);
   if (Cesium.defined(boundingSphere)) {
+    resetViewButton.hidden = false;
     viewer.camera.flyToBoundingSphere(boundingSphere, {
       offset: new Cesium.HeadingPitchRange(0, Cesium.Math.toRadians(-30), 0),
       duration: 1.5,
@@ -160,6 +180,7 @@ function createNodeElement(node) {
   li.appendChild(childList);
 
   let loaded = false;
+  let loadedChildren = [];
   let expanded = false;
   let loading;
 
@@ -180,6 +201,7 @@ function createNodeElement(node) {
             nodeKey: node.key,
           });
           const children = response?.nodes ?? [];
+          loadedChildren = children;
           for (const child of children) {
             childList.appendChild(createNodeElement(child));
           }
@@ -194,7 +216,7 @@ function createNodeElement(node) {
         toggle.textContent = expanded ? "▼" : "▶";
       }
     }
-    return Array.from(childList.children, (child) => child.treeNode.node);
+    return loadedChildren;
   }
 
   async function toggleExpand() {
@@ -210,8 +232,18 @@ function createNodeElement(node) {
     await expandNode();
   }
 
-  const treeNode = { node: node, label: label, expand: expandNode };
-  li.treeNode = treeNode;
+  function collapseNode() {
+    expanded = false;
+    li.classList.remove("expanded");
+    toggle.textContent = node.hasChildren ? "▶" : "";
+  }
+
+  const treeNode = {
+    node: node,
+    label: label,
+    expand: expandNode,
+    collapse: collapseNode,
+  };
   treeNodesByKey.set(node.key, treeNode);
 
   toggle.addEventListener("click", toggleExpand);
