@@ -59,6 +59,12 @@ class ModelGeometryAccessSession extends GeometryAccessSession {
     const attributes = primitive.attributes;
     for (let i = 0; i < attributes.length; ++i) {
       const attribute = attributes[i];
+      // Application-specific glTF attributes that Cesium does not recognize
+      // (e.g. "_TEMPERATURE") are loaded without a semantic and cannot be
+      // requested through a GeometryAttributeDescriptor, so skip them.
+      if (!defined(attribute.semantic)) {
+        continue;
+      }
       const key = VertexAttributeSemantic.getVariableName(
         attribute.semantic,
         attribute.setIndex,
@@ -152,13 +158,16 @@ class ModelGeometryAccessSession extends GeometryAccessSession {
    */
   static getAvailableAttributes(primitive) {
     const attributes = primitive.attributes;
-    const descriptors = new Array(attributes.length);
+    const descriptors = [];
     for (let i = 0; i < attributes.length; ++i) {
       const attribute = attributes[i];
-      descriptors[i] = {
+      if (!defined(attribute.semantic)) {
+        continue;
+      }
+      descriptors.push({
         semantic: attribute.semantic,
         setIndex: attribute.setIndex,
-      };
+      });
     }
     return descriptors;
   }
@@ -179,6 +188,7 @@ class ModelGeometryAccessSession extends GeometryAccessSession {
 
     return primitive.attributes.some((attribute) => {
       return (
+        defined(attribute.semantic) &&
         VertexAttributeSemantic.getVariableName(
           attribute.semantic,
           attribute.setIndex,
