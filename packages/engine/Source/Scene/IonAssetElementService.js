@@ -35,7 +35,7 @@ function toIdString(value) {
 }
 
 /**
- * Adapt an API element to the public result, preserving integer ID precision.
+ * Adapt an API element to the public result, preserving decimal string IDs.
  * Each property is mapped to its documented fields; only its arbitrary value
  * payload is passed through unchanged.
  * @private
@@ -213,7 +213,6 @@ class IonAssetElementService extends ElementService {
     super();
     this._assetId = options.assetId;
     this._resource = options.resource;
-    this._v1Resource = options.v1Resource;
   }
 
   /**
@@ -227,8 +226,6 @@ class IonAssetElementService extends ElementService {
 
   /**
    * Creates an {@link IonAssetElementService} for the given ion asset.
-   *
-   * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
    *
    * @param {number} assetId The ion id of an asset backed by a BIM/CAD Database model.
    * @param {object} [options] Object with the following properties:
@@ -248,7 +245,7 @@ class IonAssetElementService extends ElementService {
 
     const resourceOptions = {
       // Trailing slash so derived resource urls resolve under the asset id.
-      url: `assets/${assetId}/`,
+      url: `v1/assets/${assetId}/`,
       headers: IonResource._addClientHeaders(),
     };
     if (defined(accessToken)) {
@@ -256,14 +253,9 @@ class IonAssetElementService extends ElementService {
     }
     const resource = server.getDerivedResource(resourceOptions);
 
-    const v1Resource = server.getDerivedResource({
-      ...resourceOptions,
-      url: `v1/assets/${assetId}/`,
-    });
     return new IonAssetElementService({
       assetId: assetId,
       resource: resource,
-      v1Resource: v1Resource,
     });
   }
 
@@ -344,8 +336,6 @@ class IonAssetElementService extends ElementService {
    * passing the returned <code>continuationToken</code> as
    * <code>options.continuationToken</code> until it is <code>undefined</code>.
    *
-   * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
-   *
    * @param {object} [options] Object with the following properties:
    * @param {number} [options.top=100] The maximum number of elements to return per page.
    * @param {string} [options.continuationToken] A token returned from a previous call to retrieve the next page of results.
@@ -385,7 +375,7 @@ class IonAssetElementService extends ElementService {
           : JSON.stringify(options.filter);
     }
 
-    const response = await this._v1Resource
+    const response = await this._resource
       .getDerivedResource({
         url: "elements",
         queryParameters: queryParameters,
@@ -401,12 +391,10 @@ class IonAssetElementService extends ElementService {
   /**
    * Retrieves metadata and location information for a single element.
    *
-   * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
-   *
    * Use {@link IonAssetElementService.getElementId} to obtain the id from a
    * picked {@link Cesium3DTileFeature}.
    *
-   * @param {string} elementId The element id as a decimal string, e.g. <code>"3298534886898"</code> or hexadecimal string, e.g. <code>"0x30000000df2"</code>.
+   * @param {string} elementId The element id as a decimal string, e.g. <code>"3298534886898"</code>.
    * @returns {Promise<IonAssetElementService.Element>} A promise that resolves to the requested element. The promise rejects with a {@link RequestErrorEvent} if the request fails or the element does not exist.
    */
   async getElement(elementId) {
@@ -414,7 +402,7 @@ class IonAssetElementService extends ElementService {
     Check.typeOf.string("elementId", elementId);
     //>>includeEnd('debug');
 
-    const response = await this._v1Resource
+    const response = await this._resource
       .getDerivedResource({
         url: `elements/${encodeURIComponent(elementId)}`,
       })
@@ -426,8 +414,6 @@ class IonAssetElementService extends ElementService {
    * Computes aggregate statistics (count, min, max, average, and sum) for one
    * or more numeric properties across the elements of this asset, optionally
    * filtered.
-   *
-   * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
    *
    * @param {object} options Object with the following properties:
    * @param {string[]} options.propertyKeys The qualified property keys to aggregate. At least one is required.
@@ -476,7 +462,7 @@ class IonAssetElementService extends ElementService {
           : JSON.stringify(options.filter);
     }
 
-    const response = await this._v1Resource
+    const response = await this._resource
       .getDerivedResource({
         url: "elements/aggregate",
         queryParameters: queryParameters,
@@ -500,8 +486,6 @@ class IonAssetElementService extends ElementService {
   /**
    * Lists the children of a node in this asset's element tree, or the root
    * nodes when no key is given.
-   *
-   * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
    *
    * @param {object} [options] Object with the following properties:
    * @param {string} [options.nodeKey] The opaque node key returned by the endpoint. Omit it to list root nodes.
@@ -533,7 +517,7 @@ class IonAssetElementService extends ElementService {
       queryParameters.nodeKey = options.nodeKey;
     }
 
-    const response = await this._v1Resource
+    const response = await this._resource
       .getDerivedResource({
         url: "tree/children",
         queryParameters: queryParameters,
@@ -546,9 +530,7 @@ class IonAssetElementService extends ElementService {
    * Retrieves the parents of an element in this asset's element tree, from the
    * root down to the element, using ion's <code>tree/parents</code> endpoint.
    *
-   * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
-   *
-   * @param {string} elementId The element id as a decimal string, e.g. <code>"3298534886898"</code> or hexadecimal string, e.g. <code>"0x30000000df2"</code>.  
+   * @param {string} elementId The element id as a decimal string, e.g. <code>"3298534886898"</code>.  
    * @returns {Promise<{path: IonAssetElementService.ElementTreePathEntry[]}>} A promise that resolves to the root-first path. The promise rejects with a {@link RequestErrorEvent} if the request fails or no path exists.
    * @exception {DeveloperError} <code>elementId</code> must be a string.
    *
@@ -566,7 +548,7 @@ class IonAssetElementService extends ElementService {
     Check.typeOf.string("elementId", elementId);
     //>>includeEnd('debug');
 
-    const response = await this._v1Resource
+    const response = await this._resource
       .getDerivedResource({
         url: "tree/parents",
         queryParameters: { elementId },

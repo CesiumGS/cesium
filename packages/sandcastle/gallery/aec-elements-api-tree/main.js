@@ -18,17 +18,6 @@ const viewer = new Cesium.Viewer("cesiumContainer", {
   infoBox: false,
 });
 
-// Configure Ambient Occlusion
-if (Cesium.PostProcessStageLibrary.isAmbientOcclusionSupported(viewer.scene)) {
-  const ambientOcclusion = viewer.scene.postProcessStages.ambientOcclusion;
-  ambientOcclusion.enabled = true;
-  ambientOcclusion.uniforms.intensity = 2.0;
-  ambientOcclusion.uniforms.bias = 0.1;
-  ambientOcclusion.uniforms.lengthCap = 0.5;
-  ambientOcclusion.uniforms.directionCount = 16;
-  ambientOcclusion.uniforms.stepCount = 32;
-}
-
 // Set to 1 PM Philadelphia time in UTC
 viewer.clock.currentTime = Cesium.JulianDate.fromIso8601(
   "2024-11-22T18:00:00Z",

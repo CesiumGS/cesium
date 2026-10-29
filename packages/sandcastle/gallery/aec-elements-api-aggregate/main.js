@@ -17,8 +17,7 @@ const IFC_CLASS_SUMMARY = [
   "ifcfooting",
   "ifccolumn",
 ];
-// Physical Material ID for "Concrete, Cast-in-Place gray". The full element
-// properties are returned when using engine=search.
+// Physical Material ID for "Concrete, Cast-in-Place gray".
 const CONCRETE_PHYSICAL_MATERIAL_ID = "3298534883346";
 const NET_VOLUME_PROPERTY = "Volume Aspect.Net Volume";
 
