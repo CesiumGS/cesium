@@ -1,21 +1,12 @@
 import * as Cesium from "cesium";
 
-// Browse the hierarchical element tree of an architectural design model with
+// Browse the hierarchical element tree of a federated design model with
 // the Cesium ion Asset Elements API using
 // Cesium.IonAssetElementService.getElementTreeChildren. Expanding a node
 // fetches its children on demand. Click a 3D element to reveal its ancestors in
 // the tree, highlight it, and fly the camera to it.
 
-// Asset 3784
-const ION_ACCESS_TOKEN =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IndWd3ZVWWtlMXdfYVd3ZFYiLCJqdGkiOiJjNmU5NWIyMS0zOGRhLTQ2MTQtYmYxMi03ZDBjOWQyMmIzNGEiLCJpZCI6MjM1LCJzdWIiOiJydmVlbnN0cmErZWFzdHVzIiwiaXNzIjoiaHR0cHM6Ly9hcGkuaW9uLWRldmVsb3BtZW50LmNlc2l1bS5jb20iLCJhdWQiOiJRdWVyeWluZyBBUEkgV3JhcHBlciBEZW1vIiwiaWF0IjoxNzkyNDk2MjUxfQ.u1N6cRr7Wi24IxeNnkXllwbHPwZyfjtsHgRlWsiq3B8";
-Cesium.Ion.defaultAccessToken = ION_ACCESS_TOKEN;
-
-Cesium.Ion.defaultServer = new Cesium.Resource({
-  url: "https://api.ion-development.cesium.com/",
-});
-
-const ASSET_ID = 3784; // Snowdon Towers Sample Structural
+const ASSET_ID = 6093308; // Snowdon Towers Sample (federated Revit models)
 
 // A service bound to the asset that talks to the ion Asset Elements API.
 const elementService = Cesium.IonAssetElementService.fromAssetId(ASSET_ID);
@@ -26,6 +17,22 @@ const viewer = new Cesium.Viewer("cesiumContainer", {
   baseLayerPicker: false,
   infoBox: false,
 });
+
+// Configure Ambient Occlusion
+if (Cesium.PostProcessStageLibrary.isAmbientOcclusionSupported(viewer.scene)) {
+  const ambientOcclusion = viewer.scene.postProcessStages.ambientOcclusion;
+  ambientOcclusion.enabled = true;
+  ambientOcclusion.uniforms.intensity = 2.0;
+  ambientOcclusion.uniforms.bias = 0.1;
+  ambientOcclusion.uniforms.lengthCap = 0.5;
+  ambientOcclusion.uniforms.directionCount = 16;
+  ambientOcclusion.uniforms.stepCount = 32;
+}
+
+// Set to 1 PM Philadelphia time in UTC
+viewer.clock.currentTime = Cesium.JulianDate.fromIso8601(
+  "2024-11-22T18:00:00Z",
+);
 
 const tileset = viewer.scene.primitives.add(
   await Cesium.Cesium3DTileset.fromIonAssetId(ASSET_ID),

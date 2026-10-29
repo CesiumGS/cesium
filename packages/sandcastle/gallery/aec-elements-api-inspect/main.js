@@ -1,20 +1,10 @@
 import * as Cesium from "cesium";
 
-// Click any part of an architectural design model to read that element's
+// Click any part of a structural design model to read that element's
 // metadata from the Cesium ion Asset Elements API using
 // Cesium.IonAssetElementService.
 
-const ION_ACCESS_TOKEN =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IndWd3ZVWWtlMXdfYVd3ZFYiLCJqdGkiOiJjNmU5NWIyMS0zOGRhLTQ2MTQtYmYxMi03ZDBjOWQyMmIzNGEiLCJpZCI6MjM1LCJzdWIiOiJydmVlbnN0cmErZWFzdHVzIiwiaXNzIjoiaHR0cHM6Ly9hcGkuaW9uLWRldmVsb3BtZW50LmNlc2l1bS5jb20iLCJhdWQiOiJRdWVyeWluZyBBUEkgV3JhcHBlciBEZW1vIiwiaWF0IjoxNzkyNDk2MjUxfQ.u1N6cRr7Wi24IxeNnkXllwbHPwZyfjtsHgRlWsiq3B8";
-Cesium.Ion.defaultAccessToken = ION_ACCESS_TOKEN;
-
-// Point CesiumJS at the ion development server, where the Asset Elements
-// aggregate and tree endpoints are deployed.
-Cesium.Ion.defaultServer = new Cesium.Resource({
-  url: "https://api.ion-development.cesium.com/",
-});
-
-const ASSET_ID = 3784; // Snowdon Towers Sample Structural
+const ASSET_ID = 6093105; // Snowdon Towers Sample Structural.rvt
 
 // A service bound to the asset that talks to the ion Asset Elements API.
 const elementService = Cesium.IonAssetElementService.fromAssetId(ASSET_ID);
@@ -24,6 +14,11 @@ const viewer = new Cesium.Viewer("cesiumContainer", {
   animation: false,
   baseLayerPicker: false,
 });
+
+// Set to 1 PM Philadelphia time in UTC
+viewer.clock.currentTime = Cesium.JulianDate.fromIso8601(
+  "2024-11-22T18:00:00Z",
+);
 
 const tileset = viewer.scene.primitives.add(
   await Cesium.Cesium3DTileset.fromIonAssetId(ASSET_ID),

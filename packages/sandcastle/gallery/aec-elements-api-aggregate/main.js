@@ -1,20 +1,10 @@
 import * as Cesium from "cesium";
 
 // Compute aggregate statistics (count, min, max, average, and sum) for numeric
-// element properties across an architectural design model with the Cesium ion
+// element properties across a structural design model with the Cesium ion
 // Asset Elements API using Cesium.IonAssetElementService.aggregate.
 
-const ION_ACCESS_TOKEN =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IndWd3ZVWWtlMXdfYVd3ZFYiLCJqdGkiOiJjNmU5NWIyMS0zOGRhLTQ2MTQtYmYxMi03ZDBjOWQyMmIzNGEiLCJpZCI6MjM1LCJzdWIiOiJydmVlbnN0cmErZWFzdHVzIiwiaXNzIjoiaHR0cHM6Ly9hcGkuaW9uLWRldmVsb3BtZW50LmNlc2l1bS5jb20iLCJhdWQiOiJRdWVyeWluZyBBUEkgV3JhcHBlciBEZW1vIiwiaWF0IjoxNzkyNDk2MjUxfQ.u1N6cRr7Wi24IxeNnkXllwbHPwZyfjtsHgRlWsiq3B8";
-Cesium.Ion.defaultAccessToken = ION_ACCESS_TOKEN;
-
-// Point CesiumJS at the ion development server, where the Asset Elements
-// aggregate and tree endpoints are deployed.
-Cesium.Ion.defaultServer = new Cesium.Resource({
-  url: "https://api.ion-development.cesium.com/",
-});
-
-const ASSET_ID = 3784; // Snowdon Towers Sample Structural
+const ASSET_ID = 6093178; // Snowdon Towers Sample Structural.ifc
 
 // Create a service for querying this asset's element properties and aggregates.
 const elementService = Cesium.IonAssetElementService.fromAssetId(ASSET_ID);
@@ -37,6 +27,11 @@ const viewer = new Cesium.Viewer("cesiumContainer", {
   animation: false,
   baseLayerPicker: false,
 });
+
+// Set to 1 PM Philadelphia time in UTC
+viewer.clock.currentTime = Cesium.JulianDate.fromIso8601(
+  "2024-11-22T18:00:00Z",
+);
 
 const tileset = viewer.scene.primitives.add(
   await Cesium.Cesium3DTileset.fromIonAssetId(ASSET_ID),
