@@ -7,7 +7,7 @@
  * Represents a pickable object with a unique integer ID and picking color.
  *
  * @implements {Destroyable}
- * @ignore
+ * @internal
  */
 class PickId {
   /**

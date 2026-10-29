@@ -288,7 +288,8 @@ function bind(gl, attributes, indexBuffer) {
  * @see Buffer#createIndexBuffer
  * @see Context#draw
  *
- * @private
+ * @constructor
+ * @internal
  */
 function VertexArray(options) {
   options = options ?? Frozen.EMPTY_OBJECT;
