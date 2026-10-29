@@ -25,6 +25,8 @@ import {
   VertexArray,
 } from "@cesium/engine";
 import { ComponentType } from "@cesium/mesh-editor";
+import TopologyOverlayHooksFS from "../Shaders/TopologyOverlayHooksFS.js";
+import TopologyOverlayHooksVS from "../Shaders/TopologyOverlayHooksVS.js";
 
 /** @import { Context, FrameState, PickId } from "@cesium/engine"; */
 /** @import { BufferLayout, OverlayBufferView, OverlayViews, ScalarType, ShaderSources } from "@cesium/mesh-editor"; */
@@ -115,6 +117,7 @@ const POINT_DEPTH_BIAS = 0.002;
 const EDGE_DEPTH_BIAS = 0.001;
 const FACE_DEPTH_BIAS = 0.0;
 
+// Declared by TopologyOverlayHooksVS.
 const PICK_COLOR_UNIFORM = "u_pickColorTexture";
 
 /**
@@ -125,43 +128,6 @@ const PICK_COLOR_FORMAT = {
   pixelFormat: PixelFormat.RGBA,
   pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
 };
-
-const VERTEX_HOOKS = `
-uniform highp sampler2D ${PICK_COLOR_UNIFORM};
-flat out vec4 v_pickColor;
-
-vec4 topologyOverlay_modelToEye(vec3 positionMC)
-{
-    return czm_modelView * vec4(positionMC, 1.0);
-}
-
-vec4 topologyOverlay_eyeToClip(vec4 positionEC)
-{
-    return czm_projection * positionEC;
-}
-
-vec2 topologyOverlay_viewportSize()
-{
-    return czm_viewport.zw;
-}
-
-void topologyOverlay_setVertexOutputs(vec4 positionEC, uint componentIndex)
-{
-    ivec2 coord = topologyOverlay_texelCoord(componentIndex, textureSize(${PICK_COLOR_UNIFORM}, 0));
-    v_pickColor = texelFetch(${PICK_COLOR_UNIFORM}, coord, 0);
-    czm_vertexLogDepth();
-}
-`;
-
-const FRAGMENT_HOOKS = `
-flat in vec4 v_pickColor;
-
-void topologyOverlay_writeColor(vec4 color)
-{
-    out_FragColor = color;
-    czm_writeLogDepth();
-}
-`;
 
 const RENDER_STATE = {
   blending: BlendingState.ALPHA_BLEND,
@@ -613,10 +579,16 @@ class OverlayRenderer {
     componentOverlay.shaderProgram = ShaderProgram.fromCache({
       context,
       vertexShaderSource: new ShaderSource({
-        sources: [componentOverlay.shaderSources.vertex, VERTEX_HOOKS],
+        sources: [
+          componentOverlay.shaderSources.vertex,
+          TopologyOverlayHooksVS,
+        ],
       }),
       fragmentShaderSource: new ShaderSource({
-        sources: [componentOverlay.shaderSources.fragment, FRAGMENT_HOOKS],
+        sources: [
+          componentOverlay.shaderSources.fragment,
+          TopologyOverlayHooksFS,
+        ],
       }),
       attributeLocations: { a_unused: 0 },
     });
