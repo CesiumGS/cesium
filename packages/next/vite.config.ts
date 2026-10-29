@@ -75,6 +75,7 @@ export default defineConfig({
         precision: "spikes/precision.html",
         worker: "spikes/worker.html",
         indirect: "spikes/indirect.html",
+        alloc: "bench/alloc.html",
         slang: "spikes/slang.html",
         baseline: "bench/baseline.html",
       },

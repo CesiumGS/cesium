@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Steady-State Allocations</title>
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      body {
+        margin: 0;
+        padding: 16px;
+        background: #0b0e14;
+        color: #d7dce6;
+        font:
+          13px/1.4 system-ui,
+          sans-serif;
+      }
+      h1 {
+        font-size: 16px;
+        margin: 0 0 4px;
+      }
+      p {
+        color: #8a93a6;
+        max-width: 860px;
+      }
+      .views {
+        display: flex;
+        gap: 8px;
+      }
+      canvas {
+        width: 480px;
+        height: 270px;
+        display: block;
+        background: #000;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Steady-state allocations in the frame loop</h1>
+    <p>
+      Scene for the allocation gate: N boxes plus a glTF model in two views (one
+      canvas with an inset, one second canvas). The benchmark runner
+      (`bench/run.mjs alloc`) profiles allocations with the Chrome sampling heap
+      profiler while frames run, including objects already collected.
+    </p>
+    <div class="views">
+      <canvas id="a"></canvas>
+      <canvas id="b"></canvas>
+    </div>
+    <script type="module" src="./alloc.ts"></script>
+  </body>
+</html>

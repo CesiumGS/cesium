@@ -86,22 +86,39 @@ export class MipGenerator {
     this.device.queue.submit([encoder.finish()]);
   }
 
+  /**
+   * Compiles the pipeline for `format` off the main thread, so the first
+   * `generate` for that format doesn't block on a synchronous compile.
+   */
+  async prepare(format: GPUTextureFormat): Promise<void> {
+    if (!this.pipelines.has(format)) {
+      const pipeline = await this.device.createRenderPipelineAsync(
+        this.descriptor(format),
+      );
+      this.pipelines.set(format, pipeline);
+    }
+  }
+
   private pipeline(format: GPUTextureFormat): GPURenderPipeline {
     let pipeline = this.pipelines.get(format);
     if (!pipeline) {
-      pipeline = this.device.createRenderPipeline({
-        label: `mipgen.${format}`,
-        layout: "auto",
-        vertex: { module: this.module, entryPoint: "vs" },
-        fragment: {
-          module: this.module,
-          entryPoint: "fs",
-          targets: [{ format }],
-        },
-        primitive: { topology: "triangle-list" },
-      });
+      pipeline = this.device.createRenderPipeline(this.descriptor(format));
       this.pipelines.set(format, pipeline);
     }
     return pipeline;
+  }
+
+  private descriptor(format: GPUTextureFormat): GPURenderPipelineDescriptor {
+    return {
+      label: `mipgen.${format}`,
+      layout: "auto",
+      vertex: { module: this.module, entryPoint: "vs" },
+      fragment: {
+        module: this.module,
+        entryPoint: "fs",
+        targets: [{ format }],
+      },
+      primitive: { topology: "triangle-list" },
+    };
   }
 }

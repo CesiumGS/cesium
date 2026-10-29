@@ -1,6 +1,5 @@
 import { Camera } from "./Camera.ts";
 import type { World } from "./World.ts";
-import type { Vec3 } from "../math/vec3.ts";
 import type { ViewLighting } from "../render/layout.ts";
 
 /** A normalized rectangle within a target, origin at the top-left. */
@@ -76,6 +75,7 @@ export class CanvasTarget implements RenderTarget {
 export class OffscreenTarget implements RenderTarget {
   readonly kind = "offscreen";
   private texture?: GPUTexture;
+  private view?: GPUTextureView;
   private device?: GPUDevice;
   private format?: GPUTextureFormat;
 
@@ -95,8 +95,9 @@ export class OffscreenTarget implements RenderTarget {
         format,
         usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
       });
+      this.view = this.texture.createView();
     }
-    return this.texture.createView();
+    return this.view!;
   }
 
   /** Reads the last rendered image as tightly packed RGBA8. */
@@ -141,9 +142,12 @@ export class OffscreenTarget implements RenderTarget {
   }
 }
 
-/** A line set drawn on top of a view (Earth-fixed float64 endpoints). */
+/** A line list drawn on top of a view. */
 export interface Overlay {
-  segments: Vec3[];
+  /** Earth-fixed float64 endpoints, xyz per vertex, two per segment. */
+  positions: Float64Array;
+  /** Vertices in use (the array may have spare capacity). */
+  count: number;
   color: readonly [number, number, number, number];
 }
 
@@ -207,8 +211,13 @@ export class View {
     };
   }
 
-  /** Viewport in target pixels. */
-  pixelRect(): PixelRect {
+  private readonly rect: PixelRect = { x: 0, y: 0, width: 1, height: 1 };
+
+  /**
+   * Viewport in target pixels. The returned object is reused: it is current
+   * until the next call.
+   */
+  pixelRect(): Readonly<PixelRect> {
     const x = Math.round(this.viewport.x * this.target.width);
     const y = Math.round(this.viewport.y * this.target.height);
     const width = Math.max(
@@ -219,12 +228,12 @@ export class View {
       1,
       Math.round(this.viewport.height * this.target.height),
     );
-    return {
-      x,
-      y,
-      width: Math.min(width, this.target.width - x),
-      height: Math.min(height, this.target.height - y),
-    };
+    const rect = this.rect;
+    rect.x = x;
+    rect.y = y;
+    rect.width = Math.min(width, this.target.width - x);
+    rect.height = Math.min(height, this.target.height - y);
+    return rect;
   }
 
   get aspect(): number {

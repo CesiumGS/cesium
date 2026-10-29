@@ -42,7 +42,37 @@ export class Environment {
   private readonly module: GPUShaderModule;
   private readonly pipelines = new Map<string, GPUComputePipeline>();
 
-  constructor(
+  /**
+   * Creates the environment with its kernels compiled off the main thread
+   * (in parallel with whatever else is compiling), then builds the BRDF LUT.
+   */
+  static async create(
+    device: GPUDevice,
+    mips: MipGenerator,
+  ): Promise<Environment> {
+    const environment = new Environment(device, mips);
+    await Promise.all([
+      ...KERNELS.map(async (entry) => {
+        environment.pipelines.set(
+          entry,
+          await device.createComputePipelineAsync({
+            label: `ibl.${entry}`,
+            layout: "auto",
+            compute: { module: environment.module, entryPoint: entry },
+          }),
+        );
+      }),
+      mips.prepare(environment.skyCube.format),
+    ]);
+    environment.run("brdf", undefined, { 7: environment.brdfView }, [
+      BRDF_SIZE / 8,
+      BRDF_SIZE / 8,
+      1,
+    ]);
+    return environment;
+  }
+
+  private constructor(
     private readonly device: GPUDevice,
     private readonly mips: MipGenerator,
   ) {
@@ -92,11 +122,6 @@ export class Environment {
       mipmapFilter: "linear",
     });
     this.module = device.createShaderModule({ label: "ibl", code: iblWgsl });
-    this.run("brdf", undefined, { 7: this.brdfView }, [
-      BRDF_SIZE / 8,
-      BRDF_SIZE / 8,
-      1,
-    ]);
   }
 
   /** Renders `sky` into the environment and rebuilds the specular mips and SH. */
@@ -229,15 +254,8 @@ export class Environment {
   }
 
   private pipeline(entry: string): GPUComputePipeline {
-    let pipeline = this.pipelines.get(entry);
-    if (!pipeline) {
-      pipeline = this.device.createComputePipeline({
-        label: `ibl.${entry}`,
-        layout: "auto",
-        compute: { module: this.module, entryPoint: entry },
-      });
-      this.pipelines.set(entry, pipeline);
-    }
-    return pipeline;
+    return this.pipelines.get(entry)!;
   }
 }
+
+const KERNELS = ["brdf", "sky", "prefilter", "shFace", "shFinal"] as const;

@@ -1,7 +1,16 @@
 import { GpuDevice, type GpuDeviceOptions } from "../gpu/GpuDevice.ts";
 import { GpuTimer } from "../gpu/GpuTimer.ts";
-import { FrameGraph, TexturePool } from "../render/FrameGraph.ts";
-import { VIEW_SIZE, VIEW_STRIDE, writeViewBlock } from "../render/layout.ts";
+import {
+  FrameGraph,
+  TexturePool,
+  type TextureHandle,
+} from "../render/FrameGraph.ts";
+import {
+  VIEW_SIZE,
+  VIEW_STRIDE,
+  writeViewBlock,
+  type ViewBlock,
+} from "../render/layout.ts";
 import * as m4 from "../math/mat4.ts";
 import * as v3 from "../math/vec3.ts";
 import { Ellipsoid } from "../math/ellipsoid.ts";
@@ -12,7 +21,15 @@ import {
   type RenderContext,
   type ShaderOverrides,
 } from "./RenderContext.ts";
-import { View, type PickResult, type ViewOptions } from "./View.ts";
+import { createBox } from "./meshes.ts";
+import {
+  OffscreenTarget,
+  View,
+  type PickResult,
+  type PixelRect,
+  type RenderTarget,
+  type ViewOptions,
+} from "./View.ts";
 import { ViewLink, type ViewLinkOptions } from "./ViewLink.ts";
 import { World, type WorldOptions } from "./World.ts";
 import { WorkerPool } from "../io/WorkerPool.ts";
@@ -49,6 +66,11 @@ export interface FrameStats {
  *     opaque pass: replay the world's render bundle
  *     [pick]: read the feature ID under requested pixels
  *     present: tonemap into the view's rectangle of its target, overlays
+ *
+ * Each view's frame graph, pass descriptors and bind groups are built once
+ * and rebuilt only when the view's size changes, so a steady-state frame
+ * allocates only the WebGPU objects the API itself returns (encoder, passes,
+ * command buffer, canvas texture view).
  */
 export class Engine {
   readonly gpu: GpuDevice;
@@ -73,21 +95,20 @@ export class Engine {
   private readonly viewStaging: GPUBuffer;
   private readonly viewData: Float32Array;
   private readonly maxViews: number;
-  private readonly presentParams: GPUBuffer[] = [];
-  private readonly overlayResources = new Map<
-    View,
-    {
-      buffer: GPUBuffer;
-      capacity: number;
-      params: GPUBuffer;
-      group: GPUBindGroup;
-    }
-  >();
+  private readonly viewFrames = new Map<View, ViewFrame>();
+  private readonly targetFrames = new WeakMap<RenderTarget, TargetFrame>();
+  private readonly worldFrames = new WeakMap<World, WorldFrame>();
+  private readonly overlayResources = new Map<View, OverlayResources>();
   private readonly pickReadback: GPUBuffer[] = [];
   private readonly pickParams: GPUBuffer;
   private readonly pickResult: GPUBuffer;
   private readonly pickParamsData = new Uint32Array(4);
-  private readonly presentData = new ArrayBuffer(16);
+  private readonly picks: PendingPick[] = [];
+  private readonly presentData = new DataView(new ArrayBuffer(16));
+  private readonly overlayColor = new Float32Array(4);
+  private readonly viewBlock: ViewBlock;
+  private readonly commandBuffers: GPUCommandBuffer[] = [];
+  private frameNumber = 0;
   private frameHandle = 0;
 
   private constructor(gpu: GpuDevice, ctx: RenderContext, maxViews: number) {
@@ -103,14 +124,20 @@ export class Engine {
       size: maxViews * VIEW_STRIDE,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
-    for (let i = 0; i < maxViews; i++) {
-      this.presentParams.push(
-        device.createBuffer({
-          size: 16,
-          usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-        }),
-      );
-    }
+    this.viewBlock = {
+      viewProj: scratchViewProj,
+      viewRotation: scratchView,
+      cameraPosition: this.sunDirection,
+      near: 0,
+      aspect: 1,
+      planes: scratchPlanes,
+      sunDirection: this.sunDirection,
+      width: 1,
+      height: 1,
+      iblFrame: scratchFrame,
+      lighting: { sunIntensity: 0, diffuseIbl: 0, specularIbl: 0 },
+      specularMaxLod: 0,
+    };
     this.pickParams = device.createBuffer({
       size: 16,
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
@@ -131,7 +158,37 @@ export class Engine {
     );
     // M0: device-loss recovery stops at the device. Rebuilding worlds from
     // their CPU-side sources arrives with the streaming cache (M2).
-    return new Engine(gpu, ctx, options.maxViews ?? 16);
+    const engine = new Engine(gpu, ctx, options.maxViews ?? 16);
+    engine.warmUp();
+    return engine;
+  }
+
+  /**
+   * Renders one 1×1 frame with a single draw. Dawn builds some internals
+   * lazily (e.g. its indirect-draw validation pipeline), which otherwise cost
+   * the first real frame ~70 ms; submitted here, that work overlaps the
+   * app's own loading. Not awaited.
+   */
+  private warmUp(): void {
+    const world = this.createWorld({
+      maxDraws: 1,
+      maxMaterials: 1,
+      vertexBytes: 4096,
+      indexBytes: 4096,
+    });
+    world.addDraw({
+      mesh: world.addMesh(createBox()),
+      origin: v3.vec3(),
+      model: m4.mat4(),
+    });
+    const target = new OffscreenTarget(1, 1);
+    const view = this.addView({ target, world });
+    this.renderFrame();
+    this.removeView(view);
+    this.worlds.splice(this.worlds.indexOf(world), 1);
+    world.destroy();
+    target.destroy();
+    this.stats.cpuMs = 0;
   }
 
   /** Image-based lighting environment shared by all worlds and views. */
@@ -186,6 +243,11 @@ export class Engine {
     )) {
       this.unlink(link);
     }
+    this.viewFrames.get(view)?.presentParams.destroy();
+    this.viewFrames.delete(view);
+    this.overlayResources.get(view)?.buffer.destroy();
+    this.overlayResources.get(view)?.params.destroy();
+    this.overlayResources.delete(view);
   }
 
   link(source: View, target: View, options: ViewLinkOptions): ViewLink {
@@ -218,140 +280,243 @@ export class Engine {
   renderFrame(): void {
     const start = performance.now();
     const device = this.ctx.device;
-    const views = this.views.filter((v) => v.enabled);
+    const stamp = ++this.frameNumber;
 
-    for (const link of this.links) {
-      link.evaluate();
+    const links = this.links;
+    for (let i = 0; i < links.length; i++) {
+      links[i]!.evaluate();
     }
 
-    // Acquire each target once; the first view drawn into a target clears it.
-    const targetViews = new Map<View["target"], GPUTextureView>();
-    for (const view of views) {
-      if (!targetViews.has(view.target)) {
-        targetViews.set(
-          view.target,
-          view.target.acquire(device, this.ctx.outputFormat),
-        );
+    // Assign each enabled view a slot, acquire each target once (the first
+    // view drawn into a target clears it) and prepare each world once.
+    const views = this.views;
+    let slots = 0;
+    for (let i = 0; i < views.length; i++) {
+      const view = views[i]!;
+      if (!view.enabled) {
+        continue;
       }
-    }
+      const rect = view.pixelRect();
+      const frame = this.viewFrame(view, rect);
+      frame.slot = slots;
+      this.writeView(view, slots, rect);
+      slots++;
 
-    views.forEach((view, i) => this.writeView(view, i));
+      const target = this.targetFrame(view.target);
+      frame.clearTarget = target.stamp !== stamp;
+      if (frame.clearTarget) {
+        target.stamp = stamp;
+        target.view = view.target.acquire(device, this.ctx.outputFormat);
+      }
+      frame.graph.setImported(frame.output, target.view!);
+
+      const world = this.worldFrame(view.world);
+      if (world.stamp !== stamp) {
+        world.stamp = stamp;
+        world.bundle = view.world.prepareFrame();
+      }
+      frame.bundle = world.bundle;
+    }
     device.queue.writeBuffer(
       this.viewStaging,
       0,
       this.viewData,
       0,
-      (views.length * VIEW_STRIDE) / 4,
+      (slots * VIEW_STRIDE) / 4,
     );
 
-    const bundles = new Map<View["world"], GPURenderBundle>();
-    for (const view of views) {
-      if (!bundles.has(view.world)) {
-        bundles.set(view.world, view.world.prepareFrame());
+    const encoder = device.createCommandEncoder(FRAME_ENCODER);
+    this.timer.beginFrame();
+    for (let i = 0; i < views.length; i++) {
+      const view = views[i]!;
+      if (view.enabled) {
+        const frame = this.viewFrames.get(view)!;
+        // One pick per frame keeps the shared params/result buffers simple.
+        frame.pick =
+          this.picks.length === 0 ? view.pendingPicks.shift() : undefined;
+        frame.graph.execute(encoder);
       }
     }
-
-    const encoder = device.createCommandEncoder({ label: "frame" });
-    this.timer.beginFrame();
-    const cleared = new Set<View["target"]>();
-    const picks: PendingPick[] = [];
-    views.forEach((view, i) => {
-      const clear = !cleared.has(view.target);
-      cleared.add(view.target);
-      this.encodeView(
-        encoder,
-        view,
-        i,
-        targetViews.get(view.target)!,
-        bundles.get(view.world)!,
-        clear,
-        picks,
-      );
-    });
     this.timer.endFrame(encoder);
-    device.queue.submit([encoder.finish()]);
+    this.commandBuffers[0] = encoder.finish();
+    device.queue.submit(this.commandBuffers);
     this.timer.afterSubmit();
     this.pool.endFrame();
-    this.resolvePicks(picks);
+    if (this.picks.length > 0) {
+      this.resolvePicks(this.picks);
+      this.picks.length = 0;
+    }
 
     const elapsed = performance.now() - start;
     this.stats.cpuMs =
       this.stats.cpuMs === 0 ? elapsed : this.stats.cpuMs * 0.9 + elapsed * 0.1;
     this.stats.gpuMs = this.timer.milliseconds;
     this.stats.gpuSpanMs = this.timer.spanMilliseconds;
-    this.stats.views = views.length;
-    this.stats.draws = this.worlds.reduce((n, w) => n + w.recordCount, 0);
-    this.stats.batches = this.worlds.reduce((n, w) => n + w.batchCount, 0);
+    this.stats.views = slots;
+    let draws = 0;
+    let batches = 0;
+    for (let i = 0; i < this.worlds.length; i++) {
+      draws += this.worlds[i]!.recordCount;
+      batches += this.worlds[i]!.batchCount;
+    }
+    this.stats.draws = draws;
+    this.stats.batches = batches;
   }
 
-  private writeView(view: View, index: number): void {
-    const rect = view.pixelRect();
+  private writeView(
+    view: View,
+    index: number,
+    rect: Readonly<PixelRect>,
+  ): void {
     const aspect = rect.width / rect.height;
     const camera = view.camera;
     camera.viewRotation(scratchView);
     camera.projection(scratchProj, aspect);
     m4.multiply(scratchViewProj, scratchProj, scratchView);
     camera.frustumPlanes(scratchPlanes, aspect);
-    writeViewBlock(this.viewData, (index * VIEW_STRIDE) / 4, {
-      viewProj: scratchViewProj,
-      viewRotation: scratchView,
-      cameraPosition: camera.position,
-      near: camera.near,
-      aspect,
-      planes: scratchPlanes,
-      sunDirection: this.sunDirection,
-      width: rect.width,
-      height: rect.height,
-      iblFrame: environmentFrame(camera.position),
-      lighting: view.lighting,
-      specularMaxLod: this.ctx.environment.maxLod,
-    });
+    const block = this.viewBlock;
+    block.cameraPosition = camera.position;
+    block.near = camera.near;
+    block.aspect = aspect;
+    block.width = rect.width;
+    block.height = rect.height;
+    block.iblFrame = environmentFrame(camera.position);
+    block.lighting = view.lighting;
+    block.specularMaxLod = this.ctx.environment.maxLod;
+    writeViewBlock(this.viewData, (index * VIEW_STRIDE) / 4, block);
   }
 
-  private encodeView(
-    encoder: GPUCommandEncoder,
-    view: View,
-    index: number,
-    targetView: GPUTextureView,
-    bundle: GPURenderBundle,
-    clearTarget: boolean,
-    picks: PendingPick[],
-  ): void {
+  private targetFrame(target: RenderTarget): TargetFrame {
+    let frame = this.targetFrames.get(target);
+    if (!frame) {
+      frame = { stamp: 0, view: undefined };
+      this.targetFrames.set(target, frame);
+    }
+    return frame;
+  }
+
+  private worldFrame(world: World): WorldFrame {
+    let frame = this.worldFrames.get(world);
+    if (!frame) {
+      frame = { stamp: 0, bundle: undefined };
+      this.worldFrames.set(world, frame);
+    }
+    return frame;
+  }
+
+  /** The view's frame graph for its current size, built on first use and on resize. */
+  private viewFrame(view: View, rect: Readonly<PixelRect>): ViewFrame {
+    let frame = this.viewFrames.get(view);
+    if (
+      !frame ||
+      frame.width !== rect.width ||
+      frame.height !== rect.height ||
+      frame.x !== rect.x ||
+      frame.y !== rect.y
+    ) {
+      frame?.presentParams.destroy();
+      frame = this.buildViewFrame(view, rect);
+      this.viewFrames.set(view, frame);
+    }
+    return frame;
+  }
+
+  private buildViewFrame(view: View, rect: Readonly<PixelRect>): ViewFrame {
     const { device, pipelines, targets } = this.ctx;
-    const rect = view.pixelRect();
-    const world = view.world;
+    const { x, y, width, height } = rect;
     const graph = new FrameGraph(this.pool);
-    const sized = { width: rect.width, height: rect.height };
     const attachment = GPUTextureUsage.RENDER_ATTACHMENT;
     const color = graph.createTexture("color.msaa", {
-      ...sized,
+      width,
+      height,
       format: "rgba16float",
       sampleCount: targets.sampleCount,
       usage: attachment,
     });
     const resolved = graph.createTexture("color", {
-      ...sized,
+      width,
+      height,
       format: "rgba16float",
       usage: attachment | GPUTextureUsage.TEXTURE_BINDING,
     });
     const ids = graph.createTexture("featureId.msaa", {
-      ...sized,
+      width,
+      height,
       format: "rg16uint",
       sampleCount: targets.sampleCount,
       usage: attachment | GPUTextureUsage.TEXTURE_BINDING,
     });
     const depth = graph.createTexture("depth.msaa", {
-      ...sized,
+      width,
+      height,
       format: targets.depthFormat,
       sampleCount: targets.sampleCount,
       usage: attachment,
     });
-    const output = graph.importTexture("output", targetView);
+    // Rebound to this frame's target texture before every execute.
+    const output = graph.importTexture("output", {} as GPUTextureView);
+
+    const clearColor: GPUColorDict = { r: 0, g: 0, b: 0, a: 1 };
+    const opaqueColor: GPURenderPassColorAttachment = {
+      view: undefined as never,
+      resolveTarget: undefined,
+      clearValue: clearColor,
+      loadOp: "clear",
+      storeOp: "discard",
+    };
+    const opaqueIds: GPURenderPassColorAttachment = {
+      view: undefined as never,
+      clearValue: { r: 0, g: 0, b: 0, a: 0 },
+      loadOp: "clear",
+      storeOp: "store",
+    };
+    const opaqueDepth: GPURenderPassDepthStencilAttachment = {
+      view: undefined as never,
+      depthClearValue: 0, // reverse-Z: far is 0
+      depthLoadOp: "clear",
+      depthStoreOp: "discard",
+    };
+    const opaquePass: GPURenderPassDescriptor = {
+      label: "opaque",
+      colorAttachments: [opaqueColor, opaqueIds],
+      depthStencilAttachment: opaqueDepth,
+    };
+    const presentColor: GPURenderPassColorAttachment = {
+      view: undefined as never,
+      clearValue: { r: 0, g: 0, b: 0, a: 1 },
+      loadOp: "clear",
+      storeOp: "store",
+    };
+    const presentPass: GPURenderPassDescriptor = {
+      label: "present",
+      colorAttachments: [presentColor],
+    };
+
+    const frame: ViewFrame = {
+      x,
+      y,
+      width,
+      height,
+      graph,
+      output,
+      slot: 0,
+      clearTarget: true,
+      bundle: undefined,
+      bundles: [],
+      pick: undefined,
+      presentParams: device.createBuffer({
+        label: "presentParams",
+        size: 16,
+        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+      }),
+      presentGroup: undefined,
+      presentSource: undefined,
+    };
 
     graph.addPass("select-view", { sideEffect: true }, (enc) => {
       enc.copyBufferToBuffer(
         this.viewStaging,
-        index * VIEW_STRIDE,
+        frame.slot * VIEW_STRIDE,
         this.ctx.currentViewBuffer,
         0,
         VIEW_SIZE,
@@ -359,91 +524,73 @@ export class Engine {
     });
 
     graph.addPass("prep", { sideEffect: true }, (enc) => {
-      world.encodePrep(enc, this.timer.passWrites());
+      view.world.encodePrep(enc, this.timer.passWrites());
     });
 
     graph.addPass(
       "opaque",
       { writes: [color, resolved, ids, depth] },
       (enc, get) => {
-        const pass = enc.beginRenderPass({
-          label: "opaque",
-          colorAttachments: [
-            {
-              view: get(color),
-              resolveTarget: get(resolved),
-              clearValue: {
-                r: view.clearColor[0],
-                g: view.clearColor[1],
-                b: view.clearColor[2],
-                a: 1,
-              },
-              loadOp: "clear",
-              storeOp: "discard",
-            },
-            {
-              view: get(ids),
-              clearValue: { r: 0, g: 0, b: 0, a: 0 },
-              loadOp: "clear",
-              storeOp: "store",
-            },
-          ],
-          depthStencilAttachment: {
-            view: get(depth),
-            depthClearValue: 0, // reverse-Z: far is 0
-            depthLoadOp: "clear",
-            depthStoreOp: "discard",
-          },
-          timestampWrites: this.timer.passWrites(),
-        });
-        pass.executeBundles([bundle]);
+        clearColor.r = view.clearColor[0];
+        clearColor.g = view.clearColor[1];
+        clearColor.b = view.clearColor[2];
+        opaqueColor.view = get(color);
+        opaqueColor.resolveTarget = get(resolved);
+        opaqueIds.view = get(ids);
+        opaqueDepth.view = get(depth);
+        opaquePass.timestampWrites = this.timer.passWrites();
+        const pass = enc.beginRenderPass(opaquePass);
+        frame.bundles[0] = frame.bundle!;
+        pass.executeBundles(frame.bundles);
         pass.end();
       },
     );
 
-    // One pick per frame keeps the shared params/result buffers simple.
-    const request = picks.length === 0 ? view.pendingPicks.shift() : undefined;
-    if (request) {
-      graph.addPass("pick", { reads: [ids], sideEffect: true }, (enc, get) => {
-        const px = Math.min(Math.max(Math.floor(request.x), 0), rect.width - 1);
-        const py = Math.min(
-          Math.max(Math.floor(request.y), 0),
-          rect.height - 1,
-        );
-        this.pickParamsData[0] = px;
-        this.pickParamsData[1] = py;
-        device.queue.writeBuffer(this.pickParams, 0, this.pickParamsData);
-        const group = device.createBindGroup({
-          layout: pipelines.pick.getBindGroupLayout(0),
-          entries: [
-            { binding: 0, resource: get(ids) },
-            { binding: 1, resource: { buffer: this.pickParams } },
-            { binding: 2, resource: { buffer: this.pickResult } },
-          ],
-        });
-        const pass = enc.beginComputePass({ label: "pick" });
-        pass.setPipeline(pipelines.pick);
-        pass.setBindGroup(0, group);
-        pass.dispatchWorkgroups(1);
-        pass.end();
-        const readback =
-          this.pickReadback.pop() ??
-          device.createBuffer({
-            size: 16,
-            usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
-          });
-        enc.copyBufferToBuffer(this.pickResult, 0, readback, 0, 16);
-        picks.push({ view, readback, resolve: request.resolve });
+    graph.addPass("pick", { reads: [ids], sideEffect: true }, (enc, get) => {
+      const request = frame.pick;
+      if (!request) {
+        return;
+      }
+      frame.pick = undefined;
+      this.pickParamsData[0] = Math.min(
+        Math.max(Math.floor(request.x), 0),
+        width - 1,
+      );
+      this.pickParamsData[1] = Math.min(
+        Math.max(Math.floor(request.y), 0),
+        height - 1,
+      );
+      device.queue.writeBuffer(this.pickParams, 0, this.pickParamsData);
+      const group = device.createBindGroup({
+        layout: pipelines.pick.getBindGroupLayout(0),
+        entries: [
+          { binding: 0, resource: get(ids) },
+          { binding: 1, resource: { buffer: this.pickParams } },
+          { binding: 2, resource: { buffer: this.pickResult } },
+        ],
       });
-    }
+      const pass = enc.beginComputePass(PICK_PASS);
+      pass.setPipeline(pipelines.pick);
+      pass.setBindGroup(0, group);
+      pass.dispatchWorkgroups(1);
+      pass.end();
+      const readback =
+        this.pickReadback.pop() ??
+        device.createBuffer({
+          size: 16,
+          usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
+        });
+      enc.copyBufferToBuffer(this.pickResult, 0, readback, 0, 16);
+      this.picks.push({ view, readback, resolve: request.resolve });
+    });
 
     graph.addPass(
       "present",
       { reads: [resolved], writes: [output] },
       (enc, get) => {
-        const params = new DataView(this.presentData);
-        params.setFloat32(0, rect.x, true);
-        params.setFloat32(4, rect.y, true);
+        const params = this.presentData;
+        params.setFloat32(0, x, true);
+        params.setFloat32(4, y, true);
         params.setFloat32(8, view.exposure, true);
         const encoding = this.ctx.outputFormat.endsWith("-srgb")
           ? 0
@@ -451,52 +598,50 @@ export class Engine {
             ? 2
             : 1;
         params.setUint32(12, encoding, true);
-        device.queue.writeBuffer(
-          this.presentParams[index]!,
-          0,
-          this.presentData,
-        );
-        const group = device.createBindGroup({
-          layout: pipelines.present.getBindGroupLayout(0),
-          entries: [
-            { binding: 0, resource: get(resolved) },
-            { binding: 1, resource: { buffer: this.presentParams[index]! } },
-          ],
-        });
-        const pass = enc.beginRenderPass({
-          label: "present",
-          colorAttachments: [
-            {
-              view: get(output),
-              clearValue: { r: 0, g: 0, b: 0, a: 1 },
-              loadOp: clearTarget ? "clear" : "load",
-              storeOp: "store",
-            },
-          ],
-        });
-        pass.setViewport(rect.x, rect.y, rect.width, rect.height, 0, 1);
-        pass.setScissorRect(rect.x, rect.y, rect.width, rect.height);
+        device.queue.writeBuffer(frame.presentParams, 0, params.buffer);
+        // Pooled textures are stable from frame to frame, so the bind group
+        // is rebuilt only when the pool hands this view a different one.
+        const source = get(resolved);
+        if (frame.presentSource !== source) {
+          frame.presentSource = source;
+          frame.presentGroup = device.createBindGroup({
+            layout: pipelines.present.getBindGroupLayout(0),
+            entries: [
+              { binding: 0, resource: source },
+              { binding: 1, resource: { buffer: frame.presentParams } },
+            ],
+          });
+        }
+        presentColor.view = get(output);
+        presentColor.loadOp = frame.clearTarget ? "clear" : "load";
+        const pass = enc.beginRenderPass(presentPass);
+        pass.setViewport(x, y, width, height, 0, 1);
+        pass.setScissorRect(x, y, width, height);
         pass.setPipeline(pipelines.present);
-        pass.setBindGroup(0, group);
+        pass.setBindGroup(0, frame.presentGroup!);
         pass.draw(3);
         this.drawOverlays(pass, view);
         pass.end();
       },
     );
 
-    graph.execute(encoder);
+    return frame;
   }
 
   private drawOverlays(pass: GPURenderPassEncoder, view: View): void {
-    const segments = view.overlays.reduce((n, o) => n + o.segments.length, 0);
-    if (segments === 0) {
+    const overlays = view.overlays;
+    let vertices = 0;
+    for (let i = 0; i < overlays.length; i++) {
+      vertices += overlays[i]!.count;
+    }
+    if (vertices === 0) {
       return;
     }
     const device = this.ctx.device;
     let resources = this.overlayResources.get(view);
-    if (!resources || resources.capacity < segments) {
+    if (!resources || resources.capacity < vertices) {
       resources?.buffer.destroy();
-      const capacity = Math.max(segments, 256);
+      const capacity = Math.max(vertices, 256);
       const buffer = device.createBuffer({
         size: capacity * 12,
         usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
@@ -513,29 +658,39 @@ export class Engine {
           layout: this.ctx.pipelines.overlayLayout,
           entries: [{ binding: 0, resource: { buffer: params } }],
         });
-      resources = { buffer, capacity, params, group };
+      resources = {
+        buffer,
+        capacity,
+        params,
+        group,
+        staging: new Float32Array(capacity * 3),
+      };
       this.overlayResources.set(view, resources);
     }
     // Camera-relative in float64, then float32: overlays share the
     // precision scheme of the draw records.
-    const data = new Float32Array(segments * 3);
-    let k = 0;
+    const data = resources.staging;
     const eye = view.camera.position;
-    for (const overlay of view.overlays) {
-      for (const p of overlay.segments) {
-        data[k++] = p[0]! - eye[0]!;
-        data[k++] = p[1]! - eye[1]!;
-        data[k++] = p[2]! - eye[2]!;
+    const ex = eye[0]!,
+      ey = eye[1]!,
+      ez = eye[2]!;
+    let k = 0;
+    for (let i = 0; i < overlays.length; i++) {
+      const { positions, count } = overlays[i]!;
+      for (let j = 0; j < count * 3; j += 3) {
+        data[k++] = positions[j]! - ex;
+        data[k++] = positions[j + 1]! - ey;
+        data[k++] = positions[j + 2]! - ez;
       }
     }
-    device.queue.writeBuffer(resources.buffer, 0, data);
-    const color = view.overlays[0]!.color;
-    device.queue.writeBuffer(resources.params, 0, new Float32Array(color));
+    device.queue.writeBuffer(resources.buffer, 0, data, 0, vertices * 3);
+    this.overlayColor.set(overlays[0]!.color);
+    device.queue.writeBuffer(resources.params, 0, this.overlayColor);
     pass.setPipeline(this.ctx.pipelines.overlay);
     pass.setBindGroup(0, this.ctx.currentViewBindGroup);
     pass.setBindGroup(1, resources.group);
     pass.setVertexBuffer(0, resources.buffer);
-    pass.draw(segments);
+    pass.draw(vertices);
   }
 
   private resolvePicks(picks: PendingPick[]): void {
@@ -570,6 +725,49 @@ interface PendingPick {
   readback: GPUBuffer;
   resolve: (result: PickResult | undefined) => void;
 }
+
+/** Per-view frame state: the frame graph plus inputs its passes read each frame. */
+interface ViewFrame {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+  readonly graph: FrameGraph;
+  readonly output: TextureHandle;
+  /** Index of this view's block in the view staging buffer this frame. */
+  slot: number;
+  /** First view drawn into its target this frame. */
+  clearTarget: boolean;
+  bundle: GPURenderBundle | undefined;
+  /** One-element list handed to executeBundles. */
+  readonly bundles: GPURenderBundle[];
+  pick: View["pendingPicks"][number] | undefined;
+  readonly presentParams: GPUBuffer;
+  presentGroup: GPUBindGroup | undefined;
+  presentSource: GPUTextureView | undefined;
+}
+
+interface TargetFrame {
+  stamp: number;
+  view: GPUTextureView | undefined;
+}
+
+interface WorldFrame {
+  stamp: number;
+  bundle: GPURenderBundle | undefined;
+}
+
+interface OverlayResources {
+  buffer: GPUBuffer;
+  capacity: number;
+  params: GPUBuffer;
+  group: GPUBindGroup;
+  /** Camera-relative float32 positions, `capacity` × 3. */
+  staging: Float32Array;
+}
+
+const FRAME_ENCODER: GPUCommandEncoderDescriptor = { label: "frame" };
+const PICK_PASS: GPUComputePassDescriptor = { label: "pick" };
 
 const scratchEnu = m4.mat4();
 const scratchEast = v3.vec3();

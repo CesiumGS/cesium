@@ -120,6 +120,7 @@ export class World {
   private dirtyMax = -1;
   private bundle?: GPURenderBundle;
   private readonly prepParamsData = new Uint32Array(4);
+  private readonly prepPassDesc: GPUComputePassDescriptor = { label: "prep" };
 
   readonly vertexBuffer: GPUBuffer;
   readonly indexBuffer: GPUBuffer;
@@ -459,7 +460,8 @@ export class World {
       0,
       Math.max(4, this.batchList.length * 4),
     );
-    const pass = encoder.beginComputePass({ label: "prep", timestampWrites });
+    this.prepPassDesc.timestampWrites = timestampWrites;
+    const pass = encoder.beginComputePass(this.prepPassDesc);
     pass.setBindGroup(0, currentViewBindGroup);
     pass.setBindGroup(1, this.prepBindGroup);
     pass.setPipeline(pipelines.prep);

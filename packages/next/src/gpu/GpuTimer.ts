@@ -19,6 +19,12 @@ export class GpuTimer {
   private readonly resolveBuffer?: GPUBuffer;
   private readonly readbacks: GPUBuffer[] = [];
   private readonly idle: GPUBuffer[] = [];
+  private readonly handlers = new Map<
+    GPUBuffer,
+    { count: number; mapped: () => void; failed: () => void }
+  >();
+  /** Per-pass timestamp-write descriptors, created once. */
+  private readonly writes: GPUComputePassTimestampWrites[] = [];
   private pending?: GPUBuffer;
   private nextIndex = 0;
   private static readonly maxPasses = 32;
@@ -40,6 +46,18 @@ export class GpuTimer {
       });
       this.readbacks.push(buffer);
       this.idle.push(buffer);
+      this.handlers.set(buffer, {
+        count: 0,
+        mapped: () => this.onMapped(buffer),
+        failed: () => this.idle.push(buffer),
+      });
+    }
+    for (let i = 0; i < GpuTimer.maxPasses; i++) {
+      this.writes.push({
+        querySet: this.querySet,
+        beginningOfPassWriteIndex: i * 2,
+        endOfPassWriteIndex: i * 2 + 1,
+      });
     }
   }
 
@@ -59,11 +77,7 @@ export class GpuTimer {
     ) {
       return undefined;
     }
-    const writes = {
-      querySet: this.querySet,
-      beginningOfPassWriteIndex: this.nextIndex,
-      endOfPassWriteIndex: this.nextIndex + 1,
-    };
+    const writes = this.writes[this.nextIndex / 2];
     this.nextIndex += 2;
     return writes;
   }
@@ -110,35 +124,37 @@ export class GpuTimer {
       this.idle.push(buffer);
       return;
     }
-    void buffer.mapAsync(GPUMapMode.READ, 0, count * 8).then(
-      () => {
-        const times = new BigUint64Array(buffer.getMappedRange(0, count * 8));
-        let total = 0n;
-        let first = times[0]!;
-        let last = times[1]!;
-        for (let i = 0; i < count; i += 2) {
-          const begin = times[i]!,
-            end = times[i + 1]!;
-          if (end > begin) {
-            total += end - begin;
-          }
-          first = begin < first ? begin : first;
-          last = end > last ? end : last;
-        }
-        buffer.unmap();
-        this.idle.push(buffer);
-        const smooth = (previous: number, sample: number) =>
-          Number.isNaN(previous) ? sample : previous * 0.9 + sample * 0.1;
-        this.milliseconds = smooth(this.milliseconds, Number(total) / 1e6);
-        if (last > first) {
-          this.spanMilliseconds = smooth(
-            this.spanMilliseconds,
-            Number(last - first) / 1e6,
-          );
-        }
-      },
-      () => this.idle.push(buffer),
-    );
+    const handler = this.handlers.get(buffer)!;
+    handler.count = count;
+    void buffer
+      .mapAsync(GPUMapMode.READ, 0, count * 8)
+      .then(handler.mapped, handler.failed);
+  }
+
+  private onMapped(buffer: GPUBuffer): void {
+    const count = this.handlers.get(buffer)!.count;
+    const words = new Uint32Array(buffer.getMappedRange(0, count * 8));
+    let total = 0;
+    let first = timestamp(words, 0);
+    let last = timestamp(words, 1);
+    for (let i = 0; i < count; i += 2) {
+      const begin = timestamp(words, i),
+        end = timestamp(words, i + 1);
+      if (end > begin) {
+        total += end - begin;
+      }
+      first = begin < first ? begin : first;
+      last = end > last ? end : last;
+    }
+    buffer.unmap();
+    this.idle.push(buffer);
+    this.milliseconds = smooth(this.milliseconds, total / 1e6);
+    if (last > first) {
+      this.spanMilliseconds = smooth(
+        this.spanMilliseconds,
+        (last - first) / 1e6,
+      );
+    }
   }
 
   destroy(): void {
@@ -148,4 +164,16 @@ export class GpuTimer {
       buffer.destroy();
     }
   }
+}
+
+/**
+ * Nanosecond timestamp `i` as a double: exact for 104 days of uptime, without
+ * the BigInt allocations of a BigUint64Array.
+ */
+function timestamp(words: Uint32Array, i: number): number {
+  return words[i * 2 + 1]! * 4294967296 + words[i * 2]!;
+}
+
+function smooth(previous: number, sample: number): number {
+  return Number.isNaN(previous) ? sample : previous * 0.9 + sample * 0.1;
 }

@@ -24,7 +24,64 @@ const suites = {
   models: ["/parity/models.html?bench", "runModels"],
   slang: ["/spikes/slang.html?bench", "runSlang"],
   baseline: ["/bench/baseline.html?bench", "runBaseline"],
+  // Driven through CDP by `allocSuite` below.
+  alloc: ["/bench/alloc.html", "allocSetup"],
 };
+
+const ALLOC_FRAMES = 300;
+
+/**
+ * Steady-state allocation gate. Profiles allocations with the sampling heap
+ * profiler (including objects already garbage-collected) while frames run,
+ * at two draw counts, and attributes them to source locations. Engine
+ * allocations should not grow with draw count and should trend to zero.
+ */
+async function allocSuite(page) {
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send("HeapProfiler.enable");
+  const runs = [];
+  for (const draws of [1000, 10000]) {
+    const scene = await page.evaluate((n) => globalThis.allocSetup(n), draws);
+    await cdp.send("HeapProfiler.collectGarbage");
+    await cdp.send("HeapProfiler.startSampling", {
+      samplingInterval: 128,
+      includeObjectsCollectedByMajorGC: true,
+      includeObjectsCollectedByMinorGC: true,
+    });
+    await page.evaluate((n) => globalThis.allocRun(n), ALLOC_FRAMES);
+    const { profile } = await cdp.send("HeapProfiler.stopSampling");
+    const sites = new Map();
+    const walk = (node) => {
+      if (node.selfSize > 0) {
+        const { functionName, url, lineNumber } = node.callFrame;
+        const file = url.replace(/^https?:\/\/[^/]+\//, "").replace(/\?.*$/, "");
+        const key = `${functionName || "(anonymous)"} ${file}:${lineNumber + 1}`;
+        const site = sites.get(key) ?? { site: key, file, bytes: 0 };
+        site.bytes += node.selfSize;
+        sites.set(key, site);
+      }
+      node.children.forEach(walk);
+    };
+    walk(profile.head);
+    const all = [...sites.values()];
+    const sum = (list) => list.reduce((n, s) => n + s.bytes, 0);
+    const engine = all.filter((s) => s.file.startsWith("src/"));
+    runs.push({
+      draws,
+      records: scene.records,
+      batches: scene.batches,
+      frames: ALLOC_FRAMES,
+      bytesPerFrame: Math.round(sum(all) / ALLOC_FRAMES),
+      engineBytesPerFrame: Math.round(sum(engine) / ALLOC_FRAMES),
+      topEngineSites: engine
+        .sort((a, b) => b.bytes - a.bytes)
+        .slice(0, 12)
+        .map((s) => ({ site: s.site, bytesPerFrame: Math.round(s.bytes / ALLOC_FRAMES) })),
+    });
+  }
+  await cdp.detach();
+  return runs;
+}
 
 const selected = process.argv.slice(2);
 const names = selected.length > 0 ? selected : Object.keys(suites);
@@ -83,7 +140,8 @@ for (const name of names) {
   process.stdout.write(`${name}… `);
   await page.goto(`${BASE}${path}`);
   await page.waitForFunction((f) => typeof globalThis[f] === "function", fn, { timeout: 60_000 });
-  results[name] = await page.evaluate((f) => globalThis[f](), fn);
+  results[name] =
+    name === "alloc" ? await allocSuite(page) : await page.evaluate((f) => globalThis[f](), fn);
   console.log(`${((performance.now() - started) / 1000).toFixed(1)} s`);
 }
 await browser.close();

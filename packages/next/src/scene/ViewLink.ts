@@ -26,6 +26,9 @@ export interface ViewLinkOptions {
 export class ViewLink {
   private readonly overlay: Overlay;
   private readonly ellipsoid = Ellipsoid.WGS84;
+  private readonly mirror: boolean;
+  private readonly followMode: boolean;
+  private readonly footprint: boolean;
 
   constructor(
     readonly source: View,
@@ -33,23 +36,26 @@ export class ViewLink {
     readonly options: ViewLinkOptions,
   ) {
     this.overlay = {
-      segments: [],
+      positions: new Float64Array(BORDER.length * 2 * 3),
+      count: 0,
       color: options.footprintColor ?? [1, 0.8, 0.2, 1],
     };
-    if (options.modes.includes("footprint")) {
+    this.mirror = options.modes.includes("mirror");
+    this.followMode = options.modes.includes("follow");
+    this.footprint = options.modes.includes("footprint");
+    if (this.footprint) {
       target.overlays.push(this.overlay);
     }
   }
 
   evaluate(): void {
-    const { modes } = this.options;
-    if (modes.includes("mirror")) {
+    if (this.mirror) {
       this.target.camera.copyFrom(this.source.camera);
     }
-    if (modes.includes("follow")) {
+    if (this.followMode) {
       this.follow();
     }
-    if (modes.includes("footprint")) {
+    if (this.footprint) {
       this.updateFootprint();
     }
   }
@@ -77,32 +83,34 @@ export class ViewLink {
     );
   }
 
+  /** Walks the source viewport's border and connects consecutive ground hits. */
   private updateFootprint(): void {
-    const segments = this.overlay.segments;
-    segments.length = 0;
-    // Walk the source viewport's border and connect the ground hits.
-    const border: Array<[number, number]> = [];
-    const steps = 12;
-    for (let i = 0; i < steps; i++) {
-      border.push([-1 + (2 * i) / steps, -1]);
-    }
-    for (let i = 0; i < steps; i++) {
-      border.push([1, -1 + (2 * i) / steps]);
-    }
-    for (let i = 0; i < steps; i++) {
-      border.push([1 - (2 * i) / steps, 1]);
-    }
-    for (let i = 0; i < steps; i++) {
-      border.push([-1, 1 - (2 * i) / steps]);
-    }
-    const hits = border.map(([x, y]) => this.groundPoint(x, y, v3.vec3()));
-    for (let i = 0; i < hits.length; i++) {
-      const a = hits[i];
-      const b = hits[(i + 1) % hits.length];
-      if (a && b) {
-        segments.push(a, b);
+    const positions = this.overlay.positions;
+    let count = 0;
+    const n = BORDER.length;
+    let previous = this.groundPoint(
+      BORDER[n - 1]![0],
+      BORDER[n - 1]![1],
+      scratchHitA,
+    );
+    let current = scratchHitB;
+    for (let i = 0; i < n; i++) {
+      const hit = this.groundPoint(BORDER[i]![0], BORDER[i]![1], current);
+      if (previous && hit) {
+        const o = count * 3;
+        positions[o] = previous[0]!;
+        positions[o + 1] = previous[1]!;
+        positions[o + 2] = previous[2]!;
+        positions[o + 3] = hit[0]!;
+        positions[o + 4] = hit[1]!;
+        positions[o + 5] = hit[2]!;
+        count += 2;
       }
+      // Swap scratch points: this hit is the next segment's start.
+      current = current === scratchHitA ? scratchHitB : scratchHitA;
+      previous = hit;
     }
+    this.overlay.count = count;
   }
 
   private groundPoint(ndcX: number, ndcY: number, out: Vec3): Vec3 | undefined {
@@ -113,10 +121,7 @@ export class ViewLink {
       this.source.aspect,
       scratchDirection,
     );
-    const t = this.ellipsoid.rayIntersection(camera.position, direction);
-    return t === undefined
-      ? undefined
-      : v3.scaleAndAdd(out, camera.position, direction, t);
+    return this.ellipsoid.rayIntersection(camera.position, direction, out);
   }
 
   private subPoint(position: Vec3, out: Vec3): Vec3 {
@@ -127,5 +132,26 @@ export class ViewLink {
   }
 }
 
+/** Normalized viewport border, counter-clockwise from the bottom-left corner. */
+const BORDER: ReadonlyArray<readonly [number, number]> = (() => {
+  const steps = 12;
+  const points: Array<[number, number]> = [];
+  for (let i = 0; i < steps; i++) {
+    points.push([-1 + (2 * i) / steps, -1]);
+  }
+  for (let i = 0; i < steps; i++) {
+    points.push([1, -1 + (2 * i) / steps]);
+  }
+  for (let i = 0; i < steps; i++) {
+    points.push([1 - (2 * i) / steps, 1]);
+  }
+  for (let i = 0; i < steps; i++) {
+    points.push([-1, 1 - (2 * i) / steps]);
+  }
+  return points;
+})();
+
+const scratchHitA = v3.vec3();
+const scratchHitB = v3.vec3();
 const scratchFocus = v3.vec3();
 const scratchDirection = v3.vec3();

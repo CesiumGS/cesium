@@ -76,14 +76,20 @@ export async function createRenderContext(
   outputFormat: GPUTextureFormat,
   overrides: ShaderOverrides = {},
 ): Promise<RenderContext> {
-  const pipelines = await createPipelines(device, outputFormat, overrides);
+  // Everything compiles in parallel: engine pipelines, IBL kernels and the
+  // mip generator for the formats glTF textures use.
+  const mips = new MipGenerator(device);
+  const [pipelines, environment] = await Promise.all([
+    createPipelines(device, outputFormat, overrides),
+    Environment.create(device, mips),
+    mips.prepare("rgba8unorm"),
+    mips.prepare("rgba8unorm-srgb"),
+  ]);
   const currentViewBuffer = device.createBuffer({
     label: "currentView",
     size: VIEW_SIZE,
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
-  const mips = new MipGenerator(device);
-  const environment = new Environment(device, mips);
   environment.setSky();
   const currentViewBindGroup = device.createBindGroup({
     label: "currentView",

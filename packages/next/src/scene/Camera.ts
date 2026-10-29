@@ -120,25 +120,27 @@ export class Camera {
     const d = this.direction,
       u = this.up,
       x = this.right;
-    const plane = (
-      i: number,
-      nx: number,
-      ny: number,
-      nz: number,
-      dist: number,
-    ) => {
-      const len = Math.hypot(nx, ny, nz);
-      out[i * 4] = nx / len;
-      out[i * 4 + 1] = ny / len;
-      out[i * 4 + 2] = nz / len;
-      out[i * 4 + 3] = dist;
-    };
-    // Side planes pass through the camera (origin), so d = 0.
-    plane(0, d[0]! * r + x[0]!, d[1]! * r + x[1]!, d[2]! * r + x[2]!, 0);
-    plane(1, d[0]! * r - x[0]!, d[1]! * r - x[1]!, d[2]! * r - x[2]!, 0);
-    plane(2, d[0]! * t + u[0]!, d[1]! * t + u[1]!, d[2]! * t + u[2]!, 0);
-    plane(3, d[0]! * t - u[0]!, d[1]! * t - u[1]!, d[2]! * t - u[2]!, 0);
-    plane(4, d[0]!, d[1]!, d[2]!, -this.near);
+    // Unnormalized normals first; side planes pass through the camera
+    // (origin), so d = 0.
+    for (let k = 0; k < 3; k++) {
+      out[k] = d[k]! * r + x[k]!;
+      out[4 + k] = d[k]! * r - x[k]!;
+      out[8 + k] = d[k]! * t + u[k]!;
+      out[12 + k] = d[k]! * t - u[k]!;
+      out[16 + k] = d[k]!;
+    }
+    out[3] = out[7] = out[11] = out[15] = 0;
+    out[19] = -this.near;
+    for (let i = 0; i < 16; i += 4) {
+      const len = Math.sqrt(
+        out[i]! * out[i]! +
+          out[i + 1]! * out[i + 1]! +
+          out[i + 2]! * out[i + 2]!,
+      );
+      out[i] = out[i]! / len;
+      out[i + 1] = out[i + 1]! / len;
+      out[i + 2] = out[i + 2]! / len;
+    }
     return out;
   }
 

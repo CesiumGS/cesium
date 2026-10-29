@@ -90,4 +90,29 @@ describe("FrameGraph", () => {
       "release b t1",
     ]);
   });
+
+  it("executes a built graph every frame and rebinds imported textures", () => {
+    const allocator = new FakeAllocator();
+    const graph = new FrameGraph(allocator);
+    const a = graph.createTexture("a", desc("a"));
+    const out = graph.importTexture("out", {
+      label: "frame0",
+    } as GPUTextureView);
+    const seen: string[] = [];
+    graph.addPass("pa", { writes: [a] }, (_, get) => void get(a));
+    graph.addPass("present", { reads: [a], writes: [out] }, (_, get) => {
+      get(a);
+      seen.push(get(out).label);
+    });
+    graph.execute(fakeEncoder);
+    graph.setImported(out, { label: "frame1" } as GPUTextureView);
+    graph.execute(fakeEncoder);
+    expect(seen).toEqual(["frame0", "frame1"]);
+    expect(allocator.log).toEqual([
+      "acquire a t0",
+      "release a t0",
+      "acquire a t1",
+      "release a t1",
+    ]);
+  });
 });

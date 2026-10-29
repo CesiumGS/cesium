@@ -18,6 +18,7 @@ Branch: `cesium-2.0-webgpu-poc` (off `main` @ `587f52f1eb`, CesiumJS 1.146.0)
 | r10 | Translucency becomes a unified compute compositor shared by translucent meshes and Gaussian splats; MBOIT is the overflow fallback.                                                                                                                                                                                                                                                      |
 | r11 | M1 increment 2: PBR + compute-built IBL, normal maps, lit parity vs 1.x, Slang re-ported to v1 records with a surface-material interface; Slang performance gate passes.                                                                                                                                                                                                                 |
 | r12 | M1 increment 3: Draco and KTX2/Basis decoding in the workers; all 14 opaque Khronos samples within 0.025 mean FLIP of 1.x in every lighting mode.                                                                                                                                                                                                                                        |
+| r13 | M1 increment 4: steady-state allocation gate (engine ~1.5 KB/frame, independent of draw count, down from ~45 KB) and first-frame cost (2.0 first frame 23–34 ms vs 1.x 203–691 ms).                                                                                                                                                                                                      |
 
 ## 1. Goal
 
@@ -863,10 +864,77 @@ BoxVertexColorsDracoRGB, BoxTexturedKtx2Basis, BoxMixedCompression), mean FLIP:
 BoxCutout (translucent) remains the only failure, pending the compute
 translucency compositor (M4).
 
+### Increment 4 (r13): allocation gate and first-frame cost
+
+**Allocation gate.** `bench/run.mjs alloc` renders three views (main, an inset
+with a footprint link, a second canvas) of N boxes plus a glTF model, and
+profiles 300 frames with the V8 sampling heap profiler over CDP, counting
+objects already garbage-collected. Allocations are attributed to source
+locations and split into engine (`src/`) and harness. A cross-origin-isolated
+page wasn't needed: the profiler sees every allocation, not only
+`measureUserAgentSpecificMemory` totals.
+
+| Engine bytes/frame | 1,000 draws | 10,000 draws |
+| ------------------ | ----------- | ------------ |
+| Before             | 44,548      | 40,569       |
+| After              | ~1,700      | ~1,450       |
+
+Changes:
+
+- **Frame graphs are built once per view** and rebuilt only when the view's
+  pixel rectangle changes. Imported textures are rebound each frame, the
+  compiled pass list and release points are cached, and pooled textures keep
+  one default view.
+- **Pass descriptors, timestamp writes and the present bind group are reused**.
+  The present bind group is rebuilt only if the pool hands the view a
+  different texture, which doesn't happen in steady state.
+- **Texture pool**: cached keys, entries reused, coarse staleness sweep.
+- **No per-frame collections**: views are iterated in place, with per-target
+  and per-world frame stamps instead of Maps and Sets.
+- **Overlays** are flat `Float64Array` line lists with a count, and the
+  footprint link writes into them without allocating.
+- **GPU timer**: timestamps are decoded as doubles instead of BigInt, and the
+  readback callbacks are bound once.
+
+The remainder is roughly 500 bytes per view-frame of V8 number boxing in
+calls that take doubles. It scales with views, not draws, and dies in the
+young generation. The browser's own WebGPU wrapper objects (encoder, passes,
+command buffer, canvas texture view) are excluded; they are inherent to the
+API.
+
+**First-frame cost.** Breaking down the old ~180–280 ms 2.0 first frame:
+
+| Phase                                      | Before | After          |
+| ------------------------------------------ | ------ | -------------- |
+| Startup GPU work after `Engine.create`     | 261 ms | 8 ms + warm-up |
+| First frame of the first world (offscreen) | 70 ms  | ~5 ms          |
+| First frame into a new canvas              | +11 ms | +11–14 ms      |
+| First frame of any later world/view        | 6 ms   | 5–6 ms         |
+
+- The IBL kernels and the mip generator (sky cube plus `rgba8unorm[-srgb]` for
+  glTF textures) now compile with the `*Async` pipeline APIs, in parallel with
+  the engine pipelines. Before, they compiled synchronously and serialized in
+  the GPU process; this also removes a compile hitch on the first glTF
+  texture upload.
+- Dawn (Chrome's WebGPU implementation) builds its indirect-draw validation
+  lazily, which cost the first frame with any draw ~70 ms. `Engine.create`
+  now submits a 1×1 warm-up frame with one draw and doesn't await it, so that
+  work overlaps the app's loading.
+- The baseline suite now lets the GPU settle before each engine's
+  first-frame timing, so 1.x teardown no longer lands in 2.0's number.
+
+Draw scaling, first frame including GPU (results
+`2026-10-29T22-56-43-522Z`):
+
+| Draws | 1.x WebGL | 2.0 WebGPU |
+| ----- | --------- | ---------- |
+| 1,000 | 203 ms    | 23 ms      |
+| 5,000 | 691 ms    | 34 ms      |
+
+Parity, model parity and the Slang perf gate (+0.6%) are unchanged.
+
 Next increments:
 
-1. **Zero-allocation gate** (cross-origin-isolated test page) and the 2.0
-   first-frame cost.
-2. **CAD tileset content** (b3dm/glb with feature IDs) as the M1 exit test.
-3. Specular IBL parity (needs feeding 2.0's prefiltered cube to 1.x, or a
+1. **CAD tileset content** (b3dm/glb with feature IDs) as the M1 exit test.
+2. Specular IBL parity (needs feeding 2.0's prefiltered cube to 1.x, or a
    2.0-only reference render).

@@ -221,6 +221,14 @@ interface FrameSample {
   apiCalls: number;
 }
 
+/**
+ * Lets the GPU process go idle so one engine's teardown or startup work
+ * doesn't land in the other's first-frame timing.
+ */
+function settle(): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, 300));
+}
+
 function median(values: number[]): number {
   return [...values].sort((a, b) => a - b)[Math.floor(values.length / 2)]!;
 }
@@ -310,6 +318,7 @@ async function drawScaling(engine: Engine, counts: number[]): Promise<void> {
     populateLegacy(viewer, specs);
     lookAtLegacy(viewer, range);
     const legacyCreate = performance.now() - t;
+    await settle();
     t = performance.now();
     viewer.render();
     glFinish(viewer);
@@ -345,6 +354,8 @@ async function drawScaling(engine: Engine, counts: number[]): Promise<void> {
     view.camera.near = 1;
     view.camera.lookAt(centerCartesian(), 30 * deg, -35 * deg, range);
     const nextCreate = performance.now() - t;
+    await engine.gpu.device.queue.onSubmittedWorkDone();
+    await settle();
     t = performance.now();
     engine.renderFrame();
     await engine.gpu.device.queue.onSubmittedWorkDone();

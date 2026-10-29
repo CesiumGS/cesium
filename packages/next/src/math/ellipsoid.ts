@@ -118,16 +118,13 @@ export class Ellipsoid {
     const px = p[0]!,
       py = p[1]!,
       pz = p[2]!;
-    const [ox, oy, oz] = this.oneOverRadii as unknown as [
-      number,
-      number,
-      number,
-    ];
-    const [osx, osy, osz] = this.oneOverRadiiSquared as unknown as [
-      number,
-      number,
-      number,
-    ];
+    const r = this.oneOverRadii;
+    const ox = r[0]!,
+      oy = r[1]!,
+      oz = r[2]!;
+    const osx = this.oneOverRadiiSquared[0]!,
+      osy = this.oneOverRadiiSquared[1]!,
+      osz = this.oneOverRadiiSquared[2]!;
 
     const x2 = px * px * ox * ox;
     const y2 = py * py * oy * oy;
@@ -172,15 +169,13 @@ export class Ellipsoid {
   }
 
   /**
-   * Nearest intersection of a ray with the ellipsoid surface, as a distance
-   * along `direction` (unit length), or `undefined` if the ray misses.
+   * Nearest intersection of a ray with the ellipsoid surface, written to
+   * `out`, or `undefined` if the ray misses. `direction` is unit length.
    */
-  rayIntersection(origin: Vec3, direction: Vec3): number | undefined {
-    const [ox, oy, oz] = this.oneOverRadii as unknown as [
-      number,
-      number,
-      number,
-    ];
+  rayIntersection(origin: Vec3, direction: Vec3, out: Vec3): Vec3 | undefined {
+    const ox = this.oneOverRadii[0]!,
+      oy = this.oneOverRadii[1]!,
+      oz = this.oneOverRadii[2]!;
     const qx = origin[0]! * ox,
       qy = origin[1]! * oy,
       qz = origin[2]! * oz;
@@ -197,9 +192,13 @@ export class Ellipsoid {
     const sq = Math.sqrt(disc);
     const t0 = (-b - sq) / (2 * a);
     const t1 = (-b + sq) / (2 * a);
-    if (t0 > 0) {
-      return t0;
+    const t = t0 > 0 ? t0 : t1;
+    if (!(t > 0)) {
+      return undefined;
     }
-    return t1 > 0 ? t1 : undefined;
+    out[0] = origin[0]! + direction[0]! * t;
+    out[1] = origin[1]! + direction[1]! * t;
+    out[2] = origin[2]! + direction[2]! * t;
+    return out;
   }
 }
