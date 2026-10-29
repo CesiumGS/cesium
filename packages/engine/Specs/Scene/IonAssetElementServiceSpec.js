@@ -37,7 +37,15 @@ describe("Scene/IonAssetElementService", function () {
   });
 
   it("conforms to ElementService interface", function () {
-    expect(IonAssetElementService).toConformToInterface(ElementService);
+    for (const name of Object.getOwnPropertyNames(ElementService.prototype)) {
+      if (name === "constructor") {
+        continue;
+      }
+      expect(typeof IonAssetElementService.prototype[name]).toBe("function");
+      expect(IonAssetElementService.prototype[name]).not.toBe(
+        ElementService.prototype[name],
+      );
+    }
     expect(service).toBeInstanceOf(ElementService);
   });
 
