@@ -10,6 +10,21 @@ import { Scene } from "@cesium/engine";
 import createCanvas from "./createCanvas.js";
 import getWebGLStub from "./getWebGLStub.js";
 
+/**
+ * A {@link Scene} with additional functions for specs.
+ * @typedef {Scene & {
+ *   destroyForSpecs: function(): void,
+ *   renderForSpecs: function(JulianDate=): void,
+ *   pickForSpecs: function(): void
+ * }} SpecScene
+ */
+
+/**
+ * Creates a scene for specs, rendering to a new canvas.
+ *
+ * @param {object} [options] Options passed to the {@link Scene} constructor.
+ * @returns {SpecScene} The scene.
+ */
 function createScene(options) {
   options = options ?? {};
 
