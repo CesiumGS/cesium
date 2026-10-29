@@ -305,42 +305,6 @@ describe("Scene/IonAssetElementService", function () {
     });
   });
 
-  it("listPropertyNames requests and adapts a page", async function () {
-    const getFetchedResource = mockFetchJson({
-      items: [{ name: "Height", type: "number", ignored: true }],
-      total: 1,
-    });
-
-    const result = await service.listPropertyNames({ limit: 10, page: 2 });
-
-    const resource = getFetchedResource();
-    expect(resource.getUrlComponent(false)).toBe(
-      `https://example.com/assets/${assetId}/elements/properties`,
-    );
-    expect(resource.queryParameters).toEqual({ limit: 10, page: 2 });
-    expect(result).toEqual({
-      items: [{ name: "Height", type: "number" }],
-      total: 1,
-    });
-  });
-
-  it("listPropertyValues encodes the property name", async function () {
-    const values = ["A", "B"];
-    const getFetchedResource = mockFetchJson({ items: values, total: 2 });
-
-    const result = await service.listPropertyValues("IFC Class/Name", {
-      limit: 5,
-      page: 3,
-    });
-
-    const resource = getFetchedResource();
-    expect(resource.getUrlComponent(false)).toBe(
-      `https://example.com/assets/${assetId}/elements/properties/IFC%20Class%2FName`,
-    );
-    expect(resource.queryParameters).toEqual({ limit: 5, page: 3 });
-    expect(result).toEqual({ items: values, total: 2 });
-  });
-
   it("propagates request errors", async function () {
     const error = new RequestErrorEvent(404, "Not found");
     spyOn(Resource.prototype, "fetchJson").and.rejectWith(error);

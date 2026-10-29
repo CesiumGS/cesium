@@ -22,11 +22,6 @@ function checkPositiveInteger(name, value, maximum = Infinity) {
   }
 }
 
-function checkPagination(options) {
-  checkPositiveInteger("options.limit", options.limit, 1000);
-  checkPositiveInteger("options.page", options.page);
-}
-
 /**
  * Converts an id (bigint, number, or string) to a decimal string, or
  * undefined if not defined.
@@ -97,27 +92,6 @@ function treeNodeFromResponse(response) {
   };
   return result;
 }
-
-/**
- * A property exposed by the property-discovery endpoint.
- * @typedef {object} IonAssetElementService.PropertyInfo
- * @property {string} name The property name.
- * @property {string} type The property's primitive type.
- */
-
-/**
- * A page of property names and types.
- * @typedef {object} IonAssetElementService.PropertyNamePage
- * @property {IonAssetElementService.PropertyInfo[]} items The properties on this page.
- * @property {number} total The total number of properties.
- */
-
-/**
- * A page of distinct primitive property values.
- * @typedef {object} IonAssetElementService.PropertyValuePage
- * @property {Array<string|number|boolean|null>} items The distinct values on this page.
- * @property {number|string} total The total number of distinct values, which the server may encode as a string.
- */
 
 /**
  * A single property of an {@link IonAssetElementService.Element}.
@@ -603,97 +577,6 @@ class IonAssetElementService extends ElementService {
         return { kind: entry.kind, id: toIdString(entry.id) };
       }),
     };
-  }
-
-  /**
-   * Retrieves a page of the property names that exist across the elements of
-   * this asset, along with each property's type. Only top-level primitive
-   * properties (strings, numbers, booleans) are included.
-   *
-   * The returned names can be passed to
-   * {@link IonAssetElementService#listPropertyValues}.
-   *
-   * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
-   *
-   * @param {object} [options] Object with the following properties:
-   * @param {number} [options.limit=1000] The maximum number of property names to return, between 1 and 1000.
-   * @param {number} [options.page=1] The 1-based page number to return.
-   * @returns {Promise<IonAssetElementService.PropertyNamePage>} A promise that resolves to a page of property names. The promise rejects with a {@link RequestErrorEvent} if the request fails.
-   * @exception {DeveloperError} <code>options.limit</code> must be an integer between 1 and 1000.
-   * @exception {DeveloperError} <code>options.page</code> must be a positive integer.
-   */
-
-  async listPropertyNames(options) {
-    options = options ?? Frozen.EMPTY_OBJECT;
-
-    //>>includeStart('debug', pragmas.debug);
-    checkPagination(options);
-    //>>includeEnd('debug');
-
-    const queryParameters = {};
-    if (defined(options.limit)) {
-      queryParameters.limit = options.limit;
-    }
-    if (defined(options.page)) {
-      queryParameters.page = options.page;
-    }
-
-    const response = await this._resource
-      .getDerivedResource({
-        url: "elements/properties",
-        queryParameters: queryParameters,
-      })
-      .fetchJson();
-    return {
-      items: response.items.map(function (item) {
-        return { name: item.name, type: item.type };
-      }),
-      total: response.total,
-    };
-  }
-
-  /**
-   * Retrieves a page of the distinct values for a single element property
-   * across the elements of this asset. Only top-level primitive values
-   * (strings, numbers, booleans) are included.
-   *
-   * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
-   *
-   * @param {string} propertyName A property name returned by {@link IonAssetElementService#listPropertyNames}.
-   * @param {object} [options] Object with the following properties:
-   * @param {number} [options.limit=1000] The maximum number of values to return, between 1 and 1000.
-   * @param {number} [options.page=1] The 1-based page number to return.
-   * @returns {Promise<IonAssetElementService.PropertyValuePage>} A promise that resolves to a page of distinct values. The promise rejects with a {@link RequestErrorEvent} if the request fails.
-   * @exception {DeveloperError} <code>options.limit</code> must be an integer between 1 and 1000.
-   * @exception {DeveloperError} <code>options.page</code> must be a positive integer.
-   */
-
-  async listPropertyValues(propertyName, options) {
-    //>>includeStart('debug', pragmas.debug);
-    Check.typeOf.string("propertyName", propertyName);
-    //>>includeEnd('debug');
-
-    options = options ?? Frozen.EMPTY_OBJECT;
-
-    //>>includeStart('debug', pragmas.debug);
-    checkPagination(options);
-    //>>includeEnd('debug');
-
-    const queryParameters = {};
-    if (defined(options.limit)) {
-      queryParameters.limit = options.limit;
-    }
-    if (defined(options.page)) {
-      queryParameters.page = options.page;
-    }
-
-    const response = await this._resource
-      .getDerivedResource({
-        url: `elements/properties/${encodeURIComponent(propertyName)}`,
-        queryParameters: queryParameters,
-      })
-      .fetchJson();
-    return { items: response.items, total: response.total };
   }
 }
 
