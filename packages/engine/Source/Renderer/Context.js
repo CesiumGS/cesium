@@ -35,7 +35,7 @@ import UniformState from "./UniformState.js";
 import VertexArray from "./VertexArray.js";
 
 /**
- * @private
+ * @internal
  * @constructor
  *
  * @param {HTMLCanvasElement} canvas The canvas element to which the context will be associated
@@ -1098,6 +1098,7 @@ Object.defineProperties(Context.prototype, {
    * other cube maps are downloaded.
    * @memberof Context.prototype
    * @type {CubeMap}
+   * @private
    */
   defaultCubeMap: {
     get: function () {
