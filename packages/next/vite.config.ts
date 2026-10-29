@@ -70,6 +70,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         demo: "demo/index.html",
+        viewer: "viewer/index.html",
         parity: "parity/index.html",
         models: "parity/models.html",
         tileset: "parity/tileset.html",

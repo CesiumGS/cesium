@@ -26,6 +26,11 @@ export {
 } from "./scene/ViewLink.ts";
 export { Camera } from "./scene/Camera.ts";
 export { OrbitController } from "./scene/OrbitController.ts";
+export { InspectController } from "./scene/InspectController.ts";
+export {
+  collectFullDetailContents,
+  type TileContent,
+} from "./tiles/fullDetail.ts";
 export {
   createBox,
   createSurfacePatch,

@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CesiumJS 2.0 Viewer</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0b0e14;
+        --panel: #131824;
+        --text: #d7dce6;
+        --muted: #8a93a6;
+        --accent: #f2c14e;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: var(--bg);
+        color: var(--text);
+        font:
+          13px/1.4 system-ui,
+          sans-serif;
+      }
+      body {
+        display: grid;
+        grid-template-columns: 1fr 340px;
+        height: 100vh;
+      }
+      #main {
+        width: 100%;
+        height: 100%;
+        display: block;
+        touch-action: none;
+      }
+      aside {
+        background: var(--panel);
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        overflow: auto;
+      }
+      select,
+      input[type="number"] {
+        background: #0f1420;
+        color: var(--text);
+        border: 1px solid #2f3a50;
+        border-radius: 6px;
+        padding: 5px 6px;
+        width: 100%;
+      }
+      .row {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+      }
+      .row > * {
+        flex: 1;
+      }
+      label.range {
+        display: grid;
+        grid-template-columns: 96px 1fr 44px;
+        align-items: center;
+        gap: 6px;
+        color: var(--muted);
+      }
+      label.range output {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+        color: var(--text);
+      }
+      label.check {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        color: var(--muted);
+      }
+      #pick table {
+        border-collapse: collapse;
+        width: 100%;
+        margin-top: 4px;
+        font-size: 12px;
+      }
+      #pick th {
+        text-align: left;
+        color: var(--muted);
+        font-weight: normal;
+        padding: 2px 8px 2px 0;
+        vertical-align: top;
+        white-space: nowrap;
+      }
+      #pick td {
+        word-break: break-all;
+        padding: 2px 0;
+      }
+      .pick-name {
+        font-weight: 600;
+      }
+      a {
+        color: var(--accent);
+      }
+      aside h2 {
+        margin: 4px 0 0;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--muted);
+      }
+      #second {
+        width: 100%;
+        aspect-ratio: 4 / 3;
+        display: block;
+        border-radius: 6px;
+        touch-action: none;
+      }
+      #capture-img {
+        width: 100%;
+        border-radius: 6px;
+        min-height: 40px;
+        background: #000;
+      }
+      button {
+        background: #222a3a;
+        color: var(--text);
+        border: 1px solid #2f3a50;
+        border-radius: 6px;
+        padding: 6px 10px;
+        cursor: pointer;
+      }
+      button:hover {
+        border-color: var(--accent);
+      }
+      pre {
+        margin: 0;
+        white-space: pre-wrap;
+        color: var(--muted);
+        font:
+          12px/1.5 ui-monospace,
+          monospace;
+      }
+      .hint {
+        color: var(--muted);
+      }
+      #error {
+        color: #ff7b72;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="main"></canvas>
+    <aside>
+      <h2>Content</h2>
+      <div id="load-status" class="hint">starting…</div>
+      <label class="hint" for="model">glTF sample model</label>
+      <select id="model">
+        <option value="">—</option>
+      </select>
+      <label class="hint" for="tileset">3D Tiles sample (full detail)</label>
+      <select id="tileset">
+        <option value="">—</option>
+      </select>
+      <label class="hint" for="ion-asset">Cesium ion asset (3D Tiles)</label>
+      <div class="row">
+        <input id="ion-asset" type="number" min="1" placeholder="asset id" />
+        <button id="ion-load">Load</button>
+      </div>
+      <div id="ion-hint" class="hint"></div>
+      <div class="row">
+        <button id="city">Synthetic city</button>
+        <button id="frame">Frame content</button>
+      </div>
+      <label class="check"><input id="unlit" type="checkbox" /> Unlit</label>
+      <label class="check"
+        ><input id="ground" type="checkbox" checked /> Ground patch (globe is
+        M3)</label
+      >
+      <label class="check"
+        ><input id="overview" type="checkbox" /> Linked overview inset</label
+      >
+
+      <h2>Lighting</h2>
+      <label class="range"
+        >Sun azimuth
+        <input id="sun-azimuth" type="range" min="0" max="360" value="150" />
+        <output id="sun-azimuth-value"></output
+      ></label>
+      <label class="range"
+        >Sun elevation
+        <input id="sun-elevation" type="range" min="-10" max="90" value="40" />
+        <output id="sun-elevation-value"></output
+      ></label>
+      <label class="range"
+        >Sun intensity
+        <input
+          id="sun-intensity"
+          type="range"
+          min="0"
+          max="5"
+          step="0.1"
+          value="2" />
+        <output id="sun-intensity-value"></output
+      ></label>
+      <label class="range"
+        >Diffuse IBL
+        <input
+          id="diffuse-ibl"
+          type="range"
+          min="0"
+          max="2"
+          step="0.05"
+          value="1" />
+        <output id="diffuse-ibl-value"></output
+      ></label>
+      <label class="range"
+        >Specular IBL
+        <input
+          id="specular-ibl"
+          type="range"
+          min="0"
+          max="2"
+          step="0.05"
+          value="1" />
+        <output id="specular-ibl-value"></output
+      ></label>
+      <label class="range"
+        >Exposure
+        <input
+          id="exposure"
+          type="range"
+          min="0.1"
+          max="4"
+          step="0.05"
+          value="1" />
+        <output id="exposure-value"></output
+      ></label>
+      <label class="hint" for="encoding">Output encoding</label>
+      <select id="encoding">
+        <option value="srgb">sRGB (exact)</option>
+        <option value="gamma2.2">gamma 2.2 (1.x)</option>
+      </select>
+
+      <h2>Pick</h2>
+      <div id="pick" class="hint">click the view</div>
+
+      <h2>Stats</h2>
+      <pre id="stats">starting…</pre>
+
+      <h2>Content warnings</h2>
+      <pre id="warnings"></pre>
+
+      <h2>Parity and benchmarks</h2>
+      <div>
+        <a href="/parity/">Image parity</a> ·
+        <a href="/parity/models.html">Models vs 1.x</a> ·
+        <a href="/parity/tileset.html">Tilesets vs 1.x</a> ·
+        <a href="/bench/baseline.html">Baselines</a> ·
+        <a href="/demo/">Multi-view demo</a>
+      </div>
+      <p class="hint">
+        Drag to orbit, right- or shift-drag to pan, wheel to zoom. Click to
+        pick. Translucent materials draw opaque until M4; streaming and tile
+        selection are M2 (tilesets load at full detail).
+      </p>
+    </aside>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

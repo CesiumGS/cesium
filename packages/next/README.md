@@ -17,6 +17,10 @@ mips, IBL environment), `src/io` (worker pool, glTF parsing),
 
 Pages on the dev server:
 
+- `/viewer/` — demo viewer: sample glTF models, 3D Tiles samples, ion assets
+  (`?asset=<id>` with `VITE_ION_TOKEN` in `.env.local`) and a synthetic city,
+  with inspection navigation, lighting controls, picking with feature
+  properties and live stats
 - `/demo/` — multi-view demo (split, linked overview, second canvas, offscreen)
 - `/parity/` — L2 image parity against 1.x (`runParity()` in the console)
 - `/parity/models.html` — Khronos sample models, 1.x `Model` vs the 2.0 glTF

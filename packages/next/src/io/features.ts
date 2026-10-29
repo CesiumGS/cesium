@@ -456,8 +456,20 @@ const LEGACY_COMPONENT_TYPES: Record<string, string> = {
   DOUBLE: "FLOAT64",
 };
 
-/** Columns that typically name a feature, in order of preference. */
-const NAME_COLUMNS = ["name", "Name", "NAME", "title", "id", "ID", "Id"];
+/**
+ * Columns that typically name a feature, in order of preference. `element`
+ * is the iTwin element ID in iModel-derived tilesets.
+ */
+const NAME_COLUMNS = [
+  "name",
+  "Name",
+  "NAME",
+  "title",
+  "id",
+  "ID",
+  "Id",
+  "element",
+];
 
 /** A display name for feature `index` of `table`. */
 export function featureName(

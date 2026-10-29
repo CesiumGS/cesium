@@ -231,6 +231,15 @@ export class Engine {
     return world;
   }
 
+  /** Removes a world from the engine and frees its GPU resources. */
+  removeWorld(world: World): void {
+    const index = this.worlds.indexOf(world);
+    if (index >= 0) {
+      this.worlds.splice(index, 1);
+    }
+    world.destroy();
+  }
+
   addView(options: ViewOptions): View {
     if (this.views.length >= this.maxViews) {
       throw new Error(`At most ${this.maxViews} views are supported.`);

@@ -5,9 +5,10 @@ import {
   eastNorthUpToFixedFrame,
   Ellipsoid,
   mat4,
+  collectFullDetailContents,
   resolveIonAsset,
-  resolveUri,
   vec3,
+  type TileContent,
   type GltfAsset,
 } from "../src/index.ts";
 import { flip } from "./flip.ts";
@@ -75,71 +76,6 @@ interface RowImages {
   legacy: ImageData;
   next: ImageData;
   heat: ImageData;
-}
-
-/* eslint-disable @typescript-eslint/no-explicit-any -- tileset JSON is untyped */
-type Json = any;
-
-interface Content {
-  url: string;
-  transform: Float64Array;
-}
-
-/**
- * Full-detail content of a tileset: leaf contents under REPLACE refinement,
- * every content under ADD, with tile transforms accumulated; external
- * tilesets are followed. Implicit tiling is M2.
- */
-async function collectContents(
-  url: string,
-  headers: Record<string, string> | undefined,
-  parent: Float64Array,
-  out: Content[],
-  warnings: Set<string>,
-): Promise<void> {
-  const response = await fetch(url, headers ? { headers } : undefined);
-  if (!response.ok) {
-    throw new Error(`${url}: ${response.status}`);
-  }
-  const tileset: Json = await response.json();
-  const up = tileset.asset?.gltfUpAxis;
-  if (up && up !== "Y") {
-    warnings.add(`gltfUpAxis ${up} not supported (treated as Y)`);
-  }
-  const walk = async (
-    tile: Json,
-    parentTransform: Float64Array,
-    inherited: string,
-  ) => {
-    const transform = tile.transform
-      ? mat4.multiply(
-          mat4.mat4(),
-          parentTransform,
-          Float64Array.from(tile.transform),
-        )
-      : parentTransform;
-    const refine: string = tile.refine ?? inherited;
-    if (tile.implicitTiling) {
-      warnings.add("implicit tiling not supported yet (M2)");
-    }
-    const children: Json[] = tile.children ?? [];
-    const contents: Json[] = tile.content
-      ? [tile.content]
-      : (tile.contents ?? []);
-    for (const content of contents) {
-      const uri: string = content.uri ?? content.url;
-      const contentUrl = resolveUri(uri, url);
-      if (/\.json(\?|$)/i.test(uri)) {
-        await collectContents(contentUrl, headers, transform, out, warnings);
-      } else if (children.length === 0 || refine === "ADD") {
-        out.push({ url: contentUrl, transform });
-      }
-    }
-    for (const child of children) {
-      await walk(child, transform, refine);
-    }
-  };
-  await walk(tileset.root, parent, tileset.root.refine ?? "REPLACE");
 }
 
 function unionSpheres(
@@ -277,6 +213,9 @@ async function renderLegacy(
   return { image, picks };
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped 1.x objects
+type Json = any;
+
 let lastImages: RowImages[] = [];
 
 async function sources(): Promise<Source[]> {
@@ -313,10 +252,10 @@ async function runTileset(): Promise<Row[]> {
 
   for (const source of await sources()) {
     const warnings = new Set<string>();
-    const contents: Content[] = [];
+    const contents: TileContent[] = [];
     try {
       status.textContent = `${source.label}: reading tileset…`;
-      await collectContents(
+      await collectFullDetailContents(
         new URL(source.url, location.href).href,
         source.headers,
         mat4.mat4(),
