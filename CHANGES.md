@@ -17,6 +17,7 @@
 #### Fixes :wrench:
 
 - Fixed `czm_passOverlay` and `czm_passCesium3DTileEdgesDirect` GLSL constants not matching `czm_pass` during their respective passes. Removed the unused `czm_passClassification` constant. [#13657](https://github.com/CesiumGS/cesium/issues/13657)
+- Fixed 3D Tiles replacement refinement so that empty tiles no longer block a parent tile from refining. This was previously limited to vector tilesets. [#12683](https://github.com/CesiumGS/cesium/issues/12683)
 
 ## 1.146 - 2026-10-01
 
