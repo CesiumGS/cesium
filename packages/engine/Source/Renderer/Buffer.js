@@ -11,7 +11,8 @@ import {
 import BufferUsage from "./BufferUsage.js";
 
 /**
- * @private
+ * @constructor
+ * @internal
  */
 function Buffer(options) {
   options = options ?? Frozen.EMPTY_OBJECT;
@@ -447,6 +448,11 @@ Buffer.prototype.isDestroyed = function () {
   return false;
 };
 
+/**
+ * Destroys the WebGL buffer.
+ *
+ * @returns {void}
+ */
 Buffer.prototype.destroy = function () {
   this._gl.deleteBuffer(this._buffer);
   return destroyObject(this);

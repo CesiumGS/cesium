@@ -11,7 +11,7 @@ import SceneMode from "./SceneMode.js";
  * @alias FrameState
  * @constructor
  *
- * @private
+ * @internal
  */
 function FrameState(context, creditDisplay, jobScheduler) {
   /**
@@ -44,12 +44,14 @@ function FrameState(context, creditDisplay, jobScheduler) {
   /**
    * The BRDF look up texture generator used for image-based lighting for PBR models
    * @type {BrdfLutGenerator}
+   * @private
    */
   this.brdfLutGenerator = undefined;
 
   /**
    * The environment map used for image-based lighting for PBR models
    * @type {CubeMap}
+   * @private
    */
   this.environmentMap = undefined;
 
@@ -115,6 +117,7 @@ function FrameState(context, creditDisplay, jobScheduler) {
    * The job scheduler.
    *
    * @type {JobScheduler}
+   * @private
    */
   this.jobScheduler = jobScheduler;
 
@@ -147,6 +150,7 @@ function FrameState(context, creditDisplay, jobScheduler) {
    *
    * @type {GlobeTranslucencyState}
    * @default undefined
+   * @private
    */
   this.globeTranslucencyState = undefined;
 
@@ -425,6 +429,7 @@ function FrameState(context, creditDisplay, jobScheduler) {
    * Additional state used to update 3D Tilesets.
    *
    * @type {Cesium3DTilePassState}
+   * @private
    */
   this.tilesetPassState = undefined;
 

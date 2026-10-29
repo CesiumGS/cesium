@@ -14,7 +14,8 @@ import createUniformArray from "./createUniformArray.js";
 let nextShaderProgramId = 0;
 
 /**
- * @private
+ * @constructor
+ * @internal
  */
 function ShaderProgram(options) {
   let vertexShaderText = options.vertexShaderText;
@@ -64,6 +65,17 @@ function ShaderProgram(options) {
   this.id = nextShaderProgramId++;
 }
 
+/**
+ * Gets a shader program from the context's cache, creating it if needed. Release it with
+ * {@link ShaderProgram#destroy}.
+ *
+ * @param {object} options
+ * @param {Context} options.context The context.
+ * @param {string|ShaderSource} options.vertexShaderSource The vertex shader.
+ * @param {string|ShaderSource} options.fragmentShaderSource The fragment shader.
+ * @param {Object<string, number>} [options.attributeLocations] Indices for the vertex shader's attributes.
+ * @returns {ShaderProgram} The cached or newly created shader program.
+ */
 ShaderProgram.fromCache = function (options) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
@@ -609,6 +621,11 @@ ShaderProgram.prototype.isDestroyed = function () {
   return false;
 };
 
+/**
+ * Releases the shader program from the context's cache.
+ *
+ * @returns {void}
+ */
 ShaderProgram.prototype.destroy = function () {
   this._cachedShader.cache.releaseShaderProgram(this);
   return undefined;
