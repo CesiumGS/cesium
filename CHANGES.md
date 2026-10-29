@@ -21,6 +21,7 @@
 - Fixed dynamic environment lighting on models and tilesets near or below the ellipsoid surface. [#13988](https://github.com/CesiumGS/cesium/pull/13988)
 - Fixed `pointCloudShading.backFaceCulling` not hiding back-facing points on some platforms. [#13989](https://github.com/CesiumGS/cesium/pull/13989)
 - Fixed `Cesium3DTileset` repeatedly loading and unloading the same tiles when they don't fit within `cacheBytes` plus `maximumCacheOverflowBytes`. [#13999](https://github.com/CesiumGS/cesium/pull/13999)
+- Fixed `VideoSynchronizer` behavior when the clock is outside the video's time range. [#3350](https://github.com/CesiumGS/cesium/issues/3350)
 
 ## 1.146 - 2026-10-01
 
