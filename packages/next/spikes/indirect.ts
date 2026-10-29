@@ -19,6 +19,7 @@ interface Row {
   mode: SubmissionMode;
   cpuMs: number;
   gpuMs: number;
+  gpuSpanMs: number;
   wallMs: number;
 }
 
@@ -85,6 +86,7 @@ async function run(): Promise<Row[]> {
         mode,
         cpuMs: cpu / FRAMES,
         gpuMs: engine.stats.gpuMs,
+        gpuSpanMs: engine.stats.gpuSpanMs,
         wallMs: wall / FRAMES,
       });
     }
@@ -97,14 +99,18 @@ async function run(): Promise<Row[]> {
   document.querySelector("#adapter")!.textContent =
     `Adapter: ${info.vendor} ${info.architecture} ${info.description}`;
   document.querySelector("#results")!.innerHTML =
-    `<tr><th>draws</th><th>mode</th><th>cpu / frame</th><th>gpu passes (timestamps)</th><th>frame wall</th></tr>${rows
+    `<tr><th>draws</th><th>mode</th><th>cpu / frame</th><th>gpu passes (timestamps)</th><th>gpu span</th><th>frame wall</th></tr>${rows
       .map(
         (r) =>
           `<tr><td>${r.draws}</td><td>${r.mode}</td><td>${r.cpuMs.toFixed(3)} ms</td>` +
-          `<td>${Number.isNaN(r.gpuMs) ? "n/a" : `${r.gpuMs.toFixed(3)} ms`}</td><td>${r.wallMs.toFixed(3)} ms</td></tr>`,
+          `<td>${ms(r.gpuMs)}</td><td>${ms(r.gpuSpanMs)}</td><td>${r.wallMs.toFixed(3)} ms</td></tr>`,
       )
       .join("")}`;
   return rows;
+}
+
+function ms(value: number): string {
+  return Number.isNaN(value) ? "n/a" : `${value.toFixed(3)} ms`;
 }
 
 Object.assign(globalThis, { runIndirect: run });

@@ -12,6 +12,7 @@ Branch: `cesium-2.0-webgpu-poc` (off `main` @ `587f52f1eb`, CesiumJS 1.146.0)
 | r4  | Plan-owner decisions recorded (§8): Slang + WGSL ABI; **HDR + tonemapping by default**; all four multi-view scenarios including **linked views**; `packages/next` in TypeScript with new math; Chromium-first, core WebGPU only; 3D Tiles before globe. Canonical CAD test data to come from team-chosen ion assets.                                                                   |
 | r5  | M0 findings: multisampled `r32uint` is invalid in WebGPU, so feature IDs use `rg16uint` (lo16, hi16). On dual-GPU Windows laptops Chromium ignores `powerPreference` and follows the per-app Windows graphics setting, so benchmarks must record the adapter and launch Chromium on the discrete GPU.                                                                                    |
 | r6  | M0 spike results recorded in §10: L2 parity harness, GPU precision, engine-in-worker, indirect-draw overhead. Indirect draws cost measurable GPU time on Intel/D3D12, so §3.3 submission now batches before going indirect.                                                                                                                                                              |
+| r7  | Spikes rerun on the NVIDIA GPU; Slang spike run (passes, perf gate deferred to unquantized timing in M1). §10 rewritten with both GPUs.                                                                                                                                                                                                                                                  |
 
 ## 1. Goal
 
@@ -587,24 +588,65 @@ Recommendations already adopted from the review: core-only (no compatibility mod
 
 ## 10. M0 spike results
 
-Measured on a low-end Intel Xe-LPG integrated GPU (Windows, D3D12 via Chromium). The
-NVIDIA discrete GPU in the same laptop was not yet in use; rerun there and on
-Metal before treating these as general.
+Two GPUs in the same Windows laptop, both D3D12 via Chromium: a low-end Intel
+Xe-LPG iGPU and an NVIDIA Lovelace (RTX 40-series) laptop GPU. CPU and
+wall-clock numbers in the NVIDIA runs were taken while other processes were
+running unit tests and are noisy; GPU timestamps are quantized to 100 µs by
+Chrome without its developer flag. Metal is still untested.
 
-| Spike                                           | Result                                                                                                                                                                                                               | Status                         |
-| ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
-| L0 math parity                                  | Geodesy, ENU frames (incl. poles), projection terms match 1.x core to ≤1e-12 relative                                                                                                                                | pass                           |
-| L2 image parity (`parity/`)                     | Flat-colored scene, 4 cameras, 480×270, MSAA 4×, HDR + PBR Neutral. Mean ΔE 0.05–0.91 with 1.x-style gamma 2.2; 0.08–1.72 with exact sRGB curves. Differences are anti-aliased edges only; ≤1.6% of pixels above JND | pass (FLIP still to integrate) |
-| Color pipeline drift                            | 1.x uses `pow(c, 2.2)` in and `pow(c, 1/2.2)` out; exact sRGB curves shift mean ΔE by ≈0.6–0.8. Views expose `outputEncoding: "srgb" \| "gamma2.2"`                                                                  | measured                       |
-| Hi/lo precision (`spikes/precision.html`)       | Production prep kernel: max error ≈4e-8 × distance (0.04 µm at 1 m, 31 µm at 1 km, ≈4 mm at 100 km) at ground, 9 km, pole, antimeridian and LEO. Naive float32: 0.25–0.47 m everywhere                               | pass on D3D12; Metal untested  |
-| Engine in a worker (`spikes/worker.html`)       | Engine runs unchanged in a dedicated worker on an `OffscreenCanvas`; keeps rendering while the main thread is blocked                                                                                                | pass                           |
-| Indirect-draw overhead (`spikes/indirect.html`) | CPU/frame flat at 0.6–0.9 ms from 1k to 20k draws (render bundles). GPU: indirect 1.86 ms vs direct 0.60 ms at 10k draws; 8.67 vs 4.37 ms at 20k; wall-clock gap 3–9 ms (validation)                                 | **concern**                    |
-| MSAA feature IDs                                | `r32uint` cannot be multisampled; `rg16uint` (lo16, hi16) works with sample-0 pick reads                                                                                                                             | resolved                       |
-| Slang                                           | Not run yet: needs the official `shader-slang/slang` release downloaded                                                                                                                                              | pending                        |
+| Spike                                                        | Intel Xe-LPG                                                                                           | NVIDIA Lovelace                                                                     | Status                                       |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- | -------------------------------------------- |
+| L0 math parity                                               | ≤1e-12 relative vs 1.x core (CPU, GPU-independent)                                                     | same                                                                                | pass                                         |
+| L2 image parity (`parity/`)                                  | Mean ΔE 0.05–0.91 (1.x gamma 2.2), 0.08–1.72 (exact sRGB); only AA edges differ; ≤1.6% pixels > JND    | Mean ΔE 0.05–0.91 / 0.08–1.72; ≤1.7% pixels > JND                                   | pass (FLIP still to integrate)               |
+| Color pipeline drift                                         | Exact sRGB vs 1.x `pow(c, 2.2)`: +0.6–0.8 mean ΔE. Views expose `outputEncoding`                       | same                                                                                | measured                                     |
+| Hi/lo precision (`spikes/precision.html`)                    | Max error ≈4e-8 × distance (0.04 µm at 1 m, 31 µm at 1 km, ≈4 mm at 100 km); naive float32 0.25–0.47 m | Bit-identical to Intel                                                              | pass on D3D12                                |
+| Engine in a worker (`spikes/worker.html`)                    | Runs unchanged on an `OffscreenCanvas`; keeps rendering while the main thread is blocked               | not rerun                                                                           | pass                                         |
+| Demo frame (657 draws × 3 views)                             | GPU 2.25 ms, CPU 0.7 ms                                                                                | GPU 0.38 ms, CPU 0.7 ms                                                             | —                                            |
+| Indirect vs direct draws, 20k draws (`spikes/indirect.html`) | GPU in-pass 8.67 vs 4.37 ms; wall-clock gap 3–9 ms                                                     | GPU in-pass 0.75 vs 0.15 ms (≈30 ns/draw); GPU span ≈ in-pass; wall-clock gap ≈4 ms | **concern** (cost is per indirect call)      |
+| CPU per frame with render bundles                            | 0.6–0.9 ms flat from 1k to 20k draws                                                                   | 0.3–0.4 ms flat                                                                     | pass                                         |
+| MSAA feature IDs                                             | `r32uint` cannot be multisampled; `rg16uint` (lo16, hi16) with sample-0 pick reads                     | same                                                                                | resolved                                     |
+| Slang (`spikes/slang.html`)                                  | —                                                                                                      | See below                                                                           | **pass**, perf gate needs unquantized timing |
 
-**Consequence for §3.3.** Per-draw indirect calls are not free on this
-hardware (≈0.2–0.45 µs GPU per draw, plus validation). M1 keeps GPU-driven
-culling but reduces the number of indirect calls: one indirect draw per batch of
-records that share a mesh and material (GPU-compacted instance lists), CPU
-tile-level culling before the bundle, and direct draws where nothing is culled
-on the GPU. Re-measure on the discrete GPU before finalizing.
+**Indirect draws.** On NVIDIA the GPU-side cost of an indirect call is small
+(≈30 ns), and the GPU span from first to last pass matches the per-pass sum,
+so whatever Dawn adds happens off the GPU timeline (the ≈4 ms wall-clock gap at
+20k draws). On the Intel iGPU the GPU cost itself doubles. Either way the cost
+scales with the number of indirect calls, so M1 reduces them: one indirect draw
+per batch of records sharing a mesh and material (GPU-compacted instance
+lists), CPU tile-level culling before the bundle, and direct draws where the GPU
+culls nothing.
+
+**Slang (v2026.20, NVIDIA).**
+
+- Ported the opaque shader and the prep kernel. The material is an
+  `IMaterial` interface bound at link time: the engine module declares
+  `extern struct Material : IMaterial`, and a separate module exports the
+  implementation (`DefaultMaterial`, or a user `ToonMaterial`). With slangc the
+  material module is precompiled to a `.slang-module` and linked; at runtime the
+  WASM API composes the modules directly.
+- slangc output validates in Chrome with 0 errors and 0 warnings and renders
+  **pixel-identical** to the hand-written WGSL (mean ΔE 0.000). Prep-kernel
+  precision is identical (max relative error 5.96e-8 for both).
+- Corrects the r3 review: `SV_Target0/1` multiple render targets work,
+  `SV_InstanceID` maps to `instance_index` (so `firstInstance` semantics hold),
+  `nointerpolation` maps to `@interpolate(flat)`, and `[[vk::binding(b, g)]]`
+  maps to `@binding/@group`, so Slang modules fit the engine's bind group
+  layouts unchanged.
+- GPU time, 20k draws, median of 3 alternating runs: Slang was 14–20% _faster_
+  in two runs and 50% slower in a first single run — noise at this resolution
+  (≈1 ms, 100 µs quantization). No evidence of a penalty; the ≤5% gate is
+  re-run in M1's benchmark suite with unquantized timestamps.
+- Codegen quirks to track: matrices are rebuilt from 16 scalar loads per use
+  (transposed for `column_major`); one `i32` field got `@align(8)` (harmless
+  here because the offset was already 8-aligned, but a layout risk); the hi/lo
+  subtraction kept its grouping. Pin `column_major` in source, since the WASM
+  API's sessions take no `-matrix-layout-*` flag.
+- Runtime compiler: `slang-wasm.wasm` is 25.1 MB raw, 10.6 MB gzip, 7.7 MB
+  brotli, plus 155 kB of JS. Load and instantiate 120–140 ms (local server),
+  `createGlobalSession` ≈160 ms, compile opaque + ToonMaterial 220–230 ms cold
+  and ≈58 ms warm. Output validates; its text differs from slangc's (different
+  naming from linking source vs. precompiled IR) without functional change.
+- **Decision input:** build-time Slang is viable as the engine and user
+  authoring path. Runtime Slang works but costs ≈8 MB (brotli) and ≈0.5 s
+  before the first compile, so it stays lazy, worker-hosted and optional, with
+  offline compilation the recommended path, as §3.4 proposed.

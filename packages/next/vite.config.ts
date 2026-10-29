@@ -20,17 +20,22 @@ const contentTypes: Record<string, string> = {
   ".svg": "image/svg+xml",
 };
 
-/** Serves the 1.x build at /cesium1x/ without copying it into the package. */
-function serveCesium1x(): Plugin {
+/**
+ * Serves a local directory at `prefix` without copying it into the package:
+ * the 1.x build for the parity harness, and optionally the Slang WASM build
+ * (set SLANG_WASM_DIR) for the Slang spike.
+ */
+function serveDirectory(prefix: string, root: string): Plugin {
+  const base = normalize(root);
   return {
-    name: "serve-cesium-1x",
+    name: `serve-directory${prefix}`,
     configureServer(server) {
-      server.middlewares.use("/cesium1x", (req, res, next) => {
+      server.middlewares.use(prefix, (req, res, next) => {
         const path = normalize(
-          join(cesium1x, decodeURIComponent((req.url ?? "/").split("?")[0]!)),
+          join(base, decodeURIComponent((req.url ?? "/").split("?")[0]!)),
         );
         if (
-          !path.startsWith(cesium1x) ||
+          !path.startsWith(base) ||
           !existsSync(path) ||
           statSync(path).isDirectory()
         ) {
@@ -47,9 +52,14 @@ function serveCesium1x(): Plugin {
   };
 }
 
+const slangWasm = process.env.SLANG_WASM_DIR;
+
 export default defineConfig({
   server: { host: "127.0.0.1", port: 5190, strictPort: true },
-  plugins: [serveCesium1x()],
+  plugins: [
+    serveDirectory("/cesium1x", cesium1x),
+    ...(slangWasm ? [serveDirectory("/slang-wasm", slangWasm)] : []),
+  ],
   build: {
     outDir: "dist",
     emptyOutDir: true,
@@ -61,6 +71,7 @@ export default defineConfig({
         precision: "spikes/precision.html",
         worker: "spikes/worker.html",
         indirect: "spikes/indirect.html",
+        slang: "spikes/slang.html",
       },
     },
   },

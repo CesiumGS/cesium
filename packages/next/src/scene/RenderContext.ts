@@ -44,12 +44,30 @@ export interface RenderContext {
   currentViewBindGroup: GPUBindGroup;
 }
 
+/**
+ * Complete WGSL modules that replace the built-in shaders, e.g. output of the
+ * Slang toolchain. They must keep the built-in bind group layouts and entry
+ * point names (`vs`/`fs` for opaque, `main` for prep). An opaque override
+ * reads the draw index from `instance_index`, so it requires
+ * `indirect-first-instance`.
+ */
+export interface ShaderOverrides {
+  opaque?: string;
+  prep?: string;
+}
+
 export async function createRenderContext(
   device: GPUDevice,
   caps: Capabilities,
   outputFormat: GPUTextureFormat,
+  overrides: ShaderOverrides = {},
 ): Promise<RenderContext> {
-  const pipelines = await createPipelines(device, caps, outputFormat);
+  const pipelines = await createPipelines(
+    device,
+    caps,
+    outputFormat,
+    overrides,
+  );
   const currentViewBuffer = device.createBuffer({
     label: "currentView",
     size: VIEW_SIZE,
@@ -75,7 +93,11 @@ async function createPipelines(
   device: GPUDevice,
   caps: Capabilities,
   outputFormat: GPUTextureFormat,
+  overrides: ShaderOverrides,
 ): Promise<Pipelines> {
+  if (overrides.opaque !== undefined && !caps.indirectFirstInstance) {
+    throw new Error("Opaque shader overrides require indirect-first-instance.");
+  }
   const viewLayout = device.createBindGroupLayout({
     label: "view",
     entries: [
@@ -157,7 +179,10 @@ async function createPipelines(
     : opaqueWgsl
         .replace("DRAW_INDEX_PARAM", "@location(0) drawIndex: u32")
         .replace("DRAW_INDEX_EXPR", "drawIndex");
-  const opaqueModule = module("opaque", commonWgsl, opaqueSource);
+  const opaqueModule =
+    overrides.opaque !== undefined
+      ? module("opaque (override)", overrides.opaque)
+      : module("opaque", commonWgsl, opaqueSource);
 
   const [prep, opaque, present, overlay, pick] = await Promise.all([
     device.createComputePipelineAsync({
@@ -166,7 +191,10 @@ async function createPipelines(
         bindGroupLayouts: [viewLayout, prepWorldLayout],
       }),
       compute: {
-        module: module("prep", commonWgsl, prepWgsl),
+        module:
+          overrides.prep !== undefined
+            ? module("prep (override)", overrides.prep)
+            : module("prep", commonWgsl, prepWgsl),
         entryPoint: "main",
       },
     }),

@@ -9,6 +9,12 @@
 export class GpuTimer {
   /** Smoothed GPU frame time in milliseconds, or NaN when unsupported. */
   milliseconds = Number.NaN;
+  /**
+   * Smoothed span from the first measured pass's start to the last one's end.
+   * Unlike `milliseconds`, it includes work the implementation inserts
+   * between passes (e.g. indirect-draw validation) and idle gaps.
+   */
+  spanMilliseconds = Number.NaN;
   private readonly querySet?: GPUQuerySet;
   private readonly resolveBuffer?: GPUBuffer;
   private readonly readbacks: GPUBuffer[] = [];
@@ -108,19 +114,28 @@ export class GpuTimer {
       () => {
         const times = new BigUint64Array(buffer.getMappedRange(0, count * 8));
         let total = 0n;
+        let first = times[0]!;
+        let last = times[1]!;
         for (let i = 0; i < count; i += 2) {
           const begin = times[i]!,
             end = times[i + 1]!;
           if (end > begin) {
             total += end - begin;
           }
+          first = begin < first ? begin : first;
+          last = end > last ? end : last;
         }
         buffer.unmap();
         this.idle.push(buffer);
-        const ms = Number(total) / 1e6;
-        this.milliseconds = Number.isNaN(this.milliseconds)
-          ? ms
-          : this.milliseconds * 0.9 + ms * 0.1;
+        const smooth = (previous: number, sample: number) =>
+          Number.isNaN(previous) ? sample : previous * 0.9 + sample * 0.1;
+        this.milliseconds = smooth(this.milliseconds, Number(total) / 1e6);
+        if (last > first) {
+          this.spanMilliseconds = smooth(
+            this.spanMilliseconds,
+            Number(last - first) / 1e6,
+          );
+        }
       },
       () => this.idle.push(buffer),
     );

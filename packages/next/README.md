@@ -20,3 +20,12 @@ Pages on the dev server:
 - `/spikes/precision.html` — camera-relative precision of the prep kernel
 - `/spikes/worker.html` — the engine running in a worker on an OffscreenCanvas
 - `/spikes/indirect.html` — indirect vs direct draws in render bundles
+- `/spikes/slang.html` — Slang ports of the shaders (link-time materials),
+  compared with the hand-written WGSL
+
+The Slang spike uses checked-in WGSL from `spikes/slang/generated/`. To
+regenerate it, download the official Slang release
+(<https://github.com/shader-slang/slang/releases>) and run
+`SLANGC=/path/to/slangc node spikes/slang/build.mjs`. To also test runtime
+compilation, start the dev server with `SLANG_WASM_DIR` pointing at the
+extracted `slang-*-wasm.zip`.

@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Slang Spike</title>
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      body {
+        margin: 0;
+        padding: 16px;
+        background: #0b0e14;
+        color: #d7dce6;
+        font:
+          13px/1.4 system-ui,
+          sans-serif;
+      }
+      h1 {
+        font-size: 16px;
+        margin: 0 0 4px;
+      }
+      h2 {
+        font-size: 13px;
+        margin: 16px 0 4px;
+        color: #8a93a6;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+      p {
+        color: #8a93a6;
+        max-width: 860px;
+      }
+      .images {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      figure {
+        margin: 0;
+      }
+      figcaption {
+        color: #8a93a6;
+        font-size: 12px;
+        margin-bottom: 4px;
+      }
+      canvas {
+        width: 384px;
+        height: 216px;
+        display: block;
+        background: #000;
+      }
+      table {
+        border-collapse: collapse;
+        font-variant-numeric: tabular-nums;
+      }
+      th,
+      td {
+        padding: 4px 10px;
+        border-bottom: 1px solid #222a3a;
+        text-align: left;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Slang spike (M0 gate)</h1>
+    <p>
+      Slang ports of the opaque shader (material bound at link time) and the
+      prep kernel, compiled to WGSL by slangc at build time and, when the WASM
+      build is served at /slang-wasm/ (SLANG_WASM_DIR), at runtime in the page.
+    </p>
+    <div id="adapter"></div>
+    <h2>Rendering: hand-written WGSL vs Slang</h2>
+    <div class="images">
+      <figure>
+        <figcaption>WGSL (built-in)</figcaption>
+        <canvas id="wgsl"></canvas>
+      </figure>
+      <figure>
+        <figcaption>Slang, DefaultMaterial</figcaption>
+        <canvas id="slang"></canvas>
+      </figure>
+      <figure>
+        <figcaption>Slang, ToonMaterial (user module)</figcaption>
+        <canvas id="toon"></canvas>
+      </figure>
+    </div>
+    <h2>Checks</h2>
+    <table id="results"></table>
+    <script type="module" src="./slang.ts"></script>
+  </body>
+</html>

@@ -5,20 +5,28 @@ import { VIEW_SIZE, VIEW_STRIDE, writeViewBlock } from "../render/layout.ts";
 import * as m4 from "../math/mat4.ts";
 import * as v3 from "../math/vec3.ts";
 import type { Vec3 } from "../math/vec3.ts";
-import { createRenderContext, type RenderContext } from "./RenderContext.ts";
+import {
+  createRenderContext,
+  type RenderContext,
+  type ShaderOverrides,
+} from "./RenderContext.ts";
 import { View, type PickResult, type ViewOptions } from "./View.ts";
 import { ViewLink, type ViewLinkOptions } from "./ViewLink.ts";
 import { World, type WorldOptions } from "./World.ts";
 
 export interface EngineOptions extends GpuDeviceOptions {
   maxViews?: number;
+  /** Replace built-in shaders with complete WGSL modules (e.g. from Slang). */
+  shaders?: ShaderOverrides;
 }
 
 export interface FrameStats {
   /** Smoothed main-thread time spent in `renderFrame`, ms. */
   cpuMs: number;
-  /** Smoothed GPU time, ms (NaN without `timestamp-query`). */
+  /** Smoothed GPU time inside our passes, ms (NaN without `timestamp-query`). */
   gpuMs: number;
+  /** Smoothed GPU span from first pass start to last pass end, ms. */
+  gpuSpanMs: number;
   views: number;
   draws: number;
 }
@@ -43,6 +51,7 @@ export class Engine {
   readonly stats: FrameStats = {
     cpuMs: 0,
     gpuMs: Number.NaN,
+    gpuSpanMs: Number.NaN,
     views: 0,
     draws: 0,
   };
@@ -109,6 +118,7 @@ export class Engine {
       gpu.device,
       gpu.caps,
       gpu.preferredCanvasFormat,
+      options.shaders,
     );
     // M0: device-loss recovery stops at the device. Rebuilding worlds from
     // their CPU-side sources arrives with the streaming cache (M2).
@@ -236,6 +246,7 @@ export class Engine {
     this.stats.cpuMs =
       this.stats.cpuMs === 0 ? elapsed : this.stats.cpuMs * 0.9 + elapsed * 0.1;
     this.stats.gpuMs = this.timer.milliseconds;
+    this.stats.gpuSpanMs = this.timer.spanMilliseconds;
     this.stats.views = views.length;
     this.stats.draws = this.worlds.reduce((n, w) => n + w.recordCount, 0);
   }
