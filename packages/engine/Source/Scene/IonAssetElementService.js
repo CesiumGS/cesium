@@ -130,7 +130,7 @@ function treeNodeFromResponse(response) {
  *
  * @typedef {object} IonAssetElementService.ElementPage
  * @property {IonAssetElementService.Element[]} items The elements on this page.
- * @property {number} total The total number of elements matching the query across all pages.
+ * @property {number|null} total The total number of elements matching the query across all pages, or <code>null</code> when the total is unavailable.
  * @property {string} [continuationToken] A token to pass as <code>options.continuationToken</code> to retrieve the next page, or <code>undefined</code> when there are no more results.
  */
 
