@@ -48,7 +48,13 @@ function propertiesTable(properties) {
     .map(([key, property]) => {
       // displayValue already includes formatted units.
       const text = property?.displayValue ?? property?.value ?? property;
-      return `<tr><td><b>${key}</b></td><td>${text}</td></tr>`;
+      const row = document.createElement("tr");
+      const nameCell = row.insertCell();
+      const name = document.createElement("b");
+      name.textContent = key;
+      nameCell.appendChild(name);
+      row.insertCell().textContent = String(text);
+      return row.outerHTML;
     })
     .join("");
   return `<table class="cesium-infoBox-defaultTable"><tbody>${rows}</tbody></table>`;
