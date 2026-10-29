@@ -255,7 +255,6 @@ describe("Scene/IonAssetElementService", function () {
           hasChildren: true,
           id: 7,
           kind: "model",
-          className: "Building",
           ignored: true,
         },
       ],
@@ -278,7 +277,6 @@ describe("Scene/IonAssetElementService", function () {
           hasChildren: true,
           id: "7",
           kind: "model",
-          className: "Building",
         },
       ],
     });

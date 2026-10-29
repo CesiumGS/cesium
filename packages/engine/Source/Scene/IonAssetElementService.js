@@ -95,9 +95,6 @@ function treeNodeFromResponse(response) {
     id: toIdString(response.id),
     kind: response.kind,
   };
-  if (defined(response.className)) {
-    result.className = response.className;
-  }
   return result;
 }
 
@@ -194,8 +191,7 @@ function treeNodeFromResponse(response) {
  * @typedef {object} IonAssetElementService.ElementTreeNode
  * @property {string} key The opaque key of this node. Pass it as <code>options.nodeKey</code> to {@link IonAssetElementService#getElementTreeChildren} to list this node's children.
  * @property {string} label The user-friendly label of this node.
- * @property {boolean} hasChildren Whether this node has any children.
- * @property {string} [className] The name of the class this node represents, when included.
+ * @property {boolean} hasChildren Whether this node has any children. *
  * @property {string} id The integer instance id represented by this node, as a decimal string.
  * @property {"subject"|"model"|"category"|"element"} kind The kind of node.
  */
@@ -379,7 +375,7 @@ class IonAssetElementService extends ElementService {
    * @param {object} [options] Object with the following properties:
    * @param {number} [options.top=100] The maximum number of elements to return per page.
    * @param {string} [options.continuationToken] A token returned from a previous call to retrieve the next page of results.
-   * @param {object|string} [options.filter] A <a href="https://www.mongodb.com/docs/manual/reference/operator/query/">MongoDB-style</a> filter, as an object (recommended) or a JSON string.
+   * @param {object|string} [options.filter] An element filter. See the Query parameters section of the <a href="https://cesium.com/learn/ion/rest-api/#operation/getAssetElementsV1">List elements</a> ion REST API documentation for the supported structure.
    * @returns {Promise<IonAssetElementService.ElementPage>} A promise that resolves to a page of elements. The promise rejects with a {@link RequestErrorEvent} if the request fails.
    * @exception {DeveloperError} <code>options.top</code> must be a positive integer.
    * @exception {DeveloperError} <code>options.continuationToken</code> must be a string.
@@ -461,7 +457,7 @@ class IonAssetElementService extends ElementService {
    *
    * @param {object} options Object with the following properties:
    * @param {string[]} options.propertyKeys The qualified property keys to aggregate. At least one is required.
-   * @param {object|string} [options.filter] A <a href="https://www.mongodb.com/docs/manual/reference/operator/query/">MongoDB-style</a> filter, as an object (recommended) or a JSON string.
+   * @param {object|string} [options.filter] An element filter. See the Query parameters section of the <a href="https://cesium.com/learn/ion/rest-api/#operation/getAssetElementsAggregate">Aggregate elements</a> ion REST API documentation for the supported structure.
    * @returns {Promise<IonAssetElementService.AggregateResult>} A promise that resolves to the aggregate statistics. The promise rejects with a {@link RequestErrorEvent} if the request fails.
    * @exception {DeveloperError} <code>options.propertyKeys</code> must be a non-empty array of strings.
    *
