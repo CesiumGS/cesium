@@ -23,6 +23,12 @@ describe("Core/VideoSynchronizer", function () {
     return element;
   }
 
+  function waitForVideoData(element) {
+    return pollToPromise(function () {
+      return element.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA;
+    });
+  }
+
   it("Can default construct", function () {
     const videoSynchronizer = new VideoSynchronizer();
 
@@ -57,7 +63,7 @@ describe("Core/VideoSynchronizer", function () {
     expect(videoSynchronizer.isDestroyed()).toBe(true);
   });
 
-  it("Syncs time when looping", function () {
+  it("Syncs time when looping", async function () {
     const epoch = JulianDate.fromIso8601("2015-11-01T00:00:00Z");
     const clock = new Clock();
     clock.shouldAnimate = false;
@@ -65,6 +71,7 @@ describe("Core/VideoSynchronizer", function () {
 
     const element = loadVideo();
     element.loop = true;
+    await waitForVideoData(element);
 
     const videoSynchronizer = new VideoSynchronizer({
       clock: clock,
@@ -72,51 +79,48 @@ describe("Core/VideoSynchronizer", function () {
       epoch: epoch,
     });
 
-    return pollToPromise(function () {
+    await pollToPromise(function () {
       clock.tick();
       return element.currentTime === 0;
-    })
-      .then(function () {
-        clock.currentTime = JulianDate.addSeconds(epoch, 10, clock.currentTime);
-        return pollToPromise(function () {
-          clock.tick();
-          return element.currentTime === 10;
-        });
-      })
-      .then(function () {
-        clock.currentTime = JulianDate.addSeconds(epoch, 60, clock.currentTime);
-        return pollToPromise(function () {
-          clock.tick();
-          return CesiumMath.equalsEpsilon(
-            element.currentTime,
-            60 - element.duration,
-            CesiumMath.EPSILON3,
-          );
-        });
-      })
-      .then(function () {
-        clock.currentTime = JulianDate.addSeconds(epoch, -1, clock.currentTime);
-        return pollToPromise(function () {
-          clock.tick();
-          return CesiumMath.equalsEpsilon(
-            element.currentTime,
-            element.duration - 1,
-            CesiumMath.EPSILON1,
-          );
-        });
-      })
-      .then(function () {
-        videoSynchronizer.destroy();
-      });
+    });
+
+    clock.currentTime = JulianDate.addSeconds(epoch, 10, clock.currentTime);
+    await pollToPromise(function () {
+      clock.tick();
+      return element.currentTime === 10;
+    });
+
+    clock.currentTime = JulianDate.addSeconds(epoch, 60, clock.currentTime);
+    await pollToPromise(function () {
+      clock.tick();
+      return CesiumMath.equalsEpsilon(
+        element.currentTime,
+        60 - element.duration,
+        CesiumMath.EPSILON3,
+      );
+    });
+
+    clock.currentTime = JulianDate.addSeconds(epoch, -1, clock.currentTime);
+    await pollToPromise(function () {
+      clock.tick();
+      return CesiumMath.equalsEpsilon(
+        element.currentTime,
+        element.duration - 1,
+        CesiumMath.EPSILON3,
+      );
+    });
+
+    videoSynchronizer.destroy();
   });
 
-  it("Syncs time when not looping", function () {
+  it("Syncs time when not looping", async function () {
     const epoch = JulianDate.fromIso8601("2015-11-01T00:00:00Z");
     const clock = new Clock();
     clock.shouldAnimate = false;
     clock.currentTime = epoch.clone();
 
     const element = loadVideo();
+    await waitForVideoData(element);
 
     const videoSynchronizer = new VideoSynchronizer({
       clock: clock,
@@ -124,38 +128,34 @@ describe("Core/VideoSynchronizer", function () {
       epoch: epoch,
     });
 
-    return pollToPromise(function () {
+    await pollToPromise(function () {
       clock.tick();
       return element.currentTime === 0;
-    })
-      .then(function () {
-        clock.currentTime = JulianDate.addSeconds(epoch, 10, clock.currentTime);
-        return pollToPromise(function () {
-          clock.tick();
-          return element.currentTime === 10;
-        });
-      })
-      .then(function () {
-        clock.currentTime = JulianDate.addSeconds(epoch, 60, clock.currentTime);
-        return pollToPromise(function () {
-          clock.tick();
-          return CesiumMath.equalsEpsilon(
-            element.currentTime,
-            element.duration,
-            CesiumMath.EPSILON3,
-          );
-        });
-      })
-      .then(function () {
-        clock.currentTime = JulianDate.addSeconds(epoch, -1, clock.currentTime);
-        return pollToPromise(function () {
-          clock.tick();
-          return element.currentTime === 0;
-        });
-      })
-      .then(function () {
-        videoSynchronizer.destroy();
-      });
+    });
+
+    clock.currentTime = JulianDate.addSeconds(epoch, 10, clock.currentTime);
+    await pollToPromise(function () {
+      clock.tick();
+      return element.currentTime === 10;
+    });
+
+    clock.currentTime = JulianDate.addSeconds(epoch, 60, clock.currentTime);
+    await pollToPromise(function () {
+      clock.tick();
+      return CesiumMath.equalsEpsilon(
+        element.currentTime,
+        element.duration,
+        CesiumMath.EPSILON3,
+      );
+    });
+
+    clock.currentTime = JulianDate.addSeconds(epoch, -1, clock.currentTime);
+    await pollToPromise(function () {
+      clock.tick();
+      return element.currentTime === 0;
+    });
+
+    videoSynchronizer.destroy();
   });
 
   it("Plays/pauses video based on clock", function () {
