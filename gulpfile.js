@@ -30,6 +30,7 @@ import {
   getWorkspaces,
   glslToJavaScript,
   shaderFiles,
+  shaderWorkspaces,
 } from "./scripts/build-utilities.js";
 import {
   buildCesium,
@@ -173,7 +174,9 @@ export const buildWatch = gulp.series(build, async function buildWatch() {
   const specs = bundles.specs;
 
   gulp.watch(shaderFiles, async () => {
-    glslToJavaScript(minify, "Build/minifyShaders.state", "engine");
+    for (const workspace of shaderWorkspaces) {
+      await glslToJavaScript(minify, "Build/minifyShaders.state", workspace);
+    }
     await esm.rebuild();
 
     if (iife) {

@@ -30,6 +30,7 @@ export default [
       "packages/sandcastle/templates/Sandcastle.js",
       "packages/sandcastle/gallery/pagefind/",
       "packages/engine/Source/Shaders/**/*",
+      "packages/edit/Source/Shaders/**/*.js",
       "Specs/jasmine/*",
       "**/*/SpecList.js",
     ],

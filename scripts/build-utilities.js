@@ -51,10 +51,21 @@ export async function copyFiles(globs, destination, base) {
   return stream;
 }
 
-export const shaderFiles = [
-  "packages/engine/Source/Shaders/**/*.glsl",
-  "packages/engine/Source/ThirdParty/Shaders/*.glsl",
-];
+/**
+ * @param {Workspace} workspace
+ * @returns {string[]} Globs for the workspace's GLSL files.
+ */
+export function getShaderFiles(workspace) {
+  return [
+    `packages/${workspace}/Source/Shaders/**/*.glsl`,
+    `packages/${workspace}/Source/ThirdParty/Shaders/*.glsl`,
+  ];
+}
+
+/** @type {Workspace[]} */
+export const shaderWorkspaces = ["engine", "edit"];
+
+export const shaderFiles = shaderWorkspaces.flatMap(getShaderFiles);
 
 /**
  * @param {boolean} minify
@@ -87,7 +98,7 @@ export async function glslToJavaScript(minify, minifyStateFilePath, workspace) {
   /** @type {string[]} */
   const builtinStructs = [];
 
-  const glslFiles = globSync(shaderFiles);
+  const glslFiles = globSync(getShaderFiles(workspace));
   await Promise.all(
     glslFiles.map(async function (glslFile) {
       glslFile = path.normalize(glslFile);
@@ -179,6 +190,15 @@ export default "${contents}";\n`;
       contents.builtinLookup.push(`czm_${builtin} : ` + `czm_${builtin}`);
     }
   };
+
+  // Only engine defines built-in GLSL functions, structs, and constants.
+  if (
+    builtinFunctions.length === 0 &&
+    builtinConstants.length === 0 &&
+    builtinStructs.length === 0
+  ) {
+    return;
+  }
 
   //generate the JS file for Built-in GLSL Functions, Structs, and Constants
   const contents = {

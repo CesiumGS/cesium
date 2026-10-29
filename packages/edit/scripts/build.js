@@ -4,6 +4,7 @@ import { globSync, mkdirSync, existsSync } from "node:fs";
 import path from "node:path";
 
 import {
+  glslToJavaScript,
   createIndexJs,
   bundleIndexJs,
   createSpecListForWorkspace,
@@ -62,6 +63,13 @@ export const buildEdit = async (options) => {
 
   // Create Build folder to place build artifacts.
   mkdirSync("packages/edit/Build", { recursive: true });
+
+  // Convert GLSL files to JavaScript modules.
+  await glslToJavaScript(
+    minify,
+    "packages/edit/Build/minifyShaders.state",
+    "edit",
+  );
 
   // Create index.js
   await createIndexJs("edit", sourceGlobs);
