@@ -79,6 +79,7 @@ class MeshEditorModule {
 
   /**
    * @returns {Promise<MeshEditorModule>}
+   * @ignore
    */
   static async #instantiate() {
     if (!FeatureDetection.supportsWebAssembly()) {
