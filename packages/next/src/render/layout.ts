@@ -113,6 +113,8 @@ export interface MeshStreams {
   uv: number;
   color: number;
   tangent: number;
+  /** Per-vertex local feature IDs (u32 words). */
+  featureId: number;
 }
 
 export interface DrawRecordData {
@@ -131,6 +133,7 @@ export interface DrawRecordData {
   materialIndex: number;
   textureSet: number;
   batch: number;
+  /** First global feature ID of the draw (0: not pickable). */
   featureId: number;
   flags: number;
 }
@@ -165,7 +168,7 @@ export function writeDrawRecord(
   u32[o + 40] = r.streams.tangent;
   u32[o + 41] = r.textureSet;
   u32[o + 42] = 0; // imagery slice (M3)
-  u32[o + 43] = 0;
+  u32[o + 43] = r.streams.featureId;
 }
 
 export interface MaterialData {

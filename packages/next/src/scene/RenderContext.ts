@@ -33,6 +33,8 @@ export interface Pipelines {
   prepArgs: GPUComputePipeline;
   opaque: GPURenderPipeline;
   opaqueDoubleSided: GPURenderPipeline;
+  /** Line-list variant (CAD edges, glTF LINES); same shaders, no culling. */
+  opaqueLines: GPURenderPipeline;
   present: GPURenderPipeline;
   overlay: GPURenderPipeline;
   overlayLayout: GPUBindGroupLayout;
@@ -232,7 +234,11 @@ async function createPipelines(
     bindGroupLayouts: [viewLayout, drawWorldLayout, textureSetLayout],
   });
 
-  const opaquePipeline = (label: string, cullMode: GPUCullMode) =>
+  const opaquePipeline = (
+    label: string,
+    cullMode: GPUCullMode,
+    topology: GPUPrimitiveTopology = "triangle-list",
+  ) =>
     device.createRenderPipelineAsync({
       label,
       layout: opaqueLayout,
@@ -254,7 +260,7 @@ async function createPipelines(
         entryPoint: "fs",
         targets: SCENE_TARGETS.colorFormats.map((format) => ({ format })),
       },
-      primitive: { topology: "triangle-list", cullMode, frontFace: "ccw" },
+      primitive: { topology, cullMode, frontFace: "ccw" },
       depthStencil: {
         format: SCENE_TARGETS.depthFormat,
         depthWriteEnabled: true,
@@ -263,61 +269,68 @@ async function createPipelines(
       multisample: { count: SCENE_TARGETS.sampleCount },
     });
 
-  const [prep, prepArgs, opaque, opaqueDoubleSided, present, overlay, pick] =
-    await Promise.all([
-      device.createComputePipelineAsync({
-        label: "prep",
-        layout: prepLayout,
-        compute: { module: prepModule, entryPoint: "main" },
+  const [
+    prep,
+    prepArgs,
+    opaque,
+    opaqueDoubleSided,
+    opaqueLines,
+    present,
+    overlay,
+    pick,
+  ] = await Promise.all([
+    device.createComputePipelineAsync({
+      label: "prep",
+      layout: prepLayout,
+      compute: { module: prepModule, entryPoint: "main" },
+    }),
+    device.createComputePipelineAsync({
+      label: "prep.args",
+      layout: prepLayout,
+      compute: { module: prepModule, entryPoint: "writeArgs" },
+    }),
+    opaquePipeline("opaque", "back"),
+    opaquePipeline("opaque.doubleSided", "none"),
+    opaquePipeline("opaque.lines", "none", "line-list"),
+    device.createRenderPipelineAsync({
+      label: "present",
+      layout: "auto",
+      vertex: { module: module("present", presentWgsl), entryPoint: "vs" },
+      fragment: {
+        module: module("present", presentWgsl),
+        entryPoint: "fs",
+        targets: [{ format: outputFormat }],
+      },
+      primitive: { topology: "triangle-list" },
+    }),
+    device.createRenderPipelineAsync({
+      label: "overlay",
+      layout: device.createPipelineLayout({
+        bindGroupLayouts: [viewLayout, overlayLayout],
       }),
-      device.createComputePipelineAsync({
-        label: "prep.args",
-        layout: prepLayout,
-        compute: { module: prepModule, entryPoint: "writeArgs" },
-      }),
-      opaquePipeline("opaque", "back"),
-      opaquePipeline("opaque.doubleSided", "none"),
-      device.createRenderPipelineAsync({
-        label: "present",
-        layout: "auto",
-        vertex: { module: module("present", presentWgsl), entryPoint: "vs" },
-        fragment: {
-          module: module("present", presentWgsl),
-          entryPoint: "fs",
-          targets: [{ format: outputFormat }],
-        },
-        primitive: { topology: "triangle-list" },
-      }),
-      device.createRenderPipelineAsync({
-        label: "overlay",
-        layout: device.createPipelineLayout({
-          bindGroupLayouts: [viewLayout, overlayLayout],
-        }),
-        vertex: {
-          module: module("overlay", commonWgsl, overlayWgsl),
-          entryPoint: "vs",
-          buffers: [
-            {
-              arrayStride: 12,
-              attributes: [
-                { shaderLocation: 0, offset: 0, format: "float32x3" },
-              ],
-            },
-          ],
-        },
-        fragment: {
-          module: module("overlay", commonWgsl, overlayWgsl),
-          entryPoint: "fs",
-          targets: [{ format: outputFormat }],
-        },
-        primitive: { topology: "line-list" },
-      }),
-      device.createComputePipelineAsync({
-        label: "pick",
-        layout: "auto",
-        compute: { module: module("pick", pickWgsl), entryPoint: "main" },
-      }),
-    ]);
+      vertex: {
+        module: module("overlay", commonWgsl, overlayWgsl),
+        entryPoint: "vs",
+        buffers: [
+          {
+            arrayStride: 12,
+            attributes: [{ shaderLocation: 0, offset: 0, format: "float32x3" }],
+          },
+        ],
+      },
+      fragment: {
+        module: module("overlay", commonWgsl, overlayWgsl),
+        entryPoint: "fs",
+        targets: [{ format: outputFormat }],
+      },
+      primitive: { topology: "line-list" },
+    }),
+    device.createComputePipelineAsync({
+      label: "pick",
+      layout: "auto",
+      compute: { module: module("pick", pickWgsl), entryPoint: "main" },
+    }),
+  ]);
 
   return {
     viewLayout,
@@ -328,6 +341,7 @@ async function createPipelines(
     prepArgs,
     opaque,
     opaqueDoubleSided,
+    opaqueLines,
     present,
     overlay,
     overlayLayout,

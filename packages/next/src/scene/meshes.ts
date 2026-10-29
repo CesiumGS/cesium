@@ -14,6 +14,12 @@ export interface MeshData {
   colors?: Float32Array;
   tangents?: Float32Array;
   indices: Uint32Array;
+  /** Per-vertex local feature IDs (0xffffffff: no feature). */
+  featureIds?: Uint32Array;
+  /** Size of the local feature-ID space (default 1: the whole draw). */
+  featureCount?: number;
+  /** Default "triangle-list". Lines are drawn unlit, like 1.x. */
+  topology?: "triangle-list" | "line-list";
 }
 
 /** A unit cube centered at the origin, with flat per-face normals. */

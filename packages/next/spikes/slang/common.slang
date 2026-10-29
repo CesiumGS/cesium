@@ -39,7 +39,7 @@ public struct DrawRecord {
   public uint tangentOffset;
   public uint textureSet;
   public uint imagerySlice;
-  public uint pad;
+  public uint featureIdOffset; // per-vertex local feature IDs (u32 words)
 };
 
 public struct DrawInstance {

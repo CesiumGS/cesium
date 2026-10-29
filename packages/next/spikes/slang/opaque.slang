@@ -44,6 +44,7 @@ struct VsOut {
   nointerpolation uint draw : DRAW;
   float3 relPosition : POSITION_REL;
   float4 tangent : TANGENT;
+  nointerpolation uint feature : FEATURE; // global feature ID, 0 = none
 };
 
 float2 read2(uint offset, uint i) {
@@ -95,6 +96,13 @@ VsOut vs(uint vertexIndex : SV_VertexID, VsIn input) {
   float det = dot(c0, cross(c1, c2));
   o.normal = normalize(cross(c1, c2) * normal.x + cross(c2, c0) * normal.y + cross(c0, c1) * normal.z) * sign(det);
   o.draw = draw;
+  // Per-vertex feature IDs are local to the draw; its first global ID
+  // offsets them (see opaque.wgsl).
+  o.feature = r.featureId;
+  if (r.featureIdOffset != NO_STREAM) {
+    uint local = asuint(vertices[r.featureIdOffset + vertexIndex]);
+    o.feature = local == 0xffffffffu ? 0u : r.featureId + local;
+  }
   return o;
 }
 
@@ -167,7 +175,7 @@ FsOut fs(VsOut input, bool frontFacing : SV_IsFrontFace) {
   }
 
   FsOut o;
-  o.featureId = uint2(r.featureId & 0xffffu, r.featureId >> 16u);
+  o.featureId = uint2(input.feature & 0xffffu, input.feature >> 16u);
   if (s.unlit || (r.flags & 2u) != 0u) {
     o.color = float4(s.baseColor.rgb, 1.0);
     return o;

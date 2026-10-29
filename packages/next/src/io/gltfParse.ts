@@ -5,6 +5,15 @@ import {
   type DracoAttributeRequest,
   type TextureFormatSupport,
 } from "./decoders.ts";
+import {
+  featureIdSource,
+  isB3dm,
+  readPropertyTables,
+  toFeatureIds,
+  unwrapB3dm,
+  type B3dm,
+} from "./features.ts";
+import { resolveUri } from "./ion.ts";
 import type {
   GltfAsset,
   GltfDraw,
@@ -27,6 +36,8 @@ const SUPPORTED_EXTENSIONS = new Set([
   "KHR_meshopt_compression",
   "KHR_texture_transform", // tolerated; transforms are ignored (warning)
   "CESIUM_primitive_outline", // tolerated; outlines are not drawn yet
+  "EXT_mesh_features", // vertex-attribute feature IDs
+  "EXT_structural_metadata", // property tables
 ]);
 
 const COMPONENTS: Record<string, number> = {
@@ -48,12 +59,21 @@ const COMPONENTS: Record<string, number> = {
 export async function parseGltf(
   url: string,
   textureSupport: TextureFormatSupport,
+  headers?: Record<string, string>,
 ): Promise<{ asset: GltfAsset; transfer: Transferable[] }> {
-  const response = await fetch(url);
+  // Every request under the asset carries the same headers (ion auth).
+  const fetchUri = (uri: string) =>
+    fetch(resolveUri(uri, url), headers ? { headers } : undefined);
+  const response = await fetch(url, headers ? { headers } : undefined);
   if (!response.ok) {
     throw new Error(`Failed to fetch ${url}: ${response.status}`);
   }
-  const bytes = new Uint8Array(await response.arrayBuffer());
+  let bytes: Uint8Array = new Uint8Array(await response.arrayBuffer());
+  let b3dm: B3dm | undefined;
+  if (isB3dm(bytes)) {
+    b3dm = unwrapB3dm(bytes);
+    bytes = b3dm.glb;
+  }
   const { json, bin } = splitGlb(bytes);
   const warnings: string[] = [];
 
@@ -84,7 +104,7 @@ export async function parseGltf(
         }
         throw new Error(`Buffer ${i} has no data.`);
       }
-      const r = await fetch(new URL(buffer.uri, url));
+      const r = await fetchUri(buffer.uri);
       return new Uint8Array(await r.arrayBuffer());
     }),
   );
@@ -193,7 +213,21 @@ export async function parseGltf(
       readIndices,
     );
     const mesh = buildMesh(primitive, source, warnings, key);
+    const features = featureIdSource(primitive, b3dm?.batchLength, warnings);
+    const ids = features && source.attribute(features.attribute);
+    if (mesh && features && ids) {
+      const local = toFeatureIds(ids.data, features.nullFeatureId);
+      // flatShaded unwelds through the index list, as recorded in `unwelded`.
+      mesh.featureIds = mesh.unwelded
+        ? Uint32Array.from(mesh.unwelded, (v) => local[v]!)
+        : local;
+      mesh.featureCount = features.featureCount;
+      if (features.table !== undefined) {
+        mesh.featureTable = features.table;
+      }
+    }
     if (mesh) {
+      delete mesh.unwelded;
       meshes.push(mesh);
     }
     built.set(
@@ -223,9 +257,7 @@ export async function parseGltf(
       const bytes =
         image.bufferView !== undefined
           ? bufferView(image.bufferView).slice()
-          : new Uint8Array(
-              await (await fetch(new URL(image.uri, url))).arrayBuffer(),
-            );
+          : new Uint8Array(await (await fetchUri(image.uri)).arrayBuffer());
       const ktx2 =
         image.mimeType === "image/ktx2" || /\.ktx2$/i.test(image.uri ?? "");
       if (ktx2) {
@@ -237,6 +269,10 @@ export async function parseGltf(
       });
     }),
   );
+
+  const featureTables = b3dm
+    ? [b3dm.batchTable]
+    : readPropertyTables(json, bufferView, warnings);
 
   const transfer: Transferable[] = [];
   for (const image of images) {
@@ -254,6 +290,7 @@ export async function parseGltf(
       mesh.colors,
       mesh.tangents,
       mesh.indices,
+      mesh.featureIds,
     ]) {
       if (array) {
         transfer.push(array.buffer);
@@ -261,7 +298,16 @@ export async function parseGltf(
     }
   }
   return {
-    asset: { meshes, materials, textures, images, draws, warnings },
+    asset: {
+      meshes,
+      materials,
+      textures,
+      images,
+      draws,
+      featureTables,
+      ...(b3dm?.rtcCenter ? { rtcCenter: b3dm.rtcCenter } : {}),
+      warnings,
+    },
     transfer,
   };
 }
@@ -452,12 +498,10 @@ function buildMesh(
   source: AttributeSource,
   warnings: string[],
   key: string,
-): GltfMesh | undefined {
+): (GltfMesh & { unwelded?: Uint32Array }) | undefined {
   const mode = primitive.mode ?? 4;
-  if (mode !== 4 && mode !== 5 && mode !== 6) {
-    warnings.push(
-      `primitive ${key}: mode ${mode} (points/lines) not drawn yet`,
-    );
+  if (mode === 0) {
+    warnings.push(`primitive ${key}: points not drawn yet`);
     return undefined;
   }
   const position = source.attribute("POSITION");
@@ -483,8 +527,18 @@ function buildMesh(
     indices = stripToList(indices);
   } else if (mode === 6) {
     indices = fanToList(indices);
+  } else if (mode === 2 || mode === 3) {
+    indices = lineStripToList(indices, mode === 2);
   }
   const mesh: GltfMesh = { positions, indices };
+  if (mode >= 1 && mode <= 3) {
+    // Lines: no flat-normal fallback; they are drawn unlit (as in 1.x).
+    mesh.topology = "line-list";
+    if (colors) {
+      mesh.colors = colors;
+    }
+    return mesh;
+  }
   if (uvs) {
     mesh.uvs = uvs;
   }
@@ -512,6 +566,22 @@ function expandRgb(rgb: Float32Array): Float32Array {
   return out;
 }
 
+/** LINE_STRIP (or LINE_LOOP when `loop`) to a line list. */
+function lineStripToList(strip: Uint32Array, loop: boolean): Uint32Array {
+  const segments =
+    Math.max(0, strip.length - 1) + (loop && strip.length > 2 ? 1 : 0);
+  const out = new Uint32Array(segments * 2);
+  for (let i = 0; i + 1 < strip.length; i++) {
+    out[i * 2] = strip[i]!;
+    out[i * 2 + 1] = strip[i + 1]!;
+  }
+  if (loop && strip.length > 2) {
+    out[out.length - 2] = strip[strip.length - 1]!;
+    out[out.length - 1] = strip[0]!;
+  }
+  return out;
+}
+
 function stripToList(strip: Uint32Array): Uint32Array {
   const out: number[] = [];
   for (let i = 0; i + 2 < strip.length; i++) {
@@ -532,8 +602,12 @@ function fanToList(fan: Uint32Array): Uint32Array {
   return Uint32Array.from(out);
 }
 
-/** glTF requires flat normals when NORMAL is absent: unweld and use face normals. */
-function flatShaded(mesh: GltfMesh): GltfMesh {
+/**
+ * glTF requires flat normals when NORMAL is absent: unweld and use face
+ * normals. `unwelded` maps each new vertex to its source vertex, for streams
+ * attached afterwards (feature IDs).
+ */
+function flatShaded(mesh: GltfMesh): GltfMesh & { unwelded?: Uint32Array } {
   const n = mesh.indices.length;
   const positions = new Float32Array(n * 3);
   const normals = new Float32Array(n * 3);
@@ -566,10 +640,11 @@ function flatShaded(mesh: GltfMesh): GltfMesh {
       normals.set([nx, ny, nz], (t + k) * 3);
     }
   }
-  const out: GltfMesh = {
+  const out: GltfMesh & { unwelded?: Uint32Array } = {
     positions,
     normals,
     indices: Uint32Array.from({ length: n }, (_, i) => i),
+    unwelded: mesh.indices,
   };
   if (uvs) {
     out.uvs = uvs;

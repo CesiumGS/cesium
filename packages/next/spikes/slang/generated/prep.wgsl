@@ -33,7 +33,7 @@ struct DrawRecord_std430_0
     @align(16) tangentOffset_0 : u32,
     @align(4) textureSet_0 : u32,
     @align(8) imagerySlice_0 : u32,
-    @align(4) pad_0 : u32,
+    @align(4) featureIdOffset_0 : u32,
 };
 
 @binding(0) @group(1) var<storage, read> records_0 : array<DrawRecord_std430_0>;
@@ -76,7 +76,7 @@ struct Batch_std430_0
     @align(4) instanceBase_0 : u32,
     @align(4) indexCount_1 : u32,
     @align(4) firstIndex_1 : u32,
-    @align(4) pad_1 : u32,
+    @align(4) pad_0 : u32,
 };
 
 @binding(4) @group(1) var<storage, read> batches_0 : array<Batch_std430_0>;

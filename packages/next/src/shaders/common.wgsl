@@ -28,7 +28,7 @@ struct DrawRecord {
   materialIndex: u32,
   indexCount: u32,
   firstIndex: u32,
-  featureId: u32,
+  featureId: u32,          // first global feature ID; 0 = not pickable
   batch: u32,
   positionOffset: u32,     // word offsets of attribute streams; 0xffffffff = absent
   normalOffset: u32,
@@ -37,7 +37,7 @@ struct DrawRecord {
   tangentOffset: u32,
   textureSet: u32,
   imagerySlice: u32,
-  _pad: u32,
+  featureIdOffset: u32,    // per-vertex local feature IDs (u32 words)
 };
 
 struct DrawInstance {

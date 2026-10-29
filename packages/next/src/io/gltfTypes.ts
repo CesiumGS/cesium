@@ -13,6 +13,29 @@ export interface GltfMesh {
   /** xyz tangent, w handedness (glTF TANGENT). */
   tangents?: Float32Array;
   indices: Uint32Array;
+  /** Per-vertex local feature IDs (0xffffffff: no feature). */
+  featureIds?: Uint32Array;
+  /** Size of the local feature-ID space. */
+  featureCount?: number;
+  /** Index into `GltfAsset.featureTables` describing the features. */
+  featureTable?: number;
+  /** "line-list" for glTF LINES/LINE_STRIP/LINE_LOOP; default triangle-list. */
+  topology?: "triangle-list" | "line-list";
+}
+
+/** A property value of one feature (null: the property's noData). */
+export type FeatureValue =
+  string | number | boolean | null | Array<string | number | boolean>;
+
+/**
+ * Per-feature properties, column-oriented: an `EXT_structural_metadata`
+ * property table or a b3dm batch table.
+ */
+export interface FeatureTable {
+  name?: string;
+  className?: string;
+  count: number;
+  columns: Record<string, FeatureValue[]>;
 }
 
 /** Block-compressed (or fallback RGBA8) texture data transcoded in a worker. */
@@ -78,6 +101,10 @@ export interface GltfAsset {
   textures: GltfTexture[];
   images: GltfImage[];
   draws: GltfDraw[];
+  /** Property tables (or the b3dm batch table) that meshes' features index. */
+  featureTables: FeatureTable[];
+  /** b3dm RTC_CENTER: translation of the whole model, in tile (z-up) space. */
+  rtcCenter?: [number, number, number];
   /** Features skipped while parsing (unsupported extensions, attributes, modes). */
   warnings: string[];
 }

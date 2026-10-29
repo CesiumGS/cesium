@@ -1,2 +1,5 @@
 node_modules/
 dist/
+# Local secrets (ion access token for the dev-server proxy)
+.env.local
+.env.*.local

@@ -222,11 +222,21 @@ interface FrameSample {
 }
 
 /**
- * Lets the GPU process go idle so one engine's teardown or startup work
- * doesn't land in the other's first-frame timing.
+ * Brings both engines to a known idle state before a first-frame timing, so
+ * one engine's leftovers don't land in the other's number: a forced major GC
+ * (the runner exposes `gc`) and an idle WebGPU queue. The WebGL side is
+ * finished and its context released in `destroyLegacy`.
  */
-function settle(): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, 300));
+async function settle(engine: Engine): Promise<void> {
+  (globalThis as { gc?: () => void }).gc?.();
+  await engine.gpu.device.queue.onSubmittedWorkDone();
+}
+
+/** Finishes 1.x's GL work and releases its context before destroying it. */
+function destroyLegacy(viewer: Viewer): void {
+  glFinish(viewer);
+  viewer.scene.context._gl.getExtension("WEBGL_lose_context")?.loseContext();
+  viewer.destroy();
 }
 
 function median(values: number[]): number {
@@ -307,10 +317,58 @@ function status(text: string): void {
 
 /** H1/H2/H7/H8: per-frame CPU and API calls vs draw count; time to first frame. */
 async function drawScaling(engine: Engine, counts: number[]): Promise<void> {
+  // All 2.0 runs before any 1.x run: tearing down a 1.x viewer continues
+  // asynchronously in the GPU process (even after finish + loseContext) and
+  // would land in a later first-frame timing. 2.0's teardown is a few buffer
+  // destroys and its queue is drained by `settle`.
+  const nextRows = new Map<number, Row>();
   for (const count of counts) {
     const specs = boxes(count);
     const range = cameraRange(count);
-
+    status(`2.0: ${count} draws…`);
+    const canvas = addViewElement("next") as HTMLCanvasElement;
+    let t = performance.now();
+    const world = engine.createWorld({
+      maxDraws: count + 1,
+      vertexBytes: 1 << 20,
+      indexBytes: 1 << 20,
+    });
+    populateNext(world, specs);
+    const view = engine.addView({
+      target: new CanvasTarget(canvas),
+      world,
+      clearColor: [0, 0, 0],
+    });
+    view.camera.near = 1;
+    view.camera.lookAt(centerCartesian(), 30 * deg, -35 * deg, range);
+    const nextCreate = performance.now() - t;
+    await settle(engine);
+    t = performance.now();
+    engine.renderFrame();
+    const nextFirstFrameCpu = performance.now() - t;
+    await engine.gpu.device.queue.onSubmittedWorkDone();
+    const nextFirstFrame = performance.now() - t;
+    const next = await measureNext(engine);
+    nextRows.set(count, {
+      suite: "draw scaling",
+      engine: "2.0 WebGPU",
+      draws: count,
+      "create ms": nextCreate,
+      "first frame ms": nextFirstFrame,
+      "first frame cpu ms": nextFirstFrameCpu,
+      "cpu/frame ms": next.cpuMs,
+      "frame incl. GPU ms": next.frameMs,
+      "API calls/frame": next.apiCalls,
+      "gpu ms": next.gpuMs,
+    });
+    engine.removeView(view);
+    engine.worlds.splice(engine.worlds.indexOf(world), 1);
+    world.destroy();
+    canvas.remove();
+  }
+  for (const count of counts) {
+    const specs = boxes(count);
+    const range = cameraRange(count);
     status(`1.x: ${count} primitives…`);
     const legacyElement = addViewElement("legacy");
     let t = performance.now();
@@ -318,7 +376,7 @@ async function drawScaling(engine: Engine, counts: number[]): Promise<void> {
     populateLegacy(viewer, specs);
     lookAtLegacy(viewer, range);
     const legacyCreate = performance.now() - t;
-    await settle();
+    await settle(engine);
     t = performance.now();
     viewer.render();
     glFinish(viewer);
@@ -334,48 +392,9 @@ async function drawScaling(engine: Engine, counts: number[]): Promise<void> {
       "frame incl. GPU ms": legacy.frameMs,
       "API calls/frame": legacy.apiCalls,
     });
-    viewer.destroy();
+    destroyLegacy(viewer);
     legacyElement.remove();
-
-    status(`2.0: ${count} draws…`);
-    const canvas = addViewElement("next") as HTMLCanvasElement;
-    t = performance.now();
-    const world = engine.createWorld({
-      maxDraws: count + 1,
-      vertexBytes: 1 << 20,
-      indexBytes: 1 << 20,
-    });
-    populateNext(world, specs);
-    const view = engine.addView({
-      target: new CanvasTarget(canvas),
-      world,
-      clearColor: [0, 0, 0],
-    });
-    view.camera.near = 1;
-    view.camera.lookAt(centerCartesian(), 30 * deg, -35 * deg, range);
-    const nextCreate = performance.now() - t;
-    await engine.gpu.device.queue.onSubmittedWorkDone();
-    await settle();
-    t = performance.now();
-    engine.renderFrame();
-    await engine.gpu.device.queue.onSubmittedWorkDone();
-    const nextFirstFrame = performance.now() - t;
-    const next = await measureNext(engine);
-    report({
-      suite: "draw scaling",
-      engine: "2.0 WebGPU",
-      draws: count,
-      "create ms": nextCreate,
-      "first frame ms": nextFirstFrame,
-      "cpu/frame ms": next.cpuMs,
-      "frame incl. GPU ms": next.frameMs,
-      "API calls/frame": next.apiCalls,
-      "gpu ms": next.gpuMs,
-    });
-    engine.removeView(view);
-    engine.worlds.splice(engine.worlds.indexOf(world), 1);
-    world.destroy();
-    canvas.remove();
+    report(nextRows.get(count)!);
   }
 }
 

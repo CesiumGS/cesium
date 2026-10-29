@@ -37,7 +37,21 @@ const MODELS = [
   "BoxVertexColorsDracoRGB/glTF-Draco/BoxVertexColorsDracoRGB.gltf",
   "BoxTexturedKtx2Basis/glTF/BoxTexturedKtx2Basis.gltf",
   "BoxMixedCompression/glTF/BoxMixedCompression.gltf",
+  // EXT_mesh_features + EXT_structural_metadata: per-vertex feature IDs.
+  "BuildingsMetadata/glTF/buildings-metadata.gltf",
 ];
+
+/**
+ * Pick test grid (fractions of the view) for models with feature tables:
+ * both engines pick each point and must agree on the feature's `id`.
+ */
+const PICK_GRID: Array<[number, number]> = [];
+for (let j = 1; j <= 5; j++) {
+  for (let i = 1; i <= 7; i++) {
+    PICK_GRID.push([i / 8, j / 6]);
+  }
+}
+const PICK_PROPERTY = "id";
 
 /**
  * unlit: geometry, transforms, UVs, textures, filtering.
@@ -56,6 +70,8 @@ interface Row {
   flipSrgb?: number;
   flipGamma?: number;
   flipGammaP95?: number;
+  /** Pick agreement with 1.x on the feature `id` (grid points). */
+  picks?: string;
   warnings?: string;
 }
 
@@ -123,6 +139,7 @@ async function renderLegacy(
   mode: Mode,
   sun: Float64Array,
   sh: Array<[number, number, number]>,
+  picks?: Array<unknown>,
 ): Promise<ImageData> {
   viewer.scene.light = new Cesium.DirectionalLight({
     direction: new Cesium.Cartesian3(-sun[0]!, -sun[1]!, -sun[2]!),
@@ -173,6 +190,25 @@ async function renderLegacy(
     viewer.render();
   }
   const image = capture(viewer.scene.canvas);
+  if (picks) {
+    const canvas = viewer.scene.canvas as HTMLCanvasElement;
+    for (const [fx, fy] of PICK_GRID) {
+      // 1×1: 1.x defaults to a 3×3 search window; 2.0 reads one pixel.
+      const picked = viewer.scene.pick(
+        new Cesium.Cartesian2(
+          fx * canvas.clientWidth,
+          fy * canvas.clientHeight,
+        ),
+        1,
+        1,
+      );
+      picks.push(
+        picked instanceof Cesium.ModelFeature
+          ? picked.getProperty(PICK_PROPERTY)
+          : undefined,
+      );
+    }
+  }
   viewer.scene.primitives.remove(model);
   return image;
 }
@@ -228,6 +264,7 @@ async function runModels(): Promise<Row[]> {
         let batches = 0;
         let warnings = "";
         let asset0Translucent = false;
+        let nextPicks: unknown[] | undefined;
         const camera = new Camera();
         for (const colorTransfer of ["srgb", "gamma2.2"] as const) {
           const asset = await engine.loadGltf(url);
@@ -275,11 +312,46 @@ async function runModels(): Promise<Row[]> {
             WIDTH,
             HEIGHT,
           );
+          if (
+            mode === "unlit" &&
+            colorTransfer === "srgb" &&
+            asset.featureTables.length > 0
+          ) {
+            nextPicks = [];
+            for (const [fx, fy] of PICK_GRID) {
+              const pick = view.pick(fx * WIDTH, fy * HEIGHT);
+              engine.renderFrame(); // the pick rides along with a frame
+              nextPicks.push((await pick)?.properties?.[PICK_PROPERTY]);
+            }
+          }
           engine.removeView(view);
           engine.worlds.splice(engine.worlds.indexOf(world), 1);
           world.destroy();
         }
-        const legacy = await renderLegacy(viewer, url, camera, mode, sun, sh);
+        const legacyPicks = nextPicks ? [] : undefined;
+        const legacy = await renderLegacy(
+          viewer,
+          url,
+          camera,
+          mode,
+          sun,
+          sh,
+          legacyPicks,
+        );
+        let picks: string | undefined;
+        if (nextPicks && legacyPicks) {
+          const hits = legacyPicks.filter((v) => v !== undefined).length;
+          const agree = nextPicks.filter((v, i) => v === legacyPicks[i]).length;
+          const mismatches = PICK_GRID.flatMap(([fx, fy], i) =>
+            nextPicks![i] === legacyPicks[i]
+              ? []
+              : [
+                  `(${fx.toFixed(2)},${fy.toFixed(2)}): 2.0 ${String(nextPicks![i])}, 1.x ${String(legacyPicks[i])}`,
+                ],
+          );
+          const detail = mismatches.length ? `; ${mismatches.join("; ")}` : "";
+          picks = `${agree}/${PICK_GRID.length} agree (${hits} features hit)${detail}`;
+        }
         const srgb = flip(legacy.data, images.srgb!.data, WIDTH, HEIGHT);
         const gamma = flip(
           legacy.data,
@@ -299,6 +371,7 @@ async function runModels(): Promise<Row[]> {
           flipSrgb: srgb.mean,
           flipGamma: gamma.mean,
           flipGammaP95: gamma.p95,
+          ...(picks ? { picks } : {}),
           warnings,
         });
         lastImages.push({
@@ -350,12 +423,12 @@ function renderTable(rows: Row[]): void {
     v === undefined ? "" : v.toFixed(digits);
   table.innerHTML =
     `<tr><th>mode</th><th>model</th><th>status</th><th>draws</th><th>batches</th>` +
-    `<th>FLIP mean (exact sRGB)</th><th>FLIP mean (1.x color)</th><th>FLIP p95 (1.x color)</th><th>warnings</th></tr>${rows
+    `<th>FLIP mean (exact sRGB)</th><th>FLIP mean (1.x color)</th><th>FLIP p95 (1.x color)</th><th>picks vs 1.x</th><th>warnings</th></tr>${rows
       .map(
         (r, i) =>
           `<tr class="row" data-index="${i}"><td>${r.mode}</td><td class="text">${r.model}</td><td class="text">${r.status}</td>` +
           `<td>${r.draws ?? ""}</td><td>${r.batches ?? ""}</td><td>${n(r.flipSrgb)}</td>` +
-          `<td>${n(r.flipGamma)}</td><td>${n(r.flipGammaP95)}</td><td class="text">${r.warnings ?? ""}</td></tr>`,
+          `<td>${n(r.flipGamma)}</td><td>${n(r.flipGammaP95)}</td><td class="text">${r.picks ?? ""}</td><td class="text">${r.warnings ?? ""}</td></tr>`,
       )
       .join("")}`;
   table.querySelectorAll<HTMLTableRowElement>("tr.row").forEach((tr) =>

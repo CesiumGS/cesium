@@ -26,6 +26,12 @@ export interface ModelOptions {
    */
   colorTransfer?: "srgb" | "gamma2.2";
   name?: string;
+  /**
+   * Axis convention: "gltf" (default) is y-up, z-forward like 1.x `Model`;
+   * "3d-tiles" is tile content (b3dm/glb in a tileset), y-up, x-forward, like
+   * 1.x `Cesium3DTileset`.
+   */
+  axes?: "gltf" | "3d-tiles";
 }
 
 export interface ModelInstance {
@@ -81,7 +87,20 @@ export function addGltf(
   };
   const meshes: MeshHandle[] = asset.meshes.map((mesh) => world.addMesh(mesh));
 
-  const base = m4.multiply(m4.mat4(), options.modelMatrix, AXIS_CORRECTION);
+  // modelMatrix × RTC_CENTER × axis correction × node, as 1.x ModelSceneGraph.
+  const base = m4.copy(m4.mat4(), options.modelMatrix);
+  if (asset.rtcCenter) {
+    const rtc = m4.mat4();
+    rtc[12] = asset.rtcCenter[0];
+    rtc[13] = asset.rtcCenter[1];
+    rtc[14] = asset.rtcCenter[2];
+    m4.multiply(base, base, rtc);
+  }
+  m4.multiply(
+    base,
+    base,
+    options.axes === "3d-tiles" ? Y_UP_TO_Z_UP : AXIS_CORRECTION,
+  );
   const draws: DrawHandle[] = [];
   const spheres: Array<{ center: Vec3; radius: number }> = [];
   for (const draw of asset.draws) {
@@ -103,6 +122,10 @@ export function addGltf(
       doubleSided: material.doubleSided || mirrored,
       unlit: options.unlit,
       name: options.name,
+      features:
+        asset.meshes[draw.mesh]!.featureTable !== undefined
+          ? asset.featureTables[asset.meshes[draw.mesh]!.featureTable!]
+          : undefined,
     });
     draws.push(handle);
     const center = m4.transformPoint(

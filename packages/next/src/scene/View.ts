@@ -1,5 +1,6 @@
 import { Camera } from "./Camera.ts";
 import type { World } from "./World.ts";
+import type { FeatureValue } from "../io/gltfTypes.ts";
 import type { ViewLighting } from "../render/layout.ts";
 
 /** A normalized rectangle within a target, origin at the top-left. */
@@ -152,8 +153,11 @@ export interface Overlay {
 }
 
 export interface PickResult {
+  /** Global feature ID (unique within the world). */
   featureId: number;
   name: string | undefined;
+  /** Feature properties from the content's property or batch table. */
+  properties?: Record<string, FeatureValue>;
 }
 
 export interface ViewOptions {

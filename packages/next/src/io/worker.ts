@@ -11,6 +11,7 @@ self.onmessage = async (
     id: number;
     type: string;
     url: string;
+    headers?: Record<string, string>;
     textureSupport: TextureFormatSupport;
   }>,
 ) => {
@@ -22,6 +23,7 @@ self.onmessage = async (
     const { asset, transfer } = await parseGltf(
       event.data.url,
       event.data.textureSupport,
+      event.data.headers,
     );
     self.postMessage({ id, ok: true, result: asset }, transfer);
   } catch (error) {

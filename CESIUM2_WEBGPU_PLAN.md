@@ -19,6 +19,7 @@ Branch: `cesium-2.0-webgpu-poc` (off `main` @ `587f52f1eb`, CesiumJS 1.146.0)
 | r11 | M1 increment 2: PBR + compute-built IBL, normal maps, lit parity vs 1.x, Slang re-ported to v1 records with a surface-material interface; Slang performance gate passes.                                                                                                                                                                                                                 |
 | r12 | M1 increment 3: Draco and KTX2/Basis decoding in the workers; all 14 opaque Khronos samples within 0.025 mean FLIP of 1.x in every lighting mode.                                                                                                                                                                                                                                        |
 | r13 | M1 increment 4: steady-state allocation gate (engine ~1.5 KB/frame, independent of draw count, down from ~45 KB) and first-frame cost (2.0 first frame 23–34 ms vs 1.x 203–691 ms).                                                                                                                                                                                                      |
+| r14 | M1 increment 5: CAD content. Per-vertex feature IDs (EXT_mesh_features, b3dm _BATCHID) with property/batch tables and picking, b3dm, line primitives, ion asset auth, tileset parity page. An iModel-derived CAD tileset matches 1.x apart from translucency (M4). M1 exit met.                                                                                                          |
 
 ## 1. Goal
 
@@ -933,8 +934,83 @@ Draw scaling, first frame including GPU (results
 
 Parity, model parity and the Slang perf gate (+0.6%) are unchanged.
 
+### Increment 5 (r14): CAD content, the M1 exit test
+
+Done:
+
+- **Per-vertex feature IDs.** `EXT_mesh_features` attribute feature IDs, or
+  `_BATCHID` in b3dm, are a u32 stream in the vertex arena, located by the
+  draw record's last free word. Each draw gets a range of world-unique pick
+  IDs: the vertex shader adds the draw's first ID to the local ID and passes
+  it flat to the feature-ID target. `World.feature(id)` resolves a pick by
+  binary search over the ranges to the draw, the local ID, a display name
+  and the feature's properties.
+- **Feature properties.** `EXT_structural_metadata` property tables (scalars,
+  vectors/matrices, strings, booleans, enums, `offset`/`scale`/`normalized`,
+  `noData`, defaults), and b3dm batch tables (JSON and binary). Feature-ID
+  textures, property textures/attributes and variable-length arrays are not
+  supported yet (warnings).
+- **b3dm**: current and both deprecated header layouts, `RTC_CENTER`
+  (applied as `modelMatrix × RTC × axis correction × node`, as 1.x), and the
+  3D Tiles axis convention (y-up, x-forward; 1.x `Model`'s glTF default is
+  z-forward).
+- **Line primitives** (LINES/LINE_STRIP/LINE_LOOP) through a line-list
+  pipeline variant in their own batches, drawn unlit like 1.x. Points are
+  still M6.
+- **ion**: `resolveIonAsset` exchanges an access token for the asset
+  endpoint; content workers send its headers with every request, and the
+  asset version query propagates to relative URIs as in 1.x `Resource`. For
+  local testing the token lives in `packages/next/.env.local`
+  (`VITE_ION_TOKEN`, gitignored).
+- **Tileset parity page** (`parity/tileset.html`, runner suite `tileset`).
+  1.x streams the tileset with `maximumScreenSpaceError` 0 until every tile is
+  loaded. 2.0 walks the tileset (tile transforms, REPLACE/ADD, external
+  tilesets) and places full-detail content directly; streaming and selection
+  are M2. Both engines pick a 7×5 pixel grid 1×1 and compare a feature
+  property. 1.x's default 3×3 pick window resolves edge pixels differently,
+  and it returns 64-bit integers as BigInt, so values compare by string.
+- **Feature-ID model in model parity**: `BuildingsMetadata`.
+- **Deterministic baseline first-frame timing.** Draw scaling now runs every
+  2.0 count before any 1.x count. 1.x viewer teardown continues
+  asynchronously in the GPU process even after `finish()` and
+  `loseContext()`, and landed in 2.0's first frame (≈90 ms). Each timing is
+  preceded by a forced major GC (the runner exposes `gc`) and an idle WebGPU
+  queue, with no sleeps.
+
+Results (`2026-10-29T23-33-08-722Z`):
+
+| Test                                                | Mean FLIP (sRGB / 1.x color) | Picks vs 1.x                      |
+| --------------------------------------------------- | ---------------------------- | --------------------------------- |
+| BuildingsMetadata, unlit / direct / diffuse IBL     | 0.010–0.022 / 0.004–0.018    | 35/35 (10 features hit)           |
+| b3dm tilesets (JSON, binary batch table, transform) | 0.002 / 0.002                | 35/35                             |
+| iModel-derived CAD tileset, whole-site view         | 0.010 / 0.009                | 35/35                             |
+| same, close-up of the building                      | 0.066 / 0.050                | 31/35, all 4 in translucent areas |
+| same, facade close-up                               | 0.135 / 0.097                | 35/35 (35 features hit)           |
+
+The private CAD tileset is run locally with `ION_ASSET=<id>` and is not part
+of the committed results. Its remaining differences are translucency:
+window glass and a translucent roof volume, which 2.0 draws opaque until the
+M4 compositor. Its element IDs are 64-bit and pick identically.
+
+The M1 exit criterion is met: the Khronos samples and a CAD glb pass L2
+against 1.x, with feature-ID picking, except translucent materials (M4).
+
+Open, for later:
+
+- **CAD display extensions**: `BENTLEY_materials_planar_fill` (`behind`),
+  `EXT_mesh_primitive_edge_visibility` and `BENTLEY_materials_line_style` /
+  `point_style`, which 1.x implements. The CAD content tested so far uses
+  none of them. 2.0 already writes the per-pixel feature ID that `behind`
+  needs during the opaque pass, so a later pass can apply the same-feature
+  depth offset without 1.x's prepass.
+- **Edge/face coplanarity**: investigate depth behavior of CAD edges lying on
+  their faces once content with real edges is available. A preemptive line
+  depth offset was tried and dropped until a failure is observed.
+- Line width and dashes (`line_style`) need quad expansion: WebGPU lines are
+  1 px.
+
 Next increments:
 
-1. **CAD tileset content** (b3dm/glb with feature IDs) as the M1 exit test.
-2. Specular IBL parity (needs feeding 2.0's prefiltered cube to 1.x, or a
+1. Specular IBL parity (needs feeding 2.0's prefiltered cube to 1.x, or a
    2.0-only reference render).
+2. M2: streaming and 3D Tiles selection (`TileSource`, `Legacy1x`, `Next`).

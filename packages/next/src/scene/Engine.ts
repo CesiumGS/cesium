@@ -200,10 +200,17 @@ export class Engine {
     return this.gpu.caps;
   }
 
-  /** Fetches and decodes a glTF/GLB in a worker. Upload it with `addModel`. */
-  loadGltf(url: string | URL): Promise<GltfAsset> {
+  /**
+   * Fetches and decodes a glTF, GLB or b3dm in a worker. Upload it with
+   * `addModel`. `headers` go with every request (e.g. ion authorization).
+   */
+  loadGltf(
+    url: string | URL,
+    options: { headers?: Record<string, string> } = {},
+  ): Promise<GltfAsset> {
     return this.workers.request<GltfAsset>("gltf", {
       url: new URL(url, globalThis.location?.href).href,
+      headers: options.headers,
       // KTX2/Basis textures are transcoded to a block format this device supports.
       textureSupport: this.gpu.caps.textureCompression,
     });
@@ -699,10 +706,17 @@ export class Engine {
         const featureId = new Uint32Array(readback.getMappedRange())[0]!;
         readback.unmap();
         this.pickReadback.push(readback);
+        const feature = view.world.feature(featureId);
         resolve(
-          featureId === 0
-            ? undefined
-            : { featureId, name: view.world.nameForFeature(featureId) },
+          feature
+            ? {
+                featureId,
+                name: feature.name,
+                ...(feature.properties
+                  ? { properties: feature.properties }
+                  : {}),
+              }
+            : undefined,
         );
       });
     }

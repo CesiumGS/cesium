@@ -28,6 +28,12 @@ Pages on the dev server:
   picking, log depth, four views)
 - `/bench/alloc.html` — scene for the steady-state allocation gate (the
   runner profiles it with the sampling heap profiler)
+- `/parity/tileset.html` — 3D Tiles content (b3dm/glb, feature IDs, batch and
+  property tables) vs 1.x `Cesium3DTileset`, including picks
+  (`runTileset()`). Private ion assets: put `VITE_ION_TOKEN=<token>` in
+  `packages/next/.env.local` (gitignored) and open with `?asset=<id>`
+  (`&pick=<property>`, `&zoom=<k>`), or run
+  `ION_ASSET=<id> npm run bench -- tileset`
 - `/spikes/slang.html` — Slang ports of the shaders (surface materials bound
   at link time), compared with the hand-written WGSL incl. the performance gate
 
@@ -41,5 +47,5 @@ extracted `slang-*-wasm.zip`.
 `npm run bench` runs every page above in headless Edge via Playwright with
 WebGPU developer features (unquantized GPU timestamps) on the high-performance
 GPU. Pass suite names to run a subset (`precision indirect parity models
-slang baseline alloc`); set `BENCH_CHANNEL` to use another installed browser and
+slang baseline alloc tileset`); set `BENCH_CHANNEL` to use another installed browser and
 `BENCH_HEADED=1` to watch.

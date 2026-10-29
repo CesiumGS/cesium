@@ -72,6 +72,7 @@ export default defineConfig({
         demo: "demo/index.html",
         parity: "parity/index.html",
         models: "parity/models.html",
+        tileset: "parity/tileset.html",
         precision: "spikes/precision.html",
         worker: "spikes/worker.html",
         indirect: "spikes/indirect.html",

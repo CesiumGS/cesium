@@ -44,6 +44,7 @@ struct VsOut {
   @location(3) @interpolate(flat) draw: u32,
   @location(4) relPosition: vec3f, // camera-relative world position
   @location(5) tangent: vec4f,     // xyz world tangent, w handedness; w = 0: none
+  @location(6) @interpolate(flat) feature: u32, // global feature ID, 0 = none
 };
 
 fn read2(offset: u32, index: u32) -> vec2f {
@@ -97,6 +98,14 @@ fn vs(@builtin(vertex_index) vertexIndex: u32, @location(0) draw: u32) -> VsOut 
   // lengths vary with direction and would skew the interpolated normal.
   out.normal = normalize(cross(c1, c2) * normal.x + cross(c2, c0) * normal.y + cross(c0, c1) * normal.z) * sign(det);
   out.draw = draw;
+  // Per-vertex feature IDs (CAD elements, buildings) are local to the draw;
+  // its first global ID offsets them. Flat interpolation takes the provoking
+  // vertex: feature IDs are constant across a triangle.
+  out.feature = r.featureId;
+  if (r.featureIdOffset != NO_STREAM) {
+    let local = bitcast<u32>(vertices[r.featureIdOffset + vertexIndex]);
+    out.feature = select(r.featureId + local, 0u, local == 0xffffffffu);
+  }
   return out;
 }
 
@@ -187,7 +196,7 @@ fn fs(in: VsOut, @builtin(front_facing) frontFacing: bool) -> FsOut {
   }
 
   var out: FsOut;
-  out.featureId = vec2u(r.featureId & 0xffffu, r.featureId >> 16u);
+  out.featureId = vec2u(in.feature & 0xffffu, in.feature >> 16u);
   if ((flags & 1u) != 0u || (r.flags & 2u) != 0u) {
     out.color = vec4f(baseColor.rgb, 1.0);
     return out;

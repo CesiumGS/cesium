@@ -21,9 +21,18 @@ const suites = {
   precision: ["/spikes/precision.html?bench", "runPrecision"],
   indirect: ["/spikes/indirect.html?bench", "runIndirect"],
   parity: ["/parity/?bench", "runParity"],
-  models: ["/parity/models.html?bench", "runModels"],
+  models: [
+    `/parity/models.html?bench${process.env.MODELS_ONLY ? `&only=${process.env.MODELS_ONLY}` : ""}`,
+    "runModels",
+  ],
   slang: ["/spikes/slang.html?bench", "runSlang"],
   baseline: ["/bench/baseline.html?bench", "runBaseline"],
+  // Public Specs tilesets; ION_ASSET=<id> (with VITE_ION_TOKEN in .env.local)
+  // runs a private ion asset instead, without the id entering the repo.
+  tileset: [
+    `/parity/tileset.html?bench${process.env.ION_ASSET ? `&asset=${process.env.ION_ASSET}` : ""}${process.env.PICK_PROPERTY ? `&pick=${process.env.PICK_PROPERTY}` : ""}${process.env.TILESET_ZOOM ? `&zoom=${process.env.TILESET_ZOOM}` : ""}`,
+    "runTileset",
+  ],
   // Driven through CDP by `allocSuite` below.
   alloc: ["/bench/alloc.html", "allocSetup"],
 };
@@ -98,6 +107,8 @@ const browser = await chromium.launch({
   channel: process.env.BENCH_CHANNEL ?? "msedge",
   args: [
     "--enable-unsafe-webgpu",
+    // Lets pages force a major GC to reach a known idle state before timing.
+    "--js-flags=--expose-gc",
     "--enable-webgpu-developer-features",
     "--force_high_performance_gpu",
   ],

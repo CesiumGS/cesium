@@ -16,6 +16,8 @@ import * as v3 from "../math/vec3.ts";
 import type { Mat4 } from "../math/mat4.ts";
 import type { Vec3 } from "../math/vec3.ts";
 import type { MeshData } from "./meshes.ts";
+import type { FeatureTable, FeatureValue } from "../io/gltfTypes.ts";
+import { featureName, featureProperties } from "../io/features.ts";
 import type { RenderContext } from "./RenderContext.ts";
 
 export interface WorldOptions {
@@ -31,6 +33,9 @@ export interface MeshHandle {
   readonly indexCount: number;
   readonly vertexCount: number;
   readonly streams: MeshStreams;
+  /** Local feature IDs the mesh's vertices use (1 when it has none). */
+  readonly featureCount: number;
+  readonly topology: "triangle-list" | "line-list";
   /** Bounding sphere in mesh-local coordinates. */
   readonly center: readonly [number, number, number];
   readonly radius: number;
@@ -68,6 +73,17 @@ export interface DrawOptions {
   doubleSided?: boolean;
   /** Application-level name, returned by picking. */
   name?: string;
+  /** Properties of the mesh's features, indexed by local feature ID. */
+  features?: FeatureTable;
+}
+
+/** What a picked feature ID resolves to. */
+export interface FeatureInfo {
+  draw: DrawHandle;
+  /** Feature ID local to the draw's mesh. */
+  localId: number;
+  name: string | undefined;
+  properties?: Record<string, FeatureValue>;
 }
 
 export type SubmissionMode = "indirect" | "direct";
@@ -113,6 +129,15 @@ export class World {
   private readonly batches = new Map<string, Batch>();
   private readonly batchList: Batch[] = [];
   private readonly names: Array<string | undefined> = [];
+  private readonly featureTables: Array<FeatureTable | undefined> = [];
+  /**
+   * Global feature-ID ranges in allocation order (so sorted by first ID):
+   * first ID and draw index, for resolving picks by binary search.
+   */
+  private readonly featureRangeFirst: number[] = [];
+  private readonly featureRangeDraw: number[] = [];
+  private readonly drawFeatureFirst: number[] = [];
+  private nextFeatureId = 1;
   private readonly freeSlots: number[] = [];
   private nextMeshId = 0;
   private drawCount = 0;
@@ -243,7 +268,7 @@ export class World {
   addMesh(mesh: MeshData): MeshHandle {
     const vertexCount = mesh.positions.length / 3;
     const queue = this.ctx.device.queue;
-    const upload = (data: Float32Array | undefined): number => {
+    const upload = (data: Float32Array | Uint32Array | undefined): number => {
       if (!data) {
         return NO_STREAM;
       }
@@ -260,6 +285,7 @@ export class World {
       uv: upload(mesh.uvs),
       color: upload(mesh.colors),
       tangent: upload(mesh.tangents),
+      featureId: upload(mesh.featureIds),
     };
     const indexOffset = this.indexAllocator.allocate(mesh.indices.byteLength);
     if (indexOffset === undefined) {
@@ -273,6 +299,8 @@ export class World {
       indexCount: mesh.indices.length,
       vertexCount,
       streams,
+      featureCount: mesh.featureIds ? (mesh.featureCount ?? 1) : 1,
+      topology: mesh.topology ?? "triangle-list",
       center,
       radius,
     };
@@ -372,6 +400,12 @@ export class World {
       Math.hypot(m[8]!, m[9]!, m[10]!),
     );
     this.names[index] = options.name;
+    this.featureTables[index] = options.features;
+    const firstFeature = this.nextFeatureId;
+    this.nextFeatureId += Math.max(1, mesh.featureCount);
+    this.featureRangeFirst.push(firstFeature);
+    this.featureRangeDraw.push(index);
+    this.drawFeatureFirst[index] = firstFeature;
     writeDrawRecord(this.recordsF32, this.recordsU32, index, {
       origin: options.origin,
       model: options.model,
@@ -384,8 +418,10 @@ export class World {
       materialIndex: material,
       textureSet,
       batch: batch.index,
-      featureId: index + 1,
-      flags: options.unlit ? RecordFlags.unlit : 0,
+      featureId: firstFeature,
+      // Lines have no surface to light; 1.x draws them unlit too.
+      flags:
+        options.unlit || mesh.topology === "line-list" ? RecordFlags.unlit : 0,
     });
     this.markDirty(index);
     this.bundle = undefined;
@@ -395,6 +431,9 @@ export class World {
   removeDraw(handle: DrawHandle): void {
     this.recordsU32[handle.index * RECORD_WORDS + 7] = RecordFlags.hidden;
     this.names[handle.index] = undefined;
+    this.featureTables[handle.index] = undefined;
+    // The slot may be reused; its old feature range must not resolve to it.
+    this.drawFeatureFirst[handle.index] = -1;
     this.freeSlots.push(handle.index);
     this.markDirty(handle.index);
   }
@@ -408,9 +447,38 @@ export class World {
     this.markDirty(handle.index);
   }
 
-  /** Name registered for a picked feature ID (record index + 1). */
-  nameForFeature(featureId: number): string | undefined {
-    return featureId > 0 ? this.names[featureId - 1] : undefined;
+  /** Resolves a picked global feature ID to its draw, local ID and properties. */
+  feature(featureId: number): FeatureInfo | undefined {
+    const first = this.featureRangeFirst;
+    if (featureId <= 0 || first.length === 0 || featureId < first[0]!) {
+      return undefined;
+    }
+    let lo = 0;
+    let hi = first.length - 1;
+    while (lo < hi) {
+      const mid = (lo + hi + 1) >> 1;
+      if (first[mid]! <= featureId) {
+        lo = mid;
+      } else {
+        hi = mid - 1;
+      }
+    }
+    const index = this.featureRangeDraw[lo]!;
+    if (this.drawFeatureFirst[index] !== first[lo]) {
+      return undefined; // removed draw
+    }
+    const localId = featureId - first[lo]!;
+    const table = this.featureTables[index];
+    const draw = { index, name: this.names[index] };
+    if (!table || localId >= table.count) {
+      return { draw, localId, name: this.names[index] };
+    }
+    return {
+      draw,
+      localId,
+      name: featureName(table, localId) ?? this.names[index],
+      properties: featureProperties(table, localId),
+    };
   }
 
   /** Uploads dirty records and materials and returns the current bundle. */
@@ -523,19 +591,23 @@ export class World {
     encoder.setBindGroup(0, currentViewBindGroup);
     encoder.setBindGroup(1, this.drawBindGroup);
     encoder.setIndexBuffer(this.indexBuffer, "uint32");
+    const pipelineOf = (batch: Batch) =>
+      batch.mesh.topology === "line-list"
+        ? pipelines.opaqueLines
+        : batch.doubleSided
+          ? pipelines.opaqueDoubleSided
+          : pipelines.opaque;
+    const rank = (batch: Batch) =>
+      batch.mesh.topology === "line-list" ? 2 : Number(batch.doubleSided);
     const order = [...this.batchList].sort(
-      (a, b) =>
-        Number(a.doubleSided) - Number(b.doubleSided) ||
-        a.textureSet - b.textureSet,
+      (a, b) => rank(a) - rank(b) || a.textureSet - b.textureSet,
     );
     const direct = this._submission === "direct";
     const list = direct ? this.directListBuffer : this.instanceListBuffer;
     let pipeline: GPURenderPipeline | undefined;
     let textureSet = -1;
     for (const batch of order) {
-      const wanted = batch.doubleSided
-        ? pipelines.opaqueDoubleSided
-        : pipelines.opaque;
+      const wanted = pipelineOf(batch);
       if (wanted !== pipeline) {
         pipeline = wanted;
         encoder.setPipeline(pipeline);
