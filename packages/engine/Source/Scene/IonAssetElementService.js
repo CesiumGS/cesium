@@ -454,7 +454,9 @@ class IonAssetElementService extends ElementService {
 
     // The server parameter is named "aggregations" but carries property keys;
     // suggest renaming it to "propertyKeys" server-side to match the client.
-    const queryParameters = { aggregations: options.propertyKeys.join(",") };
+    const queryParameters = {
+      aggregations: JSON.stringify(options.propertyKeys),
+    };
     if (defined(options.filter)) {
       queryParameters.filter =
         typeof options.filter === "string"
