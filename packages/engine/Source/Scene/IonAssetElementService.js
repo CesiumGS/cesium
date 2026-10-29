@@ -106,12 +106,7 @@ function treeNodeFromResponse(response) {
  * The geographic location of an {@link IonAssetElementService.Element}, present
  * only when the element is geolocated.
  *
- * @typedef {object} IonAssetElementService.ElementLocation
- * @property {object} center The center of the element.
- * @property {number} center.longitude The longitude in degrees.
- * @property {number} center.latitude The latitude in degrees.
- * @property {number} center.height The height in meters above the ellipsoid.
- * @property {number} radius The radius, in meters, of a sphere centered on <code>center</code> that bounds the element.
+ * @typedef {ElementService.ElementLocation} IonAssetElementService.ElementLocation
  */
 
 /**
@@ -151,21 +146,13 @@ function treeNodeFromResponse(response) {
  */
 
 /**
- * The result of {@link IonAssetElementService#aggregate}.
- *
- * @typedef {object} IonAssetElementService.AggregateResult
- * @property {IonAssetElementService.Aggregation[]} aggregations The per-property aggregate statistics, one entry per requested property key.
- * @property {number} total The number of elements matched by the query.
- */
-
-/**
  * A node in a Cesium ion asset's element tree, as returned by
  * {@link IonAssetElementService#getElementTreeChildren}.
  *
  * @typedef {object} IonAssetElementService.ElementTreeNode
  * @property {string} key The opaque key of this node. Pass it as <code>options.nodeKey</code> to {@link IonAssetElementService#getElementTreeChildren} to list this node's children.
  * @property {string} label The user-friendly label of this node.
- * @property {boolean} hasChildren Whether this node has any children. *
+ * @property {boolean} hasChildren Whether this node has any children.
  * @property {string} id The integer instance id represented by this node, as a decimal string.
  * @property {"subject"|"model"|"category"|"element"} kind The kind of node.
  */
@@ -418,7 +405,7 @@ class IonAssetElementService extends ElementService {
    * @param {object} options Object with the following properties:
    * @param {string[]} options.propertyKeys The qualified property keys to aggregate. At least one is required.
    * @param {object|string} [options.filter] An element filter. See the Query parameters section of the <a href="https://cesium.com/learn/ion/rest-api/#operation/getAssetElementsAggregate">Aggregate elements</a> ion REST API documentation for the supported structure.
-   * @returns {Promise<IonAssetElementService.AggregateResult>} A promise that resolves to the aggregate statistics. The promise rejects with a {@link RequestErrorEvent} if the request fails.
+   * @returns {Promise<{aggregations: IonAssetElementService.Aggregation[], total: number}>} A promise that resolves to the aggregate statistics. The promise rejects with a {@link RequestErrorEvent} if the request fails.
    * @exception {DeveloperError} <code>options.propertyKeys</code> must be a non-empty array of strings.
    *
    * @example

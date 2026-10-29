@@ -1,0 +1,6 @@
+
+> cesium@1.146.0 build-ts
+> gulp buildTs
+
+[17:46:43] Using gulpfile ~/Documents/projects/cesium/gulpfile.js
+[17:46:43] Starting 'buildTs'...
