@@ -921,6 +921,12 @@ VertexArray.prototype.isDestroyed = function () {
   return false;
 };
 
+/**
+ * Destroys the vertex array object, and its vertex and index buffers whose
+ * vertexArrayDestroyable flag is true.
+ *
+ * @returns {void}
+ */
 VertexArray.prototype.destroy = function () {
   const attributes = this._attributes;
   for (let i = 0; i < attributes.length; ++i) {
