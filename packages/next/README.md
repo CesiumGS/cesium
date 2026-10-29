@@ -10,7 +10,8 @@ npm run typecheck --workspace @cesium/next
 npm run bench --workspace @cesium/next      # needs the dev server; writes bench/results/*.json
 ```
 
-Layout: `src/math` (float64 geodesy), `src/gpu` (device, timers, allocators),
+Layout: `src/math` (float64 geodesy), `src/gpu` (device, timers, allocators,
+mips), `src/io` (worker pool, glTF parsing),
 `src/render` (frame graph, byte layouts), `src/shaders` (WGSL),
 `src/scene` (Engine, World, View, ViewLink, Camera), `demo/`, `test/`.
 
@@ -18,6 +19,8 @@ Pages on the dev server:
 
 - `/demo/` — multi-view demo (split, linked overview, second canvas, offscreen)
 - `/parity/` — L2 image parity against 1.x (`runParity()` in the console)
+- `/parity/models.html` — Khronos sample models, 1.x `Model` vs the 2.0 glTF
+  path (`runModels()`)
 - `/spikes/precision.html` — camera-relative precision of the prep kernel
 - `/spikes/worker.html` — the engine running in a worker on an OffscreenCanvas
 - `/spikes/indirect.html` — indirect vs direct draws in render bundles
@@ -35,6 +38,6 @@ extracted `slang-*-wasm.zip`.
 
 `npm run bench` runs every page above in headless Edge via Playwright with
 WebGPU developer features (unquantized GPU timestamps) on the high-performance
-GPU. Pass suite names to run a subset (`precision indirect parity slang
-baseline`); set `BENCH_CHANNEL` to use another installed browser and
+GPU. Pass suite names to run a subset (`precision indirect parity models
+slang baseline`); set `BENCH_CHANNEL` to use another installed browser and
 `BENCH_HEADED=1` to watch.

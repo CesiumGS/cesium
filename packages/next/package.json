@@ -16,6 +16,9 @@
     "test:watch": "vitest",
     "bench": "node bench/run.mjs"
   },
+  "dependencies": {
+    "meshoptimizer": "^1.2.0"
+  },
   "devDependencies": {
     "@playwright/test": "^1.62.1",
     "@webgpu/types": "^0.1.74",

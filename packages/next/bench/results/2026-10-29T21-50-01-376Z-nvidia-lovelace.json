@@ -1,0 +1,592 @@
+{
+  "date": "2026-10-29T21:50:01.377Z",
+  "environment": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0",
+    "adapter": {
+      "vendor": "nvidia",
+      "architecture": "lovelace",
+      "description": "NVIDIA RTX 3000 Ada Generation Laptop GPU"
+    },
+    "timestampQuery": true
+  },
+  "errors": [],
+  "results": {
+    "precision": [
+      {
+        "site": "Philadelphia, ground",
+        "distance": 0.01,
+        "hiLo": 7.450580596923828e-9,
+        "naive": 0.00996065093204379
+      },
+      {
+        "site": "Philadelphia, ground",
+        "distance": 1,
+        "hiLo": 3.725290298461914e-8,
+        "naive": 0.4472402762621641
+      },
+      {
+        "site": "Philadelphia, ground",
+        "distance": 100,
+        "hiLo": 0.0000038053840398788452,
+        "naive": 0.44108416698873043
+      },
+      {
+        "site": "Philadelphia, ground",
+        "distance": 1000,
+        "hiLo": 0.00003051524981856346,
+        "naive": 0.4474934162572026
+      },
+      {
+        "site": "Philadelphia, ground",
+        "distance": 10000,
+        "hiLo": 0.00046303030103445053,
+        "naive": 0.4315127031877637
+      },
+      {
+        "site": "Philadelphia, ground",
+        "distance": 100000,
+        "hiLo": 0.003709627315402031,
+        "naive": 0.43906556628644466
+      },
+      {
+        "site": "Philadelphia, ground",
+        "distance": 1000000,
+        "hiLo": 0.059668722678907216,
+        "naive": 0.44663296081125736
+      },
+      {
+        "site": "Everest, 9 km",
+        "distance": 0.01,
+        "hiLo": 3.725290298461914e-9,
+        "naive": 0.009957878210116178
+      },
+      {
+        "site": "Everest, 9 km",
+        "distance": 1,
+        "hiLo": 4.377216100692749e-8,
+        "naive": 0.24140036012977362
+      },
+      {
+        "site": "Everest, 9 km",
+        "distance": 100,
+        "hiLo": 0.000003795139491558075,
+        "naive": 0.2513115806505084
+      },
+      {
+        "site": "Everest, 9 km",
+        "distance": 1000,
+        "hiLo": 0.00003021053271368146,
+        "naive": 0.24966186005622149
+      },
+      {
+        "site": "Everest, 9 km",
+        "distance": 10000,
+        "hiLo": 0.0004580861423164606,
+        "naive": 0.24832285568118095
+      },
+      {
+        "site": "Everest, 9 km",
+        "distance": 100000,
+        "hiLo": 0.003892242908477783,
+        "naive": 0.25175474025309086
+      },
+      {
+        "site": "Everest, 9 km",
+        "distance": 1000000,
+        "hiLo": 0.06176235410384834,
+        "naive": 0.25140239112079144
+      },
+      {
+        "site": "Near north pole",
+        "distance": 0.01,
+        "hiLo": 8.381903171539307e-9,
+        "naive": 0.009858598001301289
+      },
+      {
+        "site": "Near north pole",
+        "distance": 1,
+        "hiLo": 3.91155481338501e-8,
+        "naive": 0.46315971203148365
+      },
+      {
+        "site": "Near north pole",
+        "distance": 100,
+        "hiLo": 0.000003770695002458524,
+        "naive": 0.46588508132845163
+      },
+      {
+        "site": "Near north pole",
+        "distance": 1000,
+        "hiLo": 0.000045754220650451316,
+        "naive": 0.4513274682685733
+      },
+      {
+        "site": "Near north pole",
+        "distance": 10000,
+        "hiLo": 0.0008625466925877845,
+        "naive": 0.461621580645442
+      },
+      {
+        "site": "Near north pole",
+        "distance": 100000,
+        "hiLo": 0.007121505856048316,
+        "naive": 0.43772181682288647
+      },
+      {
+        "site": "Near north pole",
+        "distance": 1000000,
+        "hiLo": 0.05049848207272589,
+        "naive": 0.4545556381344795
+      },
+      {
+        "site": "Antimeridian",
+        "distance": 0.01,
+        "hiLo": 7.450580596923828e-9,
+        "naive": 0.009946443140506744
+      },
+      {
+        "site": "Antimeridian",
+        "distance": 1,
+        "hiLo": 3.5390257835388184e-8,
+        "naive": 0.3244745805859566
+      },
+      {
+        "site": "Antimeridian",
+        "distance": 100,
+        "hiLo": 0.0000034415542842225477,
+        "naive": 0.3198902551084757
+      },
+      {
+        "site": "Antimeridian",
+        "distance": 1000,
+        "hiLo": 0.000030384398996829987,
+        "naive": 0.32863001339137554
+      },
+      {
+        "site": "Antimeridian",
+        "distance": 10000,
+        "hiLo": 0.00047224294394254684,
+        "naive": 0.33063318114727736
+      },
+      {
+        "site": "Antimeridian",
+        "distance": 100000,
+        "hiLo": 0.0038803081260994077,
+        "naive": 0.3062115674838424
+      },
+      {
+        "site": "Antimeridian",
+        "distance": 1000000,
+        "hiLo": 0.031232433393597603,
+        "naive": 0.3090661112219095
+      },
+      {
+        "site": "LEO, 400 km",
+        "distance": 0.01,
+        "hiLo": 4.2515308114332573e-10,
+        "naive": 0.009801656939089298
+      },
+      {
+        "site": "LEO, 400 km",
+        "distance": 1,
+        "hiLo": 3.632158041000366e-8,
+        "naive": 0.24719491973519325
+      },
+      {
+        "site": "LEO, 400 km",
+        "distance": 100,
+        "hiLo": 0.0000037849924439115057,
+        "naive": 0.24872715771198273
+      },
+      {
+        "site": "LEO, 400 km",
+        "distance": 1000,
+        "hiLo": 0.000030406750738620758,
+        "naive": 0.2493351772427559
+      },
+      {
+        "site": "LEO, 400 km",
+        "distance": 10000,
+        "hiLo": 0.000455196668553981,
+        "naive": 0.24870306998491287
+      },
+      {
+        "site": "LEO, 400 km",
+        "distance": 100000,
+        "hiLo": 0.0036349929869174957,
+        "naive": 0.24969864264130592
+      },
+      {
+        "site": "LEO, 400 km",
+        "distance": 1000000,
+        "hiLo": 0.031052435748279095,
+        "naive": 0.24654250033199787
+      }
+    ],
+    "indirect": [
+      {
+        "draws": 1024,
+        "mode": "indirect",
+        "cpuMs": 0.16333332856496174,
+        "gpuMs": 0.02870647229915424,
+        "gpuSpanMs": 0.03803598961192264,
+        "wallMs": 3.331666666269302
+      },
+      {
+        "draws": 1024,
+        "mode": "direct",
+        "cpuMs": 0.148333344856898,
+        "gpuMs": 0.025770343227222027,
+        "gpuSpanMs": 0.033716795719619136,
+        "wallMs": 3.315833334128062
+      },
+      {
+        "draws": 10000,
+        "mode": "indirect",
+        "cpuMs": 0.15666668017705282,
+        "gpuMs": 0.0572998896576622,
+        "gpuSpanMs": 0.06653412631169647,
+        "wallMs": 3.2408333331346513
+      },
+      {
+        "draws": 10000,
+        "mode": "direct",
+        "cpuMs": 0.1300000031789144,
+        "gpuMs": 0.0532036598105881,
+        "gpuSpanMs": 0.06107922409723921,
+        "wallMs": 3.2950000007947287
+      },
+      {
+        "draws": 19881,
+        "mode": "indirect",
+        "cpuMs": 0.10666666130224864,
+        "gpuMs": 0.09189289054644309,
+        "gpuSpanMs": 0.10068434493624481,
+        "wallMs": 3.071666665871938
+      },
+      {
+        "draws": 19881,
+        "mode": "direct",
+        "cpuMs": 0.11666667858759562,
+        "gpuMs": 0.12850606226643085,
+        "gpuSpanMs": 0.1388559774953853,
+        "wallMs": 3.194999999801318
+      }
+    ],
+    "parity": [
+      {
+        "camera": "oblique",
+        "variant": "2.0 sRGB curves",
+        "metrics": {
+          "meanDeltaE": 1.4691646382452583,
+          "p95DeltaE": 1.689675727989593,
+          "noticeable": 0.016512345679012344
+        },
+        "flip": {
+          "mean": 0.04647740953485571,
+          "median": 0.05100050941109657,
+          "p95": 0.06490545719861984
+        }
+      },
+      {
+        "camera": "oblique",
+        "variant": "2.0 gamma 2.2 (1.x color)",
+        "metrics": {
+          "meanDeltaE": 0.885042536929007,
+          "p95DeltaE": 0.8092925775758862,
+          "noticeable": 0.016512345679012344
+        },
+        "flip": {
+          "mean": 0.037552609432077846,
+          "median": 0.04046520218253136,
+          "p95": 0.060851745307445526
+        }
+      },
+      {
+        "camera": "top-down",
+        "variant": "2.0 sRGB curves",
+        "metrics": {
+          "meanDeltaE": 1.7207889116999198,
+          "p95DeltaE": 1.689675727989593,
+          "noticeable": 0.005578703703703704
+        },
+        "flip": {
+          "mean": 0.052464582302336804,
+          "median": 0.05100050941109657,
+          "p95": 0.06192909553647041
+        }
+      },
+      {
+        "camera": "top-down",
+        "variant": "2.0 gamma 2.2 (1.x color)",
+        "metrics": {
+          "meanDeltaE": 0.9137565417309822,
+          "p95DeltaE": 0.8092925775758862,
+          "noticeable": 0.005578703703703704
+        },
+        "flip": {
+          "mean": 0.042614913741839296,
+          "median": 0.04046520218253136,
+          "p95": 0.05163542553782463
+        }
+      },
+      {
+        "camera": "grazing",
+        "variant": "2.0 sRGB curves",
+        "metrics": {
+          "meanDeltaE": 0.887654197731122,
+          "p95DeltaE": 1.689675727989593,
+          "noticeable": 0.006304012345679013
+        },
+        "flip": {
+          "mean": 0.03351660937065254,
+          "median": 0.032414644956588745,
+          "p95": 0.05532628670334816
+        }
+      },
+      {
+        "camera": "grazing",
+        "variant": "2.0 gamma 2.2 (1.x color)",
+        "metrics": {
+          "meanDeltaE": 0.5499441424126426,
+          "p95DeltaE": 0.8092925775758862,
+          "noticeable": 0.004274691358024691
+        },
+        "flip": {
+          "mean": 0.02760272955014828,
+          "median": 0.032414644956588745,
+          "p95": 0.04729899391531944
+        }
+      },
+      {
+        "camera": "far",
+        "variant": "2.0 sRGB curves",
+        "metrics": {
+          "meanDeltaE": 0.08138368568991056,
+          "p95DeltaE": 0,
+          "noticeable": 0.002283950617283951
+        },
+        "flip": {
+          "mean": 0.0023430667365579236,
+          "median": 0,
+          "p95": 0.0005547596956603229
+        }
+      },
+      {
+        "camera": "far",
+        "variant": "2.0 gamma 2.2 (1.x color)",
+        "metrics": {
+          "meanDeltaE": 0.04936850516716382,
+          "p95DeltaE": 0,
+          "noticeable": 0.0017978395061728396
+        },
+        "flip": {
+          "mean": 0.0019062386890580638,
+          "median": 0,
+          "p95": 0.0006279616500250995
+        }
+      }
+    ],
+    "models": [
+      {
+        "model": "Box",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.022698975176153408,
+        "flipGamma": 0.0017840774134089995,
+        "flipGammaP95": 0.004558808635920286,
+        "warnings": ""
+      },
+      {
+        "model": "BoxTextured",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.01663474153845246,
+        "flipGamma": 0.001976905852036967,
+        "flipGammaP95": 0.005520347040146589,
+        "warnings": ""
+      },
+      {
+        "model": "BoxVertexColors",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.023078218278456443,
+        "flipGamma": 0.001993025467613092,
+        "flipGammaP95": 0.0042176684364676476,
+        "warnings": ""
+      },
+      {
+        "model": "BoxInterleaved",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.022698975176153408,
+        "flipGamma": 0.0017840774134089995,
+        "flipGammaP95": 0.004558808635920286,
+        "warnings": ""
+      },
+      {
+        "model": "TorusQuantized",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.017680890297770587,
+        "flipGamma": 0.003000096523071527,
+        "flipGammaP95": 0.006170979700982571,
+        "warnings": ""
+      },
+      {
+        "model": "MeshoptCubeTest",
+        "status": "ok",
+        "draws": 35,
+        "batches": 35,
+        "flipSrgb": 0.0077273705316315625,
+        "flipGamma": 0.0057407790767775154,
+        "flipGammaP95": 0.03619134798645973,
+        "warnings": ""
+      },
+      {
+        "model": "BoomBox",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.011308884783252758,
+        "flipGamma": 0.0055909002425396466,
+        "flipGammaP95": 0.03538395091891289,
+        "warnings": ""
+      },
+      {
+        "model": "UnlitTest",
+        "status": "ok",
+        "draws": 2,
+        "batches": 2,
+        "flipSrgb": 0.017593761147706107,
+        "flipGamma": 0.0022425734819413183,
+        "flipGammaP95": 0.008769748732447624,
+        "warnings": ""
+      },
+      {
+        "model": "TwoSidedPlane",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.009490666795947955,
+        "flipGamma": 0.0038161796290617418,
+        "flipGammaP95": 0.023678552359342575,
+        "warnings": ""
+      },
+      {
+        "model": "BoxCutout",
+        "status": "ok (translucent: drawn opaque until OIT, M4)",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.16604755411620195,
+        "flipGamma": 0.15256311999930727,
+        "flipGammaP95": 0.9699193835258484,
+        "warnings": ""
+      },
+      {
+        "model": "Duck",
+        "status": "error: Unsupported required glTF extension: KHR_draco_mesh_compression"
+      }
+    ],
+    "slang": {
+      "status": "pending: Slang ports target the M0 record layout; re-ported with the M1 PBR shader"
+    },
+    "baseline": [
+      {
+        "suite": "draw scaling",
+        "engine": "1.x WebGL",
+        "draws": 1000,
+        "create ms": 23.799999952316284,
+        "first frame ms": 203.10000002384186,
+        "cpu/frame ms": 3,
+        "frame incl. GPU ms": 3,
+        "API calls/frame": 6140
+      },
+      {
+        "suite": "draw scaling",
+        "engine": "2.0 WebGPU",
+        "draws": 1000,
+        "create ms": 6.400000095367432,
+        "first frame ms": 171.5,
+        "cpu/frame ms": 0.10000002384185791,
+        "frame incl. GPU ms": 3,
+        "API calls/frame": 37,
+        "gpu ms": 0.026663719652079615
+      },
+      {
+        "suite": "draw scaling",
+        "engine": "1.x WebGL",
+        "draws": 5000,
+        "create ms": 18.100000023841858,
+        "first frame ms": 638.6999999284744,
+        "cpu/frame ms": 20.90000009536743,
+        "frame incl. GPU ms": 20.90000009536743,
+        "API calls/frame": 30140
+      },
+      {
+        "suite": "draw scaling",
+        "engine": "2.0 WebGPU",
+        "draws": 5000,
+        "create ms": 9.199999928474426,
+        "first frame ms": 252,
+        "cpu/frame ms": 0.20000004768371582,
+        "frame incl. GPU ms": 3.899999976158142,
+        "API calls/frame": 37,
+        "gpu ms": 0.04690854309112699
+      },
+      {
+        "suite": "log depth",
+        "engine": "1.x logDepth=true",
+        "draws": 5000,
+        "cpu/frame ms": 21.399999976158142,
+        "frame incl. GPU ms": 21.399999976158142,
+        "API calls/frame": 30140
+      },
+      {
+        "suite": "log depth",
+        "engine": "1.x logDepth=false",
+        "draws": 5000,
+        "cpu/frame ms": 21.199999928474426,
+        "frame incl. GPU ms": 21.199999928474426,
+        "API calls/frame": 30140
+      },
+      {
+        "suite": "picking",
+        "engine": "1.x scene.pick",
+        "draws": 5000,
+        "main-thread ms": 4.5,
+        "latency ms": 4.5
+      },
+      {
+        "suite": "picking",
+        "engine": "2.0 view.pick (incl. its frame)",
+        "draws": 5000,
+        "main-thread ms": 0.10000002384185791,
+        "latency ms": 3
+      },
+      {
+        "suite": "4 views",
+        "engine": "1.x: 4 viewers",
+        "draws": 1000,
+        "create ms": 47.90000009536743,
+        "cpu/frame ms": 10.5,
+        "scene copies": 4
+      },
+      {
+        "suite": "4 views",
+        "engine": "2.0: 4 views, 1 world",
+        "draws": 1000,
+        "create ms": 2.299999952316284,
+        "cpu/frame ms": 0.20000004768371582,
+        "frame incl. GPU ms": 4.099999904632568,
+        "API calls/frame": 127,
+        "scene copies": 1
+      }
+    ]
+  }
+}

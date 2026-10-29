@@ -4,7 +4,10 @@ export {
   World,
   type DrawHandle,
   type DrawOptions,
+  type MaterialOptions,
   type MeshHandle,
+  type TextureBinding,
+  type TextureSetOptions,
   type SubmissionMode,
 } from "./scene/World.ts";
 export {
@@ -39,3 +42,6 @@ export {
 export { eastNorthUpToFixedFrame } from "./math/transforms.ts";
 export * as vec3 from "./math/vec3.ts";
 export * as mat4 from "./math/mat4.ts";
+export { type GltfAsset } from "./io/gltfTypes.ts";
+export { type ModelInstance, type ModelOptions } from "./scene/gltfModel.ts";
+export { MaterialFlags } from "./render/layout.ts";

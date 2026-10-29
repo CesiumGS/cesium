@@ -21,6 +21,7 @@ const suites = {
   precision: ["/spikes/precision.html?bench", "runPrecision"],
   indirect: ["/spikes/indirect.html?bench", "runIndirect"],
   parity: ["/parity/?bench", "runParity"],
+  models: ["/parity/models.html?bench", "runModels"],
   slang: ["/spikes/slang.html?bench", "runSlang"],
   baseline: ["/bench/baseline.html?bench", "runBaseline"],
 };

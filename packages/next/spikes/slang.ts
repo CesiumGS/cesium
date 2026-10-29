@@ -386,7 +386,21 @@ async function main(): Promise<Record<string, string>> {
   return Object.fromEntries(rows);
 }
 
+/**
+ * The Slang ports in spikes/slang/ target the M0 draw-record layout. M1
+ * replaced it (attribute streams, materials, batches), so they are re-ported
+ * together with the PBR shader, where the Slang performance gate is re-run.
+ */
+const PORTED_TO_CURRENT_LAYOUT = false;
+
 async function runSlang(): Promise<Record<string, string>> {
+  if (!PORTED_TO_CURRENT_LAYOUT) {
+    report(
+      "status",
+      "pending: Slang ports target the M0 record layout; re-ported with the M1 PBR shader",
+    );
+    return Object.fromEntries(rows);
+  }
   try {
     return await main();
   } catch (error) {

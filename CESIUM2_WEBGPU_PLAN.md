@@ -14,6 +14,8 @@ Branch: `cesium-2.0-webgpu-poc` (off `main` @ `587f52f1eb`, CesiumJS 1.146.0)
 | r6  | M0 spike results recorded in §10: L2 parity harness, GPU precision, engine-in-worker, indirect-draw overhead. Indirect draws cost measurable GPU time on Intel/D3D12, so §3.3 submission now batches before going indirect.                                                                                                                                                              |
 | r7  | Spikes rerun on the NVIDIA GPU; Slang spike run (passes, perf gate deferred to unquantized timing in M1). §10 rewritten with both GPUs.                                                                                                                                                                                                                                                  |
 | r8  | M0 close-out: automated runner (headless Edge, unquantized timestamps), FLIP validated against NVIDIA's reference and integrated, 1.x performance baselines, Metal deferred.                                                                                                                                                                                                             |
+| r9  | M1 increment 1: worker glTF pipeline, draw records v1, materials and textures, batching. Decisions: exact sRGB over matching 1.x's gamma 2.2; translucency designed clean-slate and tested against an exact reference instead of 1.x's WBOIT.                                                                                                                                            |
+| r10 | Translucency becomes a unified compute compositor shared by translucent meshes and Gaussian splats; MBOIT is the overflow fallback.                                                                                                                                                                                                                                                      |
 
 ## 1. Goal
 
@@ -253,7 +255,7 @@ Per-view frame:
    - **MSAA 4×**, with the MSAA color target as a `TRANSIENT_ATTACHMENT` where supported.
    - **Integer targets can't be MSAA-resolved.** The feature-ID target is resolved by a **custom sample-0 resolve inside the pick-readback pass**, only for the requested region.
 4. **Sky / atmosphere** after opaque. Fog and atmosphere linearize reverse-Z depth.
-5. **Translucent**: WBOIT in `Legacy1x` render mode, matching 1.x. **Moment-based OIT** is the `Next` default (bounded memory, correct for layered CAD glazing). Per-pixel linked lists are an exact mode post-PoC; WebGPU has no fragment interlock.
+5. **Translucent** (clean-slate design; 1.x is not the reference, see r9/r10): a **unified compute translucency compositor** shared with Gaussian splats (§3.6). Translucent mesh fragments go into per-pixel linked lists in the fragment stage; splats are radix-sorted on the GPU and binned into screen tiles; one compute resolve merges both depth-ordered streams per pixel and composites front to back over the opaque depth, with early termination at full opacity. **Moment-based OIT** is the bounded-memory fallback when a pixel's list overflows. The exact (unbounded, sorted) resolve doubles as the ground-truth reference for tests. WebGPU has no fragment interlock.
 6. **Resolve and post**:
    - Exposure and tonemapping by default. The tonemapper matches 1.x's HDR tonemapper for parity; auto-exposure via a compute histogram comes later.
    - Pass-through in LDR mode.
@@ -262,19 +264,20 @@ Per-view frame:
 
 ### 3.6 Compute shaders: where they pay off
 
-| Area                | Compute use                                                                                                                                                                                                                                                         | Win over 1.x approach                                              | When     |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ | -------- |
-| Draw prep           | Per-view camera-relative offsets and args writing                                                                                                                                                                                                                   | Precision handled in one place; enables GPU-driven draws           | M1       |
-| Culling             | Frustum + horizon (M1–M3); two-phase HZB occlusion (M5)                                                                                                                                                                                                             | CPU culling and draw-list building go away                         | M1→M5    |
-| Imagery             | Composite N layers and reproject Web Mercator → geographic into **`texture_2d_array` cache slices**                                                                                                                                                                 | One texture fetch per fragment; one bind group for the whole globe | M3       |
-| Atmosphere          | 1.x scattering model precomputed into LUTs; dynamic environment map → spherical harmonics by parallel reduction                                                                                                                                                     | Per-pixel scattering becomes a LUT fetch                           | M4       |
-| Mips                | Compute mip generation                                                                                                                                                                                                                                              | No render-pass-per-level mips                                      | M1       |
-| Picking and queries | Ray/height queries (`sampleHeight`, clamp-to-ground, drill pick); feature-ID sample-0 resolve                                                                                                                                                                       | Batched and async, with no re-render                               | M2–M3    |
-| **Gaussian splats** | Cull + 3D→2D covariance projection + spherical-harmonics evaluation → **GPU radix sort**, a portable wait-free variant without subgroups or global atomics (WebSplatter, 2026) plus a subgroup variant → indirect instanced draw. 1.x sorts in WASM on CPU workers. | CPU never touches splats; each view sorts independently            | M6       |
-| **Point clouds**    | Compute rasterization with **32-bit atomics, two-pass** (depth min, then color where depth matches), because 64-bit atomics are only a draft proposal; EDL post-process as compute                                                                                  | Very large clouds without the triangle pipeline                    | M6       |
-| Styling             | Compiled style → per-feature color/show buffers                                                                                                                                                                                                                     | No CPU style evaluation                                            | M6       |
-| Post                | Auto-exposure histogram, tonemap, FXAA/SMAA, SSAO, CAD edges                                                                                                                                                                                                        | Fewer full-screen passes                                           | M4+      |
-| Classification      | Compute decals, or per-pixel lists                                                                                                                                                                                                                                  | Replaces stencil volumes that need watertight geometry             | post-PoC |
+| Area                        | Compute use                                                                                                                                                                                                                                                         | Win over 1.x approach                                                                                                    | When                     |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------ |
+| Draw prep                   | Per-view camera-relative offsets and args writing                                                                                                                                                                                                                   | Precision handled in one place; enables GPU-driven draws                                                                 | M1                       |
+| Culling                     | Frustum + horizon (M1–M3); two-phase HZB occlusion (M5)                                                                                                                                                                                                             | CPU culling and draw-list building go away                                                                               | M1→M5                    |
+| Imagery                     | Composite N layers and reproject Web Mercator → geographic into **`texture_2d_array` cache slices**                                                                                                                                                                 | One texture fetch per fragment; one bind group for the whole globe                                                       | M3                       |
+| Atmosphere                  | 1.x scattering model precomputed into LUTs; dynamic environment map → spherical harmonics by parallel reduction                                                                                                                                                     | Per-pixel scattering becomes a LUT fetch                                                                                 | M4                       |
+| Mips                        | Compute mip generation                                                                                                                                                                                                                                              | No render-pass-per-level mips                                                                                            | M1                       |
+| Picking and queries         | Ray/height queries (`sampleHeight`, clamp-to-ground, drill pick); feature-ID sample-0 resolve                                                                                                                                                                       | Batched and async, with no re-render                                                                                     | M2–M3                    |
+| **Gaussian splats**         | Cull + 3D→2D covariance projection + spherical-harmonics evaluation → **GPU radix sort**, a portable wait-free variant without subgroups or global atomics (WebSplatter, 2026) plus a subgroup variant → indirect instanced draw. 1.x sorts in WASM on CPU workers. | CPU never touches splats; each view sorts independently                                                                  | M6                       |
+| **Translucency compositor** | Per-pixel fragment lists (fragment-stage storage atomics) + splat tile lists → one compute resolve: per-pixel merge of the two sorted streams, front-to-back blending over opaque depth, early-out at full opacity; MBOIT fallback on list overflow                 | Correct ordering of glass, splats and opaque geometry together (1.x composites splats and translucent meshes separately) | M4 (meshes), M6 (splats) |
+| **Point clouds**            | Compute rasterization with **32-bit atomics, two-pass** (depth min, then color where depth matches), because 64-bit atomics are only a draft proposal; EDL post-process as compute                                                                                  | Very large clouds without the triangle pipeline                                                                          | M6                       |
+| Styling                     | Compiled style → per-feature color/show buffers                                                                                                                                                                                                                     | No CPU style evaluation                                                                                                  | M6                       |
+| Post                        | Auto-exposure histogram, tonemap, FXAA/SMAA, SSAO, CAD edges                                                                                                                                                                                                        | Fewer full-screen passes                                                                                                 | M4+                      |
+| Classification              | Compute decals, or per-pixel lists                                                                                                                                                                                                                                  | Replaces stencil volumes that need watertight geometry                                                                   | post-PoC                 |
 
 Traversal, decoding of compressed formats and networking stay on the CPU in workers.
 
@@ -370,7 +373,7 @@ Principles, each fixing a 1.x abstraction problem:
 
 ## 4. Parity strategy (1.x as oracle)
 
-The harness is `parity/` side-by-side: a 1.x `Viewer` (WebGL) and a 2.0 `Engine` (WebGPU), driven by **one serialized camera state** and a fixed `JulianDate`, with the same assets and default settings. Parity runs use `Legacy1x` selection and WBOIT. Because 2.0 defaults to HDR, the primary image baseline is **1.x with `scene.highDynamicRange = true`** and the same tonemapper. A secondary LDR-vs-LDR run covers 1.x's out-of-the-box default.
+The harness is `parity/` side-by-side: a 1.x `Viewer` (WebGL) and a 2.0 `Engine` (WebGPU), driven by **one serialized camera state** and a fixed `JulianDate`, with the same assets and default settings. Parity runs use `Legacy1x` selection. Color is judged on 2.0's exact sRGB pipeline, and translucency against 2.0's own exact reference mode rather than 1.x (r9). Because 2.0 defaults to HDR, the primary image baseline is **1.x with `scene.highDynamicRange = true`** and the same tonemapper. A secondary LDR-vs-LDR run covers 1.x's out-of-the-box default.
 
 | Level                     | Check                                                                                                         | Pass criterion                                                              |
 | ------------------------- | ------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
@@ -470,7 +473,7 @@ Durations are rough and **optimistic** for one engineer with AI assistance. If t
 
 - Sky and atmosphere LUTs, ground atmosphere and fog.
 - LDR/HDR paths, FXAA.
-- WBOIT for parity and MBOIT for `Next`.
+- Translucency: MBOIT real-time path plus the per-pixel-linked-list exact reference; tested for opaque/translucent interaction against the reference, not against 1.x.
 - _Exit_: L2 on all canonical views, and L3 sign-off.
 
 ### M5 — Performance hardening (≈3 wks)
@@ -528,7 +531,7 @@ Durations are rough and **optimistic** for one engineer with AI assistance. If t
 - **Schedule**: 5–6 months across everything here is optimistic. Droppable in this order:
   1. M6
   2. two-phase occlusion culling
-  3. MBOIT (keep WBOIT)
+  3. MBOIT (keep the exact linked-list mode, at its higher cost)
   4. `Next` prediction and GPU feedback
   5. pixel-exact horizon-culling parity
 - **Globe scope**: defaults plus terrain and imagery only.
@@ -711,3 +714,85 @@ with FLIP, precision, worker, Slang correctness and 1.x baselines are done on
 Windows. Carried into M1: the Slang performance gate, steady-state allocation
 measurement, the 2.0 first-frame cost, and the per-indirect-call cost
 (batching). Deferred: the Metal precision run.
+
+## 11. M1 progress
+
+### Increment 1 (r9): glTF content path and batching
+
+Done:
+
+- **Worker glTF pipeline** (`src/io/`): a worker pool fetches and parses
+  glTF/GLB, reads accessors (interleaved, quantized, normalized), composes the
+  node hierarchy in float64, converts strips and fans, builds flat normals when
+  NORMAL is absent, decodes meshopt (`EXT_meshopt_compression`, fallback
+  buffers) and decodes images to `ImageBitmap`. The main thread only uploads.
+- **Draw records v1** (176 bytes): per-attribute stream offsets (vertex pulling
+  with optional normals, UVs, colors, tangents), bounding sphere center,
+  material index, texture set and batch. **Material table** (64 bytes per
+  material) and **texture sets** (5 textures + samplers per bind group, 1×1
+  defaults). Base color and emissive use `-srgb` formats; mips are generated by
+  render passes, since sRGB formats are not storage-writable.
+- **Batching**: records sharing mesh, material, texture set and cull mode form
+  a batch; the prep kernel compacts visible records per batch and writes one
+  indirect draw per batch. The draw index comes from the compacted list bound
+  as an instance-step vertex buffer, which also removes the dependency on
+  `indirect-first-instance`.
+- **Placement** matches 1.x: `modelMatrix × Y_UP_TO_Z_UP × Z_UP_TO_X_UP × node`;
+  mirrored transforms are drawn without culling.
+
+Measured (NVIDIA RTX 3000 Ada laptop GPU, `bench/results/…T21-50-01…json`):
+
+| Metric                                  | Before batching (M0) | Increment 1  |
+| --------------------------------------- | -------------------- | ------------ |
+| 20k identical boxes: indirect calls     | 19,881               | 1            |
+| 20k identical boxes: GPU time           | 1.30 ms              | 0.092 ms     |
+| 20k identical boxes: frame wall-clock   | 8.7–9.3 ms           | 3.1 ms       |
+| Demo (657 records): indirect calls      | 657                  | 514          |
+| 1.x vs 2.0 API calls/frame, 5,000 draws | 30,140 vs 34         | 30,140 vs 37 |
+
+Model parity (`parity/models.html`), unlit in both engines, mean FLIP:
+
+| Model           | 2.0 exact sRGB (default) | 2.0 with 1.x color curve (diagnostic) |
+| --------------- | ------------------------ | ------------------------------------- |
+| Box             | 0.0227                   | 0.0018                                |
+| BoxTextured     | 0.0166                   | 0.0020                                |
+| BoxVertexColors | 0.0231                   | 0.0020                                |
+| BoxInterleaved  | 0.0227                   | 0.0018                                |
+| TorusQuantized  | 0.0177                   | 0.0030                                |
+| MeshoptCubeTest | 0.0077                   | 0.0057                                |
+| BoomBox         | 0.0113                   | 0.0056                                |
+| UnlitTest       | 0.0176                   | 0.0022                                |
+| TwoSidedPlane   | 0.0095                   | 0.0038                                |
+| BoxCutout       | 0.1660 (translucent)     | 0.1526 (translucent)                  |
+| Duck            | Draco: not yet           | —                                     |
+
+With 1.x's color curve applied as a diagnostic, geometry, transforms, axis
+conventions, UVs, vertex colors, quantization, interleaving, meshopt, texture
+filtering and double-sided materials agree to ≤0.006 mean FLIP; the remaining
+difference in the default column is the intended sRGB correction.
+
+**Decisions (plan owner, r9).**
+
+- **Correctness over 1.x matching for color.** 2.0 decodes color textures in
+  hardware sRGB, filters in linear space and encodes output with the exact sRGB
+  curve; 1.x approximates all three with `pow(2.2)` and filters in gamma
+  space. Parity is judged on the default (exact) path; the `gamma2.2` model and
+  view options remain only as a diagnostic that separates geometry differences
+  from color-curve differences.
+- **Translucency is clean-slate.** 1.x's WBOIT and its mixing of opaque and
+  translucent geometry are not a reference. 2.0 is tested against its own exact
+  per-pixel-linked-list mode, including opaque/translucent interaction.
+- **One compositor for translucent meshes and splats (r10).** Both feed
+  depth-ordered fragment streams into a single compute resolve (§3.5, §3.6), so
+  glass, splats and opaque geometry composite correctly together. Its splat
+  side (GPU radix sort, tile binning) lands with M6; the mesh side with M4.
+
+Next increments:
+
+1. **PBR + IBL** (1.x lighting math as a starting point, judged on correctness)
+   with normal maps and tangents; re-port the Slang shaders to the v1 layout and
+   re-run the Slang performance gate on the PBR shader.
+2. **Draco and KTX2/Basis** decoding in the workers.
+3. **Zero-allocation gate** (cross-origin-isolated test page) and the 2.0
+   first-frame cost.
+4. **CAD tileset content** (b3dm/glb with feature IDs) as the M1 exit test.

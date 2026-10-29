@@ -53,11 +53,14 @@ function serveDirectory(prefix: string, root: string): Plugin {
 }
 
 const slangWasm = process.env.SLANG_WASM_DIR;
+// Sample models and tilesets checked into the 1.x repo, for parity tests.
+const specsData = fileURLToPath(new URL("../../Specs/Data", import.meta.url));
 
 export default defineConfig({
   server: { host: "127.0.0.1", port: 5190, strictPort: true },
   plugins: [
     serveDirectory("/cesium1x", cesium1x),
+    serveDirectory("/specs-data", specsData),
     ...(slangWasm ? [serveDirectory("/slang-wasm", slangWasm)] : []),
   ],
   build: {
@@ -68,6 +71,7 @@ export default defineConfig({
       input: {
         demo: "demo/index.html",
         parity: "parity/index.html",
+        models: "parity/models.html",
         precision: "spikes/precision.html",
         worker: "spikes/worker.html",
         indirect: "spikes/indirect.html",

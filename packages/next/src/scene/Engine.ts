@@ -13,6 +13,9 @@ import {
 import { View, type PickResult, type ViewOptions } from "./View.ts";
 import { ViewLink, type ViewLinkOptions } from "./ViewLink.ts";
 import { World, type WorldOptions } from "./World.ts";
+import { WorkerPool } from "../io/WorkerPool.ts";
+import type { GltfAsset } from "../io/gltfTypes.ts";
+import { addGltf, type ModelInstance, type ModelOptions } from "./gltfModel.ts";
 
 export interface EngineOptions extends GpuDeviceOptions {
   maxViews?: number;
@@ -29,6 +32,8 @@ export interface FrameStats {
   gpuSpanMs: number;
   views: number;
   draws: number;
+  /** Indirect draw calls per view (one per batch). */
+  batches: number;
 }
 
 /**
@@ -54,11 +59,13 @@ export class Engine {
     gpuSpanMs: Number.NaN,
     views: 0,
     draws: 0,
+    batches: 0,
   };
   /** Unit vector toward the sun in Earth-fixed axes. Placeholder until the 1.x sun model lands. */
   readonly sunDirection: Vec3 = v3.vec3(1, 0, 0);
 
   private readonly ctx: RenderContext;
+  private readonly workers = new WorkerPool();
   private readonly pool: TexturePool;
   private readonly timer: GpuTimer;
   private readonly viewStaging: GPUBuffer;
@@ -127,6 +134,22 @@ export class Engine {
 
   get capabilities() {
     return this.gpu.caps;
+  }
+
+  /** Fetches and decodes a glTF/GLB in a worker. Upload it with `addModel`. */
+  loadGltf(url: string | URL): Promise<GltfAsset> {
+    return this.workers.request<GltfAsset>("gltf", {
+      url: new URL(url, globalThis.location?.href).href,
+    });
+  }
+
+  /** Places a parsed glTF asset in a world. */
+  addModel(
+    world: World,
+    asset: GltfAsset,
+    options: ModelOptions,
+  ): ModelInstance {
+    return addGltf(this.ctx, world, asset, options);
   }
 
   createWorld(options?: WorldOptions): World {
@@ -249,6 +272,7 @@ export class Engine {
     this.stats.gpuSpanMs = this.timer.spanMilliseconds;
     this.stats.views = views.length;
     this.stats.draws = this.worlds.reduce((n, w) => n + w.recordCount, 0);
+    this.stats.batches = this.worlds.reduce((n, w) => n + w.batchCount, 0);
   }
 
   private writeView(view: View, index: number): void {
@@ -323,15 +347,7 @@ export class Engine {
     });
 
     graph.addPass("prep", { sideEffect: true }, (enc) => {
-      const pass = enc.beginComputePass({
-        label: "prep",
-        timestampWrites: this.timer.passWrites(),
-      });
-      pass.setPipeline(pipelines.prep);
-      pass.setBindGroup(0, this.ctx.currentViewBindGroup);
-      pass.setBindGroup(1, world.prepBindGroup);
-      pass.dispatchWorkgroups(Math.ceil(Math.max(world.recordCount, 1) / 64));
-      pass.end();
+      world.encodePrep(enc, this.timer.passWrites());
     });
 
     graph.addPass(
@@ -532,6 +548,7 @@ export class Engine {
     }
     this.pool.destroy();
     this.timer.destroy();
+    this.workers.destroy();
     this.gpu.destroy();
   }
 }
