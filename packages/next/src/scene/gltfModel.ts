@@ -39,6 +39,15 @@ export interface ModelInstance {
   /** Bounding sphere of the placed model, Earth-fixed. */
   center: Vec3;
   radius: number;
+  /** GPU bytes owned by the instance: arena geometry plus textures. */
+  bytes: number;
+  /** Everything `removeGltf` frees. */
+  readonly resources: {
+    meshes: MeshHandle[];
+    materials: number[];
+    textureSets: number[];
+    textures: GPUTexture[];
+  };
 }
 
 /**
@@ -85,7 +94,9 @@ export function addGltf(
     textureSet: 0,
     doubleSided: false,
   };
+  const arenaBefore = world.arenaBytes;
   const meshes: MeshHandle[] = asset.meshes.map((mesh) => world.addMesh(mesh));
+  const arenaBytes = world.arenaBytes - arenaBefore;
 
   // modelMatrix × RTC_CENTER × axis correction × node, as 1.x ModelSceneGraph.
   const base = m4.copy(m4.mat4(), options.modelMatrix);
@@ -137,7 +148,41 @@ export function addGltf(
     spheres.push({ center, radius: mesh.radius * scale });
   }
   textures.release();
-  return { draws, ...unionSphere(spheres) };
+  return {
+    draws,
+    ...unionSphere(spheres),
+    bytes: arenaBytes + textures.bytes,
+    resources: {
+      meshes,
+      materials: [...materials.map((m) => m.index), defaultMaterial.index],
+      textureSets: materials.map((m) => m.textureSet),
+      textures: textures.textures,
+    },
+  };
+}
+
+/** Removes a placed glTF from its world and frees its GPU resources. */
+export function removeGltf(world: World, instance: ModelInstance): void {
+  for (const draw of instance.draws) {
+    world.removeDraw(draw);
+  }
+  for (const mesh of instance.resources.meshes) {
+    world.removeMesh(mesh);
+  }
+  for (const material of instance.resources.materials) {
+    world.removeMaterial(material);
+  }
+  for (const set of instance.resources.textureSets) {
+    world.removeTextureSet(set);
+  }
+  for (const texture of instance.resources.textures) {
+    texture.destroy();
+  }
+  instance.draws.length = 0;
+  instance.resources.meshes.length = 0;
+  instance.resources.materials.length = 0;
+  instance.resources.textureSets.length = 0;
+  instance.resources.textures.length = 0;
 }
 
 function materialData(m: GltfMaterial, gamma22: boolean) {
@@ -183,6 +228,10 @@ function materialData(m: GltfMaterial, gamma22: boolean) {
 
 /** Creates GPU textures and samplers on demand, one per (image, color space). */
 class TextureUploader {
+  /** Every texture created, for `removeGltf`. */
+  readonly textures: GPUTexture[] = [];
+  /** Approximate GPU bytes of those textures (mips included). */
+  bytes = 0;
   private readonly views = new Map<string, GPUTextureView>();
   private readonly samplers = new Map<string, GPUSampler>();
 
@@ -228,7 +277,16 @@ class TextureUploader {
       const image = this.asset.images[imageIndex]!;
       const { device, mips } = this.ctx;
       if (!(image instanceof ImageBitmap)) {
-        view = uploadCompressed(this.ctx, image, srgb, mipmaps, imageIndex);
+        const texture = uploadCompressed(
+          this.ctx,
+          image,
+          srgb,
+          mipmaps,
+          imageIndex,
+        );
+        this.textures.push(texture);
+        this.bytes += image.levels.reduce((n, l) => n + l.byteLength, 0);
+        view = texture.createView();
         this.views.set(key, view);
         return view;
       }
@@ -249,6 +307,14 @@ class TextureUploader {
         image.height,
       ]);
       mips.generate(texture);
+      this.textures.push(texture);
+      // RGBA8 plus a full mip chain ≈ 4/3 of the base level.
+      this.bytes += Math.round(
+        image.width *
+          image.height *
+          4 *
+          (texture.mipLevelCount > 1 ? 4 / 3 : 1),
+      );
       view = texture.createView();
       this.views.set(key, view);
     }
@@ -299,7 +365,7 @@ function uploadCompressed(
   srgb: boolean,
   mipmaps: boolean,
   index: number,
-): GPUTextureView {
+): GPUTexture {
   const { device, mips } = ctx;
   const block = image.format !== "rgba8";
   const format: GPUTextureFormat =
@@ -337,7 +403,7 @@ function uploadCompressed(
   if (generate) {
     mips.generate(texture);
   }
-  return texture.createView();
+  return texture;
 }
 
 function determinant3(m: Mat4): number {

@@ -34,7 +34,12 @@ import { ViewLink, type ViewLinkOptions } from "./ViewLink.ts";
 import { World, type WorldOptions } from "./World.ts";
 import { WorkerPool } from "../io/WorkerPool.ts";
 import type { GltfAsset } from "../io/gltfTypes.ts";
-import { addGltf, type ModelInstance, type ModelOptions } from "./gltfModel.ts";
+import {
+  addGltf,
+  removeGltf,
+  type ModelInstance,
+  type ModelOptions,
+} from "./gltfModel.ts";
 
 export interface EngineOptions extends GpuDeviceOptions {
   maxViews?: number;
@@ -223,6 +228,11 @@ export class Engine {
     options: ModelOptions,
   ): ModelInstance {
     return addGltf(this.ctx, world, asset, options);
+  }
+
+  /** Removes a placed glTF and frees its geometry, materials and textures. */
+  removeModel(world: World, instance: ModelInstance): void {
+    removeGltf(world, instance);
   }
 
   createWorld(options?: WorldOptions): World {

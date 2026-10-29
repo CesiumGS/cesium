@@ -96,6 +96,8 @@ export interface DrawHandle {
 
 interface Batch {
   index: number;
+  /** Key in `batches`; empty when the batch is free for reuse. */
+  key: string;
   mesh: MeshHandle;
   textureSet: number;
   doubleSided: boolean;
@@ -125,9 +127,19 @@ export class World {
   private readonly materialsU32: Uint32Array;
   private materialCount = 0;
   private materialsDirty = false;
-  private readonly textureSets: GPUBindGroup[] = [];
+  private readonly textureSets: Array<GPUBindGroup | undefined> = [];
+  private readonly freeTextureSets: number[] = [];
+  private readonly freeMaterials: number[] = [];
   private readonly batches = new Map<string, Batch>();
   private readonly batchList: Batch[] = [];
+  /** Emptied batches, reused (index kept) so live records stay valid. */
+  private readonly freeBatches: Batch[] = [];
+  private readonly drawBatches: Array<Batch | undefined> = [];
+  /** Arena ranges per mesh id, as [byte offset, byte size]. */
+  private readonly meshRanges = new Map<
+    number,
+    { vertex: Array<[number, number]>; index: [number, number] }
+  >();
   private readonly names: Array<string | undefined> = [];
   private readonly featureTables: Array<FeatureTable | undefined> = [];
   /**
@@ -260,22 +272,28 @@ export class World {
   }
 
   /** Number of batches, i.e. indirect draw calls per view. */
+  /** Live batches: indirect draws per view. */
   get batchCount(): number {
-    return this.batchList.length;
+    return this.batches.size;
   }
 
   /** Uploads geometry into the arena as separate attribute streams. */
   addMesh(mesh: MeshData): MeshHandle {
     const vertexCount = mesh.positions.length / 3;
     const queue = this.ctx.device.queue;
+    const vertexRanges: Array<[number, number]> = [];
     const upload = (data: Float32Array | Uint32Array | undefined): number => {
       if (!data) {
         return NO_STREAM;
       }
       const offset = this.vertexAllocator.allocate(data.byteLength);
       if (offset === undefined) {
+        for (const [o, size] of vertexRanges) {
+          this.vertexAllocator.release(o, size);
+        }
         throw new Error("World vertex arena is full.");
       }
+      vertexRanges.push([offset, data.byteLength]);
       queue.writeBuffer(this.vertexBuffer, offset, data);
       return offset / 4;
     };
@@ -289,12 +307,20 @@ export class World {
     };
     const indexOffset = this.indexAllocator.allocate(mesh.indices.byteLength);
     if (indexOffset === undefined) {
+      for (const [o, size] of vertexRanges) {
+        this.vertexAllocator.release(o, size);
+      }
       throw new Error("World index arena is full.");
     }
     queue.writeBuffer(this.indexBuffer, indexOffset, mesh.indices);
     const { center, radius } = boundingSphere(mesh.positions);
+    const id = this.nextMeshId++;
+    this.meshRanges.set(id, {
+      vertex: vertexRanges,
+      index: [indexOffset, mesh.indices.byteLength],
+    });
     return {
-      id: this.nextMeshId++,
+      id,
       firstIndex: indexOffset / 4,
       indexCount: mesh.indices.length,
       vertexCount,
@@ -306,10 +332,35 @@ export class World {
     };
   }
 
+  /**
+   * Frees a mesh's arena ranges. Draws that use it must be removed first.
+   * Returns the bytes released.
+   */
+  removeMesh(mesh: MeshHandle): number {
+    const ranges = this.meshRanges.get(mesh.id);
+    if (!ranges) {
+      return 0;
+    }
+    this.meshRanges.delete(mesh.id);
+    let bytes = 0;
+    for (const [offset, size] of ranges.vertex) {
+      this.vertexAllocator.release(offset, size);
+      bytes += size;
+    }
+    this.indexAllocator.release(ranges.index[0], ranges.index[1]);
+    return bytes + ranges.index[1];
+  }
+
+  /** Bytes in use in the vertex and index arenas. */
+  get arenaBytes(): number {
+    return this.vertexAllocator.used + this.indexAllocator.used;
+  }
+
   /** Adds a material to the table and returns its index. */
   addMaterial(options: MaterialOptions): number {
-    const index = this.materialCount++;
+    const index = this.freeMaterials.pop() ?? this.materialCount++;
     if (index >= this.maxMaterials) {
+      this.materialCount--;
       throw new Error("World material table is full.");
     }
     writeMaterial(this.materialsF32, this.materialsU32, index, {
@@ -324,6 +375,19 @@ export class World {
     });
     this.materialsDirty = true;
     return index;
+  }
+
+  /** Frees a material slot. Draws that use it must be removed first. */
+  removeMaterial(index: number): void {
+    this.freeMaterials.push(index);
+  }
+
+  /** Frees a texture set (not its textures). Draws must be removed first. */
+  removeTextureSet(index: number): void {
+    if (index > 0 && this.textureSets[index]) {
+      this.textureSets[index] = undefined;
+      this.freeTextureSets.push(index);
+    }
   }
 
   /** Binds up to five material textures; missing ones get 1×1 defaults. */
@@ -344,13 +408,17 @@ export class World {
         resource: slot?.sampler ?? defaults.sampler,
       });
     });
-    this.textureSets.push(
-      this.ctx.device.createBindGroup({
-        label: `world.textureSet${this.textureSets.length}`,
-        layout: this.ctx.pipelines.textureSetLayout,
-        entries,
-      }),
-    );
+    const group = this.ctx.device.createBindGroup({
+      label: "world.textureSet",
+      layout: this.ctx.pipelines.textureSetLayout,
+      entries,
+    });
+    const index = this.freeTextureSets.pop();
+    if (index !== undefined) {
+      this.textureSets[index] = group;
+      return index;
+    }
+    this.textureSets.push(group);
     return this.textureSets.length - 1;
   }
 
@@ -365,18 +433,29 @@ export class World {
     const key = `${options.mesh.id}|${material}|${textureSet}|${doubleSided ? 1 : 0}`;
     let batch = this.batches.get(key);
     if (!batch) {
-      batch = {
-        index: this.batchList.length,
-        mesh: options.mesh,
-        textureSet,
-        doubleSided,
-        records: 0,
-        instanceBase: 0,
-      };
+      const reused = this.freeBatches.pop();
+      if (reused) {
+        batch = reused;
+        batch.key = key;
+        batch.mesh = options.mesh;
+        batch.textureSet = textureSet;
+        batch.doubleSided = doubleSided;
+      } else {
+        batch = {
+          index: this.batchList.length,
+          key,
+          mesh: options.mesh,
+          textureSet,
+          doubleSided,
+          records: 0,
+          instanceBase: 0,
+        };
+        this.batchList.push(batch);
+      }
       this.batches.set(key, batch);
-      this.batchList.push(batch);
     }
     batch.records++;
+    this.drawBatches[index] = batch;
 
     const m = options.model;
     const mesh = options.mesh;
@@ -429,6 +508,18 @@ export class World {
   }
 
   removeDraw(handle: DrawHandle): void {
+    const batch = this.drawBatches[handle.index];
+    if (!batch) {
+      return; // already removed
+    }
+    this.drawBatches[handle.index] = undefined;
+    if (--batch.records === 0) {
+      this.batches.delete(batch.key);
+      batch.key = "";
+      this.freeBatches.push(batch);
+    }
+    // Slices of the instance list follow batch sizes: rebuild them.
+    this.bundle = undefined;
     this.recordsU32[handle.index * RECORD_WORDS + 7] = RecordFlags.hidden;
     this.names[handle.index] = undefined;
     this.featureTables[handle.index] = undefined;
@@ -570,9 +661,10 @@ export class World {
       base += batch.records;
     }
     for (let i = 0; i < this.drawCount; i++) {
-      const b = this.recordsU32[i * RECORD_WORDS + 35]!;
-      const batch = this.batchList[b]!;
-      direct[batch.instanceBase + fill[b]!++] = i;
+      const batch = this.drawBatches[i];
+      if (batch) {
+        direct[batch.instanceBase + fill[batch.index]!++] = i;
+      }
     }
     const queue = this.ctx.device.queue;
     queue.writeBuffer(this.batchBuffer, 0, table);
@@ -607,6 +699,9 @@ export class World {
     let pipeline: GPURenderPipeline | undefined;
     let textureSet = -1;
     for (const batch of order) {
+      if (batch.records === 0) {
+        continue;
+      }
       const wanted = pipelineOf(batch);
       if (wanted !== pipeline) {
         pipeline = wanted;
