@@ -169,13 +169,22 @@ function createNodeElement(node) {
   const row = document.createElement("div");
   row.className = "treeRow";
 
-  const toggle = document.createElement("span");
+  const labelText = node.label || node.className || node.id;
+  const toggle = document.createElement("button");
+  toggle.type = "button";
   toggle.className = "treeToggle";
+  toggle.setAttribute("aria-label", `Expand ${labelText}`);
+  if (node.hasChildren) {
+    toggle.setAttribute("aria-expanded", "false");
+  } else {
+    toggle.disabled = true;
+  }
   toggle.textContent = node.hasChildren ? "▶" : "";
 
-  const label = document.createElement("span");
+  const label = document.createElement("button");
+  label.type = "button";
   label.className = "treeLabel";
-  label.textContent = node.label || node.className || node.id;
+  label.textContent = labelText;
 
   row.appendChild(toggle);
   row.appendChild(label);
@@ -196,6 +205,8 @@ function createNodeElement(node) {
     }
     expanded = true;
     li.classList.add("expanded");
+    toggle.setAttribute("aria-expanded", "true");
+    toggle.setAttribute("aria-label", `Collapse ${labelText}`);
     toggle.textContent = "▼";
 
     if (!loaded) {
@@ -232,6 +243,8 @@ function createNodeElement(node) {
     if (expanded) {
       expanded = false;
       li.classList.remove("expanded");
+      toggle.setAttribute("aria-expanded", "false");
+      toggle.setAttribute("aria-label", `Expand ${labelText}`);
       toggle.textContent = "▶";
       return;
     }
@@ -241,6 +254,10 @@ function createNodeElement(node) {
   function collapseNode() {
     expanded = false;
     li.classList.remove("expanded");
+    if (node.hasChildren) {
+      toggle.setAttribute("aria-expanded", "false");
+      toggle.setAttribute("aria-label", `Expand ${labelText}`);
+    }
     toggle.textContent = node.hasChildren ? "▶" : "";
   }
 
