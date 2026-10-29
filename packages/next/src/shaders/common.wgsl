@@ -15,6 +15,10 @@ struct View {
   diffuseIbl: f32,
   specularIbl: f32,
   specularMaxLod: f32,
+  viewBit: u32,            // this view's bit in DrawRecord.viewMask
+  _viewPad0: u32,
+  _viewPad1: u32,
+  _viewPad2: u32,
 };
 
 struct DrawRecord {
@@ -38,6 +42,10 @@ struct DrawRecord {
   textureSet: u32,
   imagerySlice: u32,
   featureIdOffset: u32,    // per-vertex local feature IDs (u32 words)
+  viewMask: u32,           // views that draw this record (per-view LOD selection)
+  _recordPad0: u32,
+  _recordPad1: u32,
+  _recordPad2: u32,
 };
 
 struct DrawInstance {

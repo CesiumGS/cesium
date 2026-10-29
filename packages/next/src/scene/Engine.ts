@@ -6,6 +6,7 @@ import {
   type TextureHandle,
 } from "../render/FrameGraph.ts";
 import {
+  VIEW_BIT_WORD,
   VIEW_SIZE,
   VIEW_STRIDE,
   writeViewBlock,
@@ -99,6 +100,10 @@ export class Engine {
   private readonly timer: GpuTimer;
   private readonly viewStaging: GPUBuffer;
   private readonly viewData: Float32Array;
+  private readonly viewDataU32: Uint32Array;
+  /** Stable per-view bit index (0–31) for record view masks. */
+  private readonly viewIds = new Map<View, number>();
+  private readonly freeViewIds: number[] = [];
   private readonly maxViews: number;
   private readonly viewFrames = new Map<View, ViewFrame>();
   private readonly targetFrames = new WeakMap<RenderTarget, TargetFrame>();
@@ -124,6 +129,10 @@ export class Engine {
     this.pool = new TexturePool(device);
     this.timer = new GpuTimer(device);
     this.viewData = new Float32Array((maxViews * VIEW_STRIDE) / 4);
+    this.viewDataU32 = new Uint32Array(this.viewData.buffer);
+    for (let id = Math.min(maxViews, 32) - 1; id >= 0; id--) {
+      this.freeViewIds.push(id);
+    }
     this.viewStaging = device.createBuffer({
       label: "viewStaging",
       size: maxViews * VIEW_STRIDE,
@@ -254,9 +263,22 @@ export class Engine {
     if (this.views.length >= this.maxViews) {
       throw new Error(`At most ${this.maxViews} views are supported.`);
     }
+    const id = this.freeViewIds.pop();
+    if (id === undefined) {
+      throw new Error("At most 32 views can have view masks.");
+    }
     const view = new View(options);
     this.views.push(view);
+    this.viewIds.set(view, id);
     return view;
+  }
+
+  /**
+   * The view's bit in draw-record view masks (`World.setViewMask`), stable
+   * for the view's lifetime.
+   */
+  viewBit(view: View): number {
+    return (1 << this.viewIds.get(view)!) >>> 0;
   }
 
   removeView(view: View): void {
@@ -268,6 +290,11 @@ export class Engine {
       (l) => l.source === view || l.target === view,
     )) {
       this.unlink(link);
+    }
+    const id = this.viewIds.get(view);
+    if (id !== undefined) {
+      this.viewIds.delete(view);
+      this.freeViewIds.push(id);
     }
     this.viewFrames.get(view)?.presentParams.destroy();
     this.viewFrames.delete(view);
@@ -410,6 +437,8 @@ export class Engine {
     block.lighting = view.lighting;
     block.specularMaxLod = this.ctx.environment.maxLod;
     writeViewBlock(this.viewData, (index * VIEW_STRIDE) / 4, block);
+    this.viewDataU32[(index * VIEW_STRIDE) / 4 + VIEW_BIT_WORD] =
+      this.viewBit(view);
   }
 
   private targetFrame(target: RenderTarget): TargetFrame {

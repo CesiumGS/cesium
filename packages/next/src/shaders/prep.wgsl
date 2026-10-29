@@ -44,7 +44,9 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
   m[3] = vec4f(m[3].xyz + rel, 1.0);
   instances[i].relModel = m;
 
-  if ((r.flags & 1u) != 0u || r.indexCount == 0u) {
+  // Hidden, empty, or not selected for this view (multi-view tile selection
+  // shares one draw table and picks LOD per view through the mask).
+  if ((r.flags & 1u) != 0u || r.indexCount == 0u || (r.viewMask & view.viewBit) == 0u) {
     return;
   }
   let center = rel + r.center;

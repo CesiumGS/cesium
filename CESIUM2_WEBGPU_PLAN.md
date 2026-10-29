@@ -20,6 +20,7 @@ Branch: `cesium-2.0-webgpu-poc` (off `main` @ `587f52f1eb`, CesiumJS 1.146.0)
 | r12 | M1 increment 3: Draco and KTX2/Basis decoding in the workers; all 14 opaque Khronos samples within 0.025 mean FLIP of 1.x in every lighting mode.                                                                                                                                                                                                                                        |
 | r13 | M1 increment 4: steady-state allocation gate (engine ~1.5 KB/frame, independent of draw count, down from ~45 KB) and first-frame cost (2.0 first frame 23–34 ms vs 1.x 203–691 ms).                                                                                                                                                                                                      |
 | r14 | M1 increment 5: CAD content. Per-vertex feature IDs (EXT_mesh_features, b3dm _BATCHID) with property/batch tables and picking, b3dm, line primitives, ion asset auth, tileset parity page. An iModel-derived CAD tileset matches 1.x apart from translucency (M4). M1 exit met.                                                                                                          |
+| r15 | Demo viewer (`/viewer/`). M2 started: freeing placed models, per-view record view masks, and the `Legacy1x` selection spec extracted from the 1.x base traversal (§12).                                                                                                                                                                                                                  |
 
 ## 1. Goal
 
@@ -1014,3 +1015,81 @@ Next increments:
 1. Specular IBL parity (needs feeding 2.0's prefiltered cube to 1.x, or a
    2.0-only reference render).
 2. M2: streaming and 3D Tiles selection (`TileSource`, `Legacy1x`, `Next`).
+
+## 12. M2 progress
+
+### Demo viewer (r15)
+
+`/viewer/` shows the PoC's state in a browser: sample glTF models, 3D Tiles
+samples at full detail, Cesium ion assets (token in the gitignored
+`packages/next/.env.local`) and a synthetic city. It has inspection
+navigation (`InspectController`: orbit a focus point, pan, zoom), sun and
+lighting controls, exposure, output encoding, an unlit toggle, a linked
+overview inset, click-to-pick with feature properties, live stats and content
+warnings. Selections are deep-linkable (`?model=`, `?tileset=`, `?asset=`,
+`?scene=city`). Georeferenced glTF models (Earth-fixed node translations) are
+placed at their own position. The context globe draws one mesh per latitude
+band, rotated, so it costs 16 batches rather than 512.
+
+### Foundations (r15)
+
+- **Freeing placed content.** Meshes release their arena ranges. Material
+  slots and texture sets go on free lists. Removing a draw decrements its
+  batch and recycles empty batches with their index kept, so live records
+  stay valid. `Engine.removeModel` frees everything a glTF instance created,
+  and instances report their GPU bytes for the cache budget. This also fixes
+  a latent overflow: `removeDraw` used to leave batch sizes stale. Verified
+  with 20 add/remove cycles of a Draco, textured model: the arena returns to
+  baseline with no validation errors.
+- **Per-view view masks.** Each draw record carries a 32-bit `viewMask`
+  (the record grows to 192 bytes) and each view gets a stable bit
+  (`Engine.viewBit`). The prep kernel skips records not selected for the view
+  being culled. One shared draw table can therefore carry different LOD
+  selections per view: the basis for multi-view tile selection.
+
+### `Legacy1x` selection spec (from the 1.x base traversal)
+
+`Legacy1x` must reproduce 1.x's default, non-skip-LOD selection exactly
+(L1 ≥ 99% Jaccard). The rules that matter, from
+`Cesium3DTilesetBaseTraversal.js`, `Cesium3DTilesetTraversal.js` and
+`Cesium3DTile.js`:
+
+- **SSE** = `geometricError × drawingBufferHeight / (max(distance, 1e-7) ×
+2 tan(fovy/2))` (fovy derived from fov and aspect), divided by `pixelRatio`.
+  Default threshold 16. The geometric error is scaled by the transform's
+  maximum scale component.
+- **Dynamic SSE is on by default and changes selection.** It subtracts
+  `fog(distance, density) × 24` with `fog(d, k) = 1 − exp(−(d·k)²)`. The
+  density is `2e-4 × (1 − |dir·up|) × (1 − t)`, with `t` from the camera
+  height within the root content volume (falloff 0.25).
+- **Distance** is to the tile's bounding volume, not a sphere: the closest
+  point on the OBB for boxes; for regions, the max of the region-plane
+  distance and the OBB distance from `OrientedBoundingBox.fromRectangle`.
+  Frustum culling uses six planes with OBB `intersectPlane` and a parent
+  plane mask.
+- **Traversal.** Root early-out uses the parent-style SSE. A tile traverses if
+  it has children and SSE > threshold. Visible children are always pushed,
+  nearest first, so whole needed subtrees get requested. REPLACE selects a
+  tile when it stops refining. A REPLACE parent with content refines only if
+  every child, visible or not, has content available (or is empty and its
+  empty subtree is loaded) and is inside its request volume, and at least one
+  child is visible. ADD selects every visited tile. Selection also requires
+  the content bounding volume to be in view.
+- **Visibility extras that change the set:** children-bounds culling (on by
+  default for box/region trees whose children project within the parent),
+  `meetsScreenSpaceErrorEarly` for children of ADD tiles, viewer request
+  volumes, and the memory-adjusted SSE (×1.02 per frame over the 512 MiB
+  budget).
+- **Request-only behavior** (not selection): foveated deferral, which only
+  affects ADD tiles in the base traversal; progressive resolution;
+  cull-requests-while-moving; the priority digits; and cancellation of
+  untouched in-flight requests.
+
+Next:
+
+1. Tile table (SoA) with OBB/region/sphere volumes and transforms; explicit
+   and external tilesets.
+2. `Legacy1x` traversal per view, writing view masks; content cache with
+   per-view last-used frames and a byte budget; request scheduler.
+3. Streaming in the viewer; L1 Jaccard against 1.x's `_selectedTiles` in two
+   views.

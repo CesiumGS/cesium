@@ -34,6 +34,10 @@ struct DrawRecord_std430_0
     @align(4) textureSet_0 : u32,
     @align(8) imagerySlice_0 : u32,
     @align(4) featureIdOffset_0 : u32,
+    @align(16) viewMask_0 : u32,
+    @align(4) recordPad0_0 : u32,
+    @align(8) recordPad1_0 : u32,
+    @align(4) recordPad2_0 : u32,
 };
 
 @binding(0) @group(1) var<storage, read> records_0 : array<DrawRecord_std430_0>;
@@ -59,6 +63,10 @@ struct View_std140_0
     @align(4) diffuseIbl_0 : f32,
     @align(8) specularIbl_0 : f32,
     @align(4) specularMaxLod_0 : f32,
+    @align(16) viewBit_0 : u32,
+    @align(4) viewPad0_0 : u32,
+    @align(8) viewPad1_0 : u32,
+    @align(4) viewPad2_0 : u32,
 };
 
 @binding(0) @group(0) var<uniform> view_0 : View_std140_0;
@@ -109,6 +117,14 @@ fn main(@builtin(global_invocation_id) gid_0 : vec3<u32>)
     else
     {
         _S2 = (records_0[i_0].indexCount_0) == u32(0);
+    }
+    if(_S2)
+    {
+        _S2 = true;
+    }
+    else
+    {
+        _S2 = (((records_0[i_0].viewMask_0) & ((view_0.viewBit_0)))) == u32(0);
     }
     if(_S2)
     {

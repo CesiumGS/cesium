@@ -6,6 +6,7 @@ import {
   NO_STREAM,
   RECORD_SIZE,
   RECORD_WORDS,
+  VIEW_MASK_WORD,
   RecordFlags,
   writeDrawRecord,
   writeMaterial,
@@ -75,6 +76,8 @@ export interface DrawOptions {
   name?: string;
   /** Properties of the mesh's features, indexed by local feature ID. */
   features?: FeatureTable;
+  /** Views that draw it, one bit per view (`Engine.viewBit`); default all. */
+  viewMask?: number;
 }
 
 /** What a picked feature ID resolves to. */
@@ -498,6 +501,7 @@ export class World {
       textureSet,
       batch: batch.index,
       featureId: firstFeature,
+      viewMask: options.viewMask,
       // Lines have no surface to light; 1.x draws them unlit too.
       flags:
         options.unlit || mesh.topology === "line-list" ? RecordFlags.unlit : 0,
@@ -527,6 +531,18 @@ export class World {
     this.drawFeatureFirst[handle.index] = -1;
     this.freeSlots.push(handle.index);
     this.markDirty(handle.index);
+  }
+
+  /**
+   * Sets which views draw a record (bit per view, see `Engine.viewBit`):
+   * per-view tile selection over one shared draw table.
+   */
+  setViewMask(handle: DrawHandle, mask: number): void {
+    const index = handle.index * RECORD_WORDS + VIEW_MASK_WORD;
+    if (this.recordsU32[index] !== mask >>> 0) {
+      this.recordsU32[index] = mask >>> 0;
+      this.markDirty(handle.index);
+    }
   }
 
   setVisible(handle: DrawHandle, visible: boolean): void {

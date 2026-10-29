@@ -7,8 +7,10 @@ import { splitVec3 } from "../math/transforms.ts";
  * `shaders/common.wgsl`.
  */
 
-/** `struct View` — 336 bytes, padded to a 256-aligned stride per view. */
-export const VIEW_SIZE = 336;
+/** `struct View` — 352 bytes, padded to a 256-aligned stride per view. */
+export const VIEW_SIZE = 352;
+/** Word offset of `View.viewBit` (u32): this view's bit in record view masks. */
+export const VIEW_BIT_WORD = 84;
 export const VIEW_STRIDE = 512;
 
 export interface ViewBlock {
@@ -70,8 +72,12 @@ export function writeViewBlock(
   out[o + 83] = block.specularMaxLod;
 }
 
-/** `struct DrawRecord` — 176 bytes. */
-export const RECORD_SIZE = 176;
+/** `struct DrawRecord` — 192 bytes. */
+export const RECORD_SIZE = 192;
+/** Word offset of `DrawRecord.viewMask`. */
+export const VIEW_MASK_WORD = 44;
+/** Default view mask: drawn in every view. */
+export const ALL_VIEWS = 0xffffffff;
 export const RECORD_WORDS = RECORD_SIZE / 4;
 /** `struct DrawInstance` — written by the prep kernel. */
 export const INSTANCE_SIZE = 64;
@@ -136,6 +142,8 @@ export interface DrawRecordData {
   /** First global feature ID of the draw (0: not pickable). */
   featureId: number;
   flags: number;
+  /** Views that draw this record, one bit per view (`ALL_VIEWS` default). */
+  viewMask?: number;
 }
 
 export function writeDrawRecord(
@@ -169,6 +177,10 @@ export function writeDrawRecord(
   u32[o + 41] = r.textureSet;
   u32[o + 42] = 0; // imagery slice (M3)
   u32[o + 43] = r.streams.featureId;
+  u32[o + 44] = r.viewMask ?? ALL_VIEWS;
+  u32[o + 45] = 0;
+  u32[o + 46] = 0;
+  u32[o + 47] = 0;
 }
 
 export interface MaterialData {

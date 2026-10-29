@@ -43,7 +43,7 @@ void main(uint3 gid : SV_DispatchThreadID) {
   m[2][3] += rel.z;
   instances[i].relModel = m;
 
-  if ((r.flags & 1u) != 0u || r.indexCount == 0u) {
+  if ((r.flags & 1u) != 0u || r.indexCount == 0u || (r.viewMask & view.viewBit) == 0u) {
     return;
   }
   float3 center = rel + r.center;

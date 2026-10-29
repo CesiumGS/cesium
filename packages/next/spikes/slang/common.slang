@@ -17,6 +17,10 @@ public struct View {
   public float diffuseIbl;
   public float specularIbl;
   public float specularMaxLod;
+  public uint viewBit; // this view's bit in DrawRecord.viewMask
+  public uint viewPad0;
+  public uint viewPad1;
+  public uint viewPad2;
 };
 
 public struct DrawRecord {
@@ -40,6 +44,10 @@ public struct DrawRecord {
   public uint textureSet;
   public uint imagerySlice;
   public uint featureIdOffset; // per-vertex local feature IDs (u32 words)
+  public uint viewMask; // views that draw this record
+  public uint recordPad0;
+  public uint recordPad1;
+  public uint recordPad2;
 };
 
 public struct DrawInstance {
