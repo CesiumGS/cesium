@@ -1,0 +1,51 @@
+// Resolves a view's HDR image into its rectangle of the output target:
+// exposure, Khronos PBR Neutral tonemapping, and sRGB encoding when the
+// target format is not an -srgb format.
+
+struct PresentParams {
+  origin: vec2f,     // viewport origin in target pixels
+  exposure: f32,
+  encodeSrgb: u32,
+};
+
+@group(0) @binding(0) var hdr: texture_2d<f32>;
+@group(0) @binding(1) var<uniform> params: PresentParams;
+
+@vertex
+fn vs(@builtin(vertex_index) i: u32) -> @builtin(position) vec4f {
+  let uv = vec2f(f32((i << 1u) & 2u), f32(i & 2u));
+  return vec4f(uv * 2.0 - 1.0, 0.0, 1.0);
+}
+
+fn pbrNeutral(input: vec3f) -> vec3f {
+  let startCompression = 0.8 - 0.04;
+  let desaturation = 0.15;
+  let x = min(input.r, min(input.g, input.b));
+  let offset = select(0.04, x - 6.25 * x * x, x < 0.08);
+  var color = input - offset;
+  let peak = max(color.r, max(color.g, color.b));
+  if (peak < startCompression) {
+    return color;
+  }
+  let d = 1.0 - startCompression;
+  let newPeak = 1.0 - d * d / (peak + d - startCompression);
+  color *= newPeak / peak;
+  let g = 1.0 - 1.0 / (desaturation * (peak - newPeak) + 1.0);
+  return mix(color, vec3f(newPeak), g);
+}
+
+fn linearToSrgb(c: vec3f) -> vec3f {
+  let low = c * 12.92;
+  let high = 1.055 * pow(c, vec3f(1.0 / 2.4)) - 0.055;
+  return select(high, low, c <= vec3f(0.0031308));
+}
+
+@fragment
+fn fs(@builtin(position) frag: vec4f) -> @location(0) vec4f {
+  let coord = vec2i(frag.xy - params.origin);
+  var color = pbrNeutral(max(textureLoad(hdr, coord, 0).rgb * params.exposure, vec3f(0.0)));
+  if (params.encodeSrgb == 1u) {
+    color = linearToSrgb(clamp(color, vec3f(0.0), vec3f(1.0)));
+  }
+  return vec4f(color, 1.0);
+}

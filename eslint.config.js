@@ -175,6 +175,30 @@ export default [
       ],
     },
   },
+  ...[...tseslint.configs.recommended].map((config) => ({
+    ...config,
+    files: ["packages/next/**/*.ts"],
+  })),
+  {
+    files: ["packages/next/**/*.ts"],
+    languageOptions: {
+      globals: globals.browser,
+    },
+    rules: {
+      // The TypeScript compiler checks identifiers, including WebGPU types.
+      "no-undef": "off",
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { args: "none", caughtErrors: "none" },
+      ],
+      // Module-level scratch values are declared after the code that uses them.
+      "no-use-before-define": [
+        "error",
+        { variables: false, functions: false, classes: false },
+      ],
+    },
+  },
   {
     files: ["packages/sandcastle/gallery/**/*.js"],
     languageOptions: {

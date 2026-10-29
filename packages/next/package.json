@@ -1,0 +1,24 @@
+{
+  "name": "@cesium/next",
+  "version": "2.0.0-poc.0",
+  "private": true,
+  "description": "Proof of concept for a WebGPU-native CesiumJS 2.0 engine.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build",
+    "typecheck": "tsc -p . --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "@webgpu/types": "^0.1.74",
+    "typescript": "^6.0.2",
+    "vite": "8.0.16",
+    "vitest": "^5.0.5"
+  }
+}

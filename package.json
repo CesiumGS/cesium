@@ -159,7 +159,8 @@
     "packages/gltf",
     "packages/engine",
     "packages/widgets",
-    "packages/sandcastle"
+    "packages/sandcastle",
+    "packages/next"
   ],
   "overrides": {
     "protobufjs": "^8.8.0",
