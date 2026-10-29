@@ -1864,10 +1864,7 @@ describe(
       viewRootOnly();
       scene.renderForSpecs();
 
-      await pollToPromise(() => {
-        scene.renderForSpecs();
-        return tileset.tilesLoaded;
-      });
+      await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
       //Make sure tileset2.json was requested with query parameters and does not use parent tilesetVersion
       expectedUrl = getAbsoluteUri(
         `Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset2.json?v=1.2.3&${queryParams}`,
@@ -4217,10 +4214,7 @@ describe(
       // After update the tile is expired
       scene.renderForSpecs();
 
-      await pollToPromise(() => {
-        scene.renderForSpecs();
-        return tileset.tilesLoaded;
-      });
+      await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
 
       expect(failedSpy).toHaveBeenCalledWith(
         jasmine.objectContaining({
@@ -4250,11 +4244,7 @@ describe(
 
       expect(tile.contentExpired).toBe(true);
 
-      await pollToPromise(function () {
-        scene.renderForSpecs();
-        return tile.contentReady;
-      });
-      scene.renderForSpecs();
+      await Cesium3DTilesTester.waitForTileContentReady(scene, tile);
       expect(tile._expiredContent).toBeUndefined();
       expect(tile.expireDate).toBeUndefined();
     });
@@ -4740,7 +4730,7 @@ describe(
         });
       await pollToPromise(function () {
         // Scene requires manual updates in the tests to move along the promise
-        scene.render();
+        scene.renderForSpecs();
         return completed;
       });
       return result;
@@ -4757,7 +4747,7 @@ describe(
         });
       await pollToPromise(function () {
         // Scene requires manual updates in the tests to move along the promise
-        scene.render();
+        scene.renderForSpecs();
         return completed;
       });
       return result;
