@@ -16,9 +16,6 @@ describe("Scene/IonAssetElementService", function () {
     return new IonAssetElementService({
       assetId: assetId,
       resource: new Resource({
-        url: `https://example.com/assets/${assetId}/`,
-      }),
-      v1Resource: new Resource({
         url: `https://example.com/v1/assets/${assetId}/`,
       }),
     });
@@ -52,13 +49,9 @@ describe("Scene/IonAssetElementService", function () {
 
     expect(result.assetId).toBe(assetId);
     expect(result._resource.getUrlComponent(false)).toBe(
-      `https://example.com/assets/${assetId}/`,
-    );
-    expect(result._v1Resource.getUrlComponent(false)).toBe(
       `https://example.com/v1/assets/${assetId}/`,
     );
     expect(result._resource.queryParameters.access_token).toBe("token");
-    expect(result._v1Resource.queryParameters.access_token).toBe("token");
   });
 
   it("fromAssetId throws when assetId is not a number", function () {
@@ -225,7 +218,7 @@ describe("Scene/IonAssetElementService", function () {
       `https://example.com/v1/assets/${assetId}/elements/aggregate`,
     );
     expect(resource.queryParameters).toEqual({
-      aggregations: "Height",
+      aggregations: '["Height"]',
       filter: JSON.stringify({ Category: "Wall" }),
     });
     expect(result).toEqual({
