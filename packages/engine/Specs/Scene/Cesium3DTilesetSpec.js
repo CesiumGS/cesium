@@ -272,6 +272,16 @@ describe(
       scene.camera.moveDown(200.0);
     }
 
+    // Looks at the center of the tileset from slightly south, so the two southern child tiles
+    // are closer to the camera than the two northern child tiles.
+    function viewFromSouth() {
+      const center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
+      scene.camera.lookAt(
+        center,
+        new HeadingPitchRange(0.0, CesiumMath.toRadians(-82.0), 21.0),
+      );
+    }
+
     function viewInstances() {
       setZoom(30.0);
     }
@@ -3474,8 +3484,8 @@ describe(
       expect(statistics.numberOfCommands).toEqual(1);
       expect(statistics.numberOfTilesWithContentReady).toEqual(3);
 
-      // Zoom back in and attempt to render all tiles
-      viewAllTiles();
+      // Zoom back in so all four children are needed, but only two fit in memory
+      viewFromSouth();
 
       await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
       // Only 3 tiles should have been actually loaded

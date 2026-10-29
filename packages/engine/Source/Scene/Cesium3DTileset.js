@@ -255,6 +255,10 @@ function Cesium3DTileset(options) {
 
   this._maximumScreenSpaceError = options.maximumScreenSpaceError ?? 16;
   this._memoryAdjustedScreenSpaceError = this._maximumScreenSpaceError;
+  // Set when memoryAdjustedScreenSpaceError is raised to fit the memory limit, along with the
+  // view matrix at that time. See processTiles.
+  this._memoryAdjustedScreenSpaceErrorHeld = false;
+  this._memoryAdjustedScreenSpaceErrorViewMatrix = new Matrix4();
 
   this._cacheBytes = options.cacheBytes ?? 512 * 1024 * 1024;
   //>>includeStart('debug', pragmas.debug);
@@ -1578,6 +1582,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
 
       this._maximumScreenSpaceError = value;
       this._memoryAdjustedScreenSpaceError = value;
+      this._memoryAdjustedScreenSpaceErrorHeld = false;
     },
   },
 
@@ -1620,6 +1625,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
       //>>includeEnd('debug');
 
       this._cacheBytes = value;
+      this._memoryAdjustedScreenSpaceErrorHeld = false;
     },
   },
 
@@ -1652,6 +1658,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
       //>>includeEnd('debug');
 
       this._maximumCacheOverflowBytes = value;
+      this._memoryAdjustedScreenSpaceErrorHeld = false;
     },
   },
 
@@ -3344,14 +3351,34 @@ function processTiles(tileset, frameState) {
     }
   }
 
+  // Once the screen space error was raised to fit the memory limit, lowering it again in the
+  // same view would only reload the tiles that were just unloaded, so it is held until the
+  // view or the tileset's model matrix changes.
+  if (tileset._memoryAdjustedScreenSpaceErrorHeld) {
+    const viewChanged = !Matrix4.equals(
+      frameState.camera.viewMatrix,
+      tileset._memoryAdjustedScreenSpaceErrorViewMatrix,
+    );
+    if (viewChanged || tileset._modelMatrixChanged) {
+      tileset._memoryAdjustedScreenSpaceErrorHeld = false;
+    }
+  }
+
   if (tileset.totalMemoryUsageInBytes < cacheBytes) {
-    decreaseScreenSpaceError(tileset);
+    if (!tileset._memoryAdjustedScreenSpaceErrorHeld) {
+      decreaseScreenSpaceError(tileset);
+    }
   } else if (memoryExceeded && tiles.length > 0) {
-    increaseScreenSpaceError(tileset);
+    increaseScreenSpaceError(tileset, frameState);
   }
 }
 
-function increaseScreenSpaceError(tileset) {
+/**
+ * @private
+ * @param {Cesium3DTileset} tileset
+ * @param {FrameState} frameState
+ */
+function increaseScreenSpaceError(tileset, frameState) {
   //>>includeStart('debug', pragmas.debug);
   oneTimeWarning(
     "increase-screenSpaceError",
@@ -3362,6 +3389,11 @@ function increaseScreenSpaceError(tileset) {
   //>>includeEnd('debug');
 
   tileset._memoryAdjustedScreenSpaceError *= 1.02;
+  tileset._memoryAdjustedScreenSpaceErrorHeld = true;
+  Matrix4.clone(
+    frameState.camera.viewMatrix,
+    tileset._memoryAdjustedScreenSpaceErrorViewMatrix,
+  );
   const tiles = tileset._processingQueue;
   for (let i = 0; i < tiles.length; ++i) {
     tiles[i].updatePriority();
