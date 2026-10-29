@@ -72,6 +72,7 @@ export default defineConfig({
         worker: "spikes/worker.html",
         indirect: "spikes/indirect.html",
         slang: "spikes/slang.html",
+        baseline: "bench/baseline.html",
       },
     },
   },

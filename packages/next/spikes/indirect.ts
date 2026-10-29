@@ -114,4 +114,8 @@ function ms(value: number): string {
 }
 
 Object.assign(globalThis, { runIndirect: run });
-void run();
+// The benchmark runner (bench/run.mjs) loads pages with ?bench and calls
+// runIndirect() itself.
+if (!new URLSearchParams(location.search).has("bench")) {
+  void run();
+}

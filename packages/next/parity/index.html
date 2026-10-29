@@ -103,7 +103,8 @@
     <h1>L2 image parity: CesiumJS 1.x (WebGL) vs 2.0 PoC (WebGPU)</h1>
     <p>
       Same flat-colored scene, same serialized cameras, 480×270 pixels, MSAA 4×,
-      HDR + PBR Neutral tonemapping in both. Metric: CIE76 ΔE (FLIP pending).
+      HDR + PBR Neutral tonemapping in both. Metrics: LDR-FLIP (heatmap) and
+      CIE76 ΔE.
     </p>
     <button id="run">Run parity</button>
     <div id="status"></div>
@@ -117,7 +118,7 @@
         <canvas class="out" id="next"></canvas>
       </figure>
       <figure>
-        <figcaption>ΔE heatmap (red ≥ 20)</figcaption>
+        <figcaption>FLIP error (black 0 → white 1)</figcaption>
         <canvas class="out" id="heat"></canvas>
       </figure>
     </div>

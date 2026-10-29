@@ -10,6 +10,7 @@ import {
   vec3,
   type World,
 } from "../src/index.ts";
+import { flip } from "./flip.ts";
 import { compareImages, type ImageMetrics } from "./metrics.ts";
 import { center, parityScene, type CameraState, type Rgb } from "./scene.ts";
 
@@ -208,6 +209,7 @@ interface ParityRow {
   camera: string;
   variant: string;
   metrics: Omit<ImageMetrics, "heatmap">;
+  flip: { mean: number; median: number; p95: number };
 }
 
 interface RowImages {
@@ -269,24 +271,65 @@ async function runParity(): Promise<ParityRow[]> {
     const legacy = captureLegacy(viewer, state);
     for (const variant of next.variants) {
       const image = await next.capture(state, variant);
-      const { heatmap, ...metrics } = compareImages(
+      const { meanDeltaE, p95DeltaE, noticeable } = compareImages(
         legacy.data,
         image.data,
         WIDTH,
         HEIGHT,
       );
-      rows.push({ camera: state.name, variant: variant.name, metrics });
-      images.push({ legacy, next: image, heatmap });
+      const metrics = { meanDeltaE, p95DeltaE, noticeable };
+      const f = flip(legacy.data, image.data, WIDTH, HEIGHT);
+      rows.push({
+        camera: state.name,
+        variant: variant.name,
+        metrics,
+        flip: { mean: f.mean, median: f.median, p95: f.p95 },
+      });
+      images.push({ legacy, next: image, heatmap: flipHeatmap(f.errors) });
     }
   }
   renderTable(rows, images);
   showImages(images[0]!);
+  lastImages = images.map((pair, i) => ({
+    camera: rows[i]!.camera,
+    variant: rows[i]!.variant,
+    legacy: toDataUrl(pair.legacy),
+    next: toDataUrl(pair.next),
+  }));
   const canvas = viewer.scene.canvas as HTMLCanvasElement;
   status.textContent = `done — 1.x canvas ${canvas.width}×${canvas.height}, adapter ${next.engine.gpu.adapter.info.vendor} ${next.engine.gpu.adapter.info.architecture}`;
   return rows;
 }
 
 let nextPromise: ReturnType<typeof setup> | undefined;
+
+/** PNG data URLs of the last run, for cross-checking with external tools. */
+let lastImages: Array<{
+  camera: string;
+  variant: string;
+  legacy: string;
+  next: string;
+}> = [];
+
+function toDataUrl(image: ImageData): string {
+  const canvas = document.createElement("canvas");
+  canvas.width = image.width;
+  canvas.height = image.height;
+  canvas.getContext("2d")!.putImageData(image, 0, 0);
+  return canvas.toDataURL("image/png");
+}
+
+/** FLIP error in [0, 1] → black → red → yellow → white. */
+function flipHeatmap(errors: Float32Array): ImageData {
+  const image = new ImageData(WIDTH, HEIGHT);
+  errors.forEach((e, i) => {
+    image.data[i * 4] = 255 * Math.min(1, e * 3);
+    image.data[i * 4 + 1] = 255 * Math.min(1, Math.max(0, e * 3 - 1));
+    image.data[i * 4 + 2] = 255 * Math.max(0, e * 3 - 2);
+    image.data[i * 4 + 3] = 255;
+  });
+  return image;
+}
 
 function showImages(images: RowImages): void {
   const pairs: Array<[string, ImageData]> = [
@@ -304,10 +347,12 @@ function showImages(images: RowImages): void {
 
 function renderTable(rows: ParityRow[], images: RowImages[]): void {
   const table = document.querySelector("#results")!;
-  table.innerHTML = `<tr><th>camera</th><th>variant</th><th>mean ΔE</th><th>p95 ΔE</th><th>pixels ΔE&gt;2.3</th></tr>${rows
+  table.innerHTML = `<tr><th>camera</th><th>variant</th><th>FLIP mean</th><th>FLIP median</th><th>FLIP p95</th><th>mean ΔE</th><th>p95 ΔE</th><th>pixels ΔE&gt;2.3</th></tr>${rows
     .map(
       (r, i) =>
-        `<tr class="row" data-index="${i}"><td>${r.camera}</td><td>${r.variant}</td><td>${r.metrics.meanDeltaE.toFixed(2)}</td>` +
+        `<tr class="row" data-index="${i}"><td>${r.camera}</td><td>${r.variant}</td>` +
+        `<td>${r.flip.mean.toFixed(4)}</td><td>${r.flip.median.toFixed(4)}</td><td>${r.flip.p95.toFixed(4)}</td>` +
+        `<td>${r.metrics.meanDeltaE.toFixed(2)}</td>` +
         `<td>${r.metrics.p95DeltaE.toFixed(2)}</td><td>${(r.metrics.noticeable * 100).toFixed(1)}%</td></tr>`,
     )
     .join("")}`;
@@ -326,4 +371,4 @@ document.querySelector("#run")!.addEventListener("click", () => {
     document.querySelector("#status")!.textContent = String(error);
   });
 });
-Object.assign(globalThis, { runParity });
+Object.assign(globalThis, { runParity, parityImages: () => lastImages });

@@ -200,6 +200,14 @@ export default [
     },
   },
   {
+    // Node scripts in the PoC (benchmark runner, shader build). The runner's
+    // page.evaluate callbacks run in the browser, hence both global sets.
+    files: ["packages/next/**/*.mjs"],
+    languageOptions: {
+      globals: { ...globals.node, ...globals.browser },
+    },
+  },
+  {
     files: ["packages/sandcastle/gallery/**/*.js"],
     languageOptions: {
       ecmaVersion: 2022,

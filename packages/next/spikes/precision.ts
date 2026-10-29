@@ -129,4 +129,8 @@ function format(meters: number): string {
 }
 
 Object.assign(globalThis, { runPrecision: run });
-void run();
+// The benchmark runner (bench/run.mjs) loads pages with ?bench and calls
+// runPrecision() itself.
+if (!new URLSearchParams(location.search).has("bench")) {
+  void run();
+}

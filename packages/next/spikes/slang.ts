@@ -324,7 +324,7 @@ async function runtimeCompile(device: GPUDevice): Promise<void> {
   );
 }
 
-async function main(): Promise<void> {
+async function main(): Promise<Record<string, string>> {
   const side = 141; // ~20k draws
   const wgsl = await setup({}, side);
   const info = wgsl.engine.gpu.adapter.info;
@@ -383,9 +383,20 @@ async function main(): Promise<void> {
 
   await runtimeCompile(device);
   report("done", "✓");
+  return Object.fromEntries(rows);
 }
 
-main().catch((error: unknown) => {
-  console.error(error);
-  report("error", String(error instanceof Error ? error.message : error));
-});
+async function runSlang(): Promise<Record<string, string>> {
+  try {
+    return await main();
+  } catch (error) {
+    console.error(error);
+    report("error", String(error instanceof Error ? error.message : error));
+    throw error;
+  }
+}
+
+Object.assign(globalThis, { runSlang });
+if (!new URLSearchParams(location.search).has("bench")) {
+  void runSlang();
+}

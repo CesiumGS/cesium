@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>1.x Baselines</title>
+    <link rel="stylesheet" href="/cesium1x/Widgets/widgets.css" />
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      body {
+        margin: 0;
+        padding: 16px;
+        background: #0b0e14;
+        color: #d7dce6;
+        font:
+          13px/1.4 system-ui,
+          sans-serif;
+      }
+      h1 {
+        font-size: 16px;
+        margin: 0 0 4px;
+      }
+      p {
+        color: #8a93a6;
+        max-width: 900px;
+      }
+      .views {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .legacy,
+      canvas {
+        width: 320px;
+        height: 180px;
+        display: block;
+        background: #000;
+        position: relative;
+      }
+      table {
+        border-collapse: collapse;
+        font-variant-numeric: tabular-nums;
+        margin-top: 12px;
+      }
+      th,
+      td {
+        padding: 4px 10px;
+        border-bottom: 1px solid #222a3a;
+        text-align: right;
+      }
+      th:first-child,
+      td:first-child,
+      th:nth-child(2),
+      td:nth-child(2) {
+        text-align: left;
+      }
+      #status {
+        color: #8a93a6;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Performance baselines: CesiumJS 1.x vs 2.0 PoC</h1>
+    <p>
+      Matched workloads on both engines: N independent flat-colored boxes (one
+      draw each, like tile contents), picking, log depth, time to first frame,
+      and four views. 1.x API calls are counted on the WebGL2 context; 2.0 calls
+      on the WebGPU encoders and queue. "frame incl. GPU" waits for the GPU
+      (gl.finish / onSubmittedWorkDone).
+    </p>
+    <div id="status">
+      open with the runner, or call runBaseline() in the console
+    </div>
+    <div class="views" id="views"></div>
+    <table id="results"></table>
+    <div id="credits" hidden></div>
+    <script>
+      window.CESIUM_BASE_URL = "/cesium1x/";
+    </script>
+    <script src="/cesium1x/Cesium.js"></script>
+    <script type="module" src="./baseline.ts"></script>
+  </body>
+</html>

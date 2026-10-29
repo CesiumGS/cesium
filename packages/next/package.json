@@ -13,9 +13,11 @@
     "build": "vite build",
     "typecheck": "tsc -p . --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "bench": "node bench/run.mjs"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@webgpu/types": "^0.1.74",
     "typescript": "^6.0.2",
     "vite": "8.0.16",

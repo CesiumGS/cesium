@@ -9,10 +9,11 @@ Branch: `cesium-2.0-webgpu-poc` (off `main` @ `587f52f1eb`, CesiumJS 1.146.0)
 | r1  | First draft: clean-slate WebGPU engine, 1.x used as the parity oracle                                                                                                                                                                                                                                                                                                                    |
 | r2  | Added multiple viewports, Slang shaders, compute-shader uses, and globe/terrain/imagery to the PoC                                                                                                                                                                                                                                                                                       |
 | r3  | Tile selection made pluggable (`Legacy1x` vs improved `Next`). Folded in an external review against current industry practice, research and WebGPU status (late 2026). Main changes: GPU-driven submission from M1, no bindless in the PoC, Slang scope narrowed, a texture-array imagery cache, corrected MSAA/feature-ID and OIT plans, and new M0 precision tests. Sources are in §9. |
-| r4  | Plan-owner decisions recorded (§8): Slang + WGSL ABI; **HDR + tonemapping by default**; all four multi-view scenarios including **linked views**; `packages/next` in TypeScript with new math; Chromium-first, core WebGPU only; 3D Tiles before globe. Canonical CAD test data to come from team-chosen ion assets.                                                                   |
+| r4  | Plan-owner decisions recorded (§8): Slang + WGSL ABI; **HDR + tonemapping by default**; all four multi-view scenarios including **linked views**; `packages/next` in TypeScript with new math; Chromium-first, core WebGPU only; 3D Tiles before globe. Canonical CAD test data to come from team-chosen ion assets.                                                                     |
 | r5  | M0 findings: multisampled `r32uint` is invalid in WebGPU, so feature IDs use `rg16uint` (lo16, hi16). On dual-GPU Windows laptops Chromium ignores `powerPreference` and follows the per-app Windows graphics setting, so benchmarks must record the adapter and launch Chromium on the discrete GPU.                                                                                    |
 | r6  | M0 spike results recorded in §10: L2 parity harness, GPU precision, engine-in-worker, indirect-draw overhead. Indirect draws cost measurable GPU time on Intel/D3D12, so §3.3 submission now batches before going indirect.                                                                                                                                                              |
 | r7  | Spikes rerun on the NVIDIA GPU; Slang spike run (passes, perf gate deferred to unquantized timing in M1). §10 rewritten with both GPUs.                                                                                                                                                                                                                                                  |
+| r8  | M0 close-out: automated runner (headless Edge, unquantized timestamps), FLIP validated against NVIDIA's reference and integrated, 1.x performance baselines, Metal deferred.                                                                                                                                                                                                             |
 
 ## 1. Goal
 
@@ -545,7 +546,7 @@ Recommendations already adopted from the review: core-only (no compatibility mod
 | Shaders         | Slang for materials and vertex/fragment code; hand-written WGSL allowed for compute kernels; user contract is a WGSL-level ABI. Gated by the M0 spike, with WGSL + WESL as the fallback. |
 | Default look    | **HDR + tonemapping by default**, LDR as a per-view option. Parity baseline is 1.x with HDR on.                                                                                          |
 | Multi-view      | All four scenarios in the PoC: split views on one canvas, multiple canvases, offscreen targets, linked views (`ViewLink`).                                                               |
-| CAD data        | Team-chosen CAD/BIM assets in Cesium ion; iModels can be tiled into ion.                                                                                                                        |
+| CAD data        | Team-chosen CAD/BIM assets in Cesium ion; iModels can be tiled into ion.                                                                                                                 |
 | Foundation      | `packages/next` in this monorepo; TypeScript strict; new typed-array math module tested against 1.x.                                                                                     |
 | Platforms       | Chromium is the gate; Safari and Firefox best-effort; core WebGPU only.                                                                                                                  |
 | Milestone order | 3D Tiles (M2) before globe (M3). The draw-record format is locked in M1 with the globe's needs included.                                                                                 |
@@ -592,12 +593,13 @@ Two GPUs in the same Windows laptop, both D3D12 via Chromium: a low-end Intel
 Xe-LPG iGPU and an NVIDIA Lovelace (RTX 40-series) laptop GPU. CPU and
 wall-clock numbers in the NVIDIA runs were taken while other processes were
 running unit tests and are noisy; GPU timestamps are quantized to 100 µs by
-Chrome without its developer flag. Metal is still untested.
+Chrome without its developer flag. Metal is deferred until a Mac is
+available; M0 and M1 target Windows.
 
 | Spike                                                        | Intel Xe-LPG                                                                                           | NVIDIA Lovelace                                                                     | Status                                       |
 | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- | -------------------------------------------- |
 | L0 math parity                                               | ≤1e-12 relative vs 1.x core (CPU, GPU-independent)                                                     | same                                                                                | pass                                         |
-| L2 image parity (`parity/`)                                  | Mean ΔE 0.05–0.91 (1.x gamma 2.2), 0.08–1.72 (exact sRGB); only AA edges differ; ≤1.6% pixels > JND    | Mean ΔE 0.05–0.91 / 0.08–1.72; ≤1.7% pixels > JND                                   | pass (FLIP still to integrate)               |
+| L2 image parity (`parity/`)                                  | Mean ΔE 0.05–0.91 (1.x gamma 2.2), 0.08–1.72 (exact sRGB); only AA edges differ; ≤1.6% pixels > JND    | Mean ΔE 0.05–0.91 / 0.08–1.72; ≤1.7% pixels > JND                                   | pass; FLIP below                             |
 | Color pipeline drift                                         | Exact sRGB vs 1.x `pow(c, 2.2)`: +0.6–0.8 mean ΔE. Views expose `outputEncoding`                       | same                                                                                | measured                                     |
 | Hi/lo precision (`spikes/precision.html`)                    | Max error ≈4e-8 × distance (0.04 µm at 1 m, 31 µm at 1 km, ≈4 mm at 100 km); naive float32 0.25–0.47 m | Bit-identical to Intel                                                              | pass on D3D12                                |
 | Engine in a worker (`spikes/worker.html`)                    | Runs unchanged on an `OffscreenCanvas`; keeps rendering while the main thread is blocked               | not rerun                                                                           | pass                                         |
@@ -650,3 +652,62 @@ culls nothing.
   authoring path. Runtime Slang works but costs ≈8 MB (brotli) and ≈0.5 s
   before the first compile, so it stays lazy, worker-hosted and optional, with
   offline compilation the recommended path, as §3.4 proposed.
+
+### M0 close-out (r8)
+
+**Automated runner.** `packages/next/bench/run.mjs` drives every spike in
+headless Edge through Playwright with WebGPU developer features (unquantized
+timestamps) and the high-performance GPU, and writes one JSON file per run to
+`bench/results/` with the adapter recorded. Playwright's bundled Chromium is
+blocked from executing on some locked-down Windows machines, so the runner defaults to the
+installed Edge (`BENCH_CHANNEL` overrides). The committed result file is the
+reference M0 run on the NVIDIA RTX 3000 Ada laptop GPU.
+
+**FLIP.** `parity/flip.ts` implements LDR-FLIP with separable filters. On
+NVIDIA's own test pair (`images/reference.png` vs `images/test.png`, 1920×1080,
+67 PPD) it scores **0.159691** against the reference's **0.159693**. Parity
+results, mean / p95 per camera:
+
+| Camera   | 2.0 with 1.x color (gamma 2.2) | 2.0 exact sRGB  |
+| -------- | ------------------------------ | --------------- |
+| oblique  | 0.0376 / 0.0609                | 0.0465 / 0.0649 |
+| top-down | 0.0426 / 0.0516                | 0.0525 / 0.0619 |
+| grazing  | 0.0276 / 0.0473                | 0.0335 / 0.0553 |
+| far      | 0.0019 / 0.0006                | 0.0023 / 0.0006 |
+
+L2 criterion (mean ≤ 0.05, p95 ≤ 0.2) passes everywhere with 1.x color
+handling; with exact sRGB only top-down exceeds it, by 0.0025.
+
+**1.x baselines (`bench/baseline.html`)**, matched flat-colored workloads,
+one draw per box (as 1.x issues per tile content). `performance.now()` is
+coarsened to 0.1 ms on this page, so small 2.0 CPU numbers are upper bounds.
+
+| Hypothesis                     | Workload               | 1.x (WebGL)                                       | 2.0 (WebGPU)                                    |
+| ------------------------------ | ---------------------- | ------------------------------------------------- | ----------------------------------------------- |
+| H1/H2 per-frame CPU, API calls | 1,000 draws            | 3.6 ms, 6,140 calls                               | ≤0.2 ms, 34 calls                               |
+| H1/H2                          | 5,000 draws            | 21.4 ms, 30,140 calls (≈6 per draw)               | ≤0.2 ms, 34 calls (constant)                    |
+| H8 creation + first frame      | 5,000 draws            | 637 ms (geometry + shaders built on first render) | 295 ms (to investigate: bundle/canvas setup)    |
+| H3 log depth                   | 5,000 draws, on vs off | 21.7 vs 22.2 ms                                   | n/a                                             |
+| H5 picking                     | 5,000 draws            | 4.8 ms blocking (pick re-render)                  | ≤0.2 ms main thread; result ≈5 ms later (async) |
+| H10 multiple views             | 4 views × 1,000 draws  | 11.9 ms CPU/frame, 4 scene copies                 | ≤0.3 ms CPU/frame, 1 shared world               |
+
+- H3 is not shown by this workload: it is CPU-bound, not fill-bound. It needs a
+  fill-heavy scene (dense photogrammetry, M2).
+- H4, H6 and H9 need 3D Tiles and the globe (M2–M3).
+- Steady-state allocation (GC) measurement needs cross-origin isolation
+  (`measureUserAgentSpecificMemory`); added to M1 with the zero-allocation gate.
+- Caveat: 1.x does more per frame than this 2.0 prototype (more features in
+  its command path), so these ratios overstate what full feature parity will
+  keep. They do show where 1.x's cost comes from: work and API calls per draw.
+
+**Slang performance gate.** With unquantized timestamps, two full runs gave
++1.9% and +8.2% GPU time for Slang-generated vs hand-written WGSL at 20k draws
+(≈1 ms frames). Run-to-run variation is about ±6% at this scale, so the ≤5%
+gate is **not resolved, not failed**. It moves to M1, measured on the PBR shader
+(heavier, so codegen differences show) with more rounds.
+
+**M0 exit.** Foundations, multi-view, GPU-driven submission, parity harness
+with FLIP, precision, worker, Slang correctness and 1.x baselines are done on
+Windows. Carried into M1: the Slang performance gate, steady-state allocation
+measurement, the 2.0 first-frame cost, and the per-indirect-call cost
+(batching). Deferred: the Metal precision run.
