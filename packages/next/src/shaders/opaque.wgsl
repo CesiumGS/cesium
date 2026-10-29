@@ -41,7 +41,10 @@ fn fs(in: VsOut) -> FsOut {
   // Placeholder lighting until the 1.x PBR/IBL port lands in M1:
   // sun at intensity 2 (the 1.x default) plus a flat ambient term.
   let diffuse = max(dot(n, view.sunDirection.xyz), 0.0);
-  let lit = r.color.rgb * (0.12 + 2.0 * diffuse);
+  var lit = r.color.rgb * (0.12 + 2.0 * diffuse);
+  if ((r.flags & 2u) != 0u) {
+    lit = r.color.rgb; // unlit
+  }
   var out: FsOut;
   out.color = vec4f(lit, 1.0);
   out.featureId = vec2u(r.featureId & 0xffffu, r.featureId >> 16u);

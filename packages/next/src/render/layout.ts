@@ -56,6 +56,8 @@ export const INDIRECT_SIZE = 20;
 
 export const RecordFlags = {
   hidden: 1,
+  /** Output the base color without lighting (KHR_materials_unlit). */
+  unlit: 2,
 } as const;
 
 export interface DrawRecordData {

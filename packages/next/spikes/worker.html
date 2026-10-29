@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Worker Smoke Test</title>
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      body {
+        margin: 0;
+        padding: 16px;
+        background: #0b0e14;
+        color: #d7dce6;
+        font:
+          13px/1.4 system-ui,
+          sans-serif;
+      }
+      h1 {
+        font-size: 16px;
+        margin: 0 0 4px;
+      }
+      p {
+        color: #8a93a6;
+        max-width: 820px;
+      }
+      canvas {
+        width: 640px;
+        height: 360px;
+        display: block;
+        background: #000;
+        border-radius: 6px;
+      }
+      button {
+        background: #222a3a;
+        color: #d7dce6;
+        border: 1px solid #2f3a50;
+        border-radius: 6px;
+        padding: 6px 12px;
+        cursor: pointer;
+        margin: 8px 0;
+      }
+      pre {
+        color: #8a93a6;
+        font:
+          12px/1.5 ui-monospace,
+          monospace;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Engine in a worker (OffscreenCanvas)</h1>
+    <p>
+      The whole engine runs in a dedicated worker and renders into a transferred
+      OffscreenCanvas; the camera orbits on its own. "Block main thread"
+      busy-waits the page for 3 s: the scene keeps animating because nothing
+      runs on the main thread.
+    </p>
+    <canvas id="view"></canvas>
+    <button id="block">Block main thread for 3 s</button>
+    <pre id="stats">starting worker…</pre>
+    <script type="module" src="./worker-main.ts"></script>
+  </body>
+</html>

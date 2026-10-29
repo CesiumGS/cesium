@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Indirect Draw Benchmark</title>
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      body {
+        margin: 0;
+        padding: 16px;
+        background: #0b0e14;
+        color: #d7dce6;
+        font:
+          13px/1.4 system-ui,
+          sans-serif;
+      }
+      h1 {
+        font-size: 16px;
+        margin: 0 0 4px;
+      }
+      p {
+        color: #8a93a6;
+        max-width: 820px;
+      }
+      canvas {
+        width: 640px;
+        height: 360px;
+        display: block;
+        background: #000;
+      }
+      table {
+        border-collapse: collapse;
+        font-variant-numeric: tabular-nums;
+        margin-top: 8px;
+      }
+      th,
+      td {
+        padding: 4px 10px;
+        border-bottom: 1px solid #222a3a;
+        text-align: right;
+      }
+      th:first-child,
+      td:first-child {
+        text-align: left;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>drawIndexedIndirect vs drawIndexed in render bundles</h1>
+    <p>
+      The same draws replayed from one render bundle, either as indirect draws
+      (args written per view by the prep kernel; Dawn may validate them) or as
+      direct draws with CPU-baked arguments. "frame wall" is submit →
+      onSubmittedWorkDone, which includes any validation work Dawn inserts.
+    </p>
+    <div id="adapter"></div>
+    <canvas id="view"></canvas>
+    <table id="results"></table>
+    <script type="module" src="./indirect.ts"></script>
+  </body>
+</html>

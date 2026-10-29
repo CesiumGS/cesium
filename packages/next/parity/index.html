@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Parity Harness</title>
+    <link rel="stylesheet" href="/cesium1x/Widgets/widgets.css" />
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0b0e14;
+        --panel: #131824;
+        --text: #d7dce6;
+        --muted: #8a93a6;
+        --accent: #f2c14e;
+      }
+      body {
+        margin: 0;
+        padding: 16px;
+        background: var(--bg);
+        color: var(--text);
+        font:
+          13px/1.4 system-ui,
+          sans-serif;
+      }
+      h1 {
+        font-size: 16px;
+        margin: 0 0 4px;
+      }
+      p {
+        color: var(--muted);
+        margin: 0 0 12px;
+        max-width: 900px;
+      }
+      .images {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: flex-start;
+      }
+      figure {
+        margin: 0;
+      }
+      figcaption {
+        color: var(--muted);
+        font-size: 12px;
+        margin-bottom: 4px;
+      }
+      /* The live 1.x viewer renders off-screen; its captures are shown instead. */
+      #legacy {
+        position: absolute;
+        left: -10000px;
+        width: 480px;
+        height: 270px;
+      }
+      tr.row {
+        cursor: pointer;
+      }
+      tr.row:hover td,
+      tr.selected td {
+        background: #1b2232;
+      }
+      img,
+      canvas.out {
+        width: 480px;
+        height: 270px;
+        display: block;
+        background: #000;
+      }
+      button {
+        background: #222a3a;
+        color: var(--text);
+        border: 1px solid #2f3a50;
+        border-radius: 6px;
+        padding: 6px 12px;
+        cursor: pointer;
+      }
+      button:hover {
+        border-color: var(--accent);
+      }
+      table {
+        border-collapse: collapse;
+        margin-top: 12px;
+        font-variant-numeric: tabular-nums;
+      }
+      th,
+      td {
+        padding: 4px 10px;
+        border-bottom: 1px solid #222a3a;
+        text-align: right;
+      }
+      th:first-child,
+      td:first-child {
+        text-align: left;
+      }
+      #status {
+        color: var(--muted);
+        margin: 8px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>L2 image parity: CesiumJS 1.x (WebGL) vs 2.0 PoC (WebGPU)</h1>
+    <p>
+      Same flat-colored scene, same serialized cameras, 480×270 pixels, MSAA 4×,
+      HDR + PBR Neutral tonemapping in both. Metric: CIE76 ΔE (FLIP pending).
+    </p>
+    <button id="run">Run parity</button>
+    <div id="status"></div>
+    <div class="images">
+      <figure>
+        <figcaption>1.x (WebGL)</figcaption>
+        <canvas class="out" id="old"></canvas>
+      </figure>
+      <figure>
+        <figcaption>2.0 (WebGPU)</figcaption>
+        <canvas class="out" id="next"></canvas>
+      </figure>
+      <figure>
+        <figcaption>ΔE heatmap (red ≥ 20)</figcaption>
+        <canvas class="out" id="heat"></canvas>
+      </figure>
+    </div>
+    <table id="results"></table>
+    <div id="legacy"></div>
+    <div id="credits" hidden></div>
+    <script>
+      window.CESIUM_BASE_URL = "/cesium1x/";
+    </script>
+    <script src="/cesium1x/Cesium.js"></script>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

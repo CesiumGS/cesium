@@ -33,9 +33,13 @@ export interface DrawOptions {
   model: Mat4;
   radius: number;
   color: readonly [number, number, number, number];
+  /** Skip lighting and output `color` directly. */
+  unlit?: boolean;
   /** Application-level name, returned by picking. */
   name?: string;
 }
+
+export type SubmissionMode = "indirect" | "direct";
 
 /** A registered draw. Mutations go through the world so it can track dirtiness. */
 export interface DrawHandle {
@@ -52,6 +56,7 @@ export interface DrawHandle {
  */
 export class World {
   readonly maxDraws: number;
+  private _submission: SubmissionMode = "indirect";
   private readonly vertexAllocator: RangeAllocator;
   private readonly indexAllocator: RangeAllocator;
   private readonly recordsF32: Float32Array;
@@ -111,7 +116,8 @@ export class World {
     this.instanceBuffer = device.createBuffer({
       label: "world.instances",
       size: this.maxDraws * INSTANCE_SIZE,
-      usage: GPUBufferUsage.STORAGE,
+      // COPY_SRC lets precision tests read back the prep kernel's output.
+      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
     this.indirectBuffer = device.createBuffer({
       label: "world.indirect",
@@ -188,7 +194,7 @@ export class World {
       throw new Error("World draw table is full.");
     }
     this.names[index] = options.name;
-    this.write(index, options, 0);
+    this.write(index, options, options.unlit ? RecordFlags.unlit : 0);
     this.bundle = undefined;
     return { index, name: options.name };
   }
@@ -238,7 +244,23 @@ export class World {
     return this.bundle;
   }
 
-  /** Records one indirect draw per record. Rebuilt only when records are added. */
+  /**
+   * How the bundle issues draws. "indirect" (default) takes per-view culling
+   * from the prep kernel; "direct" bakes CPU-side draw arguments into the
+   * bundle and draws everything — a baseline for measuring indirect overhead.
+   */
+  get submission(): SubmissionMode {
+    return this._submission;
+  }
+
+  set submission(mode: SubmissionMode) {
+    if (mode !== this._submission) {
+      this._submission = mode;
+      this.bundle = undefined;
+    }
+  }
+
+  /** Records one draw per record. Rebuilt only when records are added. */
   private recordBundle(): GPURenderBundle {
     const encoder = this.ctx.device.createRenderBundleEncoder({
       label: "world.bundle",
@@ -255,7 +277,18 @@ export class World {
       if (!firstInstance) {
         encoder.setVertexBuffer(0, this.drawIndexBuffer, i * 4, 4);
       }
-      encoder.drawIndexedIndirect(this.indirectBuffer, i * INDIRECT_SIZE);
+      if (this._submission === "direct") {
+        const o = i * RECORD_FLOATS;
+        encoder.drawIndexed(
+          this.recordsU32[o + 28]!,
+          1,
+          this.recordsU32[o + 29]!,
+          this.recordsI32[o + 30]!,
+          firstInstance ? i : 0,
+        );
+      } else {
+        encoder.drawIndexedIndirect(this.indirectBuffer, i * INDIRECT_SIZE);
+      }
     }
     return encoder.finish();
   }

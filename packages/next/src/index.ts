@@ -4,11 +4,13 @@ export {
   type DrawHandle,
   type DrawOptions,
   type MeshHandle,
+  type SubmissionMode,
 } from "./scene/World.ts";
 export {
   View,
   CanvasTarget,
   OffscreenTarget,
+  type OutputEncoding,
   type PickResult,
   type RenderTarget,
   type Viewport,

@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Precision Spike</title>
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      body {
+        margin: 0;
+        padding: 16px;
+        background: #0b0e14;
+        color: #d7dce6;
+        font:
+          13px/1.4 system-ui,
+          sans-serif;
+      }
+      h1 {
+        font-size: 16px;
+        margin: 0 0 4px;
+      }
+      p {
+        color: #8a93a6;
+        max-width: 820px;
+      }
+      table {
+        border-collapse: collapse;
+        font-variant-numeric: tabular-nums;
+        margin-top: 8px;
+      }
+      th,
+      td {
+        padding: 4px 10px;
+        border-bottom: 1px solid #222a3a;
+        text-align: right;
+      }
+      th:first-child,
+      td:first-child {
+        text-align: left;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Camera-relative precision on this GPU</h1>
+    <p>
+      Runs the production prep kernel on draw records scattered around several
+      camera positions, reads back its float32 camera-relative translations and
+      compares them with float64 on the CPU. "naive float32" is what you get
+      without the hi/lo split: fround(origin) − fround(camera).
+    </p>
+    <div id="adapter"></div>
+    <table id="results"></table>
+    <script type="module" src="./precision.ts"></script>
+  </body>
+</html>

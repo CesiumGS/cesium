@@ -333,7 +333,12 @@ export class Engine {
             {
               view: get(color),
               resolveTarget: get(resolved),
-              clearValue: { r: 0.004, g: 0.008, b: 0.02, a: 1 },
+              clearValue: {
+                r: view.clearColor[0],
+                g: view.clearColor[1],
+                b: view.clearColor[2],
+                a: 1,
+              },
               loadOp: "clear",
               storeOp: "discard",
             },
@@ -401,11 +406,12 @@ export class Engine {
         params.setFloat32(0, rect.x, true);
         params.setFloat32(4, rect.y, true);
         params.setFloat32(8, view.exposure, true);
-        params.setUint32(
-          12,
-          this.ctx.outputFormat.endsWith("-srgb") ? 0 : 1,
-          true,
-        );
+        const encoding = this.ctx.outputFormat.endsWith("-srgb")
+          ? 0
+          : view.outputEncoding === "gamma2.2"
+            ? 2
+            : 1;
+        params.setUint32(12, encoding, true);
         device.queue.writeBuffer(
           this.presentParams[index]!,
           0,

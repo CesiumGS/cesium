@@ -27,13 +27,17 @@ export interface RenderTarget {
   acquire(device: GPUDevice, format: GPUTextureFormat): GPUTextureView;
 }
 
-/** Renders into an HTML canvas, tracking its CSS size × devicePixelRatio. */
+/**
+ * Renders into a canvas. An `HTMLCanvasElement` tracks its CSS size ×
+ * devicePixelRatio; an `OffscreenCanvas` (e.g. inside a worker) keeps
+ * whatever size its owner sets, typically from resize messages.
+ */
 export class CanvasTarget implements RenderTarget {
   readonly kind = "canvas";
   private context?: GPUCanvasContext;
   private configuredFor?: GPUDevice;
 
-  constructor(readonly canvas: HTMLCanvasElement) {}
+  constructor(readonly canvas: HTMLCanvasElement | OffscreenCanvas) {}
 
   get width(): number {
     return this.canvas.width;
@@ -44,15 +48,19 @@ export class CanvasTarget implements RenderTarget {
   }
 
   acquire(device: GPUDevice, format: GPUTextureFormat): GPUTextureView {
-    const dpr = globalThis.devicePixelRatio ?? 1;
-    const width = Math.max(1, Math.round(this.canvas.clientWidth * dpr));
-    const height = Math.max(1, Math.round(this.canvas.clientHeight * dpr));
-    if (this.canvas.width !== width || this.canvas.height !== height) {
-      this.canvas.width = width;
-      this.canvas.height = height;
+    const canvas = this.canvas;
+    if ("clientWidth" in canvas) {
+      const dpr = globalThis.devicePixelRatio ?? 1;
+      const width = Math.max(1, Math.round(canvas.clientWidth * dpr));
+      const height = Math.max(1, Math.round(canvas.clientHeight * dpr));
+      if (canvas.width !== width || canvas.height !== height) {
+        canvas.width = width;
+        canvas.height = height;
+      }
     }
     if (this.configuredFor !== device) {
-      this.context = this.canvas.getContext("webgpu") ?? undefined;
+      this.context =
+        (canvas.getContext("webgpu") as GPUCanvasContext | null) ?? undefined;
       if (!this.context) {
         throw new Error("Could not create a WebGPU canvas context.");
       }
@@ -149,7 +157,13 @@ export interface ViewOptions {
   camera?: Camera;
   viewport?: Viewport;
   exposure?: number;
+  /** Linear HDR background color. */
+  clearColor?: readonly [number, number, number];
+  /** Output transfer function. "gamma2.2" matches CesiumJS 1.x. */
+  outputEncoding?: OutputEncoding;
 }
+
+export type OutputEncoding = "srgb" | "gamma2.2";
 
 /**
  * A camera looking at a world through a rectangle of a target. Views are
@@ -161,6 +175,8 @@ export class View {
   world: World;
   viewport: Viewport;
   exposure: number;
+  clearColor: readonly [number, number, number];
+  outputEncoding: OutputEncoding;
   /** Disabled views are skipped (e.g. an offscreen view between captures). */
   enabled = true;
   readonly overlays: Overlay[] = [];
@@ -177,6 +193,8 @@ export class View {
     this.camera = options.camera ?? new Camera();
     this.viewport = options.viewport ?? { x: 0, y: 0, width: 1, height: 1 };
     this.exposure = options.exposure ?? 1;
+    this.clearColor = options.clearColor ?? [0.004, 0.008, 0.02];
+    this.outputEncoding = options.outputEncoding ?? "srgb";
   }
 
   /** Viewport in target pixels. */
