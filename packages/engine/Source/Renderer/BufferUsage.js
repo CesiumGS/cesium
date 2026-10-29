@@ -2,7 +2,7 @@
 
 import { WebGLConstants } from "@cesium/core";
 /**
- * @private
+ * @internal
  * @enum {number}
  */
 const BufferUsage = {

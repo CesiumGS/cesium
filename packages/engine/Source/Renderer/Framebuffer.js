@@ -80,7 +80,7 @@ function attachRenderbuffer(framebuffer, attachment, renderbuffer) {
  *   })
  * });
  *
- * @private
+ * @internal
  * @constructor
  */
 function Framebuffer(options) {

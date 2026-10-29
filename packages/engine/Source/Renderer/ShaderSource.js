@@ -325,7 +325,8 @@ function combineShader(shaderSource, isFragmentShader, context) {
  *   pickColorQualifier : 'uniform'
  * });
  *
- * @private
+ * @constructor
+ * @internal
  */
 function ShaderSource(options) {
   options = options ?? Frozen.EMPTY_OBJECT;
