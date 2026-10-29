@@ -4,7 +4,13 @@ import * as m4 from "../math/mat4.ts";
 import * as v3 from "../math/vec3.ts";
 import type { Mat4 } from "../math/mat4.ts";
 import type { Vec3 } from "../math/vec3.ts";
-import type { GltfAsset, GltfMaterial, GltfSampler } from "../io/gltfTypes.ts";
+import type {
+  CompressedFormat,
+  CompressedImage,
+  GltfAsset,
+  GltfMaterial,
+  GltfSampler,
+} from "../io/gltfTypes.ts";
 import type { RenderContext } from "./RenderContext.ts";
 import type { DrawHandle, MeshHandle, TextureBinding, World } from "./World.ts";
 
@@ -182,7 +188,9 @@ class TextureUploader {
   /** Closes the decoded images once every texture is on the GPU. */
   release(): void {
     for (const image of this.asset.images) {
-      image.close();
+      if (image instanceof ImageBitmap) {
+        image.close();
+      }
     }
   }
 
@@ -196,6 +204,11 @@ class TextureUploader {
     if (!view) {
       const image = this.asset.images[imageIndex]!;
       const { device, mips } = this.ctx;
+      if (!(image instanceof ImageBitmap)) {
+        view = uploadCompressed(this.ctx, image, srgb, mipmaps, imageIndex);
+        this.views.set(key, view);
+        return view;
+      }
       const texture = device.createTexture({
         label: `gltf.image${imageIndex}`,
         size: [image.width, image.height],
@@ -241,6 +254,67 @@ class TextureUploader {
     }
     return sampler;
   }
+}
+
+const BLOCK_FORMATS: Record<
+  Exclude<CompressedFormat, "rgba8">,
+  [GPUTextureFormat, GPUTextureFormat]
+> = {
+  bc7: ["bc7-rgba-unorm", "bc7-rgba-unorm-srgb"],
+  "astc-4x4": ["astc-4x4-unorm", "astc-4x4-unorm-srgb"],
+  "etc2-rgba8": ["etc2-rgba8unorm", "etc2-rgba8unorm-srgb"],
+};
+
+/**
+ * Uploads a worker-transcoded KTX2 image. Block formats get exactly the mip
+ * levels the file provides (compressed formats cannot be render targets);
+ * the uncompressed fallback gets a generated mip chain like other images.
+ */
+function uploadCompressed(
+  ctx: RenderContext,
+  image: CompressedImage,
+  srgb: boolean,
+  mipmaps: boolean,
+  index: number,
+): GPUTextureView {
+  const { device, mips } = ctx;
+  const block = image.format !== "rgba8";
+  const format: GPUTextureFormat =
+    image.format === "rgba8"
+      ? srgb
+        ? "rgba8unorm-srgb"
+        : "rgba8unorm"
+      : BLOCK_FORMATS[image.format][srgb ? 1 : 0];
+  const generate = !block && mipmaps && image.levels.length === 1;
+  const texture = device.createTexture({
+    label: `gltf.ktx2.image${index}`,
+    size: [image.width, image.height],
+    format,
+    mipLevelCount: generate
+      ? MipGenerator.levelCount(image.width, image.height)
+      : image.levels.length,
+    usage:
+      GPUTextureUsage.TEXTURE_BINDING |
+      GPUTextureUsage.COPY_DST |
+      (generate ? GPUTextureUsage.RENDER_ATTACHMENT : 0),
+  });
+  image.levels.forEach((data, level) => {
+    const width = Math.max(1, image.width >> level);
+    const height = Math.max(1, image.height >> level);
+    // Block formats: 4×4 blocks of 16 bytes; copies cover whole blocks.
+    const columns = block ? Math.ceil(width / 4) : width;
+    const rows = block ? Math.ceil(height / 4) : height;
+    device.queue.writeTexture(
+      { texture, mipLevel: level },
+      data,
+      { bytesPerRow: columns * (block ? 16 : 4), rowsPerImage: rows },
+      block ? [columns * 4, rows * 4] : [width, height],
+    );
+  });
+  if (generate) {
+    mips.generate(texture);
+  }
+  return texture.createView();
 }
 
 function determinant3(m: Mat4): number {

@@ -15,6 +15,21 @@ export interface GltfMesh {
   indices: Uint32Array;
 }
 
+/** Block-compressed (or fallback RGBA8) texture data transcoded in a worker. */
+export type CompressedFormat = "bc7" | "astc-4x4" | "etc2-rgba8" | "rgba8";
+
+export interface CompressedImage {
+  kind: "compressed";
+  format: CompressedFormat;
+  width: number;
+  height: number;
+  /** One buffer per mip level, tightly packed rows of blocks (or pixels). */
+  levels: Uint8Array[];
+}
+
+/** A decoded image: an ImageBitmap (PNG/JPEG/WebP) or transcoded KTX2. */
+export type GltfImage = ImageBitmap | CompressedImage;
+
 export interface GltfSampler {
   magFilter: GPUFilterMode;
   minFilter: GPUFilterMode;
@@ -61,7 +76,7 @@ export interface GltfAsset {
   meshes: GltfMesh[];
   materials: GltfMaterial[];
   textures: GltfTexture[];
-  images: ImageBitmap[];
+  images: GltfImage[];
   draws: GltfDraw[];
   /** Features skipped while parsing (unsupported extensions, attributes, modes). */
   warnings: string[];

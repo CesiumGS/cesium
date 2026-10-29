@@ -17,6 +17,7 @@ Branch: `cesium-2.0-webgpu-poc` (off `main` @ `587f52f1eb`, CesiumJS 1.146.0)
 | r9  | M1 increment 1: worker glTF pipeline, draw records v1, materials and textures, batching. Decisions: exact sRGB over matching 1.x's gamma 2.2; translucency designed clean-slate and tested against an exact reference instead of 1.x's WBOIT.                                                                                                                                            |
 | r10 | Translucency becomes a unified compute compositor shared by translucent meshes and Gaussian splats; MBOIT is the overflow fallback.                                                                                                                                                                                                                                                      |
 | r11 | M1 increment 2: PBR + compute-built IBL, normal maps, lit parity vs 1.x, Slang re-ported to v1 records with a surface-material interface; Slang performance gate passes.                                                                                                                                                                                                                 |
+| r12 | M1 increment 3: Draco and KTX2/Basis decoding in the workers; all 14 opaque Khronos samples within 0.025 mean FLIP of 1.x in every lighting mode.                                                                                                                                                                                                                                        |
 
 ## 1. Goal
 
@@ -833,11 +834,39 @@ about ±4%. Output is pixel-identical (ΔE 0.000) and the hi/lo precision is
 identical. Runtime compile of opaque + ToonMaterial via the WASM compiler:
 ≈380 ms cold, ≈130 ms warm.
 
+### Increment 3 (r12): Draco and KTX2/Basis
+
+Done:
+
+- **Draco** (`KHR_draco_mesh_compression`) decoded in the content workers with
+  the official `draco3d` WASM decoder, through its typed-array APIs; integer
+  attributes the accessor marks as normalized are normalized after decoding.
+  Primitives may mix Draco and plain accessors.
+- **KTX2/Basis** (`KHR_texture_basisu`): `ktx-parse` reads the container and
+  Binomial's transcoder converts ETC1S/UASTC in the worker to the best block
+  format the device supports (BC7, then ASTC 4×4, then ETC2, else RGBA8).
+  The main thread writes the transcoded mip levels straight into a
+  block-compressed texture. For the PoC the transcoder is the copy vendored in
+  the repo; a published package would vendor its own.
+- Parity harness: 1.x `Model` now loads with `incrementallyLoadTextures: false`,
+  so captures never race 1.x's texture loading.
+
+Model parity, 14 opaque Khronos samples (adds Duck, CesiumMilkTruck,
+BoxVertexColorsDracoRGB, BoxTexturedKtx2Basis, BoxMixedCompression), mean FLIP:
+
+| Mode        | 2.0 exact sRGB | 2.0 with 1.x color curve (diagnostic) |
+| ----------- | -------------- | ------------------------------------- |
+| Unlit       | 0.008–0.025    | 0.002–0.021                           |
+| Direct sun  | 0.003–0.023    | 0.002–0.018                           |
+| Diffuse IBL | 0.006–0.023    | 0.002–0.018                           |
+
+BoxCutout (translucent) remains the only failure, pending the compute
+translucency compositor (M4).
+
 Next increments:
 
-1. **Draco and KTX2/Basis** decoding in the workers.
-2. **Zero-allocation gate** (cross-origin-isolated test page) and the 2.0
+1. **Zero-allocation gate** (cross-origin-isolated test page) and the 2.0
    first-frame cost.
-3. **CAD tileset content** (b3dm/glb with feature IDs) as the M1 exit test.
-4. Specular IBL parity (needs feeding 2.0's prefiltered cube to 1.x, or a
+2. **CAD tileset content** (b3dm/glb with feature IDs) as the M1 exit test.
+3. Specular IBL parity (needs feeding 2.0's prefiltered cube to 1.x, or a
    2.0-only reference render).

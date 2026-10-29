@@ -33,6 +33,10 @@ const MODELS = [
   "TwoSidedPlane/glTF/TwoSidedPlane.gltf",
   "BoxCutout/glTF/BoxCutout.gltf",
   "Duck/glTF-Draco/Duck.gltf",
+  "CesiumMilkTruck/glTF-Draco/CesiumMilkTruck.gltf",
+  "BoxVertexColorsDracoRGB/glTF-Draco/BoxVertexColorsDracoRGB.gltf",
+  "BoxTexturedKtx2Basis/glTF/BoxTexturedKtx2Basis.gltf",
+  "BoxMixedCompression/glTF/BoxMixedCompression.gltf",
 ];
 
 /**
@@ -126,6 +130,8 @@ async function renderLegacy(
   });
   const model = await Cesium.Model.fromGltfAsync({
     url,
+    // Wait for textures before "ready" (1.x defaults to loading them later).
+    incrementallyLoadTextures: false,
     modelMatrix: Cesium.Transforms.eastNorthUpToFixedFrame(
       Cesium.Cartesian3.fromRadians(SITE.longitude, SITE.latitude, SITE.height),
     ),

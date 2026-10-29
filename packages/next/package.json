@@ -17,6 +17,8 @@
     "bench": "node bench/run.mjs"
   },
   "dependencies": {
+    "draco3d": "1.5.7",
+    "ktx-parse": "^2.0.0",
     "meshoptimizer": "^1.2.0"
   },
   "devDependencies": {

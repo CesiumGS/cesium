@@ -1,7 +1,14 @@
 import { MeshoptDecoder } from "meshoptimizer/decoder";
+import {
+  decodeDraco,
+  transcodeKtx2,
+  type DracoAttributeRequest,
+  type TextureFormatSupport,
+} from "./decoders.ts";
 import type {
   GltfAsset,
   GltfDraw,
+  GltfImage,
   GltfMaterial,
   GltfMesh,
   GltfSampler,
@@ -14,6 +21,8 @@ type Json = any;
 const SUPPORTED_EXTENSIONS = new Set([
   "KHR_materials_unlit",
   "KHR_mesh_quantization",
+  "KHR_draco_mesh_compression",
+  "KHR_texture_basisu",
   "EXT_meshopt_compression",
   "KHR_meshopt_compression",
   "KHR_texture_transform", // tolerated; transforms are ignored (warning)
@@ -32,11 +41,13 @@ const COMPONENTS: Record<string, number> = {
 
 /**
  * Parses a glTF 2.0 or GLB asset into GPU-ready streams. Runs in a worker:
- * fetching, decoding (meshopt, images) and attribute conversion all happen
- * off the main thread. Returns the asset and the list of transferables.
+ * fetching, decoding (meshopt, Draco, images, KTX2/Basis transcoding to the
+ * device's block formats) and attribute conversion all happen off the main
+ * thread. Returns the asset and the list of transferables.
  */
 export async function parseGltf(
   url: string,
+  textureSupport: TextureFormatSupport,
 ): Promise<{ asset: GltfAsset; transfer: Transferable[] }> {
   const response = await fetch(url);
   if (!response.ok) {
@@ -137,50 +148,25 @@ export async function parseGltf(
   };
 
   // Meshes: one entry per (mesh, primitive), deduplicated across nodes.
-  const meshes: GltfMesh[] = [];
-  const primitiveMesh = new Map<
-    string,
-    { mesh: number; material: number } | null
-  >();
-  const meshFor = (meshIndex: number, primitiveIndex: number) => {
-    const key = `${meshIndex}/${primitiveIndex}`;
-    if (!primitiveMesh.has(key)) {
-      const primitive = json.meshes[meshIndex].primitives[primitiveIndex];
-      const mesh = buildMesh(
-        primitive,
-        readAccessor,
-        readIndices,
-        warnings,
-        key,
-      );
-      if (mesh) {
-        meshes.push(mesh);
-      }
-      primitiveMesh.set(
-        key,
-        mesh
-          ? { mesh: meshes.length - 1, material: primitive.material ?? -1 }
-          : null,
-      );
-    }
-    return primitiveMesh.get(key) ?? undefined;
-  };
-
-  // Scene traversal in float64.
-  const draws: GltfDraw[] = [];
+  // Collect the scene's node primitives with their world matrices (float64),
+  // then build each distinct (mesh, primitive) once.
+  const instances: Array<{
+    key: string;
+    meshIndex: number;
+    primitive: number;
+    matrix: Float64Array;
+  }> = [];
   const visit = (nodeIndex: number, parent: Float64Array) => {
     const node = json.nodes[nodeIndex];
     const world = multiply(parent, nodeMatrix(node));
     if (node.mesh !== undefined) {
       json.meshes[node.mesh].primitives.forEach((_: Json, p: number) => {
-        const entry = meshFor(node.mesh, p);
-        if (entry) {
-          draws.push({
-            mesh: entry.mesh,
-            material: entry.material,
-            matrix: world,
-          });
-        }
+        instances.push({
+          key: `${node.mesh}/${p}`,
+          meshIndex: node.mesh,
+          primitive: p,
+          matrix: world,
+        });
       });
     }
     for (const child of node.children ?? []) {
@@ -192,29 +178,74 @@ export async function parseGltf(
     visit(root, identity());
   }
 
+  const meshes: GltfMesh[] = [];
+  const built = new Map<string, { mesh: number; material: number } | null>();
+  for (const { key, meshIndex, primitive: p } of instances) {
+    if (built.has(key)) {
+      continue;
+    }
+    const primitive = json.meshes[meshIndex].primitives[p];
+    const source = await attributeSource(
+      json,
+      primitive,
+      bufferView,
+      readAccessor,
+      readIndices,
+    );
+    const mesh = buildMesh(primitive, source, warnings, key);
+    if (mesh) {
+      meshes.push(mesh);
+    }
+    built.set(
+      key,
+      mesh
+        ? { mesh: meshes.length - 1, material: primitive.material ?? -1 }
+        : null,
+    );
+  }
+  const draws: GltfDraw[] = [];
+  for (const { key, matrix } of instances) {
+    const entry = built.get(key);
+    if (entry) {
+      draws.push({ mesh: entry.mesh, material: entry.material, matrix });
+    }
+  }
+
   const materials: GltfMaterial[] = (json.materials ?? []).map((m: Json) =>
     parseMaterial(m, warnings),
   );
   const textures: GltfTexture[] = (json.textures ?? []).map((t: Json) => ({
-    image: t.source,
+    image: t.extensions?.KHR_texture_basisu?.source ?? t.source,
     sampler: parseSampler(json.samplers?.[t.sampler]),
   }));
-  const images = await Promise.all(
+  const images: GltfImage[] = await Promise.all(
     (json.images ?? []).map(async (image: Json) => {
-      const blob =
+      const bytes =
         image.bufferView !== undefined
-          ? new Blob([bufferView(image.bufferView).slice()], {
-              type: image.mimeType,
-            })
-          : await (await fetch(new URL(image.uri, url))).blob();
-      return createImageBitmap(blob, {
+          ? bufferView(image.bufferView).slice()
+          : new Uint8Array(
+              await (await fetch(new URL(image.uri, url))).arrayBuffer(),
+            );
+      const ktx2 =
+        image.mimeType === "image/ktx2" || /\.ktx2$/i.test(image.uri ?? "");
+      if (ktx2) {
+        return transcodeKtx2(bytes, textureSupport);
+      }
+      return createImageBitmap(new Blob([bytes], { type: image.mimeType }), {
         colorSpaceConversion: "none",
         premultiplyAlpha: "none",
       });
     }),
   );
 
-  const transfer: Transferable[] = [...images];
+  const transfer: Transferable[] = [];
+  for (const image of images) {
+    if (image instanceof ImageBitmap) {
+      transfer.push(image);
+    } else {
+      transfer.push(...image.levels.map((level) => level.buffer));
+    }
+  }
   for (const mesh of meshes) {
     for (const array of [
       mesh.positions,
@@ -357,14 +388,68 @@ function readComponents(
   }
 }
 
-function buildMesh(
+interface AttributeSource {
+  attribute(
+    name: string,
+  ): { data: Float32Array; components: number } | undefined;
+  indices: Uint32Array | undefined;
+}
+
+/** Attribute data for a primitive: Draco-decoded, or read from accessors. */
+async function attributeSource(
+  json: Json,
   primitive: Json,
+  bufferView: (index: number) => Uint8Array,
   readAccessor: (i: number) => {
     data: Float32Array;
     components: number;
     count: number;
   },
   readIndices: (i: number) => Uint32Array,
+): Promise<AttributeSource> {
+  const fromAccessors = (name: string) => {
+    const index = primitive.attributes[name];
+    return index === undefined ? undefined : readAccessor(index);
+  };
+  const draco = primitive.extensions?.KHR_draco_mesh_compression;
+  if (!draco) {
+    return {
+      attribute: fromAccessors,
+      indices:
+        primitive.indices !== undefined
+          ? readIndices(primitive.indices)
+          : undefined,
+    };
+  }
+  const requests = new Map<string, DracoAttributeRequest>();
+  for (const [name, id] of Object.entries(
+    draco.attributes as Record<string, number>,
+  )) {
+    const accessor = json.accessors[primitive.attributes[name]];
+    requests.set(name, {
+      id,
+      components: COMPONENTS[accessor.type]!,
+      normalizeFrom:
+        accessor.normalized && accessor.componentType !== 5126
+          ? accessor.componentType
+          : undefined,
+    });
+  }
+  const decoded = await decodeDraco(bufferView(draco.bufferView), requests);
+  return {
+    attribute: (name) => {
+      const data = decoded.attributes.get(name);
+      return data
+        ? { data, components: requests.get(name)!.components }
+        : fromAccessors(name);
+    },
+    indices: decoded.indices,
+  };
+}
+
+function buildMesh(
+  primitive: Json,
+  source: AttributeSource,
   warnings: string[],
   key: string,
 ): GltfMesh | undefined {
@@ -375,36 +460,25 @@ function buildMesh(
     );
     return undefined;
   }
-  const attributes = primitive.attributes;
-  if (attributes.POSITION === undefined) {
+  const position = source.attribute("POSITION");
+  if (!position) {
     return undefined;
   }
-  const positions = readAccessor(attributes.POSITION).data;
+  const positions = position.data;
   const vertexCount = positions.length / 3;
-  const normals =
-    attributes.NORMAL !== undefined
-      ? readAccessor(attributes.NORMAL).data
-      : undefined;
-  const uvs =
-    attributes.TEXCOORD_0 !== undefined
-      ? readAccessor(attributes.TEXCOORD_0).data
-      : undefined;
+  const normals = source.attribute("NORMAL")?.data;
+  const uvs = source.attribute("TEXCOORD_0")?.data;
   let colors: Float32Array | undefined;
-  if (attributes.COLOR_0 !== undefined) {
-    const c = readAccessor(attributes.COLOR_0);
-    colors = c.components === 4 ? c.data : expandRgb(c.data);
+  const color = source.attribute("COLOR_0");
+  if (color) {
+    colors = color.components === 4 ? color.data : expandRgb(color.data);
   }
-  const tangents =
-    attributes.TANGENT !== undefined
-      ? readAccessor(attributes.TANGENT).data
-      : undefined;
-  if (attributes.TEXCOORD_1 !== undefined) {
+  const tangents = source.attribute("TANGENT")?.data;
+  if (primitive.attributes.TEXCOORD_1 !== undefined) {
     warnings.push(`primitive ${key}: TEXCOORD_1 ignored`);
   }
   let indices =
-    primitive.indices !== undefined
-      ? readIndices(primitive.indices)
-      : Uint32Array.from({ length: vertexCount }, (_, i) => i);
+    source.indices ?? Uint32Array.from({ length: vertexCount }, (_, i) => i);
   if (mode === 5) {
     indices = stripToList(indices);
   } else if (mode === 6) {

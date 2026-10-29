@@ -1,5 +1,5 @@
 {
-  "date": "2026-10-29T22:09:54.793Z",
+  "date": "2026-10-29T22:19:50.765Z",
   "environment": {
     "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0",
     "adapter": {
@@ -227,50 +227,50 @@
       {
         "draws": 1024,
         "mode": "indirect",
-        "cpuMs": 0.16083331207434337,
-        "gpuMs": 0.030727505344902782,
-        "gpuSpanMs": 0.03970217244692474,
-        "wallMs": 3.308333333333333
+        "cpuMs": 0.1733333557844162,
+        "gpuMs": 0.03154859724961388,
+        "gpuSpanMs": 0.04103291334621587,
+        "wallMs": 3.3074999998013177
       },
       {
         "draws": 1024,
         "mode": "direct",
-        "cpuMs": 0.13999999264876048,
-        "gpuMs": 0.027706358329180406,
-        "gpuSpanMs": 0.03550850035804995,
-        "wallMs": 3.299999999006589
+        "cpuMs": 0.15166666011015575,
+        "gpuMs": 0.027312049637896012,
+        "gpuSpanMs": 0.035927592194031834,
+        "wallMs": 3.2725000003973643
       },
       {
         "draws": 10000,
         "mode": "indirect",
-        "cpuMs": 0.14333332280317942,
-        "gpuMs": 0.06727254328456828,
-        "gpuSpanMs": 0.07672095058107324,
-        "wallMs": 3.2416666666666667
+        "cpuMs": 0.14416663547356923,
+        "gpuMs": 0.06851810513991893,
+        "gpuSpanMs": 0.07783755658909619,
+        "wallMs": 3.253333333134651
       },
       {
         "draws": 10000,
         "mode": "direct",
-        "cpuMs": 0.1466666450103124,
-        "gpuMs": 0.06512713917382876,
-        "gpuSpanMs": 0.07355217816921512,
-        "wallMs": 3.3099999994039537
+        "cpuMs": 0.15249999165534972,
+        "gpuMs": 0.06511680055159819,
+        "gpuSpanMs": 0.07384136071654133,
+        "wallMs": 3.2691666672627133
       },
       {
         "draws": 19881,
         "mode": "indirect",
-        "cpuMs": 0.11500000059604645,
-        "gpuMs": 0.1097647867944741,
-        "gpuSpanMs": 0.11880506402079116,
-        "wallMs": 3.3566666662693025
-      },
-      {
-        "draws": 19881,
-        "mode": "direct",
-        "cpuMs": 0.12666667302449544,
-        "gpuMs": 0.16427699167438514,
-        "gpuSpanMs": 0.17514513336061413,
+        "cpuMs": 0.12000001271565755,
+        "gpuMs": 0.11635042945574253,
+        "gpuSpanMs": 0.12593399117522264,
         "wallMs": 3.332499999801318
+      },
+      {
+        "draws": 19881,
+        "mode": "direct",
+        "cpuMs": 0.12833334902922314,
+        "gpuMs": 0.11463923241671758,
+        "gpuSpanMs": 0.13536666297354322,
+        "wallMs": 3.3299999992052713
       }
     ],
     "parity": [
@@ -501,7 +501,57 @@
       {
         "mode": "unlit",
         "model": "Duck",
-        "status": "error: Unsupported required glTF extension: KHR_draco_mesh_compression"
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.02457661367371046,
+        "flipGamma": 0.009274695551791773,
+        "flipGammaP95": 0.0340789332985878,
+        "warnings": ""
+      },
+      {
+        "mode": "unlit",
+        "model": "CesiumMilkTruck",
+        "status": "ok",
+        "draws": 5,
+        "batches": 4,
+        "flipSrgb": 0.015129375843831061,
+        "flipGamma": 0.0033240520472583293,
+        "flipGammaP95": 0.013258902356028557,
+        "warnings": ""
+      },
+      {
+        "mode": "unlit",
+        "model": "BoxVertexColorsDracoRGB",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.02306247080745901,
+        "flipGamma": 0.0019808096832665,
+        "flipGammaP95": 0.0040793404914438725,
+        "warnings": ""
+      },
+      {
+        "mode": "unlit",
+        "model": "BoxTexturedKtx2Basis",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.024265101235151573,
+        "flipGamma": 0.020570003585912818,
+        "flipGammaP95": 0.06036965921521187,
+        "warnings": ""
+      },
+      {
+        "mode": "unlit",
+        "model": "BoxMixedCompression",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.012615832356571693,
+        "flipGamma": 0.0018797201470491182,
+        "flipGammaP95": 0.00021811365149915218,
+        "warnings": ""
       },
       {
         "mode": "direct",
@@ -616,7 +666,57 @@
       {
         "mode": "direct",
         "model": "Duck",
-        "status": "error: Unsupported required glTF extension: KHR_draco_mesh_compression"
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.023222966263800597,
+        "flipGamma": 0.017612730927564615,
+        "flipGammaP95": 0.09193642437458038,
+        "warnings": ""
+      },
+      {
+        "mode": "direct",
+        "model": "CesiumMilkTruck",
+        "status": "ok",
+        "draws": 5,
+        "batches": 4,
+        "flipSrgb": 0.014570488676435648,
+        "flipGamma": 0.0042546951541943085,
+        "flipGammaP95": 0.025936061516404152,
+        "warnings": ""
+      },
+      {
+        "mode": "direct",
+        "model": "BoxVertexColorsDracoRGB",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.022502779008533244,
+        "flipGamma": 0.009046279431956879,
+        "flipGammaP95": 0.05424773320555687,
+        "warnings": ""
+      },
+      {
+        "mode": "direct",
+        "model": "BoxTexturedKtx2Basis",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.019437123482108586,
+        "flipGamma": 0.013715488001652325,
+        "flipGammaP95": 0.06459194421768188,
+        "warnings": ""
+      },
+      {
+        "mode": "direct",
+        "model": "BoxMixedCompression",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.006778974816683133,
+        "flipGamma": 0.0036444234604003003,
+        "flipGammaP95": 0.023263121023774147,
+        "warnings": ""
       },
       {
         "mode": "ibl-diffuse",
@@ -731,7 +831,57 @@
       {
         "mode": "ibl-diffuse",
         "model": "Duck",
-        "status": "error: Unsupported required glTF extension: KHR_draco_mesh_compression"
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.021141617245716667,
+        "flipGamma": 0.011151205883212355,
+        "flipGammaP95": 0.04960957169532776,
+        "warnings": ""
+      },
+      {
+        "mode": "ibl-diffuse",
+        "model": "CesiumMilkTruck",
+        "status": "ok",
+        "draws": 5,
+        "batches": 4,
+        "flipSrgb": 0.015779171316028497,
+        "flipGamma": 0.004680030719933937,
+        "flipGammaP95": 0.02507209964096546,
+        "warnings": ""
+      },
+      {
+        "mode": "ibl-diffuse",
+        "model": "BoxVertexColorsDracoRGB",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.02301274841508736,
+        "flipGamma": 0.005335199629486779,
+        "flipGammaP95": 0.017446627840399742,
+        "warnings": ""
+      },
+      {
+        "mode": "ibl-diffuse",
+        "model": "BoxTexturedKtx2Basis",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.02322542525388738,
+        "flipGamma": 0.017777710275596617,
+        "flipGammaP95": 0.05407091602683067,
+        "warnings": ""
+      },
+      {
+        "mode": "ibl-diffuse",
+        "model": "BoxMixedCompression",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.01619868073104477,
+        "flipGamma": 0.013136025923035888,
+        "flipGammaP95": 0.04161542281508446,
+        "warnings": ""
       }
     ],
     "slang": {
@@ -739,12 +889,12 @@
       "slangc WGSL validates: opaque (toon)": "0 errors, 0 warnings",
       "slangc WGSL validates: prep": "0 errors, 0 warnings",
       "image: WGSL vs Slang (same material)": "mean ΔE 0.000, pixels ΔE>2.3: 0.00%",
-      "GPU time, 1920×1080 PBR+IBL, 19882 draws, median of 7": "WGSL 1.459 ms · Slang 1.528 ms (4.8%)",
+      "GPU time, 1920×1080 PBR+IBL, 19882 draws, median of 7": "WGSL 1.445 ms · Slang 1.386 ms (-4.1%)",
       "prep hi/lo precision (max relative error)": "WGSL 5.96e-8, Slang 5.96e-8",
-      "WASM load + instantiate": "106 ms",
-      "createGlobalSession": "153 ms",
-      "compile opaque + ToonMaterial (cold)": "366 ms",
-      "compile opaque + ToonMaterial (warm)": "124 ms",
+      "WASM load + instantiate": "119 ms",
+      "createGlobalSession": "161 ms",
+      "compile opaque + ToonMaterial (cold)": "385 ms",
+      "compile opaque + ToonMaterial (warm)": "138 ms",
       "runtime WGSL validates": "0 errors, 0 warnings",
       "runtime output vs slangc output": "differs (19582 vs 20051 chars)",
       "done": "✓"
@@ -754,58 +904,58 @@
         "suite": "draw scaling",
         "engine": "1.x WebGL",
         "draws": 1000,
-        "create ms": 253.79999995231628,
-        "first frame ms": 176.30000007152557,
-        "cpu/frame ms": 3.899999976158142,
-        "frame incl. GPU ms": 3.899999976158142,
+        "create ms": 258.2999999523163,
+        "first frame ms": 173.5,
+        "cpu/frame ms": 4.300000071525574,
+        "frame incl. GPU ms": 4.300000071525574,
         "API calls/frame": 6140
       },
       {
         "suite": "draw scaling",
         "engine": "2.0 WebGPU",
         "draws": 1000,
-        "create ms": 4.799999952316284,
-        "first frame ms": 183.60000002384186,
-        "cpu/frame ms": 0.10000002384185791,
-        "frame incl. GPU ms": 3.299999952316284,
+        "create ms": 4.400000095367432,
+        "first frame ms": 199.09999990463257,
+        "cpu/frame ms": 0.19999992847442627,
+        "frame incl. GPU ms": 3.100000023841858,
         "API calls/frame": 37,
-        "gpu ms": 0.019656473635683066
+        "gpu ms": 0.020617510607521723
       },
       {
         "suite": "draw scaling",
         "engine": "1.x WebGL",
         "draws": 5000,
-        "create ms": 18.600000023841858,
-        "first frame ms": 563.2999999523163,
-        "cpu/frame ms": 21.90000009536743,
-        "frame incl. GPU ms": 21.90000009536743,
+        "create ms": 22.5,
+        "first frame ms": 659.1000000238419,
+        "cpu/frame ms": 22.200000047683716,
+        "frame incl. GPU ms": 22.200000047683716,
         "API calls/frame": 30140
       },
       {
         "suite": "draw scaling",
         "engine": "2.0 WebGPU",
         "draws": 5000,
-        "create ms": 11.399999976158142,
-        "first frame ms": 170.5,
+        "create ms": 9,
+        "first frame ms": 177.40000009536743,
         "cpu/frame ms": 0.10000002384185791,
         "frame incl. GPU ms": 3.100000023841858,
         "API calls/frame": 37,
-        "gpu ms": 0.05142738815382473
+        "gpu ms": 0.05653586859038669
       },
       {
         "suite": "log depth",
         "engine": "1.x logDepth=true",
         "draws": 5000,
-        "cpu/frame ms": 21.899999976158142,
-        "frame incl. GPU ms": 21.90000009536743,
+        "cpu/frame ms": 21.600000023841858,
+        "frame incl. GPU ms": 21.699999928474426,
         "API calls/frame": 30140
       },
       {
         "suite": "log depth",
         "engine": "1.x logDepth=false",
         "draws": 5000,
-        "cpu/frame ms": 21.5,
-        "frame incl. GPU ms": 21.5,
+        "cpu/frame ms": 22,
+        "frame incl. GPU ms": 22.100000023841858,
         "API calls/frame": 30140
       },
       {
@@ -819,22 +969,22 @@
         "suite": "picking",
         "engine": "2.0 view.pick (incl. its frame)",
         "draws": 5000,
-        "main-thread ms": 0.10000002384185791,
+        "main-thread ms": 0.19999992847442627,
         "latency ms": 3
       },
       {
         "suite": "4 views",
         "engine": "1.x: 4 viewers",
         "draws": 1000,
-        "create ms": 44.10000002384186,
-        "cpu/frame ms": 14.799999952316284,
+        "create ms": 55.800000071525574,
+        "cpu/frame ms": 10.5,
         "scene copies": 4
       },
       {
         "suite": "4 views",
         "engine": "2.0: 4 views, 1 world",
         "draws": 1000,
-        "create ms": 1.8000000715255737,
+        "create ms": 2,
         "cpu/frame ms": 0.20000004768371582,
         "frame incl. GPU ms": 4.100000023841858,
         "API calls/frame": 127,

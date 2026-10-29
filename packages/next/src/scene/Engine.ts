@@ -147,6 +147,8 @@ export class Engine {
   loadGltf(url: string | URL): Promise<GltfAsset> {
     return this.workers.request<GltfAsset>("gltf", {
       url: new URL(url, globalThis.location?.href).href,
+      // KTX2/Basis textures are transcoded to a block format this device supports.
+      textureSupport: this.gpu.caps.textureCompression,
     });
   }
 
