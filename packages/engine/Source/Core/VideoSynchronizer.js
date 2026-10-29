@@ -2,6 +2,7 @@ import {
   Frozen,
   Iso8601,
   JulianDate,
+  Math as CesiumMath,
   defined,
   destroyObject,
 } from "@cesium/core";
@@ -163,21 +164,39 @@ VideoSynchronizer.prototype._onTick = function (clock) {
     return;
   }
 
-  const paused = element.paused;
-  const shouldAnimate = clock.shouldAnimate;
-  if (shouldAnimate === paused) {
-    if (shouldAnimate) {
+  const clockTime = clock.currentTime;
+  const epoch = this.epoch ?? Iso8601.MINIMUM_VALUE;
+  let videoTime = JulianDate.secondsDifference(clockTime, epoch);
+
+  const duration = element.duration;
+  let desiredTime;
+  if (element.loop) {
+    videoTime = videoTime % duration;
+    if (videoTime < 0.0) {
+      videoTime = duration + videoTime;
+    }
+    desiredTime = videoTime;
+  } else {
+    desiredTime = CesiumMath.clamp(videoTime, 0.0, duration);
+  }
+
+  // A video that doesn't loop is held on its first or last frame while the
+  // clock is outside of it. Playing it there would restart it from the
+  // beginning once it ends.
+  const outsideVideo =
+    !element.loop && (videoTime < 0.0 || videoTime >= duration);
+  const shouldPlay = clock.shouldAnimate && !outsideVideo;
+  if (shouldPlay === element.paused) {
+    if (shouldPlay) {
       element.play();
     } else {
       element.pause();
     }
   }
 
-  //We need to avoid constant seeking or the video will
-  //never contain a complete frame for us to render.
-  //So don't do anything if we're seeing or on the first
-  //tick after a seek (the latter of which allows the frame
-  //to actually be rendered.
+  // Seeking on every tick would leave the video without a complete frame to
+  // render. So don't do anything while a seek is in progress, or on the first
+  // tick after one, which gives the new frame a chance to be rendered.
   if (this._seeking || this._firstTickAfterSeek) {
     this._firstTickAfterSeek = false;
     return;
@@ -185,30 +204,10 @@ VideoSynchronizer.prototype._onTick = function (clock) {
 
   this._trySetPlaybackRate(clock);
 
-  const clockTime = clock.currentTime;
-  const epoch = this.epoch ?? Iso8601.MINIMUM_VALUE;
-  let videoTime = JulianDate.secondsDifference(clockTime, epoch);
-
-  const duration = element.duration;
-  let desiredTime;
-  const currentTime = element.currentTime;
-  if (element.loop) {
-    videoTime = videoTime % duration;
-    if (videoTime < 0.0) {
-      videoTime = duration + videoTime;
-    }
-    desiredTime = videoTime;
-  } else if (videoTime > duration) {
-    desiredTime = duration;
-  } else if (videoTime < 0.0) {
-    desiredTime = 0.0;
-  } else {
-    desiredTime = videoTime;
-  }
-
   //If the playing video's time and the scene's clock time
   //ever drift too far apart, we want to set the video to match
-  const tolerance = shouldAnimate ? (this.tolerance ?? 1.0) : 0.001;
+  const currentTime = element.currentTime;
+  const tolerance = shouldPlay ? (this.tolerance ?? 1.0) : 0.001;
   if (Math.abs(desiredTime - currentTime) > tolerance) {
     this._seeking = true;
     element.currentTime = desiredTime;
