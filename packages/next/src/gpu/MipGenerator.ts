@@ -45,40 +45,43 @@ export class MipGenerator {
     return Math.floor(Math.log2(Math.max(width, height))) + 1;
   }
 
-  /** Fills levels 1..n-1 from level 0. The texture needs RENDER_ATTACHMENT usage. */
+  /**
+   * Fills levels 1..n-1 from level 0 for every array layer (cube faces
+   * included). The texture needs RENDER_ATTACHMENT usage.
+   */
   generate(texture: GPUTexture): void {
     if (texture.mipLevelCount < 2) {
       return;
     }
     const pipeline = this.pipeline(texture.format);
     const encoder = this.device.createCommandEncoder({ label: "mipgen" });
-    for (let level = 1; level < texture.mipLevelCount; level++) {
-      const bindGroup = this.device.createBindGroup({
-        layout: pipeline.getBindGroupLayout(0),
-        entries: [
-          {
-            binding: 0,
-            resource: texture.createView({
-              baseMipLevel: level - 1,
-              mipLevelCount: 1,
-            }),
-          },
-          { binding: 1, resource: this.sampler },
-        ],
+    const view = (level: number, layer: number) =>
+      texture.createView({
+        dimension: "2d",
+        baseMipLevel: level,
+        mipLevelCount: 1,
+        baseArrayLayer: layer,
+        arrayLayerCount: 1,
       });
-      const pass = encoder.beginRenderPass({
-        colorAttachments: [
-          {
-            view: texture.createView({ baseMipLevel: level, mipLevelCount: 1 }),
-            loadOp: "clear",
-            storeOp: "store",
-          },
-        ],
-      });
-      pass.setPipeline(pipeline);
-      pass.setBindGroup(0, bindGroup);
-      pass.draw(3);
-      pass.end();
+    for (let layer = 0; layer < texture.depthOrArrayLayers; layer++) {
+      for (let level = 1; level < texture.mipLevelCount; level++) {
+        const bindGroup = this.device.createBindGroup({
+          layout: pipeline.getBindGroupLayout(0),
+          entries: [
+            { binding: 0, resource: view(level - 1, layer) },
+            { binding: 1, resource: this.sampler },
+          ],
+        });
+        const pass = encoder.beginRenderPass({
+          colorAttachments: [
+            { view: view(level, layer), loadOp: "clear", storeOp: "store" },
+          ],
+        });
+        pass.setPipeline(pipeline);
+        pass.setBindGroup(0, bindGroup);
+        pass.draw(3);
+        pass.end();
+      }
     }
     this.device.queue.submit([encoder.finish()]);
   }

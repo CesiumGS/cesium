@@ -4,6 +4,8 @@ import { FrameGraph, TexturePool } from "../render/FrameGraph.ts";
 import { VIEW_SIZE, VIEW_STRIDE, writeViewBlock } from "../render/layout.ts";
 import * as m4 from "../math/mat4.ts";
 import * as v3 from "../math/vec3.ts";
+import { Ellipsoid } from "../math/ellipsoid.ts";
+import { eastNorthUpToFixedFrame } from "../math/transforms.ts";
 import type { Vec3 } from "../math/vec3.ts";
 import {
   createRenderContext,
@@ -130,6 +132,11 @@ export class Engine {
     // M0: device-loss recovery stops at the device. Rebuilding worlds from
     // their CPU-side sources arrives with the streaming cache (M2).
     return new Engine(gpu, ctx, options.maxViews ?? 16);
+  }
+
+  /** Image-based lighting environment shared by all worlds and views. */
+  get environment() {
+    return this.ctx.environment;
   }
 
   get capabilities() {
@@ -293,6 +300,9 @@ export class Engine {
       sunDirection: this.sunDirection,
       width: rect.width,
       height: rect.height,
+      iblFrame: environmentFrame(camera.position),
+      lighting: view.lighting,
+      specularMaxLod: this.ctx.environment.maxLod,
     });
   }
 
@@ -557,6 +567,24 @@ interface PendingPick {
   view: View;
   readback: GPUBuffer;
   resolve: (result: PickResult | undefined) => void;
+}
+
+const scratchEnu = m4.mat4();
+const scratchEast = v3.vec3();
+const scratchUp = v3.vec3();
+const scratchSouth = v3.vec3();
+const scratchFrame: [Vec3, Vec3, Vec3] = [scratchEast, scratchUp, scratchSouth];
+
+/**
+ * Environment-map frame at `position`: x = east, y = up, z = −north, the y-up
+ * convention CesiumJS 1.x also uses for image-based lighting.
+ */
+function environmentFrame(position: Vec3): [Vec3, Vec3, Vec3] {
+  const enu = eastNorthUpToFixedFrame(position, Ellipsoid.WGS84, scratchEnu);
+  v3.set(scratchEast, enu[0]!, enu[1]!, enu[2]!);
+  v3.set(scratchUp, enu[8]!, enu[9]!, enu[10]!);
+  v3.set(scratchSouth, -enu[4]!, -enu[5]!, -enu[6]!);
+  return scratchFrame;
 }
 
 const scratchView = m4.mat4();

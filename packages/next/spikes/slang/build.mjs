@@ -16,15 +16,21 @@ const run = (args) => execFileSync(slangc, args, { cwd: here, stdio: "inherit" }
 const temp = mkdtempSync(join(tmpdir(), "slang-"));
 try {
   for (const material of ["default", "toon"]) {
-    const ir = join(temp, `material_${material}.slang-module`);
-    run([`material_${material}.slang`, "-o", ir]);
+    // The binding module is precompiled separately so its `export` satisfies
+    // the engine module's `extern struct Material_` at link time.
+    const ir = join(temp, `bind_${material}.slang-module`);
+    run([`bind_${material}.slang`, "-o", ir]);
     run([
       "opaque.slang", ir, "-target", "wgsl",
       "-entry", "vs", "-stage", "vertex", "-entry", "fs", "-stage", "fragment",
       "-o", `generated/opaque_${material}.wgsl`,
     ]);
   }
-  run(["prep.slang", "-target", "wgsl", "-entry", "main", "-stage", "compute", "-o", "generated/prep.wgsl"]);
+  run([
+    "prep.slang", "-target", "wgsl",
+    "-entry", "main", "-stage", "compute", "-entry", "writeArgs", "-stage", "compute",
+    "-o", "generated/prep.wgsl",
+  ]);
 } finally {
   rmSync(temp, { recursive: true, force: true });
 }

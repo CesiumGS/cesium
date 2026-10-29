@@ -1,4 +1,5 @@
-// Shared structs, layout-identical to src/shaders/common.wgsl.
+// Shared structs, layout-identical to src/shaders/common.wgsl (v1 records).
+// Matrices are column-major in memory, as written by src/render/layout.ts.
 module common;
 
 public struct View {
@@ -11,6 +12,11 @@ public struct View {
   public float4 planes[5];
   public float4 sunDirection;
   public float4 viewport;
+  public float4 iblFrame[3];
+  public float sunIntensity;
+  public float diffuseIbl;
+  public float specularIbl;
+  public float specularMaxLod;
 };
 
 public struct DrawRecord {
@@ -20,12 +26,38 @@ public struct DrawRecord {
   public uint flags;
   public column_major float4x4 model;
   public float4 color;
+  public float3 center;
+  public uint materialIndex;
   public uint indexCount;
   public uint firstIndex;
-  public int baseVertex;
   public uint featureId;
+  public uint batch;
+  public uint positionOffset;
+  public uint normalOffset;
+  public uint uvOffset;
+  public uint colorOffset;
+  public uint tangentOffset;
+  public uint textureSet;
+  public uint imagerySlice;
+  public uint pad;
 };
 
 public struct DrawInstance {
   public column_major float4x4 relModel;
 };
+
+public struct Material {
+  public float4 baseColor;
+  public float3 emissive;
+  public float metallic;
+  public float roughness;
+  public float alphaCutoff;
+  public float normalScale;
+  public float occlusionStrength;
+  public uint flags;
+  public uint pad0;
+  public uint pad1;
+  public uint pad2;
+};
+
+public static const uint NO_STREAM = 0xffffffffu;

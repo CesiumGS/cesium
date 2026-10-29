@@ -1,5 +1,6 @@
 import type { Capabilities } from "../gpu/GpuDevice.ts";
 import { MipGenerator } from "../gpu/MipGenerator.ts";
+import { Environment } from "../gpu/Environment.ts";
 import { VIEW_SIZE } from "../render/layout.ts";
 import commonWgsl from "../shaders/common.wgsl?raw";
 import prepWgsl from "../shaders/prep.wgsl?raw";
@@ -52,6 +53,7 @@ export interface RenderContext {
   pipelines: Pipelines;
   defaults: Defaults;
   mips: MipGenerator;
+  environment: Environment;
   outputFormat: GPUTextureFormat;
   /** Uniform buffer each view's block is copied into before its passes run. */
   currentViewBuffer: GPUBuffer;
@@ -80,10 +82,19 @@ export async function createRenderContext(
     size: VIEW_SIZE,
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
+  const mips = new MipGenerator(device);
+  const environment = new Environment(device, mips);
+  environment.setSky();
   const currentViewBindGroup = device.createBindGroup({
     label: "currentView",
     layout: pipelines.viewLayout,
-    entries: [{ binding: 0, resource: { buffer: currentViewBuffer } }],
+    entries: [
+      { binding: 0, resource: { buffer: currentViewBuffer } },
+      { binding: 1, resource: environment.specularView },
+      { binding: 2, resource: environment.sampler },
+      { binding: 3, resource: environment.brdfView },
+      { binding: 4, resource: { buffer: environment.shBuffer } },
+    ],
   });
   const white = device.createTexture({
     label: "default.white",
@@ -113,7 +124,8 @@ export async function createRenderContext(
         addressModeV: "repeat",
       }),
     },
-    mips: new MipGenerator(device),
+    mips,
+    environment,
     outputFormat,
     currentViewBuffer,
     currentViewBindGroup,
@@ -146,6 +158,12 @@ async function createPipelines(
         visibility: VERTEX | FRAGMENT | COMPUTE,
         buffer: { type: "uniform" },
       },
+      // Image-based lighting: prefiltered specular cube, its sampler, the
+      // split-sum BRDF table and the irradiance SH.
+      { binding: 1, visibility: FRAGMENT, texture: { viewDimension: "cube" } },
+      { binding: 2, visibility: FRAGMENT, sampler: { type: "filtering" } },
+      { binding: 3, visibility: FRAGMENT, texture: {} },
+      { binding: 4, visibility: FRAGMENT, buffer: { type: "uniform" } },
     ],
   });
   const prepWorldLayout = device.createBindGroupLayout({

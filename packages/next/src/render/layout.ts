@@ -7,8 +7,8 @@ import { splitVec3 } from "../math/transforms.ts";
  * `shaders/common.wgsl`.
  */
 
-/** `struct View` — 272 bytes, padded to a 256-aligned stride per view. */
-export const VIEW_SIZE = 272;
+/** `struct View` — 336 bytes, padded to a 256-aligned stride per view. */
+export const VIEW_SIZE = 336;
 export const VIEW_STRIDE = 512;
 
 export interface ViewBlock {
@@ -22,6 +22,20 @@ export interface ViewBlock {
   sunDirection: Vec3;
   width: number;
   height: number;
+  /** Environment frame axes (east, up, −north) at the camera, Earth-fixed. */
+  iblFrame: readonly [Vec3, Vec3, Vec3];
+  lighting: ViewLighting;
+  /** Highest mip of the prefiltered specular cube. */
+  specularMaxLod: number;
+}
+
+export interface ViewLighting {
+  /** Directional sun illuminance (CesiumJS 1.x SunLight default: 2). */
+  sunIntensity: number;
+  /** Scale of diffuse (SH) image-based lighting. */
+  diffuseIbl: number;
+  /** Scale of specular (prefiltered cube) image-based lighting. */
+  specularIbl: number;
 }
 
 export function writeViewBlock(
@@ -44,6 +58,16 @@ export function writeViewBlock(
   out[o + 65] = block.height;
   out[o + 66] = 1 / block.width;
   out[o + 67] = 1 / block.height;
+  block.iblFrame.forEach((axis, i) => {
+    out[o + 68 + i * 4] = axis[0]!;
+    out[o + 69 + i * 4] = axis[1]!;
+    out[o + 70 + i * 4] = axis[2]!;
+    out[o + 71 + i * 4] = 0;
+  });
+  out[o + 80] = block.lighting.sunIntensity;
+  out[o + 81] = block.lighting.diffuseIbl;
+  out[o + 82] = block.lighting.specularIbl;
+  out[o + 83] = block.specularMaxLod;
 }
 
 /** `struct DrawRecord` — 176 bytes. */

@@ -221,6 +221,7 @@ export async function parseGltf(
       mesh.normals,
       mesh.uvs,
       mesh.colors,
+      mesh.tangents,
       mesh.indices,
     ]) {
       if (array) {
@@ -393,6 +394,10 @@ function buildMesh(
     const c = readAccessor(attributes.COLOR_0);
     colors = c.components === 4 ? c.data : expandRgb(c.data);
   }
+  const tangents =
+    attributes.TANGENT !== undefined
+      ? readAccessor(attributes.TANGENT).data
+      : undefined;
   if (attributes.TEXCOORD_1 !== undefined) {
     warnings.push(`primitive ${key}: TEXCOORD_1 ignored`);
   }
@@ -414,6 +419,9 @@ function buildMesh(
   }
   if (normals) {
     mesh.normals = normals;
+    if (tangents) {
+      mesh.tangents = tangents;
+    }
     return mesh;
   }
   return flatShaded(mesh);

@@ -10,6 +10,11 @@ struct View {
   planes: array<vec4f, 5>, // camera-relative, inward normals; far is infinite
   sunDirection: vec4f,     // unit vector toward the sun, Earth-fixed axes
   viewport: vec4f,         // width, height, 1/width, 1/height
+  iblFrame: array<vec4f, 3>, // environment axes (east, up, -north) at the camera
+  sunIntensity: f32,
+  diffuseIbl: f32,
+  specularIbl: f32,
+  specularMaxLod: f32,
 };
 
 struct DrawRecord {

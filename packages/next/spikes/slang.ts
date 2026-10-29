@@ -19,6 +19,8 @@ import prepSlangWgsl from "./slang/generated/prep.wgsl?raw";
 import commonSlang from "./slang/common.slang?raw";
 import materialSlang from "./slang/material.slang?raw";
 import materialToonSlang from "./slang/material_toon.slang?raw";
+import materialDefaultSlang from "./slang/material_default.slang?raw";
+import bindToonSlang from "./slang/bind_toon.slang?raw";
 import opaqueSlang from "./slang/opaque.slang?raw";
 
 const ellipsoid = Ellipsoid.WGS84;
@@ -90,7 +92,12 @@ interface Setup {
   target: OffscreenTarget;
 }
 
-async function setup(shaders: ShaderOverrides, side: number): Promise<Setup> {
+async function setup(
+  shaders: ShaderOverrides,
+  side: number,
+  size: [number, number] = [WIDTH, HEIGHT],
+  range = 9000,
+): Promise<Setup> {
   const engine = await Engine.create({ shaders });
   vec3.normalize(
     engine.sunDirection,
@@ -102,9 +109,9 @@ async function setup(shaders: ShaderOverrides, side: number): Promise<Setup> {
     indexBytes: 4 << 20,
   });
   populate(world, side);
-  const target = new OffscreenTarget(WIDTH, HEIGHT);
+  const target = new OffscreenTarget(size[0], size[1]);
   const view = engine.addView({ target, world });
-  view.camera.lookAt(centerCartesian, 35 * deg, -35 * deg, 9000);
+  view.camera.lookAt(centerCartesian, 35 * deg, -35 * deg, range);
   return { engine, world, target };
 }
 
@@ -282,13 +289,29 @@ async function runtimeCompile(device: GPUDevice): Promise<void> {
       ),
       "material",
     );
-    const toon = check(
+    check(
+      session.loadModuleFromSource(
+        materialDefaultSlang,
+        "material_default",
+        "/material_default.slang",
+      ),
+      "material_default",
+    );
+    check(
       session.loadModuleFromSource(
         materialToonSlang,
         "material_toon",
         "/material_toon.slang",
       ),
       "material_toon",
+    );
+    const toon = check(
+      session.loadModuleFromSource(
+        bindToonSlang,
+        "bind_toon",
+        "/bind_toon.slang",
+      ),
+      "bind_toon",
     );
     const opaque = check(
       session.loadModuleFromSource(opaqueSlang, "opaque", "/opaque.slang"),
@@ -359,18 +382,30 @@ async function main(): Promise<Record<string, string>> {
     `mean ΔE ${diff.meanDeltaE.toFixed(3)}, pixels ΔE>2.3: ${(diff.noticeable * 100).toFixed(2)}%`,
   );
 
-  // Alternate variants so background load affects them equally.
+  // Performance gate: a fragment-heavy view (1920×1080, boxes filling the
+  // frame, PBR + IBL) so shading cost dominates. Variants alternate so
+  // background load affects them equally.
+  const heavy = [1920, 1080] as [number, number];
+  const timedWgsl = await setup({}, side, heavy, 2500);
+  const timedSlang = await setup(
+    { opaque: opaqueDefault, prep: prepSlangWgsl },
+    side,
+    heavy,
+    2500,
+  );
   const times = { wgsl: [] as number[], slang: [] as number[] };
-  for (let round = 0; round < 3; round++) {
-    times.wgsl.push(await gpuTime(wgsl));
-    times.slang.push(await gpuTime(slang));
+  for (let round = 0; round < 7; round++) {
+    times.wgsl.push(await gpuTime(timedWgsl));
+    times.slang.push(await gpuTime(timedSlang));
   }
+  timedWgsl.engine.destroy();
+  timedSlang.engine.destroy();
   const median = (v: number[]) =>
     [...v].sort((x, y) => x - y)[Math.floor(v.length / 2)]!;
   const base = median(times.wgsl);
   const pct = (v: number) => `${(((v - base) / base) * 100).toFixed(1)}%`;
   report(
-    `GPU time, ${side * side + 1} draws (prep + opaque), median of 3`,
+    `GPU time, 1920×1080 PBR+IBL, ${side * side + 1} draws, median of 7`,
     `WGSL ${base.toFixed(3)} ms · Slang ${median(times.slang).toFixed(3)} ms (${pct(median(times.slang))})`,
   );
 
@@ -386,21 +421,7 @@ async function main(): Promise<Record<string, string>> {
   return Object.fromEntries(rows);
 }
 
-/**
- * The Slang ports in spikes/slang/ target the M0 draw-record layout. M1
- * replaced it (attribute streams, materials, batches), so they are re-ported
- * together with the PBR shader, where the Slang performance gate is re-run.
- */
-const PORTED_TO_CURRENT_LAYOUT = false;
-
 async function runSlang(): Promise<Record<string, string>> {
-  if (!PORTED_TO_CURRENT_LAYOUT) {
-    report(
-      "status",
-      "pending: Slang ports target the M0 record layout; re-ported with the M1 PBR shader",
-    );
-    return Object.fromEntries(rows);
-  }
   try {
     return await main();
   } catch (error) {

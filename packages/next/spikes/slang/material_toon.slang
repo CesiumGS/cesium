@@ -1,13 +1,16 @@
-// A user-style material: quantized "toon" lighting.
+// A user-style material built on the default one: posterized base color
+// (four levels per channel) and a rougher finish.
 module material_toon;
+import common;
 import material;
+import material_default;
 
 public struct ToonMaterial : IMaterial {
-  public float3 shade(MaterialInput input) {
-    float diffuse = max(dot(input.normal, input.sunDirection), 0.0);
-    float band = floor(diffuse * 3.0 + 0.5) / 3.0;
-    return input.baseColor.rgb * (0.15 + 1.6 * band);
+  public Surface surface(SurfaceInput i) {
+    DefaultMaterial base;
+    Surface s = base.surface(i);
+    s.baseColor = float4(floor(s.baseColor.rgb * 4.0 + 0.5) / 4.0, s.baseColor.a);
+    s.roughness = max(s.roughness, 0.6);
+    return s;
   }
 };
-
-export struct Material : IMaterial = ToonMaterial;

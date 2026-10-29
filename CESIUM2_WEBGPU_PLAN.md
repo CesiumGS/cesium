@@ -16,6 +16,7 @@ Branch: `cesium-2.0-webgpu-poc` (off `main` @ `587f52f1eb`, CesiumJS 1.146.0)
 | r8  | M0 close-out: automated runner (headless Edge, unquantized timestamps), FLIP validated against NVIDIA's reference and integrated, 1.x performance baselines, Metal deferred.                                                                                                                                                                                                             |
 | r9  | M1 increment 1: worker glTF pipeline, draw records v1, materials and textures, batching. Decisions: exact sRGB over matching 1.x's gamma 2.2; translucency designed clean-slate and tested against an exact reference instead of 1.x's WBOIT.                                                                                                                                            |
 | r10 | Translucency becomes a unified compute compositor shared by translucent meshes and Gaussian splats; MBOIT is the overflow fallback.                                                                                                                                                                                                                                                      |
+| r11 | M1 increment 2: PBR + compute-built IBL, normal maps, lit parity vs 1.x, Slang re-ported to v1 records with a surface-material interface; Slang performance gate passes.                                                                                                                                                                                                                 |
 
 ## 1. Goal
 
@@ -787,12 +788,56 @@ difference in the default column is the intended sRGB correction.
   glass, splats and opaque geometry composite correctly together. Its splat
   side (GPU radix sort, tile binning) lands with M6; the mesh side with M4.
 
+### Increment 2 (r11): PBR, image-based lighting, Slang re-port
+
+Done:
+
+- **PBR** (`src/shaders/opaque.wgsl`): glTF metallic-roughness with GGX,
+  height-correlated Smith visibility, Schlick Fresnel (Filament-style f90),
+  Lambert diffuse; normal maps with glTF tangents or a screen-space cotangent
+  frame; occlusion on indirect light only (glTF spec); emissive. Surfaces facing
+  away from the sun get no direct light (1.x lets 0.1% through).
+- **IBL built by compute shaders** (`src/shaders/ibl.wgsl`,
+  `src/gpu/Environment.ts`): environment radiance cube (procedural sky until
+  the M4 atmosphere renders into it), GGX-prefiltered specular mips with
+  filtered importance sampling, SH9 irradiance by workgroup reduction, and the
+  split-sum BRDF table. Fdez-Agüera multiple scattering. Environment frame is
+  y-up (east, up, −north) at the camera, the same convention 1.x uses.
+- **Correctness fix found by parity**: normals now transform by the
+  inverse-transpose (cofactor) and are normalized per vertex before
+  interpolation. Quantized glTF (KHR_mesh_quantization) carries non-uniform
+  dequantization scales; TorusQuantized went from 0.18 to 0.003 mean FLIP.
+- **Slang re-port** to the v1 records with a surface-material interface:
+  `IMaterial.surface(SurfaceInput) → Surface` (base color, metallic, roughness,
+  normal, emissive, occlusion); the engine owns vertex pulling, sampling and
+  lighting. `DefaultMaterial` is the glTF material; `ToonMaterial` extends it.
+  Small binding modules (`bind_default.slang`, `bind_toon.slang`) satisfy the
+  engine's `extern struct Material_` at link time.
+
+Lit model parity vs 1.x `Model` (same sun; same SH coefficients, computed by
+2.0's compute pipeline and fed to 1.x `ImageBasedLighting`), mean FLIP:
+
+| Mode                              | 2.0 exact sRGB | 2.0 with 1.x color curve (diagnostic) |
+| --------------------------------- | -------------- | ------------------------------------- |
+| Direct sun (9 opaque samples)     | 0.003–0.023    | 0.002–0.006                           |
+| Diffuse SH IBL (9 opaque samples) | 0.006–0.023    | 0.003–0.018                           |
+
+TorusQuantized is the high end of the IBL row (0.0175): most likely the IBL
+frame, which 1.x anchors at the model and 2.0 at the camera.
+
+Slang performance gate (fragment-heavy: 1920×1080, PBR + IBL, boxes filling
+the frame, ≈1.5 ms GPU; median of 7 alternating rounds, unquantized
+timestamps): four runs gave −2.6%, +1.7%, +0.2% and +4.8% for Slang vs
+hand-written WGSL, mean ≈ +1%. **The gate (≤5%) passes**; run-to-run spread is
+about ±4%. Output is pixel-identical (ΔE 0.000) and the hi/lo precision is
+identical. Runtime compile of opaque + ToonMaterial via the WASM compiler:
+≈380 ms cold, ≈130 ms warm.
+
 Next increments:
 
-1. **PBR + IBL** (1.x lighting math as a starting point, judged on correctness)
-   with normal maps and tangents; re-port the Slang shaders to the v1 layout and
-   re-run the Slang performance gate on the PBR shader.
-2. **Draco and KTX2/Basis** decoding in the workers.
-3. **Zero-allocation gate** (cross-origin-isolated test page) and the 2.0
+1. **Draco and KTX2/Basis** decoding in the workers.
+2. **Zero-allocation gate** (cross-origin-isolated test page) and the 2.0
    first-frame cost.
-4. **CAD tileset content** (b3dm/glb with feature IDs) as the M1 exit test.
+3. **CAD tileset content** (b3dm/glb with feature IDs) as the M1 exit test.
+4. Specular IBL parity (needs feeding 2.0's prefiltered cube to 1.x, or a
+   2.0-only reference render).

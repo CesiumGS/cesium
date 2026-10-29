@@ -1,6 +1,7 @@
 import { Camera } from "./Camera.ts";
 import type { World } from "./World.ts";
 import type { Vec3 } from "../math/vec3.ts";
+import type { ViewLighting } from "../render/layout.ts";
 
 /** A normalized rectangle within a target, origin at the top-left. */
 export interface Viewport {
@@ -161,6 +162,7 @@ export interface ViewOptions {
   clearColor?: readonly [number, number, number];
   /** Output transfer function. "gamma2.2" matches CesiumJS 1.x. */
   outputEncoding?: OutputEncoding;
+  lighting?: Partial<ViewLighting>;
 }
 
 export type OutputEncoding = "srgb" | "gamma2.2";
@@ -177,6 +179,8 @@ export class View {
   exposure: number;
   clearColor: readonly [number, number, number];
   outputEncoding: OutputEncoding;
+  /** Sun intensity and image-based lighting factors for this view. */
+  lighting: ViewLighting;
   /** Disabled views are skipped (e.g. an offscreen view between captures). */
   enabled = true;
   readonly overlays: Overlay[] = [];
@@ -195,6 +199,12 @@ export class View {
     this.exposure = options.exposure ?? 1;
     this.clearColor = options.clearColor ?? [0.004, 0.008, 0.02];
     this.outputEncoding = options.outputEncoding ?? "srgb";
+    this.lighting = {
+      sunIntensity: 2,
+      diffuseIbl: 1,
+      specularIbl: 1,
+      ...options.lighting,
+    };
   }
 
   /** Viewport in target pixels. */

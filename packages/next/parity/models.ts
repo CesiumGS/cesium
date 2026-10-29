@@ -35,7 +35,16 @@ const MODELS = [
   "Duck/glTF-Draco/Duck.gltf",
 ];
 
+/**
+ * unlit: geometry, transforms, UVs, textures, filtering.
+ * direct: + metallic-roughness BRDF under the sun (IBL off in both).
+ * ibl-diffuse: + SH diffuse IBL from the same coefficients (specular IBL off).
+ */
+const MODES = ["unlit", "direct", "ibl-diffuse"] as const;
+type Mode = (typeof MODES)[number];
+
 interface Row {
+  mode: Mode;
   model: string;
   status: string;
   draws?: number;
@@ -107,14 +116,32 @@ async function renderLegacy(
   viewer: any,
   url: string,
   camera: Camera,
+  mode: Mode,
+  sun: Float64Array,
+  sh: Array<[number, number, number]>,
 ): Promise<ImageData> {
+  viewer.scene.light = new Cesium.DirectionalLight({
+    direction: new Cesium.Cartesian3(-sun[0]!, -sun[1]!, -sun[2]!),
+    intensity: 2.0,
+  });
   const model = await Cesium.Model.fromGltfAsync({
     url,
     modelMatrix: Cesium.Transforms.eastNorthUpToFixedFrame(
       Cesium.Cartesian3.fromRadians(SITE.longitude, SITE.latitude, SITE.height),
     ),
-    customShader: new Cesium.CustomShader({
-      lightingModel: Cesium.LightingModel.UNLIT,
+    customShader:
+      mode === "unlit"
+        ? new Cesium.CustomShader({ lightingModel: Cesium.LightingModel.UNLIT })
+        : undefined,
+    imageBasedLighting: new Cesium.ImageBasedLighting({
+      imageBasedLightingFactor: new Cesium.Cartesian2(
+        mode === "ibl-diffuse" ? 1 : 0,
+        0,
+      ),
+      sphericalHarmonicCoefficients:
+        mode === "ibl-diffuse"
+          ? sh.map((c) => new Cesium.Cartesian3(...c))
+          : undefined,
     }),
   });
   viewer.scene.primitives.add(model);
@@ -158,98 +185,135 @@ async function runModels(): Promise<Row[]> {
   );
   const rows: Row[] = [];
   lastImages = [];
+  // Sun at azimuth 150°, elevation 40° over the site, in both engines.
+  const enu = mat4.copy(mat4.mat4(), modelMatrix);
+  const az = 150 * deg;
+  const el = 40 * deg;
+  const [e, n, u] = [
+    Math.cos(el) * Math.sin(az),
+    Math.cos(el) * Math.cos(az),
+    Math.sin(el),
+  ];
+  const sun = vec3.normalize(
+    vec3.vec3(),
+    vec3.vec3(
+      enu[0]! * e + enu[4]! * n + enu[8]! * u,
+      enu[1]! * e + enu[5]! * n + enu[9]! * u,
+      enu[2]! * e + enu[6]! * n + enu[10]! * u,
+    ),
+  );
+  vec3.copy(engine.sunDirection, sun);
+  const sh = await engine.environment.readSphericalHarmonics();
 
-  for (const path of MODELS) {
-    const url = new URL(`/specs-data/Models/glTF-2.0/${path}`, location.href)
-      .href;
-    const name = path.split("/")[0]!;
-    status.textContent = `${name}…`;
-    try {
-      const images: Partial<Record<"srgb" | "gamma2.2", ImageData>> = {};
-      let placed: { radius: number; center: Float64Array } | undefined;
-      let draws = 0;
-      let batches = 0;
-      let warnings = "";
-      let asset0Translucent = false;
-      const camera = new Camera();
-      for (const colorTransfer of ["srgb", "gamma2.2"] as const) {
-        const asset = await engine.loadGltf(url);
-        warnings = asset.warnings.join("; ");
-        asset0Translucent = asset.materials.some(
-          (m) => m.alphaMode === "BLEND",
-        );
-        const world = engine.createWorld({
-          maxDraws: 4096,
-          vertexBytes: 16 << 20,
-          indexBytes: 8 << 20,
-        });
-        const instance = engine.addModel(world, asset, {
-          modelMatrix,
-          unlit: true,
-          colorTransfer,
-        });
-        placed ??= instance;
-        draws = instance.draws.length;
-        if (colorTransfer === "srgb") {
-          camera.near = Math.max(0.01, instance.radius * 0.01);
-          camera.lookAt(
-            instance.center,
-            35 * deg,
-            -25 * deg,
-            instance.radius * 2.8,
+  // `?only=Name` restricts the run to models whose path contains Name.
+  const only = new URLSearchParams(location.search).get("only");
+  const models = only ? MODELS.filter((m) => m.includes(only)) : MODELS;
+
+  for (const mode of MODES) {
+    for (const path of models) {
+      const url = new URL(`/specs-data/Models/glTF-2.0/${path}`, location.href)
+        .href;
+      const name = path.split("/")[0]!;
+      status.textContent = `${mode}: ${name}…`;
+      try {
+        const images: Partial<Record<"srgb" | "gamma2.2", ImageData>> = {};
+        let placed: { radius: number; center: Float64Array } | undefined;
+        let draws = 0;
+        let batches = 0;
+        let warnings = "";
+        let asset0Translucent = false;
+        const camera = new Camera();
+        for (const colorTransfer of ["srgb", "gamma2.2"] as const) {
+          const asset = await engine.loadGltf(url);
+          warnings = asset.warnings.join("; ");
+          asset0Translucent = asset.materials.some(
+            (m) => m.alphaMode === "BLEND",
           );
+          const world = engine.createWorld({
+            maxDraws: 4096,
+            vertexBytes: 16 << 20,
+            indexBytes: 8 << 20,
+          });
+          const instance = engine.addModel(world, asset, {
+            modelMatrix,
+            unlit: mode === "unlit",
+            colorTransfer,
+          });
+          placed ??= instance;
+          draws = instance.draws.length;
+          if (colorTransfer === "srgb") {
+            camera.near = Math.max(0.01, instance.radius * 0.01);
+            camera.lookAt(
+              instance.center,
+              35 * deg,
+              -25 * deg,
+              instance.radius * 2.8,
+            );
+          }
+          const view = engine.addView({
+            target,
+            world,
+            camera,
+            clearColor: [0, 0, 0],
+            outputEncoding: colorTransfer === "srgb" ? "srgb" : "gamma2.2",
+            lighting: {
+              sunIntensity: 2,
+              diffuseIbl: mode === "ibl-diffuse" ? 1 : 0,
+              specularIbl: 0,
+            },
+          });
+          engine.renderFrame();
+          batches = world.batchCount;
+          images[colorTransfer] = new ImageData(
+            await target.read(),
+            WIDTH,
+            HEIGHT,
+          );
+          engine.removeView(view);
+          engine.worlds.splice(engine.worlds.indexOf(world), 1);
+          world.destroy();
         }
-        const view = engine.addView({
-          target,
-          world,
-          camera,
-          clearColor: [0, 0, 0],
-          outputEncoding: colorTransfer === "srgb" ? "srgb" : "gamma2.2",
-        });
-        engine.renderFrame();
-        batches = world.batchCount;
-        images[colorTransfer] = new ImageData(
-          await target.read(),
+        const legacy = await renderLegacy(viewer, url, camera, mode, sun, sh);
+        const srgb = flip(legacy.data, images.srgb!.data, WIDTH, HEIGHT);
+        const gamma = flip(
+          legacy.data,
+          images["gamma2.2"]!.data,
           WIDTH,
           HEIGHT,
         );
-        engine.removeView(view);
-        engine.worlds.splice(engine.worlds.indexOf(world), 1);
-        world.destroy();
+        const translucent = asset0Translucent;
+        rows.push({
+          mode,
+          model: name,
+          status: translucent
+            ? "ok (translucent: drawn opaque until OIT, M4)"
+            : "ok",
+          draws,
+          batches,
+          flipSrgb: srgb.mean,
+          flipGamma: gamma.mean,
+          flipGammaP95: gamma.p95,
+          warnings,
+        });
+        lastImages.push({
+          legacy,
+          next: images["gamma2.2"]!,
+          heat: flipHeatmap(gamma.errors),
+        });
+      } catch (error) {
+        rows.push({
+          mode,
+          model: name,
+          status: `error: ${error instanceof Error ? error.message : String(error)}`,
+        });
+        lastImages.push({
+          legacy: new ImageData(WIDTH, HEIGHT),
+          next: new ImageData(WIDTH, HEIGHT),
+          heat: new ImageData(WIDTH, HEIGHT),
+        });
       }
-      const legacy = await renderLegacy(viewer, url, camera);
-      const srgb = flip(legacy.data, images.srgb!.data, WIDTH, HEIGHT);
-      const gamma = flip(legacy.data, images["gamma2.2"]!.data, WIDTH, HEIGHT);
-      const translucent = asset0Translucent;
-      rows.push({
-        model: name,
-        status: translucent
-          ? "ok (translucent: drawn opaque until OIT, M4)"
-          : "ok",
-        draws,
-        batches,
-        flipSrgb: srgb.mean,
-        flipGamma: gamma.mean,
-        flipGammaP95: gamma.p95,
-        warnings,
-      });
-      lastImages.push({
-        legacy,
-        next: images["gamma2.2"]!,
-        heat: flipHeatmap(gamma.errors),
-      });
-    } catch (error) {
-      rows.push({
-        model: name,
-        status: `error: ${error instanceof Error ? error.message : String(error)}`,
-      });
-      lastImages.push({
-        legacy: new ImageData(WIDTH, HEIGHT),
-        next: new ImageData(WIDTH, HEIGHT),
-        heat: new ImageData(WIDTH, HEIGHT),
-      });
+      renderTable(rows);
     }
-    renderTable(rows);
   }
   engine.destroy();
   viewer.destroy();
@@ -279,11 +343,11 @@ function renderTable(rows: Row[]): void {
   const n = (v: number | undefined, digits = 4) =>
     v === undefined ? "" : v.toFixed(digits);
   table.innerHTML =
-    `<tr><th>model</th><th>status</th><th>draws</th><th>batches</th>` +
+    `<tr><th>mode</th><th>model</th><th>status</th><th>draws</th><th>batches</th>` +
     `<th>FLIP mean (exact sRGB)</th><th>FLIP mean (1.x color)</th><th>FLIP p95 (1.x color)</th><th>warnings</th></tr>${rows
       .map(
         (r, i) =>
-          `<tr class="row" data-index="${i}"><td>${r.model}</td><td class="text">${r.status}</td>` +
+          `<tr class="row" data-index="${i}"><td>${r.mode}</td><td class="text">${r.model}</td><td class="text">${r.status}</td>` +
           `<td>${r.draws ?? ""}</td><td>${r.batches ?? ""}</td><td>${n(r.flipSrgb)}</td>` +
           `<td>${n(r.flipGamma)}</td><td>${n(r.flipGammaP95)}</td><td class="text">${r.warnings ?? ""}</td></tr>`,
       )

@@ -11,7 +11,7 @@ npm run bench --workspace @cesium/next      # needs the dev server; writes bench
 ```
 
 Layout: `src/math` (float64 geodesy), `src/gpu` (device, timers, allocators,
-mips), `src/io` (worker pool, glTF parsing),
+mips, IBL environment), `src/io` (worker pool, glTF parsing),
 `src/render` (frame graph, byte layouts), `src/shaders` (WGSL),
 `src/scene` (Engine, World, View, ViewLink, Camera), `demo/`, `test/`.
 
@@ -26,8 +26,8 @@ Pages on the dev server:
 - `/spikes/indirect.html` — indirect vs direct draws in render bundles
 - `/bench/baseline.html` — 1.x vs 2.0 performance baselines (draw scaling,
   picking, log depth, four views)
-- `/spikes/slang.html` — Slang ports of the shaders (link-time materials),
-  compared with the hand-written WGSL
+- `/spikes/slang.html` — Slang ports of the shaders (surface materials bound
+  at link time), compared with the hand-written WGSL incl. the performance gate
 
 The Slang spike uses checked-in WGSL from `spikes/slang/generated/`. To
 regenerate it, download the official Slang release

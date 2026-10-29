@@ -10,6 +10,8 @@ export interface GltfMesh {
   uvs?: Float32Array;
   /** Linear RGBA. */
   colors?: Float32Array;
+  /** xyz tangent, w handedness (glTF TANGENT). */
+  tangents?: Float32Array;
   indices: Uint32Array;
 }
 
