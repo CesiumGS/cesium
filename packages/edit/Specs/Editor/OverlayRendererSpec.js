@@ -1,4 +1,9 @@
-import { Cartesian3, Matrix4, destroyObject } from "@cesium/core";
+import {
+  Cartesian3,
+  Matrix4,
+  PrimitiveType,
+  destroyObject,
+} from "@cesium/core";
 import { MeshEditorModule, OverlayRenderer } from "../../index.js";
 import createCanvas from "../../../../Specs/createCanvas.js";
 import createScene from "../../../../Specs/createScene.js";
@@ -44,6 +49,63 @@ const square = {
     [0, 2, 3, 1],
   ],
   faceCount: 2,
+};
+
+// One triangle face.
+const triangle = {
+  positions: [
+    [-1.0, -1.0, 0.0],
+    [1.0, -1.0, 0.0],
+    [1.0, 1.0, 0.0],
+  ],
+  edges: [
+    [0, 1],
+    [1, 2],
+    [2, 0],
+  ],
+  triangles: [[0, 1, 2, 0]],
+  faceCount: 1,
+};
+
+// Two squares side by side, sharing an edge.
+const twoSquares = {
+  positions: [
+    [-2.0, -1.0, 0.0],
+    [0.0, -1.0, 0.0],
+    [2.0, -1.0, 0.0],
+    [2.0, 1.0, 0.0],
+    [0.0, 1.0, 0.0],
+    [-2.0, 1.0, 0.0],
+  ],
+  edges: [
+    [0, 1],
+    [1, 2],
+    [2, 3],
+    [3, 4],
+    [4, 5],
+    [5, 0],
+    [1, 4],
+    [0, 4],
+    [1, 3],
+  ],
+  triangles: [
+    [0, 1, 4, 0],
+    [0, 4, 5, 1],
+    [1, 2, 3, 2],
+    [1, 3, 4, 3],
+  ],
+  faceCount: 4,
+};
+
+// Vertices only.
+const points = {
+  positions: [
+    [-1.0, -1.0, 0.0],
+    [1.0, 1.0, 0.0],
+  ],
+  edges: [],
+  triangles: [],
+  faceCount: 0,
 };
 
 /**
@@ -211,20 +273,113 @@ describe(
       return scene.primitives.add(overlay);
     }
 
+    // Renders a frame and returns the commands the overlay added to it.
+    function renderCommands(overlay) {
+      scene.renderForSpecs();
+      return scene.frameState.commandList.filter(
+        (command) => command.owner === overlay.renderer,
+      );
+    }
+
+    function getInstanceCounts(commands) {
+      return commands.map((command) => command.instanceCount);
+    }
+
     describe("update", function () {
-      it("adds no commands before the first upload");
+      it("adds no commands before the first upload", function () {
+        const overlay = scene.primitives.add(new OverlayTestPrimitive(shaders));
 
-      it("adds one command each for points, edges and faces");
+        expect(renderCommands(overlay)).toEqual([]);
+      });
 
-      it("skips component kinds that aren't shown");
+      it("adds one command each for points, edges and faces", function () {
+        const overlay = addSquare();
 
-      it("draws points and edges as instanced triangle strips");
+        expect(renderCommands(overlay).length).toBe(3);
+      });
 
-      it("draws faces as instanced triangles");
+      it("skips component kinds that aren't shown", function () {
+        const overlay = addSquare();
+        overlay.showEdges = false;
 
-      it("draws one instance per component");
+        const commands = renderCommands(overlay);
 
-      it("uses the model matrix");
+        // Points and faces.
+        expect(getInstanceCounts(commands)).toEqual([4, 2]);
+
+        overlay.showPoints = false;
+        overlay.showFaces = false;
+
+        expect(renderCommands(overlay)).toEqual([]);
+      });
+
+      it("draws points and edges as instanced triangle strips", function () {
+        const [pointCommand, edgeCommand] = renderCommands(addSquare());
+
+        expect(pointCommand.primitiveType).toBe(PrimitiveType.TRIANGLE_STRIP);
+        expect(pointCommand.count).toBe(4);
+        expect(edgeCommand.primitiveType).toBe(PrimitiveType.TRIANGLE_STRIP);
+        expect(edgeCommand.count).toBe(4);
+      });
+
+      it("draws faces as instanced triangles", function () {
+        const [, , faceCommand] = renderCommands(addSquare());
+
+        expect(faceCommand.primitiveType).toBe(PrimitiveType.TRIANGLES);
+        expect(faceCommand.count).toBe(3);
+      });
+
+      it("draws one instance per vertex, edge and triangle", function () {
+        const commands = renderCommands(addSquare());
+
+        expect(getInstanceCounts(commands)).toEqual([4, 5, 2]);
+      });
+
+      it("uses the model matrix", function () {
+        const overlay = addSquare();
+        const getModelMatrices = () =>
+          renderCommands(overlay).map((command) => command.modelMatrix);
+
+        overlay.modelMatrix = Matrix4.fromTranslation(
+          new Cartesian3(1.0, 2.0, 3.0),
+        );
+        expect(getModelMatrices()).toEqual([
+          overlay.modelMatrix,
+          overlay.modelMatrix,
+          overlay.modelMatrix,
+        ]);
+
+        overlay.modelMatrix = Matrix4.fromTranslation(
+          new Cartesian3(-1.0, 0.0, 0.0),
+        );
+        expect(getModelMatrices()).toEqual([
+          overlay.modelMatrix,
+          overlay.modelMatrix,
+          overlay.modelMatrix,
+        ]);
+      });
+
+      it("updates instance counts when the overlay grows or shrinks", function () {
+        const overlay = addSquare();
+        renderCommands(overlay);
+
+        overlay.setOverlay(twoSquares);
+        expect(getInstanceCounts(renderCommands(overlay))).toEqual([6, 9, 4]);
+
+        overlay.setOverlay(triangle);
+        expect(getInstanceCounts(renderCommands(overlay))).toEqual([3, 3, 1]);
+      });
+
+      it("skips component kinds with no components", function () {
+        const overlay = addSquare();
+        renderCommands(overlay);
+
+        overlay.setOverlay(points);
+        const commands = renderCommands(overlay);
+
+        expect(getInstanceCounts(commands)).toEqual([2]);
+        expect(commands[0].primitiveType).toBe(PrimitiveType.TRIANGLE_STRIP);
+      });
 
       it("renders points, edges and faces");
 
@@ -233,8 +388,6 @@ describe(
       it("draws changed positions after a partial update");
 
       it("draws the new topology after a full refresh");
-
-      it("updates instance counts when the overlay grows or shrinks");
 
       it("draws selected components in the selected color");
     });
