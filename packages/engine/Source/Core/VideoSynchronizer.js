@@ -195,7 +195,7 @@ VideoSynchronizer.prototype._onTick = function (clock) {
   if (element.loop) {
     videoTime = videoTime % duration;
     if (videoTime < 0.0) {
-      videoTime = duration - videoTime;
+      videoTime = duration + videoTime;
     }
     desiredTime = videoTime;
   } else if (videoTime > duration) {
