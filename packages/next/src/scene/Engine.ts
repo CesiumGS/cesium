@@ -30,7 +30,6 @@ import {
   CanvasTarget,
   OffscreenTarget,
   View,
-  type PickResult,
   type PixelRect,
   type RenderTarget,
   type ViewOptions,
@@ -1040,7 +1039,8 @@ export class Engine {
       height,
       format: targets.depthFormat,
       sampleCount: targets.sampleCount,
-      usage: attachment,
+      // Read by the pick pass (positions).
+      usage: attachment | GPUTextureUsage.TEXTURE_BINDING,
     });
     // Rebound to this frame's target texture before every execute.
     const output = graph.importTexture("output", {} as GPUTextureView);
@@ -1127,6 +1127,8 @@ export class Engine {
         opaqueColor.resolveTarget = get(resolved);
         opaqueIds.view = get(ids);
         opaqueDepth.view = get(depth);
+        // Depth survives the pass only when a pick reads it.
+        opaqueDepth.depthStoreOp = frame.pick ? "store" : "discard";
         opaquePass.timestampWrites = this.timer.passWrites();
         const pass = enc.beginRenderPass(opaquePass);
         frame.bundles[0] = frame.bundle!;
@@ -1135,43 +1137,65 @@ export class Engine {
       },
     );
 
-    graph.addPass("pick", { reads: [ids], sideEffect: true }, (enc, get) => {
-      const request = frame.pick;
-      if (!request) {
-        return;
-      }
-      frame.pick = undefined;
-      this.pickParamsData[0] = Math.min(
-        Math.max(Math.floor(request.x), 0),
-        width - 1,
-      );
-      this.pickParamsData[1] = Math.min(
-        Math.max(Math.floor(request.y), 0),
-        height - 1,
-      );
-      device.queue.writeBuffer(this.pickParams, 0, this.pickParamsData);
-      const group = device.createBindGroup({
-        layout: pipelines.pick.getBindGroupLayout(0),
-        entries: [
-          { binding: 0, resource: get(ids) },
-          { binding: 1, resource: { buffer: this.pickParams } },
-          { binding: 2, resource: { buffer: this.pickResult } },
-        ],
-      });
-      const pass = enc.beginComputePass(PICK_PASS);
-      pass.setPipeline(pipelines.pick);
-      pass.setBindGroup(0, group);
-      pass.dispatchWorkgroups(1);
-      pass.end();
-      const readback =
-        this.pickReadback.pop() ??
-        device.createBuffer({
-          size: 16,
-          usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
+    graph.addPass(
+      "pick",
+      { reads: [ids, depth], sideEffect: true },
+      (enc, get) => {
+        const request = frame.pick;
+        if (!request) {
+          return;
+        }
+        frame.pick = undefined;
+        this.pickParamsData[0] = Math.min(
+          Math.max(Math.floor(request.x), 0),
+          width - 1,
+        );
+        this.pickParamsData[1] = Math.min(
+          Math.max(Math.floor(request.y), 0),
+          height - 1,
+        );
+        device.queue.writeBuffer(this.pickParams, 0, this.pickParamsData);
+        const group = device.createBindGroup({
+          layout: pipelines.pick.getBindGroupLayout(0),
+          entries: [
+            { binding: 0, resource: get(ids) },
+            { binding: 1, resource: { buffer: this.pickParams } },
+            { binding: 2, resource: { buffer: this.pickResult } },
+            { binding: 3, resource: get(depth) },
+          ],
         });
-      enc.copyBufferToBuffer(this.pickResult, 0, readback, 0, 16);
-      this.picks.push({ view, readback, resolve: request.resolve });
-    });
+        const pass = enc.beginComputePass(PICK_PASS);
+        pass.setPipeline(pipelines.pick);
+        pass.setBindGroup(0, group);
+        pass.dispatchWorkgroups(1);
+        pass.end();
+        const readback =
+          this.pickReadback.pop() ??
+          device.createBuffer({
+            size: 16,
+            usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
+          });
+        enc.copyBufferToBuffer(this.pickResult, 0, readback, 0, 16);
+        // The camera of this frame, to turn the depth into a position.
+        const camera = view.camera;
+        this.picks.push({
+          view,
+          readback,
+          request,
+          camera: {
+            position: Float64Array.from(camera.position),
+            direction: Float64Array.from(camera.direction),
+            up: Float64Array.from(camera.up),
+            right: Float64Array.from(camera.right),
+            near: camera.near,
+            tanY: Math.tan(camera.fovy(width / height) / 2),
+            tanX: Math.tan(camera.fovy(width / height) / 2) * (width / height),
+            ndcX: ((this.pickParamsData[0]! + 0.5) / width) * 2 - 1,
+            ndcY: 1 - ((this.pickParamsData[1]! + 0.5) / height) * 2,
+          },
+        });
+      },
+    );
 
     graph.addPass(
       "present",
@@ -1283,11 +1307,34 @@ export class Engine {
   }
 
   private resolvePicks(picks: PendingPick[]): void {
-    for (const { view, readback, resolve } of picks) {
+    for (const { view, readback, request, camera: c } of picks) {
       void readback.mapAsync(GPUMapMode.READ).then(() => {
-        const featureId = new Uint32Array(readback.getMappedRange())[0]!;
+        const words = new Uint32Array(readback.getMappedRange());
+        const featureId = words[0]!;
+        const depth = new Float32Array(words.buffer, 4, 1)[0]!;
         readback.unmap();
         this.pickReadback.push(readback);
+        if (request.resolvePosition) {
+          // Reverse-Z, infinite far: distance along the view axis is
+          // near / depth.
+          if (!(depth > 0)) {
+            request.resolvePosition(undefined);
+            return;
+          }
+          const z = c.near / depth;
+          const p = new Float64Array(3);
+          for (let i = 0; i < 3; i++) {
+            p[i] =
+              c.position[i]! +
+              z *
+                (c.direction[i]! +
+                  c.ndcX * c.tanX * c.right[i]! +
+                  c.ndcY * c.tanY * c.up[i]!);
+          }
+          request.resolvePosition(p);
+          return;
+        }
+        const resolve = request.resolve!;
         const feature = view.world.feature(featureId);
         resolve(
           feature
@@ -1319,7 +1366,18 @@ export class Engine {
 interface PendingPick {
   view: View;
   readback: GPUBuffer;
-  resolve: (result: PickResult | undefined) => void;
+  request: View["pendingPicks"][number];
+  camera: {
+    position: Float64Array;
+    direction: Float64Array;
+    up: Float64Array;
+    right: Float64Array;
+    near: number;
+    tanX: number;
+    tanY: number;
+    ndcX: number;
+    ndcY: number;
+  };
 }
 
 /** Per-view frame state: the frame graph plus inputs its passes read each frame. */

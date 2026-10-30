@@ -29,6 +29,7 @@ export {
 export { Camera } from "./scene/Camera.ts";
 export { OrbitController } from "./scene/OrbitController.ts";
 export { InspectController } from "./scene/InspectController.ts";
+export { GlobeController } from "./scene/GlobeController.ts";
 export {
   collectFullDetailContents,
   type TileContent,

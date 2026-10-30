@@ -2,7 +2,7 @@ import {
   CanvasTarget,
   Ellipsoid,
   Engine,
-  InspectController,
+  GlobeController,
   createBox,
   createSurfacePatch,
   eastNorthUpToFixedFrame,
@@ -463,12 +463,12 @@ async function main(): Promise<void> {
   const target = new CanvasTarget(canvas);
   let world = engine.createWorld();
   const view: View = engine.addView({ target, world });
-  const controller = new InspectController(view, canvas);
+  const controller = new GlobeController(view, canvas);
   let overview: View | undefined;
   let overviewLink: ViewLink | undefined;
   /** Split view: a second, independent camera on the right half. */
   let second: View | undefined;
-  let secondController: InspectController | undefined;
+  let secondController: GlobeController | undefined;
   let focus = { center: vec3.vec3(), radius: 1 };
   let loadToken = 0;
   /**
@@ -926,7 +926,7 @@ async function main(): Promise<void> {
         world,
         viewport: { x: 0.5, y: 0, width: 0.5, height: 1 },
       });
-      secondController = new InspectController(second, canvas);
+      secondController = new GlobeController(second, canvas);
       second.camera.near = view.camera.near;
       secondController.focus(
         controller.target,

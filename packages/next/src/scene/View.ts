@@ -211,7 +211,8 @@ export class View {
   pendingPicks: Array<{
     x: number;
     y: number;
-    resolve: (r: PickResult | undefined) => void;
+    resolve?: (r: PickResult | undefined) => void;
+    resolvePosition?: (p: Float64Array | undefined) => void;
   }> = [];
 
   constructor(options: ViewOptions) {
@@ -277,5 +278,16 @@ export class View {
    */
   pick(x: number, y: number): Promise<PickResult | undefined> {
     return new Promise((resolve) => this.pendingPicks.push({ x, y, resolve }));
+  }
+
+  /**
+   * Earth-fixed position of what is drawn under a pixel of this view
+   * (float64, from the depth buffer), or undefined over the sky. Resolves a
+   * few frames later, with the camera of the frame it was read in.
+   */
+  pickPosition(x: number, y: number): Promise<Float64Array | undefined> {
+    return new Promise((resolvePosition) =>
+      this.pendingPicks.push({ x, y, resolvePosition }),
+    );
   }
 }
