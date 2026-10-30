@@ -37,20 +37,8 @@ import TopologyOverlayHooksVS from "../Shaders/TopologyOverlayHooksVS.js";
  *
  * @typedef {object} OverlayPickObject
  * @property {object} primitive The renderer's mesh.
- * @property {ComponentType} componentType The kind of component.
+ * @property {ComponentType} componentType The component's type.
  * @property {number} index The component's index in its overlay buffer. For faces, the face index.
- * @private
- */
-
-/**
- * What to upload and draw this frame.
- *
- * @typedef {object} OverlayUpdateOptions
- * @property {OverlayViews} [overlayViews] The mesh's overlay views.
- * @property {Matrix4} modelMatrix The mesh's local-to-world transform.
- * @property {boolean} showPoints Whether to draw vertices.
- * @property {boolean} showEdges Whether to draw edges.
- * @property {boolean} showFaces Whether to draw faces.
  * @private
  */
 
@@ -82,16 +70,19 @@ import TopologyOverlayHooksVS from "../Shaders/TopologyOverlayHooksVS.js";
  */
 
 /**
- * One kind of component: its draw command, buffers and pick IDs.
+ * One component type's draw command, textures and pick IDs.
  *
  * @typedef {object} ComponentOverlay
- * @property {ComponentType} componentType The kind of component.
+ * @property {ComponentType} componentType The component type.
  * @property {PrimitiveType} primitiveType How each instance is drawn.
  * @property {number} verticesPerInstance The vertices in each instance.
- * @property {ShaderSources} shaderSources The kind's overlay shaders.
- * @property {Object<string, function(): *>} styleUniforms The kind's style uniforms.
- * @property {BufferTexture | undefined} topology The edge or triangle buffer. Undefined for points.
- * @property {BufferTexture | undefined} selection The kind's selection buffer.
+ * @property {ShaderSources} shaderSources The component type's overlay shaders.
+ * @property {Object<string, function(): *>} styleUniforms The component type's style uniforms.
+ * @property {"edges" | "triangles" | undefined} topologyViewName The overlay view with the component type's edges or triangles. Undefined for points.
+ * @property {"verts" | "edges" | "faces"} selectionViewName The component type's view in the overlay views' selection.
+ * @property {boolean} shown Whether to draw the component type.
+ * @property {BufferTexture | undefined} topologyTexture The edges or triangles. Undefined for points.
+ * @property {BufferTexture | undefined} selectionTexture The component type's selection.
  * @property {PickId[]} pickIds One pick ID per component.
  * @property {Uint8Array} pickColors Each pick ID's color, four bytes each. May have spare capacity.
  * @property {BufferTexture} pickColorTexture The pick colors, by component index.
@@ -149,24 +140,35 @@ class OverlayRenderer {
   #mesh;
 
   /** @type {BufferTexture | undefined} */
-  #positions;
+  #positionTexture;
 
-  /** @type {ComponentOverlay[]} */
+  /** @type {ComponentOverlay} */
+  #pointOverlay;
+
+  /** @type {ComponentOverlay} */
+  #edgeOverlay;
+
+  /** @type {ComponentOverlay} */
+  #faceOverlay;
+
+  /**
+   * In draw order, so where depths are equal, points win over edges and edges
+   * over faces.
+   *
+   * @type {ComponentOverlay[]}
+   */
   #componentOverlays;
 
   /**
-   * Each kind's command, if it has instances to draw.
+   * The commands to add to each frame: those of the shown component types that have
+   * instances to draw.
    *
-   * @type {Array<DrawCommand | undefined>}
+   * @type {DrawCommand[]}
    */
   #commands = [];
 
-  /**
-   * Shared by every command.
-   *
-   * @type {Matrix4}
-   */
-  #modelMatrix = new Matrix4();
+  /** @type {Matrix4} */
+  #modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
 
   /** @type {VertexArray | undefined} */
   #vertexArray;
@@ -197,46 +199,83 @@ class OverlayRenderer {
     const { shaders } = this.#module;
     const { depthBias, point, edge, face } = shaders.uniforms;
 
+    this.#pointOverlay = this.#createComponentOverlay({
+      componentType: ComponentType.Vertex,
+      primitiveType: PrimitiveType.TRIANGLE_STRIP,
+      verticesPerInstance: 4,
+      shaderSources: shaders.point,
+      styleUniforms: {
+        [depthBias]: () => POINT_DEPTH_BIAS,
+        [point.size]: () => this.#getPixelSize(POINT_SIZE),
+        [point.color]: () => POINT_COLOR,
+        [point.selectedColor]: () => POINT_SELECTED_COLOR,
+      },
+      topologyViewName: undefined,
+      selectionViewName: "verts",
+    });
+
+    this.#edgeOverlay = this.#createComponentOverlay({
+      componentType: ComponentType.Edge,
+      primitiveType: PrimitiveType.TRIANGLE_STRIP,
+      verticesPerInstance: 4,
+      shaderSources: shaders.edge,
+      styleUniforms: {
+        [depthBias]: () => EDGE_DEPTH_BIAS,
+        [edge.width]: () => this.#getPixelSize(EDGE_WIDTH),
+        [edge.color]: () => EDGE_COLOR,
+        [edge.selectedColor]: () => EDGE_SELECTED_COLOR,
+      },
+      topologyViewName: "edges",
+      selectionViewName: "edges",
+    });
+
+    this.#faceOverlay = this.#createComponentOverlay({
+      componentType: ComponentType.Face,
+      primitiveType: PrimitiveType.TRIANGLES,
+      verticesPerInstance: 3,
+      shaderSources: shaders.face,
+      styleUniforms: {
+        [depthBias]: () => FACE_DEPTH_BIAS,
+        [face.color]: () => FACE_COLOR,
+        [face.selectedColor]: () => FACE_SELECTED_COLOR,
+        [face.isPickPass]: () => this.#isPickPass,
+      },
+      // Faces draw one instance per triangle, but select by face.
+      topologyViewName: "triangles",
+      selectionViewName: "faces",
+    });
+
     this.#componentOverlays = [
-      this.#createComponentOverlay(
-        ComponentType.Vertex,
-        PrimitiveType.TRIANGLE_STRIP,
-        4,
-        shaders.point,
-        {
-          [depthBias]: () => POINT_DEPTH_BIAS,
-          [point.size]: () => this.#getPixelSize(POINT_SIZE),
-          [point.color]: () => POINT_COLOR,
-          [point.selectedColor]: () => POINT_SELECTED_COLOR,
-        },
-      ),
-
-      this.#createComponentOverlay(
-        ComponentType.Edge,
-        PrimitiveType.TRIANGLE_STRIP,
-        4,
-        shaders.edge,
-        {
-          [depthBias]: () => EDGE_DEPTH_BIAS,
-          [edge.width]: () => this.#getPixelSize(EDGE_WIDTH),
-          [edge.color]: () => EDGE_COLOR,
-          [edge.selectedColor]: () => EDGE_SELECTED_COLOR,
-        },
-      ),
-
-      this.#createComponentOverlay(
-        ComponentType.Face,
-        PrimitiveType.TRIANGLES,
-        3,
-        shaders.face,
-        {
-          [depthBias]: () => FACE_DEPTH_BIAS,
-          [face.color]: () => FACE_COLOR,
-          [face.selectedColor]: () => FACE_SELECTED_COLOR,
-          [face.isPickPass]: () => this.#isPickPass,
-        },
-      ),
+      this.#pointOverlay,
+      this.#edgeOverlay,
+      this.#faceOverlay,
     ];
+  }
+
+  /**
+   * The mesh's local-to-world transform, shared by the draw commands. The
+   * identity by default. Write into it to move the overlay, e.g. with
+   * Matrix4.clone(matrix, renderer.modelMatrix).
+   *
+   * @type {Matrix4}
+   * @readonly
+   */
+  get modelMatrix() {
+    return this.#modelMatrix;
+  }
+
+  /**
+   * Sets which component types to draw. All are drawn by default.
+   *
+   * @param {boolean} points Whether to draw vertices.
+   * @param {boolean} edges Whether to draw edges.
+   * @param {boolean} faces Whether to draw faces.
+   */
+  setShownComponents(points, edges, faces) {
+    this.#pointOverlay.shown = points;
+    this.#edgeOverlay.shown = edges;
+    this.#faceOverlay.shown = faces;
+    this.#updateCommands();
   }
 
   /**
@@ -244,17 +283,15 @@ class OverlayRenderer {
    * commands to the frame. Draws nothing until overlay views are first passed.
    *
    * @param {FrameState} frameState The frame state.
-   * @param {OverlayUpdateOptions} options What to upload and draw.
+   * @param {OverlayViews} [overlayViews] The mesh's overlay views. Pass them only when wasm reports that the overlay changed, right after reading them, with no calls into wasm in between: those invalidate the views.
    */
-  update(frameState, options) {
+  update(frameState, overlayViews) {
     //>>includeStart('debug', pragmas.debug);
     Check.typeOf.object("frameState", frameState);
-    Check.typeOf.object("options", options);
-    Check.typeOf.object("options.modelMatrix", options.modelMatrix);
     //>>includeEnd('debug');
 
-    if (defined(options.overlayViews)) {
-      this.#upload(frameState.context, options.overlayViews);
+    if (defined(overlayViews)) {
+      this.#upload(frameState.context, overlayViews);
     }
 
     if (frameState.mode !== SceneMode.SCENE3D) {
@@ -264,14 +301,9 @@ class OverlayRenderer {
     // The uniform callbacks run when the commands execute, during this pass.
     this.#isPickPass = frameState.passes.pick;
     this.#pixelRatio = frameState.pixelRatio;
-    Matrix4.clone(options.modelMatrix, this.#modelMatrix);
 
-    const shows = [options.showPoints, options.showEdges, options.showFaces];
-    for (let i = 0; i < this.#commands.length; i++) {
-      const command = this.#commands[i];
-      if (shows[i] && defined(command)) {
-        frameState.commandList.push(command);
-      }
+    for (const command of this.#commands) {
+      frameState.commandList.push(command);
     }
   }
 
@@ -284,57 +316,71 @@ class OverlayRenderer {
    * @ignore
    */
   #upload(context, overlayViews) {
-    const { fullRefresh, positions, edges, triangles, selection } =
-      overlayViews;
-    const [, edgeOverlay, faceOverlay] = this.#componentOverlays;
+    const { fullRefresh, positions } = overlayViews;
 
-    this.#positions = this.#uploadBuffer(
-      context,
-      this.#positions,
-      positions,
-      fullRefresh,
-    );
+    // Every component type's shaders read the positions, so upload them first.
+    this.#positionTexture ??= this.#createBufferTexture(positions.layout);
+    this.#uploadView(context, this.#positionTexture, positions, fullRefresh);
 
-    edgeOverlay.topology = this.#uploadBuffer(
-      context,
-      edgeOverlay.topology,
-      edges,
-      fullRefresh,
-    );
+    for (const componentOverlay of this.#componentOverlays) {
+      const { topologyViewName, selectionViewName } = componentOverlay;
 
-    faceOverlay.topology = this.#uploadBuffer(
-      context,
-      faceOverlay.topology,
-      triangles,
-      fullRefresh,
-    );
+      const topologyView = defined(topologyViewName)
+        ? overlayViews[topologyViewName]
+        : undefined;
 
-    const selections = [selection.verts, selection.edges, selection.faces];
-    const instanceCounts = [
-      positions.elementCount,
-      edges.elementCount,
-      triangles.elementCount,
-    ];
+      if (defined(topologyView)) {
+        componentOverlay.topologyTexture ??= this.#createBufferTexture(
+          topologyView.layout,
+        );
+        this.#uploadView(
+          context,
+          componentOverlay.topologyTexture,
+          topologyView,
+          fullRefresh,
+        );
+      }
 
-    for (let i = 0; i < this.#componentOverlays.length; i++) {
-      const componentOverlay = this.#componentOverlays[i];
+      const selectionView = overlayViews.selection[selectionViewName];
+      componentOverlay.selectionTexture ??= this.#createBufferTexture(
+        selectionView.layout,
+      );
 
-      componentOverlay.selection = this.#uploadBuffer(
+      this.#uploadView(
         context,
-        componentOverlay.selection,
-        selections[i],
+        componentOverlay.selectionTexture,
+        selectionView,
         fullRefresh,
       );
 
-      componentOverlay.command =
-        componentOverlay.command ??
-        this.#createCommand(context, componentOverlay);
-      componentOverlay.command.instanceCount = instanceCounts[i];
+      // One instance per edge or triangle, or for points, per position.
+      const instanceCount = (topologyView ?? positions).elementCount;
+      componentOverlay.command ??= this.#createCommand(
+        context,
+        componentOverlay,
+      );
+      componentOverlay.command.instanceCount = instanceCount;
 
+      this.#addPickIds(context, componentOverlay, selectionView.elementCount);
+    }
+
+    this.#updateCommands();
+  }
+
+  /**
+   * Collects the commands of the shown component types that have instances to draw.
+   *
+   * @ignore
+   */
+  #updateCommands() {
+    this.#commands = [];
+    for (const { shown, command } of this.#componentOverlays) {
       // An instance count of zero would draw the command once, not instanced.
-      this.#commands[i] =
-        instanceCounts[i] > 0 ? componentOverlay.command : undefined;
-      this.#addPickIds(context, componentOverlay, selections[i].elementCount);
+      if (!shown || !defined(command) || command.instanceCount === 0) {
+        continue;
+      }
+
+      this.#commands.push(command);
     }
   }
 
@@ -351,11 +397,11 @@ class OverlayRenderer {
    * @returns {void}
    */
   destroy() {
-    this.#positions?.texture.destroy();
+    this.#positionTexture?.texture.destroy();
 
     for (const componentOverlay of this.#componentOverlays) {
-      componentOverlay.topology?.texture.destroy();
-      componentOverlay.selection?.texture.destroy();
+      componentOverlay.topologyTexture?.texture.destroy();
+      componentOverlay.selectionTexture?.texture.destroy();
       componentOverlay.pickColorTexture.texture.destroy();
 
       for (const pickId of componentOverlay.pickIds) {
@@ -372,29 +418,23 @@ class OverlayRenderer {
   }
 
   /**
-   * @param {ComponentType} componentType The kind of component.
-   * @param {PrimitiveType} primitiveType How each instance is drawn.
-   * @param {number} verticesPerInstance The vertices in each instance.
-   * @param {ShaderSources} shaderSources The kind's overlay shaders.
-   * @param {Object<string, function(): *>} styleUniforms The kind's style uniforms.
+   * @param {object} options
+   * @param {ComponentType} options.componentType The component type.
+   * @param {PrimitiveType} options.primitiveType How each instance is drawn.
+   * @param {number} options.verticesPerInstance The vertices in each instance.
+   * @param {ShaderSources} options.shaderSources The component type's overlay shaders.
+   * @param {Object<string, function(): *>} options.styleUniforms The component type's style uniforms.
+   * @param {"edges" | "triangles" | undefined} options.topologyViewName The overlay view with the component type's edges or triangles. Undefined for points.
+   * @param {"verts" | "edges" | "faces"} options.selectionViewName The component type's view in the overlay views' selection.
    * @returns {ComponentOverlay}
    * @ignore
    */
-  #createComponentOverlay(
-    componentType,
-    primitiveType,
-    verticesPerInstance,
-    shaderSources,
-    styleUniforms,
-  ) {
+  #createComponentOverlay(options) {
     return {
-      componentType,
-      primitiveType,
-      verticesPerInstance,
-      shaderSources,
-      styleUniforms,
-      topology: undefined,
-      selection: undefined,
+      ...options,
+      shown: true,
+      topologyTexture: undefined,
+      selectionTexture: undefined,
       pickIds: [],
       pickColors: new Uint8Array(0),
       pickColorTexture: {
@@ -416,23 +456,28 @@ class OverlayRenderer {
   }
 
   /**
-   * Uploads one overlay buffer, creating its texture on first use.
-   *
-   * @param {Context} context The context to create textures in.
-   * @param {BufferTexture | undefined} bufferTexture The buffer's texture, if created.
-   * @param {OverlayBufferView} view The buffer's view.
-   * @param {boolean} fullRefresh Whether to upload the whole buffer.
-   * @returns {BufferTexture} The buffer's texture.
+   * @param {BufferLayout} layout An overlay view's layout.
+   * @returns {BufferTexture} A texture for the view's buffer.
    * @ignore
    */
-  #uploadBuffer(context, bufferTexture, view, fullRefresh) {
-    if (!defined(bufferTexture)) {
-      bufferTexture = {
-        texture: new DataTexture(this.#getTextureFormat(view.layout)),
-        uniformName: view.layout.uniformName,
-      };
-    }
+  #createBufferTexture(layout) {
+    return {
+      texture: new DataTexture(this.#getTextureFormat(layout)),
+      uniformName: layout.uniformName,
+    };
+  }
 
+  /**
+   * Uploads an overlay view's changed elements: all of them on a full refresh,
+   * otherwise its dirty range, if any.
+   *
+   * @param {Context} context The context that owns the texture.
+   * @param {BufferTexture} bufferTexture The view's texture.
+   * @param {OverlayBufferView} view The overlay view.
+   * @param {boolean} fullRefresh Whether every element changed.
+   * @ignore
+   */
+  #uploadView(context, bufferTexture, view, fullRefresh) {
     const range = fullRefresh
       ? { start: 0, end: view.elementCount }
       : view.dirtyRange;
@@ -445,8 +490,6 @@ class OverlayRenderer {
         range.end,
       );
     }
-
-    return bufferTexture;
   }
 
   /**
@@ -529,7 +572,7 @@ class OverlayRenderer {
    * index never changes meaning, so pick IDs are only ever added.
    *
    * @param {Context} context The context that owns the pick IDs.
-   * @param {ComponentOverlay} componentOverlay The kind of component.
+   * @param {ComponentOverlay} componentOverlay The component type's overlay.
    * @param {number} count The number of components.
    * @ignore
    */
@@ -569,8 +612,8 @@ class OverlayRenderer {
 
   /**
    * @param {Context} context The context to create GPU resources in.
-   * @param {ComponentOverlay} componentOverlay The kind of component.
-   * @returns {DrawCommand} The kind's draw command.
+   * @param {ComponentOverlay} componentOverlay The component type's overlay.
+   * @returns {DrawCommand} The component type's draw command.
    * @ignore
    */
   #createCommand(context, componentOverlay) {
@@ -608,7 +651,7 @@ class OverlayRenderer {
   }
 
   /**
-   * @param {ComponentOverlay} componentOverlay The kind of component.
+   * @param {ComponentOverlay} componentOverlay The component type's overlay.
    * @returns {Object<string, function(): *>} The component overlay's uniform map.
    * @ignore
    */
@@ -617,9 +660,9 @@ class OverlayRenderer {
     const uniformMap = { ...componentOverlay.styleUniforms };
 
     for (const bufferTexture of [
-      this.#positions,
-      componentOverlay.topology,
-      componentOverlay.selection,
+      this.#positionTexture,
+      componentOverlay.topologyTexture,
+      componentOverlay.selectionTexture,
       componentOverlay.pickColorTexture,
     ]) {
       if (!defined(bufferTexture)) {
