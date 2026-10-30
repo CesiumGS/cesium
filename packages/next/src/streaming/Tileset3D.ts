@@ -9,14 +9,17 @@
 import type { Engine } from "../scene/Engine.ts";
 import type { World } from "../scene/World.ts";
 import type { GltfAsset } from "../io/gltfTypes.ts";
-import {
-  Legacy1xSelection,
-  type Legacy1xOptions,
-  type SelectionView,
-} from "./Legacy1x.ts";
+import { Legacy1xSelection, type SelectionView } from "./Legacy1x.ts";
+import { NextSelection, type NextOptions } from "./Next.ts";
 import { loadTilesetJson, type Tile, type TileTree } from "./Tile.ts";
 
-export interface TilesetOptions extends Legacy1xOptions {
+export interface TilesetOptions extends NextOptions {
+  /**
+   * Tile selection: "legacy1x" (default) reproduces CesiumJS 1.x for parity
+   * tests; "next" adds skip-LOD, visible-only coverage and free refinement
+   * from the shared cache.
+   */
+  policy?: "legacy1x" | "next";
   /** Headers for every request (e.g. ion authorization). */
   headers?: Record<string, string>;
   /** Content cache budget in bytes (1.x cacheBytes default: 512 MiB). */
@@ -48,6 +51,10 @@ export interface TilesetStats {
   maxInFlight: number;
   /** Decoded content waiting for its upload slot. */
   uploadQueue: number;
+  /** Cumulative content requests started (L1′ measurements). */
+  requestsTotal: number;
+  /** Cumulative GPU bytes uploaded (L1′ measurements). */
+  bytesTotal: number;
   /** Tiles selected per view id in the last update. */
   selected: Map<number, number>;
 }
@@ -66,6 +73,8 @@ export class Tileset3D implements TileTree {
     inFlight: 0,
     maxInFlight: 0,
     uploadQueue: 0,
+    requestsTotal: 0,
+    bytesTotal: 0,
     selected: new Map(),
   };
   /** Selected tiles per view id after the last update (parity tests). */
@@ -90,7 +99,10 @@ export class Tileset3D implements TileTree {
     public root: Tile,
     readonly geometricError: number,
   ) {
-    this.selection = new Legacy1xSelection(options);
+    this.selection =
+      options.policy === "next"
+        ? new NextSelection(options)
+        : new Legacy1xSelection(options);
     this.cacheBytes = options.cacheBytes ?? 512 * 1024 * 1024;
     this.overflowBytes = options.maximumCacheOverflowBytes ?? 512 * 1024 * 1024;
     this.maximumRequests = options.maximumRequests ?? 18;
@@ -161,12 +173,14 @@ export class Tileset3D implements TileTree {
       }
       for (const tile of result.requested) {
         tile.touchedFrame = frame;
-        // Nearest first across views (1.x orders by distance for REPLACE).
-        const distance = tile.viewState(view.id).distance;
+        // Nearest first across views (1.x orders by distance for REPLACE);
+        // a policy may supply its own priority.
+        const priority =
+          result.priority?.get(tile) ?? tile.viewState(view.id).distance;
         const previous = requests.get(tile);
         requests.set(
           tile,
-          previous === undefined ? distance : Math.min(previous, distance),
+          previous === undefined ? priority : Math.min(previous, priority),
         );
       }
       this.lastSelected.set(view.id, result.selected);
@@ -204,6 +218,7 @@ export class Tileset3D implements TileTree {
       }
       tile.state = "loading";
       this.inFlight++;
+      this.stats.requestsTotal++;
       void this.loadContent(tile).finally(() => this.inFlight--);
     }
   }
@@ -278,6 +293,7 @@ export class Tileset3D implements TileTree {
         this.loaded.add(tile);
         this.stats.loaded++;
         this.stats.bytes += tile.bytes;
+        this.stats.bytesTotal += tile.bytes;
       } catch (error) {
         tile.state = "failed";
         this.warnings.add(

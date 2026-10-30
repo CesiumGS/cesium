@@ -29,6 +29,10 @@ const suites = {
   baseline: ["/bench/baseline.html?bench", "runBaseline"],
   // Public Specs tilesets; ION_ASSET=<id> (with VITE_ION_TOKEN in .env.local)
   // runs a private ion asset instead, without the id entering the repo.
+  lod: [
+    `/parity/lod.html?bench${process.env.ION_ASSET ? `&asset=${process.env.ION_ASSET}` : ""}${process.env.AT ? `&at=${process.env.AT}` : ""}`,
+    "runLod",
+  ],
   selection: [
     `/parity/selection.html?bench${process.env.ION_ASSET ? `&asset=${process.env.ION_ASSET}` : ""}${process.env.AT ? `&at=${process.env.AT}` : ""}`,
     "runSelection",

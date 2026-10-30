@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Selection L1-prime</title>
+    <link rel="stylesheet" href="/cesium1x/Widgets/widgets.css" />
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      body {
+        margin: 0;
+        padding: 16px;
+        background: #0b0e14;
+        color: #d7dce6;
+        font:
+          13px/1.4 system-ui,
+          sans-serif;
+      }
+      h1 {
+        font-size: 16px;
+        margin: 0 0 4px;
+      }
+      p {
+        color: #8a93a6;
+        max-width: 900px;
+      }
+      .images {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      figure {
+        margin: 0;
+      }
+      figcaption {
+        color: #8a93a6;
+        font-size: 12px;
+        margin-bottom: 4px;
+      }
+      canvas.out {
+        width: 480px;
+        height: 270px;
+        display: block;
+        background: #000;
+      }
+      #legacy {
+        position: absolute;
+        left: -10000px;
+        width: 480px;
+        height: 270px;
+      }
+      table {
+        border-collapse: collapse;
+        margin-top: 12px;
+        font-variant-numeric: tabular-nums;
+      }
+      th,
+      td {
+        padding: 4px 10px;
+        border-bottom: 1px solid #222a3a;
+        text-align: right;
+      }
+      th:first-child,
+      td:first-child,
+      td.text {
+        text-align: left;
+      }
+      tr.row {
+        cursor: pointer;
+      }
+      tr.row:hover td,
+      tr.selected td {
+        background: #1b2232;
+      }
+      #status {
+        color: #8a93a6;
+        margin: 8px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Tile selection L1′: Next vs Legacy1x</h1>
+    <p>
+      One camera move per policy: settle far, jump close. Requests, GPU bytes
+      and time from the jump until settled, and FLIP against a fully refined
+      reference (SSE 2) at 250 ms, 1 s and settled. Lower is better everywhere.
+      ?asset=&lt;ion id&gt;&amp;at=lon,lat for real data.
+    </p>
+    <div id="status">call runLod() or open with the runner</div>
+
+    <table id="results"></table>
+    <div id="legacy"></div>
+    <div id="credits" hidden></div>
+    <script>
+      window.CESIUM_BASE_URL = "/cesium1x/";
+    </script>
+    <script src="/cesium1x/Cesium.js"></script>
+    <script type="module" src="./lod.ts"></script>
+  </body>
+</html>

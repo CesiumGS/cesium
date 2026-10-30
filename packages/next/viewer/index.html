@@ -303,6 +303,11 @@
       <details class="section" data-key="view" open>
         <summary>View</summary>
         <div class="body">
+          <label class="hint" for="policy">Tile selection</label>
+          <select id="policy">
+            <option value="legacy1x">Legacy1x (matches CesiumJS 1.x)</option>
+            <option value="next">Next (skip-LOD, cache reuse)</option>
+          </select>
           <label class="check"
             ><input id="split" type="checkbox" /> Split view (second independent
             camera)</label

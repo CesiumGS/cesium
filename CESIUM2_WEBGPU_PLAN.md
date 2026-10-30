@@ -24,6 +24,7 @@ Branch: `cesium-2.0-webgpu-poc` (off `main` @ `587f52f1eb`, CesiumJS 1.146.0)
 | r16 | M2 increment 1: streamed 3D Tiles with `Legacy1x` selection per view over one shared cache. L1 selection parity 100% on 36 view comparisons (9 public tilesets and 3 iModel-derived CAD tilesets, 3–4 simultaneous views each). Viewer streams.                                                                                                                                          |
 | r17 | M2 increment 2: OSM Buildings streams with 100% selection parity (Philadelphia, Manhattan); batch-table hierarchy; resize robustness (frame ordering, bounded render-target memory); viewer split view, memory panel and collapsible sections.                                                                                                                                           |
 | r18 | M2 increment 3: photogrammetry. Google Photorealistic 3D Tiles stream via ion with required credits; L1 selection parity 100% in four simultaneous views (22–164 tiles), after fixing a traversal-visibility bug in the port. Memory-adjusted SSE. Memory management recorded as an open design question.                                                                                |
+| r19 | M2 increment 4: `Next` policy v1 (skip-LOD with bounded skipping, visible-only coverage, cache reuse, region-grouped requests) and the L1′ harness. On Google 3D Tiles: 53% fewer requests, 48% fewer bytes, same final image, settles 1.6× faster (2.5× with 64 requests); in-between quality lags 1.x until mixed-LOD drawing lands.                                                   |
 
 ## 1. Goal
 
@@ -1248,11 +1249,59 @@ To work out before `Next` and M5:
 - What eviction keeps (decoded CPU copies vs refetching), and how tile memory
   interacts with the per-view LOD choice when views compete.
 
+### Increment 4 (r19): `Next` v1 and L1′
+
+`Tileset3D` takes `policy: "legacy1x" | "next"` (default `legacy1x` until
+`Next` wins on every L1′ metric). `Next` shares 1.x's visibility, distance
+and dynamic SSE and replaces the refinement rules:
+
+- **Skip-LOD with bounded skipping.** The SSE frontier is requested directly;
+  a base level loads where nothing is resident, and an intermediate level
+  every 3 levels (`skipLevels` 2).
+- **Visible-only coverage.** A REPLACE tile is replaced once its visible
+  children are covered.
+- **Cache reuse.** Resident finer content is drawn in place of a frontier
+  tile, down to a quarter of the threshold.
+- **Region-grouped requests.** Frontier requests are ordered by the region
+  (loaded ancestor) they will replace, nearest first.
+- **1.x's NaN root error** falls back to the root tile's error.
+- Content-less tiles (empty, expanded external tilesets) always refine and
+  never count as covering a region. The first version did, which left holes
+  over Google's external-tileset chains until their content arrived; a
+  snapshot at 300 ms after the jump showed it.
+
+**L1′** (`parity/lod.html`, runner suite `lod`). One move per policy: settle
+at 6 km, jump to 450 m over the same spot, measure from the jump until
+settled. Image error is FLIP against a fully refined reference (SSE 2).
+Google Photorealistic 3D Tiles over Midtown:
+
+| Policy              | Requests | MB  | Settle | FLIP @250 ms | @1 s  | Settled |
+| ------------------- | -------- | --- | ------ | ------------ | ----- | ------- |
+| `Legacy1x` (1.x)    | 315      | 426 | 3.3 s  | 0.499        | 0.421 | 0.148   |
+| `Next`              | 147      | 222 | 2.0 s  | 0.564        | 0.564 | 0.148   |
+| `Next`, 64 requests | 147      | 222 | 1.3 s  | 0.564        | 0.148 | 0.148   |
+
+`Next` fetches less than half the data for the same final image and settles
+faster. 1.x's cap of 18 concurrent requests alone costs about 0.7 s here
+(HTTP/2 and decode capacity, not connections, are the real limits now). The
+remaining gap is in-between quality: `Next` keeps a region's coarse
+ancestor until all its visible frontier tiles have arrived, while 1.x's
+level-by-level refinement (at twice the bytes) improves in small steps.
+
+**Next step: mixed-LOD drawing.** Draw arrived children together with their
+coarse ancestor, the ancestor pushed back in depth by its geometric error
+(the bound on how far its surface deviates), so finer content wins wherever
+it exists and the ancestor fills only the gaps. Regions then sharpen tile by
+tile with no holes or z-fighting. 1.x's skip-LOD needed stencil passes for
+this; a per-record depth offset in the vertex shader does it within one
+GPU-driven pass.
+
 Next:
 
-1. `Next` policy: skip-LOD, budget-driven refinement, silhouette weighting
-   and opportunistic refinement from the shared cache, measured with L1′.
-2. Request scheduling closer to 1.x where it changes time-to-settle
-   (priority digits, cull-requests-while-moving, cancellation).
-3. Move the traversal off the main thread over a transferable (SoA) tile
+1. Mixed-LOD drawing for `Next` (above), then make `Next` the default if it
+   wins every L1′ metric.
+2. Adaptive request concurrency; cancel requests the views no longer need.
+3. Budget-driven refinement and multi-view priority (view weights).
+4. Silhouette weighting for design models; GPU coverage feedback (HZB).
+5. Move the traversal off the main thread over a transferable (SoA) tile
    table.

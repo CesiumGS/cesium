@@ -333,6 +333,23 @@ async function main(): Promise<void> {
   const unlit = $<HTMLInputElement>("#unlit");
   const ground = $<HTMLInputElement>("#ground");
   unlit.addEventListener("change", () => void load(current));
+  // Tile selection policy: reloads the tileset (selection state is per policy).
+  const policySelect = $<HTMLSelectElement>("#policy");
+  try {
+    policySelect.value = localStorage.getItem("viewer.policy") ?? "legacy1x";
+  } catch {
+    // Storage unavailable.
+  }
+  policySelect.addEventListener("change", () => {
+    try {
+      localStorage.setItem("viewer.policy", policySelect.value);
+    } catch {
+      // Ignore.
+    }
+    if (current.kind === "tileset" || current.kind === "ion") {
+      void load(current);
+    }
+  });
   const globeToggle = $<HTMLInputElement>("#globe");
   globeToggle.addEventListener("change", () => {
     for (const draw of globeDraws) {
@@ -550,6 +567,7 @@ async function main(): Promise<void> {
         // Streamed: Legacy1x selection per view; content loads as needed.
         const tileset = await engine.addTileset(next, url, {
           ...(headers ? { headers } : {}),
+          policy: policySelect.value as "legacy1x" | "next",
         });
         streamed = tileset;
         if (token !== loadToken) {

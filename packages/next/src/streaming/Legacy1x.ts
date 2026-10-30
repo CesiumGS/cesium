@@ -43,6 +43,8 @@ export interface SelectionResult {
   requested: Tile[];
   /** Tiles the traversal touched this pass (kept in cache). */
   touched: Tile[];
+  /** Request priority per tile, lower first (default: distance). */
+  priority?: Map<Tile, number>;
 }
 
 // 1.x CullingVolume plane masks.
@@ -70,8 +72,8 @@ export class Legacy1xSelection {
   dynamicScreenSpaceErrorFactor: number;
   dynamicScreenSpaceErrorHeightFalloff: number;
   cullWithChildrenBounds: boolean;
-  private pass = 0;
-  private density = 0;
+  protected pass = 0;
+  protected density = 0;
 
   constructor(options: Legacy1xOptions = {}) {
     this.maximumScreenSpaceError = options.maximumScreenSpaceError ?? 16;
@@ -299,7 +301,7 @@ export class Legacy1xSelection {
   // ------------------------------------------------------------- per-tile update
 
   /** 1.x updateTile → updateTileVisibility for one view and pass. */
-  private updateTile(
+  protected updateTile(
     tile: Tile,
     view: SelectionView,
     pass: number,
@@ -354,7 +356,7 @@ export class Legacy1xSelection {
   }
 
   /** 1.x Cesium3DTile.updateVisibility. */
-  private updateVisibility(
+  protected updateVisibility(
     tile: Tile,
     state: TileViewState,
     view: SelectionView,
@@ -387,7 +389,7 @@ export class Legacy1xSelection {
   }
 
   /** 1.x getScreenSpaceError (perspective). */
-  private screenSpaceError(
+  protected screenSpaceError(
     tile: Tile,
     view: SelectionView,
     useParentGeometricError: boolean,
@@ -412,7 +414,7 @@ export class Legacy1xSelection {
   }
 
   /** 1.x updateDynamicScreenSpaceError, from the root content volume. */
-  private computeDensity(root: Tile, view: SelectionView): number {
+  protected computeDensity(root: Tile, view: SelectionView): number {
     const volume = root.contentVolume ?? root.volume;
     let up: Vec3;
     let direction: Vec3 = view.direction;
@@ -471,7 +473,7 @@ export class Legacy1xSelection {
   }
 }
 
-function isVisible(state: TileViewState): boolean {
+export function isVisible(state: TileViewState): boolean {
   return state.visible && state.inRequestVolume;
 }
 
