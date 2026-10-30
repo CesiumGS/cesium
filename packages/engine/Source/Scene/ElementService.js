@@ -35,7 +35,7 @@ import { DeveloperError } from "@cesium/core";
  * Aggregate statistics for an element property.
  *
  * @typedef {object} ElementService.Aggregation
- * @property {string} [key] The property key these statistics describe.
+ * @property {string} [propertyKey] The property key these statistics describe.
  * @property {number} count The number of elements included in the statistics.
  * @property {number|null} min The minimum value, or <code>null</code> when unavailable.
  * @property {number|null} max The maximum value, or <code>null</code> when unavailable.

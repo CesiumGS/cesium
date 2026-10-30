@@ -137,8 +137,8 @@ function treeNodeFromResponse(response) {
  * <code>null</code> for min, max, and avg, and a sum of 0.
  *
  * @typedef {object} IonAssetElementService.Aggregation
- * @property {string} key The qualified property key these statistics describe.
- * @property {number} count The number of elements that had a numeric value for this key.
+ * @property {string} propertyKey The qualified property key these statistics describe.
+ * @property {number} count The number of elements that had a numeric value for this property key.
  * @property {number|null} min The minimum value across the matched elements, or <code>null</code> when there are no numeric values.
  * @property {number|null} max The maximum value across the matched elements, or <code>null</code> when there are no numeric values.
  * @property {number|null} avg The mean value across the matched elements, or <code>null</code> when there are no numeric values.
@@ -460,7 +460,8 @@ class IonAssetElementService extends ElementService {
     return {
       aggregations: response.aggregations.map(function (aggregation) {
         return {
-          key: aggregation.key,
+          // accept either key or propertyKey from the server, but always return propertyKey`
+          propertyKey: aggregation.key ?? aggregation.propertyKey,
           count: aggregation.count,
           min: aggregation.min,
           max: aggregation.max,

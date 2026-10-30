@@ -231,7 +231,48 @@ describe("Scene/IonAssetElementService", function () {
     });
     expect(result).toEqual({
       aggregations: [
-        { key: "Height", count: 2, min: 1, max: 3, avg: 2, sum: 4 },
+        {
+          propertyKey: "Height",
+          count: 2,
+          min: 1,
+          max: 3,
+          avg: 2,
+          sum: 4,
+        },
+      ],
+      total: 2,
+    });
+  });
+
+  it("aggregate accepts propertyKey in the response", async function () {
+    mockFetchJson({
+      aggregations: [
+        {
+          propertyKey: "Height",
+          count: 2,
+          min: 1,
+          max: 3,
+          avg: 2,
+          sum: 4,
+        },
+      ],
+      total: 2,
+    });
+
+    const result = await service.aggregate({
+      propertyKeys: ["Height"],
+    });
+
+    expect(result).toEqual({
+      aggregations: [
+        {
+          propertyKey: "Height",
+          count: 2,
+          min: 1,
+          max: 3,
+          avg: 2,
+          sum: 4,
+        },
       ],
       total: 2,
     });
