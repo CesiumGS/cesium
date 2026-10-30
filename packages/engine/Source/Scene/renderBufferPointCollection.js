@@ -27,6 +27,7 @@ import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 
 /** @import FrameState from "./FrameState.js"; */
 /** @import BufferPointCollection from "./BufferPointCollection.js"; */
+/** @import { BufferPrimitiveChangeTracker } from "./BufferPrimitiveCollection.js"; */
 /** @import {TypedArray} from "@cesium/core"; */
 
 const { DirtyFlags } = BufferPrimitiveCollection;
@@ -69,6 +70,8 @@ const BufferPointAttributeLocations = {
  * @property {RenderState} [renderState]
  * @property {ShaderProgram} [shaderProgram]
  * @property {DrawCommand} [command]
+ * @property {BufferPointCollection} [collection]
+ * @property {BufferPrimitiveChangeTracker} [changeTracker]
  * @property {Function} destroy
  * @ignore
  */
@@ -89,7 +92,12 @@ const encodedCartesian = new EncodedCartesian3();
  */
 function renderBufferPointCollection(collection, frameState, renderContext) {
   const context = frameState.context;
-  renderContext = renderContext || { destroy: destroyRenderContext };
+  renderContext = renderContext || {
+    destroy: destroyRenderContext,
+    collection,
+    changeTracker: collection._addChangeTracker(),
+  };
+  const tracker = renderContext.changeTracker;
   const useFloat64 = collection._positionDatatype === ComponentDatatype.DOUBLE;
   const attributeLocations = useFloat64
     ? BufferPointAttributeLocationsFloat64
@@ -111,22 +119,19 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
     };
   }
 
-  if (
-    collection._dirtyCount > 0 &&
-    collection._dirtyFlags & DirtyFlags.PROPERTIES
-  ) {
+  if (tracker.count > 0 && tracker.flags & DirtyFlags.PROPERTIES) {
     const { attributeArrays } = renderContext;
 
     const pickColorArray = attributeArrays.pickColor;
     const showSizeColorAlphaArray = attributeArrays.showSizeColorAlpha;
     const outlineWidthColorAlphaArray = attributeArrays.outlineWidthColorAlpha;
 
-    const { _dirtyOffset, _dirtyCount } = collection;
+    const { offset, count, full } = tracker;
 
-    for (let i = _dirtyOffset, il = _dirtyOffset + _dirtyCount; i < il; i++) {
+    for (let i = offset, il = offset + count; i < il; i++) {
       collection.get(i, point);
 
-      if (!point._dirty) {
+      if (!full && !point._dirty) {
         continue;
       }
 
@@ -159,18 +164,14 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
   }
 
   // Fast path for position-only updates.
-  if (
-    collection._dirtyCount > 0 &&
-    collection._dirtyFlags & DirtyFlags.GEOMETRY &&
-    useFloat64
-  ) {
+  if (tracker.count > 0 && tracker.flags & DirtyFlags.GEOMETRY && useFloat64) {
     const { attributeArrays } = renderContext;
-    const { _dirtyOffset, _dirtyCount } = collection;
+    const { offset, count, full } = tracker;
 
-    for (let i = _dirtyOffset, il = _dirtyOffset + _dirtyCount; i < il; i++) {
+    for (let i = offset, il = offset + count; i < il; i++) {
       collection.get(i, point);
 
-      if (!point._dirty) {
+      if (!full && !point._dirty) {
         continue;
       }
 
@@ -262,10 +263,7 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
         },
       ],
     });
-  } else if (
-    collection._dirtyCount > 0 &&
-    collection._dirtyFlags & DirtyFlags.PROPERTIES
-  ) {
+  } else if (tracker.count > 0 && tracker.flags & DirtyFlags.PROPERTIES) {
     // Update all vertex attributes.
     for (const key in attributeLocations) {
       if (Object.hasOwn(attributeLocations, key)) {
@@ -273,15 +271,12 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
         renderContext.vertexArray.copyAttributeFromRange(
           attributeLocations[attribute],
           renderContext.attributeArrays[attribute],
-          collection._dirtyOffset,
-          collection._dirtyCount,
+          tracker.offset,
+          tracker.count,
         );
       }
     }
-  } else if (
-    collection._dirtyCount > 0 &&
-    collection._dirtyFlags & DirtyFlags.GEOMETRY
-  ) {
+  } else if (tracker.count > 0 && tracker.flags & DirtyFlags.GEOMETRY) {
     // Fast path for geometry-only updates.
 
     /** @type {BufferPointAttribute[]} */
@@ -293,8 +288,8 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
       renderContext.vertexArray.copyAttributeFromRange(
         attributeLocations[attribute],
         renderContext.attributeArrays[attribute],
-        collection._dirtyOffset,
-        collection._dirtyCount,
+        tracker.offset,
+        tracker.count,
       );
     }
   }
@@ -362,7 +357,7 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
 
   frameState.commandList.push(command);
 
-  collection._makeClean();
+  collection._makeClean(tracker);
 
   return renderContext;
 }
@@ -374,6 +369,8 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
  */
 function destroyRenderContext() {
   const context = /** @type {BufferPointRenderContext} */ (this);
+
+  context.collection._removeChangeTracker(context.changeTracker);
 
   if (defined(context.vertexArray)) {
     context.vertexArray.destroy();
