@@ -79,32 +79,50 @@ describe(
       return gltfLoader;
     }
 
-    function mockRenderResources(components) {
+    function mockRenderResources(components, options) {
       return {
         shaderBuilder: new ShaderBuilder(),
         model: {
           statistics: new ModelStatistics(),
           structuralMetadata: components.structuralMetadata,
-          customShader: mockCustomShader(components.structuralMetadata),
+          customShader: mockCustomShader(
+            components.structuralMetadata,
+            options,
+          ),
         },
         uniformMap: {},
       };
     }
 
     // The MetadataPipelineStage only adds metadata properties to the shader that are
-    // in use (e.g. by a custom shader, or a point cloud style). This mock adds all
-    // properties in the structural metadata to a mock custom shader.
-    function mockCustomShader(structuralMetadata) {
+    // in use (e.g. by a custom shader, or a point cloud style), and only emits the
+    // metadataClass and metadataStatistics entries a custom shader reads. This mock
+    // adds all properties in the structural metadata to a mock custom shader, reading
+    // their value, class and statistics unless options.metadataOnly is true.
+    function mockCustomShader(structuralMetadata, options) {
       if (!defined(structuralMetadata)) {
         return undefined;
       }
 
+      const metadataOnly = options?.metadataOnly ?? false;
       const vertexShaderLines = [];
       const fragmentShaderLines = [];
+      const shaderLines = (input, propertyName, glslType, index) => {
+        const lines = [
+          `\t${glslType} value${index} = ${input}.metadata.${propertyName};`,
+        ];
+        if (!metadataOnly) {
+          lines.push(
+            `\t${glslType} class${index} = ${input}.metadataClass.${propertyName}.noData;`,
+            `\tfloat statistic${index} = ${input}.metadataStatistics.${propertyName}.mean;`,
+          );
+        }
+        return lines;
+      };
       const fragmentShaderLineTemplate = (propertyName, glslType, index) =>
-        `\t${glslType} value${index} = fsInput.metadata.${propertyName};`;
+        shaderLines("fsInput", propertyName, glslType, index).join("\n");
       const vertexShaderLineTemplate = (propertyName, glslType, index) =>
-        `\t${glslType} value${index} = vsInput.metadata.${propertyName};`;
+        shaderLines("vsInput", propertyName, glslType, index).join("\n");
 
       const propertyAttributes = structuralMetadata.propertyAttributes;
       const propertyTextures = structuralMetadata.propertyTextures;
@@ -676,6 +694,65 @@ describe(
           expect(uniformMap.u_valueTransformProperty_scale()).toEqual(
             new Cartesian2(2, 2),
           );
+        },
+      );
+    });
+
+    it("Omits metadataClass and metadataStatistics entries the custom shader does not read", function () {
+      if (!context.webgl2) {
+        return;
+      }
+
+      return loadGltf(propertyTextureWithVectorProperties).then(
+        function (gltfLoader) {
+          const components = gltfLoader.components;
+          const node = components.nodes[0];
+          const primitive = node.primitives[0];
+          const frameState = scene.frameState;
+          const renderResources = mockRenderResources(components, {
+            metadataOnly: true,
+          });
+
+          MetadataPipelineStage.process(renderResources, primitive, frameState);
+
+          const shaderBuilder = renderResources.shaderBuilder;
+
+          // The values are still read...
+          ShaderBuilderTester.expectHasFragmentStruct(
+            shaderBuilder,
+            MetadataPipelineStage.STRUCT_ID_METADATA_FS,
+            MetadataPipelineStage.STRUCT_NAME_METADATA,
+            [
+              "    vec2 vec2Property;",
+              "    uint uint8Property;",
+              "    uvec3 uint8vec3Property;",
+              "    vec3 arrayProperty;",
+              "    vec2 valueTransformProperty;",
+            ],
+          );
+
+          // ...but no class or statistics constants are baked into the shader,
+          // so models with different class definitions share one program.
+          ShaderBuilderTester.expectHasFragmentStruct(
+            shaderBuilder,
+            MetadataPipelineStage.STRUCT_ID_METADATA_CLASS_FS,
+            MetadataPipelineStage.STRUCT_NAME_METADATA_CLASS,
+            [],
+          );
+          ShaderBuilderTester.expectHasFragmentStruct(
+            shaderBuilder,
+            MetadataPipelineStage.STRUCT_ID_METADATA_STATISTICS_FS,
+            MetadataPipelineStage.STRUCT_NAME_METADATA_STATISTICS,
+            [],
+          );
+          const initializeMetadata =
+            shaderBuilder._functions[
+              MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_FS
+            ];
+          const constantLines = initializeMetadata.body.filter((line) =>
+            /metadataClass\.|metadataStatistics\./.test(line),
+          );
+          expect(constantLines).toEqual([]);
         },
       );
     });
