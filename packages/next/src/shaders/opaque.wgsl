@@ -85,8 +85,17 @@ fn vs(@builtin(vertex_index) vertexIndex: u32, @location(0) draw: u32) -> VsOut 
     out.tangent = vec4f(normalize((m * vec4f(t.xyz, 0.0)).xyz), t.w);
   }
   let world = m * vec4f(read3(r.positionOffset, vertexIndex), 1.0);
-  out.position = view.viewProj * world;
   out.relPosition = world.xyz;
+  // Mixed-LOD placeholder: a coarse ancestor drawn under its arrived finer
+  // descendants. Moving along the camera ray keeps its screen position but
+  // pushes it back by its geometric error (the bound on its surface
+  // deviation), so finer content wins wherever it exists.
+  var clipWorld = world;
+  if ((r.placeholderMask & view.viewBit) != 0u) {
+    let d = max(length(world.xyz), 1e-3);
+    clipWorld = vec4f(world.xyz * (1.0 + r.depthOffset / d), 1.0);
+  }
+  out.position = view.viewProj * clipWorld;
   // Normals transform by the inverse transpose; the cofactor matrix is that up
   // to the determinant, whose sign keeps mirrored transforms facing outward.
   // (Quantized glTF often carries a non-uniform dequantization scale.)

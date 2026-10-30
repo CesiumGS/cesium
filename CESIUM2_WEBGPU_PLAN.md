@@ -26,6 +26,7 @@ Branch: `cesium-2.0-webgpu-poc` (off `main` @ `587f52f1eb`, CesiumJS 1.146.0)
 | r18 | M2 increment 3: photogrammetry. Google Photorealistic 3D Tiles stream via ion with required credits; L1 selection parity 100% in four simultaneous views (22–164 tiles), after fixing a traversal-visibility bug in the port. Memory-adjusted SSE. Memory management recorded as an open design question.                                                                                |
 | r19 | M2 increment 4: `Next` policy v1 (skip-LOD with bounded skipping, visible-only coverage, cache reuse, region-grouped requests) and the L1′ harness. On Google 3D Tiles: 53% fewer requests, 48% fewer bytes, same final image, settles 1.6× faster (2.5× with 64 requests); in-between quality lags 1.x until mixed-LOD drawing lands.                                                   |
 | r20 | §13: design notes for tile selection beyond `Legacy1x` (mixed-LOD drawing, scheduling, budget-driven refinement, multi-view priority, quality signals) and the engine memory model.                                                                                                                                                                                                      |
+| r21 | M2 increment 5: mixed-LOD drawing for `Next`; `Next` now matches or beats 1.x on every L1′ metric on Google 3D Tiles (FLIP at 1 s 0.220 vs 0.421, half the bytes). Second 1.x selection bug documented (children-bounds culling vs refinement).                                                                                                                                          |
 
 ## 1. Goal
 
@@ -1291,10 +1292,53 @@ level-by-level refinement (at twice the bytes) improves in small steps.
 
 **Next step: mixed-LOD drawing** (§13.1).
 
+### Increment 5 (r21): mixed-LOD drawing
+
+- Records carry a placeholder depth offset (meters, f32) and a per-view
+  placeholder mask. The vertex shader moves a placeholder's vertices along
+  the camera ray by the offset: screen position unchanged, depth pushed
+  back. The offset is the tile's geometric error, the bound on its surface
+  deviation. Ported to Slang.
+- `Next` returns covers (tiles plus completeness). An incomplete cover keeps
+  the finer content that has arrived; the nearest loaded ancestor draws under
+  it as a placeholder, in that view only. Regions sharpen tile by tile.
+
+L1′, Google Photorealistic 3D Tiles over Midtown
+(`2026-10-30T01-23-54-061Z`):
+
+| Policy                          | Requests | MB  | Settle | FLIP @250 ms | @1 s      | Settled |
+| ------------------------------- | -------- | --- | ------ | ------------ | --------- | ------- |
+| `Legacy1x` (1.x)                | 315      | 426 | 3.5 s  | 0.499        | 0.421     | 0.148   |
+| `Next` + mixed LOD              | 147      | 222 | 2.1 s  | 0.499        | **0.220** | 0.148   |
+| `Next` + mixed LOD, 64 requests | 147      | 222 | 1.6 s  | 0.499        | 0.288     | 0.148   |
+
+OSM Buildings (ADD refinement, shallow) is identical under both policies.
+Frames at 400, 800 and 1300 ms after the jump show fine tiles over
+placeholders, with no holes or visible z-fighting.
+
+### A second 1.x selection bug
+
+Near the Brooklyn Bridge, 1.x (and `Legacy1x`, at 100% parity there) draws a
+coarse tile at SSE 446, 30× the threshold, as a dark blocky rectangle over
+the water. Mechanism:
+
+1. A REPLACE parent is visible: its loose bounding box touches the frustum.
+2. Each child is then marked invisible by children-bounds culling
+   (`cullWithChildrenBounds`, on by default), because none of that child's
+   own children intersect the view.
+3. "No visible children → don't refine" fires, and the parent is selected.
+
+The parent's own children-bounds check uses its children's raw visibility,
+but the refinement decision uses their culled visibility. With loose
+volumes (Google's) the two disagree, and a very coarse tile is drawn where
+nothing, or the finer tiles, should be. `Next` treats a region with no
+visible children as empty and shows the correct detail there.
+
 Next:
 
-1. Mixed-LOD drawing for `Next` (above), then make `Next` the default if it
-   wins every L1′ metric.
+1. Make `Next` the default once L1′ covers more moves and data (zoom out,
+   pan, CAD, a second photogrammetry city), and check popping on slow
+   networks.
 2. Adaptive request concurrency; cancel requests the views no longer need.
 3. Budget-driven refinement and multi-view priority (view weights).
 4. Silhouette weighting for design models; GPU coverage feedback (HZB).

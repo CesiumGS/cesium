@@ -43,8 +43,8 @@ struct DrawRecord {
   imagerySlice: u32,
   featureIdOffset: u32,    // per-vertex local feature IDs (u32 words)
   viewMask: u32,           // views that draw this record (per-view LOD selection)
-  _recordPad0: u32,
-  _recordPad1: u32,
+  depthOffset: f32,        // meters pushed back along the view ray while a placeholder
+  placeholderMask: u32,    // views in which this record is a mixed-LOD placeholder
   _recordPad2: u32,
 };
 

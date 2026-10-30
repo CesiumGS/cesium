@@ -45,8 +45,8 @@ public struct DrawRecord {
   public uint imagerySlice;
   public uint featureIdOffset; // per-vertex local feature IDs (u32 words)
   public uint viewMask; // views that draw this record
-  public uint recordPad0;
-  public uint recordPad1;
+  public float depthOffset; // meters pushed back while a mixed-LOD placeholder
+  public uint placeholderMask; // views in which this record is a placeholder
   public uint recordPad2;
 };
 

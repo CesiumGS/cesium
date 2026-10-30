@@ -1,0 +1,50 @@
+{
+  "date": "2026-10-30T01:23:54.061Z",
+  "environment": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0",
+    "adapter": {
+      "vendor": "nvidia",
+      "architecture": "lovelace",
+      "description": "NVIDIA RTX 3000 Ada Generation Laptop GPU"
+    },
+    "timestampQuery": true
+  },
+  "errors": [],
+  "results": {
+    "lod": [
+      {
+        "policy": "Legacy1x (1.x)",
+        "status": "ok",
+        "requests": 315,
+        "megabytes": 426.33745861053467,
+        "settleMs": 3468.399999976158,
+        "flip250": 0.4985423387895474,
+        "flip1000": 0.4209025912650881,
+        "flipSettled": 0.14799614375154707,
+        "selected": 119
+      },
+      {
+        "policy": "Next",
+        "status": "ok",
+        "requests": 147,
+        "megabytes": 221.83854484558105,
+        "settleMs": 2051.5,
+        "flip250": 0.49854192296055505,
+        "flip1000": 0.22003936887848732,
+        "flipSettled": 0.1479956692833741,
+        "selected": 116
+      },
+      {
+        "policy": "Next, 64 requests",
+        "status": "ok",
+        "requests": 147,
+        "megabytes": 221.83854484558105,
+        "settleMs": 1554.7999999523163,
+        "flip250": 0.49854192296055505,
+        "flip1000": 0.28804463197081687,
+        "flipSettled": 0.1479956692833741,
+        "selected": 116
+      }
+    ]
+  }
+}

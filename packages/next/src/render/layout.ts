@@ -76,6 +76,9 @@ export function writeViewBlock(
 export const RECORD_SIZE = 192;
 /** Word offset of `DrawRecord.viewMask`. */
 export const VIEW_MASK_WORD = 44;
+/** Word offsets of the mixed-LOD placeholder offset (f32) and view mask. */
+export const DEPTH_OFFSET_WORD = 45;
+export const PLACEHOLDER_MASK_WORD = 46;
 /** Default view mask: drawn in every view. */
 export const ALL_VIEWS = 0xffffffff;
 export const RECORD_WORDS = RECORD_SIZE / 4;

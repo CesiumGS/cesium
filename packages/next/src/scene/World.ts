@@ -7,6 +7,8 @@ import {
   RECORD_SIZE,
   RECORD_WORDS,
   VIEW_MASK_WORD,
+  DEPTH_OFFSET_WORD,
+  PLACEHOLDER_MASK_WORD,
   RecordFlags,
   writeDrawRecord,
   writeMaterial,
@@ -585,6 +587,23 @@ export class World {
     const index = handle.index * RECORD_WORDS + VIEW_MASK_WORD;
     if (this.recordsU32[index] !== mask >>> 0) {
       this.recordsU32[index] = mask >>> 0;
+      this.markDirty(handle.index);
+    }
+  }
+
+  /**
+   * Marks a record as a mixed-LOD placeholder in the given views: drawn
+   * pushed back by `depthOffset` meters along the view ray, so finer content
+   * drawn over it wins the depth test while it fills the gaps.
+   */
+  setPlaceholder(handle: DrawHandle, mask: number, depthOffset: number): void {
+    const o = handle.index * RECORD_WORDS;
+    if (
+      this.recordsU32[o + PLACEHOLDER_MASK_WORD] !== mask >>> 0 ||
+      this.recordsF32[o + DEPTH_OFFSET_WORD] !== Math.fround(depthOffset)
+    ) {
+      this.recordsU32[o + PLACEHOLDER_MASK_WORD] = mask >>> 0;
+      this.recordsF32[o + DEPTH_OFFSET_WORD] = depthOffset;
       this.markDirty(handle.index);
     }
   }

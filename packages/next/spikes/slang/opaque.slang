@@ -86,8 +86,14 @@ VsOut vs(uint vertexIndex : SV_VertexID, VsIn input) {
     o.tangent = float4(normalize(mul(m, float4(t.xyz, 0.0)).xyz), t.w);
   }
   float4 world = mul(m, float4(read3(r.positionOffset, vertexIndex), 1.0));
-  o.position = mul(view.viewProj, world);
   o.relPosition = world.xyz;
+  // Mixed-LOD placeholder (see opaque.wgsl).
+  float4 clipWorld = world;
+  if ((r.placeholderMask & view.viewBit) != 0u) {
+    float d = max(length(world.xyz), 1e-3);
+    clipWorld = float4(world.xyz * (1.0 + r.depthOffset / d), 1.0);
+  }
+  o.position = mul(view.viewProj, clipWorld);
   // Cofactor of the 3×3 part (the inverse transpose up to the determinant);
   // column j of the matrix is m[·][j].
   float3 c0 = float3(m[0][0], m[1][0], m[2][0]);

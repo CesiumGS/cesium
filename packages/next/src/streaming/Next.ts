@@ -47,6 +47,16 @@ const FRONTIER = 1e12;
 /** No renderable ancestor is loaded (or requested) in this region yet. */
 const NONE = Number.POSITIVE_INFINITY;
 
+/**
+ * The tiles drawing a region, and whether they cover all of it. Incomplete
+ * covers still carry the finer content that has arrived; the nearest loaded
+ * ancestor fills the rest as a placeholder.
+ */
+interface Cover {
+  tiles: Tile[];
+  complete: boolean;
+}
+
 export class NextSelection extends Legacy1xSelection {
   opportunisticRatio: number;
   skipLevels: number;
@@ -68,6 +78,7 @@ export class NextSelection extends Legacy1xSelection {
       requested: [],
       touched: [],
       priority: new Map(),
+      placeholders: new Set(),
     };
     const rootError = Number.isFinite(rootGeometricError)
       ? rootGeometricError
@@ -85,16 +96,15 @@ export class NextSelection extends Legacy1xSelection {
     ) {
       return result;
     }
-    const tiles = this.display(root, view, pass, rootError, NONE, 0, result);
-    if (tiles) {
-      result.selected.push(...tiles);
-    }
+    const cover = this.display(root, view, pass, rootError, NONE, 0, result);
+    result.selected.push(...cover.tiles);
     return result;
   }
 
   /**
-   * The tiles that draw `tile`'s region in this view, or undefined if the
-   * region can't be covered yet (the caller then falls back to an ancestor).
+   * The tiles that draw `tile`'s region in this view. An incomplete cover
+   * keeps whatever finer content has arrived; the caller's nearest loaded
+   * ancestor then draws under it as a placeholder (mixed LOD).
    * `levels` counts renderable levels since the nearest loaded (or requested)
    * ancestor: NONE when there is none.
    */
@@ -106,14 +116,14 @@ export class NextSelection extends Legacy1xSelection {
     levels: number,
     group: number,
     result: SelectionResult,
-  ): Tile[] | undefined {
+  ): Cover {
     result.touched.push(tile);
     const state = tile.viewState(view.id);
 
     // An external tileset must load before its subtree is known.
     if (tile.external && tile.state !== "ready") {
       this.request(tile, BASE, state.distance, result);
-      return undefined;
+      return { tiles: [], complete: false };
     }
     const own: Tile[] | undefined = tile.contentAvailable
       ? [tile]
@@ -130,7 +140,7 @@ export class NextSelection extends Legacy1xSelection {
       // Frontier tile.
       if (own === undefined) {
         this.request(tile, FRONTIER + group, state.distance * 1e-3, result);
-        return undefined;
+        return { tiles: [], complete: false };
       }
       if (
         tile.refine === "REPLACE" &&
@@ -140,10 +150,10 @@ export class NextSelection extends Legacy1xSelection {
       ) {
         const finer = this.fromCache(tile, view, pass, rootError, result);
         if (finer) {
-          return finer;
+          return { tiles: finer, complete: true };
         }
       }
-      return own;
+      return { tiles: own, complete: true };
     }
 
     for (const child of tile.children) {
@@ -192,12 +202,12 @@ export class NextSelection extends Legacy1xSelection {
             childGroup,
             result,
           );
-          if (d) {
-            parts.push(...d);
-          }
+          parts.push(...d.tiles);
         }
       }
-      return parts;
+      // ADD content draws in addition to its children; the region is
+      // complete once this level's own content is present.
+      return { tiles: parts, complete: own !== undefined };
     }
 
     // REPLACE: the visible children must all be coverable.
@@ -216,21 +226,24 @@ export class NextSelection extends Legacy1xSelection {
         childGroup,
         result,
       );
-      if (d) {
-        parts.push(...d);
-      } else {
-        complete = false;
-      }
+      parts.push(...d.tiles);
+      complete &&= d.complete;
     }
     if (complete) {
-      return parts;
+      return { tiles: parts, complete: true };
     }
     // Only real content covers the region; an empty tile can't, so the
-    // nearest loaded ancestor keeps drawing.
+    // nearest loaded ancestor fills it.
     if (own !== undefined && own.length > 0) {
-      return own;
+      if (parts.length > 0) {
+        // Mixed LOD: the arrived finer content draws in front; this tile
+        // fills the gaps, pushed back by its geometric error.
+        result.placeholders!.add(tile);
+        return { tiles: [tile, ...parts], complete: true };
+      }
+      return { tiles: own, complete: true };
     }
-    return undefined;
+    return { tiles: parts, complete: false };
   }
 
   /** Finer resident content covering `tile`'s visible children, if any. */

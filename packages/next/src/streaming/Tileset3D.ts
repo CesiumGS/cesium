@@ -88,6 +88,7 @@ export class Tileset3D implements TileTree {
   private readonly loaded = new Set<Tile>();
   private readonly ready: Array<{ tile: Tile; asset: GltfAsset }> = [];
   private masked = new Set<Tile>();
+  private placeholders = new Set<Tile>();
   private inFlight = 0;
   private destroyed = false;
 
@@ -157,6 +158,10 @@ export class Tileset3D implements TileTree {
     for (const tile of this.masked) {
       tile.viewMask = 0;
     }
+    const nowPlaceholders = new Set<Tile>();
+    for (const tile of this.placeholders) {
+      tile.placeholderMask = 0;
+    }
     for (const view of views) {
       const result = this.selection.select(
         this.root,
@@ -167,6 +172,10 @@ export class Tileset3D implements TileTree {
       for (const tile of result.selected) {
         tile.viewMask = (tile.viewMask | bit) >>> 0;
         nowMasked.add(tile);
+      }
+      for (const tile of result.placeholders ?? []) {
+        tile.placeholderMask = (tile.placeholderMask | bit) >>> 0;
+        nowPlaceholders.add(tile);
       }
       for (const tile of result.touched) {
         tile.touchedFrame = frame;
@@ -196,6 +205,24 @@ export class Tileset3D implements TileTree {
       }
     }
     this.masked = nowMasked;
+    // Mixed-LOD placeholders: pushed back by their geometric error in the
+    // views where finer content draws over them.
+    for (const tile of new Set([...this.placeholders, ...nowPlaceholders])) {
+      if (
+        tile.instance &&
+        tile.appliedPlaceholderMask !== tile.placeholderMask
+      ) {
+        for (const draw of tile.instance.draws) {
+          this.world.setPlaceholder(
+            draw,
+            tile.placeholderMask,
+            tile.geometricError,
+          );
+        }
+        tile.appliedPlaceholderMask = tile.placeholderMask;
+      }
+    }
+    this.placeholders = nowPlaceholders;
 
     this.request(requests);
     this.upload();
@@ -340,6 +367,9 @@ export class Tileset3D implements TileTree {
     tile.bytes = 0;
     tile.state = "unloaded";
     tile.appliedMask = -1;
+    tile.appliedPlaceholderMask = 0;
+    tile.placeholderMask = 0;
+    this.placeholders.delete(tile);
     this.loaded.delete(tile);
     this.masked.delete(tile);
   }

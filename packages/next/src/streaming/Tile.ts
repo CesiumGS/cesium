@@ -63,6 +63,10 @@ export class Tile {
   viewMask = 0;
   /** View mask currently written to the content's draw records. */
   appliedMask = -1;
+  /** Views drawing this tile as a mixed-LOD placeholder this frame. */
+  placeholderMask = 0;
+  /** Placeholder mask currently written to the draw records. */
+  appliedPlaceholderMask = 0;
   readonly views: TileViewState[] = [];
 
   constructor(

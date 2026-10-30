@@ -45,6 +45,11 @@ export interface SelectionResult {
   touched: Tile[];
   /** Request priority per tile, lower first (default: distance). */
   priority?: Map<Tile, number>;
+  /**
+   * Selected tiles drawn as mixed-LOD placeholders: coarse content under its
+   * arrived finer descendants, pushed back in depth by its geometric error.
+   */
+  placeholders?: Set<Tile>;
 }
 
 // 1.x CullingVolume plane masks.
