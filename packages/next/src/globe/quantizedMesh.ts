@@ -263,6 +263,149 @@ export function decodeQuantizedMesh(
     pos += length;
   }
 
+  return buildTerrainTile({
+    rect,
+    skirtHeight,
+    center,
+    minimumHeight,
+    maximumHeight,
+    sphere,
+    horizonOcclusionPoint,
+    u,
+    v,
+    h,
+    triangles,
+    edges,
+    octNormals,
+    available,
+  });
+}
+
+/** A terrain tile's decoded contents, before its mesh is built. */
+interface TerrainTileData {
+  rect: Rectangle;
+  skirtHeight: number;
+  /** Earth-fixed center: positions are relative to it. */
+  center: [number, number, number];
+  minimumHeight: number;
+  maximumHeight: number;
+  sphere: { center: [number, number, number]; radius: number };
+  horizonOcclusionPoint: [number, number, number];
+  /** Quantized u, v, height per vertex (0..32767), v from the south. */
+  u: Uint16Array;
+  v: Uint16Array;
+  h: Uint16Array;
+  triangles: Uint32Array;
+  /** Edge vertex indices: west, south, east, north. */
+  edges: Uint32Array[];
+  octNormals?: Uint8Array | undefined;
+  available?: TileRange[][] | undefined;
+}
+
+/**
+ * A flat tile on the ellipsoid (1.x `EllipsoidTerrainProvider`): an
+ * `n`×`n` grid at height 0, with skirts, built without any data.
+ */
+export function flatTerrainTile(
+  rect: Rectangle,
+  skirtHeight: number,
+  n = 16,
+): { asset: GltfAsset; info: TerrainTileInfo; transfer: Transferable[] } {
+  const count = n * n;
+  const u = new Uint16Array(count);
+  const v = new Uint16Array(count);
+  const h = new Uint16Array(count);
+  const positions = new Float64Array(count * 3);
+  const p = new Float64Array(3);
+  for (let j = 0; j < n; j++) {
+    for (let i = 0; i < n; i++) {
+      const k = j * n + i;
+      u[k] = Math.round((i / (n - 1)) * 32767);
+      v[k] = Math.round((j / (n - 1)) * 32767);
+      Ellipsoid.WGS84.cartographicToCartesian(
+        {
+          longitude: rect.west + (i / (n - 1)) * (rect.east - rect.west),
+          latitude: rect.south + (j / (n - 1)) * (rect.north - rect.south),
+          height: 0,
+        },
+        p,
+      );
+      positions.set(p, k * 3);
+    }
+  }
+  const triangles = new Uint32Array((n - 1) * (n - 1) * 6);
+  let t = 0;
+  for (let j = 0; j + 1 < n; j++) {
+    for (let i = 0; i + 1 < n; i++) {
+      const a = j * n + i;
+      triangles.set([a, a + 1, a + n, a + 1, a + n + 1, a + n], t);
+      t += 6;
+    }
+  }
+  const column = (i: number) =>
+    Uint32Array.from({ length: n }, (_, j) => j * n + i);
+  const row = (j: number) =>
+    Uint32Array.from({ length: n }, (_, i) => j * n + i);
+  // Center and bounds from the grid itself.
+  const mid = n >> 1;
+  const center: [number, number, number] = [
+    positions[(mid * n + mid) * 3]!,
+    positions[(mid * n + mid) * 3 + 1]!,
+    positions[(mid * n + mid) * 3 + 2]!,
+  ];
+  let radius = 0;
+  for (let k = 0; k < count; k++) {
+    radius = Math.max(
+      radius,
+      Math.hypot(
+        positions[k * 3]! - center[0],
+        positions[k * 3 + 1]! - center[1],
+        positions[k * 3 + 2]! - center[2],
+      ),
+    );
+  }
+  const occludee = horizonCullingPoint(center, positions, 0);
+  return buildTerrainTile({
+    rect,
+    skirtHeight,
+    center,
+    minimumHeight: 0,
+    maximumHeight: 0,
+    sphere: { center, radius },
+    horizonOcclusionPoint: occludee
+      ? [occludee[0]!, occludee[1]!, occludee[2]!]
+      : [0, 0, 0],
+    u,
+    v,
+    h,
+    triangles,
+    edges: [column(0), row(0), column(n - 1), row(n - 1)],
+  });
+}
+
+/** Vertices, skirts, normals and bounds of a decoded terrain tile. */
+function buildTerrainTile(d: TerrainTileData): {
+  asset: GltfAsset;
+  info: TerrainTileInfo;
+  transfer: Transferable[];
+} {
+  const {
+    rect,
+    skirtHeight,
+    center,
+    minimumHeight,
+    maximumHeight,
+    sphere,
+    horizonOcclusionPoint,
+    u,
+    v,
+    h,
+    triangles,
+    edges,
+    octNormals,
+    available,
+  } = d;
+  const vertexCount = u.length;
   // Vertices plus skirt copies along each edge.
   const skirtCount = edges.reduce((n, e) => n + e.length, 0);
   const total = vertexCount + skirtCount;

@@ -4,7 +4,6 @@ import {
   Engine,
   GlobeController,
   createBox,
-  createSurfacePatch,
   eastNorthUpToFixedFrame,
   fromDegrees,
   ionDefaults,
@@ -17,7 +16,6 @@ import {
   vec3,
   type ContentSummary,
   type ContentTotals,
-  type DrawHandle,
   type Stage,
   type StageStats,
   type FeatureValue,
@@ -310,83 +308,33 @@ function label(path: string): string {
 }
 
 /**
- * Coarse ellipsoid for context (the real globe is M3). Patches in one
- * latitude row are rotations of each other about the polar axis, so each
- * row is one mesh drawn 32 times: one batch (indirect draw) per row.
+ * Lowest height above the ellipsoid of a tile volume: a region's minimum,
+ * a box's lowest corner, a sphere's lowest point.
  */
-function addGlobe(world: World): DrawHandle[] {
-  const draws: DrawHandle[] = [];
-  const chunksX = 32;
-  const chunksY = 16;
-  for (let y = 0; y < chunksY; y++) {
-    const south = -Math.PI / 2 + (Math.PI * y) / chunksY;
-    const patch = createSurfacePatch(
-      ellipsoid,
-      -Math.PI,
-      south,
-      -Math.PI + (2 * Math.PI) / chunksX,
-      south + Math.PI / chunksY,
-      16,
+function lowestHeight(volume: Tileset3D["root"]["volume"]): number {
+  if (volume.kind === "region") {
+    return volume.region.minimumHeight;
+  }
+  const height = (p: ArrayLike<number>) =>
+    ellipsoid.cartesianToCartographic(Float64Array.from(p), fromDegrees(0, 0))
+      ?.height ?? 0;
+  if (volume.kind === "sphere") {
+    return height(volume.sphere.center) - volume.sphere.radius;
+  }
+  const { center: c, halfAxes: h } = volume.obb;
+  let lowest = Infinity;
+  for (let i = 0; i < 8; i++) {
+    const s = [i & 1 ? 1 : -1, i & 2 ? 1 : -1, i & 4 ? 1 : -1];
+    lowest = Math.min(
+      lowest,
+      height(
+        [0, 1, 2].map(
+          (k) => c[k]! + s[0]! * h[k]! + s[1]! * h[3 + k]! + s[2]! * h[6 + k]!,
+        ),
+      ),
     );
-    const mesh = world.addMesh(patch);
-    for (let x = 0; x < chunksX; x++) {
-      const angle = (2 * Math.PI * x) / chunksX;
-      const c = Math.cos(angle);
-      const s = Math.sin(angle);
-      // Rotation about +z (column-major); positions are relative to the origin.
-      const model = mat4.mat4();
-      model[0] = c;
-      model[1] = s;
-      model[4] = -s;
-      model[5] = c;
-      const o = patch.origin;
-      const shade = (x + y) % 2 === 0 ? 0.05 : 0.065;
-      draws.push(
-        world.addDraw({
-          mesh,
-          origin: vec3.vec3(
-            c * o[0]! - s * o[1]!,
-            s * o[0]! + c * o[1]!,
-            o[2]!,
-          ),
-          model,
-          radius: patch.radius,
-          color: [shade, shade * 1.4, shade * 2.2, 1],
-          name: "globe",
-        }),
-      );
-    }
   }
-  return draws;
-}
-
-/** A fine ellipsoid patch under the content, `size` meters across. */
-function addGround(
-  world: World,
-  center: Float64Array,
-  size: number,
-): DrawHandle | undefined {
-  const carto = ellipsoid.cartesianToCartographic(center, fromDegrees(0, 0));
-  if (!carto) {
-    return undefined;
-  }
-  const half = size / 2 / ellipsoid.maximumRadius;
-  const patch = createSurfacePatch(
-    ellipsoid,
-    carto.longitude - half / Math.cos(carto.latitude),
-    carto.latitude - half,
-    carto.longitude + half / Math.cos(carto.latitude),
-    carto.latitude + half,
-    32,
-  );
-  return world.addDraw({
-    mesh: world.addMesh(patch),
-    origin: patch.origin,
-    model: mat4.mat4(),
-    radius: patch.radius,
-    color: [0.11, 0.12, 0.1, 1],
-    name: "ground",
-  });
+  return lowest;
 }
 
 function addCity(world: World): { center: Float64Array; radius: number } {
@@ -501,8 +449,6 @@ async function main(): Promise<void> {
   /** Cesium World Terrain in the current world, and in the one loading. */
   let currentTerrain: Tileset3D | undefined;
   let nextTerrain: Tileset3D | undefined;
-  let groundDraw: DrawHandle | undefined;
-  let globeDraws: DrawHandle[] = [];
   /** Attributions the current ion assets require (HTML from ion). */
   let attributions: IonAttribution[] = [];
   let current = sourceFromUrl();
@@ -762,7 +708,6 @@ async function main(): Promise<void> {
 
   // ---------------------------------------------------------------- lighting UI
   const unlit = $<HTMLInputElement>("#unlit");
-  const ground = $<HTMLInputElement>("#ground");
   unlit.addEventListener("change", () => void load(current));
   // Tile selection policy: reloads the tileset (selection state is per policy).
   const policySelect = $<HTMLSelectElement>("#policy");
@@ -850,14 +795,8 @@ async function main(): Promise<void> {
   });
   const globeToggle = $<HTMLInputElement>("#globe");
   globeToggle.addEventListener("change", () => {
-    for (const draw of globeDraws) {
-      world.setVisible(draw, globeToggle.checked);
-    }
-  });
-  // The ground is one draw: toggle it in place.
-  ground.addEventListener("change", () => {
-    if (groundDraw) {
-      world.setVisible(groundDraw, ground.checked);
+    if (currentTerrain) {
+      currentTerrain.show = globeToggle.checked;
     }
   });
   const bindRange = (id: string, apply: (value: number) => void) => {
@@ -1013,8 +952,7 @@ async function main(): Promise<void> {
       indexBytes: Math.min(384 << 20, Math.floor(limit / 4) * 4),
     });
     try {
-      const nextGlobe = addGlobe(next);
-      let placed: { center: Float64Array; radius: number };
+      let placed: { center: Float64Array; radius: number; lowest?: number };
       if (source.kind === "city") {
         placed = addCity(next);
       } else if (source.kind === "model") {
@@ -1111,53 +1049,51 @@ async function main(): Promise<void> {
           center:
             volume.kind === "box" ? volume.obb.center : volume.sphere.center,
           radius: volume.sphere.radius,
+          lowest: lowestHeight(volume),
         };
       }
       if (token !== loadToken) {
         engine.removeWorld(next);
         return;
       }
-      // Georeferenced tilesets can sit below the ellipsoid (underground infrastructure): the
-      // ground starts hidden for them, shown for placed models and the city.
-      ground.checked = source.kind === "model" || source.kind === "city";
-      groundDraw = addGround(
-        next,
-        placed.center,
-        source.kind === "city" ? 2000 : Math.max(placed.radius * 8, 50),
-      );
-      if (groundDraw && !ground.checked) {
-        next.setVisible(groundDraw, false);
+      // The globe: Cesium World Terrain (ion asset 1) when chosen, else the
+      // ellipsoid, both streamed with the ion default imagery (Bing).
+      // Hidden under Google's photorealistic tiles (their own terrain), and
+      // at first for site-scale content reaching below the ellipsoid
+      // (underground infrastructure; models at sea level where the geoid is
+      // below the ellipsoid), which the ellipsoid would cover.
+      const imagery = await resolveBing().catch((error) => {
+        warnings.add(
+          `imagery: ${error instanceof Error ? error.message : String(error)}`,
+        );
+        return undefined;
+      });
+      if (imagery) {
+        attributions.push(...imagery.attributions);
       }
-      // Terrain (Cesium World Terrain, ion asset 1), except under Google's
-      // photorealistic tiles, which are their own terrain.
+      const globeOptions = {
+        policy: policySelect.value as "legacy1x" | "budgeted",
+        ...(imagery ? { imagery } : {}),
+      };
       if (terrainToggle.checked && !photorealistic) {
-        const [ion, imagery] = await Promise.all([
-          resolveIon(1),
-          resolveBing().catch((error) => {
-            warnings.add(
-              `imagery: ${error instanceof Error ? error.message : String(error)}`,
-            );
-            return undefined;
-          }),
-        ]);
+        const ion = await resolveIon(1);
         attributions.push(...ion.attributions);
-        if (imagery) {
-          attributions.push(...imagery.attributions);
-        }
         nextTerrain = await engine.addTerrain(next, ion.url, {
           headers: ion.headers,
-          policy: policySelect.value as "legacy1x" | "budgeted",
-          ...(imagery ? { imagery } : {}),
+          ...globeOptions,
         });
-        if (token !== loadToken) {
-          throw new Error("superseded");
-        }
+      } else {
+        nextTerrain = engine.addEllipsoid(next, globeOptions);
       }
-      globeToggle.checked = !photorealistic && !nextTerrain;
-      globeDraws = nextGlobe;
-      for (const draw of globeDraws) {
-        next.setVisible(draw, globeToggle.checked);
+      if (token !== loadToken) {
+        throw new Error("superseded");
       }
+      globeToggle.checked =
+        !photorealistic &&
+        (!!terrainToggle.checked ||
+          placed.radius > 50000 ||
+          (placed.lowest ?? 0) > -1);
+      nextTerrain.show = globeToggle.checked;
       if (current3dTiles) {
         engine.removeTileset(current3dTiles);
       }

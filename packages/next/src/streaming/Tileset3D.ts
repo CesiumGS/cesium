@@ -135,6 +135,17 @@ export class Tileset3D implements TileTree {
     bytesReceived: 0,
     selected: new Map(),
   };
+  /** False hides the tileset in every view; it keeps its cache. */
+  get show(): boolean {
+    return this.shown;
+  }
+  set show(value: boolean) {
+    if (value !== this.shown) {
+      this.shown = value;
+      this.lastChange = this.frame; // update the views' masks next frame
+    }
+  }
+  private shown = true;
   /** Globe imagery draped on this terrain tileset (`engine.addTerrain`). */
   imagery?: GlobeImagery;
   /** Selected tiles per view id after the last update (parity tests). */
@@ -291,12 +302,14 @@ export class Tileset3D implements TileTree {
   }
 
   /** One frame: select per view, apply view masks, request, upload, evict. */
-  update(views: SelectionView[]): void {
+  update(allViews: SelectionView[]): void {
     if (this.destroyed) {
       return;
     }
     const frame = ++this.frame;
-    if (views.length === 0) {
+    // Hidden: no view selects anything (drawn tiles leave every view).
+    const views = this.show ? allViews : [];
+    if (allViews.length === 0) {
       // No view yet (e.g. its world isn't shown yet): stay active, so the
       // first selection runs as soon as a view appears.
       this.lastChange = frame;

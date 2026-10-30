@@ -1,6 +1,10 @@
 /// <reference lib="webworker" />
 import { parseGltf } from "./gltfParse.ts";
-import { decodeQuantizedMesh, type Rectangle } from "../globe/quantizedMesh.ts";
+import {
+  decodeQuantizedMesh,
+  flatTerrainTile,
+  type Rectangle,
+} from "../globe/quantizedMesh.ts";
 
 /** Quantized-mesh with the extensions we decode, as 1.x requests it. */
 const TERRAIN_ACCEPT =
@@ -33,6 +37,15 @@ self.onmessage = async (
   const controller = new AbortController();
   controllers.set(id, controller);
   try {
+    if (type === "terrain" && event.data.url.startsWith("ellipsoid:")) {
+      // The ellipsoid without terrain data: a flat tile, built here.
+      const { asset, info, transfer } = flatTerrainTile(
+        event.data.rect,
+        event.data.skirtHeight,
+      );
+      self.postMessage({ id, ok: true, result: { asset, info } }, transfer);
+      return;
+    }
     if (type === "terrain") {
       const start = performance.now();
       const response = await fetch(event.data.url, {

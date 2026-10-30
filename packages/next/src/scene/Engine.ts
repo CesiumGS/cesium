@@ -1,4 +1,4 @@
-import { TerrainSource } from "../globe/TerrainSource.ts";
+import { TerrainSource, type TerrainLoader } from "../globe/TerrainSource.ts";
 import type { TerrainTileInfo } from "../globe/quantizedMesh.ts";
 import { RequestScheduler } from "../streaming/RequestScheduler.ts";
 import { GpuDevice, type GpuDeviceOptions } from "../gpu/GpuDevice.ts";
@@ -104,6 +104,13 @@ interface PersistentImage {
 
 /** Values in one view's on-demand fingerprint (see `viewChanged`). */
 const VIEW_KEY_LENGTH = 26;
+
+/** Options for a globe surface: terrain or the ellipsoid. */
+export interface GlobeOptions extends TilesetOptions {
+  /** Imagery draped on the surface (one per world for now). */
+  imagery?: ImageryProvider;
+  imageryOptions?: GlobeImageryOptions;
+}
 
 export class Engine {
   readonly gpu: GpuDevice;
@@ -343,11 +350,7 @@ export class Engine {
   async addTerrain(
     world: World,
     url: string | URL,
-    options: TilesetOptions & {
-      /** Imagery draped on the terrain (one per world for now). */
-      imagery?: ImageryProvider;
-      imageryOptions?: GlobeImageryOptions;
-    } = {},
+    options: GlobeOptions = {},
   ): Promise<Tileset3D> {
     const base = new URL(url, globalThis.location?.href);
     const layer = base.pathname.endsWith(".json")
@@ -357,14 +360,39 @@ export class Engine {
     const source = await TerrainSource.create(
       layer.href,
       headers,
-      (request, signal) =>
-        this.workers.request<{ asset: GltfAsset; info: TerrainTileInfo }>(
-          "terrain",
-          request,
-          signal,
-        ),
+      this.terrainLoader,
       { warnings: new Set() },
     );
+    return this.addGlobeSource(world, source, options);
+  }
+
+  /**
+   * The ellipsoid as a globe without terrain data (1.x's default
+   * `EllipsoidTerrainProvider`): flat tiles built in workers, selected,
+   * culled and draped with imagery like terrain.
+   */
+  addEllipsoid(world: World, options: GlobeOptions = {}): Tileset3D {
+    const source = TerrainSource.ellipsoid(this.terrainLoader, {
+      warnings: new Set(),
+    });
+    return this.addGlobeSource(world, source, options);
+  }
+
+  private readonly terrainLoader = (
+    request: Parameters<TerrainLoader>[0],
+    signal: AbortSignal,
+  ) =>
+    this.workers.request<{ asset: GltfAsset; info: TerrainTileInfo }>(
+      "terrain",
+      request,
+      signal,
+    );
+
+  private addGlobeSource(
+    world: World,
+    source: TerrainSource,
+    options: GlobeOptions,
+  ): Tileset3D {
     const tileset = Tileset3D.fromSource(this, world, source, {
       maximumScreenSpaceError: 2,
       ...options,

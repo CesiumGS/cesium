@@ -42,6 +42,9 @@ const IDENTITY = m4.mat4();
 
 /** 1.x heightmap-equivalent level-0 error: R·2π·0.25 / (65·2). */
 export const LEVEL_ZERO_ERROR = (6378137 * 2 * Math.PI * 0.25) / (65 * 2);
+/** 1.x EllipsoidTerrainProvider's level-0 error: R·2π·0.25 / (64·2). */
+export const ELLIPSOID_LEVEL_ZERO_ERROR =
+  (6378137 * 2 * Math.PI * 0.25) / (64 * 2);
 
 interface Address {
   level: number;
@@ -87,6 +90,9 @@ export class TerrainSource {
   private readonly metadataAvailability: number;
   private readonly templates: string[];
   private readonly extensions: string;
+  /** Flat tiles built in the worker, every tile available (no data). */
+  private readonly flat: boolean;
+  private readonly levelZeroError: number;
 
   private constructor(
     readonly url: string,
@@ -106,6 +112,10 @@ export class TerrainSource {
       ext.push("metadata");
     }
     this.extensions = ext.join("-");
+    this.flat = layer.ellipsoid === true;
+    this.levelZeroError = this.flat
+      ? ELLIPSOID_LEVEL_ZERO_ERROR
+      : LEVEL_ZERO_ERROR;
     const available = (layer.available as TileRange[][] | undefined) ?? [];
     available.forEach((r, level) => this.addRanges(level, r));
     this.layerLevels = available.length;
@@ -114,7 +124,7 @@ export class TerrainSource {
       : 0;
     // A content-less root over the globe (it always refines) with the two
     // level-0 tiles as children.
-    this.geometricError = LEVEL_ZERO_ERROR * 2;
+    this.geometricError = this.levelZeroError * 2;
     this.root = new Tile(
       undefined,
       {
@@ -168,6 +178,20 @@ export class TerrainSource {
     return new TerrainSource(layerUrl, headers, load, layer, tree);
   }
 
+  /**
+   * The ellipsoid without terrain data (1.x `EllipsoidTerrainProvider`):
+   * flat tiles at height 0, built in the worker, refined like terrain.
+   */
+  static ellipsoid(load: TerrainLoader, tree: TileTree): TerrainSource {
+    return new TerrainSource(
+      "ellipsoid:",
+      undefined,
+      load,
+      { tiles: ["{z}/{x}/{y}"], ellipsoid: true },
+      tree,
+    );
+  }
+
   /** Terrain is Earth-fixed: no transform, no axis change. */
   modelOptions(): { modelMatrix: Float64Array; axes: "none" } {
     return { modelMatrix: IDENTITY, axes: "none" };
@@ -181,7 +205,7 @@ export class TerrainSource {
         url: tile.contentUrl!,
         ...(this.headers ? { headers: this.headers } : {}),
         rect: rectangle(a),
-        skirtHeight: (LEVEL_ZERO_ERROR / 2 ** a.level) * 5,
+        skirtHeight: (this.levelZeroError / 2 ** a.level) * 5,
       },
       signal,
     );
@@ -300,6 +324,9 @@ export class TerrainSource {
   }
 
   private available(a: Address): boolean {
+    if (this.flat) {
+      return true;
+    }
     return (this.ranges[a.level] ?? []).some(
       (r) =>
         a.x >= r.startX && a.x <= r.endX && a.y >= r.startY && a.y <= r.endY,
@@ -329,7 +356,7 @@ export class TerrainSource {
           maximumHeight,
         ],
       },
-      geometricError: LEVEL_ZERO_ERROR / 2 ** a.level,
+      geometricError: this.levelZeroError / 2 ** a.level,
       refine: "REPLACE",
       ...(available ? { content: { uri: this.tileUrl(a) } } : {}),
     };
@@ -354,6 +381,9 @@ export class TerrainSource {
   }
 
   private tileUrl(a: Address): string {
+    if (this.flat) {
+      return `ellipsoid:${a.level}/${a.x}/${a.y}`;
+    }
     const template =
       this.templates[(a.x + a.y + a.level) % this.templates.length]!;
     const path = template

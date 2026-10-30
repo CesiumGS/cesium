@@ -1,4 +1,9 @@
-export { Engine, type EngineOptions, type FrameStats } from "./scene/Engine.ts";
+export {
+  Engine,
+  type EngineOptions,
+  type FrameStats,
+  type GlobeOptions,
+} from "./scene/Engine.ts";
 export { type ShaderOverrides } from "./scene/RenderContext.ts";
 export {
   World,
