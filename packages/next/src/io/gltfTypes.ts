@@ -103,6 +103,12 @@ export interface ContentTiming {
   networkMs: number;
   /** Bytes of the main resource as received (after content decoding). */
   bytes: number;
+  /** Negotiated protocol ("http/1.1", "h2", "h3"), when the server shows it. */
+  protocol?: string;
+  /** Request sent to first response byte, ms, when the server shows it. */
+  ttfbMs?: number;
+  /** Served from the HTTP cache, when the server shows it. */
+  cached?: boolean;
   /**
    * Everything after: unwrap, parse, Draco, image decode, KTX2 transcode,
    * and fetching external buffers and images, ms.

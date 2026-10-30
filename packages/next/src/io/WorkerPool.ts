@@ -24,7 +24,18 @@ export class WorkerPool {
     ),
   ) {}
 
-  request<T>(type: string, payload: Record<string, unknown>): Promise<T> {
+  /**
+   * Runs a request on a worker. Aborting `signal` cancels it there (its
+   * fetches abort) and rejects with an AbortError.
+   */
+  request<T>(
+    type: string,
+    payload: Record<string, unknown>,
+    signal?: AbortSignal,
+  ): Promise<T> {
+    if (signal?.aborted) {
+      return Promise.reject(new DOMException("Aborted", "AbortError"));
+    }
     const slot = this.pickSlot();
     const id = this.nextId++;
     slot.busy++;
@@ -33,6 +44,16 @@ export class WorkerPool {
         resolve: resolve as (value: unknown) => void,
         reject,
       });
+      signal?.addEventListener(
+        "abort",
+        () => {
+          if (this.pending.delete(id)) {
+            slot.worker.postMessage({ id, type: "cancel" });
+            reject(new DOMException("Aborted", "AbortError"));
+          }
+        },
+        { once: true },
+      );
       slot.worker.postMessage({ id, type, ...payload });
     }).finally(() => {
       slot.busy--;

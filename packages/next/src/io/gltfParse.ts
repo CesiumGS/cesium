@@ -60,17 +60,22 @@ export async function parseGltf(
   url: string,
   textureSupport: TextureFormatSupport,
   headers?: Record<string, string>,
+  signal?: AbortSignal,
 ): Promise<{ asset: GltfAsset; transfer: Transferable[] }> {
   // Every request under the asset carries the same headers (ion auth).
-  const fetchUri = (uri: string) =>
-    fetch(resolveUri(uri, url), headers ? { headers } : undefined);
+  const init: RequestInit = {
+    ...(headers ? { headers } : {}),
+    ...(signal ? { signal } : {}),
+  };
+  const fetchUri = (uri: string) => fetch(resolveUri(uri, url), init);
   const fetchStart = performance.now();
-  const response = await fetch(url, headers ? { headers } : undefined);
+  const response = await fetch(url, init);
   if (!response.ok) {
     throw new Error(`Failed to fetch ${url}: ${response.status}`);
   }
   let bytes: Uint8Array = new Uint8Array(await response.arrayBuffer());
   const decodeStart = performance.now();
+  const network = resourceTiming(url);
   const received = bytes.byteLength;
   const imageTypes: Record<string, number> = {};
   let b3dm: B3dm | undefined;
@@ -329,6 +334,7 @@ export async function parseGltf(
       timing: {
         format: b3dm ? "b3dm" : bin !== undefined || isGlb ? "glb" : "gltf",
         networkMs: decodeStart - fetchStart,
+        ...network,
         bytes: received,
         decodeMs: performance.now() - decodeStart,
         images: imageTypes,
@@ -794,4 +800,36 @@ function nodeMatrix(node: Json): Float64Array {
   m[14] = tz;
   m[15] = 1;
   return m;
+}
+
+/**
+ * Protocol and time to first byte of a finished fetch, from Resource Timing
+ * (cross-origin servers expose details only with `Timing-Allow-Origin`).
+ * The buffer is cleared as it fills; a few entries may go unread.
+ */
+function resourceTiming(url: string): {
+  protocol?: string;
+  ttfbMs?: number;
+  cached?: boolean;
+} {
+  const entries = performance.getEntriesByName(
+    url,
+    "resource",
+  ) as PerformanceResourceTiming[];
+  const e = entries[entries.length - 1];
+  if (performance.getEntriesByType("resource").length > 200) {
+    performance.clearResourceTimings();
+  }
+  if (!e) {
+    return {};
+  }
+  return {
+    ...(e.nextHopProtocol ? { protocol: e.nextHopProtocol } : {}),
+    ...(e.requestStart > 0 && e.responseStart > e.requestStart
+      ? { ttfbMs: e.responseStart - e.requestStart }
+      : {}),
+    // Served from the HTTP cache: nothing crossed the network (visible
+    // only where the server allows timing detail).
+    ...(e.transferSize === 0 && e.encodedBodySize > 0 ? { cached: true } : {}),
+  };
 }

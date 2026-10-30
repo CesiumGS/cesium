@@ -750,6 +750,8 @@ async function main(): Promise<void> {
       current3dTiles.selection.maximumScreenSpaceError = sse;
       current3dTiles.selection.memoryAdjustedScreenSpaceError = sse;
     }
+    // Selection settings live outside what the engine fingerprints.
+    engine.requestRender();
     try {
       localStorage.setItem("viewer.sse", sseInput.value);
     } catch {
@@ -758,6 +760,24 @@ async function main(): Promise<void> {
   };
   sseInput.addEventListener("input", updateSse);
   updateSse();
+  // Rendering: on demand by default; continuous on request (profiling,
+  // animation work). Remembered on this device.
+  const continuous = $<HTMLInputElement>("#continuous");
+  try {
+    continuous.checked = localStorage.getItem("viewer.continuous") === "1";
+  } catch {
+    // Storage unavailable.
+  }
+  const applyRenderMode = () => {
+    engine.renderMode = continuous.checked ? "continuous" : "onDemand";
+    try {
+      localStorage.setItem("viewer.continuous", continuous.checked ? "1" : "0");
+    } catch {
+      // Ignore.
+    }
+  };
+  continuous.addEventListener("change", applyRenderMode);
+  applyRenderMode();
   const globeToggle = $<HTMLInputElement>("#globe");
   globeToggle.addEventListener("change", () => {
     for (const draw of globeDraws) {
@@ -1261,9 +1281,11 @@ async function main(): Promise<void> {
     cache: [] as number[],
     targets: [] as number[],
     inFlight: [] as number[],
+    window: [] as number[],
     received: [] as number[],
     uploadQueue: [] as number[],
     decode: [] as number[],
+    frames: [] as number[],
     cpu: [] as number[],
     gpu: [] as number[],
   };
@@ -1277,7 +1299,7 @@ async function main(): Promise<void> {
     name: string;
     series: number[];
     format: (v: number) => string;
-    limit?: number;
+    limit?: number[];
   }> => [
     { name: "Tile cache", series: samples.cache, format: mb },
     { name: "Render targets", series: samples.targets, format: mb },
@@ -1285,7 +1307,7 @@ async function main(): Promise<void> {
       name: "Requests in flight",
       series: samples.inFlight,
       format: (v) => v.toFixed(0),
-      ...(current3dTiles ? { limit: current3dTiles.stats.maxInFlight } : {}),
+      ...(current3dTiles ? { limit: samples.window } : {}),
     },
     {
       name: "Received",
@@ -1298,6 +1320,11 @@ async function main(): Promise<void> {
       format: (v) => v.toFixed(0),
     },
     { name: "Decode p50", series: samples.decode, format: (v) => duration(v) },
+    {
+      name: "Frames rendered",
+      series: samples.frames,
+      format: (v) => `${v.toFixed(0)}/s`,
+    },
     {
       name: "CPU frame",
       series: samples.cpu,
@@ -1351,7 +1378,7 @@ async function main(): Promise<void> {
       const top = r * rowH;
       const plotTop = top + textH + 2 * dpr;
       const plotH = rowH - textH - 6 * dpr;
-      const max = Math.max(1e-6, limit ?? 0, ...series);
+      const max = Math.max(1e-6, ...(limit ?? []), ...series);
       const y = (v: number) => plotTop + plotH - (v / max) * plotH;
       ctx.fillStyle = muted;
       ctx.textAlign = "left";
@@ -1360,16 +1387,26 @@ async function main(): Promise<void> {
       ctx.textAlign = "right";
       const last = series[series.length - 1] ?? 0;
       ctx.fillText(
-        limit !== undefined ? `${format(last)} of ${limit}` : format(last),
+        limit !== undefined
+          ? `${format(last)} of ${limit[limit.length - 1] ?? 0}`
+          : format(last),
         w,
         top + 2 * dpr,
       );
       // Baseline and, where there is one, the limit as a hairline.
       ctx.fillStyle = grid;
       ctx.fillRect(0, plotTop + plotH, w, dpr);
-      if (limit !== undefined) {
-        ctx.fillStyle = muted;
-        ctx.fillRect(0, Math.round(y(limit)), w, dpr);
+      if (limit !== undefined && limit.length > 1) {
+        // The window over time, as a hairline reference.
+        ctx.beginPath();
+        limit.forEach((v, i) =>
+          i === 0
+            ? ctx.moveTo(xAt(i, limit.length), y(v))
+            : ctx.lineTo(xAt(i, limit.length), y(v)),
+        );
+        ctx.strokeStyle = muted;
+        ctx.lineWidth = dpr;
+        ctx.stroke();
       }
       if (series.length > 1) {
         ctx.beginPath();
@@ -1426,6 +1463,8 @@ async function main(): Promise<void> {
   const pipelineSection = $("#section-pipeline");
   const contentEl = $("#perf-content");
   let lastReceived = 0;
+  let lastFrames = 0;
+  let framesPerSecond = 0;
   // Last move: from when the camera stopped until streaming went idle, with
   // the requests and bytes the move cost (an L1′-style number, live).
   let cameraKey = "";
@@ -1464,6 +1503,8 @@ async function main(): Promise<void> {
 
   function updatePerformance(): void {
     const s = engine.stats;
+    framesPerSecond = (s.framesRendered - lastFrames) * 4;
+    lastFrames = s.framesRendered;
     const t = current3dTiles;
     const tiles = t?.stats;
     if (loadInfo && !loadFailed) {
@@ -1495,7 +1536,7 @@ async function main(): Promise<void> {
       )}${tile(
         "In flight",
         `${tiles.inFlight} <span class="of">of ${tiles.maxInFlight}</span>`,
-        `${tiles.uploadQueue} waiting to upload ${nearLimit(tiles.inFlight / Math.max(1, tiles.maxInFlight))}`,
+        `${tiles.adaptive ? "adaptive" : "fixed"} window${tiles.protocol ? ` · ${tiles.protocol}` : ""} · ${tiles.cancelled} cancelled · ${tiles.uploadQueue} to upload`,
         track(tiles.inFlight / Math.max(1, tiles.maxInFlight)),
       )}${tile(
         "Tile cache",
@@ -1592,7 +1633,10 @@ async function main(): Promise<void> {
     $("#perf-frame").innerHTML =
       `<div class="kv"><span>Adapter</span><span>${escapeHtml(`${adapter.vendor} ${adapter.architecture}`.trim())}</span>` +
       `<span>Canvas</span><span class="num">${canvas.width} × ${canvas.height}</span>` +
-      `<span>Views</span><span class="num">${s.views} · ${s.batches} batches each</span></div>`;
+      `<span>Views</span><span class="num">${s.views} · ${s.batches} batches each</span>` +
+      `<span>Rendering</span><span>${engine.renderMode === "continuous" ? "continuous" : "on demand"} · ${
+        framesPerSecond === 0 ? "idle" : `${framesPerSecond} frames/s`
+      }</span></div>`;
     const m = world.memory;
     const targets = engine.renderTargetMemory;
     $("#perf-memory").innerHTML = [
@@ -1627,13 +1671,19 @@ async function main(): Promise<void> {
     push(samples.cache, tiles?.bytes ?? 0);
     push(samples.targets, targets.residentBytes);
     push(samples.inFlight, tiles?.inFlight ?? 0);
+    push(samples.window, tiles?.maxInFlight ?? 0);
     const received = tiles?.bytesReceived ?? 0;
     push(samples.received, Math.max(0, received - lastReceived) * 4);
     lastReceived = received;
     push(samples.uploadQueue, tiles?.uploadQueue ?? 0);
     push(samples.decode, t ? t.pipeline().stages.decode.p50 : 0);
-    push(samples.cpu, s.cpuMs);
-    push(samples.gpu, Number.isNaN(s.gpuMs) ? 0 : s.gpuMs);
+    // While idle no frame time is spent: the lines drop to zero.
+    push(samples.frames, framesPerSecond);
+    push(samples.cpu, framesPerSecond > 0 ? s.cpuMs : 0);
+    push(
+      samples.gpu,
+      framesPerSecond > 0 && !Number.isNaN(s.gpuMs) ? s.gpuMs : 0,
+    );
     drawHistory();
   }
   setInterval(updatePerformance, 250);

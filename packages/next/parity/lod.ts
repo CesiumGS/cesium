@@ -32,12 +32,15 @@ interface Policy {
 }
 
 const POLICIES: Policy[] = [
-  { label: "Legacy1x (1.x)", options: { policy: "legacy1x" } },
   {
-    label: "Next, no mixing",
-    options: { policy: "next", mixedLod: "never" },
+    label: "Legacy1x (1.x, 18 requests)",
+    options: { policy: "legacy1x", maximumRequests: 18 },
   },
-  { label: "Next (mixed where partitioned)", options: { policy: "next" } },
+  {
+    label: "Next, 18 requests",
+    options: { policy: "next", maximumRequests: 18 },
+  },
+  { label: "Next, adaptive", options: { policy: "next" } },
   {
     label: "Next, 64 requests",
     options: { policy: "next", maximumRequests: 64 },

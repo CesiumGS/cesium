@@ -7,6 +7,7 @@ import {
   RECORD_SIZE,
   RECORD_WORDS,
   VIEW_MASK_WORD,
+  ALL_VIEWS,
   CLIP_BLOCK_WORD,
   CLIP_BOXES,
   CLIP_BOX_FLOATS,
@@ -168,6 +169,18 @@ export class World {
   private readonly materialsU32: Uint32Array;
   private materialCount = 0;
   private materialsDirty = false;
+  /**
+   * Bumped by every change that can alter a rendered frame (records,
+   * materials).
+   */
+  version = 0;
+  /**
+   * View bits (`Engine.viewBit`) of every record changed since the engine
+   * last rendered: the views that can see a change, so on-demand rendering
+   * redraws only those. A changed view mask contributes its old and new
+   * bits; a material change, every view.
+   */
+  changedViews = 0;
   private readonly textureSets: Array<GPUBindGroup | undefined> = [];
   private readonly freeTextureSets: number[] = [];
   private readonly freeMaterials: number[] = [];
@@ -458,6 +471,8 @@ export class World {
       flags: options.flags ?? 0,
     });
     this.materialsDirty = true;
+    this.version++;
+    this.changedViews = ALL_VIEWS;
     return index;
   }
 
@@ -621,6 +636,7 @@ export class World {
   setViewMask(handle: DrawHandle, mask: number): void {
     const index = handle.index * RECORD_WORDS + VIEW_MASK_WORD;
     if (this.recordsU32[index] !== mask >>> 0) {
+      this.changedViews |= this.recordsU32[index]!; // the views it left
       this.recordsU32[index] = mask >>> 0;
       this.markDirty(handle.index);
     }
@@ -885,6 +901,9 @@ export class World {
   private markDirty(index: number): void {
     this.dirtyMin = Math.min(this.dirtyMin, index);
     this.dirtyMax = Math.max(this.dirtyMax, index);
+    this.version++;
+    this.changedViews |=
+      this.recordsU32[index * RECORD_WORDS + VIEW_MASK_WORD]!;
   }
 
   destroy(): void {

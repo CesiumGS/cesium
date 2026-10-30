@@ -1452,8 +1452,9 @@ Next:
 4. Silhouette weighting for design models; GPU coverage feedback (HZB).
 5. Move the traversal off the main thread over a transferable (SoA) tile
    table.
-6. Render on demand by default (§13.8), with continuous rendering as an
-   option and a viewer toggle.
+6. ~~Render on demand by default~~ (done, r23: per target; §13.8).
+   Remaining: views sharing one canvas redraw independently (per-view
+   persistent textures composited into the canvas, §13.8).
 
 ## 13. Design notes: tile selection and memory beyond `Legacy1x`
 
@@ -1539,6 +1540,17 @@ consecutive frames with a static camera as a popping metric.
   requests beyond that limit queue inside the browser, where they can be
   neither reprioritized nor cancelled. Keeping the queue on our side is the
   real purpose of a cap, which 1.x's fixed 18 only approximates.
+- **Implemented (r23): `RequestScheduler`,** one window per origin shared
+  by its tilesets. Seeded by the protocol, then modeled as TCP BBR does:
+  the highest recent delivered throughput and the lowest recent request
+  latency give, by Little's law, the requests needed to keep the link busy
+  (throughput × latency / request size + 1); more only queues. Startup
+  doubles while throughput grows 25% per period; the window cycles 1.25× /
+  0.75× around the target to keep measuring; periods that didn't fill the
+  window don't count; cache hits don't count as latency; after idle the
+  next burst starts up again (TCP's slow-start restart); it holds while
+  decoded content backs up behind the upload. HTTP/1.1 stays at 6 or
+  below. `maximumRequests` pins the window.
 - **Cancellation.** Drop queued and in-flight requests no view still needs
   (1.x cancels requests for untouched tiles). Our worker decode isn't
   abortable yet: pass an `AbortSignal` to `fetch` in the worker and discard
@@ -1547,6 +1559,25 @@ consecutive frames with a static camera as a popping metric.
   decode differently. Estimate it per format from history.
 - **Upload budget in milliseconds,** measured, rather than a count of tiles
   per frame. Uploads share the queue with rendering.
+
+**Lessons from operating systems and networking** (where these problems
+were solved first):
+
+- **Congestion control:** model the bottleneck (BBR), not just react to
+  loss or delay (AIMD); Little's law sizes the window. Implemented above.
+- **Readahead:** the OS grows its prefetch window while prefetched pages get
+  used and shrinks it when they don't. Size the prefetch band (§13.5) by its
+  hit rate: prefetched tiles later displayed vs evicted unused.
+- **Fair queueing** (weighted fair queueing, deficit round robin): share an
+  origin's window across tilesets and views by weight (§13.4) instead of
+  first come, first served.
+- **Deadlines (EDF):** a tile the camera's motion will reveal has a deadline,
+  the time until it is visible; request earliest deadline first. **Aging**
+  keeps prefetch and distant tiles from starving under constant churn.
+- **Backpressure** (as dirty-page throttling): never fetch faster than the
+  decode and upload stages drain. The scheduler holds on upload backlog.
+- **Shortest job first** among equal priorities: smaller tiles first
+  maximizes coverage per second (sizes are learnable per level).
 
 ### 13.3 Budget-driven refinement
 
@@ -1620,6 +1651,12 @@ views and asymmetric weights.
     less GPU memory, at a decode-time cost.
   - Quantized vertex streams.
   - Share textures and materials across tiles where content repeats.
+- **Paging lessons:** the tile cache is virtual memory. Measure
+  _thrashing_ directly: the rate at which evicted tiles are requested again
+  within a few seconds (page-fault frequency). That says the budget is too
+  small far better than 1.x's ×1.02 SSE creep. Working-set or ARC-style
+  replacement keeps a fast fly-through from flushing tiles the user keeps
+  returning to, which plain LRU doesn't.
 - **Eviction policy:** what survives eviction (decoded CPU copies,
   compressed bytes, nothing) trades memory against refetch and decode time.
   The HTTP cache already keeps raw bytes.
@@ -1641,7 +1678,7 @@ views and asymmetric weights.
 - **Edge and planar-fill extensions for CAD** (`EXT_mesh_primitive_edge_visibility`,
   `BENTLEY_materials_planar_fill`, line and point styles), as noted in §11.
 
-### 13.8 Rendering on demand (next up)
+### 13.8 Rendering on demand
 
 **1.x.** Renders every frame by default. `requestRenderMode` (opt-in, since
 1.42) renders only on camera changes, tile, imagery and terrain loads,
@@ -1679,6 +1716,40 @@ unaffected. The viewer gets a "Render continuously" toggle. Two states stay sepa
 loading vs up to date, `Tileset3D.idle`) and rendering (rendering vs idle);
 a scene can be up to date and still render (an animation), or stream while
 no frame renders (tiles arriving off screen).
+
+**Implemented (r23).** `engine.renderMode` defaults to `"onDemand"`; each
+tick evaluates view links, then renders if `requestRender()` was called, a
+pick is pending, or an allocation-free fingerprint of the scene changed (the
+sun; per view its target size, viewport, camera, exposure, clear color,
+encoding, lighting, world). Otherwise active tilesets (loading, changed in
+the last few frames, or with the memory-adjusted SSE still moving) run
+selection and uploads, and a frame renders only if a world's version moved
+(`World.version`, bumped by every record and material change). The viewer
+renders 16 to 19 frames per second while Midtown streams, none once it
+settles, a frame per camera change while orbiting, and serves picks while
+idle.
+
+Per-view dirtiness: each view keeps its own fingerprint, and `World`
+accumulates the view-mask bits of every record it changes (a changed mask
+contributes its old and new bits; a material change, every view), so a tile
+selected or uploaded for one view doesn't redraw another, and content
+uploaded hidden redraws nothing. Rendering is per target: a canvas gets a
+fresh texture each frame, so a target redraws all its views when any of them
+changed, and targets with nothing changed are skipped and keep their last
+image. With two canvases, moving one camera ten times rendered ten frames
+into its canvas and none into the other. Most applications are expected
+to give each view or UI component its own canvas, all driven by one engine
+over a shared scene; that case is complete.
+
+**Not yet: independent views within one canvas.** Views sharing a canvas
+(the viewer's split view and inset) redraw together, because the canvas's
+texture is fresh each frame. Doing this right: each view renders into its
+own persistent texture (its final, presented color), and every frame that
+touches the canvas composites the views' textures into it, re-rendering
+only the dirty ones; clean views cost one copy. Costs: one persistent
+texture per view (memory against the render-target budget, §13.6) and a
+composite pass; overlapping viewports (an inset over the main view) need
+the composite in view order.
 
 **Measure.** Frames rendered while idle (zero), time from a change to its
 frame (one frame), and no stale frames in the parity harnesses' interactive

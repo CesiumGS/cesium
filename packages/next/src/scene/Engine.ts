@@ -1,3 +1,4 @@
+import { RequestScheduler } from "../streaming/RequestScheduler.ts";
 import { GpuDevice, type GpuDeviceOptions } from "../gpu/GpuDevice.ts";
 import { GpuTimer } from "../gpu/GpuTimer.ts";
 import {
@@ -62,6 +63,10 @@ export interface FrameStats {
   draws: number;
   /** Indirect draw calls per view (one per batch). */
   batches: number;
+  /** Frames rendered since start (on demand: only frames something changed). */
+  framesRendered: number;
+  /** The last tick rendered nothing (on demand, nothing changed). */
+  idle: boolean;
 }
 
 /**
@@ -81,6 +86,9 @@ export interface FrameStats {
  * allocates only the WebGPU objects the API itself returns (encoder, passes,
  * command buffer, canvas texture view).
  */
+/** Values in one view's on-demand fingerprint (see `viewChanged`). */
+const VIEW_KEY_LENGTH = 26;
+
 export class Engine {
   readonly gpu: GpuDevice;
   readonly worlds: World[] = [];
@@ -95,12 +103,23 @@ export class Engine {
     views: 0,
     draws: 0,
     batches: 0,
+    framesRendered: 0,
+    idle: false,
   };
+  /**
+   * "onDemand" (default): `start()` renders a frame only when something
+   * visible changed (a camera, view, world, the sun, streamed content) or
+   * `requestRender()` was called; "continuous": every animation frame.
+   * `renderFrame()` always renders.
+   */
+  renderMode: "onDemand" | "continuous" = "onDemand";
   /** Unit vector toward the sun in Earth-fixed axes. Placeholder until the 1.x sun model lands. */
   readonly sunDirection: Vec3 = v3.vec3(1, 0, 0);
 
   private readonly ctx: RenderContext;
   private readonly workers = new WorkerPool();
+  /** Content request windows per origin, shared by all tilesets. */
+  readonly requests = new RequestScheduler();
   private readonly pool: TexturePool;
   private readonly timer: GpuTimer;
   private readonly viewStaging: GPUBuffer;
@@ -125,6 +144,12 @@ export class Engine {
   private readonly commandBuffers: GPUCommandBuffer[] = [];
   private frameNumber = 0;
   private frameHandle = 0;
+  private renderRequested = true;
+  /** Fingerprints of the last rendered frame (see viewChanged). */
+  private readonly viewKeys = new Map<View, Float64Array>();
+  private readonly globalKey = new Float64Array(5).fill(Number.NaN);
+  private readonly scratchKey = new Float64Array(VIEW_KEY_LENGTH);
+  private readonly dirtyTargets = new Set<RenderTarget>();
 
   private constructor(gpu: GpuDevice, ctx: RenderContext, maxViews: number) {
     this.gpu = gpu;
@@ -225,14 +250,18 @@ export class Engine {
    */
   loadGltf(
     url: string | URL,
-    options: { headers?: Record<string, string> } = {},
+    options: { headers?: Record<string, string>; signal?: AbortSignal } = {},
   ): Promise<GltfAsset> {
-    return this.workers.request<GltfAsset>("gltf", {
-      url: new URL(url, globalThis.location?.href).href,
-      headers: options.headers,
-      // KTX2/Basis textures are transcoded to a block format this device supports.
-      textureSupport: this.gpu.caps.textureCompression,
-    });
+    return this.workers.request<GltfAsset>(
+      "gltf",
+      {
+        url: new URL(url, globalThis.location?.href).href,
+        headers: options.headers,
+        // KTX2/Basis textures are transcoded to a block format this device supports.
+        textureSupport: this.gpu.caps.textureCompression,
+      },
+      options.signal,
+    );
   }
 
   /** Places a parsed glTF asset in a world. */
@@ -408,21 +437,177 @@ export class Engine {
     }
   }
 
-  /** Renders continuously with requestAnimationFrame until `stop()`. */
+  /**
+   * Asks for a frame in on-demand mode, for changes the engine can't see
+   * (state an application keeps outside the engine).
+   */
+  requestRender(): void {
+    this.renderRequested = true;
+  }
+
+  /** Runs the frame loop with requestAnimationFrame until `stop()`. */
   start(): void {
     const tick = () => {
-      this.renderFrame();
+      this.tick();
       this.frameHandle = requestAnimationFrame(tick);
     };
     this.frameHandle = requestAnimationFrame(tick);
+  }
+
+  private tick(): void {
+    if (this.renderMode === "continuous") {
+      this.renderFrame();
+      return;
+    }
+    const links = this.links;
+    for (let i = 0; i < links.length; i++) {
+      links[i]!.evaluate();
+    }
+    // Which targets need a frame. A canvas gets a fresh texture each frame,
+    // so a target redraws all its views when any of them changed; targets
+    // with none changed are skipped and keep their last image.
+    const all = this.globalChanged() || this.renderRequested;
+    const dirty = this.dirtyTargets;
+    dirty.clear();
+    let moved = false;
+    const views = this.views;
+    for (let i = 0; i < views.length; i++) {
+      const view = views[i]!;
+      if (!view.enabled) {
+        continue;
+      }
+      const changed = this.viewChanged(view);
+      moved ||= changed;
+      // A pick is served during a frame (one per frame).
+      if (all || changed || view.pendingPicks.length > 0) {
+        dirty.add(view.target);
+      }
+    }
+    // Selection runs when a camera moved or content streams; a frame then
+    // renders only for the views that can see what changed.
+    for (let i = 0; i < this.tilesets.length; i++) {
+      const tileset = this.tilesets[i]!;
+      if (all || moved || tileset.active) {
+        tileset.update(this.selectionViews(tileset.world));
+      }
+    }
+    for (let i = 0; i < views.length; i++) {
+      const view = views[i]!;
+      if (
+        view.enabled &&
+        (view.world.changedViews & this.viewBit(view)) !== 0
+      ) {
+        dirty.add(view.target);
+      }
+    }
+    if (dirty.size === 0) {
+      for (let i = 0; i < this.worlds.length; i++) {
+        this.worlds[i]!.changedViews = 0; // seen by no view
+      }
+      this.stats.idle = true;
+      return;
+    }
+    this.render(true, dirty);
+  }
+
+  /** The sun and the set of enabled views changed (affects every view). */
+  private globalChanged(): boolean {
+    const k = this.globalKey;
+    let enabled = 0;
+    for (let i = 0; i < this.views.length; i++) {
+      enabled += this.views[i]!.enabled ? 1 << (i % 30) : 0;
+    }
+    const sun = this.sunDirection;
+    const changed =
+      k[0] !== sun[0] ||
+      k[1] !== sun[1] ||
+      k[2] !== sun[2] ||
+      k[3] !== this.views.length ||
+      k[4] !== enabled;
+    k[0] = sun[0]!;
+    k[1] = sun[1]!;
+    k[2] = sun[2]!;
+    k[3] = this.views.length;
+    k[4] = enabled;
+    return changed;
+  }
+
+  /**
+   * Fingerprints what one view's image depends on outside its world: target
+   * size, viewport, camera, exposure, clear color, encoding, lighting and
+   * world. Compares with its last rendered frame and keeps the new one.
+   * Allocation-free after a view's first frame.
+   */
+  private viewChanged(view: View): boolean {
+    let key = this.viewKeys.get(view);
+    if (!key) {
+      key = new Float64Array(VIEW_KEY_LENGTH).fill(Number.NaN);
+      this.viewKeys.set(view, key);
+    }
+    const s = this.scratchKey;
+    let n = 0;
+    const target = view.target;
+    if (target instanceof CanvasTarget && "clientWidth" in target.canvas) {
+      const dpr = globalThis.devicePixelRatio ?? 1;
+      s[n++] = target.canvas.clientWidth * dpr;
+      s[n++] = target.canvas.clientHeight * dpr;
+    } else {
+      s[n++] = target.width;
+      s[n++] = target.height;
+    }
+    const vp = view.viewport;
+    s[n++] = vp.x;
+    s[n++] = vp.y;
+    s[n++] = vp.width;
+    s[n++] = vp.height;
+    const c = view.camera;
+    for (let k = 0; k < 3; k++) {
+      s[n++] = c.position[k]!;
+      s[n++] = c.direction[k]!;
+      s[n++] = c.up[k]!;
+    }
+    s[n++] = c.fov;
+    s[n++] = c.near;
+    s[n++] = view.exposure;
+    s[n++] = view.clearColor[0];
+    s[n++] = view.clearColor[1];
+    s[n++] = view.clearColor[2];
+    s[n++] = view.outputEncoding === "srgb" ? 0 : 1;
+    s[n++] = view.lighting.sunIntensity;
+    s[n++] = view.lighting.diffuseIbl;
+    s[n++] = view.lighting.specularIbl;
+    s[n++] = this.worlds.indexOf(view.world);
+    let changed = false;
+    for (let i = 0; i < n; i++) {
+      if (s[i] !== key[i]) {
+        changed = true;
+        key[i] = s[i]!;
+      }
+    }
+    return changed;
   }
 
   stop(): void {
     cancelAnimationFrame(this.frameHandle);
   }
 
+  /** Renders every enabled view now, whatever the render mode. */
   renderFrame(): void {
+    this.render(false);
+  }
+
+  /**
+   * `tilesetsUpdated`: the tick already ran selection this frame.
+   * `targets`: render only the views on these targets (on demand).
+   */
+  private render(
+    tilesetsUpdated: boolean,
+    targets?: ReadonlySet<RenderTarget>,
+  ): void {
     const start = performance.now();
+    this.renderRequested = false;
+    this.stats.idle = false;
+    this.stats.framesRendered++;
     const device = this.ctx.device;
     const stamp = ++this.frameNumber;
 
@@ -432,7 +617,7 @@ export class Engine {
     const views = this.views;
     for (let i = 0; i < views.length; i++) {
       const view = views[i]!;
-      if (!view.enabled) {
+      if (!view.enabled || (targets && !targets.has(view.target))) {
         continue;
       }
       const target = this.targetFrame(view.target);
@@ -447,9 +632,11 @@ export class Engine {
     for (let i = 0; i < links.length; i++) {
       links[i]!.evaluate();
     }
-    for (let i = 0; i < this.tilesets.length; i++) {
-      const tileset = this.tilesets[i]!;
-      tileset.update(this.selectionViews(tileset.world));
+    if (!tilesetsUpdated) {
+      for (let i = 0; i < this.tilesets.length; i++) {
+        const tileset = this.tilesets[i]!;
+        tileset.update(this.selectionViews(tileset.world));
+      }
     }
 
     // Assign each enabled view a slot (the first view drawn into a target
@@ -457,7 +644,7 @@ export class Engine {
     let slots = 0;
     for (let i = 0; i < views.length; i++) {
       const view = views[i]!;
-      if (!view.enabled) {
+      if (!view.enabled || (targets && !targets.has(view.target))) {
         continue;
       }
       const rect = view.pixelRect();
@@ -492,7 +679,7 @@ export class Engine {
     this.timer.beginFrame();
     for (let i = 0; i < views.length; i++) {
       const view = views[i]!;
-      if (view.enabled) {
+      if (view.enabled && (!targets || targets.has(view.target))) {
         const frame = this.viewFrames.get(view)!;
         // One pick per frame keeps the shared params/result buffers simple.
         frame.pick =
@@ -516,6 +703,9 @@ export class Engine {
     this.stats.gpuMs = this.timer.milliseconds;
     this.stats.gpuSpanMs = this.timer.spanMilliseconds;
     this.stats.views = slots;
+    for (let i = 0; i < this.worlds.length; i++) {
+      this.worlds[i]!.changedViews = 0;
+    }
     let draws = 0;
     let batches = 0;
     for (let i = 0; i < this.worlds.length; i++) {

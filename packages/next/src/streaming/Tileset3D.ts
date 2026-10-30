@@ -13,6 +13,7 @@ import { Legacy1xSelection, type SelectionView } from "./Legacy1x.ts";
 import { NextSelection, type NextOptions } from "./Next.ts";
 import { loadTilesetJson, type Tile, type TileTree } from "./Tile.ts";
 import { volumeObb } from "./volumes.ts";
+import type { RequestSample } from "./RequestScheduler.ts";
 import {
   accumulate,
   emptyTotals,
@@ -26,6 +27,8 @@ import {
 
 /** Recent content loads kept for stage percentiles. */
 const PIPELINE_WINDOW = 256;
+/** Frames without any view touching an in-flight tile before it is cancelled. */
+const CANCEL_AFTER_FRAMES = 30;
 
 export interface TilesetOptions extends NextOptions {
   /**
@@ -43,7 +46,10 @@ export interface TilesetOptions extends NextOptions {
    * before detail is reduced (1.x maximumCacheOverflowBytes: 512 MiB).
    */
   maximumCacheOverflowBytes?: number;
-  /** Concurrent content requests (1.x: 18 per server). */
+  /**
+   * Pins the request window for this tileset's origin. Without it the window
+   * adapts per origin, shared by every tileset there (RequestScheduler).
+   */
   maximumRequests?: number;
   /** Uploads per frame, to bound main-thread hitches. */
   uploadsPerFrame?: number;
@@ -62,9 +68,14 @@ export interface TilesetStats {
   screenSpaceError: number;
   /** Tiles drawn as mixed-LOD placeholders this frame, over all views. */
   placeholders: number;
-  /** Content requests in flight, and the concurrency limit. */
+  /** Content requests in flight, and the origin's current window. */
   inFlight: number;
   maxInFlight: number;
+  /** Whether the window adapts, and the origin's negotiated protocol. */
+  adaptive: boolean;
+  protocol?: string;
+  /** Requests cancelled because no view needed them any more. */
+  cancelled: number;
   /** Decoded content waiting for its upload slot. */
   uploadQueue: number;
   /** Cumulative content requests started (L1′ measurements). */
@@ -91,6 +102,8 @@ export class Tileset3D implements TileTree {
     placeholders: 0,
     inFlight: 0,
     maxInFlight: 0,
+    adaptive: true,
+    cancelled: 0,
     uploadQueue: 0,
     requestsTotal: 0,
     bytesTotal: 0,
@@ -100,9 +113,15 @@ export class Tileset3D implements TileTree {
   /** Selected tiles per view id after the last update (parity tests). */
   readonly lastSelected = new Map<number, Tile[]>();
   private frame = 0;
+  /** Last frame in which an update changed anything. */
+  private lastChange = 0;
   private readonly cacheBytes: number;
   private readonly overflowBytes: number;
-  private readonly maximumRequests: number;
+  private readonly fixedWindow?: number;
+  /** The root's origin, and every origin this tileset requested from. */
+  private readonly origin: string;
+  private readonly origins = new Set<string>();
+  private readonly loading = new Map<Tile, AbortController>();
   private readonly uploadsPerFrame: number;
   private readonly headers?: Record<string, string>;
   private readonly loaded = new Set<Tile>();
@@ -139,12 +158,16 @@ export class Tileset3D implements TileTree {
         : new NextSelection(options);
     this.cacheBytes = options.cacheBytes ?? 512 * 1024 * 1024;
     this.overflowBytes = options.maximumCacheOverflowBytes ?? 512 * 1024 * 1024;
-    this.maximumRequests = options.maximumRequests ?? 18;
+    if (options.maximumRequests !== undefined) {
+      this.fixedWindow = options.maximumRequests;
+    }
+    this.origin = this.originOf(url);
+    this.useOrigin(this.origin);
     this.uploadsPerFrame = options.uploadsPerFrame ?? 8;
     this.headers = options.headers;
     this.stats.budget = this.cacheBytes;
     this.stats.overflow = this.overflowBytes;
-    this.stats.maxInFlight = this.maximumRequests;
+    this.stats.adaptive = this.fixedWindow === undefined;
   }
 
   static async load(
@@ -181,6 +204,20 @@ export class Tileset3D implements TileTree {
   }
 
   /**
+   * Needs `update()` even with every camera still: loading, changed in the
+   * last few frames (an upload can enable further refinement), or the
+   * memory-adjusted SSE still moving toward its target.
+   */
+  get active(): boolean {
+    return (
+      !this.idle ||
+      this.frame - this.lastChange < 3 ||
+      this.selection.memoryAdjustedScreenSpaceError !==
+        this.selection.maximumScreenSpaceError
+    );
+  }
+
+  /**
    * Where recent content loads spent their time: p50 and p95 per stage over
    * the last loads (queued for a request slot, network, worker wait, decode,
    * waiting for an upload slot, upload).
@@ -195,6 +232,11 @@ export class Tileset3D implements TileTree {
       return;
     }
     const frame = ++this.frame;
+    const before =
+      this.stats.requestsTotal +
+      this.stats.bytesTotal +
+      this.stats.loaded +
+      this.world.version;
     const requests = new Map<Tile, number>();
     const nowMasked = new Set<Tile>();
     for (const tile of this.masked) {
@@ -291,9 +333,39 @@ export class Tileset3D implements TileTree {
         this.wanted.delete(tile);
       }
     }
+    // Cancel requests no view has touched for a while (1.x cancels those
+    // not touched this frame; a short grace absorbs jitter).
+    for (const [tile, controller] of this.loading) {
+      if (
+        !controller.signal.aborted &&
+        tile.touchedFrame < frame - CANCEL_AFTER_FRAMES
+      ) {
+        controller.abort();
+        this.engine.requests.cancelled(this.originOf(tile.contentUrl!));
+        this.stats.cancelled++;
+      }
+    }
     this.request(requests);
+    this.engine.requests.backlog(this.origin, this.ready.length);
+    const window = this.engine.requests.stats(this.origin);
+    if (window) {
+      this.stats.maxInFlight = window.window;
+      this.stats.adaptive = window.adaptive;
+      if (window.protocol) {
+        this.stats.protocol = window.protocol;
+      }
+    }
     this.upload();
     this.evict(frame);
+    if (
+      this.stats.requestsTotal +
+        this.stats.bytesTotal +
+        this.stats.loaded +
+        this.world.version !==
+      before
+    ) {
+      this.lastChange = frame;
+    }
     if (
       this.settledAt === undefined &&
       this.firstContentAt !== undefined &&
@@ -310,11 +382,18 @@ export class Tileset3D implements TileTree {
     const order = [...requests.entries()].sort(
       (a, b) => a[1] - b[1] || a[0].depth - b[0].depth,
     );
+    const full = new Set<string>();
     for (const [tile] of order) {
-      if (this.inFlight >= this.maximumRequests) {
-        break;
-      }
       if (tile.state !== "unloaded") {
+        continue;
+      }
+      const origin = this.originOf(tile.contentUrl!);
+      if (full.has(origin)) {
+        continue;
+      }
+      this.useOrigin(origin);
+      if (!this.engine.requests.tryAcquire(origin)) {
+        full.add(origin);
         continue;
       }
       tile.state = "loading";
@@ -323,11 +402,21 @@ export class Tileset3D implements TileTree {
       this.wanted.delete(tile);
       this.inFlight++;
       this.stats.requestsTotal++;
-      void this.loadContent(tile).finally(() => this.inFlight--);
+      const controller = new AbortController();
+      this.loading.set(tile, controller);
+      void this.loadContent(tile, controller.signal)
+        .then((sample) => this.engine.requests.release(origin, sample))
+        .finally(() => {
+          this.inFlight--;
+          this.loading.delete(tile);
+        });
     }
   }
 
-  private async loadContent(tile: Tile): Promise<void> {
+  private async loadContent(
+    tile: Tile,
+    signal: AbortSignal,
+  ): Promise<RequestSample | undefined> {
     try {
       if (tile.external) {
         const { root } = await loadTilesetJson(
@@ -342,29 +431,45 @@ export class Tileset3D implements TileTree {
         tile.children.push(root);
         tile.state = "ready";
         this.stats.tiles += countTiles(root);
-        return;
+        return undefined;
       }
-      const asset = await this.engine.loadGltf(
-        tile.contentUrl!,
-        this.headers ? { headers: this.headers } : {},
-      );
+      const asset = await this.engine.loadGltf(tile.contentUrl!, {
+        ...(this.headers ? { headers: this.headers } : {}),
+        signal,
+      });
       if (this.destroyed) {
         closeImages(asset);
-        return;
+        return undefined;
       }
       this.stats.bytesReceived += asset.timing?.bytes ?? 0;
       this.ready.push({ tile, asset, arrivedAt: performance.now() });
+      return asset.timing
+        ? {
+            bytes: asset.timing.bytes,
+            ...(asset.timing.cached
+              ? {}
+              : { latencyMs: asset.timing.networkMs }),
+            ...(asset.timing.protocol
+              ? { protocol: asset.timing.protocol }
+              : {}),
+          }
+        : undefined;
     } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        tile.state = "unloaded"; // cancelled: request again when needed
+        return undefined;
+      }
       const message = error instanceof Error ? error.message : String(error);
       if (/unsupported tile format/.test(message)) {
         // Loaded but drawing nothing: selection and refinement behave as in
         // 1.x, which does decode these formats.
         tile.state = "ready";
         this.warnings.add(`${message} (drawn empty)`);
-        return;
+        return undefined;
       }
       tile.state = "failed";
       this.warnings.add(`content failed: ${message}`);
+      return undefined;
     }
   }
 
@@ -503,8 +608,30 @@ export class Tileset3D implements TileTree {
       .map(([text]) => text);
   }
 
+  private originOf(url: string): string {
+    try {
+      return new URL(url, globalThis.location?.href).origin;
+    } catch {
+      return "";
+    }
+  }
+
+  private useOrigin(origin: string): void {
+    if (!this.origins.has(origin)) {
+      this.origins.add(origin);
+      this.engine.requests.register(origin, this.fixedWindow);
+    }
+  }
+
   /** Unloads all content. The tileset can't be used afterwards. */
   destroy(): void {
+    for (const controller of this.loading.values()) {
+      controller.abort();
+    }
+    for (const origin of this.origins) {
+      this.engine.requests.unregister(origin);
+    }
+    this.origins.clear();
     for (const tile of [...this.loaded]) {
       this.unload(tile);
     }
