@@ -17,7 +17,14 @@ import pickWgsl from "../shaders/pick.wgsl?raw";
 export const SCENE_TARGETS = {
   // r32uint cannot be multisampled in WebGPU, so 32-bit feature IDs are
   // split across the two channels of rg16uint (lo, hi).
-  colorFormats: ["rgba16float", "rg16uint"] as GPUTextureFormat[],
+  // The third is display-referred color (unlit: photographs), kept apart
+  // from scene-referred light so it is never tonemapped; alpha is its
+  // coverage. 8-bit sRGB: the precision of the images it comes from.
+  colorFormats: [
+    "rgba16float",
+    "rg16uint",
+    "rgba8unorm-srgb",
+  ] as GPUTextureFormat[],
   depthFormat: "depth32float" as GPUTextureFormat,
   sampleCount: 4,
 };

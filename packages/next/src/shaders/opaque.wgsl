@@ -119,6 +119,9 @@ fn vs(@builtin(vertex_index) vertexIndex: u32, @location(0) draw: u32) -> VsOut 
 struct FsOut {
   @location(0) color: vec4f,
   @location(1) featureId: vec2u, // (lo16, hi16): rg16uint target
+  // Display-referred color (unlit), shown without tonemapping; alpha is
+  // coverage. Scene-referred light goes to `color`.
+  @location(2) display: vec4f,
 };
 
 fn fresnelSchlick(f0: vec3f, f90: vec3f, cosTheta: f32) -> vec3f {
@@ -252,12 +255,14 @@ fn fs(in: VsOut, @builtin(front_facing) frontFacing: bool) -> FsOut {
 
   var out: FsOut;
   out.featureId = vec2u(in.feature & 0xffffu, in.feature >> 16u);
+  out.display = vec4f(0.0);
   if ((flags & 1u) != 0u || (r.flags & 2u) != 0u) {
     // Unlit color is display-referred (photographs: globe imagery,
-    // photogrammetry such as Google's tiles): alpha 0 tells the present
-    // pass to show it as is, without exposure or tonemapping, as glTF's
-    // KHR_materials_unlit and 1.x (HDR off by default) do.
-    out.color = vec4f(baseColor.rgb, 0.0);
+    // photogrammetry such as Google's tiles): it goes to the display target,
+    // which the present pass shows as is, as glTF's KHR_materials_unlit and
+    // 1.x (HDR off by default) do. No light reaches the scene target here.
+    out.color = vec4f(0.0, 0.0, 0.0, 1.0);
+    out.display = vec4f(baseColor.rgb, 1.0);
     return out;
   }
 

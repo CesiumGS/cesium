@@ -10,6 +10,8 @@ struct PresentParams {
 
 @group(0) @binding(0) var hdr: texture_2d<f32>;
 @group(0) @binding(1) var<uniform> params: PresentParams;
+// Display-referred color (unlit), premultiplied by its coverage (alpha).
+@group(0) @binding(2) var display: texture_2d<f32>;
 
 @vertex
 fn vs(@builtin(vertex_index) i: u32) -> @builtin(position) vec4f {
@@ -43,11 +45,15 @@ fn linearToSrgb(c: vec3f) -> vec3f {
 @fragment
 fn fs(@builtin(position) frag: vec4f) -> @location(0) vec4f {
   let coord = vec2i(frag.xy - params.origin);
-  let texel = textureLoad(hdr, coord, 0);
-  // Scene-referred color (alpha 1) is exposed and tonemapped; display-
-  // referred color (alpha 0: imagery) is shown as is. MSAA edges blend.
-  let mapped = pbrNeutral(max(texel.rgb * params.exposure, vec3f(0.0)));
-  var color = mix(max(texel.rgb, vec3f(0.0)), mapped, clamp(texel.a, 0.0, 1.0));
+  // Scene-referred light is exposed and tonemapped; display-referred color
+  // (unlit) is added as is. A pixel partly covered by unlit samples (MSAA
+  // edges) tonemaps its scene part at full strength, then weights it.
+  let shown = textureLoad(display, coord, 0);
+  let sceneCoverage = 1.0 - shown.a;
+  let scene = textureLoad(hdr, coord, 0).rgb / max(sceneCoverage, 1e-4);
+  var color =
+    pbrNeutral(max(scene * params.exposure, vec3f(0.0))) * sceneCoverage +
+    shown.rgb;
   color = clamp(color, vec3f(0.0), vec3f(1.0));
   if (params.encoding == 1u) {
     color = linearToSrgb(color);

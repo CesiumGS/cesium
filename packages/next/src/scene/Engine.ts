@@ -1055,6 +1055,20 @@ export class Engine {
       format: "rgba16float",
       usage: attachment | GPUTextureUsage.TEXTURE_BINDING,
     });
+    // Display-referred (unlit) color, resolved for the present pass.
+    const display = graph.createTexture("display.msaa", {
+      width,
+      height,
+      format: "rgba8unorm-srgb",
+      sampleCount: targets.sampleCount,
+      usage: attachment,
+    });
+    const displayResolved = graph.createTexture("display", {
+      width,
+      height,
+      format: "rgba8unorm-srgb",
+      usage: attachment | GPUTextureUsage.TEXTURE_BINDING,
+    });
     const ids = graph.createTexture("featureId.msaa", {
       width,
       height,
@@ -1087,6 +1101,13 @@ export class Engine {
       loadOp: "clear",
       storeOp: "store",
     };
+    const opaqueDisplay: GPURenderPassColorAttachment = {
+      view: undefined as never,
+      resolveTarget: undefined,
+      clearValue: { r: 0, g: 0, b: 0, a: 0 },
+      loadOp: "clear",
+      storeOp: "discard",
+    };
     const opaqueDepth: GPURenderPassDepthStencilAttachment = {
       view: undefined as never,
       depthClearValue: 0, // reverse-Z: far is 0
@@ -1095,7 +1116,7 @@ export class Engine {
     };
     const opaquePass: GPURenderPassDescriptor = {
       label: "opaque",
-      colorAttachments: [opaqueColor, opaqueIds],
+      colorAttachments: [opaqueColor, opaqueIds, opaqueDisplay],
       depthStencilAttachment: opaqueDepth,
     };
     const presentColor: GPURenderPassColorAttachment = {
@@ -1128,6 +1149,7 @@ export class Engine {
       }),
       presentGroup: undefined,
       presentSource: undefined,
+      presentDisplay: undefined,
     };
 
     graph.addPass("select-view", { sideEffect: true }, (enc) => {
@@ -1146,7 +1168,7 @@ export class Engine {
 
     graph.addPass(
       "opaque",
-      { writes: [color, resolved, ids, depth] },
+      { writes: [color, resolved, ids, display, displayResolved, depth] },
       (enc, get) => {
         clearColor.r = view.clearColor[0];
         clearColor.g = view.clearColor[1];
@@ -1154,6 +1176,8 @@ export class Engine {
         opaqueColor.view = get(color);
         opaqueColor.resolveTarget = get(resolved);
         opaqueIds.view = get(ids);
+        opaqueDisplay.view = get(display);
+        opaqueDisplay.resolveTarget = get(displayResolved);
         opaqueDepth.view = get(depth);
         // Depth survives the pass only when a pick reads it.
         opaqueDepth.depthStoreOp = frame.pick ? "store" : "discard";
@@ -1227,7 +1251,7 @@ export class Engine {
 
     graph.addPass(
       "present",
-      { reads: [resolved], writes: [output] },
+      { reads: [resolved, displayResolved], writes: [output] },
       (enc, get) => {
         const params = this.presentData;
         params.setFloat32(0, x, true);
@@ -1243,13 +1267,16 @@ export class Engine {
         // Pooled textures are stable from frame to frame, so the bind group
         // is rebuilt only when the pool hands this view a different one.
         const source = get(resolved);
-        if (frame.presentSource !== source) {
+        const shown = get(displayResolved);
+        if (frame.presentSource !== source || frame.presentDisplay !== shown) {
           frame.presentSource = source;
+          frame.presentDisplay = shown;
           frame.presentGroup = device.createBindGroup({
             layout: pipelines.present.getBindGroupLayout(0),
             entries: [
               { binding: 0, resource: source },
               { binding: 1, resource: { buffer: frame.presentParams } },
+              { binding: 2, resource: shown },
             ],
           });
         }
@@ -1427,6 +1454,7 @@ interface ViewFrame {
   readonly presentParams: GPUBuffer;
   presentGroup: GPUBindGroup | undefined;
   presentSource: GPUTextureView | undefined;
+  presentDisplay: GPUTextureView | undefined;
 }
 
 interface TargetFrame {

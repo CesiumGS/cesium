@@ -124,6 +124,7 @@ VsOut vs(uint vertexIndex : SV_VertexID, VsIn input) {
 struct FsOut {
   float4 color : SV_Target0;
   uint2 featureId : SV_Target1;
+  float4 display : SV_Target2; // display-referred (unlit), see opaque.wgsl
 };
 
 float3 fresnelSchlick(float3 f0, float3 f90, float cosTheta) {
@@ -196,8 +197,10 @@ FsOut fs(VsOut input, bool frontFacing : SV_IsFrontFace) {
 
   FsOut o;
   o.featureId = uint2(input.feature & 0xffffu, input.feature >> 16u);
+  o.display = float4(0.0);
   if (s.unlit || (r.flags & 2u) != 0u) {
-    o.color = float4(s.baseColor.rgb, 1.0);
+    o.color = float4(0.0, 0.0, 0.0, 1.0);
+    o.display = float4(s.baseColor.rgb, 1.0);
     return o;
   }
 

@@ -298,6 +298,7 @@ struct FsOut_0
 {
     @location(0) color_2 : vec4<f32>,
     @location(1) featureId_1 : vec2<u32>,
+    @location(2) display_0 : vec4<f32>,
 };
 
 struct pixelInput_0
@@ -515,9 +516,11 @@ fn fs( _S25 : pixelInput_0, @builtin(front_facing) frontFacing_0 : bool, @builti
     {
         _S29 = (((records_0[_S25.draw_2].flags_0) & (u32(2)))) != u32(0);
     }
+    o_1.display_0 = vec4<f32>(0.0f);
     if(_S29)
     {
-        o_1.color_2 = vec4<f32>(_S28.baseColor_1.xyz, 1.0f);
+        o_1.color_2 = vec4<f32>(0.0f, 0.0f, 0.0f, 1.0f);
+        o_1.display_0 = vec4<f32>(_S28.baseColor_1.xyz, 1.0f);
         return o_1;
     }
     var v_0 : vec3<f32> = (vec3<f32>(0) - normalize(_S25.relPosition_1));
