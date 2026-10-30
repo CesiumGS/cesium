@@ -1,10 +1,37 @@
+import { EditMode, MeshEditor } from "../../index.js";
+import createScene from "../../../../Specs/createScene.js";
+
 describe(
   "Editor/MeshEditor",
   function () {
-    describe("addToScene", function () {
-      it("resolves to an editor in the scene's primitives", function () {});
+    let scene;
 
-      it("starts in EditMode.NONE", function () {});
+    beforeAll(function () {
+      scene = createScene();
+    });
+
+    afterAll(function () {
+      scene.destroyForSpecs();
+    });
+
+    afterEach(function () {
+      // Destroys each editor.
+      scene.primitives.removeAll();
+    });
+
+    describe("addToScene", function () {
+      it("resolves to an editor in the scene's primitives", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+
+        expect(editor).toBeInstanceOf(MeshEditor);
+        expect(scene.primitives.contains(editor)).toBe(true);
+      });
+
+      it("starts in EditMode.NONE", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+
+        expect(editor.mode).toBe(EditMode.NONE);
+      });
     });
 
     describe("addMesh", function () {
@@ -30,13 +57,37 @@ describe(
     });
 
     describe("mode", function () {
+      it("sets the mode", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+
+        editor.mode = EditMode.EDGE;
+
+        expect(editor.mode).toBe(EditMode.EDGE);
+      });
+
       it("draws only the components the mode renders", function () {});
 
       it("draws only faces in EditMode.NONE", function () {});
 
       it("applies the mode to meshes added later", function () {});
 
-      it("accepts combinations of components", function () {});
+      it("accepts combinations of components", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+
+        editor.mode = EditMode.VERTEX | EditMode.EDGE;
+
+        expect(editor.mode).toBe(EditMode.VERTEX | EditMode.EDGE);
+      });
+
+      it("throws for unknown components and keeps the mode", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        editor.mode = EditMode.FACE;
+
+        expect(() => {
+          editor.mode = 8;
+        }).toThrowError();
+        expect(editor.mode).toBe(EditMode.FACE);
+      });
     });
 
     describe("update", function () {
@@ -58,11 +109,28 @@ describe(
     describe("destroy", function () {
       it("destroys every mesh and shows its source", function () {});
 
-      it("is called when the editor is removed from the scene", function () {});
+      it("is called when the editor is removed from the scene", async function () {
+        const editor = await MeshEditor.addToScene(scene);
 
-      it("is called when the scene is destroyed", function () {});
+        scene.primitives.remove(editor);
 
-      it("isDestroyed returns true afterwards", function () {});
+        expect(editor.isDestroyed()).toBe(true);
+      });
+
+      it("is called when the scene is destroyed", async function () {
+        const otherScene = createScene();
+        const editor = await MeshEditor.addToScene(otherScene);
+
+        otherScene.destroyForSpecs();
+
+        expect(editor.isDestroyed()).toBe(true);
+      });
+
+      it("isDestroyed returns false before destroy", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+
+        expect(editor.isDestroyed()).toBe(false);
+      });
     });
   },
   "WebGL",
