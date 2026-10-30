@@ -72,7 +72,7 @@ class Quaternion {
     const s = Math.sin(halfAngle);
     const fromAxisAngle = Cartesian3.normalize(
       axis,
-      this.#fromAxisAngleScratch.cartesian,
+      Quaternion.#fromAxisAngleScratch.cartesian,
     );
 
     const x = fromAxisAngle.x * s;
@@ -136,7 +136,7 @@ class Quaternion {
       z = (matrix[Matrix3.COLUMN0ROW1] - matrix[Matrix3.COLUMN1ROW0]) * root;
     } else {
       // |w| <= 1/2
-      const { next, quat } = this.#fromRotationMatrixScratch;
+      const { next, quat } = Quaternion.#fromRotationMatrixScratch;
 
       let i = 0;
       if (m11 > m00) {
@@ -215,7 +215,7 @@ class Quaternion {
     //>>includeEnd('debug');
 
     const { rollQuaternion, pitchQuaternion, headingQuaternion } =
-      this.#fromHeadingPitchRollScratch;
+      Quaternion.#fromHeadingPitchRollScratch;
 
     Quaternion.fromAxisAngle(
       Cartesian3.UNIT_X,
@@ -310,7 +310,7 @@ class Quaternion {
       sampledQuaternionAxis,
       sampledQuaternionTempQuaternion,
       sampledQuaternionQuaternion0Conjugate,
-    } = this.#convertPackedArrayForInterpolationScratch;
+    } = Quaternion.#convertPackedArrayForInterpolationScratch;
 
     Quaternion.unpack(
       packedArray,
@@ -388,7 +388,7 @@ class Quaternion {
       sampledQuaternionRotation,
       sampledQuaternionTempQuaternion,
       sampledQuaternionQuaternion0,
-    } = this.#unpackInterpolationResultScratch;
+    } = Quaternion.#unpackInterpolationResultScratch;
 
     Cartesian3.fromArray(array, 0, sampledQuaternionRotation);
     const magnitude = Cartesian3.magnitude(sampledQuaternionRotation);
@@ -763,7 +763,7 @@ class Quaternion {
     Check.typeOf.object("result", result);
     //>>includeEnd('debug');
 
-    const { lerp } = this.#lerpScratch;
+    const { lerp } = Quaternion.#lerpScratch;
     Quaternion.multiplyByScalar(end, t, lerp);
     result = Quaternion.multiplyByScalar(start, 1.0 - t, result);
     return Quaternion.add(lerp, result, result);
@@ -794,7 +794,7 @@ class Quaternion {
     Check.typeOf.object("result", result);
     //>>includeEnd('debug');
 
-    const { endNegated, scaledP, scaledR } = this.#slerpScratch;
+    const { endNegated, scaledP, scaledR } = Quaternion.#slerpScratch;
 
     let dot = Quaternion.dot(start, end);
 
@@ -898,7 +898,7 @@ class Quaternion {
     //>>includeEnd('debug');
 
     const { cartesian0, cartesian1, quaternion0, quaternion1 } =
-      this.#computeInnerQuadrangleScratch;
+      Quaternion.#computeInnerQuadrangleScratch;
 
     const qInv = Quaternion.conjugate(q1, quaternion0);
     Quaternion.multiply(qInv, q2, quaternion1);
@@ -954,8 +954,18 @@ class Quaternion {
     Check.typeOf.object("result", result);
     //>>includeEnd('debug');
 
-    const slerp0 = Quaternion.slerp(q0, q1, t, this.#squadScratch.quaternion0);
-    const slerp1 = Quaternion.slerp(s0, s1, t, this.#squadScratch.quaternion1);
+    const slerp0 = Quaternion.slerp(
+      q0,
+      q1,
+      t,
+      Quaternion.#squadScratch.quaternion0,
+    );
+    const slerp1 = Quaternion.slerp(
+      s0,
+      s1,
+      t,
+      Quaternion.#squadScratch.quaternion1,
+    );
     return Quaternion.slerp(slerp0, slerp1, 2.0 * t * (1.0 - t), result);
   }
 
@@ -1002,7 +1012,7 @@ class Quaternion {
     Check.typeOf.object("result", result);
     //>>includeEnd('debug');
 
-    const { quaternion, u, v, bT, bD } = this.#fastSlerpScratch;
+    const { quaternion, u, v, bT, bD } = Quaternion.#fastSlerpScratch;
 
     let x = Quaternion.dot(start, end);
 
@@ -1086,7 +1096,7 @@ class Quaternion {
     Check.typeOf.object("result", result);
     //>>includeEnd('debug');
 
-    const { quaternion0, quaternion1 } = this.#fastSquadScratch;
+    const { quaternion0, quaternion1 } = Quaternion.#fastSquadScratch;
     const slerp0 = Quaternion.fastSlerp(q0, q1, t, quaternion0);
     const slerp1 = Quaternion.fastSlerp(s0, s1, t, quaternion1);
     return Quaternion.fastSlerp(slerp0, slerp1, 2.0 * t * (1.0 - t), result);
