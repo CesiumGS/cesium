@@ -86,6 +86,26 @@ export const CLIP_COUNT_WORD = 47;
 /** Clip boxes per block; each box is 5 vec4s (center hi, lo, 3 rows). */
 export const CLIP_BOXES = 8;
 export const CLIP_BOX_FLOATS = 20;
+/**
+ * Word offset of `DrawRecord.imagerySlice`: a globe tile's slice of its
+ * world's imagery array (`packImagery`); 0 = none.
+ */
+export const IMAGERY_SLICE_WORD = 42;
+/** Slices an imagery array can address (`packImagery`). */
+export const MAX_IMAGERY_SLICES = 4095;
+/** Levels above a tile its imagery may come from (`packImagery`). */
+export const MAX_IMAGERY_LEVELS_UP = 8;
+
+/**
+ * Packs a tile's imagery reference: bits 0-11 the slice + 1, bits 12-15 how
+ * many levels up the tile owning the slice is, bits 16-23 and 24-31 this
+ * tile's x and y (rows from the south) within it, in this tile's units.
+ * An ancestor's slice draws a tile until its own is composited.
+ */
+export function packImagery(slice: number, levelsUp = 0, x = 0, y = 0): number {
+  return ((slice + 1) | (levelsUp << 12) | (x << 16) | (y << 24)) >>> 0;
+}
+
 /** Default view mask: drawn in every view. */
 export const ALL_VIEWS = 0xffffffff;
 export const RECORD_WORDS = RECORD_SIZE / 4;
@@ -185,7 +205,7 @@ export function writeDrawRecord(
   u32[o + 39] = r.streams.color;
   u32[o + 40] = r.streams.tangent;
   u32[o + 41] = r.textureSet;
-  u32[o + 42] = 0; // imagery slice (M3)
+  u32[o + 42] = 0; // imagery slice (packImagery)
   u32[o + 43] = r.streams.featureId;
   u32[o + 44] = r.viewMask ?? ALL_VIEWS;
   u32[o + 45] = 0;

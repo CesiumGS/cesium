@@ -38,6 +38,11 @@ import {
 import { ViewLink, type ViewLinkOptions } from "./ViewLink.ts";
 import { World, type WorldOptions } from "./World.ts";
 import { WorkerPool } from "../io/WorkerPool.ts";
+import {
+  GlobeImagery,
+  type GlobeImageryOptions,
+} from "../globe/GlobeImagery.ts";
+import type { ImageryProvider } from "../globe/ImageryProvider.ts";
 import { Tileset3D, type TilesetOptions } from "../streaming/Tileset3D.ts";
 import type { SelectionView } from "../streaming/Legacy1x.ts";
 import type { GltfAsset } from "../io/gltfTypes.ts";
@@ -339,7 +344,11 @@ export class Engine {
   async addTerrain(
     world: World,
     url: string | URL,
-    options: TilesetOptions = {},
+    options: TilesetOptions & {
+      /** Imagery draped on the terrain (one per world for now). */
+      imagery?: ImageryProvider;
+      imageryOptions?: GlobeImageryOptions;
+    } = {},
   ): Promise<Tileset3D> {
     const base = new URL(url, globalThis.location?.href);
     const layer = base.pathname.endsWith(".json")
@@ -361,6 +370,16 @@ export class Engine {
       maximumScreenSpaceError: 2,
       ...options,
     });
+    if (options.imagery) {
+      tileset.imagery = new GlobeImagery(
+        this.ctx,
+        world,
+        options.imagery,
+        this.requests,
+        this.workers,
+        options.imageryOptions,
+      );
+    }
     this.tilesets.push(tileset);
     return tileset;
   }

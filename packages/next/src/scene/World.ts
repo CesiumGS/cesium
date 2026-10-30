@@ -7,6 +7,7 @@ import {
   RECORD_SIZE,
   RECORD_WORDS,
   VIEW_MASK_WORD,
+  IMAGERY_SLICE_WORD,
   ALL_VIEWS,
   CLIP_BLOCK_WORD,
   CLIP_BOXES,
@@ -236,7 +237,10 @@ export class World {
   readonly indirectBuffer: GPUBuffer;
   private readonly prepParams: GPUBuffer;
   private readonly prepBindGroup: GPUBindGroup;
-  private readonly drawBindGroup: GPUBindGroup;
+  private drawBindGroup!: GPUBindGroup;
+  /** Globe imagery array (a 1×1 placeholder until imagery is attached). */
+  private imageryView: GPUTextureView;
+  private readonly imagerySampler: GPUSampler;
 
   constructor(
     private readonly ctx: RenderContext,
@@ -320,17 +324,24 @@ export class World {
         this.prepParams,
       ].map((b, binding) => ({ binding, resource: { buffer: b } })),
     });
-    this.drawBindGroup = device.createBindGroup({
-      label: "world.draw",
-      layout: ctx.pipelines.drawWorldLayout,
-      entries: [
-        this.recordBuffer,
-        this.instanceBuffer,
-        this.vertexBuffer,
-        this.materialBuffer,
-        this.clipBuffer,
-      ].map((b, binding) => ({ binding, resource: { buffer: b } })),
+    this.imageryView = device
+      .createTexture({
+        label: "world.imagery.placeholder",
+        size: [1, 1, 1],
+        format: "rgba8unorm",
+        usage: GPUTextureUsage.TEXTURE_BINDING,
+      })
+      .createView({ dimension: "2d-array" });
+    this.imagerySampler = device.createSampler({
+      label: "world.imagery",
+      magFilter: "linear",
+      minFilter: "linear",
+      mipmapFilter: "linear",
+      addressModeU: "clamp-to-edge",
+      addressModeV: "clamp-to-edge",
+      maxAnisotropy: 16,
     });
+    this.createDrawBindGroup();
 
     this.addMaterial({}); // material 0: white, lit, untextured
     this.createTextureSet({}); // texture set 0: defaults
@@ -636,6 +647,34 @@ export class World {
    * Sets which views draw a record (bit per view, see `Engine.viewBit`):
    * per-view tile selection over one shared draw table.
    */
+  /** Binds the globe imagery array (`GlobeImagery`) for this world's draws. */
+  setImageryArray(view: GPUTextureView): void {
+    this.imageryView = view;
+    this.createDrawBindGroup();
+    this.changedViews = ALL_VIEWS;
+    this.version++;
+  }
+
+  /**
+   * Points a globe tile's record at its imagery (`packImagery`, 0: none).
+   * Imagery replaces the material's color and draws unlit, as 1.x's globe
+   * does without scene lighting.
+   */
+  setImagery(handle: DrawHandle, packed: number): void {
+    const o = handle.index * RECORD_WORDS;
+    const flags = this.recordsU32[o + 7]!;
+    const next =
+      packed !== 0 ? flags | RecordFlags.unlit : flags & ~RecordFlags.unlit;
+    if (
+      this.recordsU32[o + IMAGERY_SLICE_WORD] !== packed >>> 0 ||
+      flags !== next
+    ) {
+      this.recordsU32[o + IMAGERY_SLICE_WORD] = packed >>> 0;
+      this.recordsU32[o + 7] = next;
+      this.markDirty(handle.index);
+    }
+  }
+
   setViewMask(handle: DrawHandle, mask: number): void {
     const index = handle.index * RECORD_WORDS + VIEW_MASK_WORD;
     if (this.recordsU32[index] !== mask >>> 0) {
@@ -899,6 +938,25 @@ export class World {
       }
     }
     return encoder.finish();
+  }
+
+  private createDrawBindGroup(): void {
+    const buffers = [
+      this.recordBuffer,
+      this.instanceBuffer,
+      this.vertexBuffer,
+      this.materialBuffer,
+      this.clipBuffer,
+    ];
+    this.drawBindGroup = this.ctx.device.createBindGroup({
+      label: "world.draw",
+      layout: this.ctx.pipelines.drawWorldLayout,
+      entries: [
+        ...buffers.map((b, binding) => ({ binding, resource: { buffer: b } })),
+        { binding: 5, resource: this.imageryView },
+        { binding: 6, resource: this.imagerySampler },
+      ],
+    });
   }
 
   private markDirty(index: number): void {

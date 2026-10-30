@@ -27,6 +27,9 @@ const PI: f32 = 3.14159265358979;
 // Mixed-LOD clip boxes: per box, center hi and lo (Earth-fixed) and three
 // rows mapping an offset from the center to box coordinates in [-1, 1].
 @group(1) @binding(4) var<storage, read> clipBoxes: array<vec4f>;
+// Globe imagery: one slice per terrain tile, composited (GlobeImagery).
+@group(1) @binding(5) var imagery: texture_2d_array<f32>;
+@group(1) @binding(6) var imagerySampler: sampler;
 const CLIP_BOXES: u32 = 8u;
 
 @group(2) @binding(0) var baseColorTexture: texture_2d<f32>;
@@ -179,6 +182,22 @@ fn insideClipBoxes(block: u32, count: u32, p: vec3f) -> bool {
   return false;
 }
 
+// Texture coordinates in a globe tile's imagery slice (layout.ts
+// packImagery): the slice may belong to an ancestor `up` levels above, in
+// which this tile sits at (x, y). Tile v and offsets count from the south;
+// slices store north at the top.
+fn imageryUv(packed: u32, uv: vec2f) -> vec2f {
+  let up = (packed >> 12u) & 15u;
+  let offset = vec2f(f32((packed >> 16u) & 255u), f32(packed >> 24u));
+  let t = (offset + uv) / f32(1u << up);
+  return vec2f(t.x, 1.0 - t.y);
+}
+
+// Exact sRGB decode (imagery slices store sRGB-encoded unorm texels).
+fn srgbToLinear(c: vec3f) -> vec3f {
+  return select(pow((c + 0.055) / 1.055, vec3f(2.4)), c / 12.92, c <= vec3f(0.04045));
+}
+
 @fragment
 fn fs(in: VsOut, @builtin(front_facing) frontFacing: bool) -> FsOut {
   let r = records[in.draw];
@@ -192,6 +211,13 @@ fn fs(in: VsOut, @builtin(front_facing) frontFacing: bool) -> FsOut {
   let metallicRoughnessSample = textureSample(metallicRoughnessTexture, metallicRoughnessSampler, in.uv);
   let normalSample = textureSample(normalTexture, normalSampler, in.uv).xyz;
   let occlusionSample = textureSample(occlusionTexture, occlusionSampler, in.uv).r;
+  let imageryPacked = r.imagerySlice;
+  let imagerySample = textureSample(
+    imagery,
+    imagerySampler,
+    imageryUv(imageryPacked, in.uv),
+    max(imageryPacked & 4095u, 1u) - 1u,
+  );
   let dPdx = dpdx(in.relPosition);
   let dPdy = dpdy(in.relPosition);
   let dUVdx = dpdx(in.uv);
@@ -206,6 +232,9 @@ fn fs(in: VsOut, @builtin(front_facing) frontFacing: bool) -> FsOut {
   var baseColor = material.baseColor * r.color * in.color;
   if ((flags & 16u) != 0u) {
     baseColor *= baseColorSample;
+  }
+  if (imageryPacked != 0u) {
+    baseColor = vec4f(srgbToLinear(imagerySample.rgb), 1.0);
   }
   if ((flags & 4u) != 0u && baseColor.a < material.alphaCutoff) {
     discard;

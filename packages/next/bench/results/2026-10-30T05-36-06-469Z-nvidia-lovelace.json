@@ -1,0 +1,213 @@
+{
+  "date": "2026-10-30T05:36:06.469Z",
+  "commit": "8d9d7028647406f010fd35a9aaa7bedea1345ef7",
+  "environment": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0",
+    "adapter": {
+      "vendor": "nvidia",
+      "architecture": "lovelace",
+      "description": "NVIDIA RTX 3000 Ada Generation Laptop GPU"
+    },
+    "timestampQuery": true
+  },
+  "errors": [],
+  "results": {
+    "lod": [
+      {
+        "scenario": "jump in",
+        "policy": "Legacy1x (1.x, 18 requests)",
+        "status": "ok",
+        "requests": 315,
+        "megabytes": 426.33745861053467,
+        "settleMs": 4444.399999976158,
+        "flip250": 0.4985423387895474,
+        "flip1000": 0.4209025912650881,
+        "flipSettled": 0.14799614375154707,
+        "selected": 119,
+        "flipAverage": 0.3040313547524813
+      },
+      {
+        "scenario": "jump in",
+        "policy": "Budgeted, 18 requests",
+        "status": "ok",
+        "requests": 214,
+        "megabytes": 269.44549655914307,
+        "settleMs": 3206.399999976158,
+        "flip250": 0.49854166195844807,
+        "flip1000": 0.4323712216482088,
+        "flipSettled": 0.14799614375154707,
+        "selected": 100,
+        "flipAverage": 0.23042452600039023
+      },
+      {
+        "scenario": "jump in",
+        "policy": "Budgeted, 4 requests",
+        "status": "ok",
+        "requests": 25,
+        "megabytes": 0,
+        "settleMs": 477.2000000476837,
+        "flip250": 0.49854166195844807,
+        "flip1000": 0.49854166195844807,
+        "flipSettled": 0.49854166195844807,
+        "selected": 13,
+        "flipAverage": 0.498541661958448
+      },
+      {
+        "scenario": "jump in",
+        "policy": "Budgeted, adaptive",
+        "status": "ok",
+        "requests": 214,
+        "megabytes": 269.44549655914307,
+        "settleMs": 1728,
+        "flip250": 0.49854166195844807,
+        "flip1000": 0.15157242270531465,
+        "flipSettled": 0.14799614375154707,
+        "selected": 100,
+        "flipAverage": 0.1922613683966307
+      },
+      {
+        "scenario": "jump in",
+        "policy": "Budgeted, 64 requests",
+        "status": "ok",
+        "requests": 214,
+        "megabytes": 269.44549655914307,
+        "settleMs": 1757.5,
+        "flip250": 0.49854166195844807,
+        "flip1000": 0.20131775714125333,
+        "flipSettled": 0.1479956692833741,
+        "selected": 100,
+        "flipAverage": 0.1984791793499933
+      },
+      {
+        "scenario": "zoom out",
+        "policy": "Legacy1x (1.x, 18 requests)",
+        "status": "ok",
+        "requests": 40,
+        "megabytes": 26.43531322479248,
+        "settleMs": 815.2999999523163,
+        "flip250": 0.4842993301834901,
+        "flip1000": 0.4902243984808078,
+        "flipSettled": 0.4902243984808078,
+        "selected": 30,
+        "flipAverage": 0.4831011100830388
+      },
+      {
+        "scenario": "zoom out",
+        "policy": "Budgeted, 18 requests",
+        "status": "ok",
+        "requests": 25,
+        "megabytes": 18.45938491821289,
+        "settleMs": 851.3999999761581,
+        "flip250": 0.4903900105524506,
+        "flip1000": 0.4963379333125422,
+        "flipSettled": 0.4963379333125422,
+        "selected": 26,
+        "flipAverage": 0.4906829872036336
+      },
+      {
+        "scenario": "zoom out",
+        "policy": "Budgeted, 4 requests",
+        "status": "ok",
+        "requests": 25,
+        "megabytes": 18.45938491821289,
+        "settleMs": 221.90000009536743,
+        "flip250": 0.4963379333125422,
+        "flip1000": 0.4963379333125422,
+        "flipSettled": 0.4963379333125422,
+        "selected": 26,
+        "flipAverage": 0.4963379333125422
+      },
+      {
+        "scenario": "zoom out",
+        "policy": "Budgeted, adaptive",
+        "status": "ok",
+        "requests": 25,
+        "megabytes": 18.45938491821289,
+        "settleMs": 202.69999992847443,
+        "flip250": 0.4963379333125422,
+        "flip1000": 0.4963379333125422,
+        "flipSettled": 0.4963379333125422,
+        "selected": 26,
+        "flipAverage": 0.4963379333125422
+      },
+      {
+        "scenario": "zoom out",
+        "policy": "Budgeted, 64 requests",
+        "status": "ok",
+        "requests": 25,
+        "megabytes": 18.45938491821289,
+        "settleMs": 204.29999995231628,
+        "flip250": 0.4963379333125422,
+        "flip1000": 0.4963379333125422,
+        "flipSettled": 0.4963379333125422,
+        "selected": 26,
+        "flipAverage": 0.4963379333125422
+      },
+      {
+        "scenario": "pan",
+        "policy": "Legacy1x (1.x, 18 requests)",
+        "status": "ok",
+        "requests": 93,
+        "megabytes": 153.64995861053467,
+        "settleMs": 1778.3000000715256,
+        "flip250": 0.5327792958905594,
+        "flip1000": 0.5525111651359235,
+        "flipSettled": 0.553610164610105,
+        "selected": 110,
+        "flipAverage": 0.5463002085455293
+      },
+      {
+        "scenario": "pan",
+        "policy": "Budgeted, 18 requests",
+        "status": "ok",
+        "requests": 83,
+        "megabytes": 132.02829265594482,
+        "settleMs": 1752.8000000715256,
+        "flip250": 0.5465952061112457,
+        "flip1000": 0.5528983587626993,
+        "flipSettled": 0.553610164610105,
+        "selected": 90,
+        "flipAverage": 0.5515596960254762
+      },
+      {
+        "scenario": "pan",
+        "policy": "Budgeted, 4 requests",
+        "status": "ok",
+        "requests": 83,
+        "megabytes": 132.02829265594482,
+        "settleMs": 971.6999999284744,
+        "flip250": 0.5514522966169203,
+        "flip1000": 0.553610164610105,
+        "flipSettled": 0.553610164610105,
+        "selected": 90,
+        "flipAverage": 0.5533170616056616
+      },
+      {
+        "scenario": "pan",
+        "policy": "Budgeted, adaptive",
+        "status": "ok",
+        "requests": 83,
+        "megabytes": 132.02829265594482,
+        "settleMs": 871.6999999284744,
+        "flip250": 0.5454881957919933,
+        "flip1000": 0.553610164610105,
+        "flipSettled": 0.553610164610105,
+        "selected": 90,
+        "flipAverage": 0.5534185070688273
+      },
+      {
+        "scenario": "pan",
+        "policy": "Budgeted, 64 requests",
+        "status": "ok",
+        "requests": 83,
+        "megabytes": 132.02829265594482,
+        "settleMs": 1274.3999999761581,
+        "flip250": 0.5441239575640933,
+        "flip1000": 0.553610164610105,
+        "flipSettled": 0.553610164610105,
+        "selected": 90,
+        "flipAverage": 0.5510074029981761
+      }
+    ]
+  }
+}

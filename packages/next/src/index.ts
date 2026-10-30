@@ -41,6 +41,15 @@ export {
 export { Legacy1xSelection, type SelectionView } from "./streaming/Legacy1x.ts";
 export { GlobeLegacy1xSelection } from "./globe/GlobeLegacy1x.ts";
 export {
+  BingImagery,
+  UrlTemplateImagery,
+  type ImageryProvider,
+} from "./globe/ImageryProvider.ts";
+export {
+  GlobeImagery,
+  type GlobeImageryOptions,
+} from "./globe/GlobeImagery.ts";
+export {
   BudgetedSelection,
   type BudgetedOptions,
 } from "./streaming/Budgeted.ts";

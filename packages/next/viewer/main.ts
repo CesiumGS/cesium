@@ -8,6 +8,7 @@ import {
   eastNorthUpToFixedFrame,
   fromDegrees,
   ionDefaults,
+  BingImagery,
   mat4,
   resolveIonAsset,
   resolveITwinIModel,
@@ -540,6 +541,23 @@ async function main(): Promise<void> {
         throw error;
       }
       return resolveIonAsset(asset, { accessToken: defaultIonToken });
+    }
+  };
+  // The ion default imagery (Bing Maps Aerial), with the same token fallback.
+  const resolveBing = async () => {
+    try {
+      return await BingImagery.fromIon(2);
+    } catch (error) {
+      const denied =
+        error instanceof Error && /\((401|404)\)/.test(error.message);
+      if (
+        !denied ||
+        !defaultIonToken ||
+        ionDefaults.accessToken === defaultIonToken
+      ) {
+        throw error;
+      }
+      return BingImagery.fromIon(2, { accessToken: defaultIonToken });
     }
   };
   const itwinShareKey = import.meta.env.VITE_ITWIN_SHARE_KEY as
@@ -1113,11 +1131,23 @@ async function main(): Promise<void> {
       // Terrain (Cesium World Terrain, ion asset 1), except under Google's
       // photorealistic tiles, which are their own terrain.
       if (terrainToggle.checked && !photorealistic) {
-        const ion = await resolveIon(1);
+        const [ion, imagery] = await Promise.all([
+          resolveIon(1),
+          resolveBing().catch((error) => {
+            warnings.add(
+              `imagery: ${error instanceof Error ? error.message : String(error)}`,
+            );
+            return undefined;
+          }),
+        ]);
         attributions.push(...ion.attributions);
+        if (imagery) {
+          attributions.push(...imagery.attributions);
+        }
         nextTerrain = await engine.addTerrain(next, ion.url, {
           headers: ion.headers,
           policy: policySelect.value as "legacy1x" | "budgeted",
+          ...(imagery ? { imagery } : {}),
         });
         if (token !== loadToken) {
           throw new Error("superseded");

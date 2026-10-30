@@ -19,6 +19,7 @@ import { BudgetedSelection, type BudgetedOptions } from "./Budgeted.ts";
 import { loadTilesetJson, type Tile, type TileTree } from "./Tile.ts";
 import { volumeObb } from "./volumes.ts";
 import type { RequestSample } from "./RequestScheduler.ts";
+import type { GlobeImagery } from "../globe/GlobeImagery.ts";
 import {
   accumulate,
   emptyTotals,
@@ -134,6 +135,8 @@ export class Tileset3D implements TileTree {
     bytesReceived: 0,
     selected: new Map(),
   };
+  /** Globe imagery draped on this terrain tileset (`engine.addTerrain`). */
+  imagery?: GlobeImagery;
   /** Selected tiles per view id after the last update (parity tests). */
   readonly lastSelected = new Map<number, Tile[]>();
   private frame = 0;
@@ -272,6 +275,7 @@ export class Tileset3D implements TileTree {
       // shared with other tilesets, may be full).
       this.wanted.size > 0 ||
       this.frame - this.lastChange < 3 ||
+      this.imagery?.busy === true ||
       this.selection.memoryAdjustedScreenSpaceError !==
         this.selection.maximumScreenSpaceError
     );
@@ -421,6 +425,18 @@ export class Tileset3D implements TileTree {
       }
     }
     this.upload();
+    if (this.imagery) {
+      // Imagery for the terrain tiles drawn in any view, nearest first.
+      const wanted = new Map<Tile, number>();
+      for (const tile of nowMasked) {
+        let priority = Infinity;
+        for (const view of views) {
+          priority = Math.min(priority, tile.viewState(view.id).distance);
+        }
+        wanted.set(tile, priority);
+      }
+      this.imagery.update(wanted);
+    }
     this.evict(frame);
     if (
       this.stats.requestsTotal +
@@ -697,6 +713,8 @@ export class Tileset3D implements TileTree {
     for (const controller of this.loading.values()) {
       controller.abort();
     }
+    this.imagery?.destroy();
+    this.imagery = undefined;
     for (const origin of this.origins) {
       this.engine.requests.unregister(origin);
     }

@@ -194,6 +194,13 @@ async function createPipelines(
       storage(2, true, VERTEX), // vertex streams
       storage(3, true, FRAGMENT), // materials
       storage(4, true, FRAGMENT), // mixed-LOD clip boxes
+      // Globe imagery: the world's composited texture array.
+      {
+        binding: 5,
+        visibility: FRAGMENT,
+        texture: { sampleType: "float", viewDimension: "2d-array" },
+      },
+      { binding: 6, visibility: FRAGMENT, sampler: { type: "filtering" } },
     ],
   });
   const textureSetLayout = device.createBindGroupLayout({

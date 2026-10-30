@@ -59,6 +59,37 @@ self.onmessage = async (
       self.postMessage({ id, ok: true, result: { asset, info } }, transfer);
       return;
     }
+    if (type === "image") {
+      // An imagery tile, decoded here (createImageBitmap), off the main thread.
+      const start = performance.now();
+      const response = await fetch(event.data.url, {
+        ...(event.data.headers ? { headers: event.data.headers } : {}),
+        signal: controller.signal,
+      });
+      if (!response.ok) {
+        throw new Error(`imagery tile: ${response.status}`);
+      }
+      const blob = await response.blob();
+      const decodeStart = performance.now();
+      const bitmap = await createImageBitmap(blob, {
+        colorSpaceConversion: "none",
+        premultiplyAlpha: "none",
+      });
+      self.postMessage(
+        {
+          id,
+          ok: true,
+          result: {
+            bitmap,
+            bytes: blob.size,
+            networkMs: decodeStart - start,
+            decodeMs: performance.now() - decodeStart,
+          },
+        },
+        [bitmap],
+      );
+      return;
+    }
     if (type !== "gltf") {
       throw new Error(`Unknown request type "${type}"`);
     }
