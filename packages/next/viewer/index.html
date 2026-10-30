@@ -111,8 +111,136 @@
         gap: 8px;
         padding-bottom: 12px;
       }
+      .segmented {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2px;
+        padding: 2px;
+        background: var(--raised);
+        border: 1px solid #2f3a50;
+        border-radius: 8px;
+      }
+      .segmented button {
+        border: none;
+        background: none;
+        border-radius: 6px;
+        padding: 5px 4px;
+        color: var(--muted);
+      }
+      .segmented button:hover {
+        color: var(--text);
+      }
+      .segmented button[aria-selected="true"] {
+        background: #222a3a;
+        color: var(--text);
+        font-weight: 600;
+      }
+      .pane {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .pane[hidden] {
+        display: none;
+      }
+      details.sub > summary {
+        cursor: pointer;
+        color: var(--text);
+        font-size: 12px;
+      }
+      details.sub > summary .hint {
+        margin-left: 6px;
+      }
+      .sub-body {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding: 6px 0 2px;
+      }
+      .combo {
+        position: relative;
+        flex: 1;
+        min-width: 0;
+      }
+      .combo input {
+        padding-right: 28px;
+      }
+      .combo-toggle {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 26px;
+        padding: 0;
+        display: grid;
+        place-items: center;
+        background: none;
+        border: none;
+        border-radius: 0 6px 6px 0;
+        color: var(--muted);
+        cursor: pointer;
+      }
+      .combo-toggle:hover {
+        color: var(--text);
+      }
+      .combo-toggle svg {
+        transition: transform 120ms;
+      }
+      .combo-toggle[aria-expanded="true"] svg {
+        transform: rotate(180deg);
+      }
+      .combo-row {
+        position: relative;
+      }
+      .combo-list {
+        position: absolute;
+        z-index: 5;
+        top: calc(100% + 4px);
+        left: 0;
+        right: 0;
+        max-height: 240px;
+        overflow-y: auto;
+        margin: 0;
+        padding: 4px;
+        list-style: none;
+        background: #0b0e14;
+        border: 1px solid #2f3a50;
+        border-radius: 6px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+      }
+      .combo-list[hidden] {
+        display: none;
+      }
+      .combo-option {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+        padding: 5px 8px;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      .combo-option[aria-selected="true"] {
+        background: #222a3a;
+      }
+      .combo-option .name {
+        color: var(--text);
+      }
+      .combo-option .id {
+        color: var(--muted);
+        font:
+          11px ui-monospace,
+          monospace;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .combo-empty {
+        padding: 5px 8px;
+        color: var(--muted);
+      }
       select,
       input[type="number"],
+      input[type="password"],
       input[type="text"] {
         background: #0f1420;
         color: var(--text);
@@ -506,37 +634,117 @@
       <details class="section" data-key="content" open>
         <summary>Content</summary>
         <div class="body">
-          <label class="hint" for="model">glTF sample model</label>
-          <select id="model">
-            <option value="">—</option>
-          </select>
-          <label class="hint" for="tileset">3D Tiles sample (streamed)</label>
-          <select id="tileset">
-            <option value="">—</option>
-          </select>
-          <label class="hint" for="ion-asset"
-            >Cesium ion asset (3D Tiles)</label
+          <div class="segmented" role="tablist" aria-label="Content source">
+            <button
+              role="tab"
+              id="tab-samples"
+              aria-controls="pane-samples"
+              data-pane="samples"
+            >
+              Samples
+            </button>
+            <button
+              role="tab"
+              id="tab-ion"
+              aria-controls="pane-ion"
+              data-pane="ion"
+            >
+              Cesium ion
+            </button>
+            <button
+              role="tab"
+              id="tab-itwin"
+              aria-controls="pane-itwin"
+              data-pane="itwin"
+            >
+              iTwin
+            </button>
+          </div>
+
+          <div
+            id="pane-samples"
+            class="pane"
+            role="tabpanel"
+            aria-labelledby="tab-samples"
           >
-          <div class="row">
-            <input
-              id="ion-asset"
-              type="number"
-              min="1"
-              placeholder="asset id"
-            />
-            <button id="ion-load">Load</button>
+            <label class="hint" for="sample"
+              >glTF models, 3D Tiles and scenes</label
+            >
+            <select id="sample"></select>
           </div>
-          <div id="ion-hint" class="hint"></div>
-          <label class="hint" for="imodel">iTwin iModel (mesh export)</label>
-          <div class="row">
-            <input id="imodel" type="text" placeholder="iModel id" />
-            <button id="imodel-load">Load</button>
+
+          <div
+            id="pane-ion"
+            class="pane"
+            role="tabpanel"
+            aria-labelledby="tab-ion"
+            hidden
+          >
+            <label class="hint" for="ion-asset">3D Tiles asset</label>
+            <div class="row combo-row">
+              <div class="combo">
+                <input
+                  id="ion-asset"
+                  type="text"
+                  inputmode="numeric"
+                  autocomplete="off"
+                  placeholder="Paste or pick an id"
+                />
+              </div>
+              <button id="ion-load">Load</button>
+            </div>
+            <div id="ion-hint" class="hint"></div>
+            <details class="sub">
+              <summary>
+                Access token <span id="ion-token-source" class="hint"></span>
+              </summary>
+              <div class="sub-body">
+                <div class="row">
+                  <input
+                    id="ion-token"
+                    type="password"
+                    autocomplete="off"
+                    spellcheck="false"
+                    aria-label="Cesium ion access token"
+                    placeholder="Paste a token (optional)"
+                  />
+                  <button id="ion-token-clear">Clear</button>
+                </div>
+                <label class="check"
+                  ><input id="ion-token-remember" type="checkbox" /> Remember on
+                  this device</label
+                >
+                <div class="hint">
+                  First found: pasted here, VITE_ION_TOKEN in .env.local, then
+                  CesiumJS's evaluation token (public assets only).
+                </div>
+              </div>
+            </details>
           </div>
-          <div id="imodel-hint" class="hint"></div>
-          <div class="row">
-            <button id="city">Synthetic city</button>
-            <button id="frame">Frame content</button>
+
+          <div
+            id="pane-itwin"
+            class="pane"
+            role="tabpanel"
+            aria-labelledby="tab-itwin"
+            hidden
+          >
+            <label class="hint" for="imodel">iModel (mesh export)</label>
+            <div class="row combo-row">
+              <div class="combo">
+                <input
+                  id="imodel"
+                  type="text"
+                  autocomplete="off"
+                  placeholder="Paste or pick an id"
+                />
+              </div>
+              <button id="imodel-load">Load</button>
+            </div>
+            <div id="imodel-hint" class="hint"></div>
           </div>
+
+          <button id="frame">Frame content</button>
         </div>
       </details>
 

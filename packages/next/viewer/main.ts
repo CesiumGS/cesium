@@ -7,6 +7,7 @@ import {
   createSurfacePatch,
   eastNorthUpToFixedFrame,
   fromDegrees,
+  ionDefaults,
   mat4,
   resolveIonAsset,
   resolveITwinIModel,
@@ -24,6 +25,7 @@ import {
   type ViewLink,
   type World,
 } from "../src/index.ts";
+import ionSource from "../../engine/Source/Core/Ion.js?raw";
 
 /**
  * Demo viewer for the 2.0 PoC: loads sample glTF models, 3D Tiles content
@@ -61,6 +63,164 @@ const TILESETS = [
   "Batched/BatchedColors/tileset.json",
   "Batched/BatchedTextured/tileset.json",
 ];
+
+/**
+ * CesiumJS's public evaluation token, read from the 1.x source (kept current
+ * by the repo's token workflow) rather than copied here.
+ */
+const defaultIonToken = /defaultAccessToken =\s*"([^"]+)"/.exec(ionSource)?.[1];
+
+/** Public ion 3D Tiles assets (all from the Sandcastle gallery). */
+const ION_ASSETS = [
+  ["2275207", "Google Photorealistic 3D Tiles"],
+  ["96188", "Cesium OSM Buildings"],
+  ["75343", "New York City buildings"],
+  ["40866", "Photogrammetry sample"],
+  ["69380", "Photogrammetry (3D Tiles Compare)"],
+  ["2464651", "BIM design model"],
+  ["2887123", "Architectural design model"],
+  ["2887129", "Architectural design site"],
+  ["4665927", "Design model with edge visibility"],
+  ["1670818", "Proposed building (Clipping Regions)"],
+] as const;
+
+/** Public demo iModels (the iModel mesh export Sandcastle). */
+const IMODELS = [
+  ["669dde67-eb69-4e0b-bcf2-f722eee94746", "Station (design model)"],
+  ["f856f57d-3d28-4265-9c4f-5e60c0662c15", "Station surroundings"],
+] as const;
+
+let comboCount = 0;
+/**
+ * Combo box: a text input that takes a pasted id, with a list of known ids
+ * under it, filtered by what's typed (name or id). Arrow keys move, Enter
+ * picks or loads what was typed, Escape closes; picking loads.
+ */
+function combo(
+  input: HTMLInputElement,
+  options: ReadonlyArray<readonly [string, string]>,
+  onLoad: () => void,
+): void {
+  const list = document.createElement("ul");
+  list.className = "combo-list";
+  list.id = `combo-list-${++comboCount}`;
+  list.setAttribute("role", "listbox");
+  list.hidden = true;
+  // The chevron: shows there is a list, and opens or closes it.
+  const toggle = document.createElement("button");
+  toggle.type = "button";
+  toggle.className = "combo-toggle";
+  toggle.tabIndex = -1;
+  toggle.setAttribute("aria-label", "Show known ids");
+  toggle.setAttribute("aria-expanded", "false");
+  toggle.innerHTML =
+    '<svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  input.after(toggle);
+  // The list spans the whole row (input and its button), not just the input.
+  (input.closest(".combo-row") ?? input.parentElement!).append(list);
+  input.setAttribute("role", "combobox");
+  input.setAttribute("aria-controls", list.id);
+  input.setAttribute("aria-autocomplete", "list");
+  input.setAttribute("aria-expanded", "false");
+  let shown: Array<readonly [string, string]> = [];
+  let active = -1;
+  const render = () => {
+    list.replaceChildren();
+    if (shown.length === 0) {
+      const empty = document.createElement("li");
+      empty.className = "combo-empty";
+      empty.textContent = "No match: press Enter to load this id";
+      list.append(empty);
+    }
+    shown.forEach(([id, name], i) => {
+      const item = document.createElement("li");
+      item.className = "combo-option";
+      item.id = `${list.id}-${i}`;
+      item.setAttribute("role", "option");
+      item.setAttribute("aria-selected", String(i === active));
+      const n = document.createElement("span");
+      n.className = "name";
+      n.textContent = name;
+      const v = document.createElement("span");
+      v.className = "id";
+      v.textContent = id;
+      item.append(n, v);
+      // mousedown: before the input's blur closes the list.
+      item.addEventListener("mousedown", (e) => {
+        e.preventDefault();
+        pick(i);
+      });
+      list.append(item);
+    });
+    if (active >= 0) {
+      input.setAttribute("aria-activedescendant", `${list.id}-${active}`);
+      list.children[active]?.scrollIntoView({ block: "nearest" });
+    } else {
+      input.removeAttribute("aria-activedescendant");
+    }
+  };
+  const open = (filter: boolean) => {
+    const q = filter ? input.value.trim().toLowerCase() : "";
+    shown = options.filter(
+      ([id, name]) => !q || id.includes(q) || name.toLowerCase().includes(q),
+    );
+    active = -1;
+    list.hidden = false;
+    input.setAttribute("aria-expanded", "true");
+    toggle.setAttribute("aria-expanded", "true");
+    render();
+  };
+  const close = () => {
+    list.hidden = true;
+    input.setAttribute("aria-expanded", "false");
+    toggle.setAttribute("aria-expanded", "false");
+    input.removeAttribute("aria-activedescendant");
+  };
+  const pick = (i: number) => {
+    input.value = shown[i]![0];
+    close();
+    onLoad();
+  };
+  // mousedown: keep focus in the input (its blur would close the list).
+  toggle.addEventListener("mousedown", (e) => {
+    e.preventDefault();
+    if (!list.hidden) {
+      close();
+    } else if (document.activeElement !== input) {
+      input.focus(); // opens the list
+    } else {
+      open(false);
+    }
+  });
+  input.addEventListener("focus", () => open(false));
+  input.addEventListener("click", () => list.hidden && open(false));
+  input.addEventListener("input", () => open(true));
+  input.addEventListener("blur", close);
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      if (list.hidden) {
+        open(false);
+      }
+      const n = shown.length;
+      if (n > 0) {
+        active =
+          e.key === "ArrowDown" ? (active + 1) % n : (active - 1 + n) % n;
+        render();
+      }
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (!list.hidden && active >= 0) {
+        pick(active);
+      } else {
+        close();
+        onLoad();
+      }
+    } else if (e.key === "Escape") {
+      close();
+    }
+  });
+}
 
 type Source =
   | { kind: "model"; path: string }
@@ -117,9 +277,15 @@ function sourceName(source: Source): string {
     case "tileset":
       return label(source.path);
     case "ion":
-      return `ion asset ${source.asset}`;
+      return (
+        ION_ASSETS.find(([id]) => id === String(source.asset))?.[1] ??
+        `ion asset ${source.asset}`
+      );
     case "imodel":
-      return `iModel ${source.id.slice(0, 8)}…`;
+      return (
+        IMODELS.find(([id]) => id === source.id)?.[1] ??
+        `iModel ${source.id.slice(0, 8)}…`
+      );
     case "city":
       return "Synthetic city";
   }
@@ -320,7 +486,43 @@ async function main(): Promise<void> {
   /** On-screen attributions the current ion asset requires (HTML from ion). */
   let attributions: string[] = [];
   let current = sourceFromUrl();
-  const ionToken = import.meta.env.VITE_ION_TOKEN as string | undefined;
+  // ion access token, first found: pasted in the viewer (this session, or
+  // remembered on this device), VITE_ION_TOKEN from .env.local, CesiumJS's
+  // evaluation token (public assets only). It becomes ionDefaults.accessToken.
+  const envIonToken = import.meta.env.VITE_ION_TOKEN as string | undefined;
+  const TOKEN_KEY = "viewer.ionToken";
+  const storage = (remember: boolean) =>
+    remember ? globalThis.localStorage : globalThis.sessionStorage;
+  let pastedIonToken: string | undefined;
+  try {
+    pastedIonToken =
+      sessionStorage.getItem(TOKEN_KEY) ??
+      localStorage.getItem(TOKEN_KEY) ??
+      undefined;
+  } catch {
+    // Storage unavailable: the pasted token lasts until reload.
+  }
+  /**
+   * With the default token; a public asset that isn't in that account
+   * (401/404) retries with CesiumJS's evaluation token, as Sandcastle would
+   * load it. A viewer convenience, not engine behavior.
+   */
+  const resolveIon = async (asset: number) => {
+    try {
+      return await resolveIonAsset(asset);
+    } catch (error) {
+      const denied =
+        error instanceof Error && /\((401|404)\)/.test(error.message);
+      if (
+        !denied ||
+        !defaultIonToken ||
+        ionDefaults.accessToken === defaultIonToken
+      ) {
+        throw error;
+      }
+      return resolveIonAsset(asset, { accessToken: defaultIonToken });
+    }
+  };
   const itwinShareKey = import.meta.env.VITE_ITWIN_SHARE_KEY as
     string | undefined;
 
@@ -348,35 +550,126 @@ async function main(): Promise<void> {
   }
 
   // ---------------------------------------------------------------- source UI
-  const modelSelect = $<HTMLSelectElement>("#model");
-  for (const path of MODELS) {
-    modelSelect.add(new Option(label(path), path));
+  // Content source tabs: Samples, Cesium ion, iTwin. The selected tab
+  // follows what's loaded; switching tabs only shows that source's inputs.
+  const tabs = [...document.querySelectorAll<HTMLButtonElement>("[data-pane]")];
+  const showPane = (pane: string) => {
+    for (const tab of tabs) {
+      const on = tab.dataset.pane === pane;
+      tab.setAttribute("aria-selected", String(on));
+      tab.tabIndex = on ? 0 : -1;
+      $(`#pane-${tab.dataset.pane}`).hidden = !on;
+    }
+  };
+  for (const tab of tabs) {
+    tab.addEventListener("click", () => showPane(tab.dataset.pane!));
+    tab.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+        const i = tabs.indexOf(tab);
+        const next =
+          tabs[
+            (i + (e.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length
+          ]!;
+        showPane(next.dataset.pane!);
+        next.focus();
+      }
+    });
   }
-  const tilesetSelect = $<HTMLSelectElement>("#tileset");
-  for (const path of TILESETS) {
-    tilesetSelect.add(new Option(label(path), path));
-  }
+  const paneOf = (source: Source) =>
+    source.kind === "ion"
+      ? "ion"
+      : source.kind === "imodel"
+        ? "itwin"
+        : "samples";
+  // One sample list: glTF models, 3D Tiles, scenes.
+  const sampleSelect = $<HTMLSelectElement>("#sample");
+  const group = (name: string, entries: Array<[string, string]>) => {
+    const g = document.createElement("optgroup");
+    g.label = name;
+    for (const [value, text] of entries) {
+      g.append(new Option(text, value));
+    }
+    sampleSelect.append(g);
+  };
+  sampleSelect.append(new Option("Choose a sample…", ""));
+  group(
+    "glTF models",
+    MODELS.map((path) => [`model:${path}`, label(path)]),
+  );
+  group(
+    "3D Tiles (streamed)",
+    TILESETS.map((path) => [`tileset:${path}`, label(path)]),
+  );
+  group("Scenes", [["city", "Synthetic city"]]);
+  const sampleValue = (source: Source) =>
+    source.kind === "model" || source.kind === "tileset"
+      ? `${source.kind}:${source.path}`
+      : source.kind === "city"
+        ? "city"
+        : "";
   const ionInput = $<HTMLInputElement>("#ion-asset");
   const ionButton = $<HTMLButtonElement>("#ion-load");
-  if (!ionToken) {
-    ionInput.disabled = ionButton.disabled = true;
-    $("#ion-hint").textContent =
-      "Set VITE_ION_TOKEN in packages/next/.env.local to load ion assets.";
+  const tokenInput = $<HTMLInputElement>("#ion-token");
+  const tokenClear = $<HTMLButtonElement>("#ion-token-clear");
+  const tokenRemember = $<HTMLInputElement>("#ion-token-remember");
+  /** Applies the token precedence and says which one is in use. */
+  const applyIonToken = () => {
+    ionDefaults.accessToken = pastedIonToken ?? envIonToken ?? defaultIonToken;
+    tokenInput.value = pastedIonToken ?? "";
+    tokenClear.disabled = pastedIonToken === undefined;
+    $("#ion-token-source").textContent = pastedIonToken
+      ? "· pasted here"
+      : envIonToken
+        ? "· from .env.local"
+        : "· CesiumJS evaluation token";
+  };
+  const setIonToken = (token: string | undefined) => {
+    pastedIonToken = token;
+    try {
+      sessionStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(TOKEN_KEY);
+      if (token) {
+        storage(tokenRemember.checked).setItem(TOKEN_KEY, token);
+      }
+    } catch {
+      // Storage unavailable.
+    }
+    applyIonToken();
+    if (current.kind === "ion") {
+      void load(current);
+    }
+  };
+  try {
+    tokenRemember.checked = localStorage.getItem(TOKEN_KEY) !== null;
+  } catch {
+    // Storage unavailable.
   }
-  modelSelect.addEventListener(
-    "change",
-    () => void load({ kind: "model", path: modelSelect.value }),
+  tokenInput.addEventListener("change", () =>
+    setIonToken(tokenInput.value.trim() || undefined),
   );
-  tilesetSelect.addEventListener(
-    "change",
-    () => void load({ kind: "tileset", path: tilesetSelect.value }),
-  );
-  ionButton.addEventListener("click", () => {
-    const asset = Number(ionInput.value);
-    if (asset > 0) {
-      void load({ kind: "ion", asset });
+  tokenClear.addEventListener("click", () => setIonToken(undefined));
+  tokenRemember.addEventListener("change", () => setIonToken(pastedIonToken));
+  applyIonToken();
+  sampleSelect.addEventListener("change", () => {
+    const v = sampleSelect.value;
+    if (v === "city") {
+      void load({ kind: "city" });
+    } else if (v.startsWith("model:")) {
+      void load({ kind: "model", path: v.slice(6) });
+    } else if (v.startsWith("tileset:")) {
+      void load({ kind: "tileset", path: v.slice(8) });
     }
   });
+  // Combo boxes: paste any id, or pick a known one (picking loads it; Enter
+  // loads what was typed).
+  const loadIon = () => {
+    const asset = Number(ionInput.value.trim());
+    if (Number.isInteger(asset) && asset > 0) {
+      void load({ kind: "ion", asset });
+    }
+  };
+  ionButton.addEventListener("click", loadIon);
+  combo(ionInput, ION_ASSETS, loadIon);
   const imodelInput = $<HTMLInputElement>("#imodel");
   const imodelButton = $<HTMLButtonElement>("#imodel-load");
   if (!itwinShareKey) {
@@ -384,13 +677,14 @@ async function main(): Promise<void> {
     $("#imodel-hint").textContent =
       "Set VITE_ITWIN_SHARE_KEY in packages/next/.env.local to load iModels.";
   }
-  imodelButton.addEventListener("click", () => {
+  const loadIModel = () => {
     const id = imodelInput.value.trim();
     if (id) {
       void load({ kind: "imodel", id });
     }
-  });
-  $("#city").addEventListener("click", () => void load({ kind: "city" }));
+  };
+  imodelButton.addEventListener("click", loadIModel);
+  combo(imodelInput, IMODELS, loadIModel);
   $("#frame").addEventListener("click", () => frame());
 
   // ---------------------------------------------------------------- lighting UI
@@ -573,8 +867,8 @@ async function main(): Promise<void> {
       sourceToQuery(source) +
         (at && source.kind !== "model" ? `&at=${at}` : ""),
     );
-    modelSelect.value = source.kind === "model" ? source.path : "";
-    tilesetSelect.value = source.kind === "tileset" ? source.path : "";
+    sampleSelect.value = sampleValue(source);
+    showPane(paneOf(source));
     if (source.kind === "imodel") {
       imodelInput.value = source.id;
     }
@@ -653,12 +947,7 @@ async function main(): Promise<void> {
         let url: string;
         let headers: Record<string, string> | undefined;
         if (source.kind === "ion") {
-          if (!ionToken) {
-            throw new Error("No VITE_ION_TOKEN configured");
-          }
-          const resolved = await resolveIonAsset(source.asset, {
-            accessToken: ionToken,
-          });
+          const resolved = await resolveIon(source.asset);
           url = resolved.url;
           headers = resolved.headers;
           attributions = resolved.attributions;

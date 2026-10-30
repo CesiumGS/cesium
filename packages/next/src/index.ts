@@ -63,6 +63,7 @@ export {
   type GltfAsset,
 } from "./io/gltfTypes.ts";
 export {
+  ionDefaults,
   resolveIonAsset,
   resolveUri,
   type IonAsset,

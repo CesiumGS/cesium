@@ -18,20 +18,36 @@ export interface IonAsset {
 }
 
 export interface IonOptions {
-  accessToken: string;
-  /** ion API server; defaults to the public Cesium ion. */
+  /** Overrides `ionDefaults.accessToken` for this asset. */
+  accessToken?: string;
+  /** Overrides `ionDefaults.server`. */
   server?: string;
 }
 
+/**
+ * Defaults for every ion request, as 1.x `Ion.defaultAccessToken` and
+ * `Ion.defaultServer`; a call's options override them. Unlike 1.x no token
+ * is built in: the application sets one.
+ */
+export const ionDefaults: { accessToken?: string; server: string } = {
+  server: "https://api.cesium.com/",
+};
+
 export async function resolveIonAsset(
   assetId: number,
-  options: IonOptions,
+  options: IonOptions = {},
 ): Promise<IonAsset> {
-  const server = options.server ?? "https://api.cesium.com/";
+  const accessToken = options.accessToken ?? ionDefaults.accessToken;
+  if (!accessToken) {
+    throw new Error(
+      `ion asset ${assetId}: no access token (set ionDefaults.accessToken or pass one)`,
+    );
+  }
+  const server = options.server ?? ionDefaults.server;
   const response = await fetch(
     new URL(`v1/assets/${assetId}/endpoint`, server),
     {
-      headers: { Authorization: `Bearer ${options.accessToken}` },
+      headers: { Authorization: `Bearer ${accessToken}` },
     },
   );
   if (!response.ok) {
