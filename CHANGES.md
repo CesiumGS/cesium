@@ -21,6 +21,10 @@
 - Fixed dynamic environment lighting on models and tilesets near or below the ellipsoid surface. [#13988](https://github.com/CesiumGS/cesium/pull/13988)
 - Fixed `pointCloudShading.backFaceCulling` not hiding back-facing points on some platforms. [#13989](https://github.com/CesiumGS/cesium/pull/13989)
 
+#### Fixes :wrench:
+
+- Fixed camera heading, pitch, and roll getters introducing roundoff drift and spurious camera movement events when repeatedly observed. [#12546](https://github.com/CesiumGS/cesium/issues/12546)
+
 ## 1.146 - 2026-10-01
 
 ### Major Announcements :loudspeaker:
