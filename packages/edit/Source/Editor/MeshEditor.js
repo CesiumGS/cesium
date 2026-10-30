@@ -28,6 +28,7 @@ import MeshEditorStyle from "./MeshEditorStyle.js";
 
 /** @import { FrameState, GeometryReadSession, GeometrySource, Scene } from "@cesium/engine"; */
 /** @import { ComponentMask } from "@cesium/mesh-editor"; */
+/** @import MeshEditorTool from "./MeshEditorTool.js"; */
 
 // The attribute read from each source.
 const POSITION_ATTRIBUTE = new GeometryAttributeDescriptor({
@@ -51,6 +52,16 @@ const scratchBoundsArray = new Float64Array(6);
 const scratchMinimum = new Cartesian3();
 const scratchMaximum = new Cartesian3();
 const scratchAabb = new AxisAlignedBoundingBox();
+
+/**
+ * A {@link MeshEditor}'s built-in tools.
+ *
+ * @typedef {object} MeshEditorTools
+ * @property {MeshEditorTool} select Selects the clicked vertex, edge or face.
+ * @property {MeshEditorTool} translate Moves the selection via mouse drags.
+ *
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ */
 
 /**
  * <div class="notice">
@@ -82,6 +93,7 @@ const scratchAabb = new AxisAlignedBoundingBox();
  * const mesh = editor.addMesh(model.nodes[0].primitives[0], { parent: group });
  * editor.setMeshActive(mesh);
  * editor.mode = Cesium.EditMode.VERTEX;
+ * editor.activeTool = editor.tools.select;
  */
 class MeshEditor {
   /** @type {MeshEditorModule} */
@@ -216,6 +228,33 @@ class MeshEditor {
    */
   get root() {
     return this.#root;
+  }
+
+  /**
+   * The editor's built-in tools.
+   *
+   * @type {MeshEditorTools}
+   * @readonly
+   */
+  get tools() {
+    throw new DeveloperError("Not implemented.");
+  }
+
+  /**
+   * The tool that receives pointer input, or <code>undefined</code> for none.
+   *
+   * @type {MeshEditorTool | undefined}
+   * @default undefined
+   *
+   * @exception {DeveloperError} The tool isn't in this editor.
+   * @exception {DeveloperError} The tool doesn't support the current mode.
+   */
+  get activeTool() {
+    throw new DeveloperError("Not implemented.");
+  }
+
+  set activeTool(value) {
+    throw new DeveloperError("Not implemented.");
   }
 
   /**

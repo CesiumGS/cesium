@@ -775,6 +775,46 @@ describe(
       });
     });
 
+    describe("tools", function () {
+      it("has the built-in select and translate tools", function () {});
+
+      it("returns the same tools on every read", function () {});
+    });
+
+    describe("activeTool", function () {
+      it("is undefined initially", function () {});
+
+      it("sets the active tool", function () {});
+
+      it("clears the active tool when set to undefined", function () {});
+
+      it("throws for a tool from another editor", function () {});
+
+      it("throws for a tool that doesn't support the current mode", function () {});
+
+      it("is cleared when the mode is set to EditMode.NONE", function () {});
+    });
+
+    describe("pointer input", function () {
+      it("selects a clicked vertex with the select tool", function () {});
+
+      it("toggles a shift-clicked vertex with the select tool", function () {});
+
+      it("clears the selection when clicking empty space", function () {});
+
+      it("clears the selection when clicking a component the mode can't select", function () {});
+
+      it("moves the selection when dragging with the translate tool", function () {});
+
+      it("restores the selection's position when the translate tool is cancelled mid-drag", function () {});
+
+      it("makes a clicked mesh the only active mesh in EditMode.NONE", function () {});
+
+      it("toggles a shift-clicked mesh in EditMode.NONE", function () {});
+
+      it("makes every mesh inactive when clicking empty space in EditMode.NONE", function () {});
+    });
+
     describe("mode", function () {
       it("sets the mode", async function () {
         const editor = await MeshEditor.addToScene(scene);
@@ -1174,6 +1214,8 @@ describe(
 
         expect(editor.isDestroyed()).toBe(false);
       });
+
+      it("stops handling pointer input", function () {});
     });
   },
   "WebGL",
