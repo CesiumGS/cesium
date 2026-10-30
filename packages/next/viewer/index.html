@@ -171,59 +171,281 @@
       a {
         color: var(--accent);
       }
-      .meter {
-        display: grid;
-        grid-template-columns: 92px 1fr;
-        gap: 2px 8px;
-        align-items: center;
-        font-size: 12px;
+      /* Data-viz tokens for the panel surface (dark). Marks wear --series-*,
+         text wears --ink / --ink-2 / --muted, never a series color. The
+         four series steps are validated against --surface. */
+      :root {
+        --surface: #131824;
+        --raised: #0f1420;
+        --ink: #e6e9ef;
+        --ink-2: #aab2c3;
+        --grid: #222a3a;
+        --hairline: rgba(255, 255, 255, 0.08);
+        --series-1: #3987e5;
+        --series-2: #d95926;
+        --series-3: #199e70;
+        --series-4: #c98500;
+        --deemph: #4a5368;
+        --track-bg: #1b2c47;
+        --warning: #fab219;
       }
-      .meter .label {
+      .panel {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .num {
+        font-variant-numeric: tabular-nums;
+      }
+      .tiles {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+      .tile {
+        background: var(--raised);
+        border: 1px solid var(--hairline);
+        border-radius: 8px;
+        padding: 8px 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 0;
+      }
+      .tile-label {
+        font-size: 11px;
         color: var(--muted);
       }
-      .meter .value.slowest {
-        color: var(--accent);
+      .tile-value {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--ink);
+        line-height: 1.2;
       }
-      .meter .value {
-        font:
-          11px/16px ui-monospace,
-          monospace;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+      .tile-value .of {
+        font-size: 12px;
+        font-weight: 400;
+        color: var(--ink-2);
       }
-      .meter .bar {
+      .tile-sub {
+        font-size: 11px;
+        color: var(--ink-2);
+      }
+      .track {
         position: relative;
-        height: 16px;
-        background: #0f1420;
-        border: 1px solid #2f3a50;
-        border-radius: 4px;
-        overflow: hidden;
+        height: 6px;
+        border-radius: 3px;
+        background: var(--track-bg);
       }
-      .meter .fill {
+      .track .fill {
         position: absolute;
         inset: 0 auto 0 0;
-        background: #3d6fb6;
+        border-radius: 3px;
+        background: var(--series-1);
       }
-      .meter .fill.idle {
-        background: #2a4a78;
+      .track .fill.warn {
+        background: var(--warning);
       }
-      .meter .fill.hot {
-        background: #c4573a;
-      }
-      .meter .text {
+      .track .marker {
         position: absolute;
-        inset: 0 6px;
-        line-height: 16px;
-        font:
-          11px/16px ui-monospace,
-          monospace;
-        color: var(--text);
+        top: -3px;
+        bottom: -3px;
+        width: 2px;
+        margin-left: -1px;
+        background: var(--ink-2);
+      }
+      .status-warn {
+        color: var(--ink);
+        white-space: nowrap;
+      }
+      .mrow {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        font-size: 12px;
+      }
+      .mrow-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        color: var(--muted);
+      }
+      .mrow-head .num {
+        color: var(--ink);
+      }
+      .chart {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .chart-title {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--ink);
+      }
+      .chart-note {
+        font-weight: 400;
+        color: var(--muted);
+      }
+      .stack {
+        display: flex;
+        gap: 2px;
+        height: 12px;
+      }
+      .stack .seg {
+        min-width: 2px;
+      }
+      .stack .seg:first-child {
+        border-radius: 4px 0 0 4px;
+      }
+      .stack .seg:last-child {
+        border-radius: 0 4px 4px 0;
+      }
+      .stack .seg:only-child {
+        border-radius: 4px;
+      }
+      .s1 {
+        background: var(--series-1);
+      }
+      .s2 {
+        background: var(--series-2);
+      }
+      .s3 {
+        background: var(--series-3);
+      }
+      .s4 {
+        background: var(--series-4);
+      }
+      .legend {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        font-size: 12px;
+        color: var(--ink-2);
+      }
+      .legend-row {
+        display: grid;
+        grid-template-columns: 12px 1fr auto;
+        align-items: center;
+        gap: 6px;
+      }
+      .legend-row .num {
+        color: var(--ink);
+      }
+      .key {
+        width: 12px;
+        height: 4px;
+        border-radius: 2px;
+      }
+      .hbar {
+        display: grid;
+        grid-template-columns: 78px 1fr 56px;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        color: var(--ink-2);
+      }
+      .hbar-plot {
+        position: relative;
+        height: 14px;
+        border-left: 1px solid var(--grid);
+      }
+      .hbar-bar {
+        position: absolute;
+        left: 0;
+        top: 2px;
+        height: 10px;
+        min-width: 1px;
+        border-radius: 0 4px 4px 0;
+        background: var(--deemph);
+      }
+      .hbar-bar.accent {
+        background: var(--series-1);
+      }
+      .hbar-tick {
+        position: absolute;
+        top: 0;
+        height: 14px;
+        width: 2px;
+        margin-left: -1px;
+        background: var(--ink-2);
+      }
+      .hbar-value {
+        text-align: right;
+        color: var(--ink);
+      }
+      .footnote {
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .kv {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 2px 12px;
+        font-size: 12px;
+        margin-bottom: 8px;
+      }
+      .kv > :nth-child(odd) {
+        color: var(--muted);
+      }
+      .history-wrap {
+        position: relative;
+      }
+      .tip {
+        position: absolute;
+        top: 0;
+        z-index: 2;
+        pointer-events: none;
+        background: #0b0e14;
+        border: 1px solid var(--hairline);
+        border-radius: 6px;
+        padding: 6px 8px;
+        font-size: 11px;
+        color: var(--ink-2);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+      }
+      .tip-when {
+        color: var(--muted);
+        margin-bottom: 2px;
+      }
+      .tip-row {
+        display: flex;
+        gap: 6px;
+      }
+      .tip-row strong {
+        color: var(--ink);
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+      }
+      #load-status {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      #load-status .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex: none;
+        background: var(--muted);
+      }
+      #load-status .dot.streaming {
+        background: var(--series-1);
+      }
+      .status-name {
+        color: var(--ink);
+        font-weight: 600;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .status-state {
+        color: var(--ink-2);
         white-space: nowrap;
       }
       #history {
         width: 100%;
-        height: 240px;
+        height: 304px;
         display: block;
       }
       aside h2 {
@@ -323,8 +545,8 @@
         <div class="body">
           <label class="hint" for="policy">Tile selection</label>
           <select id="policy">
+            <option value="next">Next (default)</option>
             <option value="legacy1x">Legacy1x (matches CesiumJS 1.x)</option>
-            <option value="next">Next (skip-LOD, cache reuse)</option>
           </select>
           <label class="range"
             >Max SSE (px)
@@ -362,23 +584,44 @@
         </div>
       </details>
 
-      <details class="section" data-key="performance" open>
-        <summary>Performance</summary>
+      <details
+        id="section-streaming"
+        class="section"
+        data-key="streaming"
+        open
+        hidden
+      >
+        <summary>Streaming</summary>
         <div class="body">
-          <h2>Frame</h2>
-          <div id="perf-frame" class="meter"></div>
-          <h2 id="perf-streaming-title">Streaming</h2>
-          <div id="perf-streaming" class="meter"></div>
-          <h2 id="perf-content-title">Content</h2>
-          <div id="perf-content" class="meter"></div>
-          <h2>GPU memory</h2>
-          <div id="perf-memory" class="meter"></div>
-          <canvas id="history"></canvas>
-          <div class="hint">
-            Last 30 s: tile cache, render targets, requests in flight (of the
-            cap), bytes received, upload queue, decode time, CPU and GPU frame
-            time.
+          <div id="perf-streaming" class="panel"></div>
+        </div>
+      </details>
+
+      <details id="section-pipeline" class="section" data-key="pipeline" hidden>
+        <summary>Content pipeline</summary>
+        <div class="body">
+          <div id="perf-content" class="panel"></div>
+        </div>
+      </details>
+
+      <details class="section" data-key="history" open>
+        <summary>History</summary>
+        <div class="body">
+          <div class="history-wrap">
+            <canvas id="history"></canvas>
+            <div id="history-tip" class="tip" hidden></div>
           </div>
+          <div class="hint">
+            Last 30 s, newest at the right. Hover for the values at a moment.
+          </div>
+        </div>
+      </details>
+
+      <details class="section" data-key="gpu">
+        <summary>GPU &amp; memory</summary>
+        <div class="body">
+          <div id="perf-frame"></div>
+          <div id="perf-memory" class="panel"></div>
         </div>
       </details>
 
@@ -481,8 +724,9 @@
             <a href="/demo/">Multi-view demo</a>
           </div>
           <p class="hint">
-            Tilesets stream with 1.x-equivalent (Legacy1x) selection per view.
-            Translucent materials draw opaque until M4.
+            Tilesets stream with Next selection per view by default; Legacy1x
+            reproduces 1.x for comparison. Translucent materials draw opaque
+            until M4.
           </p>
         </div>
       </details>

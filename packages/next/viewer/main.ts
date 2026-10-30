@@ -311,7 +311,7 @@ async function main(): Promise<void> {
   let loadInfo: LoadInfo | undefined;
   let loadFailed = false;
   let move: { stoppedAt: number; requests: number; bytes: number } | undefined;
-  let lastMove: string | undefined;
+  let lastMove: { ms: number; requests: number; bytes: number } | undefined;
   /** The streamed tileset in the current world, if any. */
   let current3dTiles: Tileset3D | undefined;
   let streamed: Tileset3D | undefined;
@@ -400,7 +400,7 @@ async function main(): Promise<void> {
   // Tile selection policy: reloads the tileset (selection state is per policy).
   const policySelect = $<HTMLSelectElement>("#policy");
   try {
-    policySelect.value = localStorage.getItem("viewer.policy") ?? "legacy1x";
+    policySelect.value = localStorage.getItem("viewer.policy") ?? "next";
   } catch {
     // Storage unavailable.
   }
@@ -680,7 +680,7 @@ async function main(): Promise<void> {
             location.href,
           ).href;
         }
-        // Streamed: Legacy1x selection per view; content loads as needed.
+        // Streamed: per-view selection (Next unless chosen otherwise).
         const tileset = await engine.addTileset(next, url, {
           ...(headers ? { headers } : {}),
           policy: policySelect.value as "legacy1x" | "next",
@@ -804,6 +804,11 @@ async function main(): Promise<void> {
   });
 
   // ---------------------------------------------------------------- performance
+  // Panels follow the data-viz rules: stat tiles for single values, meters
+  // for a value against a limit, horizontal bars for comparing magnitudes
+  // (the slowest stage emphasized, the rest gray), one stacked bar for
+  // part-to-whole, small multiples for history. Text stays in text colors;
+  // marks carry the data colors (CSS --series-*).
   const selectedPerView = (tileset: Tileset3D) =>
     (
       [
@@ -817,35 +822,127 @@ async function main(): Promise<void> {
       )
       .map(
         ([name, v]) =>
-          `${name} ${tileset.stats.selected.get(Math.log2(engine.viewBit(v))) ?? 0}`,
-      )
-      .join(", ");
+          [
+            name,
+            tileset.stats.selected.get(Math.log2(engine.viewBit(v))) ?? 0,
+          ] as const,
+      );
   const MB = 1048576;
   const mb = (bytes: number) =>
     `${(bytes / MB).toFixed(bytes < 10 * MB ? 1 : 0)} MB`;
-  /** One meter row: label, filled bar (used / capacity), text on top. */
-  const meter = (
-    label: string,
-    used: number,
-    capacity: number,
-    text: string,
-    extra?: { idle: number },
+  const duration = (ms: number) =>
+    ms < 1000
+      ? `${ms.toFixed(ms < 10 ? 1 : 0)} ms`
+      : `${(ms / 1000).toFixed(1)} s`;
+  const count = (n: number) =>
+    n >= 1e6
+      ? `${(n / 1e6).toFixed(1)}M`
+      : n >= 1e4
+        ? `${(n / 1e3).toFixed(0)}k`
+        : n.toLocaleString();
+  const pct = (fraction: number) =>
+    `${(Math.max(0, Math.min(1, fraction)) * 100).toFixed(2)}%`;
+
+  /** A meter track: fill against a limit; near the limit it turns warning. */
+  const track = (fraction: number, options: { marker?: number } = {}) =>
+    `<div class="track"><div class="fill${fraction > 0.9 ? " warn" : ""}" style="width:${pct(fraction)}"></div>${
+      options.marker !== undefined
+        ? `<div class="marker" style="left:${pct(options.marker)}"></div>`
+        : ""
+    }</div>`;
+  const nearLimit = (fraction: number) =>
+    fraction > 0.9 ? `<span class="status-warn">⚠ near limit</span>` : "";
+  /** Stat tile: label, value, optional sub line and meter. */
+  const tile = (label: string, value: string, sub = "", meter = "") =>
+    `<div class="tile"><div class="tile-label">${label}</div><div class="tile-value">${value}</div>${meter}${
+      sub ? `<div class="tile-sub">${sub}</div>` : ""
+    }</div>`;
+  /** Meter row for lists: label and value on one line, track below. */
+  const meterRow = (label: string, value: string, fraction: number) =>
+    `<div class="mrow"><div class="mrow-head"><span>${label}</span><span class="num">${value}</span></div>${track(fraction)}${nearLimit(fraction)}</div>`;
+  /** One stacked bar (part-to-whole) with its legend. */
+  const stacked = (
+    title: string,
+    parts: Array<{ label: string; value: number; text: string }>,
   ) => {
-    const pct = capacity > 0 ? Math.min(100, (used / capacity) * 100) : 0;
-    const idlePct =
-      extra && capacity > 0
-        ? Math.min(100 - pct, (extra.idle / capacity) * 100)
-        : 0;
-    const hot = pct > 90 ? " hot" : "";
-    return (
-      `<div class="label">${label}</div><div class="bar">` +
-      `<div class="fill${hot}" style="width:${pct}%"></div>${
-        idlePct > 0
-          ? `<div class="fill idle" style="left:${pct}%;width:${idlePct}%"></div>`
-          : ""
-      }<div class="text">${text}</div></div>`
-    );
+    const total = parts.reduce((sum, p) => sum + p.value, 0) || 1;
+    return `<div class="chart"><div class="chart-title">${title}</div><div class="stack">${parts
+      .filter((p) => p.value > 0)
+      .map(
+        (p) =>
+          `<div class="seg s${parts.indexOf(p) + 1}" style="flex-grow:${p.value / total}" title="${p.label}: ${p.text}"></div>`,
+      )
+      .join("")}</div><div class="legend">${parts
+      .map(
+        (p, i) =>
+          `<div class="legend-row"><span class="key s${i + 1}"></span><span>${p.label}</span><span class="num">${p.text}</span></div>`,
+      )
+      .join("")}</div></div>`;
   };
+
+  const STAGE_LABELS: Record<Stage, string> = {
+    queued: "Queued",
+    network: "Network",
+    worker: "Worker wait",
+    decode: "Decode",
+    uploadWait: "Upload wait",
+    upload: "Upload",
+  };
+  /**
+   * Where a load's time goes: one bar per stage (p50), a tick at p95; the
+   * slowest stage in the accent color, the rest gray (emphasis).
+   */
+  const stageBars = (
+    stages: Partial<Record<Stage, StageStats>>,
+    note: string,
+  ) => {
+    const shown = STAGES.filter((s) => stages[s] !== undefined);
+    const max = Math.max(1e-6, ...shown.map((s) => stages[s]!.p95));
+    const slowest = shown.reduce((a, b) =>
+      stages[b]!.p50 > stages[a]!.p50 ? b : a,
+    );
+    return `<div class="chart"><div class="chart-title">Where load time goes <span class="chart-note">${note}</span></div>${shown
+      .map((s) => {
+        const { p50, p95 } = stages[s]!;
+        const tip =
+          p95 !== p50
+            ? `p50 ${duration(p50)}, p95 ${duration(p95)}`
+            : duration(p50);
+        return `<div class="hbar" title="${STAGE_LABELS[s]}: ${tip}"><span class="hbar-label">${STAGE_LABELS[s]}</span><span class="hbar-plot"><span class="hbar-bar${s === slowest ? " accent" : ""}" style="width:${pct(p50 / max)}"></span>${
+          p95 !== p50
+            ? `<span class="hbar-tick" style="left:${pct(p95 / max)}"></span>`
+            : ""
+        }</span><span class="hbar-value num">${duration(p50)}</span></div>`;
+      })
+      .join("")}</div>`;
+  };
+  /** Content mix: counts as tiles, decoded bytes as one stacked bar. */
+  const contentMix = (t: ContentSummary | ContentTotals, formats: string) => {
+    const images = Object.entries(t.images)
+      .filter(([, n]) => n > 0)
+      .map(([type, n]) => `${type.replace("image/", "").toUpperCase()} ${n}`)
+      .join(" · ");
+    const geometry = [
+      t.lines > 0 ? `${count(t.lines)} lines` : "",
+      t.points > 0 ? `${count(t.points)} points` : "",
+    ]
+      .filter(Boolean)
+      .join(" · ");
+    return `<div class="tiles">${tile("Triangles", count(t.triangles), geometry)}${tile(
+      "Features",
+      count(t.features),
+      formats || "",
+    )}</div>${stacked("Decoded bytes", [
+      {
+        label: "Geometry",
+        value: t.geometryBytes,
+        text: mb(t.geometryBytes),
+      },
+      { label: "Textures", value: t.textureBytes, text: mb(t.textureBytes) },
+    ])}${images ? `<div class="footnote">Images: ${images}</div>` : ""}`;
+  };
+
+  // History: small multiples, one series per row, hover for a moment's values.
   const HISTORY = 120; // 30 s at 4 Hz
   const samples = {
     cache: [] as number[],
@@ -863,7 +960,58 @@ async function main(): Promise<void> {
       series.shift();
     }
   };
+  const historyRows = (): Array<{
+    name: string;
+    series: number[];
+    format: (v: number) => string;
+    limit?: number;
+  }> => [
+    { name: "Tile cache", series: samples.cache, format: mb },
+    { name: "Render targets", series: samples.targets, format: mb },
+    {
+      name: "Requests in flight",
+      series: samples.inFlight,
+      format: (v) => v.toFixed(0),
+      ...(current3dTiles ? { limit: current3dTiles.stats.maxInFlight } : {}),
+    },
+    {
+      name: "Received",
+      series: samples.received,
+      format: (v) => `${(v / MB).toFixed(1)} MB/s`,
+    },
+    {
+      name: "Upload queue",
+      series: samples.uploadQueue,
+      format: (v) => v.toFixed(0),
+    },
+    { name: "Decode p50", series: samples.decode, format: (v) => duration(v) },
+    {
+      name: "CPU frame",
+      series: samples.cpu,
+      format: (v) => `${v.toFixed(2)} ms`,
+    },
+    {
+      name: "GPU frame",
+      series: samples.gpu,
+      format: (v) => `${v.toFixed(2)} ms`,
+    },
+  ];
   const historyCanvas = $<HTMLCanvasElement>("#history");
+  const historyTip = $("#history-tip");
+  const css = getComputedStyle(document.documentElement);
+  const token = (name: string) => css.getPropertyValue(name).trim();
+  let hoverIndex: number | undefined;
+  historyCanvas.addEventListener("pointermove", (e) => {
+    const rect = historyCanvas.getBoundingClientRect();
+    hoverIndex = Math.round(
+      ((e.clientX - rect.left) / rect.width) * (HISTORY - 1),
+    );
+    drawHistory();
+  });
+  historyCanvas.addEventListener("pointerleave", () => {
+    hoverIndex = undefined;
+    drawHistory();
+  });
   function drawHistory(): void {
     const dpr = devicePixelRatio || 1;
     const w = Math.round(historyCanvas.clientWidth * dpr);
@@ -874,127 +1022,96 @@ async function main(): Promise<void> {
     }
     const ctx = historyCanvas.getContext("2d")!;
     ctx.clearRect(0, 0, w, h);
-    const rows: Array<[string, number[], string, (v: number) => string]> = [
-      ["tile cache", samples.cache, "#3d6fb6", mb],
-      ["targets", samples.targets, "#7a5fb0", mb],
-      [
-        "in flight",
-        samples.inFlight,
-        "#3a9b8a",
-        (v) => `${v.toFixed(0)}/${current3dTiles?.stats.maxInFlight ?? 0}`,
-      ],
-      [
-        "received",
-        samples.received,
-        "#4fa3d9",
-        (v) => `${(v / MB).toFixed(1)} MB/s`,
-      ],
-      ["upload queue", samples.uploadQueue, "#b0805f", (v) => v.toFixed(0)],
-      ["decode p50", samples.decode, "#9b6fd0", (v) => `${v.toFixed(1)} ms`],
-      ["cpu ms", samples.cpu, "#d9a441", (v) => v.toFixed(2)],
-      ["gpu ms", samples.gpu, "#c4573a", (v) => v.toFixed(2)],
-    ];
+    const rows = historyRows();
     const rowH = h / rows.length;
-    ctx.font = `${10 * dpr}px ui-monospace, monospace`;
-    rows.forEach(([name, series, color, format], r) => {
+    const textH = 14 * dpr;
+    const ink = token("--ink");
+    const muted = token("--muted");
+    const grid = token("--grid");
+    const accent = token("--series-1");
+    // Samples fill from the right: the newest is always at the right edge.
+    const xAt = (i: number, n: number) =>
+      ((HISTORY - n + i) / (HISTORY - 1)) * w;
+    ctx.font = `${11 * dpr}px system-ui, sans-serif`;
+    ctx.textBaseline = "top";
+    rows.forEach(({ name, series, format, limit }, r) => {
       const top = r * rowH;
-      const max = Math.max(1e-6, ...series);
-      ctx.strokeStyle = "#222a3a";
-      ctx.beginPath();
-      ctx.moveTo(0, top + rowH - 0.5);
-      ctx.lineTo(w, top + rowH - 0.5);
-      ctx.stroke();
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 1.5 * dpr;
-      ctx.beginPath();
-      series.forEach((v, i) => {
-        const x = (i / (HISTORY - 1)) * w;
-        const y = top + rowH - 3 * dpr - (v / max) * (rowH - 14 * dpr);
-        if (i === 0) {
-          ctx.moveTo(x, y);
-        } else {
-          ctx.lineTo(x, y);
-        }
-      });
-      ctx.stroke();
-      ctx.fillStyle = "#8a93a6";
+      const plotTop = top + textH + 2 * dpr;
+      const plotH = rowH - textH - 6 * dpr;
+      const max = Math.max(1e-6, limit ?? 0, ...series);
+      const y = (v: number) => plotTop + plotH - (v / max) * plotH;
+      ctx.fillStyle = muted;
+      ctx.textAlign = "left";
+      ctx.fillText(name, 0, top + 2 * dpr);
+      ctx.fillStyle = ink;
+      ctx.textAlign = "right";
       const last = series[series.length - 1] ?? 0;
       ctx.fillText(
-        `${name} ${format(last)} (max ${format(max)})`,
-        4 * dpr,
-        top + 11 * dpr,
+        limit !== undefined ? `${format(last)} of ${limit}` : format(last),
+        w,
+        top + 2 * dpr,
       );
+      // Baseline and, where there is one, the limit as a hairline.
+      ctx.fillStyle = grid;
+      ctx.fillRect(0, plotTop + plotH, w, dpr);
+      if (limit !== undefined) {
+        ctx.fillStyle = muted;
+        ctx.fillRect(0, Math.round(y(limit)), w, dpr);
+      }
+      if (series.length > 1) {
+        ctx.beginPath();
+        series.forEach((v, i) =>
+          i === 0
+            ? ctx.moveTo(xAt(i, series.length), y(v))
+            : ctx.lineTo(xAt(i, series.length), y(v)),
+        );
+        ctx.strokeStyle = accent;
+        ctx.lineWidth = 2 * dpr;
+        ctx.lineJoin = ctx.lineCap = "round";
+        ctx.stroke();
+        ctx.lineTo(w, plotTop + plotH);
+        ctx.lineTo(xAt(0, series.length), plotTop + plotH);
+        ctx.closePath();
+        ctx.globalAlpha = 0.1;
+        ctx.fillStyle = accent;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
     });
+    // Crosshair and one tooltip with every series at that moment.
+    if (hoverIndex === undefined) {
+      historyTip.hidden = true;
+      return;
+    }
+    const x = (hoverIndex / (HISTORY - 1)) * w;
+    ctx.fillStyle = muted;
+    ctx.fillRect(Math.round(x), 0, dpr, h);
+    historyTip.replaceChildren();
+    const when = document.createElement("div");
+    when.className = "tip-when";
+    when.textContent = `${((HISTORY - 1 - hoverIndex) / 4).toFixed(1)} s ago`;
+    historyTip.append(when);
+    for (const { name, series, format } of rows) {
+      const i = series.length - HISTORY + hoverIndex;
+      const row = document.createElement("div");
+      row.className = "tip-row";
+      const v = document.createElement("strong");
+      v.textContent = i >= 0 && i < series.length ? format(series[i]!) : "—";
+      const n = document.createElement("span");
+      n.textContent = name;
+      row.append(v, n);
+      historyTip.append(row);
+    }
+    historyTip.hidden = false;
+    const left = x / dpr;
+    historyTip.style.left = `${left > historyCanvas.clientWidth / 2 ? left - historyTip.offsetWidth - 8 : left + 8}px`;
   }
-  /** One label/value row in a meter grid. */
-  const value = (label: string, text: string) =>
-    `<div class="label">${label}</div><div class="value" title="${text}">${text}</div>`;
+
   const adapter = engine.gpu.adapter.info;
-  const streamingTitle = $("#perf-streaming-title");
+  const streamingSection = $("#section-streaming");
   const streamingEl = $("#perf-streaming");
-  const contentTitle = $("#perf-content-title");
+  const pipelineSection = $("#section-pipeline");
   const contentEl = $("#perf-content");
-  const STAGE_LABELS: Record<Stage, string> = {
-    queued: "queued",
-    network: "network",
-    worker: "worker wait",
-    decode: "decode",
-    uploadWait: "upload wait",
-    upload: "upload",
-  };
-  const duration = (ms: number | undefined) =>
-    ms === undefined
-      ? "…"
-      : ms < 1000
-        ? `${ms.toFixed(0)} ms`
-        : `${(ms / 1000).toFixed(1)} s`;
-  const count = (n: number) =>
-    n >= 1e6
-      ? `${(n / 1e6).toFixed(1)}M`
-      : n >= 1e4
-        ? `${(n / 1e3).toFixed(0)}k`
-        : n.toFixed(0);
-  /** Content-mix rows shared by a single model and a tileset's totals. */
-  const mixRows = (t: ContentSummary | ContentTotals, formats: string) => {
-    const images = Object.entries(t.images)
-      .filter(([, n]) => n > 0)
-      .map(([type, n]) => `${type.replace("image/", "")} ${n}`)
-      .join(" · ");
-    return [
-      value("formats", formats || "none"),
-      value(
-        "geometry",
-        [
-          `${count(t.triangles)} triangles`,
-          t.lines > 0 ? `${count(t.lines)} lines` : "",
-          t.points > 0 ? `${count(t.points)} points` : "",
-        ]
-          .filter(Boolean)
-          .join(" · "),
-      ),
-      value(
-        "bytes",
-        `geometry ${mb(t.geometryBytes)} · textures ${mb(t.textureBytes)}`,
-      ),
-      value("images", images || "none"),
-      value("features", count(t.features)),
-    ];
-  };
-  /** Stage rows: one value per stage, the slowest highlighted. */
-  const stageRows = (stages: Record<Stage, StageStats | number>) => {
-    const p50 = (v: StageStats | number) => (typeof v === "number" ? v : v.p50);
-    const slowest = STAGES.reduce((a, b) =>
-      p50(stages[b]) > p50(stages[a]) ? b : a,
-    );
-    return STAGES.map((stage) => {
-      const v = stages[stage];
-      const text =
-        typeof v === "number"
-          ? `${v.toFixed(1)} ms`
-          : `${v.p50.toFixed(1)} / ${v.p95.toFixed(1)} ms`;
-      return `<div class="label">${STAGE_LABELS[stage]}</div><div class="value${stage === slowest ? " slowest" : ""}">${text}</div>`;
-    });
-  };
   let lastReceived = 0;
   // Last move: from when the camera stopped until streaming went idle, with
   // the requests and bytes the move cost (an L1′-style number, live).
@@ -1021,158 +1138,177 @@ async function main(): Promise<void> {
       }
       cameraKey = key;
     } else if (move && t?.idle && now - move.stoppedAt > 100) {
-      lastMove = `settled ${duration(now - move.stoppedAt)} · ${t.stats.requestsTotal - move.requests} requests · ${mb(t.stats.bytesReceived - move.bytes)}`;
+      lastMove = {
+        ms: now - move.stoppedAt,
+        requests: t.stats.requestsTotal - move.requests,
+        bytes: t.stats.bytesReceived - move.bytes,
+      };
       move = undefined;
     }
     requestAnimationFrame(watchCamera);
   }
   requestAnimationFrame(watchCamera);
+
   function updatePerformance(): void {
     const s = engine.stats;
+    const t = current3dTiles;
+    const tiles = t?.stats;
     if (loadInfo && !loadFailed) {
-      const t = current3dTiles;
-      $("#load-status").textContent = t
-        ? `${loadInfo.name} · ${
-            t.idle
-              ? "idle"
-              : `streaming: ${t.stats.inFlight} in flight, ${t.stats.uploadQueue} to upload`
-          }`
-        : `${loadInfo.name} · loaded`;
+      // Streaming state only ("tiles up to date"), kept apart from the
+      // renderer's own idle state once rendering is on demand (plan §13.8).
+      const state = !t ? "loaded" : t.idle ? "current" : "streaming";
+      const detail = !t
+        ? "Loaded"
+        : t.idle
+          ? "Tiles up to date"
+          : `Tiles loading · ${t.stats.inFlight} in flight, ${t.stats.uploadQueue} to upload`;
+      $("#load-status").innerHTML =
+        `<span class="dot ${state}"></span><span class="status-name">${escapeHtml(loadInfo.name)}</span><span class="status-state">${detail}</span>`;
     }
-    $("#perf-frame").innerHTML = [
-      value("adapter", `${adapter.vendor} ${adapter.architecture}`.trim()),
-      value("canvas", `${canvas.width}×${canvas.height}`),
-      value("views", `${s.views} · ${s.batches} batches each`),
-    ].join("");
 
-    const tiles = current3dTiles?.stats;
-    streamingTitle.hidden = streamingEl.hidden = !tiles;
-    if (current3dTiles && tiles) {
-      streamingEl.innerHTML = [
-        value("tiles", `${tiles.loaded} loaded / ${tiles.tiles} known`),
-        value("selected", selectedPerView(current3dTiles)),
-        value(
-          "SSE",
-          `${current3dTiles.selection.maximumScreenSpaceError} px max · ${tiles.screenSpaceError.toFixed(1)} memory-adjusted`,
-        ),
-        value("mixed LOD", `${tiles.placeholders} placeholders`),
-        ...(loadInfo
-          ? [
-              value(
-                loadInfo.resolvedAt !== undefined ? "resolve / root" : "root",
-                [
-                  loadInfo.resolvedAt !== undefined
-                    ? duration(loadInfo.resolvedAt - loadInfo.started)
-                    : "",
-                  duration(
-                    loadInfo.rootAt !== undefined
-                      ? loadInfo.rootAt - loadInfo.started
-                      : undefined,
-                  ),
-                ]
-                  .filter(Boolean)
-                  .join(" / "),
-              ),
-              value(
-                "first content",
-                duration(
-                  current3dTiles.firstContentAt !== undefined
-                    ? current3dTiles.firstContentAt - loadInfo.started
-                    : undefined,
-                ),
-              ),
-              value(
-                "settled",
-                current3dTiles.settledAt !== undefined
-                  ? `${duration(current3dTiles.settledAt - loadInfo.started)} · ${tiles.requestsTotal} requests · ${mb(tiles.bytesReceived)}`
-                  : `… · ${tiles.requestsTotal} requests · ${mb(tiles.bytesReceived)}`,
-              ),
-            ]
-          : []),
-        value("last move", lastMove ?? (move ? "settling…" : "—")),
-        meter(
-          "tile cache",
-          tiles.bytes,
-          tiles.budget + tiles.overflow,
-          `${mb(tiles.bytes)} / ${mb(tiles.budget)} +${mb(tiles.overflow)} overflow`,
-        ),
-        meter(
-          "requests",
-          tiles.inFlight,
-          tiles.maxInFlight,
-          `${tiles.inFlight} / ${tiles.maxInFlight} in flight · ${tiles.uploadQueue} to upload`,
-        ),
-      ].join("");
-      $("#warnings").textContent =
-        [...current3dTiles.warnings].join("\n") || "none";
+    // Streaming: headline tiles, the load timeline, the last move.
+    streamingSection.hidden = !tiles;
+    if (t && tiles) {
+      const views = selectedPerView(t);
+      const total = views.reduce((sum, [, n]) => sum + n, 0);
+      const cacheLimit = tiles.budget + tiles.overflow;
+      const sse = t.selection.maximumScreenSpaceError;
+      const tilesHtml = `<div class="tiles">${tile(
+        "Selected",
+        count(total),
+        views.length > 1
+          ? views.map(([name, n]) => `${name} ${count(n)}`).join(" · ")
+          : `of ${count(tiles.tiles)} known`,
+      )}${tile(
+        "In flight",
+        `${tiles.inFlight} <span class="of">of ${tiles.maxInFlight}</span>`,
+        `${tiles.uploadQueue} waiting to upload ${nearLimit(tiles.inFlight / Math.max(1, tiles.maxInFlight))}`,
+        track(tiles.inFlight / Math.max(1, tiles.maxInFlight)),
+      )}${tile(
+        "Tile cache",
+        mb(tiles.bytes),
+        `budget ${mb(tiles.budget)} + ${mb(tiles.overflow)} overflow ${nearLimit(tiles.bytes / cacheLimit)}`,
+        track(tiles.bytes / cacheLimit, {
+          marker: tiles.budget / cacheLimit,
+        }),
+      )}${tile(
+        "Max SSE",
+        `${sse} px`,
+        `${tiles.screenSpaceError.toFixed(1)} memory-adjusted · ${tiles.placeholders} mixed-LOD`,
+      )}</div>`;
+      let timeline = "";
+      if (loadInfo) {
+        const at = (time: number | undefined) =>
+          time === undefined ? undefined : time - loadInfo!.started;
+        const now = performance.now() - loadInfo.started;
+        const resolve = at(loadInfo.resolvedAt) ?? 0;
+        const root = at(loadInfo.rootAt) ?? resolve;
+        const first = at(t.firstContentAt);
+        const settled = at(t.settledAt);
+        const end = settled ?? now;
+        const parts = [
+          ...(loadInfo.resolvedAt !== undefined
+            ? [
+                {
+                  label: "Resolve endpoint",
+                  value: resolve,
+                  text: duration(resolve),
+                },
+              ]
+            : []),
+          {
+            label: "Root tileset",
+            value: root - resolve,
+            text: duration(root - resolve),
+          },
+          {
+            label: "To first content",
+            value: (first ?? end) - root,
+            text: first !== undefined ? duration(first - root) : "…",
+          },
+          {
+            label: settled !== undefined ? "To settled" : "Streaming",
+            value: first !== undefined ? end - first : 0,
+            text: first !== undefined ? duration(end - first) : "…",
+          },
+        ];
+        timeline = stacked(
+          `Load: ${settled !== undefined ? `settled in ${duration(settled)}` : `${duration(now)} so far`} <span class="chart-note">${count(tiles.requestsTotal)} requests · ${mb(tiles.bytesReceived)} received</span>`,
+          parts,
+        );
+      }
+      const moved = lastMove
+        ? tile(
+            "Last move settled in",
+            duration(lastMove.ms),
+            `${count(lastMove.requests)} requests · ${mb(lastMove.bytes)}`,
+          )
+        : tile("Last move", move ? "Settling…" : "—", "after the camera stops");
+      streamingEl.innerHTML = `${tilesHtml + timeline}<div class="tiles">${moved}</div>`;
+      $("#warnings").textContent = [...t.warnings].join("\n") || "none";
     }
 
     // Content pipeline: a tileset's recent loads, or the single model.
     const model = loadInfo?.model;
-    contentTitle.hidden = contentEl.hidden = !current3dTiles && !model;
-    if (current3dTiles) {
-      const pipeline = current3dTiles.pipeline();
-      const resident = current3dTiles.resident;
-      contentEl.innerHTML = [
-        value("stage", `p50 / p95 · last ${pipeline.samples} loads`),
-        ...stageRows(pipeline.stages),
-        ...mixRows(
-          resident,
-          Object.entries(resident.formats)
-            .filter(([, n]) => n > 0)
-            .map(([f, n]) => `${f} ${n}`)
-            .join(" · "),
-        ),
-      ].join("");
+    pipelineSection.hidden = !t && !model;
+    if (t) {
+      const pipeline = t.pipeline();
+      const formats = Object.entries(t.resident.formats)
+        .filter(([, n]) => n > 0)
+        .map(([f, n]) => `${f} ${count(n)}`)
+        .join(" · ");
+      contentEl.innerHTML =
+        stageBars(
+          pipeline.stages,
+          `p50 bar · p95 tick · last ${pipeline.samples} loads`,
+        ) + contentMix(t.resident, formats);
     } else if (model) {
-      contentEl.innerHTML = [
-        ...stageRows({
-          queued: 0,
-          network: model.networkMs,
-          worker: 0,
-          decode: model.decodeMs,
-          uploadWait: 0,
-          upload: model.uploadMs,
-        }),
-        ...mixRows(model.summary, model.summary.format),
-      ].join("");
+      const one = (ms: number) => ({ p50: ms, p95: ms });
+      contentEl.innerHTML =
+        stageBars(
+          {
+            network: one(model.networkMs),
+            decode: one(model.decodeMs),
+            upload: one(model.uploadMs),
+          },
+          "one model",
+        ) + contentMix(model.summary, model.summary.format);
     }
 
+    // GPU & memory: what the renderer runs on, then every pool against its cap.
+    $("#perf-frame").innerHTML =
+      `<div class="kv"><span>Adapter</span><span>${escapeHtml(`${adapter.vendor} ${adapter.architecture}`.trim())}</span>` +
+      `<span>Canvas</span><span class="num">${canvas.width} × ${canvas.height}</span>` +
+      `<span>Views</span><span class="num">${s.views} · ${s.batches} batches each</span></div>`;
     const m = world.memory;
     const targets = engine.renderTargetMemory;
     $("#perf-memory").innerHTML = [
-      meter(
-        "vertex arena",
-        m.vertexBytes.used,
-        m.vertexBytes.capacity,
-        `${mb(m.vertexBytes.used)} / ${mb(m.vertexBytes.capacity)}`,
+      meterRow(
+        "Vertex arena",
+        `${mb(m.vertexBytes.used)} of ${mb(m.vertexBytes.capacity)}`,
+        m.vertexBytes.used / m.vertexBytes.capacity,
       ),
-      meter(
-        "index arena",
-        m.indexBytes.used,
-        m.indexBytes.capacity,
-        `${mb(m.indexBytes.used)} / ${mb(m.indexBytes.capacity)}`,
+      meterRow(
+        "Index arena",
+        `${mb(m.indexBytes.used)} of ${mb(m.indexBytes.capacity)}`,
+        m.indexBytes.used / m.indexBytes.capacity,
       ),
-      meter(
-        "draw records",
-        m.draws.used,
-        m.draws.capacity,
-        `${m.draws.used} / ${m.draws.capacity}`,
+      meterRow(
+        "Draw records",
+        `${count(m.draws.used)} of ${count(m.draws.capacity)}`,
+        m.draws.used / m.draws.capacity,
       ),
-      meter(
-        "materials",
-        m.materials.used,
-        m.materials.capacity,
-        `${m.materials.used} / ${m.materials.capacity}`,
+      meterRow(
+        "Materials",
+        `${count(m.materials.used)} of ${count(m.materials.capacity)}`,
+        m.materials.used / m.materials.capacity,
       ),
-      meter(
-        "render targets",
-        targets.workingSetBytes,
-        targets.workingSetBytes + targets.idleBudget,
-        `${mb(targets.workingSetBytes)} per frame · ${mb(targets.residentBytes)} resident · idle cap ${mb(targets.idleBudget)}`,
-        { idle: targets.residentBytes - targets.workingSetBytes },
+      meterRow(
+        "Render targets",
+        `${mb(targets.residentBytes)} resident · idle cap ${mb(targets.idleBudget)}`,
+        targets.residentBytes / (targets.workingSetBytes + targets.idleBudget),
       ),
-      value("GPU tables", `${mb(m.tableBytes)} fixed (records, lists, args)`),
+      `<div class="footnote">Fixed GPU tables: ${mb(m.tableBytes)} (records, lists, indirect args)</div>`,
     ].join("");
 
     push(samples.cache, tiles?.bytes ?? 0);
@@ -1182,10 +1318,7 @@ async function main(): Promise<void> {
     push(samples.received, Math.max(0, received - lastReceived) * 4);
     lastReceived = received;
     push(samples.uploadQueue, tiles?.uploadQueue ?? 0);
-    push(
-      samples.decode,
-      current3dTiles ? current3dTiles.pipeline().stages.decode.p50 : 0,
-    );
+    push(samples.decode, t ? t.pipeline().stages.decode.p50 : 0);
     push(samples.cpu, s.cpuMs);
     push(samples.gpu, Number.isNaN(s.gpuMs) ? 0 : s.gpuMs);
     drawHistory();

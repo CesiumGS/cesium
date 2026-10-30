@@ -29,9 +29,9 @@ const PIPELINE_WINDOW = 256;
 
 export interface TilesetOptions extends NextOptions {
   /**
-   * Tile selection: "legacy1x" (default) reproduces CesiumJS 1.x for parity
-   * tests; "next" adds skip-LOD, visible-only coverage and free refinement
-   * from the shared cache.
+   * Tile selection: "next" (default) adds skip-LOD, visible-only coverage,
+   * hold, prefetch and free refinement from the shared cache; "legacy1x"
+   * reproduces CesiumJS 1.x for parity tests.
    */
   policy?: "legacy1x" | "next";
   /** Headers for every request (e.g. ion authorization). */
@@ -134,9 +134,9 @@ export class Tileset3D implements TileTree {
     readonly geometricError: number,
   ) {
     this.selection =
-      options.policy === "next"
-        ? new NextSelection(options)
-        : new Legacy1xSelection(options);
+      options.policy === "legacy1x"
+        ? new Legacy1xSelection(options)
+        : new NextSelection(options);
     this.cacheBytes = options.cacheBytes ?? 512 * 1024 * 1024;
     this.overflowBytes = options.maximumCacheOverflowBytes ?? 512 * 1024 * 1024;
     this.maximumRequests = options.maximumRequests ?? 18;

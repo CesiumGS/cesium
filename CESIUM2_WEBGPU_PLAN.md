@@ -1444,9 +1444,9 @@ First readings, Midtown in the viewer (`Next`, unthrottled):
 
 Next:
 
-1. Make `Next` the default once L1′ covers more moves and data (zoom out,
-   pan, CAD, a second photogrammetry city), and check popping on slow
-   networks.
+1. ~~Make `Next` the default~~ (done after r22: `Tileset3D` and the viewer
+   default to `next`; parity harnesses pin `legacy1x`). Still to cover: a
+   second photogrammetry city, and slow-link behavior (§13.3).
 2. Adaptive request concurrency; cancel requests the views no longer need.
 3. Budget-driven refinement and multi-view priority (view weights).
 4. Silhouette weighting for design models; GPU coverage feedback (HZB).
@@ -1565,6 +1565,16 @@ user is looking at.
 **Measure.** L1′ image error at a fixed byte budget: lower FLIP than 1.x's
 memory-adjusted SSE at the same bytes.
 
+**Product question: whose network?** Throttled L1′ (r22) shows the choice
+depends on the link. On fast links skipping levels wins on every metric; on
+a 20 Mbit/s, 80 ms link 1.x's level-by-level loading looks better on average
+while loading, though it settles later on more bytes. Which default is right
+depends on the distribution of our users' bandwidth and latency (desktop on
+office networks vs mobile and field use, regions). Get that distribution
+(ion CDN logs, or opt-in client telemetry) before tuning defaults; until
+then, adapt at runtime from measured throughput (§13.2), and add a 2nd and
+10th percentile profile to L1′ once the distribution is known.
+
 ### 13.4 Multi-view priority
 
 - Pin a tile while the most demanding view needs it (max over views), and
@@ -1665,7 +1675,10 @@ last frame's image (insets and split views stop re-rendering). The API is
 `engine.requestRender()` for state outside the engine. Statistics report
 idle and frames rendered per second instead of stale frame times.
 Benchmarks and parity harnesses call `renderFrame()` directly and are
-unaffected. The viewer gets a "Render continuously" toggle.
+unaffected. The viewer gets a "Render continuously" toggle. Two states stay separate in the API and the viewer: streaming (tiles
+loading vs up to date, `Tileset3D.idle`) and rendering (rendering vs idle);
+a scene can be up to date and still render (an animation), or stream while
+no frame renders (tiles arriving off screen).
 
 **Measure.** Frames rendered while idle (zero), time from a change to its
 frame (one frame), and no stale frames in the parity harnesses' interactive
@@ -1676,10 +1689,11 @@ counterparts.
 Issues found along the way that belong to other projects or teams. Each
 links to where it is explained.
 
-| #   | Item                                                                                                                                                                                                                                                                                               | For               | Where                              | Status                           |
-| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- | ---------------------------------- | -------------------------------- |
-| 1   | A tileset without the required top-level `geometricError` makes 1.x compute `NaN` for the root's early-out SSE, so the root is never skipped. `Legacy1x` copies it; `Next` falls back to the root's error for refinement and never hides the tileset.                                              | CesiumJS 1.x      | §12 (selection parity)             | Asked whether known or by design |
-| 2   | Children-bounds culling vs refinement: a parent stays visible while every child is culled by its own children-bounds check, so 1.x selects a very coarse tile (SSE 446 near the Brooklyn Bridge).                                                                                                  | CesiumJS 1.x      | §12 ("A second 1.x selection bug") | To file                          |
-| 3   | iTwin mesh exports omit the top-level `geometricError` that 3D Tiles requires (the trigger for item 1).                                                                                                                                                                                            | iTwin mesh export | §12, increment 6                   | To raise                         |
-| 4   | Add `Timing-Allow-Origin` to the ion tile CDN (`assets.ion.cesium.com`). Without it browsers hide per-request timing (time to first byte, connection setup) and possibly the negotiated protocol from clients, which protocol-aware request scheduling wants. Google's tile host already sends it. | Cesium ion        | §13.2                              | To ask                           |
-| 5   | The same header on the iTwin mesh-export CDN.                                                                                                                                                                                                                                                      | iTwin Platform    | §13.2                              | To ask                           |
+| #   | Item                                                                                                                                                                                                                                                                                               | For                  | Where                              | Status                           |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------- | ---------------------------------- | -------------------------------- |
+| 1   | A tileset without the required top-level `geometricError` makes 1.x compute `NaN` for the root's early-out SSE, so the root is never skipped. `Legacy1x` copies it; `Next` falls back to the root's error for refinement and never hides the tileset.                                              | CesiumJS 1.x         | §12 (selection parity)             | Asked whether known or by design |
+| 2   | Children-bounds culling vs refinement: a parent stays visible while every child is culled by its own children-bounds check, so 1.x selects a very coarse tile (SSE 446 near the Brooklyn Bridge).                                                                                                  | CesiumJS 1.x         | §12 ("A second 1.x selection bug") | To file                          |
+| 3   | iTwin mesh exports omit the top-level `geometricError` that 3D Tiles requires (the trigger for item 1).                                                                                                                                                                                            | iTwin mesh export    | §12, increment 6                   | To raise                         |
+| 4   | Add `Timing-Allow-Origin` to the ion tile CDN (`assets.ion.cesium.com`). Without it browsers hide per-request timing (time to first byte, connection setup) and possibly the negotiated protocol from clients, which protocol-aware request scheduling wants. Google's tile host already sends it. | Cesium ion           | §13.2                              | To ask                           |
+| 5   | The same header on the iTwin mesh-export CDN.                                                                                                                                                                                                                                                      | iTwin Platform       | §13.2                              | To ask                           |
+| 6   | Distribution of real users' bandwidth and latency (CDN logs or opt-in telemetry), to choose `Next`'s defaults for slow vs fast links and L1′'s network profiles.                                                                                                                                   | Cesium ion / product | §13.3, increment 6                 | To ask                           |

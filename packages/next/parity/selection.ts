@@ -200,6 +200,7 @@ async function runSelection(): Promise<Row[]> {
         // Memory pressure is out of scope here: 2.0 serves several views from
         // one cache while 1.x gets a tileset per camera.
         cacheBytes: CACHE_BYTES,
+        policy: "legacy1x",
       });
       const at = params.get("at")?.split(",").map(Number);
       if (at) {
