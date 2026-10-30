@@ -9,6 +9,7 @@ import {
   type Tileset3D,
   type View,
 } from "../src/index.ts";
+import { addRunButton } from "./runButton.ts";
 
 // CesiumJS 1.x, loaded from the repo build as a global (see selection.html).
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped global
@@ -323,3 +324,4 @@ function renderTable(rows: Row[]): void {
 }
 
 Object.assign(globalThis, { runSelection });
+addRunButton(runSelection);

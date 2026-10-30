@@ -9,6 +9,7 @@ import {
   type View,
 } from "../src/index.ts";
 import { flip } from "./flip.ts";
+import { addRunButton } from "./runButton.ts";
 
 /**
  * L1′ (plan §4): `Budgeted` vs `Legacy1x` over camera moves. For each move and
@@ -388,3 +389,4 @@ function renderTable(rows: Row[]): void {
 }
 
 Object.assign(globalThis, { runLod, runLodReference });
+addRunButton(runLod);

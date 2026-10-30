@@ -4,6 +4,13 @@
  * asset and everything it references carry the returned headers.
  */
 
+/** A required attribution, as HTML from the ion API. */
+export interface IonAttribution {
+  html: string;
+  /** False: must be shown on screen; true: may be listed behind a toggle. */
+  collapsible: boolean;
+}
+
 export interface IonAsset {
   /** Root resource of the asset, e.g. a tileset.json URL. */
   url: string;
@@ -14,7 +21,7 @@ export interface IonAsset {
    * Attributions the asset requires on screen, as HTML from the ion API
    * (e.g. the Cesium ion and Google logos).
    */
-  attributions: string[];
+  attributions: IonAttribution[];
 }
 
 export interface IonOptions {
@@ -61,9 +68,14 @@ export async function resolveIonAsset(
     type: string;
     externalType?: string;
     options?: { url?: string };
-    attributions?: Array<{ html: string }>;
+    attributions?: Array<{ html: string; collapsible?: boolean }>;
   };
-  const attributions = (endpoint.attributions ?? []).map((a) => a.html);
+  // Non-collapsible attributions must stay on screen (1.x shows them in
+  // the credit bar); collapsible ones may go behind "Data attribution".
+  const attributions = (endpoint.attributions ?? []).map((a) => ({
+    html: a.html,
+    collapsible: a.collapsible === true,
+  }));
   if (endpoint.externalType) {
     // Assets ion proxies to another service (e.g. Google Photorealistic 3D
     // Tiles): the URL carries that service's key; requests send no ion token.

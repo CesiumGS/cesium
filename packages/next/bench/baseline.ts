@@ -8,6 +8,7 @@ import {
   vec3,
   type World,
 } from "../src/index.ts";
+import { addRunButton } from "../parity/runButton.ts";
 
 // CesiumJS 1.x, loaded from the repo build as a global (see baseline.html).
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped global
@@ -578,3 +579,4 @@ async function runBaseline(): Promise<Row[]> {
 }
 
 Object.assign(globalThis, { runBaseline });
+addRunButton(runBaseline);

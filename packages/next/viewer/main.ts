@@ -20,6 +20,7 @@ import {
   type Stage,
   type StageStats,
   type FeatureValue,
+  type IonAttribution,
   type Tileset3D,
   type View,
   type ViewLink,
@@ -488,6 +489,9 @@ async function main(): Promise<void> {
   }
   let loadInfo: LoadInfo | undefined;
   let loadFailed = false;
+  /** Why the last load failed, and its own (non-fatal) warnings. */
+  let loadError: string | undefined;
+  let loadWarnings = new Set<string>();
   let move: { stoppedAt: number; requests: number; bytes: number } | undefined;
   let lastMove: { ms: number; requests: number; bytes: number } | undefined;
   /** The streamed tileset in the current world, if any. */
@@ -498,8 +502,8 @@ async function main(): Promise<void> {
   let nextTerrain: Tileset3D | undefined;
   let groundDraw: DrawHandle | undefined;
   let globeDraws: DrawHandle[] = [];
-  /** On-screen attributions the current ion asset requires (HTML from ion). */
-  let attributions: string[] = [];
+  /** Attributions the current ion assets require (HTML from ion). */
+  let attributions: IonAttribution[] = [];
   let current = sourceFromUrl();
   // ion access token, first found: pasted in the viewer (this session, or
   // remembered on this device), VITE_ION_TOKEN from .env.local, CesiumJS's
@@ -976,10 +980,12 @@ async function main(): Promise<void> {
     const info: LoadInfo = { name: sourceName(source), started };
     loadInfo = undefined;
     loadFailed = false;
+    loadError = undefined;
+    loadWarnings = warnings;
     lastMove = undefined;
     move = undefined;
     status.textContent = "loading…";
-    $("#warnings").textContent = "";
+    renderProblems();
     // Size the arenas within the device's storage-binding limit.
     const limit = engine.gpu.device.limits.maxStorageBufferBindingSize;
     const next = engine.createWorld({
@@ -1041,6 +1047,13 @@ async function main(): Promise<void> {
         let headers: Record<string, string> | undefined;
         if (source.kind === "ion") {
           const resolved = await resolveIon(source.asset);
+          if (resolved.type !== "3DTILES") {
+            throw new Error(
+              resolved.type === "TERRAIN"
+                ? `ion asset ${source.asset} is terrain, not 3D Tiles: turn on Cesium World Terrain in View`
+                : `ion asset ${source.asset} is ${resolved.type.toLowerCase()}, not 3D Tiles`,
+            );
+          }
           url = resolved.url;
           headers = resolved.headers;
           attributions = resolved.attributions;
@@ -1141,7 +1154,7 @@ async function main(): Promise<void> {
       };
       frame();
       loadInfo = info;
-      $("#warnings").textContent = [...warnings].join("\n") || "none";
+      renderProblems();
     } catch (error) {
       if (streamed) {
         engine.removeTileset(streamed);
@@ -1159,9 +1172,11 @@ async function main(): Promise<void> {
         loadFailed = true;
         syncLoadButtons();
         const message = error instanceof Error ? error.message : String(error);
-        status.textContent = /arena is full/.test(message)
-          ? `error: ${message} The full-detail tileset is larger than the arena; streaming (M2) loads only what the view needs.`
-          : `error: ${message}`;
+        loadError = /arena is full/.test(message)
+          ? `${message} The full-detail tileset is larger than the arena; streaming (M2) loads only what the view needs.`
+          : message;
+        status.innerHTML = `<span class="dot error"></span><span class="status-name">Couldn't load ${escapeHtml(sourceName(source))}</span>`;
+        renderProblems();
       }
     }
   }
@@ -1573,6 +1588,63 @@ async function main(): Promise<void> {
   }
   requestAnimationFrame(watchCamera);
 
+  // Problems: the load error, the load's own warnings, and the warnings of
+  // the content and terrain tilesets, right under Content. Hidden when
+  // there are none; opens when an error appears.
+  const problemsSection = $<HTMLDetailsElement>("#section-problems");
+  const problemsList = $("#problems-list");
+  const problemCount = () => {
+    const warnings = new Set([
+      ...loadWarnings,
+      ...(current3dTiles?.warnings ?? []),
+      ...(currentTerrain?.warnings ?? []),
+    ]);
+    return { error: loadError, warnings: warnings.size, list: [...warnings] };
+  };
+  let problemsKey = "";
+  let shownError: string | undefined;
+  function renderProblems(): void {
+    const { error, list } = problemCount();
+    const key = JSON.stringify([error, list]);
+    if (key === problemsKey) {
+      return;
+    }
+    const newError = error !== undefined && error !== shownError;
+    shownError = error;
+    problemsKey = key;
+    problemsList.replaceChildren();
+    const item = (kind: "error" | "warning", text: string) => {
+      const li = document.createElement("li");
+      li.className = kind;
+      const label = document.createElement("strong");
+      label.textContent = kind === "error" ? "✖ Error" : "⚠ Warning";
+      const body = document.createElement("span");
+      body.textContent = text;
+      li.append(label, body);
+      problemsList.append(li);
+    };
+    if (error) {
+      item("error", error);
+    }
+    for (const warning of list) {
+      item("warning", warning);
+    }
+    const n = (error ? 1 : 0) + list.length;
+    problemsSection.hidden = n === 0;
+    $("#problems-count").textContent = n > 0 ? `(${n})` : "";
+    if (newError) {
+      problemsSection.open = true;
+    }
+  }
+  $("#load-status").addEventListener("click", (e) => {
+    if ((e.target as Element).closest(".status-warnings")) {
+      problemsSection.hidden = false;
+      problemsSection.open = true;
+      problemsSection.scrollIntoView({ block: "nearest" });
+    }
+  });
+  setInterval(renderProblems, 500);
+
   function updatePerformance(): void {
     const s = engine.stats;
     framesPerSecond = (s.framesRendered - lastFrames) * 4;
@@ -1588,8 +1660,13 @@ async function main(): Promise<void> {
         : t.idle
           ? "Tiles up to date"
           : `Tiles loading · ${t.stats.inFlight} in flight, ${t.stats.uploadQueue} to upload`;
+      const warningCount = problemCount().warnings;
       $("#load-status").innerHTML =
-        `<span class="dot ${state}"></span><span class="status-name">${escapeHtml(loadInfo.name)}</span><span class="status-state">${detail}</span>`;
+        `<span class="dot ${state}"></span><span class="status-name">${escapeHtml(loadInfo.name)}</span><span class="status-state">${detail}</span>${
+          warningCount > 0
+            ? `<button class="status-warnings" type="button">⚠ ${warningCount} warning${warningCount === 1 ? "" : "s"}</button>`
+            : ""
+        }`;
     }
 
     // Streaming: headline tiles, the load timeline, the last move.
@@ -1671,7 +1748,7 @@ async function main(): Promise<void> {
           )
         : tile("Last move", move ? "Settling…" : "—", "after the camera stops");
       streamingEl.innerHTML = `${tilesHtml + timeline}<div class="tiles">${moved}</div>`;
-      $("#warnings").textContent = [...t.warnings].join("\n") || "none";
+      renderProblems();
     }
 
     // Content pipeline: a tileset's recent loads, or the single model.
@@ -1761,13 +1838,126 @@ async function main(): Promise<void> {
   setInterval(updatePerformance, 250);
 
   // ---------------------------------------------------------------- credits
-  // Required attributions (ion, data providers) plus the data credits of the
-  // tiles on screen, most frequent first, as 1.x shows them.
+  // Provider logos in a compact pill, and a "Data attribution" panel listing
+  // every credit: the providers' required notices, then the data credits of
+  // the tiles on screen, most frequent first (as 1.x orders them). ion's
+  // attribution HTML is parsed, not injected: only logo images, link URLs and
+  // text are carried over.
+  const logosEl = $("#credit-logos");
+  const creditsToggle = $<HTMLButtonElement>("#credits-toggle");
+  const creditsPanel = $("#credits-panel");
+  const creditsList = $("#credits-list");
+  const setCreditsOpen = (open: boolean) => {
+    creditsPanel.hidden = !open;
+    creditsToggle.setAttribute("aria-expanded", String(open));
+  };
+  creditsToggle.addEventListener("click", () =>
+    setCreditsOpen(creditsPanel.hidden),
+  );
+  document.addEventListener("pointerdown", (e) => {
+    const target = e.target as Node;
+    if (
+      !creditsPanel.hidden &&
+      !creditsPanel.contains(target) &&
+      !creditsToggle.contains(target)
+    ) {
+      setCreditsOpen(false);
+    }
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      setCreditsOpen(false);
+    }
+  });
+  const safeLink = (href: string | null) =>
+    href && /^https?:/i.test(href) ? href : undefined;
+  let creditsKey = "";
   setInterval(() => {
     const credits = current3dTiles?.credits() ?? [];
-    $("#credits").innerHTML =
-      attributions.join("") +
-      (credits.length ? escapeHtml(credits.join(" · ")) : "");
+    const key = JSON.stringify([attributions, credits]);
+    if (key === creditsKey) {
+      return;
+    }
+    creditsKey = key;
+    logosEl.replaceChildren();
+    creditsList.replaceChildren();
+    // Several ion assets each bring the ion logo and notice: show each once.
+    const seen = new Set<string>();
+    const link = (href: string, content: Node | string) => {
+      const a = document.createElement("a");
+      a.href = href;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.append(content);
+      return a;
+    };
+    const row = (text: string, href?: string) => {
+      if (seen.has(text)) {
+        return;
+      }
+      seen.add(text);
+      const li = document.createElement("li");
+      li.append(href ? link(href, text) : text);
+      creditsList.append(li);
+    };
+    /** Text with its links (http/https only) and nothing else. */
+    const inlineText = (doc: Document) => {
+      const span = document.createElement("span");
+      span.className = "credit-text";
+      const walk = (node: Node) => {
+        for (const child of node.childNodes) {
+          if (child.nodeType === Node.TEXT_NODE) {
+            span.append(child.textContent ?? "");
+          } else if (child instanceof Element && child.tagName === "A") {
+            const href = safeLink(child.getAttribute("href"));
+            const text = child.textContent ?? "";
+            span.append(href ? link(href, text) : text);
+          } else {
+            walk(child);
+          }
+        }
+      };
+      walk(doc.body);
+      return span;
+    };
+    for (const { html } of attributions) {
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      for (const img of doc.querySelectorAll("img")) {
+        const src = img.getAttribute("src") ?? "";
+        if (!/^(https?:|data:image\/)/i.test(src) || seen.has(src)) {
+          continue;
+        }
+        seen.add(src);
+        const logo = document.createElement("img");
+        logo.src = src;
+        logo.alt = img.getAttribute("alt") ?? img.getAttribute("title") ?? "";
+        logo.title = logo.alt;
+        const href = safeLink(img.closest("a")?.getAttribute("href") ?? null);
+        logosEl.append(href ? link(href, logo) : logo);
+      }
+      const text = doc.body.textContent?.trim();
+      if (!text || seen.has(text)) {
+        continue;
+      }
+      // Every provider notice stays on screen, whatever ion's collapsible
+      // flag says (it marks © OpenStreetMap contributors collapsible, and
+      // OSM expects its credit visible); long ones are truncated, with the
+      // full text in the tooltip and the panel. Only per-tile data credits
+      // live behind "Data attribution".
+      const inline = inlineText(doc);
+      inline.title = text;
+      logosEl.append(inline);
+      row(text, safeLink(doc.querySelector("a")?.getAttribute("href") ?? null));
+    }
+    for (const credit of credits) {
+      row(credit);
+    }
+    const count = creditsList.childElementCount;
+    creditsToggle.hidden = count === 0;
+    creditsToggle.textContent = `Data attribution (${count})`;
+    if (count === 0) {
+      setCreditsOpen(false);
+    }
   }, 500);
 
   // A lost device (driver reset, out of memory) can't be recovered yet

@@ -70,6 +70,7 @@ export {
   resolveIonAsset,
   resolveUri,
   type IonAsset,
+  type IonAttribution,
   type IonOptions,
 } from "./io/ion.ts";
 export { resolveITwinIModel, type ITwinOptions } from "./io/itwin.ts";

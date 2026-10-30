@@ -12,6 +12,7 @@ import {
   type GltfAsset,
 } from "../src/index.ts";
 import { flip } from "./flip.ts";
+import { addRunButton } from "./runButton.ts";
 
 // CesiumJS 1.x, loaded from the repo build as a global (see tileset.html).
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped global
@@ -483,3 +484,4 @@ function renderTable(rows: Row[]): void {
 }
 
 Object.assign(globalThis, { runTileset });
+addRunButton(runTileset);
