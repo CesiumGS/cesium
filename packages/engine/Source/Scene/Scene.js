@@ -79,6 +79,7 @@ import StencilConstants from "./StencilConstants.js";
 import SunLight from "./SunLight.js";
 import SunPostProcess from "./SunPostProcess.js";
 import TweenCollection from "./TweenCollection.js";
+import VectorPrimitiveCollection from "./VectorPrimitiveCollection.js";
 import View from "./View.js";
 import DebugInspector from "./DebugInspector.js";
 import VoxelCell from "./VoxelCell.js";
@@ -188,6 +189,7 @@ function Scene(options) {
   this._globeTranslucencyState = new GlobeTranslucencyState();
   this._primitives = new PrimitiveCollection({ countReferences });
   this._groundPrimitives = new PrimitiveCollection({ countReferences });
+  this._vectorPrimitives = new VectorPrimitiveCollection();
 
   this._globeHeight = undefined;
   this._globeHeightDirty = true;
@@ -1027,6 +1029,20 @@ Object.defineProperties(Scene.prototype, {
   groundPrimitives: {
     get: function () {
       return this._groundPrimitives;
+    },
+  },
+
+  /**
+   * Gets the collection of vector primitives.
+   * @memberof Scene.prototype
+   *
+   * @type {VectorPrimitiveCollection}
+   * @readonly
+   * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+   */
+  vectorPrimitives: {
+    get: function () {
+      return this._vectorPrimitives;
     },
   },
 
@@ -3933,6 +3949,7 @@ function updateAndRenderPrimitives(scene) {
 
   scene._groundPrimitives.update(frameState);
   scene._primitives.update(frameState);
+  scene._vectorPrimitives.update(frameState);
 
   // If any primitive requested edge visibility this frame, flip the scene flag lazily.
   if (
@@ -5523,6 +5540,8 @@ Scene.prototype.destroy = function () {
   this._primitives = this._primitives && this._primitives.destroy();
   this._groundPrimitives =
     this._groundPrimitives && this._groundPrimitives.destroy();
+  this._vectorPrimitives =
+    this._vectorPrimitives && this._vectorPrimitives.destroy();
   this._globe = this._globe && this._globe.destroy();
   this._removeTerrainProviderReadyListener =
     this._removeTerrainProviderReadyListener &&
