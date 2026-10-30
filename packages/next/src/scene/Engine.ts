@@ -427,6 +427,7 @@ export class Engine {
         prefetchPlanes: worldPlanes(1.25),
         sseDenominator: 2 * Math.tan(camera.fovy(aspect) / 2),
         height: rect.height / pixelRatio,
+        pixelRatio,
       });
     }
     return out;

@@ -36,6 +36,20 @@ export interface SelectionView {
   sseDenominator: number;
   /** Drawing-buffer height divided by the pixel ratio (1.x `pixelRatio`). */
   height: number;
+  /** 1.x `frameState.pixelRatio` (the globe divides its fog term by it). */
+  pixelRatio?: number;
+}
+
+/** A tile selection policy (3D Tiles or globe), run per view each frame. */
+export interface TileSelection {
+  maximumScreenSpaceError: number;
+  /** Raised above `maximumScreenSpaceError` by the cache when over budget. */
+  memoryAdjustedScreenSpaceError: number;
+  select(
+    root: Tile,
+    rootGeometricError: number,
+    view: SelectionView,
+  ): SelectionResult;
 }
 
 export interface SelectionResult {
@@ -71,7 +85,7 @@ export interface Legacy1xOptions {
   cullWithChildrenBounds?: boolean;
 }
 
-export class Legacy1xSelection {
+export class Legacy1xSelection implements TileSelection {
   maximumScreenSpaceError: number;
   /** Raised above `maximumScreenSpaceError` by the cache when over budget. */
   memoryAdjustedScreenSpaceError: number;

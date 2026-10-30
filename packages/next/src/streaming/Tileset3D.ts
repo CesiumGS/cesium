@@ -10,7 +10,11 @@ import type { Engine } from "../scene/Engine.ts";
 import type { ClipBox, World } from "../scene/World.ts";
 import type { ModelOptions } from "../scene/gltfModel.ts";
 import type { GltfAsset } from "../io/gltfTypes.ts";
-import { Legacy1xSelection, type SelectionView } from "./Legacy1x.ts";
+import {
+  Legacy1xSelection,
+  type SelectionView,
+  type TileSelection,
+} from "./Legacy1x.ts";
 import { BudgetedSelection, type BudgetedOptions } from "./Budgeted.ts";
 import { loadTilesetJson, type Tile, type TileTree } from "./Tile.ts";
 import { volumeObb } from "./volumes.ts";
@@ -46,6 +50,8 @@ export interface TileSource {
   loadTile(tile: Tile, signal: AbortSignal): Promise<GltfAsset>;
   /** Placement of a tile's content. */
   modelOptions(tile: Tile): Pick<ModelOptions, "modelMatrix" | "axes">;
+  /** A selection policy of its own for `options` (default: the tileset's). */
+  createSelection?(options: TilesetOptions): TileSelection | undefined;
 }
 
 export interface TilesetOptions extends BudgetedOptions {
@@ -108,7 +114,7 @@ export interface TilesetStats {
 
 export class Tileset3D implements TileTree {
   readonly warnings = new Set<string>();
-  readonly selection: Legacy1xSelection;
+  readonly selection: TileSelection;
   readonly stats: TilesetStats = {
     tiles: 0,
     loaded: 0,
@@ -171,11 +177,13 @@ export class Tileset3D implements TileTree {
     options: TilesetOptions,
     public root: Tile,
     readonly geometricError: number,
+    source?: TileSource,
   ) {
     this.selection =
-      options.policy === "legacy1x"
+      source?.createSelection?.(options) ??
+      (options.policy === "legacy1x"
         ? new Legacy1xSelection(options)
-        : new BudgetedSelection(options);
+        : new BudgetedSelection(options));
     this.cacheBytes = options.cacheBytes ?? 512 * 1024 * 1024;
     this.overflowBytes = options.maximumCacheOverflowBytes ?? 512 * 1024 * 1024;
     if (options.maximumRequests !== undefined) {
@@ -232,6 +240,7 @@ export class Tileset3D implements TileTree {
       options,
       source.root,
       source.geometricError,
+      source,
     );
     tileset.source = source;
     source.tree = tileset;

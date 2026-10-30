@@ -620,11 +620,16 @@ function rectangleContains(r: Region, c: Cartographic): boolean {
   );
 }
 
-/** `TileBoundingRegion.distanceToCamera` (3D): max(region, OBB) distance. */
+/**
+ * `TileBoundingRegion.distanceToCamera` (3D): max(region, OBB) distance.
+ * The globe may override the heights of the region part (not the OBB).
+ */
 export function regionDistance(
   r: Region,
   p: Vec3,
   cameraCarto: Cartographic,
+  minimumHeight = r.minimumHeight,
+  maximumHeight = r.maximumHeight,
 ): number {
   let result = 0;
   if (!rectangleContains(r, cameraCarto)) {
@@ -654,10 +659,10 @@ export function regionDistance(
     }
   }
   const h = cameraCarto.height;
-  if (h > r.maximumHeight) {
-    result += (h - r.maximumHeight) ** 2;
-  } else if (h < r.minimumHeight) {
-    result += (r.minimumHeight - h) ** 2;
+  if (h > maximumHeight) {
+    result += (h - maximumHeight) ** 2;
+  } else if (h < minimumHeight) {
+    result += (minimumHeight - h) ** 2;
   }
   return Math.max(Math.sqrt(result), Math.sqrt(obbDistanceSquaredTo(r.obb, p)));
 }

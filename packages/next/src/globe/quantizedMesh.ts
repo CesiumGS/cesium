@@ -15,6 +15,7 @@
  * skirts hang `skirtHeight` below each edge to hide cracks between levels.
  */
 import { Ellipsoid } from "../math/ellipsoid.ts";
+import { horizonCullingPoint } from "./horizon.ts";
 import type { GltfAsset, GltfMesh } from "../io/gltfTypes.ts";
 
 /** A tile's extent in radians. */
@@ -40,6 +41,12 @@ export interface TerrainTileInfo {
   /** Earth-fixed bounding sphere. */
   sphere: { center: [number, number, number]; radius: number };
   horizonOcclusionPoint: [number, number, number];
+  /**
+   * The point 1.x culls the tile with: the header's, or for a tile reaching
+   * below the ellipsoid one recomputed from its vertices against an
+   * ellipsoid shrunk by the minimum height. Undefined: no horizon test.
+   */
+  occludee?: [number, number, number];
   /**
    * Availability of descendants from the metadata extension: entry i holds
    * the ranges at level + 1 + i.
@@ -181,6 +188,9 @@ export function decodeQuantizedMesh(
   const scratch = new Float64Array(3);
   const carto = { longitude: 0, latitude: 0, height: 0 };
   const range = maximumHeight - minimumHeight;
+  // Below sea level: Earth-fixed vertices (no skirts) for the occludee.
+  const below =
+    minimumHeight < 0 ? new Float64Array(vertexCount * 3) : undefined;
   const place = (i: number, dst: number, drop: number) => {
     const uu = u[i]! / 32767;
     const vv = v[i]! / 32767;
@@ -188,6 +198,9 @@ export function decodeQuantizedMesh(
     carto.latitude = rect.south + vv * (rect.north - rect.south);
     carto.height = minimumHeight + (h[i]! / 32767) * range - drop;
     ellipsoid.cartographicToCartesian(carto, scratch);
+    if (below && drop === 0) {
+      below.set(scratch, dst * 3);
+    }
     positions[dst * 3] = scratch[0]! - center[0];
     positions[dst * 3 + 1] = scratch[1]! - center[1];
     positions[dst * 3 + 2] = scratch[2]! - center[2];
@@ -238,6 +251,12 @@ export function decodeQuantizedMesh(
   indices.set(triangles);
   indices.set(skirtTriangles, triangles.length);
 
+  let occludee: [number, number, number] | undefined = horizonOcclusionPoint;
+  if (below) {
+    const point = horizonCullingPoint(center, below, minimumHeight);
+    occludee = point ? [point[0]!, point[1]!, point[2]!] : undefined;
+  }
+
   const mesh: GltfMesh = { positions, normals, uvs, indices };
   const matrix = new Float64Array(16);
   matrix[0] = matrix[5] = matrix[10] = matrix[15] = 1;
@@ -265,7 +284,8 @@ export function decodeQuantizedMesh(
     draws: [{ mesh: 0, material: 0, matrix }],
     featureTables: [],
     warnings: [],
-    horizonOcclusionPoint,
+    // The GPU test has no shrunk ellipsoid yet: tiles below sea level skip it.
+    ...(minimumHeight >= 0 ? { horizonOcclusionPoint } : {}),
   };
   return {
     asset,
@@ -274,6 +294,7 @@ export function decodeQuantizedMesh(
       maximumHeight,
       sphere,
       horizonOcclusionPoint,
+      ...(occludee ? { occludee } : {}),
       ...(available ? { available } : {}),
     },
     transfer: [positions.buffer, normals.buffer, uvs.buffer, indices.buffer],

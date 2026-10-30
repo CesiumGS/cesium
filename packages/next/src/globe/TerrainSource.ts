@@ -6,18 +6,26 @@
  *
  * - Tiling: geographic (EPSG:4326), two tiles at level 0, TMS rows counted
  *   from the south, as `layer.json` availability and tile URLs use them.
- * - A tile's children are created when it loads, from availability in
- *   `layer.json` and in the tile's metadata extension (descendant ranges);
- *   until then a tile is a leaf. Children start with their parent's height
- *   range.
+ * - A tile's children are created when it loads, or earlier when the
+ *   `Legacy1x` globe selection refines it and their availability is known
+ *   (from `layer.json` and the metadata extension's descendant ranges).
+ *   All four are created when any is available; the others fill from
+ *   their parent (1.x upsamples them). Until then a tile is a leaf.
+ * - Bounds: a tile's own height range once loaded, else its nearest loaded
+ *   ancestor's.
  * - Geometric error per level as 1.x: level 0 is
  *   `R·2π·0.25 / (65·2)`, halving per level. Skirts hang five times the
  *   level's error below each edge.
  */
 import { Tile, type TileJson, type TileTree } from "../streaming/Tile.ts";
+import { volumeFromJson } from "../streaming/volumes.ts";
+import type { TileSelection } from "../streaming/Legacy1x.ts";
+import type { TilesetOptions } from "../streaming/Tileset3D.ts";
 import * as m4 from "../math/mat4.ts";
+import type { Vec3 } from "../math/vec3.ts";
 import type { GltfAsset } from "../io/gltfTypes.ts";
 import type { Rectangle, TerrainTileInfo, TileRange } from "./quantizedMesh.ts";
+import { GlobeLegacy1xSelection } from "./GlobeLegacy1x.ts";
 
 /** Decodes one tile in a worker: fetch, quantized-mesh decode, skirts. */
 export type TerrainLoader = (
@@ -38,15 +46,34 @@ export const LEVEL_ZERO_ERROR = (6378137 * 2 * Math.PI * 0.25) / (65 * 2);
 interface Address {
   level: number;
   x: number;
+  /** Rows from the south (TMS), as tile URLs count them. */
   y: number;
+}
+
+/** Per terrain tile (`Tile.globe`). */
+export interface GlobeTile extends Address {
+  rectangle: Rectangle;
+  /** Own height range and occludee point, once loaded. */
+  own?: { minimumHeight: number; maximumHeight: number; occludee?: Vec3 };
+  /** Its metadata extension (descendant availability) has arrived. */
+  metadata: boolean;
+  /** Children created (or known to be none). */
+  expanded: boolean;
+  /** Globe `Legacy1x` selection result per view id, and its pass. */
+  selection: { pass: number; result: number }[];
+  /** Bounds cached by the globe selection. */
+  bounds?: unknown;
 }
 
 export class TerrainSource {
   readonly root: Tile;
   readonly geometricError: number;
-  private readonly address = new WeakMap<Tile, Address>();
   /** Available tile ranges per level (TMS). */
   private readonly ranges: TileRange[][] = [];
+  /** Levels `layer.json` lists availability for. */
+  private readonly layerLevels: number;
+  /** Levels per metadata tile (0: availability is all in layer.json). */
+  private readonly metadataAvailability: number;
   private readonly templates: string[];
   private readonly extensions: string;
 
@@ -68,9 +95,12 @@ export class TerrainSource {
       ext.push("metadata");
     }
     this.extensions = ext.join("-");
-    (layer.available as TileRange[][] | undefined)?.forEach((r, level) =>
-      this.addRanges(level, r),
-    );
+    const available = (layer.available as TileRange[][] | undefined) ?? [];
+    available.forEach((r, level) => this.addRanges(level, r));
+    this.layerLevels = available.length;
+    this.metadataAvailability = ext.includes("metadata")
+      ? Number(layer.metadataAvailability ?? 0)
+      : 0;
     // A content-less root over the globe (it always refines) with the two
     // level-0 tiles as children.
     this.geometricError = LEVEL_ZERO_ERROR * 2;
@@ -89,9 +119,19 @@ export class TerrainSource {
       tree,
     );
     for (let x = 0; x < 2; x++) {
-      this.addChild(this.root, { level: 0, x, y: 0 }, -1000, 9000);
+      this.addChild(this.root, { level: 0, x, y: 0 }, -1000, 9000, true);
     }
     this.root.childrenPartition = true;
+  }
+
+  /**
+   * The selection policy for terrain: 1.x's globe traversal for "legacy1x";
+   * undefined keeps the tileset's default.
+   */
+  createSelection(options: TilesetOptions): TileSelection | undefined {
+    return options.policy === "legacy1x"
+      ? new GlobeLegacy1xSelection(this, options)
+      : undefined;
   }
 
   /** Reads `layer.json` (quantized-mesh only). */
@@ -124,7 +164,7 @@ export class TerrainSource {
 
   /** Content for one terrain tile; grows the tree under it. */
   async loadTile(tile: Tile, signal: AbortSignal): Promise<GltfAsset> {
-    const a = this.address.get(tile)!;
+    const a = tile.globe!;
     const { asset, info } = await this.load(
       {
         url: tile.contentUrl!,
@@ -138,23 +178,100 @@ export class TerrainSource {
     return asset;
   }
 
-  private loaded(tile: Tile, a: Address, info: TerrainTileInfo): void {
-    info.available?.forEach((r, i) => this.addRanges(a.level + 1 + i, r));
-    if (tile.children.length > 0) {
+  private loaded(tile: Tile, g: GlobeTile, info: TerrainTileInfo): void {
+    if (info.available) {
+      info.available.forEach((r, i) => this.addRanges(g.level + 1 + i, r));
+      g.metadata = true;
+    }
+    g.own = {
+      minimumHeight: info.minimumHeight,
+      maximumHeight: info.maximumHeight,
+      ...(info.occludee ? { occludee: Float64Array.from(info.occludee) } : {}),
+    };
+    tile.volume = regionVolume(
+      g.rectangle,
+      info.minimumHeight,
+      info.maximumHeight,
+    );
+    if (!g.expanded) {
+      this.createChildren(tile, g);
       return;
     }
-    for (const [dx, dy] of [
+    // Children created before this tile loaded took a coarser ancestor's
+    // heights.
+    for (const child of tile.children) {
+      if (!child.globe!.own) {
+        child.volume = regionVolume(
+          child.globe!.rectangle,
+          info.minimumHeight,
+          info.maximumHeight,
+        );
+      }
+    }
+  }
+
+  /**
+   * Creates `tile`'s children when their availability is known (1.x
+   * canRefine); false while it waits for a metadata tile to load.
+   */
+  expand(tile: Tile): boolean {
+    const g = tile.globe!;
+    if (g.expanded) {
+      return true;
+    }
+    if (!this.availabilityKnown(tile, g.level + 1)) {
+      return false;
+    }
+    this.createChildren(tile, g);
+    return true;
+  }
+
+  private availabilityKnown(tile: Tile, level: number): boolean {
+    const per = this.metadataAvailability;
+    if (per === 0 || level < this.layerLevels) {
+      return true;
+    }
+    // Listed by the tile at the last multiple of `per` above `level`.
+    const source = Math.floor((level - 1) / per) * per;
+    let t: Tile | undefined = tile;
+    while (t?.globe && t.globe.level > source) {
+      t = t.parent;
+    }
+    return t?.globe?.level === source && t.globe.metadata;
+  }
+
+  private createChildren(tile: Tile, g: GlobeTile): void {
+    g.expanded = true;
+    // South-west, south-east, north-west, north-east.
+    const quadrants = [
       [0, 0],
       [1, 0],
       [0, 1],
       [1, 1],
-    ] as const) {
-      const child = { level: a.level + 1, x: a.x * 2 + dx, y: a.y * 2 + dy };
-      if (this.available(child)) {
-        this.addChild(tile, child, info.minimumHeight, info.maximumHeight);
-      }
+    ].map(([dx, dy]) => ({
+      level: g.level + 1,
+      x: g.x * 2 + dx!,
+      y: g.y * 2 + dy!,
+    }));
+    const available = quadrants.map((q) => this.available(q));
+    if (!available.some(Boolean)) {
+      return;
     }
-    tile.childrenPartition = tile.children.length > 0;
+    // Heights of the nearest loaded tile on the path.
+    let h: GlobeTile["own"];
+    for (let t: Tile | undefined = tile; t?.globe && !h; t = t.parent) {
+      h = t.globe.own;
+    }
+    quadrants.forEach((q, i) =>
+      this.addChild(
+        tile,
+        q,
+        h?.minimumHeight ?? -1000,
+        h?.maximumHeight ?? 9000,
+        available[i]!,
+      ),
+    );
+    tile.childrenPartition = true;
     this.tree.tilesAdded?.(tile.children.length);
   }
 
@@ -174,6 +291,7 @@ export class TerrainSource {
     a: Address,
     minimumHeight: number,
     maximumHeight: number,
+    available: boolean,
   ): void {
     const r = rectangle(a);
     const json: TileJson = {
@@ -189,7 +307,7 @@ export class TerrainSource {
       },
       geometricError: LEVEL_ZERO_ERROR / 2 ** a.level,
       refine: "REPLACE",
-      content: { uri: this.tileUrl(a) },
+      ...(available ? { content: { uri: this.tileUrl(a) } } : {}),
     };
     const tile = new Tile(
       parent,
@@ -199,7 +317,15 @@ export class TerrainSource {
       "REPLACE",
       this.tree,
     );
-    this.address.set(tile, a);
+    tile.globe = {
+      ...a,
+      rectangle: r,
+      metadata: false,
+      // Nothing below a quadrant without data.
+      expanded: !available,
+      selection: [],
+    };
+    tile.fillFromParent = !available;
     parent.children.push(tile);
   }
 
@@ -216,6 +342,19 @@ export class TerrainSource {
     }
     return url.toString();
   }
+}
+
+function regionVolume(
+  r: Rectangle,
+  minimumHeight: number,
+  maximumHeight: number,
+) {
+  return volumeFromJson(
+    {
+      region: [r.west, r.south, r.east, r.north, minimumHeight, maximumHeight],
+    },
+    IDENTITY,
+  )!;
 }
 
 /** A TMS tile's extent in radians (geographic tiling). */

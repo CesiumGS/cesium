@@ -4,6 +4,7 @@
  * state lives here too; selection policies only read the tree.
  */
 import type { ClipHandle } from "../scene/World.ts";
+import type { GlobeTile } from "../globe/TerrainSource.ts";
 import type { ContentSummary } from "./pipeline.ts";
 import * as m4 from "../math/mat4.ts";
 import * as v3 from "../math/vec3.ts";
@@ -37,7 +38,8 @@ export class Tile {
   readonly geometricError: number;
   readonly refine: Refine;
   readonly transform: Mat4;
-  readonly volume: TileVolume;
+  /** Tightened by implicit trees once content loads (terrain heights). */
+  volume: TileVolume;
   readonly contentVolume?: TileVolume;
   readonly requestVolume?: TileVolume;
   /** Absolute content URL; undefined for empty tiles. */
@@ -57,6 +59,13 @@ export class Tile {
    * little): a coarse placeholder can then be clipped to missing children.
    */
   childrenPartition = false;
+  /**
+   * No content of its own and none below: its parent's content draws its
+   * region (terrain quadrants without data, which 1.x upsamples).
+   */
+  fillFromParent = false;
+  /** Terrain tiles: quadtree address and 1.x globe selection state. */
+  globe?: GlobeTile;
 
   state: ContentState = "unloaded";
   instance?: ModelInstance;

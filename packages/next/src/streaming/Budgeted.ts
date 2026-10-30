@@ -151,6 +151,11 @@ export class BudgetedSelection extends Legacy1xSelection {
     result.touched.push(tile);
     const state = tile.viewState(view.id);
 
+    // A quadrant without data (terrain): the nearest loaded ancestor fills
+    // it, clipped to it.
+    if (tile.fillFromParent) {
+      return { tiles: [], complete: false, holes: [tile] };
+    }
     // An external tileset must load before its subtree is known.
     if (tile.external && tile.state !== "ready") {
       this.request(tile, BASE, state.distance, result);
