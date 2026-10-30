@@ -30,6 +30,7 @@ packages/*/index.d.ts
 packages/*/Specs/SpecList.js
 
 packages/engine/Source/Shaders/**/*.js
+packages/edit/Source/Shaders/**/*.js
 packages/engine/Source/ThirdParty/**
 
 packages/widgets/Source/ThirdParty/**
