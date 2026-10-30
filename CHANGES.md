@@ -7,6 +7,7 @@
 #### Fixes :wrench:
 
 - Fixed undeclared dependencies `earcut`, `mersenne-twister`, and `urijs`. [#13955](https://github.com/CesiumGS/cesium/issues/13955)
+- Fixed `PolygonGeometry` throwing "cartesian has a NaN component" when computing texture coordinates for polygons that span 180° or more. [#13882](https://github.com/CesiumGS/cesium/issues/13882)
 
 ### @cesium/engine
 
