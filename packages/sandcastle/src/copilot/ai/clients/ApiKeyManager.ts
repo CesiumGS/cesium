@@ -1,3 +1,4 @@
+const OPENAI_API_KEY_STORAGE_KEY = "sandcastle_openai_api_key";
 const API_KEY_STORAGE_KEY = "sandcastle_gemini_api_key";
 const ANTHROPIC_API_KEY_STORAGE_KEY = "sandcastle_anthropic_api_key";
 const VERTEX_SERVICE_ACCOUNT_STORAGE_KEY = "sandcastle_vertex_service_account";
@@ -262,6 +263,26 @@ export class ApiKeyManager {
       );
     } catch {
       return DEFAULT_VERTEX_REGION;
+    }
+  }
+
+  /** Clear every Copilot credential, including keys from other provider builds. */
+  static clearAllCredentials(): void {
+    for (const key of [
+      OPENAI_API_KEY_STORAGE_KEY,
+      API_KEY_STORAGE_KEY,
+      ANTHROPIC_API_KEY_STORAGE_KEY,
+      VERTEX_SERVICE_ACCOUNT_STORAGE_KEY,
+      VERTEX_REGION_STORAGE_KEY,
+    ]) {
+      try {
+        storage?.removeItem(key);
+      } catch (error) {
+        console.warn(
+          "Failed to clear a Copilot credential from sessionStorage:",
+          error,
+        );
+      }
     }
   }
 
