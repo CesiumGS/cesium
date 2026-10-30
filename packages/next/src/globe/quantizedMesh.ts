@@ -217,13 +217,21 @@ export function decodeQuantizedMesh(
     for (const i of sorted) {
       place(i, next++, skirtHeight);
     }
+    // Outward-facing, so the visible side is the front face and keeps its
+    // (copied, surface) normal: with edges sorted along increasing u or v,
+    // (a, b, a2) faces west on the west edge and north on the north edge,
+    // and inward on the south and east edges, which flip.
+    const flip = e === 1 || e === 2;
     for (let k = 0; k + 1 < sorted.length; k++) {
       const a = sorted[k]!;
       const b = sorted[k + 1]!;
       const a2 = first + k;
       const b2 = first + k + 1;
-      // Drawn double-sided, so winding doesn't matter.
-      skirtTriangles.push(a, b, a2, b, b2, a2);
+      if (flip) {
+        skirtTriangles.push(a, a2, b, b, a2, b2);
+      } else {
+        skirtTriangles.push(a, b, a2, b, b2, a2);
+      }
     }
   });
   const indices = new Uint32Array(triangles.length + skirtTriangles.length);

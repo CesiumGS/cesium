@@ -1421,6 +1421,16 @@ Midtown, jump in (`2026-10-30T02-44-06-405Z`):
 | `Budgeted`, mixed     | 217      | 271 | 17.4 s | 0.499     | 0.279     | 0.148   |
 | `Budgeted`, 64 req.   | 217      | 271 | 17.4 s | 0.499     | 0.319     | 0.148   |
 
+**Correction (r23):** the average below ran only until each policy
+settled, which favors slow policies (a long tail of near-final images
+lowers the mean). Averaged over a common horizon per move (the slowest
+settle, each policy held at its settled image), `Budgeted` beats 1.x on
+both links: jump-in FLIP avg throttled 0.225 (18 requests) and 0.251
+(adaptive) vs 0.274 for 1.x; fast 0.189 (adaptive) vs 0.278
+(`2026-10-30T03-55-56-593Z`, `03-56-55-728Z`). The adaptive window is best
+on fast links and second on slow ones; tuning it there is planned work.
+The paragraph below is kept as originally written.
+
 On a slow link 1.x looks better on average while loading, though it settles
 8.5 s later on 57% more bytes: loading every level improves the image in
 small steps, while `Budgeted` skips levels and a region stays coarse longer.
@@ -1803,3 +1813,39 @@ links to where it is explained.
 | 4   | Add `Timing-Allow-Origin` to the ion tile CDN (`assets.ion.cesium.com`). Without it browsers hide per-request timing (time to first byte, connection setup) and possibly the negotiated protocol from clients, which protocol-aware request scheduling wants. Google's tile host already sends it. | Cesium ion           | §13.2                              | To ask                           |
 | 5   | The same header on the iTwin mesh-export CDN.                                                                                                                                                                                                                                                      | iTwin Platform       | §13.2                              | To ask                           |
 | 6   | Distribution of real users' bandwidth and latency (CDN logs or opt-in telemetry), to choose `Budgeted`'s defaults for slow vs fast links and L1′'s network profiles.                                                                                                                               | Cesium ion / product | §13.3, increment 6                 | To ask                           |
+
+## 15. M3 progress
+
+### Increment 1 (r23): quantized-mesh terrain through the shared streaming
+
+- **`TileSource`** (`Tileset3D.fromSource`): a source supplies its root,
+  content loader and placement; selection, per-origin request windows,
+  cache, view masks, pipeline stats and on-demand rendering are shared.
+  3D Tiles keeps its own path.
+- **`TerrainSource`** (`src/globe`): `layer.json`, availability ranges
+  (from `layer.json` and each tile's metadata extension), an implicit
+  geographic quadtree of ordinary `Tile`s with region volumes, grown as
+  tiles load. Geometric error per level as 1.x (level 0
+  `R·2π·0.25 / (65·2)`, about 77 km); skirts five times the level's error.
+- **Worker decode**: header, zigzag-delta vertices, high-water-mark
+  indices, oct-encoded normals, metadata availability, skirts; content is
+  a mesh relative to the tile center, placed Earth-fixed (`axes: "none"`).
+- **`engine.addTerrain(world, url, options)`**, SSE 2 by default (1.x's
+  globe). The viewer's Cesium World Terrain toggle (ion asset 1) replaces
+  the context ellipsoid.
+
+Cesium World Terrain streams levels 0 to 16 over Philadelphia, with OSM
+Buildings standing on it: OSM's heights come from CWT, so no clamping is
+needed (1.x's height references are for entities and primitives).
+
+Terrain exposed two on-demand rendering bugs, both fixed: the scene
+fingerprint used a world's index, which shifts when a world is removed
+(`World.id` now), and a tileset with no view yet, or with wanted tiles
+waiting for a request window shared with another tileset on the same
+origin (OSM and CWT are both on `assets.ion.cesium.com`), went inactive
+and stopped asking.
+
+Next increments: globe `Legacy1x` (1.x `QuadtreePrimitive` selection, its
+load queues and fill behavior) with horizon culling in the cull kernel and
+L1 parity against 1.x; ion imagery composited into the `texture_2d_array`
+cache; height queries and the CAD tileset on terrain.
