@@ -165,6 +165,9 @@
       .combo input {
         padding-right: 28px;
       }
+      .combo-name {
+        color: var(--text);
+      }
       .combo-toggle {
         position: absolute;
         top: 0;
@@ -680,7 +683,10 @@
             aria-labelledby="tab-ion"
             hidden
           >
-            <label class="hint" for="ion-asset">3D Tiles asset</label>
+            <label class="hint" for="ion-asset"
+              >3D Tiles asset
+              <span id="ion-asset-name" class="combo-name"></span
+            ></label>
             <div class="row combo-row">
               <div class="combo">
                 <input
@@ -715,8 +721,9 @@
                   this device</label
                 >
                 <div class="hint">
-                  First found: pasted here, VITE_ION_TOKEN in .env.local, then
-                  CesiumJS's evaluation token (public assets only).
+                  A token pasted here takes priority over VITE_ION_TOKEN in
+                  .env.local. With neither, public assets load with CesiumJS's
+                  evaluation token.
                 </div>
               </div>
             </details>
@@ -729,7 +736,10 @@
             aria-labelledby="tab-itwin"
             hidden
           >
-            <label class="hint" for="imodel">iModel (mesh export)</label>
+            <label class="hint" for="imodel"
+              >iModel (mesh export)
+              <span id="imodel-name" class="combo-name"></span
+            ></label>
             <div class="row combo-row">
               <div class="combo">
                 <input

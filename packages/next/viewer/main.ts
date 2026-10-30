@@ -94,13 +94,20 @@ let comboCount = 0;
 /**
  * Combo box: a text input that takes a pasted id, with a list of known ids
  * under it, filtered by what's typed (name or id). Arrow keys move, Enter
- * picks or loads what was typed, Escape closes; picking loads.
+ * picks or loads what was typed, Escape closes; picking loads. The box
+ * keeps the bare id (so pasting one is obvious); `nameEl`, outside it,
+ * names a known id. Returns `sync()` for values set from code.
  */
 function combo(
   input: HTMLInputElement,
   options: ReadonlyArray<readonly [string, string]>,
   onLoad: () => void,
-): void {
+  nameEl: HTMLElement,
+): () => void {
+  const sync = () => {
+    const name = options.find(([id]) => id === input.value.trim())?.[1];
+    nameEl.textContent = name ? `· ${name}` : "";
+  };
   const list = document.createElement("ul");
   list.className = "combo-list";
   list.id = `combo-list-${++comboCount}`;
@@ -178,6 +185,7 @@ function combo(
   };
   const pick = (i: number) => {
     input.value = shown[i]![0];
+    sync();
     close();
     onLoad();
   };
@@ -194,7 +202,10 @@ function combo(
   });
   input.addEventListener("focus", () => open(false));
   input.addEventListener("click", () => list.hidden && open(false));
-  input.addEventListener("input", () => open(true));
+  input.addEventListener("input", () => {
+    sync();
+    open(true);
+  });
   input.addEventListener("blur", close);
   input.addEventListener("keydown", (e) => {
     if (e.key === "ArrowDown" || e.key === "ArrowUp") {
@@ -220,6 +231,7 @@ function combo(
       close();
     }
   });
+  return sync;
 }
 
 type Source =
@@ -669,7 +681,12 @@ async function main(): Promise<void> {
     }
   };
   ionButton.addEventListener("click", loadIon);
-  combo(ionInput, ION_ASSETS, loadIon);
+  const syncIonName = combo(
+    ionInput,
+    ION_ASSETS,
+    loadIon,
+    $("#ion-asset-name"),
+  );
   const imodelInput = $<HTMLInputElement>("#imodel");
   const imodelButton = $<HTMLButtonElement>("#imodel-load");
   if (!itwinShareKey) {
@@ -684,7 +701,12 @@ async function main(): Promise<void> {
     }
   };
   imodelButton.addEventListener("click", loadIModel);
-  combo(imodelInput, IMODELS, loadIModel);
+  const syncIModelName = combo(
+    imodelInput,
+    IMODELS,
+    loadIModel,
+    $("#imodel-name"),
+  );
   $("#frame").addEventListener("click", () => frame());
 
   // ---------------------------------------------------------------- lighting UI
@@ -871,9 +893,11 @@ async function main(): Promise<void> {
     showPane(paneOf(source));
     if (source.kind === "imodel") {
       imodelInput.value = source.id;
+      syncIModelName();
     }
     if (source.kind === "ion") {
       ionInput.value = String(source.asset);
+      syncIonName();
     }
     const status = $("#load-status");
     attributions = [];
