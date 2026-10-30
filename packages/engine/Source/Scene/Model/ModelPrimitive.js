@@ -9,13 +9,15 @@ import ModelPrimitiveReadSession from "./ModelPrimitiveReadSession.js";
  *
  * A primitive of a {@link ModelNode}, corresponding to a single glTF mesh
  * primitive. A primitive owns its own geometry and material, and is the
- * smallest unit that can be individually shown or hidden.
+ * smallest unit that can be individually shown or hidden. It implements
+ * {@link GeometrySource}.
  *
  * @alias ModelPrimitive
  * @internalConstructor
  * @class
  *
  * @see ModelNode#primitives
+ * @see GeometrySource
  */
 function ModelPrimitive(model, node, runtimePrimitive) {
   //>>includeStart('debug', pragmas.debug);
@@ -83,7 +85,7 @@ Object.defineProperties(ModelPrimitive.prototype, {
   worldMatrix: {
     get: function () {
       return this._node.computeWorldMatrix(this._worldMatrix);
-    }
+    },
   },
 
   /**
