@@ -3,7 +3,7 @@ import { DeveloperError } from "@cesium/core";
 /**
  * If element is a string, look up the element in the DOM by ID.  Otherwise return element.
  *
- * @private
+ * @internal
  *
  * @exception {DeveloperError} Element with id "id" does not exist in the document.
  */
