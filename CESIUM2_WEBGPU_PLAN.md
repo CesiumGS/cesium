@@ -2078,18 +2078,27 @@ content, Bing and CWT, Bing metadata, `layer.json`) before the swap.
   before became evictable at once.
 - `tsconfig.json` now covers `viewer/`, which had not been type-checked.
 
-Open:
+**Traced (`bench/trace.mjs`):** a Chrome trace across a camera jump into
+an uncached area, with a marker on every frame over 34 ms and V8 samples,
+reports what each process and thread did during each slow frame. The
+remaining first-visit stalls were promise continuations of 10 to 20 ms on
+the main thread (under the 50 ms long-task threshold, so unreported):
+reading Google's external tilesets, dominated by `resolveUri`, which
+re-parsed the base URL and set its parameters one by one (each set
+re-serializes the URL) for every tile. It now parses the base once per
+tileset JSON and merges missing parameters in one assignment: JS samples
+in slow frames fell from 33,970 to 174, and flights into uncached areas
+went from 3-8 frames over 34 ms (worst 83-133 ms) to 0-1 (worst 33-50 ms).
 
-- **First visits to uncached areas** still have 0 to 8 frames of 50 to
-  120 ms in the first half second, with no main-thread long task, and in
-  frames with no upload and no mass eviction (4 workers on 22 threads rule
-  out CPU contention). Next: a GPU-process trace from the runner
-  (Perfetto) around a camera jump.
-- **Smoothness against settle time:** the budget trades 1.7 s for 2.9 s on
-  Google jump-in. Options: a larger floor when one tileset streams, cost
-  per upload measured instead of bytes, or uploads spread within a frame.
-- **A hitch benchmark:** tilesets added, removed and flown into in a live
-  world, reporting worst frame and frames over 34 ms, as a regression gate.
+The upload budget now grows by a quarter per on-time frame that used it
+up (it reached 12-18 MiB in those flights) instead of a fixed quarter MiB:
+Google jump-in settles in 2.0 s (1.7 s without a budget, 2.8 s with
+linear growth), average FLIP while loading 0.185. With the budget off, one
+flight still had a 100 ms frame, so it stays.
+
+Open: a hitch benchmark (tilesets added, removed and flown into in a live
+world; worst frame and frames over 34 ms) as a regression gate, built on
+`bench/trace.mjs`.
 
 Next increments: height queries and the CAD tileset on terrain (and the
 camera's terrain collision); cross-tileset scheduling (§13.2); fetch

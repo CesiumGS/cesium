@@ -605,9 +605,9 @@ export class Engine {
   }
 
   /**
-   * AIMD on the upload budget from the time between updates: late (over
-   * 1.5× the recent median and 8 ms more) halves it; on time with the
-   * budget used up grows it by a quarter MiB. Gaps over a second (hidden
+   * The upload budget from the time between updates: late (over 1.5× the
+   * recent median and 8 ms more) halves it; on time with the budget used
+   * up grows it by a quarter. Gaps over a second (hidden
    * tab, paused loop) are ignored.
    */
   private adaptUploadBudget(now: number): void {
@@ -631,9 +631,11 @@ export class Engine {
         this.uploadBytesPerFrame / 2,
       );
     } else if (this.budgetFilled) {
+      // Proportional growth reaches what a big tileset needs within a few
+      // frames (a quarter MiB per frame left Google 1.1 s slower).
       this.uploadBytesPerFrame = Math.min(
         this.maximumUploadBytesPerFrame,
-        this.uploadBytesPerFrame + 256 * 1024,
+        this.uploadBytesPerFrame * 1.25,
       );
     }
   }
