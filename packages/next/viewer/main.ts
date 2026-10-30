@@ -493,6 +493,9 @@ async function main(): Promise<void> {
   /** The streamed tileset in the current world, if any. */
   let current3dTiles: Tileset3D | undefined;
   let streamed: Tileset3D | undefined;
+  /** Cesium World Terrain in the current world, and in the one loading. */
+  let currentTerrain: Tileset3D | undefined;
+  let nextTerrain: Tileset3D | undefined;
   let groundDraw: DrawHandle | undefined;
   let globeDraws: DrawHandle[] = [];
   /** On-screen attributions the current ion asset requires (HTML from ion). */
@@ -674,12 +677,34 @@ async function main(): Promise<void> {
   });
   // Combo boxes: paste any id, or pick a known one (picking loads it; Enter
   // loads what was typed).
-  const loadIon = () => {
+  // Load acts only on a valid id that isn't what's already loaded: picking
+  // from the list loads at once, so the button then disables, and pasting a
+  // different id enables it. Nothing loads the same content twice.
+  const ionId = () => {
     const asset = Number(ionInput.value.trim());
-    if (Number.isInteger(asset) && asset > 0) {
+    return Number.isInteger(asset) && asset > 0 ? asset : undefined;
+  };
+  const imodelId = () => imodelInput.value.trim() || undefined;
+  const syncLoadButtons = () => {
+    const ion = ionId();
+    ionButton.disabled =
+      ion === undefined ||
+      (!loadFailed && current.kind === "ion" && current.asset === ion);
+    const imodel = imodelId();
+    imodelButton.disabled =
+      imodel === undefined ||
+      (!loadFailed && current.kind === "imodel" && current.id === imodel);
+  };
+  const loadIon = () => {
+    const asset = ionId();
+    if (
+      asset !== undefined &&
+      !(!loadFailed && current.kind === "ion" && current.asset === asset)
+    ) {
       void load({ kind: "ion", asset });
     }
   };
+  ionInput.addEventListener("input", syncLoadButtons);
   ionButton.addEventListener("click", loadIon);
   const syncIonName = combo(
     ionInput,
@@ -695,11 +720,15 @@ async function main(): Promise<void> {
       "Set VITE_ITWIN_SHARE_KEY in packages/next/.env.local to load iModels.";
   }
   const loadIModel = () => {
-    const id = imodelInput.value.trim();
-    if (id) {
+    const id = imodelId();
+    if (
+      id !== undefined &&
+      !(!loadFailed && current.kind === "imodel" && current.id === id)
+    ) {
       void load({ kind: "imodel", id });
     }
   };
+  imodelInput.addEventListener("input", syncLoadButtons);
   imodelButton.addEventListener("click", loadIModel);
   const syncIModelName = combo(
     imodelInput,
@@ -782,6 +811,21 @@ async function main(): Promise<void> {
   };
   continuous.addEventListener("change", applyRenderMode);
   applyRenderMode();
+  // Terrain: reloads the scene (terrain lives in each scene's world).
+  const terrainToggle = $<HTMLInputElement>("#terrain");
+  try {
+    terrainToggle.checked = localStorage.getItem("viewer.terrain") === "1";
+  } catch {
+    // Storage unavailable.
+  }
+  terrainToggle.addEventListener("change", () => {
+    try {
+      localStorage.setItem("viewer.terrain", terrainToggle.checked ? "1" : "0");
+    } catch {
+      // Ignore.
+    }
+    void load(current);
+  });
   const globeToggle = $<HTMLInputElement>("#globe");
   globeToggle.addEventListener("change", () => {
     for (const draw of globeDraws) {
@@ -906,6 +950,7 @@ async function main(): Promise<void> {
   async function load(source: Source): Promise<void> {
     const token = ++loadToken;
     current = source;
+    syncLoadButtons();
     const at = new URLSearchParams(location.search).get("at");
     history.replaceState(
       null,
@@ -1052,7 +1097,20 @@ async function main(): Promise<void> {
       if (groundDraw && !ground.checked) {
         next.setVisible(groundDraw, false);
       }
-      globeToggle.checked = !photorealistic;
+      // Terrain (Cesium World Terrain, ion asset 1), except under Google's
+      // photorealistic tiles, which are their own terrain.
+      if (terrainToggle.checked && !photorealistic) {
+        const ion = await resolveIon(1);
+        attributions.push(...ion.attributions);
+        nextTerrain = await engine.addTerrain(next, ion.url, {
+          headers: ion.headers,
+          policy: policySelect.value as "legacy1x" | "budgeted",
+        });
+        if (token !== loadToken) {
+          throw new Error("superseded");
+        }
+      }
+      globeToggle.checked = !photorealistic && !nextTerrain;
       globeDraws = nextGlobe;
       for (const draw of globeDraws) {
         next.setVisible(draw, globeToggle.checked);
@@ -1062,6 +1120,11 @@ async function main(): Promise<void> {
       }
       current3dTiles = streamed;
       streamed = undefined;
+      if (currentTerrain) {
+        engine.removeTileset(currentTerrain);
+      }
+      currentTerrain = nextTerrain;
+      nextTerrain = undefined;
       const old = world;
       world = next;
       view.world = next;
@@ -1084,12 +1147,17 @@ async function main(): Promise<void> {
         engine.removeTileset(streamed);
         streamed = undefined;
       }
+      if (nextTerrain) {
+        engine.removeTileset(nextTerrain);
+        nextTerrain = undefined;
+      }
       engine.removeWorld(next);
       if (error instanceof Error && error.message === "superseded") {
         return;
       }
       if (token === loadToken) {
         loadFailed = true;
+        syncLoadButtons();
         const message = error instanceof Error ? error.message : String(error);
         status.textContent = /arena is full/.test(message)
           ? `error: ${message} The full-detail tileset is larger than the arena; streaming (M2) loads only what the view needs.`

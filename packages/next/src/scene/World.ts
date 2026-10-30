@@ -158,6 +158,9 @@ interface Batch {
  * one indirect draw per batch. The bundle is rebuilt only when draws are added.
  */
 export class World {
+  private static nextId = 1;
+  /** Stable identity (indexes in lists shift as worlds come and go). */
+  readonly id = World.nextId++;
   readonly maxDraws: number;
   readonly maxMaterials: number;
   private _submission: SubmissionMode = "indirect";

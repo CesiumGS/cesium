@@ -30,6 +30,8 @@ export type TerrainLoader = (
   signal: AbortSignal,
 ) => Promise<{ asset: GltfAsset; info: TerrainTileInfo }>;
 
+const IDENTITY = m4.mat4();
+
 /** 1.x heightmap-equivalent level-0 error: R·2π·0.25 / (65·2). */
 export const LEVEL_ZERO_ERROR = (6378137 * 2 * Math.PI * 0.25) / (65 * 2);
 
@@ -53,7 +55,7 @@ export class TerrainSource {
     private readonly headers: Record<string, string> | undefined,
     private readonly load: TerrainLoader,
     layer: TileJson,
-    private readonly tree: TileTree,
+    public tree: TileTree,
   ) {
     this.templates = (layer.tiles as string[]).map((t) =>
       t.replace("{version}", String(layer.version ?? "1.0.0")),
@@ -113,6 +115,11 @@ export class TerrainSource {
       );
     }
     return new TerrainSource(layerUrl, headers, load, layer, tree);
+  }
+
+  /** Terrain is Earth-fixed: no transform, no axis change. */
+  modelOptions(): { modelMatrix: Float64Array; axes: "none" } {
+    return { modelMatrix: IDENTITY, axes: "none" };
   }
 
   /** Content for one terrain tile; grows the tree under it. */

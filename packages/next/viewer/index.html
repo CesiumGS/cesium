@@ -607,6 +607,13 @@
         padding: 6px 10px;
         cursor: pointer;
       }
+      button:disabled {
+        opacity: 0.45;
+        cursor: default;
+      }
+      button:disabled:hover {
+        border-color: #2f3a50;
+      }
       button:hover {
         border-color: var(--accent);
       }
@@ -784,6 +791,10 @@
           <label class="check"
             ><input id="overview" type="checkbox" /> Linked overview
             inset</label
+          >
+          <label class="check"
+            ><input id="terrain" type="checkbox" /> Cesium World Terrain (no
+            imagery yet)</label
           >
           <label class="check"
             ><input id="globe" type="checkbox" checked /> Context globe

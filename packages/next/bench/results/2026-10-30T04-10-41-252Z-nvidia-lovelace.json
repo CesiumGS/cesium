@@ -1,0 +1,228 @@
+{
+  "date": "2026-10-30T04:10:41.252Z",
+  "commit": "65a80d37b9d0bac4b66c5ffcfffa20a53f2988cb",
+  "environment": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0",
+    "adapter": {
+      "vendor": "nvidia",
+      "architecture": "lovelace",
+      "description": "NVIDIA RTX 3000 Ada Generation Laptop GPU"
+    },
+    "timestampQuery": true
+  },
+  "errors": [],
+  "results": {
+    "precision": [
+      {
+        "site": "Philadelphia, ground",
+        "distance": 0.01,
+        "hiLo": 7.450580596923828e-9,
+        "naive": 0.00996065093204379
+      },
+      {
+        "site": "Philadelphia, ground",
+        "distance": 1,
+        "hiLo": 3.725290298461914e-8,
+        "naive": 0.4472402762621641
+      },
+      {
+        "site": "Philadelphia, ground",
+        "distance": 100,
+        "hiLo": 0.0000038053840398788452,
+        "naive": 0.44108416698873043
+      },
+      {
+        "site": "Philadelphia, ground",
+        "distance": 1000,
+        "hiLo": 0.00003051524981856346,
+        "naive": 0.4474934162572026
+      },
+      {
+        "site": "Philadelphia, ground",
+        "distance": 10000,
+        "hiLo": 0.00046303030103445053,
+        "naive": 0.4315127031877637
+      },
+      {
+        "site": "Philadelphia, ground",
+        "distance": 100000,
+        "hiLo": 0.003709627315402031,
+        "naive": 0.43906556628644466
+      },
+      {
+        "site": "Philadelphia, ground",
+        "distance": 1000000,
+        "hiLo": 0.059668722678907216,
+        "naive": 0.44663296081125736
+      },
+      {
+        "site": "Everest, 9 km",
+        "distance": 0.01,
+        "hiLo": 3.725290298461914e-9,
+        "naive": 0.009957878210116178
+      },
+      {
+        "site": "Everest, 9 km",
+        "distance": 1,
+        "hiLo": 4.377216100692749e-8,
+        "naive": 0.24140036012977362
+      },
+      {
+        "site": "Everest, 9 km",
+        "distance": 100,
+        "hiLo": 0.000003795139491558075,
+        "naive": 0.2513115806505084
+      },
+      {
+        "site": "Everest, 9 km",
+        "distance": 1000,
+        "hiLo": 0.00003021053271368146,
+        "naive": 0.24966186005622149
+      },
+      {
+        "site": "Everest, 9 km",
+        "distance": 10000,
+        "hiLo": 0.0004580861423164606,
+        "naive": 0.24832285568118095
+      },
+      {
+        "site": "Everest, 9 km",
+        "distance": 100000,
+        "hiLo": 0.003892242908477783,
+        "naive": 0.25175474025309086
+      },
+      {
+        "site": "Everest, 9 km",
+        "distance": 1000000,
+        "hiLo": 0.06176235410384834,
+        "naive": 0.25140239112079144
+      },
+      {
+        "site": "Near north pole",
+        "distance": 0.01,
+        "hiLo": 8.381903171539307e-9,
+        "naive": 0.009858598001301289
+      },
+      {
+        "site": "Near north pole",
+        "distance": 1,
+        "hiLo": 3.91155481338501e-8,
+        "naive": 0.46315971203148365
+      },
+      {
+        "site": "Near north pole",
+        "distance": 100,
+        "hiLo": 0.000003770695002458524,
+        "naive": 0.46588508132845163
+      },
+      {
+        "site": "Near north pole",
+        "distance": 1000,
+        "hiLo": 0.000045754220650451316,
+        "naive": 0.4513274682685733
+      },
+      {
+        "site": "Near north pole",
+        "distance": 10000,
+        "hiLo": 0.0008625466925877845,
+        "naive": 0.461621580645442
+      },
+      {
+        "site": "Near north pole",
+        "distance": 100000,
+        "hiLo": 0.007121505856048316,
+        "naive": 0.43772181682288647
+      },
+      {
+        "site": "Near north pole",
+        "distance": 1000000,
+        "hiLo": 0.05049848207272589,
+        "naive": 0.4545556381344795
+      },
+      {
+        "site": "Antimeridian",
+        "distance": 0.01,
+        "hiLo": 7.450580596923828e-9,
+        "naive": 0.009946443140506744
+      },
+      {
+        "site": "Antimeridian",
+        "distance": 1,
+        "hiLo": 3.5390257835388184e-8,
+        "naive": 0.3244745805859566
+      },
+      {
+        "site": "Antimeridian",
+        "distance": 100,
+        "hiLo": 0.0000034415542842225477,
+        "naive": 0.3198902551084757
+      },
+      {
+        "site": "Antimeridian",
+        "distance": 1000,
+        "hiLo": 0.000030384398996829987,
+        "naive": 0.32863001339137554
+      },
+      {
+        "site": "Antimeridian",
+        "distance": 10000,
+        "hiLo": 0.00047224294394254684,
+        "naive": 0.33063318114727736
+      },
+      {
+        "site": "Antimeridian",
+        "distance": 100000,
+        "hiLo": 0.0038803081260994077,
+        "naive": 0.3062115674838424
+      },
+      {
+        "site": "Antimeridian",
+        "distance": 1000000,
+        "hiLo": 0.031232433393597603,
+        "naive": 0.3090661112219095
+      },
+      {
+        "site": "LEO, 400 km",
+        "distance": 0.01,
+        "hiLo": 4.2515308114332573e-10,
+        "naive": 0.009801656939089298
+      },
+      {
+        "site": "LEO, 400 km",
+        "distance": 1,
+        "hiLo": 3.632158041000366e-8,
+        "naive": 0.24719491973519325
+      },
+      {
+        "site": "LEO, 400 km",
+        "distance": 100,
+        "hiLo": 0.0000037849924439115057,
+        "naive": 0.24872715771198273
+      },
+      {
+        "site": "LEO, 400 km",
+        "distance": 1000,
+        "hiLo": 0.000030406750738620758,
+        "naive": 0.2493351772427559
+      },
+      {
+        "site": "LEO, 400 km",
+        "distance": 10000,
+        "hiLo": 0.000455196668553981,
+        "naive": 0.24870306998491287
+      },
+      {
+        "site": "LEO, 400 km",
+        "distance": 100000,
+        "hiLo": 0.0036349929869174957,
+        "naive": 0.24969864264130592
+      },
+      {
+        "site": "LEO, 400 km",
+        "distance": 1000000,
+        "hiLo": 0.031052435748279095,
+        "naive": 0.24654250033199787
+      }
+    ]
+  }
+}

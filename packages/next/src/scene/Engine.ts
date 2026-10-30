@@ -1,3 +1,5 @@
+import { TerrainSource } from "../globe/TerrainSource.ts";
+import type { TerrainTileInfo } from "../globe/quantizedMesh.ts";
 import { RequestScheduler } from "../streaming/RequestScheduler.ts";
 import { GpuDevice, type GpuDeviceOptions } from "../gpu/GpuDevice.ts";
 import { GpuTimer } from "../gpu/GpuTimer.ts";
@@ -328,6 +330,41 @@ export class Engine {
     return tileset;
   }
 
+  /**
+   * Streams quantized-mesh terrain (`url`: a `layer.json` or its directory,
+   * e.g. Cesium World Terrain's ion endpoint) into `world`, through the same
+   * selection, requests, cache and rendering as 3D Tiles. Selection defaults
+   * to 1.x's globe threshold, SSE 2.
+   */
+  async addTerrain(
+    world: World,
+    url: string | URL,
+    options: TilesetOptions = {},
+  ): Promise<Tileset3D> {
+    const base = new URL(url, globalThis.location?.href);
+    const layer = base.pathname.endsWith(".json")
+      ? base
+      : new URL("layer.json", base.href.endsWith("/") ? base : `${base.href}/`);
+    const headers = options.headers;
+    const source = await TerrainSource.create(
+      layer.href,
+      headers,
+      (request, signal) =>
+        this.workers.request<{ asset: GltfAsset; info: TerrainTileInfo }>(
+          "terrain",
+          request,
+          signal,
+        ),
+      { warnings: new Set() },
+    );
+    const tileset = Tileset3D.fromSource(this, world, source, {
+      maximumScreenSpaceError: 2,
+      ...options,
+    });
+    this.tilesets.push(tileset);
+    return tileset;
+  }
+
   removeTileset(tileset: Tileset3D): void {
     const index = this.tilesets.indexOf(tileset);
     if (index >= 0) {
@@ -617,7 +654,7 @@ export class Engine {
     s[n++] = view.lighting.sunIntensity;
     s[n++] = view.lighting.diffuseIbl;
     s[n++] = view.lighting.specularIbl;
-    s[n++] = this.worlds.indexOf(view.world);
+    s[n++] = view.world.id;
     let changed = false;
     for (let i = 0; i < n; i++) {
       if (s[i] !== key[i]) {

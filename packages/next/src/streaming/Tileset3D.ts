@@ -8,6 +8,7 @@
  */
 import type { Engine } from "../scene/Engine.ts";
 import type { ClipBox, World } from "../scene/World.ts";
+import type { ModelOptions } from "../scene/gltfModel.ts";
 import type { GltfAsset } from "../io/gltfTypes.ts";
 import { Legacy1xSelection, type SelectionView } from "./Legacy1x.ts";
 import { BudgetedSelection, type BudgetedOptions } from "./Budgeted.ts";
@@ -29,6 +30,23 @@ import {
 const PIPELINE_WINDOW = 256;
 /** Frames without any view touching an in-flight tile before it is cancelled. */
 const CANCEL_AFTER_FRAMES = 30;
+
+/**
+ * A hierarchical content source other than a 3D Tiles tileset.json (plan
+ * §3.7): its own root, content loader and placement; selection, requests,
+ * cache, view masks and rendering stay shared.
+ */
+export interface TileSource {
+  readonly url: string;
+  readonly root: Tile;
+  readonly geometricError: number;
+  /** The tree new tiles belong to (implicit trees grow as tiles load). */
+  tree: TileTree;
+  /** Decoded content of one tile. */
+  loadTile(tile: Tile, signal: AbortSignal): Promise<GltfAsset>;
+  /** Placement of a tile's content. */
+  modelOptions(tile: Tile): Pick<ModelOptions, "modelMatrix" | "axes">;
+}
 
 export interface TilesetOptions extends BudgetedOptions {
   /**
@@ -113,6 +131,8 @@ export class Tileset3D implements TileTree {
   /** Selected tiles per view id after the last update (parity tests). */
   readonly lastSelected = new Map<number, Tile[]>();
   private frame = 0;
+  /** A non-3D-Tiles source, when streaming one (fromSource). */
+  private source?: TileSource;
   /** Last frame in which an update changed anything. */
   private lastChange = 0;
   private readonly cacheBytes: number;
@@ -198,19 +218,50 @@ export class Tileset3D implements TileTree {
     return tileset;
   }
 
+  /** Streams a non-3D-Tiles source (terrain) through the same machinery. */
+  static fromSource(
+    engine: Engine,
+    world: World,
+    source: TileSource,
+    options: TilesetOptions = {},
+  ): Tileset3D {
+    const tileset = new Tileset3D(
+      engine,
+      world,
+      source.url,
+      options,
+      source.root,
+      source.geometricError,
+    );
+    tileset.source = source;
+    source.tree = tileset;
+    tileset.stats.tiles = countTiles(source.root);
+    retarget(source.root, tileset);
+    return tileset;
+  }
+
+  /** Counts tiles an implicit tree created (TileTree). */
+  tilesAdded(count: number): void {
+    this.stats.tiles += count;
+  }
+
   /** True when nothing is loading or waiting to upload. */
   get idle(): boolean {
     return this.inFlight === 0 && this.ready.length === 0;
   }
 
   /**
-   * Needs `update()` even with every camera still: loading, changed in the
-   * last few frames (an upload can enable further refinement), or the
-   * memory-adjusted SSE still moving toward its target.
+   * Needs `update()` even with every camera still: loading, waiting for a
+   * request slot, changed in the last few frames (an upload can enable
+   * further refinement), or the memory-adjusted SSE still moving toward its
+   * target.
    */
   get active(): boolean {
     return (
       !this.idle ||
+      // Wanted tiles still waiting for a request slot (the origin's window,
+      // shared with other tilesets, may be full).
+      this.wanted.size > 0 ||
       this.frame - this.lastChange < 3 ||
       this.selection.memoryAdjustedScreenSpaceError !==
         this.selection.maximumScreenSpaceError
@@ -232,6 +283,11 @@ export class Tileset3D implements TileTree {
       return;
     }
     const frame = ++this.frame;
+    if (views.length === 0) {
+      // No view yet (e.g. its world isn't shown yet): stay active, so the
+      // first selection runs as soon as a view appears.
+      this.lastChange = frame;
+    }
     const before =
       this.stats.requestsTotal +
       this.stats.bytesTotal +
@@ -433,10 +489,12 @@ export class Tileset3D implements TileTree {
         this.stats.tiles += countTiles(root);
         return undefined;
       }
-      const asset = await this.engine.loadGltf(tile.contentUrl!, {
-        ...(this.headers ? { headers: this.headers } : {}),
-        signal,
-      });
+      const asset = this.source
+        ? await this.source.loadTile(tile, signal)
+        : await this.engine.loadGltf(tile.contentUrl!, {
+            ...(this.headers ? { headers: this.headers } : {}),
+            signal,
+          });
       if (this.destroyed) {
         closeImages(asset);
         return undefined;
@@ -491,8 +549,9 @@ export class Tileset3D implements TileTree {
       const uploadStart = performance.now();
       try {
         const instance = this.engine.addModel(this.world, asset, {
-          modelMatrix: tile.transform,
-          axes: "3d-tiles",
+          ...(this.source
+            ? this.source.modelOptions(tile)
+            : { modelMatrix: tile.transform, axes: "3d-tiles" as const }),
           viewMask: 0,
         });
         tile.instance = instance;

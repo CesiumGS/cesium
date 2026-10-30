@@ -1,5 +1,10 @@
 /// <reference lib="webworker" />
 import { parseGltf } from "./gltfParse.ts";
+import { decodeQuantizedMesh, type Rectangle } from "../globe/quantizedMesh.ts";
+
+/** Quantized-mesh with the extensions we decode, as 1.x requests it. */
+const TERRAIN_ACCEPT =
+  "application/vnd.quantized-mesh;extensions=octvertexnormals-metadata,application/octet-stream;q=0.9,*/*;q=0.01";
 import type { TextureFormatSupport } from "./decoders.ts";
 
 /**
@@ -16,6 +21,8 @@ self.onmessage = async (
     url: string;
     headers?: Record<string, string>;
     textureSupport: TextureFormatSupport;
+    rect: Rectangle;
+    skirtHeight: number;
   }>,
 ) => {
   const { id, type } = event.data;
@@ -26,6 +33,32 @@ self.onmessage = async (
   const controller = new AbortController();
   controllers.set(id, controller);
   try {
+    if (type === "terrain") {
+      const start = performance.now();
+      const response = await fetch(event.data.url, {
+        headers: { ...event.data.headers, Accept: TERRAIN_ACCEPT },
+        signal: controller.signal,
+      });
+      if (!response.ok) {
+        throw new Error(`terrain tile: ${response.status}`);
+      }
+      const buffer = await response.arrayBuffer();
+      const decodeStart = performance.now();
+      const { asset, info, transfer } = decodeQuantizedMesh(
+        buffer,
+        event.data.rect,
+        event.data.skirtHeight,
+      );
+      asset.timing = {
+        format: "quantized-mesh",
+        networkMs: decodeStart - start,
+        bytes: buffer.byteLength,
+        decodeMs: performance.now() - decodeStart,
+        images: {},
+      };
+      self.postMessage({ id, ok: true, result: { asset, info } }, transfer);
+      return;
+    }
     if (type !== "gltf") {
       throw new Error(`Unknown request type "${type}"`);
     }

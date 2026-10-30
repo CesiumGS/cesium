@@ -29,9 +29,10 @@ export interface ModelOptions {
   /**
    * Axis convention: "gltf" (default) is y-up, z-forward like 1.x `Model`;
    * "3d-tiles" is tile content (b3dm/glb in a tileset), y-up, x-forward, like
-   * 1.x `Cesium3DTileset`.
+   * 1.x `Cesium3DTileset`. "none": already in the frame of `modelMatrix`
+   * (terrain, whose positions are Earth-fixed).
    */
-  axes?: "gltf" | "3d-tiles";
+  axes?: "gltf" | "3d-tiles" | "none";
   /** Initial view mask of every draw (default: all views). */
   viewMask?: number;
 }
@@ -109,11 +110,13 @@ export function addGltf(
     rtc[14] = asset.rtcCenter[2];
     m4.multiply(base, base, rtc);
   }
-  m4.multiply(
-    base,
-    base,
-    options.axes === "3d-tiles" ? Y_UP_TO_Z_UP : AXIS_CORRECTION,
-  );
+  if (options.axes !== "none") {
+    m4.multiply(
+      base,
+      base,
+      options.axes === "3d-tiles" ? Y_UP_TO_Z_UP : AXIS_CORRECTION,
+    );
+  }
   const draws: DrawHandle[] = [];
   const spheres: Array<{ center: Vec3; radius: number }> = [];
   for (const draw of asset.draws) {
