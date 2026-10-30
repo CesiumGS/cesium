@@ -592,7 +592,7 @@ describe(
         expect(table.texture).toBeUndefined();
       });
 
-      it("warns and returns an undefined texture if the number of properties or features exceeds the maximum texture size", function () {
+      it("warns and returns an undefined texture if the property table does not fit the maximum texture size even when wrapped", function () {
         spyOn(console, "warn");
         ContextLimits._maximumTextureSize = 1;
 
@@ -611,7 +611,7 @@ describe(
             {
               name: "TooBig_ForTest_1",
               class: "feature",
-              count: 2, // exceeds maxTextureSize=1
+              count: 2, // wraps to 2 rows, exceeding maxTextureSize=1
               properties: {
                 a: { values: 0 },
               },
@@ -636,7 +636,133 @@ describe(
         expect(console.warn).toHaveBeenCalled();
       });
 
-      it("throws an error if a property's buffer length does not match the number of features", function () {
+      it("wraps a property table with more features than the maximum texture size onto several rows per property", function () {
+        ContextLimits._maximumTextureSize = 4;
+
+        const schemaJson = {
+          classes: {
+            feature: {
+              properties: {
+                a: { type: "SCALAR", componentType: "UINT8" },
+                b: { type: "SCALAR", componentType: "UINT8" },
+              },
+            },
+          },
+        };
+
+        const extension = {
+          propertyTables: [
+            {
+              name: "Features",
+              class: "feature",
+              count: 5,
+              properties: {
+                a: { values: 0 },
+                b: { values: 1 },
+              },
+            },
+          ],
+        };
+
+        const bufferViews = {
+          0: new Uint8Array([1, 2, 3, 4, 5]),
+          1: new Uint8Array([6, 7, 8, 9, 10]),
+        };
+
+        let createdTextureOptions;
+        spyOn(Texture, "create").and.callFake(function (options) {
+          createdTextureOptions = options;
+          return new Texture(options);
+        });
+
+        structuralMetadata = parseStructuralMetadata({
+          extension: extension,
+          schema: MetadataSchema.fromJson(schemaJson),
+          bufferViews: bufferViews,
+          context: context,
+        });
+
+        const texture = structuralMetadata.getPropertyTable(0).texture;
+        expect(texture).toBeDefined();
+        // width = maximumTextureSize, 2 rows per property, 2 properties
+        expect(texture.width).toBe(4);
+        expect(texture.height).toBe(4);
+
+        const packed = createdTextureOptions.source.arrayBufferView;
+        const expected = [
+          // Property a, row 0: features 0-3
+          1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0, 4, 0, 0, 0,
+          // Property a, row 1: feature 4 and padding
+          5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          // Property b, row 0: features 0-3
+          6, 0, 0, 0, 7, 0, 0, 0, 8, 0, 0, 0, 9, 0, 0, 0,
+          // Property b, row 1: feature 4 and padding
+          10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        ];
+        expect(Array.from(packed)).toEqual(expected);
+      });
+
+      it("reads only count elements from a property buffer view that is longer than the number of features", function () {
+        const schemaJson = {
+          classes: {
+            feature: {
+              properties: {
+                a: { type: "SCALAR", componentType: "UINT8" },
+                b: { type: "SCALAR", componentType: "UINT16" },
+              },
+            },
+          },
+        };
+
+        const extension = {
+          propertyTables: [
+            {
+              name: "Features",
+              class: "feature",
+              count: 3,
+              properties: {
+                a: { values: 0 },
+                b: { values: 1 },
+              },
+            },
+          ],
+        };
+
+        // Both buffer views are padded to 8 bytes, as some writers align byteLength.
+        const bufferViews = {
+          0: new Uint8Array([1, 2, 3, 0, 0, 0, 0, 0]),
+          1: new Uint8Array([0x02, 0x01, 0x04, 0x03, 0x06, 0x05, 0, 0]),
+        };
+
+        let createdTextureOptions;
+        spyOn(Texture, "create").and.callFake(function (options) {
+          createdTextureOptions = options;
+          return new Texture(options);
+        });
+
+        structuralMetadata = parseStructuralMetadata({
+          extension: extension,
+          schema: MetadataSchema.fromJson(schemaJson),
+          bufferViews: bufferViews,
+          context: context,
+        });
+
+        const texture = structuralMetadata.getPropertyTable(0).texture;
+        expect(texture).toBeDefined();
+        expect(texture.width).toBe(3);
+        expect(texture.height).toBe(2);
+
+        const packed = createdTextureOptions.source.arrayBufferView;
+        const expected = [
+          // Row 0 (a: UINT8)
+          1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0,
+          // Row 1 (b: UINT16, little-endian)
+          0x02, 0x01, 0, 0, 0x04, 0x03, 0, 0, 0x06, 0x05, 0, 0,
+        ];
+        expect(Array.from(packed)).toEqual(expected);
+      });
+
+      it("throws an error if a property's buffer view is shorter than the number of features", function () {
         const schemaJson = {
           classes: {
             feature: {

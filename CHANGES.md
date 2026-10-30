@@ -19,6 +19,7 @@
 - Fixed `czm_passOverlay` and `czm_passCesium3DTileEdgesDirect` GLSL constants not matching `czm_pass` during their respective passes. Removed the unused `czm_passClassification` constant. [#13657](https://github.com/CesiumGS/cesium/issues/13657)
 - Fixed dynamic environment lighting on models and tilesets near or below the ellipsoid surface. [#13988](https://github.com/CesiumGS/cesium/pull/13988)
 - Fixed `pointCloudShading.backFaceCulling` not hiding back-facing points on some platforms. [#13989](https://github.com/CesiumGS/cesium/pull/13989)
+- Fixed `EXT_structural_metadata` property tables not being available to custom shaders when the table has more features than the maximum texture size (the table is now packed onto several texture rows per property) or when a property's buffer view is longer than `count × elementSize` (the padding is now ignored, as the CPU reader already did). Previously the shader compilation failed with `no such field in structure` for the affected properties.
 
 ## 1.146 - 2026-10-01
 

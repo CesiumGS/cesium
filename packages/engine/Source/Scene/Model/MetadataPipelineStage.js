@@ -867,7 +867,14 @@ function addPropertyTablePropertyMetadata(
   }
 
   const featureIdExpression = `featureIds.${featureIdVariableName}`;
-  const texCoordExpression = `ivec2(${featureIdExpression}, ${propertyInfoIndex})`;
+  // Tables wider than the texture limit are wrapped onto several rows per
+  // property (see parseStructuralMetadata.getPropertyTableTextureLayout).
+  const textureWidth = propertyTable.texture.width;
+  const rowsPerProperty = Math.ceil(propertyTable.count / textureWidth);
+  const texCoordExpression =
+    rowsPerProperty === 1
+      ? `ivec2(${featureIdExpression}, ${propertyInfoIndex})`
+      : `ivec2(${featureIdExpression} % ${textureWidth}, ${propertyInfoIndex * rowsPerProperty} + ${featureIdExpression} / ${textureWidth})`;
   const textureSampleExpression = `texelFetch(${textureUniformName}, ${texCoordExpression}, 0)`;
   const classProperty = propertyInfo.classProperty;
 
