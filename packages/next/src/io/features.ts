@@ -437,12 +437,149 @@ export function unwrapB3dm(bytes: Uint8Array): B3dm {
       columns[name] = column;
     }
   }
+  const hierarchy = batchJson.extensions?.["3DTILES_batch_table_hierarchy"];
+  if (hierarchy) {
+    readBatchTableHierarchy(hierarchy, binary, batchLength, columns);
+  }
   return {
     glb,
     rtcCenter,
     batchLength,
     batchTable: { name: "batch table", count: batchLength, columns },
   };
+}
+
+/** A legacy batch-table value array: inline JSON or a binary reference. */
+function legacyArray(
+  value: Json,
+  binary: DataView,
+  count: number,
+  defaultComponentType: string,
+): FeatureValue[] | undefined {
+  if (Array.isArray(value)) {
+    return value as FeatureValue[];
+  }
+  if (!value || typeof value.byteOffset !== "number") {
+    return undefined;
+  }
+  const componentType =
+    LEGACY_COMPONENT_TYPES[value.componentType ?? defaultComponentType];
+  if (!componentType) {
+    return undefined;
+  }
+  const components = TYPE_COMPONENTS[value.type ?? "SCALAR"] ?? 1;
+  const size = COMPONENT_BYTES[componentType]!;
+  const out: FeatureValue[] = [];
+  for (let i = 0; i < count; i++) {
+    const items: number[] = [];
+    for (let c = 0; c < components; c++) {
+      items.push(
+        readComponent(
+          binary,
+          value.byteOffset + (i * components + c) * size,
+          componentType,
+        ),
+      );
+    }
+    out.push(components === 1 ? items[0]! : items);
+  }
+  return out;
+}
+
+/**
+ * `3DTILES_batch_table_hierarchy` (used by Cesium OSM Buildings): each
+ * feature is an instance of a class with per-class property columns, and a
+ * property missing on an instance is looked up through its parents, as 1.x
+ * `BatchTableHierarchy.getProperty` does.
+ */
+function readBatchTableHierarchy(
+  hierarchy: Json,
+  binary: DataView,
+  batchLength: number,
+  columns: Record<string, FeatureValue[]>,
+): void {
+  const instances: number = hierarchy.instancesLength;
+  const classIds = legacyArray(
+    hierarchy.classIds,
+    binary,
+    instances,
+    "UNSIGNED_SHORT",
+  ) as number[] | undefined;
+  if (!classIds) {
+    return;
+  }
+  const parentCounts = hierarchy.parentCounts
+    ? (legacyArray(
+        hierarchy.parentCounts,
+        binary,
+        instances,
+        "UNSIGNED_SHORT",
+      ) as number[])
+    : undefined;
+  const parentIndexes: number[] = [];
+  let parentIdsLength = instances;
+  if (parentCounts) {
+    parentIdsLength = 0;
+    for (let i = 0; i < instances; i++) {
+      parentIndexes.push(parentIdsLength);
+      parentIdsLength += parentCounts[i]!;
+    }
+  }
+  const parentIds = hierarchy.parentIds
+    ? (legacyArray(
+        hierarchy.parentIds,
+        binary,
+        parentIdsLength,
+        "UNSIGNED_SHORT",
+      ) as number[])
+    : undefined;
+  const classes: Array<{ properties: Record<string, FeatureValue[]> }> = (
+    hierarchy.classes ?? []
+  ).map((cls: Json) => {
+    const properties: Record<string, FeatureValue[]> = {};
+    for (const [name, value] of Object.entries<Json>(cls.instances ?? {})) {
+      const column = legacyArray(value, binary, cls.length, "FLOAT");
+      if (column) {
+        properties[name] = column;
+      }
+    }
+    return { properties };
+  });
+  const classCounts = new Array<number>(classes.length).fill(0);
+  const classIndexes = classIds.map((id) => classCounts[id]!++);
+
+  for (let feature = 0; feature < batchLength; feature++) {
+    const visited = new Set<number>();
+    const stack = [feature];
+    while (stack.length > 0) {
+      const instance = stack.pop()!;
+      if (visited.has(instance)) {
+        continue;
+      }
+      visited.add(instance);
+      const cls = classes[classIds[instance]!];
+      if (cls) {
+        for (const [name, column] of Object.entries(cls.properties)) {
+          const target = (columns[name] ??= new Array<FeatureValue>(
+            batchLength,
+          ).fill(null));
+          if (target[feature] === null || target[feature] === undefined) {
+            target[feature] = column[classIndexes[instance]!] ?? null;
+          }
+        }
+      }
+      if (parentIds) {
+        const count = parentCounts ? parentCounts[instance]! : 1;
+        const base = parentCounts ? parentIndexes[instance]! : instance;
+        for (let k = 0; k < count; k++) {
+          const parent = parentIds[base + k]!;
+          if (parent !== instance) {
+            stack.push(parent);
+          }
+        }
+      }
+    }
+  }
 }
 
 const LEGACY_COMPONENT_TYPES: Record<string, string> = {

@@ -28,6 +28,21 @@ export interface WorldOptions {
   indexBytes?: number;
 }
 
+export interface Usage {
+  used: number;
+  capacity: number;
+}
+
+export interface WorldMemory {
+  vertexBytes: Usage;
+  indexBytes: Usage;
+  draws: Usage;
+  materials: Usage;
+  batches: number;
+  /** Fixed-size GPU tables: records, instances, materials, lists, args. */
+  tableBytes: number;
+}
+
 export interface MeshHandle {
   readonly id: number;
   readonly firstIndex: number;
@@ -275,6 +290,35 @@ export class World {
   }
 
   /** Number of batches, i.e. indirect draw calls per view. */
+  /** Arena, table and fixed-buffer usage, for diagnostics. */
+  get memory(): WorldMemory {
+    return {
+      vertexBytes: {
+        used: this.vertexAllocator.used,
+        capacity: this.vertexAllocator.capacity,
+      },
+      indexBytes: {
+        used: this.indexAllocator.used,
+        capacity: this.indexAllocator.capacity,
+      },
+      draws: {
+        used: this.drawCount - this.freeSlots.length,
+        capacity: this.maxDraws,
+      },
+      materials: {
+        used: this.materialCount - this.freeMaterials.length,
+        capacity: this.maxMaterials,
+      },
+      batches: this.batches.size,
+      tableBytes:
+        this.recordBuffer.size +
+        this.instanceBuffer.size +
+        this.materialBuffer.size +
+        this.instanceListBuffer.size +
+        this.indirectBuffer.size,
+    };
+  }
+
   /** Live batches: indirect draws per view. */
   get batchCount(): number {
     return this.batches.size;

@@ -22,6 +22,7 @@ Branch: `cesium-2.0-webgpu-poc` (off `main` @ `587f52f1eb`, CesiumJS 1.146.0)
 | r14 | M1 increment 5: CAD content. Per-vertex feature IDs (EXT_mesh_features, b3dm _BATCHID) with property/batch tables and picking, b3dm, line primitives, ion asset auth, tileset parity page. An iModel-derived CAD tileset matches 1.x apart from translucency (M4). M1 exit met.                                                                                                          |
 | r15 | Demo viewer (`/viewer/`). M2 started: freeing placed models, per-view record view masks, and the `Legacy1x` selection spec extracted from the 1.x base traversal (§12).                                                                                                                                                                                                                  |
 | r16 | M2 increment 1: streamed 3D Tiles with `Legacy1x` selection per view over one shared cache. L1 selection parity 100% on 36 view comparisons (9 public tilesets and 3 iModel-derived CAD tilesets, 3–4 simultaneous views each). Viewer streams.                                                                                                                                          |
+| r17 | M2 increment 2: OSM Buildings streams with 100% selection parity (Philadelphia, Manhattan); batch-table hierarchy; resize robustness (frame ordering, bounded render-target memory); viewer split view, memory panel and collapsible sections.                                                                                                                                           |
 
 ## 1. Goal
 
@@ -1145,12 +1146,60 @@ Notes for `Next`, from viewing the CAD tilesets:
 - A track that ends at the edge of the default view may be in the data
   itself. Check it against full detail when testing `Next`.
 
+### Increment 2 (r17): OSM Buildings, resize robustness, viewer tooling
+
+- **Cesium OSM Buildings streams** (3D Tiles 1.0, b3dm, ADD refinement,
+  nested external tilesets, a planet-sized root region). L1 selection parity
+  with four simultaneous views at absolute ranges around a location
+  (`?at=lon,lat`): **100%** over Philadelphia (14–21 tiles per view) and
+  Midtown Manhattan (16–20). In the viewer, Manhattan loads in about 0.5 s:
+  24 of 13,224 known tiles, 0.5 ms CPU and 0.9 ms GPU per frame.
+- **`3DTILES_batch_table_hierarchy`** (OSM's per-building properties):
+  classes, binary and JSON references, multiple parents, inheritance through
+  ancestors as 1.x `getProperty`. Tested on 1.x's three hierarchy samples.
+  OSM picks now return names, addresses, OSM ids and estimated heights.
+- **Resize robustness.**
+  - Frame ordering: targets were acquired (and canvases resized) after view
+    rectangles were computed, so during a resize the present pass's scissor
+    could exceed the new canvas. The frame was rejected (129 validation
+    errors in a scripted resize storm). Targets are now acquired first.
+  - Render-target memory: a view that changes size frees its old-size
+    targets immediately unless another view still uses them, and idle pool
+    textures have a 256 MiB budget, evicted after submit. In a 120-frame
+    resize storm with two views, resident render targets peaked at 256 MB
+    and returned to the 112 MB working set, with zero errors.
+  - The viewer reports device loss instead of freezing.
+- **Overview link stability.** Ground points are continuous: rays that miss,
+  or hit beyond max(20 × altitude, 5 km), use the capped point dropped to the
+  surface. The footprint stays closed, and the inset no longer jumps when the
+  main camera looks toward the horizon.
+- **Viewer.**
+  - Split view: a second independent camera with its own selection over the
+    shared cache.
+  - A memory panel with live meters (arenas, draw records, materials, render
+    targets per frame and resident against the idle cap, tile cache against
+    its budget, requests in flight, upload queue) and 30-second sparklines.
+  - Collapsible sections with remembered state; only the panel scrolls.
+- Engine allocations are 2.1–2.5 KB per frame (from ~1.6): the overview
+  link's continuous ground points, exercised by the allocation scene. Still
+  independent of draw count.
+
+Notes for `Next`:
+
+- A small view (an inset) selects far coarser tiles than the main view,
+  exactly as a small 1.x viewer would. In one engine, the finer tiles another
+  view already holds can be drawn at no bandwidth cost: opportunistic
+  refinement from the shared cache.
+
+Results: `2026-10-30T00-40-56-567Z`.
+
 Next:
 
 1. Request scheduling closer to 1.x (priority digits, cull-requests-while-
    moving, cancellation) where it changes time-to-settle, and the memory-
    adjusted SSE.
-2. Stream OSM Buildings and a photogrammetry tileset (M2 exit).
-3. `Next` policy: skip-LOD and budget-driven refinement, measured with L1′.
+2. A photogrammetry tileset (M2 exit).
+3. `Next` policy: skip-LOD, budget-driven refinement, silhouette weighting
+   and opportunistic refinement from the shared cache, measured with L1′.
 4. Move the traversal off the main thread over a transferable (SoA) tile
    table.

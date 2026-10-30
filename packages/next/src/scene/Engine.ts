@@ -271,6 +271,11 @@ export class Engine {
     tileset.destroy();
   }
 
+  /** Render-target pool usage (transient textures shared by all views). */
+  get renderTargetMemory() {
+    return this.pool.stats;
+  }
+
   /** Builds the selection inputs for every enabled view of `world`. */
   private selectionViews(world: World): SelectionView[] {
     const out: SelectionView[] = [];
@@ -415,6 +420,23 @@ export class Engine {
     const device = this.ctx.device;
     const stamp = ++this.frameNumber;
 
+    // Acquire each target first: acquiring a canvas resizes it to its CSS
+    // size, and every view rectangle below (selection, frame graphs,
+    // viewport/scissor) must use this frame's size, not last frame's.
+    const views = this.views;
+    for (let i = 0; i < views.length; i++) {
+      const view = views[i]!;
+      if (!view.enabled) {
+        continue;
+      }
+      const target = this.targetFrame(view.target);
+      if (target.stamp !== stamp) {
+        target.stamp = stamp;
+        target.view = view.target.acquire(device, this.ctx.outputFormat);
+        target.clearedBy = undefined;
+      }
+    }
+
     const links = this.links;
     for (let i = 0; i < links.length; i++) {
       links[i]!.evaluate();
@@ -424,9 +446,8 @@ export class Engine {
       tileset.update(this.selectionViews(tileset.world));
     }
 
-    // Assign each enabled view a slot, acquire each target once (the first
-    // view drawn into a target clears it) and prepare each world once.
-    const views = this.views;
+    // Assign each enabled view a slot (the first view drawn into a target
+    // clears it) and prepare each world once.
     let slots = 0;
     for (let i = 0; i < views.length; i++) {
       const view = views[i]!;
@@ -440,10 +461,9 @@ export class Engine {
       slots++;
 
       const target = this.targetFrame(view.target);
-      frame.clearTarget = target.stamp !== stamp;
+      frame.clearTarget = target.clearedBy === undefined;
       if (frame.clearTarget) {
-        target.stamp = stamp;
-        target.view = view.target.acquire(device, this.ctx.outputFormat);
+        target.clearedBy = view;
       }
       frame.graph.setImported(frame.output, target.view!);
 
@@ -528,7 +548,7 @@ export class Engine {
   private targetFrame(target: RenderTarget): TargetFrame {
     let frame = this.targetFrames.get(target);
     if (!frame) {
-      frame = { stamp: 0, view: undefined };
+      frame = { stamp: 0, view: undefined, clearedBy: undefined };
       this.targetFrames.set(target, frame);
     }
     return frame;
@@ -553,11 +573,34 @@ export class Engine {
       frame.x !== rect.x ||
       frame.y !== rect.y
     ) {
-      frame?.presentParams.destroy();
+      if (frame) {
+        frame.presentParams.destroy();
+        this.releaseTargets(view, frame);
+      }
       frame = this.buildViewFrame(view, rect);
       this.viewFrames.set(view, frame);
     }
     return frame;
+  }
+
+  /**
+   * Frees a view's render targets at its old size when it resizes, unless
+   * another view still renders at that size. Without this, a window resize
+   * leaves every intermediate size resident until the pool's idle timeout.
+   */
+  private releaseTargets(view: View, old: ViewFrame): void {
+    for (const [other, frame] of this.viewFrames) {
+      if (
+        other !== view &&
+        frame.width === old.width &&
+        frame.height === old.height
+      ) {
+        return;
+      }
+    }
+    for (const desc of old.graph.transientDescs()) {
+      this.pool.purge(desc);
+    }
   }
 
   private buildViewFrame(view: View, rect: Readonly<PixelRect>): ViewFrame {
@@ -896,6 +939,8 @@ interface ViewFrame {
 interface TargetFrame {
   stamp: number;
   view: GPUTextureView | undefined;
+  /** The view that clears the target this frame (the first drawn into it). */
+  clearedBy: View | undefined;
 }
 
 interface WorldFrame {

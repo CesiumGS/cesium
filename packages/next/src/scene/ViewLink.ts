@@ -1,5 +1,5 @@
 import * as v3 from "../math/vec3.ts";
-import { Ellipsoid } from "../math/ellipsoid.ts";
+import { Ellipsoid, cartographic } from "../math/ellipsoid.ts";
 import type { Vec3 } from "../math/vec3.ts";
 import type { Overlay, View } from "./View.ts";
 
@@ -69,9 +69,7 @@ export class ViewLink {
 
   private follow(): void {
     const camera = this.source.camera;
-    const focus =
-      this.groundPoint(0, 0, scratchFocus) ??
-      this.subPoint(camera.position, scratchFocus);
+    const focus = this.groundPoint(0, 0, scratchFocus);
     const distance = v3.distance(camera.position, focus);
     const range = Math.max(500, distance * (this.options.followScale ?? 3));
     this.target.camera.lookAt(
@@ -96,7 +94,7 @@ export class ViewLink {
     let current = scratchHitB;
     for (let i = 0; i < n; i++) {
       const hit = this.groundPoint(BORDER[i]![0], BORDER[i]![1], current);
-      if (previous && hit) {
+      {
         const o = count * 3;
         positions[o] = previous[0]!;
         positions[o + 1] = previous[1]!;
@@ -113,7 +111,14 @@ export class ViewLink {
     this.overlay.count = count;
   }
 
-  private groundPoint(ndcX: number, ndcY: number, out: Vec3): Vec3 | undefined {
+  /**
+   * Where a viewport ray meets the ground, continuously: a ray that misses
+   * the ellipsoid (above the horizon) or hits beyond a cap (20× the camera's
+   * altitude, at least 5 km) uses the point at the cap dropped onto the surface.
+   * Grazing rays would otherwise jump thousands of kilometres between
+   * frames (or drop out), making the footprint and the follow target flicker.
+   */
+  private groundPoint(ndcX: number, ndcY: number, out: Vec3): Vec3 {
     const camera = this.source.camera;
     const direction = camera.rayDirection(
       ndcX,
@@ -121,7 +126,19 @@ export class ViewLink {
       this.source.aspect,
       scratchDirection,
     );
-    return this.ellipsoid.rayIntersection(camera.position, direction, out);
+    const altitude = Math.max(
+      this.ellipsoid.cartesianToCartographic(camera.position, scratchCarto)
+        ?.height ?? 0,
+      1,
+    );
+    // A floor keeps level, near-ground views on their real ground hits.
+    const cap = Math.max(altitude * 20, 5000);
+    const hit = this.ellipsoid.rayIntersection(camera.position, direction, out);
+    if (hit && v3.distance(hit, camera.position) <= cap) {
+      return hit;
+    }
+    v3.scaleAndAdd(out, camera.position, direction, cap);
+    return this.subPoint(out, out);
   }
 
   private subPoint(position: Vec3, out: Vec3): Vec3 {
@@ -154,4 +171,5 @@ const BORDER: ReadonlyArray<readonly [number, number]> = (() => {
 const scratchHitA = v3.vec3();
 const scratchHitB = v3.vec3();
 const scratchFocus = v3.vec3();
+const scratchCarto = cartographic();
 const scratchDirection = v3.vec3();

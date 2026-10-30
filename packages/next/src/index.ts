@@ -8,6 +8,8 @@ export {
   type MeshHandle,
   type TextureBinding,
   type TextureSetOptions,
+  type Usage,
+  type WorldMemory,
   type SubmissionMode,
 } from "./scene/World.ts";
 export {

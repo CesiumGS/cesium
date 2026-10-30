@@ -26,10 +26,14 @@
           13px/1.4 system-ui,
           sans-serif;
       }
+      html,
+      body {
+        overflow: hidden;
+      }
       body {
         display: grid;
-        grid-template-columns: 1fr 340px;
-        height: 100vh;
+        grid-template-columns: minmax(0, 1fr) 360px;
+        grid-template-rows: 100vh;
       }
       #main {
         width: 100%;
@@ -39,11 +43,50 @@
       }
       aside {
         background: var(--panel);
-        padding: 12px;
+        padding: 8px 12px 16px;
+        min-height: 0;
+        overflow-y: auto;
+        overflow-x: hidden;
+      }
+      #load-status {
+        position: sticky;
+        top: -8px;
+        z-index: 1;
+        background: var(--panel);
+        padding: 6px 0;
+        border-bottom: 1px solid #222a3a;
+      }
+      details.section {
+        border-bottom: 1px solid #222a3a;
+      }
+      details.section > summary {
+        cursor: pointer;
+        list-style: none;
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--muted);
+      }
+      details.section > summary::-webkit-details-marker {
+        display: none;
+      }
+      details.section > summary::after {
+        content: "\25B8";
+      }
+      details.section[open] > summary::after {
+        content: "\25BE";
+      }
+      details.section > summary:hover {
+        color: var(--text);
+      }
+      details.section > .body {
         display: flex;
         flex-direction: column;
-        gap: 10px;
-        overflow: auto;
+        gap: 8px;
+        padding-bottom: 12px;
       }
       select,
       input[type="number"] {
@@ -104,6 +147,50 @@
       a {
         color: var(--accent);
       }
+      .meter {
+        display: grid;
+        grid-template-columns: 92px 1fr;
+        gap: 2px 8px;
+        align-items: center;
+        font-size: 12px;
+      }
+      .meter .label {
+        color: var(--muted);
+      }
+      .meter .bar {
+        position: relative;
+        height: 16px;
+        background: #0f1420;
+        border: 1px solid #2f3a50;
+        border-radius: 4px;
+        overflow: hidden;
+      }
+      .meter .fill {
+        position: absolute;
+        inset: 0 auto 0 0;
+        background: #3d6fb6;
+      }
+      .meter .fill.idle {
+        background: #2a4a78;
+      }
+      .meter .fill.hot {
+        background: #c4573a;
+      }
+      .meter .text {
+        position: absolute;
+        inset: 0 6px;
+        line-height: 16px;
+        font:
+          11px/16px ui-monospace,
+          monospace;
+        color: var(--text);
+        white-space: nowrap;
+      }
+      #history {
+        width: 100%;
+        height: 150px;
+        display: block;
+      }
       aside h2 {
         margin: 4px 0 0;
         font-size: 12px;
@@ -154,118 +241,185 @@
   <body>
     <canvas id="main"></canvas>
     <aside>
-      <h2>Content</h2>
       <div id="load-status" class="hint">starting…</div>
-      <label class="hint" for="model">glTF sample model</label>
-      <select id="model">
-        <option value="">—</option>
-      </select>
-      <label class="hint" for="tileset">3D Tiles sample (streamed)</label>
-      <select id="tileset">
-        <option value="">—</option>
-      </select>
-      <label class="hint" for="ion-asset">Cesium ion asset (3D Tiles)</label>
-      <div class="row">
-        <input id="ion-asset" type="number" min="1" placeholder="asset id" />
-        <button id="ion-load">Load</button>
-      </div>
-      <div id="ion-hint" class="hint"></div>
-      <div class="row">
-        <button id="city">Synthetic city</button>
-        <button id="frame">Frame content</button>
-      </div>
-      <label class="check"><input id="unlit" type="checkbox" /> Unlit</label>
-      <label class="check"
-        ><input id="ground" type="checkbox" checked /> Ground patch (globe is
-        M3)</label
-      >
-      <label class="check"
-        ><input id="overview" type="checkbox" /> Linked overview inset</label
-      >
 
-      <h2>Lighting</h2>
-      <label class="range"
-        >Sun azimuth
-        <input id="sun-azimuth" type="range" min="0" max="360" value="150" />
-        <output id="sun-azimuth-value"></output
-      ></label>
-      <label class="range"
-        >Sun elevation
-        <input id="sun-elevation" type="range" min="-10" max="90" value="40" />
-        <output id="sun-elevation-value"></output
-      ></label>
-      <label class="range"
-        >Sun intensity
-        <input
-          id="sun-intensity"
-          type="range"
-          min="0"
-          max="5"
-          step="0.1"
-          value="2" />
-        <output id="sun-intensity-value"></output
-      ></label>
-      <label class="range"
-        >Diffuse IBL
-        <input
-          id="diffuse-ibl"
-          type="range"
-          min="0"
-          max="2"
-          step="0.05"
-          value="1" />
-        <output id="diffuse-ibl-value"></output
-      ></label>
-      <label class="range"
-        >Specular IBL
-        <input
-          id="specular-ibl"
-          type="range"
-          min="0"
-          max="2"
-          step="0.05"
-          value="1" />
-        <output id="specular-ibl-value"></output
-      ></label>
-      <label class="range"
-        >Exposure
-        <input
-          id="exposure"
-          type="range"
-          min="0.1"
-          max="4"
-          step="0.05"
-          value="1" />
-        <output id="exposure-value"></output
-      ></label>
-      <label class="hint" for="encoding">Output encoding</label>
-      <select id="encoding">
-        <option value="srgb">sRGB (exact)</option>
-        <option value="gamma2.2">gamma 2.2 (1.x)</option>
-      </select>
+      <details class="section" data-key="content" open>
+        <summary>Content</summary>
+        <div class="body">
+          <label class="hint" for="model">glTF sample model</label>
+          <select id="model">
+            <option value="">—</option>
+          </select>
+          <label class="hint" for="tileset">3D Tiles sample (streamed)</label>
+          <select id="tileset">
+            <option value="">—</option>
+          </select>
+          <label class="hint" for="ion-asset"
+            >Cesium ion asset (3D Tiles)</label
+          >
+          <div class="row">
+            <input
+              id="ion-asset"
+              type="number"
+              min="1"
+              placeholder="asset id"
+            />
+            <button id="ion-load">Load</button>
+          </div>
+          <div id="ion-hint" class="hint"></div>
+          <div class="row">
+            <button id="city">Synthetic city</button>
+            <button id="frame">Frame content</button>
+          </div>
+        </div>
+      </details>
 
-      <h2>Pick</h2>
-      <div id="pick" class="hint">click the view</div>
+      <details class="section" data-key="view" open>
+        <summary>View</summary>
+        <div class="body">
+          <label class="check"
+            ><input id="split" type="checkbox" /> Split view (second independent
+            camera)</label
+          >
+          <label class="check"
+            ><input id="overview" type="checkbox" /> Linked overview
+            inset</label
+          >
+          <label class="check"
+            ><input id="ground" type="checkbox" checked /> Ground patch (globe
+            is M3)</label
+          >
+          <label class="check"
+            ><input id="unlit" type="checkbox" /> Unlit</label
+          >
+          <p class="hint">
+            Drag to orbit, right- or shift-drag to pan, wheel to zoom, click to
+            pick.
+          </p>
+        </div>
+      </details>
 
-      <h2>Stats</h2>
-      <pre id="stats">starting…</pre>
+      <details class="section" data-key="memory" open>
+        <summary>Memory</summary>
+        <div class="body">
+          <div id="memory" class="meter"></div>
+          <canvas id="history"></canvas>
+          <div class="hint">
+            Last 30 s: tile cache, render targets, requests in flight, CPU and
+            GPU frame time.
+          </div>
+        </div>
+      </details>
 
-      <h2>Content warnings</h2>
-      <pre id="warnings"></pre>
+      <details class="section" data-key="pick">
+        <summary>Pick</summary>
+        <div class="body">
+          <div id="pick" class="hint">click the view</div>
+        </div>
+      </details>
 
-      <h2>Parity and benchmarks</h2>
-      <div>
-        <a href="/parity/">Image parity</a> ·
-        <a href="/parity/models.html">Models vs 1.x</a> ·
-        <a href="/parity/tileset.html">Tilesets vs 1.x</a> ·
-        <a href="/bench/baseline.html">Baselines</a> ·
-        <a href="/demo/">Multi-view demo</a>
-      </div>
-      <p class="hint">
-        Drag to orbit, right- or shift-drag to pan, wheel to zoom. Click to
-        pick. Translucent materials draw opaque until M4; streaming and tile
-        tilesets stream with 1.x-equivalent (Legacy1x) selection.
-      </p>
+      <details class="section" data-key="lighting">
+        <summary>Lighting</summary>
+        <div class="body">
+          <label class="range"
+            >Sun azimuth
+            <input
+              id="sun-azimuth"
+              type="range"
+              min="0"
+              max="360"
+              value="150" />
+            <output id="sun-azimuth-value"></output
+          ></label>
+          <label class="range"
+            >Sun elevation
+            <input
+              id="sun-elevation"
+              type="range"
+              min="-10"
+              max="90"
+              value="40" />
+            <output id="sun-elevation-value"></output
+          ></label>
+          <label class="range"
+            >Sun intensity
+            <input
+              id="sun-intensity"
+              type="range"
+              min="0"
+              max="5"
+              step="0.1"
+              value="2" />
+            <output id="sun-intensity-value"></output
+          ></label>
+          <label class="range"
+            >Diffuse IBL
+            <input
+              id="diffuse-ibl"
+              type="range"
+              min="0"
+              max="2"
+              step="0.05"
+              value="1" />
+            <output id="diffuse-ibl-value"></output
+          ></label>
+          <label class="range"
+            >Specular IBL
+            <input
+              id="specular-ibl"
+              type="range"
+              min="0"
+              max="2"
+              step="0.05"
+              value="1" />
+            <output id="specular-ibl-value"></output
+          ></label>
+          <label class="range"
+            >Exposure
+            <input
+              id="exposure"
+              type="range"
+              min="0.1"
+              max="4"
+              step="0.05"
+              value="1" />
+            <output id="exposure-value"></output
+          ></label>
+          <label class="hint" for="encoding">Output encoding</label>
+          <select id="encoding">
+            <option value="srgb">sRGB (exact)</option>
+            <option value="gamma2.2">gamma 2.2 (1.x)</option>
+          </select>
+        </div>
+      </details>
+
+      <details class="section" data-key="stats">
+        <summary>Stats</summary>
+        <div class="body"><pre id="stats">starting…</pre></div>
+      </details>
+
+      <details class="section" data-key="warnings">
+        <summary>Content warnings</summary>
+        <div class="body"><pre id="warnings"></pre></div>
+      </details>
+
+      <details class="section" data-key="links">
+        <summary>Parity and benchmarks</summary>
+        <div class="body">
+          <div>
+            <a href="/parity/">Image parity</a> ·
+            <a href="/parity/models.html">Models vs 1.x</a> ·
+            <a href="/parity/tileset.html">Tileset content vs 1.x</a> ·
+            <a href="/parity/selection.html">Tile selection vs 1.x</a> ·
+            <a href="/bench/baseline.html">Baselines</a> ·
+            <a href="/demo/">Multi-view demo</a>
+          </div>
+          <p class="hint">
+            Tilesets stream with 1.x-equivalent (Legacy1x) selection per view.
+            Translucent materials draw opaque until M4.
+          </p>
+        </div>
+      </details>
     </aside>
     <script type="module" src="./main.ts"></script>
   </body>

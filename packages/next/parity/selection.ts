@@ -1,5 +1,7 @@
 import {
+  Ellipsoid,
   Engine,
+  fromDegrees,
   OffscreenTarget,
   resolveIonAsset,
   type Tileset3D,
@@ -87,7 +89,7 @@ function createViewer() {
   return viewer;
 }
 
-async function settle(step: () => boolean, maxMs = 60000): Promise<void> {
+async function settle(step: () => boolean, maxMs = 180000): Promise<void> {
   const deadline = performance.now() + maxMs;
   let stable = 0;
   while (stable < 5) {
@@ -181,7 +183,30 @@ async function runSelection(): Promise<Row[]> {
       const tileset: Tileset3D = await engine.addTileset(world, source.url, {
         ...(source.headers ? { headers: source.headers } : {}),
       });
+      const at = params.get("at")?.split(",").map(Number);
+      if (at) {
+        // Planet-scale tilesets (OSM Buildings): cameras around a location.
+        const target = Ellipsoid.WGS84.cartographicToCartesian(
+          fromDegrees(at[0]!, at[1]!, 0),
+          new Float64Array(3),
+        );
+        const absolute = [
+          { heading: 30, pitch: -30, range: 600 },
+          { heading: 200, pitch: -80, range: 2500 },
+          { heading: 120, pitch: -6, range: 120 },
+          { heading: 35, pitch: -30, range: 1500 },
+        ];
+        CAMERAS.forEach((_, i) => {
+          const cam = absolute[i]!;
+          const camera = views[i]!.camera;
+          camera.near = 1.0;
+          camera.lookAt(target, cam.heading * deg, cam.pitch * deg, cam.range);
+        });
+      }
       CAMERAS.forEach((cam, i) => {
+        if (at) {
+          return;
+        }
         const volume =
           ("content" in cam && tileset.root.contentVolume) ||
           tileset.root.volume;

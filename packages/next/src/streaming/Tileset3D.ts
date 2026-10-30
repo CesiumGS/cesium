@@ -32,6 +32,13 @@ export interface TilesetStats {
   loaded: number;
   loading: number;
   bytes: number;
+  /** Content cache budget (eviction starts above it). */
+  budget: number;
+  /** Content requests in flight, and the concurrency limit. */
+  inFlight: number;
+  maxInFlight: number;
+  /** Decoded content waiting for its upload slot. */
+  uploadQueue: number;
   /** Tiles selected per view id in the last update. */
   selected: Map<number, number>;
 }
@@ -44,6 +51,10 @@ export class Tileset3D implements TileTree {
     loaded: 0,
     loading: 0,
     bytes: 0,
+    budget: 0,
+    inFlight: 0,
+    maxInFlight: 0,
+    uploadQueue: 0,
     selected: new Map(),
   };
   /** Selected tiles per view id after the last update (parity tests). */
@@ -72,6 +83,8 @@ export class Tileset3D implements TileTree {
     this.maximumRequests = options.maximumRequests ?? 18;
     this.uploadsPerFrame = options.uploadsPerFrame ?? 8;
     this.headers = options.headers;
+    this.stats.budget = this.cacheBytes;
+    this.stats.maxInFlight = this.maximumRequests;
   }
 
   static async load(
@@ -160,6 +173,8 @@ export class Tileset3D implements TileTree {
     this.upload();
     this.evict(frame);
     this.stats.loading = this.inFlight + this.ready.length;
+    this.stats.inFlight = this.inFlight;
+    this.stats.uploadQueue = this.ready.length;
   }
 
   private request(requests: Map<Tile, number>): void {

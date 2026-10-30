@@ -250,6 +250,9 @@ async function main(): Promise<void> {
   const controller = new InspectController(view, canvas);
   let overview: View | undefined;
   let overviewLink: ViewLink | undefined;
+  /** Split view: a second, independent camera on the right half. */
+  let second: View | undefined;
+  let secondController: InspectController | undefined;
   let focus = { center: vec3.vec3(), radius: 1 };
   let loadToken = 0;
   /** The streamed tileset in the current world, if any. */
@@ -258,6 +261,29 @@ async function main(): Promise<void> {
   let groundDraw: DrawHandle | undefined;
   let current = sourceFromUrl();
   const ionToken = import.meta.env.VITE_ION_TOKEN as string | undefined;
+
+  // ---------------------------------------------------------------- panel sections
+  // Collapsible sections remember their state (per browser; optional).
+  for (const section of document.querySelectorAll<HTMLDetailsElement>(
+    "details.section",
+  )) {
+    const key = `viewer.section.${section.dataset.key}`;
+    try {
+      const saved = localStorage.getItem(key);
+      if (saved !== null) {
+        section.open = saved === "open";
+      }
+    } catch {
+      // Storage unavailable: defaults apply.
+    }
+    section.addEventListener("toggle", () => {
+      try {
+        localStorage.setItem(key, section.open ? "open" : "closed");
+      } catch {
+        // Ignore.
+      }
+    });
+  }
 
   // ---------------------------------------------------------------- source UI
   const modelSelect = $<HTMLSelectElement>("#model");
@@ -332,30 +358,81 @@ async function main(): Promise<void> {
       "srgb" | "gamma2.2";
   });
 
-  // ---------------------------------------------------------------- overview inset
+  // ---------------------------------------------------------------- extra views
+  const overviewViewport = () =>
+    second
+      ? { x: 0.27, y: 0.02, width: 0.21, height: 0.3 }
+      : { x: 0.7, y: 0.02, width: 0.28, height: 0.3 };
+  const updateIgnore = () => {
+    controller.ignore = (x, y) => overview?.contains(x, y) ?? false;
+  };
   $<HTMLInputElement>("#overview").addEventListener("change", (e) => {
     if ((e.target as HTMLInputElement).checked) {
       overview = engine.addView({
         target,
         world,
-        viewport: { x: 0.7, y: 0.02, width: 0.28, height: 0.3 },
+        viewport: overviewViewport(),
       });
       overviewLink = engine.link(view, overview, {
         modes: ["follow", "footprint"],
         followScale: 4,
       });
-      controller.ignore = (x, y) => overview?.contains(x, y) ?? false;
     } else if (overview) {
       engine.unlink(overviewLink!);
       engine.removeView(overview);
       overview = overviewLink = undefined;
-      controller.ignore = undefined;
+    }
+    updateIgnore();
+  });
+  // Split view: tiles are selected per view from one shared cache and draw
+  // table, so the two halves can need different levels of detail.
+  $<HTMLInputElement>("#split").addEventListener("change", (e) => {
+    if ((e.target as HTMLInputElement).checked) {
+      view.viewport = { x: 0, y: 0, width: 0.5, height: 1 };
+      second = engine.addView({
+        target,
+        world,
+        viewport: { x: 0.5, y: 0, width: 0.5, height: 1 },
+      });
+      secondController = new InspectController(second, canvas);
+      second.camera.near = view.camera.near;
+      secondController.focus(
+        controller.target,
+        controller.heading + (150 * Math.PI) / 180,
+        -0.25,
+        controller.range * 0.4,
+      );
+    } else if (second) {
+      secondController!.dispose();
+      engine.removeView(second);
+      second = secondController = undefined;
+      view.viewport = { x: 0, y: 0, width: 1, height: 1 };
+    }
+    if (overview) {
+      overview.viewport = overviewViewport();
     }
   });
 
   function frame(): void {
-    view.camera.near = Math.max(0.005, focus.radius * 0.002);
-    controller.focus(focus.center, 35 * deg, -30 * deg, focus.radius * 2.6);
+    // ?at=lon,lat[,range] looks at a location instead (planet-scale tilesets
+    // such as OSM Buildings).
+    const at = new URLSearchParams(location.search)
+      .get("at")
+      ?.split(",")
+      .map(Number);
+    if (at && at.length >= 2) {
+      const target = ellipsoid.cartographicToCartesian(
+        fromDegrees(at[0]!, at[1]!, 0),
+        vec3.vec3(),
+      );
+      const range = at[2] ?? 1500;
+      vec3.copy(focus.center, target);
+      view.camera.near = Math.max(0.05, range * 0.0005);
+      controller.focus(target, 35 * deg, -30 * deg, range);
+    } else {
+      view.camera.near = Math.max(0.005, focus.radius * 0.002);
+      controller.focus(focus.center, 35 * deg, -30 * deg, focus.radius * 2.6);
+    }
     updateSun();
   }
 
@@ -363,7 +440,13 @@ async function main(): Promise<void> {
   async function load(source: Source): Promise<void> {
     const token = ++loadToken;
     current = source;
-    history.replaceState(null, "", sourceToQuery(source));
+    const at = new URLSearchParams(location.search).get("at");
+    history.replaceState(
+      null,
+      "",
+      sourceToQuery(source) +
+        (at && source.kind !== "model" ? `&at=${at}` : ""),
+    );
     modelSelect.value = source.kind === "model" ? source.path : "";
     tilesetSelect.value = source.kind === "tileset" ? source.path : "";
     if (source.kind === "ion") {
@@ -479,6 +562,9 @@ async function main(): Promise<void> {
       const old = world;
       world = next;
       view.world = next;
+      if (second) {
+        second.world = next;
+      }
       if (overview) {
         overview.world = next;
       }
@@ -527,8 +613,12 @@ async function main(): Promise<void> {
     if (overview?.contains(x, y)) {
       return;
     }
-    const result = await view.pick(x, y);
+    // Pick in whichever view was clicked, in that view's pixels.
+    const picked = second?.contains(x, y) ? second : view;
+    const area = picked.pixelRect();
+    const result = await picked.pick(x - area.x, y - area.y);
     const pick = $("#pick");
+    pick.closest("details")!.open = true;
     if (!result) {
       pick.innerHTML = `<span class="hint">nothing at this pixel</span>`;
       return;
@@ -546,7 +636,183 @@ async function main(): Promise<void> {
       }`;
   });
 
+  // ---------------------------------------------------------------- memory
+  const MB = 1048576;
+  const mb = (bytes: number) =>
+    `${(bytes / MB).toFixed(bytes < 10 * MB ? 1 : 0)} MB`;
+  /** One meter row: label, filled bar (used / capacity), text on top. */
+  const meter = (
+    label: string,
+    used: number,
+    capacity: number,
+    text: string,
+    extra?: { idle: number },
+  ) => {
+    const pct = capacity > 0 ? Math.min(100, (used / capacity) * 100) : 0;
+    const idlePct =
+      extra && capacity > 0
+        ? Math.min(100 - pct, (extra.idle / capacity) * 100)
+        : 0;
+    const hot = pct > 90 ? " hot" : "";
+    return (
+      `<div class="label">${label}</div><div class="bar">` +
+      `<div class="fill${hot}" style="width:${pct}%"></div>${
+        idlePct > 0
+          ? `<div class="fill idle" style="left:${pct}%;width:${idlePct}%"></div>`
+          : ""
+      }<div class="text">${text}</div></div>`
+    );
+  };
+  const HISTORY = 120; // 30 s at 4 Hz
+  const samples = {
+    cache: [] as number[],
+    targets: [] as number[],
+    inFlight: [] as number[],
+    cpu: [] as number[],
+    gpu: [] as number[],
+  };
+  const push = (series: number[], value: number) => {
+    series.push(value);
+    if (series.length > HISTORY) {
+      series.shift();
+    }
+  };
+  const historyCanvas = $<HTMLCanvasElement>("#history");
+  function drawHistory(): void {
+    const dpr = devicePixelRatio || 1;
+    const w = Math.round(historyCanvas.clientWidth * dpr);
+    const h = Math.round(historyCanvas.clientHeight * dpr);
+    if (historyCanvas.width !== w || historyCanvas.height !== h) {
+      historyCanvas.width = w;
+      historyCanvas.height = h;
+    }
+    const ctx = historyCanvas.getContext("2d")!;
+    ctx.clearRect(0, 0, w, h);
+    const rows: Array<[string, number[], string, (v: number) => string]> = [
+      ["tile cache", samples.cache, "#3d6fb6", mb],
+      ["targets", samples.targets, "#7a5fb0", mb],
+      ["in flight", samples.inFlight, "#3a9b8a", (v) => v.toFixed(0)],
+      ["cpu ms", samples.cpu, "#d9a441", (v) => v.toFixed(2)],
+      ["gpu ms", samples.gpu, "#c4573a", (v) => v.toFixed(2)],
+    ];
+    const rowH = h / rows.length;
+    ctx.font = `${10 * dpr}px ui-monospace, monospace`;
+    rows.forEach(([name, series, color, format], r) => {
+      const top = r * rowH;
+      const max = Math.max(1e-6, ...series);
+      ctx.strokeStyle = "#222a3a";
+      ctx.beginPath();
+      ctx.moveTo(0, top + rowH - 0.5);
+      ctx.lineTo(w, top + rowH - 0.5);
+      ctx.stroke();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.5 * dpr;
+      ctx.beginPath();
+      series.forEach((v, i) => {
+        const x = (i / (HISTORY - 1)) * w;
+        const y = top + rowH - 3 * dpr - (v / max) * (rowH - 14 * dpr);
+        if (i === 0) {
+          ctx.moveTo(x, y);
+        } else {
+          ctx.lineTo(x, y);
+        }
+      });
+      ctx.stroke();
+      ctx.fillStyle = "#8a93a6";
+      const last = series[series.length - 1] ?? 0;
+      ctx.fillText(
+        `${name} ${format(last)} (max ${format(max)})`,
+        4 * dpr,
+        top + 11 * dpr,
+      );
+    });
+  }
+  function updateMemory(): void {
+    const m = world.memory;
+    const targets = engine.renderTargetMemory;
+    const tiles = current3dTiles?.stats;
+    const rows = [
+      meter(
+        "vertex arena",
+        m.vertexBytes.used,
+        m.vertexBytes.capacity,
+        `${mb(m.vertexBytes.used)} / ${mb(m.vertexBytes.capacity)}`,
+      ),
+      meter(
+        "index arena",
+        m.indexBytes.used,
+        m.indexBytes.capacity,
+        `${mb(m.indexBytes.used)} / ${mb(m.indexBytes.capacity)}`,
+      ),
+      meter(
+        "draw records",
+        m.draws.used,
+        m.draws.capacity,
+        `${m.draws.used} / ${m.draws.capacity} · ${m.batches} batches`,
+      ),
+      meter(
+        "materials",
+        m.materials.used,
+        m.materials.capacity,
+        `${m.materials.used} / ${m.materials.capacity}`,
+      ),
+      meter(
+        "render targets",
+        targets.workingSetBytes,
+        targets.workingSetBytes + targets.idleBudget,
+        `${mb(targets.workingSetBytes)} per frame · ${mb(targets.residentBytes)} resident · idle cap ${mb(targets.idleBudget)}`,
+        { idle: targets.residentBytes - targets.workingSetBytes },
+      ),
+    ];
+    if (tiles) {
+      rows.push(
+        meter(
+          "tile cache",
+          tiles.bytes,
+          tiles.budget,
+          `${mb(tiles.bytes)} / ${mb(tiles.budget)} · ${tiles.loaded}/${tiles.tiles} tiles`,
+        ),
+        meter(
+          "requests",
+          tiles.inFlight,
+          tiles.maxInFlight,
+          `${tiles.inFlight} / ${tiles.maxInFlight} in flight · ${tiles.uploadQueue} to upload`,
+        ),
+      );
+    }
+    rows.push(
+      `<div class="label">GPU tables</div><div class="hint">${mb(m.tableBytes)} fixed (records, instances, lists, args)</div>`,
+    );
+    $("#memory").innerHTML = rows.join("");
+    push(samples.cache, tiles?.bytes ?? 0);
+    push(samples.targets, targets.residentBytes);
+    push(samples.inFlight, tiles?.inFlight ?? 0);
+    push(samples.cpu, engine.stats.cpuMs);
+    push(
+      samples.gpu,
+      Number.isNaN(engine.stats.gpuMs) ? 0 : engine.stats.gpuMs,
+    );
+    drawHistory();
+  }
+  setInterval(updateMemory, 250);
+
   // ---------------------------------------------------------------- stats
+  const selectedPerView = (tileset: Tileset3D) =>
+    (
+      [
+        ["main", view],
+        ["right", second],
+        ["inset", overview],
+      ] as const
+    )
+      .filter(
+        (entry): entry is readonly [string, View] => entry[1] !== undefined,
+      )
+      .map(
+        ([name, v]) =>
+          `${name} ${tileset.stats.selected.get(Math.log2(engine.viewBit(v))) ?? 0}`,
+      )
+      .join(", ");
   const adapter = engine.gpu.adapter.info;
   setInterval(() => {
     const s = engine.stats;
@@ -561,7 +827,7 @@ async function main(): Promise<void> {
       ...(current3dTiles
         ? [
             `tiles        ${current3dTiles.stats.loaded} loaded / ${current3dTiles.stats.tiles} known`,
-            `selected     ${[...current3dTiles.stats.selected.values()].join(" / ")} (per view)`,
+            `selected     ${selectedPerView(current3dTiles)}`,
             `loading      ${current3dTiles.stats.loading}`,
             `tile cache   ${(current3dTiles.stats.bytes / 1048576).toFixed(1)} MB`,
           ]
@@ -572,6 +838,13 @@ async function main(): Promise<void> {
         [...current3dTiles.warnings].join("\n") || "none";
     }
   }, 250);
+
+  // A lost device (driver reset, out of memory) can't be recovered yet
+  // (M2+ rebuilds worlds from CPU-side sources); say so instead of freezing.
+  engine.gpu.events.on("lost", (info) => {
+    $("#load-status").textContent =
+      `GPU device lost (${info.message || info.reason}); reload the page.`;
+  });
 
   engine.start();
   await load(current);

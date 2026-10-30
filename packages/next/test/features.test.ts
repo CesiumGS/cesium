@@ -106,3 +106,25 @@ describe("EXT_mesh_features / EXT_structural_metadata", () => {
     ]);
   });
 });
+
+describe("3DTILES_batch_table_hierarchy", () => {
+  for (const name of [
+    "BatchTableHierarchy",
+    "BatchTableHierarchyBinary",
+    "BatchTableHierarchyMultipleParents",
+  ]) {
+    it(`${name}: inherits properties through parent instances`, () => {
+      const b3dm = unwrapB3dm(
+        bytes(`Cesium3DTiles/Hierarchy/${name}/tile.b3dm`),
+      );
+      const columns = b3dm.batchTable.columns;
+      // Feature 0 is a doorknob; its ancestors are a door, a building and a zone.
+      for (const property of ["doorknob_name", "door_name", "building_name"]) {
+        expect(columns[property]?.[0], property).not.toBeNull();
+        expect(columns[property]?.[0], property).not.toBeUndefined();
+      }
+      // Own batch-table properties stay alongside the hierarchy's.
+      expect(columns.height).toHaveLength(b3dm.batchLength);
+    });
+  }
+});
