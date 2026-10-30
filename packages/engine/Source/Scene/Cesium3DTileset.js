@@ -40,7 +40,6 @@ import Cesium3DTile from "./Cesium3DTile.js";
 import Cesium3DTileColorBlendMode from "./Cesium3DTileColorBlendMode.js";
 import Cesium3DTileContentState from "./Cesium3DTileContentState.js";
 import Cesium3DTilesetMetadata from "./Cesium3DTilesetMetadata.js";
-import Cesium3DTileOptimizations from "./Cesium3DTileOptimizations.js";
 import Cesium3DTilePass from "./Cesium3DTilePass.js";
 import Cesium3DTileRefine from "./Cesium3DTileRefine.js";
 import Cesium3DTilesetCache from "./Cesium3DTilesetCache.js";
@@ -2546,10 +2545,6 @@ Cesium3DTileset.prototype.loadTileset = function (
         stack.push(childTile);
       }
     }
-
-    if (this._cullWithChildrenBounds) {
-      Cesium3DTileOptimizations.checkChildrenWithinParent(tile);
-    }
   }
 
   return rootTile;
@@ -2620,10 +2615,6 @@ Cesium3DTileset.prototype.loadTilesetFromGltf = function (
         childTile._depth = tile._depth + 1;
         stack.push(childTile);
       }
-    }
-
-    if (this._cullWithChildrenBounds) {
-      Cesium3DTileOptimizations.checkChildrenWithinParent(tile);
     }
   }
 

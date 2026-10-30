@@ -40,7 +40,7 @@ Cesium3DTileOptimizations.checkChildrenWithinParent = function (tile) {
     boundingVolume instanceof TileOrientedBoundingBox ||
     boundingVolume instanceof TileBoundingRegion
   ) {
-    const orientedBoundingBox = boundingVolume._orientedBoundingBox;
+    const orientedBoundingBox = boundingVolume.boundingVolume;
     tile._optimChildrenWithinParent =
       Cesium3DTileOptimizationHint.USE_OPTIMIZATION;
     for (let i = 0; i < length; ++i) {
@@ -58,7 +58,7 @@ Cesium3DTileOptimizations.checkChildrenWithinParent = function (tile) {
         break;
       }
 
-      const childOrientedBoundingBox = childBoundingVolume._orientedBoundingBox;
+      const childOrientedBoundingBox = childBoundingVolume.boundingVolume;
 
       // Compute the axis from the parent to the child.
       const axis = Cartesian3.subtract(

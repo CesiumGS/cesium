@@ -16,6 +16,7 @@ import {
   Cesium3DTileRefine,
   Cesium3DTilesetHeatmap,
   MetadataSchema,
+  Resource,
   TileBoundingRegion,
   TileOrientedBoundingBox,
 } from "../../index.js";
@@ -210,6 +211,51 @@ describe(
       expect(tile.content).toBeDefined();
       expect(tile.content).toBeInstanceOf(Empty3DTileContent);
       expect(Cesium3DTile._deprecationWarning).toHaveBeenCalled();
+    });
+
+    describe("content resource", function () {
+      it("is derived from the base resource when first used", function () {
+        spyOn(Resource.prototype, "getDerivedResource").and.callThrough();
+        const header = clone(tileWithBoundingSphere, true);
+        header.content = { uri: "0/0.b3dm" };
+        const tile = new Cesium3DTile(
+          mockTileset,
+          "http://example.com/tileset/tileset.json",
+          header,
+          undefined,
+        );
+        expect(Resource.prototype.getDerivedResource).not.toHaveBeenCalled();
+
+        expect(tile._contentResource.url).toEqual(
+          "http://example.com/tileset/0/0.b3dm",
+        );
+        expect(tile._contentResource).toBe(tile._contentResource);
+        expect(Resource.prototype.getDerivedResource).toHaveBeenCalledTimes(1);
+      });
+
+      it("is undefined if the tile has no content", function () {
+        const tile = new Cesium3DTile(
+          mockTileset,
+          "http://example.com/tileset/tileset.json",
+          tileWithBoundingSphere,
+          undefined,
+        );
+        expect(tile._contentResource).toBeUndefined();
+      });
+
+      it("can be replaced", function () {
+        const header = clone(tileWithBoundingSphere, true);
+        header.content = { uri: "0/0.b3dm" };
+        const tile = new Cesium3DTile(
+          mockTileset,
+          "http://example.com/tileset/tileset.json",
+          header,
+          undefined,
+        );
+        const resource = new Resource({ url: "http://example.com/other.glb" });
+        tile._contentResource = resource;
+        expect(tile._contentResource).toBe(resource);
+      });
     });
 
     it("logs deprecation warning if geometric error is undefined", function () {
