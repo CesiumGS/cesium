@@ -954,18 +954,9 @@ class Quaternion {
     Check.typeOf.object("result", result);
     //>>includeEnd('debug');
 
-    const slerp0 = Quaternion.slerp(
-      q0,
-      q1,
-      t,
-      Quaternion.#squadScratch.quaternion0,
-    );
-    const slerp1 = Quaternion.slerp(
-      s0,
-      s1,
-      t,
-      Quaternion.#squadScratch.quaternion1,
-    );
+    const { quaternion0, quaternion1 } = Quaternion.#squadScratch;
+    const slerp0 = Quaternion.slerp(q0, q1, t, quaternion0);
+    const slerp1 = Quaternion.slerp(s0, s1, t, quaternion1);
     return Quaternion.slerp(slerp0, slerp1, 2.0 * t * (1.0 - t), result);
   }
 
