@@ -4808,6 +4808,37 @@ describe(
         primitive.show = true;
         verifyRender(model, true);
       });
+
+      it("worldMatrix returns the node's world transform", async function () {
+        const model = await loadAndZoomToModelAsync(
+          { gltf: boxArticulationsUrl },
+          scene,
+        );
+        const node = model.getNode("Mesh");
+        const primitive = node.primitives[0];
+
+        expect(primitive.worldMatrix).toEqual(
+          node.computeWorldMatrix(new Matrix4()),
+        );
+      });
+
+      it("worldMatrix reflects changes to the node's transform", async function () {
+        const model = await loadAndZoomToModelAsync(
+          { gltf: boxArticulationsUrl },
+          scene,
+        );
+        const node = model.getNode("Mesh");
+        const primitive = node.primitives[0];
+        const original = Matrix4.clone(primitive.worldMatrix);
+
+        node.matrix = Matrix4.fromTranslation(new Cartesian3(1.0, 2.0, 3.0));
+        scene.renderForSpecs();
+
+        expect(primitive.worldMatrix).not.toEqual(original);
+        expect(primitive.worldMatrix).toEqual(
+          node.computeWorldMatrix(new Matrix4()),
+        );
+      });
     });
 
     describe("fog", function () {
