@@ -1,13 +1,16 @@
 // @ts-check
 /* eslint-disable no-unused-private-class-members -- Scaffold. Remove once implemented. */
 
-import { DeveloperError } from "@cesium/core";
+import { Check, DeveloperError, destroyObject } from "@cesium/core";
+import {
+  MeshEditor as WasmMeshEditor,
+  UpdateResult,
+} from "@cesium/mesh-editor";
 import EditMode from "./EditMode.js";
+import MeshEditorModule from "./MeshEditorModule.js";
 
 /** @import { FrameState, GeometrySource, Scene } from "@cesium/engine"; */
-/** @import { MeshEditor as WasmMeshEditor, UpdateResult } from "@cesium/mesh-editor"; */
 /** @import Mesh from "./Mesh.js"; */
-/** @import MeshEditorModule from "./MeshEditorModule.js"; */
 
 /**
  * <div class="notice">
@@ -54,10 +57,17 @@ class MeshEditor {
 
   /**
    * @param {object} options
-   * @param {object} options.module The loaded wasm module.
+   * @param {*} options.module The loaded wasm module.
    */
   constructor(options) {
-    throw new DeveloperError("Not implemented.");
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.object("options", options);
+    Check.defined("options.module", options.module);
+    //>>includeEnd('debug');
+
+    this.#module = options.module;
+    this.#wasmEditor = new WasmMeshEditor();
+    this.#updateResult = new UpdateResult();
   }
 
   /**
@@ -70,7 +80,12 @@ class MeshEditor {
    * @exception {RuntimeError} This browser does not support WebAssembly, which mesh editing requires.
    */
   static async addToScene(scene) {
-    throw new DeveloperError("Not implemented.");
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.object("scene", scene);
+    //>>includeEnd('debug');
+
+    const module = await MeshEditorModule.load();
+    return scene.primitives.add(new MeshEditor({ module }));
   }
 
   /**
@@ -85,7 +100,21 @@ class MeshEditor {
   }
 
   set mode(value) {
-    throw new DeveloperError("Not implemented.");
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.number("value", value);
+    //>>includeEnd('debug');
+
+    if (value === this.#mode) {
+      return;
+    }
+
+    this.#wasmEditor.setMode(value);
+    this.#mode = value;
+
+    const { renderableComponents } = this.#wasmEditor;
+    for (const mesh of this.#meshes) {
+      mesh._renderer.setShownComponents(renderableComponents);
+    }
   }
 
   /**
@@ -133,7 +162,21 @@ class MeshEditor {
    * @private
    */
   update(frameState) {
-    throw new DeveloperError("Not implemented.");
+    let changedKeys;
+    if (frameState.passes.render) {
+      // TODO: pass in real timestep. Currently unused by wasm update, but may be needed in the future.
+      this.#wasmEditor.update(0.0, this.#updateResult);
+      changedKeys = new Set(this.#updateResult.changedOverlays);
+    }
+
+    for (const mesh of this.#meshes) {
+      // Any call into wasm can invalidate the views, so use and dispose.
+      const overlayViews = changedKeys?.has(mesh._key)
+        ? this.#wasmEditor.overlayViews(mesh._key)
+        : undefined;
+
+      mesh._update(frameState, overlayViews);
+    }
   }
 
   /**
@@ -145,14 +188,21 @@ class MeshEditor {
 
   /**
    * Destroys every mesh, which shows its source if it has a <code>show</code>
-   * property, and frees the editor's resources. The editor
-   * can't be used afterwards. Removing the editor from the scene's primitives
-   * calls this.
+   * property, and frees the editor's resources. The editor can't be used
+   * afterwards. Removing the editor from the scene's primitives, or
+   * destroying the scene, calls this.
    *
    * @returns {void}
    */
   destroy() {
-    throw new DeveloperError("Not implemented.");
+    for (const mesh of this.#meshes) {
+      mesh._destroy();
+    }
+
+    this.#updateResult.free();
+    this.#wasmEditor.free();
+
+    return destroyObject(this);
   }
 }
 
