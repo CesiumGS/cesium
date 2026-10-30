@@ -52,7 +52,7 @@ class Mesh {
      * The mesh's key in its editor's wasm.
      *
      * @type {bigint}
-     * @private
+     * @ignore
      */
     this._key = options.key;
 
@@ -60,7 +60,7 @@ class Mesh {
      * Draws the mesh's overlay.
      *
      * @type {OverlayRenderer}
-     * @private
+     * @ignore
      */
     this._renderer = undefined;
 
@@ -74,7 +74,7 @@ class Mesh {
    *
    * @param {FrameState} frameState The frame state.
    * @param {OverlayViews} [overlayViews] The mesh's overlay views, if the overlay changed. Read right before this call, with no calls into wasm in between.
-   * @private
+   * @ignore
    */
   _update(frameState, overlayViews) {
     throw new DeveloperError("Not implemented.");
@@ -91,7 +91,7 @@ class Mesh {
    * Destroys the overlay renderer and shows the source, if it has a
    * <code>show</code> property. Called by the editor when it removes the mesh.
    *
-   * @private
+   * @ignore
    */
   _destroy() {
     throw new DeveloperError("Not implemented.");
