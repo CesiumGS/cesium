@@ -82,6 +82,11 @@ const suites = {
     `/parity/selection.html?bench${process.env.ION_ASSET ? `&asset=${process.env.ION_ASSET}` : ""}${process.env.AT ? `&at=${process.env.AT}` : ""}`,
     "runSelection",
   ],
+  // Terrain (Cesium World Terrain, ion asset 1; needs VITE_ION_TOKEN).
+  globe: [
+    `/parity/globe.html?bench${process.env.FOG === "0" ? "&fog=0" : ""}`,
+    "runGlobe",
+  ],
   tileset: [
     `/parity/tileset.html?bench${process.env.ION_ASSET ? `&asset=${process.env.ION_ASSET}` : ""}${process.env.PICK_PROPERTY ? `&pick=${process.env.PICK_PROPERTY}` : ""}${process.env.TILESET_ZOOM ? `&zoom=${process.env.TILESET_ZOOM}` : ""}`,
     "runTileset",

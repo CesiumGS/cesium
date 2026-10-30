@@ -474,6 +474,10 @@ export class Tileset3D implements TileTree {
         .finally(() => {
           this.inFlight--;
           this.loading.delete(tile);
+          // Any completion is a change, also one without content to upload
+          // (an external tileset's children need selecting, a failure needs
+          // reporting): stay active for the next updates.
+          this.lastChange = this.frame;
         });
     }
   }

@@ -5,9 +5,9 @@
  * for parity tests. See docs/globe-legacy1x-spec.md.
  *
  * Differences from 1.x, by construction:
- * - Quadrants without data are drawn by their parent clipped to them (a
- *   mixed-LOD placeholder) instead of by upsampled tiles; their bounds use
- *   the parent's heights, where 1.x upsamples tighter ones.
+ * - Quadrants without data (1.x upsamples them) are drawn by the nearest
+ *   tile with data, clipped to them (a mixed-LOD placeholder); their bounds
+ *   use that tile's heights, where 1.x upsamples tighter ones.
  * - No imagery: `canRenderWithoutLosingDetail` checks terrain only.
  * - The load queues become request priority bands (high, medium, low), each
  *   ordered by 1.x's load priority; the request scheduler, not a 5 ms time
@@ -27,6 +27,7 @@ import {
   type Region,
 } from "../streaming/volumes.ts";
 import { Ellipsoid } from "../math/ellipsoid.ts";
+import { CLIP_BOXES } from "../render/layout.ts";
 import type { Vec3 } from "../math/vec3.ts";
 import { horizonCullingPoint, isScaledSpacePointVisible } from "./horizon.ts";
 import type { GlobeTile, TerrainSource } from "./TerrainSource.ts";
@@ -236,7 +237,13 @@ export class GlobeLegacy1xSelection implements TileSelection {
       }
     }
 
-    if (this.source.expand(tile) && tile.children.length > 0) {
+    if (this.canRefine(tile)) {
+      // Every quadrant below is upsampled already: this tile draws.
+      if (tile.children.every((c) => c.fillFromParent && c.globe!.upsampled)) {
+        this.renderTile(P, tile, last, out);
+        this.queue(P, P.medium, tile);
+        return;
+      }
       setResult(P, tile, REFINED);
       const first = P.render.length;
       const low = P.low.length;
@@ -290,6 +297,20 @@ export class GlobeLegacy1xSelection implements TileSelection {
     // Can't refine (no data below, or availability still unknown).
     this.renderTile(P, tile, last, out);
     this.queue(P, P.high, tile);
+  }
+
+  /**
+   * 1.x canRefine: children whose availability is known, or, below the
+   * last level with data, upsampled ones once this tile can be drawn.
+   */
+  private canRefine(tile: Tile): boolean {
+    if (!this.source.expand(tile)) {
+      return false;
+    }
+    return (
+      tile.children.length > 0 ||
+      (renderable(tile) && this.source.upsample(tile))
+    );
   }
 
   private renderTile(P: Pass, tile: Tile, last: number, out: Details): void {
@@ -423,15 +444,25 @@ export class GlobeLegacy1xSelection implements TileSelection {
    * the nearest loaded ancestor's; undefined when there are none.
    */
   private bounds(tile: Tile): Bounds | undefined {
+    const g = tile.globe!;
     let source: Tile | undefined = tile;
-    while (source?.globe && !source.globe.own) {
-      source = source.parent;
+    let heights:
+      | { minimumHeight: number; maximumHeight: number; occludee?: Vec3 }
+      | undefined;
+    // An upsampled quadrant has the clipped mesh's own heights.
+    const quadrants = tile.parent?.globe?.own?.quadrants;
+    if (tile.fillFromParent && g.upsampled && quadrants) {
+      const q = quadrants[tile.parent!.children.indexOf(tile)]!;
+      heights = { minimumHeight: q[0], maximumHeight: q[1] };
+    } else {
+      while (source?.globe && !source.globe.own) {
+        source = source.parent;
+      }
+      heights = source?.globe?.own;
     }
-    const heights = source?.globe?.own;
     if (!source || !heights) {
       return undefined;
     }
-    const g = tile.globe!;
     const cached = g.bounds as Bounds | undefined;
     if (
       cached &&
@@ -474,8 +505,12 @@ export class GlobeLegacy1xSelection implements TileSelection {
   /** 1.x queueTileLoad with computeTileLoadPriority. */
   private queue(P: Pass, queue: Queued[], tile: Tile): void {
     if (tile.fillFromParent) {
-      // Drawn from its parent's content.
-      tile = tile.parent!;
+      // Queued quadrants without data are upsampled (at once, here) when
+      // the content they are drawn from is loaded; else it loads.
+      if (renderable(tile)) {
+        tile.globe!.upsampled = true;
+      }
+      tile = dataTile(tile);
     }
     if (tile.empty || tile.state !== "unloaded") {
       return;
@@ -511,7 +546,8 @@ export class GlobeLegacy1xSelection implements TileSelection {
     const holes = new Map<Tile, Tile[]>();
     for (const tile of P.render) {
       if (tile.fillFromParent) {
-        const parent = tile.parent!;
+        // Drawn by the tile with data above, clipped to it.
+        const parent = dataTile(tile);
         let list = holes.get(parent);
         if (!list) {
           holes.set(parent, (list = []));
@@ -524,7 +560,10 @@ export class GlobeLegacy1xSelection implements TileSelection {
     }
     result.selected.push(...selected);
     for (const [parent, list] of holes) {
-      result.placeholders!.set(parent, list);
+      // Too many pieces to clip to: draw the whole tile.
+      if (list.length <= CLIP_BOXES) {
+        result.placeholders!.set(parent, list);
+      }
     }
     const bands: [Queued[], number][] = [
       [P.high, HIGH],
@@ -554,11 +593,17 @@ function details(): Details {
   };
 }
 
-/** Ready to draw: own content, or the parent's for a quadrant without data. */
+/** The tile whose content draws `tile`: itself, or the nearest with data above. */
+function dataTile(tile: Tile): Tile {
+  while (tile.fillFromParent) {
+    tile = tile.parent!;
+  }
+  return tile;
+}
+
+/** Ready to draw: its content, or that of the tile with data above. */
 function renderable(tile: Tile): boolean {
-  return tile.fillFromParent
-    ? tile.parent!.contentAvailable
-    : tile.contentAvailable;
+  return dataTile(tile).contentAvailable;
 }
 
 function lastResult(P: Pass, tile: Tile): number {

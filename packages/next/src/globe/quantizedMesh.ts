@@ -48,6 +48,12 @@ export interface TerrainTileInfo {
    */
   occludee?: [number, number, number];
   /**
+   * Height range of the mesh clipped to each quadrant (south-west,
+   * south-east, north-west, north-east): what 1.x's upsampled children of
+   * this tile are bounded by.
+   */
+  quadrants: [number, number][];
+  /**
    * Availability of descendants from the metadata extension: entry i holds
    * the ranges at level + 1 + i.
    */
@@ -85,6 +91,85 @@ function zigZagDeltaDecode(u: Uint16Array, v: Uint16Array, h: Uint16Array) {
     v[i] = vv;
     h[i] = hh;
   }
+}
+
+/**
+ * Height range of the mesh clipped to each quadrant (1.x
+ * upsampleQuantizedTerrainMesh bounds). Heights are linear over each
+ * triangle, so the clipped pieces' extremes lie at their corners: the
+ * vertices inside a quadrant, edge crossings of the midlines, and the
+ * tile's center.
+ */
+function quadrantHeights(
+  u: Uint16Array,
+  v: Uint16Array,
+  h: Uint16Array,
+  triangles: Uint32Array,
+  minimumHeight: number,
+  range: number,
+): [number, number][] {
+  const MID = 32767 / 2;
+  const out: [number, number][] = [0, 1, 2, 3].map(() => [Infinity, -Infinity]);
+  const height = (q: number) => minimumHeight + (q / 32767) * range;
+  // Adds a point to every quadrant it lies in (both sides of a midline).
+  const add = (uu: number, vv: number, hh: number) => {
+    for (let q = 0; q < 4; q++) {
+      const east = (q & 1) === 1;
+      const north = (q & 2) === 2;
+      if ((east ? uu >= MID : uu <= MID) && (north ? vv >= MID : vv <= MID)) {
+        const r = out[q]!;
+        r[0] = Math.min(r[0], hh);
+        r[1] = Math.max(r[1], hh);
+      }
+    }
+  };
+  for (let i = 0; i < u.length; i++) {
+    add(u[i]!, v[i]!, height(h[i]!));
+  }
+  for (let t = 0; t + 2 < triangles.length; t += 3) {
+    const a = triangles[t]!;
+    const b = triangles[t + 1]!;
+    const c = triangles[t + 2]!;
+    for (const [i, j] of [
+      [a, b],
+      [b, c],
+      [c, a],
+    ] as const) {
+      const ui = u[i]!,
+        uj = u[j]!,
+        vi = v[i]!,
+        vj = v[j]!;
+      const hi = height(h[i]!),
+        hj = height(h[j]!);
+      if ((ui - MID) * (uj - MID) < 0) {
+        const s = (MID - ui) / (uj - ui);
+        add(MID, vi + s * (vj - vi), hi + s * (hj - hi));
+      }
+      if ((vi - MID) * (vj - MID) < 0) {
+        const s = (MID - vi) / (vj - vi);
+        add(ui + s * (uj - ui), MID, hi + s * (hj - hi));
+      }
+    }
+    // The tile's center, inside this triangle.
+    const ua = u[a]!,
+      va = v[a]!;
+    const d = (v[b]! - v[c]!) * (ua - u[c]!) + (u[c]! - u[b]!) * (va - v[c]!);
+    if (d !== 0) {
+      const l1 =
+        ((v[b]! - v[c]!) * (MID - u[c]!) + (u[c]! - u[b]!) * (MID - v[c]!)) / d;
+      const l2 =
+        ((v[c]! - va) * (MID - u[c]!) + (ua - u[c]!) * (MID - v[c]!)) / d;
+      const l3 = 1 - l1 - l2;
+      if (l1 >= 0 && l2 >= 0 && l3 >= 0) {
+        add(
+          MID,
+          MID,
+          l1 * height(h[a]!) + l2 * height(h[b]!) + l3 * height(h[c]!),
+        );
+      }
+    }
+  }
+  return out;
 }
 
 /**
@@ -219,6 +304,7 @@ export function decodeQuantizedMesh(
   for (let i = 0; i < vertexCount; i++) {
     place(i, i, 0);
   }
+  const quadrants = quadrantHeights(u, v, h, triangles, minimumHeight, range);
   const skirtTriangles: number[] = [];
   let next = vertexCount;
   // Edge order along the edge: west and east by v, south and north by u.
@@ -295,6 +381,7 @@ export function decodeQuantizedMesh(
       sphere,
       horizonOcclusionPoint,
       ...(occludee ? { occludee } : {}),
+      quadrants,
       ...(available ? { available } : {}),
     },
     transfer: [positions.buffer, normals.buffer, uvs.buffer, indices.buffer],

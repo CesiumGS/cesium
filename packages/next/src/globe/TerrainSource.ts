@@ -54,9 +54,20 @@ interface Address {
 export interface GlobeTile extends Address {
   rectangle: Rectangle;
   /** Own height range and occludee point, once loaded. */
-  own?: { minimumHeight: number; maximumHeight: number; occludee?: Vec3 };
+  own?: {
+    minimumHeight: number;
+    maximumHeight: number;
+    occludee?: Vec3;
+    /** Height ranges of its quadrants (SW, SE, NW, NE), for upsampling. */
+    quadrants?: [number, number][];
+  };
   /** Its metadata extension (descendant availability) has arrived. */
   metadata: boolean;
+  /**
+   * A quadrant without data that 1.x would have upsampled by now: it was
+   * queued for loading (culled quadrants never are).
+   */
+  upsampled?: boolean;
   /** Children created (or known to be none). */
   expanded: boolean;
   /** Globe `Legacy1x` selection result per view id, and its pass. */
@@ -187,6 +198,7 @@ export class TerrainSource {
       minimumHeight: info.minimumHeight,
       maximumHeight: info.maximumHeight,
       ...(info.occludee ? { occludee: Float64Array.from(info.occludee) } : {}),
+      quadrants: info.quadrants,
     };
     tile.volume = regionVolume(
       g.rectangle,
@@ -240,7 +252,19 @@ export class TerrainSource {
     return t?.globe?.level === source && t.globe.metadata;
   }
 
-  private createChildren(tile: Tile, g: GlobeTile): void {
+  /**
+   * Gives a leaf four children without data, drawn from its content, as 1.x
+   * upsamples below the last level with data (globe `Legacy1x` only).
+   */
+  upsample(tile: Tile): boolean {
+    const g = tile.globe!;
+    if (tile.children.length === 0 && g.expanded) {
+      this.createChildren(tile, g, false);
+    }
+    return tile.children.length > 0;
+  }
+
+  private createChildren(tile: Tile, g: GlobeTile, data = true): void {
     g.expanded = true;
     // South-west, south-east, north-west, north-east.
     const quadrants = [
@@ -253,8 +277,8 @@ export class TerrainSource {
       x: g.x * 2 + dx!,
       y: g.y * 2 + dy!,
     }));
-    const available = quadrants.map((q) => this.available(q));
-    if (!available.some(Boolean)) {
+    const available = quadrants.map((q) => data && this.available(q));
+    if (data && !available.some(Boolean)) {
       return;
     }
     // Heights of the nearest loaded tile on the path.

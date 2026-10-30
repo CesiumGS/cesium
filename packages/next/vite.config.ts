@@ -77,6 +77,7 @@ export default defineConfig({
         models: "parity/models.html",
         tileset: "parity/tileset.html",
         selection: "parity/selection.html",
+        globe: "parity/globe.html",
         lod: "parity/lod.html",
         precision: "spikes/precision.html",
         worker: "spikes/worker.html",
