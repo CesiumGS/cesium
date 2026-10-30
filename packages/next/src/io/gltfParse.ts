@@ -310,6 +310,9 @@ export async function parseGltf(
       draws,
       featureTables,
       ...(b3dm?.rtcCenter ? { rtcCenter: b3dm.rtcCenter } : {}),
+      ...(typeof json.asset?.copyright === "string" && json.asset.copyright
+        ? { copyright: json.asset.copyright }
+        : {}),
       warnings,
     },
     transfer,

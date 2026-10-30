@@ -105,6 +105,8 @@ export interface GltfAsset {
   featureTables: FeatureTable[];
   /** b3dm RTC_CENTER: translation of the whole model, in tile (z-up) space. */
   rtcCenter?: [number, number, number];
+  /** glTF `asset.copyright`: data credit to show while the content is on screen. */
+  copyright?: string;
   /** Features skipped while parsing (unsupported extensions, attributes, modes). */
   warnings: string[];
 }

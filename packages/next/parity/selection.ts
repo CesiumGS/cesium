@@ -1,4 +1,6 @@
 import {
+  Tile,
+  tileHeaderKey,
   Ellipsoid,
   Engine,
   fromDegrees,
@@ -20,6 +22,10 @@ type Json = any;
  * selects for the same cameras, after loading settles. Jaccard over content
  * URLs, ≥ 99% required.
  */
+
+/** Large enough that neither engine raises its SSE for memory. */
+const CACHE_BYTES = 4 * 1024 * 1024 * 1024;
+const LEGACY_OPTIONS = { cacheBytes: CACHE_BYTES };
 
 const WIDTH = 480;
 const HEIGHT = 270;
@@ -63,8 +69,14 @@ interface Row {
   onlyNext?: string;
 }
 
-const key = (url: string) =>
-  url.split("?")[0]!.replace(/^.*\/(Cesium3DTiles|[0-9a-f-]{8,})\//, "");
+/**
+ * A tile's identity: its header's bounding volume and geometric error as
+ * written in the tileset JSON. Content URLs differ per session (Google's
+ * carry session tokens) and 1.x sorts `children` in place by distance, so
+ * neither URLs nor tree paths are stable keys.
+ */
+const key = (tile: Json): string =>
+  tile instanceof Tile ? tile.headerKey : tileHeaderKey(tile._header);
 
 function createViewer() {
   const viewer = new Cesium.Viewer("legacy", {
@@ -117,14 +129,17 @@ async function legacySelection(
   });
   const tileset =
     source.ionAsset !== undefined
-      ? await Cesium.Cesium3DTileset.fromIonAssetId(source.ionAsset)
-      : await Cesium.Cesium3DTileset.fromUrl(source.url);
+      ? await Cesium.Cesium3DTileset.fromIonAssetId(
+          source.ionAsset,
+          LEGACY_OPTIONS,
+        )
+      : await Cesium.Cesium3DTileset.fromUrl(source.url, LEGACY_OPTIONS);
   viewer.scene.primitives.add(tileset);
   let previous = "";
   await settle(() => {
     viewer.render();
     const now = tileset._selectedTiles
-      .map((t: Json) => key(t._contentResource?.url ?? ""))
+      .map((t: Json) => key(t))
       .sort()
       .join("|");
     const same = tileset.tilesLoaded && now === previous;
@@ -132,7 +147,7 @@ async function legacySelection(
     return same;
   });
   const selected = new Set<string>(
-    tileset._selectedTiles.map((t: Json) => key(t._contentResource?.url ?? "")),
+    tileset._selectedTiles.map((t: Json) => key(t)),
   );
   viewer.scene.primitives.remove(tileset);
   return selected;
@@ -182,6 +197,9 @@ async function runSelection(): Promise<Row[]> {
       );
       const tileset: Tileset3D = await engine.addTileset(world, source.url, {
         ...(source.headers ? { headers: source.headers } : {}),
+        // Memory pressure is out of scope here: 2.0 serves several views from
+        // one cache while 1.x gets a tileset per camera.
+        cacheBytes: CACHE_BYTES,
       });
       const at = params.get("at")?.split(",").map(Number);
       if (at) {
@@ -227,7 +245,7 @@ async function runSelection(): Promise<Row[]> {
         const now = views
           .map((v) =>
             (tileset.lastSelected.get(viewId(engine, v)) ?? [])
-              .map((t) => key(t.contentUrl!))
+              .map((t) => key(t))
               .sort()
               .join("|"),
           )
@@ -239,7 +257,7 @@ async function runSelection(): Promise<Row[]> {
       for (let i = 0; i < CAMERAS.length; i++) {
         const next = new Set(
           (tileset.lastSelected.get(viewId(engine, views[i]!)) ?? []).map((t) =>
-            key(t.contentUrl!),
+            key(t),
           ),
         );
         const camera = views[i]!.camera;
@@ -253,7 +271,7 @@ async function runSelection(): Promise<Row[]> {
         rows.push({
           tileset: source.label,
           view: CAMERAS[i]!.label,
-          status: "ok",
+          status: `ok (2.0 SSE ${tileset.stats.screenSpaceError.toFixed(1)})`,
           legacy: legacy.size,
           next: next.size,
           jaccard: union.size === 0 ? 1 : both / union.size,

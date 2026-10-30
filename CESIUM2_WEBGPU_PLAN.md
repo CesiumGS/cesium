@@ -23,6 +23,7 @@ Branch: `cesium-2.0-webgpu-poc` (off `main` @ `587f52f1eb`, CesiumJS 1.146.0)
 | r15 | Demo viewer (`/viewer/`). M2 started: freeing placed models, per-view record view masks, and the `Legacy1x` selection spec extracted from the 1.x base traversal (§12).                                                                                                                                                                                                                  |
 | r16 | M2 increment 1: streamed 3D Tiles with `Legacy1x` selection per view over one shared cache. L1 selection parity 100% on 36 view comparisons (9 public tilesets and 3 iModel-derived CAD tilesets, 3–4 simultaneous views each). Viewer streams.                                                                                                                                          |
 | r17 | M2 increment 2: OSM Buildings streams with 100% selection parity (Philadelphia, Manhattan); batch-table hierarchy; resize robustness (frame ordering, bounded render-target memory); viewer split view, memory panel and collapsible sections.                                                                                                                                           |
+| r18 | M2 increment 3: photogrammetry. Google Photorealistic 3D Tiles stream via ion with required credits; L1 selection parity 100% in four simultaneous views (22–164 tiles), after fixing a traversal-visibility bug in the port. Memory-adjusted SSE. Memory management recorded as an open design question.                                                                                |
 
 ## 1. Goal
 
@@ -1193,13 +1194,65 @@ Notes for `Next`:
 
 Results: `2026-10-30T00-40-56-567Z`.
 
+### Increment 3 (r18): photogrammetry
+
+- **Google Photorealistic 3D Tiles** stream through ion. `resolveIonAsset`
+  handles external assets: ion returns the provider URL with its key and no
+  ion token, and the session query propagates to child requests. Required
+  attributions (Cesium ion and Google logos) and per-tile data credits
+  (glTF `asset.copyright`, most frequent first, as 1.x) show in a credit bar
+  in the viewer.
+- **Memory-adjusted SSE**, ported from 1.x `processTiles`: uploads pause
+  above budget + overflow (512 + 512 MiB), the threshold rises ×1.02 per frame
+  while content waits, and relaxes back below budget. The viewer meter shows
+  budget, overflow and the current SSE.
+- **Selection keys.** Tiles are compared by their header (JSON bounding
+  volume and geometric error). Google's content URLs carry per-session
+  tokens, and 1.x sorts `children` in place by distance, so neither URLs nor
+  tree paths are stable across engines.
+- **A bug in the port, found by photogrammetry.** 1.x computes a tile's raw
+  visibility once per frame but reapplies the traversal-level checks
+  (external-tileset copy, ADD early-out, children-bounds culling) on every
+  update. The port guarded both with one flag, so when a parent's
+  children-bounds check had already evaluated a child, the child skipped its
+  own children-bounds check and stayed visible. Planet-scale REPLACE trees
+  exposed it: 84–96% Jaccard before the fix, 100% after.
+
+L1 selection parity (`2026-10-30T00-55-07-567Z`; private assets run locally):
+
+| Data                                    | Views | Tiles per view | Jaccard      |
+| --------------------------------------- | ----- | -------------- | ------------ |
+| 9 public Specs tilesets                 | 4     | 1–17           | 100% (36/36) |
+| Google Photorealistic 3D Tiles, Midtown | 4     | 22–164         | 100%         |
+| Cesium OSM Buildings, Midtown           | 4     | 16–20          | 100%         |
+| iModel-derived CAD tilesets (3)         | 4     | 0–5            | 100%         |
+
+The M2 exit criteria are met for `Legacy1x`: OSM Buildings, a CAD tileset and
+photogrammetry stream, with ≥ 99% L1 in multiple views (100% measured).
+`Next` and its L1′ measurement remain.
+
+### Open design question: memory management
+
+1.x's static 512 + 512 MiB per tileset is the parity default, not a design.
+To work out before `Next` and M5:
+
+- One engine-wide GPU budget shared by tilesets, render targets and textures,
+  arbitrated by benefit/cost across tilesets and views, rather than caps per
+  tileset.
+- Sizing: WebGPU exposes no VRAM query. Candidates are adaptive signals
+  (allocation failures, frame time, device loss), platform heuristics, and
+  an application hint.
+- Cheaper residency: Google's JPEG textures become RGBA8 with mips, about 4×
+  the size of a GPU block format. Worker transcoding to BC7/ASTC trades
+  decode time for memory.
+- What eviction keeps (decoded CPU copies vs refetching), and how tile memory
+  interacts with the per-view LOD choice when views compete.
+
 Next:
 
-1. Request scheduling closer to 1.x (priority digits, cull-requests-while-
-   moving, cancellation) where it changes time-to-settle, and the memory-
-   adjusted SSE.
-2. A photogrammetry tileset (M2 exit).
-3. `Next` policy: skip-LOD, budget-driven refinement, silhouette weighting
+1. `Next` policy: skip-LOD, budget-driven refinement, silhouette weighting
    and opportunistic refinement from the shared cache, measured with L1′.
-4. Move the traversal off the main thread over a transferable (SoA) tile
+2. Request scheduling closer to 1.x where it changes time-to-settle
+   (priority digits, cull-requests-while-moving, cancellation).
+3. Move the traversal off the main thread over a transferable (SoA) tile
    table.

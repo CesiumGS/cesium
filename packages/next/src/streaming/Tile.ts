@@ -42,6 +42,12 @@ export class Tile {
   readonly contentUrl?: string;
   /** Content is an external tileset (loaded into `children` on demand). */
   readonly external: boolean;
+  /**
+   * The tile's identity in its tileset JSON (bounding volume and geometric
+   * error as written), independent of URLs and child order; used to compare
+   * selections across engines and sessions.
+   */
+  readonly headerKey: string;
   /** 1.x Cesium3DTileOptimizations: children's volumes lie within ours. */
   childrenWithinParent = false;
 
@@ -49,6 +55,8 @@ export class Tile {
   instance?: ModelInstance;
   /** Bytes of the loaded content (geometry + textures). */
   bytes = 0;
+  /** Data credit of the loaded content (glTF asset.copyright). */
+  copyright?: string;
   /** Frame in which any view last touched (needed) the tile. */
   touchedFrame = -1;
   /** Union of view bits selecting the tile this frame. */
@@ -66,6 +74,7 @@ export class Tile {
     public tileset: TileTree,
   ) {
     this.depth = parent ? parent.depth + 1 : 0;
+    this.headerKey = tileHeaderKey(json);
     this.transform = json.transform
       ? m4.multiply(
           m4.mat4(),
@@ -165,6 +174,11 @@ export interface TileTree {
 
 /* eslint-disable @typescript-eslint/no-explicit-any -- tileset JSON is untyped */
 export type TileJson = any;
+
+/** See `Tile.headerKey`; also applied to 1.x tile headers in parity tests. */
+export function tileHeaderKey(header: TileJson): string {
+  return `${JSON.stringify(header.boundingVolume)}|${header.geometricError}`;
+}
 
 /** 1.x `Cesium3DTileOptimizations.checkChildrenWithinParent`. */
 function checkChildrenWithinParent(tile: Tile): boolean {

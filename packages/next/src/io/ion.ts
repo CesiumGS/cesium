@@ -10,6 +10,11 @@ export interface IonAsset {
   /** Headers for every request under the asset (Authorization: Bearer). */
   headers: Record<string, string>;
   type: string;
+  /**
+   * Attributions the asset requires on screen, as HTML from the ion API
+   * (e.g. the Cesium ion and Google logos).
+   */
+  attributions: string[];
 }
 
 export interface IonOptions {
@@ -35,14 +40,34 @@ export async function resolveIonAsset(
     );
   }
   const endpoint = (await response.json()) as {
-    url: string;
-    accessToken: string;
+    url?: string;
+    accessToken?: string;
     type: string;
+    externalType?: string;
+    options?: { url?: string };
+    attributions?: Array<{ html: string }>;
   };
+  const attributions = (endpoint.attributions ?? []).map((a) => a.html);
+  if (endpoint.externalType) {
+    // Assets ion proxies to another service (e.g. Google Photorealistic 3D
+    // Tiles): the URL carries that service's key; requests send no ion token.
+    if (endpoint.externalType !== "3DTILES" || !endpoint.options?.url) {
+      throw new Error(
+        `ion asset ${assetId}: external type ${endpoint.externalType} not supported`,
+      );
+    }
+    return {
+      url: endpoint.options.url,
+      headers: {},
+      type: endpoint.type,
+      attributions,
+    };
+  }
   return {
-    url: endpoint.url,
+    url: endpoint.url!,
     headers: { Authorization: `Bearer ${endpoint.accessToken}` },
     type: endpoint.type,
+    attributions,
   };
 }
 

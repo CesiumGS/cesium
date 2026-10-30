@@ -259,6 +259,8 @@ async function main(): Promise<void> {
   let current3dTiles: Tileset3D | undefined;
   let streamed: Tileset3D | undefined;
   let groundDraw: DrawHandle | undefined;
+  /** On-screen attributions the current ion asset requires (HTML from ion). */
+  let attributions: string[] = [];
   let current = sourceFromUrl();
   const ionToken = import.meta.env.VITE_ION_TOKEN as string | undefined;
 
@@ -453,6 +455,7 @@ async function main(): Promise<void> {
       ionInput.value = String(source.asset);
     }
     const status = $("#load-status");
+    attributions = [];
     const warnings = new Set<string>();
     const started = performance.now();
     status.textContent = "loading…";
@@ -516,6 +519,7 @@ async function main(): Promise<void> {
           });
           url = resolved.url;
           headers = resolved.headers;
+          attributions = resolved.attributions;
         } else {
           url = new URL(
             `/specs-data/Cesium3DTiles/${source.path}`,
@@ -769,8 +773,8 @@ async function main(): Promise<void> {
         meter(
           "tile cache",
           tiles.bytes,
-          tiles.budget,
-          `${mb(tiles.bytes)} / ${mb(tiles.budget)} · ${tiles.loaded}/${tiles.tiles} tiles`,
+          tiles.budget + tiles.overflow,
+          `${mb(tiles.bytes)} / ${mb(tiles.budget)} +${mb(tiles.overflow)} overflow · ${tiles.loaded}/${tiles.tiles} tiles · SSE ${tiles.screenSpaceError.toFixed(1)}`,
         ),
         meter(
           "requests",
@@ -795,6 +799,16 @@ async function main(): Promise<void> {
     drawHistory();
   }
   setInterval(updateMemory, 250);
+
+  // ---------------------------------------------------------------- credits
+  // Required attributions (ion, data providers) plus the data credits of the
+  // tiles on screen, most frequent first, as 1.x shows them.
+  setInterval(() => {
+    const credits = current3dTiles?.credits() ?? [];
+    $("#credits").innerHTML =
+      attributions.join("") +
+      (credits.length ? escapeHtml(credits.join(" · ")) : "");
+  }, 500);
 
   // ---------------------------------------------------------------- stats
   const selectedPerView = (tileset: Tileset3D) =>

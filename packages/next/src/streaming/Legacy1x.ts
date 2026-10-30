@@ -306,9 +306,10 @@ export class Legacy1xSelection {
     rootError: number,
   ): void {
     const state = tile.viewState(view.id);
-    if (state.updated === pass) {
-      return;
-    }
+    // As 1.x: the raw visibility (updateVisibility) is computed once per pass,
+    // but the traversal-level refinements below run on every update. A
+    // parent's children-bounds check may already have computed this tile's
+    // raw visibility; skipping the steps below then would leave it visible.
     this.updateVisibility(tile, state, view, pass);
     if (!isVisible(state)) {
       return;

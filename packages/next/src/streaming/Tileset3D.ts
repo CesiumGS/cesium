@@ -21,6 +21,11 @@ export interface TilesetOptions extends Legacy1xOptions {
   headers?: Record<string, string>;
   /** Content cache budget in bytes (1.x cacheBytes default: 512 MiB). */
   cacheBytes?: number;
+  /**
+   * How far the cache may exceed `cacheBytes` for content the views need
+   * before detail is reduced (1.x maximumCacheOverflowBytes: 512 MiB).
+   */
+  maximumCacheOverflowBytes?: number;
   /** Concurrent content requests (1.x: 18 per server). */
   maximumRequests?: number;
   /** Uploads per frame, to bound main-thread hitches. */
@@ -34,6 +39,10 @@ export interface TilesetStats {
   bytes: number;
   /** Content cache budget (eviction starts above it). */
   budget: number;
+  /** Allowed overflow before the screen-space error is raised. */
+  overflow: number;
+  /** Current memory-adjusted screen-space error threshold. */
+  screenSpaceError: number;
   /** Content requests in flight, and the concurrency limit. */
   inFlight: number;
   maxInFlight: number;
@@ -52,6 +61,8 @@ export class Tileset3D implements TileTree {
     loading: 0,
     bytes: 0,
     budget: 0,
+    overflow: 0,
+    screenSpaceError: 16,
     inFlight: 0,
     maxInFlight: 0,
     uploadQueue: 0,
@@ -61,6 +72,7 @@ export class Tileset3D implements TileTree {
   readonly lastSelected = new Map<number, Tile[]>();
   private frame = 0;
   private readonly cacheBytes: number;
+  private readonly overflowBytes: number;
   private readonly maximumRequests: number;
   private readonly uploadsPerFrame: number;
   private readonly headers?: Record<string, string>;
@@ -80,10 +92,12 @@ export class Tileset3D implements TileTree {
   ) {
     this.selection = new Legacy1xSelection(options);
     this.cacheBytes = options.cacheBytes ?? 512 * 1024 * 1024;
+    this.overflowBytes = options.maximumCacheOverflowBytes ?? 512 * 1024 * 1024;
     this.maximumRequests = options.maximumRequests ?? 18;
     this.uploadsPerFrame = options.uploadsPerFrame ?? 8;
     this.headers = options.headers;
     this.stats.budget = this.cacheBytes;
+    this.stats.overflow = this.overflowBytes;
     this.stats.maxInFlight = this.maximumRequests;
   }
 
@@ -234,8 +248,20 @@ export class Tileset3D implements TileTree {
     }
   }
 
+  /**
+   * Uploads decoded content within the per-frame cap, then adjusts the
+   * screen-space error for memory as 1.x processTiles does: uploads stop
+   * while the cache exceeds budget + overflow, the threshold rises ×1.02 per
+   * frame while content is still waiting, and relaxes back below budget.
+   */
   private upload(): void {
+    const limit = this.cacheBytes + this.overflowBytes;
+    let exceeded = false;
     for (let n = 0; n < this.uploadsPerFrame && this.ready.length > 0; n++) {
+      if (this.stats.bytes > limit) {
+        exceeded = true;
+        break;
+      }
       const { tile, asset } = this.ready.shift()!;
       asset.warnings.forEach((w) => this.warnings.add(w));
       try {
@@ -246,6 +272,7 @@ export class Tileset3D implements TileTree {
         });
         tile.instance = instance;
         tile.bytes = instance.bytes;
+        tile.copyright = asset.copyright;
         tile.appliedMask = 0;
         tile.state = "ready";
         this.loaded.add(tile);
@@ -258,10 +285,21 @@ export class Tileset3D implements TileTree {
         );
       }
     }
+    const selection = this.selection;
+    if (this.stats.bytes < this.cacheBytes) {
+      selection.memoryAdjustedScreenSpaceError = Math.max(
+        selection.memoryAdjustedScreenSpaceError / 1.02,
+        selection.maximumScreenSpaceError,
+      );
+    } else if (exceeded && this.ready.length > 0) {
+      selection.memoryAdjustedScreenSpaceError *= 1.02;
+    }
+    this.stats.screenSpaceError = selection.memoryAdjustedScreenSpaceError;
   }
 
   /** Least-recently-touched first, never a tile touched this frame. */
   private evict(frame: number): void {
+    // Eviction starts at the budget; the overflow is for content in use.
     if (this.stats.bytes <= this.cacheBytes) {
       return;
     }
@@ -288,6 +326,28 @@ export class Tileset3D implements TileTree {
     tile.appliedMask = -1;
     this.loaded.delete(tile);
     this.masked.delete(tile);
+  }
+
+  /**
+   * Data credits of the content currently selected in any view, most
+   * frequent first (as 1.x orders tileset credits). Each copyright string may
+   * list several credits separated by semicolons.
+   */
+  credits(): string[] {
+    const counts = new Map<string, number>();
+    for (const tiles of this.lastSelected.values()) {
+      for (const tile of tiles) {
+        for (const credit of (tile.copyright ?? "").split(";")) {
+          const text = credit.trim();
+          if (text) {
+            counts.set(text, (counts.get(text) ?? 0) + 1);
+          }
+        }
+      }
+    }
+    return [...counts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .map(([text]) => text);
   }
 
   /** Unloads all content. The tileset can't be used afterwards. */
