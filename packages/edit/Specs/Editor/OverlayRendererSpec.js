@@ -220,10 +220,6 @@ class OverlayTestPrimitive {
       module: { memory: this._memory, shaders },
       mesh: this.mesh,
     });
-    this.modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
-    this.showPoints = true;
-    this.showEdges = true;
-    this.showFaces = true;
   }
 
   /**
@@ -244,13 +240,7 @@ class OverlayTestPrimitive {
       this._overlayViews = undefined;
     }
 
-    this.renderer.update(frameState, {
-      overlayViews,
-      modelMatrix: this.modelMatrix,
-      showPoints: this.showPoints,
-      showEdges: this.showEdges,
-      showFaces: this.showFaces,
-    });
+    this.renderer.update(frameState, overlayViews);
   }
 
   isDestroyed() {
@@ -316,7 +306,7 @@ describe(
     // Converts a position in the overlay's local space to window coordinates.
     function getWindowPosition(overlay, position) {
       const positionWC = Matrix4.multiplyByPoint(
-        overlay.modelMatrix,
+        overlay.renderer.modelMatrix,
         Cartesian3.fromArray(position),
         new Cartesian3(),
       );
@@ -371,15 +361,14 @@ describe(
 
       it("skips component kinds that aren't shown", function () {
         const overlay = addSquare();
-        overlay.showEdges = false;
+        overlay.renderer.setShownComponents(true, false, true);
 
         const commands = renderCommands(overlay);
 
         // Points and faces.
         expect(getInstanceCounts(commands)).toEqual([4, 2]);
 
-        overlay.showPoints = false;
-        overlay.showFaces = false;
+        overlay.renderer.setShownComponents(false, false, false);
 
         expect(renderCommands(overlay)).toEqual([]);
       });
@@ -411,22 +400,24 @@ describe(
         const getModelMatrices = () =>
           renderCommands(overlay).map((command) => command.modelMatrix);
 
-        overlay.modelMatrix = Matrix4.fromTranslation(
+        const translation = Matrix4.fromTranslation(
           new Cartesian3(1.0, 2.0, 3.0),
         );
+        Matrix4.clone(translation, overlay.renderer.modelMatrix);
         expect(getModelMatrices()).toEqual([
-          overlay.modelMatrix,
-          overlay.modelMatrix,
-          overlay.modelMatrix,
+          translation,
+          translation,
+          translation,
         ]);
 
-        overlay.modelMatrix = Matrix4.fromTranslation(
+        Matrix4.fromTranslation(
           new Cartesian3(-1.0, 0.0, 0.0),
+          overlay.renderer.modelMatrix,
         );
         expect(getModelMatrices()).toEqual([
-          overlay.modelMatrix,
-          overlay.modelMatrix,
-          overlay.modelMatrix,
+          overlay.renderer.modelMatrix,
+          overlay.renderer.modelMatrix,
+          overlay.renderer.modelMatrix,
         ]);
       });
 
