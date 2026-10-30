@@ -86,6 +86,16 @@ export interface FrameStats {
  * allocates only the WebGPU objects the API itself returns (encoder, passes,
  * command buffer, canvas texture view).
  */
+/** A view's last presented image, when it shares its canvas (on demand). */
+interface PersistentImage {
+  texture: GPUTexture;
+  view: GPUTextureView;
+  /** Its size, at the origin: the view renders into it as a whole target. */
+  rect: PixelRect;
+  /** Holds the view's current image (false until first rendered). */
+  valid: boolean;
+}
+
 /** Values in one view's on-demand fingerprint (see `viewChanged`). */
 const VIEW_KEY_LENGTH = 26;
 
@@ -150,6 +160,32 @@ export class Engine {
   private readonly globalKey = new Float64Array(5).fill(Number.NaN);
   private readonly scratchKey = new Float64Array(VIEW_KEY_LENGTH);
   private readonly dirtyTargets = new Set<RenderTarget>();
+  private readonly dirtyViews = new Set<View>();
+  /**
+   * Views sharing a canvas, on demand: each one's last presented image, so
+   * a clean view is copied instead of re-rendered.
+   */
+  private readonly persistent = new Map<View, PersistentImage>();
+  private readonly viewsPerTarget = new Map<RenderTarget, number>();
+  private readonly sharedTargets = new Set<RenderTarget>();
+  private readonly drawnViews = new Set<View>();
+  private readonly compositeClear: GPURenderPassColorAttachment = {
+    view: undefined as never,
+    clearValue: { r: 0, g: 0, b: 0, a: 1 },
+    loadOp: "clear",
+    storeOp: "store",
+  };
+  private readonly compositePass: GPURenderPassDescriptor = {
+    label: "composite.clear",
+    colorAttachments: [this.compositeClear],
+  };
+  private readonly copySource: GPUTexelCopyTextureInfo = {
+    texture: undefined as never,
+  };
+  private readonly copyDestination: GPUTexelCopyTextureInfo = {
+    texture: undefined as never,
+    origin: { x: 0, y: 0 },
+  };
 
   private constructor(gpu: GpuDevice, ctx: RenderContext, maxViews: number) {
     this.gpu = gpu;
@@ -402,6 +438,7 @@ export class Engine {
   }
 
   removeView(view: View): void {
+    this.dropPersistent(view);
     const index = this.views.indexOf(view);
     if (index >= 0) {
       this.views.splice(index, 1);
@@ -468,7 +505,9 @@ export class Engine {
     // with none changed are skipped and keep their last image.
     const all = this.globalChanged() || this.renderRequested;
     const dirty = this.dirtyTargets;
+    const dirtyViews = this.dirtyViews;
     dirty.clear();
+    dirtyViews.clear();
     let moved = false;
     const views = this.views;
     for (let i = 0; i < views.length; i++) {
@@ -481,6 +520,7 @@ export class Engine {
       // A pick is served during a frame (one per frame).
       if (all || changed || view.pendingPicks.length > 0) {
         dirty.add(view.target);
+        dirtyViews.add(view);
       }
     }
     // Selection runs when a camera moved or content streams; a frame then
@@ -498,6 +538,7 @@ export class Engine {
         (view.world.changedViews & this.viewBit(view)) !== 0
       ) {
         dirty.add(view.target);
+        dirtyViews.add(view);
       }
     }
     if (dirty.size === 0) {
@@ -507,7 +548,7 @@ export class Engine {
       this.stats.idle = true;
       return;
     }
-    this.render(true, dirty);
+    this.render(true, dirty, dirtyViews);
   }
 
   /** The sun and the set of enabled views changed (affects every view). */
@@ -598,11 +639,14 @@ export class Engine {
 
   /**
    * `tilesetsUpdated`: the tick already ran selection this frame.
-   * `targets`: render only the views on these targets (on demand).
+   * `targets`: render only the views on these targets (on demand), and on a
+   * target shared by several views only `dirtyViews` (the others are copied
+   * from their last image).
    */
   private render(
     tilesetsUpdated: boolean,
     targets?: ReadonlySet<RenderTarget>,
+    dirtyViews?: ReadonlySet<View>,
   ): void {
     const start = performance.now();
     this.renderRequested = false;
@@ -639,26 +683,76 @@ export class Engine {
       }
     }
 
-    // Assign each enabled view a slot (the first view drawn into a target
-    // clears it) and prepare each world once.
-    let slots = 0;
+    // Which views draw. On demand, a target shared by several views is
+    // composited: each view presents into its own persistent image, only
+    // dirty views (or ones without a current image) re-render, and every
+    // view's image is copied into the target in view order. Otherwise views
+    // draw straight into their target.
+    const shared = this.sharedTargets;
+    const drawn = this.drawnViews;
+    shared.clear();
+    drawn.clear();
+    if (targets && dirtyViews) {
+      const counts = this.viewsPerTarget;
+      counts.clear();
+      for (let i = 0; i < views.length; i++) {
+        const view = views[i]!;
+        if (view.enabled) {
+          counts.set(view.target, (counts.get(view.target) ?? 0) + 1);
+        }
+      }
+      for (const [target, n] of counts) {
+        if (n > 1 && targets.has(target) && target.texture) {
+          shared.add(target);
+        }
+      }
+    }
     for (let i = 0; i < views.length; i++) {
       const view = views[i]!;
       if (!view.enabled || (targets && !targets.has(view.target))) {
         continue;
       }
-      const rect = view.pixelRect();
+      if (shared.has(view.target)) {
+        const rect = view.pixelRect();
+        const image = this.persistentImage(view, rect.width, rect.height);
+        if (!image.valid || dirtyViews!.has(view)) {
+          drawn.add(view);
+        }
+      } else {
+        drawn.add(view);
+        this.dropPersistent(view);
+      }
+    }
+
+    // Assign each drawn view a slot (the first view drawn into a target
+    // clears it) and prepare each world once.
+    let slots = 0;
+    for (let i = 0; i < views.length; i++) {
+      const view = views[i]!;
+      if (!drawn.has(view)) {
+        continue;
+      }
+      const image = shared.has(view.target)
+        ? this.persistent.get(view)
+        : undefined;
+      const rect = image ? image.rect : view.pixelRect();
       const frame = this.viewFrame(view, rect);
       frame.slot = slots;
       this.writeView(view, slots, rect);
       slots++;
 
-      const target = this.targetFrame(view.target);
-      frame.clearTarget = target.clearedBy === undefined;
-      if (frame.clearTarget) {
-        target.clearedBy = view;
+      if (image) {
+        frame.clearTarget = true;
+        frame.graph.setImported(frame.output, image.view);
+        image.valid = true;
+      } else {
+        const target = this.targetFrame(view.target);
+        frame.clearTarget = target.clearedBy === undefined;
+        if (frame.clearTarget) {
+          target.clearedBy = view;
+        }
+        frame.graph.setImported(frame.output, target.view!);
       }
-      frame.graph.setImported(frame.output, target.view!);
 
       const world = this.worldFrame(view.world);
       if (world.stamp !== stamp) {
@@ -679,12 +773,38 @@ export class Engine {
     this.timer.beginFrame();
     for (let i = 0; i < views.length; i++) {
       const view = views[i]!;
-      if (view.enabled && (!targets || targets.has(view.target))) {
+      if (drawn.has(view)) {
         const frame = this.viewFrames.get(view)!;
         // One pick per frame keeps the shared params/result buffers simple.
         frame.pick =
           this.picks.length === 0 ? view.pendingPicks.shift() : undefined;
         frame.graph.execute(encoder);
+      }
+    }
+    // Composite shared targets: clear, then each view's image in view order
+    // (an inset lands over the view it overlaps).
+    for (const target of shared) {
+      this.compositeClear.view = this.targetFrame(target).view!;
+      encoder.beginRenderPass(this.compositePass).end();
+      this.copyDestination.texture = target.texture!;
+      const origin = this.copyDestination.origin as GPUOrigin3DDict;
+      for (let i = 0; i < views.length; i++) {
+        const view = views[i]!;
+        const image =
+          view.enabled && view.target === target
+            ? this.persistent.get(view)
+            : undefined;
+        if (!image) {
+          continue;
+        }
+        const rect = view.pixelRect();
+        this.copySource.texture = image.texture;
+        origin.x = rect.x;
+        origin.y = rect.y;
+        encoder.copyTextureToTexture(this.copySource, this.copyDestination, [
+          image.rect.width,
+          image.rect.height,
+        ]);
       }
     }
     this.timer.endFrame(encoder);
@@ -739,6 +859,40 @@ export class Engine {
     writeViewBlock(this.viewData, (index * VIEW_STRIDE) / 4, block);
     this.viewDataU32[(index * VIEW_STRIDE) / 4 + VIEW_BIT_WORD] =
       this.viewBit(view);
+  }
+
+  /** A view's persistent image at its current size (recreated on resize). */
+  private persistentImage(
+    view: View,
+    width: number,
+    height: number,
+  ): PersistentImage {
+    let image = this.persistent.get(view);
+    if (!image || image.rect.width !== width || image.rect.height !== height) {
+      image?.texture.destroy();
+      const texture = this.ctx.device.createTexture({
+        label: "view.image",
+        size: [width, height],
+        format: this.ctx.outputFormat,
+        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
+      });
+      image = {
+        texture,
+        view: texture.createView(),
+        rect: { x: 0, y: 0, width, height },
+        valid: false,
+      };
+      this.persistent.set(view, image);
+    }
+    return image;
+  }
+
+  private dropPersistent(view: View): void {
+    const image = this.persistent.get(view);
+    if (image) {
+      image.texture.destroy();
+      this.persistent.delete(view);
+    }
   }
 
   private targetFrame(target: RenderTarget): TargetFrame {

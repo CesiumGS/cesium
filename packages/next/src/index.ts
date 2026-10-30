@@ -39,7 +39,10 @@ export {
   type TilesetStats,
 } from "./streaming/Tileset3D.ts";
 export { Legacy1xSelection, type SelectionView } from "./streaming/Legacy1x.ts";
-export { NextSelection, type NextOptions } from "./streaming/Next.ts";
+export {
+  BudgetedSelection,
+  type BudgetedOptions,
+} from "./streaming/Budgeted.ts";
 export { Tile, tileHeaderKey } from "./streaming/Tile.ts";
 export {
   createBox,

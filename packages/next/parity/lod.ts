@@ -11,7 +11,7 @@ import {
 import { flip } from "./flip.ts";
 
 /**
- * L1′ (plan §4): `Next` vs `Legacy1x` over camera moves. For each move and
+ * L1′ (plan §4): `Budgeted` vs `Legacy1x` over camera moves. For each move and
  * policy, a fresh tileset settles at the start camera, then the camera moves;
  * from the move until settled we record requests, GPU bytes, time, and image
  * error (FLIP) at 250 ms, 1 s and settled against a fully refined reference
@@ -37,13 +37,17 @@ const POLICIES: Policy[] = [
     options: { policy: "legacy1x", maximumRequests: 18 },
   },
   {
-    label: "Next, 18 requests",
-    options: { policy: "next", maximumRequests: 18 },
+    label: "Budgeted, 18 requests",
+    options: { policy: "budgeted", maximumRequests: 18 },
   },
-  { label: "Next, adaptive", options: { policy: "next" } },
   {
-    label: "Next, 64 requests",
-    options: { policy: "next", maximumRequests: 64 },
+    label: "Budgeted, 4 requests",
+    options: { policy: "budgeted", maximumRequests: 4 },
+  },
+  { label: "Budgeted, adaptive", options: { policy: "budgeted" } },
+  {
+    label: "Budgeted, 64 requests",
+    options: { policy: "budgeted", maximumRequests: 64 },
   },
 ];
 
@@ -148,6 +152,7 @@ function source(): Promise<Source> {
       (target: Float64Array, pitch: number, range: number): Place =>
       (view) =>
         view.camera.lookAt(target, 30 * deg, pitch * deg, range);
+    const only = params.get("scenarios")?.split(",");
     return {
       label,
       url,
@@ -168,7 +173,7 @@ function source(): Promise<Source> {
           start: look(center, -20, close),
           end: look(east, -20, close),
         },
-      ],
+      ].filter((sc) => !only || only.includes(sc.name)),
     };
   })();
   return sourcePromise;

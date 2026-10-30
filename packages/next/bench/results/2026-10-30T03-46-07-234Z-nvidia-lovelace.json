@@ -1,0 +1,69 @@
+{
+  "date": "2026-10-30T03:46:07.234Z",
+  "environment": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0",
+    "adapter": {
+      "vendor": "nvidia",
+      "architecture": "lovelace",
+      "description": "NVIDIA RTX 3000 Ada Generation Laptop GPU"
+    },
+    "timestampQuery": true
+  },
+  "errors": [],
+  "results": {
+    "lod": [
+      {
+        "scenario": "jump in",
+        "policy": "Legacy1x (1.x, 18 requests)",
+        "status": "ok",
+        "requests": 315,
+        "megabytes": 426.33745861053467,
+        "settleMs": 5485.5,
+        "flip250": 0.4985423387895474,
+        "flip1000": 0.4209025912650881,
+        "flipAverage": 0.26572466110953513,
+        "flipSettled": 0.14799614375154707,
+        "selected": 119
+      },
+      {
+        "scenario": "jump in",
+        "policy": "Next, 18 requests",
+        "status": "ok",
+        "requests": 217,
+        "megabytes": 270.5189323425293,
+        "settleMs": 4461.399999976158,
+        "flip250": 0.4985423387895474,
+        "flip1000": 0.4985423387895474,
+        "flipAverage": 0.23608695805418942,
+        "flipSettled": 0.14799614375154707,
+        "selected": 116
+      },
+      {
+        "scenario": "jump in",
+        "policy": "Next, adaptive",
+        "status": "ok",
+        "requests": 217,
+        "megabytes": 270.5189323425293,
+        "settleMs": 2396.7000000476837,
+        "flip250": 0.4985423387895474,
+        "flip1000": 0.22073630140628733,
+        "flipAverage": 0.23305535471314945,
+        "flipSettled": 0.1479956692833741,
+        "selected": 116
+      },
+      {
+        "scenario": "jump in",
+        "policy": "Next, 64 requests",
+        "status": "ok",
+        "requests": 217,
+        "megabytes": 270.5189323425293,
+        "settleMs": 2364.100000023842,
+        "flip250": 0.4985423387895474,
+        "flip1000": 0.4985423387895474,
+        "flipAverage": 0.2983744628976729,
+        "flipSettled": 0.1479956692833741,
+        "selected": 116
+      }
+    ]
+  }
+}

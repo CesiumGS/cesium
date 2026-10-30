@@ -1,0 +1,173 @@
+{
+  "date": "2026-10-30T03:38:37.194Z",
+  "environment": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0",
+    "adapter": {
+      "vendor": "nvidia",
+      "architecture": "lovelace",
+      "description": "NVIDIA RTX 3000 Ada Generation Laptop GPU"
+    },
+    "timestampQuery": true
+  },
+  "errors": [],
+  "results": {
+    "lod": [
+      {
+        "scenario": "jump in",
+        "policy": "Legacy1x (1.x, 18 requests)",
+        "status": "ok",
+        "requests": 315,
+        "megabytes": 426.33745861053467,
+        "settleMs": 25855.299999952316,
+        "flip250": 0.4985423387895474,
+        "flip1000": 0.4985423387895474,
+        "flipAverage": 0.25342924616293094,
+        "flipSettled": 0.14799614375154707,
+        "selected": 119
+      },
+      {
+        "scenario": "jump in",
+        "policy": "Next, 18 requests",
+        "status": "ok",
+        "requests": 217,
+        "megabytes": 270.5189323425293,
+        "settleMs": 17389.5,
+        "flip250": 0.4985423387895474,
+        "flip1000": 0.4985423387895474,
+        "flipAverage": 0.2637360235294168,
+        "flipSettled": 0.14799614375154707,
+        "selected": 116
+      },
+      {
+        "scenario": "jump in",
+        "policy": "Next, adaptive",
+        "status": "ok",
+        "requests": 217,
+        "megabytes": 270.5189323425293,
+        "settleMs": 19935.200000047684,
+        "flip250": 0.4985423387895474,
+        "flip1000": 0.4985423387895474,
+        "flipAverage": 0.2927136164922245,
+        "flipSettled": 0.1479956692833741,
+        "selected": 116
+      },
+      {
+        "scenario": "jump in",
+        "policy": "Next, 64 requests",
+        "status": "ok",
+        "requests": 217,
+        "megabytes": 270.5189323425293,
+        "settleMs": 17296.200000047684,
+        "flip250": 0.4985423387895474,
+        "flip1000": 0.4985423387895474,
+        "flipAverage": 0.3928553536420744,
+        "flipSettled": 0.1479956692833741,
+        "selected": 116
+      },
+      {
+        "scenario": "zoom out",
+        "policy": "Legacy1x (1.x, 18 requests)",
+        "status": "ok",
+        "requests": 40,
+        "megabytes": 26.43531322479248,
+        "settleMs": 2399.7999999523163,
+        "flip250": 0.4802363373491737,
+        "flip1000": 0.4798300148589361,
+        "flipAverage": 0.48377788221117957,
+        "flipSettled": 0.4902243984808078,
+        "selected": 30
+      },
+      {
+        "scenario": "zoom out",
+        "policy": "Next, 18 requests",
+        "status": "ok",
+        "requests": 27,
+        "megabytes": 19.171987533569336,
+        "settleMs": 1896.8999999761581,
+        "flip250": 0.48305688125509433,
+        "flip1000": 0.4903900105524506,
+        "flipAverage": 0.48975151423513225,
+        "flipSettled": 0.4963379333125422,
+        "selected": 35
+      },
+      {
+        "scenario": "zoom out",
+        "policy": "Next, adaptive",
+        "status": "ok",
+        "requests": 27,
+        "megabytes": 19.171987533569336,
+        "settleMs": 1813.1000000238419,
+        "flip250": 0.48305688125509433,
+        "flip1000": 0.4812035761866304,
+        "flipAverage": 0.4892340810167023,
+        "flipSettled": 0.4963379333125422,
+        "selected": 35
+      },
+      {
+        "scenario": "zoom out",
+        "policy": "Next, 64 requests",
+        "status": "ok",
+        "requests": 27,
+        "megabytes": 19.171987533569336,
+        "settleMs": 1814.8000000715256,
+        "flip250": 0.47337956434007544,
+        "flip1000": 0.4930924945855735,
+        "flipAverage": 0.48978698138768334,
+        "flipSettled": 0.4963379333125422,
+        "selected": 35
+      },
+      {
+        "scenario": "pan",
+        "policy": "Legacy1x (1.x, 18 requests)",
+        "status": "ok",
+        "requests": 93,
+        "megabytes": 153.64995861053467,
+        "settleMs": 7947.5,
+        "flip250": 0.5327792958905594,
+        "flip1000": 0.5327792958905594,
+        "flipAverage": 0.546364329939885,
+        "flipSettled": 0.553610164610105,
+        "selected": 110
+      },
+      {
+        "scenario": "pan",
+        "policy": "Next, 18 requests",
+        "status": "ok",
+        "requests": 83,
+        "megabytes": 132.02829265594482,
+        "settleMs": 7380.199999928474,
+        "flip250": 0.5293757573900567,
+        "flip1000": 0.5442603559293205,
+        "flipAverage": 0.5498729049848401,
+        "flipSettled": 0.553610164610105,
+        "selected": 106
+      },
+      {
+        "scenario": "pan",
+        "policy": "Next, adaptive",
+        "status": "ok",
+        "requests": 83,
+        "megabytes": 132.02829265594482,
+        "settleMs": 7398,
+        "flip250": 0.5293051949136774,
+        "flip1000": 0.5388923307900365,
+        "flipAverage": 0.5474311465867856,
+        "flipSettled": 0.553610164610105,
+        "selected": 106
+      },
+      {
+        "scenario": "pan",
+        "policy": "Next, 64 requests",
+        "status": "ok",
+        "requests": 83,
+        "megabytes": 132.02829265594482,
+        "settleMs": 7392.699999928474,
+        "flip250": 0.532274407227415,
+        "flip1000": 0.5439563167636615,
+        "flipAverage": 0.5483334449204743,
+        "flipSettled": 0.553610164610105,
+        "selected": 106
+      }
+    ]
+  }
+}

@@ -10,7 +10,7 @@ import type { Engine } from "../scene/Engine.ts";
 import type { ClipBox, World } from "../scene/World.ts";
 import type { GltfAsset } from "../io/gltfTypes.ts";
 import { Legacy1xSelection, type SelectionView } from "./Legacy1x.ts";
-import { NextSelection, type NextOptions } from "./Next.ts";
+import { BudgetedSelection, type BudgetedOptions } from "./Budgeted.ts";
 import { loadTilesetJson, type Tile, type TileTree } from "./Tile.ts";
 import { volumeObb } from "./volumes.ts";
 import type { RequestSample } from "./RequestScheduler.ts";
@@ -30,13 +30,13 @@ const PIPELINE_WINDOW = 256;
 /** Frames without any view touching an in-flight tile before it is cancelled. */
 const CANCEL_AFTER_FRAMES = 30;
 
-export interface TilesetOptions extends NextOptions {
+export interface TilesetOptions extends BudgetedOptions {
   /**
-   * Tile selection: "next" (default) adds skip-LOD, visible-only coverage,
+   * Tile selection: "budgeted" (default) adds skip-LOD, visible-only coverage,
    * hold, prefetch and free refinement from the shared cache; "legacy1x"
    * reproduces CesiumJS 1.x for parity tests.
    */
-  policy?: "legacy1x" | "next";
+  policy?: "legacy1x" | "budgeted";
   /** Headers for every request (e.g. ion authorization). */
   headers?: Record<string, string>;
   /** Content cache budget in bytes (1.x cacheBytes default: 512 MiB). */
@@ -155,7 +155,7 @@ export class Tileset3D implements TileTree {
     this.selection =
       options.policy === "legacy1x"
         ? new Legacy1xSelection(options)
-        : new NextSelection(options);
+        : new BudgetedSelection(options);
     this.cacheBytes = options.cacheBytes ?? 512 * 1024 * 1024;
     this.overflowBytes = options.maximumCacheOverflowBytes ?? 512 * 1024 * 1024;
     if (options.maximumRequests !== undefined) {
@@ -446,9 +446,6 @@ export class Tileset3D implements TileTree {
       return asset.timing
         ? {
             bytes: asset.timing.bytes,
-            ...(asset.timing.cached
-              ? {}
-              : { latencyMs: asset.timing.networkMs }),
             ...(asset.timing.protocol
               ? { protocol: asset.timing.protocol }
               : {}),

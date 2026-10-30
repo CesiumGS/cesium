@@ -716,7 +716,11 @@ async function main(): Promise<void> {
   // Tile selection policy: reloads the tileset (selection state is per policy).
   const policySelect = $<HTMLSelectElement>("#policy");
   try {
-    policySelect.value = localStorage.getItem("viewer.policy") ?? "next";
+    const saved = localStorage.getItem("viewer.policy");
+    // An unknown saved value (e.g. the former "next") keeps the default.
+    if (saved && [...policySelect.options].some((o) => o.value === saved)) {
+      policySelect.value = saved;
+    }
   } catch {
     // Storage unavailable.
   }
@@ -1013,10 +1017,10 @@ async function main(): Promise<void> {
             location.href,
           ).href;
         }
-        // Streamed: per-view selection (Next unless chosen otherwise).
+        // Streamed: per-view selection (Budgeted unless chosen otherwise).
         const tileset = await engine.addTileset(next, url, {
           ...(headers ? { headers } : {}),
-          policy: policySelect.value as "legacy1x" | "next",
+          policy: policySelect.value as "legacy1x" | "budgeted",
           maximumScreenSpaceError: maximumSse(),
         });
         info.rootAt = performance.now();

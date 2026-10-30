@@ -26,6 +26,8 @@ export interface RenderTarget {
   readonly height: number;
   /** Called once per frame before views render into it. */
   acquire(device: GPUDevice, format: GPUTextureFormat): GPUTextureView;
+  /** The texture behind the last `acquire` (copy destination). */
+  readonly texture?: GPUTexture | undefined;
 }
 
 /**
@@ -35,6 +37,8 @@ export interface RenderTarget {
  */
 export class CanvasTarget implements RenderTarget {
   readonly kind = "canvas";
+  /** The canvas texture of the current frame. */
+  texture?: GPUTexture;
   private context?: GPUCanvasContext;
   private configuredFor?: GPUDevice;
 
@@ -65,17 +69,25 @@ export class CanvasTarget implements RenderTarget {
       if (!this.context) {
         throw new Error("Could not create a WebGPU canvas context.");
       }
-      this.context.configure({ device, format, alphaMode: "opaque" });
+      this.context.configure({
+        device,
+        format,
+        alphaMode: "opaque",
+        // COPY_DST: views sharing a canvas are composited into it.
+        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_DST,
+      });
       this.configuredFor = device;
     }
-    return this.context!.getCurrentTexture().createView();
+    this.texture = this.context!.getCurrentTexture();
+    return this.texture.createView();
   }
 }
 
 /** Renders into a texture that can be read back, e.g. thumbnails or tests. */
 export class OffscreenTarget implements RenderTarget {
   readonly kind = "offscreen";
-  private texture?: GPUTexture;
+  /** The texture rendered into (copy destination when views share it). */
+  texture?: GPUTexture;
   private view?: GPUTextureView;
   private device?: GPUDevice;
   private format?: GPUTextureFormat;
@@ -94,7 +106,10 @@ export class OffscreenTarget implements RenderTarget {
         label: "offscreen",
         size: { width: this.width, height: this.height },
         format,
-        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
+        usage:
+          GPUTextureUsage.RENDER_ATTACHMENT |
+          GPUTextureUsage.COPY_SRC |
+          GPUTextureUsage.COPY_DST,
       });
       this.view = this.texture.createView();
     }

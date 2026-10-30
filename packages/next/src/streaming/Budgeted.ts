@@ -1,5 +1,5 @@
 /**
- * `Next` tile selection (plan §3.7). Shares 1.x's visibility, distance and
+ * `Budgeted` tile selection (formerly `Next`) (plan §3.7). Shares 1.x's visibility, distance and
  * dynamic screen-space error (proven at 100% L1 parity) but replaces the
  * refinement rules:
  *
@@ -28,7 +28,7 @@ import { CLIP_BOXES } from "../render/layout.ts";
 import type { Tile } from "./Tile.ts";
 import { OUTSIDE, volumeIntersectPlane } from "./volumes.ts";
 
-export interface NextOptions extends Legacy1xOptions {
+export interface BudgetedOptions extends Legacy1xOptions {
   /**
    * Levels that may be skipped between a loaded ancestor and the frontier
    * before an intermediate level is loaded too (default 2), so regions
@@ -80,13 +80,13 @@ interface Cover {
 
 const NO_HOLES: readonly Tile[] = [];
 
-export class NextSelection extends Legacy1xSelection {
+export class BudgetedSelection extends Legacy1xSelection {
   opportunisticRatio: number;
   skipLevels: number;
   prefetchErrorScale: number;
   mixedLod: "auto" | "always" | "never";
 
-  constructor(options: NextOptions = {}) {
+  constructor(options: BudgetedOptions = {}) {
     super(options);
     this.opportunisticRatio = options.opportunisticRatio ?? 0.25;
     this.skipLevels = options.skipLevels ?? 2;
