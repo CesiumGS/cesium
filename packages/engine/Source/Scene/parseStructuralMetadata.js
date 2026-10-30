@@ -128,7 +128,8 @@ const NUM_CHANNELS = 4;
 
 /**
  * Creates a texture from a set of property table properties (those which are GPU compatible).
- * Each row of the texture is a property, with each column corresponding to a given feature.
+ * Each property occupies one or more rows of the texture, with each column corresponding to a
+ * given feature; see {@link getPropertyTableTextureLayout}.
  *
  * @param {PropertyTable} propertyTable The property table.
  * @param {Object<string, Uint8Array>} bufferViews An object mapping bufferView IDs to Uint8Array objects for the given property table.
@@ -172,11 +173,13 @@ function createTextureForPropertyTable(
     return undefined;
   }
 
-  // In the future, we could use multiple textures if we would exceed the maximum texture size.
-  if (
-    numFeatures > ContextLimits.maximumTextureSize ||
-    numGpuCompatibleProperties > ContextLimits.maximumTextureSize
-  ) {
+  // Tables wider than the texture limit wrap onto several rows per property;
+  // see getPropertyTableTextureLayout for the lookup the shader performs.
+  const layout = getPropertyTableTextureLayout(
+    numFeatures,
+    numGpuCompatibleProperties,
+  );
+  if (!defined(layout)) {
     oneTimeWarning(
       "PropertyTableTextureExceedsMaximumSize",
       `Cannot create a texture for the property table "${propertyTable.name}" because it exceeds the maximum texture size of ${ContextLimits.maximumTextureSize}.`,
@@ -186,7 +189,7 @@ function createTextureForPropertyTable(
 
   const packedBufferView = packPropertyTablePropertiesIntoRGBA8(
     gpuCompatiblePropertyInfo,
-    numFeatures,
+    layout,
   );
 
   // Create a sampler fit for sampling raw data without mipmapping / filtering etc.
@@ -204,11 +207,43 @@ function createTextureForPropertyTable(
     sampler: sampler,
     flipY: false,
     source: {
-      width: numFeatures,
-      height: numGpuCompatibleProperties,
+      width: layout.width,
+      height: layout.height,
       arrayBufferView: packedBufferView,
     },
   });
+}
+
+/**
+ * Lays a property table out in an RGBA8 texture. Each property occupies
+ * <code>rowsPerProperty</code> consecutive rows of <code>width</code> texels;
+ * feature <code>f</code> of property <code>p</code> is at
+ * <code>(f % width, p * rowsPerProperty + f / width)</code>. Tables with no
+ * more features than the texture limit keep the historical one-row-per-property
+ * layout, where that lookup reduces to <code>(f, p)</code>.
+ *
+ * @param {number} numFeatures The number of features in the table.
+ * @param {number} numProperties The number of GPU-compatible properties.
+ * @returns {object|undefined} The layout, or <code>undefined</code> when even the
+ * wrapped table exceeds the maximum texture size.
+ *
+ * @private
+ */
+function getPropertyTableTextureLayout(numFeatures, numProperties) {
+  const maximumTextureSize = ContextLimits.maximumTextureSize;
+  const width = Math.min(numFeatures, maximumTextureSize);
+  const rowsPerProperty = Math.ceil(numFeatures / width);
+  const height = rowsPerProperty * numProperties;
+  if (height > maximumTextureSize) {
+    return undefined;
+  }
+  return {
+    width: width,
+    height: height,
+    rowsPerProperty: rowsPerProperty,
+    /** Texels reserved per property, including the padding of the last row. */
+    texelsPerProperty: width * rowsPerProperty,
+  };
 }
 
 function collectGpuCompatiblePropertyInfo(
@@ -231,17 +266,21 @@ function collectGpuCompatiblePropertyInfo(
     }
 
     const property = properties[propertyId];
-    const bufferView = defined(property)
+    let bufferView = defined(property)
       ? bufferViews[property.values]
       : createNoDataBufferView(classProperty, numFeatures);
 
-    const bufferViewLength = bufferView.length;
     const bytesPerElement = classProperty.cpuBytesPerElement();
-    const numBufferElements = bufferViewLength / bytesPerElement;
-    if (numBufferElements !== numFeatures) {
+    const requiredByteLength = numFeatures * bytesPerElement;
+    if (bufferView.length < requiredByteLength) {
       throw new RuntimeError(
-        `Property with ID: "${propertyId}" has (${numBufferElements}), which does not match number of features in the property table: (${numFeatures}).`,
+        `Property with ID: "${propertyId}" has (${bufferView.length / bytesPerElement}), which does not match number of features in the property table: (${numFeatures}).`,
       );
+    }
+    // Exporters may pad the buffer view for alignment; read exactly count
+    // elements, as MetadataTableProperty does on the CPU.
+    if (bufferView.length > requiredByteLength) {
+      bufferView = bufferView.subarray(0, requiredByteLength);
     }
 
     propertyInfos.push({
@@ -318,10 +357,12 @@ function createNoDataBufferView(classProperty, numFeatures) {
 // Make one big buffer view to load into the texture
 // Since each texel is always 4 bytes (RGBA8 format), elements less than 4 bytes need to be padded (respecting little-endian order).
 // Exception: single-component 64-bit types can be downcast to 32-bit for GPU compatibility (with potential loss of precision / range).
-function packPropertyTablePropertiesIntoRGBA8(propertyInfos, numFeatures) {
+// Each property gets layout.texelsPerProperty texels (its rows, padding included), features contiguous within them.
+function packPropertyTablePropertiesIntoRGBA8(propertyInfos, layout) {
   const numGpuCompatibleProperties = propertyInfos.length;
+  const texelsPerProperty = layout.texelsPerProperty;
   const packedBufferView = new Uint8Array(
-    numGpuCompatibleProperties * numFeatures * NUM_CHANNELS,
+    numGpuCompatibleProperties * texelsPerProperty * NUM_CHANNELS,
   );
   const packedDataView = new DataView(
     packedBufferView.buffer,
@@ -336,7 +377,7 @@ function packPropertyTablePropertiesIntoRGBA8(propertyInfos, numFeatures) {
   ) {
     const propertyInfo = propertyInfos[propertyIndex];
     const classProperty = propertyInfo.classProperty;
-    const rowOffset = propertyIndex * numFeatures * NUM_CHANNELS;
+    const rowOffset = propertyIndex * texelsPerProperty * NUM_CHANNELS;
     const sourceType = classProperty.valueType;
     const packedType = MetadataComponentType.gpuComponentType(sourceType);
 

@@ -6,6 +6,7 @@ import {
   defined,
 } from "@cesium/core";
 import {
+  ContextLimits,
   GltfLoader,
   MetadataPipelineStage,
   ModelStatistics,
@@ -35,6 +36,8 @@ describe(
       "./Data/Models/glTF-2.0/PropertyTextureWith32BitTypes/glTF/PropertyTextureWith32BitTypes.gltf";
     const boxTexturedBinary =
       "./Data/Models/glTF-2.0/BoxTextured/glTF-Binary/BoxTextured.glb";
+    const buildingsMetadata =
+      "./Data/Models/glTF-2.0/BuildingsMetadata/glTF/buildings-metadata.gltf";
     const tilesetWithMetadataStatistics =
       "./Data/Cesium3DTiles/Metadata/PropertyAttributesPointCloud/tileset.json";
 
@@ -380,6 +383,109 @@ describe(
           expect(uniformMap.u_poloidalAngle_scale()).toBe(0.3306939635357677);
         },
       );
+    });
+
+    function expectFragmentInitializeMetadataLine(shaderBuilder, regex) {
+      const func =
+        shaderBuilder._functions[
+          MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_FS
+        ];
+      const matching = func.body.filter((line) => regex.test(line));
+      expect(matching.length)
+        .withContext(`no line matching ${regex} in ${func.body.join("\n")}`)
+        .toBe(1);
+    }
+
+    it("Adds property tables to the shader", function () {
+      return loadGltf(buildingsMetadata).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const node = components.nodes[1];
+        const primitive = node.primitives[0];
+        const frameState = scene.frameState;
+        const renderResources = mockRenderResources(components);
+
+        MetadataPipelineStage.process(renderResources, primitive, frameState);
+
+        const shaderBuilder = renderResources.shaderBuilder;
+        const propertyTable = components.structuralMetadata.getPropertyTable(0);
+        expect(propertyTable.texture).toBeDefined();
+        expect(propertyTable.texture.width).toBe(10);
+        expect(renderResources.uniformMap.u_propertyTableTexture_0()).toBe(
+          propertyTable.texture,
+        );
+
+        ShaderBuilderTester.expectHasFragmentStruct(
+          shaderBuilder,
+          MetadataPipelineStage.STRUCT_ID_METADATA_FS,
+          MetadataPipelineStage.STRUCT_NAME_METADATA,
+          [
+            "    float height;",
+            "    int id;",
+            "    int employeeCount;",
+            "    float temperatureCelsius;",
+          ],
+        );
+
+        // One texel per feature: texel (featureId, propertyIndex), with the
+        // STRING property "year" skipped in the index.
+        expectFragmentInitializeMetadataLine(
+          shaderBuilder,
+          /height_rawChannels = texelFetch\(u_propertyTableTexture_0, ivec2\(featureIds\.featureId_\d+, 0\), 0\);/,
+        );
+        expectFragmentInitializeMetadataLine(
+          shaderBuilder,
+          /id_rawChannels = texelFetch\(u_propertyTableTexture_0, ivec2\(featureIds\.featureId_\d+, 1\), 0\);/,
+        );
+        expectFragmentInitializeMetadataLine(
+          shaderBuilder,
+          /employeeCount_rawChannels = texelFetch\(u_propertyTableTexture_0, ivec2\(featureIds\.featureId_\d+, 2\), 0\);/,
+        );
+        expectFragmentInitializeMetadataLine(
+          shaderBuilder,
+          /temperatureCelsius_rawChannels = texelFetch\(u_propertyTableTexture_0, ivec2\(featureIds\.featureId_\d+, 3\), 0\);/,
+        );
+      });
+    });
+
+    it("Reads a property table wider than the maximum texture size from several rows per property", function () {
+      const maximumTextureSize = ContextLimits.maximumTextureSize;
+      // 10 features wrap onto 2 rows of 8 texels per property
+      ContextLimits._maximumTextureSize = 8;
+
+      return loadGltf(buildingsMetadata)
+        .then(function (gltfLoader) {
+          const components = gltfLoader.components;
+          const node = components.nodes[1];
+          const primitive = node.primitives[0];
+          const frameState = scene.frameState;
+          const renderResources = mockRenderResources(components);
+
+          MetadataPipelineStage.process(renderResources, primitive, frameState);
+
+          const shaderBuilder = renderResources.shaderBuilder;
+          const propertyTable =
+            components.structuralMetadata.getPropertyTable(0);
+          expect(propertyTable.texture).toBeDefined();
+          expect(propertyTable.texture.width).toBe(8);
+          expect(propertyTable.texture.height).toBe(8);
+
+          // texel (featureId % width, propertyIndex * rowsPerProperty + featureId / width)
+          expectFragmentInitializeMetadataLine(
+            shaderBuilder,
+            /height_rawChannels = texelFetch\(u_propertyTableTexture_0, ivec2\(featureIds\.(featureId_\d+) % 8, 0 \+ featureIds\.\1 \/ 8\), 0\);/,
+          );
+          expectFragmentInitializeMetadataLine(
+            shaderBuilder,
+            /id_rawChannels = texelFetch\(u_propertyTableTexture_0, ivec2\(featureIds\.(featureId_\d+) % 8, 2 \+ featureIds\.\1 \/ 8\), 0\);/,
+          );
+          expectFragmentInitializeMetadataLine(
+            shaderBuilder,
+            /temperatureCelsius_rawChannels = texelFetch\(u_propertyTableTexture_0, ivec2\(featureIds\.(featureId_\d+) % 8, 6 \+ featureIds\.\1 \/ 8\), 0\);/,
+          );
+        })
+        .finally(function () {
+          ContextLimits._maximumTextureSize = maximumTextureSize;
+        });
     });
 
     it("Adds property textures to the shader", function () {
