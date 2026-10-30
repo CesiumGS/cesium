@@ -106,7 +106,8 @@ function label(path: string): string {
  * latitude row are rotations of each other about the polar axis, so each
  * row is one mesh drawn 32 times: one batch (indirect draw) per row.
  */
-function addGlobe(world: World): void {
+function addGlobe(world: World): DrawHandle[] {
+  const draws: DrawHandle[] = [];
   const chunksX = 32;
   const chunksY = 16;
   for (let y = 0; y < chunksY; y++) {
@@ -132,16 +133,23 @@ function addGlobe(world: World): void {
       model[5] = c;
       const o = patch.origin;
       const shade = (x + y) % 2 === 0 ? 0.05 : 0.065;
-      world.addDraw({
-        mesh,
-        origin: vec3.vec3(c * o[0]! - s * o[1]!, s * o[0]! + c * o[1]!, o[2]!),
-        model,
-        radius: patch.radius,
-        color: [shade, shade * 1.4, shade * 2.2, 1],
-        name: "globe",
-      });
+      draws.push(
+        world.addDraw({
+          mesh,
+          origin: vec3.vec3(
+            c * o[0]! - s * o[1]!,
+            s * o[0]! + c * o[1]!,
+            o[2]!,
+          ),
+          model,
+          radius: patch.radius,
+          color: [shade, shade * 1.4, shade * 2.2, 1],
+          name: "globe",
+        }),
+      );
     }
   }
+  return draws;
 }
 
 /** A fine ellipsoid patch under the content, `size` meters across. */
@@ -259,6 +267,7 @@ async function main(): Promise<void> {
   let current3dTiles: Tileset3D | undefined;
   let streamed: Tileset3D | undefined;
   let groundDraw: DrawHandle | undefined;
+  let globeDraws: DrawHandle[] = [];
   /** On-screen attributions the current ion asset requires (HTML from ion). */
   let attributions: string[] = [];
   let current = sourceFromUrl();
@@ -324,6 +333,12 @@ async function main(): Promise<void> {
   const unlit = $<HTMLInputElement>("#unlit");
   const ground = $<HTMLInputElement>("#ground");
   unlit.addEventListener("change", () => void load(current));
+  const globeToggle = $<HTMLInputElement>("#globe");
+  globeToggle.addEventListener("change", () => {
+    for (const draw of globeDraws) {
+      world.setVisible(draw, globeToggle.checked);
+    }
+  });
   // The ground is one draw: toggle it in place.
   ground.addEventListener("change", () => {
     if (groundDraw) {
@@ -456,6 +471,7 @@ async function main(): Promise<void> {
     }
     const status = $("#load-status");
     attributions = [];
+    let photorealistic = false;
     const warnings = new Set<string>();
     const started = performance.now();
     status.textContent = "loading…";
@@ -469,7 +485,7 @@ async function main(): Promise<void> {
       indexBytes: Math.min(384 << 20, Math.floor(limit / 4) * 4),
     });
     try {
-      addGlobe(next);
+      const nextGlobe = addGlobe(next);
       let placed: { center: Float64Array; radius: number };
       if (source.kind === "city") {
         placed = addCity(next);
@@ -520,6 +536,11 @@ async function main(): Promise<void> {
           url = resolved.url;
           headers = resolved.headers;
           attributions = resolved.attributions;
+          // Photorealistic tiles from an external provider (Google) are
+          // their own terrain: the placeholder ellipsoid would poke through
+          // (sea level there is ~30 m below the ellipsoid), so it starts
+          // hidden, as 1.x apps hide the globe for Google tiles.
+          photorealistic = /tile\.googleapis\.com/.test(resolved.url);
         } else {
           url = new URL(
             `/specs-data/Cesium3DTiles/${source.path}`,
@@ -557,6 +578,11 @@ async function main(): Promise<void> {
       );
       if (groundDraw && !ground.checked) {
         next.setVisible(groundDraw, false);
+      }
+      globeToggle.checked = !photorealistic;
+      globeDraws = nextGlobe;
+      for (const draw of globeDraws) {
+        next.setVisible(draw, globeToggle.checked);
       }
       if (current3dTiles) {
         engine.removeTileset(current3dTiles);
