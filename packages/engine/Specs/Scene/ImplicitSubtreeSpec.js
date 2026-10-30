@@ -3307,8 +3307,6 @@ describe("Scene/ImplicitSubtree", function () {
         quadtreeCoordinatesLocal,
       );
 
-      //console.log("Now what do we have here?`", subtree);
-
       expectTileAvailability(
         subtree,
         internalQuadtreeDescriptionLocal.tileAvailability,
