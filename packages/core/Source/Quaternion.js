@@ -209,10 +209,14 @@ class Quaternion {
    * @param {Quaternion} [result] The object onto which to store the result.
    * @returns {Quaternion} The modified result parameter or a new Quaternion instance if none was provided.
    */
-  static fromHeadingPitchRoll(headingPitchRoll, result = new Quaternion()) {
+  static fromHeadingPitchRoll(headingPitchRoll, result) {
     //>>includeStart('debug', pragmas.debug);
     Check.typeOf.object("headingPitchRoll", headingPitchRoll);
     //>>includeEnd('debug');
+
+    if (!defined(result)) {
+      result = new Quaternion();
+    }
 
     const { rollQuaternion, pitchQuaternion, headingQuaternion } =
       Quaternion.#fromHeadingPitchRollScratch;
