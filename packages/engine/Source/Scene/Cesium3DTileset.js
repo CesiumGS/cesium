@@ -3122,7 +3122,8 @@ Cesium3DTileset.prototype.prePassesUpdate = function (frameState) {
     return;
   }
 
-  processTiles(this, frameState);
+  const memoryExceeded = processTiles(this, frameState);
+  updateMemoryAdjustedScreenSpaceError(this, frameState, memoryExceeded);
 
   // Update clipping planes
   const clippingPlanes = this._clippingPlanes;
@@ -3320,8 +3321,9 @@ function processUpdateHeight(tileset, tile, frameState) {
 /**
  * Process tiles in the PROCESSING state so they will eventually move to the READY state.
  * @private
- * @param {Cesium3DTileset} tileset
- * @param {Cesium3DTile} tile
+ * @param {Cesium3DTileset} tileset The tileset whose tiles are processed.
+ * @param {FrameState} frameState The current frame state.
+ * @returns {boolean} <code>true</code> if processing stopped because the tileset ran out of memory.
  */
 function processTiles(tileset, frameState) {
   filterProcessingQueue(tileset);
@@ -3330,11 +3332,9 @@ function processTiles(tileset, frameState) {
   const { cacheBytes, maximumCacheOverflowBytes, statistics } = tileset;
   const cacheByteLimit = cacheBytes + maximumCacheOverflowBytes;
 
-  let memoryExceeded = false;
   for (let i = 0; i < tiles.length; ++i) {
     if (tileset.totalMemoryUsageInBytes > cacheByteLimit) {
-      memoryExceeded = true;
-      break;
+      return true;
     }
 
     const tile = tiles[i];
@@ -3351,9 +3351,22 @@ function processTiles(tileset, frameState) {
     }
   }
 
-  // Once the screen space error was raised to fit the memory limit, lowering it again in the
-  // same view would only reload the tiles that were just unloaded, so it is held until the
-  // view or the tileset's model matrix changes.
+  return false;
+}
+
+/**
+ * Adjusts the screen space error so the number of tiles needed fits in memory.
+ *
+ * @private
+ * @param {Cesium3DTileset} tileset The tileset whose screen space error is adjusted.
+ * @param {FrameState} frameState The current frame state.
+ * @param {boolean} memoryExceeded Whether tile processing stopped because the tileset ran out of memory.
+ */
+function updateMemoryAdjustedScreenSpaceError(
+  tileset,
+  frameState,
+  memoryExceeded,
+) {
   if (tileset._memoryAdjustedScreenSpaceErrorHeld) {
     const viewChanged = !Matrix4.equals(
       frameState.camera.viewMatrix,
@@ -3364,11 +3377,10 @@ function processTiles(tileset, frameState) {
     }
   }
 
-  if (tileset.totalMemoryUsageInBytes < cacheBytes) {
-    if (!tileset._memoryAdjustedScreenSpaceErrorHeld) {
-      decreaseScreenSpaceError(tileset);
-    }
-  } else if (memoryExceeded && tiles.length > 0) {
+  const memoryAvailable = tileset.totalMemoryUsageInBytes < tileset.cacheBytes;
+  if (memoryAvailable && !tileset._memoryAdjustedScreenSpaceErrorHeld) {
+    decreaseScreenSpaceError(tileset);
+  } else if (memoryExceeded) {
     increaseScreenSpaceError(tileset, frameState);
   }
 }
