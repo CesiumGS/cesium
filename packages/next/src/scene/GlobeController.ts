@@ -15,7 +15,7 @@ import type { View } from "./View.ts";
  * - middle-drag or ctrl-drag: tilt and turn about the point at the screen
  *   center;
  * - shift-drag: look around from where the camera is;
- * - spin and zoom keep their momentum after release (1.x inertia).
+ * - spin keeps its momentum after release (1.x inertia); wheel zoom glides.
  *
  * The camera keeps `minimumHeight` above the ellipsoid (terrain height
  * queries come later in M3).
@@ -25,9 +25,15 @@ export class GlobeController {
   ignore?: (x: number, y: number) => boolean;
   /** Meters above the ellipsoid the camera stays (1.x minimumZoomDistance: 1). */
   minimumHeight = 1;
-  /** Share of the momentum kept per 1/60 s (1.x inertiaSpin, inertiaZoom). */
+  /** Share of the spin momentum kept per 1/60 s (1.x inertiaSpin). */
   inertiaSpin = 0.9;
-  inertiaZoom = 0.8;
+  /**
+   * Share of a wheel zoom still to apply after each 1/60 s: wheel steps
+   * glide instead of jumping (about 150 ms per notch).
+   */
+  zoomSmoothing = 0.75;
+  /** Distance factor per wheel pixel, as a logarithm (100 px: ×1.16). */
+  wheelZoomRate = 0.0015;
   /** Focus of the last `focus` call (split views copy it). */
   readonly target: Vec3 = v3.vec3();
   heading = 0;
@@ -47,7 +53,8 @@ export class GlobeController {
   /** Momentum: rotation about the Earth's center, and zoom per frame. */
   private readonly spinAxis = v3.vec3();
   private spinRate = 0;
-  private zoomRate = 0;
+  /** Wheel zoom not yet applied: the log of the distance factor. */
+  private pendingZoom = 0;
   private readonly zoomTarget = v3.vec3();
   private lastTime = 0;
   private animating = false;
@@ -87,7 +94,7 @@ export class GlobeController {
   /** Cancels any momentum. */
   stop(): void {
     this.spinRate = 0;
-    this.zoomRate = 0;
+    this.pendingZoom = 0;
   }
 
   dispose(): void {
@@ -201,10 +208,10 @@ export class GlobeController {
     }
     const pixels = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
     // 1.x zooms by a share of the distance; momentum carries it on.
-    const amount = Math.max(Math.min(-pixels / 600, 0.5), -1);
+    // Multiplicative, so a notch feels the same at every range; applied
+    // over the next frames.
     v3.copy(this.zoomTarget, target);
-    this.zoomRate = amount * (1 - this.inertiaZoom);
-    this.zoomToward(target, amount);
+    this.pendingZoom += pixels * this.wheelZoomRate;
     this.trackHover(x, y);
     this.animate();
   }
@@ -316,18 +323,19 @@ export class GlobeController {
         this.rotateGlobe(this.spinAxis, this.spinRate * frames);
         this.spinRate *= this.inertiaSpin ** frames;
       }
-      if (Math.abs(this.zoomRate) > 1e-4) {
-        this.zoomToward(this.zoomTarget, this.zoomRate * frames);
-        this.zoomRate *= this.inertiaZoom ** frames;
+      if (Math.abs(this.pendingZoom) > 1e-4) {
+        const portion = this.pendingZoom * (1 - this.zoomSmoothing ** frames);
+        this.pendingZoom -= portion;
+        this.zoomToward(this.zoomTarget, 1 - Math.exp(portion));
       }
       if (
         (this.mode === "none" && Math.abs(this.spinRate) > 1e-6) ||
-        Math.abs(this.zoomRate) > 1e-4
+        Math.abs(this.pendingZoom) > 1e-4
       ) {
         requestAnimationFrame(step);
       } else {
         this.spinRate = 0;
-        this.zoomRate = 0;
+        this.pendingZoom = 0;
         this.animating = false;
       }
     };
