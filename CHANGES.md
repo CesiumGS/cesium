@@ -13,6 +13,7 @@
 #### Additions :tada:
 
 - Added support for glTF models with the [KHR_materials_emissive_strength extension](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_emissive_strength). [#13961](https://github.com/CesiumGS/cesium/pull/13961)
+- Added experimental `IonAssetElementService` for querying, filtering, aggregating, and navigating element metadata for Cesium ion assets backed by BIM/CAD databases, along with the extensible `ElementService` base class.[#13995](https://github.com/CesiumGS/cesium/pull/13995)
 
 #### Fixes :wrench:
 
