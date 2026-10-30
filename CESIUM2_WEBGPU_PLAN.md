@@ -4,29 +4,30 @@ Branch: `cesium-2.0-webgpu-poc` (off `main` @ `587f52f1eb`, CesiumJS 1.146.0)
 
 ## Revisions
 
-| Rev | Change                                                                                                                                                                                                                                                                                                                                                                                   |
-| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| r1  | First draft: clean-slate WebGPU engine, 1.x used as the parity oracle                                                                                                                                                                                                                                                                                                                    |
-| r2  | Added multiple viewports, Slang shaders, compute-shader uses, and globe/terrain/imagery to the PoC                                                                                                                                                                                                                                                                                       |
-| r3  | Tile selection made pluggable (`Legacy1x` vs improved `Next`). Folded in an external review against current industry practice, research and WebGPU status (late 2026). Main changes: GPU-driven submission from M1, no bindless in the PoC, Slang scope narrowed, a texture-array imagery cache, corrected MSAA/feature-ID and OIT plans, and new M0 precision tests. Sources are in §9. |
-| r4  | Plan-owner decisions recorded (§8): Slang + WGSL ABI; **HDR + tonemapping by default**; all four multi-view scenarios including **linked views**; `packages/next` in TypeScript with new math; Chromium-first, core WebGPU only; 3D Tiles before globe. Canonical CAD test data to come from team-chosen ion assets.                                                                     |
-| r5  | M0 findings: multisampled `r32uint` is invalid in WebGPU, so feature IDs use `rg16uint` (lo16, hi16). On dual-GPU Windows laptops Chromium ignores `powerPreference` and follows the per-app Windows graphics setting, so benchmarks must record the adapter and launch Chromium on the discrete GPU.                                                                                    |
-| r6  | M0 spike results recorded in §10: L2 parity harness, GPU precision, engine-in-worker, indirect-draw overhead. Indirect draws cost measurable GPU time on Intel/D3D12, so §3.3 submission now batches before going indirect.                                                                                                                                                              |
-| r7  | Spikes rerun on the NVIDIA GPU; Slang spike run (passes, perf gate deferred to unquantized timing in M1). §10 rewritten with both GPUs.                                                                                                                                                                                                                                                  |
-| r8  | M0 close-out: automated runner (headless Edge, unquantized timestamps), FLIP validated against NVIDIA's reference and integrated, 1.x performance baselines, Metal deferred.                                                                                                                                                                                                             |
-| r9  | M1 increment 1: worker glTF pipeline, draw records v1, materials and textures, batching. Decisions: exact sRGB over matching 1.x's gamma 2.2; translucency designed clean-slate and tested against an exact reference instead of 1.x's WBOIT.                                                                                                                                            |
-| r10 | Translucency becomes a unified compute compositor shared by translucent meshes and Gaussian splats; MBOIT is the overflow fallback.                                                                                                                                                                                                                                                      |
-| r11 | M1 increment 2: PBR + compute-built IBL, normal maps, lit parity vs 1.x, Slang re-ported to v1 records with a surface-material interface; Slang performance gate passes.                                                                                                                                                                                                                 |
-| r12 | M1 increment 3: Draco and KTX2/Basis decoding in the workers; all 14 opaque Khronos samples within 0.025 mean FLIP of 1.x in every lighting mode.                                                                                                                                                                                                                                        |
-| r13 | M1 increment 4: steady-state allocation gate (engine ~1.5 KB/frame, independent of draw count, down from ~45 KB) and first-frame cost (2.0 first frame 23–34 ms vs 1.x 203–691 ms).                                                                                                                                                                                                      |
-| r14 | M1 increment 5: CAD content. Per-vertex feature IDs (EXT_mesh_features, b3dm _BATCHID) with property/batch tables and picking, b3dm, line primitives, ion asset auth, tileset parity page. An iModel-derived CAD tileset matches 1.x apart from translucency (M4). M1 exit met.                                                                                                          |
-| r15 | Demo viewer (`/viewer/`). M2 started: freeing placed models, per-view record view masks, and the `Legacy1x` selection spec extracted from the 1.x base traversal (§12).                                                                                                                                                                                                                  |
-| r16 | M2 increment 1: streamed 3D Tiles with `Legacy1x` selection per view over one shared cache. L1 selection parity 100% on 36 view comparisons (9 public tilesets and 3 iModel-derived CAD tilesets, 3–4 simultaneous views each). Viewer streams.                                                                                                                                          |
-| r17 | M2 increment 2: OSM Buildings streams with 100% selection parity (Philadelphia, Manhattan); batch-table hierarchy; resize robustness (frame ordering, bounded render-target memory); viewer split view, memory panel and collapsible sections.                                                                                                                                           |
-| r18 | M2 increment 3: photogrammetry. Google Photorealistic 3D Tiles stream via ion with required credits; L1 selection parity 100% in four simultaneous views (22–164 tiles), after fixing a traversal-visibility bug in the port. Memory-adjusted SSE. Memory management recorded as an open design question.                                                                                |
-| r19 | M2 increment 4: `Next` policy v1 (skip-LOD with bounded skipping, visible-only coverage, cache reuse, region-grouped requests) and the L1′ harness. On Google 3D Tiles: 53% fewer requests, 48% fewer bytes, same final image, settles 1.6× faster (2.5× with 64 requests); in-between quality lags 1.x until mixed-LOD drawing lands.                                                   |
-| r20 | §13: design notes for tile selection beyond `Legacy1x` (mixed-LOD drawing, scheduling, budget-driven refinement, multi-view priority, quality signals) and the engine memory model.                                                                                                                                                                                                      |
-| r21 | M2 increment 5: mixed-LOD drawing for `Next`; `Next` now matches or beats 1.x on every L1′ metric on Google 3D Tiles (FLIP at 1 s 0.220 vs 0.421, half the bytes). Second 1.x selection bug documented (children-bounds culling vs refinement).                                                                                                                                          |
+| Rev | Change                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| r1  | First draft: clean-slate WebGPU engine, 1.x used as the parity oracle                                                                                                                                                                                                                                                                                                                                                        |
+| r2  | Added multiple viewports, Slang shaders, compute-shader uses, and globe/terrain/imagery to the PoC                                                                                                                                                                                                                                                                                                                           |
+| r3  | Tile selection made pluggable (`Legacy1x` vs improved `Next`). Folded in an external review against current industry practice, research and WebGPU status (late 2026). Main changes: GPU-driven submission from M1, no bindless in the PoC, Slang scope narrowed, a texture-array imagery cache, corrected MSAA/feature-ID and OIT plans, and new M0 precision tests. Sources are in §9.                                     |
+| r4  | Plan-owner decisions recorded (§8): Slang + WGSL ABI; **HDR + tonemapping by default**; all four multi-view scenarios including **linked views**; `packages/next` in TypeScript with new math; Chromium-first, core WebGPU only; 3D Tiles before globe. Canonical CAD test data to come from team-chosen ion assets.                                                                                                         |
+| r5  | M0 findings: multisampled `r32uint` is invalid in WebGPU, so feature IDs use `rg16uint` (lo16, hi16). On dual-GPU Windows laptops Chromium ignores `powerPreference` and follows the per-app Windows graphics setting, so benchmarks must record the adapter and launch Chromium on the discrete GPU.                                                                                                                        |
+| r6  | M0 spike results recorded in §10: L2 parity harness, GPU precision, engine-in-worker, indirect-draw overhead. Indirect draws cost measurable GPU time on Intel/D3D12, so §3.3 submission now batches before going indirect.                                                                                                                                                                                                  |
+| r7  | Spikes rerun on the NVIDIA GPU; Slang spike run (passes, perf gate deferred to unquantized timing in M1). §10 rewritten with both GPUs.                                                                                                                                                                                                                                                                                      |
+| r8  | M0 close-out: automated runner (headless Edge, unquantized timestamps), FLIP validated against NVIDIA's reference and integrated, 1.x performance baselines, Metal deferred.                                                                                                                                                                                                                                                 |
+| r9  | M1 increment 1: worker glTF pipeline, draw records v1, materials and textures, batching. Decisions: exact sRGB over matching 1.x's gamma 2.2; translucency designed clean-slate and tested against an exact reference instead of 1.x's WBOIT.                                                                                                                                                                                |
+| r10 | Translucency becomes a unified compute compositor shared by translucent meshes and Gaussian splats; MBOIT is the overflow fallback.                                                                                                                                                                                                                                                                                          |
+| r11 | M1 increment 2: PBR + compute-built IBL, normal maps, lit parity vs 1.x, Slang re-ported to v1 records with a surface-material interface; Slang performance gate passes.                                                                                                                                                                                                                                                     |
+| r12 | M1 increment 3: Draco and KTX2/Basis decoding in the workers; all 14 opaque Khronos samples within 0.025 mean FLIP of 1.x in every lighting mode.                                                                                                                                                                                                                                                                            |
+| r13 | M1 increment 4: steady-state allocation gate (engine ~1.5 KB/frame, independent of draw count, down from ~45 KB) and first-frame cost (2.0 first frame 23–34 ms vs 1.x 203–691 ms).                                                                                                                                                                                                                                          |
+| r14 | M1 increment 5: CAD content. Per-vertex feature IDs (EXT_mesh_features, b3dm _BATCHID) with property/batch tables and picking, b3dm, line primitives, ion asset auth, tileset parity page. An iModel-derived CAD tileset matches 1.x apart from translucency (M4). M1 exit met.                                                                                                                                              |
+| r15 | Demo viewer (`/viewer/`). M2 started: freeing placed models, per-view record view masks, and the `Legacy1x` selection spec extracted from the 1.x base traversal (§12).                                                                                                                                                                                                                                                      |
+| r16 | M2 increment 1: streamed 3D Tiles with `Legacy1x` selection per view over one shared cache. L1 selection parity 100% on 36 view comparisons (9 public tilesets and 3 iModel-derived CAD tilesets, 3–4 simultaneous views each). Viewer streams.                                                                                                                                                                              |
+| r17 | M2 increment 2: OSM Buildings streams with 100% selection parity (Philadelphia, Manhattan); batch-table hierarchy; resize robustness (frame ordering, bounded render-target memory); viewer split view, memory panel and collapsible sections.                                                                                                                                                                               |
+| r18 | M2 increment 3: photogrammetry. Google Photorealistic 3D Tiles stream via ion with required credits; L1 selection parity 100% in four simultaneous views (22–164 tiles), after fixing a traversal-visibility bug in the port. Memory-adjusted SSE. Memory management recorded as an open design question.                                                                                                                    |
+| r19 | M2 increment 4: `Next` policy v1 (skip-LOD with bounded skipping, visible-only coverage, cache reuse, region-grouped requests) and the L1′ harness. On Google 3D Tiles: 53% fewer requests, 48% fewer bytes, same final image, settles 1.6× faster (2.5× with 64 requests); in-between quality lags 1.x until mixed-LOD drawing lands.                                                                                       |
+| r20 | §13: design notes for tile selection beyond `Legacy1x` (mixed-LOD drawing, scheduling, budget-driven refinement, multi-view priority, quality signals) and the engine memory model.                                                                                                                                                                                                                                          |
+| r21 | M2 increment 5: mixed-LOD drawing for `Next`; `Next` now matches or beats 1.x on every L1′ metric on Google 3D Tiles (FLIP at 1 s 0.220 vs 0.421, half the bytes). Second 1.x selection bug documented (children-bounds culling vs refinement).                                                                                                                                                                              |
+| r22 | M2 increment 6: the r21 depth offset is replaced (hold, prefetch band, mixed LOD clipped to missing children only where children partition their parent); `Next` never hides a tileset that lacks a top-level geometric error; iTwin mesh exports load directly; content pipeline diagnostics; throttled L1′ with time-averaged FLIP (1.x looks better while loading on slow links); §13.8 render on demand; §14 follow-ups. |
 
 ## 1. Goal
 
@@ -1334,6 +1335,113 @@ volumes (Google's) the two disagree, and a very coarse tile is drawn where
 nothing, or the finer tiles, should be. `Next` treats a region with no
 visible children as empty and shows the correct detail there.
 
+### Increment 6 (r22): hold, prefetch, clipped mixing; design models
+
+The r21 depth offset was the wrong mechanism (§13.1): placeholders fell
+behind unrelated surfaces and the context globe, jumped as tiles changed
+role, and textures swam. Removing it exposed a worse problem it had been
+hiding: rotating brought an unloaded tile into view, the region fell back to
+its nearest loaded ancestor (near the root, since levels were skipped), and
+selection dropped from about 400 tiles to 3 for a second. Pulling back did
+the same.
+
+- **Hold** (both directions) and **zoom-out hold**: a view keeps what it
+  drew last frame until the replacement is complete.
+- **Prefetch band**: a wider frustum loads what would display just off
+  screen, at the lowest priority and 2× the SSE threshold.
+- **Clipped mixing**, only where children partition their parent
+  (`mixedLod: "auto"`): the ancestor draws at its true depth inside its
+  missing descendants' boxes, discarded per fragment elsewhere. Clip boxes
+  live in a per-world buffer, one block per placeholder tile, stored hi/lo
+  and tested camera-relative. Ported to Slang.
+- **Missing top-level `geometricError`** (iTwin exports): `Next` used the
+  root's error to decide whether to hide the whole tileset, and a zoomed-out
+  design model vanished. The root's error now only drives refinement; the
+  tileset is never hidden, as in 1.x.
+- **iTwin mesh export**: `resolveITwinIModel` (share key or access token),
+  as 1.x `ITwinData`; the viewer takes `?imodel=` and L1′ takes `IMODEL=`.
+- Viewer: a live maximum-SSE slider and a placeholder count.
+
+L1′, Google Photorealistic 3D Tiles over Midtown, unthrottled
+(`2026-10-30T02-03-44-893Z`):
+
+| Move     | Policy            | Requests | MB  | Settle | FLIP @250 ms | @1 s      | Settled |
+| -------- | ----------------- | -------- | --- | ------ | ------------ | --------- | ------- |
+| jump in  | `Legacy1x` (1.x)  | 315      | 426 | 3.2 s  | 0.499        | 0.421     | 0.148   |
+| jump in  | `Next`, no mixing | 217      | 271 | 1.8 s  | 0.499        | **0.155** | 0.148   |
+| jump in  | `Next`, mixed     | 217      | 271 | 1.7 s  | 0.499        | 0.160     | 0.148   |
+| zoom out | `Legacy1x` (1.x)  | 40       | 26  | 1.4 s  | 0.490        | 0.490     | 0.490   |
+| zoom out | `Next`            | 27       | 19  | 1.4 s  | 0.496        | 0.496     | 0.496   |
+| pan      | `Legacy1x` (1.x)  | 93       | 154 | 1.5 s  | 0.533        | 0.554     | 0.554   |
+| pan      | `Next`            | 83       | 132 | 1.4 s  | 0.548        | 0.554     | 0.554   |
+
+Hold and prefetch improved `Next`'s jump-in FLIP at 1 s from 0.220 (r21) to
+0.155. Prefetch costs about 70 requests and 50 MB, still 35% fewer bytes than
+1.x. Mixing makes no measurable difference here: requests are grouped by
+region, so regions complete together and partial states are brief on a fast
+network.
+
+**Throttled L1′** (20 Mbit/s shared link, 80 ms latency, no cache; applied
+at Playwright's request router, which also sees worker fetches; CDP network
+emulation can't attach to workers). L1′ now also reports **FLIP avg**:
+FLIP sampled every 500 ms from the move until settled, so it rewards a
+good image while loading, which fixed marks miss on slow links. The runner
+serves pages from its own Vite server with watching and HMR off, so edits
+can't reload a run.
+
+Midtown, jump in (`2026-10-30T02-44-06-405Z`):
+
+| Policy            | Requests | MB  | Settle | FLIP @1 s | FLIP avg  | Settled |
+| ----------------- | -------- | --- | ------ | --------- | --------- | ------- |
+| `Legacy1x` (1.x)  | 315      | 426 | 25.9 s | 0.499     | **0.267** | 0.148   |
+| `Next`, no mixing | 217      | 271 | 17.4 s | 0.499     | 0.288     | 0.148   |
+| `Next`, mixed     | 217      | 271 | 17.4 s | 0.499     | 0.279     | 0.148   |
+| `Next`, 64 req.   | 217      | 271 | 17.4 s | 0.499     | 0.319     | 0.148   |
+
+On a slow link 1.x looks better on average while loading, though it settles
+8.5 s later on 57% more bytes: loading every level improves the image in
+small steps, while `Next` skips levels and a region stays coarse longer.
+Mixing narrows the gap a little. More concurrency hurts on a saturated
+link: 64 parallel requests split the bandwidth, so everything arrives later
+and together instead of nearest first. Consequences: adaptive concurrency
+grows only while throughput rises (§13.2), and how many levels `Next` skips
+should follow bandwidth (skip on fast links, load intermediate levels on
+slow ones), which is §13.3's benefit per byte. Pan: equal FLIP avg (0.546
+to 0.549), `Next` 7.4 s vs 8.0 s. Zoom out: equal within noise (one `Next`
+run settled in 7.0 s against 2.0 to 2.4 s for the others; to recheck).
+
+Design models (the station iModel pair, iTwin mesh export, throttled): the
+station jumps in 7.3 s (`Next`) vs 10.8 s (1.x) on 25 vs 37 MB with equal
+FLIP; the surrounding area 19.6 to 19.8 s vs 20.6 s on 64 vs 66 MB. Mixing
+never engages (their children overlap, so `auto` keeps whole-region swaps),
+and zoomed out `Next` now draws the root as 1.x does. The default L1′
+cameras (from the root sphere) suit compact tilesets poorly; long, thin
+models need cameras along their axis.
+
+**Content pipeline diagnostics.** Each content load is timed per stage:
+queued (wanted until a request slot frees), network and decode (in the
+worker), worker wait, upload wait (the per-frame upload cap) and upload.
+`Tileset3D.pipeline()` gives p50 and p95 over the last 256 loads;
+`Tileset3D.resident` sums what loaded content holds (formats, triangles and
+lines, geometry vs texture bytes, image types, features). A single glTF
+model reports the same stages. The viewer shows them in a Content group, a
+status line (streaming or idle), a load timeline (resolve, root, first
+content, settled) and a "last move" row (settle time, requests and bytes
+after each camera move), plus history lines for bytes received, requests
+in flight against the cap, upload queue and decode time.
+
+First readings, Midtown in the viewer (`Next`, unthrottled):
+
+- **Queued p50 3.0 s, p95 4.4 s; network p50 133 ms.** Tiles wait about 3 s
+  for one of the 18 request slots, then download in a seventh of a second.
+  The cap, not the network, dominates (§13.2).
+- **111 MB received became 543 MB of textures** (JPEG decoded to RGBA with
+  mips, about 8× its wire size; 953 MB resident in all). Texture transcoding
+  (§13.6) is the largest memory lever for photogrammetry.
+- **Prefetch and hold keep content resident:** tiles they touch can't be
+  evicted, so the cache sat near budget + overflow (953 of 1024 MB). Prefetch
+  should yield to the budget before the memory-adjusted SSE rises.
+
 Next:
 
 1. Make `Next` the default once L1′ covers more moves and data (zoom out,
@@ -1344,6 +1452,8 @@ Next:
 4. Silhouette weighting for design models; GPU coverage feedback (HZB).
 5. Move the traversal off the main thread over a transferable (SoA) tile
    table.
+6. Render on demand by default (§13.8), with continuous rendering as an
+   option and a viewer toggle.
 
 ## 13. Design notes: tile selection and memory beyond `Legacy1x`
 
@@ -1352,33 +1462,63 @@ during M2 so the ideas survive the session. Each item states the problem,
 the approach in this engine, and how L1′ (or another harness) measures it.
 `Legacy1x` stays as the parity reference throughout. Nothing here changes it.
 
-### 13.1 Mixed-LOD drawing (next up)
+### 13.1 Mixed-LOD drawing
 
 **Problem.** `Next` replaces a coarse ancestor only once every visible
 frontier tile under it has arrived, so a region stays coarse and then
 changes all at once. 1.x looks progressive only because it loads every
 level, at about twice the bytes (L1′, r19).
 
-**Approach.** Draw arrived descendants together with the ancestor, and push
-the ancestor back in depth by its geometric error. The geometric error is
-the tileset's bound on how far a tile's surface may deviate from the true
-surface, so wherever finer content exists it wins the depth test, and the
-ancestor shows only in the gaps.
+**What 1.x does.** By default it never mixes levels: a parent swaps for all
+its children at once, one level at a time. With `skipLevelOfDetail`
+(opt-in) it mixes through the stencil buffer: finer tiles draw first and
+mark their pixels with their selection depth, ancestors draw only where
+nothing finer did, and a back-face pass of unresolved tiles keeps that
+depth-correct. Its source documents remaining artifacts (back-facing child
+content drawn over ancestors).
 
-- One spare record word holds a per-draw depth offset in meters. The vertex
-  shader moves the position along the camera ray by that amount, which works
-  for reverse-Z, needs no stencil, and stays inside the single GPU-driven pass.
-  1.x's skip-LOD needed stencil passes and per-command state for the same
-  result.
-- The offset is set only while an ancestor is a placeholder: the record view
-  mask already scopes this per view.
-- Translucent content (M4) and feature picking need care: picks should
-  prefer the finer tile. Since picks read the frontmost surface, they
-  already do.
+**First attempt, dropped (r21).** Push the ancestor back in depth by its
+geometric error, so finer content wins the depth test. Wrong in principle:
+depth priority isn't spatial priority. The pushed-back tile falls behind
+unrelated surfaces (neighbors, the context globe), which then show through
+and jump as tiles start and stop being placeholders. Moving vertices along
+the ray also changed clip w, so textures swam.
 
-**Measure.** L1′ FLIP at 250 ms and 1 s should drop below `Legacy1x` at
-equal or fewer bytes. Also check for z-fighting and popping visually in the
-viewer and by FLIP between consecutive frames with a static camera.
+**Approach (r22): clip the ancestor to its holes.** The ancestor draws at
+its true depth, but only inside the bounding boxes of its missing
+descendants, tested per fragment against up to 8 oriented boxes per tile.
+Where finer content exists the ancestor doesn't draw, so no depth tricks,
+and selection stays in the single GPU-driven pass. Boxes grow vertically by
+the ancestor's geometric error (its surface may lie that far above or below
+the finer content) but not sideways, so they don't spill over finer
+neighbors.
+
+This is only sound where children partition their parent: photogrammetry,
+terrain-like quadtrees and octrees. Design models subdivide by element, so
+child boxes overlap heavily and coarse tiles drop whole elements; there,
+mixing either leaves holes or changes the silhouette piece by piece. `Next`
+decides per tile (`mixedLod: "auto"`): it mixes when the children lie
+within the parent and their box volumes sum to at most 1.25× the parent's,
+and otherwise swaps whole regions as 1.x does.
+
+**Independent of mixing:**
+
+- **Hold.** A coarse tile that a view drew last frame stays until its
+  region is complete. Finer tiles a view drew last frame stay while a newly
+  visible neighbor loads; without this, one unloaded tile coming into view
+  collapsed the whole region to its nearest loaded ancestor, which with
+  skipped levels was near the root (rotation showed a coarse globe for
+  about a second). Zooming out, resident finer content draws until the
+  coarser tile arrives.
+- **Prefetch.** A guard band around the frustum (half-angle tangents
+  × 1.25) loads what would display there, at the lowest priority and 2×
+  the SSE threshold (about a quarter of the bytes), so rotation reveals
+  coarse content instead of gaps.
+
+**Measure.** L1′ FLIP at 250 ms and 1 s with and without mixing, on
+photogrammetry and on a design model; time to settle and bytes no worse.
+Later: dithered cross-fades for whole-region swaps, and FLIP between
+consecutive frames with a static camera as a popping metric.
 
 ### 13.2 Request scheduling
 
@@ -1387,7 +1527,18 @@ viewer and by FLIP between consecutive frames with a static camera.
   decode throughput. Raise concurrency while delivered bytes per second keep
   rising, and back off when latency climbs or the decode queue backs up
   (AIMD). L1′ on Google: 18 → 64 requests cut time to settle from 2.0 s to
-  1.3 s.
+  1.3 s (r19); with prefetch the gain is smaller (r22).
+- **Protocol-aware, per origin.** One limiter per origin, shared by every
+  tileset on it, owns the window and the priority queue. The protocol comes
+  from Resource Timing (`nextHopProtocol`: `http/1.1`, `h2`, `h3`, also in
+  workers; cross-origin servers must send `Timing-Allow-Origin`, else it is
+  empty). It seeds the window: about 6 for HTTP/1.1 (the browser's
+  per-host connection limit), about 32 for HTTP/2 and 3; AIMD adapts from
+  there. Unknown protocol: start low and infer it (time to first byte jumps
+  once requests exceed the browser's connection limit). On HTTP/1.1,
+  requests beyond that limit queue inside the browser, where they can be
+  neither reprioritized nor cancelled. Keeping the queue on our side is the
+  real purpose of a cap, which 1.x's fixed 18 only approximates.
 - **Cancellation.** Drop queued and in-flight requests no view still needs
   (1.x cancels requests for untouched tiles). Our worker decode isn't
   abortable yet: pass an `AbortSignal` to `fetch` in the worker and discard
@@ -1479,3 +1630,56 @@ views and asymmetric weights.
   maps directly onto draw records: one record per instance), cmpt.
 - **Edge and planar-fill extensions for CAD** (`EXT_mesh_primitive_edge_visibility`,
   `BENTLEY_materials_planar_fill`, line and point styles), as noted in §11.
+
+### 13.8 Rendering on demand (next up)
+
+**1.x.** Renders every frame by default. `requestRenderMode` (opt-in, since
+1.42) renders only on camera changes, tile, imagery and terrain loads,
+simulation-time changes beyond `maximumRenderTimeChange` (default 0: a
+running clock still renders every frame), and explicit
+`scene.requestRender()`. It is off by default because 1.x can't see every
+change: entity property edits, custom shader uniforms or DOM-driven state
+can leave a stale frame unless the app calls `requestRender()`.
+
+**2.0: on demand by default, continuous as an option.** Every scene change
+already goes through engine APIs, so the engine tracks invalidation itself
+instead of relying on the app:
+
+- **Camera:** a view's camera or rect changed, including controller
+  inertia.
+- **World mutations:** dirty record ranges, mesh, material and texture
+  adds or removes, view-mask and placeholder changes (all already pass
+  through `World`).
+- **Streaming:** while requests are in flight or uploads are queued,
+  selection runs on a cheap tick, and a frame renders only when the
+  selection or draw records change. With nothing loading and a still camera
+  the engine is idle.
+- **Environment:** sun, lighting, exposure, output encoding.
+- **Time-driven content:** glTF animation, animated materials, and later the
+  clock and globe lighting request frames while active.
+- **Resize, picking and readbacks** request one frame each.
+
+Dirtiness is per view: a view whose camera and content are unchanged keeps
+last frame's image (insets and split views stop re-rendering). The API is
+`engine.renderMode = "onDemand" | "continuous"` (default on demand) plus
+`engine.requestRender()` for state outside the engine. Statistics report
+idle and frames rendered per second instead of stale frame times.
+Benchmarks and parity harnesses call `renderFrame()` directly and are
+unaffected. The viewer gets a "Render continuously" toggle.
+
+**Measure.** Frames rendered while idle (zero), time from a change to its
+frame (one frame), and no stale frames in the parity harnesses' interactive
+counterparts.
+
+## 14. Follow-ups
+
+Issues found along the way that belong to other projects or teams. Each
+links to where it is explained.
+
+| #   | Item                                                                                                                                                                                                                                                                                               | For               | Where                              | Status                           |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- | ---------------------------------- | -------------------------------- |
+| 1   | A tileset without the required top-level `geometricError` makes 1.x compute `NaN` for the root's early-out SSE, so the root is never skipped. `Legacy1x` copies it; `Next` falls back to the root's error for refinement and never hides the tileset.                                              | CesiumJS 1.x      | §12 (selection parity)             | Asked whether known or by design |
+| 2   | Children-bounds culling vs refinement: a parent stays visible while every child is culled by its own children-bounds check, so 1.x selects a very coarse tile (SSE 446 near the Brooklyn Bridge).                                                                                                  | CesiumJS 1.x      | §12 ("A second 1.x selection bug") | To file                          |
+| 3   | iTwin mesh exports omit the top-level `geometricError` that 3D Tiles requires (the trigger for item 1).                                                                                                                                                                                            | iTwin mesh export | §12, increment 6                   | To raise                         |
+| 4   | Add `Timing-Allow-Origin` to the ion tile CDN (`assets.ion.cesium.com`). Without it browsers hide per-request timing (time to first byte, connection setup) and possibly the negotiated protocol from clients, which protocol-aware request scheduling wants. Google's tile host already sends it. | Cesium ion        | §13.2                              | To ask                           |
+| 5   | The same header on the iTwin mesh-export CDN.                                                                                                                                                                                                                                                      | iTwin Platform    | §13.2                              | To ask                           |

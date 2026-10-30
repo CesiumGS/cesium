@@ -1,0 +1,161 @@
+{
+  "date": "2026-10-30T02:03:44.894Z",
+  "environment": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0",
+    "adapter": {
+      "vendor": "nvidia",
+      "architecture": "lovelace",
+      "description": "NVIDIA RTX 3000 Ada Generation Laptop GPU"
+    },
+    "timestampQuery": true
+  },
+  "errors": [],
+  "results": {
+    "lod": [
+      {
+        "scenario": "jump in",
+        "policy": "Legacy1x (1.x)",
+        "status": "ok",
+        "requests": 315,
+        "megabytes": 426.33745861053467,
+        "settleMs": 3225.6999999284744,
+        "flip250": 0.4985423387895474,
+        "flip1000": 0.4209025912650881,
+        "flipSettled": 0.14799614375154707,
+        "selected": 119
+      },
+      {
+        "scenario": "jump in",
+        "policy": "Next, no mixing",
+        "status": "ok",
+        "requests": 217,
+        "megabytes": 270.5189323425293,
+        "settleMs": 1761.3000000715256,
+        "flip250": 0.4985423387895474,
+        "flip1000": 0.15529285407784138,
+        "flipSettled": 0.1479956692833741,
+        "selected": 116
+      },
+      {
+        "scenario": "jump in",
+        "policy": "Next (mixed where partitioned)",
+        "status": "ok",
+        "requests": 217,
+        "megabytes": 270.5189323425293,
+        "settleMs": 1731.7000000476837,
+        "flip250": 0.4985423387895474,
+        "flip1000": 0.16040891311691394,
+        "flipSettled": 0.14799614375154707,
+        "selected": 116
+      },
+      {
+        "scenario": "jump in",
+        "policy": "Next, 64 requests",
+        "status": "ok",
+        "requests": 217,
+        "megabytes": 270.5189323425293,
+        "settleMs": 1722.6000000238419,
+        "flip250": 0.4985423387895474,
+        "flip1000": 0.19137357337062386,
+        "flipSettled": 0.1479956692833741,
+        "selected": 116
+      },
+      {
+        "scenario": "zoom out",
+        "policy": "Legacy1x (1.x)",
+        "status": "ok",
+        "requests": 40,
+        "megabytes": 26.43531322479248,
+        "settleMs": 1364.5,
+        "flip250": 0.4902243984808078,
+        "flip1000": 0.4902243984808078,
+        "flipSettled": 0.4902243984808078,
+        "selected": 30
+      },
+      {
+        "scenario": "zoom out",
+        "policy": "Next, no mixing",
+        "status": "ok",
+        "requests": 27,
+        "megabytes": 19.171987533569336,
+        "settleMs": 1376.6000000238419,
+        "flip250": 0.4963379333125422,
+        "flip1000": 0.4963379333125422,
+        "flipSettled": 0.4963379333125422,
+        "selected": 35
+      },
+      {
+        "scenario": "zoom out",
+        "policy": "Next (mixed where partitioned)",
+        "status": "ok",
+        "requests": 27,
+        "megabytes": 19.171987533569336,
+        "settleMs": 1376.5,
+        "flip250": 0.4963379333125422,
+        "flip1000": 0.4963379333125422,
+        "flipSettled": 0.4963379333125422,
+        "selected": 35
+      },
+      {
+        "scenario": "zoom out",
+        "policy": "Next, 64 requests",
+        "status": "ok",
+        "requests": 27,
+        "megabytes": 19.171987533569336,
+        "settleMs": 1379.8999999761581,
+        "flip250": 0.4963379333125422,
+        "flip1000": 0.4963379333125422,
+        "flipSettled": 0.4963379333125422,
+        "selected": 35
+      },
+      {
+        "scenario": "pan",
+        "policy": "Legacy1x (1.x)",
+        "status": "ok",
+        "requests": 93,
+        "megabytes": 153.64995861053467,
+        "settleMs": 1449.8999999761581,
+        "flip250": 0.5327792958905594,
+        "flip1000": 0.553610164610105,
+        "flipSettled": 0.553610164610105,
+        "selected": 110
+      },
+      {
+        "scenario": "pan",
+        "policy": "Next, no mixing",
+        "status": "ok",
+        "requests": 83,
+        "megabytes": 132.02829265594482,
+        "settleMs": 1387,
+        "flip250": 0.548144659285349,
+        "flip1000": 0.553610164610105,
+        "flipSettled": 0.553610164610105,
+        "selected": 106
+      },
+      {
+        "scenario": "pan",
+        "policy": "Next (mixed where partitioned)",
+        "status": "ok",
+        "requests": 83,
+        "megabytes": 132.02829265594482,
+        "settleMs": 1403.4999998807907,
+        "flip250": 0.552960061818098,
+        "flip1000": 0.553610164610105,
+        "flipSettled": 0.553610164610105,
+        "selected": 106
+      },
+      {
+        "scenario": "pan",
+        "policy": "Next, 64 requests",
+        "status": "ok",
+        "requests": 83,
+        "megabytes": 132.02829265594482,
+        "settleMs": 1391.2999999523163,
+        "flip250": 0.5302782022502688,
+        "flip1000": 0.553610164610105,
+        "flipSettled": 0.553610164610105,
+        "selected": 106
+      }
+    ]
+  }
+}

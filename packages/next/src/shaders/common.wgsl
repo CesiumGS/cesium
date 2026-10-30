@@ -43,9 +43,9 @@ struct DrawRecord {
   imagerySlice: u32,
   featureIdOffset: u32,    // per-vertex local feature IDs (u32 words)
   viewMask: u32,           // views that draw this record (per-view LOD selection)
-  depthOffset: f32,        // meters pushed back along the view ray while a placeholder
-  placeholderMask: u32,    // views in which this record is a mixed-LOD placeholder
-  _recordPad2: u32,
+  clipBlock: u32,          // mixed-LOD placeholder: block of clip boxes
+  placeholderMask: u32,    // views in which the record draws only inside them
+  clipCount: u32,          // boxes in the block
 };
 
 struct DrawInstance {

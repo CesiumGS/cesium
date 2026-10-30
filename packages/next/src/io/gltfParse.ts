@@ -64,11 +64,15 @@ export async function parseGltf(
   // Every request under the asset carries the same headers (ion auth).
   const fetchUri = (uri: string) =>
     fetch(resolveUri(uri, url), headers ? { headers } : undefined);
+  const fetchStart = performance.now();
   const response = await fetch(url, headers ? { headers } : undefined);
   if (!response.ok) {
     throw new Error(`Failed to fetch ${url}: ${response.status}`);
   }
   let bytes: Uint8Array = new Uint8Array(await response.arrayBuffer());
+  const decodeStart = performance.now();
+  const received = bytes.byteLength;
+  const imageTypes: Record<string, number> = {};
   let b3dm: B3dm | undefined;
   const magic = String.fromCharCode(...bytes.subarray(0, 4));
   if (["pnts", "i3dm", "cmpt", "vctr", "geom"].includes(magic)) {
@@ -78,6 +82,9 @@ export async function parseGltf(
     b3dm = unwrapB3dm(bytes);
     bytes = b3dm.glb;
   }
+  const isGlb =
+    bytes.byteLength >= 4 &&
+    String.fromCharCode(...bytes.subarray(0, 4)) === "glTF";
   const { json, bin } = splitGlb(bytes);
   const warnings: string[] = [];
 
@@ -264,6 +271,11 @@ export async function parseGltf(
           : new Uint8Array(await (await fetchUri(image.uri)).arrayBuffer());
       const ktx2 =
         image.mimeType === "image/ktx2" || /\.ktx2$/i.test(image.uri ?? "");
+      const type = ktx2
+        ? "image/ktx2"
+        : (image.mimeType ??
+          (/\.png$/i.test(image.uri ?? "") ? "image/png" : "image/jpeg"));
+      imageTypes[type] = (imageTypes[type] ?? 0) + 1;
       if (ktx2) {
         return transcodeKtx2(bytes, textureSupport);
       }
@@ -314,6 +326,13 @@ export async function parseGltf(
         ? { copyright: json.asset.copyright }
         : {}),
       warnings,
+      timing: {
+        format: b3dm ? "b3dm" : bin !== undefined || isGlb ? "glb" : "gltf",
+        networkMs: decodeStart - fetchStart,
+        bytes: received,
+        decodeMs: performance.now() - decodeStart,
+        images: imageTypes,
+      },
     },
     transfer,
   };

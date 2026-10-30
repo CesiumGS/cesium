@@ -9,8 +9,15 @@ import {
   fromDegrees,
   mat4,
   resolveIonAsset,
+  resolveITwinIModel,
+  STAGES,
+  summarizeContent,
   vec3,
+  type ContentSummary,
+  type ContentTotals,
   type DrawHandle,
+  type Stage,
+  type StageStats,
   type FeatureValue,
   type Tileset3D,
   type View,
@@ -59,6 +66,7 @@ type Source =
   | { kind: "model"; path: string }
   | { kind: "tileset"; path: string }
   | { kind: "ion"; asset: number }
+  | { kind: "imodel"; id: string }
   | { kind: "city" };
 
 const $ = <T extends HTMLElement = HTMLElement>(selector: string) =>
@@ -69,6 +77,7 @@ function sourceFromUrl(): Source {
   const model = params.get("model");
   const tileset = params.get("tileset");
   const asset = params.get("asset");
+  const imodel = params.get("imodel");
   if (model) {
     return { kind: "model", path: model };
   }
@@ -77,6 +86,9 @@ function sourceFromUrl(): Source {
   }
   if (asset) {
     return { kind: "ion", asset: Number(asset) };
+  }
+  if (imodel) {
+    return { kind: "imodel", id: imodel };
   }
   if (params.get("scene") === "city") {
     return { kind: "city" };
@@ -92,8 +104,24 @@ function sourceToQuery(source: Source): string {
       return `?tileset=${source.path}`;
     case "ion":
       return `?asset=${source.asset}`;
+    case "imodel":
+      return `?imodel=${source.id}`;
     case "city":
       return "?scene=city";
+  }
+}
+
+function sourceName(source: Source): string {
+  switch (source.kind) {
+    case "model":
+    case "tileset":
+      return label(source.path);
+    case "ion":
+      return `ion asset ${source.asset}`;
+    case "imodel":
+      return `iModel ${source.id.slice(0, 8)}…`;
+    case "city":
+      return "Synthetic city";
   }
 }
 
@@ -263,6 +291,27 @@ async function main(): Promise<void> {
   let secondController: InspectController | undefined;
   let focus = { center: vec3.vec3(), radius: 1 };
   let loadToken = 0;
+  /**
+   * The current content, for the status line and the load timeline: name,
+   * load start, endpoint resolved, root tileset ready (performance.now()),
+   * and for a single model its pipeline.
+   */
+  interface LoadInfo {
+    name: string;
+    started: number;
+    resolvedAt?: number;
+    rootAt?: number;
+    model?: {
+      summary: ContentSummary;
+      networkMs: number;
+      decodeMs: number;
+      uploadMs: number;
+    };
+  }
+  let loadInfo: LoadInfo | undefined;
+  let loadFailed = false;
+  let move: { stoppedAt: number; requests: number; bytes: number } | undefined;
+  let lastMove: string | undefined;
   /** The streamed tileset in the current world, if any. */
   let current3dTiles: Tileset3D | undefined;
   let streamed: Tileset3D | undefined;
@@ -272,6 +321,8 @@ async function main(): Promise<void> {
   let attributions: string[] = [];
   let current = sourceFromUrl();
   const ionToken = import.meta.env.VITE_ION_TOKEN as string | undefined;
+  const itwinShareKey = import.meta.env.VITE_ITWIN_SHARE_KEY as
+    string | undefined;
 
   // ---------------------------------------------------------------- panel sections
   // Collapsible sections remember their state (per browser; optional).
@@ -326,6 +377,19 @@ async function main(): Promise<void> {
       void load({ kind: "ion", asset });
     }
   });
+  const imodelInput = $<HTMLInputElement>("#imodel");
+  const imodelButton = $<HTMLButtonElement>("#imodel-load");
+  if (!itwinShareKey) {
+    imodelInput.disabled = imodelButton.disabled = true;
+    $("#imodel-hint").textContent =
+      "Set VITE_ITWIN_SHARE_KEY in packages/next/.env.local to load iModels.";
+  }
+  imodelButton.addEventListener("click", () => {
+    const id = imodelInput.value.trim();
+    if (id) {
+      void load({ kind: "imodel", id });
+    }
+  });
   $("#city").addEventListener("click", () => void load({ kind: "city" }));
   $("#frame").addEventListener("click", () => frame());
 
@@ -346,10 +410,38 @@ async function main(): Promise<void> {
     } catch {
       // Ignore.
     }
-    if (current.kind === "tileset" || current.kind === "ion") {
+    if (
+      current.kind === "tileset" ||
+      current.kind === "ion" ||
+      current.kind === "imodel"
+    ) {
       void load(current);
     }
   });
+  // Maximum screen-space error, on a log2 slider (1–128 px, 1.x default 16).
+  // Applied live; the memory-adjusted threshold restarts from it.
+  const sseInput = $<HTMLInputElement>("#sse");
+  try {
+    sseInput.value = localStorage.getItem("viewer.sse") ?? sseInput.value;
+  } catch {
+    // Storage unavailable.
+  }
+  const maximumSse = () => Math.round(2 ** Number(sseInput.value) * 10) / 10;
+  const updateSse = () => {
+    const sse = maximumSse();
+    $("#sse-value").textContent = String(sse);
+    if (current3dTiles) {
+      current3dTiles.selection.maximumScreenSpaceError = sse;
+      current3dTiles.selection.memoryAdjustedScreenSpaceError = sse;
+    }
+    try {
+      localStorage.setItem("viewer.sse", sseInput.value);
+    } catch {
+      // Ignore.
+    }
+  };
+  sseInput.addEventListener("input", updateSse);
+  updateSse();
   const globeToggle = $<HTMLInputElement>("#globe");
   globeToggle.addEventListener("change", () => {
     for (const draw of globeDraws) {
@@ -483,6 +575,9 @@ async function main(): Promise<void> {
     );
     modelSelect.value = source.kind === "model" ? source.path : "";
     tilesetSelect.value = source.kind === "tileset" ? source.path : "";
+    if (source.kind === "imodel") {
+      imodelInput.value = source.id;
+    }
     if (source.kind === "ion") {
       ionInput.value = String(source.asset);
     }
@@ -491,6 +586,11 @@ async function main(): Promise<void> {
     let photorealistic = false;
     const warnings = new Set<string>();
     const started = performance.now();
+    const info: LoadInfo = { name: sourceName(source), started };
+    loadInfo = undefined;
+    loadFailed = false;
+    lastMove = undefined;
+    move = undefined;
     status.textContent = "loading…";
     $("#warnings").textContent = "";
     // Size the arenas within the device's storage-binding limit.
@@ -511,6 +611,9 @@ async function main(): Promise<void> {
           `/specs-data/Models/glTF-2.0/${source.path}`,
         );
         asset.warnings.forEach((w) => warnings.add(w));
+        // Before the upload, which consumes the images.
+        const summary = summarizeContent(asset);
+        const uploadStart = performance.now();
         // A model whose nodes already sit at Earth-fixed coordinates
         // (translations of thousands of km, like tile content) is placed
         // as-is; anything else goes into an east-north-up frame at SITE.
@@ -540,6 +643,12 @@ async function main(): Promise<void> {
                 unlit: unlit.checked,
               },
         );
+        info.model = {
+          summary,
+          networkMs: asset.timing?.networkMs ?? 0,
+          decodeMs: asset.timing?.decodeMs ?? 0,
+          uploadMs: performance.now() - uploadStart,
+        };
       } else {
         let url: string;
         let headers: Record<string, string> | undefined;
@@ -558,6 +667,13 @@ async function main(): Promise<void> {
           // (sea level there is ~30 m below the ellipsoid), so it starts
           // hidden, as 1.x apps hide the globe for Google tiles.
           photorealistic = /tile\.googleapis\.com/.test(resolved.url);
+          info.resolvedAt = performance.now();
+        } else if (source.kind === "imodel") {
+          // iTwin mesh export (signed link, about an hour).
+          url = (
+            await resolveITwinIModel(source.id, { shareKey: itwinShareKey })
+          ).url;
+          info.resolvedAt = performance.now();
         } else {
           url = new URL(
             `/specs-data/Cesium3DTiles/${source.path}`,
@@ -568,7 +684,9 @@ async function main(): Promise<void> {
         const tileset = await engine.addTileset(next, url, {
           ...(headers ? { headers } : {}),
           policy: policySelect.value as "legacy1x" | "next",
+          maximumScreenSpaceError: maximumSse(),
         });
+        info.rootAt = performance.now();
         streamed = tileset;
         if (token !== loadToken) {
           throw new Error("superseded");
@@ -622,7 +740,7 @@ async function main(): Promise<void> {
         radius: placed.radius,
       };
       frame();
-      status.textContent = `loaded in ${(performance.now() - started).toFixed(0)} ms`;
+      loadInfo = info;
       $("#warnings").textContent = [...warnings].join("\n") || "none";
     } catch (error) {
       if (streamed) {
@@ -634,6 +752,7 @@ async function main(): Promise<void> {
         return;
       }
       if (token === loadToken) {
+        loadFailed = true;
         const message = error instanceof Error ? error.message : String(error);
         status.textContent = /arena is full/.test(message)
           ? `error: ${message} The full-detail tileset is larger than the arena; streaming (M2) loads only what the view needs.`
@@ -684,7 +803,23 @@ async function main(): Promise<void> {
       }`;
   });
 
-  // ---------------------------------------------------------------- memory
+  // ---------------------------------------------------------------- performance
+  const selectedPerView = (tileset: Tileset3D) =>
+    (
+      [
+        ["main", view],
+        ["right", second],
+        ["inset", overview],
+      ] as const
+    )
+      .filter(
+        (entry): entry is readonly [string, View] => entry[1] !== undefined,
+      )
+      .map(
+        ([name, v]) =>
+          `${name} ${tileset.stats.selected.get(Math.log2(engine.viewBit(v))) ?? 0}`,
+      )
+      .join(", ");
   const MB = 1048576;
   const mb = (bytes: number) =>
     `${(bytes / MB).toFixed(bytes < 10 * MB ? 1 : 0)} MB`;
@@ -716,6 +851,9 @@ async function main(): Promise<void> {
     cache: [] as number[],
     targets: [] as number[],
     inFlight: [] as number[],
+    received: [] as number[],
+    uploadQueue: [] as number[],
+    decode: [] as number[],
     cpu: [] as number[],
     gpu: [] as number[],
   };
@@ -739,7 +877,20 @@ async function main(): Promise<void> {
     const rows: Array<[string, number[], string, (v: number) => string]> = [
       ["tile cache", samples.cache, "#3d6fb6", mb],
       ["targets", samples.targets, "#7a5fb0", mb],
-      ["in flight", samples.inFlight, "#3a9b8a", (v) => v.toFixed(0)],
+      [
+        "in flight",
+        samples.inFlight,
+        "#3a9b8a",
+        (v) => `${v.toFixed(0)}/${current3dTiles?.stats.maxInFlight ?? 0}`,
+      ],
+      [
+        "received",
+        samples.received,
+        "#4fa3d9",
+        (v) => `${(v / MB).toFixed(1)} MB/s`,
+      ],
+      ["upload queue", samples.uploadQueue, "#b0805f", (v) => v.toFixed(0)],
+      ["decode p50", samples.decode, "#9b6fd0", (v) => `${v.toFixed(1)} ms`],
       ["cpu ms", samples.cpu, "#d9a441", (v) => v.toFixed(2)],
       ["gpu ms", samples.gpu, "#c4573a", (v) => v.toFixed(2)],
     ];
@@ -775,11 +926,221 @@ async function main(): Promise<void> {
       );
     });
   }
-  function updateMemory(): void {
+  /** One label/value row in a meter grid. */
+  const value = (label: string, text: string) =>
+    `<div class="label">${label}</div><div class="value" title="${text}">${text}</div>`;
+  const adapter = engine.gpu.adapter.info;
+  const streamingTitle = $("#perf-streaming-title");
+  const streamingEl = $("#perf-streaming");
+  const contentTitle = $("#perf-content-title");
+  const contentEl = $("#perf-content");
+  const STAGE_LABELS: Record<Stage, string> = {
+    queued: "queued",
+    network: "network",
+    worker: "worker wait",
+    decode: "decode",
+    uploadWait: "upload wait",
+    upload: "upload",
+  };
+  const duration = (ms: number | undefined) =>
+    ms === undefined
+      ? "…"
+      : ms < 1000
+        ? `${ms.toFixed(0)} ms`
+        : `${(ms / 1000).toFixed(1)} s`;
+  const count = (n: number) =>
+    n >= 1e6
+      ? `${(n / 1e6).toFixed(1)}M`
+      : n >= 1e4
+        ? `${(n / 1e3).toFixed(0)}k`
+        : n.toFixed(0);
+  /** Content-mix rows shared by a single model and a tileset's totals. */
+  const mixRows = (t: ContentSummary | ContentTotals, formats: string) => {
+    const images = Object.entries(t.images)
+      .filter(([, n]) => n > 0)
+      .map(([type, n]) => `${type.replace("image/", "")} ${n}`)
+      .join(" · ");
+    return [
+      value("formats", formats || "none"),
+      value(
+        "geometry",
+        [
+          `${count(t.triangles)} triangles`,
+          t.lines > 0 ? `${count(t.lines)} lines` : "",
+          t.points > 0 ? `${count(t.points)} points` : "",
+        ]
+          .filter(Boolean)
+          .join(" · "),
+      ),
+      value(
+        "bytes",
+        `geometry ${mb(t.geometryBytes)} · textures ${mb(t.textureBytes)}`,
+      ),
+      value("images", images || "none"),
+      value("features", count(t.features)),
+    ];
+  };
+  /** Stage rows: one value per stage, the slowest highlighted. */
+  const stageRows = (stages: Record<Stage, StageStats | number>) => {
+    const p50 = (v: StageStats | number) => (typeof v === "number" ? v : v.p50);
+    const slowest = STAGES.reduce((a, b) =>
+      p50(stages[b]) > p50(stages[a]) ? b : a,
+    );
+    return STAGES.map((stage) => {
+      const v = stages[stage];
+      const text =
+        typeof v === "number"
+          ? `${v.toFixed(1)} ms`
+          : `${v.p50.toFixed(1)} / ${v.p95.toFixed(1)} ms`;
+      return `<div class="label">${STAGE_LABELS[stage]}</div><div class="value${stage === slowest ? " slowest" : ""}">${text}</div>`;
+    });
+  };
+  let lastReceived = 0;
+  // Last move: from when the camera stopped until streaming went idle, with
+  // the requests and bytes the move cost (an L1′-style number, live).
+  let cameraKey = "";
+  function watchCamera(): void {
+    const t = current3dTiles;
+    const key = [view, second]
+      .filter((v): v is View => v !== undefined)
+      .map((v) =>
+        [...v.camera.position, ...v.camera.direction]
+          .map((x) => x.toFixed(3))
+          .join(),
+      )
+      .join("|");
+    const now = performance.now();
+    if (key !== cameraKey) {
+      if (cameraKey && t) {
+        move ??= {
+          stoppedAt: now,
+          requests: t.stats.requestsTotal,
+          bytes: t.stats.bytesReceived,
+        };
+        move.stoppedAt = now;
+      }
+      cameraKey = key;
+    } else if (move && t?.idle && now - move.stoppedAt > 100) {
+      lastMove = `settled ${duration(now - move.stoppedAt)} · ${t.stats.requestsTotal - move.requests} requests · ${mb(t.stats.bytesReceived - move.bytes)}`;
+      move = undefined;
+    }
+    requestAnimationFrame(watchCamera);
+  }
+  requestAnimationFrame(watchCamera);
+  function updatePerformance(): void {
+    const s = engine.stats;
+    if (loadInfo && !loadFailed) {
+      const t = current3dTiles;
+      $("#load-status").textContent = t
+        ? `${loadInfo.name} · ${
+            t.idle
+              ? "idle"
+              : `streaming: ${t.stats.inFlight} in flight, ${t.stats.uploadQueue} to upload`
+          }`
+        : `${loadInfo.name} · loaded`;
+    }
+    $("#perf-frame").innerHTML = [
+      value("adapter", `${adapter.vendor} ${adapter.architecture}`.trim()),
+      value("canvas", `${canvas.width}×${canvas.height}`),
+      value("views", `${s.views} · ${s.batches} batches each`),
+    ].join("");
+
+    const tiles = current3dTiles?.stats;
+    streamingTitle.hidden = streamingEl.hidden = !tiles;
+    if (current3dTiles && tiles) {
+      streamingEl.innerHTML = [
+        value("tiles", `${tiles.loaded} loaded / ${tiles.tiles} known`),
+        value("selected", selectedPerView(current3dTiles)),
+        value(
+          "SSE",
+          `${current3dTiles.selection.maximumScreenSpaceError} px max · ${tiles.screenSpaceError.toFixed(1)} memory-adjusted`,
+        ),
+        value("mixed LOD", `${tiles.placeholders} placeholders`),
+        ...(loadInfo
+          ? [
+              value(
+                loadInfo.resolvedAt !== undefined ? "resolve / root" : "root",
+                [
+                  loadInfo.resolvedAt !== undefined
+                    ? duration(loadInfo.resolvedAt - loadInfo.started)
+                    : "",
+                  duration(
+                    loadInfo.rootAt !== undefined
+                      ? loadInfo.rootAt - loadInfo.started
+                      : undefined,
+                  ),
+                ]
+                  .filter(Boolean)
+                  .join(" / "),
+              ),
+              value(
+                "first content",
+                duration(
+                  current3dTiles.firstContentAt !== undefined
+                    ? current3dTiles.firstContentAt - loadInfo.started
+                    : undefined,
+                ),
+              ),
+              value(
+                "settled",
+                current3dTiles.settledAt !== undefined
+                  ? `${duration(current3dTiles.settledAt - loadInfo.started)} · ${tiles.requestsTotal} requests · ${mb(tiles.bytesReceived)}`
+                  : `… · ${tiles.requestsTotal} requests · ${mb(tiles.bytesReceived)}`,
+              ),
+            ]
+          : []),
+        value("last move", lastMove ?? (move ? "settling…" : "—")),
+        meter(
+          "tile cache",
+          tiles.bytes,
+          tiles.budget + tiles.overflow,
+          `${mb(tiles.bytes)} / ${mb(tiles.budget)} +${mb(tiles.overflow)} overflow`,
+        ),
+        meter(
+          "requests",
+          tiles.inFlight,
+          tiles.maxInFlight,
+          `${tiles.inFlight} / ${tiles.maxInFlight} in flight · ${tiles.uploadQueue} to upload`,
+        ),
+      ].join("");
+      $("#warnings").textContent =
+        [...current3dTiles.warnings].join("\n") || "none";
+    }
+
+    // Content pipeline: a tileset's recent loads, or the single model.
+    const model = loadInfo?.model;
+    contentTitle.hidden = contentEl.hidden = !current3dTiles && !model;
+    if (current3dTiles) {
+      const pipeline = current3dTiles.pipeline();
+      const resident = current3dTiles.resident;
+      contentEl.innerHTML = [
+        value("stage", `p50 / p95 · last ${pipeline.samples} loads`),
+        ...stageRows(pipeline.stages),
+        ...mixRows(
+          resident,
+          Object.entries(resident.formats)
+            .filter(([, n]) => n > 0)
+            .map(([f, n]) => `${f} ${n}`)
+            .join(" · "),
+        ),
+      ].join("");
+    } else if (model) {
+      contentEl.innerHTML = [
+        ...stageRows({
+          queued: 0,
+          network: model.networkMs,
+          worker: 0,
+          decode: model.decodeMs,
+          uploadWait: 0,
+          upload: model.uploadMs,
+        }),
+        ...mixRows(model.summary, model.summary.format),
+      ].join("");
+    }
+
     const m = world.memory;
     const targets = engine.renderTargetMemory;
-    const tiles = current3dTiles?.stats;
-    const rows = [
+    $("#perf-memory").innerHTML = [
       meter(
         "vertex arena",
         m.vertexBytes.used,
@@ -796,7 +1157,7 @@ async function main(): Promise<void> {
         "draw records",
         m.draws.used,
         m.draws.capacity,
-        `${m.draws.used} / ${m.draws.capacity} · ${m.batches} batches`,
+        `${m.draws.used} / ${m.draws.capacity}`,
       ),
       meter(
         "materials",
@@ -811,38 +1172,25 @@ async function main(): Promise<void> {
         `${mb(targets.workingSetBytes)} per frame · ${mb(targets.residentBytes)} resident · idle cap ${mb(targets.idleBudget)}`,
         { idle: targets.residentBytes - targets.workingSetBytes },
       ),
-    ];
-    if (tiles) {
-      rows.push(
-        meter(
-          "tile cache",
-          tiles.bytes,
-          tiles.budget + tiles.overflow,
-          `${mb(tiles.bytes)} / ${mb(tiles.budget)} +${mb(tiles.overflow)} overflow · ${tiles.loaded}/${tiles.tiles} tiles · SSE ${tiles.screenSpaceError.toFixed(1)}`,
-        ),
-        meter(
-          "requests",
-          tiles.inFlight,
-          tiles.maxInFlight,
-          `${tiles.inFlight} / ${tiles.maxInFlight} in flight · ${tiles.uploadQueue} to upload`,
-        ),
-      );
-    }
-    rows.push(
-      `<div class="label">GPU tables</div><div class="hint">${mb(m.tableBytes)} fixed (records, instances, lists, args)</div>`,
-    );
-    $("#memory").innerHTML = rows.join("");
+      value("GPU tables", `${mb(m.tableBytes)} fixed (records, lists, args)`),
+    ].join("");
+
     push(samples.cache, tiles?.bytes ?? 0);
     push(samples.targets, targets.residentBytes);
     push(samples.inFlight, tiles?.inFlight ?? 0);
-    push(samples.cpu, engine.stats.cpuMs);
+    const received = tiles?.bytesReceived ?? 0;
+    push(samples.received, Math.max(0, received - lastReceived) * 4);
+    lastReceived = received;
+    push(samples.uploadQueue, tiles?.uploadQueue ?? 0);
     push(
-      samples.gpu,
-      Number.isNaN(engine.stats.gpuMs) ? 0 : engine.stats.gpuMs,
+      samples.decode,
+      current3dTiles ? current3dTiles.pipeline().stages.decode.p50 : 0,
     );
+    push(samples.cpu, s.cpuMs);
+    push(samples.gpu, Number.isNaN(s.gpuMs) ? 0 : s.gpuMs);
     drawHistory();
   }
-  setInterval(updateMemory, 250);
+  setInterval(updatePerformance, 250);
 
   // ---------------------------------------------------------------- credits
   // Required attributions (ion, data providers) plus the data credits of the
@@ -853,49 +1201,6 @@ async function main(): Promise<void> {
       attributions.join("") +
       (credits.length ? escapeHtml(credits.join(" · ")) : "");
   }, 500);
-
-  // ---------------------------------------------------------------- stats
-  const selectedPerView = (tileset: Tileset3D) =>
-    (
-      [
-        ["main", view],
-        ["right", second],
-        ["inset", overview],
-      ] as const
-    )
-      .filter(
-        (entry): entry is readonly [string, View] => entry[1] !== undefined,
-      )
-      .map(
-        ([name, v]) =>
-          `${name} ${tileset.stats.selected.get(Math.log2(engine.viewBit(v))) ?? 0}`,
-      )
-      .join(", ");
-  const adapter = engine.gpu.adapter.info;
-  setInterval(() => {
-    const s = engine.stats;
-    $("#stats").textContent = [
-      `adapter      ${`${adapter.vendor} ${adapter.architecture}`.trim()}`,
-      `views        ${s.views}`,
-      `draw records ${s.draws}`,
-      `batches      ${s.batches} (indirect draws per view)`,
-      `cpu / frame  ${s.cpuMs.toFixed(2)} ms`,
-      `gpu / frame  ${Number.isNaN(s.gpuMs) ? "n/a" : `${s.gpuMs.toFixed(2)} ms`}`,
-      `canvas       ${canvas.width}×${canvas.height}`,
-      ...(current3dTiles
-        ? [
-            `tiles        ${current3dTiles.stats.loaded} loaded / ${current3dTiles.stats.tiles} known`,
-            `selected     ${selectedPerView(current3dTiles)}`,
-            `loading      ${current3dTiles.stats.loading}`,
-            `tile cache   ${(current3dTiles.stats.bytes / 1048576).toFixed(1)} MB`,
-          ]
-        : []),
-    ].join("\n");
-    if (current3dTiles) {
-      $("#warnings").textContent =
-        [...current3dTiles.warnings].join("\n") || "none";
-    }
-  }, 250);
 
   // A lost device (driver reset, out of memory) can't be recovered yet
   // (M2+ rebuilds worlds from CPU-side sources); say so instead of freezing.

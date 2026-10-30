@@ -24,6 +24,10 @@ const PI: f32 = 3.14159265358979;
 @group(1) @binding(1) var<storage, read> instances: array<DrawInstance>;
 @group(1) @binding(2) var<storage, read> vertices: array<f32>;
 @group(1) @binding(3) var<storage, read> materials: array<Material>;
+// Mixed-LOD clip boxes: per box, center hi and lo (Earth-fixed) and three
+// rows mapping an offset from the center to box coordinates in [-1, 1].
+@group(1) @binding(4) var<storage, read> clipBoxes: array<vec4f>;
+const CLIP_BOXES: u32 = 8u;
 
 @group(2) @binding(0) var baseColorTexture: texture_2d<f32>;
 @group(2) @binding(1) var metallicRoughnessTexture: texture_2d<f32>;
@@ -86,16 +90,7 @@ fn vs(@builtin(vertex_index) vertexIndex: u32, @location(0) draw: u32) -> VsOut 
   }
   let world = m * vec4f(read3(r.positionOffset, vertexIndex), 1.0);
   out.relPosition = world.xyz;
-  // Mixed-LOD placeholder: a coarse ancestor drawn under its arrived finer
-  // descendants. Moving along the camera ray keeps its screen position but
-  // pushes it back by its geometric error (the bound on its surface
-  // deviation), so finer content wins wherever it exists.
-  var clipWorld = world;
-  if ((r.placeholderMask & view.viewBit) != 0u) {
-    let d = max(length(world.xyz), 1e-3);
-    clipWorld = vec4f(world.xyz * (1.0 + r.depthOffset / d), 1.0);
-  }
-  out.position = view.viewProj * clipWorld;
+  out.position = view.viewProj * world;
   // Normals transform by the inverse transpose; the cofactor matrix is that up
   // to the determinant, whose sign keeps mirrored transforms facing outward.
   // (Quantized glTF often carries a non-uniform dequantization scale.)
@@ -168,6 +163,22 @@ fn toEnvironment(d: vec3f) -> vec3f {
   );
 }
 
+fn insideClipBoxes(block: u32, count: u32, p: vec3f) -> bool {
+  for (var i = 0u; i < count; i++) {
+    let b = (block * CLIP_BOXES + i) * 5u;
+    let d = p - ((clipBoxes[b].xyz - view.cameraHi) + (clipBoxes[b + 1u].xyz - view.cameraLo));
+    let u = abs(vec3f(
+      dot(clipBoxes[b + 2u].xyz, d),
+      dot(clipBoxes[b + 3u].xyz, d),
+      dot(clipBoxes[b + 4u].xyz, d),
+    ));
+    if (max(u.x, max(u.y, u.z)) <= 1.0) {
+      return true;
+    }
+  }
+  return false;
+}
+
 @fragment
 fn fs(in: VsOut, @builtin(front_facing) frontFacing: bool) -> FsOut {
   let r = records[in.draw];
@@ -197,6 +208,12 @@ fn fs(in: VsOut, @builtin(front_facing) frontFacing: bool) -> FsOut {
     baseColor *= baseColorSample;
   }
   if ((flags & 4u) != 0u && baseColor.a < material.alphaCutoff) {
+    discard;
+  }
+  // Mixed-LOD placeholder: a coarse tile fills only the volumes of its
+  // missing finer descendants, at its true depth (plan §13.1).
+  if ((r.placeholderMask & view.viewBit) != 0u &&
+      !insideClipBoxes(r.clipBlock, r.clipCount, in.relPosition)) {
     discard;
   }
   var emissive = material.emissive;

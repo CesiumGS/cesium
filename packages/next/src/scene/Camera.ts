@@ -112,13 +112,15 @@ export class Camera {
   /**
    * World-space (camera-relative) frustum planes as (nx, ny, nz, d) with
    * normals pointing inward: left, right, bottom, top, near. Far is infinite.
+   * `widen` scales the tangents of the half-angles (1: the view itself).
    */
   frustumPlanes<T extends Float32Array | Float64Array>(
     out: T,
     aspect: number,
+    widen = 1,
   ): T {
     const fovy = this.fovy(aspect);
-    const t = Math.tan(fovy / 2);
+    const t = Math.tan(fovy / 2) * widen;
     const r = t * aspect;
     const d = this.direction,
       u = this.up,

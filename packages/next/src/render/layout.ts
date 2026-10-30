@@ -76,9 +76,16 @@ export function writeViewBlock(
 export const RECORD_SIZE = 192;
 /** Word offset of `DrawRecord.viewMask`. */
 export const VIEW_MASK_WORD = 44;
-/** Word offsets of the mixed-LOD placeholder offset (f32) and view mask. */
-export const DEPTH_OFFSET_WORD = 45;
+/**
+ * Word offsets of a mixed-LOD placeholder's clip block, view mask and box
+ * count: in those views the record draws only inside its clip boxes.
+ */
+export const CLIP_BLOCK_WORD = 45;
 export const PLACEHOLDER_MASK_WORD = 46;
+export const CLIP_COUNT_WORD = 47;
+/** Clip boxes per block; each box is 5 vec4s (center hi, lo, 3 rows). */
+export const CLIP_BOXES = 8;
+export const CLIP_BOX_FLOATS = 20;
 /** Default view mask: drawn in every view. */
 export const ALL_VIEWS = 0xffffffff;
 export const RECORD_WORDS = RECORD_SIZE / 4;

@@ -30,6 +30,8 @@ export interface SelectionView {
   cartographic: Cartographic;
   /** Culling planes, world space: (nx, ny, nz, d) per plane, inward normals. */
   planes: Float64Array;
+  /** A wider frustum for prefetching just outside the view (`Next` only). */
+  prefetchPlanes?: Float64Array;
   /** 2 tan(fovy / 2). */
   sseDenominator: number;
   /** Drawing-buffer height divided by the pixel ratio (1.x `pixelRatio`). */
@@ -46,10 +48,11 @@ export interface SelectionResult {
   /** Request priority per tile, lower first (default: distance). */
   priority?: Map<Tile, number>;
   /**
-   * Selected tiles drawn as mixed-LOD placeholders: coarse content under its
-   * arrived finer descendants, pushed back in depth by its geometric error.
+   * Selected tiles drawn as mixed-LOD placeholders, with the tiles whose
+   * volumes they fill (their missing finer descendants); they draw only
+   * inside those volumes.
    */
-  placeholders?: Set<Tile>;
+  placeholders?: Map<Tile, readonly Tile[]>;
 }
 
 // 1.x CullingVolume plane masks.

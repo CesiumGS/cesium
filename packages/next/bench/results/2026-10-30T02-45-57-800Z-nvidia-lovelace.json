@@ -1,0 +1,1503 @@
+{
+  "date": "2026-10-30T02:45:57.801Z",
+  "environment": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0",
+    "adapter": {
+      "vendor": "nvidia",
+      "architecture": "lovelace",
+      "description": "NVIDIA RTX 3000 Ada Generation Laptop GPU"
+    },
+    "timestampQuery": true
+  },
+  "errors": [],
+  "results": {
+    "precision": [
+      {
+        "site": "Philadelphia, ground",
+        "distance": 0.01,
+        "hiLo": 7.450580596923828e-9,
+        "naive": 0.00996065093204379
+      },
+      {
+        "site": "Philadelphia, ground",
+        "distance": 1,
+        "hiLo": 3.725290298461914e-8,
+        "naive": 0.4472402762621641
+      },
+      {
+        "site": "Philadelphia, ground",
+        "distance": 100,
+        "hiLo": 0.0000038053840398788452,
+        "naive": 0.44108416698873043
+      },
+      {
+        "site": "Philadelphia, ground",
+        "distance": 1000,
+        "hiLo": 0.00003051524981856346,
+        "naive": 0.4474934162572026
+      },
+      {
+        "site": "Philadelphia, ground",
+        "distance": 10000,
+        "hiLo": 0.00046303030103445053,
+        "naive": 0.4315127031877637
+      },
+      {
+        "site": "Philadelphia, ground",
+        "distance": 100000,
+        "hiLo": 0.003709627315402031,
+        "naive": 0.43906556628644466
+      },
+      {
+        "site": "Philadelphia, ground",
+        "distance": 1000000,
+        "hiLo": 0.059668722678907216,
+        "naive": 0.44663296081125736
+      },
+      {
+        "site": "Everest, 9 km",
+        "distance": 0.01,
+        "hiLo": 3.725290298461914e-9,
+        "naive": 0.009957878210116178
+      },
+      {
+        "site": "Everest, 9 km",
+        "distance": 1,
+        "hiLo": 4.377216100692749e-8,
+        "naive": 0.24140036012977362
+      },
+      {
+        "site": "Everest, 9 km",
+        "distance": 100,
+        "hiLo": 0.000003795139491558075,
+        "naive": 0.2513115806505084
+      },
+      {
+        "site": "Everest, 9 km",
+        "distance": 1000,
+        "hiLo": 0.00003021053271368146,
+        "naive": 0.24966186005622149
+      },
+      {
+        "site": "Everest, 9 km",
+        "distance": 10000,
+        "hiLo": 0.0004580861423164606,
+        "naive": 0.24832285568118095
+      },
+      {
+        "site": "Everest, 9 km",
+        "distance": 100000,
+        "hiLo": 0.003892242908477783,
+        "naive": 0.25175474025309086
+      },
+      {
+        "site": "Everest, 9 km",
+        "distance": 1000000,
+        "hiLo": 0.06176235410384834,
+        "naive": 0.25140239112079144
+      },
+      {
+        "site": "Near north pole",
+        "distance": 0.01,
+        "hiLo": 8.381903171539307e-9,
+        "naive": 0.009858598001301289
+      },
+      {
+        "site": "Near north pole",
+        "distance": 1,
+        "hiLo": 3.91155481338501e-8,
+        "naive": 0.46315971203148365
+      },
+      {
+        "site": "Near north pole",
+        "distance": 100,
+        "hiLo": 0.000003770695002458524,
+        "naive": 0.46588508132845163
+      },
+      {
+        "site": "Near north pole",
+        "distance": 1000,
+        "hiLo": 0.000045754220650451316,
+        "naive": 0.4513274682685733
+      },
+      {
+        "site": "Near north pole",
+        "distance": 10000,
+        "hiLo": 0.0008625466925877845,
+        "naive": 0.461621580645442
+      },
+      {
+        "site": "Near north pole",
+        "distance": 100000,
+        "hiLo": 0.007121505856048316,
+        "naive": 0.43772181682288647
+      },
+      {
+        "site": "Near north pole",
+        "distance": 1000000,
+        "hiLo": 0.05049848207272589,
+        "naive": 0.4545556381344795
+      },
+      {
+        "site": "Antimeridian",
+        "distance": 0.01,
+        "hiLo": 7.450580596923828e-9,
+        "naive": 0.009946443140506744
+      },
+      {
+        "site": "Antimeridian",
+        "distance": 1,
+        "hiLo": 3.5390257835388184e-8,
+        "naive": 0.3244745805859566
+      },
+      {
+        "site": "Antimeridian",
+        "distance": 100,
+        "hiLo": 0.0000034415542842225477,
+        "naive": 0.3198902551084757
+      },
+      {
+        "site": "Antimeridian",
+        "distance": 1000,
+        "hiLo": 0.000030384398996829987,
+        "naive": 0.32863001339137554
+      },
+      {
+        "site": "Antimeridian",
+        "distance": 10000,
+        "hiLo": 0.00047224294394254684,
+        "naive": 0.33063318114727736
+      },
+      {
+        "site": "Antimeridian",
+        "distance": 100000,
+        "hiLo": 0.0038803081260994077,
+        "naive": 0.3062115674838424
+      },
+      {
+        "site": "Antimeridian",
+        "distance": 1000000,
+        "hiLo": 0.031232433393597603,
+        "naive": 0.3090661112219095
+      },
+      {
+        "site": "LEO, 400 km",
+        "distance": 0.01,
+        "hiLo": 4.2515308114332573e-10,
+        "naive": 0.009801656939089298
+      },
+      {
+        "site": "LEO, 400 km",
+        "distance": 1,
+        "hiLo": 3.632158041000366e-8,
+        "naive": 0.24719491973519325
+      },
+      {
+        "site": "LEO, 400 km",
+        "distance": 100,
+        "hiLo": 0.0000037849924439115057,
+        "naive": 0.24872715771198273
+      },
+      {
+        "site": "LEO, 400 km",
+        "distance": 1000,
+        "hiLo": 0.000030406750738620758,
+        "naive": 0.2493351772427559
+      },
+      {
+        "site": "LEO, 400 km",
+        "distance": 10000,
+        "hiLo": 0.000455196668553981,
+        "naive": 0.24870306998491287
+      },
+      {
+        "site": "LEO, 400 km",
+        "distance": 100000,
+        "hiLo": 0.0036349929869174957,
+        "naive": 0.24969864264130592
+      },
+      {
+        "site": "LEO, 400 km",
+        "distance": 1000000,
+        "hiLo": 0.031052435748279095,
+        "naive": 0.24654250033199787
+      }
+    ],
+    "indirect": [
+      {
+        "draws": 1024,
+        "mode": "indirect",
+        "cpuMs": 0.22166665891806284,
+        "gpuMs": 0.04020935280616377,
+        "gpuSpanMs": 0.05565117900493543,
+        "wallMs": 3.847500001390775
+      },
+      {
+        "draws": 1024,
+        "mode": "direct",
+        "cpuMs": 0.17999999125798544,
+        "gpuMs": 0.037718589187795505,
+        "gpuSpanMs": 0.05047514009872455,
+        "wallMs": 3.642500000198682
+      },
+      {
+        "draws": 10000,
+        "mode": "indirect",
+        "cpuMs": 0.164166663090388,
+        "gpuMs": 0.09931289022062832,
+        "gpuSpanMs": 0.11570694740328562,
+        "wallMs": 3.7083333333333335
+      },
+      {
+        "draws": 10000,
+        "mode": "direct",
+        "cpuMs": 0.15833332339922587,
+        "gpuMs": 0.09676089536550485,
+        "gpuSpanMs": 0.11049949017364799,
+        "wallMs": 3.519999999801318
+      },
+      {
+        "draws": 19881,
+        "mode": "indirect",
+        "cpuMs": 0.15750000576178233,
+        "gpuMs": 0.1534779571095519,
+        "gpuSpanMs": 0.16912947621638977,
+        "wallMs": 3.5383333335320155
+      },
+      {
+        "draws": 19881,
+        "mode": "direct",
+        "cpuMs": 0.18166667520999907,
+        "gpuMs": 0.15015288448252087,
+        "gpuSpanMs": 0.1636379051719992,
+        "wallMs": 3.783333333333333
+      }
+    ],
+    "parity": [
+      {
+        "camera": "oblique",
+        "variant": "2.0 sRGB curves",
+        "metrics": {
+          "meanDeltaE": 1.4691646382452583,
+          "p95DeltaE": 1.689675727989593,
+          "noticeable": 0.016512345679012344
+        },
+        "flip": {
+          "mean": 0.04647740953485571,
+          "median": 0.05100050941109657,
+          "p95": 0.06490545719861984
+        }
+      },
+      {
+        "camera": "oblique",
+        "variant": "2.0 gamma 2.2 (1.x color)",
+        "metrics": {
+          "meanDeltaE": 0.885042536929007,
+          "p95DeltaE": 0.8092925775758862,
+          "noticeable": 0.016512345679012344
+        },
+        "flip": {
+          "mean": 0.037552609432077846,
+          "median": 0.04046520218253136,
+          "p95": 0.060851745307445526
+        }
+      },
+      {
+        "camera": "top-down",
+        "variant": "2.0 sRGB curves",
+        "metrics": {
+          "meanDeltaE": 1.7207889116999198,
+          "p95DeltaE": 1.689675727989593,
+          "noticeable": 0.005578703703703704
+        },
+        "flip": {
+          "mean": 0.052464582302336804,
+          "median": 0.05100050941109657,
+          "p95": 0.06192909553647041
+        }
+      },
+      {
+        "camera": "top-down",
+        "variant": "2.0 gamma 2.2 (1.x color)",
+        "metrics": {
+          "meanDeltaE": 0.9137565417309822,
+          "p95DeltaE": 0.8092925775758862,
+          "noticeable": 0.005578703703703704
+        },
+        "flip": {
+          "mean": 0.042614913741839296,
+          "median": 0.04046520218253136,
+          "p95": 0.05163542553782463
+        }
+      },
+      {
+        "camera": "grazing",
+        "variant": "2.0 sRGB curves",
+        "metrics": {
+          "meanDeltaE": 0.887654197731122,
+          "p95DeltaE": 1.689675727989593,
+          "noticeable": 0.006304012345679013
+        },
+        "flip": {
+          "mean": 0.03351660937065254,
+          "median": 0.032414644956588745,
+          "p95": 0.05532628670334816
+        }
+      },
+      {
+        "camera": "grazing",
+        "variant": "2.0 gamma 2.2 (1.x color)",
+        "metrics": {
+          "meanDeltaE": 0.5499441424126426,
+          "p95DeltaE": 0.8092925775758862,
+          "noticeable": 0.004274691358024691
+        },
+        "flip": {
+          "mean": 0.02760272955014828,
+          "median": 0.032414644956588745,
+          "p95": 0.04729899391531944
+        }
+      },
+      {
+        "camera": "far",
+        "variant": "2.0 sRGB curves",
+        "metrics": {
+          "meanDeltaE": 0.08138368568991056,
+          "p95DeltaE": 0,
+          "noticeable": 0.002283950617283951
+        },
+        "flip": {
+          "mean": 0.0023430667365579236,
+          "median": 0,
+          "p95": 0.0005547596956603229
+        }
+      },
+      {
+        "camera": "far",
+        "variant": "2.0 gamma 2.2 (1.x color)",
+        "metrics": {
+          "meanDeltaE": 0.04936850516716382,
+          "p95DeltaE": 0,
+          "noticeable": 0.0017978395061728396
+        },
+        "flip": {
+          "mean": 0.0019062386890580638,
+          "median": 0,
+          "p95": 0.0006279616500250995
+        }
+      }
+    ],
+    "models": [
+      {
+        "mode": "unlit",
+        "model": "Box",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.022698975176153408,
+        "flipGamma": 0.0017840774134089995,
+        "flipGammaP95": 0.004558808635920286,
+        "warnings": ""
+      },
+      {
+        "mode": "unlit",
+        "model": "BoxTextured",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.01663474153845246,
+        "flipGamma": 0.001976905852036967,
+        "flipGammaP95": 0.005520347040146589,
+        "warnings": ""
+      },
+      {
+        "mode": "unlit",
+        "model": "BoxVertexColors",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.023078218278456443,
+        "flipGamma": 0.001993025467613092,
+        "flipGammaP95": 0.0042176684364676476,
+        "warnings": ""
+      },
+      {
+        "mode": "unlit",
+        "model": "BoxInterleaved",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.022698975176153408,
+        "flipGamma": 0.0017840774134089995,
+        "flipGammaP95": 0.004558808635920286,
+        "warnings": ""
+      },
+      {
+        "mode": "unlit",
+        "model": "TorusQuantized",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.017680890297770587,
+        "flipGamma": 0.003000096523071527,
+        "flipGammaP95": 0.006170979700982571,
+        "warnings": ""
+      },
+      {
+        "mode": "unlit",
+        "model": "MeshoptCubeTest",
+        "status": "ok",
+        "draws": 35,
+        "batches": 35,
+        "flipSrgb": 0.0077273705316315625,
+        "flipGamma": 0.0057407790767775154,
+        "flipGammaP95": 0.03619134798645973,
+        "warnings": ""
+      },
+      {
+        "mode": "unlit",
+        "model": "BoomBox",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.011308884783252758,
+        "flipGamma": 0.0055909002425396466,
+        "flipGammaP95": 0.03538395091891289,
+        "warnings": ""
+      },
+      {
+        "mode": "unlit",
+        "model": "UnlitTest",
+        "status": "ok",
+        "draws": 2,
+        "batches": 2,
+        "flipSrgb": 0.017593761147706107,
+        "flipGamma": 0.0022425734819413183,
+        "flipGammaP95": 0.008769748732447624,
+        "warnings": ""
+      },
+      {
+        "mode": "unlit",
+        "model": "TwoSidedPlane",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.009490666795947955,
+        "flipGamma": 0.0038161796290617418,
+        "flipGammaP95": 0.023678552359342575,
+        "warnings": ""
+      },
+      {
+        "mode": "unlit",
+        "model": "BoxCutout",
+        "status": "ok (translucent: drawn opaque until OIT, M4)",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.16604755411620195,
+        "flipGamma": 0.15256311999930727,
+        "flipGammaP95": 0.9699193835258484,
+        "warnings": ""
+      },
+      {
+        "mode": "unlit",
+        "model": "Duck",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.02457661367371046,
+        "flipGamma": 0.009274695551791773,
+        "flipGammaP95": 0.0340789332985878,
+        "warnings": ""
+      },
+      {
+        "mode": "unlit",
+        "model": "CesiumMilkTruck",
+        "status": "ok",
+        "draws": 5,
+        "batches": 4,
+        "flipSrgb": 0.015129375843831061,
+        "flipGamma": 0.0033240520472583293,
+        "flipGammaP95": 0.013258902356028557,
+        "warnings": ""
+      },
+      {
+        "mode": "unlit",
+        "model": "BoxVertexColorsDracoRGB",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.02306247080745901,
+        "flipGamma": 0.0019808096832665,
+        "flipGammaP95": 0.0040793404914438725,
+        "warnings": ""
+      },
+      {
+        "mode": "unlit",
+        "model": "BoxTexturedKtx2Basis",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.024265101235151573,
+        "flipGamma": 0.020570003585912818,
+        "flipGammaP95": 0.06036965921521187,
+        "warnings": ""
+      },
+      {
+        "mode": "unlit",
+        "model": "BoxMixedCompression",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.012615832356571693,
+        "flipGamma": 0.0018797201470491182,
+        "flipGammaP95": 0.00021811365149915218,
+        "warnings": ""
+      },
+      {
+        "mode": "unlit",
+        "model": "BuildingsMetadata",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.010340859465959142,
+        "flipGamma": 0.004939234849241272,
+        "flipGammaP95": 0.023666225373744965,
+        "picks": "35/35 agree (10 features hit)",
+        "warnings": ""
+      },
+      {
+        "mode": "direct",
+        "model": "Box",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.017752613930682826,
+        "flipGamma": 0.00493787438842188,
+        "flipGammaP95": 0.03425813838839531,
+        "warnings": ""
+      },
+      {
+        "mode": "direct",
+        "model": "BoxTextured",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.020448340674792904,
+        "flipGamma": 0.005683586893166088,
+        "flipGammaP95": 0.056062210351228714,
+        "warnings": ""
+      },
+      {
+        "mode": "direct",
+        "model": "BoxVertexColors",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.022634524317378488,
+        "flipGamma": 0.006323786293543719,
+        "flipGammaP95": 0.05425577238202095,
+        "warnings": ""
+      },
+      {
+        "mode": "direct",
+        "model": "BoxInterleaved",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.007950947720409428,
+        "flipGamma": 0.005069615695268535,
+        "flipGammaP95": 0.04020153358578682,
+        "warnings": ""
+      },
+      {
+        "mode": "direct",
+        "model": "TorusQuantized",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.01167506994706615,
+        "flipGamma": 0.0029010364941411473,
+        "flipGammaP95": 0.015383845195174217,
+        "warnings": ""
+      },
+      {
+        "mode": "direct",
+        "model": "MeshoptCubeTest",
+        "status": "ok",
+        "draws": 35,
+        "batches": 35,
+        "flipSrgb": 0.0026626200381609285,
+        "flipGamma": 0.00228339483209111,
+        "flipGammaP95": 0.017169862985610962,
+        "warnings": ""
+      },
+      {
+        "mode": "direct",
+        "model": "BoomBox",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.010594377666014934,
+        "flipGamma": 0.0034103977883172152,
+        "flipGammaP95": 0.01814892329275608,
+        "warnings": ""
+      },
+      {
+        "mode": "direct",
+        "model": "UnlitTest",
+        "status": "ok",
+        "draws": 2,
+        "batches": 2,
+        "flipSrgb": 0.017593761147706107,
+        "flipGamma": 0.0022425734819413183,
+        "flipGammaP95": 0.008769748732447624,
+        "warnings": ""
+      },
+      {
+        "mode": "direct",
+        "model": "TwoSidedPlane",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.015587052168514923,
+        "flipGamma": 0.002534090335840124,
+        "flipGammaP95": 0.01569436676800251,
+        "warnings": ""
+      },
+      {
+        "mode": "direct",
+        "model": "BoxCutout",
+        "status": "ok (translucent: drawn opaque until OIT, M4)",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.2036883417519605,
+        "flipGamma": 0.1984244889216784,
+        "flipGammaP95": 0.9558411240577698,
+        "warnings": ""
+      },
+      {
+        "mode": "direct",
+        "model": "Duck",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.023222966263800597,
+        "flipGamma": 0.017612730927564615,
+        "flipGammaP95": 0.09193642437458038,
+        "warnings": ""
+      },
+      {
+        "mode": "direct",
+        "model": "CesiumMilkTruck",
+        "status": "ok",
+        "draws": 5,
+        "batches": 4,
+        "flipSrgb": 0.014570488676435648,
+        "flipGamma": 0.0042546951541943085,
+        "flipGammaP95": 0.025936061516404152,
+        "warnings": ""
+      },
+      {
+        "mode": "direct",
+        "model": "BoxVertexColorsDracoRGB",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.022502779008533244,
+        "flipGamma": 0.009046279431956879,
+        "flipGammaP95": 0.05424773320555687,
+        "warnings": ""
+      },
+      {
+        "mode": "direct",
+        "model": "BoxTexturedKtx2Basis",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.019437123482108586,
+        "flipGamma": 0.013715488001652325,
+        "flipGammaP95": 0.06459194421768188,
+        "warnings": ""
+      },
+      {
+        "mode": "direct",
+        "model": "BoxMixedCompression",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.006778974816683133,
+        "flipGamma": 0.0036444234604003003,
+        "flipGammaP95": 0.023263121023774147,
+        "warnings": ""
+      },
+      {
+        "mode": "direct",
+        "model": "BuildingsMetadata",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.011721617855545907,
+        "flipGamma": 0.0043074030016059615,
+        "flipGammaP95": 0.027387918904423714,
+        "warnings": ""
+      },
+      {
+        "mode": "ibl-diffuse",
+        "model": "Box",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.02218634712080737,
+        "flipGamma": 0.002801673519299696,
+        "flipGammaP95": 0.013304183259606361,
+        "warnings": ""
+      },
+      {
+        "mode": "ibl-diffuse",
+        "model": "BoxTextured",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.02182898256150371,
+        "flipGamma": 0.0049251966455030605,
+        "flipGammaP95": 0.028987541794776917,
+        "warnings": ""
+      },
+      {
+        "mode": "ibl-diffuse",
+        "model": "BoxVertexColors",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.02336492989269367,
+        "flipGamma": 0.0037172258525529386,
+        "flipGammaP95": 0.012474105693399906,
+        "warnings": ""
+      },
+      {
+        "mode": "ibl-diffuse",
+        "model": "BoxInterleaved",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.01560166469406487,
+        "flipGamma": 0.006533697084048063,
+        "flipGammaP95": 0.030354173853993416,
+        "warnings": ""
+      },
+      {
+        "mode": "ibl-diffuse",
+        "model": "TorusQuantized",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.021848475411657804,
+        "flipGamma": 0.01751868064119988,
+        "flipGammaP95": 0.04202913120388985,
+        "warnings": ""
+      },
+      {
+        "mode": "ibl-diffuse",
+        "model": "MeshoptCubeTest",
+        "status": "ok",
+        "draws": 35,
+        "batches": 35,
+        "flipSrgb": 0.005968787543382338,
+        "flipGamma": 0.004538620592619976,
+        "flipGammaP95": 0.033397022634744644,
+        "warnings": ""
+      },
+      {
+        "mode": "ibl-diffuse",
+        "model": "BoomBox",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.018398059700071526,
+        "flipGamma": 0.009772367133731256,
+        "flipGammaP95": 0.04313180595636368,
+        "warnings": ""
+      },
+      {
+        "mode": "ibl-diffuse",
+        "model": "UnlitTest",
+        "status": "ok",
+        "draws": 2,
+        "batches": 2,
+        "flipSrgb": 0.017593761147706107,
+        "flipGamma": 0.0022425734819413183,
+        "flipGammaP95": 0.008769748732447624,
+        "warnings": ""
+      },
+      {
+        "mode": "ibl-diffuse",
+        "model": "TwoSidedPlane",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.013908926728049156,
+        "flipGamma": 0.0030894626137572844,
+        "flipGammaP95": 0.019205287098884583,
+        "warnings": ""
+      },
+      {
+        "mode": "ibl-diffuse",
+        "model": "BoxCutout",
+        "status": "ok (translucent: drawn opaque until OIT, M4)",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.21396401216873653,
+        "flipGamma": 0.20995943350309856,
+        "flipGammaP95": 0.961876630783081,
+        "warnings": ""
+      },
+      {
+        "mode": "ibl-diffuse",
+        "model": "Duck",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.021141617245716667,
+        "flipGamma": 0.011151205883212355,
+        "flipGammaP95": 0.04960957169532776,
+        "warnings": ""
+      },
+      {
+        "mode": "ibl-diffuse",
+        "model": "CesiumMilkTruck",
+        "status": "ok",
+        "draws": 5,
+        "batches": 4,
+        "flipSrgb": 0.015779171316028497,
+        "flipGamma": 0.004680030719933937,
+        "flipGammaP95": 0.02507209964096546,
+        "warnings": ""
+      },
+      {
+        "mode": "ibl-diffuse",
+        "model": "BoxVertexColorsDracoRGB",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.02301274841508736,
+        "flipGamma": 0.005335199629486779,
+        "flipGammaP95": 0.017446627840399742,
+        "warnings": ""
+      },
+      {
+        "mode": "ibl-diffuse",
+        "model": "BoxTexturedKtx2Basis",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.02322542525388738,
+        "flipGamma": 0.017777710275596617,
+        "flipGammaP95": 0.05407091602683067,
+        "warnings": ""
+      },
+      {
+        "mode": "ibl-diffuse",
+        "model": "BoxMixedCompression",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.01619868073104477,
+        "flipGamma": 0.013136025923035888,
+        "flipGammaP95": 0.04161542281508446,
+        "warnings": ""
+      },
+      {
+        "mode": "ibl-diffuse",
+        "model": "BuildingsMetadata",
+        "status": "ok",
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.022278545108567763,
+        "flipGamma": 0.017975257868307087,
+        "flipGammaP95": 0.14753665030002594,
+        "warnings": ""
+      }
+    ],
+    "slang": {
+      "slangc WGSL validates: opaque (default)": "0 errors, 0 warnings",
+      "slangc WGSL validates: opaque (toon)": "0 errors, 0 warnings",
+      "slangc WGSL validates: prep": "0 errors, 0 warnings",
+      "image: WGSL vs Slang (same material)": "mean ΔE 0.000, pixels ΔE>2.3: 0.00%",
+      "GPU time, 1920×1080 PBR+IBL, 19882 draws, median of 7": "WGSL 3.837 ms · Slang 3.923 ms (2.2%)",
+      "prep hi/lo precision (max relative error)": "WGSL 5.96e-8, Slang 5.96e-8",
+      "WASM load + instantiate": "235 ms",
+      "createGlobalSession": "234 ms",
+      "compile opaque + ToonMaterial (cold)": "471 ms",
+      "compile opaque + ToonMaterial (warm)": "151 ms",
+      "runtime WGSL validates": "0 errors, 0 warnings",
+      "runtime output vs slangc output": "differs (21595 vs 22128 chars)",
+      "done": "✓"
+    },
+    "alloc": [
+      {
+        "draws": 1000,
+        "records": 1001,
+        "batches": 2,
+        "frames": 300,
+        "bytesPerFrame": 3198,
+        "engineBytesPerFrame": 3100,
+        "topEngineSites": [
+          {
+            "site": "groundPoint src/scene/ViewLink.ts:94",
+            "bytesPerFrame": 836
+          },
+          {
+            "site": "updateFootprint src/scene/ViewLink.ts:63",
+            "bytesPerFrame": 510
+          },
+          {
+            "site": "pixelRect src/scene/View.ts:173",
+            "bytesPerFrame": 417
+          },
+          {
+            "site": "(anonymous) src/scene/Engine.ts:606",
+            "bytesPerFrame": 267
+          },
+          {
+            "site": "execute src/render/FrameGraph.ts:67",
+            "bytesPerFrame": 179
+          },
+          {
+            "site": "(anonymous) src/scene/Engine.ts:668",
+            "bytesPerFrame": 149
+          },
+          {
+            "site": "eastNorthUpToFixedFrame src/math/transforms.ts:12",
+            "bytesPerFrame": 112
+          },
+          {
+            "site": "writeViewBlock src/render/layout.ts:11",
+            "bytesPerFrame": 111
+          },
+          {
+            "site": "renderFrame src/scene/Engine.ts:332",
+            "bytesPerFrame": 105
+          },
+          {
+            "site": "compiled src/render/FrameGraph.ts:96",
+            "bytesPerFrame": 90
+          },
+          {
+            "site": "acquire src/render/FrameGraph.ts:177",
+            "bytesPerFrame": 84
+          },
+          {
+            "site": "onMapped src/gpu/GpuTimer.ts:107",
+            "bytesPerFrame": 45
+          }
+        ]
+      },
+      {
+        "draws": 10000,
+        "records": 10001,
+        "batches": 2,
+        "frames": 300,
+        "bytesPerFrame": 2191,
+        "engineBytesPerFrame": 2124,
+        "topEngineSites": [
+          {
+            "site": "groundPoint src/scene/ViewLink.ts:94",
+            "bytesPerFrame": 594
+          },
+          {
+            "site": "updateFootprint src/scene/ViewLink.ts:63",
+            "bytesPerFrame": 484
+          },
+          {
+            "site": "(anonymous) src/scene/Engine.ts:606",
+            "bytesPerFrame": 255
+          },
+          {
+            "site": "(anonymous) src/scene/Engine.ts:668",
+            "bytesPerFrame": 156
+          },
+          {
+            "site": "eastNorthUpToFixedFrame src/math/transforms.ts:12",
+            "bytesPerFrame": 114
+          },
+          {
+            "site": "writeViewBlock src/render/layout.ts:11",
+            "bytesPerFrame": 112
+          },
+          {
+            "site": "compiled src/render/FrameGraph.ts:96",
+            "bytesPerFrame": 82
+          },
+          {
+            "site": "mapped src/gpu/GpuTimer.ts:52",
+            "bytesPerFrame": 54
+          },
+          {
+            "site": "renderFrame src/scene/Engine.ts:332",
+            "bytesPerFrame": 52
+          },
+          {
+            "site": "encodePrep src/scene/World.ts:553",
+            "bytesPerFrame": 49
+          },
+          {
+            "site": "onMapped src/gpu/GpuTimer.ts:107",
+            "bytesPerFrame": 42
+          },
+          {
+            "site": "writeView src/scene/Engine.ts:421",
+            "bytesPerFrame": 38
+          }
+        ]
+      }
+    ],
+    "tileset": [
+      {
+        "mode": "unlit",
+        "source": "BatchedWithBatchTable (b3dm, RTC_CENTER, JSON batch table)",
+        "status": "ok",
+        "contents": 1,
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.002124978892974065,
+        "flipGamma": 0.0015679384584099331,
+        "flipGammaP95": 0,
+        "picks": "35/35 agree on \"id\" (1 features hit)",
+        "properties": "id, Longitude, Latitude, Height, info, rooms",
+        "warnings": ""
+      },
+      {
+        "mode": "direct",
+        "source": "BatchedWithBatchTable (b3dm, RTC_CENTER, JSON batch table)",
+        "status": "ok",
+        "contents": 1,
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.0017010399511740834,
+        "flipGamma": 0.0012241508132124518,
+        "flipGammaP95": 0,
+        "picks": "35/35 agree on \"id\" (1 features hit)",
+        "properties": "id, Longitude, Latitude, Height, info, rooms",
+        "warnings": ""
+      },
+      {
+        "mode": "unlit",
+        "source": "BatchedWithBatchTableBinary (b3dm, binary batch table)",
+        "status": "ok",
+        "contents": 1,
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.002124978892974065,
+        "flipGamma": 0.0015679384584099331,
+        "flipGammaP95": 0,
+        "picks": "35/35 agree on \"id\" (1 features hit)",
+        "properties": "id, Longitude, Latitude, Height, cartographic, code",
+        "warnings": ""
+      },
+      {
+        "mode": "direct",
+        "source": "BatchedWithBatchTableBinary (b3dm, binary batch table)",
+        "status": "ok",
+        "contents": 1,
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.0017010399511740834,
+        "flipGamma": 0.0012241508132124518,
+        "flipGammaP95": 0,
+        "picks": "35/35 agree on \"id\" (1 features hit)",
+        "properties": "id, Longitude, Latitude, Height, cartographic, code",
+        "warnings": ""
+      },
+      {
+        "mode": "unlit",
+        "source": "BatchedWithTransformBox (tile transform)",
+        "status": "ok",
+        "contents": 1,
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.002188333506474637,
+        "flipGamma": 0.0015964730736041757,
+        "flipGammaP95": 0,
+        "picks": "35/35 agree on \"id\" (2 features hit)",
+        "properties": "id, Longitude, Latitude, Height",
+        "warnings": ""
+      },
+      {
+        "mode": "direct",
+        "source": "BatchedWithTransformBox (tile transform)",
+        "status": "ok",
+        "contents": 1,
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.0016922286325190326,
+        "flipGamma": 0.001165664541661233,
+        "flipGammaP95": 0,
+        "picks": "35/35 agree on \"id\" (2 features hit)",
+        "properties": "id, Longitude, Latitude, Height",
+        "warnings": ""
+      }
+    ],
+    "selection": [
+      {
+        "tileset": "Tileset",
+        "view": "close oblique",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 5,
+        "next": 5,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "Tileset",
+        "view": "far top-down",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 5,
+        "next": 5,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "Tileset",
+        "view": "street level",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 4,
+        "next": 4,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "Tileset",
+        "view": "viewer default",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 5,
+        "next": 5,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetOfTilesets",
+        "view": "close oblique",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 5,
+        "next": 5,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetOfTilesets",
+        "view": "far top-down",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 5,
+        "next": 5,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetOfTilesets",
+        "view": "street level",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 4,
+        "next": 4,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetOfTilesets",
+        "view": "viewer default",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 5,
+        "next": 5,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetRefinementMix",
+        "view": "close oblique",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 6,
+        "next": 6,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetRefinementMix",
+        "view": "far top-down",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 6,
+        "next": 6,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetRefinementMix",
+        "view": "street level",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 5,
+        "next": 5,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetRefinementMix",
+        "view": "viewer default",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 6,
+        "next": 6,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetReplacement1",
+        "view": "close oblique",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 4,
+        "next": 4,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetReplacement1",
+        "view": "far top-down",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 4,
+        "next": 4,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetReplacement1",
+        "view": "street level",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 3,
+        "next": 3,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetReplacement1",
+        "view": "viewer default",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 4,
+        "next": 4,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetReplacement2",
+        "view": "close oblique",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 1,
+        "next": 1,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetReplacement2",
+        "view": "far top-down",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 1,
+        "next": 1,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetReplacement2",
+        "view": "street level",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 2,
+        "next": 2,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetReplacement2",
+        "view": "viewer default",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 1,
+        "next": 1,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetReplacement3",
+        "view": "close oblique",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 4,
+        "next": 4,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetReplacement3",
+        "view": "far top-down",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 4,
+        "next": 4,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetReplacement3",
+        "view": "street level",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 3,
+        "next": 3,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetReplacement3",
+        "view": "viewer default",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 4,
+        "next": 4,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetWithViewerRequestVolume",
+        "view": "close oblique",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 5,
+        "next": 5,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetWithViewerRequestVolume",
+        "view": "far top-down",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 5,
+        "next": 5,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetWithViewerRequestVolume",
+        "view": "street level",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 5,
+        "next": 5,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetWithViewerRequestVolume",
+        "view": "viewer default",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 5,
+        "next": 5,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetWithTransforms",
+        "view": "close oblique",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 2,
+        "next": 2,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetWithTransforms",
+        "view": "far top-down",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 2,
+        "next": 2,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetWithTransforms",
+        "view": "street level",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 2,
+        "next": 2,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetWithTransforms",
+        "view": "viewer default",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 2,
+        "next": 2,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetUniform",
+        "view": "close oblique",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 16,
+        "next": 16,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetUniform",
+        "view": "far top-down",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 17,
+        "next": 17,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetUniform",
+        "view": "street level",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 10,
+        "next": 10,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetUniform",
+        "view": "viewer default",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 17,
+        "next": 17,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      }
+    ]
+  }
+}

@@ -3,6 +3,8 @@
  * bounding volumes in Earth-fixed coordinates (see volumes.ts). Content
  * state lives here too; selection policies only read the tree.
  */
+import type { ClipHandle } from "../scene/World.ts";
+import type { ContentSummary } from "./pipeline.ts";
 import * as m4 from "../math/mat4.ts";
 import * as v3 from "../math/vec3.ts";
 import type { Mat4 } from "../math/mat4.ts";
@@ -50,6 +52,11 @@ export class Tile {
   readonly headerKey: string;
   /** 1.x Cesium3DTileOptimizations: children's volumes lie within ours. */
   childrenWithinParent = false;
+  /**
+   * The children's boxes split this tile's volume (within it, overlapping
+   * little): a coarse placeholder can then be clipped to missing children.
+   */
+  childrenPartition = false;
 
   state: ContentState = "unloaded";
   instance?: ModelInstance;
@@ -65,8 +72,18 @@ export class Tile {
   appliedMask = -1;
   /** Views drawing this tile as a mixed-LOD placeholder this frame. */
   placeholderMask = 0;
-  /** Placeholder mask currently written to the draw records. */
+  /** The volumes it fills as a placeholder, over all views this frame. */
+  holes?: Set<Tile>;
+  /** Placeholder mask and holes currently written to the draw records. */
   appliedPlaceholderMask = 0;
+  appliedHoles?: Set<Tile>;
+  /** GPU clip boxes of `appliedHoles`. */
+  clip?: ClipHandle;
+  /** Pipeline timestamps: first wanted, and its fetch started. */
+  wantedAt = 0;
+  fetchStartAt = 0;
+  /** What the loaded content holds (diagnostics). */
+  summary?: ContentSummary;
   readonly views: TileViewState[] = [];
 
   constructor(
@@ -129,6 +146,8 @@ export class Tile {
       );
     }
     this.childrenWithinParent = checkChildrenWithinParent(this);
+    this.childrenPartition =
+      this.childrenWithinParent && checkChildrenPartition(this);
   }
 
   /** Empty: no content at all (1.x hasEmptyContent). */
@@ -182,6 +201,31 @@ export type TileJson = any;
 /** See `Tile.headerKey`; also applied to 1.x tile headers in parity tests. */
 export function tileHeaderKey(header: TileJson): string {
   return `${JSON.stringify(header.boundingVolume)}|${header.geometricError}`;
+}
+
+/**
+ * The children's boxes add up to little more than the parent's (≤ 1.25×), so
+ * they overlap little. Element-based subdivisions (design models) overlap
+ * heavily and fail.
+ */
+function checkChildrenPartition(tile: Tile): boolean {
+  const volume = (box: { halfAxes: Float64Array }) => {
+    const h = box.halfAxes;
+    return (
+      8 *
+      Math.abs(
+        h[0]! * (h[4]! * h[8]! - h[5]! * h[7]!) -
+          h[3]! * (h[1]! * h[8]! - h[2]! * h[7]!) +
+          h[6]! * (h[1]! * h[5]! - h[2]! * h[4]!),
+      )
+    );
+  };
+  const parentBox = volumeObb(tile.volume)!;
+  let sum = 0;
+  for (const child of tile.children) {
+    sum += volume(volumeObb(child.volume)!);
+  }
+  return sum <= 1.25 * volume(parentBox);
 }
 
 /** 1.x `Cesium3DTileOptimizations.checkChildrenWithinParent`. */

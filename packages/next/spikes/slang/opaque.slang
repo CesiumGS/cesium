@@ -20,6 +20,21 @@ struct Sh { float4 c[9]; };
 [[vk::binding(1, 1)]] StructuredBuffer<DrawInstance> instances;
 [[vk::binding(2, 1)]] StructuredBuffer<float> vertices;
 [[vk::binding(3, 1)]] StructuredBuffer<Material> materials;
+// Mixed-LOD clip boxes (see opaque.wgsl).
+[[vk::binding(4, 1)]] StructuredBuffer<float4> clipBoxes;
+static const uint CLIP_BOXES = 8;
+
+bool insideClipBoxes(uint block, uint count, float3 p) {
+  for (uint i = 0; i < count; i++) {
+    uint b = (block * CLIP_BOXES + i) * 5u;
+    float3 d = p - ((clipBoxes[b].xyz - view.cameraHi) + (clipBoxes[b + 1u].xyz - view.cameraLo));
+    float3 u = abs(float3(dot(clipBoxes[b + 2u].xyz, d), dot(clipBoxes[b + 3u].xyz, d), dot(clipBoxes[b + 4u].xyz, d)));
+    if (max(u.x, max(u.y, u.z)) <= 1.0) {
+      return true;
+    }
+  }
+  return false;
+}
 
 [[vk::binding(0, 2)]] Texture2D<float4> baseColorTexture;
 [[vk::binding(1, 2)]] Texture2D<float4> metallicRoughnessTexture;
@@ -87,13 +102,7 @@ VsOut vs(uint vertexIndex : SV_VertexID, VsIn input) {
   }
   float4 world = mul(m, float4(read3(r.positionOffset, vertexIndex), 1.0));
   o.relPosition = world.xyz;
-  // Mixed-LOD placeholder (see opaque.wgsl).
-  float4 clipWorld = world;
-  if ((r.placeholderMask & view.viewBit) != 0u) {
-    float d = max(length(world.xyz), 1e-3);
-    clipWorld = float4(world.xyz * (1.0 + r.depthOffset / d), 1.0);
-  }
-  o.position = mul(view.viewProj, clipWorld);
+  o.position = mul(view.viewProj, world);
   // Cofactor of the 3×3 part (the inverse transpose up to the determinant);
   // column j of the matrix is m[·][j].
   float3 c0 = float3(m[0][0], m[1][0], m[2][0]);
@@ -177,6 +186,11 @@ FsOut fs(VsOut input, bool frontFacing : SV_IsFrontFace) {
   Material_ material;
   Surface s = material.surface(si);
   if ((si.material.flags & 4u) != 0u && s.baseColor.a < si.material.alphaCutoff) {
+    discard;
+  }
+  // Mixed-LOD placeholder: only inside its clip boxes.
+  if ((r.placeholderMask & view.viewBit) != 0u &&
+      !insideClipBoxes(r.clipBlock, r.clipCount, input.relPosition)) {
     discard;
   }
 

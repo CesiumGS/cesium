@@ -193,6 +193,7 @@ async function createPipelines(
       storage(1, true, VERTEX), // instances
       storage(2, true, VERTEX), // vertex streams
       storage(3, true, FRAGMENT), // materials
+      storage(4, true, FRAGMENT), // mixed-LOD clip boxes
     ],
   });
   const textureSetLayout = device.createBindGroupLayout({

@@ -7,7 +7,10 @@ import {
   RECORD_SIZE,
   RECORD_WORDS,
   VIEW_MASK_WORD,
-  DEPTH_OFFSET_WORD,
+  CLIP_BLOCK_WORD,
+  CLIP_BOXES,
+  CLIP_BOX_FLOATS,
+  CLIP_COUNT_WORD,
   PLACEHOLDER_MASK_WORD,
   RecordFlags,
   writeDrawRecord,
@@ -16,6 +19,7 @@ import {
   type MeshStreams,
 } from "../render/layout.ts";
 import * as v3 from "../math/vec3.ts";
+import { splitVec3 } from "../math/transforms.ts";
 import type { Mat4 } from "../math/mat4.ts";
 import type { Vec3 } from "../math/vec3.ts";
 import type { MeshData } from "./meshes.ts";
@@ -28,6 +32,23 @@ export interface WorldOptions {
   maxMaterials?: number;
   vertexBytes?: number;
   indexBytes?: number;
+  /** Mixed-LOD clip blocks (placeholder tiles drawn at once; default 2048). */
+  maxClipBlocks?: number;
+}
+
+/**
+ * An oriented box in Earth-fixed coordinates: `rows` (3×3, row-major) maps an
+ * offset from `center` to box coordinates, inside when all lie in [-1, 1].
+ */
+export interface ClipBox {
+  center: ArrayLike<number>;
+  rows: ArrayLike<number>;
+}
+
+/** Clip boxes on the GPU, shared by the draws of one placeholder tile. */
+export interface ClipHandle {
+  readonly block: number;
+  readonly count: number;
 }
 
 export interface Usage {
@@ -171,6 +192,10 @@ export class World {
   private readonly drawFeatureFirst: number[] = [];
   private nextFeatureId = 1;
   private readonly freeSlots: number[] = [];
+  private readonly maxClipBlocks: number;
+  private clipBlockCount = 0;
+  private readonly freeClipBlocks: number[] = [];
+  private readonly clipScratch = new Float32Array(CLIP_BOXES * CLIP_BOX_FLOATS);
   private nextMeshId = 0;
   private drawCount = 0;
   private dirtyMin = Number.POSITIVE_INFINITY;
@@ -184,6 +209,8 @@ export class World {
   readonly recordBuffer: GPUBuffer;
   readonly instanceBuffer: GPUBuffer;
   readonly materialBuffer: GPUBuffer;
+  /** Mixed-LOD clip boxes, `CLIP_BOXES` per block. */
+  readonly clipBuffer: GPUBuffer;
   /** Visible record indices, compacted per batch by the prep kernel. */
   readonly instanceListBuffer: GPUBuffer;
   /** All record indices per batch, for "direct" submission. */
@@ -231,6 +258,12 @@ export class World {
       GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     );
     this.materialBuffer = buffer("materials", materials.byteLength, storage);
+    this.maxClipBlocks = options.maxClipBlocks ?? 2048;
+    this.clipBuffer = buffer(
+      "clipBoxes",
+      this.maxClipBlocks * this.clipScratch.byteLength,
+      storage,
+    );
     this.instanceListBuffer = buffer(
       "instanceList",
       this.maxDraws * 4,
@@ -279,6 +312,7 @@ export class World {
         this.instanceBuffer,
         this.vertexBuffer,
         this.materialBuffer,
+        this.clipBuffer,
       ].map((b, binding) => ({ binding, resource: { buffer: b } })),
     });
 
@@ -316,6 +350,7 @@ export class World {
         this.recordBuffer.size +
         this.instanceBuffer.size +
         this.materialBuffer.size +
+        this.clipBuffer.size +
         this.instanceListBuffer.size +
         this.indirectBuffer.size,
     };
@@ -592,18 +627,56 @@ export class World {
   }
 
   /**
-   * Marks a record as a mixed-LOD placeholder in the given views: drawn
-   * pushed back by `depthOffset` meters along the view ray, so finer content
-   * drawn over it wins the depth test while it fills the gaps.
+   * Uploads up to `CLIP_BOXES` clip boxes for a mixed-LOD placeholder, or
+   * returns undefined when there are too many or no block is free.
    */
-  setPlaceholder(handle: DrawHandle, mask: number, depthOffset: number): void {
+  allocateClip(boxes: readonly ClipBox[]): ClipHandle | undefined {
+    if (boxes.length === 0 || boxes.length > CLIP_BOXES) {
+      return undefined;
+    }
+    const block =
+      this.freeClipBlocks.pop() ??
+      (this.clipBlockCount < this.maxClipBlocks ? this.clipBlockCount++ : -1);
+    if (block < 0) {
+      return undefined;
+    }
+    const f = this.clipScratch;
+    f.fill(0);
+    boxes.forEach((box, i) => {
+      const o = i * CLIP_BOX_FLOATS;
+      splitVec3(box.center as Vec3, f, o, f, o + 4);
+      for (let k = 0; k < 3; k++) {
+        f[o + 8 + k] = box.rows[k]!;
+        f[o + 12 + k] = box.rows[3 + k]!;
+        f[o + 16 + k] = box.rows[6 + k]!;
+      }
+    });
+    this.ctx.device.queue.writeBuffer(this.clipBuffer, block * f.byteLength, f);
+    return { block, count: boxes.length };
+  }
+
+  freeClip(clip: ClipHandle): void {
+    this.freeClipBlocks.push(clip.block);
+  }
+
+  /**
+   * Makes a record a mixed-LOD placeholder in the views of `mask`: there it
+   * draws only inside `clip` (the volumes of its missing finer descendants),
+   * at its true depth. No clip restores normal drawing.
+   */
+  setPlaceholder(handle: DrawHandle, mask: number, clip?: ClipHandle): void {
     const o = handle.index * RECORD_WORDS;
+    const m = clip ? mask >>> 0 : 0;
+    const block = clip?.block ?? 0;
+    const count = clip?.count ?? 0;
     if (
-      this.recordsU32[o + PLACEHOLDER_MASK_WORD] !== mask >>> 0 ||
-      this.recordsF32[o + DEPTH_OFFSET_WORD] !== Math.fround(depthOffset)
+      this.recordsU32[o + PLACEHOLDER_MASK_WORD] !== m ||
+      this.recordsU32[o + CLIP_BLOCK_WORD] !== block ||
+      this.recordsU32[o + CLIP_COUNT_WORD] !== count
     ) {
-      this.recordsU32[o + PLACEHOLDER_MASK_WORD] = mask >>> 0;
-      this.recordsF32[o + DEPTH_OFFSET_WORD] = depthOffset;
+      this.recordsU32[o + PLACEHOLDER_MASK_WORD] = m;
+      this.recordsU32[o + CLIP_BLOCK_WORD] = block;
+      this.recordsU32[o + CLIP_COUNT_WORD] = count;
       this.markDirty(handle.index);
     }
   }
@@ -821,6 +894,7 @@ export class World {
       this.recordBuffer,
       this.instanceBuffer,
       this.materialBuffer,
+      this.clipBuffer,
       this.instanceListBuffer,
       this.directListBuffer,
       this.batchCountBuffer,

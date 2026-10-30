@@ -112,7 +112,8 @@
         padding-bottom: 12px;
       }
       select,
-      input[type="number"] {
+      input[type="number"],
+      input[type="text"] {
         background: #0f1420;
         color: var(--text);
         border: 1px solid #2f3a50;
@@ -180,6 +181,17 @@
       .meter .label {
         color: var(--muted);
       }
+      .meter .value.slowest {
+        color: var(--accent);
+      }
+      .meter .value {
+        font:
+          11px/16px ui-monospace,
+          monospace;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
       .meter .bar {
         position: relative;
         height: 16px;
@@ -211,7 +223,7 @@
       }
       #history {
         width: 100%;
-        height: 150px;
+        height: 240px;
         display: block;
       }
       aside h2 {
@@ -293,6 +305,12 @@
             <button id="ion-load">Load</button>
           </div>
           <div id="ion-hint" class="hint"></div>
+          <label class="hint" for="imodel">iTwin iModel (mesh export)</label>
+          <div class="row">
+            <input id="imodel" type="text" placeholder="iModel id" />
+            <button id="imodel-load">Load</button>
+          </div>
+          <div id="imodel-hint" class="hint"></div>
           <div class="row">
             <button id="city">Synthetic city</button>
             <button id="frame">Frame content</button>
@@ -308,6 +326,17 @@
             <option value="legacy1x">Legacy1x (matches CesiumJS 1.x)</option>
             <option value="next">Next (skip-LOD, cache reuse)</option>
           </select>
+          <label class="range"
+            >Max SSE (px)
+            <input
+              id="sse"
+              type="range"
+              min="0"
+              max="7"
+              step="0.25"
+              value="4" />
+            <output id="sse-value"></output
+          ></label>
           <label class="check"
             ><input id="split" type="checkbox" /> Split view (second independent
             camera)</label
@@ -333,14 +362,22 @@
         </div>
       </details>
 
-      <details class="section" data-key="memory" open>
-        <summary>Memory</summary>
+      <details class="section" data-key="performance" open>
+        <summary>Performance</summary>
         <div class="body">
-          <div id="memory" class="meter"></div>
+          <h2>Frame</h2>
+          <div id="perf-frame" class="meter"></div>
+          <h2 id="perf-streaming-title">Streaming</h2>
+          <div id="perf-streaming" class="meter"></div>
+          <h2 id="perf-content-title">Content</h2>
+          <div id="perf-content" class="meter"></div>
+          <h2>GPU memory</h2>
+          <div id="perf-memory" class="meter"></div>
           <canvas id="history"></canvas>
           <div class="hint">
-            Last 30 s: tile cache, render targets, requests in flight, CPU and
-            GPU frame time.
+            Last 30 s: tile cache, render targets, requests in flight (of the
+            cap), bytes received, upload queue, decode time, CPU and GPU frame
+            time.
           </div>
         </div>
       </details>
@@ -425,11 +462,6 @@
             <option value="gamma2.2">gamma 2.2 (1.x)</option>
           </select>
         </div>
-      </details>
-
-      <details class="section" data-key="stats">
-        <summary>Stats</summary>
-        <div class="body"><pre id="stats">starting…</pre></div>
       </details>
 
       <details class="section" data-key="warnings">

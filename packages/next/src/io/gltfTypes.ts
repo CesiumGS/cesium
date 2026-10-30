@@ -95,6 +95,23 @@ export interface GltfDraw {
   matrix: Float64Array;
 }
 
+/** How a content load spent its time in the worker, and its image types. */
+export interface ContentTiming {
+  /** Container: "glb", "gltf" (JSON with external resources) or "b3dm". */
+  format: string;
+  /** Request start to the last byte of the main resource, ms. */
+  networkMs: number;
+  /** Bytes of the main resource as received (after content decoding). */
+  bytes: number;
+  /**
+   * Everything after: unwrap, parse, Draco, image decode, KTX2 transcode,
+   * and fetching external buffers and images, ms.
+   */
+  decodeMs: number;
+  /** Texture images by source type. */
+  images: Record<string, number>;
+}
+
 export interface GltfAsset {
   meshes: GltfMesh[];
   materials: GltfMaterial[];
@@ -109,4 +126,6 @@ export interface GltfAsset {
   copyright?: string;
   /** Features skipped while parsing (unsupported extensions, attributes, modes). */
   warnings: string[];
+  /** Worker-side timing of the load. */
+  timing?: ContentTiming;
 }

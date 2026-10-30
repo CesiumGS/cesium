@@ -24,7 +24,9 @@ import {
   type SelectionResult,
   type SelectionView,
 } from "./Legacy1x.ts";
+import { CLIP_BOXES } from "../render/layout.ts";
 import type { Tile } from "./Tile.ts";
+import { OUTSIDE, volumeIntersectPlane } from "./volumes.ts";
 
 export interface NextOptions extends Legacy1xOptions {
   /**
@@ -38,33 +40,58 @@ export interface NextOptions extends Legacy1xOptions {
    * threshold (0 disables; default 0.25: up to two levels finer).
    */
   opportunisticRatio?: number;
+  /**
+   * Content just outside the view (`SelectionView.prefetchPlanes`) loads at
+   * this multiple of the SSE threshold (default 2: about a quarter of the
+   * bytes of full detail), so rotating and panning reveal loaded content.
+   * 0 disables prefetching.
+   */
+  prefetchErrorScale?: number;
+  /**
+   * Mixed LOD: while a region refines, draw the finer content that has
+   * arrived and let the coarse tile fill only the volumes still missing.
+   * "auto" (default) mixes where a tile's children partition its volume
+   * (photogrammetry, terrain-like quadtrees and octrees), and otherwise
+   * swaps whole regions at once (design models, whose children overlap and
+   * whose coarse tiles drop whole elements).
+   */
+  mixedLod?: "auto" | "always" | "never";
 }
 
 /** Request priority bands: base levels, then intermediates, then frontier. */
 const BASE = 0;
 const INTERMEDIATE = 1e11;
 const FRONTIER = 1e12;
+/** Content outside the view, after everything visible. */
+const PREFETCH = 1e13;
 /** No renderable ancestor is loaded (or requested) in this region yet. */
 const NONE = Number.POSITIVE_INFINITY;
 
 /**
  * The tiles drawing a region, and whether they cover all of it. Incomplete
- * covers still carry the finer content that has arrived; the nearest loaded
- * ancestor fills the rest as a placeholder.
+ * covers still carry the finer content that has arrived.
  */
 interface Cover {
   tiles: Tile[];
   complete: boolean;
+  /** Incomplete covers: the tiles whose regions have no content yet. */
+  holes: readonly Tile[];
 }
+
+const NO_HOLES: readonly Tile[] = [];
 
 export class NextSelection extends Legacy1xSelection {
   opportunisticRatio: number;
   skipLevels: number;
+  prefetchErrorScale: number;
+  mixedLod: "auto" | "always" | "never";
 
   constructor(options: NextOptions = {}) {
     super(options);
     this.opportunisticRatio = options.opportunisticRatio ?? 0.25;
     this.skipLevels = options.skipLevels ?? 2;
+    this.prefetchErrorScale = options.prefetchErrorScale ?? 2;
+    this.mixedLod = options.mixedLod ?? "auto";
   }
 
   override select(
@@ -78,7 +105,7 @@ export class NextSelection extends Legacy1xSelection {
       requested: [],
       touched: [],
       priority: new Map(),
-      placeholders: new Set(),
+      placeholders: new Map(),
     };
     const rootError = Number.isFinite(rootGeometricError)
       ? rootGeometricError
@@ -90,9 +117,13 @@ export class NextSelection extends Legacy1xSelection {
     if (!isVisible(root.viewState(view.id))) {
       return result;
     }
+    // The tileset's own geometric error says when the whole tileset is too
+    // small to draw. Without one (iTwin exports) the root's stands in only
+    // for refining it: the tileset is never hidden, as in 1.x.
     if (
+      Number.isFinite(rootGeometricError) &&
       this.screenSpaceError(root, view, true, rootError) <=
-      this.memoryAdjustedScreenSpaceError
+        this.memoryAdjustedScreenSpaceError
     ) {
       return result;
     }
@@ -103,8 +134,8 @@ export class NextSelection extends Legacy1xSelection {
 
   /**
    * The tiles that draw `tile`'s region in this view. An incomplete cover
-   * keeps whatever finer content has arrived; the caller's nearest loaded
-   * ancestor then draws under it as a placeholder (mixed LOD).
+   * keeps whatever finer content has arrived; the nearest loaded ancestor
+   * decides whether it or that content draws (see "hold" below).
    * `levels` counts renderable levels since the nearest loaded (or requested)
    * ancestor: NONE when there is none.
    */
@@ -123,7 +154,7 @@ export class NextSelection extends Legacy1xSelection {
     // An external tileset must load before its subtree is known.
     if (tile.external && tile.state !== "ready") {
       this.request(tile, BASE, state.distance, result);
-      return { tiles: [], complete: false };
+      return { tiles: [], complete: false, holes: [tile] };
     }
     const own: Tile[] | undefined = tile.contentAvailable
       ? [tile]
@@ -140,7 +171,15 @@ export class NextSelection extends Legacy1xSelection {
       // Frontier tile.
       if (own === undefined) {
         this.request(tile, FRONTIER + group, state.distance * 1e-3, result);
-        return { tiles: [], complete: false };
+        // Zooming out: finer content still resident keeps drawing until
+        // this tile arrives.
+        const finer =
+          tile.refine === "REPLACE"
+            ? this.fromCache(tile, view, pass, rootError, result)
+            : undefined;
+        return finer
+          ? { tiles: finer, complete: true, holes: NO_HOLES }
+          : { tiles: [], complete: false, holes: [tile] };
       }
       if (
         tile.refine === "REPLACE" &&
@@ -150,10 +189,10 @@ export class NextSelection extends Legacy1xSelection {
       ) {
         const finer = this.fromCache(tile, view, pass, rootError, result);
         if (finer) {
-          return { tiles: finer, complete: true };
+          return { tiles: finer, complete: true, holes: NO_HOLES };
         }
       }
-      return { tiles: own, complete: true };
+      return { tiles: own, complete: true, holes: NO_HOLES };
     }
 
     for (const child of tile.children) {
@@ -192,7 +231,9 @@ export class NextSelection extends Legacy1xSelection {
         this.request(tile, FRONTIER + group, state.distance * 1e-3, result);
       }
       for (const child of tile.children) {
-        if (isVisible(child.viewState(view.id))) {
+        if (!isVisible(child.viewState(view.id))) {
+          this.prefetch(child, view, pass, rootError, result);
+        } else {
           const d = this.display(
             child,
             view,
@@ -207,14 +248,19 @@ export class NextSelection extends Legacy1xSelection {
       }
       // ADD content draws in addition to its children; the region is
       // complete once this level's own content is present.
-      return { tiles: parts, complete: own !== undefined };
+      return own !== undefined
+        ? { tiles: parts, complete: true, holes: NO_HOLES }
+        : { tiles: parts, complete: false, holes: [tile] };
     }
 
     // REPLACE: the visible children must all be coverable.
     const parts: Tile[] = [];
+    const holes: Tile[] = [];
+    const missing: Tile[] = [];
     let complete = true;
     for (const child of tile.children) {
       if (!isVisible(child.viewState(view.id))) {
+        this.prefetch(child, view, pass, rootError, result);
         continue;
       }
       const d = this.display(
@@ -227,23 +273,107 @@ export class NextSelection extends Legacy1xSelection {
         result,
       );
       parts.push(...d.tiles);
-      complete &&= d.complete;
+      if (!d.complete) {
+        complete = false;
+        holes.push(...d.holes);
+        missing.push(child);
+      }
     }
     if (complete) {
-      return { tiles: parts, complete: true };
+      return { tiles: parts, complete: true, holes: NO_HOLES };
     }
     // Only real content covers the region; an empty tile can't, so the
     // nearest loaded ancestor fills it.
     if (own !== undefined && own.length > 0) {
-      if (parts.length > 0) {
-        // Mixed LOD: the arrived finer content draws in front; this tile
-        // fills the gaps, pushed back by its geometric error.
-        result.placeholders!.add(tile);
-        return { tiles: [tile, ...parts], complete: true };
+      // Mixed LOD: the arrived finer content draws, and this tile fills only
+      // the missing volumes, at its true depth (clipped per fragment). The
+      // finest holes when few enough, else the missing children.
+      if (parts.length > 0 && this.mixes(tile)) {
+        const clip =
+          holes.length <= CLIP_BOXES
+            ? holes
+            : missing.length <= CLIP_BOXES
+              ? missing
+              : undefined;
+        if (clip) {
+          result.placeholders!.set(tile, clip);
+          return {
+            tiles: [tile, ...parts],
+            complete: true,
+            holes: NO_HOLES,
+          };
+        }
       }
-      return { tiles: own, complete: true };
+      // Otherwise hold what this view drew last frame. A coarse tile stays until its
+      // region is complete (one swap, no mixed levels). Finer tiles already
+      // drawn stay while a newly visible neighbor loads: its gap waits
+      // (prefetch usually fills it first) instead of the whole region
+      // collapsing to this tile, which with skipped levels can be near the
+      // root.
+      if (
+        parts.length > 0 &&
+        !drawnLastFrame(tile, view) &&
+        parts.some((t) => drawnLastFrame(t, view))
+      ) {
+        return { tiles: parts, complete: false, holes };
+      }
+      return { tiles: own, complete: true, holes: NO_HOLES };
     }
-    return { tiles: parts, complete: false };
+    return {
+      tiles: parts,
+      complete: false,
+      holes: parts.length === 0 ? [tile] : holes,
+    };
+  }
+
+  private mixes(tile: Tile): boolean {
+    return (
+      this.mixedLod === "always" ||
+      (this.mixedLod === "auto" && tile.childrenPartition)
+    );
+  }
+
+  /**
+   * Requests what `tile` would display if it came into view, when it lies in
+   * the guard band around the frustum: at the lowest priority and
+   * `prefetchErrorScale` times coarser, so it is cheap and never delays
+   * visible content.
+   */
+  private prefetch(
+    tile: Tile,
+    view: SelectionView,
+    pass: number,
+    rootError: number,
+    result: SelectionResult,
+  ): void {
+    const planes = view.prefetchPlanes;
+    if (
+      !planes ||
+      this.prefetchErrorScale <= 0 ||
+      !insidePlanes(tile, planes)
+    ) {
+      return;
+    }
+    result.touched.push(tile);
+    const state = tile.viewState(view.id);
+    if (tile.external && tile.state !== "ready") {
+      this.request(tile, PREFETCH, state.distance, result);
+      return;
+    }
+    const refine =
+      tile.children.length > 0 &&
+      (!tile.renderable ||
+        state.sse >
+          this.memoryAdjustedScreenSpaceError * this.prefetchErrorScale);
+    if (tile.renderable && (!refine || tile.refine === "ADD")) {
+      this.request(tile, PREFETCH, state.distance, result);
+    }
+    if (refine) {
+      for (const child of tile.children) {
+        this.updateTile(child, view, pass, rootError);
+        this.prefetch(child, view, pass, rootError, result);
+      }
+    }
   }
 
   /** Finer resident content covering `tile`'s visible children, if any. */
@@ -302,4 +432,24 @@ export class NextSelection extends Legacy1xSelection {
       result.priority!.set(tile, priority);
     }
   }
+}
+
+/** Whether this view drew the tile's content in the previous frame. */
+function drawnLastFrame(tile: Tile, view: SelectionView): boolean {
+  return tile.appliedMask !== -1 && (tile.appliedMask & (1 << view.id)) !== 0;
+}
+
+/** Whether the tile's volume reaches inside all of `planes`. */
+function insidePlanes(tile: Tile, planes: Float64Array): boolean {
+  for (let k = 0; k < planes.length; k += 4) {
+    const r = volumeIntersectPlane(
+      tile.volume,
+      planes.subarray(k, k + 3),
+      planes[k + 3]!,
+    );
+    if (r === OUTSIDE) {
+      return false;
+    }
+  }
+  return true;
 }

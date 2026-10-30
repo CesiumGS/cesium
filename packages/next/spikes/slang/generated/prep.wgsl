@@ -35,9 +35,9 @@ struct DrawRecord_std430_0
     @align(8) imagerySlice_0 : u32,
     @align(4) featureIdOffset_0 : u32,
     @align(16) viewMask_0 : u32,
-    @align(4) depthOffset_0 : f32,
+    @align(4) clipBlock_0 : u32,
     @align(8) placeholderMask_0 : u32,
-    @align(4) recordPad2_0 : u32,
+    @align(4) clipCount_0 : u32,
 };
 
 @binding(0) @group(1) var<storage, read> records_0 : array<DrawRecord_std430_0>;

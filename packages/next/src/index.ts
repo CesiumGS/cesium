@@ -68,5 +68,14 @@ export {
   type IonAsset,
   type IonOptions,
 } from "./io/ion.ts";
+export { resolveITwinIModel, type ITwinOptions } from "./io/itwin.ts";
+export {
+  STAGES,
+  summarizeContent,
+  type ContentSummary,
+  type ContentTotals,
+  type Stage,
+  type StageStats,
+} from "./streaming/pipeline.ts";
 export { type ModelInstance, type ModelOptions } from "./scene/gltfModel.ts";
 export { MaterialFlags } from "./render/layout.ts";

@@ -1,8 +1,12 @@
 // Runs the M0 spikes and benchmarks in Playwright's Chromium and writes one
 // JSON file per run to bench/results/.
 //
-//   npm run dev --workspace @cesium/next          # in another terminal
 //   node packages/next/bench/run.mjs [suite ...]  # suites: see below
+//
+// The runner serves the pages from its own Vite server with file watching
+// and HMR off, so editing code mid-run can't reload the page being measured
+// (BENCH_URL=<origin> uses an existing server instead). The Slang suite
+// needs SLANG_WASM_DIR, as for the dev server.
 //
 // Chromium flags: WebGPU developer features (unquantized timestamp queries)
 // and the high-performance GPU on dual-GPU machines. Results record the
@@ -13,8 +17,20 @@ import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { chromium } from "@playwright/test";
 
-const BASE = process.env.BENCH_URL ?? "http://127.0.0.1:5190";
 const here = dirname(fileURLToPath(import.meta.url));
+let BASE = process.env.BENCH_URL;
+let server;
+if (!BASE) {
+  const { createServer } = await import("vite");
+  server = await createServer({
+    root: join(here, ".."),
+    configFile: join(here, "..", "vite.config.ts"),
+    server: { port: 5191, strictPort: false, hmr: false, watch: null },
+    logLevel: "error",
+  });
+  await server.listen();
+  BASE = server.resolvedUrls.local[0].replace(/\/$/, "");
+}
 
 /** page path → global function that runs it and returns JSON-serializable results */
 const suites = {
@@ -30,7 +46,7 @@ const suites = {
   // Public Specs tilesets; ION_ASSET=<id> (with VITE_ION_TOKEN in .env.local)
   // runs a private ion asset instead, without the id entering the repo.
   lod: [
-    `/parity/lod.html?bench${process.env.ION_ASSET ? `&asset=${process.env.ION_ASSET}` : ""}${process.env.AT ? `&at=${process.env.AT}` : ""}`,
+    `/parity/lod.html?bench${process.env.ION_ASSET ? `&asset=${process.env.ION_ASSET}` : ""}${process.env.IMODEL ? `&imodel=${process.env.IMODEL}` : ""}${process.env.AT ? `&at=${process.env.AT}` : ""}`,
     "runLod",
   ],
   selection: [
@@ -44,6 +60,50 @@ const suites = {
   // Driven through CDP by `allocSuite` below.
   alloc: ["/bench/alloc.html", "allocSetup"],
 };
+
+/**
+ * L1′ on a slow network: references render unthrottled, then the page and
+ * its dedicated workers (where tile fetches run; each is its own DevTools
+ * target) get 20 Mbit/s, 80 ms latency and no HTTP cache.
+ */
+async function throttledLod(page) {
+  await page.evaluate(() => globalThis.runLodReference());
+  // A shared 20 Mbit/s link with 80 ms latency for remote content, applied
+  // at the request router (which, unlike CDP network emulation, also sees
+  // worker fetches). route.fetch() bypasses the browser cache.
+  const latencyMs = 80;
+  const bytesPerMs = (20 * 1024 * 1024) / 8 / 1000;
+  let linkFreeAt = 0;
+  let throttled = 0;
+  let failed = 0;
+  await page.context().route(
+    (url) => url.hostname !== "127.0.0.1" && url.hostname !== "localhost",
+    async (route) => {
+      try {
+        const response = await route.fetch();
+        const body = await response.body();
+        const start = Math.max(performance.now() + latencyMs, linkFreeAt);
+        linkFreeAt = start + body.length / bytesPerMs;
+        await new Promise((r) =>
+          setTimeout(r, Math.max(0, linkFreeAt - performance.now())),
+        );
+        throttled++;
+        await route.fulfill({ response, body });
+      } catch (error) {
+        // Fetch failed or the page dropped the request: pass it through.
+        if (failed++ === 0) {
+          console.log(
+            `(throttle passthrough: ${error.message.split("\n")[0]}) `,
+          );
+        }
+        await route.continue().catch(() => {});
+      }
+    },
+  );
+  const rows = await page.evaluate(() => globalThis.runLod());
+  console.log(`(${throttled} throttled requests, ${failed} passed through) `);
+  return rows;
+}
 
 const ALLOC_FRAMES = 300;
 
@@ -180,10 +240,13 @@ for (const name of names) {
   results[name] =
     name === "alloc"
       ? await allocSuite(page)
-      : await page.evaluate((f) => globalThis[f](), fn);
+      : name === "lod" && process.env.THROTTLE
+        ? await throttledLod(page)
+        : await page.evaluate((f) => globalThis[f](), fn);
   console.log(`${((performance.now() - started) / 1000).toFixed(1)} s`);
 }
 await browser.close();
+await server?.close();
 
 const stamp = new Date().toISOString().replace(/[:.]/g, "-");
 const gpu =

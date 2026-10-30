@@ -288,21 +288,26 @@ export class Engine {
       const camera = view.camera;
       const p = camera.position;
       // World-space planes in float64: camera-relative planes shifted by the
-      // camera position, plus 1.x's far plane (5e8 m).
-      const planes = new Float64Array(24);
-      camera.frustumPlanes(planes, aspect);
-      for (let k = 0; k < 5; k++) {
-        planes[k * 4 + 3] =
-          planes[k * 4 + 3]! -
-          (planes[k * 4]! * p[0]! +
-            planes[k * 4 + 1]! * p[1]! +
-            planes[k * 4 + 2]! * p[2]!);
-      }
+      // camera position, plus 1.x's far plane (5e8 m). The prefetch band
+      // widens the half-angle tangents by 1.25 (about 6° per side at 60°).
       const d = camera.direction;
-      planes[20] = -d[0]!;
-      planes[21] = -d[1]!;
-      planes[22] = -d[2]!;
-      planes[23] = d[0]! * p[0]! + d[1]! * p[1]! + d[2]! * p[2]! + 5e8;
+      const worldPlanes = (widen: number) => {
+        const planes = new Float64Array(24);
+        camera.frustumPlanes(planes, aspect, widen);
+        for (let k = 0; k < 5; k++) {
+          planes[k * 4 + 3] =
+            planes[k * 4 + 3]! -
+            (planes[k * 4]! * p[0]! +
+              planes[k * 4 + 1]! * p[1]! +
+              planes[k * 4 + 2]! * p[2]!);
+        }
+        planes[20] = -d[0]!;
+        planes[21] = -d[1]!;
+        planes[22] = -d[2]!;
+        planes[23] = d[0]! * p[0]! + d[1]! * p[1]! + d[2]! * p[2]! + 5e8;
+        return planes;
+      };
+      const planes = worldPlanes(1);
       const pixelRatio =
         view.target instanceof CanvasTarget
           ? (globalThis.devicePixelRatio ?? 1)
@@ -317,6 +322,7 @@ export class Engine {
           height: 0,
         }) ?? { longitude: 0, latitude: 0, height: 0 },
         planes,
+        prefetchPlanes: worldPlanes(1.25),
         sseDenominator: 2 * Math.tan(camera.fovy(aspect) / 2),
         height: rect.height / pixelRatio,
       });
