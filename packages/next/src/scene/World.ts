@@ -651,6 +651,8 @@ export class World {
   setImageryArray(view: GPUTextureView): void {
     this.imageryView = view;
     this.createDrawBindGroup();
+    // The cached bundle binds the old group (and its soon-destroyed array).
+    this.bundle = undefined;
     this.changedViews = ALL_VIEWS;
     this.version++;
   }

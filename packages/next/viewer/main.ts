@@ -830,11 +830,13 @@ async function main(): Promise<void> {
   async function swapGlobe(): Promise<void> {
     const token = ++globeToken;
     const target = world;
+    const terrain = terrainToggle.checked && !scenePhotorealistic;
+    // Under photorealistic tiles the surface stays the ellipsoid.
+    if (terrain === currentTerrain?.url.startsWith("http")) {
+      return;
+    }
     try {
-      const globe = await createGlobe(
-        target,
-        terrainToggle.checked && !scenePhotorealistic,
-      );
+      const globe = await createGlobe(target, terrain);
       if (token !== globeToken || target !== world) {
         engine.removeTileset(globe.tileset);
         return;

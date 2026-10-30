@@ -61,6 +61,14 @@ const CAMERAS = [
     pitch: -55,
     range: 150000,
   },
+  // The viewer's framing for ?at=-121.76,46.80,9000 (over the ellipsoid).
+  {
+    label: "Rainier viewer framing",
+    at: [-121.76, 46.8, 0],
+    heading: 35,
+    pitch: -30,
+    range: 9000,
+  },
 ];
 
 interface Row {
@@ -104,13 +112,13 @@ function heatmap(errors: Float32Array): ImageData {
   return image;
 }
 
-async function createViewer(token: string): Promise<Json> {
+async function createViewer(token: string, ellipsoid: boolean): Promise<Json> {
   Cesium.Ion.defaultAccessToken = token;
   const viewer = new Cesium.Viewer("legacy", {
     baseLayer: Cesium.ImageryLayer.fromProviderAsync(
       Cesium.IonImageryProvider.fromAssetId(2),
     ),
-    terrain: Cesium.Terrain.fromWorldTerrain(),
+    ...(ellipsoid ? {} : { terrain: Cesium.Terrain.fromWorldTerrain() }),
     skyBox: false,
     skyAtmosphere: false,
     animation: false,
@@ -138,7 +146,7 @@ async function createViewer(token: string): Promise<Json> {
   // Wait for the terrain and imagery providers.
   await new Promise<void>((resolve) => {
     const check = () =>
-      scene.globe.terrainProvider?.availability !== undefined &&
+      (ellipsoid || scene.globe.terrainProvider?.availability !== undefined) &&
       scene.imageryLayers.get(0)?.ready
         ? resolve()
         : setTimeout(check, 50);
@@ -160,7 +168,9 @@ async function runImagery(): Promise<Row[]> {
     resolveIonAsset(1, { accessToken: token }),
     BingImagery.fromIon(2, { accessToken: token }),
   ]);
-  const viewer = await createViewer(token);
+  // ?ellipsoid: the globe without terrain in both engines.
+  const ellipsoid = params.has("ellipsoid");
+  const viewer = await createViewer(token, ellipsoid);
   const engine = await Engine.create();
   const rows: Row[] = [];
 
@@ -177,11 +187,13 @@ async function runImagery(): Promise<Row[]> {
       });
       const target = new OffscreenTarget(WIDTH, HEIGHT);
       const view = engine.addView({ target, world, clearColor: [0, 0, 0] });
-      const tileset: Tileset3D = await engine.addTerrain(world, terrain.url, {
-        headers: terrain.headers,
-        policy: "legacy1x",
-        imagery,
-      });
+      const tileset: Tileset3D = ellipsoid
+        ? engine.addEllipsoid(world, { policy: "legacy1x", imagery })
+        : await engine.addTerrain(world, terrain.url, {
+            headers: terrain.headers,
+            policy: "legacy1x",
+            imagery,
+          });
       if (tileset.selection instanceof GlobeLegacy1xSelection) {
         tileset.selection.fog = false;
       }

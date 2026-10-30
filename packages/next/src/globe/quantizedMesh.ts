@@ -40,7 +40,8 @@ export interface TerrainTileInfo {
   maximumHeight: number;
   /** Earth-fixed bounding sphere. */
   sphere: { center: [number, number, number]; radius: number };
-  horizonOcclusionPoint: [number, number, number];
+  /** Undefined when none exists (a tile spanning a hemisphere). */
+  horizonOcclusionPoint?: [number, number, number];
   /**
    * The point 1.x culls the tile with: the header's, or for a tile reaching
    * below the ellipsoid one recomputed from its vertices against an
@@ -290,7 +291,7 @@ interface TerrainTileData {
   minimumHeight: number;
   maximumHeight: number;
   sphere: { center: [number, number, number]; radius: number };
-  horizonOcclusionPoint: [number, number, number];
+  horizonOcclusionPoint?: [number, number, number] | undefined;
   /** Quantized u, v, height per vertex (0..32767), v from the south. */
   u: Uint16Array;
   v: Uint16Array;
@@ -372,9 +373,11 @@ export function flatTerrainTile(
     minimumHeight: 0,
     maximumHeight: 0,
     sphere: { center, radius },
+    // None for very large tiles (their points don't all face one way):
+    // they are never horizon-culled.
     horizonOcclusionPoint: occludee
       ? [occludee[0]!, occludee[1]!, occludee[2]!]
-      : [0, 0, 0],
+      : undefined,
     u,
     v,
     h,
@@ -520,7 +523,7 @@ function buildTerrainTile(d: TerrainTileData): {
       minimumHeight,
       maximumHeight,
       sphere,
-      horizonOcclusionPoint,
+      ...(horizonOcclusionPoint ? { horizonOcclusionPoint } : {}),
       ...(occludee ? { occludee } : {}),
       quadrants,
       ...(available ? { available } : {}),
