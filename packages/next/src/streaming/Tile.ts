@@ -193,6 +193,8 @@ export class Tile {
 /** Shared by all tiles of one tileset (and its external tilesets). */
 export interface TileTree {
   readonly warnings: Set<string>;
+  /** Implicit trees (terrain) report tiles they create as they grow. */
+  tilesAdded?(count: number): void;
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any -- tileset JSON is untyped */

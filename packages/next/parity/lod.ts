@@ -68,8 +68,14 @@ interface Row {
   settleMs?: number;
   flip250?: number;
   flip1000?: number;
-  /** Mean FLIP sampled every 500 ms from the move until settled. */
+  /**
+   * Mean FLIP over the same horizon for every policy in a move (the slowest
+   * settle), each held at its settled image once done: how good it looked
+   * over the same N seconds.
+   */
   flipAverage?: number;
+  /** FLIP every 500 ms until settled, for the common-horizon average. */
+  trace?: number[];
   flipSettled?: number;
   selected?: number;
 }
@@ -185,7 +191,8 @@ interface Measurement {
   megabytes: number;
   settleMs: number;
   flips: Record<number, number>;
-  flipAverage?: number;
+  /** FLIP every 500 ms from the move until settled. */
+  trace: number[];
   selected: number;
 }
 
@@ -272,14 +279,11 @@ async function measure(
     const settleMs = performance.now() - start;
     e.renderFrame();
     const image = await target.read();
-    let flipAverage: number | undefined;
     if (reference) {
       const settled = flip(reference, image, WIDTH, HEIGHT).mean;
       for (const at of marks) {
         flips[at] = settled; // settled before this mark
       }
-      samples.push(settled);
-      flipAverage = samples.reduce((a, b) => a + b, 0) / samples.length;
     }
     return {
       image,
@@ -287,7 +291,7 @@ async function measure(
       megabytes: (tileset.stats.bytesTotal - bytes0) / 1048576,
       settleMs,
       flips,
-      ...(flipAverage !== undefined ? { flipAverage } : {}),
+      trace: samples,
       selected: tileset.stats.selected.get(id) ?? 0,
     };
   } finally {
@@ -335,9 +339,7 @@ async function runLod(): Promise<Row[]> {
           settleMs: r.settleMs,
           flip250: r.flips[250],
           flip1000: r.flips[1000],
-          ...(r.flipAverage !== undefined
-            ? { flipAverage: r.flipAverage }
-            : {}),
+          trace: r.trace,
           flipSettled: flip(reference, r.image, WIDTH, HEIGHT).mean,
           selected: r.selected,
         });
@@ -350,6 +352,22 @@ async function runLod(): Promise<Row[]> {
       }
       renderTable(rows);
     }
+    // Common horizon: the slowest settle in this move; each policy holds its
+    // settled image after it settles.
+    const done = rows.filter(
+      (r) =>
+        r.scenario === scenario.name && r.trace && r.flipSettled !== undefined,
+    );
+    const horizon = Math.max(0, ...done.map((r) => r.trace!.length));
+    for (const r of done) {
+      let sum = 0;
+      for (let i = 0; i < horizon; i++) {
+        sum += r.trace![i] ?? r.flipSettled!;
+      }
+      r.flipAverage = horizon > 0 ? sum / horizon : r.flipSettled!;
+      delete r.trace;
+    }
+    renderTable(rows);
   }
   status.textContent = "done";
   return rows;

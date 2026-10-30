@@ -5,10 +5,12 @@ import { defineConfig, type Plugin } from "vitest/config";
 
 // CesiumJS 1.x core math, used only as a test oracle for parity checks.
 const oracle = fileURLToPath(new URL("../core/Source", import.meta.url));
-// Built CesiumJS 1.x (`npm run build` at the repo root), for the parity harness.
-const cesium1x = fileURLToPath(
-  new URL("../../Build/CesiumUnminified", import.meta.url),
-);
+// Built CesiumJS 1.x (`npm run build` at the repo root), for the parity
+// harness. CESIUM_BUILD_DIR overrides it (benchmark snapshots of a commit
+// use the main checkout's build).
+const cesium1x =
+  process.env.CESIUM_BUILD_DIR ??
+  fileURLToPath(new URL("../../Build/CesiumUnminified", import.meta.url));
 
 const contentTypes: Record<string, string> = {
   ".js": "text/javascript",

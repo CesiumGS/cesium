@@ -5,8 +5,11 @@
 //
 // The runner serves the pages from its own Vite server with file watching
 // and HMR off, so editing code mid-run can't reload the page being measured
-// (BENCH_URL=<origin> uses an existing server instead). The Slang suite
-// needs SLANG_WASM_DIR, as for the dev server.
+// (BENCH_URL=<origin> uses an existing server instead). BENCH_COMMIT=<rev>
+// (e.g. HEAD) serves that commit from a worktree under .bench/ instead of the
+// working tree, so development continues while benchmarks run (see
+// snapshot.mjs). The Slang suite needs SLANG_WASM_DIR, as for the dev
+// server.
 //
 // Chromium flags: WebGPU developer features (unquantized timestamp queries)
 // and the high-performance GPU on dual-GPU machines. Results record the
@@ -20,12 +23,38 @@ import { chromium } from "@playwright/test";
 const here = dirname(fileURLToPath(import.meta.url));
 let BASE = process.env.BENCH_URL;
 let server;
+let commit;
 if (!BASE) {
+  let root = join(here, "..");
+  let allow;
+  if (process.env.BENCH_COMMIT) {
+    const { snapshot } = await import("./snapshot.mjs");
+    const snap = snapshot(process.env.BENCH_COMMIT, here);
+    root = snap.root;
+    commit = snap.sha;
+    // The main checkout's 1.x build, and its node_modules (resolved by
+    // walking up from .bench/<sha>), served without links.
+    process.env.CESIUM_BUILD_DIR ??= join(
+      snap.repo,
+      "Build",
+      "CesiumUnminified",
+    );
+    allow = [snap.repo];
+    console.log(`commit ${commit.slice(0, 12)} (${root})`);
+  }
   const { createServer } = await import("vite");
   server = await createServer({
-    root: join(here, ".."),
-    configFile: join(here, "..", "vite.config.ts"),
-    server: { port: 5191, strictPort: false, hmr: false, watch: null },
+    root,
+    configFile: join(root, "vite.config.ts"),
+    // Its own dependency cache inside the served tree.
+    cacheDir: join(root, ".vite-bench"),
+    server: {
+      port: 5191,
+      strictPort: false,
+      hmr: false,
+      watch: null,
+      ...(allow ? { fs: { allow } } : {}),
+    },
     logLevel: "error",
   });
   await server.listen();
@@ -259,7 +288,7 @@ mkdirSync(outDir, { recursive: true });
 const file = join(outDir, `${stamp}-${gpu}.json`);
 writeFileSync(
   file,
-  `${JSON.stringify({ date: new Date().toISOString(), environment, errors, results }, null, 2)}\n`,
+  `${JSON.stringify({ date: new Date().toISOString(), ...(commit ? { commit } : {}), environment, errors, results }, null, 2)}\n`,
 );
 console.log(`wrote ${file}`);
 if (errors.length > 0) {
