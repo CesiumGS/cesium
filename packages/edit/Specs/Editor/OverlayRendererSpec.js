@@ -6,6 +6,7 @@ import {
   destroyObject,
 } from "@cesium/core";
 import { SceneTransforms } from "@cesium/engine";
+import { ComponentType } from "@cesium/mesh-editor";
 import { MeshEditorModule, OverlayRenderer } from "../../index.js";
 import createCanvas from "../../../../Specs/createCanvas.js";
 import createScene from "../../../../Specs/createScene.js";
@@ -108,6 +109,17 @@ const faceColor = [214, 214, 214, 255];
 const selectedPointColor = [255, 122, 0, 255];
 const selectedEdgeColor = [0, 199, 255, 255];
 const selectedFaceColor = [255, 43, 155, 255];
+
+// The square as one quad face, made of two triangles.
+const quad = {
+  ...square,
+  edges: square.edges.slice(0, 4),
+  triangles: [
+    [0, 1, 2, 0],
+    [0, 2, 3, 0],
+  ],
+  faceCount: 1,
+};
 
 // Vertices only.
 const points = {
@@ -301,19 +313,20 @@ describe(
       return commands.map((command) => command.instanceCount);
     }
 
-    // Renders a frame and reads the pixel under a position in the overlay's local space.
-    function renderPixel(overlay, position) {
-      scene.renderForSpecs();
-
+    // Converts a position in the overlay's local space to window coordinates.
+    function getWindowPosition(overlay, position) {
       const positionWC = Matrix4.multiplyByPoint(
         overlay.modelMatrix,
         Cartesian3.fromArray(position),
         new Cartesian3(),
       );
-      const windowPosition = SceneTransforms.worldToWindowCoordinates(
-        scene,
-        positionWC,
-      );
+      return SceneTransforms.worldToWindowCoordinates(scene, positionWC);
+    }
+
+    // Renders a frame and reads the pixel under a position in the overlay's local space.
+    function renderPixel(overlay, position) {
+      scene.renderForSpecs();
+      const windowPosition = getWindowPosition(overlay, position);
 
       // Window coordinates start at the top, and pixels at the bottom.
       return scene.context.readPixels({
@@ -322,6 +335,16 @@ describe(
         width: 1,
         height: 1,
       });
+    }
+
+    // Renders a frame, which uploads the overlay, then picks at a position in
+    // the overlay's local space.
+    function expectPick(overlay, position, expected) {
+      scene.renderForSpecs();
+      expect(scene).toPickAndCall(
+        (result) => expect(result).toEqual(expected),
+        getWindowPosition(overlay, position),
+      );
     }
 
     function expectPixel(overlay, position, color) {
@@ -514,17 +537,69 @@ describe(
     });
 
     describe("picking", function () {
-      it("picks a vertex");
+      it("picks a vertex", function () {
+        const overlay = addSquare();
 
-      it("picks an edge");
+        expectPick(overlay, [1.0, 1.0, 0.0], {
+          primitive: overlay.mesh,
+          componentType: ComponentType.Vertex,
+          index: 2,
+        });
+      });
 
-      it("picks a face");
+      it("picks an edge", function () {
+        const overlay = addSquare();
 
-      it("picks a face by its face index, not its triangle index");
+        // The middle of the bottom edge.
+        expectPick(overlay, [0.0, -1.0, 0.0], {
+          primitive: overlay.mesh,
+          componentType: ComponentType.Edge,
+          index: 0,
+        });
+      });
+
+      it("picks a face", function () {
+        const overlay = addSquare();
+
+        expectPick(overlay, [0.5, -0.5, 0.0], {
+          primitive: overlay.mesh,
+          componentType: ComponentType.Face,
+          index: 0,
+        });
+        expectPick(overlay, [-0.5, 0.5, 0.0], {
+          primitive: overlay.mesh,
+          componentType: ComponentType.Face,
+          index: 1,
+        });
+      });
+
+      it("picks a face by its face index, not its triangle index", function () {
+        const overlay = new OverlayTestPrimitive(shaders);
+        overlay.setOverlay(quad);
+        scene.primitives.add(overlay);
+
+        const faceZero = {
+          primitive: overlay.mesh,
+          componentType: ComponentType.Face,
+          index: 0,
+        };
+
+        // Inside each of the quad's two triangles.
+        expectPick(overlay, [0.5, -0.5, 0.0], faceZero);
+        expectPick(overlay, [-0.5, 0.5, 0.0], faceZero);
+      });
 
       it("picks transparent faces");
 
-      it("returns pick objects with its mesh as primitive");
+      it("returns pick objects with its mesh as primitive", function () {
+        const overlay = addSquare();
+        scene.renderForSpecs();
+
+        expect(scene).toPickAndCall(
+          (result) => expect(result.primitive).toBe(overlay.mesh),
+          getWindowPosition(overlay, [0.5, -0.5, 0.0]),
+        );
+      });
     });
 
     describe("destroy", function () {
