@@ -124,6 +124,7 @@ import ImageryLayerCollection from "./ImageryLayerCollection.js";
  * @property {boolean} [vectorClassificationOnly=false] Indicates that only the tileset's vector tiles should be used for classification.
  * @property {boolean} [vectorKeepDecodedPositions=false] Whether vector tiles should keep decoded positions in memory. This is used with {@link Cesium3DTileFeature.getPolylinePositions}.
  * @property {BlendOption} [vectorBlendOption=BlendOption.TRANSLUCENT] Determines how vector primitives in the tileset are blended with the scene. Must be {@link BlendOption.OPAQUE} or {@link BlendOption.TRANSLUCENT}; {@link BlendOption.OPAQUE_AND_TRANSLUCENT} is not supported.
+ * @property {boolean} [vectorGeoJson=false] Whether GeoJSON content is loaded as vector primitives instead of as a model. Vector primitives fill polygons, where the model draws only their outlines.
  * @property {string|number} [featureIdLabel="featureId_0"] Label of the feature ID set to use for picking and styling. For EXT_mesh_features, this is the feature ID's label property, or "featureId_N" (where N is the index in the featureIds array) when not specified. EXT_feature_metadata did not have a label field, so such feature ID sets are always labeled "featureId_N" where N is the index in the list of all feature Ids, where feature ID attributes are listed before feature ID textures. If featureIdLabel is an integer N, it is converted to the string "featureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @property {string|number} [instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @property {boolean} [showCreditsOnScreen=false] Whether to display the credits of this tileset on screen.
@@ -375,6 +376,8 @@ function Cesium3DTileset(options) {
 
   this._vectorBlendOption =
     options.vectorBlendOption ?? BlendOption.TRANSLUCENT;
+
+  this._vectorGeoJson = options.vectorGeoJson ?? false;
 
   /**
    * The collection of <code>ImageryLayer</code> objects providing 2D georeferenced
@@ -2098,6 +2101,23 @@ Object.defineProperties(Cesium3DTileset.prototype, {
     },
     set: function (value) {
       this._vectorBlendOption = value;
+    },
+  },
+
+  /**
+   * Whether GeoJSON content is loaded as vector primitives instead of as a model.
+   *
+   * @memberof Cesium3DTileset.prototype
+   *
+   * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+   *
+   * @type {boolean}
+   * @default false
+   * @readonly
+   */
+  vectorGeoJson: {
+    get: function () {
+      return this._vectorGeoJson;
     },
   },
 

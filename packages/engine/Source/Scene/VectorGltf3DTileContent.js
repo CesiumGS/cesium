@@ -1,6 +1,12 @@
 // @ts-check
 
-import { DeveloperError, Matrix4, defined, destroyObject } from "@cesium/core";
+import {
+  DeveloperError,
+  Ellipsoid,
+  Matrix4,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import BufferPoint from "./BufferPoint.js";
 import BufferPointCollection from "./BufferPointCollection.js";
 import BufferPointMaterial from "./BufferPointMaterial.js";
@@ -10,21 +16,23 @@ import BufferPolygonMaterial from "./BufferPolygonMaterial.js";
 import BufferPolyline from "./BufferPolyline.js";
 import BufferPolylineCollection from "./BufferPolylineCollection.js";
 import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
+import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js";
 import Cesium3DTileStyle from "./Cesium3DTileStyle.js";
+import Cesium3DTileVectorFeature from "./Cesium3DTileVectorFeature.js";
+import { createGeoJsonCollections } from "./GeoJsonPrimitive.js";
+import HeightReference, { isHeightReferenceClamp } from "./HeightReference.js";
 import Model from "./Model/Model.js";
 import ModelUtility from "./Model/ModelUtility.js";
 import Pass from "../Renderer/Pass.js";
 import VectorProvider from "../Core/VectorProvider.js";
 import createVectorTileBuffersFromModelComponents from "./Model/createVectorTileBuffersFromModelComponents.js";
-import { isHeightReferenceClamp } from "./HeightReference.js";
 
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */
 /** @import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js"; */
 /** @import { Cartesian3 } from "@cesium/core"; */
 /** @import Cesium3DContentGroup from "./Cesium3DContentGroup.js"; */
 /** @import Cesium3DTile from "./Cesium3DTile.js"; */
-/** @import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js"; */
-/** @import Cesium3DTileVectorFeature from "./Cesium3DTileVectorFeature.js";*/
+/** @import { GeoJson } from "../Core/globalTypes.js"; */
 /** @import Cesium3DTileset from "./Cesium3DTileset.js"; */
 /** @import { Color } from "@cesium/core"; */
 /** @import FrameState from "./FrameState.js"; */
@@ -50,8 +58,8 @@ const polygonMaterial = new BufferPolygonMaterial();
 const scratchTileModelMatrix = new Matrix4();
 
 /**
- * Vector glTF tile content. This path decodes glTF primitives into vector
- * buffers, then renders with dedicated vector primitives.
+ * Vector tile content. This path decodes glTF primitives or GeoJSON features
+ * into vector buffers, then renders with dedicated vector primitives.
  *
  * @ignore
  */
@@ -96,6 +104,13 @@ class VectorGltf3DTileContent {
      * @type {Map<number, Map<number, Cesium3DTileVectorFeature>>}
      */
     this._featuresByTableId = new Map();
+
+    /**
+     * Batch tables owned by this content. Content loaded from glTF uses the
+     * model's feature tables instead.
+     * @type {Cesium3DTileBatchTable[]}
+     */
+    this._batchTables = [];
 
     /** @type {ImplicitMetadataView} */
     this._metadata = undefined;
@@ -177,7 +192,9 @@ class VectorGltf3DTileContent {
 
   /** @type {Cesium3DTileBatchTable[]} */
   get batchTables() {
-    return this._model._featureTables;
+    return defined(this._model)
+      ? this._model._featureTables
+      : this._batchTables;
   }
 
   /**
@@ -387,6 +404,10 @@ class VectorGltf3DTileContent {
 
     this._model?.destroy();
     this._model = undefined;
+    for (const batchTable of this._batchTables) {
+      batchTable.destroy();
+    }
+    this._batchTables.length = 0;
     for (const collection of this._collections) {
       vectorProvider?.remove(collection);
       collection.destroy();
@@ -411,6 +432,76 @@ class VectorGltf3DTileContent {
     content._model = model;
     return content;
   }
+
+  /**
+   * @param {Cesium3DTileset} tileset
+   * @param {Cesium3DTile} tile
+   * @param {Resource} resource
+   * @param {GeoJson} geoJson
+   * @returns {VectorGltf3DTileContent}
+   */
+  static fromGeoJson(tileset, tile, resource, geoJson) {
+    const content = new VectorGltf3DTileContent(tileset, tile, resource);
+
+    /** @type {Map<number, Cesium3DTileVectorFeature>} */
+    const features = new Map();
+    /** @type {Map<BufferPrimitiveCollection<BufferPrimitive>, number>} */
+    const collectionIndices = new Map();
+
+    const { ids, properties } = createGeoJsonCollections(geoJson, {
+      ellipsoid: Ellipsoid.WGS84,
+      heightReference: HeightReference.NONE,
+      createPickObject: (featureId, index, collection) => {
+        let collectionIndex = collectionIndices.get(collection);
+        if (!defined(collectionIndex)) {
+          collectionIndex = content._collections.length;
+          collectionIndices.set(collection, collectionIndex);
+          content._collections.push(collection);
+          content._collectionLocalMatrices.push(Matrix4.IDENTITY);
+          content._collectionFeatureTableIds.set(collection, 0);
+        }
+
+        let feature = features.get(featureId);
+        if (!defined(feature)) {
+          feature = new Cesium3DTileVectorFeature(content, featureId);
+          features.set(featureId, feature);
+        }
+        feature.addPrimitiveByCollection(collectionIndex, index);
+        return feature;
+      },
+    });
+
+    content._featuresByTableId.set(0, features);
+    content._batchTables.push(
+      new Cesium3DTileBatchTable(
+        content,
+        ids.length,
+        createBatchTableJson(properties),
+      ),
+    );
+    content._ready = true;
+    return content;
+  }
+}
+
+/**
+ * Builds a JSON batch table with one array per property name. Missing and null
+ * values are stored as empty strings, as in the Model path for GeoJSON content.
+ *
+ * @param {Array<Record<string, unknown>>} properties
+ * @returns {Record<string, unknown[]>}
+ * @ignore
+ */
+function createBatchTableJson(properties) {
+  /** @type {Record<string, unknown[]>} */
+  const batchTableJson = {};
+  for (let i = 0; i < properties.length; i++) {
+    for (const name of Object.keys(properties[i])) {
+      batchTableJson[name] ??= new Array(properties.length).fill("");
+      batchTableJson[name][i] = properties[i][name] ?? "";
+    }
+  }
+  return batchTableJson;
 }
 
 /**
