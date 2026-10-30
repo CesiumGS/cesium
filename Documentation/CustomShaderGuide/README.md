@@ -907,3 +907,51 @@ The `FragmentInput` struct in a voxel shader has some differences with other cus
 - `Metadata` is fully supported.
 - `MetadataClass` is not present.
 - `MetadataStatistics`: The only supported statistics are `min` and `max`.
+
+## Using custom shaders for Gaussian splat rendering
+
+Gaussian splat tilesets (using the `KHR_gaussian_splatting` glTF extension) support a subset of custom shader functionality. The custom shader is set on the tileset, as with other 3D Tiles:
+
+```js
+tileset.customShader = new Cesium.CustomShader({
+  uniforms: {
+    u_tint: {
+      type: Cesium.UniformType.VEC3,
+      value: new Cesium.Cartesian3(1.0, 0.5, 0.5),
+    },
+  },
+  fragmentShaderText: `
+    void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
+      material.diffuse *= u_tint;
+      // Hide the splats of the feature with ID 0
+      if (fsInput.attributes.featureId_0 == 0) {
+        material.alpha = 0.0;
+      }
+    }
+  `,
+});
+```
+
+The supplied shader is executed in the fragment shader _only_. If a `vertexShaderText` is supplied, it will be ignored. Splat positions, scales and rotations are decoded and projected by a built-in vertex shader, and each splat is drawn as a camera-facing quad. The fragment shader is then executed for every fragment of that quad that lies within the Gaussian footprint of the splat.
+
+Since there is no custom vertex shader, `varyings` are not supported. Uniforms, including texture uniforms, are supported.
+
+The `FragmentInput` struct for Gaussian splats only contains an `Attributes` struct, with the following properties:
+
+| Attribute                     | Type   | Description                                                                                                                                                                                                           |
+| ----------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `positionEC`                  | `vec3` | Position of the fragment in eye coordinates, reconstructed from the depth of the splat quad. All fragments of a splat lie on a plane facing the camera, at the depth of the splat center.                             |
+| `positionWC`                  | `vec3` | Same position in world coordinates (ECEF).                                                                                                                                                                            |
+| `normalEC`                    | `vec3` | Always `vec3(0.0, 0.0, 1.0)`: splats have no surface normal, so the quad is treated as facing the camera.                                                                                                             |
+| `color_0`                     | `vec4` | Color of the splat at this fragment, not premultiplied. `rgb` includes the view-dependent spherical harmonics contribution, if present. `a` is the splat opacity multiplied by the Gaussian falloff at this fragment. |
+| `featureId_0`...`featureId_3` | `int`  | Per-splat feature IDs from `EXT_mesh_features`, one field per feature ID set. At most 4 sets are supported; additional sets are ignored. `featureId_0` is `0` when the tileset has no feature IDs.                    |
+
+`FeatureIds`, `Metadata`, `MetadataClass` and `MetadataStatistics` are not present in Gaussian splat shaders. Feature IDs are accessed through `fsInput.attributes.featureId_N` rather than `fsInput.featureIds`.
+
+The `material` passed to `fragmentMain` is initialized with the splat color: `material.diffuse` is `color_0.rgb` and `material.alpha` is `color_0.a`. No lighting is applied to Gaussian splats, so only `material.diffuse` and `material.alpha` affect the final color. Other material properties, as well as `mode` and `lightingModel`, are ignored.
+
+The `translucencyMode` option controls how splats are blended:
+
+- `CustomShaderTranslucencyMode.INHERIT` (default): splats are sorted and blended in the Gaussian splat pass, as without a custom shader.
+- `CustomShaderTranslucencyMode.OPAQUE`: splats are rendered in the 3D Tiles pass with blending disabled and depth writes enabled.
+- `CustomShaderTranslucencyMode.TRANSLUCENT`: splats are rendered in the translucent pass with pre-multiplied alpha blending.

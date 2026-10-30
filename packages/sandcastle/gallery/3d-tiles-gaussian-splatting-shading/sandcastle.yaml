@@ -1,0 +1,8 @@
+title: "3D Tiles Gaussian Splats – Custom Shaders"
+description: Apply custom shaders to a 3D Tiles Gaussian splatting dataset. Switch between a height-based rainbow colorization (blue for low elevations, red for high) and a classification-based colorization that tints each splat according to per-feature metadata stored in a property table.
+labels:
+  - Showcases
+  - 3D Tiles
+  - Gaussian Splats
+  - Custom Shaders
+thumbnail: thumbnail.jpg
