@@ -791,8 +791,70 @@ async function main(): Promise<void> {
     } catch {
       // Ignore.
     }
-    void load(current);
+    void swapGlobe();
   });
+
+  // The scene's globe inputs, kept so the surface can be swapped in place.
+  let sceneImagery: BingImagery | undefined;
+  let scenePhotorealistic = false;
+  let terrainAttributions: IonAttribution[] = [];
+
+  /** Cesium World Terrain (ion asset 1) or the ellipsoid, with the imagery. */
+  async function createGlobe(
+    target: World,
+    terrain: boolean,
+  ): Promise<{ tileset: Tileset3D; attributions: IonAttribution[] }> {
+    const options = {
+      policy: policySelect.value as "legacy1x" | "budgeted",
+      ...(sceneImagery ? { imagery: sceneImagery } : {}),
+    };
+    if (!terrain) {
+      return {
+        tileset: engine.addEllipsoid(target, options),
+        attributions: [],
+      };
+    }
+    const ion = await resolveIon(1);
+    const tileset = await engine.addTerrain(target, ion.url, {
+      headers: ion.headers,
+      ...options,
+    });
+    return { tileset, attributions: ion.attributions };
+  }
+
+  /**
+   * Switches between Cesium World Terrain and the ellipsoid in the current
+   * world: content, camera and globe visibility stay as they are.
+   */
+  let globeToken = 0;
+  async function swapGlobe(): Promise<void> {
+    const token = ++globeToken;
+    const target = world;
+    try {
+      const globe = await createGlobe(
+        target,
+        terrainToggle.checked && !scenePhotorealistic,
+      );
+      if (token !== globeToken || target !== world) {
+        engine.removeTileset(globe.tileset);
+        return;
+      }
+      globe.tileset.show = globeToggle.checked;
+      // The new globe already bound its imagery array to the world.
+      if (currentTerrain) {
+        engine.removeTileset(currentTerrain);
+      }
+      currentTerrain = globe.tileset;
+      attributions = attributions
+        .filter((a) => !terrainAttributions.includes(a))
+        .concat(globe.attributions);
+      terrainAttributions = globe.attributions;
+    } catch (error) {
+      loadWarnings.add(
+        `terrain: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
   const globeToggle = $<HTMLInputElement>("#globe");
   globeToggle.addEventListener("change", () => {
     if (currentTerrain) {
@@ -1071,20 +1133,15 @@ async function main(): Promise<void> {
       if (imagery) {
         attributions.push(...imagery.attributions);
       }
-      const globeOptions = {
-        policy: policySelect.value as "legacy1x" | "budgeted",
-        ...(imagery ? { imagery } : {}),
-      };
-      if (terrainToggle.checked && !photorealistic) {
-        const ion = await resolveIon(1);
-        attributions.push(...ion.attributions);
-        nextTerrain = await engine.addTerrain(next, ion.url, {
-          headers: ion.headers,
-          ...globeOptions,
-        });
-      } else {
-        nextTerrain = engine.addEllipsoid(next, globeOptions);
-      }
+      sceneImagery = imagery;
+      scenePhotorealistic = photorealistic;
+      const globe = await createGlobe(
+        next,
+        terrainToggle.checked && !photorealistic,
+      );
+      nextTerrain = globe.tileset;
+      terrainAttributions = globe.attributions;
+      attributions.push(...globe.attributions);
       if (token !== loadToken) {
         throw new Error("superseded");
       }
