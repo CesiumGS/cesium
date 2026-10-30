@@ -25,6 +25,7 @@ Branch: `cesium-2.0-webgpu-poc` (off `main` @ `587f52f1eb`, CesiumJS 1.146.0)
 | r17 | M2 increment 2: OSM Buildings streams with 100% selection parity (Philadelphia, Manhattan); batch-table hierarchy; resize robustness (frame ordering, bounded render-target memory); viewer split view, memory panel and collapsible sections.                                                                                                                                           |
 | r18 | M2 increment 3: photogrammetry. Google Photorealistic 3D Tiles stream via ion with required credits; L1 selection parity 100% in four simultaneous views (22–164 tiles), after fixing a traversal-visibility bug in the port. Memory-adjusted SSE. Memory management recorded as an open design question.                                                                                |
 | r19 | M2 increment 4: `Next` policy v1 (skip-LOD with bounded skipping, visible-only coverage, cache reuse, region-grouped requests) and the L1′ harness. On Google 3D Tiles: 53% fewer requests, 48% fewer bytes, same final image, settles 1.6× faster (2.5× with 64 requests); in-between quality lags 1.x until mixed-LOD drawing lands.                                                   |
+| r20 | §13: design notes for tile selection beyond `Legacy1x` (mixed-LOD drawing, scheduling, budget-driven refinement, multi-view priority, quality signals) and the engine memory model.                                                                                                                                                                                                      |
 
 ## 1. Goal
 
@@ -1234,8 +1235,8 @@ photogrammetry stream, with ≥ 99% L1 in multiple views (100% measured).
 
 ### Open design question: memory management
 
-1.x's static 512 + 512 MiB per tileset is the parity default, not a design.
-To work out before `Next` and M5:
+See §13.6 for the fuller notes. 1.x's static 512 + 512 MiB per tileset is
+the parity default, not a design. To work out before `Next` and M5:
 
 - One engine-wide GPU budget shared by tilesets, render targets and textures,
   arbitrated by benefit/cost across tilesets and views, rather than caps per
@@ -1288,13 +1289,7 @@ remaining gap is in-between quality: `Next` keeps a region's coarse
 ancestor until all its visible frontier tiles have arrived, while 1.x's
 level-by-level refinement (at twice the bytes) improves in small steps.
 
-**Next step: mixed-LOD drawing.** Draw arrived children together with their
-coarse ancestor, the ancestor pushed back in depth by its geometric error
-(the bound on how far its surface deviates), so finer content wins wherever
-it exists and the ancestor fills only the gaps. Regions then sharpen tile by
-tile with no holes or z-fighting. 1.x's skip-LOD needed stencil passes for
-this; a per-record depth offset in the vertex shader does it within one
-GPU-driven pass.
+**Next step: mixed-LOD drawing** (§13.1).
 
 Next:
 
@@ -1305,3 +1300,138 @@ Next:
 4. Silhouette weighting for design models; GPU coverage feedback (HZB).
 5. Move the traversal off the main thread over a transferable (SoA) tile
    table.
+
+## 13. Design notes: tile selection and memory beyond `Legacy1x`
+
+Working notes for the `Next` policy and the engine's memory model, written
+during M2 so the ideas survive the session. Each item states the problem,
+the approach in this engine, and how L1′ (or another harness) measures it.
+`Legacy1x` stays as the parity reference throughout. Nothing here changes it.
+
+### 13.1 Mixed-LOD drawing (next up)
+
+**Problem.** `Next` replaces a coarse ancestor only once every visible
+frontier tile under it has arrived, so a region stays coarse and then
+changes all at once. 1.x looks progressive only because it loads every
+level, at about twice the bytes (L1′, r19).
+
+**Approach.** Draw arrived descendants together with the ancestor, and push
+the ancestor back in depth by its geometric error. The geometric error is
+the tileset's bound on how far a tile's surface may deviate from the true
+surface, so wherever finer content exists it wins the depth test, and the
+ancestor shows only in the gaps.
+
+- One spare record word holds a per-draw depth offset in meters. The vertex
+  shader moves the position along the camera ray by that amount, which works
+  for reverse-Z, needs no stencil, and stays inside the single GPU-driven pass.
+  1.x's skip-LOD needed stencil passes and per-command state for the same
+  result.
+- The offset is set only while an ancestor is a placeholder: the record view
+  mask already scopes this per view.
+- Translucent content (M4) and feature picking need care: picks should
+  prefer the finer tile. Since picks read the frontmost surface, they
+  already do.
+
+**Measure.** L1′ FLIP at 250 ms and 1 s should drop below `Legacy1x` at
+equal or fewer bytes. Also check for z-fighting and popping visually in the
+viewer and by FLIP between consecutive frames with a static camera.
+
+### 13.2 Request scheduling
+
+- **Adaptive concurrency.** 1.x caps at 18 per server, an HTTP/1.1-era limit.
+  With HTTP/2 and HTTP/3 the real limits are bandwidth × latency and worker
+  decode throughput. Raise concurrency while delivered bytes per second keep
+  rising, and back off when latency climbs or the decode queue backs up
+  (AIMD). L1′ on Google: 18 → 64 requests cut time to settle from 2.0 s to
+  1.3 s.
+- **Cancellation.** Drop queued and in-flight requests no view still needs
+  (1.x cancels requests for untouched tiles). Our worker decode isn't
+  abortable yet: pass an `AbortSignal` to `fetch` in the worker and discard
+  late results.
+- **Decode-aware priority.** Cost includes decode time: Draco, KTX2 and JPEG
+  decode differently. Estimate it per format from history.
+- **Upload budget in milliseconds,** measured, rather than a count of tiles
+  per frame. Uploads share the queue with rendering.
+
+### 13.3 Budget-driven refinement
+
+**Problem.** Under memory pressure 1.x raises one global SSE threshold
+(×1.02 per frame), degrading everything uniformly, including the area the
+user is looking at.
+
+**Approach.** Benefit/cost selection (Funkhouser–Séquin):
+
+- Benefit of refining a tile = SSE reduction × screen coverage × view
+  weight. Cost = bytes + decode time.
+- Refine greedily by benefit/cost until the budget is spent. Coarsen the
+  lowest-value tiles first when over.
+- One engine-wide budget (13.6) arbitrates across tilesets and views.
+
+**Measure.** L1′ image error at a fixed byte budget: lower FLIP than 1.x's
+memory-adjusted SSE at the same bytes.
+
+### 13.4 Multi-view priority
+
+- Pin a tile while the most demanding view needs it (max over views), and
+  order bandwidth by a weighted sum across views.
+- **View weights:** a small inset or offscreen thumbnail shouldn't compete
+  equally with the main view. Apps set weights; defaults follow pixel area.
+- **Cache reuse across views** (in `Next` v1): a view may draw finer content
+  another view already loaded. In 1.x, each viewer has its own cache.
+
+**Measure.** The split-view and inset scenarios in the viewer; L1′ with two
+views and asymmetric weights.
+
+### 13.5 Visual quality signals beyond geometric error
+
+- **Silhouettes (design models).** iTwin's coarse tiles drop small elements,
+  changing the silhouette (the underground CAD case). Refine sooner where
+  children carry geometry the parent lacks, using the per-child difference
+  in feature count or bounding volume as a cheap proxy. Element-level
+  metadata could flag significant elements.
+- **GPU coverage feedback.** The depth pyramid (HZB, M5) gives pixels covered
+  per tile and occlusion. Occluded tiles (behind buildings) lose priority;
+  coverage replaces the bounding-sphere estimate of screen size.
+- **Stability.** Hysteresis bands on refine and coarsen, no coarsening while
+  a finer sibling is still loading, and dithered cross-fades instead of
+  popping.
+- **Prediction.** Prefetch along camera velocity and at flight destinations;
+  1.x's flight-destination preloading becomes a general velocity prior.
+
+### 13.6 Memory management (open design question)
+
+1.x's static 512 + 512 MiB per tileset is a parity default, not a design.
+
+- **One engine-wide GPU budget** covering tilesets, render targets
+  (already capped: 256 MiB idle), materials and textures. The arbiter is
+  13.3's benefit/cost, not per-tileset caps.
+- **Sizing without a VRAM query** (WebGPU exposes none). Candidates:
+  - adaptive signals: allocation failures, frame-time pressure, device loss;
+  - platform heuristics (integrated vs discrete GPU from the adapter);
+  - an application hint.
+    Start conservative and grow while there are no failures.
+- **Cheaper residency:**
+  - Transcode photogrammetry textures (JPEG → BC7/ASTC) in workers: about 4×
+    less GPU memory, at a decode-time cost.
+  - Quantized vertex streams.
+  - Share textures and materials across tiles where content repeats.
+- **Eviction policy:** what survives eviction (decoded CPU copies,
+  compressed bytes, nothing) trades memory against refetch and decode time.
+  The HTTP cache already keeps raw bytes.
+- **Fragmentation:** the arena allocator is first-fit. Measure churn under
+  streaming, and move to TLSF or size classes if it fragments.
+- **Visibility:** the viewer's memory panel shows every pool against its cap,
+  so budget changes are visible in real time.
+
+### 13.7 Structure and formats
+
+- **Traversal off the main thread.** Move the tile tree to a struct-of-arrays
+  table that a worker can own (transferable, no SharedArrayBuffer required),
+  and run selection there. The main thread receives per-view selections and
+  requests.
+- **3D Tiles 1.1:** implicit tiling and subtrees, multiple contents per tile,
+  and metadata at tileset, group and content level.
+- **Formats:** pnts (M6, with the compute point-cloud path), i3dm (instancing
+  maps directly onto draw records: one record per instance), cmpt.
+- **Edge and planar-fill extensions for CAD** (`EXT_mesh_primitive_edge_visibility`,
+  `BENTLEY_materials_planar_fill`, line and point styles), as noted in §11.
