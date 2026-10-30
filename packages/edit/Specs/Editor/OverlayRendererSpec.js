@@ -361,14 +361,16 @@ describe(
 
       it("skips component kinds that aren't shown", function () {
         const overlay = addSquare();
-        overlay.renderer.setShownComponents(true, false, true);
+        overlay.renderer.setShownComponents(
+          (1 << ComponentType.Vertex) | (1 << ComponentType.Face),
+        );
 
         const commands = renderCommands(overlay);
 
         // Points and faces.
         expect(getInstanceCounts(commands)).toEqual([4, 2]);
 
-        overlay.renderer.setShownComponents(false, false, false);
+        overlay.renderer.setShownComponents(0);
 
         expect(renderCommands(overlay)).toEqual([]);
       });
