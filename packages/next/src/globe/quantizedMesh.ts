@@ -265,6 +265,7 @@ export function decodeQuantizedMesh(
     draws: [{ mesh: 0, material: 0, matrix }],
     featureTables: [],
     warnings: [],
+    horizonOcclusionPoint,
   };
   return {
     asset,

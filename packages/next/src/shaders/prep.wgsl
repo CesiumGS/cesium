@@ -27,6 +27,25 @@ struct Batch {
 @group(1) @binding(5) var<storage, read_write> args: array<u32>;
 @group(1) @binding(6) var<uniform> params: PrepParams;
 
+// WGS84 radii, inverted: camera and occludee in ellipsoid-scaled space.
+const INV_RADII = vec3f(1.0 / 6378137.0, 1.0 / 6378137.0, 1.0 / 6356752.314245179);
+
+// 1.x EllipsoidalOccluder.isScaledSpacePointVisible: whether a point (the
+// tile's horizon-occlusion point) can be seen past the ellipsoid's limb.
+fn horizonVisible(occludee: vec3f) -> bool {
+  let cv = (view.cameraHi + view.cameraLo) * INV_RADII;
+  let vhMagnitudeSquared = dot(cv, cv) - 1.0;
+  let vt = occludee - cv;
+  let vtDotVc = -dot(vt, cv);
+  let occluded = select(
+    vtDotVc > vhMagnitudeSquared &&
+      (vtDotVc * vtDotVc) / dot(vt, vt) > vhMagnitudeSquared,
+    vtDotVc > 0.0,
+    vhMagnitudeSquared < 0.0,
+  );
+  return !occluded;
+}
+
 @compute @workgroup_size(64)
 fn main(@builtin(global_invocation_id) gid: vec3u) {
   let i = gid.x;
@@ -47,6 +66,10 @@ fn main(@builtin(global_invocation_id) gid: vec3u) {
   // Hidden, empty, or not selected for this view (multi-view tile selection
   // shares one draw table and picks LOD per view through the mask).
   if ((r.flags & 1u) != 0u || r.indexCount == 0u || (r.viewMask & view.viewBit) == 0u) {
+    return;
+  }
+  // Globe tiles behind the ellipsoid's horizon.
+  if ((r.flags & 4u) != 0u && !horizonVisible(r.horizonPoint)) {
     return;
   }
   let center = rel + r.center;

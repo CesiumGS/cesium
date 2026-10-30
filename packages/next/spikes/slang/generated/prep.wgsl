@@ -38,6 +38,8 @@ struct DrawRecord_std430_0
     @align(4) clipBlock_0 : u32,
     @align(8) placeholderMask_0 : u32,
     @align(4) clipCount_0 : u32,
+    @align(16) horizonPoint_0 : vec3<f32>,
+    @align(4) recordPad3_0 : u32,
 };
 
 @binding(0) @group(1) var<storage, read> records_0 : array<DrawRecord_std430_0>;
@@ -93,6 +95,31 @@ struct Batch_std430_0
 
 @binding(5) @group(1) var<storage, read_write> args_0 : array<u32>;
 
+fn horizonVisible_0( occludee_0 : vec3<f32>) -> bool
+{
+    var cv_0 : vec3<f32> = (view_0.cameraHi_0 + view_0.cameraLo_0) * vec3<f32>(1.56785588956154243e-07f, 1.56785588956154243e-07f, 1.57313024828908965e-07f);
+    var vhMagnitudeSquared_0 : f32 = dot(cv_0, cv_0) - 1.0f;
+    var vt_0 : vec3<f32> = occludee_0 - cv_0;
+    var vtDotVc_0 : f32 = - dot(vt_0, cv_0);
+    var occluded_0 : bool;
+    if((vhMagnitudeSquared_0 < 0.0f))
+    {
+        occluded_0 = (vtDotVc_0 > 0.0f);
+    }
+    else
+    {
+        if((vtDotVc_0 > vhMagnitudeSquared_0))
+        {
+            occluded_0 = ((vtDotVc_0 * vtDotVc_0 / dot(vt_0, vt_0)) > vhMagnitudeSquared_0);
+        }
+        else
+        {
+            occluded_0 = false;
+        }
+    }
+    return !occluded_0;
+}
+
 @compute
 @workgroup_size(64, 1, 1)
 fn main(@builtin(global_invocation_id) gid_0 : vec3<u32>)
@@ -109,28 +136,41 @@ fn main(@builtin(global_invocation_id) gid_0 : vec3<u32>)
     m_0[i32(2)][i32(3)] = m_0[i32(2)][i32(3)] + rel_0.z;
     var _S1 : array<vec4<f32>, i32(4)> = array<vec4<f32>, i32(4)>( vec4<f32>(m_0[i32(0)][i32(0)], m_0[i32(1)][i32(0)], m_0[i32(2)][i32(0)], m_0[i32(3)][i32(0)]), vec4<f32>(m_0[i32(0)][i32(1)], m_0[i32(1)][i32(1)], m_0[i32(2)][i32(1)], m_0[i32(3)][i32(1)]), vec4<f32>(m_0[i32(0)][i32(2)], m_0[i32(1)][i32(2)], m_0[i32(2)][i32(2)], m_0[i32(3)][i32(2)]), vec4<f32>(m_0[i32(0)][i32(3)], m_0[i32(1)][i32(3)], m_0[i32(2)][i32(3)], m_0[i32(3)][i32(3)]) );
     instances_0[i_0].relModel_0.data_0 = _S1;
-    var _S2 : bool;
+    var _S2 : u32 = records_0[i_0].flags_0;
+    var _S3 : bool;
     if((((records_0[i_0].flags_0) & (u32(1)))) != u32(0))
     {
-        _S2 = true;
+        _S3 = true;
     }
     else
     {
-        _S2 = (records_0[i_0].indexCount_0) == u32(0);
+        _S3 = (records_0[i_0].indexCount_0) == u32(0);
     }
-    if(_S2)
+    if(_S3)
     {
-        _S2 = true;
+        _S3 = true;
     }
     else
     {
-        _S2 = (((records_0[i_0].viewMask_0) & ((view_0.viewBit_0)))) == u32(0);
+        _S3 = (((records_0[i_0].viewMask_0) & ((view_0.viewBit_0)))) == u32(0);
     }
-    if(_S2)
+    if(_S3)
     {
         return;
     }
-    var _S3 : vec3<f32> = rel_0 + records_0[i_0].center_0;
+    if(((_S2 & (u32(4)))) != u32(0))
+    {
+        _S3 = !horizonVisible_0(records_0[i_0].horizonPoint_0);
+    }
+    else
+    {
+        _S3 = false;
+    }
+    if(_S3)
+    {
+        return;
+    }
+    var _S4 : vec3<f32> = rel_0 + records_0[i_0].center_0;
     var p_0 : u32 = u32(0);
     loop
     {
@@ -141,15 +181,15 @@ fn main(@builtin(global_invocation_id) gid_0 : vec3<u32>)
         {
             break;
         }
-        if(((dot(view_0.planes_0[p_0].xyz, _S3) + view_0.planes_0[p_0].w) < (- records_0[i_0].radius_0)))
+        if(((dot(view_0.planes_0[p_0].xyz, _S4) + view_0.planes_0[p_0].w) < (- records_0[i_0].radius_0)))
         {
             return;
         }
         p_0 = p_0 + u32(1);
     }
-    var _S4 : u32 = records_0[i_0].batch_0;
+    var _S5 : u32 = records_0[i_0].batch_0;
     var slot_0 : u32 = atomicAdd(&(batchCounts_0[records_0[i_0].batch_0]), u32(1));
-    instanceList_0[batches_0[_S4].instanceBase_0 + slot_0] = i_0;
+    instanceList_0[batches_0[_S5].instanceBase_0 + slot_0] = i_0;
     return;
 }
 
@@ -165,8 +205,8 @@ fn writeArgs(@builtin(global_invocation_id) gid_1 : vec3<u32>)
     var batch_1 : Batch_std430_0 = batches_0[b_0];
     var a_0 : u32 = b_0 * u32(5);
     args_0[a_0] = batch_1.indexCount_1;
-    var _S5 : u32 = atomicLoad(&(batchCounts_0[b_0]));
-    args_0[a_0 + u32(1)] = _S5;
+    var _S6 : u32 = atomicLoad(&(batchCounts_0[b_0]));
+    args_0[a_0 + u32(1)] = _S6;
     args_0[a_0 + u32(2)] = batch_1.firstIndex_1;
     args_0[a_0 + u32(3)] = u32(0);
     args_0[a_0 + u32(4)] = u32(0);

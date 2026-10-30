@@ -13,6 +13,7 @@ import {
   CLIP_BOX_FLOATS,
   CLIP_COUNT_WORD,
   PLACEHOLDER_MASK_WORD,
+  HORIZON_WORD,
   RecordFlags,
   writeDrawRecord,
   writeMaterial,
@@ -698,6 +699,28 @@ export class World {
       this.recordsU32[o + CLIP_COUNT_WORD] = count;
       this.markDirty(handle.index);
     }
+  }
+
+  /**
+   * Culls a record against the ellipsoid's horizon in the prep kernel, using
+   * its ellipsoid-scaled horizon-occlusion point (globe tiles); undefined
+   * turns the test off.
+   */
+  setHorizonPoint(
+    handle: DrawHandle,
+    point: readonly [number, number, number] | undefined,
+  ): void {
+    const o = handle.index * RECORD_WORDS;
+    const flags = this.recordsU32[o + 7]!;
+    if (point) {
+      this.recordsF32[o + HORIZON_WORD] = point[0];
+      this.recordsF32[o + HORIZON_WORD + 1] = point[1];
+      this.recordsF32[o + HORIZON_WORD + 2] = point[2];
+      this.recordsU32[o + 7] = flags | RecordFlags.horizon;
+    } else {
+      this.recordsU32[o + 7] = flags & ~RecordFlags.horizon;
+    }
+    this.markDirty(handle.index);
   }
 
   setVisible(handle: DrawHandle, visible: boolean): void {

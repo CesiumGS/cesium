@@ -48,6 +48,8 @@ public struct DrawRecord {
   public uint clipBlock; // mixed-LOD placeholder: block of clip boxes
   public uint placeholderMask; // views in which the record draws only inside them
   public uint clipCount; // boxes in the block
+  public float3 horizonPoint; // ellipsoid-scaled horizon-occlusion point (flags & 4)
+  public uint recordPad3;
 };
 
 public struct DrawInstance {

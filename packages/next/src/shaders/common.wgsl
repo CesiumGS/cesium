@@ -46,6 +46,8 @@ struct DrawRecord {
   clipBlock: u32,          // mixed-LOD placeholder: block of clip boxes
   placeholderMask: u32,    // views in which the record draws only inside them
   clipCount: u32,          // boxes in the block
+  horizonPoint: vec3f,     // ellipsoid-scaled horizon-occlusion point (flags & 4)
+  _recordPad3: u32,
 };
 
 struct DrawInstance {
