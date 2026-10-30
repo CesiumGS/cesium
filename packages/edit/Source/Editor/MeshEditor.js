@@ -24,6 +24,7 @@ import MeshEditorStyle from "./MeshEditorStyle.js";
 
 /** @import { FrameState, GeometryReadSession, GeometrySource, Scene } from "@cesium/engine"; */
 /** @import { ComponentMask } from "@cesium/mesh-editor"; */
+/** @import MeshEditorTool from "./MeshEditorTool.js"; */
 
 // The attribute read from each source.
 const POSITION_ATTRIBUTE = new GeometryAttributeDescriptor({
@@ -41,6 +42,16 @@ const INACTIVE_COMPONENTS = 1 << ComponentType.Face;
 // points and edges that are not visible (because they're behind a face) can't be picked.
 // Also, _something_ needs to be pickable in EditMode.NONE, in order to select an object to be active.
 const ALWAYS_PICKABLE_COMPONENTS = 1 << ComponentType.Face;
+
+/**
+ * A {@link MeshEditor}'s built-in tools.
+ *
+ * @typedef {object} MeshEditorTools
+ * @property {MeshEditorTool} select Selects the clicked vertex, edge or face.
+ * @property {MeshEditorTool} translate Moves the selection via mouse drags.
+ *
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ */
 
 /**
  * <div class="notice">
@@ -67,6 +78,7 @@ const ALWAYS_PICKABLE_COMPONENTS = 1 << ComponentType.Face;
  * const mesh = editor.addMesh(model.nodes[0].primitives[0]);
  * editor.setMeshActive(mesh);
  * editor.mode = Cesium.EditMode.VERTEX;
+ * editor.activeTool = editor.tools.select;
  */
 class MeshEditor {
   /** @type {MeshEditorModule} */
@@ -171,6 +183,33 @@ class MeshEditor {
    */
   get meshes() {
     return Array.from(this.#meshes);
+  }
+
+  /**
+   * The editor's built-in tools.
+   *
+   * @type {MeshEditorTools}
+   * @readonly
+   */
+  get tools() {
+    throw new DeveloperError("Not implemented.");
+  }
+
+  /**
+   * The tool that receives pointer input, or <code>undefined</code> for none.
+   *
+   * @type {MeshEditorTool | undefined}
+   * @default undefined
+   *
+   * @exception {DeveloperError} The tool isn't in this editor.
+   * @exception {DeveloperError} The tool doesn't support the current mode.
+   */
+  get activeTool() {
+    throw new DeveloperError("Not implemented.");
+  }
+
+  set activeTool(value) {
+    throw new DeveloperError("Not implemented.");
   }
 
   /**
