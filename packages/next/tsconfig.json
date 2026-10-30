@@ -17,5 +17,14 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["src", "demo", "parity", "spikes", "bench", "test", "vite.config.ts"]
+  "include": [
+    "src",
+    "demo",
+    "viewer",
+    "parity",
+    "spikes",
+    "bench",
+    "test",
+    "vite.config.ts"
+  ]
 }

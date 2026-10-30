@@ -608,9 +608,14 @@ export class Tileset3D implements TileTree {
   private upload(): void {
     const limit = this.cacheBytes + this.overflowBytes;
     let exceeded = false;
+    const budget = this.engine.uploadBudget;
     for (let n = 0; n < this.uploadsPerFrame && this.ready.length > 0; n++) {
       if (this.stats.bytes > limit) {
         exceeded = true;
+        break;
+      }
+      // The engine-wide budget for this frame (one upload always goes).
+      if (budget.uploads > 0 && budget.bytes <= 0) {
         break;
       }
       const { tile, asset, arrivedAt } = this.ready.shift()!;
@@ -627,6 +632,8 @@ export class Tileset3D implements TileTree {
         });
         tile.instance = instance;
         tile.bytes = instance.bytes;
+        budget.bytes -= instance.bytes;
+        budget.uploads++;
         const uploaded = performance.now();
         const network = asset.timing?.networkMs ?? 0;
         const decode = asset.timing?.decodeMs ?? 0;
@@ -679,10 +686,19 @@ export class Tileset3D implements TileTree {
     const candidates = [...this.loaded]
       .filter((t) => t.touchedFrame < frame)
       .sort((a, b) => a.touchedFrame - b.touchedFrame);
+    // Spread over frames, as uploads are: after a camera jump everything
+    // shown before becomes evictable at once, and freeing it all in one
+    // frame (textures and buffers by the hundred) stalls that frame. Past
+    // the hard limit (budget + overflow), whatever is needed goes now.
+    let allowance = Math.max(
+      2 * this.engine.uploadBytesPerFrame,
+      this.stats.bytes - (this.cacheBytes + this.overflowBytes),
+    );
     for (const tile of candidates) {
-      if (this.stats.bytes <= this.cacheBytes) {
+      if (this.stats.bytes <= this.cacheBytes || allowance <= 0) {
         break;
       }
+      allowance -= tile.bytes;
       this.unload(tile);
     }
   }

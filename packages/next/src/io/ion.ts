@@ -40,9 +40,39 @@ export const ionDefaults: { accessToken?: string; server: string } = {
   server: "https://api.cesium.com/",
 };
 
-export async function resolveIonAsset(
+/**
+ * Resolved endpoints, reused for 45 minutes: ion's asset tokens last about
+ * an hour, and an endpoint request costs a round trip (300 ms or more)
+ * every time content is switched. Failures are not kept.
+ */
+const endpointCache = new Map<
+  string,
+  { expires: number; asset: Promise<IonAsset> }
+>();
+const ENDPOINT_TTL_MS = 45 * 60 * 1000;
+
+export function resolveIonAsset(
   assetId: number,
   options: IonOptions = {},
+): Promise<IonAsset> {
+  const key = JSON.stringify([
+    assetId,
+    options.accessToken ?? ionDefaults.accessToken ?? "",
+    options.server ?? ionDefaults.server,
+  ]);
+  const cached = endpointCache.get(key);
+  if (cached && cached.expires > Date.now()) {
+    return cached.asset;
+  }
+  const asset = fetchIonAsset(assetId, options);
+  endpointCache.set(key, { expires: Date.now() + ENDPOINT_TTL_MS, asset });
+  asset.catch(() => endpointCache.delete(key));
+  return asset;
+}
+
+async function fetchIonAsset(
+  assetId: number,
+  options: IonOptions,
 ): Promise<IonAsset> {
   const accessToken = options.accessToken ?? ionDefaults.accessToken;
   if (!accessToken) {

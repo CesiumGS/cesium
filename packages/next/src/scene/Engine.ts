@@ -562,6 +562,36 @@ export class Engine {
    * Asks for a frame in on-demand mode, for changes the engine can't see
    * (state an application keeps outside the engine).
    */
+  /**
+   * GPU bytes of content (geometry and textures) all tilesets may upload
+   * per frame together. Uploads share the queue with rendering: a fixed
+   * count per tileset let several streaming tilesets stall frames (8 per
+   * tileset: 67 ms frames on Google 3D Tiles; this budget: none over
+   * 34 ms). At least one upload happens per frame, so loading never stops.
+   */
+  uploadBytesPerFrame = 2 * 1024 * 1024;
+  /** @internal What is left of this frame's upload budget. */
+  readonly uploadBudget = { bytes: 0, uploads: 0 };
+  private tilesetRotation = 0;
+
+  /**
+   * Runs selection, requests and uploads for the tilesets `due` picks,
+   * starting with a different one each frame so none starves the others
+   * of the shared upload budget.
+   */
+  private updateTilesets(due: (tileset: Tileset3D) => boolean): void {
+    this.uploadBudget.bytes = this.uploadBytesPerFrame;
+    this.uploadBudget.uploads = 0;
+    const n = this.tilesets.length;
+    const start = n > 0 ? this.tilesetRotation++ % n : 0;
+    for (let k = 0; k < n; k++) {
+      const tileset = this.tilesets[(start + k) % n]!;
+      if (due(tileset)) {
+        tileset.update(this.selectionViews(tileset.world));
+      }
+    }
+  }
+
   requestRender(): void {
     this.renderRequested = true;
   }
@@ -609,12 +639,7 @@ export class Engine {
     }
     // Selection runs when a camera moved or content streams; a frame then
     // renders only for the views that can see what changed.
-    for (let i = 0; i < this.tilesets.length; i++) {
-      const tileset = this.tilesets[i]!;
-      if (all || moved || tileset.active) {
-        tileset.update(this.selectionViews(tileset.world));
-      }
-    }
+    this.updateTilesets((tileset) => all || moved || tileset.active);
     for (let i = 0; i < views.length; i++) {
       const view = views[i]!;
       if (
@@ -761,10 +786,7 @@ export class Engine {
       links[i]!.evaluate();
     }
     if (!tilesetsUpdated) {
-      for (let i = 0; i < this.tilesets.length; i++) {
-        const tileset = this.tilesets[i]!;
-        tileset.update(this.selectionViews(tileset.world));
-      }
+      this.updateTilesets(() => true);
     }
 
     // Which views draw. On demand, a target shared by several views is

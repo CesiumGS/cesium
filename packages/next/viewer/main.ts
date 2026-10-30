@@ -16,6 +16,7 @@ import {
   vec3,
   type ContentSummary,
   type ContentTotals,
+  type DrawHandle,
   type Stage,
   type StageStats,
   type FeatureValue,
@@ -337,8 +338,13 @@ function lowestHeight(volume: Tileset3D["root"]["volume"]): number {
   return lowest;
 }
 
-function addCity(world: World): { center: Float64Array; radius: number } {
+function addCity(world: World): {
+  center: Float64Array;
+  radius: number;
+  remove(): void;
+} {
   const box = world.addMesh(createBox());
+  const draws: DrawHandle[] = [];
   let seed = 7;
   const random = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
   const enu = mat4.mat4();
@@ -361,19 +367,27 @@ function addCity(world: World): { center: Float64Array; radius: number } {
       mat4.fromScale(local, width, depth, height);
       local[14] = height / 2;
       const tint = 0.35 + random() * 0.45;
-      world.addDraw({
-        mesh: box,
-        origin: position,
-        model: mat4.multiply(mat4.mat4(), enu, local),
-        radius: Math.hypot(width / 2, depth / 2, height / 2) + height / 2,
-        color: [tint, tint * 0.92, tint * 0.85, 1],
-        name: `building ${j * 12 + i + 1}`,
-      });
+      draws.push(
+        world.addDraw({
+          mesh: box,
+          origin: position,
+          model: mat4.multiply(mat4.mat4(), enu, local),
+          radius: Math.hypot(width / 2, depth / 2, height / 2) + height / 2,
+          color: [tint, tint * 0.92, tint * 0.85, 1],
+          name: `building ${j * 12 + i + 1}`,
+        }),
+      );
     }
   }
   return {
     center: ellipsoid.cartographicToCartesian(SITE, vec3.vec3()),
     radius: 700,
+    remove: () => {
+      for (const draw of draws) {
+        world.removeDraw(draw);
+      }
+      world.removeMesh(box);
+    },
   };
 }
 
@@ -409,7 +423,15 @@ async function main(): Promise<void> {
   const engine = await Engine.create();
   const canvas = $<HTMLCanvasElement>("#main");
   const target = new CanvasTarget(canvas);
-  let world = engine.createWorld();
+  // One world for the session: content and the globe come and go in it.
+  // Arenas sized once, within the device's storage-binding limit.
+  const bindingLimit = engine.gpu.device.limits.maxStorageBufferBindingSize;
+  const world = engine.createWorld({
+    maxDraws: 1 << 16,
+    maxMaterials: 1 << 13,
+    vertexBytes: Math.min(768 << 20, Math.floor(bindingLimit / 4) * 4),
+    indexBytes: Math.min(384 << 20, Math.floor(bindingLimit / 4) * 4),
+  });
   const view: View = engine.addView({ target, world });
   const controller = new GlobeController(view, canvas);
   let overview: View | undefined;
@@ -443,14 +465,23 @@ async function main(): Promise<void> {
   let loadWarnings = new Set<string>();
   let move: { stoppedAt: number; requests: number; bytes: number } | undefined;
   let lastMove: { ms: number; requests: number; bytes: number } | undefined;
-  /** The streamed tileset in the current world, if any. */
+  /** The streamed tileset shown, if the content is one. */
   let current3dTiles: Tileset3D | undefined;
-  let streamed: Tileset3D | undefined;
-  /** Cesium World Terrain in the current world, and in the one loading. */
+  /** The content shown (a tileset, model or the city), removed on switch. */
+  let content: { remove(): void; tileset?: Tileset3D } | undefined;
+  /** The globe: Cesium World Terrain or the ellipsoid. */
   let currentTerrain: Tileset3D | undefined;
-  let nextTerrain: Tileset3D | undefined;
-  /** Attributions the current ion assets require (HTML from ion). */
+  /** Attributions the content, imagery and terrain require (HTML from ion). */
   let attributions: IonAttribution[] = [];
+  let contentAttributions: IonAttribution[] = [];
+  let imageryAttributions: IonAttribution[] = [];
+  const refreshAttributions = () => {
+    attributions = [
+      ...contentAttributions,
+      ...imageryAttributions,
+      ...terrainAttributions,
+    ];
+  };
   let current = sourceFromUrl();
   // ion access token, first found: pasted in the viewer (this session, or
   // remembered on this device), VITE_ION_TOKEN from .env.local, CesiumJS's
@@ -792,10 +823,36 @@ async function main(): Promise<void> {
     void swapGlobe();
   });
 
-  // The scene's globe inputs, kept so the surface can be swapped in place.
+  // The globe's inputs, kept so the surface can be swapped in place.
   let sceneImagery: BingImagery | undefined;
-  let scenePhotorealistic = false;
   let terrainAttributions: IonAttribution[] = [];
+
+  /**
+   * The globe, built once (imagery resolved, then the surface) and kept
+   * across content switches; content loads don't wait on it after the
+   * first. A failure allows a retry on the next load.
+   */
+  let globeReady: Promise<void> | undefined;
+  function ensureGlobe(): Promise<void> {
+    globeReady ??= (async () => {
+      sceneImagery = await resolveBing().catch((error) => {
+        loadWarnings.add(
+          `imagery: ${error instanceof Error ? error.message : String(error)}`,
+        );
+        return undefined;
+      });
+      imageryAttributions = sceneImagery?.attributions ?? [];
+      const globe = await createGlobe(world, terrainToggle.checked);
+      globe.tileset.show = globeToggle.checked;
+      currentTerrain = globe.tileset;
+      terrainAttributions = globe.attributions;
+      refreshAttributions();
+    })().catch((error) => {
+      globeReady = undefined;
+      throw error;
+    });
+    return globeReady;
+  }
 
   /** Cesium World Terrain (ion asset 1) or the ellipsoid, with the imagery. */
   async function createGlobe(
@@ -827,15 +884,13 @@ async function main(): Promise<void> {
   let globeToken = 0;
   async function swapGlobe(): Promise<void> {
     const token = ++globeToken;
-    const target = world;
-    const terrain = terrainToggle.checked && !scenePhotorealistic;
-    // Under photorealistic tiles the surface stays the ellipsoid.
-    if (terrain === currentTerrain?.url.startsWith("http")) {
-      return;
+    const terrain = terrainToggle.checked;
+    if (!currentTerrain || terrain === currentTerrain.url.startsWith("http")) {
+      return; // not built yet, or already that surface
     }
     try {
-      const globe = await createGlobe(target, terrain);
-      if (token !== globeToken || target !== world) {
+      const globe = await createGlobe(world, terrain);
+      if (token !== globeToken) {
         engine.removeTileset(globe.tileset);
         return;
       }
@@ -845,10 +900,8 @@ async function main(): Promise<void> {
         engine.removeTileset(currentTerrain);
       }
       currentTerrain = globe.tileset;
-      attributions = attributions
-        .filter((a) => !terrainAttributions.includes(a))
-        .concat(globe.attributions);
       terrainAttributions = globe.attributions;
+      refreshAttributions();
     } catch (error) {
       loadWarnings.add(
         `terrain: ${error instanceof Error ? error.message : String(error)}`,
@@ -992,7 +1045,6 @@ async function main(): Promise<void> {
       syncIonName();
     }
     const status = $("#load-status");
-    attributions = [];
     let photorealistic = false;
     const warnings = new Set<string>();
     const started = performance.now();
@@ -1005,22 +1057,25 @@ async function main(): Promise<void> {
     move = undefined;
     status.textContent = "loading…";
     renderProblems();
-    // Size the arenas within the device's storage-binding limit.
-    const limit = engine.gpu.device.limits.maxStorageBufferBindingSize;
-    const next = engine.createWorld({
-      maxDraws: 1 << 16,
-      maxMaterials: 1 << 13,
-      vertexBytes: Math.min(768 << 20, Math.floor(limit / 4) * 4),
-      indexBytes: Math.min(384 << 20, Math.floor(limit / 4) * 4),
-    });
+    // The globe builds once, in parallel with the first content.
+    const globe = ensureGlobe();
+    // The new content goes into the same world, hidden if it streams; the
+    // old content stays until the new one replaces it.
+    let next: { remove(): void; tileset?: Tileset3D } | undefined;
+    let nextAttributions: IonAttribution[] = [];
     try {
       let placed: { center: Float64Array; radius: number; lowest?: number };
       if (source.kind === "city") {
-        placed = addCity(next);
+        const city = addCity(world);
+        next = city;
+        placed = city;
       } else if (source.kind === "model") {
         const asset = await engine.loadGltf(
           `/specs-data/Models/glTF-2.0/${source.path}`,
         );
+        if (token !== loadToken) {
+          throw new Error("superseded");
+        }
         asset.warnings.forEach((w) => warnings.add(w));
         // Before the upload, which consumes the images.
         const summary = summarizeContent(asset);
@@ -1036,8 +1091,8 @@ async function main(): Promise<void> {
             "georeferenced model: placed at its own Earth-fixed position",
           );
         }
-        placed = engine.addModel(
-          next,
+        const instance = engine.addModel(
+          world,
           asset,
           georeferenced
             ? {
@@ -1054,6 +1109,8 @@ async function main(): Promise<void> {
                 unlit: unlit.checked,
               },
         );
+        next = { remove: () => engine.removeModel(world, instance) };
+        placed = instance;
         info.model = {
           summary,
           networkMs: asset.timing?.networkMs ?? 0,
@@ -1074,11 +1131,11 @@ async function main(): Promise<void> {
           }
           url = resolved.url;
           headers = resolved.headers;
-          attributions = resolved.attributions;
+          nextAttributions = resolved.attributions;
           // Photorealistic tiles from an external provider (Google) are
-          // their own terrain: the placeholder ellipsoid would poke through
-          // (sea level there is ~30 m below the ellipsoid), so it starts
-          // hidden, as 1.x apps hide the globe for Google tiles.
+          // their own terrain: the globe would poke through (sea level
+          // there is ~30 m below the ellipsoid), so it starts hidden, as
+          // 1.x apps hide the globe for Google tiles.
           photorealistic = /tile\.googleapis\.com/.test(resolved.url);
           info.resolvedAt = performance.now();
         } else if (source.kind === "imodel") {
@@ -1093,14 +1150,18 @@ async function main(): Promise<void> {
             location.href,
           ).href;
         }
+        if (token !== loadToken) {
+          throw new Error("superseded");
+        }
         // Streamed: per-view selection (Budgeted unless chosen otherwise).
-        const tileset = await engine.addTileset(next, url, {
+        const tileset = await engine.addTileset(world, url, {
           ...(headers ? { headers } : {}),
           policy: policySelect.value as "legacy1x" | "budgeted",
           maximumScreenSpaceError: maximumSse(),
         });
+        tileset.show = false;
+        next = { tileset, remove: () => engine.removeTileset(tileset) };
         info.rootAt = performance.now();
-        streamed = tileset;
         if (token !== loadToken) {
           throw new Error("superseded");
         }
@@ -1114,63 +1175,37 @@ async function main(): Promise<void> {
           lowest: lowestHeight(volume),
         };
       }
-      if (token !== loadToken) {
-        engine.removeWorld(next);
-        return;
-      }
-      // The globe: Cesium World Terrain (ion asset 1) when chosen, else the
-      // ellipsoid, both streamed with the ion default imagery (Bing).
-      // Hidden under Google's photorealistic tiles (their own terrain), and
-      // at first for site-scale content reaching below the ellipsoid
-      // (underground infrastructure; models at sea level where the geoid is
-      // below the ellipsoid), which the ellipsoid would cover.
-      const imagery = await resolveBing().catch((error) => {
+      // Only the first load waits for the globe (it is built by then).
+      await globe.catch((error) => {
         warnings.add(
-          `imagery: ${error instanceof Error ? error.message : String(error)}`,
+          `globe: ${error instanceof Error ? error.message : String(error)}`,
         );
-        return undefined;
       });
-      if (imagery) {
-        attributions.push(...imagery.attributions);
-      }
-      sceneImagery = imagery;
-      scenePhotorealistic = photorealistic;
-      const globe = await createGlobe(
-        next,
-        terrainToggle.checked && !photorealistic,
-      );
-      nextTerrain = globe.tileset;
-      terrainAttributions = globe.attributions;
-      attributions.push(...globe.attributions);
       if (token !== loadToken) {
         throw new Error("superseded");
       }
+      // Swap: the old content leaves as the new one shows, in one frame.
+      content?.remove();
+      content = next;
+      next = undefined;
+      current3dTiles = content.tileset;
+      if (current3dTiles) {
+        current3dTiles.show = true;
+      }
+      contentAttributions = nextAttributions;
+      refreshAttributions();
+      // The globe: hidden under Google's photorealistic tiles (their own
+      // terrain), and at first for site-scale content reaching below the
+      // ellipsoid (underground infrastructure; models at sea level where
+      // the geoid is below the ellipsoid), which the ellipsoid would cover.
       globeToggle.checked =
         !photorealistic &&
         (!!terrainToggle.checked ||
           placed.radius > 50000 ||
           (placed.lowest ?? 0) > -1);
-      nextTerrain.show = globeToggle.checked;
-      if (current3dTiles) {
-        engine.removeTileset(current3dTiles);
-      }
-      current3dTiles = streamed;
-      streamed = undefined;
       if (currentTerrain) {
-        engine.removeTileset(currentTerrain);
+        currentTerrain.show = globeToggle.checked;
       }
-      currentTerrain = nextTerrain;
-      nextTerrain = undefined;
-      const old = world;
-      world = next;
-      view.world = next;
-      if (second) {
-        second.world = next;
-      }
-      if (overview) {
-        overview.world = next;
-      }
-      engine.removeWorld(old);
       focus = {
         center: vec3.copy(vec3.vec3(), placed.center),
         radius: placed.radius,
@@ -1179,15 +1214,7 @@ async function main(): Promise<void> {
       loadInfo = info;
       renderProblems();
     } catch (error) {
-      if (streamed) {
-        engine.removeTileset(streamed);
-        streamed = undefined;
-      }
-      if (nextTerrain) {
-        engine.removeTileset(nextTerrain);
-        nextTerrain = undefined;
-      }
-      engine.removeWorld(next);
+      next?.remove();
       if (error instanceof Error && error.message === "superseded") {
         return;
       }
@@ -1259,17 +1286,16 @@ async function main(): Promise<void> {
         ["right", second],
         ["inset", overview],
       ] as const
-    )
-      .filter(
-        (entry): entry is readonly [string, View] => entry[1] !== undefined,
-      )
-      .map(
-        ([name, v]) =>
-          [
-            name,
-            tileset.stats.selected.get(Math.log2(engine.viewBit(v))) ?? 0,
-          ] as const,
-      );
+    ).flatMap(([name, v]) =>
+      v
+        ? [
+            [
+              name,
+              tileset.stats.selected.get(Math.log2(engine.viewBit(v))) ?? 0,
+            ] as const,
+          ]
+        : [],
+    );
   const MB = 1048576;
   const mb = (bytes: number) =>
     `${(bytes / MB).toFixed(bytes < 10 * MB ? 1 : 0)} MB`;
@@ -1875,7 +1901,8 @@ async function main(): Promise<void> {
     creditsToggle.setAttribute("aria-expanded", String(open));
   };
   creditsToggle.addEventListener("click", () =>
-    setCreditsOpen(creditsPanel.hidden),
+    // `hidden` may also be "until-found", which is hidden too.
+    setCreditsOpen(creditsPanel.hidden !== false),
   );
   document.addEventListener("pointerdown", (e) => {
     const target = e.target as Node;

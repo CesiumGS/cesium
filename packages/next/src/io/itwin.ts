@@ -20,7 +20,38 @@ interface MeshExport {
   _links: { mesh: { href: string } };
 }
 
-export async function resolveITwinIModel(
+/**
+ * Resolved exports, reused for 45 minutes: the signed links last about an
+ * hour, and the export lookup takes over a second. Failures are not kept.
+ */
+const exportCache = new Map<
+  string,
+  { expires: number; result: Promise<{ url: string }> }
+>();
+const EXPORT_TTL_MS = 45 * 60 * 1000;
+
+export function resolveITwinIModel(
+  iModelId: string,
+  options: ITwinOptions,
+): Promise<{ url: string }> {
+  const key = JSON.stringify([
+    iModelId,
+    options.shareKey ?? "",
+    options.accessToken ?? "",
+    options.changesetId ?? "",
+    options.server ?? "",
+  ]);
+  const cached = exportCache.get(key);
+  if (cached && cached.expires > Date.now()) {
+    return cached.result;
+  }
+  const result = fetchITwinIModel(iModelId, options);
+  exportCache.set(key, { expires: Date.now() + EXPORT_TTL_MS, result });
+  result.catch(() => exportCache.delete(key));
+  return result;
+}
+
+async function fetchITwinIModel(
   iModelId: string,
   options: ITwinOptions,
 ): Promise<{ url: string }> {
