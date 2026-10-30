@@ -1,4 +1,4 @@
-import { Check } from "@cesium/core";
+import { Check, Matrix4 } from "@cesium/core";
 
 /**
  * <div class="notice">
@@ -26,6 +26,7 @@ function ModelPrimitive(model, node, runtimePrimitive) {
   this._model = model;
   this._node = node;
   this._runtimePrimitive = runtimePrimitive;
+  this._worldMatrix = new Matrix4();
 }
 
 Object.defineProperties(ModelPrimitive.prototype, {
@@ -59,6 +60,26 @@ Object.defineProperties(ModelPrimitive.prototype, {
     },
     set: function (value) {
       this._runtimePrimitive.show = value;
+    },
+  },
+
+  /**
+   * The transform from this primitive's local coordinates to the world (ECEF)
+   * coordinates of the scene, taking the model's transform and the node
+   * hierarchy into account. This is the world matrix of the primitive's
+   * {@link ModelPrimitive#node}. It's computed on each access and is only
+   * supported in 3D.
+   *
+   * @memberof ModelPrimitive.prototype
+   *
+   * @type {Matrix4}
+   * @readonly
+   *
+   * @see ModelNode#computeWorldMatrix
+   */
+  worldMatrix: {
+    get: function () {
+      return this._node.computeWorldMatrix(this._worldMatrix);
     },
   },
 });
