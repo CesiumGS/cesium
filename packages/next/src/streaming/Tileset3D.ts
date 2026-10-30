@@ -115,7 +115,12 @@ export interface TilesetStats {
 
 export class Tileset3D implements TileTree {
   readonly warnings = new Set<string>();
-  readonly selection: TileSelection;
+  /** The selection policy (`setPolicy` replaces it). */
+  get selection(): TileSelection {
+    return this.policy;
+  }
+  private policy: TileSelection;
+  private readonly options: TilesetOptions;
   readonly stats: TilesetStats = {
     tiles: 0,
     loaded: 0,
@@ -193,11 +198,8 @@ export class Tileset3D implements TileTree {
     readonly geometricError: number,
     source?: TileSource,
   ) {
-    this.selection =
-      source?.createSelection?.(options) ??
-      (options.policy === "legacy1x"
-        ? new Legacy1xSelection(options)
-        : new BudgetedSelection(options));
+    this.options = options;
+    this.policy = createSelection(options, source);
     this.cacheBytes = options.cacheBytes ?? 512 * 1024 * 1024;
     this.overflowBytes = options.maximumCacheOverflowBytes ?? 512 * 1024 * 1024;
     if (options.maximumRequests !== undefined) {
@@ -261,6 +263,33 @@ export class Tileset3D implements TileTree {
     tileset.stats.tiles = countTiles(source.root);
     retarget(source.root, tileset);
     return tileset;
+  }
+
+  /**
+   * Switches the selection policy in place: loaded content, the cache and
+   * requests stay; the next update selects under the new rules. The
+   * current maximum screen-space error carries over.
+   */
+  setPolicy(policy: "legacy1x" | "budgeted"): void {
+    const options = {
+      ...this.options,
+      policy,
+      maximumScreenSpaceError: this.policy.maximumScreenSpaceError,
+    };
+    this.policy = createSelection(options, this.source);
+    // Per-tile selection state belongs to the old policy, whose pass
+    // numbers the new one would mistake for its own.
+    const reset = (tile: Tile) => {
+      tile.views.length = 0;
+      if (tile.globe) {
+        tile.globe.selection.length = 0;
+      }
+      for (const child of tile.children) {
+        reset(child);
+      }
+    };
+    reset(this.root);
+    this.lastChange = this.frame;
   }
 
   /** Counts tiles an implicit tree created (TileTree). */
@@ -748,6 +777,19 @@ function retarget(tile: Tile, tree: TileTree): void {
   for (const child of tile.children) {
     retarget(child, tree);
   }
+}
+
+/** The source's own policy (terrain's globe Legacy1x), else 3D Tiles'. */
+function createSelection(
+  options: TilesetOptions,
+  source: TileSource | undefined,
+): TileSelection {
+  return (
+    source?.createSelection?.(options) ??
+    (options.policy === "legacy1x"
+      ? new Legacy1xSelection(options)
+      : new BudgetedSelection(options))
+  );
 }
 
 function countTiles(tile: Tile): number {

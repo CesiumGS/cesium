@@ -709,7 +709,7 @@ async function main(): Promise<void> {
   // ---------------------------------------------------------------- lighting UI
   const unlit = $<HTMLInputElement>("#unlit");
   unlit.addEventListener("change", () => void load(current));
-  // Tile selection policy: reloads the tileset (selection state is per policy).
+  // Tile selection policy: switched in place on the tilesets and the globe.
   const policySelect = $<HTMLSelectElement>("#policy");
   try {
     const saved = localStorage.getItem("viewer.policy");
@@ -726,13 +726,11 @@ async function main(): Promise<void> {
     } catch {
       // Ignore.
     }
-    if (
-      current.kind === "tileset" ||
-      current.kind === "ion" ||
-      current.kind === "imodel"
-    ) {
-      void load(current);
-    }
+    // In place: content, cache and camera stay; the next frame selects
+    // under the new policy (the globe too).
+    const policy = policySelect.value as "legacy1x" | "budgeted";
+    current3dTiles?.setPolicy(policy);
+    currentTerrain?.setPolicy(policy);
   });
   // Maximum screen-space error, on a log2 slider (1–128 px, 1.x default 16).
   // Applied live; the memory-adjusted threshold restarts from it.
