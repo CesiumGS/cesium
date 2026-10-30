@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Globe Imagery Parity</title>
+    <link rel="stylesheet" href="/cesium1x/Widgets/widgets.css" />
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      body {
+        margin: 0;
+        padding: 16px;
+        background: #0b0e14;
+        color: #d7dce6;
+        font:
+          13px/1.4 system-ui,
+          sans-serif;
+      }
+      h1 {
+        font-size: 16px;
+        margin: 0 0 4px;
+      }
+      p {
+        color: #8a93a6;
+        max-width: 900px;
+      }
+      .images {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      figure {
+        margin: 0;
+      }
+      figcaption {
+        color: #8a93a6;
+        font-size: 12px;
+        margin-bottom: 4px;
+      }
+      canvas.out {
+        width: 480px;
+        height: 270px;
+        display: block;
+        background: #000;
+      }
+      #legacy {
+        position: absolute;
+        left: -10000px;
+        width: 640px;
+        height: 360px;
+      }
+      #images .row {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+        flex-wrap: wrap;
+      }
+      #images canvas {
+        width: 320px;
+        height: 180px;
+        display: block;
+      }
+      table {
+        border-collapse: collapse;
+        margin-top: 12px;
+        font-variant-numeric: tabular-nums;
+      }
+      th,
+      td {
+        padding: 4px 10px;
+        border-bottom: 1px solid #222a3a;
+        text-align: right;
+      }
+      th:first-child,
+      td:first-child,
+      td.text {
+        text-align: left;
+      }
+      tr.row {
+        cursor: pointer;
+      }
+      tr.row:hover td,
+      tr.selected td {
+        background: #1b2232;
+      }
+      #status {
+        color: #8a93a6;
+        margin: 8px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>
+      Globe imagery parity (L2): 1.x vs 2.0, Cesium World Terrain with Bing
+    </h1>
+    <p>
+      The same cameras rendered by each engine after loading settles. Terrain
+      selection is identical (globe Legacy1x), fog and atmosphere are off in
+      both, so the difference is imagery: level choice, compositing, filtering
+      and color. 2.0 may look better; FLIP records how far and where.
+      <code>?only=</code> runs one camera.
+    </p>
+    <div id="status"></div>
+
+    <table id="results"></table>
+    <div id="images"></div>
+    <div id="legacy"></div>
+    <div id="credits" hidden></div>
+    <script>
+      window.CESIUM_BASE_URL = "/cesium1x/";
+    </script>
+    <script src="/cesium1x/Cesium.js"></script>
+    <script type="module" src="./imagery.ts"></script>
+  </body>
+</html>

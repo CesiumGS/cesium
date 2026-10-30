@@ -1,0 +1,532 @@
+{
+  "date": "2026-10-30T06:05:28.090Z",
+  "commit": "4a84ba7255528b8bf7c9aef6b67ff3b7fe25fa2b",
+  "environment": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0",
+    "adapter": {
+      "vendor": "nvidia",
+      "architecture": "lovelace",
+      "description": "NVIDIA RTX 3000 Ada Generation Laptop GPU"
+    },
+    "timestampQuery": true
+  },
+  "errors": [],
+  "results": {
+    "globe": [
+      {
+        "view": "Rainier oblique",
+        "status": "ok (fog)",
+        "legacy": 37,
+        "next": 37,
+        "jaccard": 1,
+        "legacyMs": 2009.4000000953674,
+        "nextMs": 1628,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "view": "Grand Canyon top-down",
+        "status": "ok (fog)",
+        "legacy": 2,
+        "next": 2,
+        "jaccard": 1,
+        "legacyMs": 552.1999999284744,
+        "nextMs": 475.2999999523163,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "view": "Matterhorn near horizon",
+        "status": "ok (fog)",
+        "legacy": 37,
+        "next": 37,
+        "jaccard": 1,
+        "legacyMs": 1709.6999999284744,
+        "nextMs": 1427.1000000238419,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "view": "Everest regional",
+        "status": "ok (fog)",
+        "legacy": 16,
+        "next": 16,
+        "jaccard": 1,
+        "legacyMs": 853.2000000476837,
+        "nextMs": 1032.1000000238419,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "view": "Front Range 300 km",
+        "status": "ok (fog)",
+        "legacy": 6,
+        "next": 6,
+        "jaccard": 1,
+        "legacyMs": 506.6999999284744,
+        "nextMs": 448.2999999523163,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "view": "San Francisco coast",
+        "status": "ok (fog)",
+        "legacy": 27,
+        "next": 27,
+        "jaccard": 1,
+        "legacyMs": 1634.7000000476837,
+        "nextMs": 1424.2000000476837,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      }
+    ],
+    "selection": [
+      {
+        "tileset": "Tileset",
+        "view": "close oblique",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 5,
+        "next": 5,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "Tileset",
+        "view": "far top-down",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 5,
+        "next": 5,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "Tileset",
+        "view": "street level",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 4,
+        "next": 4,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "Tileset",
+        "view": "viewer default",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 5,
+        "next": 5,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetOfTilesets",
+        "view": "close oblique",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 5,
+        "next": 5,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetOfTilesets",
+        "view": "far top-down",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 5,
+        "next": 5,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetOfTilesets",
+        "view": "street level",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 4,
+        "next": 4,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetOfTilesets",
+        "view": "viewer default",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 5,
+        "next": 5,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetRefinementMix",
+        "view": "close oblique",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 6,
+        "next": 6,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetRefinementMix",
+        "view": "far top-down",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 6,
+        "next": 6,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetRefinementMix",
+        "view": "street level",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 5,
+        "next": 5,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetRefinementMix",
+        "view": "viewer default",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 6,
+        "next": 6,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetReplacement1",
+        "view": "close oblique",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 4,
+        "next": 4,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetReplacement1",
+        "view": "far top-down",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 4,
+        "next": 4,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetReplacement1",
+        "view": "street level",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 3,
+        "next": 3,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetReplacement1",
+        "view": "viewer default",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 4,
+        "next": 4,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetReplacement2",
+        "view": "close oblique",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 1,
+        "next": 1,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetReplacement2",
+        "view": "far top-down",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 1,
+        "next": 1,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetReplacement2",
+        "view": "street level",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 2,
+        "next": 2,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetReplacement2",
+        "view": "viewer default",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 1,
+        "next": 1,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetReplacement3",
+        "view": "close oblique",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 4,
+        "next": 4,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetReplacement3",
+        "view": "far top-down",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 4,
+        "next": 4,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetReplacement3",
+        "view": "street level",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 3,
+        "next": 3,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetReplacement3",
+        "view": "viewer default",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 4,
+        "next": 4,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetWithViewerRequestVolume",
+        "view": "close oblique",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 5,
+        "next": 5,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetWithViewerRequestVolume",
+        "view": "far top-down",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 5,
+        "next": 5,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetWithViewerRequestVolume",
+        "view": "street level",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 5,
+        "next": 5,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetWithViewerRequestVolume",
+        "view": "viewer default",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 5,
+        "next": 5,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetWithTransforms",
+        "view": "close oblique",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 2,
+        "next": 2,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetWithTransforms",
+        "view": "far top-down",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 2,
+        "next": 2,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetWithTransforms",
+        "view": "street level",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 2,
+        "next": 2,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetWithTransforms",
+        "view": "viewer default",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 2,
+        "next": 2,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetUniform",
+        "view": "close oblique",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 16,
+        "next": 16,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetUniform",
+        "view": "far top-down",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 17,
+        "next": 17,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetUniform",
+        "view": "street level",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 10,
+        "next": 10,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetUniform",
+        "view": "viewer default",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 17,
+        "next": 17,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      }
+    ],
+    "tileset": [
+      {
+        "mode": "unlit",
+        "source": "BatchedWithBatchTable (b3dm, RTC_CENTER, JSON batch table)",
+        "status": "ok",
+        "contents": 1,
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.002124978892974065,
+        "flipGamma": 0.0015679384584099331,
+        "flipGammaP95": 0,
+        "picks": "35/35 agree on \"id\" (1 features hit)",
+        "properties": "id, Longitude, Latitude, Height, info, rooms",
+        "warnings": ""
+      },
+      {
+        "mode": "direct",
+        "source": "BatchedWithBatchTable (b3dm, RTC_CENTER, JSON batch table)",
+        "status": "ok",
+        "contents": 1,
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.0017010399511740834,
+        "flipGamma": 0.0012241508132124518,
+        "flipGammaP95": 0,
+        "picks": "35/35 agree on \"id\" (1 features hit)",
+        "properties": "id, Longitude, Latitude, Height, info, rooms",
+        "warnings": ""
+      },
+      {
+        "mode": "unlit",
+        "source": "BatchedWithBatchTableBinary (b3dm, binary batch table)",
+        "status": "ok",
+        "contents": 1,
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.002124978892974065,
+        "flipGamma": 0.0015679384584099331,
+        "flipGammaP95": 0,
+        "picks": "35/35 agree on \"id\" (1 features hit)",
+        "properties": "id, Longitude, Latitude, Height, cartographic, code",
+        "warnings": ""
+      },
+      {
+        "mode": "direct",
+        "source": "BatchedWithBatchTableBinary (b3dm, binary batch table)",
+        "status": "ok",
+        "contents": 1,
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.0017010399511740834,
+        "flipGamma": 0.0012241508132124518,
+        "flipGammaP95": 0,
+        "picks": "35/35 agree on \"id\" (1 features hit)",
+        "properties": "id, Longitude, Latitude, Height, cartographic, code",
+        "warnings": ""
+      },
+      {
+        "mode": "unlit",
+        "source": "BatchedWithTransformBox (tile transform)",
+        "status": "ok",
+        "contents": 1,
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.002188333506474637,
+        "flipGamma": 0.0015964730736041757,
+        "flipGammaP95": 0,
+        "picks": "35/35 agree on \"id\" (2 features hit)",
+        "properties": "id, Longitude, Latitude, Height",
+        "warnings": ""
+      },
+      {
+        "mode": "direct",
+        "source": "BatchedWithTransformBox (tile transform)",
+        "status": "ok",
+        "contents": 1,
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.0016922286325190326,
+        "flipGamma": 0.001165664541661233,
+        "flipGammaP95": 0,
+        "picks": "35/35 agree on \"id\" (2 features hit)",
+        "properties": "id, Longitude, Latitude, Height",
+        "warnings": ""
+      }
+    ]
+  }
+}

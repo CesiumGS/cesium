@@ -43,7 +43,11 @@ fn linearToSrgb(c: vec3f) -> vec3f {
 @fragment
 fn fs(@builtin(position) frag: vec4f) -> @location(0) vec4f {
   let coord = vec2i(frag.xy - params.origin);
-  var color = pbrNeutral(max(textureLoad(hdr, coord, 0).rgb * params.exposure, vec3f(0.0)));
+  let texel = textureLoad(hdr, coord, 0);
+  // Scene-referred color (alpha 1) is exposed and tonemapped; display-
+  // referred color (alpha 0: imagery) is shown as is. MSAA edges blend.
+  let mapped = pbrNeutral(max(texel.rgb * params.exposure, vec3f(0.0)));
+  var color = mix(max(texel.rgb, vec3f(0.0)), mapped, clamp(texel.a, 0.0, 1.0));
   color = clamp(color, vec3f(0.0), vec3f(1.0));
   if (params.encoding == 1u) {
     color = linearToSrgb(color);

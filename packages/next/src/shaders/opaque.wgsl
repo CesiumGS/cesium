@@ -253,7 +253,11 @@ fn fs(in: VsOut, @builtin(front_facing) frontFacing: bool) -> FsOut {
   var out: FsOut;
   out.featureId = vec2u(in.feature & 0xffffu, in.feature >> 16u);
   if ((flags & 1u) != 0u || (r.flags & 2u) != 0u) {
-    out.color = vec4f(baseColor.rgb, 1.0);
+    // Unlit color is display-referred (photographs: globe imagery,
+    // photogrammetry such as Google's tiles): alpha 0 tells the present
+    // pass to show it as is, without exposure or tonemapping, as glTF's
+    // KHR_materials_unlit and 1.x (HDR off by default) do.
+    out.color = vec4f(baseColor.rgb, 0.0);
     return out;
   }
 

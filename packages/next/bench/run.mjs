@@ -87,6 +87,7 @@ const suites = {
     `/parity/globe.html?bench${process.env.FOG === "0" ? "&fog=0" : ""}`,
     "runGlobe",
   ],
+  imagery: ["/parity/imagery.html?bench", "runImagery"],
   tileset: [
     `/parity/tileset.html?bench${process.env.ION_ASSET ? `&asset=${process.env.ION_ASSET}` : ""}${process.env.PICK_PROPERTY ? `&pick=${process.env.PICK_PROPERTY}` : ""}${process.env.TILESET_ZOOM ? `&zoom=${process.env.TILESET_ZOOM}` : ""}`,
     "runTileset",

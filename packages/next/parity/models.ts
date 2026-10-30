@@ -142,6 +142,9 @@ async function renderLegacy(
   sh: Array<[number, number, number]>,
   picks?: Array<unknown>,
 ): Promise<ImageData> {
+  // Unlit color is display-referred in both engines: 1.x shows it as is
+  // with HDR off (its default); lit modes compare tonemapped (HDR on).
+  viewer.scene.highDynamicRange = mode !== "unlit";
   viewer.scene.light = new Cesium.DirectionalLight({
     direction: new Cesium.Cartesian3(-sun[0]!, -sun[1]!, -sun[2]!),
     intensity: 2.0,
