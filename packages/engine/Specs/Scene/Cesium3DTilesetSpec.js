@@ -3489,7 +3489,73 @@ describe(
       expect(statistics.numberOfCommands).toEqual(3);
       expect(statistics.numberOfTilesWithContentReady).toEqual(3); // Three loaded tiles
       // SSE should have been adjusted higher
+      const screenSpaceError = tileset.memoryAdjustedScreenSpaceError;
+      expect(screenSpaceError).toBeGreaterThan(16);
+
+      // The raised SSE should not be lowered again in the same view
+      scene.renderForSpecs();
+      expect(tileset.memoryAdjustedScreenSpaceError).toEqual(screenSpaceError);
+    });
+
+    // Loads a tileset where the tiles needed for the view don't all fit in memory,
+    // so its memoryAdjustedScreenSpaceError is raised.
+    async function loadTilesetOverMemoryLimit() {
+      viewFromSouth();
+      const tileset = await Cesium3DTilesTester.loadTileset(scene, tilesetUrl, {
+        cacheBytes: 0.025 * 1024 * 1024,
+        maximumCacheOverflowBytes: 0,
+      });
       expect(tileset.memoryAdjustedScreenSpaceError).toBeGreaterThan(16);
+      return tileset;
+    }
+
+    it("lowers the memory-adjusted SSE again when the camera moves", async function () {
+      const tileset = await loadTilesetOverMemoryLimit();
+      const screenSpaceError = tileset.memoryAdjustedScreenSpaceError;
+
+      scene.camera.moveRight(0.1);
+      scene.renderForSpecs();
+      expect(tileset.memoryAdjustedScreenSpaceError).toBeLessThan(
+        screenSpaceError,
+      );
+    });
+
+    it("lowers the memory-adjusted SSE again when the model matrix changes", async function () {
+      const tileset = await loadTilesetOverMemoryLimit();
+      const screenSpaceError = tileset.memoryAdjustedScreenSpaceError;
+
+      tileset.modelMatrix = Matrix4.fromTranslation(
+        new Cartesian3(0.1, 0.0, 0.0),
+      );
+      // Model matrix changes are detected after tiles are processed, so the hold is
+      // released on the frame after the change.
+      scene.renderForSpecs();
+      scene.renderForSpecs();
+      expect(tileset.memoryAdjustedScreenSpaceError).toBeLessThan(
+        screenSpaceError,
+      );
+    });
+
+    it("lowers the memory-adjusted SSE again when cacheBytes changes", async function () {
+      const tileset = await loadTilesetOverMemoryLimit();
+      const screenSpaceError = tileset.memoryAdjustedScreenSpaceError;
+
+      tileset.cacheBytes = 2 * tileset.cacheBytes;
+      scene.renderForSpecs();
+      expect(tileset.memoryAdjustedScreenSpaceError).toBeLessThan(
+        screenSpaceError,
+      );
+    });
+
+    it("lowers the memory-adjusted SSE again when maximumCacheOverflowBytes changes", async function () {
+      const tileset = await loadTilesetOverMemoryLimit();
+      const screenSpaceError = tileset.memoryAdjustedScreenSpaceError;
+
+      tileset.maximumCacheOverflowBytes = 1024 * 1024;
+      scene.renderForSpecs();
+      expect(tileset.memoryAdjustedScreenSpaceError).toBeLessThan(
+        screenSpaceError,
+      );
     });
 
     it("Unloads cached tiles outside of the view frustum using cacheBytes", async function () {
