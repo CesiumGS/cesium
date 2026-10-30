@@ -122,7 +122,7 @@ describe("Scene/IonAssetElementService", function () {
     const getFetchedResource = mockFetchJson({
       items: [
         {
-          id: 8589934767n,
+          id: 8589934767,
           label: "Wall",
           properties: {
             Height: {
@@ -328,7 +328,7 @@ describe("Scene/IonAssetElementService", function () {
     const getFetchedResource = mockFetchJson({
       path: [
         { kind: "model", id: 7 },
-        { kind: "element", id: 8589934767n },
+        { kind: "element", id: 8589934767 },
       ],
     });
 
