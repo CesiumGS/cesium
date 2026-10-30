@@ -1,9 +1,11 @@
 import {
   Cartesian3,
+  Color,
   Matrix4,
   PrimitiveType,
   destroyObject,
 } from "@cesium/core";
+import { SceneTransforms } from "@cesium/engine";
 import { MeshEditorModule, OverlayRenderer } from "../../index.js";
 import createCanvas from "../../../../Specs/createCanvas.js";
 import createScene from "../../../../Specs/createScene.js";
@@ -96,6 +98,16 @@ const twoSquares = {
   ],
   faceCount: 4,
 };
+
+// TODO: Have specs set their own colors once the renderer's are configurable.
+// The renderer's default colors, as RGBA bytes. Faces facing the camera are
+// shaded by 1.05.
+const background = [255, 255, 255, 255];
+const black = [0, 0, 0, 255];
+const faceColor = [214, 214, 214, 255];
+const selectedPointColor = [255, 122, 0, 255];
+const selectedEdgeColor = [0, 199, 255, 255];
+const selectedFaceColor = [255, 43, 155, 255];
 
 // Vertices only.
 const points = {
@@ -246,6 +258,7 @@ describe(
     let shaders;
 
     beforeAll(async function () {
+      // We need a decently big canvas (compared to most specs) to properly test overlay rendering.
       scene = createScene({ canvas: createCanvas(256, 256) });
       ({ shaders } = await MeshEditorModule.load());
     });
@@ -260,6 +273,9 @@ describe(
       camera.position = new Cartesian3(0.0, 0.0, 4.0);
       camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3());
       camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
+
+      // Points and edges are black.
+      scene.backgroundColor = Color.WHITE;
     });
 
     afterEach(function () {
@@ -283,6 +299,38 @@ describe(
 
     function getInstanceCounts(commands) {
       return commands.map((command) => command.instanceCount);
+    }
+
+    // Renders a frame and reads the pixel under a position in the overlay's local space.
+    function renderPixel(overlay, position) {
+      scene.renderForSpecs();
+
+      const positionWC = Matrix4.multiplyByPoint(
+        overlay.modelMatrix,
+        Cartesian3.fromArray(position),
+        new Cartesian3(),
+      );
+      const windowPosition = SceneTransforms.worldToWindowCoordinates(
+        scene,
+        positionWC,
+      );
+
+      // Window coordinates start at the top, and pixels at the bottom.
+      return scene.context.readPixels({
+        x: Math.floor(windowPosition.x),
+        y: scene.drawingBufferHeight - 1 - Math.floor(windowPosition.y),
+        width: 1,
+        height: 1,
+      });
+    }
+
+    function expectPixel(overlay, position, color) {
+      const pixel = renderPixel(overlay, position);
+
+      // The WebGL stub doesn't draw, so like the renderer matchers, skip the check.
+      if (!window.webglStub) {
+        expect(pixel).toEqualEpsilon(color, 3);
+      }
     }
 
     describe("update", function () {
@@ -381,15 +429,88 @@ describe(
         expect(commands[0].primitiveType).toBe(PrimitiveType.TRIANGLE_STRIP);
       });
 
-      it("renders points, edges and faces");
+      it("renders points, edges and faces", function () {
+        const overlay = addSquare();
 
-      it("draws points over edges and edges over faces");
+        // A vertex, the middle of the bottom edge, and inside the bottom-right face.
+        expectPixel(overlay, [1.0, -1.0, 0.0], black);
+        expectPixel(overlay, [0.0, -1.0, 0.0], black);
+        expectPixel(overlay, [0.5, -0.5, 0.0], faceColor);
+        expectPixel(overlay, [1.5, 0.0, 0.0], background);
+      });
 
-      it("draws changed positions after a partial update");
+      // Viewed head-on, draw order alone gives this result, so it doesn't
+      // exercise the depth bias, which matters at oblique angles.
+      it("draws points over edges and edges over faces where they overlap", function () {
+        const overlay = new OverlayTestPrimitive(shaders);
+        overlay.setOverlay({
+          ...square,
+          selected: { verts: [0, 1, 2, 3], edges: [0, 1, 2, 3, 4], faces: [] },
+        });
+        scene.primitives.add(overlay);
 
-      it("draws the new topology after a full refresh");
+        // Two edges meet at the vertex, and the edge borders a face.
+        expectPixel(overlay, [1.0, -1.0, 0.0], selectedPointColor);
+        expectPixel(overlay, [0.0, -1.0, 0.0], selectedEdgeColor);
+      });
 
-      it("draws selected components in the selected color");
+      it("draws changed positions after a partial update", function () {
+        const overlay = addSquare();
+        expectPixel(overlay, [1.0, 1.0, 0.0], black);
+
+        const positions = square.positions.slice();
+        positions[2] = [0.5, 0.5, 0.0];
+        overlay.setOverlay(
+          { ...square, positions },
+          {
+            fullRefresh: false,
+            dirtyRanges: { positions: { start: 2, end: 3 } },
+          },
+        );
+
+        expectPixel(overlay, [1.0, 1.0, 0.0], background);
+        expectPixel(overlay, [0.5, 0.5, 0.0], black);
+      });
+
+      it("draws the new topology after a full refresh", function () {
+        const overlay = addSquare();
+        expectPixel(overlay, [-0.5, 0.5, 0.0], faceColor);
+
+        // Drops the top-left vertex, and the face beside it.
+        overlay.setOverlay(triangle);
+
+        expectPixel(overlay, [-0.5, 0.5, 0.0], background);
+        expectPixel(overlay, [-1.0, 1.0, 0.0], background);
+        expectPixel(overlay, [0.5, -0.5, 0.0], faceColor);
+      });
+
+      it("draws selected components in the selected color", function () {
+        const overlay = addSquare();
+        expectPixel(overlay, [0.5, -0.5, 0.0], faceColor);
+
+        // Selects a vertex, the bottom edge, and the bottom-right face, as a
+        // partial update.
+        overlay.setOverlay(
+          { ...square, selected: { verts: [0], edges: [0], faces: [0] } },
+          {
+            fullRefresh: false,
+            dirtyRanges: {
+              selection: {
+                verts: { start: 0, end: 1 },
+                edges: { start: 0, end: 1 },
+                faces: { start: 0, end: 1 },
+              },
+            },
+          },
+        );
+
+        expectPixel(overlay, [-1.0, -1.0, 0.0], selectedPointColor);
+        expectPixel(overlay, [1.0, 1.0, 0.0], black);
+        expectPixel(overlay, [0.0, -1.0, 0.0], selectedEdgeColor);
+        expectPixel(overlay, [0.0, 1.0, 0.0], black);
+        expectPixel(overlay, [0.5, -0.5, 0.0], selectedFaceColor);
+        expectPixel(overlay, [-0.5, 0.5, 0.0], faceColor);
+      });
     });
 
     describe("picking", function () {
