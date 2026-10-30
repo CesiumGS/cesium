@@ -15,7 +15,7 @@
  * skirts hang `skirtHeight` below each edge to hide cracks between levels.
  */
 import { Ellipsoid } from "../math/ellipsoid.ts";
-import { horizonCullingPoint } from "./horizon.ts";
+import { horizonCullingPoint } from "../math/horizon.ts";
 import type { GltfAsset, GltfMesh } from "../io/gltfTypes.ts";
 
 /** A tile's extent in radians. */

@@ -25,8 +25,8 @@ import {
   type SelectionView,
 } from "./Legacy1x.ts";
 import { CLIP_BOXES } from "../render/layout.ts";
-import type { Tile } from "./Tile.ts";
-import { OUTSIDE, volumeIntersectPlane } from "./volumes.ts";
+import type { Tile, TileViewState } from "./Tile.ts";
+import { OUTSIDE, aboveHorizon, volumeIntersectPlane } from "./volumes.ts";
 
 export interface BudgetedOptions extends Legacy1xOptions {
   /**
@@ -85,6 +85,11 @@ export class BudgetedSelection extends Legacy1xSelection {
   skipLevels: number;
   prefetchErrorScale: number;
   mixedLod: "auto" | "always" | "never";
+  /**
+   * Cull against the ellipsoid's horizon. Off for views that look through
+   * or under the surface (underground content, a see-through globe).
+   */
+  horizonCulling = true;
 
   constructor(options: BudgetedOptions = {}) {
     super(options);
@@ -92,6 +97,29 @@ export class BudgetedSelection extends Legacy1xSelection {
     this.skipLevels = options.skipLevels ?? 2;
     this.prefetchErrorScale = options.prefetchErrorScale ?? 2;
     this.mixedLod = options.mixedLod ?? "auto";
+  }
+
+  /**
+   * 1.x visibility plus the ellipsoid's horizon (1.x culls only the globe
+   * this way): content past the horizon is neither drawn nor fetched.
+   */
+  protected override updateVisibility(
+    tile: Tile,
+    state: TileViewState,
+    view: SelectionView,
+    pass: number,
+  ): void {
+    if (state.updated === pass) {
+      return;
+    }
+    super.updateVisibility(tile, state, view, pass);
+    if (
+      state.visible &&
+      this.horizonCulling &&
+      !aboveHorizon(tile, view.position)
+    ) {
+      state.visible = false;
+    }
   }
 
   override select(
@@ -166,11 +194,13 @@ export class BudgetedSelection extends Legacy1xSelection {
       : tile.renderable
         ? undefined
         : []; // empty, or an external tileset already expanded
-    // Tiles without content of their own (empty, expanded external tilesets)
-    // always refine: there is nothing to show at their level.
+    // An expanded external tileset always refines (its root is its only
+    // child); an empty tile only when its error is visible, as in 1.x: an
+    // empty tile that meets the SSE means nothing below needs drawing.
     const refine =
       tile.children.length > 0 &&
-      (!tile.renderable || state.sse > this.memoryAdjustedScreenSpaceError);
+      ((tile.external && !tile.renderable) ||
+        state.sse > this.memoryAdjustedScreenSpaceError);
 
     if (!refine) {
       // Frontier tile.
@@ -355,7 +385,8 @@ export class BudgetedSelection extends Legacy1xSelection {
     if (
       !planes ||
       this.prefetchErrorScale <= 0 ||
-      !insidePlanes(tile, planes)
+      !insidePlanes(tile, planes) ||
+      (this.horizonCulling && !aboveHorizon(tile, view.position))
     ) {
       return;
     }
@@ -367,7 +398,7 @@ export class BudgetedSelection extends Legacy1xSelection {
     }
     const refine =
       tile.children.length > 0 &&
-      (!tile.renderable ||
+      ((tile.external && !tile.renderable) ||
         state.sse >
           this.memoryAdjustedScreenSpaceError * this.prefetchErrorScale);
     if (tile.renderable && (!refine || tile.refine === "ADD")) {

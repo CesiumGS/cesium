@@ -29,7 +29,10 @@ import {
 import { Ellipsoid } from "../math/ellipsoid.ts";
 import { CLIP_BOXES } from "../render/layout.ts";
 import type { Vec3 } from "../math/vec3.ts";
-import { horizonCullingPoint, isScaledSpacePointVisible } from "./horizon.ts";
+import {
+  horizonCullingPoint,
+  isScaledSpacePointVisible,
+} from "../math/horizon.ts";
 import type { GlobeTile, TerrainSource } from "./TerrainSource.ts";
 
 // 1.x TileSelectionResult.

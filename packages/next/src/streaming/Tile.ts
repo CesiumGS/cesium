@@ -11,7 +11,12 @@ import * as v3 from "../math/vec3.ts";
 import type { Mat4 } from "../math/mat4.ts";
 import { resolveUri } from "../io/ion.ts";
 import type { ModelInstance } from "../scene/gltfModel.ts";
-import { volumeFromJson, volumeObb, type TileVolume } from "./volumes.ts";
+import {
+  volumeFromJson,
+  volumeObb,
+  type Occludee,
+  type TileVolume,
+} from "./volumes.ts";
 
 export type Refine = "ADD" | "REPLACE";
 
@@ -64,6 +69,8 @@ export class Tile {
    * region (terrain quadrants without data, which 1.x upsamples).
    */
   fillFromParent = false;
+  /** Horizon-occlusion point of `volume` (`aboveHorizon`). */
+  occludee?: Occludee & { volume: TileVolume };
   /** Terrain tiles: quadtree address and 1.x globe selection state. */
   globe?: GlobeTile;
 

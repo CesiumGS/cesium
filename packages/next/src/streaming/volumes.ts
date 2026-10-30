@@ -10,6 +10,10 @@ import type { Vec3 } from "../math/vec3.ts";
 import type { Mat4 } from "../math/mat4.ts";
 import { Ellipsoid, type Cartographic } from "../math/ellipsoid.ts";
 import { eastNorthUpToFixedFrame } from "../math/transforms.ts";
+import {
+  horizonCullingPoint,
+  isScaledSpacePointVisible,
+} from "../math/horizon.ts";
 
 /** Plane classification, as 1.x `Intersect`. */
 export const OUTSIDE = -1;
@@ -735,4 +739,90 @@ export function volumeObb(v: TileVolume): Obb | undefined {
     : v.kind === "region"
       ? v.region.obb
       : undefined;
+}
+
+// ---------------------------------------------------------------- horizon
+
+/** A volume's horizon-occlusion point, and the height its occluder shrinks to. */
+export interface Occludee {
+  /** Ellipsoid-scaled point; undefined: the volume can't be horizon-culled. */
+  point?: Vec3;
+  minimumHeight: number;
+}
+
+/**
+ * The point that, hidden behind the ellipsoid shrunk to the volume's
+ * minimum height, hides the whole volume (1.x computeOccludeePoint for
+ * regions; all eight corners for boxes). Spheres, and volumes near the
+ * Earth's center (local coordinates), are never culled.
+ */
+export function volumeOccludee(v: TileVolume): Occludee {
+  const corners: number[] = [];
+  let center: Vec3;
+  let minimumHeight: number;
+  if (v.kind === "region") {
+    const r = v.region;
+    const p = v3.vec3();
+    for (const [longitude, latitude] of [
+      [r.west, r.south],
+      [r.east, r.south],
+      [r.west, r.north],
+      [r.east, r.north],
+    ] as const) {
+      ellipsoid.cartographicToCartesian(
+        { longitude, latitude, height: r.maximumHeight },
+        p,
+      );
+      corners.push(p[0]!, p[1]!, p[2]!);
+    }
+    center = r.obb.center;
+    minimumHeight = r.minimumHeight;
+  } else if (v.kind === "box") {
+    const { center: c, halfAxes: h } = v.obb;
+    center = c;
+    minimumHeight = Infinity;
+    const carto = { longitude: 0, latitude: 0, height: 0 };
+    for (let i = 0; i < 8; i++) {
+      const sx = i & 1 ? 1 : -1;
+      const sy = i & 2 ? 1 : -1;
+      const sz = i & 4 ? 1 : -1;
+      const x = c[0]! + sx * h[0]! + sy * h[3]! + sz * h[6]!;
+      const y = c[1]! + sx * h[1]! + sy * h[4]! + sz * h[7]!;
+      const z = c[2]! + sx * h[2]! + sy * h[5]! + sz * h[8]!;
+      corners.push(x, y, z);
+      const height = ellipsoid.cartesianToCartographic(
+        v3.vec3(x, y, z),
+        carto,
+      )?.height;
+      minimumHeight = Math.min(minimumHeight, height ?? -Infinity);
+    }
+  } else {
+    return { minimumHeight: 0 };
+  }
+  if (
+    !Number.isFinite(minimumHeight) ||
+    v3.length(center) < 0.1 * ellipsoid.minimumRadius
+  ) {
+    return { minimumHeight: 0 };
+  }
+  const point = horizonCullingPoint(center, corners, minimumHeight);
+  return point ? { point, minimumHeight } : { minimumHeight };
+}
+
+/**
+ * Whether the tile may be seen past the ellipsoid's horizon from `camera`,
+ * in float64 (1.x isScaledSpacePointVisiblePossiblyUnderEllipsoid). The
+ * occludee is cached per volume (terrain volumes tighten as tiles load).
+ */
+export function aboveHorizon(
+  tile: { volume: TileVolume; occludee?: Occludee & { volume: TileVolume } },
+  camera: Vec3,
+): boolean {
+  if (tile.occludee?.volume !== tile.volume) {
+    tile.occludee = { ...volumeOccludee(tile.volume), volume: tile.volume };
+  }
+  const o = tile.occludee;
+  return (
+    !o.point || isScaledSpacePointVisible(camera, o.point, o.minimumHeight)
+  );
 }

@@ -5,7 +5,7 @@
  * below the ellipsoid use a shrunk ellipsoid (radii + minimum height) for
  * both the occludee point and the visibility test.
  */
-import type { Vec3 } from "../math/vec3.ts";
+import type { Vec3 } from "./vec3.ts";
 
 const RADII = [6378137.0, 6378137.0, 6356752.314245179] as const;
 const MINIMUM_RADIUS = RADII[2];
