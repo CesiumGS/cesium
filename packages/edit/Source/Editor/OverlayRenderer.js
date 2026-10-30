@@ -250,6 +250,15 @@ class OverlayRenderer {
       this.#edgeOverlay,
       this.#faceOverlay,
     ];
+
+    /**
+     * Whether to draw the overlay. Overlay views passed to update are uploaded
+     * either way.
+     *
+     * @type {boolean}
+     * @default true
+     */
+    this.show = true;
   }
 
   /**
@@ -280,7 +289,8 @@ class OverlayRenderer {
 
   /**
    * Uploads the changed overlay views, if any, then adds the overlay's draw
-   * commands to the frame. Draws nothing until overlay views are first passed.
+   * commands to the frame. Draws nothing until overlay views are first passed,
+   * or while show is false.
    *
    * @param {FrameState} frameState The frame state.
    * @param {OverlayViews} [overlayViews] The mesh's overlay views. Pass them only when wasm reports that the overlay changed, right after reading them, with no calls into wasm in between: those invalidate the views.
@@ -294,7 +304,7 @@ class OverlayRenderer {
       this.#upload(frameState.context, overlayViews);
     }
 
-    if (frameState.mode !== SceneMode.SCENE3D) {
+    if (!this.show || frameState.mode !== SceneMode.SCENE3D) {
       return;
     }
 
