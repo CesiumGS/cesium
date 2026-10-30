@@ -74,7 +74,9 @@ function createLegacyViewer() {
     creditContainer: document.querySelector("#credits"),
   });
   const s = viewer.scene;
-  s.highDynamicRange = true;
+  // The scene is unlit, which both engines show as is (display-referred):
+  // 1.x with HDR off, its default.
+  s.highDynamicRange = false;
   s.fog.enabled = false;
   s.sun = undefined;
   s.moon = undefined;
