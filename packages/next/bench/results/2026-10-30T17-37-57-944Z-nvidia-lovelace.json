@@ -1,0 +1,82 @@
+{
+  "date": "2026-10-30T17:37:57.944Z",
+  "environment": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0",
+    "adapter": {
+      "vendor": "nvidia",
+      "architecture": "lovelace",
+      "description": "NVIDIA RTX 3000 Ada Generation Laptop GPU"
+    },
+    "timestampQuery": true
+  },
+  "errors": [],
+  "results": {
+    "lod": [
+      {
+        "scenario": "jump in",
+        "policy": "Legacy1x (1.x, 18 requests)",
+        "status": "ok",
+        "requests": 315,
+        "megabytes": 426.33745861053467,
+        "settleMs": 5784.599999904633,
+        "flip250": 0.46185244189610886,
+        "flip1000": 0.38587384622708415,
+        "flipSettled": 0.13411769403740328,
+        "selected": 119,
+        "flipAverage": 0.27650693454437586
+      },
+      {
+        "scenario": "jump in",
+        "policy": "Budgeted, 18 requests",
+        "status": "ok",
+        "requests": 214,
+        "megabytes": 269.44549655914307,
+        "settleMs": 4919.799999952316,
+        "flip250": 0.4618523164697731,
+        "flip1000": 0.4618523164697731,
+        "flipSettled": 0.13411769403740328,
+        "selected": 100,
+        "flipAverage": 0.21355373716805212
+      },
+      {
+        "scenario": "jump in",
+        "policy": "Budgeted, 4 requests",
+        "status": "ok",
+        "requests": 214,
+        "megabytes": 269.44549655914307,
+        "settleMs": 2886.399999976158,
+        "flip250": 0.4618523164697731,
+        "flip1000": 0.22018264356008005,
+        "flipSettled": 0.13411769403740328,
+        "selected": 100,
+        "flipAverage": 0.17287733101486225
+      },
+      {
+        "scenario": "jump in",
+        "policy": "Budgeted, adaptive",
+        "status": "ok",
+        "requests": 214,
+        "megabytes": 269.44549655914307,
+        "settleMs": 2873.100000023842,
+        "flip250": 0.4618523164697731,
+        "flip1000": 0.2201785115230697,
+        "flipSettled": 0.13411769403740328,
+        "selected": 100,
+        "flipAverage": 0.1734770874165331
+      },
+      {
+        "scenario": "jump in",
+        "policy": "Budgeted, 64 requests",
+        "status": "ok",
+        "requests": 214,
+        "megabytes": 269.44549655914307,
+        "settleMs": 2884.1999999284744,
+        "flip250": 0.4618523164697731,
+        "flip1000": 0.46159270655696316,
+        "flipSettled": 0.13411722800747672,
+        "selected": 100,
+        "flipAverage": 0.2042731571439778
+      }
+    ]
+  }
+}

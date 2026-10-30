@@ -32,6 +32,7 @@ Branch: `cesium-2.0-webgpu-poc` (off `main` @ `587f52f1eb`, CesiumJS 1.146.0)
 | r24 | M3 increment 2: the 1.x globe selection (`GlobeLegacy1xSelection`) with fog, horizon culling and 1.x's kicking and load queues; globe L1 parity 100% on six cameras with and without fog. Quadrants without data are upsampled as in 1.x (drawn clipped from the tile with data); partial availability no longer leaves holes under `Budgeted`. Tilesets stay active after loads without content. Fetch timeouts and retries recorded as a follow-up.                                         |
 | r25 | Horizon culling moves into selection (float64, 1.x per-tile shrink): `Budgeted` culls 3D Tiles and terrain at the horizon before fetching, and the GPU test is retired (records back to 192 bytes). `Budgeted` refines empty tiles by SSE as 1.x does: OSM at Rainier drops from 783 requests to 31. §13.2 records cross-tileset scheduling to try (per-origin priority queue, I/O priority classes, preempting prefetch, wire priorities, aging).                                            |
 | r26 | M3 increment 4: globe imagery composited on the GPU into a `texture_2d_array` cache (Bing via ion, 1.x level choice, ancestor fallback, empty-tile fallback, credits), within FLIP 0.03-0.05 of 1.x; a streamed ellipsoid globe (1.x `EllipsoidTerrainProvider`) replaces the static globe and ground patch; a 1.x-style globe camera controller with `View.pickPosition`; unlit color is display-referred (its own target, never tonemapped), which fixed darkened imagery and Google tiles. |
+| r27 | Content comes and goes in one world without stalls: the viewer keeps one world and globe (switch to a glTF: 26 ms, was 932), endpoint caches, an adaptive engine-wide upload budget and spread eviction. Open: frame stalls on first visits to uncached areas, and the budget's cost to settle time.                                                                                                                                                                                          |
 
 ## 1. Goal
 
@@ -2048,6 +2049,47 @@ off by default, shows them as is. Imagery FLIP against 1.x went from
   tonemapping as the final step of a deferred resolve (M5).
 - The models, tileset and L2 parity pages compare unlit color against 1.x
   with HDR off (its default) and lit color with HDR on.
+
+### Content in and out of a live world (r27)
+
+Switching content in the viewer froze the old scene for about 0.9 s, none
+of it in the stats panel: every switch built a new world, globe and
+imagery and waited on six serial round trips (ion endpoints for the
+content, Bing and CWT, Bing metadata, `layer.json`) before the swap.
+
+- **One world:** content (tilesets, models, the city) loads into the
+  session's world, hidden while it streams, and replaces the old content in
+  one step; the globe and its imagery are built once. Swap after: glTF
+  26 ms (was 932), OSM 498 ms (was 840), Google 562 ms, an iModel 1.6 s
+  (the export lookup), with no frame over 34 ms and teardown under 1 ms.
+- **Endpoint caches:** ion endpoints and iTwin exports for 45 minutes
+  (their tokens last about an hour); failures are not kept.
+- **One upload budget for all tilesets,** in GPU bytes per frame, the
+  update order rotating so none starves: a count per tileset (8) stalled
+  frames with several tilesets streaming (Google with OSM: 67 ms frames).
+  A fixed 2 MiB slowed a single big tileset (Google jump-in settled 2.2×
+  later), so it adapts as request windows do: it grows by a quarter MiB
+  while frames are on time and the budget was used up, halves when a frame
+  is late (0.5 to 32 MiB). Measured on Google jump-in, with network
+  variance between runs: settle 2.9 s against 1.7 s without a budget and
+  3.8 s at a fixed 2 MiB; average FLIP while loading 0.173 against 0.192.
+- **Eviction spread the same way** (at most twice the upload budget per
+  frame unless past the hard limit): after a camera jump everything shown
+  before became evictable at once.
+- `tsconfig.json` now covers `viewer/`, which had not been type-checked.
+
+Open:
+
+- **First visits to uncached areas** still have 0 to 8 frames of 50 to
+  120 ms in the first half second, with no main-thread long task, and in
+  frames with no upload and no mass eviction (4 workers on 22 threads rule
+  out CPU contention). Next: a GPU-process trace from the runner
+  (Perfetto) around a camera jump.
+- **Smoothness against settle time:** the budget trades 1.7 s for 2.9 s on
+  Google jump-in. Options: a larger floor when one tileset streams, cost
+  per upload measured instead of bytes, or uploads spread within a frame.
+- **A hitch benchmark:** tilesets added, removed and flown into in a live
+  world, reporting worst frame and frames over 34 ms, as a regression gate.
 
 Next increments: height queries and the CAD tileset on terrain (and the
 camera's terrain collision); cross-tileset scheduling (§13.2); fetch

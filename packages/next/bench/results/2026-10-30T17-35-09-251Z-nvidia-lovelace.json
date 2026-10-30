@@ -1,0 +1,125 @@
+{
+  "date": "2026-10-30T17:35:09.251Z",
+  "commit": "2acdeef499c315e9b3db9f8072737bde90379147",
+  "environment": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0",
+    "adapter": {
+      "vendor": "nvidia",
+      "architecture": "lovelace",
+      "description": "NVIDIA RTX 3000 Ada Generation Laptop GPU"
+    },
+    "timestampQuery": true
+  },
+  "errors": [],
+  "results": {
+    "lod": [
+      {
+        "scenario": "jump in",
+        "policy": "Legacy1x (1.x, 18 requests)",
+        "status": "ok",
+        "requests": 315,
+        "megabytes": 426.33745861053467,
+        "settleMs": 6365,
+        "flip250": 0.46185244189610886,
+        "flip1000": 0.46185244189610886,
+        "flipSettled": 0.13411769403740328,
+        "selected": 119,
+        "flipAverage": 0.2865428359229007
+      },
+      {
+        "scenario": "jump in",
+        "policy": "Budgeted, 18 requests",
+        "status": "ok",
+        "requests": 214,
+        "megabytes": 269.44549655914307,
+        "settleMs": 4259.700000047684,
+        "flip250": 0.4618523164697731,
+        "flip1000": 0.406433012645837,
+        "flipSettled": 0.13411769403740328,
+        "selected": 100,
+        "flipAverage": 0.1915892045022879
+      },
+      {
+        "scenario": "jump in",
+        "policy": "Budgeted, 4 requests",
+        "status": "ok",
+        "requests": 214,
+        "megabytes": 269.44549655914307,
+        "settleMs": 3930.3000000715256,
+        "flip250": 0.4618523164697731,
+        "flip1000": 0.2138024588445688,
+        "flipSettled": 0.13411769403740328,
+        "selected": 100,
+        "flipAverage": 0.17062539877685803
+      },
+      {
+        "scenario": "jump in",
+        "policy": "Budgeted, adaptive",
+        "status": "ok",
+        "requests": 214,
+        "megabytes": 269.44549655914307,
+        "settleMs": 3823.2999999523163,
+        "flip250": 0.4618523164697731,
+        "flip1000": 0.22589071321467863,
+        "flipSettled": 0.13411769403740328,
+        "selected": 100,
+        "flipAverage": 0.1722903762500895
+      },
+      {
+        "scenario": "jump in",
+        "policy": "Budgeted, 64 requests",
+        "status": "ok",
+        "requests": 214,
+        "megabytes": 269.44549655914307,
+        "settleMs": 3863.5,
+        "flip250": 0.4618523164697731,
+        "flip1000": 0.46159270655696316,
+        "flipSettled": 0.13411722800747672,
+        "selected": 100,
+        "flipAverage": 0.2089094785457283
+      }
+    ],
+    "selection": [
+      {
+        "tileset": "ion asset",
+        "view": "close oblique",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 79,
+        "next": 79,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "ion asset",
+        "view": "far top-down",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 22,
+        "next": 22,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "ion asset",
+        "view": "street level",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 164,
+        "next": 164,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "ion asset",
+        "view": "viewer default",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 68,
+        "next": 68,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      }
+    ]
+  }
+}

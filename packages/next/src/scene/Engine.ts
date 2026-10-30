@@ -565,11 +565,21 @@ export class Engine {
   /**
    * GPU bytes of content (geometry and textures) all tilesets may upload
    * per frame together. Uploads share the queue with rendering: a fixed
-   * count per tileset let several streaming tilesets stall frames (8 per
-   * tileset: 67 ms frames on Google 3D Tiles; this budget: none over
-   * 34 ms). At least one upload happens per frame, so loading never stops.
+   * count per tileset let several streaming tilesets stall frames, and a
+   * fixed small budget slowed a single big one (Google 3D Tiles settled
+   * 2.2× later at 2 MiB). So the budget adapts, as request windows do: it
+   * grows while frames arrive on time and the budget was used up, and
+   * halves when a frame arrives late. At least one upload happens per
+   * frame, so loading never stops.
    */
   uploadBytesPerFrame = 2 * 1024 * 1024;
+  /** Bounds of the adaptive upload budget, bytes per frame. */
+  minimumUploadBytesPerFrame = 512 * 1024;
+  maximumUploadBytesPerFrame = 32 * 1024 * 1024;
+  private lastUpdateAt = 0;
+  private budgetFilled = false;
+  private readonly frameIntervals = new Float64Array(31);
+  private frameIntervalCount = 0;
   /** @internal What is left of this frame's upload budget. */
   readonly uploadBudget = { bytes: 0, uploads: 0 };
   private tilesetRotation = 0;
@@ -580,6 +590,7 @@ export class Engine {
    * of the shared upload budget.
    */
   private updateTilesets(due: (tileset: Tileset3D) => boolean): void {
+    this.adaptUploadBudget(performance.now());
     this.uploadBudget.bytes = this.uploadBytesPerFrame;
     this.uploadBudget.uploads = 0;
     const n = this.tilesets.length;
@@ -589,6 +600,41 @@ export class Engine {
       if (due(tileset)) {
         tileset.update(this.selectionViews(tileset.world));
       }
+    }
+    this.budgetFilled = this.uploadBudget.bytes <= 0;
+  }
+
+  /**
+   * AIMD on the upload budget from the time between updates: late (over
+   * 1.5× the recent median and 8 ms more) halves it; on time with the
+   * budget used up grows it by a quarter MiB. Gaps over a second (hidden
+   * tab, paused loop) are ignored.
+   */
+  private adaptUploadBudget(now: number): void {
+    const interval = now - this.lastUpdateAt;
+    this.lastUpdateAt = now;
+    if (interval <= 0 || interval > 1000) {
+      return;
+    }
+    const intervals = this.frameIntervals;
+    intervals[this.frameIntervalCount++ % intervals.length] = interval;
+    const count = Math.min(this.frameIntervalCount, intervals.length);
+    if (count < 8) {
+      return;
+    }
+    const median = Float64Array.from(intervals.subarray(0, count)).sort()[
+      count >> 1
+    ]!;
+    if (interval > Math.max(1.5 * median, median + 8)) {
+      this.uploadBytesPerFrame = Math.max(
+        this.minimumUploadBytesPerFrame,
+        this.uploadBytesPerFrame / 2,
+      );
+    } else if (this.budgetFilled) {
+      this.uploadBytesPerFrame = Math.min(
+        this.maximumUploadBytesPerFrame,
+        this.uploadBytesPerFrame + 256 * 1024,
+      );
     }
   }
 
