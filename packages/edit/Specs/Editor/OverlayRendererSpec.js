@@ -373,6 +373,23 @@ describe(
         expect(renderCommands(overlay)).toEqual([]);
       });
 
+      it("adds no commands when show is false", function () {
+        const overlay = addSquare();
+        overlay.renderer.show = false;
+
+        expect(renderCommands(overlay)).toEqual([]);
+      });
+
+      it("uploads overlay views when show is false", function () {
+        const overlay = addSquare();
+        overlay.renderer.show = false;
+        renderCommands(overlay);
+
+        overlay.renderer.show = true;
+
+        expect(getInstanceCounts(renderCommands(overlay))).toEqual([4, 5, 2]);
+      });
+
       it("draws points and edges as instanced triangle strips", function () {
         const [pointCommand, edgeCommand] = renderCommands(addSquare());
 
