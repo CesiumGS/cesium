@@ -14,6 +14,7 @@
 
 - Added support for glTF models with the [KHR_materials_emissive_strength extension](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_emissive_strength). [#13961](https://github.com/CesiumGS/cesium/pull/13961)
 - Added experimental `VectorPrimitive`, `CircleLayer`, and `Scene.vectorPrimitives`. A vector primitive draws a `BufferPrimitiveCollection` with styling held by the vector primitive instead of per-primitive materials, and several vector primitives may draw the same collection. `CircleLayer` draws points with a radius, fill color, and outline. [#13932](https://github.com/CesiumGS/cesium/pull/13932)
+- `CircleLayer` can style each point individually, e.g. `radius: (point) => ...`, and `filter` selects which points are drawn. [#13942](https://github.com/CesiumGS/cesium/pull/13942)
 
 #### Fixes :wrench:
 
