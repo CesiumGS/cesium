@@ -11,6 +11,7 @@ import {
   VertexAttributeSemantic,
 } from "@cesium/engine";
 import {
+  ComponentType,
   Mesh as WasmMesh,
   MeshEditor as WasmMeshEditor,
   UpdateResult,
@@ -29,6 +30,10 @@ const POSITION_ATTRIBUTE = new GeometryAttributeDescriptor({
 // The data read from each source.
 const READ_OPTIONS = { attributes: [POSITION_ATTRIBUTE], primitives: true };
 
+// The components inactive meshes draw, so they stay visible. Wasm's policy
+// covers only active meshes.
+const INACTIVE_COMPONENTS = 1 << ComponentType.Face;
+
 /**
  * <div class="notice">
  * Use {@link MeshEditor.addToScene} to create an editor. Do not call the
@@ -36,8 +41,9 @@ const READ_OPTIONS = { attributes: [POSITION_ATTRIBUTE], primitives: true };
  * </div>
  *
  * Edits geometry in a scene. Each added {@link GeometrySource} is replaced by
- * an editable {@link Mesh}, drawn as vertices, edges and faces according to
- * the editor's {@link EditMode}.
+ * an editable {@link Mesh}. Active meshes are drawn as vertices, edges and
+ * faces according to the editor's {@link EditMode}, and are the ones it edits.
+ * Inactive meshes are drawn as faces.
  *
  * The editor is a primitive in the scene's primitive collection. Remove it
  * with <code>scene.primitives.remove(editor)</code>, which destroys it.
@@ -50,6 +56,7 @@ const READ_OPTIONS = { attributes: [POSITION_ATTRIBUTE], primitives: true };
  * @example
  * const editor = await Cesium.MeshEditor.addToScene(viewer.scene);
  * const mesh = editor.addMesh(model.nodes[0].primitives[0]);
+ * editor.setMeshActive(mesh);
  * editor.mode = Cesium.EditMode.VERTEX;
  */
 class MeshEditor {
@@ -106,7 +113,7 @@ class MeshEditor {
   }
 
   /**
-   * Which components of the meshes are edited. Changing the mode may
+   * Which components of the active meshes are edited. Changing the mode may
    * deactivate the active tool.
    *
    * @type {EditMode}
@@ -130,13 +137,16 @@ class MeshEditor {
 
     const { renderableComponents } = this.#wasmEditor;
     for (const mesh of this.#meshes) {
-      mesh._renderer.setShownComponents(renderableComponents);
+      if (this.#wasmEditor.isMeshActive(mesh._key)) {
+        mesh._renderer.setShownComponents(renderableComponents);
+      }
     }
   }
 
   /**
    * Adds a geometry source to the editor. If the source has a
    * <code>show</code> property, it's hidden while the mesh is in the editor.
+   * The new mesh starts inactive.
    *
    * @param {GeometrySource} source The geometry to edit.
    * @returns {Mesh} The mesh that edits the source.
@@ -155,10 +165,9 @@ class MeshEditor {
     //>>includeEnd('debug');
 
     const key = this.#wasmEditor.addMesh(this.#createWasmMesh(source));
-    this.#wasmEditor.setMeshActive(key);
 
     const mesh = new Mesh({ source, key, module: this.#module });
-    mesh._renderer.setShownComponents(this.#wasmEditor.renderableComponents);
+    mesh._renderer.setShownComponents(INACTIVE_COMPONENTS);
     this.#meshes.add(mesh);
 
     return mesh;
@@ -188,6 +197,64 @@ class MeshEditor {
    */
   hasMesh(mesh) {
     return this.#meshes.has(mesh);
+  }
+
+  /**
+   * Makes a mesh active, so the editor's mode applies to it. Cancels the
+   * active tool's current interaction.
+   *
+   * @param {Mesh} mesh The mesh to edit.
+   *
+   * @exception {DeveloperError} The mesh isn't in the editor.
+   */
+  setMeshActive(mesh) {
+    this.#checkMesh(mesh);
+
+    this.#wasmEditor.setMeshActive(mesh._key);
+    mesh._renderer.setShownComponents(this.#wasmEditor.renderableComponents);
+  }
+
+  /**
+   * Makes a mesh inactive, so it's drawn as faces and not edited. Its
+   * selection is kept. Cancels the active tool's current interaction.
+   *
+   * @param {Mesh} mesh The mesh to stop editing.
+   *
+   * @exception {DeveloperError} The mesh isn't in the editor.
+   */
+  setMeshInactive(mesh) {
+    this.#checkMesh(mesh);
+
+    this.#wasmEditor.setMeshInactive(mesh._key);
+    mesh._renderer.setShownComponents(INACTIVE_COMPONENTS);
+  }
+
+  /**
+   * @param {Mesh} mesh The mesh to check.
+   * @returns {boolean} <code>true</code> if the mesh is active, <code>false</code> otherwise.
+   *
+   * @exception {DeveloperError} The mesh isn't in the editor.
+   */
+  isMeshActive(mesh) {
+    this.#checkMesh(mesh);
+
+    return this.#wasmEditor.isMeshActive(mesh._key);
+  }
+
+  /**
+   * Wasm keys only identify meshes within one editor, so a mesh from another
+   * editor could match a different mesh in this one.
+   *
+   * @param {Mesh} mesh The mesh to check.
+   * @exception {DeveloperError} The mesh isn't in the editor.
+   * @ignore
+   */
+  #checkMesh(mesh) {
+    //>>includeStart('debug', pragmas.debug);
+    if (!this.#meshes.has(mesh)) {
+      throw new DeveloperError("The mesh isn't in this editor.");
+    }
+    //>>includeEnd('debug');
   }
 
   /**
