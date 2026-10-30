@@ -171,12 +171,13 @@ describe(
         expect(source.show).toBeUndefined();
       });
 
-      it("returns a shown mesh", async function () {
+      it("returns a shown, inactive mesh", async function () {
         const editor = await MeshEditor.addToScene(scene);
 
         const mesh = editor.addMesh(createSource(square));
 
         expect(mesh.show).toBe(true);
+        expect(editor.isMeshActive(mesh)).toBe(false);
       });
 
       it("throws if the source was already added", async function () {
@@ -244,6 +245,58 @@ describe(
       });
     });
 
+    describe("active meshes", function () {
+      it("setMeshActive makes a mesh active", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const mesh = editor.addMesh(createSource(square));
+
+        editor.setMeshActive(mesh);
+
+        expect(editor.isMeshActive(mesh)).toBe(true);
+      });
+
+      it("setMeshInactive makes a mesh inactive", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const mesh = editor.addMesh(createSource(square));
+        editor.setMeshActive(mesh);
+
+        editor.setMeshInactive(mesh);
+
+        expect(editor.isMeshActive(mesh)).toBe(false);
+      });
+
+      it("throws for a mesh that isn't in the editor", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const otherEditor = await MeshEditor.addToScene(scene);
+        const mesh = otherEditor.addMesh(createSource(square));
+
+        expect(() => editor.setMeshActive(mesh)).toThrowDeveloperError();
+        expect(() => editor.setMeshInactive(mesh)).toThrowDeveloperError();
+        expect(() => editor.isMeshActive(mesh)).toThrowDeveloperError();
+      });
+
+      it("draws an inactive mesh as faces in every mode", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const mesh = editor.addMesh(createSource(square));
+
+        expect(renderInstanceCounts(mesh)).toEqual([2]);
+
+        editor.mode = EditMode.VERTEX;
+        expect(renderInstanceCounts(mesh)).toEqual([2]);
+      });
+
+      it("draws a mesh as faces once it's inactive", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const mesh = editor.addMesh(createSource(square));
+        editor.mode = EditMode.VERTEX;
+        editor.setMeshActive(mesh);
+
+        editor.setMeshInactive(mesh);
+
+        expect(renderInstanceCounts(mesh)).toEqual([2]);
+      });
+    });
+
     describe("mode", function () {
       it("sets the mode", async function () {
         const editor = await MeshEditor.addToScene(scene);
@@ -256,6 +309,7 @@ describe(
       it("draws only the components the mode renders", async function () {
         const editor = await MeshEditor.addToScene(scene);
         const mesh = editor.addMesh(createSource(square));
+        editor.setMeshActive(mesh);
 
         editor.mode = EditMode.VERTEX;
         expect(renderInstanceCounts(mesh)).toEqual([4, 5, 2]);
@@ -267,17 +321,31 @@ describe(
       it("draws only faces in EditMode.NONE", async function () {
         const editor = await MeshEditor.addToScene(scene);
         const mesh = editor.addMesh(createSource(square));
+        editor.setMeshActive(mesh);
 
         expect(renderInstanceCounts(mesh)).toEqual([2]);
       });
 
-      it("applies the mode to meshes added later", async function () {
+      it("applies the mode to meshes activated later", async function () {
         const editor = await MeshEditor.addToScene(scene);
         editor.mode = EditMode.EDGE;
-
         const mesh = editor.addMesh(createSource(square));
 
+        editor.setMeshActive(mesh);
+
         expect(renderInstanceCounts(mesh)).toEqual([5, 2]);
+      });
+
+      it("doesn't affect inactive meshes", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const active = editor.addMesh(createSource(square));
+        const inactive = editor.addMesh(createSource(square));
+        editor.setMeshActive(active);
+
+        editor.mode = EditMode.VERTEX;
+
+        expect(renderInstanceCounts(active)).toEqual([4, 5, 2]);
+        expect(renderInstanceCounts(inactive)).toEqual([2]);
       });
 
       it("accepts combinations of components", async function () {
@@ -303,8 +371,9 @@ describe(
       it("draws the overlay", async function () {
         const editor = await MeshEditor.addToScene(scene);
         editor.mode = EditMode.VERTEX;
-
         const mesh = editor.addMesh(createSource(square));
+
+        editor.setMeshActive(mesh);
 
         expect(renderInstanceCounts(mesh)).toEqual([4, 5, 2]);
       });
