@@ -134,6 +134,4 @@ export interface GltfAsset {
   warnings: string[];
   /** Worker-side timing of the load. */
   timing?: ContentTiming;
-  /** Globe tiles: ellipsoid-scaled horizon-occlusion point (cull test). */
-  horizonOcclusionPoint?: [number, number, number];
 }

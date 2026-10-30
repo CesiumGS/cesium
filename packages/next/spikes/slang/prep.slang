@@ -26,19 +26,6 @@ struct Batch {
 [[vk::binding(5, 1)]] RWStructuredBuffer<uint> args;
 [[vk::binding(6, 1)]] ConstantBuffer<PrepParams> params;
 
-static const float3 INV_RADII = float3(1.0 / 6378137.0, 1.0 / 6378137.0, 1.0 / 6356752.314245179);
-
-bool horizonVisible(float3 occludee) {
-  float3 cv = (view.cameraHi + view.cameraLo) * INV_RADII;
-  float vhMagnitudeSquared = dot(cv, cv) - 1.0;
-  float3 vt = occludee - cv;
-  float vtDotVc = -dot(vt, cv);
-  bool occluded = vhMagnitudeSquared < 0.0
-    ? vtDotVc > 0.0
-    : (vtDotVc > vhMagnitudeSquared && (vtDotVc * vtDotVc) / dot(vt, vt) > vhMagnitudeSquared);
-  return !occluded;
-}
-
 [shader("compute")]
 [numthreads(64, 1, 1)]
 void main(uint3 gid : SV_DispatchThreadID) {
@@ -57,10 +44,6 @@ void main(uint3 gid : SV_DispatchThreadID) {
   instances[i].relModel = m;
 
   if ((r.flags & 1u) != 0u || r.indexCount == 0u || (r.viewMask & view.viewBit) == 0u) {
-    return;
-  }
-  // Globe tiles behind the ellipsoid's horizon (see prep.wgsl).
-  if ((r.flags & 4u) != 0u && !horizonVisible(r.horizonPoint)) {
     return;
   }
   float3 center = rel + r.center;

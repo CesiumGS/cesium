@@ -569,11 +569,6 @@ export class Tileset3D implements TileTree {
         });
         tile.instance = instance;
         tile.bytes = instance.bytes;
-        if (asset.horizonOcclusionPoint) {
-          for (const draw of instance.draws) {
-            this.world.setHorizonPoint(draw, asset.horizonOcclusionPoint);
-          }
-        }
         const uploaded = performance.now();
         const network = asset.timing?.networkMs ?? 0;
         const decode = asset.timing?.decodeMs ?? 0;

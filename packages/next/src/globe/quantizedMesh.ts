@@ -370,8 +370,6 @@ export function decodeQuantizedMesh(
     draws: [{ mesh: 0, material: 0, matrix }],
     featureTables: [],
     warnings: [],
-    // The GPU test has no shrunk ellipsoid yet: tiles below sea level skip it.
-    ...(minimumHeight >= 0 ? { horizonOcclusionPoint } : {}),
   };
   return {
     asset,

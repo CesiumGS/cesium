@@ -29,8 +29,6 @@ struct DrawRecord_std430_0
     @align(4) clipBlock_0 : u32,
     @align(8) placeholderMask_0 : u32,
     @align(4) clipCount_0 : u32,
-    @align(16) horizonPoint_0 : vec3<f32>,
-    @align(4) recordPad3_0 : u32,
 };
 
 @binding(0) @group(1) var<storage, read> records_0 : array<DrawRecord_std430_0>;

@@ -72,8 +72,8 @@ export function writeViewBlock(
   out[o + 83] = block.specularMaxLod;
 }
 
-/** `struct DrawRecord` — 208 bytes. */
-export const RECORD_SIZE = 208;
+/** `struct DrawRecord` — 192 bytes. */
+export const RECORD_SIZE = 192;
 /** Word offset of `DrawRecord.viewMask`. */
 export const VIEW_MASK_WORD = 44;
 /**
@@ -103,12 +103,7 @@ export const RecordFlags = {
   hidden: 1,
   /** Output the base color without lighting, overriding the material. */
   unlit: 2,
-  /** Cull against the ellipsoid's horizon (`horizonPoint`, globe tiles). */
-  horizon: 4,
 } as const;
-
-/** Word offset of `DrawRecord.horizonPoint` (scaled-space vec3). */
-export const HORIZON_WORD = 48;
 
 export const MaterialFlags = {
   unlit: 1,
@@ -196,10 +191,6 @@ export function writeDrawRecord(
   u32[o + 45] = 0;
   u32[o + 46] = 0;
   u32[o + 47] = 0;
-  u32[o + 48] = 0;
-  u32[o + 49] = 0;
-  u32[o + 50] = 0;
-  u32[o + 51] = 0;
 }
 
 export interface MaterialData {
