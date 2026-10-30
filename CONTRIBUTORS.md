@@ -224,6 +224,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [Jules Blom](https://github.com/JulesBlm)
 - [CloudRF](https://cloudrf.com/)
   - [Jos-Elliot Jeapes](https://github.com/appybara13)
+- [Pointerra](https://www.pointerra.com/)
+  - [Scott McNab](https://github.com/scottmcnab)
 
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-contributor-license-agreement-v1.0.pdf)
 
