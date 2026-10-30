@@ -1,16 +1,33 @@
 // @ts-check
-/* eslint-disable no-unused-private-class-members -- Scaffold. Remove once implemented. */
 
-import { Check, DeveloperError, destroyObject } from "@cesium/core";
 import {
+  Check,
+  DeveloperError,
+  RuntimeError,
+  destroyObject,
+} from "@cesium/core";
+import {
+  GeometryAttributeDescriptor,
+  VertexAttributeSemantic,
+} from "@cesium/engine";
+import {
+  Mesh as WasmMesh,
   MeshEditor as WasmMeshEditor,
   UpdateResult,
 } from "@cesium/mesh-editor";
 import EditMode from "./EditMode.js";
+import Mesh from "./Mesh.js";
 import MeshEditorModule from "./MeshEditorModule.js";
 
-/** @import { FrameState, GeometrySource, Scene } from "@cesium/engine"; */
-/** @import Mesh from "./Mesh.js"; */
+/** @import { FrameState, GeometryReadSession, GeometrySource, Scene } from "@cesium/engine"; */
+
+// The attribute read from each source.
+const POSITION_ATTRIBUTE = new GeometryAttributeDescriptor({
+  semantic: VertexAttributeSemantic.POSITION,
+});
+
+// The data read from each source.
+const READ_OPTIONS = { attributes: [POSITION_ATTRIBUTE], primitives: true };
 
 /**
  * <div class="notice">
@@ -128,7 +145,23 @@ class MeshEditor {
    * @exception {RuntimeError} The source's geometry can't be edited.
    */
   addMesh(source) {
-    throw new DeveloperError("Not implemented.");
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.object("source", source);
+    for (const mesh of this.#meshes) {
+      if (mesh.source === source) {
+        throw new DeveloperError("The source was already added.");
+      }
+    }
+    //>>includeEnd('debug');
+
+    const key = this.#wasmEditor.addMesh(this.#createWasmMesh(source));
+    this.#wasmEditor.setMeshActive(key);
+
+    const mesh = new Mesh({ source, key, module: this.#module });
+    mesh._renderer.setShownComponents(this.#wasmEditor.renderableComponents);
+    this.#meshes.add(mesh);
+
+    return mesh;
   }
 
   /**
@@ -139,7 +172,14 @@ class MeshEditor {
    * @returns {boolean} <code>true</code> if the mesh was removed, <code>false</code> if it wasn't in the editor.
    */
   removeMesh(mesh) {
-    throw new DeveloperError("Not implemented.");
+    if (!this.#meshes.delete(mesh)) {
+      return false;
+    }
+
+    this.#wasmEditor.removeMesh(mesh._key)?.free();
+    mesh._destroy();
+
+    return true;
   }
 
   /**
@@ -147,7 +187,71 @@ class MeshEditor {
    * @returns {boolean} <code>true</code> if the mesh is in the editor, <code>false</code> otherwise.
    */
   hasMesh(mesh) {
-    throw new DeveloperError("Not implemented.");
+    return this.#meshes.has(mesh);
+  }
+
+  /**
+   * Reads a source's geometry into a new wasm mesh.
+   *
+   * @param {GeometrySource} source The geometry to read.
+   * @returns {WasmMesh} The wasm mesh.
+   * @exception {RuntimeError} The source's geometry can't be edited.
+   * @ignore
+   */
+  #createWasmMesh(source) {
+    const { positions, indices, faceVertexCounts } =
+      source.geometryReader.withReadSession(
+        READ_OPTIONS,
+        MeshEditor.#readBuffers,
+      );
+
+    try {
+      // At the moment, we have no use for normals or UVs in the wasm module, so don't read them or pass them in.
+      return WasmMesh.fromBuffers(
+        positions,
+        indices,
+        undefined,
+        undefined,
+        faceVertexCounts,
+      );
+    } catch (error) {
+      throw new RuntimeError(`The geometry can't be edited: ${error.message}`);
+    }
+  }
+
+  /**
+   * Reads a session's positions and primitives as wasm mesh buffers. Each
+   * primitive becomes a face.
+   *
+   * @param {GeometryReadSession} session The read session.
+   * @returns {{ positions: Float32Array, indices: Uint32Array, faceVertexCounts: Uint32Array }} The buffers.
+   * @ignore
+   */
+  static #readBuffers(session) {
+    const vertexCount = session.vertexCount();
+    const positions = new Float32Array(vertexCount * 3);
+    const readPosition = session.vertexAttributeReader(POSITION_ATTRIBUTE);
+    for (let i = 0; i < vertexCount; ++i) {
+      readPosition(i, positions, i * 3);
+    }
+
+    const primitiveCount = session.primitiveCount();
+    const faceVertexCounts = new Uint32Array(primitiveCount);
+    let indexCount = 0;
+    for (let i = 0; i < primitiveCount; ++i) {
+      faceVertexCounts[i] = session.primitiveVertexCount(i);
+      indexCount += faceVertexCounts[i];
+    }
+
+    const indices = new Uint32Array(indexCount);
+    const readPrimitive = session.primitiveReader();
+    let offset = 0;
+    for (let i = 0; i < primitiveCount; ++i) {
+      readPrimitive(i, indices, offset);
+      offset += faceVertexCounts[i];
+    }
+
+    return { positions, indices, faceVertexCounts };
   }
 
   /**

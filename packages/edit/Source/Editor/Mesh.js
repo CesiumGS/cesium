@@ -1,10 +1,10 @@
 // @ts-check
 
-import { DeveloperError } from "@cesium/core";
+import { Matrix4, destroyObject } from "@cesium/core";
+import OverlayRenderer from "./OverlayRenderer.js";
 
 /** @import { FrameState, GeometrySource } from "@cesium/engine"; */
 /** @import { OverlayViews } from "@cesium/mesh-editor"; */
-/** @import OverlayRenderer from "./OverlayRenderer.js"; */
 
 /**
  * <div class="notice">
@@ -29,7 +29,7 @@ class Mesh {
    * @param {object} options
    * @param {GeometrySource} options.source The geometry being edited.
    * @param {bigint} options.key The mesh's key in its editor's wasm.
-   * @param {object} options.module The loaded wasm module.
+   * @param {*} options.module The loaded wasm module.
    */
   constructor(options) {
     /**
@@ -62,9 +62,16 @@ class Mesh {
      * @type {OverlayRenderer}
      * @ignore
      */
-    this._renderer = undefined;
+    this._renderer = new OverlayRenderer({
+      module: options.module,
+      mesh: this,
+    });
 
-    throw new DeveloperError("Not implemented.");
+    // TODO: consider an interface that guarantees the source can be shown/hidden.
+    const { source } = this;
+    if ("show" in source) {
+      source.show = false;
+    }
   }
 
   /**
@@ -77,7 +84,11 @@ class Mesh {
    * @ignore
    */
   _update(frameState, overlayViews) {
-    throw new DeveloperError("Not implemented.");
+    const renderer = this._renderer;
+    renderer.show = this.show;
+    // TODO: consider an event to notify when the mesh's world matrix changes.
+    Matrix4.clone(this.source.worldMatrix, renderer.modelMatrix);
+    renderer.update(frameState, overlayViews);
   }
 
   /**
@@ -94,7 +105,14 @@ class Mesh {
    * @ignore
    */
   _destroy() {
-    throw new DeveloperError("Not implemented.");
+    this._renderer.destroy();
+
+    const { source } = this;
+    if ("show" in source) {
+      source.show = true;
+    }
+
+    destroyObject(this);
   }
 }
 
