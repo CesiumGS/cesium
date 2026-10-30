@@ -70,6 +70,11 @@ self.onmessage = async (
         throw new Error(`imagery tile: ${response.status}`);
       }
       const blob = await response.blob();
+      if (blob.size === 0) {
+        // No imagery here (Bing answers missing tiles with an empty body).
+        self.postMessage({ id, ok: true, result: { empty: true, bytes: 0 } });
+        return;
+      }
       const decodeStart = performance.now();
       const bitmap = await createImageBitmap(blob, {
         colorSpaceConversion: "none",

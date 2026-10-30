@@ -4,6 +4,7 @@
  * (XYZ, Bing quadkeys) and geographic (WMTS) schemes do.
  */
 import { ionDefaults, type IonAttribution } from "../io/ion.ts";
+import bingLogoUrl from "./assets/bing_maps_credit.png";
 
 export interface ImageryProvider {
   readonly name: string;
@@ -124,10 +125,25 @@ export class BingImagery implements ImageryProvider {
     if (!resource?.imageUrl) {
       throw new Error("Bing metadata: no imageUrl");
     }
-    const attributions = (endpoint.attributions ?? []).map((a) => ({
-      html: a.html,
-      collapsible: a.collapsible === true,
-    }));
+    // ion's attributions, then Bing's logo and its imagery providers'
+    // credits (1.x lists those in the credit lightbox).
+    const attributions: IonAttribution[] = (endpoint.attributions ?? []).map(
+      (a) => ({ html: a.html, collapsible: a.collapsible === true }),
+    );
+    attributions.push({
+      html: `<a href="https://www.microsoft.com/en-us/maps/bing-maps/product"><img src="${bingLogoUrl}" title="Bing Imagery"/></a>`,
+      collapsible: true,
+    });
+    for (const p of (resource.imageryProviders ?? []) as Array<{
+      attribution?: string;
+    }>) {
+      if (p.attribution) {
+        attributions.push({
+          html: escapeHtml(p.attribution),
+          collapsible: true,
+        });
+      }
+    }
     return new BingImagery(
       `Bing Maps ${mapStyle}`,
       (resource.imageUrl as string).replace("{culture}", ""),
@@ -151,4 +167,14 @@ export class BingImagery implements ImageryProvider {
       .replace("{quadkey}", quadkey)
       .replace("{subdomain}", s);
   }
+}
+
+function escapeHtml(text: string): string {
+  return text.replace(
+    /[&<>"']/g,
+    (c) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
+        c
+      ]!,
+  );
 }

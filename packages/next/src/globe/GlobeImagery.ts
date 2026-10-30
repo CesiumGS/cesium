@@ -44,12 +44,13 @@ export interface GlobeImageryOptions {
   slices?: number;
   /** Slice width and height in texels (default 256). */
   size?: number;
-  /** Color where no imagery covers the tile (sRGB; 1.x Globe.baseColor). */
+  /** Color where no imagery covers the tile (1.x Globe.baseColor, dark blue). */
   baseColor?: readonly [number, number, number];
 }
 
 interface Source {
-  state: "loading" | "ready" | "failed";
+  /** "empty": the provider has no imagery there (an ancestor's stands in). */
+  state: "loading" | "ready" | "empty" | "failed";
   texture?: GPUTexture;
   used: number;
 }
@@ -98,7 +99,7 @@ export class GlobeImagery {
       device.limits.maxTextureArrayLayers,
       MAX_IMAGERY_SLICES,
     );
-    this.baseColor = options.baseColor ?? [0, 0, 1];
+    this.baseColor = options.baseColor ?? [0, 0, 0.5];
     this.texture = device.createTexture({
       label: "globe.imagery",
       size: [this.size, this.size, slices],
@@ -212,7 +213,7 @@ export class GlobeImagery {
       const job = this.jobs.get(tile);
       if (job) {
         for (const [x, y] of job.tiles) {
-          if (!this.requestSource(x, y, job.level, frame)) {
+          if (this.resolve(x, y, job.level, frame) === "full") {
             break;
           }
         }
@@ -291,6 +292,34 @@ export class GlobeImagery {
 
   // ------------------------------------------------------------- sources
 
+  /**
+   * The tile that supplies imagery at (x, y, level): itself, or where the
+   * provider has none, its nearest ancestor with imagery (as 1.x). Requests
+   * what it needs; "wait" while loading, "full" when the window is full,
+   * undefined when nothing above has imagery (the base color shows).
+   */
+  private resolve(
+    x: number,
+    y: number,
+    level: number,
+    frame: number,
+  ): [number, number, number] | "wait" | "full" | undefined {
+    for (; level >= this.provider.minimumLevel; level--, x >>= 1, y >>= 1) {
+      const source = this.sources.get(`${level}/${x}/${y}`);
+      if (!source) {
+        return this.requestSource(x, y, level, frame) ? "wait" : "full";
+      }
+      source.used = frame;
+      if (source.state === "loading") {
+        return "wait";
+      }
+      if (source.state === "ready") {
+        return [x, y, level];
+      }
+    }
+    return undefined;
+  }
+
   /** Requests a source tile if needed; false when the window is full. */
   private requestSource(
     x: number,
@@ -311,12 +340,16 @@ export class GlobeImagery {
     this.sources.set(key, source);
     this.loading++;
     void this.workers
-      .request<{ bitmap: ImageBitmap; bytes: number }>("image", {
+      .request<{ bitmap?: ImageBitmap; bytes: number; empty?: true }>("image", {
         url: this.provider.tileUrl(x, y, level),
         ...(this.provider.headers ? { headers: this.provider.headers } : {}),
       })
-      .then(({ bitmap, bytes }) => {
+      .then(({ bitmap, bytes, empty }) => {
         this.requests.release(this.origin, { bytes });
+        if (empty || !bitmap) {
+          source.state = "empty";
+          return;
+        }
         const texture = this.ctx.device.createTexture({
           label: `globe.imagery.source ${key}`,
           size: [bitmap.width, bitmap.height],
@@ -363,10 +396,23 @@ export class GlobeImagery {
       if (!job) {
         continue;
       }
-      const keys = job.tiles.map(([x, y]) => `${job.level}/${x}/${y}`);
-      if (keys.some((k) => this.sources.get(k)?.state === "loading")) {
+      const resolved = job.tiles.map(([x, y]) =>
+        this.resolve(x, y, job.level, frame),
+      );
+      if (resolved.some((r) => r === "wait" || r === "full")) {
         continue;
       }
+      // Distinct supplying tiles, coarse (stand-in ancestors) first, so the
+      // tiles with their own imagery draw over them.
+      const supply = new Map<string, [number, number, number]>();
+      for (const r of resolved) {
+        if (Array.isArray(r)) {
+          supply.set(`${r[2]}/${r[0]}/${r[1]}`, r);
+        }
+      }
+      const keys = [...supply.keys()].sort(
+        (a, b) => supply.get(a)![2] - supply.get(b)![2],
+      );
       if (passes + keys.length + mips + 1 > PASSES_PER_FRAME) {
         break;
       }
@@ -391,12 +437,10 @@ export class GlobeImagery {
         group: fillGroup,
         offset: fillOffset,
       });
-      for (const [i, [x, y]] of job.tiles.entries()) {
-        const source = this.sources.get(keys[i]!);
-        if (source?.state !== "ready") {
-          continue; // failed: the base color shows
-        }
-        const offset = block(this.mapping(r, x, y, job.level));
+      for (const key of keys) {
+        const [x, y, level] = supply.get(key)!;
+        const source = this.sources.get(key)!;
+        const offset = block(this.mapping(r, x, y, level));
         const group = this.bindGroup(source.texture!.createView(), destination);
         dispatches.push({
           pipeline: this.pipelines.composite,

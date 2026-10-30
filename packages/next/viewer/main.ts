@@ -1953,7 +1953,11 @@ async function main(): Promise<void> {
     for (const { html } of attributions) {
       const doc = new DOMParser().parseFromString(html, "text/html");
       for (const img of doc.querySelectorAll("img")) {
-        const src = img.getAttribute("src") ?? "";
+        // Remote logos, data URIs and the engine's own bundled ones.
+        const raw = img.getAttribute("src") ?? "";
+        const src = /^data:image\//i.test(raw)
+          ? raw
+          : new URL(raw, location.href).href;
         if (!/^(https?:|data:image\/)/i.test(src) || seen.has(src)) {
           continue;
         }
