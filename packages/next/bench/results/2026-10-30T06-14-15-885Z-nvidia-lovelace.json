@@ -1,0 +1,130 @@
+{
+  "date": "2026-10-30T06:14:15.885Z",
+  "commit": "d364264ac7beb0f1421115f0b4cdb2f682184694",
+  "environment": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0",
+    "adapter": {
+      "vendor": "nvidia",
+      "architecture": "lovelace",
+      "description": "NVIDIA RTX 3000 Ada Generation Laptop GPU"
+    },
+    "timestampQuery": true
+  },
+  "errors": [],
+  "results": {
+    "parity": [
+      {
+        "camera": "oblique",
+        "variant": "2.0 sRGB curves",
+        "metrics": {
+          "meanDeltaE": 0.44359271762956615,
+          "p95DeltaE": 0.9506941954461565,
+          "noticeable": 0.03256944444444444
+        },
+        "flip": {
+          "mean": 0.0204877496908774,
+          "median": 0.0028348416090011597,
+          "p95": 0.08659011870622635
+        }
+      },
+      {
+        "camera": "oblique",
+        "variant": "2.0 gamma 2.2 (1.x color)",
+        "metrics": {
+          "meanDeltaE": 0.43776244498715944,
+          "p95DeltaE": 0.9506941954461565,
+          "noticeable": 0.03245370370370371
+        },
+        "flip": {
+          "mean": 0.020029761866374972,
+          "median": 0.002727190498262644,
+          "p95": 0.08422514796257019
+        }
+      },
+      {
+        "camera": "top-down",
+        "variant": "2.0 sRGB curves",
+        "metrics": {
+          "meanDeltaE": 0.2430111382103935,
+          "p95DeltaE": 0.42236462619899773,
+          "noticeable": 0.018865740740740742
+        },
+        "flip": {
+          "mean": 0.013336434085523083,
+          "median": 0,
+          "p95": 0.07952895760536194
+        }
+      },
+      {
+        "camera": "top-down",
+        "variant": "2.0 gamma 2.2 (1.x color)",
+        "metrics": {
+          "meanDeltaE": 0.23781113484244257,
+          "p95DeltaE": 0.42236462619899773,
+          "noticeable": 0.018865740740740742
+        },
+        "flip": {
+          "mean": 0.0130010764079021,
+          "median": 0,
+          "p95": 0.07699589431285858
+        }
+      },
+      {
+        "camera": "grazing",
+        "variant": "2.0 sRGB curves",
+        "metrics": {
+          "meanDeltaE": 0.4099470712637663,
+          "p95DeltaE": 0.7303913383265979,
+          "noticeable": 0.018055555555555554
+        },
+        "flip": {
+          "mean": 0.02250765444107437,
+          "median": 0.00666274968534708,
+          "p95": 0.07086362689733505
+        }
+      },
+      {
+        "camera": "grazing",
+        "variant": "2.0 gamma 2.2 (1.x color)",
+        "metrics": {
+          "meanDeltaE": 0.40409637128135484,
+          "p95DeltaE": 0.7303913383265979,
+          "noticeable": 0.017785493827160492
+        },
+        "flip": {
+          "mean": 0.022478709625327373,
+          "median": 0.0065663657151162624,
+          "p95": 0.07069399207830429
+        }
+      },
+      {
+        "camera": "far",
+        "variant": "2.0 sRGB curves",
+        "metrics": {
+          "meanDeltaE": 0.03167262875822384,
+          "p95DeltaE": 0,
+          "noticeable": 0.0028935185185185184
+        },
+        "flip": {
+          "mean": 0.0010682650608359846,
+          "median": 0,
+          "p95": 0.00015353607886936516
+        }
+      },
+      {
+        "camera": "far",
+        "variant": "2.0 gamma 2.2 (1.x color)",
+        "metrics": {
+          "meanDeltaE": 0.03128741809901479,
+          "p95DeltaE": 0,
+          "noticeable": 0.0028935185185185184
+        },
+        "flip": {
+          "mean": 0.0011429926191932486,
+          "median": 0,
+          "p95": 0.0001643556315684691
+        }
+      }
+    ]
+  }
+}
