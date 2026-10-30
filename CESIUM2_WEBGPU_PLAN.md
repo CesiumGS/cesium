@@ -30,6 +30,7 @@ Branch: `cesium-2.0-webgpu-poc` (off `main` @ `587f52f1eb`, CesiumJS 1.146.0)
 | r22 | M2 increment 6: the r21 depth offset is replaced (hold, prefetch band, mixed LOD clipped to missing children only where children partition their parent); `Next` never hides a tileset that lacks a top-level geometric error; iTwin mesh exports load directly; content pipeline diagnostics; throttled L1′ with time-averaged FLIP (1.x looks better while loading on slow links); §13.8 render on demand; §14 follow-ups.                          |
 | r23 | Adaptive request windows per origin (BBR-style, protocol-seeded, cancellation); on-demand rendering per view, including views sharing a canvas (composited); viewer content tabs, combo boxes and ion token precedence; OS and networking lessons (§13.2, §13.6); M2 exit met, close-out (scheduler, `TileSource`, engine-wide cache) before M3, and a Next v2 milestone after M3. The `Next` policy is renamed `Budgeted` (`policy: "budgeted"`).    |
 | r24 | M3 increment 2: the 1.x globe selection (`GlobeLegacy1xSelection`) with fog, horizon culling and 1.x's kicking and load queues; globe L1 parity 100% on six cameras with and without fog. Quadrants without data are upsampled as in 1.x (drawn clipped from the tile with data); partial availability no longer leaves holes under `Budgeted`. Tilesets stay active after loads without content. Fetch timeouts and retries recorded as a follow-up. |
+| r25 | Horizon culling moves into selection (float64, 1.x per-tile shrink): `Budgeted` culls 3D Tiles and terrain at the horizon before fetching, and the GPU test is retired (records back to 192 bytes). `Budgeted` refines empty tiles by SSE as 1.x does: OSM at Rainier drops from 783 requests to 31. §13.2 records cross-tileset scheduling to try (per-origin priority queue, I/O priority classes, preempting prefetch, wire priorities, aging).    |
 
 ## 1. Goal
 
@@ -328,7 +329,7 @@ Traversal, decoding of compressed formats and networking stay on the CPU in work
 - **Globe rendering**:
   - camera-relative via draw prep
   - skirts for cracks
-  - horizon culling in the cull kernel
+  - horizon culling in selection (float64, before fetching; r25)
   - shared depth with 3D Tiles
   - ground atmosphere and fog matching 1.x defaults
   - lighting off by default, with an option to enable it
@@ -484,7 +485,7 @@ Durations are rough and **optimistic** for one engineer with AI assistance. If t
 
 ### M3 — Globe (≈3–4 wks)
 
-- Quantized-mesh terrain; horizon culling in the kernel.
+- Quantized-mesh terrain; horizon culling (in selection since r25).
 - Imagery sources plus the **texture-array composite cache**.
 - Height queries and clamping.
 - _Exit_: the CAD tileset sits on Cesium World Terrain with ion imagery; globe `Legacy1x` L1 ≥99%.
@@ -1574,7 +1575,8 @@ consecutive frames with a static camera as a popping metric.
   (AIMD). L1′ on Google: 18 → 64 requests cut time to settle from 2.0 s to
   1.3 s (r19); with prefetch the gain is smaller (r22).
 - **Protocol-aware, per origin.** One limiter per origin, shared by every
-  tileset on it, owns the window and the priority queue. The protocol comes
+  tileset on it, owns the window and the priority queue (the queue is not
+  built yet: see "Scheduling across tilesets" below). The protocol comes
   from Resource Timing (`nextHopProtocol`: `http/1.1`, `h2`, `h3`, also in
   workers; cross-origin servers must send `Timing-Allow-Origin`, else it is
   empty). It seeds the window: about 6 for HTTP/1.1 (the browser's
@@ -1622,6 +1624,47 @@ were solved first):
   decode and upload stages drain. The scheduler holds on upload backlog.
 - **Shortest job first** among equal priorities: smaller tiles first
   maximizes coverage per second (sizes are learnable per level).
+
+**Scheduling across tilesets (to try).** Each tileset sorts its own
+requests (prefetch already sorts after visible tiles), but the tilesets
+on one origin take free slots of the shared window in update order, first
+come first served. Seen at Mount Rainier (r25): OSM Buildings' prefetches
+filled the `assets.ion.cesium.com` window while Cesium World Terrain's
+visible tiles waited. The r25 fixes cut the flood (783 requests to 31),
+not the cause; Google 3D Tiles prefetching while terrain is missing would
+repeat it. Ideas, with the operating-system analog each comes from:
+
+- **One priority queue per origin** (the I/O scheduler that arbitrates a
+  disk among processes): every tileset submits what it wants each frame;
+  after all have updated, the origin issues requests from one queue.
+  Tilesets and views are the processes, the origin is the disk. Rebuilt
+  every frame, as wanted sets change with the camera (1.x re-sorts each
+  frame too).
+- **Priority classes before priorities** (Linux I/O priority classes,
+  `ionice`: realtime, best-effort, idle): needed now (holes in a view),
+  refinement, prefetch. Prefetch is the idle class, served only when
+  nothing else waits. Within a class, each policy's own key (distance,
+  1.x load priority, region group). Classes make tilesets comparable
+  where their priority numbers aren't.
+- **Preempt in-flight prefetch** (the kernel may drop readahead requests,
+  `REQ_RAHEAD`): when the window is full and visible requests wait, cancel
+  the lowest-class in-flight requests. A slow prefetch holding a slot
+  that a visible tile needs is priority inversion.
+- **Priorities on the wire** (the network analog): HTTP/2 and HTTP/3
+  carry request priorities (RFC 9218, urgency and incremental), and
+  `fetch(url, { priority: "low" })` passes the hint on. In-flight prefetch
+  then gets bandwidth only when visible responses don't need it; the
+  server can order bytes, which the client can't.
+- **Aging** (as in OS schedulers): a request's effective priority rises
+  the longer it waits, so prefetch and far tiles still progress while the
+  camera keeps moving, and no tileset starves another.
+- **Weighted fair sharing** (weighted fair queueing, deficit round robin,
+  above): when several tilesets need the same class at once, share the
+  window by weight (view importance, screen coverage) instead of by
+  update order.
+- **Measure**: L1′ with two tilesets on one origin (OSM with terrain;
+  Google with terrain): time until each tileset's visible tiles settle,
+  and how long visible requests wait behind others' prefetches.
 
 ### 13.3 Budget-driven refinement
 
@@ -1847,9 +1890,8 @@ waiting for a request window shared with another tileset on the same
 origin (OSM and CWT are both on `assets.ion.cesium.com`), went inactive
 and stopped asking.
 
-Horizon culling then moved into the prep kernel: globe tiles carry their
-ellipsoid-scaled horizon-occlusion point in the draw record and are culled
-per view on the GPU (1.x `isScaledSpacePointVisible`).
+Horizon culling then went into the prep kernel (r23, retired in r25: see
+increment 3).
 
 ### Increment 2 (r24): globe `Legacy1x` selection and L1 parity
 
@@ -1894,6 +1936,48 @@ update, so the children of OSM's external tilesets were never selected
 (4 of 12 tiles drawn at Rainier) and the viewer showed one request in
 flight forever. Any completion now counts as a change.
 
+### Increment 3 (r25): horizon culling in selection; `Budgeted` on terrain
+
+Switching the viewer to `Budgeted` over Cesium World Terrain and OSM
+Buildings at Mount Rainier loaded slowly: OSM took 783 requests to draw 16
+tiles (`Legacy1x`: 17), and terrain waited behind them on the shared ion
+request window. All of them were prefetches, 1,000 to 3,000 km away.
+
+- **Empty tiles refine by SSE, as in 1.x.** `Budgeted` always refined tiles
+  without content, so prefetch walked through OSM's content-less tiles to
+  the first content everywhere its guard band touched, at about 0.1 px of
+  error. An empty tile now refines only when its SSE exceeds the threshold
+  (expanded external tilesets still always do).
+- **Horizon culling in selection.** `Budgeted`'s visibility and prefetch
+  test each tile's horizon-occlusion point in float64 with 1.x's per-tile
+  ellipsoid shrink (a region's top corners, a box's eight corners), cached
+  per volume; `horizonCulling = false` turns it off for views under or
+  through the surface. 1.x culls only its globe this way.
+- **The GPU horizon test is retired.** Pressure-tested before adding the
+  shrink to it: culling in the draw kernel saves only draws, not fetches;
+  in float32 it misplaces the horizon for cameras below about 10 m (4.4 to
+  5.4 km instead of 5.1 km at 2 m), enough to cull flat ground wrongly; and
+  a per-record shrink makes the cancellation worse. The selection already
+  visits every terrain tile per view, so a float64 test there is cheap and
+  exact. Records are back to 192 bytes.
+- **Per-tile shrink, not a global one.** A shrink to the dataset's lowest
+  point (bathymetry: -11 km) would move the horizon from 5 km to about
+  375 km for a camera 2 m up, removing most culling. The per-tile shrink
+  assumes the ground between the camera and a tile is no lower than the
+  tile's minimum: true for land terrain, not always for bathymetry seen
+  through water (a later concern, with an underground mode).
+
+Measured from fresh loads (requests; OSM / CWT):
+
+| View                            | Before  | SSE rule only | Both     |
+| ------------------------------- | ------- | ------------- | -------- |
+| Rainier, 9 km range, pitch -30° | 783 / - | 35 / 71       | 31 / 65  |
+| Philadelphia, 1.5 km, pitch -3° | -       | 60 / 129      | 56 / 124 |
+
+The SSE rule is the main fix; horizon culling trims another 5-10% here
+and matters more for high, grazing views. Selection, globe, tileset,
+models and Slang suites are unchanged (100%).
+
 Next increments: ion imagery composited into the `texture_2d_array`
-cache; height queries and the CAD tileset on terrain; the GPU horizon test
-with the shrunk ellipsoid; fetch timeouts and retries (§14, item 7).
+cache; height queries and the CAD tileset on terrain; cross-tileset
+scheduling (§13.2); fetch timeouts and retries (§14, item 7).
