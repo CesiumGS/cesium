@@ -23,7 +23,7 @@ import Texture from "./Texture.js";
  * To use in a shader, read element `i` via `ivec2(i % width, i / width)`,
  * where width comes from the `textureSize` builtin.
  *
- * @private
+ * @internal
  */
 class DataTexture {
   /**
@@ -38,7 +38,10 @@ class DataTexture {
       PixelFormat
     ).componentsLength(options.pixelFormat);
 
-    /** @type {Texture | undefined} */
+    /**
+     * @type {Texture | undefined}
+     * @private
+     */
     this._texture = undefined;
     this._elementCount = 0;
   }
@@ -107,7 +110,8 @@ class DataTexture {
     //>>includeEnd('debug');
 
     // Texture defines its getters with Object.defineProperties, which the JSDoc type checker can't see.
-    const texture = /** @type {any} */ (this._texture);
+    /** @type {any} */
+    const texture = this._texture;
     if (!defined(texture) || elementCount > texture.width * texture.height) {
       this.#createTexture(context, elementCount);
       start = 0;
@@ -125,6 +129,11 @@ class DataTexture {
     return false;
   }
 
+  /**
+   * Destroys the texture.
+   *
+   * @returns {void}
+   */
   destroy() {
     this._texture?.destroy();
     return destroyObject(this);
@@ -175,7 +184,9 @@ class DataTexture {
       return;
     }
 
-    const width = /** @type {any} */ (this._texture).width;
+    /** @type {any} */
+    const texture = this._texture;
+    const width = texture.width;
     const firstRow = Math.floor(start / width);
     const lastRow = Math.floor((end - 1) / width);
     if (firstRow === lastRow) {
@@ -211,7 +222,8 @@ class DataTexture {
    * @param {number} end One past the last element to upload.
    */
   #uploadRectangle(data, start, end) {
-    const texture = /** @type {any} */ (this._texture);
+    /** @type {any} */
+    const texture = this._texture;
     const textureWidth = texture.width;
     const components = this._componentsPerElement;
     const count = end - start;

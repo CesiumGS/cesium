@@ -55,13 +55,13 @@ const Flags = {
  * @property {boolean} [pickOnly=false]
  * @property {boolean} [depthForTranslucentClassification=false]
  *
- * @ignore
+ * @internal
  */
 
 /**
  * Represents a command to the renderer for drawing.
  *
- * @private
+ * @internal
  */
 class DrawCommand {
   /**
@@ -662,6 +662,7 @@ class DrawCommand {
    *
    * @param {Context} context The renderer context in which to draw.
    * @param {PassState} [passState] The state for the current render pass.
+   * @private
    */
   execute(context, passState) {
     context.draw(this, passState);
