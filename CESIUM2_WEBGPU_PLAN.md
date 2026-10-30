@@ -21,6 +21,7 @@ Branch: `cesium-2.0-webgpu-poc` (off `main` @ `587f52f1eb`, CesiumJS 1.146.0)
 | r13 | M1 increment 4: steady-state allocation gate (engine ~1.5 KB/frame, independent of draw count, down from ~45 KB) and first-frame cost (2.0 first frame 23–34 ms vs 1.x 203–691 ms).                                                                                                                                                                                                      |
 | r14 | M1 increment 5: CAD content. Per-vertex feature IDs (EXT_mesh_features, b3dm _BATCHID) with property/batch tables and picking, b3dm, line primitives, ion asset auth, tileset parity page. An iModel-derived CAD tileset matches 1.x apart from translucency (M4). M1 exit met.                                                                                                          |
 | r15 | Demo viewer (`/viewer/`). M2 started: freeing placed models, per-view record view masks, and the `Legacy1x` selection spec extracted from the 1.x base traversal (§12).                                                                                                                                                                                                                  |
+| r16 | M2 increment 1: streamed 3D Tiles with `Legacy1x` selection per view over one shared cache. L1 selection parity 100% on 36 view comparisons (9 public tilesets and 3 iModel-derived CAD tilesets, 3–4 simultaneous views each). Viewer streams.                                                                                                                                          |
 
 ## 1. Goal
 
@@ -1085,11 +1086,71 @@ band, rotated, so it costs 16 batches rather than 512.
   cull-requests-while-moving; the priority digits; and cancellation of
   untouched in-flight requests.
 
+### Increment 1 (r16): streaming with `Legacy1x` selection
+
+Done:
+
+- **Bounding volumes** (`streaming/volumes.ts`): ports of 1.x's OBB
+  (including degenerate axes), `OrientedBoundingBox.fromRectangle` (both the
+  ≤ π and > π branches), `TileBoundingRegion` edge planes and distance, and
+  sphere volumes. Unit-tested against 1.x core and engine modules at 1e-9
+  relative tolerance: random regions (hemispheres, equator, antimeridian,
+  wider than π), boxes and planes.
+- **Tile tree** (`streaming/Tile.ts`): explicit tilesets, external tilesets
+  loaded on demand, transforms, refine inheritance, viewer request volumes,
+  content volumes and the children-within-parent optimization.
+- **`Legacy1x`** (`streaming/Legacy1x.ts`): the 1.x base traversal rule for
+  rule (§12 spec), including dynamic SSE, children-bounds culling,
+  `meetsScreenSpaceErrorEarly`, empty-subtree refinement, plane-mask frustum
+  culling with 1.x's far plane, and content-volume culling at selection. Per-view
+  state lives on the tiles, so one tree serves every view.
+- **`Tileset3D`**: per frame, selection runs for each view of the world; tiles
+  get the union of their views' bits as the record view mask, so each view
+  draws its own LOD from one shared draw table. Requests are nearest-first
+  with 18 in flight, uploads are capped per frame, and eviction is LRU over
+  untouched tiles above a 512 MiB budget. Unsupported formats (pnts, i3dm,
+  cmpt) load as empty content with a warning, so selection and refinement
+  still match 1.x, which decodes them.
+- **`Engine.addTileset`** builds selection inputs per view: float64
+  world-space planes, SSE denominator, and height ÷ pixel ratio.
+- **Viewer** streams tilesets and ion assets with live tile, selection and
+  cache stats. The ground patch toggles in place and starts hidden for
+  georeferenced tilesets, which can sit below the ellipsoid (underground infrastructure).
+
+**L1 selection parity** (`parity/selection.html`, runner suite `selection`).
+2.0 renders 3–4 cameras at once as views over one shared cache; 1.x renders
+each camera with a stock `Cesium3DTileset` until settled. Jaccard over
+selected content:
+
+| Tilesets                                                                                      | View comparisons | Jaccard   |
+| --------------------------------------------------------------------------------------------- | ---------------- | --------- |
+| 9 public Specs tilesets (REPLACE/ADD, external, empty, request volumes, transforms, quadtree) | 36               | 100% each |
+| 3 iModel-derived CAD tilesets (private; run with `ION_ASSET`)                                 | 4 each           | 100% each |
+
+A 1.x bug surfaced along the way. A tileset without the (required) top-level
+`geometricError` makes 1.x compute `NaN` for the root's early-out SSE, so it
+always traverses the root; iTwin's publisher omits the field. `Legacy1x`
+copies this, with a warning. `Next` should fall back to the root's error,
+and the bug is worth filing against 1.x.
+
+Results: `2026-10-30T00-18-53-878Z` (all suites; the Slang gate read +5.7%
+in that run and +1.8%, +3.3%, −1.6% on reruns).
+
+Notes for `Next`, from viewing the CAD tilesets:
+
+- **Silhouettes matter for design models.** iTwin's coarse tiles drop small
+  elements, so at the viewer's default distance an underground CAD model shows less than a
+  user expects, exactly as 1.x does. `Next` should weigh silhouette loss
+  (e.g. refine sooner when children carry geometry the parent lacks).
+- A track that ends at the edge of the default view may be in the data
+  itself. Check it against full detail when testing `Next`.
+
 Next:
 
-1. Tile table (SoA) with OBB/region/sphere volumes and transforms; explicit
-   and external tilesets.
-2. `Legacy1x` traversal per view, writing view masks; content cache with
-   per-view last-used frames and a byte budget; request scheduler.
-3. Streaming in the viewer; L1 Jaccard against 1.x's `_selectedTiles` in two
-   views.
+1. Request scheduling closer to 1.x (priority digits, cull-requests-while-
+   moving, cancellation) where it changes time-to-settle, and the memory-
+   adjusted SSE.
+2. Stream OSM Buildings and a photogrammetry tileset (M2 exit).
+3. `Next` policy: skip-LOD and budget-driven refinement, measured with L1′.
+4. Move the traversal off the main thread over a transferable (SoA) tile
+   table.

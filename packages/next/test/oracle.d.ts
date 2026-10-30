@@ -4,3 +4,9 @@ declare module "cesium-oracle/*" {
   const value: any;
   export default value;
 }
+
+declare module "cesium-engine-oracle/*" {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped 1.x modules
+  const value: any;
+  export default value;
+}

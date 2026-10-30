@@ -113,7 +113,10 @@ export class Camera {
    * World-space (camera-relative) frustum planes as (nx, ny, nz, d) with
    * normals pointing inward: left, right, bottom, top, near. Far is infinite.
    */
-  frustumPlanes(out: Float32Array, aspect: number): Float32Array {
+  frustumPlanes<T extends Float32Array | Float64Array>(
+    out: T,
+    aspect: number,
+  ): T {
     const fovy = this.fovy(aspect);
     const t = Math.tan(fovy / 2);
     const r = t * aspect;

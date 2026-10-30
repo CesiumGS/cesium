@@ -3,7 +3,6 @@ import {
   Ellipsoid,
   Engine,
   InspectController,
-  collectFullDetailContents,
   createBox,
   createSurfacePatch,
   eastNorthUpToFixedFrame,
@@ -11,8 +10,9 @@ import {
   mat4,
   resolveIonAsset,
   vec3,
+  type DrawHandle,
   type FeatureValue,
-  type ModelInstance,
+  type Tileset3D,
   type View,
   type ViewLink,
   type World,
@@ -145,10 +145,14 @@ function addGlobe(world: World): void {
 }
 
 /** A fine ellipsoid patch under the content, `size` meters across. */
-function addGround(world: World, center: Float64Array, size: number): void {
+function addGround(
+  world: World,
+  center: Float64Array,
+  size: number,
+): DrawHandle | undefined {
   const carto = ellipsoid.cartesianToCartographic(center, fromDegrees(0, 0));
   if (!carto) {
-    return;
+    return undefined;
   }
   const half = size / 2 / ellipsoid.maximumRadius;
   const patch = createSurfacePatch(
@@ -159,7 +163,7 @@ function addGround(world: World, center: Float64Array, size: number): void {
     carto.latitude + half,
     32,
   );
-  world.addDraw({
+  return world.addDraw({
     mesh: world.addMesh(patch),
     origin: patch.origin,
     model: mat4.mat4(),
@@ -209,21 +213,6 @@ function addCity(world: World): { center: Float64Array; radius: number } {
   };
 }
 
-function unionSpheres(
-  spheres: Array<{ center: Float64Array; radius: number }>,
-) {
-  const center = vec3.vec3();
-  for (const s of spheres) {
-    vec3.add(center, center, s.center);
-  }
-  vec3.scale(center, center, 1 / Math.max(spheres.length, 1));
-  let radius = 0;
-  for (const s of spheres) {
-    radius = Math.max(radius, vec3.distance(center, s.center) + s.radius);
-  }
-  return { center, radius: Math.max(radius, 0.01) };
-}
-
 function sunDirection(
   at: Float64Array,
   azimuthDeg: number,
@@ -263,6 +252,10 @@ async function main(): Promise<void> {
   let overviewLink: ViewLink | undefined;
   let focus = { center: vec3.vec3(), radius: 1 };
   let loadToken = 0;
+  /** The streamed tileset in the current world, if any. */
+  let current3dTiles: Tileset3D | undefined;
+  let streamed: Tileset3D | undefined;
+  let groundDraw: DrawHandle | undefined;
   let current = sourceFromUrl();
   const ionToken = import.meta.env.VITE_ION_TOKEN as string | undefined;
 
@@ -303,7 +296,12 @@ async function main(): Promise<void> {
   const unlit = $<HTMLInputElement>("#unlit");
   const ground = $<HTMLInputElement>("#ground");
   unlit.addEventListener("change", () => void load(current));
-  ground.addEventListener("change", () => void load(current));
+  // The ground is one draw: toggle it in place.
+  ground.addEventListener("change", () => {
+    if (groundDraw) {
+      world.setVisible(groundDraw, ground.checked);
+    }
+  });
   const bindRange = (id: string, apply: (value: number) => void) => {
     const input = $<HTMLInputElement>(id);
     const out = $(`${id}-value`);
@@ -376,11 +374,13 @@ async function main(): Promise<void> {
     const started = performance.now();
     status.textContent = "loading…";
     $("#warnings").textContent = "";
+    // Size the arenas within the device's storage-binding limit.
+    const limit = engine.gpu.device.limits.maxStorageBufferBindingSize;
     const next = engine.createWorld({
       maxDraws: 1 << 16,
       maxMaterials: 1 << 13,
-      vertexBytes: 256 << 20,
-      indexBytes: 128 << 20,
+      vertexBytes: Math.min(768 << 20, Math.floor(limit / 4) * 4),
+      indexBytes: Math.min(384 << 20, Math.floor(limit / 4) * 4),
     });
     try {
       addGlobe(next);
@@ -439,43 +439,43 @@ async function main(): Promise<void> {
             location.href,
           ).href;
         }
-        const contents: Array<{ url: string; transform: Float64Array }> = [];
-        await collectFullDetailContents(
-          url,
-          headers,
-          mat4.mat4(),
-          contents,
-          warnings,
-        );
-        let done = 0;
-        const instances: ModelInstance[] = await Promise.all(
-          contents.map(async (content) => {
-            const asset = await engine.loadGltf(
-              content.url,
-              headers ? { headers } : {},
-            );
-            asset.warnings.forEach((w) => warnings.add(w));
-            if (token === loadToken) {
-              status.textContent = `loading ${++done}/${contents.length} tiles…`;
-            }
-            return engine.addModel(next, asset, {
-              modelMatrix: content.transform,
-              unlit: unlit.checked,
-              axes: "3d-tiles",
-            });
-          }),
-        );
-        placed = unionSpheres(instances);
+        // Streamed: Legacy1x selection per view; content loads as needed.
+        const tileset = await engine.addTileset(next, url, {
+          ...(headers ? { headers } : {}),
+        });
+        streamed = tileset;
+        if (token !== loadToken) {
+          throw new Error("superseded");
+        }
+        // Frame the root's content volume when it has one (publishers often
+        // pad the root volume to a power of two).
+        const volume = tileset.root.contentVolume ?? tileset.root.volume;
+        placed = {
+          center:
+            volume.kind === "box" ? volume.obb.center : volume.sphere.center,
+          radius: volume.sphere.radius,
+        };
       }
       if (token !== loadToken) {
         engine.removeWorld(next);
         return;
       }
-      if (ground.checked && source.kind !== "city") {
-        addGround(next, placed.center, Math.max(placed.radius * 8, 50));
-      } else if (source.kind === "city") {
-        addGround(next, placed.center, 2000);
+      // Georeferenced tilesets can sit below the ellipsoid (underground infrastructure): the
+      // ground starts hidden for them, shown for placed models and the city.
+      ground.checked = source.kind === "model" || source.kind === "city";
+      groundDraw = addGround(
+        next,
+        placed.center,
+        source.kind === "city" ? 2000 : Math.max(placed.radius * 8, 50),
+      );
+      if (groundDraw && !ground.checked) {
+        next.setVisible(groundDraw, false);
       }
+      if (current3dTiles) {
+        engine.removeTileset(current3dTiles);
+      }
+      current3dTiles = streamed;
+      streamed = undefined;
       const old = world;
       world = next;
       view.world = next;
@@ -491,9 +491,19 @@ async function main(): Promise<void> {
       status.textContent = `loaded in ${(performance.now() - started).toFixed(0)} ms`;
       $("#warnings").textContent = [...warnings].join("\n") || "none";
     } catch (error) {
+      if (streamed) {
+        engine.removeTileset(streamed);
+        streamed = undefined;
+      }
       engine.removeWorld(next);
+      if (error instanceof Error && error.message === "superseded") {
+        return;
+      }
       if (token === loadToken) {
-        status.textContent = `error: ${error instanceof Error ? error.message : String(error)}`;
+        const message = error instanceof Error ? error.message : String(error);
+        status.textContent = /arena is full/.test(message)
+          ? `error: ${message} The full-detail tileset is larger than the arena; streaming (M2) loads only what the view needs.`
+          : `error: ${message}`;
       }
     }
   }
@@ -548,7 +558,19 @@ async function main(): Promise<void> {
       `cpu / frame  ${s.cpuMs.toFixed(2)} ms`,
       `gpu / frame  ${Number.isNaN(s.gpuMs) ? "n/a" : `${s.gpuMs.toFixed(2)} ms`}`,
       `canvas       ${canvas.width}×${canvas.height}`,
+      ...(current3dTiles
+        ? [
+            `tiles        ${current3dTiles.stats.loaded} loaded / ${current3dTiles.stats.tiles} known`,
+            `selected     ${[...current3dTiles.stats.selected.values()].join(" / ")} (per view)`,
+            `loading      ${current3dTiles.stats.loading}`,
+            `tile cache   ${(current3dTiles.stats.bytes / 1048576).toFixed(1)} MB`,
+          ]
+        : []),
     ].join("\n");
+    if (current3dTiles) {
+      $("#warnings").textContent =
+        [...current3dTiles.warnings].join("\n") || "none";
+    }
   }, 250);
 
   engine.start();

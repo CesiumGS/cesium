@@ -74,6 +74,7 @@ export default defineConfig({
         parity: "parity/index.html",
         models: "parity/models.html",
         tileset: "parity/tileset.html",
+        selection: "parity/selection.html",
         precision: "spikes/precision.html",
         worker: "spikes/worker.html",
         indirect: "spikes/indirect.html",
@@ -83,7 +84,15 @@ export default defineConfig({
       },
     },
   },
-  resolve: { alias: { "cesium-oracle": oracle } },
+  resolve: {
+    alias: {
+      "cesium-oracle": oracle,
+      // 1.x scene code (tile bounding volumes), also only for parity tests.
+      "cesium-engine-oracle": fileURLToPath(
+        new URL("../engine/Source", import.meta.url),
+      ),
+    },
+  },
   test: {
     include: ["test/**/*.test.ts"],
     environment: "node",

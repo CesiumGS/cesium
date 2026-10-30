@@ -24,6 +24,7 @@ import {
 } from "./RenderContext.ts";
 import { createBox } from "./meshes.ts";
 import {
+  CanvasTarget,
   OffscreenTarget,
   View,
   type PickResult,
@@ -34,6 +35,8 @@ import {
 import { ViewLink, type ViewLinkOptions } from "./ViewLink.ts";
 import { World, type WorldOptions } from "./World.ts";
 import { WorkerPool } from "../io/WorkerPool.ts";
+import { Tileset3D, type TilesetOptions } from "../streaming/Tileset3D.ts";
+import type { SelectionView } from "../streaming/Legacy1x.ts";
 import type { GltfAsset } from "../io/gltfTypes.ts";
 import {
   addGltf,
@@ -83,6 +86,8 @@ export class Engine {
   readonly worlds: World[] = [];
   readonly views: View[] = [];
   readonly links: ViewLink[] = [];
+  /** Streamed 3D Tiles tilesets, updated before each frame. */
+  readonly tilesets: Tileset3D[] = [];
   readonly stats: FrameStats = {
     cpuMs: 0,
     gpuMs: Number.NaN,
@@ -239,6 +244,81 @@ export class Engine {
     return addGltf(this.ctx, world, asset, options);
   }
 
+  /**
+   * Streams a 3D Tiles tileset into `world`: selection runs per view each
+   * frame, and content is drawn only in the views that selected it.
+   */
+  async addTileset(
+    world: World,
+    url: string | URL,
+    options?: TilesetOptions,
+  ): Promise<Tileset3D> {
+    const tileset = await Tileset3D.load(
+      this,
+      world,
+      new URL(url, globalThis.location?.href).href,
+      options,
+    );
+    this.tilesets.push(tileset);
+    return tileset;
+  }
+
+  removeTileset(tileset: Tileset3D): void {
+    const index = this.tilesets.indexOf(tileset);
+    if (index >= 0) {
+      this.tilesets.splice(index, 1);
+    }
+    tileset.destroy();
+  }
+
+  /** Builds the selection inputs for every enabled view of `world`. */
+  private selectionViews(world: World): SelectionView[] {
+    const out: SelectionView[] = [];
+    for (const view of this.views) {
+      if (!view.enabled || view.world !== world) {
+        continue;
+      }
+      const rect = view.pixelRect();
+      const aspect = rect.width / rect.height;
+      const camera = view.camera;
+      const p = camera.position;
+      // World-space planes in float64: camera-relative planes shifted by the
+      // camera position, plus 1.x's far plane (5e8 m).
+      const planes = new Float64Array(24);
+      camera.frustumPlanes(planes, aspect);
+      for (let k = 0; k < 5; k++) {
+        planes[k * 4 + 3] =
+          planes[k * 4 + 3]! -
+          (planes[k * 4]! * p[0]! +
+            planes[k * 4 + 1]! * p[1]! +
+            planes[k * 4 + 2]! * p[2]!);
+      }
+      const d = camera.direction;
+      planes[20] = -d[0]!;
+      planes[21] = -d[1]!;
+      planes[22] = -d[2]!;
+      planes[23] = d[0]! * p[0]! + d[1]! * p[1]! + d[2]! * p[2]! + 5e8;
+      const pixelRatio =
+        view.target instanceof CanvasTarget
+          ? (globalThis.devicePixelRatio ?? 1)
+          : 1;
+      out.push({
+        id: this.viewIds.get(view)!,
+        position: p,
+        direction: d,
+        cartographic: Ellipsoid.WGS84.cartesianToCartographic(p, {
+          longitude: 0,
+          latitude: 0,
+          height: 0,
+        }) ?? { longitude: 0, latitude: 0, height: 0 },
+        planes,
+        sseDenominator: 2 * Math.tan(camera.fovy(aspect) / 2),
+        height: rect.height / pixelRatio,
+      });
+    }
+    return out;
+  }
+
   /** Removes a placed glTF and frees its geometry, materials and textures. */
   removeModel(world: World, instance: ModelInstance): void {
     removeGltf(world, instance);
@@ -338,6 +418,10 @@ export class Engine {
     const links = this.links;
     for (let i = 0; i < links.length; i++) {
       links[i]!.evaluate();
+    }
+    for (let i = 0; i < this.tilesets.length; i++) {
+      const tileset = this.tilesets[i]!;
+      tileset.update(this.selectionViews(tileset.world));
     }
 
     // Assign each enabled view a slot, acquire each target once (the first

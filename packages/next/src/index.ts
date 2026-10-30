@@ -32,6 +32,13 @@ export {
   type TileContent,
 } from "./tiles/fullDetail.ts";
 export {
+  Tileset3D,
+  type TilesetOptions,
+  type TilesetStats,
+} from "./streaming/Tileset3D.ts";
+export { Legacy1xSelection, type SelectionView } from "./streaming/Legacy1x.ts";
+export { Tile } from "./streaming/Tile.ts";
+export {
   createBox,
   createSurfacePatch,
   type MeshData,

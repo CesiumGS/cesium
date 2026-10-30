@@ -29,6 +29,10 @@ const suites = {
   baseline: ["/bench/baseline.html?bench", "runBaseline"],
   // Public Specs tilesets; ION_ASSET=<id> (with VITE_ION_TOKEN in .env.local)
   // runs a private ion asset instead, without the id entering the repo.
+  selection: [
+    `/parity/selection.html?bench${process.env.ION_ASSET ? `&asset=${process.env.ION_ASSET}` : ""}`,
+    "runSelection",
+  ],
   tileset: [
     `/parity/tileset.html?bench${process.env.ION_ASSET ? `&asset=${process.env.ION_ASSET}` : ""}${process.env.PICK_PROPERTY ? `&pick=${process.env.PICK_PROPERTY}` : ""}${process.env.TILESET_ZOOM ? `&zoom=${process.env.TILESET_ZOOM}` : ""}`,
     "runTileset",
@@ -63,7 +67,9 @@ async function allocSuite(page) {
     const walk = (node) => {
       if (node.selfSize > 0) {
         const { functionName, url, lineNumber } = node.callFrame;
-        const file = url.replace(/^https?:\/\/[^/]+\//, "").replace(/\?.*$/, "");
+        const file = url
+          .replace(/^https?:\/\/[^/]+\//, "")
+          .replace(/\?.*$/, "");
         const key = `${functionName || "(anonymous)"} ${file}:${lineNumber + 1}`;
         const site = sites.get(key) ?? { site: key, file, bytes: 0 };
         site.bytes += node.selfSize;
@@ -85,7 +91,10 @@ async function allocSuite(page) {
       topEngineSites: engine
         .sort((a, b) => b.bytes - a.bytes)
         .slice(0, 12)
-        .map((s) => ({ site: s.site, bytesPerFrame: Math.round(s.bytes / ALLOC_FRAMES) })),
+        .map((s) => ({
+          site: s.site,
+          bytesPerFrame: Math.round(s.bytes / ALLOC_FRAMES),
+        })),
     });
   }
   await cdp.detach();
@@ -96,7 +105,9 @@ const selected = process.argv.slice(2);
 const names = selected.length > 0 ? selected : Object.keys(suites);
 for (const name of names) {
   if (!suites[name]) {
-    throw new Error(`Unknown suite "${name}". Known: ${Object.keys(suites).join(", ")}`);
+    throw new Error(
+      `Unknown suite "${name}". Known: ${Object.keys(suites).join(", ")}`,
+    );
   }
 }
 
@@ -117,7 +128,10 @@ const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
 const errors = [];
 page.on("console", (message) => {
   // Resource failures are reported with their URL by the response handler.
-  if (message.type() === "error" && !message.text().startsWith("Failed to load resource")) {
+  if (
+    message.type() === "error" &&
+    !message.text().startsWith("Failed to load resource")
+  ) {
     errors.push(message.text());
   }
 });
@@ -130,11 +144,17 @@ page.on("response", (response) => {
 
 await page.goto(`${BASE}/spikes/precision.html?bench`);
 const environment = await page.evaluate(async () => {
-  const adapter = await navigator.gpu?.requestAdapter({ powerPreference: "high-performance" });
+  const adapter = await navigator.gpu?.requestAdapter({
+    powerPreference: "high-performance",
+  });
   return {
     userAgent: navigator.userAgent,
     adapter: adapter
-      ? { vendor: adapter.info.vendor, architecture: adapter.info.architecture, description: adapter.info.description }
+      ? {
+          vendor: adapter.info.vendor,
+          architecture: adapter.info.architecture,
+          description: adapter.info.description,
+        }
       : null,
     timestampQuery: adapter?.features.has("timestamp-query") ?? false,
   };
@@ -150,19 +170,30 @@ for (const name of names) {
   const started = performance.now();
   process.stdout.write(`${name}… `);
   await page.goto(`${BASE}${path}`);
-  await page.waitForFunction((f) => typeof globalThis[f] === "function", fn, { timeout: 60_000 });
+  await page.waitForFunction((f) => typeof globalThis[f] === "function", fn, {
+    timeout: 60_000,
+  });
   results[name] =
-    name === "alloc" ? await allocSuite(page) : await page.evaluate((f) => globalThis[f](), fn);
+    name === "alloc"
+      ? await allocSuite(page)
+      : await page.evaluate((f) => globalThis[f](), fn);
   console.log(`${((performance.now() - started) / 1000).toFixed(1)} s`);
 }
 await browser.close();
 
 const stamp = new Date().toISOString().replace(/[:.]/g, "-");
-const gpu = `${environment.adapter.vendor}-${environment.adapter.architecture}`.replace(/[^a-z0-9-]/gi, "_");
+const gpu =
+  `${environment.adapter.vendor}-${environment.adapter.architecture}`.replace(
+    /[^a-z0-9-]/gi,
+    "_",
+  );
 const outDir = join(here, "results");
 mkdirSync(outDir, { recursive: true });
 const file = join(outDir, `${stamp}-${gpu}.json`);
-writeFileSync(file, `${JSON.stringify({ date: new Date().toISOString(), environment, errors, results }, null, 2)}\n`);
+writeFileSync(
+  file,
+  `${JSON.stringify({ date: new Date().toISOString(), environment, errors, results }, null, 2)}\n`,
+);
 console.log(`wrote ${file}`);
 if (errors.length > 0) {
   console.log(`${errors.length} console errors recorded`);

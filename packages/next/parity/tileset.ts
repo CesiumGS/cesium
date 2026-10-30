@@ -309,7 +309,9 @@ async function runTileset(): Promise<Row[]> {
             ?.featureTables[0];
           properties = table ? Object.keys(table.columns).join(", ") : "";
           if (colorTransfer === "srgb") {
-            const bounds = unionSpheres(spheres);
+            const bounds = unionSpheres(
+              spheres.filter((s) => s.draws.length > 0),
+            );
             camera.near = Math.max(0.01, bounds.radius * 0.01);
             // ?zoom=k moves k× closer than the whole-tileset framing.
             const zoom = Number(params.get("zoom") ?? 1);

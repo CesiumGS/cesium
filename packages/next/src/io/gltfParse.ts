@@ -70,6 +70,10 @@ export async function parseGltf(
   }
   let bytes: Uint8Array = new Uint8Array(await response.arrayBuffer());
   let b3dm: B3dm | undefined;
+  const magic = String.fromCharCode(...bytes.subarray(0, 4));
+  if (["pnts", "i3dm", "cmpt", "vctr", "geom"].includes(magic)) {
+    throw new Error(`unsupported tile format: ${magic}`);
+  }
   if (isB3dm(bytes)) {
     b3dm = unwrapB3dm(bytes);
     bytes = b3dm.glb;

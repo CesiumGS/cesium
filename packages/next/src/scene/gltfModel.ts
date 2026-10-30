@@ -32,6 +32,8 @@ export interface ModelOptions {
    * 1.x `Cesium3DTileset`.
    */
   axes?: "gltf" | "3d-tiles";
+  /** Initial view mask of every draw (default: all views). */
+  viewMask?: number;
 }
 
 export interface ModelInstance {
@@ -133,6 +135,7 @@ export function addGltf(
       doubleSided: material.doubleSided || mirrored,
       unlit: options.unlit,
       name: options.name,
+      viewMask: options.viewMask,
       features:
         asset.meshes[draw.mesh]!.featureTable !== undefined
           ? asset.featureTables[asset.meshes[draw.mesh]!.featureTable!]
