@@ -29,7 +29,7 @@ import TopologyOverlayHooksFS from "../Shaders/TopologyOverlayHooksFS.js";
 import TopologyOverlayHooksVS from "../Shaders/TopologyOverlayHooksVS.js";
 
 /** @import { Context, FrameState, PickId } from "@cesium/engine"; */
-/** @import { BufferLayout, OverlayBufferView, OverlayViews, ScalarType, ShaderSources } from "@cesium/mesh-editor"; */
+/** @import { BufferLayout, ComponentMask, OverlayBufferView, OverlayViews, ScalarType, ShaderSources } from "@cesium/mesh-editor"; */
 /** @import MeshEditorModule from "./MeshEditorModule.js"; */
 
 /**
@@ -276,14 +276,14 @@ class OverlayRenderer {
   /**
    * Sets which component types to draw. All are drawn by default.
    *
-   * @param {boolean} points Whether to draw vertices.
-   * @param {boolean} edges Whether to draw edges.
-   * @param {boolean} faces Whether to draw faces.
+   * @param {ComponentMask} components The component types to draw.
    */
-  setShownComponents(points, edges, faces) {
-    this.#pointOverlay.shown = points;
-    this.#edgeOverlay.shown = edges;
-    this.#faceOverlay.shown = faces;
+  setShownComponents(components) {
+    for (const componentOverlay of this.#componentOverlays) {
+      const componentBit = 1 << componentOverlay.componentType;
+      componentOverlay.shown = (components & componentBit) !== 0;
+    }
+
     this.#updateCommands();
   }
 
