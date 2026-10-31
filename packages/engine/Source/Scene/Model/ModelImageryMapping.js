@@ -171,7 +171,7 @@ class ModelImageryMapping {
    * @param {ModelComponents.Attribute} primitivePositionAttribute
    * The "POSITION" attribute of the primitive.
    * @param {Matrix4} primitivePositionTransform The full transform of the primitive
-   * @param {Elliposid} ellipsoid The ellipsoid that should be used
+   * @param {Ellipsoid} ellipsoid The ellipsoid that should be used
    * @returns {Iterable<Cartographic>} The iterable over `Cartographic` objects
    */
   static createCartographicPositions(

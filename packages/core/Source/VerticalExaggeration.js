@@ -16,6 +16,7 @@ const VerticalExaggeration = {};
  * @param {number} height The height.
  * @param {number} scale A scalar used to exaggerate the terrain. If the value is 1.0 there will be no effect.
  * @param {number} relativeHeight The height relative to which terrain is exaggerated. If the value is 0.0 terrain will be exaggerated relative to the ellipsoid surface.
+ * @returns {number} The exaggerated height.
  */
 VerticalExaggeration.getHeight = function (height, scale, relativeHeight) {
   //>>includeStart('debug', pragmas.debug);
@@ -39,6 +40,7 @@ const scratchCartographic = new Cartographic();
  * @param {number} verticalExaggeration A scalar used to exaggerate the terrain. If the value is 1.0 there will be no effect.
  * @param {number} verticalExaggerationRelativeHeight The height relative to which terrain is exaggerated. If the value is 0.0 terrain will be exaggerated relative to the ellipsoid surface.
  * @param {Cartesian3} [result] The object onto which to store the result.
+ * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
  */
 VerticalExaggeration.getPosition = function (
   position,
