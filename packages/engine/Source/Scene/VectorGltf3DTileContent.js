@@ -102,6 +102,14 @@ class VectorGltf3DTileContent {
     /** @type {Cesium3DContentGroup} */
     this._group = undefined;
 
+    /**
+     * Whether this content (and all collections that it contains) is
+     * currently shown.
+     *
+     * @type {boolean}
+     */
+    this._show = true;
+
     /** @type {boolean} */
     this.featurePropertiesDirty = false;
 
@@ -204,6 +212,25 @@ class VectorGltf3DTileContent {
 
   set group(value) {
     this._group = value;
+  }
+
+  /** @inheritdoc */
+  get show() {
+    return this._show;
+  }
+  set show(value) {
+    this._show = value;
+    this.applyShow(this.show);
+  }
+  /**
+   * Apply the given 'show' flag to all collections
+   *
+   * @param {boolean} show The flag
+   */
+  applyShow(show) {
+    for (const collection of this._collections) {
+      collection.show = show;
+    }
   }
 
   /**
@@ -311,6 +338,7 @@ class VectorGltf3DTileContent {
         polygon.setMaterial(polygonMaterial);
       }
     }
+    this.applyShow(this.show);
   }
 
   /**
