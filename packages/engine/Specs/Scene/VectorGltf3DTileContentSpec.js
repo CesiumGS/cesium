@@ -1,4 +1,10 @@
-import { Cartesian3, Color, Matrix4 } from "@cesium/core";
+import {
+  Cartesian3,
+  Color,
+  HeadingPitchRange,
+  Math as CesiumMath,
+  Matrix4,
+} from "@cesium/core";
 import {
   BlendOption,
   BufferPoint,
@@ -11,9 +17,12 @@ import {
   BufferPolygonCollection,
   BufferPolygonMaterial,
   Cesium3DTileStyle,
+  Model3DTileContent,
   SceneMode,
   VectorGltf3DTileContent,
 } from "../../index.js";
+import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
+import createScene from "../../../../Specs/createScene.js";
 
 const scratchPoint = new BufferPoint();
 const scratchPolyline = new BufferPolyline();
@@ -300,7 +309,223 @@ describe("Scene/VectorGltf3DTileContent", () => {
     content.update(tileset, frameState);
     expect(points.blendOption).toBe(BlendOption.TRANSLUCENT);
   });
+
+  describe("fromGeoJson", () => {
+    const geoJson = {
+      type: "FeatureCollection",
+      features: [
+        {
+          type: "Feature",
+          properties: { name: "A", code: 1 },
+          geometry: {
+            type: "MultiPoint",
+            coordinates: [
+              [-75.0, 40.0],
+              [-75.001, 40.0],
+            ],
+          },
+        },
+        {
+          type: "Feature",
+          properties: { name: "B" },
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [-75.0, 40.0],
+              [-75.001, 40.001],
+            ],
+          },
+        },
+        {
+          type: "Feature",
+          properties: null,
+          geometry: {
+            type: "Polygon",
+            coordinates: [
+              [
+                [-75.0, 40.0],
+                [-75.001, 40.0],
+                [-75.001, 40.001],
+                [-75.0, 40.001],
+                [-75.0, 40.0],
+              ],
+            ],
+          },
+        },
+      ],
+    };
+
+    it("creates one collection per geometry type", () => {
+      content = VectorGltf3DTileContent.fromGeoJson({}, {}, {}, geoJson);
+
+      expect(content.ready).toBe(true);
+      expect(content._collections.length).toBe(3);
+      expect(content._collections[0]).toBeInstanceOf(BufferPointCollection);
+      expect(content._collections[1]).toBeInstanceOf(BufferPolylineCollection);
+      expect(content._collections[2]).toBeInstanceOf(BufferPolygonCollection);
+      expect(content.pointsLength).toBe(2);
+      expect(content.featuresLength).toBe(3);
+
+      content.destroy();
+    });
+
+    it("exposes GeoJSON properties on features", () => {
+      content = VectorGltf3DTileContent.fromGeoJson({}, {}, {}, geoJson);
+
+      expect(content.getFeature(0, 0).getProperty("name")).toBe("A");
+      expect(content.getFeature(0, 0).getProperty("code")).toBe(1);
+      expect(content.getFeature(1, 0).getProperty("name")).toBe("B");
+      expect(content.getFeature(1, 0).getProperty("code")).toBe("");
+      expect(content.getFeature(2, 0).getProperty("name")).toBe("");
+      expect(content.getFeature(0, 0).getProperty("missing")).toBeUndefined();
+
+      content.destroy();
+    });
+
+    it("picks the feature from each of its primitives", () => {
+      content = VectorGltf3DTileContent.fromGeoJson({}, {}, {}, geoJson);
+      const [points, polylines, polygons] = content._collections;
+
+      expect(points.get(0, scratchPoint).pickObject).toBe(
+        content.getFeature(0, 0),
+      );
+      expect(points.get(1, scratchPoint).pickObject).toBe(
+        content.getFeature(0, 0),
+      );
+      expect(polylines.get(0, scratchPolyline).pickObject).toBe(
+        content.getFeature(1, 0),
+      );
+      expect(polygons.get(0, scratchPolygon).pickObject).toBe(
+        content.getFeature(2, 0),
+      );
+
+      content.destroy();
+    });
+
+    it("shows and hides all primitives of a feature", () => {
+      content = VectorGltf3DTileContent.fromGeoJson({}, {}, {}, geoJson);
+      const [points, polylines] = content._collections;
+
+      content.getFeature(0, 0).show = false;
+
+      expect(points.get(0, scratchPoint).show).toBe(false);
+      expect(points.get(1, scratchPoint).show).toBe(false);
+      expect(polylines.get(0, scratchPolyline).show).toBe(true);
+
+      content.destroy();
+    });
+
+    it("applies a style that reads GeoJSON properties", () => {
+      content = VectorGltf3DTileContent.fromGeoJson({}, {}, {}, geoJson);
+      const [points, polylines] = content._collections;
+
+      content.applyStyle(
+        new Cesium3DTileStyle({
+          color: "${name} === 'A' ? color('red') : color('blue')",
+        }),
+      );
+
+      points.get(1, scratchPoint).getMaterial(scratchPointMaterial);
+      expect(scratchPointMaterial.color).toEqual(Color.RED);
+      polylines.get(0, scratchPolyline).getMaterial(scratchPolylineMaterial);
+      expect(scratchPolylineMaterial.color).toEqual(Color.BLUE);
+
+      content.destroy();
+    });
+  });
 });
+
+describe(
+  "Scene/VectorGltf3DTileContent GeoJSON tilesets",
+  () => {
+    const geoJsonPolygonUrl =
+      "./Data/Cesium3DTiles/GeoJson/Polygon/tileset.json";
+    const geoJsonPolygonHoleUrl =
+      "./Data/Cesium3DTiles/GeoJson/PolygonHole/tileset.json";
+
+    let scene;
+
+    beforeAll(() => {
+      scene = createScene();
+    });
+
+    afterAll(() => {
+      scene.destroyForSpecs();
+    });
+
+    beforeEach(() => {
+      scene.morphTo3D(0.0);
+      const center = Cartesian3.fromDegrees(-75.6121443, 40.0425806);
+      scene.camera.lookAt(
+        center,
+        new HeadingPitchRange(0.0, -CesiumMath.PI_OVER_TWO, 1.0),
+      );
+    });
+
+    afterEach(() => {
+      scene.primitives.removeAll();
+    });
+
+    it("loads GeoJSON content as a model by default", async () => {
+      const tileset = await Cesium3DTilesTester.loadTileset(
+        scene,
+        geoJsonPolygonUrl,
+      );
+
+      expect(tileset.vectorGeoJson).toBe(false);
+      expect(tileset.root.content).toBeInstanceOf(Model3DTileContent);
+    });
+
+    it("loads GeoJSON content as vector content with vectorGeoJson", async () => {
+      const tileset = await Cesium3DTilesTester.loadTileset(
+        scene,
+        geoJsonPolygonUrl,
+        { vectorGeoJson: true },
+      );
+
+      expect(tileset.vectorGeoJson).toBe(true);
+      expect(tileset.root.content).toBeInstanceOf(VectorGltf3DTileContent);
+    });
+
+    it("fills polygons with holes", async () => {
+      const tileset = await Cesium3DTilesTester.loadTileset(
+        scene,
+        geoJsonPolygonHoleUrl,
+        { vectorGeoJson: true },
+      );
+
+      // A quad with one quad hole triangulates into 8 triangles.
+      expect(tileset.root.content.trianglesLength).toBe(8);
+    });
+
+    it("renders GeoJSON polygons", async () => {
+      const tileset = await Cesium3DTilesTester.loadTileset(
+        scene,
+        geoJsonPolygonUrl,
+        { vectorGeoJson: true },
+      );
+
+      Cesium3DTilesTester.expectRender(scene, tileset);
+    });
+
+    it("picks GeoJSON polygons", async () => {
+      const tileset = await Cesium3DTilesTester.loadTileset(
+        scene,
+        geoJsonPolygonUrl,
+        { vectorGeoJson: true },
+      );
+      const content = tileset.root.content;
+
+      expect(scene).toPickAndCall((result) => {
+        expect(result).toBe(content.getFeature(0, 0));
+        expect(result.primitive).toBe(tileset);
+        expect(result.getProperty("name")).toBe("UL");
+        expect(result.getProperty("code")).toBe(12);
+      });
+    });
+  },
+  "WebGL",
+);
 
 function createBufferPointCollection() {
   const collection = new BufferPointCollection();
