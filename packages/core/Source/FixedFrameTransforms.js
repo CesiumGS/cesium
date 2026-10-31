@@ -42,7 +42,10 @@ const FixedFrameTransforms = {};
  * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if none was provided.
  */
 
-/** @type {Record<LocalFrameAxis, Partial<Record<LocalFrameAxis, LocalFrameAxis>>>} */
+/**
+ * @type {Record<LocalFrameAxis, Partial<Record<LocalFrameAxis, LocalFrameAxis>>>}
+ * @ignore
+ */
 const vectorProductLocalFrame = {
   up: {
     south: "east",
@@ -91,7 +94,10 @@ const degeneratePositionLocalFrame = {
   down: [0, 0, -1],
 };
 
-/** @type {Record<string, LocalFrameToFixedFrame>} */
+/**
+ * @type {Record<string, LocalFrameToFixedFrame>}
+ * @ignore
+ */
 const localFrameToFixedFrameCache = {};
 
 const scratchCalculateCartesian = {

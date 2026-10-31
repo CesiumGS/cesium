@@ -76,7 +76,7 @@ const AttributeType = {
  * @param {AttributeType} attributeType The attribute type.
  * @returns {*} The math type.
  *
- * @private
+ * @internal
  */
 AttributeType.getMathType = function (attributeType) {
   switch (attributeType) {
@@ -107,7 +107,7 @@ AttributeType.getMathType = function (attributeType) {
  * @param {AttributeType} attributeType The attribute type.
  * @returns {number} The number of components.
  *
- * @private
+ * @internal
  */
 AttributeType.getNumberOfComponents = function (attributeType) {
   switch (attributeType) {
@@ -138,7 +138,7 @@ AttributeType.getNumberOfComponents = function (attributeType) {
  * @param {AttributeType} attributeType The attribute type.
  * @returns {number} The number of attribute locations needed in the shader
  *
- * @private
+ * @internal
  */
 AttributeType.getAttributeLocationCount = function (attributeType) {
   switch (attributeType) {
@@ -166,7 +166,7 @@ AttributeType.getAttributeLocationCount = function (attributeType) {
  * @param {AttributeType} attributeType The attribute type.
  * @returns {string} The GLSL type for the attribute type.
  *
- * @private
+ * @internal
  */
 AttributeType.getGlslType = function (attributeType) {
   //>>includeStart('debug', pragmas.debug);

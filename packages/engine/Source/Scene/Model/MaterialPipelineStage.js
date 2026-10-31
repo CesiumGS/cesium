@@ -18,8 +18,14 @@ import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import LightingModel from "./LightingModel.js";
 import ModelUtility from "./ModelUtility.js";
 
-const { Material, MetallicRoughness, SpecularGlossiness, Specular, Clearcoat } =
-  ModelComponents;
+const {
+  Material,
+  MetallicRoughness,
+  SpecularGlossiness,
+  Specular,
+  Clearcoat,
+  EmissiveStrength,
+} = ModelComponents;
 
 /**
  * The material pipeline stage processes textures and other uniforms needed
@@ -150,6 +156,16 @@ MaterialPipelineStage.process = function (
         shaderBuilder,
         defaultTexture,
         disableTextures,
+      );
+    }
+    if (
+      defined(material.emissiveStrength) &&
+      ModelUtility.supportedExtensions.KHR_materials_emissive_strength
+    ) {
+      processEmissiveStrengthUniforms(
+        material.emissiveStrength,
+        uniformMap,
+        shaderBuilder,
       );
     }
     processMetallicRoughnessUniforms(
@@ -1220,6 +1236,41 @@ function processClearcoatUniforms(
       "CLEARCOAT_NORMAL",
       defaultTexture,
     );
+  }
+}
+
+/**
+ * Add uniforms and defines for the KHR_materials_emissive_strength extension
+ *
+ * @param {ModelComponents.EmissiveStrength} emissiveStrength
+ * @param {Object<string, Function>} uniformMap The uniform map to modify.
+ * @param {ShaderBuilder} shaderBuilder
+ * @private
+ */
+function processEmissiveStrengthUniforms(
+  emissiveStrength,
+  uniformMap,
+  shaderBuilder,
+) {
+  const emissiveStrengthValue = emissiveStrength.emissiveStrength;
+
+  if (
+    defined(emissiveStrengthValue) &&
+    emissiveStrengthValue !== EmissiveStrength.DEFAULT_EMISSIVE_STRENGTH
+  ) {
+    shaderBuilder.addDefine(
+      "HAS_EMISSIVE_STRENGTH",
+      undefined,
+      ShaderDestination.FRAGMENT,
+    );
+    shaderBuilder.addUniform(
+      "float",
+      "u_emissiveStrength",
+      ShaderDestination.FRAGMENT,
+    );
+    uniformMap.u_emissiveStrength = function () {
+      return emissiveStrength.emissiveStrength;
+    };
   }
 }
 

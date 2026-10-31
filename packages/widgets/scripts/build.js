@@ -1,9 +1,7 @@
 // @ts-check
 
+import { globSync, mkdirSync } from "node:fs";
 import path from "node:path";
-
-import { mkdirp } from "mkdirp";
-import { globby } from "globby";
 
 import {
   createIndexJs,
@@ -18,8 +16,8 @@ import {
 // Widgets depends on engine's runtime assets (Workers/Assets/ThirdParty/CSS) at runtime.
 export { runtimeTestAssetFiles } from "../../engine/scripts/build.js";
 
-export const sourceGlobs = ["packages/widgets/Source/**/*.js"];
-export const specGlobs = ["packages/widgets/Specs/**/*Spec.js"];
+export const sourceGlobs = { patterns: ["Source/**/*.js"] };
+export const specGlobs = { patterns: ["Specs/**/*Spec.js"] };
 
 /**
  * Copies widgets' static assets to a destination.
@@ -58,7 +56,7 @@ export const buildWidgets = async (options) => {
   const write = options.write ?? true;
 
   // Generate Build folder to place build artifacts.
-  mkdirp.sync("packages/widgets/Build");
+  mkdirSync("packages/widgets/Build", { recursive: true });
 
   // Create index.js
   await createIndexJs("widgets", sourceGlobs);
@@ -77,9 +75,9 @@ export const buildWidgets = async (options) => {
   });
 
   // Create SpecList.js
-  const specFiles = await globby(specGlobs);
+  const specFiles = globSync(specGlobs.patterns, { cwd: "packages/widgets" });
   const specListFile = path.join("packages/widgets/Specs", "SpecList.js");
-  await createSpecListForWorkspace(specFiles, "widgets", specListFile);
+  await createSpecListForWorkspace(specFiles, specListFile);
 
   await bundleSpecs({
     incremental: incremental,

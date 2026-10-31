@@ -109,7 +109,7 @@ Object.defineProperties(EdgeFramebuffer.prototype, {
  * Updates the framebuffer.
  *
  * @param {Context} context The context.
- * @param {Viewport} viewport The viewport.
+ * @param {BoundingRectangle} viewport The viewport.
  * @param {boolean} hdr Whether HDR is enabled.
  * @param {Texture} [existingColorTexture] Optional existing color texture to reuse.
  * @param {Texture} [existingDepthTexture] Optional existing depth texture to reuse.
@@ -192,7 +192,7 @@ EdgeFramebuffer.prototype.getClearCommand = function (clearColor) {
  * Gets the edge framebuffer, creating it if necessary.
  *
  * @param {Context} context The context.
- * @param {Viewport} viewport The viewport.
+ * @param {BoundingRectangle} viewport The viewport.
  * @param {Texture} [existingColorTexture] Optional existing color texture to reuse.
  * @param {Texture} [existingDepthTexture] Optional existing depth texture to reuse.
  *

@@ -23,7 +23,7 @@
     "./Specs/**/*"
   ],
   "engines": {
-    "node": ">=22.0.0"
+    "node": ">=22.17.0"
   },
   "dependencies": {
     "@cesium/core": "^0.1.0"

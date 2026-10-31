@@ -1,5 +1,27 @@
 # Change Log
 
+## 1.147 - 2026-11-01
+
+### @cesium/core
+
+#### Fixes :wrench:
+
+- Fixed undeclared dependencies `earcut`, `mersenne-twister`, and `urijs`. [#13955](https://github.com/CesiumGS/cesium/issues/13955)
+
+### @cesium/engine
+
+#### Additions :tada:
+
+- Added support for glTF models with the [KHR_materials_emissive_strength extension](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_emissive_strength). [#13961](https://github.com/CesiumGS/cesium/pull/13961)
+- Added experimental `IonAssetElementService` for querying, filtering, aggregating, and navigating element metadata for Cesium ion assets backed by BIM/CAD databases, along with the extensible `ElementService` base class.[#13995](https://github.com/CesiumGS/cesium/pull/13995)
+
+#### Fixes :wrench:
+
+- Fixed `czm_passOverlay` and `czm_passCesium3DTileEdgesDirect` GLSL constants not matching `czm_pass` during their respective passes. Removed the unused `czm_passClassification` constant. [#13657](https://github.com/CesiumGS/cesium/issues/13657)
+- Fixed dynamic environment lighting on models and tilesets near or below the ellipsoid surface. [#13988](https://github.com/CesiumGS/cesium/pull/13988)
+- Fixed `pointCloudShading.backFaceCulling` not hiding back-facing points on some platforms. [#13989](https://github.com/CesiumGS/cesium/pull/13989)
+- Fixed `Cesium3DTileset` repeatedly loading and unloading the same tiles when they don't fit within `cacheBytes` plus `maximumCacheOverflowBytes`. [#13999](https://github.com/CesiumGS/cesium/pull/13999)
+
 ## 1.146 - 2026-10-01
 
 ### Major Announcements :loudspeaker:

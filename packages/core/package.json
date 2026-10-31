@@ -24,9 +24,13 @@
     "./Specs/**/*"
   ],
   "engines": {
-    "node": ">=22.0.0"
+    "node": ">=22.17.0"
   },
-  "dependencies": {},
+  "dependencies": {
+    "earcut": "3.0.2",
+    "mersenne-twister": "^1.1.0",
+    "urijs": "^1.19.7"
+  },
   "type": "module",
   "scripts": {
     "build": "gulp build --workspace @cesium/core",
