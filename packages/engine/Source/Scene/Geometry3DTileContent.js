@@ -124,12 +124,20 @@ class Geometry3DTileContent {
 
   /** @inheritdoc */
   get show() {
-    // TODO CONTENT_SHOW Not clear how to implement this...
     return this._show;
   }
 
   set show(value) {
     this._show = value;
+    this.applyShow(this.show);
+  }
+  applyShow(show) {
+    if (!defined(this._features)) {
+      createFeatures(this);
+    }
+    for (const feature of this._features) {
+      feature.show = show;
+    }
   }
 
   hasProperty(batchId, name) {

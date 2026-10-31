@@ -166,7 +166,6 @@ class Implicit3DTileContent {
 
   /** @inheritdoc */
   get show() {
-    // TODO CONTENT_SHOW Not clear how to implement this...
     return this._show;
   }
 
