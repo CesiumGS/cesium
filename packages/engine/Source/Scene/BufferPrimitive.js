@@ -27,7 +27,7 @@ const { DirtyFlags } = BufferPrimitiveCollection;
  */
 class BufferPrimitive {
   /**
-   * Collecton containing the primitive(s) for which this instance currently
+   * Collection containing the primitive(s) for which this instance currently
    * provides a view.
    *
    * @type {BufferPrimitiveCollection<BufferPrimitive>}
