@@ -225,6 +225,10 @@ export interface Adapter {
   setInteractive(on: boolean): void;
   /** Keep what is selected and loaded now, for inspecting it from elsewhere. */
   setStreamingPaused(on: boolean): void;
+  /** Tint tiles by tree depth (1.x `debugColorizeTiles`). */
+  setColorizeTiles(on: boolean): void;
+  /** Live statistics for the explorer's HUD. */
+  stats(): { selected: number; loading: number; note: string };
   /** The render settings in effect (read after frames were drawn). */
   effectiveRender(): EffectiveRender;
   /** Lights the scene from this direction (unit vector toward the sun). */
@@ -441,6 +445,32 @@ export class NextAdapter implements Adapter {
     }
   }
 
+  setColorizeTiles(on: boolean): void {
+    for (const tileset of this.tilesets) {
+      tileset.debugColorizeTiles = on;
+    }
+  }
+
+  stats(): { selected: number; loading: number; note: string } {
+    let selected = 0;
+    let loading = 0;
+    let requests = 0;
+    let bytes = 0;
+    for (const t of this.tilesets) {
+      for (const n of t.stats.selected.values()) {
+        selected += n;
+      }
+      loading += t.stats.inFlight;
+      requests += t.stats.requestsTotal;
+      bytes += t.stats.bytesReceived;
+    }
+    return {
+      selected,
+      loading,
+      note: `${requests} requests · ${(bytes / 1e6).toFixed(1)} MB received`,
+    };
+  }
+
   setSun(direction: Float64Array): void {
     this.engine.sunDirection.set(direction);
   }
@@ -464,6 +494,18 @@ export class NextAdapter implements Adapter {
     this.engine.destroy();
   }
 }
+
+/** Tile tints by tree depth, as 2.0's `debugColorizeTiles` (linear RGB). */
+const DEPTH_COLORS = [
+  [0.9, 0.2, 0.2],
+  [0.95, 0.55, 0.1],
+  [0.95, 0.85, 0.1],
+  [0.3, 0.8, 0.25],
+  [0.1, 0.7, 0.8],
+  [0.2, 0.35, 0.95],
+  [0.6, 0.3, 0.9],
+  [0.9, 0.35, 0.75],
+] as const;
 
 export class LegacyAdapter implements Adapter {
   private viewer: Json;
@@ -618,6 +660,63 @@ export class LegacyAdapter implements Adapter {
       fxaa: scene.postProcessStages.fxaa.enabled,
       fog: scene.fog.enabled,
       outlines: this.tilesets.some((t) => t.showOutline),
+    };
+  }
+
+  /**
+   * Tile tints by depth with 2.0's palette (1.x's own debugColorizeTiles
+   * picks random colors, which can't be compared across engines).
+   */
+  setColorizeTiles(on: boolean): void {
+    this.colorizeOff?.();
+    const white = Cesium.Color.WHITE;
+    const remove = this.tilesets.map((tileset) =>
+      tileset.tileVisible.addEventListener((tile: Json) => {
+        if (on) {
+          const [r, g, b] = DEPTH_COLORS[tile._depth % DEPTH_COLORS.length]!;
+          // 2.0 tints in linear color; 1.x's tile color is sRGB.
+          tile.color = new Cesium.Color(
+            r ** (1 / 2.2),
+            g ** (1 / 2.2),
+            b ** (1 / 2.2),
+            1,
+          );
+        } else {
+          tile.color = white;
+        }
+      }),
+    );
+    this.colorizeOff = () => {
+      for (const r of remove) {
+        r();
+      }
+    };
+    if (!on) {
+      // One more frame paints them white, then the listeners go.
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => this.colorizeOff?.()),
+      );
+    }
+  }
+  private colorizeOff?: () => void;
+
+  stats(): { selected: number; loading: number; note: string } {
+    let selected = 0;
+    let loading = 0;
+    let memory = 0;
+    for (const t of this.tilesets) {
+      selected += t.statistics.selected;
+      loading += t.statistics.numberOfPendingRequests;
+      memory += t.totalMemoryUsageInBytes;
+    }
+    const globe = this.viewer.scene.globe;
+    if (globe) {
+      selected += globe._surface._tilesToRender.length;
+    }
+    return {
+      selected,
+      loading,
+      note: `${(memory / 1e6).toFixed(0)} MB of tiles in memory`,
     };
   }
 

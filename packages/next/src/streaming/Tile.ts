@@ -76,6 +76,8 @@ export class Tile {
 
   state: ContentState = "unloaded";
   instance?: ModelInstance;
+  /** Whether the draws carry the depth tint (`debugColorizeTiles`). */
+  debugColored = false;
   /** Bytes of the loaded content (geometry + textures). */
   bytes = 0;
   /** Data credit of the loaded content (glTF asset.copyright). */

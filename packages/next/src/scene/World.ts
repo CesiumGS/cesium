@@ -1636,6 +1636,18 @@ export class World {
     return Uint32Array.from(jobs);
   }
 
+  /** Changes a draw's tint (linear RGBA, multiplied with its material). */
+  setColor(handle: DrawHandle, color: ArrayLike<number>): void {
+    if (!this.hasDraw(handle)) {
+      return;
+    }
+    const o = handle.index * RECORD_WORDS;
+    for (let i = 0; i < 4; i++) {
+      this.recordsF32[o + 4 + i] = color[i] ?? 1;
+    }
+    this.markDirty(handle.index);
+  }
+
   setVisible(handle: DrawHandle, visible: boolean): void {
     if (!this.hasDraw(handle)) {
       return;

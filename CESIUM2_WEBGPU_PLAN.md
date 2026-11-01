@@ -3304,11 +3304,17 @@ as Dyno does for 1.x and 2.0.
     report scene links to it.
   - For looking, not measuring: two engines share one GPU and main
     thread, and the page says so.
-  - Next: requests and bytes in the HUD; tile debug views (bounding
-    volumes, selected tiles colored by depth or screen-space error,
-    picking a tile for its metadata) in both engines; deep links from a
-    point on a path overlay or a filmstrip frame; "measure this" runs the
-    scenario properly through the CLI.
+  - Built since (r33): tile statistics in the HUD (drawn and loading
+    tiles; 2.0's requests and bytes, 1.x's tile memory); tiles colored by
+    tree depth in both engines with one palette (2.0
+    `Tileset3D.debugColorizeTiles` via `World.setColor`; 1.x's own colors
+    are random, so the suite tints by depth itself); deep links from the
+    report (a click on a path chart opens that point of the path, filmstrip
+    frames open their moment); "Measure this" gives the CLI command for the
+    scene and engines.
+  - Next: bounding volumes and screen-space error coloring, picking a tile
+    for its metadata, selection diffs (tiles one engine draws and the
+    other doesn't).
   - Later, authoring benchmarks: the explorer becomes where new
     benchmarks are made. Record a camera path from free flight
     (keyframes, smoothed into a spline, with timing) and save it as a

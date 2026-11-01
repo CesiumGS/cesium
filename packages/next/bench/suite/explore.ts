@@ -126,6 +126,8 @@ const TEMPLATE = `
     </div>
     <label class="check"><input type="checkbox" data-id="link" checked> Link cameras</label>
     <label class="check"><input type="checkbox" data-id="pause"> Pause streaming</label>
+    <label class="check"><input type="checkbox" data-id="colorize"> Color tiles by depth</label>
+    <button data-id="measure" title="The command that measures this scene with these engines">Measure this…</button>
     <button data-id="toPath">Back to the path</button>
     <span class="readout" data-id="readout"></span>
   </div>
@@ -140,6 +142,11 @@ const TEMPLATE = `
   </div>
   <div class="panes" data-id="panes"></div>
   <p class="hint" data-id="hint"></p>
+  <div class="measure" data-id="measureBox" hidden>
+    <p>Measure this scene properly (each engine alone, cold cache, repetitions, conditions recorded):</p>
+    <pre><code data-id="command"></code></pre>
+    <button data-id="copyCommand">Copy</button>
+  </div>
   <div id="credits" class="credits"></div>
 </div>`;
 
@@ -168,6 +175,7 @@ export function mountExplorer(
   const status = $<HTMLElement>("status");
   const link = $<HTMLInputElement>("link");
   const pause = $<HTMLInputElement>("pause");
+  const colorize = $<HTMLInputElement>("colorize");
   const readout = $<HTMLElement>("readout");
   const hint = $<HTMLElement>("hint");
 
@@ -279,6 +287,7 @@ export function mountExplorer(
     panes = [];
     leader = undefined;
     pause.checked = false;
+    colorize.checked = false;
     const container = $<HTMLElement>("panes");
     container.replaceChildren();
     root.querySelector("#credits")!.replaceChildren();
@@ -402,6 +411,7 @@ export function mountExplorer(
   function hud(pane: Pane): void {
     const version =
       pane.config.engine === "1.x" ? ` · CesiumJS ${Cesium.VERSION}` : "";
+    const stats = pane.adapter.stats();
     const key = document.createElement("span");
     key.className = "key";
     key.style.background = pane.color;
@@ -411,6 +421,8 @@ export function mountExplorer(
       `\nCPU / frame  ${pane.cpu.toFixed(2)} ms` +
         `\nGPU / frame  ${pane.gpu === undefined ? "not exposed" : `${pane.gpu.toFixed(2)} ms`}` +
         `\nframe        ${interval.toFixed(1)} ms (shared)` +
+        `\ntiles        ${stats.selected} drawn · ${stats.loading} loading` +
+        `\n             ${stats.note}` +
         `\n${pause.checked ? "streaming paused" : pane.adapter.settled() ? "settled" : "loading…"}`,
     );
     pane.hud.replaceChildren(key, name, lines);
@@ -438,6 +450,32 @@ export function mountExplorer(
     for (const pane of panes) {
       pane.adapter.setStreamingPaused(pause.checked);
     }
+  });
+  colorize.addEventListener("change", () => {
+    for (const pane of panes) {
+      pane.adapter.setColorizeTiles(colorize.checked);
+    }
+  });
+  $("measure").addEventListener("click", () => {
+    const box = $<HTMLElement>("measureBox");
+    const ids = [leftSelect.value, rightSelect.value]
+      .filter(Boolean)
+      .map((id) =>
+        catalog.configs.some((c) => c.id === id && !/@/.test(id))
+          ? id
+          : id.startsWith("1.x@")
+            ? "1.x-release"
+            : id,
+      );
+    const release = [leftSelect.value, rightSelect.value].find((id) =>
+      id.startsWith("1.x@"),
+    );
+    $("command").textContent =
+      `node packages/next/bench/suite/cli.mjs run --scenes ${sceneSelect.value} --configs ${[...new Set(ids)].join(",")}${release ? ` --cesium ${release.slice(4)}` : ""} --reps 3 --note "explorer: ${sceneSelect.value}"`;
+    box.hidden = !box.hidden;
+  });
+  $("copyCommand").addEventListener("click", () => {
+    void navigator.clipboard?.writeText($("command").textContent ?? "");
   });
   $("load").addEventListener("click", () => void load());
 

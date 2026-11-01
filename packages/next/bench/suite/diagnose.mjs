@@ -336,7 +336,7 @@ export function percentileCurve({ runs, configs, color }) {
  * the image parity (FLIP, lower is closer) against the baseline and the
  * heatmap on demand.
  */
-export function filmstrip({ entries, assets, configs, baseline }) {
+export function filmstrip({ entries, assets, configs, baseline, explore }) {
   if (!entries?.length || !assets) {
     return "";
   }
@@ -354,7 +354,8 @@ export function filmstrip({ entries, assets, configs, baseline }) {
               : escape(c);
           return `<div class="frame"><a href="${escape(assets + e.images[c])}" target="_blank" rel="noopener"><img loading="lazy" src="${escape(assets + e.images[c])}" alt="${escape(`${c}, ${moments[e.moment] ?? e.moment}`)}"></a><div class="cap">${caption}</div>${f ? `<details><summary>Difference heatmap</summary><img loading="lazy" src="${escape(assets + f.heatmap)}" alt="${escape(`FLIP heatmap, ${c} against ${baseline}`)}"></details>` : ""}</div>`;
         });
-      return `<div class="moment"><div class="m-label">${escape(moments[e.moment] ?? e.moment)}</div><div class="frames">${cells.join("")}</div></div>`;
+      const at = e.moment === "end" ? 1 : 0;
+      return `<div class="moment"><div class="m-label">${escape(moments[e.moment] ?? e.moment)}${explore ? ` · <a target="_top" href="${explore}&amp;t=${at}">open here in the explorer</a>` : ""}</div><div class="frames">${cells.join("")}</div></div>`;
     })
     .join("");
   return `<figure class="filmstrip"><figcaption>Filmstrip</figcaption><div class="sub">The first repetition's views once settled. FLIP measures how differently the two images look to a viewer (0 identical, 1 completely different); faster must not mean drawing less.</div>${rows}</figure>`;

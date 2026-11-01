@@ -149,6 +149,19 @@ export interface TilesetStats {
   selected: Map<number, number>;
 }
 
+/** Tile colors by tree depth for `debugColorizeTiles` (linear RGBA). */
+const DEPTH_COLORS: ReadonlyArray<readonly [number, number, number, number]> = [
+  [0.9, 0.2, 0.2, 1],
+  [0.95, 0.55, 0.1, 1],
+  [0.95, 0.85, 0.1, 1],
+  [0.3, 0.8, 0.25, 1],
+  [0.1, 0.7, 0.8, 1],
+  [0.2, 0.35, 0.95, 1],
+  [0.6, 0.3, 0.9, 1],
+  [0.9, 0.35, 0.75, 1],
+];
+const WHITE = [1, 1, 1, 1] as const;
+
 export class Tileset3D implements TileTree {
   readonly warnings = new Set<string>();
   /** The selection policy (`setPolicy` replaces it). */
@@ -377,6 +390,35 @@ export class Tileset3D implements TileTree {
     }
   }
   private frozen = false;
+  /**
+   * Tints each drawn tile by its depth in the tree, to see the levels a
+   * selection picked (1.x `debugColorizeTiles`). Off restores white.
+   */
+  get debugColorizeTiles(): boolean {
+    return this.colorize;
+  }
+  set debugColorizeTiles(value: boolean) {
+    if (value !== this.colorize) {
+      this.colorize = value;
+      for (const tile of this.masked) {
+        this.applyDebugColor(tile);
+      }
+      this.lastChange = this.frame;
+    }
+  }
+  private colorize = false;
+  private applyDebugColor(tile: Tile): void {
+    if (!tile.instance || tile.debugColored === this.colorize) {
+      return;
+    }
+    const color = this.colorize
+      ? DEPTH_COLORS[tile.depth % DEPTH_COLORS.length]!
+      : WHITE;
+    for (const draw of tile.instance.draws) {
+      this.world.setColor(draw, color);
+    }
+    tile.debugColored = this.colorize;
+  }
   /** Globe imagery draped on this terrain tileset (`engine.addTerrain`). */
   imagery?: GlobeImagery;
   /** Selected tiles per view id after the last update (parity tests). */
@@ -694,6 +736,7 @@ export class Tileset3D implements TileTree {
     }
     // View masks: only tiles whose mask changed touch their draw records.
     for (const tile of new Set([...this.masked, ...nowMasked])) {
+      this.applyDebugColor(tile);
       if (tile.instance && tile.appliedMask !== tile.viewMask) {
         for (const draw of tile.instance.draws) {
           this.world.setViewMask(draw, tile.viewMask);
