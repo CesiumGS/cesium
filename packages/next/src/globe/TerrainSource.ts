@@ -164,7 +164,7 @@ export class TerrainSource {
   createSelection(options: TilesetOptions): TileSelection {
     return options.policy === "legacy1x"
       ? new GlobeLegacy1xSelection(this, options)
-      : new GlobeBudgetedSelection(options);
+      : new GlobeBudgetedSelection(this, options);
   }
 
   /** Reads `layer.json` (quantized-mesh only). */

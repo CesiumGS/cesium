@@ -6,13 +6,19 @@
  * With the tileset's, oblique views of terrain left mid-distance tiles below
  * zero SSE, drawn far too coarse (Rainier: 20 tiles at levels 0 to 12 where
  * 1.x draws 57 at levels 6 to 13).
+ *
+ * Tiles are expanded as they are visited (1.x QuadtreeTile children exist
+ * before their parent loads): children whose availability is known can be
+ * selected and requested at once. Expanded only when loaded, terrain loaded
+ * one level per round trip and could not skip levels.
  */
 import {
   BudgetedSelection,
   type BudgetedOptions,
 } from "../streaming/Budgeted.ts";
 import type { SelectionResult, SelectionView } from "../streaming/Legacy1x.ts";
-import type { Tile } from "../streaming/Tile.ts";
+import type { Tile, TileViewState } from "../streaming/Tile.ts";
+import type { TerrainSource } from "./TerrainSource.ts";
 import { FOG_SSE, fog, fogDensity } from "./GlobeLegacy1x.ts";
 
 export class GlobeBudgetedSelection extends BudgetedSelection {
@@ -24,8 +30,24 @@ export class GlobeBudgetedSelection extends BudgetedSelection {
   /** This pass's fog density (0 without fog). */
   private passDensity = 0;
 
-  constructor(options: BudgetedOptions = {}) {
+  constructor(
+    private readonly source: TerrainSource,
+    options: BudgetedOptions = {},
+  ) {
     super({ ...options, dynamicScreenSpaceError: false });
+  }
+
+  /** Expands the tile (its children, where availability is known) first. */
+  protected override updateVisibility(
+    tile: Tile,
+    state: TileViewState,
+    view: SelectionView,
+    pass: number,
+  ): void {
+    if (tile.globe) {
+      this.source.expand(tile);
+    }
+    super.updateVisibility(tile, state, view, pass);
   }
 
   override select(

@@ -57,11 +57,7 @@ import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
-import {
-  loadCatalog,
-  sceneDatasets,
-  unsupportedReason,
-} from "./manifest.mjs";
+import { loadCatalog, sceneDatasets, unsupportedReason } from "./manifest.mjs";
 import { fetchDatasets, verify } from "./store.mjs";
 import { releaseList } from "./release.mjs";
 import { describeBuild, resolveEngine, treeRef } from "./engineBuilds.mjs";
@@ -176,7 +172,9 @@ if (command === "list") {
       `${a.kind === "regression" ? "▲" : "▼"} ${a.metric} ${a.change > 1 ? "+" : ""}${pct}%  ${a.title} · ${a.config} · ${a.hardware}  ${a.range.from.commit.slice(0, 7)}..${a.range.to.commit.slice(0, 7)}  [${status}]${triage[a.id]?.owner ? ` ${triage[a.id].owner}` : ""}`,
     );
   }
-  console.log(`${alerts.length} change points over ${summaries.length} runs; ${untriaged} untriaged regressions`);
+  console.log(
+    `${alerts.length} change points over ${summaries.length} runs; ${untriaged} untriaged regressions`,
+  );
   if (opts["fail-on-new"] && untriaged > 0) {
     process.exit(1);
   }
@@ -237,7 +235,9 @@ async function run() {
       : undefined;
   const scenes = pick(catalog.scenes, "scenes") ?? catalog.scenes;
   if (opts.configs || opts.cesium) {
-    throw new Error("--configs and --cesium became --engines (e.g. --engines 1.146.0,2.0)");
+    throw new Error(
+      "--configs and --cesium became --engines (e.g. --engines 1.146.0,2.0)",
+    );
   }
   // Engines (engines.mjs); a historical sweep adds one release each.
   const specs = opts.engines
@@ -297,7 +297,9 @@ async function run() {
       await snap.listen();
       snapshotServers.set(snapRoot, snap);
     }
-    return snapshotServers.get(snapRoot).resolvedUrls.local[0].replace(/\/$/, "");
+    return snapshotServers
+      .get(snapRoot)
+      .resolvedUrls.local[0].replace(/\/$/, "");
   };
   const configs = [];
   const byspec = new Map();
@@ -322,7 +324,9 @@ async function run() {
     ];
     sweep.points = sweep.values.map((value) => ({
       value,
-      configs: configs.filter((c) => c.id.endsWith(suffix(value))).map((c) => c.id),
+      configs: configs
+        .filter((c) => c.id.endsWith(suffix(value)))
+        .map((c) => c.id),
     }));
   }
   // Baseline and candidate: specs as typed, or the catalog's defaults.
@@ -332,30 +336,34 @@ async function run() {
     }
     const found = configs.find((c) => c.id === spec);
     if (!found) {
-      throw new Error(`"${spec}" is not one of this run's engines (${specs.join(", ")})`);
+      throw new Error(
+        `"${spec}" is not one of this run's engines (${specs.join(", ")})`,
+      );
     }
     return found.id;
   };
   const baseline = opts.baseline
     ? idOf(opts.baseline)
-    : byspec.get(catalog.engines.baseline) ??
+    : (byspec.get(catalog.engines.baseline) ??
       configs.find((c) => c.source.kind === "release")?.id ??
-      configs[0].id;
+      configs[0].id);
   const candidate = opts.candidate
     ? idOf(opts.candidate)
-    : byspec.get(catalog.engines.candidate) ??
+    : (byspec.get(catalog.engines.candidate) ??
       configs.find((c) => c.engine === "2.0" && c.id !== baseline)?.id ??
-      configs.at(-1).id;
+      configs.at(-1).id);
   const scenarios =
     pick(catalog.scenarios, "scenarios") ??
-    catalog.scenarios.filter((s) => s.id === "cold-orbit" || s.id === "uncapped-orbit");
+    catalog.scenarios.filter(
+      (s) => s.id === "cold-orbit" || s.id === "uncapped-orbit",
+    );
   const reps = Number(opts.reps ?? 3);
   const motion = opts.motion ? Number(opts.motion) : undefined;
 
   // The verify step guards repeatability: changed local data stops the run.
-  const checked = verify(
-    [...new Set(scenes.flatMap((s) => sceneDatasets(catalog, s)))],
-  );
+  const checked = verify([
+    ...new Set(scenes.flatMap((s) => sceneDatasets(catalog, s))),
+  ]);
   const bad = checked.filter((r) => r.status === "changed");
   if (bad.length) {
     throw new Error(`datasets changed: ${bad.map((r) => r.id).join(", ")}`);
@@ -441,13 +449,17 @@ async function run() {
     plan: {
       primary: opts.primary ?? DEFAULT_PLAN.primary,
       guardrails: opts.guardrails?.split(",") ?? DEFAULT_PLAN.guardrails,
-      tolerance: opts.tolerance ? Number(opts.tolerance) : DEFAULT_PLAN.tolerance,
+      tolerance: opts.tolerance
+        ? Number(opts.tolerance)
+        : DEFAULT_PLAN.tolerance,
       ...(opts.hypothesis ? { hypothesis: opts.hypothesis } : {}),
     },
     dirty: git("status --porcelain").length > 0,
     // Lineage (plan §16.9, Trust): how to reproduce this run exactly.
     command: ["node", "packages/next/bench/suite/cli.mjs", command, ...rest],
-    diffSha256: sha256(execSync("git diff HEAD", { cwd: root, maxBuffer: 1 << 28 })),
+    diffSha256: sha256(
+      execSync("git diff HEAD", { cwd: root, maxBuffer: 1 << 28 }),
+    ),
     catalogSha256: sha256(JSON.stringify(catalog)),
     datasets: checked,
     catalog: catalog.sources > 1 ? "public+private" : "public",
@@ -484,7 +496,9 @@ async function run() {
     ...(opts["pixel-ratio"]
       ? {
           pixelRatio:
-            opts["pixel-ratio"] === "device" ? "device" : Number(opts["pixel-ratio"]),
+            opts["pixel-ratio"] === "device"
+              ? "device"
+              : Number(opts["pixel-ratio"]),
         }
       : {}),
   };
@@ -532,10 +546,7 @@ async function run() {
             spec,
             results,
           );
-          result.span = [
-            (runStart - t0) / 1000,
-            (Date.now() - t0) / 1000,
-          ];
+          result.span = [(runStart - t0) / 1000, (Date.now() - t0) / 1000];
           result.telemetry = {
             ...sampler.window(runStart, Date.now()),
             cooldownMs,
@@ -586,7 +597,9 @@ async function run() {
     process.env.BENCH_RESULTS ?? join(homedir(), ".cesium-bench", "results");
   const stamp = started.toISOString().replace(/[:.]/g, "-");
   if (filmstrip.length) {
-    process.stdout.write(`filmstrips and image parity (${filmstrip.length} frames)… `);
+    process.stdout.write(
+      `filmstrips and image parity (${filmstrip.length} frames)… `,
+    );
     results.assets = `/bench-results/${stamp}/`;
     results.filmstrips = await filmstrips(
       browser,
@@ -616,13 +629,19 @@ async function run() {
   const card = scorecard(results);
   if (card) {
     console.log(
-      `\n${card.candidate} vs ${card.baseline}: ${card.verdict.toUpperCase()} (primary ${card.plan.primary} ${card.primary.moved}; guardrails broken: ${card.guardrails.filter((g) => g.broken.length).map((g) => g.key).join(", ") || "none"})\n`,
+      `\n${card.candidate} vs ${card.baseline}: ${card.verdict.toUpperCase()} (primary ${card.plan.primary} ${card.primary.moved}; guardrails broken: ${
+        [...card.guardrails, ...(card.image ? [card.image] : [])]
+          .filter((g) => g.broken.length)
+          .map((g) => g.key)
+          .join(", ") || "none"
+      })\n`,
     );
     console.log(
-      compareTable([results, card.baseline], [results, card.candidate], [
-        card.plan.primary,
-        ...card.plan.guardrails,
-      ]),
+      compareTable(
+        [results, card.baseline],
+        [results, card.candidate],
+        [card.plan.primary, ...card.plan.guardrails],
+      ),
     );
   } else if (results.baseline !== results.candidate) {
     console.log("\nno verdict: no scene was measured by both engines\n");
@@ -712,10 +731,10 @@ async function runOne(browser, base, spec, results) {
     }
     if (spec.scenario.cache === "warm" && !spec.unsupported) {
       // Prime the HTTP cache, then measure a fresh page in the same context.
-      await page.evaluate(
-        (s) => globalThis.runScene(s),
-        { ...spec, capture: false },
-      );
+      await page.evaluate((s) => globalThis.runScene(s), {
+        ...spec,
+        capture: false,
+      });
       await page.reload();
     }
     context.on("requestfinished", count);
@@ -733,7 +752,9 @@ async function runOne(browser, base, spec, results) {
       ...(waterfall.length
         ? {
             // [start ms, time to first byte ms, end ms, bytes, kind, host]
-            waterfall: (await Promise.all(waterfall)).sort((a, b) => a[0] - b[0]),
+            waterfall: (await Promise.all(waterfall)).sort(
+              (a, b) => a[0] - b[0],
+            ),
           }
         : {}),
     };
@@ -772,10 +793,15 @@ function timeline({ gpu, cpu }, t0) {
     const size = rows.length / max;
     const out = [];
     for (let b = 0; b < max; b++) {
-      const slice = rows.slice(Math.floor(b * size), Math.floor((b + 1) * size));
+      const slice = rows.slice(
+        Math.floor(b * size),
+        Math.floor((b + 1) * size),
+      );
       const mean = [];
       for (let k = 0; k < slice[0].length; k++) {
-        mean.push(slice.reduce((sum, r) => sum + (r[k] ?? 0), 0) / slice.length);
+        mean.push(
+          slice.reduce((sum, r) => sum + (r[k] ?? 0), 0) / slice.length,
+        );
       }
       out.push(mean);
     }
@@ -815,7 +841,10 @@ function requestKind(url) {
   if (/\.(b3dm|glb|gltf|i3dm|cmpt|pnts|bin)$/.test(path)) {
     return "content";
   }
-  if (/\.(jpe?g|png|webp|ktx2)$/.test(path) || /virtualearth|tiles\./.test(url.hostname)) {
+  if (
+    /\.(jpe?g|png|webp|ktx2)$/.test(path) ||
+    /virtualearth|tiles\./.test(url.hostname)
+  ) {
     return "imagery";
   }
   return "other";
@@ -864,6 +893,9 @@ function validity(result, quietLimit, idle = {}) {
  * Filmstrip assets: each settled view as a JPEG, and per scene and moment
  * the image parity (FLIP) of every configuration against the baseline,
  * with its heatmap, computed in a page with the parity harness's FLIP.
+ * A 2.0 frame with a selection reference (the same view under Legacy1x
+ * selection, moment "<moment>-legacy1x") also gets `selection`: FLIP
+ * against it, what its tile selection draws differently, renderer aside.
  */
 async function filmstrips(browser, base, frames, directory, baseline) {
   mkdirSync(directory, { recursive: true });
@@ -871,8 +903,17 @@ async function filmstrips(browser, base, frames, directory, baseline) {
   await page.goto(`${base}/bench/suite/flip.html`);
   const out = [];
   const key = (f) => `${f.scene}|${f.scenario}|${f.moment}`;
+  const isReference = (f) => f.moment.endsWith("-legacy1x");
+  const references = new Map(
+    frames
+      .filter(isReference)
+      .map((f) => [
+        `${key({ ...f, moment: f.moment.replace(/-legacy1x$/, "") })}|${f.config}`,
+        f,
+      ]),
+  );
   const groups = new Map();
-  for (const f of frames) {
+  for (const f of frames.filter((f) => !isReference(f))) {
     (groups.get(key(f)) ?? groups.set(key(f), []).get(key(f))).push(f);
   }
   for (const list of groups.values()) {
@@ -882,18 +923,29 @@ async function filmstrips(browser, base, frames, directory, baseline) {
       moment: list[0].moment,
       images: {},
       flip: {},
+      selection: {},
     };
     const reference = list.find((f) => f.config === baseline);
     for (const f of list) {
-      const name = `${f.scene}__${f.scenario}__${f.config}__${f.moment}`.replace(/[^\w@.-]/g, "_");
+      const name =
+        `${f.scene}__${f.scenario}__${f.config}__${f.moment}`.replace(
+          /[^\w@.-]/g,
+          "_",
+        );
       const result = await page.evaluate(
         ({ test, ref }) => globalThis.processFrame(test, ref),
         {
           test: f.png.toString("base64"),
-          ref: reference && f !== reference ? reference.png.toString("base64") : null,
+          ref:
+            reference && f !== reference
+              ? reference.png.toString("base64")
+              : null,
         },
       );
-      writeFileSync(join(directory, `${name}.jpg`), Buffer.from(result.jpeg, "base64"));
+      writeFileSync(
+        join(directory, `${name}.jpg`),
+        Buffer.from(result.jpeg, "base64"),
+      );
       entry.images[f.config] = `${name}.jpg`;
       if (result.flip) {
         writeFileSync(
@@ -904,6 +956,31 @@ async function filmstrips(browser, base, frames, directory, baseline) {
           mean: result.flip.mean,
           p95: result.flip.p95,
           heatmap: `${name}.flip.png`,
+        };
+      }
+      const own = references.get(`${key(f)}|${f.config}`);
+      if (own) {
+        const parity = await page.evaluate(
+          ({ test, ref }) => globalThis.processFrame(test, ref),
+          { test: f.png.toString("base64"), ref: own.png.toString("base64") },
+        );
+        const reference = await page.evaluate(
+          ({ test }) => globalThis.processFrame(test, null),
+          { test: own.png.toString("base64") },
+        );
+        writeFileSync(
+          join(directory, `${name}.legacy1x.jpg`),
+          Buffer.from(reference.jpeg, "base64"),
+        );
+        writeFileSync(
+          join(directory, `${name}.selection.flip.png`),
+          Buffer.from(parity.flip.heatmap, "base64"),
+        );
+        entry.selection[f.config] = {
+          mean: parity.flip.mean,
+          p95: parity.flip.p95,
+          heatmap: `${name}.selection.flip.png`,
+          reference: `${name}.legacy1x.jpg`,
         };
       }
     }

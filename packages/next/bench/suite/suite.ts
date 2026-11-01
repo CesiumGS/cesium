@@ -8,7 +8,6 @@ import {
   eastNorthUpToFixedFrame,
   fromDegrees,
   resolveIonAsset,
-  type ImageryProvider,
   type Tile,
   type Tileset3D,
   tileHeaderKey,
@@ -251,6 +250,11 @@ export interface Adapter {
   setInteractive(on: boolean): void;
   /** Keep what is selected and loaded now, for inspecting it from elsewhere. */
   setStreamingPaused(on: boolean): void;
+  /**
+   * Switches tile selection in place (2.0 only): content, cache and camera
+   * stay. The selection reference captures with "legacy1x".
+   */
+  setPolicy?(policy: "budgeted" | "legacy1x"): void;
   /** The tiles drawn now, keyed so two engines' selections compare. */
   drawnTiles(): DrawnTile[];
   /**
@@ -362,55 +366,78 @@ export class NextAdapter implements Adapter {
     });
     this.view.camera.near = 1;
     const byId = new Map(spec.datasets.map((d) => [d.id, d]));
-    let imagery: ImageryProvider | undefined;
-    if (scene.imagery) {
-      const d = byId.get(scene.imagery)!;
-      imagery = await BingImagery.fromIon(ionAsset(d), {
-        accessToken: tokenFor(d),
-      });
-    }
+    // Everything independent starts at once (an app would do the same):
+    // imagery, the terrain endpoint and every tileset's endpoint, then the
+    // terrain and tilesets themselves. Waiting on each in turn cost about a
+    // second before the first content request.
+    const imageryDataset = scene.imagery ? byId.get(scene.imagery)! : undefined;
+    const terrainDataset =
+      typeof scene.globe === "object"
+        ? byId.get(scene.globe.terrain)!
+        : undefined;
+    const layers = scene.layers.map((layer) => ({
+      layer,
+      dataset: byId.get(layer.dataset)!,
+    }));
+    const [imagery, terrain, ...endpoints] = await Promise.all([
+      imageryDataset
+        ? BingImagery.fromIon(ionAsset(imageryDataset), {
+            accessToken: tokenFor(imageryDataset),
+          })
+        : undefined,
+      terrainDataset
+        ? resolveIonAsset(ionAsset(terrainDataset), {
+            accessToken: tokenFor(terrainDataset),
+          })
+        : undefined,
+      ...layers.map(({ dataset }) =>
+        dataset.source.kind === "generator"
+          ? undefined
+          : resolveTileset(dataset),
+      ),
+    ]);
     const common = {
       ...(config.policy ? { policy: config.policy } : {}),
       ...(config.maximumScreenSpaceError !== undefined
         ? { maximumScreenSpaceError: config.maximumScreenSpaceError }
         : {}),
     };
-    if (typeof scene.globe === "object") {
-      const d = byId.get(scene.globe.terrain)!;
-      const resolved = await resolveIonAsset(ionAsset(d), {
-        accessToken: tokenFor(d),
-      });
-      this.attributions.push(...resolved.attributions);
-      this.tilesets.push(
-        await engine.addTerrain(world, resolved.url, {
-          ...(resolved.headers ? { headers: resolved.headers } : {}),
-          ...(config.policy ? { policy: config.policy } : {}),
-          ...(imagery ? { imagery } : {}),
-        }),
-      );
-    } else if (scene.globe === "ellipsoid") {
-      this.tilesets.push(
-        engine.addEllipsoid(world, imagery ? { imagery } : {}),
-      );
+    const [globe, ...tilesets] = await Promise.all([
+      terrain
+        ? engine.addTerrain(world, terrain.url, {
+            ...(terrain.headers ? { headers: terrain.headers } : {}),
+            ...(config.policy ? { policy: config.policy } : {}),
+            ...(imagery ? { imagery } : {}),
+          })
+        : scene.globe === "ellipsoid"
+          ? engine.addEllipsoid(world, imagery ? { imagery } : {})
+          : undefined,
+      ...layers.map(({ layer, dataset }, i) => {
+        const endpoint = endpoints[i];
+        return endpoint
+          ? engine.addTileset(world, endpoint.url, {
+              ...(endpoint.headers ? { headers: endpoint.headers } : {}),
+              ...common,
+              enableCollision: layer.collision ?? false,
+            })
+          : this.generate(world, dataset, layer.at ?? [0, 0, 0]);
+      }),
+    ]);
+    // Terrain first, then the tilesets in catalog order; credits as 1.x
+    // gives them (terrain's, imagery's, then content's).
+    if (globe) {
+      this.tilesets.push(globe);
     }
-    // Terrain's attributions, then imagery's, as 1.x credits them.
-    this.attributions.push(...(imagery?.attributions ?? []));
-    for (const layer of scene.layers) {
-      const d = byId.get(layer.dataset)!;
-      if (d.source.kind === "generator") {
-        await this.generate(world, d, layer.at ?? [0, 0, 0]);
-        continue;
+    this.attributions.push(
+      ...(terrain?.attributions ?? []),
+      ...(imagery?.attributions ?? []),
+    );
+    tilesets.forEach((tileset, i) => {
+      if (tileset) {
+        this.tilesets.push(tileset);
+        this.attributions.push(...(endpoints[i]?.attributions ?? []));
       }
-      const resolved = await resolveTileset(d);
-      this.attributions.push(...(resolved.attributions ?? []));
-      this.tilesets.push(
-        await engine.addTileset(world, resolved.url, {
-          ...(resolved.headers ? { headers: resolved.headers } : {}),
-          ...common,
-          enableCollision: layer.collision ?? false,
-        }),
-      );
-    }
+    });
   }
 
   /** `instanced-grid`: the milk truck on a grid, one draw per primitive. */
@@ -523,6 +550,12 @@ export class NextAdapter implements Adapter {
     } else if (!on && this.controller) {
       this.controller.dispose();
       this.controller = undefined;
+    }
+  }
+
+  setPolicy(policy: "budgeted" | "legacy1x"): void {
+    for (const tileset of this.tilesets) {
+      tileset.setPolicy(policy);
     }
   }
 
@@ -806,6 +839,7 @@ export class LegacyAdapter implements Adapter {
       Cesium.IonResource.fromAssetId(ionAsset(d), {
         accessToken: tokenFor(d),
       });
+    let terrain: Promise<Json> | undefined;
     if (viewer.scene.globe) {
       viewer.scene.globe.showGroundAtmosphere = false;
       // Without imagery, 2.0 draws the globe gray (0.62, 0.62, 0.6); 1.x's
@@ -813,11 +847,13 @@ export class LegacyAdapter implements Adapter {
       if (!scene.imagery) {
         viewer.scene.globe.baseColor = new Cesium.Color(0.62, 0.62, 0.6, 1);
       }
+      // Terrain and tilesets load together (imagery never waits): the
+      // same as the 2.0 adapter, so neither engine waits on the other's
+      // setup order.
       if (typeof scene.globe === "object") {
-        viewer.scene.globe.terrainProvider =
-          await Cesium.CesiumTerrainProvider.fromUrl(
-            await ion(byId.get(scene.globe.terrain)!),
-          );
+        terrain = Cesium.CesiumTerrainProvider.fromUrl(
+          ion(byId.get(scene.globe.terrain)!),
+        );
       }
       if (scene.imagery) {
         const d = byId.get(scene.imagery)!;
@@ -830,18 +866,22 @@ export class LegacyAdapter implements Adapter {
         );
       }
     }
-    for (const layer of scene.layers) {
-      const d = byId.get(layer.dataset)!;
-      const tileset = await Cesium.Cesium3DTileset.fromUrl(
-        googleUrl(d) ?? (await ion(d)),
-        {
+    const tilesets = await Promise.all(
+      scene.layers.map(async (layer) => {
+        const d = byId.get(layer.dataset)!;
+        return Cesium.Cesium3DTileset.fromUrl(googleUrl(d) ?? (await ion(d)), {
           ...(config.maximumScreenSpaceError !== undefined
             ? { maximumScreenSpaceError: config.maximumScreenSpaceError }
             : {}),
           enableCollision: layer.collision ?? false,
           showOutline: render.outlines,
-        },
-      );
+        });
+      }),
+    );
+    if (terrain) {
+      viewer.scene.globe.terrainProvider = await terrain;
+    }
+    for (const tileset of tilesets) {
       viewer.scene.primitives.add(tileset);
       this.tilesets.push(tileset);
     }
@@ -1346,6 +1386,23 @@ export async function runScene(spec: RunSpec): Promise<RunMetrics> {
     const memory = (performance as { memory?: { usedJSHeapSize: number } })
       .memory;
     metrics.heapBytes = memory?.usedJSHeapSize;
+
+    // The selection reference (2.0): the end view again under Legacy1x
+    // selection, same renderer, after every measurement. The filmstrip
+    // compares the two (selection parity, the scorecard's image
+    // guardrail): a policy that draws less than 1.x's selection shows
+    // there, apart from renderer differences.
+    if (
+      spec.capture &&
+      resettle !== undefined &&
+      adapter.setPolicy &&
+      spec.config.policy !== "legacy1x"
+    ) {
+      adapter.setPolicy("legacy1x");
+      if ((await settle(adapter, performance.now(), timeout)) !== undefined) {
+        await captureMoment(spec, "end-legacy1x");
+      }
+    }
   } catch (error) {
     metrics.status = "error";
     metrics.message = error instanceof Error ? error.message : String(error);

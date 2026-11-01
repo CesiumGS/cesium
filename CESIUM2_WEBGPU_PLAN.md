@@ -625,6 +625,38 @@ representative content; it then guards every later milestone.
 
 ### Budgeted selection: planned work (after M3)
 
+In order (r37). First the findings from the r37 baseline (§16.7), so each
+change after them is measured against a guardrail:
+
+- **Image guardrail (done r37)**: selection parity, `Budgeted` against
+  `Legacy1x` on the same renderer (the settled end view captured under both
+  after every measurement; FLIP at most 0.1 per scene, counted with the
+  guardrails). Calibrated: untextured scenes 0.001 to 0.008, textured
+  0.04 to 0.08 (Melbourne 0.083, to look at); Rainier's under-refinement
+  was about 0.3. FLIP against 1.x can't tell: lighting and sky alone put
+  most scenes at 0.3 to 0.55.
+- **Terrain loading (r37, measuring)**: `Budgeted` expanded a terrain tile
+  only once it loaded, so terrain loaded one level per round trip and
+  never skipped levels (the waterfalls' curve: 2 to 4 terrain requests in
+  flight for seconds where 1.x has 18). It now expands tiles as it visits
+  them, as 1.x's quadtree does. The benchmark adapters set up imagery,
+  terrain and tilesets in parallel (2.0's waited on each, about a second).
+- **Requests by purpose**: each tileset counts requests and bytes by what
+  they are for, `Budgeted`'s priority bands: base (a first coarse level),
+  intermediate (steps between skipped levels), view (the frontier) and
+  prefetch (the guard band). The inspector shows them (a stacked bar in
+  Streaming, prefetch share in its history); waterfalls tag each request so
+  scene pages can color by purpose.
+- **Over-fetching on 3D Tiles**: NYC ×3.2 and OSM Philadelphia ×1.5 the
+  bytes of 1.x with settled images that match its selection (0.002, 0.008):
+  until settled, 155 tiles (7.5 MB) to 1.x's 74 (3.8 MB), so not drawn
+  content (prefetch, base and intermediate requests); during the orbit
+  another 119 (6.1 MB) to 1.x's 5, which defers requests while the camera
+  moves (`cullRequestsWhileMoving`). Bound the prefetch band and loading in
+  motion by their benefit, against the image guardrail.
+
+Then the planned work:
+
 - Budget-driven refinement (benefit per byte, §13.3), which is also the
   slow-link answer from the throttled L1′ runs.
 - Multi-view priority and view weights; fair queueing of an origin's window
@@ -635,7 +667,7 @@ representative content; it then guards every later milestone.
 - Paging lessons: thrashing rate, working-set or ARC-style eviction, and a
   prefetch band sized by its hit rate (§13.2, §13.6).
 - A second photogrammetry city in L1′; network profiles from real-user
-  data (follow-up 6).
+  data (follow-up 6; synthetic profiles until that data exists).
 - _Exit_: `Budgeted` beats `Legacy1x` on FLIP avg at equal or fewer bytes on
   both fast and slow links, across photogrammetry, OSM and design models.
 
@@ -3093,7 +3125,9 @@ addressed in 2.0 (each with a Dyno scene to show the fix):
 - **Settle time on terrain scenes**: Rainier ×1.16 and OSM Philadelphia
   ×1.42 slower than 1.x. The waterfall shows 2.0 fetching 49 content tiles
   (18.7 MB) on OSM Philadelphia to 1.x's 31 (10.7 MB), and starting them
-  later.
+  later. _r37_: terrain loaded one level per round trip under `Budgeted`
+  (expanded only once loaded); fixed, with parallel adapter setup. See the
+  planned `Budgeted` work (§6), which now lists these findings first.
 - **Bytes**: NYC buildings ×3.3 and OSM Philadelphia ×1.5 of 1.x; Japan
   ×1.3.
 - **JS heap** above 1.x on terrain scenes and NYC (scorecard guardrail).
