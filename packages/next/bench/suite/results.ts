@@ -1,5 +1,5 @@
 import { METRICS, renderReport, summarizeRun } from "./report.mjs";
-import { CHART_CSS, CHART_SCRIPT, escape, forestPlot } from "./charts.mjs";
+import { bindChartsIn, CHART_CSS, escape, forestPlot } from "./charts.mjs";
 import { ratio } from "./stats.mjs";
 import { mountAlerts } from "./alerts.ts";
 import publicCatalog from "./catalog/public.json";
@@ -60,9 +60,19 @@ const style = document.createElement("style");
 style.textContent = CHART_CSS;
 document.head.append(style);
 
-const main = document.querySelector<HTMLElement>("#main")!;
-const where = document.querySelector<HTMLElement>("#where")!;
-const store = {
+/** The container the current tab renders into (set by `renderTab`). */
+let main: HTMLElement = document.createElement("div");
+/** Navigation, provided by the shell. */
+let navigateTo: (tab: string) => void = () => {};
+export function setNavigator(fn: (tab: string) => void): void {
+  navigateTo = fn;
+}
+/** Dark charts when the shell's theme is dark. */
+let dark = false;
+export function setDark(value: boolean): void {
+  dark = value;
+}
+export const store = {
   get(key: string, fallback: Json) {
     try {
       return JSON.parse(localStorage.getItem(key) ?? "null") ?? fallback;
@@ -79,19 +89,21 @@ const store = {
   },
 };
 
-const index = (await (await fetch("/bench-results/index.json")).json()) as {
+export const index = (await (
+  await fetch("/bench-results/index.json")
+).json()) as {
   directory: string;
   runs: string[];
   summaries: string[];
 };
 const fullCache = new Map<string, Json>();
-async function full(name: string): Promise<Json> {
+export async function full(name: string): Promise<Json> {
   if (!fullCache.has(name)) {
     fullCache.set(name, await (await fetch(`/bench-results/${name}`)).json());
   }
   return fullCache.get(name);
 }
-const summaries: Summary[] = (
+export const summaries: Summary[] = (
   await Promise.all(
     index.runs.map(async (name) => {
       const summaryName = name.replace(/\.json$/, ".summary.json");
@@ -109,8 +121,6 @@ const summaries: Summary[] = (
   .filter((s): s is Summary => !!s)
   .sort((a, b) => a.date.localeCompare(b.date));
 
-where.textContent = `${summaries.length} runs in ${index.directory} (BENCH_RESULTS) · run the suite with node packages/next/bench/suite/cli.mjs run --note "what changed" --tag a,b`;
-
 const short = (s: Summary) => `${s.commit.slice(0, 7)}${s.dirty ? "*" : ""}`;
 const when = (s: Summary) =>
   new Date(s.date).toLocaleString(undefined, {
@@ -126,8 +136,7 @@ const geomean = (values: number[]) =>
     : undefined;
 
 function bindCharts(): void {
-  document.querySelectorAll(".tip").forEach((t) => t.remove());
-  new Function(CHART_SCRIPT)();
+  bindChartsIn(main);
 }
 
 /** A row of toggle chips; the selection persists per `key`. */
@@ -204,7 +213,7 @@ function workspace(): void {
     store,
     (name) => {
       store.set("bench.report", name);
-      show("report");
+      navigateTo("report");
     },
     bindCharts,
   );
@@ -219,20 +228,20 @@ async function alerts(): Promise<void> {
   await mountAlerts(root, summaries as unknown as WorkspaceSummary[], {
     openReport: (name) => {
       store.set("bench.report", name);
-      show("report");
+      navigateTo("report");
     },
     openWorkspace: (scene, config) => {
       const url = new URL(location.href);
       url.searchParams.set("ws", scene);
       url.searchParams.set("cand", config);
       history.replaceState(null, "", url);
-      show("workspace");
+      navigateTo("workspace");
     },
     compareRuns: (a, b, config) => {
       store.set("bench.compareA", a);
       store.set("bench.compareB", b);
       store.set("bench.compareConfig", config);
-      show("compare");
+      navigateTo("compare");
     },
     bindCharts,
   });
@@ -250,20 +259,20 @@ function scenes(): void {
     {
       openReport: (name) => {
         store.set("bench.report", name);
-        show("report");
+        navigateTo("report");
       },
       openExplorer: (scene) => {
         const url = new URL(location.href);
         url.searchParams.set("scene", scene);
         url.searchParams.delete("t");
         history.replaceState(null, "", url);
-        show("explore");
+        navigateTo("explore");
       },
       openWorkspace: (scene) => {
         const url = new URL(location.href);
         url.searchParams.set("ws", scene);
         history.replaceState(null, "", url);
-        show("workspace");
+        navigateTo("workspace");
       },
       full,
       bindCharts,
@@ -284,7 +293,7 @@ async function images(): Promise<void> {
       url.searchParams.set("scene", scene);
       url.searchParams.set("t", String(t));
       history.replaceState(null, "", url);
-      show("explore");
+      navigateTo("explore");
     },
   });
 }
@@ -337,7 +346,7 @@ function log(): void {
       return `<span class="${cls}">${g < 0.95 ? "▼ " : g > 1.05 ? "▲ " : ""}×${g.toFixed(2)}</span>`;
     };
     const scenes = new Set(s.scenes.map((c) => cellKey(c))).size;
-    return `<tr>
+    return `<tr class="clickable" data-open="${escape(s.name)}" tabindex="0">
 <td>${escape(when(s))}</td>
 <td><code>${escape(short(s))}</code><div class="muted">${escape(s.branch ?? "")}</div></td>
 <td>${escape(s.note ?? "")}${s.tags.length ? `<div class="muted">${s.tags.map(escape).join(", ")}</div>` : ""}</td>
@@ -349,14 +358,20 @@ function log(): void {
 <td><button class="link" data-open="${escape(s.name)}">Report</button></td>
 </tr>`;
   });
-  main.innerHTML = `<p class="lede">Every run, newest first. Ratios are the run's candidate configuration over 1.x (geometric mean across scenes; ▼ better, ▲ worse). Notes and tags come from <code>--note</code> and <code>--tag</code>.</p>
+  main.innerHTML = `<p class="lede">Ratios are each run's candidate over its baseline (geometric mean across scenes; ▼ better, ▲ worse). Notes and tags come from <code>--note</code> and <code>--tag</code>; click a row for its report.</p>
 <table class="log"><tr><th>When</th><th>Commit</th><th>Note</th><th>Hardware</th><th class="num">Scenes × configs × reps</th><th class="num">CPU / frame</th><th class="num">Settle</th><th class="num">Frame p95</th><th></th></tr>${rows.join("")}</table>`;
-  main.querySelectorAll<HTMLButtonElement>("[data-open]").forEach((b) =>
-    b.addEventListener("click", () => {
-      store.set("bench.report", b.dataset.open);
-      show("report");
-    }),
-  );
+  main.querySelectorAll<HTMLElement>("tr[data-open]").forEach((row) => {
+    const open = () => {
+      store.set("bench.report", row.dataset.open);
+      navigateTo("report");
+    };
+    row.addEventListener("click", open);
+    row.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        open();
+      }
+    });
+  });
 }
 
 // ------------------------------------------------------------ compare
@@ -490,13 +505,31 @@ async function report(): Promise<void> {
   if (!names.some((n) => n[0] === name)) {
     name = names[0]![0];
   }
-  const frame = document.createElement("iframe");
-  frame.title = "Report";
+  const host = document.createElement("div");
+  host.className = "report-host";
+  const shadow = host.attachShadow({ mode: "open" });
+  // Path charts: a click opens the explorer at that point of the path.
+  shadow.addEventListener("chart-click", (e) => {
+    const target = (e.target as Element).closest<HTMLElement>("[data-explore]");
+    const x = (e as CustomEvent).detail.x as number;
+    if (target && x >= 0 && x <= 100) {
+      location.href = `${target.dataset.explore!.replace(/&amp;/g, "&")}&t=${(x / 100).toFixed(3)}`;
+    }
+  });
   const render = async () => {
     // Runs before r33 carry no budgets: the catalog's apply.
-    frame.srcdoc = renderReport(await full(name), {
+    const html = renderReport(await full(name), {
       budgets: (publicCatalog as { budgets?: unknown[] }).budgets,
     });
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    doc.querySelectorAll("script:not([type])").forEach((el) => el.remove());
+    shadow.innerHTML = [...doc.head.querySelectorAll("style")]
+      .map((el) => el.outerHTML)
+      .concat(doc.body.innerHTML)
+      .join("");
+    shadow.querySelector(".viz")?.classList.toggle("dark", dark);
+    shadow.querySelector(".viz")?.classList.toggle("light", !dark);
+    bindChartsIn(shadow);
   };
   const controls = document.createElement("div");
   controls.className = "controls";
@@ -510,7 +543,7 @@ async function report(): Promise<void> {
       }),
     ),
   );
-  main.append(controls, frame);
+  main.append(controls, host);
   await render();
 }
 
@@ -562,14 +595,11 @@ const views: Record<string, () => void | Promise<void>> = {
   explore,
 };
 const WORKSPACE_KEYS = ["ws", "split", "base", "cand", "pin"];
-function show(requested: string): void {
+
+/** Normalizes a tab name and clears other tabs' URL state. */
+export function prepareUrl(requested: string): string {
   // Older links: Trends became the workspace.
   const tab = requested === "trends" ? "workspace" : requested;
-  for (const b of document.querySelectorAll<HTMLButtonElement>("nav button")) {
-    b.setAttribute("aria-selected", String(b.dataset.tab === tab));
-  }
-  stopExplorer?.();
-  stopExplorer = undefined;
   const url = new URL(location.href);
   url.searchParams.set("tab", tab);
   if (tab !== "explore") {
@@ -586,9 +616,21 @@ function show(requested: string): void {
     url.searchParams.delete("sp");
   }
   history.replaceState(null, "", url);
-  void views[tab]!();
+  return tab;
 }
-for (const b of document.querySelectorAll<HTMLButtonElement>("nav button")) {
-  b.addEventListener("click", () => show(b.dataset.tab!));
+
+/** Draws a tab into `container` (stopping the explorer if it ran). */
+export async function renderTab(
+  tab: string,
+  container: HTMLElement,
+): Promise<void> {
+  stopExplorer?.();
+  stopExplorer = undefined;
+  main = container;
+  main.innerHTML = `<div class="loading" role="status"><span class="spinner"></span>Loading…</div>`;
+  // Let the placeholder paint before views that compute or fetch.
+  await new Promise((r) => requestAnimationFrame(() => r(undefined)));
+  await views[tab]?.();
 }
-show(new URLSearchParams(location.search).get("tab") ?? "workspace");
+
+export const TABS = Object.keys(views);

@@ -16,6 +16,7 @@ import {
   type RunSpec,
   sunDirection,
 } from "./suite.ts";
+import { toast } from "./toast.ts";
 
 /**
  * Dyno's explorer (plan §16.9, Explore): a catalog scene live in one or
@@ -475,7 +476,9 @@ export function mountExplorer(
     box.hidden = !box.hidden;
   });
   $("copyCommand").addEventListener("click", () => {
-    void navigator.clipboard?.writeText($("command").textContent ?? "");
+    void navigator.clipboard
+      ?.writeText($("command").textContent ?? "")
+      .then(() => toast("Command copied"));
   });
   $("load").addEventListener("click", () => void load());
 

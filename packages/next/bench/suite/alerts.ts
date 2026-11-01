@@ -7,6 +7,7 @@ import {
 import { CONDITION_METRICS, METRICS } from "./report.mjs";
 import { escape, lineChart } from "./charts.mjs";
 import { cellKey, type Summary } from "./workspace.ts";
+import { toast } from "./toast.ts";
 import publicCatalog from "./catalog/public.json";
 import type { Dataset, Scene } from "./schema.ts";
 
@@ -104,7 +105,7 @@ export async function mountAlerts(
   let kind = "regression";
 
   root.innerHTML = `<div class="alerts">
-  <p class="lede">Change points in each metric's run-to-run series (E-Divisive means with a permutation test, p &lt; 0.05) that move the median by 3% or more, per scene, configuration and hardware. Triage them here; <code>cli.mjs alerts --fail-on-new</code> fails a nightly job on untriaged regressions.</p>
+  <p class="lede">Found with E-Divisive means and a permutation test (p &lt; 0.05) per scene, configuration and hardware, grouped per change. <code>cli.mjs alerts --fail-on-new</code> fails a nightly job on untriaged regressions.</p>
   <div class="controls">
     <div class="segmented" role="radiogroup" aria-label="Kind" data-id="kind">
       <button role="radio" data-kind="regression">Regressions</button>
@@ -318,9 +319,13 @@ ${g.alerts.length > 1 ? `<details class="scenes"><summary>Scenes (largest change
           triage[x.id] = entry;
         }
         const ok = await save();
-        card.querySelector(".saved")!.textContent = ok
-          ? "Saved"
-          : "Could not save (is the dev server running?)";
+        card.querySelector(".saved")!.textContent = ok ? "Saved" : "Not saved";
+        toast(
+          ok
+            ? `Alert ${entry.status}${g.alerts.length > 1 ? ` (${g.alerts.length} scenes)` : ""}`
+            : "Could not save: is the dev server running?",
+          ok ? "good" : "bad",
+        );
       });
       card
         .querySelector('[data-act="report"]')!

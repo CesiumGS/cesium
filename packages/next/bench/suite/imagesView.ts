@@ -1,4 +1,5 @@
 import { escape } from "./charts.mjs";
+import { toast } from "./toast.ts";
 
 /**
  * Dyno's Images tab (plan §16.10), after Chromatic and Skia Gold: the
@@ -189,11 +190,13 @@ ${
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ run: runName, key: row.key, decision, note }),
       });
-      form.querySelector(".result")!.textContent = res.ok
+      const message = res.ok
         ? decision === "approve"
           ? "Approved: the new image is the baseline."
           : "Rejected: the change needs a fix."
-        : "Could not save (is the dev server running?)";
+        : "Could not save: is the dev server running?";
+      form.querySelector(".result")!.textContent = message;
+      toast(`${row.id}: ${message}`, res.ok ? "good" : "bad");
     });
     el.querySelector('[data-act="explore"]')!.addEventListener("click", () =>
       actions.openExplorer(row.scene, row.progress),

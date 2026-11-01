@@ -177,10 +177,10 @@ export default [
   },
   ...[...tseslint.configs.recommended].map((config) => ({
     ...config,
-    files: ["packages/next/**/*.ts"],
+    files: ["packages/next/**/*.ts", "packages/next/**/*.tsx"],
   })),
   {
-    files: ["packages/next/**/*.ts"],
+    files: ["packages/next/**/*.ts", "packages/next/**/*.tsx"],
     languageOptions: {
       globals: globals.browser,
     },

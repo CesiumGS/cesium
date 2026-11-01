@@ -17,11 +17,15 @@ export const CHART_CSS = `
   --grid: #e1e0d9; --axis: #c3c2b7; --ring: #fcfcfb;
   --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a; --series-4: #eda100;
   --good: #0ca30c; --good-text: #006300; --critical: #d03b3b; --neutral: #898781; }
-@media (prefers-color-scheme: dark) { :root:where(:not([data-theme="light"])) .viz {
+@media (prefers-color-scheme: dark) { :root:where(:not([data-theme="light"])) .viz:not(.light) {
   --surface: #1a1a19; --page: #0d0d0d; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
   --grid: #2c2c2a; --axis: #383835; --ring: #1a1a19;
   --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #c98500;
   --good: #0ca30c; --good-text: #0ca30c; --critical: #d03b3b; } }
+.viz.dark, .dark .viz { --surface: #1a1a19; --page: #0d0d0d; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
+  --grid: #2c2c2a; --axis: #383835; --ring: #1a1a19;
+  --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #c98500;
+  --good: #0ca30c; --good-text: #0ca30c; --critical: #d03b3b; }
 .viz figure { margin: 0 0 16px; background: var(--surface); border: 1px solid var(--grid); border-radius: 8px; padding: 12px 14px; }
 .viz figcaption { font-weight: 600; color: var(--ink); margin-bottom: 2px; }
 .viz .sub { color: var(--ink-2); font-size: 12px; margin-bottom: 6px; }
@@ -243,7 +247,10 @@ export function lineChart({
   }
   for (const m of marks) {
     svg += `<line x1="${sx(m.x)}" x2="${sx(m.x)}" y1="${top}" y2="${height - bottom}" stroke="var(--ink-2)" stroke-width="1" stroke-dasharray="2 3"><title>${escape(m.label)}</title></line>`;
-    svg += `<text x="${sx(m.x) + 3}" y="${top + 10}" class="label">${escape(m.short ?? m.label)}</text>`;
+    const short = String(m.short ?? m.label);
+    const text = short.length > 18 ? `${short.slice(0, 17)}…` : short;
+    const flip = sx(m.x) > width - right - text.length * 6.5;
+    svg += `<text x="${sx(m.x) + (flip ? -3 : 3)}" y="${top + 10}" class="label" text-anchor="${flip ? "end" : "start"}">${escape(text)}</text>`;
   }
   // Intervals: a faint area per series, under the lines.
   for (const s of series) {
@@ -335,62 +342,115 @@ export function lineChart({
 }
 
 /**
- * The crosshair readout for every line chart on the page: the pointer
- * snaps to the nearest x; the tooltip lists each series' value there
- * (value strong, label secondary, a line key) and the band under it.
- * Labels are inserted as text, never HTML.
+ * The crosshair readout for every line chart under `root` (a document, a
+ * shadow root or an element): the pointer snaps to the nearest x; the
+ * tooltip lists each series' value there (value strong, label secondary,
+ * a line key) and the band under it. Labels are inserted as text, never
+ * HTML. A click dispatches `chart-click` with the nearest x. Self-contained
+ * (it is also inlined into standalone reports as CHART_SCRIPT).
  */
-export const CHART_SCRIPT = `
-(() => {
+export function bindChartsIn(root) {
+  for (const old of root.querySelectorAll(".tip")) {
+    old.remove();
+  }
   const tip = document.createElement("div");
   tip.className = "tip";
-  document.querySelector(".viz").append(tip);
-  for (const svg of document.querySelectorAll("svg[data-chart]")) {
-    const data = JSON.parse(document.querySelector('script[data-for="' + svg.dataset.chart + '"]').textContent);
+  const host =
+    (root.classList && root.classList.contains("viz") ? root : root.querySelector(".viz")) || root;
+  host.append(tip);
+  for (const svg of root.querySelectorAll("svg[data-chart]")) {
+    const data = JSON.parse(
+      root.querySelector(`script[data-for="${svg.dataset.chart}"]`).textContent,
+    );
     const cross = svg.querySelector(".cross");
     const nearest = (points, x) => {
-      let best, bestD = Infinity;
+      let best;
+      let bestD = Infinity;
       for (const p of points) {
-        if (p[1] === null) continue;
+        if (p[1] === null) {
+          continue;
+        }
         const d = Math.abs(p[0] - x);
-        if (d < bestD) { bestD = d; best = p; }
+        if (d < bestD) {
+          bestD = d;
+          best = p;
+        }
       }
       return best;
     };
-    svg.addEventListener("pointermove", (e) => {
+    const toX = (e) => {
       const r = svg.getBoundingClientRect();
-      const px = (e.clientX - r.left) / r.width * data.width;
-      if (px < data.left || px > data.width - data.right) { tip.style.display = "none"; cross.setAttribute("visibility", "hidden"); return; }
-      const x = data.x0 + (px - data.left) / (data.width - data.left - data.right) * (data.x1 - data.x0);
-      cross.setAttribute("x1", px); cross.setAttribute("x2", px); cross.setAttribute("visibility", "visible");
+      const px = ((e.clientX - r.left) / r.width) * data.width;
+      if (px < data.left || px > data.width - data.right) {
+        return undefined;
+      }
+      return {
+        px,
+        x: data.x0 + ((px - data.left) / (data.width - data.left - data.right)) * (data.x1 - data.x0),
+      };
+    };
+    svg.addEventListener("pointermove", (e) => {
+      const at0 = toX(e);
+      if (!at0) {
+        tip.style.display = "none";
+        cross.setAttribute("visibility", "hidden");
+        return;
+      }
+      const { px, x } = at0;
+      cross.setAttribute("x1", px);
+      cross.setAttribute("x2", px);
+      cross.setAttribute("visibility", "visible");
       tip.replaceChildren();
       const head = document.createElement("div");
-      head.textContent = data.xNames ? (data.xNames[Math.round(x)] || "") : (data.xLabel || "x") + " " + x.toFixed(1);
+      head.textContent = data.xNames
+        ? data.xNames[Math.round(x)] || ""
+        : `${data.xLabel || "x"} ${x.toFixed(1)}`;
       tip.append(head);
       const band = data.bands.find((b) => x >= b[0] && x <= b[1]);
-      if (band) { const d = document.createElement("div"); d.textContent = band[2]; tip.append(d); }
+      if (band) {
+        const d = document.createElement("div");
+        d.textContent = band[2];
+        tip.append(d);
+      }
       const at = data.xNames ? Math.round(x) : x;
       for (const s of data.series.slice(0, 12)) {
         const p = nearest(s.points, at);
-        if (!p) continue;
-        const row = document.createElement("div"); row.className = "row";
-        const key = document.createElement("span"); key.className = "key"; key.style.background = s.color;
-        const v = document.createElement("b"); v.textContent = (Math.round(p[1] * 100) / 100) + (data.unit ? " " + data.unit : "");
-        const l = document.createElement("span"); l.textContent = s.label;
-        row.append(key, v, l); tip.append(row);
+        if (!p) {
+          continue;
+        }
+        const row = document.createElement("div");
+        row.className = "row";
+        const key = document.createElement("span");
+        key.className = "key";
+        key.style.background = s.color;
+        const v = document.createElement("b");
+        v.textContent = Math.round(p[1] * 100) / 100 + (data.unit ? ` ${data.unit}` : "");
+        const l = document.createElement("span");
+        l.textContent = s.label;
+        row.append(key, v, l);
+        tip.append(row);
       }
       tip.style.display = "block";
-      tip.style.left = Math.min(e.clientX + 14, innerWidth - 330) + "px";
-      tip.style.top = (e.clientY + 14) + "px";
+      tip.style.left = `${Math.min(e.clientX + 14, innerWidth - 330)}px`;
+      tip.style.top = `${e.clientY + 14}px`;
     });
-    svg.addEventListener("pointerleave", () => { tip.style.display = "none"; cross.setAttribute("visibility", "hidden"); });
+    svg.addEventListener("pointerleave", () => {
+      tip.style.display = "none";
+      cross.setAttribute("visibility", "hidden");
+    });
     svg.addEventListener("click", (e) => {
-      const r = svg.getBoundingClientRect();
-      const px = (e.clientX - r.left) / r.width * data.width;
-      if (px < data.left || px > data.width - data.right) return;
-      const x = data.x0 + (px - data.left) / (data.width - data.left - data.right) * (data.x1 - data.x0);
-      svg.closest("figure").dispatchEvent(new CustomEvent("chart-click", { bubbles: true, detail: { x: data.xNames ? Math.round(x) : x } }));
+      const at = toX(e);
+      if (at) {
+        svg.closest("figure").dispatchEvent(
+          new CustomEvent("chart-click", {
+            bubbles: true,
+            detail: { x: data.xNames ? Math.round(at.x) : at.x },
+          }),
+        );
+      }
     });
   }
-})();
-`;
+}
+
+/** The same, as a script for standalone report pages. */
+export const CHART_SCRIPT = `(${bindChartsIn.toString()})(document);`;

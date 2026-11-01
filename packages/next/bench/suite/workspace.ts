@@ -1,6 +1,7 @@
 import { CONDITION_METRICS, METRICS } from "./report.mjs";
 import { escape, lineChart } from "./charts.mjs";
 import { ratio } from "./stats.mjs";
+import { toast } from "./toast.ts";
 import publicCatalog from "./catalog/public.json";
 import type { Budget } from "./schema.ts";
 
@@ -111,6 +112,7 @@ interface State {
   search: string;
   hardware: string;
   hideInvalid: boolean;
+  showSweeps: boolean;
 }
 
 const geomean = (values: number[]) =>
@@ -135,7 +137,10 @@ export function mountWorkspace(
   bindCharts: () => void,
 ): void {
   const params = new URLSearchParams(location.search);
-  const allConfigs = [...new Set(summaries.flatMap((s) => s.configs))];
+  // Sweep variants ("2.0[param=value]") belong to the Sweeps view.
+  const allConfigs = [...new Set(summaries.flatMap((s) => s.configs))].filter(
+    (c) => !c.includes("["),
+  );
   const most = (pick: (s: Summary) => string | undefined, fallback: string) => {
     const counts = new Map<string, number>();
     for (const s of summaries) {
@@ -155,6 +160,7 @@ export function mountWorkspace(
     search: "",
     hardware: store.get("dyno.hardware", "*"),
     hideInvalid: store.get("dyno.hideInvalid", false),
+    showSweeps: store.get("dyno.showSweeps", false),
   };
   const hidden = new Set<string>(store.get("dyno.hidden", []));
   const collapsed = new Set<string>(store.get("dyno.collapsed", []));
@@ -164,6 +170,7 @@ export function mountWorkspace(
     <input type="search" data-id="search" placeholder="Search notes, tags, commits" aria-label="Search runs">
     <label>Hardware <select data-id="hardware"></select></label>
     <label class="check"><input type="checkbox" data-id="hideInvalid"> Hide runs with invalid results</label>
+    <label class="check"><input type="checkbox" data-id="showSweeps"> Include sweep runs</label>
     <div class="run-actions"><button data-id="showAll">Show all</button><button data-id="hideAll">Hide all</button></div>
     <ol data-id="list"></ol>
   </aside>
@@ -234,6 +241,13 @@ export function mountWorkspace(
     store.set("dyno.hideInvalid", hideInvalid.checked);
     update();
   });
+  const showSweeps = $<HTMLInputElement>("showSweeps");
+  showSweeps.checked = state.showSweeps;
+  showSweeps.addEventListener("change", () => {
+    state.showSweeps = showSweeps.checked;
+    store.set("dyno.showSweeps", showSweeps.checked);
+    update();
+  });
   $<HTMLInputElement>("search").addEventListener("input", (e) => {
     state.search = (e.target as HTMLInputElement).value.toLowerCase();
     drawList();
@@ -285,9 +299,12 @@ export function mountWorkspace(
     store.set("dyno.views", all);
     fillViews();
     views.value = name;
+    toast(`View "${name}" saved`);
   });
   $("copy").addEventListener("click", () => {
-    void navigator.clipboard?.writeText(location.href);
+    void navigator.clipboard
+      ?.writeText(location.href)
+      .then(() => toast("Link to this view copied"));
   });
 
   // ---------------------------------------------------------------- runs
@@ -305,14 +322,16 @@ export function mountWorkspace(
       .filter(
         (s) =>
           (state.hardware === "*" || s.hardware === state.hardware) &&
-          (!state.hideInvalid || verdictOf(s) !== "invalid"),
+          (!state.hideInvalid || verdictOf(s) !== "invalid") &&
+          (state.showSweeps || !(s as { sweep?: unknown }).sweep),
       );
   const visible = () =>
     summaries.filter(
       (s) =>
         !hidden.has(s.name) &&
         (state.hardware === "*" || s.hardware === state.hardware) &&
-        (!state.hideInvalid || verdictOf(s) !== "invalid"),
+        (!state.hideInvalid || verdictOf(s) !== "invalid") &&
+        (state.showSweeps || !(s as { sweep?: unknown }).sweep),
     );
   const when = (s: Summary) =>
     new Date(s.date).toLocaleString(undefined, {
@@ -526,8 +545,6 @@ ${s.tags.length ? `<div class="muted">${s.tags.map(escape).join(", ")}</div>` : 
       }
       return lineChart({
         title: title ?? `${name}: ${state.cand} / ${state.base}`,
-        subtitle:
-          "Ratio per run (geometric mean across scenes) with its interval; below ×1 is better.",
         xLabel: "run",
         unit: "×",
         xNames,
@@ -644,7 +661,13 @@ ${s.tags.length ? `<div class="muted">${s.tags.map(escape).join(", ")}</div>` : 
           );
         }
       }
-      html += `<details class="section" data-section="${id}" ${collapsed.has(id) ? "" : "open"}><summary>${escape(title)}</summary><div class="grid">${body || `<div class="empty">No data.</div>`}</div></details>`;
+      const about =
+        id === "headline"
+          ? `<p class="section-note">${escape(state.cand)} over ${escape(state.base)} per run (geometric mean across scenes) with its interval; below ×1 is better. Red dotted lines are budgets.</p>`
+          : id === "conditions"
+            ? `<p class="section-note">The machine's state during each configuration's runs: these should match between engines.</p>`
+            : "";
+      html += `<details class="section" data-section="${id}" ${collapsed.has(id) ? "" : "open"}><summary>${escape(title)}</summary>${about}<div class="grid">${body || `<div class="empty">No data.</div>`}</div></details>`;
     }
     out.innerHTML = html;
     for (const d of out.querySelectorAll<HTMLDetailsElement>(

@@ -3338,6 +3338,33 @@ param=a,b,c` runs each 2.0 configuration (or `--sweep-configs`) once
     the license review (§16.2), private ones into the private manifest
     outside the repo; then a first measured run from the same tab.
 
+#### Experience (r33)
+
+Dyno's shell is React with Radix Themes (`app.tsx`); the views stay
+imperative modules drawing into the page body, with their state in the
+URL. Practices applied:
+
+- Navigation by job (Track: Workspace, Alerts, Runs, Compare; Inspect:
+  Scenes, Explorer, Images; Explore: Sweeps, Hardware), counts of what
+  needs attention on the items (untriaged regressions, unreviewed
+  images), and a page header saying what each view is for. The run report
+  is a page reached from Runs, alerts, the palette or a workspace point,
+  with a way back.
+- A command palette (Ctrl/⌘ K) over views, scenes and runs; keyboard
+  shortcuts (g then a letter, / to search, ? for the list).
+- Light, dark or system theme, chosen in the sidebar; charts and the
+  report follow it (the report renders in a shadow root, not an iframe).
+- Radix tokens for every neutral surface and control (buttons, inputs,
+  selects, chips, focus rings); data and status colors stay on the
+  validated palette.
+- Feedback: a loading state between views, toasts for saves, copies and
+  approvals, clickable table rows, explanations once per section instead
+  of on every panel, long labels truncated.
+- Next: convert the views' controls to Radix components one by one
+  (selects, segmented controls, dialogs for triage), resizable and
+  full-screen panels, persistent column choices in tables, and a guided
+  first run when no results exist.
+
 #### New data the runs record
 
 - Camera progress for every frame (already implied by the motion series)
