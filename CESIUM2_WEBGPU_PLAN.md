@@ -635,12 +635,27 @@ change after them is measured against a guardrail:
   0.04 to 0.08 (Melbourne 0.083, to look at); Rainier's under-refinement
   was about 0.3. FLIP against 1.x can't tell: lighting and sky alone put
   most scenes at 0.3 to 0.55.
-- **Terrain loading (r37, measuring)**: `Budgeted` expanded a terrain tile
+- **Terrain loading (done r37)**: `Budgeted` expanded a terrain tile
   only once it loaded, so terrain loaded one level per round trip and
   never skipped levels (the waterfalls' curve: 2 to 4 terrain requests in
   flight for seconds where 1.x has 18). It now expands tiles as it visits
   them, as 1.x's quadtree does. The benchmark adapters set up imagery,
   terrain and tilesets in parallel (2.0's waited on each, about a second).
+  Measured (3 reps, against the r37 baseline): Rainier settles in 4.3 s
+  (was 6.5 s; 1.x 5.8 s) loading 13.5 MB (was 4.3 MB under-refined; 1.x
+  13.1 MB); OSM Philadelphia 4.9 s (was 7.7 s; 1.x 4.4 s), 23.3 MB (was
+  26.6 MB). Selection parity unchanged (Rainier 0.059, Philadelphia 0.008,
+  NYC 0.002).
+- **Startup latency**: 2.0's first request starts 150 to 550 ms after
+  1.x's in every scene (engine and device setup come before the first
+  endpoint request), and NYC's first content request waits about 300 ms
+  after the tileset JSON arrives, where 1.x's starts with it. Start
+  resolving endpoints while the device is created; issue root content in
+  the frame the tileset JSON arrives.
+- **Hitches on uncapped orbits**: NYC 8 per run over 100 ms on 2.0 (1.x
+  none), as in the baseline (Google Manhattan 3 to 6, Melbourne 6 to 14,
+  Tokyo 6 to 10). Content arriving faster than the uncapped frame loop can
+  upload; see H6 and the hitch harness.
 - **Requests by purpose**: each tileset counts requests and bytes by what
   they are for, `Budgeted`'s priority bands: base (a first coarse level),
   intermediate (steps between skipped levels), view (the frontier) and
@@ -3126,8 +3141,9 @@ addressed in 2.0 (each with a Dyno scene to show the fix):
   ×1.42 slower than 1.x. The waterfall shows 2.0 fetching 49 content tiles
   (18.7 MB) on OSM Philadelphia to 1.x's 31 (10.7 MB), and starting them
   later. _r37_: terrain loaded one level per round trip under `Budgeted`
-  (expanded only once loaded); fixed, with parallel adapter setup. See the
-  planned `Budgeted` work (§6), which now lists these findings first.
+  (expanded only once loaded); fixed, with parallel adapter setup: Rainier
+  now settles ×0.74 of 1.x, OSM Philadelphia within noise. See the planned
+  `Budgeted` work (§6), which now lists these findings first.
 - **Bytes**: NYC buildings ×3.3 and OSM Philadelphia ×1.5 of 1.x; Japan
   ×1.3.
 - **JS heap** above 1.x on terrain scenes and NYC (scorecard guardrail).
