@@ -1,0 +1,83 @@
+.explorer .panes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: var(--space-3);
+}
+.explorer .pane {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  border: 1px solid var(--gray-a6);
+  border-radius: var(--radius-3);
+  overflow: hidden;
+}
+.explorer .pane .view {
+  position: absolute;
+  inset: 0;
+}
+.explorer .hud {
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  background: rgba(13, 13, 13, 0.78);
+  border: 1px solid #383835;
+  border-radius: 6px;
+  padding: 6px 9px;
+  font:
+    12px/1.4 ui-monospace,
+    monospace;
+  color: #c3c2b7;
+  pointer-events: none;
+  white-space: pre;
+}
+.explorer .hud b {
+  color: #f0efec;
+}
+.explorer .key {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  margin-right: 6px;
+  vertical-align: -1px;
+}
+.explorer .scrub .rt-SliderRoot {
+  flex: 1;
+}
+.explorer .readout,
+.explorer .percent,
+.explorer .num {
+  font-variant-numeric: tabular-nums;
+}
+.explorer .percent {
+  min-width: 6ch;
+}
+.explorer .command {
+  display: block;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.explorer .swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+}
+.explorer .swatch.outline {
+  border: 2px solid;
+  background: #222;
+}
+.explorer .selection .bars {
+  display: grid;
+  gap: 2px;
+}
+.explorer .selection .bar {
+  height: 6px;
+  border-radius: 2px;
+  min-width: 1px;
+}
+.explorer .credits {
+  color: var(--gray-10);
+  font-size: 12px;
+  margin-top: var(--space-2);
+}

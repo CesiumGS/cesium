@@ -19,6 +19,7 @@
   "dependencies": {
     "@radix-ui/react-icons": "1.3.2",
     "@radix-ui/themes": "3.3.0",
+    "@tanstack/react-router": "1.170.45",
     "draco3d": "1.5.7",
     "ktx-parse": "^2.0.0",
     "meshoptimizer": "^1.2.0",

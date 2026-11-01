@@ -39,6 +39,7 @@ Branch: `cesium-2.0-webgpu-poc` (off `main` @ `587f52f1eb`, CesiumJS 1.146.0)
 | r31 | M3 complete (increment 6): model instancing (`ModelOptions.instances`) with a 100,000-instance benchmark, i3dm within FLIP 0.018 of 1.x, runtime tileset `modelMatrix`, `sampleHeightMostDetailed` within 7.5 mm of 1.x, the viewer's city clamped. Real-time tracks designed (§13.11) with a milestone after Custom shading; automatic per-instance LOD noted as an idea.                                                                                                                                                                      |
 | r32 | Benchmark suite v1 built (§16): public and private catalogs with license review, released 1.x builds pinned by version and release sweeps, recorded and controlled hardware conditions, redesigned reports and experiment tracking. §16.9 designs analysis and experience from analogous systems (experimentation platforms, quality-control charts, F1 telemetry, WebPageTest, frame analysis tools, 3DMark validation) for deciding, detecting, diagnosing, trusting, exploring and communicating.                                            |
 | r33 | Dyno phase 1 (§16.9): validity verdicts, scorecards with declared primary and guardrail metrics, a `benchstat`-style compare, cost along the camera path with path segments and a path map, filmstrips with FLIP, request waterfalls, percentile curves and stutter metrics; uncapped (vsync off) scenarios; thermal limits and headroom recorded; condition flags limited to true conditions; the Explorer tab (camera path, free flight, linked cameras, paused streaming via `Tileset3D.freezeSelection`), with benchmark authoring planned. |
+| r34 | Dyno rebuilt as a React app on TanStack Router (typed URL state, code-split views) with Radix Themes controls and a guided first run. Explorer inspection: bounding volumes in both engines, tiles tinted by depth or engine, the selection compared by depth (`Budgeted` draws much coarser terrain than 1.x at Rainier). Inspector designed; CI image job and bisection deferred.                                                                                                                                                             |
 
 ## 1. Goal
 
@@ -3041,7 +3042,12 @@ addressed in 2.0 (each with a Dyno scene to show the fix):
   `Budgeted` against a fully refined reference (§4 L1′) per scene, the
   explorer's paused streaming and the filmstrip's FLIP to find where it
   under-refines, and an image guardrail in the scorecard so a faster
-  policy can't pass by drawing less.
+  policy can't pass by drawing less. The explorer's selection view (r34)
+  shows it directly: on the Rainier path at 30%, settled, 2.0 draws 20
+  terrain tiles spanning levels 0 to 12 (six of them at levels 0 to 5)
+  where 1.x draws 57 at levels 6 to 13, and only 4 tiles are the same.
+  `Budgeted` leaves much of the view at very coarse levels that 1.x's SSE
+  would refine; the fix starts there.
 - **Settle time on terrain scenes**: Rainier ×1.16 and OSM Philadelphia
   ×1.42 slower than 1.x. The waterfall shows 2.0 fetching 49 content tiles
   (18.7 MB) on OSM Philadelphia to 1.x's 31 (10.7 MB), and starting them
@@ -3326,9 +3332,21 @@ param=a,b,c` runs each 2.0 configuration (or `--sweep-configs`) once
     report (a click on a path chart opens that point of the path, filmstrip
     frames open their moment); "Measure this" gives the CLI command for the
     scene and engines.
-  - Next: bounding volumes and screen-space error coloring, picking a tile
-    for its metadata, selection diffs (tiles one engine draws and the
-    other doesn't).
+  - Built (r34): bounding volumes (white at final resolution, yellow
+    while finer tiles load, gray without content: 1.x's colors) and
+    content volumes (blue) in both engines, through 1.x's own
+    `debugShowBoundingVolume` and 2.0's new
+    `Tileset3D.debugShowBoundingVolume` (line-list wireframes under the
+    tileset's transform; regions follow the ellipsoid); tiles tinted by
+    depth, or by engine (gray where both draw the tile, the engine's color
+    where only it does; tiles match by header, terrain by quadtree
+    address, so the two selections compare exactly; 1.x's globe takes no
+    tint); "Selection by depth", each engine's drawn tiles per level with
+    those only it draws. 2.0's terrain now applies the draw tint over its
+    imagery (white unless a debug view tints).
+  - Next: screen-space error coloring, picking a tile for its metadata
+    (header, SSE, distance, state, bytes), and the inspector below in
+    place of the HUD.
   - Later, authoring benchmarks: the explorer becomes where new
     benchmarks are made. Record a camera path from free flight
     (keyframes, smoothed into a spline, with timing) and save it as a
@@ -3364,10 +3382,49 @@ URL. Practices applied:
   closes); Compare starts from the two latest ordinary runs, offers only
   shared configurations and warns when machines or render settings differ;
   the workspace marks runs where the render settings changed.
-- Next: convert the views' controls to Radix components one by one
-  (selects, segmented controls, dialogs for triage), persistent column
-  choices and sorting in tables, and a guided first run when no results
-  exist.
+- Built (r34), the app rebuilt on standard parts: every view is a React
+  component using Radix Themes controls directly (selects, segmented
+  controls, checkboxes, sliders, dialogs, tables); TanStack Router on
+  hash history gives each view typed, validated search params (shareable
+  links, back and forward work), loads each view as its own chunk, and
+  reads the runs once in the root loader with a pending state instead of
+  a top-level await; React's StrictMode is on (the explorer's engines
+  survive mount, unmount, mount: 2.0 cleanly, 1.x at some extra start-up
+  cost). Charts stay the strings charts.mjs builds, which the CLI's
+  reports share, hosted by one component. Old `?tab=` links redirect. A
+  guided first run (`/start`, and wherever a view needs runs and there
+  are none) checks the setup live (WebGPU, the 1.x builds, the results
+  directory), gives one command for a first measured run and says where
+  to look next.
+- Next: persistent column choices in tables; the inspector (below).
+
+#### Inspector (designed r34)
+
+The standalone debug viewer (`viewer/`) splits three ways:
+
+- _Engine core: debug features as APIs, no UI._ Statistics, the content
+  pipeline's stage timings, requests, `freezeSelection`, bounding
+  volumes, tile tints, picking. The core stays headless and
+  framework-free; apps pay nothing for it.
+- _An inspector overlay, its own module outside the core_ (the viewer's
+  right panel: problems, view, streaming, content pipeline, GPU and
+  memory, pick, lighting), attached to any engine
+  (`attachInspector(engine, element)` or a `<cesium-inspector>` element),
+  written without React so any app can use it (as 1.x's
+  `CesiumInspector` and `Cesium3DTilesInspector` were widgets, not core).
+  It reads a small inspectable interface rather than 2.0's internals: 2.0
+  implements it natively and Dyno's 1.x adapter implements it too, so the
+  explorer shows the same inspector beside both engines (replacing its
+  HUD).
+- _Dyno owns content and workflows._ The viewer's content loading (ion
+  assets, URLs, local files, the test-page list) moves into the explorer,
+  where benchmark authoring is planned anyway; parity and benchmark links
+  are Dyno's already. The standalone viewer then retires, or shrinks to a
+  few lines that make an engine and attach the inspector.
+
+Order: the inspectable interface (from what the viewer panel and the
+explorer HUD show), the inspector, then content loading into the
+explorer.
 
 #### New data the runs record
 
@@ -3403,6 +3460,10 @@ URL. Practices applied:
   from the report, side-by-side video.
 - _v3_ (Cesium-wide): sweeps view, hardware scaling, narrative reports,
   budgets, reference overlays and the review checklist.
+- _Deferred (r34, decided):_ the CI image job on a software rasterizer
+  (§16.10) and automatic bisection of alerts wait until after the
+  Explorer's inspection tools and Dyno's controls are done; they need CI
+  runners and a build per commit, which the prototype does not have yet.
 
 Sources for §16.4, §16.8 and §16.9 (checked October 2026; licenses to be
 confirmed at the source before mirroring):
@@ -3478,8 +3539,8 @@ CI job and tab.
   baselines, reject records why). Streamed scenes repeat within FLIP
   0.002–0.006 mean and 0.04 p95 run to run (selection settles slightly
   differently); a fully refined check mode would make them exact. Next:
-  the CI job on SwiftShader with offline content, checks saved from the
-  explorer, parity pages as checks.
+  the CI job on SwiftShader with offline content (deferred, r34: see
+  §16.9 phasing), checks saved from the explorer, parity pages as checks.
 
 ### Increment 6 (r31): M3 close-out
 

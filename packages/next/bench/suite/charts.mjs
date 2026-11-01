@@ -126,7 +126,9 @@ export function forestPlot({ title, subtitle, rows, baseline, candidate }) {
   svg += `<text x="${x(1)}" y="${top - 8}" text-anchor="middle">${escape(baseline)}</text>`;
   rows.forEach((r, i) => {
     const cy = top + i * rowH + rowH / 2;
-    svg += `<text class="label" x="${left - 10}" y="${cy + 4}" text-anchor="end">${escape(r.label)}</text>`;
+    // Long scene names would run off the left edge: shortened, in full on hover.
+    const label = r.label.length > 40 ? `${r.label.slice(0, 39)}…` : r.label;
+    svg += `<text class="label" x="${left - 10}" y="${cy + 4}" text-anchor="end"><title>${escape(r.label)}</title>${escape(label)}</text>`;
     if (!r.ratio) {
       svg += `<text x="${left}" y="${cy + 4}">${escape(r.note ?? "no data")}</text>`;
       return;

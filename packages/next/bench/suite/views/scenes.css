@@ -1,0 +1,10 @@
+/* Scene cards are links (dyno.css styles .scene-card as a button). */
+a.scene-card {
+  text-decoration: none;
+}
+.scene-card .scene-card-table {
+  width: 100%;
+}
+.scene-page .best {
+  font-variant-numeric: tabular-nums;
+}

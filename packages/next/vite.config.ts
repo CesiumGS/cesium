@@ -158,6 +158,12 @@ function serveBenchResults(prefix: string, root: string): Plugin {
       // Alert triage (status, owner, note per alert), saved from Dyno.
       server.middlewares.use(`${prefix}/triage.json`, (req, res, next) => {
         if (req.method !== "POST") {
+          // Nothing triaged yet reads as no triage, not a missing file.
+          if (!existsSync(join(root, "triage.json"))) {
+            res.setHeader("Content-Type", "application/json");
+            res.end("{}");
+            return;
+          }
           next();
           return;
         }
@@ -220,6 +226,7 @@ export default defineConfig({
       "react-dom/client",
       "@radix-ui/themes",
       "@radix-ui/react-icons",
+      "@tanstack/react-router",
     ],
   },
   plugins: [

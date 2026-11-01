@@ -9,7 +9,9 @@ import {
   fromDegrees,
   resolveIonAsset,
   type ImageryProvider,
+  type Tile,
   type Tileset3D,
+  tileHeaderKey,
 } from "../../src/index.ts";
 import { volumeFromJson } from "../../src/streaming/volumes.ts";
 import ionSource from "../../../engine/Source/Core/Ion.js?raw";
@@ -225,8 +227,19 @@ export interface Adapter {
   setInteractive(on: boolean): void;
   /** Keep what is selected and loaded now, for inspecting it from elsewhere. */
   setStreamingPaused(on: boolean): void;
-  /** Tint tiles by tree depth (1.x `debugColorizeTiles`). */
-  setColorizeTiles(on: boolean): void;
+  /** The tiles drawn now, keyed so two engines' selections compare. */
+  drawnTiles(): DrawnTile[];
+  /**
+   * Tints each drawn tile with the color this returns (linear RGB; none
+   * leaves it untinted), checked every frame; undefined clears tints.
+   */
+  setTileTint(tint: TileTint | undefined): void;
+  /**
+   * Wireframes of the drawn tiles' bounding volumes (1.x
+   * `debugShowBoundingVolume`: white at final resolution, yellow while
+   * refining, gray without content) and content volumes (blue).
+   */
+  setVolumes(bounding: boolean, content: boolean): void;
   /** Live statistics for the explorer's HUD. */
   stats(): { selected: number; loading: number; note: string };
   /** The render settings in effect (read after frames were drawn). */
@@ -234,6 +247,40 @@ export interface Adapter {
   /** Lights the scene from this direction (unit vector toward the sun). */
   setSun(direction: Float64Array): void;
   destroy(): void;
+}
+
+/** A drawn tile, comparable across engines (plan §16.9, Explorer). */
+export interface DrawnTile {
+  /**
+   * 3D Tiles: the tile's header (bounding volume and geometric error as
+   * written, 2.0 `Tile.headerKey`); terrain: "level/x/y" with TMS rows.
+   */
+  key: string;
+  kind: "tiles" | "terrain";
+  /** Tree depth (terrain: quadtree level). */
+  depth: number;
+}
+export type TileTint = (
+  tile: DrawnTile,
+) => readonly [number, number, number] | undefined;
+
+/** Tile tints by tree depth, as 2.0's `debugColorizeTiles` (linear RGB). */
+export const DEPTH_COLORS = [
+  [0.9, 0.2, 0.2],
+  [0.95, 0.55, 0.1],
+  [0.95, 0.85, 0.1],
+  [0.3, 0.8, 0.25],
+  [0.1, 0.7, 0.8],
+  [0.2, 0.35, 0.95],
+  [0.6, 0.3, 0.9],
+  [0.9, 0.35, 0.75],
+] as const;
+
+function describeTile(tile: Tile): DrawnTile {
+  const g = tile.globe;
+  return g
+    ? { key: `${g.level}/${g.x}/${g.y}`, kind: "terrain", depth: g.level }
+    : { key: tile.headerKey, kind: "tiles", depth: tile.depth };
 }
 
 export class NextAdapter implements Adapter {
@@ -445,9 +492,37 @@ export class NextAdapter implements Adapter {
     }
   }
 
-  setColorizeTiles(on: boolean): void {
+  drawnTiles(): DrawnTile[] {
+    const out: DrawnTile[] = [];
     for (const tileset of this.tilesets) {
-      tileset.debugColorizeTiles = on;
+      const seen = new Set<Tile>();
+      for (const list of tileset.lastSelected.values()) {
+        for (const tile of list) {
+          if (!seen.has(tile)) {
+            seen.add(tile);
+            out.push(describeTile(tile));
+          }
+        }
+      }
+    }
+    return out;
+  }
+
+  setTileTint(tint: TileTint | undefined): void {
+    for (const tileset of this.tilesets) {
+      tileset.debugTileColor = tint
+        ? (tile) => {
+            const c = tint(describeTile(tile));
+            return c ? [c[0], c[1], c[2], 1] : undefined;
+          }
+        : undefined;
+    }
+  }
+
+  setVolumes(bounding: boolean, content: boolean): void {
+    for (const tileset of this.tilesets) {
+      tileset.debugShowBoundingVolume = bounding;
+      tileset.debugShowContentBoundingVolume = content;
     }
   }
 
@@ -494,18 +569,6 @@ export class NextAdapter implements Adapter {
     this.engine.destroy();
   }
 }
-
-/** Tile tints by tree depth, as 2.0's `debugColorizeTiles` (linear RGB). */
-const DEPTH_COLORS = [
-  [0.9, 0.2, 0.2],
-  [0.95, 0.55, 0.1],
-  [0.95, 0.85, 0.1],
-  [0.3, 0.8, 0.25],
-  [0.1, 0.7, 0.8],
-  [0.2, 0.35, 0.95],
-  [0.6, 0.3, 0.9],
-  [0.9, 0.35, 0.75],
-] as const;
 
 export class LegacyAdapter implements Adapter {
   private viewer: Json;
@@ -663,42 +726,76 @@ export class LegacyAdapter implements Adapter {
     };
   }
 
+  drawnTiles(): DrawnTile[] {
+    const out: DrawnTile[] = [];
+    for (const tileset of this.tilesets) {
+      for (const tile of tileset._selectedTiles ?? []) {
+        out.push({
+          key: tileHeaderKey(tile._header),
+          kind: "tiles",
+          depth: tile._depth,
+        });
+      }
+    }
+    // Globe tiles: 1.x counts rows from the north, 2.0 (TMS) from the
+    // south; the geographic scheme has 2^level rows.
+    for (const tile of this.viewer.scene.globe?._surface._tilesToRender ?? []) {
+      const rows = 1 << tile.level;
+      out.push({
+        key: `${tile.level}/${tile.x}/${rows - 1 - tile.y}`,
+        kind: "terrain",
+        depth: tile.level,
+      });
+    }
+    return out;
+  }
+
   /**
-   * Tile tints by depth with 2.0's palette (1.x's own debugColorizeTiles
-   * picks random colors, which can't be compared across engines).
+   * Tints through `tileVisible`, every frame (1.x's own
+   * debugColorizeTiles picks random colors, which can't be compared
+   * across engines). 1.x's globe tiles take no tint.
    */
-  setColorizeTiles(on: boolean): void {
-    this.colorizeOff?.();
+  setTileTint(tint: TileTint | undefined): void {
+    this.tintOff?.();
     const white = Cesium.Color.WHITE;
     const remove = this.tilesets.map((tileset) =>
       tileset.tileVisible.addEventListener((tile: Json) => {
-        if (on) {
-          const [r, g, b] = DEPTH_COLORS[tile._depth % DEPTH_COLORS.length]!;
-          // 2.0 tints in linear color; 1.x's tile color is sRGB.
-          tile.color = new Cesium.Color(
-            r ** (1 / 2.2),
-            g ** (1 / 2.2),
-            b ** (1 / 2.2),
-            1,
-          );
-        } else {
-          tile.color = white;
-        }
+        const c = tint?.({
+          key: tileHeaderKey(tile._header),
+          kind: "tiles",
+          depth: tile._depth,
+        });
+        // 2.0 tints in linear color; 1.x's tile color is sRGB.
+        tile.color = c
+          ? new Cesium.Color(
+              c[0] ** (1 / 2.2),
+              c[1] ** (1 / 2.2),
+              c[2] ** (1 / 2.2),
+              1,
+            )
+          : white;
       }),
     );
-    this.colorizeOff = () => {
+    this.tintOff = () => {
       for (const r of remove) {
         r();
       }
     };
-    if (!on) {
+    if (!tint) {
       // One more frame paints them white, then the listeners go.
       requestAnimationFrame(() =>
-        requestAnimationFrame(() => this.colorizeOff?.()),
+        requestAnimationFrame(() => this.tintOff?.()),
       );
     }
   }
-  private colorizeOff?: () => void;
+  private tintOff?: () => void;
+
+  setVolumes(bounding: boolean, content: boolean): void {
+    for (const tileset of this.tilesets) {
+      tileset.debugShowBoundingVolume = bounding;
+      tileset.debugShowContentBoundingVolume = content;
+    }
+  }
 
   stats(): { selected: number; loading: number; note: string } {
     let selected = 0;
