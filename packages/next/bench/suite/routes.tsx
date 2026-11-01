@@ -8,7 +8,7 @@ import { loadRuns } from "./data.ts";
 import { Shell, ShellError, ShellPending } from "./shell.tsx";
 
 /**
- * Dyno's routes (hash history: results.html#/workspace?…). Each view is
+ * Dyno's routes (hash history: /#/workspace?…). Each view is
  * its own chunk, loaded on first visit; its state is the route's search
  * params, validated here so views get typed values and links stay
  * shareable. The root loader reads the runs once for every view.

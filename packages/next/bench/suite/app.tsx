@@ -11,7 +11,7 @@ import { routeTree } from "./routes.tsx";
 
 /**
  * Dyno's entry: a TanStack Router app on hash history
- * (results.html#/workspace?…), so the dev server and a static build serve
+ * (the dev server's root, /#/workspace?…), so the dev server and a static build serve
  * one page. Links from before the router (results.html?tab=explore&…)
  * are carried over to their routes.
  */

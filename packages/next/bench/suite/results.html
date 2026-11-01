@@ -2,11 +2,13 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Dyno</title>
+    <!-- Dyno moved to the dev server's root; old links (and saved reports) land here. -->
+    <script>
+      location.replace(`/${location.search}${location.hash}`);
+    </script>
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="./app.tsx"></script>
+    <p>Dyno has moved to <a href="/">/</a>.</p>
   </body>
 </html>

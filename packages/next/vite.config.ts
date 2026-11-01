@@ -243,6 +243,7 @@ export default defineConfig({
     target: "es2023",
     rollupOptions: {
       input: {
+        dyno: "index.html",
         demo: "demo/index.html",
         viewer: "viewer/index.html",
         parity: "parity/index.html",

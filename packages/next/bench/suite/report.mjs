@@ -565,7 +565,7 @@ ${cpu.length ? chart("CPU speed (% of nominal)", "%", cpu, 1) + chart("CPU utili
       ? `${pathOverlay({ profiles, configs, baseline, candidate, color, metric: pathMetric })}
 <div class="diag">${segmentTable({ profiles, configs, baseline, color, metric: pathMetric })}${pathMap({ path, profiles, configs, color, metric: pathMetric, title: "Faster along the camera path" })}</div>`
       : "";
-    const explore = `/bench/suite/results.html#/explorer?scene=${encodeURIComponent(run.scene)}&amp;left=${encodeURIComponent(baseline)}&amp;right=${encodeURIComponent(candidate)}`;
+    const explore = `/#/explorer?scene=${encodeURIComponent(run.scene)}&amp;left=${encodeURIComponent(baseline)}&amp;right=${encodeURIComponent(candidate)}`;
     const strip = filmstrip({
       explore,
       // Older runs' entries have no scenario (and mixed scenarios).
