@@ -32,7 +32,12 @@ import {
   type TileJson,
   type TileTree,
 } from "./Tile.ts";
-import { transformVolume, volumeObb } from "./volumes.ts";
+import { transformVolume, volumeObb, type TileVolume } from "./volumes.ts";
+import {
+  DebugVolumes,
+  VOLUME_COLORS,
+  type DebugColor,
+} from "./debugVolumes.ts";
 import * as m4 from "../math/mat4.ts";
 import type { RequestSample } from "./RequestScheduler.ts";
 import type { GlobeImagery } from "../globe/GlobeImagery.ts";
@@ -407,17 +412,109 @@ export class Tileset3D implements TileTree {
     }
   }
   private colorize = false;
+  /**
+   * Tints each drawn tile with the color this returns (linear RGBA; none
+   * leaves it white), checked every frame, for inspection tools: tiles
+   * one engine draws and another doesn't, say. Wins over
+   * `debugColorizeTiles`.
+   */
+  get debugTileColor(): ((tile: Tile) => DebugColor | undefined) | undefined {
+    return this.tileColor;
+  }
+  set debugTileColor(fn: ((tile: Tile) => DebugColor | undefined) | undefined) {
+    this.tileColor = fn;
+    this.updateDebug();
+    this.lastChange = this.frame;
+  }
+  private tileColor?: (tile: Tile) => DebugColor | undefined;
   private applyDebugColor(tile: Tile): void {
-    if (!tile.instance || tile.debugColored === this.colorize) {
+    if (!tile.instance) {
       return;
     }
-    const color = this.colorize
-      ? DEPTH_COLORS[tile.depth % DEPTH_COLORS.length]!
-      : WHITE;
-    for (const draw of tile.instance.draws) {
-      this.world.setColor(draw, color);
+    const color =
+      this.tileColor?.(tile) ??
+      (this.colorize
+        ? DEPTH_COLORS[tile.depth % DEPTH_COLORS.length]!
+        : undefined);
+    const current = tile.debugColor;
+    if (
+      color === current ||
+      (color && current && color.every((c, i) => c === current[i]))
+    ) {
+      return;
     }
-    tile.debugColored = this.colorize;
+    for (const draw of tile.instance.draws) {
+      this.world.setColor(draw, color ?? WHITE);
+    }
+    tile.debugColor = color;
+  }
+  /**
+   * Wireframes of the drawn tiles' bounding volumes, colored as 1.x does:
+   * white at final resolution, yellow while finer tiles load (drawn as a
+   * placeholder), gray without content of its own.
+   */
+  get debugShowBoundingVolume(): boolean {
+    return this.boundingVolumes !== undefined;
+  }
+  set debugShowBoundingVolume(value: boolean) {
+    if (value !== this.debugShowBoundingVolume) {
+      this.boundingVolumes?.clear();
+      this.boundingVolumes = value
+        ? new DebugVolumes(this.world, this.transform)
+        : undefined;
+      this.updateDebug();
+      this.lastChange = this.frame;
+    }
+  }
+  private boundingVolumes?: DebugVolumes;
+  /** Wireframes (blue) of the drawn tiles' content volumes, where given. */
+  get debugShowContentBoundingVolume(): boolean {
+    return this.contentVolumes !== undefined;
+  }
+  set debugShowContentBoundingVolume(value: boolean) {
+    if (value !== this.debugShowContentBoundingVolume) {
+      this.contentVolumes?.clear();
+      this.contentVolumes = value
+        ? new DebugVolumes(this.world, this.transform)
+        : undefined;
+      this.updateDebug();
+      this.lastChange = this.frame;
+    }
+  }
+  private contentVolumes?: DebugVolumes;
+  /** Debug tints and volumes for what is drawn now (also while frozen). */
+  private updateDebug(): void {
+    if (this.tileColor) {
+      for (const tile of this.masked) {
+        this.applyDebugColor(tile);
+      }
+    }
+    if (!this.boundingVolumes && !this.contentVolumes) {
+      return;
+    }
+    const drawn = new Set([...this.masked, ...this.placeholders]);
+    type Want = Map<Tile, { volume: TileVolume; color: DebugColor }>;
+    const bounding: Want = new Map();
+    const content: Want = new Map();
+    for (const tile of drawn) {
+      bounding.set(tile, {
+        volume: tile.volume,
+        color:
+          tile.placeholderMask !== 0
+            ? VOLUME_COLORS.refining
+            : tile.renderable
+              ? VOLUME_COLORS.final
+              : VOLUME_COLORS.empty,
+      });
+      if (tile.contentVolume) {
+        content.set(tile, {
+          volume: tile.contentVolume,
+          color: VOLUME_COLORS.content,
+        });
+      }
+    }
+    this.boundingVolumes?.update(bounding);
+    this.contentVolumes?.update(content);
   }
   /** Globe imagery draped on this terrain tileset (`engine.addTerrain`). */
   imagery?: GlobeImagery;
@@ -671,7 +768,11 @@ export class Tileset3D implements TileTree {
 
   /** One frame: select per view, apply view masks, request, upload, evict. */
   update(allViews: SelectionView[]): void {
-    if (this.destroyed || this.frozen) {
+    if (this.destroyed) {
+      return;
+    }
+    if (this.frozen) {
+      this.updateDebug();
       return;
     }
     const frame = ++this.frame;
@@ -770,6 +871,7 @@ export class Tileset3D implements TileTree {
       }
     }
     this.placeholders = nowPlaceholders;
+    this.updateDebug();
     this.stats.placeholders = nowPlaceholders.size;
 
     // Queue time: since a still-unloaded tile was first wanted.
@@ -1061,6 +1163,7 @@ export class Tileset3D implements TileTree {
     tile.bytes = 0;
     tile.state = "unloaded";
     tile.appliedMask = -1;
+    tile.debugColor = undefined;
     tile.appliedPlaceholderMask = 0;
     tile.placeholderMask = 0;
     tile.holes = tile.appliedHoles = undefined;
@@ -1128,6 +1231,8 @@ export class Tileset3D implements TileTree {
       closeImages(asset);
     }
     this.ready.length = 0;
+    this.boundingVolumes?.clear();
+    this.contentVolumes?.clear();
     this.world.removeTransform(this.transform);
     this.destroyed = true;
   }

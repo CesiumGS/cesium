@@ -242,7 +242,8 @@ fn fs(in: VsOut, @builtin(front_facing) frontFacing: bool) -> FsOut {
     baseColor *= baseColorSample;
   }
   if (imageryPacked != 0u) {
-    baseColor = vec4f(srgbToLinear(imagerySample.rgb), 1.0);
+    // The draw's tint (white unless a debug view tints tiles) still applies.
+    baseColor = vec4f(srgbToLinear(imagerySample.rgb), 1.0) * r.color;
   }
   if ((flags & 4u) != 0u && baseColor.a < material.alphaCutoff) {
     discard;
