@@ -824,3 +824,13 @@ table.log th {
   min-height: 32px;
   overflow: hidden;
 }
+
+.caution {
+  border: 1px solid var(--amber-a7);
+  background: var(--amber-a2);
+  color: var(--gray-12);
+  border-radius: var(--radius-3);
+  padding: var(--space-2) var(--space-3);
+  margin: 0 0 var(--space-3);
+  overflow-wrap: anywhere;
+}

@@ -783,6 +783,7 @@ export function summarizeRun(results) {
     baseline: results.baseline,
     candidate: results.candidate,
     ...(results.sweep ? { sweep: results.sweep } : {}),
+    render: env.render ?? null,
     validity: {
       valid: verdicts.filter((v) => v === "valid").length,
       warning: verdicts.filter((v) => v === "warning").length,

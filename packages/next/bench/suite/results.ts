@@ -376,6 +376,17 @@ function log(): void {
 
 // ------------------------------------------------------------ compare
 
+/** A scene key's title from any run that measured it. */
+function titleOf(key: string): string {
+  for (const s of summaries) {
+    const c = s.scenes.find((x) => cellKey(x) === key);
+    if (c) {
+      return cellTitle(c);
+    }
+  }
+  return key;
+}
+
 function compare(): void {
   main.replaceChildren();
   if (summaries.length < 2) {
@@ -386,13 +397,20 @@ function compare(): void {
     .reverse()
     .map(
       (s) =>
-        [s.name, `${when(s)} · ${short(s)}${s.note ? ` · ${s.note}` : ""}`] as [
-          string,
-          string,
-        ],
+        [
+          s.name,
+          `${when(s)} · ${short(s)}${s.note ? ` · ${s.note}` : ""}${(s as { sweep?: unknown }).sweep ? " (sweep)" : ""}`,
+        ] as [string, string],
     );
-  let a = store.get("bench.compareA", names[1]![0]);
-  let b = store.get("bench.compareB", names[0]![0]);
+  // Defaults: the two latest ordinary runs (sweeps vary the configurations).
+  const plain = [...summaries]
+    .reverse()
+    .filter((s) => !(s as { sweep?: unknown }).sweep);
+  const exists = (n: string) => names.some((x) => x[0] === n);
+  let a = store.get("bench.compareA", (plain[1] ?? summaries.at(-2)!).name);
+  let b = store.get("bench.compareB", (plain[0] ?? summaries.at(-1)!).name);
+  a = exists(a) ? a : names[1]![0];
+  b = exists(b) ? b : names[0]![0];
   let config = store.get("bench.compareConfig", "2.0");
   const controls = document.createElement("div");
   controls.className = "controls";
@@ -403,13 +421,37 @@ function compare(): void {
     HEADLINE,
     () => draw(),
   );
-  const configs = [...new Set(summaries.flatMap((s) => s.configs))];
+  // Configurations both runs have (falling back to either run's).
+  const configSelect = document.createElement("select");
+  const fillConfigs = () => {
+    const sa = summaries.find((s) => s.name === a);
+    const sb = summaries.find((s) => s.name === b);
+    const both = (sa?.configs ?? []).filter((c) => sb?.configs.includes(c));
+    const list = both.length
+      ? both
+      : [...new Set([...(sa?.configs ?? []), ...(sb?.configs ?? [])])];
+    configSelect.replaceChildren(...list.map((c) => new Option(c, c)));
+    if (!list.includes(config)) {
+      config =
+        sb?.candidate && list.includes(sb.candidate)
+          ? sb.candidate
+          : (list.at(-1) ?? config);
+    }
+    configSelect.value = config;
+  };
+  fillConfigs();
+  configSelect.addEventListener("change", () => {
+    config = configSelect.value;
+    store.set("bench.compareConfig", config);
+    draw();
+  });
   controls.append(
     label(
       "Baseline run",
       select(names, a, (v) => {
         a = v;
         store.set("bench.compareA", v);
+        fillConfigs();
         draw();
       }),
     ),
@@ -418,21 +460,11 @@ function compare(): void {
       select(names, b, (v) => {
         b = v;
         store.set("bench.compareB", v);
+        fillConfigs();
         draw();
       }),
     ),
-    label(
-      "Configuration",
-      select(
-        configs.map((c) => [c, c]),
-        config,
-        (v) => {
-          config = v;
-          store.set("bench.compareConfig", v);
-          draw();
-        },
-      ),
-    ),
+    label("Configuration", configSelect),
     metricChips.el,
   );
   main.append(controls, out);
@@ -443,11 +475,29 @@ function compare(): void {
       out.innerHTML = "";
       return;
     }
-    let html = `<p class="lede">${escape(config)} in the candidate run relative to the baseline run, per scene: the commit-to-commit view. Hardware: ${escape(sa.hardware)}${sa.hardware !== sb.hardware ? ` vs ${escape(sb.hardware)} (different machines: compare with care)` : ""}.</p>`;
+    let html = `<p class="lede">${escape(config)} in the candidate run relative to the baseline run, per scene. Hardware: ${escape(sa.hardware)}${sa.hardware !== sb.hardware ? ` vs ${escape(sb.hardware)}` : ""}.</p>`;
+    // Different machines or render settings make the comparison unequal.
+    const ra = JSON.stringify((sa as { render?: unknown }).render ?? null);
+    const rb = JSON.stringify((sb as { render?: unknown }).render ?? null);
+    const cautions = [
+      ...(sa.hardware !== sb.hardware
+        ? ["the runs are from different machines"]
+        : []),
+      ...(ra !== rb
+        ? [
+            `the runs used different render settings (${ra === "null" ? "not recorded" : escape(ra)} vs ${rb === "null" ? "not recorded" : escape(rb)}); differences may come from the settings, not the code`,
+          ]
+        : []),
+    ];
+    if (cautions.length) {
+      html += `<div class="caution" role="note"><b>Compare with care:</b> ${cautions.join("; ")}.</div>`;
+    }
     const current = config;
     for (const key of metricChips.selected()) {
       const [, name] = metricInfo(key);
-      const sceneIds = [...new Set(sb.scenes.map((c) => cellKey(c)))];
+      const sceneIds = [
+        ...new Set([...sa.scenes, ...sb.scenes].map((c) => cellKey(c))),
+      ];
       const rows = sceneIds.map((id) => {
         const ca = sa.scenes.find(
           (c) => cellKey(c) === id && c.config === current,
@@ -463,7 +513,7 @@ function compare(): void {
               )
             : undefined;
         return {
-          label: cb ? cellTitle(cb) : ca ? cellTitle(ca) : id,
+          label: cb ? cellTitle(cb) : ca ? cellTitle(ca) : titleOf(id),
           ratio: r?.value !== undefined ? r : undefined,
           note: !ca
             ? "not in the baseline run"
