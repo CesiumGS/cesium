@@ -285,11 +285,37 @@ export async function loadTilesetJson(
   parent: Tile | undefined,
   tree: TileTree,
 ): Promise<{ root: Tile; geometricError: number; json: TileJson }> {
-  const response = await fetch(url, headers ? { headers } : undefined);
+  const json = await fetchTilesetJson(url, headers);
+  return { ...treeFromJson(json, url, parent, tree), json };
+}
+
+/** A tileset JSON, fetched and parsed. */
+export async function fetchTilesetJson(
+  url: string,
+  headers: Record<string, string> | undefined,
+  signal?: AbortSignal,
+): Promise<TileJson> {
+  const response = await fetch(url, {
+    ...(headers ? { headers } : {}),
+    ...(signal ? { signal } : {}),
+  });
   if (!response.ok) {
     throw new Error(`${url}: ${response.status}`);
   }
-  const json: TileJson = await response.json();
+  return response.json();
+}
+
+/**
+ * The tile tree of a parsed tileset JSON, under `parent` (an external
+ * tileset) or as a root. Costs milliseconds for large files, so streaming
+ * builds them within a per-frame budget.
+ */
+export function treeFromJson(
+  json: TileJson,
+  url: string,
+  parent: Tile | undefined,
+  tree: TileTree,
+): { root: Tile; geometricError: number } {
   const up = json.asset?.gltfUpAxis;
   if (up && up.toUpperCase() !== "Y") {
     tree.warnings.add(`gltfUpAxis ${up} not supported (treated as Y)`);
@@ -310,5 +336,5 @@ export async function loadTilesetJson(
       "tileset has no top-level geometricError: the root is never skipped (as in 1.x)",
     );
   }
-  return { root, geometricError: json.geometricError ?? Number.NaN, json };
+  return { root, geometricError: json.geometricError ?? Number.NaN };
 }

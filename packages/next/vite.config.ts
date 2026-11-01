@@ -86,6 +86,7 @@ export default defineConfig({
         alloc: "bench/alloc.html",
         slang: "spikes/slang.html",
         baseline: "bench/baseline.html",
+        hitch: "bench/hitch.html",
       },
     },
   },

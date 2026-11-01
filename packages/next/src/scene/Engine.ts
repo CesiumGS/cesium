@@ -580,8 +580,14 @@ export class Engine {
   private budgetFilled = false;
   private readonly frameIntervals = new Float64Array(31);
   private frameIntervalCount = 0;
-  /** @internal What is left of this frame's upload budget. */
-  readonly uploadBudget = { bytes: 0, uploads: 0 };
+  /**
+   * @internal What is left of this frame's budget: upload bytes, and main-
+   * thread time for building external tilesets' tile trees (at least one
+   * of each happens per frame).
+   */
+  readonly uploadBudget = { bytes: 0, uploads: 0, ms: 0, trees: 0 };
+  /** Main-thread time per frame for building tile trees, all tilesets. */
+  treeBuildMsPerFrame = 4;
   private tilesetRotation = 0;
 
   /**
@@ -593,6 +599,8 @@ export class Engine {
     this.adaptUploadBudget(performance.now());
     this.uploadBudget.bytes = this.uploadBytesPerFrame;
     this.uploadBudget.uploads = 0;
+    this.uploadBudget.ms = this.treeBuildMsPerFrame;
+    this.uploadBudget.trees = 0;
     const n = this.tilesets.length;
     const start = n > 0 ? this.tilesetRotation++ % n : 0;
     for (let k = 0; k < n; k++) {

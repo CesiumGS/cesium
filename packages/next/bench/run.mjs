@@ -72,6 +72,8 @@ const suites = {
   ],
   slang: ["/spikes/slang.html?bench", "runSlang"],
   baseline: ["/bench/baseline.html?bench", "runBaseline"],
+  // Content in and out of a live world (needs VITE_ION_TOKEN).
+  hitch: ["/bench/hitch.html?bench", "runHitch"],
   // Public Specs tilesets; ION_ASSET=<id> (with VITE_ION_TOKEN in .env.local)
   // runs a private ion asset instead, without the id entering the repo.
   lod: [

@@ -1,0 +1,138 @@
+{
+  "date": "2026-11-01T01:59:53.272Z",
+  "environment": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0",
+    "adapter": {
+      "vendor": "nvidia",
+      "architecture": "lovelace",
+      "description": "NVIDIA RTX 3000 Ada Generation Laptop GPU"
+    },
+    "timestampQuery": true
+  },
+  "errors": [],
+  "results": {
+    "hitch": [
+      {
+        "step": "add terrain + imagery",
+        "ms": 6444.600000023842,
+        "frames": 383,
+        "over34": 1,
+        "worst": 99.70000000000005,
+        "p99": 16.800000000000182,
+        "longFrames": 1,
+        "worstBlocking": 0,
+        "culprit": ""
+      },
+      {
+        "step": "add OSM Buildings",
+        "ms": 3641.399999976158,
+        "frames": 218,
+        "over34": 0,
+        "worst": 17.300000000000182,
+        "p99": 16.900000000000546,
+        "longFrames": 0,
+        "worstBlocking": 0,
+        "culprit": ""
+      },
+      {
+        "step": "jump (OSM + terrain)",
+        "ms": 2481,
+        "frames": 149,
+        "over34": 0,
+        "worst": 16.899999999999636,
+        "p99": 16.80000000000109,
+        "longFrames": 0,
+        "worstBlocking": 0,
+        "culprit": ""
+      },
+      {
+        "step": "jump (OSM + terrain)",
+        "ms": 1981.5,
+        "frames": 119,
+        "over34": 0,
+        "worst": 17.100000000000364,
+        "p99": 16.80000000000109,
+        "longFrames": 0,
+        "worstBlocking": 0,
+        "culprit": ""
+      },
+      {
+        "step": "add Google 3D Tiles",
+        "ms": 2640.9000000953674,
+        "frames": 159,
+        "over34": 0,
+        "worst": 19.100000000000364,
+        "p99": 16.899999999999636,
+        "longFrames": 0,
+        "worstBlocking": 0,
+        "culprit": ""
+      },
+      {
+        "step": "jump (Google)",
+        "ms": 1349,
+        "frames": 81,
+        "over34": 0,
+        "worst": 17.100000000002183,
+        "p99": 17.100000000002183,
+        "longFrames": 0,
+        "worstBlocking": 0,
+        "culprit": ""
+      },
+      {
+        "step": "jump (Google)",
+        "ms": 1348.8000000715256,
+        "frames": 80,
+        "over34": 0,
+        "worst": 16.900000000001455,
+        "p99": 16.900000000001455,
+        "longFrames": 0,
+        "worstBlocking": 0,
+        "culprit": ""
+      },
+      {
+        "step": "show OSM over Google",
+        "ms": 717.6000000238419,
+        "frames": 44,
+        "over34": 0,
+        "worst": 16.900000000001455,
+        "p99": 16.900000000001455,
+        "longFrames": 0,
+        "worstBlocking": 0,
+        "culprit": ""
+      },
+      {
+        "step": "jump (Google + OSM)",
+        "ms": 1774.9000000953674,
+        "frames": 106,
+        "over34": 0,
+        "worst": 17,
+        "p99": 16.900000000001455,
+        "longFrames": 0,
+        "worstBlocking": 0,
+        "culprit": ""
+      },
+      {
+        "step": "remove Google",
+        "ms": 1563.7000000476837,
+        "frames": 94,
+        "over34": 0,
+        "worst": 17,
+        "p99": 17,
+        "longFrames": 0,
+        "worstBlocking": 0,
+        "culprit": ""
+      },
+      {
+        "step": "remove OSM",
+        "ms": 524.5,
+        "frames": 32,
+        "over34": 0,
+        "worst": 16.80000000000291,
+        "p99": 16.80000000000291,
+        "longFrames": 0,
+        "worstBlocking": 0,
+        "culprit": ""
+      }
+    ]
+  }
+}

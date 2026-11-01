@@ -70,7 +70,8 @@ export class GlobeImagery {
   private readonly jobs = new Map<Tile, Job>();
   private readonly sources = new Map<string, Source>();
   private readonly applied = new WeakMap<ModelInstance, number>();
-  private readonly pipelines: {
+  /** Compiled asynchronously: a synchronous compile stalls frames. */
+  private pipelines?: {
     fill: GPUComputePipeline;
     composite: GPUComputePipeline;
     downsample: GPUComputePipeline;
@@ -146,16 +147,18 @@ export class GlobeImagery {
       bindGroupLayouts: [this.layout],
     });
     const pipeline = (entryPoint: string) =>
-      device.createComputePipeline({
+      device.createComputePipelineAsync({
         label: `globe.imagery.${entryPoint}`,
         layout: pipelineLayout,
         compute: { module, entryPoint },
       });
-    this.pipelines = {
-      fill: pipeline("fill"),
-      composite: pipeline("composite"),
-      downsample: pipeline("downsample"),
-    };
+    void Promise.all([
+      pipeline("fill"),
+      pipeline("composite"),
+      pipeline("downsample"),
+    ]).then(([fill, composite, downsample]) => {
+      this.pipelines = { fill, composite, downsample };
+    });
     this.params = device.createBuffer({
       label: "globe.imagery.params",
       size: PARAMS_STRIDE * PASSES_PER_FRAME,
@@ -183,7 +186,7 @@ export class GlobeImagery {
 
   /** Loading or compositing: the terrain tileset stays active. */
   get busy(): boolean {
-    return this.loading > 0 || this.jobs.size > 0;
+    return this.loading > 0 || this.jobs.size > 0 || !this.pipelines;
   }
 
   /**
@@ -382,6 +385,10 @@ export class GlobeImagery {
 
   /** Composites ready jobs, nearest first, within the per-frame pass budget. */
   private composite(order: [Tile, number][], frame: number): void {
+    const pipelines = this.pipelines;
+    if (!pipelines) {
+      return; // still compiling: tiles draw ancestors' slices or none
+    }
     const device = this.ctx.device;
     const mips = this.texture.mipLevelCount;
     let passes = 0;
@@ -433,7 +440,7 @@ export class GlobeImagery {
       const fillOffset = block(fill);
       const fillGroup = this.bindGroup(this.placeholder, destination);
       dispatches.push({
-        pipeline: this.pipelines.fill,
+        pipeline: pipelines.fill,
         group: fillGroup,
         offset: fillOffset,
       });
@@ -443,7 +450,7 @@ export class GlobeImagery {
         const offset = block(this.mapping(r, x, y, level));
         const group = this.bindGroup(source.texture!.createView(), destination);
         dispatches.push({
-          pipeline: this.pipelines.composite,
+          pipeline: pipelines.composite,
           group: group,
           offset: offset,
         });
@@ -457,7 +464,7 @@ export class GlobeImagery {
           this.sliceView(slice, level),
         );
         dispatches.push({
-          pipeline: this.pipelines.downsample,
+          pipeline: pipelines.downsample,
           group: group,
           offset: offset,
         });

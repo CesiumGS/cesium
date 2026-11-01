@@ -16,7 +16,14 @@ import {
   type TileSelection,
 } from "./Legacy1x.ts";
 import { BudgetedSelection, type BudgetedOptions } from "./Budgeted.ts";
-import { loadTilesetJson, type Tile, type TileTree } from "./Tile.ts";
+import {
+  fetchTilesetJson,
+  loadTilesetJson,
+  treeFromJson,
+  type Tile,
+  type TileJson,
+  type TileTree,
+} from "./Tile.ts";
 import { volumeObb } from "./volumes.ts";
 import type { RequestSample } from "./RequestScheduler.ts";
 import type { GlobeImagery } from "../globe/GlobeImagery.ts";
@@ -313,7 +320,40 @@ export class Tileset3D implements TileTree {
 
   /** True when nothing is loading or waiting to upload. */
   get idle(): boolean {
-    return this.inFlight === 0 && this.ready.length === 0;
+    return (
+      this.inFlight === 0 &&
+      this.ready.length === 0 &&
+      this.externals.length === 0
+    );
+  }
+
+  /** External tileset JSON waiting for its tile tree to be built. */
+  private readonly externals: Array<{ tile: Tile; json: TileJson }> = [];
+
+  /** Builds waiting external tilesets' trees within the frame's budget. */
+  private buildExternals(): void {
+    const budget = this.engine.uploadBudget;
+    while (this.externals.length > 0) {
+      if (budget.trees > 0 && budget.ms <= 0) {
+        break;
+      }
+      const { tile, json } = this.externals.shift()!;
+      const start = performance.now();
+      try {
+        const { root } = treeFromJson(json, tile.contentUrl!, tile, this);
+        tile.children.push(root);
+        tile.state = "ready";
+        this.stats.tiles += countTiles(root);
+      } catch (error) {
+        tile.state = "failed";
+        this.warnings.add(
+          `tileset JSON failed: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+      budget.ms -= performance.now() - start;
+      budget.trees++;
+      this.lastChange = this.frame;
+    }
   }
 
   /**
@@ -480,6 +520,7 @@ export class Tileset3D implements TileTree {
         this.stats.protocol = window.protocol;
       }
     }
+    this.buildExternals();
     this.upload();
     if (this.imagery) {
       // Imagery for the terrain tiles drawn in any view, nearest first.
@@ -560,18 +601,17 @@ export class Tileset3D implements TileTree {
   ): Promise<RequestSample | undefined> {
     try {
       if (tile.external) {
-        const { root } = await loadTilesetJson(
+        // Fetched and parsed here; its tile tree is built in update(),
+        // within the frame's budget (several large files finishing at once
+        // stalled frames).
+        const json = await fetchTilesetJson(
           tile.contentUrl!,
           this.headers,
-          tile,
-          this,
+          signal,
         );
-        if (this.destroyed) {
-          return;
+        if (!this.destroyed) {
+          this.externals.push({ tile, json });
         }
-        tile.children.push(root);
-        tile.state = "ready";
-        this.stats.tiles += countTiles(root);
         return undefined;
       }
       const asset = this.source

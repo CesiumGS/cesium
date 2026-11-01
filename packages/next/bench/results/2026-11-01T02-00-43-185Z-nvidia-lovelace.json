@@ -1,0 +1,549 @@
+{
+  "date": "2026-11-01T02:00:43.186Z",
+  "environment": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0",
+    "adapter": {
+      "vendor": "nvidia",
+      "architecture": "lovelace",
+      "description": "NVIDIA RTX 3000 Ada Generation Laptop GPU"
+    },
+    "timestampQuery": true
+  },
+  "errors": [],
+  "results": {
+    "selection": [
+      {
+        "tileset": "Tileset",
+        "view": "close oblique",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 5,
+        "next": 5,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "Tileset",
+        "view": "far top-down",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 5,
+        "next": 5,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "Tileset",
+        "view": "street level",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 4,
+        "next": 4,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "Tileset",
+        "view": "viewer default",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 5,
+        "next": 5,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetOfTilesets",
+        "view": "close oblique",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 5,
+        "next": 5,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetOfTilesets",
+        "view": "far top-down",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 5,
+        "next": 5,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetOfTilesets",
+        "view": "street level",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 4,
+        "next": 4,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetOfTilesets",
+        "view": "viewer default",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 5,
+        "next": 5,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetRefinementMix",
+        "view": "close oblique",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 6,
+        "next": 6,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetRefinementMix",
+        "view": "far top-down",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 6,
+        "next": 6,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetRefinementMix",
+        "view": "street level",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 5,
+        "next": 5,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetRefinementMix",
+        "view": "viewer default",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 6,
+        "next": 6,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetReplacement1",
+        "view": "close oblique",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 4,
+        "next": 4,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetReplacement1",
+        "view": "far top-down",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 4,
+        "next": 4,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetReplacement1",
+        "view": "street level",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 3,
+        "next": 3,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetReplacement1",
+        "view": "viewer default",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 4,
+        "next": 4,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetReplacement2",
+        "view": "close oblique",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 1,
+        "next": 1,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetReplacement2",
+        "view": "far top-down",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 1,
+        "next": 1,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetReplacement2",
+        "view": "street level",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 2,
+        "next": 2,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetReplacement2",
+        "view": "viewer default",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 1,
+        "next": 1,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetReplacement3",
+        "view": "close oblique",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 4,
+        "next": 4,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetReplacement3",
+        "view": "far top-down",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 4,
+        "next": 4,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetReplacement3",
+        "view": "street level",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 3,
+        "next": 3,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetReplacement3",
+        "view": "viewer default",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 4,
+        "next": 4,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetWithViewerRequestVolume",
+        "view": "close oblique",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 5,
+        "next": 5,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetWithViewerRequestVolume",
+        "view": "far top-down",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 5,
+        "next": 5,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetWithViewerRequestVolume",
+        "view": "street level",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 5,
+        "next": 5,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetWithViewerRequestVolume",
+        "view": "viewer default",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 5,
+        "next": 5,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetWithTransforms",
+        "view": "close oblique",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 2,
+        "next": 2,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetWithTransforms",
+        "view": "far top-down",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 2,
+        "next": 2,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetWithTransforms",
+        "view": "street level",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 2,
+        "next": 2,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetWithTransforms",
+        "view": "viewer default",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 2,
+        "next": 2,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetUniform",
+        "view": "close oblique",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 16,
+        "next": 16,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetUniform",
+        "view": "far top-down",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 17,
+        "next": 17,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetUniform",
+        "view": "street level",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 10,
+        "next": 10,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "tileset": "TilesetUniform",
+        "view": "viewer default",
+        "status": "ok (2.0 SSE 16.0)",
+        "legacy": 17,
+        "next": 17,
+        "jaccard": 1,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      }
+    ],
+    "tileset": [
+      {
+        "mode": "unlit",
+        "source": "BatchedWithBatchTable (b3dm, RTC_CENTER, JSON batch table)",
+        "status": "ok",
+        "contents": 1,
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.004542475832233412,
+        "flipGamma": 0.004469500639117156,
+        "flipGammaP95": 5.54209718685284e-15,
+        "picks": "35/35 agree on \"id\" (1 features hit)",
+        "properties": "id, Longitude, Latitude, Height, info, rooms",
+        "warnings": ""
+      },
+      {
+        "mode": "direct",
+        "source": "BatchedWithBatchTable (b3dm, RTC_CENTER, JSON batch table)",
+        "status": "ok",
+        "contents": 1,
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.0017010399511740834,
+        "flipGamma": 0.0012241508132124518,
+        "flipGammaP95": 0,
+        "picks": "35/35 agree on \"id\" (1 features hit)",
+        "properties": "id, Longitude, Latitude, Height, info, rooms",
+        "warnings": ""
+      },
+      {
+        "mode": "unlit",
+        "source": "BatchedWithBatchTableBinary (b3dm, binary batch table)",
+        "status": "ok",
+        "contents": 1,
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.004542475832233412,
+        "flipGamma": 0.004469500639117156,
+        "flipGammaP95": 5.54209718685284e-15,
+        "picks": "35/35 agree on \"id\" (1 features hit)",
+        "properties": "id, Longitude, Latitude, Height, cartographic, code",
+        "warnings": ""
+      },
+      {
+        "mode": "direct",
+        "source": "BatchedWithBatchTableBinary (b3dm, binary batch table)",
+        "status": "ok",
+        "contents": 1,
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.0017010399511740834,
+        "flipGamma": 0.0012241508132124518,
+        "flipGammaP95": 0,
+        "picks": "35/35 agree on \"id\" (1 features hit)",
+        "properties": "id, Longitude, Latitude, Height, cartographic, code",
+        "warnings": ""
+      },
+      {
+        "mode": "unlit",
+        "source": "BatchedWithTransformBox (tile transform)",
+        "status": "ok",
+        "contents": 1,
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.004551820703016198,
+        "flipGamma": 0.004481287512803909,
+        "flipGammaP95": 0,
+        "picks": "35/35 agree on \"id\" (2 features hit)",
+        "properties": "id, Longitude, Latitude, Height",
+        "warnings": ""
+      },
+      {
+        "mode": "direct",
+        "source": "BatchedWithTransformBox (tile transform)",
+        "status": "ok",
+        "contents": 1,
+        "draws": 1,
+        "batches": 1,
+        "flipSrgb": 0.0016922286325190326,
+        "flipGamma": 0.001165664541661233,
+        "flipGammaP95": 0,
+        "picks": "35/35 agree on \"id\" (2 features hit)",
+        "properties": "id, Longitude, Latitude, Height",
+        "warnings": ""
+      }
+    ],
+    "globe": [
+      {
+        "view": "Rainier oblique",
+        "status": "ok (fog)",
+        "legacy": 37,
+        "next": 37,
+        "jaccard": 1,
+        "legacyMs": 2165.7000000476837,
+        "nextMs": 1540,
+        "heightMax": 2.808292265399359e-9,
+        "heightMean": 5.302999740291134e-10,
+        "heightCount": 81,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "view": "Grand Canyon top-down",
+        "status": "ok (fog)",
+        "legacy": 2,
+        "next": 2,
+        "jaccard": 1,
+        "legacyMs": 536.1000000238419,
+        "nextMs": 449.1999999284744,
+        "heightMax": 9.458744898438454e-10,
+        "heightMean": 6.434394306802179e-11,
+        "heightCount": 81,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "view": "Matterhorn near horizon",
+        "status": "ok (fog)",
+        "legacy": 37,
+        "next": 37,
+        "jaccard": 1,
+        "legacyMs": 1716.6000000238419,
+        "nextMs": 1443.3999999761581,
+        "heightMax": 3.138211468467489e-9,
+        "heightMean": 2.0472052037129523e-10,
+        "heightCount": 81,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "view": "Everest regional",
+        "status": "ok (fog)",
+        "legacy": 16,
+        "next": 16,
+        "jaccard": 1,
+        "legacyMs": 878.5,
+        "nextMs": 1007.3999999761581,
+        "heightMax": 3.788045432884246e-9,
+        "heightMean": 5.905539980215699e-10,
+        "heightCount": 81,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "view": "Front Range 300 km",
+        "status": "ok (fog)",
+        "legacy": 6,
+        "next": 6,
+        "jaccard": 1,
+        "legacyMs": 509.2000000476837,
+        "nextMs": 449.2000000476837,
+        "heightMax": 2.1736923372372985e-10,
+        "heightMean": 1.5590535721132232e-11,
+        "heightCount": 81,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "view": "San Francisco coast",
+        "status": "ok (fog)",
+        "legacy": 27,
+        "next": 27,
+        "jaccard": 1,
+        "legacyMs": 1618.5,
+        "nextMs": 1399,
+        "heightMax": 3.0406965834117727e-10,
+        "heightMean": 1.798370506010003e-11,
+        "heightCount": 81,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      }
+    ]
+  }
+}
