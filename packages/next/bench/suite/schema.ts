@@ -89,6 +89,8 @@ export interface SceneLayer {
 }
 
 export interface Scene {
+  /** Image checks: points of the camera path (0..1) to capture; default [0]. */
+  checks?: number[];
   /** Render settings over the catalog's (e.g. 1.x HDR off for unlit content). */
   render?: Partial<RenderSettings>;
   id: string;

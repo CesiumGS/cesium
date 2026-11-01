@@ -510,6 +510,11 @@ export class LegacyAdapter implements Adapter {
       });
     if (viewer.scene.globe) {
       viewer.scene.globe.showGroundAtmosphere = false;
+      // Without imagery, 2.0 draws the globe gray (0.62, 0.62, 0.6); 1.x's
+      // default base color is blue. Match, so images compare the content.
+      if (!scene.imagery) {
+        viewer.scene.globe.baseColor = new Cesium.Color(0.62, 0.62, 0.6, 1);
+      }
       if (typeof scene.globe === "object") {
         viewer.scene.globe.terrainProvider =
           await Cesium.CesiumTerrainProvider.fromUrl(
@@ -708,6 +713,51 @@ async function settle(
     }
   }
   return undefined;
+}
+
+/**
+ * An image check (plan §16.10): the scene at one point of its camera path,
+ * settled, then a few more frames so nothing is mid-transition, captured
+ * through the CLI's `captureMoment`. Deterministic by construction: fixed
+ * size, render settings and sun, no timing in the image.
+ */
+export async function runCheck(
+  spec: RunSpec,
+  progress: number,
+): Promise<{ status: string; message?: string; settleMs?: number }> {
+  if (spec.unsupported) {
+    return { status: "unsupported", message: spec.unsupported };
+  }
+  const container = document.querySelector<HTMLElement>("#view")!;
+  container.replaceChildren();
+  container.style.width = `${spec.scene.width ?? 1280}px`;
+  container.style.height = `${spec.scene.height ?? 720}px`;
+  const adapter: Adapter =
+    spec.config.engine === "1.x" ? new LegacyAdapter() : new NextAdapter();
+  try {
+    const pose = await cameraScript(spec);
+    const start = performance.now();
+    await adapter.setup(container, spec);
+    adapter.setSun(sunDirection(spec, pose(0)));
+    adapter.setCamera(pose(progress));
+    const settleMs = await settle(
+      adapter,
+      start,
+      spec.scenario.settleTimeoutSeconds * 1000,
+    );
+    for (let i = 0; i < 5; i++) {
+      await animationFrame();
+      adapter.frame();
+    }
+    await captureMoment({ ...spec, capture: true }, "check");
+    return settleMs === undefined
+      ? { status: "timeout", message: "did not settle" }
+      : { status: "ok", settleMs };
+  } catch (e) {
+    return { status: "error", message: String(e) };
+  } finally {
+    adapter.destroy();
+  }
 }
 
 /** Runs one scene × scenario × configuration and measures it. */
@@ -995,7 +1045,7 @@ export async function describeBrowser(): Promise<Record<string, unknown>> {
   return out;
 }
 
-Object.assign(globalThis, { runScene, describeBrowser });
+Object.assign(globalThis, { runScene, runCheck, describeBrowser });
 // The suite page's own controls (the explorer imports this module too).
 if (
   document.querySelector("#run") &&

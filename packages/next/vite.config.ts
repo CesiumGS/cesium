@@ -1,7 +1,9 @@
+import { execSync } from "node:child_process";
 import {
   createReadStream,
   existsSync,
   mkdirSync,
+  readFileSync,
   readdirSync,
   statSync,
   writeFileSync,
@@ -80,6 +82,78 @@ function serveBenchResults(prefix: string, root: string): Plugin {
         const summaries = names.filter((n) => n.endsWith(".summary.json"));
         res.setHeader("Content-Type", "application/json");
         res.end(JSON.stringify({ directory: root, runs, summaries }));
+      });
+      // Image checks (bench/suite/images.mjs): runs, and review decisions
+      // from Dyno's Images tab (approve copies the image into baselines).
+      const imagesDir = join(root, "images");
+      server.middlewares.use(`${prefix}/images/index.json`, (_req, res) => {
+        const names = existsSync(imagesDir)
+          ? readdirSync(imagesDir).filter((n) => /Z\.json$/.test(n))
+          : [];
+        res.setHeader("Content-Type", "application/json");
+        res.end(JSON.stringify({ runs: names.sort().reverse() }));
+      });
+      server.middlewares.use(`${prefix}/images/review`, (req, res, next) => {
+        if (req.method !== "POST") {
+          next();
+          return;
+        }
+        let body = "";
+        req.on("data", (chunk: Buffer) => {
+          body += chunk;
+        });
+        req.on("end", () => {
+          void (async () => {
+            try {
+              const { run, key, decision, note } = JSON.parse(body) as Record<
+                string,
+                string
+              >;
+              if (!/^[\w-]+Z\.json$/.test(run ?? "")) {
+                throw new Error("bad run");
+              }
+              const file = join(imagesDir, run!);
+              const data = JSON.parse(readFileSync(file, "utf8"));
+              const row = data.checks.find(
+                (r: { key: string }) => r.key === key,
+              );
+              if (!row) {
+                throw new Error("no such check");
+              }
+              const by = (() => {
+                try {
+                  return execSync("git config user.name", {
+                    encoding: "utf8",
+                  }).trim();
+                } catch {
+                  return "dyno";
+                }
+              })();
+              const at = new Date().toISOString();
+              if (decision === "approve") {
+                const { approve } = await import("./bench/suite/images.mjs");
+                approve(
+                  join(root, "baselines", data.rendererClass),
+                  key!,
+                  join(imagesDir, run!.replace(/\.json$/, ""), row.image),
+                  {
+                    approvedBy: by,
+                    commit: data.commit,
+                    reason: note || "approved in Dyno",
+                  },
+                );
+                row.approved = true;
+              }
+              row.review = { decision, note: note ?? "", by, at };
+              writeFileSync(file, JSON.stringify(data, null, 1));
+              res.statusCode = 204;
+              res.end();
+            } catch (e) {
+              res.statusCode = 400;
+              res.end(String(e));
+            }
+          })();
+        });
       });
       // Alert triage (status, owner, note per alert), saved from Dyno.
       server.middlewares.use(`${prefix}/triage.json`, (req, res, next) => {

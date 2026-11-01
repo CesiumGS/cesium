@@ -2807,6 +2807,9 @@ manifest schema.
       and off for scenes of mostly unlit content (imagery, photogrammetry,
       Google tiles). Mixed scenes (lit buildings on imagery) can't match
       exactly in 1.x;
+    - the globe's color without imagery: 2.0's gray (0.62, 0.62, 0.6) in
+      both (1.x's default is blue; it dominated image parity, FLIP 0.83 on
+      the BIM scene);
     - a fixed sun (elevation 40°, azimuth 150° over the start of the camera
       path), a directional light in both engines; 1.x otherwise follows the
       wall clock, 2.0 had a placeholder.
@@ -3413,6 +3416,19 @@ CI job and tab.
 - _Phasing:_ v2 (with M5) for the checks, baselines, command, Images tab
   and CI on a software rasterizer; v3 for real-GPU nightly baselines
   across runner machines.
+- _Built (r33):_ `images.mjs` and `cli.mjs images` (checks at
+  `scene.checks` points of the camera path, default the start; FLIP
+  against the approved baseline per renderer class, thresholds mean 0.01
+  and p95 0.05; `--parity` captures the pinned 1.x release too and scores
+  it against §4 L2; `--update` approves; `--software` runs on SwiftShader;
+  JSON, JUnit and Markdown output; exit 1 on changed or new images);
+  `runCheck` in the suite page; Dyno's Images tab (side by side, swipe,
+  flicker, FLIP heatmap, parity view; approve copies the image into the
+  baselines, reject records why). Streamed scenes repeat within FLIP
+  0.002–0.006 mean and 0.04 p95 run to run (selection settles slightly
+  differently); a fully refined check mode would make them exact. Next:
+  the CI job on SwiftShader with offline content, checks saved from the
+  explorer, parity pages as checks.
 
 ### Increment 6 (r31): M3 close-out
 

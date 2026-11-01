@@ -17,6 +17,10 @@
 //   node packages/next/bench/suite/cli.mjs alerts [--all] [--fail-on-new]
 //        (change points across runs, with their triage state from Dyno;
 //        --fail-on-new exits 1 when an untriaged regression exists)
+//   node packages/next/bench/suite/cli.mjs images [--scenes a,b] [--config 2.0]
+//        [--parity] [--update [--reason why]] [--software]
+//        (image checks against approved baselines per renderer class;
+//        exits 1 on changed or new images; --software uses SwiftShader)
 //   node packages/next/bench/suite/cli.mjs resummarize   (after the summary
 //        format changes: rewrites every run's .summary.json)
 //   node packages/next/bench/suite/cli.mjs compare <old.json> [new.json]
@@ -60,6 +64,7 @@ import { ensureRelease, releaseList, resolveVersion } from "./release.mjs";
 import { renderReport, summarizeRun } from "./report.mjs";
 import { compareTable, DEFAULT_PLAN, scorecard } from "./scorecard.mjs";
 import { ALERT_METRICS, detectAlerts } from "./changepoints.mjs";
+import { runImages } from "./images.mjs";
 import {
   conditions,
   cooldown,
@@ -168,6 +173,17 @@ if (command === "list") {
   }
   console.log(`${alerts.length} change points over ${summaries.length} runs; ${untriaged} untriaged regressions`);
   if (opts["fail-on-new"] && untriaged > 0) {
+    process.exit(1);
+  }
+} else if (command === "images") {
+  const failed = await runImages({
+    catalog,
+    opts,
+    root,
+    directory:
+      process.env.BENCH_RESULTS ?? join(homedir(), ".cesium-bench", "results"),
+  });
+  if (failed > 0) {
     process.exit(1);
   }
 } else if (command === "resummarize") {

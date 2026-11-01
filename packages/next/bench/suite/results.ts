@@ -3,6 +3,7 @@ import { CHART_CSS, CHART_SCRIPT, escape, forestPlot } from "./charts.mjs";
 import { ratio } from "./stats.mjs";
 import { mountAlerts } from "./alerts.ts";
 import { mountScenes } from "./scenes.ts";
+import { mountImages } from "./imagesView.ts";
 import {
   cellKey,
   cellTitle,
@@ -269,6 +270,23 @@ function scenes(): void {
   );
 }
 
+// ------------------------------------------------------------ images
+
+async function images(): Promise<void> {
+  main.replaceChildren();
+  const root = document.createElement("div");
+  main.append(root);
+  await mountImages(root, {
+    openExplorer: (scene, t) => {
+      const url = new URL(location.href);
+      url.searchParams.set("scene", scene);
+      url.searchParams.set("t", String(t));
+      history.replaceState(null, "", url);
+      show("explore");
+    },
+  });
+}
+
 // ------------------------------------------------------------ run log
 
 function log(): void {
@@ -514,6 +532,7 @@ const views: Record<string, () => void | Promise<void>> = {
   workspace,
   alerts,
   scenes,
+  images,
   log,
   compare,
   report,
