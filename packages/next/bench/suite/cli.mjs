@@ -229,9 +229,23 @@ async function runOne(browser, base, spec, results) {
   const errors = [];
   page.on("pageerror", (e) => errors.push(String(e)));
   let requests = 0;
+  let preflights = 0;
+  const hosts = new Map();
   const sizes = [];
   const count = (request) => {
+    // CORS preflights (OPTIONS) are not content requests: counted apart.
+    if (request.method() === "OPTIONS") {
+      preflights++;
+      return;
+    }
+    // Content only: not the page's own origin (the engine's code, served
+    // module by module in development) nor data: and blob: URLs.
+    const url = new URL(request.url());
+    if (!url.protocol.startsWith("http") || url.origin === base) {
+      return;
+    }
     requests++;
+    hosts.set(url.hostname, (hosts.get(url.hostname) ?? 0) + 1);
     sizes.push(
       request
         .sizes()
@@ -267,7 +281,10 @@ async function runOne(browser, base, spec, results) {
     if (errors.length && metrics.status === "ok") {
       metrics.message = errors.slice(0, 3).join("; ");
     }
-    return { metrics: { ...metrics, requests, bytes } };
+    return {
+      metrics: { ...metrics, requests, bytes, preflights },
+      hosts: Object.fromEntries(hosts),
+    };
   } catch (error) {
     return {
       metrics: {

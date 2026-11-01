@@ -2678,10 +2678,11 @@ and field of view, recorded in either engine and replayed in both.
   commercial use at Bentley ("commercial-ok", redistributable data, or
   stream-only through Bentley's own account). Non-commercial and
   unreviewed licenses are excluded from both; only redistributable data is
-  mirrored. Before automated runs at scale, two uses are to be confirmed:
-  Cesium's sample assets through 1.x's default token, and Google
-  Photorealistic 3D Tiles under the Map Tiles API policies (held out of
-  automated runs until then).
+  mirrored. Cesium's sample assets (through 1.x's default token) and
+  Google Photorealistic 3D Tiles are cleared for internal Bentley
+  benchmarking; Cesium can adjust its own assets' terms as needed.
+  Publishing results is not cleared: results stay internal (outside the
+  repo) until it is.
 - **Synthetic datasets** come from deterministic generators (draw count,
   instances, materials, textures, feature counts, a seed), checksummed
   by generator version and parameters; nothing to download.

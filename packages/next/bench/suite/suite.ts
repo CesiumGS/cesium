@@ -168,7 +168,14 @@ class NextAdapter implements Adapter {
     const world = engine.createWorld({
       maxDraws: 1 << 16,
       maxMaterials: 1 << 13,
-      maxInstances: 1 << 20,
+      // Instance tables only as large as the scene's generators need.
+      maxInstances: spec.scene.layers.some(
+        (l) =>
+          spec.datasets.find((d) => d.id === l.dataset)?.source.kind ===
+          "generator",
+      )
+        ? 1 << 20
+        : 1 << 14,
       vertexBytes: Math.min(768 << 20, Math.floor(limit / 4) * 4),
       indexBytes: Math.min(384 << 20, Math.floor(limit / 4) * 4),
     });

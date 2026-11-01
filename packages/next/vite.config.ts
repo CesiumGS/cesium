@@ -1,4 +1,5 @@
-import { createReadStream, existsSync, statSync } from "node:fs";
+import { createReadStream, existsSync, readdirSync, statSync } from "node:fs";
+import { homedir } from "node:os";
 import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig, type Plugin } from "vitest/config";
@@ -54,6 +55,30 @@ function serveDirectory(prefix: string, root: string): Plugin {
   };
 }
 
+/**
+ * Benchmark suite results (outside the repo: they carry machine details),
+ * for the results page: `index.json` lists the runs, newest first.
+ */
+function serveBenchResults(prefix: string, root: string): Plugin {
+  return {
+    name: "serve-bench-results",
+    configureServer(server) {
+      server.middlewares.use(`${prefix}/index.json`, (_req, res) => {
+        const runs = existsSync(root)
+          ? readdirSync(root)
+              .filter((name) => name.endsWith(".json"))
+              .sort()
+              .reverse()
+          : [];
+        res.setHeader("Content-Type", "application/json");
+        res.end(JSON.stringify({ directory: root, runs }));
+      });
+    },
+  };
+}
+const benchResults =
+  process.env.BENCH_RESULTS ?? join(homedir(), ".cesium-bench", "results");
+
 const slangWasm = process.env.SLANG_WASM_DIR;
 // Sample models and tilesets checked into the 1.x repo, for parity tests.
 const specsData = fileURLToPath(new URL("../../Specs/Data", import.meta.url));
@@ -63,6 +88,8 @@ export default defineConfig({
   plugins: [
     serveDirectory("/cesium1x", cesium1x),
     serveDirectory("/specs-data", specsData),
+    serveBenchResults("/bench-results", benchResults),
+    serveDirectory("/bench-results", benchResults),
     ...(slangWasm ? [serveDirectory("/slang-wasm", slangWasm)] : []),
   ],
   build: {
@@ -90,6 +117,7 @@ export default defineConfig({
         hitch: "bench/hitch.html",
         instances: "bench/instances.html",
         suite: "bench/suite/suite.html",
+        results: "bench/suite/results.html",
       },
     },
   },
