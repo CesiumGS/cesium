@@ -12,23 +12,39 @@ import {
 } from "../data.ts";
 
 /**
- * The workspace's pure logic (no React): its sections, the points of a
- * panel (per configuration, or candidate over baseline), control bands
- * with run rules, annotations, budgets and the charts.mjs HTML of a panel.
+ * Trends' pure logic (no React): its sections, the points of a panel (per
+ * configuration, or candidate over baseline), control bands with run
+ * rules, annotations, budgets, and a panel's chart (charts.mjs HTML) with
+ * the words the view shows above it.
  */
 
-/** [id, title, metric keys] of each collapsible section. */
-export const SECTIONS: ReadonlyArray<readonly [string, string, string[]]> = [
-  [
-    "headline",
-    "Headline",
-    ["cpuP50", "settleMs", "frameP95", "bytes", "heapBytes"],
-  ],
-  ["loading", "Loading", ["firstContentMs", "settleMs", "resettleMs"]],
-  [
-    "rendering",
-    "Rendering",
-    [
+export interface SectionSpec {
+  id: string;
+  title: string;
+  /** Metric keys, one panel each (per scene when split). */
+  keys: string[];
+  /** What the section's panels show, for its Help popover. */
+  help: string;
+}
+
+/** The collapsible sections, in page order. */
+export const SECTIONS: readonly SectionSpec[] = [
+  {
+    id: "headline",
+    title: "Headline ratios",
+    keys: ["cpuP50", "settleMs", "frameP95", "bytes", "heapBytes"],
+    help: "The candidate divided by the baseline, per run: the geometric mean over scenes (or one scene), with its interval as a shaded area. Below 1× the candidate is faster or uses less. Red dotted lines are budgets.",
+  },
+  {
+    id: "loading",
+    title: "Loading",
+    keys: ["firstContentMs", "settleMs", "resettleMs"],
+    help: "How long each configuration takes to show the scene, to finish loading it, and to finish again after the camera moves. One line per configuration.",
+  },
+  {
+    id: "rendering",
+    title: "Rendering",
+    keys: [
       "cpuP50",
       "gpuP50",
       "frameP50",
@@ -38,15 +54,59 @@ export const SECTIONS: ReadonlyArray<readonly [string, string, string[]]> = [
       "over100",
       "longFrames",
     ],
-  ],
-  ["network", "Network and memory", ["requests", "bytes", "heapBytes"]],
-  ["conditions", "Conditions", CONDITION_METRICS.map((m) => m[0])],
+    help: "Frame times and hitches while the camera moves. One line per configuration.",
+  },
+  {
+    id: "network",
+    title: "Network and memory",
+    keys: ["requests", "bytes", "heapBytes"],
+    help: "What each configuration downloads and how much JavaScript memory it holds at the end.",
+  },
+  {
+    id: "conditions",
+    title: "Machine conditions",
+    keys: CONDITION_METRICS.map((m) => m[0]),
+    help: "The machine's state during each configuration's runs. These should match between engines; when they don't, a difference in the other sections may come from the machine rather than the engine.",
+  },
 ];
 
 /** [key, name, unit, scale] of every metric, conditions included. */
 export const INFO = new Map(
   [...METRICS, ...CONDITION_METRICS].map((m) => [m[0], m] as const),
 );
+
+/**
+ * Each metric's panel title in plain words, and what a change measures
+ * when "faster" or "slower" doesn't fit (`formatChange`'s noun).
+ */
+const PLAIN: Record<string, readonly [string, string?]> = {
+  firstContentMs: ["Time to first content"],
+  settleMs: ["Time to finish loading"],
+  resettleMs: ["Time to finish loading after the camera moves"],
+  frameP50: ["Frame time, median"],
+  frameP95: ["Frame time, 95th percentile"],
+  frameP999: ["Frame time, 99.9th percentile"],
+  frameStdDev: ["Frame time variation (standard deviation)"],
+  cpuP50: ["CPU time per frame, median"],
+  gpuP50: ["GPU time per frame, median"],
+  over33: ["Frames longer than two vsyncs", "slow frames"],
+  over100: ["Hitches longer than 100 ms", "hitches"],
+  longFrames: ["Long frames", "long frames"],
+  requests: ["Network requests", "requests"],
+  bytes: ["Data downloaded", "data"],
+  heapBytes: ["JavaScript heap at the end", "memory"],
+  gpuTemperatureStartC: ["GPU temperature at the start"],
+  gpuThermalFraction: ["Share of time the GPU slowed down for heat"],
+  gpuClockMeanMHz: ["GPU clock speed (follows load)"],
+  cpuPerformanceMean: ["CPU speed"],
+  backgroundCpuUtility: ["CPU use before the run"],
+};
+
+/** A metric's title in plain words. */
+export const titleOf = (key: string) =>
+  PLAIN[key]?.[0] ?? INFO.get(key)?.[1] ?? key;
+/** What a change in the metric measures ("data", "memory"), if not time. */
+export const nounOf = (key: string) => PLAIN[key]?.[1];
 
 const BUDGETS = catalog.budgets ?? [];
 /** Budgets that apply to a panel's metric, configuration and scene. */
@@ -65,7 +125,7 @@ const mean = (v: number[]) => v.reduce((a, b) => a + b, 0) / v.length;
 
 /** Every configuration the runs measured, without sweep variants. */
 export const configsOf = (summaries: Summary[]) =>
-  // Sweep variants ("2.0[param=value]") belong to the Sweeps view.
+  // Sweep variants ("2.0[param=value]") belong to Analysis (sweeps).
   [...new Set(summaries.flatMap((s) => s.configs))].filter(
     (c) => !c.includes("["),
   );
@@ -122,7 +182,7 @@ export const passes = (s: Summary, f: RunFilter) =>
 export const searchText = (s: Summary) =>
   `${s.note ?? ""} ${s.subject ?? ""} ${s.tags.join(" ")} ${s.commit} ${s.branch ?? ""}`.toLowerCase();
 
-type Point = [number, number, number];
+export type Point = [number, number, number];
 
 /** A metric's value (and interval) for one run, configuration, scene. */
 export function point(
@@ -266,7 +326,9 @@ export function control(points: Array<[number, number | null]>) {
     }
   }
   if (flags.length) {
-    reasons.push(`${flags.length} outside the control band`);
+    reasons.push(
+      `${flags.length} ${flags.length === 1 ? "run" : "runs"} outside the control band`,
+    );
   }
   let run = 0;
   let side = 0;
@@ -276,7 +338,7 @@ export function control(points: Array<[number, number | null]>) {
     side = s;
     if (run === 7) {
       flags.push(x);
-      reasons.push("7 runs in a row on one side of the mean");
+      reasons.push("7 runs in a row on one side of the average");
     }
   }
   return { y0: m - 3 * sd, y1: m + 3 * sd, flags, reasons };
@@ -296,26 +358,74 @@ export interface PanelContext {
 
 export interface PanelSpec {
   key: string;
+  /** A scene key, or "*" for the geometric mean over scenes. */
   scene: string;
   headline: boolean;
-  title?: string;
+}
+
+/** A panel: its chart and the words the view shows above it. */
+export interface Panel {
+  spec: PanelSpec;
+  /** charts.mjs HTML (its own caption is hidden; the view titles it). */
+  html: string;
+  /** The metric in plain words. */
+  title: string;
+  /** The scene's title when the panel shows one scene of a split. */
+  scene?: string;
+  unit: string;
+  /** Headline panels: the latest run's ratio [value, low, high]. */
+  ratio?: Point;
+  /** Other panels: the focus configuration and its latest value. */
+  focus?: string;
+  latest?: string;
+  /** Whether a control band is drawn (it needs six runs). */
+  band: boolean;
+  /** Whether the pinned run is drawn as dashed reference lines. */
+  pinned: boolean;
+  /** Run-rule alerts on the focus line, in words. */
+  alerts: string[];
 }
 
 const colorOf = (configs: string[], config: string) =>
   `var(--series-${Math.min(4, configs.indexOf(config) + 1)})`;
 
-/** A panel's chart (charts.mjs HTML), or "" when it has no data. */
-export function panelChart(
+/** A value with no more digits than the noise allows. */
+export const formatValue = (v: number, unit: string) => {
+  const digits = Math.abs(v) >= 100 ? 0 : Math.abs(v) >= 10 ? 1 : 2;
+  const text = v.toLocaleString(undefined, {
+    maximumFractionDigits: digits,
+    minimumFractionDigits: 0,
+  });
+  return unit ? `${text} ${unit}` : text;
+};
+
+/** The last point of a series that has a value. */
+const lastOf = <T>(values: Array<T | undefined | null>) => {
+  for (let i = values.length - 1; i >= 0; i--) {
+    const v = values[i];
+    if (v !== undefined && v !== null) {
+      return v;
+    }
+  }
+  return undefined;
+};
+
+/** A panel (chart and words), or undefined when it has no data. */
+export function panelOf(
   ctx: PanelContext,
-  { key, scene, headline, title }: PanelSpec,
-  size = { width: 520, height: 170 },
-): string {
+  spec: PanelSpec,
+  sceneTitle?: string,
+  size = { width: 520, height: 180 },
+): Panel | undefined {
+  const { key, scene, headline } = spec;
   const info = INFO.get(key);
   if (!info) {
-    return "";
+    return undefined;
   }
   const { runs, configs: allConfigs, base, cand } = ctx;
-  const [, name, unit, scale] = info;
+  const [, , unit, scale] = info;
+  const title = titleOf(key);
+  const label = sceneTitle ? `${title}, ${sceneTitle}` : title;
   const xNames = runs.map(
     (s) =>
       `${when(s)} · ${short(s)}${s.note || s.subject ? ` · ${s.note || s.subject}` : ""}`,
@@ -325,29 +435,29 @@ export function panelChart(
   if (headline) {
     const pts = runs.map((s) => ratioPoint(s, key, scene, base, cand));
     if (!pts.some(Boolean)) {
-      return "";
+      return undefined;
     }
     const series = [
       {
-        label: `${cand} / ${base}`,
+        label: `${cand} ÷ ${base}`,
         color: colorOf(allConfigs, cand),
         points: pts.map((p, i) => [i, p ? p[0] : null]),
         band: pts.flatMap((p, i) => (p ? [[i, p[1], p[2]]] : [])),
       },
     ];
-    return lineChart({
-      title: title ?? `${name}: ${cand} / ${base}`,
+    const html = lineChart({
+      title: `${label}: ${cand} ÷ ${base}`,
       xLabel: "run",
       unit: "×",
       xNames,
       series,
       refs: [
-        { y: 1, label: "×1" },
+        { y: 1, label: "1×" },
         ...budgetsFor(key, cand, scene)
           .filter((b) => b.maxRatio !== undefined)
           .map((b) => ({
             y: b.maxRatio!,
-            label: `budget ×${b.maxRatio!.toFixed(2)}`,
+            label: `budget ${b.maxRatio!.toFixed(2)}×`,
             color: "var(--critical)",
             dash: "2 3",
           })),
@@ -356,6 +466,17 @@ export function panelChart(
       yMin: Infinity,
       ...size,
     });
+    return {
+      spec,
+      html,
+      title,
+      scene: sceneTitle,
+      unit: "×",
+      ratio: lastOf(pts),
+      band: false,
+      pinned: false,
+      alerts: [],
+    };
   }
   const configs = allConfigs.filter((c) =>
     runs.some((s) => s.scenes.some((x) => x.config === c && x.metrics[key])),
@@ -375,20 +496,18 @@ export function panelChart(
     };
   });
   if (!series.some((s) => s.points.some((p) => p[1] !== null))) {
-    return "";
+    return undefined;
   }
   const focus = series.find((s) => s.label === cand) ?? series[0]!;
   const band = control(focus.points);
-  const notes: string[] = [];
   if (band) {
     focus.flags = band.flags;
-    notes.push(...new Set(band.reasons));
   }
   const budgetRefs = budgetsFor(key, cand, scene)
     .filter((b) => b.max !== undefined)
     .map((b) => ({
       y: b.max! / scale,
-      label: `budget ${b.max! / scale}${unit ? ` ${unit}` : ""}`,
+      label: `budget ${formatValue(b.max! / scale, unit)}`,
       color: "var(--critical)",
       dash: "2 3",
     }));
@@ -403,9 +522,8 @@ export function panelChart(
         })
       : []),
   ];
-  return lineChart({
-    title: title ?? name,
-    subtitle: `${unit ? `${unit} · ` : ""}${band ? `control band: ${focus.label}` : "control band after 6 runs"}${pinned >= 0 ? " · dashed: pinned run" : ""}${notes.length ? ` · ▲ ${notes.join("; ")}` : ""}`,
+  const html = lineChart({
+    title: label,
     xLabel: "run",
     unit,
     xNames,
@@ -424,6 +542,19 @@ export function panelChart(
     marks,
     ...size,
   });
+  const latest = lastOf(focus.points.map((p) => p[1]));
+  return {
+    spec,
+    html,
+    title,
+    scene: sceneTitle,
+    unit,
+    focus: focus.label,
+    latest: latest === undefined ? undefined : formatValue(latest, unit),
+    band: !!band,
+    pinned: pinned >= 0,
+    alerts: band ? [...new Set(band.reasons)] : [],
+  };
 }
 
 /** A saved view: everything but the run search ("dyno.views" by name). */

@@ -1,70 +1,78 @@
-import { Code, Flex, Table, Text, TextField } from "@radix-ui/themes";
+import "./results.css";
 import {
-  CaretDownIcon,
-  CaretUpIcon,
-  MagnifyingGlassIcon,
-} from "@radix-ui/react-icons";
-import { getRouteApi, useNavigate } from "@tanstack/react-router";
-import { useDeferredValue, useMemo } from "react";
-import { ratio } from "../stats.mjs";
-import { cellKey, geomean, short, type Summary, when } from "../data.ts";
-import { Lede, useRuns, useStored } from "./common.tsx";
-import { FirstRun } from "./FirstRun.tsx";
+  Button,
+  Checkbox,
+  IconButton,
+  InputAdornment,
+  Link,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TableSortLabel,
+  TextField,
+  Typography,
+} from "@mui/material";
+import { svgDismiss } from "@stratakit/icons/dismiss";
+import { Icon } from "@stratakit/mui";
+import {
+  getRouteApi,
+  Link as RouterLink,
+  useNavigate,
+} from "@tanstack/react-router";
+import {
+  type MouseEvent,
+  useDeferredValue,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { short, type Summary } from "../data.ts";
+import { Page, useRuns, useStored } from "./common.tsx";
+import {
+  Change,
+  dateOf,
+  headline,
+  pairOf,
+  sceneCount,
+  Status,
+  VerdictStatus,
+  verdictOf,
+} from "./runParts.tsx";
 
 /**
- * Runs, the experiment log (plan §16.9): every run with its commit, note,
- * hardware and headline ratios (candidate over baseline, geometric mean
- * across scenes), searchable and sortable; a row opens the run's report.
+ * Runs (DESIGN.md): every run with its commit, note, hardware, verdict
+ * and headline changes (candidate over baseline, geometric mean across
+ * scenes), searchable and sortable (the sort is remembered per viewer).
+ * A run opens its report; two selected runs open Compare.
  */
 
 const route = getRouteApi("/runs");
 
-/** Candidate over baseline for one run and metric (geomean of scenes). */
-function headline(s: Summary, key: string): number | undefined {
-  const base = s.baseline ?? (s.configs.includes("1.x") ? "1.x" : s.configs[0]);
-  const cand = s.candidate ?? s.configs.find((c) => c !== base);
-  if (!cand) {
-    return undefined;
-  }
-  const ratios: number[] = [];
-  for (const cell of s.scenes.filter((c) => c.config === cand)) {
-    const b = s.scenes.find(
-      (c) => cellKey(c) === cellKey(cell) && c.config === base,
-    );
-    const r =
-      b && ratio(b.metrics[key]?.values ?? [], cell.metrics[key]?.values ?? []);
-    if (r?.value) {
-      ratios.push(r.value);
-    }
-  }
-  return geomean(ratios);
-}
-
-function Ratio({ value }: { value: number | undefined }) {
-  if (value === undefined) {
-    return <Text color="gray">–</Text>;
-  }
-  const better = value < 0.95;
-  const worse = value > 1.05;
-  return (
-    <Text color={better ? "green" : worse ? "red" : "gray"}>
-      {better ? "▼ " : worse ? "▲ " : ""}×{value.toFixed(2)}
-    </Text>
-  );
-}
-
+type Headline = ReturnType<typeof headline>;
 interface Row {
   s: Summary;
-  cpu?: number;
-  settle?: number;
-  frame?: number;
+  cpu: Headline;
+  settle: Headline;
+  frame: Headline;
+  scenes: number;
   text: string;
 }
-const COLUMNS: Array<[string, string, (r: Row) => number | string]> = [
-  ["when", "When", (r) => r.s.date],
-  ["cpu", "CPU / frame", (r) => r.cpu ?? Infinity],
-  ["settle", "Settle", (r) => r.settle ?? Infinity],
-  ["frame", "Frame p95", (r) => r.frame ?? Infinity],
+
+type SortKey = "when" | "cpu" | "settle" | "frame";
+const SORTS: Record<SortKey, (r: Row) => number | string> = {
+  when: (r) => r.s.date,
+  cpu: (r) => r.cpu.ratio ?? NaN,
+  settle: (r) => r.settle.ratio ?? NaN,
+  frame: (r) => r.frame.ratio ?? NaN,
+};
+const CHANGE_COLUMNS: Array<[Exclude<SortKey, "when">, string]> = [
+  ["cpu", "CPU per frame"],
+  ["settle", "Time to settle"],
+  ["frame", "Frame p95"],
 ];
 
 export function Runs() {
@@ -72,11 +80,15 @@ export function Runs() {
   const search = route.useSearch();
   const setSearch = route.useNavigate();
   const navigate = useNavigate();
+  const input = useRef<HTMLInputElement>(null);
+  const sortHint = useId();
   const query = useDeferredValue((search.q ?? "").trim().toLowerCase());
-  const [sort, setSort] = useStored("dyno.runsSort", {
-    key: "when",
-    descending: true,
-  });
+  const [sort, setSort] = useStored<{ key: SortKey; descending: boolean }>(
+    "dyno.runsSort",
+    { key: "when", descending: true },
+  );
+  // Up to two runs to compare, in the order they were picked.
+  const [selected, setSelected] = useState<string[]>([]);
 
   const data = useMemo<Row[]>(
     () =>
@@ -85,147 +97,305 @@ export function Runs() {
         cpu: headline(s, "cpuP50"),
         settle: headline(s, "settleMs"),
         frame: headline(s, "frameP95"),
-        text: `${s.note ?? ""} ${s.subject ?? ""} ${s.tags.join(" ")} ${s.commit} ${s.branch ?? ""} ${s.hardware}`.toLowerCase(),
+        scenes: sceneCount(s),
+        text: `${s.note ?? ""} ${s.subject ?? ""} ${s.tags.join(" ")} ${s.commit} ${s.branch ?? ""} ${s.hardware} ${s.configs.join(" ")}`.toLowerCase(),
       })),
     [summaries],
   );
   const rows = useMemo(() => {
-    const value = (COLUMNS.find((c) => c[0] === sort.key) ?? COLUMNS[0]!)[2];
+    const value = SORTS[sort.key] ?? SORTS.when;
     return data
       .filter((r) => !query || r.text.includes(query))
       .sort((a, b) => {
         const x = value(a);
         const y = value(b);
+        // Runs without a value go last either way.
+        if (typeof x === "number" && Number.isNaN(x)) {
+          return typeof y === "number" && Number.isNaN(y) ? 0 : 1;
+        }
+        if (typeof y === "number" && Number.isNaN(y)) {
+          return -1;
+        }
         const order = x < y ? -1 : x > y ? 1 : 0;
         return sort.descending ? -order : order;
       });
   }, [data, query, sort]);
 
-  if (!summaries.length) {
-    return <FirstRun />;
-  }
-  const open = (name: string) =>
-    void navigate({ to: "/report", search: { run: name } });
-  const header = (key: string) => {
-    const [, label] = COLUMNS.find((c) => c[0] === key)!;
+  const toggle = (name: string) =>
+    setSelected((now) =>
+      now.includes(name)
+        ? now.filter((n) => n !== name)
+        : [...now, name].slice(-2),
+    );
+  // Older run as the baseline, newer as the candidate.
+  const pair = selected
+    .map((n) => summaries.find((s) => s.name === n)!)
+    .filter(Boolean)
+    .sort((a, b) => a.date.localeCompare(b.date));
+  const open = (e: MouseEvent, name: string) => {
+    // Clicks on the row's own controls and links do their own thing.
+    if ((e.target as Element).closest("a, button, input, label")) {
+      return;
+    }
+    void navigate({ to: "/runs/$run", params: { run: name } });
+  };
+  const sortBy = (key: SortKey) =>
+    setSort(
+      sort.key === key
+        ? { key, descending: !sort.descending }
+        : { key, descending: key === "when" },
+    );
+  const header = (key: SortKey, label: string, align?: "right") => {
     const on = sort.key === key;
+    const direction = on && sort.descending ? "desc" : "asc";
     return (
-      <Table.ColumnHeaderCell
-        justify={key === "when" ? "start" : "end"}
-        aria-sort={on ? (sort.descending ? "descending" : "ascending") : "none"}
-      >
-        <button
-          className="sort"
-          onClick={() =>
-            setSort(
-              on
-                ? { key, descending: !sort.descending }
-                : { key, descending: key === "when" },
-            )
-          }
+      <TableCell key={key} align={align} sortDirection={on ? direction : false}>
+        <TableSortLabel
+          active={on}
+          direction={on ? direction : key === "when" ? "desc" : "asc"}
+          onClick={() => sortBy(key)}
+          aria-describedby={sortHint}
         >
           {label}
-          {on ? sort.descending ? <CaretDownIcon /> : <CaretUpIcon /> : null}
-        </button>
-      </Table.ColumnHeaderCell>
+        </TableSortLabel>
+      </TableCell>
     );
   };
+
   return (
-    <>
-      <Lede>
-        Ratios are each run's candidate over its baseline (geometric mean across
-        scenes; ▼ better, ▲ worse). Notes and tags come from <Code>--note</Code>{" "}
-        and <Code>--tag</Code>; click a row for its report, a column heading to
-        sort.
-      </Lede>
-      <Flex gap="3" align="center" mb="3">
-        <TextField.Root
-          type="search"
-          placeholder="Search notes, tags, commits, hardware"
-          aria-label="Search runs"
-          value={search.q ?? ""}
-          onChange={(e) =>
-            void setSearch({
-              search: { q: e.target.value || undefined },
-              replace: true,
-            })
-          }
-          style={{ minWidth: 320 }}
-        >
-          <TextField.Slot>
-            <MagnifyingGlassIcon />
-          </TextField.Slot>
-        </TextField.Root>
-        <Text size="2" color="gray">
-          {rows.length} of {data.length} runs
-        </Text>
-      </Flex>
-      <Table.Root variant="surface" size="1" className="runs-table">
-        <Table.Header>
-          <Table.Row>
-            {header("when")}
-            <Table.ColumnHeaderCell>Commit</Table.ColumnHeaderCell>
-            <Table.ColumnHeaderCell>Note</Table.ColumnHeaderCell>
-            <Table.ColumnHeaderCell>Hardware</Table.ColumnHeaderCell>
-            <Table.ColumnHeaderCell justify="end">
-              Scenes × configs × reps
-            </Table.ColumnHeaderCell>
-            {header("cpu")}
-            {header("settle")}
-            {header("frame")}
-          </Table.Row>
-        </Table.Header>
-        <Table.Body>
-          {rows.map(({ s, cpu, settle, frame }) => (
-            <Table.Row
-              key={s.name}
-              className="clickable"
-              tabIndex={0}
-              onClick={() => open(s.name)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  open(s.name);
-                }
-              }}
-            >
-              <Table.Cell>{when(s)}</Table.Cell>
-              <Table.Cell>
-                <Code variant="ghost">{short(s)}</Code>
-                <Text as="div" size="1" color="gray">
-                  {s.branch ?? ""}
-                </Text>
-              </Table.Cell>
-              <Table.Cell>
-                {s.note || s.subject || ""}
-                {s.tags.length > 0 && (
-                  <Text as="div" size="1" color="gray">
-                    {s.tags.join(", ")}
-                  </Text>
+    <Page
+      className="res-runs"
+      title="Runs"
+      description="Every run of the suite: open one for its report, or select two to compare."
+      help={
+        <>
+          <p>
+            Changes are each run's candidate configuration over its baseline
+            (usually 2.0 over 1.x), as a geometric mean across scenes. Hover a
+            change for the raw ratio.
+          </p>
+          <p>
+            Notes and tags come from <code>--note</code> and <code>--tag</code>{" "}
+            when running the suite. The verdict is the run's scorecard: its
+            primary metric and guardrails.
+          </p>
+        </>
+      }
+      actions={
+        <>
+          <Typography
+            variant="body-sm"
+            color="textSecondary"
+            className="res-select-hint"
+            aria-live="polite"
+          >
+            {selected.length === 0
+              ? "Select two runs to compare"
+              : selected.length === 1
+                ? "Select one more run"
+                : "2 runs selected"}
+          </Typography>
+          {selected.length > 0 && (
+            <Button variant="text" onClick={() => setSelected([])}>
+              Clear selection
+            </Button>
+          )}
+          <Button
+            color="primary"
+            disabled={pair.length !== 2}
+            onClick={() =>
+              void navigate({
+                to: "/compare",
+                search: { a: pair[0]!.name, b: pair[1]!.name },
+              })
+            }
+          >
+            Compare runs
+          </Button>
+        </>
+      }
+      toolbar={
+        <>
+          <TextField
+            type="search"
+            size="small"
+            label={<span className="res-visually-hidden">Search runs</span>}
+            placeholder="Search notes, tags, commits, hardware"
+            value={search.q ?? ""}
+            inputRef={input}
+            onChange={(e) =>
+              void setSearch({
+                search: { q: e.target.value || undefined },
+                replace: true,
+              })
+            }
+            className="res-search"
+            slotProps={{
+              input: {
+                endAdornment: search.q ? (
+                  <InputAdornment position="end">
+                    <IconButton
+                      label="Clear search"
+                      size="small"
+                      onClick={() => {
+                        void setSearch({ search: {}, replace: true });
+                        input.current?.focus();
+                      }}
+                    >
+                      <Icon href={svgDismiss} />
+                    </IconButton>
+                  </InputAdornment>
+                ) : undefined,
+              },
+            }}
+          />
+          <Typography variant="body-sm" color="textSecondary">
+            {rows.length === data.length
+              ? `${data.length} runs`
+              : `${rows.length} of ${data.length} runs`}
+          </Typography>
+        </>
+      }
+    >
+      <span hidden id={sortHint}>
+        change sort
+      </span>
+      {rows.length === 0 ? (
+        <Typography variant="body-md" color="textSecondary" render={<p />}>
+          No run matches “{search.q}”. Search looks in notes, tags, commit
+          subjects and hashes, branches, hardware and configurations.
+        </Typography>
+      ) : (
+        <TableContainer>
+          <Table size="small" className="res-table">
+            <caption className="res-visually-hidden">
+              Runs, {selected.length} of 2 selected for comparison
+            </caption>
+            <TableHead>
+              <TableRow>
+                <TableCell padding="checkbox">
+                  <span className="res-visually-hidden">Compare</span>
+                </TableCell>
+                {header("when", "When")}
+                <TableCell>Note</TableCell>
+                <TableCell>Commit</TableCell>
+                <TableCell>Setup</TableCell>
+                <TableCell>Verdict</TableCell>
+                {CHANGE_COLUMNS.map(([key, label]) =>
+                  header(key, label, "right"),
                 )}
-              </Table.Cell>
-              <Table.Cell>
-                {s.hardware}
-                <Text as="div" size="1" color="gray">
-                  {s.browser ?? ""}
-                </Text>
-              </Table.Cell>
-              <Table.Cell justify="end">
-                {new Set(s.scenes.map((c) => cellKey(c))).size} ×{" "}
-                {s.configs.join(", ")} × {s.repetitions}
-              </Table.Cell>
-              <Table.Cell justify="end">
-                <Ratio value={cpu} />
-              </Table.Cell>
-              <Table.Cell justify="end">
-                <Ratio value={settle} />
-              </Table.Cell>
-              <Table.Cell justify="end">
-                <Ratio value={frame} />
-              </Table.Cell>
-            </Table.Row>
-          ))}
-        </Table.Body>
-      </Table.Root>
-    </>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {rows.map((r) => {
+                const { s } = r;
+                const on = selected.includes(s.name);
+                const { base, cand } = pairOf(s);
+                return (
+                  <TableRow
+                    key={s.name}
+                    selected={on}
+                    onClick={(e) => open(e, s.name)}
+                  >
+                    <TableCell padding="checkbox">
+                      <Checkbox
+                        checked={on}
+                        onChange={() => toggle(s.name)}
+                        slotProps={{
+                          input: {
+                            "aria-label": `Select the run of ${dateOf(s)} to compare`,
+                          },
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell
+                      render={<th scope="row" />}
+                      className="res-nowrap"
+                    >
+                      <Link
+                        render={
+                          <RouterLink
+                            to="/runs/$run"
+                            params={{ run: s.name }}
+                          />
+                        }
+                        title={s.date}
+                      >
+                        {dateOf(s)}
+                      </Link>
+                    </TableCell>
+                    <TableCell className="res-note">
+                      <div className="res-clamp">
+                        {s.note || s.subject || (
+                          <span className="none">No note</span>
+                        )}
+                      </div>
+                      {(s.tags.length > 0 || !!s.sweep) && (
+                        <Typography
+                          variant="caption-md"
+                          color="textSecondary"
+                          render={<div />}
+                        >
+                          {[
+                            ...new Set([
+                              ...(s.sweep ? ["sweep"] : []),
+                              ...s.tags,
+                            ]),
+                          ].join(", ")}
+                        </Typography>
+                      )}
+                    </TableCell>
+                    <TableCell className="res-nowrap">
+                      <span className="res-mono" title={s.commit}>
+                        {short(s)}
+                      </span>
+                      <Typography
+                        variant="caption-md"
+                        color="textSecondary"
+                        render={<div />}
+                        className="res-ellipsis"
+                        title={s.branch}
+                      >
+                        {s.branch ?? ""}
+                      </Typography>
+                    </TableCell>
+                    <TableCell className="res-setup">
+                      {cand ? `${cand} vs ${base}` : base}
+                      <Typography
+                        variant="caption-md"
+                        color="textSecondary"
+                        render={<div />}
+                        title={[s.hardware, s.browser]
+                          .filter(Boolean)
+                          .join(", ")}
+                      >
+                        {r.scenes} {r.scenes === 1 ? "scene" : "scenes"} ×{" "}
+                        {s.repetitions} {s.repetitions === 1 ? "rep" : "reps"} ·{" "}
+                        {s.hardware}
+                      </Typography>
+                    </TableCell>
+                    <TableCell className="res-nowrap">
+                      {s.sweep ? (
+                        <Status tone="info">Sweep</Status>
+                      ) : (
+                        <VerdictStatus verdict={verdictOf(s)} />
+                      )}
+                    </TableCell>
+                    {CHANGE_COLUMNS.map(([key]) => (
+                      <TableCell key={key} align="right" className="num">
+                        <Change
+                          ratio={r[key].ratio}
+                          detail={`geometric mean of ${r[key].scenes} scenes`}
+                        />
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
+    </Page>
   );
 }

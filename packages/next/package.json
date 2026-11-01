@@ -17,8 +17,13 @@
     "bench": "node bench/run.mjs"
   },
   "dependencies": {
-    "@radix-ui/react-icons": "1.3.2",
-    "@radix-ui/themes": "3.3.0",
+    "@emotion/react": "11.14.0",
+    "@emotion/styled": "11.14.1",
+    "@mui/material": "9.5.0",
+    "@stratakit/foundations": "1.0.4",
+    "@stratakit/icons": "0.4.6",
+    "@stratakit/mui": "1.2.0",
+    "@stratakit/structures": "0.6.2",
     "@tanstack/react-router": "1.170.45",
     "draco3d": "1.5.7",
     "ktx-parse": "^2.0.0",

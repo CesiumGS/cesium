@@ -1,202 +1,125 @@
-import "@radix-ui/themes/styles.css";
-import "./dyno.css";
 import {
-  BellIcon,
-  CardStackIcon,
-  ColumnsIcon,
-  DashboardIcon,
-  DesktopIcon,
-  FileTextIcon,
-  GlobeIcon,
-  ImageIcon,
-  InfoCircledIcon,
-  KeyboardIcon,
-  LayersIcon,
-  MagnifyingGlassIcon,
-  MixerHorizontalIcon,
-  MoonIcon,
-  SunIcon,
-} from "@radix-ui/react-icons";
-import {
+  Alert,
   Badge,
-  Box,
-  Callout,
-  Code,
+  CircularProgress,
   Dialog,
-  Flex,
-  Heading,
+  DialogContent,
+  DialogTitle,
+  Divider,
   IconButton,
-  Kbd,
-  Popover,
-  ScrollArea,
-  Separator,
-  Text,
+  Snackbar,
+  Table,
+  TableBody,
+  TableCell,
+  TableRow,
   TextField,
-  Theme,
-  Tooltip,
-} from "@radix-ui/themes";
-import {
-  type ReactNode,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import {
-  Link,
-  Outlet,
-  useNavigate,
-  useRouterState,
-} from "@tanstack/react-router";
+  Typography,
+} from "@mui/material";
+import { svgChartBarLarge } from "@stratakit/icons/chart-bar";
+import { svgChartLineLarge } from "@stratakit/icons/chart-line";
+import { svgDashboardLarge } from "@stratakit/icons/dashboard";
+import { svgDismiss } from "@stratakit/icons/dismiss";
+import { svgGlobeLarge } from "@stratakit/icons/globe";
+import { svgHelpLarge } from "@stratakit/icons/help";
+import { svgImageLarge } from "@stratakit/icons/image";
+import { svgKeyboardLarge } from "@stratakit/icons/keyboard";
+import { svgLayersLarge } from "@stratakit/icons/layers";
+import { svgListLarge } from "@stratakit/icons/list";
+import { svgModelCubeLarge } from "@stratakit/icons/model-cube";
+import { svgMoonLarge } from "@stratakit/icons/moon";
+import { svgNotificationsLarge } from "@stratakit/icons/notifications";
+import { svgSearchLarge } from "@stratakit/icons/search";
+import { svgSunLarge } from "@stratakit/icons/sun";
+import { Icon } from "@stratakit/mui";
+import { unstable_NavigationRail as NavigationRail } from "@stratakit/structures";
+import { Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { HARNESSES } from "../../lab/pages.ts";
 import { ALERT_METRICS, detectAlerts } from "./changepoints.mjs";
-import { cellKey, cellTitle, store, type Summary } from "./data.ts";
-import { DarkContext, useRuns } from "./views/common.tsx";
+import { cellKey, cellTitle, runLabel, type Summary } from "./data.ts";
+import logomark from "./assets/cesium-logomark.svg";
+import wordmarkDark from "./assets/Cesium_Logo_Color_Overlay_Light.png";
+import wordmarkLight from "./assets/Cesium_Logo_Color_Overlay.png";
+import { useTheme } from "./theme.tsx";
+import { useRuns } from "./views/common.tsx";
 import { FirstRun } from "./views/FirstRun.tsx";
 
-/** Views that work without runs; the others show the guided first run. */
-const WITHOUT_RUNS = new Set(["/explorer", "/images", "/start"]);
-
 /**
- * Dyno's shell (plan §16.9): navigation grouped by job, with counts of
- * what needs attention (new regressions, changed images); a page header
- * saying what each view is for; light and dark themes; a command palette
- * (Ctrl/⌘ K) to jump to any view, scene or run; keyboard shortcuts (g
- * then a letter; / to search; ? for help); and toasts for saved changes.
- * The views are routes (routes.tsx) rendered in the outlet; each keeps
- * its state in its route's search params.
+ * Dyno's shell (DESIGN.md): StrataKit's navigation rail in three groups
+ * (results, scenes, workbench) with counts of what needs attention, a
+ * command palette (Ctrl/⌘ K) over views, scenes, runs and Lab pages,
+ * keyboard shortcuts (g then a letter; / to search; ? for the list), the
+ * color scheme, and messages after actions. Views render their own page
+ * header (views/common.tsx `Page`) into the outlet.
  */
 
-interface Page {
-  /** The route's path. */
-  id: string;
+interface Destination {
+  to: string;
   label: string;
-  icon: ReactNode;
-  key?: string;
-  description: string;
-  hidden?: boolean;
+  icon: string;
+  /** g then this letter. */
+  key: string;
 }
 
-const GROUPS: Array<{ label: string; pages: Page[] }> = [
-  {
-    label: "Track",
-    pages: [
-      {
-        id: "/workspace",
-        label: "Workspace",
-        icon: <DashboardIcon />,
-        key: "w",
-        description:
-          "Metrics run to run and commit to commit: headline ratios, control bands, annotations. Pick runs on the left; click a point for its report.",
-      },
-      {
-        id: "/alerts",
-        label: "Alerts",
-        icon: <BellIcon />,
-        key: "a",
-        description:
-          "Change points across runs that moved a metric by 3% or more. Triage each: acknowledge, mark expected or invalid, or fixed.",
-      },
-      {
-        id: "/runs",
-        label: "Runs",
-        icon: <CardStackIcon />,
-        key: "r",
-        description:
-          "Every run, newest first, with its headline ratios. Open one for its full report.",
-      },
-      {
-        id: "/compare",
-        label: "Compare",
-        icon: <ColumnsIcon />,
-        key: "c",
-        description:
-          "Two runs side by side per scene: the commit-to-commit view.",
-      },
-    ],
-  },
-  {
-    label: "Inspect",
-    pages: [
-      {
-        id: "/scenes",
-        label: "Scenes",
-        icon: <LayersIcon />,
-        key: "s",
-        description:
-          "Each scene's history, best results per engine, filmstrip over time and the changes that moved it.",
-      },
-      {
-        id: "/explorer",
-        label: "Explorer",
-        icon: <GlobeIcon />,
-        key: "e",
-        description:
-          "Scenes live in one or two engines: follow the camera path or fly freely, pause streaming, color tiles by depth.",
-      },
-      {
-        id: "/images",
-        label: "Images",
-        icon: <ImageIcon />,
-        key: "i",
-        description:
-          "Image checks against approved baselines: review changes side by side, swipe or flicker, then approve or reject.",
-      },
-    ],
-  },
-  {
-    label: "Explore",
-    pages: [
-      {
-        id: "/sweeps",
-        label: "Sweeps",
-        icon: <MixerHorizontalIcon />,
-        description:
-          "What a parameter or a CesiumJS release does to every metric and to the image.",
-      },
-      {
-        id: "/hardware",
-        label: "Hardware",
-        icon: <DesktopIcon />,
-        description: "The same comparison on each machine.",
-      },
-    ],
-  },
+const GROUPS: Destination[][] = [
+  [
+    { to: "/overview", label: "Overview", icon: svgDashboardLarge, key: "o" },
+    { to: "/trends", label: "Trends", icon: svgChartLineLarge, key: "t" },
+    { to: "/runs", label: "Runs", icon: svgListLarge, key: "r" },
+    { to: "/alerts", label: "Alerts", icon: svgNotificationsLarge, key: "a" },
+  ],
+  [
+    { to: "/scenes", label: "Scenes", icon: svgLayersLarge, key: "s" },
+    { to: "/explorer", label: "Explorer", icon: svgGlobeLarge, key: "e" },
+    { to: "/images", label: "Images", icon: svgImageLarge, key: "i" },
+  ],
+  [
+    { to: "/analysis", label: "Analysis", icon: svgChartBarLarge, key: "n" },
+    { to: "/lab", label: "Lab", icon: svgModelCubeLarge, key: "l" },
+  ],
 ];
-const START: Page = {
-  id: "/start",
-  label: "Getting started",
-  icon: <InfoCircledIcon />,
-  description:
-    "What Dyno is for, your setup checked, and a first measured run.",
-  hidden: true,
-};
-const REPORT: Page = {
-  id: "/report",
-  label: "Run report",
-  icon: <FileTextIcon />,
-  description:
-    "One run: verdict and validity first, then the scorecard, budgets, scenes in detail and the setup.",
-  hidden: true,
-};
-const PAGES = [...GROUPS.flatMap((g) => g.pages), REPORT, START];
+const DESTINATIONS = GROUPS.flat();
 
-type Appearance = "light" | "dark";
-const systemDark = () => matchMedia("(prefers-color-scheme: dark)").matches;
+/** Paths that work without runs; the others show the guided first run. */
+const WITHOUT_RUNS = /^\/(explorer|images|start|lab)(\/|$)/;
 
+/** The rail item a path belongs to (a run's report belongs to Runs). */
+const destinationOf = (path: string) =>
+  DESTINATIONS.find((d) => path === d.to || path.startsWith(`${d.to}/`)) ??
+  (path === "/compare"
+    ? DESTINATIONS.find((d) => d.to === "/runs")
+    : undefined);
+
+export function ShellPending() {
+  return (
+    <div className="shell-pending" role="status">
+      <CircularProgress size={20} />
+      <Typography variant="body-md">Loading runs…</Typography>
+    </div>
+  );
+}
+
+export function ShellError({ error }: { error: unknown }) {
+  return (
+    <Alert severity="error" className="shell-error">
+      Dyno could not read the results ({String(error)}). It reads them through
+      the dev server: run <code>npm run dev</code> in packages/next.
+    </Alert>
+  );
+}
+
+/** Things to look at: untriaged regressions, images to review. */
 function useAttention(summaries: Summary[]): {
   alerts: number;
   images: number;
 } {
   const [counts, setCounts] = useState({ alerts: 0, images: 0 });
   useEffect(() => {
+    let cancelled = false;
     void (async () => {
       let triage: Record<string, { status: string }> = {};
       try {
-        const res = await fetch("/bench-results/triage.json");
-        if (res.ok) {
-          triage = await res.json();
-        }
+        triage = await (await fetch("/bench-results/triage.json")).json();
       } catch {
         // Nothing triaged yet.
       }
@@ -223,90 +146,57 @@ function useAttention(summaries: Summary[]): {
       } catch {
         // No image checks yet.
       }
-      // Grouped like the Alerts view: one per change across scenes.
+      // One per change across scenes, as the Alerts view groups them.
       const groups = new Set(
         alerts.map(
           (a) =>
             `${a.metric}|${a.config}|${a.range.from.commit}|${a.range.to.commit}`,
         ),
       );
-      setCounts({ alerts: groups.size, images });
+      if (!cancelled) {
+        setCounts({ alerts: groups.size, images });
+      }
     })();
+    return () => {
+      cancelled = true;
+    };
   }, [summaries]);
   return counts;
 }
 
-/** Loading the runs (before any view can draw). */
-export function ShellPending() {
-  return (
-    <div className="loading" role="status">
-      <span className="spinner" />
-      Loading runs…
-    </div>
-  );
-}
-
-/** The runs could not be read (no dev server, or a broken index). */
-export function ShellError({ error }: { error: unknown }) {
-  return (
-    <Callout.Root color="red" m="4">
-      <Callout.Text>
-        Dyno could not read the results ({String(error)}). It reads them through
-        the dev server: run <Code>npm run dev</Code> in packages/next.
-      </Callout.Text>
-    </Callout.Root>
-  );
-}
-
 export function Shell() {
-  const { index, summaries } = useRuns();
-  const tab = useRouterState({ select: (s) => s.location.pathname });
-  const routerNavigate = useNavigate();
-  const [choice, setChoice] = useState<Appearance | "system">(() =>
-    store.get("dyno.theme", "system"),
+  const { summaries } = useRuns();
+  const path = useRouterState({ select: (s) => s.location.pathname });
+  const navigate = useNavigate();
+  const { choice, scheme, setChoice } = useTheme();
+  const [expanded, setExpanded] = useState(
+    () => localStorage.getItem("dyno.rail") === "expanded",
   );
-  const [system, setSystem] = useState(systemDark());
-  const appearance: Appearance =
-    choice === "system" ? (system ? "dark" : "light") : choice;
   const [palette, setPalette] = useState(false);
-  const [help, setHelp] = useState(false);
-  const [toasts, setToasts] = useState<
-    Array<{ id: number; message: string; tone: string }>
-  >([]);
-  const body = useRef<HTMLDivElement>(null);
+  const [shortcuts, setShortcuts] = useState(false);
+  const [message, setMessage] = useState<{
+    id: number;
+    text: string;
+    tone: string;
+  }>();
+  const main = useRef<HTMLElement>(null);
   const attention = useAttention(summaries);
-
-  const navigate = useCallback(
-    (to: string, search?: Record<string, string>) => {
-      void routerNavigate({ to, search: search ?? {} } as never);
-    },
-    [routerNavigate],
-  );
+  const active = destinationOf(path);
 
   useEffect(() => {
-    const m = matchMedia("(prefers-color-scheme: dark)");
-    const on = () => setSystem(m.matches);
-    m.addEventListener("change", on);
-    return () => m.removeEventListener("change", on);
-  }, []);
-  // Standalone report styles read the page's theme.
-  useEffect(() => {
-    document.documentElement.dataset.theme = appearance;
-  }, [appearance]);
+    const harness = path.startsWith("/lab/")
+      ? HARNESSES.find((h) => `/lab/${h.id}` === path)
+      : undefined;
+    const name = harness?.title ?? active?.label;
+    document.title = name ? `${name} · Dyno` : "Dyno";
+  }, [path, active]);
 
-  useEffect(() => {
-    const page = PAGES.find((p) => p.id === tab);
-    document.title = page ? `${page.label} · Dyno` : "Dyno";
-  }, [tab]);
-
-  // Toasts from any view.
+  // Messages from any view (toast.ts).
   useEffect(() => {
     let next = 0;
     const on = (e: Event) => {
-      const { message, tone } = (e as CustomEvent).detail;
-      const id = ++next;
-      setToasts((t) => [...t, { id, message, tone }]);
-      setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 3500);
+      const { message: text, tone } = (e as CustomEvent).detail;
+      setMessage({ id: ++next, text, tone });
     };
     addEventListener("dyno:toast", on);
     return () => removeEventListener("dyno:toast", on);
@@ -319,7 +209,7 @@ export function Shell() {
       t instanceof HTMLElement &&
       (t.isContentEditable ||
         /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) ||
-        t.closest('[role="listbox"], [role="menu"]') !== null);
+        t.closest('[role="listbox"], [role="menu"], [role="dialog"]') !== null);
     const on = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
@@ -330,9 +220,9 @@ export function Shell() {
         return;
       }
       if (e.key === "?") {
-        setHelp(true);
+        setShortcuts(true);
       } else if (e.key === "/") {
-        const search = body.current?.querySelector<HTMLInputElement>(
+        const search = main.current?.querySelector<HTMLInputElement>(
           'input[type="search"]',
         );
         if (search) {
@@ -342,9 +232,9 @@ export function Shell() {
       } else if (e.key === "g") {
         pendingG = Date.now();
       } else if (Date.now() - pendingG < 1200) {
-        const page = PAGES.find((p) => p.key === e.key);
-        if (page) {
-          navigate(page.id);
+        const d = DESTINATIONS.find((x) => x.key === e.key);
+        if (d) {
+          void navigate({ to: d.to });
         }
         pendingG = 0;
       }
@@ -353,249 +243,225 @@ export function Shell() {
     return () => removeEventListener("keydown", on);
   }, [navigate]);
 
-  const page = PAGES.find((p) => p.id === tab) ?? PAGES[0]!;
-  const runsCount = summaries.length;
+  const count = (to: string) =>
+    to === "/alerts"
+      ? attention.alerts
+      : to === "/images"
+        ? attention.images
+        : 0;
+  const nextChoice = {
+    system: "light",
+    light: "dark",
+    dark: "system",
+  } as const;
 
   return (
-    <Theme
-      appearance={appearance}
-      accentColor="blue"
-      grayColor="sand"
-      radius="medium"
-      scaling="95%"
-      panelBackground="solid"
-    >
-      <div className="shell">
-        <nav className="sidebar" aria-label="Dyno">
-          <Flex align="baseline" gap="2" px="3" pt="3" pb="2">
-            <Heading size="5" as="h1">
-              Dyno
-            </Heading>
-            <Text size="1" color="gray">
-              CesiumJS benchmarks
-            </Text>
-          </Flex>
-          <Box px="2" pb="2">
-            <button className="search-button" onClick={() => setPalette(true)}>
-              <MagnifyingGlassIcon />
-              <span>Go to…</span>
-              <Kbd size="1">Ctrl K</Kbd>
-            </button>
-          </Box>
-          <ScrollArea type="auto" scrollbars="vertical" style={{ flex: 1 }}>
-            {GROUPS.map((group) => (
-              <Box key={group.label} px="2" pb="2">
-                <Text
-                  as="div"
-                  size="1"
-                  color="gray"
-                  weight="medium"
-                  className="group-label"
-                >
-                  {group.label}
-                </Text>
-                {group.pages.map((p) => {
-                  const count =
-                    p.id === "/alerts"
-                      ? attention.alerts
-                      : p.id === "/images"
-                        ? attention.images
-                        : 0;
+    <div className="shell">
+      <NavigationRail.Root
+        expanded={expanded}
+        setExpanded={(v) => {
+          setExpanded(v);
+          localStorage.setItem("dyno.rail", v ? "expanded" : "collapsed");
+        }}
+        className="rail"
+      >
+        <NavigationRail.Header>
+          <a
+            href="#/overview"
+            className="brand"
+            aria-label="Cesium Dyno, overview"
+          >
+            {expanded ? (
+              <>
+                <img
+                  src={scheme === "dark" ? wordmarkDark : wordmarkLight}
+                  alt=""
+                  className="brand-wordmark"
+                />
+                <span className="brand-name">Dyno</span>
+              </>
+            ) : (
+              <img src={logomark} alt="" className="brand-mark" />
+            )}
+          </a>
+          <NavigationRail.ToggleButton />
+        </NavigationRail.Header>
+        <NavigationRail.Content>
+          <NavigationRail.List>
+            <NavigationRail.ListItem>
+              <NavigationRail.Button
+                icon={svgSearchLarge}
+                label="Go to… (Ctrl K)"
+                onClick={() => setPalette(true)}
+              />
+            </NavigationRail.ListItem>
+          </NavigationRail.List>
+          {GROUPS.map((group, i) => (
+            <div key={i} className="rail-group">
+              <Divider role="presentation" />
+              <NavigationRail.List>
+                {group.map((d) => {
+                  const n = count(d.to);
                   return (
-                    <Link
-                      key={p.id}
-                      to={p.id}
-                      className="nav-item"
-                      aria-current={tab === p.id ? "page" : undefined}
-                      title={p.key ? `g then ${p.key}` : undefined}
-                    >
-                      {p.icon}
-                      <span className="label">{p.label}</span>
-                      {count > 0 && (
-                        <Badge
-                          color={p.id === "alerts" ? "red" : "orange"}
-                          variant="solid"
-                          radius="full"
-                          size="1"
-                        >
-                          {count}
-                        </Badge>
-                      )}
-                    </Link>
+                    <NavigationRail.ListItem key={d.to}>
+                      <NavigationRail.Anchor
+                        href={`#${d.to}`}
+                        icon={
+                          n && !expanded ? (
+                            <Badge variant="dot" color="error">
+                              <Icon href={d.icon} size="large" />
+                            </Badge>
+                          ) : (
+                            d.icon
+                          )
+                        }
+                        label={d.label}
+                        active={active === d}
+                        suffix={
+                          n ? (
+                            <Badge
+                              badgeContent={n}
+                              variant="inline"
+                              color={d.to === "/alerts" ? "error" : "warning"}
+                              size="small"
+                              aria-label={`${n} to look at`}
+                            />
+                          ) : undefined
+                        }
+                      />
+                    </NavigationRail.ListItem>
                   );
                 })}
-              </Box>
-            ))}
-          </ScrollArea>
-          <Separator size="4" />
-          <Flex align="center" justify="between" p="2" gap="1">
-            <Popover.Root>
-              <Popover.Trigger>
-                <button className="nav-item small">
-                  <InfoCircledIcon />
-                  <span className="label">{runsCount} runs</span>
-                </button>
-              </Popover.Trigger>
-              <Popover.Content width="420px">
-                <Text as="p" size="2" mb="2">
-                  Results are read from <Code>{index.directory}</Code> (set{" "}
-                  <Code>BENCH_RESULTS</Code> to change it). They stay outside
-                  the repository: they carry machine details.
-                </Text>
-                <Text as="p" size="2" mb="1">
-                  Run the suite:
-                </Text>
-                <Code size="2">
-                  node packages/next/bench/suite/cli.mjs run --note "what
-                  changed"
-                </Code>
-                <Text as="p" size="2" mt="2" mb="1">
-                  Image checks and alerts:
-                </Text>
-                <Code size="2">cli.mjs images --parity · cli.mjs alerts</Code>
-                <Text as="p" size="2" mt="2">
-                  <Link to="/start">Getting started</Link>: your setup checked
-                  and a first run, step by step.
-                </Text>
-              </Popover.Content>
-            </Popover.Root>
-            <Flex gap="1">
-              <Tooltip content="Keyboard shortcuts (?)">
-                <IconButton
-                  variant="ghost"
-                  color="gray"
-                  onClick={() => setHelp(true)}
-                  aria-label="Keyboard shortcuts"
-                >
-                  <KeyboardIcon />
-                </IconButton>
-              </Tooltip>
-              <Tooltip content={`Theme: ${choice} (click to change)`}>
-                <IconButton
-                  variant="ghost"
-                  color="gray"
-                  aria-label="Change theme"
-                  onClick={() => {
-                    const order = ["system", "light", "dark"] as const;
-                    const next = order[(order.indexOf(choice) + 1) % 3]!;
-                    setChoice(next);
-                    store.set("dyno.theme", next);
-                  }}
-                >
-                  {appearance === "dark" ? <MoonIcon /> : <SunIcon />}
-                </IconButton>
-              </Tooltip>
-            </Flex>
-          </Flex>
-        </nav>
-        <main className="content">
-          <header className="page-header">
-            <Flex align="center" gap="2">
-              {page.hidden && (
-                <Link className="back" to="/runs">
-                  ← Runs
-                </Link>
-              )}
-              <Heading size="6" as="h2">
-                {page.label}
-              </Heading>
-            </Flex>
-            <Text as="p" size="2" color="gray">
-              {page.description}
-            </Text>
-          </header>
-          <DarkContext.Provider value={appearance === "dark"}>
-            <div ref={body} className={`dyno-view viz ${appearance}`}>
-              {summaries.length || WITHOUT_RUNS.has(tab) ? (
-                <Outlet />
-              ) : (
-                <FirstRun />
-              )}
+              </NavigationRail.List>
             </div>
-          </DarkContext.Provider>
-        </main>
-      </div>
+          ))}
+          <NavigationRail.Footer>
+            <NavigationRail.List>
+              <NavigationRail.ListItem>
+                <NavigationRail.Anchor
+                  href="#/start"
+                  icon={svgHelpLarge}
+                  label="Getting started"
+                  active={path === "/start"}
+                />
+              </NavigationRail.ListItem>
+              <NavigationRail.ListItem>
+                <NavigationRail.Button
+                  icon={svgKeyboardLarge}
+                  label="Keyboard shortcuts (?)"
+                  onClick={() => setShortcuts(true)}
+                />
+              </NavigationRail.ListItem>
+              <NavigationRail.ListItem>
+                <NavigationRail.Button
+                  icon={scheme === "dark" ? svgMoonLarge : svgSunLarge}
+                  label={`Theme: ${choice} (switch to ${nextChoice[choice]})`}
+                  onClick={() => setChoice(nextChoice[choice])}
+                />
+              </NavigationRail.ListItem>
+            </NavigationRail.List>
+          </NavigationRail.Footer>
+        </NavigationRail.Content>
+      </NavigationRail.Root>
+
+      <main
+        ref={main}
+        className={`content viz ${scheme}`}
+        aria-label={active?.label ?? "Dyno"}
+      >
+        {summaries.length || WITHOUT_RUNS.test(path) ? (
+          <Outlet />
+        ) : (
+          <FirstRun />
+        )}
+      </main>
+
       <CommandPalette
         open={palette}
-        onOpenChange={setPalette}
-        navigate={navigate}
+        onClose={() => setPalette(false)}
         summaries={summaries}
       />
-      <Dialog.Root open={help} onOpenChange={setHelp}>
-        <Dialog.Content maxWidth="440px">
-          <Dialog.Title>Keyboard shortcuts</Dialog.Title>
-          <table className="shortcuts">
-            <tbody>
-              <tr>
-                <td>
-                  <Kbd>Ctrl K</Kbd>
-                </td>
-                <td>Go to a view, scene or run</td>
-              </tr>
-              {PAGES.filter((p) => p.key).map((p) => (
-                <tr key={p.id}>
-                  <td>
-                    <Kbd>g</Kbd> <Kbd>{p.key}</Kbd>
-                  </td>
-                  <td>{p.label}</td>
-                </tr>
+      <Dialog open={shortcuts} onClose={() => setShortcuts(false)}>
+        <DialogTitle>Keyboard shortcuts</DialogTitle>
+        <DialogContent>
+          <Table size="small" className="shortcuts">
+            <TableBody>
+              <TableRow>
+                <TableCell>
+                  <kbd>Ctrl</kbd> <kbd>K</kbd>
+                </TableCell>
+                <TableCell>Go to a view, scene, run or Lab page</TableCell>
+              </TableRow>
+              {DESTINATIONS.map((d) => (
+                <TableRow key={d.to}>
+                  <TableCell>
+                    <kbd>g</kbd> <kbd>{d.key}</kbd>
+                  </TableCell>
+                  <TableCell>{d.label}</TableCell>
+                </TableRow>
               ))}
-              <tr>
-                <td>
-                  <Kbd>/</Kbd>
-                </td>
-                <td>Search (runs, workspace)</td>
-              </tr>
-              <tr>
-                <td>
-                  <Kbd>?</Kbd>
-                </td>
-                <td>This list</td>
-              </tr>
-            </tbody>
-          </table>
-        </Dialog.Content>
-      </Dialog.Root>
-      <div className="toasts" aria-live="polite">
-        {toasts.map((t) => (
-          <Callout.Root
-            key={t.id}
-            color={t.tone === "bad" ? "red" : "green"}
-            variant="surface"
-            size="1"
-          >
-            <Callout.Text>{t.message}</Callout.Text>
-          </Callout.Root>
-        ))}
-      </div>
-    </Theme>
+              <TableRow>
+                <TableCell>
+                  <kbd>/</kbd>
+                </TableCell>
+                <TableCell>Search this page</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>
+                  <kbd>?</kbd>
+                </TableCell>
+                <TableCell>This list</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </DialogContent>
+      </Dialog>
+      <Snackbar
+        key={message?.id}
+        open={!!message}
+        autoHideDuration={4000}
+        onClose={() => setMessage(undefined)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+      >
+        <Alert
+          severity={message?.tone === "bad" ? "error" : "success"}
+          action={
+            <IconButton label="Dismiss" onClick={() => setMessage(undefined)}>
+              <Icon href={svgDismiss} />
+            </IconButton>
+          }
+        >
+          {message?.text}
+        </Alert>
+      </Snackbar>
+    </div>
   );
 }
 
 interface Item {
   label: string;
-  hint: string;
-  go: () => void;
+  kind: string;
+  to: string;
+  params?: Record<string, string>;
 }
 
 function CommandPalette({
   open,
-  onOpenChange,
-  navigate,
+  onClose,
   summaries,
 }: {
   open: boolean;
-  onOpenChange: (v: boolean) => void;
-  navigate: (to: string, search?: Record<string, string>) => void;
+  onClose: () => void;
   summaries: Summary[];
 }) {
+  const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
   const items = useMemo<Item[]>(() => {
-    const out: Item[] = PAGES.filter((p) => !p.hidden).map((p) => ({
-      label: p.label,
-      hint: "view",
-      go: () => navigate(p.id),
+    const out: Item[] = DESTINATIONS.map((d) => ({
+      label: d.label,
+      kind: "view",
+      to: d.to,
     }));
     const scenes = new Map<string, string>();
     for (const s of summaries) {
@@ -603,43 +469,55 @@ function CommandPalette({
         scenes.set(cellKey(c), cellTitle(c));
       }
     }
-    for (const [key, title] of scenes) {
+    for (const [scene, title] of scenes) {
       out.push({
         label: title,
-        hint: "scene",
-        go: () => navigate("/scenes", { scene: key }),
+        kind: "scene",
+        to: "/scenes/$scene",
+        params: { scene },
+      });
+    }
+    for (const h of HARNESSES) {
+      out.push({
+        label: h.title,
+        kind: "Lab",
+        to: "/lab/$id",
+        params: { id: h.id },
       });
     }
     for (const s of [...summaries].reverse()) {
       out.push({
-        label: `${new Date(s.date).toLocaleString()} · ${s.commit.slice(0, 7)}${s.note ? ` · ${s.note}` : ""}`,
-        hint: "run",
-        go: () => navigate("/report", { run: s.name }),
+        label: runLabel(s),
+        kind: "run",
+        to: "/runs/$run",
+        params: { run: s.name },
       });
     }
     return out;
-  }, [navigate, summaries]);
+  }, [summaries]);
   const q = query.trim().toLowerCase();
   const matches = (
     q
-      ? items.filter((i) => `${i.label} ${i.hint}`.toLowerCase().includes(q))
+      ? items.filter((i) => `${i.label} ${i.kind}`.toLowerCase().includes(q))
       : items
   ).slice(0, 40);
   useEffect(() => setActive(0), [query, open]);
   const choose = (item?: Item) => {
     if (item) {
-      onOpenChange(false);
+      onClose();
       setQuery("");
-      item.go();
+      void navigate({ to: item.to, params: item.params } as never);
     }
   };
   return (
-    <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Content maxWidth="560px" aria-describedby={undefined}>
-        <Dialog.Title size="3">Go to</Dialog.Title>
-        <TextField.Root
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+      <DialogTitle>Go to</DialogTitle>
+      <DialogContent>
+        <TextField
           autoFocus
-          placeholder="A view, a scene or a run…"
+          fullWidth
+          type="search"
+          placeholder="A view, a scene, a run or a Lab page"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => {
@@ -653,36 +531,31 @@ function CommandPalette({
               choose(matches[active]);
             }
           }}
-        >
-          <TextField.Slot>
-            <MagnifyingGlassIcon />
-          </TextField.Slot>
-        </TextField.Root>
-        <ScrollArea type="auto" style={{ maxHeight: 360, marginTop: 8 }}>
-          <div role="listbox" aria-label="Results">
-            {matches.map((item, i) => (
-              <button
-                key={`${item.hint}:${item.label}`}
-                role="option"
-                aria-selected={i === active}
-                className="palette-item"
-                onMouseEnter={() => setActive(i)}
-                onClick={() => choose(item)}
-              >
-                <span>{item.label}</span>
-                <Text size="1" color="gray">
-                  {item.hint}
-                </Text>
-              </button>
-            ))}
-            {!matches.length && (
-              <Text as="p" size="2" color="gray" m="2">
-                Nothing matches.
-              </Text>
-            )}
-          </div>
-        </ScrollArea>
-      </Dialog.Content>
-    </Dialog.Root>
+          slotProps={{ htmlInput: { "aria-label": "Go to" } }}
+        />
+        <div role="listbox" aria-label="Results" className="palette-list">
+          {matches.map((item, i) => (
+            <button
+              key={`${item.kind}:${item.label}`}
+              role="option"
+              aria-selected={i === active}
+              className="palette-item"
+              onMouseEnter={() => setActive(i)}
+              onClick={() => choose(item)}
+            >
+              <span>{item.label}</span>
+              <Typography variant="caption-md" color="textSecondary">
+                {item.kind}
+              </Typography>
+            </button>
+          ))}
+          {!matches.length && (
+            <Typography variant="body-md" color="textSecondary">
+              Nothing matches.
+            </Typography>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

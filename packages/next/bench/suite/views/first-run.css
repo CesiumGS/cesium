@@ -1,0 +1,93 @@
+/* The guided first run (views/FirstRun.tsx). */
+
+.first-run .page-content {
+  max-width: 880px;
+}
+.first-run-steps {
+  list-style: none;
+  margin: 0 0 var(--stratakit-space-600);
+  padding: 0;
+  counter-reset: step;
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-600);
+}
+.first-run-step {
+  counter-increment: step;
+  display: grid;
+  grid-template-columns: var(--stratakit-space-800) minmax(0, 1fr);
+  column-gap: var(--stratakit-space-300);
+  row-gap: var(--stratakit-space-200);
+}
+.first-run-step::before {
+  content: counter(step);
+  grid-row: 1;
+  display: grid;
+  place-items: center;
+  inline-size: var(--stratakit-space-700);
+  block-size: var(--stratakit-space-700);
+  border-radius: 50%;
+  border: 1px solid var(--stratakit-color-border-neutral-base);
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-size: var(--stratakit-font-size-body-sm);
+  font-variant-numeric: tabular-nums;
+}
+.first-run-step > h2 {
+  margin: 0;
+  align-self: center;
+}
+.first-run-step-body {
+  grid-column: 2;
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-300);
+}
+.first-run-step-body p {
+  margin: 0;
+}
+.first-run-checks {
+  display: grid;
+  grid-template-columns: max-content max-content minmax(0, 1fr);
+  column-gap: var(--stratakit-space-400);
+  row-gap: var(--stratakit-space-200);
+  align-items: baseline;
+}
+.first-run-check {
+  display: contents;
+}
+.first-run-check-label {
+  font-weight: 600;
+}
+.first-run-command {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--stratakit-space-200);
+}
+.first-run-command pre {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: var(--stratakit-space-300) var(--stratakit-space-400);
+  background: var(--stratakit-color-bg-page-depth);
+  border: 1px solid var(--stratakit-color-border-neutral-muted);
+  border-radius: var(--stratakit-radius-md);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-family: var(--stratakit-font-family-mono);
+  font-size: var(--stratakit-font-size-body-sm);
+}
+/* The page's inline-code chip would box the command twice. */
+.first-run-command pre code {
+  background: none;
+  padding: 0;
+  font-size: inherit;
+}
+/* Text for screen readers only ("opens in a new tab"). */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

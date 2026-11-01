@@ -4,7 +4,7 @@
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "lib": ["ES2023", "DOM", "DOM.Iterable"],
-    "types": ["@webgpu/types", "vite/client"],
+    "types": ["@webgpu/types", "vite/client", "@stratakit/mui/types.d.ts"],
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
@@ -25,6 +25,7 @@
     "parity",
     "spikes",
     "bench",
+    "lab",
     "test",
     "vite.config.ts"
   ]

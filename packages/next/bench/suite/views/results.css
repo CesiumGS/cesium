@@ -1,0 +1,208 @@
+/*
+ * The Results views (Overview, Runs, Compare, a run's report), on
+ * StrataKit tokens. Classes are prefixed res-.
+ */
+
+.res-mono {
+  font-family: var(--stratakit-font-family-mono);
+  font-size: 0.95em;
+}
+.res-nowrap {
+  white-space: nowrap;
+}
+/* A status's icon and word stay on one line, even in a narrow column. */
+.res-nowrap .MuiBadge-badge,
+.res-run-line .MuiBadge-badge {
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+.res-gap {
+  margin-bottom: var(--stratakit-space-500);
+}
+.res-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.change {
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------- tables */
+
+.res-table {
+  font-variant-numeric: tabular-nums;
+}
+.res-table th[scope="row"] {
+  font-weight: inherit;
+}
+.res-table td,
+.res-table th {
+  vertical-align: top;
+}
+.res-clamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-width: 48ch;
+}
+.res-over {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+
+/* ---------------------------------------------------------------- overview */
+
+.res-run-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--stratakit-space-200);
+  margin-bottom: var(--stratakit-space-500);
+}
+.res-run-line p {
+  margin: 0;
+}
+.res-tiles {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--stratakit-space-300);
+}
+.res-tile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-100);
+  height: 100%;
+  box-sizing: border-box;
+  padding: var(--stratakit-space-400);
+  border: 1px solid var(--stratakit-color-border-neutral-muted);
+  border-radius: var(--stratakit-radius-md);
+  background: var(--stratakit-color-bg-page-base);
+  color: inherit;
+  text-decoration: none;
+}
+.res-tile:hover {
+  border-color: var(--stratakit-color-border-neutral-base);
+  background: var(--stratakit-color-bg-glow-on-surface-neutral-hover);
+}
+.res-tile:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: 1px;
+}
+.res-tile-value {
+  font-size: var(--stratakit-font-size-headline-sm);
+  font-weight: 600;
+  line-height: var(--stratakit-line-height-headline-sm);
+  font-variant-numeric: tabular-nums;
+}
+.res-tile-value.same,
+.res-tile-value.none {
+  color: var(--stratakit-color-text-neutral-primary);
+}
+.res-tiles-note {
+  margin: var(--stratakit-space-200) 0 var(--stratakit-space-800);
+}
+.res-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--stratakit-space-800);
+  align-items: start;
+}
+@media (max-width: 1100px) {
+  .res-columns {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+}
+.res-todo {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.res-todo li {
+  display: grid;
+  grid-template-columns: 7.5rem minmax(0, 1fr);
+  gap: var(--stratakit-space-300);
+  align-items: start;
+  padding: var(--stratakit-space-200) 0;
+  border-bottom: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.res-todo li:first-child {
+  padding-top: 0;
+}
+.res-todo li.res-todo-loading {
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-200);
+}
+
+/* ---------------------------------------------------------------- runs */
+
+.res-runs-toolbar-count {
+  margin-left: auto;
+}
+.res-runs .res-table tbody tr {
+  cursor: pointer;
+}
+.res-runs .res-table thead th {
+  white-space: nowrap;
+}
+.res-search {
+  min-width: 360px;
+}
+.res-note {
+  min-width: 28ch;
+}
+.res-setup {
+  overflow-wrap: anywhere;
+  min-width: 24ch;
+}
+.res-ellipsis {
+  max-width: 16ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.res-select-hint {
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------- compare */
+
+.res-metric + .res-metric {
+  margin-top: var(--stratakit-space-600);
+}
+.res-metric-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--stratakit-space-200);
+  margin-bottom: var(--stratakit-space-200);
+}
+.res-metric-head h2 {
+  margin: 0;
+}
+/* The heading above names the chart; its own caption stays for readers. */
+.res-chart figure > figcaption {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------- report */
+
+.res-loading {
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-300);
+  padding: var(--stratakit-space-600) 0;
+}

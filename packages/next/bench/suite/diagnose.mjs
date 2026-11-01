@@ -224,7 +224,7 @@ export function segmentTable({ profiles, configs, baseline, color, metric }) {
       return `<tr><th><span class="key" style="background:${color(c)}"></span>${escape(c)}</th>${cells.join("")}</tr>`;
     })
     .join("");
-  return `<figure class="board"><figcaption>${escape(label)} by path segment (${unit})</figcaption>
+  return `<figure class="chart board"><figcaption>${escape(label)} by path segment (${unit})</figcaption>
 <div class="sub">Mean per frame in each third of the camera path, median of the repetitions. Gaps are to the lowest; a verdict against ${escape(baseline)} appears only when the intervals separate.</div>
 <table class="segments"><tr><th></th>${columns.map((s) => `<th>${s}</th>`).join("")}</tr>${rows}</table></figure>`;
 }
@@ -292,7 +292,7 @@ export function pathMap({ path, profiles, configs, color, metric, title }) {
     return `<span><span class="key" style="background:${c ? color(c) : "var(--neutral)"}"></span>${c ? `${escape(c)} faster` : "no clear difference"} · ${Math.round((n / total) * 100)}%</span>`;
   });
   const [, label] = PATH_METRICS[metric];
-  return `<figure class="pathmap"><figcaption>${escape(title)}</figcaption><div class="sub">The camera path from above, north up. Each stretch takes the color of the configuration at least ${FASTER_BY * 100}% faster there (${escape(label)}).</div><div class="legend">${legend.join("")}</div>${svg}</figure>`;
+  return `<figure class="chart pathmap"><figcaption>${escape(title)}</figcaption><div class="sub">The camera path from above, north up. Each stretch takes the color of the configuration at least ${FASTER_BY * 100}% faster there (${escape(label)}).</div><div class="legend">${legend.join("")}</div>${svg}</figure>`;
 }
 
 const PERCENTILES = [50, 75, 90, 95, 99, 99.5, 99.9];
@@ -358,7 +358,7 @@ export function filmstrip({ entries, assets, configs, baseline, explore }) {
       return `<div class="moment"><div class="m-label">${escape(moments[e.moment] ?? e.moment)}${explore ? ` · <a target="_top" href="${explore}&amp;t=${at}">open here in the explorer</a>` : ""}</div><div class="frames">${cells.join("")}</div></div>`;
     })
     .join("");
-  return `<figure class="filmstrip"><figcaption>Filmstrip</figcaption><div class="sub">The first repetition's views once settled. FLIP measures how differently the two images look to a viewer (0 identical, 1 completely different); faster must not mean drawing less.</div>${rows}</figure>`;
+  return `<figure class="chart filmstrip"><figcaption>Filmstrip</figcaption><div class="sub">The first repetition's views once settled. FLIP measures how differently the two images look to a viewer (0 identical, 1 completely different); faster must not mean drawing less.</div>${rows}</figure>`;
 }
 
 /**
@@ -432,7 +432,7 @@ export function waterfall({ runs, configs, color }) {
     }),
     height: 150,
   });
-  return `<figure class="waterfall"><figcaption>Request waterfall</figcaption><div class="sub">Every content request of the first repetition, in start order: faint while waiting for the first byte, solid while receiving. The dashed line is when the view settled.</div>${parts.join("")}</figure>${cumulative}`;
+  return `<figure class="chart waterfall"><figcaption>Request waterfall</figcaption><div class="sub">Every content request of the first repetition, in start order: faint while waiting for the first byte, solid while receiving. The dashed line is when the view settled.</div>${parts.join("")}</figure>${cumulative}`;
 }
 
 function ticksMs(end) {

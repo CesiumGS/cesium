@@ -152,6 +152,7 @@ export const when = (s: Summary) =>
     day: "numeric",
     hour: "2-digit",
     minute: "2-digit",
+    hourCycle: "h23",
   });
 /** A run as one line for pickers. */
 export const runLabel = (s: Summary) =>

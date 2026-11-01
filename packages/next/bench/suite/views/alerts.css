@@ -1,0 +1,93 @@
+/* Alerts (views/Alerts.tsx): change points to triage, one card per change. */
+
+.alerts-loading {
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-200);
+}
+.alerts-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-400);
+  max-width: 1280px;
+}
+.alert-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-400);
+}
+.alert-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-100);
+}
+.alert-head h2,
+.alert-head p {
+  margin: 0;
+}
+.alert-badges {
+  display: flex;
+  gap: var(--stratakit-space-200);
+  margin-bottom: var(--stratakit-space-100);
+}
+.alert-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: var(--stratakit-space-600);
+  align-items: start;
+}
+@media (max-width: 960px) {
+  .alert-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.alert-evidence {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-300);
+  min-width: 0;
+}
+.alert-evidence p,
+.alert-evidence h3 {
+  margin: 0;
+}
+/* The chart's own figure margin (charts.mjs) would double the gap. */
+.alert-chart figure {
+  margin: 0;
+}
+.alert-shared h3 {
+  font-weight: 600;
+}
+.alert-shared ul {
+  margin: var(--stratakit-space-100) 0 0;
+  padding-inline-start: var(--stratakit-space-500);
+}
+.alert-scenes {
+  border: 1px solid var(--stratakit-color-border-neutral-muted);
+  border-radius: var(--stratakit-radius-md);
+  overflow-x: auto;
+}
+.alert-triage {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-300);
+}
+.alert-triage h3 {
+  margin: 0;
+  font-weight: 600;
+}
+.alert-save {
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-300);
+}
+.alert-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--stratakit-space-200) var(--stratakit-space-600);
+  padding-top: var(--stratakit-space-300);
+  border-top: 1px solid var(--stratakit-color-border-neutral-muted);
+}

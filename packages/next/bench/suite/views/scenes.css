@@ -1,10 +1,151 @@
-/* Scene cards are links (dyno.css styles .scene-card as a button). */
-a.scene-card {
-  text-decoration: none;
+/* Scenes: the catalog (.scenes-page) and a scene's page (.scene-detail). */
+
+.scenes-page .scenes-empty {
+  margin-bottom: var(--stratakit-space-600);
 }
-.scene-card .scene-card-table {
+.scenes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--stratakit-space-300);
+}
+.scenes-card {
+  display: flex;
+  flex-direction: column;
+}
+.scenes-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-200);
+}
+.scenes-card-table {
   width: 100%;
 }
-.scene-page .best {
-  font-variant-numeric: tabular-nums;
+.scenes-card-table th,
+.scenes-card-table td {
+  white-space: nowrap;
+}
+.scenes-card-verdict {
+  margin: 0;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+
+/* The engines' validated colors (1.x blue, 2.0 orange), as in charts. */
+.scenes-page .engine-key,
+.scene-detail .series-key {
+  display: inline-block;
+  inline-size: var(--stratakit-space-200);
+  block-size: var(--stratakit-space-200);
+  border-radius: var(--stratakit-radius-sm);
+  margin-inline-end: var(--stratakit-space-150);
+}
+.scenes-page .engine-1x {
+  background: #3987e5;
+}
+.scenes-page .engine-2 {
+  background: #d95926;
+}
+
+.scene-detail .back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+}
+.scene-detail .table-scroll {
+  overflow-x: auto;
+}
+.scene-detail .best {
+  inline-size: auto;
+  min-inline-size: min(100%, 640px);
+}
+.scene-detail .best th,
+.scene-detail .best td {
+  white-space: nowrap;
+  vertical-align: top;
+}
+.scene-detail .best-when {
+  display: block;
+  color: var(--stratakit-color-text-neutral-tertiary);
+  font-size: var(--stratakit-font-size-caption-lg);
+}
+.scene-detail-charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+  gap: var(--stratakit-space-300) var(--stratakit-space-500);
+}
+.scene-detail .quiet {
+  margin: 0;
+}
+.scene-detail .moved {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.scene-detail .moved li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--stratakit-space-200) var(--stratakit-space-300);
+  padding: var(--stratakit-space-200) 0;
+  border-block-end: 1px solid var(--stratakit-color-border-neutral-muted);
+  font-size: var(--stratakit-font-size-body-md);
+}
+.scene-detail .moved li > span {
+  flex: 1;
+  min-inline-size: 240px;
+}
+.scene-detail .loading {
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-200);
+}
+
+.filmstrip {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-500);
+}
+.filmstrip-run-link {
+  display: inline-block;
+  margin-block-end: var(--stratakit-space-150);
+  font-size: var(--stratakit-font-size-body-md);
+}
+.filmstrip-frames {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--stratakit-space-300);
+}
+/* Plain figures (charts.mjs styles every .viz figure as a chart card). */
+.filmstrip-frames figure {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+.filmstrip-frames img {
+  display: block;
+  inline-size: 100%;
+  border-radius: var(--stratakit-radius-md);
+  border: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.filmstrip-frames figcaption {
+  font-weight: normal;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--stratakit-space-200);
+  margin-block-start: var(--stratakit-space-100);
+  font-size: var(--stratakit-font-size-caption-lg);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+
+.filmstrip-frames figcaption > span {
+  overflow-wrap: anywhere;
+}
+.filmstrip-frames figcaption .num {
+  white-space: nowrap;
+}
+
+.scene-detail .content-table th {
+  font-weight: inherit;
 }

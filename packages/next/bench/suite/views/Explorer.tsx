@@ -1,22 +1,37 @@
 import "./explorer.css";
 import {
+  Alert,
   Button,
-  Callout,
-  Card,
-  Checkbox,
-  Code,
-  Flex,
+  CircularProgress,
+  Divider,
+  FormControlLabel,
   IconButton,
   Popover,
-  SegmentedControl,
   Slider,
+  Switch,
   Table,
-  Text,
-  Tooltip,
-} from "@radix-ui/themes";
-import { ClipboardCopyIcon, PauseIcon, PlayIcon } from "@radix-ui/react-icons";
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  ToggleButton,
+  ToggleButtonGroup,
+  Typography,
+} from "@mui/material";
+import { svgCopy } from "@stratakit/icons/copy";
+import { svgPause } from "@stratakit/icons/pause";
+import { svgPlay } from "@stratakit/icons/play";
+import { svgStopwatch } from "@stratakit/icons/stopwatch";
+import { Icon } from "@stratakit/mui";
 import { getRouteApi } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  type ReactNode,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import publicCatalog from "../catalog/public.json";
 import type {
   Dataset,
@@ -25,8 +40,9 @@ import type {
   Scenario,
   Scene,
 } from "../schema.ts";
+import { ensureCesium } from "../cesium1x.ts";
 import { DEPTH_COLORS, type DrawnTile } from "../suite.ts";
-import { Choice, Field, Toolbar, toast } from "./common.tsx";
+import { Choice, Empty, Page, Section, toast } from "./common.tsx";
 import {
   ExplorerSession,
   PANE_COLORS,
@@ -35,7 +51,7 @@ import {
 } from "./explorerSession.ts";
 
 /**
- * Dyno's explorer (plan §16.9, Explore): a catalog scene live in one or
+ * Dyno's explorer (DESIGN.md: Explorer): a catalog scene live in one or
  * two engine configurations side by side, for looking, not measuring (the
  * engines share one GPU and main thread).
  *
@@ -49,7 +65,9 @@ import {
  *   the selection by depth in both engines.
  *
  * State lives in the route's search (scene, left, right, t, cesium), so
- * a report can link to a place on a scene's camera path.
+ * a report can link to a place on a scene's camera path. The engines live
+ * in an `ExplorerSession` outside React, which survives StrictMode's
+ * mount, unmount and mount.
  */
 
 // CesiumJS 1.x, a page global, injected on demand.
@@ -89,38 +107,12 @@ function configById(id: string): EngineConfig | undefined {
 const buildOf = (config: EngineConfig | undefined) =>
   config?.engine === "1.x" ? (config.cesium ?? "repo") : undefined;
 
-/** The 1.x build in this page, if any (a global: one per page). */
-let cesiumBuild: { build: string; loaded: Promise<void> } | undefined;
-
-/** Loads a 1.x build once; false when another build is already loaded. */
-async function ensureCesium(build: string): Promise<boolean> {
-  if (!cesiumBuild) {
-    const base =
-      build === "repo"
-        ? "/cesium1x/"
-        : `/cesium-release/${build}/package/Build/Cesium/`;
-    (globalThis as { CESIUM_BASE_URL?: string }).CESIUM_BASE_URL = base;
-    const css = document.createElement("link");
-    css.rel = "stylesheet";
-    css.href = `${base}Widgets/widgets.css`;
-    document.head.append(css);
-    const loaded = new Promise<void>((resolve, reject) => {
-      const script = document.createElement("script");
-      script.src = `${base}Cesium.js`;
-      script.onload = () => resolve();
-      script.onerror = () => reject(new Error(`CesiumJS ${build}: not found`));
-      document.head.append(script);
-    });
-    cesiumBuild = { build, loaded };
-  }
-  await cesiumBuild.loaded;
-  return cesiumBuild.build === build;
-}
-
-const HINTS = {
-  path: "Both cameras follow the scene's benchmark camera path. Switch to free flight to fly around and inspect.",
-  free: "Drag to rotate the globe, wheel or right-drag to zoom, middle- or ctrl-drag to tilt, shift-drag to look around. The engine you touch leads when cameras are linked.",
-};
+const SPEEDS = [
+  ["0.25", "¼×"],
+  ["0.5", "½×"],
+  ["1", "1×"],
+  ["2", "2×"],
+] as const;
 
 export function Explorer() {
   const search = route.useSearch();
@@ -172,7 +164,7 @@ export function Explorer() {
       const builds = new Set(configs.map(buildOf).filter(Boolean));
       if (builds.size > 1) {
         setStatus({
-          text: "Pick at most one 1.x build (a page loads one).",
+          text: "Pick at most one 1.x build: a page loads one. Change the left or right configuration.",
           error: true,
         });
         return;
@@ -199,7 +191,7 @@ export function Explorer() {
         session.setProgress(progress);
       }
       setSnapshot(undefined);
-      setStatus({ text: "loading…" });
+      setStatus({ text: "Loading the scene…" });
       const datasetIds = new Set([
         ...(typeof scene.globe === "object" ? [scene.globe.terrain] : []),
         ...(scene.imagery ? [scene.imagery] : []),
@@ -230,7 +222,10 @@ export function Explorer() {
         }
       } catch (e) {
         if (!cancelled) {
-          setStatus({ text: String(e), error: true });
+          setStatus({
+            text: `Could not load the scene: ${e instanceof Error ? e.message : String(e)}. Check the browser console, or try one engine at a time.`,
+            error: true,
+          });
         }
       }
     })();
@@ -275,250 +270,415 @@ export function Explorer() {
   )}${release ? ` --cesium ${release.slice(4)}` : ""} --reps 3 --note "explorer: ${sceneId}"`;
 
   const configOptions = catalog.configs.map((c) => c.id);
+  const help = (
+    <>
+      <p>
+        Both engines draw the same scene with the benchmark's render settings.
+        They share one GPU and main thread, so the numbers here are for looking;
+        use <b>Measure this</b> for numbers you can compare.
+      </p>
+      <p>
+        <b>Camera path</b>: both cameras follow the scene's benchmark camera
+        path; play it or drag the slider. <b>Free flight</b>: drag to rotate the
+        globe, wheel or right-drag to zoom, middle- or Ctrl-drag to tilt,
+        Shift-drag to look around. With linked cameras, the engine you touch
+        leads.
+      </p>
+      <p>
+        <b>Inspect</b>: pause streaming freezes each engine's tile selection;
+        tint tiles by tree depth or by which engine draws them; show bounding
+        volumes and content volumes. The selection by depth below the viewports
+        counts the tiles each engine draws per level.
+      </p>
+    </>
+  );
+
   if (!scene) {
     return (
-      <Callout.Root color="red">
-        <Callout.Text>No scene “{sceneId}” in the catalog.</Callout.Text>
-      </Callout.Root>
+      <Page title="Explorer" help={help}>
+        <Empty title={`No scene “${sceneId}” in the catalog.`}>
+          Pick a scene:{" "}
+          <Choice
+            label="Scene"
+            value={undefined}
+            minWidth={280}
+            options={catalog.scenes.map((s) => [s.id, s.title] as const)}
+            onChange={(v) => setSearch({ scene: v, t: undefined })}
+          />
+        </Empty>
+      </Page>
     );
   }
   return (
-    <div className="explorer">
-      <Toolbar>
-        <Field label="Scene">
-          <Choice
-            value={sceneId}
-            options={catalog.scenes.map(
-              (s) => [s.id, `${s.group} · ${s.title}`] as const,
-            )}
-            onChange={(v) => setSearch({ scene: v, t: undefined })}
-          />
-        </Field>
-        <Field label="Left">
-          <Choice
-            value={left}
-            options={
-              configOptions.includes(left)
-                ? configOptions
-                : [left, ...configOptions]
-            }
-            onChange={(v) => setSearch({ left: v })}
-          />
-        </Field>
-        <Field label="Right">
-          <Choice
-            value={right}
-            options={[
-              ["", "none"],
-              ...(configOptions.includes(right) || !right
-                ? configOptions
-                : [right, ...configOptions]
-              ).map((c) => [c, c] as const),
-            ]}
-            onChange={(v) => setSearch({ right: v })}
-          />
-        </Field>
-        {status && (
-          <Text size="2" color={status.error ? "red" : "gray"} role="status">
-            {status.text}
-          </Text>
-        )}
-      </Toolbar>
-
-      <Toolbar>
-        <SegmentedControl.Root
-          value={mode}
-          onValueChange={(v) => chooseMode(v as "path" | "free")}
-          aria-label="Camera"
-        >
-          <SegmentedControl.Item value="path">
-            Camera path
-          </SegmentedControl.Item>
-          <SegmentedControl.Item value="free">
-            Free flight
-          </SegmentedControl.Item>
-        </SegmentedControl.Root>
-        {mode === "free" && configs.length > 1 && (
-          <Text as="label" size="2">
-            <Flex gap="2" align="center">
-              <Checkbox
-                checked={link}
-                onCheckedChange={(c) => setLink((session.link = c === true))}
-              />
-              Link cameras
-            </Flex>
-          </Text>
-        )}
-        {mode === "free" && (
-          <Button variant="soft" onClick={() => chooseMode("path")}>
-            Back to the path
-          </Button>
-        )}
-        <Text as="label" size="2">
-          <Flex gap="2" align="center">
-            <Checkbox
-              checked={paused}
-              onCheckedChange={(c) => {
-                session.setPaused(c === true);
-                setPaused(c === true);
-              }}
-            />
-            Pause streaming
-          </Flex>
-        </Text>
-        <Popover.Root>
-          <Popover.Trigger>
-            <Button variant="soft" color="gray">
-              Measure this…
-            </Button>
-          </Popover.Trigger>
-          <Popover.Content width="520px">
-            <Text as="p" size="2" mb="2">
-              Measure this scene properly: each engine alone, cold cache,
-              repetitions, conditions recorded.
-            </Text>
-            <Code size="2" className="command">
-              {command}
-            </Code>
-            <Flex justify="end" mt="2">
-              <Button
-                size="1"
-                onClick={() =>
-                  void navigator.clipboard
-                    ?.writeText(command)
-                    .then(() => toast("Command copied"))
-                }
-              >
-                <ClipboardCopyIcon /> Copy
-              </Button>
-            </Flex>
-          </Popover.Content>
-        </Popover.Root>
-        {snapshot?.camera && (
-          <Text size="2" color="gray" className="readout">
-            camera {snapshot.camera[0].toFixed(5)}°,{" "}
-            {snapshot.camera[1].toFixed(5)}°, {snapshot.camera[2].toFixed(0)} m
-          </Text>
-        )}
-      </Toolbar>
-
-      <Toolbar>
-        <Text size="2" color="gray">
-          Tiles
-        </Text>
-        <SegmentedControl.Root
-          size="1"
-          value={colors}
-          onValueChange={(v) => {
-            session.setTileColors(v as TileColors);
-            setColors(v as TileColors);
-          }}
-          aria-label="Tile colors"
-        >
-          <SegmentedControl.Item value="plain">Plain</SegmentedControl.Item>
-          <SegmentedControl.Item value="depth">By depth</SegmentedControl.Item>
-          {configs.length > 1 && (
-            <SegmentedControl.Item value="difference">
-              By engine
-            </SegmentedControl.Item>
-          )}
-        </SegmentedControl.Root>
-        {(["bounding", "content"] as const).map((kind) => (
-          <Text as="label" size="2" key={kind}>
-            <Flex gap="2" align="center">
-              <Checkbox
-                checked={volumes[kind]}
-                onCheckedChange={(c) => {
-                  const next = { ...volumes, [kind]: c === true };
-                  session.setVolumes(next.bounding, next.content);
-                  setVolumes(next);
-                }}
-              />
-              {kind === "bounding" ? "Bounding volumes" : "Content volumes"}
-            </Flex>
-          </Text>
-        ))}
-      </Toolbar>
-
-      {mode === "path" && (
-        <Flex align="center" gap="3" mb="2" className="scrub">
-          <Tooltip content={playing ? "Pause" : "Play the camera path"}>
-            <IconButton
-              variant="soft"
-              onClick={togglePlay}
-              aria-label={playing ? "Pause" : "Play"}
-            >
-              {playing ? <PauseIcon /> : <PlayIcon />}
-            </IconButton>
-          </Tooltip>
-          <Slider
-            value={[Math.round(progress * 1000)]}
-            max={1000}
-            aria-label="Camera path progress"
-            onValueChange={([v]) => {
-              session.playing = false;
-              setPlaying(false);
-              session.setProgress(v! / 1000);
-              setProgress(v! / 1000);
-            }}
-            onValueCommit={([v]) => commitProgress(v! / 1000)}
-          />
-          <Text size="2" color="gray" className="percent">
-            {(progress * 100).toFixed(1)}%
-          </Text>
-          <Field label="Speed">
+    <Page
+      className="explorer-page"
+      title="Explorer"
+      description="A scene live in two engines side by side, to look at what each one draws."
+      help={help}
+      actions={<MeasureThis command={command} />}
+      toolbar={
+        <>
+          <div className="explorer-group">
             <Choice
-              value={speed}
+              label="Scene"
+              value={sceneId}
+              minWidth={300}
+              options={catalog.scenes.map(
+                (s) => [s.id, `${s.title} (${s.group})`] as const,
+              )}
+              onChange={(v) => setSearch({ scene: v, t: undefined })}
+            />
+            <Choice
+              label="Left"
+              value={left}
+              options={
+                configOptions.includes(left)
+                  ? configOptions
+                  : [left, ...configOptions]
+              }
+              onChange={(v) => setSearch({ left: v })}
+            />
+            <Choice
+              label="Right"
+              value={right}
               options={[
-                ["0.25", "¼×"],
-                ["0.5", "½×"],
-                ["1", "1×"],
-                ["2", "2×"],
+                ["", "None"],
+                ...(configOptions.includes(right) || !right
+                  ? configOptions
+                  : [right, ...configOptions]
+                ).map((c) => [c, c] as const),
               ]}
-              onChange={(v) => {
-                session.speed = Number(v);
-                setSpeed(v);
-              }}
-            />
-          </Field>
-        </Flex>
-      )}
-
-      <div className="panes">
-        {configs.map((config, i) => (
-          <div
-            key={`${loadKey}#${i}`}
-            className="pane"
-            onPointerDownCapture={() => session.lead(i)}
-            onWheelCapture={() => session.lead(i)}
-          >
-            <div
-              className="view"
-              ref={(el) => {
-                if (el) {
-                  panes.current[i] = el;
-                }
-              }}
-            />
-            <Hud
-              config={config}
-              color={PANE_COLORS[i]!}
-              stats={snapshot?.panes[i]}
-              interval={snapshot?.interval}
-              paused={paused}
+              onChange={(v) => setSearch({ right: v })}
             />
           </div>
-        ))}
-      </div>
-      <Text as="p" size="1" color="gray" mt="2">
-        {HINTS[mode]}
-      </Text>
-      {(colors !== "plain" || volumes.bounding || volumes.content) && (
-        <Legend colors={colors} volumes={volumes} configs={configs} />
+          <Divider
+            orientation="vertical"
+            flexItem
+            className="explorer-divider"
+          />
+          <ToggleButtonGroup
+            size="small"
+            exclusive
+            value={mode}
+            onChange={(_, next: "path" | "free" | null) => {
+              if (next) {
+                chooseMode(next);
+              }
+            }}
+            aria-label="Camera"
+          >
+            <ToggleButton
+              value="path"
+              render={<Button variant="outlined" size="small" />}
+            >
+              Camera path
+            </ToggleButton>
+            <ToggleButton
+              value="free"
+              render={<Button variant="outlined" size="small" />}
+            >
+              Free flight
+            </ToggleButton>
+          </ToggleButtonGroup>
+          <Divider
+            orientation="vertical"
+            flexItem
+            className="explorer-divider"
+          />
+          <Group label="Inspect">
+            <ToggleButtonGroup
+              size="small"
+              exclusive
+              value={
+                colors === "difference" && configs.length < 2 ? "plain" : colors
+              }
+              onChange={(_, next: TileColors | null) => {
+                if (next) {
+                  session.setTileColors(next);
+                  setColors(next);
+                }
+              }}
+              aria-label="Tile tint"
+            >
+              <ToggleButton
+                value="plain"
+                render={<Button variant="outlined" size="small" />}
+              >
+                Plain
+              </ToggleButton>
+              <ToggleButton
+                value="depth"
+                render={<Button variant="outlined" size="small" />}
+              >
+                By depth
+              </ToggleButton>
+              {configs.length > 1 && (
+                <ToggleButton
+                  value="difference"
+                  render={<Button variant="outlined" size="small" />}
+                >
+                  By engine
+                </ToggleButton>
+              )}
+            </ToggleButtonGroup>
+            <FormControlLabel
+              control={
+                <Switch
+                  size="small"
+                  checked={paused}
+                  onChange={(_, on) => {
+                    session.setPaused(on);
+                    setPaused(on);
+                  }}
+                />
+              }
+              label="Pause streaming"
+            />
+            {(["bounding", "content"] as const).map((kind) => (
+              <FormControlLabel
+                key={kind}
+                control={
+                  <Switch
+                    size="small"
+                    checked={volumes[kind]}
+                    onChange={(_, on) => {
+                      const next = { ...volumes, [kind]: on };
+                      session.setVolumes(next.bounding, next.content);
+                      setVolumes(next);
+                    }}
+                  />
+                }
+                label={
+                  kind === "bounding" ? "Bounding volumes" : "Content volumes"
+                }
+              />
+            ))}
+          </Group>
+        </>
+      }
+    >
+      {status?.error && (
+        <Alert severity="error" className="explorer-alert">
+          {status.text}
+        </Alert>
       )}
+
+      <div className="explorer-stage">
+        <div className="explorer-transport">
+          {mode === "path" ? (
+            <>
+              <IconButton
+                label={
+                  playing ? "Pause the camera path" : "Play the camera path"
+                }
+                variant="outlined"
+                onClick={togglePlay}
+              >
+                <Icon href={playing ? svgPause : svgPlay} />
+              </IconButton>
+              <Slider
+                size="small"
+                className="explorer-scrubber"
+                value={Math.round(progress * 1000)}
+                max={1000}
+                aria-label="Place on the camera path"
+                getAriaValueText={(v) => `${(v / 10).toFixed(1)}%`}
+                onChange={(_, v) => {
+                  const t = (v as number) / 1000;
+                  session.playing = false;
+                  setPlaying(false);
+                  session.setProgress(t);
+                  setProgress(t);
+                }}
+                onChangeCommitted={(_, v) =>
+                  commitProgress((v as number) / 1000)
+                }
+              />
+              <Typography
+                variant="body-sm"
+                color="textSecondary"
+                className="explorer-percent"
+                aria-hidden="true"
+              >
+                {(progress * 100).toFixed(1)}%
+              </Typography>
+              <ToggleButtonGroup
+                size="small"
+                exclusive
+                value={speed}
+                onChange={(_, v: string | null) => {
+                  if (v) {
+                    session.speed = Number(v);
+                    setSpeed(v);
+                  }
+                }}
+                aria-label="Playback speed"
+              >
+                {SPEEDS.map(([v, text]) => (
+                  <ToggleButton
+                    key={v}
+                    value={v}
+                    render={<Button variant="outlined" size="small" />}
+                  >
+                    {text}
+                  </ToggleButton>
+                ))}
+              </ToggleButtonGroup>
+            </>
+          ) : (
+            <>
+              {configs.length > 1 && (
+                <FormControlLabel
+                  control={
+                    <Switch
+                      size="small"
+                      checked={link}
+                      onChange={(_, on) => setLink((session.link = on))}
+                    />
+                  }
+                  label="Link cameras"
+                />
+              )}
+              <Typography variant="body-sm" color="textSecondary">
+                Drag to rotate, wheel to zoom, Ctrl-drag to tilt.
+              </Typography>
+            </>
+          )}
+          {status && !status.error && (
+            <div className="explorer-status" role="status">
+              <CircularProgress size={14} />
+              <Typography variant="body-sm" color="textSecondary">
+                {status.text}
+              </Typography>
+            </div>
+          )}
+        </div>
+
+        <div className="explorer-panes" data-count={configs.length}>
+          {configs.map((config, i) => (
+            <div
+              key={`${loadKey}#${i}`}
+              className="explorer-pane"
+              onPointerDownCapture={() => session.lead(i)}
+              onWheelCapture={() => session.lead(i)}
+            >
+              <div
+                className="explorer-view"
+                ref={(el) => {
+                  if (el) {
+                    panes.current[i] = el;
+                  }
+                }}
+              />
+              <Hud
+                config={config}
+                color={PANE_COLORS[i]!}
+                stats={snapshot?.panes[i]}
+                interval={snapshot?.interval}
+                paused={paused}
+              />
+            </div>
+          ))}
+        </div>
+
+        <div className="explorer-below">
+          {(colors !== "plain" || volumes.bounding || volumes.content) && (
+            <Legend colors={colors} volumes={volumes} configs={configs} />
+          )}
+          {snapshot?.camera && (
+            <Typography
+              variant="body-sm"
+              color="textSecondary"
+              className="explorer-readout"
+            >
+              Camera {snapshot.camera[0].toFixed(5)}°,{" "}
+              {snapshot.camera[1].toFixed(5)}°,{" "}
+              {Math.round(snapshot.camera[2]).toLocaleString()} m
+            </Typography>
+          )}
+        </div>
+        <div id="credits" className="explorer-credits" />
+      </div>
+
       {snapshot && <Selection drawn={snapshot.drawn} configs={configs} />}
-      <div id="credits" className="credits" />
+    </Page>
+  );
+}
+
+/** A labeled group of controls in the toolbar. */
+function Group({ label, children }: { label: string; children: ReactNode }) {
+  const id = useId();
+  return (
+    <div className="explorer-group" role="group" aria-labelledby={id}>
+      <Typography variant="caption-lg" color="textSecondary" id={id}>
+        {label}
+      </Typography>
+      {children}
     </div>
+  );
+}
+
+/** "Measure this": the CLI command that measures this view properly. */
+function MeasureThis({ command }: { command: string }) {
+  const [anchor, setAnchor] = useState<HTMLElement | null>(null);
+  const titleId = useId();
+  return (
+    <>
+      <Button
+        variant="outlined"
+        startIcon={<Icon href={svgStopwatch} />}
+        aria-haspopup="dialog"
+        aria-expanded={!!anchor}
+        onClick={(e) => setAnchor(e.currentTarget)}
+      >
+        Measure this
+      </Button>
+      <Popover
+        open={!!anchor}
+        anchorEl={anchor}
+        onClose={() => setAnchor(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        transformOrigin={{ vertical: "top", horizontal: "right" }}
+        slotProps={{ paper: { "aria-labelledby": titleId } }}
+      >
+        <div className="explorer-measure">
+          <Typography variant="subtitle-sm" render={<h2 />} id={titleId}>
+            Measure this scene
+          </Typography>
+          <Typography variant="body-sm" color="textSecondary" render={<p />}>
+            Each engine runs alone, with a cold cache and repetitions, and the
+            conditions are recorded. Run this from the repository root:
+          </Typography>
+          <pre className="explorer-command">
+            <code>{command}</code>
+          </pre>
+          <div className="explorer-measure-actions">
+            <Button
+              startIcon={<Icon href={svgCopy} />}
+              onClick={() => {
+                if (!navigator.clipboard) {
+                  toast(
+                    "Could not copy: select the command and copy it.",
+                    "bad",
+                  );
+                  return;
+                }
+                void navigator.clipboard.writeText(command).then(
+                  () => toast("Command copied"),
+                  () =>
+                    toast(
+                      "Could not copy: select the command and copy it.",
+                      "bad",
+                    ),
+                );
+              }}
+            >
+              Copy command
+            </Button>
+          </div>
+        </div>
+      </Popover>
+    </>
   );
 }
 
@@ -540,8 +700,8 @@ function Hud({
       ? ` · CesiumJS ${Cesium.VERSION}`
       : "";
   return (
-    <div className="hud" aria-live="off">
-      <span className="key" style={{ background: color }} />
+    <div className="explorer-hud" aria-live="off">
+      <span className="explorer-key" style={{ background: color }} />
       <b>
         {config.id}
         {version}
@@ -572,51 +732,50 @@ function Legend({
   configs: EngineConfig[];
 }) {
   const swatch = (color: string, label: string, outline = false) => (
-    <Flex align="center" gap="1" key={label}>
+    <span className="explorer-legend-item" key={label}>
       <span
-        className={outline ? "swatch outline" : "swatch"}
+        className={outline ? "explorer-swatch outline" : "explorer-swatch"}
         style={outline ? { borderColor: color } : { background: color }}
       />
-      <Text size="1">{label}</Text>
-    </Flex>
+      {label}
+    </span>
   );
   return (
-    <Flex gap="4" wrap="wrap" align="center" my="2" className="legend">
+    <div className="explorer-legend">
       {colors === "depth" && (
-        <Flex gap="2" align="center" wrap="wrap">
-          <Text size="1" color="gray">
-            Depth
-          </Text>
+        <div className="explorer-legend-group">
+          <span className="explorer-legend-title">Depth</span>
           {DEPTH_COLORS.map((c, i) => swatch(css(c), String(i)))}
-          <Text size="1" color="gray">
-            (then again from 8)
-          </Text>
-        </Flex>
+          <span className="explorer-legend-note">then again from 8</span>
+        </div>
       )}
-      {colors === "difference" && (
-        <Flex gap="2" align="center" wrap="wrap">
-          {swatch("rgb(179 179 179)", "drawn by both")}
+      {colors === "difference" && configs.length > 1 && (
+        <div className="explorer-legend-group">
+          <span className="explorer-legend-title">Drawn by</span>
+          {swatch("rgb(179 179 179)", "both")}
           {configs.map((c, i) => swatch(PANE_COLORS[i]!, `only ${c.id}`))}
-          <Text size="1" color="gray">
-            (1.x's globe takes no tint)
-          </Text>
-        </Flex>
+          <span className="explorer-legend-note">
+            1.x's globe takes no tint
+          </span>
+        </div>
       )}
       {volumes.bounding && (
-        <Flex gap="2" align="center" wrap="wrap">
-          <Text size="1" color="gray">
-            Volumes
-          </Text>
+        <div className="explorer-legend-group">
+          <span className="explorer-legend-title">Bounding volumes</span>
           {swatch("#ffffff", "final resolution", true)}
           {swatch("#ffff00", "refining (finer tiles loading)", true)}
           {swatch("#666666", "no content of its own", true)}
-          <Text size="1" color="gray">
-            (1.x draws none for its globe)
-          </Text>
-        </Flex>
+          <span className="explorer-legend-note">
+            1.x draws none for its globe
+          </span>
+        </div>
       )}
-      {volumes.content && swatch("#0000ff", "content volume", true)}
-    </Flex>
+      {volumes.content && (
+        <div className="explorer-legend-group">
+          {swatch("#0000ff", "content volume", true)}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -669,50 +828,52 @@ function Selection({
   const max = Math.max(...rows.flatMap((r) => r.counts));
   const totals = drawn.map((list) => list.length);
   return (
-    <Card mt="3" className="selection">
-      <Flex justify="between" align="baseline" mb="2" wrap="wrap" gap="2">
-        <Text weight="medium">Selection by depth</Text>
-        <Text size="1" color="gray">
-          Tiles drawn now per level of the tree;{" "}
-          {configs.length > 1
-            ? "“only” counts tiles the other engine doesn't draw. "
-            : ""}
-          Updates as the camera moves.
-        </Text>
-      </Flex>
-      <Table.Root size="1">
-        <Table.Header>
-          <Table.Row>
-            <Table.ColumnHeaderCell>Depth</Table.ColumnHeaderCell>
+    <Section
+      title="Selection by depth"
+      description={`Tiles each engine draws now, per level of the tree${
+        configs.length > 1
+          ? "; “only” counts tiles the other engine doesn't draw"
+          : ""
+      }. Updates as the camera moves.`}
+    >
+      <Table size="small" className="explorer-selection">
+        <TableHead>
+          <TableRow>
+            <TableCell>Depth</TableCell>
             {configs.map((c, i) => (
-              <Table.ColumnHeaderCell key={c.id} justify="end">
-                <span className="key" style={{ background: PANE_COLORS[i] }} />
+              <TableCell key={c.id} align="right">
+                <span
+                  className="explorer-key"
+                  style={{ background: PANE_COLORS[i] }}
+                />
                 {c.id} ({totals[i]})
-              </Table.ColumnHeaderCell>
+              </TableCell>
             ))}
-            <Table.ColumnHeaderCell width="40%" />
-          </Table.Row>
-        </Table.Header>
-        <Table.Body>
+            <TableCell className="explorer-bars-cell">
+              <span className="visually-hidden">Tiles drawn</span>
+            </TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
           {rows.map((r) => (
-            <Table.Row key={`${r.kind}|${r.depth}`}>
-              <Table.RowHeaderCell>
-                {r.kind === "terrain" ? `terrain level ${r.depth}` : r.depth}
-              </Table.RowHeaderCell>
+            <TableRow key={`${r.kind}|${r.depth}`}>
+              <TableCell render={<th scope="row" />}>
+                {r.kind === "terrain" ? `Terrain level ${r.depth}` : r.depth}
+              </TableCell>
               {r.counts.map((n, i) => (
-                <Table.Cell key={i} justify="end" className="num">
+                <TableCell key={i} align="right" className="num">
                   {n}
                   {configs.length > 1 && r.only[i] ? (
-                    <Text color="gray"> · {r.only[i]} only</Text>
+                    <span className="explorer-only"> · {r.only[i]} only</span>
                   ) : null}
-                </Table.Cell>
+                </TableCell>
               ))}
-              <Table.Cell>
-                <div className="bars">
+              <TableCell className="explorer-bars-cell">
+                <div className="explorer-bars" aria-hidden="true">
                   {r.counts.map((n, i) => (
                     <div
                       key={i}
-                      className="bar"
+                      className="explorer-bar"
                       style={{
                         width: `${(n / max) * 100}%`,
                         background: PANE_COLORS[i],
@@ -720,11 +881,11 @@ function Selection({
                     />
                   ))}
                 </div>
-              </Table.Cell>
-            </Table.Row>
+              </TableCell>
+            </TableRow>
           ))}
-        </Table.Body>
-      </Table.Root>
-    </Card>
+        </TableBody>
+      </Table>
+    </Section>
   );
 }

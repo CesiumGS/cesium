@@ -1,0 +1,44 @@
+/* Analysis (views/Analysis.tsx): sweeps and machines, as tabs. */
+
+.analysis-tabs {
+  margin-bottom: var(--stratakit-space-500);
+}
+.analysis-note {
+  margin: 0 0 var(--stratakit-space-500);
+  max-width: 900px;
+}
+.analysis-charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: var(--stratakit-space-300);
+}
+/* The charts' own figure margin (charts.mjs) would double the grid gap. */
+.analysis-chart figure {
+  margin: 0;
+}
+.analysis-table {
+  overflow-x: auto;
+  border: 1px solid var(--stratakit-color-border-neutral-muted);
+  border-radius: var(--stratakit-radius-md);
+}
+.analysis-table th[scope="row"] {
+  text-align: start;
+  font-weight: normal;
+  min-width: 200px;
+}
+.analysis-block {
+  display: block;
+}
+.analysis-machine {
+  display: block;
+  font-weight: 600;
+}
+.analysis-table .num {
+  white-space: nowrap;
+}
+.analysis-toolbar-end {
+  align-self: flex-end;
+}
+.analysis-nowrap {
+  white-space: nowrap;
+}

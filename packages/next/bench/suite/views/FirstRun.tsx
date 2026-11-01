@@ -1,41 +1,43 @@
-import {
-  Badge,
-  Button,
-  Card,
-  Code,
-  Flex,
-  Heading,
-  Link as RadixLink,
-  Text,
-} from "@radix-ui/themes";
-import {
-  CheckCircledIcon,
-  ClipboardCopyIcon,
-  CrossCircledIcon,
-  ReloadIcon,
-} from "@radix-ui/react-icons";
-import { Link } from "@tanstack/react-router";
+import "./first-run.css";
+import { Badge, Button, IconButton, Link, Typography } from "@mui/material";
+import { svgCopy } from "@stratakit/icons/copy";
+import { svgRefresh } from "@stratakit/icons/refresh";
+import { Icon } from "@stratakit/mui";
+import { Link as RouterLink } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useState } from "react";
-import { toast, useRuns } from "./common.tsx";
+import { Page, toast, useRuns } from "./common.tsx";
 
 /**
- * The guided first run (plan §16.9, Experience): what Dyno is for, the
- * setup checked live (WebGPU, the 1.x builds, the results directory),
- * one command for a first measured run, and where to look afterwards.
- * Shown wherever a view needs runs and there are none, and at /start.
+ * The guided first run (DESIGN.md, Help): what Dyno is for, the setup
+ * checked live (WebGPU, the 1.x builds, the results directory), one
+ * command for a first measured run, and where to look afterwards. Shown
+ * at /start, and wherever a view needs runs and there are none.
  */
 
-type Check = { state: "ok" | "bad" | "pending"; detail: ReactNode };
+type CheckState = "ready" | "missing" | "later" | "optional" | "checking";
+type Check = { state: CheckState; detail: ReactNode };
+
+/** Each state as a word and a color (never color alone). */
+const STATE: Record<
+  CheckState,
+  [string, "success" | "error" | "info" | "secondary"]
+> = {
+  ready: ["Ready", "success"],
+  missing: ["Missing", "error"],
+  later: ["On first run", "info"],
+  optional: ["Optional", "secondary"],
+  checking: ["Checking", "secondary"],
+};
 
 const FIRST_RUN =
   'node packages/next/bench/suite/cli.mjs run --scenes osm-philadelphia --configs 1.x-release,2.0 --reps 3 --note "first run"';
 
 function useChecks(): Record<"webgpu" | "release" | "repo", Check> {
-  const pending: Check = { state: "pending", detail: "checking…" };
+  const checking: Check = { state: "checking", detail: "Checking…" };
   const [checks, setChecks] = useState({
-    webgpu: pending,
-    release: pending,
-    repo: pending,
+    webgpu: checking,
+    release: checking,
+    repo: checking,
   });
   useEffect(() => {
     let cancelled = false;
@@ -48,14 +50,14 @@ function useChecks(): Record<"webgpu" | "release" | "repo", Check> {
         "webgpu",
         adapter
           ? {
-              state: "ok",
+              state: "ready",
               detail:
                 `${adapter.info.vendor || "GPU"} ${adapter.info.architecture}`.trim(),
             }
           : {
-              state: "bad",
+              state: "missing",
               detail:
-                "No WebGPU adapter in this browser. The suite drives Edge or Chrome with WebGPU; this page only needs it for the Explorer.",
+                "No WebGPU adapter in this browser. Runs drive Edge or Chrome themselves; this browser needs WebGPU only for the Explorer and the Lab.",
             },
       );
     })();
@@ -68,11 +70,11 @@ function useChecks(): Record<"webgpu" | "release" | "repo", Check> {
         set(
           "release",
           ok
-            ? { state: "ok", detail: "CesiumJS 1.146.0 is in the store." }
+            ? { state: "ready", detail: "CesiumJS 1.146.0 is in the store." }
             : {
-                state: "pending",
+                state: "later",
                 detail:
-                  "Not downloaded yet: the first run fetches CesiumJS 1.146.0 from npm (once) into the store.",
+                  "The first run downloads CesiumJS 1.146.0 from npm, once.",
               },
         ),
     );
@@ -80,14 +82,14 @@ function useChecks(): Record<"webgpu" | "release" | "repo", Check> {
       set(
         "repo",
         ok
-          ? { state: "ok", detail: "This repository's 1.x build is there." }
+          ? { state: "ready", detail: "This repository's 1.x build is there." }
           : {
-              state: "pending",
+              state: "optional",
               detail: (
                 <>
-                  Optional: <Code>npm run build</Code> at the repository root to
-                  benchmark this repository's 1.x (configuration{" "}
-                  <Code>1.x</Code>).
+                  To measure this repository's 1.x (configuration{" "}
+                  <code>1.x</code>), run <code>npm run build</code> at the
+                  repository root.
                 </>
               ),
             },
@@ -101,132 +103,139 @@ function useChecks(): Record<"webgpu" | "release" | "repo", Check> {
 }
 
 function CheckRow({ label, check }: { label: string; check: Check }) {
+  const [word, color] = STATE[check.state];
   return (
-    <Flex gap="2" align="start">
-      {check.state === "ok" ? (
-        <CheckCircledIcon color="var(--green-11)" />
-      ) : check.state === "bad" ? (
-        <CrossCircledIcon color="var(--red-11)" />
-      ) : (
-        <CheckCircledIcon color="var(--gray-8)" />
-      )}
-      <Text size="2">
-        <Text weight="medium">{label}</Text> · {check.detail}
-      </Text>
-    </Flex>
+    <div className="first-run-check" role="listitem">
+      <Typography variant="body-sm" className="first-run-check-label">
+        {label}
+      </Typography>
+      <span>
+        <Badge
+          variant="inline"
+          size="small"
+          type="muted"
+          color={color}
+          badgeContent={word}
+        />
+      </span>
+      <Typography variant="body-sm" color="textSecondary">
+        {check.detail}
+      </Typography>
+    </div>
   );
 }
 
-function Step({
-  n,
-  title,
-  children,
-}: {
-  n: number;
-  title: string;
-  children: ReactNode;
-}) {
+function Step({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <Flex gap="3">
-      <Badge radius="full" size="2" variant="soft">
-        {n}
-      </Badge>
-      <Flex direction="column" gap="2" style={{ flex: 1, minWidth: 0 }}>
-        <Text weight="medium">{title}</Text>
-        {children}
-      </Flex>
-    </Flex>
+    <li className="first-run-step">
+      <Typography variant="subtitle-md" render={<h2 />}>
+        {title}
+      </Typography>
+      <div className="first-run-step-body">{children}</div>
+    </li>
   );
 }
+
+/** A link to one of Dyno's views. */
+const To = ({
+  to,
+  children,
+}: {
+  to: "/runs" | "/trends" | "/alerts" | "/explorer" | "/images" | "/lab";
+  children: ReactNode;
+}) => <Link render={<RouterLink to={to} />}>{children}</Link>;
 
 export function FirstRun() {
   const { index, summaries } = useRuns();
   const checks = useChecks();
-  const copy = (text: string) =>
+  const copy = () =>
     void navigator.clipboard
-      ?.writeText(text)
-      .then(() => toast("Command copied"));
+      ?.writeText(FIRST_RUN)
+      .then(() => toast("Command copied"))
+      .catch(() => toast("Could not copy: select the command instead", "bad"));
   return (
-    <Card size="3" className="first-run" style={{ maxWidth: 820 }}>
-      <Flex direction="column" gap="4">
-        <div>
-          <Heading size="4" mb="1">
-            {summaries.length ? "Getting started" : "No runs yet"}
-          </Heading>
-          <Text as="p" size="2" color="gray">
-            Dyno measures CesiumJS 1.x and 2.0 on the same scenes, camera paths
-            and render settings, and tracks the results run to run. A run takes
-            a few minutes per scene; here is a first one.
-          </Text>
-        </div>
-        <Step n={1} title="Check the setup">
-          <CheckRow label="WebGPU" check={checks.webgpu} />
-          <CheckRow label="Released 1.x" check={checks.release} />
-          <CheckRow label="Repository 1.x" check={checks.repo} />
-          <CheckRow
-            label="Results"
-            check={{
-              state: "ok",
-              detail: (
-                <>
-                  read from <Code>{index.directory}</Code>, outside the
-                  repository (they carry machine details); set{" "}
-                  <Code>BENCH_RESULTS</Code> to move them.
-                </>
-              ),
-            }}
-          />
+    <Page
+      title={summaries.length ? "Getting started" : "No runs yet"}
+      description="Dyno measures CesiumJS 1.x and 2.0 on the same scenes, camera paths and settings, and follows the results run to run. A first run takes a few minutes."
+      className="first-run"
+    >
+      <ol className="first-run-steps">
+        <Step title="Check the setup">
+          <div className="first-run-checks" role="list">
+            <CheckRow label="WebGPU" check={checks.webgpu} />
+            <CheckRow label="Released 1.x" check={checks.release} />
+            <CheckRow label="Repository 1.x" check={checks.repo} />
+            <CheckRow
+              label="Results"
+              check={{
+                state: "ready",
+                detail: (
+                  <>
+                    Read from <code>{index.directory}</code>, outside the
+                    repository because they record machine details. Set{" "}
+                    <code>BENCH_RESULTS</code> to keep them elsewhere.
+                  </>
+                ),
+              }}
+            />
+          </div>
         </Step>
-        <Step n={2} title="Run one scene in both engines">
-          <Text size="2" color="gray">
-            From the repository root, with nothing else using the GPU (the suite
+        <Step title="Run one scene in both engines">
+          <Typography variant="body-sm" color="textSecondary" render={<p />}>
+            From the repository root, with nothing else using the GPU. The suite
             records clocks, temperature and power, and flags runs it can't
-            trust):
-          </Text>
-          <Flex gap="2" align="start">
-            <Code size="2" className="command" style={{ flex: 1 }}>
-              {FIRST_RUN}
-            </Code>
-            <Button size="1" variant="soft" onClick={() => copy(FIRST_RUN)}>
-              <ClipboardCopyIcon /> Copy
+            trust.
+          </Typography>
+          <div className="first-run-command">
+            <pre>
+              <code>{FIRST_RUN}</code>
+            </pre>
+            <IconButton label="Copy command" variant="outlined" onClick={copy}>
+              <Icon href={svgCopy} />
+            </IconButton>
+          </div>
+          <Typography variant="body-sm" color="textSecondary" render={<p />}>
+            Drop <code>--scenes</code> to run the whole catalog (about an hour);
+            add <code>--scenarios uncapped-orbit</code> to measure frame rates
+            above the display's.
+          </Typography>
+        </Step>
+        <Step title="Reload to see the results">
+          <div>
+            <Button
+              color="primary"
+              startIcon={<Icon href={svgRefresh} />}
+              onClick={() => location.reload()}
+            >
+              Reload
             </Button>
-          </Flex>
-          <Text size="2" color="gray">
-            Drop <Code>--scenes</Code> to run the whole catalog (about an hour),
-            add <Code>--scenarios uncapped-orbit</Code> for frame rates above
-            the display's.
-          </Text>
+          </div>
+          <Typography variant="body-sm" color="textSecondary" render={<p />}>
+            Each run's report in <To to="/runs">Runs</To> gives the verdict and
+            every scene in detail. <To to="/trends">Trends</To> follows metrics
+            from run to run, and <To to="/alerts">Alerts</To> start after about
+            six runs of a scene.
+          </Typography>
         </Step>
-        <Step n={3} title="Reload, then read the results">
-          <Flex gap="2" wrap="wrap">
-            <Button size="1" onClick={() => location.reload()}>
-              <ReloadIcon /> Reload
-            </Button>
-          </Flex>
-          <Text size="2" color="gray">
-            The run's report (from <Link to="/runs">Runs</Link>) gives the
-            verdict, the scorecard and each scene in detail; the{" "}
-            <Link to="/workspace">Workspace</Link> follows metrics across runs;{" "}
-            <Link to="/alerts">Alerts</Link> appear after about six runs of a
-            scene.
-          </Text>
+        <Step title="Meanwhile, look at a scene live">
+          <Typography variant="body-sm" color="textSecondary" render={<p />}>
+            The <To to="/explorer">Explorer</To> needs no runs: both engines
+            side by side on a scene's camera path, with tiles tinted by depth,
+            bounding volumes and each level's selection compared. Image checks
+            from <code>cli.mjs images --parity</code> are reviewed in{" "}
+            <To to="/images">Images</To>, and the <To to="/lab">Lab</To> has
+            focused parity checks and microbenchmarks.
+          </Typography>
         </Step>
-        <Step n={4} title="Meanwhile, look at a scene live">
-          <Text size="2" color="gray">
-            The <Link to="/explorer">Explorer</Link> needs no runs: both engines
-            side by side on a scene's camera path, or flying freely, with tiles
-            tinted by depth, bounding volumes and the selection compared level
-            by level. Image checks: <Code>cli.mjs images --parity</Code>,
-            reviewed under <Link to="/images">Images</Link>.
-          </Text>
-        </Step>
-        <Text size="1" color="gray">
-          More in the plan, §16 (benchmark suite) and §16.9 (Dyno):{" "}
-          <RadixLink href="/CESIUM2_WEBGPU_PLAN.md" target="_blank">
-            CESIUM2_WEBGPU_PLAN.md
-          </RadixLink>
-        </Text>
-      </Flex>
-    </Card>
+      </ol>
+      <Typography variant="caption-lg" color="textSecondary" render={<p />}>
+        More in the plan, §16 (benchmark suite) and §16.9 (Dyno):{" "}
+        <Link href="/CESIUM2_WEBGPU_PLAN.md" target="_blank" rel="noreferrer">
+          CESIUM2_WEBGPU_PLAN.md
+          <span aria-hidden="true">&nbsp;↗</span>
+          <span className="visually-hidden"> (opens in a new tab)</span>
+        </Link>
+      </Typography>
+    </Page>
   );
 }

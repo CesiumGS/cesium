@@ -1,0 +1,67 @@
+/* The Lab (views/Lab.tsx): Dyno's wrapper only; pages style themselves (lab/harness.css). */
+
+.lab-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--stratakit-space-300);
+}
+.lab-grid > li {
+  display: flex;
+}
+.lab-card {
+  flex: 1;
+}
+.lab-card-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--stratakit-space-200);
+}
+.lab-back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+}
+.lab-runner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--stratakit-space-200);
+  margin-bottom: var(--stratakit-space-500);
+}
+.lab-command {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+  min-width: 0;
+}
+.lab-command code {
+  overflow-wrap: anywhere;
+}
+.lab-error {
+  margin-bottom: var(--stratakit-space-500);
+  max-width: 900px;
+}
+.lab-loading {
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-200);
+  margin-bottom: var(--stratakit-space-500);
+}
+/* The harness's own heading and lede repeat the page header in Dyno. */
+.lab-host > h1,
+.lab-host > h1 + p {
+  display: none;
+}
+/* Text for screen readers only ("opens in a new tab"). */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

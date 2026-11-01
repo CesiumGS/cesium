@@ -40,6 +40,7 @@ Branch: `cesium-2.0-webgpu-poc` (off `main` @ `587f52f1eb`, CesiumJS 1.146.0)
 | r32 | Benchmark suite v1 built (§16): public and private catalogs with license review, released 1.x builds pinned by version and release sweeps, recorded and controlled hardware conditions, redesigned reports and experiment tracking. §16.9 designs analysis and experience from analogous systems (experimentation platforms, quality-control charts, F1 telemetry, WebPageTest, frame analysis tools, 3DMark validation) for deciding, detecting, diagnosing, trusting, exploring and communicating.                                            |
 | r33 | Dyno phase 1 (§16.9): validity verdicts, scorecards with declared primary and guardrail metrics, a `benchstat`-style compare, cost along the camera path with path segments and a path map, filmstrips with FLIP, request waterfalls, percentile curves and stutter metrics; uncapped (vsync off) scenarios; thermal limits and headroom recorded; condition flags limited to true conditions; the Explorer tab (camera path, free flight, linked cameras, paused streaming via `Tileset3D.freezeSelection`), with benchmark authoring planned. |
 | r34 | Dyno rebuilt as a React app on TanStack Router (typed URL state, code-split views) with Radix Themes controls and a guided first run. Explorer inspection: bounding volumes in both engines, tiles tinted by depth or engine, the selection compared by depth (`Budgeted` draws much coarser terrain than 1.x at Rainier). Inspector designed; CI image job and bisection deferred.                                                                                                                                                             |
+| r35 | Dyno on StrataKit (Bentley's design system: MUI themed by @stratakit/mui) at the dev server's root: navigation by job (results, scenes, workbench), a new Overview, a design, copy and IA pass (bench/suite/DESIGN.md), feedback for the StrataKit team (STRATAKIT_FEEDBACK.md). Parity checks, microbenchmarks and spikes fold into Dyno's Lab.                                                                                                                                                                                                |
 
 ## 1. Goal
 
@@ -3397,6 +3398,36 @@ URL. Practices applied:
   directory), gives one command for a first measured run and says where
   to look next.
 - Next: persistent column choices in tables; the inspector (below).
+
+#### Dyno on StrataKit (r35)
+
+Dyno is built on StrataKit, Bentley's design system (MUI themed by
+`@stratakit/mui`, plus `@stratakit/structures` and `@stratakit/icons`),
+as Sandcastle is; Dyno also battle-tests it, and what got in the way is
+logged for the StrataKit team in `bench/suite/STRATAKIT_FEEDBACK.md`.
+`bench/suite/DESIGN.md` sets the information architecture, page anatomy,
+copy rules and component choices; every view follows it.
+
+- _Served at the dev server's root_ (`/#/overview`); hash routes per view
+  with typed search params; no compatibility with earlier routes (Dyno
+  has one user so far).
+- _Navigation by job_, a StrataKit navigation rail in three groups:
+  results (Overview, Trends, Runs, Alerts), scenes (Scenes, Explorer,
+  Images), workbench (Analysis: sweeps and machines; Lab), with Getting
+  started, shortcuts and the theme in its footer. Compare is reached
+  from Runs (select two), alerts and links. The Cesium logo and wordmark
+  head the rail.
+- _Overview_ (new, the landing page): the latest run's verdict and
+  validity, the headline changes in words ("1.3× faster", "13% more
+  data"), budgets met or missed, what needs a look (untriaged
+  regressions, images to review, invalid runs) and the recent runs.
+- _Copy_: sentence case, buttons that say what they do, changes in words
+  with the raw ratio on hover, one sentence per page header with details
+  in help popovers, empty states that say what to do next.
+- _Lab_: every parity check, microbenchmark and spike is a module with two
+  hosts (`lab/harness.ts`): Dyno mounts it at `/#/lab/<id>`, and its own
+  .html page hosts it alone for the CLI runner (`bench/run.mjs`), which
+  measures in a page with nothing else on the main thread.
 
 #### Inspector (designed r34)
 

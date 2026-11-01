@@ -1,21 +1,71 @@
-.explorer .panes {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-  gap: var(--space-3);
+/* Explorer (Explorer.tsx): toolbar, transport, viewports and their HUDs. */
+
+.explorer-page .toolbar {
+  align-items: flex-end;
+  row-gap: var(--stratakit-space-300);
 }
-.explorer .pane {
+.explorer-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--stratakit-space-300);
+}
+.explorer-divider {
+  align-self: stretch;
+}
+.explorer-group .MuiFormControlLabel-root {
+  margin-inline: 0;
+}
+.explorer-alert {
+  margin-block-end: var(--stratakit-space-300);
+}
+
+.explorer-stage {
+  margin-block-end: var(--stratakit-space-800);
+}
+.explorer-transport {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--stratakit-space-300) var(--stratakit-space-400);
+  min-block-size: var(--stratakit-space-900);
+  margin-block-end: var(--stratakit-space-200);
+}
+.explorer-scrubber {
+  flex: 1 1 240px;
+}
+.explorer-percent {
+  min-inline-size: 6ch;
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+.explorer-status {
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-200);
+}
+
+.explorer-panes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: var(--stratakit-space-200);
+}
+.explorer-pane {
   position: relative;
   aspect-ratio: 16 / 9;
+  /* The 3D viewport: black behind the canvas in either color scheme. */
   background: #000;
-  border: 1px solid var(--gray-a6);
-  border-radius: var(--radius-3);
+  border: 1px solid var(--stratakit-color-border-neutral-muted);
+  border-radius: var(--stratakit-radius-md);
   overflow: hidden;
 }
-.explorer .pane .view {
+.explorer-view {
   position: absolute;
   inset: 0;
 }
-.explorer .hud {
+
+/* The HUD sits on the 3D viewport: dark overlay in both color schemes. */
+.explorer-hud {
   position: absolute;
   left: 8px;
   top: 8px;
@@ -24,60 +74,134 @@
   border-radius: 6px;
   padding: 6px 9px;
   font:
-    12px/1.4 ui-monospace,
+    12px/1.4 var(--stratakit-font-family-mono),
     monospace;
   color: #c3c2b7;
   pointer-events: none;
   white-space: pre;
 }
-.explorer .hud b {
+.explorer-hud b {
   color: #f0efec;
 }
-.explorer .key {
+.explorer-key {
   display: inline-block;
-  width: 10px;
-  height: 10px;
+  inline-size: 10px;
+  block-size: 10px;
   border-radius: 2px;
-  margin-right: 6px;
+  margin-inline-end: 6px;
   vertical-align: -1px;
 }
-.explorer .scrub .rt-SliderRoot {
-  flex: 1;
+
+.explorer-below {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--stratakit-space-300) var(--stratakit-space-600);
+  margin-block-start: var(--stratakit-space-200);
 }
-.explorer .readout,
-.explorer .percent,
-.explorer .num {
+.explorer-readout {
+  margin-inline-start: auto;
   font-variant-numeric: tabular-nums;
 }
-.explorer .percent {
-  min-width: 6ch;
+.explorer-legend {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-150);
+  font-size: var(--stratakit-font-size-caption-lg);
 }
-.explorer .command {
-  display: block;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
+.explorer-legend-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--stratakit-space-100) var(--stratakit-space-300);
 }
-.explorer .swatch {
+.explorer-legend-title {
+  font-weight: 600;
+}
+.explorer-legend-note {
+  color: var(--stratakit-color-text-neutral-tertiary);
+}
+.explorer-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+}
+/* Swatches show the engines' own debug colors (as drawn in the viewport). */
+.explorer-swatch {
   display: inline-block;
-  width: 12px;
-  height: 12px;
+  inline-size: 12px;
+  block-size: 12px;
   border-radius: 2px;
 }
-.explorer .swatch.outline {
+.explorer-swatch.outline {
   border: 2px solid;
   background: #222;
 }
-.explorer .selection .bars {
+
+/* 1.x positions its credits absolutely: keep them under the viewports. */
+.explorer-credits {
+  position: relative;
+  min-block-size: var(--stratakit-space-800);
+  overflow: hidden;
+  margin-block-start: var(--stratakit-space-200);
+  color: var(--stratakit-color-text-neutral-tertiary);
+  font-size: var(--stratakit-font-size-caption-lg);
+}
+
+.explorer-selection {
+  inline-size: 100%;
+}
+.explorer-selection th,
+.explorer-selection td {
+  white-space: nowrap;
+}
+.explorer-selection .explorer-bars-cell {
+  inline-size: 40%;
+}
+.explorer-only {
+  color: var(--stratakit-color-text-neutral-tertiary);
+}
+.explorer-bars {
   display: grid;
   gap: 2px;
 }
-.explorer .selection .bar {
-  height: 6px;
+.explorer-bar {
+  block-size: 6px;
   border-radius: 2px;
-  min-width: 1px;
+  min-inline-size: 1px;
 }
-.explorer .credits {
-  color: var(--gray-10);
-  font-size: 12px;
-  margin-top: var(--space-2);
+.explorer-page .visually-hidden {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.explorer-measure {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-200);
+  max-inline-size: 520px;
+  padding: var(--stratakit-space-400);
+}
+.explorer-measure h2,
+.explorer-measure p {
+  margin: 0;
+}
+.explorer-command {
+  margin: 0;
+  padding: var(--stratakit-space-200) var(--stratakit-space-300);
+  border: 1px solid var(--stratakit-color-border-neutral-muted);
+  border-radius: var(--stratakit-radius-sm);
+  font-family: var(--stratakit-font-family-mono);
+  font-size: var(--stratakit-font-size-mono-sm);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.explorer-measure-actions {
+  display: flex;
+  justify-content: flex-end;
 }

@@ -26,10 +26,10 @@ export const CHART_CSS = `
   --grid: #2c2c2a; --axis: #383835; --ring: #1a1a19;
   --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #c98500;
   --good: #0ca30c; --good-text: #0ca30c; --critical: #d03b3b; }
-.viz figure { margin: 0 0 16px; background: var(--surface); border: 1px solid var(--grid); border-radius: 8px; padding: 12px 14px; }
-.viz figcaption { font-weight: 600; color: var(--ink); margin-bottom: 2px; }
+.viz figure.chart { margin: 0 0 16px; background: var(--surface); border: 1px solid var(--grid); border-radius: 8px; padding: 12px 14px; }
+.viz figure.chart > figcaption { font-weight: 600; color: var(--ink); margin-bottom: 2px; }
 .viz .sub { color: var(--ink-2); font-size: 12px; margin-bottom: 6px; }
-.viz svg { display: block; width: 100%; height: auto; overflow: visible; }
+.viz svg:not([class]) { display: block; width: 100%; height: auto; overflow: visible; }
 .viz svg text { fill: var(--muted); font: 11px system-ui, sans-serif; font-variant-numeric: tabular-nums; }
 .viz svg .label { fill: var(--ink-2); font-size: 12px; }
 .viz .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--ink-2); margin: 4px 0; }
@@ -159,7 +159,7 @@ export function forestPlot({ title, subtitle, rows, baseline, candidate }) {
         `<tr><td>${escape(r.label)}</td><td>${r.ratio ? `×${r.ratio.value.toFixed(2)}` : "–"}</td><td>${r.ratio ? `${r.ratio.low.toFixed(2)}–${r.ratio.high.toFixed(2)}` : escape(r.note ?? "")}</td><td>${r.ratio ? (r.ratio.separated ? (r.ratio.value < 1 ? "better" : "worse") : "no clear difference") : ""}</td></tr>`,
     )
     .join("")}</table></details>`;
-  return `<figure id="${id}"><figcaption>${escape(title)}</figcaption>${subtitle ? `<div class="sub">${escape(subtitle)}</div>` : ""}${svg}${table}</figure>`;
+  return `<figure class="chart" id="${id}"><figcaption>${escape(title)}</figcaption>${subtitle ? `<div class="sub">${escape(subtitle)}</div>` : ""}${svg}${table}</figure>`;
 }
 
 /**
@@ -340,7 +340,7 @@ export function lineChart({
       return `<tr><td>${escape(s.label)}</td><td>${ys.length}</td><td>${ys.length ? compact(ys[0]) : "–"}</td><td>${ys.length ? compact(ys[ys.length >> 1]) : "–"}</td><td>${ys.length ? compact(ys[ys.length - 1]) : "–"}</td></tr>`;
     })
     .join("")}</table></details>`;
-  return `<figure id="${id}"><figcaption>${escape(title)}</figcaption>${subtitle ? `<div class="sub">${escape(subtitle)}</div>` : ""}${legend}${svg}<script type="application/json" data-for="${id}">${JSON.stringify(data).replace(/</g, "\\u003c")}</script>${table}</figure>`;
+  return `<figure class="chart" id="${id}"><figcaption>${escape(title)}</figcaption>${subtitle ? `<div class="sub">${escape(subtitle)}</div>` : ""}${legend}${svg}<script type="application/json" data-for="${id}">${JSON.stringify(data).replace(/</g, "\\u003c")}</script>${table}</figure>`;
 }
 
 /**

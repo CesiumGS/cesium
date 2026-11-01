@@ -1,16 +1,29 @@
+import "./alerts.css";
 import {
   Badge,
   Button,
-  Flex,
-  SegmentedControl,
+  Card,
+  CardContent,
+  CircularProgress,
+  Link,
   Table,
-  Text,
-  TextArea,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
   TextField,
-} from "@radix-ui/themes";
-import { getRouteApi, Link, useNavigate } from "@tanstack/react-router";
+  ToggleButton,
+  ToggleButtonGroup,
+  Typography,
+} from "@mui/material";
+import {
+  getRouteApi,
+  Link as RouterLink,
+  useNavigate,
+} from "@tanstack/react-router";
 import {
   type FormEvent,
+  type ReactNode,
   useCallback,
   useEffect,
   useMemo,
@@ -32,17 +45,19 @@ import {
   Chips,
   Choice,
   Empty,
-  Lede,
+  Page,
   toast,
   useRuns,
 } from "./common.tsx";
 
 /**
- * Dyno's alerts (plan §16.9, Detect), after Perfherder's sheriffing: every
- * significant change point across runs (changepoints.mjs) as an alert with
- * its commit range, the series around it, and a triage state (new,
- * acknowledged, expected, invalid, fixed) with an owner and a note, saved
- * beside the results. New regressions come first.
+ * Dyno's alerts (DESIGN.md, Results), after Perfherder's sheriffing:
+ * every significant change point across runs (changepoints.mjs) as an
+ * alert with its commit range, the series around it, and a triage state
+ * (new, acknowledged, expected, invalid, fixed) with an owner and a note,
+ * saved beside the results. Alerts that are one change (metric,
+ * direction, configuration, machine, commits) across several scenes are
+ * one card. New regressions come first.
  */
 
 interface Triage {
@@ -53,6 +68,7 @@ interface Triage {
 }
 type TriageFile = Record<string, Triage>;
 type Kind = NonNullable<AlertsSearch["kind"]>;
+type BadgeColor = "success" | "warning" | "error" | "info" | "secondary";
 
 const TRIAGE_URL = "/bench-results/triage.json";
 const INFO = new Map(
@@ -60,22 +76,84 @@ const INFO = new Map(
 );
 const DEFAULT_SHOWN = ["new", "acknowledged"];
 
-/** A scene and scenario's attributes, for "what differs". */
+/** The watched metrics as the subject of a sentence. */
+const NAMES: Record<string, string> = {
+  cpuP50: "CPU time per frame",
+  gpuP50: "GPU time per frame",
+  frameP95: "95th-percentile frame time",
+  frameP999: "99.9th-percentile frame time",
+  over100: "Hitches over 100 ms",
+  firstContentMs: "Time to first content",
+  settleMs: "Time to settle",
+  requests: "Requests",
+  bytes: "Bytes downloaded",
+  heapBytes: "JS heap",
+};
+const nameOf = (metric: string) => {
+  const name = NAMES[metric] ?? INFO.get(metric)?.[1] ?? metric;
+  return name[0]!.toUpperCase() + name.slice(1);
+};
+
+/** Each triage state as a word and a color. */
+const STATES: Record<string, [string, BadgeColor]> = {
+  new: ["New", "info"],
+  acknowledged: ["Acknowledged", "secondary"],
+  expected: ["Expected", "secondary"],
+  invalid: ["Invalid", "secondary"],
+  fixed: ["Fixed", "success"],
+};
+const stateLabel = (s: string) => STATES[s]?.[0] ?? s;
+
+const KINDS: Array<[Kind, string]> = [
+  ["regression", "Regressions"],
+  ["improvement", "Improvements"],
+  ["all", "All"],
+];
+
+/** "Oct 31, 18:49" (lists); the ISO date goes in a tooltip. */
+const shortDate = (iso: string) =>
+  new Date(iso).toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+/** A change's size without its sign (the verb carries the direction). */
+const pct = (change: number) => {
+  const p = Math.abs(change - 1) * 100;
+  return `${p < 10 ? p.toFixed(1).replace(/\.0$/, "") : Math.round(p)}%`;
+};
+
+/** A metric's value with its unit, at the precision the noise allows. */
+function valueOf(metric: string, raw: number): string {
+  const [, , unit, scale] = INFO.get(metric) ?? [metric, metric, "", 1];
+  const v = raw / (scale as number);
+  const text =
+    Math.abs(v) >= 100
+      ? Math.round(v).toLocaleString()
+      : Math.abs(v) >= 10
+        ? v.toFixed(1)
+        : v.toFixed(2);
+  return unit ? `${text} ${unit}` : text;
+}
+
+/** A scene and scenario's attributes, for "what the scenes share". */
 function attributes(key: string): string[] {
   const [id, scenario = "cold-orbit"] = key.split("|");
   const scene = catalog.scenes.find((s) => s.id === id);
   if (!scene) {
-    return [`scenario: ${scenario}`];
+    return [`scenario ${scenario}`];
   }
   const kinds = scene.layers.map(
     (l) => catalog.datasets.find((d) => d.id === l.dataset)?.kind ?? "?",
   );
   return [
-    `scenario: ${scenario}`,
+    `scenario ${scenario}`,
     `group ${scene.group}`,
-    `globe: ${typeof scene.globe === "object" ? "terrain" : scene.globe}`,
-    scene.imagery ? "with imagery" : "no imagery",
-    ...new Set(kinds.map((k) => `content: ${k}`)),
+    typeof scene.globe === "object" ? "terrain" : `globe: ${scene.globe}`,
+    scene.imagery ? "imagery" : "no imagery",
+    ...new Set(kinds.map((k) => `${k} content`)),
     scene.layers.length > 1 ? "several layers" : "one layer",
   ];
 }
@@ -84,7 +162,10 @@ function attributes(key: string): string[] {
  * What the affected scenes share (Honeycomb BubbleUp): attributes much
  * more common among them than among every scene measured.
  */
-function whatDiffers(affected: string[], all: string[]): string[] {
+function whatTheyShare(
+  affected: string[],
+  all: string[],
+): Array<{ attribute: string; inside: number; outside: number }> {
   if (affected.length < 2 || all.length <= affected.length) {
     return [];
   }
@@ -92,14 +173,14 @@ function whatDiffers(affected: string[], all: string[]): string[] {
     keys.filter((k) => attributes(k).includes(attr)).length / keys.length;
   const attrs = new Set(affected.flatMap(attributes));
   return [...attrs]
-    .map((a) => ({ a, inside: share(affected, a), outside: share(all, a) }))
+    .map((attribute) => ({
+      attribute,
+      inside: share(affected, attribute),
+      outside: share(all, attribute),
+    }))
     .filter((x) => x.inside - x.outside >= 0.3)
     .sort((x, y) => y.inside - y.outside - (x.inside - x.outside))
-    .slice(0, 4)
-    .map(
-      (x) =>
-        `${x.a}: ${Math.round(x.inside * 100)}% of affected scenes vs ${Math.round(x.outside * 100)}% of all`,
-    );
+    .slice(0, 4);
 }
 
 /** The series around an alert, with its change point marked. */
@@ -119,12 +200,12 @@ function seriesChart(a: Alert, summaries: Summary[]): string {
     }
     points.push([names.length, m.median]);
     names.push(
-      `${new Date(s.date).toLocaleDateString()} · ${s.commit.slice(0, 7)}${s.note ? ` · ${s.note}` : ""}`,
+      `${shortDate(s.date)} · ${s.commit.slice(0, 7)}${s.note ? ` · ${s.note}` : ""}`,
     );
   }
   const [, , unit, scale] = INFO.get(a.metric) ?? [a.metric, a.metric, "", 1];
   return lineChart({
-    title: "Series",
+    title: `${nameOf(a.metric)}, ${a.title}`,
     xLabel: "run",
     unit,
     xNames: names,
@@ -149,7 +230,7 @@ function seriesChart(a: Alert, summaries: Summary[]): string {
 
 /**
  * Alerts grouped like Perfherder's alert summaries: one change (metric,
- * direction, configuration, hardware, commit range) across the scenes it
+ * direction, configuration, machine, commit range) across the scenes it
  * shows in; triage applies to the whole group.
  */
 interface Group {
@@ -176,8 +257,6 @@ const groupStatus = (triage: TriageFile, g: Group) =>
   ALERT_STATES[
     Math.min(...g.alerts.map((a) => ALERT_STATES.indexOf(statusOf(triage, a))))
   ]!;
-const pctOf = (change: number) =>
-  `${change > 1 ? "+" : ""}${((change - 1) * 100).toFixed(1)}%`;
 
 export function Alerts() {
   const { summaries } = useRuns();
@@ -210,7 +289,7 @@ export function Alerts() {
     };
   }, []);
 
-  // Computed once the triage has loaded, so "Loading…" paints first.
+  // Computed once the triage has loaded, so the loading state paints first.
   const ready = triage !== undefined;
   const alerts = useMemo(
     () => (ready ? detectAlerts(summaries, ALERT_METRICS) : []),
@@ -219,7 +298,7 @@ export function Alerts() {
 
   // The list is filtered and ordered by the triage as it was when the
   // filters last changed: a card stays in place after its triage is saved
-  // (with "Saved" beside it) until the kind or states change.
+  // (with "Saved" beside it) until the kind or statuses change.
   const filter = `${kind}|${shown.join(",")}`;
   const [listing, setListing] = useState({ filter, triage });
   if (
@@ -260,76 +339,132 @@ export function Alerts() {
     }
   }, []);
 
+  const kindWord =
+    kind === "regression"
+      ? "regressions"
+      : kind === "improvement"
+        ? "improvements"
+        : "changes";
+  const alertCount = list.reduce((n, g) => n + g.alerts.length, 0);
+
+  let content: ReactNode;
+  if (!ready) {
+    content = (
+      <div className="alerts-loading" role="status">
+        <CircularProgress size={20} />
+        <Typography variant="body-sm" color="textSecondary">
+          Finding change points across {summaries.length} runs…
+        </Typography>
+      </div>
+    );
+  } else if (!alerts.length) {
+    content = (
+      <Empty title="No alerts yet">
+        Alerts need about six runs of a scene on the same machine (there{" "}
+        {summaries.length === 1 ? "is 1 run" : `are ${summaries.length} runs`}{" "}
+        so far). Run the suite a few more times from the repository root:{" "}
+        <code>node packages/next/bench/suite/cli.mjs run</code>
+      </Empty>
+    );
+  } else if (!list.length) {
+    content = (
+      <Empty
+        title={`No ${kindWord} with these statuses`}
+        action={
+          <Button variant="outlined" onClick={() => setShown(ALERT_STATES)}>
+            Show every status
+          </Button>
+        }
+      >
+        Everything here has been triaged, or the filters hide it.
+      </Empty>
+    );
+  } else {
+    content = (
+      <ul className="alerts-list">
+        {list.map((g) => (
+          <li key={g.key}>
+            <AlertCard
+              group={g}
+              status={groupStatus(triage, g)}
+              triage={triage[g.lead.id]}
+              summaries={summaries}
+              save={save}
+            />
+          </li>
+        ))}
+      </ul>
+    );
+  }
+
   return (
-    <div className="alerts">
-      <Lede>
-        Found with E-Divisive means and a permutation test (p &lt; 0.05) per
-        scene, configuration and hardware, grouped per change.{" "}
-        <code>cli.mjs alerts --fail-on-new</code> fails a nightly job on
-        untriaged regressions.
-      </Lede>
-      <Flex align="center" gap="3" wrap="wrap" mb="3">
-        <SegmentedControl.Root
-          size="1"
-          value={kind}
-          aria-label="Kind"
-          onValueChange={(v) =>
-            navigate({
-              search: (prev) => ({
-                ...prev,
-                kind: v === "regression" ? undefined : (v as Kind),
-              }),
-              replace: true,
-            })
-          }
-        >
-          <SegmentedControl.Item value="regression">
-            Regressions
-          </SegmentedControl.Item>
-          <SegmentedControl.Item value="improvement">
-            Improvements
-          </SegmentedControl.Item>
-          <SegmentedControl.Item value="all">All</SegmentedControl.Item>
-        </SegmentedControl.Root>
-        <Chips
-          label="States"
-          options={ALERT_STATES.map((s) => [s, s] as const)}
-          value={shown}
-          onChange={setShown}
-        />
-        {ready && (
-          <Text size="2" color="gray">
-            {list.length} changes (
-            {list.reduce((n, g) => n + g.alerts.length, 0)} of {alerts.length}{" "}
-            alerts)
-          </Text>
-        )}
-      </Flex>
-      {triage === undefined ? (
-        <Lede>Computing change points…</Lede>
-      ) : !alerts.length ? (
-        <Empty title="No change points yet.">
-          Alerts need at least 6 runs of a scene on the same hardware; run the
-          suite a few more times:{" "}
-          <code>node packages/next/bench/suite/cli.mjs run</code>
-        </Empty>
-      ) : !list.length ? (
-        <Empty title="Nothing in this view.">
-          Turn on more states above, or pick another kind.
-        </Empty>
-      ) : (
-        list.map((g) => (
-          <AlertCard
-            key={g.key}
-            group={g}
-            status={groupStatus(triage, g)}
-            triage={triage[g.lead.id]}
-            summaries={summaries}
-            save={save}
-          />
-        ))
-      )}
-    </div>
+    <Page
+      title="Alerts"
+      description="Metrics that changed and stayed changed from one run to the next, to triage. New regressions come first."
+      help={
+        <>
+          <p>
+            Change points are found with E-Divisive means and a permutation test
+            (p &lt; 0.05), per scene, configuration and machine. One change
+            across several scenes is one alert.
+          </p>
+          <p>
+            Triage is saved beside the results (<code>triage.json</code>).{" "}
+            <code>cli.mjs alerts --fail-on-new</code> fails a nightly job on
+            regressions nobody has triaged.
+          </p>
+        </>
+      }
+      toolbar={
+        // Filters only once there is something to filter.
+        alerts.length > 0 && (
+          <>
+            <ToggleButtonGroup
+              exclusive
+              size="small"
+              value={kind}
+              aria-label="Direction"
+              onChange={(_, v: Kind | null) =>
+                v &&
+                void navigate({
+                  search: (prev) => ({
+                    ...prev,
+                    kind: v === "regression" ? undefined : v,
+                  }),
+                  replace: true,
+                })
+              }
+            >
+              {KINDS.map(([v, label]) => (
+                <ToggleButton
+                  key={v}
+                  value={v}
+                  render={<Button variant="outlined" size="small" />}
+                >
+                  {label}
+                </ToggleButton>
+              ))}
+            </ToggleButtonGroup>
+            <Chips
+              label="Statuses"
+              options={ALERT_STATES.map((s) => [s, stateLabel(s)] as const)}
+              value={shown}
+              onChange={setShown}
+            />
+            <Typography
+              variant="body-sm"
+              color="textSecondary"
+              aria-live="polite"
+            >
+              {list.length} {list.length === 1 ? "change" : "changes"} (
+              {alertCount} of {alerts.length} alerts)
+            </Typography>
+          </>
+        )
+      }
+    >
+      {content}
+    </Page>
   );
 }
 
@@ -348,14 +483,18 @@ function AlertCard({
   save: (ids: string[], entry: Triage) => Promise<boolean>;
 }) {
   const a = g.lead;
-  const [, name] = INFO.get(a.metric) ?? [a.metric, a.metric];
-  const changes = g.alerts.map((x) => x.change);
+  const many = g.alerts.length > 1;
+  const sizes = g.alerts.map((x) => Math.abs(x.change - 1));
+  const lo = g.alerts[sizes.indexOf(Math.min(...sizes))]!.change;
   const span =
-    g.alerts.length > 1
-      ? `${pctOf(Math.min(...changes))} to ${pctOf(Math.max(...changes))}`
-      : pctOf(a.change);
+    many && pct(lo) !== pct(a.change)
+      ? `${pct(lo)} to ${pct(a.change)}`
+      : pct(a.change);
+  const where = many ? `on ${g.alerts.length} scenes` : `on ${a.title}`;
+  const verb = a.change > 1 ? "went up" : "went down";
+  const [stateWord, stateColor] = STATES[status] ?? [status, "secondary"];
 
-  const differs = useMemo(() => {
+  const shared = useMemo(() => {
     const all = [
       ...new Set(
         summaries
@@ -365,7 +504,7 @@ function AlertCard({
           ),
       ),
     ];
-    return whatDiffers(
+    return whatTheyShare(
       g.alerts.map((x) => x.scene),
       all,
     );
@@ -378,7 +517,7 @@ function AlertCard({
     owner: triage?.owner ?? "",
     note: triage?.note ?? "",
   }));
-  const [saved, setSaved] = useState("");
+  const [saved, setSaved] = useState<"" | "saved" | "failed">("");
   const [saving, setSaving] = useState(false);
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -394,155 +533,209 @@ function AlertCard({
       entry,
     );
     setSaving(false);
-    setSaved(ok ? "Saved" : "Not saved");
+    setSaved(ok ? "saved" : "failed");
     toast(
       ok
-        ? `Alert ${entry.status}${g.alerts.length > 1 ? ` (${g.alerts.length} scenes)` : ""}`
-        : "Could not save: is the dev server running?",
+        ? `Marked ${stateLabel(entry.status).toLowerCase()}${many ? ` on ${g.alerts.length} scenes` : ""}`
+        : "Could not save the triage. Is the dev server running?",
       ok ? "good" : "bad",
     );
   };
 
-  const at = (x: { commit: string; subject?: string; date: string }) => (
-    <>
-      <code>{x.commit.slice(0, 7)}</code> {x.subject ?? ""}{" "}
-      <span className="muted">({new Date(x.date).toLocaleString()})</span>
-    </>
+  const commit = (x: { commit: string; subject?: string; date: string }) => (
+    <span title={`${x.subject ?? ""} (${x.date})`.trim()}>
+      <code>{x.commit.slice(0, 7)}</code>
+    </span>
   );
   const stats = (x: Alert) =>
-    `p ${x.p.toFixed(3)} · ${x.before.runs} runs before, ${x.after.runs} after`;
+    `p = ${x.p.toFixed(3)}, ${x.before.runs} runs before and ${x.after.runs} after`;
 
   return (
-    <article className={`alert ${a.kind}`}>
-      <header>
-        <span className="kind">
-          {a.kind === "regression" ? "▲ Regression" : "▼ Improvement"}
-        </span>
-        <b>
-          {name} {span}
-        </b>{" "}
-        <span>
-          {a.config} ·{" "}
-          {g.alerts.length === 1 ? a.title : `${g.alerts.length} scenes`}
-        </span>
-        <span className="muted">
-          {a.hardware} ·{" "}
-          <Badge
-            size="1"
-            variant="soft"
-            color={status === "new" ? undefined : "gray"}
-            className="status-tag"
-          >
-            {status}
-          </Badge>
-        </span>
-      </header>
-      <div className="range">
-        Between {at(a.range.from)} and {at(a.range.to)}
-      </div>
-      {differs.length > 0 && (
-        <div className="differs">
-          <b>What the affected scenes share:</b> {differs.join(" · ")}
-        </div>
-      )}
-      {g.alerts.length > 1 ? (
-        <details className="scenes">
-          <summary>Scenes (largest change first)</summary>
-          <Table.Root size="1" variant="ghost">
-            <Table.Body>
-              {g.alerts.map((x) => (
-                <Table.Row key={x.id}>
-                  <Table.Cell>{x.title}</Table.Cell>
-                  <Table.Cell>{pctOf(x.change)}</Table.Cell>
-                  <Table.Cell className="muted">{stats(x)}</Table.Cell>
-                </Table.Row>
-              ))}
-            </Table.Body>
-          </Table.Root>
-        </details>
-      ) : (
-        <div className="muted">{stats(a)}</div>
-      )}
-      <div className="body">
-        <div className="chart">
-          <Chart html={chart} />
-          {g.alerts.length > 1 && (
-            <div className="muted">
-              Series of {a.title}, the largest change.
-            </div>
+    <Card className="alert-card">
+      <CardContent className="alert-card-content">
+        <header className="alert-head">
+          <div className="alert-badges">
+            <Badge
+              variant="inline"
+              size="small"
+              color={a.kind === "regression" ? "error" : "success"}
+              badgeContent={
+                a.kind === "regression" ? "Regression" : "Improvement"
+              }
+            />
+            <Badge
+              variant="inline"
+              size="small"
+              type="outlined"
+              color={stateColor}
+              badgeContent={stateWord}
+            />
+          </div>
+          <Typography variant="subtitle-md" render={<h2 />}>
+            {nameOf(a.metric)} {verb} {span} {where}
+          </Typography>
+          <Typography variant="body-sm" color="textSecondary" render={<p />}>
+            Between {commit(a.range.from)} and {commit(a.range.to)} (
+            <span title={a.range.from.date}>
+              {shortDate(a.range.from.date)}
+            </span>{" "}
+            to <span title={a.range.to.date}>{shortDate(a.range.to.date)}</span>
+            ) · {a.config} on {a.hardware}
+          </Typography>
+          {a.range.to.subject && (
+            <Typography
+              variant="body-sm"
+              color="textSecondary"
+              render={<p />}
+              className="alert-subject"
+            >
+              Last commit: {a.range.to.subject}
+            </Typography>
           )}
-        </div>
-        <form className="triage" onSubmit={(e) => void submit(e)}>
-          <label>
-            Status
+        </header>
+
+        <div className="alert-body">
+          <div className="alert-evidence">
+            <Chart html={chart} className="alert-chart" />
+            <Typography variant="body-sm" color="textSecondary" render={<p />}>
+              {many ? `Largest change, ${a.title}: median ` : "Median "}
+              {valueOf(a.metric, a.before.median)} before,{" "}
+              {valueOf(a.metric, a.after.median)} after ({stats(a)}).
+            </Typography>
+            {shared.length > 0 && (
+              <div className="alert-shared">
+                <Typography variant="body-sm" render={<h3 />}>
+                  What the affected scenes share
+                </Typography>
+                <ul>
+                  {shared.map((x) => (
+                    <li key={x.attribute}>
+                      <Typography variant="body-sm">
+                        <b>{x.attribute}</b>: {Math.round(x.inside * 100)}% of
+                        affected scenes, {Math.round(x.outside * 100)}% of all
+                      </Typography>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {many && (
+              <div className="alert-scenes">
+                <Table size="small" aria-label="Affected scenes">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Scene</TableCell>
+                      <TableCell className="num">Change</TableCell>
+                      <TableCell className="num">Before</TableCell>
+                      <TableCell className="num">After</TableCell>
+                      <TableCell className="num">p</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {g.alerts.map((x) => (
+                      <TableRow key={x.id}>
+                        <TableCell>{x.title}</TableCell>
+                        <TableCell
+                          className={`num ${
+                            x.kind === "regression" ? "worse" : "better"
+                          }`}
+                        >
+                          {x.change > 1 ? "up" : "down"} {pct(x.change)}
+                        </TableCell>
+                        <TableCell className="num">
+                          {valueOf(x.metric, x.before.median)}
+                        </TableCell>
+                        <TableCell className="num">
+                          {valueOf(x.metric, x.after.median)}
+                        </TableCell>
+                        <TableCell className="num">{x.p.toFixed(3)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </div>
+
+          <form className="alert-triage" onSubmit={(e) => void submit(e)}>
+            <Typography variant="body-sm" render={<h3 />}>
+              Triage
+            </Typography>
             <Choice
               label="Status"
               value={form.status}
-              options={ALERT_STATES}
+              options={ALERT_STATES.map((s) => [s, stateLabel(s)] as const)}
               onChange={(v) => setForm({ ...form, status: v })}
             />
-          </label>
-          <label>
-            Owner
-            <TextField.Root
-              size="2"
+            <TextField
+              label="Owner"
+              size="small"
               value={form.owner}
               autoComplete="off"
               onChange={(e) => setForm({ ...form, owner: e.target.value })}
             />
-          </label>
-          <label>
-            Note
-            <TextArea
-              rows={2}
+            <TextField
+              label="Note"
+              size="small"
+              multiline
+              minRows={2}
               value={form.note}
+              placeholder="What caused it, or a link to the issue"
               onChange={(e) => setForm({ ...form, note: e.target.value })}
             />
-          </label>
-          <div className="row">
-            <Button type="submit" size="2" loading={saving}>
-              Save
-            </Button>
-            <Text
-              size="2"
-              color={saved === "Not saved" ? "red" : "gray"}
-              aria-live="polite"
-            >
-              {saved}
-            </Text>
-          </div>
-          <div className="row links">
-            <Button asChild size="1" variant="soft" color="gray">
-              <Link to="/report" search={{ run: a.range.to.run }}>
-                Report after the change
-              </Link>
-            </Button>
-            <Button asChild size="1" variant="soft" color="gray">
-              <Link
+            <div className="alert-save">
+              <Button type="submit" color="primary" loading={saving}>
+                Save triage
+              </Button>
+              <Typography
+                variant="body-sm"
+                color={saved === "failed" ? "error" : "textSecondary"}
+                aria-live="polite"
+              >
+                {saved === "saved"
+                  ? "Saved"
+                  : saved === "failed"
+                    ? "Not saved"
+                    : ""}
+              </Typography>
+            </div>
+          </form>
+        </div>
+
+        <nav className="alert-links" aria-label="Look closer">
+          <Link
+            render={
+              <RouterLink
                 to="/compare"
                 search={{
                   a: a.range.from.run,
                   b: a.range.to.run,
                   config: a.config,
                 }}
-              >
-                Compare the two runs
-              </Link>
-            </Button>
-            <Button asChild size="1" variant="soft" color="gray">
-              <Link
-                to="/workspace"
-                search={{
-                  scene: g.alerts.length > 1 ? "*" : a.scene,
-                  cand: a.config,
-                }}
-              >
-                Open in the workspace
-              </Link>
-            </Button>
-          </div>
-        </form>
-      </div>
-    </article>
+              />
+            }
+          >
+            Compare the runs before and after
+          </Link>
+          <Link
+            render={
+              <RouterLink to="/runs/$run" params={{ run: a.range.to.run }} />
+            }
+          >
+            Report of the run after
+          </Link>
+          <Link
+            render={
+              <RouterLink
+                to="/trends"
+                search={{ scene: many ? "*" : a.scene, cand: a.config }}
+              />
+            }
+          >
+            Open in Trends
+          </Link>
+        </nav>
+      </CardContent>
+    </Card>
   );
 }

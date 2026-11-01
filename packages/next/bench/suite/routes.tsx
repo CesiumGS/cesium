@@ -8,10 +8,11 @@ import { loadRuns } from "./data.ts";
 import { Shell, ShellError, ShellPending } from "./shell.tsx";
 
 /**
- * Dyno's routes (hash history: /#/workspace?…). Each view is
- * its own chunk, loaded on first visit; its state is the route's search
- * params, validated here so views get typed values and links stay
- * shareable. The root loader reads the runs once for every view.
+ * Dyno's routes (hash history: /#/overview?…), following the navigation
+ * in DESIGN.md. Each view is its own chunk, loaded on first visit; its
+ * state is the route's path and search params, validated here so views
+ * get typed values and links stay shareable. The root loader reads the
+ * runs once for every view.
  */
 
 const str = (v: unknown) =>
@@ -38,15 +39,26 @@ export const rootRoute = createRootRoute({
   staleTime: Infinity,
 });
 
+// ------------------------------------------------------------ results
+
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/",
   beforeLoad: () => {
-    throw redirect({ to: "/workspace" });
+    throw redirect({ to: "/overview" });
   },
 });
 
-export interface WorkspaceSearch {
+export const overviewRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/overview",
+  component: lazyRouteComponent(
+    () => import("./views/Overview.tsx"),
+    "Overview",
+  ),
+});
+
+export interface TrendsSearch {
   /** Scene key, or "*" for all scenes (geometric mean). */
   scene?: string;
   split?: boolean;
@@ -55,10 +67,10 @@ export interface WorkspaceSearch {
   /** Run name pinned as the reference. */
   pin?: string;
 }
-export const workspaceRoute = createRoute({
+export const trendsRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/workspace",
-  validateSearch: (s: Record<string, unknown>): WorkspaceSearch =>
+  path: "/trends",
+  validateSearch: (s: Record<string, unknown>): TrendsSearch =>
     clean({
       scene: str(s.scene),
       split: bool(s.split),
@@ -66,10 +78,38 @@ export const workspaceRoute = createRoute({
       cand: str(s.cand),
       pin: str(s.pin),
     }),
-  component: lazyRouteComponent(
-    () => import("./views/Workspace.tsx"),
-    "Workspace",
-  ),
+  component: lazyRouteComponent(() => import("./views/Trends.tsx"), "Trends"),
+});
+
+export interface RunsSearch {
+  q?: string;
+}
+export const runsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/runs",
+  validateSearch: (s: Record<string, unknown>): RunsSearch =>
+    clean({ q: str(s.q) }),
+  component: lazyRouteComponent(() => import("./views/Runs.tsx"), "Runs"),
+});
+
+/** One run's report; `$run` is the results file's name. */
+export const runRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/runs/$run",
+  component: lazyRouteComponent(() => import("./views/Report.tsx"), "Report"),
+});
+
+export interface CompareSearch {
+  a?: string;
+  b?: string;
+  config?: string;
+}
+export const compareRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/compare",
+  validateSearch: (s: Record<string, unknown>): CompareSearch =>
+    clean({ a: str(s.a), b: str(s.b), config: str(s.config) }),
+  component: lazyRouteComponent(() => import("./views/Compare.tsx"), "Compare"),
 });
 
 export interface AlertsSearch {
@@ -88,51 +128,22 @@ export const alertsRoute = createRoute({
   component: lazyRouteComponent(() => import("./views/Alerts.tsx"), "Alerts"),
 });
 
-export interface RunsSearch {
-  q?: string;
-}
-export const runsRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/runs",
-  validateSearch: (s: Record<string, unknown>): RunsSearch =>
-    clean({ q: str(s.q) }),
-  component: lazyRouteComponent(() => import("./views/Runs.tsx"), "Runs"),
-});
+// ------------------------------------------------------------ scenes
 
-export interface CompareSearch {
-  a?: string;
-  b?: string;
-  config?: string;
-}
-export const compareRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/compare",
-  validateSearch: (s: Record<string, unknown>): CompareSearch =>
-    clean({ a: str(s.a), b: str(s.b), config: str(s.config) }),
-  component: lazyRouteComponent(() => import("./views/Compare.tsx"), "Compare"),
-});
-
-export interface ReportSearch {
-  run?: string;
-}
-export const reportRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/report",
-  validateSearch: (s: Record<string, unknown>): ReportSearch =>
-    clean({ run: str(s.run) }),
-  component: lazyRouteComponent(() => import("./views/Report.tsx"), "Report"),
-});
-
-export interface ScenesSearch {
-  /** A scene key: its page; none lists the scenes. */
-  scene?: string;
-}
 export const scenesRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/scenes",
-  validateSearch: (s: Record<string, unknown>): ScenesSearch =>
-    clean({ scene: str(s.scene) }),
   component: lazyRouteComponent(() => import("./views/Scenes.tsx"), "Scenes"),
+});
+
+/** A scene's page; `$scene` is its key (scene id, or id|scenario). */
+export const sceneRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/scenes/$scene",
+  component: lazyRouteComponent(
+    () => import("./views/Scenes.tsx"),
+    "ScenePage",
+  ),
 });
 
 export interface ExplorerSearch {
@@ -174,28 +185,49 @@ export const imagesRoute = createRoute({
   component: lazyRouteComponent(() => import("./views/Images.tsx"), "Images"),
 });
 
-export interface SweepsSearch {
+// ------------------------------------------------------------ workbench
+
+export interface AnalysisSearch {
+  /** Sweeps (the default) or machines. */
+  tab?: "machines";
   sweep?: string;
   scene?: string;
 }
-export const sweepsRoute = createRoute({
+export const analysisRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/sweeps",
-  validateSearch: (s: Record<string, unknown>): SweepsSearch =>
-    clean({ sweep: str(s.sweep), scene: str(s.scene) }),
-  component: lazyRouteComponent(() => import("./views/Sweeps.tsx"), "Sweeps"),
-});
-
-export const hardwareRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/hardware",
+  path: "/analysis",
+  validateSearch: (s: Record<string, unknown>): AnalysisSearch =>
+    clean({
+      tab: s.tab === "machines" ? ("machines" as const) : undefined,
+      sweep: str(s.sweep),
+      scene: str(s.scene),
+    }),
   component: lazyRouteComponent(
-    () => import("./views/Hardware.tsx"),
-    "Hardware",
+    () => import("./views/Analysis.tsx"),
+    "Analysis",
   ),
 });
 
-/** The guided first run, also reachable once runs exist. */
+/** Parity checks, microbenchmarks and spikes (lab/pages.ts). */
+export const labRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/lab",
+  component: lazyRouteComponent(() => import("./views/Lab.tsx"), "Lab"),
+});
+export const labPageRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/lab/$id",
+  // A page's own options (?only=, ?asset=, …) pass through as strings.
+  validateSearch: (s: Record<string, unknown>): Record<string, string> =>
+    Object.fromEntries(
+      Object.entries(s).flatMap(([k, v]) =>
+        v === undefined ? [] : [[k, String(v)]],
+      ),
+    ),
+  component: lazyRouteComponent(() => import("./views/Lab.tsx"), "LabPage"),
+});
+
+/** Getting started: the setup checked and a first run. */
 export const startRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/start",
@@ -207,15 +239,18 @@ export const startRoute = createRoute({
 
 export const routeTree = rootRoute.addChildren([
   indexRoute,
-  startRoute,
-  workspaceRoute,
-  alertsRoute,
+  overviewRoute,
+  trendsRoute,
   runsRoute,
+  runRoute,
   compareRoute,
-  reportRoute,
+  alertsRoute,
   scenesRoute,
+  sceneRoute,
   explorerRoute,
   imagesRoute,
-  sweepsRoute,
-  hardwareRoute,
+  analysisRoute,
+  labRoute,
+  labPageRoute,
+  startRoute,
 ]);

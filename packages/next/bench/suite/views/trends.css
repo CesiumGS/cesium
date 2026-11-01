@@ -1,0 +1,244 @@
+/*
+ * Trends: a run list beside collapsible sections of same-sized chart
+ * panels. StrataKit tokens only; the charts' own colors come from
+ * charts.mjs (mapped to tokens in dyno.css, and here for the dialog).
+ */
+
+/* ---------------------------------------------------------------- toolbar */
+
+.trends .trends-pair {
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+}
+.trends .trends-spacer {
+  flex: 1;
+}
+
+/* ---------------------------------------------------------------- layout */
+
+.trends-layout {
+  display: grid;
+  grid-template-columns: 272px minmax(0, 1fr);
+  gap: var(--stratakit-space-500);
+  align-items: start;
+}
+.trends-layout.list-closed {
+  grid-template-columns: minmax(0, 1fr);
+}
+.trends-main {
+  min-width: 0;
+}
+
+/* ---------------------------------------------------------------- run list */
+
+.trends-runs {
+  position: sticky;
+  top: 0;
+  max-height: calc(100vh - var(--stratakit-space-800));
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-200);
+  padding: var(--stratakit-space-300);
+  border: 1px solid var(--stratakit-color-border-neutral-muted);
+  border-radius: var(--stratakit-radius-md);
+  background: var(--stratakit-color-bg-page-base);
+}
+.trends-runs-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--stratakit-space-200);
+}
+.trends-runs-header h2,
+.trends-panel-heading h3 {
+  margin: 0;
+  /* StrataKit's subtitle variants don't set a weight (no weight tokens). */
+  font-weight: 600;
+}
+.trends-runs-actions {
+  display: flex;
+  gap: var(--stratakit-space-50);
+}
+.trends-runs-filtered {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--stratakit-space-200);
+}
+.trends-runs-all {
+  margin-inline: 0;
+  padding-block: var(--stratakit-space-100);
+  border-bottom: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.trends-filters {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--stratakit-space-300);
+  padding: var(--stratakit-space-400);
+}
+.trends-run-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.trends-run {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: var(--stratakit-space-200);
+  align-items: start;
+  padding-block: var(--stratakit-space-200);
+}
+.trends-run + .trends-run {
+  border-top: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.trends-run.off .trends-run-text {
+  opacity: 0.55;
+}
+.trends-run-text {
+  min-width: 0;
+}
+.trends-run-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: var(--stratakit-space-200);
+  row-gap: var(--stratakit-space-50);
+  font-size: var(--stratakit-font-size-body-sm);
+}
+.trends-run-link {
+  font-weight: 600;
+}
+.trends-run-note,
+.trends-run-tags {
+  margin: var(--stratakit-space-50) 0 0;
+  overflow-wrap: anywhere;
+}
+.trends-run-note {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+
+/* ---------------------------------------------------------------- sections */
+
+.trends-sections {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-300);
+}
+/* The section's Help sits beside its summary (controls don't go in one). */
+.trends-section {
+  position: relative;
+}
+.trends-section-help {
+  position: absolute;
+  top: var(--stratakit-space-100);
+  right: 0;
+}
+.trends-section-title {
+  font-size: var(--stratakit-font-size-subtitle-md);
+  font-weight: 600;
+  margin-inline-end: var(--stratakit-space-300);
+}
+.trends-none {
+  margin: 0;
+}
+
+/* ---------------------------------------------------------------- panels */
+
+.trends-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: var(--stratakit-space-400);
+}
+.trends-panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: var(--stratakit-space-300) var(--stratakit-space-400)
+    var(--stratakit-space-200);
+  border: 1px solid var(--stratakit-color-border-neutral-muted);
+  border-radius: var(--stratakit-radius-md);
+  background: var(--stratakit-color-bg-page-base);
+}
+.trends-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--stratakit-space-200);
+}
+.trends-panel-heading {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.trends-panel-meta {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: var(--stratakit-space-300);
+  row-gap: var(--stratakit-space-50);
+  min-height: 1lh;
+  margin: var(--stratakit-space-50) 0 var(--stratakit-space-200);
+}
+.trends-alert {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+  color: var(--stratakit-color-text-attention-base);
+}
+
+/* The chart: the panel titles it, so its own caption and frame go. */
+.trends-chart {
+  margin-top: auto;
+}
+.trends-chart figure {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+.trends-chart figcaption,
+.trends-chart figure > .sub {
+  display: none;
+}
+
+/* The expanded chart's dialog is portaled outside main.content.viz. */
+.trends-expanded.viz {
+  --surface: var(--stratakit-color-bg-page-base);
+  --page: var(--stratakit-color-bg-page-base);
+  --ink: var(--stratakit-color-text-neutral-primary);
+  --ink-2: var(--stratakit-color-text-neutral-secondary);
+  --muted: var(--stratakit-color-text-neutral-tertiary);
+  --grid: var(--stratakit-color-border-neutral-muted);
+  --axis: var(--stratakit-color-border-neutral-base);
+  --ring: var(--stratakit-color-bg-page-base);
+  margin-top: var(--stratakit-space-200);
+}
+
+@media (max-width: 1180px) {
+  .trends-layout {
+    grid-template-columns: 240px minmax(0, 1fr);
+    gap: var(--stratakit-space-400);
+  }
+  .trends-grid {
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  }
+}
+
+/*
+ * charts.mjs's unlayered `.viz svg { width: 100%; height: auto }` also
+ * sizes StrataKit's icons (layered) inside main.content.viz; give every
+ * svg that isn't a chart its StrataKit size back.
+ */
+.trends svg:not([data-chart]) {
+  display: revert-layer;
+  width: revert-layer;
+  height: revert-layer;
+  overflow: revert-layer;
+}

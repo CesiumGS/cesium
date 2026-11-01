@@ -1,23 +1,130 @@
-/* Images: the queue of checks beside the selected check (Images.tsx). */
-.images .queue {
+/* Images (Images.tsx): the queue of checks beside the selected check. */
+
+.image-checks-layout {
+  display: grid;
+  grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
+  gap: var(--stratakit-space-600);
+  align-items: start;
+}
+.image-checks-queue {
+  position: sticky;
+  top: 0;
+  max-block-size: calc(100vh - 220px);
+  overflow-y: auto;
+  border-inline-end: 1px solid var(--stratakit-color-border-neutral-muted);
+  padding-inline-end: var(--stratakit-space-300);
+}
+.image-checks-queue > p {
+  margin: 0 0 var(--stratakit-space-200);
+}
+.image-checks-item {
+  inline-size: 100%;
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
-  max-height: calc(100vh - 220px);
-  overflow-y: auto;
-  position: sticky;
-  top: var(--space-3);
+  align-items: stretch;
+  gap: var(--stratakit-space-50);
+  border-radius: var(--stratakit-radius-md);
 }
-.images .queue-item {
-  text-align: left;
-  cursor: pointer;
+.image-checks-item-top {
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-200);
 }
-.images .queue-item[aria-current="true"] {
-  box-shadow: inset 0 0 0 2px var(--accent-9);
+.image-checks-item-title,
+.image-checks-item-meta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.image-checks-loading {
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-200);
 }
 @media (max-width: 1023px) {
-  .images .queue {
-    position: static;
-    max-height: 260px;
+  .image-checks-layout {
+    grid-template-columns: minmax(0, 1fr);
   }
+  .image-checks-queue {
+    position: static;
+    max-block-size: 260px;
+    border-inline-end: 0;
+    border-block-end: 1px solid var(--stratakit-color-border-neutral-muted);
+    padding: 0 0 var(--stratakit-space-300);
+  }
+}
+
+.image-check {
+  min-inline-size: 0;
+}
+.image-check-header {
+  margin-block-end: var(--stratakit-space-400);
+}
+.image-check-header p {
+  margin: var(--stratakit-space-100) 0 0;
+}
+.image-check-heading {
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-300);
+}
+.image-check-heading h2 {
+  margin: 0;
+}
+.image-check-modes {
+  margin-block-end: var(--stratakit-space-300);
+}
+.image-check-viewer {
+  margin-block-end: var(--stratakit-space-400);
+}
+.image-check-side {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--stratakit-space-300);
+}
+/* Plain figures (charts.mjs styles every .viz figure as a chart card). */
+.image-check figure {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+.image-check-single {
+  max-inline-size: 960px;
+}
+.image-check img {
+  display: block;
+  inline-size: 100%;
+  border-radius: var(--stratakit-radius-sm);
+  border: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.image-check figcaption {
+  font-weight: normal;
+  margin-block-start: var(--stratakit-space-100);
+  font-size: var(--stratakit-font-size-caption-lg);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.image-check-stack {
+  position: relative;
+}
+.image-check-top {
+  position: absolute;
+  inset: 0;
+}
+.image-check-review {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--stratakit-space-300);
+}
+.image-check-reason {
+  min-inline-size: 260px;
+}
+.image-check-outcome {
+  margin: var(--stratakit-space-200) 0 0;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.image-check-outcome:empty {
+  display: none;
 }

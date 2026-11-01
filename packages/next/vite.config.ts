@@ -224,9 +224,10 @@ export default defineConfig({
       "react",
       "react/jsx-runtime",
       "react-dom/client",
-      "@radix-ui/themes",
-      "@radix-ui/react-icons",
       "@tanstack/react-router",
+      "@mui/material",
+      "@stratakit/mui",
+      "@stratakit/structures",
     ],
   },
   plugins: [
@@ -238,6 +239,9 @@ export default defineConfig({
     ...(slangWasm ? [serveDirectory("/slang-wasm", slangWasm)] : []),
   ],
   build: {
+    // StrataKit icons are SVG sprites referenced by URL (#icon), never inlined.
+    assetsInlineLimit: (file: string) =>
+      file.endsWith(".svg") ? false : undefined,
     outDir: "dist",
     emptyOutDir: true,
     target: "es2023",
@@ -263,7 +267,6 @@ export default defineConfig({
         hitch: "bench/hitch.html",
         instances: "bench/instances.html",
         suite: "bench/suite/suite.html",
-        results: "bench/suite/results.html",
         flip: "bench/suite/flip.html",
       },
     },
