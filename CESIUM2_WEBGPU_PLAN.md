@@ -2243,7 +2243,9 @@ a disposer. The gallery keeps one engine and canvas, lists examples with
 search and labels, switches with `?example=<slug>` (deep links, back
 button) without reloading, and shows each example's source. Switching
 exercises content in and out of a live world, which the engine is built
-for (r27). Later: editable source and sharing, as 1.x's Sandcastle does.
+for (r27). Kept small and self-contained in the PoC; eventually the
+gallery is Sandcastle (`packages/sandcastle`), so example modules follow a
+shape Sandcastle can host (editable source, sharing, gallery metadata).
 
 Slugs name the use case, not the API (`real-time-tracks`,
 `offshore-platform`, `campus-splats`). Example scenes are written so the
