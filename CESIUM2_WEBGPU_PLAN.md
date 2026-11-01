@@ -35,6 +35,7 @@ Branch: `cesium-2.0-webgpu-poc` (off `main` @ `587f52f1eb`, CesiumJS 1.146.0)
 | r27 | Content comes and goes in one world without stalls: the viewer keeps one world and globe (switch to a glTF: 26 ms, was 932), endpoint caches, an adaptive engine-wide upload budget and spread eviction. Open: frame stalls on first visits to uncached areas, and the budget's cost to settle time.                                                                                                                                                                                          |
 | r28 | Scene foundations (§13.9): a per-world transform table (float64 hierarchy, visibility), records 192 → 128 bytes, GPU instancing culled per instance (`EXT_mesh_gpu_instancing`), glTF assets shared across placements, generational handles, scatter uploads; the prep kernel is renamed cull. glTF 2.1 / 3D Tiles 2.0, vector billboards and decals, and ray queries to path tracing designed (§13.9, §13.10). Parity unchanged.                                                             |
 | r29 | M3 increment 5: height queries and clamping. `heightReference` on models (clamp/relative to ground, terrain or 3D Tiles), event-driven re-clamping, terrain clamped to its drawn surface (within 0.1 mm of 1.x `Globe.getHeight` where 1.x keeps full precision), 3D Tiles heights by GPU ray casts (`World.castRays`) within 6 mm of what 1.x renders; tileset `enableCollision` and `modelMatrix`. Custom shading becomes a PoC milestone (§3.4).                                           |
+| r30 | Benchmark suite designed (§16): datasets, scenes and scenarios in manifests (public in the repo, private outside it, aliased in results), a checksummed local content store, engine adapters for 1.x and 2.0, a catalog of classic Cesium content, large public data and scenes where 2.0 should win; milestone "Benchmark suite v1" after M3. Clamping open items listed under M3.                                                                                                           |
 
 ## 1. Goal
 
@@ -488,6 +489,9 @@ Canonical datasets:
   - GPU time ≤ 1.x
   - N views well under N× memory
 - Automated in Playwright + Chromium with WebGPU, with JSON results per commit.
+- **The benchmark suite** (§16) turns this into a repeatable comparison of
+  1.x and 2.0 over a catalog of real scenes, public and private, and is
+  designed to grow into a benchmark suite for Cesium as a whole.
 
 ---
 
@@ -538,7 +542,36 @@ Durations are rough and **optimistic** for one engineer with AI assistance. If t
 - Quantized-mesh terrain; horizon culling (in selection since r25).
 - Imagery sources plus the **texture-array composite cache**.
 - Height queries and clamping (r29).
+- Open after r29 (§15, increment 5):
+  - clamping for billboards and labels, with the vector rendering work
+    (§13.9);
+  - clamping the viewer's city boxes (each box needs a root transform);
+  - runtime tileset `modelMatrix`: content follows its parent transform,
+    but selection volumes must be transformed with it;
+  - `sampleHeightMostDetailed`: rays against content loaded for the query,
+    not only the tiles the views drew;
+  - from r28: `addInstances`, i3dm, and the 100,000-instance benchmark
+    (§13.9, §16).
 - _Exit_: the CAD tileset sits on Cesium World Terrain with ion imagery; globe `Legacy1x` L1 ≥99%.
+
+### Benchmark suite v1 (after M3)
+
+The §16 foundations, enough for first 1.x vs 2.0 numbers on
+representative content; it then guards every later milestone.
+
+- The dataset, scene and scenario schemas; the public manifest in the
+  repo and private manifests outside it; `fetch` and `verify` (checksums)
+  into a local content-addressed store.
+- The engine adapter interface with a 1.x adapter (this repo's build,
+  pinned) and a 2.0 adapter; the existing harnesses (`baseline`, `hitch`,
+  `lod`, `trace`) move onto it.
+- 10-15 scenes across the three catalog groups (§16.4), cold and warm,
+  unthrottled and one throttled profile.
+- A report per run: each metric per scene, 2.0 against 1.x with
+  confidence intervals, and the environment fingerprint.
+- _Exit_: one command fetches, verifies and runs the public catalog (and
+  a private one when its manifest is present) in both engines and writes
+  the report; two runs on the same machine agree within their intervals.
 
 ### Budgeted selection: planned work (after M3)
 
@@ -583,7 +616,9 @@ Durations are rough and **optimistic** for one engineer with AI assistance. If t
 
 - Two-phase occlusion culling (optional if targets are already met).
 - HZB tile-coverage feedback into `Budgeted`.
-- Upload budgeting; the remaining `Budgeted` stability and prediction work; benchmark CI.
+- Upload budgeting; the remaining `Budgeted` stability and prediction work.
+- Benchmark suite v2 (§16.7): nightly runs on dedicated machines, a
+  results store, dashboard and change-point detection, bisection.
 - _Exit_: §5 targets met or the gap explained, including multi-view.
 
 ### M6 — Compute showcases and future-proofing (time-boxed, pick 2–3)
@@ -2454,3 +2489,205 @@ Terrain or the ellipsoid, and on collision tilesets.
 Open: billboards and labels (with the vector work), clamping of the
 viewer's city boxes, runtime tileset `modelMatrix`, `sampleHeightMostDetailed`
 (rays against content loaded for the query, not the views' tiles).
+
+## 16. Benchmark suite (design)
+
+**Purpose.** Measure 1.x and 2.0 on the same scenes, repeatably, to
+guide product decisions and engineering tradeoffs as the engine grows,
+and catch regressions. Rendering and runtime only for now: streaming,
+selection, CPU and GPU time, memory, interaction. Tiling is out of scope
+here, but the schema leaves room for it (dataset lineage, §16.2), since
+the 2.0 tiler will shape runtime performance.
+
+**What exists (r29).** `bench/run.mjs` (Playwright, Edge, one JSON file
+per run, `BENCH_COMMIT` snapshots for bisecting), synthetic 1.x vs 2.0
+baselines (`baseline`), first frame, allocation gate (`alloc`), live-world
+hitches (`hitch`), L1′ quality over time with a throttled link (`lod`),
+Chrome traces of slow frames (`trace.mjs`), and parity suites. Private
+assets already stay out of the repo through environment variables
+(`ION_ASSET`, `IMODEL`). The suite generalizes these instead of
+replacing them.
+
+### 16.1 Concepts
+
+- **Dataset**: one piece of content (3D Tiles, glTF, terrain, imagery,
+  point cloud, splats, vector tiles), where it lives, its license, size
+  and checksums.
+- **Scene**: datasets placed together, with globe, imagery, lighting,
+  canvas size and per-engine settings matched for equal quality.
+- **Scenario**: what happens in a scene: a camera script (recorded
+  flythrough, orbit, jump into an uncached area), interactions (pick
+  bursts, content added and removed, moving clamped entities, split
+  views), cache state (cold or warm), network profile, duration and settle
+  rule.
+- **Engine adapter**: one interface per engine and version: `load(scene)`,
+  `setCamera(pose)`, `frame()`, `settle()`, `metrics()`, `dispose()`.
+  Adapters for 1.x (this repo's build or a pinned release) and 2.0 first;
+  native runtimes, other web engines or a 2.0 in a worker are more
+  adapters, not a new suite.
+- **Run**: scenario × engine × environment × repetition, with its
+  results and the fingerprint of everything that produced them.
+
+Camera scripts are engine-neutral: time-stamped float64 Earth-fixed poses
+and field of view, recorded in either engine and replayed in both.
+
+### 16.2 Manifests and storage
+
+- **Public manifest in the repo** (`bench/catalog/public.json`): public
+  datasets (§16.4) with URLs or ion asset IDs from 1.x's public
+  Sandcastles, licenses, sizes and checksums, and the scenes and
+  scenarios built on them.
+- **Private manifests outside the repo**, same schema, found through
+  `BENCH_MANIFEST` (a path, or a Bentley-internal repository): private
+  ion assets, iTwin exports, internal file shares and large CAD models.
+  Private datasets carry an alias (`cad-plant-01`) that is all that
+  appears in results, so reports can be shared without names, IDs or
+  paths. Tokens and share keys never go in manifests; they come from the
+  environment (`.env.local`), as today.
+- **Content-addressed local store** (a configurable directory, outside
+  the repo): files stored by SHA-256, each dataset pinned by the hash of
+  its sorted file list (a Merkle root). `bench fetch` downloads and
+  verifies; `bench verify` re-checks before a run; a run refuses a
+  dataset whose root changed. A local server serves the store, so runs
+  don't depend on remote networks, and network profiles shape that
+  server instead of the internet.
+- **Remote-only content** (Google Photorealistic 3D Tiles, ion streaming
+  where terms don't allow mirroring) runs live: the scenario records that,
+  and results carry the measured network conditions so they are compared
+  with care. Mirror only what the license allows.
+- **Lineage** (for later): a dataset may record its source and how it was
+  derived (tiler, version, settings), so tiler changes become comparable
+  runs of the same source.
+- **Synthetic datasets** come from deterministic generators (draw count,
+  instances, materials, textures, feature counts, a seed), checksummed
+  by generator version and parameters; nothing to download.
+
+Later: a proper asset store (versioned object storage with access
+control, a registry service, dataset cards with previews) behind the same
+manifest schema.
+
+### 16.3 Measurement and statistics
+
+- **Metrics**: frame time distribution (p50/p95/p99, frames over 2 and 3
+  vsyncs), main-thread CPU per frame, GPU time (2.0: timestamp queries;
+  1.x: `EXT_disjoint_timer_query_webgl2` where the browser exposes it,
+  else frame time only), long animation frames, JS heap and GC, GPU
+  memory (2.0's accounting; 1.x's statistics where available), requests
+  and bytes, time to first frame, time to settle, quality over time
+  against a settled reference (L1′ FLIP), API calls per frame, selected
+  tiles and draws. Power and thermals later (laptops).
+- **Fairness**: the same canvas size and pixel ratio, content and camera;
+  1.x at its defaults and at settings matched to 2.0's settled quality
+  (SSE, HDR off where 2.0's output is compared to 1.x's), both reported.
+- **Repeatability**: verified datasets, pinned engine builds (commit or
+  release), a fixed browser build and flags, warm-up runs, several
+  repetitions with 1.x and 2.0 interleaved (cancels thermal drift and
+  background noise), cooldowns, high-performance power settings. Medians
+  with bootstrap confidence intervals; a difference is reported only when
+  the intervals separate.
+- **Environment fingerprint**: GPU adapter (vendor, architecture,
+  description), CPU class, memory, OS, browser version and flags, display
+  refresh rate, and the WebGPU limits and features in use. Driver
+  versions come from the runner (OS tools), not the page.
+- **Privacy of results**: results with machine identifiers stay in the
+  results store, not the repo; the repo gets summaries by hardware class.
+- **Diagnostics on demand**: a run that regresses can be rerun with
+  Chrome tracing and V8 sampling (`trace.mjs`), and the trace is attached
+  to the result.
+
+### 16.4 Catalog (initial)
+
+Three groups. Public datasets are verified for license before they enter
+the public manifest; anything that needs conversion (IFC, PLY, LAS) waits
+for the tiling part of the suite, or is converted once outside the suite
+and pinned as a derived dataset with its lineage.
+
+**A. What Cesium has always been used for** (1.x strengths; public ion
+assets from 1.x's Sandcastles): Cesium World Terrain with Bing imagery;
+Cesium OSM Buildings; Google Photorealistic 3D Tiles; photogrammetry
+(Sandcastle "3D Tiles Photogrammetry", Melbourne, Aerometrex San
+Francisco); New York City buildings; the BIM design model and AEC samples;
+Japan Buildings (PLATEAU, 200+ cities in one tileset) with Japan regional
+terrain; the Montreal point cloud (about 10 billion points); Gaussian
+splats with LOD; vector 3D Tiles and global rivers; the CDB Yemen tileset;
+Maxar's One World Terrain globe; Mars and the Moon.
+
+**B. Large public datasets** (open data, mirrored where licenses allow):
+PLATEAU per-city 3D Tiles (free for commercial use); USGS 3DEP lidar
+(public domain, tens of trillions of points as EPT and COPC; a source for
+point-cloud tiling later); the Netherlands' AHN lidar; classic rendering
+scenes (Amazon Lumberyard Bistro, CC BY 4.0; Sponza; Disney's Moana Island,
+custom license) and Khronos glTF samples; massive-model classics (UNC Power
+Plant, 12.7 M triangles, non-commercial); buildingSMART and BIMData IFC
+samples (about 100 files, 3.7 GB). Bentley's iTwin sample iModels (Bay
+Town Process Plant, the Philadelphia metro station, a stadium) are public
+templates created per account, so they are listed through private
+manifests by alias.
+
+**C. Where 2.0's architecture should win** (mostly private manifests and
+generators):
+
+- very large CAD as 3D Tiles 2.0 on glTF 2.1 with instancing: process
+  plants and an offshore platform from Bentley data (no large open plant
+  or offshore model was found; private manifests);
+- many instances: a forest, power-line poles, street furniture through
+  `EXT_mesh_gpu_instancing` (generator; 100,000 to millions of
+  instances);
+- several heavy tilesets at once: Google + OSM + CAD + terrain;
+- multiple views of one world (split views, linked views);
+- dynamic content: 10,000 moving and clamped entities;
+- very large Gaussian splat datasets: 1.x struggles with them even with
+  splat LOD (its sort and per-frame upload), where 2.0 sorts on the GPU
+  in compute (M6, "Gaussian splats with GPU sort", which this group
+  needs first). Sources: 1.x's splat Sandcastles (LOD and mesh
+  comparison), public research captures (Mip-NeRF 360, Tanks and Temples;
+  licenses to check), and large private captures by alias. Measures:
+  sort time, frame time against splat count, and quality while moving;
+- huge feature counts with picking and styling;
+- content in and out of a live world over long sessions (hitches, memory
+  stability);
+- later: vector tiles and billboards at scale (§13.9), path tracing
+  (§13.10).
+
+### 16.5 Engines and versions
+
+- **1.x**: this repository's build at a pinned commit, or a published
+  release from npm (for history: how 1.x itself changed).
+- **2.0**: any commit through the existing snapshot mechanism.
+- **The same scenario, page and harness for both**: the adapter is the
+  only engine-specific code, so a third engine or a variant (2.0 with a
+  policy, a feature flag, engine-in-worker) is one more adapter or
+  configuration.
+
+### 16.6 Scope of v1 (milestone "Benchmark suite v1")
+
+Schemas; public manifest; private manifest loader with aliases; local
+store with fetch and verify; local content server with network profiles;
+1.x and 2.0 adapters; 10-15 scenes; the report. Runs on one machine, by
+hand or by script.
+
+### 16.7 Later (v2 and beyond)
+
+- **v2 (with M5)**: dedicated runner machines (GPUs are not available on
+  shared CI), nightly and per-merge runs, a results store (time series),
+  a dashboard, change-point detection (E-Divisive means, as MongoDB and
+  Apache Otava use) instead of thresholds, automatic bisection with
+  `BENCH_COMMIT`, traces on regressions.
+- **v3 (Cesium-wide)**: a matrix across OS, browser (Chrome, Edge,
+  Safari, Firefox with WebGPU), GPU vendor and driver, and device class
+  (desktop, laptop, mobile); the tiling half (source → tiler → tileset,
+  then runtime); native runtimes as adapters; the asset store; shared
+  public reports.
+
+Sources for §16.4 and §16.7 (checked October 2026; licenses to be
+confirmed at the source before mirroring):
+[PLATEAU streaming tutorial](https://github.com/Project-PLATEAU/plateau-streaming-tutorial/blob/main/3d-tiles/plateau-3dtiles-streaming.md),
+[Awesome PLATEAU](https://japan-opendata.github.io/awesome-plateau/),
+[USGS 3DEP on AWS](https://www.usgs.gov/news/technical-announcement/usgs-3dep-lidar-point-cloud-now-available-amazon-public-dataset),
+[3DEP COPC on Planetary Computer](https://planetarycomputer.microsoft.com/dataset/3dep-lidar-copc),
+[UNC Power Plant](http://gamma.cs.unc.edu/POWERPLANT/),
+[ASWF open assets](https://lf-aswf.atlassian.net/wiki/spaces/DPEL/pages/11436337/Links+to+Open+Assets),
+[BIMData IFC files](https://github.com/bimdata/BIMData-Research-and-Development/blob/master/pages/IFC_FILES.md),
+[iTwin sample iModels](https://www.itwinjs.org/learning/tutorials/create-test-imodel-sample),
+[Change point detection at MongoDB](https://arxiv.org/pdf/2003.00584),
+[Hunter / Apache Otava](https://ar5iv.labs.arxiv.org/html/2301.03034).
