@@ -2112,6 +2112,21 @@ polygons to drape as decals, all shaded programmatically:
   Tiles alike.
 - Wide lines and polylines are expanded into quads the same way (WebGPU
   only rasterizes 1-pixel lines).
+- _3D Tiles 2.0 vector tiles_ are a primary input (with 3D Tiles 1.1
+  vector content, `3DTILES_content_gltf_vector`, as today's public data):
+  the same point, line and polygon pipeline draws them.
+- _Vector sources beyond 3D Tiles:_ PostGIS, GeoParquet and similar
+  stores are where much vector data lives. A vector source interface
+  (like `TileSource` for terrain) queries features by view (extent and
+  level of detail) from a service (PostGIS behind MVT or GeoJSON
+  endpoints, FlatGeobuf) or directly in the browser (GeoParquet through
+  GeoArrow, decoded in workers into columnar buffers that upload as
+  vertex streams without per-feature objects). Features keep stable IDs
+  (primary keys) through picking, styling and updates, so edits can be
+  written back to the source; the generational handles and scatter
+  uploads already let one feature change without touching the rest. An
+  example reads vectors from PostGIS or GeoParquet and draws them, then
+  edits them (planned with the vector work).
 - _Candidate: the Slug algorithm_ (glyphs and vector shapes rendered
   directly from their Bézier curves in the fragment shader, resolution
   independent, no atlases). The plan owner has a working prototype of a
@@ -2653,6 +2668,20 @@ and field of view, recorded in either engine and replayed in both.
 - **Lineage** (for later): a dataset may record its source and how it was
   derived (tiler, version, settings), so tiler changes become comparable
   runs of the same source.
+- **Licensing (required for every dataset).** Each catalog entry carries a
+  reviewed license (name, status, where it was checked); the loader refuses
+  entries without one. The public catalog holds only data whose license is
+  compatible with CesiumJS's Apache-2.0 license ("redistributable": public
+  domain, CC0, CC BY, Apache, MIT...) or references streamed from a provider
+  under its terms and never copied ("stream-only": Cesium ion sample assets,
+  Google 3D Tiles). A private manifest holds only data cleared for
+  commercial use at Bentley ("commercial-ok", redistributable data, or
+  stream-only through Bentley's own account). Non-commercial and
+  unreviewed licenses are excluded from both; only redistributable data is
+  mirrored. Before automated runs at scale, two uses are to be confirmed:
+  Cesium's sample assets through 1.x's default token, and Google
+  Photorealistic 3D Tiles under the Map Tiles API policies (held out of
+  automated runs until then).
 - **Synthetic datasets** come from deterministic generators (draw count,
   instances, materials, textures, feature counts, a seed), checksummed
   by generator version and parameters; nothing to download.
@@ -2708,13 +2737,16 @@ splats with LOD; vector 3D Tiles and global rivers; the CDB Yemen tileset;
 Maxar's One World Terrain globe; Mars and the Moon.
 
 **B. Large public datasets** (open data, mirrored where licenses allow):
-PLATEAU per-city 3D Tiles (free for commercial use); USGS 3DEP lidar
-(public domain, tens of trillions of points as EPT and COPC; a source for
-point-cloud tiling later); the Netherlands' AHN lidar; classic rendering
-scenes (Amazon Lumberyard Bistro, CC BY 4.0; Sponza; Disney's Moana Island,
-custom license) and Khronos glTF samples; massive-model classics (UNC Power
-Plant, 12.7 M triangles, non-commercial); buildingSMART and BIMData IFC
-samples (about 100 files, 3.7 GB). Bentley's iTwin sample iModels (Bay
+PLATEAU per-city 3D Tiles (terms allow commercial use; to be confirmed as
+compatible with redistribution before mirroring); USGS 3DEP lidar (public
+domain, tens of trillions of points as EPT and COPC; a source for
+point-cloud tiling later); the Netherlands' AHN lidar (license to review);
+classic rendering scenes (Amazon Lumberyard Bistro, CC BY 4.0; Sponza,
+license varies by version, to review) and Khronos glTF samples (each
+model's own license; the Cesium milk truck is CC BY 4.0); buildingSMART
+and BIMData IFC samples (per-file licenses, to review). Excluded by the
+licensing rule: the UNC Power Plant (non-commercial) and Disney's Moana
+Island (custom license restricting use) unless a review clears them. Bentley's iTwin sample iModels (Bay
 Town Process Plant, the Philadelphia metro station, a stadium) are public
 templates created per account, so they are listed through private
 manifests by alias.
@@ -2798,6 +2830,40 @@ store with fetch and verify; local content server with network profiles;
 1.x and 2.0 adapters; 10-15 scenes; the report; a first runner page and
 results page (comparison and trends over local results). Runs on one
 machine, by hand or by script.
+
+### Built (v1, r32)
+
+`bench/suite/`:
+
+- `schema.ts`: datasets (source, formats, reviewed license, checksum),
+  scenes (globe, imagery, layers, camera script), scenarios (cold or warm
+  cache, motion seconds, settle timeout), engine configurations, metrics.
+- `catalog/public.json`: 19 public datasets and 15 scenes in groups A and
+  C; `private.example.json` shows a private manifest (aliases, licenses,
+  Bentley's own token).
+- `manifest.mjs`: loads and merges catalogs, enforces the licensing rule,
+  checks references, and reports engine gaps by format (2.0: point clouds,
+  splats, vector; 1.x: the instancing generator for now). As 2.0 gains a
+  format, its scenes start running there.
+- `store.mjs`: Merkle checksums of local datasets, `verify`, and `fetch`
+  for mirrored ones (content-addressed store outside the repo).
+- `suite.html` / `suite.ts`: the page; 1.x and 2.0 adapters (setup,
+  frame, settled, content drawn, camera); engine-neutral camera scripts
+  (orbits from 1.x's heading-pitch-range convention, `frame` from the
+  tileset's root volume); the scenario (load until settled, orbit, settle
+  again) and its metrics. A person picks a scene and engine and presses
+  Run.
+- `cli.mjs`: `list`, `verify`, `fetch`, `run` (each run a fresh browser
+  context; configurations rotate per repetition; requests and bytes from
+  the browser, workers included), `report`. Results and reports go
+  outside the repo (`BENCH_RESULTS`).
+- `stats.mjs` (medians with bootstrap intervals, ratios that count only
+  when the intervals separate) and `report.mjs` (a self-contained page per
+  run).
+
+Open for v1's exit: the results page with trends across runs, scenes for
+group B (after license review), warm-cache and throttled scenarios in the
+default set, the 1.x instancing generator, real-time tracks (§13.11).
 
 ### 16.8 Later (v2 and beyond)
 

@@ -1,0 +1,48 @@
+{
+  "$comment": "Template for a private manifest. Copy it OUTSIDE the repository (e.g. ~/.cesium-bench/manifest.json) and point BENCH_MANIFEST at it. Same schema as public.json; entries merge with it. Use aliases as ids and titles: reports show only those. Tokens and share keys never go here: ion assets marked token 'env' use VITE_ION_TOKEN from packages/next/.env.local. Every dataset needs a license entry cleared for commercial use at Bentley: status 'commercial-ok' (Bentley-owned or licensed data), 'redistributable', or 'stream-only' through Bentley's own account (token 'env'). Non-commercial licenses are refused.",
+  "datasets": [
+    {
+      "id": "cad-plant-01",
+      "title": "cad-plant-01",
+      "kind": "3dtiles",
+      "source": {
+        "kind": "ion",
+        "asset": 0,
+        "token": "env"
+      },
+      "formats": [
+        "b3dm"
+      ],
+      "private": true,
+      "license": {
+        "name": "Bentley internal (example)",
+        "status": "commercial-ok",
+        "source": "where the license or data agreement was checked"
+      }
+    }
+  ],
+  "scenes": [
+    {
+      "id": "cad-plant-01",
+      "title": "cad-plant-01",
+      "group": "C",
+      "globe": {
+        "terrain": "cwt"
+      },
+      "imagery": "bing",
+      "layers": [
+        {
+          "dataset": "cad-plant-01"
+        }
+      ],
+      "camera": {
+        "kind": "orbit",
+        "target": "frame",
+        "range": 1.6,
+        "pitch": -30,
+        "heading": 30,
+        "sweep": 180
+      }
+    }
+  ]
+}

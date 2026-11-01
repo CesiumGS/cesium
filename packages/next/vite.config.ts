@@ -89,6 +89,7 @@ export default defineConfig({
         baseline: "bench/baseline.html",
         hitch: "bench/hitch.html",
         instances: "bench/instances.html",
+        suite: "bench/suite/suite.html",
       },
     },
   },

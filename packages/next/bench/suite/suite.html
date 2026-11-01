@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Benchmark Suite</title>
+    <link rel="stylesheet" href="/cesium1x/Widgets/widgets.css" />
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      body {
+        margin: 0;
+        padding: 16px;
+        background: #0b0e14;
+        color: #d7dce6;
+        font:
+          13px/1.4 system-ui,
+          sans-serif;
+      }
+      h1 {
+        font-size: 16px;
+        margin: 0 0 4px;
+      }
+      p {
+        color: #8a93a6;
+        max-width: 900px;
+      }
+      .controls {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin: 8px 0;
+      }
+      select,
+      button {
+        background: #151a24;
+        color: #d7dce6;
+        border: 1px solid #2a3346;
+        border-radius: 6px;
+        padding: 4px 8px;
+        font: inherit;
+      }
+      #view {
+        width: 1280px;
+        height: 720px;
+        max-width: 100%;
+        background: #000;
+        position: relative;
+      }
+      #output {
+        white-space: pre;
+        font-family: ui-monospace, monospace;
+        color: #8a93a6;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Benchmark suite: 1.x and 2.0 on the same scenes</h1>
+    <p>
+      Pick a public scene and an engine configuration and run its first scenario
+      here (load, settle, orbit, settle). The command line runs the whole
+      catalog with repetitions, cold and warm caches, private manifests and
+      statistics:
+      <code>node packages/next/bench/suite/cli.mjs run</code>.
+    </p>
+    <div class="controls">
+      <label
+        >Scene
+        <select id="scene"></select
+      ></label>
+      <label
+        >Engine
+        <select id="config"></select
+      ></label>
+      <button id="run">Run</button>
+    </div>
+    <div id="view"></div>
+    <div id="output"></div>
+    <div id="credits" hidden></div>
+    <script>
+      window.CESIUM_BASE_URL = "/cesium1x/";
+    </script>
+    <script src="/cesium1x/Cesium.js"></script>
+    <script type="module" src="./suite.ts"></script>
+  </body>
+</html>

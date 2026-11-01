@@ -1,0 +1,762 @@
+{
+  "$comment": "Benchmark suite public catalog (plan §16). Public datasets only, each with a reviewed license (bench/suite/schema.ts DatasetLicense): redistributable under terms compatible with CesiumJS's Apache-2.0 license, or stream-only references under the provider's terms (never mirrored or committed). Private datasets go in a manifest outside the repo (BENCH_MANIFEST; see private.example.json).",
+  "datasets": [
+    {
+      "id": "cwt",
+      "title": "Cesium World Terrain",
+      "kind": "terrain",
+      "source": {
+        "kind": "ion",
+        "asset": 1,
+        "token": "default"
+      },
+      "formats": [
+        "quantized-mesh"
+      ],
+      "license": {
+        "name": "Cesium ion terms (sample asset used by 1.x's public Sandcastles)",
+        "status": "stream-only",
+        "source": "https://cesium.com/legal/terms-of-service/",
+        "notes": "Streamed with 1.x's public default token, never mirrored or committed. Confirm with Cesium that automated benchmark runs are within the default token's intended use."
+      }
+    },
+    {
+      "id": "bing",
+      "title": "Bing Maps Aerial",
+      "kind": "imagery",
+      "source": {
+        "kind": "ion",
+        "asset": 2,
+        "token": "default"
+      },
+      "license": {
+        "name": "Cesium ion terms (sample asset used by 1.x's public Sandcastles)",
+        "status": "stream-only",
+        "source": "https://cesium.com/legal/terms-of-service/",
+        "notes": "Streamed with 1.x's public default token, never mirrored or committed. Confirm with Cesium that automated benchmark runs are within the default token's intended use."
+      }
+    },
+    {
+      "id": "osm-buildings",
+      "title": "Cesium OSM Buildings",
+      "kind": "3dtiles",
+      "source": {
+        "kind": "ion",
+        "asset": 96188,
+        "token": "default"
+      },
+      "formats": [
+        "b3dm"
+      ],
+      "license": {
+        "name": "Cesium ion terms (sample asset used by 1.x's public Sandcastles)",
+        "status": "stream-only",
+        "source": "https://cesium.com/legal/terms-of-service/",
+        "notes": "Streamed with 1.x's public default token, never mirrored or committed. Confirm with Cesium that automated benchmark runs are within the default token's intended use."
+      }
+    },
+    {
+      "id": "google-photorealistic",
+      "title": "Google Photorealistic 3D Tiles",
+      "kind": "3dtiles",
+      "source": {
+        "kind": "ion",
+        "asset": 2275207,
+        "token": "default"
+      },
+      "formats": [
+        "glb"
+      ],
+      "mirror": false,
+      "license": {
+        "name": "Google Map Tiles API policies, via Cesium ion",
+        "status": "stream-only",
+        "source": "https://developers.google.com/maps/documentation/tile/policies",
+        "notes": "Streamed live with attribution, never cached beyond what the policies allow or mirrored. Benchmarking use to be confirmed against Google Maps Platform terms before automated runs."
+      }
+    },
+    {
+      "id": "nyc-buildings",
+      "title": "New York City 3D buildings",
+      "kind": "3dtiles",
+      "source": {
+        "kind": "ion",
+        "asset": 75343,
+        "token": "default"
+      },
+      "formats": [
+        "b3dm"
+      ],
+      "license": {
+        "name": "Cesium ion terms (sample asset used by 1.x's public Sandcastles)",
+        "status": "stream-only",
+        "source": "https://cesium.com/legal/terms-of-service/",
+        "notes": "Streamed with 1.x's public default token, never mirrored or committed. Confirm with Cesium that automated benchmark runs are within the default token's intended use."
+      }
+    },
+    {
+      "id": "melbourne",
+      "title": "Melbourne photogrammetry",
+      "kind": "3dtiles",
+      "source": {
+        "kind": "ion",
+        "asset": 69380,
+        "token": "default"
+      },
+      "formats": [
+        "b3dm"
+      ],
+      "license": {
+        "name": "Cesium ion terms (sample asset used by 1.x's public Sandcastles)",
+        "status": "stream-only",
+        "source": "https://cesium.com/legal/terms-of-service/",
+        "notes": "Streamed with 1.x's public default token, never mirrored or committed. Confirm with Cesium that automated benchmark runs are within the default token's intended use."
+      }
+    },
+    {
+      "id": "sandcastle-photogrammetry",
+      "title": "3D Tiles Photogrammetry (Sandcastle)",
+      "kind": "3dtiles",
+      "source": {
+        "kind": "ion",
+        "asset": 40866,
+        "token": "default"
+      },
+      "formats": [
+        "b3dm"
+      ],
+      "license": {
+        "name": "Cesium ion terms (sample asset used by 1.x's public Sandcastles)",
+        "status": "stream-only",
+        "source": "https://cesium.com/legal/terms-of-service/",
+        "notes": "Streamed with 1.x's public default token, never mirrored or committed. Confirm with Cesium that automated benchmark runs are within the default token's intended use."
+      }
+    },
+    {
+      "id": "bim-design-model",
+      "title": "BIM design model (Sandcastle)",
+      "kind": "3dtiles",
+      "source": {
+        "kind": "ion",
+        "asset": 2464651,
+        "token": "default"
+      },
+      "formats": [
+        "b3dm"
+      ],
+      "license": {
+        "name": "Cesium ion terms (sample asset used by 1.x's public Sandcastles)",
+        "status": "stream-only",
+        "source": "https://cesium.com/legal/terms-of-service/",
+        "notes": "Streamed with 1.x's public default token, never mirrored or committed. Confirm with Cesium that automated benchmark runs are within the default token's intended use."
+      }
+    },
+    {
+      "id": "aec-design",
+      "title": "AEC design model (Sandcastle)",
+      "kind": "3dtiles",
+      "source": {
+        "kind": "ion",
+        "asset": 2887123,
+        "token": "default"
+      },
+      "formats": [
+        "glb"
+      ],
+      "license": {
+        "name": "Cesium ion terms (sample asset used by 1.x's public Sandcastles)",
+        "status": "stream-only",
+        "source": "https://cesium.com/legal/terms-of-service/",
+        "notes": "Streamed with 1.x's public default token, never mirrored or committed. Confirm with Cesium that automated benchmark runs are within the default token's intended use."
+      }
+    },
+    {
+      "id": "aec-site",
+      "title": "AEC site (Sandcastle)",
+      "kind": "3dtiles",
+      "source": {
+        "kind": "ion",
+        "asset": 2887129,
+        "token": "default"
+      },
+      "formats": [
+        "glb"
+      ],
+      "license": {
+        "name": "Cesium ion terms (sample asset used by 1.x's public Sandcastles)",
+        "status": "stream-only",
+        "source": "https://cesium.com/legal/terms-of-service/",
+        "notes": "Streamed with 1.x's public default token, never mirrored or committed. Confirm with Cesium that automated benchmark runs are within the default token's intended use."
+      }
+    },
+    {
+      "id": "japan-buildings",
+      "title": "Japan 3D Buildings (PLATEAU)",
+      "kind": "3dtiles",
+      "source": {
+        "kind": "ion",
+        "asset": 2602291,
+        "token": "default"
+      },
+      "formats": [
+        "glb",
+        "b3dm"
+      ],
+      "license": {
+        "name": "Cesium ion terms (sample asset used by 1.x's public Sandcastles)",
+        "status": "stream-only",
+        "source": "https://cesium.com/legal/terms-of-service/",
+        "notes": "Streamed with 1.x's public default token, never mirrored or committed. Confirm with Cesium that automated benchmark runs are within the default token's intended use."
+      }
+    },
+    {
+      "id": "japan-terrain",
+      "title": "Japan regional terrain",
+      "kind": "terrain",
+      "source": {
+        "kind": "ion",
+        "asset": 2767062,
+        "token": "default"
+      },
+      "formats": [
+        "quantized-mesh"
+      ],
+      "license": {
+        "name": "Cesium ion terms (sample asset used by 1.x's public Sandcastles)",
+        "status": "stream-only",
+        "source": "https://cesium.com/legal/terms-of-service/",
+        "notes": "Streamed with 1.x's public default token, never mirrored or committed. Confirm with Cesium that automated benchmark runs are within the default token's intended use."
+      }
+    },
+    {
+      "id": "aerometrex-sf",
+      "title": "Aerometrex San Francisco",
+      "kind": "3dtiles",
+      "source": {
+        "kind": "ion",
+        "asset": 1415196,
+        "token": "default"
+      },
+      "formats": [
+        "b3dm",
+        "glb"
+      ],
+      "license": {
+        "name": "Cesium ion terms (sample asset used by 1.x's public Sandcastles)",
+        "status": "stream-only",
+        "source": "https://cesium.com/legal/terms-of-service/",
+        "notes": "Streamed with 1.x's public default token, never mirrored or committed. Confirm with Cesium that automated benchmark runs are within the default token's intended use."
+      }
+    },
+    {
+      "id": "montreal-point-cloud",
+      "title": "Montreal point cloud (~10 billion points)",
+      "kind": "3dtiles",
+      "source": {
+        "kind": "ion",
+        "asset": 28945,
+        "token": "default"
+      },
+      "formats": [
+        "pnts"
+      ],
+      "license": {
+        "name": "Cesium ion terms (sample asset used by 1.x's public Sandcastles)",
+        "status": "stream-only",
+        "source": "https://cesium.com/legal/terms-of-service/",
+        "notes": "Streamed with 1.x's public default token, never mirrored or committed. Confirm with Cesium that automated benchmark runs are within the default token's intended use."
+      }
+    },
+    {
+      "id": "campus-splats",
+      "title": "Redmond campus Gaussian splats with LODs",
+      "kind": "3dtiles",
+      "source": {
+        "kind": "ion",
+        "asset": 4547222,
+        "token": "default"
+      },
+      "formats": [
+        "splats"
+      ],
+      "license": {
+        "name": "Cesium ion terms (sample asset used by 1.x's public Sandcastles)",
+        "status": "stream-only",
+        "source": "https://cesium.com/legal/terms-of-service/",
+        "notes": "Streamed with 1.x's public default token, never mirrored or committed. Confirm with Cesium that automated benchmark runs are within the default token's intended use."
+      }
+    },
+    {
+      "id": "vector-3d-tiles",
+      "title": "Vector 3D Tiles (Sandcastle)",
+      "kind": "3dtiles",
+      "source": {
+        "kind": "ion",
+        "asset": 4854512,
+        "token": "default"
+      },
+      "formats": [
+        "vector"
+      ],
+      "license": {
+        "name": "Cesium ion terms (sample asset used by 1.x's public Sandcastles)",
+        "status": "stream-only",
+        "source": "https://cesium.com/legal/terms-of-service/",
+        "notes": "Streamed with 1.x's public default token, never mirrored or committed. Confirm with Cesium that automated benchmark runs are within the default token's intended use."
+      }
+    },
+    {
+      "id": "global-rivers",
+      "title": "Global rivers vector tiles with property-based LOD",
+      "kind": "3dtiles",
+      "source": {
+        "kind": "ion",
+        "asset": 5135960,
+        "token": "default"
+      },
+      "formats": [
+        "vector"
+      ],
+      "license": {
+        "name": "Cesium ion terms (sample asset used by 1.x's public Sandcastles)",
+        "status": "stream-only",
+        "source": "https://cesium.com/legal/terms-of-service/",
+        "notes": "Streamed with 1.x's public default token, never mirrored or committed. Confirm with Cesium that automated benchmark runs are within the default token's intended use."
+      }
+    },
+    {
+      "id": "milk-truck-fleet",
+      "title": "Cesium milk truck × 100,000 (instanced)",
+      "kind": "gltf",
+      "source": {
+        "kind": "generator",
+        "generator": "instanced-grid",
+        "params": {
+          "count": 100000,
+          "spacing": 8
+        }
+      },
+      "formats": [
+        "instancing"
+      ],
+      "license": {
+        "name": "Generated from the milk truck (CC BY 4.0, © 2017 Cesium)",
+        "status": "redistributable",
+        "source": "https://github.com/KhronosGroup/glTF-Sample-Assets/blob/main/Models/CesiumMilkTruck/README.md"
+      }
+    },
+    {
+      "id": "milk-truck",
+      "title": "Cesium milk truck (glTF sample)",
+      "kind": "gltf",
+      "source": {
+        "kind": "specs",
+        "path": "Models/glTF-2.0/CesiumMilkTruck/glTF-Draco"
+      },
+      "formats": [
+        "gltf"
+      ],
+      "sha256": "ffd2d75cbb1cce1aa4e74d5b72ba2df37f466abd0226ed8b64b0527b9a3397b8",
+      "license": {
+        "name": "CC BY 4.0 (© 2017 Cesium; the Cesium logo is a trademark)",
+        "status": "redistributable",
+        "source": "https://github.com/KhronosGroup/glTF-Sample-Assets/blob/main/Models/CesiumMilkTruck/README.md",
+        "notes": "Already in this repository's Specs data."
+      }
+    }
+  ],
+  "scenes": [
+    {
+      "id": "terrain-rainier",
+      "title": "Cesium World Terrain and Bing at Mount Rainier",
+      "group": "A",
+      "globe": {
+        "terrain": "cwt"
+      },
+      "imagery": "bing",
+      "layers": [],
+      "camera": {
+        "kind": "orbit",
+        "target": [
+          -121.76,
+          46.85,
+          2000
+        ],
+        "range": 15000,
+        "pitch": -20,
+        "heading": 30,
+        "sweep": 120
+      }
+    },
+    {
+      "id": "osm-philadelphia",
+      "title": "OSM Buildings on terrain, Philadelphia",
+      "group": "A",
+      "globe": {
+        "terrain": "cwt"
+      },
+      "imagery": "bing",
+      "layers": [
+        {
+          "dataset": "osm-buildings"
+        }
+      ],
+      "camera": {
+        "kind": "orbit",
+        "target": [
+          -75.165,
+          39.9526,
+          0
+        ],
+        "range": 1500,
+        "pitch": -35,
+        "heading": 20,
+        "sweep": 180
+      }
+    },
+    {
+      "id": "google-manhattan",
+      "title": "Google Photorealistic 3D Tiles, Manhattan",
+      "group": "A",
+      "globe": "none",
+      "layers": [
+        {
+          "dataset": "google-photorealistic"
+        }
+      ],
+      "camera": {
+        "kind": "orbit",
+        "target": [
+          -73.9857,
+          40.7484,
+          0
+        ],
+        "range": 1500,
+        "pitch": -30,
+        "heading": 30,
+        "sweep": 180
+      }
+    },
+    {
+      "id": "nyc-buildings",
+      "title": "New York City buildings",
+      "group": "A",
+      "globe": "ellipsoid",
+      "layers": [
+        {
+          "dataset": "nyc-buildings"
+        }
+      ],
+      "camera": {
+        "kind": "orbit",
+        "target": [
+          -74.01,
+          40.71,
+          0
+        ],
+        "range": 2000,
+        "pitch": -35,
+        "heading": 30,
+        "sweep": 180
+      }
+    },
+    {
+      "id": "melbourne",
+      "title": "Melbourne photogrammetry",
+      "group": "A",
+      "globe": "ellipsoid",
+      "layers": [
+        {
+          "dataset": "melbourne"
+        }
+      ],
+      "camera": {
+        "kind": "orbit",
+        "target": [
+          144.9631,
+          -37.8136,
+          0
+        ],
+        "range": 1200,
+        "pitch": -30,
+        "heading": 0,
+        "sweep": 180
+      }
+    },
+    {
+      "id": "bim-design-model",
+      "title": "BIM design model",
+      "group": "A",
+      "globe": "ellipsoid",
+      "layers": [
+        {
+          "dataset": "bim-design-model"
+        }
+      ],
+      "camera": {
+        "kind": "orbit",
+        "target": "frame",
+        "range": 1.6,
+        "pitch": -30,
+        "heading": 30,
+        "sweep": 180
+      }
+    },
+    {
+      "id": "aec-design-site",
+      "title": "AEC design model with its site (3D Tiles 1.1)",
+      "group": "A",
+      "globe": "ellipsoid",
+      "layers": [
+        {
+          "dataset": "aec-design"
+        },
+        {
+          "dataset": "aec-site"
+        }
+      ],
+      "camera": {
+        "kind": "orbit",
+        "target": "frame",
+        "range": 1.6,
+        "pitch": -30,
+        "heading": 30,
+        "sweep": 180
+      }
+    },
+    {
+      "id": "japan-tokyo",
+      "title": "Japan 3D Buildings on Japan terrain, Tokyo",
+      "group": "A",
+      "globe": {
+        "terrain": "japan-terrain"
+      },
+      "imagery": "bing",
+      "layers": [
+        {
+          "dataset": "japan-buildings"
+        }
+      ],
+      "camera": {
+        "kind": "orbit",
+        "target": [
+          139.7671,
+          35.6812,
+          0
+        ],
+        "range": 2000,
+        "pitch": -35,
+        "heading": 0,
+        "sweep": 180
+      }
+    },
+    {
+      "id": "aerometrex-sf",
+      "title": "Aerometrex San Francisco",
+      "group": "A",
+      "globe": "ellipsoid",
+      "layers": [
+        {
+          "dataset": "aerometrex-sf"
+        }
+      ],
+      "camera": {
+        "kind": "orbit",
+        "target": [
+          -122.3933,
+          37.7955,
+          0
+        ],
+        "range": 800,
+        "pitch": -30,
+        "heading": 0,
+        "sweep": 180
+      }
+    },
+    {
+      "id": "montreal-point-cloud",
+      "title": "Montreal point cloud",
+      "group": "A",
+      "globe": "ellipsoid",
+      "layers": [
+        {
+          "dataset": "montreal-point-cloud"
+        }
+      ],
+      "camera": {
+        "kind": "orbit",
+        "target": [
+          -73.5673,
+          45.5017,
+          0
+        ],
+        "range": 1500,
+        "pitch": -35,
+        "heading": 0,
+        "sweep": 180
+      }
+    },
+    {
+      "id": "campus-splats",
+      "title": "Redmond campus Gaussian splats",
+      "group": "C",
+      "description": "Very large splat dataset with LODs; 2.0 needs GPU-sorted splats (M6).",
+      "globe": {
+        "terrain": "cwt"
+      },
+      "imagery": "bing",
+      "layers": [
+        {
+          "dataset": "campus-splats"
+        }
+      ],
+      "camera": {
+        "kind": "orbit",
+        "target": [
+          -122.1381,
+          47.6445,
+          120
+        ],
+        "range": 500,
+        "pitch": -25,
+        "heading": 100,
+        "sweep": 180
+      }
+    },
+    {
+      "id": "vector-3d-tiles",
+      "title": "Vector 3D Tiles, styled",
+      "group": "A",
+      "globe": "ellipsoid",
+      "layers": [
+        {
+          "dataset": "vector-3d-tiles"
+        }
+      ],
+      "camera": {
+        "kind": "orbit",
+        "target": "frame",
+        "range": 1.6,
+        "pitch": -40,
+        "heading": 0,
+        "sweep": 120
+      }
+    },
+    {
+      "id": "global-rivers",
+      "title": "Global rivers vector tiles, Himalaya",
+      "group": "A",
+      "description": "3D Tiles vector content (3DTILES_content_gltf_vector), the path toward 3D Tiles 2.0 vector tiles.",
+      "globe": {
+        "terrain": "cwt"
+      },
+      "imagery": "bing",
+      "layers": [
+        {
+          "dataset": "global-rivers"
+        }
+      ],
+      "camera": {
+        "kind": "orbit",
+        "target": [
+          86.859391,
+          27.4,
+          0
+        ],
+        "range": 120000,
+        "pitch": -40,
+        "heading": 0,
+        "sweep": 120
+      }
+    },
+    {
+      "id": "google-osm-manhattan",
+      "title": "Google 3D Tiles and OSM Buildings together, Manhattan",
+      "group": "C",
+      "globe": "none",
+      "layers": [
+        {
+          "dataset": "google-photorealistic"
+        },
+        {
+          "dataset": "osm-buildings"
+        }
+      ],
+      "camera": {
+        "kind": "orbit",
+        "target": [
+          -73.99,
+          40.73,
+          0
+        ],
+        "range": 1500,
+        "pitch": -30,
+        "heading": 200,
+        "sweep": 180
+      }
+    },
+    {
+      "id": "milk-truck-fleet",
+      "title": "100,000 instanced milk trucks",
+      "group": "C",
+      "globe": "ellipsoid",
+      "layers": [
+        {
+          "dataset": "milk-truck-fleet",
+          "at": [
+            -75.1652,
+            39.9526,
+            0
+          ]
+        }
+      ],
+      "camera": {
+        "kind": "orbit",
+        "target": [
+          -75.1652,
+          39.9526,
+          0
+        ],
+        "range": 1500,
+        "pitch": -30,
+        "heading": 0,
+        "sweep": 180
+      }
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "cold-orbit",
+      "title": "Cold cache: load, settle, orbit, settle",
+      "motionSeconds": 15,
+      "settleTimeoutSeconds": 90,
+      "cache": "cold"
+    },
+    {
+      "id": "warm-orbit",
+      "title": "Warm cache: the same scene loaded again",
+      "motionSeconds": 15,
+      "settleTimeoutSeconds": 90,
+      "cache": "warm"
+    }
+  ],
+  "configs": [
+    {
+      "id": "1.x",
+      "engine": "1.x",
+      "maximumScreenSpaceError": 16
+    },
+    {
+      "id": "2.0",
+      "engine": "2.0",
+      "policy": "budgeted",
+      "maximumScreenSpaceError": 16
+    },
+    {
+      "id": "2.0-legacy1x",
+      "engine": "2.0",
+      "policy": "legacy1x",
+      "maximumScreenSpaceError": 16
+    }
+  ]
+}
