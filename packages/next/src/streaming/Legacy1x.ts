@@ -30,7 +30,11 @@ export interface SelectionView {
   cartographic: Cartographic;
   /** Culling planes, world space: (nx, ny, nz, d) per plane, inward normals. */
   planes: Float64Array;
-  /** A wider frustum for prefetching just outside the view (`Budgeted` only). */
+  /**
+   * Where to prefetch (`Budgeted` only): the frustum of where the camera
+   * will be shortly at its velocity, with a small margin; this view's own
+   * with that margin while it is still.
+   */
   prefetchPlanes?: Float64Array;
   /** 2 tan(fovy / 2). */
   sseDenominator: number;

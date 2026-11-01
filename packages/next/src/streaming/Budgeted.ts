@@ -42,10 +42,10 @@ export interface BudgetedOptions extends Legacy1xOptions {
    */
   opportunisticRatio?: number;
   /**
-   * Content just outside the view (`SelectionView.prefetchPlanes`) loads at
-   * this multiple of the SSE threshold (default 2: about a quarter of the
-   * bytes of full detail), so rotating and panning reveal loaded content.
-   * 0 disables prefetching.
+   * Content the camera is about to reveal (`SelectionView.prefetchPlanes`)
+   * loads at this multiple of the SSE threshold (default 2: about a quarter
+   * of the bytes of full detail), so rotating and panning reveal loaded
+   * content. 0 disables prefetching.
    */
   prefetchErrorScale?: number;
   /**

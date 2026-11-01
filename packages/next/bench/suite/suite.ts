@@ -1408,6 +1408,12 @@ export async function runScene(spec: RunSpec): Promise<RunMetrics> {
     const memory = (performance as { memory?: { usedJSHeapSize: number } })
       .memory;
     metrics.heapBytes = memory?.usedJSHeapSize;
+    const purposeStats = adapter.requestPurposes
+      ? adapter.inspect().tiles?.purposes
+      : undefined;
+    if (purposeStats) {
+      metrics.purposeStats = purposeStats;
+    }
     const purposes = adapter.requestPurposes?.();
     if (spec.capture && purposes?.length) {
       metrics.purposes = [...purposes];

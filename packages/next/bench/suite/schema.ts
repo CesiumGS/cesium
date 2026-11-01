@@ -271,6 +271,18 @@ export interface RunMetrics {
    * these.
    */
   purposes?: Array<[string, string]>;
+  /**
+   * After the run (2.0): requests by purpose with their bytes, loads drawn,
+   * loads evicted undrawn and cancellations (the inspector's numbers).
+   */
+  purposeStats?: Array<{
+    label: string;
+    requests: number;
+    bytes: number;
+    drawn: number;
+    unused?: number;
+    cancelled?: number;
+  }>;
   /** Requests and bytes received during the whole run. */
   requests?: number;
   bytes?: number;

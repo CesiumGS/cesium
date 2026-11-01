@@ -36,6 +36,7 @@ import {
   type ViewOptions,
 } from "./View.ts";
 import { ViewLink, type ViewLinkOptions } from "./ViewLink.ts";
+import { Camera } from "./Camera.ts";
 import { World, type WorldOptions } from "./World.ts";
 import { HeightClamping } from "./HeightClamping.ts";
 import { WorkerPool } from "../io/WorkerPool.ts";
@@ -108,6 +109,24 @@ interface PersistentImage {
 /** Values in one view's on-demand fingerprint (see `viewChanged`). */
 const VIEW_KEY_LENGTH = 26;
 
+/**
+ * Prefetching looks this far ahead: content the camera would reveal in
+ * this time at its current velocity loads before it comes into view (about
+ * a load's latency).
+ */
+const PREFETCH_AHEAD_SECONDS = 1;
+/** The prefetch frustum's margin (tangent scale) around that view. */
+const PREFETCH_MARGIN = 1.1;
+
+/** A view's camera at its last selection, and its velocity per second. */
+interface ViewMotion {
+  at: number;
+  position: Vec3;
+  direction: Vec3;
+  up: Vec3;
+  velocity: { position: Vec3; direction: Vec3; up: Vec3 };
+}
+
 /** Options for a globe surface: terrain or the ellipsoid. */
 export interface GlobeOptions extends TilesetOptions {
   /** Imagery draped on the surface (one per world for now). */
@@ -171,6 +190,8 @@ export class Engine {
   private readonly viewDataU32: Uint32Array;
   /** Stable per-view bit index (0–31) for record view masks. */
   private readonly viewIds = new Map<View, number>();
+  private readonly viewMotion = new Map<View, ViewMotion>();
+  private readonly aheadCamera = new Camera();
   private readonly freeViewIds: number[] = [];
   private readonly maxViews: number;
   private readonly viewFrames = new Map<View, ViewFrame>();
@@ -481,27 +502,32 @@ export class Engine {
       const aspect = rect.width / rect.height;
       const camera = view.camera;
       const p = camera.position;
-      // World-space planes in float64: camera-relative planes shifted by the
-      // camera position, plus 1.x's far plane (5e8 m). The prefetch band
-      // widens the half-angle tangents by 1.25 (about 6° per side at 60°).
       const d = camera.direction;
-      const worldPlanes = (widen: number) => {
+      // World-space planes in float64: camera-relative planes shifted by the
+      // camera position, plus 1.x's far plane (5e8 m).
+      const worldPlanes = (c: Camera, widen: number) => {
         const planes = new Float64Array(24);
-        camera.frustumPlanes(planes, aspect, widen);
+        const cp = c.position;
+        const cd = c.direction;
+        c.frustumPlanes(planes, aspect, widen);
         for (let k = 0; k < 5; k++) {
           planes[k * 4 + 3] =
             planes[k * 4 + 3]! -
-            (planes[k * 4]! * p[0]! +
-              planes[k * 4 + 1]! * p[1]! +
-              planes[k * 4 + 2]! * p[2]!);
+            (planes[k * 4]! * cp[0]! +
+              planes[k * 4 + 1]! * cp[1]! +
+              planes[k * 4 + 2]! * cp[2]!);
         }
-        planes[20] = -d[0]!;
-        planes[21] = -d[1]!;
-        planes[22] = -d[2]!;
-        planes[23] = d[0]! * p[0]! + d[1]! * p[1]! + d[2]! * p[2]! + 5e8;
+        planes[20] = -cd[0]!;
+        planes[21] = -cd[1]!;
+        planes[22] = -cd[2]!;
+        planes[23] = cd[0]! * cp[0]! + cd[1]! * cp[1]! + cd[2]! * cp[2]! + 5e8;
         return planes;
       };
-      const planes = worldPlanes(1);
+      const planes = worldPlanes(camera, 1);
+      // Prefetch: the view the camera will have shortly at its current
+      // velocity (a small margin around this one while it is still), so
+      // only content it is about to reveal loads ahead.
+      const ahead = this.cameraAhead(view, PREFETCH_AHEAD_SECONDS);
       const pixelRatio =
         view.target instanceof CanvasTarget ? view.target.pixelRatio : 1;
       out.push({
@@ -514,13 +540,56 @@ export class Engine {
           height: 0,
         }) ?? { longitude: 0, latitude: 0, height: 0 },
         planes,
-        prefetchPlanes: worldPlanes(1.25),
+        prefetchPlanes: worldPlanes(ahead, PREFETCH_MARGIN),
         sseDenominator: 2 * Math.tan(camera.fovy(aspect) / 2),
         height: rect.height / pixelRatio,
         pixelRatio,
       });
     }
     return out;
+  }
+
+  /**
+   * `view`'s camera extrapolated `seconds` ahead at its velocity (measured
+   * between selections at least 4 ms apart; still after a pause of over
+   * 250 ms, as on-demand rendering idles).
+   */
+  private cameraAhead(view: View, seconds: number): Camera {
+    const camera = view.camera;
+    const now = performance.now();
+    let motion = this.viewMotion.get(view);
+    if (!motion) {
+      motion = {
+        at: now,
+        position: v3.copy(v3.vec3(), camera.position),
+        direction: v3.copy(v3.vec3(), camera.direction),
+        up: v3.copy(v3.vec3(), camera.up),
+        velocity: { position: v3.vec3(), direction: v3.vec3(), up: v3.vec3() },
+      };
+      this.viewMotion.set(view, motion);
+    }
+    const dt = (now - motion.at) / 1000;
+    if (dt >= 0.004) {
+      const v = motion.velocity;
+      const still = dt > 0.25;
+      for (const key of ["position", "direction", "up"] as const) {
+        const current = camera[key];
+        for (let i = 0; i < 3; i++) {
+          v[key][i] = still ? 0 : (current[i]! - motion[key][i]!) / dt;
+        }
+        v3.copy(motion[key], current);
+      }
+      motion.at = now;
+    }
+    const ahead = this.aheadCamera.copyFrom(camera);
+    const v = motion.velocity;
+    for (let i = 0; i < 3; i++) {
+      ahead.position[i] = camera.position[i]! + v.position[i]! * seconds;
+      ahead.direction[i] = camera.direction[i]! + v.direction[i]! * seconds;
+      ahead.up[i] = camera.up[i]! + v.up[i]! * seconds;
+    }
+    v3.normalize(ahead.direction, ahead.direction);
+    return ahead.orient(v3.normalize(ahead.up, ahead.up));
   }
 
   /** Removes a placed glTF and frees its geometry, materials and textures. */
@@ -650,6 +719,7 @@ export class Engine {
     const id = this.viewIds.get(view);
     if (id !== undefined) {
       this.viewIds.delete(view);
+      this.viewMotion.delete(view);
       this.freeViewIds.push(id);
     }
     this.viewFrames.get(view)?.presentParams.destroy();
