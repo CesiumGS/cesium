@@ -15,6 +15,7 @@ import type { RenderContext } from "./RenderContext.ts";
 import type { Clamp, HeightReference } from "./HeightClamping.ts";
 import type {
   DrawHandle,
+  InstanceOptions,
   MeshHandle,
   TextureBinding,
   TransformHandle,
@@ -60,6 +61,32 @@ export interface ModelOptions {
    * the anchor's own height for "relative" ones.
    */
   heightOffset?: number;
+  /**
+   * Draws the model once per instance (GPU instancing, culled per
+   * instance): one draw per primitive however many instances. Matrices are
+   * in the frame of `modelMatrix` (e.g. east-north-up offsets), applied
+   * before the glTF axis correction, like 1.x `ModelInstanceCollection`
+   * instances relative to a shared frame.
+   */
+  instances?: ModelInstances;
+}
+
+/** Instances of a whole model (`ModelOptions.instances`). */
+export interface ModelInstances {
+  /** Column-major 4×4 affine matrices, 16 numbers per instance. */
+  matrices: ArrayLike<number>;
+  /** Linear RGBA tint per instance, 4 numbers each. */
+  tints?: ArrayLike<number>;
+  /** Local feature ID per instance (picking and styling per instance). */
+  featureIds?: ArrayLike<number>;
+}
+
+/** A primitive's node frame, to express model-space instances in it. */
+interface InstanceFrame {
+  local: Float64Array;
+  inverse: Float64Array;
+  /** The primitive's own `EXT_mesh_gpu_instancing` instances, if any. */
+  gltf?: Float32Array;
 }
 
 export interface ModelInstance {
@@ -82,6 +109,10 @@ export interface ModelInstance {
   readonly resources: UploadedAsset;
   /** Its clamping, with `heightReference` (`engine.addModel`). */
   clamp?: Clamp;
+  /** Instances placed with `ModelOptions.instances` (0: none). */
+  readonly instanceCount: number;
+  /** Per draw, for `setModelInstance`. */
+  readonly instanceFrames?: InstanceFrame[];
 }
 
 /**
@@ -229,6 +260,9 @@ export function addGltf(
   const nodes = new Map<Float64Array, TransformHandle>();
   const draws: DrawHandle[] = [];
   const spheres: Array<{ center: Vec3; radius: number }> = [];
+  const user = options.instances;
+  const userCount = user ? user.matrices.length / 16 : 0;
+  const frames: InstanceFrame[] | undefined = user ? [] : undefined;
   for (const draw of asset.draws) {
     // One transform per node: its primitives share the node's matrix.
     const local = m4.multiply(m4.mat4(), correction, draw.matrix);
@@ -259,16 +293,18 @@ export function addGltf(
         asset.meshes[draw.mesh]!.featureTable !== undefined
           ? asset.featureTables[asset.meshes[draw.mesh]!.featureTable!]
           : undefined,
-      ...(draw.instances
-        ? {
-            instances: {
-              matrices: draw.instances,
-              ...(draw.instanceFeatureIds
-                ? { featureIds: draw.instanceFeatureIds }
-                : {}),
-            },
-          }
-        : {}),
+      ...(user
+        ? { instances: modelInstances(user, local, draw.instances, frames!) }
+        : draw.instances
+          ? {
+              instances: {
+                matrices: draw.instances,
+                ...(draw.instanceFeatureIds
+                  ? { featureIds: draw.instanceFeatureIds }
+                  : {}),
+              },
+            }
+          : {}),
     });
     draws.push(handle);
     const meshCenter = v3.vec3(...mesh.center);
@@ -289,13 +325,231 @@ export function addGltf(
       });
     }
   }
+  let bounds = unionSphere(spheres);
+  if (user) {
+    bounds = instanceBounds(bounds, rootWorld, user.matrices);
+  }
   return {
     draws,
     transform: root,
-    ...unionSphere(spheres),
+    ...bounds,
     bytes: upload.bytes,
     resources: upload,
+    instanceCount: userCount,
+    ...(frames ? { instanceFrames: frames } : {}),
   };
+}
+
+/**
+ * A primitive's instances for model-space instance matrices P: its draw
+ * sits at root × L (L: axis correction × node), so each instance is
+ * L⁻¹ × P × L in the draw's frame (× the primitive's own glTF instance G,
+ * instance-major, when it has `EXT_mesh_gpu_instancing`).
+ */
+function modelInstances(
+  user: ModelInstances,
+  local: Float64Array,
+  gltf: Float32Array | undefined,
+  frames: InstanceFrame[],
+): InstanceOptions {
+  const inverse = invertAffine(local);
+  frames.push({ local, inverse, ...(gltf ? { gltf } : {}) });
+  const count = user.matrices.length / 16;
+  const perUser = gltf ? gltf.length / 16 : 1;
+  const out = new Float32Array(count * perUser * 16);
+  const p = new Float64Array(16);
+  const m = new Float64Array(16);
+  for (let i = 0; i < count; i++) {
+    for (let k = 0; k < 16; k++) {
+      p[k] = user.matrices[i * 16 + k]!;
+    }
+    conjugate(m, inverse, p, local);
+    for (let j = 0; j < perUser; j++) {
+      const o = (i * perUser + j) * 16;
+      if (gltf) {
+        multiplyAffineInto(out, o, m, gltf, j * 16);
+      } else {
+        out.set(m, o);
+      }
+    }
+  }
+  const repeat = (values: ArrayLike<number> | undefined, width: number) => {
+    if (!values || perUser === 1) {
+      return values;
+    }
+    const r = new Float32Array(count * perUser * width);
+    for (let i = 0; i < count * perUser; i++) {
+      for (let k = 0; k < width; k++) {
+        r[i * width + k] = values[Math.floor(i / perUser) * width + k]!;
+      }
+    }
+    return r;
+  };
+  const tints = repeat(user.tints, 4);
+  const featureIds = repeat(user.featureIds, 1);
+  return {
+    matrices: out,
+    ...(tints ? { tints } : {}),
+    ...(featureIds ? { featureIds } : {}),
+  };
+}
+
+/**
+ * Moves, hides or tints instance `index` of a model placed with
+ * `ModelOptions.instances`; `matrix` is in the model's frame, as when
+ * placed.
+ */
+export function setModelInstance(
+  world: World,
+  model: ModelInstance,
+  index: number,
+  change: {
+    matrix?: ArrayLike<number>;
+    visible?: boolean;
+    tint?: ArrayLike<number>;
+  },
+): void {
+  const frames = model.instanceFrames;
+  if (!frames || index < 0 || index >= model.instanceCount) {
+    throw new RangeError(`instance ${index} of ${model.instanceCount}`);
+  }
+  // Scratch only: moving every instance of a large fleet each frame must
+  // not allocate per call.
+  const matrix = change.matrix;
+  if (matrix) {
+    for (let k = 0; k < 16; k++) {
+      scratchP[k] = matrix[k]!;
+    }
+  }
+  scratchChange.matrix = matrix ? scratchOut : undefined;
+  scratchChange.visible = change.visible;
+  scratchChange.tint = change.tint;
+  const draws = model.draws;
+  for (let d = 0; d < draws.length; d++) {
+    const frame = frames[d]!;
+    if (matrix) {
+      conjugate(scratchM, frame.inverse, scratchP, frame.local);
+    }
+    const perUser = frame.gltf ? frame.gltf.length / 16 : 1;
+    for (let j = 0; j < perUser; j++) {
+      if (matrix) {
+        if (frame.gltf) {
+          multiplyAffineInto(scratchOut, 0, scratchM, frame.gltf, j * 16);
+        } else {
+          scratchOut.set(scratchM);
+        }
+      }
+      world.setInstance(draws[d]!, index * perUser + j, scratchChange);
+    }
+  }
+}
+const scratchP = new Float64Array(16);
+const scratchM = new Float64Array(16);
+const scratchT = new Float64Array(16);
+const scratchOut = new Float32Array(16);
+const scratchChange: {
+  matrix?: ArrayLike<number>;
+  visible?: boolean;
+  tint?: ArrayLike<number>;
+} = {};
+
+/** out = a × p × b (column-major 4×4). */
+function conjugate(
+  out: Float64Array,
+  a: Float64Array,
+  p: Float64Array,
+  b: Float64Array,
+): void {
+  m4.multiply(scratchT, p, b);
+  m4.multiply(out, a, scratchT);
+}
+
+/** out[o..] = a × b[bo..] (b float32), column-major. */
+function multiplyAffineInto(
+  out: Float32Array,
+  o: number,
+  a: Float64Array,
+  b: Float32Array,
+  bo: number,
+): void {
+  for (let c = 0; c < 4; c++) {
+    for (let r = 0; r < 4; r++) {
+      out[o + c * 4 + r] =
+        a[r]! * b[bo + c * 4]! +
+        a[4 + r]! * b[bo + c * 4 + 1]! +
+        a[8 + r]! * b[bo + c * 4 + 2]! +
+        a[12 + r]! * b[bo + c * 4 + 3]!;
+    }
+  }
+}
+
+/** Inverse of an affine matrix (column-major, last row 0 0 0 1). */
+function invertAffine(m: Float64Array): Float64Array {
+  const [a, b, c] = [m[0]!, m[1]!, m[2]!];
+  const [d, e, f] = [m[4]!, m[5]!, m[6]!];
+  const [g, h, i] = [m[8]!, m[9]!, m[10]!];
+  const det = a * (e * i - h * f) - d * (b * i - h * c) + g * (b * f - e * c);
+  const s = det !== 0 ? 1 / det : 0;
+  const out = new Float64Array(16);
+  out[0] = (e * i - h * f) * s;
+  out[1] = (h * c - b * i) * s;
+  out[2] = (b * f - e * c) * s;
+  out[4] = (g * f - d * i) * s;
+  out[5] = (a * i - g * c) * s;
+  out[6] = (d * c - a * f) * s;
+  out[8] = (d * h - g * e) * s;
+  out[9] = (g * b - a * h) * s;
+  out[10] = (a * e - d * b) * s;
+  for (let r = 0; r < 3; r++) {
+    out[12 + r] = -(
+      out[r]! * m[12]! +
+      out[4 + r]! * m[13]! +
+      out[8 + r]! * m[14]!
+    );
+  }
+  out[15] = 1;
+  return out;
+}
+
+/**
+ * The bounds of a model's instances: its bounding sphere (Earth-fixed)
+ * moved into the model frame, placed by each instance matrix.
+ */
+function instanceBounds(
+  sphere: { center: Vec3; radius: number },
+  root: Float64Array,
+  matrices: ArrayLike<number>,
+): { center: Vec3; radius: number } {
+  const inverse = invertAffine(root);
+  const c = m4.transformPoint(v3.vec3(), inverse, sphere.center);
+  const spheres: Array<{ center: Vec3; radius: number }> = [];
+  for (let k = 0; k < matrices.length; k += 16) {
+    const x =
+      matrices[k]! * c[0]! +
+      matrices[k + 4]! * c[1]! +
+      matrices[k + 8]! * c[2]! +
+      matrices[k + 12]!;
+    const y =
+      matrices[k + 1]! * c[0]! +
+      matrices[k + 5]! * c[1]! +
+      matrices[k + 9]! * c[2]! +
+      matrices[k + 13]!;
+    const z =
+      matrices[k + 2]! * c[0]! +
+      matrices[k + 6]! * c[1]! +
+      matrices[k + 10]! * c[2]! +
+      matrices[k + 14]!;
+    const scale = Math.max(
+      Math.hypot(matrices[k]!, matrices[k + 1]!, matrices[k + 2]!),
+      Math.hypot(matrices[k + 4]!, matrices[k + 5]!, matrices[k + 6]!),
+      Math.hypot(matrices[k + 8]!, matrices[k + 9]!, matrices[k + 10]!),
+    );
+    spheres.push({
+      center: m4.transformPoint(v3.vec3(), root, v3.vec3(x, y, z)),
+      radius: sphere.radius * scale,
+    });
+  }
+  return unionSphere(spheres);
 }
 
 /**

@@ -1,0 +1,43 @@
+{
+  "date": "2026-11-01T03:36:03.486Z",
+  "environment": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0",
+    "adapter": {
+      "vendor": "nvidia",
+      "architecture": "lovelace",
+      "description": "NVIDIA RTX 3000 Ada Generation Laptop GPU"
+    },
+    "timestampQuery": true
+  },
+  "errors": [],
+  "results": {
+    "instances": [
+      {
+        "instances": 10000,
+        "draws": 5,
+        "items": 50000,
+        "addMs": 24.899999976158142,
+        "tableMiB": 8.86187744140625,
+        "cpuMs": 0.25467772209487793,
+        "gpuMs": 3.505708572059784,
+        "frameP50": 16.699999999999818,
+        "frameP95": 16.700000000000273,
+        "move1PctMs": 0.10000002384185791,
+        "moveAllMs": 8.399999976158142
+      },
+      {
+        "instances": 100000,
+        "draws": 5,
+        "items": 500000,
+        "addMs": 95.60000002384186,
+        "tableMiB": 72.3765869140625,
+        "cpuMs": 0.30169731729838056,
+        "gpuMs": 35.49600576388062,
+        "frameP50": 33.399999999999636,
+        "frameP95": 50,
+        "move1PctMs": 1.7999999523162842,
+        "moveAllMs": 101.10000002384186
+      }
+    ]
+  }
+}

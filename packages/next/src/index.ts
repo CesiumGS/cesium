@@ -110,6 +110,7 @@ export {
 export {
   type ModelInstance,
   type ModelOptions,
+  type ModelInstances,
   type UploadedAsset,
 } from "./scene/gltfModel.ts";
 export { MaterialFlags } from "./render/layout.ts";

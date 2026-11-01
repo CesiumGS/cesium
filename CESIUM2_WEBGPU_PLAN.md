@@ -2640,8 +2640,10 @@ generators):
 - very large Gaussian splat datasets: 1.x struggles with them even with
   splat LOD (its sort and per-frame upload), where 2.0 sorts on the GPU
   in compute (M6, "Gaussian splats with GPU sort", which this group
-  needs first). Sources: 1.x's splat Sandcastles (LOD and mesh
-  comparison), public research captures (Mip-NeRF 360, Tanks and Temples;
+  needs first). Sources: 1.x's splat Sandcastles (ion 4547222, the
+  Microsoft Redmond campus with multiple LODs, the largest; ion 3667784,
+  a power station, with its mesh twin 3443919; the iTwin Gaussian splats
+  Sandcastle), public research captures (Mip-NeRF 360, Tanks and Temples;
   licenses to check), and large private captures by alias. Measures:
   sort time, frame time against splat count, and quality while moving;
 - huge feature counts with picking and styling;

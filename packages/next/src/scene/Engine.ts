@@ -49,6 +49,7 @@ import type { GltfAsset } from "../io/gltfTypes.ts";
 import {
   addGltf,
   removeGltf,
+  setModelInstance,
   type ModelInstance,
   type ModelOptions,
 } from "./gltfModel.ts";
@@ -522,6 +523,23 @@ export class Engine {
   }
 
   /** Removes a placed glTF and frees its geometry, materials and textures. */
+  /**
+   * Moves, hides or tints one instance of a model placed with
+   * `ModelOptions.instances` (matrix in the model's frame).
+   */
+  setModelInstance(
+    world: World,
+    model: ModelInstance,
+    index: number,
+    change: {
+      matrix?: ArrayLike<number>;
+      visible?: boolean;
+      tint?: ArrayLike<number>;
+    },
+  ): void {
+    setModelInstance(world, model, index, change);
+  }
+
   removeModel(world: World, instance: ModelInstance): void {
     instance.clamp?.remove();
     removeGltf(world, instance);

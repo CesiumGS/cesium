@@ -88,6 +88,7 @@ export default defineConfig({
         slang: "spikes/slang.html",
         baseline: "bench/baseline.html",
         hitch: "bench/hitch.html",
+        instances: "bench/instances.html",
       },
     },
   },
