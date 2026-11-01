@@ -118,6 +118,16 @@ export function sunDirection(spec: RunSpec, pose: Pose): Float64Array {
 const ratioOf = (r: RenderSettings) =>
   r.pixelRatio === "device" ? (globalThis.devicePixelRatio ?? 1) : r.pixelRatio;
 
+/**
+ * The CLI stops counting requests here (Playwright): what follows (the
+ * selection reference) is not part of the run.
+ */
+async function endMeasurement(): Promise<void> {
+  await (
+    globalThis as { endMeasurement?: () => Promise<void> }
+  ).endMeasurement?.();
+}
+
 /** Filmstrip hook, exposed by the CLI (Playwright) when it captures. */
 async function captureMoment(spec: RunSpec, moment: string): Promise<void> {
   const capture = (
@@ -282,6 +292,8 @@ export interface Adapter {
   credits?(): CreditSource;
   /** The render settings in effect (read after frames were drawn). */
   effectiveRender(): EffectiveRender;
+  /** Each content request so far: its URL and what it was for (2.0). */
+  requestPurposes?(): Array<[string, string]>;
   /** Lights the scene from this direction (unit vector toward the sun). */
   setSun(direction: Float64Array): void;
   destroy(): void;
@@ -329,6 +341,7 @@ export class NextAdapter implements Adapter {
   private canvas!: HTMLCanvasElement;
   private controller: GlobeController | undefined;
   private loadStartedAt = 0;
+  private readonly purposes: Array<[string, string]> = [];
   /** Attributions the scene's providers require (ion's HTML). */
   private readonly attributions: Array<{ html: string }> = [];
 
@@ -438,6 +451,15 @@ export class NextAdapter implements Adapter {
         this.attributions.push(...(endpoints[i]?.attributions ?? []));
       }
     });
+    for (const tileset of this.tilesets) {
+      tileset.events.on("request", ({ url, purpose }) =>
+        this.purposes.push([url, purpose]),
+      );
+    }
+  }
+
+  requestPurposes(): Array<[string, string]> {
+    return this.purposes;
   }
 
   /** `instanced-grid`: the milk truck on a grid, one draw per primitive. */
@@ -1386,6 +1408,11 @@ export async function runScene(spec: RunSpec): Promise<RunMetrics> {
     const memory = (performance as { memory?: { usedJSHeapSize: number } })
       .memory;
     metrics.heapBytes = memory?.usedJSHeapSize;
+    const purposes = adapter.requestPurposes?.();
+    if (spec.capture && purposes?.length) {
+      metrics.purposes = [...purposes];
+    }
+    await endMeasurement();
 
     // The selection reference (2.0): the end view again under Legacy1x
     // selection, same renderer, after every measurement. The filmstrip

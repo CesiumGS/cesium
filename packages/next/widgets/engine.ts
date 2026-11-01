@@ -6,6 +6,7 @@
 import type {
   ContentSummary,
   Engine,
+  RequestPurpose,
   Tileset3D,
   View,
   World,
@@ -17,6 +18,15 @@ import type {
   MemoryRow,
   StagePercentiles,
 } from "./inspectable.ts";
+
+/** Request purposes in the inspector's order, with their labels. */
+const PURPOSE_LABELS: Record<RequestPurpose, string> = {
+  base: "Base",
+  intermediate: "Intermediate",
+  view: "View",
+  prefetch: "Prefetch",
+  sample: "Height samples",
+};
 
 /** A single model loaded without a tileset: its load, end to end. */
 export interface ModelLoad {
@@ -138,6 +148,16 @@ export function engineSnapshot(
         requests: sum((t) => t.stats.requestsTotal),
         bytes: sum((t) => t.stats.bytesReceived),
       },
+      purposes: (Object.keys(PURPOSE_LABELS) as RequestPurpose[])
+        .map((p) => ({
+          label: PURPOSE_LABELS[p],
+          requests: sum((t) => t.stats.purposes[p].requests),
+          bytes: sum((t) => t.stats.purposes[p].bytes),
+          drawn: sum((t) => t.stats.purposes[p].drawn),
+          unused: sum((t) => t.stats.purposes[p].unused),
+          cancelled: sum((t) => t.stats.purposes[p].cancelled),
+        }))
+        .filter((p, i) => p.requests > 0 || i < 4), // samples when any
       load: loadPhases(tilesets, options),
     };
 

@@ -102,7 +102,14 @@ const middleBand = () => [
  * The path overlay (median per configuration, repetitions faint) and the
  * delta trace (candidate minus baseline), as two charts on one x.
  */
-export function pathOverlay({ profiles, configs, baseline, candidate, color, metric }) {
+export function pathOverlay({
+  profiles,
+  configs,
+  baseline,
+  candidate,
+  color,
+  metric,
+}) {
   const [, label, unit] = PATH_METRICS[metric];
   const series = [];
   for (const config of configs) {
@@ -154,9 +161,10 @@ export function pathOverlay({ profiles, configs, baseline, candidate, color, met
           label: `${engineLabel(candidate)} − ${engineLabel(baseline)}`,
           color: "var(--ink-2)",
           markers: false,
-          points: a.map((v, i) =>
-            [pct(i), v === null || b[i] === null ? null : b[i] - v],
-          ),
+          points: a.map((v, i) => [
+            pct(i),
+            v === null || b[i] === null ? null : b[i] - v,
+          ]),
         },
       ],
       bands: middleBand(),
@@ -192,7 +200,9 @@ export function segmentTable({ profiles, configs, baseline, color, metric }) {
         profiles
           .get(c)
           .reps.map((rep) =>
-            s === "all" ? mean(rep.filter((v) => v !== null)) : segmentOf(rep, s),
+            s === "all"
+              ? mean(rep.filter((v) => v !== null))
+              : segmentOf(rep, s),
           )
           .filter((v) => v !== undefined),
       ),
@@ -210,14 +220,16 @@ export function segmentTable({ profiles, configs, baseline, color, metric }) {
           return "<td>–</td>";
         }
         const lowest = present.length > 1 && v === best[s];
-        const gap = lowest || present.length < 2 ? "" : `+${(v - best[s]).toFixed(2)}`;
+        const gap =
+          lowest || present.length < 2 ? "" : `+${(v - best[s]).toFixed(2)}`;
         let vs = "";
         if (c !== baseline && values.has(baseline)) {
           const r = ratio(values.get(baseline)[s], values.get(c)[s]);
           if (r?.separated) {
-            vs = r.value < 1
-              ? `<span class="ratio better">▼ faster than ${escape(engineLabel(baseline))}</span>`
-              : `<span class="ratio worse">▲ slower than ${escape(engineLabel(baseline))}</span>`;
+            vs =
+              r.value < 1
+                ? `<span class="ratio better">▼ faster than ${escape(engineLabel(baseline))}</span>`
+                : `<span class="ratio worse">▲ slower than ${escape(engineLabel(baseline))}</span>`;
           }
         }
         return `<td class="${lowest ? "lowest" : ""}">${v.toFixed(2)}${lowest ? `<span class="gap">lowest</span>` : gap ? `<span class="gap">${gap}</span>` : ""}${vs}</td>`;
@@ -265,10 +277,16 @@ export function pathMap({ path, profiles, configs, color, metric, title }) {
     if (vals.length < 2) {
       return undefined;
     }
-    return vals[1][1] - vals[0][1] > FASTER_BY * vals[1][1] ? vals[0][0] : undefined;
+    return vals[1][1] - vals[0][1] > FASTER_BY * vals[1][1]
+      ? vals[0][0]
+      : undefined;
   };
   let svg = `<svg viewBox="0 0 ${size} ${size}" role="img" aria-label="${escape(title)}" style="max-width:${size}px">`;
-  const d = xy.map((p, i) => `${i ? "L" : "M"}${sx(p[0]).toFixed(1)},${sy(p[1]).toFixed(1)}`).join("");
+  const d = xy
+    .map(
+      (p, i) => `${i ? "L" : "M"}${sx(p[0]).toFixed(1)},${sy(p[1]).toFixed(1)}`,
+    )
+    .join("");
   svg += `<path d="${d}" fill="none" stroke="var(--grid)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>`;
   const share = new Map();
   for (let i = 0; i + 1 < path.length; i++) {
@@ -280,7 +298,11 @@ export function pathMap({ path, profiles, configs, color, metric, title }) {
     svg += `<line x1="${sx(xy[i][0]).toFixed(1)}" y1="${sy(xy[i][1]).toFixed(1)}" x2="${sx(xy[i + 1][0]).toFixed(1)}" y2="${sy(xy[i + 1][1]).toFixed(1)}" stroke="${stroke}" stroke-width="5" stroke-linecap="round"><title>${escape(`${Math.round(progress * 100)}% of path: ${who ? `${who} faster` : "no clear difference"}`)}</title></line>`;
   }
   // The start and the segment boundaries.
-  for (const [s, at] of [["start", 0], ["33%", 1 / 3], ["67%", 2 / 3]]) {
+  for (const [s, at] of [
+    ["start", 0],
+    ["33%", 1 / 3],
+    ["67%", 2 / 3],
+  ]) {
     const i = Math.min(path.length - 1, Math.round(at * (path.length - 1)));
     const [x, y] = [sx(xy[i][0]), sy(xy[i][1])];
     svg += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="5" fill="var(--surface)" stroke="var(--ink-2)" stroke-width="2"/>`;
@@ -314,7 +336,12 @@ export function percentileCurve({ runs, configs, color }) {
       color: color(config),
       points: PERCENTILES.map((p, i) => [
         i,
-        intervals[Math.min(intervals.length - 1, Math.floor((p / 100) * intervals.length))],
+        intervals[
+          Math.min(
+            intervals.length - 1,
+            Math.floor((p / 100) * intervals.length),
+          )
+        ],
       ]),
     });
   }
@@ -323,7 +350,8 @@ export function percentileCurve({ runs, configs, color }) {
   }
   return lineChart({
     title: "Frame-time percentiles while orbiting",
-    subtitle: "Every frame of every repetition. A flat curve is smooth; a late rise is stutter.",
+    subtitle:
+      "Every frame of every repetition. A flat curve is smooth; a late rise is stutter.",
     xLabel: "percentile",
     unit: "ms",
     xNames: PERCENTILES.map((p) => `p${p}`),
@@ -341,18 +369,22 @@ export function filmstrip({ entries, assets, configs, baseline, explore }) {
   if (!entries?.length || !assets) {
     return "";
   }
-  const moments = { start: "settled after loading", end: "settled after the orbit" };
+  const moments = {
+    start: "settled after loading",
+    end: "settled after the orbit",
+  };
   const rows = entries
     .map((e) => {
       const cells = configs
         .filter((c) => e.images[c])
         .map((c) => {
           const f = e.flip[c];
-          const caption = c === baseline
-            ? `${escape(engineLabel(c))} · reference`
-            : f
-              ? `${escape(engineLabel(c))} · FLIP ${f.mean.toFixed(3)} mean, ${f.p95.toFixed(3)} p95`
-              : escape(engineLabel(c));
+          const caption =
+            c === baseline
+              ? `${escape(engineLabel(c))} · reference`
+              : f
+                ? `${escape(engineLabel(c))} · FLIP ${f.mean.toFixed(3)} mean, ${f.p95.toFixed(3)} p95`
+                : escape(engineLabel(c));
           return `<div class="frame"><a href="${escape(assets + e.images[c])}" target="_blank" rel="noopener"><img loading="lazy" src="${escape(assets + e.images[c])}" alt="${escape(`${c}, ${moments[e.moment] ?? e.moment}`)}"></a><div class="cap">${caption}</div>${f ? `<details><summary>Difference heatmap</summary><img loading="lazy" src="${escape(assets + f.heatmap)}" alt="${escape(`FLIP heatmap, ${c} against ${baseline}`)}"></details>` : ""}</div>`;
         });
       const at = e.moment === "end" ? 1 : 0;
@@ -362,15 +394,28 @@ export function filmstrip({ entries, assets, configs, baseline, explore }) {
   return `<figure class="chart filmstrip"><figcaption>Filmstrip</figcaption><div class="sub">The first repetition's views once settled. FLIP measures how differently the two images look to a viewer (0 identical, 1 completely different); faster must not mean drawing less.</div>${rows}</figure>`;
 }
 
+/** Request purposes (2.0) in legend order, with their colors. */
+const PURPOSES = [
+  ["base", "base", "var(--series-3)"],
+  ["intermediate", "intermediate", "var(--series-4)"],
+  ["view", "view", "var(--series-1)"],
+  ["prefetch", "prefetch", "var(--series-2)"],
+  ["sample", "height samples", "var(--series-5, #9b6fe0)"],
+];
+
 /**
  * The request waterfall per configuration (first repetition): one row per
  * content request in start order, waiting (to the first byte) faint and
- * receiving solid; then the bytes received over time.
+ * receiving solid; then the bytes received over time. Where requests carry
+ * their purpose (2.0), a toggle colors them by it.
  */
 export function waterfall({ runs, configs, color }) {
   const firsts = configs
     .map((c) =>
-      runs.find((r) => r.config === c && r.waterfall?.length && r.metrics.status === "ok"),
+      runs.find(
+        (r) =>
+          r.config === c && r.waterfall?.length && r.metrics.status === "ok",
+      ),
     )
     .filter(Boolean);
   if (!firsts.length) {
@@ -380,27 +425,37 @@ export function waterfall({ runs, configs, color }) {
   const left = 52;
   const right = 12;
   const end = Math.max(
-    ...firsts.flatMap((r) => r.waterfall.map((w) => w[0] + (w[2] ?? w[1] ?? 0))),
+    ...firsts.flatMap((r) =>
+      r.waterfall.map((w) => w[0] + (w[2] ?? w[1] ?? 0)),
+    ),
   );
   const sx = (ms) => left + (ms / (end || 1)) * (width - left - right);
+  const tagged = (r) => r.waterfall.some((w) => w[6]);
   const parts = firsts.map((r) => {
     const n = r.waterfall.length;
     const h = Math.min(220, Math.max(60, n * 1.5));
     const row = h / n;
-    let svg = `<svg viewBox="0 0 ${width} ${h + 22}" role="img" aria-label="${escape(`Request waterfall, ${engineLabel(r.config)}`)}">`;
+    let svg = `<svg style="--engine:${color(r.config)}" viewBox="0 0 ${width} ${h + 22}" role="img" aria-label="${escape(`Request waterfall, ${engineLabel(r.config)}`)}">`;
     for (const t of [0, ...ticksMs(end)]) {
       svg += `<line x1="${sx(t)}" x2="${sx(t)}" y1="0" y2="${h}" stroke="var(--grid)" stroke-width="1"/>`;
       svg += `<text x="${sx(t)}" y="${h + 16}" text-anchor="middle">${compact(t / 1000)} s</text>`;
     }
-    r.waterfall.forEach(([start, ttfb, done, bytes, kind, host], i) => {
-      const y = (i * row).toFixed(2);
-      const hh = Math.max(0.6, row * 0.8).toFixed(2);
-      const first = ttfb ?? done ?? 0;
-      const last = done ?? first;
-      const tip = `<title>${escape(`${kind} · ${host} · starts ${(start / 1000).toFixed(2)} s · first byte after ${first} ms · done after ${last} ms · ${compact(bytes)} B`)}</title>`;
-      svg += `<g>${tip}<rect x="${sx(start).toFixed(1)}" y="${y}" width="${Math.max(0.8, sx(start + first) - sx(start)).toFixed(1)}" height="${hh}" fill="${color(r.config)}" opacity="0.35"/>`;
-      svg += `<rect x="${sx(start + first).toFixed(1)}" y="${y}" width="${Math.max(0.8, sx(start + last) - sx(start + first)).toFixed(1)}" height="${hh}" fill="${color(r.config)}"/></g>`;
-    });
+    const byPurpose = tagged(r);
+    r.waterfall.forEach(
+      ([start, ttfb, done, bytes, kind, host, purpose], i) => {
+        const y = (i * row).toFixed(2);
+        const hh = Math.max(0.6, row * 0.8).toFixed(2);
+        const first = ttfb ?? done ?? 0;
+        const last = done ?? first;
+        const tip = `<title>${escape(`${kind}${purpose ? ` (${purpose})` : ""} · ${host} · starts ${(start / 1000).toFixed(2)} s · first byte after ${first} ms · done after ${last} ms · ${compact(bytes)} B`)}</title>`;
+        // Engine color; by purpose when toggled (other requests gray).
+        const cls = byPurpose
+          ? ` class="wf-bar wf-${escape(purpose ?? "other")}"`
+          : "";
+        svg += `<g${cls}>${tip}<rect x="${sx(start).toFixed(1)}" y="${y}" width="${Math.max(0.8, sx(start + first) - sx(start)).toFixed(1)}" height="${hh}" fill="var(--engine)" opacity="0.35"/>`;
+        svg += `<rect x="${sx(start + first).toFixed(1)}" y="${y}" width="${Math.max(0.8, sx(start + last) - sx(start + first)).toFixed(1)}" height="${hh}" fill="var(--engine)"/></g>`;
+      },
+    );
     if (r.metrics.settleMs !== undefined) {
       svg += `<line x1="${sx(r.metrics.settleMs)}" x2="${sx(r.metrics.settleMs)}" y1="0" y2="${h}" stroke="var(--ink-2)" stroke-width="1" stroke-dasharray="3 3"/>`;
       svg += `<text x="${sx(r.metrics.settleMs) + 4}" y="10" class="label">settled</text>`;
@@ -413,10 +468,39 @@ export function waterfall({ runs, configs, color }) {
     }
     const summary = [...kinds]
       .sort((a, b) => b[1][1] - a[1][1])
-      .map(([k, [count, bytes]]) => `${escape(k)} ${count} (${(bytes / 1e6).toFixed(1)} MB)`)
+      .map(
+        ([k, [count, bytes]]) =>
+          `${escape(k)} ${count} (${(bytes / 1e6).toFixed(1)} MB)`,
+      )
       .join(" · ");
-    return `<div class="wf"><div class="m-label"><span class="key" style="background:${color(r.config)}"></span>${escape(engineLabel(r.config))}: ${n} requests · ${summary}</div>${svg}</div>`;
+    const purposes = byPurpose
+      ? PURPOSES.map(([p, label]) => {
+          const rows = r.waterfall.filter((w) => w[6] === p);
+          const mb = rows.reduce((sum, w) => sum + w[3], 0) / 1e6;
+          return rows.length
+            ? `${label} ${rows.length} (${mb.toFixed(1)} MB)`
+            : "";
+        })
+          .filter(Boolean)
+          .join(" · ")
+      : "";
+    return `<div class="wf"><div class="m-label"><span class="key" style="background:${color(r.config)}"></span>${escape(engineLabel(r.config))}: ${n} requests · ${summary}${
+      purposes
+        ? `<span class="wf-purposes"><br>by purpose: ${purposes}</span>`
+        : ""
+    }</div>${svg}</div>`;
   });
+  const toggle = firsts.some(tagged)
+    ? `<div class="wf-toggle"><label><input type="checkbox" class="wf-by-purpose"> Color requests by purpose</label><span class="wf-legend">${[
+        ...PURPOSES,
+        ["other", "other (endpoints, tileset JSON, imagery)", "var(--muted)"],
+      ]
+        .map(
+          ([, label, c]) =>
+            `<span class="key" style="background:${c}"></span>${escape(label)}`,
+        )
+        .join(" ")}</span></div>`
+    : "";
   const cumulative = lineChart({
     title: "Bytes received over time",
     subtitle: "Content bytes, cumulative, first repetition.",
@@ -425,19 +509,28 @@ export function waterfall({ runs, configs, color }) {
     series: firsts.map((r) => {
       let total = 0;
       const points = [[0, 0]];
-      for (const w of [...r.waterfall].sort((a, b) => a[0] + (a[2] ?? 0) - (b[0] + (b[2] ?? 0)))) {
+      for (const w of [...r.waterfall].sort(
+        (a, b) => a[0] + (a[2] ?? 0) - (b[0] + (b[2] ?? 0)),
+      )) {
         total += w[3];
         points.push([(w[0] + (w[2] ?? w[1] ?? 0)) / 1000, total / 1e6]);
       }
-      return { label: engineLabel(r.config), color: color(r.config), points: thin(points, 400) };
+      return {
+        label: engineLabel(r.config),
+        color: color(r.config),
+        points: thin(points, 400),
+      };
     }),
     height: 150,
   });
-  return `<figure class="chart waterfall"><figcaption>Request waterfall</figcaption><div class="sub">Every content request of the first repetition, in start order: faint while waiting for the first byte, solid while receiving. The dashed line is when the view settled.</div>${parts.join("")}</figure>${cumulative}`;
+  return `<figure class="chart waterfall"><figcaption>Request waterfall</figcaption><div class="sub">Every content request of the first repetition, in start order: faint while waiting for the first byte, solid while receiving. The dashed line is when the view settled.</div>${toggle}${parts.join("")}</figure>${cumulative}`;
 }
 
 function ticksMs(end) {
-  const step = [250, 500, 1000, 2000, 5000, 10000, 20000, 30000].find((s) => end / s <= 10) ?? 60000;
+  const step =
+    [250, 500, 1000, 2000, 5000, 10000, 20000, 30000].find(
+      (s) => end / s <= 10,
+    ) ?? 60000;
   const out = [];
   for (let t = step; t <= end; t += step) {
     out.push(t);
@@ -476,4 +569,11 @@ export const DIAGNOSE_CSS = `
 .viz .frame .cap { font-size: 12px; color: var(--ink-2); margin-top: 3px; font-variant-numeric: tabular-nums; }
 .viz .frame details { margin: 2px 0; } .viz .frame summary { font-size: 11px; color: var(--muted); }
 .viz .wf { margin: 6px 0 10px; }
+.viz .wf-toggle { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; font-size: 12px; color: var(--ink-2); margin: 4px 0; }
+.viz .wf-legend { display: none; color: var(--muted); }
+.viz .wf-legend .key { margin-left: 8px; }
+.viz .wf-purposes { display: none; color: var(--muted); }
+.viz .waterfall:has(.wf-by-purpose:checked) :is(.wf-legend, .wf-purposes) { display: inline; }
+.viz .waterfall:has(.wf-by-purpose:checked) .wf-bar { --engine: var(--muted); }
+${PURPOSES.map(([p, , c]) => `.viz .waterfall:has(.wf-by-purpose:checked) .wf-bar.wf-${p} { --engine: ${c}; }`).join(" ")}
 `;

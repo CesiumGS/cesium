@@ -677,9 +677,17 @@ async function runOne(browser, base, spec, results) {
   let runStart = 0;
   let requests = 0;
   let preflights = 0;
+  let measuring = false;
   const hosts = new Map();
   const sizes = [];
+  // The page ends the measurement before the selection reference.
+  await page.exposeFunction("endMeasurement", () => {
+    measuring = false;
+  });
   const count = (request) => {
+    if (!measuring) {
+      return;
+    }
     // CORS preflights (OPTIONS) are not content requests: counted apart.
     if (request.method() === "OPTIONS") {
       preflights++;
@@ -712,6 +720,7 @@ async function runOne(browser, base, spec, results) {
           bytes,
           requestKind(url),
           url.hostname,
+          url.href,
         ]),
       );
     }
@@ -738,9 +747,22 @@ async function runOne(browser, base, spec, results) {
       await page.reload();
     }
     context.on("requestfinished", count);
+    measuring = true;
     runStart = Date.now();
     const metrics = await page.evaluate((s) => globalThis.runScene(s), spec);
     context.off("requestfinished", count);
+    // Each request's purpose (2.0), by URL (else without its query); the
+    // URLs themselves are not kept.
+    const purposes = new Map(metrics.purposes ?? []);
+    const bare = new Map(
+      (metrics.purposes ?? []).map(([u, p]) => [u.split("?")[0], p]),
+    );
+    delete metrics.purposes;
+    const tag = (row) => {
+      const href = row.pop();
+      const purpose = purposes.get(href) ?? bare.get(href.split("?")[0]);
+      return purpose ? [...row, purpose] : row;
+    };
     const bytes = (await Promise.all(sizes)).reduce((a, b) => a + b, 0);
     if (errors.length && metrics.status === "ok") {
       metrics.message = errors.slice(0, 3).join("; ");
@@ -751,10 +773,11 @@ async function runOne(browser, base, spec, results) {
       ...(shots.length ? { shots } : {}),
       ...(waterfall.length
         ? {
-            // [start ms, time to first byte ms, end ms, bytes, kind, host]
-            waterfall: (await Promise.all(waterfall)).sort(
-              (a, b) => a[0] - b[0],
-            ),
+            // [start ms, time to first byte ms, end ms, bytes, kind, host,
+            // purpose (2.0 content)]
+            waterfall: (await Promise.all(waterfall))
+              .map(tag)
+              .sort((a, b) => a[0] - b[0]),
           }
         : {}),
     };

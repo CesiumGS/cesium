@@ -84,6 +84,19 @@ export interface InspectorSnapshot {
     /** Since loading began. */
     received?: { requests: number; bytes: number };
     /**
+     * Requests since loading began by what they were for, in a fixed order
+     * (base, intermediate, view, prefetch, height samples): started, bytes
+     * received, loads a view drew, loads evicted undrawn, cancelled.
+     */
+    purposes?: Array<{
+      label: string;
+      requests: number;
+      bytes: number;
+      drawn: number;
+      unused?: number;
+      cancelled?: number;
+    }>;
+    /**
      * Loading in phases (resolve, root, to first content, to settled), ms;
      * the last phase still running while `settled` is false.
      */

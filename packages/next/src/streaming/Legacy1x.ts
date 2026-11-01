@@ -40,6 +40,23 @@ export interface SelectionView {
   pixelRatio?: number;
 }
 
+/**
+ * What a content request is for: a first coarse level where nothing is
+ * loaded (`base`), a step between skipped levels (`intermediate`), the
+ * view's own detail (`view`), content just outside the view or preloaded
+ * (`prefetch`), or a height query's most detailed ground (`sample`).
+ */
+export type RequestPurpose =
+  "base" | "intermediate" | "view" | "prefetch" | "sample";
+
+export const REQUEST_PURPOSES: readonly RequestPurpose[] = [
+  "base",
+  "intermediate",
+  "view",
+  "prefetch",
+  "sample",
+];
+
 /** A tile selection policy (3D Tiles or globe), run per view each frame. */
 export interface TileSelection {
   maximumScreenSpaceError: number;
@@ -50,6 +67,8 @@ export interface TileSelection {
     rootGeometricError: number,
     view: SelectionView,
   ): SelectionResult;
+  /** What a request at this priority is for (default: the view). */
+  purpose?(priority: number): RequestPurpose;
 }
 
 export interface SelectionResult {

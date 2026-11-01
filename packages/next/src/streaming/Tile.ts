@@ -6,6 +6,7 @@
 import type { ClipHandle } from "../scene/World.ts";
 import type { GlobeTile } from "../globe/TerrainSource.ts";
 import type { ContentSummary } from "./pipeline.ts";
+import type { RequestPurpose } from "./Legacy1x.ts";
 import * as m4 from "../math/mat4.ts";
 import * as v3 from "../math/vec3.ts";
 import type { Mat4 } from "../math/mat4.ts";
@@ -97,6 +98,11 @@ export class Tile {
   appliedHoles?: Set<Tile>;
   /** GPU clip boxes of `appliedHoles`. */
   clip?: ClipHandle;
+  /**
+   * What its content was requested for; cleared once a view draws it, so
+   * each load counts as drawn at most once.
+   */
+  purpose?: RequestPurpose;
   /** Pipeline timestamps: first wanted, and its fetch started. */
   wantedAt = 0;
   fetchStartAt = 0;

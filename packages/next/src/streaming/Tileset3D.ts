@@ -20,9 +20,12 @@ import type { Mat4 } from "../math/mat4.ts";
 import type { Rectangle } from "../globe/quantizedMesh.ts";
 import {
   Legacy1xSelection,
+  REQUEST_PURPOSES,
+  type RequestPurpose,
   type SelectionView,
   type TileSelection,
 } from "./Legacy1x.ts";
+import { Emitter } from "../core/Emitter.ts";
 import { BudgetedSelection, type BudgetedOptions } from "./Budgeted.ts";
 import {
   fetchTilesetJson,
@@ -159,6 +162,36 @@ export interface TilesetStats {
   bytesReceived: number;
   /** Tiles selected per view id in the last update. */
   selected: Map<number, number>;
+  /** Cumulative requests by what they were for (`RequestPurpose`). */
+  purposes: Record<RequestPurpose, PurposeStats>;
+}
+
+/** Cumulative content requests of one purpose. */
+export interface PurposeStats {
+  /** Requests started. */
+  requests: number;
+  /** Bytes received over the network. */
+  bytes: number;
+  /** Loads some view drew before they were evicted (each counted once). */
+  drawn: number;
+  /** Loads evicted before any view drew them. */
+  unused: number;
+  /** Requests cancelled because no view needed them any more. */
+  cancelled: number;
+}
+
+export interface TilesetEvents {
+  /** A content request started (its URL and what it is for). */
+  request: { url: string; purpose: RequestPurpose };
+}
+
+function emptyPurposes(): Record<RequestPurpose, PurposeStats> {
+  return Object.fromEntries(
+    REQUEST_PURPOSES.map((p) => [
+      p,
+      { requests: 0, bytes: 0, drawn: 0, unused: 0, cancelled: 0 },
+    ]),
+  ) as Record<RequestPurpose, PurposeStats>;
 }
 
 /** Tile colors by tree depth for `debugColorizeTiles` (linear RGBA). */
@@ -176,6 +209,7 @@ const WHITE = [1, 1, 1, 1] as const;
 
 export class Tileset3D implements TileTree {
   readonly warnings = new Set<string>();
+  readonly events = new Emitter<TilesetEvents>();
   /** The selection policy (`setPolicy` replaces it). */
   get selection(): TileSelection {
     return this.policy;
@@ -200,6 +234,7 @@ export class Tileset3D implements TileTree {
     bytesTotal: 0,
     bytesReceived: 0,
     selected: new Map(),
+    purposes: emptyPurposes(),
   };
   /**
    * Clamped content may stand on it and ray casts with `collisionOnly`
@@ -306,7 +341,11 @@ export class Tileset3D implements TileTree {
    * Serves ray queries for one frame: wanted tiles go first in `requests`;
    * pinned tiles count as touched (not evicted or cancelled).
    */
-  private serveQueries(frame: number, requests: Map<Tile, number>): void {
+  private serveQueries(
+    frame: number,
+    requests: Map<Tile, number>,
+    purposes: Map<Tile, RequestPurpose>,
+  ): void {
     for (let q = this.queries.length - 1; q >= 0; q--) {
       const query = this.queries[q]!;
       if (query.done) {
@@ -326,6 +365,7 @@ export class Tileset3D implements TileTree {
           pending = true;
           if (tile.state === "unloaded") {
             requests.set(tile, -1);
+            purposes.set(tile, "sample");
           }
         }
       }
@@ -801,6 +841,7 @@ export class Tileset3D implements TileTree {
       this.stats.loaded +
       this.world.version;
     const requests = new Map<Tile, number>();
+    const purposes = new Map<Tile, RequestPurpose>();
     const nowMasked = new Set<Tile>();
     for (const tile of this.masked) {
       tile.viewMask = 0;
@@ -839,10 +880,11 @@ export class Tileset3D implements TileTree {
         const priority =
           result.priority?.get(tile) ?? tile.viewState(view.id).distance;
         const previous = requests.get(tile);
-        requests.set(
-          tile,
-          previous === undefined ? priority : Math.min(previous, priority),
-        );
+        if (previous === undefined || priority < previous) {
+          // The most urgent view's purpose.
+          requests.set(tile, priority);
+          purposes.set(tile, this.policy.purpose?.(priority) ?? "view");
+        }
       }
       this.lastSelected.set(view.id, result.selected);
       this.stats.selected.set(view.id, result.selected.length);
@@ -851,6 +893,10 @@ export class Tileset3D implements TileTree {
     for (const tile of new Set([...this.masked, ...nowMasked])) {
       this.applyDebugColor(tile);
       if (tile.instance && tile.appliedMask !== tile.viewMask) {
+        if (tile.viewMask !== 0 && tile.purpose) {
+          this.stats.purposes[tile.purpose].drawn++;
+          tile.purpose = undefined;
+        }
         for (const draw of tile.instance.draws) {
           this.world.setViewMask(draw, tile.viewMask);
         }
@@ -908,10 +954,13 @@ export class Tileset3D implements TileTree {
         controller.abort();
         this.engine.requests.cancelled(this.originOf(tile.contentUrl!));
         this.stats.cancelled++;
+        if (tile.purpose) {
+          this.stats.purposes[tile.purpose].cancelled++;
+        }
       }
     }
-    this.serveQueries(frame, requests);
-    this.request(requests);
+    this.serveQueries(frame, requests, purposes);
+    this.request(requests, purposes);
     this.engine.requests.backlog(this.origin, this.ready.length);
     const window = this.engine.requests.stats(this.origin);
     if (window) {
@@ -957,7 +1006,10 @@ export class Tileset3D implements TileTree {
     this.stats.uploadQueue = this.ready.length;
   }
 
-  private request(requests: Map<Tile, number>): void {
+  private request(
+    requests: Map<Tile, number>,
+    purposes: Map<Tile, RequestPurpose>,
+  ): void {
     const order = [...requests.entries()].sort(
       (a, b) => a[1] - b[1] || a[0].depth - b[0].depth,
     );
@@ -981,6 +1033,10 @@ export class Tileset3D implements TileTree {
       this.wanted.delete(tile);
       this.inFlight++;
       this.stats.requestsTotal++;
+      const purpose = purposes.get(tile) ?? "view";
+      tile.purpose = purpose;
+      this.stats.purposes[purpose].requests++;
+      this.events.emit("request", { url: tile.contentUrl!, purpose });
       const controller = new AbortController();
       this.loading.set(tile, controller);
       void this.loadContent(tile, controller.signal)
@@ -1013,6 +1069,7 @@ export class Tileset3D implements TileTree {
         if (!this.destroyed) {
           this.externals.push({ tile, json });
         }
+        tile.purpose = undefined; // structure, never drawn itself
         return undefined;
       }
       const asset = this.source
@@ -1026,6 +1083,9 @@ export class Tileset3D implements TileTree {
         return undefined;
       }
       this.stats.bytesReceived += asset.timing?.bytes ?? 0;
+      if (tile.purpose) {
+        this.stats.purposes[tile.purpose].bytes += asset.timing?.bytes ?? 0;
+      }
       this.ready.push({ tile, asset, arrivedAt: performance.now() });
       return asset.timing
         ? {
@@ -1162,6 +1222,10 @@ export class Tileset3D implements TileTree {
 
   private unload(tile: Tile): void {
     this.source?.unloadTile?.(tile);
+    if (tile.purpose) {
+      this.stats.purposes[tile.purpose].unused++;
+      tile.purpose = undefined;
+    }
     if (tile.instance) {
       this.engine.removeModel(this.world, tile.instance);
       tile.instance = undefined;

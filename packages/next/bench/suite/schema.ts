@@ -265,6 +265,12 @@ export interface RunMetrics {
   worstBlockingMs?: number;
   /** After the run: JS heap in use, bytes (Chromium). */
   heapBytes?: number;
+  /**
+   * Each content request's URL and purpose (2.0: base, intermediate, view,
+   * prefetch, sample). The CLI tags the waterfall with them and drops
+   * these.
+   */
+  purposes?: Array<[string, string]>;
   /** Requests and bytes received during the whole run. */
   requests?: number;
   bytes?: number;

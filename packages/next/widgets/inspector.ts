@@ -67,6 +67,7 @@ type Series =
   | "inFlight"
   | "window"
   | "received"
+  | "prefetch"
   | "uploadQueue"
   | "decode"
   | "frames"
@@ -148,6 +149,7 @@ export function attachInspector(
     inFlight: [],
     window: [],
     received: [],
+    prefetch: [],
     uploadQueue: [],
     decode: [],
     frames: [],
@@ -235,6 +237,21 @@ export function attachInspector(
       "received",
       received !== undefined && lastReceived !== undefined
         ? Math.max(0, received - lastReceived) / seconds
+        : 0,
+    );
+    // Prefetch's share of the bytes received since the last snapshot.
+    const prefetched = (x: InspectorSnapshot | undefined) =>
+      x?.tiles?.purposes?.find((p) => p.label === "Prefetch")?.bytes;
+    const prefetchNow = prefetched(snap);
+    const prefetchLast = prefetched(last);
+    push(
+      "prefetch",
+      received !== undefined &&
+        lastReceived !== undefined &&
+        received > lastReceived &&
+        prefetchNow !== undefined &&
+        prefetchLast !== undefined
+        ? (prefetchNow - prefetchLast) / (received - lastReceived)
         : 0,
     );
     push("uploadQueue", snap.tiles?.window?.uploadQueue ?? 0);
@@ -490,6 +507,25 @@ function streamingHtml(
   } else if (t.received) {
     html += `<div class="ci-note">${count(t.received.requests)} requests · ${mb(t.received.bytes)} received</div>`;
   }
+  if (t.purposes?.some((p) => p.requests > 0)) {
+    // Bytes by what they were for; "drawn" is how many of those loads a
+    // view has drawn so far (the rest are in flight, waiting, cancelled or
+    // evicted unused).
+    const wasted = t.purposes.reduce(
+      (n, p) => n + (p.unused ?? 0) + (p.cancelled ?? 0),
+      0,
+    );
+    html += stacked(
+      `Requests by purpose <span class="ci-note">bytes received${
+        wasted ? ` · ${count(wasted)} evicted undrawn or cancelled` : ""
+      }</span>`,
+      t.purposes.map((p) => ({
+        label: p.label,
+        value: p.bytes,
+        text: `${mb(p.bytes)} · ${count(p.drawn)} of ${count(p.requests)} drawn`,
+      })),
+    );
+  }
   if (moves) {
     const { lastMove, move } = moves;
     html += `<div class="ci-tiles">${
@@ -634,6 +670,13 @@ function historyHtml(
       name: "Received",
       series: h.received,
       format: (v) => `${(v / MB).toFixed(1)} MB/s`,
+    });
+  }
+  if (s.tiles?.purposes) {
+    rows.push({
+      name: "Prefetch share of bytes",
+      series: h.prefetch,
+      format: (v) => `${(v * 100).toFixed(0)}%`,
     });
   }
   if (s.tiles?.window?.uploadQueue !== undefined) {
@@ -857,6 +900,7 @@ const CSS = `
   --ci-series-2: #d95926;
   --ci-series-3: #199e70;
   --ci-series-4: #c98500;
+  --ci-series-5: #9b6fe0;
   --ci-good: #5cc08a;
   --ci-warning: #fab219;
   --ci-bad: #ef6c5a;
@@ -945,6 +989,7 @@ const CSS = `
 .cesium-inspector .s2 { background: var(--ci-series-2); }
 .cesium-inspector .s3 { background: var(--ci-series-3); }
 .cesium-inspector .s4 { background: var(--ci-series-4); }
+.cesium-inspector .s5 { background: var(--ci-series-5); }
 .cesium-inspector .ci-legend { display: grid; grid-template-columns: 10px 1fr auto; gap: 1px 6px; align-items: center; margin-bottom: 8px; }
 .cesium-inspector .ci-legend .ci-num { text-align: right; }
 .cesium-inspector .ci-key { inline-size: 8px; block-size: 8px; border-radius: 2px; }

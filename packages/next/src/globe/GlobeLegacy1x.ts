@@ -15,6 +15,7 @@
  */
 import type { Tile } from "../streaming/Tile.ts";
 import type {
+  RequestPurpose,
   SelectionResult,
   SelectionView,
   TileSelection,
@@ -104,6 +105,14 @@ interface Pass {
 }
 
 export class GlobeLegacy1xSelection implements TileSelection {
+  /**
+   * 1.x's high and medium load queues hold what the view draws or waits
+   * on; its low queue, preloaded siblings and ancestors.
+   */
+  purpose(priority: number): RequestPurpose {
+    return priority < LOW ? "view" : "prefetch";
+  }
+
   maximumScreenSpaceError: number;
   memoryAdjustedScreenSpaceError: number;
   /** 1.x QuadtreePrimitive defaults. */

@@ -21,6 +21,7 @@ import {
   Legacy1xSelection,
   isVisible,
   type Legacy1xOptions,
+  type RequestPurpose,
   type SelectionResult,
   type SelectionView,
 } from "./Legacy1x.ts";
@@ -120,6 +121,17 @@ export class BudgetedSelection extends Legacy1xSelection {
     ) {
       state.visible = false;
     }
+  }
+
+  /** The band a request's priority falls in. */
+  purpose(priority: number): RequestPurpose {
+    return priority < INTERMEDIATE
+      ? "base"
+      : priority < FRONTIER
+        ? "intermediate"
+        : priority < PREFETCH
+          ? "view"
+          : "prefetch";
   }
 
   override select(
