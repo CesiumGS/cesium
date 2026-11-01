@@ -43,15 +43,28 @@ const browser = await chromium.launch({
   ],
 });
 const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+// Dyno's viewer on 2.0, on the ellipsoid (its settings, as Dyno stores them).
 await page.addInitScript(() => {
-  localStorage.setItem("viewer.terrain", "0");
+  localStorage.setItem(
+    "dyno.viewer.view",
+    JSON.stringify({
+      policy: "budgeted",
+      sse: 16,
+      terrain: false,
+      globe: true,
+      unlit: false,
+      continuous: false,
+      split: false,
+      overview: false,
+    }),
+  );
 });
-await page.goto(`${base}/viewer/?asset=${asset}&at=${from},1500`);
+await page.goto(`${base}/#/viewer?engine=2.0&asset=${asset}&at=${from},1500`);
 
 // Settled: everything loaded for the start view.
 await page.waitForFunction(
   () => {
-    const e = globalThis.engine;
+    const e = globalThis.dynoViewer?.viewer?.engine;
     return (
       e &&
       e.tilesets.length > 0 &&
@@ -102,7 +115,7 @@ await browser.startTracing(page, {
   ],
 });
 await page.evaluate(([lon, lat]) => {
-  const e = globalThis.engine;
+  const e = globalThis.dynoViewer.viewer.engine;
   void e;
   const rad = Math.PI / 180;
   const a = 6378137;
@@ -114,7 +127,7 @@ await page.evaluate(([lon, lat]) => {
     n * Math.cos(lat * rad) * Math.sin(lon * rad),
     n * (1 - e2) * sl,
   ]);
-  globalThis.controller.focus(p, 200 * rad, -25 * rad, 1200);
+  globalThis.dynoViewer.viewer.controller.focus(p, 200 * rad, -25 * rad, 1200);
 }, to);
 await page.waitForTimeout(6000);
 const traceBuffer = await browser.stopTracing();

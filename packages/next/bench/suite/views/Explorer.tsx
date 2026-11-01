@@ -41,7 +41,7 @@ import type {
   Scenario,
   Scene,
 } from "../schema.ts";
-import { attachCredits, attachInspector } from "../../../inspector/index.ts";
+import { attachCredits, attachInspector } from "../../../widgets/index.ts";
 import { ensureCesium } from "../cesium1x.ts";
 import {
   compareEngines,

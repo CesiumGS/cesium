@@ -1,8 +1,16 @@
 /**
- * The inspector (plan §16.9): an overlay for any engine view, kept out of
- * the engine core. `attachInspector(element, inspectEngine(engine, …))`
- * for 2.0; other engines implement `Inspectable`.
+ * Widgets: UI over an engine view, kept out of the headless engine core (as
+ * 1.x keeps its widgets apart from its engine). `Viewer`, 2.0's counterpart
+ * to `Cesium.Viewer`; the inspector (plan §16.9), for 2.0 through
+ * `inspectEngine` and for other engines through `Inspectable`; the credits.
  */
+export {
+  Viewer,
+  type GlobeKind,
+  type TilesetSource,
+  type ViewerOptions,
+  type ZoomTarget,
+} from "./Viewer.ts";
 export {
   attachCredits,
   type CreditSource,

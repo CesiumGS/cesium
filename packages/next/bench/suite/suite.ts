@@ -19,7 +19,7 @@ import {
   engineSnapshot,
   type InspectorSnapshot,
   type PickInfo,
-} from "../../inspector/index.ts";
+} from "../../widgets/index.ts";
 import ionSource from "../../../engine/Source/Core/Ion.js?raw";
 import publicCatalog from "./catalog/public.json";
 import type {
@@ -618,20 +618,151 @@ export class NextAdapter implements Adapter {
   }
 }
 
+/**
+ * A 1.x load's milestones (performance.now()), as 2.0's tilesets record
+ * them: setup began, the root tileset and terrain were ready, content was
+ * first drawn, everything settled.
+ */
+export interface LegacyLoad {
+  startedAt: number;
+  rootAt?: number;
+  firstContentAt?: number;
+  settledAt?: number;
+}
+
+/**
+ * What the inspector shows for a 1.x viewer and its tilesets (the explorer's
+ * adapter and the viewer page): drawn and pending tiles, memory by kind with
+ * the globe's terrain meshes, thresholds and the load timeline.
+ */
+export function legacySnapshot(
+  viewer: Json,
+  tilesets: readonly Json[],
+  load: LegacyLoad,
+  settled: boolean,
+): InspectorSnapshot {
+  const sum = (f: (t: Json) => number) =>
+    tilesets.reduce((n: number, t: Json) => n + f(t), 0);
+  const statistic = (key: string) => sum((t) => t.statistics[key]);
+  const geometry = statistic("geometryByteLength");
+  const textures = statistic("texturesByteLength");
+  const batchTables = statistic("batchTableByteLength");
+  // 1.x counts globe tiles, not their bytes: terrain meshes in its tile
+  // cache, as 2.0 counts them (imagery excluded in both).
+  let terrain = 0;
+  let drawn = statistic("selected");
+  const globe = viewer.scene.globe;
+  if (globe) {
+    drawn += globe._surface._tilesToRender.length;
+    for (
+      let tile = globe._surface._tileReplacementQueue.head;
+      tile;
+      tile = tile.replacementNext
+    ) {
+      const mesh = tile.data?.mesh;
+      if (tile.data?.vertexArray && mesh) {
+        terrain += mesh.vertices.byteLength + mesh.indices.byteLength;
+      }
+    }
+  }
+  const first = tilesets[0];
+  const canvas = viewer.canvas as HTMLCanvasElement;
+  const memory: NonNullable<InspectorSnapshot["memory"]> = [];
+  if (first) {
+    memory.push(
+      { label: "Tile geometry", unit: "bytes", used: geometry },
+      { label: "Tile textures", unit: "bytes", used: textures },
+      { label: "Batch tables", unit: "bytes", used: batchTables },
+    );
+  }
+  if (globe) {
+    memory.push({ label: "Terrain meshes", unit: "bytes", used: terrain });
+  }
+  return {
+    state: settled ? "settled" : "loading",
+    tiles: {
+      drawn,
+      ...(first ? { known: statistic("numberOfTilesTotal") } : {}),
+      loading: statistic("numberOfPendingRequests"),
+      cache: {
+        bytes: geometry + textures + batchTables + terrain,
+        ...(first
+          ? {
+              budget: sum((t) => t.cacheBytes),
+              overflow: sum((t) => t.maximumCacheOverflowBytes),
+            }
+          : {}),
+      },
+      sse: first
+        ? {
+            maximum: first.maximumScreenSpaceError,
+            adjusted: first.memoryAdjustedScreenSpaceError,
+          }
+        : { maximum: globe?.maximumScreenSpaceError ?? 2 },
+      ...(load.rootAt !== undefined
+        ? { load: legacyLoadPhases(load, load.rootAt) }
+        : {}),
+    },
+    memory,
+    gpu: {
+      adapter: viewer.scene.context.webgl2 ? "WebGL 2" : "WebGL 1",
+      canvas: [canvas.width, canvas.height],
+    },
+  };
+}
+
+/** Root, to first content, to settled (or still streaming), as 2.0's. */
+function legacyLoadPhases(load: LegacyLoad, rootAt: number) {
+  const { startedAt, firstContentAt, settledAt } = load;
+  const end = settledAt ?? performance.now();
+  return {
+    phases: [
+      { label: "Root tileset", ms: rootAt - startedAt },
+      { label: "To first content", ms: (firstContentAt ?? end) - rootAt },
+      {
+        label: settledAt !== undefined ? "To settled" : "Streaming",
+        ms: firstContentAt !== undefined ? end - firstContentAt : 0,
+      },
+    ],
+    settled: settledAt !== undefined,
+  };
+}
+
+/** The feature under a point of a 1.x viewer (CSS pixels). */
+export function legacyPick(
+  viewer: Json,
+  x: number,
+  y: number,
+): PickInfo | undefined {
+  const picked = viewer.scene.pick(new Cesium.Cartesian2(x, y));
+  if (!picked) {
+    return undefined;
+  }
+  // A 3D Tiles feature: its properties, named as 1.x's picking example does.
+  if (typeof picked.getPropertyIds === "function") {
+    const properties: Record<string, unknown> = {};
+    // The schema's properties this feature has a value for.
+    for (const id of picked.getPropertyIds() as string[]) {
+      const value = picked.getProperty(id);
+      if (value !== undefined) {
+        properties[id] = value;
+      }
+    }
+    const name = properties.name ?? properties.Name;
+    return {
+      ...(name !== undefined ? { name: String(name) } : {}),
+      featureId: picked.featureId,
+      properties,
+    };
+  }
+  return { name: picked.primitive?.constructor?.name ?? "primitive" };
+}
+
 export class LegacyAdapter implements Adapter {
   private viewer: Json;
   private readonly tilesets: Json[] = [];
-  /**
-   * The load's milestones (performance.now()), as 2.0's tilesets record
-   * them: setup began, the root tileset and terrain were ready, content was
-   * first drawn, everything settled.
-   */
-  private readonly load: {
-    startedAt: number;
-    rootAt?: number;
-    firstContentAt?: number;
-    settledAt?: number;
-  } = { startedAt: 0 };
+  /** The load's milestones. */
+  private readonly load: LegacyLoad = { startedAt: 0 };
 
   async setup(container: HTMLElement, spec: RunSpec): Promise<void> {
     this.load.startedAt = performance.now();
@@ -924,116 +1055,16 @@ export class LegacyAdapter implements Adapter {
   }
 
   inspect(): InspectorSnapshot {
-    const sum = (f: (t: Json) => number) =>
-      this.tilesets.reduce((n: number, t: Json) => n + f(t), 0);
-    const statistic = (key: string) => sum((t) => t.statistics[key]);
-    const geometry = statistic("geometryByteLength");
-    const textures = statistic("texturesByteLength");
-    const batchTables = statistic("batchTableByteLength");
-    // 1.x counts globe tiles, not their bytes: terrain meshes in its tile
-    // cache, as 2.0 counts them (imagery excluded in both).
-    let terrain = 0;
-    let drawn = statistic("selected");
-    const globe = this.viewer.scene.globe;
-    if (globe) {
-      drawn += globe._surface._tilesToRender.length;
-      for (
-        let tile = globe._surface._tileReplacementQueue.head;
-        tile;
-        tile = tile.replacementNext
-      ) {
-        const mesh = tile.data?.mesh;
-        if (tile.data?.vertexArray && mesh) {
-          terrain += mesh.vertices.byteLength + mesh.indices.byteLength;
-        }
-      }
-    }
-    const first = this.tilesets[0];
-    const canvas = this.viewer.canvas as HTMLCanvasElement;
-    const memory: NonNullable<InspectorSnapshot["memory"]> = [];
-    if (first) {
-      memory.push(
-        { label: "Tile geometry", unit: "bytes", used: geometry },
-        { label: "Tile textures", unit: "bytes", used: textures },
-        { label: "Batch tables", unit: "bytes", used: batchTables },
-      );
-    }
-    if (globe) {
-      memory.push({ label: "Terrain meshes", unit: "bytes", used: terrain });
-    }
-    return {
-      state: this.settled() ? "settled" : "loading",
-      tiles: {
-        drawn,
-        ...(first ? { known: statistic("numberOfTilesTotal") } : {}),
-        loading: statistic("numberOfPendingRequests"),
-        cache: {
-          bytes: geometry + textures + batchTables + terrain,
-          ...(first
-            ? {
-                budget: sum((t) => t.cacheBytes),
-                overflow: sum((t) => t.maximumCacheOverflowBytes),
-              }
-            : {}),
-        },
-        sse: first
-          ? {
-              maximum: first.maximumScreenSpaceError,
-              adjusted: first.memoryAdjustedScreenSpaceError,
-            }
-          : { maximum: globe?.maximumScreenSpaceError ?? 2 },
-        ...(this.load.rootAt !== undefined
-          ? { load: this.loadPhases(this.load.rootAt) }
-          : {}),
-      },
-      memory,
-      gpu: {
-        adapter: this.viewer.scene.context.webgl2 ? "WebGL 2" : "WebGL 1",
-        canvas: [canvas.width, canvas.height],
-      },
-    };
-  }
-
-  /** Root, to first content, to settled (or still streaming), as 2.0's. */
-  private loadPhases(rootAt: number) {
-    const { startedAt, firstContentAt, settledAt } = this.load;
-    const end = settledAt ?? performance.now();
-    return {
-      phases: [
-        { label: "Root tileset", ms: rootAt - startedAt },
-        { label: "To first content", ms: (firstContentAt ?? end) - rootAt },
-        {
-          label: settledAt !== undefined ? "To settled" : "Streaming",
-          ms: firstContentAt !== undefined ? end - firstContentAt : 0,
-        },
-      ],
-      settled: settledAt !== undefined,
-    };
+    return legacySnapshot(
+      this.viewer,
+      this.tilesets,
+      this.load,
+      this.settled(),
+    );
   }
 
   async pick(x: number, y: number): Promise<PickInfo | undefined> {
-    const picked = this.viewer.scene.pick(new Cesium.Cartesian2(x, y));
-    if (!picked) {
-      return undefined;
-    }
-    // A 3D Tiles feature: its properties, named as 1.x's picking example does.
-    if (typeof picked.getPropertyIds === "function") {
-      const properties: Record<string, unknown> = {};
-      // The schema's properties this feature has a value for.
-      for (const id of picked.getPropertyIds() as string[]) {
-        const value = picked.getProperty(id);
-        if (value !== undefined) {
-          properties[id] = value;
-        }
-      }
-      const name = properties.name ?? properties.Name;
-      return {
-        ...(name !== undefined ? { name: String(name) } : {}),
-        featureId: picked.featureId,
-        properties,
-      };
-    }
-    return { name: picked.primitive?.constructor?.name ?? "primitive" };
+    return legacyPick(this.viewer, x, y);
   }
 
   setStreamingPaused(on: boolean): void {

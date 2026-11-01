@@ -263,7 +263,6 @@ export default defineConfig({
       input: {
         dyno: "index.html",
         demo: "demo/index.html",
-        viewer: "viewer/index.html",
         parity: "parity/index.html",
         models: "parity/models.html",
         tileset: "parity/tileset.html",

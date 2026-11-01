@@ -30,6 +30,8 @@ export interface InspectorOptions {
   expanded?: boolean;
   /** Snapshot interval, ms (default 250). */
   interval?: number;
+  /** The corner it sits in (default top left). */
+  placement?: "top-left" | "top-right";
   /** Where open sections and expansion are remembered (localStorage key prefix). */
   storageKey?: string;
 }
@@ -81,7 +83,10 @@ export function attachInspector(
   const interval = options.interval ?? 250;
   const storageKey = options.storageKey ?? "cesium-inspector";
   const root = document.createElement("div");
-  root.className = "cesium-inspector";
+  root.className =
+    options.placement === "top-right"
+      ? "cesium-inspector right"
+      : "cesium-inspector";
   // The panel is for reading and clicking, not for the camera underneath.
   for (const type of ["pointerdown", "pointerup", "wheel", "dblclick"]) {
     root.addEventListener(type, (e) => e.stopPropagation());
@@ -872,6 +877,7 @@ const CSS = `
   z-index: 1;
 }
 .cesium-inspector.expanded { width: 320px; }
+.cesium-inspector.right { left: auto; right: 8px; }
 .cesium-inspector .ci-header {
   all: unset;
   box-sizing: border-box;
@@ -905,7 +911,11 @@ const CSS = `
   transform: rotate(45deg) translateY(-2px); flex: none;
 }
 .cesium-inspector.expanded .ci-chevron { transform: rotate(-135deg) translateY(-1px); }
-.cesium-inspector .ci-body { display: none; overflow-y: auto; padding: 0 8px 6px; }
+.cesium-inspector .ci-body {
+  display: none; overflow-y: auto; padding: 0 8px 6px;
+  /* A thin scrollbar in the panel's colors, not the page's. */
+  scrollbar-width: thin; scrollbar-color: #4a4a46 transparent;
+}
 .cesium-inspector.expanded .ci-body { display: block; }
 .cesium-inspector .ci-section { border-top: 1px solid var(--ci-border); }
 .cesium-inspector .ci-section > summary {

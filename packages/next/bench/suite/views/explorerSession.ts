@@ -3,7 +3,7 @@ import type {
   CreditSource,
   Inspectable,
   PickInfo,
-} from "../../../inspector/index.ts";
+} from "../../../widgets/index.ts";
 import type { EngineConfig, Pose } from "../schema.ts";
 import {
   type Adapter,

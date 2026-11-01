@@ -1,0 +1,153 @@
+/*
+ * Dyno's viewer: the viewport is the page. Actions sit on it, settings in
+ * a panel beside it that folds away.
+ */
+.viewer-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--stratakit-space-600);
+}
+.viewer-showing {
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+}
+/* StrataKit's app layout (its sandbox): a docked panel on the page
+   background, then the canvas as an elevated card inset beside it. */
+.viewer-layout {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: var(--stratakit-space-200);
+  /* The canvas fills what the page header leaves. */
+  block-size: calc(100vh - 190px);
+  min-block-size: 440px;
+}
+.viewer-layout.closed {
+  grid-template-columns: auto minmax(0, 1fr);
+}
+.viewer-stage {
+  position: relative;
+  min-inline-size: 0;
+  border-radius: 16px;
+  border: 1px solid var(--stratakit-color-border-neutral-muted);
+  box-shadow: var(--stratakit-shadow-surface-xl);
+  overflow: hidden;
+  background: #0b0e14;
+}
+.viewer-engine {
+  position: absolute;
+  inset: 0;
+}
+.viewer-progress {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 3;
+}
+.viewer-alert {
+  position: absolute;
+  inset: var(--stratakit-space-200) 64px auto 50%;
+  transform: translateX(-50%);
+  inline-size: min(560px, calc(100% - 80px));
+  z-index: 3;
+}
+/* The canvas's tools, top left (the inspector is top right). */
+.viewer-tools {
+  position: absolute;
+  inset: var(--stratakit-space-200) auto auto var(--stratakit-space-200);
+  z-index: 2;
+}
+.viewer-panel,
+.viewer-rail {
+  background: var(--stratakit-color-bg-page-base);
+}
+.viewer-panel {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+.viewer-panel-header {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+  padding: var(--stratakit-space-200) var(--stratakit-space-100)
+    var(--stratakit-space-200) 0;
+  border-block-end: 1px solid var(--stratakit-color-border-neutral-base);
+  background: inherit;
+}
+.viewer-panel-header {
+  align-items: flex-start;
+}
+.viewer-panel-title {
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+  margin-inline-end: auto;
+}
+.viewer-panel-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-300);
+  padding-block: var(--stratakit-space-300);
+}
+/* As StrataKit's sandbox subheads its panel: a titled row with actions. */
+.viewer-subheader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-block-size: 2.5rem;
+  border-block: 1px solid var(--stratakit-color-border-neutral-base);
+}
+.viewer-subheader h2 {
+  margin: 0;
+  font-weight: 600;
+}
+.viewer-panel h2 {
+  margin: 0;
+}
+/* Folded panel: a rail at the same edge. */
+.viewer-rail {
+  padding: var(--stratakit-space-200) var(--stratakit-space-100);
+}
+.viewer-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-300);
+}
+.viewer-range-head {
+  display: flex;
+  justify-content: space-between;
+}
+.viewer-tabs {
+  padding-inline: var(--stratakit-space-600);
+}
+.viewer-open {
+  min-block-size: 360px;
+}
+.viewer-open-row {
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-200);
+  margin-block-end: var(--stratakit-space-200);
+}
+.viewer-token {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-200);
+  margin-block-start: var(--stratakit-space-400);
+}
+.viewer-token h3 {
+  margin: 0;
+}
+@media (max-width: 900px) {
+  .viewer-layout {
+    grid-template-columns: 1fr;
+    block-size: auto;
+  }
+  .viewer-stage {
+    block-size: 60vh;
+  }
+}

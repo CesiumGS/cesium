@@ -21,8 +21,7 @@
   "include": [
     "src",
     "demo",
-    "viewer",
-    "inspector",
+    "widgets",
     "parity",
     "spikes",
     "bench",

@@ -173,6 +173,34 @@ export const explorerRoute = createRoute({
   ),
 });
 
+export interface ViewerSearch {
+  /** "2.0" (the working tree) or a 1.x release. */
+  engine?: string;
+  model?: string;
+  tileset?: string;
+  /** A Cesium ion asset id. */
+  asset?: string;
+  imodel?: string;
+  scene?: string;
+  /** Where to look: longitude,latitude[,range] (degrees, meters). */
+  at?: string;
+}
+export const viewerRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/viewer",
+  validateSearch: (s: Record<string, unknown>): ViewerSearch =>
+    clean({
+      engine: str(s.engine),
+      model: str(s.model),
+      tileset: str(s.tileset),
+      asset: str(s.asset),
+      imodel: str(s.imodel),
+      scene: str(s.scene),
+      at: str(s.at),
+    }),
+  component: lazyRouteComponent(() => import("./views/Viewer.tsx"), "Viewer"),
+});
+
 export interface ImagesSearch {
   run?: string;
   check?: string;
@@ -248,6 +276,7 @@ export const routeTree = rootRoute.addChildren([
   scenesRoute,
   sceneRoute,
   explorerRoute,
+  viewerRoute,
   imagesRoute,
   analysisRoute,
   labRoute,

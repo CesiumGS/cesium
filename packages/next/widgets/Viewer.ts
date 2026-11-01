@@ -1,0 +1,561 @@
+/**
+ * `Viewer`: 2.0's counterpart to 1.x's `Cesium.Viewer`, outside the engine
+ * core (which stays headless, as 1.x's widgets sit outside its engine). One
+ * call sets up what an app needs to look at content on the globe: a canvas,
+ * the engine, a world and a view, a globe camera controller, the globe (the
+ * ellipsoid or Cesium World Terrain, with the ion default imagery) and the
+ * credits on screen; the inspector on request. Content is added through it
+ * so its attributions are credited and it can be framed; everything else is
+ * the engine's own API (`viewer.engine`, `viewer.world`, `viewer.view`).
+ *
+ *   const viewer = await Viewer.create(container);
+ *   const tileset = await viewer.addTileset({ ion: 96188 });
+ *   viewer.zoomTo({ longitude: -75.16, latitude: 39.95, range: 1500 });
+ */
+import {
+  BingImagery,
+  CanvasTarget,
+  Ellipsoid,
+  Engine,
+  GlobeController,
+  eastNorthUpToFixedFrame,
+  fromDegrees,
+  mat4,
+  resolveIonAsset,
+  vec3,
+  type GltfAsset,
+  type ImageryProvider,
+  type IonAttribution,
+  type ModelInstance,
+  type ModelOptions,
+  type PickResult,
+  type Tileset3D,
+  type TilesetOptions,
+  type View,
+  type ViewLink,
+  type World,
+} from "../src/index.ts";
+import { attachCredits, type CreditsHandle } from "./credits.ts";
+import { inspectEngine } from "./engine.ts";
+import type { Inspectable } from "./inspectable.ts";
+import {
+  attachInspector,
+  type InspectorHandle,
+  type InspectorOptions,
+} from "./inspector.ts";
+
+export type GlobeKind = "ellipsoid" | "terrain" | false;
+
+export interface ViewerOptions {
+  /**
+   * The globe: the WGS84 ellipsoid (default), Cesium World Terrain (ion
+   * asset 1), or none.
+   */
+  globe?: GlobeKind;
+  /**
+   * Imagery on the globe: the ion default, Bing Maps Aerial (true, the
+   * default), a provider, or none.
+   */
+  imagery?: ImageryProvider | boolean;
+  /** Tile selection for the globe and added tilesets (default "budgeted"). */
+  policy?: "budgeted" | "legacy1x";
+  /** Render only when something changes (default) or every frame. */
+  renderMode?: "onDemand" | "continuous";
+  /** Show the credits over the view (default true). */
+  credits?: boolean;
+  /** Attach the inspector over the view (default false). */
+  inspector?: boolean | InspectorOptions;
+  /** ion access token for terrain, imagery and ion tilesets. */
+  accessToken?: string;
+}
+
+/** A tileset by URL, or an ion asset. */
+export type TilesetSource =
+  string | URL | { ion: number; accessToken?: string };
+
+/** What `zoomTo` frames. */
+export type ZoomTarget =
+  | Tileset3D
+  | ModelInstance
+  | { center: ArrayLike<number>; radius: number }
+  | { longitude: number; latitude: number; range?: number };
+
+const ellipsoid = Ellipsoid.WGS84;
+const deg = Math.PI / 180;
+
+export class Viewer {
+  readonly engine: Engine;
+  readonly canvas: HTMLCanvasElement;
+  readonly target: CanvasTarget;
+  readonly world: World;
+  /** The main view (the left half in split view). */
+  readonly view: View;
+  readonly controller: GlobeController;
+  /** Policy for the globe and tilesets added later. */
+  policy: "budgeted" | "legacy1x";
+  /** Builds the globe; content added before it is ready still loads. */
+  readonly ready: Promise<void>;
+
+  private globe_?: Tileset3D;
+  private globeKind: GlobeKind;
+  private globeShown = true;
+  private globeToken = 0;
+  private imagery?: ImageryProvider;
+  private terrainAttributions: IonAttribution[] = [];
+  private readonly attributions = new Map<object, IonAttribution[]>();
+  private readonly tilesets = new Set<Tileset3D>();
+  private second?: View;
+  private secondController?: GlobeController;
+  private overview_?: View;
+  private overviewLink?: ViewLink;
+  private readonly focusCenter = vec3.vec3();
+  private sun?: { azimuth: number; elevation: number };
+  private credits_?: CreditsHandle;
+  private inspector?: InspectorHandle;
+  private frameRequest = 0;
+  private destroyed = false;
+  private readonly accessToken: string | undefined;
+
+  private constructor(
+    readonly container: HTMLElement,
+    engine: Engine,
+    options: ViewerOptions,
+  ) {
+    this.engine = engine;
+    this.policy = options.policy ?? "budgeted";
+    this.globeKind = options.globe ?? "ellipsoid";
+    this.accessToken = options.accessToken;
+    if (getComputedStyle(container).position === "static") {
+      container.style.position = "relative";
+    }
+    const canvas = (this.canvas = document.createElement("canvas"));
+    canvas.style.width = "100%";
+    canvas.style.height = "100%";
+    canvas.style.display = "block";
+    container.append(canvas);
+    this.target = new CanvasTarget(canvas);
+    // One world: content and the globe come and go in it. Arenas sized
+    // once, within the device's storage-binding limit.
+    const limit = engine.gpu.device.limits.maxStorageBufferBindingSize;
+    this.world = engine.createWorld({
+      maxDraws: 1 << 16,
+      maxMaterials: 1 << 13,
+      vertexBytes: Math.min(768 << 20, Math.floor(limit / 4) * 4),
+      indexBytes: Math.min(384 << 20, Math.floor(limit / 4) * 4),
+    });
+    this.view = engine.addView({ target: this.target, world: this.world });
+    this.controller = new GlobeController(this.view, canvas);
+    // The camera stays above the globe's drawn surface.
+    this.controller.surfaceHeight = (longitude, latitude) =>
+      this.globe_?.show
+        ? this.globe_.surfaceHeight(longitude, latitude)
+        : undefined;
+    this.controller.ignore = (x, y) => this.overview_?.contains(x, y) ?? false;
+    engine.renderMode = options.renderMode ?? "onDemand";
+    if (options.credits !== false) {
+      this.credits_ = attachCredits(container, () => this.credits());
+    }
+    if (options.inspector) {
+      this.inspector = attachInspector(
+        container,
+        this.inspectable("2.0"),
+        options.inspector === true ? {} : options.inspector,
+      );
+    }
+    this.ready = this.buildGlobe(options.imagery ?? true);
+    engine.start();
+    const tick = () => {
+      if (this.destroyed) {
+        return;
+      }
+      this.controller.update();
+      this.secondController?.update();
+      this.frameRequest = requestAnimationFrame(tick);
+    };
+    this.frameRequest = requestAnimationFrame(tick);
+  }
+
+  /** A viewer filling `container` (made positioned if it isn't). */
+  static async create(
+    container: HTMLElement,
+    options: ViewerOptions = {},
+  ): Promise<Viewer> {
+    return new Viewer(container, await Engine.create(), options);
+  }
+
+  // ------------------------------------------------------------- globe
+
+  /** The globe's tileset (terrain or the ellipsoid), once built. */
+  get globe(): Tileset3D | undefined {
+    return this.globe_;
+  }
+
+  /** Whether the globe draws (it stays loaded while hidden). */
+  get showGlobe(): boolean {
+    return this.globeShown;
+  }
+  set showGlobe(on: boolean) {
+    this.globeShown = on;
+    if (this.globe_) {
+      this.globe_.show = on;
+    }
+  }
+
+  private async buildGlobe(imagery: ImageryProvider | boolean): Promise<void> {
+    if (imagery === true) {
+      this.imagery = await BingImagery.fromIon(2, this.tokenOptions());
+    } else if (imagery) {
+      this.imagery = imagery;
+    }
+    await this.setGlobe(this.globeKind);
+  }
+
+  /** Switches the globe in place: content and camera stay. */
+  async setGlobe(kind: GlobeKind): Promise<void> {
+    const token = ++this.globeToken;
+    this.globeKind = kind;
+    let next: Tileset3D | undefined;
+    let attributions: IonAttribution[] = [];
+    const options = {
+      policy: this.policy,
+      ...(this.imagery ? { imagery: this.imagery } : {}),
+    };
+    if (kind === "terrain") {
+      const ion = await resolveIonAsset(1, this.tokenOptions());
+      next = await this.engine.addTerrain(this.world, ion.url, {
+        headers: ion.headers,
+        ...options,
+      });
+      attributions = ion.attributions;
+    } else if (kind === "ellipsoid") {
+      next = this.engine.addEllipsoid(this.world, options);
+    }
+    if (token !== this.globeToken || this.destroyed) {
+      if (next) {
+        this.engine.removeTileset(next);
+      }
+      return;
+    }
+    if (next) {
+      next.show = this.globeShown;
+    }
+    if (this.globe_) {
+      this.engine.removeTileset(this.globe_);
+    }
+    this.globe_ = next;
+    this.terrainAttributions = attributions;
+  }
+
+  // ------------------------------------------------------------- content
+
+  /** Streams a tileset (a URL or an ion asset) into the world. */
+  async addTileset(
+    source: TilesetSource,
+    options: TilesetOptions = {},
+  ): Promise<Tileset3D> {
+    let url: string | URL;
+    let headers: Record<string, string> | undefined;
+    let attributions: IonAttribution[] = [];
+    if (typeof source === "object" && "ion" in source) {
+      const ion = await resolveIonAsset(source.ion, {
+        ...this.tokenOptions(),
+        ...(source.accessToken ? { accessToken: source.accessToken } : {}),
+      });
+      if (ion.type !== "3DTILES") {
+        throw new Error(
+          `ion asset ${source.ion} is ${ion.type.toLowerCase()}, not 3D Tiles`,
+        );
+      }
+      url = ion.url;
+      headers = ion.headers;
+      attributions = ion.attributions;
+    } else {
+      url = source;
+    }
+    const tileset = await this.engine.addTileset(this.world, url, {
+      policy: this.policy,
+      ...(headers ? { headers } : {}),
+      ...options,
+    });
+    this.tilesets.add(tileset);
+    this.attributions.set(tileset, attributions);
+    return tileset;
+  }
+
+  /**
+   * Adds a glTF model (a URL or a loaded asset). Without a `modelMatrix`,
+   * it stands at `at` (longitude and latitude, degrees) on the ground.
+   */
+  async addModel(
+    source: string | URL | GltfAsset,
+    options: Partial<ModelOptions> & {
+      at?: { longitude: number; latitude: number };
+    } = {},
+  ): Promise<ModelInstance> {
+    const asset =
+      typeof source === "string" || source instanceof URL
+        ? await this.engine.loadGltf(source)
+        : source;
+    const { at, ...rest } = options;
+    const place = at ?? { longitude: 0, latitude: 0 };
+    return this.engine.addModel(this.world, asset, {
+      ...(rest.modelMatrix
+        ? {}
+        : {
+            modelMatrix: eastNorthUpToFixedFrame(
+              ellipsoid.cartographicToCartesian(
+                fromDegrees(place.longitude, place.latitude, 0),
+                vec3.vec3(),
+              ),
+              ellipsoid,
+              mat4.mat4(),
+            ),
+            heightReference: "clampToGround" as const,
+          }),
+      ...rest,
+    } as ModelOptions);
+  }
+
+  /** Credits that content added outside the viewer requires. */
+  addAttributions(owner: object, attributions: IonAttribution[]): void {
+    this.attributions.set(owner, attributions);
+  }
+
+  /** Removes content added through the viewer (or attributions' owner). */
+  remove(content: Tileset3D | ModelInstance | object): void {
+    this.attributions.delete(content);
+    if (this.tilesets.delete(content as Tileset3D)) {
+      this.engine.removeTileset(content as Tileset3D);
+    } else if ("draws" in content && "transform" in content) {
+      this.engine.removeModel(this.world, content as ModelInstance);
+    }
+  }
+
+  // ------------------------------------------------------------- camera
+
+  /** Frames content, a bounding sphere or a place (heading 35°, pitch -30°). */
+  zoomTo(target: ZoomTarget, heading = 35 * deg, pitch = -30 * deg): void {
+    let center: Float64Array;
+    let range: number;
+    if ("longitude" in target) {
+      center = ellipsoid.cartographicToCartesian(
+        fromDegrees(target.longitude, target.latitude, 0),
+        vec3.vec3(),
+      );
+      range = target.range ?? 1500;
+      this.view.camera.near = Math.max(0.05, range * 0.0005);
+    } else {
+      let sphere: { center: ArrayLike<number>; radius: number };
+      if ("root" in target) {
+        // The root's content volume when it has one (publishers often pad
+        // the root volume to a power of two).
+        const volume = target.root.contentVolume ?? target.root.volume;
+        sphere = {
+          center:
+            volume.kind === "box" ? volume.obb.center : volume.sphere.center,
+          radius: volume.sphere.radius,
+        };
+      } else {
+        sphere = target;
+      }
+      center = Float64Array.from(sphere.center);
+      range = sphere.radius * 2.6;
+      this.view.camera.near = Math.max(0.005, sphere.radius * 0.002);
+    }
+    vec3.copy(this.focusCenter, center);
+    this.controller.focus(center, heading, pitch, range);
+    // The split view's camera frames it too, from the other side.
+    if (this.second && this.secondController) {
+      this.second.camera.near = this.view.camera.near;
+      this.secondController.focus(
+        center,
+        heading + (150 * Math.PI) / 180,
+        -0.25,
+        range * 0.4,
+      );
+    }
+    if (this.sun) {
+      this.setSun(this.sun.azimuth, this.sun.elevation);
+    }
+  }
+
+  /** The sun by azimuth and elevation (degrees) at what is framed. */
+  setSun(azimuth: number, elevation: number): void {
+    this.sun = { azimuth, elevation };
+    const enu = eastNorthUpToFixedFrame(
+      this.focusCenter,
+      ellipsoid,
+      mat4.mat4(),
+    );
+    const az = azimuth * deg;
+    const el = elevation * deg;
+    const e = Math.cos(el) * Math.sin(az);
+    const n = Math.cos(el) * Math.cos(az);
+    const u = Math.sin(el);
+    vec3.normalize(
+      this.engine.sunDirection,
+      vec3.vec3(
+        enu[0]! * e + enu[4]! * n + enu[8]! * u,
+        enu[1]! * e + enu[5]! * n + enu[9]! * u,
+        enu[2]! * e + enu[6]! * n + enu[10]! * u,
+      ),
+    );
+    this.engine.requestRender();
+  }
+
+  /** The views drawn: main, the split view's right half, the inset. */
+  get views(): View[] {
+    return [this.view, this.second, this.overview_].filter((v) => !!v);
+  }
+
+  // ------------------------------------------------------------- layout
+
+  /**
+   * Split view: a second, independent camera on the right half. Tiles are
+   * selected per view from one shared cache and draw table.
+   */
+  get split(): boolean {
+    return !!this.second;
+  }
+  set split(on: boolean) {
+    if (on === this.split) {
+      return;
+    }
+    if (on) {
+      this.view.viewport = { x: 0, y: 0, width: 0.5, height: 1 };
+      const second = (this.second = this.engine.addView({
+        target: this.target,
+        world: this.world,
+        viewport: { x: 0.5, y: 0, width: 0.5, height: 1 },
+      }));
+      Object.assign(second.lighting, this.view.lighting);
+      second.exposure = this.view.exposure;
+      second.outputEncoding = this.view.outputEncoding;
+      const controller = (this.secondController = new GlobeController(
+        second,
+        this.canvas,
+      ));
+      second.camera.near = this.view.camera.near;
+      controller.focus(
+        this.controller.target,
+        this.controller.heading + (150 * Math.PI) / 180,
+        -0.25,
+        this.controller.range * 0.4,
+      );
+    } else {
+      this.secondController!.dispose();
+      this.engine.removeView(this.second!);
+      this.second = this.secondController = undefined;
+      this.view.viewport = { x: 0, y: 0, width: 1, height: 1 };
+    }
+    if (this.overview_) {
+      this.overview_.viewport = this.overviewViewport();
+    }
+  }
+
+  /** A linked overview inset following the main view. */
+  get overview(): boolean {
+    return !!this.overview_;
+  }
+  set overview(on: boolean) {
+    if (on === this.overview) {
+      return;
+    }
+    if (on) {
+      this.overview_ = this.engine.addView({
+        target: this.target,
+        world: this.world,
+        viewport: this.overviewViewport(),
+      });
+      this.overviewLink = this.engine.link(this.view, this.overview_, {
+        modes: ["follow", "footprint"],
+        followScale: 4,
+      });
+    } else {
+      this.engine.unlink(this.overviewLink!);
+      this.engine.removeView(this.overview_!);
+      this.overview_ = this.overviewLink = undefined;
+    }
+  }
+
+  private overviewViewport() {
+    return this.second
+      ? { x: 0.27, y: 0.02, width: 0.21, height: 0.3 }
+      : { x: 0.7, y: 0.02, width: 0.28, height: 0.3 };
+  }
+
+  // ------------------------------------------------------------- inspection
+
+  /** The feature under a point, CSS pixels from the canvas's top-left. */
+  async pick(x: number, y: number): Promise<PickResult | undefined> {
+    const scale = this.canvas.width / Math.max(1, this.canvas.clientWidth);
+    const px = x * scale;
+    const py = y * scale;
+    if (this.overview_?.contains(px, py)) {
+      return undefined;
+    }
+    const view = this.second?.contains(px, py) ? this.second : this.view;
+    const area = view.pixelRect();
+    return view.pick(px - area.x, py - area.y);
+  }
+
+  /** What the view must credit: providers' attributions and data credits. */
+  credits(): { attributions: IonAttribution[]; credits: string[] } {
+    return {
+      attributions: [
+        ...this.terrainAttributions,
+        ...(this.imagery?.attributions ?? []),
+        ...[...this.attributions.values()].flat(),
+      ],
+      credits: [
+        ...new Set(
+          [this.globe_, ...this.tilesets]
+            .filter((t) => !!t)
+            .flatMap((t) => t.credits()),
+        ),
+      ],
+    };
+  }
+
+  /** The viewer for the inspector (`widgets/inspector.ts`). */
+  inspectable(
+    name: string,
+    options: { color?: string; loadStartedAt?: number } = {},
+  ): Inspectable {
+    return inspectEngine(this.engine, {
+      name,
+      ...(options.color ? { color: options.color } : {}),
+      ...(options.loadStartedAt !== undefined
+        ? { loadStartedAt: options.loadStartedAt }
+        : {}),
+      tilesets: () => [...this.tilesets, this.globe_].filter((t) => !!t),
+      views: () => {
+        const views: Array<[string, View]> = [["main", this.view]];
+        if (this.second) {
+          views.push(["right", this.second]);
+        }
+        if (this.overview_) {
+          views.push(["inset", this.overview_]);
+        }
+        return views;
+      },
+      world: this.world,
+      canvas: this.canvas,
+    });
+  }
+
+  destroy(): void {
+    this.destroyed = true;
+    cancelAnimationFrame(this.frameRequest);
+    this.credits_?.dispose();
+    this.inspector?.dispose();
+    this.secondController?.dispose();
+    this.controller.dispose();
+    this.engine.destroy();
+    this.canvas.remove();
+  }
+
+  private tokenOptions(): { accessToken?: string } {
+    return this.accessToken ? { accessToken: this.accessToken } : {};
+  }
+}

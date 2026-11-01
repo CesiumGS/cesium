@@ -20,6 +20,7 @@
     "@emotion/react": "11.14.0",
     "@emotion/styled": "11.14.1",
     "@mui/material": "9.5.0",
+    "@stratakit/bricks": "0.6.1",
     "@stratakit/foundations": "1.0.4",
     "@stratakit/icons": "0.4.6",
     "@stratakit/mui": "1.2.0",

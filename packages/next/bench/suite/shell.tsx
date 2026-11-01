@@ -15,6 +15,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import { svg3DObjectLarge } from "@stratakit/icons/3d-object";
 import { svgChartBarLarge } from "@stratakit/icons/chart-bar";
 import { svgChartLineLarge } from "@stratakit/icons/chart-line";
 import { svgDashboardLarge } from "@stratakit/icons/dashboard";
@@ -71,6 +72,7 @@ const GROUPS: Destination[][] = [
   [
     { to: "/scenes", label: "Scenes", icon: svgLayersLarge, key: "s" },
     { to: "/explorer", label: "Explorer", icon: svgGlobeLarge, key: "e" },
+    { to: "/viewer", label: "Viewer", icon: svg3DObjectLarge, key: "v" },
     { to: "/images", label: "Images", icon: svgImageLarge, key: "i" },
   ],
   [
@@ -81,7 +83,7 @@ const GROUPS: Destination[][] = [
 const DESTINATIONS = GROUPS.flat();
 
 /** Paths that work without runs; the others show the guided first run. */
-const WITHOUT_RUNS = /^\/(explorer|images|start|lab)(\/|$)/;
+const WITHOUT_RUNS = /^\/(explorer|viewer|images|start|lab)(\/|$)/;
 
 /** The rail item a path belongs to (a run's report belongs to Runs). */
 const destinationOf = (path: string) =>
