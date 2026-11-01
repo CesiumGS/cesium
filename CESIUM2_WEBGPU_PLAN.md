@@ -2223,6 +2223,36 @@ billboards and custom shading for symbology, so it follows the "Custom
 shading" milestone ("Real-time tracks" milestone), unless its priority
 moves it earlier.
 
+### 13.12 Examples and the gallery
+
+Three kinds of pages, kept apart:
+
+- **The viewer** (`viewer/`): the development and debugging tool (content
+  tabs, stats, selection policy, parity toggles). Not an example.
+- **Harnesses** (`parity/`, `bench/`, `spikes/`): test pages the runner
+  drives, listed in the viewer's panel.
+- **Examples**: what users and stakeholders see, one per feature or use
+  case (real-time tracks, very large CAD, splats, multi-view, clamping,
+  custom shading).
+
+**One gallery page that swaps examples, not a page per example.** Each
+example is a module under `examples/<slug>/` exporting its metadata
+(title, description, labels such as "3D Tiles" or "Defense", required
+tokens) and `run(context)`, which builds its scene in a world and returns
+a disposer. The gallery keeps one engine and canvas, lists examples with
+search and labels, switches with `?example=<slug>` (deep links, back
+button) without reloading, and shows each example's source. Switching
+exercises content in and out of a live world, which the engine is built
+for (r27). Later: editable source and sharing, as 1.x's Sandcastle does.
+
+Slugs name the use case, not the API (`real-time-tracks`,
+`offshore-platform`, `campus-splats`). Example scenes are written so the
+benchmark suite (§16) can load the same scene definitions, so a showcase
+and its measurement never drift apart.
+
+The gallery skeleton comes with the first example beyond the viewer
+(likely with benchmark suite v1 or real-time tracks).
+
 ## 14. Follow-ups
 
 Issues found along the way that belong to other projects or teams. Each
