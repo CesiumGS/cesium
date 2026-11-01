@@ -206,6 +206,22 @@ const specsData = fileURLToPath(new URL("../../Specs/Data", import.meta.url));
 
 export default defineConfig({
   server: { host: "127.0.0.1", port: 5190, strictPort: true },
+  // Every bare import, bundled at startup: a dependency discovered later
+  // (say Dyno's React) re-bundles them all under a new hash, and a content
+  // worker that already loaded keeps importing the old one (a 504 from the
+  // dev server, so 2.0 never loads a tile until the page reloads).
+  optimizeDeps: {
+    include: [
+      "meshoptimizer/decoder",
+      "draco3d/draco_decoder_nodejs.js",
+      "ktx-parse",
+      "react",
+      "react/jsx-runtime",
+      "react-dom/client",
+      "@radix-ui/themes",
+      "@radix-ui/react-icons",
+    ],
+  },
   plugins: [
     serveDirectory("/cesium1x", cesium1x),
     serveDirectory("/specs-data", specsData),
