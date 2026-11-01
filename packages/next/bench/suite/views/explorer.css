@@ -130,16 +130,6 @@
   background: #222;
 }
 
-/* 1.x positions its credits absolutely: keep them under the viewports. */
-.explorer-credits {
-  position: relative;
-  min-block-size: var(--stratakit-space-800);
-  overflow: hidden;
-  margin-block-start: var(--stratakit-space-200);
-  color: var(--stratakit-color-text-neutral-tertiary);
-  font-size: var(--stratakit-font-size-caption-lg);
-}
-
 .explorer-selection {
   inline-size: 100%;
 }

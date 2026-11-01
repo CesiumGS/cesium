@@ -4,6 +4,11 @@
  * for 2.0; other engines implement `Inspectable`.
  */
 export {
+  attachCredits,
+  type CreditSource,
+  type CreditsHandle,
+} from "./credits.ts";
+export {
   attachInspector,
   type InspectorHandle,
   type InspectorOptions,

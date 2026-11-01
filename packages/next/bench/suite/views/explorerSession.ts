@@ -1,5 +1,9 @@
 import { Ellipsoid } from "../../../src/index.ts";
-import type { Inspectable, PickInfo } from "../../../inspector/index.ts";
+import type {
+  CreditSource,
+  Inspectable,
+  PickInfo,
+} from "../../../inspector/index.ts";
 import type { EngineConfig, Pose } from "../schema.ts";
 import {
   type Adapter,
@@ -171,6 +175,14 @@ export class ExplorerSession {
         };
       },
     };
+  }
+
+  /**
+   * What pane `index` must credit, for engines that leave credits to the
+   * host (undefined: none loaded, or the engine draws its own).
+   */
+  credits(index: number): CreditSource | undefined {
+    return this.panes[index]?.adapter.credits?.();
   }
 
   /** The feature under a point of pane `index` (CSS pixels). */

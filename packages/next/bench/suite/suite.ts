@@ -15,6 +15,7 @@ import {
 } from "../../src/index.ts";
 import { volumeFromJson } from "../../src/streaming/volumes.ts";
 import {
+  type CreditSource,
   engineSnapshot,
   type InspectorSnapshot,
   type PickInfo,
@@ -148,9 +149,11 @@ function googleUrl(dataset: Dataset): string | undefined {
 }
 
 /** A tileset dataset's root URL and request headers. */
-async function resolveTileset(
-  dataset: Dataset,
-): Promise<{ url: string; headers?: Record<string, string> }> {
+async function resolveTileset(dataset: Dataset): Promise<{
+  url: string;
+  headers?: Record<string, string>;
+  attributions?: Array<{ html: string }>;
+}> {
   const google = googleUrl(dataset);
   return google
     ? { url: google }
@@ -268,6 +271,11 @@ export interface Adapter {
   inspect(): InspectorSnapshot;
   /** The feature under a point, in CSS pixels from the canvas's top-left. */
   pick(x: number, y: number): Promise<PickInfo | undefined>;
+  /**
+   * What the view must credit, for hosts that show credits themselves (2.0;
+   * 1.x draws its own credit bar).
+   */
+  credits?(): CreditSource;
   /** The render settings in effect (read after frames were drawn). */
   effectiveRender(): EffectiveRender;
   /** Lights the scene from this direction (unit vector toward the sun). */
@@ -317,6 +325,8 @@ export class NextAdapter implements Adapter {
   private canvas!: HTMLCanvasElement;
   private controller: GlobeController | undefined;
   private loadStartedAt = 0;
+  /** Attributions the scene's providers require (ion's HTML). */
+  private readonly attributions: Array<{ html: string }> = [];
 
   async setup(container: HTMLElement, spec: RunSpec): Promise<void> {
     this.loadStartedAt = performance.now();
@@ -358,6 +368,7 @@ export class NextAdapter implements Adapter {
       imagery = await BingImagery.fromIon(ionAsset(d), {
         accessToken: tokenFor(d),
       });
+      this.attributions.push(...imagery.attributions);
     }
     const common = {
       ...(config.policy ? { policy: config.policy } : {}),
@@ -370,6 +381,7 @@ export class NextAdapter implements Adapter {
       const resolved = await resolveIonAsset(ionAsset(d), {
         accessToken: tokenFor(d),
       });
+      this.attributions.push(...resolved.attributions);
       this.tilesets.push(
         await engine.addTerrain(world, resolved.url, {
           ...(resolved.headers ? { headers: resolved.headers } : {}),
@@ -389,6 +401,7 @@ export class NextAdapter implements Adapter {
         continue;
       }
       const resolved = await resolveTileset(d);
+      this.attributions.push(...(resolved.attributions ?? []));
       this.tilesets.push(
         await engine.addTileset(world, resolved.url, {
           ...(resolved.headers ? { headers: resolved.headers } : {}),
@@ -560,6 +573,13 @@ export class NextAdapter implements Adapter {
     });
   }
 
+  credits(): CreditSource {
+    return {
+      attributions: this.attributions,
+      credits: [...new Set(this.tilesets.flatMap((t) => t.credits()))],
+    };
+  }
+
   async pick(x: number, y: number): Promise<PickInfo | undefined> {
     // The view picks in its target's pixels.
     const scale = this.canvas.width / Math.max(1, this.canvas.clientWidth);
@@ -636,7 +656,9 @@ export class LegacyAdapter implements Adapter {
       // Pixel ratio set explicitly below (resolutionScale).
       useBrowserRecommendedResolution: false,
       useDefaultRenderLoop: false,
-      creditContainer: document.querySelector("#credits"),
+      // The runner hides credits (#credits) so images show content only;
+      // elsewhere 1.x draws its own credit bar inside its view.
+      creditContainer: document.querySelector("#credits") ?? undefined,
     }));
     viewer.resolutionScale =
       ratioOf(render) / (globalThis.devicePixelRatio ?? 1);

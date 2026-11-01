@@ -6,6 +6,7 @@ import {
   Divider,
   FormControlLabel,
   IconButton,
+  Link,
   Popover,
   Slider,
   Switch,
@@ -23,7 +24,7 @@ import { svgPause } from "@stratakit/icons/pause";
 import { svgPlay } from "@stratakit/icons/play";
 import { svgStopwatch } from "@stratakit/icons/stopwatch";
 import { Icon } from "@stratakit/mui";
-import { getRouteApi } from "@tanstack/react-router";
+import { getRouteApi, Link as RouterLink } from "@tanstack/react-router";
 import {
   type ReactNode,
   useEffect,
@@ -40,7 +41,7 @@ import type {
   Scenario,
   Scene,
 } from "../schema.ts";
-import { attachInspector } from "../../../inspector/index.ts";
+import { attachCredits, attachInspector } from "../../../inspector/index.ts";
 import { ensureCesium } from "../cesium1x.ts";
 import {
   compareEngines,
@@ -324,9 +325,13 @@ export function Explorer() {
   const help = (
     <>
       <p>
-        Both engines draw the same scene with the benchmark's render settings.
-        They share one GPU and main thread, so the numbers here are for looking;
-        use <b>Measure this</b> for numbers you can compare.
+        Both engines draw the same scene with the benchmark's render settings,
+        to compare what each one draws. Their timings don't compare: the two
+        engines share one CPU, GPU and network, so each slows the other, and
+        whichever loads or draws more takes resources from the other. Compare
+        performance in the scene's measured results (each engine alone, warmed
+        up, repeated, with conditions recorded), or with <b>Measure this</b>,
+        which runs the benchmark for this scene.
       </p>
       <p>
         <b>Camera path</b>: both cameras follow the scene's benchmark camera
@@ -364,7 +369,21 @@ export function Explorer() {
     <Page
       className="explorer-page"
       title="Explorer"
-      description="A scene live in two engines side by side, to look at what each one draws."
+      description={
+        <>
+          A scene live in two engines side by side, to compare what each one
+          draws. Timings here don't compare: both engines share the CPU, GPU and
+          network. For performance, see the scene's{" "}
+          <Link
+            render={
+              <RouterLink to="/scenes/$scene" params={{ scene: sceneId }} />
+            }
+          >
+            measured results
+          </Link>
+          .
+        </>
+      }
       help={help}
       actions={<MeasureThis command={command} />}
       toolbar={
@@ -640,7 +659,6 @@ export function Explorer() {
             </Typography>
           )}
         </div>
-        <div id="credits" className="explorer-credits" />
       </div>
 
       {snapshot && <Selection drawn={snapshot.drawn} configs={configs} />}
@@ -737,7 +755,10 @@ function paneName(config: EngineConfig, branch: string | undefined): string {
     : name;
 }
 
-/** The inspector over one pane (inspector/), for whichever engine it holds. */
+/**
+ * The inspector and credits over one pane (inspector/), for whichever
+ * engine it holds.
+ */
 function PaneInspector({
   session,
   index,
@@ -775,9 +796,15 @@ function PaneInspector({
     };
     view.addEventListener("pointerdown", down);
     view.addEventListener("pointerup", up);
+    // Each engine's credits over its own view (2.0's here; 1.x draws its own).
+    const credits = attachCredits(
+      ref.current!,
+      () => session.credits(index) ?? { attributions: [], credits: [] },
+    );
     return () => {
       view.removeEventListener("pointerdown", down);
       view.removeEventListener("pointerup", up);
+      credits.dispose();
       handle.dispose();
     };
   }, [session, index, name, color]);
