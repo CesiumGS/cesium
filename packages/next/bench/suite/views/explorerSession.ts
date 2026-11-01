@@ -1,4 +1,5 @@
 import { Ellipsoid } from "../../../src/index.ts";
+import type { Inspectable, PickInfo } from "../../../inspector/index.ts";
 import type { EngineConfig, Pose } from "../schema.ts";
 import {
   type Adapter,
@@ -17,23 +18,13 @@ import {
  * adapters drawing a catalog scene, a frame loop that drives their
  * cameras (along the benchmark camera path, or free flight with linked
  * cameras), and the inspection settings (paused streaming, tile tints,
- * bounding volumes). The view renders the panes and controls and reads
- * statistics a few times a second.
+ * bounding volumes). The view renders the panes and controls, reads the
+ * selection a few times a second, and attaches an inspector to each pane.
  */
 
 export type TileColors = "plain" | "depth" | "difference";
 
-export interface PaneStats {
-  cpu: number;
-  gpu: number | undefined;
-  selected: number;
-  loading: number;
-  note: string;
-  settled: boolean;
-}
-
 export interface Snapshot {
-  panes: PaneStats[];
   /** Tiles each pane draws now. */
   drawn: DrawnTile[][];
   /** Shared frame interval, ms. */
@@ -58,6 +49,8 @@ interface Pane {
   adapter: Adapter;
   cpu: number;
   gpu: number | undefined;
+  /** Frames drawn (the inspector's frames per second). */
+  frames: number;
 }
 
 export class ExplorerSession {
@@ -69,7 +62,7 @@ export class ExplorerSession {
   progress = 0;
   /** Called every frame while the path plays (for the slider). */
   onProgress?: (progress: number) => void;
-  /** Called a few times a second with statistics. */
+  /** Called a few times a second with the selection and camera. */
   onSnapshot?: (snapshot: Snapshot) => void;
 
   private panes: Pane[] = [];
@@ -130,7 +123,7 @@ export class ExplorerSession {
         }
         adapter.setSun(sunDirection(spec, this.pose(0)));
         adapter.setCamera(this.pose(this.progress));
-        panes.push({ config, adapter, cpu: 0, gpu: undefined });
+        panes.push({ config, adapter, cpu: 0, gpu: undefined, frames: 0 });
       }
     } catch (e) {
       for (const p of panes) {
@@ -146,6 +139,43 @@ export class ExplorerSession {
     this.setTileColors(this.colors);
     this.setVolumes(this.volumes.bounding, this.volumes.content);
     return true;
+  }
+
+  /**
+   * Pane `index` for the inspector: its engine's snapshot with the frame
+   * timing measured here, the same way for both engines. It reads whichever
+   * engine the pane holds now, so it outlives reloads.
+   */
+  inspectable(index: number, name: string, color: string): Inspectable {
+    return {
+      name,
+      color,
+      snapshot: () => {
+        const pane = this.panes[index];
+        if (!pane) {
+          return { state: "loading" };
+        }
+        const s = pane.adapter.inspect();
+        const camera = pane.adapter.getCamera();
+        return {
+          ...s,
+          state: this.paused ? "paused" : s.state,
+          frame: {
+            cpuMs: pane.cpu,
+            ...(pane.gpu !== undefined ? { gpuMs: pane.gpu } : {}),
+            intervalMs: this.interval,
+            rendering: "continuous",
+            framesRendered: pane.frames,
+          },
+          camera: [...camera.position, ...camera.direction],
+        };
+      },
+    };
+  }
+
+  /** The feature under a point of pane `index` (CSS pixels). */
+  pick(index: number, x: number, y: number): Promise<PickInfo | undefined> {
+    return this.panes[index]?.adapter.pick(x, y) ?? Promise.resolve(undefined);
   }
 
   get paneCount(): number {
@@ -237,6 +267,7 @@ export class ExplorerSession {
       }
       for (const pane of panes) {
         const cpu = pane.adapter.frame();
+        pane.frames++;
         pane.cpu += (cpu - pane.cpu) * 0.1;
         const gpu = pane.adapter.gpuMs();
         if (gpu !== undefined) {
@@ -267,12 +298,6 @@ export class ExplorerSession {
       height: 0,
     });
     this.onSnapshot?.({
-      panes: this.panes.map((p) => ({
-        cpu: p.cpu,
-        gpu: p.gpu,
-        ...p.adapter.stats(),
-        settled: p.adapter.settled(),
-      })),
       drawn,
       interval: this.interval,
       ...(c

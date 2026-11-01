@@ -14,6 +14,11 @@ import {
   tileHeaderKey,
 } from "../../src/index.ts";
 import { volumeFromJson } from "../../src/streaming/volumes.ts";
+import {
+  engineSnapshot,
+  type InspectorSnapshot,
+  type PickInfo,
+} from "../../inspector/index.ts";
 import ionSource from "../../../engine/Source/Core/Ion.js?raw";
 import publicCatalog from "./catalog/public.json";
 import type {
@@ -256,8 +261,13 @@ export interface Adapter {
    * refining, gray without content) and content volumes (blue).
    */
   setVolumes(bounding: boolean, content: boolean): void;
-  /** Live statistics for the explorer's HUD. */
-  stats(): { selected: number; loading: number; note: string };
+  /**
+   * What the inspector shows (the explorer measures frame timing itself,
+   * the same way for both engines).
+   */
+  inspect(): InspectorSnapshot;
+  /** The feature under a point, in CSS pixels from the canvas's top-left. */
+  pick(x: number, y: number): Promise<PickInfo | undefined>;
   /** The render settings in effect (read after frames were drawn). */
   effectiveRender(): EffectiveRender;
   /** Lights the scene from this direction (unit vector toward the sun). */
@@ -306,8 +316,10 @@ export class NextAdapter implements Adapter {
   private models = 0;
   private canvas!: HTMLCanvasElement;
   private controller: GlobeController | undefined;
+  private loadStartedAt = 0;
 
   async setup(container: HTMLElement, spec: RunSpec): Promise<void> {
+    this.loadStartedAt = performance.now();
     const { scene, config } = spec;
     const canvas = document.createElement("canvas");
     canvas.style.width = "100%";
@@ -540,26 +552,25 @@ export class NextAdapter implements Adapter {
     }
   }
 
-  stats(): { selected: number; loading: number; note: string } {
-    let selected = 0;
-    let loading = 0;
-    let requests = 0;
-    let bytes = 0;
-    let memory = 0;
-    for (const t of this.tilesets) {
-      for (const n of t.stats.selected.values()) {
-        selected += n;
-      }
-      loading += t.stats.inFlight;
-      requests += t.stats.requestsTotal;
-      bytes += t.stats.bytesReceived;
-      memory += t.stats.bytes;
-    }
-    return {
-      selected,
-      loading,
-      note: `${(memory / 1e6).toFixed(0)} MB of tiles in memory · ${requests} requests · ${(bytes / 1e6).toFixed(1)} MB received`,
-    };
+  inspect(): InspectorSnapshot {
+    return engineSnapshot(this.engine, {
+      tilesets: () => this.tilesets,
+      canvas: this.canvas,
+      loadStartedAt: this.loadStartedAt,
+    });
+  }
+
+  async pick(x: number, y: number): Promise<PickInfo | undefined> {
+    // The view picks in its target's pixels.
+    const scale = this.canvas.width / Math.max(1, this.canvas.clientWidth);
+    const r = await this.view.pick(x * scale, y * scale);
+    return r
+      ? {
+          ...(r.name !== undefined ? { name: r.name } : {}),
+          featureId: r.featureId,
+          ...(r.properties ? { properties: r.properties } : {}),
+        }
+      : undefined;
   }
 
   setSun(direction: Float64Array): void {
@@ -589,8 +600,20 @@ export class NextAdapter implements Adapter {
 export class LegacyAdapter implements Adapter {
   private viewer: Json;
   private readonly tilesets: Json[] = [];
+  /**
+   * The load's milestones (performance.now()), as 2.0's tilesets record
+   * them: setup began, the root tileset and terrain were ready, content was
+   * first drawn, everything settled.
+   */
+  private readonly load: {
+    startedAt: number;
+    rootAt?: number;
+    firstContentAt?: number;
+    settledAt?: number;
+  } = { startedAt: 0 };
 
   async setup(container: HTMLElement, spec: RunSpec): Promise<void> {
+    this.load.startedAt = performance.now();
     const { scene, config } = spec;
     const render = renderSettings(spec);
     const byId = new Map(spec.datasets.map((d) => [d.id, d]));
@@ -668,6 +691,7 @@ export class LegacyAdapter implements Adapter {
       viewer.scene.primitives.add(tileset);
       this.tilesets.push(tileset);
     }
+    this.load.rootAt = performance.now();
   }
 
   frame(): number {
@@ -676,7 +700,19 @@ export class LegacyAdapter implements Adapter {
       this.updateGlobeVolumes(this.globeVolumes);
     }
     this.viewer.render();
-    return performance.now() - t;
+    const end = performance.now();
+    const load = this.load;
+    if (load.firstContentAt === undefined && this.contentDrawn()) {
+      load.firstContentAt = end;
+    }
+    if (
+      load.firstContentAt !== undefined &&
+      load.settledAt === undefined &&
+      this.settled()
+    ) {
+      load.settledAt = end;
+    }
+    return end - t;
   }
 
   gpuMs(): number | undefined {
@@ -864,20 +900,20 @@ export class LegacyAdapter implements Adapter {
     }
   }
 
-  stats(): { selected: number; loading: number; note: string } {
-    let selected = 0;
-    let loading = 0;
-    let memory = 0;
-    for (const t of this.tilesets) {
-      selected += t.statistics.selected;
-      loading += t.statistics.numberOfPendingRequests;
-      memory += t.totalMemoryUsageInBytes;
-    }
+  inspect(): InspectorSnapshot {
+    const sum = (f: (t: Json) => number) =>
+      this.tilesets.reduce((n: number, t: Json) => n + f(t), 0);
+    const statistic = (key: string) => sum((t) => t.statistics[key]);
+    const geometry = statistic("geometryByteLength");
+    const textures = statistic("texturesByteLength");
+    const batchTables = statistic("batchTableByteLength");
+    // 1.x counts globe tiles, not their bytes: terrain meshes in its tile
+    // cache, as 2.0 counts them (imagery excluded in both).
+    let terrain = 0;
+    let drawn = statistic("selected");
     const globe = this.viewer.scene.globe;
     if (globe) {
-      selected += globe._surface._tilesToRender.length;
-      // 1.x counts globe tiles, not their bytes: terrain meshes in its tile
-      // cache, as 2.0 counts them (imagery excluded in both).
+      drawn += globe._surface._tilesToRender.length;
       for (
         let tile = globe._surface._tileReplacementQueue.head;
         tile;
@@ -885,15 +921,96 @@ export class LegacyAdapter implements Adapter {
       ) {
         const mesh = tile.data?.mesh;
         if (tile.data?.vertexArray && mesh) {
-          memory += mesh.vertices.byteLength + mesh.indices.byteLength;
+          terrain += mesh.vertices.byteLength + mesh.indices.byteLength;
         }
       }
     }
+    const first = this.tilesets[0];
+    const canvas = this.viewer.canvas as HTMLCanvasElement;
+    const memory: NonNullable<InspectorSnapshot["memory"]> = [];
+    if (first) {
+      memory.push(
+        { label: "Tile geometry", unit: "bytes", used: geometry },
+        { label: "Tile textures", unit: "bytes", used: textures },
+        { label: "Batch tables", unit: "bytes", used: batchTables },
+      );
+    }
+    if (globe) {
+      memory.push({ label: "Terrain meshes", unit: "bytes", used: terrain });
+    }
     return {
-      selected,
-      loading,
-      note: `${(memory / 1e6).toFixed(0)} MB of tiles in memory`,
+      state: this.settled() ? "settled" : "loading",
+      tiles: {
+        drawn,
+        ...(first ? { known: statistic("numberOfTilesTotal") } : {}),
+        loading: statistic("numberOfPendingRequests"),
+        cache: {
+          bytes: geometry + textures + batchTables + terrain,
+          ...(first
+            ? {
+                budget: sum((t) => t.cacheBytes),
+                overflow: sum((t) => t.maximumCacheOverflowBytes),
+              }
+            : {}),
+        },
+        sse: first
+          ? {
+              maximum: first.maximumScreenSpaceError,
+              adjusted: first.memoryAdjustedScreenSpaceError,
+            }
+          : { maximum: globe?.maximumScreenSpaceError ?? 2 },
+        ...(this.load.rootAt !== undefined
+          ? { load: this.loadPhases(this.load.rootAt) }
+          : {}),
+      },
+      memory,
+      gpu: {
+        adapter: this.viewer.scene.context.webgl2 ? "WebGL 2" : "WebGL 1",
+        canvas: [canvas.width, canvas.height],
+      },
     };
+  }
+
+  /** Root, to first content, to settled (or still streaming), as 2.0's. */
+  private loadPhases(rootAt: number) {
+    const { startedAt, firstContentAt, settledAt } = this.load;
+    const end = settledAt ?? performance.now();
+    return {
+      phases: [
+        { label: "Root tileset", ms: rootAt - startedAt },
+        { label: "To first content", ms: (firstContentAt ?? end) - rootAt },
+        {
+          label: settledAt !== undefined ? "To settled" : "Streaming",
+          ms: firstContentAt !== undefined ? end - firstContentAt : 0,
+        },
+      ],
+      settled: settledAt !== undefined,
+    };
+  }
+
+  async pick(x: number, y: number): Promise<PickInfo | undefined> {
+    const picked = this.viewer.scene.pick(new Cesium.Cartesian2(x, y));
+    if (!picked) {
+      return undefined;
+    }
+    // A 3D Tiles feature: its properties, named as 1.x's picking example does.
+    if (typeof picked.getPropertyIds === "function") {
+      const properties: Record<string, unknown> = {};
+      // The schema's properties this feature has a value for.
+      for (const id of picked.getPropertyIds() as string[]) {
+        const value = picked.getProperty(id);
+        if (value !== undefined) {
+          properties[id] = value;
+        }
+      }
+      const name = properties.name ?? properties.Name;
+      return {
+        ...(name !== undefined ? { name: String(name) } : {}),
+        featureId: picked.featureId,
+        properties,
+      };
+    }
+    return { name: picked.primitive?.constructor?.name ?? "primitive" };
   }
 
   setStreamingPaused(on: boolean): void {

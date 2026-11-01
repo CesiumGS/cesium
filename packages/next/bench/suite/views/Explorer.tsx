@@ -40,6 +40,7 @@ import type {
   Scenario,
   Scene,
 } from "../schema.ts";
+import { attachInspector } from "../../../inspector/index.ts";
 import { ensureCesium } from "../cesium1x.ts";
 import {
   compareEngines,
@@ -613,13 +614,11 @@ export function Explorer() {
                   }
                 }}
               />
-              <Hud
-                config={config}
+              <PaneInspector
+                session={session}
+                index={i}
+                name={paneName(config, index.branch)}
                 color={PANE_COLORS[i]!}
-                stats={snapshot?.panes[i]}
-                interval={snapshot?.interval}
-                paused={paused}
-                branch={index.branch}
               />
             </div>
           ))}
@@ -726,42 +725,63 @@ function MeasureThis({ command }: { command: string }) {
   );
 }
 
-function Hud({
-  config,
-  color,
-  stats,
-  interval,
-  paused,
-  branch,
-}: {
-  config: EngineConfig;
-  color: string;
-  stats: Snapshot["panes"][number] | undefined;
-  interval: number | undefined;
-  paused: boolean;
-  branch: string | undefined;
-}) {
+/** The pane's engine name, with the CesiumJS build a 1.x pane loaded. */
+function paneName(config: EngineConfig, branch: string | undefined): string {
+  const name = nameOf(config.id, branch);
   const version =
     config.engine === "1.x" && typeof Cesium !== "undefined"
-      ? ` · CesiumJS ${Cesium.VERSION}`
-      : "";
-  return (
-    <div className="explorer-hud" aria-live="off">
-      <span className="explorer-key" style={{ background: color }} />
-      <b>
-        {nameOf(config.id, branch)}
-        {version}
-      </b>
-      {stats
-        ? `\nCPU / frame  ${stats.cpu.toFixed(2)} ms` +
-          `\nGPU / frame  ${stats.gpu === undefined ? "not exposed" : `${stats.gpu.toFixed(2)} ms`}` +
-          `\nframe        ${interval!.toFixed(1)} ms (shared)` +
-          `\ntiles        ${stats.selected} drawn · ${stats.loading} loading` +
-          `\n             ${stats.note}` +
-          `\n${paused ? "streaming paused" : stats.settled ? "settled" : "loading…"}`
-        : "\nloading…"}
-    </div>
-  );
+      ? Cesium.VERSION
+      : undefined;
+  return version && !name.includes(version)
+    ? `${name} · CesiumJS ${version}`
+    : name;
+}
+
+/** The inspector over one pane (inspector/), for whichever engine it holds. */
+function PaneInspector({
+  session,
+  index,
+  name,
+  color,
+}: {
+  session: ExplorerSession;
+  index: number;
+  name: string;
+  color: string;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const handle = attachInspector(
+      ref.current!,
+      session.inspectable(index, name, color),
+      { storageKey: "dyno.inspector" },
+    );
+    // A click (not a drag) on the pane's view picks there.
+    const view =
+      ref.current!.parentElement!.querySelector<HTMLElement>(".explorer-view")!;
+    let downAt: [number, number] | undefined;
+    const down = (e: PointerEvent) => (downAt = [e.clientX, e.clientY]);
+    const up = (e: PointerEvent) => {
+      if (
+        !downAt ||
+        Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) > 3
+      ) {
+        return;
+      }
+      const rect = view.getBoundingClientRect();
+      void session
+        .pick(index, e.clientX - rect.left, e.clientY - rect.top)
+        .then((pick) => handle.showPick(pick));
+    };
+    view.addEventListener("pointerdown", down);
+    view.addEventListener("pointerup", up);
+    return () => {
+      view.removeEventListener("pointerdown", down);
+      view.removeEventListener("pointerup", up);
+      handle.dispose();
+    };
+  }, [session, index, name, color]);
+  return <div ref={ref} className="explorer-inspector" />;
 }
 
 const css = (c: readonly number[]) =>

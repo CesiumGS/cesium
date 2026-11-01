@@ -65,23 +65,14 @@
 }
 
 /* The HUD sits on the 3D viewport: dark overlay in both color schemes. */
-.explorer-hud {
+/* The inspector (inspector/) sits over the pane; only its panel takes input. */
+.explorer-inspector {
   position: absolute;
-  left: 8px;
-  top: 8px;
-  background: rgba(13, 13, 13, 0.78);
-  border: 1px solid #383835;
-  border-radius: 6px;
-  padding: 6px 9px;
-  font:
-    12px/1.4 var(--stratakit-font-family-mono),
-    monospace;
-  color: #c3c2b7;
+  inset: 0;
   pointer-events: none;
-  white-space: pre;
 }
-.explorer-hud b {
-  color: #f0efec;
+.explorer-inspector .cesium-inspector {
+  pointer-events: auto;
 }
 .explorer-key {
   display: inline-block;

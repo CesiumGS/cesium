@@ -22,6 +22,7 @@
     "src",
     "demo",
     "viewer",
+    "inspector",
     "parity",
     "spikes",
     "bench",
