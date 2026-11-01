@@ -568,7 +568,8 @@ representative content; it then guards every later milestone.
 - 10-15 scenes across the three catalog groups (§16.4), cold and warm,
   unthrottled and one throttled profile.
 - A report per run: each metric per scene, 2.0 against 1.x with
-  confidence intervals, and the environment fingerprint.
+  confidence intervals, and the environment fingerprint; a runner page
+  and a results page with comparisons and trends (§16.5).
 - _Exit_: one command fetches, verifies and runs the public catalog (and
   a private one when its manifest is present) in both engines and writes
   the report; two runs on the same machine agree within their intervals.
@@ -617,7 +618,7 @@ representative content; it then guards every later milestone.
 - Two-phase occlusion culling (optional if targets are already met).
 - HZB tile-coverage feedback into `Budgeted`.
 - Upload budgeting; the remaining `Budgeted` stability and prediction work.
-- Benchmark suite v2 (§16.7): nightly runs on dedicated machines, a
+- Benchmark suite v2 (§16.8): nightly runs on dedicated machines, a
   results store, dashboard and change-point detection, bisection.
 - _Exit_: §5 targets met or the gap explained, including multi-view.
 
@@ -2649,7 +2650,40 @@ generators):
 - later: vector tiles and billboards at scale (§13.9), path tracing
   (§13.10).
 
-### 16.5 Engines and versions
+### 16.5 Interfaces: agents, scripts and people
+
+Mostly agents and automation run the suite, so the command line and JSON
+are the primary interface: `bench fetch | verify | run | report`, every
+option a flag or a scenario file, machine-readable output, nonzero exit
+on failed checks or detected regressions. People get the same
+capabilities in a browser:
+
+- **Runner UI**: pick a catalog (public, private when its manifest is
+  present), scenes, scenarios, engines and commits; see dataset status
+  (fetched, verified, size); run with live progress and a live view of
+  each engine rendering side by side; stop, repeat, or rerun one
+  scenario with tracing.
+- **Results UI** over the results store:
+  - _Comparison_: 2.0 against 1.x (or any two commits, engines or
+    configurations) per scene and metric, with confidence intervals,
+    frame-time distributions and timelines, and screenshots or short
+    captures from both at the same moments (with FLIP heatmaps where
+    quality is compared).
+  - _Trends_: each metric over commits and time per scene and hardware
+    class, change points marked, so slow drifts show up as well as
+    step regressions; click a point to open that run.
+  - _Experiment log_: every run with what changed (commit, branch,
+    settings, flags, environment) and a note, so tuning experiments
+    (an upload budget, a selection policy) are recorded and comparable
+    later instead of living in chat logs.
+  - _Drill-down_: a run's per-frame data, attached Chrome traces, and the
+    exact manifests and hashes it used, to reproduce it.
+
+Both UIs are views over the same files and store, built as pages served
+by the suite's local server (like the parity pages), with the plan's
+dashboard work (v2) hosting the results UI for the team.
+
+### 16.6 Engines and versions
 
 - **1.x**: this repository's build at a pinned commit, or a published
   release from npm (for history: how 1.x itself changed).
@@ -2659,14 +2693,15 @@ generators):
   policy, a feature flag, engine-in-worker) is one more adapter or
   configuration.
 
-### 16.6 Scope of v1 (milestone "Benchmark suite v1")
+### 16.7 Scope of v1 (milestone "Benchmark suite v1")
 
 Schemas; public manifest; private manifest loader with aliases; local
 store with fetch and verify; local content server with network profiles;
-1.x and 2.0 adapters; 10-15 scenes; the report. Runs on one machine, by
-hand or by script.
+1.x and 2.0 adapters; 10-15 scenes; the report; a first runner page and
+results page (comparison and trends over local results). Runs on one
+machine, by hand or by script.
 
-### 16.7 Later (v2 and beyond)
+### 16.8 Later (v2 and beyond)
 
 - **v2 (with M5)**: dedicated runner machines (GPUs are not available on
   shared CI), nightly and per-merge runs, a results store (time series),
@@ -2679,7 +2714,7 @@ hand or by script.
   then runtime); native runtimes as adapters; the asset store; shared
   public reports.
 
-Sources for §16.4 and §16.7 (checked October 2026; licenses to be
+Sources for §16.4 and §16.8 (checked October 2026; licenses to be
 confirmed at the source before mirroring):
 [PLATEAU streaming tutorial](https://github.com/Project-PLATEAU/plateau-streaming-tutorial/blob/main/3d-tiles/plateau-3dtiles-streaming.md),
 [Awesome PLATEAU](https://japan-opendata.github.io/awesome-plateau/),
