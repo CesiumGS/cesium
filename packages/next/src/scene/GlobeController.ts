@@ -48,6 +48,12 @@ export class GlobeController {
   heading = 0;
   pitch = -0.5;
   range = 100;
+  /**
+   * Camera gestures so far (pointer presses and wheel turns on the view):
+   * code that moves the camera later (framing content once it has loaded)
+   * can tell whether someone took over meanwhile.
+   */
+  inputs = 0;
 
   private mode: "none" | "grab" | "spin" | "zoom" | "tilt" | "look" = "none";
   private lastX = 0;
@@ -117,6 +123,7 @@ export class GlobeController {
     if (!this.accepts(x, y)) {
       return;
     }
+    this.inputs++;
     try {
       // Keep receiving moves outside the element while dragging.
       this.element.setPointerCapture(e.pointerId);
@@ -199,6 +206,7 @@ export class GlobeController {
     if (!this.accepts(x, y)) {
       return;
     }
+    this.inputs++;
     e.preventDefault();
     const target = v3.vec3();
     const near =

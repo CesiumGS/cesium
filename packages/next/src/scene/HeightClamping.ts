@@ -1,4 +1,5 @@
 import * as v3 from "../math/vec3.ts";
+import type { Vec3 } from "../math/vec3.ts";
 import { Ellipsoid } from "../math/ellipsoid.ts";
 import type { Tileset3D } from "../streaming/Tileset3D.ts";
 import type { Rectangle } from "../globe/quantizedMesh.ts";
@@ -39,14 +40,40 @@ export interface Clamp {
   readonly options: ClampOptions;
   /** Height of the anchor now (meters above the ellipsoid). */
   readonly height: number;
+  /** How far the content moved from where it was placed (Earth-fixed). */
+  readonly displacement: Vec3;
+  /**
+   * The content stands where it will: the ground's most detailed height
+   * under the anchor is known and applied. Until then it stays where it
+   * was placed (the surfaces loaded first can be kilometers off), also
+   * while there is nothing under it to stand on. False again while it
+   * settles on changed surfaces (another globe).
+   */
+  readonly settled: boolean;
+  /** Resolves once `settled`. */
+  whenSettled(): Promise<void>;
   remove(): void;
 }
+
+/** The ground's most detailed heights at places, from these surfaces. */
+export type SampleHeights = (
+  world: World,
+  positions: ReadonlyArray<{ longitude: number; latitude: number }>,
+  tilesets: readonly Tileset3D[],
+) => Promise<Array<number | undefined>>;
 
 interface Entry extends Clamp {
   world: World;
   transform: TransformHandle;
   /** Where the anchor is now; the transform moves by the difference. */
   current: number;
+  /** Settling: its most detailed ground is wanted, requested or applied. */
+  phase: "wanted" | "sampling" | "sampled" | "settled";
+  /** The most detailed ground found (undefined: none under it). */
+  sampled?: number;
+  /** The highest exactly known surface under it (the ellipsoid), if any. */
+  exact?: number;
+  waiters: Array<() => void>;
   /** Highest 3D Tiles surface under the anchor (ray cast), if any. */
   tilesHeight?: number;
   up: Float64Array;
@@ -67,6 +94,12 @@ const CAST_INTERVAL = 10;
  * Keeps clamped content on the ground as terrain and tilesets load (1.x
  * `Scene.updateHeight` with its per-surface callbacks), event-driven:
  *
+ * - First it settles: the ground's most detailed height under each anchor
+ *   is sampled (the tiles there load, whatever the views show; batched per
+ *   world) and applied once, so content moves once to where it stands.
+ *   1.x clamps to whatever has loaded, starting with the coarsest level
+ *   (kilometers off), so content and anything framing it ride every
+ *   refinement; 2.0 doesn't move content on those heights.
  * - Terrain announces the rectangles whose heights changed; only content
  *   anchored there is re-clamped, against the drawn surface (1.x
  *   `Globe.getHeight`).
@@ -96,6 +129,8 @@ export class HeightClamping {
     private readonly tilesets: () => readonly Tileset3D[],
     /** View bits of the enabled views of a world (what they draw). */
     private readonly viewMask: (world: World) => number,
+    /** Most detailed ground heights (`Engine.sampleHeightMostDetailed`). */
+    private readonly sample: SampleHeights,
   ) {}
 
   /** Clamps what `transform` places (e.g. a model) per `options`. */
@@ -105,19 +140,34 @@ export class HeightClamping {
       latitude: options.latitude,
       height: 0,
     };
+    const none = options.heightReference === "none";
     const entry: Entry = {
       options,
       world,
       transform,
       current: options.height,
+      phase: none ? "settled" : "wanted",
+      waiters: [],
       up: ellipsoid.geodeticSurfaceNormalCartographic(carto, v3.vec3()),
       dirty: true,
       cast: usesTiles(options.heightReference),
       get height() {
         return this.current;
       },
+      get displacement() {
+        return v3.scale(v3.vec3(), this.up, this.current - options.height);
+      },
+      get settled() {
+        return this.phase === "settled";
+      },
+      whenSettled() {
+        return this.phase === "settled"
+          ? Promise.resolve()
+          : new Promise<void>((resolve) => this.waiters.push(resolve));
+      },
       remove: () => {
         this.entries.delete(entry);
+        settle(entry);
       },
     };
     this.entries.add(entry);
@@ -151,14 +201,98 @@ export class HeightClamping {
         e.dirty = true;
         e.tilesHeight = undefined;
         e.cast = usesTiles(e.options.heightReference);
+        // Settles again on the new surfaces.
+        if (e.options.heightReference !== "none" && e.phase !== "sampling") {
+          e.phase = "wanted";
+        }
       }
     }
+    this.sampleWanted(tilesets);
     this.castTiles(tilesets);
     for (const entry of this.entries) {
       if (entry.dirty) {
         entry.dirty = false;
         this.clamp(entry);
       }
+    }
+  }
+
+  /**
+   * Samples the most detailed ground under the anchors that want it, one
+   * request per world and set of surfaces. With no surface to stand on yet
+   * (the globe still coming), content waits, unsettled.
+   */
+  private sampleWanted(tilesets: readonly Tileset3D[]): void {
+    const groups = new Map<
+      string,
+      { world: World; surfaces: Tileset3D[]; entries: Entry[] }
+    >();
+    for (const e of this.entries) {
+      if (e.phase !== "wanted") {
+        continue;
+      }
+      const reference = e.options.heightReference;
+      const surfaces = tilesets.filter(
+        (t) =>
+          t.world === e.world &&
+          t.show &&
+          (t.terrain
+            ? !/3DTiles/.test(reference)
+            : t.enableCollision && usesTiles(reference)),
+      );
+      if (surfaces.length === 0) {
+        continue; // nothing to stand on yet: waits for a surface
+      }
+      // Surfaces whose height is known exactly (the ellipsoid) answer at
+      // once; sampling them would load ever finer tiles that never end.
+      const { longitude, latitude } = e.options;
+      const exact = surfaces
+        .map((t) => t.exactHeight(longitude, latitude))
+        .filter((h): h is number => h !== undefined);
+      const sampled = surfaces.filter(
+        (t) => t.exactHeight(longitude, latitude) === undefined,
+      );
+      e.exact = exact.length > 0 ? Math.max(...exact) : undefined;
+      if (sampled.length === 0) {
+        e.sampled = e.exact;
+        e.phase = "sampled";
+        e.dirty = true;
+        continue;
+      }
+      const key = `${e.world.id}|${sampled.map((t) => t.url).join("|")}`;
+      const group = groups.get(key) ?? {
+        world: e.world,
+        surfaces: sampled,
+        entries: [],
+      };
+      group.entries.push(e);
+      groups.set(key, group);
+    }
+    for (const { world, surfaces, entries } of groups.values()) {
+      for (const e of entries) {
+        e.phase = "sampling";
+      }
+      void this.sample(
+        world,
+        entries.map((e) => e.options),
+        surfaces,
+      )
+        .catch(() => entries.map(() => undefined))
+        .then((heights) => {
+          entries.forEach((e, i) => {
+            if (this.entries.has(e) && e.phase === "sampling") {
+              const h = heights[i];
+              e.sampled =
+                h === undefined
+                  ? e.exact
+                  : e.exact === undefined
+                    ? h
+                    : Math.max(h, e.exact);
+              e.phase = "sampled";
+              e.dirty = true;
+            }
+          });
+        });
     }
   }
 
@@ -252,6 +386,19 @@ export class HeightClamping {
     if (reference === "none") {
       return;
     }
+    // Settling: stays where it was placed until the most detailed ground
+    // is known, then moves there once.
+    if (e.phase === "wanted" || e.phase === "sampling") {
+      return;
+    }
+    if (e.phase === "sampled") {
+      e.phase = "settled";
+      if (e.sampled !== undefined) {
+        this.moveTo(e, e.sampled);
+      }
+      settle(e);
+      return;
+    }
     const { longitude, latitude } = e.options;
     let ground: number | undefined;
     if (!/3DTiles/.test(reference)) {
@@ -271,7 +418,12 @@ export class HeightClamping {
     if (ground === undefined) {
       return; // nothing loaded there yet
     }
-    const relative = reference.startsWith("relative");
+    this.moveTo(e, ground);
+  }
+
+  /** Moves the content to stand on (or above) the ground at this height. */
+  private moveTo(e: Entry, ground: number): void {
+    const relative = e.options.heightReference.startsWith("relative");
     const target =
       ground + (e.options.offset ?? (relative ? e.options.height : 0));
     const delta = target - e.current;
@@ -288,6 +440,13 @@ export class HeightClamping {
     m[14] = m[14]! + e.up[2]! * delta;
     e.world.setTransform(e.transform, m);
     e.current = target;
+  }
+}
+
+/** Resolves whoever waits for the entry to settle. */
+function settle(e: Entry): void {
+  for (const resolve of e.waiters.splice(0)) {
+    resolve();
   }
 }
 

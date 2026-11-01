@@ -209,6 +209,11 @@ export class TerrainSource {
    * in radians, from the finest loaded tile there (1.x's globe samples the
    * same way); 0 for the ellipsoid; undefined where nothing is loaded.
    */
+  /** The ellipsoid's height is 0 everywhere; terrain's must be loaded. */
+  exactHeight(): number | undefined {
+    return this.flat ? 0 : undefined;
+  }
+
   sampleHeight(longitude: number, latitude: number): number | undefined {
     if (this.flat) {
       return 0;

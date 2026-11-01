@@ -103,6 +103,11 @@ export interface ModelInstance {
   center: Vec3;
   radius: number;
   /**
+   * Bounding sphere where the model stands now: as placed, moved by its
+   * clamp (`clamp.settled` says it won't move further on its own).
+   */
+  bounds(): { center: Vec3; radius: number };
+  /**
    * GPU bytes of the asset (arena geometry plus textures), shared by every
    * instance of it in the world.
    */
@@ -357,6 +362,14 @@ export function addGltf(
     draws,
     transform: root,
     ...bounds,
+    bounds() {
+      return {
+        center: this.clamp
+          ? v3.add(v3.vec3(), this.center, this.clamp.displacement)
+          : this.center,
+        radius: this.radius,
+      };
+    },
     bytes: upload.bytes,
     resources: upload,
     instanceCount: userCount,

@@ -110,6 +110,8 @@ export class Viewer {
   private overviewLink?: ViewLink;
   private readonly focusCenter = vec3.vec3();
   private sun?: { azimuth: number; elevation: number };
+  /** Each `zoomTo`, so a late correction knows whether it still applies. */
+  private zoomToken = 0;
   private credits_?: CreditsHandle;
   private inspector?: InspectorHandle;
   private frameRequest = 0;
@@ -333,38 +335,74 @@ export class Viewer {
 
   // ------------------------------------------------------------- camera
 
-  /** Frames content, a bounding sphere or a place (heading 35°, pitch -30°). */
+  /**
+   * Frames content, a bounding sphere or a place (heading 35°, pitch -30°).
+   * A model frames where it stands (`bounds`); clamped and still settling
+   * on the ground, it frames again once it has (`Clamp.whenSettled`),
+   * unless something else was framed or someone moved the camera since.
+   */
   zoomTo(target: ZoomTarget, heading = 35 * deg, pitch = -30 * deg): void {
-    let center: Float64Array;
-    let range: number;
-    if ("longitude" in target) {
-      center = ellipsoid.cartographicToCartesian(
-        fromDegrees(target.longitude, target.latitude, 0),
-        vec3.vec3(),
-      );
-      range = target.range ?? 1500;
-      this.view.camera.near = Math.max(0.05, range * 0.0005);
-    } else {
-      let sphere: { center: ArrayLike<number>; radius: number };
-      if ("root" in target) {
-        // The root's content volume when it has one (publishers often pad
-        // the root volume to a power of two).
-        const volume = target.root.contentVolume ?? target.root.volume;
-        sphere = {
-          center:
-            volume.kind === "box" ? volume.obb.center : volume.sphere.center,
-          radius: volume.sphere.radius,
-        };
-      } else {
-        sphere = target;
+    const token = ++this.zoomToken;
+    if ("draws" in target) {
+      const model = target;
+      const { center, radius } = model.bounds();
+      this.frame(Float64Array.from(center), radius, heading, pitch);
+      const inputs = this.controller.inputs;
+      if (model.clamp && !model.clamp.settled) {
+        void model.clamp.whenSettled().then(() => {
+          if (
+            token === this.zoomToken &&
+            inputs === this.controller.inputs &&
+            !this.destroyed
+          ) {
+            const { center, radius } = model.bounds();
+            this.frame(Float64Array.from(center), radius, heading, pitch);
+          }
+        });
       }
-      center = Float64Array.from(sphere.center);
-      range = sphere.radius * 2.6;
-      this.view.camera.near = Math.max(0.005, sphere.radius * 0.002);
+      return;
     }
+    if ("longitude" in target) {
+      const range = target.range ?? 1500;
+      this.frame(
+        ellipsoid.cartographicToCartesian(
+          fromDegrees(target.longitude, target.latitude, 0),
+          vec3.vec3(),
+        ),
+        range / 2.6,
+        heading,
+        pitch,
+      );
+      this.view.camera.near = Math.max(0.05, range * 0.0005);
+      return;
+    }
+    let sphere: { center: ArrayLike<number>; radius: number };
+    if ("root" in target) {
+      // The root's content volume when it has one (publishers often pad
+      // the root volume to a power of two).
+      const volume = target.root.contentVolume ?? target.root.volume;
+      sphere = {
+        center:
+          volume.kind === "box" ? volume.obb.center : volume.sphere.center,
+        radius: volume.sphere.radius,
+      };
+    } else {
+      sphere = target;
+    }
+    this.frame(Float64Array.from(sphere.center), sphere.radius, heading, pitch);
+  }
+
+  /** Points both cameras at a sphere (the split view's from the other side). */
+  private frame(
+    center: Float64Array,
+    radius: number,
+    heading: number,
+    pitch: number,
+  ): void {
+    const range = radius * 2.6;
+    this.view.camera.near = Math.max(0.005, radius * 0.002);
     vec3.copy(this.focusCenter, center);
     this.controller.focus(center, heading, pitch, range);
-    // The split view's camera frames it too, from the other side.
     if (this.second && this.secondController) {
       this.second.camera.near = this.view.camera.near;
       this.secondController.focus(

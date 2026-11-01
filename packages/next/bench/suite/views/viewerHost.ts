@@ -560,6 +560,8 @@ export class LegacyViewerHost implements ViewerHost {
   private readonly tilesets: Json[] = [];
   private load_: LegacyLoad = { startedAt: 0 };
   private focus?: Json;
+  /** A clamped model's sphere where it stands (its own is provisional). */
+  private placed?: Json;
   private lighting?: Lighting;
   private settings?: ViewSettings;
   private loadToken = 0;
@@ -616,6 +618,11 @@ export class LegacyViewerHost implements ViewerHost {
         }
       }),
     );
+  }
+
+  /** False once destroyed (a late call, e.g. after a hot reload, is a no-op). */
+  private get live(): boolean {
+    return !!this.viewer && !this.viewer.isDestroyed();
   }
 
   private settled(): boolean {
@@ -685,6 +692,40 @@ export class LegacyViewerHost implements ViewerHost {
     this.content = viewer.scene.primitives.add(next);
     if (next instanceof Cesium.Cesium3DTileset) {
       this.tilesets.push(next);
+    } else if (!next.ready) {
+      // A model has no bounds until it is ready, and on-demand rendering
+      // only loads it while frames are drawn. Ready isn't placed: clamped
+      // to the ground, 1.x moves it as the ground's heights load, so its
+      // bounds are provisional (kilometers underground at first). It is
+      // framed where it will stand instead (`placed`).
+      await new Promise<void>((resolve, reject) => {
+        const done = (error?: Error) => {
+          clearInterval(frames);
+          offReady();
+          offError?.();
+          if (error) {
+            reject(error);
+          } else {
+            resolve();
+          }
+        };
+        const frames = setInterval(() => {
+          if (viewer.isDestroyed() || token !== this.loadToken) {
+            done(new Error("superseded"));
+          } else {
+            viewer.scene.requestRender();
+          }
+        }, 100);
+        const offReady = next.readyEvent.addEventListener(() => done());
+        const offError = next.errorEvent?.addEventListener((e: unknown) =>
+          done(e instanceof Error ? e : new Error(String(e))),
+        );
+      });
+    }
+    if (!(next instanceof Cesium.Cesium3DTileset)) {
+      this.placed = await this.groundSphere(next.boundingSphere.radius);
+    } else {
+      this.placed = undefined;
     }
     this.load_.rootAt = performance.now();
     // Google's photorealistic tiles are their own terrain: no globe.
@@ -693,6 +734,29 @@ export class LegacyViewerHost implements ViewerHost {
     this.applyUnlit(settings.unlit);
     this.frame();
     return { warnings };
+  }
+
+  /**
+   * Where a model clamped at the site stands: on the ground there (the
+   * terrain's most detailed height, or the ellipsoid), its radius up.
+   */
+  private async groundSphere(radius: number): Promise<Json> {
+    const provider = this.viewer.scene.globe.terrainProvider;
+    let ground = 0;
+    if (!(provider instanceof Cesium.EllipsoidTerrainProvider)) {
+      const [sample] = await Cesium.sampleTerrainMostDetailed(provider, [
+        Cesium.Cartographic.fromRadians(SITE.longitude, SITE.latitude),
+      ]);
+      ground = sample?.height ?? 0;
+    }
+    return new Cesium.BoundingSphere(
+      Cesium.Cartesian3.fromRadians(
+        SITE.longitude,
+        SITE.latitude,
+        ground + radius / 2,
+      ),
+      radius,
+    );
   }
 
   /** Cesium World Terrain or the ellipsoid, when it changes. */
@@ -721,6 +785,9 @@ export class LegacyViewerHost implements ViewerHost {
   }
 
   frame(at?: readonly number[]): void {
+    if (!this.live) {
+      return;
+    }
     const viewer = this.viewer;
     const offset = (range: number) =>
       new Cesium.HeadingPitchRange(35 * deg, -30 * deg, range);
@@ -728,9 +795,9 @@ export class LegacyViewerHost implements ViewerHost {
       const center = Cesium.Cartesian3.fromDegrees(at[0], at[1], 0);
       viewer.camera.lookAt(center, offset(at[2] ?? 1500));
     } else if (this.content) {
-      const sphere = this.content.boundingSphere;
+      const sphere = this.placed ?? this.content.boundingSphere;
       if (sphere) {
-        viewer.camera.lookAt(sphere.center, offset(sphere.radius * 2.6));
+        viewer.camera.viewBoundingSphere(sphere, offset(sphere.radius * 2.6));
         this.focus = sphere.center;
       }
     }
@@ -744,6 +811,9 @@ export class LegacyViewerHost implements ViewerHost {
   setView(settings: ViewSettings): void {
     const before = this.settings;
     this.settings = settings;
+    if (!this.live) {
+      return;
+    }
     const viewer = this.viewer;
     for (const t of this.tilesets) {
       t.maximumScreenSpaceError = settings.sse;
@@ -761,6 +831,9 @@ export class LegacyViewerHost implements ViewerHost {
 
   setLighting(lighting: Lighting): void {
     this.lighting = lighting;
+    if (!this.live) {
+      return;
+    }
     const scene = this.viewer.scene;
     const at = this.focus
       ? Float64Array.from([this.focus.x, this.focus.y, this.focus.z])
@@ -787,25 +860,28 @@ export class LegacyViewerHost implements ViewerHost {
     return {
       name,
       ...(color ? { color } : {}),
-      snapshot: () => ({
-        ...legacySnapshot(
-          this.viewer,
-          this.tilesets,
-          this.load_,
-          this.settled(),
-        ),
-        frame: {
-          cpuMs: this.cpuMs,
-          rendering: this.viewer.scene.requestRenderMode
-            ? "on demand"
-            : "continuous",
-          framesRendered: this.frames,
-        },
-        camera: [
-          ...Cesium.Cartesian3.pack(this.viewer.camera.positionWC, []),
-          ...Cesium.Cartesian3.pack(this.viewer.camera.directionWC, []),
-        ],
-      }),
+      snapshot: () =>
+        !this.live
+          ? { state: "loading" as const }
+          : {
+              ...legacySnapshot(
+                this.viewer,
+                this.tilesets,
+                this.load_,
+                this.settled(),
+              ),
+              frame: {
+                cpuMs: this.cpuMs,
+                rendering: this.viewer.scene.requestRenderMode
+                  ? "on demand"
+                  : "continuous",
+                framesRendered: this.frames,
+              },
+              camera: [
+                ...Cesium.Cartesian3.pack(this.viewer.camera.positionWC, []),
+                ...Cesium.Cartesian3.pack(this.viewer.camera.directionWC, []),
+              ],
+            },
     };
   }
 
@@ -814,7 +890,7 @@ export class LegacyViewerHost implements ViewerHost {
   }
 
   async pick(x: number, y: number): Promise<PickInfo | undefined> {
-    return legacyPick(this.viewer, x, y);
+    return this.live ? legacyPick(this.viewer, x, y) : undefined;
   }
 
   destroy(): void {

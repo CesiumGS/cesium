@@ -76,6 +76,11 @@ export interface TileSource {
   ): Pick<ModelOptions, "modelMatrix" | "axes" | "underlay">;
   /** Height of the surface at a longitude and latitude (terrain sources). */
   sampleHeight?(longitude: number, latitude: number): number | undefined;
+  /**
+   * The surface's height where it is known without loading anything (the
+   * ellipsoid: 0); undefined where its data must be loaded to know.
+   */
+  exactHeight?(longitude: number, latitude: number): number | undefined;
   /** Height of the drawn surface there (terrain sources). */
   surfaceHeight?(longitude: number, latitude: number): number | undefined;
   /** Called with each rectangle whose heights changed (terrain sources). */
@@ -671,6 +676,11 @@ export class Tileset3D implements TileTree {
    */
   sampleHeight(longitude: number, latitude: number): number | undefined {
     return this.source?.sampleHeight?.(longitude, latitude);
+  }
+
+  /** Height known without loading anything (the ellipsoid: 0), if any. */
+  exactHeight(longitude: number, latitude: number): number | undefined {
+    return this.source?.exactHeight?.(longitude, latitude);
   }
 
   /**

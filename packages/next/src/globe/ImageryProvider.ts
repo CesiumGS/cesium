@@ -211,9 +211,13 @@ export class BingImagery implements ImageryProvider {
     const s = this.subdomains.length
       ? this.subdomains[(x + y + level) % this.subdomains.length]!
       : "";
-    return this.template
+    const url = this.template
       .replace("{quadkey}", quadkey)
       .replace("{subdomain}", s);
+    // n=z: Bing answers a tile it has no imagery for with an empty body
+    // instead of its "no imagery" placeholder, so the globe uses the
+    // parent's (as 1.x asks).
+    return `${url}${url.includes("?") ? "&" : "?"}n=z`;
   }
 }
 

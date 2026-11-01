@@ -137,6 +137,8 @@ export class Engine {
       }
       return mask >>> 0;
     },
+    (world, positions, tilesets) =>
+      this.sampleHeightMostDetailed(world, positions, { tilesets }),
   );
   readonly stats: FrameStats = {
     cpuMs: 0,
