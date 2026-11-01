@@ -11,6 +11,7 @@ import {
   DRAW_ITEM_SIZE,
   RECORD_WORDS,
   TRANSFORM_WORDS,
+  TRANSFORM_WORD,
   FLAGS_WORD,
   VIEW_MASK_WORD,
   IMAGERY_SLICE_WORD,
@@ -133,6 +134,8 @@ export interface DrawOptions {
   color?: readonly [number, number, number, number];
   /** Skip lighting regardless of the material. */
   unlit?: boolean;
+  /** Ray casts may hit it (`castRays` with `collisionOnly`). */
+  collision?: boolean;
   /** Index from `addMaterial`; the default is a white, non-textured material. */
   material?: number;
   /** Index from `createTextureSet`; 0 binds the default 1×1 textures. */
@@ -186,6 +189,23 @@ export interface DrawHandle {
   readonly index: number;
   readonly generation: number;
   readonly name: string | undefined;
+}
+
+/** A ray for `World.castRays`. */
+export interface CastRay {
+  /** Float64 Earth-fixed origin. */
+  origin: ArrayLike<number>;
+  /** Unit direction, Earth-fixed axes. */
+  direction: ArrayLike<number>;
+  /** Hits beyond it are ignored (meters). */
+  maxDistance: number;
+}
+
+export interface CastOptions {
+  /** Only draws marked `collision` (tilesets with `enableCollision`). */
+  collisionOnly?: boolean;
+  /** Only draws some of these views draw (default: any). */
+  viewMask?: number;
 }
 
 /** A placement in the world's transform table (`addTransform`). */
@@ -517,10 +537,11 @@ export class World {
       device.createBuffer({ label: `world.${label}`, size, usage });
     const storage = GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST;
     this.vertexBuffer = buffer("vertices", vertexBytes, storage);
+    // STORAGE: ray casts read triangles (`castRays`).
     this.indexBuffer = buffer(
       "indices",
       indexBytes,
-      GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST,
+      GPUBufferUsage.INDEX | GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
     );
     this.recordBuffer = this.records.buffer;
     this.transformBuffer = this.transforms.buffer;
@@ -942,7 +963,9 @@ export class World {
       viewMask: options.viewMask,
       // Lines have no surface to light; 1.x draws them unlit too.
       flags:
-        options.unlit || mesh.topology === "line-list" ? RecordFlags.unlit : 0,
+        (options.unlit || mesh.topology === "line-list"
+          ? RecordFlags.unlit
+          : 0) | (options.collision ? RecordFlags.collision : 0),
       instanceFirst,
       instanceCount,
       instanceStreams,
@@ -1376,6 +1399,229 @@ export class World {
     }
   }
 
+  /** Whether ray casts with `collisionOnly` may hit the draw. */
+  setCollision(handle: DrawHandle, collision: boolean): void {
+    if (!this.hasDraw(handle)) {
+      return;
+    }
+    const index = handle.index * RECORD_WORDS + FLAGS_WORD;
+    const flags = this.recordsU32[index]!;
+    const next = collision
+      ? flags | RecordFlags.collision
+      : flags & ~RecordFlags.collision;
+    if (next !== flags) {
+      this.recordsU32[index] = next;
+      this.records.mark(handle.index);
+      this.uploadsPending = true;
+    }
+  }
+
+  /**
+   * Casts rays (float64 Earth-fixed origins, unit directions) against the
+   * triangles of the draws they may hit and resolves each ray's nearest
+   * hit distance in meters, or undefined. Brute force on the GPU over the
+   * draws whose bounds a ray crosses (`raycast.wgsl`); one readback.
+   */
+  async castRays(
+    rays: readonly CastRay[],
+    options: CastOptions = {},
+  ): Promise<Array<number | undefined>> {
+    const out: Array<number | undefined> = rays.map(() => undefined);
+    if (rays.length === 0) {
+      return out;
+    }
+    this.resolveTransforms();
+    const jobs = this.rayJobs(rays, options);
+    if (jobs.length === 0) {
+      return out;
+    }
+    const device = this.ctx.device;
+    const rayData = new Float32Array(rays.length * 12);
+    const rayWords = new Uint32Array(rayData.buffer);
+    rays.forEach((ray, i) => {
+      for (let k = 0; k < 3; k++) {
+        const value = ray.origin[k]!;
+        const hi = Math.fround(value);
+        rayData[i * 12 + k] = hi;
+        rayData[i * 12 + 4 + k] = Math.fround(value - hi);
+        rayData[i * 12 + 8 + k] = ray.direction[k]!;
+      }
+      rayData[i * 12 + 3] = ray.maxDistance;
+      rayWords[i * 12 + 7] = 0;
+      rayWords[i * 12 + 11] = 0;
+    });
+    const buffer = (
+      label: string,
+      data: ArrayBufferView<ArrayBuffer>,
+      usage: number,
+    ) => {
+      const b = device.createBuffer({
+        label: `world.raycast.${label}`,
+        size: Math.max(16, data.byteLength),
+        usage: usage | GPUBufferUsage.COPY_DST,
+      });
+      device.queue.writeBuffer(b, 0, data);
+      return b;
+    };
+    const STORAGE = GPUBufferUsage.STORAGE;
+    const rayBuffer = buffer("rays", rayData, STORAGE);
+    const jobBuffer = buffer("jobs", jobs, STORAGE);
+    const hitBuffer = buffer(
+      "hits",
+      new Uint32Array(rays.length).fill(NO_HIT),
+      STORAGE | GPUBufferUsage.COPY_SRC,
+    );
+    const readback = device.createBuffer({
+      label: "world.raycast.readback",
+      size: Math.max(16, rays.length * 4),
+      usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
+    });
+    const pipeline = this.ctx.pipelines.raycast;
+    const group = device.createBindGroup({
+      label: "world.raycast",
+      layout: pipeline.getBindGroupLayout(0),
+      entries: [
+        rayBuffer,
+        jobBuffer,
+        this.recordBuffer,
+        this.transformBuffer,
+        this.instanceBuffer,
+        this.vertexBuffer,
+        this.indexBuffer,
+        hitBuffer,
+      ].map((b, binding) => ({ binding, resource: { buffer: b } })),
+    });
+    const encoder = device.createCommandEncoder({ label: "world.raycast" });
+    const pass = encoder.beginComputePass({ label: "raycast" });
+    // The tables as the CPU has them (draws added since the last frame).
+    this.uploadTables(pass);
+    pass.setPipeline(pipeline);
+    pass.setBindGroup(0, group);
+    const count = jobs.length / 4;
+    const x = Math.min(count, 65535);
+    pass.dispatchWorkgroups(x, Math.ceil(count / x));
+    pass.end();
+    encoder.copyBufferToBuffer(hitBuffer, 0, readback, 0, rays.length * 4);
+    device.queue.submit([encoder.finish()]);
+    try {
+      await readback.mapAsync(GPUMapMode.READ);
+      const hits = new Uint32Array(readback.getMappedRange(0, rays.length * 4));
+      const f32 = new Float32Array(hits.buffer, hits.byteOffset, hits.length);
+      for (let i = 0; i < rays.length; i++) {
+        out[i] = hits[i] === NO_HIT ? undefined : f32[i];
+      }
+      readback.unmap();
+    } finally {
+      for (const b of [rayBuffer, jobBuffer, hitBuffer, readback]) {
+        b.destroy();
+      }
+    }
+    return out;
+  }
+
+  /**
+   * The (ray, record, first triangle, instance) jobs of a cast: each
+   * candidate draw's bounding sphere is tested against each ray segment
+   * on the CPU, and crossing draws are split into 64-triangle jobs.
+   */
+  private rayJobs(
+    rays: readonly CastRay[],
+    options: CastOptions,
+  ): Uint32Array<ArrayBuffer> {
+    const jobs: number[] = [];
+    const u = this.recordsU32;
+    const f = this.recordsF32;
+    const mask = options.viewMask ?? ALL_VIEWS;
+    const center = new Float64Array(3);
+    const world = this.transformWorld;
+    const test = (record: number, instance: number, radius: number) => {
+      const triangles = Math.floor(u[record * RECORD_WORDS + 11]! / 3);
+      rays.forEach((ray, r) => {
+        const dx = center[0]! - ray.origin[0]!;
+        const dy = center[1]! - ray.origin[1]!;
+        const dz = center[2]! - ray.origin[2]!;
+        const along =
+          dx * ray.direction[0]! +
+          dy * ray.direction[1]! +
+          dz * ray.direction[2]!;
+        if (along < -radius || along > ray.maxDistance + radius) {
+          return;
+        }
+        if (dx * dx + dy * dy + dz * dz - along * along > radius * radius) {
+          return;
+        }
+        for (let first = 0; first < triangles; first += 64) {
+          jobs.push(r, record, first, instance);
+        }
+      });
+    };
+    for (let i = 0; i < this.drawCount; i++) {
+      const batch = this.drawBatches[i];
+      if (!batch || batch.mesh.topology !== "triangle-list") {
+        continue;
+      }
+      const o = i * RECORD_WORDS;
+      const flags = u[o + FLAGS_WORD]!;
+      if (
+        flags & RecordFlags.hidden ||
+        (options.collisionOnly && !(flags & RecordFlags.collision)) ||
+        (u[o + VIEW_MASK_WORD]! & mask) === 0
+      ) {
+        continue;
+      }
+      const t = u[o + TRANSFORM_WORD]!;
+      if (this.transformHiddenWorld[t] === 1) {
+        continue;
+      }
+      const w = t * 16;
+      const scale = this.transforms.f32[t * TRANSFORM_WORDS + 3]!;
+      const local = [f[o]!, f[o + 1]!, f[o + 2]!];
+      const radius = f[o + 3]!;
+      const count = u[o + INSTANCE_COUNT_WORD]!;
+      if (count === 0) {
+        for (let k = 0; k < 3; k++) {
+          center[k] =
+            world[w + k]! * local[0]! +
+            world[w + 4 + k]! * local[1]! +
+            world[w + 8 + k]! * local[2]! +
+            world[w + 12 + k]!;
+        }
+        test(i, NO_RECORD, radius * scale);
+        continue;
+      }
+      const first = u[o + INSTANCE_FIRST_WORD]!;
+      const it = this.instances.f32;
+      for (let j = first; j < first + count; j++) {
+        const a = j * INSTANCE_WORDS;
+        if (this.instances.u32[a + 14]! & 1) {
+          continue;
+        }
+        // The instance's affine (rows), then the transform.
+        const p = [0, 1, 2].map(
+          (row) =>
+            it[a + row * 4]! * local[0]! +
+            it[a + row * 4 + 1]! * local[1]! +
+            it[a + row * 4 + 2]! * local[2]! +
+            it[a + row * 4 + 3]!,
+        );
+        for (let k = 0; k < 3; k++) {
+          center[k] =
+            world[w + k]! * p[0]! +
+            world[w + 4 + k]! * p[1]! +
+            world[w + 8 + k]! * p[2]! +
+            world[w + 12 + k]!;
+        }
+        const instanceScale = Math.max(
+          Math.hypot(it[a]!, it[a + 4]!, it[a + 8]!),
+          Math.hypot(it[a + 1]!, it[a + 5]!, it[a + 9]!),
+          Math.hypot(it[a + 2]!, it[a + 6]!, it[a + 10]!),
+        );
+        test(i, j, radius * scale * instanceScale);
+      }
+    }
+    return Uint32Array.from(jobs);
+  }
+
   setVisible(handle: DrawHandle, visible: boolean): void {
     if (!this.hasDraw(handle)) {
       return;
@@ -1469,13 +1715,8 @@ export class World {
     );
     this.cullPassDesc.timestampWrites = timestampWrites;
     const pass = encoder.beginComputePass(this.cullPassDesc);
-    if (this.uploadsPending) {
-      // Once per frame, before any view's culling reads the tables.
-      this.uploadsPending = false;
-      this.records.upload(pass);
-      this.transforms.upload(pass);
-      this.instances.upload(pass);
-    }
+    // Once per frame, before any view's culling reads the tables.
+    this.uploadTables(pass);
     pass.setBindGroup(0, currentViewBindGroup);
     pass.setBindGroup(1, this.cullBindGroup);
     pass.setPipeline(pipelines.cullRecords);
@@ -1487,6 +1728,17 @@ export class World {
     pass.setPipeline(pipelines.writeDrawArgs);
     pass.dispatchWorkgroups(Math.ceil(Math.max(this.batchList.length, 1) / 64));
     pass.end();
+  }
+
+  /** Uploads changed table entries (a scatter is encoded into `pass`). */
+  private uploadTables(pass: GPUComputePassEncoder): void {
+    if (!this.uploadsPending) {
+      return;
+    }
+    this.uploadsPending = false;
+    this.records.upload(pass);
+    this.transforms.upload(pass);
+    this.instances.upload(pass);
   }
 
   /**
@@ -1652,6 +1904,8 @@ export class World {
   }
 }
 
+/** Hit distance bits meaning "no hit" (the largest finite float). */
+const NO_HIT = 0x7f7fffff;
 const IDENTITY = Float64Array.of(
   1,
   0,

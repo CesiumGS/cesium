@@ -34,6 +34,7 @@ Branch: `cesium-2.0-webgpu-poc` (off `main` @ `587f52f1eb`, CesiumJS 1.146.0)
 | r26 | M3 increment 4: globe imagery composited on the GPU into a `texture_2d_array` cache (Bing via ion, 1.x level choice, ancestor fallback, empty-tile fallback, credits), within FLIP 0.03-0.05 of 1.x; a streamed ellipsoid globe (1.x `EllipsoidTerrainProvider`) replaces the static globe and ground patch; a 1.x-style globe camera controller with `View.pickPosition`; unlit color is display-referred (its own target, never tonemapped), which fixed darkened imagery and Google tiles. |
 | r27 | Content comes and goes in one world without stalls: the viewer keeps one world and globe (switch to a glTF: 26 ms, was 932), endpoint caches, an adaptive engine-wide upload budget and spread eviction. Open: frame stalls on first visits to uncached areas, and the budget's cost to settle time.                                                                                                                                                                                          |
 | r28 | Scene foundations (§13.9): a per-world transform table (float64 hierarchy, visibility), records 192 → 128 bytes, GPU instancing culled per instance (`EXT_mesh_gpu_instancing`), glTF assets shared across placements, generational handles, scatter uploads; the prep kernel is renamed cull. glTF 2.1 / 3D Tiles 2.0, vector billboards and decals, and ray queries to path tracing designed (§13.9, §13.10). Parity unchanged.                                                             |
+| r29 | M3 increment 5: height queries and clamping. `heightReference` on models (clamp/relative to ground, terrain or 3D Tiles), event-driven re-clamping, terrain clamped to its drawn surface (within 0.1 mm of 1.x `Globe.getHeight` where 1.x keeps full precision), 3D Tiles heights by GPU ray casts (`World.castRays`) within 6 mm of what 1.x renders; tileset `enableCollision` and `modelMatrix`. Custom shading becomes a PoC milestone (§3.4).                                           |
 
 ## 1. Goal
 
@@ -254,6 +255,52 @@ Engine (1 GPUDevice, PipelineCache, ContentCache, RequestScheduler, WorkerPool)
 - WASM compiler payload size and cold/warm compile latency are measured
 - the output is readable enough to debug
 - the license is reviewed
+
+**Engine foundations for user shaders (r28; built in the PoC, milestone
+"Custom shading").** The r28 spike state: `ShaderOverrides` swaps the
+whole opaque module for the whole engine, and the Slang spike links one
+`IMaterial` into it at build time. User shaders per tileset, model or
+style need:
+
+1. _Shader identity in the batch key and an async pipeline cache._ Batches
+   key on mesh, material, texture set and cull mode, and the pipeline
+   follows topology and sidedness only. The key gains the shader; pipelines
+   are cached by shader hash × variant (cull mode, topology) × pass and
+   compiled asynchronously, so content shows when its pipeline is ready and
+   compiling never stalls a frame.
+2. _A vertex attribute directory._ Records have six fixed stream slots.
+   1.x `CustomShader` reads any glTF attribute (`_TEMPERATURE`), and point
+   clouds and vector billboards need named attributes too: a per-mesh table
+   of (semantic, stream offset, format) replaces the slots, read by a
+   generated accessor per attribute.
+3. _Generic material parameters._ The material table is the fixed 64-byte
+   glTF PBR struct. User materials get typed parameter blocks (layout from
+   Slang reflection) in a parameter buffer addressed per material, and
+   texture sets with as many slots as the material declares (a bind group
+   layout per material type, Slang `ParameterBlock` → group 2). glTF PBR
+   becomes the default material type.
+4. _Pass variants from one module._ Opaque, pick, depth-only and later
+   shadow and translucent pipelines compile from the same user code, so a
+   vertex modifier moves geometry the same way in every pass. A vertex
+   modifier declares its displacement bound, which pads culling bounds;
+   ray queries see undeformed geometry until compute skinning exists
+   (§13.9).
+5. _A versioned `cesium` Slang module as the public contract:_
+   `SurfaceInput`/`Surface`, attribute access, per-instance streams,
+   feature IDs and feature-property lookup (for `IFeatureStyle` and 3D
+   Tiles styling), view and lighting inputs. Raw WGSL can target the same
+   ABI.
+6. _Runtime compilation_ by the lazily loaded Slang WASM compiler in a
+   worker, cached by source hash; build-time compilation (CLI or bundler
+   plugin) stays the recommended path. Errors surface asynchronously and
+   the content draws with the default material meanwhile.
+
+Compared with 1.x `CustomShader` (GLSL snippets `vertexMain` and
+`fragmentMain`, uniforms, varyings, a lighting model, for `Model` and 3D
+Tiles): the same capabilities, typed and checked at compile time, one
+material per batch instead of per primitive draw command, and the same
+module drives every pass. A migration guide maps `vsInput.attributes`,
+`fsInput.features` and `czm_` built-ins to the `cesium` module.
 
 ### 3.5 Frame graph
 
@@ -490,7 +537,7 @@ Durations are rough and **optimistic** for one engineer with AI assistance. If t
 
 - Quantized-mesh terrain; horizon culling (in selection since r25).
 - Imagery sources plus the **texture-array composite cache**.
-- Height queries and clamping.
+- Height queries and clamping (r29).
 - _Exit_: the CAD tileset sits on Cesium World Terrain with ion imagery; globe `Legacy1x` L1 ≥99%.
 
 ### Budgeted selection: planned work (after M3)
@@ -515,6 +562,22 @@ Durations are rough and **optimistic** for one engineer with AI assistance. If t
 - LDR/HDR paths, FXAA.
 - Translucency: MBOIT real-time path plus the per-pixel-linked-list exact reference; tested for opaque/translucent interaction against the reference, not against 1.x.
 - _Exit_: L2 on all canonical views, and L3 sign-off.
+
+### Custom shading (PoC, after M4)
+
+- §3.4 foundations 1-6: shader identity in batches with an async pipeline
+  cache, attribute directory, material parameter blocks, pass variants,
+  the `cesium` Slang module, runtime compilation in a worker.
+- Public API: a custom material and vertex modifier per model or tileset,
+  and feature styling (`IFeatureStyle`) as the target 3D Tiles styling
+  compiles to.
+- Port representative 1.x `CustomShader` Sandcastles (attribute-driven
+  color, feature styling, vertex displacement, unlit and PBR outputs) and
+  compare against 1.x (L2).
+- _Exit_: a user Slang material and vertex modifier on a model and on a
+  tileset, compiled at build time and at runtime, in every pass; no frame
+  stalls when a new shader arrives; batching cost per extra material type
+  measured.
 
 ### M5 — Performance hardening (≈3 wks)
 
@@ -1999,6 +2062,12 @@ polygons to drape as decals, all shaded programmatically:
   Tiles alike.
 - Wide lines and polylines are expanded into quads the same way (WebGPU
   only rasterizes 1-pixel lines).
+- _Candidate: the Slug algorithm_ (glyphs and vector shapes rendered
+  directly from their Bézier curves in the fragment shader, resolution
+  independent, no atlases). The plan owner has a working prototype of a
+  vector styling and rendering pipeline on Slug, driven by the 3D Tiles
+  styling language with prototype extensions; it is to be evaluated for
+  this engine (decals and vector tiles) when that work starts.
 
 **Designed for, built later.**
 
@@ -2071,6 +2140,11 @@ links to where it is explained.
 | 6   | Distribution of real users' bandwidth and latency (CDN logs or opt-in telemetry), to choose `Budgeted`'s defaults for slow vs fast links and L1′'s network profiles.                                                                                                                                                                                                                                             | Cesium ion / product | §13.3, increment 6                 | To ask                           |
 | 7   | Content fetches have no timeout and no retry: a failed tile stays failed (with a warning) for the session, and a request that never answers holds a slot of its origin's window until no view needs the tile (cancelled after 30 frames). Wanted: a timeout from observed latency, retries with backoff for network errors, 5xx and 429 (`Retry-After`), 404 drawn as empty, and a token refresh on 401 for ion. | 2.0 streaming        | §15, increment 2                   | Planned                          |
 | 8   | `QuantizedMeshTerrainData.interpolateHeight` returns undefined for every loaded globe tile: it scales u and v to 0..32767 before branching, and the mesh branch compares them with texture coordinates decoded to 0..1; the other branch's quantized buffers are freed once the mesh exists. `sampleTerrain` works only because it fetches fresh terrain data.                                                   | CesiumJS 1.x         | §15, increment 5                   | To file                          |
+| 9   | `Cesium3DTileset.getHeight` (what 1.x clamps models to on 3D Tiles) misses geometry the renderer draws: on OSM Buildings it found no surface at 25 of 49 and 18 of 29 grid points that `Scene.sampleHeight` hits, and a lower surface (up to 53 m) at 4 more per view. Causes in reach: geocentric ray, first tile with any hit instead of the nearest hit, `pickModel` culling back faces.                      | CesiumJS 1.x         | §15, increment 5                   | To file                          |
+| 10  | `sampleTerrain` keeps a position's input height when sampling fails after a mesh was built, instead of returning undefined.                                                                                                                                                                                                                                                                                      | CesiumJS 1.x         | docs/clamping-legacy1x-spec.md §5  | To file                          |
+| 11  | Terrain height callbacks pass terrain-only heights, so a clamp-to-ground billboard can drop off a tileset roof until a tileset callback fires.                                                                                                                                                                                                                                                                   | CesiumJS 1.x         | docs/clamping-legacy1x-spec.md §2  | To file                          |
+| 12  | `Model.pick` passes 5 arguments to `pickModel`'s 7, so `result` lands in `ellipsoid`; tile content works by accident.                                                                                                                                                                                                                                                                                            | CesiumJS 1.x         | docs/clamping-legacy1x-spec.md §5  | To file                          |
+| 13  | `HeightmapTerrainData` mesh-path heights ignore `heightScale` and `heightOffset` after `createMesh` (latent; reached for LERC).                                                                                                                                                                                                                                                                                  | CesiumJS 1.x         | docs/clamping-legacy1x-spec.md §5  | To file                          |
 
 ## 15. M3 progress
 
@@ -2315,3 +2389,68 @@ Next increments: height queries and the CAD tileset on terrain (and the
 camera's terrain collision); cross-tileset scheduling (§13.2); fetch
 timeouts and retries (§14, item 7); imagery filtering and level choice
 against the spec's parity hazards.
+
+### Increment 5 (r29): height queries and clamping
+
+1.x behavior, defects and design notes are in
+`docs/clamping-legacy1x-spec.md`.
+
+**Terrain heights.** Tiles keep their decoded u, v, h and triangles.
+
+- `sampleHeight` is the terrain data height (1.x `sampleTerrain`): within
+  4e-9 m of 1.x at the same levels on six cameras.
+- `surfaceHeight` is the drawn surface: the triangle under the point in
+  the finest loaded tile, intersected along the geodetic normal (1.x
+  `Globe.getHeight`, what 1.x clamps to). Against 1.x on the same
+  selected tiles: within 0.6 mm on five cameras; up to 0.74 m on the
+  Matterhorn, all of it on tiles 1.x draws with 12-bit quantized vertices
+  (`TerrainEncoding` BITS12, steps of a tile's height range / 4095), where
+  2.0 keeps the data's precision. Where 1.x does not quantize the two
+  agree within 0.1 mm.
+- Camera terrain collision uses `surfaceHeight`.
+
+**Clamping.** `heightReference` on `addModel` (`clampToGround`,
+`relativeToGround`, `clampToTerrain`, `relativeToTerrain`,
+`clampTo3DTiles`, `relativeTo3DTiles`, with `heightOffset`), as 1.x:
+ground is the highest of the globe and the shown tilesets with
+`enableCollision`; content moves along the vertical, without re-orienting.
+Unlike 1.x it is event-driven:
+
+- Terrain announces the rectangle whose heights changed on each tile load
+  and unload; only anchors inside it re-clamp (1.x walks per-tile callback
+  lists under a 2 ms budget).
+- 3D Tiles heights are ray cast on the GPU (`World.castRays`) for all
+  anchors in one dispatch, down the geodetic normal, nearest hit, against
+  the collision tiles the views drew; again only while those tilesets
+  change, every 10 frames at most.
+- A clamped model moves by one `setTransform` on its root transform.
+
+**Ray casting (`World.castRays`, `raycast.wgsl`).** The first `RayQuery`
+backend of §13.10: rays in float64; the CPU picks draws whose bounds a
+ray crosses and splits them into 64-triangle jobs; a workgroup per job
+tests triangles read from the arena (instanced draws per instance) and
+keeps the nearest hit per ray with an atomic min; one readback. No views,
+render targets or picking passes; a BVH replaces the job list later.
+
+**3D Tiles height parity** (`parity/heights.html`, suite `heights`): OSM
+Buildings, 1.x selection, 15×15 grids in Philadelphia and Midtown
+Manhattan. Against 1.x `Scene.sampleHeight` (a depth render, so what 1.x
+draws): the same 49 and 29 points hit, within 6 mm (1.x depth precision).
+Against 1.x `Cesium3DTileset.getHeight`, what 1.x clamps models to: it
+misses more than half of those points and returns a lower surface at four
+per view (§14, item 9).
+
+**Tilesets.** `enableCollision` (default false, as 1.x) marks content
+draws so ray casts with `collisionOnly` hit them; it can change at
+runtime. `modelMatrix` places the whole tileset at load (root transform
+of the tile tree: boxes and spheres transformed, regions not, as 1.x).
+Changing it at runtime (1.x's height-offset Sandcastle) is open: content
+can follow through its parent transform, but selection volumes would need
+the same transform.
+
+**Viewer.** Placed glTF models are `clampToGround`: on Cesium World
+Terrain or the ellipsoid, and on collision tilesets.
+
+Open: billboards and labels (with the vector work), clamping of the
+viewer's city boxes, runtime tileset `modelMatrix`, `sampleHeightMostDetailed`
+(rays against content loaded for the query, not the views' tiles).

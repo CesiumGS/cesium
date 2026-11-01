@@ -1107,6 +1107,8 @@ async function main(): Promise<void> {
                   mat4.mat4(),
                 ),
                 unlit: unlit.checked,
+                // Stands on the terrain (or the ellipsoid) as it loads.
+                heightReference: "clampToGround",
               },
         );
         next = { remove: () => engine.removeModel(world, instance) };
@@ -1604,10 +1606,11 @@ async function main(): Promise<void> {
   // Last move: from when the camera stopped until streaming went idle, with
   // the requests and bytes the move cost (an L1′-style number, live).
   let cameraKey = "";
-  // The camera stays above the globe's surface (terrain or the ellipsoid).
+  // The camera stays above the globe's drawn surface (terrain or the
+  // ellipsoid).
   controller.surfaceHeight = (longitude, latitude) =>
     currentTerrain?.show
-      ? currentTerrain.sampleHeight(longitude, latitude)
+      ? currentTerrain.surfaceHeight(longitude, latitude)
       : undefined;
 
   function watchCamera(): void {

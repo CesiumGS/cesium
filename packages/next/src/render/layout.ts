@@ -151,6 +151,8 @@ export const RecordFlags = {
   hidden: 1,
   /** Output the base color without lighting, overriding the material. */
   unlit: 2,
+  /** Ray casts may hit it (a tileset with `enableCollision`). */
+  collision: 4,
 } as const;
 
 export const MaterialFlags = {

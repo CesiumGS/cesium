@@ -36,6 +36,7 @@ import {
 } from "./View.ts";
 import { ViewLink, type ViewLinkOptions } from "./ViewLink.ts";
 import { World, type WorldOptions } from "./World.ts";
+import { HeightClamping } from "./HeightClamping.ts";
 import { WorkerPool } from "../io/WorkerPool.ts";
 import {
   GlobeImagery,
@@ -119,6 +120,22 @@ export class Engine {
   readonly links: ViewLink[] = [];
   /** Streamed 3D Tiles tilesets, updated before each frame. */
   readonly tilesets: Tileset3D[] = [];
+  /**
+   * Keeps content with a `heightReference` on terrain and collision
+   * tilesets as they load (`addModel`).
+   */
+  readonly clamping = new HeightClamping(
+    () => this.tilesets,
+    (world) => {
+      let mask = 0;
+      for (const view of this.views) {
+        if (view.enabled && view.world === world) {
+          mask |= this.viewBit(view);
+        }
+      }
+      return mask >>> 0;
+    },
+  );
   readonly stats: FrameStats = {
     cpuMs: 0,
     gpuMs: Number.NaN,
@@ -313,13 +330,38 @@ export class Engine {
     );
   }
 
-  /** Places a parsed glTF asset in a world. */
+  /**
+   * Places a parsed glTF asset in a world. With a `heightReference` the
+   * model is anchored at its `modelMatrix` translation and kept on the
+   * ground (`clamping`).
+   */
   addModel(
     world: World,
     asset: GltfAsset,
     options: ModelOptions,
   ): ModelInstance {
-    return addGltf(this.ctx, world, asset, options);
+    const reference = options.heightReference ?? "none";
+    if (reference !== "none" && options.parent) {
+      throw new Error("addModel: heightReference needs a model without parent");
+    }
+    const instance = addGltf(this.ctx, world, asset, options);
+    if (reference !== "none") {
+      const m = options.modelMatrix;
+      const anchor = Ellipsoid.WGS84.cartesianToCartographic(
+        v3.vec3(m[12]!, m[13]!, m[14]!),
+        { longitude: 0, latitude: 0, height: 0 },
+      );
+      if (anchor) {
+        instance.clamp = this.clamping.add(world, instance.transform, {
+          heightReference: reference,
+          ...anchor,
+          ...(options.heightOffset !== undefined
+            ? { offset: options.heightOffset }
+            : {}),
+        });
+      }
+    }
+    return instance;
   }
 
   /**
@@ -481,6 +523,7 @@ export class Engine {
 
   /** Removes a placed glTF and frees its geometry, materials and textures. */
   removeModel(world: World, instance: ModelInstance): void {
+    instance.clamp?.remove();
     removeGltf(world, instance);
   }
 
@@ -610,6 +653,8 @@ export class Engine {
       }
     }
     this.budgetFilled = this.uploadBudget.bytes <= 0;
+    // After the tilesets: their loads and unloads announce height changes.
+    this.clamping.update();
   }
 
   /**

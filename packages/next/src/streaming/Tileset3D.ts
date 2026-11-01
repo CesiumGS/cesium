@@ -10,6 +10,7 @@ import type { Engine } from "../scene/Engine.ts";
 import type { ClipBox, World } from "../scene/World.ts";
 import type { ModelOptions } from "../scene/gltfModel.ts";
 import type { GltfAsset } from "../io/gltfTypes.ts";
+import type { Mat4 } from "../math/mat4.ts";
 import type { Rectangle } from "../globe/quantizedMesh.ts";
 import {
   Legacy1xSelection,
@@ -94,6 +95,17 @@ export interface TilesetOptions extends BudgetedOptions {
   maximumRequests?: number;
   /** Uploads per frame, to bound main-thread hitches. */
   uploadsPerFrame?: number;
+  /**
+   * Clamped content may stand on it and ray casts with `collisionOnly`
+   * hit it (1.x `enableCollision`, default false).
+   */
+  enableCollision?: boolean;
+  /**
+   * Float64 transform applied to the whole tileset (1.x `modelMatrix`),
+   * e.g. a height offset. Set at load: tile boxes and spheres are
+   * transformed for selection, regions are not (as in 1.x). 3D Tiles only.
+   */
+  modelMatrix?: Mat4;
 }
 
 export interface TilesetStats {
@@ -156,6 +168,34 @@ export class Tileset3D implements TileTree {
     bytesReceived: 0,
     selected: new Map(),
   };
+  /**
+   * Clamped content may stand on it and ray casts with `collisionOnly`
+   * hit it (1.x `enableCollision`).
+   */
+  get enableCollision(): boolean {
+    return this.collision;
+  }
+  set enableCollision(value: boolean) {
+    if (value === this.collision) {
+      return;
+    }
+    this.collision = value;
+    this.lastChange = this.frame;
+    const visit = (tile: Tile) => {
+      for (const draw of tile.instance?.draws ?? []) {
+        this.world.setCollision(draw, value);
+      }
+      tile.children.forEach(visit);
+    };
+    visit(this.root);
+  }
+  private collision = false;
+
+  /** Frame counter value of the last change to what the tileset draws. */
+  get changedAt(): number {
+    return this.lastChange;
+  }
+
   /** False hides the tileset in every view; it keeps its cache. */
   get show(): boolean {
     return this.shown;
@@ -215,6 +255,7 @@ export class Tileset3D implements TileTree {
     source?: TileSource,
   ) {
     this.options = options;
+    this.collision = options.enableCollision ?? false;
     this.policy = createSelection(options, source);
     this.cacheBytes = options.cacheBytes ?? 512 * 1024 * 1024;
     this.overflowBytes = options.maximumCacheOverflowBytes ?? 512 * 1024 * 1024;
@@ -242,6 +283,7 @@ export class Tileset3D implements TileTree {
       options.headers,
       undefined,
       { warnings },
+      options.modelMatrix,
     );
     const tileset = new Tileset3D(
       engine,
@@ -708,6 +750,7 @@ export class Tileset3D implements TileTree {
             ? this.source.modelOptions(tile)
             : { modelMatrix: tile.transform, axes: "3d-tiles" as const }),
           viewMask: 0,
+          collision: this.collision,
         });
         tile.instance = instance;
         tile.bytes = instance.bytes;

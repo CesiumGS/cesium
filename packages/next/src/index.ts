@@ -16,7 +16,16 @@ export {
   type Usage,
   type WorldMemory,
   type SubmissionMode,
+  type TransformHandle,
+  type InstanceOptions,
+  type CastRay,
+  type CastOptions,
 } from "./scene/World.ts";
+export {
+  type HeightReference,
+  type Clamp,
+  type ClampOptions,
+} from "./scene/HeightClamping.ts";
 export {
   View,
   CanvasTarget,
@@ -98,5 +107,9 @@ export {
   type Stage,
   type StageStats,
 } from "./streaming/pipeline.ts";
-export { type ModelInstance, type ModelOptions } from "./scene/gltfModel.ts";
+export {
+  type ModelInstance,
+  type ModelOptions,
+  type UploadedAsset,
+} from "./scene/gltfModel.ts";
 export { MaterialFlags } from "./render/layout.ts";

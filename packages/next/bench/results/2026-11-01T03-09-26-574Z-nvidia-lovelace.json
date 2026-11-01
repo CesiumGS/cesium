@@ -1,0 +1,119 @@
+{
+  "date": "2026-11-01T03:09:26.574Z",
+  "environment": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0",
+    "adapter": {
+      "vendor": "nvidia",
+      "architecture": "lovelace",
+      "description": "NVIDIA RTX 3000 Ada Generation Laptop GPU"
+    },
+    "timestampQuery": true
+  },
+  "errors": [],
+  "results": {
+    "globe": [
+      {
+        "view": "Rainier oblique",
+        "status": "ok (fog)",
+        "legacy": 37,
+        "next": 37,
+        "jaccard": 1,
+        "legacyMs": 2219.4000000953674,
+        "nextMs": 2218.8000000715256,
+        "heightMax": 2.808292265399359e-9,
+        "heightMean": 5.302999740291134e-10,
+        "heightCount": 81,
+        "surfaceMax": 0.0002656096203281777,
+        "surfaceMean": 0.00003314821493337082,
+        "surfaceCount": 81,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "view": "Grand Canyon top-down",
+        "status": "ok (fog)",
+        "legacy": 2,
+        "next": 2,
+        "jaccard": 1,
+        "legacyMs": 557.2000000476837,
+        "nextMs": 475.2000000476837,
+        "heightMax": 9.458744898438454e-10,
+        "heightMean": 6.434394306802179e-11,
+        "heightCount": 81,
+        "surfaceMax": 0.0006002729412557528,
+        "surfaceMean": 0.00007136791242390716,
+        "surfaceCount": 81,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "view": "Matterhorn near horizon",
+        "status": "ok (fog)",
+        "legacy": 37,
+        "next": 37,
+        "jaccard": 1,
+        "legacyMs": 1768.7000000476837,
+        "nextMs": 1409.7000000476837,
+        "heightMax": 3.138211468467489e-9,
+        "heightMean": 2.0472052037129523e-10,
+        "heightCount": 81,
+        "surfaceMax": 0.735066354099672,
+        "surfaceMean": 0.05711090580035365,
+        "surfaceCount": 81,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "view": "Everest regional",
+        "status": "ok (fog)",
+        "legacy": 16,
+        "next": 16,
+        "jaccard": 1,
+        "legacyMs": 876,
+        "nextMs": 888.1000000238419,
+        "heightMax": 3.788045432884246e-9,
+        "heightMean": 5.905539980215699e-10,
+        "heightCount": 81,
+        "surfaceMax": 0.0006164039605209837,
+        "surfaceMean": 0.00011071380279162564,
+        "surfaceCount": 81,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "view": "Front Range 300 km",
+        "status": "ok (fog)",
+        "legacy": 6,
+        "next": 6,
+        "jaccard": 1,
+        "legacyMs": 510.7999999523163,
+        "nextMs": 471.1999999284744,
+        "heightMax": 2.1736923372372985e-10,
+        "heightMean": 1.5590535721132232e-11,
+        "heightCount": 81,
+        "surfaceMax": 0.004053075263300343,
+        "surfaceMean": 0.0008918655813139606,
+        "surfaceCount": 81,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "view": "San Francisco coast",
+        "status": "ok (fog)",
+        "legacy": 27,
+        "next": 27,
+        "jaccard": 1,
+        "legacyMs": 1583.7999999523163,
+        "nextMs": 1483.1000000238419,
+        "heightMax": 3.0406965834117727e-10,
+        "heightMean": 1.798370506010003e-11,
+        "heightCount": 81,
+        "surfaceMax": 0.000186020793677244,
+        "surfaceMean": 0.00003422506717796916,
+        "surfaceCount": 81,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      }
+    ]
+  }
+}

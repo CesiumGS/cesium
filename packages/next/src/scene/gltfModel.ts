@@ -12,6 +12,7 @@ import type {
   GltfSampler,
 } from "../io/gltfTypes.ts";
 import type { RenderContext } from "./RenderContext.ts";
+import type { Clamp, HeightReference } from "./HeightClamping.ts";
 import type {
   DrawHandle,
   MeshHandle,
@@ -46,6 +47,19 @@ export interface ModelOptions {
   axes?: "gltf" | "3d-tiles" | "none";
   /** Initial view mask of every draw (default: all views). */
   viewMask?: number;
+  /** Ray casts may hit it (tilesets with `enableCollision`). */
+  collision?: boolean;
+  /**
+   * How the model's height relates to the ground (1.x `heightReference`),
+   * anchored at the `modelMatrix` translation; needs a model without
+   * `parent`. Kept current as terrain and 3D Tiles load (`engine.addModel`).
+   */
+  heightReference?: HeightReference;
+  /**
+   * Meters above the ground: added to "clamp" references, and replacing
+   * the anchor's own height for "relative" ones.
+   */
+  heightOffset?: number;
 }
 
 export interface ModelInstance {
@@ -66,6 +80,8 @@ export interface ModelInstance {
   bytes: number;
   /** The uploaded asset, freed when its last instance is removed. */
   readonly resources: UploadedAsset;
+  /** Its clamping, with `heightReference` (`engine.addModel`). */
+  clamp?: Clamp;
 }
 
 /**
@@ -236,6 +252,7 @@ export function addGltf(
       textureSet: material.textureSet,
       doubleSided: material.doubleSided || mirrored,
       unlit: options.unlit,
+      collision: options.collision,
       name: options.name,
       viewMask: options.viewMask,
       features:

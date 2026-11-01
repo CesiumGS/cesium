@@ -1,6 +1,7 @@
 import * as v3 from "../math/vec3.ts";
 import { Ellipsoid } from "../math/ellipsoid.ts";
 import type { Tileset3D } from "../streaming/Tileset3D.ts";
+import type { Rectangle } from "../globe/quantizedMesh.ts";
 import type { TransformHandle, World } from "./World.ts";
 
 /**
@@ -46,28 +47,56 @@ interface Entry extends Clamp {
   transform: TransformHandle;
   /** Where the anchor is now; the transform moves by the difference. */
   current: number;
-  /** Highest 3D Tiles surface under the anchor (GPU probe), if any. */
+  /** Highest 3D Tiles surface under the anchor (ray cast), if any. */
   tilesHeight?: number;
   up: Float64Array;
   dirty: boolean;
+  /** Needs a 3D Tiles ray cast (new, or the tilesets changed). */
+  cast: boolean;
 }
 
 const ellipsoid = Ellipsoid.WGS84;
+/** 3D Tiles rays start this far above the anchor (1.x: 9000 m, fixed). */
+const RAY_START = 10000;
+/** ...and reach this far below the ellipsoid. */
+const RAY_DEPTH = 12000;
+/** Frames between ray casts while collision tilesets change. */
+const CAST_INTERVAL = 10;
 
 /**
  * Keeps clamped content on the ground as terrain and tilesets load (1.x
- * `Scene.updateHeight` with its per-surface callbacks): terrain announces
- * the rectangles whose heights changed and only content anchored there is
- * re-clamped, instead of re-querying every frame. Content moves along the
- * local vertical only, as 1.x models do: its root transform (an Earth-fixed
- * transform without a parent, e.g. `ModelInstance.transform`) is
- * translated, so everything placed by it follows.
+ * `Scene.updateHeight` with its per-surface callbacks), event-driven:
+ *
+ * - Terrain announces the rectangles whose heights changed; only content
+ *   anchored there is re-clamped, against the drawn surface (1.x
+ *   `Globe.getHeight`).
+ * - 3D Tiles with `enableCollision` are ray cast on the GPU
+ *   (`World.castRays`) down the geodetic normal, against the tiles the
+ *   views drew, nearest hit from above (1.x: CPU picking of the first
+ *   tile hit along a geocentric ray). Casts are batched for all anchors and
+ *   repeat only while those tilesets change.
+ * - Ground is the highest of the surfaces the reference allows.
+ *
+ * Content moves along the local vertical only, as 1.x models do: its root
+ * transform (Earth-fixed, without a parent, e.g. `ModelInstance.transform`)
+ * is translated, so everything placed by it follows.
  */
 export class HeightClamping {
   private readonly entries = new Set<Entry>();
   private readonly listening = new WeakSet<Tileset3D>();
+  /** Tilesets and their show/collision state at the last update. */
+  private surfaces = "";
+  /** Change frames of the collision tilesets at the last cast. */
+  private castSignature = "";
+  private casting = false;
+  private frame = 0;
+  private lastCast = -CAST_INTERVAL;
 
-  constructor(private readonly tilesets: () => readonly Tileset3D[]) {}
+  constructor(
+    private readonly tilesets: () => readonly Tileset3D[],
+    /** View bits of the enabled views of a world (what they draw). */
+    private readonly viewMask: (world: World) => number,
+  ) {}
 
   /** Clamps what `transform` places (e.g. a model) per `options`. */
   add(world: World, transform: TransformHandle, options: ClampOptions): Clamp {
@@ -83,6 +112,7 @@ export class HeightClamping {
       current: options.height,
       up: ellipsoid.geodeticSurfaceNormalCartographic(carto, v3.vec3()),
       dirty: true,
+      cast: usesTiles(options.heightReference),
       get height() {
         return this.current;
       },
@@ -94,52 +124,127 @@ export class HeightClamping {
     return entry;
   }
 
-  /** The 3D Tiles height under an entry arrived (GPU probe). */
-  setTilesHeight(clamp: Clamp, height: number | undefined): void {
-    const entry = clamp as Entry;
-    if (entry.tilesHeight !== height) {
-      entry.tilesHeight = height;
-      entry.dirty = true;
-    }
-  }
-
-  /** Entries that use 3D Tiles surfaces (for the probes). */
-  tileClamps(): Clamp[] {
-    return [...this.entries].filter((e) =>
-      /Ground|3DTiles/.test(e.options.heightReference),
-    );
-  }
-
-  /** Re-clamps what changed; once per frame. */
+  /** Re-clamps what changed; once per frame, after tilesets update. */
   update(): void {
+    this.frame++;
     if (this.entries.size === 0) {
       return;
     }
-    for (const tileset of this.tilesets()) {
+    const tilesets = this.tilesets();
+    for (const tileset of tilesets) {
       if (!this.listening.has(tileset)) {
         this.listening.add(tileset);
-        tileset.onHeightsChanged((r) => {
-          for (const e of this.entries) {
-            const { longitude, latitude } = e.options;
-            if (
-              e.world === tileset.world &&
-              longitude >= r.west &&
-              longitude <= r.east &&
-              latitude >= r.south &&
-              latitude <= r.north
-            ) {
-              e.dirty = true;
-            }
-          }
-        });
+        tileset.onHeightsChanged((r) => this.heightsChanged(tileset, r));
       }
     }
+    // A surface came, went, showed, hid or changed collision: everything
+    // re-clamps, and tile heights are cast again from scratch.
+    const surfaces = tilesets
+      .map(
+        (t) =>
+          `${t.world.id}:${t.url}:${t.show ? 1 : 0}${t.enableCollision ? 1 : 0}`,
+      )
+      .join("|");
+    if (surfaces !== this.surfaces) {
+      this.surfaces = surfaces;
+      for (const e of this.entries) {
+        e.dirty = true;
+        e.tilesHeight = undefined;
+        e.cast = usesTiles(e.options.heightReference);
+      }
+    }
+    this.castTiles(tilesets);
     for (const entry of this.entries) {
       if (entry.dirty) {
         entry.dirty = false;
         this.clamp(entry);
       }
     }
+  }
+
+  private heightsChanged(tileset: Tileset3D, r: Rectangle): void {
+    for (const e of this.entries) {
+      const { longitude, latitude } = e.options;
+      if (
+        e.world === tileset.world &&
+        longitude >= r.west &&
+        longitude <= r.east &&
+        latitude >= r.south &&
+        latitude <= r.north
+      ) {
+        e.dirty = true;
+      }
+    }
+  }
+
+  /**
+   * Ray casts for the anchors that use 3D Tiles: when new, and again
+   * (every `CAST_INTERVAL` frames at most) while collision tilesets change
+   * what they draw. One cast per world covers all of its anchors.
+   */
+  private castTiles(tilesets: readonly Tileset3D[]): void {
+    if (this.casting || this.frame - this.lastCast < CAST_INTERVAL) {
+      return;
+    }
+    const colliders = tilesets.filter((t) => t.show && t.enableCollision);
+    const signature = colliders.map((t) => t.changedAt).join("|");
+    const changed = signature !== this.castSignature;
+    const byWorld = new Map<World, Entry[]>();
+    for (const e of this.entries) {
+      if (!usesTiles(e.options.heightReference)) {
+        continue;
+      }
+      if ((e.cast || changed) && colliders.some((t) => t.world === e.world)) {
+        e.cast = false;
+        const list = byWorld.get(e.world) ?? [];
+        list.push(e);
+        byWorld.set(e.world, list);
+      }
+    }
+    this.castSignature = signature;
+    if (byWorld.size === 0) {
+      return;
+    }
+    this.casting = true;
+    this.lastCast = this.frame;
+    const casts = [...byWorld].map(async ([world, entries]) => {
+      const starts = entries.map((e) => Math.max(e.current, 0) + RAY_START);
+      const rays = entries.map((e, i) => ({
+        origin: ellipsoid.cartographicToCartesian(
+          {
+            longitude: e.options.longitude,
+            latitude: e.options.latitude,
+            height: starts[i]!,
+          },
+          v3.vec3(),
+        ),
+        direction: v3.negate(v3.vec3(), e.up),
+        maxDistance: starts[i]! + RAY_DEPTH,
+      }));
+      const hits = await world.castRays(rays, {
+        collisionOnly: true,
+        viewMask: this.viewMask(world),
+      });
+      entries.forEach((e, i) => {
+        const hit = hits[i];
+        // Down the geodetic normal the height falls by the distance. No
+        // hit keeps the last height (the tiles under it may be culled).
+        if (hit !== undefined && this.entries.has(e)) {
+          const height = starts[i]! - hit;
+          if (e.tilesHeight !== height) {
+            e.tilesHeight = height;
+            e.dirty = true;
+          }
+        }
+      });
+    });
+    void Promise.all(casts)
+      .catch(() => {
+        // A lost device or destroyed world: the next change casts again.
+      })
+      .finally(() => {
+        this.casting = false;
+      });
   }
 
   private clamp(e: Entry): void {
@@ -184,4 +289,8 @@ export class HeightClamping {
     e.world.setTransform(e.transform, m);
     e.current = target;
   }
+}
+
+function usesTiles(reference: HeightReference): boolean {
+  return /Ground|3DTiles/.test(reference);
 }

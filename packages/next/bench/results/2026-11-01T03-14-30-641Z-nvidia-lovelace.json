@@ -1,0 +1,57 @@
+{
+  "date": "2026-11-01T03:14:30.641Z",
+  "environment": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0",
+    "adapter": {
+      "vendor": "nvidia",
+      "architecture": "lovelace",
+      "description": "NVIDIA RTX 3000 Ada Generation Laptop GPU"
+    },
+    "timestampQuery": true
+  },
+  "errors": [],
+  "results": {
+    "heights": [
+      {
+        "view": "Philadelphia Center City",
+        "status": "ok",
+        "sampleHeight": {
+          "both": 49,
+          "onlyLegacy": 0,
+          "onlyNext": 0,
+          "max": 0.0050751098408881035,
+          "mean": 0.0015009772767525503,
+          "over1cm": 0
+        },
+        "getHeight": {
+          "both": 24,
+          "onlyLegacy": 0,
+          "onlyNext": 25,
+          "max": 52.79982482813543,
+          "mean": 2.6001529962620586,
+          "over1cm": 4
+        }
+      },
+      {
+        "view": "Manhattan Midtown",
+        "status": "ok",
+        "sampleHeight": {
+          "both": 29,
+          "onlyLegacy": 0,
+          "onlyNext": 0,
+          "max": 0.006140800723201778,
+          "mean": 0.002243839642542278,
+          "over1cm": 0
+        },
+        "getHeight": {
+          "both": 11,
+          "onlyLegacy": 0,
+          "onlyNext": 18,
+          "max": 42.266837691364316,
+          "mean": 8.104405063211983,
+          "over1cm": 4
+        }
+      }
+    ]
+  }
+}

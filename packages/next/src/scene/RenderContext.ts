@@ -5,6 +5,7 @@ import { VIEW_SIZE } from "../render/layout.ts";
 import commonWgsl from "../shaders/common.wgsl?raw";
 import cullWgsl from "../shaders/cull.wgsl?raw";
 import scatterWgsl from "../shaders/scatter.wgsl?raw";
+import raycastWgsl from "../shaders/raycast.wgsl?raw";
 import opaqueWgsl from "../shaders/opaque.wgsl?raw";
 import presentWgsl from "../shaders/present.wgsl?raw";
 import overlayWgsl from "../shaders/overlay.wgsl?raw";
@@ -52,6 +53,8 @@ export interface Pipelines {
   /** Scatter upload of table entries (`scatter.wgsl`). */
   scatter: GPUComputePipeline;
   scatterLayout: GPUBindGroupLayout;
+  /** Rays against draw geometry (`World.castRays`, `raycast.wgsl`). */
+  raycast: GPUComputePipeline;
 }
 
 export interface Defaults {
@@ -312,6 +315,7 @@ async function createPipelines(
     overlay,
     pick,
     scatter,
+    raycast,
   ] = await Promise.all([
     device.createComputePipelineAsync({
       label: "cull.records",
@@ -376,6 +380,14 @@ async function createPipelines(
       }),
       compute: { module: module("scatter", scatterWgsl), entryPoint: "main" },
     }),
+    device.createComputePipelineAsync({
+      label: "raycast",
+      layout: "auto",
+      compute: {
+        module: module("raycast", commonWgsl, raycastWgsl),
+        entryPoint: "main",
+      },
+    }),
   ]);
 
   return {
@@ -395,5 +407,6 @@ async function createPipelines(
     pick,
     scatter,
     scatterLayout,
+    raycast,
   };
 }

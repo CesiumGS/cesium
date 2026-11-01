@@ -91,6 +91,13 @@ interface Row {
   heightMax?: number;
   heightMean?: number;
   heightCount?: number;
+  /**
+   * Drawn-surface heights (what clamping stands on) vs 1.x
+   * `Globe.getHeight` on the same selected tiles: max and mean |Δ|, m.
+   */
+  surfaceMax?: number;
+  surfaceMean?: number;
+  surfaceCount?: number;
 }
 
 /** Level of the finest loaded terrain tile at a point (TMS levels). */
@@ -193,7 +200,11 @@ async function legacySelection(
   fog: boolean,
   camera: { position: Float64Array; direction: Float64Array; up: Float64Array },
   points: Array<[number, number]>,
-): Promise<{ selected: Set<string>; heights: Array<number | undefined> }> {
+): Promise<{
+  selected: Set<string>;
+  heights: Array<number | undefined>;
+  surface: Array<number | undefined>;
+}> {
   const scene = viewer.scene;
   // Fresh tile state: a new globe, without imagery.
   const globe = new Cesium.Globe(Cesium.Ellipsoid.WGS84);
@@ -225,7 +236,11 @@ async function legacySelection(
   // texture coordinates in 0..1 with u, v scaled to 0..32767, so loaded
   // globe tiles can't be sampled (a 1.x bug, plan §14).
   const heights: Array<number | undefined> = points.map(() => undefined);
-  return { selected: selected(), heights };
+  // The drawn surface: 1.x clamps models and billboards to it.
+  const surface = points.map(([lon, lat]) =>
+    globe.getHeight(Cesium.Cartographic.fromRadians(lon, lat)),
+  );
+  return { selected: selected(), heights, surface };
 }
 
 async function runGlobe(): Promise<Row[]> {
@@ -299,6 +314,9 @@ async function runGlobe(): Promise<Row[]> {
       const nextHeights = points.map(([lon, lat]) =>
         tileset.sampleHeight(lon, lat),
       );
+      const nextSurface = points.map(([lon, lat]) =>
+        tileset.surfaceHeight(lon, lat),
+      );
       // The level each height came from: 1.x samples the same level.
       const levels = points.map(([lon, lat]) => finestLevel(tileset, lon, lat));
       // ?keep: leave both engines' state for inspection (debugging).
@@ -311,18 +329,21 @@ async function runGlobe(): Promise<Row[]> {
       }
 
       const legacyStart = performance.now();
-      const { selected: legacy, heights: legacyHeights } =
-        await legacySelection(
-          viewer,
-          provider,
-          fog,
-          {
-            position: view.camera.position,
-            direction: view.camera.direction,
-            up: view.camera.up,
-          },
-          points,
-        );
+      const {
+        selected: legacy,
+        heights: legacyHeights,
+        surface: legacySurface,
+      } = await legacySelection(
+        viewer,
+        provider,
+        fog,
+        {
+          position: view.camera.position,
+          direction: view.camera.direction,
+          up: view.camera.up,
+        },
+        points,
+      );
       // 1.x sampleTerrain at the same levels (fresh terrain data, which
       // interpolates as 2.0 does).
       for (const level of new Set(levels)) {
@@ -343,6 +364,11 @@ async function runGlobe(): Promise<Row[]> {
         const b = nextHeights[i];
         return a === undefined || b === undefined ? [] : [Math.abs(a - b)];
       });
+      const surfaceDeltas = points.flatMap((_, i) => {
+        const a = legacySurface[i];
+        const b = nextSurface[i];
+        return a === undefined || b === undefined ? [] : [Math.abs(a - b)];
+      });
       const legacyMs = performance.now() - legacyStart;
       const union = new Set([...legacy, ...next]);
       const both = [...legacy].filter((k) => next.has(k)).length;
@@ -359,6 +385,13 @@ async function runGlobe(): Promise<Row[]> {
           ? deltas.reduce((a, b) => a + b, 0) / deltas.length
           : undefined,
         heightCount: deltas.length,
+        surfaceMax: surfaceDeltas.length
+          ? Math.max(...surfaceDeltas)
+          : undefined,
+        surfaceMean: surfaceDeltas.length
+          ? surfaceDeltas.reduce((a, b) => a + b, 0) / surfaceDeltas.length
+          : undefined,
+        surfaceCount: surfaceDeltas.length,
         onlyLegacy: [...legacy]
           .filter((k) => !next.has(k))
           .slice(0, 8)
@@ -388,7 +421,7 @@ async function runGlobe(): Promise<Row[]> {
 
 function renderTable(rows: Row[]): void {
   document.querySelector("#results")!.innerHTML =
-    `<tr><th>view</th><th>status</th><th>1.x</th><th>2.0</th><th>Jaccard</th><th>1.x settle</th><th>2.0 settle</th><th>height Δ max / mean (points)</th><th>only 1.x</th><th>only 2.0</th></tr>${rows
+    `<tr><th>view</th><th>status</th><th>1.x</th><th>2.0</th><th>Jaccard</th><th>1.x settle</th><th>2.0 settle</th><th>height Δ max / mean (points)</th><th>surface Δ max / mean (points)</th><th>only 1.x</th><th>only 2.0</th></tr>${rows
       .map(
         (r) =>
           `<tr><td>${r.view}</td><td>${r.status}</td><td>${r.legacy ?? ""}</td>` +
@@ -396,6 +429,7 @@ function renderTable(rows: Row[]): void {
           `<td>${r.legacyMs === undefined ? "" : `${(r.legacyMs / 1000).toFixed(1)} s`}</td>` +
           `<td>${r.nextMs === undefined ? "" : `${(r.nextMs / 1000).toFixed(1)} s`}</td>` +
           `<td>${r.heightMax === undefined ? "" : `${r.heightMax.toFixed(3)} / ${r.heightMean!.toFixed(3)} m (${r.heightCount})`}</td>` +
+          `<td>${r.surfaceMax === undefined ? "" : `${r.surfaceMax.toFixed(3)} / ${r.surfaceMean!.toFixed(3)} m (${r.surfaceCount})`}</td>` +
           `<td class="text">${r.onlyLegacy ?? ""}</td><td class="text">${r.onlyNext ?? ""}</td></tr>`,
       )
       .join("")}`;

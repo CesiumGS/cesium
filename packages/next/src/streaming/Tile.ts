@@ -284,9 +284,10 @@ export async function loadTilesetJson(
   headers: Record<string, string> | undefined,
   parent: Tile | undefined,
   tree: TileTree,
+  rootTransform?: Mat4,
 ): Promise<{ root: Tile; geometricError: number; json: TileJson }> {
   const json = await fetchTilesetJson(url, headers);
-  return { ...treeFromJson(json, url, parent, tree), json };
+  return { ...treeFromJson(json, url, parent, tree, rootTransform), json };
 }
 
 /** A tileset JSON, fetched and parsed. */
@@ -307,14 +308,16 @@ export async function fetchTilesetJson(
 
 /**
  * The tile tree of a parsed tileset JSON, under `parent` (an external
- * tileset) or as a root. Costs milliseconds for large files, so streaming
- * builds them within a per-frame budget.
+ * tileset) or as a root, placed by `rootTransform` (a tileset's
+ * `modelMatrix`). Costs milliseconds for large files, so streaming builds
+ * them within a per-frame budget.
  */
 export function treeFromJson(
   json: TileJson,
   url: string,
   parent: Tile | undefined,
   tree: TileTree,
+  rootTransform?: Mat4,
 ): { root: Tile; geometricError: number } {
   const up = json.asset?.gltfUpAxis;
   if (up && up.toUpperCase() !== "Y") {
@@ -324,7 +327,7 @@ export function treeFromJson(
     parent,
     json.root,
     url,
-    parent ? parent.transform : m4.mat4(),
+    parent ? parent.transform : (rootTransform ?? m4.mat4()),
     parent ? parent.refine : "REPLACE",
     tree,
   );
