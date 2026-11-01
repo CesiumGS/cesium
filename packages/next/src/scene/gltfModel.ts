@@ -50,6 +50,8 @@ export interface ModelOptions {
   viewMask?: number;
   /** Ray casts may hit it (tilesets with `enableCollision`). */
   collision?: boolean;
+  /** Drawn behind all other content (the bare ellipsoid's tiles). */
+  underlay?: boolean;
   /**
    * How the model's height relates to the ground (1.x `heightReference`),
    * anchored at the `modelMatrix` translation; needs a model without
@@ -306,6 +308,7 @@ export function addGltf(
       doubleSided: material.doubleSided || mirrored,
       unlit: options.unlit,
       collision: options.collision,
+      underlay: options.underlay,
       name: options.name,
       viewMask: options.viewMask,
       features:

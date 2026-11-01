@@ -26,7 +26,7 @@ struct DrawRecord {
   radius: f32,             // (per instance, for instanced records)
   color: vec4f,            // linear RGBA tint
   transform: u32,          // index in `transforms`
-  flags: u32,              // 1 hidden, 2 unlit override
+  flags: u32,              // 1 hidden, 2 unlit override, 4 collision, 8 underlay
   materialIndex: u32,
   indexCount: u32,
   firstIndex: u32,

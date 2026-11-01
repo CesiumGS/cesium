@@ -71,7 +71,9 @@ export interface TileSource {
   /** Decoded content of one tile. */
   loadTile(tile: Tile, signal: AbortSignal): Promise<GltfAsset>;
   /** Placement of a tile's content. */
-  modelOptions(tile: Tile): Pick<ModelOptions, "modelMatrix" | "axes">;
+  modelOptions(
+    tile: Tile,
+  ): Pick<ModelOptions, "modelMatrix" | "axes" | "underlay">;
   /** Height of the surface at a longitude and latitude (terrain sources). */
   sampleHeight?(longitude: number, latitude: number): number | undefined;
   /** Height of the drawn surface there (terrain sources). */

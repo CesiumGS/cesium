@@ -318,9 +318,18 @@ export class TerrainSource {
     }
   }
 
-  /** Terrain is Earth-fixed: no transform, no axis change. */
-  modelOptions(): { modelMatrix: Float64Array; axes: "none" } {
-    return { modelMatrix: IDENTITY, axes: "none" };
+  /**
+   * Terrain is Earth-fixed: no transform, no axis change. The bare
+   * ellipsoid stands in for ground, so it never hides content (data below
+   * it, such as coasts below the ellipsoid, draws over it); real terrain
+   * occludes as any surface does.
+   */
+  modelOptions(): {
+    modelMatrix: Float64Array;
+    axes: "none";
+    underlay: boolean;
+  } {
+    return { modelMatrix: IDENTITY, axes: "none", underlay: this.flat };
   }
 
   /** Content for one terrain tile; grows the tree under it. */

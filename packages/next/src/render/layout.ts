@@ -153,7 +153,20 @@ export const RecordFlags = {
   unlit: 2,
   /** Ray casts may hit it (a tileset with `enableCollision`). */
   collision: 4,
+  /**
+   * Drawn behind all other content (the bare ellipsoid, a stand-in for
+   * ground): its depth is scaled by `UNDERLAY_DEPTH`.
+   */
+  underlay: 8,
 } as const;
+
+/**
+ * Depth scale of `RecordFlags.underlay` draws (2^-27, exact in floats).
+ * Reverse-Z depth is near / distance, so underlay draws stay behind content
+ * nearer than 2^27 near-plane distances and keep their order among
+ * themselves.
+ */
+export const UNDERLAY_DEPTH = 2 ** -27;
 
 export const MaterialFlags = {
   unlit: 1,

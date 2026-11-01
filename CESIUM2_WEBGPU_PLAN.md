@@ -42,6 +42,7 @@ Branch: `cesium-2.0-webgpu-poc` (off `main` @ `587f52f1eb`, CesiumJS 1.146.0)
 | r34 | Dyno rebuilt as a React app on TanStack Router (typed URL state, code-split views) with Radix Themes controls and a guided first run. Explorer inspection: bounding volumes in both engines, tiles tinted by depth or engine, the selection compared by depth (`Budgeted` draws much coarser terrain than 1.x at Rainier). Inspector designed; CI image job and bisection deferred.                                                                                                                                                             |
 | r35 | Dyno on StrataKit (Bentley's design system: MUI themed by @stratakit/mui) at the dev server's root: navigation by job (results, scenes, workbench), a new Overview, a design, copy and IA pass (bench/suite/DESIGN.md), feedback for the StrataKit team (STRATAKIT_FEEDBACK.md). Parity checks, microbenchmarks and spikes fold into Dyno's Lab.                                                                                                                                                                                                |
 | r36 | Engine names: releases by version (1.146.0), engines from the working tree named by branch (2.0@cesium-2.0-webgpu-poc), engines built at any git ref (2.0@main, 1.x@v1.140), settings after + (2.0+legacy1x); `--engines` replaces `--configs`/`--cesium`; budgets name setups. Explorer draws 1.x's globe tile volumes.                                                                                                                                                                                                                        |
+| r37 | `Budgeted` on terrain: the globe's SSE (fog only while drawn) instead of 3D Tiles' dynamic SSE, which left oblique terrain far too coarse (Rainier settled: 68 tiles vs 1.x's 67, all shared; was 20 at levels 0 to 12). The bare ellipsoid never hides content (§8 product choices, new). Ion assets on the environment's token; an own Google key when set.                                                                                                                                                                                   |
 
 ## 1. Goal
 
@@ -753,6 +754,19 @@ Recommendations already adopted from the review: core-only (no compatibility mod
 | Milestone order | 3D Tiles (M2) before globe (M3). The draw-record format is locked in M1 with the globe's needs included.                                                                                               |
 
 **Still open:** none blocking M0. Exact OIT, auto-exposure and the M6 picks are decided at those milestones.
+
+### Product choices: where 2.0 departs from 1.x
+
+When 1.x behaves a certain way, 2.0 asks whether to mirror it or do what
+is consistent with the rest of 2.0's design. The rule: mirror 1.x where its
+behavior is what users want; where it works around 1.x's architecture or
+trades correctness for convenience, do what 2.0's design implies, keep a
+setting for the 1.x behavior when users depend on it, and record the
+choice here so it can be revisited.
+
+| Choice (revision) | 1.x                                                                                                                                                                                                      | 2.0                                                                                                                                                                                                                                                                                                                                      | Revisit if                                                                                                                         |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Globe depth (r37) | `Globe.depthTestAgainstTerrain` off by default: Scene clears depth after the globe, so all content draws over it, including content behind mountains (see-through); apps that want occlusion turn it on. | Real terrain occludes like any other surface. The bare ellipsoid, a stand-in for ground, never hides content: its depth is scaled behind everything (`RecordFlags.underlay`), so data below it (coasts below the ellipsoid, e.g. Aerometrex San Francisco, 30 m down) draws over it. One pass, no depth clear; picking undoes the scale. | Photogrammetry or BIM a little below terrain is common in practice (then: hide terrain under a tileset's footprint, or a setting). |
 
 ## 9. Sources (from the r3 review)
 
@@ -3072,9 +3086,9 @@ addressed in 2.0 (each with a Dyno scene to show the fix):
   ground, about 30 m below the WGS84 ellipsoid there (geoid), draws under
   the ellipsoid and only the tall buildings show. 1.x clears depth after
   the globe unless `Globe.depthTestAgainstTerrain` is set (default off),
-  so tiles always draw over it. To decide: the globe drawn behind content
-  (1.x's default) or depth-tested (correct occlusion by real terrain), and
-  whether the bare ellipsoid ever occludes.
+  so tiles always draw over it. _Decided (r37, §8 product choices)_: real
+  terrain occludes; the bare ellipsoid never does. Aerometrex now matches
+  1.x.
 - **Settle time on terrain scenes**: Rainier ×1.16 and OSM Philadelphia
   ×1.42 slower than 1.x. The waterfall shows 2.0 fetching 49 content tiles
   (18.7 MB) on OSM Philadelphia to 1.x's 31 (10.7 MB), and starting them

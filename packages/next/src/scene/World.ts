@@ -136,6 +136,8 @@ export interface DrawOptions {
   unlit?: boolean;
   /** Ray casts may hit it (`castRays` with `collisionOnly`). */
   collision?: boolean;
+  /** Drawn behind all other content (`RecordFlags.underlay`). */
+  underlay?: boolean;
   /** Index from `addMaterial`; the default is a white, non-textured material. */
   material?: number;
   /** Index from `createTextureSet`; 0 binds the default 1×1 textures. */
@@ -970,7 +972,9 @@ export class World {
       flags:
         (options.unlit || mesh.topology === "line-list"
           ? RecordFlags.unlit
-          : 0) | (options.collision ? RecordFlags.collision : 0),
+          : 0) |
+        (options.collision ? RecordFlags.collision : 0) |
+        (options.underlay ? RecordFlags.underlay : 0),
       instanceFirst,
       instanceCount,
       instanceStreams,

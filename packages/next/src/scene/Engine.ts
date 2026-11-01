@@ -9,6 +9,7 @@ import {
   type TextureHandle,
 } from "../render/FrameGraph.ts";
 import {
+  UNDERLAY_DEPTH,
   VIEW_BIT_WORD,
   VIEW_SIZE,
   VIEW_STRIDE,
@@ -1568,7 +1569,9 @@ export class Engine {
             request.resolvePosition(undefined);
             return;
           }
-          const z = c.near / depth;
+          // Underlay draws (the bare ellipsoid) scale their depth down.
+          const z =
+            c.near / (depth <= UNDERLAY_DEPTH ? depth / UNDERLAY_DEPTH : depth);
           const p = new Float64Array(3);
           for (let i = 0; i < 3; i++) {
             p[i] =

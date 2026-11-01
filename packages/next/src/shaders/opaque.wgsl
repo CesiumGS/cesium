@@ -96,6 +96,11 @@ fn vs(@builtin(vertex_index) vertexIndex: u32, @location(0) item: u32) -> VsOut 
   let world = m * vec4f(read3(r.positionOffset, vertexIndex), 1.0);
   out.relPosition = world.xyz;
   out.position = view.viewProj * world;
+  // Underlay (the bare ellipsoid): behind all other content (UNDERLAY_DEPTH
+  // in layout.ts).
+  if ((r.flags & 8u) != 0u) {
+    out.position.z *= 7.450580596923828e-9;
+  }
   // Normals transform by the inverse transpose; the cofactor matrix is that up
   // to the determinant, whose sign keeps mirrored transforms facing outward.
   // (Quantized glTF often carries a non-uniform dequantization scale.)
