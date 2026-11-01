@@ -10,6 +10,8 @@
  * supported yet (warnings).
  */
 import type { FeatureTable, FeatureValue } from "./gltfTypes.ts";
+import { Ellipsoid } from "../math/ellipsoid.ts";
+import { eastNorthUpToFixedFrame } from "../math/transforms.ts";
 
 /* eslint-disable @typescript-eslint/no-explicit-any -- glTF / 3D Tiles JSON is untyped here */
 type Json = any;
@@ -401,6 +403,20 @@ export function unwrapB3dm(bytes: Uint8Array): B3dm {
     ];
   }
 
+  return {
+    glb,
+    rtcCenter,
+    batchLength,
+    batchTable: readLegacyBatchTable(batchJson, btBinary, batchLength),
+  };
+}
+
+/** A legacy (b3dm, i3dm) batch table as a feature table. */
+function readLegacyBatchTable(
+  batchJson: Json,
+  btBinary: Uint8Array,
+  batchLength: number,
+): FeatureTable {
   const columns: Record<string, FeatureValue[]> = {};
   const binary = new DataView(
     btBinary.buffer,
@@ -441,12 +457,252 @@ export function unwrapB3dm(bytes: Uint8Array): B3dm {
   if (hierarchy) {
     readBatchTableHierarchy(hierarchy, binary, batchLength, columns);
   }
-  return {
-    glb,
-    rtcCenter,
-    batchLength,
-    batchTable: { name: "batch table", count: batchLength, columns },
+  return { name: "batch table", count: batchLength, columns };
+}
+
+/** An Instanced 3D Model tile (i3dm), unwrapped. */
+export interface I3dm {
+  /** The embedded GLB, or the URI of the glTF (relative to the tile). */
+  glb?: Uint8Array;
+  uri?: string;
+  /**
+   * Per instance, column-major 4×4: rotation and scale, and the position
+   * relative to `origin` (tile space; glTF y-up is corrected after it).
+   */
+  matrices: Float64Array;
+  /** RTC_CENTER, else the instances' center: keeps translations small. */
+  origin: [number, number, number];
+  /** BATCH_ID per instance (default: the instance index). */
+  batchIds: Uint32Array;
+  batchLength: number;
+  batchTable: FeatureTable;
+}
+
+/** True for an Instanced 3D Model tile (magic "i3dm"). */
+export function isI3dm(bytes: Uint8Array): boolean {
+  return (
+    bytes.byteLength >= 32 &&
+    bytes[0] === 0x69 &&
+    bytes[1] === 0x33 &&
+    bytes[2] === 0x64 &&
+    bytes[3] === 0x6d
+  );
+}
+
+/**
+ * Splits an i3dm tile into its glTF (embedded or by URI), per-instance
+ * matrices and batch table, as 1.x's I3dmLoader reads it: positions (or
+ * quantized positions) plus RTC_CENTER; orientation from NORMAL_UP and
+ * NORMAL_RIGHT (columns right, up, right × up), their oct-encoded forms,
+ * EAST_NORTH_UP at the position, or none; SCALE and SCALE_NON_UNIFORM.
+ */
+export function unwrapI3dm(bytes: Uint8Array): I3dm {
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const byteLength = view.getUint32(8, true);
+  const ftJsonLength = view.getUint32(12, true);
+  const ftBinLength = view.getUint32(16, true);
+  const btJsonLength = view.getUint32(20, true);
+  const btBinLength = view.getUint32(24, true);
+  const gltfFormat = view.getUint32(28, true);
+  let offset = 32;
+  const decoder = new TextDecoder();
+  const parse = (length: number): Json =>
+    length > 0
+      ? JSON.parse(decoder.decode(bytes.subarray(offset, offset + length)))
+      : {};
+  const ft = parse(ftJsonLength);
+  offset += ftJsonLength;
+  const ftBinary = bytes.subarray(offset, offset + ftBinLength);
+  offset += ftBinLength;
+  const batchJson = parse(btJsonLength);
+  offset += btJsonLength;
+  const btBinary = bytes.subarray(offset, offset + btBinLength);
+  offset += btBinLength;
+  const gltf = bytes.subarray(offset, byteLength);
+
+  const n: number = ft.INSTANCES_LENGTH ?? 0;
+  const fb = new DataView(
+    ftBinary.buffer,
+    ftBinary.byteOffset,
+    ftBinary.byteLength,
+  );
+  const SIZES: Record<string, number> = {
+    BYTE: 1,
+    UNSIGNED_BYTE: 1,
+    SHORT: 2,
+    UNSIGNED_SHORT: 2,
+    INT: 4,
+    UNSIGNED_INT: 4,
+    FLOAT: 4,
+    DOUBLE: 8,
   };
+  const readOne = (at: number, type: string): number => {
+    switch (type) {
+      case "BYTE":
+        return fb.getInt8(at);
+      case "UNSIGNED_BYTE":
+        return fb.getUint8(at);
+      case "SHORT":
+        return fb.getInt16(at, true);
+      case "UNSIGNED_SHORT":
+        return fb.getUint16(at, true);
+      case "INT":
+        return fb.getInt32(at, true);
+      case "UNSIGNED_INT":
+        return fb.getUint32(at, true);
+      case "DOUBLE":
+        return fb.getFloat64(at, true);
+      default:
+        return fb.getFloat32(at, true);
+    }
+  };
+  /** A per-instance property: `components` values per instance. */
+  const property = (
+    name: string,
+    components: number,
+    defaultType: string,
+  ): Float64Array | undefined => {
+    const value = ft[name];
+    if (!value || typeof value.byteOffset !== "number") {
+      return undefined;
+    }
+    const type: string = value.componentType ?? defaultType;
+    const size = SIZES[type] ?? 4;
+    const out = new Float64Array(n * components);
+    for (let i = 0; i < out.length; i++) {
+      out[i] = readOne(value.byteOffset + i * size, type);
+    }
+    return out;
+  };
+  /** A global property: an inline array or a binary reference. */
+  const global = (name: string, components: number): number[] | undefined => {
+    const value = ft[name];
+    if (Array.isArray(value)) {
+      return value as number[];
+    }
+    if (value && typeof value.byteOffset === "number") {
+      return Array.from({ length: components }, (_, k) =>
+        fb.getFloat32(value.byteOffset + k * 4, true),
+      );
+    }
+    return undefined;
+  };
+
+  let positions = property("POSITION", 3, "FLOAT");
+  if (!positions) {
+    const quantized = property("POSITION_QUANTIZED", 3, "UNSIGNED_SHORT");
+    const qOffset = global("QUANTIZED_VOLUME_OFFSET", 3);
+    const qScale = global("QUANTIZED_VOLUME_SCALE", 3);
+    if (!quantized || !qOffset || !qScale) {
+      throw new Error("i3dm: no POSITION or POSITION_QUANTIZED");
+    }
+    positions = quantized.map(
+      (q, i) => (q / 65535) * qScale[i % 3]! + qOffset[i % 3]!,
+    );
+  }
+  const rtc = global("RTC_CENTER", 3);
+  // Translations relative to RTC_CENTER, else to the instances' center.
+  const origin: [number, number, number] = [0, 0, 0];
+  if (rtc && (rtc[0] !== 0 || rtc[1] !== 0 || rtc[2] !== 0)) {
+    origin[0] = rtc[0]!;
+    origin[1] = rtc[1]!;
+    origin[2] = rtc[2]!;
+  } else if (n > 0) {
+    for (let i = 0; i < n; i++) {
+      for (let k = 0; k < 3; k++) {
+        origin[k] = origin[k]! + positions[i * 3 + k]! / n;
+      }
+    }
+  }
+  const rtcOffset = rtc ?? [0, 0, 0];
+
+  const up = property("NORMAL_UP", 3, "FLOAT");
+  const right = property("NORMAL_RIGHT", 3, "FLOAT");
+  const upOct = property("NORMAL_UP_OCT32P", 2, "UNSIGNED_SHORT");
+  const rightOct = property("NORMAL_RIGHT_OCT32P", 2, "UNSIGNED_SHORT");
+  const eastNorthUp = ft.EAST_NORTH_UP === true;
+  const scale = property("SCALE", 1, "FLOAT");
+  const scaleNonUniform = property("SCALE_NON_UNIFORM", 3, "FLOAT");
+  const batch = property("BATCH_ID", 1, "UNSIGNED_SHORT");
+
+  const matrices = new Float64Array(n * 16);
+  const batchIds = new Uint32Array(n);
+  const u = [0, 0, 1];
+  const r = [1, 0, 0];
+  const enu = new Float64Array(16);
+  for (let i = 0; i < n; i++) {
+    const p = [0, 1, 2].map((k) => positions[i * 3 + k]! + rtcOffset[k]!);
+    let x = [1, 0, 0];
+    let y = [0, 1, 0];
+    let z = [0, 0, 1];
+    if ((up && right) || (upOct && rightOct)) {
+      if (up && right) {
+        for (let k = 0; k < 3; k++) {
+          u[k] = up[i * 3 + k]!;
+          r[k] = right[i * 3 + k]!;
+        }
+      } else {
+        octDecode(upOct![i * 2]!, upOct![i * 2 + 1]!, u);
+        octDecode(rightOct![i * 2]!, rightOct![i * 2 + 1]!, r);
+      }
+      const f = [
+        r[1]! * u[2]! - r[2]! * u[1]!,
+        r[2]! * u[0]! - r[0]! * u[2]!,
+        r[0]! * u[1]! - r[1]! * u[0]!,
+      ];
+      const length = Math.hypot(f[0]!, f[1]!, f[2]!) || 1;
+      x = [...r];
+      y = [...u];
+      z = f.map((v) => v / length);
+    } else if (eastNorthUp) {
+      eastNorthUpToFixedFrame(Float64Array.from(p), Ellipsoid.WGS84, enu);
+      x = [enu[0]!, enu[1]!, enu[2]!];
+      y = [enu[4]!, enu[5]!, enu[6]!];
+      z = [enu[8]!, enu[9]!, enu[10]!];
+    }
+    const s0 = scale?.[i] ?? 1;
+    const sx = s0 * (scaleNonUniform?.[i * 3] ?? 1);
+    const sy = s0 * (scaleNonUniform?.[i * 3 + 1] ?? 1);
+    const sz = s0 * (scaleNonUniform?.[i * 3 + 2] ?? 1);
+    const o = i * 16;
+    for (let k = 0; k < 3; k++) {
+      matrices[o + k] = x[k]! * sx;
+      matrices[o + 4 + k] = y[k]! * sy;
+      matrices[o + 8 + k] = z[k]! * sz;
+      matrices[o + 12 + k] = p[k]! - origin[k]!;
+    }
+    matrices[o + 15] = 1;
+    batchIds[i] = batch ? batch[i]! : i;
+  }
+
+  const batchLength: number =
+    ft.BATCH_LENGTH ?? (batch ? Math.max(0, ...Array.from(batchIds)) + 1 : n);
+  return {
+    ...(gltfFormat === 1
+      ? { glb: gltf }
+      : { uri: decoder.decode(gltf).replace(/[\s\0]+$/, "") }),
+    matrices,
+    origin,
+    batchIds,
+    batchLength,
+    batchTable: readLegacyBatchTable(batchJson, btBinary, batchLength),
+  };
+}
+
+/** Oct-decodes a unit vector from two values in 0..65535 (1.x octDecodeInRange). */
+function octDecode(xq: number, yq: number, out: number[]): void {
+  let x = (xq / 65535) * 2 - 1;
+  let y = (yq / 65535) * 2 - 1;
+  const z = 1 - (Math.abs(x) + Math.abs(y));
+  if (z < 0) {
+    const ox = x;
+    x = (1 - Math.abs(y)) * (ox >= 0 ? 1 : -1);
+    y = (1 - Math.abs(ox)) * (y >= 0 ? 1 : -1);
+  }
+  const length = Math.hypot(x, y, z) || 1;
+  out[0] = x / length;
+  out[1] = y / length;
+  out[2] = z / length;
 }
 
 /** A legacy batch-table value array: inline JSON or a binary reference. */

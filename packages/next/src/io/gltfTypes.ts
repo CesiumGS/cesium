@@ -104,7 +104,7 @@ export interface GltfDraw {
 
 /** How a content load spent its time in the worker, and its image types. */
 export interface ContentTiming {
-  /** Container: "glb", "gltf" (JSON with external resources) or "b3dm". */
+  /** Container: "glb", "gltf" (JSON with external resources), "b3dm" or "i3dm". */
   format: string;
   /** Request start to the last byte of the main resource, ms. */
   networkMs: number;
@@ -135,6 +135,16 @@ export interface GltfAsset {
   featureTables: FeatureTable[];
   /** b3dm RTC_CENTER: translation of the whole model, in tile (z-up) space. */
   rtcCenter?: [number, number, number];
+  /**
+   * i3dm instances: column-major 4×4 per instance in tile space, relative
+   * to `origin` (applied before the glTF axis correction), and their
+   * feature IDs into `featureTables[0]` (the batch table).
+   */
+  instances?: {
+    matrices: Float64Array;
+    origin: [number, number, number];
+    featureIds: Uint32Array;
+  };
   /** glTF `asset.copyright`: data credit to show while the content is on screen. */
   copyright?: string;
   /** Features skipped while parsing (unsupported extensions, attributes, modes). */

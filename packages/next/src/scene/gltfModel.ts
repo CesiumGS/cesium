@@ -239,7 +239,19 @@ export function addGltf(
     asset,
     options.colorTransfer === "gamma2.2",
   );
-  const root = world.addTransform(options.modelMatrix, options.parent);
+  // i3dm content: its instances, relative to their origin in tile space.
+  const assetInstances =
+    options.instances === undefined ? asset.instances : undefined;
+  let rootMatrix: Mat4 = options.modelMatrix;
+  if (assetInstances) {
+    const [x, y, z] = assetInstances.origin;
+    const translation = m4.mat4();
+    translation[12] = x;
+    translation[13] = y;
+    translation[14] = z;
+    rootMatrix = m4.multiply(m4.mat4(), options.modelMatrix, translation);
+  }
+  const root = world.addTransform(rootMatrix, options.parent);
 
   // Below the root: RTC_CENTER × axis correction × node, as 1.x
   // ModelSceneGraph composes modelMatrix × RTC_CENTER × axis × node.
@@ -260,7 +272,14 @@ export function addGltf(
   const nodes = new Map<Float64Array, TransformHandle>();
   const draws: DrawHandle[] = [];
   const spheres: Array<{ center: Vec3; radius: number }> = [];
-  const user = options.instances;
+  const user: ModelInstances | undefined =
+    options.instances ??
+    (assetInstances
+      ? {
+          matrices: assetInstances.matrices,
+          featureIds: assetInstances.featureIds,
+        }
+      : undefined);
   const userCount = user ? user.matrices.length / 16 : 0;
   const frames: InstanceFrame[] | undefined = user ? [] : undefined;
   for (const draw of asset.draws) {
@@ -292,7 +311,9 @@ export function addGltf(
       features:
         asset.meshes[draw.mesh]!.featureTable !== undefined
           ? asset.featureTables[asset.meshes[draw.mesh]!.featureTable!]
-          : undefined,
+          : assetInstances
+            ? asset.featureTables[0]
+            : undefined,
       ...(user
         ? { instances: modelInstances(user, local, draw.instances, frames!) }
         : draw.instances

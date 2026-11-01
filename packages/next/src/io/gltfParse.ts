@@ -8,10 +8,13 @@ import {
 import {
   featureIdSource,
   isB3dm,
+  isI3dm,
   readPropertyTables,
   toFeatureIds,
   unwrapB3dm,
+  unwrapI3dm,
   type B3dm,
+  type I3dm,
 } from "./features.ts";
 import { resolveUri } from "./ion.ts";
 import type {
@@ -69,7 +72,9 @@ export async function parseGltf(
     ...(headers ? { headers } : {}),
     ...(signal ? { signal } : {}),
   };
-  const fetchUri = (uri: string) => fetch(resolveUri(uri, url), init);
+  // External resources resolve against the glTF (an i3dm may point at one).
+  let base = url;
+  const fetchUri = (uri: string) => fetch(resolveUri(uri, base), init);
   const fetchStart = performance.now();
   const response = await fetch(url, init);
   if (!response.ok) {
@@ -81,13 +86,26 @@ export async function parseGltf(
   const received = bytes.byteLength;
   const imageTypes: Record<string, number> = {};
   let b3dm: B3dm | undefined;
+  let i3dm: I3dm | undefined;
   const magic = String.fromCharCode(...bytes.subarray(0, 4));
-  if (["pnts", "i3dm", "cmpt", "vctr", "geom"].includes(magic)) {
+  if (["pnts", "cmpt", "vctr", "geom"].includes(magic)) {
     throw new Error(`unsupported tile format: ${magic}`);
   }
   if (isB3dm(bytes)) {
     b3dm = unwrapB3dm(bytes);
     bytes = b3dm.glb;
+  } else if (isI3dm(bytes)) {
+    i3dm = unwrapI3dm(bytes);
+    if (i3dm.glb) {
+      bytes = i3dm.glb;
+    } else {
+      base = resolveUri(i3dm.uri!, url);
+      const gltf = await fetch(base, init);
+      if (!gltf.ok) {
+        throw new Error(`Failed to fetch ${base}: ${gltf.status}`);
+      }
+      bytes = new Uint8Array(await gltf.arrayBuffer());
+    }
   }
   const isGlb =
     bytes.byteLength >= 4 &&
@@ -310,7 +328,9 @@ export async function parseGltf(
 
   const featureTables = b3dm
     ? [b3dm.batchTable]
-    : readPropertyTables(json, bufferView, warnings);
+    : i3dm
+      ? [i3dm.batchTable]
+      : readPropertyTables(json, bufferView, warnings);
 
   const transfer: Transferable[] = [];
   for (const image of images) {
@@ -319,6 +339,9 @@ export async function parseGltf(
     } else {
       transfer.push(...image.levels.map((level) => level.buffer));
     }
+  }
+  if (i3dm) {
+    transfer.push(i3dm.matrices.buffer, i3dm.batchIds.buffer);
   }
   for (const mesh of meshes) {
     for (const array of [
@@ -344,12 +367,27 @@ export async function parseGltf(
       draws,
       featureTables,
       ...(b3dm?.rtcCenter ? { rtcCenter: b3dm.rtcCenter } : {}),
+      ...(i3dm
+        ? {
+            instances: {
+              matrices: i3dm.matrices,
+              origin: i3dm.origin,
+              featureIds: i3dm.batchIds,
+            },
+          }
+        : {}),
       ...(typeof json.asset?.copyright === "string" && json.asset.copyright
         ? { copyright: json.asset.copyright }
         : {}),
       warnings,
       timing: {
-        format: b3dm ? "b3dm" : bin !== undefined || isGlb ? "glb" : "gltf",
+        format: b3dm
+          ? "b3dm"
+          : i3dm
+            ? "i3dm"
+            : bin !== undefined || isGlb
+              ? "glb"
+              : "gltf",
         networkMs: decodeStart - fetchStart,
         ...network,
         bytes: received,
@@ -367,7 +405,9 @@ function splitGlb(bytes: Uint8Array): { json: Json; bin?: Uint8Array } {
     let offset = 12;
     let json: Json;
     let bin: Uint8Array | undefined;
-    while (offset < bytes.byteLength) {
+    // The GLB's own length: containers (i3dm) may pad after it.
+    const end = Math.min(bytes.byteLength, view.getUint32(8, true));
+    while (offset + 8 <= end) {
       const length = view.getUint32(offset, true);
       const type = view.getUint32(offset + 4, true);
       const chunk = bytes.subarray(offset + 8, offset + 8 + length);

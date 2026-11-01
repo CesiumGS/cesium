@@ -1079,18 +1079,33 @@
         <summary>Parity and benchmarks</summary>
         <div class="body">
           <div>
+            Parity with 1.x:
             <a href="/parity/">Image parity</a> ·
-            <a href="/parity/models.html">Models vs 1.x</a> ·
-            <a href="/parity/tileset.html">Tileset content vs 1.x</a> ·
-            <a href="/parity/selection.html">Tile selection vs 1.x</a> ·
-            <a href="/parity/globe.html">Globe selection vs 1.x</a> ·
-            <a href="/parity/imagery.html">Globe imagery vs 1.x</a> ·
+            <a href="/parity/models.html">Models</a> ·
+            <a href="/parity/tileset.html">Tileset content (b3dm, i3dm)</a> ·
+            <a href="/parity/selection.html">Tile selection</a> ·
+            <a href="/parity/lod.html">Quality while loading (L1′)</a> ·
+            <a href="/parity/globe.html">Globe selection and heights</a> ·
+            <a href="/parity/imagery.html">Globe imagery</a> ·
+            <a href="/parity/heights.html">3D Tiles heights</a>
+          </div>
+          <div>
+            Benchmarks:
             <a href="/bench/baseline.html">Baselines</a> ·
             <a href="/bench/hitch.html">Hitches</a> ·
+            <a href="/bench/instances.html">Instancing</a>
+          </div>
+          <div>
+            Spikes:
+            <a href="/spikes/precision.html">GPU precision</a> ·
+            <a href="/spikes/slang.html">Slang</a> ·
+            <a href="/spikes/indirect.html">Indirect draws</a> ·
+            <a href="/spikes/worker.html">Engine in a worker</a> ·
             <a href="/demo/">Multi-view demo</a>
           </div>
           <p class="hint">
-            Each page runs in this browser with its Run button.
+            Each page runs in this browser (with its Run button, or on load for
+            spikes); the allocation gate runs only under the runner.
             <code>node packages/next/bench/run.mjs</code> runs them all, and
             with <code>BENCH_COMMIT=HEAD</code> it measures a commit while you
             keep working.

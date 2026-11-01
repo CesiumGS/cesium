@@ -44,6 +44,38 @@ const PUBLIC: Source[] = [
     label: "BatchedWithTransformBox (tile transform)",
     url: "/specs-data/Cesium3DTiles/Batched/BatchedWithTransformBox/tileset.json",
   },
+  {
+    label: "InstancedWithBatchTable (i3dm, positions, batch table)",
+    url: "/specs-data/Cesium3DTiles/Instanced/InstancedWithBatchTable/tileset.json",
+  },
+  {
+    label: "InstancedOrientation (i3dm, NORMAL_UP/RIGHT)",
+    url: "/specs-data/Cesium3DTiles/Instanced/InstancedOrientation/tileset.json",
+  },
+  {
+    label: "InstancedOct32POrientation (i3dm, oct-encoded orientation)",
+    url: "/specs-data/Cesium3DTiles/Instanced/InstancedOct32POrientation/tileset.json",
+  },
+  {
+    label: "InstancedQuantized (i3dm, quantized positions)",
+    url: "/specs-data/Cesium3DTiles/Instanced/InstancedQuantized/tileset.json",
+  },
+  {
+    label: "InstancedScaleNonUniform (i3dm, non-uniform scale)",
+    url: "/specs-data/Cesium3DTiles/Instanced/InstancedScaleNonUniform/tileset.json",
+  },
+  {
+    label: "InstancedRTC (i3dm, RTC_CENTER)",
+    url: "/specs-data/Cesium3DTiles/Instanced/InstancedRTC/tileset.json",
+  },
+  {
+    label: "InstancedGltfExternal (i3dm, glTF by URI)",
+    url: "/specs-data/Cesium3DTiles/Instanced/InstancedGltfExternal/tileset.json",
+  },
+  {
+    label: "InstancedTextured (i3dm, textured)",
+    url: "/specs-data/Cesium3DTiles/Instanced/InstancedTextured/tileset.json",
+  },
 ];
 
 const MODES = ["unlit", "direct"] as const;
