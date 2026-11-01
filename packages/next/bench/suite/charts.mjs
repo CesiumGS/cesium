@@ -15,12 +15,12 @@ export const escape = (s) =>
 export const CHART_CSS = `
 .viz { --surface: #fcfcfb; --page: #f9f9f7; --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781;
   --grid: #e1e0d9; --axis: #c3c2b7; --ring: #fcfcfb;
-  --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a; --series-4: #6250d6;
+  --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a; --series-4: #eda100;
   --good: #0ca30c; --good-text: #006300; --critical: #d03b3b; --neutral: #898781; }
 @media (prefers-color-scheme: dark) { :root:where(:not([data-theme="light"])) .viz {
   --surface: #1a1a19; --page: #0d0d0d; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
   --grid: #2c2c2a; --axis: #383835; --ring: #1a1a19;
-  --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #9085e9;
+  --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #c98500;
   --good: #0ca30c; --good-text: #0ca30c; --critical: #d03b3b; } }
 .viz figure { margin: 0 0 16px; background: var(--surface); border: 1px solid var(--grid); border-radius: 8px; padding: 12px 14px; }
 .viz figcaption { font-weight: 600; color: var(--ink); margin-bottom: 2px; }
@@ -173,6 +173,7 @@ export function lineChart({
   height = 160,
   yMin = 0,
   xNames,
+  zero = false,
 }) {
   const id = `c${++chartIds}`;
   const width = 960;
@@ -208,6 +209,9 @@ export function lineChart({
     svg += `<text x="${sx(t)}" y="${height - 6}" text-anchor="middle">${escape(text)}</text>`;
   }
   svg += `<line x1="${left}" x2="${width - right}" y1="${sy(y0)}" y2="${sy(y0)}" stroke="var(--axis)" stroke-width="1"/>`;
+  if (zero && y0 < 0) {
+    svg += `<line x1="${left}" x2="${width - right}" y1="${sy(0)}" y2="${sy(0)}" stroke="var(--ink-2)" stroke-width="1"/>`;
+  }
   for (const s of series) {
     let d = "";
     let pen = false;
@@ -221,7 +225,7 @@ export function lineChart({
     }
     svg += `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="${s.width ?? 2}" stroke-linejoin="round" stroke-linecap="round" opacity="${s.opacity ?? 1}"/>`;
     // Sparse series (one point per run): markers with a surface ring.
-    if (s.points.length <= 60) {
+    if (s.markers !== false && s.points.length <= 60) {
       for (const [px, py] of s.points) {
         if (py !== null && py !== undefined) {
           svg += `<circle cx="${sx(px).toFixed(1)}" cy="${sy(py).toFixed(1)}" r="4" fill="${s.color}" stroke="var(--ring)" stroke-width="2"/>`;

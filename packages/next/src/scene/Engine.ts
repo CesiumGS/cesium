@@ -500,9 +500,7 @@ export class Engine {
       };
       const planes = worldPlanes(1);
       const pixelRatio =
-        view.target instanceof CanvasTarget
-          ? (globalThis.devicePixelRatio ?? 1)
-          : 1;
+        view.target instanceof CanvasTarget ? view.target.pixelRatio : 1;
       out.push({
         id: this.viewIds.get(view)!,
         position: p,
@@ -870,7 +868,7 @@ export class Engine {
     let n = 0;
     const target = view.target;
     if (target instanceof CanvasTarget && "clientWidth" in target.canvas) {
-      const dpr = globalThis.devicePixelRatio ?? 1;
+      const dpr = target.pixelRatio;
       s[n++] = target.canvas.clientWidth * dpr;
       s[n++] = target.canvas.clientHeight * dpr;
     } else {

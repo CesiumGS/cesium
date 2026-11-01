@@ -1,0 +1,272 @@
+// Scorecards and comparison tables (plan §16.9, Decide), borrowed from
+// canary analysis (Kayenta) and Go's benchstat.
+//
+// A comparison declares, before results exist, its primary metric (the
+// one it is meant to move) and guardrails (metrics that must not get
+// worse by more than a tolerance). The plan comes from the run
+// (`--primary`, `--guardrails`, `--hypothesis`), else the defaults here.
+// Each metric is tested per scene with the bootstrap ratio of medians
+// (§16.3); the scorecard is pass, marginal or fail:
+//
+// - fail: the primary metric got worse (more scenes clearly worse than
+//   better, geometric mean above 1), or a guardrail broke in 2+ scenes;
+// - marginal: the primary metric did not clearly move, or a guardrail
+//   broke in one scene;
+// - pass: otherwise.
+import { ratio, summarize } from "./stats.mjs";
+import { escape } from "./charts.mjs";
+
+export const DEFAULT_PLAN = {
+  primary: "cpuP50",
+  guardrails: ["settleMs", "frameP95", "over100", "bytes", "heapBytes"],
+  tolerance: 0.1,
+};
+
+const LABELS = {
+  firstContentMs: ["first content", "s", 1000],
+  settleMs: ["time to settle", "s", 1000],
+  resettleMs: ["re-settle after motion", "s", 1000],
+  frameP50: ["frame p50", "ms", 1],
+  frameP95: ["frame p95", "ms", 1],
+  frameP99: ["frame p99", "ms", 1],
+  frameP999: ["frame p99.9", "ms", 1],
+  frameStdDev: ["frame time std. dev.", "ms", 1],
+  over33: ["frames > 2 vsyncs", "", 1],
+  over100: ["hitches > 100 ms", "", 1],
+  cpuP50: ["CPU per frame", "ms", 1],
+  cpuP95: ["CPU per frame p95", "ms", 1],
+  gpuP50: ["GPU per frame", "ms", 1],
+  longFrames: ["long frames", "", 1],
+  requests: ["requests", "", 1],
+  bytes: ["bytes", "MB", 1e6],
+  heapBytes: ["JS heap", "MB", 1e6],
+};
+
+export const metricLabel = (key) => LABELS[key]?.[0] ?? key;
+
+/** Values per scene for one configuration and metric (ok runs only). */
+function valuesBy(runs, config, key) {
+  const out = new Map();
+  for (const r of runs) {
+    if (r.config !== config || r.metrics.status !== "ok") {
+      continue;
+    }
+    const v = r.metrics[key];
+    if (Number.isFinite(v)) {
+      const id = `${r.scene}|${r.scenario}`;
+      out.set(id, [...(out.get(id) ?? []), v]);
+    }
+  }
+  return out;
+}
+
+/**
+ * The comparison of one metric in one scene: the ratio with its interval,
+ * or for counts that start at zero, a clear increase when every candidate
+ * repetition exceeds every baseline repetition.
+ */
+export function compareValues(a, b) {
+  const r = ratio(a, b);
+  if (r?.value !== undefined) {
+    return r;
+  }
+  const ma = summarize(a)?.median;
+  const mb = summarize(b)?.median;
+  if (ma === undefined || mb === undefined) {
+    return undefined;
+  }
+  const worse = Math.min(...b) > Math.max(...a);
+  const better = Math.max(...b) < Math.min(...a);
+  return {
+    value: mb === ma ? 1 : undefined,
+    low: undefined,
+    high: undefined,
+    separated: worse || better,
+    direction: worse ? 1 : better ? -1 : 0,
+    from: ma,
+    to: mb,
+  };
+}
+
+const direction = (c) =>
+  c.direction ?? (c.separated ? (c.value < 1 ? -1 : 1) : 0);
+
+const geomean = (values) =>
+  values.length
+    ? Math.exp(values.reduce((s, v) => s + Math.log(v), 0) / values.length)
+    : undefined;
+
+/** The scorecard for baseline vs candidate under a declared plan. */
+export function scorecard(results, options = {}) {
+  const configs = [...new Set(results.runs.map((r) => r.config))];
+  const baseline = options.baseline ?? results.baseline ?? configs[0];
+  const candidate =
+    options.candidate ??
+    results.candidate ??
+    configs.find((c) => c !== baseline) ??
+    baseline;
+  if (baseline === candidate || !configs.includes(candidate)) {
+    return undefined;
+  }
+  const plan = { ...DEFAULT_PLAN, ...(results.plan ?? {}), ...(options.plan ?? {}) };
+  const test = (key, tolerance) => {
+    const a = valuesBy(results.runs, baseline, key);
+    const b = valuesBy(results.runs, candidate, key);
+    const scenes = [];
+    for (const [id, va] of a) {
+      const vb = b.get(id);
+      if (!vb) {
+        continue;
+      }
+      const c = compareValues(va, vb);
+      if (!c) {
+        continue;
+      }
+      const d = direction(c);
+      // A guardrail breaks only past its tolerance (and clearly).
+      const broken =
+        d > 0 && (c.value === undefined || c.low > 1 + tolerance);
+      scenes.push({ scene: id.replace("|", " · "), ...c, direction: d, broken });
+    }
+    const ratios = scenes.map((s) => s.value).filter((v) => v > 0);
+    return {
+      key,
+      label: metricLabel(key),
+      geomean: geomean(ratios),
+      better: scenes.filter((s) => s.direction < 0).length,
+      worse: scenes.filter((s) => s.direction > 0).length,
+      broken: scenes.filter((s) => s.broken).map((s) => s.scene),
+      scenes,
+    };
+  };
+  const primary = test(plan.primary, 0);
+  const guardrails = plan.guardrails.map((k) => test(k, plan.tolerance));
+  const primaryMoved =
+    primary.better > primary.worse && primary.geomean < 1
+      ? "improved"
+      : primary.worse > primary.better && primary.geomean > 1
+        ? "regressed"
+        : "no clear change";
+  const brokenScenes = guardrails.reduce((n, g) => n + g.broken.length, 0);
+  const verdict =
+    primaryMoved === "regressed" || brokenScenes >= 2
+      ? "fail"
+      : primaryMoved === "no clear change" || brokenScenes === 1
+        ? "marginal"
+        : "pass";
+  return {
+    baseline,
+    candidate,
+    plan,
+    verdict,
+    primary: { ...primary, moved: primaryMoved },
+    guardrails,
+  };
+}
+
+const VERDICTS = {
+  pass: ["✓", "Pass", "good-text"],
+  marginal: ["!", "Marginal", "ink-2"],
+  fail: ["✕", "Fail", "critical"],
+};
+
+/** The scorecard as HTML: the verdict, the primary metric, guardrails. */
+export function scorecardHtml(card) {
+  if (!card) {
+    return "";
+  }
+  const [icon, word, tone] = VERDICTS[card.verdict];
+  const g = (x) => (x === undefined ? "–" : `×${x.toFixed(2)}`);
+  const rows = card.guardrails
+    .map((r) => {
+      const ok = !r.broken.length;
+      return `<tr><th>${escape(r.label)}</th><td>${g(r.geomean)}</td><td>${r.better} better · ${r.worse} worse</td><td class="${ok ? "ok" : "broken"}">${ok ? "✓ held" : `✕ broken in ${r.broken.map(escape).join(", ")}`}</td></tr>`;
+    })
+    .join("");
+  return `<div class="scorecard"><div class="sc-head"><span class="sc-verdict" style="color:var(--${tone})">${icon} ${word}</span>
+<span>${escape(card.candidate)} vs ${escape(card.baseline)} · primary metric <b>${escape(card.primary.label)}</b>: ${escape(card.primary.moved)} (${g(card.primary.geomean)}, ${card.primary.better} scenes better, ${card.primary.worse} worse)</span></div>
+${card.plan.hypothesis ? `<div class="sub">Hypothesis: ${escape(card.plan.hypothesis)}</div>` : ""}
+<table class="sc"><tr><th>Guardrail (must not get more than ${Math.round(card.plan.tolerance * 100)}% worse)</th><th>geo. mean</th><th>scenes</th><th></th></tr>${rows}</table></div>`;
+}
+
+export const SCORECARD_CSS = `
+.viz .scorecard { background: var(--surface); border: 1px solid var(--grid); border-radius: 8px; padding: 10px 14px; margin: 10px 0; }
+.viz .sc-head { display: flex; gap: 14px; align-items: baseline; flex-wrap: wrap; color: var(--ink-2); }
+.viz .sc-verdict { font-size: 18px; font-weight: 700; }
+.viz table.sc { border-collapse: collapse; margin-top: 8px; font-variant-numeric: tabular-nums; }
+.viz table.sc th, .viz table.sc td { padding: 3px 10px 3px 0; border-bottom: 1px solid var(--grid); text-align: left; color: var(--ink-2); font-weight: normal; }
+.viz table.sc tr:first-child th { font-size: 12px; color: var(--muted); }
+.viz table.sc td.ok { color: var(--good-text); } .viz table.sc td.broken { color: var(--critical); }
+`;
+
+/**
+ * A benchstat-style text table: per scene and metric, old and new medians
+ * with their spread and the change with its interval ("~" when the
+ * intervals don't separate). `old` and `new` are [results, config] pairs:
+ * two configurations of one run, or one configuration across two runs.
+ */
+export function compareTable([oldResults, oldConfig], [newResults, newConfig], metrics) {
+  const keys = metrics ?? [DEFAULT_PLAN.primary, ...DEFAULT_PLAN.guardrails];
+  const lines = [];
+  const pad = (s, n) => String(s).padEnd(n);
+  const padStart = (s, n) => String(s).padStart(n);
+  const fmt = (v, scale) => {
+    if (v === undefined) {
+      return "–";
+    }
+    const x = v / scale;
+    return x >= 100 ? x.toFixed(0) : x >= 10 ? x.toFixed(1) : x.toFixed(2);
+  };
+  for (const key of keys) {
+    const [label, unit, scale] = LABELS[key] ?? [key, "", 1];
+    const a = valuesBy(oldResults.runs, oldConfig, key);
+    const b = valuesBy(newResults.runs, newConfig, key);
+    const rows = [];
+    const ratios = [];
+    for (const [id, va] of a) {
+      const vb = b.get(id);
+      if (!vb) {
+        continue;
+      }
+      const sa = summarize(va);
+      const sb = summarize(vb);
+      const spread = (s) =>
+        s.median ? `±${Math.round((Math.max(s.high - s.median, s.median - s.low) / s.median) * 100)}%` : "";
+      const c = compareValues(va, vb);
+      let change = "~";
+      if (c?.value !== undefined && c.separated) {
+        change = `${c.value < 1 ? "" : "+"}${((c.value - 1) * 100).toFixed(1)}% (${((c.low - 1) * 100).toFixed(0)}…${((c.high - 1) * 100).toFixed(0)}%)`;
+      } else if (c?.separated) {
+        change = `${fmt(c.from, scale)} → ${fmt(c.to, scale)}`;
+      }
+      if (c?.value > 0) {
+        ratios.push(c.value);
+      }
+      rows.push([
+        id.replace("|", " · "),
+        `${fmt(sa.median, scale)} ${spread(sa)}`,
+        `${fmt(sb.median, scale)} ${spread(sb)}`,
+        change,
+      ]);
+    }
+    if (!rows.length) {
+      continue;
+    }
+    const g = geomean(ratios);
+    rows.push([
+      "geomean",
+      "",
+      "",
+      g === undefined ? "" : `${g < 1 ? "" : "+"}${((g - 1) * 100).toFixed(1)}%`,
+    ]);
+    const w = Math.max(24, ...rows.map((r) => r[0].length));
+    lines.push(
+      `${pad(`${label}${unit ? ` (${unit})` : ""}`, w)}  ${padStart(oldConfig, 14)}  ${padStart(newConfig, 14)}  change`,
+    );
+    for (const r of rows) {
+      lines.push(`${pad(r[0], w)}  ${padStart(r[1], 14)}  ${padStart(r[2], 14)}  ${r[3]}`);
+    }
+    lines.push("");
+  }
+  return lines.join("\n");
+}

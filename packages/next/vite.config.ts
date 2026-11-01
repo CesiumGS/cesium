@@ -14,6 +14,7 @@ const cesium1x =
   fileURLToPath(new URL("../../Build/CesiumUnminified", import.meta.url));
 
 const contentTypes: Record<string, string> = {
+  ".html": "text/html; charset=utf-8",
   ".js": "text/javascript",
   ".json": "application/json",
   ".css": "text/css",
@@ -122,6 +123,7 @@ export default defineConfig({
         instances: "bench/instances.html",
         suite: "bench/suite/suite.html",
         results: "bench/suite/results.html",
+        flip: "bench/suite/flip.html",
       },
     },
   },

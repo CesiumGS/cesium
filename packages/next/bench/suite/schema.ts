@@ -89,6 +89,8 @@ export interface SceneLayer {
 }
 
 export interface Scene {
+  /** Render settings over the catalog's (e.g. 1.x HDR off for unlit content). */
+  render?: Partial<RenderSettings>;
   id: string;
   title: string;
   /** Catalog group (plan §16.4): A classic Cesium, B large public, C 2.0's architecture. */
@@ -114,6 +116,11 @@ export interface Scenario {
   settleTimeoutSeconds: number;
   /** "cold": fresh browser context; "warm": the same scene loaded again in the same page. */
   cache: "cold" | "warm";
+  /**
+   * false: no vsync or frame-rate limit (Chromium flags), so frame time
+   * measures the frame's cost instead of the display's refresh.
+   */
+  vsync?: boolean;
 }
 
 /** An engine and its settings. */
@@ -129,6 +136,51 @@ export interface EngineConfig {
   /** 2.0 selection policy. */
   policy?: "budgeted" | "legacy1x";
   maximumScreenSpaceError?: number;
+  /** Render settings over the catalog's (e.g. 1.x out of the box). */
+  render?: Partial<RenderSettings>;
+}
+
+/**
+ * How a frame is rendered, the same for every engine in a comparison
+ * (apples to apples): the catalog declares them, configurations may
+ * override them, and each run records what the engine actually used.
+ */
+export interface RenderSettings {
+  /**
+   * Drawing-buffer pixels per CSS pixel: a number (1: CSS resolution,
+   * 1.x's default on high-DPI displays) or "device" (devicePixelRatio).
+   */
+  pixelRatio: number | "device";
+  msaaSamples: number;
+  /** HDR rendering with tone mapping (2.0 always; 1.x `highDynamicRange`). */
+  hdr: boolean;
+  fxaa: boolean;
+  /** 1.x fog (also lowers distant detail); 2.0 has none yet. */
+  fog: boolean;
+  /**
+   * `CESIUM_primitive_outline` edges (e.g. OSM Buildings; 1.x
+   * `showOutline`); 2.0 doesn't draw them yet.
+   */
+  outlines: boolean;
+  /**
+   * The sun, fixed (1.x otherwise follows the wall clock): elevation and
+   * azimuth in degrees over the point below the camera at the start of
+   * the camera path, a directional light in both engines (the parity
+   * harness's convention).
+   */
+  sun: { elevation: number; azimuth: number };
+}
+
+/** The render settings an engine actually used, read back after a run. */
+export interface EffectiveRender {
+  width: number;
+  height: number;
+  pixelRatio: number;
+  msaaSamples: number;
+  hdr: boolean;
+  fxaa: boolean;
+  fog: boolean;
+  outlines: boolean;
 }
 
 /** What one run of a scene × scenario × config measured. */
@@ -145,9 +197,22 @@ export interface RunMetrics {
   frameP50?: number;
   frameP95?: number;
   frameP99?: number;
-  /** Frames over 2 and 3 vsyncs at 60 Hz. */
+  /** Frames over 2 and 3 vsyncs at 60 Hz, and over 100 ms (hitches). */
   over33?: number;
   over50?: number;
+  over100?: number;
+  /** 99.9th percentile frame interval and the intervals' spread, ms. */
+  frameP999?: number;
+  frameStdDev?: number;
+  /** What the engine rendered with (drawing buffer, MSAA, HDR...). */
+  render?: EffectiveRender;
+  /** Every motion frame interval, ms (percentile curves). */
+  intervals?: number[];
+  /**
+   * The camera path during motion: [progress 0..1, longitude°, latitude°,
+   * height m] at 50 points (track maps).
+   */
+  path?: Array<[number, number, number, number]>;
   frames?: number;
   /** Main-thread time inside the engine's frame call, ms (median, p95). */
   cpuP50?: number;

@@ -362,6 +362,21 @@ export class Tileset3D implements TileTree {
     }
   }
   private shown = true;
+  /**
+   * Keeps the current selection, for inspecting it from elsewhere: no
+   * selection, requests, uploads or eviction until cleared (1.x
+   * `debugFreezeFrame`). The GPU still culls the drawn tiles per view.
+   */
+  get freezeSelection(): boolean {
+    return this.frozen;
+  }
+  set freezeSelection(value: boolean) {
+    if (value !== this.frozen) {
+      this.frozen = value;
+      this.lastChange = this.frame; // select again as soon as it thaws
+    }
+  }
+  private frozen = false;
   /** Globe imagery draped on this terrain tileset (`engine.addTerrain`). */
   imagery?: GlobeImagery;
   /** Selected tiles per view id after the last update (parity tests). */
@@ -614,7 +629,7 @@ export class Tileset3D implements TileTree {
 
   /** One frame: select per view, apply view masks, request, upload, evict. */
   update(allViews: SelectionView[]): void {
-    if (this.destroyed) {
+    if (this.destroyed || this.frozen) {
       return;
     }
     const frame = ++this.frame;

@@ -481,6 +481,39 @@ async function report(): Promise<void> {
   await render();
 }
 
+// ------------------------------------------------------------ explorer
+
+/**
+ * The explorer (explore.ts), loaded on first use: it brings both engines.
+ * Its state (scene, engines, place on the camera path) lives in this
+ * page's URL, so a view can be shared or linked from a report.
+ */
+let stopExplorer: (() => void) | undefined;
+const EXPLORE_KEYS = ["scene", "left", "right", "t", "cesium"];
+function exploreUrl(params: Record<string, string>): URL {
+  const url = new URL(location.href);
+  for (const key of EXPLORE_KEYS) {
+    url.searchParams.delete(key);
+  }
+  for (const [key, value] of Object.entries(params)) {
+    url.searchParams.set(key, value);
+  }
+  return url;
+}
+async function explore(): Promise<void> {
+  main.replaceChildren();
+  const root = document.createElement("div");
+  main.append(root);
+  const { mountExplorer } = await import("./explore.ts");
+  stopExplorer = mountExplorer(
+    root,
+    new URLSearchParams(location.search),
+    (params) => history.replaceState(null, "", exploreUrl(params)),
+    // Another 1.x build: a page holds one, so load the page again.
+    (params) => location.assign(exploreUrl(params)),
+  );
+}
+
 // ------------------------------------------------------------ tabs
 
 const views: Record<string, () => void | Promise<void>> = {
@@ -488,13 +521,21 @@ const views: Record<string, () => void | Promise<void>> = {
   log,
   compare,
   report,
+  explore,
 };
 function show(tab: string): void {
   for (const b of document.querySelectorAll<HTMLButtonElement>("nav button")) {
     b.setAttribute("aria-selected", String(b.dataset.tab === tab));
   }
+  stopExplorer?.();
+  stopExplorer = undefined;
   const url = new URL(location.href);
   url.searchParams.set("tab", tab);
+  if (tab !== "explore") {
+    for (const key of EXPLORE_KEYS) {
+      url.searchParams.delete(key);
+    }
+  }
   history.replaceState(null, "", url);
   void views[tab]!();
 }

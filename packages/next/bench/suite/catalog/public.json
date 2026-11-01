@@ -1,5 +1,18 @@
 {
   "$comment": "Benchmark suite public catalog (plan §16). Public datasets only, each with a reviewed license (bench/suite/schema.ts DatasetLicense): redistributable under terms compatible with CesiumJS's Apache-2.0 license, or stream-only references under the provider's terms (never mirrored or committed). Private datasets go in a manifest outside the repo (BENCH_MANIFEST; see private.example.json).",
+  "render": {
+    "$comment": "The same for every engine (apples to apples); scenes and configurations may override. 2.0 always renders with 4x MSAA, tonemaps lit color (HDR) and shows unlit color display-referred, and has no fog, FXAA or primitive outlines yet, so 1.x is matched to it: HDR on, and off for scenes of mostly unlit content (imagery, photogrammetry, Google tiles), where 1.x would tonemap it. The sun is fixed in both engines. Reports flag any difference in what the engines actually used.",
+    "pixelRatio": 1,
+    "msaaSamples": 4,
+    "hdr": true,
+    "fxaa": false,
+    "fog": false,
+    "outlines": false,
+    "sun": {
+      "elevation": 40,
+      "azimuth": 150
+    }
+  },
   "datasets": [
     {
       "id": "cwt",
@@ -386,6 +399,9 @@
         "pitch": -20,
         "heading": 30,
         "sweep": 120
+      },
+      "render": {
+        "hdr": false
       }
     },
     {
@@ -435,6 +451,9 @@
         "pitch": -30,
         "heading": 30,
         "sweep": 180
+      },
+      "render": {
+        "hdr": false
       }
     },
     {
@@ -481,6 +500,9 @@
         "pitch": -30,
         "heading": 0,
         "sweep": 180
+      },
+      "render": {
+        "hdr": false
       }
     },
     {
@@ -571,6 +593,9 @@
         "pitch": -30,
         "heading": 0,
         "sweep": 180
+      },
+      "render": {
+        "hdr": false
       }
     },
     {
@@ -693,6 +718,9 @@
         "pitch": -30,
         "heading": 200,
         "sweep": 180
+      },
+      "render": {
+        "hdr": false
       }
     },
     {
@@ -731,6 +759,14 @@
       "motionSeconds": 15,
       "settleTimeoutSeconds": 90,
       "cache": "cold"
+    },
+    {
+      "id": "uncapped-orbit",
+      "title": "Cold cache, vsync off: frame time is the frame's real cost",
+      "motionSeconds": 15,
+      "settleTimeoutSeconds": 90,
+      "cache": "cold",
+      "vsync": false
     },
     {
       "id": "warm-orbit",

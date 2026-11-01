@@ -32,8 +32,11 @@ export interface RenderTarget {
 
 /**
  * Renders into a canvas. An `HTMLCanvasElement` tracks its CSS size ×
- * devicePixelRatio; an `OffscreenCanvas` (e.g. inside a worker) keeps
- * whatever size its owner sets, typically from resize messages.
+ * its pixel ratio (devicePixelRatio unless fixed, e.g. 1 to render at CSS
+ * resolution on a high-DPI display, as 1.x's default
+ * `useBrowserRecommendedResolution`); an `OffscreenCanvas` (e.g. inside a
+ * worker) keeps whatever size its owner sets, typically from resize
+ * messages.
  */
 export class CanvasTarget implements RenderTarget {
   readonly kind = "canvas";
@@ -42,7 +45,22 @@ export class CanvasTarget implements RenderTarget {
   private context?: GPUCanvasContext;
   private configuredFor?: GPUDevice;
 
-  constructor(readonly canvas: HTMLCanvasElement | OffscreenCanvas) {}
+  constructor(
+    readonly canvas: HTMLCanvasElement | OffscreenCanvas,
+    options: { pixelRatio?: number } = {},
+  ) {
+    this.fixedPixelRatio = options.pixelRatio;
+  }
+
+  /** Fixed pixel ratio, or undefined to follow devicePixelRatio. */
+  fixedPixelRatio: number | undefined;
+
+  /** Drawing-buffer pixels per CSS pixel (1 for an `OffscreenCanvas`). */
+  get pixelRatio(): number {
+    return "clientWidth" in this.canvas
+      ? (this.fixedPixelRatio ?? globalThis.devicePixelRatio ?? 1)
+      : 1;
+  }
 
   get width(): number {
     return this.canvas.width;
@@ -55,7 +73,7 @@ export class CanvasTarget implements RenderTarget {
   acquire(device: GPUDevice, format: GPUTextureFormat): GPUTextureView {
     const canvas = this.canvas;
     if ("clientWidth" in canvas) {
-      const dpr = globalThis.devicePixelRatio ?? 1;
+      const dpr = this.pixelRatio;
       const width = Math.max(1, Math.round(canvas.clientWidth * dpr));
       const height = Math.max(1, Math.round(canvas.clientHeight * dpr));
       if (canvas.width !== width || canvas.height !== height) {

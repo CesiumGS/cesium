@@ -14,6 +14,18 @@ import {
   lineChart,
   statTile,
 } from "./charts.mjs";
+import {
+  DIAGNOSE_CSS,
+  filmstrip,
+  PATH_METRICS,
+  pathMap,
+  pathOverlay,
+  pathProfiles,
+  percentileCurve,
+  segmentTable,
+  waterfall,
+} from "./diagnose.mjs";
+import { scorecard, SCORECARD_CSS, scorecardHtml } from "./scorecard.mjs";
 
 /** Metrics shown, with units and whether lower is better. */
 const METRICS = [
@@ -22,6 +34,9 @@ const METRICS = [
   ["frameP50", "frame p50", "ms", 1],
   ["frameP95", "frame p95", "ms", 1],
   ["over33", "frames > 2 vsyncs", "", 1],
+  ["over100", "hitches > 100 ms", "", 1],
+  ["frameP999", "frame p99.9", "ms", 1],
+  ["frameStdDev", "frame time std. dev.", "ms", 1],
   ["cpuP50", "CPU / frame p50", "ms", 1],
   ["gpuP50", "GPU / frame p50", "ms", 1],
   ["longFrames", "long frames", "", 1],
@@ -75,6 +90,7 @@ function environmentSection(results) {
     ["GPU driver", escape(env.gpuDriver ?? "")],
     ["GPU max clocks (graphics / memory)", env.gpuMaxClockMHz ? `${env.gpuMaxClockMHz} / ${env.gpuMaxMemoryClockMHz} MHz` : undefined],
     ["GPU power limit", env.gpuPowerLimitW ? `${env.gpuPowerLimitW} W` : "not reported"],
+    ["GPU thermal limits", env.gpuTargetTemperatureC !== undefined ? `target ${env.gpuTargetTemperatureC} °C; slowdown at ${env.gpuSlowdownTLimitC ?? "?"} °C T.Limit` : undefined],
     ["CPU", escape(`${env.cpu} (${env.cores} logical processors)`)],
     ["Memory", `${env.memoryGiB} GiB`],
     ["Display", page.screen ? escape(`${page.screen}, ${page.refreshHz} Hz, device pixel ratio ${page.devicePixelRatio}`) : undefined],
@@ -88,6 +104,7 @@ function environmentSection(results) {
     ["User agent", `<code>${escape(page.userAgent ?? "")}</code>`],
     ["Browser mode and flags", `${escape(env.browserMode ?? "")} ${list(env.browserArgs)}`],
     ["Viewport", escape(env.viewport ?? "")],
+    ["Render settings (both engines)", env.render ? escape(`pixel ratio ${env.render.pixelRatio}, ${env.render.msaaSamples}× MSAA, ${env.render.hdr ? "HDR" : "LDR"}, FXAA ${env.render.fxaa ? "on" : "off"}, fog ${env.render.fog ? "on" : "off"}`) : "not recorded (before r33: 1.x LDR with fog, 2.0 HDR)"],
     ["Engines", env.engines
       ? `${Object.entries(env.engines).map(([id, what]) => `<b>${escape(id)}</b>: ${escape(what)}`).join("<br>")}<br>2.0 commit ${escape(results.commit.slice(0, 12))}${results.dirty ? " + uncommitted changes" : ""}`
       : escape(`1.x ${page.cesium1xVersion ?? "?"} (this repository's build) · 2.0 commit ${results.commit.slice(0, 12)}${results.dirty ? " + uncommitted changes" : ""}`)],
@@ -97,7 +114,7 @@ function environmentSection(results) {
 <div><h3>Idle conditions (before the runs)</h3>${table([
     ["GPU clock mean / min", idle.gpuClockMeanMHz ? `${fixed(idle.gpuClockMeanMHz)} / ${idle.gpuClockMinMHz} MHz` : undefined],
     ["GPU memory clock", idle.gpuMemoryClockMeanMHz ? `${fixed(idle.gpuMemoryClockMeanMHz)} MHz` : undefined],
-    ["GPU temperature", idle.gpuTemperatureMaxC !== undefined ? `${idle.gpuTemperatureMaxC} °C` : undefined],
+    ["GPU temperature", idle.gpuTemperatureMaxC !== undefined ? `${idle.gpuTemperatureMaxC} °C${idle.gpuHeadroomMinC !== undefined ? ` (${idle.gpuHeadroomMinC} °C below the throttle limit)` : ""}` : undefined],
     ["GPU power / utilization", idle.gpuPowerMeanW !== undefined ? `${fixed(idle.gpuPowerMeanW, 1)} W / ${fixed(idle.gpuUtilizationMean)}%` : undefined],
     ["GPU slowdown reasons (share of samples)", idle.gpuSlowedFraction !== undefined ? `${escape((idle.gpuSlowdownReasons ?? []).join(", ") || "none")} (${fixed(idle.gpuSlowedFraction, 2)})` : undefined],
     ["CPU speed (% of nominal)", idle.cpuPerformanceMean !== undefined ? `${fixed(idle.cpuPerformanceMean)} (min ${fixed(idle.cpuPerformanceMin)})` : undefined],
@@ -129,13 +146,15 @@ ${table([
 
 /** Hardware conditions shown per configuration (medians over runs). */
 const CONDITIONS = [
-  ["gpuClockMeanMHz", "GPU clock (MHz)"],
+  ["gpuClockMeanMHz", "GPU clock (MHz; follows load)"],
   ["gpuMemoryClockMeanMHz", "GPU memory clock (MHz)"],
   ["gpuTemperatureStartC", "GPU temperature at start (°C)"],
   ["gpuTemperatureMaxC", "GPU temperature max (°C)"],
+  ["gpuHeadroomMinC", "GPU thermal headroom min (°C below throttle)"],
   ["gpuPowerMeanW", "GPU power (W)"],
   ["gpuUtilizationMean", "GPU utilization (%)"],
-  ["gpuSlowedFraction", "GPU slowed (share of samples)"],
+  ["gpuSlowedFraction", "GPU slowed, any reason (share)"],
+  ["gpuThermalFraction", "GPU thermal slowdown (share)"],
   ["cpuPerformanceMean", "CPU speed (% of nominal)"],
   ["cpuUtilityMean", "CPU utility during run (%)"],
   ["backgroundCpuUtility", "CPU utility before run (%)"],
@@ -145,8 +164,12 @@ const CONDITIONS = [
 
 /**
  * Condition rows, and a note when a configuration ran under different
- * conditions than the baseline: GPU clock or CPU speed off by more than
- * 5%, or a GPU slowdown share differing by more than 0.2.
+ * conditions than the baseline. Only true conditions count: the GPU's
+ * temperature at the start (more than 3 °C apart), its share of thermal
+ * slowdowns (more than 0.2 apart), CPU speed (more than 10% apart) and
+ * how busy the machine was before the run (more than 10 points apart).
+ * GPU clock and power are shown but not compared: on power-managed GPUs
+ * they follow each engine's own load.
  */
 function conditionRows(configs, baseline, telemetry, notes) {
   const med = (c, key) =>
@@ -166,18 +189,21 @@ function conditionRows(configs, baseline, telemetry, notes) {
       continue;
     }
     const differs = [];
-    for (const key of ["gpuClockMeanMHz", "cpuPerformanceMean"]) {
+    const check = (key, label, limit, relative = false) => {
       const a = med(baseline, key);
       const b = med(c, key);
-      if (a && b && Math.abs(b - a) / a > 0.05) {
-        differs.push(`${key === "gpuClockMeanMHz" ? "GPU clock" : "CPU speed"} ${a.toFixed(0)} vs ${b.toFixed(0)}`);
+      if (a === undefined || b === undefined) {
+        return;
       }
-    }
-    const sa = med(baseline, "gpuSlowedFraction");
-    const sb = med(c, "gpuSlowedFraction");
-    if (sa !== undefined && sb !== undefined && Math.abs(sb - sa) > 0.2) {
-      differs.push(`GPU slowed ${sa.toFixed(2)} vs ${sb.toFixed(2)}`);
-    }
+      const gap = relative ? Math.abs(b - a) / Math.max(Math.abs(a), 1e-9) : Math.abs(b - a);
+      if (gap > limit) {
+        differs.push(`${label} ${a.toFixed(key.endsWith("Fraction") ? 2 : 0)} vs ${b.toFixed(key.endsWith("Fraction") ? 2 : 0)}`);
+      }
+    };
+    check("gpuTemperatureStartC", "GPU temperature at start (°C)", 3);
+    check("gpuThermalFraction", "GPU thermal slowdown share", 0.2);
+    check("cpuPerformanceMean", "CPU speed (%)", 0.1, true);
+    check("backgroundCpuUtility", "CPU utility before the run (%)", 10);
     if (differs.length) {
       notes.push(`conditions differ, ${baseline} vs ${c}: ${differs.join(", ")}`);
     }
@@ -189,7 +215,7 @@ function conditionRows(configs, baseline, telemetry, notes) {
 const HEADLINES = [
   ["settleMs", "Time to settle", "loading the view until nothing is pending"],
   ["cpuP50", "CPU per frame", "main-thread time in the engine, median frame"],
-  ["frameP95", "Frame time p95", "while orbiting; vsync-bound at 60 Hz"],
+  ["frameP95", "Frame time p95", "while orbiting; vsync-bound at 60 Hz unless uncapped"],
   ["bytes", "Bytes downloaded", "content from servers, whole run"],
   ["heapBytes", "JS heap", "after the run"],
 ];
@@ -197,6 +223,44 @@ const HEADLINES = [
 /** Configuration colors: categorical slots in catalog order. */
 function configColor(configs, config) {
   return `var(--series-${Math.min(4, configs.indexOf(config) + 1)})`;
+}
+
+const BADGES = {
+  valid: ["✓", "valid"],
+  warning: ["!", "valid with warnings"],
+  invalid: ["✕", "invalid"],
+  "not run": ["–", "not run"],
+};
+
+/** A validity badge: icon and label, never color alone. */
+function validityBadge(verdict) {
+  const [icon, label] = BADGES[verdict] ?? BADGES["not run"];
+  return `<span class="badge ${verdict.replace(" ", "-")}">${icon} ${label}</span>`;
+}
+
+/**
+ * The run's validity before any number (plan §16.9, Trust): how many
+ * scenes were valid, valid with warnings, invalid or not run, and why.
+ */
+function validitySummary(scenes) {
+  if (!scenes.length) {
+    return "";
+  }
+  const count = (v) => scenes.filter((s) => s.verdict === v).length;
+  const measured = scenes.filter((s) => s.verdict !== "not run");
+  const overall = !measured.length || count("valid") + count("warning") === 0
+    ? "invalid"
+    : count("warning") || count("invalid")
+      ? "warning"
+      : "valid";
+  const flagged = scenes.filter((s) => s.verdict === "warning" || s.verdict === "invalid");
+  return `<div class="validity">${validityBadge(overall)} <b>${count("valid")}</b> valid, <b>${count("warning")}</b> with warnings, <b>${count("invalid")}</b> invalid, <b>${count("not run")}</b> not run (of ${scenes.length} scenes)${
+    flagged.length
+      ? `<details><summary>Why</summary><ul>${flagged
+          .map((s) => `<li><b>${escape(s.title)}</b>: ${s.reasons.map(escape).join("; ") || "a run failed"}</li>`)
+          .join("")}</ul></details>`
+      : ""
+  }</div>`;
 }
 
 const geomean = (values) =>
@@ -253,6 +317,7 @@ export function renderReport(results) {
     return undefined;
   };
 
+  const scenarioCount = new Set(results.runs.map((r) => r.scenario)).size;
   // ------------------------------------------------ overview: tiles and forests
   const tiles = [];
   const forests = [];
@@ -275,7 +340,9 @@ export function renderReport(results) {
         }
       }
       rows.push({
-        label: group.run.sceneTitle,
+        label: scenarioCount > 1
+          ? `${group.run.sceneTitle} · ${group.run.scenario}`
+          : group.run.sceneTitle,
         ratio: r?.value !== undefined ? r : undefined,
         note: gapOf(group),
       });
@@ -381,6 +448,7 @@ ${cpu.length ? chart("CPU speed (% of nominal)", "%", cpu, 1) + chart("CPU utili
 
   // ------------------------------------------------ per scene, on demand
   const sections = [];
+  const sceneValidity = [];
   for (const group of groups.values()) {
     const { run, telemetry } = group;
     const notes = [];
@@ -389,6 +457,83 @@ ${cpu.length ? chart("CPU speed (% of nominal)", "%", cpu, 1) + chart("CPU utili
       notes.push(gap);
     }
     const condition = conditionRows(configs, baseline, telemetry, notes);
+    // Render settings each engine actually used (apples to apples).
+    const renderOf = (c) =>
+      group.runs.find((r) => r.config === c && r.metrics.render)?.metrics.render;
+    const describeRender = (r) =>
+      r
+        ? `${r.width}×${r.height} · ${r.msaaSamples}× MSAA · ${r.hdr ? "HDR" : "LDR"}${r.fxaa ? " · FXAA" : ""}${r.fog ? " · fog" : ""}${r.outlines ? " · outlines" : ""}`
+        : "–";
+    const baseRender = renderOf(baseline);
+    for (const c of configs) {
+      const r = renderOf(c);
+      if (c === baseline || !r || !baseRender) {
+        continue;
+      }
+      // HDR is chosen per scene to match 2.0's color pipeline (catalog
+      // render settings), so it is shown, not compared.
+      const diff = ["width", "height", "msaaSamples", "fxaa", "fog", "outlines"].filter(
+        (k) => r[k] !== baseRender[k],
+      );
+      if (diff.length) {
+        notes.push(
+          `render settings differ, ${baseline} vs ${c}: ${diff.map((k) => `${k} ${baseRender[k]} vs ${r[k]}`).join(", ")}`,
+        );
+      }
+    }
+    const renderRow = configs.some(renderOf)
+      ? `<tr><th>rendered at</th>${configs.map((c) => `<td class="cond">${escape(describeRender(renderOf(c)))}</td>`).join("")}</tr>`
+      : "";
+    // Validity: every run's verdict, and comparable conditions.
+    // Runs recorded before validity existed: from their status alone.
+    const verdicts = group.runs
+      .map(
+        (r) =>
+          r.validity ??
+          (r.metrics.status === "ok"
+            ? { verdict: "valid", reasons: [] }
+            : r.metrics.status === "unsupported"
+              ? { verdict: "not run", reasons: [] }
+              : { verdict: "invalid", reasons: [`${r.metrics.status}: ${r.metrics.message ?? ""}`] }),
+      )
+      .filter((v) => v.verdict !== "not run");
+    const warnings = [
+      ...new Set(verdicts.flatMap((v) => (v.verdict === "valid" ? [] : v.reasons))),
+    ];
+    const invalid = verdicts.some((v) => v.verdict === "invalid");
+    const differs = (n) =>
+      n.startsWith("conditions differ") || n.startsWith("render settings differ");
+    const comparable = !notes.some(differs);
+    // A scene some configuration could not draw is not a comparison.
+    const sceneVerdict =
+      !verdicts.length || group.runs.some((r) => r.metrics.status === "unsupported")
+      ? "not run"
+      : invalid
+        ? "invalid"
+        : warnings.length || !comparable
+          ? "warning"
+          : "valid";
+    sceneValidity.push({
+      title: `${run.sceneTitle} · ${run.scenario}`,
+      verdict: sceneVerdict,
+      reasons: [...warnings, ...notes.filter(differs)],
+    });
+    // Diagnosis along the camera path: frame time when uncapped (the
+    // frame's real cost), else CPU per frame (frame time is vsync-bound).
+    const color = (c) => configColor(configs, c);
+    const pathMetric = run.vsync === false ? "frame" : "cpu";
+    const profiles = pathProfiles(group.runs, configs, PATH_METRICS[pathMetric][0]);
+    const path = group.runs.find((r) => r.metrics.path?.length)?.metrics.path;
+    const diagnosis = profiles.size
+      ? `${pathOverlay({ profiles, configs, baseline, candidate, color, metric: pathMetric })}
+<div class="diag">${segmentTable({ profiles, configs, baseline, color, metric: pathMetric })}${pathMap({ path, profiles, configs, color, metric: pathMetric, title: "Faster along the camera path" })}</div>`
+      : "";
+    const strip = filmstrip({
+      entries: (results.filmstrips ?? []).filter((e) => e.scene === run.scene),
+      assets: results.assets,
+      configs,
+      baseline,
+    });
     const rows = METRICS.map(([key, label, unit, scale]) => {
       const values = new Map(configs.map((c) => [c, okValues(group, c, key)]));
       if (configs.every((c) => !values.get(c).some(Number.isFinite))) {
@@ -436,13 +581,6 @@ ${cpu.length ? chart("CPU speed (% of nominal)", "%", cpu, 1) + chart("CPU utili
         series: frameSeries("motion", 1),
       }),
       lineChart({
-        title: "CPU per frame while orbiting",
-        subtitle: "Main-thread time inside the engine's frame.",
-        xLabel: "s into the orbit",
-        unit: "ms",
-        series: frameSeries("motion", 2),
-      }),
-      lineChart({
         title: "Frame time while loading",
         subtitle: "From the start of the load until the view settled; spikes are hitches.",
         xLabel: "s since load start",
@@ -450,10 +588,15 @@ ${cpu.length ? chart("CPU speed (% of nominal)", "%", cpu, 1) + chart("CPU utili
         series: frameSeries("load", 1),
       }),
     ].join("");
-    sections.push(`<details class="scene"><summary>${escape(run.sceneTitle)} <span class="tag">${run.group}</span> <span class="tag">${escape(run.scenario)}</span>${notes.length ? ` <span class="flag">${notes.length} note${notes.length > 1 ? "s" : ""}</span>` : ""}</summary>
-  ${notes.length ? `<p class="note">${notes.map(escape).join("<br>")}</p>` : ""}
+    sections.push(`<details class="scene"><summary>${validityBadge(sceneVerdict)} ${escape(run.sceneTitle)} <span class="tag">${run.group}</span> <span class="tag">${escape(run.scenario)}</span>${notes.length ? ` <span class="flag">${notes.length} note${notes.length > 1 ? "s" : ""}</span>` : ""}</summary>
+  ${notes.length || warnings.length ? `<p class="note">${[...warnings, ...notes].map(escape).join("<br>")}</p>` : ""}
+  <p class="explore-link"><a target="_top" href="/bench/suite/results.html?tab=explore&amp;scene=${encodeURIComponent(run.scene)}&amp;left=${encodeURIComponent(baseline)}&amp;right=${encodeURIComponent(candidate)}">Open this scene in the explorer</a> (live, both engines side by side; needs the dev server)</p>
+  ${diagnosis}
+  ${strip}
   ${charts}
-  <table class="metrics"><tr><th></th>${configs.map((c) => `<th>${escape(c)}</th>`).join("")}</tr>${rows}${condition}</table>
+  ${percentileCurve({ runs: group.runs, configs, color })}
+  ${waterfall({ runs: group.runs, configs, color })}
+  <table class="metrics"><tr><th></th>${configs.map((c) => `<th>${escape(c)}</th>`).join("")}</tr>${rows}${renderRow}${condition}</table>
 </details>`);
   }
 
@@ -463,6 +606,12 @@ ${cpu.length ? chart("CPU speed (% of nominal)", "%", cpu, 1) + chart("CPU utili
 <title>Benchmark Report</title>
 <style>
 ${CHART_CSS}
+${DIAGNOSE_CSS}
+${SCORECARD_CSS}
+.badge { display: inline-block; font-size: 11px; font-weight: 600; border-radius: 4px; padding: 0 6px; border: 1px solid currentColor; }
+.badge.valid { color: var(--good-text); } .badge.warning { color: var(--ink-2); } .badge.invalid { color: var(--critical); } .badge.not-run { color: var(--muted); }
+.validity { background: var(--surface); border: 1px solid var(--grid); border-radius: 8px; padding: 10px 14px; margin: 10px 0; }
+.validity ul { margin: 6px 0 0; padding-left: 18px; color: var(--ink-2); }
 body { margin: 0; background: var(--page, #f9f9f7); }
 .viz { color: var(--ink); font: 13px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; padding: 20px 24px 40px; max-width: 1080px; margin: 0 auto; }
 @media (prefers-color-scheme: dark) { body { background: #0d0d0d; } }
@@ -490,6 +639,8 @@ table.kv td { text-align: left; white-space: normal; max-width: 640px; padding: 
 <h1>${escape(candidate)} vs ${escape(baseline)}</h1>
 <p class="meta">${escape(new Date(results.date).toLocaleString())} · commit ${escape(results.commit.slice(0, 12))}${results.dirty ? " (uncommitted changes)" : ""}${results.note ? ` · ${escape(results.note)}` : ""}${results.tags?.length ? ` · ${results.tags.map(escape).join(", ")}` : ""}<br>
 ${escape(env.adapter?.description ?? "unknown GPU")} · ${escape(env.cpu)} · ${escape(env.os ?? env.platform)} · ${escape(env.browser)} · ${groups.size} scenes × ${configs.length} configurations × ${Math.max(...results.runs.map((r) => r.rep + 1))} repetitions</p>
+${validitySummary(sceneValidity)}
+${scorecardHtml(scorecard(results, { baseline, candidate }))}
 <p class="lede">Ratios are ${escape(candidate)} over ${escape(baseline)} (lower is better for every metric), the geometric mean across scenes on the tiles. A scene counts as better or worse only when the 95% bootstrap intervals separate.</p>
 <div class="tiles">${tiles.join("")}</div>
 <h2>By scene</h2>
@@ -497,7 +648,7 @@ ${forests.join("")}
 ${otherTiles.join("")}
 ${conditions}
 <h2>Scenes in detail</h2>
-<p class="lede">Every metric with its interval, the frame timelines of each repetition, and the hardware conditions per engine.</p>
+<p class="lede">Per scene: validity; cost along the camera path, by path segment and on a map of the path (where each engine gains or loses); the filmstrip with image parity; frame timelines and percentiles; the request waterfall; every metric with its interval; and the hardware conditions per engine.</p>
 ${sections.join("\n")}
 <h2>Setup</h2>
 ${environmentSection(results)}
@@ -534,9 +685,17 @@ export function summarizeRun(results) {
       Object.entries(c.values).map(([k, v]) => [k, { ...summarize(v), values: v }]),
     ),
   }));
+  const verdicts = results.runs.map((r) => r.validity?.verdict).filter(Boolean);
   return {
     date: results.date,
     commit: results.commit,
+    subject: results.subject,
+    validity: {
+      valid: verdicts.filter((v) => v === "valid").length,
+      warning: verdicts.filter((v) => v === "warning").length,
+      invalid: verdicts.filter((v) => v === "invalid").length,
+    },
+    scorecard: scorecard(results),
     branch: results.branch,
     dirty: results.dirty,
     note: results.note,

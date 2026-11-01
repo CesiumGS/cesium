@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Benchmark Tracking</title>
+    <title>Dyno</title>
     <style>
       body {
         margin: 0;
@@ -34,6 +34,111 @@
       h1 {
         font-size: 20px;
         margin: 0;
+      }
+      h1 .tagline {
+        font-size: 13px;
+        font-weight: normal;
+        color: var(--muted);
+        margin-left: 6px;
+      }
+      .explorer .controls {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin: 6px 0;
+      }
+      .explorer .segmented {
+        display: inline-flex;
+        border: 1px solid var(--grid);
+        border-radius: 6px;
+        overflow: hidden;
+      }
+      .explorer .segmented button {
+        border: 0;
+        border-radius: 0;
+        margin: 0;
+      }
+      .explorer .segmented button[aria-checked="true"] {
+        background: var(--ink);
+        color: var(--surface);
+      }
+      .explorer .check {
+        display: inline-flex;
+        gap: 4px;
+        align-items: center;
+      }
+      .explorer .readout,
+      .explorer .scrub output {
+        font-variant-numeric: tabular-nums;
+        color: var(--ink-2);
+      }
+      .explorer .scrub {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin: 6px 0;
+      }
+      .explorer .scrub[hidden] {
+        display: none;
+      }
+      .explorer .scrub input {
+        flex: 1;
+      }
+      .explorer .scrub output {
+        min-width: 6ch;
+      }
+      .explorer .status.error {
+        color: var(--critical);
+      }
+      .explorer .panes {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+        gap: 10px;
+        margin-top: 8px;
+      }
+      .explorer .pane {
+        position: relative;
+        aspect-ratio: 16 / 9;
+        background: #000;
+        border: 1px solid var(--grid);
+        border-radius: 6px;
+        overflow: hidden;
+      }
+      .explorer .pane .view {
+        position: absolute;
+        inset: 0;
+      }
+      .explorer .hud {
+        position: absolute;
+        left: 8px;
+        top: 8px;
+        background: rgba(13, 13, 13, 0.78);
+        border: 1px solid #383835;
+        border-radius: 6px;
+        padding: 6px 9px;
+        font:
+          12px/1.4 ui-monospace,
+          monospace;
+        color: #c3c2b7;
+        pointer-events: none;
+        white-space: pre;
+      }
+      .explorer .hud b {
+        color: #f0efec;
+      }
+      .explorer .hud .key {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 2px;
+        margin-right: 6px;
+        vertical-align: -1px;
+      }
+      .explorer .hint,
+      .explorer .credits {
+        color: var(--muted);
+        font-size: 12px;
       }
       nav {
         display: flex;
@@ -153,12 +258,15 @@
   <body>
     <div class="app viz">
       <header>
-        <h1>Benchmark tracking</h1>
+        <h1>
+          Dyno <span class="tagline">benchmark tracking for CesiumJS</span>
+        </h1>
         <nav>
           <button data-tab="trends">Trends</button>
           <button data-tab="log">Runs</button>
           <button data-tab="compare">Compare</button>
           <button data-tab="report">Report</button>
+          <button data-tab="explore">Explorer</button>
         </nav>
       </header>
       <div class="where" id="where"></div>

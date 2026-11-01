@@ -53,6 +53,21 @@ export function conditions() {
         ? { gpuPowerLimitW: Number(powerLimit) }
         : {}),
     });
+    // The GPU's own thermal limits: its target temperature and how far
+    // below the throttle limit slowdown starts (T.Limit offsets, °C).
+    const q = tryExec("nvidia-smi", ["-q", "-d", "TEMPERATURE"]) ?? "";
+    const field = (name) => {
+      const v = Number(q.match(new RegExp(`${name}\\s*:\\s*(-?\\d+)`))?.[1]);
+      return Number.isFinite(v) ? v : undefined;
+    };
+    const target = field("GPU Target Temperature");
+    const slowdown = field("GPU Slowdown T.Limit Temp");
+    if (target !== undefined) {
+      out.gpuTargetTemperatureC = target;
+    }
+    if (slowdown !== undefined) {
+      out.gpuSlowdownTLimitC = slowdown;
+    }
   }
   if (platform() === "win32") {
     const plan = tryExec("powercfg", ["/getactivescheme"]);
@@ -76,10 +91,18 @@ export function startSampler() {
   const gpu = [];
   const cpu = [];
   const children = [];
+  // Thermal headroom (T.Limit: °C below the throttle limit) where the
+  // driver reports it; an unknown field would fail the whole query.
+  const headroom = /^\s*-?\d+/.test(
+    tryExec("nvidia-smi", [
+      "--query-gpu=temperature.gpu.tlimit",
+      "--format=csv,noheader,nounits",
+    ]) ?? "",
+  );
   const gpuChild = spawn(
     "nvidia-smi",
     [
-      "--query-gpu=clocks.gr,clocks.mem,temperature.gpu,power.draw,utilization.gpu,clocks_event_reasons.active,pstate",
+      `--query-gpu=clocks.gr,clocks.mem,temperature.gpu,power.draw,utilization.gpu,clocks_event_reasons.active,pstate${headroom ? ",temperature.gpu.tlimit" : ""}`,
       "--format=csv,noheader,nounits",
       "-lms",
       "250",
@@ -93,7 +116,7 @@ export function startSampler() {
     const lines = gpuBuffer.split("\n");
     gpuBuffer = lines.pop();
     for (const line of lines) {
-      const [clock, memory, temperature, power, utilization, reasons, pstate] =
+      const [clock, memory, temperature, power, utilization, reasons, pstate, tlimit] =
         line.split(",").map((s) => s.trim());
       if (!clock || Number.isNaN(Number(clock))) {
         continue;
@@ -107,6 +130,9 @@ export function startSampler() {
         utilization: Number(utilization),
         reasons: parseInt(reasons, 16) || 0,
         pstate,
+        ...(tlimit !== undefined && Number.isFinite(Number(tlimit))
+          ? { headroom: Number(tlimit) }
+          : {}),
       });
     }
   });
@@ -162,10 +188,16 @@ export function startSampler() {
       const c = cpu.filter((s) => s.t >= start && s.t <= end);
       let reasons = 0;
       let slowed = 0;
+      let thermal = 0;
       for (const s of g) {
         reasons |= s.reasons;
         if (Object.keys(SLOWDOWN).some((bit) => s.reasons & Number(bit))) {
           slowed++;
+        }
+        // Thermal slowdowns (software, hardware) and hardware slowdown:
+        // conditions, unlike clocks, which follow the workload.
+        if (s.reasons & (0x20 | 0x40 | 0x8)) {
+          thermal++;
         }
       }
       return {
@@ -177,10 +209,15 @@ export function startSampler() {
           ? Math.max(...g.map((s) => s.temperature))
           : undefined,
         gpuTemperatureStartC: g[0]?.temperature,
+        /** Least thermal headroom (°C below the throttle limit). */
+        gpuHeadroomMinC: g.some((s) => s.headroom !== undefined)
+          ? Math.min(...g.filter((s) => s.headroom !== undefined).map((s) => s.headroom))
+          : undefined,
         gpuPowerMeanW: mean(g.map((s) => s.power)),
         gpuUtilizationMean: mean(g.map((s) => s.utilization)),
         /** Fraction of samples with a power or thermal slowdown reason. */
         gpuSlowedFraction: g.length ? slowed / g.length : undefined,
+        gpuThermalFraction: g.length ? thermal / g.length : undefined,
         gpuSlowdownReasons: Object.entries(SLOWDOWN)
           .filter(([bit]) => reasons & Number(bit))
           .map(([, name]) => name),

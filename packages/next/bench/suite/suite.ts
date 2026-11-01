@@ -4,6 +4,7 @@ import {
   CanvasTarget,
   Ellipsoid,
   Engine,
+  GlobeController,
   eastNorthUpToFixedFrame,
   fromDegrees,
   resolveIonAsset,
@@ -15,8 +16,10 @@ import ionSource from "../../../engine/Source/Core/Ion.js?raw";
 import publicCatalog from "./catalog/public.json";
 import type {
   Dataset,
+  EffectiveRender,
   EngineConfig,
   Pose,
+  RenderSettings,
   RunMetrics,
   Scenario,
   Scene,
@@ -48,6 +51,74 @@ export interface RunSpec {
   config: EngineConfig;
   /** Set by the CLI when the engine can't draw a dataset. */
   unsupported?: string;
+  /** Screenshot the settled views (filmstrips): the CLI's first repetition. */
+  capture?: boolean;
+  /** Render settings (the catalog's, then the configuration's). */
+  render?: RenderSettings;
+}
+
+/** The catalog's render settings when a spec has none. */
+export const DEFAULT_RENDER: RenderSettings = {
+  pixelRatio: 1,
+  msaaSamples: 4,
+  hdr: true,
+  fxaa: false,
+  fog: false,
+  outlines: false,
+  sun: { elevation: 40, azimuth: 150 },
+};
+
+/**
+ * A spec's render settings: the catalog's, then the scene's, then the
+ * configuration's.
+ */
+export function renderSettings(spec: RunSpec): RenderSettings {
+  return {
+    ...DEFAULT_RENDER,
+    ...spec.render,
+    ...spec.scene.render,
+    ...spec.config.render,
+  };
+}
+
+/**
+ * Unit vector toward the sun (Earth-fixed) for a scene: the settings'
+ * elevation and azimuth over the point below the camera at `pose`.
+ */
+export function sunDirection(spec: RunSpec, pose: Pose): Float64Array {
+  const { elevation, azimuth } = renderSettings(spec).sun;
+  const position = Float64Array.from(pose.position);
+  const ground = Ellipsoid.WGS84.scaleToGeodeticSurface(
+    position,
+    new Float64Array(3),
+  );
+  const enu = eastNorthUpToFixedFrame(
+    ground ?? position,
+    Ellipsoid.WGS84,
+    new Float64Array(16),
+  );
+  const e = Math.cos(elevation * deg) * Math.sin(azimuth * deg);
+  const n = Math.cos(elevation * deg) * Math.cos(azimuth * deg);
+  const u = Math.sin(elevation * deg);
+  const out = new Float64Array(3);
+  for (let i = 0; i < 3; i++) {
+    out[i] = enu[i]! * e + enu[4 + i]! * n + enu[8 + i]! * u;
+  }
+  const length = Math.hypot(out[0]!, out[1]!, out[2]!);
+  return out.map((v) => v / length);
+}
+
+const ratioOf = (r: RenderSettings) =>
+  r.pixelRatio === "device" ? (globalThis.devicePixelRatio ?? 1) : r.pixelRatio;
+
+/** Filmstrip hook, exposed by the CLI (Playwright) when it captures. */
+async function captureMoment(spec: RunSpec, moment: string): Promise<void> {
+  const capture = (
+    globalThis as { captureMoment?: (moment: string) => Promise<void> }
+  ).captureMoment;
+  if (spec.capture && capture) {
+    await capture(moment);
+  }
 }
 
 function tokenFor(dataset: Dataset): string {
@@ -98,7 +169,7 @@ async function frameSphere(
  * poses for every engine: float64 position, direction and up from 1.x's
  * heading-pitch-range convention.
  */
-async function cameraScript(
+export async function cameraScript(
   spec: RunSpec,
 ): Promise<(progress: number) => Pose> {
   const camera = spec.scene.camera;
@@ -138,7 +209,7 @@ async function cameraScript(
 
 // ---------------------------------------------------------------- adapters
 
-interface Adapter {
+export interface Adapter {
   setup(container: HTMLElement, spec: RunSpec): Promise<void>;
   /** Renders one frame; returns main-thread ms inside the engine. */
   frame(): number;
@@ -148,14 +219,26 @@ interface Adapter {
   /** Some content (tiles or models) is drawn. */
   contentDrawn(): boolean;
   setCamera(pose: Pose): void;
+  /** The camera now (the explorer links engines' cameras). */
+  getCamera(): Pose;
+  /** Mouse and keyboard camera control (the explorer's free flight). */
+  setInteractive(on: boolean): void;
+  /** Keep what is selected and loaded now, for inspecting it from elsewhere. */
+  setStreamingPaused(on: boolean): void;
+  /** The render settings in effect (read after frames were drawn). */
+  effectiveRender(): EffectiveRender;
+  /** Lights the scene from this direction (unit vector toward the sun). */
+  setSun(direction: Float64Array): void;
   destroy(): void;
 }
 
-class NextAdapter implements Adapter {
+export class NextAdapter implements Adapter {
   private engine!: Engine;
   private view!: ReturnType<Engine["addView"]>;
   private readonly tilesets: Tileset3D[] = [];
   private models = 0;
+  private canvas!: HTMLCanvasElement;
+  private controller: GlobeController | undefined;
 
   async setup(container: HTMLElement, spec: RunSpec): Promise<void> {
     const { scene, config } = spec;
@@ -163,6 +246,7 @@ class NextAdapter implements Adapter {
     canvas.style.width = "100%";
     canvas.style.height = "100%";
     container.append(canvas);
+    this.canvas = canvas;
     const engine = (this.engine = await Engine.create());
     const limit = engine.gpu.device.limits.maxStorageBufferBindingSize;
     const world = engine.createWorld({
@@ -179,7 +263,14 @@ class NextAdapter implements Adapter {
       vertexBytes: Math.min(768 << 20, Math.floor(limit / 4) * 4),
       indexBytes: Math.min(384 << 20, Math.floor(limit / 4) * 4),
     });
-    this.view = engine.addView({ target: new CanvasTarget(canvas), world });
+    // 2.0 renders with 4× MSAA and HDR always, and has no fog or FXAA:
+    // effectiveRender() reports it, and the report flags differences.
+    this.view = engine.addView({
+      target: new CanvasTarget(canvas, {
+        pixelRatio: ratioOf(renderSettings(spec)),
+      }),
+      world,
+    });
     this.view.camera.near = 1;
     const byId = new Map(spec.datasets.map((d) => [d.id, d]));
     let imagery: ImageryProvider | undefined;
@@ -292,6 +383,7 @@ class NextAdapter implements Adapter {
 
   frame(): number {
     const t = performance.now();
+    this.controller?.update();
     this.engine.renderFrame();
     return performance.now() - t;
   }
@@ -325,17 +417,61 @@ class NextAdapter implements Adapter {
     c.orient(Float64Array.from(pose.up));
   }
 
+  getCamera(): Pose {
+    const c = this.view.camera;
+    return {
+      position: [...c.position] as Pose["position"],
+      direction: [...c.direction] as Pose["direction"],
+      up: [...c.up] as Pose["up"],
+    };
+  }
+
+  setInteractive(on: boolean): void {
+    if (on && !this.controller) {
+      this.controller = new GlobeController(this.view, this.canvas);
+    } else if (!on && this.controller) {
+      this.controller.dispose();
+      this.controller = undefined;
+    }
+  }
+
+  setStreamingPaused(on: boolean): void {
+    for (const tileset of this.tilesets) {
+      tileset.freezeSelection = on;
+    }
+  }
+
+  setSun(direction: Float64Array): void {
+    this.engine.sunDirection.set(direction);
+  }
+
+  effectiveRender(): EffectiveRender {
+    const target = this.view.target as CanvasTarget;
+    return {
+      width: target.width,
+      height: target.height,
+      pixelRatio: target.pixelRatio,
+      msaaSamples: 4,
+      hdr: true,
+      fxaa: false,
+      fog: false,
+      outlines: false,
+    };
+  }
+
   destroy(): void {
+    this.controller?.dispose();
     this.engine.destroy();
   }
 }
 
-class LegacyAdapter implements Adapter {
+export class LegacyAdapter implements Adapter {
   private viewer: Json;
   private readonly tilesets: Json[] = [];
 
   async setup(container: HTMLElement, spec: RunSpec): Promise<void> {
     const { scene, config } = spec;
+    const render = renderSettings(spec);
     const byId = new Map(spec.datasets.map((d) => [d.id, d]));
     const viewer = (this.viewer = new Cesium.Viewer(container, {
       globe: scene.globe === "none" ? false : undefined,
@@ -352,13 +488,22 @@ class LegacyAdapter implements Adapter {
       fullscreenButton: false,
       infoBox: false,
       selectionIndicator: false,
-      msaaSamples: 4,
+      msaaSamples: render.msaaSamples,
+      // Pixel ratio set explicitly below (resolutionScale).
+      useBrowserRecommendedResolution: false,
       useDefaultRenderLoop: false,
       creditContainer: document.querySelector("#credits"),
     }));
+    viewer.resolutionScale =
+      ratioOf(render) / (globalThis.devicePixelRatio ?? 1);
+    viewer.scene.highDynamicRange = render.hdr;
+    viewer.scene.postProcessStages.fxaa.enabled = render.fxaa;
+    viewer.scene.fog.enabled = render.fog;
     viewer.scene.sun = undefined;
     viewer.scene.moon = undefined;
     viewer.camera.frustum.near = 1.0;
+    // Input off unless the explorer turns it on (runs are scripted).
+    viewer.scene.screenSpaceCameraController.enableInputs = false;
     const ion = (d: Dataset) =>
       Cesium.IonResource.fromAssetId(ionAsset(d), {
         accessToken: tokenFor(d),
@@ -389,6 +534,7 @@ class LegacyAdapter implements Adapter {
           ? { maximumScreenSpaceError: config.maximumScreenSpaceError }
           : {}),
         enableCollision: layer.collision ?? false,
+        showOutline: render.outlines,
       });
       viewer.scene.primitives.add(tileset);
       this.tilesets.push(tileset);
@@ -428,6 +574,57 @@ class LegacyAdapter implements Adapter {
         up: new Cesium.Cartesian3(...pose.up),
       },
     });
+  }
+
+  getCamera(): Pose {
+    const c = this.viewer.camera;
+    const xyz = (v: Json) => [v.x, v.y, v.z] as [number, number, number];
+    return {
+      position: xyz(c.positionWC),
+      direction: xyz(c.directionWC),
+      up: xyz(c.upWC),
+    };
+  }
+
+  setInteractive(on: boolean): void {
+    this.viewer.scene.screenSpaceCameraController.enableInputs = on;
+  }
+
+  setSun(direction: Float64Array): void {
+    // As the parity harness: a directional light of 2.0's intensity.
+    this.viewer.scene.light = new Cesium.DirectionalLight({
+      direction: new Cesium.Cartesian3(
+        -direction[0]!,
+        -direction[1]!,
+        -direction[2]!,
+      ),
+      intensity: 2.0,
+    });
+  }
+
+  effectiveRender(): EffectiveRender {
+    const scene = this.viewer.scene;
+    return {
+      width: scene.drawingBufferWidth,
+      height: scene.drawingBufferHeight,
+      pixelRatio: scene.pixelRatio,
+      msaaSamples: scene.msaaSamples,
+      hdr: scene.highDynamicRange,
+      fxaa: scene.postProcessStages.fxaa.enabled,
+      fog: scene.fog.enabled,
+      outlines: this.tilesets.some((t) => t.showOutline),
+    };
+  }
+
+  setStreamingPaused(on: boolean): void {
+    for (const tileset of this.tilesets) {
+      tileset.debugFreezeFrame = on;
+    }
+    // The globe's own switch (CesiumInspector's "Suspend LOD update").
+    const surface = this.viewer.scene.globe?._surface;
+    if (surface) {
+      surface._debug.suspendLodUpdate = on;
+    }
   }
 
   destroy(): void {
@@ -535,6 +732,7 @@ export async function runScene(spec: RunSpec): Promise<RunMetrics> {
     const pose = await cameraScript(spec);
     const start = performance.now();
     await adapter.setup(container, spec);
+    adapter.setSun(sunDirection(spec, pose(0)));
     adapter.setCamera(pose(0));
     const timeout = spec.scenario.settleTimeoutSeconds * 1000;
     const load: Array<[number, number, number]> = [];
@@ -557,6 +755,11 @@ export async function runScene(spec: RunSpec): Promise<RunMetrics> {
         }
       },
     );
+    metrics.render = adapter.effectiveRender();
+    // Settled: the start view, for the filmstrip (outside any timing).
+    if (metrics.settleMs !== undefined) {
+      await captureMoment(spec, "start");
+    }
     if (metrics.settleMs === undefined) {
       metrics.status = "timeout";
       metrics.message = "initial view did not settle";
@@ -598,6 +801,32 @@ export async function runScene(spec: RunSpec): Promise<RunMetrics> {
     metrics.frameP99 = quantile(intervals, 0.99);
     metrics.over33 = intervals.filter((i) => i > 34).length;
     metrics.over50 = intervals.filter((i) => i > 50).length;
+    metrics.over100 = intervals.filter((i) => i > 100).length;
+    metrics.frameP999 = quantile(intervals, 0.999);
+    const meanInterval =
+      intervals.reduce((a, b) => a + b, 0) / Math.max(1, intervals.length);
+    metrics.frameStdDev = Math.sqrt(
+      intervals.reduce((a, b) => a + (b - meanInterval) ** 2, 0) /
+        Math.max(1, intervals.length),
+    );
+    metrics.intervals = intervals.map(round);
+    // The camera path, for track maps (the same for every engine).
+    metrics.path = [];
+    for (let k = 0; k <= 49; k++) {
+      const progress = k / 49;
+      const carto = Ellipsoid.WGS84.cartesianToCartographic(
+        Float64Array.from(pose(progress).position),
+        { longitude: 0, latitude: 0, height: 0 },
+      );
+      if (carto) {
+        metrics.path.push([
+          round(progress),
+          carto.longitude / deg,
+          carto.latitude / deg,
+          Math.round(carto.height),
+        ]);
+      }
+    }
     metrics.series = {
       load: downsample(load),
       motion: downsample(motion),
@@ -610,6 +839,9 @@ export async function runScene(spec: RunSpec): Promise<RunMetrics> {
     const resettleStart = performance.now();
     const resettle = await settle(adapter, resettleStart, timeout);
     metrics.resettleMs = resettle;
+    if (resettle !== undefined) {
+      await captureMoment(spec, "end");
+    }
     metrics.longFrames = longFrames.length;
     metrics.worstBlockingMs = longFrames.length
       ? Math.max(...longFrames.map((f) => f.blockingDuration))
@@ -764,6 +996,10 @@ export async function describeBrowser(): Promise<Record<string, unknown>> {
 }
 
 Object.assign(globalThis, { runScene, describeBrowser });
-if (!new URLSearchParams(location.search).has("bench")) {
+// The suite page's own controls (the explorer imports this module too).
+if (
+  document.querySelector("#run") &&
+  !new URLSearchParams(location.search).has("bench")
+) {
   setupUi();
 }

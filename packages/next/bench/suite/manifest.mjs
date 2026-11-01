@@ -28,7 +28,12 @@ export function loadCatalog(manifest = process.env.BENCH_MANIFEST) {
         problems.push(`${index > 0 ? "private" : "public"} ${problem}`);
       }
     }
-    for (const key of Object.keys(catalog)) {
+    // Render settings: the public catalog's, then the private manifest's.
+    if (json.render) {
+      catalog.render = { ...catalog.render, ...json.render };
+      delete catalog.render.$comment;
+    }
+    for (const key of ["datasets", "scenes", "scenarios", "configs"]) {
       for (const entry of json[key] ?? []) {
         if (index > 0 && key === "datasets") {
           entry.private ??= true;
