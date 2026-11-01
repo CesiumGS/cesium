@@ -1,9 +1,10 @@
 /**
- * Data attribution over an engine view: provider logos and required
- * notices in a compact pill at the bottom left, and a "Data attribution"
- * panel listing every credit (the providers' notices, then the data credits
- * of the tiles on screen, most frequent first, as 1.x orders them). Plain
- * DOM beside the inspector, for any app.
+ * Data attribution over an engine view, as 1.x shows it: the attributions
+ * a provider requires on screen (ion's non-collapsible ones: logos and
+ * notices) in a compact bar at the bottom left, and a "Data attribution"
+ * panel listing the rest (collapsible notices, then the data credits of the
+ * tiles on screen, most frequent first). Plain DOM beside the inspector,
+ * for any app.
  *
  * ion's attribution HTML is parsed, not injected: only logo images, link
  * URLs (http and https) and text are carried over.
@@ -11,8 +12,11 @@
 
 /** What the view must credit now. */
 export interface CreditSource {
-  /** Provider attributions (ion's HTML: logos, links, notices). */
-  attributions: ReadonlyArray<{ html: string }>;
+  /**
+   * Provider attributions (ion's HTML: logos, links, notices); collapsible
+   * ones may be listed behind "Data attribution" instead of on screen.
+   */
+  attributions: ReadonlyArray<{ html: string; collapsible?: boolean }>;
   /** Data credits of the content on screen. */
   credits: readonly string[];
 }
@@ -89,17 +93,28 @@ export function attachCredits(
     list.replaceChildren();
     // Several ion assets each bring the ion logo and notice: show each once.
     const seen = new Set<string>();
-    const row = (text: string, href?: string) => {
-      if (seen.has(text)) {
+    const row = (content: Node | string, key: string, href?: string) => {
+      if (seen.has(key)) {
         return;
       }
-      seen.add(text);
+      seen.add(key);
       const li = document.createElement("li");
-      li.append(href ? link(href, text) : text);
+      li.append(href ? link(href, content) : content);
       list.append(li);
     };
-    for (const { html } of attributions) {
+    for (const { html, collapsible } of attributions) {
       const doc = new DOMParser().parseFromString(html, "text/html");
+      const text = doc.body.textContent?.trim();
+      const href = safeLink(
+        doc.querySelector("a")?.getAttribute("href") ?? null,
+      );
+      if (collapsible) {
+        // Behind "Data attribution", as 1.x lists it.
+        if (text) {
+          row(text, text, href);
+        }
+        continue;
+      }
       for (const img of doc.querySelectorAll("img")) {
         // Remote logos, data URIs and the engine's own bundled ones.
         const raw = img.getAttribute("src") ?? "";
@@ -117,22 +132,18 @@ export function attachCredits(
         const href = safeLink(img.closest("a")?.getAttribute("href") ?? null);
         logos.append(href ? link(href, logo) : logo);
       }
-      const text = doc.body.textContent?.trim();
       if (!text || seen.has(text)) {
         continue;
       }
-      // Every provider notice stays on screen, whatever ion's collapsible
-      // flag says (it marks © OpenStreetMap contributors collapsible, and
-      // OSM expects its credit visible); long ones are truncated, with the
-      // full text in the tooltip and the panel. Only per-tile data credits
-      // live behind "Data attribution".
+      // A required notice stays on screen, truncated when long (the full
+      // text in its tooltip).
+      seen.add(text);
       const inline = inlineText(doc);
       inline.title = text;
       logos.append(inline);
-      row(text, safeLink(doc.querySelector("a")?.getAttribute("href") ?? null));
     }
     for (const credit of credits) {
-      row(credit);
+      row(credit, credit);
     }
     const count = list.childElementCount;
     toggle.hidden = count === 0;
@@ -211,8 +222,10 @@ const CSS = `
   background: rgba(11, 14, 20, 0.55); backdrop-filter: blur(4px);
 }
 .cesium-credits .cc-logos { display: flex; align-items: center; gap: 8px; min-width: 0; }
-.cesium-credits .cc-logos img { height: 16px; display: block; }
-.cesium-credits .cc-text { color: #c3cad8; white-space: nowrap; max-width: 32ch; overflow: hidden; text-overflow: ellipsis; }
+/* Logos keep their aspect ratio; notices truncate instead. */
+.cesium-credits .cc-logos > a, .cesium-credits .cc-logos > img { flex: none; display: block; }
+.cesium-credits .cc-logos img { height: 16px; width: auto; max-width: none; display: block; }
+.cesium-credits .cc-text { flex: 0 1 auto; min-width: 0; color: #c3cad8; white-space: nowrap; max-width: 32ch; overflow: hidden; text-overflow: ellipsis; }
 .cesium-credits a { color: #8ab8ff; }
 .cesium-credits .cc-toggle {
   background: none; border: none; padding: 0; color: #c3cad8; font: inherit;
