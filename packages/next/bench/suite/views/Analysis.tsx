@@ -19,6 +19,7 @@ import {
 } from "@tanstack/react-router";
 import { useId, useMemo } from "react";
 import { lineChart } from "../charts.mjs";
+import { compareEngines, engineLabel, isRelease } from "../engines.mjs";
 import {
   cellKey,
   cellTitle,
@@ -172,7 +173,10 @@ interface SweepAxis {
 interface SweepInfo {
   param: string;
   values: Array<string | number>;
-  configs: string[];
+  /** The swept engines (resolved ids, without the swept value). */
+  engines: string[];
+  /** Per value: the engines run with it. */
+  points: Array<{ value: string | number; configs: string[] }>;
 }
 
 /** The axis a run swept, if any: a parameter, or CesiumJS releases. */
@@ -181,27 +185,22 @@ function axisOf(s: Summary): SweepAxis | undefined {
   if (sweep) {
     return {
       param: sweep.param,
-      points: sweep.values.map((v) => ({
-        label: String(v),
-        configs: sweep.configs.map((c) => `${c}[${sweep.param}=${v}]`),
+      points: sweep.points.map((p) => ({
+        label: String(p.value),
+        configs: p.configs,
       })),
-      lines: sweep.configs,
+      lines: sweep.engines,
       baseline: s.baseline,
     };
   }
-  const releases = s.configs
-    .filter((c) => /^1\.x@\d+\.\d+\.\d+$/.test(c))
-    .sort((a, b) => {
-      const k = (c: string) => c.slice(4).split(".").map(Number);
-      const [x, y] = [k(a), k(b)];
-      return x[0]! - y[0]! || x[1]! - y[1]! || x[2]! - y[2]!;
-    });
+  // Several CesiumJS releases in one run: a release sweep.
+  const releases = s.configs.filter(isRelease).sort(compareEngines);
   if (releases.length >= 2) {
     return {
       param: "CesiumJS release",
-      points: releases.map((c) => ({ label: c.slice(4), configs: [c] })),
-      lines: ["1.x"],
-      baseline: s.configs.includes("2.0") ? "2.0" : undefined,
+      points: releases.map((c) => ({ label: engineLabel(c), configs: [c] })),
+      lines: ["CesiumJS"],
+      baseline: s.candidate,
     };
   }
   return undefined;
@@ -248,7 +247,7 @@ function Sweeps() {
       for (const metric of metrics) {
         const [, , unit, scale] = metricInfo(metric);
         const series = axis.lines.map((line, i) => ({
-          label: line,
+          label: engineLabel(line),
           color: `var(--series-${Math.min(4, i + 2)})`,
           points: axis.points.map((p, x) => {
             const config =
@@ -274,7 +273,7 @@ function Sweeps() {
                 ? [
                     {
                       y: base / scale,
-                      label: axis.baseline,
+                      label: engineLabel(axis.baseline!),
                       color: "var(--series-1)",
                       dash: "6 4",
                     },
@@ -368,8 +367,10 @@ function Sweeps() {
       >
         {axis.param} at {listOf(axis.points.map((p) => p.label))} on{" "}
         {listOf(axis.lines)}
-        {axis.baseline ? `, against ${axis.baseline} (dashed)` : ""}. Each point
-        is{" "}
+        {axis.baseline
+          ? `, against ${engineLabel(axis.baseline)} (dashed)`
+          : ""}
+        . Each point is{" "}
         {scene === ALL
           ? `the geometric mean over ${sceneCount} scenes`
           : "this scene's median"}
@@ -495,7 +496,7 @@ function Machines() {
                     color="textSecondary"
                     className="analysis-block"
                   >
-                    {cand} against {base}
+                    {engineLabel(cand)} against {engineLabel(base)}
                   </Typography>
                 </TableCell>
                 {ratios.map((g, i) => {
@@ -507,7 +508,7 @@ function Machines() {
                         <span className="none">–</span>
                       ) : (
                         <Tooltip
-                          title={`×${g.toFixed(2)} (${cand} / ${base})`}
+                          title={`×${g.toFixed(2)} (${engineLabel(cand)} / ${engineLabel(base)})`}
                           describeChild
                         >
                           <span className={change.tone}>{change.text}</span>

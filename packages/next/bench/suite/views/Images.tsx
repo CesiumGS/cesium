@@ -18,6 +18,7 @@ import { Icon } from "@stratakit/mui";
 import { getRouteApi, Link, useNavigate } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 import type { Json } from "../data.ts";
+import { engineLabel } from "../engines.mjs";
 import { Chips, Choice, Empty, Page, toast } from "./common.tsx";
 import "./images.css";
 
@@ -298,7 +299,7 @@ export function Images() {
                     color="textSecondary"
                     className="image-checks-item-meta"
                   >
-                    {row.id} · {row.config}
+                    {row.id} · {engineLabel(row.config)}
                     {row.flip ? ` · FLIP ${row.flip.mean.toFixed(3)}` : ""}
                   </Typography>
                 </ListItemButton>
@@ -373,7 +374,9 @@ function Check({
         ] as Array<[Mode, string]>)
       : ([["side", "New image"]] as Array<[Mode, string]>)),
     ...(parity
-      ? ([["parity", `Against ${row.parity.config}`]] as Array<[Mode, string]>)
+      ? ([["parity", `Against ${engineLabel(row.parity.config)}`]] as Array<
+          [Mode, string]
+        >)
       : []),
   ];
   const [mode, setMode] = useState<Mode>("side");
@@ -426,7 +429,7 @@ function Check({
           </Typography>
         </div>
         <Typography variant="body-sm" color="textSecondary" render={<p />}>
-          {row.id} · {row.config}
+          {row.id} · {engineLabel(row.config)}
           {row.flip ? (
             <>
               {" · "}
@@ -442,7 +445,7 @@ function Check({
         </Typography>
         {row.parity ? (
           <Typography variant="body-sm" color="textSecondary" render={<p />}>
-            Parity with {row.parity.config}: FLIP{" "}
+            Parity with {engineLabel(row.parity.config)}: FLIP{" "}
             <span className="num">{row.parity.mean.toFixed(3)}</span> mean,{" "}
             <span className={row.parity.within ? "better" : "worse"}>
               {row.parity.within ? "within" : "outside"} the parity threshold
@@ -508,12 +511,14 @@ function Check({
             ) : (
               <div className="image-check-side">
                 <figure>
-                  <img src={parity} alt={row.parity.config} />
-                  <figcaption>{row.parity.config}</figcaption>
+                  <img src={parity} alt={engineLabel(row.parity.config)} />
+                  <figcaption>{engineLabel(row.parity.config)}</figcaption>
                 </figure>
                 <figure>
                   <img src={parityHeat} alt="FLIP heatmap against it" />
-                  <figcaption>FLIP against {row.parity.config}</figcaption>
+                  <figcaption>
+                    FLIP against {engineLabel(row.parity.config)}
+                  </figcaption>
                 </figure>
               </div>
             )}

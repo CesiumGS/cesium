@@ -15,6 +15,7 @@
 // - pass: otherwise.
 import { ratio, summarize } from "./stats.mjs";
 import { escape } from "./charts.mjs";
+import { engineLabel, setupOf } from "./engines.mjs";
 
 export const DEFAULT_PLAN = {
   primary: "cpuP50",
@@ -184,20 +185,25 @@ export function scorecardHtml(card) {
     })
     .join("");
   return `<div class="scorecard"><div class="sc-head"><span class="sc-verdict" style="color:var(--${tone})">${icon} ${word}</span>
-<span>${escape(card.candidate)} vs ${escape(card.baseline)} · primary metric <b>${escape(card.primary.label)}</b>: ${escape(card.primary.moved)} (${g(card.primary.geomean)}, ${card.primary.better} scenes better, ${card.primary.worse} worse)</span></div>
+<span>${escape(engineLabel(card.candidate))} vs ${escape(engineLabel(card.baseline))} · primary metric <b>${escape(card.primary.label)}</b>: ${escape(card.primary.moved)} (${g(card.primary.geomean)}, ${card.primary.better} scenes better, ${card.primary.worse} worse)</span></div>
 ${card.plan.hypothesis ? `<div class="sub">Hypothesis: ${escape(card.plan.hypothesis)}</div>` : ""}
 <table class="sc"><tr><th>Guardrail (must not get more than ${Math.round(card.plan.tolerance * 100)}% worse)</th><th>geo. mean</th><th>scenes</th><th></th></tr>${rows}</table></div>`;
 }
 
 /**
- * Budgets checked against a run: per budget and scene, the configuration's
- * median (or its ratio to the baseline's) against the limit.
+ * Budgets checked against a run: per budget, each engine running its
+ * setup (any build: "2.0" covers 2.0@main and the working tree), and per
+ * scene, the median (or its ratio to the baseline's) against the limit.
  */
 export function checkBudgets(results, budgets = results.budgets ?? []) {
   const configs = [...new Set(results.runs.map((r) => r.config))];
   const baseline = results.baseline ?? configs[0];
   return budgets
-    .filter((b) => configs.includes(b.config))
+    .flatMap((b) =>
+      configs
+        .filter((c) => c !== baseline && setupOf(c) === (b.setup ?? b.config))
+        .map((config) => ({ ...b, config })),
+    )
     .map((b) => {
       const a = valuesBy(results.runs, baseline, b.metric);
       const c = valuesBy(results.runs, b.config, b.metric);
@@ -231,7 +237,7 @@ export function budgetsHtml(checked) {
     .map((b) => {
       const ok = b.broken === 0;
       const worst = b.scenes.filter((s) => !s.ok).sort((x, y) => y.value - x.value);
-      return `<tr><th>${escape(b.label)}<div class="muted">${escape(b.config)}${b.maxRatio !== undefined ? ` vs ${escape(b.baseline)}` : ""}</div></th><td class="${ok ? "ok" : "broken"}">${ok ? `✓ within in all ${b.scenes.length} scenes` : `✕ over in ${b.broken} of ${b.scenes.length}`}</td><td class="muted">${worst
+      return `<tr><th>${escape(b.label)}<div class="muted">${escape(engineLabel(b.config))}${b.maxRatio !== undefined ? ` vs ${escape(engineLabel(b.baseline))}` : ""}</div></th><td class="${ok ? "ok" : "broken"}">${ok ? `✓ within in all ${b.scenes.length} scenes` : `✕ over in ${b.broken} of ${b.scenes.length}`}</td><td class="muted">${worst
         .slice(0, 6)
         .map((s) => `${escape(s.scene)} ${fmt(b, s.value)}`)
         .join(" · ")}${worst.length > 6 ? " …" : ""}</td></tr>`;
@@ -312,11 +318,13 @@ export function compareTable([oldResults, oldConfig], [newResults, newConfig], m
       g === undefined ? "" : `${g < 1 ? "" : "+"}${((g - 1) * 100).toFixed(1)}%`,
     ]);
     const w = Math.max(24, ...rows.map((r) => r[0].length));
+    const [ha, hb] = [engineLabel(oldConfig), engineLabel(newConfig)];
+    const [wa, wb] = [Math.max(14, ha.length), Math.max(14, hb.length)];
     lines.push(
-      `${pad(`${label}${unit ? ` (${unit})` : ""}`, w)}  ${padStart(oldConfig, 14)}  ${padStart(newConfig, 14)}  change`,
+      `${pad(`${label}${unit ? ` (${unit})` : ""}`, w)}  ${padStart(ha, wa)}  ${padStart(hb, wb)}  change`,
     );
     for (const r of rows) {
-      lines.push(`${pad(r[0], w)}  ${padStart(r[1], 14)}  ${padStart(r[2], 14)}  ${r[3]}`);
+      lines.push(`${pad(r[0], w)}  ${padStart(r[1], wa)}  ${padStart(r[2], wb)}  ${r[3]}`);
     }
     lines.push("");
   }

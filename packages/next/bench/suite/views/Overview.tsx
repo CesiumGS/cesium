@@ -14,6 +14,7 @@ import {
 import { Link as RouterLink } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { ALERT_METRICS, detectAlerts } from "../changepoints.mjs";
+import { engineLabel, isRelease, setupOf } from "../engines.mjs";
 import { METRICS } from "../report.mjs";
 import { catalog, geomean, metricInfo, short, type Summary } from "../data.ts";
 import type { Budget } from "../schema.ts";
@@ -64,6 +65,8 @@ const metricName = (key: string) => {
 
 interface CheckedBudget {
   budget: Budget;
+  /** The engine checked (a build of the budget's setup). */
+  config: string;
   baseline: string;
   scenes: Array<{ title: string; value: number; ok: boolean }>;
   missed: number;
@@ -76,15 +79,20 @@ interface CheckedBudget {
  * baseline's) against the limit.
  */
 function checkBudgets(s: Summary, budgets: Budget[]): CheckedBudget[] {
-  const baseline = s.baseline ?? s.configs[0] ?? "1.x";
+  const baseline = s.baseline ?? s.configs.find(isRelease) ?? s.configs[0]!;
   return budgets
-    .filter((b) => s.configs.includes(b.config))
-    .map((budget) => {
+    .flatMap((budget) =>
+      // Every engine running the budget's setup (2.0: any build of 2.0).
+      s.configs
+        .filter((c) => c !== baseline && setupOf(c) === budget.setup)
+        .map((config) => ({ budget, config })),
+    )
+    .map(({ budget, config }) => {
       const scenes: CheckedBudget["scenes"] = [];
       for (const cell of s.scenes) {
         const scenario = cell.scenario ?? "cold-orbit";
         if (
-          cell.config !== budget.config ||
+          cell.config !== config ||
           (budget.scenes && !budget.scenes.includes(cell.scene)) ||
           (budget.scenario && budget.scenario !== scenario)
         ) {
@@ -118,6 +126,7 @@ function checkBudgets(s: Summary, budgets: Budget[]): CheckedBudget[] {
       }
       return {
         budget,
+        config,
         baseline,
         scenes,
         missed: scenes.filter((x) => !x.ok).length,
@@ -369,14 +378,14 @@ export function Overview() {
 
       {!cand && (
         <Alert severity="info" className="res-gap">
-          The latest run measured only {base}. Run 1.x and 2.0 together to
-          compare them.
+          The latest run measured only {engineLabel(base)}. Run a release and
+          2.0 together to compare them.
         </Alert>
       )}
 
       <ul
         className="res-tiles"
-        aria-label={`${cand ?? "Candidate"} against ${base}`}
+        aria-label={`${cand ? engineLabel(cand) : "Candidate"} against ${engineLabel(base)}`}
       >
         {tiles.map((t) => {
           const c = formatChange(t.ratio, { noun: t.noun });
@@ -423,7 +432,8 @@ export function Overview() {
         render={<p />}
         className="res-tiles-note"
       >
-        {cand ?? "Candidate"} against {base}, geometric mean across scenes.
+        {cand ? engineLabel(cand) : "Candidate"} against {engineLabel(base)},
+        geometric mean across scenes.
       </Typography>
 
       <div className="res-columns">
@@ -459,9 +469,9 @@ export function Overview() {
                           color="textSecondary"
                           render={<div />}
                         >
-                          {b.budget.config}
+                          {engineLabel(b.config)}
                           {b.budget.maxRatio !== undefined
-                            ? ` vs ${b.baseline}`
+                            ? ` vs ${engineLabel(b.baseline)}`
                             : ""}
                           {limit !== undefined
                             ? ` · limit ${budgetValue(b.budget, limit)}`
@@ -501,9 +511,9 @@ export function Overview() {
             </Table>
           ) : (
             <Typography variant="body-sm" color="textSecondary" render={<p />}>
-              No catalog budget applies to this run's configurations (
-              {latest.configs.join(", ")}). Budgets name the configuration they
-              hold for, such as 2.0.
+              No catalog budget applies to this run's engines (
+              {latest.configs.map((c) => engineLabel(c)).join(", ")}). Budgets
+              name the setup they hold for, such as 2.0.
             </Typography>
           )}
         </Section>
@@ -606,7 +616,7 @@ function ToLookAt({
             <Status tone="error">Regression</Status>
             <div>
               <Link render={<RouterLink to="/alerts" />}>
-                {metricName(a.metric)} {c.text} in {a.config}
+                {metricName(a.metric)} {c.text} in {engineLabel(a.config)}
               </Link>
               <Typography
                 variant="caption-md"

@@ -18,6 +18,7 @@
 // compared at the same place on the same path.
 import { ratio, summarize } from "./stats.mjs";
 import { compact, escape, lineChart } from "./charts.mjs";
+import { engineLabel } from "./engines.mjs";
 
 /** Bins along the camera path (overlays and path maps). */
 const BINS = 50;
@@ -111,7 +112,7 @@ export function pathOverlay({ profiles, configs, baseline, candidate, color, met
     }
     for (const [i, rep] of l.reps.entries()) {
       series.push({
-        label: `${config} #${i + 1}`,
+        label: `${engineLabel(config)} #${i + 1}`,
         group: config,
         color: color(config),
         opacity: 0.22,
@@ -121,7 +122,7 @@ export function pathOverlay({ profiles, configs, baseline, candidate, color, met
       });
     }
     series.push({
-      label: `${config} median`,
+      label: `${engineLabel(config)} median`,
       group: config,
       color: color(config),
       markers: false,
@@ -150,7 +151,7 @@ export function pathOverlay({ profiles, configs, baseline, candidate, color, met
       unit,
       series: [
         {
-          label: `${candidate} − ${baseline}`,
+          label: `${engineLabel(candidate)} − ${engineLabel(baseline)}`,
           color: "var(--ink-2)",
           markers: false,
           points: a.map((v, i) =>
@@ -215,17 +216,17 @@ export function segmentTable({ profiles, configs, baseline, color, metric }) {
           const r = ratio(values.get(baseline)[s], values.get(c)[s]);
           if (r?.separated) {
             vs = r.value < 1
-              ? `<span class="ratio better">▼ faster than ${escape(baseline)}</span>`
-              : `<span class="ratio worse">▲ slower than ${escape(baseline)}</span>`;
+              ? `<span class="ratio better">▼ faster than ${escape(engineLabel(baseline))}</span>`
+              : `<span class="ratio worse">▲ slower than ${escape(engineLabel(baseline))}</span>`;
           }
         }
         return `<td class="${lowest ? "lowest" : ""}">${v.toFixed(2)}${lowest ? `<span class="gap">lowest</span>` : gap ? `<span class="gap">${gap}</span>` : ""}${vs}</td>`;
       });
-      return `<tr><th><span class="key" style="background:${color(c)}"></span>${escape(c)}</th>${cells.join("")}</tr>`;
+      return `<tr><th><span class="key" style="background:${color(c)}"></span>${escape(engineLabel(c))}</th>${cells.join("")}</tr>`;
     })
     .join("");
   return `<figure class="chart board"><figcaption>${escape(label)} by path segment (${unit})</figcaption>
-<div class="sub">Mean per frame in each third of the camera path, median of the repetitions. Gaps are to the lowest; a verdict against ${escape(baseline)} appears only when the intervals separate.</div>
+<div class="sub">Mean per frame in each third of the camera path, median of the repetitions. Gaps are to the lowest; a verdict against ${escape(engineLabel(baseline))} appears only when the intervals separate.</div>
 <table class="segments"><tr><th></th>${columns.map((s) => `<th>${s}</th>`).join("")}</tr>${rows}</table></figure>`;
 }
 
@@ -289,7 +290,7 @@ export function pathMap({ path, profiles, configs, color, metric, title }) {
   const total = path.length - 1;
   const legend = [...present, ""].map((c) => {
     const n = share.get(c) ?? 0;
-    return `<span><span class="key" style="background:${c ? color(c) : "var(--neutral)"}"></span>${c ? `${escape(c)} faster` : "no clear difference"} · ${Math.round((n / total) * 100)}%</span>`;
+    return `<span><span class="key" style="background:${c ? color(c) : "var(--neutral)"}"></span>${c ? `${escape(engineLabel(c))} faster` : "no clear difference"} · ${Math.round((n / total) * 100)}%</span>`;
   });
   const [, label] = PATH_METRICS[metric];
   return `<figure class="chart pathmap"><figcaption>${escape(title)}</figcaption><div class="sub">The camera path from above, north up. Each stretch takes the color of the configuration at least ${FASTER_BY * 100}% faster there (${escape(label)}).</div><div class="legend">${legend.join("")}</div>${svg}</figure>`;
@@ -309,7 +310,7 @@ export function percentileCurve({ runs, configs, color }) {
       continue;
     }
     series.push({
-      label: config,
+      label: engineLabel(config),
       color: color(config),
       points: PERCENTILES.map((p, i) => [
         i,
@@ -348,10 +349,10 @@ export function filmstrip({ entries, assets, configs, baseline, explore }) {
         .map((c) => {
           const f = e.flip[c];
           const caption = c === baseline
-            ? `${escape(c)} · reference`
+            ? `${escape(engineLabel(c))} · reference`
             : f
-              ? `${escape(c)} · FLIP ${f.mean.toFixed(3)} mean, ${f.p95.toFixed(3)} p95`
-              : escape(c);
+              ? `${escape(engineLabel(c))} · FLIP ${f.mean.toFixed(3)} mean, ${f.p95.toFixed(3)} p95`
+              : escape(engineLabel(c));
           return `<div class="frame"><a href="${escape(assets + e.images[c])}" target="_blank" rel="noopener"><img loading="lazy" src="${escape(assets + e.images[c])}" alt="${escape(`${c}, ${moments[e.moment] ?? e.moment}`)}"></a><div class="cap">${caption}</div>${f ? `<details><summary>Difference heatmap</summary><img loading="lazy" src="${escape(assets + f.heatmap)}" alt="${escape(`FLIP heatmap, ${c} against ${baseline}`)}"></details>` : ""}</div>`;
         });
       const at = e.moment === "end" ? 1 : 0;
@@ -414,7 +415,7 @@ export function waterfall({ runs, configs, color }) {
       .sort((a, b) => b[1][1] - a[1][1])
       .map(([k, [count, bytes]]) => `${escape(k)} ${count} (${(bytes / 1e6).toFixed(1)} MB)`)
       .join(" · ");
-    return `<div class="wf"><div class="m-label"><span class="key" style="background:${color(r.config)}"></span>${escape(r.config)}: ${n} requests · ${summary}</div>${svg}</div>`;
+    return `<div class="wf"><div class="m-label"><span class="key" style="background:${color(r.config)}"></span>${escape(engineLabel(r.config))}: ${n} requests · ${summary}</div>${svg}</div>`;
   });
   const cumulative = lineChart({
     title: "Bytes received over time",
@@ -428,7 +429,7 @@ export function waterfall({ runs, configs, color }) {
         total += w[3];
         points.push([(w[0] + (w[2] ?? w[1] ?? 0)) / 1000, total / 1e6]);
       }
-      return { label: r.config, color: color(r.config), points: thin(points, 400) };
+      return { label: engineLabel(r.config), color: color(r.config), points: thin(points, 400) };
     }),
     height: 150,
   });

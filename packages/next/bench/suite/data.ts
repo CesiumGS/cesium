@@ -49,7 +49,10 @@ export interface Summary {
 export const catalog = publicCatalog as unknown as {
   datasets: Dataset[];
   scenes: Scene[];
-  configs: EngineConfig[];
+  /** Engine settings ("1.x", "2.0", "2.0+legacy1x"; engines.mjs). */
+  setups: EngineConfig[];
+  /** What runs measure by default, and the baseline and candidate. */
+  engines: { default: string[]; baseline: string; candidate: string };
   budgets?: Budget[];
 };
 
@@ -86,6 +89,8 @@ export interface RunIndex {
   directory: string;
   runs: string[];
   summaries: string[];
+  /** The working tree's branch (names its engines: "2.0@<branch>"). */
+  branch?: string;
 }
 
 export interface Runs {

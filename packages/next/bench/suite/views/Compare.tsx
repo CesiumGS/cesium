@@ -8,6 +8,7 @@ import { forestPlot } from "../charts.mjs";
 import { METRICS } from "../report.mjs";
 import { ratio } from "../stats.mjs";
 import { cellKey, cellTitle, geomean, metricInfo } from "../data.ts";
+import { engineLabel } from "../engines.mjs";
 import {
   Chart,
   Chips,
@@ -82,7 +83,7 @@ export function Compare() {
       ? search.config
       : sb?.candidate && configs.includes(sb.candidate)
         ? sb.candidate
-        : (configs.at(-1) ?? "2.0");
+        : (configs.at(-1) ?? "");
 
   // Scenes of this configuration in each run: compared where both have them.
   const scenes = useMemo(() => {
@@ -136,7 +137,7 @@ export function Compare() {
         better: measured.filter((r) => r.separated && r.value! < 1).length,
         worse: measured.filter((r) => r.separated && r.value! > 1).length,
         html: forestPlot({
-          title: `${metricName(key)} per scene, ${config}: candidate run relative to baseline run`,
+          title: `${metricName(key)} per scene, ${engineLabel(config)}: candidate run relative to baseline run`,
           rows,
           baseline: "baseline run",
           candidate: "candidate run",
@@ -221,7 +222,7 @@ export function Compare() {
           <Choice
             label="Configuration"
             value={config}
-            options={configs}
+            options={configs.map((c) => [c, engineLabel(c)] as const)}
             onChange={(v) => setSearch({ config: v })}
           />
           <Chips
@@ -257,7 +258,9 @@ export function Compare() {
           </Typography>
         )}
       {!scenes.both.length ? (
-        <Empty title={`These runs share no scene measured with ${config}.`}>
+        <Empty
+          title={`These runs share no scene measured with ${engineLabel(config)}.`}
+        >
           Pick another configuration, or runs of the same scenes.
         </Empty>
       ) : (

@@ -1,6 +1,7 @@
 import { lineChart } from "../charts.mjs";
 import { CONDITION_METRICS, METRICS } from "../report.mjs";
 import { ratio } from "../stats.mjs";
+import { engineLabel, setupOf } from "../engines.mjs";
 import {
   catalog,
   cellKey,
@@ -114,7 +115,7 @@ export const budgetsFor = (metric: string, config: string, scene: string) =>
   BUDGETS.filter(
     (b) =>
       b.metric === metric &&
-      b.config === config &&
+      b.setup === setupOf(config) &&
       (scene === "*" ||
         ((!b.scenes || b.scenes.includes(scene.split("|")[0]!)) &&
           (!b.scenario ||
@@ -280,7 +281,7 @@ export function annotations(runs: Summary[]): Mark[] {
     if (i > 0 && fresh.length) {
       marks.push({
         x: i,
-        label: `first run of ${fresh.join(", ")}`,
+        label: `first run of ${fresh.map((c) => engineLabel(c)).join(", ")}`,
         short: fresh.join(", "),
       });
     }
@@ -297,7 +298,7 @@ export function annotations(runs: Summary[]): Mark[] {
     if (i > 0 && render(s) !== render(runs[i - 1]!)) {
       marks.push({
         x: i,
-        label: `render settings changed: ${render(s)}`,
+        label: "render settings changed",
         short: "render settings",
       });
     }
@@ -439,7 +440,7 @@ export function panelOf(
     }
     const series = [
       {
-        label: `${cand} ÷ ${base}`,
+        label: `${engineLabel(cand)} ÷ ${engineLabel(base)}`,
         color: colorOf(allConfigs, cand),
         points: pts.map((p, i) => [i, p ? p[0] : null]),
         band: pts.flatMap((p, i) => (p ? [[i, p[1], p[2]]] : [])),
@@ -484,7 +485,7 @@ export function panelOf(
   const series = configs.map((config) => {
     const pts = runs.map((s) => point(s, config, key, scene));
     return {
-      label: config,
+      label: engineLabel(config),
       color: colorOf(allConfigs, config),
       points: pts.map((p, i) => [i, p ? p[0] / scale : null]) as Array<
         [number, number | null]

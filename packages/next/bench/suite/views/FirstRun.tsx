@@ -1,4 +1,5 @@
 import "./first-run.css";
+import {} from "../engines.mjs";
 import { Badge, Button, IconButton, Link, Typography } from "@mui/material";
 import { svgCopy } from "@stratakit/icons/copy";
 import { svgRefresh } from "@stratakit/icons/refresh";
@@ -30,7 +31,7 @@ const STATE: Record<
 };
 
 const FIRST_RUN =
-  'node packages/next/bench/suite/cli.mjs run --scenes osm-philadelphia --configs 1.x-release,2.0 --reps 3 --note "first run"';
+  'node packages/next/bench/suite/cli.mjs run --scenes osm-philadelphia --engines 1.146.0,2.0 --reps 3 --note "first run"';
 
 function useChecks(): Record<"webgpu" | "release" | "repo", Check> {
   const checking: Check = { state: "checking", detail: "Checking…" };

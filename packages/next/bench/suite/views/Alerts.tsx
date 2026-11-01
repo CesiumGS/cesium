@@ -40,6 +40,7 @@ import { lineChart } from "../charts.mjs";
 import { CONDITION_METRICS, METRICS } from "../report.mjs";
 import { catalog, cellKey, type Summary } from "../data.ts";
 import type { AlertsSearch } from "../routes.tsx";
+import { engineLabel } from "../engines.mjs";
 import {
   Chart,
   Chips,
@@ -211,7 +212,7 @@ function seriesChart(a: Alert, summaries: Summary[]): string {
     xNames: names,
     series: [
       {
-        label: a.config,
+        label: engineLabel(a.config),
         color: "var(--ink-2)",
         points: points.map(([x, y]) => [x, y / scale]),
       },
@@ -580,7 +581,7 @@ function AlertCard({
               {shortDate(a.range.from.date)}
             </span>{" "}
             to <span title={a.range.to.date}>{shortDate(a.range.to.date)}</span>
-            ) · {a.config} on {a.hardware}
+            ) · {engineLabel(a.config)} on {a.hardware}
           </Typography>
           {a.range.to.subject && (
             <Typography

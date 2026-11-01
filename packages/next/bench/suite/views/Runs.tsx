@@ -31,6 +31,7 @@ import {
   useState,
 } from "react";
 import { short, type Summary } from "../data.ts";
+import { engineLabel } from "../engines.mjs";
 import { Page, useRuns, useStored } from "./common.tsx";
 import {
   Change,
@@ -360,7 +361,9 @@ export function Runs() {
                       </Typography>
                     </TableCell>
                     <TableCell className="res-setup">
-                      {cand ? `${cand} vs ${base}` : base}
+                      {cand
+                        ? `${engineLabel(cand)} vs ${engineLabel(base)}`
+                        : engineLabel(base)}
                       <Typography
                         variant="caption-md"
                         color="textSecondary"

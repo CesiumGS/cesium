@@ -7,6 +7,7 @@
 // only when the bootstrap intervals separate; gaps (scenes an engine can't
 // draw yet) are shown, not hidden.
 import { ratio, summarize } from "./stats.mjs";
+import { engineLabel, isRelease } from "./engines.mjs";
 import {
   CHART_CSS,
   CHART_SCRIPT,
@@ -242,7 +243,7 @@ function conditionRows(configs, baseline, telemetry, notes) {
     check("cpuPerformanceMean", "CPU speed (%)", 0.1, true);
     check("backgroundCpuUtility", "CPU utility before the run (%)", 10);
     if (differs.length) {
-      notes.push(`conditions differ, ${baseline} vs ${c}: ${differs.join(", ")}`);
+      notes.push(`conditions differ, ${engineLabel(baseline)} vs ${engineLabel(c)}: ${differs.join(", ")}`);
     }
   }
   return `<tr><th colspan="${configs.length + 1}" class="section">Conditions</th></tr>${rows}`;
@@ -310,9 +311,7 @@ export function renderReport(results, options = {}) {
   const baseline =
     results.baseline && configs.includes(results.baseline)
       ? results.baseline
-      : configs.includes("1.x")
-        ? "1.x"
-        : configs[0];
+      : (configs.find(isRelease) ?? configs[0]);
   const candidate =
     results.candidate && configs.includes(results.candidate)
       ? results.candidate
@@ -440,7 +439,7 @@ export function renderReport(results, options = {}) {
               better > worse ? "better" : worse > better ? "worse" : undefined,
           });
     }).join("");
-    return `<h2>${escape(config)} relative to ${escape(baseline)}</h2><div class="tiles">${row}</div>`;
+    return `<h2>${escape(engineLabel(config))} relative to ${escape(engineLabel(baseline))}</h2><div class="tiles">${row}</div>`;
   });
 
   // ------------------------------------------------ conditions over the run
@@ -453,10 +452,10 @@ export function renderReport(results, options = {}) {
         x0: r.span[0],
         x1: r.span[1],
         color: configColor(configs, r.config),
-        label: `${r.sceneTitle} · ${r.config} #${r.rep + 1}`,
+        label: `${r.sceneTitle} · ${engineLabel(r.config)} #${r.rep + 1}`,
       }));
     const bandLegend = configs.map((c) => ({
-      label: `${c} running`,
+      label: `${engineLabel(c)} running`,
       color: configColor(configs, c),
     }));
     const chart = (title, unit, rows, index) =>
@@ -514,7 +513,7 @@ ${cpu.length ? chart("CPU speed (% of nominal)", "%", cpu, 1) + chart("CPU utili
       );
       if (diff.length) {
         notes.push(
-          `render settings differ, ${baseline} vs ${c}: ${diff.map((k) => `${k} ${baseRender[k]} vs ${r[k]}`).join(", ")}`,
+          `render settings differ, ${engineLabel(baseline)} vs ${engineLabel(c)}: ${diff.map((k) => `${k} ${baseRender[k]} vs ${r[k]}`).join(", ")}`,
         );
       }
     }
@@ -608,7 +607,7 @@ ${cpu.length ? chart("CPU speed (% of nominal)", "%", cpu, 1) + chart("CPU utili
       group.runs
         .filter((r) => r.metrics.series?.[phase]?.length)
         .map((r) => ({
-          label: `${r.config} #${r.rep + 1}`,
+          label: `${engineLabel(r.config)} #${r.rep + 1}`,
           group: r.config,
           color: configColor(configs, r.config),
           opacity: 0.8,
@@ -638,7 +637,7 @@ ${cpu.length ? chart("CPU speed (% of nominal)", "%", cpu, 1) + chart("CPU utili
   ${charts}
   ${percentileCurve({ runs: group.runs, configs, color })}
   ${waterfall({ runs: group.runs, configs, color })}
-  <table class="metrics"><tr><th></th>${configs.map((c) => `<th>${escape(c)}</th>`).join("")}</tr>${rows}${renderRow}${condition}</table>
+  <table class="metrics"><tr><th></th>${configs.map((c) => `<th>${escape(engineLabel(c))}</th>`).join("")}</tr>${rows}${renderRow}${condition}</table>
 </details>`);
   }
 
@@ -678,13 +677,13 @@ table.kv th { text-align: left; font-weight: normal; color: var(--ink-2); vertic
 table.kv td { text-align: left; white-space: normal; max-width: 640px; padding: 3px 0; border-bottom: 1px solid var(--grid); }
 .list { font-family: ui-monospace, monospace; font-size: 11px; word-break: break-word; } code { font-size: 11px; word-break: break-all; }
 </style></head><body><div class="viz">
-<h1>${escape(candidate)} vs ${escape(baseline)}</h1>
+<h1>${escape(engineLabel(candidate))} vs ${escape(engineLabel(baseline))}</h1>
 <p class="meta">${escape(new Date(results.date).toLocaleString())} · commit ${escape(results.commit.slice(0, 12))}${results.dirty ? " (uncommitted changes)" : ""}${results.note ? ` · ${escape(results.note)}` : ""}${results.tags?.length ? ` · ${results.tags.map(escape).join(", ")}` : ""}<br>
 ${escape(env.adapter?.description ?? "unknown GPU")} · ${escape(env.cpu)} · ${escape(env.os ?? env.platform)} · ${escape(env.browser)} · ${groups.size} scenes × ${configs.length} configurations × ${Math.max(...results.runs.map((r) => r.rep + 1))} repetitions</p>
 ${validitySummary(sceneValidity)}
 ${scorecardHtml(scorecard(results, { baseline, candidate }))}
 ${budgetsHtml(checkBudgets(results, results.budgets ?? options.budgets))}
-<p class="lede">Ratios are ${escape(candidate)} over ${escape(baseline)} (lower is better for every metric), the geometric mean across scenes on the tiles. A scene counts as better or worse only when the 95% bootstrap intervals separate.</p>
+<p class="lede">Ratios are ${escape(engineLabel(candidate))} over ${escape(engineLabel(baseline))} (lower is better for every metric), the geometric mean across scenes on the tiles. A scene counts as better or worse only when the 95% bootstrap intervals separate.</p>
 <div class="tiles">${tiles.join("")}</div>
 <h2>By scene</h2>
 ${forests.join("")}

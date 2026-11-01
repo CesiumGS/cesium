@@ -41,8 +41,16 @@ import type {
   Scene,
 } from "../schema.ts";
 import { ensureCesium } from "../cesium1x.ts";
+import {
+  compareEngines,
+  engineId,
+  engineLabel,
+  isRelease,
+  parseEngine,
+  setupOf,
+} from "../engines.mjs";
 import { DEPTH_COLORS, type DrawnTile } from "../suite.ts";
-import { Choice, Empty, Page, Section, toast } from "./common.tsx";
+import { Choice, Empty, Page, Section, toast, useRuns } from "./common.tsx";
 import {
   ExplorerSession,
   PANE_COLORS,
@@ -78,34 +86,68 @@ const catalog = publicCatalog as unknown as {
   datasets: Dataset[];
   scenes: Scene[];
   scenarios: Scenario[];
-  configs: EngineConfig[];
+  setups: EngineConfig[];
+  engines: { default: string[]; baseline: string; candidate: string };
   render?: RenderSettings;
 };
 
 const route = getRouteApi("/explorer");
 
 /**
- * A configuration by id: the catalog's, or a released 1.x build named the
- * way runs name it ("1.x@1.146.0"), so reports can link here.
+ * An engine spec (engines.mjs) as a configuration the explorer can load:
+ * the catalog setup's settings with any key=value variants, and the 1.x
+ * build it needs ("repo" for the working tree's, or a release version).
+ * Builds at other refs need their own dev server, which only the CLI
+ * starts.
  */
-function configById(id: string): EngineConfig | undefined {
-  const found = catalog.configs.find((c) => c.id === id);
-  const release = /^1\.x@(\d+\.\d+\.\d+)$/.exec(id);
-  if (found || !release) {
-    return found;
+function configOf(spec: string): {
+  config?: EngineConfig;
+  build?: string;
+  problem?: string;
+} {
+  let parsed;
+  try {
+    parsed = parseEngine(spec);
+  } catch (e) {
+    return { problem: String(e instanceof Error ? e.message : e) };
   }
-  const config: EngineConfig = {
-    ...catalog.configs.find((c) => c.engine === "1.x")!,
-    id,
-    cesium: release[1]!,
-  };
-  catalog.configs.push(config);
-  return config;
+  if (parsed.source.kind === "ref") {
+    return {
+      problem: `${engineLabel(spec)} is built at another git ref; the explorer shows releases and the working tree (run it with the CLI: --engines ${spec}).`,
+    };
+  }
+  const setupId = setupOf(spec);
+  const setup = catalog.setups.find((x) => x.id === setupId);
+  if (!setup) {
+    return { problem: `No setup "${setupId}" in the catalog.` };
+  }
+  const config: EngineConfig = { ...setup, id: spec, setup: setupId };
+  for (const v of parsed.variants.filter((x) => x.includes("="))) {
+    const [key, value] = v.split("=") as [string, string];
+    if (key === "sse" || key === "maximumScreenSpaceError") {
+      config.maximumScreenSpaceError = Number(value);
+    }
+  }
+  const build =
+    parsed.engine === "1.x"
+      ? parsed.source.kind === "release"
+        ? parsed.source.version
+        : "repo"
+      : undefined;
+  return { config, ...(build ? { build } : {}) };
 }
 
-/** The 1.x build a configuration needs: "repo" or an exact version. */
-const buildOf = (config: EngineConfig | undefined) =>
-  config?.engine === "1.x" ? (config.cesium ?? "repo") : undefined;
+/** An engine's name, the working tree's named by its branch. */
+function nameOf(spec: string, branch: string | undefined): string {
+  try {
+    const p = parseEngine(spec);
+    return p.source.kind === "tree" && branch
+      ? engineLabel(engineId({ ...p, source: { kind: "ref", ref: branch } }))
+      : engineLabel(spec);
+  } catch {
+    return spec;
+  }
+}
 
 const SPEEDS = [
   ["0.25", "¼×"],
@@ -118,13 +160,14 @@ export function Explorer() {
   const search = route.useSearch();
   const navigate = route.useNavigate();
   const sceneId = search.scene ?? catalog.scenes[0]!.id;
-  const left =
-    search.left ?? catalog.configs.find((c) => c.engine === "1.x")!.id;
-  const right =
-    search.right ?? catalog.configs.find((c) => c.engine === "2.0")!.id;
+  const { index, summaries } = useRuns();
+  const left = search.left ?? catalog.engines.baseline;
+  const right = search.right ?? catalog.engines.candidate;
   const scene = catalog.scenes.find((s) => s.id === sceneId);
   const ids = [left, right].filter(Boolean);
-  const configs = ids.map((id) => configById(id)).filter((c) => !!c);
+  const resolved = ids.map((id) => configOf(id));
+  const configs = resolved.flatMap((r) => (r.config ? [r.config] : []));
+  const problem = resolved.find((r) => r.problem)?.problem;
   const loadKey = `${sceneId}|${ids.join("|")}`;
 
   const [session] = useState(() => new ExplorerSession());
@@ -161,7 +204,11 @@ export function Explorer() {
     }
     let cancelled = false;
     void (async () => {
-      const builds = new Set(configs.map(buildOf).filter(Boolean));
+      if (problem) {
+        setStatus({ text: problem, error: true });
+        return;
+      }
+      const builds = new Set(resolved.map((r) => r.build).filter(Boolean));
       if (builds.size > 1) {
         setStatus({
           text: "Pick at most one 1.x build: a page loads one. Change the left or right configuration.",
@@ -254,22 +301,25 @@ export function Explorer() {
     }
   };
 
-  const release = [left, right].find((id) => id.startsWith("1.x@"));
-  const command = `node packages/next/bench/suite/cli.mjs run --scenes ${sceneId} --configs ${[
-    ...new Set(
-      ids.map((id) =>
-        catalog.configs.some((c) => c.id === id && !/@/.test(id))
-          ? id
-          : id.startsWith("1.x@")
-            ? "1.x-release"
-            : id,
-      ),
-    ),
-  ].join(
-    ",",
-  )}${release ? ` --cesium ${release.slice(4)}` : ""} --reps 3 --note "explorer: ${sceneId}"`;
+  const command = `node packages/next/bench/suite/cli.mjs run --scenes ${sceneId} --engines ${ids.join(",")}${
+    ids.length === 2 ? ` --baseline ${left} --candidate ${right}` : ""
+  } --reps 3 --note "explorer: ${sceneId}"`;
 
-  const configOptions = catalog.configs.map((c) => c.id);
+  // Releases (the catalog's and any a run measured), then the working
+  // tree's setups.
+  const releases = [
+    ...new Set([
+      ...catalog.engines.default.filter(isRelease),
+      ...summaries.flatMap((x) => x.configs.filter(isRelease)),
+    ]),
+  ].sort(compareEngines);
+  const engineOptions = [...releases, ...catalog.setups.map((x) => x.id)].map(
+    (id) => [id, nameOf(id, index.branch)] as const,
+  );
+  const withCurrent = (id: string) =>
+    engineOptions.some(([x]) => x === id)
+      ? engineOptions
+      : [[id, nameOf(id, index.branch)] as const, ...engineOptions];
   const help = (
     <>
       <p>
@@ -331,11 +381,7 @@ export function Explorer() {
             <Choice
               label="Left"
               value={left}
-              options={
-                configOptions.includes(left)
-                  ? configOptions
-                  : [left, ...configOptions]
-              }
+              options={withCurrent(left)}
               onChange={(v) => setSearch({ left: v })}
             />
             <Choice
@@ -343,10 +389,7 @@ export function Explorer() {
               value={right}
               options={[
                 ["", "None"],
-                ...(configOptions.includes(right) || !right
-                  ? configOptions
-                  : [right, ...configOptions]
-                ).map((c) => [c, c] as const),
+                ...(right ? withCurrent(right) : engineOptions),
               ]}
               onChange={(v) => setSearch({ right: v })}
             />
@@ -576,6 +619,7 @@ export function Explorer() {
                 stats={snapshot?.panes[i]}
                 interval={snapshot?.interval}
                 paused={paused}
+                branch={index.branch}
               />
             </div>
           ))}
@@ -688,12 +732,14 @@ function Hud({
   stats,
   interval,
   paused,
+  branch,
 }: {
   config: EngineConfig;
   color: string;
   stats: Snapshot["panes"][number] | undefined;
   interval: number | undefined;
   paused: boolean;
+  branch: string | undefined;
 }) {
   const version =
     config.engine === "1.x" && typeof Cesium !== "undefined"
@@ -703,7 +749,7 @@ function Hud({
     <div className="explorer-hud" aria-live="off">
       <span className="explorer-key" style={{ background: color }} />
       <b>
-        {config.id}
+        {nameOf(config.id, branch)}
         {version}
       </b>
       {stats
@@ -731,6 +777,7 @@ function Legend({
   volumes: { bounding: boolean; content: boolean };
   configs: EngineConfig[];
 }) {
+  const branch = useRuns().index.branch;
   const swatch = (color: string, label: string, outline = false) => (
     <span className="explorer-legend-item" key={label}>
       <span
@@ -753,7 +800,9 @@ function Legend({
         <div className="explorer-legend-group">
           <span className="explorer-legend-title">Drawn by</span>
           {swatch("rgb(179 179 179)", "both")}
-          {configs.map((c, i) => swatch(PANE_COLORS[i]!, `only ${c.id}`))}
+          {configs.map((c, i) =>
+            swatch(PANE_COLORS[i]!, `only ${nameOf(c.id, branch)}`),
+          )}
           <span className="explorer-legend-note">
             1.x's globe takes no tint
           </span>
@@ -799,6 +848,7 @@ function Selection({
   drawn: DrawnTile[][];
   configs: EngineConfig[];
 }) {
+  const branch = useRuns().index.branch;
   const rows = useMemo(() => {
     const keys = drawn.map((list) => new Set(list.map((t) => t.key)));
     const byDepth = new Map<string, DepthRow>();
@@ -846,7 +896,7 @@ function Selection({
                   className="explorer-key"
                   style={{ background: PANE_COLORS[i] }}
                 />
-                {c.id} ({totals[i]})
+                {nameOf(c.id, branch)} ({totals[i]})
               </TableCell>
             ))}
             <TableCell className="explorer-bars-cell">

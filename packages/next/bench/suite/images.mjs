@@ -17,7 +17,7 @@ import {
 import { join } from "node:path";
 import process from "node:process";
 import { sceneDatasets, unsupportedReason } from "./manifest.mjs";
-import { ensureRelease, resolveVersion } from "./release.mjs";
+import { resolveEngine } from "./engineBuilds.mjs";
 
 /** Regression thresholds: the same engine on the same renderer class. */
 export const REGRESSION = { mean: 0.01, p95: 0.05 };
@@ -63,19 +63,25 @@ export async function runImages({ catalog, opts, root, directory }) {
   const pick = (list, key) =>
     opts[key] ? list.filter((x) => opts[key].split(",").includes(x.id)) : undefined;
   const scenes = pick(catalog.scenes, "scenes") ?? catalog.scenes;
-  const candidate = catalog.configs.find((c) => c.id === (opts.config ?? "2.0"));
-  if (!candidate) {
-    throw new Error(`unknown config ${opts.config}`);
-  }
-  // Parity: the same checks in the pinned 1.x release, FLIP against it.
-  let parity;
-  if (opts.parity) {
-    parity = { ...catalog.configs.find((c) => c.engine === "1.x" && c.cesium && c.cesium !== "repo") };
-    const version = resolveVersion(parity.cesium);
-    ensureRelease(version);
-    parity.cesiumVersion = version;
-    parity.id = `1.x@${version}`;
-  }
+  // The engine under test (--engine, default the catalog's candidate)
+  // and, with --parity, the reference it is scored against (--parity-engine,
+  // default the catalog's baseline release). Other refs need their own
+  // server, which image checks don't start: the working tree and releases.
+  const noServer = () => {
+    throw new Error("image checks run the working tree or releases, not 2.0 at another ref");
+  };
+  const candidate = await resolveEngine(
+    opts.engine ?? catalog.engines.candidate,
+    catalog,
+    { cwd: root, serve: noServer },
+  );
+  const parity = opts.parity
+    ? await resolveEngine(
+        opts["parity-engine"] ?? catalog.engines.baseline,
+        catalog,
+        { cwd: root, serve: noServer },
+      )
+    : undefined;
   const scenario = catalog.scenarios.find((s) => s.id === "cold-orbit");
   const checks = scenes.flatMap((scene) =>
     (scene.checks ?? [0]).map((progress) => ({
@@ -137,8 +143,10 @@ export async function runImages({ catalog, opts, root, directory }) {
     await page.exposeFunction("captureMoment", async () => {
       png = await page.locator("#view").screenshot({ type: "png" });
     });
-    const release = config.cesiumVersion ? `&cesium=${config.cesiumVersion}` : "";
-    await page.goto(`${base}/bench/suite/suite.html?bench${release}`);
+    const cesium = config.page?.cesium;
+    await page.goto(
+      `${base}/bench/suite/suite.html?bench${cesium ? `&cesium=${encodeURIComponent(cesium)}` : ""}`,
+    );
     const spec = {
       scene: check.scene,
       datasets: sceneDatasets(catalog, check.scene),

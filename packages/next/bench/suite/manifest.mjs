@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
 
-/** The merged catalog: { datasets, scenes, scenarios, configs, sources }. */
+/** The merged catalog: { datasets, scenes, scenarios, setups, engines, budgets, sources }. */
 export function loadCatalog(manifest = process.env.BENCH_MANIFEST) {
   const sources = [join(here, "catalog", "public.json")];
   if (manifest) {
@@ -22,8 +22,9 @@ export function loadCatalog(manifest = process.env.BENCH_MANIFEST) {
     datasets: [],
     scenes: [],
     scenarios: [],
-    configs: [],
+    setups: [],
     budgets: [],
+    engines: { default: [], baseline: undefined, candidate: undefined },
   };
   const problems = [];
   for (const [index, path] of sources.entries()) {
@@ -39,7 +40,12 @@ export function loadCatalog(manifest = process.env.BENCH_MANIFEST) {
       catalog.render = { ...catalog.render, ...json.render };
       delete catalog.render.$comment;
     }
-    for (const key of ["datasets", "scenes", "scenarios", "configs", "budgets"]) {
+    // Default engines: the public catalog's, then the private manifest's.
+    if (json.engines) {
+      catalog.engines = { ...catalog.engines, ...json.engines };
+      delete catalog.engines.$comment;
+    }
+    for (const key of ["datasets", "scenes", "scenarios", "setups", "budgets"]) {
       for (const entry of json[key] ?? []) {
         if (index > 0 && key === "datasets") {
           entry.private ??= true;

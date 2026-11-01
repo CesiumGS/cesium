@@ -81,7 +81,16 @@ function serveBenchResults(prefix: string, root: string): Plugin {
           .reverse();
         const summaries = names.filter((n) => n.endsWith(".summary.json"));
         res.setHeader("Content-Type", "application/json");
-        res.end(JSON.stringify({ directory: root, runs, summaries }));
+        // The working tree's branch names its engines ("2.0@<branch>").
+        let branch: string | undefined;
+        try {
+          branch = execSync("git rev-parse --abbrev-ref HEAD", {
+            encoding: "utf8",
+          }).trim();
+        } catch {
+          // Not a git checkout.
+        }
+        res.end(JSON.stringify({ directory: root, runs, summaries, branch }));
       });
       // Image checks (bench/suite/images.mjs): runs, and review decisions
       // from Dyno's Images tab (approve copies the image into baselines).
@@ -236,6 +245,11 @@ export default defineConfig({
     serveBenchResults("/bench-results", benchResults),
     serveDirectory("/bench-results", benchResults),
     serveDirectory("/cesium-release", cesiumReleases),
+    // 1.x built at git refs, in snapshot worktrees (<repo>/.bench/<sha>).
+    serveDirectory(
+      "/cesium-ref",
+      fileURLToPath(new URL("../../.bench", import.meta.url)),
+    ),
     ...(slangWasm ? [serveDirectory("/slang-wasm", slangWasm)] : []),
   ],
   build: {

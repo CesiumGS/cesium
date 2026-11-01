@@ -7,6 +7,7 @@ import { Icon } from "@stratakit/mui";
 import type { ReactNode } from "react";
 import { ratio as bootstrapRatio } from "../stats.mjs";
 import { cellKey, cellTitle, geomean, short, type Summary } from "../data.ts";
+import { isRelease } from "../engines.mjs";
 import { formatChange } from "./common.tsx";
 
 /**
@@ -36,9 +37,7 @@ export function pairOf(s: Summary): { base: string; cand?: string } {
   const base =
     s.baseline && s.configs.includes(s.baseline)
       ? s.baseline
-      : s.configs.includes("1.x")
-        ? "1.x"
-        : (s.configs[0] ?? "1.x");
+      : (s.configs.find(isRelease) ?? s.configs[0] ?? "");
   const cand =
     s.candidate && s.configs.includes(s.candidate) && s.candidate !== base
       ? s.candidate

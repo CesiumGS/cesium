@@ -50,6 +50,7 @@ import {
   useState,
 } from "react";
 import { short, type Summary, when } from "../data.ts";
+import { engineLabel, engineOf, isRelease } from "../engines.mjs";
 import {
   Chart,
   Choice,
@@ -138,11 +139,21 @@ function TrendsView({ summaries }: { summaries: Summary[] }) {
     [summaries],
   );
   const defaultBase = useMemo(
-    () => most(summaries, (s) => s.baseline, configs[0] ?? "1.x"),
+    () =>
+      most(
+        summaries,
+        (s) => s.baseline,
+        configs.find(isRelease) ?? configs[0] ?? "",
+      ),
     [summaries, configs],
   );
   const defaultCand = useMemo(
-    () => most(summaries, (s) => s.candidate, "2.0"),
+    () =>
+      most(
+        summaries,
+        (s) => s.candidate,
+        configs.find((c) => engineOf(c) === "2.0") ?? "",
+      ),
     [summaries],
   );
   const view: ViewState = {
@@ -332,7 +343,7 @@ function TrendsView({ summaries }: { summaries: Summary[] }) {
         <Choice
           label="Baseline"
           value={base}
-          options={configs}
+          options={configs.map((c) => [c, engineLabel(c)] as const)}
           onChange={(v) => void update({ base: v })}
         />
         <IconButton
@@ -344,7 +355,7 @@ function TrendsView({ summaries }: { summaries: Summary[] }) {
         <Choice
           label="Candidate"
           value={cand}
-          options={configs}
+          options={configs.map((c) => [c, engineLabel(c)] as const)}
           onChange={(v) => void update({ cand: v })}
         />
       </div>
@@ -472,7 +483,7 @@ function TrendsView({ summaries }: { summaries: Summary[] }) {
                         render={<span />}
                       >
                         {section.id === "headline"
-                          ? `${cand} relative to ${base}`
+                          ? `${engineLabel(cand)} relative to ${engineLabel(base)}`
                           : `${section.panels.length} ${section.panels.length === 1 ? "chart" : "charts"}`}
                       </Typography>
                     </AccordionSummary>
@@ -496,7 +507,7 @@ function TrendsView({ summaries }: { summaries: Summary[] }) {
                           className="trends-none"
                         >
                           {section.id === "headline"
-                            ? `No run on the charts measured both ${base} and ${cand}. Pick another baseline or candidate.`
+                            ? `No run on the charts measured both ${engineLabel(base)} and ${engineLabel(cand)}. Pick another baseline or candidate.`
                             : "The runs on the charts didn't record these metrics."}
                         </Typography>
                       )}

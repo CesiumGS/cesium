@@ -41,6 +41,7 @@ Branch: `cesium-2.0-webgpu-poc` (off `main` @ `587f52f1eb`, CesiumJS 1.146.0)
 | r33 | Dyno phase 1 (§16.9): validity verdicts, scorecards with declared primary and guardrail metrics, a `benchstat`-style compare, cost along the camera path with path segments and a path map, filmstrips with FLIP, request waterfalls, percentile curves and stutter metrics; uncapped (vsync off) scenarios; thermal limits and headroom recorded; condition flags limited to true conditions; the Explorer tab (camera path, free flight, linked cameras, paused streaming via `Tileset3D.freezeSelection`), with benchmark authoring planned. |
 | r34 | Dyno rebuilt as a React app on TanStack Router (typed URL state, code-split views) with Radix Themes controls and a guided first run. Explorer inspection: bounding volumes in both engines, tiles tinted by depth or engine, the selection compared by depth (`Budgeted` draws much coarser terrain than 1.x at Rainier). Inspector designed; CI image job and bisection deferred.                                                                                                                                                             |
 | r35 | Dyno on StrataKit (Bentley's design system: MUI themed by @stratakit/mui) at the dev server's root: navigation by job (results, scenes, workbench), a new Overview, a design, copy and IA pass (bench/suite/DESIGN.md), feedback for the StrataKit team (STRATAKIT_FEEDBACK.md). Parity checks, microbenchmarks and spikes fold into Dyno's Lab.                                                                                                                                                                                                |
+| r36 | Engine names: releases by version (1.146.0), engines from the working tree named by branch (2.0@cesium-2.0-webgpu-poc), engines built at any git ref (2.0@main, 1.x@v1.140), settings after + (2.0+legacy1x); `--engines` replaces `--configs`/`--cesium`; budgets name setups. Explorer draws 1.x's globe tile volumes.                                                                                                                                                                                                                        |
 
 ## 1. Goal
 
@@ -2976,12 +2977,24 @@ dashboard work (v2) hosting the results UI for the team.
 repository's build or a released CesiumJS from npm, fetched once with
 `npm pack` into the store outside the repo (`BENCH_CESIUM_DIR`), checked
 against npm's integrity hash and served locally. Catalogs pin an exact
-version (`1.x-release`: 1.146.0 today); a moving tag is refused there, and
-`--cesium` overrides it only on purpose. Runs name the configuration with
-its version (`1.x@1.146.0`), so a new release starts a new trend line
+version (1.146.0 today), so a new release starts a new trend line
 instead of silently changing an old one across a release window. The
-default comparison is 2.0 against the pinned release, with this
-repository's 1.x build alongside.
+default comparison is 2.0 against the pinned release.
+
+**Engine names (r36).** One grammar everywhere (`bench/suite/engines.mjs`):
+a release by its version (`1.146.0`; "1.x" always means "a CesiumJS 1
+build", never a release), an engine from the working tree (`2.0`, `1.x`),
+or one built at any git ref (`2.0@main`, `1.x@v1.140`), with settings
+after `+` (`2.0+legacy1x`, `2.0+sse=32`). Runs record the working tree
+under its branch (`2.0@cesium-2.0-webgpu-poc`), so after a merge the same
+engine continues as `2.0@main`, and a branch can be run against a release
+and against main at once (`--engines 1.146.0,2.0@main,2.0`). Refs are
+checked out once into snapshot worktrees (`.bench/<sha>`): 1.x is built
+there on first use, 2.0 gets a dev server of its own. The catalog lists
+setups (engine settings without a build: `1.x`, `2.0`, `2.0+legacy1x`)
+and the default engines, baseline and candidate; budgets name a setup and
+apply to every build of it. People see readable names: "1.146.0",
+"2.0 · main", "2.0 · cesium-2.0-webgpu-poc · legacy1x selection".
 
 **Historical sweeps.** `--releases 1.120.0..1.146.0` (or a list) adds one
 pinned configuration per published release, to see how 1.x itself
@@ -3307,9 +3320,9 @@ param=a,b,c` runs each 2.0 configuration (or `--sweep-configs`) once
 - _Explorer_ (built, r33): the scenes, live and interactive, as a Dyno
   tab (a module loaded on first use; the 1.x build is injected on demand,
   and switching 1.x builds reloads the page, since 1.x is a page
-  global). Pick a catalog scene and one or two engines (any
-  configuration: a pinned 1.x release such as `1.x@1.146.0`, this
-  repository's 1.x build, 2.0 with a policy), side by side.
+  global). Pick a catalog scene and one or two engines (a release
+  such as 1.146.0, or the working tree's 1.x or 2.0 with a setup), side
+  by side.
   - _Camera path:_ both cameras on the scene's benchmark camera path;
     play, scrub, change speed.
   - _Free flight:_ fly either engine with the mouse (1.x's camera

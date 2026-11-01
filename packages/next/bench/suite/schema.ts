@@ -125,16 +125,27 @@ export interface Scenario {
   vsync?: boolean;
 }
 
-/** An engine and its settings. */
+/**
+ * An engine with its settings. In the catalog, a setup ("1.x", "2.0",
+ * "2.0+legacy1x"); in a run, resolved from an engine spec (engines.mjs)
+ * with its build: `id` names both ("1.146.0", "2.0@main+legacy1x").
+ */
 export interface EngineConfig {
   id: string;
   engine: "1.x" | "2.0";
+  /** The catalog setup it runs (runs only). */
+  setup?: string;
+  /** Where the build came from (runs only). */
+  source?:
+    | { kind: "release"; version: string; integrity?: string }
+    | { kind: "tree"; ref: string }
+    | { kind: "ref"; ref: string; sha: string };
   /**
-   * 1.x build: "repo" (this repository's, the default) or a released
-   * version from npm ("latest", a dist-tag or an exact version), resolved
-   * to an exact version per run.
+   * How the suite page loads it (runs only): the 1.x build ("1.146.0",
+   * "ref:<sha>"; none: the working tree's) and the dev server of a 2.0
+   * built at another ref.
    */
-  cesium?: string;
+  page?: { cesium?: string; server?: string };
   /** 2.0 selection policy. */
   policy?: "budgeted" | "legacy1x";
   maximumScreenSpaceError?: number;
@@ -194,7 +205,8 @@ export interface EffectiveRender {
 export interface Budget {
   id: string;
   metric: string;
-  config: string;
+  /** The setup it applies to ("2.0": every build of 2.0's setup). */
+  setup: string;
   max?: number;
   maxRatio?: number;
   scenes?: string[];

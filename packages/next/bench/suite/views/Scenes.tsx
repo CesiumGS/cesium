@@ -35,6 +35,7 @@ import {
   when,
 } from "../data.ts";
 import type { Dataset, Scene } from "../schema.ts";
+import { engineLabel, engineOf } from "../engines.mjs";
 import {
   Chart,
   Empty,
@@ -103,9 +104,6 @@ function useEntries(): Map<string, Entry> {
 }
 
 // ------------------------------------------------------------ formatting
-
-const engineOf = (config: string): "1.x" | "2.0" =>
-  config.startsWith("1.x") ? "1.x" : "2.0";
 
 /** Configurations in palette order: 1.x first, then 2.0. */
 const byEngine = (configs: string[]) =>
@@ -249,7 +247,7 @@ function SceneCard({ sceneKey, entry }: { sceneKey: string; entry: Entry }) {
     const top = best.get(engine);
     return top ? (
       <Tooltip
-        title={`${top.config} · ${when(top.s)} · ${short(top.s.commit)}`}
+        title={`${engineLabel(top.config)} · ${when(top.s)} · ${short(top.s.commit)}`}
       >
         <span>{formatValue(top.v, unit, scale)}</span>
       </Tooltip>
@@ -426,7 +424,7 @@ function SceneDetail({
           unit,
           xNames,
           series: configs.map((config) => ({
-            label: config,
+            label: engineLabel(config),
             color: colors.get(config)!,
             points: runs.map((s, j) => {
               const m = metricOf(s, config);
@@ -582,7 +580,7 @@ function SceneDetail({
                           className="series-key"
                           style={{ background: colors.get(c) }}
                         />
-                        {c}
+                        {engineLabel(c)}
                       </TableCell>
                     ))}
                   </TableRow>
@@ -655,7 +653,7 @@ function SceneDetail({
                         >
                           <span className={change.tone}>{change.text}</span>
                         </Tooltip>{" "}
-                        in {a.config}, between{" "}
+                        in {engineLabel(a.config)}, between{" "}
                         <code>{short(a.range.from.commit)}</code> and{" "}
                         <code>{short(a.range.to.commit)}</code>
                         {a.range.to.subject ? ` (${a.range.to.subject})` : ""}
@@ -719,10 +717,10 @@ function SceneDetail({
                           <img
                             loading="lazy"
                             src={f.src}
-                            alt={`${f.config}, ${when(run)}`}
+                            alt={`${engineLabel(f.config)}, ${when(run)}`}
                           />
                           <figcaption>
-                            <span>{f.config}</span>
+                            <span>{engineLabel(f.config)}</span>
                             {f.flip !== undefined && (
                               <Tooltip title="FLIP difference from the baseline's frame (0 identical, 1 completely different)">
                                 <span className="num">

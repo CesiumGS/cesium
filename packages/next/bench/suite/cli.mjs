@@ -3,29 +3,31 @@
 //   node packages/next/bench/suite/cli.mjs list
 //   node packages/next/bench/suite/cli.mjs verify
 //   node packages/next/bench/suite/cli.mjs fetch
-//   node packages/next/bench/suite/cli.mjs run [--scenes a,b] [--configs 1.x,2.0]
+//   node packages/next/bench/suite/cli.mjs run [--scenes a,b] [--engines 1.146.0,2.0]
 //        [--scenarios cold-orbit,warm-orbit] [--reps 3] [--motion 15]
-//        [--note "what changed"] [--tag a,b] [--cesium 1.147.0]
-//        [--baseline 1.x@1.146.0] [--candidate 2.0]
+//        [--note "what changed"] [--tag a,b]
+//        [--baseline 1.146.0] [--candidate 2.0]
 //        [--releases 1.120.0..1.146.0 | 1.130.0,1.140.0]  (historical sweep)
 //        [--dpr 2] [--pixel-ratio device|1]  (high-DPI display; render scale)
-//        [--sweep maximumScreenSpaceError=8,16,32 [--sweep-configs 2.0]]
+//        [--sweep maximumScreenSpaceError=8,16,32 [--sweep-engines 2.0]]
 //
-// 1.x configurations run this repository's build ("cesium": "repo") or a
-// released version from npm ("latest", or --cesium to pin one), fetched
-// once into the store and recorded exactly in the results.
+// Engines (engines.mjs): a CesiumJS release ("1.146.0", "latest"), an
+// engine from the working tree ("2.0", "1.x", named by the branch in
+// results), or one built at a git ref ("2.0@main", "1.x@v1.140"), with
+// settings after "+" ("2.0+legacy1x", "2.0+sse=32"). Releases are fetched
+// once into the store; refs are checked out once into snapshot worktrees.
 //   node packages/next/bench/suite/cli.mjs report <results.json>
 //   node packages/next/bench/suite/cli.mjs alerts [--all] [--fail-on-new]
 //        (change points across runs, with their triage state from Dyno;
 //        --fail-on-new exits 1 when an untriaged regression exists)
-//   node packages/next/bench/suite/cli.mjs images [--scenes a,b] [--config 2.0]
+//   node packages/next/bench/suite/cli.mjs images [--scenes a,b] [--engine 2.0]
 //        [--parity] [--update [--reason why]] [--software]
 //        (image checks against approved baselines per renderer class;
 //        exits 1 on changed or new images; --software uses SwiftShader)
 //   node packages/next/bench/suite/cli.mjs resummarize   (after the summary
 //        format changes: rewrites every run's .summary.json)
 //   node packages/next/bench/suite/cli.mjs compare <old.json> [new.json]
-//        [--old 1.x@1.146.0] [--new 2.0] [--metrics cpuP50,settleMs]
+//        [--old 1.146.0] [--new 2.0@my-branch] [--metrics cpuP50,settleMs]
 //        (benchstat-style: two configurations of one run, or one
 //        configuration across two runs, e.g. before and after a change)
 //
@@ -61,7 +63,9 @@ import {
   unsupportedReason,
 } from "./manifest.mjs";
 import { fetchDatasets, verify } from "./store.mjs";
-import { ensureRelease, releaseList, resolveVersion } from "./release.mjs";
+import { releaseList } from "./release.mjs";
+import { describeBuild, resolveEngine, treeRef } from "./engineBuilds.mjs";
+import { parseEngine } from "./engines.mjs";
 import { renderReport, summarizeRun } from "./report.mjs";
 import { compareTable, DEFAULT_PLAN, scorecard } from "./scorecard.mjs";
 import { ALERT_METRICS, detectAlerts } from "./changepoints.mjs";
@@ -232,86 +236,116 @@ async function run() {
         })
       : undefined;
   const scenes = pick(catalog.scenes, "scenes") ?? catalog.scenes;
-  const configs = (
-    pick(catalog.configs, "configs") ??
-    catalog.configs.filter((c) =>
-      ["1.x-release", "1.x", "2.0"].includes(c.id),
-    )
-  ).map((c) => ({ ...c }));
-  // A historical sweep adds one pinned 1.x configuration per release.
+  if (opts.configs || opts.cesium) {
+    throw new Error("--configs and --cesium became --engines (e.g. --engines 1.146.0,2.0)");
+  }
+  // Engines (engines.mjs); a historical sweep adds one release each.
+  const specs = opts.engines
+    ? String(opts.engines).split(",")
+    : [...catalog.engines.default];
   if (opts.releases) {
-    const template = catalog.configs.find((c) => c.id === "1.x-release") ?? {
-      engine: "1.x",
-      maximumScreenSpaceError: 16,
-    };
     for (const version of releaseList(opts.releases)) {
-      if (!configs.some((c) => c.cesium === version)) {
-        configs.push({ ...template, id: `1.x@${version}`, cesium: version });
+      if (!specs.includes(version)) {
+        specs.push(version);
       }
     }
   }
-  // Released 1.x builds: catalogs pin an exact version (a moving tag
-  // would mix releases in one trend across a release window); --cesium
-  // overrides it on purpose and may name a tag, resolved and recorded.
-  // Each run's configuration carries its version (1.x@1.146.0), so a new
-  // release is a new line in trends, not a jump in the old one.
-  const releases = {};
-  for (const config of configs) {
-    if (config.engine === "1.x" && config.cesium && config.cesium !== "repo") {
-      if (!opts.cesium && !/^\d+\.\d+\.\d+$/.test(config.cesium)) {
-        throw new Error(
-          `config ${config.id}: pin an exact CesiumJS version, not "${config.cesium}" (or pass --cesium)`,
-        );
-      }
-      const version = resolveVersion(opts.cesium ?? config.cesium);
-      config.cesiumVersion = version;
-      config.id = `1.x@${version}`;
-      releases[config.id] = ensureRelease(version);
-    }
-  }
-  // A parameter sweep (plan §16.9, Explore): each 2.0 configuration (or
-  // --sweep-configs) once per value, e.g. --sweep maximumScreenSpaceError=8,16,32
-  // or --sweep render.pixelRatio=1,2; ids name the value ("2.0[sse…=8]").
+  // A parameter sweep (plan §16.9, Explore): each 2.0 engine (or
+  // --sweep-engines) once per value, e.g. --sweep maximumScreenSpaceError=8,16,32
+  // or --sweep render.pixelRatio=1,2: "2.0+maximumScreenSpaceError=8".
   let sweep;
   if (opts.sweep) {
     const [param, list] = String(opts.sweep).split("=");
     if (!param || !list) {
       throw new Error("--sweep param=value,value");
     }
-    const values = list
-      .split(",")
-      .map((v) => (Number.isFinite(Number(v)) ? Number(v) : v));
-    const swept = opts["sweep-configs"]
-      ? String(opts["sweep-configs"]).split(",")
-      : configs.filter((c) => c.engine === "2.0").map((c) => c.id);
-    const expanded = [];
-    for (const c of configs) {
-      if (!swept.includes(c.id)) {
-        expanded.push(c);
-        continue;
-      }
-      for (const value of values) {
-        const variant = structuredClone(c);
-        const path = param.split(".");
-        let target = variant;
-        for (const key of path.slice(0, -1)) {
-          target = target[key] ??= {};
-        }
-        target[path.at(-1)] = value;
-        variant.id = `${c.id}[${param}=${value}]`;
-        variant.sweep = { param, value, base: c.id };
-        expanded.push(variant);
-      }
-    }
-    configs.splice(0, configs.length, ...expanded);
-    sweep = { param, values, configs: swept };
+    const values = list.split(",");
+    const swept = opts["sweep-engines"]
+      ? String(opts["sweep-engines"]).split(",")
+      : specs.filter((x) => parseEngine(x).engine === "2.0");
+    specs.splice(
+      0,
+      specs.length,
+      ...specs.flatMap((x) =>
+        swept.includes(x) ? values.map((v) => `${x}+${param}=${v}`) : [x],
+      ),
+    );
+    sweep = {
+      param,
+      values: values.map((v) => (Number.isFinite(Number(v)) ? Number(v) : v)),
+      engines: swept,
+    };
   }
-  const baseline =
-    opts.baseline ??
-    (configs.find((c) => c.cesiumVersion)?.id ?? configs[0].id);
-  const candidate =
-    opts.candidate ??
-    (configs.find((c) => c.engine === "2.0")?.id ?? configs.at(-1).id);
+  // Snapshot servers for 2.0 at other refs, one per worktree.
+  const snapshotServers = new Map();
+  const serve = async (snapRoot, repo) => {
+    if (!snapshotServers.has(snapRoot)) {
+      const { createServer } = await import("vite");
+      const snap = await createServer({
+        root: snapRoot,
+        configFile: join(snapRoot, "vite.config.ts"),
+        cacheDir: join(snapRoot, ".vite-bench"),
+        server: {
+          port: 5194,
+          strictPort: false,
+          hmr: false,
+          watch: null,
+          fs: { allow: [repo] },
+        },
+        logLevel: "error",
+      });
+      await snap.listen();
+      snapshotServers.set(snapRoot, snap);
+    }
+    return snapshotServers.get(snapRoot).resolvedUrls.local[0].replace(/\/$/, "");
+  };
+  const configs = [];
+  const byspec = new Map();
+  for (const spec of specs) {
+    const config = await resolveEngine(spec, catalog, {
+      cwd: root,
+      serve,
+      log: (line) => console.log(line),
+    });
+    configs.push(config);
+    byspec.set(spec, config.id);
+  }
+  if (sweep) {
+    // The swept engines (resolved ids) and, per value, the engines run.
+    const suffix = (v) => `+${sweep.param}=${v}`;
+    sweep.engines = [
+      ...new Set(
+        configs
+          .filter((c) => c.id.includes(`+${sweep.param}=`))
+          .map((c) => c.id.replace(/\+[^+]*=[^+]*$/, "")),
+      ),
+    ];
+    sweep.points = sweep.values.map((value) => ({
+      value,
+      configs: configs.filter((c) => c.id.endsWith(suffix(value))).map((c) => c.id),
+    }));
+  }
+  // Baseline and candidate: specs as typed, or the catalog's defaults.
+  const idOf = (spec) => {
+    if (byspec.has(spec)) {
+      return byspec.get(spec);
+    }
+    const found = configs.find((c) => c.id === spec);
+    if (!found) {
+      throw new Error(`"${spec}" is not one of this run's engines (${specs.join(", ")})`);
+    }
+    return found.id;
+  };
+  const baseline = opts.baseline
+    ? idOf(opts.baseline)
+    : byspec.get(catalog.engines.baseline) ??
+      configs.find((c) => c.source.kind === "release")?.id ??
+      configs[0].id;
+  const candidate = opts.candidate
+    ? idOf(opts.candidate)
+    : byspec.get(catalog.engines.candidate) ??
+      configs.find((c) => c.engine === "2.0" && c.id !== baseline)?.id ??
+      configs.at(-1).id;
   const scenarios =
     pick(catalog.scenarios, "scenarios") ??
     catalog.scenarios.filter((s) => s.id === "cold-orbit" || s.id === "uncapped-orbit");
@@ -399,7 +433,7 @@ async function run() {
     date: started.toISOString(),
     commit: git("rev-parse HEAD"),
     subject: git("log -1 --format=%s"),
-    branch: git("rev-parse --abbrev-ref HEAD"),
+    branch: treeRef(root),
     note: opts.note ?? "",
     baseline,
     candidate,
@@ -423,16 +457,7 @@ async function run() {
       cores: cpus().length,
       memoryGiB: Math.round(totalmem() / 2 ** 30),
       browser: `${channel === "msedge" ? "Microsoft Edge" : channel} ${browser.version()}`,
-      engines: Object.fromEntries(
-        configs.map((c) => [
-          c.id,
-          c.engine === "1.x"
-            ? c.cesiumVersion
-              ? `CesiumJS ${c.cesiumVersion} (npm release, ${releases[c.id].integrity})`
-              : "CesiumJS, this repository's build"
-            : `2.0 prototype, policy ${c.policy ?? "budgeted"}`,
-        ]),
-      ),
+      engines: Object.fromEntries(configs.map((c) => [c.id, describeBuild(c)])),
       browserMode: headless ? "headless" : "headed",
       browserArgs,
       uncappedArgs,
@@ -575,6 +600,9 @@ async function run() {
   await browser.close();
   await uncapped?.close();
   await server.close();
+  for (const snap of snapshotServers.values()) {
+    await snap.close();
+  }
 
   mkdirSync(directory, { recursive: true });
   const file = join(directory, `${stamp}.json`);
@@ -639,7 +667,11 @@ async function runOne(browser, base, spec, results) {
     // Content only: not the page's own origin (the engine's code, served
     // module by module in development) nor data: and blob: URLs.
     const url = new URL(request.url());
-    if (!url.protocol.startsWith("http") || url.origin === base) {
+    if (
+      !url.protocol.startsWith("http") ||
+      url.origin === base ||
+      url.origin === spec.config.page?.server
+    ) {
       return;
     }
     requests++;
@@ -664,10 +696,11 @@ async function runOne(browser, base, spec, results) {
     }
   };
   try {
-    const release = spec.config.cesiumVersion
-      ? `&cesium=${spec.config.cesiumVersion}`
-      : "";
-    await page.goto(`${base}/bench/suite/suite.html?bench${release}`);
+    const { cesium, server } = spec.config.page ?? {};
+    const origin = server ?? base;
+    await page.goto(
+      `${origin}/bench/suite/suite.html?bench${cesium ? `&cesium=${encodeURIComponent(cesium)}` : ""}`,
+    );
     if (!results.environment.page) {
       results.environment.page = await page.evaluate(() =>
         globalThis.describeBrowser(),
