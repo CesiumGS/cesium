@@ -1179,12 +1179,16 @@ export class Tileset3D implements TileTree {
   }
 
   /**
-   * Data credits of the content currently selected in any view, most
-   * frequent first (as 1.x orders tileset credits). Each copyright string may
-   * list several credits separated by semicolons.
+   * Data credits of the content currently selected in any view, and of the
+   * imagery draped on it, most frequent first (as 1.x orders credits). Each
+   * copyright string may list several credits separated by semicolons.
    */
   credits(): string[] {
     const counts = new Map<string, number>();
+    this.imagery?.credits(
+      new Set([...this.lastSelected.values()].flat()),
+      counts,
+    );
     for (const tiles of this.lastSelected.values()) {
       for (const tile of tiles) {
         for (const credit of (tile.copyright ?? "").split(";")) {

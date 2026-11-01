@@ -17,6 +17,11 @@ export interface ImageryProvider {
   readonly headers?: Record<string, string>;
   /** Required on-screen credits (provider logos, ion). */
   readonly attributions: IonAttribution[];
+  /**
+   * Data credits for one tile (1.x `getTileCredits`): the imagery
+   * providers whose coverage includes it.
+   */
+  tileCredits?(x: number, y: number, level: number): string[];
 }
 
 /** XYZ tiles from a URL template with `{x}`, `{y}`, `{z}` (and `{s}`). */
@@ -77,6 +82,7 @@ export class BingImagery implements ImageryProvider {
     readonly maximumLevel: number,
     readonly tileSize: number,
     readonly attributions: IonAttribution[],
+    private readonly providers: BingProvider[],
   ) {}
 
   /**
@@ -125,8 +131,9 @@ export class BingImagery implements ImageryProvider {
     if (!resource?.imageUrl) {
       throw new Error("Bing metadata: no imageUrl");
     }
-    // ion's attributions, then Bing's logo and its imagery providers'
-    // credits (1.x lists those in the credit lightbox).
+    // ion's attributions and Bing's logo (1.x lists it in the credit
+    // lightbox); the imagery providers are credited per tile drawn
+    // (`tileCredits`).
     const attributions: IonAttribution[] = (endpoint.attributions ?? []).map(
       (a) => ({ html: a.html, collapsible: a.collapsible === true }),
     );
@@ -134,13 +141,26 @@ export class BingImagery implements ImageryProvider {
       html: `<a href="https://www.microsoft.com/en-us/maps/bing-maps/product"><img src="${bingLogoUrl}" title="Bing Imagery"/></a>`,
       collapsible: true,
     });
+    const providers: BingProvider[] = [];
     for (const p of (resource.imageryProviders ?? []) as Array<{
       attribution?: string;
+      coverageAreas?: Array<{
+        bbox: [number, number, number, number];
+        zoomMin: number;
+        zoomMax: number;
+      }>;
     }>) {
       if (p.attribution) {
-        attributions.push({
-          html: escapeHtml(p.attribution),
-          collapsible: true,
+        providers.push({
+          attribution: p.attribution,
+          areas: (p.coverageAreas ?? []).map((a) => ({
+            south: a.bbox[0] * DEG,
+            west: a.bbox[1] * DEG,
+            north: a.bbox[2] * DEG,
+            east: a.bbox[3] * DEG,
+            zoomMin: a.zoomMin,
+            zoomMax: a.zoomMax,
+          })),
         });
       }
     }
@@ -151,7 +171,35 @@ export class BingImagery implements ImageryProvider {
       resource.zoomMax ?? 21,
       resource.imageWidth ?? 256,
       attributions,
+      providers,
     );
+  }
+
+  /**
+   * 1.x BingMapsImageryProvider.getTileCredits: providers with a coverage
+   * area that intersects the tile, at a zoom within its range (Bing zooms
+   * start at 1 where Web Mercator levels start at 0).
+   */
+  tileCredits(x: number, y: number, level: number): string[] {
+    const n = 2 ** level;
+    const west = (x / n) * 2 * Math.PI - Math.PI;
+    const east = ((x + 1) / n) * 2 * Math.PI - Math.PI;
+    const north = mercatorLatitude(y / n);
+    const south = mercatorLatitude((y + 1) / n);
+    const zoom = level + 1;
+    return this.providers
+      .filter((p) =>
+        p.areas.some(
+          (a) =>
+            zoom >= a.zoomMin &&
+            zoom <= a.zoomMax &&
+            a.west <= east &&
+            a.east >= west &&
+            a.south <= north &&
+            a.north >= south,
+        ),
+      )
+      .map((p) => p.attribution);
   }
 
   tileUrl(x: number, y: number, level: number): string {
@@ -169,12 +217,22 @@ export class BingImagery implements ImageryProvider {
   }
 }
 
-function escapeHtml(text: string): string {
-  return text.replace(
-    /[&<>"']/g,
-    (c) =>
-      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
-        c
-      ]!,
-  );
+const DEG = Math.PI / 180;
+
+/** A Bing imagery provider and where (radians) and at which zooms it is. */
+interface BingProvider {
+  attribution: string;
+  areas: Array<{
+    west: number;
+    south: number;
+    east: number;
+    north: number;
+    zoomMin: number;
+    zoomMax: number;
+  }>;
+}
+
+/** Latitude (radians) of a Web Mercator y in [0, 1] from the north. */
+function mercatorLatitude(y: number): number {
+  return Math.atan(Math.sinh(Math.PI * (1 - 2 * y)));
 }

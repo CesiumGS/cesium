@@ -229,6 +229,32 @@ export class GlobeImagery {
     this.trimSources(frame);
   }
 
+  /**
+   * Data credits of the imagery under `tiles` (terrain tiles drawn), with
+   * how many imagery tiles carry each (1.x credits the imagery tiles it
+   * draws).
+   */
+  credits(tiles: Iterable<Tile>, counts: Map<string, number>): void {
+    const credit = this.provider.tileCredits?.bind(this.provider);
+    if (!credit) {
+      return;
+    }
+    const seen = new Set<string>();
+    for (const tile of tiles) {
+      const { level, tiles: sources } = this.job(tile);
+      for (const [x, y] of sources) {
+        const key = `${level}/${x}/${y}`;
+        if (seen.has(key)) {
+          continue;
+        }
+        seen.add(key);
+        for (const text of credit(x, y, level)) {
+          counts.set(text, (counts.get(text) ?? 0) + 1);
+        }
+      }
+    }
+  }
+
   /** Drops the least recently used settled source tiles over the cap. */
   private trimSources(frame: number): void {
     if (this.sources.size <= MAX_SOURCES) {

@@ -368,7 +368,6 @@ export class NextAdapter implements Adapter {
       imagery = await BingImagery.fromIon(ionAsset(d), {
         accessToken: tokenFor(d),
       });
-      this.attributions.push(...imagery.attributions);
     }
     const common = {
       ...(config.policy ? { policy: config.policy } : {}),
@@ -394,6 +393,8 @@ export class NextAdapter implements Adapter {
         engine.addEllipsoid(world, imagery ? { imagery } : {}),
       );
     }
+    // Terrain's attributions, then imagery's, as 1.x credits them.
+    this.attributions.push(...(imagery?.attributions ?? []));
     for (const layer of scene.layers) {
       const d = byId.get(layer.dataset)!;
       if (d.source.kind === "generator") {

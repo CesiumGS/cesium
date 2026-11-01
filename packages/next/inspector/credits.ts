@@ -2,9 +2,9 @@
  * Data attribution over an engine view, as 1.x shows it: the attributions
  * a provider requires on screen (ion's non-collapsible ones: logos and
  * notices) in a compact bar at the bottom left, and a "Data attribution"
- * panel listing the rest (collapsible notices, then the data credits of the
- * tiles on screen, most frequent first). Plain DOM beside the inspector,
- * for any app.
+ * panel listing the rest (the data credits of the tiles on screen, most
+ * frequent first, then collapsible notices). Plain DOM beside the
+ * inspector, for any app.
  *
  * ion's attribution HTML is parsed, not injected: only logo images, link
  * URLs (http and https) and text are carried over.
@@ -109,29 +109,17 @@ export function attachCredits(
         doc.querySelector("a")?.getAttribute("href") ?? null,
       );
       if (collapsible) {
-        // Behind "Data attribution", as 1.x lists it.
-        if (text) {
-          row(text, text, href);
+        // Behind "Data attribution", logos included, as 1.x lists it.
+        const images = logosOf(doc, seen);
+        if (images.length > 0 || text) {
+          const span = document.createElement("span");
+          span.className = "cc-entry";
+          span.append(...images, text ?? "");
+          row(span, text || images.map((i) => i.textContent).join(), href);
         }
         continue;
       }
-      for (const img of doc.querySelectorAll("img")) {
-        // Remote logos, data URIs and the engine's own bundled ones.
-        const raw = img.getAttribute("src") ?? "";
-        const src = /^data:image\//i.test(raw)
-          ? raw
-          : new URL(raw, location.href).href;
-        if (!/^(https?:|data:image\/)/i.test(src) || seen.has(src)) {
-          continue;
-        }
-        seen.add(src);
-        const logo = document.createElement("img");
-        logo.src = src;
-        logo.alt = img.getAttribute("alt") ?? img.getAttribute("title") ?? "";
-        logo.title = logo.alt;
-        const href = safeLink(img.closest("a")?.getAttribute("href") ?? null);
-        logos.append(href ? link(href, logo) : logo);
-      }
+      logos.append(...logosOf(doc, seen));
       if (!text || seen.has(text)) {
         continue;
       }
@@ -142,9 +130,14 @@ export function attachCredits(
       inline.title = text;
       logos.append(inline);
     }
+    // The data credits come first in the panel, most frequent first, then
+    // the providers' collapsible notices (1.x orders by frequency, and
+    // providers credit once).
+    const notices = [...list.children];
     for (const credit of credits) {
       row(credit, credit);
     }
+    list.append(...notices);
     const count = list.childElementCount;
     toggle.hidden = count === 0;
     toggle.textContent = `Data attribution (${count})`;
@@ -165,6 +158,29 @@ export function attachCredits(
       root.remove();
     },
   };
+}
+
+/** An attribution's logos (each once), linked where the HTML links them. */
+function logosOf(doc: Document, seen: Set<string>): Node[] {
+  const out: Node[] = [];
+  for (const img of doc.querySelectorAll("img")) {
+    // Remote logos, data URIs and the engine's own bundled ones.
+    const raw = img.getAttribute("src") ?? "";
+    const src = /^data:image\//i.test(raw)
+      ? raw
+      : new URL(raw, location.href).href;
+    if (!/^(https?:|data:image\/)/i.test(src) || seen.has(src)) {
+      continue;
+    }
+    seen.add(src);
+    const logo = document.createElement("img");
+    logo.src = src;
+    logo.alt = img.getAttribute("alt") ?? img.getAttribute("title") ?? "";
+    logo.title = logo.alt;
+    const href = safeLink(img.closest("a")?.getAttribute("href") ?? null);
+    out.push(href ? link(href, logo) : logo);
+  }
+  return out;
 }
 
 function safeLink(href: string | null): string | undefined {
@@ -243,4 +259,6 @@ const CSS = `
 .cesium-credits .cc-panel[hidden] { display: none; }
 .cesium-credits .cc-title { color: #e6e9ef; font-weight: 600; margin-bottom: 6px; }
 .cesium-credits .cc-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.cesium-credits .cc-entry { display: inline-flex; align-items: center; gap: 6px; }
+.cesium-credits .cc-entry img { height: 16px; width: auto; display: block; }
 `;
