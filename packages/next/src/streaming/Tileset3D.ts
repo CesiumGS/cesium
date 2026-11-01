@@ -10,6 +10,7 @@ import type { Engine } from "../scene/Engine.ts";
 import type { ClipBox, World } from "../scene/World.ts";
 import type { ModelOptions } from "../scene/gltfModel.ts";
 import type { GltfAsset } from "../io/gltfTypes.ts";
+import type { Rectangle } from "../globe/quantizedMesh.ts";
 import {
   Legacy1xSelection,
   type SelectionView,
@@ -60,6 +61,10 @@ export interface TileSource {
   modelOptions(tile: Tile): Pick<ModelOptions, "modelMatrix" | "axes">;
   /** Height of the surface at a longitude and latitude (terrain sources). */
   sampleHeight?(longitude: number, latitude: number): number | undefined;
+  /** Height of the drawn surface there (terrain sources). */
+  surfaceHeight?(longitude: number, latitude: number): number | undefined;
+  /** Called with each rectangle whose heights changed (terrain sources). */
+  readonly heightListeners?: Set<(rectangle: Rectangle) => void>;
   /** A tile's content left the cache. */
   unloadTile?(tile: Tile): void;
   /** A selection policy of its own for `options` (default: the tileset's). */
@@ -311,6 +316,26 @@ export class Tileset3D implements TileTree {
    */
   sampleHeight(longitude: number, latitude: number): number | undefined {
     return this.source?.sampleHeight?.(longitude, latitude);
+  }
+
+  /**
+   * Height of the drawn surface (the triangle under the point in the
+   * finest loaded tile, as 1.x `Globe.getHeight`): what clamped content
+   * stands on. Terrain and the ellipsoid; undefined elsewhere.
+   */
+  surfaceHeight(longitude: number, latitude: number): number | undefined {
+    return this.source?.surfaceHeight?.(longitude, latitude);
+  }
+
+  /**
+   * Calls `listener` with each rectangle (radians) whose surface heights
+   * changed as terrain tiles load and unload; returns a remover. Never
+   * called for 3D Tiles.
+   */
+  onHeightsChanged(listener: (rectangle: Rectangle) => void): () => void {
+    const listeners = this.source?.heightListeners;
+    listeners?.add(listener);
+    return () => listeners?.delete(listener);
   }
 
   /** Counts tiles an implicit tree created (TileTree). */

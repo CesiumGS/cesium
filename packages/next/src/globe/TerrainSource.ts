@@ -24,7 +24,10 @@ import type { TilesetOptions } from "../streaming/Tileset3D.ts";
 import * as m4 from "../math/mat4.ts";
 import type { Vec3 } from "../math/vec3.ts";
 import type { GltfAsset } from "../io/gltfTypes.ts";
+import { Ellipsoid } from "../math/ellipsoid.ts";
+import * as v3 from "../math/vec3.ts";
 import {
+  containingTriangle,
   interpolateHeight,
   type Rectangle,
   type TerrainHeights,
@@ -209,6 +212,77 @@ export class TerrainSource {
     if (this.flat) {
       return 0;
     }
+    const finest = this.finestTile(longitude, latitude);
+    if (!finest) {
+      return undefined;
+    }
+    const r = finest.rectangle;
+    return interpolateHeight(
+      finest.heights!,
+      (longitude - r.west) / (r.east - r.west),
+      (latitude - r.south) / (r.north - r.south),
+    );
+  }
+
+  /**
+   * Height of the drawn surface at a longitude and latitude in radians: a
+   * ray along the geodetic normal against the finest loaded tile's
+   * triangle there, flat in Earth-fixed space as it is drawn (1.x
+   * Globe.getHeight). On coarse tiles this lies up to hundreds of meters
+   * below `sampleHeight`; clamped content stands on it, not in the air.
+   */
+  surfaceHeight(longitude: number, latitude: number): number | undefined {
+    if (this.flat) {
+      return 0;
+    }
+    const finest = this.finestTile(longitude, latitude);
+    if (!finest) {
+      return undefined;
+    }
+    const r = finest.rectangle;
+    const t = finest.heights!;
+    const triangle = containingTriangle(
+      t,
+      (longitude - r.west) / (r.east - r.west),
+      (latitude - r.south) / (r.north - r.south),
+    );
+    if (!triangle) {
+      return undefined;
+    }
+    const ellipsoid = Ellipsoid.WGS84;
+    const range = t.maximumHeight - t.minimumHeight;
+    const [a, b, c] = triangle.map((i) =>
+      ellipsoid.cartographicToCartesian(
+        {
+          longitude: r.west + (t.u[i]! / 32767) * (r.east - r.west),
+          latitude: r.south + (t.v[i]! / 32767) * (r.north - r.south),
+          height: t.minimumHeight + (t.h[i]! / 32767) * range,
+        },
+        v3.vec3(),
+      ),
+    ) as [Float64Array, Float64Array, Float64Array];
+    // The point on the ellipsoid and its normal; the height is where the
+    // normal line meets the triangle's plane.
+    const carto = { longitude, latitude, height: 0 };
+    const origin = ellipsoid.cartographicToCartesian(carto, v3.vec3());
+    const up = ellipsoid.geodeticSurfaceNormalCartographic(carto, v3.vec3());
+    const normal = v3.cross(
+      v3.vec3(),
+      v3.sub(v3.vec3(), b, a),
+      v3.sub(v3.vec3(), c, a),
+    );
+    const denominator = v3.dot(normal, up);
+    if (Math.abs(denominator) < 1e-12) {
+      return undefined;
+    }
+    return v3.dot(normal, v3.sub(v3.vec3(), a, origin)) / denominator;
+  }
+
+  /** The finest tile with height data at a point. */
+  private finestTile(
+    longitude: number,
+    latitude: number,
+  ): GlobeTile | undefined {
     let tile = this.root.children.find((t) =>
       rectangleContains(t.globe!.rectangle, longitude, latitude),
     );
@@ -223,21 +297,23 @@ export class TerrainSource {
           rectangleContains(t.globe!.rectangle, longitude, latitude),
       );
     }
-    if (!finest) {
-      return undefined;
-    }
-    const r = finest.rectangle;
-    return interpolateHeight(
-      finest.heights!,
-      (longitude - r.west) / (r.east - r.west),
-      (latitude - r.south) / (r.north - r.south),
-    );
+    return finest;
   }
 
   /** Content left the cache: its height data goes too. */
   unloadTile(tile: Tile): void {
-    if (tile.globe) {
+    if (tile.globe?.heights) {
       tile.globe.heights = undefined;
+      this.heightsChanged(tile.globe.rectangle);
+    }
+  }
+
+  /** Called with the rectangle (radians) whose heights changed. */
+  readonly heightListeners = new Set<(rectangle: Rectangle) => void>();
+
+  private heightsChanged(rectangle: Rectangle): void {
+    for (const listener of this.heightListeners) {
+      listener(rectangle);
     }
   }
 
@@ -269,6 +345,7 @@ export class TerrainSource {
     }
     if (info.heights) {
       g.heights = info.heights;
+      this.heightsChanged(g.rectangle);
     }
     g.own = {
       minimumHeight: info.minimumHeight,
