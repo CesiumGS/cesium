@@ -7,7 +7,13 @@
  * exceeds its byte budget; a tile touched by any view stays.
  */
 import type { Engine } from "../scene/Engine.ts";
-import type { ClipBox, TransformHandle, World } from "../scene/World.ts";
+import type {
+  CastRay,
+  ClipBox,
+  DrawHandle,
+  TransformHandle,
+  World,
+} from "../scene/World.ts";
 import type { ModelOptions } from "../scene/gltfModel.ts";
 import type { GltfAsset } from "../io/gltfTypes.ts";
 import type { Mat4 } from "../math/mat4.ts";
@@ -239,6 +245,104 @@ export class Tileset3D implements TileTree {
     }
     for (const child of tile.children) {
       this.moveVolumes(child, change);
+    }
+  }
+
+  /** True for terrain and the ellipsoid (a globe source), not 3D Tiles. */
+  get terrain(): boolean {
+    return this.source !== undefined;
+  }
+
+  /**
+   * Loads the most detailed content along rays (1.x
+   * `MOST_DETAILED_PRELOAD`): every tile whose bounds a ray crosses, down
+   * to the leaves (and every tile on the way under ADD refinement),
+   * requested ahead of what the views need, external tilesets included.
+   * Resolves with those tiles' draws, kept loaded until `release`. The
+   * engine's frame loop must be running.
+   */
+  queryRays(
+    rays: readonly CastRay[],
+  ): Promise<{ draws: DrawHandle[]; release(): void }> {
+    return new Promise((resolve, reject) => {
+      this.queries.push({ rays, resolve, reject, pinned: [] });
+      this.lastChange = this.frame;
+    });
+  }
+  private readonly queries: Array<{
+    rays: readonly CastRay[];
+    resolve: (result: { draws: DrawHandle[]; release(): void }) => void;
+    reject: (error: Error) => void;
+    pinned: Tile[];
+    done?: boolean;
+  }> = [];
+
+  /**
+   * Serves ray queries for one frame: wanted tiles go first in `requests`;
+   * pinned tiles count as touched (not evicted or cancelled).
+   */
+  private serveQueries(frame: number, requests: Map<Tile, number>): void {
+    for (let q = this.queries.length - 1; q >= 0; q--) {
+      const query = this.queries[q]!;
+      if (query.done) {
+        for (const tile of query.pinned) {
+          tile.touchedFrame = frame;
+        }
+        continue;
+      }
+      const tiles = new Set<Tile>();
+      for (const ray of query.rays) {
+        this.tilesAlongRay(this.root, ray, tiles);
+      }
+      let pending = false;
+      for (const tile of tiles) {
+        tile.touchedFrame = frame;
+        if (tile.state === "unloaded" || tile.state === "loading") {
+          pending = true;
+          if (tile.state === "unloaded") {
+            requests.set(tile, -1);
+          }
+        }
+      }
+      if (this.externals.length > 0) {
+        pending = true; // children still to be built
+      }
+      if (!pending) {
+        query.done = true;
+        query.pinned = [...tiles].filter((t) => t.instance);
+        query.resolve({
+          draws: query.pinned.flatMap((t) => t.instance!.draws),
+          release: () => {
+            const at = this.queries.indexOf(query);
+            if (at >= 0) {
+              this.queries.splice(at, 1);
+            }
+          },
+        });
+      }
+    }
+  }
+
+  /** Tiles a ray needs for its most detailed content. */
+  private tilesAlongRay(tile: Tile, ray: CastRay, out: Set<Tile>): void {
+    if (!crossesSphere(ray, tile.volume.sphere)) {
+      return;
+    }
+    if (tile.external) {
+      if (tile.state !== "ready") {
+        out.add(tile); // its tileset JSON, then its children
+        return;
+      }
+    } else if (tile.contentUrl) {
+      const crossed = tile.children.some((c) =>
+        crossesSphere(ray, c.volume.sphere),
+      );
+      if (tile.refine === "ADD" || !crossed) {
+        out.add(tile);
+      }
+    }
+    for (const child of tile.children) {
+      this.tilesAlongRay(child, ray, out);
     }
   }
 
@@ -634,6 +738,7 @@ export class Tileset3D implements TileTree {
         this.stats.cancelled++;
       }
     }
+    this.serveQueries(frame, requests);
     this.request(requests);
     this.engine.requests.backlog(this.origin, this.ready.length);
     const window = this.engine.requests.stats(this.origin);
@@ -1077,4 +1182,21 @@ function isIdentity(m: Mat4): boolean {
     }
   }
   return true;
+}
+
+/** Whether a ray segment passes through a sphere. */
+function crossesSphere(
+  ray: CastRay,
+  sphere: { center: ArrayLike<number>; radius: number },
+): boolean {
+  const dx = sphere.center[0]! - ray.origin[0]!;
+  const dy = sphere.center[1]! - ray.origin[1]!;
+  const dz = sphere.center[2]! - ray.origin[2]!;
+  const along =
+    dx * ray.direction[0]! + dy * ray.direction[1]! + dz * ray.direction[2]!;
+  const r = sphere.radius;
+  if (along < -r || along > ray.maxDistance + r) {
+    return false;
+  }
+  return dx * dx + dy * dy + dz * dz - along * along <= r * r;
 }

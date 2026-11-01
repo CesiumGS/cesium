@@ -524,6 +524,59 @@ export class Engine {
 
   /** Removes a placed glTF and frees its geometry, materials and textures. */
   /**
+   * Heights (meters above the ellipsoid) of the most detailed 3D Tiles
+   * content at each longitude and latitude (radians), as 1.x
+   * `Scene.sampleHeightMostDetailed`: the tiles under each point are loaded
+   * down to the leaves whatever the views show, then ray cast on the GPU
+   * down the geodetic normal from 10 km (nearest hit). Tilesets: those
+   * given, else the shown collision tilesets of the world. Undefined where
+   * nothing is hit. Needs the frame loop running (`start`).
+   */
+  async sampleHeightMostDetailed(
+    world: World,
+    positions: ReadonlyArray<{ longitude: number; latitude: number }>,
+    options: { tilesets?: readonly Tileset3D[] } = {},
+  ): Promise<Array<number | undefined>> {
+    const START = 10000;
+    const tilesets =
+      options.tilesets ??
+      this.tilesets.filter(
+        (t) => t.world === world && t.show && t.enableCollision && !t.terrain,
+      );
+    const rays = positions.map(({ longitude, latitude }) => {
+      const up = Ellipsoid.WGS84.geodeticSurfaceNormalCartographic(
+        { longitude, latitude, height: 0 },
+        v3.vec3(),
+      );
+      return {
+        origin: Ellipsoid.WGS84.cartographicToCartesian(
+          { longitude, latitude, height: START },
+          v3.vec3(),
+        ),
+        direction: v3.negate(v3.vec3(), up),
+        maxDistance: START + 12000,
+      };
+    });
+    const heights: Array<number | undefined> = positions.map(() => undefined);
+    await Promise.all(
+      tilesets.map(async (tileset) => {
+        const query = await tileset.queryRays(rays);
+        try {
+          const hits = await world.castRays(rays, { draws: query.draws });
+          hits.forEach((d, i) => {
+            if (d !== undefined) {
+              heights[i] = Math.max(heights[i] ?? -Infinity, START - d);
+            }
+          });
+        } finally {
+          query.release();
+        }
+      }),
+    );
+    return heights;
+  }
+
+  /**
    * Moves, hides or tints one instance of a model placed with
    * `ModelOptions.instances` (matrix in the model's frame).
    */

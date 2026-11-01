@@ -36,6 +36,7 @@ Branch: `cesium-2.0-webgpu-poc` (off `main` @ `587f52f1eb`, CesiumJS 1.146.0)
 | r28 | Scene foundations (§13.9): a per-world transform table (float64 hierarchy, visibility), records 192 → 128 bytes, GPU instancing culled per instance (`EXT_mesh_gpu_instancing`), glTF assets shared across placements, generational handles, scatter uploads; the prep kernel is renamed cull. glTF 2.1 / 3D Tiles 2.0, vector billboards and decals, and ray queries to path tracing designed (§13.9, §13.10). Parity unchanged.                                                             |
 | r29 | M3 increment 5: height queries and clamping. `heightReference` on models (clamp/relative to ground, terrain or 3D Tiles), event-driven re-clamping, terrain clamped to its drawn surface (within 0.1 mm of 1.x `Globe.getHeight` where 1.x keeps full precision), 3D Tiles heights by GPU ray casts (`World.castRays`) within 6 mm of what 1.x renders; tileset `enableCollision` and `modelMatrix`. Custom shading becomes a PoC milestone (§3.4).                                           |
 | r30 | Benchmark suite designed (§16): datasets, scenes and scenarios in manifests (public in the repo, private outside it, aliased in results), a checksummed local content store, engine adapters for 1.x and 2.0, a catalog of classic Cesium content, large public data and scenes where 2.0 should win; milestone "Benchmark suite v1" after M3. Clamping open items listed under M3.                                                                                                           |
+| r31 | M3 complete (increment 6): model instancing (`ModelOptions.instances`) with a 100,000-instance benchmark, i3dm within FLIP 0.018 of 1.x, runtime tileset `modelMatrix`, `sampleHeightMostDetailed` within 7.5 mm of 1.x, the viewer's city clamped. Real-time tracks designed (§13.11) with a milestone after Custom shading; automatic per-instance LOD noted as an idea.                                                                                                                    |
 
 ## 1. Goal
 
@@ -542,16 +543,11 @@ Durations are rough and **optimistic** for one engineer with AI assistance. If t
 - Quantized-mesh terrain; horizon culling (in selection since r25).
 - Imagery sources plus the **texture-array composite cache**.
 - Height queries and clamping (r29).
-- Open after r29 (§15, increment 5):
-  - clamping for billboards and labels, with the vector rendering work
-    (§13.9);
-  - clamping the viewer's city boxes (each box needs a root transform);
-  - runtime tileset `modelMatrix`: content follows its parent transform,
-    but selection volumes must be transformed with it;
-  - `sampleHeightMostDetailed`: rays against content loaded for the query,
-    not only the tiles the views drew;
-  - from r28: `addInstances`, i3dm, and the 100,000-instance benchmark
-    (§13.9, §16).
+- Closed out in r31 (§15, increment 6): model instancing and i3dm, the
+  100,000-instance benchmark, runtime tileset `modelMatrix`, the viewer's
+  city clamped, `sampleHeightMostDetailed`. Clamping billboards and labels
+  moves to real-time tracks (§13.11), with the billboards themselves.
+- **Status: M3 complete (r31).**
 - _Exit_: the CAD tileset sits on Cesium World Terrain with ion imagery; globe `Legacy1x` L1 ≥99%.
 
 ### Benchmark suite v1 (after M3)
@@ -612,6 +608,15 @@ representative content; it then guards every later milestone.
   tileset, compiled at build time and at runtime, in every pass; no frame
   stalls when a new shader arrives; batching cost per extra material type
   measured.
+
+### Real-time tracks (after Custom shading)
+
+- §13.11: track collections as instance data with a bulk update API,
+  GPU clamping, interpolation between feed samples, billboard symbology
+  with custom shading, labels with decluttering, picking per track.
+- _Exit_: 100,000 clamped tracks updated at 10 Hz from a synthetic feed
+  over terrain and 3D Tiles hold frame rate with flat CPU cost, measured
+  against 1.x entities in the benchmark suite.
 
 ### M5 — Performance hardening (≈3 wks)
 
@@ -2011,6 +2016,15 @@ anything means rewriting every one of its records. 1.x needs much more:
   (trees, poles, vehicles).
 - Later: record-level pre-culling of the instances' union bounds,
   per-instance LOD, GPU-driven instance updates (simulation in compute).
+- _Idea (not committed for the PoC): automatic per-instance LOD._ The r31
+  benchmark is bound by triangles drawn (100,000 trucks of 3,624 triangles:
+  35.5 ms GPU), not by culling. The worker could build a short LOD chain
+  per instanced mesh at decode (meshoptimizer simplification, then an
+  impostor for the farthest level), and the instance cull kernel choose a
+  level per instance from its projected size, compacting each instance
+  into its level's batch, so one draw per level and primitive replaces one
+  per primitive. It would make large instance counts (forests, fleets,
+  plant equipment) cost what is visible at the detail it is seen.
 
 **Measure.** Pixel-identical parity suites after the switch; bench draw
 throughput and prep time unchanged or better (records shrink by a third);
@@ -2160,6 +2174,54 @@ native Slang backend could use hardware ray queries); no bindless textures
 (texture sets would move into arrays or atlases, as imagery already is,
 §7.1); float32 (the TLAS is camera-relative with hi/lo origins, as the
 rasterizer is); streaming (BLAS once per tile, TLAS per frame).
+
+### 13.11 Real-time tracks: thousands of moving, clamped entities
+
+**Use case.** Defense and operations customers show live unit positions
+from a network feed or database as custom symbology (usually billboards,
+sometimes models or decals), clamped to terrain and 3D Tiles, updated
+fluidly. 1.x does this with entities and billboard collections, re-clamping
+each one on the CPU.
+
+**What exists (r31).** Clamped models with event-driven re-clamping (one
+`setTransform` per move), GPU ray casts for 3D Tiles heights batched over
+all anchors, per-instance updates without allocation (100,000 instances:
+1.8 ms CPU to move 1% per frame, 101 ms to move all), and scatter uploads.
+
+**Design.**
+
+- _Tracks as instance data, not objects:_ a track collection is one
+  record (a billboard set or an instanced model) with per-instance streams
+  (position as longitude, latitude and height or Earth-fixed hi/lo,
+  heading, symbol, color, flags). A feed update writes a typed-array slice
+  (bulk update API) that uploads as a scatter; no per-entity JavaScript
+  object or call on the hot path, and decoding of the feed can run in a
+  worker.
+- _Clamping on the GPU:_ a compute pass gives each instance its ground
+  height every frame, from the terrain tiles drawn (their heights uploaded
+  as a texture array or read from the arena) and from 3D Tiles by ray
+  casts against the views' draws; the instance matrix is built on the GPU.
+  Moving anchors then cost nothing on the CPU, and many-entity clamping
+  scales with the GPU.
+- _Smooth motion:_ interpolation (or extrapolation) between feed samples
+  in the shader from two timestamped positions per track, so 1-10 Hz
+  feeds animate at frame rate.
+- _Symbology:_ billboards by point expansion (§13.9) with programmable
+  shading (custom shading, §3.4) for military symbols (MIL-STD-2525 /
+  APP-6 style) from per-instance attributes; decals for areas; labels
+  with GPU decluttering.
+- _Picking and selection per track_ through per-instance feature IDs.
+
+**Measure** (benchmark suite v1, §16.4 group C; instanced models until
+billboards exist): 10,000 and 100,000 tracks updated at 1 Hz and 10 Hz
+from a synthetic feed over terrain and over Google 3D Tiles: CPU per
+frame, GPU per frame, update-to-display latency, clamping error, frame
+time stability; against 1.x entities and billboard collections.
+
+**When.** The measurement belongs in benchmark suite v1. The feature needs
+billboards and custom shading for symbology, so it follows the "Custom
+shading" milestone ("Real-time tracks" milestone), unless its priority
+moves it earlier.
 
 ## 14. Follow-ups
 
@@ -2636,7 +2698,9 @@ generators):
   instances);
 - several heavy tilesets at once: Google + OSM + CAD + terrain;
 - multiple views of one world (split views, linked views);
-- dynamic content: 10,000 moving and clamped entities;
+- dynamic content: 10,000 to 100,000 moving, clamped tracks from a
+  synthetic feed at 1-10 Hz (§13.11; instanced models until billboards
+  exist);
 - very large Gaussian splat datasets: 1.x struggles with them even with
   splat LOD (its sort and per-frame upload), where 2.0 sorts on the GPU
   in compute (M6, "Gaussian splats with GPU sort", which this group
@@ -2728,3 +2792,57 @@ confirmed at the source before mirroring):
 [iTwin sample iModels](https://www.itwinjs.org/learning/tutorials/create-test-imodel-sample),
 [Change point detection at MongoDB](https://arxiv.org/pdf/2003.00584),
 [Hunter / Apache Otava](https://ar5iv.labs.arxiv.org/html/2301.03034).
+
+### Increment 6 (r31): M3 close-out
+
+**Model instancing.** `ModelOptions.instances` places a glTF N times with
+matrices in its model frame: one draw per primitive with N instances
+(L⁻¹·P·L in each node frame, times the primitive's own
+`EXT_mesh_gpu_instancing` instances), per-instance tints and feature IDs;
+`setModelInstance` moves, hides or tints one without allocating.
+Benchmark (`bench/instances`, suite `instances`), the Cesium milk truck (5
+primitives, 3,624 triangles):
+
+| Instances | Place | CPU / frame | GPU / frame | Move 1% / frame | Move all |
+| --------- | ----- | ----------- | ----------- | --------------- | -------- |
+| 10,000    | 25 ms | 0.25 ms     | 3.5 ms      | 0.1 ms          | 8 ms     |
+| 100,000   | 96 ms | 0.30 ms     | 35.5 ms     | 1.8 ms          | 101 ms   |
+
+GPU time is linear in triangles drawn (36 M and 362 M), not in culling:
+per-instance LOD is the lever (§13.9). A glTF asset is shared within a
+world; uploading consumes its images, so another world needs its own
+load.
+
+**i3dm.** Instanced 3D Model tiles parse in the worker as 1.x's
+I3dmLoader reads them (positions or quantized positions with RTC_CENTER,
+orientation from normals, oct-encoded normals or east-north-up, uniform
+and non-uniform scale, BATCH_ID, embedded or external glTF) and place as
+model instances under a root at their origin. Eight Specs i3dm tilesets
+are on the tileset parity page: mean FLIP 0.010-0.018 against 1.x.
+`splitGlb` now stops at the GLB's own length (i3dm pads after it).
+
+**Runtime tileset `modelMatrix`.** Content hangs off a tileset root
+transform (`modelMatrix` × load-time matrix⁻¹), so moving a loaded tileset
+is one transform write; tile boxes and spheres move with it for
+selection (regions stay, as 1.x), subtrees built later from external
+tilesets included. Verified: content and volumes move by exactly the
+change and back.
+
+**Clamping.** The viewer's city buildings each stand on a clamped anchor
+(144 of 144 on the drawn terrain surface). While terrain loads, content
+sits on coarse tiles whose flat triangles sag far below the ellipsoid
+(kilometers at the first levels), as in 1.x; it settles as finer tiles
+arrive.
+
+**`sampleHeightMostDetailed`.** `Tileset3D.queryRays` loads every tile
+whose bounds a ray crosses down to the leaves (all tiles on the path
+under ADD refinement), ahead of the views' requests and pinned against
+eviction, external tilesets included; `Engine.sampleHeightMostDetailed`
+then ray casts against those draws (`CastOptions.draws`). Against 1.x
+`Scene.sampleHeightMostDetailed` on OSM Buildings: the same 123 and 120
+of 225 points hit, within 7.5 mm (1.x depth precision).
+
+**Viewer.** The "Parity and benchmarks" panel lists every parity page,
+benchmark and spike.
+
+**M3 is complete.** Next: benchmark suite v1 (§16), then M4.

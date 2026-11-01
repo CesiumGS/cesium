@@ -70,6 +70,12 @@ interface Row {
   status: string;
   sampleHeight?: Comparison;
   getHeight?: Comparison;
+  /**
+   * `Engine.sampleHeightMostDetailed` against 1.x
+   * `Scene.sampleHeightMostDetailed` (content loaded down to the leaves
+   * under each point, whatever the view shows).
+   */
+  mostDetailed?: Comparison;
 }
 
 function compare(
@@ -260,12 +266,34 @@ async function runHeights(): Promise<Row[]> {
         scene.sampleHeight(Cesium.Cartographic.fromRadians(lon, lat)),
       );
 
+      // Most detailed: both engines load what the points need; their
+      // frame loops run meanwhile (both use manual rendering here).
+      const pump = setInterval(() => {
+        engine.renderFrame();
+        viewer.render();
+      }, 16);
+      let mostNext: Array<number | undefined>;
+      let mostLegacy: Array<number | undefined>;
+      try {
+        mostNext = await engine.sampleHeightMostDetailed(
+          world,
+          points.map(([longitude, latitude]) => ({ longitude, latitude })),
+          { tilesets: [tileset] },
+        );
+        const cartos = await scene.sampleHeightMostDetailed(
+          points.map(([lon, lat]) => Cesium.Cartographic.fromRadians(lon, lat)),
+        );
+        mostLegacy = cartos.map((c: Json) => c?.height);
+      } finally {
+        clearInterval(pump);
+      }
+
       // ?keep: leave both engines' state for inspection (debugging).
       if (keep) {
         Object.assign(globalThis, {
           parityHeights: {
             ...{ engine, world, view, tileset, legacy, viewer },
-            ...{ points, picked, rendered, next },
+            ...{ points, picked, rendered, next, mostLegacy, mostNext },
           },
         });
       } else {
@@ -279,6 +307,7 @@ async function runHeights(): Promise<Row[]> {
         status: "ok",
         sampleHeight: compare(rendered, next),
         getHeight: compare(picked, next),
+        mostDetailed: compare(mostLegacy, mostNext),
       });
     } catch (error) {
       rows.push({
@@ -307,11 +336,11 @@ function renderTable(rows: Row[]): void {
   const head =
     "<th>both hit</th><th>only 1.x</th><th>only 2.0</th><th>Δ max</th><th>Δ mean</th><th>Δ &gt; 1 cm</th>";
   document.querySelector("#results")!.innerHTML =
-    `<tr><th></th><th></th><th colspan="6">vs 1.x Scene.sampleHeight (rendered)</th><th colspan="6">vs 1.x Cesium3DTileset.getHeight (CPU pick)</th></tr>` +
-    `<tr><th>view</th><th>status</th>${head}${head}</tr>${rows
+    `<tr><th></th><th></th><th colspan="6">vs 1.x Scene.sampleHeight (rendered)</th><th colspan="6">vs 1.x Cesium3DTileset.getHeight (CPU pick)</th><th colspan="6">most detailed vs 1.x sampleHeightMostDetailed</th></tr>` +
+    `<tr><th>view</th><th>status</th>${head}${head}${head}</tr>${rows
       .map(
         (r) =>
-          `<tr><td>${r.view}</td><td>${r.status}</td>${cells(r.sampleHeight)}${cells(r.getHeight)}</tr>`,
+          `<tr><td>${r.view}</td><td>${r.status}</td>${cells(r.sampleHeight)}${cells(r.getHeight)}${cells(r.mostDetailed)}</tr>`,
       )
       .join("")}`;
 }

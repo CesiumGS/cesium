@@ -206,6 +206,11 @@ export interface CastOptions {
   collisionOnly?: boolean;
   /** Only draws some of these views draw (default: any). */
   viewMask?: number;
+  /**
+   * Only these draws, drawn or not (content loaded for a query); the view
+   * mask is not checked.
+   */
+  draws?: readonly DrawHandle[];
 }
 
 /** A placement in the world's transform table (`addTransform`). */
@@ -1532,6 +1537,11 @@ export class World {
     const u = this.recordsU32;
     const f = this.recordsF32;
     const mask = options.viewMask ?? ALL_VIEWS;
+    const only = options.draws
+      ? new Set(
+          options.draws.filter((d) => this.hasDraw(d)).map((d) => d.index),
+        )
+      : undefined;
     const center = new Float64Array(3);
     const world = this.transformWorld;
     const test = (record: number, instance: number, radius: number) => {
@@ -1557,7 +1567,11 @@ export class World {
     };
     for (let i = 0; i < this.drawCount; i++) {
       const batch = this.drawBatches[i];
-      if (!batch || batch.mesh.topology !== "triangle-list") {
+      if (
+        !batch ||
+        batch.mesh.topology !== "triangle-list" ||
+        (only && !only.has(i))
+      ) {
         continue;
       }
       const o = i * RECORD_WORDS;
@@ -1565,7 +1579,7 @@ export class World {
       if (
         flags & RecordFlags.hidden ||
         (options.collisionOnly && !(flags & RecordFlags.collision)) ||
-        (u[o + VIEW_MASK_WORD]! & mask) === 0
+        (!only && (u[o + VIEW_MASK_WORD]! & mask) === 0)
       ) {
         continue;
       }
