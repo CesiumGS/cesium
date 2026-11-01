@@ -93,6 +93,13 @@ export interface GltfDraw {
   material: number;
   /** Node world matrix in glTF space (column-major float64). */
   matrix: Float64Array;
+  /**
+   * `EXT_mesh_gpu_instancing`: column-major 4×4 per instance, in node space
+   * (applied before `matrix`).
+   */
+  instances?: Float32Array;
+  /** Local feature ID per instance (0xffffffff: none). */
+  instanceFeatureIds?: Uint32Array;
 }
 
 /** How a content load spent its time in the worker, and its image types. */

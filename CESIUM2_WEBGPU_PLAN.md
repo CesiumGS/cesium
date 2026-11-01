@@ -33,6 +33,7 @@ Branch: `cesium-2.0-webgpu-poc` (off `main` @ `587f52f1eb`, CesiumJS 1.146.0)
 | r25 | Horizon culling moves into selection (float64, 1.x per-tile shrink): `Budgeted` culls 3D Tiles and terrain at the horizon before fetching, and the GPU test is retired (records back to 192 bytes). `Budgeted` refines empty tiles by SSE as 1.x does: OSM at Rainier drops from 783 requests to 31. §13.2 records cross-tileset scheduling to try (per-origin priority queue, I/O priority classes, preempting prefetch, wire priorities, aging).                                            |
 | r26 | M3 increment 4: globe imagery composited on the GPU into a `texture_2d_array` cache (Bing via ion, 1.x level choice, ancestor fallback, empty-tile fallback, credits), within FLIP 0.03-0.05 of 1.x; a streamed ellipsoid globe (1.x `EllipsoidTerrainProvider`) replaces the static globe and ground patch; a 1.x-style globe camera controller with `View.pickPosition`; unlit color is display-referred (its own target, never tonemapped), which fixed darkened imagery and Google tiles. |
 | r27 | Content comes and goes in one world without stalls: the viewer keeps one world and globe (switch to a glTF: 26 ms, was 932), endpoint caches, an adaptive engine-wide upload budget and spread eviction. Open: frame stalls on first visits to uncached areas, and the budget's cost to settle time.                                                                                                                                                                                          |
+| r28 | Scene foundations (§13.9): a per-world transform table (float64 hierarchy, visibility), records 192 → 128 bytes, GPU instancing culled per instance (`EXT_mesh_gpu_instancing`), glTF assets shared across placements, generational handles, scatter uploads; the prep kernel is renamed cull. glTF 2.1 / 3D Tiles 2.0, vector billboards and decals, and ray queries to path tracing designed (§13.9, §13.10). Parity unchanged.                                                             |
 
 ## 1. Goal
 
@@ -1845,6 +1846,215 @@ ten times and the other none. Cost: one image per view on a shared canvas
 **Measure.** Frames rendered while idle (zero), time from a change to its
 frame (one frame), and no stale frames in the parity harnesses' interactive
 counterparts.
+
+### 13.9 Transforms and instancing
+
+**Problem (r27 state).** Every draw record carries its own flattened
+placement: an Earth-fixed origin (float64 split hi/lo) plus a float32 3×3
+(96 of 192 bytes). glTF node hierarchies and tile transforms are multiplied
+out when content is added, and glTF instancing is not supported. Moving
+anything means rewriting every one of its records. 1.x needs much more:
+
+- `Model.modelMatrix` changing every frame, driven by entities
+  (`SampledPositionProperty`, tracked vehicles, `VelocityOrientation`);
+- glTF animation (node TRS per frame down the hierarchy), skins, morph
+  targets, articulations;
+- instancing: `EXT_mesh_gpu_instancing`, i3dm, `ModelInstanceCollection`,
+  with per-instance features (pick, style, show);
+- a tileset `modelMatrix` changed at runtime (1.x recomputes every tile's
+  `computedTransform`);
+- georeferencing frames: east-north-up and heading/pitch/roll, iModel
+  `ecefLocation`, `CESIUM_RTC`, glTF axis correction, and later an inertial
+  (ICRF) root that rotates against Earth-fixed content each frame;
+- clamping: an anchor moving along the vertical.
+
+**Design: a transform table in each world, separate from draw records**
+(Filament's TransformManager, Bevy's GlobalTransform).
+
+- _CPU, float64._ `world.addTransform(matrix, parent?)` returns a handle.
+  Local and world matrices are float64; a change marks the transform dirty
+  and once per frame only dirty subtrees are recomposed, parents first.
+  Precision never drops below float64 before upload.
+- _GPU entry (80 bytes):_ origin hi/lo, the 3×3 rotation-scale in float32
+  and its largest axis scale (for bounds).
+- _Draw record (128 bytes, was 192):_ a transform index instead of the
+  placement; bounds stay in the transform's local frame, so a moved or
+  rotated transform never stales them. The prep kernel reads the transform
+  once per record and writes the camera-relative matrix it already writes;
+  vertex shaders don't change cost.
+- _Content:_ a placed glTF gets a root transform (its `modelMatrix`) and a
+  child per node (axis correction × RTC × node). Moving a model is one
+  `setTransform` however many draws it has; animation writes node locals;
+  clamping moves the root; a tileset `modelMatrix` becomes the parent of
+  its tiles' roots. Draw options with a bare origin and model still work
+  (the draw owns a transform).
+- _Above the world:_ a placement layer (cartographic, heading/pitch/roll
+  and `heightReference`) produces anchor matrices; entities evaluate their
+  time-dynamic properties into them each frame. Cost: 10,000 moving models
+  upload about 0.8 MB per frame. If the CPU becomes the bottleneck the
+  hierarchy can be composed on the GPU in float32 below float64 anchors.
+
+**Instancing: instance ranges, culled per instance on the GPU.**
+
+- A record may own a range in the world's instance table: per instance a
+  float32 affine relative to the record's transform (instances of one
+  model sit within kilometers of it), a local feature ID and flags
+  (64 bytes). One record per primitive, however many instances.
+- The prep kernel gets a second dispatch over the instance table: each
+  instance reads its record and transform, culls its own bounds, and is
+  compacted into the record's batch like a record. Batches count items
+  (records plus instances), so one indirect draw still covers them all.
+- Per-instance feature IDs give picking and styling per instance (1.x
+  i3dm `_BATCH_ID`, `EXT_mesh_gpu_instancing` `_FEATURE_ID_n`); moving one
+  instance writes 64 bytes.
+- Sources: `EXT_mesh_gpu_instancing` (parsed into instance ranges, not
+  flattened), i3dm, and an `addInstances` API for application content
+  (trees, poles, vehicles).
+- Later: record-level pre-culling of the instances' union bounds,
+  per-instance LOD, GPU-driven instance updates (simulation in compute).
+
+**Measure.** Pixel-identical parity suites after the switch; bench draw
+throughput and prep time unchanged or better (records shrink by a third);
+100,000 instances of a multi-primitive model: memory, prep time, frame
+time, and the cost of moving all of them each frame.
+
+**Scene fundamentals built with the transform table (r28).**
+
+1. _Assets apart from instances._ A world uploads a parsed glTF once
+   (meshes, materials, textures, reference-counted); every placement is an
+   instance of it (transforms and draws). A thousand placements no longer
+   upload a thousand copies.
+2. _Generational handles._ Draw, transform and instance-range slots are
+   reused; handles carry a generation, so a stale handle is a no-op instead
+   of editing whatever took its slot.
+3. _Scatter uploads._ Dirty records, transforms and instances upload as
+   packed `{index, data}` pairs that a compute pass scatters (Unreal's GPU
+   scene), instead of the whole range between the lowest and highest dirty
+   index; contiguous runs still upload directly.
+4. _Per-instance data beyond the transform._ The instance table has a
+   fixed core (affine, record, feature, flags, tint), and a record may
+   point at per-instance streams in the arena, read by instance index the
+   way vertices are, for billboards, labels and styling.
+5. _Visibility on transforms._ A hidden transform hides its subtree
+   (`KHR_node_visibility`, entity `show`, tileset `show`).
+
+**Built (r28).** All of the above except `addInstances` and i3dm. The
+per-view kernel is renamed from "prep" to **cull** (`cull.wgsl`:
+`cullRecords`, `cullInstances`, `writeDrawArgs`): it culls draw items and
+compacts them; draw items are records without instances plus instances.
+
+- Records 192 → 128 bytes; transforms 80; instances 64; per-view draw
+  items 80 (was 64, now carrying record, feature, instance and tint).
+- Unchanged output: GPU precision bit-identical (35 sites and distances),
+  Slang image ΔE 0.000 and cull precision 5.96e-8 for WGSL and Slang,
+  model, tileset and selection parity bit-identical, globe heights and
+  imagery FLIP unchanged, hitch benchmark unchanged, baseline perf within
+  noise.
+- `EXT_mesh_gpu_instancing` (Cesium's `BoxInstanced` samples) draws as
+  instance ranges; a glTF placed twice in a world uploads once.
+- 16,000 instances of one mesh (viewer, RTX 3000 Ada laptop): added in
+  2.1 ms, 1.3 ms GPU per frame for the whole scene with Philadelphia
+  imagery; moving all 16,000 costs 1.6 ms CPU per frame, 320 scattered ones
+  0.4 ms; moving the group is one `setTransform`. The GPU tables read back
+  identical to the CPU tables after adds, scattered and dense updates.
+- Stale handles are inert: a removed draw's handle cannot touch the draw
+  that reuses its slot.
+
+**glTF 2.1 and 3D Tiles 2.0.** 3D Tiles 2.0 builds on glTF 2.1, so both
+shape the scene model (glTF 2.1 is in development at Khronos, announced
+June 2026):
+
+- _External assets_, placed once or many times and loaded on demand,
+  map onto shared assets (1) and instance ranges; a referenced asset placed
+  many times becomes one record per primitive with one instance per
+  placement. Deferred loads go through the request scheduler, so a large
+  glTF 2.1 scene streams like a tileset; the `files` array is one more
+  resolver in the content pipeline.
+- _Node bounding volumes_ (box, sphere, capsule, cylinder, plane) feed
+  culling and deferred loading as tile volumes do.
+- _`KHR_node_visibility`_ (core in 2.1) is transform visibility (5).
+- _Unique IDs_ name objects for picking, selection and saved state, beside
+  feature IDs.
+- _`DOUBLE` accessors and 64-bit GLB:_ float64 positions are split at
+  decode into a float32 offset from a mesh origin; the GPU never sees them.
+- _`KHR_mesh_quantization`_ (core in 2.1): see quantized storage below.
+
+**Billboards, points and decals for vector rendering.** Vector tiles and
+point clouds bring very large point sets to draw as billboards, and
+polygons to drape as decals, all shaded programmatically:
+
+- _Point expansion by vertex pulling._ A point set is a record whose
+  points are streams in the arena (position offset from the transform,
+  size, color, image rectangle, rotation, pixel offset); a billboard
+  pipeline draws six vertices per point and expands each in screen space
+  from `vertex_index / 6`. No per-point instance entries, no CPU work per
+  point; culling is per record (tile), as vector renderers do.
+- _Programmable shading._ Billboard and point styles are Slang material
+  functions over the point's streams and feature properties (3D Tiles
+  styling and vector-tile styles compile to them), evaluated on the GPU.
+- _Collision and decluttering_ (labels) run as a compute pass over the
+  points' screen positions.
+- _Decals_ project onto the depth and feature-ID targets (the draping
+  plan, after M3), so vector polygons and lines drape on terrain and 3D
+  Tiles alike.
+- Wide lines and polylines are expanded into quads the same way (WebGPU
+  only rasterizes 1-pixel lines).
+
+**Designed for, built later.**
+
+- _Quantized vertex storage on the GPU:_ positions as 16-bit values in
+  the mesh bounds, octahedral normals, 16-bit UVs, decoded in the vertex
+  shader (vertex pulling makes mixed formats free); about 2-3× less arena
+  memory.
+- _Arena pages:_ one vertex buffer runs into the device's largest storage
+  binding (the viewer caps the arena at a quarter of it; mobile allows
+  far less). The arena becomes several pages, with occasional compaction.
+- _Clusters (meshlets) and two-phase occlusion culling_ (Nanite, Bevy,
+  Unity's GPU Resident Drawer) in compute, since WebGPU has no mesh
+  shaders: ~128-triangle clusters built in the worker (meshoptimizer),
+  culled by frustum, back-face cone and the previous frame's depth
+  pyramid. Records gain a cluster range as they gained an instance range.
+- _Compute skinning and morph targets_ into per-instance vertex streams:
+  no extra per-pass cost (shadows, picking) and geometry a ray tracer can
+  refit.
+- _Animation by property path_ (`KHR_animation_pointer`): animatable
+  state is addressable properties, not only node transforms.
+- _i3dm_ into instance ranges; `addInstances` for application content.
+- _WebGPU features as they land:_ subgroups (Chrome 134) for compaction
+  without an atomic per item; immediates (Chrome 149-150) for the draw
+  index; multi-draw indirect (experimental since Chrome 131) with bindless
+  textures for one draw per pipeline. Compatibility mode (OpenGL ES 3.1)
+  can allow no storage buffers in the vertex stage, which vertex pulling
+  needs: a concrete reason the PoC targets core WebGPU only.
+
+### 13.10 Ray queries, ray tracing and path tracing
+
+**Height and pick queries.** Terrain answers on the CPU: it is a height
+field and each tile keeps its drawn triangles, so the triangle under a
+point is a direct lookup, synchronous and exact against the drawn surface.
+3D Tiles keep no CPU geometry (1.x keeps it with `enablePick` or reads it
+back), so their queries run on the GPU behind one batched, asynchronous
+API: rays in float64 in, hits out (distance, point, normal, draw, feature).
+
+1. _Raster probes (M3, clamping)._ Tiny views along each ray, depth and
+   feature ID read back. They reuse culling, view masks and level of
+   detail, and handle point clouds. 1.x's `Scene.sampleHeight` works the
+   same way.
+2. _Compute ray tracing (later)._ A BVH per mesh (BLAS), built in the
+   worker at decode, and a top-level BVH (TLAS) over the transform and
+   instance tables, rebuilt per frame (it covers draws, so it is cheap).
+   Exact nearest hits for any batch of rays.
+
+**Path tracing grows out of (2).** The architecture suits it: all geometry
+is in one arena read by index from storage buffers, and materials, draw
+records, transforms and instances are tables, so one compute shader can
+fetch any triangle and its material. Gaps: WebGPU has no hardware ray
+tracing (traversal is software, as in three-gpu-pathtracer: fine for
+progressive or offline images, not real time at Google 3D Tiles scale; a
+native Slang backend could use hardware ray queries); no bindless textures
+(texture sets would move into arrays or atlases, as imagery already is,
+§7.1); float32 (the TLAS is camera-relative with hi/lo origins, as the
+rasterizer is); streaming (BLAS once per tile, TLAS per frame).
 
 ## 14. Follow-ups
 

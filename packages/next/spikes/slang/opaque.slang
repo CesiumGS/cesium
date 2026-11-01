@@ -1,4 +1,4 @@
-// Slang port of src/shaders/opaque.wgsl (v1 records, PBR + IBL). The
+// Slang port of src/shaders/opaque.wgsl (v2 records, PBR + IBL). The
 // material surface is bound at link time (`extern struct Material_`); the
 // engine owns vertex pulling, texture sampling and lighting.
 module opaque;
@@ -17,7 +17,7 @@ struct Sh { float4 c[9]; };
 [[vk::binding(4, 0)]] ConstantBuffer<Sh> irradianceSh;
 
 [[vk::binding(0, 1)]] StructuredBuffer<DrawRecord> records;
-[[vk::binding(1, 1)]] StructuredBuffer<DrawInstance> instances;
+[[vk::binding(1, 1)]] StructuredBuffer<DrawItem> items;
 [[vk::binding(2, 1)]] StructuredBuffer<float> vertices;
 [[vk::binding(3, 1)]] StructuredBuffer<Material> materials;
 // Mixed-LOD clip boxes (see opaque.wgsl).
@@ -48,7 +48,7 @@ bool insideClipBoxes(uint block, uint count, float3 p) {
 [[vk::binding(9, 2)]] SamplerState emissiveSampler;
 
 struct VsIn {
-  [[vk::location(0)]] uint draw : DRAW_INDEX;
+  [[vk::location(0)]] uint item : DRAW_INDEX;
 };
 
 struct VsOut {
@@ -79,9 +79,10 @@ float4 read4(uint offset, uint i) {
 
 [shader("vertex")]
 VsOut vs(uint vertexIndex : SV_VertexID, VsIn input) {
-  uint draw = input.draw;
+  DrawItem p = items[input.item];
+  uint draw = p.record;
   DrawRecord r = records[draw];
-  float4x4 m = instances[draw].relModel;
+  float4x4 m = p.relModel;
   VsOut o;
   float3 normal = float3(0.0, 0.0, 1.0);
   if (r.normalOffset != NO_STREAM) {
@@ -91,9 +92,9 @@ VsOut vs(uint vertexIndex : SV_VertexID, VsIn input) {
   if (r.uvOffset != NO_STREAM) {
     o.uv = read2(r.uvOffset, vertexIndex);
   }
-  o.color = float4(1.0);
+  o.color = unpackUnorm4x8ToFloat(p.tint);
   if (r.colorOffset != NO_STREAM) {
-    o.color = read4(r.colorOffset, vertexIndex);
+    o.color *= read4(r.colorOffset, vertexIndex);
   }
   o.tangent = float4(0.0);
   if (r.tangentOffset != NO_STREAM) {
@@ -114,7 +115,9 @@ VsOut vs(uint vertexIndex : SV_VertexID, VsIn input) {
   // Per-vertex feature IDs are local to the draw; its first global ID
   // offsets them (see opaque.wgsl).
   o.feature = r.featureId;
-  if (r.featureIdOffset != NO_STREAM) {
+  if (p.feature != 0u) {
+    o.feature = p.feature;
+  } else if (r.featureIdOffset != NO_STREAM) {
     uint local = asuint(vertices[r.featureIdOffset + vertexIndex]);
     o.feature = local == 0xffffffffu ? 0u : r.featureId + local;
   }

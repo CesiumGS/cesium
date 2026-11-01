@@ -1,11 +1,17 @@
 import { RangeAllocator } from "../gpu/RangeAllocator.ts";
 import {
   INDIRECT_SIZE,
-  INSTANCE_SIZE,
+  INSTANCE_WORDS,
+  INSTANCE_COUNT_WORD,
+  INSTANCE_FIRST_WORD,
   MATERIAL_SIZE,
+  NO_FEATURE,
+  NO_RECORD,
   NO_STREAM,
-  RECORD_SIZE,
+  DRAW_ITEM_SIZE,
   RECORD_WORDS,
+  TRANSFORM_WORDS,
+  FLAGS_WORD,
   VIEW_MASK_WORD,
   IMAGERY_SLICE_WORD,
   ALL_VIEWS,
@@ -15,12 +21,14 @@ import {
   CLIP_COUNT_WORD,
   PLACEHOLDER_MASK_WORD,
   RecordFlags,
+  packTint,
   writeDrawRecord,
+  writeInstance,
   writeMaterial,
+  writeTransform,
   type MaterialData,
   type MeshStreams,
 } from "../render/layout.ts";
-import * as v3 from "../math/vec3.ts";
 import { splitVec3 } from "../math/transforms.ts";
 import type { Mat4 } from "../math/mat4.ts";
 import type { Vec3 } from "../math/vec3.ts";
@@ -36,6 +44,10 @@ export interface WorldOptions {
   indexBytes?: number;
   /** Mixed-LOD clip blocks (placeholder tiles drawn at once; default 2048). */
   maxClipBlocks?: number;
+  /** Transform table entries (default: `maxDraws`). */
+  maxTransforms?: number;
+  /** Instance table entries, shared by all instanced draws (default 16384). */
+  maxInstances?: number;
 }
 
 /**
@@ -62,9 +74,11 @@ export interface WorldMemory {
   vertexBytes: Usage;
   indexBytes: Usage;
   draws: Usage;
+  transforms: Usage;
+  instances: Usage;
   materials: Usage;
   batches: number;
-  /** Fixed-size GPU tables: records, instances, materials, lists, args. */
+  /** Fixed-size GPU tables: records, transforms, instances, materials, lists, args. */
   tableBytes: number;
 }
 
@@ -99,10 +113,22 @@ export type MaterialOptions = Partial<MaterialData>;
 
 export interface DrawOptions {
   mesh: MeshHandle;
-  origin: Vec3;
-  model: Mat4;
-  /** Bounding radius; computed from the mesh bounds and `model` when omitted. */
+  /**
+   * Where the draw is (`addTransform`), shared with other draws. Without
+   * it, `origin` and `model` place the draw and it owns its transform.
+   */
+  transform?: TransformHandle;
+  /** Float64 Earth-fixed origin of `model` (without `transform`). */
+  origin?: Vec3;
+  /** Rotation, scale and small offsets relative to `origin`. */
+  model?: Mat4;
+  /**
+   * Bounding radius in meters (Earth-fixed), per instance when instanced;
+   * from the mesh bounds when omitted.
+   */
   radius?: number;
+  /** Draws the mesh once per instance (culled per instance on the GPU). */
+  instances?: InstanceOptions;
   /** Linear RGBA tint multiplied with the material base color. */
   color?: readonly [number, number, number, number];
   /** Skip lighting regardless of the material. */
@@ -131,10 +157,41 @@ export interface FeatureInfo {
 
 export type SubmissionMode = "indirect" | "direct";
 
-/** A registered draw. Mutations go through the world so it can track dirtiness. */
+/**
+ * Instances of a draw: each draws the mesh with its own matrix, relative to
+ * the draw's transform (instances of one model sit within kilometers of
+ * it, so float32 suffices).
+ */
+export interface InstanceOptions {
+  /** Column-major 4×4 affine matrices, 16 numbers per instance. */
+  matrices: ArrayLike<number>;
+  /** Local feature ID per instance (picking and styling per instance). */
+  featureIds?: ArrayLike<number>;
+  /** Linear RGBA tint per instance, 4 numbers each (stored as 8 bits). */
+  tints?: ArrayLike<number>;
+  /**
+   * Per-instance data for custom shaders: `stride` 32-bit words per
+   * instance, uploaded to the arena and read by instance index the way
+   * vertex streams are (`DrawRecord.instanceStreams`).
+   */
+  streams?: { data: Float32Array | Uint32Array; stride: number };
+}
+
+/**
+ * A registered draw. Mutations go through the world so it can track
+ * dirtiness. Slots are reused: the generation makes a handle to a removed
+ * draw inert instead of pointing at whatever took its slot.
+ */
 export interface DrawHandle {
   readonly index: number;
+  readonly generation: number;
   readonly name: string | undefined;
+}
+
+/** A placement in the world's transform table (`addTransform`). */
+export interface TransformHandle {
+  readonly index: number;
+  readonly generation: number;
 }
 
 interface Batch {
@@ -144,8 +201,133 @@ interface Batch {
   mesh: MeshHandle;
   textureSet: number;
   doubleSided: boolean;
-  records: number;
-  instanceBase: number;
+  /** Draw items: records without instances plus instances. */
+  items: number;
+  itemBase: number;
+}
+
+/**
+ * A CPU table mirrored to a GPU storage buffer. Changed entries upload once
+ * per frame: a contiguous run with one write, entries spread across the
+ * table as packed (index, data) pairs that a compute pass scatters
+ * (`scatter.wgsl`), instead of the whole span between them.
+ */
+class MirroredTable {
+  readonly f32: Float32Array;
+  readonly u32: Uint32Array;
+  readonly buffer: GPUBuffer;
+  private readonly flags: Uint8Array;
+  private readonly dirty: number[] = [];
+  private readonly params: GPUBuffer;
+  private readonly paramsData = new Uint32Array(4);
+  private staging?: GPUBuffer;
+  private scratch = new Uint32Array(0);
+  private bindGroup?: GPUBindGroup;
+
+  constructor(
+    private readonly ctx: RenderContext,
+    label: string,
+    readonly words: number,
+    capacity: number,
+  ) {
+    const data = new ArrayBuffer(capacity * words * 4);
+    this.f32 = new Float32Array(data);
+    this.u32 = new Uint32Array(data);
+    this.flags = new Uint8Array(capacity);
+    this.buffer = ctx.device.createBuffer({
+      label: `world.${label}`,
+      size: data.byteLength,
+      // COPY_SRC: tests compare the GPU copy with the CPU table.
+      usage:
+        GPUBufferUsage.STORAGE |
+        GPUBufferUsage.COPY_DST |
+        GPUBufferUsage.COPY_SRC,
+    });
+    this.params = ctx.device.createBuffer({
+      label: `world.${label}.scatter`,
+      size: 16,
+      usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+    });
+    this.paramsData[1] = words;
+  }
+
+  mark(index: number): void {
+    if (this.flags[index] === 0) {
+      this.flags[index] = 1;
+      this.dirty.push(index);
+    }
+  }
+
+  /** Uploads the changes; a scatter is encoded into `pass`. */
+  upload(pass: GPUComputePassEncoder): void {
+    const n = this.dirty.length;
+    if (n === 0) {
+      return;
+    }
+    const queue = this.ctx.device.queue;
+    const bytes = this.words * 4;
+    let min = Number.POSITIVE_INFINITY;
+    let max = -1;
+    for (const i of this.dirty) {
+      min = Math.min(min, i);
+      max = Math.max(max, i);
+      this.flags[i] = 0;
+    }
+    const span = max - min + 1;
+    if (span <= 2 * n + 16) {
+      queue.writeBuffer(
+        this.buffer,
+        min * bytes,
+        this.f32.buffer,
+        min * bytes,
+        span * bytes,
+      );
+      this.dirty.length = 0;
+      return;
+    }
+    const total = n * (1 + this.words);
+    if (this.scratch.length < total) {
+      const size = 1 << Math.ceil(Math.log2(total));
+      this.scratch = new Uint32Array(size);
+      this.staging?.destroy();
+      this.staging = this.ctx.device.createBuffer({
+        label: "world.scatter.staging",
+        size: size * 4,
+        usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
+      });
+      this.bindGroup = this.ctx.device.createBindGroup({
+        label: "world.scatter",
+        layout: this.ctx.pipelines.scatterLayout,
+        entries: [
+          { binding: 0, resource: { buffer: this.params } },
+          { binding: 1, resource: { buffer: this.staging } },
+          { binding: 2, resource: { buffer: this.buffer } },
+        ],
+      });
+    }
+    const out = this.scratch;
+    for (let k = 0; k < n; k++) {
+      const i = this.dirty[k]!;
+      out[k] = i;
+      out.set(
+        this.u32.subarray(i * this.words, (i + 1) * this.words),
+        n + k * this.words,
+      );
+    }
+    this.dirty.length = 0;
+    queue.writeBuffer(this.staging!, 0, out.buffer, 0, total * 4);
+    this.paramsData[0] = n;
+    queue.writeBuffer(this.params, 0, this.paramsData);
+    pass.setPipeline(this.ctx.pipelines.scatter);
+    pass.setBindGroup(0, this.bindGroup!);
+    pass.dispatchWorkgroups(Math.ceil((n * this.words) / 64));
+  }
+
+  destroy(): void {
+    this.buffer.destroy();
+    this.params.destroy();
+    this.staging?.destroy();
+  }
 }
 
 /**
@@ -154,7 +336,7 @@ interface Batch {
  * sets, and a table of draw records mirrored to the GPU.
  *
  * Records that share a mesh, material, texture set and cull mode form a
- * batch. Per view, the prep kernel culls records and compacts the visible
+ * batch. Per view, the cull kernels cull records and compacts the visible
  * ones into their batch's slice of an instance list; the bundle then issues
  * one indirect draw per batch. The bundle is rebuilt only when draws are added.
  */
@@ -163,12 +345,48 @@ export class World {
   /** Stable identity (indexes in lists shift as worlds come and go). */
   readonly id = World.nextId++;
   readonly maxDraws: number;
+  readonly maxTransforms: number;
+  readonly maxInstances: number;
   readonly maxMaterials: number;
   private _submission: SubmissionMode = "indirect";
   private readonly vertexAllocator: RangeAllocator;
   private readonly indexAllocator: RangeAllocator;
+  private readonly records: MirroredTable;
   private readonly recordsF32: Float32Array;
   private readonly recordsU32: Uint32Array;
+  /** Generation per draw slot (`DrawHandle.generation`). */
+  private readonly drawGeneration: Uint32Array;
+  /** Transform a draw owns (placed by origin and model), or -1. */
+  private readonly drawOwnedTransform: Int32Array;
+  /** Per-instance stream ranges in the vertex arena, by draw slot. */
+  private readonly instanceStreamRanges: Array<[number, number] | undefined> =
+    [];
+
+  // The transform table: float64 local and world matrices on the CPU,
+  // composed parents first; GPU entries mirror the world matrices.
+  private readonly transforms: MirroredTable;
+  private readonly transformLocal: Float64Array;
+  private readonly transformWorld: Float64Array;
+  private readonly transformParent: Int32Array;
+  private readonly transformChildren: Array<number[] | undefined> = [];
+  private readonly transformGeneration: Uint32Array;
+  private readonly transformLive: Uint8Array;
+  /** Hidden by itself, and by itself or an ancestor. */
+  private readonly transformHidden: Uint8Array;
+  private readonly transformHiddenWorld: Uint8Array;
+  private readonly transformPending: number[] = [];
+  private readonly transformPendingFlag: Uint8Array;
+  private readonly transformStamp: Uint32Array;
+  private transformResolve = 0;
+  private transformCount = 0;
+  private readonly freeTransforms: number[] = [];
+
+  // The instance table: ranges owned by instanced draws.
+  private readonly instances: MirroredTable;
+  private readonly instanceAllocator: RangeAllocator;
+  /** Instance slots in use or freed below the highest (cull dispatch size). */
+  private instanceHighWater = 0;
+  private uploadsPending = false;
   private readonly materialsF32: Float32Array;
   private readonly materialsU32: Uint32Array;
   private materialCount = 0;
@@ -215,28 +433,29 @@ export class World {
   private readonly clipScratch = new Float32Array(CLIP_BOXES * CLIP_BOX_FLOATS);
   private nextMeshId = 0;
   private drawCount = 0;
-  private dirtyMin = Number.POSITIVE_INFINITY;
-  private dirtyMax = -1;
   private bundle?: GPURenderBundle;
-  private readonly prepParamsData = new Uint32Array(4);
-  private readonly prepPassDesc: GPUComputePassDescriptor = { label: "prep" };
+  private readonly cullParamsData = new Uint32Array(4);
+  private readonly cullPassDesc: GPUComputePassDescriptor = { label: "cull" };
 
   readonly vertexBuffer: GPUBuffer;
   readonly indexBuffer: GPUBuffer;
   readonly recordBuffer: GPUBuffer;
+  readonly transformBuffer: GPUBuffer;
   readonly instanceBuffer: GPUBuffer;
+  /** Per draw item and view: its camera-relative matrix and record (cull). */
+  readonly itemBuffer: GPUBuffer;
   readonly materialBuffer: GPUBuffer;
   /** Mixed-LOD clip boxes, `CLIP_BOXES` per block. */
   readonly clipBuffer: GPUBuffer;
-  /** Visible record indices, compacted per batch by the prep kernel. */
-  readonly instanceListBuffer: GPUBuffer;
-  /** All record indices per batch, for "direct" submission. */
+  /** Visible draw items, compacted per batch by the cull kernels. */
+  readonly itemListBuffer: GPUBuffer;
+  /** All draw items per batch, for "direct" submission. */
   private readonly directListBuffer: GPUBuffer;
   private readonly batchCountBuffer: GPUBuffer;
   private readonly batchBuffer: GPUBuffer;
   readonly indirectBuffer: GPUBuffer;
-  private readonly prepParams: GPUBuffer;
-  private readonly prepBindGroup: GPUBindGroup;
+  private readonly cullParams: GPUBuffer;
+  private readonly cullBindGroup: GPUBindGroup;
   private drawBindGroup!: GPUBindGroup;
   /** Globe imagery array (a 1×1 placeholder until imagery is attached). */
   private imageryView: GPUTextureView;
@@ -248,15 +467,48 @@ export class World {
   ) {
     const device = ctx.device;
     this.maxDraws = options.maxDraws ?? 16384;
+    this.maxTransforms = options.maxTransforms ?? this.maxDraws;
+    this.maxInstances = options.maxInstances ?? 16384;
     this.maxMaterials = options.maxMaterials ?? 4096;
+    const items = this.maxDraws + this.maxInstances;
     const vertexBytes = options.vertexBytes ?? 64 * 1024 * 1024;
     const indexBytes = options.indexBytes ?? 32 * 1024 * 1024;
     this.vertexAllocator = new RangeAllocator(vertexBytes, 4);
     this.indexAllocator = new RangeAllocator(indexBytes, 4);
 
-    const records = new ArrayBuffer(this.maxDraws * RECORD_SIZE);
-    this.recordsF32 = new Float32Array(records);
-    this.recordsU32 = new Uint32Array(records);
+    this.records = new MirroredTable(
+      ctx,
+      "records",
+      RECORD_WORDS,
+      this.maxDraws,
+    );
+    this.recordsF32 = this.records.f32;
+    this.recordsU32 = this.records.u32;
+    this.drawGeneration = new Uint32Array(this.maxDraws);
+    this.drawOwnedTransform = new Int32Array(this.maxDraws).fill(-1);
+    this.transforms = new MirroredTable(
+      ctx,
+      "transforms",
+      TRANSFORM_WORDS,
+      this.maxTransforms,
+    );
+    const t = this.maxTransforms;
+    this.transformLocal = new Float64Array(t * 16);
+    this.transformWorld = new Float64Array(t * 16);
+    this.transformParent = new Int32Array(t).fill(-1);
+    this.transformGeneration = new Uint32Array(t);
+    this.transformLive = new Uint8Array(t);
+    this.transformHidden = new Uint8Array(t);
+    this.transformHiddenWorld = new Uint8Array(t);
+    this.transformPendingFlag = new Uint8Array(t);
+    this.transformStamp = new Uint32Array(t);
+    this.instances = new MirroredTable(
+      ctx,
+      "instances",
+      INSTANCE_WORDS,
+      Math.max(1, this.maxInstances),
+    );
+    this.instanceAllocator = new RangeAllocator(this.maxInstances, 1);
     const materials = new ArrayBuffer(this.maxMaterials * MATERIAL_SIZE);
     this.materialsF32 = new Float32Array(materials);
     this.materialsU32 = new Uint32Array(materials);
@@ -270,11 +522,13 @@ export class World {
       indexBytes,
       GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST,
     );
-    this.recordBuffer = buffer("records", records.byteLength, storage);
-    // COPY_SRC lets precision tests read back the prep kernel's output.
-    this.instanceBuffer = buffer(
-      "instances",
-      this.maxDraws * INSTANCE_SIZE,
+    this.recordBuffer = this.records.buffer;
+    this.transformBuffer = this.transforms.buffer;
+    this.instanceBuffer = this.instances.buffer;
+    // COPY_SRC lets precision tests read back the cull kernels' output.
+    this.itemBuffer = buffer(
+      "items",
+      items * DRAW_ITEM_SIZE,
       GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     );
     this.materialBuffer = buffer("materials", materials.byteLength, storage);
@@ -284,14 +538,14 @@ export class World {
       this.maxClipBlocks * this.clipScratch.byteLength,
       storage,
     );
-    this.instanceListBuffer = buffer(
-      "instanceList",
-      this.maxDraws * 4,
+    this.itemListBuffer = buffer(
+      "itemList",
+      items * 4,
       GPUBufferUsage.STORAGE | GPUBufferUsage.VERTEX,
     );
     this.directListBuffer = buffer(
       "directList",
-      this.maxDraws * 4,
+      items * 4,
       GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
     );
     this.batchCountBuffer = buffer(
@@ -305,23 +559,25 @@ export class World {
       this.maxDraws * INDIRECT_SIZE,
       GPUBufferUsage.STORAGE | GPUBufferUsage.INDIRECT,
     );
-    this.prepParams = buffer(
-      "prepParams",
+    this.cullParams = buffer(
+      "cullParams",
       16,
       GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     );
 
-    this.prepBindGroup = device.createBindGroup({
-      label: "world.prep",
-      layout: ctx.pipelines.prepWorldLayout,
+    this.cullBindGroup = device.createBindGroup({
+      label: "world.cull",
+      layout: ctx.pipelines.cullWorldLayout,
       entries: [
         this.recordBuffer,
+        this.transformBuffer,
         this.instanceBuffer,
-        this.instanceListBuffer,
+        this.itemBuffer,
+        this.itemListBuffer,
         this.batchCountBuffer,
         this.batchBuffer,
         this.indirectBuffer,
-        this.prepParams,
+        this.cullParams,
       ].map((b, binding) => ({ binding, resource: { buffer: b } })),
     });
     this.imageryView = device
@@ -368,6 +624,14 @@ export class World {
         used: this.drawCount - this.freeSlots.length,
         capacity: this.maxDraws,
       },
+      transforms: {
+        used: this.transformCount - this.freeTransforms.length,
+        capacity: this.maxTransforms,
+      },
+      instances: {
+        used: this.instanceAllocator.used,
+        capacity: this.maxInstances,
+      },
       materials: {
         used: this.materialCount - this.freeMaterials.length,
         capacity: this.maxMaterials,
@@ -375,10 +639,12 @@ export class World {
       batches: this.batches.size,
       tableBytes:
         this.recordBuffer.size +
+        this.transformBuffer.size +
         this.instanceBuffer.size +
+        this.itemBuffer.size +
         this.materialBuffer.size +
         this.clipBuffer.size +
-        this.instanceListBuffer.size +
+        this.itemListBuffer.size +
         this.indirectBuffer.size,
     };
   }
@@ -538,71 +804,133 @@ export class World {
   addDraw(options: DrawOptions): DrawHandle {
     const index = this.freeSlots.pop() ?? this.drawCount++;
     if (index >= this.maxDraws) {
+      this.drawCount--;
       throw new Error("World draw table is full.");
     }
+    const mesh = options.mesh;
+    // Placement: a shared transform, or one the draw owns.
+    let transform: number;
+    if (options.transform) {
+      if (!this.transformAlive(options.transform)) {
+        this.freeSlots.push(index);
+        throw new Error("addDraw: the transform was removed.");
+      }
+      transform = options.transform.index;
+      this.drawOwnedTransform[index] = -1;
+    } else {
+      const m = new Float64Array(16);
+      m.set(options.model ?? IDENTITY);
+      const origin = options.origin ?? ZERO;
+      m[12] = origin[0]! + m[12]!;
+      m[13] = origin[1]! + m[13]!;
+      m[14] = origin[2]! + m[14]!;
+      transform = this.addTransform(m).index;
+      this.drawOwnedTransform[index] = transform;
+    }
+
+    // Instances: a range in the instance table, culled one by one.
+    const instances = options.instances;
+    const instanceCount = instances ? instances.matrices.length / 16 : 0;
+    let instanceFirst = 0;
+    let instanceFeatures = 0;
+    if (instances && instanceCount > 0) {
+      const first = this.instanceAllocator.allocate(instanceCount);
+      if (first === undefined) {
+        this.releaseOwnedTransform(index);
+        this.freeSlots.push(index);
+        throw new Error("World instance table is full.");
+      }
+      instanceFirst = first;
+      this.instanceHighWater = Math.max(
+        this.instanceHighWater,
+        first + instanceCount,
+      );
+      const { f32, u32 } = this.instances;
+      for (let k = 0; k < instanceCount; k++) {
+        const feature = instances.featureIds?.[k] ?? NO_FEATURE;
+        if (feature !== NO_FEATURE) {
+          instanceFeatures = Math.max(instanceFeatures, feature + 1);
+        }
+        writeInstance(
+          f32,
+          u32,
+          first + k,
+          instances.matrices,
+          k * 16,
+          index,
+          feature,
+          0,
+          instances.tints ? packTint(instances.tints, k * 4) : 0xffffffff,
+        );
+        this.instances.mark(first + k);
+      }
+    }
+    let instanceStreams = NO_STREAM;
+    let instanceStride = 0;
+    this.instanceStreamRanges[index] = undefined;
+    if (instances?.streams && instanceCount > 0) {
+      const data = instances.streams.data;
+      const offset = this.vertexAllocator.allocate(data.byteLength);
+      if (offset === undefined) {
+        this.releaseInstances(instanceFirst, instanceCount);
+        this.releaseOwnedTransform(index);
+        this.freeSlots.push(index);
+        throw new Error("World vertex arena is full.");
+      }
+      this.ctx.device.queue.writeBuffer(this.vertexBuffer, offset, data);
+      this.instanceStreamRanges[index] = [offset, data.byteLength];
+      instanceStreams = offset / 4;
+      instanceStride = instances.streams.stride;
+    }
+
     const material = options.material ?? 0;
     const textureSet = options.textureSet ?? 0;
     const doubleSided = options.doubleSided ?? false;
-    const key = `${options.mesh.id}|${material}|${textureSet}|${doubleSided ? 1 : 0}`;
+    const key = `${mesh.id}|${material}|${textureSet}|${doubleSided ? 1 : 0}`;
     let batch = this.batches.get(key);
     if (!batch) {
       const reused = this.freeBatches.pop();
       if (reused) {
         batch = reused;
         batch.key = key;
-        batch.mesh = options.mesh;
+        batch.mesh = mesh;
         batch.textureSet = textureSet;
         batch.doubleSided = doubleSided;
       } else {
         batch = {
           index: this.batchList.length,
           key,
-          mesh: options.mesh,
+          mesh,
           textureSet,
           doubleSided,
-          records: 0,
-          instanceBase: 0,
+          items: 0,
+          itemBase: 0,
         };
         this.batchList.push(batch);
       }
       this.batches.set(key, batch);
     }
-    batch.records++;
+    batch.items += instanceCount > 0 ? instanceCount : 1;
     this.drawBatches[index] = batch;
 
-    const m = options.model;
-    const mesh = options.mesh;
-    const center = v3.vec3(
-      m[0]! * mesh.center[0] +
-        m[4]! * mesh.center[1] +
-        m[8]! * mesh.center[2] +
-        m[12]!,
-      m[1]! * mesh.center[0] +
-        m[5]! * mesh.center[1] +
-        m[9]! * mesh.center[2] +
-        m[13]!,
-      m[2]! * mesh.center[0] +
-        m[6]! * mesh.center[1] +
-        m[10]! * mesh.center[2] +
-        m[14]!,
-    );
-    const scale = Math.max(
-      Math.hypot(m[0]!, m[1]!, m[2]!),
-      Math.hypot(m[4]!, m[5]!, m[6]!),
-      Math.hypot(m[8]!, m[9]!, m[10]!),
-    );
+    // Bounds live in the transform's local frame, so moving or rotating
+    // the transform never stales them; an explicit radius is in meters.
+    this.resolveTransforms();
+    const scale = this.transformsF32Scale(transform);
     this.names[index] = options.name;
     this.featureTables[index] = options.features;
     const firstFeature = this.nextFeatureId;
-    this.nextFeatureId += Math.max(1, mesh.featureCount);
+    this.nextFeatureId += Math.max(1, mesh.featureCount, instanceFeatures);
     this.featureRangeFirst.push(firstFeature);
     this.featureRangeDraw.push(index);
     this.drawFeatureFirst[index] = firstFeature;
     writeDrawRecord(this.recordsF32, this.recordsU32, index, {
-      origin: options.origin,
-      model: options.model,
-      center,
-      radius: options.radius ?? mesh.radius * scale,
+      transform,
+      center: mesh.center,
+      radius:
+        options.radius !== undefined
+          ? options.radius / (scale || 1)
+          : mesh.radius,
       color: options.color ?? [1, 1, 1, 1],
       indexCount: mesh.indexCount,
       firstIndex: mesh.firstIndex,
@@ -615,32 +943,330 @@ export class World {
       // Lines have no surface to light; 1.x draws them unlit too.
       flags:
         options.unlit || mesh.topology === "line-list" ? RecordFlags.unlit : 0,
+      instanceFirst,
+      instanceCount,
+      instanceStreams,
+      instanceStride,
     });
     this.markDirty(index);
     this.bundle = undefined;
-    return { index, name: options.name };
+    return {
+      index,
+      generation: this.drawGeneration[index]!,
+      name: options.name,
+    };
+  }
+
+  /** Whether `handle` still names a live draw. */
+  hasDraw(handle: DrawHandle): boolean {
+    return (
+      this.drawBatches[handle.index] !== undefined &&
+      this.drawGeneration[handle.index] === handle.generation
+    );
   }
 
   removeDraw(handle: DrawHandle): void {
-    const batch = this.drawBatches[handle.index];
-    if (!batch) {
+    if (!this.hasDraw(handle)) {
       return; // already removed
     }
+    const batch = this.drawBatches[handle.index]!;
+    const o = handle.index * RECORD_WORDS;
+    const instanceCount = this.recordsU32[o + INSTANCE_COUNT_WORD]!;
     this.drawBatches[handle.index] = undefined;
-    if (--batch.records === 0) {
+    this.drawGeneration[handle.index] = this.drawGeneration[handle.index]! + 1;
+    batch.items -= instanceCount > 0 ? instanceCount : 1;
+    if (batch.items === 0) {
       this.batches.delete(batch.key);
       batch.key = "";
       this.freeBatches.push(batch);
     }
-    // Slices of the instance list follow batch sizes: rebuild them.
+    // Slices of the item list follow batch sizes: rebuild them.
     this.bundle = undefined;
-    this.recordsU32[handle.index * RECORD_WORDS + 7] = RecordFlags.hidden;
+    this.recordsU32[o + FLAGS_WORD] = RecordFlags.hidden;
+    if (instanceCount > 0) {
+      this.releaseInstances(
+        this.recordsU32[o + INSTANCE_FIRST_WORD]!,
+        instanceCount,
+      );
+      this.recordsU32[o + INSTANCE_COUNT_WORD] = 0;
+    }
+    const streams = this.instanceStreamRanges[handle.index];
+    if (streams) {
+      this.vertexAllocator.release(streams[0], streams[1]);
+      this.instanceStreamRanges[handle.index] = undefined;
+    }
+    this.releaseOwnedTransform(handle.index);
     this.names[handle.index] = undefined;
     this.featureTables[handle.index] = undefined;
     // The slot may be reused; its old feature range must not resolve to it.
     this.drawFeatureFirst[handle.index] = -1;
     this.freeSlots.push(handle.index);
     this.markDirty(handle.index);
+  }
+
+  private releaseInstances(first: number, count: number): void {
+    for (let k = first; k < first + count; k++) {
+      this.instances.u32[k * INSTANCE_WORDS + 12] = NO_RECORD;
+      this.instances.mark(k);
+    }
+    this.instanceAllocator.release(first, count);
+    this.version++;
+  }
+
+  private releaseOwnedTransform(draw: number): void {
+    const owned = this.drawOwnedTransform[draw]!;
+    if (owned >= 0) {
+      this.drawOwnedTransform[draw] = -1;
+      this.removeTransform({
+        index: owned,
+        generation: this.transformGeneration[owned]!,
+      });
+    }
+  }
+
+  /**
+   * Changes one instance of an instanced draw: its matrix (relative to the
+   * draw's transform), visibility or tint.
+   */
+  setInstance(
+    handle: DrawHandle,
+    instance: number,
+    change: {
+      matrix?: ArrayLike<number>;
+      visible?: boolean;
+      tint?: ArrayLike<number>;
+    },
+  ): void {
+    if (!this.hasDraw(handle)) {
+      return;
+    }
+    const o = handle.index * RECORD_WORDS;
+    const count = this.recordsU32[o + INSTANCE_COUNT_WORD]!;
+    if (instance < 0 || instance >= count) {
+      throw new RangeError(`instance ${instance} of ${count}`);
+    }
+    const slot = this.recordsU32[o + INSTANCE_FIRST_WORD]! + instance;
+    const { f32, u32 } = this.instances;
+    const w = slot * INSTANCE_WORDS;
+    if (change.matrix) {
+      writeInstance(
+        f32,
+        u32,
+        slot,
+        change.matrix,
+        0,
+        u32[w + 12]!,
+        u32[w + 13]!,
+        u32[w + 14]!,
+        u32[w + 15]!,
+      );
+    }
+    if (change.visible !== undefined) {
+      u32[w + 14] = change.visible ? 0 : 1;
+    }
+    if (change.tint) {
+      u32[w + 15] = packTint(change.tint);
+    }
+    this.instances.mark(slot);
+    this.version++;
+    this.changedViews |= this.recordsU32[o + VIEW_MASK_WORD]!;
+  }
+
+  // ------------------------------------------------------------ transforms
+
+  /**
+   * Adds a placement: `matrix` (column-major float64) relative to `parent`,
+   * or Earth-fixed without one. Draws, other transforms and instanced
+   * draws' instances hang off it; moving it moves them all.
+   */
+  addTransform(
+    matrix: ArrayLike<number>,
+    parent?: TransformHandle,
+  ): TransformHandle {
+    if (parent && !this.transformAlive(parent)) {
+      throw new Error("addTransform: the parent was removed.");
+    }
+    const index = this.freeTransforms.pop() ?? this.transformCount++;
+    if (index >= this.maxTransforms) {
+      this.transformCount--;
+      throw new Error("World transform table is full.");
+    }
+    this.transformLocal.set(matrix, index * 16);
+    this.transformParent[index] = parent ? parent.index : -1;
+    if (parent) {
+      (this.transformChildren[parent.index] ??= []).push(index);
+    }
+    this.transformChildren[index] = undefined;
+    this.transformLive[index] = 1;
+    this.transformHidden[index] = 0;
+    this.pendTransform(index);
+    return { index, generation: this.transformGeneration[index]! };
+  }
+
+  /** Replaces a transform's matrix (relative to its parent). */
+  setTransform(handle: TransformHandle, matrix: ArrayLike<number>): void {
+    if (!this.transformAlive(handle)) {
+      return;
+    }
+    this.transformLocal.set(matrix, handle.index * 16);
+    this.pendTransform(handle.index);
+    this.changedViews = ALL_VIEWS;
+  }
+
+  /** Hides or shows a transform and everything below it. */
+  setTransformVisible(handle: TransformHandle, visible: boolean): void {
+    if (!this.transformAlive(handle)) {
+      return;
+    }
+    const hidden = visible ? 0 : 1;
+    if (this.transformHidden[handle.index] !== hidden) {
+      this.transformHidden[handle.index] = hidden;
+      this.pendTransform(handle.index);
+      this.changedViews = ALL_VIEWS;
+    }
+  }
+
+  /** A transform's matrix relative to its parent. */
+  localMatrix(
+    handle: TransformHandle,
+    out = new Float64Array(16),
+  ): Float64Array {
+    out.set(
+      this.transformLocal.subarray(handle.index * 16, handle.index * 16 + 16),
+    );
+    return out;
+  }
+
+  /** A transform's Earth-fixed matrix (float64), composed with its parents. */
+  worldMatrix(
+    handle: TransformHandle,
+    out = new Float64Array(16),
+  ): Float64Array {
+    this.resolveTransforms();
+    out.set(
+      this.transformWorld.subarray(handle.index * 16, handle.index * 16 + 16),
+    );
+    return out;
+  }
+
+  /**
+   * Removes a transform and its descendants. Draws placed by them must be
+   * removed first.
+   */
+  removeTransform(handle: TransformHandle): void {
+    if (!this.transformAlive(handle)) {
+      return;
+    }
+    const index = handle.index;
+    const parent = this.transformParent[index]!;
+    if (parent >= 0) {
+      const siblings = this.transformChildren[parent];
+      const at = siblings?.indexOf(index) ?? -1;
+      if (at >= 0) {
+        siblings!.splice(at, 1);
+      }
+    }
+    this.freeTransformTree(index);
+  }
+
+  /** Whether `handle` still names a live transform. */
+  transformAlive(handle: TransformHandle): boolean {
+    return (
+      this.transformLive[handle.index] === 1 &&
+      this.transformGeneration[handle.index] === handle.generation
+    );
+  }
+
+  private freeTransformTree(index: number): void {
+    for (const child of this.transformChildren[index] ?? []) {
+      this.freeTransformTree(child);
+    }
+    this.transformChildren[index] = undefined;
+    this.transformLive[index] = 0;
+    this.transformParent[index] = -1;
+    this.transformGeneration[index] = this.transformGeneration[index]! + 1;
+    this.freeTransforms.push(index);
+  }
+
+  private pendTransform(index: number): void {
+    if (this.transformPendingFlag[index] === 0) {
+      this.transformPendingFlag[index] = 1;
+      this.transformPending.push(index);
+    }
+    this.version++;
+  }
+
+  /** Composes changed transforms and their descendants, parents first. */
+  private resolveTransforms(): void {
+    if (this.transformPending.length === 0) {
+      return;
+    }
+    const stamp = ++this.transformResolve;
+    for (const index of this.transformPending) {
+      this.transformPendingFlag[index] = 0;
+      if (this.transformLive[index] === 1) {
+        // From the highest pending ancestor, so each subtree composes once.
+        let top = index;
+        for (
+          let p = this.transformParent[index]!;
+          p >= 0;
+          p = this.transformParent[p]!
+        ) {
+          if (
+            this.transformPendingFlag[p] === 1 ||
+            this.transformStamp[p] === stamp
+          ) {
+            top = p;
+          }
+        }
+        if (this.transformStamp[top] !== stamp) {
+          this.composeTransform(top, stamp);
+        }
+      }
+    }
+    this.transformPending.length = 0;
+  }
+
+  private composeTransform(index: number, stamp: number): void {
+    this.transformStamp[index] = stamp;
+    const parent = this.transformParent[index]!;
+    const world = this.transformWorld;
+    if (parent >= 0) {
+      multiplyInto(
+        world,
+        index * 16,
+        world,
+        parent * 16,
+        this.transformLocal,
+        index * 16,
+      );
+    } else {
+      world.set(
+        this.transformLocal.subarray(index * 16, index * 16 + 16),
+        index * 16,
+      );
+    }
+    const hidden =
+      this.transformHidden[index] === 1 ||
+      (parent >= 0 && this.transformHiddenWorld[parent] === 1);
+    this.transformHiddenWorld[index] = hidden ? 1 : 0;
+    writeTransform(
+      this.transforms.f32,
+      this.transforms.u32,
+      index,
+      world.subarray(index * 16, index * 16 + 16),
+      hidden,
+    );
+    this.transforms.mark(index);
+    this.uploadsPending = true;
+    for (const child of this.transformChildren[index] ?? []) {
+      this.composeTransform(child, stamp);
+    }
+  }
+
+  /** Largest axis scale of a composed transform. */
+  private transformsF32Scale(index: number): number {
+    return this.transforms.f32[index * TRANSFORM_WORDS + 3]!;
   }
 
   /**
@@ -663,8 +1289,11 @@ export class World {
    * does without scene lighting.
    */
   setImagery(handle: DrawHandle, packed: number): void {
+    if (!this.hasDraw(handle)) {
+      return;
+    }
     const o = handle.index * RECORD_WORDS;
-    const flags = this.recordsU32[o + 7]!;
+    const flags = this.recordsU32[o + FLAGS_WORD]!;
     const next =
       packed !== 0 ? flags | RecordFlags.unlit : flags & ~RecordFlags.unlit;
     if (
@@ -672,12 +1301,15 @@ export class World {
       flags !== next
     ) {
       this.recordsU32[o + IMAGERY_SLICE_WORD] = packed >>> 0;
-      this.recordsU32[o + 7] = next;
+      this.recordsU32[o + FLAGS_WORD] = next;
       this.markDirty(handle.index);
     }
   }
 
   setViewMask(handle: DrawHandle, mask: number): void {
+    if (!this.hasDraw(handle)) {
+      return;
+    }
     const index = handle.index * RECORD_WORDS + VIEW_MASK_WORD;
     if (this.recordsU32[index] !== mask >>> 0) {
       this.changedViews |= this.recordsU32[index]!; // the views it left
@@ -725,6 +1357,9 @@ export class World {
    * at its true depth. No clip restores normal drawing.
    */
   setPlaceholder(handle: DrawHandle, mask: number, clip?: ClipHandle): void {
+    if (!this.hasDraw(handle)) {
+      return;
+    }
     const o = handle.index * RECORD_WORDS;
     const m = clip ? mask >>> 0 : 0;
     const block = clip?.block ?? 0;
@@ -742,7 +1377,10 @@ export class World {
   }
 
   setVisible(handle: DrawHandle, visible: boolean): void {
-    const flagsIndex = handle.index * RECORD_WORDS + 7;
+    if (!this.hasDraw(handle)) {
+      return;
+    }
+    const flagsIndex = handle.index * RECORD_WORDS + FLAGS_WORD;
     const flags = this.recordsU32[flagsIndex]!;
     this.recordsU32[flagsIndex] = visible
       ? flags & ~RecordFlags.hidden
@@ -772,7 +1410,11 @@ export class World {
     }
     const localId = featureId - first[lo]!;
     const table = this.featureTables[index];
-    const draw = { index, name: this.names[index] };
+    const draw = {
+      index,
+      generation: this.drawGeneration[index]!,
+      name: this.names[index],
+    };
     if (!table || localId >= table.count) {
       return { draw, localId, name: this.names[index] };
     }
@@ -784,22 +1426,14 @@ export class World {
     };
   }
 
-  /** Uploads dirty records and materials and returns the current bundle. */
+  /**
+   * Composes changed transforms, uploads materials and returns the current
+   * bundle; table changes upload in the first view's cull pass.
+   */
   prepareFrame(): GPURenderBundle {
     const queue = this.ctx.device.queue;
-    if (this.dirtyMax >= 0) {
-      const begin = this.dirtyMin * RECORD_SIZE;
-      const end = (this.dirtyMax + 1) * RECORD_SIZE;
-      queue.writeBuffer(
-        this.recordBuffer,
-        begin,
-        this.recordsF32.buffer,
-        begin,
-        end - begin,
-      );
-      this.dirtyMin = Number.POSITIVE_INFINITY;
-      this.dirtyMax = -1;
-    }
+    this.resolveTransforms();
+    this.uploadsPending = true;
     if (this.materialsDirty) {
       queue.writeBuffer(
         this.materialBuffer,
@@ -814,14 +1448,16 @@ export class World {
       this.writeBatches();
       this.bundle = this.recordBundle();
     }
-    this.prepParamsData[0] = this.drawCount;
-    this.prepParamsData[1] = this.batchList.length;
-    queue.writeBuffer(this.prepParams, 0, this.prepParamsData);
+    this.cullParamsData[0] = this.drawCount;
+    this.cullParamsData[1] = this.batchList.length;
+    this.cullParamsData[2] = this.instanceHighWater;
+    this.cullParamsData[3] = this.maxDraws;
+    queue.writeBuffer(this.cullParams, 0, this.cullParamsData);
     return this.bundle;
   }
 
-  /** Encodes this world's per-view prep: clear batch counts, cull, write args. */
-  encodePrep(
+  /** Encodes this world's per-view culling: clear batch counts, cull, write args. */
+  encodeCull(
     encoder: GPUCommandEncoder,
     timestampWrites?: GPUComputePassTimestampWrites,
   ): void {
@@ -831,20 +1467,31 @@ export class World {
       0,
       Math.max(4, this.batchList.length * 4),
     );
-    this.prepPassDesc.timestampWrites = timestampWrites;
-    const pass = encoder.beginComputePass(this.prepPassDesc);
+    this.cullPassDesc.timestampWrites = timestampWrites;
+    const pass = encoder.beginComputePass(this.cullPassDesc);
+    if (this.uploadsPending) {
+      // Once per frame, before any view's culling reads the tables.
+      this.uploadsPending = false;
+      this.records.upload(pass);
+      this.transforms.upload(pass);
+      this.instances.upload(pass);
+    }
     pass.setBindGroup(0, currentViewBindGroup);
-    pass.setBindGroup(1, this.prepBindGroup);
-    pass.setPipeline(pipelines.prep);
+    pass.setBindGroup(1, this.cullBindGroup);
+    pass.setPipeline(pipelines.cullRecords);
     pass.dispatchWorkgroups(Math.ceil(Math.max(this.drawCount, 1) / 64));
-    pass.setPipeline(pipelines.prepArgs);
+    if (this.instanceHighWater > 0) {
+      pass.setPipeline(pipelines.cullInstances);
+      pass.dispatchWorkgroups(Math.ceil(this.instanceHighWater / 64));
+    }
+    pass.setPipeline(pipelines.writeDrawArgs);
     pass.dispatchWorkgroups(Math.ceil(Math.max(this.batchList.length, 1) / 64));
     pass.end();
   }
 
   /**
    * How the bundle issues draws. "indirect" (default) takes per-view culling
-   * from the prep kernel; "direct" bakes CPU-side draw arguments into the
+   * from the cull kernels; "direct" bakes CPU-side draw arguments into the
    * bundle and draws everything — a baseline for measuring indirect overhead.
    */
   get submission(): SubmissionMode {
@@ -858,24 +1505,38 @@ export class World {
     }
   }
 
-  /** Assigns each batch its slice of the instance list and uploads the batch table. */
+  /** Assigns each batch its slice of the item list and uploads the batch table. */
   private writeBatches(): void {
     const table = new Uint32Array(Math.max(1, this.batchList.length) * 4);
-    const direct = new Uint32Array(Math.max(1, this.drawCount));
+    let items = 0;
+    for (const batch of this.batchList) {
+      items += batch.items;
+    }
+    const direct = new Uint32Array(Math.max(1, items));
     const fill = new Uint32Array(this.batchList.length);
     let base = 0;
     for (const batch of this.batchList) {
-      batch.instanceBase = base;
+      batch.itemBase = base;
       const o = batch.index * 4;
       table[o] = base;
       table[o + 1] = batch.mesh.indexCount;
       table[o + 2] = batch.mesh.firstIndex;
-      base += batch.records;
+      base += batch.items;
     }
     for (let i = 0; i < this.drawCount; i++) {
       const batch = this.drawBatches[i];
-      if (batch) {
-        direct[batch.instanceBase + fill[batch.index]!++] = i;
+      if (!batch) {
+        continue;
+      }
+      const o = i * RECORD_WORDS;
+      const count = this.recordsU32[o + INSTANCE_COUNT_WORD]!;
+      if (count === 0) {
+        direct[batch.itemBase + fill[batch.index]!++] = i;
+      } else {
+        const first = this.maxDraws + this.recordsU32[o + INSTANCE_FIRST_WORD]!;
+        for (let k = 0; k < count; k++) {
+          direct[batch.itemBase + fill[batch.index]!++] = first + k;
+        }
       }
     }
     const queue = this.ctx.device.queue;
@@ -907,11 +1568,11 @@ export class World {
       (a, b) => rank(a) - rank(b) || a.textureSet - b.textureSet,
     );
     const direct = this._submission === "direct";
-    const list = direct ? this.directListBuffer : this.instanceListBuffer;
+    const list = direct ? this.directListBuffer : this.itemListBuffer;
     let pipeline: GPURenderPipeline | undefined;
     let textureSet = -1;
     for (const batch of order) {
-      if (batch.records === 0) {
+      if (batch.items === 0) {
         continue;
       }
       const wanted = pipelineOf(batch);
@@ -923,11 +1584,11 @@ export class World {
         textureSet = batch.textureSet;
         encoder.setBindGroup(2, this.textureSets[textureSet]!);
       }
-      encoder.setVertexBuffer(0, list, batch.instanceBase * 4);
+      encoder.setVertexBuffer(0, list, batch.itemBase * 4);
       if (direct) {
         encoder.drawIndexed(
           batch.mesh.indexCount,
-          batch.records,
+          batch.items,
           batch.mesh.firstIndex,
           0,
           0,
@@ -945,7 +1606,7 @@ export class World {
   private createDrawBindGroup(): void {
     const buffers = [
       this.recordBuffer,
-      this.instanceBuffer,
+      this.itemBuffer,
       this.vertexBuffer,
       this.materialBuffer,
       this.clipBuffer,
@@ -962,29 +1623,75 @@ export class World {
   }
 
   private markDirty(index: number): void {
-    this.dirtyMin = Math.min(this.dirtyMin, index);
-    this.dirtyMax = Math.max(this.dirtyMax, index);
+    this.records.mark(index);
+    this.uploadsPending = true;
     this.version++;
     this.changedViews |=
       this.recordsU32[index * RECORD_WORDS + VIEW_MASK_WORD]!;
   }
 
   destroy(): void {
+    this.records.destroy();
+    this.transforms.destroy();
+    this.instances.destroy();
     for (const buffer of [
       this.vertexBuffer,
       this.indexBuffer,
-      this.recordBuffer,
-      this.instanceBuffer,
+      this.itemBuffer,
       this.materialBuffer,
       this.clipBuffer,
-      this.instanceListBuffer,
+      this.itemListBuffer,
       this.directListBuffer,
       this.batchCountBuffer,
       this.batchBuffer,
       this.indirectBuffer,
-      this.prepParams,
+      this.cullParams,
     ]) {
       buffer.destroy();
+    }
+  }
+}
+
+const IDENTITY = Float64Array.of(
+  1,
+  0,
+  0,
+  0,
+  0,
+  1,
+  0,
+  0,
+  0,
+  0,
+  1,
+  0,
+  0,
+  0,
+  0,
+  1,
+);
+const ZERO = Float64Array.of(0, 0, 0);
+
+/** out[o..o+16) = a[ao..] × b[bo..] (column-major); `out` may alias `a`'s slot only via distinct offsets. */
+function multiplyInto(
+  out: Float64Array,
+  o: number,
+  a: Float64Array,
+  ao: number,
+  b: Float64Array,
+  bo: number,
+): void {
+  for (let c = 0; c < 4; c++) {
+    const b0 = b[bo + c * 4]!;
+    const b1 = b[bo + c * 4 + 1]!;
+    const b2 = b[bo + c * 4 + 2]!;
+    const b3 = b[bo + c * 4 + 3]!;
+    for (let r = 0; r < 4; r++) {
+      out[o + c * 4 + r] =
+        a[ao + r]! * b0 +
+        a[ao + 4 + r]! * b1 +
+        a[ao + 8 + r]! * b2 +
+        a[ao + 12 + r]! * b3;
     }
   }
 }

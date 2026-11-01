@@ -38,6 +38,8 @@ const SUPPORTED_EXTENSIONS = new Set([
   "CESIUM_primitive_outline", // tolerated; outlines are not drawn yet
   "EXT_mesh_features", // vertex-attribute feature IDs
   "EXT_structural_metadata", // property tables
+  "EXT_mesh_gpu_instancing", // instance ranges, culled per instance
+  "EXT_instance_features", // per-instance feature IDs
 ]);
 
 const COMPONENTS: Record<string, number> = {
@@ -191,17 +193,20 @@ export async function parseGltf(
     meshIndex: number;
     primitive: number;
     matrix: Float64Array;
+    gpuInstances?: { matrices: Float32Array; featureIds?: Uint32Array };
   }> = [];
   const visit = (nodeIndex: number, parent: Float64Array) => {
     const node = json.nodes[nodeIndex];
     const world = multiply(parent, nodeMatrix(node));
     if (node.mesh !== undefined) {
+      const gpuInstances = gpuInstancing(node, readAccessor, warnings);
       json.meshes[node.mesh].primitives.forEach((_: Json, p: number) => {
         instances.push({
           key: `${node.mesh}/${p}`,
           meshIndex: node.mesh,
           primitive: p,
           matrix: world,
+          ...(gpuInstances ? { gpuInstances } : {}),
         });
       });
     }
@@ -254,10 +259,22 @@ export async function parseGltf(
     );
   }
   const draws: GltfDraw[] = [];
-  for (const { key, matrix } of instances) {
+  for (const { key, matrix, gpuInstances } of instances) {
     const entry = built.get(key);
     if (entry) {
-      draws.push({ mesh: entry.mesh, material: entry.material, matrix });
+      draws.push({
+        mesh: entry.mesh,
+        material: entry.material,
+        matrix,
+        ...(gpuInstances
+          ? {
+              instances: gpuInstances.matrices,
+              ...(gpuInstances.featureIds
+                ? { instanceFeatureIds: gpuInstances.featureIds }
+                : {}),
+            }
+          : {}),
+      });
     }
   }
 
@@ -832,4 +849,74 @@ function resourceTiming(url: string): {
     // only where the server allows timing detail).
     ...(e.transferSize === 0 && e.encodedBodySize > 0 ? { cached: true } : {}),
   };
+}
+
+/**
+ * `EXT_mesh_gpu_instancing`: per-instance translation, rotation and scale
+ * (node space, applied before the node's own transform) as column-major
+ * matrices, and per-instance feature IDs (`EXT_instance_features`, else
+ * `_FEATURE_ID_0`).
+ */
+function gpuInstancing(
+  node: Json,
+  readAccessor: (i: number) => { data: Float32Array; count: number },
+  warnings: string[],
+): { matrices: Float32Array; featureIds?: Uint32Array } | undefined {
+  const attributes = node.extensions?.EXT_mesh_gpu_instancing?.attributes;
+  if (!attributes) {
+    return undefined;
+  }
+  const read = (name: string) =>
+    attributes[name] !== undefined ? readAccessor(attributes[name]) : undefined;
+  const t = read("TRANSLATION");
+  const r = read("ROTATION");
+  const sc = read("SCALE");
+  const count = t?.count ?? r?.count ?? sc?.count ?? 0;
+  if (count === 0) {
+    warnings.push("EXT_mesh_gpu_instancing: no instance attributes");
+    return undefined;
+  }
+  const out = new Float32Array(count * 16);
+  for (let i = 0; i < count; i++) {
+    const [x, y, z, w] = r
+      ? [
+          r.data[i * 4]!,
+          r.data[i * 4 + 1]!,
+          r.data[i * 4 + 2]!,
+          r.data[i * 4 + 3]!,
+        ]
+      : [0, 0, 0, 1];
+    const [sx, sy, sz] = sc
+      ? [sc.data[i * 3]!, sc.data[i * 3 + 1]!, sc.data[i * 3 + 2]!]
+      : [1, 1, 1];
+    const o = i * 16;
+    // T × R × S, column-major (quaternion x, y, z, w as glTF).
+    out[o] = (1 - 2 * (y * y + z * z)) * sx;
+    out[o + 1] = 2 * (x * y + z * w) * sx;
+    out[o + 2] = 2 * (x * z - y * w) * sx;
+    out[o + 4] = 2 * (x * y - z * w) * sy;
+    out[o + 5] = (1 - 2 * (x * x + z * z)) * sy;
+    out[o + 6] = 2 * (y * z + x * w) * sy;
+    out[o + 8] = 2 * (x * z + y * w) * sz;
+    out[o + 9] = 2 * (y * z - x * w) * sz;
+    out[o + 10] = (1 - 2 * (x * x + y * y)) * sz;
+    out[o + 12] = t ? t.data[i * 3]! : 0;
+    out[o + 13] = t ? t.data[i * 3 + 1]! : 0;
+    out[o + 14] = t ? t.data[i * 3 + 2]! : 0;
+    out[o + 15] = 1;
+  }
+  const featureIds = node.extensions?.EXT_instance_features?.featureIds?.[0];
+  const ids = read(
+    featureIds?.attribute !== undefined
+      ? `_FEATURE_ID_${featureIds.attribute}`
+      : "_FEATURE_ID_0",
+  );
+  return ids
+    ? {
+        matrices: out,
+        featureIds: Uint32Array.from(ids.data, (v) =>
+          v === featureIds?.nullFeatureId ? 0xffffffff : Math.round(v),
+        ),
+      }
+    : { matrices: out };
 }

@@ -12,11 +12,22 @@ import type {
   GltfSampler,
 } from "../io/gltfTypes.ts";
 import type { RenderContext } from "./RenderContext.ts";
-import type { DrawHandle, MeshHandle, TextureBinding, World } from "./World.ts";
+import type {
+  DrawHandle,
+  MeshHandle,
+  TextureBinding,
+  TransformHandle,
+  World,
+} from "./World.ts";
 
 export interface ModelOptions {
-  /** Earth-fixed float64 transform of the model (e.g. an east-north-up frame). */
+  /**
+   * Float64 transform of the model (e.g. an east-north-up frame):
+   * Earth-fixed, or relative to `parent`.
+   */
   modelMatrix: Mat4;
+  /** A transform the model hangs off (e.g. a tileset's root transform). */
+  parent?: TransformHandle;
   /** Force unlit shading for every draw (used by parity tests). */
   unlit?: boolean;
   /**
@@ -39,19 +50,52 @@ export interface ModelOptions {
 
 export interface ModelInstance {
   draws: DrawHandle[];
-  /** Bounding sphere of the placed model, Earth-fixed. */
+  /**
+   * The model's root transform (`modelMatrix`): `World.setTransform` moves
+   * the whole model, `setTransformVisible` hides it. Node transforms hang
+   * off it.
+   */
+  readonly transform: TransformHandle;
+  /** Bounding sphere where the model was placed, Earth-fixed. */
   center: Vec3;
   radius: number;
-  /** GPU bytes owned by the instance: arena geometry plus textures. */
+  /**
+   * GPU bytes of the asset (arena geometry plus textures), shared by every
+   * instance of it in the world.
+   */
   bytes: number;
-  /** Everything `removeGltf` frees. */
-  readonly resources: {
-    meshes: MeshHandle[];
-    materials: number[];
-    textureSets: number[];
-    textures: GPUTexture[];
-  };
+  /** The uploaded asset, freed when its last instance is removed. */
+  readonly resources: UploadedAsset;
 }
+
+/**
+ * A glTF asset's GPU resources in one world: uploaded once, shared by all
+ * of its instances (glTF 2.1 external assets and repeated placements),
+ * freed with the last.
+ */
+export interface UploadedAsset {
+  meshes: MeshHandle[];
+  materials: number[];
+  textureSets: number[];
+  textures: GPUTexture[];
+  /** Per glTF material, and the default material last. */
+  readonly drawMaterials: Array<{
+    index: number;
+    textureSet: number;
+    doubleSided: boolean;
+  }>;
+  bytes: number;
+  references: number;
+}
+
+/**
+ * Uploads per world, asset and color transfer. Weak keys: a cached upload
+ * never keeps a parsed asset (and its CPU geometry) alive.
+ */
+const uploads = new WeakMap<
+  World,
+  WeakMap<GltfAsset, Map<string, UploadedAsset>>
+>();
 
 /**
  * glTF is y-up and z-forward; CesiumJS 1.x maps it to z-up, x-forward with
@@ -67,19 +111,33 @@ const Z_UP_TO_X_UP = Float64Array.from([
 const AXIS_CORRECTION = m4.multiply(m4.mat4(), Y_UP_TO_Z_UP, Z_UP_TO_X_UP);
 
 /**
- * Uploads a parsed glTF asset into a world: textures (sRGB where glTF says
- * so, with mips), materials and texture sets, meshes, and one draw per node
- * primitive. Node transforms are composed in float64; each draw's origin is
- * its world translation, so large Earth-fixed coordinates never reach float32.
+ * Uploads a glTF asset into a world once: textures (sRGB where glTF says so,
+ * with mips), materials and texture sets, and meshes. Later placements of
+ * the same asset in the same world share them.
  */
-export function addGltf(
+function uploadAsset(
   ctx: RenderContext,
   world: World,
   asset: GltfAsset,
-  options: ModelOptions,
-): ModelInstance {
+  gamma22: boolean,
+): UploadedAsset {
+  let byAsset = uploads.get(world);
+  if (!byAsset) {
+    byAsset = new WeakMap();
+    uploads.set(world, byAsset);
+  }
+  let byTransfer = byAsset.get(asset);
+  if (!byTransfer) {
+    byTransfer = new Map();
+    byAsset.set(asset, byTransfer);
+  }
+  const key = gamma22 ? "gamma2.2" : "srgb";
+  const existing = byTransfer.get(key);
+  if (existing && existing.references > 0) {
+    existing.references++;
+    return existing;
+  }
   const textures = new TextureUploader(ctx, asset);
-  const gamma22 = options.colorTransfer === "gamma2.2";
   const materials = asset.materials.map((m) => ({
     index: world.addMaterial(materialData(m, gamma22)),
     textureSet: world.createTextureSet({
@@ -100,39 +158,80 @@ export function addGltf(
   const arenaBefore = world.arenaBytes;
   const meshes: MeshHandle[] = asset.meshes.map((mesh) => world.addMesh(mesh));
   const arenaBytes = world.arenaBytes - arenaBefore;
+  textures.release();
+  const upload: UploadedAsset = {
+    meshes,
+    materials: [...materials.map((m) => m.index), defaultMaterial.index],
+    textureSets: materials.map((m) => m.textureSet),
+    textures: textures.textures,
+    drawMaterials: [...materials, defaultMaterial],
+    bytes: arenaBytes + textures.bytes,
+    references: 1,
+  };
+  byTransfer.set(key, upload);
+  return upload;
+}
 
-  // modelMatrix × RTC_CENTER × axis correction × node, as 1.x ModelSceneGraph.
-  const base = m4.copy(m4.mat4(), options.modelMatrix);
+/**
+ * Places a parsed glTF asset in a world: its resources are uploaded once
+ * per world (`uploadAsset`); each placement adds a root transform
+ * (`modelMatrix`), a transform per node below it and one draw per node
+ * primitive. Transforms compose in float64, so large Earth-fixed
+ * coordinates never reach float32. `EXT_mesh_gpu_instancing` nodes draw
+ * their mesh once per instance, culled per instance on the GPU.
+ */
+export function addGltf(
+  ctx: RenderContext,
+  world: World,
+  asset: GltfAsset,
+  options: ModelOptions,
+): ModelInstance {
+  const upload = uploadAsset(
+    ctx,
+    world,
+    asset,
+    options.colorTransfer === "gamma2.2",
+  );
+  const root = world.addTransform(options.modelMatrix, options.parent);
+
+  // Below the root: RTC_CENTER × axis correction × node, as 1.x
+  // ModelSceneGraph composes modelMatrix × RTC_CENTER × axis × node.
+  const correction = m4.mat4();
   if (asset.rtcCenter) {
-    const rtc = m4.mat4();
-    rtc[12] = asset.rtcCenter[0];
-    rtc[13] = asset.rtcCenter[1];
-    rtc[14] = asset.rtcCenter[2];
-    m4.multiply(base, base, rtc);
+    correction[12] = asset.rtcCenter[0];
+    correction[13] = asset.rtcCenter[1];
+    correction[14] = asset.rtcCenter[2];
   }
   if (options.axes !== "none") {
     m4.multiply(
-      base,
-      base,
+      correction,
+      correction,
       options.axes === "3d-tiles" ? Y_UP_TO_Z_UP : AXIS_CORRECTION,
     );
   }
+  const rootWorld = world.worldMatrix(root);
+  const nodes = new Map<Float64Array, TransformHandle>();
   const draws: DrawHandle[] = [];
   const spheres: Array<{ center: Vec3; radius: number }> = [];
   for (const draw of asset.draws) {
-    const worldMatrix = m4.multiply(m4.mat4(), base, draw.matrix);
-    const origin = v3.vec3(worldMatrix[12], worldMatrix[13], worldMatrix[14]);
-    const model = m4.copy(m4.mat4(), worldMatrix);
-    model[12] = model[13] = model[14] = 0;
+    // One transform per node: its primitives share the node's matrix.
+    const local = m4.multiply(m4.mat4(), correction, draw.matrix);
+    let node = nodes.get(draw.matrix);
+    if (!node) {
+      node = world.addTransform(local, root);
+      nodes.set(draw.matrix, node);
+    }
+    const worldMatrix = m4.multiply(m4.mat4(), rootWorld, local);
     const material =
-      draw.material >= 0 ? materials[draw.material]! : defaultMaterial;
-    const mesh = meshes[draw.mesh]!;
+      upload.drawMaterials[
+        draw.material >= 0 ? draw.material : upload.drawMaterials.length - 1
+      ]!;
+    const mesh = upload.meshes[draw.mesh]!;
     // A mirroring transform flips the winding; draw those without culling.
-    const mirrored = determinant3(model) < 0;
+    const mirrored = determinant3(worldMatrix) < 0;
     const handle = world.addDraw({
       mesh,
-      origin,
-      model,
+      transform: node,
       material: material.index,
       textureSet: material.textureSet,
       doubleSided: material.doubleSided || mirrored,
@@ -143,52 +242,75 @@ export function addGltf(
         asset.meshes[draw.mesh]!.featureTable !== undefined
           ? asset.featureTables[asset.meshes[draw.mesh]!.featureTable!]
           : undefined,
+      ...(draw.instances
+        ? {
+            instances: {
+              matrices: draw.instances,
+              ...(draw.instanceFeatureIds
+                ? { featureIds: draw.instanceFeatureIds }
+                : {}),
+            },
+          }
+        : {}),
     });
     draws.push(handle);
-    const center = m4.transformPoint(
-      v3.vec3(),
-      worldMatrix,
-      v3.vec3(...mesh.center),
-    );
-    const scale = Math.cbrt(Math.abs(determinant3(model))) || 1;
-    spheres.push({ center, radius: mesh.radius * scale });
+    const meshCenter = v3.vec3(...mesh.center);
+    const placements: Mat4[] = [];
+    if (draw.instances) {
+      for (let k = 0; k < draw.instances.length; k += 16) {
+        const instance = m4.mat4();
+        instance.set(draw.instances.subarray(k, k + 16));
+        placements.push(m4.multiply(instance, worldMatrix, instance));
+      }
+    } else {
+      placements.push(worldMatrix);
+    }
+    for (const m of placements) {
+      spheres.push({
+        center: m4.transformPoint(v3.vec3(), m, meshCenter),
+        radius: mesh.radius * (Math.cbrt(Math.abs(determinant3(m))) || 1),
+      });
+    }
   }
-  textures.release();
   return {
     draws,
+    transform: root,
     ...unionSphere(spheres),
-    bytes: arenaBytes + textures.bytes,
-    resources: {
-      meshes,
-      materials: [...materials.map((m) => m.index), defaultMaterial.index],
-      textureSets: materials.map((m) => m.textureSet),
-      textures: textures.textures,
-    },
+    bytes: upload.bytes,
+    resources: upload,
   };
 }
 
-/** Removes a placed glTF from its world and frees its GPU resources. */
+/**
+ * Removes a placed glTF from its world; the asset's GPU resources are freed
+ * with its last instance there.
+ */
 export function removeGltf(world: World, instance: ModelInstance): void {
   for (const draw of instance.draws) {
     world.removeDraw(draw);
   }
-  for (const mesh of instance.resources.meshes) {
+  instance.draws.length = 0;
+  world.removeTransform(instance.transform);
+  const upload = instance.resources;
+  if (upload.references === 0 || --upload.references > 0) {
+    return;
+  }
+  for (const mesh of upload.meshes) {
     world.removeMesh(mesh);
   }
-  for (const material of instance.resources.materials) {
+  for (const material of upload.materials) {
     world.removeMaterial(material);
   }
-  for (const set of instance.resources.textureSets) {
+  for (const set of upload.textureSets) {
     world.removeTextureSet(set);
   }
-  for (const texture of instance.resources.textures) {
+  for (const texture of upload.textures) {
     texture.destroy();
   }
-  instance.draws.length = 0;
-  instance.resources.meshes.length = 0;
-  instance.resources.materials.length = 0;
-  instance.resources.textureSets.length = 0;
-  instance.resources.textures.length = 0;
+  upload.meshes.length = 0;
+  upload.materials.length = 0;
+  upload.textureSets.length = 0;
+  upload.textures.length = 0;
 }
 
 function materialData(m: GltfMaterial, gamma22: boolean) {

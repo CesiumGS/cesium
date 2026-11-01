@@ -82,7 +82,7 @@ export interface FrameStats {
  *
  *   for each view:
  *     copy view block → current-view buffer   (ordered within the encoder)
- *     prep kernel: camera-relative transforms, culling, indirect args
+ *     cull kernels: camera-relative transforms, culling, indirect args
  *     opaque pass: replay the world's render bundle
  *     [pick]: read the feature ID under requested pixels
  *     present: tonemap into the view's rectangle of its target, overlays
@@ -1240,8 +1240,8 @@ export class Engine {
       );
     });
 
-    graph.addPass("prep", { sideEffect: true }, (enc) => {
-      view.world.encodePrep(enc, this.timer.passWrites());
+    graph.addPass("cull", { sideEffect: true }, (enc) => {
+      view.world.encodeCull(enc, this.timer.passWrites());
     });
 
     graph.addPass(

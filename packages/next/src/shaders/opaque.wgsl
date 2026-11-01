@@ -2,9 +2,9 @@
 //
 // Vertex pulling: every attribute is a separate stream of f32 words in the
 // world's arena, located by offsets in the draw record, so meshes with
-// different attribute sets share one pipeline. The draw index arrives as an
-// instance-step vertex attribute read from the batch's slice of the
-// compacted instance list.
+// different attribute sets share one pipeline. The draw item (a record, or
+// one instance of an instanced record) arrives as an instance-step vertex
+// attribute read from the batch's slice of the compacted item list.
 //
 // Lighting (camera-relative world space, Earth-fixed axes): a directional sun
 // plus image-based lighting. The BRDF follows the glTF reference and the
@@ -21,7 +21,7 @@ const PI: f32 = 3.14159265358979;
 @group(0) @binding(4) var<uniform> irradianceSh: array<vec4f, 9>;
 
 @group(1) @binding(0) var<storage, read> records: array<DrawRecord>;
-@group(1) @binding(1) var<storage, read> instances: array<DrawInstance>;
+@group(1) @binding(1) var<storage, read> items: array<DrawItem>;
 @group(1) @binding(2) var<storage, read> vertices: array<f32>;
 @group(1) @binding(3) var<storage, read> materials: array<Material>;
 // Mixed-LOD clip boxes: per box, center hi and lo (Earth-fixed) and three
@@ -70,9 +70,11 @@ fn read4(offset: u32, index: u32) -> vec4f {
 }
 
 @vertex
-fn vs(@builtin(vertex_index) vertexIndex: u32, @location(0) draw: u32) -> VsOut {
+fn vs(@builtin(vertex_index) vertexIndex: u32, @location(0) item: u32) -> VsOut {
+  let p = items[item];
+  let draw = p.record;
   let r = records[draw];
-  let m = instances[draw].relModel;
+  let m = p.relModel;
   var out: VsOut;
   var normal = vec3f(0.0, 0.0, 1.0);
   if (r.normalOffset != NO_STREAM) {
@@ -82,9 +84,9 @@ fn vs(@builtin(vertex_index) vertexIndex: u32, @location(0) draw: u32) -> VsOut 
   if (r.uvOffset != NO_STREAM) {
     out.uv = read2(r.uvOffset, vertexIndex);
   }
-  out.color = vec4f(1.0);
+  out.color = unpack4x8unorm(p.tint);
   if (r.colorOffset != NO_STREAM) {
-    out.color = read4(r.colorOffset, vertexIndex);
+    out.color *= read4(r.colorOffset, vertexIndex);
   }
   out.tangent = vec4f(0.0);
   if (r.tangentOffset != NO_STREAM) {
@@ -108,8 +110,11 @@ fn vs(@builtin(vertex_index) vertexIndex: u32, @location(0) draw: u32) -> VsOut 
   // Per-vertex feature IDs (CAD elements, buildings) are local to the draw;
   // its first global ID offsets them. Flat interpolation takes the provoking
   // vertex: feature IDs are constant across a triangle.
+  // An instance with its own feature ID is one feature.
   out.feature = r.featureId;
-  if (r.featureIdOffset != NO_STREAM) {
+  if (p.feature != 0u) {
+    out.feature = p.feature;
+  } else if (r.featureIdOffset != NO_STREAM) {
     let local = bitcast<u32>(vertices[r.featureIdOffset + vertexIndex]);
     out.feature = select(r.featureId + local, 0u, local == 0xffffffffu);
   }

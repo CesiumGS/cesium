@@ -22,13 +22,11 @@ struct View {
 };
 
 struct DrawRecord {
-  originHi: vec3f,
-  radius: f32,
-  originLo: vec3f,
-  flags: u32,              // 1 hidden, 2 unlit override
-  model: mat4x4f,          // local frame relative to the origin
+  center: vec3f,           // bounding sphere in the transform's local frame
+  radius: f32,             // (per instance, for instanced records)
   color: vec4f,            // linear RGBA tint
-  center: vec3f,           // bounding sphere center offset (Earth-fixed axes)
+  transform: u32,          // index in `transforms`
+  flags: u32,              // 1 hidden, 2 unlit override
   materialIndex: u32,
   indexCount: u32,
   firstIndex: u32,
@@ -46,10 +44,41 @@ struct DrawRecord {
   clipBlock: u32,          // mixed-LOD placeholder: block of clip boxes
   placeholderMask: u32,    // views in which the record draws only inside them
   clipCount: u32,          // boxes in the block
+  instanceFirst: u32,      // range in `instanceTable`; count 0 = not instanced
+  instanceCount: u32,
+  instanceStreams: u32,    // per-instance streams in the arena (word offset)
+  instanceStride: u32,     // their words per instance
+  _recordPad: u32,
 };
 
-struct DrawInstance {
-  relModel: mat4x4f,       // model translated by (origin - camera), float32-safe
+// A placement composed in float64 on the CPU (World transform table).
+struct Transform {
+  originHi: vec3f,
+  scale: f32,              // largest axis scale of `linear` (bounding radii)
+  originLo: vec3f,
+  flags: u32,              // 1 hidden (itself or an ancestor)
+  linear: mat3x3f,         // rotation-scale, Earth-fixed axes
+};
+
+// One instance of an instanced record.
+struct Instance {
+  row0: vec4f,             // affine relative to the record's transform,
+  row1: vec4f,             // as three rows of a 3×4 matrix
+  row2: vec4f,
+  record: u32,             // 0xffffffff: free slot
+  feature: u32,            // local feature ID; 0xffffffff = the record's
+  flags: u32,              // 1 hidden
+  tint: u32,               // RGBA8 linear multiplier
+};
+
+// Written per view by the cull kernels for every draw item (a record without
+// instances, or one instance).
+struct DrawItem {
+  relModel: mat4x4f,       // to camera-relative world space, float32-safe
+  record: u32,
+  feature: u32,            // the instance's global feature ID; 0 = the record's
+  instance: u32,           // index within the record's instance range
+  tint: u32,               // RGBA8 linear multiplier
 };
 
 struct Material {

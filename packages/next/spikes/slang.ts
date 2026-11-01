@@ -11,11 +11,11 @@ import {
   type ShaderOverrides,
   type World,
 } from "../src/index.ts";
-import { INSTANCE_SIZE } from "../src/render/layout.ts";
+import { DRAW_ITEM_SIZE } from "../src/render/layout.ts";
 import { compareImages } from "../parity/metrics.ts";
 import opaqueDefault from "./slang/generated/opaque_default.wgsl?raw";
 import opaqueToon from "./slang/generated/opaque_toon.wgsl?raw";
-import prepSlangWgsl from "./slang/generated/prep.wgsl?raw";
+import cullSlangWgsl from "./slang/generated/cull.wgsl?raw";
 import commonSlang from "./slang/common.slang?raw";
 import materialSlang from "./slang/material.slang?raw";
 import materialToonSlang from "./slang/material_toon.slang?raw";
@@ -143,8 +143,8 @@ async function compilationErrors(
   return `${errors} errors, ${warnings} warnings`;
 }
 
-/** Max error of the prep kernel's camera-relative output against float64. */
-async function prepPrecision(shaders: ShaderOverrides): Promise<number> {
+/** Max error of the cull kernels' camera-relative output against float64. */
+async function cullPrecision(shaders: ShaderOverrides): Promise<number> {
   const engine = await Engine.create({ shaders });
   const world = engine.createWorld({
     maxDraws: 512,
@@ -179,13 +179,13 @@ async function prepPrecision(shaders: ShaderOverrides): Promise<number> {
   const view = engine.addView({ target: new OffscreenTarget(64, 64), world });
   vec3.copy(view.camera.position, centerCartesian);
   engine.renderFrame();
-  const bytes = origins.length * INSTANCE_SIZE;
+  const bytes = origins.length * DRAW_ITEM_SIZE;
   const readback = engine.gpu.device.createBuffer({
     size: bytes,
     usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
   });
   const encoder = engine.gpu.device.createCommandEncoder();
-  encoder.copyBufferToBuffer(world.instanceBuffer, 0, readback, 0, bytes);
+  encoder.copyBufferToBuffer(world.itemBuffer, 0, readback, 0, bytes);
   engine.gpu.device.queue.submit([encoder.finish()]);
   await readback.mapAsync(GPUMapMode.READ);
   const instances = new Float32Array(readback.getMappedRange().slice(0));
@@ -196,7 +196,7 @@ async function prepPrecision(shaders: ShaderOverrides): Promise<number> {
       const expected = origin[c]! - centerCartesian[c]!;
       worst = Math.max(
         worst,
-        Math.abs(instances[k * 16 + 12 + c]! - expected) /
+        Math.abs(instances[k * (DRAW_ITEM_SIZE / 4) + 12 + c]! - expected) /
           Math.max(1, Math.abs(expected)),
       );
     }
@@ -364,15 +364,15 @@ async function main(): Promise<Record<string, string>> {
     await compilationErrors(device, opaqueToon),
   );
   report(
-    "slangc WGSL validates: prep",
-    await compilationErrors(device, prepSlangWgsl),
+    "slangc WGSL validates: cull",
+    await compilationErrors(device, cullSlangWgsl),
   );
 
   const slang = await setup(
-    { opaque: opaqueDefault, prep: prepSlangWgsl },
+    { opaque: opaqueDefault, cull: cullSlangWgsl },
     side,
   );
-  const toon = await setup({ opaque: opaqueToon, prep: prepSlangWgsl }, side);
+  const toon = await setup({ opaque: opaqueToon, cull: cullSlangWgsl }, side);
   const a = await render(wgsl, "wgsl");
   const b = await render(slang, "slang");
   await render(toon, "toon");
@@ -388,7 +388,7 @@ async function main(): Promise<Record<string, string>> {
   const heavy = [1920, 1080] as [number, number];
   const timedWgsl = await setup({}, side, heavy, 2500);
   const timedSlang = await setup(
-    { opaque: opaqueDefault, prep: prepSlangWgsl },
+    { opaque: opaqueDefault, cull: cullSlangWgsl },
     side,
     heavy,
     2500,
@@ -409,10 +409,10 @@ async function main(): Promise<Record<string, string>> {
     `WGSL ${base.toFixed(3)} ms · Slang ${median(times.slang).toFixed(3)} ms (${pct(median(times.slang))})`,
   );
 
-  const precisionWgsl = await prepPrecision({});
-  const precisionSlang = await prepPrecision({ prep: prepSlangWgsl });
+  const precisionWgsl = await cullPrecision({});
+  const precisionSlang = await cullPrecision({ cull: cullSlangWgsl });
   report(
-    "prep hi/lo precision (max relative error)",
+    "cull hi/lo precision (max relative error)",
     `WGSL ${precisionWgsl.toExponential(2)}, Slang ${precisionSlang.toExponential(2)}`,
   );
 

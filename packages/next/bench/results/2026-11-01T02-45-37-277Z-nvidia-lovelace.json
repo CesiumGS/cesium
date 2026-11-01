@@ -1,0 +1,266 @@
+{
+  "date": "2026-11-01T02:45:37.277Z",
+  "environment": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0",
+    "adapter": {
+      "vendor": "nvidia",
+      "architecture": "lovelace",
+      "description": "NVIDIA RTX 3000 Ada Generation Laptop GPU"
+    },
+    "timestampQuery": true
+  },
+  "errors": [],
+  "results": {
+    "globe": [
+      {
+        "view": "Rainier oblique",
+        "status": "ok (fog)",
+        "legacy": 37,
+        "next": 37,
+        "jaccard": 1,
+        "legacyMs": 1928.3999999761581,
+        "nextMs": 1475.5,
+        "heightMax": 2.808292265399359e-9,
+        "heightMean": 5.302999740291134e-10,
+        "heightCount": 81,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "view": "Grand Canyon top-down",
+        "status": "ok (fog)",
+        "legacy": 2,
+        "next": 2,
+        "jaccard": 1,
+        "legacyMs": 602.2999999523163,
+        "nextMs": 501.8000000715256,
+        "heightMax": 9.458744898438454e-10,
+        "heightMean": 6.434394306802179e-11,
+        "heightCount": 81,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "view": "Matterhorn near horizon",
+        "status": "ok (fog)",
+        "legacy": 37,
+        "next": 37,
+        "jaccard": 1,
+        "legacyMs": 1703.8000000715256,
+        "nextMs": 1404.3999999761581,
+        "heightMax": 3.138211468467489e-9,
+        "heightMean": 2.0472052037129523e-10,
+        "heightCount": 81,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "view": "Everest regional",
+        "status": "ok (fog)",
+        "legacy": 16,
+        "next": 16,
+        "jaccard": 1,
+        "legacyMs": 835.6000000238419,
+        "nextMs": 994.1999999284744,
+        "heightMax": 3.788045432884246e-9,
+        "heightMean": 5.905539980215699e-10,
+        "heightCount": 81,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "view": "Front Range 300 km",
+        "status": "ok (fog)",
+        "legacy": 6,
+        "next": 6,
+        "jaccard": 1,
+        "legacyMs": 507.7000000476837,
+        "nextMs": 450.7000000476837,
+        "heightMax": 2.1736923372372985e-10,
+        "heightMean": 1.5590535721132232e-11,
+        "heightCount": 81,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      },
+      {
+        "view": "San Francisco coast",
+        "status": "ok (fog)",
+        "legacy": 27,
+        "next": 27,
+        "jaccard": 1,
+        "legacyMs": 1331.7999999523163,
+        "nextMs": 1376,
+        "heightMax": 3.0406965834117727e-10,
+        "heightMean": 1.798370506010003e-11,
+        "heightCount": 81,
+        "onlyLegacy": "",
+        "onlyNext": ""
+      }
+    ],
+    "imagery": [
+      {
+        "view": "Rainier oblique",
+        "status": "ok",
+        "flipMean": 0.0346417965950473,
+        "flipP95": 0.07757745683193207,
+        "meanDeltaE": 1.1254690404796721,
+        "noticeable": 0.1104861111111111
+      },
+      {
+        "view": "San Francisco top-down",
+        "status": "ok",
+        "flipMean": 0.047008151879974,
+        "flipP95": 0.10980501770973206,
+        "meanDeltaE": 1.6327207455396933,
+        "noticeable": 0.23537326388888888
+      },
+      {
+        "view": "Matterhorn",
+        "status": "ok",
+        "flipMean": 0.02909616182224796,
+        "flipP95": 0.07698559015989304,
+        "meanDeltaE": 0.9157820517224385,
+        "noticeable": 0.074375
+      },
+      {
+        "view": "Alps regional",
+        "status": "ok",
+        "flipMean": 0.031714574721760716,
+        "flipP95": 0.06920617073774338,
+        "meanDeltaE": 1.0825814679168408,
+        "noticeable": 0.09489583333333333
+      },
+      {
+        "view": "Rainier viewer framing",
+        "status": "ok",
+        "flipMean": 0.022263254072412676,
+        "flipP95": 0.058638062328100204,
+        "meanDeltaE": 0.7013517719030932,
+        "noticeable": 0.041666666666666664
+      }
+    ],
+    "hitch": [
+      {
+        "step": "add terrain + imagery",
+        "ms": 5741.900000095367,
+        "frames": 338,
+        "over34": 1,
+        "worst": 116.69999999999999,
+        "p99": 16.90000000000009,
+        "longFrames": 1,
+        "worstBlocking": 0,
+        "culprit": ""
+      },
+      {
+        "step": "add OSM Buildings",
+        "ms": 3300.2999999523163,
+        "frames": 197,
+        "over34": 0,
+        "worst": 33.399999999999636,
+        "p99": 17.200000000000728,
+        "longFrames": 1,
+        "worstBlocking": 0,
+        "culprit": "Worker.onmessage src/io/WorkerPool.ts 32 ms"
+      },
+      {
+        "step": "jump (OSM + terrain)",
+        "ms": 2595.3000000715256,
+        "frames": 155,
+        "over34": 0,
+        "worst": 17,
+        "p99": 16.899999999999636,
+        "longFrames": 0,
+        "worstBlocking": 0,
+        "culprit": ""
+      },
+      {
+        "step": "jump (OSM + terrain)",
+        "ms": 1883.6000000238419,
+        "frames": 114,
+        "over34": 0,
+        "worst": 16.80000000000109,
+        "p99": 16.80000000000109,
+        "longFrames": 0,
+        "worstBlocking": 0,
+        "culprit": ""
+      },
+      {
+        "step": "add Google 3D Tiles",
+        "ms": 2841.3000000715256,
+        "frames": 170,
+        "over34": 0,
+        "worst": 16.899999999999636,
+        "p99": 16.80000000000109,
+        "longFrames": 0,
+        "worstBlocking": 0,
+        "culprit": ""
+      },
+      {
+        "step": "jump (Google)",
+        "ms": 1340,
+        "frames": 81,
+        "over34": 0,
+        "worst": 16.80000000000291,
+        "p99": 16.80000000000291,
+        "longFrames": 0,
+        "worstBlocking": 0,
+        "culprit": ""
+      },
+      {
+        "step": "jump (Google)",
+        "ms": 1449.5,
+        "frames": 87,
+        "over34": 0,
+        "worst": 16.80000000000291,
+        "p99": 16.80000000000291,
+        "longFrames": 0,
+        "worstBlocking": 0,
+        "culprit": ""
+      },
+      {
+        "step": "show OSM over Google",
+        "ms": 848.6000000238419,
+        "frames": 50,
+        "over34": 0,
+        "worst": 16.80000000000291,
+        "p99": 16.80000000000291,
+        "longFrames": 0,
+        "worstBlocking": 0,
+        "culprit": ""
+      },
+      {
+        "step": "jump (Google + OSM)",
+        "ms": 1666.2000000476837,
+        "frames": 101,
+        "over34": 0,
+        "worst": 16.899999999997817,
+        "p99": 16.80000000000291,
+        "longFrames": 0,
+        "worstBlocking": 0,
+        "culprit": ""
+      },
+      {
+        "step": "remove Google",
+        "ms": 1575.4000000953674,
+        "frames": 94,
+        "over34": 0,
+        "worst": 16.80000000000291,
+        "p99": 16.80000000000291,
+        "longFrames": 0,
+        "worstBlocking": 0,
+        "culprit": ""
+      },
+      {
+        "step": "remove OSM",
+        "ms": 523.3999999761581,
+        "frames": 32,
+        "over34": 0,
+        "worst": 16.799999999999272,
+        "p99": 16.799999999999272,
+        "longFrames": 0,
+        "worstBlocking": 0,
+        "culprit": ""
+      }
+    ]
+  }
+}

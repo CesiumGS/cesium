@@ -3,7 +3,8 @@ import { MipGenerator } from "../gpu/MipGenerator.ts";
 import { Environment } from "../gpu/Environment.ts";
 import { VIEW_SIZE } from "../render/layout.ts";
 import commonWgsl from "../shaders/common.wgsl?raw";
-import prepWgsl from "../shaders/prep.wgsl?raw";
+import cullWgsl from "../shaders/cull.wgsl?raw";
+import scatterWgsl from "../shaders/scatter.wgsl?raw";
 import opaqueWgsl from "../shaders/opaque.wgsl?raw";
 import presentWgsl from "../shaders/present.wgsl?raw";
 import overlayWgsl from "../shaders/overlay.wgsl?raw";
@@ -31,13 +32,15 @@ export const SCENE_TARGETS = {
 
 export interface Pipelines {
   viewLayout: GPUBindGroupLayout;
-  prepWorldLayout: GPUBindGroupLayout;
+  cullWorldLayout: GPUBindGroupLayout;
   drawWorldLayout: GPUBindGroupLayout;
   textureSetLayout: GPUBindGroupLayout;
   /** Per-record cull and compaction. */
-  prep: GPUComputePipeline;
+  cullRecords: GPUComputePipeline;
+  /** Per-instance cull and compaction (instanced records). */
+  cullInstances: GPUComputePipeline;
   /** Per-batch indirect args. */
-  prepArgs: GPUComputePipeline;
+  writeDrawArgs: GPUComputePipeline;
   opaque: GPURenderPipeline;
   opaqueDoubleSided: GPURenderPipeline;
   /** Line-list variant (CAD edges, glTF LINES); same shaders, no culling. */
@@ -46,6 +49,9 @@ export interface Pipelines {
   overlay: GPURenderPipeline;
   overlayLayout: GPUBindGroupLayout;
   pick: GPUComputePipeline;
+  /** Scatter upload of table entries (`scatter.wgsl`). */
+  scatter: GPUComputePipeline;
+  scatterLayout: GPUBindGroupLayout;
 }
 
 export interface Defaults {
@@ -72,11 +78,12 @@ export interface RenderContext {
 /**
  * Complete WGSL modules that replace the built-in shaders, e.g. output of the
  * Slang toolchain. They must keep the built-in bind group layouts and entry
- * point names (`vs`/`fs` for opaque, `main`/`writeArgs` for prep).
+ * point names (`vs`/`fs` for opaque; `cullRecords`, `cullInstances` and
+ * `writeDrawArgs` for cull).
  */
 export interface ShaderOverrides {
   opaque?: string;
-  prep?: string;
+  cull?: string;
 }
 
 export async function createRenderContext(
@@ -181,23 +188,25 @@ async function createPipelines(
       { binding: 4, visibility: FRAGMENT, buffer: { type: "uniform" } },
     ],
   });
-  const prepWorldLayout = device.createBindGroupLayout({
-    label: "prep.world",
+  const cullWorldLayout = device.createBindGroupLayout({
+    label: "cull.world",
     entries: [
       storage(0, true, COMPUTE), // records
-      storage(1, false, COMPUTE), // instances
-      storage(2, false, COMPUTE), // instance list
-      storage(3, false, COMPUTE), // batch counts
-      storage(4, true, COMPUTE), // batches
-      storage(5, false, COMPUTE), // indirect args
-      { binding: 6, visibility: COMPUTE, buffer: { type: "uniform" } },
+      storage(1, true, COMPUTE), // transforms
+      storage(2, true, COMPUTE), // instance table
+      storage(3, false, COMPUTE), // draw items
+      storage(4, false, COMPUTE), // item list
+      storage(5, false, COMPUTE), // batch counts
+      storage(6, true, COMPUTE), // batches
+      storage(7, false, COMPUTE), // indirect args
+      { binding: 8, visibility: COMPUTE, buffer: { type: "uniform" } },
     ],
   });
   const drawWorldLayout = device.createBindGroupLayout({
     label: "draw.world",
     entries: [
       storage(0, true, VERTEX | FRAGMENT), // records
-      storage(1, true, VERTEX), // instances
+      storage(1, true, VERTEX), // draw items
       storage(2, true, VERTEX), // vertex streams
       storage(3, true, FRAGMENT), // materials
       storage(4, true, FRAGMENT), // mixed-LOD clip boxes
@@ -225,6 +234,14 @@ async function createPipelines(
       })),
     ],
   });
+  const scatterLayout = device.createBindGroupLayout({
+    label: "scatter",
+    entries: [
+      { binding: 0, visibility: COMPUTE, buffer: { type: "uniform" } },
+      storage(1, true, COMPUTE), // indices, then data
+      storage(2, false, COMPUTE), // the table
+    ],
+  });
   const overlayLayout = device.createBindGroupLayout({
     label: "overlay",
     entries: [
@@ -238,12 +255,12 @@ async function createPipelines(
     overrides.opaque !== undefined
       ? module("opaque (override)", overrides.opaque)
       : module("opaque", commonWgsl, opaqueWgsl);
-  const prepModule =
-    overrides.prep !== undefined
-      ? module("prep (override)", overrides.prep)
-      : module("prep", commonWgsl, prepWgsl);
-  const prepLayout = device.createPipelineLayout({
-    bindGroupLayouts: [viewLayout, prepWorldLayout],
+  const cullModule =
+    overrides.cull !== undefined
+      ? module("cull (override)", overrides.cull)
+      : module("cull", commonWgsl, cullWgsl);
+  const cullLayout = device.createPipelineLayout({
+    bindGroupLayouts: [viewLayout, cullWorldLayout],
   });
   const opaqueLayout = device.createPipelineLayout({
     bindGroupLayouts: [viewLayout, drawWorldLayout, textureSetLayout],
@@ -285,24 +302,31 @@ async function createPipelines(
     });
 
   const [
-    prep,
-    prepArgs,
+    cullRecords,
+    cullInstances,
+    writeDrawArgs,
     opaque,
     opaqueDoubleSided,
     opaqueLines,
     present,
     overlay,
     pick,
+    scatter,
   ] = await Promise.all([
     device.createComputePipelineAsync({
-      label: "prep",
-      layout: prepLayout,
-      compute: { module: prepModule, entryPoint: "main" },
+      label: "cull.records",
+      layout: cullLayout,
+      compute: { module: cullModule, entryPoint: "cullRecords" },
     }),
     device.createComputePipelineAsync({
-      label: "prep.args",
-      layout: prepLayout,
-      compute: { module: prepModule, entryPoint: "writeArgs" },
+      label: "cull.instances",
+      layout: cullLayout,
+      compute: { module: cullModule, entryPoint: "cullInstances" },
+    }),
+    device.createComputePipelineAsync({
+      label: "cull.args",
+      layout: cullLayout,
+      compute: { module: cullModule, entryPoint: "writeDrawArgs" },
     }),
     opaquePipeline("opaque", "back"),
     opaquePipeline("opaque.doubleSided", "none"),
@@ -345,15 +369,23 @@ async function createPipelines(
       layout: "auto",
       compute: { module: module("pick", pickWgsl), entryPoint: "main" },
     }),
+    device.createComputePipelineAsync({
+      label: "scatter",
+      layout: device.createPipelineLayout({
+        bindGroupLayouts: [scatterLayout],
+      }),
+      compute: { module: module("scatter", scatterWgsl), entryPoint: "main" },
+    }),
   ]);
 
   return {
     viewLayout,
-    prepWorldLayout,
+    cullWorldLayout,
     drawWorldLayout,
     textureSetLayout,
-    prep,
-    prepArgs,
+    cullRecords,
+    cullInstances,
+    writeDrawArgs,
     opaque,
     opaqueDoubleSided,
     opaqueLines,
@@ -361,5 +393,7 @@ async function createPipelines(
     overlay,
     overlayLayout,
     pick,
+    scatter,
+    scatterLayout,
   };
 }

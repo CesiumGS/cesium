@@ -27,9 +27,11 @@ try {
     ]);
   }
   run([
-    "prep.slang", "-target", "wgsl",
-    "-entry", "main", "-stage", "compute", "-entry", "writeArgs", "-stage", "compute",
-    "-o", "generated/prep.wgsl",
+    "cull.slang", "-target", "wgsl",
+    "-entry", "cullRecords", "-stage", "compute",
+    "-entry", "cullInstances", "-stage", "compute",
+    "-entry", "writeDrawArgs", "-stage", "compute",
+    "-o", "generated/cull.wgsl",
   ]);
 } finally {
   rmSync(temp, { recursive: true, force: true });

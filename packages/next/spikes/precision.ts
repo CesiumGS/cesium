@@ -6,7 +6,7 @@ import {
   mat4,
   vec3,
 } from "../src/index.ts";
-import { INSTANCE_SIZE } from "../src/render/layout.ts";
+import { DRAW_ITEM_SIZE } from "../src/render/layout.ts";
 import { createBox } from "../src/scene/meshes.ts";
 
 const ellipsoid = Ellipsoid.WGS84;
@@ -67,13 +67,13 @@ async function run(): Promise<Row[]> {
     vec3.copy(view.camera.position, camera);
     engine.renderFrame();
 
-    const bytes = origins.length * INSTANCE_SIZE;
+    const bytes = origins.length * DRAW_ITEM_SIZE;
     const readback = engine.gpu.device.createBuffer({
       size: bytes,
       usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
     });
     const encoder = engine.gpu.device.createCommandEncoder();
-    encoder.copyBufferToBuffer(world.instanceBuffer, 0, readback, 0, bytes);
+    encoder.copyBufferToBuffer(world.itemBuffer, 0, readback, 0, bytes);
     engine.gpu.device.queue.submit([encoder.finish()]);
     await readback.mapAsync(GPUMapMode.READ);
     const instances = new Float32Array(readback.getMappedRange().slice(0));
@@ -92,7 +92,7 @@ async function run(): Promise<Row[]> {
         const origin = origins[k]!;
         for (let c = 0; c < 3; c++) {
           const expected = origin[c]! - camera[c]!;
-          const gpu = instances[k * 16 + 12 + c]!;
+          const gpu = instances[k * (DRAW_ITEM_SIZE / 4) + 12 + c]!;
           hiLo = Math.max(hiLo, Math.abs(gpu - expected));
           naive = Math.max(
             naive,

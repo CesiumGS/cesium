@@ -1,0 +1,353 @@
+{
+  "date": "2026-11-01T02:42:46.461Z",
+  "environment": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0",
+    "adapter": {
+      "vendor": "nvidia",
+      "architecture": "lovelace",
+      "description": "NVIDIA RTX 3000 Ada Generation Laptop GPU"
+    },
+    "timestampQuery": true
+  },
+  "errors": [
+    "HTTP 404 http://127.0.0.1:5191/slang-wasm/slang-wasm.wasm"
+  ],
+  "results": {
+    "precision": [
+      {
+        "site": "Philadelphia, ground",
+        "distance": 0.01,
+        "hiLo": 7.450580596923828e-9,
+        "naive": 0.00996065093204379
+      },
+      {
+        "site": "Philadelphia, ground",
+        "distance": 1,
+        "hiLo": 3.725290298461914e-8,
+        "naive": 0.4472402762621641
+      },
+      {
+        "site": "Philadelphia, ground",
+        "distance": 100,
+        "hiLo": 0.0000038053840398788452,
+        "naive": 0.44108416698873043
+      },
+      {
+        "site": "Philadelphia, ground",
+        "distance": 1000,
+        "hiLo": 0.00003051524981856346,
+        "naive": 0.4474934162572026
+      },
+      {
+        "site": "Philadelphia, ground",
+        "distance": 10000,
+        "hiLo": 0.00046303030103445053,
+        "naive": 0.4315127031877637
+      },
+      {
+        "site": "Philadelphia, ground",
+        "distance": 100000,
+        "hiLo": 0.003709627315402031,
+        "naive": 0.43906556628644466
+      },
+      {
+        "site": "Philadelphia, ground",
+        "distance": 1000000,
+        "hiLo": 0.059668722678907216,
+        "naive": 0.44663296081125736
+      },
+      {
+        "site": "Everest, 9 km",
+        "distance": 0.01,
+        "hiLo": 3.725290298461914e-9,
+        "naive": 0.009957878210116178
+      },
+      {
+        "site": "Everest, 9 km",
+        "distance": 1,
+        "hiLo": 4.377216100692749e-8,
+        "naive": 0.24140036012977362
+      },
+      {
+        "site": "Everest, 9 km",
+        "distance": 100,
+        "hiLo": 0.000003795139491558075,
+        "naive": 0.2513115806505084
+      },
+      {
+        "site": "Everest, 9 km",
+        "distance": 1000,
+        "hiLo": 0.00003021053271368146,
+        "naive": 0.24966186005622149
+      },
+      {
+        "site": "Everest, 9 km",
+        "distance": 10000,
+        "hiLo": 0.0004580861423164606,
+        "naive": 0.24832285568118095
+      },
+      {
+        "site": "Everest, 9 km",
+        "distance": 100000,
+        "hiLo": 0.003892242908477783,
+        "naive": 0.25175474025309086
+      },
+      {
+        "site": "Everest, 9 km",
+        "distance": 1000000,
+        "hiLo": 0.06176235410384834,
+        "naive": 0.25140239112079144
+      },
+      {
+        "site": "Near north pole",
+        "distance": 0.01,
+        "hiLo": 8.381903171539307e-9,
+        "naive": 0.009858598001301289
+      },
+      {
+        "site": "Near north pole",
+        "distance": 1,
+        "hiLo": 3.91155481338501e-8,
+        "naive": 0.46315971203148365
+      },
+      {
+        "site": "Near north pole",
+        "distance": 100,
+        "hiLo": 0.000003770695002458524,
+        "naive": 0.46588508132845163
+      },
+      {
+        "site": "Near north pole",
+        "distance": 1000,
+        "hiLo": 0.000045754220650451316,
+        "naive": 0.4513274682685733
+      },
+      {
+        "site": "Near north pole",
+        "distance": 10000,
+        "hiLo": 0.0008625466925877845,
+        "naive": 0.461621580645442
+      },
+      {
+        "site": "Near north pole",
+        "distance": 100000,
+        "hiLo": 0.007121505856048316,
+        "naive": 0.43772181682288647
+      },
+      {
+        "site": "Near north pole",
+        "distance": 1000000,
+        "hiLo": 0.05049848207272589,
+        "naive": 0.4545556381344795
+      },
+      {
+        "site": "Antimeridian",
+        "distance": 0.01,
+        "hiLo": 7.450580596923828e-9,
+        "naive": 0.009946443140506744
+      },
+      {
+        "site": "Antimeridian",
+        "distance": 1,
+        "hiLo": 3.5390257835388184e-8,
+        "naive": 0.3244745805859566
+      },
+      {
+        "site": "Antimeridian",
+        "distance": 100,
+        "hiLo": 0.0000034415542842225477,
+        "naive": 0.3198902551084757
+      },
+      {
+        "site": "Antimeridian",
+        "distance": 1000,
+        "hiLo": 0.000030384398996829987,
+        "naive": 0.32863001339137554
+      },
+      {
+        "site": "Antimeridian",
+        "distance": 10000,
+        "hiLo": 0.00047224294394254684,
+        "naive": 0.33063318114727736
+      },
+      {
+        "site": "Antimeridian",
+        "distance": 100000,
+        "hiLo": 0.0038803081260994077,
+        "naive": 0.3062115674838424
+      },
+      {
+        "site": "Antimeridian",
+        "distance": 1000000,
+        "hiLo": 0.031232433393597603,
+        "naive": 0.3090661112219095
+      },
+      {
+        "site": "LEO, 400 km",
+        "distance": 0.01,
+        "hiLo": 4.2515308114332573e-10,
+        "naive": 0.009801656939089298
+      },
+      {
+        "site": "LEO, 400 km",
+        "distance": 1,
+        "hiLo": 3.632158041000366e-8,
+        "naive": 0.24719491973519325
+      },
+      {
+        "site": "LEO, 400 km",
+        "distance": 100,
+        "hiLo": 0.0000037849924439115057,
+        "naive": 0.24872715771198273
+      },
+      {
+        "site": "LEO, 400 km",
+        "distance": 1000,
+        "hiLo": 0.000030406750738620758,
+        "naive": 0.2493351772427559
+      },
+      {
+        "site": "LEO, 400 km",
+        "distance": 10000,
+        "hiLo": 0.000455196668553981,
+        "naive": 0.24870306998491287
+      },
+      {
+        "site": "LEO, 400 km",
+        "distance": 100000,
+        "hiLo": 0.0036349929869174957,
+        "naive": 0.24969864264130592
+      },
+      {
+        "site": "LEO, 400 km",
+        "distance": 1000000,
+        "hiLo": 0.031052435748279095,
+        "naive": 0.24654250033199787
+      }
+    ],
+    "slang": {
+      "slangc WGSL validates: opaque (default)": "0 errors, 0 warnings",
+      "slangc WGSL validates: opaque (toon)": "0 errors, 0 warnings",
+      "slangc WGSL validates: cull": "0 errors, 0 warnings",
+      "image: WGSL vs Slang (same material)": "mean ΔE 0.000, pixels ΔE>2.3: 0.00%",
+      "GPU time, 1920×1080 PBR+IBL, 19882 draws, median of 7": "WGSL 1.888 ms · Slang 1.801 ms (-4.6%)",
+      "cull hi/lo precision (max relative error)": "WGSL 5.96e-8, Slang 5.96e-8",
+      "runtime compile (slang-wasm)": "skipped: WASM build not served (set SLANG_WASM_DIR)",
+      "done": "✓"
+    },
+    "parity": [
+      {
+        "camera": "oblique",
+        "variant": "2.0 sRGB curves",
+        "metrics": {
+          "meanDeltaE": 0.44011115689124664,
+          "p95DeltaE": 0.9506941954461565,
+          "noticeable": 0.03263888888888889
+        },
+        "flip": {
+          "mean": 0.020424879325554857,
+          "median": 0.0032119539100676775,
+          "p95": 0.08680487424135208
+        }
+      },
+      {
+        "camera": "oblique",
+        "variant": "2.0 gamma 2.2 (1.x color)",
+        "metrics": {
+          "meanDeltaE": 0.5391720402983373,
+          "p95DeltaE": 0.9903027606007401,
+          "noticeable": 0.032546296296296295
+        },
+        "flip": {
+          "mean": 0.0251269891003391,
+          "median": 0.011915300041437149,
+          "p95": 0.08565423637628555
+        }
+      },
+      {
+        "camera": "top-down",
+        "variant": "2.0 sRGB curves",
+        "metrics": {
+          "meanDeltaE": 0.24258411418759673,
+          "p95DeltaE": 0.38891391811970355,
+          "noticeable": 0.018865740740740742
+        },
+        "flip": {
+          "mean": 0.013304247312716677,
+          "median": 0,
+          "p95": 0.07978876680135727
+        }
+      },
+      {
+        "camera": "top-down",
+        "variant": "2.0 gamma 2.2 (1.x color)",
+        "metrics": {
+          "meanDeltaE": 0.252466710232833,
+          "p95DeltaE": 0.6550238133622245,
+          "noticeable": 0.018865740740740742
+        },
+        "flip": {
+          "mean": 0.013490467134299354,
+          "median": 0,
+          "p95": 0.0777210220694542
+        }
+      },
+      {
+        "camera": "grazing",
+        "variant": "2.0 sRGB curves",
+        "metrics": {
+          "meanDeltaE": 0.47080438036980926,
+          "p95DeltaE": 1.043004441966436,
+          "noticeable": 0.01783179012345679
+        },
+        "flip": {
+          "mean": 0.027374040568114617,
+          "median": 0.011254586279392242,
+          "p95": 0.07683093100786209
+        }
+      },
+      {
+        "camera": "grazing",
+        "variant": "2.0 gamma 2.2 (1.x color)",
+        "metrics": {
+          "meanDeltaE": 0.36903609556545414,
+          "p95DeltaE": 0.9083201178933017,
+          "noticeable": 0.018040123456790125
+        },
+        "flip": {
+          "mean": 0.022072929740654102,
+          "median": 0.0004654813383240253,
+          "p95": 0.07703825831413269
+        }
+      },
+      {
+        "camera": "far",
+        "variant": "2.0 sRGB curves",
+        "metrics": {
+          "meanDeltaE": 0.030269058489525963,
+          "p95DeltaE": 0,
+          "noticeable": 0.0025308641975308644
+        },
+        "flip": {
+          "mean": 0.0012608206056857652,
+          "median": 0,
+          "p95": 0.00014880186063237488
+        }
+      },
+      {
+        "camera": "far",
+        "variant": "2.0 gamma 2.2 (1.x color)",
+        "metrics": {
+          "meanDeltaE": 0.03053679292427034,
+          "p95DeltaE": 0,
+          "noticeable": 0.0025308641975308644
+        },
+        "flip": {
+          "mean": 0.0013315081340697812,
+          "median": 0,
+          "p95": 0.00015811232151463628
+        }
+      }
+    ]
+  }
+}

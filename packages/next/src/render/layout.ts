@@ -72,25 +72,50 @@ export function writeViewBlock(
   out[o + 83] = block.specularMaxLod;
 }
 
-/** `struct DrawRecord` — 192 bytes. */
-export const RECORD_SIZE = 192;
-/** Word offset of `DrawRecord.viewMask`. */
-export const VIEW_MASK_WORD = 44;
-/**
- * Word offsets of a mixed-LOD placeholder's clip block, view mask and box
- * count: in those views the record draws only inside its clip boxes.
- */
-export const CLIP_BLOCK_WORD = 45;
-export const PLACEHOLDER_MASK_WORD = 46;
-export const CLIP_COUNT_WORD = 47;
-/** Clip boxes per block; each box is 5 vec4s (center hi, lo, 3 rows). */
-export const CLIP_BOXES = 8;
-export const CLIP_BOX_FLOATS = 20;
+/** `struct DrawRecord` — 128 bytes. */
+export const RECORD_SIZE = 128;
+export const RECORD_WORDS = RECORD_SIZE / 4;
+/** Word offsets of `DrawRecord` fields written after creation. */
+export const TRANSFORM_WORD = 8;
+export const FLAGS_WORD = 9;
 /**
  * Word offset of `DrawRecord.imagerySlice`: a globe tile's slice of its
  * world's imagery array (`packImagery`); 0 = none.
  */
-export const IMAGERY_SLICE_WORD = 42;
+export const IMAGERY_SLICE_WORD = 21;
+/** Word offset of `DrawRecord.viewMask`. */
+export const VIEW_MASK_WORD = 23;
+/**
+ * Word offsets of a mixed-LOD placeholder's clip block, view mask and box
+ * count: in those views the record draws only inside its clip boxes.
+ */
+export const CLIP_BLOCK_WORD = 24;
+export const PLACEHOLDER_MASK_WORD = 25;
+export const CLIP_COUNT_WORD = 26;
+/** Word offsets of a record's range in the instance table (count 0: none). */
+export const INSTANCE_FIRST_WORD = 27;
+export const INSTANCE_COUNT_WORD = 28;
+/** Clip boxes per block; each box is 5 vec4s (center hi, lo, 3 rows). */
+export const CLIP_BOXES = 8;
+export const CLIP_BOX_FLOATS = 20;
+
+/**
+ * `struct Transform` — 80 bytes: a placement composed in float64 on the CPU
+ * (origin as hi/lo, rotation-scale in float32, its largest axis scale and
+ * the hidden flag of it and its ancestors).
+ */
+export const TRANSFORM_SIZE = 80;
+export const TRANSFORM_WORDS = TRANSFORM_SIZE / 4;
+/**
+ * `struct Instance` — 64 bytes: an affine relative to its record's
+ * transform, the record, a local feature ID, flags and a tint.
+ */
+export const INSTANCE_SIZE = 64;
+export const INSTANCE_WORDS = INSTANCE_SIZE / 4;
+/** `Instance.record` of a free instance slot. */
+export const NO_RECORD = 0xffffffff;
+/** `Instance.feature` of an instance without its own feature ID. */
+export const NO_FEATURE = 0xffffffff;
 /** Slices an imagery array can address (`packImagery`). */
 export const MAX_IMAGERY_SLICES = 4095;
 /** Levels above a tile its imagery may come from (`packImagery`). */
@@ -108,9 +133,12 @@ export function packImagery(slice: number, levelsUp = 0, x = 0, y = 0): number {
 
 /** Default view mask: drawn in every view. */
 export const ALL_VIEWS = 0xffffffff;
-export const RECORD_WORDS = RECORD_SIZE / 4;
-/** `struct DrawInstance` — written by the prep kernel. */
-export const INSTANCE_SIZE = 64;
+/**
+ * `struct DrawItem` — written per view by the cull kernels for every draw
+ * item (a record without instances, or one instance): its camera-relative
+ * matrix, record, feature, instance index and tint.
+ */
+export const DRAW_ITEM_SIZE = 80;
 /** `drawIndexedIndirect` args: indexCount, instanceCount, firstIndex, baseVertex, firstInstance. */
 export const INDIRECT_SIZE = 20;
 /** `struct Material` — 64 bytes. */
@@ -154,12 +182,10 @@ export interface MeshStreams {
 }
 
 export interface DrawRecordData {
-  /** Float64 Earth-fixed origin of the draw's local frame. */
-  origin: Vec3;
-  /** Local transform (rotation/scale/small translation), relative to `origin`. */
-  model: Mat4;
-  /** Bounding sphere: center offset from `origin` (Earth-fixed axes) and radius. */
-  center: Vec3;
+  /** Index in the world's transform table. */
+  transform: number;
+  /** Bounding sphere in the transform's local frame (per instance, if any). */
+  center: ArrayLike<number>;
   radius: number;
   /** Linear RGBA tint, multiplied with the material's base color. */
   color: readonly [number, number, number, number];
@@ -174,6 +200,12 @@ export interface DrawRecordData {
   flags: number;
   /** Views that draw this record, one bit per view (`ALL_VIEWS` default). */
   viewMask?: number;
+  /** Range in the instance table (count 0: not instanced). */
+  instanceFirst?: number;
+  instanceCount?: number;
+  /** Per-instance streams in the arena: word offset and words per instance. */
+  instanceStreams?: number;
+  instanceStride?: number;
 }
 
 export function writeDrawRecord(
@@ -183,34 +215,109 @@ export function writeDrawRecord(
   r: DrawRecordData,
 ): void {
   const o = index * RECORD_WORDS;
-  splitVec3(r.origin, f32, o, f32, o + 4);
+  f32[o] = r.center[0]!;
+  f32[o + 1] = r.center[1]!;
+  f32[o + 2] = r.center[2]!;
   f32[o + 3] = r.radius;
-  u32[o + 7] = r.flags;
-  f32.set(r.model, o + 8);
-  f32[o + 24] = r.color[0];
-  f32[o + 25] = r.color[1];
-  f32[o + 26] = r.color[2];
-  f32[o + 27] = r.color[3];
-  f32[o + 28] = r.center[0]!;
-  f32[o + 29] = r.center[1]!;
-  f32[o + 30] = r.center[2]!;
-  u32[o + 31] = r.materialIndex;
-  u32[o + 32] = r.indexCount;
-  u32[o + 33] = r.firstIndex;
-  u32[o + 34] = r.featureId;
-  u32[o + 35] = r.batch;
-  u32[o + 36] = r.streams.position;
-  u32[o + 37] = r.streams.normal;
-  u32[o + 38] = r.streams.uv;
-  u32[o + 39] = r.streams.color;
-  u32[o + 40] = r.streams.tangent;
-  u32[o + 41] = r.textureSet;
-  u32[o + 42] = 0; // imagery slice (packImagery)
-  u32[o + 43] = r.streams.featureId;
-  u32[o + 44] = r.viewMask ?? ALL_VIEWS;
-  u32[o + 45] = 0;
-  u32[o + 46] = 0;
-  u32[o + 47] = 0;
+  f32[o + 4] = r.color[0];
+  f32[o + 5] = r.color[1];
+  f32[o + 6] = r.color[2];
+  f32[o + 7] = r.color[3];
+  u32[o + 8] = r.transform;
+  u32[o + 9] = r.flags;
+  u32[o + 10] = r.materialIndex;
+  u32[o + 11] = r.indexCount;
+  u32[o + 12] = r.firstIndex;
+  u32[o + 13] = r.featureId;
+  u32[o + 14] = r.batch;
+  u32[o + 15] = r.streams.position;
+  u32[o + 16] = r.streams.normal;
+  u32[o + 17] = r.streams.uv;
+  u32[o + 18] = r.streams.color;
+  u32[o + 19] = r.streams.tangent;
+  u32[o + 20] = r.textureSet;
+  u32[o + 21] = 0; // imagery slice (packImagery)
+  u32[o + 22] = r.streams.featureId;
+  u32[o + 23] = r.viewMask ?? ALL_VIEWS;
+  u32[o + 24] = 0;
+  u32[o + 25] = 0;
+  u32[o + 26] = 0;
+  u32[o + 27] = r.instanceFirst ?? 0;
+  u32[o + 28] = r.instanceCount ?? 0;
+  u32[o + 29] = r.instanceStreams ?? NO_STREAM;
+  u32[o + 30] = r.instanceStride ?? 0;
+  u32[o + 31] = 0;
+}
+
+/**
+ * Writes a transform entry from its float64 world matrix (column-major):
+ * the translation split hi/lo, the 3×3 in float32 and its largest axis
+ * scale, which scales bounding radii.
+ */
+export function writeTransform(
+  f32: Float32Array,
+  u32: Uint32Array,
+  index: number,
+  m: ArrayLike<number>,
+  hidden: boolean,
+): void {
+  const o = index * TRANSFORM_WORDS;
+  for (let i = 0; i < 3; i++) {
+    const value = m[12 + i]!;
+    const h = Math.fround(value);
+    f32[o + i] = h;
+    f32[o + 4 + i] = Math.fround(value - h);
+  }
+  f32[o + 3] = Math.max(
+    Math.hypot(m[0]!, m[1]!, m[2]!),
+    Math.hypot(m[4]!, m[5]!, m[6]!),
+    Math.hypot(m[8]!, m[9]!, m[10]!),
+  );
+  u32[o + 7] = hidden ? 1 : 0;
+  for (let c = 0; c < 3; c++) {
+    f32[o + 8 + c * 4] = m[c * 4]!;
+    f32[o + 9 + c * 4] = m[c * 4 + 1]!;
+    f32[o + 10 + c * 4] = m[c * 4 + 2]!;
+    f32[o + 11 + c * 4] = 0;
+  }
+}
+
+/**
+ * Writes an instance entry: `m` (column-major 4×4, affine) relative to the
+ * record's transform, stored as three rows.
+ */
+export function writeInstance(
+  f32: Float32Array,
+  u32: Uint32Array,
+  index: number,
+  m: ArrayLike<number>,
+  mOffset: number,
+  record: number,
+  feature: number,
+  flags: number,
+  tint: number,
+): void {
+  const o = index * INSTANCE_WORDS;
+  for (let r = 0; r < 3; r++) {
+    f32[o + r * 4] = m[mOffset + r]!;
+    f32[o + r * 4 + 1] = m[mOffset + 4 + r]!;
+    f32[o + r * 4 + 2] = m[mOffset + 8 + r]!;
+    f32[o + r * 4 + 3] = m[mOffset + 12 + r]!;
+  }
+  u32[o + 12] = record >>> 0;
+  u32[o + 13] = feature >>> 0;
+  u32[o + 14] = flags >>> 0;
+  u32[o + 15] = tint >>> 0;
+}
+
+/** Packs a linear RGBA tint (0-1) as RGBA8 (`unpack4x8unorm` in WGSL). */
+export function packTint(rgba: ArrayLike<number>, offset = 0): number {
+  let packed = 0;
+  for (let i = 3; i >= 0; i--) {
+    const v = Math.round(Math.min(1, Math.max(0, rgba[offset + i]!)) * 255);
+    packed = (packed << 8) | v;
+  }
+  return packed >>> 0;
 }
 
 export interface MaterialData {
