@@ -1,0 +1,22 @@
+.worker canvas {
+  width: 640px;
+  height: 360px;
+  display: block;
+  background: #000;
+  border-radius: 6px;
+}
+.worker button {
+  background: var(--gray-a3, #222a3a);
+  color: inherit;
+  border: 1px solid var(--gray-a6, #2f3a50);
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+  margin: 8px 0;
+}
+.worker pre {
+  color: var(--gray-11, #8a93a6);
+  font:
+    12px/1.5 ui-monospace,
+    monospace;
+}

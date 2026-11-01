@@ -10,6 +10,7 @@ import {
   vec3,
   type World,
 } from "../src/index.ts";
+import type { Harness } from "../lab/harness.ts";
 import { flip } from "./flip.ts";
 import { compareImages, type ImageMetrics } from "./metrics.ts";
 import { center, parityScene, type CameraState, type Rgb } from "./scene.ts";
@@ -17,6 +18,37 @@ import { center, parityScene, type CameraState, type Rgb } from "./scene.ts";
 // CesiumJS 1.x, loaded from the repo build as a global (see index.html).
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped global
 declare const Cesium: any;
+
+const TEMPLATE = `
+<h1>L2 image parity: CesiumJS 1.x (WebGL) vs 2.0 PoC (WebGPU)</h1>
+<p>
+  Same flat-colored scene, same serialized cameras, 480×270 pixels, MSAA 4×,
+  HDR + PBR Neutral tonemapping in both. Metrics: LDR-FLIP (heatmap) and
+  CIE76 ΔE.
+</p>
+<div class="status">Run to render the scene in both engines.</div>
+<div class="images">
+  <figure>
+    <figcaption>1.x (WebGL)</figcaption>
+    <canvas class="out" data-id="old"></canvas>
+  </figure>
+  <figure>
+    <figcaption>2.0 (WebGPU)</figcaption>
+    <canvas class="out" data-id="next"></canvas>
+  </figure>
+  <figure>
+    <figcaption>FLIP error (black 0 → white 1)</figcaption>
+    <canvas class="out" data-id="heat"></canvas>
+  </figure>
+</div>
+<table data-id="results"></table>
+<div class="offscreen" data-id="legacy"></div>
+<div data-id="credits" hidden></div>`;
+
+/** Where the page is mounted (harness `mount`). */
+let root: HTMLElement;
+const $ = <T extends Element = HTMLElement>(id: string) =>
+  root.querySelector<T>(`[data-id="${id}"]`)!;
 
 const WIDTH = 480;
 const HEIGHT = 270;
@@ -53,7 +85,7 @@ function canonicalCameras(): CameraState[] {
 // ---------------------------------------------------------------- 1.x side
 
 function createLegacyViewer() {
-  const viewer = new Cesium.Viewer("legacy", {
+  const viewer = new Cesium.Viewer($("legacy"), {
     globe: false,
     baseLayer: false,
     skyBox: false,
@@ -71,7 +103,7 @@ function createLegacyViewer() {
     msaaSamples: 4,
     useDefaultRenderLoop: false,
     contextOptions: { webgl: { preserveDrawingBuffer: true } },
-    creditContainer: document.querySelector("#credits"),
+    creditContainer: $("credits"),
   });
   const s = viewer.scene;
   // The scene is unlit, which both engines show as is (display-referred):
@@ -261,11 +293,9 @@ async function setup() {
 }
 
 async function runParity(): Promise<ParityRow[]> {
-  const status = document.querySelector("#status")!;
+  const status = root.querySelector(".status")!;
   status.textContent = "running…";
-  const viewer = ((
-    globalThis as { __legacy?: ReturnType<typeof createLegacyViewer> }
-  ).__legacy ??= createLegacyViewer());
+  const viewer = (legacyViewer ??= createLegacyViewer());
   const next = await (nextPromise ??= setup());
   const rows: ParityRow[] = [];
   const images: RowImages[] = [];
@@ -303,6 +333,8 @@ async function runParity(): Promise<ParityRow[]> {
   return rows;
 }
 
+// Both engines persist between runs while the page is mounted.
+let legacyViewer: ReturnType<typeof createLegacyViewer> | undefined;
 let nextPromise: ReturnType<typeof setup> | undefined;
 
 /** PNG data URLs of the last run, for cross-checking with external tools. */
@@ -335,12 +367,12 @@ function flipHeatmap(errors: Float32Array): ImageData {
 
 function showImages(images: RowImages): void {
   const pairs: Array<[string, ImageData]> = [
-    ["#old", images.legacy],
-    ["#next", images.next],
-    ["#heat", images.heatmap],
+    ["old", images.legacy],
+    ["next", images.next],
+    ["heat", images.heatmap],
   ];
-  for (const [selector, image] of pairs) {
-    const canvas = document.querySelector<HTMLCanvasElement>(selector)!;
+  for (const [id, image] of pairs) {
+    const canvas = $<HTMLCanvasElement>(id);
     canvas.width = WIDTH;
     canvas.height = HEIGHT;
     canvas.getContext("2d")!.putImageData(image, 0, 0);
@@ -348,7 +380,7 @@ function showImages(images: RowImages): void {
 }
 
 function renderTable(rows: ParityRow[], images: RowImages[]): void {
-  const table = document.querySelector("#results")!;
+  const table = $("results");
   table.innerHTML = `<tr><th>camera</th><th>variant</th><th>FLIP mean</th><th>FLIP median</th><th>FLIP p95</th><th>mean ΔE</th><th>p95 ΔE</th><th>pixels ΔE&gt;2.3</th></tr>${rows
     .map(
       (r, i) =>
@@ -367,10 +399,21 @@ function renderTable(rows: ParityRow[], images: RowImages[]): void {
   );
 }
 
-document.querySelector("#run")!.addEventListener("click", () => {
-  runParity().catch((error: unknown) => {
-    console.error(error);
-    document.querySelector("#status")!.textContent = String(error);
-  });
-});
-Object.assign(globalThis, { runParity, parityImages: () => lastImages });
+export const harness: Harness = {
+  mount(element) {
+    root = element;
+    root.innerHTML = TEMPLATE;
+    return {
+      run: runParity,
+      entries: { parityImages: () => lastImages },
+      dispose() {
+        legacyViewer?.destroy();
+        legacyViewer = undefined;
+        const next = nextPromise;
+        nextPromise = undefined;
+        lastImages = [];
+        next?.then(({ engine }) => engine.destroy()).catch(() => {});
+      },
+    };
+  },
+};

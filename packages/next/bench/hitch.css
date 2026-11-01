@@ -1,0 +1,7 @@
+/* 2.0 sizes its drawing buffer from this. */
+.hitch canvas {
+  width: 960px;
+  height: 540px;
+  display: block;
+  background: #000;
+}

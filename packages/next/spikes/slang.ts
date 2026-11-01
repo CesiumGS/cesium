@@ -13,6 +13,8 @@ import {
 } from "../src/index.ts";
 import { DRAW_ITEM_SIZE } from "../src/render/layout.ts";
 import { compareImages } from "../parity/metrics.ts";
+import type { Harness } from "../lab/harness.ts";
+import "./slang.css";
 import opaqueDefault from "./slang/generated/opaque_default.wgsl?raw";
 import opaqueToon from "./slang/generated/opaque_toon.wgsl?raw";
 import cullSlangWgsl from "./slang/generated/cull.wgsl?raw";
@@ -22,6 +24,63 @@ import materialToonSlang from "./slang/material_toon.slang?raw";
 import materialDefaultSlang from "./slang/material_default.slang?raw";
 import bindToonSlang from "./slang/bind_toon.slang?raw";
 import opaqueSlang from "./slang/opaque.slang?raw";
+
+const TEMPLATE = `
+<h1>Slang spike (M0 gate)</h1>
+<p>
+  Slang ports of the opaque shader (material bound at link time) and the
+  prep kernel, compiled to WGSL by slangc at build time and, when the WASM
+  build is served at /slang-wasm/ (SLANG_WASM_DIR), at runtime in the page.
+</p>
+<div class="status">Run to compile, render and time both shader paths.</div>
+<div class="slang">
+  <div data-id="adapter"></div>
+  <h2>Rendering: hand-written WGSL vs Slang</h2>
+  <div class="images">
+    <figure>
+      <figcaption>WGSL (built-in)</figcaption>
+      <canvas data-id="wgsl"></canvas>
+    </figure>
+    <figure>
+      <figcaption>Slang, DefaultMaterial</figcaption>
+      <canvas data-id="slang"></canvas>
+    </figure>
+    <figure>
+      <figcaption>Slang, ToonMaterial (user module)</figcaption>
+      <canvas data-id="toon"></canvas>
+    </figure>
+  </div>
+  <h2>Checks</h2>
+  <table data-id="results"></table>
+</div>`;
+
+/** Where the page is mounted (harness `mount`). */
+let root: HTMLElement;
+const $ = <T extends Element = HTMLElement>(id: string) =>
+  root.querySelector<T>(`[data-id="${id}"]`)!;
+
+/** The engines of a run in progress; `dispose` destroys them. */
+let engines: Set<Engine> | undefined;
+
+function track(engine: Engine): Engine {
+  if (!engines) {
+    engine.destroy();
+    throw new Error("stopped");
+  }
+  engines.add(engine);
+  return engine;
+}
+
+function release(engine: Engine): void {
+  if (engines?.delete(engine)) {
+    engine.destroy();
+  }
+}
+
+function stop(): void {
+  engines?.forEach((engine) => engine.destroy());
+  engines = undefined;
+}
 
 const ellipsoid = Ellipsoid.WGS84;
 const deg = Math.PI / 180;
@@ -33,10 +92,9 @@ const centerCartesian = ellipsoid.cartographicToCartesian(center, vec3.vec3());
 const rows: Array<[string, string]> = [];
 function report(check: string, result: string): void {
   rows.push([check, result]);
-  document.querySelector("#results")!.innerHTML =
-    `<tr><th>check</th><th>result</th></tr>${rows
-      .map(([c, r]) => `<tr><td>${c}</td><td>${r}</td></tr>`)
-      .join("")}`;
+  $("results").innerHTML = `<tr><th>check</th><th>result</th></tr>${rows
+    .map(([c, r]) => `<tr><td>${c}</td><td>${r}</td></tr>`)
+    .join("")}`;
 }
 
 function populate(world: World, side: number): void {
@@ -98,7 +156,7 @@ async function setup(
   size: [number, number] = [WIDTH, HEIGHT],
   range = 9000,
 ): Promise<Setup> {
-  const engine = await Engine.create({ shaders });
+  const engine = track(await Engine.create({ shaders }));
   vec3.normalize(
     engine.sunDirection,
     vec3.add(vec3.vec3(), centerCartesian, vec3.vec3(2e6, -1e6, 3e6)),
@@ -118,7 +176,7 @@ async function setup(
 async function render(s: Setup, canvasId: string): Promise<ImageData> {
   s.engine.renderFrame();
   const image = new ImageData(await s.target.read(), WIDTH, HEIGHT);
-  const canvas = document.querySelector<HTMLCanvasElement>(`#${canvasId}`)!;
+  const canvas = $<HTMLCanvasElement>(canvasId);
   canvas.width = WIDTH;
   canvas.height = HEIGHT;
   canvas.getContext("2d")!.putImageData(image, 0, 0);
@@ -145,7 +203,7 @@ async function compilationErrors(
 
 /** Max error of the cull kernels' camera-relative output against float64. */
 async function cullPrecision(shaders: ShaderOverrides): Promise<number> {
-  const engine = await Engine.create({ shaders });
+  const engine = track(await Engine.create({ shaders }));
   const world = engine.createWorld({
     maxDraws: 512,
     vertexBytes: 1 << 16,
@@ -201,7 +259,7 @@ async function cullPrecision(shaders: ShaderOverrides): Promise<number> {
       );
     }
   });
-  engine.destroy();
+  release(engine);
   return worst;
 }
 
@@ -351,8 +409,7 @@ async function main(): Promise<Record<string, string>> {
   const side = 141; // ~20k draws
   const wgsl = await setup({}, side);
   const info = wgsl.engine.gpu.adapter.info;
-  document.querySelector("#adapter")!.textContent =
-    `Adapter: ${info.vendor} ${info.architecture}`;
+  $("adapter").textContent = `Adapter: ${info.vendor} ${info.architecture}`;
   const device = wgsl.engine.gpu.device;
 
   report(
@@ -398,8 +455,8 @@ async function main(): Promise<Record<string, string>> {
     times.wgsl.push(await gpuTime(timedWgsl));
     times.slang.push(await gpuTime(timedSlang));
   }
-  timedWgsl.engine.destroy();
-  timedSlang.engine.destroy();
+  release(timedWgsl.engine);
+  release(timedSlang.engine);
   const median = (v: number[]) =>
     [...v].sort((x, y) => x - y)[Math.floor(v.length / 2)]!;
   const base = median(times.wgsl);
@@ -422,16 +479,30 @@ async function main(): Promise<Record<string, string>> {
 }
 
 async function runSlang(): Promise<Record<string, string>> {
+  const status = root.querySelector(".status")!;
+  status.textContent = "running…";
+  rows.length = 0;
+  const own = new Set<Engine>();
+  engines = own;
   try {
-    return await main();
+    const result = await main();
+    status.textContent = "done";
+    return result;
   } catch (error) {
     console.error(error);
     report("error", String(error instanceof Error ? error.message : error));
     throw error;
+  } finally {
+    if (engines === own) {
+      stop();
+    }
   }
 }
 
-Object.assign(globalThis, { runSlang });
-if (!new URLSearchParams(location.search).has("bench")) {
-  void runSlang();
-}
+export const harness: Harness = {
+  mount(element) {
+    root = element;
+    root.innerHTML = TEMPLATE;
+    return { run: runSlang, dispose: stop };
+  },
+};

@@ -8,7 +8,8 @@ import {
   resolveIonAsset,
   type Tileset3D,
 } from "../src/index.ts";
-import { addRunButton } from "../parity/runButton.ts";
+import type { Harness } from "../lab/harness.ts";
+import "./hitch.css";
 
 /**
  * Hitch benchmark (plan §15, r27): a live world takes content in and out
@@ -20,6 +21,25 @@ import { addRunButton } from "../parity/runButton.ts";
  * pacing can stretch an idle frame, so long animation frames are the
  * measure of our own work; frame gaps show what a user would see.
  */
+
+const TEMPLATE = `
+<h1>Hitch benchmark: content in and out of a live world</h1>
+<p>
+  One world rendering continuously into a canvas while tilesets are added
+  and removed and the camera jumps into uncached areas. Per step: frames
+  over 34 ms, the worst frame, and the browser's long animation frames (over
+  50 ms, with the script that ran longest). Needs VITE_ION_TOKEN.
+</p>
+<div class="status">Run to step through adds, removes and jumps.</div>
+<div class="hitch">
+  <canvas data-id="canvas" width="960" height="540"></canvas>
+  <table data-id="results"></table>
+</div>`;
+
+/** Where the page is mounted (harness `mount`). */
+let root: HTMLElement;
+const $ = <T extends Element = HTMLElement>(id: string) =>
+  root.querySelector<T>(`[data-id="${id}"]`)!;
 
 const deg = Math.PI / 180;
 
@@ -47,28 +67,50 @@ interface LongFrame {
   }>;
 }
 const longFrames: LongFrame[] = [];
-try {
-  new PerformanceObserver((list) => {
-    for (const entry of list.getEntries()) {
-      longFrames.push(entry as unknown as LongFrame);
-    }
-  }).observe({ type: "long-animation-frame", buffered: false });
-} catch {
-  // Not supported: the long-frame columns stay empty.
-}
 
-/** Frame intervals from requestAnimationFrame, recorded while `on`. */
+/** The run in progress: its engine and frame watch, stopped by `dispose`. */
+interface Run {
+  engine?: Engine;
+  unwatch: () => void;
+}
+let active: Run | undefined;
+
+/** Frame intervals from requestAnimationFrame, recorded while `recording`. */
 const frames: number[] = [];
 let recording = false;
-let last = performance.now();
-const tick = (t: number) => {
-  if (recording) {
-    frames.push(t - last);
+
+/**
+ * Starts watching frames (intervals and long animation frames) for a run;
+ * returns the function that stops it.
+ */
+function watchFrames(): () => void {
+  let observer: PerformanceObserver | undefined;
+  try {
+    observer = new PerformanceObserver((list) => {
+      for (const entry of list.getEntries()) {
+        longFrames.push(entry as unknown as LongFrame);
+      }
+    });
+    observer.observe({ type: "long-animation-frame", buffered: false });
+  } catch {
+    // Not supported: the long-frame columns stay empty.
   }
-  last = t;
-  requestAnimationFrame(tick);
-};
-requestAnimationFrame(tick);
+  let last = performance.now();
+  let handle = 0;
+  const tick = (t: number) => {
+    if (recording) {
+      frames.push(t - last);
+    }
+    last = t;
+    handle = requestAnimationFrame(tick);
+  };
+  handle = requestAnimationFrame(tick);
+  return () => {
+    cancelAnimationFrame(handle);
+    observer?.disconnect();
+    recording = false;
+  };
+}
 
 async function measure(
   step: string,
@@ -82,7 +124,7 @@ async function measure(
   await action();
   // Settled for half a second, or 20 s at most.
   let since = 0;
-  while (performance.now() - start < 20000) {
+  while (active && performance.now() - start < 20000) {
     await new Promise((r) => setTimeout(r, 100));
     since = settled() ? since + 100 : 0;
     if (since >= 500) {
@@ -111,21 +153,41 @@ async function measure(
   };
 }
 
+function stop(run: Run): void {
+  if (active !== run) {
+    return; // already stopped by `dispose`
+  }
+  active = undefined;
+  run.unwatch();
+  run.engine?.destroy();
+}
+
 async function runHitch(): Promise<Row[]> {
-  const status = document.querySelector("#status")!;
+  const status = root.querySelector(".status")!;
   const token = import.meta.env.VITE_ION_TOKEN as string | undefined;
   if (!token) {
     throw new Error("needs VITE_ION_TOKEN in packages/next/.env.local");
   }
   ionDefaults.accessToken = token;
+  const run: Run = { unwatch: watchFrames() };
+  active = run;
+  try {
+    return await steps(run, status);
+  } finally {
+    stop(run);
+  }
+}
+
+async function steps(run: Run, status: Element): Promise<Row[]> {
   const engine = await Engine.create();
+  run.engine = engine;
   const world = engine.createWorld({
     maxDraws: 1 << 16,
     maxMaterials: 1 << 13,
     vertexBytes: 512 << 20,
     indexBytes: 256 << 20,
   });
-  const canvas = document.querySelector<HTMLCanvasElement>("#canvas")!;
+  const canvas = $<HTMLCanvasElement>("canvas");
   const view = engine.addView({ target: new CanvasTarget(canvas), world });
   engine.start();
   const look = (lon: number, lat: number, heading = 30, range = 1500) => {
@@ -156,6 +218,9 @@ async function runHitch(): Promise<Row[]> {
     name: string,
     action: () => Promise<void> | void,
   ): Promise<void> => {
+    if (active !== run) {
+      throw new Error("stopped");
+    }
     status.textContent = `${name}…`;
     rows.push(await measure(name, action, settled));
     renderTable(rows);
@@ -203,13 +268,12 @@ async function runHitch(): Promise<Row[]> {
     engine.removeTileset(osm!);
     tilesets.delete(osm!);
   });
-  engine.destroy();
   status.textContent = "done";
   return rows;
 }
 
 function renderTable(rows: Row[]): void {
-  document.querySelector("#results")!.innerHTML =
+  $("results").innerHTML =
     `<tr><th>step</th><th>until settled</th><th>frames</th><th>&gt; 34 ms</th><th>worst</th><th>p99</th><th>long frames</th><th>worst blocking</th><th>longest script</th></tr>${rows
       .map(
         (r) =>
@@ -220,5 +284,17 @@ function renderTable(rows: Row[]): void {
       .join("")}`;
 }
 
-Object.assign(globalThis, { runHitch });
-addRunButton(runHitch);
+export const harness: Harness = {
+  mount(element) {
+    root = element;
+    root.innerHTML = TEMPLATE;
+    return {
+      run: runHitch,
+      dispose() {
+        if (active) {
+          stop(active);
+        }
+      },
+    };
+  },
+};

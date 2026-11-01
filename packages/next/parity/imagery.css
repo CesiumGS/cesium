@@ -1,0 +1,18 @@
+/* Imagery parity (parity/imagery.ts). */
+
+/* 1.x renders at 640×360 here; its captures are scaled to 480×270. */
+.imagery .offscreen[data-id="legacy"] {
+  width: 640px;
+  height: 360px;
+}
+.imagery .captures .row {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+.imagery .captures canvas {
+  width: 320px;
+  height: 180px;
+  display: block;
+}

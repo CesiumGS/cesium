@@ -1,0 +1,7 @@
+/* 2.0 sizes its drawing buffer from this. */
+.indirect canvas {
+  width: 640px;
+  height: 360px;
+  display: block;
+  background: #000;
+}

@@ -9,6 +9,27 @@ import {
   vec3,
   type World,
 } from "../src/index.ts";
+import type { Harness } from "../lab/harness.ts";
+
+const TEMPLATE = `
+<h1>Steady-state allocations in the frame loop</h1>
+<p>
+  Scene for the allocation gate: N boxes plus a glTF model in two views (one
+  canvas with an inset, one second canvas). The benchmark runner
+  (<code>bench/run.mjs alloc</code>) profiles allocations with the Chrome
+  sampling heap profiler while frames run, including objects already
+  collected.
+</p>
+<div class="status">Run to build the scene and render a few hundred frames.</div>
+<div class="images">
+  <canvas class="out" data-id="a"></canvas>
+  <canvas class="out" data-id="b"></canvas>
+</div>`;
+
+/** Where the page is mounted (harness `mount`). */
+let root: HTMLElement;
+const $ = <T extends Element = HTMLElement>(id: string) =>
+  root.querySelector<T>(`[data-id="${id}"]`)!;
 
 const deg = Math.PI / 180;
 const ellipsoid = Ellipsoid.WGS84;
@@ -68,7 +89,7 @@ async function allocSetup(
   );
   engine.addModel(world, asset, { modelMatrix });
 
-  const a = new CanvasTarget(document.querySelector<HTMLCanvasElement>("#a")!);
+  const a = new CanvasTarget($<HTMLCanvasElement>("a"));
   const main = engine.addView({ target: a, world });
   main.camera.lookAt(centerCartesian, 30 * deg, -35 * deg, side * 18);
   const inset = engine.addView({
@@ -78,7 +99,7 @@ async function allocSetup(
   });
   inset.camera.lookAt(centerCartesian, 0, -89 * deg, side * 25);
   const second = engine.addView({
-    target: new CanvasTarget(document.querySelector<HTMLCanvasElement>("#b")!),
+    target: new CanvasTarget($<HTMLCanvasElement>("b")),
     world,
   });
   second.camera.lookAt(centerCartesian, 210 * deg, -25 * deg, side * 14);
@@ -106,4 +127,29 @@ async function allocRun(frames: number): Promise<void> {
   }
 }
 
-Object.assign(globalThis, { allocSetup, allocRun });
+/** By hand (the runner calls the two steps itself, profiling the second). */
+async function runAlloc(): Promise<{ records: number; batches: number }> {
+  const status = root.querySelector(".status")!;
+  status.textContent = "building 1000 draws…";
+  const scene = await allocSetup(1000);
+  status.textContent = "300 frames…";
+  await allocRun(300);
+  status.textContent = `done: ${scene.records} records, ${scene.batches} batches`;
+  return scene;
+}
+
+export const harness: Harness = {
+  mount(element) {
+    root = element;
+    root.innerHTML = TEMPLATE;
+    return {
+      run: runAlloc,
+      entries: { allocSetup, allocRun },
+      dispose() {
+        engine?.destroy();
+        engine = undefined;
+        world = undefined;
+      },
+    };
+  },
+};

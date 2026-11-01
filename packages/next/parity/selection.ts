@@ -9,13 +9,32 @@ import {
   type Tileset3D,
   type View,
 } from "../src/index.ts";
-import { addRunButton } from "./runButton.ts";
+import type { Harness } from "../lab/harness.ts";
 
 // CesiumJS 1.x, loaded from the repo build as a global (see selection.html).
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped global
 declare const Cesium: any;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped 1.x objects
 type Json = any;
+
+const TEMPLATE = `
+<h1>Selection parity (L1): 1.x Cesium3DTileset vs 2.0 Legacy1x</h1>
+<p>
+  Tiles selected after loading settles, per camera. 2.0 renders both cameras
+  at once as two views over one shared tile cache (record view masks); 1.x
+  renders one camera at a time. Jaccard over content URLs; the M2 bar is
+  99%.
+</p>
+<div class="status">Run to compare both engines' tile selections.</div>
+<table data-id="results"></table>
+<div class="offscreen" data-id="legacy"></div>
+<div data-id="credits" hidden></div>`;
+
+/** Where the page is mounted, and its options (harness `mount`). */
+let root: HTMLElement;
+let params = new URLSearchParams();
+const $ = <T extends Element = HTMLElement>(id: string) =>
+  root.querySelector<T>(`[data-id="${id}"]`)!;
 
 /**
  * L1 selection parity (plan §4): the tiles `Legacy1x` selects in each of two
@@ -80,7 +99,7 @@ const key = (tile: Json): string =>
   tile instanceof Tile ? tile.headerKey : tileHeaderKey(tile._header);
 
 function createViewer() {
-  const viewer = new Cesium.Viewer("legacy", {
+  const viewer = new Cesium.Viewer($("legacy"), {
     globe: false,
     baseLayer: false,
     skyBox: false,
@@ -96,7 +115,7 @@ function createViewer() {
     infoBox: false,
     selectionIndicator: false,
     useDefaultRenderLoop: false,
-    creditContainer: document.querySelector("#credits"),
+    creditContainer: $("credits"),
   });
   viewer.scene.fog.enabled = false;
   return viewer;
@@ -155,11 +174,10 @@ async function legacySelection(
 }
 
 async function runSelection(): Promise<Row[]> {
-  const status = document.querySelector("#status")!;
+  const status = root.querySelector(".status")!;
   const rows: Row[] = [];
   const viewer = createViewer();
   const engine = await Engine.create();
-  const params = new URLSearchParams(location.search);
   const sources: Array<{
     label: string;
     url: string;
@@ -312,7 +330,7 @@ function viewId(engine: Engine, view: View): number {
 }
 
 function renderTable(rows: Row[]): void {
-  document.querySelector("#results")!.innerHTML =
+  $("results").innerHTML =
     `<tr><th>tileset</th><th>view</th><th>status</th><th>1.x</th><th>2.0</th><th>Jaccard</th><th>only 1.x</th><th>only 2.0</th></tr>${rows
       .map(
         (r) =>
@@ -323,5 +341,11 @@ function renderTable(rows: Row[]): void {
       .join("")}`;
 }
 
-Object.assign(globalThis, { runSelection });
-addRunButton(runSelection);
+export const harness: Harness = {
+  mount(element, options) {
+    root = element;
+    params = options;
+    root.innerHTML = TEMPLATE;
+    return { run: runSelection };
+  },
+};

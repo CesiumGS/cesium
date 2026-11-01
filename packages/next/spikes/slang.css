@@ -1,0 +1,17 @@
+.slang h2 {
+  font-size: 13px;
+  margin: 16px 0 4px;
+  color: var(--gray-11, #8a93a6);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.slang canvas {
+  width: 384px;
+  height: 216px;
+  display: block;
+  background: #000;
+}
+.slang table th,
+.slang table td {
+  text-align: left;
+}

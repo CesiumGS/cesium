@@ -1,0 +1,94 @@
+/*
+ * Shared styles for harness pages, in Dyno (Radix tokens) and standalone
+ * (the fallbacks: a dark page).
+ */
+body:has(> .harness.standalone) {
+  margin: 0;
+  background: #0b0e14;
+  color-scheme: dark;
+}
+.harness.standalone {
+  padding: 16px;
+  color: #d7dce6;
+  font:
+    13px/1.4 system-ui,
+    sans-serif;
+}
+.harness.standalone > button {
+  margin-right: 8px;
+}
+.harness h1 {
+  font-size: 16px;
+  margin: 0 0 4px;
+}
+.harness p {
+  color: var(--gray-11, #8a93a6);
+  max-width: 900px;
+}
+.harness .status {
+  color: var(--gray-11, #8a93a6);
+  margin: 8px 0;
+  font-variant-numeric: tabular-nums;
+}
+.harness .images {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.harness figure {
+  margin: 0;
+}
+.harness figcaption {
+  color: var(--gray-11, #8a93a6);
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+.harness canvas.out {
+  width: 480px;
+  max-width: 100%;
+  aspect-ratio: 16 / 9;
+  height: auto;
+  display: block;
+  background: #000;
+  border-radius: var(--radius-2, 4px);
+}
+/* 1.x renders here, off screen; the page shows copies. */
+.harness .offscreen {
+  position: absolute;
+  left: -10000px;
+  width: 480px;
+  height: 270px;
+}
+.harness table {
+  border-collapse: collapse;
+  margin-top: 12px;
+  font-variant-numeric: tabular-nums;
+  font-size: var(--font-size-1, 12px);
+}
+.harness th,
+.harness td {
+  padding: 4px 10px;
+  border-bottom: 1px solid var(--gray-a5, #222a3a);
+  text-align: right;
+}
+.harness th {
+  color: var(--gray-11, #8a93a6);
+  font-weight: 500;
+}
+.harness th:first-child,
+.harness td:first-child,
+.harness td.text {
+  text-align: left;
+}
+.harness tr.row {
+  cursor: pointer;
+}
+.harness tr.row:hover td,
+.harness tr.selected td {
+  background: var(--gray-a3, #1b2232);
+}
+.harness pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+}

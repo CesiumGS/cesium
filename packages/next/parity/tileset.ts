@@ -11,12 +11,48 @@ import {
   type TileContent,
   type GltfAsset,
 } from "../src/index.ts";
+import type { Harness } from "../lab/harness.ts";
 import { flip } from "./flip.ts";
-import { addRunButton } from "./runButton.ts";
 
 // CesiumJS 1.x, loaded from the repo build as a global (see tileset.html).
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped global
 declare const Cesium: any;
+
+const TEMPLATE = `
+<h1>Tileset parity: CesiumJS 1.x Cesium3DTileset vs 2.0 tile content</h1>
+<p>
+  Full-detail content of a 3D Tiles tileset (b3dm or glb, with feature IDs
+  and batch/property tables) in both engines from the same camera. 1.x
+  streams it with maximumScreenSpaceError 0 until every tile is loaded; 2.0
+  walks the tileset (transforms, REPLACE/ADD refinement, external tilesets)
+  and places each content directly. Streaming and tile selection are M2.
+  Also compares picks at a grid of pixels on a feature property. Private ion
+  assets: set VITE_ION_TOKEN in .env.local and open with ?asset=&lt;id&gt;.
+</p>
+<div class="status">Run to render the tileset in both engines.</div>
+<div class="images">
+  <figure>
+    <figcaption>1.x Cesium3DTileset (WebGL)</figcaption>
+    <canvas class="out" data-id="old"></canvas>
+  </figure>
+  <figure>
+    <figcaption>2.0 (WebGPU)</figcaption>
+    <canvas class="out" data-id="next"></canvas>
+  </figure>
+  <figure>
+    <figcaption>FLIP error</figcaption>
+    <canvas class="out" data-id="heat"></canvas>
+  </figure>
+</div>
+<table data-id="results"></table>
+<div class="offscreen" data-id="legacy"></div>
+<div data-id="credits" hidden></div>`;
+
+/** Where the page is mounted, and its options (harness `mount`). */
+let root: HTMLElement;
+let params = new URLSearchParams();
+const $ = <T extends Element = HTMLElement>(id: string) =>
+  root.querySelector<T>(`[data-id="${id}"]`)!;
 
 const WIDTH = 480;
 const HEIGHT = 270;
@@ -127,7 +163,7 @@ function unionSpheres(
 }
 
 function createViewer() {
-  const viewer = new Cesium.Viewer("legacy", {
+  const viewer = new Cesium.Viewer($("legacy"), {
     globe: false,
     baseLayer: false,
     skyBox: false,
@@ -145,7 +181,7 @@ function createViewer() {
     msaaSamples: 4,
     useDefaultRenderLoop: false,
     contextOptions: { webgl: { preserveDrawingBuffer: true } },
-    creditContainer: document.querySelector("#credits"),
+    creditContainer: $("credits"),
   });
   const s = viewer.scene;
   s.highDynamicRange = true;
@@ -255,7 +291,6 @@ type Json = any;
 let lastImages: RowImages[] = [];
 
 async function sources(): Promise<Source[]> {
-  const params = new URLSearchParams(location.search);
   const asset = params.get("asset");
   if (!asset) {
     return PUBLIC;
@@ -277,8 +312,7 @@ async function sources(): Promise<Source[]> {
 }
 
 async function runTileset(): Promise<Row[]> {
-  const status = document.querySelector("#status")!;
-  const params = new URLSearchParams(location.search);
+  const status = root.querySelector(".status")!;
   const pickProperty = params.get("pick") ?? "id";
   const viewer = createViewer();
   const engine = await Engine.create();
@@ -484,7 +518,7 @@ function showImages(images: RowImages): void {
     ["next", images.next],
     ["heat", images.heat],
   ] as const) {
-    const canvas = document.querySelector<HTMLCanvasElement>(`#${id}`)!;
+    const canvas = $<HTMLCanvasElement>(id);
     canvas.width = WIDTH;
     canvas.height = HEIGHT;
     canvas.getContext("2d")!.putImageData(image, 0, 0);
@@ -492,7 +526,7 @@ function showImages(images: RowImages): void {
 }
 
 function renderTable(rows: Row[]): void {
-  const table = document.querySelector("#results")!;
+  const table = $("results");
   const n = (v: number | undefined) => (v === undefined ? "" : v.toFixed(4));
   table.innerHTML =
     `<tr><th>mode</th><th>source</th><th>status</th><th>contents</th><th>draws</th><th>batches</th>` +
@@ -518,5 +552,11 @@ function renderTable(rows: Row[]): void {
   );
 }
 
-Object.assign(globalThis, { runTileset });
-addRunButton(runTileset);
+export const harness: Harness = {
+  mount(element, options) {
+    root = element;
+    params = options;
+    root.innerHTML = TEMPLATE;
+    return { run: runTileset };
+  },
+};

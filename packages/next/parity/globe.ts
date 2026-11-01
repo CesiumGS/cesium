@@ -8,13 +8,33 @@ import {
   type Tile,
   type Tileset3D,
 } from "../src/index.ts";
-import { addRunButton } from "./runButton.ts";
+import type { Harness } from "../lab/harness.ts";
 
 // CesiumJS 1.x, loaded from the repo build as a global (see globe.html).
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped global
 declare const Cesium: any;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped 1.x objects
 type Json = any;
+
+const TEMPLATE = `
+<h1>Globe selection parity (L1): 1.x globe vs 2.0 Legacy1x terrain</h1>
+<p>
+  Cesium World Terrain tiles each engine renders after loading settles, one
+  camera at a time with fresh tile state, no imagery, and fog as 1.x
+  defaults (<code>?fog=0</code> turns it off in both). Tiles are compared by
+  level/x/y (TMS rows); 1.x tiles upsampled for quadrants without data count
+  as their parent, which 2.0 draws clipped to them. Jaccard; the bar is 99%.
+</p>
+<div class="status">Run to compare both engines' terrain tiles.</div>
+<table data-id="results"></table>
+<div class="offscreen" data-id="legacy"></div>
+<div data-id="credits" hidden></div>`;
+
+/** Where the page is mounted, and its options (harness `mount`). */
+let root: HTMLElement;
+let params = new URLSearchParams();
+const $ = <T extends Element = HTMLElement>(id: string) =>
+  root.querySelector<T>(`[data-id="${id}"]`)!;
 
 /**
  * L1 globe selection parity (plan §15): the terrain tiles the globe
@@ -173,7 +193,7 @@ async function settle(step: () => boolean, maxMs = 180000): Promise<void> {
 }
 
 function createViewer(): Json {
-  const viewer = new Cesium.Viewer("legacy", {
+  const viewer = new Cesium.Viewer($("legacy"), {
     baseLayer: false,
     skyBox: false,
     skyAtmosphere: false,
@@ -188,7 +208,7 @@ function createViewer(): Json {
     infoBox: false,
     selectionIndicator: false,
     useDefaultRenderLoop: false,
-    creditContainer: document.querySelector("#credits"),
+    creditContainer: $("credits"),
   });
   viewer.scene.screenSpaceCameraController.enableCollisionDetection = false;
   return viewer;
@@ -244,8 +264,7 @@ async function legacySelection(
 }
 
 async function runGlobe(): Promise<Row[]> {
-  const status = document.querySelector("#status")!;
-  const params = new URLSearchParams(location.search);
+  const status = root.querySelector(".status")!;
   const fog = params.get("fog") !== "0";
   const token = import.meta.env.VITE_ION_TOKEN as string | undefined;
   if (!token) {
@@ -420,7 +439,7 @@ async function runGlobe(): Promise<Row[]> {
 }
 
 function renderTable(rows: Row[]): void {
-  document.querySelector("#results")!.innerHTML =
+  $("results").innerHTML =
     `<tr><th>view</th><th>status</th><th>1.x</th><th>2.0</th><th>Jaccard</th><th>1.x settle</th><th>2.0 settle</th><th>height Δ max / mean (points)</th><th>surface Δ max / mean (points)</th><th>only 1.x</th><th>only 2.0</th></tr>${rows
       .map(
         (r) =>
@@ -435,5 +454,11 @@ function renderTable(rows: Row[]): void {
       .join("")}`;
 }
 
-Object.assign(globalThis, { runGlobe });
-addRunButton(runGlobe);
+export const harness: Harness = {
+  mount(element, options) {
+    root = element;
+    params = options;
+    root.innerHTML = TEMPLATE;
+    return { run: runGlobe };
+  },
+};

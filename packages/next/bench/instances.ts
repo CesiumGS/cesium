@@ -6,7 +6,8 @@ import {
   fromDegrees,
   type ModelInstance,
 } from "../src/index.ts";
-import { addRunButton } from "../parity/runButton.ts";
+import type { Harness } from "../lab/harness.ts";
+import "./instances.css";
 
 /**
  * Instancing benchmark (plan §13.9): a multi-primitive glTF (the Cesium
@@ -16,6 +17,25 @@ import { addRunButton } from "../parity/runButton.ts";
  * frame while orbiting, frame intervals, and the CPU cost of moving 1% of
  * the instances every frame and all of them once.
  */
+
+const TEMPLATE = `
+<h1>Instancing benchmark: one multi-primitive model, many instances</h1>
+<p>
+  The Cesium milk truck placed N times with
+  <code>ModelOptions.instances</code>: one draw per primitive, culled per
+  instance on the GPU. Placement time, tables, CPU and GPU time per frame
+  while orbiting, and the cost of moving instances.
+</p>
+<div class="status">Run to place and orbit each instance count.</div>
+<div class="instances">
+  <canvas data-id="canvas" width="960" height="540"></canvas>
+  <table data-id="results"></table>
+</div>`;
+
+/** Where the page is mounted (harness `mount`). */
+let root: HTMLElement;
+const $ = <T extends Element = HTMLElement>(id: string) =>
+  root.querySelector<T>(`[data-id="${id}"]`)!;
 
 const deg = Math.PI / 180;
 const MODEL =
@@ -81,9 +101,20 @@ function grid(n: number): Float64Array {
   return m;
 }
 
+/** The engine of a run in progress, destroyed by `dispose`. */
+let active: Engine | undefined;
+
+function stop(engine: Engine | undefined): void {
+  if (engine && active === engine) {
+    active = undefined;
+    engine.destroy();
+  }
+}
+
 async function runInstances(): Promise<Row[]> {
-  const status = document.querySelector("#status")!;
+  const status = root.querySelector(".status")!;
   const engine = await Engine.create();
+  active = engine;
   const rows: Row[] = [];
   const site = Ellipsoid.WGS84.cartographicToCartesian(
     fromDegrees(-75.1652, 39.9526, 0),
@@ -94,8 +125,11 @@ async function runInstances(): Promise<Row[]> {
     Ellipsoid.WGS84,
     new Float64Array(16),
   );
-  const canvas = document.querySelector<HTMLCanvasElement>("#canvas")!;
+  const canvas = $<HTMLCanvasElement>("canvas");
   for (const n of COUNTS) {
+    if (active !== engine) {
+      throw new Error("stopped");
+    }
     status.textContent = `${n.toLocaleString()} instances…`;
     // Per world: an upload consumes the asset's images.
     const asset = await engine.loadGltf(MODEL);
@@ -175,13 +209,13 @@ async function runInstances(): Promise<Row[]> {
     engine.removeView(view);
     engine.removeWorld(world);
   }
-  engine.destroy();
+  stop(engine);
   status.textContent = "done";
   return rows;
 }
 
 function renderTable(rows: Row[]): void {
-  document.querySelector("#results")!.innerHTML =
+  $("results").innerHTML =
     `<tr><th>instances</th><th>draws</th><th>instance items</th><th>place</th><th>tables</th><th>CPU / frame</th><th>GPU / frame</th><th>frame p50 / p95</th><th>move 1% / frame</th><th>move all once</th></tr>${rows
       .map(
         (r) =>
@@ -194,5 +228,10 @@ function renderTable(rows: Row[]): void {
       .join("")}`;
 }
 
-Object.assign(globalThis, { runInstances });
-addRunButton(runInstances);
+export const harness: Harness = {
+  mount(element) {
+    root = element;
+    root.innerHTML = TEMPLATE;
+    return { run: runInstances, dispose: () => stop(active) };
+  },
+};

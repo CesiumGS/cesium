@@ -6,13 +6,33 @@ import {
   resolveIonAsset,
   type Tileset3D,
 } from "../src/index.ts";
-import { addRunButton } from "./runButton.ts";
+import type { Harness } from "../lab/harness.ts";
 
 // CesiumJS 1.x, loaded from the repo build as a global (see heights.html).
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped global
 declare const Cesium: any;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped 1.x objects
 type Json = any;
+
+const TEMPLATE = `
+<h1>3D Tiles height parity: what clamped content stands on</h1>
+<p>
+  OSM Buildings in both engines with the 1.x selection, one camera at a
+  time, settled. Over a 15×15 grid around the target: 1.x
+  <code>Cesium3DTileset.getHeight</code> (CPU picking of the selected tiles)
+  against 2.0 <code>World.castRays</code> (GPU, down the geodetic normal,
+  nearest hit).
+</p>
+<div class="status">Run to compare heights in both engines.</div>
+<table data-id="results"></table>
+<div class="offscreen" data-id="legacy"></div>
+<div data-id="credits" hidden></div>`;
+
+/** Where the page is mounted, and its options (harness `mount`). */
+let root: HTMLElement;
+let params = new URLSearchParams();
+const $ = <T extends Element = HTMLElement>(id: string) =>
+  root.querySelector<T>(`[data-id="${id}"]`)!;
 
 /**
  * 3D Tiles height parity (plan §15, clamping): the height clamped content
@@ -136,7 +156,7 @@ async function settle(step: () => boolean, maxMs = 180000): Promise<void> {
 }
 
 function createViewer(): Json {
-  return new Cesium.Viewer("legacy", {
+  return new Cesium.Viewer($("legacy"), {
     baseLayer: false,
     globe: false,
     skyBox: false,
@@ -152,12 +172,12 @@ function createViewer(): Json {
     infoBox: false,
     selectionIndicator: false,
     useDefaultRenderLoop: false,
-    creditContainer: "credits",
+    creditContainer: $("credits"),
   });
 }
 
 async function runHeights(): Promise<Row[]> {
-  const status = document.querySelector("#status")!;
+  const status = root.querySelector(".status")!;
   const token = import.meta.env.VITE_ION_TOKEN as string | undefined;
   if (!token) {
     throw new Error("needs VITE_ION_TOKEN in packages/next/.env.local");
@@ -167,7 +187,6 @@ async function runHeights(): Promise<Row[]> {
   const viewer = createViewer();
   const engine = await Engine.create();
   const rows: Row[] = [];
-  const params = new URLSearchParams(location.search);
   const only = params.get("only")?.toLowerCase();
   const keep = params.has("keep");
   for (const cam of CAMERAS) {
@@ -335,7 +354,7 @@ function renderTable(rows: Row[]): void {
       : "<td></td>".repeat(6);
   const head =
     "<th>both hit</th><th>only 1.x</th><th>only 2.0</th><th>Δ max</th><th>Δ mean</th><th>Δ &gt; 1 cm</th>";
-  document.querySelector("#results")!.innerHTML =
+  $("results").innerHTML =
     `<tr><th></th><th></th><th colspan="6">vs 1.x Scene.sampleHeight (rendered)</th><th colspan="6">vs 1.x Cesium3DTileset.getHeight (CPU pick)</th><th colspan="6">most detailed vs 1.x sampleHeightMostDetailed</th></tr>` +
     `<tr><th>view</th><th>status</th>${head}${head}${head}</tr>${rows
       .map(
@@ -345,5 +364,11 @@ function renderTable(rows: Row[]): void {
       .join("")}`;
 }
 
-Object.assign(globalThis, { runHeights });
-addRunButton(runHeights);
+export const harness: Harness = {
+  mount(element, options) {
+    root = element;
+    params = options;
+    root.innerHTML = TEMPLATE;
+    return { run: runHeights };
+  },
+};

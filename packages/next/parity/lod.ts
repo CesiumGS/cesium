@@ -8,8 +8,8 @@ import {
   type TilesetOptions,
   type View,
 } from "../src/index.ts";
+import type { Harness } from "../lab/harness.ts";
 import { flip } from "./flip.ts";
-import { addRunButton } from "./runButton.ts";
 
 /**
  * L1′ (plan §4): `Budgeted` vs `Legacy1x` over camera moves. For each move and
@@ -22,6 +22,23 @@ import { addRunButton } from "./runButton.ts";
  * equally for every policy); the runner may then throttle the network before
  * `runLod()`, which measures.
  */
+
+const TEMPLATE = `
+<h1>Tile selection L1′: Budgeted vs Legacy1x</h1>
+<p>
+  One camera move per policy: settle far, jump close. Requests, GPU bytes
+  and time from the jump until settled, and FLIP against a fully refined
+  reference (SSE 2) at 250 ms, 1 s and settled. Lower is better everywhere.
+  ?asset=&lt;ion id&gt;&amp;at=lon,lat for real data.
+</p>
+<div class="status">Run to measure every policy over each camera move.</div>
+<table data-id="results"></table>`;
+
+/** Where the page is mounted, and its options (harness `mount`). */
+let root: HTMLElement;
+let params = new URLSearchParams();
+const $ = <T extends Element = HTMLElement>(id: string) =>
+  root.querySelector<T>(`[data-id="${id}"]`)!;
 
 const WIDTH = 480;
 const HEIGHT = 270;
@@ -102,7 +119,6 @@ function engine(): Promise<Engine> {
 /** The tileset and its moves: around ?at=lon,lat, else the root volume. */
 function source(): Promise<Source> {
   sourcePromise ??= (async () => {
-    const params = new URLSearchParams(location.search);
     const asset = params.get("asset");
     const imodel = params.get("imodel");
     const at = params.get("at")?.split(",").map(Number);
@@ -307,7 +323,7 @@ async function runLodReference(): Promise<number> {
   const s = await source();
   for (const scenario of s.scenarios) {
     if (!references.has(scenario.name)) {
-      document.querySelector("#status")!.textContent =
+      root.querySelector(".status")!.textContent =
         `reference: ${scenario.name}…`;
       const r = await measure(
         { policy: "legacy1x", maximumScreenSpaceError: 2 },
@@ -320,10 +336,10 @@ async function runLodReference(): Promise<number> {
 }
 
 async function runLod(): Promise<Row[]> {
-  const status = document.querySelector("#status")!;
+  const status = root.querySelector(".status")!;
   const rows: Row[] = [];
   const s = await source();
-  document.querySelector("h1")!.textContent += ` (${s.label})`;
+  root.querySelector("h1")!.textContent += ` (${s.label})`;
   await runLodReference();
   for (const scenario of s.scenarios) {
     const reference = references.get(scenario.name)!;
@@ -377,7 +393,7 @@ async function runLod(): Promise<Row[]> {
 function renderTable(rows: Row[]): void {
   const n = (v: number | undefined, d = 3) =>
     v === undefined ? "" : v.toFixed(d);
-  document.querySelector("#results")!.innerHTML =
+  $("results").innerHTML =
     `<tr><th>move</th><th>policy</th><th>status</th><th>requests</th><th>MB uploaded</th><th>settle ms</th>` +
     `<th>FLIP @250 ms</th><th>FLIP @1 s</th><th>FLIP avg</th><th>FLIP settled</th><th>selected</th></tr>${rows
       .map(
@@ -388,5 +404,23 @@ function renderTable(rows: Row[]): void {
       .join("")}`;
 }
 
-Object.assign(globalThis, { runLod, runLodReference });
-addRunButton(runLod);
+export const harness: Harness = {
+  mount(element, options) {
+    root = element;
+    params = options;
+    root.innerHTML = TEMPLATE;
+    return {
+      run: runLod,
+      entries: { runLodReference },
+      dispose() {
+        // The source depends on the options; the engine and references
+        // are kept only while mounted.
+        const engine = enginePromise;
+        enginePromise = undefined;
+        sourcePromise = undefined;
+        references.clear();
+        engine?.then((e) => e.destroy()).catch(() => {});
+      },
+    };
+  },
+};

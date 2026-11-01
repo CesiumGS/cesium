@@ -4,66 +4,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Instancing Benchmark</title>
-    <style>
-      :root {
-        color-scheme: dark;
-      }
-      body {
-        margin: 0;
-        padding: 16px;
-        background: #0b0e14;
-        color: #d7dce6;
-        font:
-          13px/1.4 system-ui,
-          sans-serif;
-      }
-      h1 {
-        font-size: 16px;
-        margin: 0 0 4px;
-      }
-      p {
-        color: #8a93a6;
-        max-width: 900px;
-      }
-      canvas {
-        width: 960px;
-        height: 540px;
-        display: block;
-        background: #000;
-      }
-      table {
-        border-collapse: collapse;
-        margin-top: 12px;
-        font-variant-numeric: tabular-nums;
-      }
-      th,
-      td {
-        padding: 4px 10px;
-        border-bottom: 1px solid #222a3a;
-        text-align: right;
-      }
-      th:first-child,
-      td:first-child,
-      td.text {
-        text-align: left;
-      }
-      #status {
-        color: #8a93a6;
-        margin: 8px 0;
-      }
-    </style>
   </head>
   <body>
-    <h1>Instancing benchmark: one multi-primitive model, many instances</h1>
-    <p>
-      The Cesium milk truck placed N times with
-      <code>ModelOptions.instances</code>: one draw per primitive, culled per
-      instance on the GPU. Placement time, tables, CPU and GPU time per frame
-      while orbiting, and the cost of moving instances.
-    </p>
-    <div id="status"></div>
-    <canvas id="canvas" width="960" height="540"></canvas>
-    <table id="results"></table>
-    <script type="module" src="./instances.ts"></script>
+    <!-- The runner's entry (bench/run.mjs instances); in Dyno: /#/lab/instances. -->
+    <div id="root"></div>
+    <script type="module">
+      import { harness } from "./instances.ts";
+      import { standalone } from "../lab/harness.ts";
+      standalone(harness, "runInstances");
+    </script>
   </body>
 </html>

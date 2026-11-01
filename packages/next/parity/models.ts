@@ -8,12 +8,46 @@ import {
   mat4,
   vec3,
 } from "../src/index.ts";
+import type { Harness } from "../lab/harness.ts";
 import { flip } from "./flip.ts";
-import { addRunButton } from "./runButton.ts";
 
 // CesiumJS 1.x, loaded from the repo build as a global (see models.html).
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped global
 declare const Cesium: any;
+
+const TEMPLATE = `
+<h1>Model parity: CesiumJS 1.x Model vs 2.0 glTF path (unlit)</h1>
+<p>
+  Khronos sample models from Specs/Data, rendered unlit in both engines
+  (1.x: CustomShader with LightingModel.UNLIT) from the same camera, so the
+  comparison isolates geometry, node transforms, axis conventions, UVs,
+  vertex colors, textures and filtering. PBR lighting parity follows in the
+  next increment. Click a row to see its images.
+</p>
+<div class="status">Run to render every model in both engines.</div>
+<div class="images">
+  <figure>
+    <figcaption>1.x Model (WebGL)</figcaption>
+    <canvas class="out" data-id="old"></canvas>
+  </figure>
+  <figure>
+    <figcaption>2.0 (WebGPU)</figcaption>
+    <canvas class="out" data-id="next"></canvas>
+  </figure>
+  <figure>
+    <figcaption>FLIP error</figcaption>
+    <canvas class="out" data-id="heat"></canvas>
+  </figure>
+</div>
+<table data-id="results"></table>
+<div class="offscreen" data-id="legacy"></div>
+<div data-id="credits" hidden></div>`;
+
+/** Where the page is mounted, and its options (harness `mount`). */
+let root: HTMLElement;
+let params = new URLSearchParams();
+const $ = <T extends Element = HTMLElement>(id: string) =>
+  root.querySelector<T>(`[data-id="${id}"]`)!;
 
 const WIDTH = 480;
 const HEIGHT = 270;
@@ -83,7 +117,7 @@ interface RowImages {
 }
 
 function createViewer() {
-  const viewer = new Cesium.Viewer("legacy", {
+  const viewer = new Cesium.Viewer($("legacy"), {
     globe: false,
     baseLayer: false,
     skyBox: false,
@@ -101,7 +135,7 @@ function createViewer() {
     msaaSamples: 4,
     useDefaultRenderLoop: false,
     contextOptions: { webgl: { preserveDrawingBuffer: true } },
-    creditContainer: document.querySelector("#credits"),
+    creditContainer: $("credits"),
   });
   const s = viewer.scene;
   s.highDynamicRange = true;
@@ -220,7 +254,7 @@ async function renderLegacy(
 let lastImages: RowImages[] = [];
 
 async function runModels(): Promise<Row[]> {
-  const status = document.querySelector("#status")!;
+  const status = root.querySelector(".status")!;
   const viewer = createViewer();
   const engine = await Engine.create();
   const target = new OffscreenTarget(WIDTH, HEIGHT);
@@ -252,7 +286,7 @@ async function runModels(): Promise<Row[]> {
   const sh = await engine.environment.readSphericalHarmonics();
 
   // `?only=Name` restricts the run to models whose path contains Name.
-  const only = new URLSearchParams(location.search).get("only");
+  const only = params.get("only");
   const models = only ? MODELS.filter((m) => m.includes(only)) : MODELS;
 
   for (const mode of MODES) {
@@ -414,7 +448,7 @@ function showImages(images: RowImages): void {
     ["next", images.next],
     ["heat", images.heat],
   ] as const) {
-    const canvas = document.querySelector<HTMLCanvasElement>(`#${id}`)!;
+    const canvas = $<HTMLCanvasElement>(id);
     canvas.width = WIDTH;
     canvas.height = HEIGHT;
     canvas.getContext("2d")!.putImageData(image, 0, 0);
@@ -422,7 +456,7 @@ function showImages(images: RowImages): void {
 }
 
 function renderTable(rows: Row[]): void {
-  const table = document.querySelector("#results")!;
+  const table = $("results");
   const n = (v: number | undefined, digits = 4) =>
     v === undefined ? "" : v.toFixed(digits);
   table.innerHTML =
@@ -444,5 +478,11 @@ function renderTable(rows: Row[]): void {
   );
 }
 
-Object.assign(globalThis, { runModels });
-addRunButton(runModels);
+export const harness: Harness = {
+  mount(element, options) {
+    root = element;
+    params = options;
+    root.innerHTML = TEMPLATE;
+    return { run: runModels };
+  },
+};

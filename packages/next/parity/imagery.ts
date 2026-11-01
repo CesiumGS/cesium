@@ -9,14 +9,38 @@ import {
   type Tileset3D,
 } from "../src/index.ts";
 import { flip } from "./flip.ts";
+import type { Harness } from "../lab/harness.ts";
 import { compareImages } from "./metrics.ts";
-import { addRunButton } from "./runButton.ts";
+import "./imagery.css";
 
 // CesiumJS 1.x, loaded from the repo build as a global (see imagery.html).
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped global
 declare const Cesium: any;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped 1.x objects
 type Json = any;
+
+const TEMPLATE = `
+<h1>Globe imagery parity (L2): 1.x vs 2.0, Cesium World Terrain with Bing</h1>
+<p>
+  The same cameras rendered by each engine after loading settles. Terrain
+  selection is identical (globe Legacy1x), fog and atmosphere are off in
+  both, so the difference is imagery: level choice, compositing, filtering
+  and color. 2.0 may look better; FLIP records how far and where.
+  <code>?only=</code> runs one camera.
+</p>
+<div class="status">Run to render each camera in both engines.</div>
+<div class="imagery">
+  <table data-id="results"></table>
+  <div class="captures" data-id="images"></div>
+  <div class="offscreen" data-id="legacy"></div>
+  <div data-id="credits" hidden></div>
+</div>`;
+
+/** Where the page is mounted, and its options (harness `mount`). */
+let root: HTMLElement;
+let params = new URLSearchParams();
+const $ = <T extends Element = HTMLElement>(id: string) =>
+  root.querySelector<T>(`[data-id="${id}"]`)!;
 
 /**
  * L2 globe imagery parity (plan §15): Cesium World Terrain with the ion
@@ -114,7 +138,7 @@ function heatmap(errors: Float32Array): ImageData {
 
 async function createViewer(token: string, ellipsoid: boolean): Promise<Json> {
   Cesium.Ion.defaultAccessToken = token;
-  const viewer = new Cesium.Viewer("legacy", {
+  const viewer = new Cesium.Viewer($("legacy"), {
     baseLayer: Cesium.ImageryLayer.fromProviderAsync(
       Cesium.IonImageryProvider.fromAssetId(2),
     ),
@@ -134,7 +158,7 @@ async function createViewer(token: string, ellipsoid: boolean): Promise<Json> {
     msaaSamples: 4,
     useDefaultRenderLoop: false,
     contextOptions: { webgl: { preserveDrawingBuffer: true } },
-    creditContainer: document.querySelector("#credits"),
+    creditContainer: $("credits"),
   });
   const scene = viewer.scene;
   scene.fog.enabled = false;
@@ -156,13 +180,12 @@ async function createViewer(token: string, ellipsoid: boolean): Promise<Json> {
 }
 
 async function runImagery(): Promise<Row[]> {
-  const status = document.querySelector("#status")!;
-  const images = document.querySelector("#images")!;
+  const status = root.querySelector(".status")!;
+  const images = $("images");
   const token = import.meta.env.VITE_ION_TOKEN as string | undefined;
   if (!token) {
     throw new Error("needs VITE_ION_TOKEN in packages/next/.env.local");
   }
-  const params = new URLSearchParams(location.search);
   const only = params.get("only")?.toLowerCase();
   const [terrain, imagery] = await Promise.all([
     resolveIonAsset(1, { accessToken: token }),
@@ -282,7 +305,7 @@ function renderTable(rows: Row[]): void {
   const pct = (v?: number) =>
     v === undefined ? "" : `${(v * 100).toFixed(1)}%`;
   const n = (v?: number) => (v === undefined ? "" : v.toFixed(3));
-  document.querySelector("#results")!.innerHTML =
+  $("results").innerHTML =
     `<tr><th>view</th><th>status</th><th>FLIP mean</th><th>FLIP p95</th><th>mean ΔE</th><th>ΔE > 2.3</th></tr>${rows
       .map(
         (r) =>
@@ -292,5 +315,11 @@ function renderTable(rows: Row[]): void {
       .join("")}`;
 }
 
-Object.assign(globalThis, { runImagery });
-addRunButton(runImagery);
+export const harness: Harness = {
+  mount(element, options) {
+    root = element;
+    params = options;
+    root.innerHTML = TEMPLATE;
+    return { run: runImagery };
+  },
+};

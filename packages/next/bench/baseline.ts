@@ -8,11 +8,33 @@ import {
   vec3,
   type World,
 } from "../src/index.ts";
-import { addRunButton } from "../parity/runButton.ts";
+import type { Harness } from "../lab/harness.ts";
+import "./baseline.css";
 
 // CesiumJS 1.x, loaded from the repo build as a global (see baseline.html).
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped global
 declare const Cesium: any;
+
+const TEMPLATE = `
+<h1>Performance baselines: CesiumJS 1.x vs 2.0 PoC</h1>
+<p>
+  Matched workloads on both engines: N independent flat-colored boxes (one
+  draw each, like tile contents), picking, log depth, time to first frame,
+  and four views. 1.x API calls are counted on the WebGL2 context; 2.0 calls
+  on the WebGPU encoders and queue. "frame incl. GPU" waits for the GPU
+  (gl.finish / onSubmittedWorkDone).
+</p>
+<div class="status">Run to measure both engines.</div>
+<div class="baseline">
+  <div class="views" data-id="views"></div>
+  <table data-id="results"></table>
+</div>
+<div data-id="credits" hidden></div>`;
+
+/** Where the page is mounted (harness `mount`). */
+let root: HTMLElement;
+const $ = <T extends Element = HTMLElement>(id: string) =>
+  root.querySelector<T>(`[data-id="${id}"]`)!;
 
 const deg = Math.PI / 180;
 const ellipsoid = Ellipsoid.WGS84;
@@ -23,13 +45,15 @@ const FRAMES = 60;
 
 const counters = { webgl: 0, webgpu: 0 };
 
+/** Wraps every method of `proto` to count its calls; returns the unwrap. */
 function countCalls(
   proto: object | undefined,
   counter: "webgl" | "webgpu",
-): void {
+): () => void {
   if (!proto) {
-    return;
+    return () => {};
   }
+  const originals: Array<[string, PropertyDescriptor]> = [];
   for (const name of Object.getOwnPropertyNames(proto)) {
     const descriptor = Object.getOwnPropertyDescriptor(proto, name);
     if (
@@ -40,6 +64,7 @@ function countCalls(
       continue;
     }
     const original = descriptor.value as (...args: unknown[]) => unknown;
+    originals.push([name, descriptor]);
     Object.defineProperty(proto, name, {
       ...descriptor,
       value: function (this: unknown, ...args: unknown[]) {
@@ -48,22 +73,38 @@ function countCalls(
       },
     });
   }
+  return () => {
+    for (const [name, descriptor] of originals) {
+      Object.defineProperty(proto, name, descriptor);
+    }
+  };
 }
 
-countCalls(globalThis.WebGL2RenderingContext?.prototype, "webgl");
-for (const type of [
-  "GPUDevice",
-  "GPUQueue",
-  "GPUCommandEncoder",
-  "GPURenderPassEncoder",
-  "GPUComputePassEncoder",
-  "GPURenderBundleEncoder",
-] as const) {
-  countCalls(
-    (globalThis as unknown as Record<string, { prototype: object }>)[type]
-      ?.prototype,
-    "webgpu",
-  );
+/**
+ * Counts WebGL2 and WebGPU calls while a run is going (the prototypes are
+ * shared with the rest of the page, so only then). Returns the unwrap.
+ */
+function countApiCalls(): () => void {
+  const unwrap = [
+    countCalls(globalThis.WebGL2RenderingContext?.prototype, "webgl"),
+  ];
+  for (const type of [
+    "GPUDevice",
+    "GPUQueue",
+    "GPUCommandEncoder",
+    "GPURenderPassEncoder",
+    "GPUComputePassEncoder",
+    "GPURenderBundleEncoder",
+  ] as const) {
+    unwrap.push(
+      countCalls(
+        (globalThis as unknown as Record<string, { prototype: object }>)[type]
+          ?.prototype,
+        "webgpu",
+      ),
+    );
+  }
+  return () => unwrap.forEach((f) => f());
 }
 
 // ---------------------------------------------------------------- scene
@@ -103,7 +144,7 @@ function cameraRange(count: number): number {
 function addViewElement(kind: "legacy" | "next"): HTMLElement {
   const element = document.createElement(kind === "legacy" ? "div" : "canvas");
   element.className = kind === "legacy" ? "legacy" : "";
-  document.querySelector("#views")!.appendChild(element);
+  $("views").appendChild(element);
   return element;
 }
 
@@ -111,6 +152,9 @@ function addViewElement(kind: "legacy" | "next"): HTMLElement {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped 1.x API
 type Viewer = any;
+
+/** 1.x viewers alive, destroyed by `dispose` if a run is cut short. */
+const viewers = new Set<Viewer>();
 
 function createViewer(container: HTMLElement, logDepth = true): Viewer {
   const viewer = new Cesium.Viewer(container, {
@@ -130,8 +174,9 @@ function createViewer(container: HTMLElement, logDepth = true): Viewer {
     selectionIndicator: false,
     msaaSamples: 4,
     useDefaultRenderLoop: false,
-    creditContainer: document.querySelector("#credits"),
+    creditContainer: $("credits"),
   });
+  viewers.add(viewer);
   viewer.scene.logarithmicDepthBuffer = logDepth;
   viewer.scene.highDynamicRange = true;
   viewer.scene.fog.enabled = false;
@@ -237,6 +282,11 @@ async function settle(engine: Engine): Promise<void> {
 function destroyLegacy(viewer: Viewer): void {
   glFinish(viewer);
   viewer.scene.context._gl.getExtension("WEBGL_lose_context")?.loseContext();
+  destroyViewer(viewer);
+}
+
+function destroyViewer(viewer: Viewer): void {
+  viewers.delete(viewer);
   viewer.destroy();
 }
 
@@ -304,7 +354,7 @@ function report(row: Row): void {
         ? String(v)
         : v.toFixed(3)
       : String(v ?? "");
-  document.querySelector("#results")!.innerHTML =
+  $("results").innerHTML =
     `<tr>${keys.map((k) => `<th>${k}</th>`).join("")}</tr>${rows
       .map(
         (r) => `<tr>${keys.map((k) => `<td>${cell(r[k])}</td>`).join("")}</tr>`,
@@ -313,7 +363,7 @@ function report(row: Row): void {
 }
 
 function status(text: string): void {
-  document.querySelector("#status")!.textContent = text;
+  root.querySelector(".status")!.textContent = text;
 }
 
 /** H1/H2/H7/H8: per-frame CPU and API calls vs draw count; time to first frame. */
@@ -416,7 +466,7 @@ function logDepth(count: number): void {
       "frame incl. GPU ms": r.frameMs,
       "API calls/frame": r.apiCalls,
     });
-    viewer.destroy();
+    destroyViewer(viewer);
     element.remove();
   }
 }
@@ -443,7 +493,7 @@ async function picking(engine: Engine, count: number): Promise<void> {
     "main-thread ms": median(legacyTimes),
     "latency ms": median(legacyTimes),
   });
-  viewer.destroy();
+  destroyViewer(viewer);
   element.remove();
 
   const canvas = addViewElement("next") as HTMLCanvasElement;
@@ -491,24 +541,24 @@ async function multiView(engine: Engine, count: number): Promise<void> {
   const specs = boxes(count);
   const range = cameraRange(count);
   let t = performance.now();
-  const viewers: Viewer[] = [];
+  const legacy: Viewer[] = [];
   const elements: HTMLElement[] = [];
   for (let v = 0; v < 4; v++) {
     const element = addViewElement("legacy");
     const viewer = createViewer(element);
     populateLegacy(viewer, specs);
     lookAtLegacy(viewer, range, 30 + v * 90);
-    viewers.push(viewer);
+    legacy.push(viewer);
     elements.push(element);
   }
   const legacyCreate = performance.now() - t;
-  for (const viewer of viewers) {
+  for (const viewer of legacy) {
     measureLegacy(viewer); // warm-up
   }
   const legacyCpu: number[] = [];
   for (let i = 0; i < FRAMES; i++) {
     t = performance.now();
-    for (const viewer of viewers) {
+    for (const viewer of legacy) {
       viewer.render();
     }
     legacyCpu.push(performance.now() - t);
@@ -521,7 +571,7 @@ async function multiView(engine: Engine, count: number): Promise<void> {
     "cpu/frame ms": median(legacyCpu),
     "scene copies": 4,
   });
-  viewers.forEach((viewer) => viewer.destroy());
+  legacy.forEach(destroyViewer);
   elements.forEach((element) => element.remove());
 
   t = performance.now();
@@ -563,20 +613,55 @@ async function multiView(engine: Engine, count: number): Promise<void> {
   canvases.forEach((canvas) => canvas.remove());
 }
 
+/** The engine of a run in progress, and its call counting. */
+interface Run {
+  engine?: Engine;
+  uncount: () => void;
+}
+let active: Run | undefined;
+
 async function runBaseline(): Promise<Row[]> {
   rows.length = 0;
-  const engine = await Engine.create();
-  await drawScaling(engine, [1000, 5000]);
-  status("log depth…");
-  logDepth(5000);
-  status("picking…");
-  await picking(engine, 5000);
-  status("multi-view…");
-  await multiView(engine, 1000);
-  engine.destroy();
-  status("done");
-  return rows;
+  const run: Run = { uncount: countApiCalls() };
+  active = run;
+  try {
+    const engine = await Engine.create();
+    run.engine = engine;
+    await drawScaling(engine, [1000, 5000]);
+    status("log depth…");
+    logDepth(5000);
+    status("picking…");
+    await picking(engine, 5000);
+    status("multi-view…");
+    await multiView(engine, 1000);
+    status("done");
+    return rows;
+  } finally {
+    stop(run);
+  }
 }
 
-Object.assign(globalThis, { runBaseline });
-addRunButton(runBaseline);
+function stop(run: Run): void {
+  if (active !== run) {
+    return; // already stopped by `dispose`
+  }
+  active = undefined;
+  run.uncount();
+  run.engine?.destroy();
+}
+
+export const harness: Harness = {
+  mount(element) {
+    root = element;
+    root.innerHTML = TEMPLATE;
+    return {
+      run: runBaseline,
+      dispose() {
+        if (active) {
+          stop(active);
+        }
+        viewers.forEach(destroyViewer);
+      },
+    };
+  },
+};

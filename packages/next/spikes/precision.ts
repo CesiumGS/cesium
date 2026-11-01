@@ -8,6 +8,34 @@ import {
 } from "../src/index.ts";
 import { DRAW_ITEM_SIZE } from "../src/render/layout.ts";
 import { createBox } from "../src/scene/meshes.ts";
+import type { Harness } from "../lab/harness.ts";
+
+const TEMPLATE = `
+<h1>Camera-relative precision on this GPU</h1>
+<p>
+  Runs the production prep kernel on draw records scattered around several
+  camera positions, reads back its float32 camera-relative translations and
+  compares them with float64 on the CPU. "naive float32" is what you get
+  without the hi/lo split: fround(origin) − fround(camera).
+</p>
+<div class="status">Run to measure on this GPU.</div>
+<div data-id="adapter"></div>
+<table data-id="results"></table>`;
+
+/** Where the page is mounted (harness `mount`). */
+let root: HTMLElement;
+const $ = <T extends Element = HTMLElement>(id: string) =>
+  root.querySelector<T>(`[data-id="${id}"]`)!;
+
+/** The engine of a run in progress, destroyed by `dispose`. */
+let active: Engine | undefined;
+
+function stop(engine: Engine | undefined): void {
+  if (engine && active === engine) {
+    active = undefined;
+    engine.destroy();
+  }
+}
 
 const ellipsoid = Ellipsoid.WGS84;
 const distances = [0.01, 1, 100, 1e3, 1e4, 1e5, 1e6];
@@ -27,14 +55,20 @@ interface Row {
   naive: number;
 }
 
-async function run(): Promise<Row[]> {
+async function runPrecision(): Promise<Row[]> {
+  const status = root.querySelector(".status")!;
+  status.textContent = "measuring…";
   const engine = await Engine.create();
+  active = engine;
   const target = new OffscreenTarget(64, 64);
   const rows: Row[] = [];
   let seed = 3;
   const random = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
 
   for (const [site, lon, lat, height] of sites) {
+    if (active !== engine) {
+      throw new Error("stopped");
+    }
     const world = engine.createWorld({
       maxDraws: distances.length * perDistance,
       vertexBytes: 1 << 16,
@@ -105,9 +139,11 @@ async function run(): Promise<Row[]> {
   }
 
   const info = engine.gpu.adapter.info;
-  document.querySelector("#adapter")!.textContent =
+  stop(engine);
+  status.textContent = "done";
+  $("adapter").textContent =
     `Adapter: ${info.vendor} ${info.architecture} ${info.description}`;
-  document.querySelector("#results")!.innerHTML =
+  $("results").innerHTML =
     `<tr><th>site</th><th>distance to camera</th><th>max error, hi/lo (GPU)</th><th>max error, naive float32</th></tr>${rows
       .map(
         (r) =>
@@ -128,9 +164,10 @@ function format(meters: number): string {
       : `${meters.toFixed(2)} m`;
 }
 
-Object.assign(globalThis, { runPrecision: run });
-// The benchmark runner (bench/run.mjs) loads pages with ?bench and calls
-// runPrecision() itself.
-if (!new URLSearchParams(location.search).has("bench")) {
-  void run();
-}
+export const harness: Harness = {
+  mount(element) {
+    root = element;
+    root.innerHTML = TEMPLATE;
+    return { run: runPrecision, dispose: () => stop(active) };
+  },
+};

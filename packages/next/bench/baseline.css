@@ -1,0 +1,17 @@
+.baseline .views {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+/* Each engine's view (2.0 canvases size their drawing buffer from this). */
+.baseline .views > * {
+  width: 320px;
+  height: 180px;
+  display: block;
+  background: #000;
+  position: relative;
+}
+.baseline th:nth-child(2),
+.baseline td:nth-child(2) {
+  text-align: left;
+}

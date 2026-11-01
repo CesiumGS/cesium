@@ -9,6 +9,38 @@ import {
   vec3,
   type SubmissionMode,
 } from "../src/index.ts";
+import type { Harness } from "../lab/harness.ts";
+import "./indirect.css";
+
+const TEMPLATE = `
+<h1>drawIndexedIndirect vs drawIndexed in render bundles</h1>
+<p>
+  The same draws replayed from one render bundle, either as indirect draws
+  (args written per view by the prep kernel; Dawn may validate them) or as
+  direct draws with CPU-baked arguments. "frame wall" is submit →
+  onSubmittedWorkDone, which includes any validation work Dawn inserts.
+</p>
+<div class="status">Run to time both submission modes.</div>
+<div class="indirect">
+  <div data-id="adapter"></div>
+  <canvas data-id="view"></canvas>
+  <table data-id="results"></table>
+</div>`;
+
+/** Where the page is mounted (harness `mount`). */
+let root: HTMLElement;
+const $ = <T extends Element = HTMLElement>(id: string) =>
+  root.querySelector<T>(`[data-id="${id}"]`)!;
+
+/** The engine of a run in progress, destroyed by `dispose`. */
+let active: Engine | undefined;
+
+function stop(engine: Engine | undefined): void {
+  if (engine && active === engine) {
+    active = undefined;
+    engine.destroy();
+  }
+}
 
 const ellipsoid = Ellipsoid.WGS84;
 const deg = Math.PI / 180;
@@ -23,16 +55,20 @@ interface Row {
   wallMs: number;
 }
 
-async function run(): Promise<Row[]> {
+async function runIndirect(): Promise<Row[]> {
+  const status = root.querySelector(".status")!;
+  status.textContent = "measuring…";
   const engine = await Engine.create();
+  active = engine;
   const center = fromDegrees(-75.1652, 39.9526);
   const target = ellipsoid.cartographicToCartesian(center, vec3.vec3());
   const rows: Row[] = [];
-  const canvas = new CanvasTarget(
-    document.querySelector<HTMLCanvasElement>("#view")!,
-  );
+  const canvas = new CanvasTarget($<HTMLCanvasElement>("view"));
 
   for (const side of [32, 100, 141]) {
+    if (active !== engine) {
+      throw new Error("stopped");
+    }
     const world = engine.createWorld({
       maxDraws: side * side,
       vertexBytes: 1 << 20,
@@ -96,9 +132,11 @@ async function run(): Promise<Row[]> {
   }
 
   const info = engine.gpu.adapter.info;
-  document.querySelector("#adapter")!.textContent =
+  stop(engine);
+  status.textContent = "done";
+  $("adapter").textContent =
     `Adapter: ${info.vendor} ${info.architecture} ${info.description}`;
-  document.querySelector("#results")!.innerHTML =
+  $("results").innerHTML =
     `<tr><th>draws</th><th>mode</th><th>cpu / frame</th><th>gpu passes (timestamps)</th><th>gpu span</th><th>frame wall</th></tr>${rows
       .map(
         (r) =>
@@ -113,9 +151,10 @@ function ms(value: number): string {
   return Number.isNaN(value) ? "n/a" : `${value.toFixed(3)} ms`;
 }
 
-Object.assign(globalThis, { runIndirect: run });
-// The benchmark runner (bench/run.mjs) loads pages with ?bench and calls
-// runIndirect() itself.
-if (!new URLSearchParams(location.search).has("bench")) {
-  void run();
-}
+export const harness: Harness = {
+  mount(element) {
+    root = element;
+    root.innerHTML = TEMPLATE;
+    return { run: runIndirect, dispose: () => stop(active) };
+  },
+};

@@ -4,66 +4,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Hitch Benchmark</title>
-    <style>
-      :root {
-        color-scheme: dark;
-      }
-      body {
-        margin: 0;
-        padding: 16px;
-        background: #0b0e14;
-        color: #d7dce6;
-        font:
-          13px/1.4 system-ui,
-          sans-serif;
-      }
-      h1 {
-        font-size: 16px;
-        margin: 0 0 4px;
-      }
-      p {
-        color: #8a93a6;
-        max-width: 900px;
-      }
-      canvas {
-        width: 960px;
-        height: 540px;
-        display: block;
-        background: #000;
-      }
-      table {
-        border-collapse: collapse;
-        margin-top: 12px;
-        font-variant-numeric: tabular-nums;
-      }
-      th,
-      td {
-        padding: 4px 10px;
-        border-bottom: 1px solid #222a3a;
-        text-align: right;
-      }
-      th:first-child,
-      td:first-child,
-      td.text {
-        text-align: left;
-      }
-      #status {
-        color: #8a93a6;
-        margin: 8px 0;
-      }
-    </style>
   </head>
   <body>
-    <h1>Hitch benchmark: content in and out of a live world</h1>
-    <p>
-      One world rendering continuously into a canvas while tilesets are added
-      and removed and the camera jumps into uncached areas. Per step: frames
-      over 34 ms, the worst frame, and the browser's long animation frames (over
-      50 ms, with the script that ran longest). Needs VITE_ION_TOKEN.
-    </p>
-    <div id="status"></div>
-    <canvas id="canvas" width="960" height="540"></canvas>
-    <table id="results"></table>
-    <script type="module" src="./hitch.ts"></script>
+    <!-- The runner's entry (bench/run.mjs hitch); in Dyno: /#/lab/hitch. -->
+    <div id="root"></div>
+    <script type="module">
+      import { harness } from "./hitch.ts";
+      import { standalone } from "../lab/harness.ts";
+      standalone(harness, "runHitch");
+    </script>
   </body>
 </html>
