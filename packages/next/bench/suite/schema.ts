@@ -120,6 +120,12 @@ export interface Scenario {
 export interface EngineConfig {
   id: string;
   engine: "1.x" | "2.0";
+  /**
+   * 1.x build: "repo" (this repository's, the default) or a released
+   * version from npm ("latest", a dist-tag or an exact version), resolved
+   * to an exact version per run.
+   */
+  cesium?: string;
   /** 2.0 selection policy. */
   policy?: "budgeted" | "legacy1x";
   maximumScreenSpaceError?: number;
@@ -128,6 +134,8 @@ export interface EngineConfig {
 /** What one run of a scene × scenario × config measured. */
 export interface RunMetrics {
   status: "ok" | "unsupported" | "timeout" | "error";
+  /** The engine build that ran (1.x: Cesium.VERSION). */
+  engineVersion?: string;
   message?: string;
   /** Load start to the first frame with content drawn, ms. */
   firstContentMs?: number;

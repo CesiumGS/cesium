@@ -2876,6 +2876,24 @@ dashboard work (v2) hosting the results UI for the team.
   policy, a feature flag, engine-in-worker) is one more adapter or
   configuration.
 
+**Released 1.x builds (built, r32).** A 1.x configuration runs this
+repository's build or a released CesiumJS from npm, fetched once with
+`npm pack` into the store outside the repo (`BENCH_CESIUM_DIR`), checked
+against npm's integrity hash and served locally. Catalogs pin an exact
+version (`1.x-release`: 1.146.0 today); a moving tag is refused there, and
+`--cesium` overrides it only on purpose. Runs name the configuration with
+its version (`1.x@1.146.0`), so a new release starts a new trend line
+instead of silently changing an old one across a release window. The
+default comparison is 2.0 against the pinned release, with this
+repository's 1.x build alongside.
+
+**Historical sweeps.** `--releases 1.120.0..1.146.0` (or a list) adds one
+pinned configuration per published release, to see how 1.x itself
+changed release by release on the same scenes and hardware. The adapter
+uses 1.x's asynchronous loading APIs (about 1.104 and later); older
+releases need an older adapter variant and are reported as errors until
+then.
+
 ### 16.7 Scope of v1 (milestone "Benchmark suite v1")
 
 Schemas; public manifest; private manifest loader with aliases; local

@@ -526,7 +526,10 @@ export async function runScene(spec: RunSpec): Promise<RunMetrics> {
   container.style.height = `${height}px`;
   const adapter: Adapter =
     spec.config.engine === "1.x" ? new LegacyAdapter() : new NextAdapter();
-  const metrics: RunMetrics = { status: "ok" };
+  const metrics: RunMetrics = {
+    status: "ok",
+    ...(spec.config.engine === "1.x" ? { engineVersion: Cesium.VERSION } : {}),
+  };
   longFrames.length = 0;
   try {
     const pose = await cameraScript(spec);

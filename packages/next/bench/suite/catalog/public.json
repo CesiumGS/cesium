@@ -742,8 +742,15 @@
   ],
   "configs": [
     {
+      "id": "1.x-release",
+      "engine": "1.x",
+      "cesium": "1.146.0",
+      "maximumScreenSpaceError": 16
+    },
+    {
       "id": "1.x",
       "engine": "1.x",
+      "cesium": "repo",
       "maximumScreenSpaceError": 16
     },
     {

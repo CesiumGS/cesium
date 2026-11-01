@@ -1,6 +1,4 @@
-// @ts-expect-error -- plain ES modules shared with the CLI
 import { METRICS, renderReport, summarizeRun } from "./report.mjs";
-// @ts-expect-error -- plain ES modules shared with the CLI
 import {
   CHART_CSS,
   CHART_SCRIPT,
@@ -8,7 +6,6 @@ import {
   forestPlot,
   lineChart,
 } from "./charts.mjs";
-// @ts-expect-error -- plain ES modules shared with the CLI
 import { ratio } from "./stats.mjs";
 
 /**
@@ -48,7 +45,7 @@ interface Summary {
   }>;
 }
 
-const METRIC_LIST = METRICS as Array<[string, string, string, number]>;
+const METRIC_LIST = METRICS;
 const HEADLINE = ["settleMs", "cpuP50", "frameP95", "bytes", "heapBytes"];
 const style = document.createElement("style");
 style.textContent = CHART_CSS;

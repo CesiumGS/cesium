@@ -88,7 +88,10 @@ function environmentSection(results) {
     ["User agent", `<code>${escape(page.userAgent ?? "")}</code>`],
     ["Browser mode and flags", `${escape(env.browserMode ?? "")} ${list(env.browserArgs)}`],
     ["Viewport", escape(env.viewport ?? "")],
-    ["Engines", escape(`1.x ${page.cesium1xVersion ?? "?"} (this repository's build) · 2.0 commit ${results.commit.slice(0, 12)}${results.dirty ? " + uncommitted changes" : ""}`)],
+    ["Engines", env.engines
+      ? `${Object.entries(env.engines).map(([id, what]) => `<b>${escape(id)}</b>: ${escape(what)}`).join("<br>")}<br>2.0 commit ${escape(results.commit.slice(0, 12))}${results.dirty ? " + uncommitted changes" : ""}`
+      : escape(`1.x ${page.cesium1xVersion ?? "?"} (this repository's build) · 2.0 commit ${results.commit.slice(0, 12)}${results.dirty ? " + uncommitted changes" : ""}`)],
+    ["1.x versions that ran", escape([...new Set(results.runs.map((r) => r.metrics.engineVersion).filter(Boolean))].join(", "))],
     ["Tools", escape(Object.entries(env.tools ?? {}).map(([k, v]) => `${k} ${v}`).join(" · "))],
   ])}</div>
 <div><h3>Idle conditions (before the runs)</h3>${table([
@@ -203,8 +206,17 @@ const geomean = (values) =>
 
 export function renderReport(results) {
   const configs = [...new Set(results.runs.map((r) => r.config))];
-  const baseline = configs.includes("1.x") ? "1.x" : configs[0];
-  const candidate = configs.find((c) => c !== baseline) ?? baseline;
+  const baseline =
+    results.baseline && configs.includes(results.baseline)
+      ? results.baseline
+      : configs.includes("1.x")
+        ? "1.x"
+        : configs[0];
+  const candidate =
+    results.candidate && configs.includes(results.candidate)
+      ? results.candidate
+      : (configs.find((c) => c !== baseline) ?? baseline);
+  const others = configs.filter((c) => c !== baseline && c !== candidate);
   const groups = new Map();
   for (const run of results.runs) {
     const key = `${run.scene}|${run.scenario}`;
@@ -291,6 +303,41 @@ export function renderReport(results) {
       }),
     );
   }
+
+  // Secondary configurations (e.g. this repository's 1.x build against the
+  // release): tiles only, against the same baseline.
+  const otherTiles = others.map((config) => {
+    const row = HEADLINES.map(([key, label]) => {
+      const ratios = [];
+      let better = 0;
+      let worse = 0;
+      for (const group of groups.values()) {
+        const r = ratio(
+          okValues(group, baseline, key),
+          okValues(group, config, key),
+        );
+        if (r?.value !== undefined) {
+          ratios.push(r.value);
+          if (r.separated && r.value < 1) {
+            better++;
+          } else if (r.separated) {
+            worse++;
+          }
+        }
+      }
+      const g = geomean(ratios);
+      return g === undefined
+        ? ""
+        : statTile({
+            label,
+            value: `×${g.toFixed(2)}`,
+            delta: `better in ${better}, worse in ${worse} of ${ratios.length} scenes`,
+            status:
+              better > worse ? "better" : worse > better ? "worse" : undefined,
+          });
+    }).join("");
+    return `<h2>${escape(config)} relative to ${escape(baseline)}</h2><div class="tiles">${row}</div>`;
+  });
 
   // ------------------------------------------------ conditions over the run
   const timeline = results.timeline;
@@ -447,6 +494,7 @@ ${escape(env.adapter?.description ?? "unknown GPU")} · ${escape(env.cpu)} · ${
 <div class="tiles">${tiles.join("")}</div>
 <h2>By scene</h2>
 ${forests.join("")}
+${otherTiles.join("")}
 ${conditions}
 <h2>Scenes in detail</h2>
 <p class="lede">Every metric with its interval, the frame timelines of each repetition, and the hardware conditions per engine.</p>

@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Benchmark Suite</title>
-    <link rel="stylesheet" href="/cesium1x/Widgets/widgets.css" />
+
     <style>
       :root {
         color-scheme: dark;
@@ -81,9 +81,20 @@
     <div id="output"></div>
     <div id="credits" hidden></div>
     <script>
-      window.CESIUM_BASE_URL = "/cesium1x/";
+      // The 1.x build: this repository's (default) or a released version
+      // from the suite's store (?cesium=<version>, fetched by the CLI).
+      (() => {
+        const release = new URLSearchParams(location.search).get("cesium");
+        const base =
+          release && /^\d+\.\d+\.\d+(-[\w.]+)?$/.test(release)
+            ? `/cesium-release/${release}/package/Build/Cesium/`
+            : "/cesium1x/";
+        window.CESIUM_BASE_URL = base;
+        document.write(
+          `<link rel="stylesheet" href="${base}Widgets/widgets.css"><script src="${base}Cesium.js"><\/script>`,
+        );
+      })();
     </script>
-    <script src="/cesium1x/Cesium.js"></script>
     <script type="module" src="./suite.ts"></script>
   </body>
 </html>

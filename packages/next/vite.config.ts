@@ -78,6 +78,9 @@ function serveBenchResults(prefix: string, root: string): Plugin {
 }
 const benchResults =
   process.env.BENCH_RESULTS ?? join(homedir(), ".cesium-bench", "results");
+// Released CesiumJS builds fetched by the suite (bench/suite/release.mjs).
+const cesiumReleases =
+  process.env.BENCH_CESIUM_DIR ?? join(homedir(), ".cesium-bench", "cesium");
 
 const slangWasm = process.env.SLANG_WASM_DIR;
 // Sample models and tilesets checked into the 1.x repo, for parity tests.
@@ -90,6 +93,7 @@ export default defineConfig({
     serveDirectory("/specs-data", specsData),
     serveBenchResults("/bench-results", benchResults),
     serveDirectory("/bench-results", benchResults),
+    serveDirectory("/cesium-release", cesiumReleases),
     ...(slangWasm ? [serveDirectory("/slang-wasm", slangWasm)] : []),
   ],
   build: {

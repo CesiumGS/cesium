@@ -5,7 +5,13 @@
 //   node packages/next/bench/suite/cli.mjs fetch
 //   node packages/next/bench/suite/cli.mjs run [--scenes a,b] [--configs 1.x,2.0]
 //        [--scenarios cold-orbit,warm-orbit] [--reps 3] [--motion 15]
-//        [--note "what changed"] [--tag a,b]
+//        [--note "what changed"] [--tag a,b] [--cesium 1.147.0]
+//        [--baseline 1.x@1.146.0] [--candidate 2.0]
+//        [--releases 1.120.0..1.146.0 | 1.130.0,1.140.0]  (historical sweep)
+//
+// 1.x configurations run this repository's build ("cesium": "repo") or a
+// released version from npm ("latest", or --cesium to pin one), fetched
+// once into the store and recorded exactly in the results.
 //   node packages/next/bench/suite/cli.mjs report <results.json>
 //
 // BENCH_MANIFEST adds a private manifest (outside the repo). Results go to
@@ -35,6 +41,7 @@ import {
   unsupportedReason,
 } from "./manifest.mjs";
 import { fetchDatasets, verify } from "./store.mjs";
+import { ensureRelease, releaseList, resolveVersion } from "./release.mjs";
 import { renderReport, summarizeRun } from "./report.mjs";
 import {
   conditions,
@@ -118,9 +125,49 @@ async function run() {
         })
       : undefined;
   const scenes = pick(catalog.scenes, "scenes") ?? catalog.scenes;
-  const configs =
+  const configs = (
     pick(catalog.configs, "configs") ??
-    catalog.configs.filter((c) => c.id === "1.x" || c.id === "2.0");
+    catalog.configs.filter((c) =>
+      ["1.x-release", "1.x", "2.0"].includes(c.id),
+    )
+  ).map((c) => ({ ...c }));
+  // A historical sweep adds one pinned 1.x configuration per release.
+  if (opts.releases) {
+    const template = catalog.configs.find((c) => c.id === "1.x-release") ?? {
+      engine: "1.x",
+      maximumScreenSpaceError: 16,
+    };
+    for (const version of releaseList(opts.releases)) {
+      if (!configs.some((c) => c.cesium === version)) {
+        configs.push({ ...template, id: `1.x@${version}`, cesium: version });
+      }
+    }
+  }
+  // Released 1.x builds: catalogs pin an exact version (a moving tag
+  // would mix releases in one trend across a release window); --cesium
+  // overrides it on purpose and may name a tag, resolved and recorded.
+  // Each run's configuration carries its version (1.x@1.146.0), so a new
+  // release is a new line in trends, not a jump in the old one.
+  const releases = {};
+  for (const config of configs) {
+    if (config.engine === "1.x" && config.cesium && config.cesium !== "repo") {
+      if (!opts.cesium && !/^\d+\.\d+\.\d+$/.test(config.cesium)) {
+        throw new Error(
+          `config ${config.id}: pin an exact CesiumJS version, not "${config.cesium}" (or pass --cesium)`,
+        );
+      }
+      const version = resolveVersion(opts.cesium ?? config.cesium);
+      config.cesiumVersion = version;
+      config.id = `1.x@${version}`;
+      releases[config.id] = ensureRelease(version);
+    }
+  }
+  const baseline =
+    opts.baseline ??
+    (configs.find((c) => c.cesiumVersion)?.id ?? configs[0].id);
+  const candidate =
+    opts.candidate ??
+    (configs.find((c) => c.engine === "2.0")?.id ?? configs.at(-1).id);
   const scenarios =
     pick(catalog.scenarios, "scenarios") ??
     catalog.scenarios.filter((s) => s.id === "cold-orbit");
@@ -192,6 +239,8 @@ async function run() {
     commit: git("rev-parse HEAD"),
     branch: git("rev-parse --abbrev-ref HEAD"),
     note: opts.note ?? "",
+    baseline,
+    candidate,
     tags: opts.tag ? opts.tag.split(",") : [],
     dirty: git("status --porcelain").length > 0,
     catalog: catalog.sources > 1 ? "public+private" : "public",
@@ -201,6 +250,16 @@ async function run() {
       cores: cpus().length,
       memoryGiB: Math.round(totalmem() / 2 ** 30),
       browser: `${channel === "msedge" ? "Microsoft Edge" : channel} ${browser.version()}`,
+      engines: Object.fromEntries(
+        configs.map((c) => [
+          c.id,
+          c.engine === "1.x"
+            ? c.cesiumVersion
+              ? `CesiumJS ${c.cesiumVersion} (npm release, ${releases[c.id].integrity})`
+              : "CesiumJS, this repository's build"
+            : `2.0 prototype, policy ${c.policy ?? "budgeted"}`,
+        ]),
+      ),
       browserMode: headless ? "headless" : "headed",
       browserArgs,
       viewport: "1400×900 CSS px, device scale 1; scenes 1280×720",
@@ -338,7 +397,10 @@ async function runOne(browser, base, spec, results) {
     );
   };
   try {
-    await page.goto(`${base}/bench/suite/suite.html?bench`);
+    const release = spec.config.cesiumVersion
+      ? `&cesium=${spec.config.cesiumVersion}`
+      : "";
+    await page.goto(`${base}/bench/suite/suite.html?bench${release}`);
     if (!results.environment.page) {
       results.environment.page = await page.evaluate(() =>
         globalThis.describeBrowser(),
