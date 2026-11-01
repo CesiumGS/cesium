@@ -624,6 +624,8 @@ async function run() {
         ...card.plan.guardrails,
       ]),
     );
+  } else if (results.baseline !== results.candidate) {
+    console.log("\nno verdict: no scene was measured by both engines\n");
   }
   console.log(`results: ${file}\nreport:  ${file.replace(/\.json$/, ".html")}`);
   if (failed > 0) {

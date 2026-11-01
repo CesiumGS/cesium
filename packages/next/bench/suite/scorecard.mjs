@@ -13,6 +13,8 @@
 // - marginal: the primary metric did not clearly move, or a guardrail
 //   broke in one scene;
 // - pass: otherwise.
+//
+// No scene measured by both engines (all errored, say) has no scorecard.
 import { ratio, summarize } from "./stats.mjs";
 import { escape } from "./charts.mjs";
 import { engineLabel, setupOf } from "./engines.mjs";
@@ -141,6 +143,10 @@ export function scorecard(results, options = {}) {
     };
   };
   const primary = test(plan.primary, 0);
+  // No scene measured by both: nothing to judge.
+  if (!primary.scenes.length) {
+    return undefined;
+  }
   const guardrails = plan.guardrails.map((k) => test(k, plan.tolerance));
   const primaryMoved =
     primary.better > primary.worse && primary.geomean < 1

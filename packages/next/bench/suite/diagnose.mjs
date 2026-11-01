@@ -387,7 +387,7 @@ export function waterfall({ runs, configs, color }) {
     const n = r.waterfall.length;
     const h = Math.min(220, Math.max(60, n * 1.5));
     const row = h / n;
-    let svg = `<svg viewBox="0 0 ${width} ${h + 22}" role="img" aria-label="${escape(`Request waterfall, ${r.config}`)}">`;
+    let svg = `<svg viewBox="0 0 ${width} ${h + 22}" role="img" aria-label="${escape(`Request waterfall, ${engineLabel(r.config)}`)}">`;
     for (const t of [0, ...ticksMs(end)]) {
       svg += `<line x1="${sx(t)}" x2="${sx(t)}" y1="0" y2="${h}" stroke="var(--grid)" stroke-width="1"/>`;
       svg += `<text x="${sx(t)}" y="${h + 16}" text-anchor="middle">${compact(t / 1000)} s</text>`;
