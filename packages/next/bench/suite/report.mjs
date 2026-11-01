@@ -144,6 +144,34 @@ ${table([
 </details>`;
 }
 
+/**
+ * Lineage (plan §16.9, Trust): what produced the run, enough to reproduce
+ * it: the command, commit and working-tree state, catalog and dataset
+ * checksums, engine builds with their integrity hashes, the plan.
+ */
+function lineageSection(results) {
+  const env = results.environment ?? {};
+  const datasets = results.datasets ?? [];
+  const rows = [
+    ["Command", results.command ? `<code>${escape(results.command.join(" "))}</code>` : "not recorded (before r33)"],
+    ["Commit", `<code>${escape(results.commit)}</code> on ${escape(results.branch ?? "?")}${results.subject ? ` · ${escape(results.subject)}` : ""}`],
+    ["Working tree", results.dirty ? `uncommitted changes (diff sha256 <code>${escape((results.diffSha256 ?? "not recorded").slice(0, 16))}</code>)` : "clean"],
+    ["Catalog", `${escape(results.catalog ?? "public")}${results.catalogSha256 ? ` · sha256 <code>${escape(results.catalogSha256.slice(0, 16))}</code>` : ""}`],
+    ["Engines", env.engines ? Object.entries(env.engines).map(([id, what]) => `<b>${escape(id)}</b>: ${escape(what)}`).join("<br>") : undefined],
+    ["Plan", results.plan ? escape(`primary ${results.plan.primary}; guardrails ${results.plan.guardrails.join(", ")}; tolerance ${Math.round(results.plan.tolerance * 100)}%${results.plan.hypothesis ? `; hypothesis: ${results.plan.hypothesis}` : ""}`) : undefined],
+    ["Render settings", env.render ? `<code>${escape(JSON.stringify(env.render))}</code>` : undefined],
+    [
+      "Datasets",
+      datasets.length
+        ? datasets
+            .map((d) => `${escape(d.id)}: ${escape(d.status)}${d.sha256 ? ` <code>${escape(d.sha256.slice(0, 16))}</code>` : ""}`)
+            .join("<br>")
+        : undefined,
+    ],
+  ];
+  return `<details class="setup"><summary>Lineage: reproduce this run</summary>${table(rows)}</details>`;
+}
+
 /** Hardware conditions shown per configuration (medians over runs). */
 const CONDITIONS = [
   ["gpuClockMeanMHz", "GPU clock (MHz; follows load)"],
@@ -529,7 +557,10 @@ ${cpu.length ? chart("CPU speed (% of nominal)", "%", cpu, 1) + chart("CPU utili
 <div class="diag">${segmentTable({ profiles, configs, baseline, color, metric: pathMetric })}${pathMap({ path, profiles, configs, color, metric: pathMetric, title: "Faster along the camera path" })}</div>`
       : "";
     const strip = filmstrip({
-      entries: (results.filmstrips ?? []).filter((e) => e.scene === run.scene),
+      // Older runs' entries have no scenario (and mixed scenarios).
+      entries: (results.filmstrips ?? []).filter(
+        (e) => e.scene === run.scene && (e.scenario ?? run.scenario) === run.scenario,
+      ),
       assets: results.assets,
       configs,
       baseline,
@@ -652,6 +683,7 @@ ${conditions}
 ${sections.join("\n")}
 <h2>Setup</h2>
 ${environmentSection(results)}
+${lineageSection(results)}
 </div><script>${CHART_SCRIPT}</script></body></html>
 `;
 }

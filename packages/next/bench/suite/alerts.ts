@@ -7,6 +7,55 @@ import {
 import { CONDITION_METRICS, METRICS } from "./report.mjs";
 import { escape, lineChart } from "./charts.mjs";
 import { cellKey, type Summary } from "./workspace.ts";
+import publicCatalog from "./catalog/public.json";
+import type { Dataset, Scene } from "./schema.ts";
+
+const catalog = publicCatalog as unknown as {
+  datasets: Dataset[];
+  scenes: Scene[];
+};
+
+/** A scene and scenario's attributes, for "what differs". */
+function attributes(key: string): string[] {
+  const [id, scenario = "cold-orbit"] = key.split("|");
+  const scene = catalog.scenes.find((s) => s.id === id);
+  if (!scene) {
+    return [`scenario: ${scenario}`];
+  }
+  const kinds = scene.layers.map(
+    (l) => catalog.datasets.find((d) => d.id === l.dataset)?.kind ?? "?",
+  );
+  return [
+    `scenario: ${scenario}`,
+    `group ${scene.group}`,
+    `globe: ${typeof scene.globe === "object" ? "terrain" : scene.globe}`,
+    scene.imagery ? "with imagery" : "no imagery",
+    ...new Set(kinds.map((k) => `content: ${k}`)),
+    scene.layers.length > 1 ? "several layers" : "one layer",
+  ];
+}
+
+/**
+ * What the affected scenes share (Honeycomb BubbleUp): attributes much
+ * more common among them than among every scene measured.
+ */
+function whatDiffers(affected: string[], all: string[]): string[] {
+  if (affected.length < 2 || all.length <= affected.length) {
+    return [];
+  }
+  const share = (keys: string[], attr: string) =>
+    keys.filter((k) => attributes(k).includes(attr)).length / keys.length;
+  const attrs = new Set(affected.flatMap(attributes));
+  return [...attrs]
+    .map((a) => ({ a, inside: share(affected, a), outside: share(all, a) }))
+    .filter((x) => x.inside - x.outside >= 0.3)
+    .sort((x, y) => y.inside - y.outside - (x.inside - x.outside))
+    .slice(0, 4)
+    .map(
+      (x) =>
+        `${x.a}: ${Math.round(x.inside * 100)}% of affected scenes vs ${Math.round(x.outside * 100)}% of all`,
+    );
+}
 
 /**
  * Dyno's alerts (plan §16.9, Detect), after Perfherder's sheriffing: every
@@ -224,6 +273,24 @@ export async function mountAlerts(
 </header>
 <div class="range">Between <code>${escape(a.range.from.commit.slice(0, 7))}</code> ${escape(a.range.from.subject ?? "")} <span class="muted">(${escape(new Date(a.range.from.date).toLocaleString())})</span>
 and <code>${escape(a.range.to.commit.slice(0, 7))}</code> ${escape(a.range.to.subject ?? "")} <span class="muted">(${escape(new Date(a.range.to.date).toLocaleString())})</span></div>
+${(() => {
+  const all = [
+    ...new Set(
+      summaries
+        .filter((s) => s.hardware === a.hardware)
+        .flatMap((s) =>
+          s.scenes.filter((c) => c.config === a.config).map(cellKey),
+        ),
+    ),
+  ];
+  const differs = whatDiffers(
+    g.alerts.map((x) => x.scene),
+    all,
+  );
+  return differs.length
+    ? `<div class="differs"><b>What the affected scenes share:</b> ${differs.map(escape).join(" · ")}</div>`
+    : "";
+})()}
 ${g.alerts.length > 1 ? `<details class="scenes"><summary>Scenes (largest change first)</summary><table class="twin">${g.alerts.map((x) => `<tr><td>${escape(x.title)}</td><td>${pctOf(x)}</td><td class="muted">p ${x.p.toFixed(3)} · ${x.before.runs} runs before, ${x.after.runs} after</td></tr>`).join("")}</table></details>` : `<div class="muted">p ${a.p.toFixed(3)} · ${a.before.runs} runs before, ${a.after.runs} after</div>`}
 <div class="body"><div class="chart">${chart(a)}${g.alerts.length > 1 ? `<div class="muted">Series of ${escape(a.title)}, the largest change.</div>` : ""}</div>
 <form class="triage">

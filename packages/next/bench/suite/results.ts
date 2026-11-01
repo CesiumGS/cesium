@@ -2,6 +2,7 @@ import { METRICS, renderReport, summarizeRun } from "./report.mjs";
 import { CHART_CSS, CHART_SCRIPT, escape, forestPlot } from "./charts.mjs";
 import { ratio } from "./stats.mjs";
 import { mountAlerts } from "./alerts.ts";
+import { mountScenes } from "./scenes.ts";
 import {
   cellKey,
   cellTitle,
@@ -232,6 +233,40 @@ async function alerts(): Promise<void> {
     },
     bindCharts,
   });
+}
+
+// ------------------------------------------------------------ scenes
+
+function scenes(): void {
+  main.replaceChildren();
+  const root = document.createElement("div");
+  main.append(root);
+  mountScenes(
+    root,
+    summaries as unknown as WorkspaceSummary[],
+    {
+      openReport: (name) => {
+        store.set("bench.report", name);
+        show("report");
+      },
+      openExplorer: (scene) => {
+        const url = new URL(location.href);
+        url.searchParams.set("scene", scene);
+        url.searchParams.delete("t");
+        history.replaceState(null, "", url);
+        show("explore");
+      },
+      openWorkspace: (scene) => {
+        const url = new URL(location.href);
+        url.searchParams.set("ws", scene);
+        history.replaceState(null, "", url);
+        show("workspace");
+      },
+      full,
+      bindCharts,
+    },
+    new URLSearchParams(location.search).get("sp") ?? undefined,
+  );
 }
 
 // ------------------------------------------------------------ run log
@@ -478,6 +513,7 @@ async function explore(): Promise<void> {
 const views: Record<string, () => void | Promise<void>> = {
   workspace,
   alerts,
+  scenes,
   log,
   compare,
   report,
@@ -503,6 +539,9 @@ function show(requested: string): void {
     for (const key of WORKSPACE_KEYS) {
       url.searchParams.delete(key);
     }
+  }
+  if (tab !== "scenes") {
+    url.searchParams.delete("sp");
   }
   history.replaceState(null, "", url);
   void views[tab]!();

@@ -3167,7 +3167,9 @@ and trace viewers (Perfetto, Tracy, Unreal Insights).
   tools): the full percentile curve of frame times per engine, "1% low"
   style metrics, hitch counts by size, frame-time variance; better than a
   single p95.
-- _"What differs" analysis_ (BubbleUp): for a regression, compare the
+- _"What differs" analysis_ (BubbleUp; built in a first form, r33: each
+  grouped alert lists the scene attributes far more common among the
+  affected scenes than among all measured ones): for a regression, compare the
   regressed runs or scenes with the rest across every recorded dimension
   (scene group, content format, tileset, phase, hardware, browser
   version, driver, conditions) and rank the dimensions that explain it.
@@ -3187,7 +3189,9 @@ Skia Gold).
   power), dataset checksums, catalog and license checks and errors; shown
   before any number and carried into trends (invalid runs hidden by
   default).
-- _Lineage:_ every number links to what produced it (commit, catalog and
+- _Lineage_ (built, r33: command, commit, working-tree diff hash, catalog
+  and dataset checksums, engine builds, plan, render settings, in each
+  report): every number links to what produced it (commit, catalog and
   dataset checksums, engine builds with integrity hashes, browser,
   driver, settings) so any run can be reproduced exactly.
 - _Reference overlays and a review checklist_ (data-quality shifts): the
@@ -3268,7 +3272,11 @@ as Dyno does for 1.x and 2.0.
   setup and lineage).
 - _Compare:_ any two runs or configurations, with the scorecard, forest
   plots and path overlays.
-- _Scenes:_ the segment pages.
+- _Scenes_ (built, r33): the segment pages (`scenes.ts`): every scene
+  and scenario with its latest result per configuration; a page per scene
+  with its content and licenses, best results per configuration (when and
+  at which commit), history panels, the change points that moved it, and
+  the filmstrip over time; links to the explorer and the workspace.
 - _Sweeps:_ parallel coordinates and parameter importance.
 - _Hardware:_ results across machines.
 - _Reports:_ saved narratives.

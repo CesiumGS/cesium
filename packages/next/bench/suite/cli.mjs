@@ -35,6 +35,7 @@
 // drift (thermals, background work) spreads across all of them. Exits 1
 // when a run fails or the catalog is invalid.
 import { execSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import {
   arch,
@@ -356,6 +357,11 @@ async function run() {
       ...(opts.hypothesis ? { hypothesis: opts.hypothesis } : {}),
     },
     dirty: git("status --porcelain").length > 0,
+    // Lineage (plan §16.9, Trust): how to reproduce this run exactly.
+    command: ["node", "packages/next/bench/suite/cli.mjs", command, ...rest],
+    diffSha256: sha256(execSync("git diff HEAD", { cwd: root, maxBuffer: 1 << 28 })),
+    catalogSha256: sha256(JSON.stringify(catalog)),
+    datasets: checked,
     catalog: catalog.sources > 1 ? "public+private" : "public",
     environment: {
       os: `${osVersion()} (${platform()} ${release()}, ${arch()})`,
@@ -457,6 +463,7 @@ async function run() {
             for (const shot of result.shots) {
               filmstrip.push({
                 scene: scene.id,
+                scenario: scenario.id,
                 config: config.id,
                 moment: shot.moment,
                 png: shot.png,
@@ -770,7 +777,7 @@ async function filmstrips(browser, base, frames, directory, baseline) {
   const page = await browser.newPage();
   await page.goto(`${base}/bench/suite/flip.html`);
   const out = [];
-  const key = (f) => `${f.scene}|${f.moment}`;
+  const key = (f) => `${f.scene}|${f.scenario}|${f.moment}`;
   const groups = new Map();
   for (const f of frames) {
     (groups.get(key(f)) ?? groups.set(key(f), []).get(key(f))).push(f);
@@ -778,13 +785,14 @@ async function filmstrips(browser, base, frames, directory, baseline) {
   for (const list of groups.values()) {
     const entry = {
       scene: list[0].scene,
+      scenario: list[0].scenario,
       moment: list[0].moment,
       images: {},
       flip: {},
     };
     const reference = list.find((f) => f.config === baseline);
     for (const f of list) {
-      const name = `${f.scene}__${f.config}__${f.moment}`.replace(/[^\w@.-]/g, "_");
+      const name = `${f.scene}__${f.scenario}__${f.config}__${f.moment}`.replace(/[^\w@.-]/g, "_");
       const result = await page.evaluate(
         ({ test, ref }) => globalThis.processFrame(test, ref),
         {
@@ -810,4 +818,8 @@ async function filmstrips(browser, base, frames, directory, baseline) {
   }
   await page.close();
   return out;
+}
+
+function sha256(data) {
+  return createHash("sha256").update(data).digest("hex");
 }

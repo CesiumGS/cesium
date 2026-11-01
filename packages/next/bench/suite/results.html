@@ -244,6 +244,71 @@
         margin: 0;
         cursor: pointer;
       }
+      .scene-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 10px;
+      }
+      .scene-card {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        align-items: flex-start;
+        text-align: left;
+        background: var(--surface);
+        border: 1px solid var(--grid);
+        border-radius: 8px;
+        padding: 10px 12px;
+        cursor: pointer;
+        font: inherit;
+        color: var(--ink);
+      }
+      .scene-card:hover,
+      .scene-card:focus-visible {
+        border-color: var(--ink-2);
+      }
+      .scene-card .title {
+        font-weight: 600;
+      }
+      .scene-page h3 {
+        margin: 18px 0 6px;
+      }
+      .scene-page .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+        gap: 10px;
+      }
+      .scene-page .row-actions {
+        display: flex;
+        gap: 8px;
+      }
+      .film-run {
+        margin: 8px 0 14px;
+      }
+      .film-frames {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 8px;
+      }
+      .film-frames figure {
+        margin: 0;
+      }
+      .film-frames img {
+        width: 100%;
+        border-radius: 4px;
+        border: 1px solid var(--grid);
+        display: block;
+      }
+      .film-frames figcaption {
+        font-size: 12px;
+        color: var(--ink-2);
+      }
+      table.kv th {
+        text-align: left;
+        font-weight: normal;
+        color: var(--ink-2);
+        padding: 2px 12px 2px 0;
+      }
       .segmented {
         display: inline-flex;
         border: 1px solid var(--grid);
@@ -449,6 +514,7 @@
         <nav>
           <button data-tab="workspace">Workspace</button>
           <button data-tab="alerts">Alerts</button>
+          <button data-tab="scenes">Scenes</button>
           <button data-tab="log">Runs</button>
           <button data-tab="compare">Compare</button>
           <button data-tab="report">Report</button>
