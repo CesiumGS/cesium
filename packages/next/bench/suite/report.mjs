@@ -629,7 +629,8 @@ ${cpu.length ? chart("CPU speed (% of nominal)", "%", cpu, 1) + chart("CPU utili
         series: frameSeries("load", 1),
       }),
     ].join("");
-    sections.push(`<details class="scene"><summary>${validityBadge(sceneVerdict)} ${escape(run.sceneTitle)} <span class="tag">${run.group}</span> <span class="tag">${escape(run.scenario)}</span>${notes.length ? ` <span class="flag">${notes.length} note${notes.length > 1 ? "s" : ""}</span>` : ""}</summary>
+    // The first scene opens, so its diagnostics are in view.
+    sections.push(`<details class="scene"${sections.length === 0 ? " open" : ""}><summary>${validityBadge(sceneVerdict)} ${escape(run.sceneTitle)} <span class="tag">${run.group}</span> <span class="tag">${escape(run.scenario)}</span>${notes.length ? ` <span class="flag">${notes.length} note${notes.length > 1 ? "s" : ""}</span>` : ""}</summary>
   ${notes.length || warnings.length ? `<p class="note">${[...warnings, ...notes].map(escape).join("<br>")}</p>` : ""}
   <p class="explore-link"><a target="_top" href="${explore}">Open this scene in the explorer</a> (live, both engines side by side; needs the dev server). Click a point on a path chart to open it there.</p>
   <div data-explore="${explore}">${diagnosis}</div>

@@ -24,6 +24,7 @@ import {
   useState,
 } from "react";
 import { bindChartsIn, CHART_CSS } from "../charts.mjs";
+import { DIAGNOSE_CSS } from "../diagnose.mjs";
 import { type Runs, store } from "../data.ts";
 import { useTheme } from "../theme.tsx";
 
@@ -37,9 +38,10 @@ import { useTheme } from "../theme.tsx";
 
 const rootApi = getRouteApi("__root__");
 
-// The charts' own styles (shared with the CLI's standalone reports).
+// The charts' own styles (shared with the CLI's standalone reports),
+// diagnostics' (waterfalls, path segments) included.
 const chartStyle = document.createElement("style");
-chartStyle.textContent = CHART_CSS;
+chartStyle.textContent = CHART_CSS + DIAGNOSE_CSS;
 document.head.append(chartStyle);
 
 /** Every run's summary and the results index (loaded before any view). */

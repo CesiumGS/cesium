@@ -23,6 +23,7 @@ import { getRouteApi, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { ALERT_METRICS, detectAlerts } from "../changepoints.mjs";
 import { lineChart } from "../charts.mjs";
+import { waterfall } from "../diagnose.mjs";
 import {
   catalog,
   type Cell,
@@ -454,50 +455,87 @@ function SceneDetail({
     [summaries, runs, key],
   );
 
-  // Filmstrip over time: each run's settled view after the orbit, per
-  // configuration (runs that captured one), newest first.
-  const [film, setFilm] = useState<FilmRun[]>();
+  // The newest runs' full results (12 at most), for the filmstrip over
+  // time and the latest request waterfall.
+  const scenario = key.includes("|") ? key.split("|")[1]! : "cold-orbit";
+  const [loaded, setLoaded] =
+    useState<Array<{ run: Summary; results: Json }>>();
   useEffect(() => {
     let cancelled = false;
-    const scenario = key.includes("|") ? key.split("|")[1] : "cold-orbit";
     void Promise.all(
       [...runs]
         .reverse()
         .slice(0, 12)
-        .map(async (s): Promise<FilmRun | undefined> => {
-          let results: Json;
+        .map(async (run) => {
           try {
-            results = await full(s.name);
+            return { run, results: await full(run.name) };
           } catch {
             return undefined;
           }
-          const strip = (results.filmstrips ?? []).find(
-            (f: Json) =>
-              f.scene === entry.scene &&
-              (f.scenario ?? "cold-orbit") === scenario &&
-              f.moment === "end",
-          );
-          if (!strip || !results.assets) {
-            return undefined;
-          }
-          return {
-            run: s,
-            frames: byEngine(Object.keys(strip.images)).map((config) => ({
-              config,
-              src: results.assets + strip.images[config],
-              flip: strip.flip?.[config]?.mean as number | undefined,
-            })),
-          };
         }),
     ).then((list) => {
       if (!cancelled) {
-        setFilm(list.filter((x): x is FilmRun => !!x));
+        setLoaded(list.filter((x) => !!x));
       }
     });
     return () => {
       cancelled = true;
     };
-  }, [key, entry, runs]);
+  }, [runs]);
+
+  // Filmstrip over time: each run's settled view after the orbit, per
+  // configuration (runs that captured one), newest first.
+  const film = useMemo(
+    () =>
+      loaded?.flatMap(({ run, results }): FilmRun[] => {
+        const strip = (results.filmstrips ?? []).find(
+          (f: Json) =>
+            f.scene === entry.scene &&
+            (f.scenario ?? "cold-orbit") === scenario &&
+            f.moment === "end",
+        );
+        if (!strip || !results.assets) {
+          return [];
+        }
+        return [
+          {
+            run,
+            frames: byEngine(Object.keys(strip.images)).map((config) => ({
+              config,
+              src: results.assets + strip.images[config],
+              flip: strip.flip?.[config]?.mean as number | undefined,
+            })),
+          },
+        ];
+      }),
+    [loaded, entry, scenario],
+  );
+
+  // Requests: the newest run that recorded a waterfall for this scene.
+  const requests = useMemo(() => {
+    for (const { run, results } of loaded ?? []) {
+      const sceneRuns = (results.runs ?? []).filter(
+        (r: Json) =>
+          r.scene === entry.scene &&
+          (r.scenario ?? "cold-orbit") === scenario &&
+          r.waterfall?.length,
+      );
+      if (sceneRuns.length) {
+        const ids = byEngine([
+          ...new Set<string>(sceneRuns.map((r: Json) => r.config)),
+        ]);
+        return {
+          run,
+          html: waterfall({
+            runs: sceneRuns,
+            configs: ids,
+            color: (c) => colors.get(c) ?? "var(--series-4)",
+          }),
+        };
+      }
+    }
+    return undefined;
+  }, [loaded, entry, scenario, colors]);
 
   const runCommand = `node packages/next/bench/suite/cli.mjs run --scenes ${entry.scene}`;
   const facts = scene
@@ -681,6 +719,50 @@ function SceneDetail({
               >
                 No change points yet. They need about six runs of this scene on
                 the same hardware.
+              </Typography>
+            )}
+          </Section>
+
+          <Section
+            title="Requests"
+            description={
+              requests
+                ? `Every content request of the newest run that recorded them (${when(requests.run)}), per engine: when it started, waited and finished.`
+                : "Every content request of a run, per engine."
+            }
+            actions={
+              requests ? (
+                <Button
+                  variant="outlined"
+                  size="small"
+                  nativeButton={false}
+                  render={
+                    <Link to="/runs/$run" params={{ run: requests.run.name }} />
+                  }
+                >
+                  Open that run
+                </Button>
+              ) : undefined
+            }
+          >
+            {loaded === undefined ? (
+              <div className="loading" role="status">
+                <CircularProgress size={16} />
+                <Typography variant="body-md" color="textSecondary">
+                  Loading requests…
+                </Typography>
+              </div>
+            ) : requests ? (
+              <Chart html={requests.html} />
+            ) : (
+              <Typography
+                variant="body-sm"
+                color="textSecondary"
+                render={<p />}
+                className="quiet"
+              >
+                No recent run recorded requests for this scene. Each run records
+                them for its first repetition.
               </Typography>
             )}
           </Section>
