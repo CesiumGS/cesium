@@ -42,3 +42,8 @@ yarn.lock
 
 # Benchmark worktrees of commits (packages/next/bench/snapshot.mjs)
 /.bench/
+
+# Microbenchmark results (packages/next/bench/run.mjs; machine details)
+/packages/next/bench/results/
+# Vite dependency cache of snapshot dev servers
+/packages/next/.vite-bench/
