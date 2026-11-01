@@ -467,6 +467,15 @@ ${s.tags.length ? `<div class="muted">${s.tags.map(escape).join(", ")}</div>` : 
           short: "hardware",
         });
       }
+      const render = (r: Summary) =>
+        JSON.stringify((r as { render?: unknown }).render ?? null);
+      if (i > 0 && render(s) !== render(runs[i - 1]!)) {
+        marks.push({
+          x: i,
+          label: `render settings changed: ${render(s)}`,
+          short: "render settings",
+        });
+      }
     });
     return marks;
   }
