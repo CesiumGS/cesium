@@ -3027,6 +3027,29 @@ Open for v1's exit: the results page with trends across runs, scenes for
 group B (after license review), warm-cache and throttled scenarios in the
 default set, the 1.x instancing generator, real-time tracks (§13.11).
 
+### Findings to work through (r33)
+
+From the first full pass and the phase 1 verification runs, to be
+addressed in 2.0 (each with a Dyno scene to show the fix):
+
+- **`Budgeted` selection draws visibly differently from 1.x**, most
+  apparent on Mount Rainier (terrain and imagery): in-between and settled
+  views pick different levels than `Legacy1x`. Wanted: a parity pass on
+  `Budgeted` against a fully refined reference (§4 L1′) per scene, the
+  explorer's paused streaming and the filmstrip's FLIP to find where it
+  under-refines, and an image guardrail in the scorecard so a faster
+  policy can't pass by drawing less.
+- **Settle time on terrain scenes**: Rainier ×1.16 and OSM Philadelphia
+  ×1.42 slower than 1.x. The waterfall shows 2.0 fetching 49 content tiles
+  (18.7 MB) on OSM Philadelphia to 1.x's 31 (10.7 MB), and starting them
+  later.
+- **Bytes**: NYC buildings ×3.3 and OSM Philadelphia ×1.5 of 1.x; Japan
+  ×1.3.
+- **JS heap** above 1.x on terrain scenes and NYC (scorecard guardrail).
+- **Lighting**: 1.x lights tilesets with an environment map from its
+  atmosphere; 2.0's own IBL is brighter and bluer until M4 (§16.3).
+- **Primitive outlines** and the other extensions in §4.1.
+
 ### 16.8 Later (v2 and beyond)
 
 - **v2 (with M5)**: dedicated runner machines (GPUs are not available on
