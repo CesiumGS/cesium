@@ -14,6 +14,9 @@
 // released version from npm ("latest", or --cesium to pin one), fetched
 // once into the store and recorded exactly in the results.
 //   node packages/next/bench/suite/cli.mjs report <results.json>
+//   node packages/next/bench/suite/cli.mjs alerts [--all] [--fail-on-new]
+//        (change points across runs, with their triage state from Dyno;
+//        --fail-on-new exits 1 when an untriaged regression exists)
 //   node packages/next/bench/suite/cli.mjs resummarize   (after the summary
 //        format changes: rewrites every run's .summary.json)
 //   node packages/next/bench/suite/cli.mjs compare <old.json> [new.json]
@@ -55,6 +58,7 @@ import { fetchDatasets, verify } from "./store.mjs";
 import { ensureRelease, releaseList, resolveVersion } from "./release.mjs";
 import { renderReport, summarizeRun } from "./report.mjs";
 import { compareTable, DEFAULT_PLAN, scorecard } from "./scorecard.mjs";
+import { ALERT_METRICS, detectAlerts } from "./changepoints.mjs";
 import {
   conditions,
   cooldown,
@@ -130,6 +134,41 @@ if (command === "list") {
   const out = file.replace(/\.json$/, ".html");
   writeFileSync(out, renderReport(results));
   console.log(out);
+} else if (command === "alerts") {
+  const directory =
+    process.env.BENCH_RESULTS ?? join(homedir(), ".cesium-bench", "results");
+  const summaries = readdirSync(directory)
+    .filter((f) => /Z\.summary\.json$/.test(f))
+    .map((f) => ({
+      ...JSON.parse(readFileSync(join(directory, f), "utf8")),
+      name: f.replace(".summary.json", ".json"),
+    }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+  let triage = {};
+  try {
+    triage = JSON.parse(readFileSync(join(directory, "triage.json"), "utf8"));
+  } catch {
+    // Nothing triaged yet.
+  }
+  const alerts = detectAlerts(summaries, ALERT_METRICS);
+  let untriaged = 0;
+  for (const a of alerts) {
+    const status = triage[a.id]?.status ?? "new";
+    if (!opts.all && (status === "invalid" || status === "fixed")) {
+      continue;
+    }
+    if (status === "new" && a.kind === "regression") {
+      untriaged++;
+    }
+    const pct = ((a.change - 1) * 100).toFixed(1);
+    console.log(
+      `${a.kind === "regression" ? "▲" : "▼"} ${a.metric} ${a.change > 1 ? "+" : ""}${pct}%  ${a.title} · ${a.config} · ${a.hardware}  ${a.range.from.commit.slice(0, 7)}..${a.range.to.commit.slice(0, 7)}  [${status}]${triage[a.id]?.owner ? ` ${triage[a.id].owner}` : ""}`,
+    );
+  }
+  console.log(`${alerts.length} change points over ${summaries.length} runs; ${untriaged} untriaged regressions`);
+  if (opts["fail-on-new"] && untriaged > 0) {
+    process.exit(1);
+  }
 } else if (command === "resummarize") {
   const directory =
     process.env.BENCH_RESULTS ?? join(homedir(), ".cesium-bench", "results");

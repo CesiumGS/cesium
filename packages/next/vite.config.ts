@@ -1,4 +1,11 @@
-import { createReadStream, existsSync, readdirSync, statSync } from "node:fs";
+import {
+  createReadStream,
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import { homedir } from "node:os";
 import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -67,12 +74,48 @@ function serveBenchResults(prefix: string, root: string): Plugin {
       server.middlewares.use(`${prefix}/index.json`, (_req, res) => {
         const names = existsSync(root) ? readdirSync(root) : [];
         const runs = names
-          .filter((n) => n.endsWith(".json") && !n.endsWith(".summary.json"))
+          .filter((n) => /Z\.json$/.test(n))
           .sort()
           .reverse();
         const summaries = names.filter((n) => n.endsWith(".summary.json"));
         res.setHeader("Content-Type", "application/json");
         res.end(JSON.stringify({ directory: root, runs, summaries }));
+      });
+      // Alert triage (status, owner, note per alert), saved from Dyno.
+      server.middlewares.use(`${prefix}/triage.json`, (req, res, next) => {
+        if (req.method !== "POST") {
+          next();
+          return;
+        }
+        let body = "";
+        req.on("data", (chunk: Buffer) => {
+          body += chunk;
+          if (body.length > 4 << 20) {
+            req.destroy();
+          }
+        });
+        req.on("end", () => {
+          try {
+            const triage = JSON.parse(body) as unknown;
+            if (
+              !triage ||
+              typeof triage !== "object" ||
+              Array.isArray(triage)
+            ) {
+              throw new Error("triage must be an object");
+            }
+            mkdirSync(root, { recursive: true });
+            writeFileSync(
+              join(root, "triage.json"),
+              JSON.stringify(triage, null, 1),
+            );
+            res.statusCode = 204;
+            res.end();
+          } catch (e) {
+            res.statusCode = 400;
+            res.end(String(e));
+          }
+        });
       });
     },
   };

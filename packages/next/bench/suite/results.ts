@@ -1,6 +1,7 @@
 import { METRICS, renderReport, summarizeRun } from "./report.mjs";
 import { CHART_CSS, CHART_SCRIPT, escape, forestPlot } from "./charts.mjs";
 import { ratio } from "./stats.mjs";
+import { mountAlerts } from "./alerts.ts";
 import {
   cellKey,
   cellTitle,
@@ -203,6 +204,34 @@ function workspace(): void {
     },
     bindCharts,
   );
+}
+
+// ------------------------------------------------------------ alerts
+
+async function alerts(): Promise<void> {
+  main.replaceChildren();
+  const root = document.createElement("div");
+  main.append(root);
+  await mountAlerts(root, summaries as unknown as WorkspaceSummary[], {
+    openReport: (name) => {
+      store.set("bench.report", name);
+      show("report");
+    },
+    openWorkspace: (scene, config) => {
+      const url = new URL(location.href);
+      url.searchParams.set("ws", scene);
+      url.searchParams.set("cand", config);
+      history.replaceState(null, "", url);
+      show("workspace");
+    },
+    compareRuns: (a, b, config) => {
+      store.set("bench.compareA", a);
+      store.set("bench.compareB", b);
+      store.set("bench.compareConfig", config);
+      show("compare");
+    },
+    bindCharts,
+  });
 }
 
 // ------------------------------------------------------------ run log
@@ -448,6 +477,7 @@ async function explore(): Promise<void> {
 
 const views: Record<string, () => void | Promise<void>> = {
   workspace,
+  alerts,
   log,
   compare,
   report,

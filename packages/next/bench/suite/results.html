@@ -244,6 +244,87 @@
         margin: 0;
         cursor: pointer;
       }
+      .segmented {
+        display: inline-flex;
+        border: 1px solid var(--grid);
+        border-radius: 6px;
+        overflow: hidden;
+      }
+      .segmented button {
+        border: 0;
+        border-radius: 0;
+        margin: 0;
+      }
+      .segmented button[aria-checked="true"] {
+        background: var(--ink);
+        color: var(--surface);
+      }
+      .alerts article.alert {
+        background: var(--surface);
+        border: 1px solid var(--grid);
+        border-left: 4px solid var(--neutral);
+        border-radius: 8px;
+        padding: 10px 14px;
+        margin: 10px 0;
+      }
+      .alerts article.regression {
+        border-left-color: var(--critical);
+      }
+      .alerts article.improvement {
+        border-left-color: var(--good);
+      }
+      .alerts header {
+        display: flex;
+        gap: 10px;
+        align-items: baseline;
+        flex-wrap: wrap;
+      }
+      .alerts .kind {
+        font-weight: 700;
+        font-size: 12px;
+      }
+      .alerts .regression .kind {
+        color: var(--critical);
+      }
+      .alerts .improvement .kind {
+        color: var(--good-text);
+      }
+      .alerts .range {
+        color: var(--ink-2);
+        margin: 4px 0;
+      }
+      .alerts .body {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 300px;
+        gap: 12px;
+        align-items: start;
+      }
+      @media (max-width: 860px) {
+        .alerts .body {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+      .alerts .chart figure {
+        margin: 0;
+      }
+      .alerts form.triage {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .alerts form.triage label {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        color: var(--ink-2);
+        font-size: 12px;
+      }
+      .alerts form.triage .row {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
       nav {
         display: flex;
         gap: 4px;
@@ -367,6 +448,7 @@
         </h1>
         <nav>
           <button data-tab="workspace">Workspace</button>
+          <button data-tab="alerts">Alerts</button>
           <button data-tab="log">Runs</button>
           <button data-tab="compare">Compare</button>
           <button data-tab="report">Report</button>

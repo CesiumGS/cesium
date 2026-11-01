@@ -3252,7 +3252,16 @@ as Dyno does for 1.x and 2.0.
   in the URL and saved views by name. Summaries now keep scenarios apart
   and carry conditions and validity (`cli.mjs resummarize` rewrites old
   ones). Commit subjects show where a run has no note.
-- _Alerts:_ the triage queue (§16.9, Detect).
+- _Alerts_ (built, r33): the triage queue (§16.9, Detect).
+  `changepoints.mjs` runs E-Divisive means (energy statistic, binary
+  segmentation, permutation test at p < 0.05, O(n²) per split) on each
+  metric's run medians per scene, scenario, configuration and hardware,
+  and keeps changes of 3% or more; alerts are grouped like Perfherder's
+  alert summaries (one change across scenes), triaged in Dyno (new,
+  acknowledged, expected, invalid, fixed; owner; note) into
+  `triage.json` beside the results, and listed by `cli.mjs alerts`
+  (`--fail-on-new` for nightly jobs). Checked on a synthetic 20-run
+  history with planted steps: every step found, no false alerts.
 - _Run:_ the report (verdict and validity first, scorecard, tiles, forest
   plots, then per scene: cost along the camera path, path segments and
   path map, filmstrip, waterfall, percentile curves, metrics, conditions;
