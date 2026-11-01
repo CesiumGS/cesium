@@ -156,4 +156,13 @@ export interface RunMetrics {
   bytes?: number;
   /** Time to settle again after motion stops, ms. */
   resettleMs?: number;
+  /**
+   * Per-frame series for charts (downsampled to at most 1,000 points,
+   * keeping each bucket's worst frame): seconds since the phase began,
+   * frame interval ms, CPU ms in the engine, GPU ms (2.0).
+   */
+  series?: {
+    load: Array<[number, number, number]>;
+    motion: Array<[number, number, number, number | null]>;
+  };
 }

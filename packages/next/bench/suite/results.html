@@ -3,54 +3,167 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Benchmark Results</title>
+    <title>Benchmark Tracking</title>
     <style>
-      :root {
-        color-scheme: dark;
-      }
       body {
         margin: 0;
-        padding: 16px;
-        background: #0b0e14;
-        color: #d7dce6;
+        background: #f9f9f7;
+      }
+      @media (prefers-color-scheme: dark) {
+        body {
+          background: #0d0d0d;
+        }
+      }
+      .app {
         font:
-          13px/1.4 system-ui,
+          13px/1.45 system-ui,
+          -apple-system,
+          "Segoe UI",
           sans-serif;
+        color: var(--ink);
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 16px 24px 40px;
+      }
+      header {
+        display: flex;
+        align-items: baseline;
+        gap: 16px;
+        flex-wrap: wrap;
       }
       h1 {
-        font-size: 16px;
-        margin: 0 0 4px;
+        font-size: 20px;
+        margin: 0;
       }
-      p {
-        color: #8a93a6;
-        max-width: 900px;
+      nav {
+        display: flex;
+        gap: 4px;
       }
-      select {
-        background: #151a24;
-        color: #d7dce6;
-        border: 1px solid #2a3346;
+      nav button {
+        background: none;
+        border: 1px solid transparent;
         border-radius: 6px;
-        padding: 4px 8px;
+        padding: 4px 10px;
+        color: var(--ink-2);
         font: inherit;
+        cursor: pointer;
+      }
+      nav button[aria-selected="true"] {
+        border-color: var(--grid);
+        background: var(--surface);
+        color: var(--ink);
+        font-weight: 600;
+      }
+      .where {
+        color: var(--muted);
+        font-size: 12px;
+        margin: 4px 0 12px;
+      }
+      .controls {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin: 8px 0 12px;
+        color: var(--ink-2);
+      }
+      select,
+      input[type="text"] {
+        background: var(--surface);
+        color: var(--ink);
+        border: 1px solid var(--grid);
+        border-radius: 6px;
+        padding: 3px 8px;
+        font: inherit;
+      }
+      .chips {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+      .chip {
+        border: 1px solid var(--grid);
+        border-radius: 999px;
+        padding: 2px 10px;
+        background: var(--surface);
+        cursor: pointer;
+        user-select: none;
+        color: var(--ink-2);
+      }
+      .chip[aria-pressed="true"] {
+        color: var(--ink);
+        border-color: var(--ink-2);
+        font-weight: 600;
+      }
+      table.log {
+        border-collapse: collapse;
+        width: 100%;
+        background: var(--surface);
+        border: 1px solid var(--grid);
+        border-radius: 8px;
+        font-variant-numeric: tabular-nums;
+      }
+      table.log th,
+      table.log td {
+        padding: 6px 10px;
+        border-bottom: 1px solid var(--grid);
+        text-align: left;
+        vertical-align: top;
+      }
+      table.log th {
+        color: var(--ink-2);
+        font-weight: normal;
+      }
+      table.log td.num {
+        text-align: right;
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .better {
+        color: var(--good-text);
+      }
+      .worse {
+        color: var(--critical);
       }
       iframe {
         width: 100%;
-        height: calc(100vh - 140px);
-        border: 1px solid #222a3a;
-        border-radius: 6px;
-        margin-top: 8px;
-        background: #0b0e14;
+        height: calc(100vh - 150px);
+        border: 1px solid var(--grid);
+        border-radius: 8px;
+        background: var(--surface);
+      }
+      .empty {
+        color: var(--muted);
+        padding: 24px;
+        background: var(--surface);
+        border: 1px dashed var(--grid);
+        border-radius: 8px;
+      }
+      button.link {
+        background: none;
+        border: none;
+        color: var(--series-1);
+        cursor: pointer;
+        font: inherit;
+        padding: 0;
       }
     </style>
   </head>
   <body>
-    <h1>Benchmark results</h1>
-    <p id="where"></p>
-    <label
-      >Run
-      <select id="run"></select
-    ></label>
-    <iframe id="report" title="Report"></iframe>
+    <div class="app viz">
+      <header>
+        <h1>Benchmark tracking</h1>
+        <nav>
+          <button data-tab="trends">Trends</button>
+          <button data-tab="log">Runs</button>
+          <button data-tab="compare">Compare</button>
+          <button data-tab="report">Report</button>
+        </nav>
+      </header>
+      <div class="where" id="where"></div>
+      <main id="main"></main>
+    </div>
     <script type="module" src="./results.ts"></script>
   </body>
 </html>

@@ -464,18 +464,47 @@ const quantile = (values: number[], q: number) => {
   return sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * q))];
 };
 
+/**
+ * At most `max` points, keeping each bucket's worst frame (largest
+ * interval), so hitches survive downsampling.
+ */
+function downsample<T extends ReadonlyArray<number | null>>(
+  points: T[],
+  max = 1000,
+): T[] {
+  if (points.length <= max) {
+    return points;
+  }
+  const out: T[] = [];
+  const size = points.length / max;
+  for (let b = 0; b < max; b++) {
+    let worst: T | undefined;
+    for (let i = Math.floor(b * size); i < Math.floor((b + 1) * size); i++) {
+      if (!worst || (points[i]![1] ?? 0) > (worst[1] ?? 0)) {
+        worst = points[i];
+      }
+    }
+    if (worst) {
+      out.push(worst);
+    }
+  }
+  return out;
+}
+
+const round = (v: number) => Math.round(v * 100) / 100;
+
 /** Renders until settled for 10 frames in a row; ms, or undefined on timeout. */
 async function settle(
   adapter: Adapter,
   start: number,
   timeoutMs: number,
-  onFrame?: () => void,
+  onFrame?: (timestamp: number, cpuMs: number) => void,
 ): Promise<number | undefined> {
   let stable = 0;
   while (performance.now() - start < timeoutMs) {
-    await animationFrame();
-    adapter.frame();
-    onFrame?.();
+    const timestamp = await animationFrame();
+    const cpuMs = adapter.frame();
+    onFrame?.(timestamp, cpuMs);
     stable = adapter.settled() ? stable + 1 : 0;
     if (stable >= 10) {
       return performance.now() - start;
@@ -505,11 +534,26 @@ export async function runScene(spec: RunSpec): Promise<RunMetrics> {
     await adapter.setup(container, spec);
     adapter.setCamera(pose(0));
     const timeout = spec.scenario.settleTimeoutSeconds * 1000;
-    metrics.settleMs = await settle(adapter, start, timeout, () => {
-      if (metrics.firstContentMs === undefined && adapter.contentDrawn()) {
-        metrics.firstContentMs = performance.now() - start;
-      }
-    });
+    const load: Array<[number, number, number]> = [];
+    let lastLoad: number | undefined;
+    metrics.settleMs = await settle(
+      adapter,
+      start,
+      timeout,
+      (timestamp, cpuMs) => {
+        if (lastLoad !== undefined) {
+          load.push([
+            round((timestamp - start) / 1000),
+            round(timestamp - lastLoad),
+            round(cpuMs),
+          ]);
+        }
+        lastLoad = timestamp;
+        if (metrics.firstContentMs === undefined && adapter.contentDrawn()) {
+          metrics.firstContentMs = performance.now() - start;
+        }
+      },
+    );
     if (metrics.settleMs === undefined) {
       metrics.status = "timeout";
       metrics.message = "initial view did not settle";
@@ -519,6 +563,7 @@ export async function runScene(spec: RunSpec): Promise<RunMetrics> {
     const intervals: number[] = [];
     const cpu: number[] = [];
     const gpu: number[] = [];
+    const motion: Array<[number, number, number, number | null]> = [];
     const duration = spec.scenario.motionSeconds * 1000;
     const motionStart = performance.now();
     let last = await animationFrame();
@@ -529,13 +574,20 @@ export async function runScene(spec: RunSpec): Promise<RunMetrics> {
         break;
       }
       intervals.push(now - last);
-      last = now;
       adapter.setCamera(pose(progress));
-      cpu.push(adapter.frame());
+      const cpuMs = adapter.frame();
+      cpu.push(cpuMs);
       const g = adapter.gpuMs();
       if (g !== undefined) {
         gpu.push(g);
       }
+      motion.push([
+        round((now - motionStart) / 1000),
+        round(now - last),
+        round(cpuMs),
+        g === undefined ? null : round(g),
+      ]);
+      last = now;
     }
     metrics.frames = intervals.length;
     metrics.frameP50 = quantile(intervals, 0.5);
@@ -543,6 +595,10 @@ export async function runScene(spec: RunSpec): Promise<RunMetrics> {
     metrics.frameP99 = quantile(intervals, 0.99);
     metrics.over33 = intervals.filter((i) => i > 34).length;
     metrics.over50 = intervals.filter((i) => i > 50).length;
+    metrics.series = {
+      load: downsample(load),
+      motion: downsample(motion),
+    };
     metrics.cpuP50 = quantile(cpu, 0.5);
     metrics.cpuP95 = quantile(cpu, 0.95);
     metrics.gpuP50 = quantile(gpu, 0.5);
@@ -610,7 +666,101 @@ function setupUi(): void {
   });
 }
 
-Object.assign(globalThis, { runScene });
+/**
+ * What the browser offers both engines: user agent (and its high-entropy
+ * details), display, WebGPU adapter (info, features, limits, WGSL
+ * features) for 2.0, WebGL 2 (renderer, extensions, timer queries) for
+ * 1.x, the 1.x build's version, and the measured display refresh.
+ */
+export async function describeBrowser(): Promise<Record<string, unknown>> {
+  const out: Record<string, unknown> = {
+    userAgent: navigator.userAgent,
+    hardwareConcurrency: navigator.hardwareConcurrency,
+    deviceMemoryGiB: (navigator as { deviceMemory?: number }).deviceMemory,
+    devicePixelRatio,
+    screen: `${screen.width}×${screen.height}`,
+    cesium1xVersion: Cesium.VERSION,
+  };
+  const uaData = (
+    navigator as {
+      userAgentData?: {
+        getHighEntropyValues(keys: string[]): Promise<Record<string, unknown>>;
+      };
+    }
+  ).userAgentData;
+  if (uaData) {
+    out.userAgentData = await uaData.getHighEntropyValues([
+      "platform",
+      "platformVersion",
+      "architecture",
+      "bitness",
+      "fullVersionList",
+    ]);
+  }
+  // Display refresh: the median requestAnimationFrame interval at idle.
+  const stamps: number[] = [];
+  for (let i = 0; i < 61; i++) {
+    stamps.push(await animationFrame());
+  }
+  const intervals = stamps.slice(1).map((t, i) => t - stamps[i]!);
+  const interval = quantile(intervals, 0.5)!;
+  out.refreshHz = Math.round(1000 / interval);
+
+  const adapter = await navigator.gpu?.requestAdapter({
+    powerPreference: "high-performance",
+  });
+  if (adapter) {
+    const info = adapter.info as unknown as Record<string, unknown>;
+    const limits: Record<string, number> = {};
+    // WebIDL attributes: enumerable getters on the prototype.
+    for (const key of Object.keys(Object.getPrototypeOf(adapter.limits))) {
+      limits[key] = (adapter.limits as unknown as Record<string, number>)[key]!;
+    }
+    out.webgpu = {
+      info: Object.fromEntries(
+        [
+          "vendor",
+          "architecture",
+          "device",
+          "description",
+          "subgroupMinSize",
+          "subgroupMaxSize",
+          "isFallbackAdapter",
+        ]
+          .filter((k) => info[k] !== undefined && info[k] !== "")
+          .map((k) => [k, info[k]]),
+      ),
+      features: [...adapter.features].sort(),
+      limits,
+      wgslLanguageFeatures: [
+        ...(navigator.gpu.wgslLanguageFeatures ?? []),
+      ].sort(),
+      preferredCanvasFormat: navigator.gpu.getPreferredCanvasFormat(),
+    };
+  }
+  const gl = document.createElement("canvas").getContext("webgl2");
+  if (gl) {
+    const debug = gl.getExtension("WEBGL_debug_renderer_info");
+    out.webgl2 = {
+      version: gl.getParameter(gl.VERSION),
+      shadingLanguage: gl.getParameter(gl.SHADING_LANGUAGE_VERSION),
+      vendor: debug
+        ? gl.getParameter(debug.UNMASKED_VENDOR_WEBGL)
+        : gl.getParameter(gl.VENDOR),
+      renderer: debug
+        ? gl.getParameter(debug.UNMASKED_RENDERER_WEBGL)
+        : gl.getParameter(gl.RENDERER),
+      maxTextureSize: gl.getParameter(gl.MAX_TEXTURE_SIZE),
+      maxSamples: gl.getParameter(gl.MAX_SAMPLES),
+      timerQuery: !!gl.getExtension("EXT_disjoint_timer_query_webgl2"),
+      extensions: (gl.getSupportedExtensions() ?? []).sort(),
+    };
+    gl.getExtension("WEBGL_lose_context")?.loseContext();
+  }
+  return out;
+}
+
+Object.assign(globalThis, { runScene, describeBrowser });
 if (!new URLSearchParams(location.search).has("bench")) {
   setupUi();
 }

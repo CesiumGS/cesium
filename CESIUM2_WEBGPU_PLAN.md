@@ -2716,6 +2716,31 @@ manifest schema.
   versions come from the runner (OS tools), not the page.
 - **Privacy of results**: results with machine identifiers stay in the
   results store, not the repo; the repo gets summaries by hardware class.
+- **Controlled and recorded conditions** (built, r32):
+  - recorded per run: GPU clocks, temperature, power, utilization and the
+    driver's slowdown reasons (`nvidia-smi`), CPU speed relative to
+    nominal and whole-machine utility (Windows counters), power source
+    and plan, driver version, the browser's WebGPU adapter (features,
+    limits, WGSL features) and WebGL renderer, and the full software
+    stack;
+  - controlled by the runner: each run starts within 3 °C of the idle GPU
+    temperature (cooldown) and after the machine is quiet (CPU utility near
+    its idle level), a wake lock keeps the machine and display awake for
+    the whole run (no settings change), and configurations alternate;
+  - reported: conditions per engine for every scene, flagged when GPU
+    clock or CPU speed differ by more than 5% or GPU slowdown shares by
+    more than 0.2; timelines of the whole run.
+  - Locking clocks and power states needs administrator rights and
+    changes machine settings, so a person applies them, once per runner
+    machine, and the suite records the state: GPU clocks locked
+    (`nvidia-smi -lgc`, where the driver allows it; laptops often don't),
+    CPU minimum and maximum processor state at 100% in a high-performance
+    power plan, the driver's "prefer maximum performance", dynamic power
+    sharing (laptop Dynamic Boost) off where possible, AC power, a fixed
+    display refresh, background work (updates, indexing, scans) paused.
+    Dedicated runner machines (v2) are configured this way once.
+  - Not corrected: timings are not scaled by clock (the relation isn't
+    linear); runs under different conditions are flagged or rerun.
 - **Diagnostics on demand**: a run that regresses can be rerun with
   Chrome tracing and V8 sampling (`trace.mjs`), and the trace is attached
   to the result.
@@ -2809,6 +2834,33 @@ capabilities in a browser:
     later instead of living in chat logs.
   - _Drill-down_: a run's per-frame data, attached Chrome traces, and the
     exact manifests and hashes it used, to reproduce it.
+
+**Experiment tracking (built, r32).** As ML experiment trackers manage
+training runs, the results page treats every run as an experiment:
+parameters (commit, branch, configurations, hardware and browser, catalog,
+repetitions, tags, a note) and metrics (per scene and configuration, with
+intervals). Its views:
+
+- _Trends_: chosen metrics (toggle chips, remembered) for one scene or
+  all scenes (geometric mean), per configuration, run to run and commit
+  to commit, filtered by hardware.
+- _Runs_: the experiment log, newest first, with headline ratios.
+- _Compare_: two runs per scene for one configuration, as forest plots
+  (the commit-to-commit regression view).
+- _Report_: one run's full report.
+
+The report itself is overview first, details on demand: verdict tiles
+(geometric mean ratio across scenes and how many scenes were better,
+worse or not distinguishable), a forest plot per headline metric, the
+hardware conditions over the run, then each scene's frame timelines,
+metrics and conditions (collapsed), and the setup. Charts follow the
+data-viz method: one axis per chart, thin marks, engine identity in
+validated categorical colors, better and worse in status colors with an
+icon and a label, a table twin for every chart, crosshair readouts.
+
+Next: notes and tags editable in the page (written back to the run),
+saved views, change points marked on trends, filters by tag and branch,
+a pinned baseline run, parameter columns in the log.
 
 Both UIs are views over the same files and store, built as pages served
 by the suite's local server (like the parity pages), with the plan's

@@ -64,14 +64,14 @@ function serveBenchResults(prefix: string, root: string): Plugin {
     name: "serve-bench-results",
     configureServer(server) {
       server.middlewares.use(`${prefix}/index.json`, (_req, res) => {
-        const runs = existsSync(root)
-          ? readdirSync(root)
-              .filter((name) => name.endsWith(".json"))
-              .sort()
-              .reverse()
-          : [];
+        const names = existsSync(root) ? readdirSync(root) : [];
+        const runs = names
+          .filter((n) => n.endsWith(".json") && !n.endsWith(".summary.json"))
+          .sort()
+          .reverse();
+        const summaries = names.filter((n) => n.endsWith(".summary.json"));
         res.setHeader("Content-Type", "application/json");
-        res.end(JSON.stringify({ directory: root, runs }));
+        res.end(JSON.stringify({ directory: root, runs, summaries }));
       });
     },
   };

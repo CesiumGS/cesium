@@ -5,6 +5,7 @@
 //   node packages/next/bench/suite/cli.mjs fetch
 //   node packages/next/bench/suite/cli.mjs run [--scenes a,b] [--configs 1.x,2.0]
 //        [--scenarios cold-orbit,warm-orbit] [--reps 3] [--motion 15]
+//        [--note "what changed"] [--tag a,b]
 //   node packages/next/bench/suite/cli.mjs report <results.json>
 //
 // BENCH_MANIFEST adds a private manifest (outside the repo). Results go to
@@ -15,7 +16,16 @@
 // when a run fails or the catalog is invalid.
 import { execSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { cpus, homedir, platform, release, totalmem } from "node:os";
+import {
+  arch,
+  cpus,
+  homedir,
+  platform,
+  release,
+  totalmem,
+  version as osVersion,
+} from "node:os";
+import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
@@ -25,7 +35,14 @@ import {
   unsupportedReason,
 } from "./manifest.mjs";
 import { fetchDatasets, verify } from "./store.mjs";
-import { renderReport } from "./report.mjs";
+import { renderReport, summarizeRun } from "./report.mjs";
+import {
+  conditions,
+  cooldown,
+  keepAwake,
+  quiet,
+  startSampler,
+} from "./telemetry.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, "..", "..");
@@ -130,29 +147,73 @@ async function run() {
   await server.listen();
   const base = server.resolvedUrls.local[0].replace(/\/$/, "");
   const { chromium } = await import("@playwright/test");
+  const channel = process.env.BENCH_CHANNEL ?? "msedge";
+  const headless = !process.env.BENCH_HEADED;
+  const browserArgs = [
+    "--enable-unsafe-webgpu",
+    "--enable-webgpu-developer-features",
+    "--force_high_performance_gpu",
+    "--js-flags=--expose-gc",
+  ];
   const browser = await chromium.launch({
-    headless: !process.env.BENCH_HEADED,
-    channel: process.env.BENCH_CHANNEL ?? "msedge",
-    args: [
-      "--enable-unsafe-webgpu",
-      "--enable-webgpu-developer-features",
-      "--force_high_performance_gpu",
-      "--js-flags=--expose-gc",
-    ],
+    headless,
+    channel,
+    args: browserArgs,
   });
+  const require = createRequire(import.meta.url);
+  const versionOf = (name) => {
+    try {
+      return require(`${name}/package.json`).version;
+    } catch {
+      return undefined;
+    }
+  };
+
+  // Hardware conditions: sampled throughout; each run starts from the
+  // idle temperature measured here, after the browser is up.
+  const t0 = Date.now();
+  const sampler = startSampler();
+  const awake = keepAwake();
+  process.stdout.write("measuring idle conditions (10 s)… ");
+  const idleStart = Date.now();
+  await new Promise((r) => setTimeout(r, 10000));
+  const idle = sampler.window(idleStart, Date.now());
+  console.log(
+    idle.gpuTemperatureMaxC !== undefined
+      ? `GPU ${idle.gpuTemperatureMaxC} °C`
+      : "no GPU telemetry",
+  );
+
+  const quietLimit = Math.max(15, (idle.cpuUtilityMean ?? 5) + 10);
 
   const started = new Date();
   const results = {
     date: started.toISOString(),
     commit: git("rev-parse HEAD"),
+    branch: git("rev-parse --abbrev-ref HEAD"),
+    note: opts.note ?? "",
+    tags: opts.tag ? opts.tag.split(",") : [],
     dirty: git("status --porcelain").length > 0,
     catalog: catalog.sources > 1 ? "public+private" : "public",
     environment: {
-      platform: `${platform()} ${release()}`,
+      os: `${osVersion()} (${platform()} ${release()}, ${arch()})`,
       cpu: cpus()[0]?.model,
       cores: cpus().length,
       memoryGiB: Math.round(totalmem() / 2 ** 30),
-      browser: browser.version(),
+      browser: `${channel === "msedge" ? "Microsoft Edge" : channel} ${browser.version()}`,
+      browserMode: headless ? "headless" : "headed",
+      browserArgs,
+      viewport: "1400×900 CSS px, device scale 1; scenes 1280×720",
+      tools: {
+        node: process.version,
+        playwright: versionOf("@playwright/test"),
+        vite: versionOf("vite"),
+      },
+      ...conditions(),
+      idle,
+      cooldownMarginC: 3,
+      wakeLock: awake.held ? "held (system and display)" : "not available",
+      quietRule: `CPU utility under ${quietLimit.toFixed(0)}% (idle + 10, at least 15) for 3 s before each run (30 s at most)`,
     },
     runs: [],
   };
@@ -180,7 +241,23 @@ async function run() {
           };
           const label = `[${done}/${total}] ${scene.id} ${scenario.id} ${config.id} #${rep + 1}`;
           process.stdout.write(`${label}… `);
+          const cooldownMs = spec.unsupported
+            ? 0
+            : await cooldown(sampler, idle.gpuTemperatureMaxC);
+          const calm = spec.unsupported
+            ? { quietMs: 0 }
+            : await quiet(sampler, quietLimit);
+          const runStart = Date.now();
           const result = await runOne(browser, base, spec, results);
+          result.span = [
+            (runStart - t0) / 1000,
+            (Date.now() - t0) / 1000,
+          ];
+          result.telemetry = {
+            ...sampler.window(runStart, Date.now()),
+            cooldownMs,
+            ...calm,
+          };
           results.runs.push({
             scene: scene.id,
             sceneTitle: scene.private ? scene.id : scene.title,
@@ -203,6 +280,9 @@ async function run() {
       }
     }
   }
+  results.timeline = timeline(sampler.samples(), t0);
+  sampler.stop();
+  awake.release();
   await browser.close();
   await server.close();
 
@@ -211,7 +291,11 @@ async function run() {
   mkdirSync(directory, { recursive: true });
   const stamp = started.toISOString().replace(/[:.]/g, "-");
   const file = join(directory, `${stamp}.json`);
-  writeFileSync(file, JSON.stringify(results, null, 2));
+  writeFileSync(file, JSON.stringify(results));
+  writeFileSync(
+    file.replace(/\.json$/, ".summary.json"),
+    JSON.stringify(summarizeRun(results)),
+  );
   writeFileSync(file.replace(/\.json$/, ".html"), renderReport(results));
   console.log(`results: ${file}\nreport:  ${file.replace(/\.json$/, ".html")}`);
   if (failed > 0) {
@@ -255,19 +339,12 @@ async function runOne(browser, base, spec, results) {
   };
   try {
     await page.goto(`${base}/bench/suite/suite.html?bench`);
-    if (!results.environment.adapter) {
-      results.environment.adapter = await page.evaluate(async () => {
-        const adapter = await navigator.gpu?.requestAdapter({
-          powerPreference: "high-performance",
-        });
-        return adapter
-          ? {
-              vendor: adapter.info.vendor,
-              architecture: adapter.info.architecture,
-              description: adapter.info.description,
-            }
-          : undefined;
-      });
+    if (!results.environment.page) {
+      results.environment.page = await page.evaluate(() =>
+        globalThis.describeBrowser(),
+      );
+      const info = results.environment.page.webgpu?.info;
+      results.environment.adapter = info;
     }
     if (spec.scenario.cache === "warm" && !spec.unsupported) {
       // Prime the HTTP cache, then measure a fresh page in the same context.
@@ -303,4 +380,47 @@ function git(args) {
   } catch {
     return "";
   }
+}
+
+/**
+ * The run's hardware timeline for charts: seconds since the suite began;
+ * GPU [t, clock MHz, memory clock MHz, °C, W, utilization %, slowed 0/1]
+ * and CPU [t, speed % of nominal, utility %], averaged into at most 4,000
+ * buckets each.
+ */
+function timeline({ gpu, cpu }, t0) {
+  const bucket = (samples, row, max = 4000) => {
+    const rows = samples.map((s) => row(s));
+    if (rows.length <= max) {
+      return rows;
+    }
+    const size = rows.length / max;
+    const out = [];
+    for (let b = 0; b < max; b++) {
+      const slice = rows.slice(Math.floor(b * size), Math.floor((b + 1) * size));
+      const mean = [];
+      for (let k = 0; k < slice[0].length; k++) {
+        mean.push(slice.reduce((sum, r) => sum + (r[k] ?? 0), 0) / slice.length);
+      }
+      out.push(mean);
+    }
+    return out;
+  };
+  const round = (v) => (Number.isFinite(v) ? Math.round(v * 10) / 10 : null);
+  return {
+    gpu: bucket(gpu, (s) =>
+      [
+        (s.t - t0) / 1000,
+        s.clock,
+        s.memory,
+        s.temperature,
+        s.power,
+        s.utilization,
+        s.reasons & 0xec ? 1 : 0,
+      ].map(round),
+    ),
+    cpu: bucket(cpu, (s) =>
+      [(s.t - t0) / 1000, s.performance, s.utility].map(round),
+    ),
+  };
 }
