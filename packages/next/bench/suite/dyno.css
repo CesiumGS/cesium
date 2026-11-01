@@ -871,3 +871,20 @@ dialog.expanded form {
   justify-content: flex-end;
   margin-bottom: var(--space-2);
 }
+
+table.log button.sort {
+  border: 0;
+  background: none;
+  padding: 0;
+  min-height: 0;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+table.log button.sort:hover {
+  color: var(--gray-12);
+  background: none;
+}
+.dyno-view input[type="search"] {
+  min-width: min(360px, 100%);
+}

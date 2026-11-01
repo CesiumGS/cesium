@@ -40,6 +40,7 @@ interface Summary {
   browser?: string;
   configs: string[];
   repetitions: number;
+  subject?: string;
   baseline?: string;
   candidate?: string;
   scenes: Array<{
@@ -318,60 +319,134 @@ function hardware(): void {
 
 function log(): void {
   main.replaceChildren();
-  const rows = [...summaries].reverse().map((s) => {
-    const headline = (key: string) => {
-      const configs = s.configs;
-      const base = s.baseline ?? (configs.includes("1.x") ? "1.x" : configs[0]);
-      const cand = s.candidate ?? configs.find((c) => c !== base);
-      if (!cand) {
-        return "–";
+  /** Candidate over baseline for one run and metric (geomean of scenes). */
+  const headline = (s: Summary, key: string) => {
+    const configs = s.configs;
+    const base = s.baseline ?? (configs.includes("1.x") ? "1.x" : configs[0]);
+    const cand = s.candidate ?? configs.find((c) => c !== base);
+    if (!cand) {
+      return undefined;
+    }
+    const ratios: number[] = [];
+    for (const cell of s.scenes.filter((c) => c.config === cand)) {
+      const b = s.scenes.find(
+        (c) => cellKey(c) === cellKey(cell) && c.config === base,
+      );
+      const r =
+        b &&
+        ratio(b.metrics[key]?.values ?? [], cell.metrics[key]?.values ?? []);
+      if (r?.value) {
+        ratios.push(r.value);
       }
-      const ratios: number[] = [];
-      for (const cell of s.scenes.filter((c) => c.config === cand)) {
-        const b = s.scenes.find(
-          (c) => cellKey(c) === cellKey(cell) && c.config === base,
-        );
-        const r =
-          b &&
-          ratio(b.metrics[key]?.values ?? [], cell.metrics[key]?.values ?? []);
-        if (r?.value) {
-          ratios.push(r.value);
-        }
-      }
-      const g = geomean(ratios);
-      if (g === undefined) {
-        return "–";
-      }
-      const cls = g < 0.95 ? "better" : g > 1.05 ? "worse" : "muted";
-      return `<span class="${cls}">${g < 0.95 ? "▼ " : g > 1.05 ? "▲ " : ""}×${g.toFixed(2)}</span>`;
-    };
-    const scenes = new Set(s.scenes.map((c) => cellKey(c))).size;
-    return `<tr class="clickable" data-open="${escape(s.name)}" tabindex="0">
+    }
+    return geomean(ratios);
+  };
+  const cellOf = (g: number | undefined) => {
+    if (g === undefined) {
+      return "–";
+    }
+    const cls = g < 0.95 ? "better" : g > 1.05 ? "worse" : "muted";
+    return `<span class="${cls}">${g < 0.95 ? "▼ " : g > 1.05 ? "▲ " : ""}×${g.toFixed(2)}</span>`;
+  };
+  const data = summaries.map((s) => ({
+    s,
+    cpu: headline(s, "cpuP50"),
+    settle: headline(s, "settleMs"),
+    frame: headline(s, "frameP95"),
+    text: `${s.note ?? ""} ${s.subject ?? ""} ${s.tags.join(" ")} ${s.commit} ${s.branch ?? ""} ${s.hardware}`.toLowerCase(),
+  }));
+  type Row = (typeof data)[number];
+  const COLUMNS: Array<[string, string, (r: Row) => number | string]> = [
+    ["when", "When", (r) => r.s.date],
+    ["cpu", "CPU / frame", (r) => r.cpu ?? Infinity],
+    ["settle", "Settle", (r) => r.settle ?? Infinity],
+    ["frame", "Frame p95", (r) => r.frame ?? Infinity],
+  ];
+  let sort = store.get("dyno.runsSort", { key: "when", descending: true });
+  let query = "";
+
+  main.innerHTML = `<p class="lede">Ratios are each run's candidate over its baseline (geometric mean across scenes; ▼ better, ▲ worse). Notes and tags come from <code>--note</code> and <code>--tag</code>; click a row for its report, a column heading to sort.</p>
+<div class="controls"><input type="search" data-id="search" placeholder="Search notes, tags, commits, hardware" aria-label="Search runs"><span class="muted" data-id="count"></span></div>
+<table class="log"><thead><tr>
+  <th>${sortButton("when")}</th><th>Commit</th><th>Note</th><th>Hardware</th><th class="num">Scenes × configs × reps</th>
+  <th class="num">${sortButton("cpu")}</th><th class="num">${sortButton("settle")}</th><th class="num">${sortButton("frame")}</th>
+</tr></thead><tbody></tbody></table>`;
+  function sortButton(key: string): string {
+    const label = COLUMNS.find((c) => c[0] === key)![1];
+    return `<button class="sort" data-sort="${key}">${escape(label)}<span class="arrow" aria-hidden="true"></span></button>`;
+  }
+  const body = main.querySelector("tbody")!;
+
+  function draw(): void {
+    const value = COLUMNS.find((c) => c[0] === sort.key)![2];
+    const rows = data
+      .filter((r) => !query || r.text.includes(query))
+      .sort((a, b) => {
+        const x = value(a);
+        const y = value(b);
+        const order = x < y ? -1 : x > y ? 1 : 0;
+        return sort.descending ? -order : order;
+      });
+    main.querySelector('[data-id="count"]')!.textContent =
+      `${rows.length} of ${data.length} runs`;
+    for (const b of main.querySelectorAll<HTMLButtonElement>("button.sort")) {
+      const on = b.dataset.sort === sort.key;
+      b.closest("th")!.setAttribute(
+        "aria-sort",
+        on ? (sort.descending ? "descending" : "ascending") : "none",
+      );
+      b.querySelector(".arrow")!.textContent = on
+        ? sort.descending
+          ? " ▼"
+          : " ▲"
+        : "";
+    }
+    body.innerHTML = rows
+      .map(({ s, cpu, settle, frame }) => {
+        const scenes = new Set(s.scenes.map((c) => cellKey(c))).size;
+        return `<tr class="clickable" data-open="${escape(s.name)}" tabindex="0">
 <td>${escape(when(s))}</td>
 <td><code>${escape(short(s))}</code><div class="muted">${escape(s.branch ?? "")}</div></td>
-<td>${escape(s.note ?? "")}${s.tags.length ? `<div class="muted">${s.tags.map(escape).join(", ")}</div>` : ""}</td>
+<td>${escape(s.note || s.subject || "")}${s.tags.length ? `<div class="muted">${s.tags.map(escape).join(", ")}</div>` : ""}</td>
 <td>${escape(s.hardware)}<div class="muted">${escape(s.browser ?? "")}</div></td>
 <td class="num">${scenes} × ${escape(s.configs.join(", "))} × ${s.repetitions}</td>
-<td class="num">${headline("cpuP50")}</td>
-<td class="num">${headline("settleMs")}</td>
-<td class="num">${headline("frameP95")}</td>
-<td><button class="link" data-open="${escape(s.name)}">Report</button></td>
+<td class="num">${cellOf(cpu)}</td>
+<td class="num">${cellOf(settle)}</td>
+<td class="num">${cellOf(frame)}</td>
 </tr>`;
-  });
-  main.innerHTML = `<p class="lede">Ratios are each run's candidate over its baseline (geometric mean across scenes; ▼ better, ▲ worse). Notes and tags come from <code>--note</code> and <code>--tag</code>; click a row for its report.</p>
-<table class="log"><tr><th>When</th><th>Commit</th><th>Note</th><th>Hardware</th><th class="num">Scenes × configs × reps</th><th class="num">CPU / frame</th><th class="num">Settle</th><th class="num">Frame p95</th><th></th></tr>${rows.join("")}</table>`;
-  main.querySelectorAll<HTMLElement>("tr[data-open]").forEach((row) => {
-    const open = () => {
-      store.set("bench.report", row.dataset.open);
-      navigateTo("report");
-    };
-    row.addEventListener("click", open);
-    row.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        open();
-      }
+      })
+      .join("");
+    body.querySelectorAll<HTMLElement>("tr[data-open]").forEach((row) => {
+      const open = () => {
+        store.set("bench.report", row.dataset.open);
+        navigateTo("report");
+      };
+      row.addEventListener("click", open);
+      row.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          open();
+        }
+      });
     });
-  });
+  }
+  const setSort = (key: string) => {
+    sort =
+      sort.key === key
+        ? { key, descending: !sort.descending }
+        : { key, descending: key === "when" };
+    store.set("dyno.runsSort", sort);
+    draw();
+  };
+  for (const b of main.querySelectorAll<HTMLButtonElement>("button.sort")) {
+    b.addEventListener("click", () => setSort(b.dataset.sort!));
+  }
+  main
+    .querySelector<HTMLInputElement>('[data-id="search"]')!
+    .addEventListener("input", (e) => {
+      query = (e.target as HTMLInputElement).value.trim().toLowerCase();
+      draw();
+    });
+  draw();
 }
 
 // ------------------------------------------------------------ compare
@@ -568,9 +643,15 @@ async function report(): Promise<void> {
   });
   const render = async () => {
     // Runs before r33 carry no budgets: the catalog's apply.
-    const html = renderReport(await full(name), {
-      budgets: (publicCatalog as { budgets?: unknown[] }).budgets,
-    });
+    let html: string;
+    try {
+      html = renderReport(await full(name), {
+        budgets: (publicCatalog as { budgets?: unknown[] }).budgets,
+      });
+    } catch (e) {
+      shadow.innerHTML = `<p style="font: 14px system-ui; color: #d03b3b">This run's results could not be read (${escape(String(e))}). The summary may outlive a moved or partial results file.</p>`;
+      return;
+    }
     const doc = new DOMParser().parseFromString(html, "text/html");
     doc.querySelectorAll("script:not([type])").forEach((el) => el.remove());
     shadow.innerHTML = [...doc.head.querySelectorAll("style")]
