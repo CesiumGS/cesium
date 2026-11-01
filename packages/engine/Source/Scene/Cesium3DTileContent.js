@@ -37,7 +37,6 @@ class Cesium3DTileContent {
      *
      * @type {boolean}
      *
-     * @protected
      * @ignore
      */
     this.featurePropertiesDirty = false;
@@ -172,8 +171,6 @@ class Cesium3DTileContent {
    * @type {Cesium3DTileBatchTable}
    * @readonly
    * @constant
-   *
-   * @private
    */
   batchTable;
 
@@ -187,7 +184,6 @@ class Cesium3DTileContent {
    *
    * @type {ImplicitMetadataView|undefined}
    *
-   * @private
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   metadata;
@@ -203,7 +199,6 @@ class Cesium3DTileContent {
    *
    * @type {Cesium3DContentGroup|undefined}
    *
-   * @private
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   group;
@@ -217,7 +212,6 @@ class Cesium3DTileContent {
    *
    * @type {boolean}
    *
-   * @private
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   show;
@@ -235,36 +229,34 @@ class Cesium3DTileContent {
 
   /**
    * Returns the {@link Cesium3DTileFeature} object for the feature with the
-   * given <code>batchId</code>.  This object is used to get and modify the
+   * given <code>featureId</code>.  This object is used to get and modify the
    * feature's properties.
    * <p>
-   * Features in a tile are ordered by <code>batchId</code>, an index used to retrieve their metadata from the batch table.
+   * Features in a tile are ordered by <code>featureId</code>, an index used to retrieve their metadata from the batch table.
    * </p>
    *
    * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/BatchTable}.
    *
-   * @param {number} batchId The batchId for the feature.
+   * @param {number} featureId The batchId for the feature.
+   * @param {number} [featureTableId] The ID of the feature table to look up the given ID
    * @returns {Cesium3DTileFeature} The corresponding {@link Cesium3DTileFeature} object.
    *
-   * @exception {DeveloperError} batchId must be between zero and {@link Cesium3DTileContent#featuresLength} - 1.
+   * @exception {DeveloperError} featureId must be between zero and {@link Cesium3DTileContent#featuresLength} - 1.
    */
-  getFeature(batchId) {
+  getFeature(featureId, featureTableId) {
     DeveloperError.throwInstantiationError();
   }
 
   /**
-       * Called when {@link Cesium3DTileset#debugColorizeTiles} changes.
-       * <p>
-       * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
-       * not part of the public Cesium API.
-       * </p>
-       *
-       * @param {boolean} enabled Whether to enable or disable debug settings.
-       * @param {Color} color Debug color.
-       * @returns {Cesium3DTileFeature} The corresponding {@link Cesium3DTileFeature} object.
-
-       * @private
-       */
+   * Called when {@link Cesium3DTileset#debugColorizeTiles} changes.
+   * <p>
+   * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
+   * not part of the public Cesium API.
+   * </p>
+   *
+   * @param {boolean} enabled Whether to enable or disable debug settings.
+   * @param {Color} color Debug color.
+   */
   applyDebugSettings(enabled, color) {
     DeveloperError.throwInstantiationError();
   }
@@ -278,8 +270,6 @@ class Cesium3DTileContent {
    *
    * @param {Cesium3DTileStyle} style The style.
    * @returns {void}
-   *
-   * @private
    */
   applyStyle(style) {
     DeveloperError.throwInstantiationError();
@@ -297,8 +287,6 @@ class Cesium3DTileContent {
    * @param {Cesium3DTileset} tileset The tileset containing this tile.
    * @param {FrameState} frameState The frame state.
    * @returns {void}
-   *
-   * @private
    */
   update(tileset, frameState) {
     DeveloperError.throwInstantiationError();
@@ -311,8 +299,6 @@ class Cesium3DTileContent {
    * @param {FrameState} frameState The frame state.
    * @param {Cartesian3|undefined} [result] The intersection or <code>undefined</code> if none was found.
    * @returns {Cartesian3|undefined} The intersection or <code>undefined</code> if none was found.
-   *
-   * @private
    */
   pick(ray, frameState, result) {
     DeveloperError.throwInstantiationError();
@@ -331,8 +317,6 @@ class Cesium3DTileContent {
    * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
    *
    * @see Cesium3DTileContent#destroy
-   *
-   * @private
    */
   isDestroyed() {
     DeveloperError.throwInstantiationError();
@@ -358,8 +342,6 @@ class Cesium3DTileContent {
    * @see Cesium3DTileContent#isDestroyed
    *
    * @returns {void}
-   *
-   * @private
    */
   destroy() {
     DeveloperError.throwInstantiationError();

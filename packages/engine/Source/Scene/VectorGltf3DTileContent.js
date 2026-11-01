@@ -23,6 +23,7 @@ import { isHeightReferenceClamp } from "./HeightReference.js";
 /** @import { Cartesian3 } from "@cesium/core"; */
 /** @import Cesium3DContentGroup from "./Cesium3DContentGroup.js"; */
 /** @import Cesium3DTile from "./Cesium3DTile.js"; */
+/** @import Cesium3DTileContent from "./Cesium3DTileContent.js"; */
 /** @import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js"; */
 /** @import Cesium3DTileVectorFeature from "./Cesium3DTileVectorFeature.js";*/
 /** @import Cesium3DTileset from "./Cesium3DTileset.js"; */
@@ -53,6 +54,7 @@ const scratchTileModelMatrix = new Matrix4();
  * Vector glTF tile content. This path decodes glTF primitives into vector
  * buffers, then renders with dedicated vector primitives.
  *
+ * @implements Cesium3DTileContent
  * @ignore
  */
 class VectorGltf3DTileContent {

@@ -46,6 +46,8 @@ const polygonMaterial = new BufferPolygonMaterial();
  *
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  *
+ * @implements Cesium3DTileFeature
+ *
  * @example
  * // On mouse over, display all the properties for a feature in the console log.
  * handler.setInputAction(function(movement) {
@@ -274,6 +276,22 @@ class Cesium3DTileVectorFeature {
   }
 
   /**
+   * Dummy implementation for 'Cesium3DTileFeature'
+   * @type {undefined}
+   */
+  get pickId() {
+    return undefined;
+  }
+
+  /**
+   * Dummy implementation for 'Cesium3DTileFeature'
+   * @type {undefined}
+   */
+  get polylinePositions() {
+    return undefined;
+  }
+
+  /**
    * Gets the content of the tile containing the feature.
    *
    * @type {VectorGltf3DTileContent}
@@ -405,12 +423,10 @@ class Cesium3DTileVectorFeature {
    * </p>
    * @param {string} name The case-sensitive name of the property.
    * @returns {*} The value of the property or <code>undefined</code> if the feature does not have this property.
-   * @private
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   getPropertyInherited(name) {
     return Cesium3DTileFeature.getPropertyInherited(
-      // @ts-expect-error Requires type checking in Cesium3DTileContent.
       this._content,
       this._batchId,
       name,
@@ -454,8 +470,6 @@ class Cesium3DTileVectorFeature {
    *
    * @param {string} className The name to check against.
    * @returns {boolean} Whether the feature's class name equals <code>className</code>
-   *
-   * @private
    */
   isExactClass(className) {
     if (!defined(this._batchTable)) {
@@ -472,8 +486,6 @@ class Cesium3DTileVectorFeature {
    *
    * @param {string} className The name to check against.
    * @returns {boolean} Whether the feature's class or inherited classes are named <code>className</code>
-   *
-   * @private
    */
   isClass(className) {
     if (!defined(this._batchTable)) {
@@ -489,8 +501,6 @@ class Cesium3DTileVectorFeature {
    * </p>
    *
    * @returns {string} The feature's class name.
-   *
-   * @private
    */
   getExactClassName() {
     if (!defined(this._batchTable)) {
