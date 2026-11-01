@@ -3060,8 +3060,21 @@ addressed in 2.0 (each with a Dyno scene to show the fix):
   shows it directly: on the Rainier path at 30%, settled, 2.0 draws 20
   terrain tiles spanning levels 0 to 12 (six of them at levels 0 to 5)
   where 1.x draws 57 at levels 6 to 13, and only 4 tiles are the same.
-  `Budgeted` leaves much of the view at very coarse levels that 1.x's SSE
-  would refine; the fix starts there.
+  _Cause (r37)_: on terrain, `Budgeted` used 3D Tiles' dynamic SSE (up to
+  24 pixels off distant tiles, density from the whole-globe root), which
+  took mid-distance tiles below zero SSE at oblique views. 1.x's globe
+  lowers the SSE only by fog (at most 2 pixels), and only while fog is
+  drawn. `GlobeBudgetedSelection` uses the globe's term (off while 2.0
+  draws no fog); settled at the same camera, 2.0 draws 68 tiles and 1.x
+  67, all 67 shared, level for level.
+- **Content under the globe is hidden** (r37, Aerometrex San Francisco):
+  2.0 depth-tests every tile against the globe, so the photogrammetry's
+  ground, about 30 m below the WGS84 ellipsoid there (geoid), draws under
+  the ellipsoid and only the tall buildings show. 1.x clears depth after
+  the globe unless `Globe.depthTestAgainstTerrain` is set (default off),
+  so tiles always draw over it. To decide: the globe drawn behind content
+  (1.x's default) or depth-tested (correct occlusion by real terrain), and
+  whether the bare ellipsoid ever occludes.
 - **Settle time on terrain scenes**: Rainier ×1.16 and OSM Philadelphia
   ×1.42 slower than 1.x. The waterfall shows 2.0 fetching 49 content tiles
   (18.7 MB) on OSM Philadelphia to 1.x's 31 (10.7 MB), and starting them

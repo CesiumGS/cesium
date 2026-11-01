@@ -57,7 +57,8 @@ const FOG_DENSITY = 0.0006;
 const FOG_HEIGHT_SCALAR = 0.001;
 const FOG_HEIGHT_FALLOFF = 0.59;
 const FOG_MAX_HEIGHT = 800000;
-const FOG_SSE = 2.0;
+/** 1.x Fog.screenSpaceErrorFactor. */
+export const FOG_SSE = 2.0;
 
 const ellipsoid = Ellipsoid.WGS84;
 
@@ -126,22 +127,8 @@ export class GlobeLegacy1xSelection implements TileSelection {
   }
 
   select(root: Tile, _rootError: number, view: SelectionView): SelectionResult {
-    const height = view.cartographic.height;
-    const fogEnabled = this.fog && height <= FOG_MAX_HEIGHT;
-    let density = 0;
-    if (fogEnabled) {
-      density =
-        FOG_DENSITY *
-        FOG_HEIGHT_SCALAR *
-        Math.pow(Math.max(height / FOG_MAX_HEIGHT, 1e-4), -FOG_HEIGHT_FALLOFF);
-      const p = view.position;
-      const length = Math.hypot(p[0]!, p[1]!, p[2]!);
-      const d = view.direction;
-      const dot = Math.abs(
-        (d[0]! * p[0]! + d[1]! * p[1]! + d[2]! * p[2]!) / length,
-      );
-      density *= 1 - dot;
-    }
+    const fogEnabled = this.fog && view.cartographic.height <= FOG_MAX_HEIGHT;
+    const density = fogEnabled ? fogDensity(view) : 0;
     const P: Pass = {
       view,
       pass: ++this.passes,
@@ -625,8 +612,30 @@ function setResult(P: Pass, tile: Tile, result: number): void {
   }
 }
 
+/**
+ * 1.x Fog's density for a view (0 above its maximum height), thinner looking
+ * down than toward the horizon.
+ */
+export function fogDensity(view: SelectionView): number {
+  const height = view.cartographic.height;
+  if (height > FOG_MAX_HEIGHT) {
+    return 0;
+  }
+  const density =
+    FOG_DENSITY *
+    FOG_HEIGHT_SCALAR *
+    Math.pow(Math.max(height / FOG_MAX_HEIGHT, 1e-4), -FOG_HEIGHT_FALLOFF);
+  const p = view.position;
+  const length = Math.hypot(p[0]!, p[1]!, p[2]!);
+  const d = view.direction;
+  const dot = Math.abs(
+    (d[0]! * p[0]! + d[1]! * p[1]! + d[2]! * p[2]!) / length,
+  );
+  return density * (1 - dot);
+}
+
 /** 1.x CesiumMath.fog. */
-function fog(distance: number, density: number): number {
+export function fog(distance: number, density: number): number {
   const scalar = distance * density;
   return 1.0 - Math.exp(-(scalar * scalar));
 }

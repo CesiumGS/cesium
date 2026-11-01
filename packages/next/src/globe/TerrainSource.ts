@@ -35,6 +35,7 @@ import {
   type TileRange,
 } from "./quantizedMesh.ts";
 import { GlobeLegacy1xSelection } from "./GlobeLegacy1x.ts";
+import { GlobeBudgetedSelection } from "./GlobeBudgeted.ts";
 
 /** Decodes one tile in a worker: fetch, quantized-mesh decode, skirts. */
 export type TerrainLoader = (
@@ -157,13 +158,13 @@ export class TerrainSource {
   }
 
   /**
-   * The selection policy for terrain: 1.x's globe traversal for "legacy1x";
-   * undefined keeps the tileset's default.
+   * The selection policy for terrain: 1.x's globe traversal for "legacy1x",
+   * else `Budgeted` with the globe's fog in place of 3D Tiles' dynamic SSE.
    */
-  createSelection(options: TilesetOptions): TileSelection | undefined {
+  createSelection(options: TilesetOptions): TileSelection {
     return options.policy === "legacy1x"
       ? new GlobeLegacy1xSelection(this, options)
-      : undefined;
+      : new GlobeBudgetedSelection(options);
   }
 
   /** Reads `layer.json` (quantized-mesh only). */
