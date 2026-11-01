@@ -185,6 +185,10 @@ export function mountWorkspace(
     </div>
     <div data-id="sections"></div>
   </section>
+  <dialog class="expanded" aria-label="Expanded panel">
+    <form method="dialog"><button class="close" aria-label="Close">Close</button></form>
+    <div class="expanded-body"></div>
+  </dialog>
 </div>`;
   const $ = <T extends Element>(id: string) =>
     root.querySelector<T>(`[data-id="${id}"]`)!;
@@ -526,6 +530,7 @@ ${s.tags.length ? `<div class="muted">${s.tags.map(escape).join(", ")}</div>` : 
     scene: string,
     headline: boolean,
     title?: string,
+    size = { width: 520, height: 170 },
   ): string {
     const info = INFO.get(key);
     if (!info) {
@@ -571,8 +576,7 @@ ${s.tags.length ? `<div class="muted">${s.tags.map(escape).join(", ")}</div>` : 
         ],
         marks,
         yMin: Infinity,
-        width: 520,
-        height: 170,
+        ...size,
       });
     }
     const configs = allConfigs.filter((c) =>
@@ -640,8 +644,7 @@ ${s.tags.length ? `<div class="muted">${s.tags.map(escape).join(", ")}</div>` : 
         : [],
       refs,
       marks,
-      width: 520,
-      height: 170,
+      ...size,
     });
   }
 
@@ -659,7 +662,7 @@ ${s.tags.length ? `<div class="muted">${s.tags.map(escape).join(", ")}</div>` : 
       let body = "";
       for (const key of keys) {
         for (const scene of sceneKeys) {
-          body += panel(
+          const chart = panel(
             key,
             runs,
             scene,
@@ -668,6 +671,9 @@ ${s.tags.length ? `<div class="muted">${s.tags.map(escape).join(", ")}</div>` : 
               ? `${INFO.get(key)?.[1] ?? key}: ${scenes.get(scene)}`
               : undefined,
           );
+          body += chart
+            ? `<div class="panel" data-key="${escape(key)}" data-scene="${escape(scene)}" data-headline="${id === "headline"}">${chart}<button class="expand" aria-label="Expand this panel" title="Expand">⤢</button></div>`
+            : "";
         }
       }
       const about =
@@ -679,6 +685,24 @@ ${s.tags.length ? `<div class="muted">${s.tags.map(escape).join(", ")}</div>` : 
       html += `<details class="section" data-section="${id}" ${collapsed.has(id) ? "" : "open"}><summary>${escape(title)}</summary>${about}<div class="grid">${body || `<div class="empty">No data.</div>`}</div></details>`;
     }
     out.innerHTML = html;
+    for (const b of out.querySelectorAll<HTMLButtonElement>(".panel .expand")) {
+      b.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const host = b.closest<HTMLElement>(".panel")!;
+        const dialog =
+          root.querySelector<HTMLDialogElement>("dialog.expanded")!;
+        dialog.querySelector(".expanded-body")!.innerHTML = panel(
+          host.dataset.key!,
+          visible(),
+          host.dataset.scene!,
+          host.dataset.headline === "true",
+          undefined,
+          { width: 1200, height: 420 },
+        );
+        dialog.showModal();
+        bindCharts();
+      });
+    }
     for (const d of out.querySelectorAll<HTMLDetailsElement>(
       "details.section",
     )) {

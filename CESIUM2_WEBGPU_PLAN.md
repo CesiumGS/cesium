@@ -3360,10 +3360,14 @@ URL. Practices applied:
 - Feedback: a loading state between views, toasts for saves, copies and
   approvals, clickable table rows, explanations once per section instead
   of on every panel, long labels truncated.
+- Also built: workspace panels expand full width in a dialog (Esc
+  closes); Compare starts from the two latest ordinary runs, offers only
+  shared configurations and warns when machines or render settings differ;
+  the workspace marks runs where the render settings changed.
 - Next: convert the views' controls to Radix components one by one
-  (selects, segmented controls, dialogs for triage), resizable and
-  full-screen panels, persistent column choices in tables, and a guided
-  first run when no results exist.
+  (selects, segmented controls, dialogs for triage), persistent column
+  choices and sorting in tables, and a guided first run when no results
+  exist.
 
 #### New data the runs record
 

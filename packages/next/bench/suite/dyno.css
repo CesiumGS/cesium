@@ -834,3 +834,40 @@ table.log th {
   margin: 0 0 var(--space-3);
   overflow-wrap: anywhere;
 }
+
+.workspace .panel {
+  position: relative;
+}
+.workspace .panel .expand {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  min-height: 0;
+  padding: 2px 7px;
+  font-size: 14px;
+  line-height: 1;
+  opacity: 0;
+  transition: opacity 120ms;
+}
+.workspace .panel:hover .expand,
+.workspace .panel .expand:focus-visible {
+  opacity: 1;
+}
+dialog.expanded {
+  width: min(1280px, 94vw);
+  max-height: 90vh;
+  border: 1px solid var(--gray-a6);
+  border-radius: var(--radius-4);
+  background: var(--color-panel-solid);
+  color: var(--gray-12);
+  padding: var(--space-4);
+  box-shadow: var(--shadow-6);
+}
+dialog.expanded::backdrop {
+  background: var(--color-overlay);
+}
+dialog.expanded form {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: var(--space-2);
+}
