@@ -545,6 +545,7 @@ export class NextAdapter implements Adapter {
     let loading = 0;
     let requests = 0;
     let bytes = 0;
+    let memory = 0;
     for (const t of this.tilesets) {
       for (const n of t.stats.selected.values()) {
         selected += n;
@@ -552,11 +553,12 @@ export class NextAdapter implements Adapter {
       loading += t.stats.inFlight;
       requests += t.stats.requestsTotal;
       bytes += t.stats.bytesReceived;
+      memory += t.stats.bytes;
     }
     return {
       selected,
       loading,
-      note: `${requests} requests · ${(bytes / 1e6).toFixed(1)} MB received`,
+      note: `${(memory / 1e6).toFixed(0)} MB of tiles in memory · ${requests} requests · ${(bytes / 1e6).toFixed(1)} MB received`,
     };
   }
 
@@ -874,6 +876,18 @@ export class LegacyAdapter implements Adapter {
     const globe = this.viewer.scene.globe;
     if (globe) {
       selected += globe._surface._tilesToRender.length;
+      // 1.x counts globe tiles, not their bytes: terrain meshes in its tile
+      // cache, as 2.0 counts them (imagery excluded in both).
+      for (
+        let tile = globe._surface._tileReplacementQueue.head;
+        tile;
+        tile = tile.replacementNext
+      ) {
+        const mesh = tile.data?.mesh;
+        if (tile.data?.vertexArray && mesh) {
+          memory += mesh.vertices.byteLength + mesh.indices.byteLength;
+        }
+      }
     }
     return {
       selected,
