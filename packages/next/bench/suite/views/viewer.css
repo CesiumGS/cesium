@@ -35,6 +35,11 @@
   overflow: hidden;
   background: #0b0e14;
 }
+/* Full screen: the card fills the screen, square and borderless. */
+.viewer-stage:fullscreen {
+  border: none;
+  border-radius: 0;
+}
 .viewer-engine {
   position: absolute;
   inset: 0;
@@ -50,6 +55,12 @@
   transform: translateX(-50%);
   inline-size: min(560px, calc(100% - 80px));
   z-index: 3;
+}
+/* Full screen, bottom right (credits are bottom left). */
+.viewer-screen {
+  position: absolute;
+  inset: auto var(--stratakit-space-200) var(--stratakit-space-200) auto;
+  z-index: 2;
 }
 /* The canvas's tools, top left (the inspector is top right). */
 .viewer-tools {

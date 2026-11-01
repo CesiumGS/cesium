@@ -22,14 +22,16 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { svgFitToView } from "@stratakit/icons/fit-to-view";
+import { svgMap } from "@stratakit/icons/map";
+import { svgReCenter } from "@stratakit/icons/re-center";
 import { svgFolderOpen } from "@stratakit/icons/folder-open";
 import { svgGlobe } from "@stratakit/icons/globe";
 import { svgPanelCollapseLeft } from "@stratakit/icons/panel-collapse-left";
 import { svgPanelExpandLeft } from "@stratakit/icons/panel-expand-left";
 import { svgRefresh } from "@stratakit/icons/refresh";
 import { svgWindowSplitVertical } from "@stratakit/icons/window-split-vertical";
-import { svgWindowZoomIn } from "@stratakit/icons/window-zoom-in";
+import { svgWindowCollapse } from "@stratakit/icons/window-collapse";
+import { svgWindowExpand } from "@stratakit/icons/window-expand";
 import { IconButton } from "@stratakit/bricks";
 import { Icon } from "@stratakit/mui";
 import { unstable_Toolbar as Toolbar } from "@stratakit/structures";
@@ -152,6 +154,15 @@ export function Viewer() {
   const [attempt, setAttempt] = useState(0);
   const [opening, setOpening] = useState(false);
   const stage = useRef<HTMLDivElement>(null);
+  // Fullscreen: the canvas card with its tools, inspector and credits.
+  const card = useRef<HTMLDivElement>(null);
+  const [fullscreen, setFullscreen] = useState(false);
+  useEffect(() => {
+    const changed = () =>
+      setFullscreen(document.fullscreenElement === card.current);
+    document.addEventListener("fullscreenchange", changed);
+    return () => document.removeEventListener("fullscreenchange", changed);
+  }, []);
   const viewRef = useRef(view);
   viewRef.current = view;
   const lightingRef = useRef(lighting);
@@ -523,7 +534,7 @@ export function Viewer() {
             />
           </div>
         )}
-        <div className="viewer-stage">
+        <div className="viewer-stage" ref={card}>
           {/* The engine's own DOM (canvas or 1.x widget), not React's. */}
           <div className="viewer-engine" key={engine} ref={stage} />
           {(state.phase === "starting" || state.phase === "loading") && (
@@ -564,7 +575,7 @@ export function Viewer() {
               render={
                 <GhostButton
                   label="Frame content"
-                  icon={svgFitToView}
+                  icon={svgReCenter}
                   onClick={() => host?.frame(at)}
                 />
               }
@@ -578,7 +589,7 @@ export function Viewer() {
             />
             <ViewToggle
               label="Overview inset"
-              icon={svgWindowZoomIn}
+              icon={svgMap}
               active={view.overview}
               reason={unsupported.overview}
               onChange={(v) => set("overview", v)}
@@ -588,6 +599,26 @@ export function Viewer() {
               icon={svgGlobe}
               active={view.globe}
               onChange={(v) => set("globe", v)}
+            />
+          </Toolbar.Group>
+          {/* Apart from the view tools, where maps and players put it. */}
+          <Toolbar.Group
+            variant="solid"
+            className="viewer-screen"
+            aria-label="Screen"
+          >
+            <Toolbar.Item
+              render={
+                <GhostButton
+                  label={fullscreen ? "Exit full screen" : "Full screen"}
+                  icon={fullscreen ? svgWindowCollapse : svgWindowExpand}
+                  onClick={() =>
+                    void (fullscreen
+                      ? document.exitFullscreen()
+                      : card.current?.requestFullscreen())
+                  }
+                />
+              }
             />
           </Toolbar.Group>
         </div>
