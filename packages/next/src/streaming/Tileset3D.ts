@@ -7,7 +7,7 @@
  * exceeds its byte budget; a tile touched by any view stays.
  */
 import type { Engine } from "../scene/Engine.ts";
-import type { ClipBox, World } from "../scene/World.ts";
+import type { ClipBox, TransformHandle, World } from "../scene/World.ts";
 import type { ModelOptions } from "../scene/gltfModel.ts";
 import type { GltfAsset } from "../io/gltfTypes.ts";
 import type { Mat4 } from "../math/mat4.ts";
@@ -26,7 +26,8 @@ import {
   type TileJson,
   type TileTree,
 } from "./Tile.ts";
-import { volumeObb } from "./volumes.ts";
+import { transformVolume, volumeObb } from "./volumes.ts";
+import * as m4 from "../math/mat4.ts";
 import type { RequestSample } from "./RequestScheduler.ts";
 import type { GlobeImagery } from "../globe/GlobeImagery.ts";
 import {
@@ -102,8 +103,9 @@ export interface TilesetOptions extends BudgetedOptions {
   enableCollision?: boolean;
   /**
    * Float64 transform applied to the whole tileset (1.x `modelMatrix`),
-   * e.g. a height offset. Set at load: tile boxes and spheres are
-   * transformed for selection, regions are not (as in 1.x). 3D Tiles only.
+   * e.g. a height offset; can change at runtime (`Tileset3D.modelMatrix`).
+   * Tile boxes and spheres follow it for selection, regions do not (as in
+   * 1.x); geometric errors keep the load-time scale. 3D Tiles only.
    */
   modelMatrix?: Mat4;
 }
@@ -191,6 +193,55 @@ export class Tileset3D implements TileTree {
   }
   private collision = false;
 
+  /**
+   * The tileset's `modelMatrix` (1.x `Cesium3DTileset.modelMatrix`).
+   * Setting it moves loaded content with one transform write and moves
+   * the selection volumes of every tile (boxes and spheres; regions are
+   * geographic and stay, as in 1.x). 3D Tiles only.
+   */
+  get modelMatrix(): Mat4 {
+    return m4.multiply(m4.mat4(), this.delta, this.loadMatrix);
+  }
+  set modelMatrix(matrix: Mat4) {
+    if (this.source) {
+      throw new Error("modelMatrix applies to 3D Tiles, not terrain");
+    }
+    const delta = m4.multiply(
+      m4.mat4(),
+      matrix,
+      m4.invertAffine(m4.mat4(), this.loadMatrix),
+    );
+    // The volumes move by the change from the current placement.
+    const change = m4.multiply(
+      m4.mat4(),
+      delta,
+      m4.invertAffine(m4.mat4(), this.delta),
+    );
+    this.delta = delta;
+    this.world.setTransform(this.transform, delta);
+    this.moveVolumes(this.root, change);
+    this.lastChange = this.frame;
+  }
+  /** Load-time `modelMatrix`, built into tile transforms and volumes. */
+  private readonly loadMatrix: Mat4;
+  /** `modelMatrix` × loadMatrix⁻¹: the content root transform. */
+  private delta: Mat4 = m4.mat4();
+  /** Parent transform of all content: moves it with one write. */
+  private readonly transform: TransformHandle;
+
+  private moveVolumes(tile: Tile, change: Mat4): void {
+    tile.volume = transformVolume(tile.volume, change);
+    if (tile.contentVolume) {
+      tile.contentVolume = transformVolume(tile.contentVolume, change);
+    }
+    if (tile.requestVolume) {
+      tile.requestVolume = transformVolume(tile.requestVolume, change);
+    }
+    for (const child of tile.children) {
+      this.moveVolumes(child, change);
+    }
+  }
+
   /** Frame counter value of the last change to what the tileset draws. */
   get changedAt(): number {
     return this.lastChange;
@@ -256,6 +307,8 @@ export class Tileset3D implements TileTree {
   ) {
     this.options = options;
     this.collision = options.enableCollision ?? false;
+    this.loadMatrix = m4.copy(m4.mat4(), options.modelMatrix ?? m4.mat4());
+    this.transform = world.addTransform(m4.mat4());
     this.policy = createSelection(options, source);
     this.cacheBytes = options.cacheBytes ?? 512 * 1024 * 1024;
     this.overflowBytes = options.maximumCacheOverflowBytes ?? 512 * 1024 * 1024;
@@ -408,6 +461,10 @@ export class Tileset3D implements TileTree {
       const start = performance.now();
       try {
         const { root } = treeFromJson(json, tile.contentUrl!, tile, this);
+        // Built in the load-time frame: move it to the current one.
+        if (!isIdentity(this.delta)) {
+          this.moveVolumes(root, this.delta);
+        }
         tile.children.push(root);
         tile.state = "ready";
         this.stats.tiles += countTiles(root);
@@ -749,6 +806,7 @@ export class Tileset3D implements TileTree {
           ...(this.source
             ? this.source.modelOptions(tile)
             : { modelMatrix: tile.transform, axes: "3d-tiles" as const }),
+          parent: this.transform,
           viewMask: 0,
           collision: this.collision,
         });
@@ -907,6 +965,7 @@ export class Tileset3D implements TileTree {
       closeImages(asset);
     }
     this.ready.length = 0;
+    this.world.removeTransform(this.transform);
     this.destroyed = true;
   }
 }
@@ -1009,4 +1068,13 @@ function clipBox(tile: Tile, margin: number): ClipBox {
     }
   });
   return { center, rows };
+}
+
+function isIdentity(m: Mat4): boolean {
+  for (let i = 0; i < 16; i++) {
+    if (m[i] !== (i % 5 === 0 ? 1 : 0)) {
+      return false;
+    }
+  }
+  return true;
 }

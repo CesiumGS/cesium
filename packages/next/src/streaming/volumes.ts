@@ -826,3 +826,49 @@ export function aboveHorizon(
     !o.point || isScaledSpacePointVisible(camera, o.point, o.minimumHeight)
   );
 }
+
+/**
+ * A tile volume moved by an affine transform (a tileset `modelMatrix`
+ * change): boxes and spheres are transformed, regions are geographic and
+ * stay (as 1.x).
+ */
+export function transformVolume(v: TileVolume, m: Mat4): TileVolume {
+  switch (v.kind) {
+    case "box": {
+      const h = v.obb.halfAxes;
+      const box = boxFromJson(
+        [
+          0,
+          0,
+          0,
+          h[0]!,
+          h[1]!,
+          h[2]!,
+          h[3]!,
+          h[4]!,
+          h[5]!,
+          h[6]!,
+          h[7]!,
+          h[8]!,
+        ],
+        m,
+      );
+      const c = v.obb.center;
+      box.center = v3.vec3(
+        m[0]! * c[0]! + m[4]! * c[1]! + m[8]! * c[2]! + m[12]!,
+        m[1]! * c[0]! + m[5]! * c[1]! + m[9]! * c[2]! + m[13]!,
+        m[2]! * c[0]! + m[6]! * c[1]! + m[10]! * c[2]! + m[14]!,
+      );
+      return { kind: "box", obb: box, sphere: sphereFromObb(box) };
+    }
+    case "sphere": {
+      const c = v.sphere.center;
+      return {
+        kind: "sphere",
+        sphere: sphereFromJson([c[0]!, c[1]!, c[2]!, v.sphere.radius], m),
+      };
+    }
+    default:
+      return v;
+  }
+}

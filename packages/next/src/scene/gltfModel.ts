@@ -373,7 +373,7 @@ function modelInstances(
   gltf: Float32Array | undefined,
   frames: InstanceFrame[],
 ): InstanceOptions {
-  const inverse = invertAffine(local);
+  const inverse = m4.invertAffine(m4.mat4(), local);
   frames.push({ local, inverse, ...(gltf ? { gltf } : {}) });
   const count = user.matrices.length / 16;
   const perUser = gltf ? gltf.length / 16 : 1;
@@ -504,34 +504,6 @@ function multiplyAffineInto(
   }
 }
 
-/** Inverse of an affine matrix (column-major, last row 0 0 0 1). */
-function invertAffine(m: Float64Array): Float64Array {
-  const [a, b, c] = [m[0]!, m[1]!, m[2]!];
-  const [d, e, f] = [m[4]!, m[5]!, m[6]!];
-  const [g, h, i] = [m[8]!, m[9]!, m[10]!];
-  const det = a * (e * i - h * f) - d * (b * i - h * c) + g * (b * f - e * c);
-  const s = det !== 0 ? 1 / det : 0;
-  const out = new Float64Array(16);
-  out[0] = (e * i - h * f) * s;
-  out[1] = (h * c - b * i) * s;
-  out[2] = (b * f - e * c) * s;
-  out[4] = (g * f - d * i) * s;
-  out[5] = (a * i - g * c) * s;
-  out[6] = (d * c - a * f) * s;
-  out[8] = (d * h - g * e) * s;
-  out[9] = (g * b - a * h) * s;
-  out[10] = (a * e - d * b) * s;
-  for (let r = 0; r < 3; r++) {
-    out[12 + r] = -(
-      out[r]! * m[12]! +
-      out[4 + r]! * m[13]! +
-      out[8 + r]! * m[14]!
-    );
-  }
-  out[15] = 1;
-  return out;
-}
-
 /**
  * The bounds of a model's instances: its bounding sphere (Earth-fixed)
  * moved into the model frame, placed by each instance matrix.
@@ -541,7 +513,7 @@ function instanceBounds(
   root: Float64Array,
   matrices: ArrayLike<number>,
 ): { center: Vec3; radius: number } {
-  const inverse = invertAffine(root);
+  const inverse = m4.invertAffine(m4.mat4(), root);
   const c = m4.transformPoint(v3.vec3(), inverse, sphere.center);
   const spheres: Array<{ center: Vec3; radius: number }> = [];
   for (let k = 0; k < matrices.length; k += 16) {

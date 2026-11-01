@@ -16,7 +16,9 @@ import {
   vec3,
   type ContentSummary,
   type ContentTotals,
+  type Clamp,
   type DrawHandle,
+  type TransformHandle,
   type Stage,
   type StageStats,
   type FeatureValue,
@@ -338,41 +340,52 @@ function lowestHeight(volume: Tileset3D["root"]["volume"]): number {
   return lowest;
 }
 
-function addCity(world: World): {
+function addCity(
+  engine: Engine,
+  world: World,
+): {
   center: Float64Array;
   radius: number;
   remove(): void;
 } {
   const box = world.addMesh(createBox());
   const draws: DrawHandle[] = [];
+  // Each building stands on the ground: an anchor transform at its foot,
+  // clamped as terrain loads, with the box as a child.
+  const anchors: TransformHandle[] = [];
+  const clamps: Clamp[] = [];
   let seed = 7;
   const random = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
   const enu = mat4.mat4();
   const local = mat4.mat4();
   for (let j = 0; j < 12; j++) {
     for (let i = 0; i < 12; i++) {
-      const position = ellipsoid.cartographicToCartesian(
-        {
-          longitude: SITE.longitude + (i - 5.5) * 0.0011 * deg,
-          latitude: SITE.latitude + (j - 5.5) * 0.00085 * deg,
-          height: 0,
-        },
-        vec3.vec3(),
-      );
+      const foot = {
+        longitude: SITE.longitude + (i - 5.5) * 0.0011 * deg,
+        latitude: SITE.latitude + (j - 5.5) * 0.00085 * deg,
+        height: 0,
+      };
+      const position = ellipsoid.cartographicToCartesian(foot, vec3.vec3());
       const width = 25 + random() * 30;
       const depth = 25 + random() * 30;
       const height = 15 + random() ** 3 * 220;
       eastNorthUpToFixedFrame(position, ellipsoid, enu);
-      mat4.setTranslation(enu, vec3.vec3());
       mat4.fromScale(local, width, depth, height);
       local[14] = height / 2;
       const tint = 0.35 + random() * 0.45;
+      const anchor = world.addTransform(enu);
+      anchors.push(anchor);
+      clamps.push(
+        engine.clamping.add(world, anchor, {
+          heightReference: "clampToGround",
+          ...foot,
+        }),
+      );
       draws.push(
         world.addDraw({
           mesh: box,
-          origin: position,
-          model: mat4.multiply(mat4.mat4(), enu, local),
-          radius: Math.hypot(width / 2, depth / 2, height / 2) + height / 2,
+          transform: world.addTransform(local, anchor),
+          radius: Math.hypot(width / 2, depth / 2, height / 2),
           color: [tint, tint * 0.92, tint * 0.85, 1],
           name: `building ${j * 12 + i + 1}`,
         }),
@@ -383,8 +396,14 @@ function addCity(world: World): {
     center: ellipsoid.cartographicToCartesian(SITE, vec3.vec3()),
     radius: 700,
     remove: () => {
+      for (const clamp of clamps) {
+        clamp.remove();
+      }
       for (const draw of draws) {
         world.removeDraw(draw);
+      }
+      for (const anchor of anchors) {
+        world.removeTransform(anchor);
       }
       world.removeMesh(box);
     },
@@ -1066,7 +1085,7 @@ async function main(): Promise<void> {
     try {
       let placed: { center: Float64Array; radius: number; lowest?: number };
       if (source.kind === "city") {
-        const city = addCity(world);
+        const city = addCity(engine, world);
         next = city;
         placed = city;
       } else if (source.kind === "model") {

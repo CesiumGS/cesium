@@ -45,8 +45,8 @@ export class Tile {
   readonly transform: Mat4;
   /** Tightened by implicit trees once content loads (terrain heights). */
   volume: TileVolume;
-  readonly contentVolume?: TileVolume;
-  readonly requestVolume?: TileVolume;
+  contentVolume?: TileVolume;
+  requestVolume?: TileVolume;
   /** Absolute content URL; undefined for empty tiles. */
   readonly contentUrl?: string;
   /** Content is an external tileset (loaded into `children` on demand). */

@@ -146,3 +146,41 @@ export function perspectiveReverseZInfinite(
   out[14] = near;
   return out;
 }
+
+/**
+ * Inverse of an affine matrix (column-major, last row 0 0 0 1); a singular
+ * 3×3 gives zeros.
+ */
+export function invertAffine(out: Mat4, m: ArrayLike<number>): Mat4 {
+  const a = m[0]!,
+    b = m[1]!,
+    c = m[2]!;
+  const d = m[4]!,
+    e = m[5]!,
+    f = m[6]!;
+  const g = m[8]!,
+    h = m[9]!,
+    i = m[10]!;
+  const det = a * (e * i - h * f) - d * (b * i - h * c) + g * (b * f - e * c);
+  const s = det !== 0 ? 1 / det : 0;
+  const tx = m[12]!,
+    ty = m[13]!,
+    tz = m[14]!;
+  out[0] = (e * i - h * f) * s;
+  out[1] = (h * c - b * i) * s;
+  out[2] = (b * f - e * c) * s;
+  out[3] = 0;
+  out[4] = (g * f - d * i) * s;
+  out[5] = (a * i - g * c) * s;
+  out[6] = (d * c - a * f) * s;
+  out[7] = 0;
+  out[8] = (d * h - g * e) * s;
+  out[9] = (g * b - a * h) * s;
+  out[10] = (a * e - d * b) * s;
+  out[11] = 0;
+  for (let r = 0; r < 3; r++) {
+    out[12 + r] = -(out[r]! * tx + out[4 + r]! * ty + out[8 + r]! * tz);
+  }
+  out[15] = 1;
+  return out;
+}
