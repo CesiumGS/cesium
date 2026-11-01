@@ -653,6 +653,9 @@ export class LegacyAdapter implements Adapter {
 
   frame(): number {
     const t = performance.now();
+    if (this.globeVolumes) {
+      this.updateGlobeVolumes(this.globeVolumes);
+    }
     this.viewer.render();
     return performance.now() - t;
   }
@@ -794,6 +797,51 @@ export class LegacyAdapter implements Adapter {
     for (const tileset of this.tilesets) {
       tileset.debugShowBoundingVolume = bounding;
       tileset.debugShowContentBoundingVolume = content;
+    }
+    // 1.x has no switch for its globe's tiles: draw their bounding regions
+    // here, as debugShowBoundingVolume draws a tileset's.
+    if (bounding && !this.globeVolumes && this.viewer.scene.globe) {
+      this.globeVolumes = new Map();
+    } else if (!bounding && this.globeVolumes) {
+      this.updateGlobeVolumes(this.globeVolumes, true);
+      this.globeVolumes = undefined;
+    }
+  }
+  /** Outlines of the globe tiles rendered last frame, by tile. */
+  private globeVolumes?: Map<Json, { primitive: Json; key: string }>;
+  private updateGlobeVolumes(
+    shown: Map<Json, { primitive: Json; key: string }>,
+    clear = false,
+  ): void {
+    const primitives = this.viewer.scene.primitives;
+    const tiles: Json[] = clear
+      ? []
+      : (this.viewer.scene.globe?._surface._tilesToRender ?? []);
+    const wanted = new Set(tiles);
+    for (const [tile, entry] of shown) {
+      if (!wanted.has(tile)) {
+        primitives.remove(entry.primitive);
+        shown.delete(tile);
+      }
+    }
+    for (const tile of tiles) {
+      const region = tile.data?.tileBoundingRegion;
+      if (!region) {
+        continue;
+      }
+      // Heights tighten as tiles load: redraw when they change.
+      const key = `${region.minimumHeight}|${region.maximumHeight}`;
+      const entry = shown.get(tile);
+      if (entry?.key === key) {
+        continue;
+      }
+      if (entry) {
+        primitives.remove(entry.primitive);
+      }
+      shown.set(tile, {
+        primitive: primitives.add(region.createDebugVolume(Cesium.Color.WHITE)),
+        key,
+      });
     }
   }
 

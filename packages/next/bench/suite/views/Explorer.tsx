@@ -766,7 +766,7 @@ function Legend({
           {swatch("#ffff00", "refining (finer tiles loading)", true)}
           {swatch("#666666", "no content of its own", true)}
           <span className="explorer-legend-note">
-            1.x draws none for its globe
+            1.x's globe tiles in white
           </span>
         </div>
       )}
