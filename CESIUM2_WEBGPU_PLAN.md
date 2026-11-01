@@ -3224,8 +3224,13 @@ segments.
 
 - _Narrative reports:_ a page that combines live charts and text (a
   release comparison, a design decision), built from saved views.
-- _Budgets:_ per scene and metric limits (Lighthouse budgets) that turn
-  red when exceeded, for targets such as §5's.
+- _Budgets_ (built, r33): per scene and metric limits (Lighthouse
+  budgets) that turn red when exceeded. The catalog's `budgets` hold §5's
+  targets (CPU per frame at most ⅓ of 1.x, time to settle at most ½,
+  frame p95 within 17.5 ms with vsync, no hitches over 100 ms), checked in
+  every report and drawn as limit lines in the workspace. The first full
+  pass breaks the CPU budget in 8 of 10 scenes and the settle budget in 9
+  of 10: the targets are not met yet.
 - _Scene pages_ (Strava segments): each catalog scene as a segment with
   its history, each engine's best result and when it got there, its
   filmstrip over time, and the commits that moved it.
@@ -3280,8 +3285,17 @@ as Dyno does for 1.x and 2.0.
   with its content and licenses, best results per configuration (when and
   at which commit), history panels, the change points that moved it, and
   the filmstrip over time; links to the explorer and the workspace.
-- _Sweeps:_ parallel coordinates and parameter importance.
-- _Hardware:_ results across machines.
+- _Sweeps_ (built in a first form, r33): `cli.mjs run --sweep
+param=a,b,c` runs each 2.0 configuration (or `--sweep-configs`) once
+  per value (any configuration field, e.g. `maximumScreenSpaceError`,
+  `policy`, `render.pixelRatio`); release sweeps (`--releases`) count too.
+  The Sweeps tab plots each metric against the values, with the baseline
+  as a reference and the image difference from the baseline (FLIP) beside
+  the costs, so a cheaper setting that draws less shows it. Parallel
+  coordinates and parameter importance come with multi-parameter sweeps.
+- _Hardware_ (built in a first form, r33): the latest ordinary run per
+  hardware class, candidate over baseline per headline metric; fills in
+  as runner machines are added.
 - _Reports:_ saved narratives.
 - _Explorer_ (built, r33): the scenes, live and interactive, as a Dyno
   tab (a module loaded on first use; the 1.x build is injected on demand,

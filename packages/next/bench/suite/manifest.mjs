@@ -18,7 +18,13 @@ export function loadCatalog(manifest = process.env.BENCH_MANIFEST) {
     }
     sources.push(manifest);
   }
-  const catalog = { datasets: [], scenes: [], scenarios: [], configs: [] };
+  const catalog = {
+    datasets: [],
+    scenes: [],
+    scenarios: [],
+    configs: [],
+    budgets: [],
+  };
   const problems = [];
   for (const [index, path] of sources.entries()) {
     const json = JSON.parse(readFileSync(path, "utf8"));
@@ -33,7 +39,7 @@ export function loadCatalog(manifest = process.env.BENCH_MANIFEST) {
       catalog.render = { ...catalog.render, ...json.render };
       delete catalog.render.$comment;
     }
-    for (const key of ["datasets", "scenes", "scenarios", "configs"]) {
+    for (const key of ["datasets", "scenes", "scenarios", "configs", "budgets"]) {
       for (const entry of json[key] ?? []) {
         if (index > 0 && key === "datasets") {
           entry.private ??= true;

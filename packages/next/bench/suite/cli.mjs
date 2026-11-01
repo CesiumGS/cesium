@@ -9,6 +9,7 @@
 //        [--baseline 1.x@1.146.0] [--candidate 2.0]
 //        [--releases 1.120.0..1.146.0 | 1.130.0,1.140.0]  (historical sweep)
 //        [--dpr 2] [--pixel-ratio device|1]  (high-DPI display; render scale)
+//        [--sweep maximumScreenSpaceError=8,16,32 [--sweep-configs 2.0]]
 //
 // 1.x configurations run this repository's build ("cesium": "repo") or a
 // released version from npm ("latest", or --cesium to pin one), fetched
@@ -268,6 +269,43 @@ async function run() {
       releases[config.id] = ensureRelease(version);
     }
   }
+  // A parameter sweep (plan §16.9, Explore): each 2.0 configuration (or
+  // --sweep-configs) once per value, e.g. --sweep maximumScreenSpaceError=8,16,32
+  // or --sweep render.pixelRatio=1,2; ids name the value ("2.0[sse…=8]").
+  let sweep;
+  if (opts.sweep) {
+    const [param, list] = String(opts.sweep).split("=");
+    if (!param || !list) {
+      throw new Error("--sweep param=value,value");
+    }
+    const values = list
+      .split(",")
+      .map((v) => (Number.isFinite(Number(v)) ? Number(v) : v));
+    const swept = opts["sweep-configs"]
+      ? String(opts["sweep-configs"]).split(",")
+      : configs.filter((c) => c.engine === "2.0").map((c) => c.id);
+    const expanded = [];
+    for (const c of configs) {
+      if (!swept.includes(c.id)) {
+        expanded.push(c);
+        continue;
+      }
+      for (const value of values) {
+        const variant = structuredClone(c);
+        const path = param.split(".");
+        let target = variant;
+        for (const key of path.slice(0, -1)) {
+          target = target[key] ??= {};
+        }
+        target[path.at(-1)] = value;
+        variant.id = `${c.id}[${param}=${value}]`;
+        variant.sweep = { param, value, base: c.id };
+        expanded.push(variant);
+      }
+    }
+    configs.splice(0, configs.length, ...expanded);
+    sweep = { param, values, configs: swept };
+  }
   const baseline =
     opts.baseline ??
     (configs.find((c) => c.cesiumVersion)?.id ?? configs[0].id);
@@ -426,6 +464,10 @@ async function run() {
       : {}),
   };
   results.environment.render = render;
+  results.budgets = catalog.budgets;
+  if (sweep) {
+    results.sweep = sweep;
+  }
   const filmstrip = [];
   const total = scenes.length * scenarios.length * reps * configs.length;
   let done = 0;

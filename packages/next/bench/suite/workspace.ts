@@ -1,6 +1,21 @@
 import { CONDITION_METRICS, METRICS } from "./report.mjs";
 import { escape, lineChart } from "./charts.mjs";
 import { ratio } from "./stats.mjs";
+import publicCatalog from "./catalog/public.json";
+import type { Budget } from "./schema.ts";
+
+const BUDGETS = (publicCatalog as { budgets?: Budget[] }).budgets ?? [];
+/** Budgets that apply to a panel's metric, configuration and scene. */
+const budgetsFor = (metric: string, config: string, scene: string) =>
+  BUDGETS.filter(
+    (b) =>
+      b.metric === metric &&
+      b.config === config &&
+      (scene === "*" ||
+        ((!b.scenes || b.scenes.includes(scene.split("|")[0]!)) &&
+          (!b.scenario ||
+            b.scenario === (scene.split("|")[1] ?? "cold-orbit")))),
+  );
 
 /**
  * Dyno's workspace (plan §16.9), after W&B's: a runs sidebar (show or
@@ -517,7 +532,17 @@ ${s.tags.length ? `<div class="muted">${s.tags.map(escape).join(", ")}</div>` : 
         unit: "×",
         xNames,
         series,
-        refs: [{ y: 1, label: "×1" }],
+        refs: [
+          { y: 1, label: "×1" },
+          ...budgetsFor(key, state.cand, scene)
+            .filter((b) => b.maxRatio !== undefined)
+            .map((b) => ({
+              y: b.maxRatio!,
+              label: `budget ×${b.maxRatio!.toFixed(2)}`,
+              color: "var(--critical)",
+              dash: "2 3",
+            })),
+        ],
         marks,
         yMin: Infinity,
         width: 520,
@@ -551,15 +576,25 @@ ${s.tags.length ? `<div class="muted">${s.tags.map(escape).join(", ")}</div>` : 
       focus.flags = band.flags;
       notes.push(...new Set(band.reasons));
     }
-    const refs =
-      pinned >= 0
+    const budgetRefs = budgetsFor(key, state.cand, scene)
+      .filter((b) => b.max !== undefined)
+      .map((b) => ({
+        y: b.max! / scale,
+        label: `budget ${b.max! / scale}${unit ? ` ${unit}` : ""}`,
+        color: "var(--critical)",
+        dash: "2 3",
+      }));
+    const refs = [
+      ...budgetRefs,
+      ...(pinned >= 0
         ? series.flatMap((s) => {
             const y = s.points[pinned]?.[1];
             return y === null || y === undefined
               ? []
               : [{ y, color: s.color, dash: "6 4", label: "" }];
           })
-        : [];
+        : []),
+    ];
     return lineChart({
       title: title ?? name,
       subtitle: `${unit ? `${unit} · ` : ""}${band ? `control band: ${focus.label}` : "control band after 6 runs"}${pinned >= 0 ? " · dashed: pinned run" : ""}${notes.length ? ` · ▲ ${notes.join("; ")}` : ""}`,

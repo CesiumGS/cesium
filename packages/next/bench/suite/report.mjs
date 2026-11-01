@@ -25,7 +25,13 @@ import {
   segmentTable,
   waterfall,
 } from "./diagnose.mjs";
-import { scorecard, SCORECARD_CSS, scorecardHtml } from "./scorecard.mjs";
+import {
+  budgetsHtml,
+  checkBudgets,
+  scorecard,
+  SCORECARD_CSS,
+  scorecardHtml,
+} from "./scorecard.mjs";
 
 /** Metrics shown, with units and whether lower is better. */
 const METRICS = [
@@ -44,6 +50,9 @@ const METRICS = [
   ["requests", "requests", "", 1],
   ["bytes", "bytes", "MB", 1e6],
   ["heapBytes", "JS heap", "MB", 1e6],
+  // From the filmstrip: how differently the settled view after the orbit
+  // looks from the baseline's (summaries, sweeps; not a per-run metric).
+  ["flipEnd", "image difference from the baseline (FLIP)", "", 1],
 ];
 
 const escape = (s) =>
@@ -296,7 +305,7 @@ const geomean = (values) =>
     ? Math.exp(values.reduce((s, v) => s + Math.log(v), 0) / values.length)
     : undefined;
 
-export function renderReport(results) {
+export function renderReport(results, options = {}) {
   const configs = [...new Set(results.runs.map((r) => r.config))];
   const baseline =
     results.baseline && configs.includes(results.baseline)
@@ -674,6 +683,7 @@ table.kv td { text-align: left; white-space: normal; max-width: 640px; padding: 
 ${escape(env.adapter?.description ?? "unknown GPU")} · ${escape(env.cpu)} · ${escape(env.os ?? env.platform)} · ${escape(env.browser)} · ${groups.size} scenes × ${configs.length} configurations × ${Math.max(...results.runs.map((r) => r.rep + 1))} repetitions</p>
 ${validitySummary(sceneValidity)}
 ${scorecardHtml(scorecard(results, { baseline, candidate }))}
+${budgetsHtml(checkBudgets(results, results.budgets ?? options.budgets))}
 <p class="lede">Ratios are ${escape(candidate)} over ${escape(baseline)} (lower is better for every metric), the geometric mean across scenes on the tiles. A scene counts as better or worse only when the 95% bootstrap intervals separate.</p>
 <div class="tiles">${tiles.join("")}</div>
 <h2>By scene</h2>
@@ -743,6 +753,18 @@ export function summarizeRun(results) {
       }
     }
   }
+  // Image difference from the baseline (filmstrips, first repetition).
+  for (const strip of results.filmstrips ?? []) {
+    if (strip.moment !== "end") {
+      continue;
+    }
+    for (const [config, flip] of Object.entries(strip.flip ?? {})) {
+      const cell = cells[`${strip.scene}|${strip.scenario ?? "cold-orbit"}|${config}`];
+      if (cell) {
+        cell.values.flipEnd = [flip.mean];
+      }
+    }
+  }
   const scenes = Object.values(cells).map((c) => ({
     scene: c.scene,
     scenario: c.scenario,
@@ -760,6 +782,7 @@ export function summarizeRun(results) {
     subject: results.subject,
     baseline: results.baseline,
     candidate: results.candidate,
+    ...(results.sweep ? { sweep: results.sweep } : {}),
     validity: {
       valid: verdicts.filter((v) => v === "valid").length,
       warning: verdicts.filter((v) => v === "warning").length,

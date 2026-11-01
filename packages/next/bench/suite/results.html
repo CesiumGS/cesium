@@ -332,6 +332,22 @@
       .images form.review input {
         min-width: 240px;
       }
+      main > div > .grid,
+      main .grid[data-id="charts"] {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+        gap: 10px;
+      }
+      table.metrics {
+        border-collapse: collapse;
+        font-variant-numeric: tabular-nums;
+      }
+      table.metrics th,
+      table.metrics td {
+        padding: 6px 12px;
+        border-bottom: 1px solid var(--grid);
+        text-align: left;
+      }
       .scene-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -604,6 +620,8 @@
           <button data-tab="alerts">Alerts</button>
           <button data-tab="scenes">Scenes</button>
           <button data-tab="images">Images</button>
+          <button data-tab="sweeps">Sweeps</button>
+          <button data-tab="hardware">Hardware</button>
           <button data-tab="log">Runs</button>
           <button data-tab="compare">Compare</button>
           <button data-tab="report">Report</button>

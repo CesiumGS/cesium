@@ -189,7 +189,59 @@ ${card.plan.hypothesis ? `<div class="sub">Hypothesis: ${escape(card.plan.hypoth
 <table class="sc"><tr><th>Guardrail (must not get more than ${Math.round(card.plan.tolerance * 100)}% worse)</th><th>geo. mean</th><th>scenes</th><th></th></tr>${rows}</table></div>`;
 }
 
+/**
+ * Budgets checked against a run: per budget and scene, the configuration's
+ * median (or its ratio to the baseline's) against the limit.
+ */
+export function checkBudgets(results, budgets = results.budgets ?? []) {
+  const configs = [...new Set(results.runs.map((r) => r.config))];
+  const baseline = results.baseline ?? configs[0];
+  return budgets
+    .filter((b) => configs.includes(b.config))
+    .map((b) => {
+      const a = valuesBy(results.runs, baseline, b.metric);
+      const c = valuesBy(results.runs, b.config, b.metric);
+      const scenes = [];
+      for (const [id, values] of c) {
+        const [scene, scenario] = id.split("|");
+        if ((b.scenes && !b.scenes.includes(scene)) || (b.scenario && b.scenario !== scenario)) {
+          continue;
+        }
+        const median = summarize(values)?.median;
+        const base = summarize(a.get(id) ?? [])?.median;
+        const value = b.maxRatio !== undefined ? (base > 0 ? median / base : undefined) : median;
+        if (value === undefined) {
+          continue;
+        }
+        const limit = b.maxRatio ?? b.max;
+        scenes.push({ scene: id.replace("|", " · "), value, limit, ok: value <= limit + 1e-9 });
+      }
+      return { ...b, baseline, scenes, broken: scenes.filter((s) => !s.ok).length };
+    });
+}
+
+/** Budgets as HTML: one row per budget, the broken scenes listed. */
+export function budgetsHtml(checked) {
+  if (!checked.length) {
+    return "";
+  }
+  const fmt = (b, v) =>
+    b.maxRatio !== undefined ? `×${v.toFixed(2)}` : LABELS[b.metric]?.[2] ? `${(v / LABELS[b.metric][2]).toFixed(2)} ${LABELS[b.metric][1]}` : v.toFixed(2);
+  const rows = checked
+    .map((b) => {
+      const ok = b.broken === 0;
+      const worst = b.scenes.filter((s) => !s.ok).sort((x, y) => y.value - x.value);
+      return `<tr><th>${escape(b.label)}<div class="muted">${escape(b.config)}${b.maxRatio !== undefined ? ` vs ${escape(b.baseline)}` : ""}</div></th><td class="${ok ? "ok" : "broken"}">${ok ? `✓ within in all ${b.scenes.length} scenes` : `✕ over in ${b.broken} of ${b.scenes.length}`}</td><td class="muted">${worst
+        .slice(0, 6)
+        .map((s) => `${escape(s.scene)} ${fmt(b, s.value)}`)
+        .join(" · ")}${worst.length > 6 ? " …" : ""}</td></tr>`;
+    })
+    .join("");
+  return `<div class="scorecard budgets"><div class="sc-head"><span class="sc-title">Budgets</span><span>limits from the catalog (plan §5 targets); a budget is broken in a scene when its median is over the limit</span></div><table class="sc"><tr><th>Budget</th><th>Status</th><th>Over the limit</th></tr>${rows}</table></div>`;
+}
+
 export const SCORECARD_CSS = `
+.viz .sc-title { font-size: 15px; font-weight: 700; color: var(--ink); }
 .viz .scorecard { background: var(--surface); border: 1px solid var(--grid); border-radius: 8px; padding: 10px 14px; margin: 10px 0; }
 .viz .sc-head { display: flex; gap: 14px; align-items: baseline; flex-wrap: wrap; color: var(--ink-2); }
 .viz .sc-verdict { font-size: 18px; font-weight: 700; }

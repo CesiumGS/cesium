@@ -2,8 +2,10 @@ import { METRICS, renderReport, summarizeRun } from "./report.mjs";
 import { CHART_CSS, CHART_SCRIPT, escape, forestPlot } from "./charts.mjs";
 import { ratio } from "./stats.mjs";
 import { mountAlerts } from "./alerts.ts";
+import publicCatalog from "./catalog/public.json";
 import { mountScenes } from "./scenes.ts";
 import { mountImages } from "./imagesView.ts";
+import { mountHardware, mountSweeps } from "./sweeps.ts";
 import {
   cellKey,
   cellTitle,
@@ -287,6 +289,22 @@ async function images(): Promise<void> {
   });
 }
 
+// ------------------------------------------------------------ sweeps, hardware
+
+function sweeps(): void {
+  main.replaceChildren();
+  const root = document.createElement("div");
+  main.append(root);
+  mountSweeps(root, summaries as unknown as WorkspaceSummary[], bindCharts);
+}
+
+function hardware(): void {
+  main.replaceChildren();
+  const root = document.createElement("div");
+  main.append(root);
+  mountHardware(root, summaries as unknown as WorkspaceSummary[]);
+}
+
 // ------------------------------------------------------------ run log
 
 function log(): void {
@@ -475,7 +493,10 @@ async function report(): Promise<void> {
   const frame = document.createElement("iframe");
   frame.title = "Report";
   const render = async () => {
-    frame.srcdoc = renderReport(await full(name));
+    // Runs before r33 carry no budgets: the catalog's apply.
+    frame.srcdoc = renderReport(await full(name), {
+      budgets: (publicCatalog as { budgets?: unknown[] }).budgets,
+    });
   };
   const controls = document.createElement("div");
   controls.className = "controls";
@@ -533,6 +554,8 @@ const views: Record<string, () => void | Promise<void>> = {
   alerts,
   scenes,
   images,
+  sweeps,
+  hardware,
   log,
   compare,
   report,

@@ -185,6 +185,23 @@ export interface EffectiveRender {
   outlines: boolean;
 }
 
+/**
+ * A budget (plan §16.9, Communicate; Lighthouse budgets): a limit on a
+ * metric for a configuration, absolute (`max`, in the metric's raw unit)
+ * or relative to the run's baseline (`maxRatio`), for every scene or the
+ * listed ones, optionally one scenario.
+ */
+export interface Budget {
+  id: string;
+  metric: string;
+  config: string;
+  max?: number;
+  maxRatio?: number;
+  scenes?: string[];
+  scenario?: string;
+  label: string;
+}
+
 /** What one run of a scene × scenario × config measured. */
 export interface RunMetrics {
   status: "ok" | "unsupported" | "timeout" | "error";
