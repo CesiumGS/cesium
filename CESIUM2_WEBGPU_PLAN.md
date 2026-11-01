@@ -4,39 +4,40 @@ Branch: `cesium-2.0-webgpu-poc` (off `main` @ `587f52f1eb`, CesiumJS 1.146.0)
 
 ## Revisions
 
-| Rev | Change                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| r1  | First draft: clean-slate WebGPU engine, 1.x used as the parity oracle                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| r2  | Added multiple viewports, Slang shaders, compute-shader uses, and globe/terrain/imagery to the PoC                                                                                                                                                                                                                                                                                                                                                                                            |
-| r3  | Tile selection made pluggable (`Legacy1x` vs improved `Next`). Folded in an external review against current industry practice, research and WebGPU status (late 2026). Main changes: GPU-driven submission from M1, no bindless in the PoC, Slang scope narrowed, a texture-array imagery cache, corrected MSAA/feature-ID and OIT plans, and new M0 precision tests. Sources are in §9.                                                                                                      |
-| r4  | Plan-owner decisions recorded (§8): Slang + WGSL ABI; **HDR + tonemapping by default**; all four multi-view scenarios including **linked views**; `packages/next` in TypeScript with new math; Chromium-first, core WebGPU only; 3D Tiles before globe. Canonical CAD test data to come from team-chosen ion assets.                                                                                                                                                                          |
-| r5  | M0 findings: multisampled `r32uint` is invalid in WebGPU, so feature IDs use `rg16uint` (lo16, hi16). On dual-GPU Windows laptops Chromium ignores `powerPreference` and follows the per-app Windows graphics setting, so benchmarks must record the adapter and launch Chromium on the discrete GPU.                                                                                                                                                                                         |
-| r6  | M0 spike results recorded in §10: L2 parity harness, GPU precision, engine-in-worker, indirect-draw overhead. Indirect draws cost measurable GPU time on Intel/D3D12, so §3.3 submission now batches before going indirect.                                                                                                                                                                                                                                                                   |
-| r7  | Spikes rerun on the NVIDIA GPU; Slang spike run (passes, perf gate deferred to unquantized timing in M1). §10 rewritten with both GPUs.                                                                                                                                                                                                                                                                                                                                                       |
-| r8  | M0 close-out: automated runner (headless Edge, unquantized timestamps), FLIP validated against NVIDIA's reference and integrated, 1.x performance baselines, Metal deferred.                                                                                                                                                                                                                                                                                                                  |
-| r9  | M1 increment 1: worker glTF pipeline, draw records v1, materials and textures, batching. Decisions: exact sRGB over matching 1.x's gamma 2.2; translucency designed clean-slate and tested against an exact reference instead of 1.x's WBOIT.                                                                                                                                                                                                                                                 |
-| r10 | Translucency becomes a unified compute compositor shared by translucent meshes and Gaussian splats; MBOIT is the overflow fallback.                                                                                                                                                                                                                                                                                                                                                           |
-| r11 | M1 increment 2: PBR + compute-built IBL, normal maps, lit parity vs 1.x, Slang re-ported to v1 records with a surface-material interface; Slang performance gate passes.                                                                                                                                                                                                                                                                                                                      |
-| r12 | M1 increment 3: Draco and KTX2/Basis decoding in the workers; all 14 opaque Khronos samples within 0.025 mean FLIP of 1.x in every lighting mode.                                                                                                                                                                                                                                                                                                                                             |
-| r13 | M1 increment 4: steady-state allocation gate (engine ~1.5 KB/frame, independent of draw count, down from ~45 KB) and first-frame cost (2.0 first frame 23–34 ms vs 1.x 203–691 ms).                                                                                                                                                                                                                                                                                                           |
-| r14 | M1 increment 5: CAD content. Per-vertex feature IDs (EXT_mesh_features, b3dm _BATCHID) with property/batch tables and picking, b3dm, line primitives, ion asset auth, tileset parity page. An iModel-derived CAD tileset matches 1.x apart from translucency (M4). M1 exit met.                                                                                                                                                                                                               |
-| r15 | Demo viewer (`/viewer/`). M2 started: freeing placed models, per-view record view masks, and the `Legacy1x` selection spec extracted from the 1.x base traversal (§12).                                                                                                                                                                                                                                                                                                                       |
-| r16 | M2 increment 1: streamed 3D Tiles with `Legacy1x` selection per view over one shared cache. L1 selection parity 100% on 36 view comparisons (9 public tilesets and 3 iModel-derived CAD tilesets, 3–4 simultaneous views each). Viewer streams.                                                                                                                                                                                                                                               |
-| r17 | M2 increment 2: OSM Buildings streams with 100% selection parity (Philadelphia, Manhattan); batch-table hierarchy; resize robustness (frame ordering, bounded render-target memory); viewer split view, memory panel and collapsible sections.                                                                                                                                                                                                                                                |
-| r18 | M2 increment 3: photogrammetry. Google Photorealistic 3D Tiles stream via ion with required credits; L1 selection parity 100% in four simultaneous views (22–164 tiles), after fixing a traversal-visibility bug in the port. Memory-adjusted SSE. Memory management recorded as an open design question.                                                                                                                                                                                     |
-| r19 | M2 increment 4: `Next` policy v1 (skip-LOD with bounded skipping, visible-only coverage, cache reuse, region-grouped requests) and the L1′ harness. On Google 3D Tiles: 53% fewer requests, 48% fewer bytes, same final image, settles 1.6× faster (2.5× with 64 requests); in-between quality lags 1.x until mixed-LOD drawing lands.                                                                                                                                                        |
-| r20 | §13: design notes for tile selection beyond `Legacy1x` (mixed-LOD drawing, scheduling, budget-driven refinement, multi-view priority, quality signals) and the engine memory model.                                                                                                                                                                                                                                                                                                           |
-| r21 | M2 increment 5: mixed-LOD drawing for `Next`; `Next` now matches or beats 1.x on every L1′ metric on Google 3D Tiles (FLIP at 1 s 0.220 vs 0.421, half the bytes). Second 1.x selection bug documented (children-bounds culling vs refinement).                                                                                                                                                                                                                                               |
-| r22 | M2 increment 6: the r21 depth offset is replaced (hold, prefetch band, mixed LOD clipped to missing children only where children partition their parent); `Next` never hides a tileset that lacks a top-level geometric error; iTwin mesh exports load directly; content pipeline diagnostics; throttled L1′ with time-averaged FLIP (1.x looks better while loading on slow links); §13.8 render on demand; §14 follow-ups.                                                                  |
-| r23 | Adaptive request windows per origin (BBR-style, protocol-seeded, cancellation); on-demand rendering per view, including views sharing a canvas (composited); viewer content tabs, combo boxes and ion token precedence; OS and networking lessons (§13.2, §13.6); M2 exit met, close-out (scheduler, `TileSource`, engine-wide cache) before M3, and a Next v2 milestone after M3. The `Next` policy is renamed `Budgeted` (`policy: "budgeted"`).                                            |
-| r24 | M3 increment 2: the 1.x globe selection (`GlobeLegacy1xSelection`) with fog, horizon culling and 1.x's kicking and load queues; globe L1 parity 100% on six cameras with and without fog. Quadrants without data are upsampled as in 1.x (drawn clipped from the tile with data); partial availability no longer leaves holes under `Budgeted`. Tilesets stay active after loads without content. Fetch timeouts and retries recorded as a follow-up.                                         |
-| r25 | Horizon culling moves into selection (float64, 1.x per-tile shrink): `Budgeted` culls 3D Tiles and terrain at the horizon before fetching, and the GPU test is retired (records back to 192 bytes). `Budgeted` refines empty tiles by SSE as 1.x does: OSM at Rainier drops from 783 requests to 31. §13.2 records cross-tileset scheduling to try (per-origin priority queue, I/O priority classes, preempting prefetch, wire priorities, aging).                                            |
-| r26 | M3 increment 4: globe imagery composited on the GPU into a `texture_2d_array` cache (Bing via ion, 1.x level choice, ancestor fallback, empty-tile fallback, credits), within FLIP 0.03-0.05 of 1.x; a streamed ellipsoid globe (1.x `EllipsoidTerrainProvider`) replaces the static globe and ground patch; a 1.x-style globe camera controller with `View.pickPosition`; unlit color is display-referred (its own target, never tonemapped), which fixed darkened imagery and Google tiles. |
-| r27 | Content comes and goes in one world without stalls: the viewer keeps one world and globe (switch to a glTF: 26 ms, was 932), endpoint caches, an adaptive engine-wide upload budget and spread eviction. Open: frame stalls on first visits to uncached areas, and the budget's cost to settle time.                                                                                                                                                                                          |
-| r28 | Scene foundations (§13.9): a per-world transform table (float64 hierarchy, visibility), records 192 → 128 bytes, GPU instancing culled per instance (`EXT_mesh_gpu_instancing`), glTF assets shared across placements, generational handles, scatter uploads; the prep kernel is renamed cull. glTF 2.1 / 3D Tiles 2.0, vector billboards and decals, and ray queries to path tracing designed (§13.9, §13.10). Parity unchanged.                                                             |
-| r29 | M3 increment 5: height queries and clamping. `heightReference` on models (clamp/relative to ground, terrain or 3D Tiles), event-driven re-clamping, terrain clamped to its drawn surface (within 0.1 mm of 1.x `Globe.getHeight` where 1.x keeps full precision), 3D Tiles heights by GPU ray casts (`World.castRays`) within 6 mm of what 1.x renders; tileset `enableCollision` and `modelMatrix`. Custom shading becomes a PoC milestone (§3.4).                                           |
-| r30 | Benchmark suite designed (§16): datasets, scenes and scenarios in manifests (public in the repo, private outside it, aliased in results), a checksummed local content store, engine adapters for 1.x and 2.0, a catalog of classic Cesium content, large public data and scenes where 2.0 should win; milestone "Benchmark suite v1" after M3. Clamping open items listed under M3.                                                                                                           |
-| r31 | M3 complete (increment 6): model instancing (`ModelOptions.instances`) with a 100,000-instance benchmark, i3dm within FLIP 0.018 of 1.x, runtime tileset `modelMatrix`, `sampleHeightMostDetailed` within 7.5 mm of 1.x, the viewer's city clamped. Real-time tracks designed (§13.11) with a milestone after Custom shading; automatic per-instance LOD noted as an idea.                                                                                                                    |
+| Rev | Change                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| r1  | First draft: clean-slate WebGPU engine, 1.x used as the parity oracle                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| r2  | Added multiple viewports, Slang shaders, compute-shader uses, and globe/terrain/imagery to the PoC                                                                                                                                                                                                                                                                                                                                                                                                   |
+| r3  | Tile selection made pluggable (`Legacy1x` vs improved `Next`). Folded in an external review against current industry practice, research and WebGPU status (late 2026). Main changes: GPU-driven submission from M1, no bindless in the PoC, Slang scope narrowed, a texture-array imagery cache, corrected MSAA/feature-ID and OIT plans, and new M0 precision tests. Sources are in §9.                                                                                                             |
+| r4  | Plan-owner decisions recorded (§8): Slang + WGSL ABI; **HDR + tonemapping by default**; all four multi-view scenarios including **linked views**; `packages/next` in TypeScript with new math; Chromium-first, core WebGPU only; 3D Tiles before globe. Canonical CAD test data to come from team-chosen ion assets.                                                                                                                                                                                 |
+| r5  | M0 findings: multisampled `r32uint` is invalid in WebGPU, so feature IDs use `rg16uint` (lo16, hi16). On dual-GPU Windows laptops Chromium ignores `powerPreference` and follows the per-app Windows graphics setting, so benchmarks must record the adapter and launch Chromium on the discrete GPU.                                                                                                                                                                                                |
+| r6  | M0 spike results recorded in §10: L2 parity harness, GPU precision, engine-in-worker, indirect-draw overhead. Indirect draws cost measurable GPU time on Intel/D3D12, so §3.3 submission now batches before going indirect.                                                                                                                                                                                                                                                                          |
+| r7  | Spikes rerun on the NVIDIA GPU; Slang spike run (passes, perf gate deferred to unquantized timing in M1). §10 rewritten with both GPUs.                                                                                                                                                                                                                                                                                                                                                              |
+| r8  | M0 close-out: automated runner (headless Edge, unquantized timestamps), FLIP validated against NVIDIA's reference and integrated, 1.x performance baselines, Metal deferred.                                                                                                                                                                                                                                                                                                                         |
+| r9  | M1 increment 1: worker glTF pipeline, draw records v1, materials and textures, batching. Decisions: exact sRGB over matching 1.x's gamma 2.2; translucency designed clean-slate and tested against an exact reference instead of 1.x's WBOIT.                                                                                                                                                                                                                                                        |
+| r10 | Translucency becomes a unified compute compositor shared by translucent meshes and Gaussian splats; MBOIT is the overflow fallback.                                                                                                                                                                                                                                                                                                                                                                  |
+| r11 | M1 increment 2: PBR + compute-built IBL, normal maps, lit parity vs 1.x, Slang re-ported to v1 records with a surface-material interface; Slang performance gate passes.                                                                                                                                                                                                                                                                                                                             |
+| r12 | M1 increment 3: Draco and KTX2/Basis decoding in the workers; all 14 opaque Khronos samples within 0.025 mean FLIP of 1.x in every lighting mode.                                                                                                                                                                                                                                                                                                                                                    |
+| r13 | M1 increment 4: steady-state allocation gate (engine ~1.5 KB/frame, independent of draw count, down from ~45 KB) and first-frame cost (2.0 first frame 23–34 ms vs 1.x 203–691 ms).                                                                                                                                                                                                                                                                                                                  |
+| r14 | M1 increment 5: CAD content. Per-vertex feature IDs (EXT_mesh_features, b3dm _BATCHID) with property/batch tables and picking, b3dm, line primitives, ion asset auth, tileset parity page. An iModel-derived CAD tileset matches 1.x apart from translucency (M4). M1 exit met.                                                                                                                                                                                                                      |
+| r15 | Demo viewer (`/viewer/`). M2 started: freeing placed models, per-view record view masks, and the `Legacy1x` selection spec extracted from the 1.x base traversal (§12).                                                                                                                                                                                                                                                                                                                              |
+| r16 | M2 increment 1: streamed 3D Tiles with `Legacy1x` selection per view over one shared cache. L1 selection parity 100% on 36 view comparisons (9 public tilesets and 3 iModel-derived CAD tilesets, 3–4 simultaneous views each). Viewer streams.                                                                                                                                                                                                                                                      |
+| r17 | M2 increment 2: OSM Buildings streams with 100% selection parity (Philadelphia, Manhattan); batch-table hierarchy; resize robustness (frame ordering, bounded render-target memory); viewer split view, memory panel and collapsible sections.                                                                                                                                                                                                                                                       |
+| r18 | M2 increment 3: photogrammetry. Google Photorealistic 3D Tiles stream via ion with required credits; L1 selection parity 100% in four simultaneous views (22–164 tiles), after fixing a traversal-visibility bug in the port. Memory-adjusted SSE. Memory management recorded as an open design question.                                                                                                                                                                                            |
+| r19 | M2 increment 4: `Next` policy v1 (skip-LOD with bounded skipping, visible-only coverage, cache reuse, region-grouped requests) and the L1′ harness. On Google 3D Tiles: 53% fewer requests, 48% fewer bytes, same final image, settles 1.6× faster (2.5× with 64 requests); in-between quality lags 1.x until mixed-LOD drawing lands.                                                                                                                                                               |
+| r20 | §13: design notes for tile selection beyond `Legacy1x` (mixed-LOD drawing, scheduling, budget-driven refinement, multi-view priority, quality signals) and the engine memory model.                                                                                                                                                                                                                                                                                                                  |
+| r21 | M2 increment 5: mixed-LOD drawing for `Next`; `Next` now matches or beats 1.x on every L1′ metric on Google 3D Tiles (FLIP at 1 s 0.220 vs 0.421, half the bytes). Second 1.x selection bug documented (children-bounds culling vs refinement).                                                                                                                                                                                                                                                      |
+| r22 | M2 increment 6: the r21 depth offset is replaced (hold, prefetch band, mixed LOD clipped to missing children only where children partition their parent); `Next` never hides a tileset that lacks a top-level geometric error; iTwin mesh exports load directly; content pipeline diagnostics; throttled L1′ with time-averaged FLIP (1.x looks better while loading on slow links); §13.8 render on demand; §14 follow-ups.                                                                         |
+| r23 | Adaptive request windows per origin (BBR-style, protocol-seeded, cancellation); on-demand rendering per view, including views sharing a canvas (composited); viewer content tabs, combo boxes and ion token precedence; OS and networking lessons (§13.2, §13.6); M2 exit met, close-out (scheduler, `TileSource`, engine-wide cache) before M3, and a Next v2 milestone after M3. The `Next` policy is renamed `Budgeted` (`policy: "budgeted"`).                                                   |
+| r24 | M3 increment 2: the 1.x globe selection (`GlobeLegacy1xSelection`) with fog, horizon culling and 1.x's kicking and load queues; globe L1 parity 100% on six cameras with and without fog. Quadrants without data are upsampled as in 1.x (drawn clipped from the tile with data); partial availability no longer leaves holes under `Budgeted`. Tilesets stay active after loads without content. Fetch timeouts and retries recorded as a follow-up.                                                |
+| r25 | Horizon culling moves into selection (float64, 1.x per-tile shrink): `Budgeted` culls 3D Tiles and terrain at the horizon before fetching, and the GPU test is retired (records back to 192 bytes). `Budgeted` refines empty tiles by SSE as 1.x does: OSM at Rainier drops from 783 requests to 31. §13.2 records cross-tileset scheduling to try (per-origin priority queue, I/O priority classes, preempting prefetch, wire priorities, aging).                                                   |
+| r26 | M3 increment 4: globe imagery composited on the GPU into a `texture_2d_array` cache (Bing via ion, 1.x level choice, ancestor fallback, empty-tile fallback, credits), within FLIP 0.03-0.05 of 1.x; a streamed ellipsoid globe (1.x `EllipsoidTerrainProvider`) replaces the static globe and ground patch; a 1.x-style globe camera controller with `View.pickPosition`; unlit color is display-referred (its own target, never tonemapped), which fixed darkened imagery and Google tiles.        |
+| r27 | Content comes and goes in one world without stalls: the viewer keeps one world and globe (switch to a glTF: 26 ms, was 932), endpoint caches, an adaptive engine-wide upload budget and spread eviction. Open: frame stalls on first visits to uncached areas, and the budget's cost to settle time.                                                                                                                                                                                                 |
+| r28 | Scene foundations (§13.9): a per-world transform table (float64 hierarchy, visibility), records 192 → 128 bytes, GPU instancing culled per instance (`EXT_mesh_gpu_instancing`), glTF assets shared across placements, generational handles, scatter uploads; the prep kernel is renamed cull. glTF 2.1 / 3D Tiles 2.0, vector billboards and decals, and ray queries to path tracing designed (§13.9, §13.10). Parity unchanged.                                                                    |
+| r29 | M3 increment 5: height queries and clamping. `heightReference` on models (clamp/relative to ground, terrain or 3D Tiles), event-driven re-clamping, terrain clamped to its drawn surface (within 0.1 mm of 1.x `Globe.getHeight` where 1.x keeps full precision), 3D Tiles heights by GPU ray casts (`World.castRays`) within 6 mm of what 1.x renders; tileset `enableCollision` and `modelMatrix`. Custom shading becomes a PoC milestone (§3.4).                                                  |
+| r30 | Benchmark suite designed (§16): datasets, scenes and scenarios in manifests (public in the repo, private outside it, aliased in results), a checksummed local content store, engine adapters for 1.x and 2.0, a catalog of classic Cesium content, large public data and scenes where 2.0 should win; milestone "Benchmark suite v1" after M3. Clamping open items listed under M3.                                                                                                                  |
+| r31 | M3 complete (increment 6): model instancing (`ModelOptions.instances`) with a 100,000-instance benchmark, i3dm within FLIP 0.018 of 1.x, runtime tileset `modelMatrix`, `sampleHeightMostDetailed` within 7.5 mm of 1.x, the viewer's city clamped. Real-time tracks designed (§13.11) with a milestone after Custom shading; automatic per-instance LOD noted as an idea.                                                                                                                           |
+| r32 | Benchmark suite v1 built (§16): public and private catalogs with license review, released 1.x builds pinned by version and release sweeps, recorded and controlled hardware conditions, redesigned reports and experiment tracking. §16.9 designs analysis and experience from analogous systems (experimentation platforms, quality-control charts, F1 telemetry, WebPageTest, frame analysis tools, 3DMark validation) for deciding, detecting, diagnosing, trusting, exploring and communicating. |
 
 ## 1. Goal
 
@@ -566,9 +567,17 @@ representative content; it then guards every later milestone.
 - A report per run: each metric per scene, 2.0 against 1.x with
   confidence intervals, and the environment fingerprint; a runner page
   and a results page with comparisons and trends (§16.5).
+- The first phase of §16.9: lap overlays with delta traces and track
+  maps, filmstrips with parity, frame-time percentile curves and stutter
+  metrics, request waterfalls, a validity verdict per run, a scorecard
+  with declared primary and guardrail metrics, and the tracking
+  workspace with annotations and control bands.
 - _Exit_: one command fetches, verifies and runs the public catalog (and
   a private one when its manifest is present) in both engines and writes
-  the report; two runs on the same machine agree within their intervals.
+  the report; two runs on the same machine agree within their intervals;
+  a regression planted in a commit is visible in the workspace and
+  explained by the report (where on the path, which frames, which
+  requests).
 
 ### Budgeted selection: planned work (after M3)
 
@@ -623,8 +632,10 @@ representative content; it then guards every later milestone.
 - Two-phase occlusion culling (optional if targets are already met).
 - HZB tile-coverage feedback into `Budgeted`.
 - Upload budgeting; the remaining `Budgeted` stability and prediction work.
-- Benchmark suite v2 (§16.8): nightly runs on dedicated machines, a
-  results store, dashboard and change-point detection, bisection.
+- Benchmark suite v2 (§16.8, §16.9): nightly runs on dedicated machines,
+  a results store, change points, alerts and triage, automatic
+  bisection, pull-request comments, scene pages, "what differs" analysis,
+  traces from the report.
 - _Exit_: §5 targets met or the gap explained, including multi-view.
 
 ### M6 — Compute showcases and future-proofing (time-boxed, pick 2–3)
@@ -2949,7 +2960,215 @@ default set, the 1.x instancing generator, real-time tracks (§13.11).
   then runtime); native runtimes as adapters; the asset store; shared
   public reports.
 
-Sources for §16.4 and §16.8 (checked October 2026; licenses to be
+### 16.9 Analysis and experience design: learning from analogous systems
+
+Experiment trackers such as Weights & Biases were built for training runs.
+Graphics benchmarking is closer to a mix of race telemetry, web
+performance monitoring, online experimentation, manufacturing quality
+control and game frame analysis. This section starts from what the suite
+has to do, borrows from the fields that already solved each job, and
+phases the result into the suite's milestones (§16.7, §16.8).
+
+**Principles.**
+
+- Every view answers one of six jobs: decide, detect, diagnose, trust,
+  explore, communicate.
+- Overview first, then zoom and filter, details on demand; every claim
+  carries its interval.
+- Validity before verdict: a result is shown as a verdict only when its
+  run was valid.
+- Runs of one scene are aligned by camera progress, not wall time, so
+  engines and commits are compared at the same place on the same path.
+- One click from an alert to its cause: the regressed scene, the place on
+  the path, the frames, the requests, the trace.
+- The suite, the examples (§13.12) and parity (§4) share scene
+  definitions, so a showcase, its measurement and its image check never
+  drift apart.
+- Results stay internal (§16.2); views can be shared inside Bentley.
+
+#### Decide: is B really better than A?
+
+Borrowed from online experimentation platforms (Statsig, Eppo, Optimizely,
+Microsoft's experimentation platform), canary analysis (Netflix and
+Google's Kayenta), Go's `benchstat` and clinical trials.
+
+- _A declared primary metric and guardrails._ Each comparison names its
+  primary metric (e.g. CPU per frame, or settle time) and guardrail
+  metrics that must not get worse (memory, long frames, bytes, image
+  parity), declared in the catalog or the run (`--plan`) before results
+  exist, so nobody picks the flattering metric afterwards.
+- _Validity checks before any result_ (the experimentation platforms'
+  sample-ratio checks): both engines ran the same scenes, repetitions and
+  datasets (checksums), under comparable conditions (§16.3); otherwise
+  the comparison says why it isn't valid instead of showing a verdict.
+- _Variance reduction_ (CUPED-style): adjust run metrics with
+  measurements taken before each run (idle clocks, temperature, machine
+  utility) where that demonstrably narrows intervals; report both.
+- _A scorecard_ (Kayenta): each metric tested per scene (bootstrap ratio,
+  §16.3), weighted into pass, marginal or fail overall; the merge gate for
+  2.0 changes and the verdict line on every report.
+- _A terse comparison table_ (`benchstat`): old, new, change with interval,
+  per scene and metric, for pull-request comments and the CLI.
+- _Forest plots_ (clinical trials): already the report's per-scene view.
+
+#### Detect: did something get slower, or slowly drift?
+
+Borrowed from statistical process control in manufacturing, Mozilla
+Perfherder, Chromium's performance dashboard and Pinpoint, change-point
+detection (MongoDB, Apache Otava) and Grafana annotations.
+
+- _Control bands on trends:_ an expected band (mean ± 3σ of a stable
+  baseline window, per scene, metric and hardware class), with simple
+  run rules that catch drift (several runs in a row on one side, a trend
+  of rising points), not only steps. Humans read these at a glance.
+- _Change points_ (E-Divisive means, §16.8) marked on trends.
+- _Alerts with triage:_ a detected regression or improvement becomes an
+  alert with a commit range, the affected scenes and metrics, and a state
+  (new, acknowledged, expected, invalid, fixed), plus who owns it and a
+  note; an alerts view is the reviewer's queue (Perfherder's sheriffs).
+- _Automatic bisection_ (Pinpoint): an alert can run the affected scenes
+  on commits inside its range (`BENCH_COMMIT` snapshots) until the culprit
+  is found, and attach the result.
+- _Annotations:_ commits (messages, authors), CesiumJS releases, driver
+  and browser updates and catalog changes drawn as markers on every
+  trend, so a step lines up with its cause.
+
+#### Diagnose: why is it slower?
+
+Borrowed from Formula 1 telemetry, WebPageTest, Digital Foundry, Honeycomb
+BubbleUp, frame analysis tools (CapFrameX, AMD OCAT, NVIDIA FrameView)
+and trace viewers (Perfetto, Tracy, Unreal Insights).
+
+- _Lap overlay with a delta trace_ (F1): frame time, CPU and GPU per
+  frame for both engines (or two commits) against camera progress along
+  the same path, with a line of the difference; and a _track map_: the
+  camera path on a small globe or map, colored by where the candidate
+  loses or gains. Where in the scene a difference happens becomes
+  obvious.
+- _Filmstrip_ (WebPageTest): screenshots of each engine at fixed moments
+  (first content, settled, every quarter of the motion), side by side,
+  with the image-parity FLIP score and heatmap (§4) under each pair, so
+  "faster" is never mistaken for "drawing less".
+- _Side-by-side video with overlays_ (Digital Foundry): optional
+  recordings of both engines on the same path with frame time and
+  progress overlaid, for reviews and stakeholders.
+- _Request waterfall_ (WebPageTest): every content request over time per
+  engine (queued, waiting, receiving; bytes; tileset; host), aligned with
+  the load phase, to explain settle-time differences (the open OSM
+  Philadelphia question, §15).
+- _Frame-time percentile curves and stutter metrics_ (frame analysis
+  tools): the full percentile curve of frame times per engine, "1% low"
+  style metrics, hitch counts by size, frame-time variance; better than a
+  single p95.
+- _"What differs" analysis_ (BubbleUp): for a regression, compare the
+  regressed runs or scenes with the rest across every recorded dimension
+  (scene group, content format, tileset, phase, hardware, browser
+  version, driver, conditions) and rank the dimensions that explain it.
+- _Traces one click away:_ a regressed run is rerun with Chrome tracing
+  and V8 sampling (`trace.mjs`) and the trace opens in Perfetto from the
+  report; GPU frame captures later.
+
+#### Trust: can the result be believed?
+
+Borrowed from 3DMark's result validation, MLflow's lineage, data-quality
+monitoring in particle physics and visual-regression tools (Chromatic,
+Skia Gold).
+
+- _A validity verdict per run:_ valid, valid with warnings or invalid,
+  from the recorded conditions (cooldown reached, machine quiet, clocks
+  and slowdown shares comparable between engines, wake lock held, AC
+  power), dataset checksums, catalog and license checks and errors; shown
+  before any number and carried into trends (invalid runs hidden by
+  default).
+- _Lineage:_ every number links to what produced it (commit, catalog and
+  dataset checksums, engine builds with integrity hashes, browser,
+  driver, settings) so any run can be reproduced exactly.
+- _Reference overlays and a review checklist_ (data-quality shifts): the
+  nightly run's distributions drawn over reference distributions, and a
+  short checklist for whoever reviews them.
+- _Image baselines_ (visual-regression tools): parity images per scene
+  approved or rejected like visual-regression snapshots, in the same
+  report as performance.
+
+#### Explore: what do parameters do?
+
+Borrowed from hyperparameter tools (W&B sweeps, Optuna, TensorBoard's
+HParams) and hardware result browsers (3DMark, Geekbench).
+
+- _Sweeps as experiments:_ screen-space error, upload budget, selection
+  policy, cache size, the CesiumJS version across a release sweep
+  (§16.6): each sweep a set of runs with its parameters.
+- _Parallel coordinates and parameter importance:_ which parameters move
+  which metrics, and how much.
+- _Hardware scaling:_ the same scenes across GPUs and machines, per engine
+  (normalized by hardware class), once several runner machines exist.
+
+#### Communicate: what does this mean for the product?
+
+Borrowed from W&B Reports, Lighthouse and performance budgets, and Strava
+segments.
+
+- _Narrative reports:_ a page that combines live charts and text (a
+  release comparison, a design decision), built from saved views.
+- _Budgets:_ per scene and metric limits (Lighthouse budgets) that turn
+  red when exceeded, for targets such as §5's.
+- _Scene pages_ (Strava segments): each catalog scene as a segment with
+  its history, each engine's best result and when it got there, its
+  filmstrip over time, and the commits that moved it.
+
+#### Information architecture of the tracking app
+
+- _Workspace_ (W&B-style, replacing Trends): a runs sidebar (color, eye
+  toggle, search, filters by tag, branch, hardware, validity; grouping);
+  collapsible sections (Headline, Loading, Rendering, Network and memory,
+  Conditions) of compact panels in a 2–3 column grid; the headline
+  section shows the candidate/baseline ratio per metric with interval
+  bands and a reference line at ×1; panels show one line per
+  configuration with interval bands, control bands, annotations and run
+  dots; each panel can split by scene into small multiples; clicking a
+  point opens that run; a pinned baseline run draws a reference line;
+  saved views and shareable URLs.
+- _Alerts:_ the triage queue (§16.9, Detect).
+- _Run:_ the report (verdict and validity first, scorecard, tiles, forest
+  plots, then per scene: lap overlays and track map, filmstrip, waterfall,
+  percentile curves, metrics, conditions; setup and lineage).
+- _Compare:_ any two runs or configurations, with the scorecard, forest
+  plots and lap overlays.
+- _Scenes:_ the segment pages.
+- _Sweeps:_ parallel coordinates and parameter importance.
+- _Hardware:_ results across machines.
+- _Reports:_ saved narratives.
+
+#### New data the runs record
+
+- Camera progress for every frame (already implied by the motion series)
+  and the camera position, for track maps.
+- Screenshots at fixed moments per run (filmstrips), in the results store;
+  optional video.
+- Request records per run: start, time to first byte, end, bytes, host,
+  tileset and engine.
+- A per-run validity verdict and its reasons; the scorecard per
+  comparison.
+- Alerts and annotations as their own records in the results store
+  (status, owner, notes), editable from the app.
+- Declared plans (`--plan`: primary metric, guardrails, hypothesis) stored
+  with the run.
+
+#### Phasing
+
+- _With v1's exit_ (now): lap overlay with delta trace and track map;
+  filmstrip with parity; frame-time percentile curves and stutter
+  metrics; request waterfall; validity verdict; scorecard with declared
+  primary and guardrail metrics and the `benchstat`-style table; the
+  workspace redesign with commit and release annotations and control
+  bands.
+- _v2_ (with M5): alerts and triage, change points, automatic bisection,
+  pull-request comments, scene pages, "what differs" analysis, traces
+  from the report, side-by-side video.
+- _v3_ (Cesium-wide): sweeps view, hardware scaling, narrative reports,
+  budgets, reference overlays and the review checklist.
+
+Sources for §16.4, §16.8 and §16.9 (checked October 2026; licenses to be
 confirmed at the source before mirroring):
 [PLATEAU streaming tutorial](https://github.com/Project-PLATEAU/plateau-streaming-tutorial/blob/main/3d-tiles/plateau-3dtiles-streaming.md),
 [Awesome PLATEAU](https://japan-opendata.github.io/awesome-plateau/),
