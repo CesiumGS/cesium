@@ -133,6 +133,25 @@ Versions: `@stratakit/mui` 1.2.0, `@stratakit/foundations` 1.0.4,
     accepts `color="textTertiary"`, while the `Link` docs say those colors
     were removed; which components accept them is unclear.
 
+36. **Patterns aren't published.** The docs intro mentions patterns for
+    construction and infrastructure apps, but no pattern pages (or the
+    PDFs some remember) are public; the sandbox's source was the best
+    reference for a docked panel beside a canvas.
+37. **No docked or resizable panel.** The sandbox's panel and splitter
+    come from `react-resizable-panels`; a `Panel` structure (header with
+    title and dock or collapse action, subheader, resize handle, folded
+    rail) would save every 3D app from rebuilding it.
+38. **Toolbars need bricks.** `unstable_Toolbar.Item` expects a bricks
+    `IconButton` (with `active` for toggles), while the MUI theme's
+    `IconButton` and `ToggleButton` are what MUI apps already use; mixing
+    both on one page works but isn't documented.
+39. **Look-alike icons.** `fit-to-view`, `object-zoom-to` and
+    `window-expand` all read as "full screen" at 16 px; guidance on which
+    icon means frame content, overview map and full screen would help.
+40. **Popups in full screen.** Tooltips portal to the document body, so
+    they vanish when an element (a canvas card) goes full screen; the
+    portal container should follow `document.fullscreenElement`.
+
 ## What worked well
 
 - Setup was small: one `Root`, one types entry, one Vite option, and MUI

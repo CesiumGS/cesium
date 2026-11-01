@@ -15,8 +15,9 @@ Engineers working on CesiumJS 2.0. They come to:
 1. **See where 2.0 stands** against 1.x now (Overview).
 2. **Follow metrics over time** and catch regressions (Trends, Alerts).
 3. **Understand one run** or compare two (Runs, a run's report, Compare).
-4. **Look at a scene** live in both engines (Scenes, Explorer), or at
-   images that changed (Images).
+4. **Look at a scene** live in both engines (Scenes, Explorer), at any
+   content in one engine at a time (Viewer), or at images that changed
+   (Images).
 5. **Try a variation** (Analysis: sweeps and machines) or run a focused
    check (Lab).
 
@@ -33,6 +34,7 @@ three groups separated by dividers, then a footer:
 |           | Alerts          | `/alerts`                   | Change points to triage                              |
 | Scenes    | Scenes          | `/scenes`, `/scenes/$scene` | The catalog; a scene's page                          |
 |           | Explorer        | `/explorer`                 | A scene live in one or two engines                   |
+|           | Viewer          | `/viewer`                   | Any content in one engine at a time, to debug        |
 |           | Images          | `/images`                   | Image checks to review                               |
 | Workbench | Analysis        | `/analysis`                 | Sweeps and machines (tabs)                           |
 |           | Lab             | `/lab`, `/lab/$id`          | Parity checks, microbenchmarks, spikes               |
@@ -103,6 +105,30 @@ to see.
   (`--stratakit-space-*` (50 to 1000: 2 to 40 px), `--stratakit-color-*`, `--stratakit-font-size-*` (semantic: `body-md`, `caption-lg`, …));
   never `sx`, never hard-coded colors except the validated chart palette
   and the 3D viewport's HUD.
+
+## Live engines (Explorer, Viewer)
+
+- **Inspector**: every engine view carries the inspector
+  (`widgets/inspector.ts`) over it, collapsed to one line; 1.x and 2.0
+  show the same panel through `Inspectable`.
+- **Credits**: each engine's credits sit in its own view, bottom left,
+  as 1.x shows them (required notices on screen, the rest behind Data
+  attribution).
+- **Timings**: the Explorer says up front that its timings don't compare
+  (both engines share the machine) and links measured results; the
+  Viewer runs one engine at a time.
+- **The Viewer follows StrataKit's app layout** (its sandbox) instead of
+  the page anatomy above: a docked panel on the left headed by what is
+  loaded (with Open content and the engine), then a Settings subheader
+  and accordion groups; the canvas an elevated card (16 px radius,
+  `shadow-surface-xl`) with a solid `unstable_Toolbar` of ghost bricks
+  `IconButton`s top left (toggles use `active`), the inspector top
+  right, full screen alone bottom right. A panel's controls live in its
+  own header (Hide panel); folded, a rail at the same edge brings it
+  back. Settings an engine can't do stay visible, disabled, with why.
+- **Icons on the canvas** must not look alike: re-center frames content,
+  map is the overview inset, window-expand and window-collapse are full
+  screen.
 
 ## Charts
 

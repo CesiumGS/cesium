@@ -42,7 +42,7 @@ Branch: `cesium-2.0-webgpu-poc` (off `main` @ `587f52f1eb`, CesiumJS 1.146.0)
 | r34 | Dyno rebuilt as a React app on TanStack Router (typed URL state, code-split views) with Radix Themes controls and a guided first run. Explorer inspection: bounding volumes in both engines, tiles tinted by depth or engine, the selection compared by depth (`Budgeted` draws much coarser terrain than 1.x at Rainier). Inspector designed; CI image job and bisection deferred.                                                                                                                                                             |
 | r35 | Dyno on StrataKit (Bentley's design system: MUI themed by @stratakit/mui) at the dev server's root: navigation by job (results, scenes, workbench), a new Overview, a design, copy and IA pass (bench/suite/DESIGN.md), feedback for the StrataKit team (STRATAKIT_FEEDBACK.md). Parity checks, microbenchmarks and spikes fold into Dyno's Lab.                                                                                                                                                                                                |
 | r36 | Engine names: releases by version (1.146.0), engines from the working tree named by branch (2.0@cesium-2.0-webgpu-poc), engines built at any git ref (2.0@main, 1.x@v1.140), settings after + (2.0+legacy1x); `--engines` replaces `--configs`/`--cesium`; budgets name setups. Explorer draws 1.x's globe tile volumes.                                                                                                                                                                                                                        |
-| r37 | `Budgeted` on terrain: the globe's SSE (fog only while drawn) instead of 3D Tiles' dynamic SSE, which left oblique terrain far too coarse (Rainier settled: 68 tiles vs 1.x's 67, all shared; was 20 at levels 0 to 12). The bare ellipsoid never hides content (§8 product choices, new). Ion assets on the environment's token; an own Google key when set.                                                                                                                                                                                   |
+| r37 | `Budgeted` on terrain: the globe's SSE (fog only while drawn) instead of 3D Tiles' dynamic SSE, which left oblique terrain far too coarse (Rainier settled: 68 tiles vs 1.x's 67, all shared; was 20 at levels 0 to 12). The bare ellipsoid never hides content (§8 product choices, new). The inspector built (widgets/, with credits as 1.x shows them and imagery credited per tile drawn); `Viewer`, 2.0's `Cesium.Viewer`; Dyno's Viewer page (one engine at a time, StrataKit's app layout) replaces the standalone viewer.               |
 
 ## 1. Goal
 
@@ -3469,7 +3469,19 @@ copy rules and component choices; every view follows it.
   .html page hosts it alone for the CLI runner (`bench/run.mjs`), which
   measures in a page with nothing else on the main thread.
 
-#### Inspector (designed r34)
+#### Inspector (designed r34, built r37)
+
+Built as designed, in `packages/next/widgets/`: `Inspectable` (a
+snapshot an engine fills in as far as it can measure), `inspectEngine`
+for 2.0, Dyno's 1.x adapter for 1.x, and `attachInspector` with every
+readout the viewer panel had. Beside it, `Viewer` (2.0's counterpart to
+`Cesium.Viewer`: canvas, engine, world, view, controller, globe and
+imagery, credits, content with its attributions, framing, split view,
+overview inset, sun, picking) and the credits widget. Dyno's Viewer page
+runs one engine at a time on it (or `Cesium.Viewer` for 1.x), and the
+standalone viewer is gone. Still open: per-pane settings controls in the
+Explorer (deliberately absent: they would undo the comparison), and a
+resizable docked panel.
 
 The standalone debug viewer (`viewer/`) splits three ways:
 
