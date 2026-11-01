@@ -157,13 +157,7 @@ class GaussianSplat3DTileContent {
     return hasGaussianSplatExtension;
   }
 
-  /**
-   * Gets the number of features in the tile. Currently this is always zero.
-   *
-   *
-   * @type {number}
-   * @readonly
-   */
+  /** @inheritdoc */
   get featuresLength() {
     return 0;
   }
@@ -172,7 +166,6 @@ class GaussianSplat3DTileContent {
    * Equal to the number of Gaussian splats in the tile. Each splat is represented by a median point and a set of attributes, so we can
    * treat this as the number of points in the tile.
    *
-   *
    * @type {number}
    * @readonly
    */
@@ -180,33 +173,17 @@ class GaussianSplat3DTileContent {
     return this.gltfPrimitive.attributes[0].count;
   }
 
-  /**
-   * Gets the number of triangles in the tile. Currently this is always zero because Gaussian splats are not represented as triangles in the tile content.
-   * <p>
-   *
-   * @type {number}
-   * @readonly
-   */
+  /** @inheritdoc */
   get trianglesLength() {
     return 0;
   }
 
-  /**
-   * The number of bytes used by the geometry attributes of this content.
-   * <p>
-   * @type {number}
-   * @readonly
-   */
+  /** @inheritdoc */
   get geometryByteLength() {
     return 0;
   }
 
-  /**
-   * The number of bytes used by the textures of this content.
-   * <p>
-   * @type {number}
-   * @readonly
-   */
+  /** @inheritdoc */
   get texturesByteLength() {
     const primitive = this._tileset?.gaussianSplatPrimitive;
     if (!defined(primitive)) {
@@ -220,39 +197,17 @@ class GaussianSplat3DTileContent {
     return texture.sizeInBytes / selectedTileLength;
   }
 
-  /**
-   * Gets the amount of memory used by the batch table textures and any binary
-   * metadata properties not accounted for in geometryByteLength or
-   * texturesByteLength
-   * <p>
-   *
-   * @type {number}
-   * @readonly
-   */
+  /** @inheritdoc */
   get batchTableByteLength() {
     return 0;
   }
 
-  /**
-   * Gets the array of {@link Cesium3DTileContent} objects for contents that contain other contents, such as composite tiles. The inner contents may in turn have inner contents, such as a composite tile that contains a composite tile.
-   *
-   * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/Composite|Composite specification}
-   *
-   *
-   * @type {Array}
-   * @readonly
-   */
+  /** @inheritdoc */
   get innerContents() {
     return undefined;
   }
 
-  /**
-   * Returns true when the tile's content is ready to render; otherwise false
-   *
-   *
-   * @type {boolean}
-   * @readonly
-   */
+  /** @inheritdoc */
   get ready() {
     return this._ready;
   }
@@ -267,65 +222,27 @@ class GaussianSplat3DTileContent {
     return this._transformed;
   }
 
-  /**
-   * The tileset that this content belongs to.
-   * <p>
-   * @type {Cesium3DTileset}
-   * @readonly
-   */
+  /** @inheritdoc */
   get tileset() {
     return this._tileset;
   }
 
-  /**
-   * The tile that this content belongs to.
-   * <p>
-   * @type {Cesium3DTile}
-   * @readonly
-   */
+  /** @inheritdoc */
   get tile() {
     return this._tile;
   }
 
-  /**
-   * The resource that this content was loaded from.
-   * <p>
-   * @type {string}
-   * @readonly
-   */
+  /** @inheritdoc */
   get url() {
     return this._resource.getUrlComponent(true);
   }
 
-  /**
-   * Gets the batch table for this content.
-   * <p>
-   * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
-   * not part of the public Cesium API.
-   * </p>
-   *
-   * @type {Cesium3DTileBatchTable}
-   * @readonly
-   *
-   * @private
-   */
+  /** @inheritdoc */
   get batchTable() {
     return undefined;
   }
 
-  /**
-   * Gets the metadata for this content, whether it is available explicitly or via
-   * implicit tiling. If there is no metadata, this property should be undefined.
-   * <p>
-   * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
-   * not part of the public Cesium API.
-   * </p>
-   *
-   * @type {ImplicitMetadataView|undefined}
-   *
-   * @private
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
-   */
+  /** @inheritdoc */
   get metadata() {
     return this._metadata;
   }
@@ -334,20 +251,7 @@ class GaussianSplat3DTileContent {
     this._metadata = value;
   }
 
-  /**
-   * Gets the group for this content if the content has metadata (3D Tiles 1.1) or
-   * if it uses the <code>3DTILES_metadata</code> extension. If neither are present,
-   * this property should be undefined.
-   * <p>
-   * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
-   * not part of the public Cesium API.
-   * </p>
-   *
-   * @type {Cesium3DContentGroup|undefined}
-   *
-   * @private
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
-   */
+  /** @inheritdoc */
   get group() {
     return this._group;
   }
@@ -531,73 +435,23 @@ class GaussianSplat3DTileContent {
     this._resourcesLoaded = loader.process(frameState);
   }
 
-  /**
-   * Returns whether the feature has this property.
-   *
-   * @param {number} batchId The batchId for the feature.
-   * @param {string} name The case-sensitive name of the property.
-   * @returns {boolean} <code>true</code> if the feature has this property; otherwise, <code>false</code>.
-   */
+  /** @inheritdoc */
   hasProperty(batchId, name) {
     return false;
   }
 
-  /**
-   * Returns the {@link Cesium3DTileFeature} object for the feature with the
-   * given <code>batchId</code>.  This object is used to get and modify the
-   * feature's properties.
-   * <p>
-   * Features in a tile are ordered by <code>batchId</code>, an index used to retrieve their metadata from the batch table.
-   * </p>
-   *
-   * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/BatchTable}.
-   *
-   * @param {number} batchId The batchId for the feature.
-   * @returns {Cesium3DTileFeature} The corresponding {@link Cesium3DTileFeature} object.
-   *
-   * @exception {DeveloperError} batchId must be between zero and {@link Cesium3DTileContent#featuresLength} - 1.
-   */
+  /** @inheritdoc */
   getFeature(batchId) {
     return undefined;
   }
 
-  /**
-       * Called when {@link Cesium3DTileset#debugColorizeTiles} changes.
-       * <p>
-       * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
-       * not part of the public Cesium API.
-       * </p>
-       *
-       * @param {boolean} enabled Whether to enable or disable debug settings.
-       * @returns {Cesium3DTileFeature} The corresponding {@link Cesium3DTileFeature} object.
-
-       * @private
-       */
+  /** @inheritdoc */
   applyDebugSettings(enabled, color) {}
 
-  /**
-   * Apply a style to the content
-   * <p>
-   * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
-   * not part of the public Cesium API.
-   * </p>
-   *
-   * @param {Cesium3DTileStyle} style The style.
-   *
-   * @private
-   */
+  /** @inheritdoc */
   applyStyle(style) {}
 
-  /**
-   * Find an intersection between a ray and the tile content surface that was rendered. The ray must be given in world coordinates.
-   *
-   * @param {Ray} ray The ray to test for intersection.
-   * @param {FrameState} frameState The frame state.
-   * @param {Cartesian3|undefined} [result] The intersection or <code>undefined</code> if none was found.
-   * @returns {Cartesian3|undefined} The intersection or <code>undefined</code> if none was found.
-   *
-   * @private
-   */
+  /** @inheritdoc */
   pick(ray, frameState, result) {
     return undefined;
   }
