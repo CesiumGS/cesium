@@ -656,10 +656,20 @@ ${environmentSection(results)}
 `;
 }
 
+/** Conditions summarized per scene and configuration (workspace panels). */
+const CONDITION_METRICS = [
+  ["gpuTemperatureStartC", "GPU temperature at start", "°C", 1],
+  ["gpuThermalFraction", "GPU thermal slowdown share", "", 1],
+  ["gpuClockMeanMHz", "GPU clock (follows load)", "MHz", 1],
+  ["cpuPerformanceMean", "CPU speed", "% of nominal", 1],
+  ["backgroundCpuUtility", "CPU utility before the run", "%", 1],
+];
+
 /**
- * A compact summary of a run for the experiment log and trends: run
- * metadata, the hardware class, and per scene × configuration each
- * metric's median and interval (no per-frame series or timeline).
+ * A compact summary of a run for the experiment log and the workspace:
+ * run metadata, the hardware class, and per scene × scenario ×
+ * configuration each metric's and condition's median and interval, and
+ * how many of its runs were valid (no per-frame series or timeline).
  */
 export function summarizeRun(results) {
   const env = results.environment ?? {};
@@ -668,10 +678,24 @@ export function summarizeRun(results) {
     if (run.metrics.status !== "ok") {
       continue;
     }
-    const key = `${run.scene}|${run.config}`;
-    (cells[key] ??= { scene: run.scene, title: run.sceneTitle, config: run.config, values: {} });
+    const key = `${run.scene}|${run.scenario}|${run.config}`;
+    (cells[key] ??= {
+      scene: run.scene,
+      scenario: run.scenario,
+      title: run.sceneTitle,
+      config: run.config,
+      values: {},
+      verdicts: [],
+    });
+    cells[key].verdicts.push(run.validity?.verdict ?? "valid");
     for (const [metric] of METRICS) {
       const v = run.metrics[metric];
+      if (Number.isFinite(v)) {
+        (cells[key].values[metric] ??= []).push(v);
+      }
+    }
+    for (const [metric] of CONDITION_METRICS) {
+      const v = run.telemetry?.[metric];
       if (Number.isFinite(v)) {
         (cells[key].values[metric] ??= []).push(v);
       }
@@ -679,8 +703,10 @@ export function summarizeRun(results) {
   }
   const scenes = Object.values(cells).map((c) => ({
     scene: c.scene,
+    scenario: c.scenario,
     title: c.title,
     config: c.config,
+    warnings: c.verdicts.filter((v) => v !== "valid").length,
     metrics: Object.fromEntries(
       Object.entries(c.values).map(([k, v]) => [k, { ...summarize(v), values: v }]),
     ),
@@ -690,6 +716,8 @@ export function summarizeRun(results) {
     date: results.date,
     commit: results.commit,
     subject: results.subject,
+    baseline: results.baseline,
+    candidate: results.candidate,
     validity: {
       valid: verdicts.filter((v) => v === "valid").length,
       warning: verdicts.filter((v) => v === "warning").length,
@@ -710,4 +738,4 @@ export function summarizeRun(results) {
   };
 }
 
-export { METRICS };
+export { CONDITION_METRICS, METRICS };

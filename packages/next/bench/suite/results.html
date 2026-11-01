@@ -21,7 +21,7 @@
           "Segoe UI",
           sans-serif;
         color: var(--ink);
-        max-width: 1180px;
+        max-width: 1480px;
         margin: 0 auto;
         padding: 16px 24px 40px;
       }
@@ -139,6 +139,110 @@
       .explorer .credits {
         color: var(--muted);
         font-size: 12px;
+      }
+      .workspace {
+        display: grid;
+        grid-template-columns: 260px minmax(0, 1fr);
+        gap: 16px;
+        align-items: start;
+      }
+      @media (max-width: 860px) {
+        .workspace {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+      .workspace .runs {
+        position: sticky;
+        top: 8px;
+        max-height: calc(100vh - 24px);
+        overflow: auto;
+        background: var(--surface);
+        border: 1px solid var(--grid);
+        border-radius: 8px;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .workspace .runs input[type="search"] {
+        width: 100%;
+        box-sizing: border-box;
+      }
+      .workspace .run-actions {
+        display: flex;
+        gap: 6px;
+      }
+      .workspace .runs ol {
+        list-style: none;
+        margin: 4px 0 0;
+        padding: 0;
+      }
+      .workspace .runs li {
+        display: grid;
+        grid-template-columns: 22px minmax(0, 1fr) 22px;
+        gap: 4px;
+        align-items: start;
+        padding: 6px 2px;
+        border-top: 1px solid var(--grid);
+        font-size: 12px;
+      }
+      .workspace .runs li.off .run-text {
+        opacity: 0.45;
+      }
+      .workspace .run-text {
+        cursor: pointer;
+        overflow-wrap: anywhere;
+      }
+      .workspace .pin {
+        border: 0;
+        background: none;
+        color: var(--muted);
+        cursor: pointer;
+        padding: 0;
+      }
+      .workspace .pin.on {
+        color: var(--ink);
+      }
+      .workspace .badge {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 700;
+        border: 1px solid currentColor;
+        border-radius: 4px;
+        padding: 0 4px;
+      }
+      .workspace .badge.valid {
+        color: var(--good-text);
+      }
+      .workspace .badge.warning {
+        color: var(--ink-2);
+      }
+      .workspace .badge.invalid {
+        color: var(--critical);
+      }
+      .workspace .views {
+        display: inline-flex;
+        gap: 6px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .workspace details.section {
+        margin: 10px 0;
+      }
+      .workspace details.section > summary {
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+        margin-bottom: 6px;
+      }
+      .workspace .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+        gap: 10px;
+      }
+      .workspace .grid figure {
+        margin: 0;
+        cursor: pointer;
       }
       nav {
         display: flex;
@@ -262,7 +366,7 @@
           Dyno <span class="tagline">benchmark tracking for CesiumJS</span>
         </h1>
         <nav>
-          <button data-tab="trends">Trends</button>
+          <button data-tab="workspace">Workspace</button>
           <button data-tab="log">Runs</button>
           <button data-tab="compare">Compare</button>
           <button data-tab="report">Report</button>

@@ -3231,7 +3231,7 @@ as Dyno does for 1.x and 2.0.
 
 #### Information architecture of the tracking app
 
-- _Workspace_ (W&B-style, replacing Trends): a runs sidebar (color, eye
+- _Workspace_ (built, r33; W&B-style, replacing Trends): a runs sidebar (color, eye
   toggle, search, filters by tag, branch, hardware, validity; grouping);
   collapsible sections (Headline, Loading, Rendering, Network and memory,
   Conditions) of compact panels in a 2–3 column grid; the headline
@@ -3241,6 +3241,17 @@ as Dyno does for 1.x and 2.0.
   dots; each panel can split by scene into small multiples; clicking a
   point opens that run; a pinned baseline run draws a reference line;
   saved views and shareable URLs.
+  Built as `workspace.ts`: runs sidebar (show or hide each run, search,
+  hardware and validity filters, ★ to pin the reference run), sections
+  Headline (candidate over baseline with intervals and ×1), Loading,
+  Rendering, Network and memory, Conditions; per configuration lines with
+  their intervals; a control band for the candidate (mean ± 3σ of the
+  earlier runs, once there are six) with Western Electric rules 1 and 4;
+  markers where a configuration first appears or the hardware changes;
+  split by scene (and scenario); click a point for its report; view state
+  in the URL and saved views by name. Summaries now keep scenarios apart
+  and carry conditions and validity (`cli.mjs resummarize` rewrites old
+  ones). Commit subjects show where a run has no note.
 - _Alerts:_ the triage queue (§16.9, Detect).
 - _Run:_ the report (verdict and validity first, scorecard, tiles, forest
   plots, then per scene: cost along the camera path, path segments and
@@ -3315,8 +3326,7 @@ as Dyno does for 1.x and 2.0.
   (hitches over 100 ms, p99.9, spread); request waterfall and bytes over
   time; validity verdicts; scorecard with declared primary and guardrail
   metrics; `cli.mjs compare` (`benchstat`-style) and the table after each
-  run; uncapped scenarios; thermal headroom. Still to do: the workspace
-  redesign with commit and release annotations and control bands.
+  run; uncapped scenarios; thermal headroom; the workspace (r33, below).
 - _v2_ (with M5): alerts and triage, change points, automatic bisection,
   pull-request comments, scene pages, "what differs" analysis, traces
   from the report, side-by-side video.

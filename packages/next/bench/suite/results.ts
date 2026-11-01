@@ -1,21 +1,22 @@
 import { METRICS, renderReport, summarizeRun } from "./report.mjs";
-import {
-  CHART_CSS,
-  CHART_SCRIPT,
-  escape,
-  forestPlot,
-  lineChart,
-} from "./charts.mjs";
+import { CHART_CSS, CHART_SCRIPT, escape, forestPlot } from "./charts.mjs";
 import { ratio } from "./stats.mjs";
+import {
+  cellKey,
+  cellTitle,
+  mountWorkspace,
+  type Summary as WorkspaceSummary,
+} from "./workspace.ts";
 
 /**
- * Benchmark tracking (plan §16.5), in the spirit of ML experiment trackers:
- * every run is an experiment with parameters (commit, configurations,
- * hardware, tags, a note) and metrics; Trends follows chosen metrics run
- * to run and commit to commit, Runs is the experiment log, Compare puts
- * two runs side by side per scene (the commit-to-commit regression view),
- * and Report opens one run. Reads the results directory through the dev
- * server; compact summaries keep it fast.
+ * Dyno, the benchmark app (plan §16.5, §16.9), in the spirit of ML
+ * experiment trackers: every run is an experiment with parameters
+ * (commit, configurations, hardware, tags, a note) and metrics. The
+ * Workspace follows metrics run to run and commit to commit
+ * (workspace.ts), Runs is the experiment log, Compare puts two runs side
+ * by side per scene (the commit-to-commit regression view), Report opens
+ * one run, and the Explorer shows scenes live. Reads the results
+ * directory through the dev server; compact summaries keep it fast.
  */
 
 /* eslint-disable @typescript-eslint/no-explicit-any -- results are JSON */
@@ -34,8 +35,11 @@ interface Summary {
   browser?: string;
   configs: string[];
   repetitions: number;
+  baseline?: string;
+  candidate?: string;
   scenes: Array<{
     scene: string;
+    scenario?: string;
     title: string;
     config: string;
     metrics: Record<
@@ -111,8 +115,6 @@ const when = (s: Summary) =>
     minute: "2-digit",
   });
 const metricInfo = (key: string) => METRIC_LIST.find((m) => m[0] === key)!;
-const configColor = (configs: string[], config: string) =>
-  `var(--series-${Math.min(4, configs.indexOf(config) + 1)})`;
 const geomean = (values: number[]) =>
   values.length
     ? Math.exp(values.reduce((a, v) => a + Math.log(v), 0) / values.length)
@@ -181,98 +183,26 @@ function label(text: string, control: HTMLElement): HTMLElement {
   return l;
 }
 
-// ------------------------------------------------------------ trends
+// ------------------------------------------------------------ workspace
 
-function trends(): void {
+function workspace(): void {
   main.replaceChildren();
   if (summaries.length === 0) {
     main.innerHTML = `<div class="empty">No runs yet.</div>`;
     return;
   }
-  const controls = document.createElement("div");
-  controls.className = "controls";
-  const charts = document.createElement("div");
-  const scenes = [
-    ...new Map(
-      summaries.flatMap((s) =>
-        s.scenes.map((c) => [c.scene, c.title] as [string, string]),
-      ),
-    ),
-  ];
-  const hardware = [...new Set(summaries.map((s) => s.hardware))];
-  let scene = store.get("bench.scene", "*");
-  let hw = store.get("bench.hardware", "*");
-  const metricChips = chips(
-    "bench.metrics",
-    METRIC_LIST.map(([k, l]) => [k, l]),
-    HEADLINE,
-    () => draw(),
+  const root = document.createElement("div");
+  main.append(root);
+  mountWorkspace(
+    root,
+    summaries as unknown as WorkspaceSummary[],
+    store,
+    (name) => {
+      store.set("bench.report", name);
+      show("report");
+    },
+    bindCharts,
   );
-  controls.append(
-    label(
-      "Scene",
-      select([["*", "All scenes (geometric mean)"], ...scenes], scene, (v) => {
-        scene = v;
-        store.set("bench.scene", v);
-        draw();
-      }),
-    ),
-    label(
-      "Hardware",
-      select(
-        [["*", "All"], ...hardware.map((h) => [h, h] as [string, string])],
-        hw,
-        (v) => {
-          hw = v;
-          store.set("bench.hardware", v);
-          draw();
-        },
-      ),
-    ),
-    metricChips.el,
-  );
-  main.append(controls, charts);
-
-  function draw(): void {
-    const runs = summaries.filter((s) => hw === "*" || s.hardware === hw);
-    const configs = [...new Set(runs.flatMap((s) => s.configs))];
-    const xNames = runs.map(
-      (s) => `${when(s)} · ${short(s)}${s.note ? ` · ${s.note}` : ""}`,
-    );
-    const value = (s: Summary, config: string, key: string) => {
-      const cells = s.scenes.filter(
-        (c) => c.config === config && (scene === "*" || c.scene === scene),
-      );
-      const medians = cells
-        .map((c) => c.metrics[key]?.median)
-        .filter((v): v is number => Number.isFinite(v) && v! > 0);
-      return scene === "*" ? geomean(medians) : medians[0];
-    };
-    let html = `<p class="lede">Each point is a run (oldest left); hover for its date, commit and note. ${scene === "*" ? "All scenes: the geometric mean of each scene's median, over the scenes each run measured." : ""}</p>`;
-    for (const key of metricChips.selected()) {
-      const [, name, unit, scale] = metricInfo(key);
-      const series = configs.map((config) => ({
-        label: config,
-        color: configColor(configs, config),
-        points: runs.map((s, i) => {
-          const v = value(s, config, key);
-          return [i, v === undefined ? null : v / scale];
-        }),
-      }));
-      html += lineChart({
-        title: name,
-        subtitle: `${unit ? `${unit}, ` : ""}per configuration`,
-        xLabel: "run",
-        unit,
-        xNames,
-        series,
-        height: 150,
-      });
-    }
-    charts.innerHTML = html;
-    bindCharts();
-  }
-  draw();
 }
 
 // ------------------------------------------------------------ run log
@@ -282,15 +212,15 @@ function log(): void {
   const rows = [...summaries].reverse().map((s) => {
     const headline = (key: string) => {
       const configs = s.configs;
-      const base = configs.includes("1.x") ? "1.x" : configs[0];
-      const cand = configs.find((c) => c !== base);
+      const base = s.baseline ?? (configs.includes("1.x") ? "1.x" : configs[0]);
+      const cand = s.candidate ?? configs.find((c) => c !== base);
       if (!cand) {
         return "–";
       }
       const ratios: number[] = [];
       for (const cell of s.scenes.filter((c) => c.config === cand)) {
         const b = s.scenes.find(
-          (c) => c.scene === cell.scene && c.config === base,
+          (c) => cellKey(c) === cellKey(cell) && c.config === base,
         );
         const r =
           b &&
@@ -306,7 +236,7 @@ function log(): void {
       const cls = g < 0.95 ? "better" : g > 1.05 ? "worse" : "muted";
       return `<span class="${cls}">${g < 0.95 ? "▼ " : g > 1.05 ? "▲ " : ""}×${g.toFixed(2)}</span>`;
     };
-    const scenes = new Set(s.scenes.map((c) => c.scene)).size;
+    const scenes = new Set(s.scenes.map((c) => cellKey(c))).size;
     return `<tr>
 <td>${escape(when(s))}</td>
 <td><code>${escape(short(s))}</code><div class="muted">${escape(s.branch ?? "")}</div></td>
@@ -402,13 +332,13 @@ function compare(): void {
     const current = config;
     for (const key of metricChips.selected()) {
       const [, name] = metricInfo(key);
-      const sceneIds = [...new Set(sb.scenes.map((c) => c.scene))];
+      const sceneIds = [...new Set(sb.scenes.map((c) => cellKey(c)))];
       const rows = sceneIds.map((id) => {
         const ca = sa.scenes.find(
-          (c) => c.scene === id && c.config === current,
+          (c) => cellKey(c) === id && c.config === current,
         );
         const cb = sb.scenes.find(
-          (c) => c.scene === id && c.config === current,
+          (c) => cellKey(c) === id && c.config === current,
         );
         const r =
           ca && cb
@@ -418,7 +348,7 @@ function compare(): void {
               )
             : undefined;
         return {
-          label: (cb ?? ca)?.title ?? id,
+          label: cb ? cellTitle(cb) : ca ? cellTitle(ca) : id,
           ratio: r?.value !== undefined ? r : undefined,
           note: !ca
             ? "not in the baseline run"
@@ -517,13 +447,16 @@ async function explore(): Promise<void> {
 // ------------------------------------------------------------ tabs
 
 const views: Record<string, () => void | Promise<void>> = {
-  trends,
+  workspace,
   log,
   compare,
   report,
   explore,
 };
-function show(tab: string): void {
+const WORKSPACE_KEYS = ["ws", "split", "base", "cand", "pin"];
+function show(requested: string): void {
+  // Older links: Trends became the workspace.
+  const tab = requested === "trends" ? "workspace" : requested;
   for (const b of document.querySelectorAll<HTMLButtonElement>("nav button")) {
     b.setAttribute("aria-selected", String(b.dataset.tab === tab));
   }
@@ -536,10 +469,15 @@ function show(tab: string): void {
       url.searchParams.delete(key);
     }
   }
+  if (tab !== "workspace") {
+    for (const key of WORKSPACE_KEYS) {
+      url.searchParams.delete(key);
+    }
+  }
   history.replaceState(null, "", url);
   void views[tab]!();
 }
 for (const b of document.querySelectorAll<HTMLButtonElement>("nav button")) {
   b.addEventListener("click", () => show(b.dataset.tab!));
 }
-show(new URLSearchParams(location.search).get("tab") ?? "trends");
+show(new URLSearchParams(location.search).get("tab") ?? "workspace");

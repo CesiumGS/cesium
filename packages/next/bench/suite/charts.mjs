@@ -159,8 +159,14 @@ export function forestPlot({ title, subtitle, rows, baseline, candidate }) {
 /**
  * A line chart: series of [x, y] points (one y-axis), optional shaded
  * bands along x (e.g. which engine ran when) and a crosshair readout.
- * `series`: { label, color, points, group? } — lines sharing a group share
- * a legend entry (e.g. three repetitions of one engine).
+ * `series`: { label, color, points, group?, band?, markers?, dash? } —
+ * lines sharing a group share a legend entry (e.g. three repetitions of
+ * one engine); `band` is [x, low, high] per point, drawn as a faint area
+ * (an interval). `refs`: horizontal reference lines { y, label, color? };
+ * `hbands`: horizontal ranges { y0, y1, label, color } (control bands);
+ * `marks`: vertical markers { x, label } (annotations). `width` sets the
+ * drawing's own width (small panels use less, so text stays legible).
+ * Clicking the plot dispatches a `chart-click` event with the nearest x.
  */
 export function lineChart({
   title,
@@ -174,9 +180,12 @@ export function lineChart({
   yMin = 0,
   xNames,
   zero = false,
+  refs = [],
+  hbands = [],
+  marks = [],
+  width = 960,
 }) {
   const id = `c${++chartIds}`;
-  const width = 960;
   const left = 52;
   const right = 12;
   const top = 8;
@@ -187,14 +196,28 @@ export function lineChart({
   }
   const x0 = Math.min(...all.map((p) => p[0]), ...bands.map((b) => b.x0));
   const x1 = Math.max(...all.map((p) => p[0]), ...bands.map((b) => b.x1));
-  const yMax = Math.max(...all.map((p) => p[1])) * 1.08 || 1;
-  const y0 = Math.min(yMin, ...all.map((p) => p[1]));
+  const extra = [
+    ...series.flatMap((s) =>
+      (s.band ?? []).flatMap((b) => [b[1], b[2]]).filter(Number.isFinite),
+    ),
+    ...refs.map((r) => r.y),
+    ...hbands.flatMap((b) => [b.y0, b.y1]),
+  ];
+  const ys = [...all.map((p) => p[1]), ...extra];
+  const yMax = Math.max(...ys) * 1.08 || 1;
+  const y0 = Math.min(yMin, ...ys);
   const sx = (v) => left + ((v - x0) / (x1 - x0 || 1)) * (width - left - right);
   const sy = (v) =>
     top + (1 - (v - y0) / (yMax - y0 || 1)) * (height - top - bottom);
   let svg = `<svg viewBox="0 0 ${width} ${height}" data-chart="${id}" role="img" aria-label="${escape(title)}">`;
   for (const b of bands) {
     svg += `<rect x="${sx(b.x0)}" y="${top}" width="${Math.max(1, sx(b.x1) - sx(b.x0))}" height="${height - top - bottom}" fill="${b.color}" opacity="0.12"/>`;
+  }
+  for (const b of hbands) {
+    svg += `<rect x="${left}" y="${sy(b.y1)}" width="${width - left - right}" height="${Math.max(1, sy(b.y0) - sy(b.y1))}" fill="${b.color ?? "var(--muted)"}" opacity="0.1"><title>${escape(b.label ?? "")}</title></rect>`;
+    for (const y of [b.y0, b.y1]) {
+      svg += `<line x1="${left}" x2="${width - right}" y1="${sy(y)}" y2="${sy(y)}" stroke="${b.color ?? "var(--muted)"}" stroke-width="1" stroke-dasharray="4 3" opacity="0.6"/>`;
+    }
   }
   for (const t of ticks(y0, yMax)) {
     svg += `<line x1="${left}" x2="${width - right}" y1="${sy(t)}" y2="${sy(t)}" stroke="var(--grid)" stroke-width="1"/>`;
@@ -212,6 +235,33 @@ export function lineChart({
   if (zero && y0 < 0) {
     svg += `<line x1="${left}" x2="${width - right}" y1="${sy(0)}" y2="${sy(0)}" stroke="var(--ink-2)" stroke-width="1"/>`;
   }
+  for (const r of refs) {
+    svg += `<line x1="${left}" x2="${width - right}" y1="${sy(r.y)}" y2="${sy(r.y)}" stroke="${r.color ?? "var(--ink-2)"}" stroke-width="1" stroke-dasharray="${r.dash ?? ""}"/>`;
+    if (r.label) {
+      svg += `<text x="${width - right - 4}" y="${sy(r.y) - 4}" text-anchor="end">${escape(r.label)}</text>`;
+    }
+  }
+  for (const m of marks) {
+    svg += `<line x1="${sx(m.x)}" x2="${sx(m.x)}" y1="${top}" y2="${height - bottom}" stroke="var(--ink-2)" stroke-width="1" stroke-dasharray="2 3"><title>${escape(m.label)}</title></line>`;
+    svg += `<text x="${sx(m.x) + 3}" y="${top + 10}" class="label">${escape(m.short ?? m.label)}</text>`;
+  }
+  // Intervals: a faint area per series, under the lines.
+  for (const s of series) {
+    const band = (s.band ?? []).filter(
+      (b) => Number.isFinite(b[1]) && Number.isFinite(b[2]),
+    );
+    if (band.length > 1) {
+      const upper = band.map((b) => `${sx(b[0]).toFixed(1)},${sy(b[2]).toFixed(1)}`);
+      const lower = band
+        .slice()
+        .reverse()
+        .map((b) => `${sx(b[0]).toFixed(1)},${sy(b[1]).toFixed(1)}`);
+      svg += `<path d="M${upper.join("L")}L${lower.join("L")}Z" fill="${s.color}" opacity="0.15"/>`;
+    } else if (band.length === 1) {
+      const b = band[0];
+      svg += `<line x1="${sx(b[0])}" x2="${sx(b[0])}" y1="${sy(b[1])}" y2="${sy(b[2])}" stroke="${s.color}" stroke-width="6" opacity="0.2" stroke-linecap="round"/>`;
+    }
+  }
   for (const s of series) {
     let d = "";
     let pen = false;
@@ -223,12 +273,13 @@ export function lineChart({
       d += `${pen ? "L" : "M"}${sx(px).toFixed(1)},${sy(py).toFixed(1)}`;
       pen = true;
     }
-    svg += `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="${s.width ?? 2}" stroke-linejoin="round" stroke-linecap="round" opacity="${s.opacity ?? 1}"/>`;
+    svg += `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="${s.width ?? 2}" stroke-linejoin="round" stroke-linecap="round" opacity="${s.opacity ?? 1}"${s.dash ? ` stroke-dasharray="${s.dash}"` : ""}/>`;
     // Sparse series (one point per run): markers with a surface ring.
     if (s.markers !== false && s.points.length <= 60) {
       for (const [px, py] of s.points) {
         if (py !== null && py !== undefined) {
-          svg += `<circle cx="${sx(px).toFixed(1)}" cy="${sy(py).toFixed(1)}" r="4" fill="${s.color}" stroke="var(--ring)" stroke-width="2"/>`;
+          const flagged = s.flags?.includes(px);
+          svg += `<circle cx="${sx(px).toFixed(1)}" cy="${sy(py).toFixed(1)}" r="${flagged ? 6 : 4}" fill="${flagged ? "var(--surface)" : s.color}" stroke="${flagged ? s.color : "var(--ring)"}" stroke-width="${flagged ? 3 : 2}"/>`;
         }
       }
     }
@@ -333,6 +384,13 @@ export const CHART_SCRIPT = `
       tip.style.top = (e.clientY + 14) + "px";
     });
     svg.addEventListener("pointerleave", () => { tip.style.display = "none"; cross.setAttribute("visibility", "hidden"); });
+    svg.addEventListener("click", (e) => {
+      const r = svg.getBoundingClientRect();
+      const px = (e.clientX - r.left) / r.width * data.width;
+      if (px < data.left || px > data.width - data.right) return;
+      const x = data.x0 + (px - data.left) / (data.width - data.left - data.right) * (data.x1 - data.x0);
+      svg.closest("figure").dispatchEvent(new CustomEvent("chart-click", { bubbles: true, detail: { x: data.xNames ? Math.round(x) : x } }));
+    });
   }
 })();
 `;

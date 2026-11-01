@@ -14,6 +14,8 @@
 // released version from npm ("latest", or --cesium to pin one), fetched
 // once into the store and recorded exactly in the results.
 //   node packages/next/bench/suite/cli.mjs report <results.json>
+//   node packages/next/bench/suite/cli.mjs resummarize   (after the summary
+//        format changes: rewrites every run's .summary.json)
 //   node packages/next/bench/suite/cli.mjs compare <old.json> [new.json]
 //        [--old 1.x@1.146.0] [--new 2.0] [--metrics cpuP50,settleMs]
 //        (benchstat-style: two configurations of one run, or one
@@ -30,7 +32,7 @@
 // drift (thermals, background work) spreads across all of them. Exits 1
 // when a run fails or the catalog is invalid.
 import { execSync } from "node:child_process";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import {
   arch,
   cpus,
@@ -64,12 +66,21 @@ import {
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, "..", "..");
 
+/**
+ * `--key value` options, `--flag` booleans (followed by another option or
+ * nothing) and positional arguments.
+ */
 function options(args) {
   const out = {};
   for (let i = 0; i < args.length; i++) {
     if (args[i].startsWith("--")) {
-      out[args[i].slice(2)] = args[i + 1];
-      i++;
+      const next = args[i + 1];
+      if (next === undefined || next.startsWith("--")) {
+        out[args[i].slice(2)] = true;
+      } else {
+        out[args[i].slice(2)] = next;
+        i++;
+      }
     } else {
       (out._ ??= []).push(args[i]);
     }
@@ -119,6 +130,18 @@ if (command === "list") {
   const out = file.replace(/\.json$/, ".html");
   writeFileSync(out, renderReport(results));
   console.log(out);
+} else if (command === "resummarize") {
+  const directory =
+    process.env.BENCH_RESULTS ?? join(homedir(), ".cesium-bench", "results");
+  const files = readdirSync(directory).filter((f) => /Z\.json$/.test(f));
+  for (const f of files) {
+    const results = JSON.parse(readFileSync(join(directory, f), "utf8"));
+    writeFileSync(
+      join(directory, f.replace(/\.json$/, ".summary.json")),
+      JSON.stringify(summarizeRun(results)),
+    );
+  }
+  console.log(`${files.length} summaries rewritten in ${directory}`);
 } else if (command === "compare") {
   const [a, b] = opts._ ?? [];
   if (!a) {
