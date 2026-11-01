@@ -23,8 +23,17 @@ import type { View } from "./View.ts";
 export class GlobeController {
   /** Ignore input at these target pixels, e.g. where another view sits on top. */
   ignore?: (x: number, y: number) => boolean;
-  /** Meters above the ellipsoid the camera stays (1.x minimumZoomDistance: 1). */
+  /**
+   * Meters the camera stays above the surface (1.x minimumZoomDistance: 1):
+   * the terrain from `surfaceHeight`, else the ellipsoid.
+   */
   minimumHeight = 1;
+  /**
+   * Height of the ground (meters above the ellipsoid) at a longitude and
+   * latitude in radians, e.g. `terrain.sampleHeight`; undefined where it
+   * isn't known yet. Without it the ellipsoid is the ground.
+   */
+  surfaceHeight?: (longitude: number, latitude: number) => number | undefined;
   /** Share of the spin momentum kept per 1/60 s (1.x inertiaSpin). */
   inertiaSpin = 0.9;
   /**
@@ -295,6 +304,17 @@ export class GlobeController {
     this.view.camera.rotateAroundCenter(v3.normalize(v3.vec3(), axis), angle);
   }
 
+  /**
+   * Keeps the camera `minimumHeight` above the ground. Call once per frame:
+   * finer terrain loading under a still camera can rise above it (1.x
+   * checks every frame too).
+   */
+  update(): void {
+    if (this.mode === "none" && !this.animating) {
+      this.keepAboveGround();
+    }
+  }
+
   private keepAboveGround(): void {
     const camera = this.view.camera;
     const c = this.ellipsoid.cartesianToCartographic(camera.position, {
@@ -302,8 +322,17 @@ export class GlobeController {
       latitude: 0,
       height: 0,
     });
-    if (c && c.height < this.minimumHeight) {
-      c.height = this.minimumHeight;
+    if (!c) {
+      return;
+    }
+    const ground = this.surfaceHeight
+      ? this.surfaceHeight(c.longitude, c.latitude)
+      : 0;
+    if (ground === undefined) {
+      return; // not loaded there yet
+    }
+    if (c.height < ground + this.minimumHeight) {
+      c.height = ground + this.minimumHeight;
       this.ellipsoid.cartographicToCartesian(c, camera.position);
       camera.version++;
     }

@@ -87,6 +87,55 @@ interface Row {
   nextMs?: number;
   onlyLegacy?: string;
   onlyNext?: string;
+  /** Height queries over a grid around the target: max and mean |Δ|, m. */
+  heightMax?: number;
+  heightMean?: number;
+  heightCount?: number;
+}
+
+/** Level of the finest loaded terrain tile at a point (TMS levels). */
+function finestLevel(
+  tileset: Tileset3D,
+  longitude: number,
+  latitude: number,
+): number | undefined {
+  const contains = (t: Tile) => {
+    const r = t.globe!.rectangle;
+    return (
+      longitude >= r.west &&
+      longitude <= r.east &&
+      latitude >= r.south &&
+      latitude <= r.north
+    );
+  };
+  let tile = tileset.root.children.find(contains);
+  let level: number | undefined;
+  while (tile) {
+    if (tile.globe!.heights) {
+      level = tile.globe!.level;
+    }
+    tile = tile.children.find((t) => !t.fillFromParent && contains(t));
+  }
+  return level;
+}
+
+/**
+ * A 9×9 grid of points (radians) around a camera target, spanning a third
+ * of the range: where the camera sees detailed tiles.
+ */
+function heightGrid(cam: (typeof CAMERAS)[number]): Array<[number, number]> {
+  const points: Array<[number, number]> = [];
+  const span = cam.range / 3 / 6378137;
+  const lat = cam.at[1]! * deg;
+  for (let j = -4; j <= 4; j++) {
+    for (let i = -4; i <= 4; i++) {
+      points.push([
+        cam.at[0]! * deg + ((i / 4) * span) / Math.cos(lat),
+        lat + (j / 4) * span,
+      ]);
+    }
+  }
+  return points;
 }
 
 /** level/x/y with TMS rows (from the south), as 2.0 addresses tiles. */
@@ -143,7 +192,8 @@ async function legacySelection(
   provider: Json,
   fog: boolean,
   camera: { position: Float64Array; direction: Float64Array; up: Float64Array },
-): Promise<Set<string>> {
+  points: Array<[number, number]>,
+): Promise<{ selected: Set<string>; heights: Array<number | undefined> }> {
   const scene = viewer.scene;
   // Fresh tile state: a new globe, without imagery.
   const globe = new Cesium.Globe(Cesium.Ellipsoid.WGS84);
@@ -170,7 +220,12 @@ async function legacySelection(
     previous = now;
     return same;
   });
-  return selected();
+  // Heights come from sampleTerrain (below): 1.x frees a tile's quantized
+  // buffers once its mesh exists, and its interpolateHeight then compares
+  // texture coordinates in 0..1 with u, v scaled to 0..32767, so loaded
+  // globe tiles can't be sampled (a 1.x bug, plan §14).
+  const heights: Array<number | undefined> = points.map(() => undefined);
+  return { selected: selected(), heights };
 }
 
 async function runGlobe(): Promise<Row[]> {
@@ -240,6 +295,12 @@ async function runGlobe(): Promise<Row[]> {
       const nextMs = performance.now() - nextStart;
       const marked = selected();
       const next = new Set([...marked].map((k) => k.replace("*", "")));
+      const points = heightGrid(cam);
+      const nextHeights = points.map(([lon, lat]) =>
+        tileset.sampleHeight(lon, lat),
+      );
+      // The level each height came from: 1.x samples the same level.
+      const levels = points.map(([lon, lat]) => finestLevel(tileset, lon, lat));
       // ?keep: leave both engines' state for inspection (debugging).
       if (keep) {
         Object.assign(globalThis, { parityGlobe: { engine, view, tileset } });
@@ -250,10 +311,37 @@ async function runGlobe(): Promise<Row[]> {
       }
 
       const legacyStart = performance.now();
-      const legacy = await legacySelection(viewer, provider, fog, {
-        position: view.camera.position,
-        direction: view.camera.direction,
-        up: view.camera.up,
+      const { selected: legacy, heights: legacyHeights } =
+        await legacySelection(
+          viewer,
+          provider,
+          fog,
+          {
+            position: view.camera.position,
+            direction: view.camera.direction,
+            up: view.camera.up,
+          },
+          points,
+        );
+      // 1.x sampleTerrain at the same levels (fresh terrain data, which
+      // interpolates as 2.0 does).
+      for (const level of new Set(levels)) {
+        if (level === undefined) {
+          continue;
+        }
+        const indices = levels.flatMap((l, i) => (l === level ? [i] : []));
+        const cartos = indices.map((i) =>
+          Cesium.Cartographic.fromRadians(points[i]![0], points[i]![1]),
+        );
+        await Cesium.sampleTerrain(provider, level, cartos);
+        indices.forEach((i, k) => {
+          legacyHeights[i] = cartos[k].height;
+        });
+      }
+      const deltas = points.flatMap((_, i) => {
+        const a = legacyHeights[i];
+        const b = nextHeights[i];
+        return a === undefined || b === undefined ? [] : [Math.abs(a - b)];
       });
       const legacyMs = performance.now() - legacyStart;
       const union = new Set([...legacy, ...next]);
@@ -266,6 +354,11 @@ async function runGlobe(): Promise<Row[]> {
         jaccard: union.size === 0 ? 1 : both / union.size,
         legacyMs,
         nextMs,
+        heightMax: deltas.length ? Math.max(...deltas) : undefined,
+        heightMean: deltas.length
+          ? deltas.reduce((a, b) => a + b, 0) / deltas.length
+          : undefined,
+        heightCount: deltas.length,
         onlyLegacy: [...legacy]
           .filter((k) => !next.has(k))
           .slice(0, 8)
@@ -295,13 +388,14 @@ async function runGlobe(): Promise<Row[]> {
 
 function renderTable(rows: Row[]): void {
   document.querySelector("#results")!.innerHTML =
-    `<tr><th>view</th><th>status</th><th>1.x</th><th>2.0</th><th>Jaccard</th><th>1.x settle</th><th>2.0 settle</th><th>only 1.x</th><th>only 2.0</th></tr>${rows
+    `<tr><th>view</th><th>status</th><th>1.x</th><th>2.0</th><th>Jaccard</th><th>1.x settle</th><th>2.0 settle</th><th>height Δ max / mean (points)</th><th>only 1.x</th><th>only 2.0</th></tr>${rows
       .map(
         (r) =>
           `<tr><td>${r.view}</td><td>${r.status}</td><td>${r.legacy ?? ""}</td>` +
           `<td>${r.next ?? ""}</td><td>${r.jaccard === undefined ? "" : `${(r.jaccard * 100).toFixed(1)}%`}</td>` +
           `<td>${r.legacyMs === undefined ? "" : `${(r.legacyMs / 1000).toFixed(1)} s`}</td>` +
           `<td>${r.nextMs === undefined ? "" : `${(r.nextMs / 1000).toFixed(1)} s`}</td>` +
+          `<td>${r.heightMax === undefined ? "" : `${r.heightMax.toFixed(3)} / ${r.heightMean!.toFixed(3)} m (${r.heightCount})`}</td>` +
           `<td class="text">${r.onlyLegacy ?? ""}</td><td class="text">${r.onlyNext ?? ""}</td></tr>`,
       )
       .join("")}`;

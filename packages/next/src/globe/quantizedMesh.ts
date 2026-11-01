@@ -59,6 +59,74 @@ export interface TerrainTileInfo {
    * the ranges at level + 1 + i.
    */
   available?: TileRange[][];
+  /**
+   * The quantized vertices and triangles (no skirts), kept on the CPU for
+   * height queries (`interpolateHeight`, as 1.x's terrain data does).
+   */
+  heights?: TerrainHeights;
+}
+
+/** A terrain tile's surface for height queries. */
+export interface TerrainHeights {
+  /** u, v and height per vertex, 0..32767 (v from the south). */
+  u: Uint16Array;
+  v: Uint16Array;
+  h: Uint16Array;
+  triangles: Uint32Array;
+  minimumHeight: number;
+  maximumHeight: number;
+}
+
+/**
+ * Height at (u, v) in [0, 1]² of the tile, interpolated in the triangle
+ * containing it (1.x QuantizedMeshTerrainData.interpolateHeight), or
+ * undefined if no triangle contains it.
+ */
+export function interpolateHeight(
+  t: TerrainHeights,
+  uNormalized: number,
+  vNormalized: number,
+): number | undefined {
+  const u = Math.min(Math.max(uNormalized, 0), 1) * 32767;
+  const v = Math.min(Math.max(vNormalized, 0), 1) * 32767;
+  const { u: us, v: vs, h: hs, triangles } = t;
+  for (let i = 0; i + 2 < triangles.length; i += 3) {
+    const i0 = triangles[i]!;
+    const i1 = triangles[i + 1]!;
+    const i2 = triangles[i + 2]!;
+    const u0 = us[i0]!,
+      u1 = us[i1]!,
+      u2 = us[i2]!;
+    const v0 = vs[i0]!,
+      v1 = vs[i1]!,
+      v2 = vs[i2]!;
+    if (
+      u < Math.min(u0, u1, u2) ||
+      u > Math.max(u0, u1, u2) ||
+      v < Math.min(v0, v1, v2) ||
+      v > Math.max(v0, v1, v2)
+    ) {
+      continue;
+    }
+    // 1.x Intersections2D.computeBarycentricCoordinates.
+    const x1mx3 = u0 - u2;
+    const x3mx2 = u2 - u1;
+    const y2my3 = v1 - v2;
+    const y1my3 = v0 - v2;
+    const inverse = 1 / (y2my3 * x1mx3 + x3mx2 * y1my3);
+    const ymy3 = v - v2;
+    const xmx3 = u - u2;
+    const l1 = (y2my3 * xmx3 + x3mx2 * ymy3) * inverse;
+    const l2 = (-y1my3 * xmx3 + x1mx3 * ymy3) * inverse;
+    const l3 = 1 - l1 - l2;
+    if (l1 >= -1e-15 && l2 >= -1e-15 && l3 >= -1e-15) {
+      const q = l1 * hs[i0]! + l2 * hs[i1]! + l3 * hs[i2]!;
+      return (
+        t.minimumHeight + (q / 32767) * (t.maximumHeight - t.minimumHeight)
+      );
+    }
+  }
+  return undefined;
 }
 
 const EXT_OCT_NORMALS = 1;
@@ -279,6 +347,7 @@ export function decodeQuantizedMesh(
     edges,
     octNormals,
     available,
+    keepHeights: true,
   });
 }
 
@@ -301,6 +370,8 @@ interface TerrainTileData {
   edges: Uint32Array[];
   octNormals?: Uint8Array | undefined;
   available?: TileRange[][] | undefined;
+  /** Keep the vertices and triangles for height queries (data tiles). */
+  keepHeights?: boolean;
 }
 
 /**
@@ -527,7 +598,19 @@ function buildTerrainTile(d: TerrainTileData): {
       ...(occludee ? { occludee } : {}),
       quadrants,
       ...(available ? { available } : {}),
+      // u, v and h share one buffer (transferred once).
+      ...(d.keepHeights
+        ? {
+            heights: { u, v, h, triangles, minimumHeight, maximumHeight },
+          }
+        : {}),
     },
-    transfer: [positions.buffer, normals.buffer, uvs.buffer, indices.buffer],
+    transfer: [
+      positions.buffer,
+      normals.buffer,
+      uvs.buffer,
+      indices.buffer,
+      ...(d.keepHeights ? [u.buffer, triangles.buffer] : []),
+    ],
   };
 }

@@ -1604,7 +1604,14 @@ async function main(): Promise<void> {
   // Last move: from when the camera stopped until streaming went idle, with
   // the requests and bytes the move cost (an L1′-style number, live).
   let cameraKey = "";
+  // The camera stays above the globe's surface (terrain or the ellipsoid).
+  controller.surfaceHeight = (longitude, latitude) =>
+    currentTerrain?.show
+      ? currentTerrain.sampleHeight(longitude, latitude)
+      : undefined;
+
   function watchCamera(): void {
+    controller.update();
     const t = current3dTiles;
     const key = [view, second]
       .filter((v): v is View => v !== undefined)

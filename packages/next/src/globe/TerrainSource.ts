@@ -24,7 +24,13 @@ import type { TilesetOptions } from "../streaming/Tileset3D.ts";
 import * as m4 from "../math/mat4.ts";
 import type { Vec3 } from "../math/vec3.ts";
 import type { GltfAsset } from "../io/gltfTypes.ts";
-import type { Rectangle, TerrainTileInfo, TileRange } from "./quantizedMesh.ts";
+import {
+  interpolateHeight,
+  type Rectangle,
+  type TerrainHeights,
+  type TerrainTileInfo,
+  type TileRange,
+} from "./quantizedMesh.ts";
 import { GlobeLegacy1xSelection } from "./GlobeLegacy1x.ts";
 
 /** Decodes one tile in a worker: fetch, quantized-mesh decode, skirts. */
@@ -66,6 +72,8 @@ export interface GlobeTile extends Address {
   };
   /** Its metadata extension (descendant availability) has arrived. */
   metadata: boolean;
+  /** Its surface for height queries, while its content is loaded. */
+  heights?: TerrainHeights;
   /**
    * A quadrant without data that 1.x would have upsampled by now: it was
    * queued for loading (culled quadrants never are).
@@ -192,6 +200,47 @@ export class TerrainSource {
     );
   }
 
+  /**
+   * Terrain height (meters above the ellipsoid) at a longitude and latitude
+   * in radians, from the finest loaded tile there (1.x's globe samples the
+   * same way); 0 for the ellipsoid; undefined where nothing is loaded.
+   */
+  sampleHeight(longitude: number, latitude: number): number | undefined {
+    if (this.flat) {
+      return 0;
+    }
+    let tile = this.root.children.find((t) =>
+      rectangleContains(t.globe!.rectangle, longitude, latitude),
+    );
+    let finest: GlobeTile | undefined;
+    while (tile) {
+      if (tile.globe!.heights) {
+        finest = tile.globe;
+      }
+      tile = tile.children.find(
+        (t) =>
+          !t.fillFromParent &&
+          rectangleContains(t.globe!.rectangle, longitude, latitude),
+      );
+    }
+    if (!finest) {
+      return undefined;
+    }
+    const r = finest.rectangle;
+    return interpolateHeight(
+      finest.heights!,
+      (longitude - r.west) / (r.east - r.west),
+      (latitude - r.south) / (r.north - r.south),
+    );
+  }
+
+  /** Content left the cache: its height data goes too. */
+  unloadTile(tile: Tile): void {
+    if (tile.globe) {
+      tile.globe.heights = undefined;
+    }
+  }
+
   /** Terrain is Earth-fixed: no transform, no axis change. */
   modelOptions(): { modelMatrix: Float64Array; axes: "none" } {
     return { modelMatrix: IDENTITY, axes: "none" };
@@ -217,6 +266,9 @@ export class TerrainSource {
     if (info.available) {
       info.available.forEach((r, i) => this.addRanges(g.level + 1 + i, r));
       g.metadata = true;
+    }
+    if (info.heights) {
+      g.heights = info.heights;
     }
     g.own = {
       minimumHeight: info.minimumHeight,
@@ -409,6 +461,19 @@ function regionVolume(
     },
     IDENTITY,
   )!;
+}
+
+function rectangleContains(
+  r: Rectangle,
+  longitude: number,
+  latitude: number,
+): boolean {
+  return (
+    longitude >= r.west &&
+    longitude <= r.east &&
+    latitude >= r.south &&
+    latitude <= r.north
+  );
 }
 
 /** A TMS tile's extent in radians (geographic tiling). */

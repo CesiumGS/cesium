@@ -51,6 +51,10 @@ export interface TileSource {
   loadTile(tile: Tile, signal: AbortSignal): Promise<GltfAsset>;
   /** Placement of a tile's content. */
   modelOptions(tile: Tile): Pick<ModelOptions, "modelMatrix" | "axes">;
+  /** Height of the surface at a longitude and latitude (terrain sources). */
+  sampleHeight?(longitude: number, latitude: number): number | undefined;
+  /** A tile's content left the cache. */
+  unloadTile?(tile: Tile): void;
   /** A selection policy of its own for `options` (default: the tileset's). */
   createSelection?(options: TilesetOptions): TileSelection | undefined;
 }
@@ -290,6 +294,16 @@ export class Tileset3D implements TileTree {
     };
     reset(this.root);
     this.lastChange = this.frame;
+  }
+
+  /**
+   * Height of the surface (meters above the ellipsoid) at a longitude and
+   * latitude in radians, for terrain and the ellipsoid: from the finest
+   * loaded tile, so it sharpens as tiles load. Undefined for 3D Tiles and
+   * where nothing is loaded yet.
+   */
+  sampleHeight(longitude: number, latitude: number): number | undefined {
+    return this.source?.sampleHeight?.(longitude, latitude);
   }
 
   /** Counts tiles an implicit tree created (TileTree). */
@@ -704,6 +718,7 @@ export class Tileset3D implements TileTree {
   }
 
   private unload(tile: Tile): void {
+    this.source?.unloadTile?.(tile);
     if (tile.instance) {
       this.engine.removeModel(this.world, tile.instance);
       tile.instance = undefined;
