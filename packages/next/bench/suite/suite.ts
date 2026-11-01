@@ -134,6 +134,24 @@ function tokenFor(dataset: Dataset): string {
   return token;
 }
 
+/** A Google dataset's root with the environment's own Map Tiles API key. */
+function googleUrl(dataset: Dataset): string | undefined {
+  const key = import.meta.env.VITE_GOOGLE_MAPS_KEY as string | undefined;
+  return dataset.source.kind === "ion" && dataset.source.google && key
+    ? `https://tile.googleapis.com/v1/3dtiles/root.json?key=${key}`
+    : undefined;
+}
+
+/** A tileset dataset's root URL and request headers. */
+async function resolveTileset(
+  dataset: Dataset,
+): Promise<{ url: string; headers?: Record<string, string> }> {
+  const google = googleUrl(dataset);
+  return google
+    ? { url: google }
+    : resolveIonAsset(ionAsset(dataset), { accessToken: tokenFor(dataset) });
+}
+
 function ionAsset(dataset: Dataset): number {
   if (dataset.source.kind !== "ion") {
     throw new Error(`${dataset.title}: not an ion dataset`);
@@ -147,9 +165,7 @@ function ionAsset(dataset: Dataset): number {
 async function frameSphere(
   dataset: Dataset,
 ): Promise<{ center: Float64Array; radius: number }> {
-  const resolved = await resolveIonAsset(ionAsset(dataset), {
-    accessToken: tokenFor(dataset),
-  });
+  const resolved = await resolveTileset(dataset);
   const json = await (
     await fetch(resolved.url, { headers: resolved.headers ?? {} })
   ).json();
@@ -360,9 +376,7 @@ export class NextAdapter implements Adapter {
         await this.generate(world, d, layer.at ?? [0, 0, 0]);
         continue;
       }
-      const resolved = await resolveIonAsset(ionAsset(d), {
-        accessToken: tokenFor(d),
-      });
+      const resolved = await resolveTileset(d);
       this.tilesets.push(
         await engine.addTileset(world, resolved.url, {
           ...(resolved.headers ? { headers: resolved.headers } : {}),
@@ -639,13 +653,16 @@ export class LegacyAdapter implements Adapter {
     }
     for (const layer of scene.layers) {
       const d = byId.get(layer.dataset)!;
-      const tileset = await Cesium.Cesium3DTileset.fromUrl(await ion(d), {
-        ...(config.maximumScreenSpaceError !== undefined
-          ? { maximumScreenSpaceError: config.maximumScreenSpaceError }
-          : {}),
-        enableCollision: layer.collision ?? false,
-        showOutline: render.outlines,
-      });
+      const tileset = await Cesium.Cesium3DTileset.fromUrl(
+        googleUrl(d) ?? (await ion(d)),
+        {
+          ...(config.maximumScreenSpaceError !== undefined
+            ? { maximumScreenSpaceError: config.maximumScreenSpaceError }
+            : {}),
+          enableCollision: layer.collision ?? false,
+          showOutline: render.outlines,
+        },
+      );
       viewer.scene.primitives.add(tileset);
       this.tilesets.push(tileset);
     }

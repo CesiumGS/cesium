@@ -21,7 +21,7 @@
       "source": {
         "kind": "ion",
         "asset": 1,
-        "token": "default"
+        "token": "env"
       },
       "formats": [
         "quantized-mesh"
@@ -40,7 +40,7 @@
       "source": {
         "kind": "ion",
         "asset": 2,
-        "token": "default"
+        "token": "env"
       },
       "license": {
         "name": "Cesium ion terms (sample asset used by 1.x's public Sandcastles)",
@@ -56,7 +56,7 @@
       "source": {
         "kind": "ion",
         "asset": 96188,
-        "token": "default"
+        "token": "env"
       },
       "formats": [
         "b3dm"
@@ -75,7 +75,8 @@
       "source": {
         "kind": "ion",
         "asset": 2275207,
-        "token": "default"
+        "token": "env",
+        "google": true
       },
       "formats": [
         "glb"

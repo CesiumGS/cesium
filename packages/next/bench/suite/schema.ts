@@ -7,8 +7,18 @@
 
 /** Where a dataset comes from. */
 export type DatasetSource =
-  /** Cesium ion; `token`: 1.x's public default token (Sandcastle assets) or the environment's. */
-  | { kind: "ion"; asset: number; token?: "default" | "env" }
+  /**
+   * Cesium ion; `token`: 1.x's public default token (Sandcastle assets) or
+   * the environment's. `google`: Google's tiles, which ion serves with a
+   * key every account shares; with VITE_GOOGLE_MAPS_KEY set, the run uses
+   * that key instead (its own quota).
+   */
+  | {
+      kind: "ion";
+      asset: number;
+      token?: "default" | "env";
+      google?: boolean;
+    }
   /** Served from this repository's Specs data (`/specs-data/...`). */
   | { kind: "specs"; path: string }
   /** A URL (public data, or a private share). */
