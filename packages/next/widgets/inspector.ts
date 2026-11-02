@@ -901,6 +901,7 @@ const CSS = `
   --ci-series-3: #199e70;
   --ci-series-4: #c98500;
   --ci-series-5: #9b6fe0;
+  --ci-series-6: #d0507f;
   --ci-good: #5cc08a;
   --ci-warning: #fab219;
   --ci-bad: #ef6c5a;
@@ -990,6 +991,7 @@ const CSS = `
 .cesium-inspector .s3 { background: var(--ci-series-3); }
 .cesium-inspector .s4 { background: var(--ci-series-4); }
 .cesium-inspector .s5 { background: var(--ci-series-5); }
+.cesium-inspector .s6 { background: var(--ci-series-6); }
 .cesium-inspector .ci-legend { display: grid; grid-template-columns: 10px 1fr auto; gap: 1px 6px; align-items: center; margin-bottom: 8px; }
 .cesium-inspector .ci-legend .ci-num { text-align: right; }
 .cesium-inspector .ci-key { inline-size: 8px; block-size: 8px; border-radius: 2px; }

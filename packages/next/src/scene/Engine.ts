@@ -551,7 +551,10 @@ export class Engine {
         }) ?? { longitude: 0, latitude: 0, height: 0 },
         planes,
         ...(ahead
-          ? { prefetchPlanes: worldPlanes(ahead, PREFETCH_MARGIN) }
+          ? {
+              prefetchPlanes: worldPlanes(ahead, PREFETCH_MARGIN),
+              motion: this.motionOf(view)!,
+            }
           : {}),
         sseDenominator: 2 * Math.tan(camera.fovy(aspect) / 2),
         height: rect.height / pixelRatio,
@@ -566,6 +569,16 @@ export class Engine {
    * between selections at least 4 ms apart; still after a pause of over
    * 250 ms, as on-demand rendering idles).
    */
+  /** The view's steady motion (`cameraAhead` measured it this selection). */
+  private motionOf(
+    view: View,
+  ): { velocity: Vec3; turnRate: number } | undefined {
+    const motion = this.viewMotion.get(view);
+    return motion
+      ? { velocity: motion.velocity.position, turnRate: motion.speeds[1] }
+      : undefined;
+  }
+
   private cameraAhead(view: View, seconds: number): Camera | undefined {
     const camera = view.camera;
     const now = performance.now();

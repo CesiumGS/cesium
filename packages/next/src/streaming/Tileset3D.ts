@@ -592,6 +592,11 @@ export class Tileset3D implements TileTree {
   /** Unloaded tiles wanted by some view, since when (queue time). */
   private readonly wanted = new Map<Tile, number>();
   private readonly recent: StageTimes[] = [];
+  /**
+   * Median request-to-drawable time of recent loads, ms (until measured,
+   * a typical CDN load).
+   */
+  private loadEstimateMs = 500;
   /** What resident content holds, summed over loaded tiles. */
   readonly resident: ContentTotals = emptyTotals();
   /** Load milestones (performance.now()): created, first content, idle. */
@@ -856,6 +861,7 @@ export class Tileset3D implements TileTree {
       tile.holes = undefined;
     }
     this.selection.imageryReady = this.imagery ? this.imageryReady : undefined;
+    this.selection.expectedLoadSeconds = this.loadEstimateMs / 1000;
     const waiting = new Set<Tile>();
     for (const view of views) {
       const result = this.selection.select(
@@ -1198,6 +1204,19 @@ export class Tileset3D implements TileTree {
         if (this.recent.length > PIPELINE_WINDOW) {
           this.recent.shift();
         }
+        const totals = this.recent
+          .slice(-32)
+          .map(
+            (r) =>
+              r.queued +
+              r.network +
+              r.worker +
+              r.decode +
+              r.uploadWait +
+              r.upload,
+          )
+          .sort((a, b) => a - b);
+        this.loadEstimateMs = totals[totals.length >> 1]!;
         tile.summary = summary;
         accumulate(this.resident, summary, 1);
         this.firstContentAt ??= uploaded;

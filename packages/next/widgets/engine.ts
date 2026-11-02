@@ -157,7 +157,21 @@ export function engineSnapshot(
           unused: sum((t) => t.stats.purposes[p].unused),
           cancelled: sum((t) => t.stats.purposes[p].cancelled),
         }))
-        .filter((p, i) => p.requests > 0 || i < 4), // samples when any
+        .filter((p, i) => p.requests > 0 || i < 4) // samples when any
+        .concat(
+          tilesets.some((t) => t.imagery?.stats.requests)
+            ? [
+                {
+                  label: "Imagery",
+                  requests: sum((t) => t.imagery?.stats.requests ?? 0),
+                  bytes: sum((t) => t.imagery?.stats.bytes ?? 0),
+                  drawn: sum((t) => t.imagery?.stats.drawn ?? 0),
+                  unused: 0,
+                  cancelled: sum((t) => t.imagery?.stats.cancelled ?? 0),
+                },
+              ]
+            : [],
+        ),
       load: loadPhases(tilesets, options),
     };
 

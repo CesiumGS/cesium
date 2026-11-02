@@ -57,6 +57,15 @@ export interface BudgetedOptions extends StepwiseOptions {
    * whose coarse tiles drop whole elements).
    */
   mixedLod?: "auto" | "always" | "never";
+  /**
+   * Loading in motion by benefit: while the camera moves, a tile whose
+   * time on screen (the field of view over how fast it crosses it) is
+   * shorter than this many typical load times is not requested; what is
+   * drawn stays until it slows. 1.x's `cullRequestsWhileMoving` is a
+   * cruder form (60 frames' travel against the tile's diameter). 0 loads
+   * everything in motion. Default 1.
+   */
+  motionBenefit?: number;
 }
 
 /** Request priority bands: base levels, then intermediates, then frontier. */
@@ -88,6 +97,9 @@ export class BudgetedSelection extends StepwiseSelection {
   skipLevels: number;
   prefetchErrorScale: number;
   mixedLod: "auto" | "always" | "never";
+  motionBenefit: number;
+  /** Set by the tileset each update (`TileSelection`). */
+  expectedLoadSeconds?: number;
   /**
    * Cull against the ellipsoid's horizon. Off for views that look through
    * or under the surface (underground content, a see-through globe).
@@ -101,6 +113,7 @@ export class BudgetedSelection extends StepwiseSelection {
     this.skipLevels = options.skipLevels ?? 2;
     this.prefetchErrorScale = options.prefetchErrorScale ?? 2;
     this.mixedLod = options.mixedLod ?? "auto";
+    this.motionBenefit = options.motionBenefit ?? 1;
   }
 
   /**
@@ -220,7 +233,9 @@ export class BudgetedSelection extends StepwiseSelection {
     if (!refine) {
       // Frontier tile.
       if (own === undefined) {
-        this.request(tile, FRONTIER + group, state.distance * 1e-3, result);
+        if (this.worthLoading(tile, view)) {
+          this.request(tile, FRONTIER + group, state.distance * 1e-3, result);
+        }
         // Zooming out: finer content still resident keeps drawing until
         // this tile arrives.
         const finer =
@@ -273,7 +288,7 @@ export class BudgetedSelection extends StepwiseSelection {
       this.request(tile, BASE, state.distance, result);
       childLevels = 1;
       childGroup = state.distance;
-    } else if (levels > this.skipLevels) {
+    } else if (levels > this.skipLevels && this.worthLoading(tile, view)) {
       this.request(tile, INTERMEDIATE, state.distance, result);
       childLevels = 1;
       childGroup = state.distance;
@@ -433,6 +448,35 @@ export class BudgetedSelection extends StepwiseSelection {
         this.prefetch(child, view, pass, rootError, result);
       }
     }
+  }
+
+  /**
+   * Whether the tile stays on screen long enough to be worth loading now
+   * (`motionBenefit`). Only motion across the line of sight counts: a tile
+   * straight ahead of a camera flying toward it stays in view.
+   */
+  private worthLoading(tile: Tile, view: SelectionView): boolean {
+    const motion = view.motion;
+    const load = this.expectedLoadSeconds;
+    if (!motion || this.motionBenefit <= 0 || !load) {
+      return true;
+    }
+    const c = tile.volume.sphere.center;
+    const dx = c[0]! - view.position[0]!;
+    const dy = c[1]! - view.position[1]!;
+    const dz = c[2]! - view.position[2]!;
+    const d = Math.max(Math.hypot(dx, dy, dz), tile.volume.sphere.radius, 1);
+    const v = motion.velocity;
+    const along = (v[0]! * dx + v[1]! * dy + v[2]! * dz) / d;
+    const across = Math.sqrt(
+      Math.max(0, v[0]! ** 2 + v[1]! ** 2 + v[2]! ** 2 - along * along),
+    );
+    const sweep = across / d + motion.turnRate; // rad/s across the view
+    if (sweep <= 0) {
+      return true;
+    }
+    const fov = 2 * Math.atan(view.sseDenominator / 2);
+    return fov / sweep >= this.motionBenefit * load;
   }
 
   /** Loaded content that can draw now (terrain also waits for imagery). */

@@ -37,6 +37,11 @@ export interface SelectionView {
    * camera is still or jumps.
    */
   prefetchPlanes?: Float64Array;
+  /**
+   * While the camera moves steadily: its velocity (m/s) and how fast its
+   * direction turns (rad/s), for loading in motion by benefit (`Budgeted`).
+   */
+  motion?: { velocity: Vec3; turnRate: number };
   /** 2 tan(fovy / 2). */
   sseDenominator: number;
   /** Drawing-buffer height divided by the pixel ratio (1.x `pixelRatio`). */
@@ -86,6 +91,11 @@ export interface TileSelection {
    * the view shows). 1.x's preloads go out with the rest (`Stepwise`).
    */
   prefetchAfterVisible?: boolean;
+  /**
+   * Typical time from request to drawable content, s (the tileset's recent
+   * loads; `Tileset3D` sets it): what loading in motion weighs against.
+   */
+  expectedLoadSeconds?: number;
 }
 
 export interface SelectionResult {

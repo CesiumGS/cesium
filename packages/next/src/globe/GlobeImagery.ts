@@ -53,6 +53,22 @@ interface Source {
   state: "loading" | "ready" | "empty" | "failed";
   texture?: GPUTexture;
   used: number;
+  /** While loading: cancels the request when no tile wants it any more. */
+  controller?: AbortController;
+  /** Composited into some tile's slice at least once (drawn). */
+  composited?: boolean;
+}
+
+/** Frames no wanted tile needs a loading source before it is cancelled. */
+const CANCEL_AFTER_FRAMES = 30;
+
+/** Imagery requests (the inspector's purposes and run metrics). */
+export interface ImageryStats {
+  requests: number;
+  bytes: number;
+  /** Sources composited into a drawn tile's slice. */
+  drawn: number;
+  cancelled: number;
 }
 
 interface Job {
@@ -64,6 +80,12 @@ interface Job {
 export class GlobeImagery {
   readonly texture: GPUTexture;
   readonly size: number;
+  readonly stats: ImageryStats = {
+    requests: 0,
+    bytes: 0,
+    drawn: 0,
+    cancelled: 0,
+  };
   /** Slice per terrain tile, and the frame it was last wanted. */
   private readonly slices = new Map<Tile, { slice: number; used: number }>();
   private readonly free: number[] = [];
@@ -257,6 +279,7 @@ export class GlobeImagery {
     for (const [tile] of order) {
       this.apply(tile);
     }
+    this.cancelStale(frame);
     this.trimSources(frame);
   }
 
@@ -282,6 +305,26 @@ export class GlobeImagery {
         for (const text of credit(x, y, level)) {
           counts.set(text, (counts.get(text) ?? 0) + 1);
         }
+      }
+    }
+  }
+
+  /**
+   * Cancels sources still loading that no wanted tile has needed for a
+   * while (as 3D Tiles requests): flying over the globe left every source
+   * once requested to finish, most of them for places long passed.
+   */
+  private cancelStale(frame: number): void {
+    for (const source of this.sources.values()) {
+      if (
+        source.state === "loading" &&
+        source.controller &&
+        !source.controller.signal.aborted &&
+        source.used < frame - CANCEL_AFTER_FRAMES
+      ) {
+        source.controller.abort();
+        this.requests.cancelled(this.origin);
+        this.stats.cancelled++;
       }
     }
   }
@@ -396,16 +439,24 @@ export class GlobeImagery {
     if (!this.requests.tryAcquire(this.origin)) {
       return false;
     }
-    const source: Source = { state: "loading", used: frame };
+    const controller = new AbortController();
+    const source: Source = { state: "loading", used: frame, controller };
     this.sources.set(key, source);
     this.loading++;
+    this.stats.requests++;
     void this.workers
-      .request<{ bitmap?: ImageBitmap; bytes: number; empty?: true }>("image", {
-        url: this.provider.tileUrl(x, y, level),
-        ...(this.provider.headers ? { headers: this.provider.headers } : {}),
-      })
+      .request<{ bitmap?: ImageBitmap; bytes: number; empty?: true }>(
+        "image",
+        {
+          url: this.provider.tileUrl(x, y, level),
+          ...(this.provider.headers ? { headers: this.provider.headers } : {}),
+        },
+        controller.signal,
+      )
       .then(({ bitmap, bytes, empty }) => {
         this.requests.release(this.origin, { bytes });
+        source.controller = undefined;
+        this.stats.bytes += bytes;
         if (empty || !bitmap) {
           source.state = "empty";
           return;
@@ -428,8 +479,16 @@ export class GlobeImagery {
         source.texture = texture;
         source.state = "ready";
       })
-      .catch(() => {
+      .catch((error: unknown) => {
         this.requests.release(this.origin);
+        source.controller = undefined;
+        if (error instanceof DOMException && error.name === "AbortError") {
+          // Cancelled: requested again if wanted later.
+          if (this.sources.get(key) === source) {
+            this.sources.delete(key);
+          }
+          return;
+        }
         source.state = "failed";
       })
       .finally(() => {
@@ -504,6 +563,10 @@ export class GlobeImagery {
       for (const key of keys) {
         const [x, y, level] = supply.get(key)!;
         const source = this.sources.get(key)!;
+        if (!source.composited) {
+          source.composited = true;
+          this.stats.drawn++;
+        }
         const offset = block(this.mapping(r, x, y, level));
         const group = this.bindGroup(source.texture!.createView(), destination);
         dispatches.push({
