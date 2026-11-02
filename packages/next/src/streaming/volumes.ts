@@ -53,6 +53,51 @@ export type TileVolume =
   | { kind: "sphere"; sphere: Sphere }
   | { kind: "region"; region: Region; sphere: Sphere };
 
+/**
+ * Moves every Float64Array a volume holds into one buffer (views in their
+ * place; an array held twice stays one view). A region held nine small
+ * arrays, each its own ArrayBuffer: about 40% of NYC's heap was tile
+ * volumes for 36k tiles, mostly never loaded (r38).
+ */
+export function compactVolume<T extends object>(volume: T): T {
+  const found: Array<[Record<string, unknown>, string, Float64Array]> = [];
+  const visit = (o: Record<string, unknown>, depth: number) => {
+    for (const [key, value] of Object.entries(o)) {
+      if (value instanceof Float64Array) {
+        found.push([o, key, value]);
+      } else if (
+        value &&
+        typeof value === "object" &&
+        !ArrayBuffer.isView(value) &&
+        depth < 3
+      ) {
+        visit(value as Record<string, unknown>, depth + 1);
+      }
+    }
+  };
+  visit(volume as Record<string, unknown>, 0);
+  const views = new Map<Float64Array, Float64Array>();
+  let length = 0;
+  for (const [, , array] of found) {
+    if (!views.has(array)) {
+      views.set(array, array); // placeholder until the buffer exists
+      length += array.length;
+    }
+  }
+  const buffer = new Float64Array(length);
+  let offset = 0;
+  for (const array of views.keys()) {
+    const view = buffer.subarray(offset, offset + array.length);
+    view.set(array);
+    views.set(array, view);
+    offset += array.length;
+  }
+  for (const [owner, key, array] of found) {
+    owner[key] = views.get(array);
+  }
+  return volume;
+}
+
 const ellipsoid = Ellipsoid.WGS84;
 const TWO_PI = 2 * Math.PI;
 const EPSILON7 = 1e-7;

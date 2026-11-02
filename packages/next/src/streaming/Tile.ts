@@ -13,6 +13,7 @@ import type { Mat4 } from "../math/mat4.ts";
 import { resolveUri } from "../io/ion.ts";
 import type { ModelInstance } from "../scene/gltfModel.ts";
 import {
+  compactVolume,
   volumeFromJson,
   volumeObb,
   type Occludee,
@@ -152,7 +153,7 @@ export class Tile {
     if (!volume) {
       throw new Error("tile has no supported bounding volume");
     }
-    this.volume = volume;
+    this.volume = compactVolume(volume);
     const content = json.content ?? json.contents?.[0];
     if (json.contents && json.contents.length > 1) {
       tileset.warnings.add(

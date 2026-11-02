@@ -384,13 +384,14 @@ export class BudgetedSelection extends StepwiseSelection {
       // drawn stay while a newly visible neighbor loads: its gap waits
       // (prefetch usually fills it first) instead of the whole region
       // collapsing to this tile, which with skipped levels can be near the
-      // root. Only while nearly all of the region is covered (a pan's new
-      // edge): zooming out, much of it is newly visible, and holding left
-      // it empty where this tile draws all of it (AEC, throttled: FLIP avg
-      // 0.046, then 0.035 holding up to half missing, vs Stepwise 0.028).
+      // root. Only while most of the region is covered: zooming out, much
+      // of it is newly visible, and holding left it empty where this tile
+      // draws all of it (AEC zoom-out, throttled, FLIP avg against the
+      // target: always holding 0.046, up to half missing 0.035, up to a
+      // quarter 0.045; Stepwise 0.028).
       if (
         parts.length > 0 &&
-        missing.length * 4 <= visible &&
+        missing.length * 2 <= visible &&
         !drawnLastFrame(tile, view) &&
         parts.some((t) => drawnLastFrame(t, view))
       ) {
