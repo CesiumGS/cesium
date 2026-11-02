@@ -264,8 +264,8 @@ EdgeVisibilityPipelineStage.process = function (
  * at least one silhouette edge.
  *
  * @param {number[]} edgeIndices Packed array of 2 vertex indices per edge
- * @param {Object[]} edgeData Array of edge metadata (edgeType, silhouetteEdgeIndex)
- * @param {Object} edgeVisibility Edge visibility extension data
+ * @param {object[]} edgeData Array of edge metadata (edgeType, silhouetteEdgeIndex)
+ * @param {object} edgeVisibility Edge visibility extension data
  * @returns {Float32Array} Packed array: 6 floats per edge (normalA.xyz, normalB.xyz)
  * @private
  */
@@ -342,7 +342,7 @@ function generateEdgeFaceNormals(edgeIndices, edgeData, edgeVisibility) {
  * Deduplicates edges shared by adjacent triangles and records per-edge metadata.
  *
  * @param {ModelComponents.Primitive} primitive The primitive with EXT_mesh_primitive_edge_visibility data
- * @returns {{edgeIndices:number[], edgeData:Object[], silhouetteEdgeCount:number}} Edge extraction result
+ * @returns {{edgeIndices:number[], edgeData:object[], silhouetteEdgeCount:number}} Edge extraction result
  * @private
  */
 function extractVisibleEdges(primitive) {
@@ -602,7 +602,7 @@ function collectVertexColors(runtimePrimitive) {
  * This allows proper line width rendering in the vertex shader by extruding perpendicular to the line direction.
  *
  * @param {number[]} edgeIndices Packed array [a0,b0, a1,b1, ...] of vertex indices into the source mesh
- * @param {Object[]} edgeData Array of edge metadata including edge type and silhouette normal lookup index
+ * @param {object[]} edgeData Array of edge metadata including edge type and silhouette normal lookup index
  * @param {PrimitiveRenderResources} renderResources The render resources for the primitive
  * @param {Context} context The WebGL rendering context
  * @param {number} edgeTypeLocation Shader attribute location for the edge type
@@ -613,11 +613,11 @@ function collectVertexColors(runtimePrimitive) {
  * @param {number} edgeOtherPosLocation Shader attribute location for the other endpoint position
  * @param {number} edgeOffsetLocation Shader attribute location for edge offset (-1 or +1)
  * @param {VertexColorInfo} [vertexColorInfo] Packed per-vertex colors (optional)
- * @param {Object} edgeVisibility Edge visibility extension object (may contain silhouetteNormals, a packed typed array of VEC3 components)
+ * @param {object} edgeVisibility Edge visibility extension object (may contain silhouetteNormals, a packed typed array of VEC3 components)
  * @param {Float32Array} edgeFaceNormals Packed face normals (6 floats per edge)
- * @param {Object} [cumDistAttribute] Cumulative distance attribute
+ * @param {object} [cumDistAttribute] Cumulative distance attribute
  * @param {number} [edgeCumDistLocation] Cumulative distance location
- * @returns {Object|undefined} Object with {vertexArray, indexCount, hasEdgeFeatureIds} or undefined on failure
+ * @returns {object|undefined} Object with {vertexArray, indexCount, hasEdgeFeatureIds} or undefined on failure
  * @private
  */
 function createQuadEdgeGeometry(

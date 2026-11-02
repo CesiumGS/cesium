@@ -16,7 +16,7 @@ Frozen.EMPTY_OBJECT = Object.freeze({});
 /**
  * A frozen empty array that can be used as the default value for options passed as
  * an array literal.
- * @type {array}
+ * @type {Array}
  * @memberof Frozen
  */
 Frozen.EMPTY_ARRAY = Object.freeze([]);

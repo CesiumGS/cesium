@@ -59,7 +59,7 @@ class ModelReader {
    *
    * The result will be THE actual attribute data.
    *
-   * @param {Attribute} attribute The attribute
+   * @param {ModelComponents.Attribute} attribute The attribute
    * @returns {TypedArray} The attribute data
    */
   static readAttributeAsTypedArray(attribute) {
@@ -586,7 +586,7 @@ class ModelReader {
    * @callback ComponentReaderCallback
    * @param {DataView} dataView Typed data view into a binary buffer
    * @param {number} byteOffset The offset, in bytes, from the start of the view to read the data from
-   * @returns {number|BigInt} The value read from the dataView
+   * @returns {number|bigint} The value read from the dataView
    */
 
   /**
@@ -673,7 +673,7 @@ class ModelReader {
    * each vertex. If <code>repeat</code> is undefined, all values are set to
    * <code>offset</code>.
    *
-   * @param {FeatureIdImplicitRange} featureIdSet The implicit range feature ID set.
+   * @param {ModelComponents.FeatureIdImplicitRange} featureIdSet The implicit range feature ID set.
    * @param {object} attributeOwner An object with an <code>attributes</code> array
    *   (a primitive or an instances object)
    * @returns {Float32Array} The generated feature ID values.

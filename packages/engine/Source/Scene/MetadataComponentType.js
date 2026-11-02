@@ -392,6 +392,13 @@ MetadataComponentType.unnormalize = function (value, type) {
 };
 
 /**
+ * Apply an offset and scale to a value, as <code>scale * value + offset</code>.
+ *
+ * @param {number} value The value to transform.
+ * @param {number} offset The offset to add.
+ * @param {number} scale The scale to multiply by.
+ * @returns {number} The transformed value.
+ *
  * @private
  */
 MetadataComponentType.applyValueTransform = function (value, offset, scale) {
@@ -399,6 +406,13 @@ MetadataComponentType.applyValueTransform = function (value, offset, scale) {
 };
 
 /**
+ * Reverse an offset and scale applied to a value. If the scale is 0, returns 0.
+ *
+ * @param {number} value The transformed value.
+ * @param {number} offset The offset that was added.
+ * @param {number} scale The scale that was multiplied by.
+ * @returns {number} The original value.
+ *
  * @private
  */
 MetadataComponentType.unapplyValueTransform = function (value, offset, scale) {
@@ -544,7 +558,7 @@ MetadataComponentType.toComponentDatatype = function (type) {
  *
  * @param {DataView} view The DataView.
  * @param {MetadataComponentType} componentType The component type.
- * @returns {Object} An object containing the getter and setter functions.
+ * @returns {object} An object containing the getter and setter functions.
  *
  * @private
  */

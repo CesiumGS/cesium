@@ -668,7 +668,15 @@ describe(
         "HAS_POINT_CLOUD_BACK_FACE_CULLING",
       ]);
 
-      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, []);
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+        "HAS_POINT_CLOUD_BACK_FACE_CULLING",
+      ]);
+      ShaderBuilderTester.expectVertexVaryings(shaderBuilder, [
+        "out float v_pointCloudShow;",
+      ]);
+      ShaderBuilderTester.expectFragmentVaryings(shaderBuilder, [
+        "in float v_pointCloudShow;",
+      ]);
       ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
         "uniform vec4 model_pointCloudParameters;",
       ]);

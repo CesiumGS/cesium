@@ -75,8 +75,7 @@ import ModelImagery from "./ModelImagery.js";
  *  {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_mesh_features|EXT_mesh_features}
  *  </li>
  *  <li>
- *  {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/EXT_mesh_gpu_instancing|EXT_mesh_gpu_instancing}
- *  </li>
+ *  {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/EXT_mesh_gpu_instancing|EXT_mesh_gpu_instancing} *  </li>
  *  <li>
  *  {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/EXT_mesh_primitive_restart|EXT_mesh_primitive_restart}
  *  </li>
@@ -95,16 +94,31 @@ import ModelImagery from "./ModelImagery.js";
  *  {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/EXT_texture_webp|EXT_texture_webp}
  *  </li>
  *  <li>
+ *  {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-2.0/extensions/2.1/Vendor/EXT_voxels|EXT_voxels} (experimental)
+ *  </li>
+ *  <li>
  *  {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_draco_mesh_compression/README.md|KHR_draco_mesh_compression}
  *  </li>
  *  <li>
+ *  {@link https://github.com/CesiumGS/glTF/tree/draft-splat-spz/extensions/2.0/Khronos/KHR_gaussian_splatting|KHR_gaussian_splatting} (experimental)
+ *  </li>
+ *  <li>
  *  {@link https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Archived/KHR_techniques_webgl/README.md|KHR_techniques_webgl}
+ *  </li>
+ *  <li>
+ *  {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_anisotropy|KHR_materials_anisotropy}
+ *  </li>
+ *  <li>
+ *  {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_clearcoat|KHR_materials_clearcoat}
  *  </li>
  *  <li>
  *  {@link https://github.com/KhronosGroup/glTF/blob/main/extensions/1.0/Khronos/KHR_materials_common/README.md|KHR_materials_common}
  *  </li>
  *  <li>
  *  {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Archived/KHR_materials_pbrSpecularGlossiness|KHR_materials_pbrSpecularGlossiness}
+ *  </li>
+ *  <li>
+ *  {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_specular|KHR_materials_specular}
  *  </li>
  *  <li>
  *  {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_unlit/README.md|KHR_materials_unlit}
@@ -540,7 +554,19 @@ function Model(options) {
   this._texturesReadyEvent = new Event();
 
   this._sceneGraph = undefined;
-  this._nodesByName = {}; // Stores the nodes by their names in the glTF.
+
+  /**
+   * Stores the nodes by their names in the glTF.
+   *
+   * The glTF nodes that don't have their 'name' property set are not
+   * contained in this map. When there are duplicate names in the
+   * input, then the node that is stored here is unspecified, so...
+   * better make sure to not have duplicate names...
+   *
+   * @private
+   * @readonly
+   */
+  this._nodesByName = new Map();
 
   /**
    * Used for picking primitives that wrap a model.
@@ -1869,6 +1895,9 @@ Model.prototype.getRectangle = function (ellipsoid) {
  * Returns the node with the given <code>name</code> in the glTF. This is used to
  * modify a node's transform for user-defined animation.
  *
+ * If there are multiple nodes with the same <code>name</code> in the glTF,
+ * then the returned node is unspecified.
+ *
  * @param {string} name The name of the node in the glTF.
  * @returns {ModelNode} The node, or <code>undefined</code> if no node with the <code>name</code> exists.
  *
@@ -1889,7 +1918,7 @@ Model.prototype.getNode = function (name) {
   Check.typeOf.string("name", name);
   //>>includeEnd('debug');
 
-  return this._nodesByName[name];
+  return this._nodesByName.get(name);
 };
 
 /**

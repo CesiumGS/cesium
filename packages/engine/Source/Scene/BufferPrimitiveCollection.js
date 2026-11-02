@@ -1127,7 +1127,7 @@ class BufferPrimitiveCollection {
    * @example
    * console.table(collection.toJSON());
    *
-   * @returns {Array<Object>} List of JSON-serializable objects, one for each
+   * @returns {Array<object>} List of JSON-serializable objects, one for each
    * primitive in the collection.
    */
   toJSON() {
