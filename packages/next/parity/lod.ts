@@ -9,7 +9,22 @@ import {
   type View,
 } from "../src/index.ts";
 import type { Harness } from "../lab/harness.ts";
-import { flip } from "./flip.ts";
+import { createGpuFlip, type GpuFlip } from "./flipGpu.ts";
+
+/**
+ * FLIP on the GPU: the JS version took about 0.3 s per comparison on the
+ * main thread, stalling the very loading it sampled every 500 ms.
+ */
+let gpuFlip: Promise<GpuFlip> | undefined;
+const flip = async (
+  reference: Uint8ClampedArray,
+  test: Uint8ClampedArray,
+  width: number,
+  height: number,
+) => {
+  gpuFlip ??= createGpuFlip();
+  return (await gpuFlip).flip(reference, test, width, height);
+};
 
 /**
  * L1′ (plan §4): `Budgeted` vs `Stepwise` over camera moves. For each move and
@@ -274,7 +289,9 @@ async function measure(
       await frame();
       const t = performance.now() - start;
       if (reference && (t >= marks[0]! || t >= nextSample)) {
-        const error = flip(reference, await target.read(), WIDTH, HEIGHT).mean;
+        const error = (
+          await flip(reference, await target.read(), WIDTH, HEIGHT)
+        ).mean;
         while (marks.length > 0 && t >= marks[0]!) {
           flips[marks.shift()!] = error;
         }
@@ -297,7 +314,7 @@ async function measure(
     e.renderFrame();
     const image = await target.read();
     if (reference) {
-      const settled = flip(reference, image, WIDTH, HEIGHT).mean;
+      const settled = (await flip(reference, image, WIDTH, HEIGHT)).mean;
       for (const at of marks) {
         flips[at] = settled; // settled before this mark
       }
@@ -357,7 +374,7 @@ async function runLod(): Promise<Row[]> {
           flip250: r.flips[250],
           flip1000: r.flips[1000],
           trace: r.trace,
-          flipSettled: flip(reference, r.image, WIDTH, HEIGHT).mean,
+          flipSettled: (await flip(reference, r.image, WIDTH, HEIGHT)).mean,
           selected: r.selected,
         });
       } catch (error) {

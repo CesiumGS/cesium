@@ -2,7 +2,11 @@
 // a captured PNG into a JPEG frame and, given the baseline's frame of the
 // same moment, the image parity (FLIP, §4) and its heatmap. The CLI calls
 // `processFrame` through Playwright once the runs are done.
+import { createGpuFlip, type GpuFlip } from "../../parity/flipGpu.ts";
 import { flip } from "../../parity/flip.js";
+
+/** On the GPU (40 to 60 times faster); the JS reference without WebGPU. */
+let gpu: Promise<GpuFlip | undefined> | undefined;
 
 /** FLIP runs on frames this wide at most (seconds per frame otherwise). */
 const FLIP_WIDTH = 640;
@@ -66,18 +70,19 @@ async function processFrame(test: string, reference: string | null) {
   // seen at the parity harness's default distance.
   const ppd =
     ((0.7 * image.width) / 0.7) * (Math.PI / 180) * (width / image.width);
-  const result = flip(
-    pixels(other, width, height),
-    pixels(image, width, height),
-    width,
-    height,
-    ppd,
-  );
+  gpu ??= createGpuFlip().catch(() => undefined);
+  const evaluator = await gpu;
+  const ref = pixels(other, width, height);
+  const tst = pixels(image, width, height);
+  const result = evaluator
+    ? await evaluator.flip(ref, tst, width, height, ppd, { errors: true })
+    : flip(ref, tst, width, height, ppd);
+  const errors = result.errors!;
   const heat = new OffscreenCanvas(width, height);
   const context = heat.getContext("2d")!;
   const data = context.createImageData(width, height);
   for (let i = 0; i < width * height; i++) {
-    const [r, g, b] = magma(result.errors[i]!);
+    const [r, g, b] = magma(errors[i]!);
     data.data.set([r, g, b, 255], i * 4);
   }
   context.putImageData(data, 0, 0);
