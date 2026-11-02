@@ -44,7 +44,7 @@ Branch: `cesium-2.0-webgpu-poc` (off `main` @ `587f52f1eb`, CesiumJS 1.146.0)
 | r36 | Engine names: releases by version (1.146.0), engines from the working tree named by branch (2.0@cesium-2.0-webgpu-poc), engines built at any git ref (2.0@main, 1.x@v1.140), settings after + (2.0+stepwise); `--engines` replaces `--configs`/`--cesium`; budgets name setups. Explorer draws 1.x's globe tile volumes.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | r37 | `Budgeted` on terrain: the globe's SSE (fog only while drawn) instead of 3D Tiles' dynamic SSE, which left oblique terrain far too coarse (Rainier settled: 68 tiles vs 1.x's 67, all shared; was 20 at levels 0 to 12). The bare ellipsoid never hides content (§8 product choices, new). The inspector built (widgets/, with credits as 1.x shows them and imagery credited per tile drawn); `Viewer`, 2.0's `Cesium.Viewer`; Dyno's Viewer page (one engine at a time, StrataKit's app layout) replaces the standalone viewer. The `Legacy1x` policy is renamed `Stepwise` (`policy: "stepwise"`), for what it does: 1.x's refinement one level at a time, each level loaded on the way down.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | r38 | Overnight toward the L1′ exit check: FLIP on the GPU (40 to 60× faster); the exit check as a content × link matrix (`bench/lod-matrix.mjs`; FLIP against the target as well as SSE 2, bytes downloaded, repetitions and their standard error); prefetch only ahead of steady motion and after everything visible; loading in motion by benefit (on-screen speed as vectors); imagery request stats and cancellation; partial resident cover and a bounded hold for design models; no free detail from the cache by default (still views no longer depend on where the camera was; Google quality in motion 0.046 → 0.020, 1.x 0.026); startup endpoints during device creation; Dyno's guardrails by comparison type, bytes split at the motion, quality in motion as a guardrail; tile volumes compacted and content URIs kept relative (NYC heap 217 → 200 MB); upload budgets by time and geometry and KTX2 uploads through mapped staging buffers (NYC vsync-off hitches 4.5 → 0); content origins without URL parses; the ellipsoid's expansion within a time budget (BIM and NYC first content 0.3 to 0.6 s sooner). Full catalog against 1.x: settle −26%, CPU −73%, no guardrail broken after the fixes. Exit check: 9 of 10 cells pass (8 better); AEC trails by about 0.004, at the margin. |
-| r39 | Terrain's first content ahead of 1.x: the globe's tiles load while its imagery resolves (none drawn without it), imagery is requested for tiles still loading, content workers start with the engine; first content 0.5 to 1.1 s sooner, ahead of 1.146.0 in 5 of 6 scene runs. A fixed 0.1 m near plane (reverse-Z with an infinite far plane loses nothing to it), and the underlay's depth scale 2⁻⁶⁴ so picks from beyond 13,400 km no longer read as the underlay. `GlobeController` as 1.x's: the camera never rolls, zoom keeps heading and pitch and the point under the cursor, zoom over the sky heads for the ground below, height capped at 100,000 km.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| r39 | Terrain's first content ahead of 1.x: the globe's tiles load while its imagery resolves (none drawn without it), imagery is requested for tiles still loading, content workers start with the engine; first content 0.5 to 1.1 s sooner, ahead of 1.146.0 in 5 of 6 scene runs. A fixed 0.1 m near plane (reverse-Z with an infinite far plane loses nothing to it), and the underlay's depth scale 2⁻⁶⁴ so picks from beyond 13,400 km no longer read as the underlay. `GlobeController` as 1.x's: the camera never rolls, zoom keeps heading and pitch and the point under the cursor, zoom over the sky heads for the ground below, height capped at 100,000 km. Tiles build their bounding volumes on first use (Tokyo's JS heap 242 → 83 MB; 6,941 of 137,637 tiles ever build one). Memory measured over CDP after full collections, main thread and workers, as JS heap and buffers apart: 2.0 holds a third to a sixth of 1.x's JS heap but 4 to 5 times its buffers. Benchmarks run the working tree frozen as a commit and built for production, so development continues during a run (the dev server had added 5.6 MB of JS and 19 MB of buffers to NYC).                                                                                                                                 |
 
 ## 1. Goal
 
@@ -881,6 +881,20 @@ _r38 (overnight, toward the L1′ exit check)_:
   Float64Array per tileset for every volume. (A 32 MB external string
   in the snapshot is the benchmark page's script source, 1.x's
   unminified build, loaded for both engines.)
+  _r39_: volumes are built lazily (`Tile.volume`, content and request
+  volumes, the children checks and `headerKey` on first use). Snapshot
+  against snapshot, after the orbit, JS heap after full GC: NYC 23.2 →
+  15.2 MB, Tokyo 242 → 83 MB, Google Manhattan 123 → 78 MB (1.146.0: 43,
+  535, 310); Tokyo's buffers 86 → 49 MB (each volume's packed array was
+  an ArrayBuffer). The "2 to 6 times 1.x" above was the metric:
+  `performance.memory.usedJSHeapSize` didn't move with a full GC and
+  counted ArrayBuffer storage with the main thread's objects (NYC: 93 MB,
+  of which 21 MB objects and 64 MB buffers). The suite now reads both
+  over CDP, main thread and workers, after full collections (`heapBytes`,
+  `bufferBytes`). What remains is buffers: 2.0 holds 68 MB on NYC and 73
+  MB on Tokyo to 1.x's 13 and 16 (production builds). Next: find what
+  holds them (staging areas, CPU copies kept for ray casts and clamping,
+  decoder memory).
 - **Hitches with vsync off (fixed r38)**: a CPU profile of NYC's
   uncapped orbit: the 100 to 300 ms stalls are not script. The main thread
   waits in `getCurrentTexture` (1.4 s of them) and `queue.writeBuffer`
@@ -3519,6 +3533,35 @@ addressed in 2.0 (each with a Dyno scene to show the fix):
 - **Bytes**: NYC buildings ×3.3 and OSM Philadelphia ×1.5 of 1.x; Japan
   ×1.3.
 - **JS heap** above 1.x on terrain scenes and NYC (scorecard guardrail).
+  _r39_: a measurement artifact (§6, JS heap); 2.0 holds less JS heap than
+  1.x everywhere measured, and 4 to 5 times its buffers.
+- **Benchmarks take the GPU and stop development (r39).** A terrain
+  comparison (3 scenes, 3 engines, 3 reps) took 26.5 minutes: 54 runs of
+  about 26 s, 15 s of them motion, 10% cooldown; two of the three engines
+  were baselines that can't change. Done: runs serve the working tree
+  frozen as a commit and built for production (`frozen.mjs`; `--dev` for
+  the live tree), so edits during a run don't reach it and pages load as
+  shipped. Planned, in order:
+  - Reuse baseline results (releases and commits don't change) per
+    machine, scene and scenario, with one calibration repetition per
+    session against the stored values to catch drift.
+  - A startup scenario (load, settle, memory; no motion): about 10 s a
+    run instead of 26 for first-content and memory work.
+  - Groups of scenes by what they exercise (terrain and imagery, 3D
+    Tiles streaming, design models, picking and clamping, memory), and a
+    selection from the change: the files a diff touches map to groups,
+    and a run takes those groups at one or two repetitions; the full
+    catalog runs at milestones and overnight. Repetitions stop early when
+    a comparison is decided (sequential testing).
+  - Annotations on results and trends (as PostHog's): a dated note,
+    optionally per metric, engine or scene, for changes in the method
+    (`heapBytes` redefined, r39; the frozen production build, r39), the
+    machine (driver, OS) or the data, drawn on every trend chart.
+  - Content served from the local store through a server that shapes
+    the link per connection (latency, bandwidth, HTTP/2), for both
+    engines' main threads and workers, where licenses allow mirroring;
+    mainly for variance (Philadelphia's cold first content ranged 1.3 to
+    2.7 s for 1.x alone over the live network). Google's tiles stay live.
 - **Lighting**: 1.x lights tilesets with an environment map from its
   atmosphere; 2.0's own IBL is brighter and bluer until M4 (§16.3).
 - **Primitive outlines** and the other extensions in §4.1.
