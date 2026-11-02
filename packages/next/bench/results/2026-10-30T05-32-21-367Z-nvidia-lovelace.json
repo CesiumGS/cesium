@@ -1074,7 +1074,7 @@
     "lod": [
       {
         "scenario": "jump in",
-        "policy": "Legacy1x (1.x, 18 requests)",
+        "policy": "Stepwise (1.x, 18 requests)",
         "status": "ok",
         "requests": 0,
         "megabytes": 0,
@@ -1139,7 +1139,7 @@
       },
       {
         "scenario": "zoom out",
-        "policy": "Legacy1x (1.x, 18 requests)",
+        "policy": "Stepwise (1.x, 18 requests)",
         "status": "ok",
         "requests": 0,
         "megabytes": 0,
@@ -1204,7 +1204,7 @@
       },
       {
         "scenario": "pan",
-        "policy": "Legacy1x (1.x, 18 requests)",
+        "policy": "Stepwise (1.x, 18 requests)",
         "status": "ok",
         "requests": 0,
         "megabytes": 0,

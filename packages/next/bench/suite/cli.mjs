@@ -10,6 +10,7 @@
 //        [--releases 1.120.0..1.146.0 | 1.130.0,1.140.0]  (historical sweep)
 //        [--dpr 2] [--pixel-ratio device|1]  (high-DPI display; render scale)
 //        [--sweep maximumScreenSpaceError=8,16,32 [--sweep-engines 2.0]]
+//        [--motion-samples 8 | --no-motion-quality]  (frames in motion)
 //
 // Engines (engines.mjs): a CesiumJS release ("1.146.0", "latest"), an
 // engine from the working tree ("2.0", "1.x", named by the branch in
@@ -882,7 +883,10 @@ async function runMotion(browser, base, spec) {
     await page.goto(
       `${server ?? base}/bench/suite/suite.html?bench${cesium ? `&cesium=${encodeURIComponent(cesium)}` : ""}`,
     );
-    return await page.evaluate((s) => globalThis.runMotionQuality(s), spec);
+    return await page.evaluate(
+      ({ s, n }) => globalThis.runMotionQuality(s, n),
+      { s: spec, n: Number(opts["motion-samples"] ?? 8) },
+    );
   } catch (error) {
     return {
       status: "error",

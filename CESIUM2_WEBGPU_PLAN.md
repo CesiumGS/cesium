@@ -751,6 +751,28 @@ change after them is measured against a guardrail:
     worth their bytes; a slower flight (`seconds`) and a flight between
     3D Tiles cities with no globe.
 
+- **Untextured terrain while zooming out (next)**: 2.0 draws a terrain
+  tile as soon as its geometry arrives, with its own imagery or an
+  ancestor's within 8 levels, and that ancestor's only if it was drawn
+  itself; otherwise untextured. Zooming out fast over Rainier (3 km to
+  600 km in 0.25 s) drew up to 31 untextured tiles in a frame. 1.x makes
+  a terrain tile renderable only once each imagery layer has its own or
+  any loaded ancestor's imagery (`GlobeSurfaceTile.processImagery`) and
+  keeps drawing what was renderable meanwhile. Do the same: imagery as
+  part of a globe tile's readiness, and imagery jobs for tiles waiting on
+  it.
+- **Imagery captures in motion**: Bing's levels are different captures on
+  Rainier (bluish ice, hazy level 12), so a tile drawn with a stand-in
+  ancestor's imagery while its own loads shows a different capture for a
+  moment. Both engines do (32 frames of the orbit: 1.x 0.022, 2.0 0.023,
+  bumps at the same moments; 2.0's at 33% covers more of the summit).
+  `--motion-samples` sets the frames per replay (default 8).
+- **Dyno's guardrails, after tuning `Budgeted`**: some comparisons with
+  1.x now measure product choices rather than regressions (bytes for
+  loading in motion and prefetch, JS heap, terrain free detail). Revisit
+  the plan's guardrails and their tolerances per scene once `Budgeted`
+  settles, so a verdict means what it says.
+
 Then the planned work:
 
 - Budget-driven refinement (benefit per byte, §13.3), which is also the

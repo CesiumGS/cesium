@@ -13,7 +13,7 @@
   "results": {
     "lod": [
       {
-        "policy": "Legacy1x (1.x)",
+        "policy": "Stepwise (1.x)",
         "status": "ok",
         "requests": 315,
         "megabytes": 426.33745861053467,
