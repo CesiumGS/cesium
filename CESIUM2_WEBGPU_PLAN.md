@@ -44,6 +44,7 @@ Branch: `cesium-2.0-webgpu-poc` (off `main` @ `587f52f1eb`, CesiumJS 1.146.0)
 | r36 | Engine names: releases by version (1.146.0), engines from the working tree named by branch (2.0@cesium-2.0-webgpu-poc), engines built at any git ref (2.0@main, 1.x@v1.140), settings after + (2.0+stepwise); `--engines` replaces `--configs`/`--cesium`; budgets name setups. Explorer draws 1.x's globe tile volumes.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | r37 | `Budgeted` on terrain: the globe's SSE (fog only while drawn) instead of 3D Tiles' dynamic SSE, which left oblique terrain far too coarse (Rainier settled: 68 tiles vs 1.x's 67, all shared; was 20 at levels 0 to 12). The bare ellipsoid never hides content (§8 product choices, new). The inspector built (widgets/, with credits as 1.x shows them and imagery credited per tile drawn); `Viewer`, 2.0's `Cesium.Viewer`; Dyno's Viewer page (one engine at a time, StrataKit's app layout) replaces the standalone viewer. The `Legacy1x` policy is renamed `Stepwise` (`policy: "stepwise"`), for what it does: 1.x's refinement one level at a time, each level loaded on the way down.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | r38 | Overnight toward the L1′ exit check: FLIP on the GPU (40 to 60× faster); the exit check as a content × link matrix (`bench/lod-matrix.mjs`; FLIP against the target as well as SSE 2, bytes downloaded, repetitions and their standard error); prefetch only ahead of steady motion and after everything visible; loading in motion by benefit (on-screen speed as vectors); imagery request stats and cancellation; partial resident cover and a bounded hold for design models; no free detail from the cache by default (still views no longer depend on where the camera was; Google quality in motion 0.046 → 0.020, 1.x 0.026); startup endpoints during device creation; Dyno's guardrails by comparison type, bytes split at the motion, quality in motion as a guardrail; tile volumes compacted and content URIs kept relative (NYC heap 217 → 200 MB); upload budgets by time and geometry and KTX2 uploads through mapped staging buffers (NYC vsync-off hitches 4.5 → 0); content origins without URL parses; the ellipsoid's expansion within a time budget (BIM and NYC first content 0.3 to 0.6 s sooner). Full catalog against 1.x: settle −26%, CPU −73%, no guardrail broken after the fixes. Exit check: 9 of 10 cells pass (8 better); AEC trails by about 0.004, at the margin. |
+| r39 | Terrain's first content ahead of 1.x: the globe's tiles load while its imagery resolves (none drawn without it), imagery is requested for tiles still loading, content workers start with the engine; first content 0.5 to 1.1 s sooner, ahead of 1.146.0 in 5 of 6 scene runs. A fixed 0.1 m near plane (reverse-Z with an infinite far plane loses nothing to it), and the underlay's depth scale 2⁻⁶⁴ so picks from beyond 13,400 km no longer read as the underlay. `GlobeController` as 1.x's: the camera never rolls, zoom keeps heading and pitch and the point under the cursor, zoom over the sky heads for the ground below, height capped at 100,000 km.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 
 ## 1. Goal
 
@@ -948,6 +949,29 @@ _r38 (overnight, toward the L1′ exit check)_:
   intermediate levels, where 1.x sends 10 before its first content. Next:
   add terrain as soon as its own endpoint resolves (imagery attached when
   ready), and let the root levels' requests go first.
+  _Fixed (r39)_: the burst was not the cause (2.0's level 0 tiles take the
+  same 230 to 330 ms on the network as 1.x's). Three waits were: terrain
+  added only after every endpoint resolved; a tile's imagery requested
+  only once its terrain had loaded (about 0.4 s; 1.x requests both at
+  once, imagery needing only the rectangle); workers created on the first
+  request. Terrain now starts on its own endpoint (adapter and `Viewer`),
+  the globe's tiles load while imagery resolves (`GlobeOptions.imagery`
+  takes a promise; nothing is drawn without imagery), imagery is wanted
+  for loading tiles after drawn ones (not prefetch), and `warmUp` starts
+  the workers. First content, median of 3 (ms):
+
+  | Scene · scenario        | 1.146.0 | r38  | r39  |
+  | ----------------------- | ------- | ---- | ---- |
+  | Rainier · cold          | 1944    | 2561 | 1731 |
+  | Rainier · uncapped      | 2754    | 2825 | 1721 |
+  | Philadelphia · cold     | 1353    | 2185 | 1624 |
+  | Philadelphia · uncapped | 2175    | 2041 | 1361 |
+  | Tokyo · cold            | 2726    | 3108 | 2176 |
+  | Tokyo · uncapped        | 3607    | 3011 | 2214 |
+
+  Philadelphia cold varies widely in both engines (1.x 1287 to 2718, 2.0
+  1361 to 2452).
+
 - **The L1′ exit check (r38)**: the final state (commit `4d94c22c95`:
   no free detail, staging uploads, the ellipsoid's expansion budget),
   three repetitions per cell, FLIP against the target (lower is better),
@@ -2904,6 +2928,20 @@ looks; spin momentum. `View.pickPosition` reads the depth under a pixel
 (kept only in frames that serve a pick) and rebuilds the position in
 float64. The camera stays 1 m above the ellipsoid until terrain height
 queries exist.
+
+_r39_: as 1.x (whose `constrainedAxis` is the globe's axis and whose zoom
+restores heading, pitch and roll after each step), the camera never
+rolls: every motion levels it against the geodetic up, and zoom carries
+heading and pitch from the old position's east-north-up frame to the new
+one, turning the globe so the point under the cursor stays there
+(zooming from 6,000 km to 1 km: roll 0°, was 10.5°; the target 0 px
+off). Zoom over the sky heads for the ground below the camera; height is
+capped at 100,000 km. The near plane is a fixed 0.1 m (as 1.x's default):
+with reverse-Z and an infinite far plane depth precision doesn't depend
+on it, and a near plane scaled to what was framed clipped Google's tiles
+when zooming in from the whole globe. The underlay's depth scale went
+from 2⁻²⁷ to 2⁻⁶⁴ with it, since at 0.1 m content beyond 13,400 km fell
+inside the underlay's range and picks there landed at the camera.
 
 **Display-referred color.** Unlit color (globe imagery, unlit glTF such
 as Google's photorealistic tiles and most photogrammetry, the viewer's
