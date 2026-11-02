@@ -22,6 +22,10 @@
 - Fixed `pointCloudShading.backFaceCulling` not hiding back-facing points on some platforms. [#13989](https://github.com/CesiumGS/cesium/pull/13989)
 - Fixed `Cesium3DTileset` repeatedly loading and unloading the same tiles when they don't fit within `cacheBytes` plus `maximumCacheOverflowBytes`. [#13999](https://github.com/CesiumGS/cesium/pull/13999)
 
+#### Fixes :wrench:
+
+- Fixed camera flights re-enabling `enableInputs` even when it was `false` before the flight started. `Camera.flyTo` and `Camera.flyToBoundingSphere` now restore the previous value instead of unconditionally setting `true`. [#13771](https://github.com/CesiumGS/cesium/pull/13771)
+
 ## 1.146 - 2026-10-01
 
 ### Major Announcements :loudspeaker:
