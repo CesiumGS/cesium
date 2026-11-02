@@ -940,9 +940,14 @@ _r38 (overnight, toward the L1′ exit check)_:
   settles sooner. Not the terrain-waits-for-imagery rule (Rainier 2.5 to
   2.7 s just before `2bd5d85d21`, 2.6 to 2.7 at it, 2.4 to 2.9 now): 2.0's
   has been about 2.5 s since r37 while 1.x's ranges from 1.6 to 3.0 s
-  between sessions (it was level in the r37 baseline). Next: the
-  waterfall of the first second (terrain's layer.json, the first tiles'
-  request order, imagery).
+  between sessions (it was level in the r37 baseline). The waterfall
+  (Rainier, same session): 2.0 requests `layer.json` at 1.37 s to 1.x's
+  0.99 (the benchmark adapter adds terrain only once every endpoint,
+  Bing's imagery metadata included, has resolved), so its first terrain
+  requests leave 0.6 s after 1.x's; and then 66 at once, mostly
+  intermediate levels, where 1.x sends 10 before its first content. Next:
+  add terrain as soon as its own endpoint resolves (imagery attached when
+  ready), and let the root levels' requests go first.
 - **The L1′ exit check (r38)**: the final state (commit `4d94c22c95`:
   no free detail, staging uploads, the ellipsoid's expansion budget),
   three repetitions per cell, FLIP against the target (lower is better),
