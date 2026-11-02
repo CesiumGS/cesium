@@ -937,9 +937,12 @@ _r38 (overnight, toward the L1′ exit check)_:
   0.55 and 1.57); settle BIM 1.80 → 1.47 s, NYC 3.38 → 2.83 s (1.x 1.54,
   3.05). Still open: on terrain 2.0's first content comes later than
   1.x's (Rainier 2.7 to 3.2 s vs 1.6 to 1.9, OSM 2.1 vs 1.5) though it
-  settles sooner. In the r37 baseline they were level (Rainier 2.5 vs 2.4
-  to 3.0), so the terrain-waits-for-imagery rule (`2bd5d85d21`) is the
-  first suspect.
+  settles sooner. Not the terrain-waits-for-imagery rule (Rainier 2.5 to
+  2.7 s just before `2bd5d85d21`, 2.6 to 2.7 at it, 2.4 to 2.9 now): 2.0's
+  has been about 2.5 s since r37 while 1.x's ranges from 1.6 to 3.0 s
+  between sessions (it was level in the r37 baseline). Next: the
+  waterfall of the first second (terrain's layer.json, the first tiles'
+  request order, imagery).
 - **The L1′ exit check (r38)**: the final state (commit `4d94c22c95`:
   no free detail, staging uploads, the ellipsoid's expansion budget),
   three repetitions per cell, FLIP against the target (lower is better),
