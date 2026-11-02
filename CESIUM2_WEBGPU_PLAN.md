@@ -891,10 +891,30 @@ _r38 (overnight, toward the L1′ exit check)_:
   counted ArrayBuffer storage with the main thread's objects (NYC: 93 MB,
   of which 21 MB objects and 64 MB buffers). The suite now reads both
   over CDP, main thread and workers, after full collections (`heapBytes`,
-  `bufferBytes`). What remains is buffers: 2.0 holds 68 MB on NYC and 73
-  MB on Tokyo to 1.x's 13 and 16 (production builds). Next: find what
-  holds them (staging areas, CPU copies kept for ray casts and clamping,
-  decoder memory).
+  `bufferBytes`). What remained was buffers: 2.0 held 68 MB on NYC and 73
+  MB on Tokyo to 1.x's 13 and 16 (production builds). Heap snapshots of
+  the main thread and the workers on NYC (the workers hold 0.5 MB each):
+  - **The benchmark page**: it loaded this repository's unminified 1.x
+    build on every run, 2.0's too (the note above): 23 MB of the buffer
+    count (its source text) and 5.6 MB of JS heap. 2.0 pages now load no
+    1.x; snapshots of 2.0 at older refs get an empty one (an annotation
+    on the trend charts marks it).
+  - **The World's CPU tables**: records, transforms (float64 local and
+    world matrices), instances and materials were allocated at full
+    capacity, and the suite's world has 65,536 draws: 37 MB, nearly all
+    empty. They now start at 1,024 rows and double as slots are used;
+    the GPU tables stay full size.
+  - **The upload copy buffer** kept its peak (4 MB after NYC's load).
+    Queued geometry is now written straight into staging buffers mapped
+    at creation (1 MB or the write's size), destroyed after each flush:
+    nothing stays between bursts, and one copy of every upload is gone.
+
+  Quick tier, cold start, against 1.146.0 (median MB, main thread and
+  workers): NYC buffers 3.1 (1.x 12.3), Tokyo 7.3 (15.9), Google
+  Manhattan 2.2 (8.8); JS heap 12.8, 70.7, 38.6 (41.2, 371, 187). NYC
+  against HEAD over 6 repetitions: buffers −93%, time to settle and
+  first content unchanged; lab parity images identical.
+
 - **Hitches with vsync off (fixed r38)**: a CPU profile of NYC's
   uncapped orbit: the 100 to 300 ms stalls are not script. The main thread
   waits in `getCurrentTexture` (1.4 s of them) and `queue.writeBuffer`
