@@ -1776,7 +1776,8 @@ export async function describeBrowser(): Promise<Record<string, unknown>> {
     deviceMemoryGiB: (navigator as { deviceMemory?: number }).deviceMemory,
     devicePixelRatio,
     screen: `${screen.width}×${screen.height}`,
-    cesium1xVersion: Cesium.VERSION,
+    // Absent when the first page is 2.0 only (no 1.x script).
+    cesium1xVersion: typeof Cesium === "undefined" ? undefined : Cesium.VERSION,
   };
   const uaData = (
     navigator as {

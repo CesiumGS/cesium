@@ -876,7 +876,7 @@ _r38 (overnight, toward the L1′ exit check)_:
   → 200 MB); the views remain (23 MB), as do 6 to 7 MB each of Tile
   objects, plain objects, heap numbers and short strings. Tiles also keep
   content URIs relative (resolved on use) instead of each carrying the
-  tileset URL's query. The real fix is the SoA tile table (§13.7): one
+  tileset URL's query. A cheaper step first: build volumes lazily (keep the 6 or 12 numbers from the JSON; corners, normals, box and sphere on first use, which most of NYC's 36k tiles never see; `childrenWithinParent` and `childrenPartition` on first use too). The real fix is the SoA tile table (§13.7): one
   Float64Array per tileset for every volume. (A 32 MB external string
   in the snapshot is the benchmark page's script source, 1.x's
   unminified build, loaded for both engines.)
