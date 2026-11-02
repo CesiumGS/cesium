@@ -89,6 +89,7 @@ const NAMES: Record<string, string> = {
   requests: "Requests",
   bytes: "Bytes downloaded",
   heapBytes: "JS heap",
+  bufferBytes: "Buffers",
 };
 const nameOf = (metric: string) => {
   const name = NAMES[metric] ?? INFO.get(metric)?.[1] ?? metric;

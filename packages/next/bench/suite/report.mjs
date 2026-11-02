@@ -54,6 +54,7 @@ const METRICS = [
   ["bytesLoad", "bytes until settled", "MB", 1e6],
   ["bytesMotion", "bytes in and after motion", "MB", 1e6],
   ["heapBytes", "JS heap", "MB", 1e6],
+  ["bufferBytes", "buffers (ArrayBuffer and WebAssembly memory)", "MB", 1e6],
   // From the filmstrip: how differently the settled view after the orbit
   // looks from the baseline's (summaries, sweeps; not a per-run metric).
   ["flipEnd", "image difference from the baseline (FLIP)", "", 1],
@@ -102,61 +103,182 @@ function environmentSection(results) {
 <div class="cols">
 <div><h3>Hardware</h3>${table([
     ["GPU", escape(gpu?.info?.description ?? env.adapter?.description ?? "")],
-    ["GPU vendor / architecture", escape([gpu?.info?.vendor, gpu?.info?.architecture].filter(Boolean).join(" / "))],
+    [
+      "GPU vendor / architecture",
+      escape(
+        [gpu?.info?.vendor, gpu?.info?.architecture]
+          .filter(Boolean)
+          .join(" / "),
+      ),
+    ],
     ["GPU driver", escape(env.gpuDriver ?? "")],
-    ["GPU max clocks (graphics / memory)", env.gpuMaxClockMHz ? `${env.gpuMaxClockMHz} / ${env.gpuMaxMemoryClockMHz} MHz` : undefined],
-    ["GPU power limit", env.gpuPowerLimitW ? `${env.gpuPowerLimitW} W` : "not reported"],
-    ["GPU thermal limits", env.gpuTargetTemperatureC !== undefined ? `target ${env.gpuTargetTemperatureC} °C; slowdown at ${env.gpuSlowdownTLimitC ?? "?"} °C T.Limit` : undefined],
+    [
+      "GPU max clocks (graphics / memory)",
+      env.gpuMaxClockMHz
+        ? `${env.gpuMaxClockMHz} / ${env.gpuMaxMemoryClockMHz} MHz`
+        : undefined,
+    ],
+    [
+      "GPU power limit",
+      env.gpuPowerLimitW ? `${env.gpuPowerLimitW} W` : "not reported",
+    ],
+    [
+      "GPU thermal limits",
+      env.gpuTargetTemperatureC !== undefined
+        ? `target ${env.gpuTargetTemperatureC} °C; slowdown at ${env.gpuSlowdownTLimitC ?? "?"} °C T.Limit`
+        : undefined,
+    ],
     ["CPU", escape(`${env.cpu} (${env.cores} logical processors)`)],
     ["Memory", `${env.memoryGiB} GiB`],
-    ["Display", page.screen ? escape(`${page.screen}, ${page.refreshHz} Hz, device pixel ratio ${page.devicePixelRatio}`) : undefined],
-    ["Power source / plan", escape(`${env.power ?? "?"} / ${env.powerPlan ?? "?"}`)],
+    [
+      "Display",
+      page.screen
+        ? escape(
+            `${page.screen}, ${page.refreshHz} Hz, device pixel ratio ${page.devicePixelRatio}`,
+          )
+        : undefined,
+    ],
+    [
+      "Power source / plan",
+      escape(`${env.power ?? "?"} / ${env.powerPlan ?? "?"}`),
+    ],
   ])}</div>
 <div><h3>Software</h3>${table([
     ["OS", escape(env.os ?? env.platform ?? "")],
     ["Browser", escape(env.browser ?? "")],
     ["Browser builds", versions ? escape(versions) : undefined],
-    ["Platform (browser)", page.userAgentData ? escape(`${page.userAgentData.platform} ${page.userAgentData.platformVersion}, ${page.userAgentData.architecture} ${page.userAgentData.bitness}-bit`) : undefined],
+    [
+      "Platform (browser)",
+      page.userAgentData
+        ? escape(
+            `${page.userAgentData.platform} ${page.userAgentData.platformVersion}, ${page.userAgentData.architecture} ${page.userAgentData.bitness}-bit`,
+          )
+        : undefined,
+    ],
     ["User agent", `<code>${escape(page.userAgent ?? "")}</code>`],
-    ["Browser mode and flags", `${escape(env.browserMode ?? "")} ${list(env.browserArgs)}`],
+    [
+      "Browser mode and flags",
+      `${escape(env.browserMode ?? "")} ${list(env.browserArgs)}`,
+    ],
     ["Viewport", escape(env.viewport ?? "")],
-    ["Render settings (both engines)", env.render ? escape(`pixel ratio ${env.render.pixelRatio}, ${env.render.msaaSamples}× MSAA, ${env.render.hdr ? "HDR" : "LDR"}, FXAA ${env.render.fxaa ? "on" : "off"}, fog ${env.render.fog ? "on" : "off"}`) : "not recorded (before r33: 1.x LDR with fog, 2.0 HDR)"],
-    ["Engines", env.engines
-      ? `${Object.entries(env.engines).map(([id, what]) => `<b>${escape(id)}</b>: ${escape(what)}`).join("<br>")}<br>2.0 commit ${escape(results.commit.slice(0, 12))}${results.dirty ? " + uncommitted changes" : ""}`
-      : escape(`1.x ${page.cesium1xVersion ?? "?"} (this repository's build) · 2.0 commit ${results.commit.slice(0, 12)}${results.dirty ? " + uncommitted changes" : ""}`)],
-    ["1.x versions that ran", escape([...new Set(results.runs.map((r) => r.metrics.engineVersion).filter(Boolean))].join(", "))],
-    ["Tools", escape(Object.entries(env.tools ?? {}).map(([k, v]) => `${k} ${v}`).join(" · "))],
+    [
+      "Render settings (both engines)",
+      env.render
+        ? escape(
+            `pixel ratio ${env.render.pixelRatio}, ${env.render.msaaSamples}× MSAA, ${env.render.hdr ? "HDR" : "LDR"}, FXAA ${env.render.fxaa ? "on" : "off"}, fog ${env.render.fog ? "on" : "off"}`,
+          )
+        : "not recorded (before r33: 1.x LDR with fog, 2.0 HDR)",
+    ],
+    [
+      "Engines",
+      env.engines
+        ? `${Object.entries(env.engines)
+            .map(([id, what]) => `<b>${escape(id)}</b>: ${escape(what)}`)
+            .join(
+              "<br>",
+            )}<br>2.0 commit ${escape(results.commit.slice(0, 12))}${results.dirty ? " + uncommitted changes" : ""}`
+        : escape(
+            `1.x ${page.cesium1xVersion ?? "?"} (this repository's build) · 2.0 commit ${results.commit.slice(0, 12)}${results.dirty ? " + uncommitted changes" : ""}`,
+          ),
+    ],
+    [
+      "1.x versions that ran",
+      escape(
+        [
+          ...new Set(
+            results.runs.map((r) => r.metrics.engineVersion).filter(Boolean),
+          ),
+        ].join(", "),
+      ),
+    ],
+    [
+      "Tools",
+      escape(
+        Object.entries(env.tools ?? {})
+          .map(([k, v]) => `${k} ${v}`)
+          .join(" · "),
+      ),
+    ],
   ])}</div>
 <div><h3>Idle conditions (before the runs)</h3>${table([
-    ["GPU clock mean / min", idle.gpuClockMeanMHz ? `${fixed(idle.gpuClockMeanMHz)} / ${idle.gpuClockMinMHz} MHz` : undefined],
-    ["GPU memory clock", idle.gpuMemoryClockMeanMHz ? `${fixed(idle.gpuMemoryClockMeanMHz)} MHz` : undefined],
-    ["GPU temperature", idle.gpuTemperatureMaxC !== undefined ? `${idle.gpuTemperatureMaxC} °C${idle.gpuHeadroomMinC !== undefined ? ` (${idle.gpuHeadroomMinC} °C below the throttle limit)` : ""}` : undefined],
-    ["GPU power / utilization", idle.gpuPowerMeanW !== undefined ? `${fixed(idle.gpuPowerMeanW, 1)} W / ${fixed(idle.gpuUtilizationMean)}%` : undefined],
-    ["GPU slowdown reasons (share of samples)", idle.gpuSlowedFraction !== undefined ? `${escape((idle.gpuSlowdownReasons ?? []).join(", ") || "none")} (${fixed(idle.gpuSlowedFraction, 2)})` : undefined],
-    ["CPU speed (% of nominal)", idle.cpuPerformanceMean !== undefined ? `${fixed(idle.cpuPerformanceMean)} (min ${fixed(idle.cpuPerformanceMin)})` : undefined],
-    ["CPU utility", idle.cpuUtilityMean !== undefined ? `${fixed(idle.cpuUtilityMean)}%` : undefined],
-    ["Cooldown rule", `each run starts within ${env.cooldownMarginC ?? "?"} °C of idle GPU temperature (60 s at most)`],
+    [
+      "GPU clock mean / min",
+      idle.gpuClockMeanMHz
+        ? `${fixed(idle.gpuClockMeanMHz)} / ${idle.gpuClockMinMHz} MHz`
+        : undefined,
+    ],
+    [
+      "GPU memory clock",
+      idle.gpuMemoryClockMeanMHz
+        ? `${fixed(idle.gpuMemoryClockMeanMHz)} MHz`
+        : undefined,
+    ],
+    [
+      "GPU temperature",
+      idle.gpuTemperatureMaxC !== undefined
+        ? `${idle.gpuTemperatureMaxC} °C${idle.gpuHeadroomMinC !== undefined ? ` (${idle.gpuHeadroomMinC} °C below the throttle limit)` : ""}`
+        : undefined,
+    ],
+    [
+      "GPU power / utilization",
+      idle.gpuPowerMeanW !== undefined
+        ? `${fixed(idle.gpuPowerMeanW, 1)} W / ${fixed(idle.gpuUtilizationMean)}%`
+        : undefined,
+    ],
+    [
+      "GPU slowdown reasons (share of samples)",
+      idle.gpuSlowedFraction !== undefined
+        ? `${escape((idle.gpuSlowdownReasons ?? []).join(", ") || "none")} (${fixed(idle.gpuSlowedFraction, 2)})`
+        : undefined,
+    ],
+    [
+      "CPU speed (% of nominal)",
+      idle.cpuPerformanceMean !== undefined
+        ? `${fixed(idle.cpuPerformanceMean)} (min ${fixed(idle.cpuPerformanceMin)})`
+        : undefined,
+    ],
+    [
+      "CPU utility",
+      idle.cpuUtilityMean !== undefined
+        ? `${fixed(idle.cpuUtilityMean)}%`
+        : undefined,
+    ],
+    [
+      "Cooldown rule",
+      `each run starts within ${env.cooldownMarginC ?? "?"} °C of idle GPU temperature (60 s at most)`,
+    ],
     ["Quiet rule", escape(env.quietRule ?? "")],
     ["Wake lock", escape(env.wakeLock ?? "")],
   ])}</div>
 </div>
-${gpu ? `<details><summary>WebGPU (2.0): ${gpu.features.length} features, ${Object.keys(gpu.limits).length} limits, ${gpu.wgslLanguageFeatures.length} WGSL language features</summary>
+${
+  gpu
+    ? `<details><summary>WebGPU (2.0): ${gpu.features.length} features, ${Object.keys(gpu.limits).length} limits, ${gpu.wgslLanguageFeatures.length} WGSL language features</summary>
 ${table([
-    ["Adapter info", `<code>${escape(JSON.stringify(gpu.info))}</code>`],
-    ["Preferred canvas format", escape(gpu.preferredCanvasFormat)],
-    ["Features", list(gpu.features)],
-    ["WGSL language features", list(gpu.wgslLanguageFeatures)],
-    ...Object.entries(gpu.limits).map(([k, v]) => [k, escape(String(v))]),
-  ])}</details>` : ""}
-${gl ? `<details><summary>WebGL 2 (1.x): ${escape(gl.renderer)}, ${gl.extensions.length} extensions</summary>
+  ["Adapter info", `<code>${escape(JSON.stringify(gpu.info))}</code>`],
+  ["Preferred canvas format", escape(gpu.preferredCanvasFormat)],
+  ["Features", list(gpu.features)],
+  ["WGSL language features", list(gpu.wgslLanguageFeatures)],
+  ...Object.entries(gpu.limits).map(([k, v]) => [k, escape(String(v))]),
+])}</details>`
+    : ""
+}
+${
+  gl
+    ? `<details><summary>WebGL 2 (1.x): ${escape(gl.renderer)}, ${gl.extensions.length} extensions</summary>
 ${table([
-    ["Version", escape(gl.version)],
-    ["Shading language", escape(gl.shadingLanguage)],
-    ["Vendor / renderer", escape(`${gl.vendor} / ${gl.renderer}`)],
-    ["Max texture size / samples", `${gl.maxTextureSize} / ${gl.maxSamples}`],
-    ["GPU timer queries", gl.timerQuery ? "available" : "not exposed (1.x GPU time unavailable)"],
-    ["Extensions", list(gl.extensions)],
-  ])}</details>` : ""}
+  ["Version", escape(gl.version)],
+  ["Shading language", escape(gl.shadingLanguage)],
+  ["Vendor / renderer", escape(`${gl.vendor} / ${gl.renderer}`)],
+  ["Max texture size / samples", `${gl.maxTextureSize} / ${gl.maxSamples}`],
+  [
+    "GPU timer queries",
+    gl.timerQuery ? "available" : "not exposed (1.x GPU time unavailable)",
+  ],
+  ["Extensions", list(gl.extensions)],
+])}</details>`
+    : ""
+}
 </details>`;
 }
 
@@ -169,18 +291,56 @@ function lineageSection(results) {
   const env = results.environment ?? {};
   const datasets = results.datasets ?? [];
   const rows = [
-    ["Command", results.command ? `<code>${escape(results.command.join(" "))}</code>` : "not recorded (before r33)"],
-    ["Commit", `<code>${escape(results.commit)}</code> on ${escape(results.branch ?? "?")}${results.subject ? ` · ${escape(results.subject)}` : ""}`],
-    ["Working tree", results.dirty ? `uncommitted changes (diff sha256 <code>${escape((results.diffSha256 ?? "not recorded").slice(0, 16))}</code>)` : "clean"],
-    ["Catalog", `${escape(results.catalog ?? "public")}${results.catalogSha256 ? ` · sha256 <code>${escape(results.catalogSha256.slice(0, 16))}</code>` : ""}`],
-    ["Engines", env.engines ? Object.entries(env.engines).map(([id, what]) => `<b>${escape(id)}</b>: ${escape(what)}`).join("<br>") : undefined],
-    ["Plan", results.plan ? escape(`primary ${results.plan.primary}; guardrails ${results.plan.guardrails.join(", ")}; tolerance ${Math.round(results.plan.tolerance * 100)}%${results.plan.hypothesis ? `; hypothesis: ${results.plan.hypothesis}` : ""}`) : undefined],
-    ["Render settings", env.render ? `<code>${escape(JSON.stringify(env.render))}</code>` : undefined],
+    [
+      "Command",
+      results.command
+        ? `<code>${escape(results.command.join(" "))}</code>`
+        : "not recorded (before r33)",
+    ],
+    [
+      "Commit",
+      `<code>${escape(results.commit)}</code> on ${escape(results.branch ?? "?")}${results.subject ? ` · ${escape(results.subject)}` : ""}`,
+    ],
+    [
+      "Working tree",
+      results.dirty
+        ? `uncommitted changes (diff sha256 <code>${escape((results.diffSha256 ?? "not recorded").slice(0, 16))}</code>)`
+        : "clean",
+    ],
+    [
+      "Catalog",
+      `${escape(results.catalog ?? "public")}${results.catalogSha256 ? ` · sha256 <code>${escape(results.catalogSha256.slice(0, 16))}</code>` : ""}`,
+    ],
+    [
+      "Engines",
+      env.engines
+        ? Object.entries(env.engines)
+            .map(([id, what]) => `<b>${escape(id)}</b>: ${escape(what)}`)
+            .join("<br>")
+        : undefined,
+    ],
+    [
+      "Plan",
+      results.plan
+        ? escape(
+            `primary ${results.plan.primary}; guardrails ${results.plan.guardrails.join(", ")}; tolerance ${Math.round(results.plan.tolerance * 100)}%${results.plan.hypothesis ? `; hypothesis: ${results.plan.hypothesis}` : ""}`,
+          )
+        : undefined,
+    ],
+    [
+      "Render settings",
+      env.render
+        ? `<code>${escape(JSON.stringify(env.render))}</code>`
+        : undefined,
+    ],
     [
       "Datasets",
       datasets.length
         ? datasets
-            .map((d) => `${escape(d.id)}: ${escape(d.status)}${d.sha256 ? ` <code>${escape(d.sha256.slice(0, 16))}</code>` : ""}`)
+            .map(
+              (d) =>
+                `${escape(d.id)}: ${escape(d.status)}${d.sha256 ? ` <code>${escape(d.sha256.slice(0, 16))}</code>` : ""}`,
+            )
             .join("<br>")
         : undefined,
     ],
@@ -239,9 +399,13 @@ function conditionRows(configs, baseline, telemetry, notes) {
       if (a === undefined || b === undefined) {
         return;
       }
-      const gap = relative ? Math.abs(b - a) / Math.max(Math.abs(a), 1e-9) : Math.abs(b - a);
+      const gap = relative
+        ? Math.abs(b - a) / Math.max(Math.abs(a), 1e-9)
+        : Math.abs(b - a);
       if (gap > limit) {
-        differs.push(`${label} ${a.toFixed(key.endsWith("Fraction") ? 2 : 0)} vs ${b.toFixed(key.endsWith("Fraction") ? 2 : 0)}`);
+        differs.push(
+          `${label} ${a.toFixed(key.endsWith("Fraction") ? 2 : 0)} vs ${b.toFixed(key.endsWith("Fraction") ? 2 : 0)}`,
+        );
       }
     };
     check("gpuTemperatureStartC", "GPU temperature at start (°C)", 3);
@@ -249,7 +413,9 @@ function conditionRows(configs, baseline, telemetry, notes) {
     check("cpuPerformanceMean", "CPU speed (%)", 0.1, true);
     check("backgroundCpuUtility", "CPU utility before the run (%)", 10);
     if (differs.length) {
-      notes.push(`conditions differ, ${engineLabel(baseline)} vs ${engineLabel(c)}: ${differs.join(", ")}`);
+      notes.push(
+        `conditions differ, ${engineLabel(baseline)} vs ${engineLabel(c)}: ${differs.join(", ")}`,
+      );
     }
   }
   return `<tr><th colspan="${configs.length + 1}" class="section">Conditions</th></tr>${rows}`;
@@ -259,9 +425,13 @@ function conditionRows(configs, baseline, telemetry, notes) {
 const HEADLINES = [
   ["settleMs", "Time to settle", "loading the view until nothing is pending"],
   ["cpuP50", "CPU per frame", "main-thread time in the engine, median frame"],
-  ["frameP95", "Frame time p95", "while orbiting; vsync-bound at 60 Hz unless uncapped"],
+  [
+    "frameP95",
+    "Frame time p95",
+    "while orbiting; vsync-bound at 60 Hz unless uncapped",
+  ],
   ["bytes", "Bytes downloaded", "content from servers, whole run"],
-  ["heapBytes", "JS heap", "after the run"],
+  ["heapBytes", "JS heap", "after the run and a full GC, with workers"],
 ];
 
 /** Configuration colors: categorical slots in catalog order. */
@@ -292,16 +462,22 @@ function validitySummary(scenes) {
   }
   const count = (v) => scenes.filter((s) => s.verdict === v).length;
   const measured = scenes.filter((s) => s.verdict !== "not run");
-  const overall = !measured.length || count("valid") + count("warning") === 0
-    ? "invalid"
-    : count("warning") || count("invalid")
-      ? "warning"
-      : "valid";
-  const flagged = scenes.filter((s) => s.verdict === "warning" || s.verdict === "invalid");
+  const overall =
+    !measured.length || count("valid") + count("warning") === 0
+      ? "invalid"
+      : count("warning") || count("invalid")
+        ? "warning"
+        : "valid";
+  const flagged = scenes.filter(
+    (s) => s.verdict === "warning" || s.verdict === "invalid",
+  );
   return `<div class="validity">${validityBadge(overall)} <b>${count("valid")}</b> valid, <b>${count("warning")}</b> with warnings, <b>${count("invalid")}</b> invalid, <b>${count("not run")}</b> not run (of ${scenes.length} scenes)${
     flagged.length
       ? `<details><summary>Why</summary><ul>${flagged
-          .map((s) => `<li><b>${escape(s.title)}</b>: ${s.reasons.map(escape).join("; ") || "a run failed"}</li>`)
+          .map(
+            (s) =>
+              `<li><b>${escape(s.title)}</b>: ${s.reasons.map(escape).join("; ") || "a run failed"}</li>`,
+          )
           .join("")}</ul></details>`
       : ""
   }</div>`;
@@ -382,9 +558,10 @@ export function renderReport(results, options = {}) {
         }
       }
       rows.push({
-        label: scenarioCount > 1
-          ? `${group.run.sceneTitle} · ${group.run.scenario}`
-          : group.run.sceneTitle,
+        label:
+          scenarioCount > 1
+            ? `${group.run.sceneTitle} · ${group.run.scenario}`
+            : group.run.sceneTitle,
         ratio: r?.value !== undefined ? r : undefined,
         note: gapOf(group),
       });
@@ -399,7 +576,8 @@ export function renderReport(results, options = {}) {
         label,
         value: `×${g.toFixed(2)}`,
         delta: `${candidate} vs ${baseline}: better in ${better}, worse in ${worse}, no clear difference in ${same} of ${ratios.length} scenes`,
-        status: better > worse ? "better" : worse > better ? "worse" : undefined,
+        status:
+          better > worse ? "better" : worse > better ? "worse" : undefined,
       }),
     );
     forests.push(
@@ -501,7 +679,8 @@ ${cpu.length ? chart("CPU speed (% of nominal)", "%", cpu, 1) + chart("CPU utili
     const condition = conditionRows(configs, baseline, telemetry, notes);
     // Render settings each engine actually used (apples to apples).
     const renderOf = (c) =>
-      group.runs.find((r) => r.config === c && r.metrics.render)?.metrics.render;
+      group.runs.find((r) => r.config === c && r.metrics.render)?.metrics
+        .render;
     const describeRender = (r) =>
       r
         ? `${r.width}×${r.height} · ${r.msaaSamples}× MSAA · ${r.hdr ? "HDR" : "LDR"}${r.fxaa ? " · FXAA" : ""}${r.fog ? " · fog" : ""}${r.outlines ? " · outlines" : ""}`
@@ -514,9 +693,14 @@ ${cpu.length ? chart("CPU speed (% of nominal)", "%", cpu, 1) + chart("CPU utili
       }
       // HDR is chosen per scene to match 2.0's color pipeline (catalog
       // render settings), so it is shown, not compared.
-      const diff = ["width", "height", "msaaSamples", "fxaa", "fog", "outlines"].filter(
-        (k) => r[k] !== baseRender[k],
-      );
+      const diff = [
+        "width",
+        "height",
+        "msaaSamples",
+        "fxaa",
+        "fog",
+        "outlines",
+      ].filter((k) => r[k] !== baseRender[k]);
       if (diff.length) {
         notes.push(
           `render settings differ, ${engineLabel(baseline)} vs ${engineLabel(c)}: ${diff.map((k) => `${k} ${baseRender[k]} vs ${r[k]}`).join(", ")}`,
@@ -536,25 +720,32 @@ ${cpu.length ? chart("CPU speed (% of nominal)", "%", cpu, 1) + chart("CPU utili
             ? { verdict: "valid", reasons: [] }
             : r.metrics.status === "unsupported"
               ? { verdict: "not run", reasons: [] }
-              : { verdict: "invalid", reasons: [`${r.metrics.status}: ${r.metrics.message ?? ""}`] }),
+              : {
+                  verdict: "invalid",
+                  reasons: [`${r.metrics.status}: ${r.metrics.message ?? ""}`],
+                }),
       )
       .filter((v) => v.verdict !== "not run");
     const warnings = [
-      ...new Set(verdicts.flatMap((v) => (v.verdict === "valid" ? [] : v.reasons))),
+      ...new Set(
+        verdicts.flatMap((v) => (v.verdict === "valid" ? [] : v.reasons)),
+      ),
     ];
     const invalid = verdicts.some((v) => v.verdict === "invalid");
     const differs = (n) =>
-      n.startsWith("conditions differ") || n.startsWith("render settings differ");
+      n.startsWith("conditions differ") ||
+      n.startsWith("render settings differ");
     const comparable = !notes.some(differs);
     // A scene some configuration could not draw is not a comparison.
     const sceneVerdict =
-      !verdicts.length || group.runs.some((r) => r.metrics.status === "unsupported")
-      ? "not run"
-      : invalid
-        ? "invalid"
-        : warnings.length || !comparable
-          ? "warning"
-          : "valid";
+      !verdicts.length ||
+      group.runs.some((r) => r.metrics.status === "unsupported")
+        ? "not run"
+        : invalid
+          ? "invalid"
+          : warnings.length || !comparable
+            ? "warning"
+            : "valid";
     sceneValidity.push({
       title: `${run.sceneTitle} · ${run.scenario}`,
       verdict: sceneVerdict,
@@ -564,7 +755,11 @@ ${cpu.length ? chart("CPU speed (% of nominal)", "%", cpu, 1) + chart("CPU utili
     // frame's real cost), else CPU per frame (frame time is vsync-bound).
     const color = (c) => configColor(configs, c);
     const pathMetric = run.vsync === false ? "frame" : "cpu";
-    const profiles = pathProfiles(group.runs, configs, PATH_METRICS[pathMetric][0]);
+    const profiles = pathProfiles(
+      group.runs,
+      configs,
+      PATH_METRICS[pathMetric][0],
+    );
     const path = group.runs.find((r) => r.metrics.path?.length)?.metrics.path;
     const diagnosis = profiles.size
       ? `${pathOverlay({ profiles, configs, baseline, candidate, color, metric: pathMetric })}
@@ -575,7 +770,9 @@ ${cpu.length ? chart("CPU speed (% of nominal)", "%", cpu, 1) + chart("CPU utili
       explore,
       // Older runs' entries have no scenario (and mixed scenarios).
       entries: (results.filmstrips ?? []).filter(
-        (e) => e.scene === run.scene && (e.scenario ?? run.scenario) === run.scenario,
+        (e) =>
+          e.scene === run.scene &&
+          (e.scenario ?? run.scenario) === run.scenario,
       ),
       assets: results.assets,
       configs,
@@ -637,7 +834,8 @@ ${cpu.length ? chart("CPU speed (% of nominal)", "%", cpu, 1) + chart("CPU utili
       }),
       lineChart({
         title: "Frame time while loading",
-        subtitle: "From the start of the load until the view settled; spikes are hitches.",
+        subtitle:
+          "From the start of the load until the view settled; spikes are hitches.",
         xLabel: "s since load start",
         unit: "ms",
         series: frameSeries("load", 1),
@@ -746,14 +944,14 @@ export function summarizeRun(results) {
       continue;
     }
     const key = `${run.scene}|${run.scenario}|${run.config}`;
-    (cells[key] ??= {
+    cells[key] ??= {
       scene: run.scene,
       scenario: run.scenario,
       title: run.sceneTitle,
       config: run.config,
       values: {},
       verdicts: [],
-    });
+    };
     cells[key].verdicts.push(run.validity?.verdict ?? "valid");
     for (const [metric] of METRICS) {
       const v = run.metrics[metric];
@@ -774,7 +972,8 @@ export function summarizeRun(results) {
       continue;
     }
     for (const [config, flip] of Object.entries(strip.flip ?? {})) {
-      const cell = cells[`${strip.scene}|${strip.scenario ?? "cold-orbit"}|${config}`];
+      const cell =
+        cells[`${strip.scene}|${strip.scenario ?? "cold-orbit"}|${config}`];
       if (cell) {
         cell.values.flipEnd = [flip.mean];
       }
@@ -793,7 +992,10 @@ export function summarizeRun(results) {
     config: c.config,
     warnings: c.verdicts.filter((v) => v !== "valid").length,
     metrics: Object.fromEntries(
-      Object.entries(c.values).map(([k, v]) => [k, { ...summarize(v), values: v }]),
+      Object.entries(c.values).map(([k, v]) => [
+        k,
+        { ...summarize(v), values: v },
+      ]),
     ),
   }));
   const verdicts = results.runs.map((r) => r.validity?.verdict).filter(Boolean);

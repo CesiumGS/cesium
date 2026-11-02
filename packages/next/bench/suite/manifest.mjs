@@ -45,7 +45,13 @@ export function loadCatalog(manifest = process.env.BENCH_MANIFEST) {
       catalog.engines = { ...catalog.engines, ...json.engines };
       delete catalog.engines.$comment;
     }
-    for (const key of ["datasets", "scenes", "scenarios", "setups", "budgets"]) {
+    for (const key of [
+      "datasets",
+      "scenes",
+      "scenarios",
+      "setups",
+      "budgets",
+    ]) {
       for (const entry of json[key] ?? []) {
         if (index > 0 && key === "datasets") {
           entry.private ??= true;

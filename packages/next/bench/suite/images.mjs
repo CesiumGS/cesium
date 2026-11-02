@@ -45,7 +45,10 @@ export function approve(baselines, key, image, meta) {
     approvedAt: new Date().toISOString(),
     ...meta,
   };
-  writeFileSync(join(baselines, "baselines.json"), JSON.stringify(manifest, null, 1));
+  writeFileSync(
+    join(baselines, "baselines.json"),
+    JSON.stringify(manifest, null, 1),
+  );
 }
 
 function git(root, args) {
@@ -57,18 +60,25 @@ function git(root, args) {
 }
 
 const xml = (s) =>
-  String(s).replace(/[<>&"]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;" })[c]);
+  String(s).replace(
+    /[<>&"]/g,
+    (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;" })[c],
+  );
 
 export async function runImages({ catalog, opts, root, directory }) {
   const pick = (list, key) =>
-    opts[key] ? list.filter((x) => opts[key].split(",").includes(x.id)) : undefined;
+    opts[key]
+      ? list.filter((x) => opts[key].split(",").includes(x.id))
+      : undefined;
   const scenes = pick(catalog.scenes, "scenes") ?? catalog.scenes;
   // The engine under test (--engine, default the catalog's candidate)
   // and, with --parity, the reference it is scored against (--parity-engine,
   // default the catalog's baseline release). Other refs need their own
   // server, which image checks don't start: the working tree and releases.
   const noServer = () => {
-    throw new Error("image checks run the working tree or releases, not 2.0 at another ref");
+    throw new Error(
+      "image checks run the working tree or releases, not 2.0 at another ref",
+    );
   };
   const candidate = await resolveEngine(
     opts.engine ?? catalog.engines.candidate,
@@ -107,7 +117,11 @@ export async function runImages({ catalog, opts, root, directory }) {
     "--enable-unsafe-webgpu",
     "--enable-webgpu-developer-features",
     ...(software
-      ? ["--use-webgpu-adapter=swiftshader", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"]
+      ? [
+          "--use-webgpu-adapter=swiftshader",
+          "--use-angle=swiftshader",
+          "--enable-unsafe-swiftshader",
+        ]
       : ["--force_high_performance_gpu"]),
   ];
   const browser = await chromium.launch({
@@ -124,7 +138,9 @@ export async function runImages({ catalog, opts, root, directory }) {
   const info = described.webgpu?.info ?? {};
   const rendererClass = software
     ? "swiftshader"
-    : slug(`${info.vendor || "gpu"}-${info.architecture || info.description || "unknown"}`);
+    : slug(
+        `${info.vendor || "gpu"}-${info.architecture || info.description || "unknown"}`,
+      );
   const baselines = join(directory, "baselines", rendererClass);
   const manifest = readBaselines(baselines);
 
@@ -193,13 +209,25 @@ export async function runImages({ catalog, opts, root, directory }) {
       if (!approved || !existsSync(join(baselines, approved.file))) {
         row.status = "new";
       } else {
-        const r = await compare(png, readFileSync(join(baselines, approved.file)));
+        const r = await compare(
+          png,
+          readFileSync(join(baselines, approved.file)),
+        );
         row.flip = { mean: r.flip.mean, p95: r.flip.p95 };
         row.heatmap = `${slug(key)}.flip.png`;
-        writeFileSync(join(out, row.heatmap), Buffer.from(r.flip.heatmap, "base64"));
-        row.baseline = { file: approved.file, approvedAt: approved.approvedAt, commit: approved.commit };
+        writeFileSync(
+          join(out, row.heatmap),
+          Buffer.from(r.flip.heatmap, "base64"),
+        );
+        row.baseline = {
+          file: approved.file,
+          approvedAt: approved.approvedAt,
+          commit: approved.commit,
+        };
         row.status =
-          r.flip.mean <= REGRESSION.mean && r.flip.p95 <= REGRESSION.p95 ? "pass" : "changed";
+          r.flip.mean <= REGRESSION.mean && r.flip.p95 <= REGRESSION.p95
+            ? "pass"
+            : "changed";
       }
       if (parity) {
         const other = await capture(parity, check);
@@ -214,7 +242,10 @@ export async function runImages({ catalog, opts, root, directory }) {
             within: r.flip.mean <= PARITY.mean && r.flip.p95 <= PARITY.p95,
           };
           writeFileSync(join(out, row.parity.image), other.png);
-          writeFileSync(join(out, row.parity.heatmap), Buffer.from(r.flip.heatmap, "base64"));
+          writeFileSync(
+            join(out, row.parity.heatmap),
+            Buffer.from(r.flip.heatmap, "base64"),
+          );
         }
       }
       if (opts.update && (row.status === "new" || row.status === "changed")) {
@@ -250,7 +281,9 @@ export async function runImages({ catalog, opts, root, directory }) {
   writeFileSync(file, JSON.stringify(run, null, 1));
 
   // CI: JUnit (one test case per check) and a Markdown summary.
-  const failed = rows.filter((r) => !r.approved && r.status !== "pass" && r.status !== "unsupported");
+  const failed = rows.filter(
+    (r) => !r.approved && r.status !== "pass" && r.status !== "unsupported",
+  );
   writeFileSync(
     file.replace(/\.json$/, ".junit.xml"),
     `<?xml version="1.0" encoding="UTF-8"?>

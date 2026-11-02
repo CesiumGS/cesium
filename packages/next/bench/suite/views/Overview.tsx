@@ -46,6 +46,7 @@ import {
 const NOUNS: Record<string, string> = {
   bytes: "data",
   heapBytes: "memory",
+  bufferBytes: "memory",
   requests: "requests",
   over100: "hitches",
 };

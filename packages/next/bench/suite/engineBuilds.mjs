@@ -81,11 +81,15 @@ export async function resolveEngine(spec, catalog, { cwd, serve, log }) {
       const build = join(tree, "Build", "CesiumUnminified", "Cesium.js");
       if (!existsSync(build)) {
         log?.(`building CesiumJS at ${parsed.source.ref} (${short}), once…`);
-        execFileSync(process.platform === "win32" ? "npm.cmd" : "npm", ["run", "build"], {
-          cwd: tree,
-          stdio: "inherit",
-          shell: process.platform === "win32",
-        });
+        execFileSync(
+          process.platform === "win32" ? "npm.cmd" : "npm",
+          ["run", "build"],
+          {
+            cwd: tree,
+            stdio: "inherit",
+            shell: process.platform === "win32",
+          },
+        );
       }
       page.cesium = `ref:${short}`;
     } else {
@@ -117,7 +121,9 @@ export function describeBuild(config) {
     return `CesiumJS ${s.version} (npm release, ${s.integrity})`;
   }
   const where =
-    s.kind === "tree" ? `working tree of ${s.ref}` : `${s.ref} at ${s.sha.slice(0, 12)}`;
+    s.kind === "tree"
+      ? `working tree of ${s.ref}`
+      : `${s.ref} at ${s.sha.slice(0, 12)}`;
   return config.engine === "1.x"
     ? `CesiumJS 1.x built from the ${where}`
     : `2.0 from the ${where}, ${config.policy ?? "budgeted"} selection`;

@@ -60,6 +60,7 @@ const NAMES: Record<string, string> = {
   settleMs: "Time to settle",
   bytes: "Bytes downloaded",
   heapBytes: "JS heap",
+  bufferBytes: "Buffers",
   flipEnd: "Image difference (FLIP)",
   motionFlip: "Quality in motion (FLIP)",
 };
@@ -73,7 +74,7 @@ const listOf = (items: string[]) =>
 /** The sweep's charts, grouped as people read them. */
 const SWEEP_GROUPS: Array<[string, string[]]> = [
   ["Frame time", ["cpuP50", "gpuP50", "frameP95"]],
-  ["Loading and memory", ["settleMs", "bytes", "heapBytes"]],
+  ["Loading and memory", ["settleMs", "bytes", "heapBytes", "bufferBytes"]],
   ["Image", ["flipEnd", "motionFlip"]],
 ];
 
@@ -96,6 +97,7 @@ const MACHINE_METRICS: Array<[string, string | undefined]> = [
   ["settleMs", undefined],
   ["bytes", "data"],
   ["heapBytes", "memory"],
+  ["bufferBytes", "memory"],
 ];
 
 export function Analysis() {

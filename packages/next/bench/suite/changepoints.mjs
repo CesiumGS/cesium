@@ -186,15 +186,23 @@ export function detectAlerts(
         before: { median: a, runs: before.length },
         after: { median: b, runs: after.length },
         range: {
-          from: { commit: last.commit, subject: last.subject, date: last.date, run: last.name },
-          to: { commit: first.commit, subject: first.subject, date: first.date, run: first.name },
+          from: {
+            commit: last.commit,
+            subject: last.subject,
+            date: last.date,
+            run: last.name,
+          },
+          to: {
+            commit: first.commit,
+            subject: first.subject,
+            date: first.date,
+            run: first.name,
+          },
         },
       });
     });
   }
-  return alerts.sort((x, y) =>
-    y.range.to.date.localeCompare(x.range.to.date),
-  );
+  return alerts.sort((x, y) => y.range.to.date.localeCompare(x.range.to.date));
 }
 
 /** Metrics watched for alerts (lower is better for each). */
@@ -209,7 +217,14 @@ export const ALERT_METRICS = [
   "requests",
   "bytes",
   "heapBytes",
+  "bufferBytes",
 ];
 
 /** Triage states, in queue order. */
-export const ALERT_STATES = ["new", "acknowledged", "expected", "invalid", "fixed"];
+export const ALERT_STATES = [
+  "new",
+  "acknowledged",
+  "expected",
+  "invalid",
+  "fixed",
+];

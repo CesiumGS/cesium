@@ -759,6 +759,9 @@ async function runOne(browser, base, spec, results) {
   const hosts = new Map();
   const sizes = [];
   const starts = [];
+  await page.exposeFunction("measureMemory", () =>
+    retainedMemory(context, page),
+  );
   // The page ends the measurement before the selection reference.
   await page.exposeFunction("endMeasurement", () => {
     measuring = false;
@@ -884,6 +887,70 @@ async function runOne(browser, base, spec, results) {
     };
   } finally {
     await context.close();
+  }
+}
+
+/**
+ * What the page holds at the end of the run (the page asks, with the
+ * engine still up), over CDP after full collections, on
+ * the main thread and in every worker: JS objects (`heapBytes`) and
+ * ArrayBuffer storage (`bufferBytes`, typed arrays and WebAssembly memory).
+ * `performance.memory` (before r39) counted the main thread's objects with
+ * garbage and its buffers together.
+ */
+async function retainedMemory(context, page) {
+  const cdp = await context.newCDPSession(page);
+  // Workers through Target messages: Playwright's sessions don't route
+  // child sessions.
+  const workers = [];
+  const replies = new Map();
+  let next = 0;
+  cdp.on("Target.attachedToTarget", (e) => workers.push(e.sessionId));
+  cdp.on("Target.receivedMessageFromTarget", ({ message }) => {
+    const reply = JSON.parse(message);
+    replies.get(reply.id)?.(reply.result ?? {});
+  });
+  const call = (sessionId, method) =>
+    new Promise((resolve) => {
+      const id = ++next;
+      replies.set(id, resolve);
+      cdp
+        .send("Target.sendMessageToTarget", {
+          sessionId,
+          message: JSON.stringify({ id, method, params: {} }),
+        })
+        .catch(() => resolve({}));
+    });
+  try {
+    await cdp.send("Target.setAutoAttach", {
+      autoAttach: true,
+      waitForDebuggerOnStart: false,
+      flatten: false,
+    });
+    // Existing workers attach right away.
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    const usage = async (send) => {
+      for (let i = 0; i < 3; i++) {
+        await send("HeapProfiler.collectGarbage");
+      }
+      return send("Runtime.getHeapUsage");
+    };
+    const all = [
+      await usage((method) => cdp.send(method)),
+      ...(await Promise.all(
+        workers.map((id) => usage((method) => call(id, method))),
+      )),
+    ];
+    const sum = (key) => all.reduce((n, u) => n + (u[key] ?? 0), 0);
+    return {
+      heapBytes: sum("usedSize"),
+      bufferBytes: sum("backingStorageSize"),
+      workers: workers.length,
+    };
+  } catch {
+    return {};
+  } finally {
+    await cdp.detach().catch(() => {});
   }
 }
 

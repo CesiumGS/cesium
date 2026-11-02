@@ -298,8 +298,16 @@ export interface RunMetrics {
   /** Long animation frames (over 50 ms) and the worst blocking time, ms. */
   longFrames?: number;
   worstBlockingMs?: number;
-  /** After the run: JS heap in use, bytes (Chromium). */
+  /**
+   * After the run, after full collections: JS objects on the main thread
+   * and in workers, bytes (CDP; before r39 `performance.memory`, which
+   * counted garbage and buffers too).
+   */
   heapBytes?: number;
+  /** After the run: ArrayBuffer and WebAssembly memory, main and workers. */
+  bufferBytes?: number;
+  /** Workers whose memory the two above include. */
+  workers?: number;
   /**
    * Each content request's URL and purpose (2.0: base, intermediate, view,
    * prefetch, sample). The CLI tags the waterfall with them and drops

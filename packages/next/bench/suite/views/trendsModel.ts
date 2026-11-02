@@ -60,7 +60,7 @@ export const SECTIONS: readonly SectionSpec[] = [
   {
     id: "network",
     title: "Network and memory",
-    keys: ["requests", "bytes", "heapBytes"],
+    keys: ["requests", "bytes", "heapBytes", "bufferBytes"],
     help: "What each configuration downloads and how much JavaScript memory it holds at the end.",
   },
   {
@@ -96,6 +96,7 @@ const PLAIN: Record<string, readonly [string, string?]> = {
   requests: ["Network requests", "requests"],
   bytes: ["Data downloaded", "data"],
   heapBytes: ["JavaScript heap at the end", "memory"],
+  bufferBytes: ["Buffers at the end", "memory"],
   gpuTemperatureStartC: ["GPU temperature at the start"],
   gpuThermalFraction: ["Share of time the GPU slowed down for heat"],
   gpuClockMeanMHz: ["GPU clock speed (follows load)"],

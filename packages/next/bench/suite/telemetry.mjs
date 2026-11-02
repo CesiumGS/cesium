@@ -78,7 +78,11 @@ export function conditions() {
       "(Get-CimInstance Win32_Battery | Select-Object -First 1).BatteryStatus",
     ]);
     // Win32_Battery.BatteryStatus 2: on AC power; no battery: a desktop.
-    out.power = !battery ? "AC (no battery)" : battery === "2" ? "AC" : "battery";
+    out.power = !battery
+      ? "AC (no battery)"
+      : battery === "2"
+        ? "AC"
+        : "battery";
   }
   return out;
 }
@@ -116,8 +120,16 @@ export function startSampler() {
     const lines = gpuBuffer.split("\n");
     gpuBuffer = lines.pop();
     for (const line of lines) {
-      const [clock, memory, temperature, power, utilization, reasons, pstate, tlimit] =
-        line.split(",").map((s) => s.trim());
+      const [
+        clock,
+        memory,
+        temperature,
+        power,
+        utilization,
+        reasons,
+        pstate,
+        tlimit,
+      ] = line.split(",").map((s) => s.trim());
       if (!clock || Number.isNaN(Number(clock))) {
         continue;
       }
@@ -203,7 +215,9 @@ export function startSampler() {
       return {
         gpuSamples: g.length,
         gpuClockMeanMHz: mean(g.map((s) => s.clock)),
-        gpuClockMinMHz: g.length ? Math.min(...g.map((s) => s.clock)) : undefined,
+        gpuClockMinMHz: g.length
+          ? Math.min(...g.map((s) => s.clock))
+          : undefined,
         gpuMemoryClockMeanMHz: mean(g.map((s) => s.memory)),
         gpuTemperatureMaxC: g.length
           ? Math.max(...g.map((s) => s.temperature))
@@ -211,7 +225,11 @@ export function startSampler() {
         gpuTemperatureStartC: g[0]?.temperature,
         /** Least thermal headroom (°C below the throttle limit). */
         gpuHeadroomMinC: g.some((s) => s.headroom !== undefined)
-          ? Math.min(...g.filter((s) => s.headroom !== undefined).map((s) => s.headroom))
+          ? Math.min(
+              ...g
+                .filter((s) => s.headroom !== undefined)
+                .map((s) => s.headroom),
+            )
           : undefined,
         gpuPowerMeanW: mean(g.map((s) => s.power)),
         gpuUtilizationMean: mean(g.map((s) => s.utilization)),
@@ -288,7 +306,7 @@ export function keepAwake() {
     return { held: false, release() {} };
   }
   const script = [
-    'Add-Type -Name P -Namespace W -MemberDefinition \'[DllImport("kernel32.dll")] public static extern uint SetThreadExecutionState(uint f);\'',
+    "Add-Type -Name P -Namespace W -MemberDefinition '[DllImport(\"kernel32.dll\")] public static extern uint SetThreadExecutionState(uint f);'",
     // ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED (0x80000003,
     // as an unsigned decimal: PowerShell reads the hex as a negative int).
     "[void][W.P]::SetThreadExecutionState([uint32]2147483651)",

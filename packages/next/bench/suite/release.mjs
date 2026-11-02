@@ -34,7 +34,9 @@ export function resolveVersion(spec) {
   if (/^\d+\.\d+\.\d+$/.test(spec)) {
     return spec;
   }
-  const version = npm(["view", `cesium@${spec}`, "version"]).split("\n").pop();
+  const version = npm(["view", `cesium@${spec}`, "version"])
+    .split("\n")
+    .pop();
   if (!/^\d+\.\d+\.\d+(-[\w.]+)?$/.test(version)) {
     throw new Error(`cesium@${spec}: no such version`);
   }
@@ -83,7 +85,10 @@ export function ensureRelease(version, log = console.log) {
   mkdirSync(directory, { recursive: true });
   log(`downloading cesium@${version} from npm…`);
   const packed = JSON.parse(
-    npm(["pack", `cesium@${version}`, "--json", "--pack-destination", "."], directory),
+    npm(
+      ["pack", `cesium@${version}`, "--json", "--pack-destination", "."],
+      directory,
+    ),
   )[0];
   const tarball = join(directory, packed.filename);
   // npm pack checks the tarball against the registry's integrity hash.

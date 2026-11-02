@@ -37,10 +37,12 @@ const DEFAULT_METRICS = [
   "frameP95",
   "bytes",
   "heapBytes",
+  "bufferBytes",
 ];
 const NOUNS: Record<string, string> = {
   bytes: "data",
   heapBytes: "memory",
+  bufferBytes: "memory",
   requests: "requests",
   over100: "hitches",
   over33: "slow frames",

@@ -130,6 +130,18 @@ async function endMeasurement(): Promise<void> {
   ).endMeasurement?.();
 }
 
+/**
+ * Memory after the run, read by the CLI over CDP while the engine is still
+ * up (`heapBytes`, `bufferBytes`, `workers`); nothing without the CLI.
+ */
+async function measureMemory(): Promise<Partial<RunMetrics>> {
+  return (
+    (await (
+      globalThis as { measureMemory?: () => Promise<Partial<RunMetrics>> }
+    ).measureMemory?.()) ?? {}
+  );
+}
+
 /** Filmstrip hook, exposed by the CLI (Playwright) when it captures. */
 async function captureMoment(spec: RunSpec, moment: string): Promise<void> {
   const capture = (
@@ -1698,10 +1710,7 @@ export async function runScene(spec: RunSpec): Promise<RunMetrics> {
     metrics.worstBlockingMs = longFrames.length
       ? Math.max(...longFrames.map((f) => f.blockingDuration))
       : 0;
-    (globalThis as { gc?: () => void }).gc?.();
-    const memory = (performance as { memory?: { usedJSHeapSize: number } })
-      .memory;
-    metrics.heapBytes = memory?.usedJSHeapSize;
+    Object.assign(metrics, await measureMemory());
     const purposeStats = adapter.requestPurposes
       ? adapter.inspect().tiles?.purposes
       : undefined;

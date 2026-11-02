@@ -36,7 +36,14 @@ import { engineLabel, engineOf, setupOf } from "./engines.mjs";
 /** Guardrails for a change against the same engine (2.0 vs 2.0). */
 export const DEFAULT_PLAN = {
   primary: "cpuP50",
-  guardrails: ["settleMs", "frameP95", "over100", "bytes", "heapBytes"],
+  guardrails: [
+    "settleMs",
+    "frameP95",
+    "over100",
+    "bytes",
+    "heapBytes",
+    "bufferBytes",
+  ],
   tolerance: 0.1,
 };
 
@@ -44,7 +51,7 @@ export const DEFAULT_PLAN = {
 export const CROSS_ENGINE_PLAN = {
   primary: "cpuP50",
   guardrails: ["settleMs", "frameP95", "over100", "bytesLoad"],
-  context: ["bytesMotion", "heapBytes"],
+  context: ["bytesMotion", "heapBytes", "bufferBytes"],
   tolerance: 0.1,
 };
 
@@ -82,6 +89,7 @@ const LABELS = {
   bytesLoad: ["bytes until settled", "MB", 1e6],
   bytesMotion: ["bytes in and after motion", "MB", 1e6],
   heapBytes: ["JS heap", "MB", 1e6],
+  bufferBytes: ["buffers", "MB", 1e6],
 };
 
 export const metricLabel = (key) => LABELS[key]?.[0] ?? key;

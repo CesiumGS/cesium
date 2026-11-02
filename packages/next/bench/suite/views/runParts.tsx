@@ -30,6 +30,7 @@ export const HEADLINES: ReadonlyArray<{
   { key: "frameP95", label: "Frame p95" },
   { key: "bytes", label: "Data downloaded", noun: "data" },
   { key: "heapBytes", label: "JS heap", noun: "memory" },
+  { key: "bufferBytes", label: "Buffers", noun: "memory" },
 ];
 
 /** A run's baseline and candidate configurations (as its report picks them). */

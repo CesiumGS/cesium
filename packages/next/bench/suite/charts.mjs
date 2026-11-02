@@ -59,10 +59,13 @@ export function ticks(min, max, count = 4) {
   const raw = (max - min) / count;
   const magnitude = 10 ** Math.floor(Math.log10(raw));
   const step =
-    [1, 2, 2.5, 5, 10].map((m) => m * magnitude).find((s) => s >= raw) ??
-    raw;
+    [1, 2, 2.5, 5, 10].map((m) => m * magnitude).find((s) => s >= raw) ?? raw;
   const out = [];
-  for (let v = Math.ceil(min / step) * step; v <= max + step * 1e-9; v += step) {
+  for (
+    let v = Math.ceil(min / step) * step;
+    v <= max + step * 1e-9;
+    v += step
+  ) {
     out.push(Number(v.toPrecision(12)));
   }
   return out;
@@ -231,7 +234,9 @@ export function lineChart({
   }
   // Categorical x (runs): every name if few, else a spread; else numeric.
   const xTicks = xNames
-    ? ticks(x0, x1, Math.min(8, xNames.length)).filter((t) => Number.isInteger(t))
+    ? ticks(x0, x1, Math.min(8, xNames.length)).filter((t) =>
+        Number.isInteger(t),
+      )
     : ticks(x0, x1, 8);
   for (const t of xTicks) {
     const text = xNames ? (xNames[t] ?? "").split(" · ")[0] : compact(t);
@@ -260,7 +265,9 @@ export function lineChart({
       (b) => Number.isFinite(b[1]) && Number.isFinite(b[2]),
     );
     if (band.length > 1) {
-      const upper = band.map((b) => `${sx(b[0]).toFixed(1)},${sy(b[2]).toFixed(1)}`);
+      const upper = band.map(
+        (b) => `${sx(b[0]).toFixed(1)},${sy(b[2]).toFixed(1)}`,
+      );
       const lower = band
         .slice()
         .reverse()
@@ -358,7 +365,9 @@ export function bindChartsIn(root) {
   const tip = document.createElement("div");
   tip.className = "tip";
   const host =
-    (root.classList && root.classList.contains("viz") ? root : root.querySelector(".viz")) || root;
+    (root.classList && root.classList.contains("viz")
+      ? root
+      : root.querySelector(".viz")) || root;
   host.append(tip);
   for (const svg of root.querySelectorAll("svg[data-chart]")) {
     const data = JSON.parse(
@@ -388,7 +397,10 @@ export function bindChartsIn(root) {
       }
       return {
         px,
-        x: data.x0 + ((px - data.left) / (data.width - data.left - data.right)) * (data.x1 - data.x0),
+        x:
+          data.x0 +
+          ((px - data.left) / (data.width - data.left - data.right)) *
+            (data.x1 - data.x0),
       };
     };
     svg.addEventListener("pointermove", (e) => {
@@ -426,7 +438,8 @@ export function bindChartsIn(root) {
         key.className = "key";
         key.style.background = s.color;
         const v = document.createElement("b");
-        v.textContent = Math.round(p[1] * 100) / 100 + (data.unit ? ` ${data.unit}` : "");
+        v.textContent =
+          Math.round(p[1] * 100) / 100 + (data.unit ? ` ${data.unit}` : "");
         const l = document.createElement("span");
         l.textContent = s.label;
         row.append(key, v, l);

@@ -58,7 +58,14 @@ import "./scenes.css";
 const sceneRoute = getRouteApi("/scenes/$scene");
 
 /** Metrics a scene's page shows (lower is better for each). */
-const BEST = ["cpuP50", "settleMs", "frameP95", "bytes", "heapBytes"];
+const BEST = [
+  "cpuP50",
+  "settleMs",
+  "frameP95",
+  "bytes",
+  "heapBytes",
+  "bufferBytes",
+];
 
 /** What a metric's change measures, when "faster" doesn't fit. */
 const NOUN: Record<string, string> = {
@@ -66,6 +73,7 @@ const NOUN: Record<string, string> = {
   requests: "requests",
   bytes: "data",
   heapBytes: "memory",
+  bufferBytes: "memory",
 };
 
 /** Catalog groups (plan §16.4), in the order the catalog lists them. */
