@@ -1,5 +1,7 @@
 import * as v3 from "../math/vec3.ts";
+import * as m4 from "../math/mat4.ts";
 import { Ellipsoid } from "../math/ellipsoid.ts";
+import { eastNorthUpToFixedFrame } from "../math/transforms.ts";
 import type { Vec3 } from "../math/vec3.ts";
 import type { View } from "./View.ts";
 
@@ -17,6 +19,14 @@ import type { View } from "./View.ts";
  * - shift-drag: look around from where the camera is;
  * - spin keeps its momentum after release (1.x inertia); wheel zoom glides.
  *
+ * The camera never rolls (1.x constrains it to the Earth's axis): every
+ * motion levels it about its view direction. A zoom keeps the heading and
+ * pitch it had relative to the ground below it (1.x restores them after
+ * each zoom step) and turns the globe so the point zoomed toward stays
+ * under the cursor. Moving straight at the point kept the orientation
+ * fixed in Earth coordinates, so across the globe's curve a level camera
+ * came down rolled 10 degrees and pitched 30 (r38).
+ *
  * The camera keeps `minimumHeight` above the ellipsoid (terrain height
  * queries come later in M3).
  */
@@ -28,6 +38,12 @@ export class GlobeController {
    * the terrain from `surfaceHeight`, else the ellipsoid.
    */
   minimumHeight = 1;
+  /**
+   * Meters above the ellipsoid the camera can zoom out to (1.x: no limit).
+   * Unbounded, a few dozen wheel notches went 50 million km out, where the
+   * globe is under a pixel and nothing is left to grab or zoom toward.
+   */
+  maximumHeight = 1e8;
   /**
    * Height of the ground (meters above the ellipsoid) at a longitude and
    * latitude in radians, e.g. `terrain.sampleHeight`; undefined where it
@@ -71,6 +87,8 @@ export class GlobeController {
   /** Wheel zoom not yet applied: the log of the distance factor. */
   private pendingZoom = 0;
   private readonly zoomTarget = v3.vec3();
+  /** Where the zoom target stays on screen (none for the sky). */
+  private zoomPixel: [number, number] | undefined;
   private lastTime = 0;
   private animating = false;
   private readonly abort = new AbortController();
@@ -104,6 +122,9 @@ export class GlobeController {
     this.range = range;
     this.stop();
     this.view.camera.lookAt(target, heading, pitch, range, this.ellipsoid);
+    // Level where the camera is, not at the target (the target stays at
+    // the screen's center).
+    this.level();
   }
 
   /** Cancels any momentum. */
@@ -142,7 +163,12 @@ export class GlobeController {
       this.mode = "look";
     } else if (e.button === 2) {
       this.mode = "zoom";
+      this.zoomPixel = [x, y];
       this.anchorAt(x, y);
+      if (!this.hasAnchor) {
+        this.zoomPixel = undefined;
+        this.ground(this.anchor);
+      }
     } else {
       this.anchorAt(x, y);
       this.mode = this.hasAnchor ? "grab" : "spin";
@@ -175,7 +201,7 @@ export class GlobeController {
         break;
       }
       case "zoom":
-        this.zoomToward(this.anchor, (dy / height) * 4);
+        this.zoomToward(this.anchor, (dy / height) * 4, this.zoomPixel);
         break;
       case "tilt":
         this.tilt(dx / height, dy / height);
@@ -212,16 +238,12 @@ export class GlobeController {
     const near =
       this.hoverPixel &&
       Math.hypot(this.hoverPixel[0] - x, this.hoverPixel[1] - y) < 8;
+    this.zoomPixel = [x, y];
     if (near) {
       v3.copy(target, this.hover);
     } else if (!this.ellipsoidAt(x, y, target)) {
-      // Sky: along the view direction, as far as the globe's center.
-      v3.scaleAndAdd(
-        target,
-        this.view.camera.position,
-        this.view.camera.direction,
-        v3.length(this.view.camera.position),
-      );
+      this.zoomPixel = undefined;
+      this.ground(target);
     }
     const pixels = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
     // 1.x zooms by a share of the distance; momentum carries it on.
@@ -237,38 +259,141 @@ export class GlobeController {
 
   /** Turns the globe so the anchor stays under (x, y). */
   private grab(x: number, y: number, dt: number): void {
-    const camera = this.view.camera;
-    const radius = v3.length(this.anchor);
-    const ray = this.ray(x, y);
-    const hit = raySphere(camera.position, ray, radius);
-    if (!hit) {
-      return;
+    const turn = this.pin(this.anchor, x, y);
+    if (turn) {
+      v3.copy(this.spinAxis, turn.axis);
+      this.spinRate = turn.angle / (dt / (1000 / 60));
     }
-    const axis = v3.cross(v3.vec3(), hit, this.anchor);
-    const length = v3.length(axis);
-    if (length < 1e-12) {
-      return;
-    }
-    v3.scale(axis, axis, 1 / length);
-    const angle = Math.atan2(length, v3.dot(hit, this.anchor));
-    // Turning the camera by this angle brings the anchor under the cursor.
-    this.rotateGlobe(axis, angle);
-    v3.copy(this.spinAxis, axis);
-    this.spinRate = angle / (dt / (1000 / 60));
   }
 
-  /** Moves the camera toward `target` by `amount` of the distance. */
-  private zoomToward(target: Vec3, amount: number): void {
+  /**
+   * Turns the globe about its center so `point` lies under (x, y): where
+   * the pixel's ray meets the sphere through the point. Returns the turn,
+   * or undefined where the ray misses that sphere.
+   */
+  private pin(
+    point: Vec3,
+    x: number,
+    y: number,
+  ): { axis: Vec3; angle: number } | undefined {
+    const hit = raySphere(
+      this.view.camera.position,
+      this.ray(x, y),
+      v3.length(point),
+    );
+    if (!hit) {
+      return undefined;
+    }
+    const axis = v3.cross(v3.vec3(), hit, point);
+    const length = v3.length(axis);
+    if (length < 1e-12) {
+      return undefined;
+    }
+    v3.scale(axis, axis, 1 / length);
+    const angle = Math.atan2(length, v3.dot(hit, point));
+    // Turning the camera by this angle brings the point under the pixel.
+    this.rotateGlobe(axis, angle);
+    return { axis, angle };
+  }
+
+  /**
+   * Moves the camera toward `target` by `amount` of the distance, keeping
+   * its heading and pitch relative to the ground below it and the target
+   * under `pixel`.
+   */
+  private zoomToward(
+    target: Vec3,
+    amount: number,
+    pixel?: [number, number],
+  ): void {
     const camera = this.view.camera;
     const offset = v3.sub(v3.vec3(), target, camera.position);
     const distance = v3.length(offset);
     if (distance < 1e-6) {
       return;
     }
+    const from = v3.copy(v3.vec3(), camera.position);
     // Never past the target (keep at least a meter).
     const step = Math.min(amount, 1 - 1 / distance) * distance;
     v3.scaleAndAdd(camera.position, camera.position, offset, step / distance);
+    const c = this.ellipsoid.cartesianToCartographic(camera.position, {
+      longitude: 0,
+      latitude: 0,
+      height: 0,
+    });
+    if (c && c.height > this.maximumHeight) {
+      c.height = this.maximumHeight;
+      this.ellipsoid.cartographicToCartesian(c, camera.position);
+    }
+    this.carryOrientation(from);
+    if (pixel) {
+      this.pin(target, pixel[0], pixel[1]);
+    }
+    this.level();
     this.keepAboveGround();
+    camera.version++;
+  }
+
+  /**
+   * The ellipsoid below the camera: what a zoom heads for over the sky
+   * (1.x zooms by a share of the height). A point along the view direction
+   * was empty space once the globe was off screen, so zooming in from far
+   * out never came back.
+   */
+  private ground(out: Vec3): void {
+    if (
+      !this.ellipsoid.scaleToGeodeticSurface(this.view.camera.position, out)
+    ) {
+      v3.set(out, 0, 0, 0);
+    }
+  }
+
+  /**
+   * Gives the camera, now at its position, the orientation it had in the
+   * east-north-up frame at `from` (1.x keeps heading, pitch and roll
+   * through a zoom).
+   */
+  private carryOrientation(from: Vec3): void {
+    const camera = this.view.camera;
+    const a = eastNorthUpToFixedFrame(from, this.ellipsoid, m4.mat4());
+    const b = eastNorthUpToFixedFrame(
+      camera.position,
+      this.ellipsoid,
+      m4.mat4(),
+    );
+    for (const v of [camera.direction, camera.up, camera.right]) {
+      const e = v[0]! * a[0]! + v[1]! * a[1]! + v[2]! * a[2]!;
+      const n = v[0]! * a[4]! + v[1]! * a[5]! + v[2]! * a[6]!;
+      const u = v[0]! * a[8]! + v[1]! * a[9]! + v[2]! * a[10]!;
+      for (let i = 0; i < 3; i++) {
+        v[i] = b[i]! * e + b[4 + i]! * n + b[8 + i]! * u;
+      }
+    }
+  }
+
+  /**
+   * Removes roll: turns the camera about its view direction until its
+   * right is level with the ground below it.
+   */
+  private level(): void {
+    const camera = this.view.camera;
+    const up = this.ellipsoid.geodeticSurfaceNormal(camera.position, v3.vec3());
+    if (!up) {
+      return;
+    }
+    const right = v3.cross(v3.vec3(), camera.direction, up);
+    if (v3.length(right) < 1e-6) {
+      // Straight down: keep the heading the camera's right gives.
+      v3.scaleAndAdd(right, camera.right, up, -v3.dot(camera.right, up));
+      if (v3.length(right) < 1e-6) {
+        return;
+      }
+    }
+    v3.normalize(camera.right, right);
+    v3.normalize(
+      camera.up,
+      v3.cross(camera.up, camera.right, camera.direction),
+    );
     camera.version++;
   }
 
@@ -293,6 +418,7 @@ export class GlobeController {
       Math.PI / 2 - 0.001,
     );
     rotateAbout(camera, this.anchor, camera.right, -(next - elevation));
+    this.level();
     this.keepAboveGround();
   }
 
@@ -305,11 +431,13 @@ export class GlobeController {
     }
     rotateAbout(camera, camera.position, up, -dx * Math.PI * 0.5);
     rotateAbout(camera, camera.position, camera.right, -dy * Math.PI * 0.5);
+    this.level();
   }
 
   /** Rotates the camera about the Earth's center (the globe turns opposite). */
   private rotateGlobe(axis: Vec3, angle: number): void {
     this.view.camera.rotateAroundCenter(v3.normalize(v3.vec3(), axis), angle);
+    this.level();
   }
 
   /**
@@ -363,7 +491,7 @@ export class GlobeController {
       if (Math.abs(this.pendingZoom) > 1e-4) {
         const portion = this.pendingZoom * (1 - this.zoomSmoothing ** frames);
         this.pendingZoom -= portion;
-        this.zoomToward(this.zoomTarget, 1 - Math.exp(portion));
+        this.zoomToward(this.zoomTarget, 1 - Math.exp(portion), this.zoomPixel);
       }
       if (
         (this.mode === "none" && Math.abs(this.spinRate) > 1e-6) ||
