@@ -22,9 +22,11 @@ import {
 import ionSource from "../../../engine/Source/Core/Ion.js?raw";
 import publicCatalog from "./catalog/public.json";
 import type {
+  CameraScript,
   Dataset,
   EffectiveRender,
   EngineConfig,
+  FlightView,
   Pose,
   RenderSettings,
   RunMetrics,
@@ -204,10 +206,20 @@ async function frameSphere(
  * poses for every engine: float64 position, direction and up from 1.x's
  * heading-pitch-range convention.
  */
-export async function cameraScript(
-  spec: RunSpec,
-): Promise<(progress: number) => Pose> {
+/** A camera script's pose at each point of the motion (0..1). */
+export type CameraPath = ((progress: number) => Pose) & {
+  /** The motion's length when the script sets it (flights), s. */
+  seconds?: number;
+};
+
+export async function cameraScript(spec: RunSpec): Promise<CameraPath> {
   const camera = spec.scene.camera;
+  if (camera.kind === "flight") {
+    return flightPath(
+      camera,
+      (spec.scene.width ?? 1280) / (spec.scene.height ?? 720),
+    );
+  }
   if (camera.kind === "path") {
     const poses = camera.poses;
     return (progress) =>
@@ -240,6 +252,133 @@ export async function cameraScript(
       up: [...scratch.up] as Pose["up"],
     };
   };
+}
+
+/**
+ * 1.x `camera.flyTo` in 3D (CameraFlightPath, its defaults): longitude and
+ * latitude interpolated the short way round; height on 1.x's flat-topped
+ * curve up to a fifth of the altitude that would frame the distance from
+ * the start view; heading and pitch interpolated; eased quintic in and out
+ * (cubic out when descending from above 11.5 km); 1.x's default length,
+ * at most 3 s, unless `seconds`.
+ */
+function flightPath(
+  flight: Extract<CameraScript, { kind: "flight" }>,
+  aspect: number,
+): CameraPath {
+  const wgs84 = Ellipsoid.WGS84;
+  const enuOf = (position: ArrayLike<number>) =>
+    eastNorthUpToFixedFrame(
+      Float64Array.from(position),
+      wgs84,
+      new Float64Array(16),
+    );
+  const end = (v: FlightView) => {
+    const [lon, lat, h] = v.target;
+    const target = wgs84.cartographicToCartesian(
+      fromDegrees(lon, lat, h),
+      new Float64Array(3),
+    );
+    const camera = new Camera().lookAt(
+      target,
+      (v.heading ?? 0) * deg,
+      v.pitch * deg,
+      v.range,
+    );
+    // Heading and pitch in the camera's own east-north-up frame.
+    const enu = enuOf(camera.position);
+    const d = camera.direction;
+    const along = (k: number) =>
+      d[0]! * enu[k]! + d[1]! * enu[k + 1]! + d[2]! * enu[k + 2]!;
+    const carto = wgs84.cartesianToCartographic(camera.position, {
+      longitude: 0,
+      latitude: 0,
+      height: 0,
+    })!;
+    return {
+      camera,
+      longitude: carto.longitude,
+      latitude: carto.latitude,
+      height: carto.height,
+      heading: Math.atan2(along(0), along(4)),
+      pitch: Math.asin(Math.max(-1, Math.min(1, along(8)))),
+    };
+  };
+  const a = end(flight.from);
+  const b = end(flight.to);
+  const twoPi = 2 * Math.PI;
+  // Longitudes in 0..2π, then the short way round (1.x useShortestFlight).
+  let lon0 = ((a.longitude % twoPi) + twoPi) % twoPi;
+  let lon1 = ((b.longitude % twoPi) + twoPi) % twoPi;
+  if (lon0 - lon1 < -Math.PI) {
+    lon0 += twoPi;
+  } else if (lon0 - lon1 > Math.PI) {
+    lon1 += twoPi;
+  }
+  // Headings the short way round (1.x adjustAngleForLERP).
+  let heading0 = a.heading;
+  if (Math.abs(b.heading - heading0) > Math.PI) {
+    heading0 += b.heading > heading0 ? twoPi : -twoPi;
+  }
+  // The altitude that frames the distance from the start view (1.x
+  // getAltitude, its argument order included), a fifth of it.
+  const diff = [0, 1, 2].map(
+    (i) => a.camera.position[i]! - b.camera.position[i]!,
+  );
+  const dot = (v: ArrayLike<number>) =>
+    diff[0]! * v[0]! + diff[1]! * v[1]! + diff[2]! * v[2]!;
+  const top = Math.tan(a.camera.fovy(aspect) / 2);
+  const altitude = Math.min(
+    Math.max(
+      Math.abs(dot(a.camera.up)) / (aspect * top),
+      Math.abs(dot(a.camera.right)) / top,
+    ) * 0.2,
+    1e9,
+  );
+  let height = (t: number) => a.height + (b.height - a.height) * t;
+  if (Math.max(a.height, b.height) < altitude) {
+    const power = 8;
+    const factor = 1e6;
+    const s = -Math.pow((altitude - a.height) * factor, 1 / power);
+    const e = Math.pow((altitude - b.height) * factor, 1 / power);
+    height = (t) => -Math.pow(t * (e - s) + s, power) / factor + altitude;
+  }
+  const ease =
+    a.height > b.height && a.height > 11500
+      ? (k: number) => (k - 1) ** 3 + 1
+      : (k: number) => (k < 0.5 ? 16 * k ** 5 : 0.5 * ((2 * k - 2) ** 5 + 2));
+  const distance = Math.hypot(diff[0]!, diff[1]!, diff[2]!);
+  const path: CameraPath = (progress) => {
+    const t = ease(Math.min(1, Math.max(0, progress)));
+    const position = wgs84.cartographicToCartesian(
+      {
+        longitude: lon0 + (lon1 - lon0) * t,
+        latitude: a.latitude + (b.latitude - a.latitude) * t,
+        height: height(t),
+      },
+      new Float64Array(3),
+    );
+    const heading = heading0 + (b.heading - heading0) * t;
+    const pitch = a.pitch + (b.pitch - a.pitch) * t;
+    const enu = enuOf(position);
+    const e = Math.cos(pitch) * Math.sin(heading);
+    const n = Math.cos(pitch) * Math.cos(heading);
+    const u = Math.sin(pitch);
+    const direction = [0, 1, 2].map(
+      (i) => enu[i]! * e + enu[4 + i]! * n + enu[8 + i]! * u,
+    );
+    // No roll: up in the vertical plane through the direction.
+    const camera = new Camera();
+    camera.direction.set(direction);
+    camera.orient(Float64Array.of(enu[8]!, enu[9]!, enu[10]!));
+    return {
+      position: [...position] as Pose["position"],
+      direction: [...camera.direction] as Pose["direction"],
+      up: [...camera.up] as Pose["up"],
+    };
+  };
+  path.seconds = flight.seconds ?? Math.min(Math.ceil(distance / 1e6) + 2, 3);
+  return path;
 }
 
 // ---------------------------------------------------------------- adapters
@@ -1223,6 +1362,112 @@ async function settle(
   return undefined;
 }
 
+/** Flights cross the globe: the sun stays over the camera (orbits keep the start's). */
+const followsSun = (spec: RunSpec) => spec.scene.camera.kind === "flight";
+
+/** The canvas as drawn this frame (call right after `frame()`), as a PNG. */
+async function canvasPng(container: HTMLElement): Promise<string> {
+  const canvas = container.querySelector("canvas")!;
+  const bitmap = await createImageBitmap(canvas);
+  const copy = new OffscreenCanvas(bitmap.width, bitmap.height);
+  copy.getContext("2d")!.drawImage(bitmap, 0, 0);
+  bitmap.close();
+  const bytes = new Uint8Array(
+    await (await copy.convertToBlob({ type: "image/png" })).arrayBuffer(),
+  );
+  let text = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) {
+    text += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  }
+  return btoa(text);
+}
+
+/** A frame drawn in motion and the same pose fully loaded (PNG, base64). */
+export interface MotionFrame {
+  progress: number;
+  moving: string;
+  settled: string;
+}
+
+/**
+ * Quality in motion (plan §6): the scenario's motion again in a fresh page
+ * after the measured runs (nothing here is timed), the canvas copied as
+ * drawn at evenly spaced points of the motion; then each of those poses
+ * fully loaded. The CLI compares the two (FLIP): what motion cost the
+ * image, 0 when the engine drew in motion what it draws settled.
+ * Copying the canvas doesn't wait (the copy is taken in the frame's task),
+ * so loading in motion runs at the measured runs' pace.
+ */
+export async function runMotionQuality(
+  spec: RunSpec,
+  samples = 8,
+): Promise<{ status: string; message?: string; frames: MotionFrame[] }> {
+  if (spec.unsupported) {
+    return { status: "unsupported", message: spec.unsupported, frames: [] };
+  }
+  const container = document.querySelector<HTMLElement>("#view")!;
+  container.replaceChildren();
+  container.style.width = `${spec.scene.width ?? 1280}px`;
+  container.style.height = `${spec.scene.height ?? 720}px`;
+  const adapter: Adapter =
+    spec.config.engine === "1.x" ? new LegacyAdapter() : new NextAdapter();
+  const timeout = spec.scenario.settleTimeoutSeconds * 1000;
+  try {
+    const pose = await cameraScript(spec);
+    const sun = followsSun(spec);
+    await adapter.setup(container, spec);
+    adapter.setSun(sunDirection(spec, pose(0)));
+    adapter.setCamera(pose(0));
+    if ((await settle(adapter, performance.now(), timeout)) === undefined) {
+      return { status: "timeout", message: "did not settle", frames: [] };
+    }
+    const moving: Array<{ progress: number; png: Promise<string> }> = [];
+    const duration = (pose.seconds ?? spec.scenario.motionSeconds) * 1000;
+    const motionStart = performance.now();
+    await animationFrame();
+    for (;;) {
+      await animationFrame();
+      const progress = (performance.now() - motionStart) / duration;
+      if (progress >= 1) {
+        break;
+      }
+      if (sun) {
+        adapter.setSun(sunDirection(spec, pose(progress)));
+      }
+      adapter.setCamera(pose(progress));
+      adapter.frame();
+      if (progress >= (moving.length + 0.5) / samples) {
+        moving.push({ progress, png: canvasPng(container) });
+      }
+    }
+    const frames: MotionFrame[] = [];
+    for (const m of moving) {
+      if (sun) {
+        adapter.setSun(sunDirection(spec, pose(m.progress)));
+      }
+      adapter.setCamera(pose(m.progress));
+      if ((await settle(adapter, performance.now(), timeout)) === undefined) {
+        continue;
+      }
+      for (let i = 0; i < 5; i++) {
+        await animationFrame();
+        adapter.frame();
+      }
+      adapter.frame();
+      frames.push({
+        progress: round(m.progress),
+        moving: await m.png,
+        settled: await canvasPng(container),
+      });
+    }
+    return { status: "ok", frames };
+  } catch (e) {
+    return { status: "error", message: String(e), frames: [] };
+  } finally {
+    adapter.destroy();
+  }
+}
+
 /**
  * An image check (plan §16.10): the scene at one point of its camera path,
  * settled, then a few more frames so nothing is mid-transition, captured
@@ -1246,7 +1491,7 @@ export async function runCheck(
     const pose = await cameraScript(spec);
     const start = performance.now();
     await adapter.setup(container, spec);
-    adapter.setSun(sunDirection(spec, pose(0)));
+    adapter.setSun(sunDirection(spec, pose(followsSun(spec) ? progress : 0)));
     adapter.setCamera(pose(progress));
     const settleMs = await settle(
       adapter,
@@ -1328,7 +1573,11 @@ export async function runScene(spec: RunSpec): Promise<RunMetrics> {
     const cpu: number[] = [];
     const gpu: number[] = [];
     const motion: Array<[number, number, number, number | null]> = [];
-    const duration = spec.scenario.motionSeconds * 1000;
+    const duration = (pose.seconds ?? spec.scenario.motionSeconds) * 1000;
+    if (pose.seconds !== undefined) {
+      metrics.motionSeconds = pose.seconds;
+    }
+    const sun = followsSun(spec);
     const motionStart = performance.now();
     let last = await animationFrame();
     for (;;) {
@@ -1338,6 +1587,9 @@ export async function runScene(spec: RunSpec): Promise<RunMetrics> {
         break;
       }
       intervals.push(now - last);
+      if (sun) {
+        adapter.setSun(sunDirection(spec, pose(progress)));
+      }
       adapter.setCamera(pose(progress));
       const cpuMs = adapter.frame();
       cpu.push(cpuMs);
@@ -1353,6 +1605,10 @@ export async function runScene(spec: RunSpec): Promise<RunMetrics> {
       ]);
       last = now;
     }
+    metrics.motionMs = [
+      Math.round(motionStart - start),
+      Math.round(performance.now() - start),
+    ];
     metrics.frames = intervals.length;
     metrics.frameP50 = quantile(intervals, 0.5);
     metrics.frameP95 = quantile(intervals, 0.95);
@@ -1393,6 +1649,9 @@ export async function runScene(spec: RunSpec): Promise<RunMetrics> {
     metrics.cpuP95 = quantile(cpu, 0.95);
     metrics.gpuP50 = quantile(gpu, 0.5);
 
+    if (sun) {
+      adapter.setSun(sunDirection(spec, pose(1)));
+    }
     adapter.setCamera(pose(1));
     const resettleStart = performance.now();
     const resettle = await settle(adapter, resettleStart, timeout);
@@ -1581,7 +1840,12 @@ export async function describeBrowser(): Promise<Record<string, unknown>> {
   return out;
 }
 
-Object.assign(globalThis, { runScene, runCheck, describeBrowser });
+Object.assign(globalThis, {
+  runScene,
+  runCheck,
+  runMotionQuality,
+  describeBrowser,
+});
 // The suite page's own controls (the explorer imports this module too).
 if (
   document.querySelector("#run") &&

@@ -61,6 +61,7 @@ const NAMES: Record<string, string> = {
   bytes: "Bytes downloaded",
   heapBytes: "JS heap",
   flipEnd: "Image difference (FLIP)",
+  motionFlip: "Quality in motion (FLIP)",
 };
 const nameOf = (metric: string) => NAMES[metric] ?? metricInfo(metric)[1];
 /** "a", "a and b", "a, b and c". */
@@ -73,7 +74,7 @@ const listOf = (items: string[]) =>
 const SWEEP_GROUPS: Array<[string, string[]]> = [
   ["Frame time", ["cpuP50", "gpuP50", "frameP95"]],
   ["Loading and memory", ["settleMs", "bytes", "heapBytes"]],
-  ["Image", ["flipEnd"]],
+  ["Image", ["flipEnd", "motionFlip"]],
 ];
 
 /** Shorter column headings for the machines table. */

@@ -508,6 +508,7 @@ async function run() {
     results.sweep = sweep;
   }
   const filmstrip = [];
+  const motionFrames = [];
   const total = scenes.length * scenarios.length * reps * configs.length;
   let done = 0;
   let failed = 0;
@@ -570,7 +571,8 @@ async function run() {
             sceneTitle: scene.private ? scene.id : scene.title,
             group: scene.group,
             scenario: scenario.id,
-            motionSeconds: spec.scenario.motionSeconds,
+            motionSeconds:
+              result.metrics.motionSeconds ?? spec.scenario.motionSeconds,
             vsync: spec.scenario.vsync !== false,
             config: config.id,
             engine: config.engine,
@@ -584,6 +586,53 @@ async function run() {
             result.metrics.status === "ok"
               ? `settle ${(result.metrics.settleMs / 1000).toFixed(1)} s, frame p50 ${result.metrics.frameP50?.toFixed(1)} ms`
               : `${result.metrics.status}${result.metrics.message ? `: ${result.metrics.message}` : ""}`,
+          );
+        }
+      }
+      // Quality in motion: the motion again per engine after the measured
+      // runs, frames copied in flight and settled (cold cache with vsync:
+      // the cache and pace the measured runs had).
+      if (
+        !opts["no-capture"] &&
+        !opts["no-motion-quality"] &&
+        scenario.cache === "cold" &&
+        scenario.vsync !== false
+      ) {
+        for (const config of configs) {
+          const spec = {
+            scene,
+            datasets,
+            scenario: motion
+              ? { ...scenario, motionSeconds: motion }
+              : scenario,
+            config,
+            unsupported: unsupportedReason(catalog, scene, config.engine),
+            render,
+          };
+          if (spec.unsupported) {
+            continue;
+          }
+          process.stdout.write(
+            `${scene.id} ${scenario.id} ${config.id}: quality in motion… `,
+          );
+          await cooldown(sampler, idle.gpuTemperatureMaxC);
+          const replay = await runMotion(
+            await browserFor(scenario),
+            base,
+            spec,
+          );
+          for (const frame of replay.frames) {
+            motionFrames.push({
+              scene: scene.id,
+              scenario: scenario.id,
+              config: config.id,
+              ...frame,
+            });
+          }
+          console.log(
+            replay.status === "ok"
+              ? `${replay.frames.length} frames`
+              : `${replay.status}${replay.message ? `: ${replay.message}` : ""}`,
           );
         }
       }
@@ -607,6 +656,19 @@ async function run() {
       filmstrip,
       join(directory, stamp),
       baseline,
+    );
+    console.log("done");
+  }
+  if (motionFrames.length) {
+    process.stdout.write(
+      `quality in motion (${motionFrames.length} frame pairs)… `,
+    );
+    results.assets = `/bench-results/${stamp}/`;
+    results.motionQuality = await motionQuality(
+      browser,
+      base,
+      motionFrames,
+      join(directory, stamp),
     );
     console.log("done");
   }
@@ -645,6 +707,17 @@ async function run() {
     );
   } else if (results.baseline !== results.candidate) {
     console.log("\nno verdict: no scene was measured by both engines\n");
+  }
+  if (results.motionQuality?.length) {
+    console.log(
+      "\nquality in motion (FLIP in motion vs settled, mean over frames)",
+    );
+    for (const e of results.motionQuality) {
+      console.log(
+        `${`${e.scene} · ${e.scenario}`.padEnd(40)} ${e.config.padEnd(28)} ${e.mean.toFixed(3)}  [${e.frames.map((f) => f.mean.toFixed(2)).join(" ")}]`,
+      );
+    }
+    console.log("");
   }
   console.log(`results: ${file}\nreport:  ${file.replace(/\.json$/, ".html")}`);
   if (failed > 0) {
@@ -791,6 +864,96 @@ async function runOne(browser, base, spec, results) {
   } finally {
     await context.close();
   }
+}
+
+/**
+ * Quality in motion, one engine: the page replays the scenario's motion
+ * in a fresh context (cold cache) and returns frames copied in flight with
+ * the same poses settled (`runMotionQuality`). Nothing here is measured.
+ */
+async function runMotion(browser, base, spec) {
+  const context = await browser.newContext({
+    viewport: { width: 1400, height: 900 },
+    deviceScaleFactor: Number(opts.dpr ?? 1),
+  });
+  try {
+    const page = await context.newPage();
+    const { cesium, server } = spec.config.page ?? {};
+    await page.goto(
+      `${server ?? base}/bench/suite/suite.html?bench${cesium ? `&cesium=${encodeURIComponent(cesium)}` : ""}`,
+    );
+    return await page.evaluate((s) => globalThis.runMotionQuality(s), spec);
+  } catch (error) {
+    return {
+      status: "error",
+      message: error instanceof Error ? error.message : String(error),
+      frames: [],
+    };
+  } finally {
+    await context.close();
+  }
+}
+
+/**
+ * Quality in motion: per scene, scenario and engine, FLIP of each frame
+ * drawn in motion against the same pose settled (its own engine, so
+ * renderer differences cancel), with JPEGs and heatmaps; `mean` is over
+ * the frames.
+ */
+async function motionQuality(browser, base, frames, directory) {
+  mkdirSync(directory, { recursive: true });
+  const page = await browser.newPage();
+  await page.goto(`${base}/bench/suite/flip.html`);
+  const groups = new Map();
+  for (const f of frames) {
+    const k = `${f.scene}|${f.scenario}|${f.config}`;
+    (groups.get(k) ?? groups.set(k, []).get(k)).push(f);
+  }
+  const out = [];
+  for (const list of groups.values()) {
+    const { scene, scenario, config } = list[0];
+    const entry = { scene, scenario, config, frames: [] };
+    for (const f of list) {
+      const name =
+        `${scene}__${scenario}__${config}__motion${Math.round(f.progress * 100)}`.replace(
+          /[^\w@.-]/g,
+          "_",
+        );
+      const r = await page.evaluate(
+        ({ test, ref }) => globalThis.processFrame(test, ref),
+        { test: f.moving, ref: f.settled },
+      );
+      const settled = await page.evaluate(
+        ({ test }) => globalThis.processFrame(test, null),
+        { test: f.settled },
+      );
+      writeFileSync(
+        join(directory, `${name}.jpg`),
+        Buffer.from(r.jpeg, "base64"),
+      );
+      writeFileSync(
+        join(directory, `${name}.settled.jpg`),
+        Buffer.from(settled.jpeg, "base64"),
+      );
+      writeFileSync(
+        join(directory, `${name}.flip.png`),
+        Buffer.from(r.flip.heatmap, "base64"),
+      );
+      entry.frames.push({
+        progress: f.progress,
+        mean: r.flip.mean,
+        p95: r.flip.p95,
+        image: `${name}.jpg`,
+        settled: `${name}.settled.jpg`,
+        heatmap: `${name}.flip.png`,
+      });
+    }
+    entry.mean =
+      entry.frames.reduce((a, f) => a + f.mean, 0) / entry.frames.length;
+    out.push(entry);
+  }
+  await page.close();
+  return out;
 }
 
 function git(args) {

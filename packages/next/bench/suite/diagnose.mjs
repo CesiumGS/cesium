@@ -394,6 +394,31 @@ export function filmstrip({ entries, assets, configs, baseline, explore }) {
   return `<figure class="chart filmstrip"><figcaption>Filmstrip</figcaption><div class="sub">The first repetition's views once settled. FLIP measures how differently the two images look to a viewer (0 identical, 1 completely different); faster must not mean drawing less.</div>${rows}</figure>`;
 }
 
+/**
+ * Quality in motion: per configuration, frames drawn in motion (a replay
+ * after the measured runs) with FLIP against the same pose settled by the
+ * same engine; the settled frame and the heatmap open below each.
+ */
+export function motionStrip({ entries, assets, configs, color }) {
+  if (!entries?.length || !assets) {
+    return "";
+  }
+  const rows = configs
+    .map((c) => entries.find((e) => e.config === c))
+    .filter(Boolean)
+    .map((e) => {
+      const frames = e.frames
+        .map(
+          (f) =>
+            `<div class="frame"><a href="${escape(assets + f.image)}" target="_blank" rel="noopener"><img loading="lazy" src="${escape(assets + f.image)}" alt="${escape(`${e.config} in motion at ${Math.round(f.progress * 100)}%`)}"></a><div class="cap">${Math.round(f.progress * 100)}% · FLIP ${f.mean.toFixed(3)}</div><details><summary>Settled, heatmap</summary><img loading="lazy" src="${escape(assets + f.settled)}" alt="${escape(`${e.config} settled at ${Math.round(f.progress * 100)}%`)}"><img loading="lazy" src="${escape(assets + f.heatmap)}" alt="${escape(`FLIP heatmap, in motion against settled, ${e.config}`)}"></details></div>`,
+        )
+        .join("");
+      return `<div class="moment"><div class="m-label"><span class="key" style="background:${color(e.config)}"></span>${escape(engineLabel(e.config))}: FLIP ${e.mean.toFixed(3)} mean over ${e.frames.length} frames</div><div class="frames motion">${frames}</div></div>`;
+    })
+    .join("");
+  return `<figure class="chart filmstrip"><figcaption>Quality in motion</figcaption><div class="sub">The motion replayed after the measured runs (cold cache, the same pace), frames copied as drawn at points of the path, each against the same pose once settled by the same engine. FLIP 0 means the engine drew in motion what it draws settled; renderer differences cancel.</div>${rows}</figure>`;
+}
+
 /** Request purposes (2.0) in legend order, with their colors. */
 const PURPOSES = [
   ["base", "base", "var(--series-3)"],
@@ -456,6 +481,11 @@ export function waterfall({ runs, configs, color }) {
         svg += `<rect x="${sx(start + first).toFixed(1)}" y="${y}" width="${Math.max(0.8, sx(start + last) - sx(start + first)).toFixed(1)}" height="${hh}" fill="var(--engine)"/></g>`;
       },
     );
+    const motion = r.metrics.motionMs;
+    if (motion) {
+      svg += `<rect x="${sx(motion[0]).toFixed(1)}" y="0" width="${(sx(motion[1]) - sx(motion[0])).toFixed(1)}" height="${h}" fill="var(--ink-2)" opacity="0.08"/>`;
+      svg += `<text x="${sx(motion[0]) + 4}" y="22" class="label">motion</text>`;
+    }
     if (r.metrics.settleMs !== undefined) {
       svg += `<line x1="${sx(r.metrics.settleMs)}" x2="${sx(r.metrics.settleMs)}" y1="0" y2="${h}" stroke="var(--ink-2)" stroke-width="1" stroke-dasharray="3 3"/>`;
       svg += `<text x="${sx(r.metrics.settleMs) + 4}" y="10" class="label">settled</text>`;
@@ -484,7 +514,23 @@ export function waterfall({ runs, configs, color }) {
           .filter(Boolean)
           .join(" · ")
       : "";
+    // Requests started before, during and after the motion.
+    const phases = motion
+      ? [
+          ["before motion", (s) => s < motion[0]],
+          ["in motion", (s) => s >= motion[0] && s < motion[1]],
+          ["after", (s) => s >= motion[1]],
+        ]
+          .map(([label, test]) => {
+            const rows = r.waterfall.filter((w) => test(w[0]));
+            const mb = rows.reduce((sum, w) => sum + w[3], 0) / 1e6;
+            return `${label} ${rows.length} (${mb.toFixed(1)} MB)`;
+          })
+          .join(" · ")
+      : "";
     return `<div class="wf"><div class="m-label"><span class="key" style="background:${color(r.config)}"></span>${escape(engineLabel(r.config))}: ${n} requests · ${summary}${
+      phases ? `<br>started ${phases}` : ""
+    }${
       purposes
         ? `<span class="wf-purposes"><br>by purpose: ${purposes}</span>`
         : ""
@@ -565,6 +611,7 @@ export const DIAGNOSE_CSS = `
 .viz .filmstrip .moment { margin: 8px 0 12px; }
 .viz .m-label { font-size: 12px; color: var(--ink-2); margin: 4px 0; }
 .viz .frames { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+.viz .frames.motion { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
 .viz .frame img { width: 100%; display: block; border-radius: 4px; border: 1px solid var(--grid); }
 .viz .frame .cap { font-size: 12px; color: var(--ink-2); margin-top: 3px; font-variant-numeric: tabular-nums; }
 .viz .frame details { margin: 2px 0; } .viz .frame summary { font-size: 11px; color: var(--muted); }

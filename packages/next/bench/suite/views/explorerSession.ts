@@ -71,6 +71,8 @@ export class ExplorerSession {
 
   private panes: Pane[] = [];
   private pose?: (progress: number) => Pose;
+  /** Flights: the sun stays over the camera, as in the benchmark. */
+  private sun?: (pose: Pose) => Float64Array;
   private duration = 15;
   private leader = 0;
   private generation = 0;
@@ -109,8 +111,14 @@ export class ExplorerSession {
   ): Promise<boolean> {
     const mine = ++this.generation;
     this.destroyPanes();
-    this.duration = scenarioSeconds;
-    this.pose = await cameraScript({ ...base, config: configs[0]! } as RunSpec);
+    const spec = { ...base, config: configs[0]! } as RunSpec;
+    const path = await cameraScript(spec);
+    this.pose = path;
+    this.duration = path.seconds ?? scenarioSeconds;
+    this.sun =
+      base.scene.camera.kind === "flight"
+        ? (pose) => sunDirection(spec, pose)
+        : undefined;
     const panes: Pane[] = [];
     try {
       for (const [i, config] of configs.entries()) {
@@ -266,7 +274,11 @@ export class ExplorerSession {
     if (this.pose && panes.length) {
       if (this.mode === "path") {
         const p = this.pose(this.progress);
+        const sun = this.sun?.(p);
         for (const pane of panes) {
+          if (sun) {
+            pane.adapter.setSun(sun);
+          }
           pane.adapter.setCamera(p);
         }
       } else if (this.link && panes[this.leader]) {

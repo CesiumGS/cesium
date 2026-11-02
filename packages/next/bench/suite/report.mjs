@@ -18,6 +18,7 @@ import {
 import {
   DIAGNOSE_CSS,
   filmstrip,
+  motionStrip,
   PATH_METRICS,
   pathMap,
   pathOverlay,
@@ -54,6 +55,9 @@ const METRICS = [
   // From the filmstrip: how differently the settled view after the orbit
   // looks from the baseline's (summaries, sweeps; not a per-run metric).
   ["flipEnd", "image difference from the baseline (FLIP)", "", 1],
+  // Quality in motion: frames in motion against the same pose settled,
+  // the engine's own (mean over the replay's frames).
+  ["motionFlip", "quality in motion (FLIP, in motion vs settled)", "", 1],
 ];
 
 const escape = (s) =>
@@ -575,6 +579,14 @@ ${cpu.length ? chart("CPU speed (% of nominal)", "%", cpu, 1) + chart("CPU utili
       configs,
       baseline,
     });
+    const motionFrames = motionStrip({
+      entries: (results.motionQuality ?? []).filter(
+        (e) => e.scene === run.scene && e.scenario === run.scenario,
+      ),
+      assets: results.assets,
+      configs,
+      color,
+    });
     const rows = METRICS.map(([key, label, unit, scale]) => {
       const values = new Map(configs.map((c) => [c, okValues(group, c, key)]));
       if (configs.every((c) => !values.get(c).some(Number.isFinite))) {
@@ -635,6 +647,7 @@ ${cpu.length ? chart("CPU speed (% of nominal)", "%", cpu, 1) + chart("CPU utili
   <p class="explore-link"><a target="_top" href="${explore}">Open this scene in the explorer</a> (live, both engines side by side; needs the dev server). Click a point on a path chart to open it there.</p>
   <div data-explore="${explore}">${diagnosis}</div>
   ${strip}
+  ${motionFrames}
   ${charts}
   ${percentileCurve({ runs: group.runs, configs, color })}
   ${waterfall({ runs: group.runs, configs, color })}
@@ -763,6 +776,12 @@ export function summarizeRun(results) {
       if (cell) {
         cell.values.flipEnd = [flip.mean];
       }
+    }
+  }
+  for (const entry of results.motionQuality ?? []) {
+    const cell = cells[`${entry.scene}|${entry.scenario}|${entry.config}`];
+    if (cell) {
+      cell.values.motionFlip = [entry.mean];
     }
   }
   const scenes = Object.values(cells).map((c) => ({

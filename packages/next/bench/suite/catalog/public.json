@@ -432,6 +432,36 @@
       }
     },
     {
+      "id": "flight-philadelphia-tokyo",
+      "title": "Flight across the globe: OSM Buildings on terrain, Philadelphia to Tokyo",
+      "description": "The Viewer's geocoder flight: 1.x camera.flyTo from a street-level view of Philadelphia to one of Tokyo, up to about 2,900 km and down in 3 s. What each engine fetches on the way, draws in flight, and how soon Tokyo settles.",
+      "group": "A",
+      "globe": {
+        "terrain": "cwt"
+      },
+      "imagery": "bing",
+      "layers": [
+        {
+          "dataset": "osm-buildings"
+        }
+      ],
+      "camera": {
+        "kind": "flight",
+        "from": {
+          "target": [-75.165, 39.9526, 0],
+          "range": 1500,
+          "pitch": -35,
+          "heading": 20
+        },
+        "to": {
+          "target": [139.7671, 35.6812, 0],
+          "range": 1500,
+          "pitch": -35,
+          "heading": 20
+        }
+      }
+    },
+    {
       "id": "google-manhattan",
       "title": "Google Photorealistic 3D Tiles, Manhattan",
       "group": "A",

@@ -546,7 +546,11 @@ function SceneDetail({
           : typeof scene.globe === "object"
             ? "terrain"
             : "ellipsoid",
-        scene.camera.kind === "orbit" ? "orbit camera" : "recorded camera path",
+        scene.camera.kind === "orbit"
+          ? "orbit camera"
+          : scene.camera.kind === "flight"
+            ? "1.x flyTo flight"
+            : "recorded camera path",
       ].join(" · ")
     : undefined;
 

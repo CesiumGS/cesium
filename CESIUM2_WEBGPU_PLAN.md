@@ -682,15 +682,62 @@ change after them is measured against a guardrail:
   unchanged. What remains (NYC ×2.6 of 1.x) is mostly content 2.0 draws
   during the orbit and 1.x never loads: a choice of quality in motion
   against bytes (§8 product choices), not waste.
-- **Quality in motion (next)**: the image guardrail compares settled
-  views only, so it can't see what loading in motion buys. Measure it
-  before bounding view requests in motion: frames during the orbit
-  against the same pose fully loaded (FLIP, both engines), captured
-  without disturbing the timed frames (a replay pass after the
-  measurements). Then bound loading in motion by benefit: a tile whose
-  expected time on screen is shorter than its load time is not worth
-  requesting (1.x's `cullRequestsWhileMoving` is the special case of
-  60 frames' travel against the tile's diameter).
+- **Quality in motion (done r37)**: the image guardrail compares settled
+  views only, so it can't see what loading in motion buys. After the
+  measured runs, each engine replays the motion in a fresh context (cold
+  cache, vsync, the same pace; nothing timed) and copies the canvas as
+  drawn at 8 evenly spaced points (`createImageBitmap` in the frame's
+  task, so loading isn't paused), then settles at each of those poses and
+  copies it again. FLIP between the pair is what motion cost the image
+  (0: drawn in motion as settled; renderer differences cancel). Scene
+  pages show the frames with their settled pair and heatmap; the CLI
+  prints the table; summaries and Analysis carry `motionFlip`. First
+  results (r37, two reps):
+
+  | Scene            | 1.x   | 2.0   |
+  | ---------------- | ----- | ----- |
+  | NYC              | 0.030 | 0.008 |
+  | OSM Philadelphia | 0.012 | 0.011 |
+  | Rainier          | 0.025 | 0.062 |
+  | Aerometrex SF    | 0.014 | 0.031 |
+  | Flight (below)   | 0.166 | 0.153 |
+
+  NYC confirms what prefetch ahead buys (sharp in motion where 1.x defers
+  requests). Rainier is worse in motion: 2.0 draws the western flank with
+  a coarser imagery level for most of the orbit (Bing's coarser capture
+  is bluish there, so FLIP shows it plainly); Aerometrex loses its first
+  frame (0.09) and matches after. **Next**: imagery refinement in motion
+  on terrain (why imagery lags terrain under `Budgeted`), then bound
+  loading in motion by benefit: a tile whose expected time on screen is
+  shorter than its load time is not worth requesting (1.x's
+  `cullRequestsWhileMoving` is the special case of 60 frames' travel
+  against the tile's diameter), checked against both image metrics.
+
+- **Big camera moves (r37, measuring)**: a scene flies 1.x's
+  `camera.flyTo` path (CameraFlightPath in 3D, its defaults: up to a
+  fifth of the framing altitude on a flat-topped curve, quintic easing,
+  at most 3 s) from street level in Philadelphia to Tokyo over OSM
+  Buildings on terrain, about 2,900 km up, the sun over the camera
+  (`flight-philadelphia-tokyo`; camera script `flight`). Waterfalls now
+  mark the motion and split requests before, in and after it. Two reps:
+  - _In flight_ (3 s): 1.x 271 requests, 2.1 MB; 2.0 685, 8.5 MB (imagery
+    234 to 71, terrain 430 to 196, 3D Tiles content 9 to 2, tileset JSON
+    12 to 2). Uncapped, 2.0 434 requests, 4.9 MB.
+  - _After arrival_: 1.x 138 requests, 11.2 MB (107 of them imagery);
+    2.0 25, 9.9 MB, having loaded Tokyo's imagery and terrain during the
+    descent. Tokyo settles after 1.4 to 1.6 s on 1.x and 1.1 to 1.6 s on
+    2.0 (vsync); uncapped 2.8 s on 1.x, 0.9 s on 2.0. Totals +27% bytes.
+  - _In motion_: alike (0.17 and 0.15); both draw only the coarsest
+    levels near arrival (0.6 at 94% of the flight) and space at the top
+    (the end pitch, −35°, is kept the whole way, as flyTo does).
+  - Nothing was cancelled: 3D Tiles and terrain cancel a request only
+    after 30 frames untouched, and most loads finish sooner; imagery
+    sources are never cancelled once requested. **Next**: what 2.0
+    fetches in flight that is never drawn (purpose stats for imagery
+    too), cancellation for imagery, and whether the descent's loads or
+    the 3 s flight's prefetch (1 s ahead at thousands of km/s) are
+    worth their bytes; a slower flight (`seconds`) and a flight between
+    3D Tiles cities with no globe.
 
 Then the planned work:
 
@@ -2061,6 +2108,14 @@ selection and uploads, and a frame renders only if a world's version moved
 renders 16 to 19 frames per second while Midtown streams, none once it
 settles, a frame per camera change while orbiting, and serves picks while
 idle.
+
+_r37_: hovering renders frames. `GlobeController` picks the position
+under the cursor on every pointer move (one pick at a time, so wheel zoom
+can aim at what's under the cursor), and a pick is served by a pass in a
+rendered frame, so the viewer renders about as often as the pointer moves.
+**To do**: serve a pick from the view's last frame (keep its depth and
+pick IDs while the view is clean and run only the pick pass), which makes
+clicks free too; else pick when the wheel turns.
 
 Per-view dirtiness: each view keeps its own fingerprint, and `World`
 accumulates the view-mask bits of every record it changes (a changed mask

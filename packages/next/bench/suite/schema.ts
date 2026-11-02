@@ -88,7 +88,27 @@ export type CameraScript =
       sweep?: number;
     }
   /** Recorded poses, interpolated over the motion phase. */
-  | { kind: "path"; poses: Pose[] };
+  | { kind: "path"; poses: Pose[] }
+  /**
+   * 1.x `camera.flyTo` (CameraFlightPath in 3D) from one view to another,
+   * as the Viewer's geocoder does: up to a fifth of the distance and down
+   * again. Lasts what 1.x's flight would (at most 3 s) unless `seconds`,
+   * whatever the scenario's motion time; the sun follows the camera.
+   */
+  | {
+      kind: "flight";
+      from: FlightView;
+      to: FlightView;
+      seconds?: number;
+    };
+
+/** A flight's end: the view of a target (degrees, meters) as an orbit's start. */
+export interface FlightView {
+  target: [number, number, number];
+  range: number;
+  pitch: number;
+  heading?: number;
+}
 
 export interface SceneLayer {
   dataset: string;
@@ -230,6 +250,10 @@ export interface RunMetrics {
   /** The engine build that ran (1.x: Cesium.VERSION). */
   engineVersion?: string;
   message?: string;
+  /** The motion's length when the camera script sets it (flights), s. */
+  motionSeconds?: number;
+  /** When the motion started and ended, ms from load start (waterfall phases). */
+  motionMs?: [number, number];
   /** Load start to the first frame with content drawn, ms. */
   firstContentMs?: number;
   /** Load start until the initial view settled (nothing loading), ms. */
