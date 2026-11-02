@@ -123,6 +123,16 @@ interface Row {
   flipAverage?: number;
   /** FLIP every 500 ms until settled, for the common-horizon average. */
   trace?: number[];
+  /**
+   * The same against the target: the image every policy converges to
+   * (`Stepwise` settled at the default SSE). The fully refined reference
+   * rewards lingering on finer or coarser content that happens to look
+   * more like SSE 2 than the target does: zooming out, the finer content
+   * still drawn; design models whose SSE-16 tiles drop elements.
+   */
+  traceTarget?: number[];
+  flipAverageTarget?: number;
+  flipSettledTarget?: number;
   flipSettled?: number;
   selected?: number;
   /** Requests and MB by purpose over the move (`Budgeted`'s bands). */
@@ -141,6 +151,7 @@ interface Source {
 let sourcePromise: Promise<Source> | undefined;
 let enginePromise: Promise<Engine> | undefined;
 const references = new Map<string, Uint8ClampedArray>();
+const targets = new Map<string, Uint8ClampedArray>();
 
 function engine(): Promise<Engine> {
   enginePromise ??= Engine.create();
@@ -245,6 +256,8 @@ interface Measurement {
   flips: Record<number, number>;
   /** FLIP every 500 ms from the move until settled. */
   trace: number[];
+  /** The same against the target, when given. */
+  traceTarget: number[];
   selected: number;
   purposes: Record<string, { requests: number; megabytes: number }>;
 }
@@ -253,6 +266,7 @@ async function measure(
   options: TilesetOptions,
   scenario: Scenario,
   reference?: Uint8ClampedArray,
+  goal?: Uint8ClampedArray,
 ): Promise<Measurement> {
   const e = await engine();
   const s = await source();
@@ -303,6 +317,7 @@ async function measure(
     const flips: Record<number, number> = {};
     const marks = [250, 1000];
     const samples: number[] = [];
+    const goalSamples: number[] = [];
     let nextSample = 500;
     let previous = "";
     let stable = 0;
@@ -311,14 +326,16 @@ async function measure(
       await frame();
       const t = performance.now() - start;
       if (reference && (t >= marks[0]! || t >= nextSample)) {
-        const error = (
-          await flip(reference, await target.read(), WIDTH, HEIGHT)
-        ).mean;
+        const image = await target.read();
+        const error = (await flip(reference, image, WIDTH, HEIGHT)).mean;
         while (marks.length > 0 && t >= marks[0]!) {
           flips[marks.shift()!] = error;
         }
         if (t >= nextSample) {
           samples.push(error);
+          if (goal) {
+            goalSamples.push((await flip(goal, image, WIDTH, HEIGHT)).mean);
+          }
           nextSample += 500;
         }
       }
@@ -348,6 +365,7 @@ async function measure(
       settleMs,
       flips,
       trace: samples,
+      traceTarget: goalSamples,
       selected: tileset.stats.selected.get(id) ?? 0,
       purposes: Object.fromEntries(
         Object.entries(tileset.stats.purposes)
@@ -371,7 +389,10 @@ async function measure(
   }
 }
 
-/** Fully refined images (SSE 2) at every scenario's end camera. */
+/**
+ * Fully refined images (SSE 2) at every scenario's end camera, and the
+ * targets (`Stepwise` at the default SSE, what every policy settles to).
+ */
 async function runLodReference(): Promise<number> {
   const s = await source();
   for (const scenario of s.scenarios) {
@@ -383,6 +404,8 @@ async function runLodReference(): Promise<number> {
         scenario,
       );
       references.set(scenario.name, r.image);
+      const t = await measure({ policy: "stepwise" }, scenario);
+      targets.set(scenario.name, t.image);
     }
   }
   return references.size;
@@ -398,10 +421,11 @@ async function runLod(): Promise<Row[]> {
   const policies = POLICIES.filter((p) => !only || only.includes(p.id));
   for (const scenario of s.scenarios) {
     const reference = references.get(scenario.name)!;
+    const goal = targets.get(scenario.name)!;
     for (const policy of policies) {
       status.textContent = `${scenario.name}: ${policy.label}…`;
       try {
-        const r = await measure(policy.options, scenario, reference);
+        const r = await measure(policy.options, scenario, reference, goal);
         rows.push({
           scenario: scenario.name,
           policy: policy.label,
@@ -412,7 +436,9 @@ async function runLod(): Promise<Row[]> {
           flip250: r.flips[250],
           flip1000: r.flips[1000],
           trace: r.trace,
+          traceTarget: r.traceTarget,
           flipSettled: (await flip(reference, r.image, WIDTH, HEIGHT)).mean,
+          flipSettledTarget: (await flip(goal, r.image, WIDTH, HEIGHT)).mean,
           selected: r.selected,
           purposes: r.purposes,
         });
@@ -434,11 +460,16 @@ async function runLod(): Promise<Row[]> {
     const horizon = Math.max(0, ...done.map((r) => r.trace!.length));
     for (const r of done) {
       let sum = 0;
+      let sumTarget = 0;
       for (let i = 0; i < horizon; i++) {
         sum += r.trace![i] ?? r.flipSettled!;
+        sumTarget += r.traceTarget?.[i] ?? r.flipSettledTarget!;
       }
       r.flipAverage = horizon > 0 ? sum / horizon : r.flipSettled!;
+      r.flipAverageTarget =
+        horizon > 0 ? sumTarget / horizon : r.flipSettledTarget!;
       delete r.trace;
+      delete r.traceTarget;
     }
     renderTable(rows);
   }
@@ -475,6 +506,7 @@ export const harness: Harness = {
         enginePromise = undefined;
         sourcePromise = undefined;
         references.clear();
+        targets.clear();
         engine?.then((e) => e.destroy()).catch(() => {});
       },
     };
