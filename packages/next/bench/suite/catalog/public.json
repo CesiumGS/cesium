@@ -346,6 +346,7 @@
       "id": "terrain-rainier",
       "title": "Cesium World Terrain and Bing at Mount Rainier",
       "group": "A",
+      "areas": ["terrain", "core"],
       "globe": {
         "terrain": "cwt"
       },
@@ -367,6 +368,7 @@
       "id": "osm-philadelphia",
       "title": "OSM Buildings on terrain, Philadelphia",
       "group": "A",
+      "areas": ["terrain", "streaming"],
       "globe": {
         "terrain": "cwt"
       },
@@ -390,6 +392,7 @@
       "title": "Flight across the globe: OSM Buildings on terrain, Philadelphia to Tokyo",
       "description": "The Viewer's geocoder flight: 1.x camera.flyTo from a street-level view of Philadelphia to one of Tokyo, up to about 2,900 km and down in 3 s. What each engine fetches on the way, draws in flight, and how soon Tokyo settles.",
       "group": "A",
+      "areas": [],
       "globe": {
         "terrain": "cwt"
       },
@@ -419,6 +422,7 @@
       "id": "google-manhattan",
       "title": "Google Photorealistic 3D Tiles, Manhattan",
       "group": "A",
+      "areas": ["streaming", "render", "core"],
       "globe": "none",
       "layers": [
         {
@@ -441,6 +445,7 @@
       "id": "nyc-buildings",
       "title": "New York City buildings",
       "group": "A",
+      "areas": ["streaming", "content", "core"],
       "globe": "ellipsoid",
       "layers": [
         {
@@ -460,6 +465,7 @@
       "id": "melbourne",
       "title": "Melbourne photogrammetry",
       "group": "A",
+      "areas": ["content"],
       "globe": "ellipsoid",
       "layers": [
         {
@@ -482,6 +488,7 @@
       "id": "bim-design-model",
       "title": "BIM design model",
       "group": "A",
+      "areas": ["content", "render", "core"],
       "globe": "ellipsoid",
       "layers": [
         {
@@ -501,6 +508,7 @@
       "id": "aec-design-site",
       "title": "AEC design model with its site (3D Tiles 1.1)",
       "group": "A",
+      "areas": ["content"],
       "globe": "ellipsoid",
       "layers": [
         {
@@ -523,6 +531,7 @@
       "id": "japan-tokyo",
       "title": "Japan 3D Buildings on Japan terrain, Tokyo",
       "group": "A",
+      "areas": ["terrain", "render"],
       "globe": {
         "terrain": "japan-terrain"
       },
@@ -545,6 +554,7 @@
       "id": "aerometrex-sf",
       "title": "Aerometrex San Francisco",
       "group": "A",
+      "areas": ["streaming"],
       "globe": "ellipsoid",
       "layers": [
         {
@@ -676,6 +686,7 @@
       "id": "milk-truck-fleet",
       "title": "100,000 instanced milk trucks",
       "group": "C",
+      "areas": ["instancing", "render"],
       "globe": "ellipsoid",
       "layers": [
         {
@@ -722,6 +733,96 @@
       "motionSeconds": 15,
       "settleTimeoutSeconds": 90,
       "cache": "warm"
+    }
+  ],
+  "areas": [
+    {
+      "id": "terrain",
+      "title": "Terrain and imagery",
+      "paths": ["src/globe/**", "src/io/worker.ts", "src/io/decoders.ts"]
+    },
+    {
+      "id": "streaming",
+      "title": "3D Tiles streaming, selection and requests",
+      "paths": [
+        "src/streaming/**",
+        "src/tiles/**",
+        "src/io/ion.ts",
+        "src/io/WorkerPool.ts"
+      ]
+    },
+    {
+      "id": "content",
+      "title": "Content decoding, glTF and uploads",
+      "paths": [
+        "src/io/**",
+        "src/scene/gltfModel.ts",
+        "src/scene/meshes.ts",
+        "src/scene/World.ts",
+        "src/gpu/RangeAllocator.ts",
+        "src/gpu/MipGenerator.ts"
+      ]
+    },
+    {
+      "id": "render",
+      "title": "Rendering: frame graph, shaders, culling",
+      "paths": [
+        "src/render/**",
+        "src/shaders/**",
+        "src/gpu/**",
+        "src/scene/RenderContext.ts",
+        "src/scene/View.ts",
+        "src/scene/Camera.ts"
+      ]
+    },
+    {
+      "id": "instancing",
+      "title": "Model instancing and transforms",
+      "paths": [
+        "src/scene/World.ts",
+        "src/scene/gltfModel.ts",
+        "src/scene/HeightClamping.ts"
+      ]
+    },
+    {
+      "id": "core",
+      "title": "Engine core and the measuring harness (a cross-section)",
+      "paths": [
+        "src/scene/Engine.ts",
+        "src/core/**",
+        "src/math/**",
+        "src/index.ts",
+        "bench/suite/suite.ts",
+        "bench/suite/cli.mjs",
+        "bench/suite/telemetry.mjs",
+        "bench/suite/frozen.mjs",
+        "vite.config.ts",
+        "package.json"
+      ]
+    }
+  ],
+  "tiers": [
+    {
+      "id": "quick",
+      "title": "While developing: startup only, stops early, reuses baselines",
+      "scenarios": ["cold-start"],
+      "reps": 3,
+      "motionQuality": false
+    },
+    {
+      "id": "standard",
+      "title": "Before a commit that changes performance: the orbit",
+      "scenarios": ["cold-orbit"],
+      "reps": 3,
+      "motionQuality": false
+    },
+    {
+      "id": "full",
+      "title": "Milestones and overnight: every scene, both orbits",
+      "scenarios": ["cold-orbit", "uncapped-orbit"],
+      "reps": 3,
+      "motionQuality": true,
+      "allScenes": true
     }
   ],
   "setups": [

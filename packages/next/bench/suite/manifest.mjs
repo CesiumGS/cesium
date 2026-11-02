@@ -24,6 +24,8 @@ export function loadCatalog(manifest = process.env.BENCH_MANIFEST) {
     scenarios: [],
     setups: [],
     budgets: [],
+    areas: [],
+    tiers: [],
     engines: { default: [], baseline: undefined, candidate: undefined },
   };
   const problems = [];
@@ -51,6 +53,8 @@ export function loadCatalog(manifest = process.env.BENCH_MANIFEST) {
       "scenarios",
       "setups",
       "budgets",
+      "areas",
+      "tiers",
     ]) {
       for (const entry of json[key] ?? []) {
         if (index > 0 && key === "datasets") {

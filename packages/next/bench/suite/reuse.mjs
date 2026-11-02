@@ -83,8 +83,13 @@ export const immutable = (config) =>
 
 /** The scene as measured: scene, scenario, render settings, its data. */
 export function sceneKey(spec) {
+  // Not what describes or files the scene (title, areas, catalog group).
+  const scene = { ...spec.scene };
+  delete scene.title;
+  delete scene.areas;
+  delete scene.group;
   return hash({
-    scene: spec.scene,
+    scene,
     scenario: spec.scenario,
     render: spec.render,
     datasets: spec.datasets,

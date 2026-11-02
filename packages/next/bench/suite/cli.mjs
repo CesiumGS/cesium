@@ -11,6 +11,12 @@
 //        [--dpr 2] [--pixel-ratio device|1]  (high-DPI display; render scale)
 //        [--sweep maximumScreenSpaceError=8,16,32 [--sweep-engines 2.0]]
 //        [--motion-samples 8 | --no-motion-quality]  (frames in motion)
+//        [--tier quick|standard|full]  (scenarios, repetitions and motion
+//        quality for the occasion; explicit options override them)
+//        [--areas terrain,streaming | --changed [ref]]  (the scenes of
+//        those areas, or of the areas the files changed since ref, HEAD by
+//        default, fall in; uncommitted and untracked files count)
+//        [--no-reuse] [--reuse-days 14] [--no-early-stop] [--min-reps 2]
 //        [--dev]  (the live tree on Vite's dev server instead of the
 //        working tree frozen and built for production, frozen.mjs)
 //
@@ -69,6 +75,7 @@ import { renderReport, summarizeRun } from "./report.mjs";
 import { compareTable, defaultPlan, scorecard } from "./scorecard.mjs";
 import { ALERT_METRICS, detectAlerts } from "./changepoints.mjs";
 import { runImages } from "./images.mjs";
+import { areasFor, changedFiles, scenesFor } from "./areas.mjs";
 import { checkoutFrozen, freezeTree, serveBuild } from "./frozen.mjs";
 import {
   drift,
@@ -130,6 +137,13 @@ if (command === "list") {
   console.log(
     `${catalog.scenes.length} scenes, ${catalog.datasets.length} datasets, ${catalog.sources > 1 ? "public + private" : "public"} catalog`,
   );
+  for (const area of catalog.areas) {
+    const ids = scenesFor(catalog, [area.id]).map((s) => s.id);
+    console.log(`area ${area.id.padEnd(11)} ${ids.join(", ")}`);
+  }
+  for (const tier of catalog.tiers) {
+    console.log(`tier ${tier.id.padEnd(9)} ${tier.title}`);
+  }
 } else if (command === "verify") {
   const rows = verify(catalog.datasets);
   console.table(
@@ -248,7 +262,46 @@ async function run() {
           return found;
         })
       : undefined;
-  const scenes = pick(catalog.scenes, "scenes") ?? catalog.scenes;
+  // The occasion (catalog tiers) sets scenarios, repetitions and motion
+  // quality; the areas a change touches (or --areas) pick the scenes.
+  const tier = opts.tier
+    ? catalog.tiers.find((t) => t.id === opts.tier)
+    : undefined;
+  if (opts.tier && !tier) {
+    throw new Error(
+      `unknown tier "${opts.tier}" (tiers: ${catalog.tiers.map((t) => t.id).join(", ")})`,
+    );
+  }
+  let areaIds;
+  if (opts.areas) {
+    areaIds = String(opts.areas).split(",");
+  } else if (opts.changed) {
+    const ref = opts.changed === true ? "HEAD" : String(opts.changed);
+    const files = changedFiles(root, ref);
+    const found = areasFor(catalog, files);
+    areaIds = [...found.keys()];
+    console.log(
+      `${files.length} file${files.length === 1 ? "" : "s"} changed since ${ref}: ${
+        found.size
+          ? [...found]
+              .map(
+                ([id, hits]) =>
+                  `${id} (${hits.slice(0, 3).join(", ")}${hits.length > 3 ? ", …" : ""})`,
+              )
+              .join("; ")
+          : "nothing measured"
+      }`,
+    );
+    if (!areaIds.length && !opts.scenes) {
+      console.log("no scenes to run");
+      return;
+    }
+  }
+  const scenes =
+    pick(catalog.scenes, "scenes") ??
+    (areaIds && !tier?.allScenes
+      ? scenesFor(catalog, areaIds)
+      : catalog.scenes);
   if (opts.configs || opts.cesium) {
     throw new Error(
       "--configs and --cesium became --engines (e.g. --engines 1.146.0,2.0)",
@@ -407,10 +460,14 @@ async function run() {
       configs.at(-1).id);
   const scenarios =
     pick(catalog.scenarios, "scenarios") ??
-    catalog.scenarios.filter(
-      (s) => s.id === "cold-orbit" || s.id === "uncapped-orbit",
-    );
-  const reps = Number(opts.reps ?? 3);
+    (tier
+      ? catalog.scenarios.filter((s) => tier.scenarios.includes(s.id))
+      : catalog.scenarios.filter(
+          (s) => s.id === "cold-orbit" || s.id === "uncapped-orbit",
+        ));
+  const reps = Number(opts.reps ?? tier?.reps ?? 3);
+  const replayMotion =
+    !opts["no-motion-quality"] && tier?.motionQuality !== false;
   const motion = opts.motion ? Number(opts.motion) : undefined;
 
   // The verify step guards repeatability: changed local data stops the run.
@@ -607,10 +664,11 @@ async function run() {
       })
     : [];
   // Early stop: once a scene's comparison of the candidate with the
-  // baseline is decided (the primary metric's interval clears 1, each
-  // guardrail is clearly within or past its tolerance) after at least
-  // --min-reps repetitions, its remaining ones are skipped.
-  // --no-early-stop runs them all.
+  // baseline is decided after at least --min-reps repetitions, its
+  // remaining ones are skipped: the primary metric's interval lies wholly
+  // past the tolerance (a large change; with two repetitions a bootstrap
+  // interval is too narrow to call a small one), and each guardrail is
+  // clearly within or past its tolerance. --no-early-stop runs them all.
   const minReps = Math.max(2, Number(opts["min-reps"] ?? 2));
   const earlyStop =
     !opts["no-early-stop"] && reps > minReps && baseline !== candidate;
@@ -632,7 +690,7 @@ async function run() {
         .filter((r) => r.metrics.status === "ok")
         .map((r) => r.metrics[key])
         .filter((v) => Number.isFinite(v));
-    const settledBy = (key, tolerance) => {
+    const settledBy = (key, tolerance, primary = false) => {
       const va = values(a, key);
       const vb = values(b, key);
       if (!va.length && !vb.length) {
@@ -642,13 +700,13 @@ async function run() {
         return false;
       }
       const r = ratio(va, vb);
-      return tolerance === 0
-        ? r.separated
+      return primary
+        ? r.low > 1 + tolerance || r.high < 1 - tolerance
         : r.low > 1 + tolerance || r.high < 1 + tolerance;
     };
     const plan = results.plan;
     return (
-      settledBy(plan.primary, 0) &&
+      settledBy(plan.primary, plan.tolerance, true) &&
       plan.guardrails.every((k) => settledBy(k, plan.tolerance))
     );
   };
@@ -794,7 +852,7 @@ async function run() {
       // the cache and pace the measured runs had).
       if (
         !opts["no-capture"] &&
-        !opts["no-motion-quality"] &&
+        replayMotion &&
         (motion ?? scenario.motionSeconds) > 0 &&
         scenario.cache === "cold" &&
         scenario.vsync !== false
