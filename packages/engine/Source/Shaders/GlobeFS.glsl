@@ -124,6 +124,15 @@ uniform vec4 u_undergroundColorAlphaByDistance;
 // The hasVertexNormals flag is from the tileProvider
 #ifdef ENABLE_VERTEX_LIGHTING
 uniform float u_lambertDiffuseMultiplier;
+#endif
+
+// Without vertex normals (ENABLE_DAYNIGHT_SHADING) the globe is lit from the
+// ellipsoid's normal, with its own multiplier, and the same shadow floor.
+#ifdef ENABLE_DAYNIGHT_SHADING
+uniform float u_dayNightLambertDiffuseMultiplier;
+#endif
+
+#if defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING)
 uniform float u_vertexShadowDarkness;
 #endif
 
@@ -432,7 +441,7 @@ void main()
     float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_lightDirectionEC, normalize(v_normalEC)) * u_lambertDiffuseMultiplier + u_vertexShadowDarkness, 0.0, 1.0);
     vec4 finalColor = vec4(color.rgb * czm_lightColor * diffuseIntensity, color.a);
 #elif defined(ENABLE_DAYNIGHT_SHADING)
-    float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_lightDirectionEC, normalEC) * 5.0 + 0.3, 0.0, 1.0);
+    float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_lightDirectionEC, normalEC) * u_dayNightLambertDiffuseMultiplier + u_vertexShadowDarkness, 0.0, 1.0);
     diffuseIntensity = mix(1.0, diffuseIntensity, fade);
     vec4 finalColor = vec4(color.rgb * czm_lightColor * diffuseIntensity, color.a);
 #else
