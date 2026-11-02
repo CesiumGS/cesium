@@ -161,12 +161,16 @@ export const RecordFlags = {
 } as const;
 
 /**
- * Depth scale of `RecordFlags.underlay` draws (2^-27, exact in floats).
+ * Depth scale of `RecordFlags.underlay` draws (2^-64, exact in floats).
  * Reverse-Z depth is near / distance, so underlay draws stay behind content
- * nearer than 2^27 near-plane distances and keep their order among
- * themselves.
+ * nearer than 2^64 near-plane distances and keep their order among
+ * themselves; picks read depths at or below it as underlay. At 2^-27 with
+ * a 0.1 m near plane, content beyond 13,400 km read as underlay: picks on
+ * the globe from farther out landed at the camera (r38). Underlay depths
+ * stay normal floats (above 2^-126) for near planes down to 1 mm and
+ * distances up to 10^9 m.
  */
-export const UNDERLAY_DEPTH = 2 ** -27;
+export const UNDERLAY_DEPTH = 2 ** -64;
 
 export const MaterialFlags = {
   unlit: 1,

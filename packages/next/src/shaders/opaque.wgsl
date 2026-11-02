@@ -99,7 +99,7 @@ fn vs(@builtin(vertex_index) vertexIndex: u32, @location(0) item: u32) -> VsOut 
   // Underlay (the bare ellipsoid): behind all other content (UNDERLAY_DEPTH
   // in layout.ts).
   if ((r.flags & 8u) != 0u) {
-    out.position.z *= 7.450580596923828e-9;
+    out.position.z *= 5.421010862427522e-20;
   }
   // Normals transform by the inverse transpose; the cofactor matrix is that up
   // to the determinant, whose sign keeps mirrored transforms facing outward.
