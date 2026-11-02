@@ -822,7 +822,93 @@ _r38 (overnight, toward the L1′ exit check)_:
   child is resident.
 - **Startup (done r38)**: `Viewer.create` resolves the default globe's
   imagery and terrain endpoints while the device is created, and both at
-  once; the benchmark adapter does the same for every dataset.
+  once; the benchmark adapter does the same for every dataset. Settle
+  (cold orbit, two reps): NYC 3.0 s (was 3.5 to 3.7; 1.x 3.1), OSM
+  Philadelphia 4.1 s (was 4.3; 1.x 4.7), Rainier 3.9 s (was 4.4; 1.x 6.0).
+- **Loading in motion by benefit (done r38)**: while the camera moves,
+  Budgeted doesn't request a tile (frontier, intermediate or prefetch)
+  whose time on screen, the field of view over how fast it crosses it, is
+  shorter than the tileset's median load time (`motionBenefit`, default
+  1). Only motion across the line of sight counts (a tile straight ahead
+  of a camera flying toward it stays in view), plus turning. Views carry
+  their steady motion, tilesets their recent load time. 1.x's
+  `cullRequestsWhileMoving` is the crude case. Slow orbits are untouched
+  (NYC 10.9 MB, quality in motion 0.008 vs 1.x 0.030).
+- **Imagery requests (done r38)**: globe imagery counts requests, bytes,
+  drawn and cancelled (an Imagery row in the inspector's purposes and in
+  run metrics) and cancels sources no wanted tile has needed for 30
+  frames. Flight Philadelphia–Tokyo: 31.7 → 25.9 MB (1.x 24.7), quality
+  in motion unchanged (0.149 vs 1.x 0.164). Nothing was cancelled on a
+  fast link (loads finish inside the 30 frames); the savings come from
+  not requesting in motion.
+- **Dyno's guardrails (retuned r38)**: the default plan depends on what
+  is compared. 2.0 against 1.x judges what should match: time to settle,
+  frame p95, hitches, and bytes until settled (`bytesLoad`: requests
+  started before the motion); bytes in and after motion and the JS heap
+  are product choices there, reported but not judged. 2.0 against 2.0
+  judges them all. Quality in motion is an image guardrail beside
+  selection parity: the candidate's may not be worse than the baseline's
+  by more than 0.01 per scene. Re-summarized runs that stored the old
+  default plan get the new one (runs before r38 have no `bytesLoad`).
+- **JS heap (r38, partly done)**: 2.0's main-thread heap is 2 to 6 times
+  1.x's in every scene (NYC 172 to 331 MB vs 54). A heap snapshot of NYC
+  settled (36,176 tiles known, 176 loaded): the bulk is per-tile
+  bookkeeping for tiles never loaded. About 10 small Float64Arrays per
+  tile (a region volume's corners, normals and box; each its own
+  ArrayBuffer): 377k typed arrays and as many ArrayBuffers. Volumes are
+  now compacted into one buffer each (ArrayBuffers 377k → 90k, heap 217
+  → 200 MB); the views remain (23 MB), as do 6 to 7 MB each of Tile
+  objects, plain objects, heap numbers and short strings. Tiles also keep
+  content URIs relative (resolved on use) instead of each carrying the
+  tileset URL's query. The real fix is the SoA tile table (§13.7): one
+  Float64Array per tileset for every volume. (A 32 MB external string
+  in the snapshot is the benchmark page's script source, 1.x's
+  unminified build, loaded for both engines.)
+- **Hitches with vsync off (r38, fix measuring)**: a CPU profile of NYC's
+  uncapped orbit: the 100 to 300 ms stalls are not script. The main thread
+  waits in `getCurrentTexture` (1.4 s of them) and `queue.writeBuffer`
+  (0.9 s), the GPU's backlog. The upload and tree-build budgets were per
+  frame and grew while frames were "on time", which at 500+ frames a
+  second meant gigabytes a second. Each update now gets the budgets'
+  share of a 60 Hz frame by the time since the last one; with vsync
+  nothing changes. That is sound but did not remove the hitches (NYC
+  uncapped still 4.5 per run; settle a little better, 3.3 s and OSM 3.8 s
+  vs 3.7 and 4.2). What a second profile and the waterfall show: the two
+  hitches come at the same moments of the orbit (1.5 s and 4.6 s), when
+  bursts of prefetched tiles arrive (5 to 7 within 100 ms, none larger
+  than 130 KB); most of each 200 to 300 ms interval passes outside
+  `frame()` (the next animation frame comes late: the GPU process is
+  behind), and the main thread's busiest call is `queue.writeBuffer` for
+  mesh uploads (1.2 s over 8 s). A trivial uncapped WebGPU loop in the
+  same browser never stalls (79k frames, worst 17 ms). **Next**: trace the
+  GPU process (Dawn) through a burst; likely an engine-owned staging ring
+  (mapped upload buffers) instead of a `writeBuffer` per mesh, and
+  spreading a burst's uploads by bytes and count.
+- **The L1′ exit check (r38)**: after the changes above, two repetitions
+  per cell, FLIP against the target (lower is better), bytes downloaded:
+
+  | Content           | Link | FLIP S → B    | MB S → B    | Verdict |
+  | ----------------- | ---- | ------------- | ----------- | ------- |
+  | Google Midtown    | fast | 0.120 → 0.095 | 69.1 → 40.7 | better  |
+  | Google Midtown    | slow | 0.125 → 0.098 | 69.1 → 40.7 | better  |
+  | Aerometrex SF     | fast | 0.062 → 0.015 | 6.1 → 1.4   | better  |
+  | Aerometrex SF     | slow | 0.093 → 0.024 | 6.1 → 1.4   | better  |
+  | OSM Philadelphia  | fast | 0.108 → 0.004 | 11.3 → 11.3 | better  |
+  | OSM Philadelphia  | slow | 0.136 → 0.121 | 11.3 → 11.3 | better  |
+  | BIM design model  | fast | 0.015 → 0.002 | 62.6 → 37.4 | better  |
+  | BIM design model  | slow | 0.019 → 0.009 | 62.6 → 37.4 | better  |
+  | AEC design + site | fast | 0.009 → 0.009 | 12.5 → 12.5 | pass    |
+  | AEC design + site | slow | 0.016 → 0.019 | 12.5 → 12.5 | fail    |
+
+  Nine of ten pass, eight better. AEC on the throttled link misses by
+  0.001 past the tolerance: both policies request the same 113 tiles
+  zooming out, and Stepwise draws the complete coarse parent until a
+  region completes where Budgeted holds the finer tiles it has. The hold
+  (kept for pans, so a new edge doesn't collapse a region to a near-root
+  tile) now applies only while at most half a region's visible children
+  are missing: zoom-out FLIP 0.046 → 0.035 (Stepwise 0.028); a quarter
+  was worse (0.045, pans too). What remains is likely the request order
+  on a FIFO link; next.
 
 Then the planned work:
 
