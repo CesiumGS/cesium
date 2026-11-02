@@ -331,11 +331,13 @@ export class BudgetedSelection extends StepwiseSelection {
     const holes: Tile[] = [];
     const missing: Tile[] = [];
     let complete = true;
+    let visible = 0;
     for (const child of tile.children) {
       if (!isVisible(child.viewState(view.id))) {
         this.prefetch(child, view, pass, rootError, result);
         continue;
       }
+      visible++;
       const d = this.display(
         child,
         view,
@@ -382,9 +384,12 @@ export class BudgetedSelection extends StepwiseSelection {
       // drawn stay while a newly visible neighbor loads: its gap waits
       // (prefetch usually fills it first) instead of the whole region
       // collapsing to this tile, which with skipped levels can be near the
-      // root.
+      // root. Only while most of the region is covered: zooming out, most
+      // of it is newly visible, and holding left it empty where this tile
+      // draws all of it (AEC, throttled: FLIP avg 0.046 vs Stepwise 0.027).
       if (
         parts.length > 0 &&
+        missing.length * 2 <= visible &&
         !drawnLastFrame(tile, view) &&
         parts.some((t) => drawnLastFrame(t, view))
       ) {
@@ -439,7 +444,14 @@ export class BudgetedSelection extends StepwiseSelection {
       ((tile.external && !tile.renderable) ||
         state.sse >
           this.memoryAdjustedScreenSpaceError * this.prefetchErrorScale);
-    if (tile.renderable && (!refine || tile.refine === "ADD")) {
+    // Content about to be revealed is worth it only if it then stays on
+    // screen long enough (a flight prefetched 12 MB a second ahead of
+    // thousands of km/s).
+    if (
+      tile.renderable &&
+      (!refine || tile.refine === "ADD") &&
+      this.worthLoading(tile, view)
+    ) {
       this.request(tile, PREFETCH, state.distance, result);
     }
     if (refine) {
