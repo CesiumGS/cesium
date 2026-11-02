@@ -103,7 +103,8 @@ export class TerrainSource {
   private readonly templates: string[];
   private readonly extensions: string;
   /** Flat tiles built in the worker, every tile available (no data). */
-  private readonly flat: boolean;
+  /** The ellipsoid: every tile exists, generated rather than fetched. */
+  readonly flat: boolean;
   private readonly levelZeroError: number;
 
   private constructor(

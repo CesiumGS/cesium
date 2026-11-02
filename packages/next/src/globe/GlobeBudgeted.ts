@@ -10,7 +10,12 @@
  * Tiles are expanded as they are visited (1.x QuadtreeTile children exist
  * before their parent loads): children whose availability is known can be
  * selected and requested at once. Expanded only when loaded, terrain loaded
- * one level per round trip and could not skip levels.
+ * one level per round trip and could not skip levels. The ellipsoid's
+ * expansion has a time budget per pass (beyond it, tiles expand when they
+ * load): it has every tile, so expanding all visited at once took one
+ * startup frame 0.5 s and delayed a design model's first request by 0.3 s
+ * (r38); its tiles are generated, so expanding ahead saves no round trips.
+ * Limiting terrain the same way slowed OSM Philadelphia's settle by 0.5 s.
  *
  * No free detail from the cache (`opportunisticRatio` 0, as for 3D Tiles):
  * finer terrain brings finer imagery, and an imagery provider's levels can
@@ -27,6 +32,9 @@ import type { Tile, TileViewState } from "../streaming/Tile.ts";
 import type { TerrainSource } from "./TerrainSource.ts";
 import { FOG_SSE, fog, fogDensity } from "./GlobeStepwise.ts";
 
+/** Main-thread time per selection pass for expanding visited tiles, ms. */
+const EXPAND_MS = 4;
+
 export class GlobeBudgetedSelection extends BudgetedSelection {
   /**
    * 1.x scene.fog.enabled: fog lowers the SSE of distant tiles. Off while
@@ -35,6 +43,8 @@ export class GlobeBudgetedSelection extends BudgetedSelection {
   fog = false;
   /** This pass's fog density (0 without fog). */
   private passDensity = 0;
+  /** When this pass's expansion budget runs out (performance.now). */
+  private expandUntil = 0;
   imageryReady?: (tile: Tile) => boolean;
 
   constructor(
@@ -64,14 +74,21 @@ export class GlobeBudgetedSelection extends BudgetedSelection {
     return false;
   }
 
-  /** Expands the tile (its children, where availability is known) first. */
+  /**
+   * Expands the tile (its children, where availability is known) first;
+   * the ellipsoid within the pass's budget.
+   */
   protected override updateVisibility(
     tile: Tile,
     state: TileViewState,
     view: SelectionView,
     pass: number,
   ): void {
-    if (tile.globe) {
+    if (
+      tile.globe &&
+      !tile.globe.expanded &&
+      (!this.source.flat || performance.now() < this.expandUntil)
+    ) {
       this.source.expand(tile);
     }
     super.updateVisibility(tile, state, view, pass);
@@ -83,6 +100,7 @@ export class GlobeBudgetedSelection extends BudgetedSelection {
     view: SelectionView,
   ): SelectionResult {
     this.passDensity = this.fog ? fogDensity(view) : 0;
+    this.expandUntil = performance.now() + EXPAND_MS;
     return super.select(root, rootGeometricError, view);
   }
 
