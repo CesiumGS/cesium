@@ -254,6 +254,12 @@ export interface RunMetrics {
   motionSeconds?: number;
   /** When the motion started and ended, ms from load start (waterfall phases). */
   motionMs?: [number, number];
+  /**
+   * Bytes of requests started before the motion (the load until settled)
+   * and from it on, set by the CLI: 2.0 vs 1.x judges the first only.
+   */
+  bytesLoad?: number;
+  bytesMotion?: number;
   /** Load start to the first frame with content drawn, ms. */
   firstContentMs?: number;
   /** Load start until the initial view settled (nothing loading), ms. */

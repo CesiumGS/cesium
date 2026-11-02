@@ -51,6 +51,8 @@ const METRICS = [
   ["resettleMs", "re-settled after motion", "s", 1000],
   ["requests", "requests", "", 1],
   ["bytes", "bytes", "MB", 1e6],
+  ["bytesLoad", "bytes until settled", "MB", 1e6],
+  ["bytesMotion", "bytes in and after motion", "MB", 1e6],
   ["heapBytes", "JS heap", "MB", 1e6],
   // From the filmstrip: how differently the settled view after the orbit
   // looks from the baseline's (summaries, sweeps; not a per-run metric).

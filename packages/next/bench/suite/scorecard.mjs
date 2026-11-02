@@ -14,21 +14,53 @@
 //   broke in one scene;
 // - pass: otherwise.
 //
-// The image guardrail: where a run captured 2.0's settled end view under
+// The image guardrails: where a run captured 2.0's settled end view under
 // both its own selection and Stepwise (same renderer), their FLIP must
-// stay under SELECTION_LIMIT, so a policy can't pass by drawing less. It
-// counts with the guardrails.
+// stay under SELECTION_LIMIT, so a policy can't pass by drawing less; and
+// where it measured quality in motion, the candidate's must not be worse
+// than the baseline's by more than MOTION_TOLERANCE, so loading less in
+// motion can't pass by looking worse. Both count with the guardrails.
+//
+// The default plan depends on what is compared (r38). 2.0 against 1.x
+// judges what should match: time to settle, frame time, hitches and the
+// bytes until settled; bytes in motion (2.0 loads in motion and prefetches
+// ahead, 1.x defers requests while moving) and the JS heap (2.0 keeps
+// structures 1.x doesn't; plan §6) are product choices there, reported
+// but not judged. 2.0 against 2.0 (a change against main) judges them all.
 //
 // No scene measured by both engines (all errored, say) has no scorecard.
 import { ratio, summarize } from "./stats.mjs";
 import { escape } from "./charts.mjs";
-import { engineLabel, setupOf } from "./engines.mjs";
+import { engineLabel, engineOf, setupOf } from "./engines.mjs";
 
+/** Guardrails for a change against the same engine (2.0 vs 2.0). */
 export const DEFAULT_PLAN = {
   primary: "cpuP50",
   guardrails: ["settleMs", "frameP95", "over100", "bytes", "heapBytes"],
   tolerance: 0.1,
 };
+
+/** Guardrails for 2.0 against 1.x; `context` is reported, not judged. */
+export const CROSS_ENGINE_PLAN = {
+  primary: "cpuP50",
+  guardrails: ["settleMs", "frameP95", "over100", "bytesLoad"],
+  context: ["bytesMotion", "heapBytes"],
+  tolerance: 0.1,
+};
+
+/** The default plan for comparing `baseline` with `candidate`. */
+export function defaultPlan(baseline, candidate) {
+  return engineOf(baseline) === engineOf(candidate)
+    ? DEFAULT_PLAN
+    : CROSS_ENGINE_PLAN;
+}
+
+/** A stored plan that is just the old default (runs before r38). */
+const isOldDefault = (plan) =>
+  !plan.hypothesis &&
+  plan.primary === DEFAULT_PLAN.primary &&
+  plan.tolerance === DEFAULT_PLAN.tolerance &&
+  plan.guardrails?.join() === DEFAULT_PLAN.guardrails.join();
 
 const LABELS = {
   firstContentMs: ["first content", "s", 1000],
@@ -47,6 +79,8 @@ const LABELS = {
   longFrames: ["long frames", "", 1],
   requests: ["requests", "", 1],
   bytes: ["bytes", "MB", 1e6],
+  bytesLoad: ["bytes until settled", "MB", 1e6],
+  bytesMotion: ["bytes in and after motion", "MB", 1e6],
   heapBytes: ["JS heap", "MB", 1e6],
 };
 
@@ -111,6 +145,37 @@ const geomean = (values) =>
  */
 export const SELECTION_LIMIT = 0.1;
 
+/**
+ * How much worse than the baseline's the candidate's quality in motion
+ * (mean FLIP of frames in motion against the same pose settled) may be.
+ */
+export const MOTION_TOLERANCE = 0.01;
+
+/** The motion guardrail: quality in motion per scene, if measured. */
+function motionCheck(results, baseline, candidate) {
+  const by = (config) =>
+    new Map(
+      (results.motionQuality ?? [])
+        .filter((e) => e.config === config)
+        .map((e) => [`${e.scene} · ${e.scenario}`, e.mean]),
+    );
+  const a = by(baseline);
+  const scenes = [...by(candidate)]
+    .filter(([scene]) => a.has(scene))
+    .map(([scene, flip]) => ({ scene, flip, baseline: a.get(scene) }));
+  return scenes.length
+    ? {
+        key: "motion",
+        label: "quality in motion (FLIP in motion vs settled)",
+        limit: MOTION_TOLERANCE,
+        scenes,
+        broken: scenes
+          .filter((s) => s.flip > s.baseline + MOTION_TOLERANCE)
+          .map((s) => s.scene),
+      }
+    : undefined;
+}
+
 /** The image guardrail: selection parity per scene, if the run has it. */
 function selectionCheck(results, candidate) {
   const scenes = (results.filmstrips ?? [])
@@ -144,9 +209,11 @@ export function scorecard(results, options = {}) {
   if (baseline === candidate || !configs.includes(candidate)) {
     return undefined;
   }
+  const stored =
+    results.plan && !isOldDefault(results.plan) ? results.plan : {};
   const plan = {
-    ...DEFAULT_PLAN,
-    ...(results.plan ?? {}),
+    ...defaultPlan(baseline, candidate),
+    ...stored,
     ...(options.plan ?? {}),
   };
   const test = (key, tolerance) => {
@@ -189,6 +256,7 @@ export function scorecard(results, options = {}) {
     return undefined;
   }
   const guardrails = plan.guardrails.map((k) => test(k, plan.tolerance));
+  const context = (plan.context ?? []).map((k) => test(k, Infinity));
   const primaryMoved =
     primary.better > primary.worse && primary.geomean < 1
       ? "improved"
@@ -196,9 +264,11 @@ export function scorecard(results, options = {}) {
         ? "regressed"
         : "no clear change";
   const image = selectionCheck(results, candidate);
+  const motion = motionCheck(results, baseline, candidate);
   const brokenScenes =
     guardrails.reduce((n, g) => n + g.broken.length, 0) +
-    (image?.broken.length ?? 0);
+    (image?.broken.length ?? 0) +
+    (motion?.broken.length ?? 0);
   const verdict =
     primaryMoved === "regressed" || brokenScenes >= 2
       ? "fail"
@@ -212,7 +282,9 @@ export function scorecard(results, options = {}) {
     verdict,
     primary: { ...primary, moved: primaryMoved },
     guardrails,
+    context,
     ...(image ? { image } : {}),
+    ...(motion ? { motion } : {}),
   };
 }
 
@@ -242,10 +314,26 @@ export function scorecardHtml(card) {
         return `<tr><th>${escape(card.image.label)} at most ${card.image.limit}</th><td>max ${worst.toFixed(3)}</td><td>${card.image.scenes.length} scenes</td><td class="${ok ? "ok" : "broken"}">${ok ? "✓ held" : `✕ broken in ${card.image.broken.map(escape).join(", ")}`}</td></tr>`;
       })()
     : "";
+  const motion = card.motion
+    ? (() => {
+        const ok = !card.motion.broken.length;
+        const worst = Math.max(
+          ...card.motion.scenes.map((s) => s.flip - s.baseline),
+        );
+        return `<tr><th>${escape(card.motion.label)}, at most ${card.motion.limit} worse</th><td>worst ${worst >= 0 ? "+" : ""}${worst.toFixed(3)}</td><td>${card.motion.scenes.length} scenes</td><td class="${ok ? "ok" : "broken"}">${ok ? "✓ held" : `✕ broken in ${card.motion.broken.map(escape).join(", ")}`}</td></tr>`;
+      })()
+    : "";
+  const context = (card.context ?? [])
+    .filter((r) => r.scenes.length)
+    .map(
+      (r) =>
+        `<tr class="sc-context"><th>${escape(r.label)} (product choice, not judged)</th><td>${g(r.geomean)}</td><td>${r.better} better · ${r.worse} worse</td><td>reported</td></tr>`,
+    )
+    .join("");
   return `<div class="scorecard"><div class="sc-head"><span class="sc-verdict" style="color:var(--${tone})">${icon} ${word}</span>
 <span>${escape(engineLabel(card.candidate))} vs ${escape(engineLabel(card.baseline))} · primary metric <b>${escape(card.primary.label)}</b>: ${escape(card.primary.moved)} (${g(card.primary.geomean)}, ${card.primary.better} scenes better, ${card.primary.worse} worse)</span></div>
 ${card.plan.hypothesis ? `<div class="sub">Hypothesis: ${escape(card.plan.hypothesis)}</div>` : ""}
-<table class="sc"><tr><th>Guardrail (must not get more than ${Math.round(card.plan.tolerance * 100)}% worse)</th><th>geo. mean</th><th>scenes</th><th></th></tr>${rows}${image}</table></div>`;
+<table class="sc"><tr><th>Guardrail (must not get more than ${Math.round(card.plan.tolerance * 100)}% worse)</th><th>geo. mean</th><th>scenes</th><th></th></tr>${rows}${image}${motion}${context}</table></div>`;
 }
 
 /**

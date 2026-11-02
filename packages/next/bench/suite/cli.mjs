@@ -64,7 +64,7 @@ import { releaseList } from "./release.mjs";
 import { describeBuild, resolveEngine, treeRef } from "./engineBuilds.mjs";
 import { parseEngine } from "./engines.mjs";
 import { renderReport, summarizeRun } from "./report.mjs";
-import { compareTable, DEFAULT_PLAN, scorecard } from "./scorecard.mjs";
+import { compareTable, defaultPlan, scorecard } from "./scorecard.mjs";
 import { ALERT_METRICS, detectAlerts } from "./changepoints.mjs";
 import { runImages } from "./images.mjs";
 import {
@@ -447,12 +447,12 @@ async function run() {
     baseline,
     candidate,
     tags: opts.tag ? opts.tag.split(",") : [],
+    // The default depends on what is compared (2.0 vs 1.x or vs 2.0).
     plan: {
-      primary: opts.primary ?? DEFAULT_PLAN.primary,
-      guardrails: opts.guardrails?.split(",") ?? DEFAULT_PLAN.guardrails,
-      tolerance: opts.tolerance
-        ? Number(opts.tolerance)
-        : DEFAULT_PLAN.tolerance,
+      ...defaultPlan(baseline, candidate),
+      ...(opts.primary ? { primary: opts.primary } : {}),
+      ...(opts.guardrails ? { guardrails: opts.guardrails.split(",") } : {}),
+      ...(opts.tolerance ? { tolerance: Number(opts.tolerance) } : {}),
       ...(opts.hypothesis ? { hypothesis: opts.hypothesis } : {}),
     },
     dirty: git("status --porcelain").length > 0,
@@ -693,7 +693,11 @@ async function run() {
   if (card) {
     console.log(
       `\n${card.candidate} vs ${card.baseline}: ${card.verdict.toUpperCase()} (primary ${card.plan.primary} ${card.primary.moved}; guardrails broken: ${
-        [...card.guardrails, ...(card.image ? [card.image] : [])]
+        [
+          ...card.guardrails,
+          ...(card.image ? [card.image] : []),
+          ...(card.motion ? [card.motion] : []),
+        ]
           .filter((g) => g.broken.length)
           .map((g) => g.key)
           .join(", ") || "none"
@@ -754,6 +758,7 @@ async function runOne(browser, base, spec, results) {
   let measuring = false;
   const hosts = new Map();
   const sizes = [];
+  const starts = [];
   // The page ends the measurement before the selection reference.
   await page.exposeFunction("endMeasurement", () => {
     measuring = false;
@@ -784,6 +789,9 @@ async function runOne(browser, base, spec, results) {
       .then((s) => s.responseBodySize + s.responseHeadersSize)
       .catch(() => 0);
     sizes.push(size);
+    // When each request started, to split bytes at the motion's start.
+    const startedAt = request.timing().startTime - runStart;
+    starts.push(size.then((bytes) => [startedAt, bytes]));
     if (spec.capture) {
       const t = request.timing();
       waterfall.push(
@@ -838,6 +846,18 @@ async function runOne(browser, base, spec, results) {
       return purpose ? [...row, purpose] : row;
     };
     const bytes = (await Promise.all(sizes)).reduce((a, b) => a + b, 0);
+    // Bytes of requests started before the motion (the load until settled)
+    // and from it on (in and after motion): 2.0 vs 1.x judges the first.
+    if (metrics.motionMs) {
+      let load = 0;
+      for (const [at, b] of await Promise.all(starts)) {
+        if (at < metrics.motionMs[0]) {
+          load += b;
+        }
+      }
+      metrics.bytesLoad = load;
+      metrics.bytesMotion = bytes - load;
+    }
     if (errors.length && metrics.status === "ok") {
       metrics.message = errors.slice(0, 3).join("; ");
     }
