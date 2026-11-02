@@ -398,7 +398,7 @@ export class Tileset3D implements TileTree {
         out.add(tile); // its tileset JSON, then its children
         return;
       }
-    } else if (tile.contentUrl) {
+    } else if (tile.hasContent) {
       const crossed = tile.children.some((c) =>
         crossesSphere(ray, c.volume.sphere),
       );

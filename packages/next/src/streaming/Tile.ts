@@ -48,8 +48,13 @@ export class Tile {
   volume: TileVolume;
   contentVolume?: TileVolume;
   requestVolume?: TileVolume;
-  /** Absolute content URL; undefined for empty tiles. */
-  readonly contentUrl?: string;
+  /**
+   * The content's URI as written in the tileset JSON; undefined for empty
+   * tiles. Kept relative: resolved, every tile carried its own copy of the
+   * tileset URL's query (ion's signed query: about 1.2 KB a tile, 45 MB of
+   * NYC's 217 MB heap, r38).
+   */
+  private readonly contentUri?: string;
   /** Content is an external tileset (loaded into `children` on demand). */
   readonly external: boolean;
   /**
@@ -156,7 +161,7 @@ export class Tile {
     }
     const uri: string | undefined = content?.uri ?? content?.url;
     if (uri) {
-      this.contentUrl = resolveUri(uri, baseUrl);
+      this.contentUri = uri;
       this.contentVolume = content?.boundingVolume
         ? volumeFromJson(content.boundingVolume, t)
         : undefined;
@@ -179,9 +184,21 @@ export class Tile {
       this.childrenWithinParent && checkChildrenPartition(this);
   }
 
+  /** Absolute content URL (resolved on use); undefined for empty tiles. */
+  get contentUrl(): string | undefined {
+    return this.contentUri === undefined
+      ? undefined
+      : resolveUri(this.contentUri, this.baseUrl);
+  }
+
+  /** Whether the tile has content (a URI). */
+  get hasContent(): boolean {
+    return this.contentUri !== undefined;
+  }
+
   /** Empty: no content at all (1.x hasEmptyContent). */
   get empty(): boolean {
-    return this.contentUrl === undefined;
+    return this.contentUri === undefined;
   }
 
   /**
@@ -190,7 +207,7 @@ export class Tile {
    */
   get renderable(): boolean {
     return (
-      this.contentUrl !== undefined &&
+      this.contentUri !== undefined &&
       !(this.external && this.state === "ready")
     );
   }
