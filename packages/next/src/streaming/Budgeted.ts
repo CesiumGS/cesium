@@ -18,18 +18,18 @@
  *   computes NaN and never skips the root).
  */
 import {
-  Legacy1xSelection,
+  StepwiseSelection,
   isVisible,
-  type Legacy1xOptions,
+  type StepwiseOptions,
   type RequestPurpose,
   type SelectionResult,
   type SelectionView,
-} from "./Legacy1x.ts";
+} from "./Stepwise.ts";
 import { CLIP_BOXES } from "../render/layout.ts";
 import type { Tile, TileViewState } from "./Tile.ts";
 import { OUTSIDE, aboveHorizon, volumeIntersectPlane } from "./volumes.ts";
 
-export interface BudgetedOptions extends Legacy1xOptions {
+export interface BudgetedOptions extends StepwiseOptions {
   /**
    * Levels that may be skipped between a loaded ancestor and the frontier
    * before an intermediate level is loaded too (default 2), so regions
@@ -81,7 +81,7 @@ interface Cover {
 
 const NO_HOLES: readonly Tile[] = [];
 
-export class BudgetedSelection extends Legacy1xSelection {
+export class BudgetedSelection extends StepwiseSelection {
   opportunisticRatio: number;
   skipLevels: number;
   prefetchErrorScale: number;

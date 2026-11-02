@@ -61,7 +61,7 @@ const close = (a: number, b: number, scale: number) =>
     1e-9 * Math.max(1, Math.abs(scale)),
   );
 
-describe("Legacy1x volumes vs CesiumJS 1.x", () => {
+describe("Stepwise volumes vs CesiumJS 1.x", () => {
   it("OrientedBoundingBox.fromRectangle matches", () => {
     for (const r of regions()) {
       const ours = obbFromRectangle(r[0]!, r[1]!, r[2]!, r[3]!, r[4]!, r[5]!);

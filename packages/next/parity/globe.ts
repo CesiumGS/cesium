@@ -2,7 +2,7 @@ import {
   Ellipsoid,
   Engine,
   fromDegrees,
-  GlobeLegacy1xSelection,
+  GlobeStepwiseSelection,
   OffscreenTarget,
   resolveIonAsset,
   type Tile,
@@ -17,7 +17,7 @@ declare const Cesium: any;
 type Json = any;
 
 const TEMPLATE = `
-<h1>Globe selection parity (L1): 1.x globe vs 2.0 Legacy1x terrain</h1>
+<h1>Globe selection parity (L1): 1.x globe vs 2.0 Stepwise terrain</h1>
 <p>
   Cesium World Terrain tiles each engine renders after loading settles, one
   camera at a time with fresh tile state, no imagery, and fog as 1.x
@@ -38,10 +38,10 @@ const $ = <T extends Element = HTMLElement>(id: string) =>
 
 /**
  * L1 globe selection parity (plan §15): the terrain tiles the globe
- * `Legacy1x` selection renders against those 1.x's globe renders
+ * `Stepwise` selection renders against those 1.x's globe renders
  * (`globe._surface._tilesToRender`) for the same camera, after loading
  * settles. Each camera starts from fresh tile state in both engines, since
- * cached tiles keep tighter bounds (docs/globe-legacy1x-spec.md §7).
+ * cached tiles keep tighter bounds (docs/globe-1x-spec.md §7).
  */
 
 const WIDTH = 480;
@@ -297,10 +297,10 @@ async function runGlobe(): Promise<Row[]> {
       });
       const tileset: Tileset3D = await engine.addTerrain(world, terrain.url, {
         headers: terrain.headers,
-        policy: "legacy1x",
+        policy: "stepwise",
         cacheBytes: 4 * 1024 * 1024 * 1024,
       });
-      if (tileset.selection instanceof GlobeLegacy1xSelection) {
+      if (tileset.selection instanceof GlobeStepwiseSelection) {
         tileset.selection.fog = fog;
       }
       const target = Ellipsoid.WGS84.cartographicToCartesian(

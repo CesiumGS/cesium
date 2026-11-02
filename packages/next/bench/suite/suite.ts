@@ -401,9 +401,9 @@ export interface Adapter {
   setStreamingPaused(on: boolean): void;
   /**
    * Switches tile selection in place (2.0 only): content, cache and camera
-   * stay. The selection reference captures with "legacy1x".
+   * stay. The selection reference captures with "stepwise".
    */
-  setPolicy?(policy: "budgeted" | "legacy1x"): void;
+  setPolicy?(policy: "budgeted" | "stepwise"): void;
   /** The tiles drawn now, keyed so two engines' selections compare. */
   drawnTiles(): DrawnTile[];
   /**
@@ -714,7 +714,7 @@ export class NextAdapter implements Adapter {
     }
   }
 
-  setPolicy(policy: "budgeted" | "legacy1x"): void {
+  setPolicy(policy: "budgeted" | "stepwise"): void {
     for (const tileset of this.tilesets) {
       tileset.setPolicy(policy);
     }
@@ -1679,7 +1679,7 @@ export async function runScene(spec: RunSpec): Promise<RunMetrics> {
     }
     await endMeasurement();
 
-    // The selection reference (2.0): the end view again under Legacy1x
+    // The selection reference (2.0): the end view again under Stepwise
     // selection, same renderer, after every measurement. The filmstrip
     // compares the two (selection parity, the scorecard's image
     // guardrail): a policy that draws less than 1.x's selection shows
@@ -1688,11 +1688,11 @@ export async function runScene(spec: RunSpec): Promise<RunMetrics> {
       spec.capture &&
       resettle !== undefined &&
       adapter.setPolicy &&
-      spec.config.policy !== "legacy1x"
+      spec.config.policy !== "stepwise"
     ) {
-      adapter.setPolicy("legacy1x");
+      adapter.setPolicy("stepwise");
       if ((await settle(adapter, performance.now(), timeout)) !== undefined) {
-        await captureMoment(spec, "end-legacy1x");
+        await captureMoment(spec, "end-stepwise");
       }
     }
   } catch (error) {

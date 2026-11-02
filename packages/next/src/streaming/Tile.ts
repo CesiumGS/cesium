@@ -6,7 +6,7 @@
 import type { ClipHandle } from "../scene/World.ts";
 import type { GlobeTile } from "../globe/TerrainSource.ts";
 import type { ContentSummary } from "./pipeline.ts";
-import type { RequestPurpose } from "./Legacy1x.ts";
+import type { RequestPurpose } from "./Stepwise.ts";
 import * as m4 from "../math/mat4.ts";
 import * as v3 from "../math/vec3.ts";
 import type { Mat4 } from "../math/mat4.ts";
@@ -342,7 +342,7 @@ export function treeFromJson(
   if (json.geometricError === undefined) {
     // Required by the spec but omitted by some publishers. 1.x then computes
     // NaN for the root's early-out SSE and always traverses the root (a 1.x
-    // bug that happens to work); Legacy1x reproduces it.
+    // bug that happens to work); Stepwise reproduces it.
     tree.warnings.add(
       "tileset has no top-level geometricError: the root is never skipped (as in 1.x)",
     );

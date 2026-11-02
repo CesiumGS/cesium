@@ -46,7 +46,7 @@ import {
 } from "../globe/GlobeImagery.ts";
 import type { ImageryProvider } from "../globe/ImageryProvider.ts";
 import { Tileset3D, type TilesetOptions } from "../streaming/Tileset3D.ts";
-import type { SelectionView } from "../streaming/Legacy1x.ts";
+import type { SelectionView } from "../streaming/Stepwise.ts";
 import type { GltfAsset } from "../io/gltfTypes.ts";
 import {
   addGltf,

@@ -7,8 +7,8 @@
 //   2.0, 1.x                that engine from the working tree
 //   2.0@main, 1.x@v1.140    that engine built at a git ref (branch, tag,
 //                           commit), from a snapshot worktree
-//   …+legacy1x, …+sse=32    settings on top: a catalog setup's variant
-//                           (2.0+legacy1x) or swept values (key=value)
+//   …+stepwise, …+sse=32    settings on top: a catalog setup's variant
+//                           (2.0+stepwise) or swept values (key=value)
 //
 // A run resolves the working tree to its current branch, so results name
 // "2.0@cesium-2.0-webgpu-poc" and, after a merge, "2.0@main". "1.x" always
@@ -31,7 +31,11 @@ export function parseEngine(spec) {
     if (!base.startsWith("1.") && !TAGS.has(base)) {
       throw new Error(`engine "${spec}": releases are CesiumJS 1 versions`);
     }
-    return { engine: "1.x", source: { kind: "release", version: base }, variants };
+    return {
+      engine: "1.x",
+      source: { kind: "release", version: base },
+      variants,
+    };
   }
   const match = /^(1\.x|2\.0)(?:@(.+))?$/.exec(base);
   if (!match) {
@@ -77,7 +81,7 @@ export function engineOf(id) {
 }
 
 /**
- * The catalog setup an id runs: "2.0", "1.x" or "2.0+legacy1x" (the
+ * The catalog setup an id runs: "2.0", "1.x" or "2.0+stepwise" (the
  * engine plus named variants, without build source or swept values).
  * Budgets and defaults refer to setups.
  */
@@ -90,9 +94,9 @@ export function setupOf(id) {
   }
 }
 
-/** Words for variants: "legacy1x" → "legacy1x selection". */
+/** Words for variants: "stepwise" → "stepwise selection". */
 const VARIANT_WORDS = {
-  legacy1x: "legacy1x selection",
+  stepwise: "stepwise selection",
   budgeted: "budgeted selection",
 };
 const PARAM_WORDS = {
@@ -103,7 +107,7 @@ const PARAM_WORDS = {
 
 /**
  * A person's name for an id: "1.146.0", "2.0 · main",
- * "2.0 · cesium-2.0-webgpu-poc · legacy1x selection", "2.0 · main · SSE 32".
+ * "2.0 · cesium-2.0-webgpu-poc · stepwise selection", "2.0 · main · SSE 32".
  * `short` drops the source for compact places (legends) when the caller
  * shows it elsewhere.
  */
@@ -147,5 +151,8 @@ export function compareEngines(a, b) {
     })();
     return p?.source.kind === "release" ? 0 : p?.engine === "1.x" ? 1 : 2;
   };
-  return rank(a) - rank(b) || String(a).localeCompare(String(b), undefined, { numeric: true });
+  return (
+    rank(a) - rank(b) ||
+    String(a).localeCompare(String(b), undefined, { numeric: true })
+  );
 }

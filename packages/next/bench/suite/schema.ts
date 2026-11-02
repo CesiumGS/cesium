@@ -157,8 +157,8 @@ export interface Scenario {
 
 /**
  * An engine with its settings. In the catalog, a setup ("1.x", "2.0",
- * "2.0+legacy1x"); in a run, resolved from an engine spec (engines.mjs)
- * with its build: `id` names both ("1.146.0", "2.0@main+legacy1x").
+ * "2.0+stepwise"); in a run, resolved from an engine spec (engines.mjs)
+ * with its build: `id` names both ("1.146.0", "2.0@main+stepwise").
  */
 export interface EngineConfig {
   id: string;
@@ -177,7 +177,7 @@ export interface EngineConfig {
    */
   page?: { cesium?: string; server?: string };
   /** 2.0 selection policy. */
-  policy?: "budgeted" | "legacy1x";
+  policy?: "budgeted" | "stepwise";
   maximumScreenSpaceError?: number;
   /** Render settings over the catalog's (e.g. 1.x out of the box). */
   render?: Partial<RenderSettings>;

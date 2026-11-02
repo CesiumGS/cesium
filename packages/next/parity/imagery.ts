@@ -3,7 +3,7 @@ import {
   Ellipsoid,
   Engine,
   fromDegrees,
-  GlobeLegacy1xSelection,
+  GlobeStepwiseSelection,
   OffscreenTarget,
   resolveIonAsset,
   type Tileset3D,
@@ -23,7 +23,7 @@ const TEMPLATE = `
 <h1>Globe imagery parity (L2): 1.x vs 2.0, Cesium World Terrain with Bing</h1>
 <p>
   The same cameras rendered by each engine after loading settles. Terrain
-  selection is identical (globe Legacy1x), fog and atmosphere are off in
+  selection is identical (globe Stepwise), fog and atmosphere are off in
   both, so the difference is imagery: level choice, compositing, filtering
   and color. 2.0 may look better; FLIP records how far and where.
   <code>?only=</code> runs one camera.
@@ -46,10 +46,10 @@ const $ = <T extends Element = HTMLElement>(id: string) =>
  * L2 globe imagery parity (plan §15): Cesium World Terrain with the ion
  * default imagery (Bing Maps Aerial), rendered by 1.x and by 2.0 for the
  * same cameras after loading settles. Terrain selection is identical in
- * both (globe `Legacy1x`, 100% L1), and fog and atmosphere are off in
+ * both (globe `Stepwise`, 100% L1), and fog and atmosphere are off in
  * both, so the difference is imagery: level choice, compositing,
  * filtering and color. 2.0 is allowed to look better; this records by how
- * much and where (docs/imagery-legacy1x-spec.md §7).
+ * much and where (docs/imagery-1x-spec.md §7).
  */
 
 const WIDTH = 640;
@@ -211,13 +211,13 @@ async function runImagery(): Promise<Row[]> {
       const target = new OffscreenTarget(WIDTH, HEIGHT);
       const view = engine.addView({ target, world, clearColor: [0, 0, 0] });
       const tileset: Tileset3D = ellipsoid
-        ? engine.addEllipsoid(world, { policy: "legacy1x", imagery })
+        ? engine.addEllipsoid(world, { policy: "stepwise", imagery })
         : await engine.addTerrain(world, terrain.url, {
             headers: terrain.headers,
-            policy: "legacy1x",
+            policy: "stepwise",
             imagery,
           });
-      if (tileset.selection instanceof GlobeLegacy1xSelection) {
+      if (tileset.selection instanceof GlobeStepwiseSelection) {
         tileset.selection.fog = false;
       }
       const at = Ellipsoid.WGS84.cartographicToCartesian(

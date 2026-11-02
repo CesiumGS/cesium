@@ -1,7 +1,8 @@
 /**
- * `Legacy1x` tile selection: CesiumJS 1.x's default (non-skip-LOD) base
- * traversal, reproduced for fair comparisons and selection parity tests
- * (plan §12). Runs once per view over a shared tile tree; per-view state
+ * `Stepwise` tile selection: refines one level at a time, loading each
+ * level on the way down, a parent drawn until its children load. CesiumJS
+ * 1.x's default (non-skip-LOD) base traversal, reproduced for fair
+ * comparisons and selection parity tests (plan §12). Runs once per view over a shared tile tree; per-view state
  * lives in `Tile.views[viewId]`.
  *
  * Sources: Cesium3DTilesetBaseTraversal.js, Cesium3DTilesetTraversal.js,
@@ -99,7 +100,7 @@ const MASK_INDETERMINATE = 0x7fffffff;
 
 const ellipsoid = Ellipsoid.WGS84;
 
-export interface Legacy1xOptions {
+export interface StepwiseOptions {
   maximumScreenSpaceError?: number;
   dynamicScreenSpaceError?: boolean;
   dynamicScreenSpaceErrorDensity?: number;
@@ -108,7 +109,7 @@ export interface Legacy1xOptions {
   cullWithChildrenBounds?: boolean;
 }
 
-export class Legacy1xSelection implements TileSelection {
+export class StepwiseSelection implements TileSelection {
   maximumScreenSpaceError: number;
   /** Raised above `maximumScreenSpaceError` by the cache when over budget. */
   memoryAdjustedScreenSpaceError: number;
@@ -120,7 +121,7 @@ export class Legacy1xSelection implements TileSelection {
   protected pass = 0;
   protected density = 0;
 
-  constructor(options: Legacy1xOptions = {}) {
+  constructor(options: StepwiseOptions = {}) {
     this.maximumScreenSpaceError = options.maximumScreenSpaceError ?? 16;
     this.memoryAdjustedScreenSpaceError = this.maximumScreenSpaceError;
     this.dynamicScreenSpaceError = options.dynamicScreenSpaceError ?? true;

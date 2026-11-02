@@ -12,7 +12,7 @@ import type { Harness } from "../lab/harness.ts";
 import { flip } from "./flip.ts";
 
 /**
- * L1′ (plan §4): `Budgeted` vs `Legacy1x` over camera moves. For each move and
+ * L1′ (plan §4): `Budgeted` vs `Stepwise` over camera moves. For each move and
  * policy, a fresh tileset settles at the start camera, then the camera moves;
  * from the move until settled we record requests, GPU bytes, time, and image
  * error (FLIP) at 250 ms, 1 s and settled against a fully refined reference
@@ -24,7 +24,7 @@ import { flip } from "./flip.ts";
  */
 
 const TEMPLATE = `
-<h1>Tile selection L1′: Budgeted vs Legacy1x</h1>
+<h1>Tile selection L1′: Budgeted vs Stepwise</h1>
 <p>
   One camera move per policy: settle far, jump close. Requests, GPU bytes
   and time from the jump until settled, and FLIP against a fully refined
@@ -51,8 +51,8 @@ interface Policy {
 
 const POLICIES: Policy[] = [
   {
-    label: "Legacy1x (1.x, 18 requests)",
-    options: { policy: "legacy1x", maximumRequests: 18 },
+    label: "Stepwise (1.x, 18 requests)",
+    options: { policy: "stepwise", maximumRequests: 18 },
   },
   {
     label: "Budgeted, 18 requests",
@@ -326,7 +326,7 @@ async function runLodReference(): Promise<number> {
       root.querySelector(".status")!.textContent =
         `reference: ${scenario.name}…`;
       const r = await measure(
-        { policy: "legacy1x", maximumScreenSpaceError: 2 },
+        { policy: "stepwise", maximumScreenSpaceError: 2 },
         scenario,
       );
       references.set(scenario.name, r.image);

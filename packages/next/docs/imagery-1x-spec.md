@@ -3,7 +3,7 @@
 Reference for porting default globe imagery (ion asset 2, Bing Aerial).
 Derived from the 1.x source in this repository; paths are relative to
 `packages/engine/Source` (`Scene/` unless noted). Companion to
-`globe-legacy1x-spec.md`.
+`globe-1x-spec.md`.
 
 ## 1. ion asset 2 → Bing provider
 

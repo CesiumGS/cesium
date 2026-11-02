@@ -125,7 +125,7 @@ export const DEFAULT_ION_TOKEN = /defaultAccessToken =\s*"([^"]+)"/.exec(
 // ---------------------------------------------------------------- settings
 
 export interface ViewSettings {
-  policy: "budgeted" | "legacy1x";
+  policy: "budgeted" | "stepwise";
   /** Maximum screen-space error, px. */
   sse: number;
   /** Cesium World Terrain with Bing imagery (else the ellipsoid). */

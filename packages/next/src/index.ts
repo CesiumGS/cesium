@@ -56,12 +56,12 @@ export {
   type TilesetStats,
 } from "./streaming/Tileset3D.ts";
 export {
-  Legacy1xSelection,
+  StepwiseSelection,
   REQUEST_PURPOSES,
   type RequestPurpose,
   type SelectionView,
-} from "./streaming/Legacy1x.ts";
-export { GlobeLegacy1xSelection } from "./globe/GlobeLegacy1x.ts";
+} from "./streaming/Stepwise.ts";
+export { GlobeStepwiseSelection } from "./globe/GlobeStepwise.ts";
 export {
   BingImagery,
   UrlTemplateImagery,

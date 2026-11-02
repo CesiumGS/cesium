@@ -44,7 +44,7 @@ export const HARNESSES: HarnessInfo[] = [
     group: "parity",
     title: "Tile selection parity",
     description:
-      "The tiles each engine selects once loading settles, per camera, 1.x against 2.0's Legacy1x (Jaccard; the bar is 99%).",
+      "The tiles each engine selects once loading settles, per camera, 1.x against 2.0's Stepwise (Jaccard; the bar is 99%).",
     page: "/parity/selection.html",
     entry: "runSelection",
     cesium1x: true,

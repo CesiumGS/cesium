@@ -2,7 +2,7 @@
  * 3D Tiles bounding volumes with the exact geometry CesiumJS 1.x uses for
  * tile selection (`TileOrientedBoundingBox`, `TileBoundingRegion`,
  * `TileBoundingSphere`): distance to the camera, plane classification, and
- * construction from tileset JSON. `Legacy1x` selection depends on matching
+ * construction from tileset JSON. `Stepwise` selection depends on matching
  * these bit for bit in spirit; they are tested against 1.x core.
  */
 import * as v3 from "../math/vec3.ts";

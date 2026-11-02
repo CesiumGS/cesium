@@ -15,7 +15,7 @@
 // - pass: otherwise.
 //
 // The image guardrail: where a run captured 2.0's settled end view under
-// both its own selection and Legacy1x (same renderer), their FLIP must
+// both its own selection and Stepwise (same renderer), their FLIP must
 // stay under SELECTION_LIMIT, so a policy can't pass by drawing less. It
 // counts with the guardrails.
 //
@@ -106,7 +106,7 @@ const geomean = (values) =>
 
 /**
  * Mean FLIP between the candidate's settled end view and the same view
- * under Legacy1x selection above which its selection draws visibly
+ * under Stepwise selection above which its selection draws visibly
  * differently.
  */
 export const SELECTION_LIMIT = 0.1;
@@ -122,7 +122,7 @@ function selectionCheck(results, candidate) {
   return scenes.length
     ? {
         key: "selection",
-        label: "selection parity (FLIP vs Legacy1x)",
+        label: "selection parity (FLIP vs Stepwise)",
         limit: SELECTION_LIMIT,
         scenes,
         broken: scenes

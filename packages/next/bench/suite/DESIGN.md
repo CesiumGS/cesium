@@ -46,10 +46,10 @@ alert, or a link; it is not in the rail. `/` opens the Overview.
 Words that mean one thing each: **run** (one invocation of the suite),
 **scene** (catalog content with a camera path), **engine** (1.x, any
 CesiumJS 1 build, or 2.0), **setup** (an engine's settings without a
-build, e.g. `2.0+legacy1x`), **check** (one image check), **Lab page**.
+build, e.g. `2.0+stepwise`), **check** (one image check), **Lab page**.
 Engines are always named through `engineLabel` (engines.mjs), never by
 raw id: a release by its version ("1.146.0"), a build by engine and
-branch or ref ("2.0 · main", "2.0 · cesium-2.0-webgpu-poc · legacy1x
+branch or ref ("2.0 · main", "2.0 · cesium-2.0-webgpu-poc · stepwise
 selection"). Never "lap", "tab" (for a view), "experiment",
 "workspace", "1.x@1.146.0".
 

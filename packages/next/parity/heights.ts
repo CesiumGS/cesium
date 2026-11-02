@@ -206,7 +206,7 @@ async function runHeights(): Promise<Row[]> {
       });
       const tileset: Tileset3D = await engine.addTileset(world, osm.url, {
         headers: osm.headers,
-        policy: "legacy1x",
+        policy: "stepwise",
         enableCollision: true,
       });
       const target = Ellipsoid.WGS84.cartographicToCartesian(

@@ -49,7 +49,7 @@ export interface Summary {
 export const catalog = publicCatalog as unknown as {
   datasets: Dataset[];
   scenes: Scene[];
-  /** Engine settings ("1.x", "2.0", "2.0+legacy1x"; engines.mjs). */
+  /** Engine settings ("1.x", "2.0", "2.0+stepwise"; engines.mjs). */
   setups: EngineConfig[];
   /** What runs measure by default, and the baseline and candidate. */
   engines: { default: string[]; baseline: string; candidate: string };

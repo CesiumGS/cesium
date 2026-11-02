@@ -58,7 +58,7 @@ export interface ViewerOptions {
    */
   imagery?: ImageryProvider | boolean;
   /** Tile selection for the globe and added tilesets (default "budgeted"). */
-  policy?: "budgeted" | "legacy1x";
+  policy?: "budgeted" | "stepwise";
   /** Render only when something changes (default) or every frame. */
   renderMode?: "onDemand" | "continuous";
   /** Show the credits over the view (default true). */
@@ -92,7 +92,7 @@ export class Viewer {
   readonly view: View;
   readonly controller: GlobeController;
   /** Policy for the globe and tilesets added later. */
-  policy: "budgeted" | "legacy1x";
+  policy: "budgeted" | "stepwise";
   /** Builds the globe; content added before it is ready still loads. */
   readonly ready: Promise<void>;
 

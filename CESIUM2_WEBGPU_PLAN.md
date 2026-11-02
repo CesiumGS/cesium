@@ -4,45 +4,45 @@ Branch: `cesium-2.0-webgpu-poc` (off `main` @ `587f52f1eb`, CesiumJS 1.146.0)
 
 ## Revisions
 
-| Rev | Change                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| r1  | First draft: clean-slate WebGPU engine, 1.x used as the parity oracle                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| r2  | Added multiple viewports, Slang shaders, compute-shader uses, and globe/terrain/imagery to the PoC                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| r3  | Tile selection made pluggable (`Legacy1x` vs improved `Next`). Folded in an external review against current industry practice, research and WebGPU status (late 2026). Main changes: GPU-driven submission from M1, no bindless in the PoC, Slang scope narrowed, a texture-array imagery cache, corrected MSAA/feature-ID and OIT plans, and new M0 precision tests. Sources are in §9.                                                                                                                                                        |
-| r4  | Plan-owner decisions recorded (§8): Slang + WGSL ABI; **HDR + tonemapping by default**; all four multi-view scenarios including **linked views**; `packages/next` in TypeScript with new math; Chromium-first, core WebGPU only; 3D Tiles before globe. Canonical CAD test data to come from team-chosen ion assets.                                                                                                                                                                                                                            |
-| r5  | M0 findings: multisampled `r32uint` is invalid in WebGPU, so feature IDs use `rg16uint` (lo16, hi16). On dual-GPU Windows laptops Chromium ignores `powerPreference` and follows the per-app Windows graphics setting, so benchmarks must record the adapter and launch Chromium on the discrete GPU.                                                                                                                                                                                                                                           |
-| r6  | M0 spike results recorded in §10: L2 parity harness, GPU precision, engine-in-worker, indirect-draw overhead. Indirect draws cost measurable GPU time on Intel/D3D12, so §3.3 submission now batches before going indirect.                                                                                                                                                                                                                                                                                                                     |
-| r7  | Spikes rerun on the NVIDIA GPU; Slang spike run (passes, perf gate deferred to unquantized timing in M1). §10 rewritten with both GPUs.                                                                                                                                                                                                                                                                                                                                                                                                         |
-| r8  | M0 close-out: automated runner (headless Edge, unquantized timestamps), FLIP validated against NVIDIA's reference and integrated, 1.x performance baselines, Metal deferred.                                                                                                                                                                                                                                                                                                                                                                    |
-| r9  | M1 increment 1: worker glTF pipeline, draw records v1, materials and textures, batching. Decisions: exact sRGB over matching 1.x's gamma 2.2; translucency designed clean-slate and tested against an exact reference instead of 1.x's WBOIT.                                                                                                                                                                                                                                                                                                   |
-| r10 | Translucency becomes a unified compute compositor shared by translucent meshes and Gaussian splats; MBOIT is the overflow fallback.                                                                                                                                                                                                                                                                                                                                                                                                             |
-| r11 | M1 increment 2: PBR + compute-built IBL, normal maps, lit parity vs 1.x, Slang re-ported to v1 records with a surface-material interface; Slang performance gate passes.                                                                                                                                                                                                                                                                                                                                                                        |
-| r12 | M1 increment 3: Draco and KTX2/Basis decoding in the workers; all 14 opaque Khronos samples within 0.025 mean FLIP of 1.x in every lighting mode.                                                                                                                                                                                                                                                                                                                                                                                               |
-| r13 | M1 increment 4: steady-state allocation gate (engine ~1.5 KB/frame, independent of draw count, down from ~45 KB) and first-frame cost (2.0 first frame 23–34 ms vs 1.x 203–691 ms).                                                                                                                                                                                                                                                                                                                                                             |
-| r14 | M1 increment 5: CAD content. Per-vertex feature IDs (EXT_mesh_features, b3dm _BATCHID) with property/batch tables and picking, b3dm, line primitives, ion asset auth, tileset parity page. An iModel-derived CAD tileset matches 1.x apart from translucency (M4). M1 exit met.                                                                                                                                                                                                                                                                 |
-| r15 | Demo viewer (`/viewer/`). M2 started: freeing placed models, per-view record view masks, and the `Legacy1x` selection spec extracted from the 1.x base traversal (§12).                                                                                                                                                                                                                                                                                                                                                                         |
-| r16 | M2 increment 1: streamed 3D Tiles with `Legacy1x` selection per view over one shared cache. L1 selection parity 100% on 36 view comparisons (9 public tilesets and 3 iModel-derived CAD tilesets, 3–4 simultaneous views each). Viewer streams.                                                                                                                                                                                                                                                                                                 |
-| r17 | M2 increment 2: OSM Buildings streams with 100% selection parity (Philadelphia, Manhattan); batch-table hierarchy; resize robustness (frame ordering, bounded render-target memory); viewer split view, memory panel and collapsible sections.                                                                                                                                                                                                                                                                                                  |
-| r18 | M2 increment 3: photogrammetry. Google Photorealistic 3D Tiles stream via ion with required credits; L1 selection parity 100% in four simultaneous views (22–164 tiles), after fixing a traversal-visibility bug in the port. Memory-adjusted SSE. Memory management recorded as an open design question.                                                                                                                                                                                                                                       |
-| r19 | M2 increment 4: `Next` policy v1 (skip-LOD with bounded skipping, visible-only coverage, cache reuse, region-grouped requests) and the L1′ harness. On Google 3D Tiles: 53% fewer requests, 48% fewer bytes, same final image, settles 1.6× faster (2.5× with 64 requests); in-between quality lags 1.x until mixed-LOD drawing lands.                                                                                                                                                                                                          |
-| r20 | §13: design notes for tile selection beyond `Legacy1x` (mixed-LOD drawing, scheduling, budget-driven refinement, multi-view priority, quality signals) and the engine memory model.                                                                                                                                                                                                                                                                                                                                                             |
-| r21 | M2 increment 5: mixed-LOD drawing for `Next`; `Next` now matches or beats 1.x on every L1′ metric on Google 3D Tiles (FLIP at 1 s 0.220 vs 0.421, half the bytes). Second 1.x selection bug documented (children-bounds culling vs refinement).                                                                                                                                                                                                                                                                                                 |
-| r22 | M2 increment 6: the r21 depth offset is replaced (hold, prefetch band, mixed LOD clipped to missing children only where children partition their parent); `Next` never hides a tileset that lacks a top-level geometric error; iTwin mesh exports load directly; content pipeline diagnostics; throttled L1′ with time-averaged FLIP (1.x looks better while loading on slow links); §13.8 render on demand; §14 follow-ups.                                                                                                                    |
-| r23 | Adaptive request windows per origin (BBR-style, protocol-seeded, cancellation); on-demand rendering per view, including views sharing a canvas (composited); viewer content tabs, combo boxes and ion token precedence; OS and networking lessons (§13.2, §13.6); M2 exit met, close-out (scheduler, `TileSource`, engine-wide cache) before M3, and a Next v2 milestone after M3. The `Next` policy is renamed `Budgeted` (`policy: "budgeted"`).                                                                                              |
-| r24 | M3 increment 2: the 1.x globe selection (`GlobeLegacy1xSelection`) with fog, horizon culling and 1.x's kicking and load queues; globe L1 parity 100% on six cameras with and without fog. Quadrants without data are upsampled as in 1.x (drawn clipped from the tile with data); partial availability no longer leaves holes under `Budgeted`. Tilesets stay active after loads without content. Fetch timeouts and retries recorded as a follow-up.                                                                                           |
-| r25 | Horizon culling moves into selection (float64, 1.x per-tile shrink): `Budgeted` culls 3D Tiles and terrain at the horizon before fetching, and the GPU test is retired (records back to 192 bytes). `Budgeted` refines empty tiles by SSE as 1.x does: OSM at Rainier drops from 783 requests to 31. §13.2 records cross-tileset scheduling to try (per-origin priority queue, I/O priority classes, preempting prefetch, wire priorities, aging).                                                                                              |
-| r26 | M3 increment 4: globe imagery composited on the GPU into a `texture_2d_array` cache (Bing via ion, 1.x level choice, ancestor fallback, empty-tile fallback, credits), within FLIP 0.03-0.05 of 1.x; a streamed ellipsoid globe (1.x `EllipsoidTerrainProvider`) replaces the static globe and ground patch; a 1.x-style globe camera controller with `View.pickPosition`; unlit color is display-referred (its own target, never tonemapped), which fixed darkened imagery and Google tiles.                                                   |
-| r27 | Content comes and goes in one world without stalls: the viewer keeps one world and globe (switch to a glTF: 26 ms, was 932), endpoint caches, an adaptive engine-wide upload budget and spread eviction. Open: frame stalls on first visits to uncached areas, and the budget's cost to settle time.                                                                                                                                                                                                                                            |
-| r28 | Scene foundations (§13.9): a per-world transform table (float64 hierarchy, visibility), records 192 → 128 bytes, GPU instancing culled per instance (`EXT_mesh_gpu_instancing`), glTF assets shared across placements, generational handles, scatter uploads; the prep kernel is renamed cull. glTF 2.1 / 3D Tiles 2.0, vector billboards and decals, and ray queries to path tracing designed (§13.9, §13.10). Parity unchanged.                                                                                                               |
-| r29 | M3 increment 5: height queries and clamping. `heightReference` on models (clamp/relative to ground, terrain or 3D Tiles), event-driven re-clamping, terrain clamped to its drawn surface (within 0.1 mm of 1.x `Globe.getHeight` where 1.x keeps full precision), 3D Tiles heights by GPU ray casts (`World.castRays`) within 6 mm of what 1.x renders; tileset `enableCollision` and `modelMatrix`. Custom shading becomes a PoC milestone (§3.4).                                                                                             |
-| r30 | Benchmark suite designed (§16): datasets, scenes and scenarios in manifests (public in the repo, private outside it, aliased in results), a checksummed local content store, engine adapters for 1.x and 2.0, a catalog of classic Cesium content, large public data and scenes where 2.0 should win; milestone "Benchmark suite v1" after M3. Clamping open items listed under M3.                                                                                                                                                             |
-| r31 | M3 complete (increment 6): model instancing (`ModelOptions.instances`) with a 100,000-instance benchmark, i3dm within FLIP 0.018 of 1.x, runtime tileset `modelMatrix`, `sampleHeightMostDetailed` within 7.5 mm of 1.x, the viewer's city clamped. Real-time tracks designed (§13.11) with a milestone after Custom shading; automatic per-instance LOD noted as an idea.                                                                                                                                                                      |
-| r32 | Benchmark suite v1 built (§16): public and private catalogs with license review, released 1.x builds pinned by version and release sweeps, recorded and controlled hardware conditions, redesigned reports and experiment tracking. §16.9 designs analysis and experience from analogous systems (experimentation platforms, quality-control charts, F1 telemetry, WebPageTest, frame analysis tools, 3DMark validation) for deciding, detecting, diagnosing, trusting, exploring and communicating.                                            |
-| r33 | Dyno phase 1 (§16.9): validity verdicts, scorecards with declared primary and guardrail metrics, a `benchstat`-style compare, cost along the camera path with path segments and a path map, filmstrips with FLIP, request waterfalls, percentile curves and stutter metrics; uncapped (vsync off) scenarios; thermal limits and headroom recorded; condition flags limited to true conditions; the Explorer tab (camera path, free flight, linked cameras, paused streaming via `Tileset3D.freezeSelection`), with benchmark authoring planned. |
-| r34 | Dyno rebuilt as a React app on TanStack Router (typed URL state, code-split views) with Radix Themes controls and a guided first run. Explorer inspection: bounding volumes in both engines, tiles tinted by depth or engine, the selection compared by depth (`Budgeted` draws much coarser terrain than 1.x at Rainier). Inspector designed; CI image job and bisection deferred.                                                                                                                                                             |
-| r35 | Dyno on StrataKit (Bentley's design system: MUI themed by @stratakit/mui) at the dev server's root: navigation by job (results, scenes, workbench), a new Overview, a design, copy and IA pass (bench/suite/DESIGN.md), feedback for the StrataKit team (STRATAKIT_FEEDBACK.md). Parity checks, microbenchmarks and spikes fold into Dyno's Lab.                                                                                                                                                                                                |
-| r36 | Engine names: releases by version (1.146.0), engines from the working tree named by branch (2.0@cesium-2.0-webgpu-poc), engines built at any git ref (2.0@main, 1.x@v1.140), settings after + (2.0+legacy1x); `--engines` replaces `--configs`/`--cesium`; budgets name setups. Explorer draws 1.x's globe tile volumes.                                                                                                                                                                                                                        |
-| r37 | `Budgeted` on terrain: the globe's SSE (fog only while drawn) instead of 3D Tiles' dynamic SSE, which left oblique terrain far too coarse (Rainier settled: 68 tiles vs 1.x's 67, all shared; was 20 at levels 0 to 12). The bare ellipsoid never hides content (§8 product choices, new). The inspector built (widgets/, with credits as 1.x shows them and imagery credited per tile drawn); `Viewer`, 2.0's `Cesium.Viewer`; Dyno's Viewer page (one engine at a time, StrataKit's app layout) replaces the standalone viewer.               |
+| Rev | Change                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| r1  | First draft: clean-slate WebGPU engine, 1.x used as the parity oracle                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| r2  | Added multiple viewports, Slang shaders, compute-shader uses, and globe/terrain/imagery to the PoC                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| r3  | Tile selection made pluggable (`Stepwise` vs improved `Next`). Folded in an external review against current industry practice, research and WebGPU status (late 2026). Main changes: GPU-driven submission from M1, no bindless in the PoC, Slang scope narrowed, a texture-array imagery cache, corrected MSAA/feature-ID and OIT plans, and new M0 precision tests. Sources are in §9.                                                                                                                                                                                                                                                                                                         |
+| r4  | Plan-owner decisions recorded (§8): Slang + WGSL ABI; **HDR + tonemapping by default**; all four multi-view scenarios including **linked views**; `packages/next` in TypeScript with new math; Chromium-first, core WebGPU only; 3D Tiles before globe. Canonical CAD test data to come from team-chosen ion assets.                                                                                                                                                                                                                                                                                                                                                                             |
+| r5  | M0 findings: multisampled `r32uint` is invalid in WebGPU, so feature IDs use `rg16uint` (lo16, hi16). On dual-GPU Windows laptops Chromium ignores `powerPreference` and follows the per-app Windows graphics setting, so benchmarks must record the adapter and launch Chromium on the discrete GPU.                                                                                                                                                                                                                                                                                                                                                                                            |
+| r6  | M0 spike results recorded in §10: L2 parity harness, GPU precision, engine-in-worker, indirect-draw overhead. Indirect draws cost measurable GPU time on Intel/D3D12, so §3.3 submission now batches before going indirect.                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| r7  | Spikes rerun on the NVIDIA GPU; Slang spike run (passes, perf gate deferred to unquantized timing in M1). §10 rewritten with both GPUs.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| r8  | M0 close-out: automated runner (headless Edge, unquantized timestamps), FLIP validated against NVIDIA's reference and integrated, 1.x performance baselines, Metal deferred.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| r9  | M1 increment 1: worker glTF pipeline, draw records v1, materials and textures, batching. Decisions: exact sRGB over matching 1.x's gamma 2.2; translucency designed clean-slate and tested against an exact reference instead of 1.x's WBOIT.                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| r10 | Translucency becomes a unified compute compositor shared by translucent meshes and Gaussian splats; MBOIT is the overflow fallback.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| r11 | M1 increment 2: PBR + compute-built IBL, normal maps, lit parity vs 1.x, Slang re-ported to v1 records with a surface-material interface; Slang performance gate passes.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| r12 | M1 increment 3: Draco and KTX2/Basis decoding in the workers; all 14 opaque Khronos samples within 0.025 mean FLIP of 1.x in every lighting mode.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| r13 | M1 increment 4: steady-state allocation gate (engine ~1.5 KB/frame, independent of draw count, down from ~45 KB) and first-frame cost (2.0 first frame 23–34 ms vs 1.x 203–691 ms).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| r14 | M1 increment 5: CAD content. Per-vertex feature IDs (EXT_mesh_features, b3dm _BATCHID) with property/batch tables and picking, b3dm, line primitives, ion asset auth, tileset parity page. An iModel-derived CAD tileset matches 1.x apart from translucency (M4). M1 exit met.                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| r15 | Demo viewer (`/viewer/`). M2 started: freeing placed models, per-view record view masks, and the `Stepwise` selection spec extracted from the 1.x base traversal (§12).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| r16 | M2 increment 1: streamed 3D Tiles with `Stepwise` selection per view over one shared cache. L1 selection parity 100% on 36 view comparisons (9 public tilesets and 3 iModel-derived CAD tilesets, 3–4 simultaneous views each). Viewer streams.                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| r17 | M2 increment 2: OSM Buildings streams with 100% selection parity (Philadelphia, Manhattan); batch-table hierarchy; resize robustness (frame ordering, bounded render-target memory); viewer split view, memory panel and collapsible sections.                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| r18 | M2 increment 3: photogrammetry. Google Photorealistic 3D Tiles stream via ion with required credits; L1 selection parity 100% in four simultaneous views (22–164 tiles), after fixing a traversal-visibility bug in the port. Memory-adjusted SSE. Memory management recorded as an open design question.                                                                                                                                                                                                                                                                                                                                                                                        |
+| r19 | M2 increment 4: `Next` policy v1 (skip-LOD with bounded skipping, visible-only coverage, cache reuse, region-grouped requests) and the L1′ harness. On Google 3D Tiles: 53% fewer requests, 48% fewer bytes, same final image, settles 1.6× faster (2.5× with 64 requests); in-between quality lags 1.x until mixed-LOD drawing lands.                                                                                                                                                                                                                                                                                                                                                           |
+| r20 | §13: design notes for tile selection beyond `Stepwise` (mixed-LOD drawing, scheduling, budget-driven refinement, multi-view priority, quality signals) and the engine memory model.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| r21 | M2 increment 5: mixed-LOD drawing for `Next`; `Next` now matches or beats 1.x on every L1′ metric on Google 3D Tiles (FLIP at 1 s 0.220 vs 0.421, half the bytes). Second 1.x selection bug documented (children-bounds culling vs refinement).                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| r22 | M2 increment 6: the r21 depth offset is replaced (hold, prefetch band, mixed LOD clipped to missing children only where children partition their parent); `Next` never hides a tileset that lacks a top-level geometric error; iTwin mesh exports load directly; content pipeline diagnostics; throttled L1′ with time-averaged FLIP (1.x looks better while loading on slow links); §13.8 render on demand; §14 follow-ups.                                                                                                                                                                                                                                                                     |
+| r23 | Adaptive request windows per origin (BBR-style, protocol-seeded, cancellation); on-demand rendering per view, including views sharing a canvas (composited); viewer content tabs, combo boxes and ion token precedence; OS and networking lessons (§13.2, §13.6); M2 exit met, close-out (scheduler, `TileSource`, engine-wide cache) before M3, and a Next v2 milestone after M3. The `Next` policy is renamed `Budgeted` (`policy: "budgeted"`).                                                                                                                                                                                                                                               |
+| r24 | M3 increment 2: the 1.x globe selection (`GlobeStepwiseSelection`) with fog, horizon culling and 1.x's kicking and load queues; globe L1 parity 100% on six cameras with and without fog. Quadrants without data are upsampled as in 1.x (drawn clipped from the tile with data); partial availability no longer leaves holes under `Budgeted`. Tilesets stay active after loads without content. Fetch timeouts and retries recorded as a follow-up.                                                                                                                                                                                                                                            |
+| r25 | Horizon culling moves into selection (float64, 1.x per-tile shrink): `Budgeted` culls 3D Tiles and terrain at the horizon before fetching, and the GPU test is retired (records back to 192 bytes). `Budgeted` refines empty tiles by SSE as 1.x does: OSM at Rainier drops from 783 requests to 31. §13.2 records cross-tileset scheduling to try (per-origin priority queue, I/O priority classes, preempting prefetch, wire priorities, aging).                                                                                                                                                                                                                                               |
+| r26 | M3 increment 4: globe imagery composited on the GPU into a `texture_2d_array` cache (Bing via ion, 1.x level choice, ancestor fallback, empty-tile fallback, credits), within FLIP 0.03-0.05 of 1.x; a streamed ellipsoid globe (1.x `EllipsoidTerrainProvider`) replaces the static globe and ground patch; a 1.x-style globe camera controller with `View.pickPosition`; unlit color is display-referred (its own target, never tonemapped), which fixed darkened imagery and Google tiles.                                                                                                                                                                                                    |
+| r27 | Content comes and goes in one world without stalls: the viewer keeps one world and globe (switch to a glTF: 26 ms, was 932), endpoint caches, an adaptive engine-wide upload budget and spread eviction. Open: frame stalls on first visits to uncached areas, and the budget's cost to settle time.                                                                                                                                                                                                                                                                                                                                                                                             |
+| r28 | Scene foundations (§13.9): a per-world transform table (float64 hierarchy, visibility), records 192 → 128 bytes, GPU instancing culled per instance (`EXT_mesh_gpu_instancing`), glTF assets shared across placements, generational handles, scatter uploads; the prep kernel is renamed cull. glTF 2.1 / 3D Tiles 2.0, vector billboards and decals, and ray queries to path tracing designed (§13.9, §13.10). Parity unchanged.                                                                                                                                                                                                                                                                |
+| r29 | M3 increment 5: height queries and clamping. `heightReference` on models (clamp/relative to ground, terrain or 3D Tiles), event-driven re-clamping, terrain clamped to its drawn surface (within 0.1 mm of 1.x `Globe.getHeight` where 1.x keeps full precision), 3D Tiles heights by GPU ray casts (`World.castRays`) within 6 mm of what 1.x renders; tileset `enableCollision` and `modelMatrix`. Custom shading becomes a PoC milestone (§3.4).                                                                                                                                                                                                                                              |
+| r30 | Benchmark suite designed (§16): datasets, scenes and scenarios in manifests (public in the repo, private outside it, aliased in results), a checksummed local content store, engine adapters for 1.x and 2.0, a catalog of classic Cesium content, large public data and scenes where 2.0 should win; milestone "Benchmark suite v1" after M3. Clamping open items listed under M3.                                                                                                                                                                                                                                                                                                              |
+| r31 | M3 complete (increment 6): model instancing (`ModelOptions.instances`) with a 100,000-instance benchmark, i3dm within FLIP 0.018 of 1.x, runtime tileset `modelMatrix`, `sampleHeightMostDetailed` within 7.5 mm of 1.x, the viewer's city clamped. Real-time tracks designed (§13.11) with a milestone after Custom shading; automatic per-instance LOD noted as an idea.                                                                                                                                                                                                                                                                                                                       |
+| r32 | Benchmark suite v1 built (§16): public and private catalogs with license review, released 1.x builds pinned by version and release sweeps, recorded and controlled hardware conditions, redesigned reports and experiment tracking. §16.9 designs analysis and experience from analogous systems (experimentation platforms, quality-control charts, F1 telemetry, WebPageTest, frame analysis tools, 3DMark validation) for deciding, detecting, diagnosing, trusting, exploring and communicating.                                                                                                                                                                                             |
+| r33 | Dyno phase 1 (§16.9): validity verdicts, scorecards with declared primary and guardrail metrics, a `benchstat`-style compare, cost along the camera path with path segments and a path map, filmstrips with FLIP, request waterfalls, percentile curves and stutter metrics; uncapped (vsync off) scenarios; thermal limits and headroom recorded; condition flags limited to true conditions; the Explorer tab (camera path, free flight, linked cameras, paused streaming via `Tileset3D.freezeSelection`), with benchmark authoring planned.                                                                                                                                                  |
+| r34 | Dyno rebuilt as a React app on TanStack Router (typed URL state, code-split views) with Radix Themes controls and a guided first run. Explorer inspection: bounding volumes in both engines, tiles tinted by depth or engine, the selection compared by depth (`Budgeted` draws much coarser terrain than 1.x at Rainier). Inspector designed; CI image job and bisection deferred.                                                                                                                                                                                                                                                                                                              |
+| r35 | Dyno on StrataKit (Bentley's design system: MUI themed by @stratakit/mui) at the dev server's root: navigation by job (results, scenes, workbench), a new Overview, a design, copy and IA pass (bench/suite/DESIGN.md), feedback for the StrataKit team (STRATAKIT_FEEDBACK.md). Parity checks, microbenchmarks and spikes fold into Dyno's Lab.                                                                                                                                                                                                                                                                                                                                                 |
+| r36 | Engine names: releases by version (1.146.0), engines from the working tree named by branch (2.0@cesium-2.0-webgpu-poc), engines built at any git ref (2.0@main, 1.x@v1.140), settings after + (2.0+stepwise); `--engines` replaces `--configs`/`--cesium`; budgets name setups. Explorer draws 1.x's globe tile volumes.                                                                                                                                                                                                                                                                                                                                                                         |
+| r37 | `Budgeted` on terrain: the globe's SSE (fog only while drawn) instead of 3D Tiles' dynamic SSE, which left oblique terrain far too coarse (Rainier settled: 68 tiles vs 1.x's 67, all shared; was 20 at levels 0 to 12). The bare ellipsoid never hides content (§8 product choices, new). The inspector built (widgets/, with credits as 1.x shows them and imagery credited per tile drawn); `Viewer`, 2.0's `Cesium.Viewer`; Dyno's Viewer page (one engine at a time, StrataKit's app layout) replaces the standalone viewer. The `Legacy1x` policy is renamed `Stepwise` (`policy: "stepwise"`), for what it does: 1.x's refinement one level at a time, each level loaded on the way down. |
 
 ## 1. Goal
 
@@ -363,7 +363,7 @@ Traversal, decoding of compressed formats and networking stay on the CPU in work
   - one **ContentCache** with an engine-wide budget and per-view last-used tracking
 - **Imagery** is a dependent source keyed to visible terrain tiles.
 - **`SelectionPolicy`** is pluggable:
-  - **`Legacy1x`** reproduces 1.x selection exactly (3D Tiles SSE 16 with REPLACE/ADD and request volumes; globe SSE 2 with horizon culling). It exists for **fair comparisons** and deterministic parity tests.
+  - **`Stepwise`** reproduces 1.x selection exactly (3D Tiles SSE 16 with REPLACE/ADD and request volumes; globe SSE 2 with horizon culling). It exists for **fair comparisons** and deterministic parity tests.
   - **`Budgeted`** (default) improves on it:
     - **Keeps 1.x's proven heuristics**: skip-LOD (the biggest win for deep photogrammetry trees), dynamic SSE, foveated SSE, progressive resolution, flight-destination preloading, and culling requests while moving.
     - **Budget-driven refinement**, formalized as Funkhouser–Séquin benefit/cost selection. Benefit = SSE reduction × screen weight × view weight. Cost = bytes plus decode milliseconds. When the budget is reached, quality degrades gracefully instead of thrashing.
@@ -446,13 +446,13 @@ Principles, each fixing a 1.x abstraction problem:
 
 ## 4. Parity strategy (1.x as oracle)
 
-The harness is `parity/` side-by-side: a 1.x `Viewer` (WebGL) and a 2.0 `Engine` (WebGPU), driven by **one serialized camera state** and a fixed `JulianDate`, with the same assets and default settings. Parity runs use `Legacy1x` selection. Color is judged on 2.0's exact sRGB pipeline, and translucency against 2.0's own exact reference mode rather than 1.x (r9). Because 2.0 defaults to HDR, the primary image baseline is **1.x with `scene.highDynamicRange = true`** and the same tonemapper. A secondary LDR-vs-LDR run covers 1.x's out-of-the-box default.
+The harness is `parity/` side-by-side: a 1.x `Viewer` (WebGL) and a 2.0 `Engine` (WebGPU), driven by **one serialized camera state** and a fixed `JulianDate`, with the same assets and default settings. Parity runs use `Stepwise` selection. Color is judged on 2.0's exact sRGB pipeline, and translucency against 2.0's own exact reference mode rather than 1.x (r9). Because 2.0 defaults to HDR, the primary image baseline is **1.x with `scene.highDynamicRange = true`** and the same tonemapper. A secondary LDR-vs-LDR run covers 1.x's out-of-the-box default.
 
 | Level                      | Check                                                                                                         | Pass criterion                                                              |
 | -------------------------- | ------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
 | L0 math                    | Ellipsoid/Transforms/Sun/projection vs 1.x; **hi/lo precision on Metal, D3D12 and Vulkan**                    | ≤1e-12 relative (CPU); bounded error in meters at canonical distances (GPU) |
-| L1 selection (`Legacy1x`)  | Selected 3D Tiles and terrain tile IDs after load settles                                                     | ≥ 99% Jaccard (target 100%)                                                 |
-| L1′ selection (`Budgeted`) | Image error vs a fully refined reference; bytes downloaded; time-to-full-detail; popping with a static camera | better than `Legacy1x` on most metrics and no worse on any                  |
+| L1 selection (`Stepwise`)  | Selected 3D Tiles and terrain tile IDs after load settles                                                     | ≥ 99% Jaccard (target 100%)                                                 |
+| L1′ selection (`Budgeted`) | Image error vs a fully refined reference; bytes downloaded; time-to-full-detail; popping with a static camera | better than `Stepwise` on most metrics and no worse on any                  |
 | L2 image                   | NVIDIA FLIP mean / p95 vs 1.x screenshot                                                                      | mean ≤ 0.05, p95 ≤ 0.2 (tune in M0)                                         |
 | L3 look-dev                | Swipe slider plus flicker toggle                                                                              | human sign-off                                                              |
 
@@ -570,11 +570,11 @@ Durations are rough and **optimistic** for one engineer with AI assistance. If t
 
 ### M2 — Unified streaming plus 3D Tiles (≈3–4 wks)
 
-- `TileSource`, SoA tile table, `Legacy1x` policy, RequestScheduler with ion and P3DT auth, engine-wide cache with per-view tracking, b3dm unwrap.
+- `TileSource`, SoA tile table, `Stepwise` policy, RequestScheduler with ion and P3DT auth, engine-wide cache with per-view tracking, b3dm unwrap.
 - First cut of the `Budgeted` policy: skip-LOD and budget-driven refinement.
 - _Exit_:
   - OSM Buildings, the CAD tileset and photogrammetry stream.
-  - `Legacy1x` L1 ≥99% in two views.
+  - `Stepwise` L1 ≥99% in two views.
   - `Budgeted` L1′ is measured.
 - _Status (r23)_: exit met (100% L1 in two views; L1′ fast and throttled,
   three moves, photogrammetry and design models). Closing out before M3:
@@ -593,7 +593,7 @@ Durations are rough and **optimistic** for one engineer with AI assistance. If t
   city clamped, `sampleHeightMostDetailed`. Clamping billboards and labels
   moves to real-time tracks (§13.11), with the billboards themselves.
 - **Status: M3 complete (r31).**
-- _Exit_: the CAD tileset sits on Cesium World Terrain with ion imagery; globe `Legacy1x` L1 ≥99%.
+- _Exit_: the CAD tileset sits on Cesium World Terrain with ion imagery; globe `Stepwise` L1 ≥99%.
 
 ### Benchmark suite v1 (after M3)
 
@@ -629,7 +629,7 @@ In order (r37). First the findings from the r37 baseline (§16.7), so each
 change after them is measured against a guardrail:
 
 - **Image guardrail (done r37)**: selection parity, `Budgeted` against
-  `Legacy1x` on the same renderer (the settled end view captured under both
+  `Stepwise` on the same renderer (the settled end view captured under both
   after every measurement; FLIP at most 0.1 per scene, counted with the
   guardrails). Calibrated: untextured scenes 0.001 to 0.008, textured
   0.04 to 0.08 (Melbourne 0.083, to look at); Rainier's under-refinement
@@ -752,7 +752,7 @@ Then the planned work:
   prefetch band sized by its hit rate (§13.2, §13.6).
 - A second photogrammetry city in L1′; network profiles from real-user
   data (follow-up 6; synthetic profiles until that data exists).
-- _Exit_: `Budgeted` beats `Legacy1x` on FLIP avg at equal or fewer bytes on
+- _Exit_: `Budgeted` beats `Stepwise` on FLIP avg at equal or fewer bytes on
   both fast and slow links, across photogrammetry, OSM and design models.
 
 ### M4 — Visual parity (≈3 wks)
@@ -1339,7 +1339,7 @@ Next increments:
 
 1. Specular IBL parity (needs feeding 2.0's prefiltered cube to 1.x, or a
    2.0-only reference render).
-2. M2: streaming and 3D Tiles selection (`TileSource`, `Legacy1x`, `Budgeted`).
+2. M2: streaming and 3D Tiles selection (`TileSource`, `Stepwise`, `Budgeted`).
 
 ## 12. M2 progress
 
@@ -1372,9 +1372,9 @@ band, rotated, so it costs 16 batches rather than 512.
   being culled. One shared draw table can therefore carry different LOD
   selections per view: the basis for multi-view tile selection.
 
-### `Legacy1x` selection spec (from the 1.x base traversal)
+### `Stepwise` selection spec (from the 1.x base traversal)
 
-`Legacy1x` must reproduce 1.x's default, non-skip-LOD selection exactly
+`Stepwise` must reproduce 1.x's default, non-skip-LOD selection exactly
 (L1 ≥ 99% Jaccard). The rules that matter, from
 `Cesium3DTilesetBaseTraversal.js`, `Cesium3DTilesetTraversal.js` and
 `Cesium3DTile.js`:
@@ -1410,7 +1410,7 @@ band, rotated, so it costs 16 batches rather than 512.
   cull-requests-while-moving; the priority digits; and cancellation of
   untouched in-flight requests.
 
-### Increment 1 (r16): streaming with `Legacy1x` selection
+### Increment 1 (r16): streaming with `Stepwise` selection
 
 Done:
 
@@ -1423,7 +1423,7 @@ Done:
 - **Tile tree** (`streaming/Tile.ts`): explicit tilesets, external tilesets
   loaded on demand, transforms, refine inheritance, viewer request volumes,
   content volumes and the children-within-parent optimization.
-- **`Legacy1x`** (`streaming/Legacy1x.ts`): the 1.x base traversal rule for
+- **`Stepwise`** (`streaming/Stepwise.ts`): the 1.x base traversal rule for
   rule (§12 spec), including dynamic SSE, children-bounds culling,
   `meetsScreenSpaceErrorEarly`, empty-subtree refinement, plane-mask frustum
   culling with 1.x's far plane, and content-volume culling at selection. Per-view
@@ -1453,7 +1453,7 @@ selected content:
 
 A 1.x bug surfaced along the way. A tileset without the (required) top-level
 `geometricError` makes 1.x compute `NaN` for the root's early-out SSE, so it
-always traverses the root; iTwin's publisher omits the field. `Legacy1x`
+always traverses the root; iTwin's publisher omits the field. `Stepwise`
 copies this, with a warning. `Budgeted` should fall back to the root's error,
 and the bug is worth filing against 1.x.
 
@@ -1549,7 +1549,7 @@ L1 selection parity (`2026-10-30T00-55-07-567Z`; private assets run locally):
 | Cesium OSM Buildings, Midtown           | 4     | 16–20          | 100%         |
 | iModel-derived CAD tilesets (3)         | 4     | 0–5            | 100%         |
 
-The M2 exit criteria are met for `Legacy1x`: OSM Buildings, a CAD tileset and
+The M2 exit criteria are met for `Stepwise`: OSM Buildings, a CAD tileset and
 photogrammetry stream, with ≥ 99% L1 in multiple views (100% measured).
 `Budgeted` and its L1′ measurement remain.
 
@@ -1572,7 +1572,7 @@ the parity default, not a design. To work out before `Budgeted` and M5:
 
 ### Increment 4 (r19): `Budgeted` v1 and L1′
 
-`Tileset3D` takes `policy: "legacy1x" | "next"` (default `legacy1x` until
+`Tileset3D` takes `policy: "stepwise" | "next"` (default `stepwise` until
 `Budgeted` wins on every L1′ metric). `Budgeted` shares 1.x's visibility, distance
 and dynamic SSE and replaces the refinement rules:
 
@@ -1598,7 +1598,7 @@ Google Photorealistic 3D Tiles over Midtown:
 
 | Policy                  | Requests | MB  | Settle | FLIP @250 ms | @1 s  | Settled |
 | ----------------------- | -------- | --- | ------ | ------------ | ----- | ------- |
-| `Legacy1x` (1.x)        | 315      | 426 | 3.3 s  | 0.499        | 0.421 | 0.148   |
+| `Stepwise` (1.x)        | 315      | 426 | 3.3 s  | 0.499        | 0.421 | 0.148   |
 | `Budgeted`              | 147      | 222 | 2.0 s  | 0.564        | 0.564 | 0.148   |
 | `Budgeted`, 64 requests | 147      | 222 | 1.3 s  | 0.564        | 0.148 | 0.148   |
 
@@ -1627,7 +1627,7 @@ L1′, Google Photorealistic 3D Tiles over Midtown
 
 | Policy                              | Requests | MB  | Settle | FLIP @250 ms | @1 s      | Settled |
 | ----------------------------------- | -------- | --- | ------ | ------------ | --------- | ------- |
-| `Legacy1x` (1.x)                    | 315      | 426 | 3.5 s  | 0.499        | 0.421     | 0.148   |
+| `Stepwise` (1.x)                    | 315      | 426 | 3.5 s  | 0.499        | 0.421     | 0.148   |
 | `Budgeted` + mixed LOD              | 147      | 222 | 2.1 s  | 0.499        | **0.220** | 0.148   |
 | `Budgeted` + mixed LOD, 64 requests | 147      | 222 | 1.6 s  | 0.499        | 0.288     | 0.148   |
 
@@ -1637,7 +1637,7 @@ placeholders, with no holes or visible z-fighting.
 
 ### A second 1.x selection bug
 
-Near the Brooklyn Bridge, 1.x (and `Legacy1x`, at 100% parity there) draws a
+Near the Brooklyn Bridge, 1.x (and `Stepwise`, at 100% parity there) draws a
 coarse tile at SSE 446, 30× the threshold, as a dark blocky rectangle over
 the water. Mechanism:
 
@@ -1685,12 +1685,12 @@ L1′, Google Photorealistic 3D Tiles over Midtown, unthrottled
 
 | Move     | Policy                | Requests | MB  | Settle | FLIP @250 ms | @1 s      | Settled |
 | -------- | --------------------- | -------- | --- | ------ | ------------ | --------- | ------- |
-| jump in  | `Legacy1x` (1.x)      | 315      | 426 | 3.2 s  | 0.499        | 0.421     | 0.148   |
+| jump in  | `Stepwise` (1.x)      | 315      | 426 | 3.2 s  | 0.499        | 0.421     | 0.148   |
 | jump in  | `Budgeted`, no mixing | 217      | 271 | 1.8 s  | 0.499        | **0.155** | 0.148   |
 | jump in  | `Budgeted`, mixed     | 217      | 271 | 1.7 s  | 0.499        | 0.160     | 0.148   |
-| zoom out | `Legacy1x` (1.x)      | 40       | 26  | 1.4 s  | 0.490        | 0.490     | 0.490   |
+| zoom out | `Stepwise` (1.x)      | 40       | 26  | 1.4 s  | 0.490        | 0.490     | 0.490   |
 | zoom out | `Budgeted`            | 27       | 19  | 1.4 s  | 0.496        | 0.496     | 0.496   |
-| pan      | `Legacy1x` (1.x)      | 93       | 154 | 1.5 s  | 0.533        | 0.554     | 0.554   |
+| pan      | `Stepwise` (1.x)      | 93       | 154 | 1.5 s  | 0.533        | 0.554     | 0.554   |
 | pan      | `Budgeted`            | 83       | 132 | 1.4 s  | 0.548        | 0.554     | 0.554   |
 
 Hold and prefetch improved `Budgeted`'s jump-in FLIP at 1 s from 0.220 (r21) to
@@ -1711,7 +1711,7 @@ Midtown, jump in (`2026-10-30T02-44-06-405Z`):
 
 | Policy                | Requests | MB  | Settle | FLIP @1 s | FLIP avg  | Settled |
 | --------------------- | -------- | --- | ------ | --------- | --------- | ------- |
-| `Legacy1x` (1.x)      | 315      | 426 | 25.9 s | 0.499     | **0.267** | 0.148   |
+| `Stepwise` (1.x)      | 315      | 426 | 25.9 s | 0.499     | **0.267** | 0.148   |
 | `Budgeted`, no mixing | 217      | 271 | 17.4 s | 0.499     | 0.288     | 0.148   |
 | `Budgeted`, mixed     | 217      | 271 | 17.4 s | 0.499     | 0.279     | 0.148   |
 | `Budgeted`, 64 req.   | 217      | 271 | 17.4 s | 0.499     | 0.319     | 0.148   |
@@ -1787,10 +1787,10 @@ priority, silhouettes and HZB feedback, worker traversal over an SoA tile
 table, paging and readahead lessons, a second photogrammetry city.
 
 Done along the way: `Budgeted` is the default (parity harnesses pin
-`legacy1x`); rendering is on demand, per view, including views sharing a
+`stepwise`); rendering is on demand, per view, including views sharing a
 canvas (§13.8).
 
-## 13. Design notes: tile selection and memory beyond `Legacy1x`
+## 13. Design notes: tile selection and memory beyond `Stepwise`
 
 The `Budgeted` policy was called `Next` until r23 (renamed for its goal:
 spend limited memory, bandwidth and requests where they improve the image
@@ -1799,7 +1799,7 @@ most, without leaving holes).
 Working notes for the `Budgeted` policy and the engine's memory model, written
 during M2 so the ideas survive the session. Each item states the problem,
 the approach in this engine, and how L1′ (or another harness) measures it.
-`Legacy1x` stays as the parity reference throughout. Nothing here changes it.
+`Stepwise` stays as the parity reference throughout. Nothing here changes it.
 
 ### 13.1 Mixed-LOD drawing
 
@@ -2475,7 +2475,7 @@ links to where it is explained.
 
 | #   | Item                                                                                                                                                                                                                                                                                                                                                                                                             | For                  | Where                              | Status                           |
 | --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------- | ---------------------------------- | -------------------------------- |
-| 1   | A tileset without the required top-level `geometricError` makes 1.x compute `NaN` for the root's early-out SSE, so the root is never skipped. `Legacy1x` copies it; `Budgeted` falls back to the root's error for refinement and never hides the tileset.                                                                                                                                                        | CesiumJS 1.x         | §12 (selection parity)             | Asked whether known or by design |
+| 1   | A tileset without the required top-level `geometricError` makes 1.x compute `NaN` for the root's early-out SSE, so the root is never skipped. `Stepwise` copies it; `Budgeted` falls back to the root's error for refinement and never hides the tileset.                                                                                                                                                        | CesiumJS 1.x         | §12 (selection parity)             | Asked whether known or by design |
 | 2   | Children-bounds culling vs refinement: a parent stays visible while every child is culled by its own children-bounds check, so 1.x selects a very coarse tile (SSE 446 near the Brooklyn Bridge).                                                                                                                                                                                                                | CesiumJS 1.x         | §12 ("A second 1.x selection bug") | To file                          |
 | 3   | iTwin mesh exports omit the top-level `geometricError` that 3D Tiles requires (the trigger for item 1).                                                                                                                                                                                                                                                                                                          | iTwin mesh export    | §12, increment 6                   | To raise                         |
 | 4   | Add `Timing-Allow-Origin` to the ion tile CDN (`assets.ion.cesium.com`). Without it browsers hide per-request timing (time to first byte, connection setup) and possibly the negotiated protocol from clients, which protocol-aware request scheduling wants. Google's tile host already sends it.                                                                                                               | Cesium ion           | §13.2                              | To ask                           |
@@ -2484,10 +2484,10 @@ links to where it is explained.
 | 7   | Content fetches have no timeout and no retry: a failed tile stays failed (with a warning) for the session, and a request that never answers holds a slot of its origin's window until no view needs the tile (cancelled after 30 frames). Wanted: a timeout from observed latency, retries with backoff for network errors, 5xx and 429 (`Retry-After`), 404 drawn as empty, and a token refresh on 401 for ion. | 2.0 streaming        | §15, increment 2                   | Planned                          |
 | 8   | `QuantizedMeshTerrainData.interpolateHeight` returns undefined for every loaded globe tile: it scales u and v to 0..32767 before branching, and the mesh branch compares them with texture coordinates decoded to 0..1; the other branch's quantized buffers are freed once the mesh exists. `sampleTerrain` works only because it fetches fresh terrain data.                                                   | CesiumJS 1.x         | §15, increment 5                   | To file                          |
 | 9   | `Cesium3DTileset.getHeight` (what 1.x clamps models to on 3D Tiles) misses geometry the renderer draws: on OSM Buildings it found no surface at 25 of 49 and 18 of 29 grid points that `Scene.sampleHeight` hits, and a lower surface (up to 53 m) at 4 more per view. Causes in reach: geocentric ray, first tile with any hit instead of the nearest hit, `pickModel` culling back faces.                      | CesiumJS 1.x         | §15, increment 5                   | To file                          |
-| 10  | `sampleTerrain` keeps a position's input height when sampling fails after a mesh was built, instead of returning undefined.                                                                                                                                                                                                                                                                                      | CesiumJS 1.x         | docs/clamping-legacy1x-spec.md §5  | To file                          |
-| 11  | Terrain height callbacks pass terrain-only heights, so a clamp-to-ground billboard can drop off a tileset roof until a tileset callback fires.                                                                                                                                                                                                                                                                   | CesiumJS 1.x         | docs/clamping-legacy1x-spec.md §2  | To file                          |
-| 12  | `Model.pick` passes 5 arguments to `pickModel`'s 7, so `result` lands in `ellipsoid`; tile content works by accident.                                                                                                                                                                                                                                                                                            | CesiumJS 1.x         | docs/clamping-legacy1x-spec.md §5  | To file                          |
-| 13  | `HeightmapTerrainData` mesh-path heights ignore `heightScale` and `heightOffset` after `createMesh` (latent; reached for LERC).                                                                                                                                                                                                                                                                                  | CesiumJS 1.x         | docs/clamping-legacy1x-spec.md §5  | To file                          |
+| 10  | `sampleTerrain` keeps a position's input height when sampling fails after a mesh was built, instead of returning undefined.                                                                                                                                                                                                                                                                                      | CesiumJS 1.x         | docs/clamping-1x-spec.md §5        | To file                          |
+| 11  | Terrain height callbacks pass terrain-only heights, so a clamp-to-ground billboard can drop off a tileset roof until a tileset callback fires.                                                                                                                                                                                                                                                                   | CesiumJS 1.x         | docs/clamping-1x-spec.md §2        | To file                          |
+| 12  | `Model.pick` passes 5 arguments to `pickModel`'s 7, so `result` lands in `ellipsoid`; tile content works by accident.                                                                                                                                                                                                                                                                                            | CesiumJS 1.x         | docs/clamping-1x-spec.md §5        | To file                          |
+| 13  | `HeightmapTerrainData` mesh-path heights ignore `heightScale` and `heightOffset` after `createMesh` (latent; reached for LERC).                                                                                                                                                                                                                                                                                  | CesiumJS 1.x         | docs/clamping-1x-spec.md §5        | To file                          |
 
 ## 15. M3 progress
 
@@ -2523,10 +2523,10 @@ and stopped asking.
 Horizon culling then went into the prep kernel (r23, retired in r25: see
 increment 3).
 
-### Increment 2 (r24): globe `Legacy1x` selection and L1 parity
+### Increment 2 (r24): globe `Stepwise` selection and L1 parity
 
-- **`GlobeLegacy1xSelection`** (`src/globe/GlobeLegacy1x.ts`), chosen by
-  `TerrainSource.createSelection` for `policy: "legacy1x"`: 1.x
+- **`GlobeStepwiseSelection`** (`src/globe/GlobeStepwise.ts`), chosen by
+  `TerrainSource.createSelection` for `policy: "stepwise"`: 1.x
   `QuadtreePrimitive` traversal (level-zero sort, near-to-far children,
   `TraversalDetails`, kicking, `loadingDescendantLimit`,
   `canRenderWithoutLosingDetail`) over `GlobeSurfaceTileProvider`
@@ -2534,7 +2534,7 @@ increment 3).
   ancestor-height collapse, OBB frustum test, horizon test against an
   ellipsoid shrunk below sea level. The high, medium and low load queues
   become request priority bands ordered by 1.x's load priority.
-  Specification: `docs/globe-legacy1x-spec.md`.
+  Specification: `docs/globe-1x-spec.md`.
 - **Bounds**: a terrain tile's volume tightens to its own heights when it
   loads; until then the nearest loaded ancestor's. The decoder recomputes
   1.x's occludee for tiles reaching below sea level; those skip the GPU
@@ -2570,7 +2570,7 @@ flight forever. Any completion now counts as a change.
 
 Switching the viewer to `Budgeted` over Cesium World Terrain and OSM
 Buildings at Mount Rainier loaded slowly: OSM took 783 requests to draw 16
-tiles (`Legacy1x`: 17), and terrain waited behind them on the shared ion
+tiles (`Stepwise`: 17), and terrain waited behind them on the shared ion
 request window. All of them were prefetches, 1,000 to 3,000 km away.
 
 - **Empty tiles refine by SSE, as in 1.x.** `Budgeted` always refined tiles
@@ -2611,7 +2611,7 @@ models and Slang suites are unchanged (100%).
 ### Increment 4 (r26): imagery, the ellipsoid globe, camera, display-referred color
 
 **Imagery** (`GlobeImagery`, `ImageryProvider`; spec in
-`docs/imagery-legacy1x-spec.md`):
+`docs/imagery-1x-spec.md`):
 
 - Each drawn terrain tile gets a slice of a per-world `texture_2d_array`
   (rgba8unorm, 256×256 with mips), bound once for the whole globe. A
@@ -2736,7 +2736,7 @@ against the spec's parity hazards.
 ### Increment 5 (r29): height queries and clamping
 
 1.x behavior, defects and design notes are in
-`docs/clamping-legacy1x-spec.md`.
+`docs/clamping-1x-spec.md`.
 
 **Terrain heights.** Tiles keep their decoded u, v, h and triangles.
 
@@ -3129,16 +3129,16 @@ default comparison is 2.0 against the pinned release.
 a release by its version (`1.146.0`; "1.x" always means "a CesiumJS 1
 build", never a release), an engine from the working tree (`2.0`, `1.x`),
 or one built at any git ref (`2.0@main`, `1.x@v1.140`), with settings
-after `+` (`2.0+legacy1x`, `2.0+sse=32`). Runs record the working tree
+after `+` (`2.0+stepwise`, `2.0+sse=32`). Runs record the working tree
 under its branch (`2.0@cesium-2.0-webgpu-poc`), so after a merge the same
 engine continues as `2.0@main`, and a branch can be run against a release
 and against main at once (`--engines 1.146.0,2.0@main,2.0`). Refs are
 checked out once into snapshot worktrees (`.bench/<sha>`): 1.x is built
 there on first use, 2.0 gets a dev server of its own. The catalog lists
-setups (engine settings without a build: `1.x`, `2.0`, `2.0+legacy1x`)
+setups (engine settings without a build: `1.x`, `2.0`, `2.0+stepwise`)
 and the default engines, baseline and candidate; budgets name a setup and
 apply to every build of it. People see readable names: "1.146.0",
-"2.0 · main", "2.0 · cesium-2.0-webgpu-poc · legacy1x selection".
+"2.0 · main", "2.0 · cesium-2.0-webgpu-poc · stepwise selection".
 
 **Historical sweeps.** `--releases 1.120.0..1.146.0` (or a list) adds one
 pinned configuration per published release, to see how 1.x itself
@@ -3196,7 +3196,7 @@ addressed in 2.0 (each with a Dyno scene to show the fix):
 
 - **`Budgeted` selection draws visibly differently from 1.x**, most
   apparent on Mount Rainier (terrain and imagery): in-between and settled
-  views pick different levels than `Legacy1x`. Wanted: a parity pass on
+  views pick different levels than `Stepwise`. Wanted: a parity pass on
   `Budgeted` against a fully refined reference (§4 L1′) per scene, the
   explorer's paused streaming and the filmstrip's FLIP to find where it
   under-refines, and an image guardrail in the scorecard so a faster
@@ -3714,7 +3714,7 @@ CI job and tab.
 - _Checks, not runs._ An image check is a scene, a pose (or a moment on
   its camera path), a time of day, a size and an engine configuration,
   captured once settled. It is deterministic: fixed size and device pixel
-  ratio, fixed `JulianDate`, `Legacy1x` selection or a selection settled
+  ratio, fixed `JulianDate`, `Stepwise` selection or a selection settled
   to full detail, no frame-time dependence, animation stopped. The
   catalog's scenes supply poses; the parity pages (`parity/*.html`)
   become checks; the explorer can save the current view as a check.

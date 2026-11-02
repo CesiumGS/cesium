@@ -16,10 +16,10 @@ import {
   BudgetedSelection,
   type BudgetedOptions,
 } from "../streaming/Budgeted.ts";
-import type { SelectionResult, SelectionView } from "../streaming/Legacy1x.ts";
+import type { SelectionResult, SelectionView } from "../streaming/Stepwise.ts";
 import type { Tile, TileViewState } from "../streaming/Tile.ts";
 import type { TerrainSource } from "./TerrainSource.ts";
-import { FOG_SSE, fog, fogDensity } from "./GlobeLegacy1x.ts";
+import { FOG_SSE, fog, fogDensity } from "./GlobeStepwise.ts";
 
 export class GlobeBudgetedSelection extends BudgetedSelection {
   /**

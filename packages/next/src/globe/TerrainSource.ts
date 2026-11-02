@@ -7,7 +7,7 @@
  * - Tiling: geographic (EPSG:4326), two tiles at level 0, TMS rows counted
  *   from the south, as `layer.json` availability and tile URLs use them.
  * - A tile's children are created when it loads, or earlier when the
- *   `Legacy1x` globe selection refines it and their availability is known
+ *   `Stepwise` globe selection refines it and their availability is known
  *   (from `layer.json` and the metadata extension's descendant ranges).
  *   All four are created when any is available; the others fill from
  *   their parent (1.x upsamples them). Until then a tile is a leaf.
@@ -19,7 +19,7 @@
  */
 import { Tile, type TileJson, type TileTree } from "../streaming/Tile.ts";
 import { volumeFromJson } from "../streaming/volumes.ts";
-import type { TileSelection } from "../streaming/Legacy1x.ts";
+import type { TileSelection } from "../streaming/Stepwise.ts";
 import type { TilesetOptions } from "../streaming/Tileset3D.ts";
 import * as m4 from "../math/mat4.ts";
 import type { Vec3 } from "../math/vec3.ts";
@@ -34,7 +34,7 @@ import {
   type TerrainTileInfo,
   type TileRange,
 } from "./quantizedMesh.ts";
-import { GlobeLegacy1xSelection } from "./GlobeLegacy1x.ts";
+import { GlobeStepwiseSelection } from "./GlobeStepwise.ts";
 import { GlobeBudgetedSelection } from "./GlobeBudgeted.ts";
 
 /** Decodes one tile in a worker: fetch, quantized-mesh decode, skirts. */
@@ -85,7 +85,7 @@ export interface GlobeTile extends Address {
   upsampled?: boolean;
   /** Children created (or known to be none). */
   expanded: boolean;
-  /** Globe `Legacy1x` selection result per view id, and its pass. */
+  /** Globe `Stepwise` selection result per view id, and its pass. */
   selection: { pass: number; result: number }[];
   /** Bounds cached by the globe selection. */
   bounds?: unknown;
@@ -158,12 +158,12 @@ export class TerrainSource {
   }
 
   /**
-   * The selection policy for terrain: 1.x's globe traversal for "legacy1x",
+   * The selection policy for terrain: 1.x's globe traversal for "stepwise",
    * else `Budgeted` with the globe's fog in place of 3D Tiles' dynamic SSE.
    */
   createSelection(options: TilesetOptions): TileSelection {
-    return options.policy === "legacy1x"
-      ? new GlobeLegacy1xSelection(this, options)
+    return options.policy === "stepwise"
+      ? new GlobeStepwiseSelection(this, options)
       : new GlobeBudgetedSelection(this, options);
   }
 
@@ -422,7 +422,7 @@ export class TerrainSource {
 
   /**
    * Gives a leaf four children without data, drawn from its content, as 1.x
-   * upsamples below the last level with data (globe `Legacy1x` only).
+   * upsamples below the last level with data (globe `Stepwise` only).
    */
   upsample(tile: Tile): boolean {
     const g = tile.globe!;

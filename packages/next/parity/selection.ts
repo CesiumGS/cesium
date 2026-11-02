@@ -18,7 +18,7 @@ declare const Cesium: any;
 type Json = any;
 
 const TEMPLATE = `
-<h1>Selection parity (L1): 1.x Cesium3DTileset vs 2.0 Legacy1x</h1>
+<h1>Selection parity (L1): 1.x Cesium3DTileset vs 2.0 Stepwise</h1>
 <p>
   Tiles selected after loading settles, per camera. 2.0 renders both cameras
   at once as two views over one shared tile cache (record view masks); 1.x
@@ -37,7 +37,7 @@ const $ = <T extends Element = HTMLElement>(id: string) =>
   root.querySelector<T>(`[data-id="${id}"]`)!;
 
 /**
- * L1 selection parity (plan §4): the tiles `Legacy1x` selects in each of two
+ * L1 selection parity (plan §4): the tiles `Stepwise` selects in each of two
  * views, rendered at once over one shared tile cache, against the tiles 1.x
  * selects for the same cameras, after loading settles. Jaccard over content
  * URLs, ≥ 99% required.
@@ -219,7 +219,7 @@ async function runSelection(): Promise<Row[]> {
         // Memory pressure is out of scope here: 2.0 serves several views from
         // one cache while 1.x gets a tileset per camera.
         cacheBytes: CACHE_BYTES,
-        policy: "legacy1x",
+        policy: "stepwise",
       });
       const at = params.get("at")?.split(",").map(Number);
       if (at) {

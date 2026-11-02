@@ -821,9 +821,9 @@
       "maximumScreenSpaceError": 16
     },
     {
-      "id": "2.0+legacy1x",
+      "id": "2.0+stepwise",
       "engine": "2.0",
-      "policy": "legacy1x",
+      "policy": "stepwise",
       "maximumScreenSpaceError": 16
     }
   ],

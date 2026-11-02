@@ -1,8 +1,8 @@
 /**
- * `Legacy1x` selection for terrain: CesiumJS 1.x's globe quadtree traversal
+ * `Stepwise` selection for terrain: CesiumJS 1.x's globe quadtree traversal
  * (QuadtreePrimitive selectTilesForRendering / visitTile, with
  * GlobeSurfaceTileProvider's visibility, distance and bounds), reproduced
- * for parity tests. See docs/globe-legacy1x-spec.md.
+ * for parity tests. See docs/globe-1x-spec.md.
  *
  * Differences from 1.x, by construction:
  * - Quadrants without data (1.x upsamples them) are drawn by the nearest
@@ -19,7 +19,7 @@ import type {
   SelectionResult,
   SelectionView,
   TileSelection,
-} from "../streaming/Legacy1x.ts";
+} from "../streaming/Stepwise.ts";
 import {
   OUTSIDE,
   obbIntersectPlane,
@@ -63,7 +63,7 @@ export const FOG_SSE = 2.0;
 
 const ellipsoid = Ellipsoid.WGS84;
 
-export interface GlobeLegacy1xOptions {
+export interface GlobeStepwiseOptions {
   /** 1.x Globe.maximumScreenSpaceError (default 2). */
   maximumScreenSpaceError?: number;
 }
@@ -104,7 +104,7 @@ interface Pass {
   touched: Tile[];
 }
 
-export class GlobeLegacy1xSelection implements TileSelection {
+export class GlobeStepwiseSelection implements TileSelection {
   /**
    * 1.x's high and medium load queues hold what the view draws or waits
    * on; its low queue, preloaded siblings and ancestors.
@@ -129,7 +129,7 @@ export class GlobeLegacy1xSelection implements TileSelection {
 
   constructor(
     private readonly source: TerrainSource,
-    options: GlobeLegacy1xOptions = {},
+    options: GlobeStepwiseOptions = {},
   ) {
     this.maximumScreenSpaceError = options.maximumScreenSpaceError ?? 2;
     this.memoryAdjustedScreenSpaceError = this.maximumScreenSpaceError;

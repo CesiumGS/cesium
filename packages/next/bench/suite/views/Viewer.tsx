@@ -423,7 +423,7 @@ export function Viewer() {
                 disabled={!!unsupported.policy}
                 options={[
                   ["budgeted", "Budgeted (default)"],
-                  ["legacy1x", "Legacy1x (as CesiumJS 1.x)"],
+                  ["stepwise", "Stepwise (as CesiumJS 1.x)"],
                 ]}
                 onChange={(v) => set("policy", v as ViewSettings["policy"])}
               />

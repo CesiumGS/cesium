@@ -19,12 +19,12 @@ import type { GltfAsset } from "../io/gltfTypes.ts";
 import type { Mat4 } from "../math/mat4.ts";
 import type { Rectangle } from "../globe/quantizedMesh.ts";
 import {
-  Legacy1xSelection,
+  StepwiseSelection,
   REQUEST_PURPOSES,
   type RequestPurpose,
   type SelectionView,
   type TileSelection,
-} from "./Legacy1x.ts";
+} from "./Stepwise.ts";
 import { Emitter } from "../core/Emitter.ts";
 import { BudgetedSelection, type BudgetedOptions } from "./Budgeted.ts";
 import {
@@ -97,10 +97,10 @@ export interface TileSource {
 export interface TilesetOptions extends BudgetedOptions {
   /**
    * Tile selection: "budgeted" (default) adds skip-LOD, visible-only coverage,
-   * hold, prefetch and free refinement from the shared cache; "legacy1x"
+   * hold, prefetch and free refinement from the shared cache; "stepwise"
    * reproduces CesiumJS 1.x for parity tests.
    */
-  policy?: "legacy1x" | "budgeted";
+  policy?: "stepwise" | "budgeted";
   /** Headers for every request (e.g. ion authorization). */
   headers?: Record<string, string>;
   /** Content cache budget in bytes (1.x cacheBytes default: 512 MiB). */
@@ -686,7 +686,7 @@ export class Tileset3D implements TileTree {
    * requests stay; the next update selects under the new rules. The
    * current maximum screen-space error carries over.
    */
-  setPolicy(policy: "legacy1x" | "budgeted"): void {
+  setPolicy(policy: "stepwise" | "budgeted"): void {
     const options = {
       ...this.options,
       policy,
@@ -1325,15 +1325,15 @@ function retarget(tile: Tile, tree: TileTree): void {
   }
 }
 
-/** The source's own policy (terrain's globe Legacy1x), else 3D Tiles'. */
+/** The source's own policy (terrain's globe Stepwise), else 3D Tiles'. */
 function createSelection(
   options: TilesetOptions,
   source: TileSource | undefined,
 ): TileSelection {
   return (
     source?.createSelection?.(options) ??
-    (options.policy === "legacy1x"
-      ? new Legacy1xSelection(options)
+    (options.policy === "stepwise"
+      ? new StepwiseSelection(options)
       : new BudgetedSelection(options))
   );
 }

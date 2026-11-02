@@ -14,7 +14,7 @@
 // Engines (engines.mjs): a CesiumJS release ("1.146.0", "latest"), an
 // engine from the working tree ("2.0", "1.x", named by the branch in
 // results), or one built at a git ref ("2.0@main", "1.x@v1.140"), with
-// settings after "+" ("2.0+legacy1x", "2.0+sse=32"). Releases are fetched
+// settings after "+" ("2.0+stepwise", "2.0+sse=32"). Releases are fetched
 // once into the store; refs are checked out once into snapshot worktrees.
 //   node packages/next/bench/suite/cli.mjs report <results.json>
 //   node packages/next/bench/suite/cli.mjs alerts [--all] [--fail-on-new]
@@ -1079,8 +1079,8 @@ function validity(result, quietLimit, idle = {}) {
  * Filmstrip assets: each settled view as a JPEG, and per scene and moment
  * the image parity (FLIP) of every configuration against the baseline,
  * with its heatmap, computed in a page with the parity harness's FLIP.
- * A 2.0 frame with a selection reference (the same view under Legacy1x
- * selection, moment "<moment>-legacy1x") also gets `selection`: FLIP
+ * A 2.0 frame with a selection reference (the same view under Stepwise
+ * selection, moment "<moment>-stepwise") also gets `selection`: FLIP
  * against it, what its tile selection draws differently, renderer aside.
  */
 async function filmstrips(browser, base, frames, directory, baseline) {
@@ -1089,12 +1089,12 @@ async function filmstrips(browser, base, frames, directory, baseline) {
   await page.goto(`${base}/bench/suite/flip.html`);
   const out = [];
   const key = (f) => `${f.scene}|${f.scenario}|${f.moment}`;
-  const isReference = (f) => f.moment.endsWith("-legacy1x");
+  const isReference = (f) => f.moment.endsWith("-stepwise");
   const references = new Map(
     frames
       .filter(isReference)
       .map((f) => [
-        `${key({ ...f, moment: f.moment.replace(/-legacy1x$/, "") })}|${f.config}`,
+        `${key({ ...f, moment: f.moment.replace(/-stepwise$/, "") })}|${f.config}`,
         f,
       ]),
   );
@@ -1155,7 +1155,7 @@ async function filmstrips(browser, base, frames, directory, baseline) {
           { test: own.png.toString("base64") },
         );
         writeFileSync(
-          join(directory, `${name}.legacy1x.jpg`),
+          join(directory, `${name}.stepwise.jpg`),
           Buffer.from(reference.jpeg, "base64"),
         );
         writeFileSync(
@@ -1166,7 +1166,7 @@ async function filmstrips(browser, base, frames, directory, baseline) {
           mean: parity.flip.mean,
           p95: parity.flip.p95,
           heatmap: `${name}.selection.flip.png`,
-          reference: `${name}.legacy1x.jpg`,
+          reference: `${name}.stepwise.jpg`,
         };
       }
     }
