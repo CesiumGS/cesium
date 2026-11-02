@@ -2109,13 +2109,17 @@ renders 16 to 19 frames per second while Midtown streams, none once it
 settles, a frame per camera change while orbiting, and serves picks while
 idle.
 
-_r37_: hovering renders frames. `GlobeController` picks the position
+_r37_: hovering rendered frames. `GlobeController` picks the position
 under the cursor on every pointer move (one pick at a time, so wheel zoom
-can aim at what's under the cursor), and a pick is served by a pass in a
-rendered frame, so the viewer renders about as often as the pointer moves.
-**To do**: serve a pick from the view's last frame (keep its depth and
-pick IDs while the view is clean and run only the pick pass), which makes
-clicks free too; else pick when the wheel turns.
+can aim at what's under the cursor), and a pick was served by a pass in a
+rendered frame, so the viewer rendered about as often as the pointer
+moved. **Fixed**: each view keeps its own feature-ID and depth targets
+(not pooled; depth is stored every frame), and a pick for a view that
+doesn't render this tick runs only the pick pass on what its last frame
+left there. Hovering the milk truck: 60 pointer moves, no frames rendered
+(30 pick-only submits); wheel zoom still lands on the hovered point.
+The cost is those two MSAA targets per view, no longer shared between
+views of one size through the pool.
 
 Per-view dirtiness: each view keeps its own fingerprint, and `World`
 accumulates the view-mask bits of every record it changes (a changed mask

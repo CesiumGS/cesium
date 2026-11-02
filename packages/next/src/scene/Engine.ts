@@ -722,7 +722,10 @@ export class Engine {
       this.viewMotion.delete(view);
       this.freeViewIds.push(id);
     }
-    this.viewFrames.get(view)?.presentParams.destroy();
+    const frame = this.viewFrames.get(view);
+    if (frame) {
+      destroyViewFrame(frame);
+    }
     this.viewFrames.delete(view);
     this.overlayResources.get(view)?.buffer.destroy();
     this.overlayResources.get(view)?.params.destroy();
@@ -874,8 +877,13 @@ export class Engine {
       }
       const changed = this.viewChanged(view);
       moved ||= changed;
-      // A pick is served during a frame (one per frame).
-      if (all || changed || view.pendingPicks.length > 0) {
+      // A pick renders a frame only when the view has no last frame to
+      // read it from (see `serveIdlePick`).
+      if (
+        all ||
+        changed ||
+        (view.pendingPicks.length > 0 && !this.viewFrames.get(view)?.rendered)
+      ) {
         dirty.add(view.target);
         dirtyViews.add(view);
       }
@@ -893,6 +901,7 @@ export class Engine {
         dirtyViews.add(view);
       }
     }
+    this.serveIdlePick(dirtyViews);
     if (dirty.size === 0) {
       for (let i = 0; i < this.worlds.length; i++) {
         this.worlds[i]!.changedViews = 0; // seen by no view
@@ -901,6 +910,34 @@ export class Engine {
       return;
     }
     this.render(true, dirty, dirtyViews);
+  }
+
+  /**
+   * Serves one pick of a view that doesn't render this tick from its last
+   * frame's feature IDs and depth, which still show what is on screen: just
+   * the pick pass, no render (hovering picks on every pointer move).
+   */
+  private serveIdlePick(rendering: Set<View>): void {
+    const views = this.views;
+    for (let i = 0; i < views.length; i++) {
+      const view = views[i]!;
+      const frame = this.viewFrames.get(view);
+      if (
+        !view.enabled ||
+        rendering.has(view) ||
+        view.pendingPicks.length === 0 ||
+        !frame?.rendered
+      ) {
+        continue;
+      }
+      const encoder = this.ctx.device.createCommandEncoder(PICK_ENCODER);
+      this.encodePick(encoder, view, frame, view.pendingPicks.shift()!);
+      this.commandBuffers[0] = encoder.finish();
+      this.ctx.device.queue.submit(this.commandBuffers);
+      this.resolvePicks(this.picks);
+      this.picks.length = 0;
+      return; // one per tick: the params and result buffers are shared
+    }
   }
 
   /** The sun and the set of enabled views changed (affects every view). */
@@ -1128,6 +1165,7 @@ export class Engine {
         frame.pick =
           this.picks.length === 0 ? view.pendingPicks.shift() : undefined;
         frame.graph.execute(encoder);
+        frame.rendered = true;
       }
     }
     // Composite shared targets: clear, then each view's image in view order
@@ -1262,6 +1300,65 @@ export class Engine {
     return frame;
   }
 
+  /** Reads a pick's feature ID and depth from the view's frame textures. */
+  private encodePick(
+    enc: GPUCommandEncoder,
+    view: View,
+    frame: ViewFrame,
+    request: View["pendingPicks"][number],
+  ): void {
+    const { device, pipelines } = this.ctx;
+    const { width, height } = frame;
+    this.pickParamsData[0] = Math.min(
+      Math.max(Math.floor(request.x), 0),
+      width - 1,
+    );
+    this.pickParamsData[1] = Math.min(
+      Math.max(Math.floor(request.y), 0),
+      height - 1,
+    );
+    device.queue.writeBuffer(this.pickParams, 0, this.pickParamsData);
+    const group = device.createBindGroup({
+      layout: pipelines.pick.getBindGroupLayout(0),
+      entries: [
+        { binding: 0, resource: frame.idsView },
+        { binding: 1, resource: { buffer: this.pickParams } },
+        { binding: 2, resource: { buffer: this.pickResult } },
+        { binding: 3, resource: frame.depthView },
+      ],
+    });
+    const pass = enc.beginComputePass(PICK_PASS);
+    pass.setPipeline(pipelines.pick);
+    pass.setBindGroup(0, group);
+    pass.dispatchWorkgroups(1);
+    pass.end();
+    const readback =
+      this.pickReadback.pop() ??
+      device.createBuffer({
+        size: 16,
+        usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
+      });
+    enc.copyBufferToBuffer(this.pickResult, 0, readback, 0, 16);
+    // The camera of this frame, to turn the depth into a position.
+    const camera = view.camera;
+    this.picks.push({
+      view,
+      readback,
+      request,
+      camera: {
+        position: Float64Array.from(camera.position),
+        direction: Float64Array.from(camera.direction),
+        up: Float64Array.from(camera.up),
+        right: Float64Array.from(camera.right),
+        near: camera.near,
+        tanY: Math.tan(camera.fovy(width / height) / 2),
+        tanX: Math.tan(camera.fovy(width / height) / 2) * (width / height),
+        ndcX: ((this.pickParamsData[0]! + 0.5) / width) * 2 - 1,
+        ndcY: 1 - ((this.pickParamsData[1]! + 0.5) / height) * 2,
+      },
+    });
+  }
+
   /** The view's frame graph for its current size, built on first use and on resize. */
   private viewFrame(view: View, rect: Readonly<PixelRect>): ViewFrame {
     let frame = this.viewFrames.get(view);
@@ -1273,7 +1370,7 @@ export class Engine {
       frame.y !== rect.y
     ) {
       if (frame) {
-        frame.presentParams.destroy();
+        destroyViewFrame(frame);
         this.releaseTargets(view, frame);
       }
       frame = this.buildViewFrame(view, rect);
@@ -1334,21 +1431,27 @@ export class Engine {
       format: "rgba8unorm-srgb",
       usage: attachment | GPUTextureUsage.TEXTURE_BINDING,
     });
-    const ids = graph.createTexture("featureId.msaa", {
-      width,
-      height,
+    // Feature IDs and depth are the view's own, not pooled: what the last
+    // frame left in them serves picks while the view is idle, without a
+    // render. Read by the pick pass (features, positions).
+    const idsTexture = device.createTexture({
+      label: "featureId.msaa",
+      size: [width, height],
       format: "rg16uint",
       sampleCount: targets.sampleCount,
       usage: attachment | GPUTextureUsage.TEXTURE_BINDING,
     });
-    const depth = graph.createTexture("depth.msaa", {
-      width,
-      height,
+    const depthTexture = device.createTexture({
+      label: "depth.msaa",
+      size: [width, height],
       format: targets.depthFormat,
       sampleCount: targets.sampleCount,
-      // Read by the pick pass (positions).
       usage: attachment | GPUTextureUsage.TEXTURE_BINDING,
     });
+    const idsView = idsTexture.createView();
+    const depthView = depthTexture.createView();
+    const ids = graph.importTexture("featureId.msaa", idsView);
+    const depth = graph.importTexture("depth.msaa", depthView);
     // Rebound to this frame's target texture before every execute.
     const output = graph.importTexture("output", {} as GPUTextureView);
 
@@ -1377,7 +1480,7 @@ export class Engine {
       view: undefined as never,
       depthClearValue: 0, // reverse-Z: far is 0
       depthLoadOp: "clear",
-      depthStoreOp: "discard",
+      depthStoreOp: "store", // picks read it, also while the view is idle
     };
     const opaquePass: GPURenderPassDescriptor = {
       label: "opaque",
@@ -1407,6 +1510,11 @@ export class Engine {
       bundle: undefined,
       bundles: [],
       pick: undefined,
+      ids: idsTexture,
+      depth: depthTexture,
+      idsView,
+      depthView,
+      rendered: false,
       presentParams: device.createBuffer({
         label: "presentParams",
         size: 16,
@@ -1444,8 +1552,6 @@ export class Engine {
         opaqueDisplay.view = get(display);
         opaqueDisplay.resolveTarget = get(displayResolved);
         opaqueDepth.view = get(depth);
-        // Depth survives the pass only when a pick reads it.
-        opaqueDepth.depthStoreOp = frame.pick ? "store" : "discard";
         opaquePass.timestampWrites = this.timer.passWrites();
         const pass = enc.beginRenderPass(opaquePass);
         frame.bundles[0] = frame.bundle!;
@@ -1454,65 +1560,13 @@ export class Engine {
       },
     );
 
-    graph.addPass(
-      "pick",
-      { reads: [ids, depth], sideEffect: true },
-      (enc, get) => {
-        const request = frame.pick;
-        if (!request) {
-          return;
-        }
+    graph.addPass("pick", { reads: [ids, depth], sideEffect: true }, (enc) => {
+      const request = frame.pick;
+      if (request) {
         frame.pick = undefined;
-        this.pickParamsData[0] = Math.min(
-          Math.max(Math.floor(request.x), 0),
-          width - 1,
-        );
-        this.pickParamsData[1] = Math.min(
-          Math.max(Math.floor(request.y), 0),
-          height - 1,
-        );
-        device.queue.writeBuffer(this.pickParams, 0, this.pickParamsData);
-        const group = device.createBindGroup({
-          layout: pipelines.pick.getBindGroupLayout(0),
-          entries: [
-            { binding: 0, resource: get(ids) },
-            { binding: 1, resource: { buffer: this.pickParams } },
-            { binding: 2, resource: { buffer: this.pickResult } },
-            { binding: 3, resource: get(depth) },
-          ],
-        });
-        const pass = enc.beginComputePass(PICK_PASS);
-        pass.setPipeline(pipelines.pick);
-        pass.setBindGroup(0, group);
-        pass.dispatchWorkgroups(1);
-        pass.end();
-        const readback =
-          this.pickReadback.pop() ??
-          device.createBuffer({
-            size: 16,
-            usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
-          });
-        enc.copyBufferToBuffer(this.pickResult, 0, readback, 0, 16);
-        // The camera of this frame, to turn the depth into a position.
-        const camera = view.camera;
-        this.picks.push({
-          view,
-          readback,
-          request,
-          camera: {
-            position: Float64Array.from(camera.position),
-            direction: Float64Array.from(camera.direction),
-            up: Float64Array.from(camera.up),
-            right: Float64Array.from(camera.right),
-            near: camera.near,
-            tanY: Math.tan(camera.fovy(width / height) / 2),
-            tanX: Math.tan(camera.fovy(width / height) / 2) * (width / height),
-            ndcX: ((this.pickParamsData[0]! + 0.5) / width) * 2 - 1,
-            ndcY: 1 - ((this.pickParamsData[1]! + 0.5) / height) * 2,
-          },
-        });
-      },
-    );
+        this.encodePick(enc, view, frame, request);
+      }
+    });
 
     graph.addPass(
       "present",
@@ -1718,6 +1772,13 @@ interface ViewFrame {
   /** One-element list handed to executeBundles. */
   readonly bundles: GPURenderBundle[];
   pick: View["pendingPicks"][number] | undefined;
+  /** The view's own feature IDs and depth (picks read the last frame's). */
+  readonly ids: GPUTexture;
+  readonly depth: GPUTexture;
+  readonly idsView: GPUTextureView;
+  readonly depthView: GPUTextureView;
+  /** Rendered since built: `ids` and `depth` show what is on screen. */
+  rendered: boolean;
   readonly presentParams: GPUBuffer;
   presentGroup: GPUBindGroup | undefined;
   presentSource: GPUTextureView | undefined;
@@ -1747,6 +1808,13 @@ interface OverlayResources {
 
 const FRAME_ENCODER: GPUCommandEncoderDescriptor = { label: "frame" };
 const PICK_PASS: GPUComputePassDescriptor = { label: "pick" };
+const PICK_ENCODER: GPUCommandEncoderDescriptor = { label: "pick" };
+
+function destroyViewFrame(frame: ViewFrame): void {
+  frame.presentParams.destroy();
+  frame.ids.destroy();
+  frame.depth.destroy();
+}
 
 const scratchEnu = m4.mat4();
 const scratchEast = v3.vec3();
