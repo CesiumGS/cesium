@@ -2770,6 +2770,19 @@ for (r27). Kept small and self-contained in the PoC; eventually the
 gallery is Sandcastle (`packages/sandcastle`), so example modules follow a
 shape Sandcastle can host (editable source, sharing, gallery metadata).
 
+**Pages without a build step (r39).** `npm run build:lib` writes
+`dist-lib/`: one ES module (`cesium-next.mjs`, WGSL inlined), the content
+worker and the Draco and Basis wasm under `assets/` (each located from its
+importer's `import.meta.url`), and declarations under `types/`. A static
+page (Sandcastle-style, no bundler, no TypeScript) imports it with a module
+script. From another origin (a CDN) the files need CORS, and the worker
+starts through a same-origin `blob:` module that imports the real script,
+since browsers start workers only from the page's origin (`WorkerPool`);
+`standalone/index.html` is the check, tested with the page and the library
+on different origins (workers, wasm and KTX2 transcoding included). Not
+yet: a classic-script (global) build, publishing, or a stable public API
+surface; `exports` still points at the source for the workspace.
+
 Slugs name the use case, not the API (`real-time-tracks`,
 `offshore-platform`, `campus-splats`). Example scenes are written so the
 benchmark suite (§16) can load the same scene definitions, so a showcase
