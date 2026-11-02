@@ -58,10 +58,20 @@ export class Tile {
   readonly geometricError: number;
   readonly refine: Refine;
   readonly transform: Mat4;
-  /** Tightened by implicit trees once content loads (terrain heights). */
-  volume: TileVolume;
-  contentVolume?: TileVolume;
-  requestVolume?: TileVolume;
+  /**
+   * Bounding volumes as written in the tileset JSON. Each is built on first
+   * use: a built region held about 1 KB (corners, edge normals, box and
+   * sphere), and most of a large tileset's tiles are never visited (NYC
+   * knows 36k tiles and loads about 200, r39).
+   */
+  private readonly volumeJson: VolumeJson;
+  private contentVolumeJson?: VolumeJson;
+  private requestVolumeJson?: VolumeJson;
+  private builtVolume?: TileVolume;
+  private builtContentVolume?: TileVolume;
+  private builtRequestVolume?: TileVolume;
+  /** The geometric error as written (`headerKey`). */
+  private readonly jsonGeometricError?: number;
   /**
    * The content's URI as written in the tileset JSON; undefined for empty
    * tiles. Kept relative: resolved, every tile carried its own copy of the
@@ -71,19 +81,9 @@ export class Tile {
   private readonly contentUri?: string;
   /** Content is an external tileset (loaded into `children` on demand). */
   readonly external: boolean;
-  /**
-   * The tile's identity in its tileset JSON (bounding volume and geometric
-   * error as written), independent of URLs and child order; used to compare
-   * selections across engines and sessions.
-   */
-  readonly headerKey: string;
-  /** 1.x Cesium3DTileOptimizations: children's volumes lie within ours. */
-  childrenWithinParent = false;
-  /**
-   * The children's boxes split this tile's volume (within it, overlapping
-   * little): a coarse placeholder can then be clipped to missing children.
-   */
-  childrenPartition = false;
+  /** `childrenWithinParent` and `childrenPartition`, once computed. */
+  private withinParent?: boolean;
+  private partition?: boolean;
   /**
    * No content of its own and none below: its parent's content draws its
    * region (terrain quadrants without data, which 1.x upsamples).
@@ -143,7 +143,6 @@ export class Tile {
     public tileset: TileTree,
   ) {
     this.depth = parent ? parent.depth + 1 : 0;
-    this.headerKey = tileHeaderKey(json);
     this.transform = json.transform
       ? m4.multiply(
           m4.mat4(),
@@ -160,13 +159,14 @@ export class Tile {
       Math.hypot(t[4]!, t[5]!, t[6]!),
       Math.hypot(t[8]!, t[9]!, t[10]!),
     );
+    this.jsonGeometricError = json.geometricError;
     const error = json.geometricError ?? parent?.geometricError ?? 0;
     this.geometricError = error * scale;
-    const volume = volumeFromJson(json.boundingVolume, t);
-    if (!volume) {
+    const bv: VolumeJson | undefined = json.boundingVolume;
+    if (!bv?.box && !bv?.region && !bv?.sphere) {
       throw new Error("tile has no supported bounding volume");
     }
-    this.volume = compactVolume(volume);
+    this.volumeJson = bv;
     const content = json.content ?? json.contents?.[0];
     if (json.contents && json.contents.length > 1) {
       tileset.warnings.add(
@@ -176,14 +176,10 @@ export class Tile {
     const uri: string | undefined = content?.uri ?? content?.url;
     if (uri) {
       this.contentUri = uri;
-      this.contentVolume = content?.boundingVolume
-        ? volumeFromJson(content.boundingVolume, t)
-        : undefined;
+      this.contentVolumeJson = content?.boundingVolume;
     }
     this.external = !!uri && /\.json(\?|$)/i.test(uri);
-    if (json.viewerRequestVolume) {
-      this.requestVolume = volumeFromJson(json.viewerRequestVolume, t);
-    }
+    this.requestVolumeJson = json.viewerRequestVolume;
     if (json.implicitTiling) {
       tileset.warnings.add("implicit tiling not supported yet");
     }
@@ -193,9 +189,84 @@ export class Tile {
         new Tile(this, child, baseUrl, this.transform, this.refine, tileset),
       );
     }
-    this.childrenWithinParent = checkChildrenWithinParent(this);
-    this.childrenPartition =
-      this.childrenWithinParent && checkChildrenPartition(this);
+    // Children added later (an external tileset's root, terrain's
+    // quadrants) leave these as they are at construction.
+    if (this.children.length === 0) {
+      this.withinParent = this.partition = false;
+    }
+  }
+
+  /** Tightened by implicit trees once content loads (terrain heights). */
+  get volume(): TileVolume {
+    return (this.builtVolume ??= compactVolume(
+      volumeFromJson(this.volumeJson, this.transform)!,
+    ));
+  }
+
+  set volume(volume: TileVolume) {
+    this.builtVolume = volume;
+  }
+
+  get contentVolume(): TileVolume | undefined {
+    if (this.contentVolumeJson) {
+      this.builtContentVolume = volumeFromJson(
+        this.contentVolumeJson,
+        this.transform,
+      );
+      this.contentVolumeJson = undefined;
+    }
+    return this.builtContentVolume;
+  }
+
+  set contentVolume(volume: TileVolume | undefined) {
+    this.contentVolumeJson = undefined;
+    this.builtContentVolume = volume;
+  }
+
+  get requestVolume(): TileVolume | undefined {
+    if (this.requestVolumeJson) {
+      this.builtRequestVolume = volumeFromJson(
+        this.requestVolumeJson,
+        this.transform,
+      );
+      this.requestVolumeJson = undefined;
+    }
+    return this.builtRequestVolume;
+  }
+
+  set requestVolume(volume: TileVolume | undefined) {
+    this.requestVolumeJson = undefined;
+    this.builtRequestVolume = volume;
+  }
+
+  /**
+   * The tile's identity in its tileset JSON (bounding volume and geometric
+   * error as written), independent of URLs and child order; used to compare
+   * selections across engines and sessions.
+   */
+  get headerKey(): string {
+    return tileHeaderKey({
+      boundingVolume: this.volumeJson,
+      geometricError: this.jsonGeometricError,
+    });
+  }
+
+  /** 1.x Cesium3DTileOptimizations: children's volumes lie within ours. */
+  get childrenWithinParent(): boolean {
+    return (this.withinParent ??= checkChildrenWithinParent(this));
+  }
+
+  /**
+   * The children's boxes split this tile's volume (within it, overlapping
+   * little): a coarse placeholder can then be clipped to missing children.
+   */
+  get childrenPartition(): boolean {
+    return (this.partition ??=
+      this.childrenWithinParent && checkChildrenPartition(this));
+  }
+
+  set childrenPartition(value: boolean) {
+    this.partition = value;
   }
 
   /** Absolute content URL (resolved on use); undefined for empty tiles. */
@@ -281,6 +352,13 @@ export interface TileTree {
 
 /* eslint-disable @typescript-eslint/no-explicit-any -- tileset JSON is untyped */
 export type TileJson = any;
+
+/** A `boundingVolume` as written in tileset JSON. */
+interface VolumeJson {
+  box?: number[];
+  sphere?: number[];
+  region?: number[];
+}
 
 /** See `Tile.headerKey`; also applied to 1.x tile headers in parity tests. */
 export function tileHeaderKey(header: TileJson): string {
