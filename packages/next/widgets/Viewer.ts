@@ -407,7 +407,6 @@ export class Viewer {
         heading,
         pitch,
       );
-      this.view.camera.near = Math.max(0.05, range * 0.0005);
       return;
     }
     let sphere: { center: ArrayLike<number>; radius: number };
@@ -434,7 +433,12 @@ export class Viewer {
     pitch: number,
   ): void {
     const range = radius * 2.6;
-    this.view.camera.near = Math.max(0.005, radius * 0.002);
+    // 1.x's near plane (0.1 m), closer for small models. Fixed, not scaled
+    // to what is framed: zooming in from a globe-sized root kept a near
+    // plane kilometers out, cutting (and culling) the ground. Reverse-Z
+    // float depth is as precise whatever the near plane, so 1.x's per-frame
+    // near from drawn volumes isn't needed.
+    this.view.camera.near = Math.min(0.1, Math.max(0.001, radius * 0.002));
     vec3.copy(this.focusCenter, center);
     this.controller.focus(center, heading, pitch, range);
     if (this.second && this.secondController) {
