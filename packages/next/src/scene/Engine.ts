@@ -125,6 +125,15 @@ interface ViewMotion {
   direction: Vec3;
   up: Vec3;
   velocity: { position: Vec3; direction: Vec3; up: Vec3 };
+  /** Speeds of the last estimate (position m/s, direction 1/s). */
+  speeds: [number, number];
+  /**
+   * The velocity continues the previous one: motion, not a jump. A camera
+   * set somewhere else in one frame (a teleport, a flight's end) reads as
+   * thousands of meters per second for that frame; prefetching a second
+   * ahead of it requested content nowhere near the view.
+   */
+  steady: boolean;
 }
 
 /** Options for a globe surface: terrain or the ellipsoid. */
@@ -525,8 +534,9 @@ export class Engine {
       };
       const planes = worldPlanes(camera, 1);
       // Prefetch: the view the camera will have shortly at its current
-      // velocity (a small margin around this one while it is still), so
-      // only content it is about to reveal loads ahead.
+      // velocity, so only content it is about to reveal loads ahead. None
+      // while it is still: a margin around a still view (r37) was half the
+      // bytes of a jump into OSM Philadelphia, rarely drawn (L1′).
       const ahead = this.cameraAhead(view, PREFETCH_AHEAD_SECONDS);
       const pixelRatio =
         view.target instanceof CanvasTarget ? view.target.pixelRatio : 1;
@@ -540,7 +550,9 @@ export class Engine {
           height: 0,
         }) ?? { longitude: 0, latitude: 0, height: 0 },
         planes,
-        prefetchPlanes: worldPlanes(ahead, PREFETCH_MARGIN),
+        ...(ahead
+          ? { prefetchPlanes: worldPlanes(ahead, PREFETCH_MARGIN) }
+          : {}),
         sseDenominator: 2 * Math.tan(camera.fovy(aspect) / 2),
         height: rect.height / pixelRatio,
         pixelRatio,
@@ -554,7 +566,7 @@ export class Engine {
    * between selections at least 4 ms apart; still after a pause of over
    * 250 ms, as on-demand rendering idles).
    */
-  private cameraAhead(view: View, seconds: number): Camera {
+  private cameraAhead(view: View, seconds: number): Camera | undefined {
     const camera = view.camera;
     const now = performance.now();
     let motion = this.viewMotion.get(view);
@@ -565,6 +577,8 @@ export class Engine {
         direction: v3.copy(v3.vec3(), camera.direction),
         up: v3.copy(v3.vec3(), camera.up),
         velocity: { position: v3.vec3(), direction: v3.vec3(), up: v3.vec3() },
+        speeds: [0, 0],
+        steady: false,
       };
       this.viewMotion.set(view, motion);
     }
@@ -580,6 +594,19 @@ export class Engine {
         v3.copy(motion[key], current);
       }
       motion.at = now;
+      // Steady: each speed zero, or within 4x of the previous estimate's.
+      const speeds = [v3.length(v.position), v3.length(v.direction)];
+      motion.steady = speeds.every(
+        (s, i) =>
+          s === 0 ||
+          (motion!.speeds[i]! > 0 &&
+            s <= 4 * motion!.speeds[i]! &&
+            s >= motion!.speeds[i]! / 4),
+      );
+      motion.speeds = speeds as [number, number];
+    }
+    if (!motion.steady || motion.speeds.every((s) => s === 0)) {
+      return undefined;
     }
     const ahead = this.aheadCamera.copyFrom(camera);
     const v = motion.velocity;

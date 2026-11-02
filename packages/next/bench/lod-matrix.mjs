@@ -80,7 +80,12 @@ for (const content of CONTENT.filter((c) => contentIds.includes(c.id))) {
     const file = /wrote (.+\.json)/.exec(run.stdout)?.[1];
     if (run.status !== 0 || !file) {
       console.log(`failed: ${(run.stderr || run.stdout).slice(-300)}`);
-      cells.push({ content: content.id, kind: content.kind, link, error: true });
+      cells.push({
+        content: content.id,
+        kind: content.kind,
+        link,
+        error: true,
+      });
       continue;
     }
     const result = JSON.parse(readFileSync(file.trim(), "utf8"));
@@ -99,7 +104,9 @@ for (const content of CONTENT.filter((c) => contentIds.includes(c.id))) {
 
 // Per cell: each policy's FLIP average and bytes summed over the moves.
 const totals = (rows, label) => {
-  const own = rows.filter((r) => r.policy.startsWith(label) && r.status === "ok");
+  const own = rows.filter(
+    (r) => r.policy.startsWith(label) && r.status === "ok",
+  );
   return own.length
     ? {
         flipAverage:

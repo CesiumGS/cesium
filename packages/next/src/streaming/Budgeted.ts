@@ -91,6 +91,7 @@ export class BudgetedSelection extends StepwiseSelection {
    * or under the surface (underground content, a see-through globe).
    */
   horizonCulling = true;
+  readonly prefetchAfterVisible = true;
 
   constructor(options: BudgetedOptions = {}) {
     super(options);

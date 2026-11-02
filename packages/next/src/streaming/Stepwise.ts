@@ -33,8 +33,8 @@ export interface SelectionView {
   planes: Float64Array;
   /**
    * Where to prefetch (`Budgeted` only): the frustum of where the camera
-   * will be shortly at its velocity, with a small margin; this view's own
-   * with that margin while it is still.
+   * will be shortly at its velocity, with a small margin; none while the
+   * camera is still or jumps.
    */
   prefetchPlanes?: Float64Array;
   /** 2 tan(fovy / 2). */
@@ -80,6 +80,12 @@ export interface TileSelection {
    * what was drawn stays (`Tileset3D` sets it).
    */
   imageryReady?: (tile: Tile) => boolean;
+  /**
+   * Prefetch requests wait until no visible request of the tileset is
+   * queued or in flight (they took a throttled link's bandwidth from what
+   * the view shows). 1.x's preloads go out with the rest (`Stepwise`).
+   */
+  prefetchAfterVisible?: boolean;
 }
 
 export interface SelectionResult {

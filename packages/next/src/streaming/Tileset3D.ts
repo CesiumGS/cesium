@@ -601,6 +601,8 @@ export class Tileset3D implements TileTree {
   private masked = new Set<Tile>();
   private placeholders = new Set<Tile>();
   private inFlight = 0;
+  /** In flight for anything but prefetch (`prefetchAfterVisible`). */
+  private visibleInFlight = 0;
   private destroyed = false;
 
   private constructor(
@@ -1026,17 +1028,28 @@ export class Tileset3D implements TileTree {
       (a, b) => a[1] - b[1] || a[0].depth - b[0].depth,
     );
     const full = new Set<string>();
+    // Prefetch after everything visible (`prefetchAfterVisible`).
+    let visibleWaiting =
+      this.selection.prefetchAfterVisible === true && this.visibleInFlight > 0;
     for (const [tile] of order) {
       if (tile.state !== "unloaded") {
         continue;
       }
+      const prefetch = purposes.get(tile) === "prefetch";
+      if (prefetch && visibleWaiting) {
+        continue;
+      }
       const origin = this.originOf(tile.contentUrl!);
       if (full.has(origin)) {
+        visibleWaiting ||=
+          !prefetch && this.selection.prefetchAfterVisible === true;
         continue;
       }
       this.useOrigin(origin);
       if (!this.engine.requests.tryAcquire(origin)) {
         full.add(origin);
+        visibleWaiting ||=
+          !prefetch && this.selection.prefetchAfterVisible === true;
         continue;
       }
       tile.state = "loading";
@@ -1047,6 +1060,11 @@ export class Tileset3D implements TileTree {
       this.stats.requestsTotal++;
       const purpose = purposes.get(tile) ?? "view";
       tile.purpose = purpose;
+      const visible = purpose !== "prefetch";
+      if (visible) {
+        this.visibleInFlight++;
+        visibleWaiting ||= this.selection.prefetchAfterVisible === true;
+      }
       this.stats.purposes[purpose].requests++;
       this.events.emit("request", { url: tile.contentUrl!, purpose });
       const controller = new AbortController();
@@ -1055,6 +1073,9 @@ export class Tileset3D implements TileTree {
         .then((sample) => this.engine.requests.release(origin, sample))
         .finally(() => {
           this.inFlight--;
+          if (visible) {
+            this.visibleInFlight--;
+          }
           this.loading.delete(tile);
           // Any completion is a change, also one without content to upload
           // (an external tileset's children need selecting, a failure needs
