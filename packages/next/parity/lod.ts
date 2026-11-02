@@ -9,6 +9,7 @@ import {
   type View,
 } from "../src/index.ts";
 import type { Harness } from "../lab/harness.ts";
+import ionSource from "../../engine/Source/Core/Ion.js?raw";
 import { createGpuFlip, type GpuFlip } from "./flipGpu.ts";
 
 /**
@@ -60,29 +61,42 @@ const HEIGHT = 270;
 const deg = Math.PI / 180;
 
 interface Policy {
+  /** For ?policies= (e.g. stepwise,adaptive: the exit check's pair). */
+  id: string;
   label: string;
   options: TilesetOptions;
 }
 
 const POLICIES: Policy[] = [
   {
+    id: "stepwise",
     label: "Stepwise (1.x, 18 requests)",
     options: { policy: "stepwise", maximumRequests: 18 },
   },
   {
+    id: "budgeted-18",
     label: "Budgeted, 18 requests",
     options: { policy: "budgeted", maximumRequests: 18 },
   },
   {
+    id: "budgeted-4",
     label: "Budgeted, 4 requests",
     options: { policy: "budgeted", maximumRequests: 4 },
   },
-  { label: "Budgeted, adaptive", options: { policy: "budgeted" } },
   {
+    id: "adaptive",
+    label: "Budgeted, adaptive",
+    options: { policy: "budgeted" },
+  },
+  {
+    id: "budgeted-64",
     label: "Budgeted, 64 requests",
     options: { policy: "budgeted", maximumRequests: 64 },
   },
 ];
+
+/** 1.x's public default ion token (Sandcastle's sample assets). */
+const DEFAULT_TOKEN = /defaultAccessToken =\s*"([^"]+)"/.exec(ionSource)?.[1];
 
 type Place = (view: View) => void;
 
@@ -111,6 +125,8 @@ interface Row {
   trace?: number[];
   flipSettled?: number;
   selected?: number;
+  /** Requests and MB by purpose over the move (`Budgeted`'s bands). */
+  purposes?: Record<string, { requests: number; megabytes: number }>;
 }
 
 const frame = () => new Promise((resolve) => setTimeout(resolve, 16));
@@ -144,8 +160,12 @@ function source(): Promise<Source> {
     let headers: Record<string, string> | undefined;
     let label = "TilesetUniform";
     if (asset) {
+      // ?token=default: 1.x's public token, for Cesium's sample assets.
       const resolved = await resolveIonAsset(Number(asset), {
-        accessToken: import.meta.env.VITE_ION_TOKEN as string,
+        accessToken:
+          params.get("token") === "default" && DEFAULT_TOKEN
+            ? DEFAULT_TOKEN
+            : (import.meta.env.VITE_ION_TOKEN as string),
       });
       url = resolved.url;
       headers = resolved.headers;
@@ -226,6 +246,7 @@ interface Measurement {
   /** FLIP every 500 ms from the move until settled. */
   trace: number[];
   selected: number;
+  purposes: Record<string, { requests: number; megabytes: number }>;
 }
 
 async function measure(
@@ -273,6 +294,7 @@ async function measure(
     await settle();
     const requests0 = tileset.stats.requestsTotal;
     const bytes0 = tileset.stats.bytesTotal;
+    const purposes0 = structuredClone(tileset.stats.purposes);
     scenario.end(view);
     // From the move until settled: FLIP at fixed marks, and every 500 ms
     // for the average (how good the image was while loading, which fixed
@@ -327,6 +349,20 @@ async function measure(
       flips,
       trace: samples,
       selected: tileset.stats.selected.get(id) ?? 0,
+      purposes: Object.fromEntries(
+        Object.entries(tileset.stats.purposes)
+          .map(([k, v]) => [
+            k,
+            {
+              requests:
+                v.requests - purposes0[k as keyof typeof purposes0].requests,
+              megabytes:
+                (v.bytes - purposes0[k as keyof typeof purposes0].bytes) /
+                1048576,
+            },
+          ])
+          .filter(([, v]) => (v as { requests: number }).requests > 0),
+      ),
     };
   } finally {
     e.removeView(view);
@@ -358,9 +394,11 @@ async function runLod(): Promise<Row[]> {
   const s = await source();
   root.querySelector("h1")!.textContent += ` (${s.label})`;
   await runLodReference();
+  const only = params.get("policies")?.split(",");
+  const policies = POLICIES.filter((p) => !only || only.includes(p.id));
   for (const scenario of s.scenarios) {
     const reference = references.get(scenario.name)!;
-    for (const policy of POLICIES) {
+    for (const policy of policies) {
       status.textContent = `${scenario.name}: ${policy.label}…`;
       try {
         const r = await measure(policy.options, scenario, reference);
@@ -376,6 +414,7 @@ async function runLod(): Promise<Row[]> {
           trace: r.trace,
           flipSettled: (await flip(reference, r.image, WIDTH, HEIGHT)).mean,
           selected: r.selected,
+          purposes: r.purposes,
         });
       } catch (error) {
         rows.push({
