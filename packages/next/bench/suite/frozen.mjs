@@ -14,6 +14,7 @@ import {
   copyFileSync,
   createReadStream,
   existsSync,
+  mkdirSync,
   mkdtempSync,
   readFileSync,
   statSync,
@@ -177,6 +178,18 @@ function staticDirectories(directories) {
       }
     },
   };
+}
+
+/**
+ * An empty 1.x build (a directory to serve as /cesium1x/), for 2.0 pages
+ * from before r39, which load the repository's 1.x build on every run.
+ */
+export function emptyCesium() {
+  const dir = mkdtempSync(join(tmpdir(), "bench-no-1x-"));
+  mkdirSync(join(dir, "Widgets"));
+  writeFileSync(join(dir, "Cesium.js"), "");
+  writeFileSync(join(dir, "Widgets", "widgets.css"), "");
+  return dir;
 }
 
 /**

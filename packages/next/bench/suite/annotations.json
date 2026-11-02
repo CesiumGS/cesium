@@ -19,6 +19,13 @@
       "kind": "method",
       "short": "reuse, early stop",
       "text": "Baseline engines reuse stored repetitions after a calibration repetition (marked reused in each run), and a scene stops early once its comparison is decided (r39)."
+    },
+    {
+      "date": "2026-11-02T23:30:00Z",
+      "kind": "method",
+      "short": "2.0 pages without 1.x",
+      "text": "The suite page loaded this repository's unminified 1.x build on every run, 2.0's included: on NYC it added 23 MB to bufferBytes (its source text) and 5.6 MB to heapBytes on 2.0's main thread. 2.0 pages, at this tree or a ref, now load none (r39).",
+      "metrics": ["heapBytes", "bufferBytes"]
     }
   ]
 }

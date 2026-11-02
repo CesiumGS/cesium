@@ -8,8 +8,8 @@
 //
 //   machine  OS, CPU, memory, browser, GPU driver and clocks, power, the
 //            browser's flags and viewport
-//   method   the harness that measures (the suite page, the CLI, telemetry
-//            and the build), from the frozen tree
+//   method   the harness that measures (the suite page and its script, the
+//            CLI, telemetry and the build), from the frozen tree
 //   engine   the build (version and integrity, or commit) and its settings
 //   scene    the scene, scenario, render settings and the scene's datasets
 //
@@ -48,6 +48,7 @@ export function machineKey(environment) {
 
 /** Files whose changes change what a measurement means. */
 const METHOD_FILES = [
+  "bench/suite/suite.html",
   "bench/suite/suite.ts",
   "bench/suite/cli.mjs",
   "bench/suite/telemetry.mjs",

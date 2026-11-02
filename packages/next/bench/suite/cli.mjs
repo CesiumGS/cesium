@@ -86,7 +86,12 @@ import { compareTable, defaultPlan, scorecard } from "./scorecard.mjs";
 import { ALERT_METRICS, detectAlerts } from "./changepoints.mjs";
 import { runImages } from "./images.mjs";
 import { areasFor, changedFiles, scenesFor } from "./areas.mjs";
-import { checkoutFrozen, freezeTree, serveBuild } from "./frozen.mjs";
+import {
+  checkoutFrozen,
+  emptyCesium,
+  freezeTree,
+  serveBuild,
+} from "./frozen.mjs";
 import {
   drift,
   engineKey,
@@ -403,7 +408,13 @@ async function run() {
     "/cesium-ref": join(repoRoot, ".bench"),
   };
   const log = (line) => console.log(line);
-  // Snapshot servers for 2.0 at other refs, one per worktree.
+  // Snapshot servers for 2.0 at other refs, one per worktree. Pages from
+  // before r39 load 1.x's build on every run: they get an empty one, so
+  // 2.0 at a ref measures as 2.0 here does.
+  const snapshotDirectories = {
+    ...directories,
+    "/cesium1x": emptyCesium(),
+  };
   const snapshotServers = new Map();
   const serve = async (snapRoot, repo) => {
     if (!snapshotServers.has(snapRoot) && !opts.dev) {
@@ -413,7 +424,11 @@ async function run() {
       try {
         snapshotServers.set(
           snapRoot,
-          await serveBuild(snapRoot, sha, { directories, port: 5194, log }),
+          await serveBuild(snapRoot, sha, {
+            directories: snapshotDirectories,
+            port: 5194,
+            log,
+          }),
         );
       } catch (error) {
         console.log(

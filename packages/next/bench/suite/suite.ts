@@ -34,7 +34,7 @@ import type {
   Scene,
 } from "./schema.ts";
 
-// CesiumJS 1.x, loaded from the repo build as a global (see suite.html).
+// CesiumJS 1.x, a global on 1.x runs' pages only (see suite.html).
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped global
 declare const Cesium: any;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped 1.x objects

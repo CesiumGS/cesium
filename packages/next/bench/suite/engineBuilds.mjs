@@ -7,7 +7,8 @@
 //   tree     the working tree: 2.0 from the suite's own server (the tree
 //            frozen and built, frozen.mjs, or live with --dev), 1.x from
 //            its build (/cesium1x/, `npm run build` at the repository
-//            root). Named by the current branch.
+//            root; the page loads it for `cesium: "repo"`). Named by the
+//            current branch.
 //   ref      a git ref, checked out once into a snapshot worktree
 //            (snapshot.mjs, <repo>/.bench/<sha>). 1.x is built there on
 //            first use (`npm run build`, minutes) and loaded from
@@ -81,6 +82,9 @@ export async function resolveEngine(
       ref: treeRef(cwd),
       ...(frozen ? { sha: frozen.sha } : {}),
     };
+    if (parsed.engine === "1.x") {
+      page.cesium = "repo";
+    }
   } else {
     const snap = snapshot(parsed.source.ref, cwd);
     const short = snap.sha.slice(0, 12);
