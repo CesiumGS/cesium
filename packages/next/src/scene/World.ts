@@ -237,13 +237,15 @@ interface Batch {
  * A CPU table mirrored to a GPU storage buffer. Changed entries upload once
  * per frame: a contiguous run with one write, entries spread across the
  * table as packed (index, data) pairs that a compute pass scatters
- * (`scatter.wgsl`), instead of the whole span between them.
+ * (`scatter.wgsl`), instead of the whole span between them. The GPU buffer
+ * holds the full capacity; the CPU rows grow as entries are used
+ * (`reserve`).
  */
 class MirroredTable {
-  readonly f32: Float32Array;
-  readonly u32: Uint32Array;
+  f32: Float32Array;
+  u32: Uint32Array;
   readonly buffer: GPUBuffer;
-  private readonly flags: Uint8Array;
+  private flags: Uint8Array;
   private readonly dirty: number[] = [];
   private readonly params: GPUBuffer;
   private readonly paramsData = new Uint32Array(4);
@@ -255,15 +257,16 @@ class MirroredTable {
     private readonly ctx: RenderContext,
     label: string,
     readonly words: number,
-    capacity: number,
+    readonly capacity: number,
   ) {
-    const data = new ArrayBuffer(capacity * words * 4);
+    const rows = Math.min(capacity, INITIAL_ROWS);
+    const data = new ArrayBuffer(rows * words * 4);
     this.f32 = new Float32Array(data);
     this.u32 = new Uint32Array(data);
-    this.flags = new Uint8Array(capacity);
+    this.flags = new Uint8Array(rows);
     this.buffer = ctx.device.createBuffer({
       label: `world.${label}`,
-      size: data.byteLength,
+      size: capacity * words * 4,
       // COPY_SRC: tests compare the GPU copy with the CPU table.
       usage:
         GPUBufferUsage.STORAGE |
@@ -276,6 +279,28 @@ class MirroredTable {
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     });
     this.paramsData[1] = words;
+  }
+
+  /** Rows on the CPU. */
+  get rows(): number {
+    return this.flags.length;
+  }
+
+  /**
+   * Room for rows below `count` on the CPU (doubling, up to the capacity);
+   * true when `f32` and `u32` were replaced.
+   */
+  reserve(count: number): boolean {
+    if (count <= this.rows) {
+      return false;
+    }
+    const rows = grownSize(this.rows, count, this.capacity);
+    const data = new ArrayBuffer(rows * this.words * 4);
+    new Uint32Array(data).set(this.u32);
+    this.f32 = new Float32Array(data);
+    this.u32 = new Uint32Array(data);
+    this.flags = resized(this.flags, rows);
+    return true;
   }
 
   mark(index: number): void {
@@ -378,13 +403,16 @@ export class World {
   private _submission: SubmissionMode = "indirect";
   private readonly vertexAllocator: RangeAllocator;
   private readonly indexAllocator: RangeAllocator;
+  // Per-slot CPU tables (records, transforms, instances, materials) start
+  // small and grow as slots are used; the GPU tables are full size (a
+  // 65536-draw world's CPU tables held 37 MB on NYC, r39).
   private readonly records: MirroredTable;
-  private readonly recordsF32: Float32Array;
-  private readonly recordsU32: Uint32Array;
+  private recordsF32: Float32Array;
+  private recordsU32: Uint32Array;
   /** Generation per draw slot (`DrawHandle.generation`). */
-  private readonly drawGeneration: Uint32Array;
+  private drawGeneration: Uint32Array;
   /** Transform a draw owns (placed by origin and model), or -1. */
-  private readonly drawOwnedTransform: Int32Array;
+  private drawOwnedTransform: Int32Array;
   /** Per-instance stream ranges in the vertex arena, by draw slot. */
   private readonly instanceStreamRanges: Array<[number, number] | undefined> =
     [];
@@ -392,18 +420,18 @@ export class World {
   // The transform table: float64 local and world matrices on the CPU,
   // composed parents first; GPU entries mirror the world matrices.
   private readonly transforms: MirroredTable;
-  private readonly transformLocal: Float64Array;
-  private readonly transformWorld: Float64Array;
-  private readonly transformParent: Int32Array;
+  private transformLocal: Float64Array;
+  private transformWorld: Float64Array;
+  private transformParent: Int32Array;
   private readonly transformChildren: Array<number[] | undefined> = [];
-  private readonly transformGeneration: Uint32Array;
-  private readonly transformLive: Uint8Array;
+  private transformGeneration: Uint32Array;
+  private transformLive: Uint8Array;
   /** Hidden by itself, and by itself or an ancestor. */
-  private readonly transformHidden: Uint8Array;
-  private readonly transformHiddenWorld: Uint8Array;
+  private transformHidden: Uint8Array;
+  private transformHiddenWorld: Uint8Array;
   private readonly transformPending: number[] = [];
-  private readonly transformPendingFlag: Uint8Array;
-  private readonly transformStamp: Uint32Array;
+  private transformPendingFlag: Uint8Array;
+  private transformStamp: Uint32Array;
   private transformResolve = 0;
   private transformCount = 0;
   private readonly freeTransforms: number[] = [];
@@ -414,8 +442,8 @@ export class World {
   /** Instance slots in use or freed below the highest (cull dispatch size). */
   private instanceHighWater = 0;
   private uploadsPending = false;
-  private readonly materialsF32: Float32Array;
-  private readonly materialsU32: Uint32Array;
+  private materialsF32: Float32Array;
+  private materialsU32: Uint32Array;
   private materialCount = 0;
   private materialsDirty = false;
   /**
@@ -511,15 +539,15 @@ export class World {
     );
     this.recordsF32 = this.records.f32;
     this.recordsU32 = this.records.u32;
-    this.drawGeneration = new Uint32Array(this.maxDraws);
-    this.drawOwnedTransform = new Int32Array(this.maxDraws).fill(-1);
+    this.drawGeneration = new Uint32Array(this.records.rows);
+    this.drawOwnedTransform = new Int32Array(this.records.rows).fill(-1);
     this.transforms = new MirroredTable(
       ctx,
       "transforms",
       TRANSFORM_WORDS,
       this.maxTransforms,
     );
-    const t = this.maxTransforms;
+    const t = this.transforms.rows;
     this.transformLocal = new Float64Array(t * 16);
     this.transformWorld = new Float64Array(t * 16);
     this.transformParent = new Int32Array(t).fill(-1);
@@ -536,7 +564,9 @@ export class World {
       Math.max(1, this.maxInstances),
     );
     this.instanceAllocator = new RangeAllocator(this.maxInstances, 1);
-    const materials = new ArrayBuffer(this.maxMaterials * MATERIAL_SIZE);
+    const materials = new ArrayBuffer(
+      Math.min(this.maxMaterials, INITIAL_ROWS) * MATERIAL_SIZE,
+    );
     this.materialsF32 = new Float32Array(materials);
     this.materialsU32 = new Uint32Array(materials);
 
@@ -692,12 +722,21 @@ export class World {
   private readonly pendingUploads: Array<{
     target: GPUBuffer;
     offset: number;
+    source: GPUBuffer;
     at: number;
     size: number;
   }> = [];
-  /** The queued bytes, copied when queued (as writeBuffer copied them). */
-  private pendingData = new Uint8Array(1 << 20);
-  private pendingUploadBytes = 0;
+  /**
+   * Staging buffers mapped at creation, the queued bytes copied into them
+   * when queued (as writeBuffer copied them); destroyed after each flush,
+   * so nothing stays on this thread between bursts (a reused copy buffer
+   * kept its peak, 4 MB after NYC's load, r39).
+   */
+  private readonly uploadChunks: Array<{
+    buffer: GPUBuffer;
+    bytes: Uint8Array;
+    used: number;
+  }> = [];
 
   /** Queues a write of `data` at `offset` in `target` (`flushUploads`). */
   private queueUpload(
@@ -705,27 +744,38 @@ export class World {
     offset: number,
     data: Float32Array | Uint32Array,
   ): void {
-    const at = this.pendingUploadBytes;
-    const end = at + data.byteLength;
-    if (end > this.pendingData.length) {
-      let size = this.pendingData.length;
-      while (size < end) {
-        size *= 2;
-      }
-      const grown = new Uint8Array(size);
-      grown.set(this.pendingData.subarray(0, at));
-      this.pendingData = grown;
+    const size = data.byteLength;
+    let chunk = this.uploadChunks.at(-1);
+    if (!chunk || chunk.used + size > chunk.bytes.length) {
+      const buffer = this.ctx.device.createBuffer({
+        label: "world.uploads",
+        size: Math.max(UPLOAD_CHUNK_BYTES, Math.ceil(size / 4) * 4),
+        usage: GPUBufferUsage.COPY_SRC,
+        mappedAtCreation: true,
+      });
+      chunk = {
+        buffer,
+        bytes: new Uint8Array(buffer.getMappedRange()),
+        used: 0,
+      };
+      this.uploadChunks.push(chunk);
     }
-    this.pendingData.set(
-      new Uint8Array(data.buffer, data.byteOffset, data.byteLength),
-      at,
+    chunk.bytes.set(
+      new Uint8Array(data.buffer, data.byteOffset, size),
+      chunk.used,
     );
-    this.pendingUploads.push({ target, offset, at, size: data.byteLength });
-    this.pendingUploadBytes = end;
+    this.pendingUploads.push({
+      target,
+      offset,
+      source: chunk.buffer,
+      at: chunk.used,
+      size,
+    });
+    chunk.used += size;
   }
 
   /**
-   * Copies the queued geometry into place: one mapped staging buffer
+   * Copies the queued geometry into place: the mapped staging buffers
    * filled on this thread, and a buffer-to-buffer copy per write, submitted
    * before anything that reads the arenas (the frame, ray casts) and before
    * any other write to them or a release of their ranges.
@@ -734,26 +784,21 @@ export class World {
     if (this.pendingUploads.length === 0) {
       return;
     }
-    const device = this.ctx.device;
-    const size = Math.ceil(this.pendingUploadBytes / 4) * 4;
-    const staging = device.createBuffer({
-      label: "world.uploads",
-      size,
-      usage: GPUBufferUsage.COPY_SRC,
-      mappedAtCreation: true,
-    });
-    new Uint8Array(staging.getMappedRange()).set(
-      this.pendingData.subarray(0, this.pendingUploadBytes),
-    );
-    staging.unmap();
-    const encoder = device.createCommandEncoder({ label: "world.uploads" });
-    for (const { target, offset, at, size } of this.pendingUploads) {
-      encoder.copyBufferToBuffer(staging, at, target, offset, size);
+    for (const chunk of this.uploadChunks) {
+      chunk.buffer.unmap();
     }
-    device.queue.submit([encoder.finish()]);
-    staging.destroy(); // released once the copies have run
+    const encoder = this.ctx.device.createCommandEncoder({
+      label: "world.uploads",
+    });
+    for (const { target, offset, source, at, size } of this.pendingUploads) {
+      encoder.copyBufferToBuffer(source, at, target, offset, size);
+    }
+    this.ctx.device.queue.submit([encoder.finish()]);
+    for (const chunk of this.uploadChunks) {
+      chunk.buffer.destroy(); // released once the copies have run
+    }
+    this.uploadChunks.length = 0;
     this.pendingUploads.length = 0;
-    this.pendingUploadBytes = 0;
   }
 
   /** Uploads geometry into the arena as separate attribute streams. */
@@ -837,6 +882,46 @@ export class World {
     return this.vertexAllocator.used + this.indexAllocator.used;
   }
 
+  /** CPU room for draw slots below `count`. */
+  private reserveDraws(count: number): void {
+    if (this.records.reserve(count)) {
+      const rows = this.records.rows;
+      this.recordsF32 = this.records.f32;
+      this.recordsU32 = this.records.u32;
+      this.drawGeneration = resized(this.drawGeneration, rows);
+      this.drawOwnedTransform = resized(this.drawOwnedTransform, rows, -1);
+    }
+  }
+
+  /** CPU room for transforms below `count`. */
+  private reserveTransforms(count: number): void {
+    if (this.transforms.reserve(count)) {
+      const t = this.transforms.rows;
+      this.transformLocal = resized(this.transformLocal, t * 16);
+      this.transformWorld = resized(this.transformWorld, t * 16);
+      this.transformParent = resized(this.transformParent, t, -1);
+      this.transformGeneration = resized(this.transformGeneration, t);
+      this.transformLive = resized(this.transformLive, t);
+      this.transformHidden = resized(this.transformHidden, t);
+      this.transformHiddenWorld = resized(this.transformHiddenWorld, t);
+      this.transformPendingFlag = resized(this.transformPendingFlag, t);
+      this.transformStamp = resized(this.transformStamp, t);
+    }
+  }
+
+  /** CPU room for materials below `count`. */
+  private reserveMaterials(count: number): void {
+    const rows = this.materialsF32.byteLength / MATERIAL_SIZE;
+    if (count > rows) {
+      const data = new ArrayBuffer(
+        grownSize(rows, count, this.maxMaterials) * MATERIAL_SIZE,
+      );
+      new Uint32Array(data).set(this.materialsU32);
+      this.materialsF32 = new Float32Array(data);
+      this.materialsU32 = new Uint32Array(data);
+    }
+  }
+
   /** Adds a material to the table and returns its index. */
   addMaterial(options: MaterialOptions): number {
     const index = this.freeMaterials.pop() ?? this.materialCount++;
@@ -844,6 +929,7 @@ export class World {
       this.materialCount--;
       throw new Error("World material table is full.");
     }
+    this.reserveMaterials(index + 1);
     writeMaterial(this.materialsF32, this.materialsU32, index, {
       baseColor: options.baseColor ?? [1, 1, 1, 1],
       emissive: options.emissive ?? [0, 0, 0],
@@ -911,6 +997,7 @@ export class World {
       this.drawCount--;
       throw new Error("World draw table is full.");
     }
+    this.reserveDraws(index + 1);
     const mesh = options.mesh;
     // Placement: a shared transform, or one the draw owns.
     let transform: number;
@@ -944,6 +1031,7 @@ export class World {
         this.freeSlots.push(index);
         throw new Error("World instance table is full.");
       }
+      this.instances.reserve(first + instanceCount);
       instanceFirst = first;
       this.instanceHighWater = Math.max(
         this.instanceHighWater,
@@ -1200,6 +1288,7 @@ export class World {
       this.transformCount--;
       throw new Error("World transform table is full.");
     }
+    this.reserveTransforms(index + 1);
     this.transformLocal.set(matrix, index * 16);
     this.transformParent[index] = parent ? parent.index : -1;
     if (parent) {
@@ -1992,6 +2081,9 @@ export class World {
   }
 
   destroy(): void {
+    for (const chunk of this.uploadChunks) {
+      chunk.buffer.destroy();
+    }
     this.records.destroy();
     this.transforms.destroy();
     this.instances.destroy();
@@ -2015,6 +2107,27 @@ export class World {
 
 /** Hit distance bits meaning "no hit" (the largest finite float). */
 const NO_HIT = 0x7f7fffff;
+/** Smallest staging buffer for queued uploads. */
+const UPLOAD_CHUNK_BYTES = 1 << 20;
+/** CPU rows a per-slot table starts with. */
+const INITIAL_ROWS = 1024;
+
+/** Rows after growing from `rows` to hold `count`: doubling, capped. */
+function grownSize(rows: number, count: number, capacity: number): number {
+  return Math.min(capacity, Math.max(count, rows * 2));
+}
+
+/** A copy of `array` with `length` elements, the new ones `fill`. */
+function resized<
+  T extends Uint8Array | Uint32Array | Int32Array | Float64Array,
+>(array: T, length: number, fill = 0): T {
+  const out = new (array.constructor as new (length: number) => T)(length);
+  out.set(array);
+  if (fill !== 0) {
+    out.fill(fill, array.length);
+  }
+  return out;
+}
 const IDENTITY = Float64Array.of(
   1,
   0,
