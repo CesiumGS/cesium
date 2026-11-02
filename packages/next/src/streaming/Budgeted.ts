@@ -67,6 +67,8 @@ const FRONTIER = 1e12;
 const PREFETCH = 1e13;
 /** No renderable ancestor is loaded (or requested) in this region yet. */
 const NONE = Number.POSITIVE_INFINITY;
+/** Levels below a missing frontier tile searched for resident content. */
+const RESIDENT_DEPTH = 4;
 
 /**
  * The tiles drawing a region, and whether they cover all of it. Incomplete
@@ -225,9 +227,17 @@ export class BudgetedSelection extends StepwiseSelection {
           tile.refine === "REPLACE"
             ? this.fromCache(tile, view, pass, rootError, result)
             : undefined;
-        return finer
-          ? { tiles: finer, complete: true, holes: NO_HOLES }
-          : { tiles: [], complete: false, holes: [tile] };
+        if (finer) {
+          return { tiles: finer, complete: true, holes: NO_HOLES };
+        }
+        // Not all of it: the finer content that is here still draws where
+        // it covers (zooming out past levels skipped on the way in, the
+        // region showed nothing until this tile arrived).
+        const partial: Tile[] = [];
+        if (tile.refine === "REPLACE" && tile.residentBelow > 0) {
+          this.resident(tile, view, pass, rootError, result, partial, 0);
+        }
+        return { tiles: partial, complete: false, holes: [tile] };
       }
       if (
         tile.refine === "REPLACE" &&
@@ -428,6 +438,36 @@ export class BudgetedSelection extends StepwiseSelection {
   /** Loaded content that can draw now (terrain also waits for imagery). */
   protected drawable(tile: Tile, _result: SelectionResult): boolean {
     return tile.contentAvailable;
+  }
+
+  /**
+   * Whatever resident content lies under `tile`'s visible children, the
+   * coarsest drawable on each path, at most `RESIDENT_DEPTH` levels down.
+   */
+  private resident(
+    tile: Tile,
+    view: SelectionView,
+    pass: number,
+    rootError: number,
+    result: SelectionResult,
+    out: Tile[],
+    depth: number,
+  ): void {
+    for (const child of tile.children) {
+      if (child.state !== "ready" && child.residentBelow === 0) {
+        continue;
+      }
+      this.updateTile(child, view, pass, rootError);
+      if (!isVisible(child.viewState(view.id))) {
+        continue;
+      }
+      result.touched.push(child);
+      if (this.drawable(child, result)) {
+        out.push(child);
+      } else if (depth < RESIDENT_DEPTH && child.residentBelow > 0) {
+        this.resident(child, view, pass, rootError, result, out, depth + 1);
+      }
+    }
   }
 
   /** Finer resident content covering `tile`'s visible children, if any. */

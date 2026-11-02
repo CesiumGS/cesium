@@ -1205,6 +1205,9 @@ export class Tileset3D implements TileTree {
         tile.appliedMask = 0;
         tile.state = "ready";
         this.loaded.add(tile);
+        for (let t = tile.parent; t; t = t.parent) {
+          t.residentBelow++;
+        }
         this.stats.loaded++;
         this.stats.bytes += tile.bytes;
         this.stats.bytesTotal += tile.bytes;
@@ -1281,7 +1284,11 @@ export class Tileset3D implements TileTree {
       tile.clip = undefined;
     }
     this.placeholders.delete(tile);
-    this.loaded.delete(tile);
+    if (this.loaded.delete(tile)) {
+      for (let t = tile.parent; t; t = t.parent) {
+        t.residentBelow--;
+      }
+    }
     this.masked.delete(tile);
   }
 

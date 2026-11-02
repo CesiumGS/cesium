@@ -76,6 +76,11 @@ export class Tile {
   globe?: GlobeTile;
 
   state: ContentState = "unloaded";
+  /**
+   * Loaded descendants (`Tileset3D.loaded`), so selection finds resident
+   * finer content under a tile without walking its whole subtree.
+   */
+  residentBelow = 0;
   instance?: ModelInstance;
   /** Debug tint currently on the draws (linear RGBA; none is white). */
   debugColor?: readonly number[];
