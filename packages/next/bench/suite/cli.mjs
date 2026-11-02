@@ -71,6 +71,17 @@ import { ALERT_METRICS, detectAlerts } from "./changepoints.mjs";
 import { runImages } from "./images.mjs";
 import { checkoutFrozen, freezeTree, serveBuild } from "./frozen.mjs";
 import {
+  drift,
+  engineKey,
+  findStored,
+  immutable,
+  machineKey,
+  methodKey,
+  sceneKey,
+  storedRuns,
+} from "./reuse.mjs";
+import { ratio } from "./stats.mjs";
+import {
   conditions,
   cooldown,
   keepAwake,
@@ -570,17 +581,90 @@ async function run() {
   }
   const filmstrip = [];
   const motionFrames = [];
-  const total = scenes.length * scenarios.length * reps * configs.length;
+  let total = scenes.length * scenarios.length * reps * configs.length;
   let done = 0;
   let failed = 0;
+  const resultsDir =
+    process.env.BENCH_RESULTS ?? join(homedir(), ".cesium-bench", "results");
+  // Stored repetitions of engines that can't change, other than the
+  // candidate (reuse.mjs): one calibration repetition, then the rest from
+  // earlier runs on this machine, method and data. --no-reuse turns it off.
+  results.reuse = {
+    machine: machineKey(results.environment),
+    method: methodKey(benchRoot),
+  };
+  results.configs = configs.map((c) => ({
+    id: c.id,
+    engine: c.engine,
+    source: c.source,
+    engineKey: engineKey(c),
+  }));
+  const reusing = !opts["no-reuse"] && reps > 1;
+  const stored = reusing
+    ? storedRuns(resultsDir, {
+        ...results.reuse,
+        days: Number(opts["reuse-days"] ?? 14),
+      })
+    : [];
+  // Early stop: once a scene's comparison of the candidate with the
+  // baseline is decided (the primary metric's interval clears 1, each
+  // guardrail is clearly within or past its tolerance) after at least
+  // --min-reps repetitions, its remaining ones are skipped.
+  // --no-early-stop runs them all.
+  const minReps = Math.max(2, Number(opts["min-reps"] ?? 2));
+  const earlyStop =
+    !opts["no-early-stop"] && reps > minReps && baseline !== candidate;
+  const decided = (sceneId, scenarioId) => {
+    const runsOf = (config) =>
+      results.runs.filter(
+        (r) =>
+          r.scene === sceneId &&
+          r.scenario === scenarioId &&
+          r.config === config,
+      );
+    const a = runsOf(baseline);
+    const b = runsOf(candidate);
+    if ([a, b].some((x) => x.some((r) => r.metrics.status === "unsupported"))) {
+      return true;
+    }
+    const values = (list, key) =>
+      list
+        .filter((r) => r.metrics.status === "ok")
+        .map((r) => r.metrics[key])
+        .filter((v) => Number.isFinite(v));
+    const settledBy = (key, tolerance) => {
+      const va = values(a, key);
+      const vb = values(b, key);
+      if (!va.length && !vb.length) {
+        return true;
+      }
+      if (va.length < minReps || vb.length < minReps) {
+        return false;
+      }
+      const r = ratio(va, vb);
+      return tolerance === 0
+        ? r.separated
+        : r.low > 1 + tolerance || r.high < 1 + tolerance;
+    };
+    const plan = results.plan;
+    return (
+      settledBy(plan.primary, 0) &&
+      plan.guardrails.every((k) => settledBy(k, plan.tolerance))
+    );
+  };
   for (const scene of scenes) {
     const datasets = sceneDatasets(catalog, scene);
     for (const scenario of scenarios) {
+      // Engines whose remaining repetitions came from stored runs.
+      const fromStore = new Set();
       for (let rep = 0; rep < reps; rep++) {
         // Rotate the configuration order every repetition.
         const shift = rep % configs.length;
         const order = [...configs.slice(shift), ...configs.slice(0, shift)];
         for (const config of order) {
+          if (fromStore.has(config.id)) {
+            continue;
+          }
           done++;
           const spec = {
             scene,
@@ -627,7 +711,7 @@ async function run() {
             }
             delete result.shots;
           }
-          results.runs.push({
+          const record = {
             scene: scene.id,
             sceneTitle: scene.private ? scene.id : scene.title,
             group: scene.group,
@@ -638,8 +722,10 @@ async function run() {
             config: config.id,
             engine: config.engine,
             rep,
+            sceneKey: sceneKey(spec),
             ...result,
-          });
+          };
+          results.runs.push(record);
           if (result.metrics.status === "error") {
             failed++;
           }
@@ -652,6 +738,55 @@ async function run() {
                 }`
               : `${result.metrics.status}${result.metrics.message ? `: ${result.metrics.message}` : ""}`,
           );
+          // The first repetition calibrates against stored ones.
+          if (
+            rep === 0 &&
+            reusing &&
+            config.id !== candidate &&
+            immutable(config) &&
+            result.metrics.status === "ok" &&
+            result.validity.verdict === "valid"
+          ) {
+            const prior = findStored(
+              stored,
+              engineKey(config),
+              record.sceneKey,
+              reps - 1,
+            );
+            if (prior.length === reps - 1) {
+              const d = drift(record, prior);
+              const shown = (v) =>
+                d.key === "cpuP50"
+                  ? `${v.toFixed(2)} ms`
+                  : `${(v / 1000).toFixed(2)} s`;
+              if (d.drifted) {
+                console.log(
+                  `  ${config.id}: ${d.key} ${d.value === undefined ? "missing" : shown(d.value)} vs stored ${d.mean === undefined ? "none" : `${shown(d.mean)} ± ${shown(d.band)}`}: every repetition runs`,
+                );
+              } else {
+                fromStore.add(config.id);
+                total -= reps - 1;
+                prior.forEach((p, i) =>
+                  results.runs.push({ ...p.run, rep: i + 1, reused: p.file }),
+                );
+                console.log(
+                  `  ${config.id}: within ${shown(d.band)} of stored runs: repetitions 2 to ${reps} from ${[...new Set(prior.map((p) => p.file))].join(", ")}`,
+                );
+              }
+            }
+          }
+        }
+        if (earlyStop && rep + 1 >= minReps && rep + 1 < reps) {
+          if (decided(scene.id, scenario.id)) {
+            const skipped =
+              (reps - rep - 1) *
+              configs.filter((c) => !fromStore.has(c.id)).length;
+            total -= skipped;
+            console.log(
+              `  ${scene.id} ${scenario.id}: decided after ${rep + 1} repetitions; ${skipped} run${skipped === 1 ? "" : "s"} skipped`,
+            );
+            break;
+          }
         }
       }
       // Quality in motion: the motion again per engine after the measured

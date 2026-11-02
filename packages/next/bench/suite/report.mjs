@@ -308,6 +308,15 @@ function lineageSection(results) {
         : "clean",
     ],
     [
+      "Served",
+      results.served === "build"
+        ? `production build of <code>${escape((results.frozen ?? results.commit).slice(0, 12))}</code> (the working tree frozen)`
+        : results.served === "dev"
+          ? "the live working tree (Vite dev server)"
+          : "the live working tree (before r39)",
+    ],
+    ["Reused", reusedSummary(results.runs)],
+    [
       "Catalog",
       `${escape(results.catalog ?? "public")}${results.catalogSha256 ? ` · sha256 <code>${escape(results.catalogSha256.slice(0, 16))}</code>` : ""}`,
     ],
@@ -1023,8 +1032,28 @@ export function summarizeRun(results) {
     browser: env.browser,
     configs: [...new Set(results.runs.map((r) => r.config))],
     repetitions: Math.max(0, ...results.runs.map((r) => r.rep + 1)),
+    reused: results.runs.filter((r) => r.reused).length,
     scenes,
   };
+}
+
+/** Which runs came from earlier sessions (reuse.mjs), per engine. */
+function reusedSummary(runs) {
+  const by = new Map();
+  for (const r of runs.filter((x) => x.reused)) {
+    const e = by.get(r.config) ?? { count: 0, from: new Set() };
+    e.count++;
+    e.from.add(r.reused);
+    by.set(r.config, e);
+  }
+  return by.size
+    ? [...by]
+        .map(
+          ([config, e]) =>
+            `<b>${escape(config)}</b>: ${e.count} repetition${e.count === 1 ? "" : "s"} from ${[...e.from].map(escape).join(", ")} (after a calibration repetition in this run)`,
+        )
+        .join("<br>")
+    : "none: every repetition ran in this session";
 }
 
 export { CONDITION_METRICS, METRICS };

@@ -46,9 +46,20 @@ export function freezeTree(cwd) {
   if (tree === git(["rev-parse", "HEAD^{tree}"], repo)) {
     return { repo, sha: head, dirty: false };
   }
+  // The same tree on the same HEAD freezes to the same commit (a fixed
+  // author and date), so its build and stored runs are found again.
+  const date = git(["log", "-1", "--format=%cI", "HEAD"], repo);
   const sha = git(
     ["commit-tree", tree, "-p", head, "-m", "bench: working tree"],
     repo,
+    {
+      GIT_AUTHOR_NAME: "bench",
+      GIT_AUTHOR_EMAIL: "bench@localhost",
+      GIT_COMMITTER_NAME: "bench",
+      GIT_COMMITTER_EMAIL: "bench@localhost",
+      GIT_AUTHOR_DATE: date,
+      GIT_COMMITTER_DATE: date,
+    },
   );
   return { repo, sha, dirty: true };
 }
