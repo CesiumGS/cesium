@@ -157,21 +157,53 @@ const summary = cells.map((c) => {
   }
   const stepwise = totals(c.rows, "Stepwise");
   const budgeted = totals(c.rows, "Budgeted, adaptive");
-  // No worse (FLIP within 0.002) at no more bytes (within 2%); better
-  // where FLIP is lower by more than that. FLIP against the target where
-  // measured (parity/lod.ts: the fully refined reference rewards lingering
-  // on content unlike the target); the other is shown too.
-  const key = (t) => t.flipAverageTarget ?? t.flipAverage;
+  // FLIP against the target where measured (parity/lod.ts: the fully
+  // refined reference rewards lingering on content unlike the target); the
+  // other is shown too. Repetitions vary (a throttled jump into OSM ran
+  // 0.29 to 0.44 for either policy), so the margin is 0.002 plus twice the
+  // standard error of the difference of the per-repetition cell means.
+  const field =
+    stepwise?.flipAverageTarget !== undefined
+      ? "flipAverageTarget"
+      : "flipAverage";
+  const perRep = (label) => {
+    const by = new Map();
+    for (const r of c.rows) {
+      if (r.policy.startsWith(label) && r.status === "ok") {
+        const k = r.rep ?? 0;
+        by.set(k, [...(by.get(k) ?? []), r[field] ?? 0]);
+      }
+    }
+    return new Map(
+      [...by].map(([k, v]) => [k, v.reduce((a, b) => a + b, 0) / v.length]),
+    );
+  };
+  const a = perRep("Stepwise");
+  const b = perRep("Budgeted, adaptive");
+  const diffs = [...b.keys()]
+    .filter((k) => a.has(k))
+    .map((k) => b.get(k) - a.get(k));
+  const meanDiff = diffs.reduce((s, d) => s + d, 0) / Math.max(1, diffs.length);
+  const se =
+    diffs.length > 1
+      ? Math.sqrt(
+          diffs.reduce((s, d) => s + (d - meanDiff) ** 2, 0) /
+            (diffs.length - 1) /
+            diffs.length,
+        )
+      : 0;
+  const margin = 0.002 + 2 * se;
   const pass =
     stepwise &&
     budgeted &&
-    key(budgeted) <= key(stepwise) + 0.002 &&
+    meanDiff <= margin &&
     budgeted.megabytes <= stepwise.megabytes * 1.02;
-  const better = pass && key(budgeted) < key(stepwise) - 0.002;
+  const better = pass && meanDiff < -margin;
   return {
     ...c,
     stepwise,
     budgeted,
+    difference: { mean: meanDiff, margin },
     verdict: better ? "better" : pass ? "pass" : "fail",
   };
 });
@@ -186,7 +218,7 @@ console.log(
 );
 for (const s of summary) {
   console.log(
-    `${s.content.padEnd(18)} ${s.link.padEnd(5)} ${pair(s, "flipAverageTarget", 3, 18)} ${pair(s, "flipAverage", 3, 19)} ${pair(s, "megabytes", 1, 16)} ${pair(s, "settleMs", 1, 17)} ${s.verdict}`,
+    `${s.content.padEnd(18)} ${s.link.padEnd(5)} ${pair(s, "flipAverageTarget", 3, 18)} ${pair(s, "flipAverage", 3, 19)} ${pair(s, "megabytes", 1, 16)} ${pair(s, "settleMs", 1, 17)} ${s.verdict}${s.difference ? ` (Δ ${s.difference.mean >= 0 ? "+" : ""}${s.difference.mean.toFixed(3)} ± ${s.difference.margin.toFixed(3)})` : ""}`,
   );
 }
 const passed = summary.filter(
