@@ -570,12 +570,17 @@ export class Engine {
    * 250 ms, as on-demand rendering idles).
    */
   /** The view's steady motion (`cameraAhead` measured it this selection). */
-  private motionOf(
-    view: View,
-  ): { velocity: Vec3; turnRate: number } | undefined {
+  private motionOf(view: View): { velocity: Vec3; angular: Vec3 } | undefined {
     const motion = this.viewMotion.get(view);
     return motion
-      ? { velocity: motion.velocity.position, turnRate: motion.speeds[1] }
+      ? {
+          velocity: motion.velocity.position,
+          angular: v3.cross(
+            v3.vec3(),
+            view.camera.direction,
+            motion.velocity.direction,
+          ),
+        }
       : undefined;
   }
 

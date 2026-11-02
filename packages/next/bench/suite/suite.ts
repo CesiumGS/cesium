@@ -472,6 +472,14 @@ function describeTile(tile: Tile): DrawnTile {
     : { key: tile.headerKey, kind: "tiles", depth: tile.depth };
 }
 
+/** Budgeted's numeric options an engine variant may set (`EngineConfig`). */
+const BUDGETED_OPTIONS = [
+  "motionBenefit",
+  "prefetchErrorScale",
+  "opportunisticRatio",
+  "skipLevels",
+] as const;
+
 export class NextAdapter implements Adapter {
   private engine!: Engine;
   private view!: ReturnType<Engine["addView"]>;
@@ -549,11 +557,19 @@ export class NextAdapter implements Adapter {
     });
     this.view.camera.near = 1;
     const [imagery, terrain, ...endpoints] = await resolving;
+    // Budgeted's numeric options, from engine variants (2.0+motionBenefit=0).
+    const tuning = Object.fromEntries(
+      BUDGETED_OPTIONS.filter((k) => config[k] !== undefined).map((k) => [
+        k,
+        Number(config[k]),
+      ]),
+    );
     const common = {
       ...(config.policy ? { policy: config.policy } : {}),
       ...(config.maximumScreenSpaceError !== undefined
         ? { maximumScreenSpaceError: config.maximumScreenSpaceError }
         : {}),
+      ...tuning,
     };
     const [globe, ...tilesets] = await Promise.all([
       terrain

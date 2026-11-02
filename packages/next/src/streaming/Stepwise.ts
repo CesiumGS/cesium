@@ -38,10 +38,11 @@ export interface SelectionView {
    */
   prefetchPlanes?: Float64Array;
   /**
-   * While the camera moves steadily: its velocity (m/s) and how fast its
-   * direction turns (rad/s), for loading in motion by benefit (`Budgeted`).
+   * While the camera moves steadily: its velocity (m/s) and angular
+   * velocity (rad/s, direction × its rate of change), for loading in
+   * motion by benefit (`Budgeted`).
    */
-  motion?: { velocity: Vec3; turnRate: number };
+  motion?: { velocity: Vec3; angular: Vec3 };
   /** 2 tan(fovy / 2). */
   sseDenominator: number;
   /** Drawing-buffer height divided by the pixel ratio (1.x `pixelRatio`). */

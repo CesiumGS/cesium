@@ -466,8 +466,13 @@ export class BudgetedSelection extends StepwiseSelection {
 
   /**
    * Whether the tile stays on screen long enough to be worth loading now
-   * (`motionBenefit`). Only motion across the line of sight counts: a tile
-   * straight ahead of a camera flying toward it stays in view.
+   * (`motionBenefit`): the field of view over how fast the tile moves
+   * across it, its apparent motion from the camera's translation (only
+   * across the line of sight: a tile straight ahead of a camera flying
+   * toward it stays in view) less the camera's turning, as vectors. Adding
+   * the two as speeds (r38, first version) made an orbit's near content,
+   * which the turning holds still on screen, look fast: Google's quality
+   * in motion fell to twice 1.x's.
    */
   private worthLoading(tile: Tile, view: SelectionView): boolean {
     const motion = view.motion;
@@ -480,12 +485,19 @@ export class BudgetedSelection extends StepwiseSelection {
     const dy = c[1]! - view.position[1]!;
     const dz = c[2]! - view.position[2]!;
     const d = Math.max(Math.hypot(dx, dy, dz), tile.volume.sphere.radius, 1);
+    const r = Math.max(Math.hypot(dx, dy, dz), 1e-6);
+    const ux = dx / r;
+    const uy = dy / r;
+    const uz = dz / r;
     const v = motion.velocity;
-    const along = (v[0]! * dx + v[1]! * dy + v[2]! * dz) / d;
-    const across = Math.sqrt(
-      Math.max(0, v[0]! ** 2 + v[1]! ** 2 + v[2]! ** 2 - along * along),
-    );
-    const sweep = across / d + motion.turnRate; // rad/s across the view
+    const along = v[0]! * ux + v[1]! * uy + v[2]! * uz;
+    // The direction to the tile changes at −v⊥ / d (world); the camera's
+    // frame turns at ω, moving a fixed direction u by −ω × u in it.
+    const w = motion.angular;
+    const sx = -(v[0]! - along * ux) / d - (w[1]! * uz - w[2]! * uy);
+    const sy = -(v[1]! - along * uy) / d - (w[2]! * ux - w[0]! * uz);
+    const sz = -(v[2]! - along * uz) / d - (w[0]! * uy - w[1]! * ux);
+    const sweep = Math.hypot(sx, sy, sz); // rad/s across the view
     if (sweep <= 0) {
       return true;
     }

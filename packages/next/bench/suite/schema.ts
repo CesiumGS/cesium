@@ -179,6 +179,11 @@ export interface EngineConfig {
   /** 2.0 selection policy. */
   policy?: "budgeted" | "stepwise";
   maximumScreenSpaceError?: number;
+  /** Budgeted options from engine variants (2.0+motionBenefit=0), numeric. */
+  motionBenefit?: number;
+  prefetchErrorScale?: number;
+  opportunisticRatio?: number;
+  skipLevels?: number;
   /** Render settings over the catalog's (e.g. 1.x out of the box). */
   render?: Partial<RenderSettings>;
 }
