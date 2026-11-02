@@ -83,6 +83,12 @@ export type ZoomTarget =
 const ellipsoid = Ellipsoid.WGS84;
 const deg = Math.PI / 180;
 
+/** Endpoints `Viewer.create` starts resolving before the engine exists. */
+interface EarlyEndpoints {
+  imagery?: Promise<BingImagery>;
+  terrain?: ReturnType<typeof resolveIonAsset>;
+}
+
 export class Viewer {
   readonly engine: Engine;
   readonly canvas: HTMLCanvasElement;
@@ -118,11 +124,16 @@ export class Viewer {
   private destroyed = false;
   private readonly accessToken: string | undefined;
 
+  /** Default globe endpoints, resolved while the device was created. */
+  private early: EarlyEndpoints;
+
   private constructor(
     readonly container: HTMLElement,
     engine: Engine,
     options: ViewerOptions,
+    early: EarlyEndpoints = {},
   ) {
+    this.early = early;
     this.engine = engine;
     this.policy = options.policy ?? "budgeted";
     this.globeKind = options.globe ?? "ellipsoid";
@@ -182,7 +193,23 @@ export class Viewer {
     container: HTMLElement,
     options: ViewerOptions = {},
   ): Promise<Viewer> {
-    return new Viewer(container, await Engine.create(), options);
+    // The default globe's endpoints resolve while the device is created
+    // (2.0's first request came 150 to 550 ms after 1.x's, r37).
+    const token = options.accessToken
+      ? { accessToken: options.accessToken }
+      : {};
+    const early: EarlyEndpoints = {
+      ...((options.imagery ?? true) === true
+        ? { imagery: BingImagery.fromIon(2, token) }
+        : {}),
+      ...((options.globe ?? "ellipsoid") === "terrain"
+        ? { terrain: resolveIonAsset(1, token) }
+        : {}),
+    };
+    // Settled here so a failure surfaces where it is used, not unhandled.
+    early.imagery?.catch(() => {});
+    early.terrain?.catch(() => {});
+    return new Viewer(container, await Engine.create(), options, early);
   }
 
   // ------------------------------------------------------------- globe
@@ -205,7 +232,12 @@ export class Viewer {
 
   private async buildGlobe(imagery: ImageryProvider | boolean): Promise<void> {
     if (imagery === true) {
-      this.imagery = await BingImagery.fromIon(2, this.tokenOptions());
+      // Imagery and the terrain endpoint at once, not one after the other.
+      if (this.globeKind === "terrain") {
+        this.early.terrain ??= resolveIonAsset(1, this.tokenOptions());
+      }
+      this.imagery = await (this.early.imagery ??
+        BingImagery.fromIon(2, this.tokenOptions()));
     } else if (imagery) {
       this.imagery = imagery;
     }
@@ -223,7 +255,9 @@ export class Viewer {
       ...(this.imagery ? { imagery: this.imagery } : {}),
     };
     if (kind === "terrain") {
-      const ion = await resolveIonAsset(1, this.tokenOptions());
+      const ion = await (this.early.terrain ??
+        resolveIonAsset(1, this.tokenOptions()));
+      this.early.terrain = undefined; // used once: later switches resolve anew
       next = await this.engine.addTerrain(this.world, ion.url, {
         headers: ion.headers,
         ...options,

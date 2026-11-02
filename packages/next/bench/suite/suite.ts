@@ -492,6 +492,37 @@ export class NextAdapter implements Adapter {
     canvas.style.height = "100%";
     container.append(canvas);
     this.canvas = canvas;
+    const byId = new Map(spec.datasets.map((d) => [d.id, d]));
+    // Everything independent starts at once (an app would do the same):
+    // imagery, the terrain endpoint and every tileset's endpoint, while the
+    // device is created, then the terrain and tilesets themselves. Waiting
+    // on each in turn cost about a second before the first content request.
+    const imageryDataset = scene.imagery ? byId.get(scene.imagery)! : undefined;
+    const terrainDataset =
+      typeof scene.globe === "object"
+        ? byId.get(scene.globe.terrain)!
+        : undefined;
+    const layers = scene.layers.map((layer) => ({
+      layer,
+      dataset: byId.get(layer.dataset)!,
+    }));
+    const resolving = Promise.all([
+      imageryDataset
+        ? BingImagery.fromIon(ionAsset(imageryDataset), {
+            accessToken: tokenFor(imageryDataset),
+          })
+        : undefined,
+      terrainDataset
+        ? resolveIonAsset(ionAsset(terrainDataset), {
+            accessToken: tokenFor(terrainDataset),
+          })
+        : undefined,
+      ...layers.map(({ dataset }) =>
+        dataset.source.kind === "generator"
+          ? undefined
+          : resolveTileset(dataset),
+      ),
+    ]);
     const engine = (this.engine = await Engine.create());
     const limit = engine.gpu.device.limits.maxStorageBufferBindingSize;
     const world = engine.createWorld({
@@ -517,37 +548,7 @@ export class NextAdapter implements Adapter {
       world,
     });
     this.view.camera.near = 1;
-    const byId = new Map(spec.datasets.map((d) => [d.id, d]));
-    // Everything independent starts at once (an app would do the same):
-    // imagery, the terrain endpoint and every tileset's endpoint, then the
-    // terrain and tilesets themselves. Waiting on each in turn cost about a
-    // second before the first content request.
-    const imageryDataset = scene.imagery ? byId.get(scene.imagery)! : undefined;
-    const terrainDataset =
-      typeof scene.globe === "object"
-        ? byId.get(scene.globe.terrain)!
-        : undefined;
-    const layers = scene.layers.map((layer) => ({
-      layer,
-      dataset: byId.get(layer.dataset)!,
-    }));
-    const [imagery, terrain, ...endpoints] = await Promise.all([
-      imageryDataset
-        ? BingImagery.fromIon(ionAsset(imageryDataset), {
-            accessToken: tokenFor(imageryDataset),
-          })
-        : undefined,
-      terrainDataset
-        ? resolveIonAsset(ionAsset(terrainDataset), {
-            accessToken: tokenFor(terrainDataset),
-          })
-        : undefined,
-      ...layers.map(({ dataset }) =>
-        dataset.source.kind === "generator"
-          ? undefined
-          : resolveTileset(dataset),
-      ),
-    ]);
+    const [imagery, terrain, ...endpoints] = await resolving;
     const common = {
       ...(config.policy ? { policy: config.policy } : {}),
       ...(config.maximumScreenSpaceError !== undefined
