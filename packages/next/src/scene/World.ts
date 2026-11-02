@@ -682,10 +682,83 @@ export class World {
     return this.batches.size;
   }
 
+  /**
+   * Geometry written since the last frame, copied in one batch
+   * (`flushUploads`). A queue.writeBuffer per stream of every mesh went
+   * through the browser's transfer ring to the GPU process: a burst of
+   * tiles blocked the main thread in writeBuffer (NYC, vsync off: 1.2 s
+   * over 8 s of an orbit, r38).
+   */
+  private readonly pendingUploads: Array<{
+    target: GPUBuffer;
+    offset: number;
+    at: number;
+    size: number;
+  }> = [];
+  /** The queued bytes, copied when queued (as writeBuffer copied them). */
+  private pendingData = new Uint8Array(1 << 20);
+  private pendingUploadBytes = 0;
+
+  /** Queues a write of `data` at `offset` in `target` (`flushUploads`). */
+  private queueUpload(
+    target: GPUBuffer,
+    offset: number,
+    data: Float32Array | Uint32Array,
+  ): void {
+    const at = this.pendingUploadBytes;
+    const end = at + data.byteLength;
+    if (end > this.pendingData.length) {
+      let size = this.pendingData.length;
+      while (size < end) {
+        size *= 2;
+      }
+      const grown = new Uint8Array(size);
+      grown.set(this.pendingData.subarray(0, at));
+      this.pendingData = grown;
+    }
+    this.pendingData.set(
+      new Uint8Array(data.buffer, data.byteOffset, data.byteLength),
+      at,
+    );
+    this.pendingUploads.push({ target, offset, at, size: data.byteLength });
+    this.pendingUploadBytes = end;
+  }
+
+  /**
+   * Copies the queued geometry into place: one mapped staging buffer
+   * filled on this thread, and a buffer-to-buffer copy per write, submitted
+   * before anything that reads the arenas (the frame, ray casts) and before
+   * any other write to them or a release of their ranges.
+   */
+  flushUploads(): void {
+    if (this.pendingUploads.length === 0) {
+      return;
+    }
+    const device = this.ctx.device;
+    const size = Math.ceil(this.pendingUploadBytes / 4) * 4;
+    const staging = device.createBuffer({
+      label: "world.uploads",
+      size,
+      usage: GPUBufferUsage.COPY_SRC,
+      mappedAtCreation: true,
+    });
+    new Uint8Array(staging.getMappedRange()).set(
+      this.pendingData.subarray(0, this.pendingUploadBytes),
+    );
+    staging.unmap();
+    const encoder = device.createCommandEncoder({ label: "world.uploads" });
+    for (const { target, offset, at, size } of this.pendingUploads) {
+      encoder.copyBufferToBuffer(staging, at, target, offset, size);
+    }
+    device.queue.submit([encoder.finish()]);
+    staging.destroy(); // released once the copies have run
+    this.pendingUploads.length = 0;
+    this.pendingUploadBytes = 0;
+  }
+
   /** Uploads geometry into the arena as separate attribute streams. */
   addMesh(mesh: MeshData): MeshHandle {
     const vertexCount = mesh.positions.length / 3;
-    const queue = this.ctx.device.queue;
     const vertexRanges: Array<[number, number]> = [];
     const upload = (data: Float32Array | Uint32Array | undefined): number => {
       if (!data) {
@@ -699,7 +772,7 @@ export class World {
         throw new Error("World vertex arena is full.");
       }
       vertexRanges.push([offset, data.byteLength]);
-      queue.writeBuffer(this.vertexBuffer, offset, data);
+      this.queueUpload(this.vertexBuffer, offset, data);
       return offset / 4;
     };
     const streams: MeshStreams = {
@@ -717,7 +790,7 @@ export class World {
       }
       throw new Error("World index arena is full.");
     }
-    queue.writeBuffer(this.indexBuffer, indexOffset, mesh.indices);
+    this.queueUpload(this.indexBuffer, indexOffset, mesh.indices);
     const { center, radius } = boundingSphere(mesh.positions);
     const id = this.nextMeshId++;
     this.meshRanges.set(id, {
@@ -746,6 +819,9 @@ export class World {
     if (!ranges) {
       return 0;
     }
+    // Its ranges may be reused before the next frame: its queued data
+    // must not land on their next owner's.
+    this.flushUploads();
     this.meshRanges.delete(mesh.id);
     let bytes = 0;
     for (const [offset, size] of ranges.vertex) {
@@ -905,7 +981,7 @@ export class World {
         this.freeSlots.push(index);
         throw new Error("World vertex arena is full.");
       }
-      this.ctx.device.queue.writeBuffer(this.vertexBuffer, offset, data);
+      this.queueUpload(this.vertexBuffer, offset, data);
       this.instanceStreamRanges[index] = [offset, data.byteLength];
       instanceStreams = offset / 4;
       instanceStride = instances.streams.stride;
@@ -1024,6 +1100,7 @@ export class World {
     }
     const streams = this.instanceStreamRanges[handle.index];
     if (streams) {
+      this.flushUploads(); // before its range can be reused
       this.vertexAllocator.release(streams[0], streams[1]);
       this.instanceStreamRanges[handle.index] = undefined;
     }
@@ -1439,6 +1516,7 @@ export class World {
     if (rays.length === 0) {
       return out;
     }
+    this.flushUploads();
     this.resolveTransforms();
     const jobs = this.rayJobs(rays, options);
     if (jobs.length === 0) {
@@ -1708,6 +1786,7 @@ export class World {
    */
   prepareFrame(): GPURenderBundle {
     const queue = this.ctx.device.queue;
+    this.flushUploads();
     this.resolveTransforms();
     this.uploadsPending = true;
     if (this.materialsDirty) {
