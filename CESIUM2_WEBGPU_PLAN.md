@@ -2783,6 +2783,42 @@ on different origins (workers, wasm and KTX2 transcoding included). Not
 yet: a classic-script (global) build, publishing, or a stable public API
 surface; `exports` still points at the source for the workspace.
 
+How cross-origin loading works, step by step:
+
+1. **No base URL.** Every file the library loads is located from the
+   module that loads it, fixed at build time: the worker from
+   `cesium-next.mjs` (`?worker&url`), the wasm from the worker, each as
+   `new URL(file, import.meta.url)`. Wherever the files are served, the
+   URLs follow; there is no `CESIUM_BASE_URL` to set and no folders to
+   copy.
+2. **The module.** `import()` or `<script type="module">` of another
+   origin needs `Access-Control-Allow-Origin` on the response (module
+   scripts are always fetched in CORS mode). npm CDNs (jsDelivr, unpkg)
+   send it.
+3. **The worker.** `new Worker(url)` must be same-origin, CORS or not.
+   `WorkerPool` compares the worker URL's origin with the page's: the
+   same, it starts the worker directly; different, it starts a module
+   worker from a `blob:` URL (same-origin by construction) whose only line
+   is `import "<worker url>";`. The import is a cross-origin module fetch
+   (CORS again). Inside, `import.meta.url` is the real CDN URL, so the
+   worker's own chunks and wasm resolve against the CDN, not the blob. One
+   blob URL per page, made on first use and kept.
+4. **Wasm and data.** The worker `fetch`es its wasm (CORS) and content
+   (whatever the content server allows, as in 1.x). The worker's origin is
+   the page's, so content requests carry the page's origin.
+5. **Not covered:** `file://` pages (browsers load no modules or workers
+   there; the page says so) and Content Security Policies without
+   `worker-src blob:`. A consumer's own bundler re-bundling `dist-lib` is
+   untested: bundlers that follow `new URL(…, import.meta.url)` (Vite,
+   webpack 5) should copy the worker, but the worker's wasm is referenced
+   only from inside it.
+
+1.x already starts cross-origin workers through the same blob shim
+(`TaskProcessor.createWorker`); what differs is step 1: 1.x finds workers,
+wasm and assets from `CESIUM_BASE_URL` (`buildModuleUrl`), which pages and
+bundler setups must set and populate by copying `Workers/`, `Assets/`,
+`ThirdParty/` and `Widgets/` (follow-up 14).
+
 Slugs name the use case, not the API (`real-time-tracks`,
 `offshore-platform`, `campus-splats`). Example scenes are written so the
 benchmark suite (§16) can load the same scene definitions, so a showcase
@@ -2811,6 +2847,7 @@ links to where it is explained.
 | 11  | Terrain height callbacks pass terrain-only heights, so a clamp-to-ground billboard can drop off a tileset roof until a tileset callback fires.                                                                                                                                                                                                                                                                   | CesiumJS 1.x         | docs/clamping-1x-spec.md §2        | To file                          |
 | 12  | `Model.pick` passes 5 arguments to `pickModel`'s 7, so `result` lands in `ellipsoid`; tile content works by accident.                                                                                                                                                                                                                                                                                            | CesiumJS 1.x         | docs/clamping-1x-spec.md §5        | To file                          |
 | 13  | `HeightmapTerrainData` mesh-path heights ignore `heightScale` and `heightOffset` after `createMesh` (latent; reached for LERC).                                                                                                                                                                                                                                                                                  | CesiumJS 1.x         | docs/clamping-1x-spec.md §5        | To file                          |
+| 14  | Loading 1.x from a CDN or a bundler is a common struggle. Consider backporting 2.0's approach for 1.148.0: locate workers, wasm and assets from `import.meta.url` in the ESM build (no `CESIUM_BASE_URL`, nothing to copy), keeping the blob shim 1.x already uses for cross-origin workers. First collect the failures users actually report (forum, issues) to confirm this is what they hit.                  | CesiumJS 1.x         | §13.12 (pages without a build)     | To bring to the team             |
 
 ## 15. M3 progress
 
