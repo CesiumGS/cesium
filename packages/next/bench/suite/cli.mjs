@@ -11,6 +11,8 @@
 //        [--dpr 2] [--pixel-ratio device|1]  (high-DPI display; render scale)
 //        [--sweep maximumScreenSpaceError=8,16,32 [--sweep-engines 2.0]]
 //        [--motion-samples 8 | --no-motion-quality]  (frames in motion)
+//        [--dev]  (the live tree on Vite's dev server instead of the
+//        working tree frozen and built for production, frozen.mjs)
 //
 // Engines (engines.mjs): a CesiumJS release ("1.146.0", "latest"), an
 // engine from the working tree ("2.0", "1.x", named by the branch in
@@ -67,6 +69,7 @@ import { renderReport, summarizeRun } from "./report.mjs";
 import { compareTable, defaultPlan, scorecard } from "./scorecard.mjs";
 import { ALERT_METRICS, detectAlerts } from "./changepoints.mjs";
 import { runImages } from "./images.mjs";
+import { checkoutFrozen, freezeTree, serveBuild } from "./frozen.mjs";
 import {
   conditions,
   cooldown,
@@ -277,9 +280,46 @@ async function run() {
       engines: swept,
     };
   }
+  // What runs: the working tree frozen as a commit and built for
+  // production (frozen.mjs), unless --dev serves the live tree.
+  const frozen = opts.dev ? undefined : freezeTree(root);
+  const benchRoot = frozen ? checkoutFrozen(frozen.repo, frozen.sha) : root;
+  if (frozen) {
+    console.log(
+      `frozen ${frozen.dirty ? "working tree" : "HEAD"} at ${frozen.sha.slice(0, 12)}: edits from now on don't reach this run`,
+    );
+  }
+  const repoRoot = join(root, "..", "..");
+  // Served beside production builds (the dev server's own middleware).
+  const directories = {
+    "/cesium1x":
+      process.env.CESIUM_BUILD_DIR ??
+      join(repoRoot, "Build", "CesiumUnminified"),
+    "/specs-data": join(repoRoot, "Specs", "Data"),
+    "/cesium-release":
+      process.env.BENCH_CESIUM_DIR ??
+      join(homedir(), ".cesium-bench", "cesium"),
+    "/cesium-ref": join(repoRoot, ".bench"),
+  };
+  const log = (line) => console.log(line);
   // Snapshot servers for 2.0 at other refs, one per worktree.
   const snapshotServers = new Map();
   const serve = async (snapRoot, repo) => {
+    if (!snapshotServers.has(snapRoot) && !opts.dev) {
+      const sha = execSync("git rev-parse HEAD", { cwd: snapRoot })
+        .toString()
+        .trim();
+      try {
+        snapshotServers.set(
+          snapRoot,
+          await serveBuild(snapRoot, sha, { directories, port: 5194, log }),
+        );
+      } catch (error) {
+        console.log(
+          `${sha.slice(0, 12)} doesn't build for production (${String(error).split(/\r?\n/)[0]}): served by a dev server`,
+        );
+      }
+    }
     if (!snapshotServers.has(snapRoot)) {
       const { createServer } = await import("vite");
       const snap = await createServer({
@@ -308,7 +348,8 @@ async function run() {
     const config = await resolveEngine(spec, catalog, {
       cwd: root,
       serve,
-      log: (line) => console.log(line),
+      frozen,
+      log,
     });
     configs.push(config);
     byspec.set(spec, config.id);
@@ -370,15 +411,24 @@ async function run() {
     throw new Error(`datasets changed: ${bad.map((r) => r.id).join(", ")}`);
   }
 
-  const { createServer } = await import("vite");
-  const server = await createServer({
-    root,
-    configFile: join(root, "vite.config.ts"),
-    cacheDir: join(root, ".vite-bench"),
-    server: { port: 5193, strictPort: false, hmr: false, watch: null },
-    logLevel: "error",
-  });
-  await server.listen();
+  let server;
+  if (frozen) {
+    server = await serveBuild(benchRoot, frozen.sha, {
+      directories,
+      port: 5193,
+      log,
+    });
+  } else {
+    const { createServer } = await import("vite");
+    server = await createServer({
+      root,
+      configFile: join(root, "vite.config.ts"),
+      cacheDir: join(root, ".vite-bench"),
+      server: { port: 5193, strictPort: false, hmr: false, watch: null },
+      logLevel: "error",
+    });
+    await server.listen();
+  }
   const base = server.resolvedUrls.local[0].replace(/\/$/, "");
   const { chromium } = await import("@playwright/test");
   const channel = process.env.BENCH_CHANNEL ?? "msedge";
@@ -456,6 +506,10 @@ async function run() {
       ...(opts.hypothesis ? { hypothesis: opts.hypothesis } : {}),
     },
     dirty: git("status --porcelain").length > 0,
+    // The commit the run served (the working tree frozen), and how:
+    // "build" (production) or "dev" (--dev, the live tree).
+    ...(frozen ? { frozen: frozen.sha } : {}),
+    served: frozen ? "build" : "dev",
     // Lineage (plan §16.9, Trust): how to reproduce this run exactly.
     command: ["node", "packages/next/bench/suite/cli.mjs", command, ...rest],
     diffSha256: sha256(
@@ -836,6 +890,12 @@ async function runOne(browser, base, spec, results) {
     runStart = Date.now();
     const metrics = await page.evaluate((s) => globalThis.runScene(s), spec);
     context.off("requestfinished", count);
+    // A page from before r39 (a snapshot at an older commit) read
+    // performance.memory itself: kept apart, as migrated results are.
+    if (metrics.heapBytes !== undefined && metrics.bufferBytes === undefined) {
+      metrics.jsHeapReportedBytes = metrics.heapBytes;
+      delete metrics.heapBytes;
+    }
     // Each request's purpose (2.0), by URL (else without its query); the
     // URLs themselves are not kept.
     const purposes = new Map(metrics.purposes ?? []);

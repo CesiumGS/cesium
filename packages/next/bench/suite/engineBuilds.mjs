@@ -4,14 +4,15 @@
 //
 //   release  CesiumJS from npm, fetched once into the store (release.mjs);
 //            the page loads /cesium-release/<version>/.
-//   tree     the working tree: 2.0 from this dev server, 1.x from its
-//            build (/cesium1x/, `npm run build` at the repository root).
-//            Named by the current branch.
+//   tree     the working tree: 2.0 from the suite's own server (the tree
+//            frozen and built, frozen.mjs, or live with --dev), 1.x from
+//            its build (/cesium1x/, `npm run build` at the repository
+//            root). Named by the current branch.
 //   ref      a git ref, checked out once into a snapshot worktree
 //            (snapshot.mjs, <repo>/.bench/<sha>). 1.x is built there on
 //            first use (`npm run build`, minutes) and loaded from
-//            /cesium-ref/<sha>/; 2.0 is served by a dev server of its own
-//            rooted in the worktree.
+//            /cesium-ref/<sha>/; 2.0 is built there and served by a server
+//            of its own.
 import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
@@ -48,7 +49,11 @@ function setPath(target, path, value) {
  * the engine (`page`: { cesium?, server? }). `serve(root)` returns the
  * origin of a dev server for a snapshot's packages/next (2.0 at a ref).
  */
-export async function resolveEngine(spec, catalog, { cwd, serve, log }) {
+export async function resolveEngine(
+  spec,
+  catalog,
+  { cwd, serve, frozen, log },
+) {
   const parsed = parseEngine(spec);
   const setupId = setupOf(spec);
   const setup = catalog.setups.find((s) => s.id === setupId);
@@ -71,7 +76,11 @@ export async function resolveEngine(spec, catalog, { cwd, serve, log }) {
     source = { kind: "release", version, integrity: release.integrity };
     page.cesium = version;
   } else if (parsed.source.kind === "tree") {
-    source = { kind: "tree", ref: treeRef(cwd) };
+    source = {
+      kind: "tree",
+      ref: treeRef(cwd),
+      ...(frozen ? { sha: frozen.sha } : {}),
+    };
   } else {
     const snap = snapshot(parsed.source.ref, cwd);
     const short = snap.sha.slice(0, 12);
@@ -122,7 +131,7 @@ export function describeBuild(config) {
   }
   const where =
     s.kind === "tree"
-      ? `working tree of ${s.ref}`
+      ? `working tree of ${s.ref}${s.sha ? ` (frozen at ${s.sha.slice(0, 12)})` : ""}`
       : `${s.ref} at ${s.sha.slice(0, 12)}`;
   return config.engine === "1.x"
     ? `CesiumJS 1.x built from the ${where}`
