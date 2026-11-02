@@ -1,3 +1,8 @@
+// The content worker's built URL (`?worker&url`: Vite compiles it as a
+// worker and gives where it lands, relative to this module in the library
+// build).
+import workerUrl from "./worker.ts?worker&url";
+
 interface Pending {
   resolve: (value: unknown) => void;
   reject: (error: Error) => void;
@@ -91,9 +96,7 @@ export class WorkerPool {
   }
 
   private spawn(): Slot {
-    const worker = new Worker(new URL("./worker.ts", import.meta.url), {
-      type: "module",
-    });
+    const worker = new Worker(workerScript(), { type: "module" });
     worker.onmessage = (
       event: MessageEvent<{
         id: number;
@@ -114,4 +117,35 @@ export class WorkerPool {
     this.slots.push(slot);
     return slot;
   }
+}
+
+let script: string | undefined;
+
+/**
+ * Where workers start. Browsers start a worker only from the page's own
+ * origin, so with the library served from another one (a CDN) workers
+ * start from a same-origin blob that imports the real script (which then
+ * needs CORS, as the library's other files do); its own imports and wasm
+ * resolve against its real URL.
+ */
+function workerScript(): string {
+  if (script === undefined) {
+    const url = new URL(workerUrl, import.meta.url);
+    const origin = globalThis.location?.origin;
+    script =
+      origin === undefined || url.origin === origin
+        ? url.href
+        : URL.createObjectURL(
+            new Blob(
+              [
+                `import ${JSON.stringify(url.href)};
+`,
+              ],
+              {
+                type: "text/javascript",
+              },
+            ),
+          );
+  }
+  return script;
 }

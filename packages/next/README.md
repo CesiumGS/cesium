@@ -8,7 +8,23 @@ npm run dev --workspace @cesium/next        # dev server at http://127.0.0.1:519
 npm run test --workspace @cesium/next       # unit + 1.x parity (L0) tests
 npm run typecheck --workspace @cesium/next
 npm run bench --workspace @cesium/next      # needs the dev server; writes bench/results/*.json
+npm run build:lib --workspace @cesium/next  # the library for pages without a build step
 ```
+
+**The library build** (`build:lib`, `vite.lib.config.ts`) writes
+`dist-lib/`: `cesium-next.mjs` (one ES module, the shaders inlined),
+`assets/` (the content worker and the Draco and Basis wasm, each found
+relative to the module that loads it) and `types/` (declarations). A page
+needs no bundler or TypeScript: a module script imports it, from its own
+server or another origin (a CDN, with CORS headers, as npm CDNs send).
+Browsers start workers only from the page's origin, so from another origin
+the worker starts through a same-origin `blob:` module that imports the
+real one (`WorkerPool`). `standalone/index.html` loads two compressed
+models (Draco, Basis) that way; serve the folder (e.g. `python -m
+http.server` in `packages/next`; pages opened as `file://` load no modules
+or workers) and open `/standalone/`, with `?lib=<url of
+cesium-next.mjs>` and `?data=<models folder>` to load either from
+elsewhere.
 
 Layout: `src/math` (float64 geodesy), `src/gpu` (device, timers, allocators,
 mips, IBL environment), `src/io` (worker pool, glTF parsing),

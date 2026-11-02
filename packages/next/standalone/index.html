@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CesiumJS 2.0 without a build step</title>
+    <link rel="icon" href="data:," />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #0b0e14;
+        color: #d7dce6;
+        font:
+          13px/1.4 system-ui,
+          sans-serif;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+        touch-action: none;
+      }
+      #status {
+        position: absolute;
+        left: 12px;
+        top: 12px;
+        max-width: 640px;
+        white-space: pre-wrap;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <div id="status">Loading…</div>
+    <!--
+      A static page using the library build (`npm run build:lib` in
+      packages/next, which writes dist-lib/): no bundler, no TypeScript, a
+      module script importing the library. Served from anywhere: ?lib= is
+      the library's URL (another origin works when it sends CORS headers,
+      as npm CDNs do), ?data= the folder of glTF models. The models are
+      Draco- and Basis-compressed, so they decode in the library's workers.
+    -->
+    <script type="module">
+      const params = new URLSearchParams(location.search);
+      const lib = params.get("lib") ?? "../dist-lib/cesium-next.mjs";
+      const data =
+        params.get("data") ??
+        "https://raw.githubusercontent.com/CesiumGS/cesium/main/Specs/Data/Models/glTF-2.0/";
+      const status = document.querySelector("#status");
+      const show = (text) => (status.textContent = text);
+
+      try {
+        if (location.protocol === "file:") {
+          // Browsers load no modules or workers into file:// pages.
+          throw new Error(
+            "open this page from a web server, not as a file (e.g. `python -m http.server` in packages/next, then http://localhost:8000/standalone/)",
+          );
+        }
+        const {
+          CanvasTarget,
+          Ellipsoid,
+          Engine,
+          InspectController,
+          eastNorthUpToFixedFrame,
+          fromDegrees,
+          mat4,
+          vec3,
+        } = await import(lib);
+        const engine = await Engine.create();
+        const world = engine.createWorld();
+        const canvas = document.querySelector("#view");
+        const view = engine.addView({
+          target: new CanvasTarget(canvas),
+          world,
+        });
+        // Drag orbits the models, right- or shift-drag pans, wheel zooms.
+        const controller = new InspectController(view, canvas);
+
+        // A spot on the globe (Philadelphia) and its east-north-up frame:
+        // models are placed along east, either side of it.
+        const ellipsoid = Ellipsoid.WGS84;
+        const center = ellipsoid.cartographicToCartesian(
+          fromDegrees(-75.1652, 39.9526, 10),
+          vec3.vec3(),
+        );
+        const frame = eastNorthUpToFixedFrame(center, ellipsoid, mat4.mat4());
+        const models = [
+          "BoxVertexColorsDracoRGB/glTF-Draco/BoxVertexColorsDracoRGB.gltf",
+          "BoxTexturedKtx2Basis/glTF/BoxTexturedKtx2Basis.gltf",
+        ];
+        const placed = [];
+        for (const [i, path] of models.entries()) {
+          show(`Loading ${path}…`);
+          // Fetched, parsed and decoded (Draco, Basis) in a worker.
+          const asset = await engine.loadGltf(new URL(path, data));
+          const modelMatrix = Float64Array.from(frame);
+          const east = (i - (models.length - 1) / 2) * 2;
+          for (let k = 0; k < 3; k++) {
+            modelMatrix[12 + k] += frame[k] * east;
+          }
+          placed.push(engine.addModel(world, asset, { modelMatrix }));
+        }
+        const draws = placed.reduce((n, m) => n + m.draws.length, 0);
+        controller.focus(center, 0.4, -0.35, 7);
+        engine.start();
+        show(`${models.length} models, ${draws} draws (drag to orbit)`);
+        globalThis.exampleResult = { ok: true, draws };
+      } catch (error) {
+        console.error(error);
+        show(`Failed: ${error instanceof Error ? error.message : error}`);
+        globalThis.exampleResult = { ok: false, error: String(error) };
+      }
+    </script>
+  </body>
+</html>

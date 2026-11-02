@@ -27,6 +27,7 @@
     "bench",
     "lab",
     "test",
-    "vite.config.ts"
+    "vite.config.ts",
+    "vite.lib.config.ts"
   ]
 }
