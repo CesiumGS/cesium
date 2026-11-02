@@ -33,6 +33,10 @@
 //        [--parity] [--update [--reason why]] [--software]
 //        (image checks against approved baselines per renderer class;
 //        exits 1 on changed or new images; --software uses SwiftShader)
+//   node packages/next/bench/suite/cli.mjs annotate "driver 573.57" [--short
+//        driver] [--kind machine|data|note] [--metrics a,b] [--date ISO]
+//        (a dated note on Dyno's trend charts, in the results directory;
+//        changes to the method go in bench/suite/annotations.json)
 //   node packages/next/bench/suite/cli.mjs resummarize   (after the summary
 //        format changes: rewrites every run's .summary.json)
 //   node packages/next/bench/suite/cli.mjs compare <old.json> [new.json]
@@ -52,7 +56,13 @@
 // when a run fails or the catalog is invalid.
 import { execSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  writeFileSync,
+} from "node:fs";
 import {
   arch,
   cpus,
@@ -218,6 +228,33 @@ if (command === "list") {
   if (failed > 0) {
     process.exit(1);
   }
+} else if (command === "annotate") {
+  const text = opts._?.join(" ");
+  if (!text) {
+    throw new Error('annotate "what changed" [--short s] [--kind machine]');
+  }
+  const kinds = ["machine", "data", "note", "method"];
+  const kind = opts.kind ? String(opts.kind) : "note";
+  if (!kinds.includes(kind)) {
+    throw new Error(`--kind: one of ${kinds.join(", ")}`);
+  }
+  const directory =
+    process.env.BENCH_RESULTS ?? join(homedir(), ".cesium-bench", "results");
+  const file = join(directory, "annotations.json");
+  const stored = existsSync(file)
+    ? JSON.parse(readFileSync(file, "utf8"))
+    : { annotations: [] };
+  const note = {
+    date: new Date(opts.date ? String(opts.date) : Date.now()).toISOString(),
+    kind,
+    text,
+    ...(opts.short ? { short: String(opts.short) } : {}),
+    ...(opts.metrics ? { metrics: String(opts.metrics).split(",") } : {}),
+  };
+  stored.annotations.push(note);
+  mkdirSync(directory, { recursive: true });
+  writeFileSync(file, `${JSON.stringify(stored, null, 2)}\n`);
+  console.log(`${note.date} ${kind}: ${text} (${file})`);
 } else if (command === "resummarize") {
   const directory =
     process.env.BENCH_RESULTS ?? join(homedir(), ".cesium-bench", "results");

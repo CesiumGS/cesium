@@ -252,12 +252,22 @@ export function lineChart({
       svg += `<text x="${width - right - 4}" y="${sy(r.y) - 4}" text-anchor="end">${escape(r.label)}</text>`;
     }
   }
-  for (const m of marks) {
+  // Labels stack in up to three rows where they would overlap; past that
+  // a mark keeps its line and hover title only.
+  const rowEnds = [-Infinity, -Infinity, -Infinity];
+  for (const m of [...marks].sort((p, q) => p.x - q.x)) {
     svg += `<line x1="${sx(m.x)}" x2="${sx(m.x)}" y1="${top}" y2="${height - bottom}" stroke="var(--ink-2)" stroke-width="1" stroke-dasharray="2 3"><title>${escape(m.label)}</title></line>`;
     const short = String(m.short ?? m.label);
     const text = short.length > 18 ? `${short.slice(0, 17)}…` : short;
-    const flip = sx(m.x) > width - right - text.length * 6.5;
-    svg += `<text x="${sx(m.x) + (flip ? -3 : 3)}" y="${top + 10}" class="label" text-anchor="${flip ? "end" : "start"}">${escape(text)}</text>`;
+    const textWidth = text.length * 6.5;
+    const flip = sx(m.x) > width - right - textWidth;
+    const start = flip ? sx(m.x) - 3 - textWidth : sx(m.x) + 3;
+    const row = rowEnds.findIndex((end) => end < start - 4);
+    if (row < 0) {
+      continue;
+    }
+    rowEnds[row] = start + textWidth;
+    svg += `<text x="${sx(m.x) + (flip ? -3 : 3)}" y="${top + 10 + row * 11}" class="label" text-anchor="${flip ? "end" : "start"}"><title>${escape(m.label)}</title>${escape(text)}</text>`;
   }
   // Intervals: a faint area per series, under the lines.
   for (const s of series) {

@@ -1,5 +1,6 @@
 import { METRICS, summarizeRun } from "./report.mjs";
 import publicCatalog from "./catalog/public.json";
+import methodNotes from "./annotations.json";
 import type { Budget, Dataset, EngineConfig, Scene } from "./schema.ts";
 
 /**
@@ -93,10 +94,26 @@ export interface RunIndex {
   branch?: string;
 }
 
+/**
+ * A dated note drawn on trend charts: changes to the method (the
+ * repository's annotations.json) and to machines or data (the results
+ * directory's, `cli.mjs annotate`).
+ */
+export interface Note {
+  date: string;
+  kind: "method" | "machine" | "data" | "note";
+  text: string;
+  short?: string;
+  /** Only on these metrics' charts; every chart when absent. */
+  metrics?: string[];
+}
+
 export interface Runs {
   index: RunIndex;
   /** Every run's summary, oldest first. */
   summaries: Summary[];
+  /** Annotations, oldest first. */
+  notes: Note[];
 }
 
 const fullCache = new Map<string, Promise<Json>>();
@@ -143,7 +160,14 @@ export function loadRuns(): Promise<Runs> {
     )
       .filter((s): s is Summary => !!s)
       .sort((a, b) => a.date.localeCompare(b.date));
-    return { index, summaries };
+    const local = await fetch("/bench-results/annotations.json")
+      .then((r) => (r.ok ? r.json() : { annotations: [] }))
+      .catch(() => ({ annotations: [] }));
+    const notes = [
+      ...(methodNotes.annotations as Note[]),
+      ...((local.annotations ?? []) as Note[]),
+    ].sort((a, b) => a.date.localeCompare(b.date));
+    return { index, summaries, notes };
   })();
   return runs;
 }

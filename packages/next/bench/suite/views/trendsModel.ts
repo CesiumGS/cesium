@@ -8,6 +8,7 @@ import {
   cellTitle,
   geomean,
   short,
+  type Note,
   type Summary,
   when,
 } from "../data.ts";
@@ -271,10 +272,29 @@ export interface Mark {
 }
 /**
  * Annotations: where a configuration first appears, the hardware changes
- * or the render settings change.
+ * or the render settings change, and the dated notes (`notes`) at the
+ * first run on or after their date, on their metrics' charts.
  */
-export function annotations(runs: Summary[]): Mark[] {
+export function annotations(
+  runs: Summary[],
+  notes: Note[] = [],
+  metric?: string,
+): Mark[] {
   const marks: Mark[] = [];
+  for (const note of notes) {
+    if (metric && note.metrics && !note.metrics.includes(metric)) {
+      continue;
+    }
+    const x = runs.findIndex((s) => s.date >= note.date);
+    // Before the first run shown, a note marks nothing on these charts.
+    if (x > 0) {
+      marks.push({
+        x,
+        label: `${note.kind}: ${note.text}`,
+        short: note.short ?? note.text,
+      });
+    }
+  }
   const seen = new Set<string>();
   const render = (r: Summary) => JSON.stringify(r.render ?? null);
   runs.forEach((s, i) => {
@@ -350,6 +370,8 @@ export function control(points: Array<[number, number | null]>) {
 export interface PanelContext {
   /** The runs shown, oldest first (a point's x is its index here). */
   runs: Summary[];
+  /** Dated annotations (data.ts `Note`). */
+  notes?: Note[];
   /** Every configuration, in series color order. */
   configs: string[];
   base: string;
@@ -432,7 +454,7 @@ export function panelOf(
     (s) =>
       `${when(s)} · ${short(s)}${s.note || s.subject ? ` · ${s.note || s.subject}` : ""}`,
   );
-  const marks = annotations(runs);
+  const marks = annotations(runs, ctx.notes, key);
   const pinned = runs.findIndex((s) => s.name === ctx.pin);
   if (headline) {
     const pts = runs.map((s) => ratioPoint(s, key, scene, base, cand));

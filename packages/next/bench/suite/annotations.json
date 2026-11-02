@@ -1,0 +1,24 @@
+{
+  "$comment": "Changes to how the suite measures, drawn on Dyno's trend charts at the first run on or after `date` (only on the charts of `metrics`, when given). Notes about a machine or data go in the results directory's annotations.json (cli.mjs annotate), which never enters the repository.",
+  "annotations": [
+    {
+      "date": "2026-11-02T18:45:00Z",
+      "kind": "method",
+      "short": "heap measured after GC",
+      "text": "JS heap is the main thread's and workers' live objects after a full GC, read over CDP; ArrayBuffer and WebAssembly memory are bufferBytes. Earlier runs' performance.memory reading is jsHeapReportedBytes (r39).",
+      "metrics": ["heapBytes", "bufferBytes", "jsHeapReportedBytes"]
+    },
+    {
+      "date": "2026-11-02T18:56:00Z",
+      "kind": "method",
+      "short": "production build",
+      "text": "Runs serve the working tree frozen as a commit and built for production, not the live tree through Vite's dev server (which added 5.6 MB of JS heap and 19 MB of buffers on NYC; r39)."
+    },
+    {
+      "date": "2026-11-02T19:12:00Z",
+      "kind": "method",
+      "short": "reuse, early stop",
+      "text": "Baseline engines reuse stored repetitions after a calibration repetition (marked reused in each run), and a scene stops early once its comparison is decided (r39)."
+    }
+  ]
+}

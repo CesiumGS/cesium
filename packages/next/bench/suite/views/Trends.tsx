@@ -49,7 +49,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { short, type Summary, when } from "../data.ts";
+import { type Note, short, type Summary, when } from "../data.ts";
 import { engineLabel, engineOf, isRelease } from "../engines.mjs";
 import {
   Chart,
@@ -111,7 +111,7 @@ const DESCRIPTION =
   "Each metric run to run, to catch regressions and confirm wins.";
 
 export function Trends() {
-  const { summaries } = useRuns();
+  const { summaries, notes } = useRuns();
   if (!summaries.length) {
     return (
       <Page title={TITLE} description={DESCRIPTION}>
@@ -124,10 +124,16 @@ export function Trends() {
       </Page>
     );
   }
-  return <TrendsView summaries={summaries} />;
+  return <TrendsView summaries={summaries} notes={notes} />;
 }
 
-function TrendsView({ summaries }: { summaries: Summary[] }) {
+function TrendsView({
+  summaries,
+  notes,
+}: {
+  summaries: Summary[];
+  notes: Note[];
+}) {
   const search = route.useSearch();
   const navigate = useNavigate({ from: "/trends" });
   const dark = useDark();
@@ -230,8 +236,8 @@ function TrendsView({ summaries }: { summaries: Summary[] }) {
     [visible, navigate],
   );
   const ctx = useMemo<PanelContext>(
-    () => ({ runs: visible, configs, base, cand, pin }),
-    [visible, configs, base, cand, pin],
+    () => ({ runs: visible, notes, configs, base, cand, pin }),
+    [visible, notes, configs, base, cand, pin],
   );
   const splitting = split && scene === "*" && scenes.size > 1;
   const sceneKeys = useMemo(
