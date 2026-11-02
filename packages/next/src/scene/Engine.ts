@@ -798,13 +798,18 @@ export class Engine {
    * 2.2× later at 2 MiB). So the budget adapts, as request windows do: it
    * grows while frames arrive on time and the budget was used up, and
    * halves when a frame arrives late. At least one upload happens per
-   * frame, so loading never stops.
+   * frame, so loading never stops. The budget is per 60 Hz frame: a faster
+   * loop gets its share by time (vsync off at 500+ frames a second tried
+   * gigabytes a second, and the GPU's backlog blocked the main thread for
+   * 100 to 300 ms in getCurrentTexture and writeBuffer, r38).
    */
   uploadBytesPerFrame = 2 * 1024 * 1024;
   /** Bounds of the adaptive upload budget, bytes per frame. */
   minimumUploadBytesPerFrame = 512 * 1024;
   maximumUploadBytesPerFrame = 32 * 1024 * 1024;
   private lastUpdateAt = 0;
+  /** Time since the previous update, ms (60 Hz until measured). */
+  private lastUpdateInterval = 1000 / 60;
   private budgetFilled = false;
   private readonly frameIntervals = new Float64Array(31);
   private frameIntervalCount = 0;
@@ -825,9 +830,11 @@ export class Engine {
    */
   private updateTilesets(due: (tileset: Tileset3D) => boolean): void {
     this.adaptUploadBudget(performance.now());
-    this.uploadBudget.bytes = this.uploadBytesPerFrame;
+    // Budgets are per 60 Hz frame; a faster loop gets its share by time.
+    const share = Math.min(1, this.lastUpdateInterval / (1000 / 60));
+    this.uploadBudget.bytes = this.uploadBytesPerFrame * share;
     this.uploadBudget.uploads = 0;
-    this.uploadBudget.ms = this.treeBuildMsPerFrame;
+    this.uploadBudget.ms = this.treeBuildMsPerFrame * share;
     this.uploadBudget.trees = 0;
     const n = this.tilesets.length;
     const start = n > 0 ? this.tilesetRotation++ % n : 0;
@@ -854,6 +861,7 @@ export class Engine {
     if (interval <= 0 || interval > 1000) {
       return;
     }
+    this.lastUpdateInterval = interval;
     const intervals = this.frameIntervals;
     intervals[this.frameIntervalCount++ % intervals.length] = interval;
     const count = Math.min(this.frameIntervalCount, intervals.length);
