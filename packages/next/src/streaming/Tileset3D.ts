@@ -967,7 +967,7 @@ export class Tileset3D implements TileTree {
         tile.touchedFrame < frame - CANCEL_AFTER_FRAMES
       ) {
         controller.abort();
-        this.engine.requests.cancelled(this.originOf(tile.contentUrl!));
+        this.engine.requests.cancelled(tile.contentOrigin);
         this.stats.cancelled++;
         if (tile.purpose) {
           this.stats.purposes[tile.purpose].cancelled++;
@@ -1045,7 +1045,7 @@ export class Tileset3D implements TileTree {
       if (prefetch && visibleWaiting) {
         continue;
       }
-      const origin = this.originOf(tile.contentUrl!);
+      const origin = tile.contentOrigin;
       if (full.has(origin)) {
         visibleWaiting ||=
           !prefetch && this.selection.prefetchAfterVisible === true;

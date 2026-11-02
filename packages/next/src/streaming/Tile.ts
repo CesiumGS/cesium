@@ -38,6 +38,19 @@ export interface TileViewState {
   refines: boolean;
 }
 
+/** A scheme or a protocol-relative URI: not relative to its base's origin. */
+const ABSOLUTE_URI = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
+/** Each content base URL's origin (a tileset and its external tilesets). */
+const baseOrigins = new Map<string, string>();
+
+function originOf(url: string): string {
+  try {
+    return new URL(url, globalThis.location?.href).origin;
+  } catch {
+    return "";
+  }
+}
+
 export class Tile {
   readonly children: Tile[] = [];
   readonly depth: number;
@@ -190,6 +203,28 @@ export class Tile {
     return this.contentUri === undefined
       ? undefined
       : resolveUri(this.contentUri, this.baseUrl);
+  }
+
+  /**
+   * The content's origin, for per-origin request slots. A relative URI
+   * (nearly all) shares its base's, looked up without parsing: request
+   * order runs over every wanted tile each frame, and two URL parses per
+   * tile there took 0.5 s of AEC's load (r38).
+   */
+  get contentOrigin(): string {
+    const uri = this.contentUri;
+    if (uri === undefined) {
+      return "";
+    }
+    if (!ABSOLUTE_URI.test(uri)) {
+      let origin = baseOrigins.get(this.baseUrl);
+      if (origin === undefined) {
+        origin = originOf(this.baseUrl);
+        baseOrigins.set(this.baseUrl, origin);
+      }
+      return origin;
+    }
+    return originOf(resolveUri(uri, this.baseUrl));
   }
 
   /** Whether the tile has content (a URI). */

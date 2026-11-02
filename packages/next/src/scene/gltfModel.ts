@@ -795,19 +795,56 @@ function uploadCompressed(
       GPUTextureUsage.COPY_DST |
       (generate ? GPUTextureUsage.RENDER_ATTACHMENT : 0),
   });
-  image.levels.forEach((data, level) => {
+  // Through one mapped staging buffer, as World's geometry: writeTexture
+  // goes through the browser's transfer ring, and under a GPU backlog it
+  // blocked the main thread for up to 0.5 s (AEC with vsync off, r38).
+  // Buffer copies need rows padded to 256 bytes.
+  const levels = image.levels.map((data, level) => {
     const width = Math.max(1, image.width >> level);
     const height = Math.max(1, image.height >> level);
     // Block formats: 4×4 blocks of 16 bytes; copies cover whole blocks.
     const columns = block ? Math.ceil(width / 4) : width;
     const rows = block ? Math.ceil(height / 4) : height;
-    device.queue.writeTexture(
-      { texture, mipLevel: level },
-      data,
-      { bytesPerRow: columns * (block ? 16 : 4), rowsPerImage: rows },
-      block ? [columns * 4, rows * 4] : [width, height],
-    );
+    const rowBytes = columns * (block ? 16 : 4);
+    const paddedRow = Math.ceil(rowBytes / 256) * 256;
+    return { data, width, height, columns, rows, rowBytes, paddedRow };
   });
+  const size = levels.reduce((n, l) => n + l.paddedRow * l.rows, 0);
+  const staging = device.createBuffer({
+    label: `gltf.ktx2.image${index}.staging`,
+    size,
+    usage: GPUBufferUsage.COPY_SRC,
+    mappedAtCreation: true,
+  });
+  const bytes = new Uint8Array(staging.getMappedRange());
+  const encoder = device.createCommandEncoder({ label: "gltf.ktx2.upload" });
+  let at = 0;
+  levels.forEach((l, level) => {
+    if (l.paddedRow === l.rowBytes) {
+      bytes.set(l.data.subarray(0, l.rowBytes * l.rows), at);
+    } else {
+      for (let r = 0; r < l.rows; r++) {
+        bytes.set(
+          l.data.subarray(r * l.rowBytes, (r + 1) * l.rowBytes),
+          at + r * l.paddedRow,
+        );
+      }
+    }
+    encoder.copyBufferToTexture(
+      {
+        buffer: staging,
+        offset: at,
+        bytesPerRow: l.paddedRow,
+        rowsPerImage: l.rows,
+      },
+      { texture, mipLevel: level },
+      block ? [l.columns * 4, l.rows * 4] : [l.width, l.height],
+    );
+    at += l.paddedRow * l.rows;
+  });
+  staging.unmap();
+  device.queue.submit([encoder.finish()]);
+  staging.destroy(); // released once the copies have run
   if (generate) {
     mips.generate(texture);
   }
