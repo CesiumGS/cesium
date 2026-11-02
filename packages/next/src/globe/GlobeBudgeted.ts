@@ -12,7 +12,7 @@
  * selected and requested at once. Expanded only when loaded, terrain loaded
  * one level per round trip and could not skip levels.
  *
- * No free detail from the cache (`opportunisticRatio` 0 by default):
+ * No free detail from the cache (`opportunisticRatio` 0, as for 3D Tiles):
  * finer terrain brings finer imagery, and an imagery provider's levels can
  * be different captures (Bing's level 12 on Rainier's south flank is hazy
  * and snowless where 11 and 13 are not), so a still view would look

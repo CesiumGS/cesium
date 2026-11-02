@@ -10,10 +10,15 @@
  *   it has loaded, so refinement never opens holes.
  * - **Visible-only coverage.** A REPLACE tile is replaced once its visible
  *   children are covered; off-screen children are not waited for.
- * - **Free detail from the shared cache.** Where finer content is already
- *   resident (another view loaded it, or the camera zoomed out), it is drawn
- *   instead of the coarser frontier tile, down to `opportunisticRatio` of the
- *   threshold, at no download cost.
+ * - **Free detail from the shared cache** (off by default since r38):
+ *   where finer content is already resident (another view loaded it, or the
+ *   camera zoomed out), it can be drawn instead of the coarser frontier
+ *   tile, down to `opportunisticRatio` of the threshold, at no download
+ *   cost. It makes a still view depend on where the camera has been
+ *   (Rainier's hazy patch; Google's settled views finer after an orbit:
+ *   selection parity 0.066 vs 0.024 without, quality in motion 0.046 vs
+ *   0.020), and costs draws. Zooming out, resident finer content still
+ *   stands in while the coarser tile loads.
  * - A tileset without a top-level geometricError uses its root's (1.x
  *   computes NaN and never skips the root).
  */
@@ -38,7 +43,7 @@ export interface BudgetedOptions extends StepwiseOptions {
   skipLevels?: number;
   /**
    * Draw cached finer content while its SSE is above this fraction of the
-   * threshold (0 disables; default 0.25: up to two levels finer).
+   * threshold (0 disables, the default; 0.25: up to two levels finer).
    */
   opportunisticRatio?: number;
   /**
@@ -109,7 +114,7 @@ export class BudgetedSelection extends StepwiseSelection {
 
   constructor(options: BudgetedOptions = {}) {
     super(options);
-    this.opportunisticRatio = options.opportunisticRatio ?? 0.25;
+    this.opportunisticRatio = options.opportunisticRatio ?? 0;
     this.skipLevels = options.skipLevels ?? 2;
     this.prefetchErrorScale = options.prefetchErrorScale ?? 2;
     this.mixedLod = options.mixedLod ?? "auto";
