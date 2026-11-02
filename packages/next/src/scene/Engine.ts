@@ -138,8 +138,12 @@ interface ViewMotion {
 
 /** Options for a globe surface: terrain or the ellipsoid. */
 export interface GlobeOptions extends TilesetOptions {
-  /** Imagery draped on the surface (one per world for now). */
-  imagery?: ImageryProvider;
+  /**
+   * Imagery draped on the surface (one per world for now). A promise lets
+   * the surface's tiles load while the imagery's metadata resolves (1.x
+   * starts terrain without waiting for imagery); none is shown without it.
+   */
+  imagery?: ImageryProvider | Promise<ImageryProvider | undefined>;
   imageryOptions?: GlobeImageryOptions;
 }
 
@@ -308,12 +312,13 @@ export class Engine {
   }
 
   /**
-   * Renders one 1×1 frame with a single draw. Dawn builds some internals
-   * lazily (e.g. its indirect-draw validation pipeline), which otherwise cost
-   * the first real frame ~70 ms; submitted here, that work overlaps the
-   * app's own loading. Not awaited.
+   * Starts the content workers, and renders one 1×1 frame with a single
+   * draw. Dawn builds some internals lazily (e.g. its indirect-draw
+   * validation pipeline), which otherwise cost the first real frame ~70 ms;
+   * submitted here, that work overlaps the app's own loading. Not awaited.
    */
   private warmUp(): void {
+    this.workers.warm();
     const world = this.createWorld({
       maxDraws: 1,
       maxMaterials: 1,
@@ -473,15 +478,32 @@ export class Engine {
       maximumScreenSpaceError: 2,
       ...options,
     });
-    if (options.imagery) {
-      tileset.imagery = new GlobeImagery(
+    const drape = (provider: ImageryProvider) =>
+      new GlobeImagery(
         this.ctx,
         world,
-        options.imagery,
+        provider,
         this.requests,
         this.workers,
         options.imageryOptions,
       );
+    if (options.imagery instanceof Promise) {
+      tileset.imageryPending = true;
+      void options.imagery.then(
+        (provider) => {
+          if (this.tilesets.includes(tileset)) {
+            tileset.imagery = provider ? drape(provider) : undefined;
+          }
+          tileset.imageryPending = false;
+          this.requestRender();
+        },
+        () => {
+          tileset.imageryPending = false;
+          this.requestRender();
+        },
+      );
+    } else if (options.imagery) {
+      tileset.imagery = drape(options.imagery);
     }
     this.tilesets.push(tileset);
     return tileset;

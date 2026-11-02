@@ -107,6 +107,8 @@ export class Viewer {
   private globeShown = true;
   private globeToken = 0;
   private imagery?: ImageryProvider;
+  /** The default imagery while its metadata resolves. */
+  private imageryLoading?: Promise<ImageryProvider>;
   private terrainAttributions: IonAttribution[] = [];
   private readonly attributions = new Map<object, IonAttribution[]>();
   private readonly tilesets = new Set<Tileset3D>();
@@ -232,16 +234,21 @@ export class Viewer {
 
   private async buildGlobe(imagery: ImageryProvider | boolean): Promise<void> {
     if (imagery === true) {
-      // Imagery and the terrain endpoint at once, not one after the other.
+      // Imagery and the terrain endpoint at once, not one after the other;
+      // the globe's tiles load while the imagery resolves (1.x starts
+      // terrain without waiting for it).
       if (this.globeKind === "terrain") {
         this.early.terrain ??= resolveIonAsset(1, this.tokenOptions());
       }
-      this.imagery = await (this.early.imagery ??
-        BingImagery.fromIon(2, this.tokenOptions()));
+      this.imageryLoading = (
+        this.early.imagery ?? BingImagery.fromIon(2, this.tokenOptions())
+      ).then((provider) => (this.imagery = provider));
+      this.imageryLoading.catch(() => {}); // surfaces through `ready`
     } else if (imagery) {
       this.imagery = imagery;
     }
     await this.setGlobe(this.globeKind);
+    await this.imageryLoading;
   }
 
   /** Switches the globe in place: content and camera stay. */
@@ -250,9 +257,10 @@ export class Viewer {
     this.globeKind = kind;
     let next: Tileset3D | undefined;
     let attributions: IonAttribution[] = [];
+    const imagery = this.imagery ?? this.imageryLoading;
     const options = {
       policy: this.policy,
-      ...(this.imagery ? { imagery: this.imagery } : {}),
+      ...(imagery ? { imagery } : {}),
     };
     if (kind === "terrain") {
       const ion = await (this.early.terrain ??

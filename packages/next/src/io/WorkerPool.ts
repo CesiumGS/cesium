@@ -60,6 +60,17 @@ export class WorkerPool {
     });
   }
 
+  /**
+   * Starts every worker now, so their modules load while the app resolves
+   * endpoints: started on the first request, the first tiles waited for
+   * them (r38).
+   */
+  warm(): void {
+    while (this.slots.length < this.size) {
+      this.spawn();
+    }
+  }
+
   destroy(): void {
     for (const slot of this.slots) {
       slot.worker.terminate();
@@ -76,6 +87,10 @@ export class WorkerPool {
     if (idle || this.slots.length >= this.size) {
       return idle ?? this.slots.reduce((a, b) => (b.busy < a.busy ? b : a));
     }
+    return this.spawn();
+  }
+
+  private spawn(): Slot {
     const worker = new Worker(new URL("./worker.ts", import.meta.url), {
       type: "module",
     });

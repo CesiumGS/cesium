@@ -57,6 +57,8 @@ import {
 
 /** Recent content loads kept for stage percentiles. */
 const PIPELINE_WINDOW = 256;
+/** Imagery priority offset of loading tiles: after drawn and waiting ones. */
+const LOADING_IMAGERY = 1e15;
 /** Frames without any view touching an in-flight tile before it is cancelled. */
 const CANCEL_AFTER_FRAMES = 30;
 
@@ -565,8 +567,13 @@ export class Tileset3D implements TileTree {
   }
   /** Globe imagery draped on this terrain tileset (`engine.addTerrain`). */
   imagery?: GlobeImagery;
+  /**
+   * Imagery is on its way (`GlobeOptions.imagery` as a promise): tiles load
+   * meanwhile but none is shown bare.
+   */
+  imageryPending = false;
   private readonly imageryReady = (tile: Tile) =>
-    this.imagery?.hasImagery(tile) ?? true;
+    !this.imageryPending && (this.imagery?.hasImagery(tile) ?? true);
   /** Selected tiles per view id after the last update (parity tests). */
   readonly lastSelected = new Map<number, Tile[]>();
   private frame = 0;
@@ -813,6 +820,7 @@ export class Tileset3D implements TileTree {
       this.wanted.size > 0 ||
       this.frame - this.lastChange < 3 ||
       this.imagery?.busy === true ||
+      this.imageryPending ||
       this.selection.memoryAdjustedScreenSpaceError !==
         this.selection.maximumScreenSpaceError
     );
@@ -860,7 +868,8 @@ export class Tileset3D implements TileTree {
       tile.placeholderMask = 0;
       tile.holes = undefined;
     }
-    this.selection.imageryReady = this.imagery ? this.imageryReady : undefined;
+    this.selection.imageryReady =
+      this.imagery || this.imageryPending ? this.imageryReady : undefined;
     this.selection.expectedLoadSeconds = this.loadEstimateMs / 1000;
     const waiting = new Set<Tile>();
     for (const view of views) {
@@ -1001,6 +1010,25 @@ export class Tileset3D implements TileTree {
           priority = Math.min(priority, tile.viewState(view.id).distance);
         }
         wanted.set(tile, priority);
+      }
+      // Then tiles still loading (not prefetch or height samples): their
+      // imagery needs only their rectangle, so it loads alongside the
+      // terrain as in 1.x. After it arrived, the first view's imagery came
+      // 0.4 s after its terrain (Rainier, r38).
+      for (const tile of this.loading.keys()) {
+        if (
+          tile.globe &&
+          !wanted.has(tile) &&
+          tile.purpose !== undefined &&
+          tile.purpose !== "prefetch" &&
+          tile.purpose !== "sample"
+        ) {
+          let priority = Infinity;
+          for (const view of views) {
+            priority = Math.min(priority, tile.viewState(view.id).distance);
+          }
+          wanted.set(tile, LOADING_IMAGERY + priority);
+        }
       }
       this.imagery.update(wanted);
     }

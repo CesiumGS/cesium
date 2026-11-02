@@ -505,6 +505,9 @@ export class NextAdapter implements Adapter {
     // imagery, the terrain endpoint and every tileset's endpoint, while the
     // device is created, then the terrain and tilesets themselves. Waiting
     // on each in turn cost about a second before the first content request.
+    // Each starts as soon as its own endpoint has resolved: terrain waited
+    // on all of them (Bing's metadata included), so its layer.json went out
+    // 0.4 s after 1.x's (r38); its tiles load while imagery resolves.
     const imageryDataset = scene.imagery ? byId.get(scene.imagery)! : undefined;
     const terrainDataset =
       typeof scene.globe === "object"
@@ -514,23 +517,27 @@ export class NextAdapter implements Adapter {
       layer,
       dataset: byId.get(layer.dataset)!,
     }));
-    const resolving = Promise.all([
-      imageryDataset
-        ? BingImagery.fromIon(ionAsset(imageryDataset), {
-            accessToken: tokenFor(imageryDataset),
-          })
-        : undefined,
-      terrainDataset
-        ? resolveIonAsset(ionAsset(terrainDataset), {
-            accessToken: tokenFor(terrainDataset),
-          })
-        : undefined,
-      ...layers.map(({ dataset }) =>
-        dataset.source.kind === "generator"
-          ? undefined
-          : resolveTileset(dataset),
-      ),
-    ]);
+    const imageryResolving = imageryDataset
+      ? BingImagery.fromIon(ionAsset(imageryDataset), {
+          accessToken: tokenFor(imageryDataset),
+        })
+      : undefined;
+    const terrainResolving = terrainDataset
+      ? resolveIonAsset(ionAsset(terrainDataset), {
+          accessToken: tokenFor(terrainDataset),
+        })
+      : undefined;
+    const endpointsResolving = layers.map(({ dataset }) =>
+      dataset.source.kind === "generator" ? undefined : resolveTileset(dataset),
+    );
+    // Failures surface where each is awaited below.
+    for (const p of [
+      imageryResolving,
+      terrainResolving,
+      ...endpointsResolving,
+    ]) {
+      p?.catch(() => {});
+    }
     const engine = (this.engine = await Engine.create());
     const limit = engine.gpu.device.limits.maxStorageBufferBindingSize;
     const world = engine.createWorld({
@@ -556,7 +563,6 @@ export class NextAdapter implements Adapter {
       world,
     });
     this.view.camera.near = 1;
-    const [imagery, terrain, ...endpoints] = await resolving;
     // Budgeted's numeric options, from engine variants (2.0+motionBenefit=0).
     const tuning = Object.fromEntries(
       BUDGETED_OPTIONS.filter((k) => config[k] !== undefined).map((k) => [
@@ -571,35 +577,47 @@ export class NextAdapter implements Adapter {
         : {}),
       ...tuning,
     };
+    const drape = imageryResolving ? { imagery: imageryResolving } : {};
     const [globe, ...tilesets] = await Promise.all([
-      terrain
-        ? engine.addTerrain(world, terrain.url, {
-            ...(terrain.headers ? { headers: terrain.headers } : {}),
-            ...(config.policy ? { policy: config.policy } : {}),
-            ...(imagery ? { imagery } : {}),
-          })
+      terrainResolving
+        ? terrainResolving.then((terrain) =>
+            engine.addTerrain(world, terrain.url, {
+              ...(terrain.headers ? { headers: terrain.headers } : {}),
+              ...(config.policy ? { policy: config.policy } : {}),
+              ...drape,
+            }),
+          )
         : scene.globe === "ellipsoid"
-          ? engine.addEllipsoid(world, imagery ? { imagery } : {})
+          ? engine.addEllipsoid(world, drape)
           : undefined,
       ...layers.map(({ layer, dataset }, i) => {
-        const endpoint = endpoints[i];
-        return endpoint
-          ? engine.addTileset(world, endpoint.url, {
-              ...(endpoint.headers ? { headers: endpoint.headers } : {}),
-              ...common,
-              enableCollision: layer.collision ?? false,
-            })
+        const resolving = endpointsResolving[i];
+        return resolving
+          ? resolving.then((endpoint) =>
+              engine.addTileset(world, endpoint.url, {
+                ...(endpoint.headers ? { headers: endpoint.headers } : {}),
+                ...common,
+                enableCollision: layer.collision ?? false,
+              }),
+            )
           : this.generate(world, dataset, layer.at ?? [0, 0, 0]);
       }),
     ]);
+    const [terrain, ...endpoints] = await Promise.all([
+      terrainResolving,
+      ...endpointsResolving,
+    ]);
     // Terrain first, then the tilesets in catalog order; credits as 1.x
-    // gives them (terrain's, imagery's, then content's).
+    // gives them (terrain's, imagery's, then content's). Imagery's join
+    // when it resolves: as 1.x's adapter, setup doesn't wait for it (the
+    // globe shows no tile without it).
     if (globe) {
       this.tilesets.push(globe);
     }
-    this.attributions.push(
-      ...(terrain?.attributions ?? []),
-      ...(imagery?.attributions ?? []),
+    this.attributions.push(...(terrain?.attributions ?? []));
+    const imageryAt = this.attributions.length;
+    void imageryResolving?.then((imagery) =>
+      this.attributions.splice(imageryAt, 0, ...imagery.attributions),
     );
     tilesets.forEach((tileset, i) => {
       if (tileset) {
