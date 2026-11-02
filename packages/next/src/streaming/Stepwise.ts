@@ -74,6 +74,12 @@ export interface TileSelection {
   ): SelectionResult;
   /** What a request at this priority is for (default: the view). */
   purpose?(priority: number): RequestPurpose;
+  /**
+   * Terrain draped with imagery: whether a loaded tile has imagery to draw
+   * with (its own or an ancestor's). One without waits, as in 1.x, and
+   * what was drawn stays (`Tileset3D` sets it).
+   */
+  imageryReady?: (tile: Tile) => boolean;
 }
 
 export interface SelectionResult {
@@ -91,6 +97,8 @@ export interface SelectionResult {
    * inside those volumes.
    */
   placeholders?: Map<Tile, readonly Tile[]>;
+  /** Loaded tiles not drawn for want of imagery (terrain): it loads for them. */
+  waiting?: Tile[];
 }
 
 // 1.x CullingVolume plane masks.

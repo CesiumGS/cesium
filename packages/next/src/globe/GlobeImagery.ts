@@ -184,6 +184,29 @@ export class GlobeImagery {
     world.setImageryArray(this.texture.createView({ dimension: "2d-array" }));
   }
 
+  /**
+   * Whether `tile` has imagery to draw with: its own slice or an
+   * ancestor's within reach (`apply`).
+   */
+  hasImagery(tile: Tile): boolean {
+    return this.slices.has(tile) || this.standIn(tile) !== undefined;
+  }
+
+  /** The nearest ancestor's slice within reach, which `apply` would use. */
+  private standIn(tile: Tile): { slice: number; used: number } | undefined {
+    for (
+      let t = tile.parent, up = 1;
+      t?.globe && up <= MAX_IMAGERY_LEVELS_UP;
+      t = t.parent, up++
+    ) {
+      const slice = this.slices.get(t);
+      if (slice) {
+        return slice;
+      }
+    }
+    return undefined;
+  }
+
   /** Loading or compositing: the terrain tileset stays active. */
   get busy(): boolean {
     return this.loading > 0 || this.jobs.size > 0 || !this.pipelines;
@@ -201,8 +224,16 @@ export class GlobeImagery {
       const own = this.slices.get(tile);
       if (own) {
         own.used = frame;
-      } else if (!this.jobs.has(tile)) {
-        this.jobs.set(tile, this.job(tile));
+      } else {
+        if (!this.jobs.has(tile)) {
+          this.jobs.set(tile, this.job(tile));
+        }
+        // The ancestor's slice it draws with meanwhile is in use too: not
+        // evicted for this frame's composites.
+        const stand = this.standIn(tile);
+        if (stand) {
+          stand.used = frame;
+        }
       }
     }
     // Jobs for tiles no longer drawn are dropped (their sources stay cached).

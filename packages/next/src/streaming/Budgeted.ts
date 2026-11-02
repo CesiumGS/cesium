@@ -201,7 +201,7 @@ export class BudgetedSelection extends StepwiseSelection {
       this.request(tile, BASE, state.distance, result);
       return { tiles: [], complete: false, holes: [tile] };
     }
-    const own: Tile[] | undefined = tile.contentAvailable
+    const own: Tile[] | undefined = this.drawable(tile, result)
       ? [tile]
       : tile.renderable
         ? undefined
@@ -424,6 +424,11 @@ export class BudgetedSelection extends StepwiseSelection {
     }
   }
 
+  /** Loaded content that can draw now (terrain also waits for imagery). */
+  protected drawable(tile: Tile, _result: SelectionResult): boolean {
+    return tile.contentAvailable;
+  }
+
   /** Finer resident content covering `tile`'s visible children, if any. */
   private fromCache(
     tile: Tile,
@@ -443,7 +448,7 @@ export class BudgetedSelection extends StepwiseSelection {
       if (!isVisible(state)) {
         continue;
       }
-      if (child.contentAvailable) {
+      if (this.drawable(child, result)) {
         result.touched.push(child);
         const finer =
           child.refine === "REPLACE" &&

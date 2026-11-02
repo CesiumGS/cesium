@@ -751,16 +751,21 @@ change after them is measured against a guardrail:
     worth their bytes; a slower flight (`seconds`) and a flight between
     3D Tiles cities with no globe.
 
-- **Untextured terrain while zooming out (next)**: 2.0 draws a terrain
-  tile as soon as its geometry arrives, with its own imagery or an
-  ancestor's within 8 levels, and that ancestor's only if it was drawn
-  itself; otherwise untextured. Zooming out fast over Rainier (3 km to
-  600 km in 0.25 s) drew up to 31 untextured tiles in a frame. 1.x makes
-  a terrain tile renderable only once each imagery layer has its own or
-  any loaded ancestor's imagery (`GlobeSurfaceTile.processImagery`) and
-  keeps drawing what was renderable meanwhile. Do the same: imagery as
-  part of a globe tile's readiness, and imagery jobs for tiles waiting on
-  it.
+- **Untextured terrain while zooming out (fixed r37)**: 2.0 drew a
+  terrain tile as soon as its geometry arrived, with its own imagery or an
+  ancestor's within 8 levels, else untextured: zooming out fast over
+  Rainier (3 km to 600 km in 0.25 s) drew up to 31 gray tiles in a frame.
+  As 1.x (`GlobeSurfaceTile.processImagery`), a terrain tile is now
+  drawable only with imagery, its own or a stand-in ancestor's; until
+  then what was drawn stays (finer cached tiles, or the ancestor), and
+  its imagery loads (`SelectionResult.waiting`, both policies). Stand-in
+  slices count as used, so a composite can't evict one a drawn tile is
+  borrowing; placeholders get imagery too. Zoom-outs from 1.5 s down to
+  0.15 s (×1000): no untextured tile in any frame. Rainier, OSM
+  Philadelphia and the flight: settle 4.3, 4.3 and 4.3 s (1.x 6.0, 4.8,
+  4.6), Tokyo after the flight 0.9 s (was 1.3; 1.x 1.5 to 2.1); bytes,
+  selection parity and quality in motion unchanged. First content on
+  Rainier waits for imagery too (2.7 to 3.1 s; 1.x 2.1 to 2.2).
 - **Imagery captures in motion**: Bing's levels are different captures on
   Rainier (bluish ice, hazy level 12), so a tile drawn with a stand-in
   ancestor's imagery while its own loads shows a different capture for a

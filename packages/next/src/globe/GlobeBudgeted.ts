@@ -35,6 +35,7 @@ export class GlobeBudgetedSelection extends BudgetedSelection {
   fog = false;
   /** This pass's fog density (0 without fog). */
   private passDensity = 0;
+  imageryReady?: (tile: Tile) => boolean;
 
   constructor(
     private readonly source: TerrainSource,
@@ -45,6 +46,22 @@ export class GlobeBudgetedSelection extends BudgetedSelection {
       opportunisticRatio: options.opportunisticRatio ?? 0,
       dynamicScreenSpaceError: false,
     });
+  }
+
+  /**
+   * Loaded terrain draws once it has imagery (1.x renderable): until then
+   * the finer tiles or the ancestor already drawn stay, and its imagery
+   * loads. Drawn untextured, a tile flashed gray while zooming out.
+   */
+  protected override drawable(tile: Tile, result: SelectionResult): boolean {
+    if (!tile.contentAvailable) {
+      return false;
+    }
+    if (!this.imageryReady || this.imageryReady(tile)) {
+      return true;
+    }
+    (result.waiting ??= []).push(tile);
+    return false;
   }
 
   /** Expands the tile (its children, where availability is known) first. */

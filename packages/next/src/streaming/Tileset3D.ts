@@ -565,6 +565,8 @@ export class Tileset3D implements TileTree {
   }
   /** Globe imagery draped on this terrain tileset (`engine.addTerrain`). */
   imagery?: GlobeImagery;
+  private readonly imageryReady = (tile: Tile) =>
+    this.imagery?.hasImagery(tile) ?? true;
   /** Selected tiles per view id after the last update (parity tests). */
   readonly lastSelected = new Map<number, Tile[]>();
   private frame = 0;
@@ -851,6 +853,8 @@ export class Tileset3D implements TileTree {
       tile.placeholderMask = 0;
       tile.holes = undefined;
     }
+    this.selection.imageryReady = this.imagery ? this.imageryReady : undefined;
+    const waiting = new Set<Tile>();
     for (const view of views) {
       const result = this.selection.select(
         this.root,
@@ -872,6 +876,9 @@ export class Tileset3D implements TileTree {
       }
       for (const tile of result.touched) {
         tile.touchedFrame = frame;
+      }
+      for (const tile of result.waiting ?? []) {
+        waiting.add(tile);
       }
       for (const tile of result.requested) {
         tile.touchedFrame = frame;
@@ -973,9 +980,14 @@ export class Tileset3D implements TileTree {
     this.buildExternals();
     this.upload();
     if (this.imagery) {
-      // Imagery for the terrain tiles drawn in any view, nearest first.
+      // Imagery for the terrain tiles drawn in any view (placeholders too)
+      // and those waiting for it to draw, nearest first.
       const wanted = new Map<Tile, number>();
-      for (const tile of nowMasked) {
+      for (const tile of new Set([
+        ...nowMasked,
+        ...nowPlaceholders,
+        ...waiting,
+      ])) {
         let priority = Infinity;
         for (const view of views) {
           priority = Math.min(priority, tile.viewState(view.id).distance);

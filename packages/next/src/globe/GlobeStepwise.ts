@@ -126,6 +126,9 @@ export class GlobeStepwiseSelection implements TileSelection {
   private readonly lastPass: number[] = [];
   /** Level-zero tiles, re-sorted in place each pass as 1.x. */
   private roots?: Tile[];
+  imageryReady?: (tile: Tile) => boolean;
+  /** This pass's loaded tiles waiting for imagery. */
+  private readonly waiting = new Set<Tile>();
 
   constructor(
     private readonly source: TerrainSource,
@@ -136,6 +139,7 @@ export class GlobeStepwiseSelection implements TileSelection {
   }
 
   select(root: Tile, _rootError: number, view: SelectionView): SelectionResult {
+    this.waiting.clear();
     const fogEnabled = this.fog && view.cartographic.height <= FOG_MAX_HEIGHT;
     const density = fogEnabled ? fogDensity(view) : 0;
     const P: Pass = {
@@ -164,7 +168,7 @@ export class GlobeStepwiseSelection implements TileSelection {
     roots.sort((a, b) => key(a) - key(b));
     for (const tile of roots) {
       P.touched.push(tile);
-      if (!renderable(tile)) {
+      if (!this.renderable(tile)) {
         this.queue(P, P.high, tile);
       } else {
         this.visitIfVisible(P, tile, false, details());
@@ -191,7 +195,7 @@ export class GlobeStepwiseSelection implements TileSelection {
     out.anyWereRenderedLastFrame = false;
     out.notYetRenderableCount = 0;
     if (rectangleContains(tile.globe!, P.view.cartographic)) {
-      if (!renderable(tile)) {
+      if (!this.renderable(tile)) {
         this.queue(P, P.medium, tile);
       }
       setResult(P, tile, CULLED_BUT_NEEDED);
@@ -219,7 +223,7 @@ export class GlobeStepwiseSelection implements TileSelection {
         original(last) === RENDERED ||
         original(last) === CULLED ||
         last === NONE ||
-        renderable(tile);
+        this.renderable(tile);
       if (!ok) {
         ok = this.canRenderWithoutLosingDetail(P, tile);
       }
@@ -280,10 +284,10 @@ export class GlobeStepwiseSelection implements TileSelection {
             P.medium.length = medium;
             P.high.length = high;
             this.queue(P, P.medium, tile);
-            out.notYetRenderableCount = renderable(tile) ? 0 : 1;
+            out.notYetRenderableCount = this.renderable(tile) ? 0 : 1;
             queued = true;
           }
-          out.allAreRenderable = renderable(tile);
+          out.allAreRenderable = this.renderable(tile);
           out.anyWereRenderedLastFrame = wasRendered;
         }
         if (this.preloadAncestors && !queued) {
@@ -308,15 +312,15 @@ export class GlobeStepwiseSelection implements TileSelection {
     }
     return (
       tile.children.length > 0 ||
-      (renderable(tile) && this.source.upsample(tile))
+      (this.renderable(tile) && this.source.upsample(tile))
     );
   }
 
   private renderTile(P: Pass, tile: Tile, last: number, out: Details): void {
     P.render.push(tile);
-    out.allAreRenderable = renderable(tile);
+    out.allAreRenderable = this.renderable(tile);
     out.anyWereRenderedLastFrame = last === RENDERED;
-    out.notYetRenderableCount = renderable(tile) ? 0 : 1;
+    out.notYetRenderableCount = this.renderable(tile) ? 0 : 1;
     setResult(P, tile, RENDERED);
   }
 
@@ -352,13 +356,13 @@ export class GlobeStepwiseSelection implements TileSelection {
 
   /** 1.x canRenderWithoutLosingDetail, terrain only (no imagery). */
   private canRenderWithoutLosingDetail(P: Pass, tile: Tile): boolean {
-    const ready = renderable(tile);
+    const ready = this.renderable(tile);
     const stack = [...tile.children];
     while (stack.length > 0) {
       const descendant = stack.pop()!;
       const last = lastResult(P, descendant);
       if (last === RENDERED) {
-        if (!ready && renderable(descendant)) {
+        if (!ready && this.renderable(descendant)) {
           return false;
         }
       } else if (last === REFINED) {
@@ -506,7 +510,7 @@ export class GlobeStepwiseSelection implements TileSelection {
     if (tile.fillFromParent) {
       // Queued quadrants without data are upsampled (at once, here) when
       // the content they are drawn from is loaded; else it loads.
-      if (renderable(tile)) {
+      if (this.renderable(tile)) {
         tile.globe!.upsampled = true;
       }
       tile = dataTile(tile);
@@ -533,6 +537,23 @@ export class GlobeStepwiseSelection implements TileSelection {
     queue.push({ tile, priority });
   }
 
+  /**
+   * Ready to draw: its content, or that of the tile with data above, and
+   * with imagery when draped (1.x GlobeSurfaceTile.processImagery: any
+   * imagery of its own or a loaded ancestor's).
+   */
+  private renderable(tile: Tile): boolean {
+    const data = dataTile(tile);
+    if (!data.contentAvailable) {
+      return false;
+    }
+    if (!this.imageryReady || this.imageryReady(data)) {
+      return true;
+    }
+    this.waiting.add(data);
+    return false;
+  }
+
   private result(P: Pass): SelectionResult {
     const result: SelectionResult = {
       selected: [],
@@ -540,6 +561,7 @@ export class GlobeStepwiseSelection implements TileSelection {
       touched: P.touched,
       priority: new Map(),
       placeholders: new Map(),
+      ...(this.waiting.size ? { waiting: [...this.waiting] } : {}),
     };
     const selected = new Set<Tile>();
     const holes = new Map<Tile, Tile[]>();
@@ -598,11 +620,6 @@ function dataTile(tile: Tile): Tile {
     tile = tile.parent!;
   }
   return tile;
-}
-
-/** Ready to draw: its content, or that of the tile with data above. */
-function renderable(tile: Tile): boolean {
-  return dataTile(tile).contentAvailable;
 }
 
 function lastResult(P: Pass, tile: Tile): number {
