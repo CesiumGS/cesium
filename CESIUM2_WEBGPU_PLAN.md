@@ -831,7 +831,9 @@ _r38 (overnight, toward the L1′ exit check)_:
   whose time on screen, the field of view over how fast it crosses it, is
   shorter than the tileset's median load time (`motionBenefit`, default
   1). Only motion across the line of sight counts (a tile straight ahead
-  of a camera flying toward it stays in view), plus turning. Views carry
+  of a camera flying toward it stays in view), less the camera's turning
+  as vectors (|−v⊥/d − ω × u|: an orbit's target stays still on screen;
+  adding the two as speeds first made near content look fast). Views carry
   their steady motion, tilesets their recent load time. 1.x's
   `cullRequestsWhileMoving` is the crude case. Slow orbits are untouched
   (NYC 10.9 MB, quality in motion 0.008 vs 1.x 0.030).
@@ -851,6 +853,17 @@ _r38 (overnight, toward the L1′ exit check)_:
   selection parity: the candidate's may not be worse than the baseline's
   by more than 0.01 per scene. Re-summarized runs that stored the old
   default plan get the new one (runs before r38 have no `bytesLoad`).
+- **No free detail by default (done r38)**: Google Manhattan's quality in
+  motion was 0.046 to 1.x's 0.026 (the new motion guardrail broke) with
+  the motion bound on or off, prefetch at full detail or none, and at
+  r37's commit too. The cause was free detail: after the replay's orbit
+  filled the cache, each settled reference drew cached tiles up to two
+  levels finer than its view needs, so in-motion frames were scored
+  against an over-refined image, and a still view depended on where the
+  camera had been (as Rainier's patch on terrain). `opportunisticRatio`
+  now defaults to 0 for 3D Tiles too: quality in motion 0.020 (1.x
+  0.026), selection parity 0.066 → 0.024, bytes unchanged. Zooming out,
+  resident finer content still stands in while the coarser tile loads.
 - **JS heap (r38, partly done)**: 2.0's main-thread heap is 2 to 6 times
   1.x's in every scene (NYC 172 to 331 MB vs 54). A heap snapshot of NYC
   settled (36,176 tiles known, 176 loaded): the bulk is per-tile
