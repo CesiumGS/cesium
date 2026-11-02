@@ -56,6 +56,12 @@ let params = new URLSearchParams();
 const $ = <T extends Element = HTMLElement>(id: string) =>
   root.querySelector<T>(`[data-id="${id}"]`)!;
 
+/**
+ * FLIP samples while loading. 500 ms while FLIP ran in JS; moves that
+ * settle in under a second got one or two samples, so whether a policy
+ * had converged at 500 ms decided its average (r37).
+ */
+const SAMPLE_MS = 100;
 const WIDTH = 480;
 const HEIGHT = 270;
 const deg = Math.PI / 180;
@@ -121,7 +127,7 @@ interface Row {
    * over the same N seconds.
    */
   flipAverage?: number;
-  /** FLIP every 500 ms until settled, for the common-horizon average. */
+  /** FLIP every `SAMPLE_MS` until settled, for the common-horizon average. */
   trace?: number[];
   /**
    * The same against the target: the image every policy converges to
@@ -254,7 +260,7 @@ interface Measurement {
   megabytes: number;
   settleMs: number;
   flips: Record<number, number>;
-  /** FLIP every 500 ms from the move until settled. */
+  /** FLIP every `SAMPLE_MS` from the move until settled. */
   trace: number[];
   /** The same against the target, when given. */
   traceTarget: number[];
@@ -310,7 +316,7 @@ async function measure(
     const bytes0 = tileset.stats.bytesTotal;
     const purposes0 = structuredClone(tileset.stats.purposes);
     scenario.end(view);
-    // From the move until settled: FLIP at fixed marks, and every 500 ms
+    // From the move until settled: FLIP at fixed marks, and every SAMPLE_MS
     // for the average (how good the image was while loading, which fixed
     // marks miss on slow networks).
     const start = performance.now();
@@ -318,7 +324,7 @@ async function measure(
     const marks = [250, 1000];
     const samples: number[] = [];
     const goalSamples: number[] = [];
-    let nextSample = 500;
+    let nextSample = SAMPLE_MS;
     let previous = "";
     let stable = 0;
     while (stable < 5) {
@@ -336,7 +342,7 @@ async function measure(
           if (goal) {
             goalSamples.push((await flip(goal, image, WIDTH, HEIGHT)).mean);
           }
-          nextSample += 500;
+          nextSample += SAMPLE_MS;
         }
       }
       const now = (tileset.lastSelected.get(id) ?? [])

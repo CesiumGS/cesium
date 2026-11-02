@@ -778,6 +778,52 @@ change after them is measured against a guardrail:
   the plan's guardrails and their tolerances per scene once `Budgeted`
   settles, so a verdict means what it says.
 
+_r38 (overnight, toward the L1′ exit check)_:
+
+- **FLIP on the GPU (done r38)**: `parity/flipGpu.ts`, a WebGPU compute
+  port of `parity/flip.ts` (separable filters as passes, per-workgroup
+  sums and a histogram for mean and percentiles). Same mean as the JS
+  reference to 5 decimals (per pixel within 2e-4) at 4 to 8 ms a
+  comparison instead of 220 to 310. Benchmark filmstrips and the L1′
+  loop use it; in L1′ the JS FLIP ran on the main thread every 500 ms of
+  the very loading it measured.
+- **The exit check as a matrix (done r38)**: `bench/lod-matrix.mjs` runs
+  L1′ for Stepwise and adaptive Budgeted over five datasets
+  (photogrammetry: Google Midtown, Aerometrex SF; OSM Philadelphia;
+  design models: BIM and AEC samples) on a fast link and the throttled
+  one (20 Mbit/s, 80 ms), with repetitions (`--reps`; single runs vary
+  by up to 0.03 in FLIP avg) and re-scoring (`--summarize`). A cell
+  passes where Budgeted's FLIP average is no worse (within 0.002) at no
+  more bytes downloaded (within 2%; L1′'s "MB" column was GPU upload).
+  L1′ rows record requests and bytes by purpose.
+- **FLIP against the target (r38)**: the fully refined reference (SSE 2)
+  rewards lingering on content that happens to look more like SSE 2 than
+  the image both policies settle to. Zooming out on AEC, Budgeted reaches
+  the target in 500 ms and Stepwise after 1 s, yet Budgeted scored worse
+  (the finer content still drawn resembles SSE 2); BIM's SSE-16 tiles
+  drop an element its coarse tiles keep, so settling sooner scored worse.
+  L1′ now also measures FLIP against the target (Stepwise settled at the
+  default SSE), samples every 100 ms (500 ms decided whole averages by
+  whether a sub-second move had converged at the one sample), and the
+  exit check judges on the target metric, showing both.
+- **Prefetch only ahead of real motion (done r38)**: a still camera
+  prefetched a 1.1× margin around the view; on a jump into OSM
+  Philadelphia 13 prefetches were half of Budgeted's bytes (21.6 MB to
+  Stepwise's 11.3) and, throttled, delayed what the view showed (settle
+  8.1 s vs 3.6). Prefetch now needs steady motion: a camera set somewhere
+  else in one frame (a teleport, a flight's end) read as thousands of m/s
+  and prefetched far from the view. Budgeted's prefetch requests also wait
+  until no visible request of the tileset is queued or in flight
+  (`prefetchAfterVisible`; 1.x's preloads go out with the rest). OSM:
+  11.3 MB both, throttled FLIP avg no worse.
+- **Partial resident cover (done r38)**: a missing frontier tile draws
+  whatever resident finer content lies under it (tiles count loaded
+  descendants, `residentBelow`), instead of nothing unless every visible
+  child is resident.
+- **Startup (done r38)**: `Viewer.create` resolves the default globe's
+  imagery and terrain endpoints while the device is created, and both at
+  once; the benchmark adapter does the same for every dataset.
+
 Then the planned work:
 
 - Budget-driven refinement (benefit per byte, §13.3), which is also the
