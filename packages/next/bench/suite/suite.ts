@@ -1616,94 +1616,101 @@ export async function runScene(spec: RunSpec): Promise<RunMetrics> {
     }
 
     // Motion: the camera script, one pose per frame, timed by progress.
-    const intervals: number[] = [];
-    const cpu: number[] = [];
-    const gpu: number[] = [];
-    const motion: Array<[number, number, number, number | null]> = [];
+    // None in a startup scenario (motionSeconds 0): load, settle, memory.
     const duration = (pose.seconds ?? spec.scenario.motionSeconds) * 1000;
-    if (pose.seconds !== undefined) {
-      metrics.motionSeconds = pose.seconds;
-    }
-    const sun = followsSun(spec);
-    const motionStart = performance.now();
-    let last = await animationFrame();
-    for (;;) {
-      const now = await animationFrame();
-      const progress = (performance.now() - motionStart) / duration;
-      if (progress >= 1) {
-        break;
+    // Whether the view at the end (after the motion, or the start view)
+    // settled: the image checks compare it.
+    let settledEnd = metrics.settleMs !== undefined;
+    if (duration > 0) {
+      const intervals: number[] = [];
+      const cpu: number[] = [];
+      const gpu: number[] = [];
+      const motion: Array<[number, number, number, number | null]> = [];
+      if (pose.seconds !== undefined) {
+        metrics.motionSeconds = pose.seconds;
       }
-      intervals.push(now - last);
-      if (sun) {
-        adapter.setSun(sunDirection(spec, pose(progress)));
-      }
-      adapter.setCamera(pose(progress));
-      const cpuMs = adapter.frame();
-      cpu.push(cpuMs);
-      const g = adapter.gpuMs();
-      if (g !== undefined) {
-        gpu.push(g);
-      }
-      motion.push([
-        round((now - motionStart) / 1000),
-        round(now - last),
-        round(cpuMs),
-        g === undefined ? null : round(g),
-      ]);
-      last = now;
-    }
-    metrics.motionMs = [
-      Math.round(motionStart - start),
-      Math.round(performance.now() - start),
-    ];
-    metrics.frames = intervals.length;
-    metrics.frameP50 = quantile(intervals, 0.5);
-    metrics.frameP95 = quantile(intervals, 0.95);
-    metrics.frameP99 = quantile(intervals, 0.99);
-    metrics.over33 = intervals.filter((i) => i > 34).length;
-    metrics.over50 = intervals.filter((i) => i > 50).length;
-    metrics.over100 = intervals.filter((i) => i > 100).length;
-    metrics.frameP999 = quantile(intervals, 0.999);
-    const meanInterval =
-      intervals.reduce((a, b) => a + b, 0) / Math.max(1, intervals.length);
-    metrics.frameStdDev = Math.sqrt(
-      intervals.reduce((a, b) => a + (b - meanInterval) ** 2, 0) /
-        Math.max(1, intervals.length),
-    );
-    metrics.intervals = intervals.map(round);
-    // The camera path, for track maps (the same for every engine).
-    metrics.path = [];
-    for (let k = 0; k <= 49; k++) {
-      const progress = k / 49;
-      const carto = Ellipsoid.WGS84.cartesianToCartographic(
-        Float64Array.from(pose(progress).position),
-        { longitude: 0, latitude: 0, height: 0 },
-      );
-      if (carto) {
-        metrics.path.push([
-          round(progress),
-          carto.longitude / deg,
-          carto.latitude / deg,
-          Math.round(carto.height),
+      const sun = followsSun(spec);
+      const motionStart = performance.now();
+      let last = await animationFrame();
+      for (;;) {
+        const now = await animationFrame();
+        const progress = (performance.now() - motionStart) / duration;
+        if (progress >= 1) {
+          break;
+        }
+        intervals.push(now - last);
+        if (sun) {
+          adapter.setSun(sunDirection(spec, pose(progress)));
+        }
+        adapter.setCamera(pose(progress));
+        const cpuMs = adapter.frame();
+        cpu.push(cpuMs);
+        const g = adapter.gpuMs();
+        if (g !== undefined) {
+          gpu.push(g);
+        }
+        motion.push([
+          round((now - motionStart) / 1000),
+          round(now - last),
+          round(cpuMs),
+          g === undefined ? null : round(g),
         ]);
+        last = now;
       }
-    }
-    metrics.series = {
-      load: downsample(load),
-      motion: downsample(motion),
-    };
-    metrics.cpuP50 = quantile(cpu, 0.5);
-    metrics.cpuP95 = quantile(cpu, 0.95);
-    metrics.gpuP50 = quantile(gpu, 0.5);
+      metrics.motionMs = [
+        Math.round(motionStart - start),
+        Math.round(performance.now() - start),
+      ];
+      metrics.frames = intervals.length;
+      metrics.frameP50 = quantile(intervals, 0.5);
+      metrics.frameP95 = quantile(intervals, 0.95);
+      metrics.frameP99 = quantile(intervals, 0.99);
+      metrics.over33 = intervals.filter((i) => i > 34).length;
+      metrics.over50 = intervals.filter((i) => i > 50).length;
+      metrics.over100 = intervals.filter((i) => i > 100).length;
+      metrics.frameP999 = quantile(intervals, 0.999);
+      const meanInterval =
+        intervals.reduce((a, b) => a + b, 0) / Math.max(1, intervals.length);
+      metrics.frameStdDev = Math.sqrt(
+        intervals.reduce((a, b) => a + (b - meanInterval) ** 2, 0) /
+          Math.max(1, intervals.length),
+      );
+      metrics.intervals = intervals.map(round);
+      // The camera path, for track maps (the same for every engine).
+      metrics.path = [];
+      for (let k = 0; k <= 49; k++) {
+        const progress = k / 49;
+        const carto = Ellipsoid.WGS84.cartesianToCartographic(
+          Float64Array.from(pose(progress).position),
+          { longitude: 0, latitude: 0, height: 0 },
+        );
+        if (carto) {
+          metrics.path.push([
+            round(progress),
+            carto.longitude / deg,
+            carto.latitude / deg,
+            Math.round(carto.height),
+          ]);
+        }
+      }
+      metrics.series = {
+        load: downsample(load),
+        motion: downsample(motion),
+      };
+      metrics.cpuP50 = quantile(cpu, 0.5);
+      metrics.cpuP95 = quantile(cpu, 0.95);
+      metrics.gpuP50 = quantile(gpu, 0.5);
 
-    if (sun) {
-      adapter.setSun(sunDirection(spec, pose(1)));
+      if (sun) {
+        adapter.setSun(sunDirection(spec, pose(1)));
+      }
+      adapter.setCamera(pose(1));
+      const resettleStart = performance.now();
+      const resettle = await settle(adapter, resettleStart, timeout);
+      metrics.resettleMs = resettle;
+      settledEnd = resettle !== undefined;
     }
-    adapter.setCamera(pose(1));
-    const resettleStart = performance.now();
-    const resettle = await settle(adapter, resettleStart, timeout);
-    metrics.resettleMs = resettle;
-    if (resettle !== undefined) {
+    if (settledEnd) {
       await captureMoment(spec, "end");
     }
     metrics.longFrames = longFrames.length;
@@ -1730,7 +1737,7 @@ export async function runScene(spec: RunSpec): Promise<RunMetrics> {
     // there, apart from renderer differences.
     if (
       spec.capture &&
-      resettle !== undefined &&
+      settledEnd &&
       adapter.setPolicy &&
       spec.config.policy !== "stepwise"
     ) {

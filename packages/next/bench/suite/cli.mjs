@@ -499,7 +499,9 @@ async function run() {
     tags: opts.tag ? opts.tag.split(",") : [],
     // The default depends on what is compared (2.0 vs 1.x or vs 2.0).
     plan: {
-      ...defaultPlan(baseline, candidate),
+      ...defaultPlan(baseline, candidate, {
+        motion: scenarios.some((s) => (motion ?? s.motionSeconds) > 0),
+      }),
       ...(opts.primary ? { primary: opts.primary } : {}),
       ...(opts.guardrails ? { guardrails: opts.guardrails.split(",") } : {}),
       ...(opts.tolerance ? { tolerance: Number(opts.tolerance) } : {}),
@@ -513,7 +515,11 @@ async function run() {
     // Lineage (plan §16.9, Trust): how to reproduce this run exactly.
     command: ["node", "packages/next/bench/suite/cli.mjs", command, ...rest],
     diffSha256: sha256(
-      execSync("git diff HEAD", { cwd: root, maxBuffer: 1 << 28 }),
+      execSync("git diff HEAD", {
+        cwd: root,
+        maxBuffer: 1 << 28,
+        stdio: ["ignore", "pipe", "ignore"],
+      }),
     ),
     catalogSha256: sha256(JSON.stringify(catalog)),
     datasets: checked,
@@ -639,7 +645,11 @@ async function run() {
           }
           console.log(
             result.metrics.status === "ok"
-              ? `settle ${(result.metrics.settleMs / 1000).toFixed(1)} s, frame p50 ${result.metrics.frameP50?.toFixed(1)} ms`
+              ? `settle ${(result.metrics.settleMs / 1000).toFixed(1)} s, ${
+                  result.metrics.frameP50 === undefined
+                    ? `first content ${(result.metrics.firstContentMs / 1000).toFixed(2)} s`
+                    : `frame p50 ${result.metrics.frameP50.toFixed(1)} ms`
+                }`
               : `${result.metrics.status}${result.metrics.message ? `: ${result.metrics.message}` : ""}`,
           );
         }
@@ -650,6 +660,7 @@ async function run() {
       if (
         !opts["no-capture"] &&
         !opts["no-motion-quality"] &&
+        (motion ?? scenario.motionSeconds) > 0 &&
         scenario.cache === "cold" &&
         scenario.vsync !== false
       ) {

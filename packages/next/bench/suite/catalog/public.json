@@ -23,9 +23,7 @@
         "asset": 1,
         "token": "env"
       },
-      "formats": [
-        "quantized-mesh"
-      ],
+      "formats": ["quantized-mesh"],
       "license": {
         "name": "Cesium ion terms (sample asset used by 1.x's public Sandcastles)",
         "status": "stream-only",
@@ -58,9 +56,7 @@
         "asset": 96188,
         "token": "env"
       },
-      "formats": [
-        "b3dm"
-      ],
+      "formats": ["b3dm"],
       "license": {
         "name": "Cesium ion terms (sample asset used by 1.x's public Sandcastles)",
         "status": "stream-only",
@@ -78,9 +74,7 @@
         "token": "env",
         "google": true
       },
-      "formats": [
-        "glb"
-      ],
+      "formats": ["glb"],
       "mirror": false,
       "license": {
         "name": "Google Map Tiles API policies, via Cesium ion",
@@ -98,9 +92,7 @@
         "asset": 75343,
         "token": "default"
       },
-      "formats": [
-        "b3dm"
-      ],
+      "formats": ["b3dm"],
       "license": {
         "name": "Cesium ion terms (sample asset used by 1.x's public Sandcastles)",
         "status": "stream-only",
@@ -117,9 +109,7 @@
         "asset": 69380,
         "token": "default"
       },
-      "formats": [
-        "b3dm"
-      ],
+      "formats": ["b3dm"],
       "license": {
         "name": "Cesium ion terms (sample asset used by 1.x's public Sandcastles)",
         "status": "stream-only",
@@ -136,9 +126,7 @@
         "asset": 40866,
         "token": "default"
       },
-      "formats": [
-        "b3dm"
-      ],
+      "formats": ["b3dm"],
       "license": {
         "name": "Cesium ion terms (sample asset used by 1.x's public Sandcastles)",
         "status": "stream-only",
@@ -155,9 +143,7 @@
         "asset": 2464651,
         "token": "default"
       },
-      "formats": [
-        "b3dm"
-      ],
+      "formats": ["b3dm"],
       "license": {
         "name": "Cesium ion terms (sample asset used by 1.x's public Sandcastles)",
         "status": "stream-only",
@@ -174,9 +160,7 @@
         "asset": 2887123,
         "token": "default"
       },
-      "formats": [
-        "glb"
-      ],
+      "formats": ["glb"],
       "license": {
         "name": "Cesium ion terms (sample asset used by 1.x's public Sandcastles)",
         "status": "stream-only",
@@ -193,9 +177,7 @@
         "asset": 2887129,
         "token": "default"
       },
-      "formats": [
-        "glb"
-      ],
+      "formats": ["glb"],
       "license": {
         "name": "Cesium ion terms (sample asset used by 1.x's public Sandcastles)",
         "status": "stream-only",
@@ -212,10 +194,7 @@
         "asset": 2602291,
         "token": "default"
       },
-      "formats": [
-        "glb",
-        "b3dm"
-      ],
+      "formats": ["glb", "b3dm"],
       "license": {
         "name": "Cesium ion terms (sample asset used by 1.x's public Sandcastles)",
         "status": "stream-only",
@@ -232,9 +211,7 @@
         "asset": 2767062,
         "token": "default"
       },
-      "formats": [
-        "quantized-mesh"
-      ],
+      "formats": ["quantized-mesh"],
       "license": {
         "name": "Cesium ion terms (sample asset used by 1.x's public Sandcastles)",
         "status": "stream-only",
@@ -251,10 +228,7 @@
         "asset": 1415196,
         "token": "default"
       },
-      "formats": [
-        "b3dm",
-        "glb"
-      ],
+      "formats": ["b3dm", "glb"],
       "license": {
         "name": "Cesium ion terms (sample asset used by 1.x's public Sandcastles)",
         "status": "stream-only",
@@ -271,9 +245,7 @@
         "asset": 28945,
         "token": "default"
       },
-      "formats": [
-        "pnts"
-      ],
+      "formats": ["pnts"],
       "license": {
         "name": "Cesium ion terms (sample asset used by 1.x's public Sandcastles)",
         "status": "stream-only",
@@ -290,9 +262,7 @@
         "asset": 4547222,
         "token": "default"
       },
-      "formats": [
-        "splats"
-      ],
+      "formats": ["splats"],
       "license": {
         "name": "Cesium ion terms (sample asset used by 1.x's public Sandcastles)",
         "status": "stream-only",
@@ -309,9 +279,7 @@
         "asset": 4854512,
         "token": "default"
       },
-      "formats": [
-        "vector"
-      ],
+      "formats": ["vector"],
       "license": {
         "name": "Cesium ion terms (sample asset used by 1.x's public Sandcastles)",
         "status": "stream-only",
@@ -328,9 +296,7 @@
         "asset": 5135960,
         "token": "default"
       },
-      "formats": [
-        "vector"
-      ],
+      "formats": ["vector"],
       "license": {
         "name": "Cesium ion terms (sample asset used by 1.x's public Sandcastles)",
         "status": "stream-only",
@@ -350,9 +316,7 @@
           "spacing": 8
         }
       },
-      "formats": [
-        "instancing"
-      ],
+      "formats": ["instancing"],
       "license": {
         "name": "Generated from the milk truck (CC BY 4.0, © 2017 Cesium)",
         "status": "redistributable",
@@ -367,9 +331,7 @@
         "kind": "specs",
         "path": "Models/glTF-2.0/CesiumMilkTruck/glTF-Draco"
       },
-      "formats": [
-        "gltf"
-      ],
+      "formats": ["gltf"],
       "sha256": "ffd2d75cbb1cce1aa4e74d5b72ba2df37f466abd0226ed8b64b0527b9a3397b8",
       "license": {
         "name": "CC BY 4.0 (© 2017 Cesium; the Cesium logo is a trademark)",
@@ -391,11 +353,7 @@
       "layers": [],
       "camera": {
         "kind": "orbit",
-        "target": [
-          -121.76,
-          46.85,
-          2000
-        ],
+        "target": [-121.76, 46.85, 2000],
         "range": 15000,
         "pitch": -20,
         "heading": 30,
@@ -420,11 +378,7 @@
       ],
       "camera": {
         "kind": "orbit",
-        "target": [
-          -75.165,
-          39.9526,
-          0
-        ],
+        "target": [-75.165, 39.9526, 0],
         "range": 1500,
         "pitch": -35,
         "heading": 20,
@@ -473,11 +427,7 @@
       ],
       "camera": {
         "kind": "orbit",
-        "target": [
-          -73.9857,
-          40.7484,
-          0
-        ],
+        "target": [-73.9857, 40.7484, 0],
         "range": 1500,
         "pitch": -30,
         "heading": 30,
@@ -499,11 +449,7 @@
       ],
       "camera": {
         "kind": "orbit",
-        "target": [
-          -74.01,
-          40.71,
-          0
-        ],
+        "target": [-74.01, 40.71, 0],
         "range": 2000,
         "pitch": -35,
         "heading": 30,
@@ -522,11 +468,7 @@
       ],
       "camera": {
         "kind": "orbit",
-        "target": [
-          144.9631,
-          -37.8136,
-          0
-        ],
+        "target": [144.9631, -37.8136, 0],
         "range": 1200,
         "pitch": -30,
         "heading": 0,
@@ -592,11 +534,7 @@
       ],
       "camera": {
         "kind": "orbit",
-        "target": [
-          139.7671,
-          35.6812,
-          0
-        ],
+        "target": [139.7671, 35.6812, 0],
         "range": 2000,
         "pitch": -35,
         "heading": 0,
@@ -615,11 +553,7 @@
       ],
       "camera": {
         "kind": "orbit",
-        "target": [
-          -122.3933,
-          37.7955,
-          0
-        ],
+        "target": [-122.3933, 37.7955, 0],
         "range": 800,
         "pitch": -30,
         "heading": 0,
@@ -641,11 +575,7 @@
       ],
       "camera": {
         "kind": "orbit",
-        "target": [
-          -73.5673,
-          45.5017,
-          0
-        ],
+        "target": [-73.5673, 45.5017, 0],
         "range": 1500,
         "pitch": -35,
         "heading": 0,
@@ -668,11 +598,7 @@
       ],
       "camera": {
         "kind": "orbit",
-        "target": [
-          -122.1381,
-          47.6445,
-          120
-        ],
+        "target": [-122.1381, 47.6445, 120],
         "range": 500,
         "pitch": -25,
         "heading": 100,
@@ -714,11 +640,7 @@
       ],
       "camera": {
         "kind": "orbit",
-        "target": [
-          86.859391,
-          27.4,
-          0
-        ],
+        "target": [86.859391, 27.4, 0],
         "range": 120000,
         "pitch": -40,
         "heading": 0,
@@ -740,11 +662,7 @@
       ],
       "camera": {
         "kind": "orbit",
-        "target": [
-          -73.99,
-          40.73,
-          0
-        ],
+        "target": [-73.99, 40.73, 0],
         "range": 1500,
         "pitch": -30,
         "heading": 200,
@@ -762,20 +680,12 @@
       "layers": [
         {
           "dataset": "milk-truck-fleet",
-          "at": [
-            -75.1652,
-            39.9526,
-            0
-          ]
+          "at": [-75.1652, 39.9526, 0]
         }
       ],
       "camera": {
         "kind": "orbit",
-        "target": [
-          -75.1652,
-          39.9526,
-          0
-        ],
+        "target": [-75.1652, 39.9526, 0],
         "range": 1500,
         "pitch": -30,
         "heading": 0,
@@ -798,6 +708,13 @@
       "settleTimeoutSeconds": 90,
       "cache": "cold",
       "vsync": false
+    },
+    {
+      "id": "cold-start",
+      "title": "Cold cache: load and settle, no motion (first content, settle, memory)",
+      "motionSeconds": 0,
+      "settleTimeoutSeconds": 90,
+      "cache": "cold"
     },
     {
       "id": "warm-orbit",
@@ -829,10 +746,7 @@
   ],
   "engines": {
     "$comment": "What `cli.mjs run` measures by default, and which is the baseline and the candidate. Releases are pinned exactly (a moving tag would mix releases in one trend).",
-    "default": [
-      "1.146.0",
-      "2.0"
-    ],
+    "default": ["1.146.0", "2.0"],
     "baseline": "1.146.0",
     "candidate": "2.0"
   },

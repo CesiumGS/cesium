@@ -55,11 +55,30 @@ export const CROSS_ENGINE_PLAN = {
   tolerance: 0.1,
 };
 
-/** The default plan for comparing `baseline` with `candidate`. */
-export function defaultPlan(baseline, candidate) {
-  return engineOf(baseline) === engineOf(candidate)
-    ? DEFAULT_PLAN
-    : CROSS_ENGINE_PLAN;
+/** Startup runs (no motion, so no frames to time): loading is primary. */
+export const STARTUP_PLAN = {
+  primary: "settleMs",
+  guardrails: ["firstContentMs", "bytes", "heapBytes", "bufferBytes"],
+  tolerance: 0.1,
+};
+
+export const CROSS_ENGINE_STARTUP_PLAN = {
+  primary: "settleMs",
+  guardrails: ["firstContentMs", "bytes"],
+  context: ["heapBytes", "bufferBytes"],
+  tolerance: 0.1,
+};
+
+/**
+ * The default plan for comparing `baseline` with `candidate`; `motion`:
+ * whether any of the run's scenarios moves the camera.
+ */
+export function defaultPlan(baseline, candidate, { motion = true } = {}) {
+  const same = engineOf(baseline) === engineOf(candidate);
+  if (!motion) {
+    return same ? STARTUP_PLAN : CROSS_ENGINE_STARTUP_PLAN;
+  }
+  return same ? DEFAULT_PLAN : CROSS_ENGINE_PLAN;
 }
 
 /** A stored plan that is just the old default (runs before r38). */
@@ -220,7 +239,9 @@ export function scorecard(results, options = {}) {
   const stored =
     results.plan && !isOldDefault(results.plan) ? results.plan : {};
   const plan = {
-    ...defaultPlan(baseline, candidate),
+    ...defaultPlan(baseline, candidate, {
+      motion: results.runs.some((r) => (r.motionSeconds ?? 1) > 0),
+    }),
     ...stored,
     ...(options.plan ?? {}),
   };
