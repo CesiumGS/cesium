@@ -757,6 +757,63 @@ describe(
       );
     });
 
+    it("Shares one shader program across models whose class definitions differ, unless the custom shader reads the class", function () {
+      if (!context.webgl2) {
+        return;
+      }
+
+      return loadGltf(propertyTextureWithVectorProperties).then(
+        function (gltfLoader) {
+          const components = gltfLoader.components;
+          const primitive = components.nodes[0].primitives[0];
+          const frameState = scene.frameState;
+          const classProperty =
+            components.structuralMetadata.propertyTextures[0].class.properties
+              .uint8vec3Property;
+
+          // Builds the primitive's shader program once per class range; the
+          // shader cache keys programs by generated source, so two builds that
+          // produce the same text return the same program.
+          function buildPrograms(options) {
+            const programs = [];
+            for (const max of [
+              [30, 17, 50],
+              [60, 34, 100],
+            ]) {
+              classProperty._max = max;
+              const renderResources = mockRenderResources(components, options);
+              MetadataPipelineStage.process(
+                renderResources,
+                primitive,
+                frameState,
+              );
+              programs.push(
+                renderResources.shaderBuilder.buildShaderProgram(context),
+              );
+            }
+            return programs;
+          }
+
+          const shaderCache = context.shaderCache;
+          const initialCount = shaderCache.numberOfShaders;
+
+          const shared = buildPrograms({ metadataOnly: true });
+          expect(shared[0]).toBe(shared[1]);
+          expect(shaderCache.numberOfShaders).toBe(initialCount + 1);
+
+          const distinct = buildPrograms({ metadataOnly: false });
+          expect(distinct[0]).not.toBe(distinct[1]);
+          expect(shaderCache.numberOfShaders).toBe(initialCount + 3);
+
+          for (const program of shared.concat(distinct)) {
+            program.destroy();
+          }
+          shaderCache.destroyReleasedShaderPrograms();
+          expect(shaderCache.numberOfShaders).toBe(initialCount);
+        },
+      );
+    });
+
     it("Handles property textures that use multiple channels to represent higher-precision types", function () {
       if (!context.webgl2) {
         return;
