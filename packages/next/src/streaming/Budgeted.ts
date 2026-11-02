@@ -447,6 +447,7 @@ export class BudgetedSelection extends StepwiseSelection {
         result.touched.push(child);
         const finer =
           child.refine === "REPLACE" &&
+          this.opportunisticRatio > 0 &&
           state.sse >
             this.memoryAdjustedScreenSpaceError * this.opportunisticRatio
             ? this.fromCache(child, view, pass, rootError, result)

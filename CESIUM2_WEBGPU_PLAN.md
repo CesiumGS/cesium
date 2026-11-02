@@ -634,7 +634,20 @@ change after them is measured against a guardrail:
   guardrails). Calibrated: untextured scenes 0.001 to 0.008, textured
   0.04 to 0.08 (Melbourne 0.083, to look at); Rainier's under-refinement
   was about 0.3. FLIP against 1.x can't tell: lighting and sky alone put
-  most scenes at 0.3 to 0.55.
+  most scenes at 0.3 to 0.55. _r37_: Rainier's 0.055 was not texture
+  noise but a real patch (below, free detail on terrain); 0.009 since.
+- **Free detail on terrain (fixed r37)**: after the orbit, Rainier's end
+  view showed a hazy, snowless patch on the south flank that a direct load
+  of the same view didn't. Terrain selection and imagery were both
+  correct for the tiles drawn: `Budgeted` drew level-12 tiles left in the
+  cache by the orbit (free detail, `opportunisticRatio` 0.25) where a
+  direct load and `Stepwise` draw level 11, and Bing's level 12 there is
+  a different, hazy capture. A still view looked different depending on
+  where the camera had been. The globe now takes no free detail by
+  default (`opportunisticRatio` 0; 3D Tiles keep it), and 0 now disables
+  it on every path. Rainier: selection parity 0.055 → 0.009, quality in
+  motion 0.062 → 0.026 (1.x 0.025); OSM Philadelphia 0.008 → 0.004;
+  settle, resettle and bytes unchanged.
 - **Terrain loading (done r37)**: `Budgeted` expanded a terrain tile
   only once it loaded, so terrain loaded one level per round trip and
   never skipped levels (the waterfalls' curve: 2 to 4 terrain requests in
@@ -703,11 +716,10 @@ change after them is measured against a guardrail:
   | Flight (below)   | 0.166 | 0.153 |
 
   NYC confirms what prefetch ahead buys (sharp in motion where 1.x defers
-  requests). Rainier is worse in motion: 2.0 draws the western flank with
-  a coarser imagery level for most of the orbit (Bing's coarser capture
-  is bluish there, so FLIP shows it plainly); Aerometrex loses its first
-  frame (0.09) and matches after. **Next**: imagery refinement in motion
-  on terrain (why imagery lags terrain under `Budgeted`), then bound
+  requests). Rainier looked worse in motion (0.062), but its settled
+  frames carried free detail the orbit had cached (above); 0.026 since,
+  as 1.x. Aerometrex loses its first frame (0.09) and matches after.
+  **Next**: bound
   loading in motion by benefit: a tile whose expected time on screen is
   shorter than its load time is not worth requesting (1.x's
   `cullRequestsWhileMoving` is the special case of 60 frames' travel

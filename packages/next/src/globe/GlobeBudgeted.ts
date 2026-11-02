@@ -11,6 +11,12 @@
  * before their parent loads): children whose availability is known can be
  * selected and requested at once. Expanded only when loaded, terrain loaded
  * one level per round trip and could not skip levels.
+ *
+ * No free detail from the cache (`opportunisticRatio` 0 by default):
+ * finer terrain brings finer imagery, and an imagery provider's levels can
+ * be different captures (Bing's level 12 on Rainier's south flank is hazy
+ * and snowless where 11 and 13 are not), so a still view would look
+ * different depending on where the camera had been.
  */
 import {
   BudgetedSelection,
@@ -34,7 +40,11 @@ export class GlobeBudgetedSelection extends BudgetedSelection {
     private readonly source: TerrainSource,
     options: BudgetedOptions = {},
   ) {
-    super({ ...options, dynamicScreenSpaceError: false });
+    super({
+      ...options,
+      opportunisticRatio: options.opportunisticRatio ?? 0,
+      dynamicScreenSpaceError: false,
+    });
   }
 
   /** Expands the tile (its children, where availability is known) first. */
