@@ -3538,30 +3538,57 @@ addressed in 2.0 (each with a Dyno scene to show the fix):
 - **Benchmarks take the GPU and stop development (r39).** A terrain
   comparison (3 scenes, 3 engines, 3 reps) took 26.5 minutes: 54 runs of
   about 26 s, 15 s of them motion, 10% cooldown; two of the three engines
-  were baselines that can't change. Done: runs serve the working tree
-  frozen as a commit and built for production (`frozen.mjs`; `--dev` for
-  the live tree), so edits during a run don't reach it and pages load as
-  shipped. Planned, in order:
-  - Reuse baseline results (releases and commits don't change) per
-    machine, scene and scenario, with one calibration repetition per
-    session against the stored values to catch drift.
-  - A startup scenario (load, settle, memory; no motion): about 10 s a
-    run instead of 26 for first-content and memory work.
-  - Groups of scenes by what they exercise (terrain and imagery, 3D
-    Tiles streaming, design models, picking and clamping, memory), and a
-    selection from the change: the files a diff touches map to groups,
-    and a run takes those groups at one or two repetitions; the full
-    catalog runs at milestones and overnight. Repetitions stop early when
-    a comparison is decided (sequential testing).
-  - Annotations on results and trends (as PostHog's): a dated note,
-    optionally per metric, engine or scene, for changes in the method
-    (`heapBytes` redefined, r39; the frozen production build, r39), the
-    machine (driver, OS) or the data, drawn on every trend chart.
+  were baselines that can't change. Done (r39):
+  - **Frozen production builds** (`frozen.mjs`): a run commits the
+    working tree as it stands into a commit object (a temporary index;
+    branch, index and files untouched; the same tree on the same HEAD
+    freezes to the same commit), checks it out into one reused worktree
+    (`.bench/tree`) and builds the suite and FLIP pages for production
+    once per commit, in seconds; 1.x's harness and 2.0 load from it, and
+    snapshots at refs build the same way. Edits during a run don't reach
+    it. `--dev` serves the live tree.
+  - **A startup scenario** (`cold-start`: load, settle, memory; no
+    motion): about 10 s a run instead of 26. Its default plan has time to
+    settle as the primary and first content as a guardrail.
+  - **Baseline reuse** (`reuse.mjs`): an engine that can't change (a
+    release, a commit, the frozen tree), never the candidate, runs one
+    calibration repetition per scene; within the stored spread (CPU per
+    frame where the scenario moves, else time to settle with a wider band)
+    the other repetitions come from stored runs with the same machine,
+    method (the measuring harness's files), build and settings, scene and
+    data, marked `reused`; else all run. `--no-reuse`.
+  - **Early stop**: a scene's remaining repetitions are skipped once,
+    after at least two, the primary metric's interval lies wholly past
+    the tolerance and each guardrail is clearly within or past its own.
+    A smaller primary change gets every repetition: with two repetitions
+    a bootstrap interval is too narrow to call one (NYC stopped on a 3%
+    difference before this rule). `--no-early-stop`.
+  - **Areas and tiers** (`areas.mjs`, the catalog's `areas` and `tiers`):
+    areas name source paths (terrain, streaming, content, render,
+    instancing, core), scenes list the areas they exercise; `--changed
+[ref]` runs the scenes of the areas a changed file falls in (nothing
+    when no measured code changed), `--areas` names them. Tiers: quick
+    (startup, reuse, early stop), standard (the orbit), full (every
+    scene, both orbits, motion quality).
+  - **Annotations**: dated notes on Dyno's trend charts, at the first run
+    on or after their date and only on their metrics' charts when named:
+    method changes in `bench/suite/annotations.json`, machine and data
+    notes in the results directory (`cli.mjs annotate`).
+
+  The quick tier on the terrain area (3 scenes, 2.0 against 1.146.0):
+  16 runs in 2.5 minutes, then 10 runs (1.146.0 calibrated within its
+  stored spread on every scene; two scenes stopped after two
+  repetitions), 127 s → 78 s inside runs. The orbit at three repetitions
+  would have been 36 runs and about 16 minutes. Still planned:
   - Content served from the local store through a server that shapes
     the link per connection (latency, bandwidth, HTTP/2), for both
     engines' main threads and workers, where licenses allow mirroring;
     mainly for variance (Philadelphia's cold first content ranged 1.3 to
     2.7 s for 1.x alone over the live network). Google's tiles stay live.
+  - Guardrails decided "within tolerance" after two repetitions share
+    the narrow-interval caveat; a permutation bound for small samples
+    would be sounder than the bootstrap there.
+
 - **Lighting**: 1.x lights tilesets with an environment map from its
   atmosphere; 2.0's own IBL is brighter and bluer until M4 (§16.3).
 - **Primitive outlines** and the other extensions in §4.1.
