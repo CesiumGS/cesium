@@ -62,6 +62,18 @@ fn airTransmittanceUv(r: f32, mu: f32, bottom: f32, top: f32) -> vec2f {
   return vec2f(0.5 / 256.0 + x.x * (1.0 - 1.0 / 256.0), 0.5 / 64.0 + x.y * (1.0 - 1.0 / 64.0));
 }
 
+// How much of a light at zenith cosine `mu` stands above the planet's
+// horizon from radius `r`: its elevation above the horizon over a `soft`
+// angle (radians). The Earth's shadow in the air is soft over about a
+// degree (the sun's disk, refraction near the horizon), and a step of the
+// march spans more from high up: a hard test drew a ladder of stripes
+// across the day/night line, neighbouring rays' steps crossing it apart.
+fn sunAbove(r: f32, mu: f32, bottom: f32, soft: f32) -> f32 {
+  let horizon = -sqrt(max(0.0, 1.0 - (bottom / r) * (bottom / r)));
+  let above = asin(clamp(mu, -1.0, 1.0)) - asin(horizon);
+  return clamp(0.5 + above / soft, 0.0, 1.0);
+}
+
 fn aerialMarch(relPosition: vec3f) -> AerialPerspective {
   let a = air.groups[0];
   let b = air.groups[1];
@@ -118,10 +130,10 @@ fn aerialMarch(relPosition: vec3f) -> AerialPerspective {
     let rayleighDensity = exp(-h / a.rayleighScaleHeight);
     let mieDensity = exp(-h / a.mieScaleHeight);
     let ozoneDensity = select(clamp(-h / 15.0 + 8.0 / 3.0, 0.0, 1.0), clamp(h / 15.0 - 2.0 / 3.0, 0.0, 1.0), h < 25.0);
-    // In the planet's shadow, no sunlight (its disk a point).
-    let shadowed = muSun < 0.0 && rp * rp * (muSun * muSun - 1.0) + bottom * bottom >= 0.0;
+    // In the planet's shadow, no sunlight, its edge soft (`sunAbove`).
+    let soft = max(0.0175, dt / rp);
     let uv = airTransmittanceUv(rp, muSun, bottom, top);
-    let lit = select(1.0, 0.0, shadowed);
+    let lit = sunAbove(rp, muSun, bottom, soft);
     let sunA = textureSampleLevel(airTransmittance, environmentSampler, uv, 0, 0.0) * lit;
     let sunB = textureSampleLevel(airTransmittance, environmentSampler, uv, 1, 0.0) * lit;
     let msUv = vec2f(
@@ -136,9 +148,9 @@ fn aerialMarch(relPosition: vec3f) -> AerialPerspective {
     var moonMsB = vec4f(0.0);
     if (moonShare > 0.0) {
       let muMoon = dot(normalize(p / (radii * radii)), moon);
-      let moonShadowed = muMoon < 0.0 && rp * rp * (muMoon * muMoon - 1.0) + bottom * bottom >= 0.0;
+
       let moonUv = airTransmittanceUv(rp, muMoon, bottom, top);
-      let moonLit = select(1.0, 0.0, moonShadowed);
+      let moonLit = sunAbove(rp, muMoon, bottom, soft);
       moonA = textureSampleLevel(airTransmittance, environmentSampler, moonUv, 0, 0.0) * moonLit;
       moonB = textureSampleLevel(airTransmittance, environmentSampler, moonUv, 1, 0.0) * moonLit;
       let moonMsUv = vec2f(
@@ -467,6 +479,11 @@ struct Shadows {
 // Ambient occlusion by pixel (ao.wgsl `denoise`): 4 pixels a word, 8 bits
 // each, rows of ceil(width / 4) words.
 @group(0) @binding(15) var<storage, read> aoWords: array<u32>;
+// Aerial perspective from high up, a ray per texel of a screen grid
+// (sky.wgsl `aerialScreenFragment`): in-scatter (pre-exposed) and
+// transmittance.
+@group(0) @binding(16) var aerialScreenInscatter: texture_2d<f32>;
+@group(0) @binding(17) var aerialScreenTransmittance: texture_2d<f32>;
 
 fn ambientOcclusion(pixel: vec2f) -> f32 {
   if (shadows.fade.z < 0.5) {
@@ -827,9 +844,20 @@ fn fs(in: VsOut, @builtin(front_facing) frontFacing: bool) -> FsOut {
       ap = aerialPerspective(in.position.xy, in.relPosition);
     }
     if (march > 0.0) {
+      var air = AerialPerspective(in.airInscatter, in.airTransmittance);
+      // From high up, the screen grid: per vertex, the coarsest tiles'
+      // triangles drew the day/night line in blocky streaks.
+      let screen = view.iblFrame[1].w;
+      if (screen > 0.0) {
+        let uv = in.position.xy * view.viewport.zw;
+        air = AerialPerspective(
+          mix(air.inscatter, textureSampleLevel(aerialScreenInscatter, environmentSampler, uv, 0.0).rgb, screen),
+          mix(air.transmittance, textureSampleLevel(aerialScreenTransmittance, environmentSampler, uv, 0.0).rgb, screen),
+        );
+      }
       ap = AerialPerspective(
-        mix(ap.inscatter, in.airInscatter, march),
-        mix(ap.transmittance, in.airTransmittance, march),
+        mix(ap.inscatter, air.inscatter, march),
+        mix(ap.transmittance, air.transmittance, march),
       );
     }
     lit = lit * ap.transmittance + ap.inscatter;

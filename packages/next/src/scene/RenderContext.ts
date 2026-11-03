@@ -135,6 +135,8 @@ export async function createRenderContext(
     sunLight: GPUTextureView;
     aerialInscatter: GPUTextureView;
     aerialTransmittance: GPUTextureView;
+    aerialScreenInscatter: GPUTextureView;
+    aerialScreenTransmittance: GPUTextureView;
     air: GPUBuffer;
     airTransmittance: GPUTextureView;
     airScattering: GPUTextureView;
@@ -203,6 +205,8 @@ export async function createRenderContext(
     { binding: 13, resource: shadows },
     { binding: 14, resource: shadowSampler },
     { binding: 15, resource: { buffer: aoBuffer } },
+    { binding: 16, resource: sky.aerialScreenInscatter },
+    { binding: 17, resource: sky.aerialScreenTransmittance },
   ];
   const shadowViewBindGroup = device.createBindGroup({
     label: "currentView.shadowCasters",
@@ -335,6 +339,9 @@ async function createPipelines(
       { binding: 14, visibility: FRAGMENT, sampler: { type: "comparison" } },
       // Ambient occlusion by pixel (ao.wgsl).
       storage(15, true, FRAGMENT),
+      // Aerial perspective from high up, on a screen grid.
+      { binding: 16, visibility: FRAGMENT, texture: {} },
+      { binding: 17, visibility: FRAGMENT, texture: {} },
     ],
   });
   const cullWorldLayout = device.createBindGroupLayout({

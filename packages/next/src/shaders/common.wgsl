@@ -13,7 +13,8 @@ struct View {
   sunDirection: vec4f,
   viewport: vec4f,         // width, height, 1/width, 1/height
   // Environment axes (east, up, -north) at the camera; [0].w: 1 when the
-  // globe's night lights show (View.cityLights).
+  // globe's night lights show (View.cityLights); [1].w: how much aerial
+  // perspective comes from the screen grid from high up.
   iblFrame: array<vec4f, 3>,
   sunIlluminance: f32,     // lux by default
   diffuseIbl: f32,

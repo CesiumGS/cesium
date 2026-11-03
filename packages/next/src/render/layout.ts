@@ -43,6 +43,8 @@ export interface ViewBlock {
         start: number;
         end: number;
         march: number;
+        /** How much comes from the screen grid from high up (0 to 1). */
+        screen: number;
       }
     | undefined;
   /**
@@ -121,6 +123,7 @@ export function writeViewBlock(
     out[o + 71 + i * 4] = 0;
   });
   out[o + 71] = block.cityLights ? 1 : 0;
+  out[o + 75] = block.aerial?.screen ?? 0;
   const sun = block.lighting.sunIlluminance;
   const atmosphere = block.body.atmosphere;
   // From the atmosphere: the table's light, scaled by 1; a body without

@@ -23,6 +23,16 @@ const EARTH_ALBEDO = 0.367;
 /** Bytes between the environment faces' `Sky` uniforms. */
 const FACE_STRIDE = 512;
 
+/**
+ * Camera altitudes, km, across which aerial perspective from high up moves
+ * from the per-vertex march to the screen grid (sky.wgsl
+ * `aerialScreenFragment`): there the coarsest tiles' triangles span
+ * hundreds of kilometers.
+ */
+const SCREEN_HAZE_FROM = 500;
+const SCREEN_HAZE_TO = 1000;
+/** The screen grid's size (sky.wgsl `AERIAL_SCREEN`). */
+const AERIAL_SCREEN: [number, number] = [640, 400];
 /** The aerial-perspective volume: 32 × 32 directions × 128 distances. */
 const AERIAL_SIZE = 32;
 const AERIAL_SLICES = 128;
@@ -98,6 +108,11 @@ export interface SkyView {
    */
   march: number;
   /**
+   * How much of it comes from the screen grid instead of the vertices, 0
+   * to 1, by altitude (`SCREEN_HAZE_FROM`).
+   */
+  screenHaze: number;
+  /**
    * The aerial-perspective volume's first and last slice distances along
    * view rays, km (from the atmosphere's nearest point above it, to its far
    * edge), the same for every ray.
@@ -122,7 +137,8 @@ type Pipelines = Record<
   | "sunLight"
   | "environment"
   | "environmentFromTable"
-  | "stars",
+  | "stars"
+  | "aerialScreen",
   GPURenderPipeline
 >;
 
@@ -200,6 +216,12 @@ export class Sky {
    */
   readonly aerialInscatter: GPUTexture;
   readonly aerialTransmittance: GPUTexture;
+  /**
+   * Aerial perspective from high up on a screen grid (sky.wgsl
+   * `aerialScreenFragment`): in-scattered light and transmittance.
+   */
+  readonly aerialScreen: [GPUTexture, GPUTexture];
+  private readonly aerialScreenPass: GPURenderPassDescriptor;
   private readonly aerialPartial: [GPUTexture, GPUTexture];
   /**
    * For the opaque pass's per-vertex march (opaque.wgsl `aerialMarch`): both
@@ -265,6 +287,27 @@ export class Sky {
       storeOp: "store",
     };
     this.starPass = { label: "stars", colorAttachments: [this.starAttachment] };
+    const screen = (label: string) =>
+      device.createTexture({
+        label,
+        size: AERIAL_SCREEN,
+        format: "rgba16float",
+        usage:
+          GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
+      });
+    this.aerialScreen = [
+      screen("sky.aerialScreenInscatter"),
+      screen("sky.aerialScreenTransmittance"),
+    ];
+    this.aerialScreenPass = {
+      label: "aerial-screen",
+      colorAttachments: this.aerialScreen.map((texture) => ({
+        view: texture.createView(),
+        clearValue: { r: 0, g: 0, b: 0, a: 0 },
+        loadOp: "clear" as const,
+        storeOp: "store" as const,
+      })),
+    };
     this.aerialPipelines = aerialPipelines;
     this.aerialLayout = layouts.aerial;
     this.viewLayout = layouts.view;
@@ -394,8 +437,28 @@ export class Sky {
     pass.end();
   }
 
+  /**
+   * Encodes aerial perspective from high up on the screen grid (after
+   * `write`; only where `screenHaze` > 0).
+   */
+  encodeAerialScreen(encoder: GPUCommandEncoder, view: SkyView): void {
+    const pass = encoder.beginRenderPass(this.aerialScreenPass);
+    pass.setPipeline(this.pipelines.aerialScreen);
+    pass.setBindGroup(2, view.group);
+    for (let g = 0; g < this.groups.length; g++) {
+      const [atmosphere, tables] = this.groups[g]!;
+      pass.setBindGroup(0, atmosphere);
+      pass.setBindGroup(1, tables);
+      pass.draw(3, 1, 0, g);
+    }
+    pass.end();
+  }
+
   /** Releases the sun-light table and the aerial-perspective volumes. */
   destroy(): void {
+    for (const texture of this.aerialScreen) {
+      texture.destroy();
+    }
     this.sunLight.destroy();
     this.aerialInscatter.destroy();
     this.aerialTransmittance.destroy();
@@ -942,6 +1005,7 @@ export class Sky {
       aerial0,
       aerial1,
       stars,
+      aerialScreen,
     ] = await Promise.all([
       device.createRenderPipelineAsync(
         scene("skyStarsFragment", [...marching, layouts.stars]),
@@ -1014,6 +1078,22 @@ export class Sky {
         },
         primitive: { topology: "triangle-list" },
       }),
+      device.createRenderPipelineAsync({
+        label: "sky.aerialScreen",
+        layout: device.createPipelineLayout({
+          bindGroupLayouts: [layouts.atmosphere, layouts.tables, layouts.view],
+        }),
+        vertex: { module, entryPoint: "skyVertex" },
+        fragment: {
+          module,
+          entryPoint: "aerialScreenFragment",
+          targets: [
+            { format: "rgba16float", blend: additive },
+            { format: "rgba16float", blend: additive },
+          ],
+        },
+        primitive: { topology: "triangle-list" },
+      }),
     ]);
     return new Sky(
       device,
@@ -1026,6 +1106,7 @@ export class Sky {
         environment,
         environmentFromTable,
         stars: stars as GPURenderPipeline,
+        aerialScreen: aerialScreen as GPURenderPipeline,
       },
       [aerial0 as GPUComputePipeline, aerial1 as GPUComputePipeline],
       layouts,
@@ -1081,6 +1162,7 @@ export class Sky {
       aerialEnd: 0,
       position: [0, 0, 0],
       march: 0,
+      screenHaze: 0,
       // Group 0 writes its share into the partial volume (the final one is
       // bound, unused, as its input); group 1 adds it and writes the final.
       aerialGroups: [
@@ -1174,6 +1256,14 @@ export class Sky {
       1,
     );
     view.march = this.marchOverride ?? x * x * (3 - 2 * x);
+    const y = Math.min(
+      Math.max(
+        (r - bottom - SCREEN_HAZE_FROM) / (SCREEN_HAZE_TO - SCREEN_HAZE_FROM),
+        0,
+      ),
+      1,
+    );
+    view.screenHaze = y * y * (3 - 2 * y);
     view.aerialEnd =
       Math.sqrt(Math.max(0, r * r - bottom * bottom)) +
       Math.sqrt(top * top - bottom * bottom);

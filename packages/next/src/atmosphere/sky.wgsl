@@ -809,3 +809,55 @@ fn aerialCompute(
   textureStore(aerialInscatterOut, at, vec4f(min(inscatter, vec3f(2.0 * SKY_MAX)), 1.0));
   textureStore(aerialTransmittanceOut, at, vec4f(t, 1.0));
 }
+
+// --- aerial perspective from high up, per screen texel -------------------------
+
+// From high up (`Sky.ts` SCREEN_HAZE_FROM), the per-vertex march spans the
+// coarsest tiles' triangles, hundreds of kilometers: interpolated across
+// them, the haze at the day/night line (lit, then in the Earth's shadow)
+// drew blocky streaks. Here each texel of a screen-sized grid marches its
+// own ray to the ground, in the space where the ellipsoid is the ground
+// sphere (`marchedSky`: the globe's surface exactly, its terrain's heights
+// small from that high); the opaque pass samples it (opaque.wgsl). The
+// groups' wavelengths add up, as the sky's. Rays past the planet carry the
+// atmosphere's light along them, for the limb's texels.
+const AERIAL_SCREEN = vec2f(640.0, 400.0);
+
+struct AerialScreen {
+  @location(0) inscatter: vec4f,
+  @location(1) transmittance: vec4f,
+};
+
+@fragment
+fn aerialScreenFragment(in: SkyVarying) -> AerialScreen {
+  let ndc = vec2f(in.position.x / AERIAL_SCREEN.x * 2.0 - 1.0, 1.0 - in.position.y / AERIAL_SCREEN.y * 2.0);
+  let seen = normalize(sky.forward + sky.right * (ndc.x * sky.tanX) + sky.up * (ndc.y * sky.tanY));
+  let direction = normalize(sky.shape * seen);
+  let sun = normalize(sky.shape * sky.sun);
+  let r = length(sky.position);
+  let mu = dot(sky.position, direction) / r;
+  // To just short of the ground: its own light (the surface's) is drawn.
+  var reach = 1e9;
+  if (hitsGround(r, mu)) {
+    reach = sphereDistance(r, mu, atmosphere.bottomRadius, true) * 0.9999;
+  }
+  let s = march(sky.position, direction, sun, reach, i32(sky.steps), false);
+  var spectral = s.radiance * atmosphere.solarIrradiance;
+  if (sky.moonLight > 0.0) {
+    let moon = march(sky.position, direction, normalize(sky.shape * sky.moon), reach, i32(sky.steps), false);
+    spectral += moon.radiance * atmosphere.solarIrradiance * sky.moonLight;
+  }
+  var total = vec3f(0.0);
+  for (var k = 0u; k < 8u; k++) {
+    total += sky.weights[k].xyz;
+  }
+  let base = in.group * 4u;
+  let t = (s.transmittance.x * sky.weights[base].xyz
+    + s.transmittance.y * sky.weights[base + 1u].xyz
+    + s.transmittance.z * sky.weights[base + 2u].xyz
+    + s.transmittance.w * sky.weights[base + 3u].xyz) / total;
+  return AerialScreen(
+    vec4f(min(toRgb(spectral, in.group) * sky.exposure, vec3f(SKY_MAX)), 0.0),
+    vec4f(t, 0.0),
+  );
+}

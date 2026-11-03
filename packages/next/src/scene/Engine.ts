@@ -441,6 +441,8 @@ export class Engine {
         aerialTransmittance: sky.aerialTransmittance.createView({
           dimension: "3d",
         }),
+        aerialScreenInscatter: sky.aerialScreen[0].createView(),
+        aerialScreenTransmittance: sky.aerialScreen[1].createView(),
         air: sky.air,
         airTransmittance: sky.airTransmittance.createView({
           dimension: "2d-array",
@@ -1850,6 +1852,7 @@ export class Engine {
           start: sky.aerialStart,
           end: sky.aerialEnd,
           march: sky.march,
+          screen: sky.screenHaze,
         };
       }
     }
@@ -2410,6 +2413,9 @@ export class Engine {
       // Marched per vertex instead from high up: no volume.
       if (drawsAerialPerspective(view) && frame.sky.march < 1) {
         this.sky.encodeAerial(enc, frame.sky, this.timer.passWrites());
+      }
+      if (drawsAerialPerspective(view) && frame.sky.screenHaze > 0) {
+        this.sky.encodeAerialScreen(enc, frame.sky);
       }
     });
 

@@ -760,7 +760,16 @@ Next steps (r44, after the night work). Now, in this order:
 2. **Haze at the day/night line from orbit**: the per-vertex march
    interpolates a step (lit, then in the Earth's shadow) across the
    coarsest tiles' triangles, drawing blocky streaks. Where a triangle's
-   vertices disagree, march per pixel.
+   vertices disagree, march per pixel. Done (r44), otherwise: marching
+   per pixel where the vertices disagree left a patchwork (the vertices'
+   haze is off across every coarse triangle, not only there), and per
+   pixel everywhere cost 6.8 ms. From 500 km up (all of it from 1,000)
+   the haze now comes from a screen grid (640 × 400, a ray per texel to
+   the ground in the space where the ellipsoid is the ground sphere, as
+   the orbit sky; sky.wgsl `aerialScreenFragment`), sampled bilinearly:
+   the day/night line is a smooth curve, and the frame from 18,000 km
+   takes 3.3 ms against 4.1. The march's shadow test is soft over a
+   degree (the sun's disk, refraction) or a step's span.
 3. **The environment's rebuild cost** (about 10 ms when the sun, the Moon
    or the exposure moves): fewer prefilter samples with filtered
    importance sampling, the irradiance from a smaller level.
