@@ -52,7 +52,8 @@ const TEMPLATE = `
   <h2>Aerial perspective</h2>
   <p>The air between the camera and the scene: the view's froxel volume
   (32 × 32 directions × 32 distances, quadratic out to the atmosphere's far
-  edge), its in-scattered light at a spread of froxels against the tables'
+  edge; each ray's slices span its own stretch of atmosphere), its
+  in-scattered light at a spread of froxels against the tables'
   own march along the same ray to the same distance:</p>
   <table id="aerial"></table>
   <div id="aerialImages"></div>
@@ -308,12 +309,7 @@ async function inTheEngine(realtime: RealtimeAtmosphere) {
     await buffer.mapAsync(GPUMapMode.READ);
     const halves = new Uint16Array(buffer.getMappedRange().slice(0));
     buffer.destroy();
-    const bottom = EARTH.bottomRadius;
     const top = EARTH.topRadius;
-    const start = Math.max(0, r - top);
-    const end =
-      Math.sqrt(Math.max(0, r * r - bottom * bottom)) +
-      Math.sqrt(top * top - bottom * bottom);
     const aspect = width / height;
     const tanY = Math.tan(camera.fovy(aspect) / 2);
     const observer = [normal[0]! * r, normal[1]! * r, normal[2]! * r];
@@ -345,9 +341,19 @@ async function inTheEngine(realtime: RealtimeAtmosphere) {
           ),
         ),
       );
+      // The ray's stretch of atmosphere (sky.wgsl aerialSpan).
+      const mu =
+        (observer[0]! * d[0]! + observer[1]! * d[1]! + observer[2]! * d[2]!) /
+        r;
+      const disc = r * r * (mu * mu - 1) + top * top;
+      if (disc < 0) {
+        continue;
+      }
+      const enter = Math.max(-r * mu - Math.sqrt(disc), 0);
+      const leave = Math.max(-r * mu + Math.sqrt(disc), 0);
       for (const slice of [2, 8, 16, 24, 31]) {
         const w = (slice + 0.5) / n;
-        const distance = start + (end - start) * w * w;
+        const distance = enter + (leave - enter) * w * w;
         const probe = await realtime.radiance(
           observer as never,
           sun as never,

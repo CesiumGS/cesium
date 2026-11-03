@@ -8,8 +8,8 @@ import { splitVec3 } from "../math/transforms.ts";
  * `shaders/common.wgsl`.
  */
 
-/** `struct View` — 384 bytes, padded to a 256-aligned stride per view. */
-export const VIEW_SIZE = 384;
+/** `struct View` — 400 bytes, padded to a 256-aligned stride per view. */
+export const VIEW_SIZE = 400;
 /** Word offset of `View.viewBit` (u32): this view's bit in record view masks. */
 export const VIEW_BIT_WORD = 84;
 export const VIEW_STRIDE = 512;
@@ -34,8 +34,11 @@ export interface ViewBlock {
   exposure: number;
   /** The body seen: its ellipsoid, and its atmosphere's radii. */
   body: Body;
-  /** Aerial perspective's volume distances, km; undefined: none. */
-  aerial: { start: number; end: number } | undefined;
+  /**
+   * Aerial perspective: the camera on the atmosphere's sphere (km,
+   * planet-centered), where its rays are measured from; undefined: none.
+   */
+  aerial: { origin: readonly [number, number, number] } | undefined;
 }
 
 /**
@@ -111,8 +114,8 @@ export function writeViewBlock(
   out[o + 82] = block.lighting.specularIbl;
   out[o + 83] = block.specularMaxLod;
   out[o + 85] = block.exposure;
-  out[o + 86] = block.aerial?.start ?? 0;
-  out[o + 87] = block.aerial?.end ?? 0;
+  out[o + 86] = 0;
+  out[o + 87] = 0;
   out[o + 88] = (atmosphere?.bottomRadius ?? 0) / 1000;
   out[o + 89] = (atmosphere?.topRadius ?? 0) / 1000;
   out[o + 90] = sun === "atmosphere" && atmosphere ? 1 : 0;
@@ -122,6 +125,11 @@ export function writeViewBlock(
   out[o + 93] = radii[1]!;
   out[o + 94] = radii[2]!;
   out[o + 95] = 0;
+  const origin = block.aerial?.origin;
+  out[o + 96] = origin?.[0] ?? 0;
+  out[o + 97] = origin?.[1] ?? 0;
+  out[o + 98] = origin?.[2] ?? 0;
+  out[o + 99] = 0;
 }
 
 /** `struct DrawRecord` — 128 bytes. */

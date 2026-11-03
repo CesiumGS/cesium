@@ -1541,9 +1541,7 @@ export class Engine {
         view.sunDisk,
       );
       if (drawsAerialPerspective(view)) {
-        scratchAerial.start = sky.aerialStart;
-        scratchAerial.end = sky.aerialEnd;
-        block.aerial = scratchAerial;
+        block.aerial = { origin: sky.origin };
       }
     }
     writeViewBlock(this.viewData, (index * VIEW_STRIDE) / 4, block);
@@ -2341,7 +2339,6 @@ export function environmentFrame(
 }
 
 const scratchView = m4.mat4();
-const scratchAerial = { start: 0, end: 0 };
 const scratchCartographic: Cartographic = {
   longitude: 0,
   latitude: 0,

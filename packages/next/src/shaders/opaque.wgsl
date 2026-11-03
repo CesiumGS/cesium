@@ -20,11 +20,24 @@ struct AerialPerspective {
 };
 
 // The air between the camera and a fragment: from the view's volume at the
-// fragment's screen position and its distance (slices spaced
-// quadratically between aerialStart and aerialEnd).
+// fragment's screen position and its distance, along its ray's own stretch
+// of atmosphere (slices spaced quadratically from where the ray enters it
+// to where it leaves: atmosphere/sky.wgsl `aerialSpan`).
 fn aerialPerspective(fragment: vec2f, relPosition: vec3f) -> AerialPerspective {
   let distance = length(relPosition) / 1000.0;
-  let w = sqrt(clamp((distance - view.aerialStart) / (view.aerialEnd - view.aerialStart), 0.0, 1.0));
+  let direction = relPosition / max(distance * 1000.0, 1e-6);
+  let origin = view.aerialOrigin.xyz;
+  let r = length(origin);
+  let mu = dot(origin, direction) / r;
+  let top = view.sunLight.y;
+  let disc = r * r * (mu * mu - 1.0) + top * top;
+  if (disc < 0.0) {
+    return AerialPerspective(vec3f(0.0), vec3f(1.0));
+  }
+  let s = sqrt(disc);
+  let enter = max(-r * mu - s, 0.0);
+  let leave = max(-r * mu + s, 0.0);
+  let w = sqrt(clamp((distance - enter) / max(leave - enter, 1e-6), 0.0, 1.0));
   // A slice's texel center, w = (slice + 0.5) / 32, holds the integral to
   // its distance; before the first, fade in from none.
   let uvw = vec3f(fragment * view.viewport.zw, w);

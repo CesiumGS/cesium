@@ -32,13 +32,6 @@ struct Sky {
   steps: f32,
   bottomRadius: f32, // the planet's, km
   weights: array<vec4f, 8>, // the 8 bands to linear sRGB (cd/m² per W·m⁻²·sr⁻¹·nm⁻¹)
-  // The aerial-perspective volume's distances along view rays, km: its
-  // first and last slice (from the atmosphere's entry when the camera is
-  // above it, to its far edge).
-  aerialStart: f32,
-  aerialEnd: f32,
-  _pad0: f32,
-  _pad1: f32,
 };
 
 @group(2) @binding(0) var<uniform> sky: Sky;
@@ -95,11 +88,39 @@ fn sunDisk(direction: vec3f) -> f32 {
 
 // --- per pixel (above the atmosphere) -------------------------------------------
 
+// The sky's light along `direction` (spectral, this group's wavelengths).
+fn skyAlong(direction: vec3f) -> vec4f {
+  return march(sky.position, direction, sky.sun, 1e9, i32(sky.steps), false).radiance * atmosphere.solarIrradiance;
+}
+
 @fragment
 fn skyFragment(in: SkyVarying) -> @location(0) vec4f {
   let direction = viewDirection(in.position.xy);
   let s = march(sky.position, direction, sky.sun, 1e9, i32(sky.steps), false);
   var spectral = s.radiance * atmosphere.solarIrradiance;
+  // From far away the atmosphere's rim is a pixel or less across, its
+  // bright part a fraction of one: one ray per pixel catches it in some
+  // pixels and not others (the glow breaks up and blinks as the camera
+  // moves). The rim varies only across its width, so where the ray passes
+  // within a pixel of the shell, average 8 rays spread across the pixel
+  // toward the planet's center.
+  let r0 = length(sky.position);
+  let mu0 = dot(sky.position, direction) / r0;
+  let closest = r0 * sqrt(max(0.0, 1.0 - mu0 * mu0));
+  let pixelAngle = 2.0 * sky.tanY / sky.size.y;
+  let footprint = max(-r0 * mu0, 0.0) * pixelAngle;
+  if (r0 > atmosphere.topRadius && mu0 < 0.0
+      && closest < atmosphere.topRadius + footprint
+      && closest > atmosphere.bottomRadius - footprint) {
+    let center = -sky.position / r0;
+    let across = normalize(center - direction * dot(center, direction));
+    var sum = vec4f(0.0);
+    for (var k = 0; k < 8; k++) {
+      let offset = (f32(k) + 0.5) / 8.0 - 0.5;
+      sum += skyAlong(normalize(direction + across * (offset * pixelAngle)));
+    }
+    spectral = sum * 0.125;
+  }
   // The disk, seen through the whole atmosphere unless the planet is in
   // the way.
   let r = length(sky.position);
@@ -287,10 +308,14 @@ fn sunLightFragment(in: SkyVarying) -> @location(0) vec4f {
 // the air scatters toward the camera between it and each froxel's
 // distance (linear sRGB, cd/m², not exposed), and how much it dims what is
 // there (transmittance, each channel the bands' average weighted by their
-// color). Slices are spaced quadratically between aerialStart and
-// aerialEnd. Each depth slice is one render pass (a 3D target's slice);
-// the instance index carries the wavelength group (bit 0) and the slice.
-// The opaque pass reads it per pixel (opaque.wgsl `aerialPerspective`).
+// color). Each ray's slices span its own stretch of atmosphere, from where
+// it enters (the camera, inside) to where it leaves, quadratically, so all
+// 32 fall in the air whether the camera is on the ground or far out in
+// space (one span for every ray put the limb's 1,000 km of air in a slice
+// or two from far away). Each depth slice is one render pass (a 3D
+// target's slice); the instance index carries the wavelength group (bit 0)
+// and the slice. The opaque pass reads it per pixel (opaque.wgsl
+// `aerialPerspective`, the same span).
 const AERIAL_SIZE = 32.0;
 const AERIAL_STEPS = 16;
 
@@ -299,6 +324,19 @@ struct Aerial {
   @location(1) transmittance: vec4f,
 };
 
+// Where a ray from `position` (km, planet-centered) along `direction`
+// enters and leaves the atmosphere: (0, 0) where it misses.
+fn aerialSpan(position: vec3f, direction: vec3f, top: f32) -> vec2f {
+  let r = length(position);
+  let mu = dot(position, direction) / r;
+  let disc = r * r * (mu * mu - 1.0) + top * top;
+  if (disc < 0.0) {
+    return vec2f(0.0);
+  }
+  let s = sqrt(disc);
+  return vec2f(max(-r * mu - s, 0.0), max(-r * mu + s, 0.0));
+}
+
 @fragment
 fn aerialFragment(in: SkyVarying) -> Aerial {
   let group = in.group & 1u;
@@ -306,7 +344,8 @@ fn aerialFragment(in: SkyVarying) -> Aerial {
   let ndc = vec2f(in.position.x / AERIAL_SIZE * 2.0 - 1.0, 1.0 - in.position.y / AERIAL_SIZE * 2.0);
   let direction = normalize(sky.forward + sky.right * (ndc.x * sky.tanX) + sky.up * (ndc.y * sky.tanY));
   let w = (f32(slice) + 0.5) / AERIAL_SIZE;
-  let distance = sky.aerialStart + (sky.aerialEnd - sky.aerialStart) * w * w;
+  let span = aerialSpan(sky.position, direction, atmosphere.topRadius);
+  let distance = span.x + (span.y - span.x) * w * w;
   // Stop short of the ground: the surface there is the scene's, not the
   // planet's (march adds the ground only where it ends at the ground).
   let r = length(sky.position);

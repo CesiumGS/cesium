@@ -10,7 +10,7 @@ import type { Camera } from "../scene/Camera.ts";
 export const SUN_ANGULAR_DIAMETER = 0.00935;
 
 /** Bytes of the WGSL `Sky` uniform (sky.wgsl). */
-const SKY_SIZE = 240;
+const SKY_SIZE = 224;
 
 /** The aerial-perspective volume: 32 × 32 directions × 32 distances. */
 const AERIAL_SIZE = 32;
@@ -40,11 +40,10 @@ export interface SkyView {
   /** The camera is inside the atmosphere: the sky comes from the table. */
   inside: boolean;
   /**
-   * The aerial-perspective volume's first and last slice distances along
-   * view rays, km (from the atmosphere's entry above it, to its far edge).
+   * The camera on the atmosphere's sphere, km, planet-centered: where the
+   * opaque pass measures aerial perspective's rays from.
    */
-  aerialStart: number;
-  aerialEnd: number;
+  origin: [number, number, number];
   /** Six `Sky` uniforms, 256 bytes apart: the environment cube's faces. */
   faceUniforms: GPUBuffer;
   /** Per face: its uniform alone (marching), and with the table. */
@@ -579,8 +578,7 @@ export class Sky {
         ],
       }),
       inside: true,
-      aerialStart: 0,
-      aerialEnd: 0,
+      origin: [0, 0, 0],
       faceUniforms,
       faceGroups: CUBE_FACES.map((_, i) =>
         device.createBindGroup({
@@ -628,16 +626,9 @@ export class Sky {
     // A margin below the top, where the table's rows still resolve the
     // thin shell of atmosphere left above.
     view.inside = r < (p.topRadius - 1000) / 1000;
-    // Aerial perspective, from the camera (or where rays can first enter
-    // the atmosphere) to its far edge past the horizon.
-    const bottom = p.bottomRadius / 1000;
-    const top = p.topRadius / 1000;
-    view.aerialStart = Math.max(0, r - top);
-    view.aerialEnd =
-      Math.sqrt(Math.max(0, r * r - bottom * bottom)) +
-      Math.sqrt(top * top - bottom * bottom);
-    f[56] = view.aerialStart;
-    f[57] = view.aerialEnd;
+    view.origin[0] = f[0]!;
+    view.origin[1] = f[1]!;
+    view.origin[2] = f[2]!;
     f[3] = exposure;
     f[4] = sun[0]!;
     f[5] = sun[1]!;
@@ -655,7 +646,6 @@ export class Sky {
     f[21] = height;
     f[22] = SKY_STEPS;
     this.device.queue.writeBuffer(view.buffer, 0, this.data, 0, 96);
-    this.device.queue.writeBuffer(view.buffer, 224, this.data, 224, 16);
   }
 
   /** The weights (bytes 96 on) are constant: written once per view. */
