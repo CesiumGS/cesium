@@ -1044,9 +1044,12 @@ smaller GPUs.
 
 **Aerial perspective** (r41; `View.aerialPerspective`, default on with
 background "atmosphere"). Hillaire's froxel volume per view per frame: 32 ×
-32 screen directions × 32 distances, quadratic from the camera (or, above
-the atmosphere, from where rays can first enter it) to the atmosphere's far
-edge past the horizon, so one volume serves street level and orbit. Each
+32 screen directions × 32 distances, each ray's slices spaced quadratically
+over its own stretch of atmosphere (from the camera, or where the ray enters
+the atmosphere from above, to where it leaves), so all 32 fall in the air
+at street level and from orbit alike (one span for all rays put the limb's
+1,000 km of air in a slice or two from far away, and the haze on the
+globe's edge came and went as the camera moved). Each
 froxel holds the light the air scatters toward the camera up to its
 distance (linear sRGB, cd/m²) and the transmittance (each channel the 8
 bands' average weighted by their color), marched with the transmittance and
@@ -1060,8 +1063,9 @@ the horizon without a seam (the same atmosphere, the same tables). Checked
 in the Lab: froxels against the tables' own march along the same ray to the
 same distance, median 0.03-0.06%, worst 0.8%, from the ground through
 twilight to orbit, with pictures of the bare globe with and without it.
-Limits: 32 slices over up to ~900 km (the first slice ends ~0.9 km out at
-the ground), so haze within a few hundred meters is interpolated from none;
+Limits: 32 slices over up to ~900 km along a horizontal ray (the first
+ends ~0.9 km out), so haze within a few hundred meters is interpolated from
+none;
 fine for haze, coarse for weather fog (the "weather haze" medium, an
 analytic exponential, is the follow-up for that).
 
@@ -1100,7 +1104,21 @@ sun read as the sun in a photograph or to the eye is glare, not the disk:
 **Regressions fixed on the way** (r40): wheel zoom slid sideways in split
 view (zoom leveled the camera after pinning the target under the cursor;
 from b9166e4adf), and the inspector's load time never ended under
-photorealistic tiles (it waited for the hidden globe).
+photorealistic tiles (it waited for the hidden globe). (r41) The world's
+materials table was 64 KB on the GPU while its CPU mirror grew (from
+ececae914a): more than 1,024 materials failed every upload. Wheel zoom with
+no pick under the cursor aimed at the ellipsoid under it: with terrain below
+the ellipsoid (a negative geoid, Philadelphia's ~-33 m) a camera near the
+ground is inside it and the ray met it on the far side of the Earth, so one
+notch out left for orbit; toward the horizon, a notch moved by a share of
+thousands of kilometers. Now the ellipsoid counts only within 20 times the
+camera's height above the ground, else the zoom is a share of that height
+(1.x's rule over the sky). And a zoom keeps aiming at what is drawn under
+its pixel now (a fresh pick each frame while it moves): the target picked
+frames ago, on a coarse tile or the ellipsoid under terrain still loading,
+made the ground slide sideways past it as finer tiles came in. Seen from
+far away, the atmosphere's rim (a pixel or less) is now sampled with 8 rays
+across its width.
 
 **Next phase after lighting: visual regression tests.** Golden images
 for canonical scenes and lab pages (2.0 against its own approved images,
