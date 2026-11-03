@@ -240,7 +240,12 @@ export class GlobeController {
       Math.hypot(this.hoverPixel[0] - x, this.hoverPixel[1] - y) < 8;
     this.zoomPixel = [x, y];
     if (near) {
+      // The hovered point stays at the pixel it was picked at: pinning it
+      // to the cursor's pixel a few pixels away jumped the view by that
+      // much every notch (jitter with a real mouse, which moves a little
+      // between notches).
       v3.copy(target, this.hover);
+      this.zoomPixel = [this.hoverPixel![0], this.hoverPixel![1]];
     } else if (!this.ellipsoidAt(x, y, target)) {
       this.zoomPixel = undefined;
       this.ground(target);
