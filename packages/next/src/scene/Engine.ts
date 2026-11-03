@@ -59,6 +59,7 @@ import {
   shadowRange,
   writeShadows,
 } from "./shadows.ts";
+import { CityLight } from "../globe/cityLight.ts";
 import {
   CLUSTERS,
   LIGHTS_SIZE,
@@ -281,6 +282,14 @@ export class Engine {
   private readonly cascadeStaging: GPUBuffer;
   private readonly shadowData: Float32Array;
   private readonly shadowStaging: GPUBuffer;
+  /** The night lights' mean around each view's camera (`cityLightAt`). */
+  private readonly cityLights = new WeakMap<ImageryProvider, CityLight>();
+  private readonly cityLightPlaces = new WeakMap<
+    View,
+    { city: CityLight; longitude: number; latitude: number; light: number }
+  >();
+  /** This frame's view's city light, cd/m² (`cityLightAt`). */
+  private viewCityLight = 0;
   /** Each drawn view's lights (lights.ts `packViewLights`), by slot. */
   private readonly lightStaging: GPUBuffer;
   private readonly lightData = new Float32Array(LIGHTS_SIZE / 4);
@@ -561,7 +570,7 @@ export class Engine {
     if (!entry) {
       entry = {
         probe: this.ctx.environment.createProbe("env.view"),
-        key: new Float64Array(8).fill(Number.NaN),
+        key: new Float64Array(9).fill(Number.NaN),
         exposure: Number.NaN,
         pending: false,
       };
@@ -597,12 +606,17 @@ export class Engine {
         ? k[7] !== 0
         : !(Math.abs(Math.log(moonLight / k[7]!)) <= 0.1);
     const stops = Math.abs(Math.log2(view.exposureScale / entry.exposure));
+    // The city's light (its glow, its ground) by 10%.
+    const city = this.viewCityLight;
+    const cityChanged =
+      city === 0 ? k[8] !== 0 : !(Math.abs(Math.log(city / k[8]!)) <= 0.1);
     // NaN (never built) compares false: rebuild.
     if (
       turned <= 0.002 &&
       climbed <= 0.1 &&
       moonTurned <= 0.002 &&
       !moonChanged &&
+      !cityChanged &&
       stops <= 1
     ) {
       return;
@@ -615,6 +629,7 @@ export class Engine {
     k[5] = moonUp;
     k[6] = moonSouth;
     k[7] = moonLight;
+    k[8] = city;
     entry.exposure = view.exposureScale;
     entry.pending = true;
   }
@@ -1842,6 +1857,68 @@ export class Engine {
   }
 
   /**
+   * The light the ground around a view's camera emits, cd/m² (its
+   * world's globe's night lights, cityLight.ts), for the sky's glow and
+   * the environment's ground; 0 without them or `View.cityLights`. Read
+   * again as the camera moves half a kilometer, or a tile arrives.
+   */
+  private cityLightAt(view: View): number {
+    if (!view.cityLights) {
+      return 0;
+    }
+    const provider = this.tilesets.find(
+      (t) => t.world === view.world && t.lights,
+    )?.lights?.provider;
+    if (!provider) {
+      return 0;
+    }
+    let city = this.cityLights.get(provider);
+    if (!city) {
+      city = new CityLight(provider, () => {
+        this.cityLightRead++;
+        this.requestRender();
+      });
+      this.cityLights.set(provider, city);
+    }
+    const c = view.body.ellipsoid.cartesianToCartographic(
+      view.camera.position,
+      scratchCartographic,
+    );
+    if (!c) {
+      return 0;
+    }
+    const last = this.cityLightPlaces.get(view);
+    const moved = last
+      ? Math.hypot(
+          (c.longitude - last.longitude) * Math.cos(c.latitude),
+          c.latitude - last.latitude,
+        ) * 6_371_000
+      : Infinity;
+    if (
+      last?.city === city &&
+      moved < 500 &&
+      this.cityLightRead === this.cityLightSeen
+    ) {
+      return last.light;
+    }
+    this.cityLightSeen = this.cityLightRead;
+    const light = city.around(c.longitude, c.latitude);
+    if (light === undefined) {
+      // Its tiles on their way (they render again as they come).
+      return last?.light ?? 0;
+    }
+    this.cityLightPlaces.set(view, {
+      city,
+      longitude: c.longitude,
+      latitude: c.latitude,
+      light,
+    });
+    return light;
+  }
+  private cityLightRead = 0;
+  private cityLightSeen = 0;
+
+  /**
    * A view's point and spot lights, culled to it, camera-relative, into
    * its slot of the staging buffer (copied in before its opaque pass).
    */
@@ -1897,6 +1974,7 @@ export class Engine {
     block.exposure = view.exposureScale;
     block.body = view.body;
     block.cityLights = view.cityLights;
+    this.viewCityLight = this.cityLightAt(view);
     block.aerial = undefined;
     // The Moon's light: its full disk gives the albedo's share of the sun's
     // light times its solid angle over π, then less by phase (Allen).
@@ -1930,6 +2008,7 @@ export class Engine {
         view.sunDisk,
         "eye" in view.exposure ? ev100ToScale(EYE_STARS_EV100) : 0,
         moon,
+        this.viewCityLight,
       );
       if (drawsAerialPerspective(view)) {
         block.aerial = {

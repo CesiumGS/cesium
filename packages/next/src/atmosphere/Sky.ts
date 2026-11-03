@@ -1241,6 +1241,7 @@ export class Sky {
     sunDisk: boolean,
     starExposure = 0,
     moon?: MoonView,
+    cityLight = 0,
   ): void {
     const f = this.f32;
     const p = this.atmosphere.parameters;
@@ -1287,6 +1288,8 @@ export class Sky {
     f[57] = view.aerialEnd;
     f[58] = starExposure;
     f[59] = moon?.airShare ?? 0;
+    // The light the ground around emits (cities), cd/m² (cityLight.ts).
+    f[75] = cityLight;
     if (moon) {
       f.set(moon.direction, 60);
       f[63] = moon.sinRadius;

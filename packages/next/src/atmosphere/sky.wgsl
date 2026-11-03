@@ -63,7 +63,9 @@ struct Sky {
   earthshine: f32,
   // From the Moon toward the sun (unit).
   moonSun: vec3f,
-  _pad3: f32,
+  // The mean light the ground around emits (its cities' lamps), cd/m²
+  // (globe/cityLight.ts); 0 without the night lights.
+  cityLight: f32,
   // From above the atmosphere, the scale per axis that makes the body's
   // ellipsoid the atmosphere's ground sphere (`marchedSky`); 1 otherwise.
   shape: vec3f,
@@ -380,7 +382,34 @@ fn nightGlow(r: f32, mu: f32, ground: bool, toSpace: f32) -> vec3f {
   let r2 = bottom + AIRGLOW_TOP;
   let near = sphereSpan(r, mu, r2, 0.0, lowest) - sphereSpan(r, mu, r1, 0.0, lowest);
   let far = sphereSpan(r, mu, r2, lowest, end) - sphereSpan(r, mu, r1, lowest, end);
-  return AIRGLOW * (near * 0.5 + far * select(toSpace, 0.5, ground)) + STARLIGHT * toSpace;
+  return AIRGLOW * (near * 0.5 + far * select(toSpace, 0.5, ground)) + STARLIGHT * toSpace
+    + cityGlow(r - bottom, mu, ground);
+}
+
+// A city's light by night, this group's half (the groups add). The ground
+// around emits `sky.cityLight` on average (its lamps, on the streets and
+// what they light): seen below the horizon, and lighting what stands on it
+// from below through the environment. Its air scatters a share of that
+// back down, the sky glow: an urban sky at the zenith some 0.02 to 0.04
+// cd/m² (16 to 17 V mag/arcsec², against the natural sky's 22) over
+// ground of 0.2 to 0.3 (Falchi et al. 2016's atlas; Garstang 1986's
+// model), brighter toward the horizon as the line of sight runs longer
+// through the lit air, and fading with height above it (its haze within
+// a kilometer or two, the air's scale height of eight). Sodium and LED
+// light, warm.
+const CITY_GLOW_COLOR = vec3f(1.25, 0.95, 0.62);
+const CITY_SKY_SHARE = 0.1;
+
+fn cityGlow(height: f32, mu: f32, ground: bool) -> vec3f {
+  if (sky.cityLight <= 0.0) {
+    return vec3f(0.0);
+  }
+  if (ground) {
+    return CITY_GLOW_COLOR * (sky.cityLight * 0.5);
+  }
+  let horizon = 1.0 + 2.0 * pow(1.0 - clamp(mu, 0.0, 1.0), 3.0);
+  let air = 0.6 * exp(-max(height, 0.0) / 1.5) + 0.4 * exp(-max(height, 0.0) / 8.0);
+  return CITY_GLOW_COLOR * (sky.cityLight * CITY_SKY_SHARE * horizon * air * 0.5);
 }
 
 // --- per pixel (above the atmosphere) -------------------------------------------

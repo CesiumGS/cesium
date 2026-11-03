@@ -887,7 +887,17 @@ Later:
   lights' upward light scattered by the air (the sky glow, an urban sky
   some 100 times the natural one) into the sky and its environment, and
   the lit ground's light up the facades (the environment's lower half),
-  so streets and buildings show as they do at night, not black.
+  so streets and buildings show as they do at night, not black. Done
+  (r44): globe/cityLight.ts averages the night lights' image (level 7,
+  about a kilometer a pixel, 2 × 2 tiles fetched once) within 30 km of
+  the camera, weighted 1/(d² + 2 km²), as the ground's mean light, cd/m²
+  (0.26 over lower Manhattan); the sky (sky.wgsl `cityGlow`, with the
+  night's own light, so in the drawn sky and the environment alike) shows
+  it below the horizon, and above it a tenth of it at the zenith, three
+  times that at the horizon, warm, fading with height (a 1.5 km haze and
+  the air's 8 km). Facades in lower Manhattan's streets show by night
+  where they were black. To tune: the stars still fade only as the sky's
+  luminance grows, so more show over a city than do.
 - **Stars, part two**: diffraction spikes for the camera, the eye's
   corona rays, twinkle; a catalog for the brightest stars' magnitudes and
   colors (a license decision).
