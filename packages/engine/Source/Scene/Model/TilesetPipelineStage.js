@@ -28,7 +28,7 @@ const TilesetPipelineStage = {
  * </p>
  *
  * @param {ModelRenderResources} renderResources The render resources for this model.
- * @param {ModelExperimental} model The model.
+ * @param {Model} model The model.
  * @param {FrameState} frameState The frameState.
  *
  * @private

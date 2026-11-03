@@ -3212,5 +3212,113 @@ describe("Scene/ImplicitSubtree", function () {
         expectMetadata(subtree);
       });
     });
+
+    it("doesn't throw up for bufferView.byteOffset being undefined", async function () {
+      const subtreeGltf = {
+        extensions: {
+          "3DTILES_subtree": {
+            tileAvailability: {
+              bitstream: 0,
+              availableCount: 5,
+            },
+            contentAvailability: {
+              constant: 0,
+            },
+            childSubtreeAvailability: {
+              constant: 0,
+            },
+          },
+        },
+        extensionsUsed: ["3DTILES_subtree"],
+        extensionsRequired: ["3DTILES_subtree"],
+        asset: {
+          version: "2.1",
+        },
+        buffers: [
+          {
+            uri: "data:application/octet-stream;base64,Hw==",
+            byteLength: 1,
+          },
+        ],
+        bufferViews: [
+          {
+            buffer: 0,
+            //byteOffset: 0, // This is what this spec is about...
+            byteLength: 1,
+          },
+        ],
+      };
+
+      const implicitQuadtreeJsonLocal = {
+        geometricError: 500,
+        refine: "ADD",
+        boundingVolume: {
+          region: [0, 0, Math.PI / 24, Math.PI / 24, 0, 1000.0],
+        },
+        content: {
+          uri: "https://example.com/{level}/{x}/{y}.b3dm",
+        },
+        implicitTiling: {
+          subdivisionScheme: "QUADTREE",
+          subtreeLevels: 2,
+          availableLevels: 2,
+          subtrees: {
+            uri: "https://example.com/{level}/{x}/{y}.subtree",
+          },
+        },
+      };
+
+      const internalQuadtreeDescriptionLocal = {
+        tileAvailability: {
+          descriptor: "11111",
+          lengthBits: 5,
+          isInternal: true,
+        },
+        contentAvailability: [
+          {
+            descriptor: "0",
+            lengthBits: 1,
+            isInternal: true,
+          },
+        ],
+        childSubtreeAvailability: {
+          descriptor: "0",
+          lengthBits: 1,
+          isInternal: true,
+        },
+      };
+
+      const implicitQuadtreeLocal = new ImplicitTileset(
+        tilesetResource,
+        implicitQuadtreeJsonLocal,
+        metadataSchema,
+      );
+      const quadtreeCoordinatesLocal = new ImplicitTileCoordinates({
+        subdivisionScheme: implicitQuadtreeLocal.subdivisionScheme,
+        subtreeLevels: implicitQuadtreeLocal.subtreeLevels,
+        level: 0,
+        x: 0,
+        y: 0,
+      });
+      const subtree = await ImplicitSubtree.fromSubtreeGltf(
+        subtreeResource,
+        subtreeGltf,
+        implicitQuadtreeLocal,
+        quadtreeCoordinatesLocal,
+      );
+
+      expectTileAvailability(
+        subtree,
+        internalQuadtreeDescriptionLocal.tileAvailability,
+      );
+      expectContentAvailability(
+        subtree,
+        internalQuadtreeDescriptionLocal.contentAvailability,
+      );
+      expectChildSubtreeAvailability(
+        subtree,
+        internalQuadtreeDescriptionLocal.childSubtreeAvailability,
+      );
+    });
   });
 });

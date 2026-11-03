@@ -24,7 +24,12 @@ const WindingOrder = {
 };
 
 /**
- * @private
+ * Determine whether a value is a valid winding order.
+ *
+ * @param {WindingOrder} windingOrder The winding order.
+ * @returns {boolean} <code>true</code> if the winding order is valid; otherwise, <code>false</code>.
+ *
+ * @internal
  */
 WindingOrder.validate = function (windingOrder) {
   return (

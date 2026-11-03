@@ -1,0 +1,555 @@
+import {
+  Check,
+  Cartesian3,
+  DeveloperError,
+  BoundingSphere,
+  defined,
+  Frozen,
+} from "@cesium/core";
+import Ion from "../Core/Ion.js";
+import IonResource from "../Core/IonResource.js";
+import Resource from "../Core/Resource.js";
+import ElementService from "./ElementService.js";
+
+function checkPositiveInteger(name, value, maximum = Infinity) {
+  if (
+    defined(value) &&
+    (!Number.isInteger(value) || value < 1 || value > maximum)
+  ) {
+    throw new DeveloperError(
+      `${name} must be a positive integer no greater than ${maximum}.`,
+    );
+  }
+}
+
+/**
+ * Converts an id (bigint, number, or string) to a decimal string, or
+ * undefined if not defined.
+ * @private
+ */
+function toIdString(value) {
+  if (!defined(value)) {
+    return undefined;
+  }
+  return String(value);
+}
+
+/**
+ * Adapt an API element to the public result, preserving decimal string IDs.
+ * Each property is mapped to its documented fields; only its arbitrary value
+ * payload is passed through unchanged.
+ * @private
+ */
+function elementFromResponse(response) {
+  const result = {
+    id: toIdString(response.id),
+    label: response.label,
+  };
+  if (defined(response.properties)) {
+    result.properties = Object.fromEntries(
+      Object.entries(response.properties).map(function ([name, property]) {
+        return [
+          name,
+          {
+            value: property.value,
+            displayValue: property.displayValue,
+            units: property.units,
+          },
+        ];
+      }),
+    );
+  }
+  const location = locationFromResponse(response.location);
+  if (defined(location)) {
+    result.location = location;
+  }
+  return result;
+}
+
+/** @private */
+function locationFromResponse(location) {
+  if (!defined(location) || !defined(location.center)) {
+    return undefined;
+  }
+  return {
+    center: {
+      longitude: location.center.longitude,
+      latitude: location.center.latitude,
+      height: location.center.height,
+    },
+    radius: location.radius,
+  };
+}
+
+/** @private */
+function treeNodeFromResponse(response) {
+  const result = {
+    key: response.key,
+    label: response.label,
+    hasChildren: response.hasChildren,
+    id: toIdString(response.id),
+    kind: response.kind,
+  };
+  return result;
+}
+
+/**
+ * A single property of an {@link IonAssetElementService.Element}.
+ *
+ * @typedef {object} IonAssetElementService.ElementProperty
+ * @property {*} value The raw value of this property.
+ * @property {string} [displayValue] The human-readable, pre-formatted value, including any unit suffix (e.g. <code>"0.6208 m³"</code>).
+ * @property {string|null} [units] The unit of <code>value</code>, or <code>null</code> or <code>undefined</code> when the property is unitless.
+ */
+
+/**
+ * The geographic location of an {@link IonAssetElementService.Element}, present
+ * only when the element is geolocated.
+ *
+ * @typedef {ElementService.ElementLocation} IonAssetElementService.ElementLocation
+ */
+
+/**
+ * A single element of a Cesium ion asset, such as a wall or column in a
+ * BIM/CAD model.
+ *
+ * @typedef {object} IonAssetElementService.Element
+ * @property {string} id The unique integer identifier of this element, as a decimal string, e.g. <code>"3298534886898"</code>.
+ * @property {string} [label] The user-friendly label of this element, if any.
+ * @property {IonAssetElementService.ElementLocation} [location] The geographic location of this element, or <code>undefined</code> when the element has no location (e.g. conceptual elements, or assets with no geographic coordinate system).
+ * @property {Object<string, IonAssetElementService.ElementProperty>} [properties] The properties of this element, keyed by property name. List results may omit properties; use {@link IonAssetElementService#getElement} to retrieve the element's details. Property names are kept verbatim, including any dotted namespaces (e.g. <code>"Volume Aspect.Net Volume"</code>).
+ */
+
+/**
+ * A page of results from {@link IonAssetElementService#listElements}.
+ *
+ * @typedef {object} IonAssetElementService.ElementPage
+ * @property {IonAssetElementService.Element[]} items The elements on this page.
+ * @property {number|null} total The total number of elements matching the query across all pages, or <code>null</code> when the total is unavailable.
+ * @property {string} [continuationToken] A token to pass as <code>options.continuationToken</code> to retrieve the next page, or <code>undefined</code> when there are no more results.
+ */
+
+/**
+ * Aggregate statistics for a single numeric property across a set of elements,
+ * as returned by {@link IonAssetElementService#aggregate}.
+ *
+ * Non-numeric properties come back with a <code>count</code> of 0,
+ * <code>null</code> for min, max, and avg, and a sum of 0.
+ *
+ * @typedef {object} IonAssetElementService.Aggregation
+ * @property {string} propertyKey The qualified property key these statistics describe.
+ * @property {number} count The number of elements that had a numeric value for this property key.
+ * @property {number|null} min The minimum value across the matched elements, or <code>null</code> when there are no numeric values.
+ * @property {number|null} max The maximum value across the matched elements, or <code>null</code> when there are no numeric values.
+ * @property {number|null} avg The mean value across the matched elements, or <code>null</code> when there are no numeric values.
+ * @property {number} sum The sum of values across the matched elements.
+ */
+
+/**
+ * A node in a Cesium ion asset's element tree, as returned by
+ * {@link IonAssetElementService#getElementTreeChildren}.
+ *
+ * @typedef {object} IonAssetElementService.ElementTreeNode
+ * @property {string} key The opaque key of this node. Pass it as <code>options.nodeKey</code> to {@link IonAssetElementService#getElementTreeChildren} to list this node's children.
+ * @property {string} label The user-friendly label of this node.
+ * @property {boolean} hasChildren Whether this node has any children.
+ * @property {string} id The integer instance id represented by this node, as a decimal string.
+ * @property {"subject"|"model"|"category"|"element"} kind The kind of node.
+ */
+
+/**
+ * An entry in the root-first path returned by
+ * {@link IonAssetElementService#getElementTreeParents}. Entries include the
+ * target element as well as its ancestors.
+ *
+ * @typedef {object} IonAssetElementService.ElementTreePathEntry
+ * @property {"subject"|"model"|"category"|"element"} kind The kind of path entry.
+ * @property {string} id The integer instance id for this subject, model, category, or element, as a decimal string.
+ */
+
+/**
+ * Queries the individual elements within a Cesium ion asset backed by a
+ * BIM/CAD Database model, using the ion REST API's
+ * <a href="https://cesium.com/learn/ion/ion-rest-api/">Asset Elements</a> endpoints.
+ *
+ * Element ids are typically obtained by picking a {@link Cesium3DTileFeature}
+ * and reading its <code>element</code> property.
+ *
+ * This object is normally not instantiated directly, use {@link IonAssetElementService.fromAssetId}.
+ *
+ * @extends ElementService
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ *
+ * @see Ion
+ *
+ * @example
+ * const elements = Cesium.IonAssetElementService.fromAssetId(123456);
+ * const page = await elements.listElements({
+ *   filter: { "IFC Attributes.name": { $like: "%Rebar%" } },
+ *   top: 50,
+ * });
+ * console.log(`${page.items.length} of ${page.total} elements`);
+ */
+class IonAssetElementService extends ElementService {
+  /**
+   * @param {object} options Object with the following properties:
+   * @param {number} options.assetId The ion asset id.
+   * @param {Resource} options.resource The asset's ion API resource.
+   */
+  constructor(options) {
+    super();
+    this._assetId = options.assetId;
+    this._resource = options.resource;
+  }
+
+  /**
+   * The ion asset id this service operates on.
+   * @type {number}
+   * @readonly
+   */
+  get assetId() {
+    return this._assetId;
+  }
+
+  /**
+   * Creates an {@link IonAssetElementService} for the given ion asset.
+   *
+   * @param {number} assetId The ion id of an asset backed by a BIM/CAD Database model.
+   * @param {object} [options] Object with the following properties:
+   * @param {string} [options.accessToken=Ion.defaultAccessToken] The ion access token to use.
+   * @param {string|Resource} [options.server=Ion.defaultServer] The ion API server to use.
+   * @returns {IonAssetElementService} A service bound to the asset.
+   */
+  static fromAssetId(assetId, options) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.number("assetId", assetId);
+    //>>includeEnd('debug');
+
+    options = options ?? Frozen.EMPTY_OBJECT;
+    const accessToken = options.accessToken ?? Ion.defaultAccessToken;
+    const server = Resource.createIfNeeded(options.server ?? Ion.defaultServer);
+    server.appendForwardSlash();
+
+    const resourceOptions = {
+      // Trailing slash so derived resource urls resolve under the asset id.
+      url: `v1/assets/${assetId}/`,
+      headers: IonResource._addClientHeaders(),
+    };
+    if (defined(accessToken)) {
+      resourceOptions.queryParameters = { access_token: accessToken };
+    }
+    const resource = server.getDerivedResource(resourceOptions);
+
+    return new IonAssetElementService({
+      assetId: assetId,
+      resource: resource,
+    });
+  }
+
+  /**
+   * Computes a {@link BoundingSphere} enclosing an element from its
+   * <code>location</code>, suitable for framing the camera with
+   * {@link Camera#flyToBoundingSphere} or {@link Viewer#zoomTo}.
+   *
+   * @param {IonAssetElementService.Element} element An element returned by {@link IonAssetElementService#getElement} or {@link IonAssetElementService#listElements}.
+   * @returns {BoundingSphere|undefined} A bounding sphere for the element, or <code>undefined</code> if the element has no valid location.
+   *
+   * @example
+   * const element = await elements.getElement(elementId);
+   * const boundingSphere = Cesium.IonAssetElementService.getBoundingSphere(element);
+   * if (Cesium.defined(boundingSphere)) {
+   *   viewer.camera.flyToBoundingSphere(boundingSphere);
+   * }
+   */
+  static getBoundingSphere(element) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("element", element);
+    //>>includeEnd('debug');
+
+    const center = element.location?.center;
+    if (
+      !defined(center) ||
+      !Number.isFinite(center.longitude) ||
+      !Number.isFinite(center.latitude)
+    ) {
+      return undefined;
+    }
+
+    const height = center.height ?? 0;
+    const radius = element.location.radius ?? 0;
+    if (!Number.isFinite(height) || !Number.isFinite(radius) || radius < 0) {
+      return undefined;
+    }
+
+    const position = Cartesian3.fromDegrees(
+      center.longitude,
+      center.latitude,
+      height,
+    );
+    return new BoundingSphere(position, radius);
+  }
+
+  /**
+   * Reads the element id from a picked {@link Cesium3DTileFeature}. Rendered
+   * features carry the id of the element they belong to in their
+   * <code>element</code> property.
+   *
+   * The returned id can be passed directly to
+   * {@link IonAssetElementService#getElement}.
+   *
+   * @param {Cesium3DTileFeature} feature A feature picked from the asset's tileset.
+   * @returns {string|undefined} The element id as a decimal string, e.g. <code>"3298534886898"</code>, or <code>undefined</code> if the feature has no element id.
+   *
+   * @example
+   * const feature = viewer.scene.pick(movement.position);
+   * const elementId = Cesium.IonAssetElementService.getElementId(feature);
+   * if (Cesium.defined(elementId)) {
+   *   const element = await elements.getElement(elementId);
+   * }
+   */
+  static getElementId(feature) {
+    if (!defined(feature) || typeof feature.getProperty !== "function") {
+      return undefined;
+    }
+    // 3D Tile feature properties store element IDs as BigInt values (e.g. 8589934767n)
+    const elementId = feature.getProperty("element");
+    return toIdString(elementId);
+  }
+
+  /**
+   * Retrieves a page of elements for this asset, optionally filtered.
+   *
+   * Results are paginated with an opaque cursor. Request subsequent pages by
+   * passing the returned <code>continuationToken</code> as
+   * <code>options.continuationToken</code> until it is <code>undefined</code>.
+   *
+   * @param {object} [options] Object with the following properties:
+   * @param {number} [options.top=100] The maximum number of elements to return per page.
+   * @param {string} [options.continuationToken] A token returned from a previous call to retrieve the next page of results.
+   * @param {object|string} [options.filter] An element filter. See the Query parameters section of the <a href="https://cesium.com/learn/ion/rest-api/#operation/getAssetElementsV1">List elements</a> ion REST API documentation for the supported structure.
+   * @returns {Promise<IonAssetElementService.ElementPage>} A promise that resolves to a page of elements. The promise rejects with a {@link RequestErrorEvent} if the request fails.
+   * @exception {DeveloperError} <code>options.top</code> must be a positive integer.
+   * @exception {DeveloperError} <code>options.continuationToken</code> must be a string.
+   *
+   * @example
+   * const page = await elements.listElements({
+   *   filter: {
+   *     $or: [{ "IFC Class Name": "ifcwall" }, { "IFC Class Name": "ifccolumn" }],
+   *   },
+   * });
+   */
+  async listElements(options) {
+    options = options ?? Frozen.EMPTY_OBJECT;
+
+    //>>includeStart('debug', pragmas.debug);
+    checkPositiveInteger("options.top", options.top);
+    if (defined(options.continuationToken)) {
+      Check.typeOf.string(
+        "options.continuationToken",
+        options.continuationToken,
+      );
+    }
+    //>>includeEnd('debug');
+
+    const queryParameters = { top: options.top ?? 100 };
+    if (defined(options.continuationToken)) {
+      queryParameters.continuationToken = options.continuationToken;
+    }
+    if (defined(options.filter)) {
+      queryParameters.filter =
+        typeof options.filter === "string"
+          ? options.filter
+          : JSON.stringify(options.filter);
+    }
+
+    const response = await this._resource
+      .getDerivedResource({
+        url: "elements",
+        queryParameters: queryParameters,
+      })
+      .fetchJson();
+    return {
+      items: response.items.map(elementFromResponse),
+      total: response.total,
+      continuationToken: response.continuationToken,
+    };
+  }
+
+  /**
+   * Retrieves metadata and location information for a single element.
+   *
+   * Use {@link IonAssetElementService.getElementId} to obtain the id from a
+   * picked {@link Cesium3DTileFeature}.
+   *
+   * @param {string} elementId The element id as a decimal string, e.g. <code>"3298534886898"</code>.
+   * @returns {Promise<IonAssetElementService.Element>} A promise that resolves to the requested element. The promise rejects with a {@link RequestErrorEvent} if the request fails or the element does not exist.
+   */
+  async getElement(elementId) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.string("elementId", elementId);
+    //>>includeEnd('debug');
+
+    const response = await this._resource
+      .getDerivedResource({
+        url: `elements/${encodeURIComponent(elementId)}`,
+      })
+      .fetchJson();
+    return elementFromResponse(response);
+  }
+
+  /**
+   * Computes aggregate statistics (count, min, max, average, and sum) for one
+   * or more numeric properties across the elements of this asset, optionally
+   * filtered.
+   *
+   * @param {object} options Object with the following properties:
+   * @param {string[]} options.propertyKeys The qualified property keys to aggregate. At least one is required.
+   * @param {object|string} [options.filter] An element filter. See the Query parameters section of the <a href="https://cesium.com/learn/ion/rest-api/#operation/getAssetElementsAggregate">Aggregate elements</a> ion REST API documentation for the supported structure.
+   * @returns {Promise<{aggregations: IonAssetElementService.Aggregation[], total: number}>} A promise that resolves to the aggregate statistics. The promise rejects with a {@link RequestErrorEvent} if the request fails.
+   * @exception {DeveloperError} <code>options.propertyKeys</code> must be a non-empty array of strings.
+   *
+   * @example
+   * try {
+   *   const result = await elements.aggregate({
+   *     propertyKeys: ["Volume Aspect.Net Volume"],
+   *     filter: { "IFC Class Name": "ifcwall" },
+   *   });
+   *   console.log(result.aggregations, result.total);
+   * } catch (error) {
+   *   console.error(error.statusCode, error.response);
+   * };
+   */
+  async aggregate(options) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("options", options);
+    Check.defined("options.propertyKeys", options.propertyKeys);
+    if (
+      !Array.isArray(options.propertyKeys) ||
+      options.propertyKeys.length === 0
+    ) {
+      throw new DeveloperError(
+        "options.propertyKeys must be a non-empty array.",
+      );
+    }
+    for (let i = 0; i < options.propertyKeys.length; i++) {
+      Check.typeOf.string(
+        `options.propertyKeys[${i}]`,
+        options.propertyKeys[i],
+      );
+    }
+    //>>includeEnd('debug');
+
+    // The server parameter is named "aggregations" but carries property keys;
+    // suggest renaming it to "propertyKeys" server-side to match the client.
+    const queryParameters = {
+      aggregations: JSON.stringify(options.propertyKeys),
+    };
+    if (defined(options.filter)) {
+      queryParameters.filter =
+        typeof options.filter === "string"
+          ? options.filter
+          : JSON.stringify(options.filter);
+    }
+
+    const response = await this._resource
+      .getDerivedResource({
+        url: "elements/aggregate",
+        queryParameters: queryParameters,
+      })
+      .fetchJson();
+    return {
+      aggregations: response.aggregations.map(function (aggregation) {
+        return {
+          // accept either key or propertyKey from the server, but always return propertyKey`
+          propertyKey: aggregation.key ?? aggregation.propertyKey,
+          count: aggregation.count,
+          min: aggregation.min,
+          max: aggregation.max,
+          avg: aggregation.avg,
+          sum: aggregation.sum,
+        };
+      }),
+      total: response.total,
+    };
+  }
+
+  /**
+   * Lists the children of a node in this asset's element tree, or the root
+   * nodes when no key is given.
+   *
+   * @param {object} [options] Object with the following properties:
+   * @param {string} [options.nodeKey] The opaque node key returned by the endpoint. Omit it to list root nodes.
+   * @returns {Promise<{nodes: IonAssetElementService.ElementTreeNode[]}>} A promise that resolves to the child nodes. The promise rejects with a {@link RequestErrorEvent} if the request fails or a key for a node that does not exist is provided.
+   * @exception {DeveloperError} <code>options.nodeKey</code> must be a string.
+   *
+   * @example
+   * try {
+   *   const { nodes } = await elements.getElementTreeChildren();
+   *   const { nodes: children } = await elements.getElementTreeChildren({
+   *     nodeKey: nodes[0].key,
+   *   });
+   *   console.log(nodes);
+   * } catch (error) {
+   *   console.error(error.statusCode, error.response);
+   * }
+   */
+  async getElementTreeChildren(options) {
+    options = options ?? Frozen.EMPTY_OBJECT;
+
+    //>>includeStart('debug', pragmas.debug);
+    if (defined(options.nodeKey)) {
+      Check.typeOf.string("options.nodeKey", options.nodeKey);
+    }
+    //>>includeEnd('debug');
+
+    const queryParameters = {};
+    if (defined(options.nodeKey)) {
+      queryParameters.nodeKey = options.nodeKey;
+    }
+
+    const response = await this._resource
+      .getDerivedResource({
+        url: "tree/children",
+        queryParameters: queryParameters,
+      })
+      .fetchJson();
+    return { nodes: response.nodes.map(treeNodeFromResponse) };
+  }
+
+  /**
+   * Retrieves the parents of an element in this asset's element tree, from the
+   * root down to the element, using ion's <code>tree/parents</code> endpoint.
+   *
+   * @param {string} elementId The element id as a decimal string, e.g. <code>"3298534886898"</code>.  
+   * @returns {Promise<{path: IonAssetElementService.ElementTreePathEntry[]}>} A promise that resolves to the root-first path. The promise rejects with a {@link RequestErrorEvent} if the request fails or no path exists.
+   * @exception {DeveloperError} <code>elementId</code> must be a string.
+   *
+   * @example
+   * try {
+   *   const { path } = await elements.getElementTreeParents(elementId);
+   *   console.log(path);
+   * } catch (error) {
+   *   console.error(error.statusCode, error.response);
+   * }
+   *
+   */
+  async getElementTreeParents(elementId) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.string("elementId", elementId);
+    //>>includeEnd('debug');
+
+    const response = await this._resource
+      .getDerivedResource({
+        url: "tree/parents",
+        queryParameters: { elementId },
+      })
+      .fetchJson();
+    return {
+      path: response.path.map(function (entry) {
+        return { kind: entry.kind, id: toIdString(entry.id) };
+      }),
+    };
+  }
+}
+
+export default IonAssetElementService;
