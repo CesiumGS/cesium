@@ -947,6 +947,60 @@ and drawing the sky and the sun's disk, then the environment lighting and
 the sun's illuminance from the atmosphere (replacing the procedural sky
 and the fixed 100 klx), then aerial perspective.
 
+**The sky in views** (r41; `src/atmosphere/Sky.ts`, `sky.wgsl`). Views draw
+the real-time atmosphere behind the scene by default (`View.background`
+"atmosphere"; "color" keeps `clearColor`), with the sun's disk (its real
+angular size, 0.53°, limb darkening, seen through the whole atmosphere;
+`View.sunDisk` turns it off). Drawn inside the opaque pass after the scene:
+a fullscreen triangle at the far plane where the depth is still the cleared
+0 (reverse-Z), once per group of four wavelengths, added up, alpha 1 so the
+exposure meter counts the sky. The camera sits on the atmosphere's sphere at
+its height above the ellipsoid, along the ellipsoid's normal, so horizon and
+light are local anywhere on the globe. Checked in the Lab page's new "In the
+engine" section: the engine's center pixel against the tables' own probe in
+the same direction within 0.1% (noon, sun 20°, 5°, 0°, 4° below, 10 km,
+2,000 km), with pictures from the ground through twilight to orbit. Parity
+harnesses and the benchmark baseline pin `background: "color"`
+(bit-identical to before). Cost: a per-pixel march (32 steps, two groups),
+1.3 ns per pixel on an RTX 3000 Ada laptop GPU, about 2.7 ms at 1080p:
+the sky-view table (Hillaire's 192 × 108 latitude-longitude sky around the
+camera, per frame) is the next step and should cut it to a few hundredths
+of a millisecond. The scene's light doesn't follow the sky yet (a sunset
+sky over a noon-lit city) until the sun's illuminance and the environment
+come from the atmosphere.
+
+**How the sun looks** (r41). At ordinary fields of view the disk is 3 to 4
+pixels across, so its edge is antialiased by each pixel's coverage. Its
+luminance (about 1.6 × 10⁹ cd/m² overhead) is far beyond any exposure that
+shows the sky: pre-exposed at EV100 15 it reaches fp16's range and is
+clipped (to 30,000 per group), losing the limb darkening and part of its
+energy, and tonemapping turns it into a small white dot. What makes the
+sun read as the sun in a photograph or to the eye is glare, not the disk:
+
+- **Glare from the sun's energy, analytically.** The sun's illuminance at
+  the camera (through the atmosphere) is known exactly, so a post pass adds
+  its point-spread function (a camera's or the eye's: a narrow core and a
+  wide, faint halo, Spencer et al. 1995) centered on its position, scaled by
+  the fraction of the disk that is visible (sampled from the depth around
+  it: buildings, terrain, the moon). Exact energy without relying on
+  clipped pixels, and the glare dims smoothly as the sun sets behind a
+  ridge. The general bloom pass (energy-conserving, Unreal and Frostbite
+  style) handles everything else bright.
+- **Lens effects as options**: diffraction spikes from an aperture shape,
+  ghosts and flares. Looks, not physics; off by default.
+- **Eclipses.** The moon's disk (from the ephemeris, at its real angular
+  size, or its tileset, §13.14) covers the sun's: the visible fraction of
+  the disk, computed per sample point along the sky's march, scales the
+  sunlight, so the umbra's 100-odd km darkens the sky overhead while the
+  horizon stays lit from outside it (the 360° sunset of totality) with no
+  special case. The sun's illuminance on the scene follows the same
+  fraction. **The corona** is about a millionth of the disk's luminance,
+  visible only in totality: an emissive radial profile (K and F corona,
+  falling roughly as r⁻² to r⁻⁶, with streamers as a texture), invisible at
+  any other time because the exposure never opens far enough, which is
+  exactly what happens with a real camera. Baily's beads and the diamond
+  ring come from the moon's limb profile (its terrain).
+
 **Regressions fixed on the way** (r40): wheel zoom slid sideways in split
 view (zoom leveled the camera after pinning the target under the cursor;
 from b9166e4adf), and the inspector's load time never ended under
@@ -3330,6 +3384,131 @@ and its measurement never drift apart.
 
 The gallery skeleton comes with the first example beyond the viewer
 (likely with benchmark suite v1 or real-time tracks).
+
+### 13.13 Time and its controls
+
+Once the sky, the sun's light and the stars come from the time, views need
+time controls. 1.x's are the `Animation` widget (a shuttle-ring dial for
+play, reverse and speed) and the `Timeline` (a scrubbable bar of dense tick
+labels in UTC). They show the clock, not what the time means: no time
+zone, no sunrise or sunset, no "now", no quick way to pick a date, and a
+speed dial few users understand. The model under them (one `Clock` per
+viewer: current time, multiplier, range, step) is sound and stays,
+improved.
+
+**Model (engine).**
+
+- A `Clock` holds the time (a `JulianDate`, TAI inside), a rate (seconds of
+  scene time per second), a mode (paused, playing, or live: following the
+  wall clock), and an optional range (clamp or loop). Views refer to a
+  clock, shared by default; a view can have its own (split view comparing
+  9 am and 3 pm shadows, an AEC staple).
+- What depends on time is computed per view from its clock: the sun and
+  moon directions (L0 parity with 1.x), the star field's rotation, the
+  atmosphere's light and the environment lighting, time-dynamic content
+  (§13.11 tracks, time-dynamic tiles). `Engine.sunDirection` becomes a
+  derived, per-view value; setting the sun by hand stays possible (an
+  override, as the Viewer's sliders do today).
+- Changing the time renders on demand like any other change (§13.8);
+  scrubbing must stay smooth, so what time rebuilds per frame (the
+  atmosphere's sky-view table, the environment's radiance and SH) has to
+  fit in a frame.
+
+**Controls (a widget, separate from the engine).**
+
+- **A time pill** in a corner of the view: the date and time at the place
+  being looked at, in its time zone ("Tue 21 Jun 2026 · 3:42 pm EDT"), with
+  play/pause. `Intl.DateTimeFormat` formats any IANA zone; finding the zone
+  of a place needs a small boundary table (or solar time as a fallback).
+  UTC and the viewer's own zone are a menu choice.
+- **Expanded: a day strip.** A 24-hour scrubber for the chosen day whose
+  background is the day itself: the atmosphere's horizon color over the day
+  at the focus point (night, twilight, day), with marks for sunrise, solar
+  noon, sunset and the twilights, and "now". Dragging scrubs; scrolling over
+  it zooms the scale from minutes to years (the timeline's job, when it's
+  needed).
+- **Date**: a calendar with the year's landmarks (solstices, equinoxes) and
+  presets for shadow studies (21 Mar, 21 Jun, 21 Sep, 21 Dec at 9 am, noon
+  and 3 pm) and for looks (sunrise, golden hour, noon, sunset, night).
+- **Speed** as a few named steps (real time, 1 min/s, 1 h/s, 1 day/s),
+  reverse in a menu, instead of a dial. **Now** returns to live.
+- **Data time**: when content carries time (tracks, CZML, time-dynamic
+  tiles), the scrubber shows its availability as bands and its range, which
+  is what 1.x's timeline is for; without such content the day strip is the
+  default.
+- **Exposure across day and night**: a fixed EV100 15 turns a scrubbed night
+  black, so scrubbing past sunset offers (or turns on) automatic exposure,
+  and the stars, moon and city lights appear as they would to a camera.
+- Keyboard first (space to play, arrow keys to step an hour or a day),
+  screen-reader announcements of the time, and a compact form that fits a
+  phone. Built framework-free in `widgets/` like the Viewer, with Dyno's
+  StrataKit version on top.
+
+### 13.14 Bodies, frames and engineering coordinates
+
+Everything today is in Earth-fixed coordinates (ECEF): the globe, tiles,
+the camera and the atmosphere. Two kinds of users want more: space
+customers (other bodies, and moving between them) and designers (models in
+their own coordinate systems, which are not the Earth's).
+
+**Other bodies.**
+
+- **The moon from its tileset.** Seen from the Earth, the moon can be the
+  Cesium Moon terrain tileset placed at its ephemeris position (384,000 km
+  away, a handful of root tiles by screen-space error), lit by the sun with
+  a regolith BRDF (Lommel-Seeliger or Hapke: the full moon's flat look and
+  opposition surge, which Lambert gets wrong) plus earthshine, and seen
+  through the atmosphere (transmittance and the sky's radiance in front).
+  Its phase, libration and eclipses come out right with no special case.
+- **Views on any body without a reload.** Each body has its own fixed frame
+  (the Earth's ITRF, the Moon's principal-axis frame, Mars' IAU frame), and
+  content belongs to a body. A view's camera is expressed in one body's
+  frame; per frame, each body's frame is placed relative to it from the
+  ephemerides at the view's time, composed in float64 on the CPU (as the
+  transform table already composes placements), then rendered
+  camera-relative. Moving a view from the Earth to the Moon changes a root
+  transform, not the scene, and different views of one world can be on
+  different bodies (one view in Houston, one at the lunar south pole).
+- **The gotchas**: time scales (UTC, TT, TDB) and Earth orientation
+  parameters; light time (the moon is seen where it was 1.3 s ago, about a
+  kilometer of motion, visible at close range) and aberration; per-body
+  ellipsoids, terrain, heights and atmospheres (Mars has one, the Moon has
+  none); globe controllers per body (up, minimum height, hand-off between
+  bodies at a sphere of influence during a flight); one tile cache and
+  budget across bodies; picks that return the body and body-fixed
+  coordinates; and float32 nowhere near an absolute position (hi/lo and
+  camera-relative everywhere, as now). Ephemerides: analytic series to
+  start (1.x's Simon 1994 and its moon theory), JPL DE440 for precision.
+- **A demo**: fly from a city on the Earth to the Apollo 11 site, the
+  Earth's tiles and the Moon's streaming together, the atmosphere's limb
+  thinning to black, stars and the Earth in the lunar sky, on the real date
+  with the real phase. It exercises every part of this section.
+
+**Engineering coordinates.** Design models are authored in projected
+systems (state plane, UTM) or local site grids, often treated as flat over
+long distances, with heights in a local vertical datum. One rigid placement
+(an iModel's `ecefLocation`) is exact at its origin and wrong away from it:
+over a 50 km highway the Earth's curvature drops about 196 m (d²/2R), and
+the projection's scale varies by up to 1:10,000 (5 m over 50 km). So:
+
+- **Placement**: reproject vertices through the model's real coordinate
+  system when tiles are made (exact in ECEF), or at least place each tile
+  rigidly from a tangent frame at its own center (error bounded by the tile
+  size); nonlinear warping in a shader is the last resort.
+- **Measurement in the design's terms**: the engine keeps each model's
+  engineering frame (its CRS and datum, from the source or tileset
+  metadata) and its inverse, so picks return both ECEF and design
+  coordinates, and measurement tools show grid distance, station and offset
+  along an alignment, and elevation in the project datum next to the true
+  (geodesic) values, with the combined scale factor that relates them.
+  PROJ (MIT) compiled to WebAssembly does the exact transforms on demand.
+  Carrying a CRS in 3D Tiles (tileset metadata, or an extension) would be a
+  proposal to the 3D Tiles community.
+
+Bodies and engineering frames are one concept: a tree of frames (ICRF to a
+body's fixed frame to a model's engineering frame), rigid transforms in
+float64 along it, with the nonlinear ones (map projections) at the edges,
+resolved when tiles are made or when a point is measured.
 
 ## 14. Follow-ups
 
