@@ -497,8 +497,9 @@ async function inTheEngine(realtime: RealtimeAtmosphere) {
     const image = await render();
     // A grid of pixels against the tables' own per-direction march (what
     // the table interpolates), from the same point on their sphere (the
-    // camera along the ellipsoid's normal at its height), away from the
-    // sun's disk.
+    // camera along the ellipsoid's normal at its height; from above the
+    // atmosphere, where the engine marches with the ellipsoid scaled to
+    // the ground sphere, the same scaling), away from the sun's disk.
     const c = Ellipsoid.WGS84.cartesianToCartographic(camera.position, {
       longitude: 0,
       latitude: 0,
@@ -509,6 +510,15 @@ async function inTheEngine(realtime: RealtimeAtmosphere) {
       v3.vec3(),
     )!;
     const r = EARTH.bottomRadius + Math.max(c.height, 1);
+    const fromSpace = r >= EARTH.topRadius - 1000;
+    const shape = Ellipsoid.WGS84.radii.map((radius) =>
+      fromSpace ? EARTH.bottomRadius / radius : 1,
+    );
+    const shaped = (v: ArrayLike<number>): number[] => {
+      const out = [0, 1, 2].map((k) => v[k]! * shape[k]!);
+      const length = Math.hypot(...out);
+      return out.map((x) => x / length);
+    };
     const aspect = width / height;
     const tanY = Math.tan(camera.fovy(aspect) / 2);
     const pixels: number[] = [];
@@ -539,16 +549,19 @@ async function inTheEngine(realtime: RealtimeAtmosphere) {
         }
         pixels.push(py * width + px);
         sky.push(v3.dot(d, normal) > 0);
-        directions.push(d[0]!, d[1]!, d[2]!);
+        directions.push(...shaped(d));
       }
     }
+    const observer: V3 = fromSpace
+      ? [
+          camera.position[0]! * shape[0]!,
+          camera.position[1]! * shape[1]!,
+          camera.position[2]! * shape[2]!,
+        ]
+      : [normal[0]! * r, normal[1]! * r, normal[2]! * r];
     const probe = await realtime.radiance(
-      [normal[0]! * r, normal[1]! * r, normal[2]! * r],
-      [
-        engine.sunDirection[0]!,
-        engine.sunDirection[1]!,
-        engine.sunDirection[2]!,
-      ],
+      observer,
+      shaped(engine.sunDirection) as V3,
       directions,
       { steps: 32 },
     );

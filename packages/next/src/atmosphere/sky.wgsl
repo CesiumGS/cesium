@@ -18,7 +18,9 @@
 // sRGB, like the opaque pass.
 
 struct Sky {
-  position: vec3f,   // the camera, km, planet-centered (on the sphere's normal)
+  // The camera, km, planet-centered: on the sphere's normal, or from above
+  // the atmosphere scaled by `shape`.
+  position: vec3f,
   exposure: f32,
   sun: vec3f,        // unit, toward the sun
   sunCos: f32,       // cosine of the sun's angular radius; > 1: no disk
@@ -56,6 +58,10 @@ struct Sky {
   // From the Moon toward the sun (unit).
   moonSun: vec3f,
   _pad3: f32,
+  // From above the atmosphere, the scale per axis that makes the body's
+  // ellipsoid the atmosphere's ground sphere (`marchedSky`); 1 otherwise.
+  shape: vec3f,
+  _pad4: f32,
 };
 
 @group(2) @binding(0) var<uniform> sky: Sky;
@@ -222,8 +228,8 @@ fn luminanceShare(t: vec4f, group: u32) -> f32 {
 // --- per pixel (above the atmosphere) -------------------------------------------
 
 // The sky's light along `direction` (spectral, this group's wavelengths).
-fn skyAlong(direction: vec3f) -> vec4f {
-  return march(sky.position, direction, sky.sun, 1e9, i32(sky.steps), false).radiance * atmosphere.solarIrradiance;
+fn skyAlong(direction: vec3f, sun: vec3f) -> vec4f {
+  return march(sky.position, direction, sun, 1e9, i32(sky.steps), false).radiance * atmosphere.solarIrradiance;
 }
 
 // The sky marched along a pixel's ray (pre-exposed), and this group's
@@ -236,8 +242,14 @@ struct MarchedSky {
 };
 
 fn marchedSky(pixel: vec2f, group: u32) -> MarchedSky {
-  let direction = viewDirection(pixel);
-  let s = march(sky.position, direction, sky.sun, 1e9, i32(sky.steps), false);
+  let seen = viewDirection(pixel);
+  // Marched where the ellipsoid is the ground sphere (`sky.shape`): a scale
+  // keeps what touches what, so the planet's edge and the glow along it
+  // are the ellipsoid's (the scene's ground) wherever the camera is. The
+  // shell's thickness changes by 0.3% at most, the angles by 0.2°.
+  let direction = normalize(sky.shape * seen);
+  let sun = normalize(sky.shape * sky.sun);
+  let s = march(sky.position, direction, sun, 1e9, i32(sky.steps), false);
   var spectral = s.radiance * atmosphere.solarIrradiance;
   // From far away the atmosphere's rim is a pixel or less across, its
   // bright part a fraction of one: one ray per pixel catches it in some
@@ -258,7 +270,7 @@ fn marchedSky(pixel: vec2f, group: u32) -> MarchedSky {
     var sum = vec4f(0.0);
     for (var k = 0; k < 8; k++) {
       let offset = (f32(k) + 0.5) / 8.0 - 0.5;
-      sum += skyAlong(normalize(direction + across * (offset * pixelAngle)));
+      sum += skyAlong(normalize(direction + across * (offset * pixelAngle)), sun);
     }
     spectral = sum * 0.125;
   }
@@ -268,7 +280,7 @@ fn marchedSky(pixel: vec2f, group: u32) -> MarchedSky {
   let mu = dot(sky.position, direction) / r;
   let ground = hitsGround(r, mu);
   if (!ground) {
-    spectral += atmosphere.solarIrradiance / sky.sunSolidAngle * sunDisk(direction) * s.transmittance;
+    spectral += atmosphere.solarIrradiance / sky.sunSolidAngle * sunDisk(seen) * s.transmittance;
   }
   return MarchedSky(
     toRgb(spectral, group) * sky.exposure,

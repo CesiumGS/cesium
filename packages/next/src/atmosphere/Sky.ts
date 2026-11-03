@@ -16,7 +16,7 @@ import {
 export const SUN_ANGULAR_DIAMETER = 0.00935;
 
 /** Bytes of the WGSL `Sky` uniform (sky.wgsl). */
-const SKY_SIZE = 304;
+const SKY_SIZE = 320;
 /** Bytes between the environment faces' `Sky` uniforms. */
 const FACE_STRIDE = 512;
 
@@ -578,12 +578,15 @@ export class Sky {
 
   /**
    * The camera on the atmosphere's sphere (uniform words 0-2 and 23): at
-   * its height above the body's ellipsoid, along the ellipsoid's normal.
-   * Returns the radius, km.
+   * its height above the body's ellipsoid, along the ellipsoid's normal;
+   * the sphere unscaled (words 76-78). Returns the radius, km.
    */
   private placeCamera(ellipsoid: Ellipsoid, position: Vec3): number {
     const f = this.f32;
     const p = this.atmosphere.parameters;
+    f[76] = 1;
+    f[77] = 1;
+    f[78] = 1;
     const c = ellipsoid.cartesianToCartographic(position, scratchCartographic);
     const altitude = Math.max(c?.height ?? 0, 1);
     const normal =
@@ -989,6 +992,16 @@ export class Sky {
     // A margin below the top, where the table's rows still resolve the
     // thin shell of atmosphere left above.
     view.inside = r < (p.topRadius - 1000) / 1000;
+    if (!view.inside) {
+      // From above, the sky is marched where the ellipsoid is the ground
+      // sphere (sky.wgsl `marchedSky`): the sphere under the camera alone
+      // is up to 20 km off the ellipsoid's edge, the glow along it with it.
+      const radii = ellipsoid.radii;
+      for (let i = 0; i < 3; i++) {
+        f[76 + i] = p.bottomRadius / radii[i]!;
+        f[i] = (camera.position[i]! / 1000) * f[76 + i]!;
+      }
+    }
     // Aerial perspective, from the camera (or where rays can first enter
     // the atmosphere) to its far edge past the horizon.
     const bottom = p.bottomRadius / 1000;
@@ -1041,7 +1054,7 @@ export class Sky {
     f[21] = height;
     f[22] = SKY_STEPS;
     this.device.queue.writeBuffer(view.buffer, 0, this.data, 0, 96);
-    this.device.queue.writeBuffer(view.buffer, 224, this.data, 224, 80);
+    this.device.queue.writeBuffer(view.buffer, 224, this.data, 224, 96);
   }
 
   /** The weights (bytes 96 on) are constant: written once per view. */

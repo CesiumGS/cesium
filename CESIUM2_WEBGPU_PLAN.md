@@ -1322,6 +1322,14 @@ tables). Two ways to evaluate it, by the camera's altitude:
   haze of the north and south (the ground there is 18 km above the
   sphere's surface, in thin air), and the pattern moved with the camera.
   Now the four limbs agree within 10%, from over the equator to 45° S.
+  The sky from above the atmosphere had the same flaw: its glow along the
+  planet's edge sank behind the ground at the equator and stood off it at
+  the poles (2 px each way from 18,000 km). It is now marched in the space
+  where the ellipsoid, scaled per axis, is the ground sphere: a linear map
+  keeps tangency, so the edge is the ellipsoid's exactly; the shell's
+  thickness changes by 0.3% at most, angles by 0.2°. No jump where the sky
+  switches from the table (below 99 km) to the march; the Lab's orbit row
+  probes in the same space (median 0.0%, worst 8.4%).
 
 Haze within a few hundred meters is coarse in the volume (the first slices
 fade in from none); fine for haze, coarse for weather fog (the "weather
