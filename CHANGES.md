@@ -6,7 +6,7 @@
 
 #### Fixes :wrench:
 
-- Fixed WebGL errors with dynamic environment lighting when multiple scenes use different WebGL contexts, caused by one scene executing backlogged commands of another. [#XXXXX](https://github.com/CesiumGS/cesium/pull/XXXXX)
+- Fixed WebGL errors with dynamic environment lighting when multiple scenes use different WebGL contexts, caused by one scene executing backlogged commands of another. [#14013](https://github.com/CesiumGS/cesium/pull/14013)
 
 ## 1.147 - 2026-11-02
 
