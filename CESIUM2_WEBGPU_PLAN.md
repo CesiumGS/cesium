@@ -1042,6 +1042,29 @@ every frame while scrubbing time (§13.13), so the prefilter keeps its 256
 samples. Spreading a rebuild over frames stays available if it's needed on
 smaller GPUs.
 
+**Aerial perspective** (r41; `View.aerialPerspective`, default on with
+background "atmosphere"). Hillaire's froxel volume per view per frame: 32 ×
+32 screen directions × 32 distances, quadratic from the camera (or, above
+the atmosphere, from where rays can first enter it) to the atmosphere's far
+edge past the horizon, so one volume serves street level and orbit. Each
+froxel holds the light the air scatters toward the camera up to its
+distance (linear sRGB, cd/m²) and the transmittance (each channel the 8
+bands' average weighted by their color), marched with the transmittance and
+multiple-scattering tables and stopping short of the ground (the scene's
+surface, not the planet's). One render pass per depth slice into a pair of
+3D targets, both wavelength groups added; one pair shared by all views,
+rewritten before each view's opaque pass. The opaque pass applies it per
+pixel: lit × transmittance + in-scatter, emission dimmed too. It replaces
+1.x's ground atmosphere and `Fog` for scenes, and the haze meets the sky at
+the horizon without a seam (the same atmosphere, the same tables). Checked
+in the Lab: froxels against the tables' own march along the same ray to the
+same distance, median 0.03-0.06%, worst 0.8%, from the ground through
+twilight to orbit, with pictures of the bare globe with and without it.
+Limits: 32 slices over up to ~900 km (the first slice ends ~0.9 km out at
+the ground), so haze within a few hundred meters is interpolated from none;
+fine for haze, coarse for weather fog (the "weather haze" medium, an
+analytic exponential, is the follow-up for that).
+
 **How the sun looks** (r41). At ordinary fields of view the disk is 3 to 4
 pixels across, so its edge is antialiased by each pixel's coverage. Its
 luminance (about 1.6 × 10⁹ cd/m² overhead) is far beyond any exposure that
