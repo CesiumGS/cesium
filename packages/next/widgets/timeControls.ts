@@ -5,9 +5,8 @@
  *
  * Laid out like a video player's controls, so each part says what it does:
  *
- *   ☀  ▶  ‹ Mon, Nov 2 ›  [==== the day ====]  10:30 AM  ⚙
+ *   ▶  ‹ Mon, Nov 2 ›  [==== the day ====]  10:30 AM  ⚙
  *
- * - The sun icon: this is about the sun (and the light it gives the scene).
  * - Play: time passes (at the speed in ⚙), the sun moving with it.
  * - The date, with the day before and after; clicking it opens a calendar.
  * - The day as a strip, the scrubber: shaded by the sun's elevation at the
@@ -117,9 +116,6 @@ export function attachTimeControls(
 
   // --- the bar ---
   const bar = el("div", "ct-bar");
-  const sun = el("span", "ct-sun-icon");
-  sun.innerHTML = SUN_ICON;
-  sun.title = "The sun follows this date and time";
   const play = button("ct-icon ct-play", "Play");
   const previous = button("ct-icon", "The day before", "‹");
   const dateButton = button("ct-date", "Choose a date");
@@ -153,7 +149,6 @@ export function attachTimeControls(
   settings.setAttribute("aria-haspopup", "dialog");
   settings.setAttribute("aria-expanded", "false");
   bar.append(
-    sun,
     play,
     divider(),
     previous,
@@ -471,6 +466,7 @@ export function attachTimeControls(
 
   // --- drawing ---
   let lastDrawn = "";
+  let shownPlaying: boolean | undefined;
   let cachedStrip: ImageData | undefined;
   let sunMarks: SunTimes | undefined;
 
@@ -491,7 +487,13 @@ export function attachTimeControls(
     const playing = clock.mode !== "paused";
     const rateName =
       SPEEDS.find(([, rate]) => rate === clock.rate)?.[0] ?? `${clock.rate}×`;
-    play.innerHTML = playing ? PAUSE_ICON : PLAY_ICON;
+    // Only when it changes: replaced every frame while playing, the icon
+    // under the pointer was gone by the time the button was released, and
+    // the click (to pause) never came.
+    if (playing !== shownPlaying) {
+      shownPlaying = playing;
+      play.innerHTML = playing ? PAUSE_ICON : PLAY_ICON;
+    }
     play.setAttribute("aria-label", playing ? "Pause" : `Play (${rateName})`);
     play.title = playing
       ? "Pause"
@@ -708,8 +710,6 @@ const PLAY_ICON =
   '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M4.5 2.5v11l9-5.5z" fill="currentColor"/></svg>';
 const PAUSE_ICON =
   '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M4 2.5h3v11H4zM9 2.5h3v11H9z" fill="currentColor"/></svg>';
-const SUN_ICON =
-  '<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><circle cx="8" cy="8" r="3" fill="currentColor"/><g stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M8 1.5v1.6M8 12.9v1.6M1.5 8h1.6M12.9 8h1.6M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M3.4 12.6l1.1-1.1M11.5 4.5l1.1-1.1"/></g></svg>';
 const GEAR_ICON =
   '<svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M9.2 1.5l.3 1.7a5 5 0 0 1 1.3.7l1.6-.6 1.2 2.1-1.3 1.1a5 5 0 0 1 0 1.5l1.3 1.1-1.2 2.1-1.6-.6a5 5 0 0 1-1.3.7l-.3 1.7H6.8l-.3-1.7a5 5 0 0 1-1.3-.7l-1.6.6-1.2-2.1 1.3-1.1a5 5 0 0 1 0-1.5L2.4 5.4l1.2-2.1 1.6.6a5 5 0 0 1 1.3-.7l.3-1.7zM8 5.8A2.2 2.2 0 1 0 8 10.2 2.2 2.2 0 0 0 8 5.8z"/></svg>';
 
@@ -763,7 +763,8 @@ const CSS = `
   background: var(--ct-surface); box-shadow: var(--ct-shadow);
 }
 .cesium-time .ct-divider { flex: none; width: 1px; height: 16px; margin: 0 2px; background: var(--ct-border); }
-.cesium-time .ct-sun-icon { flex: none; display: grid; place-items: center; width: 24px; color: #f2c46d; }
+/* Clicks land on the button, not its icon (which is swapped as it plays). */
+.cesium-time button svg { pointer-events: none; }
 .cesium-time .ct-icon {
   flex: none; display: grid; place-items: center; width: 28px; height: 28px; padding: 0;
   border: none; border-radius: 4px; background: none; color: var(--ct-icon); cursor: pointer;

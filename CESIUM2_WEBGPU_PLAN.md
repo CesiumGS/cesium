@@ -692,6 +692,30 @@ from the others. The Tycho star map 1.x ships stays; points would need
 ESA's permission for commercial use or a legal opinion on the Yale
 catalogue.
 
+Next for the stars (asked for after r44): they look soft, and at high
+brightness show visible edges. Both come from drawing a texture: 1.x's
+Tycho map is six 8-bit sRGB faces, magnified (a star is a blur several
+texels wide, not a point) and quantized (256 levels stretched over many
+stops at an open exposure draw contour bands; the faces' seams may show
+too). Film VFX draws stars as points, not pixels of a texture:
+
+- each star a point source with its flux (from magnitude) and color (from
+  its temperature, B−V), splatted energy-conserving at its subpixel
+  position through a point spread function (a Gaussian or Airy core, the
+  eye's or the lens's), so a star stays one sharp point at any field of
+  view and its brightness doesn't shimmer as the camera turns;
+- glare for the bright ones as the eye sees it (Spencer et al. 1995,
+  "Physically-Based Glare Effects for Digital Images": a bloom and the
+  ciliary corona's fine rays), or a lens's diffraction spikes for the
+  camera;
+- twinkle (scintillation) near the horizon, where the air is thickest;
+- the Milky Way and the faint unresolved stars as a smooth background in
+  float, below the points.
+
+The catalog problem stands (none we found ships under Apache-2.0); the
+points could come from the Tycho map itself (its peaks: positions,
+fluxes, colors), the map kept, low-passed, as the background.
+
 Progress (r43): **the Moon**. `moonPosition(time)` (time/moon.ts) ports
 1.x's Simon et al. (1994) lunar theory (within 0.04° and 0.05% of
 distance of Meeus's example 47.a), turned to Earth-fixed axes with
