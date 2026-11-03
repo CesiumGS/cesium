@@ -44,10 +44,46 @@ export function createShadowCascades(): ShadowCascades {
 }
 
 /**
+ * The depth the cascades cover, from the depth the view showed (its
+ * nearest and farthest surface along its axis, a frame or so late):
+ * Lauritzen, Salvi and Lefohn 2011's sample distribution shadow maps,
+ * their splits (the cascades' texels go where the surfaces are, not from
+ * a meter in front of the camera). With room for the camera's motion (a
+ * fifth nearer, a quarter farther), in steps of a quarter octave, and
+ * steady: it widens at once and narrows only when a step and a half too
+ * wide, so the splits don't wobble as the view moves. Undefined without
+ * a reading.
+ */
+export function shadowRange(
+  previous: { near: number; far: number } | undefined,
+  shown: { near: number; far: number } | undefined,
+): { near: number; far: number } | undefined {
+  if (!shown) {
+    return previous;
+  }
+  const step = (x: number, round: (x: number) => number) =>
+    2 ** (round(Math.log2(x) * 4) / 4);
+  const near = step(Math.max(shown.near * 0.8, 1e-3), Math.floor);
+  const far = step(shown.far * 1.25, Math.ceil);
+  if (!previous) {
+    return { near, far };
+  }
+  const slack = 2 ** 0.375;
+  return {
+    near:
+      near < previous.near || near > previous.near * slack
+        ? near
+        : previous.near,
+    far: far > previous.far || far < previous.far / slack ? far : previous.far,
+  };
+}
+
+/**
  * Fits the cascades for a camera and the sun (`sun`, unit, toward it,
  * Earth-fixed). `height` is the camera's height above the ground, m: the
  * shadows reach 20 times as far (at least 200 m, at most 150 km), so a
  * street-level camera gets fine cascades and a mountain view long ones.
+ * `shown`, the depth the view shows (`shadowRange`), narrows that to it.
  * Splits blend logarithmic and uniform (Zhang et al.'s practical scheme).
  */
 export function fitShadowCascades(
@@ -56,9 +92,11 @@ export function fitShadowCascades(
   aspect: number,
   sun: ArrayLike<number>,
   height: number,
+  shown?: { near: number; far: number },
 ): void {
-  const near = Math.max(camera.near, 1);
-  const far = Math.min(Math.max(20 * height, 200), 150_000);
+  const longest = Math.min(Math.max(20 * height, 200), 150_000);
+  const far = Math.min(shown?.far ?? longest, longest);
+  const near = Math.min(Math.max(camera.near, 1, shown?.near ?? 0), far / 4);
   out.far = far;
   out.fadeStart = far * 0.85;
   const lambda = 0.9;

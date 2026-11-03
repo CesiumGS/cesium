@@ -56,6 +56,7 @@ import {
   SHADOWS_STRIDE,
   createShadowCascades,
   fitShadowCascades,
+  shadowRange,
   writeShadows,
 } from "./shadows.ts";
 import {
@@ -319,6 +320,12 @@ export class Engine {
   /** Exposure meter readings this frame, mapped after submit. */
   private readonly meters: Array<{
     view: View;
+    readback: GPUBuffer;
+    scratch: GPUBuffer[];
+  }> = [];
+  /** Depth ranges reduced this frame (`depthRange.wgsl`), mapped after submit. */
+  private readonly depthRanges: Array<{
+    frame: ViewFrame;
     readback: GPUBuffer;
     scratch: GPUBuffer[];
   }> = [];
@@ -1782,6 +1789,17 @@ export class Engine {
         );
       });
     }
+    for (const range of this.depthRanges.splice(0)) {
+      void range.readback.mapAsync(GPUMapMode.READ).then(() => {
+        const [near, far] = new Float32Array(range.readback.getMappedRange());
+        range.readback.destroy();
+        range.scratch.forEach((b) => b.destroy());
+        range.frame.rangePending = false;
+        // Nothing but sky: no range.
+        range.frame.depthRange =
+          far! > 0 && near! <= far! ? { near: near!, far: far! } : undefined;
+      });
+    }
     for (const read of this.hdrReads.splice(0)) {
       void read.buffer.mapAsync(GPUMapMode.READ).then(() => {
         const halves = new Uint16Array(read.buffer.getMappedRange());
@@ -1958,6 +1976,10 @@ export class Engine {
         aspect,
         sun,
         Math.max(c?.height ?? 0, 2),
+        (frame.cascadeRange = shadowRange(
+          frame.cascadeRange,
+          frame.depthRange,
+        )),
       );
       const block = this.viewBlock;
       const viewProj = block.viewProj;
@@ -2409,6 +2431,9 @@ export class Engine {
       shadowed: false,
       ambient: false,
       lightCount: 0,
+      depthRange: undefined,
+      rangePending: false,
+      cascadeRange: undefined,
       aoParams: device.createBuffer({
         label: "aoParams",
         size: 64,
@@ -2670,6 +2695,55 @@ export class Engine {
           this.sky.draw(pass, frame.sky, get(starLayer));
         }
         pass.end();
+      },
+    );
+
+    // The nearest and farthest surface shown, for the next frame's shadow
+    // cascades (`writeShadows`): read back a frame or so late.
+    graph.addPass(
+      "depth-range",
+      { reads: [depth], sideEffect: true },
+      (enc, get) => {
+        if (!frame.shadowed || frame.rangePending) {
+          return;
+        }
+        frame.rangePending = true;
+        const params = device.createBuffer({
+          size: 16,
+          usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+        });
+        const data = new ArrayBuffer(16);
+        new Float32Array(data, 0, 1)[0] = view.camera.near;
+        new Uint32Array(data, 4, 2).set([width, height]);
+        device.queue.writeBuffer(params, 0, data);
+        const result = device.createBuffer({
+          size: 8,
+          usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
+          mappedAtCreation: true,
+        });
+        new Uint32Array(result.getMappedRange()).set([0x7f7fffff, 0]);
+        result.unmap();
+        const readback = device.createBuffer({
+          size: 8,
+          usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
+        });
+        const pass = enc.beginComputePass({ label: "depth-range" });
+        pass.setPipeline(pipelines.depthRange);
+        pass.setBindGroup(
+          0,
+          device.createBindGroup({
+            layout: pipelines.depthRange.getBindGroupLayout(0),
+            entries: [
+              { binding: 0, resource: get(depth) },
+              { binding: 1, resource: { buffer: params } },
+              { binding: 2, resource: { buffer: result } },
+            ],
+          }),
+        );
+        pass.dispatchWorkgroups(8, 8);
+        pass.end();
+        enc.copyBufferToBuffer(result, 0, readback, 0, 8);
+        this.depthRanges.push({ frame, readback, scratch: [params, result] });
       },
     );
 
@@ -3023,6 +3097,15 @@ interface PendingPick {
 
 /** Per-view frame state: the frame graph plus inputs its passes read each frame. */
 interface ViewFrame {
+  /**
+   * The nearest and farthest surface it showed along its axis, m (the
+   * depth range read back, `depth-range`), and whether a reading is in
+   * flight; the range its shadow cascades cover, kept steady
+   * (`shadowRange`).
+   */
+  depthRange: { near: number; far: number } | undefined;
+  rangePending: boolean;
+  cascadeRange: { near: number; far: number } | undefined;
   /** The point and spot lights it shades this frame (`writeLights`). */
   lightCount: number;
   readonly x: number;

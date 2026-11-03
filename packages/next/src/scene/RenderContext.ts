@@ -15,6 +15,7 @@ import pickWgsl from "../shaders/pick.wgsl?raw";
 import meterWgsl from "../shaders/meter.wgsl?raw";
 import adaptWgsl from "../shaders/adapt.wgsl?raw";
 import lightsWgsl from "../shaders/lights.wgsl?raw";
+import depthRangeWgsl from "../shaders/depthRange.wgsl?raw";
 import { CLUSTERS_SIZE, LIGHTS_SIZE } from "./lights.ts";
 
 /**
@@ -97,6 +98,8 @@ export interface Pipelines {
   adaptBlur: GPUComputePipeline;
   /** Point and spot lights into the view's froxels (`lights.wgsl`). */
   lightsAssign: GPUComputePipeline;
+  /** The nearest and farthest surface a view shows (`depthRange.wgsl`). */
+  depthRange: GPUComputePipeline;
 }
 
 export interface Defaults {
@@ -667,6 +670,7 @@ async function createPipelines(
     adaptReduce,
     adaptBlur,
     lightsAssign,
+    depthRange,
   ] = await Promise.all([
     device.createComputePipelineAsync({
       label: "cull.records",
@@ -782,6 +786,14 @@ async function createPipelines(
         entryPoint: "assign",
       },
     }),
+    device.createComputePipelineAsync({
+      label: "depthRange",
+      layout: "auto",
+      compute: {
+        module: module("depthRange", depthRangeWgsl),
+        entryPoint: "main",
+      },
+    }),
   ]);
 
   return {
@@ -819,5 +831,6 @@ async function createPipelines(
     adaptReduce,
     adaptBlur,
     lightsAssign,
+    depthRange,
   };
 }

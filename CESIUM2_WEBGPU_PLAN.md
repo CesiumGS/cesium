@@ -756,7 +756,19 @@ Next steps (r44, after the night work). Now, in this order:
    cascades to the depth actually on screen (Lauritzen's sample
    distribution shadow maps, a min/max reduction of the depth buffer on
    the GPU each frame) is the next step, the content's bounds being no
-   help once the globe reaches the horizon.
+   help once the globe reaches the horizon. Done (r44), their splits: a
+   compute pass reduces the opaque depth to the nearest and farthest
+   surface along the view (depthRange.wgsl, one sample a pixel, the sky
+   left out), read back a frame or so late; the cascades cover that (a
+   fifth nearer, a quarter farther, in quarter-octave steps that widen at
+   once and narrow only past a step and a half: shadows.ts `shadowRange`)
+   within the 20 × height they had. The same view and sun steps: 11,900
+   pixels a step against 15,700 (the nearest building 717 m off, the
+   cascades from 512 m instead of 1 m); in a street canyon they cover 38
+   to 861 m instead of 1 to 600. Each cascade's extent still fits its
+   slice's sphere (steady as the camera turns); fitting it to the
+   surfaces seen from the sun is Lauritzen's other half, left for when
+   its crawl as the view turns can be kept down.
 2. **Haze at the day/night line from orbit**: the per-vertex march
    interpolates a step (lit, then in the Earth's shadow) across the
    coarsest tiles' triangles, drawing blocky streaks. Where a triangle's
