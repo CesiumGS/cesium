@@ -2464,6 +2464,29 @@ whole ice sheet.
   not yet shown with real content), frame times while a new shader's 19
   pipelines compile, and the batching cost per extra material type.
 
+**Increment 3 (r46): pipelines on demand; the costs.**
+
+- Microbenchmark `bench/shaderCost` (`bench/run.mjs shaderCost`). Arrival:
+  1,024 boxes drawn every frame on a canvas while a shader the engine
+  hasn't seen arrives on one more box. Compiling all 19 of its pipelines
+  at once held frames up: worst 108, 47 and 67 ms for fragment-only,
+  vertex-only and both, 1–2 frames over 34 ms and long animation frames
+  each, though the main thread's WebGPU calls took 0.4 ms in all (the
+  GPU process's compiling, ≈680 ms, competed with the frames' drawing).
+- So a custom shader now compiles once (its module checked, errors
+  reported) and each pipeline (`SurfaceKey`) is made in the background
+  when a batch first asks for it; that pass uses the engine's pipeline
+  until then. Opaque, one-sided triangles make 4 (opaque, depth, shadow,
+  prepass) of the 19; translucent pipelines and their module only for
+  blended content. `Engine.compileShader` still makes all 19 (warming
+  ahead). Arrival then: 0 frames over 34 ms, worst 16.8–17.2 ms, the same
+  as with no change; an unlit red shader shows from 400 ms after its box
+  appears, drawn with the engine's shader before.
+- Batching: 4,096 boxes at 1920×1080 spread over 1 to 64 shaders (each a
+  batch and a pipeline switch): GPU 1.05–1.17 ms and CPU 0.11–0.27 ms per
+  frame throughout, against 1.09 and 0.27 ms with the engine's own; at most
+  ≈1 µs of GPU per extra shader, none measurable on the CPU.
+
 ### Real-time tracks (after Custom shading)
 
 - §13.11: track collections as instance data with a bulk update API,

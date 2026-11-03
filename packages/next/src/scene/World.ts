@@ -39,7 +39,7 @@ import type { Vec3 } from "../math/vec3.ts";
 import type { MeshData } from "./meshes.ts";
 import type { FeatureTable, FeatureValue } from "../io/gltfTypes.ts";
 import { featureName, featureProperties } from "../io/features.ts";
-import type { RenderContext, SurfacePipelines } from "./RenderContext.ts";
+import type { RenderContext, SurfaceKey } from "./RenderContext.ts";
 import type { CustomShader } from "./CustomShader.ts";
 import type { LightHandle, LightOptions } from "./lights.ts";
 
@@ -2233,34 +2233,33 @@ export class World {
       (this.materialsU32[batch.material * MATERIAL_WORDS + 12]! &
         (MaterialFlags.alphaMask | MaterialFlags.alphaBlend)) !==
       0;
-    const pipelineOf = (batch: Batch) => {
-      const set = this.surfacePipelines(batch);
-      return prepass
+    const keyOf = (batch: Batch): SurfaceKey =>
+      prepass
         ? batch.doubleSided
-          ? set.prepassDoubleSided
-          : set.prepass
+          ? "prepassDoubleSided"
+          : "prepass"
         : depth
           ? masked(batch)
             ? batch.doubleSided
-              ? set.depthMaskedDoubleSided
-              : set.depthMasked
+              ? "depthMaskedDoubleSided"
+              : "depthMasked"
             : batch.doubleSided
-              ? set.depthDoubleSided
-              : set.depth
+              ? "depthDoubleSided"
+              : "depth"
           : shadow
             ? masked(batch)
               ? batch.doubleSided
-                ? set.shadowMaskedDoubleSided
-                : set.shadowMasked
+                ? "shadowMaskedDoubleSided"
+                : "shadowMasked"
               : batch.doubleSided
-                ? set.shadowDoubleSided
-                : set.shadow
+                ? "shadowDoubleSided"
+                : "shadow"
             : batch.mesh.topology === "line-list"
-              ? set.opaqueLines
+              ? "opaqueLines"
               : batch.doubleSided
-                ? set.opaqueDoubleSided
-                : set.opaque;
-    };
+                ? "opaqueDoubleSided"
+                : "opaque";
+    const pipelineOf = (batch: Batch) => this.pipeline(batch, keyOf(batch));
     const rank = (batch: Batch) =>
       batch.mesh.topology === "line-list" ? 2 : Number(batch.doubleSided);
     const order = [...this.batchList].sort(
@@ -2309,18 +2308,18 @@ export class World {
   }
 
   /**
-   * A batch's pipelines: its custom shader's once compiled, else the
-   * engine's (then recorded again when they are ready).
+   * A batch's pipeline for a pass: its custom shader's once made, else the
+   * engine's (then recorded again when it is ready).
    */
-  private surfacePipelines(batch: Batch): SurfacePipelines {
+  private pipeline(batch: Batch, key: SurfaceKey): GPURenderPipeline {
     return (
       (batch.shader &&
-        this.ctx.shaders.pipelines(batch.shader, this.shaderReady)) ??
-      this.ctx.pipelines
+        this.ctx.shaders.pipeline(batch.shader, key, this.shaderReady)) ??
+      this.ctx.pipelines[key]
     );
   }
 
-  /** A custom shader's pipelines compiled: draw with them from now on. */
+  /** A custom shader's pipeline is ready: draw with it from now on. */
   private readonly shaderReady = () => {
     this.bundle = undefined;
     this.version++;
@@ -2426,16 +2425,13 @@ export class World {
 
   /**
    * Encodes this world's blended surfaces into a translucent pass (after
-   * the view's cull): the pass's pipeline from each batch's set, one- or
-   * double-sided, and its group 3. Encoded directly, not bundled: group 3
-   * is per view.
+   * the view's cull): the pass's pipeline (`keyOf`, one- or double-sided)
+   * from each batch's shader, and its group 3. Encoded directly, not
+   * bundled: group 3 is per view.
    */
   encodeTranslucent(
     pass: GPURenderPassEncoder,
-    pipelineOf: (
-      set: SurfacePipelines,
-      doubleSided: boolean,
-    ) => GPURenderPipeline,
+    keyOf: (doubleSided: boolean) => SurfaceKey,
     group: GPUBindGroup,
   ): void {
     pass.setBindGroup(0, this.ctx.currentViewBindGroup);
@@ -2450,10 +2446,7 @@ export class World {
       if (batch.items === 0 || !this.translucent(batch)) {
         continue;
       }
-      const wanted = pipelineOf(
-        this.surfacePipelines(batch),
-        batch.doubleSided,
-      );
+      const wanted = this.pipeline(batch, keyOf(batch.doubleSided));
       if (wanted !== current) {
         current = wanted;
         pass.setPipeline(wanted);

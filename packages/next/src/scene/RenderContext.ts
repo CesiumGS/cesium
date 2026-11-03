@@ -92,6 +92,31 @@ export interface SurfacePipelines {
   translucentColorDoubleSided: GPURenderPipeline;
 }
 
+/** One of a shader's pipelines (`SurfacePipelines`). */
+export type SurfaceKey = keyof SurfacePipelines;
+
+export const SURFACE_KEYS: readonly SurfaceKey[] = [
+  "opaque",
+  "opaqueDoubleSided",
+  "opaqueLines",
+  "shadow",
+  "shadowDoubleSided",
+  "shadowMasked",
+  "shadowMaskedDoubleSided",
+  "prepass",
+  "prepassDoubleSided",
+  "depth",
+  "depthDoubleSided",
+  "depthMasked",
+  "depthMaskedDoubleSided",
+  "translucentList",
+  "translucentListDoubleSided",
+  "translucentMoments",
+  "translucentMomentsDoubleSided",
+  "translucentColor",
+  "translucentColorDoubleSided",
+];
+
 export interface Pipelines extends SurfacePipelines {
   viewLayout: GPUBindGroupLayout;
   cullWorldLayout: GPUBindGroupLayout;
@@ -104,10 +129,12 @@ export interface Pipelines extends SurfacePipelines {
   /** Per-batch indirect args. */
   writeDrawArgs: GPUComputePipeline;
   /**
-   * A custom shader's pipelines from its stages' WGSL; rejects with the
-   * compiler's messages.
+   * A custom shader's pipelines from its stages' WGSL, one by key; rejects
+   * with the compiler's messages.
    */
-  surface(shader: CustomShader): Promise<SurfacePipelines>;
+  surface(
+    shader: CustomShader,
+  ): Promise<(key: SurfaceKey) => Promise<GPURenderPipeline>>;
   /**
    * The opaque pass draws its depth first (`depth`); false with an
    * override shader, which may not compute the same depths.
@@ -858,112 +885,106 @@ async function createPipelines(
     caster: GPUShaderModule,
     translucent: GPUShaderModule,
   ): Promise<SurfacePipelines> => {
-    const name = (label: string) => `${prefix}${label}`;
-    const [
-      opaquePipe,
-      opaqueDoubleSided,
-      opaqueLines,
-      shadow,
-      shadowDoubleSided,
-      shadowMasked,
-      shadowMaskedDoubleSided,
-      prepass,
-      prepassDoubleSided,
-      depth,
-      depthDoubleSided,
-      depthMasked,
-      depthMaskedDoubleSided,
-      translucentList,
-      translucentListDoubleSided,
-      translucentMoments,
-      translucentMomentsDoubleSided,
-      translucentColor,
-      translucentColorDoubleSided,
-    ] = await Promise.all([
-      opaquePipeline(opaque, name("opaque"), "back"),
-      opaquePipeline(opaque, name("opaque.doubleSided"), "none"),
-      opaquePipeline(opaque, name("opaque.lines"), "none", "line-list"),
-      shadowPipeline(caster, name("shadow"), "back", false),
-      shadowPipeline(caster, name("shadow.doubleSided"), "none", false),
-      shadowPipeline(caster, name("shadow.masked"), "back", true),
-      shadowPipeline(caster, name("shadow.maskedDoubleSided"), "none", true),
-      prepassPipeline(caster, name("prepass"), "back"),
-      prepassPipeline(caster, name("prepass.doubleSided"), "none"),
-      depthPipeline(opaque, name("depth"), "back", false),
-      depthPipeline(opaque, name("depth.doubleSided"), "none", false),
-      depthPipeline(opaque, name("depth.masked"), "back", true),
-      depthPipeline(opaque, name("depth.maskedDoubleSided"), "none", true),
-      translucentPipeline(
-        translucent,
-        name("translucent.list"),
-        "back",
-        "fsList",
-        listTargets,
-        SCENE_TARGETS.sampleCount,
-      ),
-      translucentPipeline(
-        translucent,
-        name("translucent.list.doubleSided"),
-        "none",
-        "fsList",
-        listTargets,
-        SCENE_TARGETS.sampleCount,
-      ),
-      translucentPipeline(
-        translucent,
-        name("translucent.moments"),
-        "back",
-        "fsMoments",
-        momentTargets,
-      ),
-      translucentPipeline(
-        translucent,
-        name("translucent.moments.doubleSided"),
-        "none",
-        "fsMoments",
-        momentTargets,
-      ),
-      translucentPipeline(
-        translucent,
-        name("translucent.color"),
-        "back",
-        "fsMomentColor",
-        colorTargets,
-      ),
-      translucentPipeline(
-        translucent,
-        name("translucent.color.doubleSided"),
-        "none",
-        "fsMomentColor",
-        colorTargets,
-      ),
-    ]);
-    return {
-      opaque: opaquePipe,
-      opaqueDoubleSided,
-      opaqueLines,
-      shadow,
-      shadowDoubleSided,
-      shadowMasked,
-      shadowMaskedDoubleSided,
-      prepass,
-      prepassDoubleSided,
-      depth,
-      depthDoubleSided,
-      depthMasked,
-      depthMaskedDoubleSided,
-      translucentList,
-      translucentListDoubleSided,
-      translucentMoments,
-      translucentMomentsDoubleSided,
-      translucentColor,
-      translucentColorDoubleSided,
-    };
+    const build = surfaceBuilder(prefix, opaque, caster, () => translucent);
+    const built = await Promise.all(SURFACE_KEYS.map((key) => build(key)));
+    return Object.fromEntries(
+      SURFACE_KEYS.map((key, i) => [key, built[i]!]),
+    ) as unknown as SurfacePipelines;
   };
 
-  // A custom shader's set: its stages in place of the defaults. The
-  // compiler's errors first, at their line in the stage's own code.
-  const surface = async (shader: CustomShader): Promise<SurfacePipelines> => {
+  // One pipeline of a shader's set by key: from its opaque stages, its
+  // casters' (the same but for an override) and its translucent ones (the
+  // same stages with translucent.wgsl, made when first needed).
+  function surfaceBuilder(
+    prefix: string,
+    opaque: GPUShaderModule,
+    caster: GPUShaderModule,
+    translucent: () => GPUShaderModule,
+  ): (key: SurfaceKey) => Promise<GPURenderPipeline> {
+    const name = (label: string) => `${prefix}${label}`;
+    const builders: Record<SurfaceKey, () => Promise<GPURenderPipeline>> = {
+      opaque: () => opaquePipeline(opaque, name("opaque"), "back"),
+      opaqueDoubleSided: () =>
+        opaquePipeline(opaque, name("opaque.doubleSided"), "none"),
+      opaqueLines: () =>
+        opaquePipeline(opaque, name("opaque.lines"), "none", "line-list"),
+      shadow: () => shadowPipeline(caster, name("shadow"), "back", false),
+      shadowDoubleSided: () =>
+        shadowPipeline(caster, name("shadow.doubleSided"), "none", false),
+      shadowMasked: () =>
+        shadowPipeline(caster, name("shadow.masked"), "back", true),
+      shadowMaskedDoubleSided: () =>
+        shadowPipeline(caster, name("shadow.maskedDoubleSided"), "none", true),
+      prepass: () => prepassPipeline(caster, name("prepass"), "back"),
+      prepassDoubleSided: () =>
+        prepassPipeline(caster, name("prepass.doubleSided"), "none"),
+      depth: () => depthPipeline(opaque, name("depth"), "back", false),
+      depthDoubleSided: () =>
+        depthPipeline(opaque, name("depth.doubleSided"), "none", false),
+      depthMasked: () =>
+        depthPipeline(opaque, name("depth.masked"), "back", true),
+      depthMaskedDoubleSided: () =>
+        depthPipeline(opaque, name("depth.maskedDoubleSided"), "none", true),
+      translucentList: () =>
+        translucentPipeline(
+          translucent(),
+          name("translucent.list"),
+          "back",
+          "fsList",
+          listTargets,
+          SCENE_TARGETS.sampleCount,
+        ),
+      translucentListDoubleSided: () =>
+        translucentPipeline(
+          translucent(),
+          name("translucent.list.doubleSided"),
+          "none",
+          "fsList",
+          listTargets,
+          SCENE_TARGETS.sampleCount,
+        ),
+      translucentMoments: () =>
+        translucentPipeline(
+          translucent(),
+          name("translucent.moments"),
+          "back",
+          "fsMoments",
+          momentTargets,
+        ),
+      translucentMomentsDoubleSided: () =>
+        translucentPipeline(
+          translucent(),
+          name("translucent.moments.doubleSided"),
+          "none",
+          "fsMoments",
+          momentTargets,
+        ),
+      translucentColor: () =>
+        translucentPipeline(
+          translucent(),
+          name("translucent.color"),
+          "back",
+          "fsMomentColor",
+          colorTargets,
+        ),
+      translucentColorDoubleSided: () =>
+        translucentPipeline(
+          translucent(),
+          name("translucent.color.doubleSided"),
+          "none",
+          "fsMomentColor",
+          colorTargets,
+        ),
+    };
+    return (key) => builders[key]();
+  }
+
+  // A custom shader's pipelines, each made when first asked for: its
+  // stages in place of the defaults. The compiler's errors first, at their
+  // line in the stage's own code.
+  const surface = async (
+    shader: CustomShader,
+  ): Promise<(key: SurfaceKey) => Promise<GPURenderPipeline>> => {
     const { code, label, vertexLines } = shader;
     const base = [commonWgsl, opaqueWgsl].join("\n");
     // Its errors are reported below, once, not as an uncaptured error too.
@@ -990,18 +1011,17 @@ async function createPipelines(
           .join("; ")}`,
       );
     }
-    return surfacePipelines(
-      `${label} `,
-      opaque,
-      opaque,
-      module(
+    let translucent: GPUShaderModule | undefined;
+    return surfaceBuilder(`${label} `, opaque, opaque, () => {
+      translucent ??= module(
         `${label} translucent`,
         commonWgsl,
         opaqueWgsl,
         translucentWgsl,
         code,
-      ),
-    );
+      );
+      return translucent;
+    });
   };
 
   const [

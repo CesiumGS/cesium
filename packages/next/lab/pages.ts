@@ -127,6 +127,16 @@ export const HARNESSES: HarnessInfo[] = [
     load: () => import("../bench/baseline.ts").then((m) => m.harness),
   },
   {
+    id: "shader-cost",
+    group: "microbenchmarks",
+    title: "Custom shader costs",
+    description:
+      "Frames while new custom shaders compile in the background, and CPU and GPU time for the same boxes spread over 1 to 64 shaders.",
+    page: "/bench/shaderCost.html",
+    entry: "runShaderCost",
+    load: () => import("../bench/shaderCost.ts").then((m) => m.harness),
+  },
+  {
     id: "hitch",
     group: "microbenchmarks",
     title: "Hitches",

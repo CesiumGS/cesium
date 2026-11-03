@@ -3073,10 +3073,8 @@ export class Engine {
           const pass = enc.beginRenderPass(listPass);
           world.encodeTranslucent(
             pass,
-            (set, doubleSided) =>
-              doubleSided
-                ? set.translucentListDoubleSided
-                : set.translucentList,
+            (doubleSided) =>
+              doubleSided ? "translucentListDoubleSided" : "translucentList",
             this.translucentGroup(frame, 0, [
               lists,
               dummies.zero,
@@ -3104,10 +3102,10 @@ export class Engine {
         const first = enc.beginRenderPass(momentPass);
         world.encodeTranslucent(
           first,
-          (set, doubleSided) =>
+          (doubleSided) =>
             doubleSided
-              ? set.translucentMomentsDoubleSided
-              : set.translucentMoments,
+              ? "translucentMomentsDoubleSided"
+              : "translucentMoments",
           this.translucentGroup(frame, 1, [
             dummies.buffer,
             dummies.zero,
@@ -3121,10 +3119,8 @@ export class Engine {
         const second = enc.beginRenderPass(colorPass);
         world.encodeTranslucent(
           second,
-          (set, doubleSided) =>
-            doubleSided
-              ? set.translucentColorDoubleSided
-              : set.translucentColor,
+          (doubleSided) =>
+            doubleSided ? "translucentColorDoubleSided" : "translucentColor",
           this.translucentGroup(frame, 2, [dummies.buffer, zero, higher]),
         );
         second.end();
