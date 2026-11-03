@@ -26,6 +26,12 @@
       "short": "2.0 pages without 1.x",
       "text": "The suite page loaded this repository's unminified 1.x build on every run, 2.0's included: on NYC it added 23 MB to bufferBytes (its source text) and 5.6 MB to heapBytes on 2.0's main thread. 2.0 pages, at this tree or a ref, now load none (r39).",
       "metrics": ["heapBytes", "bufferBytes"]
+    },
+    {
+      "date": "2026-11-03T00:05:00Z",
+      "kind": "method",
+      "short": "baseline 1.147.0",
+      "text": "CesiumJS 1.147.0 joins the default engines and becomes the baseline (1.146.0 still runs)."
     }
   ]
 }

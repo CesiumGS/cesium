@@ -847,8 +847,8 @@
   ],
   "engines": {
     "$comment": "What `cli.mjs run` measures by default, and which is the baseline and the candidate. Releases are pinned exactly (a moving tag would mix releases in one trend).",
-    "default": ["1.146.0", "2.0"],
-    "baseline": "1.146.0",
+    "default": ["1.146.0", "1.147.0", "2.0"],
+    "baseline": "1.147.0",
     "candidate": "2.0"
   },
   "budgets": [
