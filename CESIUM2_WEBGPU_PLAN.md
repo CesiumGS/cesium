@@ -842,7 +842,23 @@ deterministic single-scattering integral within its own noise (six views,
 zenith 1,440 cd/m² with the sun at 45°, multiple scattering 5% to 23% of
 the zenith sky, diffuse horizontal illuminance 7.5 klx (this atmosphere's
 aerosols are very thin, optical depth 0.005; turbidity is a parameter).
-The Monte Carlo IBL reference is next.
+
+**The image-based lighting reference** (`src/lighting/`, Lab "Image-based
+lighting vs reference", `bench/run.mjs ibl`): material balls (a dielectric
+and a metal, roughness 0.05 to 1) rendered by 2.0 and by Monte Carlo
+integration of the glTF BRDF under the same environment cube (cosine and
+visible-normal sampling, balance heuristic, 1,024 samples per pixel),
+compared on 2.0's linear HDR image, which views can now read back
+(`View.readHdr`). Against the default sky, 2.0's spherical harmonics, split
+sum and prefiltered specular are within 0.1-2.7% of the exact integral for
+dielectrics and within 2.3% for metals up to roughness 0.35. Rougher metals
+are brighter by design: in a white furnace a white metal reflects exactly
+1.0 in 2.0 at every roughness (Fdez-Agüera's compensation), where the
+glTF BRDF's single scattering keeps 0.37 at roughness 1. Measuring how much
+energy compensation is right for colored metals needs a multiple-
+scattering reference (Heitz et al. 2016), a follow-up. The procedural
+sky's darker band below the horizon is now an explicit `belowHorizon`
+option (default unchanged), so a furnace can be uniform.
 
 Decided (r40):
 
