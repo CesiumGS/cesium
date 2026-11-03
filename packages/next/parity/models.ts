@@ -7,6 +7,9 @@ import {
   fromDegrees,
   mat4,
   vec3,
+  UNITLESS_EXPOSURE,
+  UNITLESS_SKY,
+  UNITLESS_SUN_ILLUMINANCE,
 } from "../src/index.ts";
 import type { Harness } from "../lab/harness.ts";
 import { flip } from "./flip.ts";
@@ -257,6 +260,8 @@ async function runModels(): Promise<Row[]> {
   const status = root.querySelector(".status")!;
   const viewer = createViewer();
   const engine = await Engine.create();
+  // 1.x's lighting has no units: compare in the same terms.
+  engine.environment.setSky(UNITLESS_SKY);
   const target = new OffscreenTarget(WIDTH, HEIGHT);
   const modelMatrix = eastNorthUpToFixedFrame(
     ellipsoid.cartographicToCartesian(SITE, vec3.vec3()),
@@ -337,8 +342,9 @@ async function runModels(): Promise<Row[]> {
             camera,
             clearColor: [0, 0, 0],
             outputEncoding: colorTransfer === "srgb" ? "srgb" : "gamma2.2",
+            exposure: UNITLESS_EXPOSURE,
             lighting: {
-              sunIntensity: 2,
+              sunIlluminance: UNITLESS_SUN_ILLUMINANCE,
               diffuseIbl: mode === "ibl-diffuse" ? 1 : 0,
               specularIbl: 0,
             },

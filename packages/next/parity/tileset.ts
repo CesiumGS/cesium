@@ -10,6 +10,9 @@ import {
   vec3,
   type TileContent,
   type GltfAsset,
+  UNITLESS_EXPOSURE,
+  UNITLESS_SKY,
+  UNITLESS_SUN_ILLUMINANCE,
 } from "../src/index.ts";
 import type { Harness } from "../lab/harness.ts";
 import { flip } from "./flip.ts";
@@ -316,6 +319,8 @@ async function runTileset(): Promise<Row[]> {
   const pickProperty = params.get("pick") ?? "id";
   const viewer = createViewer();
   const engine = await Engine.create();
+  // 1.x's lighting has no units: compare in the same terms.
+  engine.environment.setSky(UNITLESS_SKY);
   const target = new OffscreenTarget(WIDTH, HEIGHT);
   const rows: Row[] = [];
   lastImages = [];
@@ -418,7 +423,12 @@ async function runTileset(): Promise<Row[]> {
             camera,
             clearColor: [0, 0, 0],
             outputEncoding: colorTransfer === "srgb" ? "srgb" : "gamma2.2",
-            lighting: { sunIntensity: 2, diffuseIbl: 0, specularIbl: 0 },
+            exposure: UNITLESS_EXPOSURE,
+            lighting: {
+              sunIlluminance: UNITLESS_SUN_ILLUMINANCE,
+              diffuseIbl: 0,
+              specularIbl: 0,
+            },
           });
           engine.renderFrame();
           batches = world.batchCount;

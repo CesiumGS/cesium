@@ -1,7 +1,10 @@
 import { Camera } from "./Camera.ts";
 import type { World } from "./World.ts";
 import type { FeatureValue } from "../io/gltfTypes.ts";
-import type { ViewLighting } from "../render/layout.ts";
+import {
+  DAYLIGHT_SUN_ILLUMINANCE,
+  type ViewLighting,
+} from "../render/layout.ts";
 
 /** A normalized rectangle within a target, origin at the top-left. */
 export interface Viewport {
@@ -190,9 +193,11 @@ export interface HdrImage {
   width: number;
   height: number;
   /**
-   * Linear Rec. 709 RGBA per pixel, row by row from the top: the HDR
-   * buffer's values before exposure and tonemapping. Unlit content is
-   * display-referred and not in it.
+   * Linear Rec. 709 RGBA per pixel, row by row from the top: the light in
+   * the scene before exposure and tonemapping, in the scene's units
+   * (cd/m² by default). Unlit content is display-referred and not in it.
+   * Emission is display-relative (added after exposure), so it appears
+   * divided by the exposure scale here.
    */
   data: Float32Array;
 }
@@ -205,13 +210,49 @@ export interface PickResult {
   properties?: Record<string, FeatureValue>;
 }
 
+/**
+ * How a view exposes its light (plan §4.2). Light is in physical units by
+ * default (lux, cd/m²), so the default is a camera set for daylight.
+ */
+export type Exposure =
+  /**
+   * A camera's exposure value at ISO 100: about 15 in direct sun ("sunny
+   * 16"), 12 overcast, 7 in a lit interior. Scale 1 / (1.2 · 2^EV100).
+   */
+  | { ev100: number }
+  /** A plain multiplier, for scenes without physical units. */
+  | { scale: number }
+  /**
+   * Automatic: from the image's average luminance (reflected-light meter,
+   * K = 12.5), adapting over time. EV100 is kept within [min, max];
+   * `compensation` (stops) brightens when positive; `speed` is the
+   * adaptation rate per second.
+   */
+  | {
+      auto: true;
+      compensation?: number;
+      min?: number;
+      max?: number;
+      speed?: number;
+    };
+
+/** No exposure: for scenes lit without units (1.x's terms). */
+export const UNITLESS_EXPOSURE: Exposure = { scale: 1 };
+
+/** Daylight: EV100 15. */
+export const DAYLIGHT_EXPOSURE: Exposure = { ev100: 15 };
+
+/** The exposure scale for an EV100 (Lagarde and de Rousiers 2014). */
+export const ev100ToScale = (ev100: number): number => 1 / (1.2 * 2 ** ev100);
+
 export interface ViewOptions {
   target: RenderTarget;
   world: World;
   camera?: Camera;
   viewport?: Viewport;
-  exposure?: number;
-  /** Linear HDR background color. */
+  /** Default: daylight, EV100 15. */
+  exposure?: Exposure;
+  /** Background color as displayed (already exposed). */
   clearColor?: readonly [number, number, number];
   /** Output transfer function. "gamma2.2" matches CesiumJS 1.x. */
   outputEncoding?: OutputEncoding;
@@ -229,10 +270,26 @@ export class View {
   readonly target: RenderTarget;
   world: World;
   viewport: Viewport;
-  exposure: number;
+  exposure: Exposure;
+  /**
+   * The multiplier from the light in the scene to what is tonemapped, as
+   * of the last frame (automatic exposure moves it). Shading applies it
+   * before writing the HDR target (pre-exposure: fp16 stops at 65,504, and
+   * a sunny day spans about 20 stops from night).
+   */
+  exposureScale: number;
+  /** @internal Automatic exposure's EV100 and when it last moved. */
+  autoExposure?: {
+    ev100: number;
+    time: number;
+    /** A reading is in flight. */
+    pending: boolean;
+    /** At least one reading arrived (the first is taken as is). */
+    metered: boolean;
+  };
   clearColor: readonly [number, number, number];
   outputEncoding: OutputEncoding;
-  /** Sun intensity and image-based lighting factors for this view. */
+  /** The sun's illuminance and image-based lighting factors. */
   lighting: ViewLighting;
   /** Disabled views are skipped (e.g. an offscreen view between captures). */
   enabled = true;
@@ -252,11 +309,15 @@ export class View {
     this.world = options.world;
     this.camera = options.camera ?? new Camera();
     this.viewport = options.viewport ?? { x: 0, y: 0, width: 1, height: 1 };
-    this.exposure = options.exposure ?? 1;
+    this.exposure = options.exposure ?? DAYLIGHT_EXPOSURE;
+    this.exposureScale =
+      "scale" in this.exposure
+        ? this.exposure.scale
+        : ev100ToScale("ev100" in this.exposure ? this.exposure.ev100 : 15);
     this.clearColor = options.clearColor ?? [0.004, 0.008, 0.02];
     this.outputEncoding = options.outputEncoding ?? "srgb";
     this.lighting = {
-      sunIntensity: 2,
+      sunIlluminance: DAYLIGHT_SUN_ILLUMINANCE,
       diffuseIbl: 1,
       specularIbl: 1,
       ...options.lighting,

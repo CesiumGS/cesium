@@ -29,11 +29,30 @@ export interface ViewBlock {
   lighting: ViewLighting;
   /** Highest mip of the prefiltered specular cube. */
   specularMaxLod: number;
+  /** Pre-exposure: scene light × this is what is written and tonemapped. */
+  exposure: number;
 }
 
+/**
+ * The sun's illuminance on a surface facing it, lux, by default: a high
+ * sun through a clear sky (about 100 klx; 132.5 klx outside the
+ * atmosphere). The atmosphere will supply it from the sun's position.
+ */
+export const DAYLIGHT_SUN_ILLUMINANCE = 100_000;
+
+/**
+ * CesiumJS 1.x's `SunLight` intensity, for scenes lit without units (with
+ * `UNITLESS_SKY` and `UNITLESS_EXPOSURE`).
+ */
+export const UNITLESS_SUN_ILLUMINANCE = 2;
+
 export interface ViewLighting {
-  /** Directional sun illuminance (CesiumJS 1.x SunLight default: 2). */
-  sunIntensity: number;
+  /**
+   * The sun's illuminance on a surface facing it: lux by default
+   * (`DAYLIGHT_SUN_ILLUMINANCE`); 2 matches CesiumJS 1.x's unitless
+   * `SunLight` with the unitless sky and an exposure scale of 1.
+   */
+  sunIlluminance: number;
   /** Scale of diffuse (SH) image-based lighting. */
   diffuseIbl: number;
   /** Scale of specular (prefiltered cube) image-based lighting. */
@@ -66,10 +85,11 @@ export function writeViewBlock(
     out[o + 70 + i * 4] = axis[2]!;
     out[o + 71 + i * 4] = 0;
   });
-  out[o + 80] = block.lighting.sunIntensity;
+  out[o + 80] = block.lighting.sunIlluminance;
   out[o + 81] = block.lighting.diffuseIbl;
   out[o + 82] = block.lighting.specularIbl;
   out[o + 83] = block.specularMaxLod;
+  out[o + 85] = block.exposure;
 }
 
 /** `struct DrawRecord` — 128 bytes. */

@@ -11,6 +11,9 @@ import {
   type Tile,
   type Tileset3D,
   tileHeaderKey,
+  UNITLESS_EXPOSURE,
+  UNITLESS_SKY,
+  UNITLESS_SUN_ILLUMINANCE,
 } from "../../src/index.ts";
 import { volumeFromJson } from "../../src/streaming/volumes.ts";
 import {
@@ -551,6 +554,7 @@ export class NextAdapter implements Adapter {
       p?.catch(() => {});
     }
     const engine = (this.engine = await Engine.create());
+    engine.environment.setSky(UNITLESS_SKY);
     const limit = engine.gpu.device.limits.maxStorageBufferBindingSize;
     const world = engine.createWorld({
       maxDraws: 1 << 16,
@@ -573,6 +577,9 @@ export class NextAdapter implements Adapter {
         pixelRatio: ratioOf(renderSettings(spec)),
       }),
       world,
+      // Compared with 1.x frame for frame: lit in 1.x's (unitless) terms.
+      exposure: UNITLESS_EXPOSURE,
+      lighting: { sunIlluminance: UNITLESS_SUN_ILLUMINANCE },
     });
     this.view.camera.near = 1;
     // Budgeted's numeric options, from engine variants (2.0+motionBenefit=0).

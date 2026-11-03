@@ -10,6 +10,7 @@ import opaqueWgsl from "../shaders/opaque.wgsl?raw";
 import presentWgsl from "../shaders/present.wgsl?raw";
 import overlayWgsl from "../shaders/overlay.wgsl?raw";
 import pickWgsl from "../shaders/pick.wgsl?raw";
+import meterWgsl from "../shaders/meter.wgsl?raw";
 
 /**
  * The single render-target configuration views draw their 3D content into.
@@ -55,6 +56,8 @@ export interface Pipelines {
   scatterLayout: GPUBindGroupLayout;
   /** Rays against draw geometry (`World.castRays`, `raycast.wgsl`). */
   raycast: GPUComputePipeline;
+  /** Average log luminance for automatic exposure (`meter.wgsl`). */
+  meter: GPUComputePipeline;
 }
 
 export interface Defaults {
@@ -316,6 +319,7 @@ async function createPipelines(
     pick,
     scatter,
     raycast,
+    meter,
   ] = await Promise.all([
     device.createComputePipelineAsync({
       label: "cull.records",
@@ -388,6 +392,11 @@ async function createPipelines(
         entryPoint: "main",
       },
     }),
+    device.createComputePipelineAsync({
+      label: "meter",
+      layout: "auto",
+      compute: { module: module("meter", meterWgsl), entryPoint: "main" },
+    }),
   ]);
 
   return {
@@ -408,5 +417,6 @@ async function createPipelines(
     scatter,
     scatterLayout,
     raycast,
+    meter,
   };
 }

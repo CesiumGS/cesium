@@ -330,7 +330,7 @@ fn fs(in: VsOut, @builtin(front_facing) frontFacing: bool) -> FsOut {
   // 1.x clamps n·l to at least 0.001, which lets a little sun light reach
   // surfaces facing away from it; 2.0 gives them none.
   let sunVisible = select(0.0, 1.0, dot(n, l) > 0.0);
-  let direct = (diffuse + specular) * nDotL * view.sunIntensity * sunVisible;
+  let direct = (diffuse + specular) * nDotL * view.sunIlluminance * sunVisible;
 
   // Image-based lighting (Fdez-Agüera 2019 multiple scattering).
   let lut = textureSampleLevel(brdfLut, environmentSampler, vec2f(nDotV, roughness), 0.0).rg;
@@ -350,6 +350,8 @@ fn fs(in: VsOut, @builtin(front_facing) frontFacing: bool) -> FsOut {
   }
   let indirect = (diffuseIbl * view.diffuseIbl + specularIbl * view.specularIbl) * occlusion;
 
-  out.color = vec4f(direct + indirect + emissive, 1.0);
+  // Pre-exposed (plan §4.2). Emission is display-relative: authored
+  // emissive colors look the same at any exposure.
+  out.color = vec4f((direct + indirect) * view.exposure + emissive, 1.0);
   return out;
 }

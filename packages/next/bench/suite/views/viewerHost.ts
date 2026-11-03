@@ -21,6 +21,8 @@ import {
   type Tileset3D,
   type TransformHandle,
   type World,
+  DAYLIGHT_SUN_ILLUMINANCE,
+  UNITLESS_SUN_ILLUMINANCE,
 } from "../../../src/index.ts";
 import ionSource from "../../../../engine/Source/Core/Ion.js?raw";
 import {
@@ -403,10 +405,16 @@ export class NextViewerHost implements ViewerHost {
     const { viewer } = this;
     viewer.setSun(lighting.azimuth, lighting.elevation);
     for (const view of viewer.views) {
-      view.lighting.sunIntensity = lighting.intensity;
+      // The panel speaks 1.x's terms (sun 2, exposure 1); 2.0 lights in
+      // physical units: sun 2 is 100 klx, exposure 1 is EV100 15.
+      view.lighting.sunIlluminance =
+        (lighting.intensity / UNITLESS_SUN_ILLUMINANCE) *
+        DAYLIGHT_SUN_ILLUMINANCE;
       view.lighting.diffuseIbl = lighting.diffuseIbl;
       view.lighting.specularIbl = lighting.specularIbl;
-      view.exposure = lighting.exposure;
+      view.exposure = {
+        ev100: 15 - Math.log2(Math.max(lighting.exposure, 1e-3)),
+      };
       view.outputEncoding = lighting.encoding;
     }
     viewer.engine.requestRender();

@@ -103,7 +103,9 @@ async function runIbl() {
     target,
     world,
     clearColor: [0, 0, 0],
-    lighting: { sunIntensity: 0, diffuseIbl: 1, specularIbl: 1 },
+    // The skies here are unitless: no exposure.
+    exposure: { scale: 1 },
+    lighting: { sunIlluminance: 0, diffuseIbl: 1, specularIbl: 1 },
   });
 
   // Balls in a row east-west, two rows, at a place on the globe.

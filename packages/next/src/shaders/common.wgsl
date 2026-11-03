@@ -11,12 +11,12 @@ struct View {
   sunDirection: vec4f,     // unit vector toward the sun, Earth-fixed axes
   viewport: vec4f,         // width, height, 1/width, 1/height
   iblFrame: array<vec4f, 3>, // environment axes (east, up, -north) at the camera
-  sunIntensity: f32,
+  sunIlluminance: f32,     // lux by default
   diffuseIbl: f32,
   specularIbl: f32,
   specularMaxLod: f32,
   viewBit: u32,            // this view's bit in DrawRecord.viewMask
-  _viewPad0: u32,
+  exposure: f32,           // pre-exposure: scene light × exposure is written
   _viewPad1: u32,
   _viewPad2: u32,
 };

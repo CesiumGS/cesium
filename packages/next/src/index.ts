@@ -31,6 +31,10 @@ export {
   CanvasTarget,
   OffscreenTarget,
   type HdrImage,
+  type Exposure,
+  DAYLIGHT_EXPOSURE,
+  UNITLESS_EXPOSURE,
+  ev100ToScale,
   type OutputEncoding,
   type PickResult,
   type RenderTarget,
@@ -122,3 +126,13 @@ export {
   type UploadedAsset,
 } from "./scene/gltfModel.ts";
 export { MaterialFlags } from "./render/layout.ts";
+export {
+  DAYLIGHT_SUN_ILLUMINANCE,
+  UNITLESS_SUN_ILLUMINANCE,
+  type ViewLighting,
+} from "./render/layout.ts";
+export {
+  DEFAULT_SKY,
+  UNITLESS_SKY,
+  type SkyOptions,
+} from "./gpu/Environment.ts";

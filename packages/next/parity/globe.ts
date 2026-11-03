@@ -7,6 +7,9 @@ import {
   resolveIonAsset,
   type Tile,
   type Tileset3D,
+  UNITLESS_EXPOSURE,
+  UNITLESS_SKY,
+  UNITLESS_SUN_ILLUMINANCE,
 } from "../src/index.ts";
 import type { Harness } from "../lab/harness.ts";
 
@@ -276,6 +279,8 @@ async function runGlobe(): Promise<Row[]> {
     await Cesium.CesiumTerrainProvider.fromIonAssetId(TERRAIN_ASSET);
   const viewer = createViewer();
   const engine = await Engine.create();
+  // 1.x's lighting has no units: compare in the same terms.
+  engine.environment.setSky(UNITLESS_SKY);
   const rows: Row[] = [];
 
   const only = params.get("only")?.toLowerCase();
@@ -294,6 +299,8 @@ async function runGlobe(): Promise<Row[]> {
       const view = engine.addView({
         target: new OffscreenTarget(WIDTH, HEIGHT),
         world,
+        exposure: UNITLESS_EXPOSURE,
+        lighting: { sunIlluminance: UNITLESS_SUN_ILLUMINANCE },
       });
       const tileset: Tileset3D = await engine.addTerrain(world, terrain.url, {
         headers: terrain.headers,

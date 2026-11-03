@@ -7,6 +7,9 @@ import {
   OffscreenTarget,
   resolveIonAsset,
   type Tileset3D,
+  UNITLESS_EXPOSURE,
+  UNITLESS_SKY,
+  UNITLESS_SUN_ILLUMINANCE,
 } from "../src/index.ts";
 import { flip } from "./flip.ts";
 import type { Harness } from "../lab/harness.ts";
@@ -195,6 +198,8 @@ async function runImagery(): Promise<Row[]> {
   const ellipsoid = params.has("ellipsoid");
   const viewer = await createViewer(token, ellipsoid);
   const engine = await Engine.create();
+  // 1.x's lighting has no units: compare in the same terms.
+  engine.environment.setSky(UNITLESS_SKY);
   const rows: Row[] = [];
 
   for (const cam of CAMERAS) {
@@ -209,7 +214,13 @@ async function runImagery(): Promise<Row[]> {
         indexBytes: 128 << 20,
       });
       const target = new OffscreenTarget(WIDTH, HEIGHT);
-      const view = engine.addView({ target, world, clearColor: [0, 0, 0] });
+      const view = engine.addView({
+        target,
+        world,
+        clearColor: [0, 0, 0],
+        exposure: UNITLESS_EXPOSURE,
+        lighting: { sunIlluminance: UNITLESS_SUN_ILLUMINANCE },
+      });
       const tileset: Tileset3D = ellipsoid
         ? engine.addEllipsoid(world, { policy: "stepwise", imagery })
         : await engine.addTerrain(world, terrain.url, {

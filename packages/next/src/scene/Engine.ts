@@ -31,6 +31,7 @@ import {
   CanvasTarget,
   OffscreenTarget,
   View,
+  ev100ToScale,
   type HdrImage,
   type PixelRect,
   type RenderTarget,
@@ -217,12 +218,20 @@ export class Engine {
   private readonly pickResult: GPUBuffer;
   private readonly pickParamsData = new Uint32Array(4);
   private readonly picks: PendingPick[] = [];
+  /** Exposure meter readings this frame, mapped after submit. */
+  private readonly meters: Array<{
+    view: View;
+    readback: GPUBuffer;
+    scratch: GPUBuffer[];
+  }> = [];
   /** HDR images copied this frame (`View.readHdr`), mapped after submit. */
   private readonly hdrReads: Array<{
     buffer: GPUBuffer;
     bytesPerRow: number;
     width: number;
     height: number;
+    /** The pre-exposure of the frame read: divided out. */
+    exposure: number;
     resolvers: Array<(image: HdrImage) => void>;
   }> = [];
   private readonly presentData = new DataView(new ArrayBuffer(16));
@@ -292,8 +301,9 @@ export class Engine {
       width: 1,
       height: 1,
       iblFrame: scratchFrame,
-      lighting: { sunIntensity: 0, diffuseIbl: 0, specularIbl: 0 },
+      lighting: { sunIlluminance: 0, diffuseIbl: 0, specularIbl: 0 },
       specularMaxLod: 0,
+      exposure: 1,
     };
     this.pickParams = device.createBuffer({
       size: 16,
@@ -1082,12 +1092,12 @@ export class Engine {
     }
     s[n++] = c.fov;
     s[n++] = c.near;
-    s[n++] = view.exposure;
+    s[n++] = this.updateExposure(view);
     s[n++] = view.clearColor[0];
     s[n++] = view.clearColor[1];
     s[n++] = view.clearColor[2];
     s[n++] = view.outputEncoding === "srgb" ? 0 : 1;
-    s[n++] = view.lighting.sunIntensity;
+    s[n++] = view.lighting.sunIlluminance;
     s[n++] = view.lighting.diffuseIbl;
     s[n++] = view.lighting.specularIbl;
     s[n++] = view.world.id;
@@ -1287,16 +1297,28 @@ export class Engine {
       this.resolvePicks(this.picks);
       this.picks.length = 0;
     }
+    for (const meter of this.meters.splice(0)) {
+      void meter.readback.mapAsync(GPUMapMode.READ).then(() => {
+        const [sum, count] = new Float32Array(meter.readback.getMappedRange());
+        meter.readback.destroy();
+        meter.scratch.forEach((b) => b.destroy());
+        this.adaptExposure(
+          meter.view,
+          count! > 0 ? 2 ** (sum! / count!) : undefined,
+        );
+      });
+    }
     for (const read of this.hdrReads.splice(0)) {
       void read.buffer.mapAsync(GPUMapMode.READ).then(() => {
         const halves = new Uint16Array(read.buffer.getMappedRange());
         const data = new Float32Array(read.width * read.height * 4);
         const rowHalves = read.bytesPerRow / 2;
+        const unexpose = 1 / read.exposure;
         for (let y = 0; y < read.height; y++) {
           for (let i = 0; i < read.width * 4; i++) {
-            data[y * read.width * 4 + i] = halfToFloat(
-              halves[y * rowHalves + i]!,
-            );
+            const value = halfToFloat(halves[y * rowHalves + i]!);
+            data[y * read.width * 4 + i] =
+              i % 4 === 3 ? value : value * unexpose;
           }
         }
         read.buffer.unmap();
@@ -1347,6 +1369,7 @@ export class Engine {
     block.iblFrame = environmentFrame(camera.position);
     block.lighting = view.lighting;
     block.specularMaxLod = this.ctx.environment.maxLod;
+    block.exposure = view.exposureScale;
     writeViewBlock(this.viewData, (index * VIEW_STRIDE) / 4, block);
     this.viewDataU32[(index * VIEW_STRIDE) / 4 + VIEW_BIT_WORD] =
       this.viewBit(view);
@@ -1405,6 +1428,67 @@ export class Engine {
   }
 
   /** Reads a pick's feature ID and depth from the view's frame textures. */
+  /**
+   * The view's exposure scale this frame: fixed for an EV100 or a scale;
+   * automatic exposure moves toward its meter reading (`meterExposure`).
+   */
+  private updateExposure(view: View): number {
+    const e = view.exposure;
+    if ("scale" in e) {
+      view.exposureScale = e.scale;
+    } else if ("ev100" in e) {
+      view.exposureScale = ev100ToScale(e.ev100);
+    } else {
+      view.autoExposure ??= {
+        ev100: Math.min(Math.max(15, e.min ?? -6), e.max ?? 18),
+        time: performance.now(),
+        pending: false,
+        metered: false,
+      };
+      view.exposureScale = ev100ToScale(view.autoExposure.ev100);
+    }
+    return view.exposureScale;
+  }
+
+  /**
+   * Automatic exposure, from a meter reading (average luminance, the
+   * scene's units): the EV100 a reflected-light meter gives (K = 12.5,
+   * ISO 100) minus the compensation, within [min, max], approached
+   * exponentially at `speed` per second; the first reading is taken as is.
+   * Renders again until it settles.
+   */
+  private adaptExposure(view: View, average: number | undefined): void {
+    const e = view.exposure;
+    const state = view.autoExposure;
+    if (!("auto" in e) || !state) {
+      return;
+    }
+    state.pending = false;
+    if (average === undefined) {
+      return;
+    }
+    const target = Math.min(
+      Math.max(
+        Math.log2((average * 100) / 12.5) - (e.compensation ?? 0),
+        e.min ?? -6,
+      ),
+      e.max ?? 18,
+    );
+    const now = performance.now();
+    if (!state.metered) {
+      state.ev100 = target;
+      state.metered = true;
+    } else {
+      const dt = Math.min((now - state.time) / 1000, 1);
+      state.ev100 +=
+        (target - state.ev100) * (1 - Math.exp(-dt * (e.speed ?? 2)));
+    }
+    state.time = now;
+    if (Math.abs(target - state.ev100) > 0.02) {
+      this.requestRender();
+    }
+  }
+
   private encodePick(
     enc: GPUCommandEncoder,
     view: View,
@@ -1561,7 +1645,8 @@ export class Engine {
     // Rebound to this frame's target texture before every execute.
     const output = graph.importTexture("output", {} as GPUTextureView);
 
-    const clearColor: GPUColorDict = { r: 0, g: 0, b: 0, a: 1 };
+    // Alpha 0 where nothing is drawn: the exposure meter leaves it out.
+    const clearColor: GPUColorDict = { r: 0, g: 0, b: 0, a: 0 };
     const opaqueColor: GPURenderPassColorAttachment = {
       view: undefined as never,
       resolveTarget: undefined,
@@ -1690,8 +1775,54 @@ export class Engine {
           bytesPerRow,
           width,
           height,
+          exposure: view.exposureScale,
           resolvers: view.pendingHdrReads.splice(0),
         });
+      },
+    );
+
+    graph.addPass(
+      "meter",
+      { reads: [resolved], sideEffect: true },
+      (enc, get) => {
+        const auto = view.autoExposure;
+        if (!("auto" in view.exposure) || !auto || auto.pending) {
+          return;
+        }
+        auto.pending = true;
+        const params = device.createBuffer({
+          size: 16,
+          usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+        });
+        const data = new ArrayBuffer(16);
+        new Float32Array(data, 0, 1)[0] = view.exposureScale;
+        new Uint32Array(data, 4, 2).set([width, height]);
+        device.queue.writeBuffer(params, 0, data);
+        const result = device.createBuffer({
+          size: 8,
+          usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
+        });
+        const readback = device.createBuffer({
+          size: 8,
+          usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
+        });
+        const pass = enc.beginComputePass({ label: "meter" });
+        pass.setPipeline(pipelines.meter);
+        pass.setBindGroup(
+          0,
+          device.createBindGroup({
+            layout: pipelines.meter.getBindGroupLayout(0),
+            entries: [
+              { binding: 0, resource: get(resolved) },
+              { binding: 1, resource: { buffer: params } },
+              { binding: 2, resource: { buffer: result } },
+            ],
+          }),
+        );
+        pass.dispatchWorkgroups(1);
+        pass.end();
+        enc.copyBufferToBuffer(result, 0, readback, 0, 8);
+        this.meters.push({ view, readback, scratch: [params, result] });
       },
     );
 
@@ -1710,7 +1841,7 @@ export class Engine {
         const params = this.presentData;
         params.setFloat32(0, x, true);
         params.setFloat32(4, y, true);
-        params.setFloat32(8, view.exposure, true);
+        params.setFloat32(8, 1, true);
         const encoding = this.ctx.outputFormat.endsWith("-srgb")
           ? 0
           : view.outputEncoding === "gamma2.2"

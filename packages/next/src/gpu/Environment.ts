@@ -2,7 +2,11 @@ import iblWgsl from "../shaders/ibl.wgsl?raw";
 import { MipGenerator } from "./MipGenerator.ts";
 
 export interface SkyOptions {
-  /** Linear radiance at the zenith, the horizon and the ground. */
+  /**
+   * Linear radiance at the zenith, the horizon and the ground: cd/m² for
+   * physical scenes (`DEFAULT_SKY`), unitless for 1.x-style ones
+   * (`UNITLESS_SKY`).
+   */
   zenith: readonly [number, number, number];
   horizon: readonly [number, number, number];
   ground: readonly [number, number, number];
@@ -10,10 +14,40 @@ export interface SkyOptions {
   belowHorizon?: readonly [number, number, number];
 }
 
-export const DEFAULT_SKY: SkyOptions = {
+/**
+ * The procedural sky without units, as 2.0 lit scenes before physical
+ * units (with a sun of 2 and an exposure scale of 1, like 1.x).
+ */
+export const UNITLESS_SKY: SkyOptions = {
   zenith: [0.18, 0.32, 0.65],
   horizon: [0.62, 0.72, 0.85],
   ground: [0.2, 0.18, 0.15],
+};
+
+/** cd/m² per unit of `UNITLESS_SKY` for the physical default. */
+const SKY_LUMINANCE = 12_000;
+
+/**
+ * The default sky in cd/m², until the atmosphere replaces it: the unitless
+ * gradient scaled so its diffuse horizontal illuminance is about 13 klx (a
+ * clear sky's; zenith about 3,800 cd/m², horizon 8,500).
+ */
+export const DEFAULT_SKY: SkyOptions = {
+  zenith: UNITLESS_SKY.zenith.map((c) => c * SKY_LUMINANCE) as [
+    number,
+    number,
+    number,
+  ],
+  horizon: UNITLESS_SKY.horizon.map((c) => c * SKY_LUMINANCE) as [
+    number,
+    number,
+    number,
+  ],
+  ground: UNITLESS_SKY.ground.map((c) => c * SKY_LUMINANCE) as [
+    number,
+    number,
+    number,
+  ],
 };
 
 const SKY_SIZE = 128;

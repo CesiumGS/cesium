@@ -9,6 +9,9 @@ import {
   mat4,
   vec3,
   type World,
+  UNITLESS_EXPOSURE,
+  UNITLESS_SKY,
+  UNITLESS_SUN_ILLUMINANCE,
 } from "../src/index.ts";
 import type { Harness } from "../lab/harness.ts";
 import { flip } from "./flip.ts";
@@ -254,6 +257,8 @@ interface RowImages {
 
 async function setup() {
   const engine = await Engine.create();
+  // 1.x's lighting has no units: compare in the same terms.
+  engine.environment.setSky(UNITLESS_SKY);
   const srgbWorld = engine.createWorld();
   populate(srgbWorld, srgbToLinear);
   const legacyColorWorld = engine.createWorld();
@@ -263,6 +268,8 @@ async function setup() {
     target,
     world: srgbWorld,
     clearColor: [0, 0, 0],
+    exposure: UNITLESS_EXPOSURE,
+    lighting: { sunIlluminance: UNITLESS_SUN_ILLUMINANCE },
   });
   view.camera.near = NEAR;
   const variants = [

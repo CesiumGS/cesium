@@ -1,10 +1,11 @@
 // Resolves a view's HDR image into its rectangle of the output target:
-// exposure, Khronos PBR Neutral tonemapping, then output encoding: the exact
-// sRGB curve, or gamma 2.2 to match CesiumJS 1.x (`czm_inverseGamma`).
+// Khronos PBR Neutral tonemapping, then output encoding: the exact sRGB
+// curve, or gamma 2.2 to match CesiumJS 1.x (`czm_inverseGamma`). The image
+// is already exposed (shading pre-exposes, plan §4.2).
 
 struct PresentParams {
   origin: vec2f,     // viewport origin in target pixels
-  exposure: f32,
+  _pad: f32,
   encoding: u32, // 0 none (-srgb target), 1 sRGB, 2 gamma 2.2
 };
 
@@ -52,7 +53,7 @@ fn fs(@builtin(position) frag: vec4f) -> @location(0) vec4f {
   let sceneCoverage = 1.0 - shown.a;
   let scene = textureLoad(hdr, coord, 0).rgb / max(sceneCoverage, 1e-4);
   var color =
-    pbrNeutral(max(scene * params.exposure, vec3f(0.0))) * sceneCoverage +
+    pbrNeutral(max(scene, vec3f(0.0))) * sceneCoverage +
     shown.rgb;
   color = clamp(color, vec3f(0.0), vec3f(1.0));
   if (params.encoding == 1u) {
