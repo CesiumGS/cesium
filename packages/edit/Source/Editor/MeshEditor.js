@@ -54,16 +54,6 @@ const scratchMaximum = new Cartesian3();
 const scratchAabb = new AxisAlignedBoundingBox();
 
 /**
- * A {@link MeshEditor}'s built-in tools.
- *
- * @typedef {object} MeshEditorTools
- * @property {MeshEditorTool} select Selects the clicked vertex, edge or face.
- * @property {MeshEditorTool} translate Moves the selection via mouse drags.
- *
- * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
- */
-
-/**
  * <div class="notice">
  * Use {@link MeshEditor.addToScene} to create an editor. Do not call the
  * constructor directly.
@@ -93,7 +83,7 @@ const scratchAabb = new AxisAlignedBoundingBox();
  * const mesh = editor.addMesh(model.nodes[0].primitives[0], { parent: group });
  * editor.setMeshActive(mesh);
  * editor.mode = Cesium.EditMode.VERTEX;
- * editor.activeTool = editor.tools.select;
+ * editor.activeTool = Cesium.SelectTool.addTo(editor);
  */
 class MeshEditor {
   /** @type {MeshEditorModule} */
@@ -130,6 +120,9 @@ class MeshEditor {
 
   /** @type {MeshEditorStyle} */
   #style = new MeshEditorStyle();
+
+  /** @type {Set<MeshEditorTool>} */
+  #tools = new Set();
 
   /**
    * @param {object} options
@@ -230,15 +223,6 @@ class MeshEditor {
     return this.#root;
   }
 
-  /**
-   * The editor's built-in tools.
-   *
-   * @type {MeshEditorTools}
-   * @readonly
-   */
-  get tools() {
-    throw new DeveloperError("Not implemented.");
-  }
 
   /**
    * The tool that receives pointer input, or <code>undefined</code> for none.
@@ -250,11 +234,52 @@ class MeshEditor {
    * @exception {DeveloperError} The tool doesn't support the current mode.
    */
   get activeTool() {
-    throw new DeveloperError("Not implemented.");
+    const id = this.#wasmEditor.activeTool;
+    for (const tool of this.#tools) {
+      if (tool._id === id) {
+        return tool;
+      }
+    }
+    return undefined;
   }
 
   set activeTool(value) {
-    throw new DeveloperError("Not implemented.");
+    if (!defined(value)) {
+      this.#wasmEditor.clearActiveTool();
+      return;
+    }
+
+    //>>includeStart('debug', pragmas.debug);
+    if (!this.#tools.has(value)) {
+      throw new DeveloperError("The tool isn't in this editor.");
+    }
+    //>>includeEnd('debug');
+
+    try {
+      this.#wasmEditor.setActiveTool(value._id);
+    } catch (error) {
+      throw new DeveloperError(`The tool can't be activated: ${error.message}`);
+    }
+  }
+
+  /**
+   * Adds a new wasm tool to the editor and creates its handle. Called by each
+   * tool type's <code>addTo</code>.
+   *
+   * @template {MeshEditorTool} T
+   * @param {function(new:T, object)} ToolType The handle's type.
+   * @param {function(WasmMeshEditor): number} addToWasm Adds the wasm tool and returns its ID.
+   * @returns {T} The new tool.
+   * @ignore
+   */
+  _addTool(ToolType, addToWasm) {
+    const wasmEditor = this.#wasmEditor;
+    const id = addToWasm(wasmEditor);
+
+    const tool = new ToolType({ wasmEditor, id });
+    this.#tools.add(tool);
+
+    return tool;
   }
 
   /**
