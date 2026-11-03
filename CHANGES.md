@@ -1,5 +1,13 @@
 # Change Log
 
+## 1.148 - 2026-12-01
+
+### @cesium/engine
+
+#### Additions :tada:
+
+- Added experimental `Cesium3DTileset` option `vectorGeoJson`, which loads `MAXAR_content_geojson` tile content as vector primitives with filled polygons, instead of as a model. [#14007](https://github.com/CesiumGS/cesium/pull/14007)
+
 ## 1.147 - 2026-11-02
 
 ### @cesium/core
