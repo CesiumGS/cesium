@@ -2818,18 +2818,32 @@ WebAssembly (Draco, meshopt, Basis) in its workers; the page bundle has no
 WebAssembly and no `eval`. Tested with the guide's split policy, the page
 served `script-src 'self'` (plus `'unsafe-inline'` for the example's own
 inline script) and the same-origin worker response `script-src 'self'
-'wasm-unsafe-eval' 'unsafe-eval'`: everything loads, and the page itself
-can neither compile WebAssembly nor evaluate strings. Found and fixed on
-the way: glTF `data:` URIs were `fetch`ed in the worker, which `connect-src`
-checks (blocked under `'self'`); they are decoded in place now, as 1.x
-does. Still open:
+'wasm-unsafe-eval'`: everything loads (Draco, Basis KTX2), and the page
+itself can neither compile WebAssembly nor evaluate strings. Fixed on the
+way:
 
-- **Basis needs `'unsafe-eval'` in the worker.** The vendored transcoder
-  (1.x's Emscripten build) generates code with `new Function` (embind), and
-  2.0 evaluates its UMD source with `new Function` too. Without it, KTX2
-  fails with a CSP error while Draco and meshopt load. Fix: vendor an ES
-  module build made with `-s DYNAMIC_EXECUTION=0 -s EXPORT_ES6=1` and
-  import it normally (the guide's replacement for 1.x).
+- **glTF `data:` URIs** were `fetch`ed in the worker, which `connect-src`
+  checks (blocked under `'self'`); they are decoded in place now, as 1.x
+  does.
+- **Basis needed `'unsafe-eval'`.** The vendored transcoder glue (1.x's
+  Emscripten build) generates functions from strings in four places of its
+  embind runtime (`createNamedFunction`, `craftInvokerFunction`,
+  `craftEmvalAllocator`, `__emval_get_method_caller`), and 2.0 evaluated
+  the UMD script itself with `new Function`. `basisTranscoderEsm.ts` (a
+  Vite plugin, `…/basis_transcoder.js?basis-esm`) now rewrites the glue at
+  build time into an ES module with each generator replaced by the closure
+  Emscripten emits under `-s DYNAMIC_EXECUTION=0`; every patch must match
+  once or the build fails. Transcoding is unchanged: the 7 KTX2 samples in
+  `Specs/Data` into RGBA8, BC7, ASTC and ETC2, every level (72 outcomes),
+  are identical to the original glue's; model parity is identical. The
+  output carries a notice of the change (Apache-2.0 §4(b): Basis Universal
+  is Apache-2.0, Emscripten's runtime MIT), and the library build ships
+  the repository's `LICENSE.md` with its third-party notices. The
+  alternative, rebuilding the transcoder with Emscripten, stays open if the
+  glue is ever updated.
+
+Still open:
+
 - **Strict separation needs same-origin workers.** A worker started from a
   `blob:` URL (the cross-origin path) takes the page's policy, so the page
   must allow `blob:` and the CDN in `worker-src` and `script-src`, and
@@ -2874,6 +2888,7 @@ links to where it is explained.
 | 12  | `Model.pick` passes 5 arguments to `pickModel`'s 7, so `result` lands in `ellipsoid`; tile content works by accident.                                                                                                                                                                                                                                                                                                                                                                                                                                          | CesiumJS 1.x         | docs/clamping-1x-spec.md §5        | To file                          |
 | 13  | `HeightmapTerrainData` mesh-path heights ignore `heightScale` and `heightOffset` after `createMesh` (latent; reached for LERC).                                                                                                                                                                                                                                                                                                                                                                                                                                | CesiumJS 1.x         | docs/clamping-1x-spec.md §5        | To file                          |
 | 14  | Loading 1.x from a CDN or a bundler is a common struggle. Consider backporting 2.0's approach for 1.148.0: locate workers, wasm and assets from `import.meta.url` in the ESM build (no `CESIUM_BASE_URL`, nothing to copy), keeping the blob shim 1.x already uses for cross-origin workers. First collect the failures users actually report (forum, issues) to confirm this is what they hit. Coordinate with PR #13669 (WebAssembly in workers, CSP guide): it adds worker URL options and documents `CESIUM_BASE_URL` per policy, which this would change. | CesiumJS 1.x         | §13.12 (pages without a build)     | To bring to the team             |
+| 15  | 1.x's bundled Basis transcoder needs `'unsafe-eval'` in its workers; PR #13669's guide asks applications to build their own with `-s DYNAMIC_EXECUTION=0`. 2.0 instead patches the four embind code generators in the same vendored glue at build time (closures, as Emscripten emits without dynamic execution; identical output on 72 transcodes), so a strict worker policy needs only `'wasm-unsafe-eval'`. 1.x could ship the same patch for 1.148.0 and make strict CSP work out of the box.                                                             | CesiumJS 1.x         | §13.12 (pages without a build)     | To bring to the team             |
 
 ## 15. M3 progress
 
