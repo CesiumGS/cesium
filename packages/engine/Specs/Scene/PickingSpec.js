@@ -169,7 +169,7 @@ describe(
         scene.globe = globe;
         globe.depthTestAgainstTerrain = true;
         return pollToPromise(function () {
-          scene.render();
+          scene.renderForSpecs();
           return globe.tilesLoaded;
         });
       }
@@ -1458,7 +1458,7 @@ describe(
           });
         return pollToPromise(function () {
           // Scene requires manual updates in the tests to move along the promise
-          scene.render();
+          scene.renderForSpecs();
           return completed;
         }).then(function () {
           return result;
@@ -1481,7 +1481,7 @@ describe(
           });
         return pollToPromise(function () {
           // Scene requires manual updates in the tests to move along the promise
-          scene.render();
+          scene.renderForSpecs();
           return completed;
         }).then(function () {
           return result;
@@ -1503,7 +1503,7 @@ describe(
           });
         return pollToPromise(function () {
           // Scene requires manual updates in the tests to move along the promise
-          scene.render();
+          scene.renderForSpecs();
           return completed;
         }).then(function () {
           return result;
@@ -1521,7 +1521,7 @@ describe(
           });
         return pollToPromise(function () {
           // Scene requires manual updates in the tests to move along the promise
-          scene.render();
+          scene.renderForSpecs();
           return completed;
         }).then(function () {
           return result;
@@ -2667,7 +2667,7 @@ describe(
 
         return pollToPromise(function () {
           // Scene requires manual updates in the tests to move along the promise
-          scene.render();
+          scene.renderForSpecs();
           return completed === 2;
         }).then(function () {
           expect(results[0][0]).toBeDefined();

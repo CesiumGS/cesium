@@ -7,8 +7,8 @@ import gulpZip from "gulp-zip";
 import gulpRename from "gulp-rename";
 import { glslToJavaScript } from "./scripts/build-utilities.js";
 import { release } from "./gulpfile.js";
+import { rmSync } from "fs";
 import { readFile, writeFile } from "fs/promises";
-import { rimraf } from "rimraf";
 import { finished } from "stream/promises";
 import { createRequire } from "module";
 import { buildSandcastleApp } from "./scripts/buildSandcastle.js";
@@ -223,11 +223,11 @@ export const makeZip = gulp.series(
 
     await finished(src);
 
-    rimraf.sync("./package.noprepare.json");
-    rimraf.sync("./packages/core/package.noprepare.json");
-    rimraf.sync("./packages/gltf/package.noprepare.json");
-    rimraf.sync("./packages/engine/package.noprepare.json");
-    rimraf.sync("./packages/widgets/package.noprepare.json");
+    rmSync("./package.noprepare.json", { force: true });
+    rmSync("./packages/core/package.noprepare.json", { force: true });
+    rmSync("./packages/gltf/package.noprepare.json", { force: true });
+    rmSync("./packages/engine/package.noprepare.json", { force: true });
+    rmSync("./packages/widgets/package.noprepare.json", { force: true });
 
     return src;
   },

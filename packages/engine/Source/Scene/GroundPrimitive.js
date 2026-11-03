@@ -232,7 +232,7 @@ function GroundPrimitive(options) {
     compressVertices: options.compressVertices ?? true,
     _createBoundingVolumeFunction: undefined,
     _updateAndQueueCommandsFunction: undefined,
-    _pickPrimitive: that,
+    _pickPrimitive: /** @type {GroundPrimitive} */ (that),
     _extruded: true,
     _uniformMap: GroundPrimitiveUniformMap,
   };
