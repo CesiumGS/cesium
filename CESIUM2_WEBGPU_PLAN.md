@@ -747,7 +747,16 @@ Next steps (r44, after the night work). Now, in this order:
 1. **Shadow cascades' aliasing**: filtered lookups (a Poisson or Vogel
    disk of comparisons, scaled to each cascade's texel) instead of one
    hard comparison, and cascades fitted to what is drawn, not only to the
-   view's slices.
+   view's slices. Done (r44), the filter: Castaño's optimized PCF (a 5 × 5
+   tent from 9 bilinear comparisons) for the 3 × 3 box; with the sun
+   stepping 0.08° over lower Manhattan from 450 m (NYC buildings), pixels
+   jumping by more than 8 levels went from 38,000 to 27,000 a step (some
+   of the rest is the shadows' own motion). The fit is still to do: the
+   buildings there fall in the third cascade, 0.6 m a texel; fitting the
+   cascades to the depth actually on screen (Lauritzen's sample
+   distribution shadow maps, a min/max reduction of the depth buffer on
+   the GPU each frame) is the next step, the content's bounds being no
+   help once the globe reaches the horizon.
 2. **Haze at the day/night line from orbit**: the per-vertex march
    interpolates a step (lit, then in the Earth's shadow) across the
    coarsest tiles' triangles, drawing blocky streaks. Where a triangle's

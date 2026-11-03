@@ -480,28 +480,41 @@ fn ambientOcclusion(pixel: vec2f) -> f32 {
 
 const SHADOW_SIZE: f32 = 2048.0;
 
-// One cascade's light at a point: 3 × 3 PCF, the point pushed along its
-// normal by 1.5 of the cascade's texels; 1 outside the cascade.
+// One cascade's light at a point: a 5 × 5 tent filter of depth
+// comparisons from 9 bilinear ones (Castaño's optimized PCF, as The
+// Witness and MJP's shadow samples): smooth edges where a 3 × 3 box of
+// texel-spaced comparisons drew stair-steps wherever a texel spans several
+// pixels. The point is pushed along its normal by 2 of the cascade's
+// texels (the filter's reach); 1 outside the cascade.
 fn cascadeLight(c: u32, relPosition: vec3f, n: vec3f) -> f32 {
-  let p = shadows.matrices[c] * vec4f(relPosition + n * (shadows.texels[c] * 1.5), 1.0);
+  let p = shadows.matrices[c] * vec4f(relPosition + n * (shadows.texels[c] * 2.0), 1.0);
   let uv = vec2f(p.x * 0.5 + 0.5, 0.5 - p.y * 0.5);
   if (any(uv < vec2f(0.0)) || any(uv > vec2f(1.0)) || p.z > 1.0) {
     return 1.0;
   }
   let texel = 1.0 / SHADOW_SIZE;
+  let at = uv * SHADOW_SIZE;
+  let base = floor(at + 0.5);
+  let st = at + 0.5 - base;
+  let origin = (base - 0.5) * texel;
+  let uw = vec3f(4.0 - 3.0 * st.x, 7.0, 1.0 + 3.0 * st.x);
+  let u = vec3f((3.0 - 2.0 * st.x) / uw.x - 2.0, (3.0 + st.x) / uw.y, st.x / uw.z + 2.0);
+  let vw = vec3f(4.0 - 3.0 * st.y, 7.0, 1.0 + 3.0 * st.y);
+  let v = vec3f((3.0 - 2.0 * st.y) / vw.x - 2.0, (3.0 + st.y) / vw.y, st.y / vw.z + 2.0);
   var lit = 0.0;
-  for (var dy = -1; dy <= 1; dy++) {
-    for (var dx = -1; dx <= 1; dx++) {
-      lit += textureSampleCompareLevel(shadowMap, shadowSampler, uv + vec2f(f32(dx), f32(dy)) * texel, c, p.z);
+  for (var j = 0; j < 3; j++) {
+    for (var i = 0; i < 3; i++) {
+      let offset = vec2f(u[i], v[j]) * texel;
+      lit += uw[i] * vw[j] * textureSampleCompareLevel(shadowMap, shadowSampler, origin + offset, c, p.z);
     }
   }
-  return lit / 9.0;
+  return lit / 144.0;
 }
 
 // How much of the sun reaches a camera-relative position on a surface with
-// geometric normal `n`: 3 × 3 bilinear comparisons (a smooth edge about
-// three texels wide), offset along the normal by a texel and a half (no
-// acne on surfaces at grazing angles to the sun), fading out at the
+// geometric normal `n`: a 5 × 5 tent of comparisons (`cascadeLight`: a
+// smooth edge about four texels wide), offset along the normal (no acne
+// on surfaces at grazing angles to the sun), fading out at the
 // shadows' far distance, blending between cascades.
 fn sunShadow(relPosition: vec3f, n: vec3f) -> f32 {
   if (shadows.forward.w < 0.5) {
