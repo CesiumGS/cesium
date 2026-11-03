@@ -636,6 +636,12 @@ any zoom. 2.0 draws the sky as it is, so the camera decides what shows:
 - **Diffuse light**: the Milky Way and zodiacal light as a low-resolution
   all-sky luminance map (the natural night sky is about 2 × 10⁻⁴ cd/m²),
   under the same exposure.
+- **Deep-sky objects** in their real places: Andromeda, the Magellanic
+  Clouds, the Orion Nebula, the Pleiades and other bright Messier and NGC
+  objects, as images with their catalog surface brightness (Andromeda's
+  core about 22 mag/arcsec², some 2 × 10⁻⁴ cd/m², as faint as the natural
+  night sky): they show only under a dark sky at long exposures, as with a
+  real camera. Image licenses to check.
 - **Moon and planets** from ephemerides: the moon's disk lit by the sun
   with its phase (and earthshine), the planets as points with their
   magnitudes. The moon's light also lights the scene at night (about
@@ -921,6 +927,25 @@ parity harnesses (image, models, tilesets, imagery, globe: bit-identical
 results) and the benchmark suite's 2.0 adapter (filmstrip FLIP against
 1.147.0 unchanged). Dyno's Viewer keeps its 1.x-style sliders, mapped to
 physical units for 2.0 (sun 2 is 100 klx, exposure 1 is EV100 15).
+
+**The real-time atmosphere, first tables** (r40; `src/atmosphere/`, Lab
+"Real-time sky vs reference", `bench/run.mjs sky`): Hillaire's
+transmittance (256 × 64) and multiple-scattering (32 × 32) tables built on
+the GPU from the reference's parameters, and a ray-marched sky from them,
+checked against the spectral reference in cd/m². At three wavelengths
+(Bruneton's real-time colors) the sky was 20-40% off near sunset and in
+twilight; that was the three-wavelength color model, not the tables (the
+CPU's single scattering at the same three wavelengths had the same
+errors). It now computes at 8 wavelengths (bands of 50 nm over 380-780,
+two passes of four, each band weighted by the solar spectrum through the
+CIE functions, within 0.5% of the full spectral luminance): daytime probes
+within about ±7%, the whole sky within 2-5%, sunset within -7%..-1%, 10 km
+within ±4%; twilight (sun 3° down) +6% over the whole sky with the
+dimmest directions +10-50%, where Hillaire's isotropic multiple
+scattering is weakest (a refinement for later). Next: the sky-view table
+and drawing the sky and the sun's disk, then the environment lighting and
+the sun's illuminance from the atmosphere (replacing the procedural sky
+and the fixed 100 klx), then aerial perspective.
 
 **Regressions fixed on the way** (r40): wheel zoom slid sideways in split
 view (zoom leveled the camera after pinning the target under the cursor;
