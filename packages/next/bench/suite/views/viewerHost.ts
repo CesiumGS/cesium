@@ -155,6 +155,8 @@ export interface Lighting {
   exposure: number;
   /** 2.0: the sun's light through the atmosphere (per pixel). */
   sunFromAtmosphere: boolean;
+  /** 2.0: the air between the camera and the scene (haze with distance). */
+  aerialPerspective: boolean;
   /** 2.0: otherwise, a white sun of this illuminance, lux. */
   sunIlluminance: number;
   /** 2.0: the camera's exposure value at ISO 100, when not automatic. */
@@ -431,6 +433,7 @@ export class NextViewerHost implements ViewerHost {
       view.lighting.sunIlluminance = lighting.sunFromAtmosphere
         ? "atmosphere"
         : lighting.sunIlluminance;
+      view.aerialPerspective = lighting.aerialPerspective;
       view.lighting.diffuseIbl = lighting.diffuseIbl;
       view.lighting.specularIbl = lighting.specularIbl;
       view.exposure = lighting.autoExposure

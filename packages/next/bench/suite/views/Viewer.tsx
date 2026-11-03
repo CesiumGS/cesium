@@ -101,6 +101,7 @@ const LIGHTING_DEFAULTS: Lighting = {
   specularIbl: 1,
   exposure: 1,
   sunFromAtmosphere: true,
+  aerialPerspective: true,
   sunIlluminance: 100_000,
   ev100: 15,
   autoExposure: false,
@@ -526,6 +527,11 @@ export function Viewer() {
                     label="Sunlight from the atmosphere"
                     checked={lighting.sunFromAtmosphere}
                     onChange={(v) => light("sunFromAtmosphere", v)}
+                  />
+                  <Setting
+                    label="Aerial perspective"
+                    checked={lighting.aerialPerspective}
+                    onChange={(v) => light("aerialPerspective", v)}
                   />
                   {!lighting.sunFromAtmosphere && (
                     <Range

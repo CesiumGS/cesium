@@ -162,3 +162,12 @@
     block-size: 60vh;
   }
 }
+
+/* The engine's overlays (time controls, credits) take StrataKit's accent
+   and type through --cesium-ui-* (the library doesn't depend on it). Their
+   surfaces stay dark in either theme: imagery under them varies, and
+   providers' logos are made for a dark backing. */
+.viewer-engine {
+  --cesium-ui-accent: var(--stratakit-color-bg-accent-base);
+  --cesium-ui-font: var(--stratakit-font-family-sans);
+}

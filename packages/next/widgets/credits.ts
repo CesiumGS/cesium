@@ -229,36 +229,51 @@ function injectStyle(): void {
   document.head.append(style);
 }
 
+// The same --cesium-ui-* properties as the time controls (their defaults
+// follow StrataKit's dark theme): one surface, border, radius and type for
+// everything over the view, and one place for an app to theme them.
 const CSS = `
-.cesium-credits { position: absolute; inset: auto 8px 8px 8px; pointer-events: none; z-index: 1; font: 11px/1.4 system-ui, sans-serif; }
+.cesium-credits {
+  --cc-surface: var(--cesium-ui-surface, oklch(26.92% 0.008 268.32));
+  --cc-raised: var(--cesium-ui-surface-raised, oklch(30.5% 0.009 268.32));
+  --cc-border: var(--cesium-ui-border, oklch(100% 0 0 / 0.08));
+  --cc-text: var(--cesium-ui-text, oklch(99.06% 0.002 247.84));
+  --cc-text-muted: var(--cesium-ui-text-muted, oklch(79.56% 0.008 241.69));
+  --cc-link: var(--cesium-ui-link, #8cc4ff);
+  --cc-focus: var(--cesium-ui-focus, #8cc4ff);
+  --cc-font: var(--cesium-ui-font, "InterVariable", "Inter", system-ui, sans-serif);
+  --cc-shadow: var(--cesium-ui-shadow, 0 1px 0 oklch(0% 0 0 / 0.08), 0 4px 12px -2px oklch(0% 0 0 / 0.4));
+  position: absolute; inset: auto 8px 8px 8px; pointer-events: none; z-index: 1;
+  font: 400 11px/16px var(--cc-font); color: var(--cc-text-muted);
+}
 .cesium-credits[hidden] { display: none; }
 .cesium-credits .cc-bar {
-  display: inline-flex; align-items: center; gap: 10px; max-width: 100%;
-  padding: 4px 8px; border-radius: 6px; pointer-events: auto;
-  background: rgba(11, 14, 20, 0.55); backdrop-filter: blur(4px);
+  display: inline-flex; align-items: center; gap: 10px; max-width: 100%; box-sizing: border-box;
+  height: 36px; padding: 0 10px; border-radius: 8px; pointer-events: auto;
+  border: 1px solid var(--cc-border); background: var(--cc-surface); box-shadow: var(--cc-shadow);
 }
 .cesium-credits .cc-logos { display: flex; align-items: center; gap: 8px; min-width: 0; }
 /* Logos keep their aspect ratio; notices truncate instead. */
 .cesium-credits .cc-logos > a, .cesium-credits .cc-logos > img { flex: none; display: block; }
 .cesium-credits .cc-logos img { height: 16px; width: auto; max-width: none; display: block; }
-.cesium-credits .cc-text { flex: 0 1 auto; min-width: 0; color: #c3cad8; white-space: nowrap; max-width: 32ch; overflow: hidden; text-overflow: ellipsis; }
-.cesium-credits a { color: #8ab8ff; }
+.cesium-credits .cc-text { flex: 0 1 auto; min-width: 0; white-space: nowrap; max-width: 32ch; overflow: hidden; text-overflow: ellipsis; }
+.cesium-credits a { color: var(--cc-link); }
 .cesium-credits .cc-toggle {
-  background: none; border: none; padding: 0; color: #c3cad8; font: inherit;
+  background: none; border: none; padding: 0; color: var(--cc-text-muted); font: inherit;
   text-decoration: underline dotted; text-underline-offset: 3px; cursor: pointer; white-space: nowrap;
 }
-.cesium-credits .cc-toggle:hover { color: #fff; }
-.cesium-credits .cc-toggle:focus-visible { outline: 2px solid #8ab8ff; outline-offset: 2px; }
+.cesium-credits .cc-toggle:hover { color: var(--cc-text); }
+.cesium-credits .cc-toggle:focus-visible { outline: 2px solid var(--cc-focus); outline-offset: 2px; }
 .cesium-credits .cc-panel {
-  position: absolute; left: 0; bottom: 32px; max-width: min(520px, 100%); max-height: 240px;
-  overflow-y: auto; padding: 10px 12px; pointer-events: auto;
-  border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px;
-  background: rgba(11, 14, 20, 0.94); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-  scrollbar-width: thin; scrollbar-color: #4a4f5c transparent;
-  font-size: 12px; color: #aab2c3;
+  position: absolute; left: 0; bottom: 42px; max-width: min(520px, 100%); max-height: 240px;
+  overflow-y: auto; padding: 12px; pointer-events: auto; box-sizing: border-box;
+  border: 1px solid var(--cc-border); border-radius: 8px;
+  background: var(--cc-raised); box-shadow: var(--cc-shadow);
+  scrollbar-width: thin; scrollbar-color: var(--cc-border) transparent;
+  font-size: 12px; color: var(--cc-text-muted);
 }
 .cesium-credits .cc-panel[hidden] { display: none; }
-.cesium-credits .cc-title { color: #e6e9ef; font-weight: 600; margin-bottom: 6px; }
+.cesium-credits .cc-title { color: var(--cc-text); font-weight: 600; margin-bottom: 6px; }
 .cesium-credits .cc-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; }
 .cesium-credits .cc-entry { display: inline-flex; align-items: center; gap: 6px; }
 .cesium-credits .cc-entry img { height: 16px; width: auto; display: block; }
