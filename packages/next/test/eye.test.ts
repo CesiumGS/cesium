@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import {
   DISPLAY_ADAPTATION,
   DISPLAY_WHITE,
+  EYE_ADAPTATION_SPEED,
   SCOTOPIC_WHITE,
   adapt,
   brightness,
@@ -77,11 +78,19 @@ describe("eyeResponse", () => {
 });
 
 describe("adapt", () => {
-  it("brightens faster than it darkens", () => {
-    const up = adapt(0, 1, 0.2, "cones");
-    const down = 1 - adapt(1, 0, 0.2, "cones");
-    expect(up).toBeGreaterThan(0.8);
-    expect(down).toBeLessThan(0.2);
+  it("brightens at once and darkens over minutes, as an eye does", () => {
+    expect(adapt(0, 1, 0.2, "cones")).toBeGreaterThan(0.8);
+    // A third of the way to dark in a minute; nearly all in half an hour.
+    expect(1 - adapt(1, 0, 60, "cones")).toBeCloseTo(
+      1 - Math.exp(-60 / 180),
+      6,
+    );
+    expect(adapt(1, 0, 1800, "rods")).toBeLessThan(0.06);
+  });
+
+  it("settles to dark in a few seconds at the default speed", () => {
+    expect(adapt(1, 0, 5, "rods", EYE_ADAPTATION_SPEED)).toBeLessThan(0.05);
+    expect(adapt(1, 0, 5, "rods", 1)).toBeGreaterThan(0.99);
   });
 
   it("rods are slower than cones", () => {

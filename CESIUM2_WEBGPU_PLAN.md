@@ -816,7 +816,12 @@ Next steps (r44, after the night work). Now, in this order:
    under them carries the city lights. The missing light is the city's
    own: see "City light" below. Also fixed: a meter reading in flight as
    the exposure turned fixed left automatic exposure pending, never to
-   meter again.
+   meter again. Adaptation's pace (r44): a real eye's at `speed` 1
+   (to light in 0.1 s for the cones and 0.4 s for the rods; to dark, time
+   constants of 180 s and 600 s, after Hecht, Haig and Chase 1937's
+   plateaus at 10 and 30 to 40 minutes), 400 times that by default (to
+   dark in a few seconds; scene/eye.ts `EYE_ADAPTATION_SPEED`), a slider
+   from ×1 to ×1024 in the viewer.
 5. **The Moon**: its libration (its orientation from the IAU rotation
    model, so the face it shows wobbles as it does), and a sharper map
    than 1.x's 256 × 128 (NASA's CGI Moon Kit, public domain). Done (r44):

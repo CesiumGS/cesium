@@ -111,6 +111,7 @@ const LIGHTING_DEFAULTS: Lighting = {
   sunIlluminance: 100_000,
   rendering: "eye",
   compensation: 0,
+  adaptationSpeed: 400,
   ev100: 15,
   autoExposure: false,
   encoding: "srgb",
@@ -631,6 +632,15 @@ export function Viewer() {
                         step={0.1}
                         text={lighting.compensation.toFixed(1)}
                         onChange={(v) => light("compensation", v)}
+                      />
+                      <Range
+                        label="Adaptation speed"
+                        value={Math.log2(lighting.adaptationSpeed)}
+                        min={0}
+                        max={10}
+                        step={0.1}
+                        text={`×${Math.round(lighting.adaptationSpeed)}`}
+                        onChange={(v) => light("adaptationSpeed", 2 ** v)}
                       />
                     </>
                   ) : (

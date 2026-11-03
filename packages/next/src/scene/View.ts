@@ -244,9 +244,11 @@ export type Exposure =
    * Rushmeier's brightness: 1.8 stops by moonlight); adapting to light
    * takes a moment, to dark longer. It sees the stars against a dark sky
    * even where the scene is bright (from orbit). `compensation` (stops)
-   * brightens when positive.
+   * brightens when positive; `speed` is how many times faster than a
+   * real eye it adapts (1: to dark in minutes, as the eye does; default
+   * `EYE_ADAPTATION_SPEED`, 400: a few seconds).
    */
-  | { eye: true; compensation?: number };
+  | { eye: true; compensation?: number; speed?: number };
 
 /** The eye (`Exposure`): the `Viewer`'s default. */
 export const EYE: Exposure = { eye: true };

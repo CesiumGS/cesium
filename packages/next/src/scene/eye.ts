@@ -113,21 +113,30 @@ export function eyeResponse(
 }
 
 /**
+ * How much faster than a real eye the eye adapts by default (`Exposure`
+ * "eye" `speed`): to dark in a few seconds (the rods' 600 s over 400),
+ * to light at once.
+ */
+export const EYE_ADAPTATION_SPEED = 400;
+
+/**
  * The eye's adaptation moving toward a level, as log10 luminance, over
  * `dt` seconds: exponentially, faster toward light than toward dark
- * (Pattanaik et al. 2000; Durand and Dorsey 2000). Toward light the cones
- * take 0.1 s, the rods 0.4 s (Krawczyk et al. 2005); toward dark the eye
- * takes minutes (cones about 10, rods 30), compressed here to 1.5 s and
- * 4 s so a change of scene settles while one watches.
+ * (Pattanaik et al. 2000; Durand and Dorsey 2000), at a real eye's pace
+ * times `speed`. Toward light the cones take 0.1 s, the rods 0.4 s
+ * (Krawczyk et al. 2005); toward dark the cones reach their plateau in
+ * about 10 minutes and the rods theirs in 30 to 40 (Hecht, Haig and Chase
+ * 1937): time constants of about a third of that, 180 s and 600 s.
  */
 export function adapt(
   current: number,
   target: number,
   dt: number,
   receptor: "cones" | "rods",
+  speed = 1,
 ): number {
   const brighter = target > current;
   const tau =
-    receptor === "cones" ? (brighter ? 0.1 : 1.5) : brighter ? 0.4 : 4;
-  return current + (target - current) * (1 - Math.exp(-dt / tau));
+    receptor === "cones" ? (brighter ? 0.1 : 180) : brighter ? 0.4 : 600;
+  return current + (target - current) * (1 - Math.exp((-dt * speed) / tau));
 }

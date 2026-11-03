@@ -47,7 +47,12 @@ import { Sky, type SkyView } from "../atmosphere/Sky.ts";
 import { MOON_ALBEDO, MOON_RADIUS, moonPhaseBrightness } from "../time/moon.ts";
 import type { AerosolType } from "../atmosphere/model.ts";
 import { EARTH } from "./Body.ts";
-import { SCOTOPIC_WHITE, adapt, eyeResponse } from "./eye.ts";
+import {
+  EYE_ADAPTATION_SPEED,
+  SCOTOPIC_WHITE,
+  adapt,
+  eyeResponse,
+} from "./eye.ts";
 import type { StarField } from "../atmosphere/stars.ts";
 import { Camera } from "./Camera.ts";
 import {
@@ -2239,8 +2244,9 @@ export class Engine {
         state.metered = true;
       } else {
         const dt = Math.min((now - state.time) / 1000, 1);
-        state.cones = adapt(state.cones, cones, dt, "cones");
-        state.rods = adapt(state.rods, rods, dt, "rods");
+        const speed = e.speed ?? EYE_ADAPTATION_SPEED;
+        state.cones = adapt(state.cones, cones, dt, "cones", speed);
+        state.rods = adapt(state.rods, rods, dt, "rods", speed);
       }
       state.time = now;
       if (

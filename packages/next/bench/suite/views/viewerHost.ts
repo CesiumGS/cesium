@@ -180,6 +180,8 @@ export interface Lighting {
   rendering: "eye" | "camera";
   /** 2.0, eye: brighter (stops) than the eye's own adaptation. */
   compensation: number;
+  /** 2.0, eye: how many times faster than a real eye it adapts (1: real). */
+  adaptationSpeed: number;
   /** 2.0, camera: its exposure value at ISO 100, when not automatic. */
   ev100: number;
   /** 2.0, camera: exposure metered from the image. */
@@ -477,7 +479,11 @@ export class NextViewerHost implements ViewerHost {
       view.lighting.specularIbl = 1;
       view.exposure =
         lighting.rendering === "eye"
-          ? { eye: true, compensation: lighting.compensation }
+          ? {
+              eye: true,
+              compensation: lighting.compensation,
+              speed: lighting.adaptationSpeed,
+            }
           : lighting.autoExposure
             ? { auto: true }
             : { ev100: lighting.ev100 };
