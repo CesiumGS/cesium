@@ -3,6 +3,7 @@ import { MipGenerator } from "../gpu/MipGenerator.ts";
 import { Environment } from "../gpu/Environment.ts";
 import { VIEW_SIZE } from "../render/layout.ts";
 import commonWgsl from "../shaders/common.wgsl?raw";
+import { SHADOW_CASCADES, SHADOW_SIZE, SHADOWS_SIZE } from "./shadows.ts";
 import cullWgsl from "../shaders/cull.wgsl?raw";
 import scatterWgsl from "../shaders/scatter.wgsl?raw";
 import raycastWgsl from "../shaders/raycast.wgsl?raw";
@@ -47,6 +48,14 @@ export interface Pipelines {
   opaqueDoubleSided: GPURenderPipeline;
   /** Line-list variant (CAD edges, glTF LINES); same shaders, no culling. */
   opaqueLines: GPURenderPipeline;
+  /**
+   * The sun's shadow-map casters: depth only, and double-sided; "masked"
+   * for materials that cut out (a fragment stage that discards).
+   */
+  shadow: GPURenderPipeline;
+  shadowDoubleSided: GPURenderPipeline;
+  shadowMasked: GPURenderPipeline;
+  shadowMaskedDoubleSided: GPURenderPipeline;
   present: GPURenderPipeline;
   overlay: GPURenderPipeline;
   overlayLayout: GPUBindGroupLayout;
@@ -79,6 +88,20 @@ export interface RenderContext {
   /** Uniform buffer each view's block is copied into before its passes run. */
   currentViewBuffer: GPUBuffer;
   currentViewBindGroup: GPUBindGroup;
+  /**
+   * The sun's cascaded shadow maps (scene/shadows.ts): one depth layer per
+   * cascade, rewritten for each view before its opaque pass reads them,
+   * and the view's `Shadows` uniform, copied in like its block.
+   */
+  shadowMap: GPUTexture;
+  shadowLayers: GPUTextureView[];
+  currentShadowsBuffer: GPUBuffer;
+  /**
+   * The view bind group for drawing into the shadow maps: the same, with
+   * a placeholder where the maps are bound (a texture can't be read and
+   * drawn into in one pass).
+   */
+  shadowViewBindGroup: GPUBindGroup;
 }
 
 /**
@@ -121,23 +144,59 @@ export async function createRenderContext(
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
   environment.setSky();
+  const shadowMap = device.createTexture({
+    label: "shadowMap",
+    size: [SHADOW_SIZE, SHADOW_SIZE, SHADOW_CASCADES],
+    format: "depth32float",
+    usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
+  });
+  const shadowPlaceholder = device.createTexture({
+    label: "shadowMap.placeholder",
+    size: [1, 1, 1],
+    format: "depth32float",
+    usage: GPUTextureUsage.TEXTURE_BINDING,
+  });
+  const currentShadowsBuffer = device.createBuffer({
+    label: "currentShadows",
+    size: SHADOWS_SIZE,
+    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+  });
+  // Reverse-Z: a receiver is lit where it is at least as near the sun as
+  // the nearest caster.
+  const shadowSampler = device.createSampler({
+    label: "shadow",
+    magFilter: "linear",
+    minFilter: "linear",
+    compare: "greater-equal",
+  });
+  const viewEntries = (shadows: GPUTextureView): GPUBindGroupEntry[] => [
+    { binding: 0, resource: { buffer: currentViewBuffer } },
+    { binding: 1, resource: environment.specularView },
+    { binding: 2, resource: environment.sampler },
+    { binding: 3, resource: environment.brdfView },
+    { binding: 4, resource: { buffer: environment.shBuffer } },
+    { binding: 5, resource: sky.sunLight },
+    { binding: 6, resource: environment.irradianceView },
+    { binding: 7, resource: sky.aerialInscatter },
+    { binding: 8, resource: sky.aerialTransmittance },
+    { binding: 9, resource: { buffer: sky.air } },
+    { binding: 10, resource: sky.airTransmittance },
+    { binding: 11, resource: sky.airScattering },
+    { binding: 12, resource: { buffer: currentShadowsBuffer } },
+    { binding: 13, resource: shadows },
+    { binding: 14, resource: shadowSampler },
+  ];
+  const shadowViewBindGroup = device.createBindGroup({
+    label: "currentView.shadowCasters",
+    layout: pipelines.viewLayout,
+    entries: viewEntries(
+      shadowPlaceholder.createView({ dimension: "2d-array" }),
+    ),
+  });
   const currentViewBindGroup = device.createBindGroup({
     label: "currentView",
     layout: pipelines.viewLayout,
-    entries: [
-      { binding: 0, resource: { buffer: currentViewBuffer } },
-      { binding: 1, resource: environment.specularView },
-      { binding: 2, resource: environment.sampler },
-      { binding: 3, resource: environment.brdfView },
-      { binding: 4, resource: { buffer: environment.shBuffer } },
-      { binding: 5, resource: sky.sunLight },
-      { binding: 6, resource: environment.irradianceView },
-      { binding: 7, resource: sky.aerialInscatter },
-      { binding: 8, resource: sky.aerialTransmittance },
-      { binding: 9, resource: { buffer: sky.air } },
-      { binding: 10, resource: sky.airTransmittance },
-      { binding: 11, resource: sky.airScattering },
-    ],
+    entries: viewEntries(shadowMap.createView({ dimension: "2d-array" })),
   });
   const white = device.createTexture({
     label: "default.white",
@@ -172,6 +231,16 @@ export async function createRenderContext(
     outputFormat,
     currentViewBuffer,
     currentViewBindGroup,
+    shadowMap,
+    shadowLayers: Array.from({ length: SHADOW_CASCADES }, (_, layer) =>
+      shadowMap.createView({
+        dimension: "2d",
+        baseArrayLayer: layer,
+        arrayLayerCount: 1,
+      }),
+    ),
+    currentShadowsBuffer,
+    shadowViewBindGroup,
   };
 }
 
@@ -231,6 +300,14 @@ async function createPipelines(
         visibility: VERTEX,
         texture: { viewDimension: "2d-array" },
       },
+      // The sun's shadows: the cascades' uniform, maps and comparisons.
+      { binding: 12, visibility: FRAGMENT, buffer: { type: "uniform" } },
+      {
+        binding: 13,
+        visibility: FRAGMENT,
+        texture: { sampleType: "depth", viewDimension: "2d-array" },
+      },
+      { binding: 14, visibility: FRAGMENT, sampler: { type: "comparison" } },
     ],
   });
   const cullWorldLayout = device.createBindGroupLayout({
@@ -345,6 +422,52 @@ async function createPipelines(
       },
       multisample: { count: SCENE_TARGETS.sampleCount },
     });
+  // Shadow casters always use the built-in module (an override has no
+  // `vsDepth` or `shadowFs`).
+  const casterModule =
+    overrides.opaque !== undefined
+      ? module("opaque", commonWgsl, opaqueWgsl)
+      : opaqueModule;
+  const shadowPipeline = (
+    label: string,
+    cullMode: GPUCullMode,
+    masked: boolean,
+  ) =>
+    device.createRenderPipelineAsync({
+      label,
+      layout: opaqueLayout,
+      vertex: {
+        module: casterModule,
+        entryPoint: "vsDepth",
+        buffers: [
+          {
+            arrayStride: 4,
+            stepMode: "instance",
+            attributes: [{ shaderLocation: 0, offset: 0, format: "uint32" }],
+          },
+        ],
+      },
+      ...(masked
+        ? {
+            fragment: {
+              module: casterModule,
+              entryPoint: "shadowFs",
+              targets: [],
+            },
+          }
+        : {}),
+      primitive: { topology: "triangle-list", cullMode, frontFace: "ccw" },
+      depthStencil: {
+        format: "depth32float",
+        depthWriteEnabled: true,
+        depthCompare: "greater",
+        // Away from the sun (reverse-Z: smaller), more where the surface
+        // slopes away from it.
+        depthBias: -2,
+        depthBiasSlopeScale: -1.5,
+        depthBiasClamp: 0,
+      },
+    });
 
   const [
     cullRecords,
@@ -353,6 +476,10 @@ async function createPipelines(
     opaque,
     opaqueDoubleSided,
     opaqueLines,
+    shadow,
+    shadowDoubleSided,
+    shadowMasked,
+    shadowMaskedDoubleSided,
     present,
     overlay,
     pick,
@@ -378,6 +505,10 @@ async function createPipelines(
     opaquePipeline("opaque", "back"),
     opaquePipeline("opaque.doubleSided", "none"),
     opaquePipeline("opaque.lines", "none", "line-list"),
+    shadowPipeline("shadow", "back", false),
+    shadowPipeline("shadow.doubleSided", "none", false),
+    shadowPipeline("shadow.masked", "back", true),
+    shadowPipeline("shadow.maskedDoubleSided", "none", true),
     device.createRenderPipelineAsync({
       label: "present",
       layout: "auto",
@@ -449,6 +580,10 @@ async function createPipelines(
     opaque,
     opaqueDoubleSided,
     opaqueLines,
+    shadow,
+    shadowDoubleSided,
+    shadowMasked,
+    shadowMaskedDoubleSided,
     present,
     overlay,
     overlayLayout,

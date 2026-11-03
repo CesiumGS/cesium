@@ -46,6 +46,14 @@ import { Sky, type SkyView } from "../atmosphere/Sky.ts";
 import type { AerosolType } from "../atmosphere/model.ts";
 import { EARTH } from "./Body.ts";
 import { Camera } from "./Camera.ts";
+import {
+  SHADOW_CASCADES,
+  SHADOWS_SIZE,
+  SHADOWS_STRIDE,
+  createShadowCascades,
+  fitShadowCascades,
+  writeShadows,
+} from "./shadows.ts";
 import { World, type WorldOptions } from "./World.ts";
 import { HeightClamping } from "./HeightClamping.ts";
 import { WorkerPool } from "../io/WorkerPool.ts";
@@ -241,6 +249,17 @@ export class Engine {
   private readonly timer: GpuTimer;
   private readonly viewStaging: GPUBuffer;
   private readonly viewData: Float32Array;
+  /**
+   * Per view slot: a view block per shadow cascade (the sun's projection
+   * and box, for culling and drawing the casters), and the receivers'
+   * `Shadows` uniform; staged like the views' blocks.
+   */
+  private readonly cascadeData: Float32Array;
+  private readonly cascadeDataU32: Uint32Array;
+  private readonly cascadeStaging: GPUBuffer;
+  private readonly shadowData: Float32Array;
+  private readonly shadowStaging: GPUBuffer;
+  private readonly cascades = createShadowCascades();
   private readonly viewDataU32: Uint32Array;
   /** Stable per-view bit index (0–31) for record view masks. */
   private readonly viewIds = new Map<View, number>();
@@ -343,6 +362,21 @@ export class Engine {
     this.viewStaging = device.createBuffer({
       label: "viewStaging",
       size: maxViews * VIEW_STRIDE,
+      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
+    });
+    this.cascadeData = new Float32Array(
+      (maxViews * SHADOW_CASCADES * VIEW_STRIDE) / 4,
+    );
+    this.cascadeDataU32 = new Uint32Array(this.cascadeData.buffer);
+    this.cascadeStaging = device.createBuffer({
+      label: "cascadeStaging",
+      size: maxViews * SHADOW_CASCADES * VIEW_STRIDE,
+      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
+    });
+    this.shadowData = new Float32Array((maxViews * SHADOWS_STRIDE) / 4);
+    this.shadowStaging = device.createBuffer({
+      label: "shadowStaging",
+      size: maxViews * SHADOWS_STRIDE,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
     this.viewBlock = {
@@ -1500,6 +1534,20 @@ export class Engine {
       0,
       (slots * VIEW_STRIDE) / 4,
     );
+    device.queue.writeBuffer(
+      this.cascadeStaging,
+      0,
+      this.cascadeData,
+      0,
+      (slots * SHADOW_CASCADES * VIEW_STRIDE) / 4,
+    );
+    device.queue.writeBuffer(
+      this.shadowStaging,
+      0,
+      this.shadowData,
+      0,
+      (slots * SHADOWS_STRIDE) / 4,
+    );
 
     const encoder = device.createCommandEncoder(FRAME_ENCODER);
     this.timer.beginFrame();
@@ -1650,6 +1698,59 @@ export class Engine {
     writeViewBlock(this.viewData, (index * VIEW_STRIDE) / 4, block);
     this.viewDataU32[(index * VIEW_STRIDE) / 4 + VIEW_BIT_WORD] =
       this.viewBit(view);
+    this.writeShadows(view, index, aspect);
+  }
+
+  /**
+   * A view's shadow cascades (when it has shadows and the sun is up where
+   * the camera is): their view blocks, copies of the view's with the sun's
+   * projection and box, and the receivers' uniform.
+   */
+  private writeShadows(view: View, index: number, aspect: number): void {
+    const frame = this.viewFrames.get(view)!;
+    const camera = view.camera;
+    const sun = this.sunDirection;
+    const up = v3.normalize(scratchShadowUp, camera.position);
+    frame.shadowed =
+      view.shadows &&
+      view.lighting.sunIlluminance !== 0 &&
+      v3.dot(up, sun) > -0.05;
+    const cascades = this.cascades;
+    if (frame.shadowed) {
+      const c = view.body.ellipsoid.cartesianToCartographic(
+        camera.position,
+        scratchCartographic,
+      );
+      fitShadowCascades(
+        cascades,
+        camera,
+        aspect,
+        sun,
+        Math.max(c?.height ?? 0, 2),
+      );
+      const block = this.viewBlock;
+      const viewProj = block.viewProj;
+      const planes = block.planes;
+      const aerial = block.aerial;
+      block.aerial = undefined;
+      for (let k = 0; k < SHADOW_CASCADES; k++) {
+        const o = ((index * SHADOW_CASCADES + k) * VIEW_STRIDE) / 4;
+        block.viewProj = cascades.matrices.subarray(k * 16, k * 16 + 16);
+        block.planes = cascades.planes[k]!;
+        writeViewBlock(this.cascadeData, o, block);
+        this.cascadeDataU32[o + VIEW_BIT_WORD] = this.viewBit(view);
+      }
+      block.viewProj = viewProj;
+      block.planes = planes;
+      block.aerial = aerial;
+    }
+    writeShadows(
+      this.shadowData,
+      (index * SHADOWS_STRIDE) / 4,
+      cascades,
+      camera.direction,
+      frame.shadowed,
+    );
   }
 
   /** A view's persistent image at its current size (recreated on resize). */
@@ -1997,8 +2098,44 @@ export class Engine {
       presentSource: undefined,
       presentDisplay: undefined,
       sky: this.sky.createView(),
+      shadowed: false,
     };
     this.sky.writeWeights(frame.sky);
+
+    // The sun's shadow maps: per cascade, its block in place of the view's,
+    // the world culled to the sun's box and its casters drawn.
+    const shadowDepth: GPURenderPassDepthStencilAttachment = {
+      view: undefined as never,
+      depthClearValue: 0, // reverse-Z: farthest from the sun is 0
+      depthLoadOp: "clear",
+      depthStoreOp: "store",
+    };
+    const shadowPass: GPURenderPassDescriptor = {
+      label: "shadow",
+      colorAttachments: [],
+      depthStencilAttachment: shadowDepth,
+    };
+    graph.addPass("shadows", { sideEffect: true }, (enc) => {
+      if (!frame.shadowed) {
+        return;
+      }
+      const casters = view.world.shadowBundle();
+      for (let k = 0; k < SHADOW_CASCADES; k++) {
+        enc.copyBufferToBuffer(
+          this.cascadeStaging,
+          (frame.slot * SHADOW_CASCADES + k) * VIEW_STRIDE,
+          this.ctx.currentViewBuffer,
+          0,
+          VIEW_SIZE,
+        );
+        view.world.encodeCull(enc);
+        shadowDepth.view = this.ctx.shadowLayers[k]!;
+        shadowPass.timestampWrites = this.timer.passWrites();
+        const pass = enc.beginRenderPass(shadowPass);
+        pass.executeBundles([casters]);
+        pass.end();
+      }
+    });
 
     graph.addPass("select-view", { sideEffect: true }, (enc) => {
       enc.copyBufferToBuffer(
@@ -2007,6 +2144,13 @@ export class Engine {
         this.ctx.currentViewBuffer,
         0,
         VIEW_SIZE,
+      );
+      enc.copyBufferToBuffer(
+        this.shadowStaging,
+        frame.slot * SHADOWS_STRIDE,
+        this.ctx.currentShadowsBuffer,
+        0,
+        SHADOWS_SIZE,
       );
     });
 
@@ -2361,6 +2505,8 @@ interface ViewFrame {
   presentDisplay: GPUTextureView | undefined;
   /** The sky's uniform for this view (`View.background` "atmosphere"). */
   readonly sky: SkyView;
+  /** The sun's shadow maps were fitted for this view this frame. */
+  shadowed: boolean;
 }
 
 interface TargetFrame {
@@ -2452,5 +2598,6 @@ const scratchCartographic: Cartographic = {
   height: 0,
 };
 const scratchProj = m4.mat4();
+const scratchShadowUp = v3.vec3();
 const scratchViewProj = m4.mat4();
 const scratchPlanes = new Float32Array(20);

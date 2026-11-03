@@ -90,6 +90,8 @@ export interface ViewerOptions {
    * by the clock); false: none.
    */
   stars?: boolean;
+  /** The sun's shadows in the views (default true; `View.shadows`). */
+  shadows?: boolean;
 }
 
 /** 1.x's star map (Tycho), +x, −x, +y, −y, +z, −z in the celestial frame. */
@@ -180,6 +182,8 @@ export class Viewer {
   private credits_?: CreditsHandle;
   private inspector?: InspectorHandle;
   private frameRequest = 0;
+  /** New views (a split's second) get the main view's shadows. */
+  private readonly shadows: boolean;
   private destroyed = false;
   private readonly accessToken: string | undefined;
 
@@ -215,7 +219,12 @@ export class Viewer {
       vertexBytes: Math.min(768 << 20, Math.floor(limit / 4) * 4),
       indexBytes: Math.min(384 << 20, Math.floor(limit / 4) * 4),
     });
-    this.view = engine.addView({ target: this.target, world: this.world });
+    this.shadows = options.shadows ?? true;
+    this.view = engine.addView({
+      target: this.target,
+      world: this.world,
+      shadows: this.shadows,
+    });
     this.controller = new GlobeController(this.view, canvas);
     // The whole Earth until the app frames something, as 1.x starts: the
     // camera at the Earth's center drew its first frames from inside it.
@@ -664,6 +673,7 @@ export class Viewer {
       const second = (this.second = this.engine.addView({
         target: this.target,
         world: this.world,
+        shadows: this.shadows,
         viewport: { x: 0.5, y: 0, width: 0.5, height: 1 },
       }));
       Object.assign(second.lighting, this.view.lighting);

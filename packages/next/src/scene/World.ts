@@ -20,6 +20,7 @@ import {
   CLIP_BOXES,
   CLIP_BOX_FLOATS,
   CLIP_COUNT_WORD,
+  MATERIAL_WORDS,
   PLACEHOLDER_MASK_WORD,
   RecordFlags,
   packTint,
@@ -227,6 +228,8 @@ interface Batch {
   key: string;
   mesh: MeshHandle;
   textureSet: number;
+  /** Its material's index (shadow casters: cut out or not). */
+  material: number;
   doubleSided: boolean;
   /** Draw items: records without instances plus instances. */
   items: number;
@@ -489,6 +492,9 @@ export class World {
   private nextMeshId = 0;
   private drawCount = 0;
   private bundle?: GPURenderBundle;
+  /** The shadow casters' bundle, and the draw bundle it was recorded with. */
+  private casters?: GPURenderBundle;
+  private castersFor?: GPURenderBundle;
   private readonly cullParamsData = new Uint32Array(4);
   private readonly cullPassDesc: GPUComputePassDescriptor = { label: "cull" };
 
@@ -1092,6 +1098,7 @@ export class World {
         batch.key = key;
         batch.mesh = mesh;
         batch.textureSet = textureSet;
+        batch.material = material;
         batch.doubleSided = doubleSided;
       } else {
         batch = {
@@ -1099,6 +1106,7 @@ export class World {
           key,
           mesh,
           textureSet,
+          material,
           doubleSided,
           items: 0,
           itemBase: 0,
@@ -1908,6 +1916,18 @@ export class World {
     return this.bundle;
   }
 
+  /**
+   * The bundle drawing this world's shadow casters (depth only, after a
+   * cull for the shadow map's cascade), current with `prepareFrame`'s.
+   */
+  shadowBundle(): GPURenderBundle {
+    if (!this.casters || this.castersFor !== this.bundle) {
+      this.casters = this.recordBundle("shadow");
+      this.castersFor = this.bundle;
+    }
+    return this.casters;
+  }
+
   /** Encodes this world's per-view culling: clear batch counts, cull, write args. */
   encodeCull(
     encoder: GPUCommandEncoder,
@@ -2002,24 +2022,52 @@ export class World {
     queue.writeBuffer(this.directListBuffer, 0, direct);
   }
 
-  /** One draw per batch, grouped by cull mode and texture set. */
-  private recordBundle(): GPURenderBundle {
+  /**
+   * One draw per batch, grouped by cull mode and texture set: the opaque
+   * pass's, or the sun's shadow casters' (depth only; no lines).
+   */
+  private recordBundle(kind: "opaque" | "shadow" = "opaque"): GPURenderBundle {
     const { device, pipelines, targets, currentViewBindGroup } = this.ctx;
-    const encoder = device.createRenderBundleEncoder({
-      label: "world.bundle",
-      colorFormats: targets.colorFormats,
-      depthStencilFormat: targets.depthFormat,
-      sampleCount: targets.sampleCount,
-    });
-    encoder.setBindGroup(0, currentViewBindGroup);
+    const shadow = kind === "shadow";
+    const encoder = device.createRenderBundleEncoder(
+      shadow
+        ? {
+            label: "world.shadowBundle",
+            colorFormats: [],
+            depthStencilFormat: "depth32float",
+            sampleCount: 1,
+          }
+        : {
+            label: "world.bundle",
+            colorFormats: targets.colorFormats,
+            depthStencilFormat: targets.depthFormat,
+            sampleCount: targets.sampleCount,
+          },
+    );
+    encoder.setBindGroup(
+      0,
+      shadow ? this.ctx.shadowViewBindGroup : currentViewBindGroup,
+    );
     encoder.setBindGroup(1, this.drawBindGroup);
     encoder.setIndexBuffer(this.indexBuffer, "uint32");
+    // Casters: depth only, so the GPU tests depth before shading; the
+    // fragment stage only where a material cuts out (alpha mask).
+    const masked = (batch: Batch) =>
+      (this.materialsU32[batch.material * MATERIAL_WORDS + 12]! & 4) !== 0;
     const pipelineOf = (batch: Batch) =>
-      batch.mesh.topology === "line-list"
-        ? pipelines.opaqueLines
-        : batch.doubleSided
-          ? pipelines.opaqueDoubleSided
-          : pipelines.opaque;
+      shadow
+        ? masked(batch)
+          ? batch.doubleSided
+            ? pipelines.shadowMaskedDoubleSided
+            : pipelines.shadowMasked
+          : batch.doubleSided
+            ? pipelines.shadowDoubleSided
+            : pipelines.shadow
+        : batch.mesh.topology === "line-list"
+          ? pipelines.opaqueLines
+          : batch.doubleSided
+            ? pipelines.opaqueDoubleSided
+            : pipelines.opaque;
     const rank = (batch: Batch) =>
       batch.mesh.topology === "line-list" ? 2 : Number(batch.doubleSided);
     const order = [...this.batchList].sort(
@@ -2030,7 +2078,10 @@ export class World {
     let pipeline: GPURenderPipeline | undefined;
     let textureSet = -1;
     for (const batch of order) {
-      if (batch.items === 0) {
+      if (
+        batch.items === 0 ||
+        (shadow && batch.mesh.topology === "line-list")
+      ) {
         continue;
       }
       const wanted = pipelineOf(batch);

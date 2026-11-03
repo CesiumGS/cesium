@@ -265,6 +265,13 @@ export interface ViewOptions {
    * with background "atmosphere". Default true.
    */
   aerialPerspective?: boolean;
+  /**
+   * The sun's shadows (cascaded shadow maps, out to 20 times the camera's
+   * height above the ground, 200 m to 150 km). Default false in the
+   * engine (its tests compare with 1.x, which draws none); the `Viewer`
+   * turns them on.
+   */
+  shadows?: boolean;
   /** Background color as displayed (already exposed), with "color". */
   clearColor?: readonly [number, number, number];
   /** Output transfer function. "gamma2.2" matches CesiumJS 1.x. */
@@ -324,6 +331,7 @@ export class View {
   background: ViewBackground;
   sunDisk: boolean;
   aerialPerspective: boolean;
+  shadows: boolean;
   clearColor: readonly [number, number, number];
   outputEncoding: OutputEncoding;
   toneMapping: ToneMapping;
@@ -356,6 +364,7 @@ export class View {
     this.background = options.background ?? "atmosphere";
     this.sunDisk = options.sunDisk ?? true;
     this.aerialPerspective = options.aerialPerspective ?? true;
+    this.shadows = options.shadows ?? false;
     this.clearColor = options.clearColor ?? [0.004, 0.008, 0.02];
     this.outputEncoding = options.outputEncoding ?? "srgb";
     this.toneMapping = options.toneMapping ?? "pbrNeutral";

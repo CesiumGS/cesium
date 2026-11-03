@@ -102,6 +102,7 @@ const LIGHTING_DEFAULTS: Lighting = {
   exposure: 1,
   sunFromAtmosphere: true,
   aerialPerspective: true,
+  shadows: true,
   visibility: 60,
   aerosol: "continental",
   sunIlluminance: 100_000,
@@ -548,6 +549,11 @@ export function Viewer() {
                     label="Aerial perspective"
                     checked={lighting.aerialPerspective}
                     onChange={(v) => light("aerialPerspective", v)}
+                  />
+                  <Setting
+                    label="Sun shadows"
+                    checked={lighting.shadows}
+                    onChange={(v) => light("shadows", v)}
                   />
                   <Choice
                     label="Aerosols"

@@ -908,6 +908,42 @@ Both programmatically and with options, in layers:
 6. Shadows and ambient occlusion (GTAO with bent normals, the first GI
    step); then the daylighting sky, probe GI, clouds and the rest.
 
+Progress (r42): **the sun's shadows**, cascaded shadow maps
+(`View.shadows`; on in the `Viewer`, off by default in the engine so the
+harnesses that compare with 1.x, which draws none, stay as they are). Four
+cascades of 2048² (depth32float, one array), fitted per view per frame
+(scene/shadows.ts): splits blending logarithmic and uniform (λ 0.9) out to
+20 times the camera's height above the ground (200 m to 150 km, so a street
+and a mountain range both get useful cascades), each slice in a bounding
+sphere (its size independent of the camera's direction) seen from the sun
+orthographically, centers snapped to a texel grid fixed to the ground (no
+crawling edges), depth reaching 30 km or more toward the sun (mountains
+outside the view cast into it at a low sun). Camera-relative throughout,
+as the engine draws. Each cascade is a view block like the camera's (the
+sun's projection, its box as the five culling planes), so it goes through
+the same GPU culling and the same batches: per cascade the world is culled
+to the box and its casters drawn from a depth-only bundle (no fragment
+stage, so depth is tested before shading; a fragment stage only for
+alpha-masked materials, which discard). The opaque pass picks the cascade
+by view depth and takes 3 × 3 bilinear comparisons (an edge about three
+texels wide), the receiver offset along its normal by 1.5 texels, plus a
+slope-scaled depth bias on the casters; shadows fade out over the last 15%
+of their distance. Cost in the Alps at 4.5 km, 2.6 megapixels with 4×
+MSAA (RTX 3000 Ada laptop): about 2.2 ms (1.8 ms for the four cascades,
+0.5 ms in the opaque pass), against 1.8 ms more for the first try, which
+ran a fragment stage for every caster. Limits and next steps: mixed-LOD
+placeholders cast unclipped where they're not alpha-masked (coarse and
+fine tiles cast nearly the same shadow); no cascade blending (a seam can
+show where cascades meet); far cascades could update every other frame or
+cache until the sun or the tiles move, leading to virtual shadow maps
+(pages rendered where the view needs them and cached, a good fit for
+streamed tiles); shadows from the moon at night and from the clouds later.
+Measured on the way: the aerial-perspective volume's compute takes about
+1 ms (1,024 threads each marching 256 steps; splitting each column's
+march across threads would fill the GPU better), and the opaque pass in a
+close oblique terrain view is about 9 ms at that size, mostly the lighting
+the imagery now gets (it took the unlit path before).
+
 Progress (r40): **the atmosphere reference** (`src/atmosphere/`, Lab
 "Reference atmosphere", `bench/run.mjs atmosphere`). A spectral Monte
 Carlo volumetric path tracer in a compute shader: spectral tracking (four

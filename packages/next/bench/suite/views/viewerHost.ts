@@ -159,6 +159,8 @@ export interface Lighting {
   sunFromAtmosphere: boolean;
   /** 2.0: the air between the camera and the scene (haze with distance). */
   aerialPerspective: boolean;
+  /** 2.0: the sun's shadows. */
+  shadows: boolean;
   /** 2.0: how far one can see through the air, km (its haze). */
   visibility: number;
   /** 2.0: what the haze is made of. */
@@ -444,6 +446,7 @@ export class NextViewerHost implements ViewerHost {
         ? "atmosphere"
         : lighting.sunIlluminance;
       view.aerialPerspective = lighting.aerialPerspective;
+      view.shadows = lighting.shadows;
       view.lighting.diffuseIbl = lighting.diffuseIbl;
       view.lighting.specularIbl = lighting.specularIbl;
       view.exposure = lighting.autoExposure

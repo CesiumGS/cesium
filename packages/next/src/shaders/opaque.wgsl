@@ -268,6 +268,16 @@ fn read4(offset: u32, index: u32) -> vec4f {
 
 @vertex
 fn vs(@builtin(vertex_index) vertexIndex: u32, @location(0) item: u32) -> VsOut {
+  return vertexOut(vertexIndex, item, true);
+}
+
+// The same without the air (shadow maps: no aerial perspective there).
+@vertex
+fn vsDepth(@builtin(vertex_index) vertexIndex: u32, @location(0) item: u32) -> VsOut {
+  return vertexOut(vertexIndex, item, false);
+}
+
+fn vertexOut(vertexIndex: u32, item: u32, withAir: bool) -> VsOut {
   let p = items[item];
   let draw = p.record;
   let r = records[draw];
@@ -295,7 +305,7 @@ fn vs(@builtin(vertex_index) vertexIndex: u32, @location(0) item: u32) -> VsOut 
   out.position = view.viewProj * world;
   out.airInscatter = vec3f(0.0);
   out.airTransmittance = vec3f(1.0);
-  if (view.sunLight.w > 0.5 && view.aerialOrigin.w > 0.0) {
+  if (withAir && view.sunLight.w > 0.5 && view.aerialOrigin.w > 0.0) {
     let air = aerialMarch(world.xyz);
     out.airInscatter = air.inscatter;
     out.airTransmittance = air.transmittance;
@@ -328,6 +338,81 @@ fn vs(@builtin(vertex_index) vertexIndex: u32, @location(0) item: u32) -> VsOut 
     out.feature = select(r.featureId + local, 0u, local == 0xffffffffu);
   }
   return out;
+}
+
+// A shadow map's caster: depth only, with the opaque pass's discards
+// (alpha cutoff, mixed-LOD placeholders), so cut-out leaves and clipped
+// coarse tiles cast what is drawn.
+@fragment
+fn shadowFs(in: VsOut) {
+  let r = records[in.draw];
+  let material = materials[r.materialIndex];
+  let baseColorAlpha = textureSample(baseColorTexture, baseColorSampler, in.uv).a;
+  if ((material.flags & 4u) != 0u) {
+    var alpha = material.baseColor.a * r.color.a * in.color.a;
+    if ((material.flags & 16u) != 0u) {
+      alpha *= baseColorAlpha;
+    }
+    if (alpha < material.alphaCutoff) {
+      discard;
+    }
+  }
+  if ((r.placeholderMask & view.viewBit) != 0u &&
+      !insideClipBoxes(r.clipBlock, r.clipCount, in.relPosition)) {
+    discard;
+  }
+}
+
+// --- the sun's shadows -----------------------------------------------------------
+
+// Cascaded shadow maps (scene/shadows.ts): per cascade, camera-relative
+// positions to the sun's clip space (reverse-Z: nearest to the sun is 1).
+struct Shadows {
+  matrices: array<mat4x4f, 4>,
+  splits: vec4f,   // each cascade's far distance along the view, m
+  texels: vec4f,   // each cascade's texel size, m
+  forward: vec4f,  // the camera's forward axis (xyz); w: 1 when drawn
+  fade: vec4f,     // x: where shadows start to fade, y: where they end, m
+};
+
+@group(0) @binding(12) var<uniform> shadows: Shadows;
+@group(0) @binding(13) var shadowMap: texture_depth_2d_array;
+@group(0) @binding(14) var shadowSampler: sampler_comparison;
+
+const SHADOW_SIZE: f32 = 2048.0;
+
+// How much of the sun reaches a camera-relative position on a surface with
+// geometric normal `n`: 3 × 3 bilinear comparisons (a smooth edge about
+// three texels wide), offset along the normal by a texel and a half (no
+// acne on surfaces at grazing angles to the sun), fading out at the
+// shadows' far distance.
+fn sunShadow(relPosition: vec3f, n: vec3f) -> f32 {
+  if (shadows.forward.w < 0.5) {
+    return 1.0;
+  }
+  let depth = dot(relPosition, shadows.forward.xyz);
+  if (depth >= shadows.fade.y) {
+    return 1.0;
+  }
+  var c = 0u;
+  while (c < 3u && depth > shadows.splits[c]) {
+    c++;
+  }
+  let p = shadows.matrices[c] * vec4f(relPosition + n * (shadows.texels[c] * 1.5), 1.0);
+  let uv = vec2f(p.x * 0.5 + 0.5, 0.5 - p.y * 0.5);
+  if (any(uv < vec2f(0.0)) || any(uv > vec2f(1.0)) || p.z > 1.0) {
+    return 1.0;
+  }
+  let texel = 1.0 / SHADOW_SIZE;
+  var lit = 0.0;
+  for (var dy = -1; dy <= 1; dy++) {
+    for (var dx = -1; dx <= 1; dx++) {
+      lit += textureSampleCompareLevel(shadowMap, shadowSampler, uv + vec2f(f32(dx), f32(dy)) * texel, c, p.z);
+    }
+  }
+  lit /= 9.0;
+  let fade = clamp((depth - shadows.fade.x) / max(shadows.fade.y - shadows.fade.x, 1e-3), 0.0, 1.0);
+  return mix(lit, 1.0, fade);
 }
 
 struct FsOut {
@@ -523,7 +608,14 @@ fn fs(in: VsOut, @builtin(front_facing) frontFacing: bool) -> FsOut {
   let diffuse = (1.0 - fresnel) * diffuseColor / PI;
   // 1.x clamps n·l to at least 0.001, which lets a little sun light reach
   // surfaces facing away from it; 2.0 gives them none.
-  let sunVisible = select(0.0, 1.0, dot(n, l) > 0.0);
+  var sunVisible = select(0.0, 1.0, dot(n, l) > 0.0);
+  if (sunVisible > 0.0) {
+    var geometric = normalize(in.normal);
+    if (!frontFacing) {
+      geometric = -geometric;
+    }
+    sunVisible *= sunShadow(in.relPosition, geometric);
+  }
   let direct = (diffuse + specular) * nDotL * sunIlluminance(in.relPosition) * sunVisible;
 
   // Image-based lighting (Fdez-Agüera 2019 multiple scattering).
