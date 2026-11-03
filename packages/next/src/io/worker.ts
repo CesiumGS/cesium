@@ -10,6 +10,7 @@ import {
 const TERRAIN_ACCEPT =
   "application/vnd.quantized-mesh;extensions=octvertexnormals-metadata,application/octet-stream;q=0.9,*/*;q=0.01";
 import type { TextureFormatSupport } from "./decoders.ts";
+import { extractStars, type StarMapFace } from "../atmosphere/stars.ts";
 
 /**
  * Content worker. Each request is `{ id, type, ...payload }`; each reply is
@@ -27,6 +28,8 @@ self.onmessage = async (
     textureSupport: TextureFormatSupport;
     rect: Rectangle;
     skirtHeight: number;
+    /** "stars": the star map's six faces. */
+    urls?: string[];
   }>,
 ) => {
   const { id, type } = event.data;
@@ -70,6 +73,35 @@ self.onmessage = async (
         images: {},
       };
       self.postMessage({ id, ok: true, result: { asset, info } }, transfer);
+      return;
+    }
+    if (type === "stars") {
+      // The stars read out of a star map (atmosphere/stars.ts): about a
+      // second of work, here rather than on the page.
+      const faces: StarMapFace[] = await Promise.all(
+        (event.data.urls ?? []).map(async (url) => {
+          const response = await fetch(url, { signal: controller.signal });
+          if (!response.ok) {
+            throw new Error(`star map: ${response.status}`);
+          }
+          const bitmap = await createImageBitmap(await response.blob(), {
+            colorSpaceConversion: "none",
+            premultiplyAlpha: "none",
+          });
+          const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+          const context = canvas.getContext("2d")!;
+          context.drawImage(bitmap, 0, 0);
+          return {
+            data: context.getImageData(0, 0, bitmap.width, bitmap.height).data,
+            width: bitmap.width,
+          };
+        }),
+      );
+      const field = extractStars(faces);
+      self.postMessage({ id, ok: true, result: field }, [
+        field.points.buffer,
+        ...field.background.map((face) => face.buffer),
+      ]);
       return;
     }
     if (type === "image") {

@@ -317,19 +317,7 @@ export class Viewer {
         .catch(() => {});
     }
     if (options.stars !== false) {
-      void Promise.all(
-        STAR_MAP.map(async (url) =>
-          createImageBitmap(await (await fetch(url)).blob(), {
-            colorSpaceConversion: "none",
-          }),
-        ),
-      )
-        .then((faces) => {
-          if (!this.destroyed) {
-            this.engine.setStarMap(faces);
-          }
-        })
-        .catch(() => {});
+      this.engine.setStarMap(STAR_MAP);
     }
     if (options.timeControls !== false) {
       this.time_ = attachTimeControls(container, this.clock, {

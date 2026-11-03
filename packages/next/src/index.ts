@@ -1,6 +1,5 @@
 export {
   Engine,
-  STAR_MAP_LUMINANCE,
   type EngineOptions,
   type FrameStats,
   type GlobeOptions,

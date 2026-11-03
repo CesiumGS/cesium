@@ -66,7 +66,9 @@ struct Sky {
   // From above the atmosphere, the scale per axis that makes the body's
   // ellipsoid the atmosphere's ground sphere (`marchedSky`); 1 otherwise.
   shape: vec3f,
-  _pad4: f32,
+  // Device pixels per CSS pixel: the stars' point spread is sized for the
+  // display as it's seen (a star a CSS pixel or two, at any density).
+  starPixel: f32,
 };
 
 @group(2) @binding(0) var<uniform> sky: Sky;
@@ -123,29 +125,113 @@ fn sunDisk(direction: vec3f) -> f32 {
 
 // --- the stars ------------------------------------------------------------------
 
-// The stars behind the atmosphere (plan §4.2, the night sky): a star map in
-// the celestial frame (ICRF), turned to Earth-fixed axes by the time, its
-// texels luminance in cd/m² per unit (linear). Seen through the
-// atmosphere: dimmed by its transmittance along the ray (to space), so they
-// fade toward the horizon and into twilight, and show as the exposure
-// opens at night; at a daylight exposure they're far below black.
+// The stars behind the atmosphere (plan §4.2, the night sky), in the
+// celestial frame (ICRF), turned to Earth-fixed axes by the time: points,
+// each splatted into the view's star layer through a point spread function
+// (`starVertex`), over a smooth background (the Milky Way, a low-passed
+// cube in cd/m²) (atmosphere/stars.ts). Seen through the atmosphere:
+// dimmed by its transmittance along the ray (to space), so they fade
+// toward the horizon and into twilight, and show as the exposure opens at
+// night; at a daylight exposure they're far below black.
 struct Stars {
-  // Earth-fixed to ICRF, by rows; rows[0].w: luminance per unit (cd/m²),
-  // 0 for none.
+  // Earth-fixed to ICRF, by rows; rows[0].w: 1 with stars, 0 without.
   rows: array<vec4f, 3>,
 };
 
 @group(3) @binding(0) var<uniform> stars: Stars;
-@group(3) @binding(1) var starMap: texture_cube<f32>;
+@group(3) @binding(1) var starBackground: texture_cube<f32>;
 @group(3) @binding(2) var starSampler: sampler;
+// The view's stars, splatted (cd/m², not exposed).
+@group(3) @binding(4) var starLayer: texture_2d<f32>;
+// Per star: direction (ICRF) and illuminance (lux), then color.
+@group(3) @binding(5) var<storage, read> starPoints: array<vec4f>;
 
-fn starLight(direction: vec3f) -> vec3f {
+// The stars' light at a pixel looking along `direction` (cd/m²).
+fn starLight(pixel: vec2f, direction: vec3f) -> vec3f {
   let d = vec3f(
     dot(stars.rows[0].xyz, direction),
     dot(stars.rows[1].xyz, direction),
     dot(stars.rows[2].xyz, direction),
   );
-  return textureSampleLevel(starMap, starSampler, d, 0.0).rgb * stars.rows[0].w;
+  let background = textureSampleLevel(starBackground, starSampler, d, 0.0).rgb * stars.rows[0].w;
+  return textureLoad(starLayer, vec2i(pixel), 0).rgb + background;
+}
+
+// A star's point spread function, in CSS pixels (`starPixel`): a sharp
+// core (a Gaussian integrated over each pixel, so its light sums to the
+// same wherever it falls: no shimmer as the view turns) and a faint wide
+// halo, glare that shows only around the bright ones (Spencer et al.
+// 1995's bloom, the eye's or a lens's scatter): a bright star, its core
+// past white, is larger, as the eye sees it.
+const STAR_CORE = 0.6;
+const STAR_HALO = 3.0;
+const STAR_HALO_SHARE = 0.05;
+const STAR_MAX = 60000.0;
+
+struct StarSplat {
+  @builtin(position) position: vec4f,
+  @location(0) center: vec2f,
+  @location(1) @interpolate(flat) light: vec3f,
+};
+
+// erf (Winitzki's approximation, within 1e-4).
+fn erfApprox(x: f32) -> f32 {
+  let x2 = x * x;
+  return sign(x) * sqrt(1.0 - exp(-x2 * (1.2732395 + 0.147 * x2) / (1.0 + 0.147 * x2)));
+}
+
+// One star as a square around it, as large as its halo stays visible at
+// the most open exposure the stars get; off screen if behind the camera or
+// too faint to show at all.
+@vertex
+fn starVertex(@builtin(vertex_index) corner: u32, @builtin(instance_index) index: u32) -> StarSplat {
+  var out: StarSplat;
+  out.position = vec4f(2.0, 2.0, 0.0, 1.0);
+  out.center = vec2f(0.0);
+  out.light = vec3f(0.0);
+  let a = starPoints[index * 2u];
+  let b = starPoints[index * 2u + 1u];
+  // ICRF to Earth-fixed: the rows' transpose.
+  let d = stars.rows[0].xyz * a.x + stars.rows[1].xyz * a.y + stars.rows[2].xyz * a.z;
+  let z = dot(d, sky.forward);
+  if (z < 0.01) {
+    return out;
+  }
+  let ndc = vec2f(dot(d, sky.right) / (z * sky.tanX), dot(d, sky.up) / (z * sky.tanY));
+  let pixel = vec2f((ndc.x * 0.5 + 0.5) * sky.size.x, (0.5 - ndc.y * 0.5) * sky.size.y);
+  // Its illuminance over the pixel's solid angle there: radiance.
+  let pixelAngle = 2.0 * sky.tanY / sky.size.y;
+  let omega = pixelAngle * pixelAngle * z * z * z;
+  let light = min(b.xyz * (a.w / omega), vec3f(STAR_MAX));
+  let brightest = max(light.r, max(light.g, light.b)) * max(sky.exposure, sky.starExposure);
+  if (brightest * 0.4 < 1e-4) {
+    return out;
+  }
+  let haloSize = STAR_HALO * sky.starPixel;
+  let halo = brightest * STAR_HALO_SHARE / (2.0 * PI * haloSize * haloSize);
+  let radius = clamp(haloSize * sqrt(2.0 * log(max(halo / 0.002, 1.0))), 2.0 * sky.starPixel, 64.0);
+  var corners = array<vec2f, 6>(
+    vec2f(-1.0, -1.0), vec2f(1.0, -1.0), vec2f(-1.0, 1.0),
+    vec2f(-1.0, 1.0), vec2f(1.0, -1.0), vec2f(1.0, 1.0),
+  );
+  let p = pixel + corners[corner] * radius;
+  out.position = vec4f(p.x / sky.size.x * 2.0 - 1.0, 1.0 - p.y / sky.size.y * 2.0, 0.0, 1.0);
+  out.center = pixel;
+  out.light = light;
+  return out;
+}
+
+@fragment
+fn starFragment(in: StarSplat) -> @location(0) vec4f {
+  let d = in.position.xy - in.center;
+  let core = STAR_CORE * sky.starPixel;
+  let haloSize = STAR_HALO * sky.starPixel;
+  let s = 1.0 / (sqrt(2.0) * core);
+  let sharp = 0.25
+    * (erfApprox((d.x + 0.5) * s) - erfApprox((d.x - 0.5) * s))
+    * (erfApprox((d.y + 0.5) * s) - erfApprox((d.y - 0.5) * s));
+  let halo = exp(-dot(d, d) / (2.0 * haloSize * haloSize)) / (2.0 * PI * haloSize * haloSize);
+  return vec4f(in.light * mix(sharp, halo, STAR_HALO_SHARE), 0.0);
 }
 
 // The exposure the stars are shown at against `background` (pre-exposed,
@@ -360,7 +446,7 @@ fn skyStarsFragment(in: SkyVarying) -> @location(0) vec4f {
   let direction = viewDirection(in.position.xy);
   let moon = moonDisk(direction);
   let moonLight = toRgb(atmosphere.solarIrradiance * moon.radiance * m.transmittance, in.group) * sky.exposure;
-  let starry = starLight(direction) * m.toSpace * starExposure(m.color, 0.5) * (1.0 - moon.coverage);
+  let starry = starLight(in.position.xy, direction) * m.toSpace * starExposure(m.color, 0.5) * (1.0 - moon.coverage);
   return vec4f(min(m.color + moonLight + starry, vec3f(SKY_MAX)), 1.0);
 }
 
@@ -552,7 +638,7 @@ fn skyFromTableFragment(in: SkyVarying) -> @location(0) vec4f {
       let light = textureLoad(skyView, vec2i(1, i32(SKY_VIEW_SIZE.y)), 0).rgb / MOON_ROW_SCALE;
       color += light * moon.radiance * sky.exposure;
     }
-    color += starLight(direction) * s.toSpace * starExposure(s.color, 1.0) * (1.0 - moon.coverage);
+    color += starLight(in.position.xy, direction) * s.toSpace * starExposure(s.color, 1.0) * (1.0 - moon.coverage);
   }
   return vec4f(min(color, vec3f(2.0 * SKY_MAX)), 1.0);
 }

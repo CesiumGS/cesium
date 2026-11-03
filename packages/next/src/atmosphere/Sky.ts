@@ -6,6 +6,7 @@ import type { Ellipsoid, Cartographic } from "../math/ellipsoid.ts";
 import * as v3 from "../math/vec3.ts";
 import type { Vec3 } from "../math/vec3.ts";
 import type { Camera } from "../scene/Camera.ts";
+import { STAR_FLOATS, type StarField } from "./stars.ts";
 import {
   MOON_ALBEDO,
   lommelSeeliger,
@@ -108,6 +109,10 @@ export interface SkyView {
   /** Per face: its uniform alone (marching), and with the table. */
   faceGroups: GPUBindGroup[];
   faceTableGroups: GPUBindGroup[];
+  /** The stars' group for this view's star layer (rebuilt as it changes). */
+  starGroup?: GPUBindGroup;
+  starLayer?: GPUTextureView;
+  starFor?: GPUBuffer;
 }
 
 type Pipelines = Record<
@@ -116,7 +121,8 @@ type Pipelines = Record<
   | "fromTable"
   | "sunLight"
   | "environment"
-  | "environmentFromTable",
+  | "environmentFromTable"
+  | "stars",
   GPURenderPipeline
 >;
 
@@ -204,17 +210,23 @@ export class Sky {
   readonly airTransmittance: GPUTexture;
   readonly airScattering: GPUTexture;
   /**
-   * The stars (sky.wgsl `starLight`): their uniform (Earth-fixed to ICRF,
-   * the luminance per unit), the map (a cube in the celestial frame; black
-   * until one is set) and the bind group drawing the sky reads.
+   * The stars (sky.wgsl `starLight`, atmosphere/stars.ts): their uniform
+   * (Earth-fixed to ICRF, and whether there are any), the points (one
+   * placeholder until set), the background (a cube in the celestial frame,
+   * cd/m²; black until set), and the groups splatting and reading them.
    */
   private readonly starUniform: GPUBuffer;
-  private starMap: GPUTexture;
-  private starGroup: GPUBindGroup;
+  private starBackground: GPUTexture;
+  private starPoints: GPUBuffer;
+  private starCount = 0;
+  private starSplatGroup: GPUBindGroup;
   private readonly starLayout: GPUBindGroupLayout;
+  private readonly starSplatLayout: GPUBindGroupLayout;
   private readonly starSampler: GPUSampler;
   private readonly starData = new Float32Array(12);
-  private starLuminance = 0;
+  private starsOn = 0;
+  private readonly starPass: GPURenderPassDescriptor;
+  private readonly starAttachment: GPURenderPassColorAttachment;
   /** The Moon's albedo map (white until one is set) and its mean albedo. */
   private moonMap: GPUTexture;
   private moonMean = 1;
@@ -232,12 +244,27 @@ export class Sky {
     pipelines: Pipelines,
     aerialPipelines: [GPUComputePipeline, GPUComputePipeline],
     layouts: Record<
-      "atmosphere" | "tables" | "view" | "table" | "empty" | "aerial" | "stars",
+      | "atmosphere"
+      | "tables"
+      | "view"
+      | "table"
+      | "empty"
+      | "aerial"
+      | "stars"
+      | "starSplat",
       GPUBindGroupLayout
     >,
   ) {
     this.pipelines = pipelines;
     this.starLayout = layouts.stars;
+    this.starSplatLayout = layouts.starSplat;
+    this.starAttachment = {
+      view: undefined as never,
+      clearValue: { r: 0, g: 0, b: 0, a: 0 },
+      loadOp: "clear",
+      storeOp: "store",
+    };
+    this.starPass = { label: "stars", colorAttachments: [this.starAttachment] };
     this.aerialPipelines = aerialPipelines;
     this.aerialLayout = layouts.aerial;
     this.viewLayout = layouts.view;
@@ -309,7 +336,8 @@ export class Sky {
       magFilter: "linear",
       minFilter: "linear",
     });
-    this.starMap = this.createStarMap(1);
+    this.starBackground = this.createStarBackground(1);
+    this.starPoints = this.createStarPoints(1);
     this.moonMap = this.createMoonMap(1, 1);
     device.queue.writeTexture(
       { texture: this.moonMap },
@@ -317,7 +345,7 @@ export class Sky {
       {},
       [1, 1],
     );
-    this.starGroup = this.createStarGroup();
+    this.starSplatGroup = this.createStarSplatGroup();
     const volume = (label: string, extra = 0) =>
       device.createTexture({
         label,
@@ -378,37 +406,55 @@ export class Sky {
     this.airTransmittance.destroy();
     this.airScattering.destroy();
     this.starUniform.destroy();
-    this.starMap.destroy();
+    this.starBackground.destroy();
+    this.starPoints.destroy();
     this.moonMap.destroy();
   }
 
   /**
-   * Sets the star map: six square faces of a cube in the celestial frame
-   * (ICRF), +x, −x, +y, −y, +z, −z (sRGB), and the luminance of a texel at
-   * full value, cd/m². Null: no stars.
+   * Sets the stars (atmosphere/stars.ts `extractStars`): their points and
+   * the background, its faces as the star map's (upside down to WebGPU's
+   * cube layout, as 1.x uploads them). Null: no stars.
    */
-  setStarMap(
-    faces: readonly GPUCopyExternalImageSource[] | null,
-    luminance: number,
-  ): void {
-    const old = this.starMap;
-    if (!faces) {
-      this.starMap = this.createStarMap(1);
-      this.starLuminance = 0;
+  setStarField(field: StarField | null): void {
+    const oldBackground = this.starBackground;
+    const oldPoints = this.starPoints;
+    if (!field || field.count === 0) {
+      this.starBackground = this.createStarBackground(1);
+      this.starPoints = this.createStarPoints(1);
+      this.starCount = 0;
+      this.starsOn = 0;
     } else {
-      const size = (faces[0] as { width: number }).width;
-      this.starMap = this.createStarMap(size);
-      faces.forEach((source, face) =>
-        this.device.queue.copyExternalImageToTexture(
-          { source },
-          { texture: this.starMap, origin: [0, 0, face] },
-          [size, size],
-        ),
+      const n = field.backgroundSize;
+      this.starBackground = this.createStarBackground(n);
+      const halves = new Uint16Array(n * n * 4);
+      field.background.forEach((face, f) => {
+        for (let y = 0; y < n; y++) {
+          for (let k = 0; k < n * 4; k++) {
+            halves[y * n * 4 + k] = floatToHalf(face[(n - 1 - y) * n * 4 + k]!);
+          }
+        }
+        this.device.queue.writeTexture(
+          { texture: this.starBackground, origin: [0, 0, f] },
+          halves,
+          { bytesPerRow: n * 8 },
+          [n, n],
+        );
+      });
+      this.starPoints = this.createStarPoints(field.count);
+      this.device.queue.writeBuffer(
+        this.starPoints,
+        0,
+        field.points,
+        0,
+        field.count * STAR_FLOATS,
       );
-      this.starLuminance = luminance;
+      this.starCount = field.count;
+      this.starsOn = 1;
     }
-    this.starGroup = this.createStarGroup();
-    old.destroy();
+    this.starSplatGroup = this.createStarSplatGroup();
+    oldBackground.destroy();
+    oldPoints.destroy();
   }
 
   /**
@@ -438,7 +484,6 @@ export class Sky {
       );
       this.moonMean = meanAlbedo(image);
     }
-    this.starGroup = this.createStarGroup();
     old.destroy();
   }
 
@@ -467,37 +512,87 @@ export class Sky {
       f[i * 4 + 2] = icrfToFixed[6 + i]!;
       f[i * 4 + 3] = 0;
     }
-    f[3] = this.starLuminance;
+    f[3] = this.starsOn;
     this.device.queue.writeBuffer(this.starUniform, 0, f);
   }
 
-  private createStarMap(size: number): GPUTexture {
+  private createStarBackground(size: number): GPUTexture {
     return this.device.createTexture({
-      label: "sky.starMap",
+      label: "sky.starBackground",
       size: [size, size, 6],
       dimension: "2d",
-      format: "rgba8unorm-srgb",
-      usage:
-        GPUTextureUsage.TEXTURE_BINDING |
-        GPUTextureUsage.COPY_DST |
-        GPUTextureUsage.RENDER_ATTACHMENT,
+      format: "rgba16float",
+      usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST,
     });
   }
 
-  private createStarGroup(): GPUBindGroup {
+  private createStarPoints(count: number): GPUBuffer {
+    return this.device.createBuffer({
+      label: "sky.starPoints",
+      size: Math.max(count, 1) * STAR_FLOATS * 4,
+      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
+    });
+  }
+
+  private createStarSplatGroup(): GPUBindGroup {
     return this.device.createBindGroup({
-      label: "sky.stars",
-      layout: this.starLayout,
+      label: "sky.starSplat",
+      layout: this.starSplatLayout,
       entries: [
         { binding: 0, resource: { buffer: this.starUniform } },
-        {
-          binding: 1,
-          resource: this.starMap.createView({ dimension: "cube" }),
-        },
-        { binding: 2, resource: this.starSampler },
-        { binding: 3, resource: this.moonMap.createView() },
+        { binding: 5, resource: { buffer: this.starPoints } },
       ],
     });
+  }
+
+  /** The stars' group reading `layer` (the view's, cached while it holds). */
+  private starGroupFor(view: SkyView, layer: GPUTextureView): GPUBindGroup {
+    if (
+      !view.starGroup ||
+      view.starLayer !== layer ||
+      view.starFor !== this.starPoints
+    ) {
+      view.starLayer = layer;
+      view.starFor = this.starPoints;
+      view.starGroup = this.device.createBindGroup({
+        label: "sky.stars",
+        layout: this.starLayout,
+        entries: [
+          { binding: 0, resource: { buffer: this.starUniform } },
+          {
+            binding: 1,
+            resource: this.starBackground.createView({ dimension: "cube" }),
+          },
+          { binding: 2, resource: this.starSampler },
+          { binding: 3, resource: this.moonMap.createView() },
+          { binding: 4, resource: layer },
+        ],
+      });
+    }
+    return view.starGroup;
+  }
+
+  /**
+   * Splats the stars into a view's star layer (`layer`, rgba16float at the
+   * view's size; cleared): each through its point spread function, in
+   * cd/m², for the sky to read (`draw`).
+   */
+  encodeStars(
+    encoder: GPUCommandEncoder,
+    view: SkyView,
+    layer: GPUTextureView,
+  ): void {
+    this.starAttachment.view = layer;
+    const pass = encoder.beginRenderPass(this.starPass);
+    if (this.starCount > 0) {
+      pass.setPipeline(this.pipelines.stars);
+      pass.setBindGroup(0, this.empty);
+      pass.setBindGroup(1, this.empty);
+      pass.setBindGroup(2, view.group);
+      pass.setBindGroup(3, this.starSplatGroup);
+      pass.draw(6, this.starCount);
+    }
+    pass.end();
   }
 
   /**
@@ -737,7 +832,13 @@ export class Sky {
       }),
       view: device.createBindGroupLayout({
         label: "sky.view",
-        entries: [{ binding: 0, visibility: fragment, buffer: {} }],
+        entries: [
+          {
+            binding: 0,
+            visibility: fragment | GPUShaderStage.VERTEX,
+            buffer: {},
+          },
+        ],
       }),
       table: device.createBindGroupLayout({
         label: "sky.fromTable",
@@ -759,6 +860,22 @@ export class Sky {
           },
           { binding: 2, visibility: fragment, sampler: {} },
           { binding: 3, visibility: fragment, texture: {} },
+          {
+            binding: 4,
+            visibility: fragment,
+            texture: { sampleType: "unfilterable-float" },
+          },
+        ],
+      }),
+      starSplat: device.createBindGroupLayout({
+        label: "sky.starSplat",
+        entries: [
+          { binding: 0, visibility: GPUShaderStage.VERTEX, buffer: {} },
+          {
+            binding: 5,
+            visibility: GPUShaderStage.VERTEX,
+            buffer: { type: "read-only-storage" },
+          },
         ],
       }),
     };
@@ -824,6 +941,7 @@ export class Sky {
       environmentFromTable,
       aerial0,
       aerial1,
+      stars,
     ] = await Promise.all([
       device.createRenderPipelineAsync(
         scene("skyStarsFragment", [...marching, layouts.stars]),
@@ -869,6 +987,33 @@ export class Sky {
           },
         }),
       ),
+      // The stars' splats into the view's star layer, adding up.
+      device.createRenderPipelineAsync({
+        label: "sky.stars",
+        layout: device.createPipelineLayout({
+          bindGroupLayouts: [
+            layouts.empty,
+            layouts.empty,
+            layouts.view,
+            layouts.starSplat,
+          ],
+        }),
+        vertex: { module, entryPoint: "starVertex" },
+        fragment: {
+          module,
+          entryPoint: "starFragment",
+          targets: [
+            {
+              format: "rgba16float",
+              blend: {
+                color: { srcFactor: "one", dstFactor: "one", operation: "add" },
+                alpha: { srcFactor: "one", dstFactor: "one", operation: "add" },
+              },
+            },
+          ],
+        },
+        primitive: { topology: "triangle-list" },
+      }),
     ]);
     return new Sky(
       device,
@@ -880,6 +1025,7 @@ export class Sky {
         sunLight,
         environment,
         environmentFromTable,
+        stars: stars as GPURenderPipeline,
       },
       [aerial0 as GPUComputePipeline, aerial1 as GPUComputePipeline],
       layouts,
@@ -1004,6 +1150,7 @@ export class Sky {
     // A margin below the top, where the table's rows still resolve the
     // thin shell of atmosphere left above.
     view.inside = r < (p.topRadius - 1000) / 1000;
+    f[79] = globalThis.devicePixelRatio ?? 1;
     if (!view.inside) {
       // From above, the sky is marched where the ellipsoid is the ground
       // sphere (sky.wgsl `marchedSky`): the sphere under the camera alone
@@ -1108,20 +1255,28 @@ export class Sky {
     pass.end();
   }
 
-  /** Draws the sky in an open opaque pass (after the scene). */
-  draw(pass: GPURenderPassEncoder, view: SkyView): void {
+  /**
+   * Draws the sky in an open opaque pass (after the scene), the stars from
+   * the view's layer (`encodeStars`, this frame).
+   */
+  draw(
+    pass: GPURenderPassEncoder,
+    view: SkyView,
+    starLayer: GPUTextureView,
+  ): void {
+    const stars = this.starGroupFor(view, starLayer);
     if (view.inside) {
       pass.setPipeline(this.pipelines.fromTable);
       pass.setBindGroup(0, this.empty);
       pass.setBindGroup(1, this.empty);
       pass.setBindGroup(2, view.tableGroup);
-      pass.setBindGroup(3, this.starGroup);
+      pass.setBindGroup(3, stars);
       pass.draw(3);
       return;
     }
     pass.setPipeline(this.pipelines.march);
     pass.setBindGroup(2, view.group);
-    pass.setBindGroup(3, this.starGroup);
+    pass.setBindGroup(3, stars);
     for (let g = 0; g < this.groups.length; g++) {
       const [atmosphere, tables] = this.groups[g]!;
       pass.setBindGroup(0, atmosphere);
@@ -1170,4 +1325,26 @@ function meanAlbedo(image: ImageBitmap): number {
     }
   }
   return sum > 0 ? sum / weights : 1;
+}
+
+const halfScratch = new DataView(new ArrayBuffer(4));
+
+/** A float as IEEE half precision bits (round to nearest even). */
+function floatToHalf(value: number): number {
+  halfScratch.setFloat32(0, value);
+  const x = halfScratch.getUint32(0);
+  const sign = (x >>> 16) & 0x8000;
+  const exponent = ((x >>> 23) & 0xff) - 127 + 15;
+  const mantissa = x & 0x7fffff;
+  if (exponent >= 31) {
+    return sign | 0x7c00;
+  }
+  if (exponent <= 0) {
+    if (exponent < -10) {
+      return sign;
+    }
+    const m = (mantissa | 0x800000) >>> (1 - exponent);
+    return sign | ((m + 0x1000) >>> 13);
+  }
+  return sign | (exponent << 10) | ((mantissa + 0x1000) >>> 13);
 }

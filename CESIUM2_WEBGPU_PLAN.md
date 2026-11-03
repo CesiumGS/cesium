@@ -716,6 +716,32 @@ The catalog problem stands (none we found ships under Apache-2.0); the
 points could come from the Tycho map itself (its peaks: positions,
 fluxes, colors), the map kept, low-passed, as the background.
 
+Progress (r44): **stars as points**. Looking closer, the map draws a star
+as one texel (5′; bright ones as disks 4-5 texels across), its value
+growing with brightness, compressed (Sirius about 230 of 255, a ninth
+magnitude star about 16), over an 8-bit background; drawn as a texture, a
+star was a texel magnified and filtered, and the background's steps drew
+contours at an open exposure. And 1.x uploads cube faces upside down
+(`flipY`), so the 2.0 sky had each face mirrored (Procyon at −5° for +5°).
+atmosphere/stars.ts reads it out in a worker (1.1 s): 86,000 stars, each
+at its texels' centroid (Procyon, Capella, α Centauri, Orion where they
+are), its brightness by rank (sorted by its light in the map, the n-th
+takes the magnitude the sky has n stars brighter than: the map's
+compression drops out) and its color; the rest, low-passed in float
+(64² a face), is the background, its brightest (the Milky Way's core)
+1.5 × 10⁻⁴ cd/m² above the rest. Each frame the stars are splatted into a
+view-sized layer through a point spread function in CSS pixels (a
+Gaussian core integrated over each pixel, energy-conserving at any
+subpixel position, and a halo of 5% of the light, σ 3 CSS px: a bright
+star past white is larger), culled where too faint to show; the sky reads
+the layer as it read the map (the air's transmittance, the dark-sky rule,
+the Moon). The whole frame of a dense star field at EV100 −10 takes 0.5 ms.
+Limits: the brightness of the brightest stars is the map's, off by about
+a magnitude on average and more for a few (Spica 1.0 reads 4.6, Alnilam
+1.7 reads 5.2: Tycho-2 handles the brightest stars poorly); a catalog
+would fix it, and colors from B−V. Still to do: diffraction spikes for the
+camera, the corona's rays, twinkle (needs continuous rendering).
+
 Progress (r43): **the Moon**. `moonPosition(time)` (time/moon.ts) ports
 1.x's Simon et al. (1994) lunar theory (within 0.04° and 0.05% of
 distance of Meeus's example 47.a), turned to Earth-fixed axes with

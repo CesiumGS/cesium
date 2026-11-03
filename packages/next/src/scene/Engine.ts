@@ -48,6 +48,7 @@ import { MOON_ALBEDO, MOON_RADIUS, moonPhaseBrightness } from "../time/moon.ts";
 import type { AerosolType } from "../atmosphere/model.ts";
 import { EARTH } from "./Body.ts";
 import { SCOTOPIC_WHITE, adapt, eyeResponse } from "./eye.ts";
+import type { StarField } from "../atmosphere/stars.ts";
 import { Camera } from "./Camera.ts";
 import {
   SHADOW_CASCADES,
@@ -75,17 +76,6 @@ import {
   type ModelInstance,
   type ModelOptions,
 } from "./gltfModel.ts";
-
-/**
- * The luminance of a full-value texel of 1.x's star map (Tycho), cd/m²:
- * its mean is then about 3 × 10⁻⁴ cd/m², the natural night sky's (stars,
- * airglow and zodiacal light together, about 2 × 10⁻⁴), the map standing
- * for all of it. Its stars are blurred over texels magnified at ordinary
- * fields of view and clipped at full value (8 bits), so a bright star's
- * light, which belongs on a pixel, is spread over dozens: catalog stars,
- * drawn as points with their own illuminance, replace it (plan §4.2).
- */
-export const STAR_MAP_LUMINANCE = 0.2;
 
 /** Tone mappings by their index in present.wgsl's `PresentParams`. */
 const TONE_MAPPINGS: readonly ToneMapping[] = ["pbrNeutral", "agx", "aces"];
@@ -629,19 +619,33 @@ export class Engine {
   }
 
   /**
-   * The stars behind the sky (the night sky): a star map, six square faces
-   * of a cube in the celestial frame (ICRF), in the order +x, −x, +y, −y,
-   * +z, −z, sRGB, and the luminance of a texel at full value, cd/m²
-   * (default `STAR_MAP_LUMINANCE`, for 1.x's Tycho map). They show as the
+   * The stars behind the sky (the night sky), from a star map as 1.x's
+   * Tycho map is laid out: six square faces of a cube in the celestial
+   * frame (ICRF), +x, −x, +y, −y, +z, −z, sRGB, each star a texel or a
+   * small disk. Read out in a worker into points with their brightness and
+   * a background (atmosphere/stars.ts), drawn as points. They show as the
    * exposure opens at night, dimmed by the air; null: none.
    */
-  setStarMap(
-    faces: readonly GPUCopyExternalImageSource[] | null,
-    luminance = STAR_MAP_LUMINANCE,
-  ): void {
-    this.sky.setStarMap(faces, luminance);
-    this.requestRender();
+  setStarMap(faces: readonly (string | URL)[] | null): void {
+    const token = ++this.starToken;
+    if (!faces) {
+      this.sky.setStarField(null);
+      this.requestRender();
+      return;
+    }
+    const urls = faces.map((url) => new URL(url, location.href).href);
+    void this.workers.request<StarField>("stars", { urls }).then(
+      (field) => {
+        if (token === this.starToken) {
+          this.sky.setStarField(field);
+          this.requestRender();
+        }
+      },
+      () => {},
+    );
   }
+
+  private starToken = 0;
 
   /**
    * The Moon's albedo map: equirectangular, longitude 0 (the near side's
@@ -2515,9 +2519,25 @@ export class Engine {
       },
     );
 
+    // The stars, splatted as points into a layer the sky reads.
+    const starLayer = graph.createTexture("stars", {
+      width,
+      height,
+      format: "rgba16float",
+      usage: attachment | GPUTextureUsage.TEXTURE_BINDING,
+    });
+    graph.addPass("stars", { writes: [starLayer] }, (enc, get) => {
+      if (drawsSky(view)) {
+        this.sky.encodeStars(enc, frame.sky, get(starLayer));
+      }
+    });
+
     graph.addPass(
       "opaque",
-      { writes: [color, resolved, ids, display, displayResolved, depth] },
+      {
+        reads: [starLayer],
+        writes: [color, resolved, ids, display, displayResolved, depth],
+      },
       (enc, get) => {
         const atmosphere = drawsSky(view);
         clearColor.r = atmosphere ? 0 : view.clearColor[0];
@@ -2534,7 +2554,7 @@ export class Engine {
         frame.bundles[0] = frame.bundle!;
         pass.executeBundles(frame.bundles);
         if (atmosphere) {
-          this.sky.draw(pass, frame.sky);
+          this.sky.draw(pass, frame.sky, get(starLayer));
         }
         pass.end();
       },
