@@ -111,6 +111,12 @@ export class GlobeBudgetedSelection extends BudgetedSelection {
     useParentGeometricError: boolean,
     rootError: number,
   ): number {
+    // The content-less root over the two level-0 tiles always refines:
+    // its own error fell below the threshold from about 75,000 km, and it
+    // was drawn (nothing) in their place (1.x always draws level 0).
+    if (tile === this.source.root) {
+      return Number.MAX_VALUE;
+    }
     const sse = super.screenSpaceError(
       tile,
       view,
