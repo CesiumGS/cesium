@@ -61,6 +61,30 @@ const COMPONENTS: Record<string, number> = {
  * device's block formats) and attribute conversion all happen off the main
  * thread. Returns the asset and the list of transferables.
  */
+/**
+ * A `data:` URI's bytes, decoded here: fetching one is a request that a
+ * Content Security Policy checks against `connect-src` (as 1.x, which
+ * decodes them too).
+ */
+function dataUriResponse(uri: string): Response {
+  const comma = uri.indexOf(",");
+  const meta = uri.slice(5, comma);
+  const body = uri.slice(comma + 1);
+  let bytes: Uint8Array<ArrayBuffer>;
+  if (meta.endsWith(";base64")) {
+    const binary = atob(body);
+    bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+  } else {
+    bytes = new TextEncoder().encode(decodeURIComponent(body));
+  }
+  return new Response(bytes, {
+    headers: { "Content-Type": meta.split(";")[0] || "text/plain" },
+  });
+}
+
 export async function parseGltf(
   url: string,
   textureSupport: TextureFormatSupport,
@@ -74,7 +98,10 @@ export async function parseGltf(
   };
   // External resources resolve against the glTF (an i3dm may point at one).
   let base = url;
-  const fetchUri = (uri: string) => fetch(resolveUri(uri, base), init);
+  const fetchUri = (uri: string) =>
+    uri.startsWith("data:")
+      ? Promise.resolve(dataUriResponse(uri))
+      : fetch(resolveUri(uri, base), init);
   const fetchStart = performance.now();
   const response = await fetch(url, init);
   if (!response.ok) {
