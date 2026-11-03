@@ -2343,8 +2343,8 @@ tested against 2.0's own exact lists, r9); and UnlitTest lit (mean
 0.074), where 1.x tonemaps unlit color under HDR and 2.0 shows it as
 authored (display-referred, as glTF's unlit and 1.x's LDR default). With
 translucency the only failure before, the models table's BoxCutout row
-(unlit) is now 0.018. Remaining for the exit: **L3 sign-off**, the plan
-owner's look-dev review in Dyno's comparison views (swipe and flicker).
+(unlit) is now 0.018. **L3 signed off** by the plan owner (2026-11-03,
+"good enough for now"), with the open bug below: M4 is done.
 
 **Open bug: East Antarctica drawn as ocean from far out (r45).** With
 Cesium World Terrain and Bing, from about 25,000 km over the South
