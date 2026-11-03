@@ -376,6 +376,9 @@ export class Engine {
   private readonly adaptData = new Float32Array(4);
   /** The eye's local adaptation grid, sampled trilinearly. */
   private adaptSampler?: GPUSampler;
+  /** FXAA's image, sampled bilinearly. */
+  private fxaaSampler?: GPUSampler;
+  private readonly fxaaData = new DataView(new ArrayBuffer(32));
   private readonly overlayColor = new Float32Array(4);
   private readonly viewBlock: ViewBlock;
   private readonly commandBuffers: GPUCommandBuffer[] = [];
@@ -2690,6 +2693,13 @@ export class Engine {
         size: 16,
         usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
       }),
+      fxaaParams: device.createBuffer({
+        label: "fxaaParams",
+        size: 32,
+        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+      }),
+      fxaaGroup: undefined,
+      fxaaImage: undefined,
       sky: this.sky.createView(),
       shadowed: false,
       ambient: false,
@@ -3336,19 +3346,45 @@ export class Engine {
       },
     );
 
+    // With FXAA, the present pass tonemaps into this (encoded), and FXAA
+    // reads it into the view's rectangle of the target.
+    const ldr = graph.createTexture("ldr", {
+      width,
+      height,
+      format: "rgba8unorm",
+      usage: attachment | GPUTextureUsage.TEXTURE_BINDING,
+    });
+    const ldrColor: GPURenderPassColorAttachment = {
+      view: undefined as never,
+      clearValue: { r: 0, g: 0, b: 0, a: 1 },
+      loadOp: "clear",
+      storeOp: "store",
+    };
+    const ldrPass: GPURenderPassDescriptor = {
+      label: "present.ldr",
+      colorAttachments: [ldrColor],
+    };
     graph.addPass(
       "present",
-      { reads: [resolved, displayResolved, adaptation], writes: [output] },
+      {
+        reads: [resolved, displayResolved, adaptation],
+        writes: [output, ldr],
+      },
       (enc, get) => {
+        const fxaa = view.fxaa;
+        const srgbTarget = this.ctx.outputFormat.endsWith("-srgb");
         const params = this.presentData;
-        params.setFloat32(0, x, true);
-        params.setFloat32(4, y, true);
+        params.setFloat32(0, fxaa ? 0 : x, true);
+        params.setFloat32(4, fxaa ? 0 : y, true);
         params.setUint32(8, TONE_MAPPINGS.indexOf(view.toneMapping), true);
-        const encoding = this.ctx.outputFormat.endsWith("-srgb")
-          ? 0
-          : view.outputEncoding === "gamma2.2"
-            ? 2
-            : 1;
+        // FXAA reads encoded color (its edges are found in display luma);
+        // gamma 2.2 only where the target isn't -srgb, as without it.
+        const encoding =
+          srgbTarget && !fxaa
+            ? 0
+            : view.outputEncoding === "gamma2.2" && !srgbTarget
+              ? 2
+              : 1;
         params.setUint32(12, encoding, true);
         // The eye: its adaptation over the view (log10 cd/m²) and its
         // brightening; per pixel it adapts partly to its region too.
@@ -3390,13 +3426,46 @@ export class Engine {
             ],
           });
         }
+        if (fxaa) {
+          const image = get(ldr);
+          ldrColor.view = image;
+          const first = enc.beginRenderPass(ldrPass);
+          first.setPipeline(pipelines.presentLdr);
+          first.setBindGroup(0, frame.presentGroup!);
+          first.draw(3);
+          first.end();
+          const f = this.fxaaData;
+          f.setFloat32(0, x, true);
+          f.setFloat32(4, y, true);
+          f.setFloat32(8, 1 / width, true);
+          f.setFloat32(12, 1 / height, true);
+          f.setUint32(16, srgbTarget && encoding === 1 ? 1 : 0, true);
+          device.queue.writeBuffer(frame.fxaaParams, 0, f.buffer);
+          if (frame.fxaaImage !== image) {
+            frame.fxaaImage = image;
+            this.fxaaSampler ??= device.createSampler({
+              label: "fxaa",
+              magFilter: "linear",
+              minFilter: "linear",
+            });
+            frame.fxaaGroup = device.createBindGroup({
+              label: "fxaa",
+              layout: pipelines.fxaa.getBindGroupLayout(0),
+              entries: [
+                { binding: 0, resource: image },
+                { binding: 1, resource: this.fxaaSampler },
+                { binding: 2, resource: { buffer: frame.fxaaParams } },
+              ],
+            });
+          }
+        }
         presentColor.view = get(output);
         presentColor.loadOp = frame.clearTarget ? "clear" : "load";
         const pass = enc.beginRenderPass(presentPass);
         pass.setViewport(x, y, width, height, 0, 1);
         pass.setScissorRect(x, y, width, height);
-        pass.setPipeline(pipelines.present);
-        pass.setBindGroup(0, frame.presentGroup!);
+        pass.setPipeline(fxaa ? pipelines.fxaa : pipelines.present);
+        pass.setBindGroup(0, fxaa ? frame.fxaaGroup! : frame.presentGroup!);
         pass.draw(3);
         this.drawOverlays(pass, view);
         pass.end();
@@ -3590,6 +3659,10 @@ interface ViewFrame {
   presentAdaptation: GPUTextureView | undefined;
   /** The eye's adaptation map's parameters (its pre-exposure). */
   adaptParams: GPUBuffer;
+  /** FXAA's parameters and group (`View.fxaa`), with the image it read. */
+  readonly fxaaParams: GPUBuffer;
+  fxaaGroup: GPUBindGroup | undefined;
+  fxaaImage: GPUTextureView | undefined;
   presentDisplay: GPUTextureView | undefined;
   /** The sky's uniform for this view (`View.background` "atmosphere"). */
   readonly sky: SkyView;
@@ -3654,6 +3727,7 @@ function drawsAerialPerspective(view: View): boolean {
 function destroyViewFrame(frame: ViewFrame): void {
   frame.presentParams.destroy();
   frame.adaptParams.destroy();
+  frame.fxaaParams.destroy();
   frame.aoParams.destroy();
   frame.translucentParams.destroy();
   frame.sky.buffer.destroy();

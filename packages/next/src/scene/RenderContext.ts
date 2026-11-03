@@ -18,6 +18,7 @@ import lightsWgsl from "../shaders/lights.wgsl?raw";
 import depthRangeWgsl from "../shaders/depthRange.wgsl?raw";
 import translucentWgsl from "../shaders/translucent.wgsl?raw";
 import compositeWgsl from "../shaders/composite.wgsl?raw";
+import fxaaWgsl from "../shaders/fxaa.wgsl?raw";
 import { CLUSTERS_SIZE, LIGHTS_SIZE } from "./lights.ts";
 
 /**
@@ -85,6 +86,12 @@ export interface Pipelines {
   aoTrace: GPUComputePipeline;
   aoDenoise: GPUComputePipeline;
   present: GPURenderPipeline;
+  /**
+   * With FXAA (View.fxaa): the present pass into an encoded 8-bit image,
+   * then FXAA from it into the target (`fxaa.wgsl`).
+   */
+  presentLdr: GPURenderPipeline;
+  fxaa: GPURenderPipeline;
   overlay: GPURenderPipeline;
   overlayLayout: GPUBindGroupLayout;
   pick: GPUComputePipeline;
@@ -508,6 +515,26 @@ async function createPipelines(
       },
     ],
   });
+  // Shared by the present pass's two pipelines (to the target, or to the
+  // image FXAA reads).
+  const presentLayout = device.createPipelineLayout({
+    bindGroupLayouts: [
+      device.createBindGroupLayout({
+        label: "present",
+        entries: [
+          { binding: 0, visibility: FRAGMENT, texture: {} },
+          { binding: 1, visibility: FRAGMENT, buffer: { type: "uniform" } },
+          { binding: 2, visibility: FRAGMENT, texture: {} },
+          {
+            binding: 3,
+            visibility: FRAGMENT,
+            texture: { viewDimension: "3d" },
+          },
+          { binding: 4, visibility: FRAGMENT, sampler: { type: "filtering" } },
+        ],
+      }),
+    ],
+  });
   const overlayLayout = device.createBindGroupLayout({
     label: "overlay",
     entries: [
@@ -808,6 +835,8 @@ async function createPipelines(
     aoTrace,
     aoDenoise,
     present,
+    presentLdr,
+    fxaa,
     overlay,
     pick,
     scatter,
@@ -866,10 +895,32 @@ async function createPipelines(
     }),
     device.createRenderPipelineAsync({
       label: "present",
-      layout: "auto",
+      layout: presentLayout,
       vertex: { module: module("present", presentWgsl), entryPoint: "vs" },
       fragment: {
         module: module("present", presentWgsl),
+        entryPoint: "fs",
+        targets: [{ format: outputFormat }],
+      },
+      primitive: { topology: "triangle-list" },
+    }),
+    device.createRenderPipelineAsync({
+      label: "present.ldr",
+      layout: presentLayout,
+      vertex: { module: module("present", presentWgsl), entryPoint: "vs" },
+      fragment: {
+        module: module("present", presentWgsl),
+        entryPoint: "fs",
+        targets: [{ format: "rgba8unorm" }],
+      },
+      primitive: { topology: "triangle-list" },
+    }),
+    device.createRenderPipelineAsync({
+      label: "fxaa",
+      layout: "auto",
+      vertex: { module: module("fxaa", fxaaWgsl), entryPoint: "vs" },
+      fragment: {
+        module: module("fxaa", fxaaWgsl),
         entryPoint: "fs",
         targets: [{ format: outputFormat }],
       },
@@ -1015,6 +1066,8 @@ async function createPipelines(
     aoTrace,
     aoDenoise,
     present,
+    presentLdr,
+    fxaa,
     overlay,
     overlayLayout,
     pick,

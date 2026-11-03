@@ -192,6 +192,8 @@ export interface Lighting {
   toneMapping: ToneMapping;
   /** 2.0: how blended surfaces are put in order (moments, or exact lists). */
   translucency: Translucency;
+  /** FXAA after tonemapping (both engines; on top of 4× MSAA). */
+  fxaa: boolean;
 }
 
 /** The settings an engine supports; the page explains the others. */
@@ -493,6 +495,7 @@ export class NextViewerHost implements ViewerHost {
       view.outputEncoding = lighting.encoding;
       view.toneMapping = lighting.toneMapping;
       view.translucency = lighting.translucency;
+      view.fxaa = lighting.fxaa;
     }
     viewer.engine.requestRender();
   }
@@ -943,6 +946,7 @@ export class LegacyViewerHost implements ViewerHost {
         ? Cesium.Tonemapper.ACES
         : Cesium.Tonemapper.PBR_NEUTRAL;
     scene.postProcessStages.exposure = lighting.exposure;
+    scene.postProcessStages.fxaa.enabled = lighting.fxaa;
     scene.requestRender();
   }
 

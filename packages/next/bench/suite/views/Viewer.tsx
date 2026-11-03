@@ -117,6 +117,7 @@ const LIGHTING_DEFAULTS: Lighting = {
   encoding: "srgb",
   toneMapping: "pbrNeutral",
   translucency: "moments",
+  fxaa: false,
 };
 
 const TOKEN_KEY = "viewer.ionToken";
@@ -513,6 +514,11 @@ export function Viewer() {
                 onChange={(v) =>
                   light("translucency", v as Lighting["translucency"])
                 }
+              />
+              <Setting
+                label="FXAA"
+                checked={lighting.fxaa}
+                onChange={(v) => light("fxaa", v)}
               />
               <NotHere
                 reasons={[

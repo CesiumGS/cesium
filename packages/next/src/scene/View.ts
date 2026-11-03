@@ -303,6 +303,11 @@ export interface ViewOptions {
   /** How blended surfaces are put in order (`Translucency`). */
   translucency?: Translucency;
   /**
+   * FXAA after tonemapping, on top of 4× MSAA: smooths the edges MSAA
+   * leaves (within shading, and translucency's moments). Default false.
+   */
+  fxaa?: boolean;
+  /**
    * The globe's night lights (`GlobeOptions.lights`), where it has them.
    * Default true.
    */
@@ -389,6 +394,7 @@ export class View {
   ambientOcclusion: boolean;
   ambientOcclusionRadius: number;
   translucency: Translucency;
+  fxaa: boolean;
   cityLights: boolean;
   clearColor: readonly [number, number, number];
   outputEncoding: OutputEncoding;
@@ -426,6 +432,7 @@ export class View {
     this.ambientOcclusion = options.ambientOcclusion ?? false;
     this.ambientOcclusionRadius = options.ambientOcclusionRadius ?? 3;
     this.translucency = options.translucency ?? "moments";
+    this.fxaa = options.fxaa ?? false;
     this.cityLights = options.cityLights ?? true;
     this.clearColor = options.clearColor ?? [0.004, 0.008, 0.02];
     this.outputEncoding = options.outputEncoding ?? "srgb";
