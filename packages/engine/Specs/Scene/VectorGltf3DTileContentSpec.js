@@ -433,6 +433,41 @@ describe("Scene/VectorGltf3DTileContent", () => {
       content.destroy();
     });
 
+    it("reads property names that are reserved in batch tables", () => {
+      // JSON.parse keeps "__proto__" as an own key, as when loading a tile.
+      const reservedGeoJson = JSON.parse(`{
+        "type": "Feature",
+        "properties": {
+          "__proto__": "a",
+          "HIERARCHY": "b",
+          "extras": "c",
+          "extensions": "d"
+        },
+        "geometry": { "type": "Point", "coordinates": [-75.0, 40.0] }
+      }`);
+      content = VectorGltf3DTileContent.fromGeoJson(
+        {},
+        {},
+        {},
+        reservedGeoJson,
+      );
+      const feature = content.getFeature(0, 0);
+
+      expect(feature.getProperty("__proto__")).toBe("a");
+      expect(feature.getProperty("HIERARCHY")).toBe("b");
+      expect(feature.getProperty("extras")).toBe("c");
+      expect(feature.getProperty("extensions")).toBe("d");
+      expect(feature.getPropertyIds()).toEqual([
+        "__proto__",
+        "HIERARCHY",
+        "extras",
+        "extensions",
+      ]);
+      expect(Object.hasOwn(Object.prototype, "0")).toBe(false);
+
+      content.destroy();
+    });
+
     it("picks the feature from each of its primitives", () => {
       content = VectorGltf3DTileContent.fromGeoJson({}, {}, {}, geoJson);
       const [points, polylines, polygons] = content._collections;

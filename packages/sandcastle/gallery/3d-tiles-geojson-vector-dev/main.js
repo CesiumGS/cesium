@@ -137,13 +137,23 @@ const style = new Cesium.Cesium3DTileStyle({
 });
 
 let tileset;
+let highlighted;
+let loadRequest = 0;
 async function loadTileset(vectorGeoJson) {
+  const request = ++loadRequest;
+  const loaded = await Cesium.Cesium3DTileset.fromUrl(tilesetUrl, {
+    vectorGeoJson: vectorGeoJson,
+  });
+  if (request !== loadRequest) {
+    loaded.destroy();
+    return;
+  }
+
   if (Cesium.defined(tileset)) {
     scene.primitives.remove(tileset);
   }
-  tileset = await Cesium.Cesium3DTileset.fromUrl(tilesetUrl, {
-    vectorGeoJson: vectorGeoJson,
-  });
+  highlighted = undefined;
+  tileset = loaded;
   tileset.style = style;
   scene.primitives.add(tileset);
 }
@@ -166,7 +176,6 @@ const info = document.createElement("div");
 info.textContent = "Click a feature";
 document.getElementById("toolbar").appendChild(info);
 
-let highlighted;
 const highlightedColor = new Cesium.Color();
 const handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
 handler.setInputAction(function (movement) {

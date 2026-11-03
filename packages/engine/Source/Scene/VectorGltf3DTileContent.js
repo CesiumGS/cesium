@@ -4,6 +4,7 @@ import {
   DeveloperError,
   Ellipsoid,
   Matrix4,
+  clone,
   defined,
   destroyObject,
 } from "@cesium/core";
@@ -17,7 +18,6 @@ import BufferPolyline from "./BufferPolyline.js";
 import BufferPolylineCollection from "./BufferPolylineCollection.js";
 import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
 import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
-import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js";
 import Cesium3DTileStyle from "./Cesium3DTileStyle.js";
 import Cesium3DTileVectorFeature from "./Cesium3DTileVectorFeature.js";
 import { createGeoJsonCollections } from "./GeoJsonPrimitive.js";
@@ -29,6 +29,7 @@ import VectorProvider from "../Core/VectorProvider.js";
 import createVectorTileBuffersFromModelComponents from "./Model/createVectorTileBuffersFromModelComponents.js";
 
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */
+/** @import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js"; */
 /** @import { Cartesian3 } from "@cesium/core"; */
 /** @import Cesium3DContentGroup from "./Cesium3DContentGroup.js"; */
 /** @import Cesium3DTile from "./Cesium3DTile.js"; */
@@ -106,9 +107,9 @@ class VectorGltf3DTileContent {
     this._featuresByTableId = new Map();
 
     /**
-     * Batch tables owned by this content. Content loaded from glTF uses the
+     * Batch tables of GeoJSON content. Content loaded from glTF uses the
      * model's feature tables instead.
-     * @type {Cesium3DTileBatchTable[]}
+     * @type {GeoJsonBatchTable[]}
      */
     this._batchTables = [];
 
@@ -192,9 +193,11 @@ class VectorGltf3DTileContent {
 
   /** @type {Cesium3DTileBatchTable[]} */
   get batchTables() {
-    return defined(this._model)
-      ? this._model._featureTables
-      : this._batchTables;
+    if (defined(this._model)) {
+      return this._model._featureTables;
+    }
+    // GeoJsonBatchTable implements the batch table methods that features read.
+    return /** @type {*} */ (this._batchTables);
   }
 
   /**
@@ -406,10 +409,6 @@ class VectorGltf3DTileContent {
 
     this._model?.destroy();
     this._model = undefined;
-    for (const batchTable of this._batchTables) {
-      batchTable.destroy();
-    }
-    this._batchTables.length = 0;
     for (const collection of this._collections) {
       vectorProvider?.remove(collection);
       collection.destroy();
@@ -450,7 +449,7 @@ class VectorGltf3DTileContent {
     /** @type {Map<BufferPrimitiveCollection<BufferPrimitive>, number>} */
     const collectionIndices = new Map();
 
-    const { ids, properties } = createGeoJsonCollections(geoJson, {
+    const { properties } = createGeoJsonCollections(geoJson, {
       ellipsoid: Ellipsoid.WGS84,
       heightReference: HeightReference.NONE,
       createPickObject: (featureId, index, collection) => {
@@ -474,36 +473,103 @@ class VectorGltf3DTileContent {
     });
 
     content._featuresByTableId.set(0, features);
-    content._batchTables.push(
-      new Cesium3DTileBatchTable(
-        content,
-        ids.length,
-        createBatchTableJson(properties),
-      ),
-    );
+    content._batchTables.push(new GeoJsonBatchTable(properties));
     content._ready = true;
     return content;
   }
 }
 
 /**
- * Builds a JSON batch table with one array per property name. Missing and null
- * values are stored as empty strings, as in the Model path for GeoJSON content.
+ * Read-only batch table over GeoJSON feature properties. Names are only read as
+ * own keys, so no property name is treated as a batch table header field.
  *
- * @param {Array<Record<string, unknown>>} properties
- * @returns {Record<string, unknown[]>}
  * @ignore
  */
-function createBatchTableJson(properties) {
-  /** @type {Record<string, unknown[]>} */
-  const batchTableJson = {};
-  for (let i = 0; i < properties.length; i++) {
-    for (const name of Object.keys(properties[i])) {
-      batchTableJson[name] ??= new Array(properties.length).fill("");
-      batchTableJson[name][i] = properties[i][name] ?? "";
+class GeoJsonBatchTable {
+  /**
+   * @param {Array<Record<string, unknown>>} properties Properties, indexed by feature ID.
+   */
+  constructor(properties) {
+    this._properties = properties;
+
+    /** @type {Set<string>} */
+    this._propertyIds = new Set();
+    for (const featureProperties of properties) {
+      for (const name of Object.keys(featureProperties)) {
+        this._propertyIds.add(name);
+      }
     }
   }
-  return batchTableJson;
+
+  get featuresLength() {
+    return this._properties.length;
+  }
+
+  get batchTableByteLength() {
+    return 0;
+  }
+
+  /**
+   * @param {number} batchId
+   * @param {string} name
+   * @returns {boolean}
+   */
+  hasProperty(batchId, name) {
+    return this._propertyIds.has(name);
+  }
+
+  /**
+   * @param {number} batchId
+   * @param {string[]} [results]
+   * @returns {string[]}
+   */
+  getPropertyIds(batchId, results) {
+    results = results ?? [];
+    results.length = 0;
+    results.push(...this._propertyIds);
+    return results;
+  }
+
+  /**
+   * Missing and null values read as empty strings, as in the Model path for
+   * GeoJSON content.
+   *
+   * @param {number} batchId
+   * @param {string} name
+   * @returns {*}
+   */
+  getProperty(batchId, name) {
+    if (!this._propertyIds.has(name)) {
+      return undefined;
+    }
+    const featureProperties = this._properties[batchId];
+    const value = Object.hasOwn(featureProperties, name)
+      ? featureProperties[name]
+      : undefined;
+    return clone(value ?? "", true);
+  }
+
+  hasPropertyBySemantic() {
+    return false;
+  }
+
+  /** @returns {undefined} */
+  getPropertyBySemantic() {
+    return undefined;
+  }
+
+  isClass() {
+    return false;
+  }
+
+  isExactClass() {
+    return false;
+  }
+
+  /** @returns {undefined} */
+  getExactClassName() {
+    return undefined;
+  }
 }
 
 /**
