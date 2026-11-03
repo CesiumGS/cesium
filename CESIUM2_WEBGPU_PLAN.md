@@ -860,6 +860,68 @@ AgX). A fuller ACES (the reference rendering transform with its gamut
 matrices, Hill's fit) and an exposure-independent "look" (contrast,
 saturation) are follow-ups.
 
+#### Lights beyond the sun: kinds, and how they scale (r42, design)
+
+The sun is one directional light with cascaded shadow maps (above). The
+rest, by kind:
+
+- **Directional**: the sun, and the moon at night (about 0.25 lux full,
+  through the same atmosphere tables; moon shadows from the same cascades).
+- **Punctual**: point and spot lights, glTF's `KHR_lights_punctual` in
+  candela (and lux for directional), so models and tiles bring their own.
+- **Photometric profiles**: IES and EULUMDAT files (a luminaire's measured
+  candela by direction) as a small 2D table per profile on a point or spot
+  light: what lighting designers deliver, and what makes a facade or a
+  parking lot read right at night.
+- **Area lights**: rectangles, disks, spheres, tubes, shaded with
+  linearly transformed cosines (Heitz et al. 2016: exact-looking specular
+  and diffuse from polygonal lights for a few table lookups). Soft shadows
+  need either shadow maps with filtering by the light's size or rays.
+- **Emissive surfaces**: materials that glow (screens, signs, lit windows);
+  they light the scene only through global illumination or stochastic
+  light sampling, not as lights of their own.
+- **Lights from data**: street lamps, building windows at night, vehicles
+  (millions in a city, from OpenStreetMap or a city's assets), streamed
+  with the tiles they belong to.
+
+How they scale, in tiers that keep the forward MSAA renderer:
+
+1. **Clustered forward shading** (Olsson et al. 2012; Doom 2016) for tens to
+   thousands of lights: lights in a GPU table like draws, culled per view
+   in compute into a froxel grid (the same froxels as aerial perspective's
+   volume), each pixel looping over its cluster's lights. Unshadowed, or
+   with shadow maps for a few chosen lights.
+2. **Shadows for many lights**: one shadow map per light (six for a point
+   light) doesn't scale. A shadow atlas whose pages are rendered by
+   priority (screen coverage, intensity) and cached until the light or the
+   tiles under it change, the per-light form of virtual shadow maps.
+3. **Stochastic many-light sampling** (MegaLights in Unreal 5.5): per pixel,
+   a few lights chosen by their contribution (ReSTIR's reservoir
+   resampling, Bitterli et al. 2020, through a light hierarchy for
+   importance), a shadow ray each, denoised over time. Cost is per pixel,
+   not per light, so thousands of shadowed lights cost about what a few
+   do. It needs what probe GI needs: a BVH of the world's triangles (rays
+   in compute; WebGPU has no hardware ray tracing yet), temporal
+   reprojection and a denoiser. Shared infrastructure, built once.
+4. **Lights at city scale**: millions of lamps can't each be shaded. Like
+   tiles, lights get levels of detail: near ones as lights (tier 1 to 3),
+   farther clusters merged into one light (lightcuts, Walter et al. 2005),
+   and the farthest only as their glow (emissive points under the bloom
+   pass) with their light on the ground baked into a coarse irradance
+   texture per tile from the data. Night views from the air are mostly
+   that glow.
+5. **Indirect light from all of them**: through the GI radiance cache
+   (probe GI on the BVH, above), Lumen's structure: lights are gathered
+   into probes once, and pixels reuse the probes, so bounced light doesn't
+   multiply with the number of lights.
+
+Order: the moon as a light, then `KHR_lights_punctual` with clustered
+shading (unshadowed), IES profiles, an atlas of shadow maps for a few
+lights, area lights, then the BVH, temporal accumulation and stochastic
+sampling together with probe GI. Units throughout are photometric (lux,
+candela, lumens), so the night exposure (§13.13) and the false-color
+illuminance view work unchanged.
+
 #### Scaling to the hardware
 
 Both programmatically and with options, in layers:
