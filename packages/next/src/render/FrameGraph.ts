@@ -135,6 +135,11 @@ export class FrameGraph {
     }
   }
 
+  /** The texture behind a handle, once resolved in this frame's execution. */
+  texture(handle: TextureHandle): GPUTexture | undefined {
+    return this.resources[handle.id]!.texture;
+  }
+
   private readonly resolve: ResolveView = (handle) => {
     const resource = this.resources[handle.id]!;
     if (resource.imported) {

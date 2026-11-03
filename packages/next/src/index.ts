@@ -30,6 +30,7 @@ export {
   View,
   CanvasTarget,
   OffscreenTarget,
+  type HdrImage,
   type OutputEncoding,
   type PickResult,
   type RenderTarget,

@@ -31,6 +31,7 @@ import {
   CanvasTarget,
   OffscreenTarget,
   View,
+  type HdrImage,
   type PixelRect,
   type RenderTarget,
   type ViewOptions,
@@ -216,6 +217,14 @@ export class Engine {
   private readonly pickResult: GPUBuffer;
   private readonly pickParamsData = new Uint32Array(4);
   private readonly picks: PendingPick[] = [];
+  /** HDR images copied this frame (`View.readHdr`), mapped after submit. */
+  private readonly hdrReads: Array<{
+    buffer: GPUBuffer;
+    bytesPerRow: number;
+    width: number;
+    height: number;
+    resolvers: Array<(image: HdrImage) => void>;
+  }> = [];
   private readonly presentData = new DataView(new ArrayBuffer(16));
   private readonly overlayColor = new Float32Array(4);
   private readonly viewBlock: ViewBlock;
@@ -1278,6 +1287,26 @@ export class Engine {
       this.resolvePicks(this.picks);
       this.picks.length = 0;
     }
+    for (const read of this.hdrReads.splice(0)) {
+      void read.buffer.mapAsync(GPUMapMode.READ).then(() => {
+        const halves = new Uint16Array(read.buffer.getMappedRange());
+        const data = new Float32Array(read.width * read.height * 4);
+        const rowHalves = read.bytesPerRow / 2;
+        for (let y = 0; y < read.height; y++) {
+          for (let i = 0; i < read.width * 4; i++) {
+            data[y * read.width * 4 + i] = halfToFloat(
+              halves[y * rowHalves + i]!,
+            );
+          }
+        }
+        read.buffer.unmap();
+        read.buffer.destroy();
+        const image = { width: read.width, height: read.height, data };
+        for (const resolve of read.resolvers) {
+          resolve(image);
+        }
+      });
+    }
 
     const elapsed = performance.now() - start;
     this.stats.cpuMs =
@@ -1490,7 +1519,9 @@ export class Engine {
       width,
       height,
       format: "rgba16float",
-      usage: attachment | GPUTextureUsage.TEXTURE_BINDING,
+      // COPY_SRC: `View.readHdr`.
+      usage:
+        attachment | GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_SRC,
     });
     // Display-referred (unlit) color, resolved for the present pass.
     const display = graph.createTexture("display.msaa", {
@@ -1632,6 +1663,35 @@ export class Engine {
         frame.bundles[0] = frame.bundle!;
         pass.executeBundles(frame.bundles);
         pass.end();
+      },
+    );
+
+    graph.addPass(
+      "hdr-readback",
+      { reads: [resolved], sideEffect: true },
+      (enc, get) => {
+        if (view.pendingHdrReads.length === 0) {
+          return;
+        }
+        get(resolved);
+        const bytesPerRow = Math.ceil((width * 8) / 256) * 256;
+        const buffer = device.createBuffer({
+          label: "view.hdr.readback",
+          size: bytesPerRow * height,
+          usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
+        });
+        enc.copyTextureToBuffer(
+          { texture: graph.texture(resolved)! },
+          { buffer, bytesPerRow },
+          [width, height],
+        );
+        this.hdrReads.push({
+          buffer,
+          bytesPerRow,
+          width,
+          height,
+          resolvers: view.pendingHdrReads.splice(0),
+        });
       },
     );
 
@@ -1901,7 +1961,21 @@ const scratchFrame: [Vec3, Vec3, Vec3] = [scratchEast, scratchUp, scratchSouth];
  * Environment-map frame at `position`: x = east, y = up, z = −north, the y-up
  * convention CesiumJS 1.x also uses for image-based lighting.
  */
-function environmentFrame(position: Vec3): [Vec3, Vec3, Vec3] {
+/** An IEEE half-precision float's value. */
+function halfToFloat(h: number): number {
+  const sign = h & 0x8000 ? -1 : 1;
+  const exponent = (h >> 10) & 0x1f;
+  const fraction = h & 0x3ff;
+  if (exponent === 0) {
+    return sign * 2 ** -14 * (fraction / 1024);
+  }
+  if (exponent === 31) {
+    return fraction ? Number.NaN : sign * Number.POSITIVE_INFINITY;
+  }
+  return sign * 2 ** (exponent - 15) * (1 + fraction / 1024);
+}
+
+export function environmentFrame(position: Vec3): [Vec3, Vec3, Vec3] {
   const enu = eastNorthUpToFixedFrame(position, Ellipsoid.WGS84, scratchEnu);
   v3.set(scratchEast, enu[0]!, enu[1]!, enu[2]!);
   v3.set(scratchUp, enu[8]!, enu[9]!, enu[10]!);

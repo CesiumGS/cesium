@@ -185,6 +185,18 @@ export interface Overlay {
   color: readonly [number, number, number, number];
 }
 
+/** A view's scene-referred image (`View.readHdr`). */
+export interface HdrImage {
+  width: number;
+  height: number;
+  /**
+   * Linear Rec. 709 RGBA per pixel, row by row from the top: the HDR
+   * buffer's values before exposure and tonemapping. Unlit content is
+   * display-referred and not in it.
+   */
+  data: Float32Array;
+}
+
 export interface PickResult {
   /** Global feature ID (unique within the world). */
   featureId: number;
@@ -232,6 +244,8 @@ export class View {
     resolve?: (r: PickResult | undefined) => void;
     resolvePosition?: (p: Float64Array | undefined) => void;
   }> = [];
+  /** @internal Waiting for the view's next render (`readHdr`). */
+  pendingHdrReads: Array<(image: HdrImage) => void> = [];
 
   constructor(options: ViewOptions) {
     this.target = options.target;
@@ -296,6 +310,15 @@ export class View {
    */
   pick(x: number, y: number): Promise<PickResult | undefined> {
     return new Promise((resolve) => this.pendingPicks.push({ x, y, resolve }));
+  }
+
+  /**
+   * This view's scene-referred image (before exposure and tonemapping),
+   * from its next render: for measurements and references, not display.
+   * `Engine.renderFrame` renders now.
+   */
+  readHdr(): Promise<HdrImage> {
+    return new Promise((resolve) => this.pendingHdrReads.push(resolve));
   }
 
   /**
