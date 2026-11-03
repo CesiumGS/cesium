@@ -305,7 +305,21 @@ Object.defineProperties(DynamicEnvironmentMapManager.prototype, {
 // Internally manage a queue of commands across all instances to prevent too many commands from being added in a single frame and using too much memory at once.
 DynamicEnvironmentMapManager._maximumComputeCommandCount = 8; // This value is updated once a context is created.
 DynamicEnvironmentMapManager._activeComputeCommandCount = 0;
-DynamicEnvironmentMapManager._nextFrameCommandQueue = [];
+/**
+ * Gets the backlog of commands for a context. Commands reference the WebGL resources of the context that created them, so they
+ * must only be executed by a scene using that same context. The backlog is kept in the context cache, which is shared by all
+ * scenes using a {@link SharedContext} and released along with the context.
+ * @private
+ * @param {Context} context The context the commands were created with
+ * @returns {ComputeCommand[]} The commands to attempt in a later frame
+ */
+DynamicEnvironmentMapManager._getNextFrameCommandQueue = (context) => {
+  const cache = context.cache;
+  if (!defined(cache.dynamicEnvironmentMapManager_nextFrameCommandQueue)) {
+    cache.dynamicEnvironmentMapManager_nextFrameCommandQueue = [];
+  }
+  return cache.dynamicEnvironmentMapManager_nextFrameCommandQueue;
+};
 /**
  * Add a command to the queue. If possible, it will be added to the list of commands for the next frame. Otherwise, it will be added to a backlog
  * and attempted next frame.
@@ -319,7 +333,9 @@ DynamicEnvironmentMapManager._queueCommand = (command, frameState) => {
     DynamicEnvironmentMapManager._maximumComputeCommandCount
   ) {
     // Command will instead be scheduled next frame
-    DynamicEnvironmentMapManager._nextFrameCommandQueue.push(command);
+    DynamicEnvironmentMapManager._getNextFrameCommandQueue(
+      frameState.context,
+    ).push(command);
     return;
   }
 
@@ -336,29 +352,31 @@ DynamicEnvironmentMapManager._updateCommandQueue = (frameState) => {
     ContextLimits.maximumCubeMapSize,
   ); // Scale relative to GPU resources available
 
+  const nextFrameCommandQueue =
+    DynamicEnvironmentMapManager._getNextFrameCommandQueue(frameState.context);
   if (
-    DynamicEnvironmentMapManager._nextFrameCommandQueue.length > 0 &&
+    nextFrameCommandQueue.length > 0 &&
     DynamicEnvironmentMapManager._activeComputeCommandCount <
       DynamicEnvironmentMapManager._maximumComputeCommandCount
   ) {
-    let command = DynamicEnvironmentMapManager._nextFrameCommandQueue.shift();
+    let command = nextFrameCommandQueue.shift();
     while (
       defined(command) &&
       DynamicEnvironmentMapManager._activeComputeCommandCount <
         DynamicEnvironmentMapManager._maximumComputeCommandCount
     ) {
       if (command.owner.isDestroyed() || command.canceled) {
-        command = DynamicEnvironmentMapManager._nextFrameCommandQueue.shift();
+        command = nextFrameCommandQueue.shift();
         continue;
       }
 
       frameState.commandList.push(command);
       DynamicEnvironmentMapManager._activeComputeCommandCount++;
-      command = DynamicEnvironmentMapManager._nextFrameCommandQueue.shift();
+      command = nextFrameCommandQueue.shift();
     }
 
     if (defined(command)) {
-      DynamicEnvironmentMapManager._nextFrameCommandQueue.push(command);
+      nextFrameCommandQueue.push(command);
     }
   }
 };

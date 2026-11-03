@@ -235,6 +235,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Drashti Patel](https://github.com/Chelsy-AI)
 - [Vignesh Panneerselvam](https://github.com/nobelium)
 - [TianHengZhuang](https://github.com/TianHengZhuang)
+- [Peter Mayrhofer](https://github.com/mapeGeoinfo)
 - [Ognjen Bubalo](https://github.com/ognjenb)
 - [Ayudh Das](https://github.com/ayudhDas)
 - [You Lu](https://github.com/YouLu)

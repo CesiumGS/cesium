@@ -15,6 +15,7 @@ import {
 } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
 import Atmosphere from "../../Source/Scene/Atmosphere.js";
+import SharedContext from "../../Source/Renderer/SharedContext.js";
 
 describe("Scene/DynamicEnvironmentMapManager", function () {
   it("constructs with default values", function () {
@@ -74,6 +75,80 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
     });
 
     expect(manager._mipmapLevels).toBe(0);
+  });
+
+  describe("command backlog", () => {
+    let originalMaximumCubeMapSize;
+    let originalMaximumComputeCommandCount;
+    let originalActiveComputeCommandCount;
+
+    beforeEach(() => {
+      originalMaximumCubeMapSize = ContextLimits._maximumCubeMapSize;
+      originalMaximumComputeCommandCount =
+        DynamicEnvironmentMapManager._maximumComputeCommandCount;
+      originalActiveComputeCommandCount =
+        DynamicEnvironmentMapManager._activeComputeCommandCount;
+      ContextLimits._maximumCubeMapSize = 1024;
+      DynamicEnvironmentMapManager._activeComputeCommandCount = 0;
+    });
+
+    afterEach(() => {
+      ContextLimits._maximumCubeMapSize = originalMaximumCubeMapSize;
+      DynamicEnvironmentMapManager._maximumComputeCommandCount =
+        originalMaximumComputeCommandCount;
+      DynamicEnvironmentMapManager._activeComputeCommandCount =
+        originalActiveComputeCommandCount;
+    });
+
+    function createFrameState(context) {
+      return { context: context, commandList: [] };
+    }
+
+    function backlogCommand(frameState) {
+      const command = { owner: { isDestroyed: () => false } };
+      DynamicEnvironmentMapManager._maximumComputeCommandCount = 0;
+      DynamicEnvironmentMapManager._queueCommand(command, frameState);
+      return command;
+    }
+
+    it("does not schedule a backlogged command in a scene with a different context", () => {
+      const frameState = createFrameState({ cache: {} });
+      const otherFrameState = createFrameState({ cache: {} });
+      const command = backlogCommand(frameState);
+
+      DynamicEnvironmentMapManager._updateCommandQueue(otherFrameState);
+
+      expect(otherFrameState.commandList).toEqual([]);
+
+      DynamicEnvironmentMapManager._updateCommandQueue(frameState);
+
+      expect(frameState.commandList).toEqual([command]);
+    });
+
+    it(
+      "schedules a backlogged command in any scene sharing the context",
+      () => {
+        if (window.webglStub) {
+          return;
+        }
+
+        const sharedContext = new SharedContext();
+        const frameState = createFrameState(
+          sharedContext.createSceneContext(document.createElement("canvas")),
+        );
+        const otherFrameState = createFrameState(
+          sharedContext.createSceneContext(document.createElement("canvas")),
+        );
+        const command = backlogCommand(frameState);
+
+        DynamicEnvironmentMapManager._updateCommandQueue(otherFrameState);
+
+        expect(otherFrameState.commandList).toEqual([command]);
+
+        sharedContext.destroy();
+      },
+      "WebGL",
+    );
   });
 
   describe(
