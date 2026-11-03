@@ -604,7 +604,47 @@ wavelengths, then to RGB through the CIE matching functions, as Bruneton's
 default; Mars and the Moon, which 1.x's ellipsoids already support, need
 only other constants). The sun is a disk of its real angular size with limb
 darkening, its color the transmittance along its path; the moon is lit by
-the sun with its phase; stars are a dim radiance, not a background color.
+the sun with its phase; stars are light from the catalog (next section).
+
+#### The night sky
+
+1.x draws stars from a sky box: six images of a star map (Tycho), at a
+fixed brightness unrelated to the scene's light, magnified and soft at
+any zoom. 2.0 draws the sky as it is, so the camera decides what shows:
+
+- **Stars from a catalog**, as points: the Yale Bright Star Catalogue
+  first (about 9,000 stars to magnitude 6.5, all a naked eye sees), then
+  Hipparcos (118,000) and Gaia's bright stars (millions, to magnitude 12
+  and beyond, streamed by magnitude like tiles). Positions in ICRS with
+  proper motion to the date, turned to Earth-fixed axes with the same
+  transforms as the sun (precession, nutation, Earth rotation; L0 parity
+  with 1.x's `computeIcrfToFixedMatrix`).
+- **Photometric brightness**: a star of visual magnitude m gives an
+  illuminance of 2.54 µlux × 10^(−0.4 m) on a surface facing it (Vega,
+  magnitude 0, about 2.5 µlux). Each is drawn as a small point-spread
+  splat whose energy is exactly that illuminance, in the same units as the
+  sun and sky, so exposure does the rest: invisible at EV100 15 in
+  daylight, appearing through twilight as the sky darkens and the camera
+  (or automatic exposure) opens up, the naked-eye sky at about EV100 −2.
+- **Color** from the catalog's B−V index: an effective temperature
+  (Ballesteros 2012), a blackbody spectrum through the CIE matching
+  functions, scaled to the V-band magnitude.
+- **Through the atmosphere**: each star's light attenuated by the
+  atmosphere's transmittance along the line of sight (extinction toward
+  the horizon) and seen against the sky's own radiance, so stars fade
+  into twilight and haze physically, not by a fade parameter.
+- **Diffuse light**: the Milky Way and zodiacal light as a low-resolution
+  all-sky luminance map (the natural night sky is about 2 × 10⁻⁴ cd/m²),
+  under the same exposure.
+- **Moon and planets** from ephemerides: the moon's disk lit by the sun
+  with its phase (and earthshine), the planets as points with their
+  magnitudes. The moon's light also lights the scene at night (about
+  0.25 lux when full).
+- **Looks**: point-spread size in pixels, independent of zoom; glare on
+  the brightest stars and planets from the bloom pass (a camera or eye
+  effect, not the star's size); scintillation as an option.
+- Catalog licenses to check before shipping data (Yale BSC and Hipparcos
+  are public; Gaia's data asks for attribution).
 
 #### Fog and aerial perspective
 
