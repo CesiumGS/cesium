@@ -907,7 +907,8 @@ Later:
   corona rays, twinkle; a catalog for the brightest stars' magnitudes and
   colors (a license decision).
 - **Translucency**: order-independent transparency (M4); cut-out and
-  blended materials are drawn opaque until then.
+  blended materials are drawn opaque until then. Done (r45): see M4
+  (§6), "Progress (r45)".
 - **Weather fog**: a haze medium of its own beside the clear air's.
 
 Progress (r43): **the Moon**. `moonPosition(time)` (time/moon.ts) ports
@@ -2262,6 +2263,88 @@ Then the planned work:
 - LDR/HDR paths, FXAA.
 - Translucency: MBOIT real-time path plus the per-pixel-linked-list exact reference; tested for opaque/translucent interaction against the reference, not against 1.x.
 - _Exit_: L2 on all canonical views, and L3 sign-off.
+
+Progress (r45): **translucency**. Blended materials (glTF "BLEND") no
+longer draw opaque. Their surfaces shade as opaque ones do (opaque.wgsl
+`shadeSurface`, without the screen's ambient occlusion, which is the
+surfaces' behind), then go in order over the opaque pass's resolved
+targets one of two ways (`View.translucency`, a switch in the viewer):
+
+- "moments" (default): moment-based OIT (Münstermann, Krumpen, Klein and
+  Peters 2018), four power moments of absorbance in 32-bit float targets
+  (`float32-blendable`; 16-bit otherwise), depth warped logarithmically
+  over the blended draws' own range (their bounding spheres from the
+  camera: a range reaching kilometers past a model's centimeters left its
+  layers indistinguishable). Two passes over the blended geometry, a
+  fixed 36 bytes a pixel, single-sampled. Two fixes to the published
+  form, both found as black speckles: a lone layer evaluated at its own
+  depth makes the reconstruction's quadratic degenerate (its division
+  gave NaN about one time in six in 32-bit floats; caught before
+  dividing, the overestimation's weight used), and the bias 5·10⁻⁶, not
+  5·10⁻⁷ (no failure in 400,000 random stacks of one to four layers).
+- "exact": every fragment into a list per pixel (fragment-stage atomics),
+  sorted and blended front to back in the composite, the nearest 32 kept.
+  Multisampled: fragments know their sample coverage, so glass's edges
+  antialias. The lists grow to a quarter more than a frame needed (its
+  count read back). The reference "moments" is tested against.
+
+Neither has a depth attachment: a storage write disables early depth
+tests, so translucent fragments test the opaque depth themselves, per
+sample at their own depth there (from its slope; tested at the pixel's
+center, glass meeting its frame speckled). One full-screen composite
+blends either result over the scene-referred target (premultiplied
+"over") and the display-referred one (its color the same, its alpha, the
+unlit share, times the light let through), so glass over imagery and over
+lit content tonemap sensibly. Blended surfaces' opaque parts (alpha ≥
+0.999) draw in the opaque pass, with depth, shadows (glass lets the sun
+through) and picks: near-opaque layers centimeters apart are what the
+moments tell apart worst. Cutouts (alpha mask, and those opaque parts)
+use alpha to coverage in the opaque pass's depth stage, the alpha
+sharpened to a pixel-wide ramp across the cutoff, so their edges
+antialias like geometry's; shading at equal depth fills just those
+samples. Deviation from §3.5: the lists are the reference and an option,
+not the default with the moments as overflow fallback; the moments are
+the default, cheaper and bounded (below).
+
+Tested against the reference (parity/translucency, `bench/run.mjs
+translucency`): six scenes on the bare ellipsoid (stacked and crossing
+layers, glass around opaque boxes with one poking through its wall, 16
+layers, near-opaque layers 5 cm apart, layers 1 cm apart). Moments within
+mean FLIP 0.02 and p95 0.11 of exact everywhere; near-opaque layers are
+worst (the front pane takes on the color of those behind). The lists are
+order-independent (draws added in reverse: 0, at most 0.0012 where
+near-opaque layers tie). Cost on the station design model's glass canopy
+filling a 1489 × 1416 view (4× MSAA, RTX 3000 Ada laptop, rendering
+continuously): the frame 15.2 ms without the translucent passes, 15.9 ms
+with moments, 17.3 ms with exact lists.
+
+**FXAA** (r45, `View.fxaa`, off by default): FXAA 3.11's quality version
+(Lottes) after tonemapping, on top of 4× MSAA: the present pass tonemaps
+into an encoded 8-bit image and FXAA reads it into the view's rectangle,
+overlays after. It smooths what MSAA leaves (within shading, and the
+moments' single-sampled edges). A viewer switch for both engines.
+
+**LDR/HDR paths**: settled differently than §3.5 planned. There is one
+path, HDR (rgba16float, pre-exposed, tonemapped in the present pass),
+with display-referred content (unlit: imagery, photogrammetry) kept in
+its own 8-bit sRGB target and added after tonemapping, so photographs
+show as authored, as 1.x's LDR default shows them. 1.x's gamma 2.2
+output and ACES are view options for comparisons. A separate LDR scene
+target isn't needed.
+
+**Exit status (r45).** L2 against 1.x (`bench/run.mjs parity models
+imagery globe tileset`, RTX 3000 Ada): 79 of 83 image comparisons within
+mean FLIP 0.05 and p95 0.2; the globe's tiles match 1.x's in every view
+(Jaccard 1). The four others are intended differences: BoxCutout lit
+(mean 0.049 to 0.056, p95 0.38 to 0.48; 0.21 and 0.96 before
+translucency), where 1.x's weighted, blended OIT lets the faces behind its
+alpha-1 frame show through and 2.0 draws them opaque (translucency is
+tested against 2.0's own exact lists, r9); and UnlitTest lit (mean
+0.074), where 1.x tonemaps unlit color under HDR and 2.0 shows it as
+authored (display-referred, as glTF's unlit and 1.x's LDR default). With
+translucency the only failure before, the models table's BoxCutout row
+(unlit) is now 0.018. Remaining for the exit: **L3 sign-off**, the plan
+owner's look-dev review in Dyno's comparison views (swipe and flicker).
 
 ### Custom shading (PoC, after M4)
 

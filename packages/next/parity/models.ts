@@ -410,7 +410,7 @@ async function runModels(): Promise<Row[]> {
           mode,
           model: name,
           status: translucent
-            ? "ok (translucent: drawn opaque until OIT, M4)"
+            ? "ok (translucent: 1.x's OIT isn't the reference, plan r9)"
             : "ok",
           draws,
           batches,
