@@ -99,6 +99,7 @@ const LIGHTING_DEFAULTS: Lighting = {
   diffuseIbl: 1,
   specularIbl: 1,
   exposure: 1,
+  sunFromAtmosphere: true,
   sunIlluminance: 100_000,
   ev100: 15,
   autoExposure: false,
@@ -501,15 +502,24 @@ export function Viewer() {
                 onChange={(v) => light("elevation", v)}
               />
               {engine === "2.0" ? (
-                <Range
-                  label="Sun illuminance"
-                  value={lighting.sunIlluminance}
-                  min={0}
-                  max={150_000}
-                  step={1000}
-                  text={`${Math.round(lighting.sunIlluminance / 1000)} klx`}
-                  onChange={(v) => light("sunIlluminance", v)}
-                />
+                <>
+                  <Setting
+                    label="Sunlight from the atmosphere"
+                    checked={lighting.sunFromAtmosphere}
+                    onChange={(v) => light("sunFromAtmosphere", v)}
+                  />
+                  {!lighting.sunFromAtmosphere && (
+                    <Range
+                      label="Sun illuminance"
+                      value={lighting.sunIlluminance}
+                      min={0}
+                      max={150_000}
+                      step={1000}
+                      text={`${Math.round(lighting.sunIlluminance / 1000)} klx`}
+                      onChange={(v) => light("sunIlluminance", v)}
+                    />
+                  )}
+                </>
               ) : (
                 <Range
                   label="Sun intensity"

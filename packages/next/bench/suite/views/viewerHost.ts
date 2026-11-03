@@ -151,7 +151,9 @@ export interface Lighting {
   specularIbl: number;
   /** 1.x: the exposure multiplier, unitless. */
   exposure: number;
-  /** 2.0: the sun's illuminance, lux. */
+  /** 2.0: the sun's light through the atmosphere (per pixel). */
+  sunFromAtmosphere: boolean;
+  /** 2.0: otherwise, a white sun of this illuminance, lux. */
   sunIlluminance: number;
   /** 2.0: the camera's exposure value at ISO 100, when not automatic. */
   ev100: number;
@@ -412,7 +414,9 @@ export class NextViewerHost implements ViewerHost {
     viewer.setSun(lighting.azimuth, lighting.elevation);
     for (const view of viewer.views) {
       // 2.0 lights in physical units (lux, EV100).
-      view.lighting.sunIlluminance = lighting.sunIlluminance;
+      view.lighting.sunIlluminance = lighting.sunFromAtmosphere
+        ? "atmosphere"
+        : lighting.sunIlluminance;
       view.lighting.diffuseIbl = lighting.diffuseIbl;
       view.lighting.specularIbl = lighting.specularIbl;
       view.exposure = lighting.autoExposure

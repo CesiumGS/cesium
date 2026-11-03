@@ -19,6 +19,10 @@ struct View {
   exposure: f32,           // pre-exposure: scene light × exposure is written
   _viewPad1: u32,
   _viewPad2: u32,
+  // The atmosphere's bottom and top radii (km), and 1 when the sun's light
+  // comes from it per pixel (sunIlluminance then scales it, 1).
+  sunLight: vec4f,
+  bodyRadii: vec4f,        // the body's ellipsoid, meters (xyz)
 };
 
 struct DrawRecord {

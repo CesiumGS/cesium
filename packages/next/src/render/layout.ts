@@ -1,5 +1,6 @@
 import type { Mat4 } from "../math/mat4.ts";
 import type { Vec3 } from "../math/vec3.ts";
+import { SOLAR_ILLUMINANCE, type Body } from "../scene/Body.ts";
 import { splitVec3 } from "../math/transforms.ts";
 
 /**
@@ -7,8 +8,8 @@ import { splitVec3 } from "../math/transforms.ts";
  * `shaders/common.wgsl`.
  */
 
-/** `struct View` — 352 bytes, padded to a 256-aligned stride per view. */
-export const VIEW_SIZE = 352;
+/** `struct View` — 384 bytes, padded to a 256-aligned stride per view. */
+export const VIEW_SIZE = 384;
 /** Word offset of `View.viewBit` (u32): this view's bit in record view masks. */
 export const VIEW_BIT_WORD = 84;
 export const VIEW_STRIDE = 512;
@@ -31,12 +32,14 @@ export interface ViewBlock {
   specularMaxLod: number;
   /** Pre-exposure: scene light × this is what is written and tonemapped. */
   exposure: number;
+  /** The body seen: its ellipsoid, and its atmosphere's radii. */
+  body: Body;
 }
 
 /**
- * The sun's illuminance on a surface facing it, lux, by default: a high
- * sun through a clear sky (about 100 klx; 132.5 klx outside the
- * atmosphere). The atmosphere will supply it from the sun's position.
+ * A high sun through a clear sky, lux (about 100 klx; 132.5 klx outside
+ * the atmosphere), for scenes that set the sun's illuminance themselves.
+ * By default the atmosphere supplies it (`ViewLighting.sunIlluminance`).
  */
 export const DAYLIGHT_SUN_ILLUMINANCE = 100_000;
 
@@ -48,11 +51,14 @@ export const UNITLESS_SUN_ILLUMINANCE = 2;
 
 export interface ViewLighting {
   /**
-   * The sun's illuminance on a surface facing it: lux by default
-   * (`DAYLIGHT_SUN_ILLUMINANCE`); 2 matches CesiumJS 1.x's unitless
-   * `SunLight` with the unitless sky and an exposure scale of 1.
+   * The sun's illuminance on a surface facing it. "atmosphere" (the
+   * default): the sunlight through the atmosphere where each pixel is, in
+   * lux, its color included (white noon, orange sunset, none after the sun
+   * sets). A number: a white sun of that illuminance everywhere, lux
+   * (`DAYLIGHT_SUN_ILLUMINANCE`) or unitless (2 matches CesiumJS 1.x's
+   * `SunLight` with the unitless sky and an exposure scale of 1).
    */
-  sunIlluminance: number;
+  sunIlluminance: number | "atmosphere";
   /** Scale of diffuse (SH) image-based lighting. */
   diffuseIbl: number;
   /** Scale of specular (prefiltered cube) image-based lighting. */
@@ -85,11 +91,25 @@ export function writeViewBlock(
     out[o + 70 + i * 4] = axis[2]!;
     out[o + 71 + i * 4] = 0;
   });
-  out[o + 80] = block.lighting.sunIlluminance;
+  const sun = block.lighting.sunIlluminance;
+  const atmosphere = block.body.atmosphere;
+  // From the atmosphere: the table's light, scaled by 1; a body without
+  // one gets the sun's whole light.
+  out[o + 80] =
+    sun === "atmosphere" ? (atmosphere ? 1 : SOLAR_ILLUMINANCE) : sun;
   out[o + 81] = block.lighting.diffuseIbl;
   out[o + 82] = block.lighting.specularIbl;
   out[o + 83] = block.specularMaxLod;
   out[o + 85] = block.exposure;
+  out[o + 88] = (atmosphere?.bottomRadius ?? 0) / 1000;
+  out[o + 89] = (atmosphere?.topRadius ?? 0) / 1000;
+  out[o + 90] = sun === "atmosphere" && atmosphere ? 1 : 0;
+  out[o + 91] = 0;
+  const radii = block.body.ellipsoid.radii;
+  out[o + 92] = radii[0]!;
+  out[o + 93] = radii[1]!;
+  out[o + 94] = radii[2]!;
+  out[o + 95] = 0;
 }
 
 /** `struct DrawRecord` — 128 bytes. */

@@ -14,7 +14,7 @@ import {
 import { GpuDevice } from "../src/gpu/GpuDevice.ts";
 import { AtmosphereReference } from "../src/atmosphere/AtmosphereReference.ts";
 import { RealtimeAtmosphere } from "../src/atmosphere/RealtimeAtmosphere.ts";
-import { EARTH } from "../src/atmosphere/model.ts";
+import { EARTH, directSunIlluminance } from "../src/atmosphere/model.ts";
 import { Engine } from "../src/scene/Engine.ts";
 import { OffscreenTarget, type HdrImage } from "../src/scene/View.ts";
 import { Ellipsoid, fromDegrees } from "../src/math/ellipsoid.ts";
@@ -37,9 +37,17 @@ const TEMPLATE = `
   <h2>In the engine</h2>
   <p>The sky behind a view (<code>background: "atmosphere"</code>), at a
   daylight exposure (EV100 15) unless noted: looking toward the sun from the
-  ground as it sets, and the planet from orbit. The center pixel is checked
-  against the tables' own probe in the same direction.</p>
+  ground as it sets, and the planet from orbit. A grid of 16 × 9 pixels is
+  checked against the tables' own march in the same directions: inside the
+  atmosphere the sky comes from the per-view sky-view table, interpolated,
+  so this measures the table's error.</p>
   <table id="engine"></table>
+  <h2>Sunlight on the scene</h2>
+  <p>The sun's illuminance on a surface facing it, which the opaque pass
+  reads per pixel from the engine's sun-light table (by altitude and sun
+  angle), against the CPU model's direct sunlight (81 wavelengths, double
+  precision), in lux.</p>
+  <table id="sunLight"></table>
   <div id="engineImages"></div>
 `;
 
@@ -260,11 +268,6 @@ async function inTheEngine(realtime: RealtimeAtmosphere) {
     engine.renderFrame();
     return image;
   };
-  const centerOf = (image: HdrImage) => {
-    const i = ((height / 2) * width + width / 2) * 4;
-    return luminance(image.data, i / 4, 4);
-  };
-
   const rows: Array<Record<string, string | number>> = [];
   // Name, EV100, the sun's elevation, the camera's altitude and pitch.
   const shots: Array<[string, number, number, number, number]> = [
@@ -281,8 +284,10 @@ async function inTheEngine(realtime: RealtimeAtmosphere) {
     lookWest(altitude, pitch);
     view.exposure = { ev100 };
     const image = await render();
-    // The same direction through the tables, from the same point on their
-    // sphere (the camera along the ellipsoid's normal at its height).
+    // A grid of pixels against the tables' own per-direction march (what
+    // the table interpolates), from the same point on their sphere (the
+    // camera along the ellipsoid's normal at its height), away from the
+    // sun's disk.
     const c = Ellipsoid.WGS84.cartesianToCartographic(camera.position, {
       longitude: 0,
       latitude: 0,
@@ -295,18 +300,37 @@ async function inTheEngine(realtime: RealtimeAtmosphere) {
     const r = EARTH.bottomRadius + Math.max(c.height, 1);
     const aspect = width / height;
     const tanY = Math.tan(camera.fovy(aspect) / 2);
-    // The center pixel's direction (half a pixel right and down of center).
-    const dir = v3.normalize(
-      v3.vec3(),
-      Float64Array.from(
-        [0, 1, 2].map(
-          (k) =>
-            camera.direction[k]! +
-            (camera.right[k]! * (tanY * aspect)) / width -
-            (camera.up[k]! * tanY) / height,
-        ),
-      ),
-    );
+    const pixels: number[] = [];
+    // Above the horizon (the bare planet's ground, below, is covered by
+    // the globe in a scene; within a pixel of the horizon its radiance
+    // changes faster than the table resolves).
+    const sky: boolean[] = [];
+    const directions: number[] = [];
+    for (let gy = 0; gy < 9; gy++) {
+      for (let gx = 0; gx < 16; gx++) {
+        const px = Math.floor(((gx + 0.5) / 16) * width);
+        const py = Math.floor(((gy + 0.5) / 9) * height);
+        const nx = ((px + 0.5) / width) * 2 - 1;
+        const ny = 1 - ((py + 0.5) / height) * 2;
+        const d = v3.normalize(
+          v3.vec3(),
+          Float64Array.from(
+            [0, 1, 2].map(
+              (k) =>
+                camera.direction[k]! +
+                camera.right[k]! * nx * tanY * aspect +
+                camera.up[k]! * ny * tanY,
+            ),
+          ),
+        );
+        if (v3.dot(d, engine.sunDirection) > Math.cos(2 * deg)) {
+          continue;
+        }
+        pixels.push(py * width + px);
+        sky.push(v3.dot(d, normal) > 0);
+        directions.push(d[0]!, d[1]!, d[2]!);
+      }
+    }
     const probe = await realtime.radiance(
       [normal[0]! * r, normal[1]! * r, normal[2]! * r],
       [
@@ -314,17 +338,34 @@ async function inTheEngine(realtime: RealtimeAtmosphere) {
         engine.sunDirection[1]!,
         engine.sunDirection[2]!,
       ],
-      Array.from(dir),
+      directions,
       { steps: 32 },
     );
-    const engineY = centerOf(image);
-    const probeY = luminance(probe, 0);
+    const errorsOf = (above: boolean) =>
+      pixels
+        .map((pixel, i) => {
+          if (sky[i] !== above) {
+            return -1;
+          }
+          const probeY = luminance(probe, i);
+          return Math.abs(luminance(image.data, pixel, 4) - probeY) / probeY;
+        })
+        .filter((e) => e >= 0)
+        .sort((a, b) => a - b);
+    const percent = (x: number | undefined) =>
+      x === undefined ? "–" : `${(x * 100).toFixed(1)}%`;
+    const above = errorsOf(true);
+    const below = errorsOf(false);
     rows.push({
       view: name,
       EV100: ev100,
-      "center (engine)": Number(engineY.toFixed(engineY < 10 ? 3 : 0)),
-      "center (probe)": Number(probeY.toFixed(probeY < 10 ? 3 : 0)),
-      difference: `${(((engineY - probeY) / probeY) * 100).toFixed(1)}%`,
+      "sky pixels": above.length,
+      "sky: median |difference|": percent(above[above.length >> 1]),
+      "95th percentile": percent(above[Math.floor(above.length * 0.95)]),
+      worst: percent(above[above.length - 1]),
+      "ground pixels": below.length,
+      "ground: median": percent(below[below.length >> 1]),
+      "ground: worst": percent(below[below.length - 1]),
     });
     const scale = 1 / (1.2 * 2 ** ev100);
     $("engineImages").append(
@@ -353,8 +394,81 @@ async function inTheEngine(realtime: RealtimeAtmosphere) {
     "afterend",
     `<p>GPU per frame at ${width} × ${height}: ${cost.color} ms without the sky, ${cost.atmosphere} ms with it (${skyMs.toFixed(3)} ms; ${((skyMs / (width * height)) * 1e6).toFixed(2)} ns per pixel).</p>`,
   );
+  const sunLight = await checkSunLight(engine);
   engine.destroy();
-  return { rows, gpuMs: cost };
+  return { rows, gpuMs: cost, sunLight };
+}
+
+/** The engine's sun-light table against the CPU model, at its own texels. */
+async function checkSunLight(engine: Engine) {
+  const device = engine.gpu.device;
+  const [width, height] = [256, 64];
+  const buffer = device.createBuffer({
+    size: width * height * 8,
+    usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
+  });
+  const encoder = device.createCommandEncoder();
+  encoder.copyTextureToBuffer(
+    { texture: engine.sky.sunLight },
+    { buffer, bytesPerRow: width * 8 },
+    [width, height],
+  );
+  device.queue.submit([encoder.finish()]);
+  await buffer.mapAsync(GPUMapMode.READ);
+  const halves = new Uint16Array(buffer.getMappedRange().slice(0));
+  buffer.destroy();
+  // The table's mapping (sky.wgsl sunLightFragment), texel to (mu, r).
+  const unit = (i: number, size: number) => i / (size - 1);
+  const rows: Array<Record<string, string | number>> = [];
+  let worst = 0;
+  for (const altitude of [0, 2_000, 10_000]) {
+    const y = Math.round(
+      Math.sqrt(altitude / (EARTH.topRadius - EARTH.bottomRadius)) *
+        (height - 1),
+    );
+    const v = unit(y, height);
+    const r =
+      EARTH.bottomRadius + (EARTH.topRadius - EARTH.bottomRadius) * v * v;
+    for (const elevation of [90, 45, 20, 10, 5, 2]) {
+      const target = Math.sin(elevation * deg);
+      const x = Math.round((0.5 + 0.5 * Math.sqrt(target)) * (width - 1));
+      const s = unit(x, width) * 2 - 1;
+      const mu = Math.sign(s) * s * s;
+      const i = (y * width + x) * 4;
+      const rgb = [0, 1, 2].map((k) => halfToFloat(halves[i + k]!) * 1e5);
+      const engineY = luminance(rgb, 0);
+      const cpu = directSunIlluminance(
+        EARTH,
+        [0, 0, r],
+        [Math.sqrt(1 - mu * mu), 0, mu],
+      ).y;
+      const error = (engineY - cpu) / cpu;
+      worst = Math.max(worst, Math.abs(error));
+      rows.push({
+        altitude: `${(r - EARTH.bottomRadius).toFixed(0)} m`,
+        "sun elevation": `${((Math.asin(mu) * 180) / Math.PI).toFixed(1)}°`,
+        engine: Math.round(engineY),
+        "CPU model": Math.round(cpu),
+        difference: `${(error * 100).toFixed(1)}%`,
+        color: rgb.map((c) => (c / engineY).toFixed(2)).join(" "),
+      });
+    }
+  }
+  $("sunLight").innerHTML = table(rows);
+  return { rows, worst: Number((worst * 100).toFixed(2)) };
+}
+
+function halfToFloat(h: number): number {
+  const exponent = (h >> 10) & 0x1f;
+  const fraction = h & 0x3ff;
+  const sign = h & 0x8000 ? -1 : 1;
+  if (exponent === 0) {
+    return sign * 2 ** -14 * (fraction / 1024);
+  }
+  if (exponent === 31) {
+    return fraction ? Number.NaN : sign * Infinity;
+  }
+  return sign * 2 ** (exponent - 15) * (1 + fraction / 1024);
 }
 
 function table(rows: Array<Record<string, number | string>>): string {

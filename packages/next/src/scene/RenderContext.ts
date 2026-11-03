@@ -96,6 +96,7 @@ export async function createRenderContext(
   device: GPUDevice,
   caps: Capabilities,
   outputFormat: GPUTextureFormat,
+  sunLight: GPUTextureView,
   overrides: ShaderOverrides = {},
 ): Promise<RenderContext> {
   // Everything compiles in parallel: engine pipelines, IBL kernels and the
@@ -122,6 +123,7 @@ export async function createRenderContext(
       { binding: 2, resource: environment.sampler },
       { binding: 3, resource: environment.brdfView },
       { binding: 4, resource: { buffer: environment.shBuffer } },
+      { binding: 5, resource: sunLight },
     ],
   });
   const white = device.createTexture({
@@ -192,6 +194,8 @@ async function createPipelines(
       { binding: 2, visibility: FRAGMENT, sampler: { type: "filtering" } },
       { binding: 3, visibility: FRAGMENT, texture: {} },
       { binding: 4, visibility: FRAGMENT, buffer: { type: "uniform" } },
+      // The sun's light through the atmosphere (atmosphere/Sky.ts).
+      { binding: 5, visibility: FRAGMENT, texture: {} },
     ],
   });
   const cullWorldLayout = device.createBindGroupLayout({

@@ -23,6 +23,7 @@ import { eastNorthUpToFixedFrame } from "../math/transforms.ts";
 import type { Vec3 } from "../math/vec3.ts";
 import {
   createRenderContext,
+  SCENE_TARGETS,
   type RenderContext,
   type ShaderOverrides,
 } from "./RenderContext.ts";
@@ -40,6 +41,7 @@ import {
 import { ViewLink, type ViewLinkOptions } from "./ViewLink.ts";
 import { RealtimeAtmosphere } from "../atmosphere/RealtimeAtmosphere.ts";
 import { Sky, type SkyView } from "../atmosphere/Sky.ts";
+import { EARTH } from "./Body.ts";
 import { Camera } from "./Camera.ts";
 import { World, type WorldOptions } from "./World.ts";
 import { HeightClamping } from "./HeightClamping.ts";
@@ -197,8 +199,8 @@ export class Engine {
   readonly sunDirection: Vec3 = v3.vec3(1, 0, 0);
 
   private readonly ctx: RenderContext;
-  /** The real-time atmosphere and the sky drawn from it behind views. */
-  private readonly sky: Sky;
+  /** @internal The real-time atmosphere and the sky drawn from it. */
+  readonly sky: Sky;
   private readonly workers = new WorkerPool();
   /** Content request windows per origin, shared by all tilesets. */
   readonly requests = new RequestScheduler();
@@ -314,6 +316,7 @@ export class Engine {
       lighting: { sunIlluminance: 0, diffuseIbl: 0, specularIbl: 0 },
       specularMaxLod: 0,
       exposure: 1,
+      body: EARTH,
     };
     this.pickParams = device.createBuffer({
       size: 16,
@@ -327,16 +330,17 @@ export class Engine {
 
   static async create(options: EngineOptions = {}): Promise<Engine> {
     const gpu = await GpuDevice.create(options);
+    const atmosphere = await RealtimeAtmosphere.create(gpu.device);
+    const sky = await Sky.create(gpu.device, atmosphere, SCENE_TARGETS);
     const ctx = await createRenderContext(
       gpu.device,
       gpu.caps,
       gpu.preferredCanvasFormat,
+      sky.sunLight.createView(),
       options.shaders,
     );
     // M0: device-loss recovery stops at the device. Rebuilding worlds from
     // their CPU-side sources arrives with the streaming cache (M2).
-    const atmosphere = await RealtimeAtmosphere.create(gpu.device);
-    const sky = await Sky.create(gpu.device, atmosphere, ctx.targets);
     const engine = new Engine(gpu, ctx, sky, options.maxViews ?? 16);
     engine.warmUp();
     return engine;
@@ -790,6 +794,13 @@ export class Engine {
       throw new Error("At most 32 views can have view masks.");
     }
     const view = new View(options);
+    const atmosphere = view.body.atmosphere;
+    if (atmosphere && atmosphere !== this.sky.atmosphere.parameters) {
+      // Per-body atmospheres follow with per-body frames (plan §13.14).
+      throw new Error(
+        `Only the Earth's atmosphere is built so far (view body ${view.body.name}).`,
+      );
+    }
     this.views.push(view);
     this.viewIds.set(view, id);
     return view;
@@ -1110,7 +1121,8 @@ export class Engine {
     s[n++] = view.clearColor[2];
     s[n++] = view.background === "atmosphere" ? (view.sunDisk ? 2 : 1) : 0;
     s[n++] = view.outputEncoding === "srgb" ? 0 : 1;
-    s[n++] = view.lighting.sunIlluminance;
+    const sun = view.lighting.sunIlluminance;
+    s[n++] = sun === "atmosphere" ? -1 : sun;
     s[n++] = view.lighting.diffuseIbl;
     s[n++] = view.lighting.specularIbl;
     s[n++] = view.world.id;
@@ -1383,10 +1395,12 @@ export class Engine {
     block.lighting = view.lighting;
     block.specularMaxLod = this.ctx.environment.maxLod;
     block.exposure = view.exposureScale;
+    block.body = view.body;
     writeViewBlock(this.viewData, (index * VIEW_STRIDE) / 4, block);
-    if (view.background === "atmosphere") {
+    if (drawsSky(view)) {
       this.sky.write(
         this.viewFrames.get(view)!.sky,
+        view.body.ellipsoid,
         camera,
         aspect,
         rect.width,
@@ -1757,11 +1771,18 @@ export class Engine {
       view.world.encodeCull(enc, this.timer.passWrites());
     });
 
+    // The sky around the camera, before the opaque pass draws from it.
+    graph.addPass("sky-view", { sideEffect: true }, (enc) => {
+      if (drawsSky(view) && frame.sky.inside) {
+        this.sky.encodeTable(enc, frame.sky, this.timer.passWrites());
+      }
+    });
+
     graph.addPass(
       "opaque",
       { writes: [color, resolved, ids, display, displayResolved, depth] },
       (enc, get) => {
-        const atmosphere = view.background === "atmosphere";
+        const atmosphere = drawsSky(view);
         clearColor.r = atmosphere ? 0 : view.clearColor[0];
         clearColor.g = atmosphere ? 0 : view.clearColor[1];
         clearColor.b = atmosphere ? 0 : view.clearColor[2];
@@ -2032,6 +2053,7 @@ export class Engine {
     this.pool.destroy();
     this.timer.destroy();
     this.sky.atmosphere.destroy();
+    this.sky.sunLight.destroy();
     this.workers.destroy();
     this.gpu.destroy();
   }
@@ -2110,9 +2132,18 @@ const FRAME_ENCODER: GPUCommandEncoderDescriptor = { label: "frame" };
 const PICK_PASS: GPUComputePassDescriptor = { label: "pick" };
 const PICK_ENCODER: GPUCommandEncoderDescriptor = { label: "pick" };
 
+/**
+ * The view shows its body's sky. Without an atmosphere the sky is black
+ * (the stars and the sun's disk there come with the night sky).
+ */
+function drawsSky(view: View): boolean {
+  return view.background === "atmosphere" && view.body.atmosphere !== undefined;
+}
+
 function destroyViewFrame(frame: ViewFrame): void {
   frame.presentParams.destroy();
   frame.sky.buffer.destroy();
+  frame.sky.table.destroy();
   frame.ids.destroy();
   frame.depth.destroy();
 }

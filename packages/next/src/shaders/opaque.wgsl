@@ -14,11 +14,41 @@
 
 const PI: f32 = 3.14159265358979;
 
+// The sun's illuminance at a camera-relative position: white and uniform
+// (`view.sunIlluminance`), or through the body's atmosphere from the
+// sun-light table, at the point's height above the body's ellipsoid and the
+// sun's angle to its normal (the table's mapping: sky.wgsl
+// `sunLightFragment`).
+fn sunIlluminance(relPosition: vec3f) -> vec3f {
+  if (view.sunLight.z < 0.5) {
+    return vec3f(view.sunIlluminance);
+  }
+  let p = relPosition + view.cameraHi + view.cameraLo;
+  let radii = view.bodyRadii.xyz;
+  let distance = length(p);
+  let height = (distance - distance / length(p / radii)) / 1000.0;
+  let up = normalize(p / (radii * radii));
+  let mu = dot(up, view.sunDirection.xyz);
+  let bottom = view.sunLight.x;
+  let top = view.sunLight.y;
+  let size = vec2f(256.0, 64.0);
+  let unit = vec2f(
+    0.5 + 0.5 * sign(mu) * sqrt(abs(mu)),
+    sqrt(clamp(height / (top - bottom), 0.0, 1.0)),
+  );
+  let uv = (0.5 + unit * (size - 1.0)) / size;
+  let light = textureSampleLevel(sunLightTable, environmentSampler, uv, 0.0).rgb;
+  return light * (1e5 * view.sunIlluminance);
+}
+
 @group(0) @binding(0) var<uniform> view: View;
 @group(0) @binding(1) var specularEnvironment: texture_cube<f32>;
 @group(0) @binding(2) var environmentSampler: sampler;
 @group(0) @binding(3) var brdfLut: texture_2d<f32>;
 @group(0) @binding(4) var<uniform> irradianceSh: array<vec4f, 9>;
+// The sun's illuminance through the atmosphere by altitude and sun angle
+// (atmosphere/sky.wgsl `sunLightFragment`).
+@group(0) @binding(5) var sunLightTable: texture_2d<f32>;
 
 @group(1) @binding(0) var<storage, read> records: array<DrawRecord>;
 @group(1) @binding(1) var<storage, read> items: array<DrawItem>;
@@ -330,7 +360,7 @@ fn fs(in: VsOut, @builtin(front_facing) frontFacing: bool) -> FsOut {
   // 1.x clamps n·l to at least 0.001, which lets a little sun light reach
   // surfaces facing away from it; 2.0 gives them none.
   let sunVisible = select(0.0, 1.0, dot(n, l) > 0.0);
-  let direct = (diffuse + specular) * nDotL * view.sunIlluminance * sunVisible;
+  let direct = (diffuse + specular) * nDotL * sunIlluminance(in.relPosition) * sunVisible;
 
   // Image-based lighting (Fdez-Agüera 2019 multiple scattering).
   let lut = textureSampleLevel(brdfLut, environmentSampler, vec2f(nDotV, roughness), 0.0).rg;

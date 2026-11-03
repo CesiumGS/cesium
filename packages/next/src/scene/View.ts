@@ -1,10 +1,8 @@
 import { Camera } from "./Camera.ts";
 import type { World } from "./World.ts";
 import type { FeatureValue } from "../io/gltfTypes.ts";
-import {
-  DAYLIGHT_SUN_ILLUMINANCE,
-  type ViewLighting,
-} from "../render/layout.ts";
+import type { ViewLighting } from "../render/layout.ts";
+import { EARTH, type Body } from "./Body.ts";
 
 /** A normalized rectangle within a target, origin at the top-left. */
 export interface Viewport {
@@ -252,8 +250,10 @@ export interface ViewOptions {
   viewport?: Viewport;
   /** Default: daylight, EV100 15. */
   exposure?: Exposure;
+  /** The body whose sky and light the view sees. Default: the Earth. */
+  body?: Body;
   /**
-   * Behind the scene: the real-time atmosphere's sky (the default) or
+   * Behind the scene: the body's sky from its atmosphere (the default) or
    * `clearColor`.
    */
   background?: ViewBackground;
@@ -296,6 +296,8 @@ export class View {
     /** At least one reading arrived (the first is taken as is). */
     metered: boolean;
   };
+  /** The body whose sky and light the view sees. */
+  readonly body: Body;
   background: ViewBackground;
   sunDisk: boolean;
   clearColor: readonly [number, number, number];
@@ -325,12 +327,13 @@ export class View {
       "scale" in this.exposure
         ? this.exposure.scale
         : ev100ToScale("ev100" in this.exposure ? this.exposure.ev100 : 15);
+    this.body = options.body ?? EARTH;
     this.background = options.background ?? "atmosphere";
     this.sunDisk = options.sunDisk ?? true;
     this.clearColor = options.clearColor ?? [0.004, 0.008, 0.02];
     this.outputEncoding = options.outputEncoding ?? "srgb";
     this.lighting = {
-      sunIlluminance: DAYLIGHT_SUN_ILLUMINANCE,
+      sunIlluminance: "atmosphere",
       diffuseIbl: 1,
       specularIbl: 1,
       ...options.lighting,
