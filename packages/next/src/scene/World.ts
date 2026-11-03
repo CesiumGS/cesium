@@ -589,7 +589,12 @@ export class World {
       items * DRAW_ITEM_SIZE,
       GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     );
-    this.materialBuffer = buffer("materials", materials.byteLength, storage);
+    // Full size: the CPU mirror grows (reserveMaterials), the table doesn't.
+    this.materialBuffer = buffer(
+      "materials",
+      this.maxMaterials * MATERIAL_SIZE,
+      storage,
+    );
     this.maxClipBlocks = options.maxClipBlocks ?? 2048;
     this.clipBuffer = buffer(
       "clipBoxes",
