@@ -282,7 +282,12 @@ async function measure(
     indexBytes: 256 << 20,
   });
   const target = new OffscreenTarget(WIDTH, HEIGHT);
-  const view = e.addView({ target, world, clearColor: [0, 0, 0] });
+  const view = e.addView({
+    target,
+    world,
+    background: "color",
+    clearColor: [0, 0, 0],
+  });
   view.camera.near = 1;
   const tileset = await e.addTileset(world, s.url, {
     ...(s.headers ? { headers: s.headers } : {}),

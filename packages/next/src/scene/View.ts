@@ -252,7 +252,14 @@ export interface ViewOptions {
   viewport?: Viewport;
   /** Default: daylight, EV100 15. */
   exposure?: Exposure;
-  /** Background color as displayed (already exposed). */
+  /**
+   * Behind the scene: the real-time atmosphere's sky (the default) or
+   * `clearColor`.
+   */
+  background?: ViewBackground;
+  /** The sun's disk in the sky. Default true. */
+  sunDisk?: boolean;
+  /** Background color as displayed (already exposed), with "color". */
   clearColor?: readonly [number, number, number];
   /** Output transfer function. "gamma2.2" matches CesiumJS 1.x. */
   outputEncoding?: OutputEncoding;
@@ -260,6 +267,8 @@ export interface ViewOptions {
 }
 
 export type OutputEncoding = "srgb" | "gamma2.2";
+
+export type ViewBackground = "atmosphere" | "color";
 
 /**
  * A camera looking at a world through a rectangle of a target. Views are
@@ -287,6 +296,8 @@ export class View {
     /** At least one reading arrived (the first is taken as is). */
     metered: boolean;
   };
+  background: ViewBackground;
+  sunDisk: boolean;
   clearColor: readonly [number, number, number];
   outputEncoding: OutputEncoding;
   /** The sun's illuminance and image-based lighting factors. */
@@ -314,6 +325,8 @@ export class View {
       "scale" in this.exposure
         ? this.exposure.scale
         : ev100ToScale("ev100" in this.exposure ? this.exposure.ev100 : 15);
+    this.background = options.background ?? "atmosphere";
+    this.sunDisk = options.sunDisk ?? true;
     this.clearColor = options.clearColor ?? [0.004, 0.008, 0.02];
     this.outputEncoding = options.outputEncoding ?? "srgb";
     this.lighting = {

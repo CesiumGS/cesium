@@ -36,6 +36,7 @@ export {
   UNITLESS_EXPOSURE,
   ev100ToScale,
   type OutputEncoding,
+  type ViewBackground,
   type PickResult,
   type RenderTarget,
   type Viewport,

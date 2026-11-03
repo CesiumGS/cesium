@@ -389,6 +389,7 @@ async function drawScaling(engine: Engine, counts: number[]): Promise<void> {
       target: new CanvasTarget(canvas),
       world,
       clearColor: [0, 0, 0],
+      background: "color",
     });
     view.camera.near = 1;
     view.camera.lookAt(centerCartesian(), 30 * deg, -35 * deg, range);

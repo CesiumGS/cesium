@@ -300,6 +300,7 @@ async function runGlobe(): Promise<Row[]> {
         target: new OffscreenTarget(WIDTH, HEIGHT),
         world,
         exposure: UNITLESS_EXPOSURE,
+        background: "color",
         lighting: { sunIlluminance: UNITLESS_SUN_ILLUMINANCE },
       });
       const tileset: Tileset3D = await engine.addTerrain(world, terrain.url, {

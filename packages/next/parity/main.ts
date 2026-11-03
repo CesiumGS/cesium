@@ -269,6 +269,7 @@ async function setup() {
     world: srgbWorld,
     clearColor: [0, 0, 0],
     exposure: UNITLESS_EXPOSURE,
+    background: "color",
     lighting: { sunIlluminance: UNITLESS_SUN_ILLUMINANCE },
   });
   view.camera.near = NEAR;

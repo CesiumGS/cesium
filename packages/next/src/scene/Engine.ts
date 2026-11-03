@@ -38,6 +38,8 @@ import {
   type ViewOptions,
 } from "./View.ts";
 import { ViewLink, type ViewLinkOptions } from "./ViewLink.ts";
+import { RealtimeAtmosphere } from "../atmosphere/RealtimeAtmosphere.ts";
+import { Sky, type SkyView } from "../atmosphere/Sky.ts";
 import { Camera } from "./Camera.ts";
 import { World, type WorldOptions } from "./World.ts";
 import { HeightClamping } from "./HeightClamping.ts";
@@ -109,7 +111,7 @@ interface PersistentImage {
 }
 
 /** Values in one view's on-demand fingerprint (see `viewChanged`). */
-const VIEW_KEY_LENGTH = 26;
+const VIEW_KEY_LENGTH = 27;
 
 /**
  * Prefetching looks this far ahead: content the camera would reveal in
@@ -195,6 +197,8 @@ export class Engine {
   readonly sunDirection: Vec3 = v3.vec3(1, 0, 0);
 
   private readonly ctx: RenderContext;
+  /** The real-time atmosphere and the sky drawn from it behind views. */
+  private readonly sky: Sky;
   private readonly workers = new WorkerPool();
   /** Content request windows per origin, shared by all tilesets. */
   readonly requests = new RequestScheduler();
@@ -273,9 +277,15 @@ export class Engine {
     origin: { x: 0, y: 0 },
   };
 
-  private constructor(gpu: GpuDevice, ctx: RenderContext, maxViews: number) {
+  private constructor(
+    gpu: GpuDevice,
+    ctx: RenderContext,
+    sky: Sky,
+    maxViews: number,
+  ) {
     this.gpu = gpu;
     this.ctx = ctx;
+    this.sky = sky;
     this.maxViews = maxViews;
     const device = ctx.device;
     this.pool = new TexturePool(device);
@@ -325,7 +335,9 @@ export class Engine {
     );
     // M0: device-loss recovery stops at the device. Rebuilding worlds from
     // their CPU-side sources arrives with the streaming cache (M2).
-    const engine = new Engine(gpu, ctx, options.maxViews ?? 16);
+    const atmosphere = await RealtimeAtmosphere.create(gpu.device);
+    const sky = await Sky.create(gpu.device, atmosphere, ctx.targets);
+    const engine = new Engine(gpu, ctx, sky, options.maxViews ?? 16);
     engine.warmUp();
     return engine;
   }
@@ -1096,6 +1108,7 @@ export class Engine {
     s[n++] = view.clearColor[0];
     s[n++] = view.clearColor[1];
     s[n++] = view.clearColor[2];
+    s[n++] = view.background === "atmosphere" ? (view.sunDisk ? 2 : 1) : 0;
     s[n++] = view.outputEncoding === "srgb" ? 0 : 1;
     s[n++] = view.lighting.sunIlluminance;
     s[n++] = view.lighting.diffuseIbl;
@@ -1371,6 +1384,18 @@ export class Engine {
     block.specularMaxLod = this.ctx.environment.maxLod;
     block.exposure = view.exposureScale;
     writeViewBlock(this.viewData, (index * VIEW_STRIDE) / 4, block);
+    if (view.background === "atmosphere") {
+      this.sky.write(
+        this.viewFrames.get(view)!.sky,
+        camera,
+        aspect,
+        rect.width,
+        rect.height,
+        this.sunDirection,
+        view.exposureScale,
+        view.sunDisk,
+      );
+    }
     this.viewDataU32[(index * VIEW_STRIDE) / 4 + VIEW_BIT_WORD] =
       this.viewBit(view);
   }
@@ -1714,7 +1739,9 @@ export class Engine {
       presentGroup: undefined,
       presentSource: undefined,
       presentDisplay: undefined,
+      sky: this.sky.createView(),
     };
+    this.sky.writeWeights(frame.sky);
 
     graph.addPass("select-view", { sideEffect: true }, (enc) => {
       enc.copyBufferToBuffer(
@@ -1734,9 +1761,10 @@ export class Engine {
       "opaque",
       { writes: [color, resolved, ids, display, displayResolved, depth] },
       (enc, get) => {
-        clearColor.r = view.clearColor[0];
-        clearColor.g = view.clearColor[1];
-        clearColor.b = view.clearColor[2];
+        const atmosphere = view.background === "atmosphere";
+        clearColor.r = atmosphere ? 0 : view.clearColor[0];
+        clearColor.g = atmosphere ? 0 : view.clearColor[1];
+        clearColor.b = atmosphere ? 0 : view.clearColor[2];
         opaqueColor.view = get(color);
         opaqueColor.resolveTarget = get(resolved);
         opaqueIds.view = get(ids);
@@ -1747,6 +1775,9 @@ export class Engine {
         const pass = enc.beginRenderPass(opaquePass);
         frame.bundles[0] = frame.bundle!;
         pass.executeBundles(frame.bundles);
+        if (atmosphere) {
+          this.sky.draw(pass, frame.sky);
+        }
         pass.end();
       },
     );
@@ -2000,6 +2031,7 @@ export class Engine {
     }
     this.pool.destroy();
     this.timer.destroy();
+    this.sky.atmosphere.destroy();
     this.workers.destroy();
     this.gpu.destroy();
   }
@@ -2049,6 +2081,8 @@ interface ViewFrame {
   presentGroup: GPUBindGroup | undefined;
   presentSource: GPUTextureView | undefined;
   presentDisplay: GPUTextureView | undefined;
+  /** The sky's uniform for this view (`View.background` "atmosphere"). */
+  readonly sky: SkyView;
 }
 
 interface TargetFrame {
@@ -2078,6 +2112,7 @@ const PICK_ENCODER: GPUCommandEncoderDescriptor = { label: "pick" };
 
 function destroyViewFrame(frame: ViewFrame): void {
   frame.presentParams.destroy();
+  frame.sky.buffer.destroy();
   frame.ids.destroy();
   frame.depth.destroy();
 }

@@ -10,7 +10,7 @@ import {
 type V3 = readonly [number, number, number];
 
 /** Four of the 8 bands: their parameters and tables. */
-interface Group {
+export interface AtmosphereGroup {
   wavelengths: number[];
   uniforms: GPUBuffer;
   transmittance: GPUTexture;
@@ -26,10 +26,12 @@ interface Group {
  * environment lighting and aerial perspective build on the same tables.
  */
 export class RealtimeAtmosphere {
-  private readonly groups: Group[];
-  /** Band weights to sRGB (`spectralBands`), 8 × rgb. */
-  private readonly weights: Array<[number, number, number]>;
-  private readonly sampler: GPUSampler;
+  /** @internal The two groups of four wavelengths (Sky draws from them). */
+  readonly groups: AtmosphereGroup[];
+  /** @internal Band weights to sRGB (`spectralBands`), 8 × rgb. */
+  readonly weights: Array<[number, number, number]>;
+  /** @internal Bilinear, clamped: the tables' sampler. */
+  readonly sampler: GPUSampler;
   /** 1 × 1 zero: the multiple-scattering term left out. */
   private readonly zero: GPUTexture;
   private readonly pipelines: Record<
@@ -152,7 +154,7 @@ export class RealtimeAtmosphere {
   private pass(
     encoder: GPUCommandEncoder,
     name: keyof RealtimeAtmosphere["pipelines"],
-    group: Group,
+    group: AtmosphereGroup,
     resources: Record<number, GPUBindingResource>,
     workgroups: [number, number],
   ): void {

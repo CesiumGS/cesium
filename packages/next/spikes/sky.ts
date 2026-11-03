@@ -15,6 +15,12 @@ import { GpuDevice } from "../src/gpu/GpuDevice.ts";
 import { AtmosphereReference } from "../src/atmosphere/AtmosphereReference.ts";
 import { RealtimeAtmosphere } from "../src/atmosphere/RealtimeAtmosphere.ts";
 import { EARTH } from "../src/atmosphere/model.ts";
+import { Engine } from "../src/scene/Engine.ts";
+import { OffscreenTarget, type HdrImage } from "../src/scene/View.ts";
+import { Ellipsoid, fromDegrees } from "../src/math/ellipsoid.ts";
+import { eastNorthUpToFixedFrame } from "../src/math/transforms.ts";
+import * as v3 from "../src/math/vec3.ts";
+import * as m4 from "../src/math/mat4.ts";
 
 type V3 = [number, number, number];
 
@@ -28,6 +34,13 @@ const TEMPLATE = `
   <table id="probes"></table>
   <h2>Sky: reference · real-time · difference (±25%)</h2>
   <div id="images"></div>
+  <h2>In the engine</h2>
+  <p>The sky behind a view (<code>background: "atmosphere"</code>), at a
+  daylight exposure (EV100 15) unless noted: looking toward the sun from the
+  ground as it sets, and the planet from orbit. The center pixel is checked
+  against the tables' own probe in the same direction.</p>
+  <table id="engine"></table>
+  <div id="engineImages"></div>
 `;
 
 let root: HTMLElement;
@@ -44,8 +57,10 @@ const view = (zenith: number, azimuth: number): V3 => [
   Math.sin(zenith * deg) * Math.sin(azimuth * deg),
   Math.cos(zenith * deg),
 ];
-const luminance = (rgb: ArrayLike<number>, i: number) =>
-  0.2126 * rgb[i * 3]! + 0.7152 * rgb[i * 3 + 1]! + 0.0722 * rgb[i * 3 + 2]!;
+const luminance = (rgb: ArrayLike<number>, i: number, stride = 3) =>
+  0.2126 * rgb[i * stride]! +
+  0.7152 * rgb[i * stride + 1]! +
+  0.0722 * rgb[i * stride + 2]!;
 
 function fisheye(size: number) {
   const directions: number[] = [];
@@ -181,11 +196,165 @@ async function runSky() {
     );
   }
   results.domes = domeMeans;
-  status.textContent = "done";
   reference.destroy();
+
+  status.textContent = "in the engine…";
+  results.engine = await inTheEngine(realtime);
+  status.textContent = "done";
   realtime.destroy();
   gpu.destroy();
   return results;
+}
+
+/**
+ * The engine's sky: pictures from a few places and sun angles, the center
+ * pixel against `realtime` (the same tables, on another device), and the
+ * pass's cost.
+ */
+async function inTheEngine(realtime: RealtimeAtmosphere) {
+  const width = 480;
+  const height = 270;
+  const engine = await Engine.create();
+  const world = engine.createWorld({
+    maxDraws: 16,
+    vertexBytes: 1 << 20,
+    indexBytes: 1 << 20,
+  });
+  const view = engine.addView({
+    target: new OffscreenTarget(width, height),
+    world,
+  });
+  const camera = view.camera;
+  camera.fov = (70 * Math.PI) / 180;
+  const ground = Ellipsoid.WGS84.cartographicToCartesian(
+    fromDegrees(-105, 40, 0),
+    v3.vec3(),
+  );
+  const enu = eastNorthUpToFixedFrame(ground, Ellipsoid.WGS84, m4.mat4());
+  const axis = (i: number) => v3.vec3(enu[i]!, enu[i + 1]!, enu[i + 2]!);
+  const [east, north, up] = [axis(0), axis(4), axis(8)];
+  const local = (e: number, n: number, u: number) =>
+    v3.normalize(
+      v3.vec3(),
+      Float64Array.from(
+        [0, 1, 2].map((k) => east[k]! * e + north[k]! * n + up[k]! * u),
+      ),
+    );
+  /** Sun to the west at `elevation` degrees. */
+  const setSun = (elevation: number) =>
+    v3.copy(
+      engine.sunDirection,
+      local(-Math.cos(elevation * deg), 0, Math.sin(elevation * deg)),
+    );
+  /** At `altitude` meters, looking west, `pitch` degrees up. */
+  const lookWest = (altitude: number, pitch: number) => {
+    v3.scaleAndAdd(camera.position, ground, up, altitude);
+    v3.copy(
+      camera.direction,
+      local(-Math.cos(pitch * deg), 0, Math.sin(pitch * deg)),
+    );
+    camera.orient(up);
+  };
+  const render = async (): Promise<HdrImage> => {
+    const image = view.readHdr();
+    engine.renderFrame();
+    return image;
+  };
+  const centerOf = (image: HdrImage) => {
+    const i = ((height / 2) * width + width / 2) * 4;
+    return luminance(image.data, i / 4, 4);
+  };
+
+  const rows: Array<Record<string, string | number>> = [];
+  // Name, EV100, the sun's elevation, the camera's altitude and pitch.
+  const shots: Array<[string, number, number, number, number]> = [
+    ["noon", 15, 60, 2, 10],
+    ["sun 20° up", 15, 20, 2, 5],
+    ["sun 5° up", 14, 5, 2, 3],
+    ["sun on the horizon", 12, 0, 2, 3],
+    ["twilight, sun 4° down", 8, -4, 2, 3],
+    ["10 km up, sun 10° up", 15, 10, 10_000, -2],
+    ["orbit, 2,000 km", 15, 30, 2_000_000, -60],
+  ];
+  for (const [name, ev100, sun, altitude, pitch] of shots) {
+    setSun(sun);
+    lookWest(altitude, pitch);
+    view.exposure = { ev100 };
+    const image = await render();
+    // The same direction through the tables, from the same point on their
+    // sphere (the camera along the ellipsoid's normal at its height).
+    const c = Ellipsoid.WGS84.cartesianToCartographic(camera.position, {
+      longitude: 0,
+      latitude: 0,
+      height: 0,
+    })!;
+    const normal = Ellipsoid.WGS84.geodeticSurfaceNormal(
+      camera.position,
+      v3.vec3(),
+    )!;
+    const r = EARTH.bottomRadius + Math.max(c.height, 1);
+    const aspect = width / height;
+    const tanY = Math.tan(camera.fovy(aspect) / 2);
+    // The center pixel's direction (half a pixel right and down of center).
+    const dir = v3.normalize(
+      v3.vec3(),
+      Float64Array.from(
+        [0, 1, 2].map(
+          (k) =>
+            camera.direction[k]! +
+            (camera.right[k]! * (tanY * aspect)) / width -
+            (camera.up[k]! * tanY) / height,
+        ),
+      ),
+    );
+    const probe = await realtime.radiance(
+      [normal[0]! * r, normal[1]! * r, normal[2]! * r],
+      [
+        engine.sunDirection[0]!,
+        engine.sunDirection[1]!,
+        engine.sunDirection[2]!,
+      ],
+      Array.from(dir),
+      { steps: 32 },
+    );
+    const engineY = centerOf(image);
+    const probeY = luminance(probe, 0);
+    rows.push({
+      view: name,
+      EV100: ev100,
+      "center (engine)": Number(engineY.toFixed(engineY < 10 ? 3 : 0)),
+      "center (probe)": Number(probeY.toFixed(probeY < 10 ? 3 : 0)),
+      difference: `${(((engineY - probeY) / probeY) * 100).toFixed(1)}%`,
+    });
+    const scale = 1 / (1.2 * 2 ** ev100);
+    $("engineImages").append(
+      figure(
+        `${name} · EV100 ${ev100}`,
+        picture({ width, height, data: image.data, stride: 4 }, scale, 1),
+      ),
+    );
+  }
+  $("engine").innerHTML = table(rows);
+
+  // Cost: the same frame with and without the sky.
+  lookWest(2, 10);
+  setSun(30);
+  const cost: Record<string, number> = {};
+  for (const background of ["color", "atmosphere"] as const) {
+    view.background = background;
+    for (let i = 0; i < 60; i++) {
+      engine.renderFrame();
+      await engine.gpu.device.queue.onSubmittedWorkDone();
+    }
+    cost[background] = Number(engine.stats.gpuMs.toFixed(3));
+  }
+  const skyMs = cost.atmosphere! - cost.color!;
+  $("engine").insertAdjacentHTML(
+    "afterend",
+    `<p>GPU per frame at ${width} × ${height}: ${cost.color} ms without the sky, ${cost.atmosphere} ms with it (${skyMs.toFixed(3)} ms; ${((skyMs / (width * height)) * 1e6).toFixed(2)} ns per pixel).</p>`,
+  );
+  engine.destroy();
+  return { rows, gpuMs: cost };
 }
 
 function table(rows: Array<Record<string, number | string>>): string {

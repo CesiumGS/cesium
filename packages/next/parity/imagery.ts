@@ -219,6 +219,7 @@ async function runImagery(): Promise<Row[]> {
         world,
         clearColor: [0, 0, 0],
         exposure: UNITLESS_EXPOSURE,
+        background: "color",
         lighting: { sunIlluminance: UNITLESS_SUN_ILLUMINANCE },
       });
       const tileset: Tileset3D = ellipsoid
