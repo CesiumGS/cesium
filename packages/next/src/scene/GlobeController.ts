@@ -100,6 +100,8 @@ export class GlobeController {
   private readonly zoomTarget = v3.vec3();
   /** Where the zoom target stays on screen (none for the sky). */
   private zoomPixel: [number, number] | undefined;
+  /** A pick at `zoomPixel` is in flight (`refreshZoomTarget`). */
+  private zoomPickPending = false;
   private lastTime = 0;
   private animating = false;
   private readonly abort = new AbortController();
@@ -258,7 +260,7 @@ export class GlobeController {
       // between notches).
       v3.copy(target, this.hover);
       this.zoomPixel = [this.hoverPixel![0], this.hoverPixel![1]];
-    } else if (!this.ellipsoidAt(x, y, target)) {
+    } else if (!this.nearEllipsoidAt(x, y, target)) {
       this.zoomPixel = undefined;
       this.ground(target);
     }
@@ -365,11 +367,39 @@ export class GlobeController {
    * out never came back.
    */
   private ground(out: Vec3): void {
-    if (
-      !this.ellipsoid.scaleToGeodeticSurface(this.view.camera.position, out)
-    ) {
+    const c = this.ellipsoid.cartesianToCartographic(
+      this.view.camera.position,
+      { longitude: 0, latitude: 0, height: 0 },
+    );
+    if (!c) {
       v3.set(out, 0, 0, 0);
+      return;
     }
+    // The terrain's height there where it's loaded: the zoom is then a
+    // share of the camera's height above the ground, not the ellipsoid
+    // (which is above the ground where the geoid is negative).
+    c.height =
+      (this.surfaceHeight && this.surfaceHeight(c.longitude, c.latitude)) ?? 0;
+    this.ellipsoid.cartographicToCartesian(c, out);
+  }
+
+  /**
+   * The ellipsoid under (x, y) when it's a fair wheel target: within 20
+   * times the camera's height above the ground. Farther (toward the
+   * horizon) a notch moved the camera by a share of hundreds or thousands
+   * of kilometers; with the camera below the ellipsoid (terrain below it,
+   * where the geoid is negative) the ray met it on the far side of the
+   * Earth and one notch out left for orbit.
+   */
+  private nearEllipsoidAt(x: number, y: number, out: Vec3): Vec3 | undefined {
+    if (!this.ellipsoidAt(x, y, out)) {
+      return undefined;
+    }
+    const camera = this.view.camera.position;
+    const below = v3.vec3();
+    this.ground(below);
+    const height = Math.max(v3.distance(camera, below), 1);
+    return v3.distance(camera, out) <= 20 * height ? out : undefined;
   }
 
   /**
@@ -525,6 +555,7 @@ export class GlobeController {
         const portion = y0 - left;
         this.pendingZoom = left;
         this.zoomToward(this.zoomTarget, 1 - Math.exp(portion), this.zoomPixel);
+        this.refreshZoomTarget();
       }
       if (
         (this.mode === "none" && Math.abs(this.spinRate) > 1e-6) ||
@@ -559,6 +590,34 @@ export class GlobeController {
     });
   }
 
+  /**
+   * While a zoom moves, aims it at what is drawn under its pixel now. The
+   * target was picked frames ago, perhaps on a coarse tile or the bare
+   * ellipsoid under terrain still loading; once finer tiles show the
+   * surface elsewhere along that ray, pinning the old point made the ground
+   * slide sideways past it as the camera closed in. The new point lies on
+   * the same ray through the pixel as the old one (both under it when the
+   * pick's frame was drawn), so switching doesn't jump.
+   */
+  private refreshZoomTarget(): void {
+    const pixel = this.zoomPixel;
+    if (!pixel || this.zoomPickPending) {
+      return;
+    }
+    this.zoomPickPending = true;
+    const r = this.view.pixelRect();
+    void this.view.pickPosition(pixel[0] - r.x, pixel[1] - r.y).then((p) => {
+      this.zoomPickPending = false;
+      const zooming =
+        Math.abs(this.pendingZoom) > 1e-4 || Math.abs(this.zoomRate) > 1e-3;
+      if (p && zooming && this.zoomPixel === pixel) {
+        v3.copy(this.zoomTarget, p);
+        v3.copy(this.hover, p);
+        this.hoverPixel = [pixel[0], pixel[1]];
+      }
+    });
+  }
+
   /** Keeps a pick under the hovering cursor (for the wheel), one at a time. */
   private trackHover(x: number, y: number): void {
     if (this.hoverPending || !this.view.contains(x, y)) {
@@ -578,11 +637,19 @@ export class GlobeController {
   }
 
   private ellipsoidAt(x: number, y: number, out: Vec3): Vec3 | undefined {
-    return this.ellipsoid.rayIntersection(
-      this.view.camera.position,
-      this.ray(x, y),
-      out,
-    );
+    const position = this.view.camera.position;
+    // From inside the ellipsoid (a camera on terrain below it) the ray
+    // meets it on the far side of the Earth: no use as a point under (x, y).
+    const r = this.ellipsoid.radii;
+    const inside =
+      (position[0]! / r[0]!) ** 2 +
+        (position[1]! / r[1]!) ** 2 +
+        (position[2]! / r[2]!) ** 2 <
+      1;
+    if (inside) {
+      return undefined;
+    }
+    return this.ellipsoid.rayIntersection(position, this.ray(x, y), out);
   }
 
   /** World ray through a target pixel. */
