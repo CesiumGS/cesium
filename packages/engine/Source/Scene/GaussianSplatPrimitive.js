@@ -358,54 +358,6 @@ function releaseRetiredTextures(primitive, frameNumber) {
   primitive._retiredTextures = next;
 }
 
-/**
- * Schedules a shader program for deferred destruction. The program is kept
- * alive for one additional frame so that any in-flight draw command still
- * referencing it (e.g. one already pushed to this frame's command list) can
- * finish before the underlying GPU program is released. Mirrors
- * {@link retireTexture}.
- *
- * @param {GaussianSplatPrimitive} primitive The owning primitive.
- * @param {ShaderProgram|undefined} shaderProgram The shader program to retire.
- * @param {number} frameNumber The frame number at which the program was retired.
- * @private
- */
-function retireShaderProgram(primitive, shaderProgram, frameNumber) {
-  if (!defined(shaderProgram)) {
-    return;
-  }
-  primitive._retiredShaderPrograms.push({
-    shaderProgram: shaderProgram,
-    frameNumber: frameNumber,
-  });
-}
-
-/**
- * Destroys any retired shader programs whose grace period (one frame) has
- * elapsed. Called once per frame to reclaim GPU programs replaced by a rebuilt
- * draw command (e.g. after a custom shader change).
- *
- * @param {GaussianSplatPrimitive} primitive The owning primitive.
- * @param {number} frameNumber The current frame number.
- * @private
- */
-function releaseRetiredShaderPrograms(primitive, frameNumber) {
-  const retired = primitive._retiredShaderPrograms;
-  if (!defined(retired) || retired.length === 0) {
-    return;
-  }
-  const next = [];
-  for (let i = 0; i < retired.length; i++) {
-    const entry = retired[i];
-    if (frameNumber - entry.frameNumber > 0) {
-      entry.shaderProgram.destroy();
-    } else {
-      next.push(entry);
-    }
-  }
-  primitive._retiredShaderPrograms = next;
-}
-
 function getSnapshotArrayBuffer(snapshot, key) {
   const value = snapshot?.[key];
   return defined(value) ? value.buffer : undefined;
@@ -1023,7 +975,6 @@ function GaussianSplatPrimitive(options) {
   this._snapshot = undefined;
   this._pendingSnapshot = undefined;
   this._retiredTextures = [];
-  this._retiredShaderPrograms = [];
   this._aggregateScratchBuffers = {
     positions: [],
     scales: [],
@@ -1419,12 +1370,6 @@ GaussianSplatPrimitive.prototype.destroy = function () {
     }
   }
   this._retiredTextures = [];
-  if (defined(this._retiredShaderPrograms)) {
-    for (let i = 0; i < this._retiredShaderPrograms.length; i++) {
-      this._retiredShaderPrograms[i].shaderProgram.destroy();
-    }
-  }
-  this._retiredShaderPrograms = [];
   this._pendingSnapshot = undefined;
   this._snapshot = undefined;
   this._aggregateScratchBuffers = undefined;
@@ -1986,16 +1931,12 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
     receiveShadows: false,
   });
 
-  // Retire the previous draw command's shader program so it is destroyed one
-  // frame later. It may still be referenced by a draw command already queued in
-  // this frame's command list, so it cannot be destroyed synchronously here.
+  // Release the previous draw command's shader program. Programs built by
+  // ShaderBuilder come from the ShaderCache, which defers the actual GL
+  // deletion, so a command already queued this frame can still render.
   const previousCommand = primitive._drawCommand;
-  if (defined(previousCommand)) {
-    retireShaderProgram(
-      primitive,
-      previousCommand.shaderProgram,
-      frameState.frameNumber,
-    );
+  if (defined(previousCommand?.shaderProgram)) {
+    previousCommand.shaderProgram.destroy();
   }
 
   primitive._drawCommand = command;
@@ -2035,7 +1976,6 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
   }
 
   releaseRetiredTextures(this, frameState.frameNumber);
-  releaseRetiredShaderPrograms(this, frameState.frameNumber);
 
   if (!tileset.show) {
     return;
