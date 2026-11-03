@@ -2346,6 +2346,46 @@ translucency the only failure before, the models table's BoxCutout row
 (unlit) is now 0.018. Remaining for the exit: **L3 sign-off**, the plan
 owner's look-dev review in Dyno's comparison views (swipe and flicker).
 
+**Open bug: East Antarctica drawn as ocean from far out (r45).** With
+Cesium World Terrain and Bing, from about 25,000 km over the South
+Atlantic, part of the Antarctic ice sheet beyond the pole shows as
+ocean-colored, bounded by straight edges, with a seam through the ice.
+A small rotation makes it go away. 1.x at the same camera draws the
+whole ice sheet.
+
+- Repro (Dyno viewer, `#/viewer?engine=2.0&asset=96188`, 2026-11-03
+  11:00 local, sun from date and time, default settings): camera ECEF
+  position (6325610.29, -16639664.12, -18088692.37) m, direction
+  (-0.254088, 0.617099, 0.744733), up (-0.092624, -0.78199, 0.61637),
+  right (0.962736, 0.087632, 0.255853), vertical fov 60°. Set it with
+  `dynoViewer.viewer.view.camera` (`position`, `direction`, `up`,
+  `right`, then `version++`). Globe tiles selected: 1/0/0, 1/1/0, 1/0/1,
+  1/1/1 and the level-0 eastern hemisphere 0/1/0.
+- Fixed (an 8.3° turn): position (4899582.15, -14201053.89,
+  -20455237.03) m, direction (-0.196158, 0.517243, 0.833056), up
+  (-0.059528, -0.854275, 0.516402). There 0/1/0 refines to 1/2/0 and
+  1/3/0.
+- 1.x selects the same five tiles at the repro camera, at the same
+  distance for 0/1/0 (30,247 km, overestimated: `TileBoundingRegion`'s
+  four edge planes coincide for a 180°-wide region, so the plane offset
+  counts twice; the tile's nearest point is about 21,300 km away). So
+  the selection matches 1.x and isn't the bug; 2.0 draws it wrong.
+- Ruled out: 0/1/0's imagery slice (read back on the GPU: ice where it
+  belongs) and its mesh and texture coordinates at the blue pixels;
+  frustum culling (every sphere inside), mixed-LOD clip and placeholder
+  state (none set); sun shadows, ambient occlusion, aerial perspective
+  and sunlight through the atmosphere (each toggled off: still broken);
+  back-face normal flipping (disabled for globe tiles: still broken).
+- Seen: drawn unlit (`World.setImagery(…, unlit)` on 0/1/0's record),
+  the missing area shows the tile's ice, so the tile is drawn there
+  with the right imagery and its lit color is wrong. Picks in the area
+  land 40 to 85 km below the ellipsoid: the level-0 tile's 400
+  triangles sag (chords up to about 20° across), and the level-1
+  neighbors' skirts reach 193 km below their edges (0/1/0's: 385 km).
+  Next: what in the lit path uses the fragment's position or depth
+  (the sagged chord is far below the ground), beginning with the IBL
+  and specular terms and the deferred aerial-perspective volume.
+
 ### Custom shading (PoC, after M4)
 
 - §3.4 foundations 1-6: shader identity in batches with an async pipeline
