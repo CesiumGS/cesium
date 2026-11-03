@@ -68,6 +68,8 @@ const suites = {
   atmosphere: ["/spikes/atmosphere.html?bench", "runAtmosphere"],
   // 2.0's image-based lighting vs a Monte Carlo reference (plan §4.2).
   ibl: ["/spikes/ibl.html?bench", "runIbl"],
+  // The real-time atmosphere vs the reference (plan §4.2).
+  sky: ["/spikes/sky.html?bench", "runSky"],
   indirect: ["/spikes/indirect.html?bench", "runIndirect"],
   parity: ["/parity/?bench", "runParity"],
   models: [

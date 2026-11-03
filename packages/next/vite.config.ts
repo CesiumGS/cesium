@@ -278,6 +278,7 @@ export default defineConfig({
         precision: "spikes/precision.html",
         atmosphere: "spikes/atmosphere.html",
         ibl: "spikes/ibl.html",
+        sky: "spikes/sky.html",
         worker: "spikes/worker.html",
         indirect: "spikes/indirect.html",
         alloc: "bench/alloc.html",

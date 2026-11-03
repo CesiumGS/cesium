@@ -323,3 +323,43 @@ export function singleScattering(
   });
   return spectrumToRgb(lambdas, values);
 }
+
+/**
+ * The wavelengths real-time models compute at: the centers of 8 bands of
+ * 50 nm over 380-780 nm (two groups of four, one per RGBA table), and each
+ * band's weights to linear sRGB in photometric units (cd/m² per
+ * W·m⁻²·sr⁻¹·nm⁻¹ at its center): ∫ solar × (CIE → sRGB) over the band ×
+ * 683 / solar at the center, so a radiance shaped like the sun's spectrum
+ * within a band converts exactly. Three wavelengths (Bruneton's real-time
+ * default) were 20-40% off near sunset and in twilight, where long,
+ * reddened paths reshape the spectrum; eight are within 0.5% of the full
+ * spectral luminance there (r40).
+ */
+export function spectralBands(count = 8): {
+  centers: number[];
+  /** rgb weights per band, row by row. */
+  weights: Array<[number, number, number]>;
+} {
+  const lo = 380;
+  const hi = 780;
+  const width = (hi - lo) / count;
+  const m = XYZ_TO_LINEAR_SRGB;
+  const centers: number[] = [];
+  const weights: Array<[number, number, number]> = [];
+  for (let i = 0; i < count; i++) {
+    const center = lo + (i + 0.5) * width;
+    const w: [number, number, number] = [0, 0, 0];
+    for (let l = lo + i * width + 0.5; l < lo + (i + 1) * width; l += 1) {
+      const [x, y, z] = colorMatching(l);
+      const solar = solarIrradiance(l);
+      for (let c = 0; c < 3; c++) {
+        w[c]! +=
+          solar * (m[c * 3]! * x + m[c * 3 + 1]! * y + m[c * 3 + 2]! * z);
+      }
+    }
+    const scale = MAX_LUMINOUS_EFFICACY / solarIrradiance(center);
+    centers.push(center);
+    weights.push(w.map((v) => v * scale) as [number, number, number]);
+  }
+  return { centers, weights };
+}

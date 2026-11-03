@@ -158,6 +158,16 @@ export const HARNESSES: HarnessInfo[] = [
     load: () => import("../spikes/atmosphere.ts").then((m) => m.harness),
   },
   {
+    id: "sky",
+    group: "spikes",
+    title: "Real-time sky vs reference",
+    description:
+      "Hillaire's real-time atmosphere (transmittance and multiple-scattering tables, a ray-marched sky) against the spectral path-traced reference, in cd/m².",
+    page: "/spikes/sky.html",
+    entry: "runSky",
+    load: () => import("../spikes/sky.ts").then((m) => m.harness),
+  },
+  {
     id: "ibl",
     group: "spikes",
     title: "Image-based lighting vs reference",
