@@ -13,6 +13,7 @@ import presentWgsl from "../shaders/present.wgsl?raw";
 import overlayWgsl from "../shaders/overlay.wgsl?raw";
 import pickWgsl from "../shaders/pick.wgsl?raw";
 import meterWgsl from "../shaders/meter.wgsl?raw";
+import adaptWgsl from "../shaders/adapt.wgsl?raw";
 
 /**
  * The single render-target configuration views draw their 3D content into.
@@ -74,6 +75,9 @@ export interface Pipelines {
   raycast: GPUComputePipeline;
   /** Average log luminance for automatic exposure (`meter.wgsl`). */
   meter: GPUComputePipeline;
+  /** The eye's local adaptation map (`adapt.wgsl`): reduce, then blur. */
+  adaptReduce: GPUComputePipeline;
+  adaptBlur: GPUComputePipeline;
 }
 
 export interface Defaults {
@@ -559,6 +563,8 @@ async function createPipelines(
     scatter,
     raycast,
     meter,
+    adaptReduce,
+    adaptBlur,
   ] = await Promise.all([
     device.createComputePipelineAsync({
       label: "cull.records",
@@ -652,6 +658,16 @@ async function createPipelines(
       layout: "auto",
       compute: { module: module("meter", meterWgsl), entryPoint: "main" },
     }),
+    device.createComputePipelineAsync({
+      label: "adapt.reduce",
+      layout: "auto",
+      compute: { module: module("adapt", adaptWgsl), entryPoint: "reduce" },
+    }),
+    device.createComputePipelineAsync({
+      label: "adapt.blur",
+      layout: "auto",
+      compute: { module: module("adapt", adaptWgsl), entryPoint: "blur" },
+    }),
   ]);
 
   return {
@@ -681,5 +697,7 @@ async function createPipelines(
     scatterLayout,
     raycast,
     meter,
+    adaptReduce,
+    adaptBlur,
   };
 }

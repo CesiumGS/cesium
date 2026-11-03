@@ -788,7 +788,23 @@ Next steps (r44, after the night work). Now, in this order:
    looks at, not to the view as a whole: a moonless night is less black
    to a dark-adapted walker than one global adaptation shows, and bright
    lights at night keep their color. Ferwerda's gains per pixel from a
-   blurred adaptation map, blended with the global one.
+   blurred adaptation map, blended with the global one. Done (r44): a
+   plain blur of the image's log luminance (a sixteenth of its size,
+   σ 2 texels) haloed every edge (the ground beside dark buildings glowed
+   where it met them), so each pixel now adapts among its neighbors of
+   about its own brightness: a bilateral grid (Chen, Paris and Durand
+   2007), 16 × 16-pixel cells by 16 levels of log luminance over ±12 stops
+   of the view's adaptation, blurred over 7 × 7 cells and 3 levels, read
+   trilinearly at the pixel and its level (adapt.wgsl, present.wgsl
+   `eyeSees`); halfway to it in log, no more than 2 log10 from the view's.
+   0.2 ms at 1831 × 1416. From orbit the dark land keeps its texture
+   beside the lit cities; moonlit streets are unchanged, without halos.
+   What it can't do: lower Manhattan on a moonless night stays black,
+   since nothing lights the facades (starlight only) while the ground
+   under them carries the city lights. The missing light is the city's
+   own: see "City light" below. Also fixed: a meter reading in flight as
+   the exposure turned fixed left automatic exposure pending, never to
+   meter again.
 5. **The Moon**: its libration (its orientation from the IAU rotation
    model, so the face it shows wobbles as it does), and a sharper map
    than 1.x's 256 × 128 (NASA's CGI Moon Kit, public domain).
@@ -798,6 +814,11 @@ Next steps (r44, after the night work). Now, in this order:
 
 Later:
 
+- **City light**: on a moonless night a city lights itself. The night
+  lights' upward light scattered by the air (the sky glow, an urban sky
+  some 100 times the natural one) into the sky and its environment, and
+  the lit ground's light up the facades (the environment's lower half),
+  so streets and buildings show as they do at night, not black.
 - **Stars, part two**: diffraction spikes for the camera, the eye's
   corona rays, twinkle; a catalog for the brightest stars' magnitudes and
   colors (a license decision).

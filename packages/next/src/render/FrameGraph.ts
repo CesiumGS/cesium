@@ -18,6 +18,8 @@ export interface TextureDesc {
   format: GPUTextureFormat;
   width: number;
   height: number;
+  /** Its depth: a 3D texture (unset, a 2D one). */
+  depth?: number;
   sampleCount?: number;
   usage: GPUTextureUsageFlags;
 }
@@ -219,6 +221,7 @@ function textureBytes(desc: TextureDesc): number {
   return (
     desc.width *
     desc.height *
+    (desc.depth ?? 1) *
     (BYTES_PER_PIXEL[desc.format] ?? 4) *
     (desc.sampleCount ?? 1)
   );
@@ -270,7 +273,12 @@ export class TexturePool implements TextureAllocator {
     const texture = this.device.createTexture({
       label: desc.label,
       format: desc.format,
-      size: { width: desc.width, height: desc.height },
+      size: {
+        width: desc.width,
+        height: desc.height,
+        depthOrArrayLayers: desc.depth ?? 1,
+      },
+      dimension: desc.depth === undefined ? "2d" : "3d",
       sampleCount: desc.sampleCount ?? 1,
       usage: desc.usage,
     });
@@ -406,7 +414,7 @@ export class TexturePool implements TextureAllocator {
   private keyOf(desc: TextureDesc): string {
     let key = this.keys.get(desc);
     if (key === undefined) {
-      key = `${desc.format}|${desc.width}x${desc.height}|${desc.sampleCount ?? 1}|${desc.usage}`;
+      key = `${desc.format}|${desc.width}x${desc.height}x${desc.depth ?? 0}|${desc.sampleCount ?? 1}|${desc.usage}`;
       this.keys.set(desc, key);
     }
     return key;

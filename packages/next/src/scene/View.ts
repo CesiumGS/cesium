@@ -363,12 +363,6 @@ export class View {
     /** At least one reading arrived (the first is taken as is). */
     metered: boolean;
   };
-  /**
-   * @internal The eye's response this frame (scene/eye.ts `eyeResponse`)
-   * relative to the pre-exposure: the present pass's cones (color) and
-   * rods (gray) gains; 1 and 0 for a camera.
-   */
-  eyeGains = { cones: 1, rods: 0 };
   /** The body whose sky and light the view sees. */
   readonly body: Body;
   background: ViewBackground;

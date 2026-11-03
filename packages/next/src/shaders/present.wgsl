@@ -8,17 +8,28 @@ struct PresentParams {
   origin: vec2f,     // viewport origin in target pixels
   toneMapping: u32,  // 0 PBR Neutral, 1 AgX, 2 ACES
   encoding: u32, // 0 none (-srgb target), 1 sRGB, 2 gamma 2.2
-  // The eye (scene/eye.ts): its cones' gain on the image (color) and its
-  // rods' on its scotopic luminance (gray); 1 and 0: a camera.
+  // The image's pre-exposure (the scene's light × it); 1 when the eye
+  // sees it (`eyeSees`), 0 for a camera.
+  exposure: f32,
+  eye: u32,
+  // The eye's adaptation over the view, log10 cd/m²: the cones'
+  // (photopic) and the rods' (scotopic); its brightening, stops.
   cones: f32,
   rods: f32,
-  _pad: vec2u,
+  compensation: f32,
+  _pad0: f32,
+  _pad1: f32,
+  _pad2: f32,
 };
 
 @group(0) @binding(0) var hdr: texture_2d<f32>;
 @group(0) @binding(1) var<uniform> params: PresentParams;
 // Display-referred color (unlit), premultiplied by its coverage (alpha).
 @group(0) @binding(2) var display: texture_2d<f32>;
+// The eye's local adaptation (adapt.wgsl): a bilateral grid of log2
+// luminance, photopic and scotopic, and its weight, by place and level.
+@group(0) @binding(3) var adaptation: texture_3d<f32>;
+@group(0) @binding(4) var adaptationSampler: sampler;
 
 @vertex
 fn vs(@builtin(vertex_index) i: u32) -> @builtin(position) vec4f {
@@ -101,16 +112,90 @@ fn toneMap(c: vec3f) -> vec3f {
   }
 }
 
-// What the eye sees (View.ts `Exposure` "eye", scene/eye.ts): its cones,
-// in color, and its rods, the image's scotopic luminance (from XYZ:
-// Larson, Rushmeier and Piatko 1997) in a gray blue (Thompson, Shirley
-// and Ferwerda 2002), each at its own gain for the eye's adaptation.
-fn eyeSees(image: vec3f) -> vec3f {
-  let x = dot(image, vec3f(0.4124, 0.3576, 0.1805));
-  let y = dot(image, vec3f(0.2126, 0.7152, 0.0722));
-  let z = dot(image, vec3f(0.0193, 0.1192, 0.9505));
+// --- the eye (scene/eye.ts, the same model per pixel) --------------------------
+
+fn log10(x: f32) -> f32 {
+  return log2(max(x, 1e-12)) * 0.30103;
+}
+
+// Ferwerda et al. 1996's thresholds, cd/m² (cones) and scotopic cd/m² (rods).
+fn coneThreshold(la: f32) -> f32 {
+  let l = log10(la);
+  var t = pow(0.249 * l + 0.65, 2.7) - 0.72;
+  if (l <= -2.6) {
+    t = -0.72;
+  } else if (l >= 1.9) {
+    t = l - 1.255;
+  }
+  return pow(10.0, t);
+}
+
+fn rodThreshold(la: f32) -> f32 {
+  let l = log10(la);
+  var t = pow(0.405 * l + 1.6, 2.18) - 2.86;
+  if (l <= -3.94) {
+    t = -2.86;
+  } else if (l >= -1.44) {
+    t = l - 0.395;
+  }
+  return pow(10.0, t);
+}
+
+fn rodWeight(la: f32) -> f32 {
+  let k = clamp(1.0 - (la - 0.01) / (10.0 - 0.01), 0.0, 1.0);
+  return k * k;
+}
+
+// Tumblin and Rushmeier's brightness against daylight's.
+fn brightness(la: f32) -> f32 {
+  let gamma = select(1.855 + 0.4 * log10(la + 2.3e-5), 2.655, la > 100.0);
+  let display = 1.855 + 0.4 * log10(50.0 + 2.3e-5);
+  return pow(10.0, (gamma - 2.655) / display);
+}
+
+// How far toward the region it looks at (log, half way) the eye adapts,
+// and no further than this (log10) from the view's.
+const EYE_LOCAL = 0.5;
+const EYE_LOCAL_REACH = 2.0;
+// The adaptation grid's levels' span (adapt.wgsl `RANGE`), log2 either
+// side of the view's adaptation.
+const ADAPT_RANGE = 12.0;
+
+// The eye's adaptation around a pixel of log2 luminance `logY`, among its
+// neighbors of about its brightness (adapt.wgsl), log10: photopic and
+// scotopic; the view's where it has few.
+fn localAdaptation(uv: vec2f, logY: f32, global: vec2f) -> vec2f {
+  let center = global.x / 0.30103;
+  let w = (logY - (center - ADAPT_RANGE)) / (2.0 * ADAPT_RANGE);
+  let g = textureSampleLevel(adaptation, adaptationSampler, vec3f(uv, clamp(w, 0.0, 1.0)), 0.0).xyz;
+  let prior = 0.05;
+  return (g.xy + global / 0.30103 * prior) / (g.z + prior) * 0.30103;
+}
+
+// What the eye sees (View.ts `Exposure` "eye"): its cones, in color, and
+// its rods, the image's scotopic luminance (from XYZ: Larson, Rushmeier
+// and Piatko 1997) in a gray blue (Thompson, Shirley and Ferwerda 2002),
+// each at its gain for the eye's adaptation there: partly the view's,
+// partly its region's (`localAdaptation`): a dark street keeps detail
+// beside a bright one, a lamp its color in the dark. `image` pre-exposed; returns
+// display light (white 1).
+fn eyeSees(image: vec3f, uv: vec2f) -> vec3f {
+  let light = image / params.exposure;
+  let x = dot(light, vec3f(0.4124, 0.3576, 0.1805));
+  let y = dot(light, vec3f(0.2126, 0.7152, 0.0722));
+  let z = dot(light, vec3f(0.0193, 0.1192, 0.9505));
   let scotopic = max(y * (1.33 * (1.0 + (y + z) / max(x, 1e-12)) - 1.68), 0.0);
-  return image * params.cones + scotopic * params.rods * vec3f(1.041, 0.962, 1.259);
+  let global = vec2f(params.cones, params.rods);
+  let local = localAdaptation(uv, log2(max(y, 1e-7)), global);
+  let adapted = clamp(mix(global, local, EYE_LOCAL), global - EYE_LOCAL_REACH, global + EYE_LOCAL_REACH);
+  let cones = pow(10.0, adapted.x);
+  let rods = pow(10.0, adapted.y);
+  // Daylight's adaptation level shows where a metered camera puts it.
+  let calibration = 0.104 / (coneThreshold(50.0) * pow(10.0, 1.255) / 100.0);
+  let scale = calibration * brightness(cones) * exp2(params.compensation) / 100.0;
+  let coneGain = scale * coneThreshold(50.0) / coneThreshold(cones);
+  let rodGain = scale * rodWeight(cones) * rodThreshold(50.0) / rodThreshold(rods);
+  return light * coneGain + scotopic * rodGain * vec3f(1.041, 0.962, 1.259);
 }
 
 fn linearToSrgb(c: vec3f) -> vec3f {
@@ -128,8 +213,9 @@ fn fs(@builtin(position) frag: vec4f) -> @location(0) vec4f {
   let shown = textureLoad(display, coord, 0);
   let sceneCoverage = 1.0 - shown.a;
   var scene = textureLoad(hdr, coord, 0).rgb / max(sceneCoverage, 1e-4);
-  if (params.rods > 0.0 || params.cones != 1.0) {
-    scene = eyeSees(max(scene, vec3f(0.0)));
+  if (params.eye == 1u) {
+    let uv = (vec2f(coord) + 0.5) / vec2f(textureDimensions(hdr));
+    scene = eyeSees(max(scene, vec3f(0.0)), uv);
   }
   var color =
     toneMap(max(scene, vec3f(0.0))) * sceneCoverage +

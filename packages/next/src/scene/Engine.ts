@@ -315,7 +315,10 @@ export class Engine {
     exposure: number;
     resolvers: Array<(image: HdrImage) => void>;
   }> = [];
-  private readonly presentData = new DataView(new ArrayBuffer(32));
+  private readonly presentData = new DataView(new ArrayBuffer(48));
+  private readonly adaptData = new Float32Array(4);
+  /** The eye's local adaptation grid, sampled trilinearly. */
+  private adaptSampler?: GPUSampler;
   private readonly overlayColor = new Float32Array(4);
   private readonly viewBlock: ViewBlock;
   private readonly commandBuffers: GPUCommandBuffer[] = [];
@@ -2013,8 +2016,8 @@ export class Engine {
         metered: false,
       });
       if ("eye" in e) {
-        // Pre-exposed for the stronger of the two (fp16's range), the
-        // present pass applies each (`eyeGains`).
+        // Pre-exposed for the stronger of the two (fp16's range); the
+        // present pass sees the light per pixel (present.wgsl `eyeSees`).
         const r = eyeResponse(
           10 ** state.cones,
           10 ** state.rods,
@@ -2022,12 +2025,10 @@ export class Engine {
         );
         const scale = Math.max(r.cones, r.rods * SCOTOPIC_WHITE);
         view.exposureScale = scale;
-        view.eyeGains = { cones: r.cones / scale, rods: r.rods / scale };
         return scale;
       }
       view.exposureScale = ev100ToScale(state.ev100);
     }
-    view.eyeGains = { cones: 1, rods: 0 };
     return view.exposureScale;
   }
 
@@ -2046,10 +2047,15 @@ export class Engine {
   ): void {
     const e = view.exposure;
     const state = view.autoExposure;
-    if (!("auto" in e || "eye" in e) || !state) {
+    if (!state) {
       return;
     }
+    // Before the mode's check: a reading in flight as the exposure turned
+    // fixed left it pending, and it never metered again on turning back.
     state.pending = false;
+    if (!("auto" in e || "eye" in e)) {
+      return;
+    }
     // A reading that isn't a number (infinities in the image) says
     // nothing; a state that isn't one starts over from the next reading.
     if (average === undefined || !Number.isFinite(average)) {
@@ -2323,12 +2329,18 @@ export class Engine {
       rendered: false,
       presentParams: device.createBuffer({
         label: "presentParams",
-        size: 32,
+        size: 48,
         usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
       }),
       presentGroup: undefined,
       presentSource: undefined,
       presentDisplay: undefined,
+      presentAdaptation: undefined,
+      adaptParams: device.createBuffer({
+        label: "adaptParams",
+        size: 16,
+        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+      }),
       sky: this.sky.createView(),
       shadowed: false,
       ambient: false,
@@ -2650,9 +2662,60 @@ export class Engine {
       }
     });
 
+    // The eye's local adaptation: a bilateral grid of the image's log
+    // luminance, a sixteenth of its size by 16 levels, blurred (adapt.wgsl).
+    const adaptSize = {
+      width: Math.ceil(width / 16),
+      height: Math.ceil(height / 16),
+      depth: 16,
+      format: "rgba16float" as const,
+      usage: GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.TEXTURE_BINDING,
+    };
+    const adaptReduced = graph.createTexture("adapt.reduced", adaptSize);
+    const adaptation = graph.createTexture("adapt.map", adaptSize);
+    graph.addPass(
+      "adaptation",
+      { reads: [resolved], writes: [adaptReduced, adaptation] },
+      (enc, get) => {
+        if (!("eye" in view.exposure)) {
+          return;
+        }
+        this.adaptData[0] = view.exposureScale;
+        this.adaptData[1] = view.autoExposure?.cones ?? 0;
+        device.queue.writeBuffer(frame.adaptParams, 0, this.adaptData);
+        const reduce = device.createBindGroup({
+          layout: pipelines.adaptReduce.getBindGroupLayout(0),
+          entries: [
+            { binding: 0, resource: get(resolved) },
+            { binding: 1, resource: { buffer: frame.adaptParams } },
+            { binding: 2, resource: get(adaptReduced) },
+          ],
+        });
+        const blur = device.createBindGroup({
+          layout: pipelines.adaptBlur.getBindGroupLayout(0),
+          entries: [
+            { binding: 3, resource: get(adaptReduced) },
+            { binding: 4, resource: get(adaptation) },
+          ],
+        });
+        const pass = enc.beginComputePass({ label: "adaptation" });
+        const groups = [
+          Math.ceil(adaptSize.width / 8),
+          Math.ceil(adaptSize.height / 8),
+        ] as const;
+        pass.setPipeline(pipelines.adaptReduce);
+        pass.setBindGroup(0, reduce);
+        pass.dispatchWorkgroups(...groups);
+        pass.setPipeline(pipelines.adaptBlur);
+        pass.setBindGroup(0, blur);
+        pass.dispatchWorkgroups(...groups, adaptSize.depth);
+        pass.end();
+      },
+    );
+
     graph.addPass(
       "present",
-      { reads: [resolved, displayResolved], writes: [output] },
+      { reads: [resolved, displayResolved, adaptation], writes: [output] },
       (enc, get) => {
         const params = this.presentData;
         params.setFloat32(0, x, true);
@@ -2664,23 +2727,43 @@ export class Engine {
             ? 2
             : 1;
         params.setUint32(12, encoding, true);
-        // The eye's cones and rods (1 and 0: a camera).
-        params.setFloat32(16, view.eyeGains.cones, true);
-        params.setFloat32(20, view.eyeGains.rods, true);
+        // The eye: its adaptation over the view (log10 cd/m²) and its
+        // brightening; per pixel it adapts partly to its region too.
+        const e = view.exposure;
+        const state = view.autoExposure;
+        const eye = "eye" in e && state !== undefined;
+        params.setFloat32(16, view.exposureScale, true);
+        params.setUint32(20, eye ? 1 : 0, true);
+        params.setFloat32(24, eye ? state.cones : 0, true);
+        params.setFloat32(28, eye ? state.rods : 0, true);
+        params.setFloat32(32, "eye" in e ? (e.compensation ?? 0) : 0, true);
         device.queue.writeBuffer(frame.presentParams, 0, params.buffer);
         // Pooled textures are stable from frame to frame, so the bind group
         // is rebuilt only when the pool hands this view a different one.
         const source = get(resolved);
         const shown = get(displayResolved);
-        if (frame.presentSource !== source || frame.presentDisplay !== shown) {
+        const adapted = get(adaptation);
+        if (
+          frame.presentSource !== source ||
+          frame.presentDisplay !== shown ||
+          frame.presentAdaptation !== adapted
+        ) {
           frame.presentSource = source;
           frame.presentDisplay = shown;
+          frame.presentAdaptation = adapted;
+          this.adaptSampler ??= device.createSampler({
+            label: "adaptation",
+            magFilter: "linear",
+            minFilter: "linear",
+          });
           frame.presentGroup = device.createBindGroup({
             layout: pipelines.present.getBindGroupLayout(0),
             entries: [
               { binding: 0, resource: source },
               { binding: 1, resource: { buffer: frame.presentParams } },
               { binding: 2, resource: shown },
+              { binding: 3, resource: adapted },
+              { binding: 4, resource: this.adaptSampler },
             ],
           });
         }
@@ -2869,6 +2952,9 @@ interface ViewFrame {
   readonly presentParams: GPUBuffer;
   presentGroup: GPUBindGroup | undefined;
   presentSource: GPUTextureView | undefined;
+  presentAdaptation: GPUTextureView | undefined;
+  /** The eye's adaptation map's parameters (its pre-exposure). */
+  adaptParams: GPUBuffer;
   presentDisplay: GPUTextureView | undefined;
   /** The sky's uniform for this view (`View.background` "atmosphere"). */
   readonly sky: SkyView;
@@ -2920,6 +3006,7 @@ function drawsAerialPerspective(view: View): boolean {
 
 function destroyViewFrame(frame: ViewFrame): void {
   frame.presentParams.destroy();
+  frame.adaptParams.destroy();
   frame.aoParams.destroy();
   frame.sky.buffer.destroy();
   frame.sky.table.destroy();
