@@ -3,6 +3,7 @@ import skyWgsl from "./sky.wgsl?raw";
 import type { RealtimeAtmosphere } from "./RealtimeAtmosphere.ts";
 import type { Ellipsoid, Cartographic } from "../math/ellipsoid.ts";
 import * as v3 from "../math/vec3.ts";
+import type { Vec3 } from "../math/vec3.ts";
 import type { Camera } from "../scene/Camera.ts";
 
 /** The sun's angular diameter seen from the Earth, radians (mean). */
@@ -38,9 +39,52 @@ export interface SkyView {
 }
 
 type Pipelines = Record<
-  "march" | "table" | "fromTable" | "sunLight",
+  "march" | "table" | "fromTable" | "sunLight" | "environment",
   GPURenderPipeline
 >;
+
+/** The environment cube's face size (Environment's sky cube). */
+const ENVIRONMENT_SIZE = 128;
+
+/**
+ * Cube faces as 90° views in the environment frame (east, up, −north):
+ * forward, right and up, matching ibl.wgsl `cubeDirection` (WebGPU layer
+ * order +X, −X, +Y, −Y, +Z, −Z).
+ */
+const CUBE_FACES: ReadonlyArray<readonly [V3, V3, V3]> = [
+  [
+    [1, 0, 0],
+    [0, 0, -1],
+    [0, 1, 0],
+  ],
+  [
+    [-1, 0, 0],
+    [0, 0, 1],
+    [0, 1, 0],
+  ],
+  [
+    [0, 1, 0],
+    [1, 0, 0],
+    [0, 0, -1],
+  ],
+  [
+    [0, -1, 0],
+    [1, 0, 0],
+    [0, 0, 1],
+  ],
+  [
+    [0, 0, 1],
+    [1, 0, 0],
+    [0, 1, 0],
+  ],
+  [
+    [0, 0, -1],
+    [-1, 0, 0],
+    [0, 1, 0],
+  ],
+];
+
+type V3 = readonly [number, number, number];
 
 /**
  * Draws a real-time atmosphere's sky and the sun's disk behind a view's
@@ -65,6 +109,9 @@ export class Sky {
    * sRGB lux × 1e-5 (sky.wgsl `sunLightFragment`); the opaque pass reads it.
    */
   readonly sunLight: GPUTexture;
+  /** Six `Sky` uniforms, 256 bytes apart: the environment cube's faces. */
+  private readonly faceUniforms: GPUBuffer;
+  private readonly faceGroups: GPUBindGroup[];
 
   private constructor(
     private readonly device: GPUDevice,
@@ -121,6 +168,121 @@ export class Sky {
         GPUTextureUsage.COPY_SRC,
     });
     this.buildSunLight();
+    this.faceUniforms = device.createBuffer({
+      label: "sky.environment",
+      size: 6 * 256,
+      usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+    });
+    this.faceGroups = CUBE_FACES.map((_, face) =>
+      device.createBindGroup({
+        label: "sky.environment",
+        layout: this.viewLayout,
+        entries: [
+          {
+            binding: 0,
+            resource: {
+              buffer: this.faceUniforms,
+              offset: face * 256,
+              size: SKY_SIZE,
+            },
+          },
+        ],
+      }),
+    );
+  }
+
+  /**
+   * Renders the sky as the environment around `position` (Earth-fixed,
+   * meters) into the top level of `cube`, in the environment frame `frame`
+   * (east, up, −north there): radiance in cd/m², not exposed, without the
+   * sun's disk (the sun lights the scene directly). The caller builds the
+   * probe's mips, specular cube and SH from it (`Environment.build`).
+   */
+  renderEnvironment(
+    cube: GPUTexture,
+    ellipsoid: Ellipsoid,
+    position: Vec3,
+    frame: readonly [Vec3, Vec3, Vec3],
+    sun: ArrayLike<number>,
+  ): void {
+    const f = this.f32;
+    this.placeCamera(ellipsoid, position);
+    f[3] = 1;
+    f[4] = sun[0]!;
+    f[5] = sun[1]!;
+    f[6] = sun[2]!;
+    f[7] = 2; // no disk
+    f[11] = 1;
+    f[15] = 1;
+    f[19] = 1;
+    f[20] = ENVIRONMENT_SIZE;
+    f[21] = ENVIRONMENT_SIZE;
+    f[22] = SKY_STEPS;
+    const world = (v: V3, at: number) => {
+      for (let k = 0; k < 3; k++) {
+        f[at + k] =
+          frame[0][k]! * v[0] + frame[1][k]! * v[1] + frame[2][k]! * v[2];
+      }
+    };
+    CUBE_FACES.forEach(([forward, right, up], face) => {
+      world(forward, 8);
+      world(right, 12);
+      world(up, 16);
+      this.device.queue.writeBuffer(this.faceUniforms, face * 256, this.data);
+    });
+    const encoder = this.device.createCommandEncoder({
+      label: "sky.environment",
+    });
+    for (let face = 0; face < 6; face++) {
+      const pass = encoder.beginRenderPass({
+        label: "sky.environment",
+        colorAttachments: [
+          {
+            view: cube.createView({
+              dimension: "2d",
+              baseMipLevel: 0,
+              mipLevelCount: 1,
+              baseArrayLayer: face,
+              arrayLayerCount: 1,
+            }),
+            clearValue: { r: 0, g: 0, b: 0, a: 0 },
+            loadOp: "clear",
+            storeOp: "store",
+          },
+        ],
+      });
+      pass.setPipeline(this.pipelines.environment);
+      pass.setBindGroup(2, this.faceGroups[face]!);
+      for (let g = 0; g < this.groups.length; g++) {
+        const [atmosphere, tables] = this.groups[g]!;
+        pass.setBindGroup(0, atmosphere);
+        pass.setBindGroup(1, tables);
+        pass.draw(3, 1, 0, g);
+      }
+      pass.end();
+    }
+    this.device.queue.submit([encoder.finish()]);
+  }
+
+  /**
+   * The camera on the atmosphere's sphere (uniform words 0-2 and 23): at
+   * its height above the body's ellipsoid, along the ellipsoid's normal.
+   * Returns the radius, km.
+   */
+  private placeCamera(ellipsoid: Ellipsoid, position: Vec3): number {
+    const f = this.f32;
+    const p = this.atmosphere.parameters;
+    const c = ellipsoid.cartesianToCartographic(position, scratchCartographic);
+    const altitude = Math.max(c?.height ?? 0, 1);
+    const normal =
+      ellipsoid.geodeticSurfaceNormal(position, scratchNormal) ??
+      v3.set(scratchNormal, 0, 0, 1);
+    const r = (p.bottomRadius + altitude) / 1000;
+    f[0] = normal[0]! * r;
+    f[1] = normal[1]! * r;
+    f[2] = normal[2]! * r;
+    f[23] = p.bottomRadius / 1000;
+    return r;
   }
 
   /** Renders the sun-light table from the atmosphere's tables. */
@@ -243,22 +405,24 @@ export class Sky {
       },
       primitive: { topology: "triangle-list" },
     });
-    const [march, skyView, fromTable, sunLight] = await Promise.all([
-      device.createRenderPipelineAsync(scene("skyFragment", marching)),
-      device.createRenderPipelineAsync(table("skyViewFragment")),
-      device.createRenderPipelineAsync(
-        scene("skyFromTableFragment", [
-          layouts.empty,
-          layouts.empty,
-          layouts.table,
-        ]),
-      ),
-      device.createRenderPipelineAsync(table("sunLightFragment")),
-    ]);
+    const [march, skyView, fromTable, sunLight, environment] =
+      await Promise.all([
+        device.createRenderPipelineAsync(scene("skyFragment", marching)),
+        device.createRenderPipelineAsync(table("skyViewFragment")),
+        device.createRenderPipelineAsync(
+          scene("skyFromTableFragment", [
+            layouts.empty,
+            layouts.empty,
+            layouts.table,
+          ]),
+        ),
+        device.createRenderPipelineAsync(table("sunLightFragment")),
+        device.createRenderPipelineAsync(table("skyFragment")),
+      ]);
     return new Sky(
       device,
       atmosphere,
-      { march, table: skyView, fromTable, sunLight },
+      { march, table: skyView, fromTable, sunLight, environment },
       layouts,
     );
   }
@@ -321,21 +485,10 @@ export class Sky {
   ): void {
     const f = this.f32;
     const p = this.atmosphere.parameters;
-    const c = ellipsoid.cartesianToCartographic(
-      camera.position,
-      scratchCartographic,
-    );
-    const altitude = Math.max(c?.height ?? 0, 1);
-    const normal =
-      ellipsoid.geodeticSurfaceNormal(camera.position, scratchNormal) ??
-      v3.set(scratchNormal, 0, 0, 1);
-    const r = (p.bottomRadius + altitude) / 1000;
+    const r = this.placeCamera(ellipsoid, camera.position);
     // A margin below the top, where the table's rows still resolve the
     // thin shell of atmosphere left above.
     view.inside = r < (p.topRadius - 1000) / 1000;
-    f[0] = normal[0]! * r;
-    f[1] = normal[1]! * r;
-    f[2] = normal[2]! * r;
     f[3] = exposure;
     f[4] = sun[0]!;
     f[5] = sun[1]!;
@@ -352,7 +505,6 @@ export class Sky {
     f[20] = width;
     f[21] = height;
     f[22] = SKY_STEPS;
-    f[23] = p.bottomRadius / 1000;
     this.device.queue.writeBuffer(view.buffer, 0, this.data, 0, 96);
   }
 

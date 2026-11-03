@@ -18,7 +18,8 @@ import {
 } from "../render/layout.ts";
 import * as m4 from "../math/mat4.ts";
 import * as v3 from "../math/vec3.ts";
-import { Ellipsoid } from "../math/ellipsoid.ts";
+import { Ellipsoid, type Cartographic } from "../math/ellipsoid.ts";
+import type { EnvironmentProbe } from "../gpu/Environment.ts";
 import { eastNorthUpToFixedFrame } from "../math/transforms.ts";
 import type { Vec3 } from "../math/vec3.ts";
 import {
@@ -83,6 +84,8 @@ export interface FrameStats {
   framesRendered: number;
   /** The last tick rendered nothing (on demand, nothing changed). */
   idle: boolean;
+  /** Environments rebuilt from an atmosphere since start (`ViewLighting`). */
+  environmentBuilds: number;
 }
 
 /**
@@ -187,6 +190,7 @@ export class Engine {
     batches: 0,
     framesRendered: 0,
     idle: false,
+    environmentBuilds: 0,
   };
   /**
    * "onDemand" (default): `start()` renders a frame only when something
@@ -219,6 +223,16 @@ export class Engine {
   private readonly targetFrames = new WeakMap<RenderTarget, TargetFrame>();
   private readonly worldFrames = new WeakMap<World, WorldFrame>();
   private readonly overlayResources = new Map<View, OverlayResources>();
+  /**
+   * Views lit by their atmosphere's environment: its probe, and the local
+   * sun direction and altitude it was built for.
+   */
+  private readonly probes = new Map<
+    View,
+    { probe: EnvironmentProbe; key: Float64Array }
+  >();
+  /** The environment of a body without an atmosphere: black. */
+  private darkProbe: EnvironmentProbe | undefined;
   private readonly pickReadback: GPUBuffer[] = [];
   private readonly pickParams: GPUBuffer;
   private readonly pickResult: GPUBuffer;
@@ -313,7 +327,12 @@ export class Engine {
       width: 1,
       height: 1,
       iblFrame: scratchFrame,
-      lighting: { sunIlluminance: 0, diffuseIbl: 0, specularIbl: 0 },
+      lighting: {
+        sunIlluminance: 0,
+        environment: "procedural",
+        diffuseIbl: 0,
+        specularIbl: 0,
+      },
       specularMaxLod: 0,
       exposure: 1,
       body: EARTH,
@@ -373,6 +392,74 @@ export class Engine {
     world.destroy();
     target.destroy();
     this.stats.cpuMs = 0;
+  }
+
+  /**
+   * The environment a view's lighting reads: its atmosphere's (rebuilt by
+   * `updateEnvironment`), black without one, or the procedural sky.
+   */
+  private probeOf(view: View): EnvironmentProbe {
+    const environment = this.ctx.environment;
+    if (view.lighting.environment !== "atmosphere") {
+      return environment.procedural;
+    }
+    if (!view.body.atmosphere) {
+      // Never built: textures and buffers start as zeros.
+      return (this.darkProbe ??= environment.createProbe("env.dark"));
+    }
+    return this.probes.get(view)!.probe;
+  }
+
+  /**
+   * Rebuilds a view's environment from its atmosphere when the sun has
+   * moved by about 0.1° in its local frame (or the camera about 13 km
+   * along the ground), or its altitude by 10% (500 m and below count as
+   * 500 m: below the 8 km scale height the sky changes slowly with
+   * altitude). About 10 ms of GPU work each time (plan §4.2: to cut).
+   */
+  private updateEnvironment(view: View): void {
+    if (view.lighting.environment !== "atmosphere" || !view.body.atmosphere) {
+      return;
+    }
+    let entry = this.probes.get(view);
+    if (!entry) {
+      entry = {
+        probe: this.ctx.environment.createProbe("env.view"),
+        key: new Float64Array(4).fill(Number.NaN),
+      };
+      this.probes.set(view, entry);
+    }
+    const ellipsoid = view.body.ellipsoid;
+    const position = view.camera.position;
+    const frame = environmentFrame(position, ellipsoid);
+    const sun = this.sunDirection;
+    const east = v3.dot(frame[0], sun);
+    const up = v3.dot(frame[1], sun);
+    const south = v3.dot(frame[2], sun);
+    const height =
+      ellipsoid.cartesianToCartographic(position, scratchCartographic)
+        ?.height ?? 0;
+    const altitude = Math.max(height, 500);
+    const k = entry.key;
+    const turned = Math.hypot(east - k[0]!, up - k[1]!, south - k[2]!);
+    const climbed = Math.abs(Math.log(altitude / k[3]!));
+    // NaN (never built) compares false: rebuild.
+    if (turned <= 0.002 && climbed <= 0.1) {
+      return;
+    }
+    k[0] = east;
+    k[1] = up;
+    k[2] = south;
+    k[3] = altitude;
+    this.sky.renderEnvironment(
+      entry.probe.skyCube,
+      ellipsoid,
+      position,
+      frame,
+      sun,
+    );
+    this.ctx.environment.build(entry.probe);
+    this.stats.environmentBuilds++;
   }
 
   /** Image-based lighting environment shared by all worlds and views. */
@@ -816,6 +903,11 @@ export class Engine {
 
   removeView(view: View): void {
     this.dropPersistent(view);
+    const probe = this.probes.get(view);
+    if (probe) {
+      this.ctx.environment.destroyProbe(probe.probe);
+      this.probes.delete(view);
+    }
     const index = this.views.indexOf(view);
     if (index >= 0) {
       this.views.splice(index, 1);
@@ -1244,6 +1336,7 @@ export class Engine {
       const frame = this.viewFrame(view, rect);
       frame.slot = slots;
       this.writeView(view, slots, rect);
+      this.updateEnvironment(view);
       slots++;
 
       if (image) {
@@ -1391,7 +1484,7 @@ export class Engine {
     block.aspect = aspect;
     block.width = rect.width;
     block.height = rect.height;
-    block.iblFrame = environmentFrame(camera.position);
+    block.iblFrame = environmentFrame(camera.position, view.body.ellipsoid);
     block.lighting = view.lighting;
     block.specularMaxLod = this.ctx.environment.maxLod;
     block.exposure = view.exposureScale;
@@ -1765,6 +1858,7 @@ export class Engine {
         0,
         VIEW_SIZE,
       );
+      this.ctx.environment.select(enc, this.probeOf(view));
     });
 
     graph.addPass("cull", { sideEffect: true }, (enc) => {
@@ -2172,8 +2266,11 @@ function halfToFloat(h: number): number {
   return sign * 2 ** (exponent - 15) * (1 + fraction / 1024);
 }
 
-export function environmentFrame(position: Vec3): [Vec3, Vec3, Vec3] {
-  const enu = eastNorthUpToFixedFrame(position, Ellipsoid.WGS84, scratchEnu);
+export function environmentFrame(
+  position: Vec3,
+  ellipsoid: Ellipsoid = Ellipsoid.WGS84,
+): [Vec3, Vec3, Vec3] {
+  const enu = eastNorthUpToFixedFrame(position, ellipsoid, scratchEnu);
   v3.set(scratchEast, enu[0]!, enu[1]!, enu[2]!);
   v3.set(scratchUp, enu[8]!, enu[9]!, enu[10]!);
   v3.set(scratchSouth, -enu[4]!, -enu[5]!, -enu[6]!);
@@ -2181,6 +2278,11 @@ export function environmentFrame(position: Vec3): [Vec3, Vec3, Vec3] {
 }
 
 const scratchView = m4.mat4();
+const scratchCartographic: Cartographic = {
+  longitude: 0,
+  latitude: 0,
+  height: 0,
+};
 const scratchProj = m4.mat4();
 const scratchViewProj = m4.mat4();
 const scratchPlanes = new Float32Array(20);

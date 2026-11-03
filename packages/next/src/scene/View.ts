@@ -334,6 +334,7 @@ export class View {
     this.outputEncoding = options.outputEncoding ?? "srgb";
     this.lighting = {
       sunIlluminance: "atmosphere",
+      environment: "atmosphere",
       diffuseIbl: 1,
       specularIbl: 1,
       ...options.lighting,

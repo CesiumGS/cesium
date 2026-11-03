@@ -106,7 +106,12 @@ async function runIbl() {
     // The skies here are unitless: no exposure.
     exposure: { scale: 1 },
     background: "color",
-    lighting: { sunIlluminance: 0, diffuseIbl: 1, specularIbl: 1 },
+    lighting: {
+      sunIlluminance: 0,
+      environment: "procedural",
+      diffuseIbl: 1,
+      specularIbl: 1,
+    },
   });
 
   // Balls in a row east-west, two rows, at a place on the globe.

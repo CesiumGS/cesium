@@ -270,7 +270,10 @@ async function setup() {
     clearColor: [0, 0, 0],
     exposure: UNITLESS_EXPOSURE,
     background: "color",
-    lighting: { sunIlluminance: UNITLESS_SUN_ILLUMINANCE },
+    lighting: {
+      sunIlluminance: UNITLESS_SUN_ILLUMINANCE,
+      environment: "procedural",
+    },
   });
   view.camera.near = NEAR;
   const variants = [

@@ -346,6 +346,7 @@ async function runModels(): Promise<Row[]> {
             background: "color",
             lighting: {
               sunIlluminance: UNITLESS_SUN_ILLUMINANCE,
+              environment: "procedural",
               diffuseIbl: mode === "ibl-diffuse" ? 1 : 0,
               specularIbl: 0,
             },

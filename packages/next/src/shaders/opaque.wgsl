@@ -45,10 +45,11 @@ fn sunIlluminance(relPosition: vec3f) -> vec3f {
 @group(0) @binding(1) var specularEnvironment: texture_cube<f32>;
 @group(0) @binding(2) var environmentSampler: sampler;
 @group(0) @binding(3) var brdfLut: texture_2d<f32>;
-@group(0) @binding(4) var<uniform> irradianceSh: array<vec4f, 9>;
 // The sun's illuminance through the atmosphere by altitude and sun angle
 // (atmosphere/sky.wgsl `sunLightFragment`).
 @group(0) @binding(5) var sunLightTable: texture_2d<f32>;
+// Diffuse irradiance E/π by normal (gpu/Environment.ts).
+@group(0) @binding(6) var irradianceCube: texture_cube<f32>;
 
 @group(1) @binding(0) var<storage, read> records: array<DrawRecord>;
 @group(1) @binding(1) var<storage, read> items: array<DrawItem>;
@@ -184,21 +185,11 @@ fn ggx(alpha: f32, nDotH: f32) -> f32 {
   return a2 / (PI * f * f);
 }
 
-/** Irradiance / π from SH9 (environment frame), as czm_sphericalHarmonics. */
+// Irradiance / π by normal (environment frame), from the irradiance cube:
+// the exact cosine integral of the environment (1.x evaluates SH9, which
+// leaks light across a sharp horizon).
 fn irradiance(n: vec3f) -> vec3f {
-  let x = n.x;
-  let y = n.y;
-  let z = n.z;
-  let e = irradianceSh[0].rgb
-    + irradianceSh[1].rgb * y
-    + irradianceSh[2].rgb * z
-    + irradianceSh[3].rgb * x
-    + irradianceSh[4].rgb * (x * y)
-    + irradianceSh[5].rgb * (y * z)
-    + irradianceSh[6].rgb * (3.0 * z * z - 1.0)
-    + irradianceSh[7].rgb * (z * x)
-    + irradianceSh[8].rgb * (x * x - y * y);
-  return max(e, vec3f(0.0));
+  return textureSampleLevel(irradianceCube, environmentSampler, n, 0.0).rgb;
 }
 
 fn toEnvironment(d: vec3f) -> vec3f {

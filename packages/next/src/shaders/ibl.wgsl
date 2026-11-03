@@ -4,6 +4,7 @@
 //   prefilter— GGX-prefiltered specular mips (roughness = mip / (levels - 1))
 //   shFace   — per-face SH9 projection by workgroup reduction
 //   shFinal  — sum the faces into irradiance coefficients (E/π form)
+//   irradianceCube — diffuse irradiance (E/π) per normal, what shading reads
 //   brdf     — split-sum BRDF lookup table (scale, bias)
 //
 // Directions are in the environment frame: x = east, y = up, z = -north
@@ -214,6 +215,45 @@ fn shFinal() {
   shOut[6] = vec4f(c3 / 3.0 * L[6] * s, 0.0);
   shOut[7] = vec4f(2.0 * c1 * L[7] * s, 0.0);
   shOut[8] = vec4f(c1 * L[8] * s, 0.0);
+}
+
+// --- irradiance cube (diffuse light, exact up to texel resolution) ---------------
+
+// E(n)/π for each texel's normal n: the cosine-weighted integral of the
+// radiance over the sphere, from a 16 × 16 level of the radiance cube, by
+// brute force (1,536 source texels per output texel). Unlike the SH it
+// keeps a sharp horizon: no light leaks from a bright ground into a dark
+// sky's half, or the reverse (SH9 is 4-6% high on the ground under a clear
+// sky, 27% at 10 km, and rings into negative colors from orbit).
+
+@group(1) @binding(8) var irradianceSource: texture_2d_array<f32>;
+@group(1) @binding(9) var irradianceTarget: texture_storage_2d_array<rgba16float, write>;
+
+@compute @workgroup_size(8, 8, 1)
+fn irradianceCube(@builtin(global_invocation_id) id: vec3u) {
+  let size = textureDimensions(irradianceTarget).x;
+  if (id.x >= size || id.y >= size) {
+    return;
+  }
+  let n = cubeDirection(id.z, id.x, id.y, size);
+  let sourceSize = textureDimensions(irradianceSource).x;
+  var sum = vec3f(0.0);
+  for (var face = 0u; face < 6u; face++) {
+    for (var y = 0u; y < sourceSize; y++) {
+      for (var x = 0u; x < sourceSize; x++) {
+        let d = cubeDirection(face, x, y, sourceSize);
+        let cosine = dot(n, d);
+        if (cosine <= 0.0) {
+          continue;
+        }
+        let u = (f32(x) + 0.5) / f32(sourceSize) * 2.0 - 1.0;
+        let v = (f32(y) + 0.5) / f32(sourceSize) * 2.0 - 1.0;
+        let solidAngle = 4.0 / (f32(sourceSize * sourceSize) * pow(1.0 + u * u + v * v, 1.5));
+        sum += textureLoad(irradianceSource, vec2u(x, y), face, 0).rgb * cosine * solidAngle;
+      }
+    }
+  }
+  textureStore(irradianceTarget, vec2u(id.xy), id.z, vec4f(sum / PI, 1.0));
 }
 
 // --- BRDF LUT (split sum: scale and bias of F0) -------------------------------

@@ -42,6 +42,13 @@ const TEMPLATE = `
   atmosphere the sky comes from the per-view sky-view table, interpolated,
   so this measures the table's error.</p>
   <table id="engine"></table>
+  <h2>The sky's light on the scene</h2>
+  <p>Each view's environment comes from its atmosphere (rebuilt when the
+  sun or the camera's altitude moves). Its irradiance on a horizontal
+  surface, from the irradiance cube the opaque pass reads (and from SH9, as
+  1.x lights), against the cosine-weighted integral of the sky's radiance
+  over the hemisphere:</p>
+  <table id="environment"></table>
   <h2>Sunlight on the scene</h2>
   <p>The sun's illuminance on a surface facing it, which the opaque pass
   reads per pixel from the engine's sun-light table (by altitude and sun
@@ -269,6 +276,74 @@ async function inTheEngine(realtime: RealtimeAtmosphere) {
     return image;
   };
   const rows: Array<Record<string, string | number>> = [];
+  const environments: Array<Record<string, string | number>> = [];
+  /**
+   * The environment's diffuse light on a horizontal surface (its SH, as the
+   * opaque pass evaluates it) against the cosine-weighted integral of the
+   * tables' own sky radiance over the upper hemisphere (32 × 32 stratified
+   * directions, Malley's method), in lux.
+   */
+  const skyIrradiance = async (
+    name: string,
+    normal: Float64Array,
+    r: number,
+    east: Float64Array,
+    north: Float64Array,
+    up: Float64Array,
+  ) => {
+    const sh = await engine.environment.readSphericalHarmonics();
+    const cube = (await engine.environment.readIrradianceUp()).map(
+      (c) => c * Math.PI,
+    );
+    // irradiance(n) is E/π; up is (0, 1, 0) in the environment frame.
+    const shE = [0, 1, 2].map(
+      (k) => Math.PI * (sh[0]![k]! + sh[1]![k]! - sh[6]![k]! - sh[8]![k]!),
+    );
+    const n = 32;
+    const directions: number[] = [];
+    for (let i = 0; i < n; i++) {
+      for (let j = 0; j < n; j++) {
+        const radius = Math.sqrt((i + 0.5) / n);
+        const phi = (2 * Math.PI * (j + 0.5)) / n;
+        const x = radius * Math.cos(phi);
+        const y = radius * Math.sin(phi);
+        const z = Math.sqrt(Math.max(0, 1 - radius * radius));
+        directions.push(
+          ...[0, 1, 2].map((k) => east[k]! * x + north[k]! * y + up[k]! * z),
+        );
+      }
+    }
+    const sky = await realtime.radiance(
+      [normal[0]! * r, normal[1]! * r, normal[2]! * r],
+      [
+        engine.sunDirection[0]!,
+        engine.sunDirection[1]!,
+        engine.sunDirection[2]!,
+      ],
+      directions,
+      { steps: 32 },
+    );
+    let sum = 0;
+    for (let i = 0; i < n * n; i++) {
+      sum += luminance(sky, i);
+    }
+    const integral = (Math.PI * sum) / (n * n);
+    const shY = luminance(shE, 0);
+    const cubeY = luminance(cube, 0);
+    const versus = (y: number) =>
+      integral < 1e-3
+        ? `${y.toFixed(1)} lux`
+        : `${(((y - integral) / integral) * 100).toFixed(1)}%`;
+    return {
+      view: name,
+      "integral (lux)": Math.round(integral),
+      "irradiance cube (lux)": Math.round(cubeY),
+      difference: versus(cubeY),
+      "SH9 (lux)": Math.round(shY),
+      "SH9 difference": versus(shY),
+      color: cube.map((c) => (c / Math.max(cubeY, 1e-9)).toFixed(2)).join(" "),
+    };
+  };
   // Name, EV100, the sun's elevation, the camera's altitude and pitch.
   const shots: Array<[string, number, number, number, number]> = [
     ["noon", 15, 60, 2, 10],
@@ -367,6 +442,7 @@ async function inTheEngine(realtime: RealtimeAtmosphere) {
       "ground: median": percent(below[below.length >> 1]),
       "ground: worst": percent(below[below.length - 1]),
     });
+    environments.push(await skyIrradiance(name, normal, r, east, north, up));
     const scale = 1 / (1.2 * 2 ** ev100);
     $("engineImages").append(
       figure(
@@ -376,6 +452,7 @@ async function inTheEngine(realtime: RealtimeAtmosphere) {
     );
   }
   $("engine").innerHTML = table(rows);
+  $("environment").innerHTML = table(environments);
 
   // Cost: the same frame with and without the sky.
   lookWest(2, 10);
@@ -396,7 +473,7 @@ async function inTheEngine(realtime: RealtimeAtmosphere) {
   );
   const sunLight = await checkSunLight(engine);
   engine.destroy();
-  return { rows, gpuMs: cost, sunLight };
+  return { rows, environments, gpuMs: cost, sunLight };
 }
 
 /** The engine's sun-light table against the CPU model, at its own texels. */

@@ -124,6 +124,7 @@ export async function createRenderContext(
       { binding: 3, resource: environment.brdfView },
       { binding: 4, resource: { buffer: environment.shBuffer } },
       { binding: 5, resource: sunLight },
+      { binding: 6, resource: environment.irradianceView },
     ],
   });
   const white = device.createTexture({
@@ -196,6 +197,8 @@ async function createPipelines(
       { binding: 4, visibility: FRAGMENT, buffer: { type: "uniform" } },
       // The sun's light through the atmosphere (atmosphere/Sky.ts).
       { binding: 5, visibility: FRAGMENT, texture: {} },
+      // Diffuse irradiance by normal (the environment's irradiance cube).
+      { binding: 6, visibility: FRAGMENT, texture: { viewDimension: "cube" } },
     ],
   });
   const cullWorldLayout = device.createBindGroupLayout({

@@ -301,7 +301,10 @@ async function runGlobe(): Promise<Row[]> {
         world,
         exposure: UNITLESS_EXPOSURE,
         background: "color",
-        lighting: { sunIlluminance: UNITLESS_SUN_ILLUMINANCE },
+        lighting: {
+          sunIlluminance: UNITLESS_SUN_ILLUMINANCE,
+          environment: "procedural",
+        },
       });
       const tileset: Tileset3D = await engine.addTerrain(world, terrain.url, {
         headers: terrain.headers,

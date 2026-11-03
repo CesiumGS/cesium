@@ -54,26 +54,55 @@ const SKY_SIZE = 128;
 const SPECULAR_SIZE = 128;
 const SPECULAR_LEVELS = 6;
 const SH_SOURCE_LEVEL = 2; // 32×32 faces
+/** The irradiance cube's faces (it is smooth; the horizon needs ~1°). */
+const IRRADIANCE_SIZE = 32;
+/** The radiance it integrates: 16 × 16 faces (1,536 texels per output). */
+const IRRADIANCE_SOURCE_LEVEL = 3;
 const BRDF_SIZE = 64;
 
 type Groups = [number, number, number];
 
 /**
- * Image-based lighting resources, built entirely on the GPU by compute
- * shaders (src/shaders/ibl.wgsl): environment radiance cube, GGX-prefiltered
- * specular cube, SH9 irradiance coefficients and the split-sum BRDF table.
- * Regenerating reuses the same GPU objects, so bind groups stay valid.
+ * An environment's radiance and what lighting reads from it: the radiance
+ * cube (in the environment frame: east, up, −north), its GGX-prefiltered
+ * specular cube, its irradiance cube, and its irradiance SH (9 × vec4, E/π
+ * form; for reading back and comparing with 1.x, which lights with it).
  */
-export class Environment {
+export interface EnvironmentProbe {
   readonly skyCube: GPUTexture;
   readonly specularCube: GPUTexture;
+  /** Diffuse irradiance (E/π) by normal: what shading reads. */
+  readonly irradianceCube: GPUTexture;
+  readonly sh: GPUBuffer;
+}
+
+/**
+ * Image-based lighting resources, built entirely on the GPU by compute
+ * shaders (src/shaders/ibl.wgsl): environment radiance cubes, GGX-
+ * prefiltered specular cubes, SH9 irradiance coefficients and the
+ * split-sum BRDF table.
+ *
+ * Lighting reads one specular cube and one SH buffer (`specularView`,
+ * `shBuffer`, bound once). Probes are environments built apart (the
+ * procedural sky of `setSky`, a view's atmosphere), each copied into the
+ * bound ones by `select` before the draws that use it. Regenerating reuses
+ * the same GPU objects, so bind groups stay valid.
+ */
+export class Environment {
+  readonly specularCube: GPUTexture;
   readonly specularView: GPUTextureView;
+  readonly irradianceCube: GPUTexture;
+  readonly irradianceView: GPUTextureView;
   readonly brdfLut: GPUTexture;
   readonly brdfView: GPUTextureView;
   /** 9 × vec4: irradiance SH in E/π form (see shFinal in ibl.wgsl). */
   readonly shBuffer: GPUBuffer;
   readonly sampler: GPUSampler;
   readonly maxLod = SPECULAR_LEVELS - 1;
+  /** The procedural sky (`setSky`). */
+  readonly procedural: EnvironmentProbe;
+  /** The probe last copied into the bound cube and SH. */
+  private current: EnvironmentProbe | undefined;
   private readonly shPartial: GPUBuffer;
   private readonly module: GPUShaderModule;
   private readonly pipelines = new Map<string, GPUComputePipeline>();
@@ -98,7 +127,7 @@ export class Environment {
           }),
         );
       }),
-      mips.prepare(environment.skyCube.format),
+      mips.prepare("rgba16float"),
     ]);
     environment.run("brdf", undefined, { 7: environment.brdfView }, [
       BRDF_SIZE / 8,
@@ -112,25 +141,16 @@ export class Environment {
     private readonly device: GPUDevice,
     private readonly mips: MipGenerator,
   ) {
-    const cube = (label: string, size: number, levels: number, extra: number) =>
-      device.createTexture({
-        label,
-        size: [size, size, 6],
-        format: "rgba16float",
-        mipLevelCount: levels,
-        usage:
-          GPUTextureUsage.STORAGE_BINDING |
-          GPUTextureUsage.TEXTURE_BINDING |
-          extra,
-      });
-    this.skyCube = cube(
-      "env.sky",
-      SKY_SIZE,
-      MipGenerator.levelCount(SKY_SIZE, SKY_SIZE),
-      GPUTextureUsage.RENDER_ATTACHMENT,
-    );
-    this.specularCube = cube("env.specular", SPECULAR_SIZE, SPECULAR_LEVELS, 0);
+    this.specularCube = specularCube(device, "env.specular", COPY_DST);
     this.specularView = this.specularCube.createView({ dimension: "cube" });
+    this.irradianceCube = irradianceCube(
+      device,
+      "env.irradiance",
+      COPY_DST | COPY_SRC,
+    );
+    this.irradianceView = this.irradianceCube.createView({
+      dimension: "cube",
+    });
     this.brdfLut = device.createTexture({
       label: "env.brdf",
       size: [BRDF_SIZE, BRDF_SIZE],
@@ -142,9 +162,9 @@ export class Environment {
       label: "env.sh",
       size: 9 * 16,
       usage:
-        GPUBufferUsage.STORAGE |
         GPUBufferUsage.UNIFORM |
-        GPUBufferUsage.COPY_SRC,
+        GPUBufferUsage.COPY_SRC |
+        GPUBufferUsage.COPY_DST,
     });
     this.shPartial = device.createBuffer({
       label: "env.shPartial",
@@ -158,46 +178,84 @@ export class Environment {
       mipmapFilter: "linear",
     });
     this.module = device.createShaderModule({ label: "ibl", code: iblWgsl });
+    this.procedural = this.createProbe("env.procedural");
   }
 
-  /** Renders `sky` into the environment and rebuilds the specular mips and SH. */
-  setSky(sky: SkyOptions = DEFAULT_SKY): void {
-    const level = (texture: GPUTexture, mip: number) =>
-      texture.createView({
-        dimension: "2d-array",
-        baseMipLevel: mip,
-        mipLevelCount: 1,
-      });
-    const faces = (size: number): Groups => [
-      Math.ceil(size / 8),
-      Math.ceil(size / 8),
-      6,
-    ];
+  /** The procedural sky's radiance cube. */
+  get skyCube(): GPUTexture {
+    return this.procedural.skyCube;
+  }
 
+  /** A probe's textures, for `build` and `select`. */
+  createProbe(label = "env.probe"): EnvironmentProbe {
+    const device = this.device;
+    return {
+      skyCube: device.createTexture({
+        label: `${label}.sky`,
+        size: [SKY_SIZE, SKY_SIZE, 6],
+        format: "rgba16float",
+        mipLevelCount: MipGenerator.levelCount(SKY_SIZE, SKY_SIZE),
+        usage:
+          GPUTextureUsage.STORAGE_BINDING |
+          GPUTextureUsage.TEXTURE_BINDING |
+          GPUTextureUsage.RENDER_ATTACHMENT,
+      }),
+      specularCube: specularCube(device, `${label}.specular`, COPY_SRC),
+      irradianceCube: irradianceCube(device, `${label}.irradiance`, COPY_SRC),
+      sh: device.createBuffer({
+        label: `${label}.sh`,
+        size: 9 * 16,
+        usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
+      }),
+    };
+  }
+
+  destroyProbe(probe: EnvironmentProbe): void {
+    if (this.current === probe) {
+      this.current = undefined;
+    }
+    probe.skyCube.destroy();
+    probe.specularCube.destroy();
+    probe.irradianceCube.destroy();
+    probe.sh.destroy();
+  }
+
+  /** Renders `sky` into the procedural probe, builds it and selects it. */
+  setSky(sky: SkyOptions = DEFAULT_SKY): void {
     this.run(
       "sky",
-      this.params(sky, SKY_SIZE, 0),
-      { 0: level(this.skyCube, 0) },
+      this.params(SKY_SIZE, 0, 0, sky),
+      { 0: level(this.procedural.skyCube, 0) },
       faces(SKY_SIZE),
     );
-    this.mips.generate(this.skyCube);
+    this.build(this.procedural);
+    const encoder = this.device.createCommandEncoder({ label: "env.select" });
+    this.select(encoder, this.procedural);
+    this.device.queue.submit([encoder.finish()]);
+  }
 
-    const skyView = this.skyCube.createView({ dimension: "cube" });
+  /**
+   * Builds a probe from the radiance in its sky cube's top level: the
+   * cube's mips, the prefiltered specular cube and the irradiance SH.
+   * Submits its own work (after anything already submitted).
+   */
+  build(probe: EnvironmentProbe): void {
+    this.mips.generate(probe.skyCube);
+    const skyView = probe.skyCube.createView({ dimension: "cube" });
     for (let mip = 0; mip < SPECULAR_LEVELS; mip++) {
       const size = SPECULAR_SIZE >> mip;
       this.run(
         "prefilter",
-        this.params(sky, size, mip, 256),
-        { 1: skyView, 2: this.sampler, 3: level(this.specularCube, mip) },
+        this.params(size, mip, 256),
+        { 1: skyView, 2: this.sampler, 3: level(probe.specularCube, mip) },
         faces(size),
       );
     }
-
     this.run(
       "shFace",
       undefined,
       {
-        4: level(this.skyCube, SH_SOURCE_LEVEL),
+        4: level(probe.skyCube, SH_SOURCE_LEVEL),
         5: { buffer: this.shPartial },
       },
       [6, 1, 1],
@@ -205,9 +263,77 @@ export class Environment {
     this.run(
       "shFinal",
       undefined,
-      { 5: { buffer: this.shPartial }, 6: { buffer: this.shBuffer } },
+      { 5: { buffer: this.shPartial }, 6: { buffer: probe.sh } },
       [1, 1, 1],
     );
+    this.run(
+      "irradianceCube",
+      undefined,
+      {
+        8: level(probe.skyCube, IRRADIANCE_SOURCE_LEVEL),
+        9: level(probe.irradianceCube, 0),
+      },
+      faces(IRRADIANCE_SIZE),
+    );
+    if (this.current === probe) {
+      this.current = undefined;
+    }
+  }
+
+  /**
+   * Makes `probe` the environment lighting reads, for the draws encoded
+   * after this: copies its specular and irradiance cubes and SH into the
+   * bound ones, unless they already hold it.
+   */
+  select(encoder: GPUCommandEncoder, probe: EnvironmentProbe): void {
+    if (this.current === probe) {
+      return;
+    }
+    this.current = probe;
+    for (let mip = 0; mip < SPECULAR_LEVELS; mip++) {
+      const size = SPECULAR_SIZE >> mip;
+      encoder.copyTextureToTexture(
+        { texture: probe.specularCube, mipLevel: mip },
+        { texture: this.specularCube, mipLevel: mip },
+        [size, size, 6],
+      );
+    }
+    encoder.copyTextureToTexture(
+      { texture: probe.irradianceCube },
+      { texture: this.irradianceCube },
+      [IRRADIANCE_SIZE, IRRADIANCE_SIZE, 6],
+    );
+    encoder.copyBufferToBuffer(probe.sh, 0, this.shBuffer, 0, 9 * 16);
+  }
+
+  /**
+   * Reads the bound irradiance cube at the zenith (E/π, linear rgb): the
+   * diffuse light on a horizontal surface, divided by π.
+   */
+  async readIrradianceUp(): Promise<[number, number, number]> {
+    // Face +Y (2): its center is the zenith, between four texels.
+    const half = IRRADIANCE_SIZE / 2;
+    const readback = this.device.createBuffer({
+      size: 256 * 2,
+      usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
+    });
+    const encoder = this.device.createCommandEncoder();
+    encoder.copyTextureToBuffer(
+      { texture: this.irradianceCube, origin: [half - 1, half - 1, 2] },
+      { buffer: readback, bytesPerRow: 256 },
+      [2, 2, 1],
+    );
+    this.device.queue.submit([encoder.finish()]);
+    await readback.mapAsync(GPUMapMode.READ);
+    const halves = new Uint16Array(readback.getMappedRange().slice(0));
+    readback.destroy();
+    // Rows are 256 bytes (128 halves) apart; texels 4 halves.
+    const channel = (k: number) =>
+      [0, 128, 4, 132].reduce(
+        (sum, at) => sum + halfToFloat(halves[at + k]!) / 4,
+        0,
+      );
+    return [channel(0), channel(1), channel(2)];
   }
 
   /** Reads the irradiance SH back (9 × rgb, E/π form, environment frame). */
@@ -230,10 +356,10 @@ export class Environment {
   }
 
   private params(
-    sky: SkyOptions,
     size: number,
     level: number,
     sampleCount = 0,
+    sky: SkyOptions = UNITLESS_SKY,
   ): GPUBuffer {
     const buffer = this.device.createBuffer({
       size: 80,
@@ -295,4 +421,68 @@ export class Environment {
   }
 }
 
-const KERNELS = ["brdf", "sky", "prefilter", "shFace", "shFinal"] as const;
+const KERNELS = [
+  "brdf",
+  "sky",
+  "prefilter",
+  "shFace",
+  "shFinal",
+  "irradianceCube",
+] as const;
+
+const COPY_SRC = GPUTextureUsage.COPY_SRC;
+const COPY_DST = GPUTextureUsage.COPY_DST;
+
+function specularCube(
+  device: GPUDevice,
+  label: string,
+  extra: number,
+): GPUTexture {
+  return device.createTexture({
+    label,
+    size: [SPECULAR_SIZE, SPECULAR_SIZE, 6],
+    format: "rgba16float",
+    mipLevelCount: SPECULAR_LEVELS,
+    usage:
+      GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.TEXTURE_BINDING | extra,
+  });
+}
+
+function irradianceCube(
+  device: GPUDevice,
+  label: string,
+  extra: number,
+): GPUTexture {
+  return device.createTexture({
+    label,
+    size: [IRRADIANCE_SIZE, IRRADIANCE_SIZE, 6],
+    format: "rgba16float",
+    usage:
+      GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.TEXTURE_BINDING | extra,
+  });
+}
+
+function halfToFloat(h: number): number {
+  const exponent = (h >> 10) & 0x1f;
+  const fraction = h & 0x3ff;
+  const sign = h & 0x8000 ? -1 : 1;
+  if (exponent === 0) {
+    return sign * 2 ** -14 * (fraction / 1024);
+  }
+  return exponent === 31
+    ? Number.NaN
+    : sign * 2 ** (exponent - 15) * (1 + fraction / 1024);
+}
+
+/** One mip level of a cube, as the 2D array a compute kernel writes. */
+function level(texture: GPUTexture, mip: number): GPUTextureView {
+  return texture.createView({
+    dimension: "2d-array",
+    baseMipLevel: mip,
+    mipLevelCount: 1,
+  });
+}
+
+function faces(size: number): Groups {
+  return [Math.ceil(size / 8), Math.ceil(size / 8), 6];
+}

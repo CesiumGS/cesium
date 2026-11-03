@@ -427,6 +427,7 @@ async function runTileset(): Promise<Row[]> {
             background: "color",
             lighting: {
               sunIlluminance: UNITLESS_SUN_ILLUMINANCE,
+              environment: "procedural",
               diffuseIbl: 0,
               specularIbl: 0,
             },

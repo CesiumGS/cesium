@@ -220,7 +220,10 @@ async function runImagery(): Promise<Row[]> {
         clearColor: [0, 0, 0],
         exposure: UNITLESS_EXPOSURE,
         background: "color",
-        lighting: { sunIlluminance: UNITLESS_SUN_ILLUMINANCE },
+        lighting: {
+          sunIlluminance: UNITLESS_SUN_ILLUMINANCE,
+          environment: "procedural",
+        },
       });
       const tileset: Tileset3D = ellipsoid
         ? engine.addEllipsoid(world, { policy: "stepwise", imagery })

@@ -59,6 +59,14 @@ export interface ViewLighting {
    * `SunLight` with the unitless sky and an exposure scale of 1).
    */
   sunIlluminance: number | "atmosphere";
+  /**
+   * The environment's light (the sky's radiance around the view, for
+   * diffuse and specular image-based lighting). "atmosphere" (the
+   * default): the body's sky at the camera's altitude and sun angle, rebuilt
+   * as they change (black for a body without one). "procedural":
+   * `Engine.environment.setSky`'s gradient, shared by such views.
+   */
+  environment: "atmosphere" | "procedural";
   /** Scale of diffuse (SH) image-based lighting. */
   diffuseIbl: number;
   /** Scale of specular (prefiltered cube) image-based lighting. */
