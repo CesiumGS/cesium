@@ -1314,6 +1314,14 @@ tables). Two ways to evaluate it, by the camera's altitude:
   pixels; both within about 1% of the tables' march on the bare ellipsoid.
   Limit: haze interpolates linearly across a triangle, so a large face seen
   from high up (a model's ground plane) gets a smooth approximation.
+  Each step's air is at its height above the ellipsoid and its sun angle
+  to the ellipsoid's normal, as the ground's sunlight reads its table. At
+  first the march used the volume's sphere, which is placed to meet the
+  ellipsoid under the camera and is up to 20 km off it across the globe.
+  From orbit over the equator, the east and west limbs got under half the
+  haze of the north and south (the ground there is 18 km above the
+  sphere's surface, in thin air), and the pattern moved with the camera.
+  Now the four limbs agree within 10%, from over the equator to 45° S.
 
 Haze within a few hundred meters is coarse in the volume (the first slices
 fade in from none); fine for haze, coarse for weather fog (the "weather

@@ -8,8 +8,8 @@ import { splitVec3 } from "../math/transforms.ts";
  * `shaders/common.wgsl`.
  */
 
-/** `struct View` — 416 bytes, padded to a 256-aligned stride per view. */
-export const VIEW_SIZE = 416;
+/** `struct View` — 400 bytes, padded to a 256-aligned stride per view. */
+export const VIEW_SIZE = 400;
 /** Word offset of `View.viewBit` (u32): this view's bit in record view masks. */
 export const VIEW_BIT_WORD = 84;
 export const VIEW_STRIDE = 512;
@@ -35,15 +35,13 @@ export interface ViewBlock {
   /** The body seen: its ellipsoid, and its atmosphere's radii. */
   body: Body;
   /**
-   * Aerial perspective: the volume's distances, km, the camera on the
-   * atmosphere's sphere (km, planet-centered) and how much is marched per
-   * vertex instead (0 to 1); undefined: none.
+   * Aerial perspective: the volume's distances, km, and how much is
+   * marched per vertex instead (0 to 1); undefined: none.
    */
   aerial:
     | {
         start: number;
         end: number;
-        origin: readonly [number, number, number];
         march: number;
       }
     | undefined;
@@ -138,17 +136,12 @@ export function writeViewBlock(
   out[o + 92] = radii[0]!;
   out[o + 93] = radii[1]!;
   out[o + 94] = radii[2]!;
-  out[o + 95] = 0;
-  const origin = block.aerial?.origin;
-  out[o + 96] = origin?.[0] ?? 0;
-  out[o + 97] = origin?.[1] ?? 0;
-  out[o + 98] = origin?.[2] ?? 0;
-  out[o + 99] = block.aerial?.march ?? 0;
+  out[o + 95] = block.aerial?.march ?? 0;
   const moon = block.moon;
-  out[o + 100] = moon?.direction[0] ?? 0;
-  out[o + 101] = moon?.direction[1] ?? 0;
-  out[o + 102] = moon?.direction[2] ?? 0;
-  out[o + 103] = moon?.share ?? 0;
+  out[o + 96] = moon?.direction[0] ?? 0;
+  out[o + 97] = moon?.direction[1] ?? 0;
+  out[o + 98] = moon?.direction[2] ?? 0;
+  out[o + 99] = moon?.share ?? 0;
 }
 
 /** `struct DrawRecord` — 128 bytes. */

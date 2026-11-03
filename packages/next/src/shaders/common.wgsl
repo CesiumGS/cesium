@@ -23,10 +23,9 @@ struct View {
   // comes from it per pixel (sunIlluminance then scales it, 1), and 1 when
   // aerial perspective applies.
   sunLight: vec4f,
-  bodyRadii: vec4f,        // the body's ellipsoid, meters (xyz)
-  // The camera on the atmosphere's sphere, km (xyz), and how much aerial
-  // perspective is marched per vertex rather than read from the volume (w).
-  aerialOrigin: vec4f,
+  // The body's ellipsoid, meters (xyz), and how much aerial perspective is
+  // marched per vertex rather than read from the volume (w).
+  bodyRadii: vec4f,
   // Toward the Moon from the camera (unit, xyz), and its illuminance as a
   // share of the sun's above the atmosphere (w; 0: none).
   moonLight: vec4f,

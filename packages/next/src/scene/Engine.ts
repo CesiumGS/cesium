@@ -1768,7 +1768,6 @@ export class Engine {
         block.aerial = {
           start: sky.aerialStart,
           end: sky.aerialEnd,
-          origin: sky.position,
           march: sky.march,
         };
       }

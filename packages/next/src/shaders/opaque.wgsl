@@ -40,8 +40,15 @@ fn aerialPerspective(fragment: vec2f, relPosition: vec3f) -> AerialPerspective {
 // lights distant ground atmosphere: the haze varies smoothly across a
 // triangle, and vertices are a fraction of the pixels (per pixel it cost
 // 4.5 ms at 2.6 megapixels). Both groups of four wavelengths at once,
-// through the planet's sphere at its surface's air, steps packed toward the
-// vertex (the air thickens toward the ground, where a ray from above ends).
+// steps packed toward the vertex (the air thickens toward the ground, where
+// a ray from above ends).
+//
+// Each step's air is at its height above the body's ellipsoid and its sun
+// angle to the ellipsoid's normal, as the ground's sunlight
+// (`sunlightThroughAir`): the volume's sphere, placed to meet the ellipsoid
+// under the camera, is up to 20 km off it across the globe, so from orbit
+// the haze thinned and thickened as the camera moved and stayed sunlit past
+// where the ground went dark. Below the ellipsoid, its surface's air.
 const AIR_STEPS = 24;
 
 fn airTransmittanceUv(r: f32, mu: f32, bottom: f32, top: f32) -> vec2f {
@@ -63,13 +70,16 @@ fn aerialMarch(relPosition: vec3f) -> AerialPerspective {
   let clearAir = AerialPerspective(vec3f(0.0), vec3f(1.0));
   let meters = length(relPosition);
   let direction = relPosition / max(meters, 1e-6);
-  let origin = view.aerialOrigin.xyz;
+  let radii = view.bodyRadii.xyz / 1000.0;
+  let origin = (view.cameraHi + view.cameraLo) / 1000.0;
   let r = length(origin);
   let mu = dot(origin, direction) / r;
-  // From above, where the ray enters the atmosphere.
+  // From above, where the ray enters the atmosphere (over the ellipsoid's
+  // widest).
+  let outer = max(radii.x, max(radii.y, radii.z)) + top - bottom;
   var start = 0.0;
-  if (r > top) {
-    let disc = r * r * (mu * mu - 1.0) + top * top;
+  if (r > outer) {
+    let disc = r * r * (mu * mu - 1.0) + outer * outer;
     if (disc < 0.0) {
       return clearAir;
     }
@@ -95,9 +105,10 @@ fn aerialMarch(relPosition: vec3f) -> AerialPerspective {
     let dt = t1 - t0;
     let p = origin + direction * (0.5 * (t0 + t1));
     t0 = t1;
-    let rp = max(length(p), bottom + 1e-3);
-    let muSun = dot(p, sun) / rp;
-    let h = rp - bottom;
+    let distance = length(p);
+    let h = max(distance - distance / length(p / radii), 1e-3);
+    let rp = bottom + h;
+    let muSun = dot(normalize(p / (radii * radii)), sun);
     let rayleighDensity = exp(-h / a.rayleighScaleHeight);
     let mieDensity = exp(-h / a.mieScaleHeight);
     let ozoneDensity = select(clamp(-h / 15.0 + 8.0 / 3.0, 0.0, 1.0), clamp(h / 15.0 - 2.0 / 3.0, 0.0, 1.0), h < 25.0);
@@ -311,7 +322,7 @@ fn vertexOut(vertexIndex: u32, item: u32, withAir: bool) -> VsOut {
   out.position = view.viewProj * world;
   out.airInscatter = vec3f(0.0);
   out.airTransmittance = vec3f(1.0);
-  if (withAir && view.sunLight.w > 0.5 && view.aerialOrigin.w > 0.0) {
+  if (withAir && view.sunLight.w > 0.5 && view.bodyRadii.w > 0.0) {
     let air = aerialMarch(world.xyz);
     out.airInscatter = air.inscatter;
     out.airTransmittance = air.transmittance;
@@ -736,7 +747,7 @@ fn fs(in: VsOut, @builtin(front_facing) frontFacing: bool) -> FsOut {
   if (view.sunLight.w > 0.5) {
     // The air's light is pre-exposed in the volume. From high up it's
     // marched per vertex instead; between, both, blended.
-    let march = view.aerialOrigin.w;
+    let march = view.bodyRadii.w;
     var ap = AerialPerspective(vec3f(0.0), vec3f(1.0));
     if (march < 1.0) {
       ap = aerialPerspective(in.position.xy, in.relPosition);
