@@ -261,8 +261,15 @@ export class GlobeController {
       v3.copy(target, this.hover);
       this.zoomPixel = [this.hoverPixel![0], this.hoverPixel![1]];
     } else if (!this.nearEllipsoidAt(x, y, target)) {
-      this.zoomPixel = undefined;
-      this.ground(target);
+      // No pick here yet: the wheel came with the cursor (or the window
+      // got no pointer moves while unfocused). Start on a provisional
+      // point on this pixel's ray, at the camera's height above the
+      // ground; the pick pulled below replaces it with the drawn surface
+      // when it arrives (on the same ray, so without a jump).
+      const below = v3.vec3();
+      this.ground(below);
+      const height = Math.max(v3.distance(this.view.camera.position, below), 1);
+      v3.scaleAndAdd(target, this.view.camera.position, this.ray(x, y), height);
     }
     const pixels = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
     // 1.x zooms by a share of the distance; momentum carries it on.
@@ -272,6 +279,7 @@ export class GlobeController {
     const zoom = pixels * this.wheelZoomRate;
     this.pendingZoom += zoom;
     this.zoomRate += zoom * this.zoomKick * this.zoomResponse;
+    this.refreshZoomTarget();
     this.trackHover(x, y);
     this.animate();
   }

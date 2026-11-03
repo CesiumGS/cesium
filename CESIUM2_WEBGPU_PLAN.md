@@ -1112,8 +1112,10 @@ the ellipsoid (a negative geoid, Philadelphia's ~-33 m) a camera near the
 ground is inside it and the ray met it on the far side of the Earth, so one
 notch out left for orbit; toward the horizon, a notch moved by a share of
 thousands of kilometers. Now the ellipsoid counts only within 20 times the
-camera's height above the ground, else the zoom is a share of that height
-(1.x's rule over the sky). And a zoom keeps aiming at what is drawn under
+camera's height above the ground, else the zoom starts on a point on the
+cursor's ray at that height (1.x's rule over the sky), and a pick is pulled
+at the cursor at once (a wheel can come without pointer moves: an unfocused
+window, or the cursor arriving with it) and replaces it when it lands. And a zoom keeps aiming at what is drawn under
 its pixel now (a fresh pick each frame while it moves): the target picked
 frames ago, on a coarse tile or the ellipsoid under terrain still loading,
 made the ground slide sideways past it as finer tiles came in. Seen from
