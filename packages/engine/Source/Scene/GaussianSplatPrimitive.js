@@ -508,6 +508,15 @@ async function processGeneratedSplatTextureData(
 ) {
   try {
     const splatTextureData = await promise;
+
+    // The pending snapshot may have been replaced (or the primitive destroyed)
+    // while texture generation was in flight. Its textures were already
+    // released, so bail out before allocating any new GPU resources.
+    if (primitive._pendingSnapshot !== snapshot) {
+      snapshot.state = SnapshotState.BUILDING;
+      return;
+    }
+
     const maxTex = ContextLimits.maximumTextureSize;
 
     // Use maximumTextureSize as the texture width; splatsPerRow = maxTex / 2
@@ -594,10 +603,6 @@ async function processGeneratedSplatTextureData(
     snapshot.splatRowMask = splatRowMask;
     snapshot.splatRowShift = splatRowShift;
 
-    if (primitive._pendingSnapshot !== snapshot) {
-      snapshot.state = SnapshotState.BUILDING;
-      return;
-    }
     if (!defined(snapshot.gaussianSplatTexture)) {
       snapshot.gaussianSplatTexture = createGaussianSplatTexture(
         frameState.context,
@@ -1279,17 +1284,21 @@ Object.defineProperties(GaussianSplatPrimitive.prototype, {
     },
     set: function (customShader) {
       if (this._customShader !== customShader) {
-        // Delete old custom shader entries from the uniform map
+        // Delete old custom shader entries from the uniform map. The map is
+        // undefined until the first draw command is built (e.g. while tiles
+        // are still loading), in which case there is nothing to remove.
         const uniformMap = this._uniformMap;
         const oldCustomShader = this._customShader;
         const oldCustomShaderUniformMap = oldCustomShader.uniformMap;
-        for (const uniformName in oldCustomShaderUniformMap) {
-          if (oldCustomShaderUniformMap.hasOwnProperty(uniformName)) {
-            // If the custom shader was set but the splat shader was never
-            // built, the custom shader uniforms wouldn't have been added to
-            // the uniform map. But it doesn't matter because the delete
-            // operator ignores if the key doesn't exist.
-            delete uniformMap[uniformName];
+        if (defined(uniformMap)) {
+          for (const uniformName in oldCustomShaderUniformMap) {
+            if (oldCustomShaderUniformMap.hasOwnProperty(uniformName)) {
+              // If the custom shader was set but the splat shader was never
+              // built, the custom shader uniforms wouldn't have been added to
+              // the uniform map. But it doesn't matter because the delete
+              // operator ignores if the key doesn't exist.
+              delete uniformMap[uniformName];
+            }
           }
         }
 
@@ -1686,6 +1695,9 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
   const { shaderBuilder } = renderResources;
   const renderStateOptions = renderResources.renderStateOptions;
 
+  // Splats are inherently translucent, so TRANSLUCENT (like INHERIT) keeps the
+  // dedicated GAUSSIAN_SPLATS pass. Routing them through Pass.TRANSLUCENT would
+  // darken them under OIT, which premultiplies the already-premultiplied color.
   let drawPass = Pass.GAUSSIAN_SPLATS;
   if (
     primitive._customShader.translucencyMode ===
@@ -1694,13 +1706,6 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
     drawPass = Pass.CESIUM_3D_TILE;
     renderStateOptions.blending = BlendingState.DISABLED;
     renderStateOptions.depthMask = true;
-  } else if (
-    primitive._customShader.translucencyMode ===
-    CustomShaderTranslucencyMode.TRANSLUCENT
-  ) {
-    drawPass = Pass.TRANSLUCENT;
-    renderStateOptions.blending = BlendingState.PRE_MULTIPLIED_ALPHA_BLEND;
-    renderStateOptions.depthMask = false;
   }
 
   shaderBuilder.addAttribute("vec2", "a_screenQuadPosition");
@@ -1839,7 +1844,13 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
   let shaderProgram;
   try {
     shaderProgram = shaderBuilder.buildShaderProgram(frameState.context);
+    // Shader programs are compiled lazily on first bind. Force compilation
+    // here so custom shader errors are reported through the compilation event.
+    shaderProgram._bind();
   } catch (error) {
+    if (defined(shaderProgram)) {
+      shaderProgram.destroy();
+    }
     primitive._customShaderCompilationEvent.raiseEvent(error);
     throw error;
   }
