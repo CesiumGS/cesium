@@ -22,6 +22,7 @@ import {
   type TransformHandle,
   type World,
   type AerosolType,
+  type ToneMapping,
 } from "../../../src/index.ts";
 import ionSource from "../../../../engine/Source/Core/Ion.js?raw";
 import {
@@ -169,6 +170,8 @@ export interface Lighting {
   /** 2.0: exposure metered from the image. */
   autoExposure: boolean;
   encoding: "srgb" | "gamma2.2";
+  /** How exposed light becomes display color (1.x: no AgX, PBR Neutral). */
+  toneMapping: ToneMapping;
 }
 
 /** The settings an engine supports; the page explains the others. */
@@ -447,6 +450,7 @@ export class NextViewerHost implements ViewerHost {
         ? { auto: true }
         : { ev100: lighting.ev100 };
       view.outputEncoding = lighting.encoding;
+      view.toneMapping = lighting.toneMapping;
     }
     viewer.engine.requestRender();
   }
@@ -891,6 +895,10 @@ export class LegacyViewerHost implements ViewerHost {
       this.content.imageBasedLighting.imageBasedLightingFactor = ibl;
     }
     scene.highDynamicRange = true;
+    scene.postProcessStages.tonemapper =
+      lighting.toneMapping === "aces"
+        ? Cesium.Tonemapper.ACES
+        : Cesium.Tonemapper.PBR_NEUTRAL;
     scene.postProcessStages.exposure = lighting.exposure;
     scene.requestRender();
   }

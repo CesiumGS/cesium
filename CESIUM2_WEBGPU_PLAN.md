@@ -849,6 +849,17 @@ What sets 2.0 up for them, decided before the atmosphere is written:
   `falsecolor` does: the check that the units are right, and a feature for
   design review.
 
+Progress (r42): **tone mapping options**. `View.toneMapping`: "pbrNeutral"
+(Khronos PBR Neutral, the default: authored colors kept up to about 0.8,
+for design review), "agx" (Sobotka's AgX as Blender 4 and Filament ship it:
+a filmic curve in Rec. 2020 that desaturates bright saturated light toward
+white, lower contrast, middle gray to about 0.21) and "aces" (the curve 1.x
+applies, Narkowicz's fit, for parity with 1.x's ACES). In Dyno's viewer
+(Globe and rendering), and mapped onto 1.x's tonemapper there (1.x has no
+AgX). A fuller ACES (the reference rendering transform with its gamut
+matrices, Hill's fit) and an exposure-independent "look" (contrast,
+saturation) are follow-ups.
+
 #### Scaling to the hardware
 
 Both programmatically and with options, in layers:

@@ -37,6 +37,7 @@ import {
   type HdrImage,
   type PixelRect,
   type RenderTarget,
+  type ToneMapping,
   type ViewOptions,
 } from "./View.ts";
 import { ViewLink, type ViewLinkOptions } from "./ViewLink.ts";
@@ -74,6 +75,9 @@ import {
  * drawn as points with their own illuminance, replace it (plan §4.2).
  */
 export const STAR_MAP_LUMINANCE = 0.2;
+
+/** Tone mappings by their index in present.wgsl's `PresentParams`. */
+const TONE_MAPPINGS: readonly ToneMapping[] = ["pbrNeutral", "agx", "aces"];
 
 export interface EngineOptions extends GpuDeviceOptions {
   maxViews?: number;
@@ -1342,6 +1346,7 @@ export class Engine {
         ? (view.sunDisk ? 2 : 1) + (view.aerialPerspective ? 4 : 0)
         : 0;
     s[n++] = view.outputEncoding === "srgb" ? 0 : 1;
+    s[n++] = TONE_MAPPINGS.indexOf(view.toneMapping);
     const sun = view.lighting.sunIlluminance;
     s[n++] = sun === "atmosphere" ? -1 : sun;
     s[n++] = view.lighting.diffuseIbl;
@@ -2144,7 +2149,7 @@ export class Engine {
         const params = this.presentData;
         params.setFloat32(0, x, true);
         params.setFloat32(4, y, true);
-        params.setFloat32(8, 1, true);
+        params.setUint32(8, TONE_MAPPINGS.indexOf(view.toneMapping), true);
         const encoding = this.ctx.outputFormat.endsWith("-srgb")
           ? 0
           : view.outputEncoding === "gamma2.2"

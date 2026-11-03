@@ -1,11 +1,12 @@
 // Resolves a view's HDR image into its rectangle of the output target:
-// Khronos PBR Neutral tonemapping, then output encoding: the exact sRGB
-// curve, or gamma 2.2 to match CesiumJS 1.x (`czm_inverseGamma`). The image
-// is already exposed (shading pre-exposes, plan §4.2).
+// tonemapping (Khronos PBR Neutral, AgX or ACES: View.ts `ToneMapping`),
+// then output encoding: the exact sRGB curve, or gamma 2.2 to match
+// CesiumJS 1.x (`czm_inverseGamma`). The image is already exposed (shading
+// pre-exposes, plan §4.2).
 
 struct PresentParams {
   origin: vec2f,     // viewport origin in target pixels
-  _pad: f32,
+  toneMapping: u32,  // 0 PBR Neutral, 1 AgX, 2 ACES
   encoding: u32, // 0 none (-srgb target), 1 sRGB, 2 gamma 2.2
 };
 
@@ -37,6 +38,64 @@ fn pbrNeutral(input: vec3f) -> vec3f {
   return mix(color, vec3f(newPeak), g);
 }
 
+// AgX (Troy Sobotka), in the form Filament and three.js ship: into a wider
+// (Rec. 2020) gamut, inset, a log2 encoding over 16.5 stops, a sigmoid
+// (Benjamin Wrensch's polynomial fit of the default contrast), outset, back
+// to linear sRGB. Matrices are column-major, as GLSL's and WGSL's
+// constructors take them. Middle gray (0.18) comes out at about 0.21.
+fn agx(input: vec3f) -> vec3f {
+  let srgbToRec2020 = mat3x3f(
+    0.6274, 0.0691, 0.0164,
+    0.3293, 0.9195, 0.0880,
+    0.0433, 0.0113, 0.8956,
+  );
+  let rec2020ToSrgb = mat3x3f(
+    1.6605, -0.1246, -0.0182,
+    -0.5876, 1.1329, -0.1006,
+    -0.0728, -0.0083, 1.1187,
+  );
+  let inset = mat3x3f(
+    0.856627153315983, 0.137318972929847, 0.11189821299995,
+    0.0951212405381588, 0.761241990602591, 0.0767994186031903,
+    0.0482516061458583, 0.101439036467562, 0.811302368396859,
+  );
+  let outset = mat3x3f(
+    1.1271005818144368, -0.1413297634984383, -0.14132976349843826,
+    -0.11060664309660323, 1.157823702216272, -0.11060664309660294,
+    -0.016493938717834573, -0.016493938717834257, 1.2519364065950405,
+  );
+  let minEv = -12.47393;
+  let maxEv = 4.026069;
+  var c = inset * (srgbToRec2020 * input);
+  c = clamp((log2(max(c, vec3f(1e-10))) - minEv) / (maxEv - minEv), vec3f(0.0), vec3f(1.0));
+  let x2 = c * c;
+  let x4 = x2 * x2;
+  c = 15.5 * x4 * x2 - 40.14 * x4 * c + 31.96 * x4 - 6.868 * x2 * c + 0.4298 * x2 + 0.1191 * c - 0.00232;
+  c = outset * c;
+  c = pow(max(c, vec3f(0.0)), vec3f(2.2));
+  return clamp(rec2020ToSrgb * c, vec3f(0.0), vec3f(1.0));
+}
+
+// ACES filmic as CesiumJS 1.x applies it (`czm_acesTonemapping`,
+// Narkowicz's fit of the reference rendering and output transforms).
+fn aces(c: vec3f) -> vec3f {
+  return clamp((c * (c + 0.065) - 0.0001) / (c * (0.985 * c + 0.433) + 0.238), vec3f(0.0), vec3f(1.0));
+}
+
+fn toneMap(c: vec3f) -> vec3f {
+  switch (params.toneMapping) {
+    case 1u: {
+      return agx(c);
+    }
+    case 2u: {
+      return aces(c);
+    }
+    default: {
+      return pbrNeutral(c);
+    }
+  }
+}
+
 fn linearToSrgb(c: vec3f) -> vec3f {
   let low = c * 12.92;
   let high = 1.055 * pow(c, vec3f(1.0 / 2.4)) - 0.055;
@@ -53,7 +112,7 @@ fn fs(@builtin(position) frag: vec4f) -> @location(0) vec4f {
   let sceneCoverage = 1.0 - shown.a;
   let scene = textureLoad(hdr, coord, 0).rgb / max(sceneCoverage, 1e-4);
   var color =
-    pbrNeutral(max(scene, vec3f(0.0))) * sceneCoverage +
+    toneMap(max(scene, vec3f(0.0))) * sceneCoverage +
     shown.rgb;
   color = clamp(color, vec3f(0.0), vec3f(1.0));
   if (params.encoding == 1u) {

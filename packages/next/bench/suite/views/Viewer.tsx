@@ -108,6 +108,7 @@ const LIGHTING_DEFAULTS: Lighting = {
   ev100: 15,
   autoExposure: false,
   encoding: "srgb",
+  toneMapping: "pbrNeutral",
 };
 
 const TOKEN_KEY = "viewer.ionToken";
@@ -486,6 +487,19 @@ export function Viewer() {
                   ["gamma2.2", "Gamma 2.2 (as 1.x)"],
                 ]}
                 onChange={(v) => light("encoding", v as Lighting["encoding"])}
+              />
+              <Choice
+                label="Tone mapping"
+                value={lighting.toneMapping}
+                minWidth={0}
+                options={[
+                  ["pbrNeutral", "PBR Neutral"],
+                  ["agx", "AgX"],
+                  ["aces", "ACES (as 1.x)"],
+                ]}
+                onChange={(v) =>
+                  light("toneMapping", v as Lighting["toneMapping"])
+                }
               />
               <NotHere
                 reasons={[

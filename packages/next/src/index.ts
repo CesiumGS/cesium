@@ -37,6 +37,7 @@ export {
   UNITLESS_EXPOSURE,
   ev100ToScale,
   type OutputEncoding,
+  type ToneMapping,
   type ViewBackground,
   type PickResult,
   type RenderTarget,

@@ -269,10 +269,27 @@ export interface ViewOptions {
   clearColor?: readonly [number, number, number];
   /** Output transfer function. "gamma2.2" matches CesiumJS 1.x. */
   outputEncoding?: OutputEncoding;
+  /** How exposed light becomes display color (`ToneMapping`). */
+  toneMapping?: ToneMapping;
   lighting?: Partial<ViewLighting>;
 }
 
 export type OutputEncoding = "srgb" | "gamma2.2";
+
+/**
+ * How exposed scene light becomes display color:
+ *
+ * - "pbrNeutral" (default): Khronos PBR Neutral. Base colors stay as
+ *   authored up to about 0.8, then highlights compress toward white; the
+ *   choice for design review and product color.
+ * - "agx": Troy Sobotka's AgX (as Blender 4 and Filament ship it). A
+ *   filmic curve in a wider gamut: bright saturated light desaturates
+ *   toward white the way film and the eye see it (a sunset, a lamp), with
+ *   lower contrast and a slightly lifted middle gray.
+ * - "aces": the ACES filmic curve as CesiumJS 1.x applies it (Narkowicz's
+ *   fit): more contrast and saturation, highlights clipping toward hue.
+ */
+export type ToneMapping = "pbrNeutral" | "agx" | "aces";
 
 export type ViewBackground = "atmosphere" | "color";
 
@@ -309,6 +326,7 @@ export class View {
   aerialPerspective: boolean;
   clearColor: readonly [number, number, number];
   outputEncoding: OutputEncoding;
+  toneMapping: ToneMapping;
   /** The sun's illuminance and image-based lighting factors. */
   lighting: ViewLighting;
   /** Disabled views are skipped (e.g. an offscreen view between captures). */
@@ -340,6 +358,7 @@ export class View {
     this.aerialPerspective = options.aerialPerspective ?? true;
     this.clearColor = options.clearColor ?? [0.004, 0.008, 0.02];
     this.outputEncoding = options.outputEncoding ?? "srgb";
+    this.toneMapping = options.toneMapping ?? "pbrNeutral";
     this.lighting = {
       sunIlluminance: "atmosphere",
       environment: "atmosphere",
