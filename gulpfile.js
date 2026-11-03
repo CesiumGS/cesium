@@ -15,7 +15,6 @@ import gulp from "gulp";
 import open from "open";
 import karma from "karma";
 import yargs from "yargs";
-import typeScript from "typescript";
 import { build as esbuild } from "esbuild";
 import { createInstrumenter } from "istanbul-lib-instrument";
 
@@ -273,14 +272,8 @@ export async function buildTs() {
       directory,
       `packages/${directory}/index.d.ts`,
       `packages/${directory}/tsd-conf.json`,
-      // The core package needs additional processing for its enum strings
-      // (WebGLConstants and its aliasing enums, e.g. ComponentDatatype, live there now).
-      // The engine package still needs its own Viewer circular-dependency workaround.
-      directory === "core"
-        ? moveWebGLConstantsFirst
-        : directory === "engine"
-          ? processEngineSource
-          : undefined,
+      // The engine package needs its own Viewer circular-dependency workaround.
+      directory === "engine" ? processEngineSource : undefined,
       // Add Math, which parseWorkspaceExports misses in core.
       directory === "core" ? addMathExport : undefined,
       dependencyExports,
@@ -1014,6 +1007,8 @@ function fixTypeScriptDefinitionsSource(source, includeKnockout) {
     )
     // Strip const enums which can cause errors - https://www.typescriptlang.org/docs/handbook/enums.html#const-enum-pitfalls
     .replace(/^(\s*)(export )?const enum (\S+) {(\s*)$/gm, "$1$2enum $3 {$4")
+    // Quote enum keys that start with a digit, which tsd-jsdoc writes unquoted
+    .replace(/^(\s+)(\d\w*) = /gm, '$1"$2" = ')
     // Replace JSDoc generation version of defined with an improved version using TS type predicates
     .replace(
       /\n?export function defined\(value: any\): boolean;/gm,
@@ -1052,7 +1047,7 @@ function fixTypeScriptDefinitionsSource(source, includeKnockout) {
  * @param {string} workspaceName The workspace directory name, e.g. "core".
  * @param {string} definitionsPath The path of the .d.ts file to generate.
  * @param {string} configurationPath The path of the JSDoc configuration file that runs tsd-jsdoc for this workspace.
- * @param {function(string, string): string} [processSourceFunc] Transforms the generated source before its exports are collected. Receives the definitions path and the source, and returns the new source.
+ * @param {function(string): string} [processSourceFunc] Transforms the generated source before its exports are collected. Receives the source and returns the new source.
  * @param {function(Set<string>): Set<string>} [processExportsFunc] Adjusts the collected export names, and returns the adjusted set.
  * @param {Object<string, Set<string>>} [dependencyExports] The export names of earlier workspaces, keyed by workspace directory name, used to generate this workspace's imports from them.
  * @returns {Promise<Set<string>>} The names this workspace exports.
@@ -1073,7 +1068,7 @@ function generateWorkspaceTypeScriptDefinitions(
   let source = readFileSync(definitionsPath).toString();
 
   if (processSourceFunc) {
-    source = processSourceFunc(definitionsPath, source);
+    source = processSourceFunc(source);
   }
 
   // Collect the names this workspace exports, so that later workspaces can import them.
@@ -1161,67 +1156,8 @@ function addMathExport(exportNames) {
   return exportNames;
 }
 
-/**
- * Moves the WebGLConstants enum declaration to the start of the definitions source.
- *
- * Enums that alias WebGLConstants values, such as PixelDatatype, are emitted as
- * strings, which fixTypeScriptDefinitionsSource later rewrites to reference
- * WebGLConstants directly. That requires WebGLConstants to be declared first.
- *
- * The whole source is reprinted with the TypeScript printer, even when it doesn't
- * declare WebGLConstants.
- *
- * @param {string} definitionsPath The path of the definitions file.
- * @param {string} source The definitions source.
- * @returns {string} The reordered source.
- */
-function moveWebGLConstantsFirst(definitionsPath, source) {
-  const sourceFile = typeScript.createSourceFile(
-    definitionsPath,
-    source,
-    typeScript.ScriptTarget.Latest,
-  );
-  let webGLConstantsNode;
-  sourceFile.forEachChild((child) => {
-    if (
-      typeScript.SyntaxKind[child.kind] === "EnumDeclaration" &&
-      child.name.escapedText === "WebGLConstants"
-    ) {
-      webGLConstantsNode = child;
-    }
-  });
-
-  const printer = typeScript.createPrinter({
-    removeComments: false,
-    newLine: typeScript.NewLineKind.LineFeed,
-  });
-  let newSource = "";
-  // Not every workspace's declarations include WebGLConstants,
-  // so only reorder if found.
-  if (webGLConstantsNode) {
-    newSource += printer.printNode(
-      typeScript.EmitHint.Unspecified,
-      webGLConstantsNode,
-      sourceFile,
-    );
-    newSource += "\n\n";
-  }
-  sourceFile.forEachChild((child) => {
-    if (child === webGLConstantsNode) {
-      return;
-    }
-    newSource += printer.printNode(
-      typeScript.EmitHint.Unspecified,
-      child,
-      sourceFile,
-    );
-    newSource += "\n\n";
-  });
-  return newSource;
-}
-
-function processEngineSource(definitionsPath, source) {
-  let newSource = moveWebGLConstantsFirst(definitionsPath, source);
+function processEngineSource(source) {
+  let newSource = source;
   // Manually add a type definition from Viewer to avoid circular dependency
   // with the widgets package. This will no longer be needed past Cesium 1.100.
   newSource += `
@@ -1277,7 +1213,6 @@ function generateCesiumTypeScriptDefinitions() {
   });
 
   let source = readFileSync("Source/Cesium.d.ts").toString();
-  source = moveWebGLConstantsFirst("Source/Cesium.d.ts", source);
 
   source = fixTypeScriptDefinitionsSource(source, true);
 
