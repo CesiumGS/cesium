@@ -505,15 +505,29 @@ export class GlobeController {
   /**
    * Keeps the camera `minimumHeight` above the ground. Call once per frame:
    * finer terrain loading under a still camera can rise above it (1.x
-   * checks every frame too).
+   * checks every frame too). The lift is temporary: coarse terrain, which
+   * loads first and smooths over valleys, rose above a camera framed on a
+   * building by the river and lifted it 100 m, the building out of view;
+   * when the finer ground below loads, the camera comes back down to where
+   * it was put (unless something moved it since).
    */
   update(): void {
-    if (this.mode === "none" && !this.animating) {
-      this.keepAboveGround();
+    if (this.mode !== "none" || this.animating) {
+      return;
     }
+    const camera = this.view.camera;
+    if (camera.version !== this.liftedVersion) {
+      this.intendedHeight = undefined;
+    }
+    this.keepAboveGround(true);
   }
 
-  private keepAboveGround(): void {
+  /** Where the camera was put before the ground lifted it (meters). */
+  private intendedHeight: number | undefined;
+  /** The camera's version after the lift (another change: a new intent). */
+  private liftedVersion = -1;
+
+  private keepAboveGround(restore = false): void {
     const camera = this.view.camera;
     const c = this.ellipsoid.cartesianToCartographic(camera.position, {
       longitude: 0,
@@ -529,10 +543,20 @@ export class GlobeController {
     if (ground === undefined) {
       return; // not loaded there yet
     }
-    if (c.height < ground + this.minimumHeight) {
-      c.height = ground + this.minimumHeight;
-      this.ellipsoid.cartographicToCartesian(c, camera.position);
-      camera.version++;
+    const lowest = ground + this.minimumHeight;
+    const intended = restore ? this.intendedHeight : undefined;
+    const height = Math.max(intended ?? c.height, lowest);
+    if (Math.abs(height - c.height) < 1e-3) {
+      return;
+    }
+    if (restore) {
+      this.intendedHeight ??= c.height;
+    }
+    c.height = height;
+    this.ellipsoid.cartographicToCartesian(c, camera.position);
+    camera.version++;
+    if (restore) {
+      this.liftedVersion = camera.version;
     }
   }
 

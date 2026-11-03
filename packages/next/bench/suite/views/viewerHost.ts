@@ -274,6 +274,9 @@ export class NextViewerHost implements ViewerHost {
     });
     const host = new NextViewerHost(viewer);
     host.settings = settings;
+    // Content loads next: no frames of the whole Earth (the Viewer's start)
+    // before the camera jumps to it; the view shows once it's framed.
+    viewer.view.enabled = false;
     viewer.ready.catch((error) =>
       host.warnings.add(`globe: ${message(error)}`),
     );
@@ -393,10 +396,20 @@ export class NextViewerHost implements ViewerHost {
       this.focus = focus;
       this.load_ = info;
       this.frame();
+      this.show();
       return { warnings: [...warnings] };
     } catch (error) {
+      this.show();
       next?.remove();
       throw error;
+    }
+  }
+
+  /** Shows the view (held from the start until content is framed). */
+  private show(): void {
+    if (!this.viewer.view.enabled) {
+      this.viewer.view.enabled = true;
+      this.viewer.engine.requestRender();
     }
   }
 
