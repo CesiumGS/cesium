@@ -13,6 +13,7 @@ import type {
 } from "../io/gltfTypes.ts";
 import type { RenderContext } from "./RenderContext.ts";
 import type { Clamp, HeightReference } from "./HeightClamping.ts";
+import type { LightHandle } from "./lights.ts";
 import type {
   DrawHandle,
   InstanceOptions,
@@ -93,6 +94,8 @@ interface InstanceFrame {
 
 export interface ModelInstance {
   draws: DrawHandle[];
+  /** Its `KHR_lights_punctual` lights (`World.setLight` changes them). */
+  lights: LightHandle[];
   /**
    * The model's root transform (`modelMatrix`): `World.setTransform` moves
    * the whole model, `setTransformVisible` hides it. Node transforms hang
@@ -354,12 +357,36 @@ export function addGltf(
       });
     }
   }
+  // Its lights, at their nodes (one placement: not for instanced models).
+  const lights: LightHandle[] = [];
+  for (const light of user ? [] : (asset.lights ?? [])) {
+    let node = nodes.get(light.matrix);
+    if (!node) {
+      node = world.addTransform(
+        m4.multiply(m4.mat4(), correction, light.matrix),
+        root,
+      );
+      nodes.set(light.matrix, node);
+    }
+    lights.push(
+      world.addLight({
+        type: light.type,
+        color: light.color,
+        intensity: light.intensity,
+        range: light.range,
+        innerConeAngle: light.innerConeAngle,
+        outerConeAngle: light.outerConeAngle,
+        transform: node,
+      }),
+    );
+  }
   let bounds = unionSphere(spheres);
   if (user) {
     bounds = instanceBounds(bounds, rootWorld, user.matrices);
   }
   return {
     draws,
+    lights,
     transform: root,
     ...bounds,
     bounds() {
@@ -566,6 +593,10 @@ function instanceBounds(
  * with its last instance there.
  */
 export function removeGltf(world: World, instance: ModelInstance): void {
+  for (const light of instance.lights) {
+    world.removeLight(light);
+  }
+  instance.lights.length = 0;
   for (const draw of instance.draws) {
     world.removeDraw(draw);
   }

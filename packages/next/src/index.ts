@@ -22,6 +22,11 @@ export {
   type CastOptions,
 } from "./scene/World.ts";
 export {
+  lightReach,
+  type LightHandle,
+  type LightOptions,
+} from "./scene/lights.ts";
+export {
   type HeightReference,
   type Clamp,
   type ClampOptions,

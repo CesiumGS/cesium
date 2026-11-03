@@ -14,6 +14,8 @@ import overlayWgsl from "../shaders/overlay.wgsl?raw";
 import pickWgsl from "../shaders/pick.wgsl?raw";
 import meterWgsl from "../shaders/meter.wgsl?raw";
 import adaptWgsl from "../shaders/adapt.wgsl?raw";
+import lightsWgsl from "../shaders/lights.wgsl?raw";
+import { CLUSTERS_SIZE, LIGHTS_SIZE } from "./lights.ts";
 
 /**
  * The single render-target configuration views draw their 3D content into.
@@ -78,6 +80,8 @@ export interface Pipelines {
   /** The eye's local adaptation map (`adapt.wgsl`): reduce, then blur. */
   adaptReduce: GPUComputePipeline;
   adaptBlur: GPUComputePipeline;
+  /** Point and spot lights into the view's froxels (`lights.wgsl`). */
+  lightsAssign: GPUComputePipeline;
 }
 
 export interface Defaults {
@@ -112,6 +116,13 @@ export interface RenderContext {
    * (rewritten per view before its opaque pass): up to `AO_MAX_PIXELS`.
    */
   aoBuffer: GPUBuffer;
+  /**
+   * The view's point and spot lights (scene/lights.ts, copied in per view
+   * before its opaque pass), and the group that sorts them into its
+   * froxels (`lightsAssign`).
+   */
+  lightBuffer: GPUBuffer;
+  lightAssignGroup: GPUBindGroup;
   /**
    * The view bind group for drawing into the shadow maps: the same, with
    * a placeholder where the maps are bound (a texture can't be read and
@@ -179,6 +190,16 @@ export async function createRenderContext(
     size: AO_MAX_PIXELS,
     usage: GPUBufferUsage.STORAGE,
   });
+  const lightBuffer = device.createBuffer({
+    label: "currentLights",
+    size: LIGHTS_SIZE,
+    usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
+  });
+  const clusterBuffer = device.createBuffer({
+    label: "lightClusters",
+    size: CLUSTERS_SIZE,
+    usage: GPUBufferUsage.STORAGE,
+  });
   const currentShadowsBuffer = device.createBuffer({
     label: "currentShadows",
     size: SHADOWS_SIZE,
@@ -211,6 +232,8 @@ export async function createRenderContext(
     { binding: 15, resource: { buffer: aoBuffer } },
     { binding: 16, resource: sky.aerialScreenInscatter },
     { binding: 17, resource: sky.aerialScreenTransmittance },
+    { binding: 18, resource: { buffer: lightBuffer } },
+    { binding: 19, resource: { buffer: clusterBuffer } },
   ];
   const shadowViewBindGroup = device.createBindGroup({
     label: "currentView.shadowCasters",
@@ -267,6 +290,15 @@ export async function createRenderContext(
     ),
     currentShadowsBuffer,
     aoBuffer,
+    lightBuffer,
+    lightAssignGroup: device.createBindGroup({
+      label: "lights.assign",
+      layout: pipelines.lightsAssign.getBindGroupLayout(0),
+      entries: [
+        { binding: 0, resource: { buffer: lightBuffer } },
+        { binding: 1, resource: { buffer: clusterBuffer } },
+      ],
+    }),
     shadowViewBindGroup,
   };
 }
@@ -346,6 +378,9 @@ async function createPipelines(
       // Aerial perspective from high up, on a screen grid.
       { binding: 16, visibility: FRAGMENT, texture: {} },
       { binding: 17, visibility: FRAGMENT, texture: {} },
+      // Point and spot lights, and their froxels' lists (scene/lights.ts).
+      storage(18, true, FRAGMENT),
+      storage(19, true, FRAGMENT),
     ],
   });
   const cullWorldLayout = device.createBindGroupLayout({
@@ -565,6 +600,7 @@ async function createPipelines(
     meter,
     adaptReduce,
     adaptBlur,
+    lightsAssign,
   ] = await Promise.all([
     device.createComputePipelineAsync({
       label: "cull.records",
@@ -668,6 +704,14 @@ async function createPipelines(
       layout: "auto",
       compute: { module: module("adapt", adaptWgsl), entryPoint: "blur" },
     }),
+    device.createComputePipelineAsync({
+      label: "lights.assign",
+      layout: "auto",
+      compute: {
+        module: module("lights", commonWgsl, lightsWgsl),
+        entryPoint: "assign",
+      },
+    }),
   ]);
 
   return {
@@ -699,5 +743,6 @@ async function createPipelines(
     meter,
     adaptReduce,
     adaptBlur,
+    lightsAssign,
   };
 }

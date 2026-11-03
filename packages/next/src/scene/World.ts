@@ -39,6 +39,7 @@ import type { MeshData } from "./meshes.ts";
 import type { FeatureTable, FeatureValue } from "../io/gltfTypes.ts";
 import { featureName, featureProperties } from "../io/features.ts";
 import type { RenderContext } from "./RenderContext.ts";
+import type { LightHandle, LightOptions } from "./lights.ts";
 
 export interface WorldOptions {
   maxDraws?: number;
@@ -433,6 +434,10 @@ export class World {
   /** Hidden by itself, and by itself or an ancestor. */
   private transformHidden: Uint8Array;
   private transformHiddenWorld: Uint8Array;
+  /** Point and spot lights by slot (`addLight`), free slots undefined. */
+  private readonly lights: Array<LightOptions | undefined> = [];
+  private readonly lightGenerations: number[] = [];
+  private readonly freeLights: number[] = [];
   private readonly transformPending: number[] = [];
   private transformPendingFlag: Uint8Array;
   private transformStamp: Uint32Array;
@@ -1480,6 +1485,93 @@ export class World {
     for (const child of this.transformChildren[index] ?? []) {
       this.composeTransform(child, stamp);
     }
+  }
+
+  // ---------------------------------------------------------------- lights
+
+  /**
+   * Adds a point or spot light (`LightOptions`) at a transform: moving or
+   * hiding the transform moves or hides it; removing it removes the light.
+   */
+  addLight(options: LightOptions): LightHandle {
+    if (!this.transformAlive(options.transform)) {
+      throw new Error("addLight: the transform was removed.");
+    }
+    const index = this.freeLights.pop() ?? this.lights.length;
+    const generation = this.lightGenerations[index] ?? 0;
+    this.lightGenerations[index] = generation;
+    this.lights[index] = { ...options };
+    this.lightsChanged();
+    return { index, generation };
+  }
+
+  /** Changes a light; its transform stays (move that instead). */
+  setLight(
+    handle: LightHandle,
+    changes: Partial<Omit<LightOptions, "transform">>,
+  ): void {
+    if (this.lightAlive(handle)) {
+      Object.assign(this.lights[handle.index]!, changes);
+      this.lightsChanged();
+    }
+  }
+
+  removeLight(handle: LightHandle): void {
+    if (!this.lightAlive(handle)) {
+      return;
+    }
+    this.lights[handle.index] = undefined;
+    this.lightGenerations[handle.index] = handle.generation + 1;
+    this.freeLights.push(handle.index);
+    this.lightsChanged();
+  }
+
+  /** Whether `handle` still names a light. */
+  lightAlive(handle: LightHandle): boolean {
+    return (
+      this.lights[handle.index] !== undefined &&
+      this.lightGenerations[handle.index] === handle.generation
+    );
+  }
+
+  /** How many lights the world holds. */
+  get lightCount(): number {
+    return this.lights.length - this.freeLights.length;
+  }
+
+  /**
+   * @internal Each shown light with its transform's Earth-fixed matrix
+   * (lights.ts `packViewLights`); lights whose transform was removed go.
+   */
+  forEachLight(
+    visit: (light: LightOptions, matrix: Float64Array) => void,
+  ): void {
+    if (this.lightCount === 0) {
+      return;
+    }
+    this.resolveTransforms();
+    for (let i = 0; i < this.lights.length; i++) {
+      const light = this.lights[i];
+      if (!light) {
+        continue;
+      }
+      const t = light.transform;
+      if (!this.transformAlive(t)) {
+        this.removeLight({ index: i, generation: this.lightGenerations[i]! });
+        continue;
+      }
+      if (this.transformHiddenWorld[t.index] === 0) {
+        visit(
+          light,
+          this.transformWorld.subarray(t.index * 16, t.index * 16 + 16),
+        );
+      }
+    }
+  }
+
+  private lightsChanged(): void {
+    this.version++;
+    this.changedViews = ALL_VIEWS;
   }
 
   /** Largest axis scale of a composed transform. */

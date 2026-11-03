@@ -125,12 +125,28 @@ export interface ContentTiming {
   images: Record<string, number>;
 }
 
+/** A `KHR_lights_punctual` point or spot light at a node. */
+export interface GltfLight {
+  type: "point" | "spot";
+  /** Linear RGB. */
+  color: [number, number, number];
+  /** Candela. */
+  intensity: number;
+  range?: number;
+  innerConeAngle?: number;
+  outerConeAngle?: number;
+  /** Its node's world matrix in glTF space (column-major float64). */
+  matrix: Float64Array;
+}
+
 export interface GltfAsset {
   meshes: GltfMesh[];
   materials: GltfMaterial[];
   textures: GltfTexture[];
   images: GltfImage[];
   draws: GltfDraw[];
+  /** Its point and spot lights (`KHR_lights_punctual`). */
+  lights?: GltfLight[];
   /** Property tables (or the b3dm batch table) that meshes' features index. */
   featureTables: FeatureTable[];
   /** b3dm RTC_CENTER: translation of the whole model, in tile (z-up) space. */

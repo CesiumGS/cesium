@@ -484,6 +484,60 @@ struct Shadows {
 // transmittance.
 @group(0) @binding(16) var aerialScreenInscatter: texture_2d<f32>;
 @group(0) @binding(17) var aerialScreenTransmittance: texture_2d<f32>;
+// Point and spot lights (scene/lights.ts) and their froxels' lists
+// (lights.wgsl).
+@group(0) @binding(18) var<storage, read> lightTable: LightTable;
+@group(0) @binding(19) var<storage, read> clusters: array<u32>;
+
+// The point and spot lights of the pixel's froxel, reflected toward the
+// camera: candela over distance squared, faded to nothing at its reach
+// (glTF's window, (1 − (d/reach)⁴)², with no hard edge), within a spot's
+// cone (glTF's falloff). Unshadowed.
+fn punctualLight(
+  pixel: vec2f,
+  relPosition: vec3f,
+  n: vec3f,
+  v: vec3f,
+  f0: vec3f,
+  diffuseColor: vec3f,
+  alpha: f32,
+  nDotV: f32,
+) -> vec3f {
+  let h = lightTable.header;
+  var sum = vec3f(0.0);
+  if (h.grid.w < 0.5) {
+    return sum;
+  }
+  let z = dot(relPosition, h.forward.xyz);
+  if (z < h.depth.x || z >= h.forward.w) {
+    return sum;
+  }
+  let dims = vec3u(h.grid.xyz);
+  let uv = pixel * view.viewport.zw;
+  let i = min(u32(uv.x * f32(dims.x)), dims.x - 1u);
+  let j = min(u32(uv.y * f32(dims.y)), dims.y - 1u);
+  let k = min(u32(log(z / h.depth.x) * h.depth.y), dims.z - 1u);
+  let base = ((k * dims.y + j) * dims.x + i) * (1u + CLUSTER_LIGHTS);
+  let count = clusters[base];
+  for (var t = 0u; t < count; t++) {
+    let light = lightTable.lights[clusters[base + 1u + t]];
+    let toLight = light.position.xyz - relPosition;
+    let d2 = max(dot(toLight, toLight), 1e-4);
+    let l = toLight * inverseSqrt(d2);
+    if (dot(n, l) <= 0.0) {
+      continue;
+    }
+    let ratio2 = d2 / (light.position.w * light.position.w);
+    let window = clamp(1.0 - ratio2 * ratio2, 0.0, 1.0);
+    var illuminance = light.color.rgb * (window * window / d2);
+    if (light.color.w > 0.5) {
+      let cone = clamp(dot(light.direction.xyz, -l) * light.direction.w + light.cone.x, 0.0, 1.0);
+      illuminance *= cone * cone;
+    }
+    sum += directReflectance(n, v, l, f0, diffuseColor, alpha, nDotV) * illuminance;
+  }
+  return sum;
+}
 
 fn ambientOcclusion(pixel: vec2f) -> f32 {
   if (shadows.fade.z < 0.5) {
@@ -797,6 +851,7 @@ fn fs(in: VsOut, @builtin(front_facing) frontFacing: bool) -> FsOut {
     direct += directReflectance(n, v, moonward, f0, diffuseColor, alpha, nDotV)
       * sunlightThroughAir(in.relPosition, moonward) * view.moonLight.w * moonVisible;
   }
+  direct += punctualLight(in.position.xy, in.relPosition, n, v, f0, diffuseColor, alpha, nDotV);
 
   // Image-based lighting (Fdez-Agüera 2019 multiple scattering).
   let lut = textureSampleLevel(brdfLut, environmentSampler, vec2f(nDotV, roughness), 0.0).rg;

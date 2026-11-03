@@ -111,3 +111,31 @@ struct Material {
 };
 
 const NO_STREAM: u32 = 0xffffffffu;
+
+// --- lights beyond the sun (scene/lights.ts) -----------------------------------
+
+// A view's point and spot lights, culled to it and camera-relative, and its
+// froxel grid: tiles across and down, slices in depth from `near` (log).
+struct LightHeader {
+  grid: vec4f, // tiles across, down, slices; the lights' count
+  depth: vec4f, // near (m), slices per unit of ln(z / near), tan(half fov) x, y
+  forward: vec4f, // the camera's axes; .w of forward: the grid's far end (m)
+  right: vec4f,
+  up: vec4f,
+};
+
+struct Light {
+  position: vec4f, // camera-relative; .w its reach (m)
+  color: vec4f, // linear RGB × candela; .w 1 for a spot
+  direction: vec4f, // where a spot points; .w its cone's scale
+  cone: vec4f, // .x its cone's offset: (cos θ · scale + offset)²
+};
+
+struct LightTable {
+  header: LightHeader,
+  lights: array<Light>,
+};
+
+// A froxel's lights: its count, then up to CLUSTER_LIGHTS indices (its
+// brightest; scene/lights.ts the same).
+const CLUSTER_LIGHTS: u32 = 16u;

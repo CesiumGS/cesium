@@ -827,7 +827,23 @@ Next steps (r44, after the night work). Now, in this order:
    sun would not.
 6. **Lights in the scene**: point and spot lights (`KHR_lights_punctual`,
    candela), clustered forward shading, unshadowed (the order in "Lights
-   beyond the sun", above).
+   beyond the sun", above). Done (r44): `World.addLight` at a transform
+   (moved, hidden and removed with it); a model's glTF lights at their
+   nodes. Each view culls its lights to its frustum on the CPU, nearest
+   1,024 kept, each reaching where its light on white would show below
+   1/256 of white at the view's exposure (or its glTF `range`), faded by
+   glTF's window; a compute pass sorts them into 32 × 18 × 32 froxels
+   (log depth), a workgroup per tile culling to its column in shared
+   memory, then a thread per slice keeping its 16 brightest (lights.wgsl);
+   the opaque pass shades its froxel's (scene/lights.ts, opaque.wgsl
+   `punctualLight`). 576 spots over lower Manhattan at night: 1.1 ms to
+   sort, about 3.5 ms more in the opaque pass at 1831 × 1416. Most of that
+   is overdraw: the MSAA opaque pass shades every fragment that passes
+   the depth test as drawn (the ambient occlusion prepass is single
+   sampled), so lights cost per fragment, not per pixel. Next for many
+   lights: a depth prepass in the MSAA pass and shading at equal depth
+   (Forward+'s z-prepass, Harada et al. 2012), which also cuts the sun's
+   and the environment's shading of hidden fragments.
 
 Later:
 

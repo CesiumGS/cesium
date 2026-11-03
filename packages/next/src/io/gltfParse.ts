@@ -21,11 +21,13 @@ import type {
   GltfAsset,
   GltfDraw,
   GltfImage,
+  GltfLight,
   GltfMaterial,
   GltfMesh,
   GltfSampler,
   GltfTexture,
 } from "./gltfTypes.ts";
+import { readLight } from "./gltfLights.ts";
 
 /* eslint-disable @typescript-eslint/no-explicit-any -- glTF JSON is untyped here */
 type Json = any;
@@ -43,6 +45,7 @@ const SUPPORTED_EXTENSIONS = new Set([
   "EXT_structural_metadata", // property tables
   "EXT_mesh_gpu_instancing", // instance ranges, culled per instance
   "EXT_instance_features", // per-instance feature IDs
+  "KHR_lights_punctual", // point and spot lights (directional ones skipped)
 ]);
 
 const COMPONENTS: Record<string, number> = {
@@ -240,9 +243,18 @@ export async function parseGltf(
     matrix: Float64Array;
     gpuInstances?: { matrices: Float32Array; featureIds?: Uint32Array };
   }> = [];
+  const lights: GltfLight[] = [];
+  const lightDefs: Json[] = json.extensions?.KHR_lights_punctual?.lights ?? [];
   const visit = (nodeIndex: number, parent: Float64Array) => {
     const node = json.nodes[nodeIndex];
     const world = multiply(parent, nodeMatrix(node));
+    const lightIndex = node.extensions?.KHR_lights_punctual?.light;
+    if (lightIndex !== undefined) {
+      const light = readLight(lightDefs[lightIndex], world, warnings);
+      if (light) {
+        lights.push(light);
+      }
+    }
     if (node.mesh !== undefined) {
       const gpuInstances = gpuInstancing(node, readAccessor, warnings);
       json.meshes[node.mesh].primitives.forEach((_: Json, p: number) => {
@@ -392,6 +404,7 @@ export async function parseGltf(
       textures,
       images,
       draws,
+      ...(lights.length > 0 ? { lights } : {}),
       featureTables,
       ...(b3dm?.rtcCenter ? { rtcCenter: b3dm.rtcCenter } : {}),
       ...(i3dm

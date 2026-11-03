@@ -58,6 +58,13 @@ import {
   fitShadowCascades,
   writeShadows,
 } from "./shadows.ts";
+import {
+  CLUSTERS,
+  LIGHTS_SIZE,
+  LIGHT_FLOATS,
+  LIGHT_HEADER_FLOATS,
+  packViewLights,
+} from "./lights.ts";
 import { World, type WorldOptions } from "./World.ts";
 import { HeightClamping } from "./HeightClamping.ts";
 import { WorkerPool } from "../io/WorkerPool.ts";
@@ -273,6 +280,9 @@ export class Engine {
   private readonly cascadeStaging: GPUBuffer;
   private readonly shadowData: Float32Array;
   private readonly shadowStaging: GPUBuffer;
+  /** Each drawn view's lights (lights.ts `packViewLights`), by slot. */
+  private readonly lightStaging: GPUBuffer;
+  private readonly lightData = new Float32Array(LIGHTS_SIZE / 4);
   private readonly cascades = createShadowCascades();
   private readonly viewDataU32: Uint32Array;
   /** Stable per-view bit index (0–31) for record view masks. */
@@ -400,6 +410,11 @@ export class Engine {
     this.shadowStaging = device.createBuffer({
       label: "shadowStaging",
       size: maxViews * SHADOWS_STRIDE,
+      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
+    });
+    this.lightStaging = device.createBuffer({
+      label: "lightStaging",
+      size: maxViews * LIGHTS_SIZE,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
     this.viewBlock = {
@@ -1808,6 +1823,39 @@ export class Engine {
     this.stats.batches = batches;
   }
 
+  /**
+   * A view's point and spot lights, culled to it, camera-relative, into
+   * its slot of the staging buffer (copied in before its opaque pass).
+   */
+  private writeLights(view: View, index: number, aspect: number): void {
+    const frame = this.viewFrames.get(view)!;
+    const camera = view.camera;
+    const tanY = Math.tan(camera.fovy(aspect) / 2);
+    const count = packViewLights(
+      this.lightData,
+      0,
+      (visit) => view.world.forEachLight(visit),
+      {
+        position: camera.position,
+        direction: camera.direction,
+        up: camera.up,
+        right: camera.right,
+        near: camera.near,
+        tanX: tanY * aspect,
+        tanY,
+      },
+      view.exposureScale,
+    );
+    frame.lightCount = count;
+    this.ctx.device.queue.writeBuffer(
+      this.lightStaging,
+      index * LIGHTS_SIZE,
+      this.lightData,
+      0,
+      LIGHT_HEADER_FLOATS + count * LIGHT_FLOATS,
+    );
+  }
+
   private writeView(
     view: View,
     index: number,
@@ -1878,6 +1926,7 @@ export class Engine {
     this.viewDataU32[(index * VIEW_STRIDE) / 4 + VIEW_BIT_WORD] =
       this.viewBit(view);
     this.writeShadows(view, index, aspect);
+    this.writeLights(view, index, aspect);
   }
 
   /**
@@ -2359,6 +2408,7 @@ export class Engine {
       sky: this.sky.createView(),
       shadowed: false,
       ambient: false,
+      lightCount: 0,
       aoParams: device.createBuffer({
         label: "aoParams",
         size: 64,
@@ -2417,6 +2467,29 @@ export class Engine {
         0,
         SHADOWS_SIZE,
       );
+      enc.copyBufferToBuffer(
+        this.lightStaging,
+        frame.slot * LIGHTS_SIZE,
+        this.ctx.lightBuffer,
+        0,
+        (LIGHT_HEADER_FLOATS + frame.lightCount * LIGHT_FLOATS) * 4,
+      );
+    });
+
+    // Its point and spot lights into its froxels (lights.wgsl).
+    graph.addPass("lights", { sideEffect: true }, (enc) => {
+      if (frame.lightCount === 0) {
+        return;
+      }
+      const pass = enc.beginComputePass({
+        label: "lights",
+        timestampWrites: this.timer.passWrites(),
+      });
+      pass.setPipeline(this.ctx.pipelines.lightsAssign);
+      pass.setBindGroup(0, this.ctx.lightAssignGroup);
+      // A workgroup per tile, a thread per slice (lights.wgsl).
+      pass.dispatchWorkgroups(CLUSTERS[0], CLUSTERS[1]);
+      pass.end();
     });
 
     graph.addPass("cull", { sideEffect: true }, (enc) => {
@@ -2943,6 +3016,8 @@ interface PendingPick {
 
 /** Per-view frame state: the frame graph plus inputs its passes read each frame. */
 interface ViewFrame {
+  /** The point and spot lights it shades this frame (`writeLights`). */
+  lightCount: number;
   readonly x: number;
   readonly y: number;
   readonly width: number;
