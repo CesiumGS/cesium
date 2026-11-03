@@ -91,9 +91,15 @@ fn aerialMarch(relPosition: vec3f) -> AerialPerspective {
   }
   let sun = view.sunDirection.xyz;
   let nu = dot(direction, sun);
-  let phaseR = 3.0 / (16.0 * PI) * (1.0 + nu * nu);
   let g = a.miePhaseG;
+  let phaseR = 3.0 / (16.0 * PI) * (1.0 + nu * nu);
   let phaseM = 3.0 / (8.0 * PI) * (1.0 - g * g) / (2.0 + g * g) * (1.0 + nu * nu) / pow(1.0 + g * g - 2.0 * g * nu, 1.5);
+  // By night the Moon's light too (its share in `sunDirection.w`).
+  let moonShare = view.sunDirection.w;
+  let moon = view.moonLight.xyz;
+  let moonNu = dot(direction, moon);
+  let moonPhaseR = 3.0 / (16.0 * PI) * (1.0 + moonNu * moonNu) * moonShare;
+  let moonPhaseM = 3.0 / (8.0 * PI) * (1.0 - g * g) / (2.0 + g * g) * (1.0 + moonNu * moonNu) / pow(1.0 + g * g - 2.0 * g * moonNu, 1.5) * moonShare;
   var radianceA = vec4f(0.0);
   var radianceB = vec4f(0.0);
   var transmittanceA = vec4f(1.0);
@@ -124,11 +130,30 @@ fn aerialMarch(relPosition: vec3f) -> AerialPerspective {
     );
     let msA = textureSampleLevel(airMultipleScattering, environmentSampler, msUv, 0, 0.0);
     let msB = textureSampleLevel(airMultipleScattering, environmentSampler, msUv, 1, 0.0);
+    var moonA = vec4f(0.0);
+    var moonB = vec4f(0.0);
+    var moonMsA = vec4f(0.0);
+    var moonMsB = vec4f(0.0);
+    if (moonShare > 0.0) {
+      let muMoon = dot(normalize(p / (radii * radii)), moon);
+      let moonShadowed = muMoon < 0.0 && rp * rp * (muMoon * muMoon - 1.0) + bottom * bottom >= 0.0;
+      let moonUv = airTransmittanceUv(rp, muMoon, bottom, top);
+      let moonLit = select(1.0, 0.0, moonShadowed);
+      moonA = textureSampleLevel(airTransmittance, environmentSampler, moonUv, 0, 0.0) * moonLit;
+      moonB = textureSampleLevel(airTransmittance, environmentSampler, moonUv, 1, 0.0) * moonLit;
+      let moonMsUv = vec2f(
+        0.5 / 32.0 + (muMoon * 0.5 + 0.5) * (1.0 - 1.0 / 32.0),
+        msUv.y,
+      );
+      moonMsA = textureSampleLevel(airMultipleScattering, environmentSampler, moonMsUv, 0, 0.0) * moonShare;
+      moonMsB = textureSampleLevel(airMultipleScattering, environmentSampler, moonMsUv, 1, 0.0) * moonShare;
+    }
     {
       let rayleigh = a.rayleighScattering * rayleighDensity;
       let mie = a.mieScattering * mieDensity;
       let extinction = rayleigh + a.mieExtinction * mieDensity + a.ozoneAbsorption * ozoneDensity;
-      let scattered = (rayleigh * phaseR + mie * phaseM) * sunA + (rayleigh + mie) * msA;
+      let scattered = (rayleigh * phaseR + mie * phaseM) * sunA + (rayleigh + mie) * msA
+        + (rayleigh * moonPhaseR + mie * moonPhaseM) * moonA + (rayleigh + mie) * moonMsA;
       let segment = exp(-extinction * dt);
       radianceA += transmittanceA * scattered * (1.0 - segment) / max(extinction, vec4f(1e-9));
       transmittanceA *= segment;
@@ -137,7 +162,8 @@ fn aerialMarch(relPosition: vec3f) -> AerialPerspective {
       let rayleigh = b.rayleighScattering * rayleighDensity;
       let mie = b.mieScattering * mieDensity;
       let extinction = rayleigh + b.mieExtinction * mieDensity + b.ozoneAbsorption * ozoneDensity;
-      let scattered = (rayleigh * phaseR + mie * phaseM) * sunB + (rayleigh + mie) * msB;
+      let scattered = (rayleigh * phaseR + mie * phaseM) * sunB + (rayleigh + mie) * msB
+        + (rayleigh * moonPhaseR + mie * moonPhaseM) * moonB + (rayleigh + mie) * moonMsB;
       let segment = exp(-extinction * dt);
       radianceB += transmittanceB * scattered * (1.0 - segment) / max(extinction, vec4f(1e-9));
       transmittanceB *= segment;

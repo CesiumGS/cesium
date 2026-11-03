@@ -43,7 +43,10 @@ struct Sky {
   // The stars' exposure scale against a dark sky, when more open than the
   // view's (`starExposure`); 0: the view's.
   starExposure: f32,
-  _pad1: f32,
+  // The Moon's illuminance as a share of the sun's above the atmosphere,
+  // for the light the air scatters by night (the sky's, the haze's); 0
+  // while the sun is up, or without the Moon.
+  moonLight: f32,
   // The Moon (`moonDisk`): its center's direction from the camera (unit),
   // and the sine of its angular radius (0: none).
   moon: vec3f,
@@ -282,6 +285,12 @@ fn marchedSky(pixel: vec2f, group: u32) -> MarchedSky {
   if (!ground) {
     spectral += atmosphere.solarIrradiance / sky.sunSolidAngle * sunDisk(seen) * s.transmittance;
   }
+  // By night, the Moon's light scattered as the sun's is (its light is the
+  // sun's, reflected).
+  if (sky.moonLight > 0.0) {
+    let moon = march(sky.position, direction, normalize(sky.shape * sky.moon), 1e9, i32(sky.steps), false);
+    spectral += moon.radiance * atmosphere.solarIrradiance * sky.moonLight;
+  }
   return MarchedSky(
     toRgb(spectral, group) * sky.exposure,
     select(luminanceShare(s.transmittance, group), 0.0, ground),
@@ -309,8 +318,11 @@ fn skyStarsFragment(in: SkyVarying) -> @location(0) vec4f {
 // --- the sky-view table ---------------------------------------------------------
 
 const SKY_VIEW_SIZE = vec2f(192.0, 108.0);
-// The sky's rows, then one for the sun's radiance.
-const SKY_VIEW_ROWS = 109.0;
+// The sky's rows, one for the sun's radiance, then the Moon's sky: the
+// light it scatters, by night (the same mapping about the Moon's
+// direction; zeros while the sun is up).
+const SKY_VIEW_ROWS = 217.0;
+const MOON_SKY_ROW = 109.0;
 const SKY_VIEW_STEPS = 30;
 
 // The camera's local frame: up, and the horizontal direction of the sun.
@@ -321,8 +333,13 @@ struct SkyFrame {
 };
 
 fn skyFrame() -> SkyFrame {
+  return frameToward(sky.sun);
+}
+
+// The camera's local frame about a light's direction.
+fn frameToward(light: vec3f) -> SkyFrame {
   let up = normalize(sky.position);
-  var toward = sky.sun - up * dot(sky.sun, up);
+  var toward = light - up * dot(light, up);
   if (dot(toward, toward) < 1e-10) {
     // The sun at the zenith or nadir: any horizontal direction.
     toward = cross(up, select(vec3f(1.0, 0.0, 0.0), vec3f(0.0, 1.0, 0.0), abs(up.x) > 0.9));
@@ -373,7 +390,18 @@ fn skyViewFragment(in: SkyVarying) -> @location(0) vec4f {
   let f = skyFrame();
   var spectral = vec4f(0.0);
   var toSpace = 0.0;
-  if (in.position.y >= SKY_VIEW_SIZE.y) {
+  if (in.position.y >= MOON_SKY_ROW) {
+    if (sky.moonLight <= 0.0) {
+      return vec4f(0.0);
+    }
+    let m = frameToward(sky.moon);
+    let unit = vec2f(
+      texelToUnit(in.position.x / SKY_VIEW_SIZE.x, SKY_VIEW_SIZE.x),
+      texelToUnit((in.position.y - MOON_SKY_ROW) / SKY_VIEW_SIZE.y, SKY_VIEW_SIZE.y),
+    );
+    let s = march(sky.position, tableDirection(unit, r, m), sky.moon, 1e9, SKY_VIEW_STEPS, false);
+    spectral = s.radiance * atmosphere.solarIrradiance * sky.moonLight;
+  } else if (in.position.y >= SKY_VIEW_SIZE.y) {
     if (in.position.x >= 1.0) {
       // Texel 1: the sun's light through the air along the Moon's
       // direction (the Moon's color and dimming), scaled, not exposed.
@@ -393,11 +421,7 @@ fn skyViewFragment(in: SkyVarying) -> @location(0) vec4f {
       texelToUnit(in.position.x / SKY_VIEW_SIZE.x, SKY_VIEW_SIZE.x),
       texelToUnit(in.position.y / SKY_VIEW_SIZE.y, SKY_VIEW_SIZE.y),
     );
-    let angles = skyViewAngles(unit, r, atmosphere.bottomRadius);
-    let sinZenith = sin(angles.x);
-    let cosAzimuth = angles.y;
-    let sinAzimuth = sqrt(max(0.0, 1.0 - cosAzimuth * cosAzimuth));
-    let direction = f.up * cos(angles.x) + (f.toward * cosAzimuth + f.side * sinAzimuth) * sinZenith;
+    let direction = tableDirection(unit, r, f);
     let s = march(sky.position, direction, sky.sun, 1e9, SKY_VIEW_STEPS, false);
     spectral = s.radiance * atmosphere.solarIrradiance;
     // Alpha: the transmittance to space, for the stars (the groups' shares
@@ -407,6 +431,15 @@ fn skyViewFragment(in: SkyVarying) -> @location(0) vec4f {
     }
   }
   return vec4f(min(toRgb(spectral, in.group) * sky.exposure, vec3f(SKY_MAX)), toSpace);
+}
+
+// A table texel's direction in a frame (`skyViewAngles`).
+fn tableDirection(unit: vec2f, r: f32, f: SkyFrame) -> vec3f {
+  let angles = skyViewAngles(unit, r, atmosphere.bottomRadius);
+  let sinZenith = sin(angles.x);
+  let cosAzimuth = angles.y;
+  let sinAzimuth = sqrt(max(0.0, 1.0 - cosAzimuth * cosAzimuth));
+  return f.up * cos(angles.x) + (f.toward * cosAzimuth + f.side * sinAzimuth) * sinZenith;
 }
 
 @group(2) @binding(1) var skyView: texture_2d<f32>;
@@ -427,18 +460,29 @@ fn skyFromTable(direction: vec3f) -> TableSky {
   let cosZenith = dot(direction, f.up);
   let bottom = sky.bottomRadius;
   let ground = cosZenith < 0.0 && r * r * (cosZenith * cosZenith - 1.0) + bottom * bottom >= 0.0;
+  let texel = tableTexel(direction, f, 0.0, ground, r);
+  var color = texel.rgb;
+  if (sky.moonLight > 0.0) {
+    color += tableTexel(direction, frameToward(sky.moon), MOON_SKY_ROW, ground, r).rgb;
+  }
+  return TableSky(color, ground, texel.a);
+}
+
+// The table's texel in `direction`, its rows from `first`, about the
+// frame's light.
+fn tableTexel(direction: vec3f, f: SkyFrame, first: f32, ground: bool, r: f32) -> vec4f {
+  let cosZenith = dot(direction, f.up);
   let horizontal = direction - f.up * cosZenith;
   let length2 = dot(horizontal, horizontal);
   let cosAzimuth = select(1.0, dot(horizontal, f.toward) * inverseSqrt(length2), length2 > 1e-12);
-  let unit = skyViewUnit(cosZenith, cosAzimuth, ground, r, bottom);
+  let unit = skyViewUnit(cosZenith, cosAzimuth, ground, r, sky.bottomRadius);
   // The horizon lies between two rows (sky above, ground below): stay on
   // this side of it, or the filter blends the sky with the ground.
   let half = SKY_VIEW_SIZE.y * 0.5;
   var row = unitToTexel(unit.y, SKY_VIEW_SIZE.y) * SKY_VIEW_SIZE.y;
   row = select(min(row, half - 0.5), max(row, half + 0.5), ground);
-  let uv = vec2f(unitToTexel(unit.x, SKY_VIEW_SIZE.x), row / SKY_VIEW_ROWS);
-  let texel = textureSampleLevel(skyView, skyViewSampler, uv, 0.0);
-  return TableSky(texel.rgb, ground, texel.a);
+  let uv = vec2f(unitToTexel(unit.x, SKY_VIEW_SIZE.x), (first + row) / SKY_VIEW_ROWS);
+  return textureSampleLevel(skyView, skyViewSampler, uv, 0.0);
 }
 
 // The sky from the table, the sun's disk, the Moon and the stars.
@@ -557,6 +601,9 @@ fn aerialCompute(
   let nu = dot(direction, sky.sun);
   let phaseR = rayleighPhase(nu);
   let phaseM = miePhase(nu);
+  let moonNu = dot(direction, sky.moon);
+  let moonPhaseR = rayleighPhase(moonNu) * sky.moonLight;
+  let moonPhaseM = miePhase(moonNu) * sky.moonLight;
   // This slice's interval: from the slice before (the span's start for
   // the first) to its own distance.
   let w0 = (f32(j) - 0.5) / f32(AERIAL_SLICES);
@@ -574,8 +621,13 @@ fn aerialCompute(
     let rp = max(length(p), atmosphere.bottomRadius + 1e-3);
     let muSun = dot(p, sky.sun) / rp;
     let m = medium(rp - atmosphere.bottomRadius);
-    let scattered = (m.rayleigh * phaseR + m.mie * phaseM) * sunTransmittance(rp, muSun)
+    var scattered = (m.rayleigh * phaseR + m.mie * phaseM) * sunTransmittance(rp, muSun)
       + m.scattering * multipleScattering(rp, muSun);
+    if (sky.moonLight > 0.0) {
+      let muMoon = dot(p, sky.moon) / rp;
+      scattered += (m.rayleigh * moonPhaseR + m.mie * moonPhaseM) * sunTransmittance(rp, muMoon)
+        + m.scattering * multipleScattering(rp, muMoon) * sky.moonLight;
+    }
     let segment = exp(-m.extinction * dt);
     radiance += transmittance * scattered * (1.0 - segment) / max(m.extinction, vec4f(1e-9));
     transmittance *= segment;

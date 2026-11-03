@@ -39,9 +39,12 @@ const AIR_SIZE = 2 * 112 + 8 * 16;
 /** Ray-march steps per pixel, above the atmosphere. */
 const SKY_STEPS = 32;
 
-/** The sky-view table: 192 × 108 directions and a row for the sun. */
+/**
+ * The sky-view table: 192 × 108 directions, a row for the sun, then 108
+ * for the Moon's sky (sky.wgsl `skyViewFragment`).
+ */
 const SKY_VIEW_WIDTH = 192;
-const SKY_VIEW_ROWS = 109;
+const SKY_VIEW_ROWS = 217;
 
 export interface SkyTargets {
   colorFormats: GPUTextureFormat[];
@@ -63,6 +66,11 @@ export interface MoonView {
   toSun: ArrayLike<number>;
   /** At it, between the sun and the camera, radians (0: full). */
   phaseAngle: number;
+  /**
+   * Its illuminance as a share of the sun's above the atmosphere, for the
+   * light the air scatters (0 while the sun is up: by day it's lost).
+   */
+  airShare: number;
 }
 
 export interface SkyView {
@@ -1021,6 +1029,7 @@ export class Sky {
     f[56] = view.aerialStart;
     f[57] = view.aerialEnd;
     f[58] = starExposure;
+    f[59] = moon?.airShare ?? 0;
     if (moon) {
       f.set(moon.direction, 60);
       f[63] = moon.sinRadius;

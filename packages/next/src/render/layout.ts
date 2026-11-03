@@ -51,6 +51,8 @@ export interface ViewBlock {
    * transmittance toward it still to apply); undefined: none.
    */
   moon: { direction: Vec3; share: number } | undefined;
+  /** The Moon's share for the air's light (0 by day; `MoonView.airShare`). */
+  moonAir: number;
 }
 
 /**
@@ -105,7 +107,7 @@ export function writeViewBlock(
   out[o + 60] = block.sunDirection[0]!;
   out[o + 61] = block.sunDirection[1]!;
   out[o + 62] = block.sunDirection[2]!;
-  out[o + 63] = 0;
+  out[o + 63] = block.moonAir;
   out[o + 64] = block.width;
   out[o + 65] = block.height;
   out[o + 66] = 1 / block.width;

@@ -8,7 +8,9 @@ struct View {
   cameraLo: vec3f,
   aspect: f32,
   planes: array<vec4f, 5>, // camera-relative, inward normals; far is infinite
-  sunDirection: vec4f,     // unit vector toward the sun, Earth-fixed axes
+  // Toward the sun (unit, Earth-fixed axes, xyz), and the Moon's
+  // illuminance share for the air's light (w; 0 by day, `moonLight`).
+  sunDirection: vec4f,
   viewport: vec4f,         // width, height, 1/width, 1/height
   iblFrame: array<vec4f, 3>, // environment axes (east, up, -north) at the camera
   sunIlluminance: f32,     // lux by default

@@ -410,6 +410,7 @@ export class Engine {
       body: EARTH,
       aerial: undefined,
       moon: undefined,
+      moonAir: 0,
     };
     this.pickParams = device.createBuffer({
       size: 16,
@@ -1740,14 +1741,20 @@ export class Engine {
     // The Moon's light: its full disk gives the albedo's share of the sun's
     // light times its solid angle over π, then less by phase (Allen).
     const moon = this.moonFrom(camera.position);
-    block.moon = moon && {
-      direction: moon.direction,
-      share:
-        MOON_ALBEDO *
+    const moonShare = moon
+      ? MOON_ALBEDO *
         moon.sinRadius *
         moon.sinRadius *
-        moonPhaseBrightness(moon.phaseAngle),
-    };
+        moonPhaseBrightness(moon.phaseAngle)
+      : 0;
+    block.moon = moon && { direction: moon.direction, share: moonShare };
+    // The air's light by the Moon: only by night (by day the sun's is a
+    // million times more).
+    if (moon) {
+      const up = v3.normalize(scratchMoonAxis, camera.position);
+      moon.airShare = v3.dot(up, this.sunDirection) < 0 ? moonShare : 0;
+    }
+    block.moonAir = moon?.airShare ?? 0;
     if (drawsSky(view)) {
       const sky = this.viewFrames.get(view)!.sky;
       this.sky.writeStars(this.icrfToFixed);
@@ -2781,6 +2788,7 @@ const scratchMoon = {
   north: v3.vec3(),
   toSun: v3.vec3(),
   phaseAngle: 0,
+  airShare: 0,
 };
 const scratchMoonAxis = v3.vec3();
 /** The mean distance to the sun, m (IAU 2012). */
