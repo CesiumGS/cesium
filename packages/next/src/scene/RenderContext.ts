@@ -366,6 +366,12 @@ async function createPipelines(
         texture: { sampleType: "float", viewDimension: "2d-array" },
       },
       { binding: 6, visibility: FRAGMENT, sampler: { type: "filtering" } },
+      // Night lights: the same, emitted light.
+      {
+        binding: 7,
+        visibility: FRAGMENT,
+        texture: { sampleType: "float", viewDimension: "2d-array" },
+      },
     ],
   });
   const textureSetLayout = device.createBindGroupLayout({

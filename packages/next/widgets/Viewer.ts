@@ -18,6 +18,7 @@
 import {
   BingImagery,
   CanvasTarget,
+  IonTmsImagery,
   Clock,
   EYE,
   Ellipsoid,
@@ -103,6 +104,12 @@ export interface ViewerOptions {
    * there would see it; a camera's exposure for what a camera records.
    */
   exposure?: Exposure;
+  /**
+   * The Earth's lights at night (default true: NASA's Black Marble, ion
+   * asset 3812, when the token can reach it), or another night image;
+   * false: none. `cityLights` turns them on and off.
+   */
+  cityLights?: boolean | ImageryProvider | Promise<ImageryProvider | undefined>;
   /** The sun's shadows in the views (default true; `View.shadows`). */
   shadows?: boolean;
   /** Ambient occlusion in the views (default true; `View.ambientOcclusion`). */
@@ -277,6 +284,15 @@ export class Viewer {
     this.clockPlaced = options.clock !== undefined;
     this.clock = options.clock ?? new Clock({ mode: "paused" });
     this.moon = options.moon !== false;
+    const lights = options.cityLights ?? true;
+    if (lights !== false) {
+      // A public asset: without it in the token's account, no lights.
+      this.lightsProvider = (
+        lights === true
+          ? IonTmsImagery.fromIon(3812, this.tokenOptions())
+          : Promise.resolve(lights)
+      ).catch(() => undefined);
+    }
     this.clock.events.on("change", () => {
       this.applyClockSky();
       if (this.sunFromClock_) {
@@ -387,6 +403,20 @@ export class Viewer {
     }
   }
 
+  /** The night lights' image, resolving (undefined: none). */
+  private lightsProvider?: Promise<ImageryProvider | undefined>;
+
+  /** Whether the globe's night lights show (`ViewerOptions.cityLights`). */
+  get cityLights(): boolean {
+    return this.view.cityLights;
+  }
+  set cityLights(on: boolean) {
+    for (const view of this.views) {
+      view.cityLights = on;
+    }
+    this.engine.requestRender();
+  }
+
   private async buildGlobe(imagery: ImageryProvider | boolean): Promise<void> {
     if (imagery === true) {
       // Imagery and the terrain endpoint at once, not one after the other;
@@ -416,6 +446,7 @@ export class Viewer {
     const options = {
       policy: this.policy,
       ...(imagery ? { imagery } : {}),
+      ...(this.lightsProvider ? { lights: this.lightsProvider } : {}),
     };
     if (kind === "terrain") {
       const ion = await (this.early.terrain ??
@@ -738,6 +769,7 @@ export class Viewer {
       }));
       Object.assign(second.lighting, this.view.lighting);
       second.exposure = this.view.exposure;
+      second.cityLights = this.view.cityLights;
       second.outputEncoding = this.view.outputEncoding;
       const controller = (this.secondController = new GlobeController(
         second,

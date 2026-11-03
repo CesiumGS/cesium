@@ -15,6 +15,7 @@ import {
   FLAGS_WORD,
   VIEW_MASK_WORD,
   IMAGERY_SLICE_WORD,
+  LIGHTS_SLICE_WORD,
   ALL_VIEWS,
   CLIP_BLOCK_WORD,
   CLIP_BOXES,
@@ -523,6 +524,8 @@ export class World {
   private drawBindGroup!: GPUBindGroup;
   /** Globe imagery array (a 1×1 placeholder until imagery is attached). */
   private imageryView: GPUTextureView;
+  /** Night lights array (the same until lights are attached). */
+  private lightsView: GPUTextureView;
   private readonly imagerySampler: GPUSampler;
 
   constructor(
@@ -660,6 +663,7 @@ export class World {
         usage: GPUTextureUsage.TEXTURE_BINDING,
       })
       .createView({ dimension: "2d-array" });
+    this.lightsView = this.imageryView;
     this.imagerySampler = device.createSampler({
       label: "world.imagery",
       magFilter: "linear",
@@ -1497,6 +1501,32 @@ export class World {
     this.version++;
   }
 
+  /** Binds the night lights array (`GlobeImagery`, "lights") for draws. */
+  setLightsArray(view: GPUTextureView): void {
+    this.lightsView = view;
+    this.createDrawBindGroup();
+    // The cached bundle binds the old group (and its soon-destroyed array).
+    this.bundle = undefined;
+    this.changedViews = ALL_VIEWS;
+    this.version++;
+  }
+
+  /**
+   * Points a globe tile's record at its night lights (`packImagery`, 0:
+   * none): light the surface emits (cities), in cd/m², added to what it
+   * reflects.
+   */
+  setLights(handle: DrawHandle, packed: number): void {
+    if (!this.hasDraw(handle)) {
+      return;
+    }
+    const o = handle.index * RECORD_WORDS;
+    if (this.recordsU32[o + LIGHTS_SLICE_WORD] !== packed >>> 0) {
+      this.recordsU32[o + LIGHTS_SLICE_WORD] = packed >>> 0;
+      this.markDirty(handle.index);
+    }
+  }
+
   /**
    * Points a globe tile's record at its imagery (`packImagery`, 0: none).
    * Imagery replaces the material's color, lit like any surface, or with
@@ -2149,6 +2179,7 @@ export class World {
         ...buffers.map((b, binding) => ({ binding, resource: { buffer: b } })),
         { binding: 5, resource: this.imageryView },
         { binding: 6, resource: this.imagerySampler },
+        { binding: 7, resource: this.lightsView },
       ],
     });
   }

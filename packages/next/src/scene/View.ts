@@ -298,6 +298,11 @@ export interface ViewOptions {
   ambientOcclusion?: boolean;
   /** How far ambient occlusion looks for occluders, m. Default 3. */
   ambientOcclusionRadius?: number;
+  /**
+   * The globe's night lights (`GlobeOptions.lights`), where it has them.
+   * Default true.
+   */
+  cityLights?: boolean;
   /** Background color as displayed (already exposed), with "color". */
   clearColor?: readonly [number, number, number];
   /** Output transfer function. "gamma2.2" matches CesiumJS 1.x. */
@@ -372,6 +377,7 @@ export class View {
   shadows: boolean;
   ambientOcclusion: boolean;
   ambientOcclusionRadius: number;
+  cityLights: boolean;
   clearColor: readonly [number, number, number];
   outputEncoding: OutputEncoding;
   toneMapping: ToneMapping;
@@ -407,6 +413,7 @@ export class View {
     this.shadows = options.shadows ?? false;
     this.ambientOcclusion = options.ambientOcclusion ?? false;
     this.ambientOcclusionRadius = options.ambientOcclusionRadius ?? 3;
+    this.cityLights = options.cityLights ?? true;
     this.clearColor = options.clearColor ?? [0.004, 0.008, 0.02];
     this.outputEncoding = options.outputEncoding ?? "srgb";
     this.toneMapping = options.toneMapping ?? "pbrNeutral";

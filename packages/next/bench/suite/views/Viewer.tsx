@@ -105,6 +105,7 @@ const LIGHTING_DEFAULTS: Lighting = {
   aerialPerspective: true,
   shadows: true,
   ambientOcclusion: true,
+  cityLights: true,
   visibility: 60,
   aerosol: "continental",
   sunIlluminance: 100_000,
@@ -555,6 +556,11 @@ export function Viewer() {
                     label="Ambient occlusion"
                     checked={lighting.ambientOcclusion}
                     onChange={(v) => light("ambientOcclusion", v)}
+                  />
+                  <Setting
+                    label="City lights"
+                    checked={lighting.cityLights}
+                    onChange={(v) => light("cityLights", v)}
                   />
                   <Choice
                     label="Aerosols"

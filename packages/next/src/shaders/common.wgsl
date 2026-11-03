@@ -12,7 +12,9 @@ struct View {
   // illuminance share for the air's light (w; 0 by day, `moonLight`).
   sunDirection: vec4f,
   viewport: vec4f,         // width, height, 1/width, 1/height
-  iblFrame: array<vec4f, 3>, // environment axes (east, up, -north) at the camera
+  // Environment axes (east, up, -north) at the camera; [0].w: 1 when the
+  // globe's night lights show (View.cityLights).
+  iblFrame: array<vec4f, 3>,
   sunIlluminance: f32,     // lux by default
   diffuseIbl: f32,
   specularIbl: f32,
@@ -60,7 +62,7 @@ struct DrawRecord {
   instanceCount: u32,
   instanceStreams: u32,    // per-instance streams in the arena (word offset)
   instanceStride: u32,     // their words per instance
-  _recordPad: u32,
+  lightsSlice: u32,        // a globe tile's slice of the night lights (as imagerySlice)
 };
 
 // A placement composed in float64 on the CPU (World transform table).

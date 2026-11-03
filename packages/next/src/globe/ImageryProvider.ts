@@ -67,6 +67,97 @@ export class UrlTemplateImagery implements ImageryProvider {
 }
 
 /**
+ * Imagery ion tiles and hosts itself (a Tile Map Service: rows counted from
+ * the south), as `IonImageryProvider` reads it in 1.x: e.g. asset 3812,
+ * NASA's Black Marble (the Earth at night, public domain), the `Viewer`'s
+ * city lights. Web Mercator only.
+ */
+export class IonTmsImagery implements ImageryProvider {
+  readonly tilingScheme = "webMercator" as const;
+  readonly minimumLevel = 0;
+
+  private constructor(
+    readonly name: string,
+    private readonly base: string,
+    private readonly extension: string,
+    readonly maximumLevel: number,
+    readonly tileSize: number,
+    readonly headers: Record<string, string>,
+    readonly attributions: IonAttribution[],
+  ) {}
+
+  /**
+   * The imagery behind an ion asset, resolved with the ion access token
+   * (`ionDefaults` or `accessToken`); its tile map's levels and format.
+   */
+  static async fromIon(
+    assetId: number,
+    options: { accessToken?: string; server?: string } = {},
+  ): Promise<IonTmsImagery> {
+    const accessToken = options.accessToken ?? ionDefaults.accessToken;
+    if (!accessToken) {
+      throw new Error(`ion asset ${assetId}: no access token`);
+    }
+    const server = options.server ?? ionDefaults.server;
+    const response = await fetch(
+      new URL(`v1/assets/${assetId}/endpoint`, server),
+      { headers: { Authorization: `Bearer ${accessToken}` } },
+    );
+    if (!response.ok) {
+      throw new Error(
+        `ion asset ${assetId}: endpoint request failed (${response.status})`,
+      );
+    }
+    const endpoint = (await response.json()) as {
+      type: string;
+      externalType?: string;
+      url?: string;
+      accessToken?: string;
+      attributions?: Array<{ html: string; collapsible?: boolean }>;
+    };
+    if (endpoint.type !== "IMAGERY" || endpoint.externalType || !endpoint.url) {
+      throw new Error(
+        `ion asset ${assetId}: ${endpoint.externalType ?? endpoint.type} imagery is not ion's own tiles`,
+      );
+    }
+    const headers = { Authorization: `Bearer ${endpoint.accessToken ?? ""}` };
+    const map = await fetch(new URL("tilemapresource.xml", endpoint.url), {
+      headers,
+    });
+    if (!map.ok) {
+      throw new Error(`ion asset ${assetId}: no tile map (${map.status})`);
+    }
+    const xml = new DOMParser().parseFromString(await map.text(), "text/xml");
+    const srs = xml.querySelector("SRS")?.textContent ?? "";
+    if (!/3857|900913/.test(srs)) {
+      throw new Error(`ion asset ${assetId}: ${srs} tiles are not supported`);
+    }
+    const format = xml.querySelector("TileFormat");
+    const levels = [...xml.querySelectorAll("TileSet")].map((t) =>
+      Number(t.getAttribute("href")),
+    );
+    return new IonTmsImagery(
+      `ion ${assetId}`,
+      endpoint.url,
+      format?.getAttribute("extension") ?? "png",
+      Math.max(...levels, 0),
+      Number(format?.getAttribute("width") ?? 256),
+      headers,
+      (endpoint.attributions ?? []).map((a) => ({
+        html: a.html,
+        collapsible: a.collapsible === true,
+      })),
+    );
+  }
+
+  tileUrl(x: number, y: number, level: number): string {
+    // Rows counted from the south.
+    const row = 2 ** level - 1 - y;
+    return new URL(`${level}/${x}/${row}.${this.extension}`, this.base).href;
+  }
+}
+
+/**
  * Bing Maps tiles (quadkeys), as ion serves its default imagery (asset 2).
  * Levels here are Web Mercator levels (one tile at level 0); Bing starts at
  * level 1, its quadkey length (1.x counts from there with 2×2 tiles).

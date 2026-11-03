@@ -7,6 +7,7 @@
  */
 import {
   Ellipsoid,
+  IonTmsImagery,
   createBox,
   eastNorthUpToFixedFrame,
   fromDegrees,
@@ -164,6 +165,8 @@ export interface Lighting {
   shadows: boolean;
   /** 2.0: ambient occlusion. */
   ambientOcclusion: boolean;
+  /** 2.0: the Earth's lights at night (NASA's Black Marble). */
+  cityLights: boolean;
   /** 2.0: how far one can see through the air, km (its haze). */
   visibility: number;
   /** 2.0: what the haze is made of. */
@@ -263,6 +266,11 @@ export class NextViewerHost implements ViewerHost {
       globe: settings.terrain ? "terrain" : "ellipsoid",
       policy: settings.policy,
       renderMode: settings.continuous ? "continuous" : "onDemand",
+      // A public asset: with CesiumJS's evaluation token where the
+      // account's doesn't reach it, as other public assets load here.
+      cityLights: IonTmsImagery.fromIon(3812).catch(() =>
+        IonTmsImagery.fromIon(3812, { accessToken: DEFAULT_ION_TOKEN }),
+      ),
     });
     const host = new NextViewerHost(viewer);
     host.settings = settings;
@@ -436,6 +444,7 @@ export class NextViewerHost implements ViewerHost {
   setLighting(lighting: Lighting): void {
     const { viewer } = this;
     viewer.engine.visibility = lighting.visibility;
+    viewer.cityLights = lighting.cityLights;
     viewer.engine.aerosol = lighting.aerosol;
     if (lighting.sunFromTime) {
       viewer.sunFromClock = true;

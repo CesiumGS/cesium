@@ -769,7 +769,14 @@ from orbit open the exposure ten stops. Settled: a sunlit city about
 EV100 16, the sunlit Earth from orbit about 13.8; a moonlit city dark,
 gray-blue and legible; a moonless one, with nothing lit, near black (the
 brightness model's verdict, darker than a dark-adapted walker finds it).
-Next: city lights on the night side.
+City lights: the globe's second imagery layer, light the surface emits
+(`GlobeOptions.lights`; the `Viewer` takes NASA's Black Marble, ion asset
+3812, through `IonTmsImagery`), each terrain tile's night slice in the
+record's last word, its brightest white 0.3 cd/m² as seen from above
+(VIIRS's day-night band near saturation in city centers), dimmed by the
+air like any surface; `View.cityLights` turns them off. A camera at EV100
+−4 sees them orange, as photographs from orbit do; the dark-adapted eye
+sees them mostly with its rods, gray-white.
 
 #### Fog and aerial perspective
 

@@ -73,6 +73,7 @@ export {
 export { GlobeStepwiseSelection } from "./globe/GlobeStepwise.ts";
 export {
   BingImagery,
+  IonTmsImagery,
   UrlTemplateImagery,
   type ImageryProvider,
 } from "./globe/ImageryProvider.ts";

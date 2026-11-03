@@ -53,6 +53,8 @@ export interface ViewBlock {
   moon: { direction: Vec3; share: number } | undefined;
   /** The Moon's share for the air's light (0 by day; `MoonView.airShare`). */
   moonAir: number;
+  /** The globe's night lights show (`View.cityLights`). */
+  cityLights: boolean;
 }
 
 /**
@@ -118,6 +120,7 @@ export function writeViewBlock(
     out[o + 70 + i * 4] = axis[2]!;
     out[o + 71 + i * 4] = 0;
   });
+  out[o + 71] = block.cityLights ? 1 : 0;
   const sun = block.lighting.sunIlluminance;
   const atmosphere = block.body.atmosphere;
   // From the atmosphere: the table's light, scaled by 1; a body without
@@ -157,6 +160,11 @@ export const FLAGS_WORD = 9;
  * world's imagery array (`packImagery`); 0 = none.
  */
 export const IMAGERY_SLICE_WORD = 21;
+/**
+ * Word offset of `DrawRecord.lightsSlice`: a globe tile's slice of its
+ * world's night-lights array (`packImagery`); 0 = none.
+ */
+export const LIGHTS_SLICE_WORD = 31;
 /** Word offset of `DrawRecord.viewMask`. */
 export const VIEW_MASK_WORD = 23;
 /**
@@ -339,7 +347,7 @@ export function writeDrawRecord(
   u32[o + 28] = r.instanceCount ?? 0;
   u32[o + 29] = r.instanceStreams ?? NO_STREAM;
   u32[o + 30] = r.instanceStride ?? 0;
-  u32[o + 31] = 0;
+  u32[o + 31] = 0; // night lights slice (packImagery)
 }
 
 /**

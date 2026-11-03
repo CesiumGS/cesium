@@ -54,6 +54,12 @@ export interface GlobeImageryOptions {
    * use against 1.x.
    */
   lit?: boolean;
+  /**
+   * "surface" (the default): the surface's color. "lights": light it
+   * emits, a night image of the Earth (its own array; the surface's tiles
+   * don't wait for it).
+   */
+  role?: "surface" | "lights";
 }
 
 interface Source {
@@ -113,6 +119,7 @@ export class GlobeImagery {
   private readonly baseColor: readonly [number, number, number];
   /** Lit by the sun and sky (`GlobeImageryOptions.lit`). */
   private readonly lit: boolean;
+  readonly role: "surface" | "lights";
   private readonly origin: string;
   private frame = 0;
   private loading = 0;
@@ -132,10 +139,13 @@ export class GlobeImagery {
       device.limits.maxTextureArrayLayers,
       MAX_IMAGERY_SLICES,
     );
-    this.baseColor = options.baseColor ?? [0, 0, 0.5];
+    this.role = options.role ?? "surface";
+    // No lights where the night image has none.
+    this.baseColor =
+      options.baseColor ?? (this.role === "lights" ? [0, 0, 0] : [0, 0, 0.5]);
     this.lit = options.lit ?? true;
     this.texture = device.createTexture({
-      label: "globe.imagery",
+      label: `globe.${this.role}`,
       size: [this.size, this.size, slices],
       format: "rgba8unorm",
       mipLevelCount: Math.log2(this.size) + 1,
@@ -214,7 +224,12 @@ export class GlobeImagery {
       provider.tileUrl(0, 0, Math.max(provider.minimumLevel, 1)),
     ).origin;
     requests.register(this.origin);
-    world.setImageryArray(this.texture.createView({ dimension: "2d-array" }));
+    const array = this.texture.createView({ dimension: "2d-array" });
+    if (this.role === "lights") {
+      world.setLightsArray(array);
+    } else {
+      world.setImageryArray(array);
+    }
   }
 
   /**
@@ -740,7 +755,11 @@ export class GlobeImagery {
     }
     if (this.applied.get(instance) !== packed) {
       for (const draw of instance.draws) {
-        this.world.setImagery(draw, packed, !this.lit);
+        if (this.role === "lights") {
+          this.world.setLights(draw, packed);
+        } else {
+          this.world.setImagery(draw, packed, !this.lit);
+        }
       }
       this.applied.set(instance, packed);
     }

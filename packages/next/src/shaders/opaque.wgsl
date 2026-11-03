@@ -266,6 +266,16 @@ struct Air {
 // Globe imagery: one slice per terrain tile, composited (GlobeImagery).
 @group(1) @binding(5) var imagery: texture_2d_array<f32>;
 @group(1) @binding(6) var imagerySampler: sampler;
+// The night lights: light the surface emits (GlobeImagery "lights").
+@group(1) @binding(7) var lightsImagery: texture_2d_array<f32>;
+
+// The night image's brightest white, cd/m² as seen from above (a city's
+// lamps averaged over the image's half-kilometer texels): VIIRS's
+// day-night band saturates near 100 nW/cm²/sr in city centers, about 0.3
+// cd/m² for their spectrum. Below `CITY_LIGHTS_FLOOR` (linear), the
+// image's own dark background, none.
+const CITY_LIGHTS_LUMINANCE = 0.3;
+const CITY_LIGHTS_FLOOR = 0.004;
 const CLIP_BOXES: u32 = 8u;
 
 @group(2) @binding(0) var baseColorTexture: texture_2d<f32>;
@@ -638,6 +648,13 @@ fn fs(in: VsOut, @builtin(front_facing) frontFacing: bool) -> FsOut {
     imageryUv(imageryPacked, in.uv),
     max(imageryPacked & 4095u, 1u) - 1u,
   );
+  let lightsPacked = r.lightsSlice;
+  let lightsSample = textureSample(
+    lightsImagery,
+    imagerySampler,
+    imageryUv(lightsPacked, in.uv),
+    max(lightsPacked & 4095u, 1u) - 1u,
+  ).rgb;
   let dPdx = dpdx(in.relPosition);
   let dPdy = dpdy(in.relPosition);
   let dUVdx = dpdx(in.uv);
@@ -781,7 +798,12 @@ fn fs(in: VsOut, @builtin(front_facing) frontFacing: bool) -> FsOut {
 
   // Pre-exposed (plan §4.2). Emission is display-relative: authored
   // emissive colors look the same at any exposure.
-  var lit = (direct + indirect) * view.exposure;
+  var emitted = vec3f(0.0);
+  if (lightsPacked != 0u && view.iblFrame[0].w > 0.5) {
+    let lights = srgbToLinear(lightsSample);
+    emitted = max(lights - CITY_LIGHTS_FLOOR, vec3f(0.0)) / (1.0 - CITY_LIGHTS_FLOOR) * CITY_LIGHTS_LUMINANCE;
+  }
+  var lit = (direct + indirect + emitted) * view.exposure;
   var shown = emissive;
   if (view.sunLight.w > 0.5) {
     // The air's light is pre-exposed in the volume. From high up it's

@@ -188,6 +188,13 @@ export interface GlobeOptions extends TilesetOptions {
    */
   imagery?: ImageryProvider | Promise<ImageryProvider | undefined>;
   imageryOptions?: GlobeImageryOptions;
+  /**
+   * The Earth at night, as light the surface emits (cities, roads, ships):
+   * an image of it (e.g. NASA's Black Marble, `IonTmsImagery.fromIon(3812)`),
+   * its brightest white `CITY_LIGHTS_LUMINANCE`. Seen at night (by day the
+   * sunlit ground is ten thousand times brighter).
+   */
+  lights?: ImageryProvider | Promise<ImageryProvider | undefined>;
 }
 
 export class Engine {
@@ -418,6 +425,7 @@ export class Engine {
       aerial: undefined,
       moon: undefined,
       moonAir: 0,
+      cityLights: true,
     };
     this.pickParams = device.createBuffer({
       size: 16,
@@ -879,6 +887,24 @@ export class Engine {
         this.workers,
         options.imageryOptions,
       );
+    if (options.lights) {
+      void Promise.resolve(options.lights).then(
+        (provider) => {
+          if (provider && this.tilesets.includes(tileset)) {
+            tileset.lights = new GlobeImagery(
+              this.ctx,
+              world,
+              provider,
+              this.requests,
+              this.workers,
+              { role: "lights" },
+            );
+            this.requestRender();
+          }
+        },
+        () => undefined,
+      );
+    }
     if (options.imagery instanceof Promise) {
       tileset.imageryPending = true;
       void options.imagery.then(
@@ -1780,6 +1806,7 @@ export class Engine {
     block.specularMaxLod = this.ctx.environment.maxLod;
     block.exposure = view.exposureScale;
     block.body = view.body;
+    block.cityLights = view.cityLights;
     block.aerial = undefined;
     // The Moon's light: its full disk gives the albedo's share of the sun's
     // light times its solid angle over π, then less by phase (Allen).

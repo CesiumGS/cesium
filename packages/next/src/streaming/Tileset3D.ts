@@ -567,6 +567,8 @@ export class Tileset3D implements TileTree {
   }
   /** Globe imagery draped on this terrain tileset (`engine.addTerrain`). */
   imagery?: GlobeImagery;
+  /** The globe's night lights (`GlobeOptions.lights`), for the same tiles. */
+  lights?: GlobeImagery;
   /**
    * Imagery is on its way (`GlobeOptions.imagery` as a promise): tiles load
    * meanwhile but none is shown bare.
@@ -1031,6 +1033,7 @@ export class Tileset3D implements TileTree {
         }
       }
       this.imagery.update(wanted);
+      this.lights?.update(wanted);
     }
     this.evict(frame);
     if (
@@ -1346,10 +1349,9 @@ export class Tileset3D implements TileTree {
    */
   credits(): string[] {
     const counts = new Map<string, number>();
-    this.imagery?.credits(
-      new Set([...this.lastSelected.values()].flat()),
-      counts,
-    );
+    const shown = new Set([...this.lastSelected.values()].flat());
+    this.imagery?.credits(shown, counts);
+    this.lights?.credits(shown, counts);
     for (const tiles of this.lastSelected.values()) {
       for (const tile of tiles) {
         for (const credit of (tile.copyright ?? "").split(";")) {
@@ -1387,6 +1389,8 @@ export class Tileset3D implements TileTree {
     }
     this.imagery?.destroy();
     this.imagery = undefined;
+    this.lights?.destroy();
+    this.lights = undefined;
     for (const origin of this.origins) {
       this.engine.requests.unregister(origin);
     }
