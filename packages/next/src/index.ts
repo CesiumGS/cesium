@@ -34,6 +34,7 @@ export {
   type HdrImage,
   type Exposure,
   DAYLIGHT_EXPOSURE,
+  EYE,
   UNITLESS_EXPOSURE,
   ev100ToScale,
   type OutputEncoding,

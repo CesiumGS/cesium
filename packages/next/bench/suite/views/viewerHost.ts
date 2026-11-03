@@ -151,6 +151,7 @@ export interface Lighting {
   elevation: number;
   /** 1.x: the sun's intensity, unitless (1.x's default 2). */
   intensity: number;
+  /** 1.x: image-based lighting factors (2.0 lights physically: 1). */
   diffuseIbl: number;
   specularIbl: number;
   /** 1.x: the exposure multiplier, unitless. */
@@ -169,9 +170,16 @@ export interface Lighting {
   aerosol: AerosolType;
   /** 2.0: otherwise, a white sun of this illuminance, lux. */
   sunIlluminance: number;
-  /** 2.0: the camera's exposure value at ISO 100, when not automatic. */
+  /**
+   * 2.0: as a person there would see it ("eye": adapting, night vision,
+   * the stars) or as a camera records it ("camera": the exposure below).
+   */
+  rendering: "eye" | "camera";
+  /** 2.0, eye: brighter (stops) than the eye's own adaptation. */
+  compensation: number;
+  /** 2.0, camera: its exposure value at ISO 100, when not automatic. */
   ev100: number;
-  /** 2.0: exposure metered from the image. */
+  /** 2.0, camera: exposure metered from the image. */
   autoExposure: boolean;
   encoding: "srgb" | "gamma2.2";
   /** How exposed light becomes display color (1.x: no AgX, PBR Neutral). */
@@ -239,8 +247,6 @@ const message = (error: unknown) =>
 export class NextViewerHost implements ViewerHost {
   readonly unsupported = {};
   private constructor(readonly viewer: Viewer) {}
-  /** The time controls' night action (the page turns on auto exposure). */
-  onNight?: () => void;
   private settings?: ViewSettings;
   private loadToken = 0;
   /** The content shown (a tileset, model or the city), removed on switch. */
@@ -253,18 +259,12 @@ export class NextViewerHost implements ViewerHost {
     element: HTMLElement,
     settings: ViewSettings,
   ): Promise<NextViewerHost> {
-    // The host is made after the viewer; its night action is looked up late.
-    const made: { host?: NextViewerHost } = {};
     const viewer = await Viewer.create(element, {
       globe: settings.terrain ? "terrain" : "ellipsoid",
       policy: settings.policy,
       renderMode: settings.continuous ? "continuous" : "onDemand",
-      timeControls: {
-        nightActionLabel: "Automatic exposure",
-        onNight: () => made.host?.onNight?.(),
-      },
     });
-    const host = (made.host = new NextViewerHost(viewer));
+    const host = new NextViewerHost(viewer);
     host.settings = settings;
     viewer.ready.catch((error) =>
       host.warnings.add(`globe: ${message(error)}`),
@@ -450,11 +450,15 @@ export class NextViewerHost implements ViewerHost {
       view.aerialPerspective = lighting.aerialPerspective;
       view.shadows = lighting.shadows;
       view.ambientOcclusion = lighting.ambientOcclusion;
-      view.lighting.diffuseIbl = lighting.diffuseIbl;
-      view.lighting.specularIbl = lighting.specularIbl;
-      view.exposure = lighting.autoExposure
-        ? { auto: true }
-        : { ev100: lighting.ev100 };
+      // Physically based: image-based lighting at its own strength.
+      view.lighting.diffuseIbl = 1;
+      view.lighting.specularIbl = 1;
+      view.exposure =
+        lighting.rendering === "eye"
+          ? { eye: true, compensation: lighting.compensation }
+          : lighting.autoExposure
+            ? { auto: true }
+            : { ev100: lighting.ev100 };
       view.outputEncoding = lighting.encoding;
       view.toneMapping = lighting.toneMapping;
     }

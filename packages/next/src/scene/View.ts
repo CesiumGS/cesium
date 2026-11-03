@@ -209,8 +209,10 @@ export interface PickResult {
 }
 
 /**
- * How a view exposes its light (plan §4.2). Light is in physical units by
- * default (lux, cd/m²), so the default is a camera set for daylight.
+ * How a view turns the scene's light into an image (plan §4.2): as a
+ * camera records it (a fixed exposure, a plain scale, or metered), or as
+ * the eye sees it (`EYE`). Light is in physical units by default (lux,
+ * cd/m²), so the default is a camera set for daylight.
  */
 export type Exposure =
   /**
@@ -232,7 +234,21 @@ export type Exposure =
       min?: number;
       max?: number;
       speed?: number;
-    };
+    }
+  /**
+   * The eye: the scene's light as a person there would see it. It adapts
+   * to the scene as automatic exposure does, but not all the way: night
+   * stays darker than day (Krawczyk et al. 2005's adaptation key, about
+   * 4.5 stops at moonlight); in dim light it sees with its rods, losing
+   * color toward a gray blue (below about 3 cd/m², wholly below 0.01:
+   * Thompson et al. 2002); and it sees the stars against a dark sky even
+   * where the scene is bright (from orbit). `compensation` (stops)
+   * brightens when positive; `speed` is the adaptation rate per second.
+   */
+  | { eye: true; compensation?: number; speed?: number };
+
+/** The eye (`Exposure`): the `Viewer`'s default. */
+export const EYE: Exposure = { eye: true };
 
 /** No exposure: for scenes lit without units (1.x's terms). */
 export const UNITLESS_EXPOSURE: Exposure = { scale: 1 };
@@ -248,7 +264,7 @@ export interface ViewOptions {
   world: World;
   camera?: Camera;
   viewport?: Viewport;
-  /** Default: daylight, EV100 15. */
+  /** How light becomes an image (`Exposure`). Default: daylight, EV100 15. */
   exposure?: Exposure;
   /** The body whose sky and light the view sees. Default: the Earth. */
   body?: Body;
@@ -281,16 +297,6 @@ export interface ViewOptions {
   ambientOcclusion?: boolean;
   /** How far ambient occlusion looks for occluders, m. Default 3. */
   ambientOcclusionRadius?: number;
-  /**
-   * The stars as the eye sees them rather than as a camera would: against
-   * a dark sky (space, night, deep twilight) they are exposed as at this
-   * EV100 when the view's own exposure is less open, so they show at a
-   * daylight exposure from orbit; a bright sky hides them as before.
-   * Default undefined: the view's exposure (physical; at daylight
-   * exposures they're far below black). The `Viewer` sets -3 (about as
-   * bright as 1.x draws its star map).
-   */
-  starExposure?: number;
   /** Background color as displayed (already exposed), with "color". */
   clearColor?: readonly [number, number, number];
   /** Output transfer function. "gamma2.2" matches CesiumJS 1.x. */
@@ -336,7 +342,7 @@ export class View {
    * a sunny day spans about 20 stops from night).
    */
   exposureScale: number;
-  /** @internal Automatic exposure's EV100 and when it last moved. */
+  /** @internal Automatic exposure's (or the eye's) EV100 and when it last moved. */
   autoExposure?: {
     ev100: number;
     time: number;
@@ -353,7 +359,6 @@ export class View {
   shadows: boolean;
   ambientOcclusion: boolean;
   ambientOcclusionRadius: number;
-  starExposure: number | undefined;
   clearColor: readonly [number, number, number];
   outputEncoding: OutputEncoding;
   toneMapping: ToneMapping;
@@ -389,7 +394,6 @@ export class View {
     this.shadows = options.shadows ?? false;
     this.ambientOcclusion = options.ambientOcclusion ?? false;
     this.ambientOcclusionRadius = options.ambientOcclusionRadius ?? 3;
-    this.starExposure = options.starExposure;
     this.clearColor = options.clearColor ?? [0.004, 0.008, 0.02];
     this.outputEncoding = options.outputEncoding ?? "srgb";
     this.toneMapping = options.toneMapping ?? "pbrNeutral";

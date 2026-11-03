@@ -91,7 +91,8 @@ const VIEW_DEFAULTS: ViewSettings = {
 };
 
 // Each engine's own terms: 1.x's unitless sun (2) and exposure (1); 2.0's
-// physical ones, a high sun (100 klx) and a daylight camera (EV100 15).
+// physical ones, a high sun (100 klx), seen as the eye sees it (or a
+// daylight camera, EV100 15).
 const LIGHTING_DEFAULTS: Lighting = {
   sunFromTime: true,
   azimuth: 150,
@@ -107,6 +108,8 @@ const LIGHTING_DEFAULTS: Lighting = {
   visibility: 60,
   aerosol: "continental",
   sunIlluminance: 100_000,
+  rendering: "eye",
+  compensation: 0,
   ev100: 15,
   autoExposure: false,
   encoding: "srgb",
@@ -287,14 +290,6 @@ export function Viewer() {
 
   useEffect(() => host?.setView(view), [host, view]);
   useEffect(() => host?.setLighting(lighting), [host, lighting]);
-  // The time controls' night action: open the camera up.
-  useEffect(() => {
-    if (host instanceof NextViewerHost) {
-      host.onNight = () =>
-        setLighting({ ...lightingRef.current, autoExposure: true });
-    }
-  }, [host, setLighting]);
-
   // The inspector over the viewport, and picking on a click (not a drag).
   useEffect(() => {
     if (!host) {
@@ -602,54 +597,88 @@ export function Viewer() {
                   onChange={(v) => light("intensity", v)}
                 />
               )}
-              <Range
-                label="Diffuse IBL"
-                value={lighting.diffuseIbl}
-                min={0}
-                max={2}
-                step={0.05}
-                onChange={(v) => light("diffuseIbl", v)}
-              />
-              <Range
-                label="Specular IBL"
-                value={lighting.specularIbl}
-                min={0}
-                max={2}
-                step={0.05}
-                onChange={(v) => light("specularIbl", v)}
-              />
               {engine === "2.0" ? (
                 <>
-                  <Setting
-                    label="Automatic exposure"
-                    checked={lighting.autoExposure}
-                    onChange={(v) => light("autoExposure", v)}
+                  <Choice
+                    label="Rendering"
+                    value={lighting.rendering}
+                    minWidth={0}
+                    options={[
+                      ["eye", "Eye"],
+                      ["camera", "Camera"],
+                    ]}
+                    onChange={(v) =>
+                      light("rendering", v as Lighting["rendering"])
+                    }
                   />
-                  {lighting.autoExposure ? (
-                    <Typography variant="caption-md" color="textSecondary">
-                      Exposure metered from the image.
-                    </Typography>
+                  {lighting.rendering === "eye" ? (
+                    <>
+                      <Typography variant="caption-md" color="textSecondary">
+                        As a person there would see it: adapting to the light,
+                        losing color at night, the stars.
+                      </Typography>
+                      <Range
+                        label="Brightness (stops)"
+                        value={lighting.compensation}
+                        min={-3}
+                        max={3}
+                        step={0.1}
+                        text={lighting.compensation.toFixed(1)}
+                        onChange={(v) => light("compensation", v)}
+                      />
+                    </>
                   ) : (
-                    <Range
-                      label="Exposure (EV100)"
-                      value={lighting.ev100}
-                      min={4}
-                      max={18}
-                      step={0.1}
-                      text={lighting.ev100.toFixed(1)}
-                      onChange={(v) => light("ev100", v)}
-                    />
+                    <>
+                      <Setting
+                        label="Automatic exposure"
+                        checked={lighting.autoExposure}
+                        onChange={(v) => light("autoExposure", v)}
+                      />
+                      {lighting.autoExposure ? (
+                        <Typography variant="caption-md" color="textSecondary">
+                          Exposure metered from the image.
+                        </Typography>
+                      ) : (
+                        <Range
+                          label="Exposure (EV100)"
+                          value={lighting.ev100}
+                          min={-12}
+                          max={18}
+                          step={0.1}
+                          text={lighting.ev100.toFixed(1)}
+                          onChange={(v) => light("ev100", v)}
+                        />
+                      )}
+                    </>
                   )}
                 </>
               ) : (
-                <Range
-                  label="Exposure"
-                  value={lighting.exposure}
-                  min={0.1}
-                  max={4}
-                  step={0.05}
-                  onChange={(v) => light("exposure", v)}
-                />
+                <>
+                  <Range
+                    label="Diffuse IBL"
+                    value={lighting.diffuseIbl}
+                    min={0}
+                    max={2}
+                    step={0.05}
+                    onChange={(v) => light("diffuseIbl", v)}
+                  />
+                  <Range
+                    label="Specular IBL"
+                    value={lighting.specularIbl}
+                    min={0}
+                    max={2}
+                    step={0.05}
+                    onChange={(v) => light("specularIbl", v)}
+                  />
+                  <Range
+                    label="Exposure"
+                    value={lighting.exposure}
+                    min={0.1}
+                    max={4}
+                    step={0.05}
+                    onChange={(v) => light("exposure", v)}
+                  />
+                </>
               )}
             </Group>
           </aside>

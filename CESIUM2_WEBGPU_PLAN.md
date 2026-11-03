@@ -717,6 +717,29 @@ moonlit sky's blue) and in the environment, which would light what the
 Moon doesn't reach; earthshine on the dark part; then starlight and
 airglow in the environment (about 1 mlux without a moon).
 
+Progress (r44): **night, and the eye**. Moonlight scatters in the air
+(the sky-view table's second set of rows, about the Moon; the orbit sky,
+the haze volume and the per-vertex march add it while the sun is down);
+the night sky lights itself (airglow, a 87-97 km shell, 1.1e-4 cd/m² at
+the zenith; zodiacal light and faint stars, 0.8e-4; about 1 mlux on the
+ground, Leinert et al. 1998); the environment carries both, so nothing
+is black that something lights; earthshine shows on the Moon's night side.
+How light becomes an image is one choice, `View.exposure`: a camera's
+(`{ ev100 }`, `{ scale }`, metered `{ auto }`) or the eye's (`EYE`, the
+`Viewer`'s default; `starExposure` is gone, the stars as seen being part
+of it). The eye adapts as automatic exposure does but keeps night dark
+(Krawczyk et al. 2005's key, at 60%: 2.6 stops by moonlight), sees with
+its rods in dim light (scotopic luminance, Thompson et al. 2002's gray
+blue, below 3 cd/m² and wholly below 0.01), and sees the stars against a
+dark sky. The meter now averages the 65th to 98th percentiles of a
+log-luminance histogram (as Unreal's eye adaptation) instead of the mean:
+the night half of the Earth from orbit had opened the exposure ten stops.
+Settled EV100s: a sunlit city 15.8, the sunlit Earth from orbit 13.5,
+under a full moon −0.3, a moonless night −8.1. Next: the adaptation from
+a model of vision rather than a key (Ferwerda et al. 1996's threshold
+curves, Irawan et al. 2005), its time course (Pattanaik et al. 2000),
+city lights on the night side.
+
 #### Fog and aerial perspective
 
 - **Aerial perspective from the atmosphere** (Hillaire's froxel volume of

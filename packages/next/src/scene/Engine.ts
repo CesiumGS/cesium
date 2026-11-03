@@ -317,7 +317,7 @@ export class Engine {
     exposure: number;
     resolvers: Array<(image: HdrImage) => void>;
   }> = [];
-  private readonly presentData = new DataView(new ArrayBuffer(16));
+  private readonly presentData = new DataView(new ArrayBuffer(32));
   private readonly overlayColor = new Float32Array(4);
   private readonly viewBlock: ViewBlock;
   private readonly commandBuffers: GPUCommandBuffer[] = [];
@@ -1807,7 +1807,7 @@ export class Engine {
         this.sunDirection,
         view.exposureScale,
         view.sunDisk,
-        view.starExposure === undefined ? 0 : ev100ToScale(view.starExposure),
+        "eye" in view.exposure ? ev100ToScale(EYE_STARS_EV100) : 0,
         moon,
       );
       if (drawsAerialPerspective(view)) {
@@ -1954,7 +1954,8 @@ export class Engine {
   /** Reads a pick's feature ID and depth from the view's frame textures. */
   /**
    * The view's exposure scale this frame: fixed for an EV100 or a scale;
-   * automatic exposure moves toward its meter reading (`meterExposure`).
+   * automatic exposure and the eye move toward their meter reading
+   * (`adaptExposure`).
    */
   private updateExposure(view: View): number {
     const e = view.exposure;
@@ -1963,8 +1964,9 @@ export class Engine {
     } else if ("ev100" in e) {
       view.exposureScale = ev100ToScale(e.ev100);
     } else {
+      const [min, max] = "eye" in e ? EYE_RANGE : [e.min ?? -6, e.max ?? 18];
       view.autoExposure ??= {
-        ev100: Math.min(Math.max(15, e.min ?? -6), e.max ?? 18),
+        ev100: Math.min(Math.max(15, min), max),
         time: performance.now(),
         pending: false,
         metered: false,
@@ -1979,12 +1981,13 @@ export class Engine {
    * scene's units): the EV100 a reflected-light meter gives (K = 12.5,
    * ISO 100) minus the compensation, within [min, max], approached
    * exponentially at `speed` per second; the first reading is taken as is.
+   * The eye's adapts as far as its key at that luminance (`eyeKeyStops`).
    * Renders again until it settles.
    */
   private adaptExposure(view: View, average: number | undefined): void {
     const e = view.exposure;
     const state = view.autoExposure;
-    if (!("auto" in e) || !state) {
+    if (!("auto" in e || "eye" in e) || !state) {
       return;
     }
     state.pending = false;
@@ -1996,12 +1999,16 @@ export class Engine {
     if (!Number.isFinite(state.ev100)) {
       state.metered = false;
     }
+    const [min, max] = "eye" in e ? EYE_RANGE : [e.min ?? -6, e.max ?? 18];
+    const metered = Math.log2((average * 100) / 12.5);
     const target = Math.min(
       Math.max(
-        Math.log2((average * 100) / 12.5) - (e.compensation ?? 0),
-        e.min ?? -6,
+        metered -
+          (e.compensation ?? 0) +
+          ("eye" in e ? eyeKeyStops(average) : 0),
+        min,
       ),
-      e.max ?? 18,
+      max,
     );
     const now = performance.now();
     if (!state.metered) {
@@ -2237,7 +2244,7 @@ export class Engine {
       rendered: false,
       presentParams: device.createBuffer({
         label: "presentParams",
-        size: 16,
+        size: 32,
         usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
       }),
       presentGroup: undefined,
@@ -2496,7 +2503,8 @@ export class Engine {
       { reads: [resolved], sideEffect: true },
       (enc, get) => {
         const auto = view.autoExposure;
-        if (!("auto" in view.exposure) || !auto || auto.pending) {
+        const adapts = "auto" in view.exposure || "eye" in view.exposure;
+        if (!adapts || !auto || auto.pending) {
           return;
         }
         auto.pending = true;
@@ -2558,6 +2566,9 @@ export class Engine {
             ? 2
             : 1;
         params.setUint32(12, encoding, true);
+        // The eye's night vision reads the scene's luminance (cd/m²).
+        params.setFloat32(16, view.exposureScale, true);
+        params.setUint32(20, "eye" in view.exposure ? 1 : 0, true);
         device.queue.writeBuffer(frame.presentParams, 0, params.buffer);
         // Pooled textures are stable from frame to frame, so the bind group
         // is rebuilt only when the pool hands this view a different one.
@@ -2831,6 +2842,38 @@ const scratchMoon = {
   airShare: 0,
 };
 const scratchMoonAxis = v3.vec3();
+/**
+ * The eye's adaptation, EV100 (`Exposure` "eye"): from starlight (a
+ * moonless night meters near −10) to a sunlit snowfield.
+ */
+const EYE_RANGE = [-14, 18] as const;
+/**
+ * The stars as the eye sees them against a dark sky, EV100 (sky.wgsl
+ * `starExposure`): shown where the view's own adaptation is less open
+ * (from orbit by day); about as bright as 1.x draws its star map.
+ */
+const EYE_STARS_EV100 = -3;
+
+/**
+ * How much darker than a camera's metered exposure the eye sees a scene of
+ * this log-average luminance (cd/m²), stops: Krawczyk, Myszkowski and
+ * Seidel 2005's key, a(L) = 1.03 − 2 / (2 + log10(L + 1)), relative to a
+ * sunlit scene's (3,000 cd/m², where the eye and the meter agree), at
+ * `EYE_KEY_WEIGHT` of its strength: 0.2 stops at 100 cd/m², 1.2 at deep
+ * twilight (1 cd/m²), 2.6 by moonlight (0.01 cd/m²). Night stays night.
+ */
+export function eyeKeyStops(luminance: number): number {
+  const key = (l: number) => 1.03 - 2 / (2 + Math.log10(Math.max(l, 0) + 1));
+  return Math.max(-Math.log2(key(luminance) / key(3000)), 0) * EYE_KEY_WEIGHT;
+}
+
+/**
+ * The share of the eye's darkening at night shown: on a display in a lit
+ * room, all of it (4.4 stops by moonlight) left a moonlit scene at 6% of
+ * the screen's white, near black.
+ */
+const EYE_KEY_WEIGHT = 0.6;
+
 /** The Earth's mean radius, m (its size from the Moon: earthshine). */
 const EARTH_RADIUS = 6_371_009;
 /** The mean distance to the sun, m (IAU 2012). */

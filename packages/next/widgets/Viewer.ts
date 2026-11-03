@@ -19,6 +19,7 @@ import {
   BingImagery,
   CanvasTarget,
   Clock,
+  EYE,
   Ellipsoid,
   Engine,
   GlobeController,
@@ -30,6 +31,7 @@ import {
   resolveIonAsset,
   sunDirection,
   vec3,
+  type Exposure,
   type GltfAsset,
   type ImageryProvider,
   type IonAttribution,
@@ -96,6 +98,11 @@ export interface ViewerOptions {
    * the clock, with 1.x's moon map); false: none.
    */
   moon?: boolean;
+  /**
+   * How light becomes an image (`Exposure`): default `EYE`, as a person
+   * there would see it; a camera's exposure for what a camera records.
+   */
+  exposure?: Exposure;
   /** The sun's shadows in the views (default true; `View.shadows`). */
   shadows?: boolean;
   /** Ambient occlusion in the views (default true; `View.ambientOcclusion`). */
@@ -245,9 +252,8 @@ export class Viewer {
       world: this.world,
       shadows: this.shadows,
       ambientOcclusion: this.ambientOcclusion,
-      // The stars as the eye sees them: they show against space and the
-      // night sky at the daylight exposure, as in 1.x.
-      starExposure: -3,
+      // As the eye sees the scene: adapting to it, night vision, the stars.
+      exposure: options.exposure ?? EYE,
     });
     this.controller = new GlobeController(this.view, canvas);
     // The whole Earth until the app frames something, as 1.x starts: the
@@ -732,7 +738,6 @@ export class Viewer {
       }));
       Object.assign(second.lighting, this.view.lighting);
       second.exposure = this.view.exposure;
-      second.starExposure = this.view.starExposure;
       second.outputEncoding = this.view.outputEncoding;
       const controller = (this.secondController = new GlobeController(
         second,
