@@ -72,6 +72,7 @@ export function fitShadowCascades(
   const f = camera.direction;
   const position = camera.position;
   let previous = near;
+  let before = 0;
   for (let c = 0; c < SHADOW_CASCADES; c++) {
     const i = (c + 1) / SHADOW_CASCADES;
     const split =
@@ -80,7 +81,9 @@ export function fitShadowCascades(
     out.splits[c] = split;
     // The slice's bounding sphere: centered on the view axis where the
     // farthest corners of both ends are equally far (rotation invariant).
-    const d0 = previous;
+    // It reaches back over the last tenth of the cascade before, where
+    // receivers blend the two (opaque.wgsl `sunShadow`).
+    const d0 = c === 0 ? previous : previous - 0.1 * (previous - before);
     const d1 = split;
     const k0 = tanX * tanX + tanY * tanY;
     // Center at distance t along the view: |t − d0|² + d0²k0 = |d1 − t|² +
@@ -90,6 +93,7 @@ export function fitShadowCascades(
     let radius = Math.sqrt((d1 - t) * (d1 - t) + d1 * d1 * k0);
     // Quantized, so the sphere (and the texel size) doesn't wobble.
     radius = Math.ceil(radius * 16) / 16;
+    before = c === 0 ? 0 : previous;
     previous = split;
     const center = [f[0]! * t, f[1]! * t, f[2]! * t];
     // Snap the center to the texel grid in absolute (Earth-fixed) light

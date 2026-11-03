@@ -1015,8 +1015,7 @@ gaps between frames, which let this laptop's GPU clock down: absolute
 times measured that way run several times high. Back to back, the synthetic
 city's whole frame with shadows and ambient occlusion is 1.3-1.8 ms.) Limits and next steps: mixed-LOD
 placeholders cast unclipped where they're not alpha-masked (coarse and
-fine tiles cast nearly the same shadow); no cascade blending (a seam can
-show where cascades meet); far cascades could update every other frame or
+fine tiles cast nearly the same shadow); far cascades could update every other frame or
 cache until the sun or the tiles move, leading to virtual shadow maps
 (pages rendered where the view needs them and cached, a good fit for
 streamed tiles); shadows from the moon at night and from the clouds later.
@@ -1027,6 +1026,11 @@ the imagery now gets (it took the unlit path before); both measured with
 idle gaps between frames, where this laptop's GPU clocks down. Back to
 back, the volume took 0.20 ms; with a thread per slice and a prefix scan
 (r43) it takes 0.07 ms.
+
+Cascades blend (r43): over the last tenth of each cascade, receivers mix
+its light with the next's, whose sphere reaches back over that band, so no
+seam shows where the texel size (and the bias with it) changes; the second
+lookup runs only in the bands.
 
 Progress (r42): **ambient occlusion** (`View.ambientOcclusion`,
 `ambientOcclusionRadius`, default 3 m; on in the `Viewer`, off by default

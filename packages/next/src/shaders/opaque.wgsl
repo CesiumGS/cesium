@@ -413,23 +413,9 @@ fn ambientOcclusion(pixel: vec2f) -> f32 {
 
 const SHADOW_SIZE: f32 = 2048.0;
 
-// How much of the sun reaches a camera-relative position on a surface with
-// geometric normal `n`: 3 × 3 bilinear comparisons (a smooth edge about
-// three texels wide), offset along the normal by a texel and a half (no
-// acne on surfaces at grazing angles to the sun), fading out at the
-// shadows' far distance.
-fn sunShadow(relPosition: vec3f, n: vec3f) -> f32 {
-  if (shadows.forward.w < 0.5) {
-    return 1.0;
-  }
-  let depth = dot(relPosition, shadows.forward.xyz);
-  if (depth >= shadows.fade.y) {
-    return 1.0;
-  }
-  var c = 0u;
-  while (c < 3u && depth > shadows.splits[c]) {
-    c++;
-  }
+// One cascade's light at a point: 3 × 3 PCF, the point pushed along its
+// normal by 1.5 of the cascade's texels; 1 outside the cascade.
+fn cascadeLight(c: u32, relPosition: vec3f, n: vec3f) -> f32 {
   let p = shadows.matrices[c] * vec4f(relPosition + n * (shadows.texels[c] * 1.5), 1.0);
   let uv = vec2f(p.x * 0.5 + 0.5, 0.5 - p.y * 0.5);
   if (any(uv < vec2f(0.0)) || any(uv > vec2f(1.0)) || p.z > 1.0) {
@@ -442,7 +428,38 @@ fn sunShadow(relPosition: vec3f, n: vec3f) -> f32 {
       lit += textureSampleCompareLevel(shadowMap, shadowSampler, uv + vec2f(f32(dx), f32(dy)) * texel, c, p.z);
     }
   }
-  lit /= 9.0;
+  return lit / 9.0;
+}
+
+// How much of the sun reaches a camera-relative position on a surface with
+// geometric normal `n`: 3 × 3 bilinear comparisons (a smooth edge about
+// three texels wide), offset along the normal by a texel and a half (no
+// acne on surfaces at grazing angles to the sun), fading out at the
+// shadows' far distance, blending between cascades.
+fn sunShadow(relPosition: vec3f, n: vec3f) -> f32 {
+  if (shadows.forward.w < 0.5) {
+    return 1.0;
+  }
+  let depth = dot(relPosition, shadows.forward.xyz);
+  if (depth >= shadows.fade.y) {
+    return 1.0;
+  }
+  var c = 0u;
+  while (c < 3u && depth > shadows.splits[c]) {
+    c++;
+  }
+  var lit = cascadeLight(c, relPosition, n);
+  // Over the last tenth of a cascade, blend into the next: their texels
+  // differ in size (and their bias with them), and a seam shows where one
+  // gives way to the other.
+  if (c < 3u) {
+    let near = select(0.0, shadows.splits[max(c, 1u) - 1u], c > 0u);
+    let band = 0.1 * (shadows.splits[c] - near);
+    let w = clamp((depth - (shadows.splits[c] - band)) / max(band, 1e-3), 0.0, 1.0);
+    if (w > 0.0) {
+      lit = mix(lit, cascadeLight(c + 1u, relPosition, n), w);
+    }
+  }
   let fade = clamp((depth - shadows.fade.x) / max(shadows.fade.y - shadows.fade.x, 1e-3), 0.0, 1.0);
   return mix(lit, 1.0, fade);
 }
