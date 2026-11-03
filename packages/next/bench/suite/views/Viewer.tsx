@@ -40,7 +40,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import publicCatalog from "../catalog/public.json";
 import { ensureCesium } from "../cesium1x.ts";
 import { compareEngines, engineLabel, isRelease } from "../engines.mjs";
-import { ionDefaults } from "../../../src/index.ts";
+import { AEROSOLS, ionDefaults, type AerosolType } from "../../../src/index.ts";
 import { attachInspector } from "../../../widgets/index.ts";
 import { Choice, Page, toast, useRuns, useStored } from "./common.tsx";
 import {
@@ -102,6 +102,8 @@ const LIGHTING_DEFAULTS: Lighting = {
   exposure: 1,
   sunFromAtmosphere: true,
   aerialPerspective: true,
+  visibility: 60,
+  aerosol: "continental",
   sunIlluminance: 100_000,
   ev100: 15,
   autoExposure: false,
@@ -532,6 +534,25 @@ export function Viewer() {
                     label="Aerial perspective"
                     checked={lighting.aerialPerspective}
                     onChange={(v) => light("aerialPerspective", v)}
+                  />
+                  <Choice
+                    label="Aerosols"
+                    value={lighting.aerosol}
+                    minWidth={0}
+                    options={Object.entries(AEROSOLS).map(([key, a]) => [
+                      key,
+                      a.name,
+                    ])}
+                    onChange={(v) => light("aerosol", v as AerosolType)}
+                  />
+                  <Range
+                    label="Visibility"
+                    value={lighting.visibility}
+                    min={5}
+                    max={200}
+                    step={5}
+                    text={`${lighting.visibility} km`}
+                    onChange={(v) => light("visibility", v)}
                   />
                   {!lighting.sunFromAtmosphere && (
                     <Range

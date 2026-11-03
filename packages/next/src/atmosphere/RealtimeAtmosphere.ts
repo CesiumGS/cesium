@@ -4,6 +4,8 @@ import {
   coefficients,
   solarIrradiance,
   spectralBands,
+  withVisibility,
+  type AerosolType,
   type AtmosphereParameters,
 } from "./model.ts";
 
@@ -39,22 +41,35 @@ export class RealtimeAtmosphere {
     GPUComputePipeline
   >;
 
+  /** The parameters the tables are built from (`parameters` with haze). */
+  private effective: Readonly<AtmosphereParameters>;
+  private visibility_: number | undefined;
+  private aerosol_: AerosolType | undefined;
+
   private constructor(
     private readonly device: GPUDevice,
     pipelines: RealtimeAtmosphere["pipelines"],
+    /** The atmosphere as described (its body's); `visibility` hazes it. */
     readonly parameters: AtmosphereParameters,
   ) {
+    this.effective = parameters;
     this.pipelines = pipelines;
     const bands = spectralBands(8);
     this.weights = bands.weights;
+    // COPY_SRC: Sky gathers both groups for the opaque pass's march.
     const usage =
-      GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.TEXTURE_BINDING;
+      GPUTextureUsage.STORAGE_BINDING |
+      GPUTextureUsage.TEXTURE_BINDING |
+      GPUTextureUsage.COPY_SRC;
     this.groups = [0, 4].map((first) => {
       const wavelengths = bands.centers.slice(first, first + 4);
       const uniforms = device.createBuffer({
         label: "atmosphere.uniforms",
         size: 112,
-        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+        usage:
+          GPUBufferUsage.UNIFORM |
+          GPUBufferUsage.COPY_DST |
+          GPUBufferUsage.COPY_SRC,
       });
       device.queue.writeBuffer(
         uniforms,
@@ -118,6 +133,44 @@ export class RealtimeAtmosphere {
       entries.map((e, i) => [e, built[i]!]),
     ) as RealtimeAtmosphere["pipelines"];
     return new RealtimeAtmosphere(device, pipelines, parameters);
+  }
+
+  /**
+   * Meteorological visibility, km, and the kind of aerosols: the haze
+   * (`withVisibility`), the tables rebuilt; no visibility: the parameters'
+   * own (Bruneton's Earth, about 220 km, gray aerosols).
+   */
+  get visibility(): number | undefined {
+    return this.visibility_;
+  }
+
+  get aerosol(): AerosolType | undefined {
+    return this.aerosol_;
+  }
+
+  setHaze(kilometers: number | undefined, aerosol?: AerosolType): void {
+    if (kilometers === this.visibility_ && aerosol === this.aerosol_) {
+      return;
+    }
+    this.visibility_ = kilometers;
+    this.aerosol_ = aerosol;
+    this.effective =
+      kilometers === undefined
+        ? this.parameters
+        : withVisibility(this.parameters, kilometers, aerosol);
+    for (const g of this.groups) {
+      this.device.queue.writeBuffer(
+        g.uniforms,
+        0,
+        packAtmosphere(this.effective, g.wavelengths),
+      );
+    }
+    this.build();
+  }
+
+  /** The parameters the tables are built from: with `visibility`'s haze. */
+  get effectiveParameters(): Readonly<AtmosphereParameters> {
+    return this.effective;
   }
 
   /** Builds each group's transmittance, then multiple-scattering table. */

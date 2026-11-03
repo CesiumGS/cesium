@@ -3,6 +3,8 @@
 import { describe, expect, it } from "vitest";
 import {
   EARTH,
+  visibilityOf,
+  withVisibility,
   directSunIlluminance,
   singleScattering,
   solarIlluminanceOutside,
@@ -64,5 +66,21 @@ describe("reference frame", () => {
       p[0]! * q[0]! + p[1]! * q[1]! + p[2]! * q[2]!;
     expect(dot(ra, rb)).toBeCloseTo(dot(a, b), 12);
     expect(dot(ra, ra)).toBeCloseTo(dot(a, a), 12);
+  });
+});
+
+describe("visibility", () => {
+  it("is about 220 km for Bruneton's clean reference air", () => {
+    expect(visibilityOf(EARTH)).toBeGreaterThan(200);
+    expect(visibilityOf(EARTH)).toBeLessThan(240);
+  });
+
+  it("round-trips and gives a clear day's aerosol optical depth", () => {
+    const clear = withVisibility(EARTH, 40);
+    expect(visibilityOf(clear)).toBeCloseTo(40, 6);
+    // The aerosol optical depth is mieBeta (extinction × scale height).
+    expect(clear.mieBeta).toBeGreaterThan(0.08);
+    expect(clear.mieBeta).toBeLessThan(0.12);
+    expect(withVisibility(EARTH, 10).mieBeta).toBeGreaterThan(0.4);
   });
 });

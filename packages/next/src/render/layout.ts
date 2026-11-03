@@ -35,10 +35,18 @@ export interface ViewBlock {
   /** The body seen: its ellipsoid, and its atmosphere's radii. */
   body: Body;
   /**
-   * Aerial perspective: the camera on the atmosphere's sphere (km,
-   * planet-centered), where its rays are measured from; undefined: none.
+   * Aerial perspective: the volume's distances, km, the camera on the
+   * atmosphere's sphere (km, planet-centered) and how much is marched per
+   * vertex instead (0 to 1); undefined: none.
    */
-  aerial: { origin: readonly [number, number, number] } | undefined;
+  aerial:
+    | {
+        start: number;
+        end: number;
+        origin: readonly [number, number, number];
+        march: number;
+      }
+    | undefined;
 }
 
 /**
@@ -114,8 +122,8 @@ export function writeViewBlock(
   out[o + 82] = block.lighting.specularIbl;
   out[o + 83] = block.specularMaxLod;
   out[o + 85] = block.exposure;
-  out[o + 86] = 0;
-  out[o + 87] = 0;
+  out[o + 86] = block.aerial?.start ?? 0;
+  out[o + 87] = block.aerial?.end ?? 0;
   out[o + 88] = (atmosphere?.bottomRadius ?? 0) / 1000;
   out[o + 89] = (atmosphere?.topRadius ?? 0) / 1000;
   out[o + 90] = sun === "atmosphere" && atmosphere ? 1 : 0;
@@ -129,7 +137,7 @@ export function writeViewBlock(
   out[o + 96] = origin?.[0] ?? 0;
   out[o + 97] = origin?.[1] ?? 0;
   out[o + 98] = origin?.[2] ?? 0;
-  out[o + 99] = 0;
+  out[o + 99] = block.aerial?.march ?? 0;
 }
 
 /** `struct DrawRecord` — 128 bytes. */

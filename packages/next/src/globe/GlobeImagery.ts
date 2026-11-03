@@ -46,6 +46,14 @@ export interface GlobeImageryOptions {
   size?: number;
   /** Color where no imagery covers the tile (1.x Globe.baseColor, dark blue). */
   baseColor?: readonly [number, number, number];
+  /**
+   * The imagery as the surface's color, lit by the sun and the sky (the
+   * default, plan §4.2: an albedo estimate from the photographs), with
+   * aerial perspective; or false: shown as is, unlit (display-referred, as
+   * 1.x's globe without lighting, its default), which the parity harnesses
+   * use against 1.x.
+   */
+  lit?: boolean;
 }
 
 interface Source {
@@ -103,6 +111,8 @@ export class GlobeImagery {
   private readonly sampler: GPUSampler;
   private readonly placeholder: GPUTextureView;
   private readonly baseColor: readonly [number, number, number];
+  /** Lit by the sun and sky (`GlobeImageryOptions.lit`). */
+  private readonly lit: boolean;
   private readonly origin: string;
   private frame = 0;
   private loading = 0;
@@ -123,6 +133,7 @@ export class GlobeImagery {
       MAX_IMAGERY_SLICES,
     );
     this.baseColor = options.baseColor ?? [0, 0, 0.5];
+    this.lit = options.lit ?? true;
     this.texture = device.createTexture({
       label: "globe.imagery",
       size: [this.size, this.size, slices],
@@ -729,7 +740,7 @@ export class GlobeImagery {
     }
     if (this.applied.get(instance) !== packed) {
       for (const draw of instance.draws) {
-        this.world.setImagery(draw, packed);
+        this.world.setImagery(draw, packed, !this.lit);
       }
       this.applied.set(instance, packed);
     }

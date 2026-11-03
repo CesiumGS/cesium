@@ -21,6 +21,7 @@ import {
   type Tileset3D,
   type TransformHandle,
   type World,
+  type AerosolType,
 } from "../../../src/index.ts";
 import ionSource from "../../../../engine/Source/Core/Ion.js?raw";
 import {
@@ -157,6 +158,10 @@ export interface Lighting {
   sunFromAtmosphere: boolean;
   /** 2.0: the air between the camera and the scene (haze with distance). */
   aerialPerspective: boolean;
+  /** 2.0: how far one can see through the air, km (its haze). */
+  visibility: number;
+  /** 2.0: what the haze is made of. */
+  aerosol: AerosolType;
   /** 2.0: otherwise, a white sun of this illuminance, lux. */
   sunIlluminance: number;
   /** 2.0: the camera's exposure value at ISO 100, when not automatic. */
@@ -423,6 +428,8 @@ export class NextViewerHost implements ViewerHost {
 
   setLighting(lighting: Lighting): void {
     const { viewer } = this;
+    viewer.engine.visibility = lighting.visibility;
+    viewer.engine.aerosol = lighting.aerosol;
     if (lighting.sunFromTime) {
       viewer.sunFromClock = true;
     } else {

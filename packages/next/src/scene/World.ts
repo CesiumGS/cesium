@@ -1488,17 +1488,20 @@ export class World {
 
   /**
    * Points a globe tile's record at its imagery (`packImagery`, 0: none).
-   * Imagery replaces the material's color and draws unlit, as 1.x's globe
-   * does without scene lighting.
+   * Imagery replaces the material's color, lit like any surface, or with
+   * `unlit` shown as is (display-referred, as 1.x's globe without scene
+   * lighting).
    */
-  setImagery(handle: DrawHandle, packed: number): void {
+  setImagery(handle: DrawHandle, packed: number, unlit = false): void {
     if (!this.hasDraw(handle)) {
       return;
     }
     const o = handle.index * RECORD_WORDS;
     const flags = this.recordsU32[o + FLAGS_WORD]!;
     const next =
-      packed !== 0 ? flags | RecordFlags.unlit : flags & ~RecordFlags.unlit;
+      packed !== 0 && unlit
+        ? flags | RecordFlags.unlit
+        : flags & ~RecordFlags.unlit;
     if (
       this.recordsU32[o + IMAGERY_SLICE_WORD] !== packed >>> 0 ||
       flags !== next

@@ -16,7 +16,11 @@ import { AtmosphereReference } from "../src/atmosphere/AtmosphereReference.ts";
 import { RealtimeAtmosphere } from "../src/atmosphere/RealtimeAtmosphere.ts";
 import { EARTH, directSunIlluminance } from "../src/atmosphere/model.ts";
 import { Engine } from "../src/scene/Engine.ts";
-import { OffscreenTarget, type HdrImage } from "../src/scene/View.ts";
+import {
+  OffscreenTarget,
+  type HdrImage,
+  type View,
+} from "../src/scene/View.ts";
 import { Ellipsoid, fromDegrees } from "../src/math/ellipsoid.ts";
 import { eastNorthUpToFixedFrame } from "../src/math/transforms.ts";
 import * as v3 from "../src/math/vec3.ts";
@@ -50,11 +54,12 @@ const TEMPLATE = `
   over the hemisphere:</p>
   <table id="environment"></table>
   <h2>Aerial perspective</h2>
-  <p>The air between the camera and the scene: the view's froxel volume
-  (32 × 32 directions × 32 distances, quadratic out to the atmosphere's far
-  edge; each ray's slices span its own stretch of atmosphere), its
-  in-scattered light at a spread of froxels against the tables'
-  own march along the same ray to the same distance:</p>
+  <p>The air between the camera and the scene. Near the ground, the view's
+  froxel volume (32 × 32 directions × 128 distances, quadratic out to the
+  atmosphere's far edge, the same for every ray): its in-scattered light at
+  a spread of froxels against the tables' own march along the same ray to
+  the same distance. From higher up (above 5 km) each vertex marches its own
+  ray instead; between 2 and 5 km the two blend.</p>
   <table id="aerial"></table>
   <div id="aerialImages"></div>
   <h2>Sunlight on the scene</h2>
@@ -238,6 +243,8 @@ async function inTheEngine(realtime: RealtimeAtmosphere) {
   const width = 480;
   const height = 270;
   const engine = await Engine.create();
+  // The tables compared with the engine's: the same air (its visibility).
+  realtime.setHaze(engine.visibility, engine.aerosol);
   const world = engine.createWorld({
     maxDraws: 16,
     vertexBytes: 1 << 20,
@@ -289,27 +296,44 @@ async function inTheEngine(realtime: RealtimeAtmosphere) {
   /**
    * The aerial-perspective volume (its in-scattered light) at a spread of
    * froxels against the tables' own march along the same direction to the
-   * same distance (16 steps, as the volume; both stop short of the
-   * ground).
+   * same distance (64 even steps; the volume's are 2 per interval between
+   * its 128 slices; froxels past the ground skipped).
    */
   const checkAerial = async (name: string, normal: Float64Array, r: number) => {
+    // From high up the volume isn't built: marched per vertex (checked
+    // against it below, the pictures).
+    if (r - EARTH.bottomRadius > 5000) {
+      return {
+        view: name,
+        froxels: 0,
+        "brightest in-scatter (cd/m²)": "–",
+        "median |difference|": "marched per vertex",
+        worst: "–",
+      };
+    }
     const device = engine.gpu.device;
     const n = 32;
+    const slices = 128;
     const buffer = device.createBuffer({
-      size: n * n * n * 8,
+      size: n * n * slices * 8,
       usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
     });
     const encoder = device.createCommandEncoder();
     encoder.copyTextureToBuffer(
       { texture: engine.sky.aerialInscatter },
       { buffer, bytesPerRow: n * 8, rowsPerImage: n },
-      [n, n, n],
+      [n, n, slices],
     );
     device.queue.submit([encoder.finish()]);
     await buffer.mapAsync(GPUMapMode.READ);
     const halves = new Uint16Array(buffer.getMappedRange().slice(0));
     buffer.destroy();
     const top = EARTH.topRadius;
+    const bottomRadius = EARTH.bottomRadius;
+    const start = Math.max(0, r - top);
+    const end =
+      Math.sqrt(Math.max(0, r * r - bottomRadius * bottomRadius)) +
+      Math.sqrt(top * top - bottomRadius * bottomRadius);
     const aspect = width / height;
     const tanY = Math.tan(camera.fovy(aspect) / 2);
     const observer = [normal[0]! * r, normal[1]! * r, normal[2]! * r];
@@ -341,30 +365,37 @@ async function inTheEngine(realtime: RealtimeAtmosphere) {
           ),
         ),
       );
-      // The ray's stretch of atmosphere (sky.wgsl aerialSpan).
+      // Where the ray meets the planet: slices past it hold the air beyond
+      // (the volume goes through), the march stops there; compared before.
       const mu =
         (observer[0]! * d[0]! + observer[1]! * d[1]! + observer[2]! * d[2]!) /
         r;
-      const disc = r * r * (mu * mu - 1) + top * top;
-      if (disc < 0) {
-        continue;
-      }
-      const enter = Math.max(-r * mu - Math.sqrt(disc), 0);
-      const leave = Math.max(-r * mu + Math.sqrt(disc), 0);
-      for (const slice of [2, 8, 16, 24, 31]) {
-        const w = (slice + 0.5) / n;
-        const distance = enter + (leave - enter) * w * w;
+      const bottom = EARTH.bottomRadius;
+      const disc = r * r * (mu * mu - 1) + bottom * bottom;
+      const ground =
+        mu < 0 && disc >= 0
+          ? -r * mu - Math.sqrt(disc)
+          : Number.POSITIVE_INFINITY;
+      for (const slice of [8, 32, 64, 96, 127]) {
+        const w = (slice + 0.5) / slices;
+        const distance = start + (end - start) * w * w;
+        if (distance >= ground * 0.999) {
+          continue;
+        }
         const probe = await realtime.radiance(
           observer as never,
           sun as never,
           [...d],
           {
-            steps: 16,
+            steps: 64,
             maxLength: distance,
           },
         );
         const i = ((slice * n + y!) * n + x!) * 4;
-        const rgb = [0, 1, 2].map((k) => halfToFloat(halves[i + k]!));
+        // The volume is pre-exposed (the view's exposure).
+        const rgb = [0, 1, 2].map(
+          (k) => halfToFloat(halves[i + k]!) / view.exposureScale,
+        );
         const engineY = luminance(rgb, 0);
         const probeY = luminance(probe, 0);
         largest = Math.max(largest, probeY);
@@ -528,6 +559,10 @@ async function inTheEngine(realtime: RealtimeAtmosphere) {
             return -1;
           }
           const probeY = luminance(probe, i);
+          // Nearly black pixels (the bare planet's night side) say little.
+          if (probeY < 1e-3) {
+            return -1;
+          }
           return Math.abs(luminance(image.data, pixel, 4) - probeY) / probeY;
         })
         .filter((e) => e >= 0)
@@ -645,6 +680,9 @@ async function aerialPictures(
       }),
     );
     const scale = 1 / (1.2 * 2 ** 15);
+    if (altitude === 1_000) {
+      await checkMarch(engine, views[1]!);
+    }
     $("aerialImages").append(
       figure(
         `${name}: without · with aerial perspective (EV100 15)`,
@@ -655,6 +693,38 @@ async function aerialPictures(
     );
   }
   views.forEach((view) => engine.removeView(view));
+}
+
+/**
+ * Aerial perspective marched per vertex against the volume, both forced on
+ * the same frame from 1 km up, where both hold: the ground's pixels.
+ */
+async function checkMarch(engine: Engine, view: View) {
+  const render = async (march: number) => {
+    engine.sky.marchOverride = march;
+    engine.renderFrame();
+    const image = view.readHdr();
+    engine.renderFrame();
+    return image;
+  };
+  const volume = await render(0);
+  const marched = await render(1);
+  engine.sky.marchOverride = undefined;
+  const differences: number[] = [];
+  for (let i = 0; i < volume.data.length; i += 4) {
+    const a = luminance(volume.data, i / 4, 4);
+    const b = luminance(marched.data, i / 4, 4);
+    // The ground: the sky's pixels are the same in both.
+    if (a > 1 && a !== b) {
+      differences.push(Math.abs(b - a) / a);
+    }
+  }
+  differences.sort((a, b) => a - b);
+  const percent = (x: number | undefined) => `${((x ?? 0) * 100).toFixed(2)}%`;
+  $("aerialImages").insertAdjacentHTML(
+    "beforebegin",
+    `<p>Marched per vertex against the volume, both forced from 1 km up: ${differences.length} ground pixels, median |difference| ${percent(differences[differences.length >> 1])}, 95th percentile ${percent(differences[Math.floor(differences.length * 0.95)])}.</p>`,
+  );
 }
 
 /** The engine's sun-light table against the CPU model, at its own texels. */
@@ -696,7 +766,7 @@ async function checkSunLight(engine: Engine) {
       const rgb = [0, 1, 2].map((k) => halfToFloat(halves[i + k]!) * 1e5);
       const engineY = luminance(rgb, 0);
       const cpu = directSunIlluminance(
-        EARTH,
+        engine.sky.atmosphere.effectiveParameters,
         [0, 0, r],
         [Math.sqrt(1 - mu * mu), 0, mu],
       ).y;

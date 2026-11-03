@@ -183,6 +183,14 @@ export class Viewer {
     });
     this.view = engine.addView({ target: this.target, world: this.world });
     this.controller = new GlobeController(this.view, canvas);
+    // The whole Earth until the app frames something, as 1.x starts: the
+    // camera at the Earth's center drew its first frames from inside it.
+    this.view.camera.lookAt(
+      ellipsoid.cartographicToCartesian(fromDegrees(-82.5, 35, 0), vec3.vec3()),
+      0,
+      -Math.PI / 2,
+      2e7,
+    );
     // The camera stays above the globe's drawn surface.
     this.controller.surfaceHeight = (longitude, latitude) =>
       this.globe_?.show

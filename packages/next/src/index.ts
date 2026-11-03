@@ -148,3 +148,6 @@ export {
   sunTimes,
   type SunTimes,
 } from "./time/sun.ts";
+
+// The atmosphere's haze: kinds of aerosols (Engine.visibility, .aerosol).
+export { AEROSOLS, type AerosolType } from "./atmosphere/model.ts";

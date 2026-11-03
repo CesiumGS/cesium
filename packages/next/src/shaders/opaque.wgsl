@@ -20,31 +20,131 @@ struct AerialPerspective {
 };
 
 // The air between the camera and a fragment: from the view's volume at the
-// fragment's screen position and its distance, along its ray's own stretch
-// of atmosphere (slices spaced quadratically from where the ray enters it
-// to where it leaves: atmosphere/sky.wgsl `aerialSpan`).
+// fragment's screen position and its distance (slices spaced quadratically
+// between aerialStart and aerialEnd, the same for every ray).
 fn aerialPerspective(fragment: vec2f, relPosition: vec3f) -> AerialPerspective {
   let distance = length(relPosition) / 1000.0;
-  let direction = relPosition / max(distance * 1000.0, 1e-6);
-  let origin = view.aerialOrigin.xyz;
-  let r = length(origin);
-  let mu = dot(origin, direction) / r;
-  let top = view.sunLight.y;
-  let disc = r * r * (mu * mu - 1.0) + top * top;
-  if (disc < 0.0) {
-    return AerialPerspective(vec3f(0.0), vec3f(1.0));
-  }
-  let s = sqrt(disc);
-  let enter = max(-r * mu - s, 0.0);
-  let leave = max(-r * mu + s, 0.0);
-  let w = sqrt(clamp((distance - enter) / max(leave - enter, 1e-6), 0.0, 1.0));
-  // A slice's texel center, w = (slice + 0.5) / 32, holds the integral to
+  let w = sqrt(clamp((distance - view.aerialStart) / max(view.aerialEnd - view.aerialStart, 1e-6), 0.0, 1.0));
+  // A slice's texel center, w = (slice + 0.5) / 128, holds the integral to
   // its distance; before the first, fade in from none.
   let uvw = vec3f(fragment * view.viewport.zw, w);
-  let near = clamp(w * 64.0, 0.0, 1.0);
+  let near = clamp(w * 256.0, 0.0, 1.0);
   let inscatter = textureSampleLevel(aerialInscatter, environmentSampler, uvw, 0.0).rgb;
   let transmittance = textureSampleLevel(aerialTransmittance, environmentSampler, uvw, 0.0).rgb;
   return AerialPerspective(inscatter * near, mix(vec3f(1.0), transmittance, near));
+}
+
+// The air between the camera and a vertex, marched along its own ray (from
+// high up, where the volume's rays are too far apart near the ground:
+// atmosphere/Sky.ts `MARCH_FROM`). The volume's march, per vertex, as 1.x
+// lights distant ground atmosphere: the haze varies smoothly across a
+// triangle, and vertices are a fraction of the pixels (per pixel it cost
+// 4.5 ms at 2.6 megapixels). Both groups of four wavelengths at once,
+// through the planet's sphere at its surface's air, steps packed toward the
+// vertex (the air thickens toward the ground, where a ray from above ends).
+const AIR_STEPS = 24;
+
+fn airTransmittanceUv(r: f32, mu: f32, bottom: f32, top: f32) -> vec2f {
+  let h = sqrt(top * top - bottom * bottom);
+  let rho = sqrt(max(0.0, r * r - bottom * bottom));
+  let disc = r * r * (mu * mu - 1.0) + top * top;
+  let d = max(0.0, -r * mu + sqrt(max(disc, 0.0)));
+  let dMin = top - r;
+  let dMax = rho + h;
+  let x = vec2f((d - dMin) / (dMax - dMin), rho / h);
+  return vec2f(0.5 / 256.0 + x.x * (1.0 - 1.0 / 256.0), 0.5 / 64.0 + x.y * (1.0 - 1.0 / 64.0));
+}
+
+fn aerialMarch(relPosition: vec3f) -> AerialPerspective {
+  let a = air.groups[0];
+  let b = air.groups[1];
+  let bottom = a.bottomRadius;
+  let top = a.topRadius;
+  let clearAir = AerialPerspective(vec3f(0.0), vec3f(1.0));
+  let meters = length(relPosition);
+  let direction = relPosition / max(meters, 1e-6);
+  let origin = view.aerialOrigin.xyz;
+  let r = length(origin);
+  let mu = dot(origin, direction) / r;
+  // From above, where the ray enters the atmosphere.
+  var start = 0.0;
+  if (r > top) {
+    let disc = r * r * (mu * mu - 1.0) + top * top;
+    if (disc < 0.0) {
+      return clearAir;
+    }
+    start = max(-r * mu - sqrt(disc), 0.0);
+  }
+  let end = meters / 1000.0;
+  if (end <= start) {
+    return clearAir;
+  }
+  let sun = view.sunDirection.xyz;
+  let nu = dot(direction, sun);
+  let phaseR = 3.0 / (16.0 * PI) * (1.0 + nu * nu);
+  let g = a.miePhaseG;
+  let phaseM = 3.0 / (8.0 * PI) * (1.0 - g * g) / (2.0 + g * g) * (1.0 + nu * nu) / pow(1.0 + g * g - 2.0 * g * nu, 1.5);
+  var radianceA = vec4f(0.0);
+  var radianceB = vec4f(0.0);
+  var transmittanceA = vec4f(1.0);
+  var transmittanceB = vec4f(1.0);
+  var t0 = start;
+  for (var i = 1; i <= AIR_STEPS; i++) {
+    let u = 1.0 - f32(i) / f32(AIR_STEPS);
+    let t1 = start + (end - start) * (1.0 - u * u * u);
+    let dt = t1 - t0;
+    let p = origin + direction * (0.5 * (t0 + t1));
+    t0 = t1;
+    let rp = max(length(p), bottom + 1e-3);
+    let muSun = dot(p, sun) / rp;
+    let h = rp - bottom;
+    let rayleighDensity = exp(-h / a.rayleighScaleHeight);
+    let mieDensity = exp(-h / a.mieScaleHeight);
+    let ozoneDensity = select(clamp(-h / 15.0 + 8.0 / 3.0, 0.0, 1.0), clamp(h / 15.0 - 2.0 / 3.0, 0.0, 1.0), h < 25.0);
+    // In the planet's shadow, no sunlight (its disk a point).
+    let shadowed = muSun < 0.0 && rp * rp * (muSun * muSun - 1.0) + bottom * bottom >= 0.0;
+    let uv = airTransmittanceUv(rp, muSun, bottom, top);
+    let lit = select(1.0, 0.0, shadowed);
+    let sunA = textureSampleLevel(airTransmittance, environmentSampler, uv, 0, 0.0) * lit;
+    let sunB = textureSampleLevel(airTransmittance, environmentSampler, uv, 1, 0.0) * lit;
+    let msUv = vec2f(
+      0.5 / 32.0 + (muSun * 0.5 + 0.5) * (1.0 - 1.0 / 32.0),
+      0.5 / 32.0 + clamp(h / (top - bottom), 0.0, 1.0) * (1.0 - 1.0 / 32.0),
+    );
+    let msA = textureSampleLevel(airMultipleScattering, environmentSampler, msUv, 0, 0.0);
+    let msB = textureSampleLevel(airMultipleScattering, environmentSampler, msUv, 1, 0.0);
+    {
+      let rayleigh = a.rayleighScattering * rayleighDensity;
+      let mie = a.mieScattering * mieDensity;
+      let extinction = rayleigh + a.mieExtinction * mieDensity + a.ozoneAbsorption * ozoneDensity;
+      let scattered = (rayleigh * phaseR + mie * phaseM) * sunA + (rayleigh + mie) * msA;
+      let segment = exp(-extinction * dt);
+      radianceA += transmittanceA * scattered * (1.0 - segment) / max(extinction, vec4f(1e-9));
+      transmittanceA *= segment;
+    }
+    {
+      let rayleigh = b.rayleighScattering * rayleighDensity;
+      let mie = b.mieScattering * mieDensity;
+      let extinction = rayleigh + b.mieExtinction * mieDensity + b.ozoneAbsorption * ozoneDensity;
+      let scattered = (rayleigh * phaseR + mie * phaseM) * sunB + (rayleigh + mie) * msB;
+      let segment = exp(-extinction * dt);
+      radianceB += transmittanceB * scattered * (1.0 - segment) / max(extinction, vec4f(1e-9));
+      transmittanceB *= segment;
+    }
+  }
+  // In linear sRGB by the bands' weights, pre-exposed like the volume;
+  // transmittance each channel's bands weighted by their color.
+  let w = air.weights;
+  let la = radianceA * a.solarIrradiance;
+  let lb = radianceB * b.solarIrradiance;
+  let inscatter = la.x * w[0].xyz + la.y * w[1].xyz + la.z * w[2].xyz + la.w * w[3].xyz
+    + lb.x * w[4].xyz + lb.y * w[5].xyz + lb.z * w[6].xyz + lb.w * w[7].xyz;
+  let total = w[0].xyz + w[1].xyz + w[2].xyz + w[3].xyz + w[4].xyz + w[5].xyz + w[6].xyz + w[7].xyz;
+  let transmittance = (transmittanceA.x * w[0].xyz + transmittanceA.y * w[1].xyz
+    + transmittanceA.z * w[2].xyz + transmittanceA.w * w[3].xyz
+    + transmittanceB.x * w[4].xyz + transmittanceB.y * w[5].xyz
+    + transmittanceB.z * w[6].xyz + transmittanceB.w * w[7].xyz) / total;
+  return AerialPerspective(inscatter * view.exposure, transmittance);
 }
 
 // The sun's illuminance at a camera-relative position: white and uniform
@@ -84,9 +184,34 @@ fn sunIlluminance(relPosition: vec3f) -> vec3f {
 // Diffuse irradiance E/π by normal (gpu/Environment.ts).
 @group(0) @binding(6) var irradianceCube: texture_cube<f32>;
 // Aerial perspective: in-scattered light (cd/m²) and transmittance by
-// screen position and distance (atmosphere/sky.wgsl `aerialFragment`).
+// screen position and distance (atmosphere/sky.wgsl `aerialCompute`).
 @group(0) @binding(7) var aerialInscatter: texture_3d<f32>;
 @group(0) @binding(8) var aerialTransmittance: texture_3d<f32>;
+// The air for marching aerial perspective per pixel (atmosphere/Sky.ts
+// `buildAir`): both groups' parameters (atmosphere.wgsl `Atmosphere`) and
+// the bands' weights to linear sRGB, and their tables, a layer per group.
+struct AirGroup {
+  rayleighScattering: vec4f,
+  mieScattering: vec4f,
+  mieExtinction: vec4f,
+  ozoneAbsorption: vec4f,
+  solarIrradiance: vec4f,
+  bottomRadius: f32,
+  topRadius: f32,
+  rayleighScaleHeight: f32,
+  mieScaleHeight: f32,
+  miePhaseG: f32,
+  groundAlbedo: f32,
+  _pad0: f32,
+  _pad1: f32,
+};
+struct Air {
+  groups: array<AirGroup, 2>,
+  weights: array<vec4f, 8>,
+};
+@group(0) @binding(9) var<uniform> air: Air;
+@group(0) @binding(10) var airTransmittance: texture_2d_array<f32>;
+@group(0) @binding(11) var airMultipleScattering: texture_2d_array<f32>;
 
 @group(1) @binding(0) var<storage, read> records: array<DrawRecord>;
 @group(1) @binding(1) var<storage, read> items: array<DrawItem>;
@@ -120,6 +245,10 @@ struct VsOut {
   @location(4) relPosition: vec3f, // camera-relative world position
   @location(5) tangent: vec4f,     // xyz world tangent, w handedness; w = 0: none
   @location(6) @interpolate(flat) feature: u32, // global feature ID, 0 = none
+  // Aerial perspective marched per vertex (`aerialMarch`), pre-exposed
+  // in-scatter and transmittance; unused where the view reads the volume.
+  @location(7) airInscatter: vec3f,
+  @location(8) airTransmittance: vec3f,
 };
 
 fn read2(offset: u32, index: u32) -> vec2f {
@@ -164,6 +293,13 @@ fn vs(@builtin(vertex_index) vertexIndex: u32, @location(0) item: u32) -> VsOut 
   let world = m * vec4f(read3(r.positionOffset, vertexIndex), 1.0);
   out.relPosition = world.xyz;
   out.position = view.viewProj * world;
+  out.airInscatter = vec3f(0.0);
+  out.airTransmittance = vec3f(1.0);
+  if (view.sunLight.w > 0.5 && view.aerialOrigin.w > 0.0) {
+    let air = aerialMarch(world.xyz);
+    out.airInscatter = air.inscatter;
+    out.airTransmittance = air.transmittance;
+  }
   // Underlay (the bare ellipsoid): behind all other content (UNDERLAY_DEPTH
   // in layout.ts).
   if ((r.flags & 8u) != 0u) {
@@ -410,15 +546,27 @@ fn fs(in: VsOut, @builtin(front_facing) frontFacing: bool) -> FsOut {
 
   // Pre-exposed (plan §4.2). Emission is display-relative: authored
   // emissive colors look the same at any exposure.
-  var lit = direct + indirect;
+  var lit = (direct + indirect) * view.exposure;
   var shown = emissive;
   if (view.sunLight.w > 0.5) {
-    let air = aerialPerspective(in.position.xy, in.relPosition);
-    lit = lit * air.transmittance + air.inscatter;
-    shown = emissive * air.transmittance;
+    // The air's light is pre-exposed in the volume. From high up it's
+    // marched per vertex instead; between, both, blended.
+    let march = view.aerialOrigin.w;
+    var ap = AerialPerspective(vec3f(0.0), vec3f(1.0));
+    if (march < 1.0) {
+      ap = aerialPerspective(in.position.xy, in.relPosition);
+    }
+    if (march > 0.0) {
+      ap = AerialPerspective(
+        mix(ap.inscatter, in.airInscatter, march),
+        mix(ap.transmittance, in.airTransmittance, march),
+      );
+    }
+    lit = lit * ap.transmittance + ap.inscatter;
+    shown = emissive * ap.transmittance;
   }
   // Below fp16's largest value: an overflow to infinity (a lit scene at a
   // night exposure) poisoned the exposure meter's average with NaN.
-  out.color = vec4f(min(lit * view.exposure + shown, vec3f(60000.0)), 1.0);
+  out.color = vec4f(min(lit + shown, vec3f(60000.0)), 1.0);
   return out;
 }

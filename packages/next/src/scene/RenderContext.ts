@@ -100,6 +100,9 @@ export async function createRenderContext(
     sunLight: GPUTextureView;
     aerialInscatter: GPUTextureView;
     aerialTransmittance: GPUTextureView;
+    air: GPUBuffer;
+    airTransmittance: GPUTextureView;
+    airScattering: GPUTextureView;
   },
   overrides: ShaderOverrides = {},
 ): Promise<RenderContext> {
@@ -131,6 +134,9 @@ export async function createRenderContext(
       { binding: 6, resource: environment.irradianceView },
       { binding: 7, resource: sky.aerialInscatter },
       { binding: 8, resource: sky.aerialTransmittance },
+      { binding: 9, resource: { buffer: sky.air } },
+      { binding: 10, resource: sky.airTransmittance },
+      { binding: 11, resource: sky.airScattering },
     ],
   });
   const white = device.createTexture({
@@ -198,7 +204,11 @@ async function createPipelines(
       // Image-based lighting: prefiltered specular cube, its sampler, the
       // split-sum BRDF table and the irradiance SH.
       { binding: 1, visibility: FRAGMENT, texture: { viewDimension: "cube" } },
-      { binding: 2, visibility: FRAGMENT, sampler: { type: "filtering" } },
+      {
+        binding: 2,
+        visibility: VERTEX | FRAGMENT,
+        sampler: { type: "filtering" },
+      },
       { binding: 3, visibility: FRAGMENT, texture: {} },
       { binding: 4, visibility: FRAGMENT, buffer: { type: "uniform" } },
       // The sun's light through the atmosphere (atmosphere/Sky.ts).
@@ -208,6 +218,19 @@ async function createPipelines(
       // Aerial perspective: in-scatter and transmittance volumes.
       { binding: 7, visibility: FRAGMENT, texture: { viewDimension: "3d" } },
       { binding: 8, visibility: FRAGMENT, texture: { viewDimension: "3d" } },
+      // The air marched per vertex: parameters, then transmittance and
+      // multiple-scattering tables (a layer per group of wavelengths).
+      { binding: 9, visibility: VERTEX, buffer: { type: "uniform" } },
+      {
+        binding: 10,
+        visibility: VERTEX,
+        texture: { viewDimension: "2d-array" },
+      },
+      {
+        binding: 11,
+        visibility: VERTEX,
+        texture: { viewDimension: "2d-array" },
+      },
     ],
   });
   const cullWorldLayout = device.createBindGroupLayout({

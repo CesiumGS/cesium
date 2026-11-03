@@ -1,6 +1,7 @@
 import atmosphereWgsl from "./atmosphere.wgsl?raw";
 import skyWgsl from "./sky.wgsl?raw";
 import type { RealtimeAtmosphere } from "./RealtimeAtmosphere.ts";
+import type { AerosolType } from "./model.ts";
 import type { Ellipsoid, Cartographic } from "../math/ellipsoid.ts";
 import * as v3 from "../math/vec3.ts";
 import type { Vec3 } from "../math/vec3.ts";
@@ -10,10 +11,23 @@ import type { Camera } from "../scene/Camera.ts";
 export const SUN_ANGULAR_DIAMETER = 0.00935;
 
 /** Bytes of the WGSL `Sky` uniform (sky.wgsl). */
-const SKY_SIZE = 224;
+const SKY_SIZE = 240;
 
-/** The aerial-perspective volume: 32 × 32 directions × 32 distances. */
+/** The aerial-perspective volume: 32 × 32 directions × 128 distances. */
 const AERIAL_SIZE = 32;
+const AERIAL_SLICES = 128;
+/**
+ * Camera altitudes, km, across which aerial perspective moves from the
+ * volume to a march per vertex (the opaque pass's `aerialMarch`). From
+ * higher up a pixel's ray and its neighbor's in the volume, at the same
+ * distance, are at heights kilometers apart near the ground, where the haze
+ * changes fastest: interpolating between them drew bands at the volume's
+ * row spacing. Near the ground they're close; the volume is cheaper.
+ */
+const MARCH_FROM = 2;
+const MARCH_TO = 5;
+/** Bytes of the opaque pass's `Air`: both groups' `Atmosphere`, weights. */
+const AIR_SIZE = 2 * 112 + 8 * 16;
 
 /** Ray-march steps per pixel, above the atmosphere. */
 const SKY_STEPS = 32;
@@ -37,13 +51,24 @@ export interface SkyView {
   tableTarget: GPUTextureView;
   /** The uniform and the table (drawing from it). */
   tableGroup: GPUBindGroup;
+  /** The aerial-perspective volume's two dispatches (group 0, then 1). */
+  aerialGroups: [GPUBindGroup, GPUBindGroup];
   /** The camera is inside the atmosphere: the sky comes from the table. */
   inside: boolean;
+  /** The camera on the atmosphere's sphere, km, planet-centered. */
+  position: [number, number, number];
   /**
-   * The camera on the atmosphere's sphere, km, planet-centered: where the
-   * opaque pass measures aerial perspective's rays from.
+   * How much of aerial perspective is marched per vertex rather than read
+   * from the volume, 0 to 1, by the camera's altitude (`MARCH_FROM`).
    */
-  origin: [number, number, number];
+  march: number;
+  /**
+   * The aerial-perspective volume's first and last slice distances along
+   * view rays, km (from the atmosphere's nearest point above it, to its far
+   * edge), the same for every ray.
+   */
+  aerialStart: number;
+  aerialEnd: number;
   /** Six `Sky` uniforms, 256 bytes apart: the environment cube's faces. */
   faceUniforms: GPUBuffer;
   /** Per face: its uniform alone (marching), and with the table. */
@@ -57,8 +82,7 @@ type Pipelines = Record<
   | "fromTable"
   | "sunLight"
   | "environment"
-  | "environmentFromTable"
-  | "aerial",
+  | "environmentFromTable",
   GPURenderPipeline
 >;
 
@@ -129,25 +153,43 @@ export class Sky {
    */
   readonly sunLight: GPUTexture;
   /**
-   * The aerial-perspective volume (sky.wgsl `aerialFragment`): in-scattered
-   * light (cd/m²) and transmittance, by screen position and distance. One
-   * pair, rewritten for each view before its opaque pass reads it.
+   * The aerial-perspective volume (sky.wgsl `aerialCompute`): in-scattered
+   * light (cd/m², pre-exposed) and transmittance, by screen position and
+   * distance. One pair, rewritten for each view before its opaque pass
+   * reads it; another holds the first wavelength group's share.
    */
   readonly aerialInscatter: GPUTexture;
   readonly aerialTransmittance: GPUTexture;
-  private readonly aerialPass: GPURenderPassDescriptor;
-  private readonly aerialAttachments: GPURenderPassColorAttachment[];
+  private readonly aerialPartial: [GPUTexture, GPUTexture];
+  /**
+   * For the opaque pass's per-vertex march (opaque.wgsl `aerialMarch`): both
+   * wavelength groups' parameters and the bands' weights (`Air`), and their
+   * transmittance and multiple-scattering tables as two-layer arrays.
+   */
+  readonly air: GPUBuffer;
+  readonly airTransmittance: GPUTexture;
+  readonly airScattering: GPUTexture;
+  /**
+   * @internal For checks: how much aerial perspective is marched per vertex
+   * whatever the altitude (Lab "Real-time sky"); undefined: by altitude.
+   */
+  marchOverride: number | undefined;
+  private readonly aerialPipelines: [GPUComputePipeline, GPUComputePipeline];
+  private readonly aerialLayout: GPUBindGroupLayout;
 
   private constructor(
     private readonly device: GPUDevice,
     readonly atmosphere: RealtimeAtmosphere,
     pipelines: Pipelines,
+    aerialPipelines: [GPUComputePipeline, GPUComputePipeline],
     layouts: Record<
-      "atmosphere" | "tables" | "view" | "table" | "empty",
+      "atmosphere" | "tables" | "view" | "table" | "empty" | "aerial",
       GPUBindGroupLayout
     >,
   ) {
     this.pipelines = pipelines;
+    this.aerialPipelines = aerialPipelines;
+    this.aerialLayout = layouts.aerial;
     this.viewLayout = layouts.view;
     this.tableLayout = layouts.table;
     this.groups = atmosphere.groups.map((g) => [
@@ -193,56 +235,80 @@ export class Sky {
         GPUTextureUsage.COPY_SRC,
     });
     this.buildSunLight();
-    const volume = (label: string) =>
+    this.air = device.createBuffer({
+      label: "sky.air",
+      size: AIR_SIZE,
+      usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+    });
+    const layers = (label: string, size: number, height: number) =>
       device.createTexture({
         label,
-        size: [AERIAL_SIZE, AERIAL_SIZE, AERIAL_SIZE],
+        size: [size, height, 2],
+        format: "rgba16float",
+        usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST,
+      });
+    this.airTransmittance = layers("sky.airTransmittance", 256, 64);
+    this.airScattering = layers("sky.airScattering", 32, 32);
+    this.buildAir();
+    const volume = (label: string, extra = 0) =>
+      device.createTexture({
+        label,
+        size: [AERIAL_SIZE, AERIAL_SIZE, AERIAL_SLICES],
         dimension: "3d",
         format: "rgba16float",
-        // COPY_SRC: checked against the march (Lab "Real-time sky").
         usage:
-          GPUTextureUsage.RENDER_ATTACHMENT |
+          GPUTextureUsage.STORAGE_BINDING |
           GPUTextureUsage.TEXTURE_BINDING |
-          GPUTextureUsage.COPY_SRC,
+          extra,
       });
-    this.aerialInscatter = volume("sky.aerialInscatter");
+    // COPY_SRC: checked against the march (Lab "Real-time sky").
+    this.aerialInscatter = volume(
+      "sky.aerialInscatter",
+      GPUTextureUsage.COPY_SRC,
+    );
     this.aerialTransmittance = volume("sky.aerialTransmittance");
-    this.aerialAttachments = [
-      this.aerialInscatter,
-      this.aerialTransmittance,
-    ].map((texture) => ({
-      view: texture.createView({ dimension: "3d" }),
-      depthSlice: 0,
-      clearValue: { r: 0, g: 0, b: 0, a: 0 },
-      loadOp: "clear",
-      storeOp: "store",
-    }));
-    this.aerialPass = {
-      label: "aerial-perspective",
-      colorAttachments: this.aerialAttachments,
-    };
+    this.aerialPartial = [
+      volume("sky.aerialPartialInscatter"),
+      volume("sky.aerialPartialTransmittance"),
+    ];
   }
 
   /**
-   * Encodes a view's aerial-perspective volume (after `write`): one render
-   * pass per depth slice, both wavelength groups added.
+   * Encodes a view's aerial-perspective volume (after `write`): each column
+   * marched once, every slice written, one dispatch per wavelength group
+   * (the second adds the first's share).
    */
-  encodeAerial(encoder: GPUCommandEncoder, view: SkyView): void {
-    for (let slice = 0; slice < AERIAL_SIZE; slice++) {
-      for (const attachment of this.aerialAttachments) {
-        attachment.depthSlice = slice;
-      }
-      const pass = encoder.beginRenderPass(this.aerialPass);
-      pass.setPipeline(this.pipelines.aerial);
-      pass.setBindGroup(2, view.group);
-      for (let g = 0; g < this.groups.length; g++) {
-        const [atmosphere, tables] = this.groups[g]!;
-        pass.setBindGroup(0, atmosphere);
-        pass.setBindGroup(1, tables);
-        pass.draw(3, 1, 0, g + 2 * slice);
-      }
-      pass.end();
+  encodeAerial(
+    encoder: GPUCommandEncoder,
+    view: SkyView,
+    timestampWrites?: GPUComputePassTimestampWrites,
+  ): void {
+    const pass = encoder.beginComputePass({
+      label: "aerial-perspective",
+      ...(timestampWrites ? { timestampWrites } : {}),
+    });
+    for (let g = 0; g < this.groups.length; g++) {
+      const [atmosphere, tables] = this.groups[g]!;
+      pass.setPipeline(this.aerialPipelines[g]!);
+      pass.setBindGroup(0, atmosphere);
+      pass.setBindGroup(1, tables);
+      pass.setBindGroup(2, view.aerialGroups[g]!);
+      pass.dispatchWorkgroups(AERIAL_SIZE / 8, AERIAL_SIZE / 8);
     }
+    pass.end();
+  }
+
+  /** Releases the sun-light table and the aerial-perspective volumes. */
+  destroy(): void {
+    this.sunLight.destroy();
+    this.aerialInscatter.destroy();
+    this.aerialTransmittance.destroy();
+    for (const texture of this.aerialPartial) {
+      texture.destroy();
+    }
+    this.air.destroy();
+    this.airTransmittance.destroy();
+    this.airScattering.destroy();
   }
 
   /**
@@ -349,6 +415,45 @@ export class Sky {
     return r;
   }
 
+  /**
+   * The atmosphere's haze (visibility, km, and kind of aerosols): rebuilds
+   * its tables and the sun-light table. Views' environments need
+   * rebuilding after (Engine).
+   */
+  setHaze(kilometers: number | undefined, aerosol?: AerosolType): void {
+    if (
+      kilometers === this.atmosphere.visibility &&
+      aerosol === this.atmosphere.aerosol
+    ) {
+      return;
+    }
+    this.atmosphere.setHaze(kilometers, aerosol);
+    this.buildSunLight();
+    this.buildAir();
+  }
+
+  /** Gathers both wavelength groups for the opaque pass's march. */
+  private buildAir(): void {
+    const device = this.device;
+    const encoder = device.createCommandEncoder({ label: "sky.air" });
+    this.atmosphere.groups.forEach((g, i) => {
+      encoder.copyBufferToBuffer(g.uniforms, 0, this.air, i * 112, 112);
+      encoder.copyTextureToTexture(
+        { texture: g.transmittance },
+        { texture: this.airTransmittance, origin: [0, 0, i] },
+        [256, 64],
+      );
+      encoder.copyTextureToTexture(
+        { texture: g.multipleScattering },
+        { texture: this.airScattering, origin: [0, 0, i] },
+        [32, 32],
+      );
+    });
+    device.queue.submit([encoder.finish()]);
+    // The band weights, as in the `Sky` uniform.
+    device.queue.writeBuffer(this.air, 224, this.data, 96, 128);
+  }
+
   /** Renders the sun-light table from the atmosphere's tables. */
   private buildSunLight(): void {
     const device = this.device;
@@ -394,17 +499,43 @@ export class Sky {
     targets: SkyTargets,
   ): Promise<Sky> {
     const fragment = GPUShaderStage.FRAGMENT;
+    const compute = GPUShaderStage.COMPUTE;
+    const both = fragment | compute;
+    const volume = (binding: number): GPUBindGroupLayoutEntry => ({
+      binding,
+      visibility: compute,
+      texture: { viewDimension: "3d", sampleType: "unfilterable-float" },
+    });
+    const store = (binding: number): GPUBindGroupLayoutEntry => ({
+      binding,
+      visibility: compute,
+      storageTexture: {
+        access: "write-only",
+        format: "rgba16float",
+        viewDimension: "3d",
+      },
+    });
     const layouts = {
       atmosphere: device.createBindGroupLayout({
         label: "sky.atmosphere",
-        entries: [{ binding: 0, visibility: fragment, buffer: {} }],
+        entries: [{ binding: 0, visibility: both, buffer: {} }],
       }),
       tables: device.createBindGroupLayout({
         label: "sky.tables",
         entries: [
-          { binding: 1, visibility: fragment, texture: {} },
-          { binding: 2, visibility: fragment, sampler: {} },
-          { binding: 3, visibility: fragment, texture: {} },
+          { binding: 1, visibility: both, texture: {} },
+          { binding: 2, visibility: both, sampler: {} },
+          { binding: 3, visibility: both, texture: {} },
+        ],
+      }),
+      aerial: device.createBindGroupLayout({
+        label: "sky.aerial",
+        entries: [
+          { binding: 0, visibility: compute, buffer: {} },
+          volume(5),
+          volume(6),
+          store(7),
+          store(8),
         ],
       }),
       view: device.createBindGroupLayout({
@@ -475,8 +606,9 @@ export class Sky {
       fromTable,
       sunLight,
       environment,
-      aerial,
       environmentFromTable,
+      aerial0,
+      aerial1,
     ] = await Promise.all([
       device.createRenderPipelineAsync(scene("skyFragment", marching)),
       device.createRenderPipelineAsync(table("skyViewFragment")),
@@ -490,20 +622,6 @@ export class Sky {
       device.createRenderPipelineAsync(table("sunLightFragment")),
       device.createRenderPipelineAsync(table("skyFragment")),
       device.createRenderPipelineAsync({
-        label: "sky.aerial",
-        layout: device.createPipelineLayout({ bindGroupLayouts: marching }),
-        vertex: { module, entryPoint: "skyVertex" },
-        fragment: {
-          module,
-          entryPoint: "aerialFragment",
-          targets: [
-            { format: "rgba16float", blend: additive },
-            { format: "rgba16float", blend: additive },
-          ],
-        },
-        primitive: { topology: "triangle-list" },
-      }),
-      device.createRenderPipelineAsync({
         label: "sky.environmentFromTable",
         layout: device.createPipelineLayout({
           bindGroupLayouts: [layouts.empty, layouts.empty, layouts.table],
@@ -516,6 +634,23 @@ export class Sky {
         },
         primitive: { topology: "triangle-list" },
       }),
+      ...[0, 1].map((group) =>
+        device.createComputePipelineAsync({
+          label: `sky.aerial${group}`,
+          layout: device.createPipelineLayout({
+            bindGroupLayouts: [
+              layouts.atmosphere,
+              layouts.tables,
+              layouts.aerial,
+            ],
+          }),
+          compute: {
+            module,
+            entryPoint: "aerialCompute",
+            constants: { AERIAL_GROUP: group },
+          },
+        }),
+      ),
     ]);
     return new Sky(
       device,
@@ -527,8 +662,8 @@ export class Sky {
         sunLight,
         environment,
         environmentFromTable,
-        aerial,
       },
+      [aerial0 as GPUComputePipeline, aerial1 as GPUComputePipeline],
       layouts,
     );
   }
@@ -578,7 +713,28 @@ export class Sky {
         ],
       }),
       inside: true,
-      origin: [0, 0, 0],
+      aerialStart: 0,
+      aerialEnd: 0,
+      position: [0, 0, 0],
+      march: 0,
+      // Group 0 writes its share into the partial volume (the final one is
+      // bound, unused, as its input); group 1 adds it and writes the final.
+      aerialGroups: [
+        [this.aerialInscatter, this.aerialTransmittance, ...this.aerialPartial],
+        [...this.aerialPartial, this.aerialInscatter, this.aerialTransmittance],
+      ].map(([inI, inT, outI, outT]) =>
+        device.createBindGroup({
+          label: "sky.aerial",
+          layout: this.aerialLayout,
+          entries: [
+            { binding: 0, resource: { buffer } },
+            { binding: 5, resource: inI!.createView() },
+            { binding: 6, resource: inT!.createView() },
+            { binding: 7, resource: outI!.createView() },
+            { binding: 8, resource: outT!.createView() },
+          ],
+        }),
+      ) as [GPUBindGroup, GPUBindGroup],
       faceUniforms,
       faceGroups: CUBE_FACES.map((_, i) =>
         device.createBindGroup({
@@ -626,9 +782,24 @@ export class Sky {
     // A margin below the top, where the table's rows still resolve the
     // thin shell of atmosphere left above.
     view.inside = r < (p.topRadius - 1000) / 1000;
-    view.origin[0] = f[0]!;
-    view.origin[1] = f[1]!;
-    view.origin[2] = f[2]!;
+    // Aerial perspective, from the camera (or where rays can first enter
+    // the atmosphere) to its far edge past the horizon.
+    const bottom = p.bottomRadius / 1000;
+    const top = p.topRadius / 1000;
+    view.aerialStart = Math.max(0, r - top);
+    view.position[0] = f[0]!;
+    view.position[1] = f[1]!;
+    view.position[2] = f[2]!;
+    const x = Math.min(
+      Math.max((r - bottom - MARCH_FROM) / (MARCH_TO - MARCH_FROM), 0),
+      1,
+    );
+    view.march = this.marchOverride ?? x * x * (3 - 2 * x);
+    view.aerialEnd =
+      Math.sqrt(Math.max(0, r * r - bottom * bottom)) +
+      Math.sqrt(top * top - bottom * bottom);
+    f[56] = view.aerialStart;
+    f[57] = view.aerialEnd;
     f[3] = exposure;
     f[4] = sun[0]!;
     f[5] = sun[1]!;
@@ -646,6 +817,7 @@ export class Sky {
     f[21] = height;
     f[22] = SKY_STEPS;
     this.device.queue.writeBuffer(view.buffer, 0, this.data, 0, 96);
+    this.device.queue.writeBuffer(view.buffer, 224, this.data, 224, 16);
   }
 
   /** The weights (bytes 96 on) are constant: written once per view. */

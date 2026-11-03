@@ -1042,32 +1042,92 @@ every frame while scrubbing time (§13.13), so the prefilter keeps its 256
 samples. Spreading a rebuild over frames stays available if it's needed on
 smaller GPUs.
 
-**Aerial perspective** (r41; `View.aerialPerspective`, default on with
-background "atmosphere"). Hillaire's froxel volume per view per frame: 32 ×
-32 screen directions × 32 distances, each ray's slices spaced quadratically
-over its own stretch of atmosphere (from the camera, or where the ray enters
-the atmosphere from above, to where it leaves), so all 32 fall in the air
-at street level and from orbit alike (one span for all rays put the limb's
-1,000 km of air in a slice or two from far away, and the haze on the
-globe's edge came and went as the camera moved). Each
-froxel holds the light the air scatters toward the camera up to its
-distance (linear sRGB, cd/m²) and the transmittance (each channel the 8
-bands' average weighted by their color), marched with the transmittance and
-multiple-scattering tables and stopping short of the ground (the scene's
-surface, not the planet's). One render pass per depth slice into a pair of
-3D targets, both wavelength groups added; one pair shared by all views,
-rewritten before each view's opaque pass. The opaque pass applies it per
-pixel: lit × transmittance + in-scatter, emission dimmed too. It replaces
-1.x's ground atmosphere and `Fog` for scenes, and the haze meets the sky at
-the horizon without a seam (the same atmosphere, the same tables). Checked
-in the Lab: froxels against the tables' own march along the same ray to the
-same distance, median 0.03-0.06%, worst 0.8%, from the ground through
-twilight to orbit, with pictures of the bare globe with and without it.
-Limits: 32 slices over up to ~900 km along a horizontal ray (the first
-ends ~0.9 km out), so haze within a few hundred meters is interpolated from
-none;
-fine for haze, coarse for weather fog (the "weather haze" medium, an
-analytic exponential, is the follow-up for that).
+**Aerial perspective** (r41, reworked in r42; `View.aerialPerspective`,
+default on with background "atmosphere"). Each froxel or vertex holds the
+light the air scatters toward the camera up to its distance (linear sRGB,
+cd/m², pre-exposed: haze toward the sun passes fp16's range) and the
+transmittance (each channel the 8 bands' average weighted by their color),
+marched with the transmittance and multiple-scattering tables. The opaque
+pass applies it: lit × transmittance + in-scatter, emission dimmed too. It
+replaces 1.x's ground atmosphere and `Fog` for scenes, and the haze meets
+the sky at the horizon without a seam (the same atmosphere, the same
+tables). Two ways to evaluate it, by the camera's altitude:
+
+- **Near the ground: Hillaire's froxel volume.** 32 × 32 screen directions
+  × 128 distances, the same distances for every ray (spaced quadratically
+  from the camera, or the atmosphere's nearest point from above it, to its
+  far edge past the horizon), built per view per frame by a compute shader:
+  one thread per column marches once, front to back, writing every slice as
+  it passes (each slice is the one before plus one interval, two steps per
+  interval), one dispatch per group of four wavelengths (the second adds
+  the first's share). Rays go on through the planet's sphere at its
+  surface's air (the scene's surface, the WGS84 ellipsoid or terrain, is
+  above it). Each of those choices fixed a banding seen while zooming: rays
+  with their own spans put different distances side by side (bands at the
+  volume's row spacing); slices marched independently each carried their
+  own step error (ripples across the terrain); rays stopping at the ground
+  ended their haze at different distances (a step between rays); 32 slices
+  over the 1,750 km a high camera sees were too coarse where a ray reaches
+  the ground. Checked in the Lab against the tables' own march along the
+  same ray to the same distance: median 0.09-0.48%, worst 1.8%, from noon
+  to twilight.
+- **From higher up: a march per vertex.** From a few kilometers up, at the
+  same distance, two neighboring rows' rays are kilometers apart in height
+  where they near the ground, where the haze changes fastest:
+  interpolating between them drew stripes at the volume's row spacing
+  (doubling the rows halved their spacing, which confirmed it). No slicing
+  of a screen-space volume fixes that. Above 5 km each vertex marches its
+  own ray instead (the opaque vertex shader: 24 steps packed toward the
+  vertex, where the air is densest, both wavelength groups at once), as 1.x
+  lights distant ground atmosphere; between 2 and 5 km the two blend, and
+  above 5 km the volume isn't built. Per pixel the same march cost 4.5 ms
+  at 2.6 megapixels (an RTX 40-series laptop GPU); per vertex the whole
+  Alps view from 60 km takes 2.6 ms of GPU, against 2.7 ms with the volume.
+  Checked in the Lab: the march against the volume, both forced on the same
+  frame from 1 km up, median 0.08%, 95th percentile 0.28% over the ground's
+  pixels; both within about 1% of the tables' march on the bare ellipsoid.
+  Limit: haze interpolates linearly across a triangle, so a large face seen
+  from high up (a model's ground plane) gets a smooth approximation.
+
+Haze within a few hundred meters is coarse in the volume (the first slices
+fade in from none); fine for haze, coarse for weather fog (the "weather
+haze" medium, an analytic exponential, is the follow-up for that). Other
+ways to remove interpolation artifacts, if they come back: jittering the
+volume's samples with temporal accumulation (Frostbite's and AC4's
+volumetric fog; needs temporal reprojection), and a reduced-resolution
+march with depth-aware upsampling (once depth comes before shading, §6's
+visibility buffer).
+
+**Haze: visibility and kinds of aerosols** (r42). `Engine.visibility`
+(km, meteorological visibility, default 60) sets the aerosols' amount:
+extinction at 550 nm is 3.912 / V (Koschmieder), the aerosols' share what's
+left after Rayleigh's. `Engine.aerosol` sets what they are: continental
+(default), urban, maritime or desert dust, each with an Ångström exponent,
+single-scattering albedo and asymmetry after the OPAC climatology, and a
+typical scale height (sea salt stays in a shallow marine layer, dust is
+lofted kilometers up). Bruneton's reference Earth is gray aerosols at about
+220 km. Changing either rebuilds the atmosphere's tables, the sun-light
+table and every view's environment (a few ms, once). Seen from the ground
+the kinds differ most around the sun (measured near Geneva at noon, the
+halo 3-8° from the sun: 26,600 cd/m² in red for maritime, a white halo;
+19,400 for desert; 14,200 for continental, bluish; 11,900 for urban, whose
+soot absorbs) and by about 5% toward distant mountains. Seen from above
+they barely differ (1-2% from 60 km over the Alps): the aerosols are in the
+lowest kilometer or two, below the camera and mostly below the Alps, and
+only lofted dust reaches high enough to change much. Visibility is the
+control with the most visible effect. Dyno's viewer has both (Lighting).
+
+**Correction (r42): globe imagery wasn't lit.** r40 decided imagery is lit
+by the sun and sky, and r41 described it as lit, but `GlobeImagery` still
+drew it unlit (1.x's way): terrain looked the same at noon and at night,
+aerial perspective had no visible effect on the globe, and automatic
+exposure misbehaved. Now `GlobeImageryOptions.lit` (default true); the
+imagery parity harness and the benchmark suite pin `lit: false`, which
+checks decoding against 1.x.
+
+**The Viewer's first frames** (r42) drew with the camera at the Earth's
+center, before the app framed anything (a flash of haze at nonsense
+distances). It now starts on the whole Earth, as 1.x does.
 
 **How the sun looks** (r41). At ordinary fields of view the disk is 3 to 4
 pixels across, so its edge is antialiased by each pixel's coverage. Its

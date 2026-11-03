@@ -42,6 +42,7 @@ import {
 import { ViewLink, type ViewLinkOptions } from "./ViewLink.ts";
 import { RealtimeAtmosphere } from "../atmosphere/RealtimeAtmosphere.ts";
 import { Sky, type SkyView } from "../atmosphere/Sky.ts";
+import type { AerosolType } from "../atmosphere/model.ts";
 import { EARTH } from "./Body.ts";
 import { Camera } from "./Camera.ts";
 import { World, type WorldOptions } from "./World.ts";
@@ -67,6 +68,13 @@ export interface EngineOptions extends GpuDeviceOptions {
   maxViews?: number;
   /** Replace built-in shaders with complete WGSL modules (e.g. from Slang). */
   shaders?: ShaderOverrides;
+  /**
+   * The Earth air's visibility, km (default 60, a clear day; null: the
+   * reference atmosphere's own, about 220 km).
+   */
+  visibility?: number | null;
+  /** What the haze is made of (default "continental"). */
+  aerosol?: AerosolType;
 }
 
 export interface FrameStats {
@@ -362,12 +370,23 @@ export class Engine {
         aerialTransmittance: sky.aerialTransmittance.createView({
           dimension: "3d",
         }),
+        air: sky.air,
+        airTransmittance: sky.airTransmittance.createView({
+          dimension: "2d-array",
+        }),
+        airScattering: sky.airScattering.createView({
+          dimension: "2d-array",
+        }),
       },
       options.shaders,
     );
     // M0: device-loss recovery stops at the device. Rebuilding worlds from
     // their CPU-side sources arrives with the streaming cache (M2).
     const engine = new Engine(gpu, ctx, sky, options.maxViews ?? 16);
+    engine.setHaze(
+      options.visibility === undefined ? 60 : (options.visibility ?? undefined),
+      options.aerosol ?? "continental",
+    );
     engine.warmUp();
     return engine;
   }
@@ -494,6 +513,47 @@ export class Engine {
       this.stats.environmentBuilds++;
     }
     this.ctx.environment.select(encoder, this.probeOf(view));
+  }
+
+  /**
+   * How far one can see through the Earth's air, km: the haze of its
+   * aerosols (the sky, aerial perspective and the sun's light all follow).
+   * Default 60 km, a fair, clear day; Bruneton's reference atmosphere (no
+   * value) is about 220 km, very clean air.
+   */
+  get visibility(): number | undefined {
+    return this.sky.atmosphere.visibility;
+  }
+
+  set visibility(kilometers: number | undefined) {
+    this.setHaze(kilometers, this.aerosol);
+  }
+
+  /**
+   * What the Earth air's haze is made of (`AEROSOLS`): fine continental
+   * particles by default (a bluish haze), urban, maritime or desert dust.
+   */
+  get aerosol(): AerosolType | undefined {
+    return this.sky.atmosphere.aerosol;
+  }
+
+  set aerosol(aerosol: AerosolType | undefined) {
+    this.setHaze(this.visibility, aerosol);
+  }
+
+  private setHaze(
+    kilometers: number | undefined,
+    aerosol: AerosolType | undefined,
+  ): void {
+    if (kilometers === this.visibility && aerosol === this.aerosol) {
+      return;
+    }
+    this.sky.setHaze(kilometers, aerosol);
+    // Every view's environment from the new air.
+    for (const entry of this.probes.values()) {
+      entry.key.fill(Number.NaN);
+    }
+    this.requestRender();
   }
 
   /** Image-based lighting environment shared by all worlds and views. */
@@ -1541,7 +1601,12 @@ export class Engine {
         view.sunDisk,
       );
       if (drawsAerialPerspective(view)) {
-        block.aerial = { origin: sky.origin };
+        block.aerial = {
+          start: sky.aerialStart,
+          end: sky.aerialEnd,
+          origin: sky.position,
+          march: sky.march,
+        };
       }
     }
     writeViewBlock(this.viewData, (index * VIEW_STRIDE) / 4, block);
@@ -1925,7 +1990,8 @@ export class Engine {
 
     // The air between the camera and the scene, for the opaque pass.
     graph.addPass("aerial-perspective", { sideEffect: true }, (enc) => {
-      if (drawsAerialPerspective(view)) {
+      // Marched per vertex instead from high up: no volume.
+      if (drawsAerialPerspective(view) && frame.sky.march < 1) {
         this.sky.encodeAerial(enc, frame.sky);
       }
     });
@@ -2205,9 +2271,7 @@ export class Engine {
     this.pool.destroy();
     this.timer.destroy();
     this.sky.atmosphere.destroy();
-    this.sky.sunLight.destroy();
-    this.sky.aerialInscatter.destroy();
-    this.sky.aerialTransmittance.destroy();
+    this.sky.destroy();
     this.workers.destroy();
     this.gpu.destroy();
   }

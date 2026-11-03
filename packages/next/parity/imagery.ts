@@ -226,11 +226,17 @@ async function runImagery(): Promise<Row[]> {
         },
       });
       const tileset: Tileset3D = ellipsoid
-        ? engine.addEllipsoid(world, { policy: "stepwise", imagery })
+        ? engine.addEllipsoid(world, {
+            policy: "stepwise",
+            imagery,
+            // 1.x's globe is unlit by default: compared as is.
+            imageryOptions: { lit: false },
+          })
         : await engine.addTerrain(world, terrain.url, {
             headers: terrain.headers,
             policy: "stepwise",
             imagery,
+            imageryOptions: { lit: false },
           });
       if (tileset.selection instanceof GlobeStepwiseSelection) {
         tileset.selection.fog = false;

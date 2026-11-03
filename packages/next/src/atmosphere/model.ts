@@ -53,6 +53,105 @@ export const EARTH: Readonly<AtmosphereParameters> = {
   groundAlbedo: 0.1,
 };
 
+/**
+ * The parameters with aerosols for a meteorological visibility (km): the
+ * extinction at the ground at 550 nm is 3.912 / visibility (Koschmieder's
+ * relation for a 2% contrast threshold), the air's Rayleigh share and the
+ * rest aerosols (their profile and the other parameters kept). Bruneton's
+ * Earth is about 220 km (aerosol optical depth 0.005, very clean air); a
+ * clear day is 40 to 60 km (about 0.1), a hazy summer day 10 to 20 km. At
+ * least the Rayleigh share: no fewer aerosols than none.
+ */
+export function withVisibility(
+  p: Readonly<AtmosphereParameters>,
+  kilometers: number,
+  aerosol?: AerosolType,
+): AtmosphereParameters {
+  const a = aerosol ? AEROSOLS[aerosol] : undefined;
+  const q: AtmosphereParameters = a
+    ? {
+        ...p,
+        mieAngstromAlpha: a.angstrom,
+        mieSingleScatteringAlbedo: a.singleScatteringAlbedo,
+        miePhaseG: a.phaseG,
+        mieScaleHeight: a.scaleHeight,
+      }
+    : { ...p };
+  const extinction = 3.912 / (kilometers * 1000);
+  const rayleigh550 = q.rayleigh * 0.55 ** -4;
+  const aerosols =
+    Math.max(extinction - rayleigh550, 0) * 0.55 ** q.mieAngstromAlpha;
+  return { ...q, mieBeta: aerosols * q.mieScaleHeight };
+}
+
+/** Kinds of aerosols: what the haze is made of (`AEROSOLS`). */
+export type AerosolType = "continental" | "urban" | "maritime" | "desert";
+
+/**
+ * Aerosol optical properties at 550 nm by type, after the OPAC climatology
+ * (Hess, Koepke and Schult 1998), approximately: how their extinction falls
+ * with wavelength (the Ångström exponent: fine particles scatter blue more,
+ * a bluish haze; coarse dust and sea salt about evenly, a white one), how
+ * much of it is scattering rather than absorption, and how strongly forward
+ * it scatters (the Cornette–Shanks asymmetry), and how high they reach (the
+ * scale height, m: sea salt stays in a shallow marine layer, dust is lofted
+ * kilometers up, as in the Saharan air layer; typical values, not OPAC's).
+ * Bruneton's reference Earth is gray (exponent 0), close to dust, with a
+ * 1.2 km scale height.
+ *
+ * Seen from the ground the kinds differ most around the sun (the forward
+ * scattering: maritime haze a bright white halo, continental a bluish one)
+ * and in how dark the haze is (urban soot absorbs); seen from above, only
+ * dust reaches high enough to change much.
+ */
+export const AEROSOLS: Readonly<
+  Record<
+    AerosolType,
+    {
+      name: string;
+      angstrom: number;
+      singleScatteringAlbedo: number;
+      phaseG: number;
+      scaleHeight: number;
+    }
+  >
+> = {
+  continental: {
+    name: "Continental",
+    angstrom: 1.3,
+    singleScatteringAlbedo: 0.93,
+    phaseG: 0.7,
+    scaleHeight: 1200,
+  },
+  urban: {
+    name: "Urban",
+    angstrom: 1.4,
+    singleScatteringAlbedo: 0.82,
+    phaseG: 0.69,
+    scaleHeight: 1000,
+  },
+  maritime: {
+    name: "Maritime",
+    angstrom: 0.4,
+    singleScatteringAlbedo: 0.99,
+    phaseG: 0.77,
+    scaleHeight: 800,
+  },
+  desert: {
+    name: "Desert dust",
+    angstrom: 0.2,
+    singleScatteringAlbedo: 0.92,
+    phaseG: 0.73,
+    scaleHeight: 3000,
+  },
+};
+
+/** Meteorological visibility of a set of parameters, km (the inverse). */
+export function visibilityOf(p: Readonly<AtmosphereParameters>): number {
+  const c = coefficients(p, 550);
+  return 3.912 / (c.rayleighScattering + c.mieExtinction) / 1000;
+}
+
 /** Molecules per m² in one Dobson unit. */
 const DOBSON_UNIT = 2.687e20;
 /** Height integral of the ozone profile (a tent from 10 to 40 km), m. */

@@ -32,6 +32,14 @@ struct Sky {
   steps: f32,
   bottomRadius: f32, // the planet's, km
   weights: array<vec4f, 8>, // the 8 bands to linear sRGB (cd/m² per W·m⁻²·sr⁻¹·nm⁻¹)
+  // The aerial-perspective volume's slice distances, km: the same for every
+  // ray (the opaque pass interpolates across rays at a distance), from the
+  // camera (or the atmosphere's nearest point, from above it) to its far
+  // edge past the horizon.
+  aerialStart: f32,
+  aerialEnd: f32,
+  _pad0: f32,
+  _pad1: f32,
 };
 
 @group(2) @binding(0) var<uniform> sky: Sky;
@@ -304,68 +312,92 @@ fn sunLightFragment(in: SkyVarying) -> @location(0) vec4f {
 
 // --- aerial perspective --------------------------------------------------------
 
-// Hillaire's froxel volume over the view's frustum, 32 × 32 × 32: the light
-// the air scatters toward the camera between it and each froxel's
-// distance (linear sRGB, cd/m², not exposed), and how much it dims what is
-// there (transmittance, each channel the bands' average weighted by their
-// color). Each ray's slices span its own stretch of atmosphere, from where
-// it enters (the camera, inside) to where it leaves, quadratically, so all
-// 32 fall in the air whether the camera is on the ground or far out in
-// space (one span for every ray put the limb's 1,000 km of air in a slice
-// or two from far away). Each depth slice is one render pass (a 3D
-// target's slice); the instance index carries the wavelength group (bit 0)
-// and the slice. The opaque pass reads it per pixel (opaque.wgsl
-// `aerialPerspective`, the same span).
-const AERIAL_SIZE = 32.0;
-const AERIAL_STEPS = 16;
+// Hillaire's froxel volume over the view's frustum: 32 × 32 directions ×
+// AERIAL_SLICES distances, spaced quadratically between aerialStart and
+// aerialEnd (the same for every ray: the opaque pass interpolates across
+// rays at a distance). Each froxel holds the light the air scatters toward
+// the camera up to its distance (linear sRGB, cd/m², pre-exposed) and how
+// much it dims what is there (transmittance, each channel the 8 bands'
+// average weighted by their color).
+//
+// One thread marches each column once, front to back, writing every slice
+// as it passes (each slice is the one before it plus one interval). The
+// opaque pass reads the volume per pixel (opaque.wgsl `aerialPerspective`).
+// Slices are many because the haze bends sharply where a ray reaches the
+// ground (the air thickens toward it), exactly where the terrain is: with
+// 32 slices over the 1,750 km a high camera sees, linear interpolation
+// between them drew concentric ripples across the terrain.
+//
+// Two dispatches, one per group of four wavelengths (`AERIAL_GROUP`): the
+// first writes its share, the second reads it, adds its own and writes the
+// volume the opaque pass reads.
+const AERIAL_SIZE = 32u;
+const AERIAL_SLICES = 128u;
+/** Steps per interval between slices. */
+const AERIAL_SUBSTEPS = 2;
 
-struct Aerial {
-  @location(0) inscatter: vec4f,
-  @location(1) transmittance: vec4f,
-};
+override AERIAL_GROUP: u32 = 0u;
 
-// Where a ray from `position` (km, planet-centered) along `direction`
-// enters and leaves the atmosphere: (0, 0) where it misses.
-fn aerialSpan(position: vec3f, direction: vec3f, top: f32) -> vec2f {
-  let r = length(position);
-  let mu = dot(position, direction) / r;
-  let disc = r * r * (mu * mu - 1.0) + top * top;
-  if (disc < 0.0) {
-    return vec2f(0.0);
+@group(2) @binding(5) var aerialPartialInscatter: texture_3d<f32>;
+@group(2) @binding(6) var aerialPartialTransmittance: texture_3d<f32>;
+@group(2) @binding(7) var aerialInscatterOut: texture_storage_3d<rgba16float, write>;
+@group(2) @binding(8) var aerialTransmittanceOut: texture_storage_3d<rgba16float, write>;
+
+@compute @workgroup_size(8, 8, 1)
+fn aerialCompute(@builtin(global_invocation_id) id: vec3u) {
+  if (id.x >= AERIAL_SIZE || id.y >= AERIAL_SIZE) {
+    return;
   }
-  let s = sqrt(disc);
-  return vec2f(max(-r * mu - s, 0.0), max(-r * mu + s, 0.0));
-}
-
-@fragment
-fn aerialFragment(in: SkyVarying) -> Aerial {
-  let group = in.group & 1u;
-  let slice = in.group >> 1u;
-  let ndc = vec2f(in.position.x / AERIAL_SIZE * 2.0 - 1.0, 1.0 - in.position.y / AERIAL_SIZE * 2.0);
+  let group = AERIAL_GROUP;
+  let ndc = vec2f(
+    (f32(id.x) + 0.5) / f32(AERIAL_SIZE) * 2.0 - 1.0,
+    1.0 - (f32(id.y) + 0.5) / f32(AERIAL_SIZE) * 2.0,
+  );
   let direction = normalize(sky.forward + sky.right * (ndc.x * sky.tanX) + sky.up * (ndc.y * sky.tanY));
-  let w = (f32(slice) + 0.5) / AERIAL_SIZE;
-  let span = aerialSpan(sky.position, direction, atmosphere.topRadius);
-  let distance = span.x + (span.y - span.x) * w * w;
-  // Stop short of the ground: the surface there is the scene's, not the
-  // planet's (march adds the ground only where it ends at the ground).
-  let r = length(sky.position);
-  let mu = dot(sky.position, direction) / r;
-  var extent = distance;
-  if (hitsGround(r, mu)) {
-    extent = min(extent, sphereDistance(r, mu, atmosphere.bottomRadius, true) * 0.999);
-  }
-  let s = march(sky.position, direction, sky.sun, extent, AERIAL_STEPS, false);
+  let span = vec2f(sky.aerialStart, sky.aerialEnd);
+  let nu = dot(direction, sky.sun);
+  let phaseR = rayleighPhase(nu);
+  let phaseM = miePhase(nu);
   var total = vec3f(0.0);
   for (var b = 0u; b < 8u; b++) {
     total += sky.weights[b].xyz;
   }
   let base = group * 4u;
-  let t = s.transmittance.x * sky.weights[base].xyz
-    + s.transmittance.y * sky.weights[base + 1u].xyz
-    + s.transmittance.z * sky.weights[base + 2u].xyz
-    + s.transmittance.w * sky.weights[base + 3u].xyz;
-  var out: Aerial;
-  out.inscatter = vec4f(toRgb(s.radiance * atmosphere.solarIrradiance, group), 1.0);
-  out.transmittance = vec4f(t / total, 1.0);
-  return out;
+  var radiance = vec4f(0.0);
+  var transmittance = vec4f(1.0);
+  var a = span.x;
+  for (var j = 0u; j < AERIAL_SLICES; j++) {
+    let w = (f32(j) + 0.5) / f32(AERIAL_SLICES);
+    let b = span.x + (span.y - span.x) * w * w;
+    let dt = max(b - a, 0.0) / f32(AERIAL_SUBSTEPS);
+    for (var i = 0; i < AERIAL_SUBSTEPS; i++) {
+      let p = sky.position + direction * (a + (f32(i) + 0.5) * dt);
+      // Through the planet's sphere at its surface's air: the scene's
+      // surface (the WGS84 ellipsoid, terrain) is above it, and the haze
+      // must go on smoothly past where each ray meets it.
+      let rp = max(length(p), atmosphere.bottomRadius + 1e-3);
+      let muSun = dot(p, sky.sun) / rp;
+      let m = medium(rp - atmosphere.bottomRadius);
+      let scattered = (m.rayleigh * phaseR + m.mie * phaseM) * sunTransmittance(rp, muSun)
+        + m.scattering * multipleScattering(rp, muSun);
+      let segment = exp(-m.extinction * dt);
+      radiance += transmittance * scattered * (1.0 - segment) / max(m.extinction, vec4f(1e-9));
+      transmittance *= segment;
+    }
+    a = b;
+    // Pre-exposed (the view's exposure), as the scene target: haze toward
+    // the sun reaches 70,000 cd/m² and more, past fp16's 65,504.
+    var inscatter = toRgb(radiance * atmosphere.solarIrradiance, group) * sky.exposure;
+    var t = (transmittance.x * sky.weights[base].xyz
+      + transmittance.y * sky.weights[base + 1u].xyz
+      + transmittance.z * sky.weights[base + 2u].xyz
+      + transmittance.w * sky.weights[base + 3u].xyz) / total;
+    let at = vec3u(id.xy, j);
+    if (group == 1u) {
+      inscatter += textureLoad(aerialPartialInscatter, at, 0).rgb;
+      t += textureLoad(aerialPartialTransmittance, at, 0).rgb;
+    }
+    textureStore(aerialInscatterOut, at, vec4f(min(inscatter, vec3f(2.0 * SKY_MAX)), 1.0));
+    textureStore(aerialTransmittanceOut, at, vec4f(t, 1.0));
+  }
 }

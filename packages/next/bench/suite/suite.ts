@@ -600,7 +600,10 @@ export class NextAdapter implements Adapter {
         : {}),
       ...tuning,
     };
-    const drape = imageryResolving ? { imagery: imageryResolving } : {};
+    // Unlit, as 1.x's globe by default (the suite compares the two).
+    const drape = imageryResolving
+      ? { imagery: imageryResolving, imageryOptions: { lit: false } }
+      : {};
     const [globe, ...tilesets] = await Promise.all([
       terrainResolving
         ? terrainResolving.then((terrain) =>
