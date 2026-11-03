@@ -229,6 +229,9 @@ export class Viewer {
       world: this.world,
       shadows: this.shadows,
       ambientOcclusion: this.ambientOcclusion,
+      // The stars as the eye sees them: they show against space and the
+      // night sky at the daylight exposure, as in 1.x.
+      starExposure: -3,
     });
     this.controller = new GlobeController(this.view, canvas);
     // The whole Earth until the app frames something, as 1.x starts: the
@@ -684,6 +687,7 @@ export class Viewer {
       }));
       Object.assign(second.lighting, this.view.lighting);
       second.exposure = this.view.exposure;
+      second.starExposure = this.view.starExposure;
       second.outputEncoding = this.view.outputEncoding;
       const controller = (this.secondController = new GlobeController(
         second,

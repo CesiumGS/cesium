@@ -1686,6 +1686,7 @@ export class Engine {
         this.sunDirection,
         view.exposureScale,
         view.sunDisk,
+        view.starExposure === undefined ? 0 : ev100ToScale(view.starExposure),
       );
       if (drawsAerialPerspective(view)) {
         block.aerial = {

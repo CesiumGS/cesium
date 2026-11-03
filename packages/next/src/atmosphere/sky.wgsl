@@ -38,7 +38,9 @@ struct Sky {
   // edge past the horizon.
   aerialStart: f32,
   aerialEnd: f32,
-  _pad0: f32,
+  // The stars' exposure scale against a dark sky, when more open than the
+  // view's (`starExposure`); 0: the view's.
+  starExposure: f32,
   _pad1: f32,
 };
 
@@ -121,6 +123,17 @@ fn starLight(direction: vec3f) -> vec3f {
   return textureSampleLevel(starMap, starSampler, d, 0.0).rgb * stars.rows[0].w;
 }
 
+// The exposure the stars are shown at against `background` (pre-exposed,
+// this group's share of the sky, `share` of the whole): the view's, or
+// the stars' own (`View.starExposure`, the eye's view of them) where the
+// sky is dark, fading out as the sky brightens toward a few percent of
+// white (twilight's blue hides them, as it does to the eye).
+fn starExposure(background: vec3f, share: f32) -> f32 {
+  let y = dot(background, vec3f(0.2126, 0.7152, 0.0722)) / share;
+  let dark = 1.0 - smoothstep(0.002, 0.03, y);
+  return sky.exposure + max(sky.starExposure - sky.exposure, 0.0) * dark;
+}
+
 // This group's share of a transmittance weighted by its bands' luminance:
 // the two groups' shares add up to the mean (the stars' dimming, gray).
 fn luminanceShare(t: vec4f, group: u32) -> f32 {
@@ -201,7 +214,7 @@ fn skyFragment(in: SkyVarying) -> @location(0) vec4f {
 @fragment
 fn skyStarsFragment(in: SkyVarying) -> @location(0) vec4f {
   let m = marchedSky(in.position.xy, in.group);
-  let starry = starLight(viewDirection(in.position.xy)) * m.toSpace * sky.exposure;
+  let starry = starLight(viewDirection(in.position.xy)) * m.toSpace * starExposure(m.color, 0.5);
   return vec4f(min(m.color + starry, vec3f(SKY_MAX)), 1.0);
 }
 
@@ -339,7 +352,7 @@ fn skyFromTableFragment(in: SkyVarying) -> @location(0) vec4f {
   if (!s.ground) {
     let sun = textureLoad(skyView, vec2i(0, i32(SKY_VIEW_SIZE.y)), 0).rgb;
     color += sun * sunDisk(direction);
-    color += starLight(direction) * s.toSpace * sky.exposure;
+    color += starLight(direction) * s.toSpace * starExposure(color, 1.0);
   }
   return vec4f(min(color, vec3f(2.0 * SKY_MAX)), 1.0);
 }

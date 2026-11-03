@@ -671,10 +671,27 @@ fields of view (0.09° per texel against about 0.03° per pixel) and clipped
 at 8 bits, so a bright star's light, which belongs on one pixel, is spread
 over dozens (the brightest reach 0.07 of white at EV100 −2, where Vega
 drawn as a point would saturate). Tests check the rotation against Sirius's
-annual precession and Polaris. Next: the Yale Bright Star Catalogue as
-points (the data download needs a decision on where catalogs live, and
-its license check), then the moon (§13.14), then starlight and airglow in
-the environment, which light the ground at night (about 1 mlux without a
+annual precession and Polaris.
+
+The stars as the eye sees them (r43): physically, a daylight exposure
+leaves them black, from orbit as from the ground (as in photographs of the
+sunlit Earth), and the `Viewer` showed none. `View.starExposure` (EV100)
+exposes them as the eye does against a dark sky: where the sky behind a
+star is under a few percent of white, its light is taken at that exposure
+when the view's is less open, so they show against space and the night sky
+at EV100 15, and twilight's blue or the day sky still hides them. The
+engine leaves it unset (physical); the `Viewer` sets −3, about 1.x's
+brightness.
+
+Catalogs: none we checked can be shipped in this Apache-2.0 repository.
+Hipparcos and Tycho-2 (ESA) and Gaia are CC BY-NC 3.0 IGO; HYG and AT-HYG
+are CC BY-SA 4.0; the Yale Bright Star Catalogue is its authors'
+copyright, redistributable unmodified only (Debian's reading, from the
+data center); SKY2000 (NASA Goddard) states no license and is compiled
+from the others. The Tycho star map 1.x ships stays; points would need
+ESA's permission for commercial use or a legal opinion on the Yale
+catalogue. Next: the moon (§13.14), then starlight and airglow in the
+environment, which light the ground at night (about 1 mlux without a
 moon).
 
 #### Fog and aerial perspective

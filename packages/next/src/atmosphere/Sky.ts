@@ -879,7 +879,8 @@ export class Sky {
 
   /**
    * Writes a view's uniform: its camera (Earth-fixed, meters), the sun
-   * (unit, Earth-fixed), the pre-exposure and whether the sun's disk shows.
+   * (unit, Earth-fixed), the pre-exposure, whether the sun's disk shows and
+   * the stars' exposure against a dark sky (0: the view's).
    *
    * The atmosphere is a sphere; the camera sits on it at its height above
    * the body's ellipsoid, along the ellipsoid's normal, so the horizon and
@@ -895,6 +896,7 @@ export class Sky {
     sun: ArrayLike<number>,
     exposure: number,
     sunDisk: boolean,
+    starExposure = 0,
   ): void {
     const f = this.f32;
     const p = this.atmosphere.parameters;
@@ -920,6 +922,7 @@ export class Sky {
       Math.sqrt(top * top - bottom * bottom);
     f[56] = view.aerialStart;
     f[57] = view.aerialEnd;
+    f[58] = starExposure;
     f[3] = exposure;
     f[4] = sun[0]!;
     f[5] = sun[1]!;

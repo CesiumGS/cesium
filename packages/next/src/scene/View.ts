@@ -281,6 +281,16 @@ export interface ViewOptions {
   ambientOcclusion?: boolean;
   /** How far ambient occlusion looks for occluders, m. Default 3. */
   ambientOcclusionRadius?: number;
+  /**
+   * The stars as the eye sees them rather than as a camera would: against
+   * a dark sky (space, night, deep twilight) they are exposed as at this
+   * EV100 when the view's own exposure is less open, so they show at a
+   * daylight exposure from orbit; a bright sky hides them as before.
+   * Default undefined: the view's exposure (physical; at daylight
+   * exposures they're far below black). The `Viewer` sets -3 (about as
+   * bright as 1.x draws its star map).
+   */
+  starExposure?: number;
   /** Background color as displayed (already exposed), with "color". */
   clearColor?: readonly [number, number, number];
   /** Output transfer function. "gamma2.2" matches CesiumJS 1.x. */
@@ -343,6 +353,7 @@ export class View {
   shadows: boolean;
   ambientOcclusion: boolean;
   ambientOcclusionRadius: number;
+  starExposure: number | undefined;
   clearColor: readonly [number, number, number];
   outputEncoding: OutputEncoding;
   toneMapping: ToneMapping;
@@ -378,6 +389,7 @@ export class View {
     this.shadows = options.shadows ?? false;
     this.ambientOcclusion = options.ambientOcclusion ?? false;
     this.ambientOcclusionRadius = options.ambientOcclusionRadius ?? 3;
+    this.starExposure = options.starExposure;
     this.clearColor = options.clearColor ?? [0.004, 0.008, 0.02];
     this.outputEncoding = options.outputEncoding ?? "srgb";
     this.toneMapping = options.toneMapping ?? "pbrNeutral";
