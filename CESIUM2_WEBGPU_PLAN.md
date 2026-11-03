@@ -742,6 +742,40 @@ a magnitude on average and more for a few (Spica 1.0 reads 4.6, Alnilam
 would fix it, and colors from B−V. Still to do: diffraction spikes for the
 camera, the corona's rays, twinkle (needs continuous rendering).
 
+Next steps (r44, after the night work). Now, in this order:
+
+1. **Shadow cascades' aliasing**: filtered lookups (a Poisson or Vogel
+   disk of comparisons, scaled to each cascade's texel) instead of one
+   hard comparison, and cascades fitted to what is drawn, not only to the
+   view's slices.
+2. **Haze at the day/night line from orbit**: the per-vertex march
+   interpolates a step (lit, then in the Earth's shadow) across the
+   coarsest tiles' triangles, drawing blocky streaks. Where a triangle's
+   vertices disagree, march per pixel.
+3. **The environment's rebuild cost** (about 10 ms when the sun, the Moon
+   or the exposure moves): fewer prefilter samples with filtered
+   importance sampling, the irradiance from a smaller level.
+4. **The eye's local adaptation**: the eye adapts to each region it
+   looks at, not to the view as a whole: a moonless night is less black
+   to a dark-adapted walker than one global adaptation shows, and bright
+   lights at night keep their color. Ferwerda's gains per pixel from a
+   blurred adaptation map, blended with the global one.
+5. **The Moon**: its libration (its orientation from the IAU rotation
+   model, so the face it shows wobbles as it does), and a sharper map
+   than 1.x's 256 × 128 (NASA's CGI Moon Kit, public domain).
+6. **Lights in the scene**: point and spot lights (`KHR_lights_punctual`,
+   candela), clustered forward shading, unshadowed (the order in "Lights
+   beyond the sun", above).
+
+Later:
+
+- **Stars, part two**: diffraction spikes for the camera, the eye's
+  corona rays, twinkle; a catalog for the brightest stars' magnitudes and
+  colors (a license decision).
+- **Translucency**: order-independent transparency (M4); cut-out and
+  blended materials are drawn opaque until then.
+- **Weather fog**: a haze medium of its own beside the clear air's.
+
 Progress (r43): **the Moon**. `moonPosition(time)` (time/moon.ts) ports
 1.x's Simon et al. (1994) lunar theory (within 0.04° and 0.05% of
 distance of Meeus's example 47.a), turned to Earth-fixed axes with
