@@ -53,10 +53,13 @@ export class GlobeController {
   /** Share of the spin momentum kept per 1/60 s (1.x inertiaSpin). */
   inertiaSpin = 0.9;
   /**
-   * Share of a wheel zoom still to apply after each 1/60 s: wheel steps
-   * glide instead of jumping (about 150 ms per notch).
+   * How quickly wheel zoom follows the wheel, per second: a critically
+   * damped spring toward the zoom asked for, so a notch eases in and out
+   * and fast notches blend into one motion (an exponential glide started
+   * each notch at full speed, which read as jitter). About 0.35 s to
+   * settle.
    */
-  zoomSmoothing = 0.75;
+  zoomResponse = 14;
   /** Distance factor per wheel pixel, as a logarithm (100 px: ×1.16). */
   wheelZoomRate = 0.0015;
   /** Focus of the last `focus` call (split views copy it). */
@@ -86,6 +89,8 @@ export class GlobeController {
   private spinRate = 0;
   /** Wheel zoom not yet applied: the log of the distance factor. */
   private pendingZoom = 0;
+  /** How fast `pendingZoom` is being applied, per second. */
+  private zoomRate = 0;
   private readonly zoomTarget = v3.vec3();
   /** Where the zoom target stays on screen (none for the sky). */
   private zoomPixel: [number, number] | undefined;
@@ -131,6 +136,7 @@ export class GlobeController {
   stop(): void {
     this.spinRate = 0;
     this.pendingZoom = 0;
+    this.zoomRate = 0;
   }
 
   dispose(): void {
@@ -498,19 +504,30 @@ export class GlobeController {
         this.rotateGlobe(this.spinAxis, this.spinRate * frames);
         this.spinRate *= this.inertiaSpin ** frames;
       }
-      if (Math.abs(this.pendingZoom) > 1e-4) {
-        const portion = this.pendingZoom * (1 - this.zoomSmoothing ** frames);
-        this.pendingZoom -= portion;
+      if (Math.abs(this.pendingZoom) > 1e-4 || Math.abs(this.zoomRate) > 1e-3) {
+        // The critically damped spring's exact step: what's left decays as
+        // (y0 + (v0 + ω y0) t) e^(−ωt), with v the rate it's applied at.
+        const w = this.zoomResponse;
+        const t = frames / 60;
+        const y0 = this.pendingZoom;
+        const v0 = -this.zoomRate;
+        const decay = Math.exp(-w * t);
+        const left = (y0 + (v0 + w * y0) * t) * decay;
+        this.zoomRate = -(v0 - w * (v0 + w * y0) * t) * decay;
+        const portion = y0 - left;
+        this.pendingZoom = left;
         this.zoomToward(this.zoomTarget, 1 - Math.exp(portion), this.zoomPixel);
       }
       if (
         (this.mode === "none" && Math.abs(this.spinRate) > 1e-6) ||
-        Math.abs(this.pendingZoom) > 1e-4
+        Math.abs(this.pendingZoom) > 1e-4 ||
+        Math.abs(this.zoomRate) > 1e-3
       ) {
         requestAnimationFrame(step);
       } else {
         this.spinRate = 0;
         this.pendingZoom = 0;
+        this.zoomRate = 0;
         this.animating = false;
       }
     };
