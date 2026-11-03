@@ -727,18 +727,25 @@ is black that something lights; earthshine shows on the Moon's night side.
 How light becomes an image is one choice, `View.exposure`: a camera's
 (`{ ev100 }`, `{ scale }`, metered `{ auto }`) or the eye's (`EYE`, the
 `Viewer`'s default; `starExposure` is gone, the stars as seen being part
-of it). The eye adapts as automatic exposure does but keeps night dark
-(Krawczyk et al. 2005's key, at 60%: 2.6 stops by moonlight), sees with
-its rods in dim light (scotopic luminance, Thompson et al. 2002's gray
-blue, below 3 cd/m² and wholly below 0.01), and sees the stars against a
-dark sky. The meter now averages the 65th to 98th percentiles of a
-log-luminance histogram (as Unreal's eye adaptation) instead of the mean:
-the night half of the Earth from orbit had opened the exposure ten stops.
-Settled EV100s: a sunlit city 15.8, the sunlit Earth from orbit 13.5,
-under a full moon −0.3, a moonless night −8.1. Next: the adaptation from
-a model of vision rather than a key (Ferwerda et al. 1996's threshold
-curves, Irawan et al. 2005), its time course (Pattanaik et al. 2000),
-city lights on the night side.
+of it). The eye (scene/eye.ts) is a model of vision, not a key: its
+cones and rods each adapt to the scene (a center-weighted meter, photopic
+and scotopic, over the 65th-98th percentiles of a log-luminance
+histogram, as Unreal's eye adaptation), and each shows what it sees as
+visible as it was (Ferwerda et al. 1996's threshold curves: the cones in
+color, the rods gray-blue as Thompson et al. 2002, weighing in through the
+mesopic range). Thresholds keep visibility, not brightness: alone they
+showed a moonlit scene about as bright as a sunlit one. How bright night
+looks follows Tumblin and Rushmeier (Stevens' brightness data): 1.8 stops
+darker by moonlight, 3.1 under starlight. One calibration: by day the
+adaptation level shows where a metered camera puts it (0.104 of white).
+Adapting to light takes a moment (cones 0.1 s, rods 0.4 s), to dark longer
+(the eye's minutes compressed to 1.5 s and 4 s). The eye sees the stars
+against a dark sky. The plain mean had let the night half of the Earth
+from orbit open the exposure ten stops. Settled: a sunlit city about
+EV100 16, the sunlit Earth from orbit about 13.8; a moonlit city dark,
+gray-blue and legible; a moonless one, with nothing lit, near black (the
+brightness model's verdict, darker than a dark-adapted walker finds it).
+Next: city lights on the night side.
 
 #### Fog and aerial perspective
 

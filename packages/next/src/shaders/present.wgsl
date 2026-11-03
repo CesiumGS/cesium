@@ -8,8 +8,10 @@ struct PresentParams {
   origin: vec2f,     // viewport origin in target pixels
   toneMapping: u32,  // 0 PBR Neutral, 1 AgX, 2 ACES
   encoding: u32, // 0 none (-srgb target), 1 sRGB, 2 gamma 2.2
-  exposure: f32,     // the image's pre-exposure (the scene's light × it)
-  eye: u32,          // 1: the eye's night vision (`nightVision`)
+  // The eye (scene/eye.ts): its cones' gain on the image (color) and its
+  // rods' on its scotopic luminance (gray); 1 and 0: a camera.
+  cones: f32,
+  rods: f32,
   _pad: vec2u,
 };
 
@@ -99,21 +101,16 @@ fn toneMap(c: vec3f) -> vec3f {
   }
 }
 
-// The eye in dim light (View.ts `Exposure` "eye"): the rods take over from
-// the cones, colors fade and shift toward blue (the Purkinje shift). The
-// rods' luminance (scotopic, from XYZ: Larson, Rushmeier and Piatko 1997),
-// normalized so white keeps its luminance, tinted a gray blue (Thompson,
-// Shirley and Ferwerda 2002), weighs in below about 3 cd/m² and wholly
-// below 0.01 (the mesopic range, smooth in log luminance). `light` is the
-// scene's, cd/m² (linear sRGB).
-fn nightVision(light: vec3f) -> vec3f {
-  let x = dot(light, vec3f(0.4124, 0.3576, 0.1805));
-  let y = dot(light, vec3f(0.2126, 0.7152, 0.0722));
-  let z = dot(light, vec3f(0.0193, 0.1192, 0.9505));
-  let scotopic = max(y * (1.33 * (1.0 + (y + z) / max(x, 1e-12)) - 1.68), 0.0) / 2.573;
-  let rods = scotopic * vec3f(1.041, 0.962, 1.259);
-  let cones = smoothstep(-2.0, 0.5, log2(max(y, 1e-12)) * 0.30103); // log10
-  return mix(rods, light, cones);
+// What the eye sees (View.ts `Exposure` "eye", scene/eye.ts): its cones,
+// in color, and its rods, the image's scotopic luminance (from XYZ:
+// Larson, Rushmeier and Piatko 1997) in a gray blue (Thompson, Shirley
+// and Ferwerda 2002), each at its own gain for the eye's adaptation.
+fn eyeSees(image: vec3f) -> vec3f {
+  let x = dot(image, vec3f(0.4124, 0.3576, 0.1805));
+  let y = dot(image, vec3f(0.2126, 0.7152, 0.0722));
+  let z = dot(image, vec3f(0.0193, 0.1192, 0.9505));
+  let scotopic = max(y * (1.33 * (1.0 + (y + z) / max(x, 1e-12)) - 1.68), 0.0);
+  return image * params.cones + scotopic * params.rods * vec3f(1.041, 0.962, 1.259);
 }
 
 fn linearToSrgb(c: vec3f) -> vec3f {
@@ -131,8 +128,8 @@ fn fs(@builtin(position) frag: vec4f) -> @location(0) vec4f {
   let shown = textureLoad(display, coord, 0);
   let sceneCoverage = 1.0 - shown.a;
   var scene = textureLoad(hdr, coord, 0).rgb / max(sceneCoverage, 1e-4);
-  if (params.eye == 1u) {
-    scene = nightVision(max(scene, vec3f(0.0)) / params.exposure) * params.exposure;
+  if (params.rods > 0.0 || params.cones != 1.0) {
+    scene = eyeSees(max(scene, vec3f(0.0)));
   }
   var color =
     toneMap(max(scene, vec3f(0.0))) * sceneCoverage +

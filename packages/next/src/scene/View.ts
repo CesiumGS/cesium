@@ -236,16 +236,17 @@ export type Exposure =
       speed?: number;
     }
   /**
-   * The eye: the scene's light as a person there would see it. It adapts
-   * to the scene as automatic exposure does, but not all the way: night
-   * stays darker than day (Krawczyk et al. 2005's adaptation key, about
-   * 4.5 stops at moonlight); in dim light it sees with its rods, losing
-   * color toward a gray blue (below about 3 cd/m², wholly below 0.01:
-   * Thompson et al. 2002); and it sees the stars against a dark sky even
-   * where the scene is bright (from orbit). `compensation` (stops)
-   * brightens when positive; `speed` is the adaptation rate per second.
+   * The eye: the scene's light as a person there would see it
+   * (scene/eye.ts). Its cones and rods adapt to the scene, each showing
+   * what it sees as visible as it was (Ferwerda et al. 1996's thresholds):
+   * in dim light the rods take over, gray and a little blue (Thompson et
+   * al. 2002), colors fading; night looks darker than day (Tumblin and
+   * Rushmeier's brightness: 1.8 stops by moonlight); adapting to light
+   * takes a moment, to dark longer. It sees the stars against a dark sky
+   * even where the scene is bright (from orbit). `compensation` (stops)
+   * brightens when positive.
    */
-  | { eye: true; compensation?: number; speed?: number };
+  | { eye: true; compensation?: number };
 
 /** The eye (`Exposure`): the `Viewer`'s default. */
 export const EYE: Exposure = { eye: true };
@@ -342,15 +343,27 @@ export class View {
    * a sunny day spans about 20 stops from night).
    */
   exposureScale: number;
-  /** @internal Automatic exposure's (or the eye's) EV100 and when it last moved. */
+  /**
+   * @internal Automatic exposure's EV100, or the eye's adaptation (log10
+   * cd/m², the cones' photopic and the rods' scotopic), and when it last
+   * moved.
+   */
   autoExposure?: {
     ev100: number;
+    cones: number;
+    rods: number;
     time: number;
     /** A reading is in flight. */
     pending: boolean;
     /** At least one reading arrived (the first is taken as is). */
     metered: boolean;
   };
+  /**
+   * @internal The eye's response this frame (scene/eye.ts `eyeResponse`)
+   * relative to the pre-exposure: the present pass's cones (color) and
+   * rods (gray) gains; 1 and 0 for a camera.
+   */
+  eyeGains = { cones: 1, rods: 0 };
   /** The body whose sky and light the view sees. */
   readonly body: Body;
   background: ViewBackground;

@@ -47,6 +47,7 @@ import { Sky, type SkyView } from "../atmosphere/Sky.ts";
 import { MOON_ALBEDO, MOON_RADIUS, moonPhaseBrightness } from "../time/moon.ts";
 import type { AerosolType } from "../atmosphere/model.ts";
 import { EARTH } from "./Body.ts";
+import { SCOTOPIC_WHITE, adapt, eyeResponse } from "./eye.ts";
 import { Camera } from "./Camera.ts";
 import {
   SHADOW_CASCADES,
@@ -1704,12 +1705,15 @@ export class Engine {
     }
     for (const meter of this.meters.splice(0)) {
       void meter.readback.mapAsync(GPUMapMode.READ).then(() => {
-        const [sum, count] = new Float32Array(meter.readback.getMappedRange());
+        const [sum, count, rodSum, rodCount] = new Float32Array(
+          meter.readback.getMappedRange(),
+        );
         meter.readback.destroy();
         meter.scratch.forEach((b) => b.destroy());
         this.adaptExposure(
           meter.view,
           count! > 0 ? 2 ** (sum! / count!) : undefined,
+          rodCount! > 0 ? 2 ** (rodSum! / rodCount!) : undefined,
         );
       });
     }
@@ -1964,15 +1968,32 @@ export class Engine {
     } else if ("ev100" in e) {
       view.exposureScale = ev100ToScale(e.ev100);
     } else {
-      const [min, max] = "eye" in e ? EYE_RANGE : [e.min ?? -6, e.max ?? 18];
-      view.autoExposure ??= {
-        ev100: Math.min(Math.max(15, min), max),
+      const state = (view.autoExposure ??= {
+        ev100:
+          "eye" in e ? 15 : Math.min(Math.max(15, e.min ?? -6), e.max ?? 18),
+        // Daylight until the first reading.
+        cones: Math.log10(4000),
+        rods: Math.log10(4000 * SCOTOPIC_WHITE),
         time: performance.now(),
         pending: false,
         metered: false,
-      };
-      view.exposureScale = ev100ToScale(view.autoExposure.ev100);
+      });
+      if ("eye" in e) {
+        // Pre-exposed for the stronger of the two (fp16's range), the
+        // present pass applies each (`eyeGains`).
+        const r = eyeResponse(
+          10 ** state.cones,
+          10 ** state.rods,
+          e.compensation ?? 0,
+        );
+        const scale = Math.max(r.cones, r.rods * SCOTOPIC_WHITE);
+        view.exposureScale = scale;
+        view.eyeGains = { cones: r.cones / scale, rods: r.rods / scale };
+        return scale;
+      }
+      view.exposureScale = ev100ToScale(state.ev100);
     }
+    view.eyeGains = { cones: 1, rods: 0 };
     return view.exposureScale;
   }
 
@@ -1981,10 +2002,14 @@ export class Engine {
    * scene's units): the EV100 a reflected-light meter gives (K = 12.5,
    * ISO 100) minus the compensation, within [min, max], approached
    * exponentially at `speed` per second; the first reading is taken as is.
-   * The eye's adapts as far as its key at that luminance (`eyeKeyStops`).
-   * Renders again until it settles.
+   * The eye's cones adapt to the photopic reading, its rods to the
+   * scotopic one (scene/eye.ts `adapt`). Renders again until it settles.
    */
-  private adaptExposure(view: View, average: number | undefined): void {
+  private adaptExposure(
+    view: View,
+    average: number | undefined,
+    scotopic: number | undefined,
+  ): void {
     const e = view.exposure;
     const state = view.autoExposure;
     if (!("auto" in e || "eye" in e) || !state) {
@@ -1996,21 +2021,41 @@ export class Engine {
     if (average === undefined || !Number.isFinite(average)) {
       return;
     }
+    const now = performance.now();
+    if ("eye" in e) {
+      if (scotopic === undefined || !Number.isFinite(scotopic)) {
+        return;
+      }
+      const cones = Math.log10(Math.max(average, 1e-7));
+      const rods = Math.log10(Math.max(scotopic, 1e-7));
+      if (!state.metered || !Number.isFinite(state.cones + state.rods)) {
+        state.cones = cones;
+        state.rods = rods;
+        state.metered = true;
+      } else {
+        const dt = Math.min((now - state.time) / 1000, 1);
+        state.cones = adapt(state.cones, cones, dt, "cones");
+        state.rods = adapt(state.rods, rods, dt, "rods");
+      }
+      state.time = now;
+      if (
+        Math.abs(cones - state.cones) > 0.005 ||
+        Math.abs(rods - state.rods) > 0.005
+      ) {
+        this.requestRender();
+      }
+      return;
+    }
     if (!Number.isFinite(state.ev100)) {
       state.metered = false;
     }
-    const [min, max] = "eye" in e ? EYE_RANGE : [e.min ?? -6, e.max ?? 18];
-    const metered = Math.log2((average * 100) / 12.5);
     const target = Math.min(
       Math.max(
-        metered -
-          (e.compensation ?? 0) +
-          ("eye" in e ? eyeKeyStops(average) : 0),
-        min,
+        Math.log2((average * 100) / 12.5) - (e.compensation ?? 0),
+        e.min ?? -6,
       ),
-      max,
+      e.max ?? 18,
     );
-    const now = performance.now();
     if (!state.metered) {
       state.ev100 = target;
       state.metered = true;
@@ -2517,11 +2562,11 @@ export class Engine {
         new Uint32Array(data, 4, 2).set([width, height]);
         device.queue.writeBuffer(params, 0, data);
         const result = device.createBuffer({
-          size: 8,
+          size: 16,
           usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
         });
         const readback = device.createBuffer({
-          size: 8,
+          size: 16,
           usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
         });
         const pass = enc.beginComputePass({ label: "meter" });
@@ -2539,7 +2584,7 @@ export class Engine {
         );
         pass.dispatchWorkgroups(1);
         pass.end();
-        enc.copyBufferToBuffer(result, 0, readback, 0, 8);
+        enc.copyBufferToBuffer(result, 0, readback, 0, 16);
         this.meters.push({ view, readback, scratch: [params, result] });
       },
     );
@@ -2566,9 +2611,9 @@ export class Engine {
             ? 2
             : 1;
         params.setUint32(12, encoding, true);
-        // The eye's night vision reads the scene's luminance (cd/m²).
-        params.setFloat32(16, view.exposureScale, true);
-        params.setUint32(20, "eye" in view.exposure ? 1 : 0, true);
+        // The eye's cones and rods (1 and 0: a camera).
+        params.setFloat32(16, view.eyeGains.cones, true);
+        params.setFloat32(20, view.eyeGains.rods, true);
         device.queue.writeBuffer(frame.presentParams, 0, params.buffer);
         // Pooled textures are stable from frame to frame, so the bind group
         // is rebuilt only when the pool hands this view a different one.
@@ -2843,36 +2888,11 @@ const scratchMoon = {
 };
 const scratchMoonAxis = v3.vec3();
 /**
- * The eye's adaptation, EV100 (`Exposure` "eye"): from starlight (a
- * moonless night meters near −10) to a sunlit snowfield.
- */
-const EYE_RANGE = [-14, 18] as const;
-/**
  * The stars as the eye sees them against a dark sky, EV100 (sky.wgsl
  * `starExposure`): shown where the view's own adaptation is less open
  * (from orbit by day); about as bright as 1.x draws its star map.
  */
 const EYE_STARS_EV100 = -3;
-
-/**
- * How much darker than a camera's metered exposure the eye sees a scene of
- * this log-average luminance (cd/m²), stops: Krawczyk, Myszkowski and
- * Seidel 2005's key, a(L) = 1.03 − 2 / (2 + log10(L + 1)), relative to a
- * sunlit scene's (3,000 cd/m², where the eye and the meter agree), at
- * `EYE_KEY_WEIGHT` of its strength: 0.2 stops at 100 cd/m², 1.2 at deep
- * twilight (1 cd/m²), 2.6 by moonlight (0.01 cd/m²). Night stays night.
- */
-export function eyeKeyStops(luminance: number): number {
-  const key = (l: number) => 1.03 - 2 / (2 + Math.log10(Math.max(l, 0) + 1));
-  return Math.max(-Math.log2(key(luminance) / key(3000)), 0) * EYE_KEY_WEIGHT;
-}
-
-/**
- * The share of the eye's darkening at night shown: on a display in a lit
- * room, all of it (4.4 stops by moonlight) left a moonlit scene at 6% of
- * the screen's white, near black.
- */
-const EYE_KEY_WEIGHT = 0.6;
 
 /** The Earth's mean radius, m (its size from the Moon: earthshine). */
 const EARTH_RADIUS = 6_371_009;
