@@ -148,6 +148,16 @@ export const HARNESSES: HarnessInfo[] = [
     load: () => import("../spikes/precision.ts").then((m) => m.harness),
   },
   {
+    id: "atmosphere",
+    group: "spikes",
+    title: "Reference atmosphere",
+    description:
+      "Spectral Monte Carlo path tracing of Earth's sky in physical units, checked against a deterministic single-scattering integral: the oracle for 2.0's sky and environment lighting.",
+    page: "/spikes/atmosphere.html",
+    entry: "runAtmosphere",
+    load: () => import("../spikes/atmosphere.ts").then((m) => m.harness),
+  },
+  {
     id: "indirect",
     group: "spikes",
     title: "Indirect draws",

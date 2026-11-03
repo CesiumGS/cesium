@@ -64,6 +64,8 @@ if (!BASE) {
 /** page path → global function that runs it and returns JSON-serializable results */
 const suites = {
   precision: ["/spikes/precision.html?bench", "runPrecision"],
+  // The reference atmosphere (plan §4.2): GPU path tracer vs CPU integral.
+  atmosphere: ["/spikes/atmosphere.html?bench", "runAtmosphere"],
   indirect: ["/spikes/indirect.html?bench", "runIndirect"],
   parity: ["/parity/?bench", "runParity"],
   models: [
