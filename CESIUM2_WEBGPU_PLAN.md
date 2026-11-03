@@ -516,6 +516,288 @@ Of the 3D Tiles 1.0 content formats, b3dm and i3dm are supported; pnts,
 cmpt, vctr and geom are not. The table is checked when a milestone closes, and
 the benchmark catalog's scenes note which of these their content uses.
 
+### 4.2 Lighting and shading: what matches 1.x, and what is judged against physics
+
+1.x is the oracle for **what a scene says**: geometry, positions, time and
+the sun, which content is shown, and the values a material or style carries.
+It is not the oracle for **how light behaves**. Where 1.x shading is an
+approximation or a workaround, 2.0 follows the physics and the glTF and
+3D Tiles specifications and is judged against references; comparisons with
+1.x there only check that a scene migrated with default settings still looks
+like itself. Three tiers, each with its own test:
+
+**Exact parity (L2 FLIP vs 1.x, as today).** Things that carry data:
+
+- unlit content (`KHR_materials_unlit`), vertex and feature colors, styles,
+  picking, and globe imagery with lighting off (1.x's default:
+  `Globe.enableLighting` is false, so imagery shows its own colors);
+- input decoding: sRGB vs linear textures, KTX2, quantization, normal-map
+  conventions, alpha modes, double-sidedness, texture transforms. Tested
+  through unlit and albedo debug outputs, so lighting can't hide a decoding
+  bug;
+- geometry and time: sun and moon directions from a `JulianDate` (L0),
+  cameras, depth, clipping;
+- direct sunlight with image-based lighting off (the parity harness's
+  `direct` mode): the same glTF BRDF on both sides, so a difference is a
+  bug on one of them (filed in §14 when it is 1.x's).
+
+**Intent parity (statistics vs 1.x, not FLIP).** The default look of a lit
+scene: average luminance of lit content within a third of a stop, sky
+chromaticity at zenith and horizon, the dominant direction and ratio of the
+environment's irradiance (its SH coefficients against 1.147's
+`DynamicEnvironmentMapManager`, at the same position and time). Canonical
+times: noon, golden hour, dusk and night, at ground, mountain and orbital
+altitudes, and underground (the case 1.147's #13988 fixed). This tier keeps
+migration honest without freezing 1.x's approximations.
+
+**Deliberate divergence (against references, not 1.x).**
+
+- _Atmosphere._ One physically based model for everything that involves the
+  atmosphere: the sky, aerial perspective (what 1.x splits into ground
+  atmosphere and fog), the sun's and moon's color through the air, and the
+  environment lighting. 1.x has four separate approximations: `SkyAtmosphere`,
+  ground atmosphere, `Fog` and the dynamic environment map, each with its own
+  constants and color corrections (HSB shifts, brightness, saturation, and a
+  `pow(color, gamma)` kept as a precision workaround). Single scattering with
+  ad hoc step weighting, no ozone (the blue of twilight), no multiple
+  scattering (skies too dark at low sun and from altitude).
+- _Environment lighting._ The radiance at the content's position, integrated
+  properly: SH9 projection weighted by solid angle, GGX-prefiltered specular
+  with filtered importance sampling, energy compensation for multiple
+  scattering on rough metals, specular occlusion, and the ground's bounce
+  from its albedo.
+- _Color correction is not lighting._ Brightness, saturation and white
+  balance belong in the display transform, after the light has been
+  computed, not inside the environment map.
+- _Materials._ The full glTF PBR model and the KHR material extensions
+  (specular, IOR, transmission, volume, clearcoat, sheen, iridescence,
+  emissive strength) as specified, judged against the Khronos glTF Sample
+  Renderer's images of the sample models, which replace 1.x as the oracle
+  for materials.
+- _HDR, exposure and display._ Always HDR (as now); exposure, tonemapping
+  and the display encoding last (below).
+- _Shadows and ambient occlusion._ Sun shadows and ambient occlusion on by
+  default once they are fast enough; 1.x has both opt-in. Judged at L3.
+
+**References** for the third tier, each a test: a brute-force atmosphere
+integrator (spectral, many steps, several scattering orders) in a compute
+shader, against which the real-time LUTs must agree within a few percent of
+radiance; a Monte Carlo integration of an environment's radiance for every
+pixel, against which the SH and the prefiltered specular must agree (FLIP);
+the Khronos sample images for materials; published clear-sky illuminances
+for the photometric scale (below); L3 sign-off for the look.
+
+#### Sky and sun models
+
+| Model                                            | What it is                                                                                              | Altitudes                | Fit for a globe                                                        |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------- | ------------------------ | ---------------------------------------------------------------------- |
+| Preetham (1999)                                  | analytic fit, clear sky                                                                                 | ground                   | no: wrong at low sun, no space view                                    |
+| Hosek–Wilkie (2012)                              | analytic fit, clear sky, ground albedo and turbidity                                                    | ground                   | no: no aerial or space views                                           |
+| Prague (Wilkie et al. 2021)                      | fitted to spectral simulations, polarization, visibility                                                | up to about 15 km        | no as the default (no space views, large data); yes as a reference     |
+| Bruneton & Neyret (2008; reference 2017)         | precomputed multiple scattering in 4D tables                                                            | any                      | good, but the tables are costly to rebuild when the atmosphere changes |
+| **Hillaire (2020)**, Unreal's sky and atmosphere | small LUTs (transmittance, multiple scattering, sky view, aerial-perspective volume), rebuilt per frame | any (ground to space)    | **yes**: any altitude, cheap, every parameter dynamic                  |
+| CIE standard skies, Perez all-weather            | luminance distributions fitted to measurement; Perez driven by measured direct and diffuse irradiance   | ground (an analysis sky) | yes for daylighting analysis, not for visuals from altitude            |
+
+The default is **Hillaire's model**, computed spectrally (at least 4
+wavelengths, then to RGB through the CIE matching functions, as Bruneton's
+2017 reference does) with an ozone layer, parameterized per body (Earth by
+default; Mars and the Moon, which 1.x's ellipsoids already support, need
+only other constants). The sun is a disk of its real angular size with limb
+darkening, its color the transmittance along its path; the moon is lit by
+the sun with its phase; stars are a dim radiance, not a background color.
+
+#### Fog and aerial perspective
+
+- **Aerial perspective from the atmosphere** (Hillaire's froxel volume of
+  in-scattering and transmittance): haze that depends on distance, altitude
+  and sun direction, replacing both 1.x ground atmosphere and `Fog`.
+- **Weather haze**: an extra participating medium with exponential height
+  density, integrated analytically, set as a visibility in kilometers
+  (METAR-style) and a color, for conditions the clear atmosphere doesn't
+  cover (mist, smog, dust).
+- **Volumetric fog later**: a froxel volume that samples sun shadows, for
+  light shafts and local fog volumes. It needs temporal filtering, the first
+  temporal pass 2.0 would have.
+- **Detail from transmittance**: 1.x raises the screen-space error of tiles
+  in its fog. 2.0 can do the same from the atmosphere's transmittance (a
+  tile barely visible through the haze can be coarser), so the saving
+  follows what the viewer can actually see.
+
+#### Other atmospheric effects
+
+- **Clouds**: first a 2D cloud layer (coverage from satellite imagery or
+  weather data), with cloud shadows on the ground and its effect on the sky
+  and environment lighting; volumetric clouds (Nubis- or Frostbite-style
+  raymarching with temporal reprojection) later. The engine provides the
+  participating-media framework (froxels, shadow maps, temporal
+  accumulation, the atmosphere's light and transmittance); a cloud system
+  plugs into it, so clouds can be an example or an extension rather than
+  core.
+- Precipitation (particles, wet materials), city lights at night (emission
+  from night imagery, which 1.x blends as a second imagery layer), aurora,
+  atmospheric refraction near the horizon, eclipses. All later, all
+  consumers of the same framework.
+
+#### Design and architecture models
+
+For design review what makes an image accurate is, in order:
+
+1. **Photometric units throughout** (next section): a model at noon in June
+   in Phoenix receives the right lux, not "intensity 2".
+2. **The sun's position** (L0 parity, already exact) and **its color**
+   through the atmosphere (transmittance), for orientation and shading
+   studies.
+3. **Materials as authored**: glTF base color as measured albedo, IOR,
+   transmission and volume for glazing, specular for coatings. Glass in
+   particular needs transmission and refraction, not alpha blending.
+4. **Shadows and ambient occlusion**, which dominate how buildings read.
+5. **The sky for analysis**: alongside the visual sky, a daylighting mode
+   with CIE standard skies or the Perez all-weather model driven by weather
+   data (direct normal and diffuse horizontal irradiance from an EPW file),
+   which is what daylighting tools such as Radiance use. Same units, so a
+   false-color view of illuminance on surfaces is meaningful.
+6. **Photometric lights**: glTF's `KHR_lights_punctual` already gives
+   intensities in candela (point and spot) and lux (directional); add IES
+   and EULUMDAT profiles for luminaires.
+7. **Indirect light** (interiors, courtyards, light bouncing off a facade)
+   needs global illumination (next section).
+
+#### Global illumination
+
+WebGPU has no hardware ray tracing yet, so real-time GI here means screen
+space, software ray tracing in compute shaders, or precomputation. Outdoors
+at globe scale most indirect light is the sky, occluded; indoors and
+between buildings it is bounces. In order of cost and payoff:
+
+1. **Sky visibility**: ground-truth ambient occlusion (GTAO) with bent
+   normals, so the environment's SH is sampled in the unoccluded direction,
+   and the multi-bounce approximation (Jimenez et al. 2016) so occlusion
+   doesn't over-darken bright materials. Screen space, cheap; it is also
+   M4's ambient occlusion.
+2. **Screen-space indirect light**: the visibility-bitmask extension of
+   GTAO (SSILVB, 2023) gathers one bounce from what's on screen in the same
+   pass. Near-field color bleeding; misses what's off screen.
+3. **Probe GI with software ray tracing** (DDGI, Majercik et al. 2019): a
+   grid of irradiance probes with depth moments (to avoid leaks through
+   walls), updated each frame by rays traced in compute against a BVH of
+   the world's triangles, lit by the sun (shadowed by the same rays) and the
+   atmosphere. Scoped to where it matters: around a design model, or
+   cascades centered on the camera; probes update incrementally as tiles
+   stream in. The BVH is the main new piece of infrastructure; 2.0's ray
+   casts (`castRays`) already walk the world's triangles, and the BVH is
+   shared with the path tracer later.
+4. **Baking for static design models**: the path tracer, once it exists,
+   bakes probes or lightmaps for a model in the background, the most
+   accurate indirect light at no cost per frame. Design models are static,
+   so this suits AEC best.
+
+Not chosen: voxel cone tracing (memory at city scale, voxel leaks), light
+propagation volumes (leaks), Lumen-style signed distance fields (too large
+an undertaking for now). Radiance cascades (Sannikov 2023) are worth a spike
+in screen space. Shared infrastructure for all of it: a depth and normal
+prepass (2.0 shades forward with MSAA), a hierarchical depth buffer,
+temporal accumulation with denoising (shared with volumetric fog and
+clouds), and the BVH.
+
+#### What to take from Unreal Engine 5
+
+Unreal's renderer is the most complete public example of physically based
+real-time lighting at scale. What transfers to 2.0, and what doesn't:
+
+- **A path tracer in the engine as the reference.** Unreal ships one that
+  renders the same scene, materials and lights, and Epic checks Lumen
+  against it. 2.0's references (§4.2 tiers) should grow into the same: the
+  path tracer we plan to experiment with is first the oracle for every
+  real-time approximation, then a product feature.
+- **One sky system feeding everything.** Sky Atmosphere (Hillaire's model,
+  above), Volumetric Clouds and the Sky Light, which re-captures the sky
+  (with clouds) into the environment lighting in real time. The same shape
+  as §4.2: one atmosphere, one environment derived from it.
+- **Physical units and exposure as the default.** Lux, candela, nits and
+  EV100 throughout, with automatic exposure set in physical terms. Epic made
+  these the default after years of unitless settings; 2.0 starts there.
+- **Lumen's structure, not its implementation.** Traces that fall back by
+  distance (screen space, then near geometry, then far), radiance caching
+  so a pixel reuses light gathered nearby, and temporal reuse with
+  denoising. Its software tracing relies on signed distance fields per mesh
+  and a global one, too heavy for streamed, city-scale content in a
+  browser; 2.0's equivalent is the probe GI on a BVH above, keeping the
+  same fallback-and-cache structure.
+- **Virtual shadow maps.** Very high resolution shadow maps split into
+  pages, rendered only where the view needs them and cached until the
+  geometry or the sun moves. A good fit for streamed 3D Tiles (a tile's
+  arrival invalidates its pages only) and for the sun over a large scene;
+  the likely target after cascaded shadow maps.
+- **MegaLights.** Many shadowed lights sampled stochastically per pixel and
+  denoised, rather than a shadow map per light: relevant for interiors with
+  many luminaires (IES), later.
+- **Substrate.** Materials as layers of slabs (coatings, films, subsurface)
+  instead of a fixed list of shading models. 2.0's custom shading (after
+  M4) should be able to grow that way, with glTF's metallic-roughness and
+  KHR extensions mapping onto it.
+- **Visibility buffer.** Nanite rasterizes triangle IDs and shades
+  afterwards. 2.0 is already GPU-driven; a visibility buffer would also give
+  the depth and normal prepass that screen-space GI and ambient occlusion
+  need.
+
+What doesn't transfer: hardware ray tracing (not in WebGPU), memory and
+compute budgets sized for consoles and desktops, and baked lightmaps as the
+default (content streams in, so baking is an option for static design
+models only). Anything taken from Unreal is sized for a browser tab sharing
+a laptop GPU.
+
+#### Physical lighting units
+
+What sets 2.0 up for them, decided before the atmosphere is written:
+
+- **Units inside the renderer.** Luminance in cd/m² (nits) in the HDR
+  buffer; illuminance in lux; the sun's illuminance outside the atmosphere
+  (about 128,000 lux; 1,361 W/m²) attenuated by the atmosphere's
+  transmittance, giving about 100,000 lux at the ground with a high clear
+  sun; sky radiance from the same model in the same units. Lights in glTF's
+  units (candela, lux); emission in nits (`KHR_materials_emissive_strength`
+  scales an authored color to nits). No unitless "intensity".
+- **Pre-exposure.** A sunny day spans about 20 stops from night, and fp16
+  stops at 65,504, so shading multiplies by the current exposure before
+  writing the HDR target (Frostbite's and Unreal's approach); the exposure
+  of the previous frame is enough. Without it, noon overflows or night
+  quantizes.
+- **A camera.** Exposure as EV100 (aperture, shutter, ISO) or automatic
+  (a luminance histogram, with adaptation speed), plus exposure
+  compensation; the present pass then applies the tonemapper (Khronos PBR
+  Neutral, as now, which keeps base colors recognizable for design review;
+  AgX or ACES optional) and the display encoding.
+- **HDR displays.** WebGPU canvases can be configured for extended range
+  (`toneMapping: { mode: "extended" }` with an `rgba16float` canvas):
+  output in nits, tonemapped only to the display's peak.
+- **Spectral where it matters.** The atmosphere computed spectrally, then
+  converted to linear Rec.709 RGB (later Display P3 or Rec.2020), with white
+  balance in the display transform.
+- **Measurement tools.** The inspector reads a pixel's luminance (cd/m²) and
+  a surface's illuminance (lux), with false-color views, as Radiance's
+  `falsecolor` does: the check that the units are right, and a feature for
+  design review.
+
+#### Order of work in M4
+
+1. References first: the brute-force atmosphere and the Monte Carlo IBL
+   integrator, with numeric tests.
+2. Units, pre-exposure and the camera (EV100, automatic exposure), so
+   everything after is written in nits and lux.
+3. Hillaire's LUTs, checked against the reference; the sky and the sun
+   disk.
+4. Environment lighting from the atmosphere at the content's position and
+   time (radiance cube, SH, specular), checked against the Monte Carlo
+   reference, then intent parity with 1.147.
+5. Aerial perspective and weather haze; fog-aware detail.
+6. Shadows and ambient occlusion (GTAO with bent normals, the first GI
+   step); then the daylighting sky, probe GI, clouds and the rest.
+
+Open decisions (§ product): the default exposure (automatic, or a fixed
+EV100 for daylight); whether globe imagery stays unlit by default (1.x) or
+is lit by the sun and sky; whether 1.x's environment knobs (brightness,
+saturation, gamma) get compatibility equivalents in the display transform.
+
 ## 5. Performance methodology
 
 - **Scripted flythroughs** recorded in 1.x and replayed in both, cold and warm cache.
@@ -1067,7 +1349,9 @@ Then the planned work:
 
 ### M4 — Visual parity (≈3 wks)
 
-- Sky and atmosphere LUTs, ground atmosphere and fog.
+- Lighting and shading as designed in §4.2: physical units and exposure,
+  Hillaire's atmosphere (sky, aerial perspective, environment lighting),
+  shadows and ambient occlusion.
 - LDR/HDR paths, FXAA.
 - Translucency: MBOIT real-time path plus the per-pixel-linked-list exact reference; tested for opaque/translucent interaction against the reference, not against 1.x.
 - _Exit_: L2 on all canonical views, and L3 sign-off.
