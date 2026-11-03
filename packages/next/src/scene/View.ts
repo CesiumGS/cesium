@@ -300,6 +300,8 @@ export interface ViewOptions {
   ambientOcclusion?: boolean;
   /** How far ambient occlusion looks for occluders, m. Default 3. */
   ambientOcclusionRadius?: number;
+  /** How blended surfaces are put in order (`Translucency`). */
+  translucency?: Translucency;
   /**
    * The globe's night lights (`GlobeOptions.lights`), where it has them.
    * Default true.
@@ -315,6 +317,19 @@ export interface ViewOptions {
 }
 
 export type OutputEncoding = "srgb" | "gamma2.2";
+
+/**
+ * How blended surfaces (glTF alpha mode "BLEND": glass, water, ghosted
+ * design) are put in order, whatever order they're drawn in:
+ *
+ * - "moments" (default): moment-based order-independent transparency. Two
+ *   passes over them and a fixed 36 bytes a pixel; where many layers
+ *   overlap, the light reaching each is estimated, so their order blurs.
+ * - "exact": every layer kept per pixel and sorted, the nearest 32 blended
+ *   in order. Memory grows with the layers on screen (16 bytes each); the
+ *   reference "moments" is tested against.
+ */
+export type Translucency = "moments" | "exact";
 
 /**
  * How exposed scene light becomes display color:
@@ -373,6 +388,7 @@ export class View {
   shadows: boolean;
   ambientOcclusion: boolean;
   ambientOcclusionRadius: number;
+  translucency: Translucency;
   cityLights: boolean;
   clearColor: readonly [number, number, number];
   outputEncoding: OutputEncoding;
@@ -409,6 +425,7 @@ export class View {
     this.shadows = options.shadows ?? false;
     this.ambientOcclusion = options.ambientOcclusion ?? false;
     this.ambientOcclusionRadius = options.ambientOcclusionRadius ?? 3;
+    this.translucency = options.translucency ?? "moments";
     this.cityLights = options.cityLights ?? true;
     this.clearColor = options.clearColor ?? [0.004, 0.008, 0.02];
     this.outputEncoding = options.outputEncoding ?? "srgb";

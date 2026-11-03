@@ -440,17 +440,54 @@ fn prepassFs(in: VsOut, @builtin(front_facing) frontFacing: bool) -> @location(0
   return vec4f(n, 1.0);
 }
 
-// The opaque pass's discards: alpha cutoff, mixed-LOD placeholders.
+// Blended surfaces at least this opaque draw in the opaque pass (depth,
+// shadows, picks, ambient occlusion); the rest in the translucent passes
+// (translucent.wgsl). Near-opaque layers a few centimeters apart are what
+// order-independent transparency's moments tell apart worst.
+const OPAQUE_ALPHA = 0.999;
+
+// The opaque pass draws its depth first, cutouts by alpha to coverage
+// (`depthCoverageFs`): its shading, at equal depth, then fills just the
+// samples covered, without cutting out per pixel itself. True in the
+// opaque pass's triangle pipelines (RenderContext.ts); lines cut out here.
+override cutOutInDepth: bool = false;
+
+// The opaque pass's depth for materials that cut out (alpha mask, and
+// blended surfaces' opaque parts): their alpha, sharpened to a pixel-wide
+// ramp across the cutoff, as coverage (the pipeline's alpha to coverage),
+// so the cut edges antialias across the samples as geometry's do; and the
+// placeholders' clip.
+@fragment
+fn depthCoverageFs(in: VsOut) -> @location(0) vec4f {
+  let r = records[in.draw];
+  let material = materials[r.materialIndex];
+  let sampled = textureSample(baseColorTexture, baseColorSampler, in.uv).a;
+  var alpha = material.baseColor.a * r.color.a * in.color.a;
+  if ((material.flags & 16u) != 0u) {
+    alpha *= sampled;
+  }
+  let ramp = max(fwidth(alpha), 1e-4);
+  if ((r.placeholderMask & view.viewBit) != 0u &&
+      !insideClipBoxes(r.clipBlock, r.clipCount, in.relPosition)) {
+    discard;
+  }
+  let cutoff = select(material.alphaCutoff, OPAQUE_ALPHA, (material.flags & 8u) != 0u);
+  return vec4f(0.0, 0.0, 0.0, clamp((alpha - cutoff) / ramp + 0.5, 0.0, 1.0));
+}
+
+// The opaque pass's discards: alpha cutoff, blended surfaces' translucent
+// parts, mixed-LOD placeholders.
 fn cutOut(in: VsOut) {
   let r = records[in.draw];
   let material = materials[r.materialIndex];
   let baseColorAlpha = textureSample(baseColorTexture, baseColorSampler, in.uv).a;
-  if ((material.flags & 4u) != 0u) {
+  if ((material.flags & 12u) != 0u) {
     var alpha = material.baseColor.a * r.color.a * in.color.a;
     if ((material.flags & 16u) != 0u) {
       alpha *= baseColorAlpha;
     }
-    if (alpha < material.alphaCutoff) {
+    let cutoff = select(material.alphaCutoff, OPAQUE_ALPHA, (material.flags & 8u) != 0u);
+    if (alpha < cutoff) {
       discard;
     }
   }
@@ -714,8 +751,40 @@ fn srgbToLinear(c: vec3f) -> vec3f {
   return select(pow((c + 0.055) / 1.055, vec3f(2.4)), c / 12.92, c <= vec3f(0.04045));
 }
 
+// A surface's light toward the camera: scene-referred (pre-exposed, through
+// the air) or, unlit, display-referred; its alpha for blended materials.
+struct Surface {
+  color: vec3f,
+  alpha: f32,
+  unlit: bool,
+};
+
 @fragment
 fn fs(in: VsOut, @builtin(front_facing) frontFacing: bool) -> FsOut {
+  let surface = shadeSurface(in, frontFacing, false);
+  if (!cutOutInDepth &&
+      (materials[records[in.draw].materialIndex].flags & 8u) != 0u && surface.alpha < OPAQUE_ALPHA) {
+    discard;
+  }
+  var out: FsOut;
+  out.featureId = vec2u(in.feature & 0xffffu, in.feature >> 16u);
+  if (surface.unlit) {
+    // Unlit color is display-referred (photographs: globe imagery,
+    // photogrammetry such as Google's tiles): it goes to the display target,
+    // which the present pass shows as is, as glTF's KHR_materials_unlit and
+    // 1.x (HDR off by default) do. No light reaches the scene target here.
+    out.color = vec4f(0.0, 0.0, 0.0, 1.0);
+    out.display = vec4f(surface.color, 1.0);
+  } else {
+    out.color = vec4f(surface.color, 1.0);
+    out.display = vec4f(0.0);
+  }
+  return out;
+}
+
+// Translucent surfaces (`translucent`) take no ambient occlusion: the
+// screen's occlusion is that of the opaque surfaces behind them.
+fn shadeSurface(in: VsOut, frontFacing: bool, translucent: bool) -> Surface {
   let r = records[in.draw];
   let material = materials[r.materialIndex];
   let flags = material.flags;
@@ -760,7 +829,7 @@ fn fs(in: VsOut, @builtin(front_facing) frontFacing: bool) -> FsOut {
     // The draw's tint (white unless a debug view tints tiles) still applies.
     baseColor = vec4f(srgbToLinear(imagerySample.rgb), 1.0) * r.color;
   }
-  if ((flags & 4u) != 0u && baseColor.a < material.alphaCutoff) {
+  if (!cutOutInDepth && (flags & 4u) != 0u && baseColor.a < material.alphaCutoff) {
     discard;
   }
   // Mixed-LOD placeholder: a coarse tile fills only the volumes of its
@@ -774,17 +843,8 @@ fn fs(in: VsOut, @builtin(front_facing) frontFacing: bool) -> FsOut {
     emissive *= emissiveSample;
   }
 
-  var out: FsOut;
-  out.featureId = vec2u(in.feature & 0xffffu, in.feature >> 16u);
-  out.display = vec4f(0.0);
   if ((flags & 1u) != 0u || (r.flags & 2u) != 0u) {
-    // Unlit color is display-referred (photographs: globe imagery,
-    // photogrammetry such as Google's tiles): it goes to the display target,
-    // which the present pass shows as is, as glTF's KHR_materials_unlit and
-    // 1.x (HDR off by default) do. No light reaches the scene target here.
-    out.color = vec4f(0.0, 0.0, 0.0, 1.0);
-    out.display = vec4f(baseColor.rgb, 1.0);
-    return out;
+    return Surface(baseColor.rgb, baseColor.a, true);
   }
 
   var metallic = material.metallic;
@@ -875,7 +935,7 @@ fn fs(in: VsOut, @builtin(front_facing) frontFacing: bool) -> FsOut {
   // occlusion), with light bouncing between bright surfaces (Jimenez et
   // al.'s multi-bounce fit on the diffuse color) and its share of the
   // reflections (Lagarde's specular occlusion).
-  let ao = ambientOcclusion(in.position.xy);
+  let ao = select(ambientOcclusion(in.position.xy), 1.0, translucent);
   let ma = 2.0404 * diffuseColor - 0.3324;
   let mb = -4.7951 * diffuseColor + 0.6417;
   let mc = 2.7552 * diffuseColor + 0.6903;
@@ -922,6 +982,5 @@ fn fs(in: VsOut, @builtin(front_facing) frontFacing: bool) -> FsOut {
   }
   // Below fp16's largest value: an overflow to infinity (a lit scene at a
   // night exposure) poisoned the exposure meter's average with NaN.
-  out.color = vec4f(min(lit + shown, vec3f(60000.0)), 1.0);
-  return out;
+  return Surface(min(lit + shown, vec3f(60000.0)), baseColor.a, false);
 }

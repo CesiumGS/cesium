@@ -23,6 +23,7 @@ import {
   CLIP_COUNT_WORD,
   MATERIAL_WORDS,
   PLACEHOLDER_MASK_WORD,
+  MaterialFlags,
   RecordFlags,
   packTint,
   writeDrawRecord,
@@ -498,6 +499,8 @@ export class World {
   private nextMeshId = 0;
   private drawCount = 0;
   private bundle?: GPURenderBundle;
+  /** Draws of blended surfaces (`translucentRange`), until draws change. */
+  private translucentDraws?: number[];
   /** The shadow casters' bundle, and the draw bundle it was recorded with. */
   private casters?: GPURenderBundle;
   private castersFor?: GPURenderBundle;
@@ -1173,6 +1176,7 @@ export class World {
     });
     this.markDirty(index);
     this.bundle = undefined;
+    this.translucentDraws = undefined;
     return {
       index,
       generation: this.drawGeneration[index]!,
@@ -1205,6 +1209,7 @@ export class World {
     }
     // Slices of the item list follow batch sizes: rebuild them.
     this.bundle = undefined;
+    this.translucentDraws = undefined;
     this.recordsU32[o + FLAGS_WORD] = RecordFlags.hidden;
     if (instanceCount > 0) {
       this.releaseInstances(
@@ -2208,8 +2213,13 @@ export class World {
     encoder.setIndexBuffer(this.indexBuffer, "uint32");
     // Casters: depth, the fragment stage clipping placeholders, and where
     // a material cuts out (alpha mask) its cutoff too.
+    // Blended surfaces draw their opaque parts here, cut out where they're
+    // translucent (opaque.wgsl `cutOut`); the rest in the translucent
+    // passes (`encodeTranslucent`). Glass lets the sun through.
     const masked = (batch: Batch) =>
-      (this.materialsU32[batch.material * MATERIAL_WORDS + 12]! & 4) !== 0;
+      (this.materialsU32[batch.material * MATERIAL_WORDS + 12]! &
+        (MaterialFlags.alphaMask | MaterialFlags.alphaBlend)) !==
+      0;
     const pipelineOf = (batch: Batch) =>
       prepass
         ? batch.doubleSided
@@ -2278,6 +2288,153 @@ export class World {
       }
     }
     return encoder.finish();
+  }
+
+  /** A batch of blended triangles (alpha mode "BLEND"); lines stay opaque. */
+  private translucent(batch: Batch): boolean {
+    return (
+      batch.mesh.topology !== "line-list" &&
+      (this.materialsU32[batch.material * MATERIAL_WORDS + 12]! &
+        MaterialFlags.alphaBlend) !==
+        0
+    );
+  }
+
+  /**
+   * The nearest and farthest a blended surface may be from `eye` (their
+   * draws' bounding spheres, shown or not, as of the last `prepareFrame`),
+   * m; undefined without any.
+   */
+  translucentRange(
+    eye: ArrayLike<number>,
+  ): { near: number; far: number } | undefined {
+    if (!this.translucentDraws) {
+      this.translucentDraws = [];
+      for (let i = 0; i < this.drawCount; i++) {
+        const batch = this.drawBatches[i];
+        if (batch && this.translucent(batch)) {
+          this.translucentDraws.push(i);
+        }
+      }
+    }
+    if (this.translucentDraws.length === 0) {
+      return undefined;
+    }
+    const u = this.recordsU32;
+    const f = this.recordsF32;
+    const world = this.transformWorld;
+    let near = Infinity;
+    let far = 0;
+    const sphere = (x: number, y: number, z: number, radius: number) => {
+      const d = Math.hypot(x - eye[0]!, y - eye[1]!, z - eye[2]!);
+      near = Math.min(near, d - radius);
+      far = Math.max(far, d + radius);
+    };
+    for (const i of this.translucentDraws) {
+      const o = i * RECORD_WORDS;
+      const t = u[o + TRANSFORM_WORD]!;
+      if (
+        u[o + FLAGS_WORD]! & RecordFlags.hidden ||
+        this.transformHiddenWorld[t] === 1
+      ) {
+        continue;
+      }
+      const w = t * 16;
+      const scale = this.transforms.f32[t * TRANSFORM_WORDS + 3]!;
+      const local = [f[o]!, f[o + 1]!, f[o + 2]!];
+      const point = (p: readonly number[], k: number) =>
+        world[w + k]! * p[0]! +
+        world[w + 4 + k]! * p[1]! +
+        world[w + 8 + k]! * p[2]! +
+        world[w + 12 + k]!;
+      const count = u[o + INSTANCE_COUNT_WORD]!;
+      if (count === 0) {
+        sphere(
+          point(local, 0),
+          point(local, 1),
+          point(local, 2),
+          f[o + 3]! * scale,
+        );
+        continue;
+      }
+      const first = u[o + INSTANCE_FIRST_WORD]!;
+      const it = this.instances.f32;
+      for (let j = first; j < first + count; j++) {
+        const a = j * INSTANCE_WORDS;
+        if (this.instances.u32[a + 14]! & 1) {
+          continue;
+        }
+        const p = [0, 1, 2].map(
+          (row) =>
+            it[a + row * 4]! * local[0]! +
+            it[a + row * 4 + 1]! * local[1]! +
+            it[a + row * 4 + 2]! * local[2]! +
+            it[a + row * 4 + 3]!,
+        );
+        const instanceScale = Math.max(
+          Math.hypot(it[a]!, it[a + 4]!, it[a + 8]!),
+          Math.hypot(it[a + 1]!, it[a + 5]!, it[a + 9]!),
+          Math.hypot(it[a + 2]!, it[a + 6]!, it[a + 10]!),
+        );
+        sphere(
+          point(p, 0),
+          point(p, 1),
+          point(p, 2),
+          f[o + 3]! * scale * instanceScale,
+        );
+      }
+    }
+    return far > 0 ? { near: Math.max(near, 0), far } : undefined;
+  }
+
+  /**
+   * Encodes this world's blended surfaces into a translucent pass (after
+   * the view's cull): the pass's pipeline, one- or double-sided, and its
+   * group 3. Encoded directly, not bundled: group 3 is per view.
+   */
+  encodeTranslucent(
+    pass: GPURenderPassEncoder,
+    pipeline: GPURenderPipeline,
+    doubleSided: GPURenderPipeline,
+    group: GPUBindGroup,
+  ): void {
+    pass.setBindGroup(0, this.ctx.currentViewBindGroup);
+    pass.setBindGroup(1, this.drawBindGroup);
+    pass.setBindGroup(3, group);
+    pass.setIndexBuffer(this.indexBuffer, "uint32");
+    const direct = this._submission === "direct";
+    const list = direct ? this.directListBuffer : this.itemListBuffer;
+    let current: GPURenderPipeline | undefined;
+    let textureSet = -1;
+    for (const batch of this.batchList) {
+      if (batch.items === 0 || !this.translucent(batch)) {
+        continue;
+      }
+      const wanted = batch.doubleSided ? doubleSided : pipeline;
+      if (wanted !== current) {
+        current = wanted;
+        pass.setPipeline(wanted);
+      }
+      if (batch.textureSet !== textureSet) {
+        textureSet = batch.textureSet;
+        pass.setBindGroup(2, this.textureSets[textureSet]!);
+      }
+      pass.setVertexBuffer(0, list, batch.itemBase * 4);
+      if (direct) {
+        pass.drawIndexed(
+          batch.mesh.indexCount,
+          batch.items,
+          batch.mesh.firstIndex,
+          0,
+          0,
+        );
+      } else {
+        pass.drawIndexedIndirect(
+          this.indirectBuffer,
+          batch.index * INDIRECT_SIZE,
+        );
+      }
+    }
   }
 
   private createDrawBindGroup(): void {

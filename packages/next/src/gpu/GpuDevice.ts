@@ -13,6 +13,7 @@ const OPTIONAL_FEATURES: readonly GPUFeatureName[] = [
   "texture-compression-astc",
   "shader-f16",
   "float32-filterable",
+  "float32-blendable",
   "subgroups",
   "clip-distances",
   "dual-source-blending",
@@ -24,6 +25,8 @@ export interface Capabilities {
   timestampQuery: boolean;
   subgroups: boolean;
   shaderF16: boolean;
+  /** 32-bit float targets blend (translucency's moments; else 16-bit). */
+  float32Blendable: boolean;
   textureCompression: { bc: boolean; etc2: boolean; astc: boolean };
 }
 
@@ -146,6 +149,9 @@ async function requestDevice(
       maxBufferSize: limits.maxBufferSize,
       maxStorageBuffersPerShaderStage: limits.maxStorageBuffersPerShaderStage,
       maxComputeWorkgroupStorageSize: limits.maxComputeWorkgroupStorageSize,
+      // Translucent surfaces read the opaque depth and their moments on
+      // top of everything the opaque pass samples (19; the default is 16).
+      maxSampledTexturesPerShaderStage: limits.maxSampledTexturesPerShaderStage,
     },
   });
   return { adapter, device };
@@ -158,6 +164,7 @@ function capabilitiesOf(device: GPUDevice): Capabilities {
     timestampQuery: has("timestamp-query"),
     subgroups: has("subgroups"),
     shaderF16: has("shader-f16"),
+    float32Blendable: has("float32-blendable"),
     textureCompression: {
       bc: has("texture-compression-bc"),
       etc2: has("texture-compression-etc2"),

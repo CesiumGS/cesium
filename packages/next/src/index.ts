@@ -43,6 +43,7 @@ export {
   ev100ToScale,
   type OutputEncoding,
   type ToneMapping,
+  type Translucency,
   type ViewBackground,
   type PickResult,
   type RenderTarget,

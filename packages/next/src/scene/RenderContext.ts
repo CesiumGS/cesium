@@ -16,6 +16,8 @@ import meterWgsl from "../shaders/meter.wgsl?raw";
 import adaptWgsl from "../shaders/adapt.wgsl?raw";
 import lightsWgsl from "../shaders/lights.wgsl?raw";
 import depthRangeWgsl from "../shaders/depthRange.wgsl?raw";
+import translucentWgsl from "../shaders/translucent.wgsl?raw";
+import compositeWgsl from "../shaders/composite.wgsl?raw";
 import { CLUSTERS_SIZE, LIGHTS_SIZE } from "./lights.ts";
 
 /**
@@ -100,6 +102,28 @@ export interface Pipelines {
   lightsAssign: GPUComputePipeline;
   /** The nearest and farthest surface a view shows (`depthRange.wgsl`). */
   depthRange: GPUComputePipeline;
+  /**
+   * Translucency (translucent.wgsl), one- and double-sided: blended
+   * surfaces into per-pixel lists ("exact"), or their moments, then their
+   * light weighted by what shows through in front ("moments"). Bound with
+   * `translucentLayout` as group 3.
+   */
+  translucentLayout: GPUBindGroupLayout;
+  translucentList: GPURenderPipeline;
+  translucentListDoubleSided: GPURenderPipeline;
+  translucentMoments: GPURenderPipeline;
+  translucentMomentsDoubleSided: GPURenderPipeline;
+  translucentColor: GPURenderPipeline;
+  translucentColorDoubleSided: GPURenderPipeline;
+  /** Either way's layers over the opaque pass's targets (composite.wgsl). */
+  compositeExact: GPURenderPipeline;
+  compositeMoments: GPURenderPipeline;
+  /**
+   * The moments' targets (absorbance, its moments): 32-bit floats where
+   * they blend, else 16-bit; and the bias their precision calls for.
+   */
+  momentFormats: readonly [GPUTextureFormat, GPUTextureFormat];
+  momentBias: number;
 }
 
 export interface Defaults {
@@ -180,7 +204,7 @@ export async function createRenderContext(
   // mip generator for the formats glTF textures use.
   const mips = new MipGenerator(device);
   const [pipelines, environment] = await Promise.all([
-    createPipelines(device, outputFormat, overrides),
+    createPipelines(device, caps, outputFormat, overrides),
     Environment.create(device),
     mips.prepare("rgba8unorm"),
     mips.prepare("rgba8unorm-srgb"),
@@ -341,6 +365,7 @@ function storage(
 
 async function createPipelines(
   device: GPUDevice,
+  caps: Capabilities,
   outputFormat: GPUTextureFormat,
   overrides: ShaderOverrides,
 ): Promise<Pipelines> {
@@ -461,6 +486,28 @@ async function createPipelines(
       storage(2, false, COMPUTE), // the table
     ],
   });
+  const translucentLayout = device.createBindGroupLayout({
+    label: "translucent",
+    entries: [
+      { binding: 0, visibility: FRAGMENT, buffer: { type: "uniform" } },
+      storage(1, false, FRAGMENT), // the lists
+      {
+        binding: 2,
+        visibility: FRAGMENT,
+        texture: { sampleType: "depth", multisampled: true },
+      },
+      {
+        binding: 3,
+        visibility: FRAGMENT,
+        texture: { sampleType: "unfilterable-float" },
+      },
+      {
+        binding: 4,
+        visibility: FRAGMENT,
+        texture: { sampleType: "unfilterable-float" },
+      },
+    ],
+  });
   const overlayLayout = device.createBindGroupLayout({
     label: "overlay",
     entries: [
@@ -512,6 +559,10 @@ async function createPipelines(
       fragment: {
         module: opaqueModule,
         entryPoint: "fs",
+        // Cutouts were decided per sample by the depth (`depthCoverageFs`).
+        ...(depthPrepass && topology === "triangle-list"
+          ? { constants: { cutOutInDepth: 1 } }
+          : {}),
         targets: SCENE_TARGETS.colorFormats.map((format) => ({ format })),
       },
       primitive: { topology, cullMode, frontFace: "ccw" },
@@ -552,7 +603,7 @@ async function createPipelines(
       },
       fragment: {
         module: opaqueModule,
-        entryPoint: masked ? "shadowFs" : "shadowPlaceholderFs",
+        entryPoint: masked ? "depthCoverageFs" : "shadowPlaceholderFs",
         targets: SCENE_TARGETS.colorFormats.map((format) => ({
           format,
           writeMask: 0,
@@ -564,7 +615,11 @@ async function createPipelines(
         depthWriteEnabled: true,
         depthCompare: "greater",
       },
-      multisample: { count: SCENE_TARGETS.sampleCount },
+      // Cutouts' edges antialiased: their alpha picks the samples.
+      multisample: {
+        count: SCENE_TARGETS.sampleCount,
+        alphaToCoverageEnabled: masked,
+      },
     });
   // Shadow casters always use the built-in module (an override has no
   // `vsDepth` or `shadowFs`).
@@ -614,6 +669,97 @@ async function createPipelines(
 
   // The prepass: single-sampled depth and normals, the casters' vertex
   // stage (no aerial perspective) and discards.
+  // Translucency: single-sampled, no depth attachment (translucent.wgsl
+  // tests the opaque depth itself). Override shaders have no translucent
+  // entry points: the built-in module draws them.
+  const translucentModule = module(
+    "translucent",
+    commonWgsl,
+    opaqueWgsl,
+    translucentWgsl,
+  );
+  const translucentPipelineLayout = device.createPipelineLayout({
+    bindGroupLayouts: [
+      viewLayout,
+      drawWorldLayout,
+      textureSetLayout,
+      translucentLayout,
+    ],
+  });
+  const added: GPUBlendState = {
+    color: { srcFactor: "one", dstFactor: "one" },
+    alpha: { srcFactor: "one", dstFactor: "one" },
+  };
+  const momentFormats = caps.float32Blendable
+    ? (["r32float", "rgba32float"] as const)
+    : (["r16float", "rgba16float"] as const);
+  const translucentPipeline = (
+    label: string,
+    cullMode: GPUCullMode,
+    entryPoint: string,
+    targets: GPUColorTargetState[],
+    sampleCount = 1,
+  ) =>
+    device.createRenderPipelineAsync({
+      label,
+      layout: translucentPipelineLayout,
+      multisample: { count: sampleCount },
+      vertex: {
+        module: translucentModule,
+        entryPoint: "vs",
+        buffers: [
+          {
+            arrayStride: 4,
+            stepMode: "instance",
+            attributes: [{ shaderLocation: 0, offset: 0, format: "uint32" }],
+          },
+        ],
+      },
+      fragment: { module: translucentModule, entryPoint, targets },
+      primitive: { topology: "triangle-list", cullMode, frontFace: "ccw" },
+    });
+  // The lists' pass writes no color; its one target is the scene's
+  // multisampled one (its fragments' coverage antialiases glass's edges).
+  const listTargets: GPUColorTargetState[] = [
+    { format: "rgba16float", writeMask: 0 },
+  ];
+  const momentTargets: GPUColorTargetState[] = momentFormats.map((format) => ({
+    format,
+    blend: added,
+  }));
+  const colorTargets: GPUColorTargetState[] = [
+    { format: "rgba16float", blend: added },
+    { format: "rgba16float", blend: added },
+  ];
+  // Premultiplied, alpha 1 - T: the scene's light and coverage "over";
+  // the display's color the same, its alpha (the unlit share) times T.
+  const over: GPUBlendComponent = {
+    srcFactor: "one",
+    dstFactor: "one-minus-src-alpha",
+  };
+  const compositeModule = module("composite", compositeWgsl);
+  const compositePipeline = (label: string, entryPoint: string) =>
+    device.createRenderPipelineAsync({
+      label,
+      layout: "auto",
+      vertex: { module: compositeModule, entryPoint: "vs" },
+      fragment: {
+        module: compositeModule,
+        entryPoint,
+        targets: [
+          { format: "rgba16float", blend: { color: over, alpha: over } },
+          {
+            format: "rgba8unorm-srgb",
+            blend: {
+              color: over,
+              alpha: { srcFactor: "zero", dstFactor: "one-minus-src-alpha" },
+            },
+          },
+        ],
+      },
+      primitive: { topology: "triangle-list" },
+    });
+
   const prepassPipeline = (label: string, cullMode: GPUCullMode) =>
     device.createRenderPipelineAsync({
       label,
@@ -671,6 +817,14 @@ async function createPipelines(
     adaptBlur,
     lightsAssign,
     depthRange,
+    translucentList,
+    translucentListDoubleSided,
+    translucentMoments,
+    translucentMomentsDoubleSided,
+    translucentColor,
+    translucentColorDoubleSided,
+    compositeExact,
+    compositeMoments,
   ] = await Promise.all([
     device.createComputePipelineAsync({
       label: "cull.records",
@@ -794,6 +948,46 @@ async function createPipelines(
         entryPoint: "main",
       },
     }),
+    translucentPipeline(
+      "translucent.list",
+      "back",
+      "fsList",
+      listTargets,
+      SCENE_TARGETS.sampleCount,
+    ),
+    translucentPipeline(
+      "translucent.list.doubleSided",
+      "none",
+      "fsList",
+      listTargets,
+      SCENE_TARGETS.sampleCount,
+    ),
+    translucentPipeline(
+      "translucent.moments",
+      "back",
+      "fsMoments",
+      momentTargets,
+    ),
+    translucentPipeline(
+      "translucent.moments.doubleSided",
+      "none",
+      "fsMoments",
+      momentTargets,
+    ),
+    translucentPipeline(
+      "translucent.color",
+      "back",
+      "fsMomentColor",
+      colorTargets,
+    ),
+    translucentPipeline(
+      "translucent.color.doubleSided",
+      "none",
+      "fsMomentColor",
+      colorTargets,
+    ),
+    compositePipeline("composite.exact", "fsExact"),
+    compositePipeline("composite.moments", "fsMoments"),
   ]);
 
   return {
@@ -832,5 +1026,21 @@ async function createPipelines(
     adaptBlur,
     lightsAssign,
     depthRange,
+    translucentLayout,
+    translucentList,
+    translucentListDoubleSided,
+    translucentMoments,
+    translucentMomentsDoubleSided,
+    translucentColor,
+    translucentColorDoubleSided,
+    compositeExact,
+    compositeMoments,
+    momentFormats,
+    // Münstermann et al. give 5·10⁻⁷ for four power moments in 32-bit
+    // floats; computed in 32-bit floats here, that left a lone layer's
+    // reconstruction failing often enough to speckle (5·10⁻⁶: never in
+    // 400,000 random stacks of one to four layers). In 16-bit (without
+    // their quantization), more.
+    momentBias: caps.float32Blendable ? 5e-6 : 6e-4,
   };
 }

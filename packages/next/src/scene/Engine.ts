@@ -165,6 +165,9 @@ const PREFETCH_AHEAD_SECONDS = 1;
 /** The prefetch frustum's margin (tangent scale) around that view. */
 const PREFETCH_MARGIN = 1.1;
 
+/** Words before the translucent lists' heads (translucent.wgsl `LIST_HEADER`). */
+const LIST_HEADER = 4;
+
 /** A view's camera at its last selection, and its velocity per second. */
 interface ViewMotion {
   at: number;
@@ -353,6 +356,22 @@ export class Engine {
     exposure: number;
     resolvers: Array<(image: HdrImage) => void>;
   }> = [];
+  /**
+   * Translucency's per-pixel lists ("exact", translucent.wgsl), shared by
+   * the views (each clears and fills them in turn): the nodes they hold,
+   * grown when a frame needed more (its count read back, one at a time).
+   */
+  private lists?: GPUBuffer;
+  private listNodes = 0;
+  private listCountPending = false;
+  private readonly listCounts: GPUBuffer[] = [];
+  /** Bound where a translucent pass doesn't read the lists or moments. */
+  private translucentDummies?: {
+    buffer: GPUBuffer;
+    zero: GPUTextureView;
+    higher: GPUTextureView;
+  };
+  private readonly translucentData = new DataView(new ArrayBuffer(32));
   private readonly presentData = new DataView(new ArrayBuffer(48));
   private readonly adaptData = new Float32Array(4);
   /** The eye's local adaptation grid, sampled trilinearly. */
@@ -1724,6 +1743,8 @@ export class Engine {
         world.bundle = view.world.prepareFrame();
       }
       frame.bundle = world.bundle;
+      // After the world's transforms are resolved for the frame.
+      this.writeTranslucency(view);
     }
     device.queue.writeBuffer(
       this.viewStaging,
@@ -1818,6 +1839,17 @@ export class Engine {
         // Nothing but sky: no range.
         range.frame.depthRange =
           far! > 0 && near! <= far! ? { near: near!, far: far! } : undefined;
+      });
+    }
+    for (const readback of this.listCounts.splice(0)) {
+      void readback.mapAsync(GPUMapMode.READ).then(() => {
+        const needed = new Uint32Array(readback.getMappedRange())[0]!;
+        readback.destroy();
+        this.listCountPending = false;
+        // Room for a quarter more than the frame needed (`writeTranslucency`).
+        if (needed > this.listNodes) {
+          this.listNodes = Math.ceil(needed * 1.25);
+        }
       });
     }
     for (const read of this.hdrReads.splice(0)) {
@@ -2029,6 +2061,152 @@ export class Engine {
       this.viewBit(view);
     this.writeShadows(view, index, aspect);
     this.writeLights(view, index, aspect);
+  }
+
+  /**
+   * Whether a view draws blended surfaces this frame, and its translucent
+   * passes' parameters: the lists' layout ("exact", grown to what the last
+   * reading needed) or the moments' depth range.
+   */
+  private writeTranslucency(view: View): void {
+    const frame = this.viewFrames.get(view)!;
+    const range = view.world.translucentRange(view.camera.position);
+    frame.translucent = range !== undefined;
+    if (!range) {
+      return;
+    }
+    const pixels = frame.width * frame.height;
+    let capacity = 0;
+    if (view.translucency === "exact") {
+      const { limits } = this.ctx.device;
+      const heads = (LIST_HEADER + pixels) * 4;
+      const most = Math.floor(
+        (Math.min(limits.maxStorageBufferBindingSize, limits.maxBufferSize) -
+          heads) /
+          16,
+      );
+      // Half a layer a pixel to start; more once a frame needs it.
+      this.listNodes = Math.max(this.listNodes, Math.ceil(pixels / 2));
+      capacity = Math.max(Math.min(this.listNodes, most), 0);
+      const size = heads + capacity * 16;
+      if (!this.lists || this.lists.size < size) {
+        this.lists?.destroy();
+        this.lists = this.ctx.device.createBuffer({
+          label: "translucent.lists",
+          size,
+          usage:
+            GPUBufferUsage.STORAGE |
+            GPUBufferUsage.COPY_SRC |
+            GPUBufferUsage.COPY_DST,
+        });
+      }
+      capacity = Math.floor((this.lists.size - heads) / 16);
+    }
+    // The moments' depths: the blended surfaces' own range (the moments
+    // can't tell apart layers whose warped depths nearly agree: a range
+    // reaching kilometers past a model's centimeters speckled it).
+    const near = Math.max(range.near, view.camera.near, 1e-3);
+    const far = Math.max(range.far, near * 1.01);
+    const d = this.translucentData;
+    d.setUint32(0, frame.width, true);
+    d.setUint32(4, frame.height, true);
+    d.setUint32(8, LIST_HEADER + pixels, true);
+    d.setUint32(12, capacity, true);
+    d.setFloat32(16, Math.log(near), true);
+    d.setFloat32(20, 1 / Math.log(far / near), true);
+    d.setFloat32(24, this.ctx.pipelines.momentBias, true);
+    this.ctx.device.queue.writeBuffer(frame.translucentParams, 0, d.buffer);
+  }
+
+  /** What a translucent pass binds where it reads no lists or moments. */
+  private translucentInputs(): NonNullable<Engine["translucentDummies"]> {
+    if (!this.translucentDummies) {
+      const { device, pipelines } = this.ctx;
+      const texture = (format: GPUTextureFormat) =>
+        device
+          .createTexture({
+            label: "translucent.placeholder",
+            size: [1, 1],
+            format,
+            usage: GPUTextureUsage.TEXTURE_BINDING,
+          })
+          .createView();
+      this.translucentDummies = {
+        buffer: device.createBuffer({
+          label: "translucent.placeholder",
+          size: 16,
+          usage: GPUBufferUsage.STORAGE,
+        }),
+        zero: texture(pipelines.momentFormats[0]),
+        higher: texture(pipelines.momentFormats[1]),
+      };
+    }
+    return this.translucentDummies;
+  }
+
+  /**
+   * A view's translucent pass's group 3 (translucent.wgsl): its parameters
+   * and depth, with the lists and the moments given; kept by role while
+   * they stay the same.
+   */
+  private translucentGroup(
+    frame: ViewFrame,
+    role: number,
+    [lists, zero, higher]: [GPUBuffer, GPUTextureView, GPUTextureView],
+  ): GPUBindGroup {
+    return this.keptGroup(frame, role, [lists, zero, higher], () =>
+      this.ctx.device.createBindGroup({
+        label: "translucent",
+        layout: this.ctx.pipelines.translucentLayout,
+        entries: [
+          { binding: 0, resource: { buffer: frame.translucentParams } },
+          { binding: 1, resource: { buffer: lists } },
+          { binding: 2, resource: frame.depthView },
+          { binding: 3, resource: zero },
+          { binding: 4, resource: higher },
+        ],
+      }),
+    );
+  }
+
+  /** A view's composite's group (composite.wgsl): the lists, or the moments' sums. */
+  private compositeGroup(
+    frame: ViewFrame,
+    role: number,
+    pipeline: GPURenderPipeline,
+    inputs: [GPUBuffer] | [GPUTextureView, GPUTextureView, GPUTextureView],
+  ): GPUBindGroup {
+    return this.keptGroup(frame, role, inputs, () =>
+      this.ctx.device.createBindGroup({
+        label: "composite",
+        layout: pipeline.getBindGroupLayout(0),
+        entries:
+          inputs.length === 1
+            ? [
+                { binding: 0, resource: { buffer: frame.translucentParams } },
+                { binding: 1, resource: { buffer: inputs[0] } },
+              ]
+            : inputs.map((resource, i) => ({
+                binding: 2 + i,
+                resource: resource as GPUTextureView,
+              })),
+      }),
+    );
+  }
+
+  private keptGroup(
+    frame: ViewFrame,
+    role: number,
+    inputs: readonly (GPUBuffer | GPUTextureView)[],
+    create: () => GPUBindGroup,
+  ): GPUBindGroup {
+    const kept = frame.translucentGroups[role];
+    if (kept && kept.inputs.every((input, i) => input === inputs[i])) {
+      return kept.group;
+    }
+    const group = create();
+    frame.translucentGroups[role] = { group, inputs };
+    return group;
   }
 
   /**
@@ -2524,6 +2702,13 @@ export class Engine {
         size: 64,
         usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
       }),
+      translucent: false,
+      translucentParams: device.createBuffer({
+        label: "translucentParams",
+        size: 32,
+        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+      }),
+      translucentGroups: [],
     };
     this.sky.writeWeights(frame.sky);
 
@@ -2779,6 +2964,190 @@ export class Engine {
         if (atmosphere) {
           this.sky.draw(pass, frame.sky, get(starLayer));
         }
+        pass.end();
+      },
+    );
+
+    // Translucency (translucent.wgsl): blended surfaces into per-pixel
+    // lists ("exact"), or their moments and then their weighted light
+    // ("moments"); then composited over the opaque pass's resolved targets
+    // (composite.wgsl), before anything reads them.
+    const momentsZero = graph.createTexture("moments.zero", {
+      width,
+      height,
+      format: pipelines.momentFormats[0],
+      usage: attachment | GPUTextureUsage.TEXTURE_BINDING,
+    });
+    const momentsHigher = graph.createTexture("moments.higher", {
+      width,
+      height,
+      format: pipelines.momentFormats[1],
+      usage: attachment | GPUTextureUsage.TEXTURE_BINDING,
+    });
+    const accumulatedLit = graph.createTexture("translucent.lit", {
+      width,
+      height,
+      format: "rgba16float",
+      usage: attachment | GPUTextureUsage.TEXTURE_BINDING,
+    });
+    const accumulatedUnlit = graph.createTexture("translucent.unlit", {
+      width,
+      height,
+      format: "rgba16float",
+      usage: attachment | GPUTextureUsage.TEXTURE_BINDING,
+    });
+    const cleared = (): GPURenderPassColorAttachment => ({
+      view: undefined as never,
+      clearValue: { r: 0, g: 0, b: 0, a: 0 },
+      loadOp: "clear",
+      storeOp: "store",
+    });
+    const listTarget: GPURenderPassColorAttachment = {
+      view: undefined as never,
+      clearValue: { r: 0, g: 0, b: 0, a: 0 },
+      loadOp: "clear",
+      storeOp: "discard",
+    };
+    const listPass: GPURenderPassDescriptor = {
+      label: "translucent.lists",
+      colorAttachments: [listTarget],
+    };
+    const momentTargets = [cleared(), cleared()];
+    const momentPass: GPURenderPassDescriptor = {
+      label: "translucent.moments",
+      colorAttachments: momentTargets,
+    };
+    const colorTargets = [cleared(), cleared()];
+    const colorPass: GPURenderPassDescriptor = {
+      label: "translucent.color",
+      colorAttachments: colorTargets,
+    };
+    graph.addPass(
+      "translucent",
+      {
+        reads: [depth],
+        writes: [
+          momentsZero,
+          momentsHigher,
+          accumulatedLit,
+          accumulatedUnlit,
+          color,
+        ],
+        sideEffect: true,
+      },
+      (enc, get) => {
+        if (!frame.translucent) {
+          return;
+        }
+        const world = view.world;
+        const dummies = this.translucentInputs();
+        if (view.translucency === "exact") {
+          const lists = this.lists!;
+          enc.clearBuffer(lists, 0, (LIST_HEADER + width * height) * 4);
+          listTarget.view = get(color);
+          listPass.timestampWrites = this.timer.passWrites();
+          const pass = enc.beginRenderPass(listPass);
+          world.encodeTranslucent(
+            pass,
+            pipelines.translucentList,
+            pipelines.translucentListDoubleSided,
+            this.translucentGroup(frame, 0, [
+              lists,
+              dummies.zero,
+              dummies.higher,
+            ]),
+          );
+          pass.end();
+          if (!this.listCountPending) {
+            this.listCountPending = true;
+            const readback = device.createBuffer({
+              label: "translucent.count",
+              size: 4,
+              usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
+            });
+            enc.copyBufferToBuffer(lists, 0, readback, 0, 4);
+            this.listCounts.push(readback);
+          }
+          return;
+        }
+        const zero = get(momentsZero);
+        const higher = get(momentsHigher);
+        momentTargets[0]!.view = zero;
+        momentTargets[1]!.view = higher;
+        momentPass.timestampWrites = this.timer.passWrites();
+        const first = enc.beginRenderPass(momentPass);
+        world.encodeTranslucent(
+          first,
+          pipelines.translucentMoments,
+          pipelines.translucentMomentsDoubleSided,
+          this.translucentGroup(frame, 1, [
+            dummies.buffer,
+            dummies.zero,
+            dummies.higher,
+          ]),
+        );
+        first.end();
+        colorTargets[0]!.view = get(accumulatedLit);
+        colorTargets[1]!.view = get(accumulatedUnlit);
+        colorPass.timestampWrites = this.timer.passWrites();
+        const second = enc.beginRenderPass(colorPass);
+        world.encodeTranslucent(
+          second,
+          pipelines.translucentColor,
+          pipelines.translucentColorDoubleSided,
+          this.translucentGroup(frame, 2, [dummies.buffer, zero, higher]),
+        );
+        second.end();
+      },
+    );
+    const compositeScene: GPURenderPassColorAttachment = {
+      view: undefined as never,
+      loadOp: "load",
+      storeOp: "store",
+    };
+    const compositeDisplay: GPURenderPassColorAttachment = {
+      view: undefined as never,
+      loadOp: "load",
+      storeOp: "store",
+    };
+    const compositePass: GPURenderPassDescriptor = {
+      label: "composite",
+      colorAttachments: [compositeScene, compositeDisplay],
+    };
+    graph.addPass(
+      "composite",
+      {
+        reads: [momentsZero, momentsHigher, accumulatedLit, accumulatedUnlit],
+        writes: [resolved, displayResolved],
+      },
+      (enc, get) => {
+        if (!frame.translucent) {
+          return;
+        }
+        compositeScene.view = get(resolved);
+        compositeDisplay.view = get(displayResolved);
+        compositePass.timestampWrites = this.timer.passWrites();
+        const pass = enc.beginRenderPass(compositePass);
+        if (view.translucency === "exact") {
+          pass.setPipeline(pipelines.compositeExact);
+          pass.setBindGroup(
+            0,
+            this.compositeGroup(frame, 3, pipelines.compositeExact, [
+              this.lists!,
+            ]),
+          );
+        } else {
+          pass.setPipeline(pipelines.compositeMoments);
+          pass.setBindGroup(
+            0,
+            this.compositeGroup(frame, 4, pipelines.compositeMoments, [
+              get(momentsZero),
+              get(accumulatedLit),
+              get(accumulatedUnlit),
+            ]),
+          );
+        }
+        pass.draw(3);
         pass.end();
       },
     );
@@ -3155,6 +3524,7 @@ export class Engine {
       world.destroy();
     }
     this.pool.destroy();
+    this.lists?.destroy();
     this.timer.destroy();
     this.sky.atmosphere.destroy();
     this.sky.destroy();
@@ -3229,6 +3599,18 @@ interface ViewFrame {
   ambient: boolean;
   /** Its kernels' parameters (ao.wgsl `AoParams`). */
   readonly aoParams: GPUBuffer;
+  /** It draws blended surfaces this frame (`writeTranslucency`). */
+  translucent: boolean;
+  /** Their passes' parameters (translucent.wgsl `TranslucentParams`). */
+  readonly translucentParams: GPUBuffer;
+  /**
+   * Bind groups of its translucent passes and composites, by role, with
+   * what they were made for.
+   */
+  readonly translucentGroups: Array<
+    | { group: GPUBindGroup; inputs: readonly (GPUBuffer | GPUTextureView)[] }
+    | undefined
+  >;
 }
 
 interface TargetFrame {
@@ -3273,6 +3655,7 @@ function destroyViewFrame(frame: ViewFrame): void {
   frame.presentParams.destroy();
   frame.adaptParams.destroy();
   frame.aoParams.destroy();
+  frame.translucentParams.destroy();
   frame.sky.buffer.destroy();
   frame.sky.table.destroy();
   frame.sky.faceUniforms.destroy();
