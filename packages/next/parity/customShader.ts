@@ -15,6 +15,9 @@ import {
 } from "../src/index.ts";
 import type { Harness } from "../lab/harness.ts";
 import { flip } from "./flip.ts";
+import twistHeightSlang from "./slang/twistHeight.slang?raw";
+// Built from it with scripts/slangShader.mjs.
+import twistHeightWgsl from "./slang/twistHeight.wgsl?raw";
 
 const TEMPLATE = `
 <h1>Custom shaders</h1>
@@ -24,12 +27,14 @@ const TEMPLATE = `
   (opaque, depth, shadow, ambient occlusion, translucent) compiles from the
   custom module. Stages that change nothing, and a shader that fails to
   compile (the content keeps the default), must match the default exactly;
-  the others must differ. Click a row to see its images.
+  the others must differ. The same stages in Slang, compiled at build time
+  (scripts/slangShader.mjs) and at runtime (the WebAssembly build in a
+  worker), must match their WGSL exactly. Click a row to see its images.
 </p>
 <div class="status">Run to render every case both ways.</div>
 <div class="images">
   <figure>
-    <figcaption>Default</figcaption>
+    <figcaption>Reference (default or WGSL)</figcaption>
     <canvas class="out" data-id="default"></canvas>
   </figure>
   <figure>
@@ -50,14 +55,42 @@ const SITE = fromDegrees(-75.1652, 39.9526, 0);
 
 interface Case {
   name: string;
-  shader: CustomShader;
-  /** Must match the default exactly (else must differ). */
+  /** The shader, or how to make one (runtime Slang). */
+  shader: CustomShader | (() => Promise<CustomShader>);
+  /** Compared with this shader's image; the engine's own without. */
+  against?: CustomShader;
+  /** Must match exactly (else must differ). */
   same: boolean;
   /** Compiling must fail. */
   fails?: boolean;
   /** The boxes blended (alpha 0.5). */
   blended?: boolean;
 }
+
+const HEIGHT_WGSL = `fn fragmentMain(fsInput: FragmentInput, material: ptr<function, MaterialOutput>) {
+  let t = clamp(fsInput.positionMC.z + 0.5, 0.0, 1.0);
+  (*material).baseColor = mix(vec3f(0.1, 0.2, 0.9), vec3f(0.95, 0.3, 0.1), t);
+}`;
+
+const TWIST_WGSL = `fn twist(v: vec3f, a: f32) -> vec3f {
+  let c = cos(a);
+  let s = sin(a);
+  return vec3f(c * v.x - s * v.y, s * v.x + c * v.y, v.z);
+}
+fn vertexMain(vsInput: VertexInput, vsOutput: ptr<function, VertexOutput>) {
+  let a = vsInput.positionMC.z * 1.5;
+  (*vsOutput).positionMC = twist(vsInput.positionMC, a);
+  (*vsOutput).normalMC = twist(vsInput.normalMC, a);
+}`;
+
+/** Twist and height in WGSL: what the Slang versions must draw. */
+const TWIST_HEIGHT = new CustomShader({
+  label: "twist + height (WGSL)",
+  vertex: TWIST_WGSL,
+  fragment: HEIGHT_WGSL,
+});
+
+const SLANG_WASM = "/slang-wasm/slang-wasm.js";
 
 const CASES: Case[] = [
   {
@@ -87,30 +120,36 @@ const CASES: Case[] = [
   {
     name: "fragment: color by height",
     same: false,
-    shader: new CustomShader({
-      label: "height",
-      fragment: `fn fragmentMain(fsInput: FragmentInput, material: ptr<function, MaterialOutput>) {
-  let t = clamp(fsInput.positionMC.z + 0.5, 0.0, 1.0);
-  (*material).baseColor = mix(vec3f(0.1, 0.2, 0.9), vec3f(0.95, 0.3, 0.1), t);
-}`,
-    }),
+    shader: new CustomShader({ label: "height", fragment: HEIGHT_WGSL }),
   },
   {
     name: "vertex: twist about up",
     same: false,
+    shader: new CustomShader({ label: "twist", vertex: TWIST_WGSL }),
+  },
+  {
+    name: "twist + height (WGSL)",
+    same: false,
+    shader: TWIST_HEIGHT,
+  },
+  {
+    name: "Slang, build time (vs WGSL)",
+    same: true,
+    against: TWIST_HEIGHT,
     shader: new CustomShader({
-      label: "twist",
-      vertex: `fn twist(v: vec3f, a: f32) -> vec3f {
-  let c = cos(a);
-  let s = sin(a);
-  return vec3f(c * v.x - s * v.y, s * v.x + c * v.y, v.z);
-}
-fn vertexMain(vsInput: VertexInput, vsOutput: ptr<function, VertexOutput>) {
-  let a = vsInput.positionMC.z * 1.5;
-  (*vsOutput).positionMC = twist(vsInput.positionMC, a);
-  (*vsOutput).normalMC = twist(vsInput.normalMC, a);
-}`,
+      label: "twist + height (slangc)",
+      wgsl: twistHeightWgsl,
     }),
+  },
+  {
+    name: "Slang, runtime (vs WGSL)",
+    same: true,
+    against: TWIST_HEIGHT,
+    shader: () =>
+      CustomShader.fromSlang(twistHeightSlang, {
+        label: "twist + height (slang-wasm)",
+        slangUrl: SLANG_WASM,
+      }),
   },
   {
     name: "fragment: unlit red",
@@ -242,10 +281,11 @@ interface Row {
   expected: string;
   compiled: string;
   flipMean: number;
-  pass: boolean;
+  pass: boolean | "skipped";
 }
 
-let lastImages: { default: ImageData; custom: ImageData }[] = [];
+/** Each row's images (none for a skipped one). */
+let lastImages: ({ default: ImageData; custom: ImageData } | undefined)[] = [];
 
 async function runCustomShader(): Promise<Row[]> {
   const status = root.querySelector(".status")!;
@@ -271,21 +311,40 @@ async function runCustomShader(): Promise<Row[]> {
   }
   const rows: Row[] = [];
   lastImages = [];
+  // Runtime Slang needs the WebAssembly build served (SLANG_WASM_DIR).
+  const slangServed = (
+    await fetch(SLANG_WASM.replace(/\.js$/, ".wasm"), { method: "HEAD" })
+  ).ok;
   for (const c of CASES) {
     status.textContent = `${c.name}…`;
+    const against = c.against ? ` vs ${c.against.label}` : "";
+    if (typeof c.shader === "function" && !slangServed) {
+      rows.push({
+        case: c.name,
+        expected: `same${against}`,
+        compiled: "skipped: slang-wasm not served (SLANG_WASM_DIR)",
+        flipMean: 0,
+        pass: "skipped",
+      });
+      lastImages.push(undefined);
+      renderTable(rows);
+      continue;
+    }
     let compiled = "yes";
+    let shader: CustomShader | undefined;
     try {
-      await engine.compileShader(c.shader);
+      shader = typeof c.shader === "function" ? await c.shader() : c.shader;
+      await engine.compileShader(shader);
     } catch (error) {
       compiled = `failed: ${error instanceof Error ? error.message : String(error)}`;
     }
-    const base = await render(engine, target, c, undefined);
-    const custom = await render(engine, target, c, c.shader);
+    const base = await render(engine, target, c, c.against);
+    const custom = await render(engine, target, c, shader);
     const f = flip(base.data, custom.data, WIDTH, HEIGHT);
     const failed = compiled !== "yes";
     rows.push({
       case: c.name,
-      expected: c.same ? "same" : "differs",
+      expected: `${c.same ? "same" : "differs"}${against}`,
       compiled,
       flipMean: f.mean,
       pass:
@@ -295,11 +354,12 @@ async function runCustomShader(): Promise<Row[]> {
     lastImages.push({ default: base, custom });
     renderTable(rows);
   }
-  if (lastImages.length) {
-    showImages(lastImages[0]!);
+  if (lastImages[0]) {
+    showImages(lastImages[0]);
   }
-  const passed = rows.filter((r) => r.pass).length;
-  status.textContent = `Done: ${passed} of ${rows.length} pass.`;
+  const passed = rows.filter((r) => r.pass === true).length;
+  const skipped = rows.filter((r) => r.pass === "skipped").length;
+  status.textContent = `Done: ${passed} of ${rows.length - skipped} pass${skipped ? `, ${skipped} skipped` : ""}.`;
   target.destroy();
   engine.destroy();
   return rows;
@@ -316,17 +376,22 @@ function showImages(images: { default: ImageData; custom: ImageData }): void {
 
 function renderTable(rows: Row[]): void {
   const table = $("results");
-  table.innerHTML = `<tr><th>Case</th><th>Expected</th><th>Compiled</th><th>FLIP mean vs default</th><th>Pass</th></tr>${rows
+  const outcome = (pass: Row["pass"]) =>
+    pass === "skipped" ? "skipped" : pass ? "yes" : "NO";
+  table.innerHTML = `<tr><th>Case</th><th>Expected</th><th>Compiled</th><th>FLIP mean</th><th>Pass</th></tr>${rows
     .map(
       (r, i) =>
-        `<tr class="row" data-index="${i}"><td>${r.case}</td><td>${r.expected}</td><td>${r.compiled}</td><td>${r.flipMean.toFixed(4)}</td><td>${r.pass ? "yes" : "NO"}</td></tr>`,
+        `<tr class="row" data-index="${i}"><td>${r.case}</td><td>${r.expected}</td><td>${r.compiled}</td><td>${r.flipMean.toFixed(4)}</td><td>${outcome(r.pass)}</td></tr>`,
     )
     .join("")}`;
   table.querySelectorAll<HTMLTableRowElement>("tr.row").forEach((tr) =>
     tr.addEventListener("click", () => {
       table.querySelector("tr.selected")?.classList.remove("selected");
       tr.classList.add("selected");
-      showImages(lastImages[Number(tr.dataset.index)]!);
+      const images = lastImages[Number(tr.dataset.index)];
+      if (images) {
+        showImages(images);
+      }
     }),
   );
 }

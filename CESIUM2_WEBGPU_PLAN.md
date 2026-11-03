@@ -2438,6 +2438,32 @@ whole ice sheet.
   properties on the GPU); changing a tileset's shader after load; a custom
   alpha doesn't reach the depth pass's alpha-to-coverage cutout.
 
+**Increment 2 (r46): Slang stages, at build time and at runtime
+(foundations 5 and 6).**
+
+- The `cesium` Slang module (shaders/cesium.slang, version 1) mirrors the
+  contract's four structs; a shader `import cesium;` and defines
+  `vertexMain`, `fragmentMain` or both, as in WGSL. The engine's shaders
+  stay WGSL: only the user's stages go through Slang. Slang emits
+  functions only from an entry point, so a generated stub fragment entry
+  point calls the stages; Slang keeps them as functions (`vertexMain_0`)
+  with renamed copies of the structs, fields in declaration order, and
+  slangStages.ts appends the contract's functions, converting by
+  position (the stub's entry point stays, unused).
+- Build time (recommended): `npm run slang -- stages.slang` (SLANGC,
+  scripts/slangShader.mjs) writes WGSL for `CustomShader({ wgsl })`.
+  Runtime: `CustomShader.fromSlang(source)` compiles in one worker that
+  loads the Slang WebAssembly build on first use (`slangUrl`). Errors
+  come back with Slang's lines in the user's source.
+- The harness's twist and color-by-height in Slang, both ways, draw
+  exactly what the WGSL draws (FLIP 0, shadows and AO on); runtime is
+  skipped where slang-wasm isn't served. Runtime cost: 0.5 s cold (worker
+  and WebAssembly), 52 ms warm; the main thread's longest gap meanwhile
+  19 ms.
+- Remaining for the exit: a Slang shader on a tileset (the option exists;
+  not yet shown with real content), frame times while a new shader's 19
+  pipelines compile, and the batching cost per extra material type.
+
 ### Real-time tracks (after Custom shading)
 
 - §13.11: track collections as instance data with a bulk update API,

@@ -15,7 +15,8 @@
     "typecheck": "tsc -p . --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "bench": "node bench/run.mjs"
+    "bench": "node bench/run.mjs",
+    "slang": "node scripts/slangShader.mjs"
   },
   "dependencies": {
     "@emotion/react": "11.14.0",

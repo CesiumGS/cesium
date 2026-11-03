@@ -121,31 +121,25 @@ export class WorkerPool {
 
 let script: string | undefined;
 
-/**
- * Where workers start. Browsers start a worker only from the page's own
- * origin, so with the library served from another one (a CDN) workers
- * start from a same-origin blob that imports the real script (which then
- * needs CORS, as the library's other files do); its own imports and wasm
- * resolve against its real URL.
- */
 function workerScript(): string {
-  if (script === undefined) {
-    const url = new URL(workerUrl, import.meta.url);
-    const origin = globalThis.location?.origin;
-    script =
-      origin === undefined || url.origin === origin
-        ? url.href
-        : URL.createObjectURL(
-            new Blob(
-              [
-                `import ${JSON.stringify(url.href)};
-`,
-              ],
-              {
-                type: "text/javascript",
-              },
-            ),
-          );
-  }
+  script ??= workerStart(new URL(workerUrl, import.meta.url));
   return script;
+}
+
+/**
+ * Where a worker at `url` starts. Browsers start a worker only from the
+ * page's own origin, so with the library served from another one (a CDN)
+ * workers start from a same-origin blob that imports the real script
+ * (which then needs CORS, as the library's other files do); its own
+ * imports and wasm resolve against its real URL.
+ */
+export function workerStart(url: URL): string {
+  const origin = globalThis.location?.origin;
+  return origin === undefined || url.origin === origin
+    ? url.href
+    : URL.createObjectURL(
+        new Blob([`import ${JSON.stringify(url.href)};\n`], {
+          type: "text/javascript",
+        }),
+      );
 }

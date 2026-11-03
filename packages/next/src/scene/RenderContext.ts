@@ -975,9 +975,11 @@ async function createPipelines(
     if (errors.length > 0) {
       const offset = base.split("\n").length;
       const where = (line: number) =>
-        line <= vertexLines
-          ? `vertex line ${line}`
-          : `fragment line ${line - vertexLines}`;
+        vertexLines === undefined
+          ? `line ${line}`
+          : line <= vertexLines
+            ? `vertex line ${line}`
+            : `fragment line ${line - vertexLines}`;
       throw new Error(
         `${label}: ${errors
           .map((m) =>
