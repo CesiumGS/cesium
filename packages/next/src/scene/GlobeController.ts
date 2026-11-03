@@ -80,7 +80,8 @@ export class GlobeController {
    */
   inputs = 0;
 
-  private mode: "none" | "grab" | "spin" | "zoom" | "tilt" | "look" = "none";
+  /** `sky`: a drag begun off the globe, which moves nothing. */
+  private mode: "none" | "grab" | "sky" | "zoom" | "tilt" | "look" = "none";
   private lastX = 0;
   private lastY = 0;
   /** Point held under the cursor while grabbing, or the zoom/tilt pivot. */
@@ -185,7 +186,9 @@ export class GlobeController {
       }
     } else {
       this.anchorAt(x, y);
-      this.mode = this.hasAnchor ? "grab" : "spin";
+      // Off the globe nothing turns, unless the pick finds something drawn
+      // there (terrain seen from below the ellipsoid, content above it).
+      this.mode = this.hasAnchor ? "grab" : "sky";
     }
   }
 
@@ -205,15 +208,8 @@ export class GlobeController {
     const height = this.view.pixelRect().height;
     switch (this.mode) {
       case "grab":
-        this.grab(x, y, dt);
+        this.grab(x, y, dx / height, dy / height, dt);
         break;
-      case "spin": {
-        // Over the sky: turn the globe about its axis and the view's right.
-        const angle = (dx / height) * Math.PI;
-        this.rotateGlobe(v3.vec3(0, 0, 1), -angle);
-        this.rotateGlobe(this.view.camera.right, (dy / height) * Math.PI);
-        break;
-      }
       case "zoom":
         this.zoomToward(this.anchor, (dy / height) * 4, this.zoomPixel);
         break;
@@ -286,14 +282,53 @@ export class GlobeController {
 
   // ------------------------------------------------------------- motions
 
-  /** Turns the globe so the anchor stays under (x, y). */
-  private grab(x: number, y: number, dt: number): void {
-    const turn = this.pin(this.anchor, x, y);
+  /**
+   * Turns the globe so the anchor stays under (x, y). Off the globe it
+   * keeps turning by the cursor's motion (as a drag over the sky does; it
+   * stopped dead at the limb), and grabs what is under the cursor again
+   * when it comes back on.
+   */
+  private grab(x: number, y: number, dx: number, dy: number, dt: number): void {
+    const camera = this.view.camera;
+    const hit = raySphere(
+      camera.position,
+      this.ray(x, y),
+      v3.length(this.anchor),
+    );
+    if (hit && this.offGlobe) {
+      // A pick from the drag's start would now pull the globe back.
+      this.anchoring++;
+      v3.copy(this.anchor, hit);
+      this.offGlobe = false;
+      return;
+    }
+    let turn: { axis: Vec3; angle: number } | undefined;
+    if (hit) {
+      turn = this.pin(this.anchor, x, y);
+    } else {
+      this.offGlobe = true;
+      // About the Earth's axis for across, the view's right for up and
+      // down, as one turn so the glide after release carries on with it.
+      const axis = v3.scale(v3.vec3(), v3.vec3(0, 0, 1), -dx);
+      v3.scaleAndAdd(axis, axis, camera.right, dy);
+      const angle = v3.length(axis) * Math.PI;
+      if (angle < 1e-12) {
+        return;
+      }
+      v3.scale(axis, axis, 1 / v3.length(axis));
+      this.rotateGlobe(axis, angle);
+      turn = { axis, angle };
+    }
     if (turn) {
       v3.copy(this.spinAxis, turn.axis);
       this.spinRate = turn.angle / (dt / (1000 / 60));
     }
   }
+
+  /** A grab's cursor left the globe (`grab`). */
+  private offGlobe = false;
+  /** Each anchor set: a late pick for an older one is dropped. */
+  private anchoring = 0;
 
   /**
    * Turns the globe about its center so `point` lies under (x, y): where
@@ -444,12 +479,24 @@ export class GlobeController {
       return;
     }
     const right = v3.cross(v3.vec3(), camera.direction, up);
-    if (v3.length(right) < 1e-6) {
-      // Straight down: keep the heading the camera's right gives.
+    if (v3.length(right) < STEEP) {
+      // Nearly straight down (or up): the cross product of two almost
+      // parallel vectors points wherever the small tilt left is. A turn
+      // about the Earth's center leaves the camera up to 0.2° off the
+      // geodetic normal (the ellipsoid's flattening), in no relation to its
+      // heading: leveling with that spun the camera about its view direction
+      // every frame of a glide. Keep the heading the camera's right gives,
+      // made horizontal and across the view direction.
       v3.scaleAndAdd(right, camera.right, up, -v3.dot(camera.right, up));
       if (v3.length(right) < 1e-6) {
         return;
       }
+      v3.scaleAndAdd(
+        right,
+        right,
+        camera.direction,
+        -v3.dot(right, camera.direction),
+      );
     }
     v3.normalize(camera.right, right);
     v3.normalize(
@@ -613,11 +660,16 @@ export class GlobeController {
    */
   private anchorAt(x: number, y: number): void {
     this.hasAnchor = this.ellipsoidAt(x, y, this.anchor) !== undefined;
+    this.offGlobe = false;
+    const anchoring = ++this.anchoring;
     const r = this.view.pixelRect();
     void this.view.pickPosition(x - r.x, y - r.y).then((p) => {
-      if (p && this.mode !== "none" && this.mode !== "spin") {
+      if (p && anchoring === this.anchoring && this.mode !== "none") {
         v3.copy(this.anchor, p);
         this.hasAnchor = true;
+        if (this.mode === "sky") {
+          this.mode = "grab";
+        }
       }
     });
   }
@@ -734,6 +786,12 @@ function rodrigues(v: Vec3, k: Vec3, angle: number): void {
     v[i] = v[i]! * c + kv[i]! * s + k[i]! * kdv * (1 - c);
   }
 }
+
+/**
+ * How far from straight down `level` trusts the view direction for the
+ * horizon (the sine of 3°): steeper, it keeps the camera's own heading.
+ */
+const STEEP = 0.05;
 
 /** Nearest intersection of a ray with a sphere about the Earth's center. */
 function raySphere(

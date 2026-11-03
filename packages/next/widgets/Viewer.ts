@@ -576,6 +576,8 @@ export class Viewer {
    * A model frames where it stands (`bounds`); clamped and still settling
    * on the ground, it frames again once it has (`Clamp.whenSettled`),
    * unless something else was framed or someone moved the camera since.
+   * Planet-scale content frames the whole globe, north up, from above the
+   * ground under the camera.
    */
   zoomTo(target: ZoomTarget, heading = 35 * deg, pitch = -30 * deg): void {
     const token = ++this.zoomToken;
@@ -624,7 +626,25 @@ export class Viewer {
     } else {
       sphere = target;
     }
-    this.frame(Float64Array.from(sphere.center), sphere.radius, heading, pitch);
+    const center = Float64Array.from(sphere.center);
+    if (vec3.length(center) < 0.1 * ellipsoid.minimumRadius) {
+      // Planet-scale content (OSM Buildings' root is the whole globe) is
+      // centered near the Earth's center, where east-north-up is the
+      // direction of a small offset: the camera went below a pole, upside
+      // down, orbiting a point thousands of kilometers underground. Frame
+      // the globe instead from straight above the ground under the camera,
+      // north up, orbiting that ground point.
+      const ground = ellipsoid.scaleToGeodeticSurface(
+        this.view.camera.position,
+        vec3.vec3(),
+      );
+      if (ground) {
+        const range = sphere.radius * 2.6 - vec3.length(ground);
+        this.frame(ground, Math.max(range, 1) / 2.6, 0, -Math.PI / 2 + 1e-4);
+        return;
+      }
+    }
+    this.frame(center, sphere.radius, heading, pitch);
   }
 
   /** Points both cameras at a sphere (the split view's from the other side). */
