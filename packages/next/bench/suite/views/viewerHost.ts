@@ -24,6 +24,7 @@ import {
   type World,
   type AerosolType,
   type ToneMapping,
+  type Translucency,
 } from "../../../src/index.ts";
 import ionSource from "../../../../engine/Source/Core/Ion.js?raw";
 import {
@@ -189,6 +190,8 @@ export interface Lighting {
   encoding: "srgb" | "gamma2.2";
   /** How exposed light becomes display color (1.x: no AgX, PBR Neutral). */
   toneMapping: ToneMapping;
+  /** 2.0: how blended surfaces are put in order (moments, or exact lists). */
+  translucency: Translucency;
 }
 
 /** The settings an engine supports; the page explains the others. */
@@ -489,6 +492,7 @@ export class NextViewerHost implements ViewerHost {
             : { ev100: lighting.ev100 };
       view.outputEncoding = lighting.encoding;
       view.toneMapping = lighting.toneMapping;
+      view.translucency = lighting.translucency;
     }
     viewer.engine.requestRender();
   }
@@ -634,6 +638,7 @@ export class LegacyViewerHost implements ViewerHost {
     split: "1.x draws one view per canvas",
     overview: "1.x draws one view per canvas",
     encoding: "1.x encodes output with gamma 2.2 only",
+    translucency: "1.x has its own weighted, blended OIT only",
     city: "the synthetic city is built with 2.0's API",
   };
   private viewer: Json;

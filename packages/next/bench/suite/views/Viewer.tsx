@@ -116,6 +116,7 @@ const LIGHTING_DEFAULTS: Lighting = {
   autoExposure: false,
   encoding: "srgb",
   toneMapping: "pbrNeutral",
+  translucency: "moments",
 };
 
 const TOKEN_KEY = "viewer.ionToken";
@@ -500,9 +501,23 @@ export function Viewer() {
                   light("toneMapping", v as Lighting["toneMapping"])
                 }
               />
+              <Choice
+                label="Translucency"
+                value={lighting.translucency}
+                minWidth={0}
+                disabled={!!unsupported.translucency}
+                options={[
+                  ["moments", "Moments (MBOIT)"],
+                  ["exact", "Exact (per-pixel lists)"],
+                ]}
+                onChange={(v) =>
+                  light("translucency", v as Lighting["translucency"])
+                }
+              />
               <NotHere
                 reasons={[
                   unsupported.encoding,
+                  unsupported.translucency,
                   unsupported.split,
                   unsupported.overview,
                 ]}
