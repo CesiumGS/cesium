@@ -860,6 +860,40 @@ scattering reference (Heitz et al. 2016), a follow-up. The procedural
 sky's darker band below the horizon is now an explicit `belowHorizon`
 option (default unchanged), so a furnace can be uniform.
 
+**Physical units, the default** (r40). Light is in photometric units: the
+sun's illuminance in lux (`ViewLighting.sunIlluminance`, default 100 klx
+until the atmosphere supplies it), the sky in cd/m² (the procedural
+gradient scaled to about 13 klx diffuse horizontal until the atmosphere
+replaces it), and views expose with a camera: `exposure: { ev100: 15 }` by
+default, `{ scale }` for unitless scenes, or `{ auto: true }` (a meter over
+a 64 × 64 grid of the HDR image, reflected-light constant K = 12.5,
+adaptation per second, background left out; the first reading is taken as
+is). Shading pre-exposes (light × exposure is written, so fp16 neither
+overflows at noon nor quantizes at night); present only tonemaps; glTF
+emission is display-relative (added after exposure) until emission gets
+units; `View.readHdr` returns cd/m². Checked: a ground patch of albedo 0.3
+under the overhead sun reads 10,835 cd/m² (predicted 10,800 with the
+sky), automatic exposure settles at EV100 16.4 (the meter's value, an
+exposed mean of 0.104) and eases to 13.4 in about 2.5 s when the sun sets.
+Everything compared with 1.x frame for frame stays in 1.x's unitless terms
+(`UNITLESS_EXPOSURE`, `UNITLESS_SUN_ILLUMINANCE`, `UNITLESS_SKY`): the
+parity harnesses (image, models, tilesets, imagery, globe: bit-identical
+results) and the benchmark suite's 2.0 adapter (filmstrip FLIP against
+1.147.0 unchanged). Dyno's Viewer keeps its 1.x-style sliders, mapped to
+physical units for 2.0 (sun 2 is 100 klx, exposure 1 is EV100 15).
+
+**Regressions fixed on the way** (r40): wheel zoom slid sideways in split
+view (zoom leveled the camera after pinning the target under the cursor;
+from b9166e4adf), and the inspector's load time never ended under
+photorealistic tiles (it waited for the hidden globe).
+
+**Next phase after lighting: visual regression tests.** Golden images
+for canonical scenes and lab pages (2.0 against its own approved images,
+separate from parity with 1.x), FLIP-thresholded, run with the lab runner
+and on demand from Dyno, with approving a new golden as an explicit step.
+Both regressions above would have been caught by a scripted interaction
+(zoom toward a point in split view) plus an image or numeric check.
+
 Decided (r40):
 
 - **Exposure**: a fixed daylight EV100 by default (about 15, the "sunny 16"
