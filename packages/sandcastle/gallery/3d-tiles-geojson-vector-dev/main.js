@@ -148,8 +148,13 @@ async function loadTileset(vectorGeoJson) {
 }
 
 await loadTileset(true);
+const [centerLongitude, centerLatitude] = toDegrees([4, 1.5]);
 viewer.camera.setView({
-  destination: Cesium.Cartesian3.fromDegrees(...toDegrees([4, 1.5]), 1200),
+  destination: Cesium.Cartesian3.fromDegrees(
+    centerLongitude,
+    centerLatitude,
+    1200,
+  ),
 });
 
 Sandcastle.addToggleButton("vectorGeoJson", true, function (checked) {
@@ -170,10 +175,7 @@ handler.setInputAction(function (movement) {
   }
 
   const picked = scene.pick(movement.position);
-  if (
-    !(picked instanceof Cesium.Cesium3DTileFeature) &&
-    !(picked instanceof Cesium.Cesium3DTileVectorFeature)
-  ) {
+  if (!Cesium.defined(picked) || typeof picked.getProperty !== "function") {
     info.textContent = "Click a feature";
     return;
   }
