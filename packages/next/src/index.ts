@@ -137,3 +137,14 @@ export {
   UNITLESS_SKY,
   type SkyOptions,
 } from "./gpu/Environment.ts";
+
+// Time: the scene's clock and the sun's position from it (plan §13.13).
+export { Clock, type ClockMode } from "./time/Clock.ts";
+export {
+  greenwichSiderealTime,
+  julianDate,
+  sunDirection,
+  sunElevation,
+  sunTimes,
+  type SunTimes,
+} from "./time/sun.ts";

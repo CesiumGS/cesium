@@ -93,6 +93,7 @@ const VIEW_DEFAULTS: ViewSettings = {
 // Each engine's own terms: 1.x's unitless sun (2) and exposure (1); 2.0's
 // physical ones, a high sun (100 klx) and a daylight camera (EV100 15).
 const LIGHTING_DEFAULTS: Lighting = {
+  sunFromTime: true,
   azimuth: 150,
   elevation: 40,
   intensity: 2,
@@ -280,6 +281,13 @@ export function Viewer() {
 
   useEffect(() => host?.setView(view), [host, view]);
   useEffect(() => host?.setLighting(lighting), [host, lighting]);
+  // The time controls' night action: open the camera up.
+  useEffect(() => {
+    if (host instanceof NextViewerHost) {
+      host.onNight = () =>
+        setLighting({ ...lightingRef.current, autoExposure: true });
+    }
+  }, [host, setLighting]);
 
   // The inspector over the viewport, and picking on a click (not a drag).
   useEffect(() => {
@@ -485,22 +493,33 @@ export function Viewer() {
               />
             </Group>
             <Group title="Lighting">
-              <Range
-                label="Sun azimuth"
-                value={lighting.azimuth}
-                min={0}
-                max={360}
-                text={`${lighting.azimuth}°`}
-                onChange={(v) => light("azimuth", v)}
-              />
-              <Range
-                label="Sun elevation"
-                value={lighting.elevation}
-                min={-10}
-                max={90}
-                text={`${lighting.elevation}°`}
-                onChange={(v) => light("elevation", v)}
-              />
+              {engine === "2.0" && (
+                <Setting
+                  label="Sun from date and time"
+                  checked={lighting.sunFromTime}
+                  onChange={(v) => light("sunFromTime", v)}
+                />
+              )}
+              {(engine !== "2.0" || !lighting.sunFromTime) && (
+                <>
+                  <Range
+                    label="Sun azimuth"
+                    value={lighting.azimuth}
+                    min={0}
+                    max={360}
+                    text={`${lighting.azimuth}°`}
+                    onChange={(v) => light("azimuth", v)}
+                  />
+                  <Range
+                    label="Sun elevation"
+                    value={lighting.elevation}
+                    min={-10}
+                    max={90}
+                    text={`${lighting.elevation}°`}
+                    onChange={(v) => light("elevation", v)}
+                  />
+                </>
+              )}
               {engine === "2.0" ? (
                 <>
                   <Setting

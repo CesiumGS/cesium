@@ -12,6 +12,11 @@ export {
   type ZoomTarget,
 } from "./Viewer.ts";
 export {
+  attachTimeControls,
+  type TimeControlsHandle,
+  type TimeControlsOptions,
+} from "./timeControls.ts";
+export {
   attachCredits,
   type CreditSource,
   type CreditsHandle,

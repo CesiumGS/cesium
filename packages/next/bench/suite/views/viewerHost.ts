@@ -142,7 +142,9 @@ export interface ViewSettings {
 }
 
 export interface Lighting {
-  /** Sun azimuth and elevation, degrees, at the content. */
+  /** 2.0: the sun from the viewer's clock (the time controls). */
+  sunFromTime: boolean;
+  /** Sun azimuth and elevation, degrees, at the content (otherwise). */
   azimuth: number;
   elevation: number;
   /** 1.x: the sun's intensity, unitless (1.x's default 2). */
@@ -223,6 +225,8 @@ const message = (error: unknown) =>
 export class NextViewerHost implements ViewerHost {
   readonly unsupported = {};
   private constructor(readonly viewer: Viewer) {}
+  /** The time controls' night action (the page turns on auto exposure). */
+  onNight?: () => void;
   private settings?: ViewSettings;
   private loadToken = 0;
   /** The content shown (a tileset, model or the city), removed on switch. */
@@ -235,12 +239,18 @@ export class NextViewerHost implements ViewerHost {
     element: HTMLElement,
     settings: ViewSettings,
   ): Promise<NextViewerHost> {
+    // The host is made after the viewer; its night action is looked up late.
+    const made: { host?: NextViewerHost } = {};
     const viewer = await Viewer.create(element, {
       globe: settings.terrain ? "terrain" : "ellipsoid",
       policy: settings.policy,
       renderMode: settings.continuous ? "continuous" : "onDemand",
+      timeControls: {
+        nightActionLabel: "Automatic exposure",
+        onNight: () => made.host?.onNight?.(),
+      },
     });
-    const host = new NextViewerHost(viewer);
+    const host = (made.host = new NextViewerHost(viewer));
     host.settings = settings;
     viewer.ready.catch((error) =>
       host.warnings.add(`globe: ${message(error)}`),
@@ -411,7 +421,11 @@ export class NextViewerHost implements ViewerHost {
 
   setLighting(lighting: Lighting): void {
     const { viewer } = this;
-    viewer.setSun(lighting.azimuth, lighting.elevation);
+    if (lighting.sunFromTime) {
+      viewer.sunFromClock = true;
+    } else {
+      viewer.setSun(lighting.azimuth, lighting.elevation);
+    }
     for (const view of viewer.views) {
       // 2.0 lights in physical units (lux, EV100).
       view.lighting.sunIlluminance = lighting.sunFromAtmosphere

@@ -11,10 +11,14 @@
  *   const viewer = await Viewer.create(container);
  *   const tileset = await viewer.addTileset({ ion: 96188 });
  *   viewer.zoomTo({ longitude: -75.16, latitude: 39.95, range: 1500 });
+ *
+ * The sun follows the viewer's clock (`viewer.clock`), set with the time
+ * controls over the view; `setSun` places it by hand instead.
  */
 import {
   BingImagery,
   CanvasTarget,
+  Clock,
   Ellipsoid,
   Engine,
   GlobeController,
@@ -22,6 +26,7 @@ import {
   fromDegrees,
   mat4,
   resolveIonAsset,
+  sunDirection,
   vec3,
   type GltfAsset,
   type ImageryProvider,
@@ -43,6 +48,11 @@ import {
   type InspectorHandle,
   type InspectorOptions,
 } from "./inspector.ts";
+import {
+  attachTimeControls,
+  type TimeControlsHandle,
+  type TimeControlsOptions,
+} from "./timeControls.ts";
 
 export type GlobeKind = "ellipsoid" | "terrain" | false;
 
@@ -67,6 +77,13 @@ export interface ViewerOptions {
   inspector?: boolean | InspectorOptions;
   /** ion access token for terrain, imagery and ion tilesets. */
   accessToken?: string;
+  /**
+   * The scene's clock (default: a new one, paused; the first framing sets
+   * it to 10:30 local solar time today at what is framed).
+   */
+  clock?: Clock;
+  /** Show the time controls over the view (default true). */
+  timeControls?: boolean | Omit<TimeControlsOptions, "place">;
 }
 
 /** A tileset by URL, or an ion asset. */
@@ -118,6 +135,12 @@ export class Viewer {
   private overviewLink?: ViewLink;
   private readonly focusCenter = vec3.vec3();
   private sun?: { azimuth: number; elevation: number };
+  /** The scene's time: the sun follows it unless placed by `setSun`. */
+  readonly clock: Clock;
+  private sunFromClock_ = true;
+  /** The clock was given or has been set to the first framing's morning. */
+  private clockPlaced: boolean;
+  private time_?: TimeControlsHandle;
   /** Each `zoomTo`, so a late correction knows whether it still applies. */
   private zoomToken = 0;
   private credits_?: CreditsHandle;
@@ -170,6 +193,22 @@ export class Viewer {
     if (options.credits !== false) {
       this.credits_ = attachCredits(container, () => this.credits());
     }
+    this.clockPlaced = options.clock !== undefined;
+    this.clock = options.clock ?? new Clock({ mode: "paused" });
+    this.clock.events.on("change", () => {
+      if (this.sunFromClock_) {
+        this.applyClockSun();
+      }
+    });
+    if (options.timeControls !== false) {
+      this.time_ = attachTimeControls(container, this.clock, {
+        ...(options.timeControls === true || !options.timeControls
+          ? {}
+          : options.timeControls),
+        place: () => this.place(),
+      });
+    }
+    this.applyClockSun();
     if (options.inspector) {
       this.inspector = attachInspector(
         container,
@@ -185,6 +224,7 @@ export class Viewer {
       }
       this.controller.update();
       this.secondController?.update();
+      this.clock.tick(performance.now());
       this.frameRequest = requestAnimationFrame(tick);
     };
     this.frameRequest = requestAnimationFrame(tick);
@@ -458,13 +498,66 @@ export class Viewer {
         range * 0.4,
       );
     }
-    if (this.sun) {
+    if (this.sunFromClock_) {
+      if (!this.clockPlaced) {
+        // A first look in daylight: 10:30 local solar time today there.
+        this.clockPlaced = true;
+        const place = this.place();
+        const offset = place ? (place.longitude / Math.PI) * 12 * 3_600_000 : 0;
+        const day = 86_400_000;
+        const start = Math.floor((Date.now() + offset) / day) * day - offset;
+        this.clock.time = start + 10.5 * 3_600_000;
+      }
+      this.applyClockSun();
+      this.time_?.update();
+    } else if (this.sun) {
       this.setSun(this.sun.azimuth, this.sun.elevation);
     }
   }
 
-  /** The sun by azimuth and elevation (degrees) at what is framed. */
+  /**
+   * The sun follows the clock (default), or stays where `setSun` put it.
+   * The time controls show while it follows the clock.
+   */
+  get sunFromClock(): boolean {
+    return this.sunFromClock_;
+  }
+
+  set sunFromClock(on: boolean) {
+    this.sunFromClock_ = on;
+    this.time_?.show(on);
+    if (on) {
+      this.applyClockSun();
+    }
+  }
+
+  /** The sun's direction at the clock's time. */
+  private applyClockSun(): void {
+    sunDirection(this.clock.time, this.engine.sunDirection);
+    this.engine.requestRender();
+  }
+
+  /** What the time is about: what is framed, else below the camera. */
+  private place(): { longitude: number; latitude: number } | undefined {
+    const at =
+      vec3.length(this.focusCenter) > 0
+        ? this.focusCenter
+        : this.view.camera.position;
+    const c = ellipsoid.cartesianToCartographic(at, {
+      longitude: 0,
+      latitude: 0,
+      height: 0,
+    });
+    return c ? { longitude: c.longitude, latitude: c.latitude } : undefined;
+  }
+
+  /**
+   * The sun by azimuth and elevation (degrees) at what is framed, instead
+   * of from the clock (`sunFromClock` turns the clock back on).
+   */
   setSun(azimuth: number, elevation: number): void {
+    this.sunFromClock_ = false;
+    this.time_?.show(false);
     this.sun = { azimuth, elevation };
     const enu = eastNorthUpToFixedFrame(
       this.focusCenter,
@@ -633,6 +726,7 @@ export class Viewer {
     cancelAnimationFrame(this.frameRequest);
     this.credits_?.dispose();
     this.inspector?.dispose();
+    this.time_?.dispose();
     this.secondController?.dispose();
     this.controller.dispose();
     this.engine.destroy();
