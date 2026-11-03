@@ -8,6 +8,10 @@
 
 - Added experimental `Cesium3DTileset` option `vectorGeoJson`, which loads `MAXAR_content_geojson` tile content as vector primitives with filled polygons, instead of as a model. [#14007](https://github.com/CesiumGS/cesium/pull/14007)
 
+#### Fixes :wrench:
+
+- Fixed picking for clamped vector tilesets and `GeoJsonPrimitive` polylines and polygons. [#13917](https://github.com/CesiumGS/cesium/pull/13917)
+
 ## 1.147 - 2026-11-02
 
 ### @cesium/core

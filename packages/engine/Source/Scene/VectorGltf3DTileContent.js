@@ -16,6 +16,7 @@ import BufferPolygonMaterial from "./BufferPolygonMaterial.js";
 import BufferPolyline from "./BufferPolyline.js";
 import BufferPolylineCollection from "./BufferPolylineCollection.js";
 import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
+import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js";
 import Cesium3DTileStyle from "./Cesium3DTileStyle.js";
 import Cesium3DTileVectorFeature from "./Cesium3DTileVectorFeature.js";
@@ -28,7 +29,6 @@ import VectorProvider from "../Core/VectorProvider.js";
 import createVectorTileBuffersFromModelComponents from "./Model/createVectorTileBuffersFromModelComponents.js";
 
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */
-/** @import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js"; */
 /** @import { Cartesian3 } from "@cesium/core"; */
 /** @import Cesium3DContentGroup from "./Cesium3DContentGroup.js"; */
 /** @import Cesium3DTile from "./Cesium3DTile.js"; */
@@ -376,6 +376,8 @@ class VectorGltf3DTileContent {
       ) {
         collection.update(frameState);
       } else if (isSelected) {
+        // Updates pick IDs and bounds without drawing the collection in 3D.
+        BufferPrimitiveCollection.prototype.update.call(collection, frameState);
         vectorProvider.markForFrame(
           collection,
           frameState.frameNumber,
