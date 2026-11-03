@@ -16,8 +16,10 @@ import {
 import type { Harness } from "../lab/harness.ts";
 import { flip } from "./flip.ts";
 import twistHeightSlang from "./slang/twistHeight.slang?raw";
-// Built from it with scripts/slangShader.mjs.
+import heightBandsSlang from "./slang/heightBands.slang?raw";
+// Built from them with scripts/slangShader.mjs.
 import twistHeightWgsl from "./slang/twistHeight.wgsl?raw";
+import heightBandsWgsl from "./slang/heightBands.wgsl?raw";
 
 const TEMPLATE = `
 <h1>Custom shaders</h1>
@@ -65,7 +67,25 @@ interface Case {
   fails?: boolean;
   /** The boxes blended (alpha 0.5). */
   blended?: boolean;
+  /** A streamed 3D Tiles tileset (`TILESET`) with the shader instead. */
+  tileset?: boolean;
 }
+
+/** Buildings with per-feature colors (batched b3dm), streamed. */
+const TILESET = "/specs-data/Cesium3DTiles/Batched/BatchedColors/tileset.json";
+
+/** Bands of color by height (heightBands.slang in WGSL). */
+const BANDS = new CustomShader({
+  label: "height bands (WGSL)",
+  fragment: `fn hue(h: f32) -> vec3f {
+  let k = vec3f(0.0, 2.0 / 3.0, 1.0 / 3.0);
+  return saturate(abs(fract(h + k) * 6.0 - 3.0) - 1.0);
+}
+fn fragmentMain(fsInput: FragmentInput, material: ptr<function, MaterialOutput>) {
+  let height = length(fsInput.positionWC) - 6369000.0;
+  (*material).baseColor = mix((*material).baseColor, hue(fract(height / 8.0)), 0.7);
+}`,
+});
 
 const HEIGHT_WGSL = `fn fragmentMain(fsInput: FragmentInput, material: ptr<function, MaterialOutput>) {
   let t = clamp(fsInput.positionMC.z + 0.5, 0.0, 1.0);
@@ -173,6 +193,33 @@ const CASES: Case[] = [
 }`,
     }),
   },
+  {
+    name: "tileset: height bands (WGSL)",
+    same: false,
+    tileset: true,
+    shader: BANDS,
+  },
+  {
+    name: "tileset: Slang, build time (vs WGSL)",
+    same: true,
+    tileset: true,
+    against: BANDS,
+    shader: new CustomShader({
+      label: "height bands (slangc)",
+      wgsl: heightBandsWgsl,
+    }),
+  },
+  {
+    name: "tileset: Slang, runtime (vs WGSL)",
+    same: true,
+    tileset: true,
+    against: BANDS,
+    shader: () =>
+      CustomShader.fromSlang(heightBandsSlang, {
+        label: "height bands (slang-wasm)",
+        slangUrl: SLANG_WASM,
+      }),
+  },
 ];
 
 /** A unit square in its xy-plane, facing +z. */
@@ -234,12 +281,69 @@ function build(world: World, c: Case, shader: CustomShader | undefined): void {
 
 const frame = () => new Promise((resolve) => setTimeout(resolve, 30));
 
+/**
+ * The tileset with `shader`, drawn once it has loaded what it wants at
+ * this view (the tiles' volumes framed as `Viewer.zoomTo` does).
+ */
+async function renderTileset(
+  engine: Engine,
+  target: OffscreenTarget,
+  shader: CustomShader | undefined,
+): Promise<ImageData> {
+  const world = engine.createWorld({
+    maxDraws: 1024,
+    maxMaterials: 256,
+    vertexBytes: 16 << 20,
+    indexBytes: 8 << 20,
+  });
+  const tileset = await engine.addTileset(
+    world,
+    new URL(TILESET, location.href),
+    shader ? { customShader: shader } : {},
+  );
+  const volume = tileset.root.contentVolume ?? tileset.root.volume;
+  const camera = new Camera();
+  camera.near = Math.max(0.1, volume.sphere.radius * 0.01);
+  camera.lookAt(
+    volume.sphere.center,
+    35 * deg,
+    -30 * deg,
+    volume.sphere.radius * 2.6,
+  );
+  const view = engine.addView({
+    target,
+    world,
+    camera,
+    background: "color",
+    clearColor: [0.03, 0.04, 0.06],
+    lighting: { environment: "procedural" },
+    shadows: true,
+    ambientOcclusion: true,
+  });
+  // Until nothing has been in flight for 10 frames (5 s at most).
+  let quiet = 0;
+  for (let i = 0; i < 160 && quiet < 10; i++) {
+    engine.renderFrame();
+    await frame();
+    quiet = tileset.idle && tileset.stats.inFlight === 0 ? quiet + 1 : 0;
+  }
+  const image = new ImageData(await target.read(), WIDTH, HEIGHT);
+  engine.removeView(view);
+  engine.removeTileset(tileset);
+  engine.worlds.splice(engine.worlds.indexOf(world), 1);
+  world.destroy();
+  return image;
+}
+
 async function render(
   engine: Engine,
   target: OffscreenTarget,
   c: Case,
   shader: CustomShader | undefined,
 ): Promise<ImageData> {
+  if (c.tileset) {
+    return renderTileset(engine, target, shader);
+  }
   const world = engine.createWorld({
     maxDraws: 16,
     maxMaterials: 16,

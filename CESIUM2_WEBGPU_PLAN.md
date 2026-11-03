@@ -2486,6 +2486,21 @@ whole ice sheet.
   batch and a pipeline switch): GPU 1.05–1.17 ms and CPU 0.11–0.27 ms per
   frame throughout, against 1.09 and 0.27 ms with the engine's own; at most
   ≈1 µs of GPU per extra shader, none measurable on the CPU.
+- On a tileset: the harness streams `Batched/BatchedColors` (b3dm, tile
+  content through `addModel`) with `customShader` height bands in WGSL
+  (FLIP 0.013 against the default) and the same bands in Slang, compiled
+  at build time and at runtime: both match the WGSL exactly. 12 of 12
+  cases pass.
+
+**Exit status (r46).** Met: a user Slang material and vertex modifier on
+models and on a tileset, compiled at build time and at runtime, drawn in
+every pass (opaque, depth, shadow, ambient-occlusion prepass,
+translucent); no frame stalls when a new shader arrives; batching cost
+per extra shader measured (≈1 µs GPU). Still open from this milestone's
+list: named vertex attributes (foundation 2), typed parameters and user
+textures (3), feature styling with properties on the GPU
+(`IFeatureStyle`), and ports of 1.x `CustomShader` Sandcastles compared
+with 1.x (L2), which need 2 and 3.
 
 ### Real-time tracks (after Custom shading)
 
