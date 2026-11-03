@@ -96,7 +96,11 @@ export async function createRenderContext(
   device: GPUDevice,
   caps: Capabilities,
   outputFormat: GPUTextureFormat,
-  sunLight: GPUTextureView,
+  sky: {
+    sunLight: GPUTextureView;
+    aerialInscatter: GPUTextureView;
+    aerialTransmittance: GPUTextureView;
+  },
   overrides: ShaderOverrides = {},
 ): Promise<RenderContext> {
   // Everything compiles in parallel: engine pipelines, IBL kernels and the
@@ -123,8 +127,10 @@ export async function createRenderContext(
       { binding: 2, resource: environment.sampler },
       { binding: 3, resource: environment.brdfView },
       { binding: 4, resource: { buffer: environment.shBuffer } },
-      { binding: 5, resource: sunLight },
+      { binding: 5, resource: sky.sunLight },
       { binding: 6, resource: environment.irradianceView },
+      { binding: 7, resource: sky.aerialInscatter },
+      { binding: 8, resource: sky.aerialTransmittance },
     ],
   });
   const white = device.createTexture({
@@ -199,6 +205,9 @@ async function createPipelines(
       { binding: 5, visibility: FRAGMENT, texture: {} },
       // Diffuse irradiance by normal (the environment's irradiance cube).
       { binding: 6, visibility: FRAGMENT, texture: { viewDimension: "cube" } },
+      // Aerial perspective: in-scatter and transmittance volumes.
+      { binding: 7, visibility: FRAGMENT, texture: { viewDimension: "3d" } },
+      { binding: 8, visibility: FRAGMENT, texture: { viewDimension: "3d" } },
     ],
   });
   const cullWorldLayout = device.createBindGroupLayout({

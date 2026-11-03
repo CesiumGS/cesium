@@ -32,6 +32,13 @@ struct Sky {
   steps: f32,
   bottomRadius: f32, // the planet's, km
   weights: array<vec4f, 8>, // the 8 bands to linear sRGB (cd/m² per W·m⁻²·sr⁻¹·nm⁻¹)
+  // The aerial-perspective volume's distances along view rays, km: its
+  // first and last slice (from the atmosphere's entry when the camera is
+  // above it, to its far edge).
+  aerialStart: f32,
+  aerialEnd: f32,
+  _pad0: f32,
+  _pad1: f32,
 };
 
 @group(2) @binding(0) var<uniform> sky: Sky;
@@ -272,4 +279,54 @@ fn sunLightFragment(in: SkyVarying) -> @location(0) vec4f {
   let t = transmittanceToTop(r, max(mu, muHorizon + 1e-4));
   let rgb = toRgb(atmosphere.solarIrradiance * t * visible, in.group);
   return vec4f(rgb * SUN_LIGHT_SCALE, 1.0);
+}
+
+// --- aerial perspective --------------------------------------------------------
+
+// Hillaire's froxel volume over the view's frustum, 32 × 32 × 32: the light
+// the air scatters toward the camera between it and each froxel's
+// distance (linear sRGB, cd/m², not exposed), and how much it dims what is
+// there (transmittance, each channel the bands' average weighted by their
+// color). Slices are spaced quadratically between aerialStart and
+// aerialEnd. Each depth slice is one render pass (a 3D target's slice);
+// the instance index carries the wavelength group (bit 0) and the slice.
+// The opaque pass reads it per pixel (opaque.wgsl `aerialPerspective`).
+const AERIAL_SIZE = 32.0;
+const AERIAL_STEPS = 16;
+
+struct Aerial {
+  @location(0) inscatter: vec4f,
+  @location(1) transmittance: vec4f,
+};
+
+@fragment
+fn aerialFragment(in: SkyVarying) -> Aerial {
+  let group = in.group & 1u;
+  let slice = in.group >> 1u;
+  let ndc = vec2f(in.position.x / AERIAL_SIZE * 2.0 - 1.0, 1.0 - in.position.y / AERIAL_SIZE * 2.0);
+  let direction = normalize(sky.forward + sky.right * (ndc.x * sky.tanX) + sky.up * (ndc.y * sky.tanY));
+  let w = (f32(slice) + 0.5) / AERIAL_SIZE;
+  let distance = sky.aerialStart + (sky.aerialEnd - sky.aerialStart) * w * w;
+  // Stop short of the ground: the surface there is the scene's, not the
+  // planet's (march adds the ground only where it ends at the ground).
+  let r = length(sky.position);
+  let mu = dot(sky.position, direction) / r;
+  var extent = distance;
+  if (hitsGround(r, mu)) {
+    extent = min(extent, sphereDistance(r, mu, atmosphere.bottomRadius, true) * 0.999);
+  }
+  let s = march(sky.position, direction, sky.sun, extent, AERIAL_STEPS, false);
+  var total = vec3f(0.0);
+  for (var b = 0u; b < 8u; b++) {
+    total += sky.weights[b].xyz;
+  }
+  let base = group * 4u;
+  let t = s.transmittance.x * sky.weights[base].xyz
+    + s.transmittance.y * sky.weights[base + 1u].xyz
+    + s.transmittance.z * sky.weights[base + 2u].xyz
+    + s.transmittance.w * sky.weights[base + 3u].xyz;
+  var out: Aerial;
+  out.inscatter = vec4f(toRgb(s.radiance * atmosphere.solarIrradiance, group), 1.0);
+  out.transmittance = vec4f(t / total, 1.0);
+  return out;
 }

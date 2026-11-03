@@ -259,6 +259,12 @@ export interface ViewOptions {
   background?: ViewBackground;
   /** The sun's disk in the sky. Default true. */
   sunDisk?: boolean;
+  /**
+   * The air between the camera and the scene (haze, the blue of distant
+   * mountains, the orange of a low sun through it), from the atmosphere,
+   * with background "atmosphere". Default true.
+   */
+  aerialPerspective?: boolean;
   /** Background color as displayed (already exposed), with "color". */
   clearColor?: readonly [number, number, number];
   /** Output transfer function. "gamma2.2" matches CesiumJS 1.x. */
@@ -300,6 +306,7 @@ export class View {
   readonly body: Body;
   background: ViewBackground;
   sunDisk: boolean;
+  aerialPerspective: boolean;
   clearColor: readonly [number, number, number];
   outputEncoding: OutputEncoding;
   /** The sun's illuminance and image-based lighting factors. */
@@ -330,6 +337,7 @@ export class View {
     this.body = options.body ?? EARTH;
     this.background = options.background ?? "atmosphere";
     this.sunDisk = options.sunDisk ?? true;
+    this.aerialPerspective = options.aerialPerspective ?? true;
     this.clearColor = options.clearColor ?? [0.004, 0.008, 0.02];
     this.outputEncoding = options.outputEncoding ?? "srgb";
     this.lighting = {

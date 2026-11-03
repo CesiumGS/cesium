@@ -17,10 +17,11 @@ struct View {
   specularMaxLod: f32,
   viewBit: u32,            // this view's bit in DrawRecord.viewMask
   exposure: f32,           // pre-exposure: scene light × exposure is written
-  _viewPad1: u32,
-  _viewPad2: u32,
-  // The atmosphere's bottom and top radii (km), and 1 when the sun's light
-  // comes from it per pixel (sunIlluminance then scales it, 1).
+  aerialStart: f32,        // aerial-perspective volume's distances, km
+  aerialEnd: f32,
+  // The atmosphere's bottom and top radii (km), 1 when the sun's light
+  // comes from it per pixel (sunIlluminance then scales it, 1), and 1 when
+  // aerial perspective applies.
   sunLight: vec4f,
   bodyRadii: vec4f,        // the body's ellipsoid, meters (xyz)
 };

@@ -34,6 +34,8 @@ export interface ViewBlock {
   exposure: number;
   /** The body seen: its ellipsoid, and its atmosphere's radii. */
   body: Body;
+  /** Aerial perspective's volume distances, km; undefined: none. */
+  aerial: { start: number; end: number } | undefined;
 }
 
 /**
@@ -109,10 +111,12 @@ export function writeViewBlock(
   out[o + 82] = block.lighting.specularIbl;
   out[o + 83] = block.specularMaxLod;
   out[o + 85] = block.exposure;
+  out[o + 86] = block.aerial?.start ?? 0;
+  out[o + 87] = block.aerial?.end ?? 0;
   out[o + 88] = (atmosphere?.bottomRadius ?? 0) / 1000;
   out[o + 89] = (atmosphere?.topRadius ?? 0) / 1000;
   out[o + 90] = sun === "atmosphere" && atmosphere ? 1 : 0;
-  out[o + 91] = 0;
+  out[o + 91] = block.aerial ? 1 : 0;
   const radii = block.body.ellipsoid.radii;
   out[o + 92] = radii[0]!;
   out[o + 93] = radii[1]!;

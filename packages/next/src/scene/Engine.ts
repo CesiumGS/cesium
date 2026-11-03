@@ -336,6 +336,7 @@ export class Engine {
       specularMaxLod: 0,
       exposure: 1,
       body: EARTH,
+      aerial: undefined,
     };
     this.pickParams = device.createBuffer({
       size: 16,
@@ -355,7 +356,13 @@ export class Engine {
       gpu.device,
       gpu.caps,
       gpu.preferredCanvasFormat,
-      sky.sunLight.createView(),
+      {
+        sunLight: sky.sunLight.createView(),
+        aerialInscatter: sky.aerialInscatter.createView({ dimension: "3d" }),
+        aerialTransmittance: sky.aerialTransmittance.createView({
+          dimension: "3d",
+        }),
+      },
       options.shaders,
     );
     // M0: device-loss recovery stops at the device. Rebuilding worlds from
@@ -1238,7 +1245,10 @@ export class Engine {
     s[n++] = view.clearColor[0];
     s[n++] = view.clearColor[1];
     s[n++] = view.clearColor[2];
-    s[n++] = view.background === "atmosphere" ? (view.sunDisk ? 2 : 1) : 0;
+    s[n++] =
+      view.background === "atmosphere"
+        ? (view.sunDisk ? 2 : 1) + (view.aerialPerspective ? 4 : 0)
+        : 0;
     s[n++] = view.outputEncoding === "srgb" ? 0 : 1;
     const sun = view.lighting.sunIlluminance;
     s[n++] = sun === "atmosphere" ? -1 : sun;
@@ -1516,10 +1526,11 @@ export class Engine {
     block.specularMaxLod = this.ctx.environment.maxLod;
     block.exposure = view.exposureScale;
     block.body = view.body;
-    writeViewBlock(this.viewData, (index * VIEW_STRIDE) / 4, block);
+    block.aerial = undefined;
     if (drawsSky(view)) {
+      const sky = this.viewFrames.get(view)!.sky;
       this.sky.write(
-        this.viewFrames.get(view)!.sky,
+        sky,
         view.body.ellipsoid,
         camera,
         aspect,
@@ -1529,7 +1540,13 @@ export class Engine {
         view.exposureScale,
         view.sunDisk,
       );
+      if (drawsAerialPerspective(view)) {
+        scratchAerial.start = sky.aerialStart;
+        scratchAerial.end = sky.aerialEnd;
+        block.aerial = scratchAerial;
+      }
     }
+    writeViewBlock(this.viewData, (index * VIEW_STRIDE) / 4, block);
     this.viewDataU32[(index * VIEW_STRIDE) / 4 + VIEW_BIT_WORD] =
       this.viewBit(view);
   }
@@ -1903,6 +1920,13 @@ export class Engine {
       this.encodeEnvironment(enc, view, frame);
     });
 
+    // The air between the camera and the scene, for the opaque pass.
+    graph.addPass("aerial-perspective", { sideEffect: true }, (enc) => {
+      if (drawsAerialPerspective(view)) {
+        this.sky.encodeAerial(enc, frame.sky);
+      }
+    });
+
     graph.addPass(
       "opaque",
       { writes: [color, resolved, ids, display, displayResolved, depth] },
@@ -2179,6 +2203,8 @@ export class Engine {
     this.timer.destroy();
     this.sky.atmosphere.destroy();
     this.sky.sunLight.destroy();
+    this.sky.aerialInscatter.destroy();
+    this.sky.aerialTransmittance.destroy();
     this.workers.destroy();
     this.gpu.destroy();
   }
@@ -2265,6 +2291,11 @@ function drawsSky(view: View): boolean {
   return view.background === "atmosphere" && view.body.atmosphere !== undefined;
 }
 
+/** The view shows its atmosphere's air between the camera and the scene. */
+function drawsAerialPerspective(view: View): boolean {
+  return drawsSky(view) && view.aerialPerspective;
+}
+
 function destroyViewFrame(frame: ViewFrame): void {
   frame.presentParams.destroy();
   frame.sky.buffer.destroy();
@@ -2310,6 +2341,7 @@ export function environmentFrame(
 }
 
 const scratchView = m4.mat4();
+const scratchAerial = { start: 0, end: 0 };
 const scratchCartographic: Cartographic = {
   longitude: 0,
   latitude: 0,

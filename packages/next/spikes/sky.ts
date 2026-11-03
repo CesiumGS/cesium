@@ -49,6 +49,13 @@ const TEMPLATE = `
   1.x lights), against the cosine-weighted integral of the sky's radiance
   over the hemisphere:</p>
   <table id="environment"></table>
+  <h2>Aerial perspective</h2>
+  <p>The air between the camera and the scene: the view's froxel volume
+  (32 × 32 directions × 32 distances, quadratic out to the atmosphere's far
+  edge), its in-scattered light at a spread of froxels against the tables'
+  own march along the same ray to the same distance:</p>
+  <table id="aerial"></table>
+  <div id="aerialImages"></div>
   <h2>Sunlight on the scene</h2>
   <p>The sun's illuminance on a surface facing it, which the opaque pass
   reads per pixel from the engine's sun-light table (by altitude and sun
@@ -277,6 +284,98 @@ async function inTheEngine(realtime: RealtimeAtmosphere) {
   };
   const rows: Array<Record<string, string | number>> = [];
   const environments: Array<Record<string, string | number>> = [];
+  const aerials: Array<Record<string, string | number>> = [];
+  /**
+   * The aerial-perspective volume (its in-scattered light) at a spread of
+   * froxels against the tables' own march along the same direction to the
+   * same distance (16 steps, as the volume; both stop short of the
+   * ground).
+   */
+  const checkAerial = async (name: string, normal: Float64Array, r: number) => {
+    const device = engine.gpu.device;
+    const n = 32;
+    const buffer = device.createBuffer({
+      size: n * n * n * 8,
+      usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
+    });
+    const encoder = device.createCommandEncoder();
+    encoder.copyTextureToBuffer(
+      { texture: engine.sky.aerialInscatter },
+      { buffer, bytesPerRow: n * 8, rowsPerImage: n },
+      [n, n, n],
+    );
+    device.queue.submit([encoder.finish()]);
+    await buffer.mapAsync(GPUMapMode.READ);
+    const halves = new Uint16Array(buffer.getMappedRange().slice(0));
+    buffer.destroy();
+    const bottom = EARTH.bottomRadius;
+    const top = EARTH.topRadius;
+    const start = Math.max(0, r - top);
+    const end =
+      Math.sqrt(Math.max(0, r * r - bottom * bottom)) +
+      Math.sqrt(top * top - bottom * bottom);
+    const aspect = width / height;
+    const tanY = Math.tan(camera.fovy(aspect) / 2);
+    const observer = [normal[0]! * r, normal[1]! * r, normal[2]! * r];
+    const sun = [
+      engine.sunDirection[0]!,
+      engine.sunDirection[1]!,
+      engine.sunDirection[2]!,
+    ];
+    const errors: number[] = [];
+    let largest = 0;
+    for (const [x, y] of [
+      [4, 4],
+      [16, 4],
+      [28, 10],
+      [16, 16],
+      [4, 26],
+      [28, 28],
+    ]) {
+      const nx = ((x! + 0.5) / n) * 2 - 1;
+      const ny = 1 - ((y! + 0.5) / n) * 2;
+      const d = v3.normalize(
+        v3.vec3(),
+        Float64Array.from(
+          [0, 1, 2].map(
+            (k) =>
+              camera.direction[k]! +
+              camera.right[k]! * nx * tanY * aspect +
+              camera.up[k]! * ny * tanY,
+          ),
+        ),
+      );
+      for (const slice of [2, 8, 16, 24, 31]) {
+        const w = (slice + 0.5) / n;
+        const distance = start + (end - start) * w * w;
+        const probe = await realtime.radiance(
+          observer as never,
+          sun as never,
+          [...d],
+          {
+            steps: 16,
+            maxLength: distance,
+          },
+        );
+        const i = ((slice * n + y!) * n + x!) * 4;
+        const rgb = [0, 1, 2].map((k) => halfToFloat(halves[i + k]!));
+        const engineY = luminance(rgb, 0);
+        const probeY = luminance(probe, 0);
+        largest = Math.max(largest, probeY);
+        if (probeY > 1) {
+          errors.push(Math.abs(engineY - probeY) / probeY);
+        }
+      }
+    }
+    errors.sort((a, b) => a - b);
+    return {
+      view: name,
+      froxels: errors.length,
+      "brightest in-scatter (cd/m²)": Math.round(largest),
+      "median |difference|": `${((errors[errors.length >> 1] ?? 0) * 100).toFixed(2)}%`,
+      worst: `${((errors[errors.length - 1] ?? 0) * 100).toFixed(2)}%`,
+    };
+  };
   /**
    * The environment's diffuse light on a horizontal surface (its SH, as the
    * opaque pass evaluates it) against the cosine-weighted integral of the
@@ -443,6 +542,7 @@ async function inTheEngine(realtime: RealtimeAtmosphere) {
       "ground: worst": percent(below[below.length - 1]),
     });
     environments.push(await skyIrradiance(name, normal, r, east, north, up));
+    aerials.push(await checkAerial(name, normal, r));
     const scale = 1 / (1.2 * 2 ** ev100);
     $("engineImages").append(
       figure(
@@ -453,6 +553,7 @@ async function inTheEngine(realtime: RealtimeAtmosphere) {
   }
   $("engine").innerHTML = table(rows);
   $("environment").innerHTML = table(environments);
+  $("aerial").innerHTML = table(aerials);
 
   // Cost: the same frame with and without the sky.
   lookWest(2, 10);
@@ -472,8 +573,82 @@ async function inTheEngine(realtime: RealtimeAtmosphere) {
     `<p>GPU per frame at ${width} × ${height}: ${cost.color} ms without the sky, ${cost.atmosphere} ms with it (${skyMs.toFixed(3)} ms; ${((skyMs / (width * height)) * 1e6).toFixed(2)} ns per pixel).</p>`,
   );
   const sunLight = await checkSunLight(engine);
+  await aerialPictures(engine, ground, east, north, up, setSun);
   engine.destroy();
-  return { rows, environments, gpuMs: cost, sunLight };
+  return { rows, environments, aerials, gpuMs: cost, sunLight };
+}
+
+/**
+ * The bare globe (the ellipsoid, untextured) with aerial perspective off and
+ * on, side by side, from a few heights.
+ */
+async function aerialPictures(
+  engine: Engine,
+  ground: Float64Array,
+  east: Float64Array,
+  north: Float64Array,
+  up: Float64Array,
+  setSun: (elevation: number) => void,
+) {
+  const width = 480;
+  const height = 270;
+  const world = engine.createWorld({});
+  engine.addEllipsoid(world);
+  const views = [false, true].map((aerialPerspective) =>
+    engine.addView({
+      target: new OffscreenTarget(width, height),
+      world,
+      aerialPerspective,
+    }),
+  );
+  const shots: Array<[string, number, number, number, number]> = [
+    ["10 km up, sun 20° up, looking toward it", 10_000, -8, 20, 0],
+    ["1 km up, sun 20° behind", 1_000, -3, 20, 180],
+    ["orbit, 400 km, sun 30° up", 400_000, -30, 30, 90],
+  ];
+  for (const [name, altitude, pitch, sun, azimuth] of shots) {
+    setSun(sun);
+    for (const view of views) {
+      const camera = view.camera;
+      camera.fov = (70 * Math.PI) / 180;
+      v3.scaleAndAdd(camera.position, ground, up, altitude);
+      // Toward the west, turned by `azimuth` degrees.
+      const a = (azimuth * Math.PI) / 180;
+      const p = (pitch * Math.PI) / 180;
+      const h = [0, 1, 2].map(
+        (k) => -east[k]! * Math.cos(a) + north[k]! * Math.sin(a),
+      );
+      v3.normalize(
+        camera.direction,
+        Float64Array.from(
+          [0, 1, 2].map((k) => h[k]! * Math.cos(p) + up[k]! * Math.sin(p)),
+        ),
+      );
+      camera.orient(up);
+    }
+    // Content streams in: render until the globe settles.
+    for (let i = 0; i < 60; i++) {
+      engine.renderFrame();
+      await new Promise((resolve) => setTimeout(resolve, 30));
+    }
+    const images = await Promise.all(
+      views.map((view) => {
+        const image = view.readHdr();
+        engine.renderFrame();
+        return image;
+      }),
+    );
+    const scale = 1 / (1.2 * 2 ** 15);
+    $("aerialImages").append(
+      figure(
+        `${name}: without · with aerial perspective (EV100 15)`,
+        ...images.map((image) =>
+          picture({ width, height, data: image.data, stride: 4 }, scale, 1),
+        ),
+      ),
+    );
+  }
+  views.forEach((view) => engine.removeView(view));
 }
 
 /** The engine's sun-light table against the CPU model, at its own texels. */

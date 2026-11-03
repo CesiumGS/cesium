@@ -297,6 +297,10 @@ struct ProbeParams {
   count: u32,
   sun: vec3f,
   steps: u32,
+  maxLength: f32,  // km along each ray (the aerial-perspective volume's checks)
+  _pad0: f32,
+  _pad1: f32,
+  _pad2: f32,
 };
 
 @group(1) @binding(5) var<uniform> probe: ProbeParams;
@@ -309,7 +313,15 @@ fn skyProbe(@builtin(global_invocation_id) id: vec3u) {
     return;
   }
   let direction = normalize(probeDirections[id.x].xyz);
-  let s = march(probe.observer, direction, probe.sun, 1e9, i32(probe.steps), false);
+  // A finite length is a stretch of air (the aerial-perspective volume's):
+  // stop short of the ground, as the volume does, so its light isn't added.
+  var maxLength = probe.maxLength;
+  let r = length(probe.observer);
+  let mu = dot(probe.observer, direction) / r;
+  if (maxLength < 1e8 && hitsGround(r, mu)) {
+    maxLength = min(maxLength, sphereDistance(r, mu, atmosphere.bottomRadius, true) * 0.999);
+  }
+  let s = march(probe.observer, direction, probe.sun, maxLength, i32(probe.steps), false);
   // Spectral radiance at this pass's 4 wavelengths, W·m⁻²·sr⁻¹·nm⁻¹ (the
   // bands' weights turn the 8 into sRGB, RealtimeAtmosphere).
   probeRadiance[id.x] = s.radiance * atmosphere.solarIrradiance;

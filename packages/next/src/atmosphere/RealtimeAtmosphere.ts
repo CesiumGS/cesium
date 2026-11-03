@@ -175,13 +175,16 @@ export class RealtimeAtmosphere {
    * `directions` with the sun along `sun`: linear sRGB, cd/m², the same
    * units as AtmosphereReference. The planet's sphere is the parameters'
    * bottom radius, centered at the origin. `multipleScattering: false`
-   * leaves out Hillaire's term (single scattering, for diagnosis).
+   * leaves out Hillaire's term (single scattering, for diagnosis);
+   * `maxLength` (meters) stops each ray there, the in-scattered light along
+   * that stretch of air (the aerial-perspective volume's; short of the
+   * ground, whose light it leaves out).
    */
   async radiance(
     observer: V3,
     sun: V3,
     directions: ArrayLike<number>,
-    { steps = 64, multipleScattering = true } = {},
+    { steps = 64, multipleScattering = true, maxLength = 1e12 } = {},
   ): Promise<Float64Array> {
     const device = this.device;
     const count = directions.length / 3;
@@ -191,7 +194,7 @@ export class RealtimeAtmosphere {
       dirs[i * 4 + 1] = directions[i * 3 + 1]!;
       dirs[i * 4 + 2] = directions[i * 3 + 2]!;
     }
-    const probe = new ArrayBuffer(32);
+    const probe = new ArrayBuffer(48);
     const f = new Float32Array(probe);
     const u = new Uint32Array(probe);
     f.set(
@@ -201,10 +204,11 @@ export class RealtimeAtmosphere {
     u[3] = count;
     f.set(sun, 4);
     u[7] = steps;
+    f[8] = maxLength / 1000;
     const buffer = (size: number, usage: number) =>
       device.createBuffer({ size: Math.max(16, size), usage });
     const probeBuffer = buffer(
-      32,
+      48,
       GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     );
     device.queue.writeBuffer(probeBuffer, 0, probe);

@@ -14,6 +14,26 @@
 
 const PI: f32 = 3.14159265358979;
 
+struct AerialPerspective {
+  inscatter: vec3f,
+  transmittance: vec3f,
+};
+
+// The air between the camera and a fragment: from the view's volume at the
+// fragment's screen position and its distance (slices spaced
+// quadratically between aerialStart and aerialEnd).
+fn aerialPerspective(fragment: vec2f, relPosition: vec3f) -> AerialPerspective {
+  let distance = length(relPosition) / 1000.0;
+  let w = sqrt(clamp((distance - view.aerialStart) / (view.aerialEnd - view.aerialStart), 0.0, 1.0));
+  // A slice's texel center, w = (slice + 0.5) / 32, holds the integral to
+  // its distance; before the first, fade in from none.
+  let uvw = vec3f(fragment * view.viewport.zw, w);
+  let near = clamp(w * 64.0, 0.0, 1.0);
+  let inscatter = textureSampleLevel(aerialInscatter, environmentSampler, uvw, 0.0).rgb;
+  let transmittance = textureSampleLevel(aerialTransmittance, environmentSampler, uvw, 0.0).rgb;
+  return AerialPerspective(inscatter * near, mix(vec3f(1.0), transmittance, near));
+}
+
 // The sun's illuminance at a camera-relative position: white and uniform
 // (`view.sunIlluminance`), or through the body's atmosphere from the
 // sun-light table, at the point's height above the body's ellipsoid and the
@@ -50,6 +70,10 @@ fn sunIlluminance(relPosition: vec3f) -> vec3f {
 @group(0) @binding(5) var sunLightTable: texture_2d<f32>;
 // Diffuse irradiance E/π by normal (gpu/Environment.ts).
 @group(0) @binding(6) var irradianceCube: texture_cube<f32>;
+// Aerial perspective: in-scattered light (cd/m²) and transmittance by
+// screen position and distance (atmosphere/sky.wgsl `aerialFragment`).
+@group(0) @binding(7) var aerialInscatter: texture_3d<f32>;
+@group(0) @binding(8) var aerialTransmittance: texture_3d<f32>;
 
 @group(1) @binding(0) var<storage, read> records: array<DrawRecord>;
 @group(1) @binding(1) var<storage, read> items: array<DrawItem>;
@@ -373,6 +397,13 @@ fn fs(in: VsOut, @builtin(front_facing) frontFacing: bool) -> FsOut {
 
   // Pre-exposed (plan §4.2). Emission is display-relative: authored
   // emissive colors look the same at any exposure.
-  out.color = vec4f((direct + indirect) * view.exposure + emissive, 1.0);
+  var lit = direct + indirect;
+  var shown = emissive;
+  if (view.sunLight.w > 0.5) {
+    let air = aerialPerspective(in.position.xy, in.relPosition);
+    lit = lit * air.transmittance + air.inscatter;
+    shown = emissive * air.transmittance;
+  }
+  out.color = vec4f(lit * view.exposure + shown, 1.0);
   return out;
 }
