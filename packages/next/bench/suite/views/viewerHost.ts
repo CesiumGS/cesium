@@ -21,8 +21,6 @@ import {
   type Tileset3D,
   type TransformHandle,
   type World,
-  DAYLIGHT_SUN_ILLUMINANCE,
-  UNITLESS_SUN_ILLUMINANCE,
 } from "../../../src/index.ts";
 import ionSource from "../../../../engine/Source/Core/Ion.js?raw";
 import {
@@ -147,10 +145,18 @@ export interface Lighting {
   /** Sun azimuth and elevation, degrees, at the content. */
   azimuth: number;
   elevation: number;
+  /** 1.x: the sun's intensity, unitless (1.x's default 2). */
   intensity: number;
   diffuseIbl: number;
   specularIbl: number;
+  /** 1.x: the exposure multiplier, unitless. */
   exposure: number;
+  /** 2.0: the sun's illuminance, lux. */
+  sunIlluminance: number;
+  /** 2.0: the camera's exposure value at ISO 100, when not automatic. */
+  ev100: number;
+  /** 2.0: exposure metered from the image. */
+  autoExposure: boolean;
   encoding: "srgb" | "gamma2.2";
 }
 
@@ -405,16 +411,13 @@ export class NextViewerHost implements ViewerHost {
     const { viewer } = this;
     viewer.setSun(lighting.azimuth, lighting.elevation);
     for (const view of viewer.views) {
-      // The panel speaks 1.x's terms (sun 2, exposure 1); 2.0 lights in
-      // physical units: sun 2 is 100 klx, exposure 1 is EV100 15.
-      view.lighting.sunIlluminance =
-        (lighting.intensity / UNITLESS_SUN_ILLUMINANCE) *
-        DAYLIGHT_SUN_ILLUMINANCE;
+      // 2.0 lights in physical units (lux, EV100).
+      view.lighting.sunIlluminance = lighting.sunIlluminance;
       view.lighting.diffuseIbl = lighting.diffuseIbl;
       view.lighting.specularIbl = lighting.specularIbl;
-      view.exposure = {
-        ev100: 15 - Math.log2(Math.max(lighting.exposure, 1e-3)),
-      };
+      view.exposure = lighting.autoExposure
+        ? { auto: true }
+        : { ev100: lighting.ev100 };
       view.outputEncoding = lighting.encoding;
     }
     viewer.engine.requestRender();

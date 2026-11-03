@@ -36,7 +36,7 @@ import { IconButton } from "@stratakit/bricks";
 import { Icon } from "@stratakit/mui";
 import { unstable_Toolbar as Toolbar } from "@stratakit/structures";
 import { getRouteApi } from "@tanstack/react-router";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import publicCatalog from "../catalog/public.json";
 import { ensureCesium } from "../cesium1x.ts";
 import { compareEngines, engineLabel, isRelease } from "../engines.mjs";
@@ -90,6 +90,8 @@ const VIEW_DEFAULTS: ViewSettings = {
   overview: false,
 };
 
+// Each engine's own terms: 1.x's unitless sun (2) and exposure (1); 2.0's
+// physical ones, a high sun (100 klx) and a daylight camera (EV100 15).
 const LIGHTING_DEFAULTS: Lighting = {
   azimuth: 150,
   elevation: 40,
@@ -97,6 +99,9 @@ const LIGHTING_DEFAULTS: Lighting = {
   diffuseIbl: 1,
   specularIbl: 1,
   exposure: 1,
+  sunIlluminance: 100_000,
+  ev100: 15,
+  autoExposure: false,
   encoding: "srgb",
 };
 
@@ -142,9 +147,14 @@ export function Viewer() {
     "dyno.viewer.view",
     VIEW_DEFAULTS,
   );
-  const [lighting, setLighting] = useStored<Lighting>(
+  const [storedLighting, setLighting] = useStored<Lighting>(
     "dyno.viewer.lighting",
     LIGHTING_DEFAULTS,
+  );
+  // Settings stored before a field existed get its default.
+  const lighting = useMemo(
+    () => ({ ...LIGHTING_DEFAULTS, ...storedLighting }),
+    [storedLighting],
   );
   const [panelOpen, setPanelOpen] = useStored("dyno.viewer.panel", true);
   const [pastedToken, setPastedToken] = useState(readToken);
@@ -490,14 +500,26 @@ export function Viewer() {
                 text={`${lighting.elevation}°`}
                 onChange={(v) => light("elevation", v)}
               />
-              <Range
-                label="Sun intensity"
-                value={lighting.intensity}
-                min={0}
-                max={5}
-                step={0.1}
-                onChange={(v) => light("intensity", v)}
-              />
+              {engine === "2.0" ? (
+                <Range
+                  label="Sun illuminance"
+                  value={lighting.sunIlluminance}
+                  min={0}
+                  max={150_000}
+                  step={1000}
+                  text={`${Math.round(lighting.sunIlluminance / 1000)} klx`}
+                  onChange={(v) => light("sunIlluminance", v)}
+                />
+              ) : (
+                <Range
+                  label="Sun intensity"
+                  value={lighting.intensity}
+                  min={0}
+                  max={5}
+                  step={0.1}
+                  onChange={(v) => light("intensity", v)}
+                />
+              )}
               <Range
                 label="Diffuse IBL"
                 value={lighting.diffuseIbl}
@@ -514,14 +536,39 @@ export function Viewer() {
                 step={0.05}
                 onChange={(v) => light("specularIbl", v)}
               />
-              <Range
-                label="Exposure"
-                value={lighting.exposure}
-                min={0.1}
-                max={4}
-                step={0.05}
-                onChange={(v) => light("exposure", v)}
-              />
+              {engine === "2.0" ? (
+                <>
+                  <Setting
+                    label="Automatic exposure"
+                    checked={lighting.autoExposure}
+                    onChange={(v) => light("autoExposure", v)}
+                  />
+                  {lighting.autoExposure ? (
+                    <Typography variant="caption-md" color="textSecondary">
+                      Exposure metered from the image.
+                    </Typography>
+                  ) : (
+                    <Range
+                      label="Exposure (EV100)"
+                      value={lighting.ev100}
+                      min={4}
+                      max={18}
+                      step={0.1}
+                      text={lighting.ev100.toFixed(1)}
+                      onChange={(v) => light("ev100", v)}
+                    />
+                  )}
+                </>
+              ) : (
+                <Range
+                  label="Exposure"
+                  value={lighting.exposure}
+                  min={0.1}
+                  max={4}
+                  step={0.05}
+                  onChange={(v) => light("exposure", v)}
+                />
+              )}
             </Group>
           </aside>
         ) : (
