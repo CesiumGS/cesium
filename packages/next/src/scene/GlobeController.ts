@@ -56,10 +56,16 @@ export class GlobeController {
    * How quickly wheel zoom follows the wheel, per second: a critically
    * damped spring toward the zoom asked for, so a notch eases in and out
    * and fast notches blend into one motion (an exponential glide started
-   * each notch at full speed, which read as jitter). About 0.35 s to
+   * each notch at full speed, which read as jitter). About 0.25 s to
    * settle.
    */
-  zoomResponse = 14;
+  zoomResponse = 20;
+  /**
+   * Speed a notch adds at once, as a share of its zoom × `zoomResponse`
+   * per second: the zoom starts moving on the notch instead of easing out
+   * of rest, without the full kick of a glide.
+   */
+  zoomKick = 0.4;
   /** Distance factor per wheel pixel, as a logarithm (100 px: ×1.16). */
   wheelZoomRate = 0.0015;
   /** Focus of the last `focus` call (split views copy it). */
@@ -261,7 +267,9 @@ export class GlobeController {
     // Multiplicative, so a notch feels the same at every range; applied
     // over the next frames.
     v3.copy(this.zoomTarget, target);
-    this.pendingZoom += pixels * this.wheelZoomRate;
+    const zoom = pixels * this.wheelZoomRate;
+    this.pendingZoom += zoom;
+    this.zoomRate += zoom * this.zoomKick * this.zoomResponse;
     this.trackHover(x, y);
     this.animate();
   }
