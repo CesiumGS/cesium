@@ -178,7 +178,8 @@ function normalize(a: number[]): number[] {
 
 /**
  * Writes a view's `Shadows` uniform (opaque.wgsl); `enabled` false: none.
- * It also says whether the ambient-occlusion buffer holds the view's.
+ * It also says whether the ambient-occlusion buffer holds the view's, and
+ * whether the cascades follow the Moon (at night) rather than the sun.
  */
 export function writeShadows(
   out: Float32Array,
@@ -187,6 +188,7 @@ export function writeShadows(
   forward: ArrayLike<number>,
   enabled: boolean,
   ambientOcclusion: boolean,
+  moonlight = false,
 ): void {
   const o = offsetFloats;
   out.set(cascades.matrices, o);
@@ -199,5 +201,5 @@ export function writeShadows(
   out[o + 76] = cascades.fadeStart;
   out[o + 77] = cascades.far;
   out[o + 78] = ambientOcclusion ? 1 : 0;
-  out[o + 79] = 0;
+  out[o + 79] = moonlight ? 1 : 0;
 }

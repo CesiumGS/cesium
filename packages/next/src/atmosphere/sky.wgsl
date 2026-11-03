@@ -42,6 +42,20 @@ struct Sky {
   // view's (`starExposure`); 0: the view's.
   starExposure: f32,
   _pad1: f32,
+  // The Moon (`moonDisk`): its center's direction from the camera (unit),
+  // and the sine of its angular radius (0: none).
+  moon: vec3f,
+  moonSize: f32,
+  // Its axes (Earth-fixed): toward the Earth's center (selenographic
+  // longitude and latitude 0) and its north pole; its radiance per unit of
+  // the map's albedo, as a share of the sun's irradiance (sr⁻¹).
+  moonX: vec3f,
+  moonScale: f32,
+  moonZ: vec3f,
+  _pad2: f32,
+  // From the Moon toward the sun (unit).
+  moonSun: vec3f,
+  _pad3: f32,
 };
 
 @group(2) @binding(0) var<uniform> sky: Sky;
@@ -134,6 +148,62 @@ fn starExposure(background: vec3f, share: f32) -> f32 {
   return sky.exposure + max(sky.starExposure - sky.exposure, 0.0) * dark;
 }
 
+// --- the moon -------------------------------------------------------------------
+
+// The Moon's albedo map (equirectangular, longitude 0 at the center, the
+// near side; linear once sampled), with the stars' sampler.
+@group(3) @binding(3) var moonMap: texture_2d<f32>;
+
+// Texel 1 of the table's sun row holds the sun's light through the air
+// along the Moon's direction at this scale (not exposed: at night's open
+// exposures it would pass fp16's range).
+const MOON_ROW_SCALE = 1e-5;
+
+// The Moon's disk at `direction`: its radiance as a multiple of the sun's
+// irradiance above the atmosphere (sr⁻¹; the air's transmittance toward it
+// still to apply), and how much of the pixel it covers (it hides the
+// stars). The sunlit part shades as Lommel-Seeliger, 2μ₀ / (μ₀ + μ) (flat
+// at full, as the Moon looks), by the map's albedo; `moonScale` sets the
+// whole disk's brightness by phase (Allen's magnitudes).
+struct MoonSample {
+  radiance: f32,
+  coverage: f32,
+};
+
+fn moonDisk(direction: vec3f) -> MoonSample {
+  let m = sky.moon;
+  let k = sky.moonSize;
+  if (k <= 0.0 || dot(direction, m) <= 0.0) {
+    return MoonSample(0.0, 0.0);
+  }
+  let pixel = 2.0 * sky.tanY / sky.size.y; // radians per pixel, about
+  // The direction's offset from the center, across the disk.
+  let offset = direction - m * dot(direction, m);
+  let sinAngle = length(offset);
+  if (sinAngle >= k + pixel) {
+    return MoonSample(0.0, 0.0);
+  }
+  let coverage = clamp((k - sinAngle) / pixel + 0.5, 0.0, 1.0);
+  // The surface seen there (rim pixels: the limb), facing the camera.
+  var q = offset / k;
+  let q2 = dot(q, q);
+  if (q2 > 1.0) {
+    q *= inverseSqrt(q2);
+  }
+  let mu = sqrt(max(0.0, 1.0 - dot(q, q)));
+  let normal = q - m * mu;
+  let mu0 = dot(normal, sky.moonSun);
+  if (mu0 <= 0.0) {
+    return MoonSample(0.0, coverage);
+  }
+  let moonY = cross(sky.moonZ, sky.moonX);
+  let longitude = atan2(dot(normal, moonY), dot(normal, sky.moonX));
+  let latitude = asin(clamp(dot(normal, sky.moonZ), -1.0, 1.0));
+  let uv = vec2f(0.5 + longitude / (2.0 * PI), 0.5 - latitude / PI);
+  let albedo = dot(textureSampleLevel(moonMap, starSampler, uv, 0.0).rgb, vec3f(0.2126, 0.7152, 0.0722));
+  return MoonSample(sky.moonScale * albedo * 2.0 * mu0 / (mu0 + mu) * coverage, coverage);
+}
+
 // This group's share of a transmittance weighted by its bands' luminance:
 // the two groups' shares add up to the mean (the stars' dimming, gray).
 fn luminanceShare(t: vec4f, group: u32) -> f32 {
@@ -161,6 +231,8 @@ fn skyAlong(direction: vec3f) -> vec4f {
 struct MarchedSky {
   color: vec3f,
   toSpace: f32,
+  // Along the ray (this group's wavelengths); 0 where the ground is.
+  transmittance: vec4f,
 };
 
 fn marchedSky(pixel: vec2f, group: u32) -> MarchedSky {
@@ -201,6 +273,7 @@ fn marchedSky(pixel: vec2f, group: u32) -> MarchedSky {
   return MarchedSky(
     toRgb(spectral, group) * sky.exposure,
     select(luminanceShare(s.transmittance, group), 0.0, ground),
+    select(s.transmittance, vec4f(0.0), ground),
   );
 }
 
@@ -210,12 +283,15 @@ fn skyFragment(in: SkyVarying) -> @location(0) vec4f {
   return vec4f(min(marchedSky(in.position.xy, in.group).color, vec3f(SKY_MAX)), 1.0);
 }
 
-// The sky behind a view, with the stars through it.
+// The sky behind a view, with the Moon and the stars through it.
 @fragment
 fn skyStarsFragment(in: SkyVarying) -> @location(0) vec4f {
   let m = marchedSky(in.position.xy, in.group);
-  let starry = starLight(viewDirection(in.position.xy)) * m.toSpace * starExposure(m.color, 0.5);
-  return vec4f(min(m.color + starry, vec3f(SKY_MAX)), 1.0);
+  let direction = viewDirection(in.position.xy);
+  let moon = moonDisk(direction);
+  let moonLight = toRgb(atmosphere.solarIrradiance * moon.radiance * m.transmittance, in.group) * sky.exposure;
+  let starry = starLight(direction) * m.toSpace * starExposure(m.color, 0.5) * (1.0 - moon.coverage);
+  return vec4f(min(m.color + moonLight + starry, vec3f(SKY_MAX)), 1.0);
 }
 
 // --- the sky-view table ---------------------------------------------------------
@@ -286,7 +362,17 @@ fn skyViewFragment(in: SkyVarying) -> @location(0) vec4f {
   var spectral = vec4f(0.0);
   var toSpace = 0.0;
   if (in.position.y >= SKY_VIEW_SIZE.y) {
-    // The sun's mean radiance through the atmosphere (the disk's color).
+    if (in.position.x >= 1.0) {
+      // Texel 1: the sun's light through the air along the Moon's
+      // direction (the Moon's color and dimming), scaled, not exposed.
+      if (in.position.x < 2.0 && sky.moonSize > 0.0) {
+        let light = atmosphere.solarIrradiance * sunTransmittance(r, dot(f.up, sky.moon));
+        return vec4f(toRgb(light, in.group) * MOON_ROW_SCALE, 0.0);
+      }
+      return vec4f(0.0);
+    }
+    // Texel 0: the sun's mean radiance through the atmosphere (the disk's
+    // color).
     if (sky.sunCos <= 1.0) {
       spectral = atmosphere.solarIrradiance / sky.sunSolidAngle * sunTransmittance(r, dot(f.up, sky.sun));
     }
@@ -343,7 +429,7 @@ fn skyFromTable(direction: vec3f) -> TableSky {
   return TableSky(texel.rgb, ground, texel.a);
 }
 
-// The sky from the table, the sun's disk and the stars.
+// The sky from the table, the sun's disk, the Moon and the stars.
 @fragment
 fn skyFromTableFragment(in: SkyVarying) -> @location(0) vec4f {
   let direction = viewDirection(in.position.xy);
@@ -352,7 +438,12 @@ fn skyFromTableFragment(in: SkyVarying) -> @location(0) vec4f {
   if (!s.ground) {
     let sun = textureLoad(skyView, vec2i(0, i32(SKY_VIEW_SIZE.y)), 0).rgb;
     color += sun * sunDisk(direction);
-    color += starLight(direction) * s.toSpace * starExposure(color, 1.0);
+    let moon = moonDisk(direction);
+    if (moon.coverage > 0.0) {
+      let light = textureLoad(skyView, vec2i(1, i32(SKY_VIEW_SIZE.y)), 0).rgb / MOON_ROW_SCALE;
+      color += light * moon.radiance * sky.exposure;
+    }
+    color += starLight(direction) * s.toSpace * starExposure(s.color, 1.0) * (1.0 - moon.coverage);
   }
   return vec4f(min(color, vec3f(2.0 * SKY_MAX)), 1.0);
 }

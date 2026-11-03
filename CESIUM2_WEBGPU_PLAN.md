@@ -690,9 +690,32 @@ copyright, redistributable unmodified only (Debian's reading, from the
 data center); SKY2000 (NASA Goddard) states no license and is compiled
 from the others. The Tycho star map 1.x ships stays; points would need
 ESA's permission for commercial use or a legal opinion on the Yale
-catalogue. Next: the moon (§13.14), then starlight and airglow in the
-environment, which light the ground at night (about 1 mlux without a
-moon).
+catalogue.
+
+Progress (r43): **the Moon**. `moonPosition(time)` (time/moon.ts) ports
+1.x's Simon et al. (1994) lunar theory (within 0.04° and 0.05% of
+distance of Meeus's example 47.a), turned to Earth-fixed axes with
+`icrfToFixed`; `Engine.moonPosition` places it (the `Viewer` sets it from
+its clock; unset, no Moon, as in the comparisons with 1.x). The sky draws
+its disk from the camera's own position (the Moon's parallax reaches 1°),
+at its angular size, textured with 1.x's `moonSmall.jpg` (near side in the
+middle, north toward the ecliptic's pole, libration left out) and shaded
+as Lommel-Seeliger, 2μ₀/(μ₀ + μ), which is flat at full as the Moon
+looks; its total brightness follows its albedo (0.12) and Allen's phase
+law (a half moon a tenth of a full), the map normalized to its mean. The
+air dims and reddens it as it does the sun: the sky-view table's sun row
+holds, in a second texel, the sun's light through the air along the
+Moon's direction; above the atmosphere the march's transmittance applies.
+It hides the stars behind it and shows faintly in the day sky (a crescent
+at 39° with the sun 68° away is a tenth of the sky's brightness, as seen).
+Its light reaches the scene as a second directional light: the sun's
+light through the air toward the Moon (the sun-light table) times its
+share (albedo × its angular radius² × phase, 2.4 × 10⁻⁶ when full, about
+0.25 lux), shadowed by the sun's cascades, which follow the Moon when the
+sun is down and it is up. Next: moonlight in the sky (scattered, the
+moonlit sky's blue) and in the environment, which would light what the
+Moon doesn't reach; earthshine on the dark part; then starlight and
+airglow in the environment (about 1 mlux without a moon).
 
 #### Fog and aerial perspective
 
@@ -1018,7 +1041,7 @@ placeholders cast unclipped where they're not alpha-masked (coarse and
 fine tiles cast nearly the same shadow); far cascades could update every other frame or
 cache until the sun or the tiles move, leading to virtual shadow maps
 (pages rendered where the view needs them and cached, a good fit for
-streamed tiles); shadows from the moon at night and from the clouds later.
+streamed tiles); shadows from the clouds later (the Moon's: r43, with the night sky).
 Measured on the way: the aerial-perspective volume's compute looked like
 1 ms (1,024 threads each marching 256 steps), and the opaque pass in a
 close oblique terrain view about 9 ms at that size, mostly the lighting

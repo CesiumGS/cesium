@@ -6,12 +6,19 @@ import type { Ellipsoid, Cartographic } from "../math/ellipsoid.ts";
 import * as v3 from "../math/vec3.ts";
 import type { Vec3 } from "../math/vec3.ts";
 import type { Camera } from "../scene/Camera.ts";
+import {
+  MOON_ALBEDO,
+  lommelSeeliger,
+  moonPhaseBrightness,
+} from "../time/moon.ts";
 
 /** The sun's angular diameter seen from the Earth, radians (mean). */
 export const SUN_ANGULAR_DIAMETER = 0.00935;
 
 /** Bytes of the WGSL `Sky` uniform (sky.wgsl). */
-const SKY_SIZE = 240;
+const SKY_SIZE = 304;
+/** Bytes between the environment faces' `Sky` uniforms. */
+const FACE_STRIDE = 512;
 
 /** The aerial-perspective volume: 32 × 32 directions × 128 distances. */
 const AERIAL_SIZE = 32;
@@ -43,6 +50,21 @@ export interface SkyTargets {
 }
 
 /** One view's sky: its uniform, its sky-view table and their bind groups. */
+/** The Moon as a view's camera sees it (`Sky.write`), Earth-fixed axes. */
+export interface MoonView {
+  /** Toward its center from the camera (unit). */
+  direction: ArrayLike<number>;
+  /** The sine of its angular radius. */
+  sinRadius: number;
+  /** Its axes: toward the Earth's center, and its north pole (unit). */
+  toEarth: ArrayLike<number>;
+  north: ArrayLike<number>;
+  /** From it toward the sun (unit). */
+  toSun: ArrayLike<number>;
+  /** At it, between the sun and the camera, radians (0: full). */
+  phaseAngle: number;
+}
+
 export interface SkyView {
   buffer: GPUBuffer;
   /** The uniform alone (marching, and building the table). */
@@ -69,7 +91,7 @@ export interface SkyView {
    */
   aerialStart: number;
   aerialEnd: number;
-  /** Six `Sky` uniforms, 256 bytes apart: the environment cube's faces. */
+  /** Six `Sky` uniforms, `FACE_STRIDE` apart: the environment cube's faces. */
   faceUniforms: GPUBuffer;
   /** Per face: its uniform alone (marching), and with the table. */
   faceGroups: GPUBindGroup[];
@@ -181,6 +203,9 @@ export class Sky {
   private readonly starSampler: GPUSampler;
   private readonly starData = new Float32Array(12);
   private starLuminance = 0;
+  /** The Moon's albedo map (white until one is set) and its mean albedo. */
+  private moonMap: GPUTexture;
+  private moonMean = 1;
   /**
    * @internal For checks: how much aerial perspective is marched per vertex
    * whatever the altitude (Lab "Real-time sky"); undefined: by altitude.
@@ -273,6 +298,13 @@ export class Sky {
       minFilter: "linear",
     });
     this.starMap = this.createStarMap(1);
+    this.moonMap = this.createMoonMap(1, 1);
+    device.queue.writeTexture(
+      { texture: this.moonMap },
+      new Uint8Array([255, 255, 255, 255]),
+      {},
+      [1, 1],
+    );
     this.starGroup = this.createStarGroup();
     const volume = (label: string, extra = 0) =>
       device.createTexture({
@@ -335,6 +367,7 @@ export class Sky {
     this.airScattering.destroy();
     this.starUniform.destroy();
     this.starMap.destroy();
+    this.moonMap.destroy();
   }
 
   /**
@@ -364,6 +397,49 @@ export class Sky {
     }
     this.starGroup = this.createStarGroup();
     old.destroy();
+  }
+
+  /**
+   * Sets the Moon's albedo map: equirectangular, longitude 0 (the near
+   * side's center) in the middle, north up, sRGB; its mean sets the scale
+   * (the disk's total follows the Moon's albedo, `MOON_ALBEDO`). Null: a
+   * uniform disk.
+   */
+  setMoonMap(image: ImageBitmap | null): void {
+    const old = this.moonMap;
+    if (!image) {
+      this.moonMap = this.createMoonMap(1, 1);
+      this.device.queue.writeTexture(
+        { texture: this.moonMap },
+        new Uint8Array([255, 255, 255, 255]),
+        {},
+        [1, 1],
+      );
+      this.moonMean = 1;
+    } else {
+      const { width, height } = image;
+      this.moonMap = this.createMoonMap(width, height);
+      this.device.queue.copyExternalImageToTexture(
+        { source: image },
+        { texture: this.moonMap },
+        [width, height],
+      );
+      this.moonMean = meanAlbedo(image);
+    }
+    this.starGroup = this.createStarGroup();
+    old.destroy();
+  }
+
+  private createMoonMap(width: number, height: number): GPUTexture {
+    return this.device.createTexture({
+      label: "sky.moonMap",
+      size: [width, height],
+      format: "rgba8unorm-srgb",
+      usage:
+        GPUTextureUsage.TEXTURE_BINDING |
+        GPUTextureUsage.COPY_DST |
+        GPUTextureUsage.RENDER_ATTACHMENT,
+    });
   }
 
   /**
@@ -407,6 +483,7 @@ export class Sky {
           resource: this.starMap.createView({ dimension: "cube" }),
         },
         { binding: 2, resource: this.starSampler },
+        { binding: 3, resource: this.moonMap.createView() },
       ],
     });
   }
@@ -438,6 +515,7 @@ export class Sky {
     f[5] = sun[1]!;
     f[6] = sun[2]!;
     f[7] = 2; // no disk
+    f[63] = 0; // nor the Moon
     f[11] = 1;
     f[15] = 1;
     f[19] = 1;
@@ -454,7 +532,11 @@ export class Sky {
       world(forward, 8);
       world(right, 12);
       world(up, 16);
-      this.device.queue.writeBuffer(view.faceUniforms, face * 256, this.data);
+      this.device.queue.writeBuffer(
+        view.faceUniforms,
+        face * FACE_STRIDE,
+        this.data,
+      );
     });
     for (let face = 0; face < 6; face++) {
       const pass = encoder.beginRenderPass({
@@ -661,6 +743,7 @@ export class Sky {
             texture: { viewDimension: "cube" },
           },
           { binding: 2, visibility: fragment, sampler: {} },
+          { binding: 3, visibility: fragment, texture: {} },
         ],
       }),
     };
@@ -805,12 +888,12 @@ export class Sky {
     });
     const faceUniforms = device.createBuffer({
       label: "sky.environment",
-      size: 6 * 256,
+      size: 6 * FACE_STRIDE,
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     });
     const face = (index: number): GPUBufferBinding => ({
       buffer: faceUniforms,
-      offset: index * 256,
+      offset: index * FACE_STRIDE,
       size: SKY_SIZE,
     });
     const tableView = table.createView();
@@ -879,8 +962,9 @@ export class Sky {
 
   /**
    * Writes a view's uniform: its camera (Earth-fixed, meters), the sun
-   * (unit, Earth-fixed), the pre-exposure, whether the sun's disk shows and
-   * the stars' exposure against a dark sky (0: the view's).
+   * (unit, Earth-fixed), the pre-exposure, whether the sun's disk shows,
+   * the stars' exposure against a dark sky (0: the view's) and the Moon
+   * as the camera sees it (undefined: none).
    *
    * The atmosphere is a sphere; the camera sits on it at its height above
    * the body's ellipsoid, along the ellipsoid's normal, so the horizon and
@@ -897,6 +981,7 @@ export class Sky {
     exposure: number,
     sunDisk: boolean,
     starExposure = 0,
+    moon?: MoonView,
   ): void {
     const f = this.f32;
     const p = this.atmosphere.parameters;
@@ -923,6 +1008,22 @@ export class Sky {
     f[56] = view.aerialStart;
     f[57] = view.aerialEnd;
     f[58] = starExposure;
+    if (moon) {
+      f.set(moon.direction, 60);
+      f[63] = moon.sinRadius;
+      f.set(moon.toEarth, 64);
+      f.set(moon.north, 68);
+      f.set(moon.toSun, 72);
+      // A full disk's radiance is the albedo's share of a white Lambertian
+      // disk's (E / π); by phase, Allen's total over Lommel-Seeliger's.
+      const alpha = Math.min(moon.phaseAngle, (170 * Math.PI) / 180);
+      f[67] =
+        ((MOON_ALBEDO / Math.PI) * moonPhaseBrightness(alpha)) /
+        lommelSeeliger(alpha) /
+        this.moonMean;
+    } else {
+      f[63] = 0;
+    }
     f[3] = exposure;
     f[4] = sun[0]!;
     f[5] = sun[1]!;
@@ -940,7 +1041,7 @@ export class Sky {
     f[21] = height;
     f[22] = SKY_STEPS;
     this.device.queue.writeBuffer(view.buffer, 0, this.data, 0, 96);
-    this.device.queue.writeBuffer(view.buffer, 224, this.data, 224, 16);
+    this.device.queue.writeBuffer(view.buffer, 224, this.data, 224, 80);
   }
 
   /** The weights (bytes 96 on) are constant: written once per view. */
@@ -1000,3 +1101,37 @@ const scratchCartographic: Cartographic = {
   height: 0,
 };
 const scratchNormal = v3.vec3();
+
+/**
+ * An albedo map's mean (linear luminance of its sRGB texels), weighted by
+ * latitude's cosine (equirectangular rows shrink toward the poles).
+ */
+function meanAlbedo(image: ImageBitmap): number {
+  const { width, height } = image;
+  const canvas = new OffscreenCanvas(width, height);
+  const context = canvas.getContext("2d");
+  if (!context) {
+    return 1;
+  }
+  context.drawImage(image, 0, 0);
+  const data = context.getImageData(0, 0, width, height).data;
+  const linear = (c: number) => {
+    const x = c / 255;
+    return x <= 0.04045 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4;
+  };
+  let sum = 0;
+  let weights = 0;
+  for (let y = 0; y < height; y++) {
+    const w = Math.cos(((y + 0.5) / height - 0.5) * Math.PI);
+    for (let x = 0; x < width; x++) {
+      const i = (y * width + x) * 4;
+      sum +=
+        w *
+        (0.2126 * linear(data[i]!) +
+          0.7152 * linear(data[i + 1]!) +
+          0.0722 * linear(data[i + 2]!));
+      weights += w;
+    }
+  }
+  return sum > 0 ? sum / weights : 1;
+}

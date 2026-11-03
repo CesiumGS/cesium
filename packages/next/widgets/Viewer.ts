@@ -26,6 +26,7 @@ import {
   fromDegrees,
   icrfToFixed,
   mat4,
+  moonPosition,
   resolveIonAsset,
   sunDirection,
   vec3,
@@ -90,11 +91,24 @@ export interface ViewerOptions {
    * by the clock); false: none.
    */
   stars?: boolean;
+  /**
+   * The Moon in the sky and its light at night (default true: placed by
+   * the clock, with 1.x's moon map); false: none.
+   */
+  moon?: boolean;
   /** The sun's shadows in the views (default true; `View.shadows`). */
   shadows?: boolean;
   /** Ambient occlusion in the views (default true; `View.ambientOcclusion`). */
   ambientOcclusion?: boolean;
 }
+
+/** 1.x's moon map (equirectangular, the near side in the middle). */
+const scratchMoon = new Float64Array(3);
+
+const MOON_MAP = new URL(
+  "../../engine/Source/Assets/Textures/moonSmall.jpg",
+  import.meta.url,
+);
 
 /** 1.x's star map (Tycho), +x, −x, +y, −y, +z, −z in the celestial frame. */
 const STAR_MAP = [
@@ -176,6 +190,8 @@ export class Viewer {
   /** The scene's time: the sun follows it unless placed by `setSun`. */
   readonly clock: Clock;
   private sunFromClock_ = true;
+  /** The Moon is drawn (`ViewerOptions.moon`). */
+  private readonly moon: boolean;
   /** The clock was given or has been set to the first framing's morning. */
   private clockPlaced: boolean;
   private time_?: TimeControlsHandle;
@@ -254,15 +270,30 @@ export class Viewer {
     }
     this.clockPlaced = options.clock !== undefined;
     this.clock = options.clock ?? new Clock({ mode: "paused" });
+    this.moon = options.moon !== false;
     this.clock.events.on("change", () => {
-      icrfToFixed(this.clock.time, this.engine.icrfToFixed);
+      this.applyClockSky();
       if (this.sunFromClock_) {
         this.applyClockSun();
       } else {
         this.engine.requestRender();
       }
     });
-    icrfToFixed(this.clock.time, this.engine.icrfToFixed);
+    this.applyClockSky();
+    if (this.moon) {
+      void fetch(MOON_MAP)
+        .then(async (response) =>
+          createImageBitmap(await response.blob(), {
+            colorSpaceConversion: "none",
+          }),
+        )
+        .then((image) => {
+          if (!this.destroyed) {
+            this.engine.setMoonMap(image);
+          }
+        })
+        .catch(() => {});
+    }
     if (options.stars !== false) {
       void Promise.all(
         STAR_MAP.map(async (url) =>
@@ -606,6 +637,20 @@ export class Viewer {
     this.time_?.show(on);
     if (on) {
       this.applyClockSun();
+    }
+  }
+
+  /** The stars' turn and the Moon's place at the clock's time. */
+  private applyClockSky(): void {
+    const m = icrfToFixed(this.clock.time, this.engine.icrfToFixed);
+    if (!this.moon) {
+      return;
+    }
+    const p = moonPosition(this.clock.time, scratchMoon);
+    const fixed = (this.engine.moonPosition ??= new Float64Array(3));
+    for (let i = 0; i < 3; i++) {
+      fixed[i] =
+        m[i * 3]! * p[0]! + m[i * 3 + 1]! * p[1]! + m[i * 3 + 2]! * p[2]!;
     }
   }
 

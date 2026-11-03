@@ -27,6 +27,9 @@ struct View {
   // The camera on the atmosphere's sphere, km (xyz), and how much aerial
   // perspective is marched per vertex rather than read from the volume (w).
   aerialOrigin: vec4f,
+  // Toward the Moon from the camera (unit, xyz), and its illuminance as a
+  // share of the sun's above the atmosphere (w; 0: none).
+  moonLight: vec4f,
 };
 
 struct DrawRecord {

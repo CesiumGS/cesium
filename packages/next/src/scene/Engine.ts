@@ -44,6 +44,7 @@ import {
 import { ViewLink, type ViewLinkOptions } from "./ViewLink.ts";
 import { RealtimeAtmosphere } from "../atmosphere/RealtimeAtmosphere.ts";
 import { Sky, type SkyView } from "../atmosphere/Sky.ts";
+import { MOON_ALBEDO, MOON_RADIUS, moonPhaseBrightness } from "../time/moon.ts";
 import type { AerosolType } from "../atmosphere/model.ts";
 import { EARTH } from "./Body.ts";
 import { Camera } from "./Camera.ts";
@@ -239,6 +240,13 @@ export class Engine {
    * sets it from its clock, with the sun).
    */
   readonly icrfToFixed = new Float64Array([1, 0, 0, 0, 1, 0, 0, 0, 1]);
+  /**
+   * The Moon's center, meters from the Earth's center in Earth-fixed axes
+   * (`moonPosition(time)` turned by `icrfToFixed`): drawn in the sky (its
+   * phase from the sun) and lighting the scene at night. Undefined (the
+   * default): no Moon; the Viewer sets it from its clock.
+   */
+  moonPosition: Float64Array | undefined = undefined;
 
   private readonly ctx: RenderContext;
   /** @internal The real-time atmosphere and the sky drawn from it. */
@@ -401,6 +409,7 @@ export class Engine {
       exposure: 1,
       body: EARTH,
       aerial: undefined,
+      moon: undefined,
     };
     this.pickParams = device.createBuffer({
       size: 16,
@@ -584,6 +593,61 @@ export class Engine {
   ): void {
     this.sky.setStarMap(faces, luminance);
     this.requestRender();
+  }
+
+  /**
+   * The Moon's albedo map: equirectangular, longitude 0 (the near side's
+   * center) in the middle, north up, sRGB (1.x's `moonSmall.jpg`); only
+   * its pattern counts (the disk's brightness follows the Moon's albedo and
+   * phase). Null: a uniform disk.
+   */
+  setMoonMap(image: ImageBitmap | null): void {
+    this.sky.setMoonMap(image);
+    this.requestRender();
+  }
+
+  /**
+   * The Moon as a camera at `position` (Earth-fixed, m) sees it, for the
+   * sky, and its light, for the scene; undefined without `moonPosition`.
+   */
+  private moonFrom(position: Vec3): typeof scratchMoon | undefined {
+    const moon = this.moonPosition;
+    if (!moon) {
+      return undefined;
+    }
+    const m = scratchMoon;
+    const toward = v3.sub(m.direction, moon, position);
+    const distance = v3.length(toward);
+    v3.scale(toward, toward, 1 / distance);
+    v3.normalize(m.toEarth, v3.negate(m.toEarth, moon));
+    // Its pole: the ecliptic's (1.5° off), turned to Earth-fixed axes and
+    // square to the axis toward the Earth.
+    const r = this.icrfToFixed;
+    const ey = -Math.sin(OBLIQUITY);
+    const ez = Math.cos(OBLIQUITY);
+    const north = m.north;
+    for (let i = 0; i < 3; i++) {
+      north[i] = r[i * 3 + 1]! * ey + r[i * 3 + 2]! * ez;
+    }
+    v3.normalize(
+      north,
+      v3.sub(
+        north,
+        north,
+        v3.scale(scratchMoonAxis, m.toEarth, v3.dot(north, m.toEarth)),
+      ),
+    );
+    // Toward the sun from the Moon (the sun's direction is the Earth's).
+    const sun = this.sunDirection;
+    for (let i = 0; i < 3; i++) {
+      m.toSun[i] = sun[i]! * ASTRONOMICAL_UNIT - moon[i]!;
+    }
+    v3.normalize(m.toSun, m.toSun);
+    m.sinRadius = Math.min(MOON_RADIUS / distance, 1);
+    m.phaseAngle = Math.acos(
+      Math.min(Math.max(-v3.dot(m.toSun, toward), -1), 1),
+    );
+    return m;
   }
 
   /**
@@ -1673,6 +1737,17 @@ export class Engine {
     block.exposure = view.exposureScale;
     block.body = view.body;
     block.aerial = undefined;
+    // The Moon's light: its full disk gives the albedo's share of the sun's
+    // light times its solid angle over π, then less by phase (Allen).
+    const moon = this.moonFrom(camera.position);
+    block.moon = moon && {
+      direction: moon.direction,
+      share:
+        MOON_ALBEDO *
+        moon.sinRadius *
+        moon.sinRadius *
+        moonPhaseBrightness(moon.phaseAngle),
+    };
     if (drawsSky(view)) {
       const sky = this.viewFrames.get(view)!.sky;
       this.sky.writeStars(this.icrfToFixed);
@@ -1687,6 +1762,7 @@ export class Engine {
         view.exposureScale,
         view.sunDisk,
         view.starExposure === undefined ? 0 : ev100ToScale(view.starExposure),
+        moon,
       );
       if (drawsAerialPerspective(view)) {
         block.aerial = {
@@ -1711,12 +1787,15 @@ export class Engine {
   private writeShadows(view: View, index: number, aspect: number): void {
     const frame = this.viewFrames.get(view)!;
     const camera = view.camera;
-    const sun = this.sunDirection;
     const up = v3.normalize(scratchShadowUp, camera.position);
+    // The sun's, or at night the Moon's when it's up.
+    const sunUp = v3.dot(up, this.sunDirection) > -0.05;
+    const moon = this.viewBlock.moon;
+    const moonUp =
+      !sunUp && moon !== undefined && v3.dot(up, moon.direction) > 0;
+    const sun = moonUp ? moon.direction : this.sunDirection;
     frame.shadowed =
-      view.shadows &&
-      view.lighting.sunIlluminance !== 0 &&
-      v3.dot(up, sun) > -0.05;
+      view.shadows && view.lighting.sunIlluminance !== 0 && (sunUp || moonUp);
     const cascades = this.cascades;
     if (frame.shadowed) {
       const c = view.body.ellipsoid.cartesianToCartographic(
@@ -1771,6 +1850,7 @@ export class Engine {
       camera.direction,
       frame.shadowed,
       frame.ambient,
+      frame.shadowed && moonUp,
     );
   }
 
@@ -2694,6 +2774,20 @@ function destroyViewFrame(frame: ViewFrame): void {
   frame.depth.destroy();
 }
 
+/** The Moon as a view sees it (`moonFrom`). */
+const scratchMoon = {
+  direction: v3.vec3(),
+  sinRadius: 0,
+  toEarth: v3.vec3(),
+  north: v3.vec3(),
+  toSun: v3.vec3(),
+  phaseAngle: 0,
+};
+const scratchMoonAxis = v3.vec3();
+/** The mean distance to the sun, m (IAU 2012). */
+const ASTRONOMICAL_UNIT = 1.495978707e11;
+/** The ecliptic's tilt to the equator (J2000), radians. */
+const OBLIQUITY = (23.4392911 * Math.PI) / 180;
 const scratchEnu = m4.mat4();
 const scratchEast = v3.vec3();
 const scratchUp = v3.vec3();

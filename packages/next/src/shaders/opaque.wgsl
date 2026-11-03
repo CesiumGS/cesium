@@ -156,12 +156,18 @@ fn sunIlluminance(relPosition: vec3f) -> vec3f {
   if (view.sunLight.z < 0.5) {
     return vec3f(view.sunIlluminance);
   }
+  return sunlightThroughAir(relPosition, view.sunDirection.xyz);
+}
+
+// The sun's light through the atmosphere arriving from `direction` (the
+// sun-light table): the sun's own, or the Moon's color and dimming.
+fn sunlightThroughAir(relPosition: vec3f, direction: vec3f) -> vec3f {
   let p = relPosition + view.cameraHi + view.cameraLo;
   let radii = view.bodyRadii.xyz;
   let distance = length(p);
   let height = (distance - distance / length(p / radii)) / 1000.0;
   let up = normalize(p / (radii * radii));
-  let mu = dot(up, view.sunDirection.xyz);
+  let mu = dot(up, direction);
   let bottom = view.sunLight.x;
   let top = view.sunLight.y;
   let size = vec2f(256.0, 64.0);
@@ -390,7 +396,8 @@ struct Shadows {
   texels: vec4f,   // each cascade's texel size, m
   forward: vec4f,  // the camera's forward axis (xyz); w: 1 when drawn
   // x: where shadows start to fade, y: where they end, m; z: 1 when the
-  // ambient-occlusion buffer holds this view's.
+  // ambient-occlusion buffer holds this view's; w: 1 when the cascades
+  // follow the Moon (at night) rather than the sun.
   fade: vec4f,
 };
 
@@ -484,6 +491,28 @@ fn smithVisibility(alpha: f32, nDotL: f32, nDotV: f32) -> f32 {
   let ggxL = nDotV * sqrt(nDotL * nDotL * (1.0 - a2) + a2);
   let sum = ggxV + ggxL;
   return select(0.0, 0.5 / sum, sum > 0.0);
+}
+
+// A light's reflectance toward the camera, per unit of its illuminance:
+// GGX specular and Lambert diffuse, times n·l (clamped as 1.x clamps it).
+fn directReflectance(
+  n: vec3f,
+  v: vec3f,
+  l: vec3f,
+  f0: vec3f,
+  diffuseColor: vec3f,
+  alpha: f32,
+  nDotV: f32,
+) -> vec3f {
+  let h = normalize(v + l);
+  let nDotL = clamp(dot(n, l), 0.001, 1.0);
+  let vDotH = clamp(dot(v, h), 0.0, 1.0);
+  let nDotH = clamp(dot(n, h), 0.0, 1.0);
+  let f90 = vec3f(clamp(max(f0.r, max(f0.g, f0.b)) * 25.0, 0.0, 1.0));
+  let fresnel = fresnelSchlick(f0, f90, vDotH);
+  let specular = fresnel * smithVisibility(alpha, nDotL, nDotV) * ggx(alpha, nDotH);
+  let diffuse = (1.0 - fresnel) * diffuseColor / PI;
+  return (diffuse + specular) * nDotL;
 }
 
 fn ggx(alpha: f32, nDotH: f32) -> f32 {
@@ -647,25 +676,30 @@ fn fs(in: VsOut, @builtin(front_facing) frontFacing: bool) -> FsOut {
   let alpha = roughness * roughness;
 
   // Direct sun light.
-  let h = normalize(v + l);
-  let nDotL = clamp(dot(n, l), 0.001, 1.0);
-  let vDotH = clamp(dot(v, h), 0.0, 1.0);
-  let nDotH = clamp(dot(n, h), 0.0, 1.0);
-  let f90 = vec3f(clamp(max(f0.r, max(f0.g, f0.b)) * 25.0, 0.0, 1.0));
-  let fresnel = fresnelSchlick(f0, f90, vDotH);
-  let specular = fresnel * smithVisibility(alpha, nDotL, nDotV) * ggx(alpha, nDotH);
-  let diffuse = (1.0 - fresnel) * diffuseColor / PI;
+  let sunReflected = directReflectance(n, v, l, f0, diffuseColor, alpha, nDotV);
   // 1.x clamps n·l to at least 0.001, which lets a little sun light reach
   // surfaces facing away from it; 2.0 gives them none.
+  var geometric = normalize(in.normal);
+  if (!frontFacing) {
+    geometric = -geometric;
+  }
+  let moonShadows = shadows.fade.w > 0.5;
   var sunVisible = select(0.0, 1.0, dot(n, l) > 0.0);
-  if (sunVisible > 0.0) {
-    var geometric = normalize(in.normal);
-    if (!frontFacing) {
-      geometric = -geometric;
-    }
+  if (sunVisible > 0.0 && !moonShadows) {
     sunVisible *= sunShadow(in.relPosition, geometric);
   }
-  let direct = (diffuse + specular) * nDotL * sunIlluminance(in.relPosition) * sunVisible;
+  var direct = sunReflected * sunIlluminance(in.relPosition) * sunVisible;
+  // The Moon's light: the sun's, reflected (its share in `moonLight.w`),
+  // through the air toward it, shadowed by the cascades at night.
+  let moonward = view.moonLight.xyz;
+  if (view.moonLight.w > 0.0 && view.sunLight.z > 0.5 && dot(n, moonward) > 0.0) {
+    var moonVisible = 1.0;
+    if (moonShadows) {
+      moonVisible = sunShadow(in.relPosition, geometric);
+    }
+    direct += directReflectance(n, v, moonward, f0, diffuseColor, alpha, nDotV)
+      * sunlightThroughAir(in.relPosition, moonward) * view.moonLight.w * moonVisible;
+  }
 
   // Image-based lighting (Fdez-Agüera 2019 multiple scattering).
   let lut = textureSampleLevel(brdfLut, environmentSampler, vec2f(nDotV, roughness), 0.0).rg;
