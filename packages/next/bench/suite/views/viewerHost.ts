@@ -161,6 +161,8 @@ export interface Lighting {
   aerialPerspective: boolean;
   /** 2.0: the sun's shadows. */
   shadows: boolean;
+  /** 2.0: ambient occlusion. */
+  ambientOcclusion: boolean;
   /** 2.0: how far one can see through the air, km (its haze). */
   visibility: number;
   /** 2.0: what the haze is made of. */
@@ -447,6 +449,7 @@ export class NextViewerHost implements ViewerHost {
         : lighting.sunIlluminance;
       view.aerialPerspective = lighting.aerialPerspective;
       view.shadows = lighting.shadows;
+      view.ambientOcclusion = lighting.ambientOcclusion;
       view.lighting.diffuseIbl = lighting.diffuseIbl;
       view.lighting.specularIbl = lighting.specularIbl;
       view.exposure = lighting.autoExposure

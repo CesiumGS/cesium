@@ -27,6 +27,7 @@ import {
   SCENE_TARGETS,
   type RenderContext,
   type ShaderOverrides,
+  AO_MAX_PIXELS,
 } from "./RenderContext.ts";
 import { createBox } from "./meshes.ts";
 import {
@@ -1744,12 +1745,31 @@ export class Engine {
       block.planes = planes;
       block.aerial = aerial;
     }
+    // Ambient occlusion: its prepass and kernels' parameters.
+    frame.ambient =
+      view.ambientOcclusion && frame.width * frame.height <= AO_MAX_PIXELS;
+    if (frame.ambient) {
+      const tanY = Math.tan(camera.fovy(aspect) / 2);
+      const a = scratchAo;
+      a.set(camera.right, 0);
+      a[3] = tanY * aspect;
+      a.set(camera.up, 4);
+      a[7] = tanY;
+      a.set(camera.direction, 8);
+      a[11] = camera.near;
+      a[12] = frame.width;
+      a[13] = frame.height;
+      a[14] = view.ambientOcclusionRadius;
+      a[15] = Math.max(32, 0.15 * frame.height);
+      this.ctx.device.queue.writeBuffer(frame.aoParams, 0, a);
+    }
     writeShadows(
       this.shadowData,
       (index * SHADOWS_STRIDE) / 4,
       cascades,
       camera.direction,
       frame.shadowed,
+      frame.ambient,
     );
   }
 
@@ -2099,6 +2119,12 @@ export class Engine {
       presentDisplay: undefined,
       sky: this.sky.createView(),
       shadowed: false,
+      ambient: false,
+      aoParams: device.createBuffer({
+        label: "aoParams",
+        size: 64,
+        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+      }),
     };
     this.sky.writeWeights(frame.sky);
 
@@ -2177,6 +2203,112 @@ export class Engine {
         this.sky.encodeAerial(enc, frame.sky, this.timer.passWrites());
       }
     });
+
+    // Ambient occlusion: a single-sampled depth and normal prepass of what
+    // the view culled, the horizon search, then the blur into the buffer
+    // the opaque pass reads.
+    const prepassNormal = graph.createTexture("prepass.normal", {
+      width,
+      height,
+      format: "rgba16float",
+      usage: attachment | GPUTextureUsage.TEXTURE_BINDING,
+    });
+    const prepassDepth = graph.createTexture("prepass.depth", {
+      width,
+      height,
+      format: "depth32float",
+      usage: attachment | GPUTextureUsage.TEXTURE_BINDING,
+    });
+    const rawAo = graph.createTexture("ao.raw", {
+      width: Math.ceil(width / 2),
+      height: Math.ceil(height / 2),
+      format: "r32float",
+      usage: GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.TEXTURE_BINDING,
+    });
+    const prepassColor: GPURenderPassColorAttachment = {
+      view: undefined as never,
+      clearValue: { r: 0, g: 0, b: 1, a: 0 },
+      loadOp: "clear",
+      storeOp: "store",
+    };
+    const prepassDepthAttachment: GPURenderPassDepthStencilAttachment = {
+      view: undefined as never,
+      depthClearValue: 0,
+      depthLoadOp: "clear",
+      depthStoreOp: "store",
+    };
+    const prepassPass: GPURenderPassDescriptor = {
+      label: "prepass",
+      colorAttachments: [prepassColor],
+      depthStencilAttachment: prepassDepthAttachment,
+    };
+    graph.addPass(
+      "prepass",
+      { writes: [prepassNormal, prepassDepth], sideEffect: true },
+      (enc, get) => {
+        if (!frame.ambient) {
+          return;
+        }
+        prepassColor.view = get(prepassNormal);
+        prepassDepthAttachment.view = get(prepassDepth);
+        prepassPass.timestampWrites = this.timer.passWrites();
+        const pass = enc.beginRenderPass(prepassPass);
+        pass.executeBundles([view.world.prepassBundle()]);
+        pass.end();
+      },
+    );
+    graph.addPass(
+      "ambient-occlusion",
+      {
+        reads: [prepassNormal, prepassDepth],
+        writes: [rawAo],
+        sideEffect: true,
+      },
+      (enc, get) => {
+        if (!frame.ambient) {
+          return;
+        }
+        const trace = device.createBindGroup({
+          layout: pipelines.aoTrace.getBindGroupLayout(0),
+          entries: [
+            { binding: 0, resource: { buffer: frame.aoParams } },
+            { binding: 1, resource: get(prepassDepth) },
+            { binding: 2, resource: get(prepassNormal) },
+            { binding: 3, resource: get(rawAo) },
+          ],
+        });
+        const blur = device.createBindGroup({
+          layout: pipelines.aoDenoise.getBindGroupLayout(0),
+          entries: [
+            { binding: 0, resource: { buffer: frame.aoParams } },
+            { binding: 1, resource: get(prepassDepth) },
+            { binding: 4, resource: get(rawAo) },
+            { binding: 5, resource: { buffer: this.ctx.aoBuffer } },
+          ],
+        });
+        const timestampWrites = this.timer.passWrites();
+        const pass = enc.beginComputePass({
+          label: "ambient-occlusion",
+          ...(timestampWrites ? { timestampWrites } : {}),
+        });
+        pass.setPipeline(pipelines.aoTrace);
+        pass.setBindGroup(0, trace);
+        pass.dispatchWorkgroups(Math.ceil(width / 16), Math.ceil(height / 16));
+        pass.end();
+        const blurWrites = this.timer.passWrites();
+        const second = enc.beginComputePass({
+          label: "ambient-occlusion.blur",
+          ...(blurWrites ? { timestampWrites: blurWrites } : {}),
+        });
+        second.setPipeline(pipelines.aoDenoise);
+        second.setBindGroup(0, blur);
+        second.dispatchWorkgroups(
+          Math.ceil(Math.ceil(width / 4) / 8),
+          Math.ceil(height / 8),
+        );
+        second.end();
+      },
+    );
 
     graph.addPass(
       "opaque",
@@ -2507,6 +2639,10 @@ interface ViewFrame {
   readonly sky: SkyView;
   /** The sun's shadow maps were fitted for this view this frame. */
   shadowed: boolean;
+  /** Ambient occlusion is computed for this view this frame. */
+  ambient: boolean;
+  /** Its kernels' parameters (ao.wgsl `AoParams`). */
+  readonly aoParams: GPUBuffer;
 }
 
 interface TargetFrame {
@@ -2549,6 +2685,7 @@ function drawsAerialPerspective(view: View): boolean {
 
 function destroyViewFrame(frame: ViewFrame): void {
   frame.presentParams.destroy();
+  frame.aoParams.destroy();
   frame.sky.buffer.destroy();
   frame.sky.table.destroy();
   frame.sky.faceUniforms.destroy();
@@ -2599,5 +2736,6 @@ const scratchCartographic: Cartographic = {
 };
 const scratchProj = m4.mat4();
 const scratchShadowUp = v3.vec3();
+const scratchAo = new Float32Array(16);
 const scratchViewProj = m4.mat4();
 const scratchPlanes = new Float32Array(20);

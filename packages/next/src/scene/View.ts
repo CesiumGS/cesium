@@ -272,6 +272,15 @@ export interface ViewOptions {
    * turns them on.
    */
   shadows?: boolean;
+  /**
+   * Ambient occlusion (GTAO from a depth and normal prepass): the sky's
+   * light hidden by nearby surfaces, in corners, under eaves, between
+   * buildings. Default false in the engine (as `shadows`); the `Viewer`
+   * turns it on.
+   */
+  ambientOcclusion?: boolean;
+  /** How far ambient occlusion looks for occluders, m. Default 3. */
+  ambientOcclusionRadius?: number;
   /** Background color as displayed (already exposed), with "color". */
   clearColor?: readonly [number, number, number];
   /** Output transfer function. "gamma2.2" matches CesiumJS 1.x. */
@@ -332,6 +341,8 @@ export class View {
   sunDisk: boolean;
   aerialPerspective: boolean;
   shadows: boolean;
+  ambientOcclusion: boolean;
+  ambientOcclusionRadius: number;
   clearColor: readonly [number, number, number];
   outputEncoding: OutputEncoding;
   toneMapping: ToneMapping;
@@ -365,6 +376,8 @@ export class View {
     this.sunDisk = options.sunDisk ?? true;
     this.aerialPerspective = options.aerialPerspective ?? true;
     this.shadows = options.shadows ?? false;
+    this.ambientOcclusion = options.ambientOcclusion ?? false;
+    this.ambientOcclusionRadius = options.ambientOcclusionRadius ?? 3;
     this.clearColor = options.clearColor ?? [0.004, 0.008, 0.02];
     this.outputEncoding = options.outputEncoding ?? "srgb";
     this.toneMapping = options.toneMapping ?? "pbrNeutral";

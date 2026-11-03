@@ -172,13 +172,17 @@ function normalize(a: number[]): number[] {
   return [a[0]! / l, a[1]! / l, a[2]! / l];
 }
 
-/** Writes a view's `Shadows` uniform (opaque.wgsl); `enabled` false: none. */
+/**
+ * Writes a view's `Shadows` uniform (opaque.wgsl); `enabled` false: none.
+ * It also says whether the ambient-occlusion buffer holds the view's.
+ */
 export function writeShadows(
   out: Float32Array,
   offsetFloats: number,
   cascades: ShadowCascades,
   forward: ArrayLike<number>,
   enabled: boolean,
+  ambientOcclusion: boolean,
 ): void {
   const o = offsetFloats;
   out.set(cascades.matrices, o);
@@ -190,6 +194,6 @@ export function writeShadows(
   out[o + 75] = enabled ? 1 : 0;
   out[o + 76] = cascades.fadeStart;
   out[o + 77] = cascades.far;
-  out[o + 78] = 0;
+  out[o + 78] = ambientOcclusion ? 1 : 0;
   out[o + 79] = 0;
 }

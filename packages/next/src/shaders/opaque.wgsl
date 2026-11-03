@@ -345,6 +345,23 @@ fn vertexOut(vertexIndex: u32, item: u32, withAir: bool) -> VsOut {
 // coarse tiles cast what is drawn.
 @fragment
 fn shadowFs(in: VsOut) {
+  cutOut(in);
+}
+
+// The depth and normal prepass (ambient occlusion reads it): the surface's
+// normal (geometric, facing the camera), with the opaque pass's discards.
+@fragment
+fn prepassFs(in: VsOut, @builtin(front_facing) frontFacing: bool) -> @location(0) vec4f {
+  cutOut(in);
+  var n = normalize(in.normal);
+  if (!frontFacing) {
+    n = -n;
+  }
+  return vec4f(n, 1.0);
+}
+
+// The opaque pass's discards: alpha cutoff, mixed-LOD placeholders.
+fn cutOut(in: VsOut) {
   let r = records[in.draw];
   let material = materials[r.materialIndex];
   let baseColorAlpha = textureSample(baseColorTexture, baseColorSampler, in.uv).a;
@@ -372,12 +389,27 @@ struct Shadows {
   splits: vec4f,   // each cascade's far distance along the view, m
   texels: vec4f,   // each cascade's texel size, m
   forward: vec4f,  // the camera's forward axis (xyz); w: 1 when drawn
-  fade: vec4f,     // x: where shadows start to fade, y: where they end, m
+  // x: where shadows start to fade, y: where they end, m; z: 1 when the
+  // ambient-occlusion buffer holds this view's.
+  fade: vec4f,
 };
 
 @group(0) @binding(12) var<uniform> shadows: Shadows;
 @group(0) @binding(13) var shadowMap: texture_depth_2d_array;
 @group(0) @binding(14) var shadowSampler: sampler_comparison;
+// Ambient occlusion by pixel (ao.wgsl `denoise`): 4 pixels a word, 8 bits
+// each, rows of ceil(width / 4) words.
+@group(0) @binding(15) var<storage, read> aoWords: array<u32>;
+
+fn ambientOcclusion(pixel: vec2f) -> f32 {
+  if (shadows.fade.z < 0.5) {
+    return 1.0;
+  }
+  let p = vec2u(pixel);
+  let words = (u32(view.viewport.x) + 3u) / 4u;
+  let word = aoWords[p.y * words + p.x / 4u];
+  return f32((word >> (8u * (p.x & 3u))) & 255u) / 255.0;
+}
 
 const SHADOW_SIZE: f32 = 2048.0;
 
@@ -634,7 +666,17 @@ fn fs(in: VsOut, @builtin(front_facing) frontFacing: bool) -> FsOut {
   if ((flags & 128u) != 0u) {
     occlusion = 1.0 + material.occlusionStrength * (occlusionSample - 1.0);
   }
-  let indirect = (diffuseIbl * view.diffuseIbl + specularIbl * view.specularIbl) * occlusion;
+  // The sky's light where the surroundings hide it (screen-space ambient
+  // occlusion), with light bouncing between bright surfaces (Jimenez et
+  // al.'s multi-bounce fit on the diffuse color) and its share of the
+  // reflections (Lagarde's specular occlusion).
+  let ao = ambientOcclusion(in.position.xy);
+  let ma = 2.0404 * diffuseColor - 0.3324;
+  let mb = -4.7951 * diffuseColor + 0.6417;
+  let mc = 2.7552 * diffuseColor + 0.6903;
+  let aoDiffuse = max(vec3f(ao), ((ao * ma + mb) * ao + mc) * ao);
+  let aoSpecular = clamp(pow(nDotV + ao, exp2(-16.0 * roughness - 1.0)) - 1.0 + ao, 0.0, 1.0);
+  let indirect = (diffuseIbl * aoDiffuse * view.diffuseIbl + specularIbl * aoSpecular * view.specularIbl) * occlusion;
 
   // Pre-exposed (plan §4.2). Emission is display-relative: authored
   // emissive colors look the same at any exposure.

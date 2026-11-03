@@ -495,6 +495,9 @@ export class World {
   /** The shadow casters' bundle, and the draw bundle it was recorded with. */
   private casters?: GPURenderBundle;
   private castersFor?: GPURenderBundle;
+  /** The depth and normal prepass's bundle, likewise. */
+  private prepassBundle_?: GPURenderBundle;
+  private prepassFor?: GPURenderBundle;
   private readonly cullParamsData = new Uint32Array(4);
   private readonly cullPassDesc: GPUComputePassDescriptor = { label: "cull" };
 
@@ -1928,6 +1931,18 @@ export class World {
     return this.casters;
   }
 
+  /**
+   * The bundle drawing this world into the depth and normal prepass (after
+   * the view's cull), current with `prepareFrame`'s.
+   */
+  prepassBundle(): GPURenderBundle {
+    if (!this.prepassBundle_ || this.prepassFor !== this.bundle) {
+      this.prepassBundle_ = this.recordBundle("prepass");
+      this.prepassFor = this.bundle;
+    }
+    return this.prepassBundle_;
+  }
+
   /** Encodes this world's per-view culling: clear batch counts, cull, write args. */
   encodeCull(
     encoder: GPUCommandEncoder,
@@ -2026,14 +2041,17 @@ export class World {
    * One draw per batch, grouped by cull mode and texture set: the opaque
    * pass's, or the sun's shadow casters' (depth only; no lines).
    */
-  private recordBundle(kind: "opaque" | "shadow" = "opaque"): GPURenderBundle {
+  private recordBundle(
+    kind: "opaque" | "shadow" | "prepass" = "opaque",
+  ): GPURenderBundle {
     const { device, pipelines, targets, currentViewBindGroup } = this.ctx;
     const shadow = kind === "shadow";
+    const prepass = kind === "prepass";
     const encoder = device.createRenderBundleEncoder(
-      shadow
+      shadow || prepass
         ? {
-            label: "world.shadowBundle",
-            colorFormats: [],
+            label: `world.${kind}Bundle`,
+            colorFormats: prepass ? ["rgba16float"] : [],
             depthStencilFormat: "depth32float",
             sampleCount: 1,
           }
@@ -2055,19 +2073,23 @@ export class World {
     const masked = (batch: Batch) =>
       (this.materialsU32[batch.material * MATERIAL_WORDS + 12]! & 4) !== 0;
     const pipelineOf = (batch: Batch) =>
-      shadow
-        ? masked(batch)
-          ? batch.doubleSided
-            ? pipelines.shadowMaskedDoubleSided
-            : pipelines.shadowMasked
-          : batch.doubleSided
-            ? pipelines.shadowDoubleSided
-            : pipelines.shadow
-        : batch.mesh.topology === "line-list"
-          ? pipelines.opaqueLines
-          : batch.doubleSided
-            ? pipelines.opaqueDoubleSided
-            : pipelines.opaque;
+      prepass
+        ? batch.doubleSided
+          ? pipelines.prepassDoubleSided
+          : pipelines.prepass
+        : shadow
+          ? masked(batch)
+            ? batch.doubleSided
+              ? pipelines.shadowMaskedDoubleSided
+              : pipelines.shadowMasked
+            : batch.doubleSided
+              ? pipelines.shadowDoubleSided
+              : pipelines.shadow
+          : batch.mesh.topology === "line-list"
+            ? pipelines.opaqueLines
+            : batch.doubleSided
+              ? pipelines.opaqueDoubleSided
+              : pipelines.opaque;
     const rank = (batch: Batch) =>
       batch.mesh.topology === "line-list" ? 2 : Number(batch.doubleSided);
     const order = [...this.batchList].sort(
@@ -2080,7 +2102,7 @@ export class World {
     for (const batch of order) {
       if (
         batch.items === 0 ||
-        (shadow && batch.mesh.topology === "line-list")
+        ((shadow || prepass) && batch.mesh.topology === "line-list")
       ) {
         continue;
       }

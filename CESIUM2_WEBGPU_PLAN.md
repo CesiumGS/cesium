@@ -929,9 +929,12 @@ by view depth and takes 3 × 3 bilinear comparisons (an edge about three
 texels wide), the receiver offset along its normal by 1.5 texels, plus a
 slope-scaled depth bias on the casters; shadows fade out over the last 15%
 of their distance. Cost in the Alps at 4.5 km, 2.6 megapixels with 4×
-MSAA (RTX 3000 Ada laptop): about 2.2 ms (1.8 ms for the four cascades,
-0.5 ms in the opaque pass), against 1.8 ms more for the first try, which
-ran a fragment stage for every caster. Limits and next steps: mixed-LOD
+MSAA (RTX 3000 Ada laptop): about a fifth of the frame (the four cascades
+plus their lookups in the opaque pass), half what the first try cost, which
+ran a fragment stage for every caster. (Those timings were taken with idle
+gaps between frames, which let this laptop's GPU clock down: absolute
+times measured that way run several times high. Back to back, the synthetic
+city's whole frame with shadows and ambient occlusion is 1.3-1.8 ms.) Limits and next steps: mixed-LOD
 placeholders cast unclipped where they're not alpha-masked (coarse and
 fine tiles cast nearly the same shadow); no cascade blending (a seam can
 show where cascades meet); far cascades could update every other frame or
@@ -943,6 +946,46 @@ Measured on the way: the aerial-perspective volume's compute takes about
 march across threads would fill the GPU better), and the opaque pass in a
 close oblique terrain view is about 9 ms at that size, mostly the lighting
 the imagery now gets (it took the unlit path before).
+
+Progress (r42): **ambient occlusion** (`View.ambientOcclusion`,
+`ambientOcclusionRadius`, default 3 m; on in the `Viewer`, off by default
+in the engine like shadows). GTAO (Jimenez et al. 2016, in the form of
+Intel's XeGTAO, ao.wgsl) from a **depth and normal prepass**: after the
+view's cull, a single-sampled pass draws the same batches (the casters'
+vertex stage, without aerial perspective; the opaque pass's discards) into
+depth and normals. At half resolution, two slices per pixel at angles from
+interleaved gradient noise, six steps a side, the horizon on each side
+within the radius (a falloff over its outer 60%), the cosine-weighted
+visible arc integrated exactly; then per full-resolution pixel a
+depth-aware 3 × 3 of the half-resolution result, upsampling and blurring
+the noise at once, packed 8 bits a pixel into a buffer the opaque pass
+reads (one global buffer, rewritten per view like the shadow maps, so the
+recorded bundles never need a per-view binding; up to 4096 × 4096). In the
+opaque pass it occludes the environment's light only: the diffuse through
+Jimenez's multi-bounce fit on the surface's diffuse color (bright surfaces
+lose less), the specular through Lagarde's specular occlusion. In the
+synthetic city at 2.6 megapixels: the prepass about 0.1 ms, the trace
+about 0.2 ms, the blur about 0.35 ms (back-to-back frames; full resolution
+with a 5 × 5 blur was three times that). It is subtle in daylight, where
+the sun dominates, and shows in shade, at building bases, in corners;
+from far above, a radius of meters covers less than a pixel and it fades
+out. Next: bent normals (the environment sampled in the unoccluded
+direction), larger-scale sky visibility for terrain (valleys under ridges,
+from the height field rather than the screen), and the visibility-bitmask
+extension for one bounce of screen-space indirect light (SSILVB).
+
+**Why a depth and normal prepass rather than a visibility buffer.** A
+visibility buffer (Burns and Hunt 2013, Nanite's) rasterizes triangle IDs
+and depth, then shades per pixel from them. For ambient occlusion and
+other screen-space passes what's needed is depth and normals before
+shading, which the prepass gives directly. The visibility buffer's other
+half, deferred material shading, still waits on bindless textures (§7.1:
+the material pass must reach every visible tile's textures), and writing
+triangle IDs needs the `primitive_index` builtin, an optional WebGPU
+feature not yet everywhere. The prepass draws from the same GPU-culled
+batches the opaque pass does, so a visibility buffer can replace it later
+without changing anything downstream: the prepass's targets are what the
+AO, and later SSR and screen-space GI, read.
 
 Progress (r40): **the atmosphere reference** (`src/atmosphere/`, Lab
 "Reference atmosphere", `bench/run.mjs atmosphere`). A spectral Monte

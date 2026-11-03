@@ -3,6 +3,7 @@ import { MipGenerator } from "../gpu/MipGenerator.ts";
 import { Environment } from "../gpu/Environment.ts";
 import { VIEW_SIZE } from "../render/layout.ts";
 import commonWgsl from "../shaders/common.wgsl?raw";
+import aoWgsl from "../shaders/ao.wgsl?raw";
 import { SHADOW_CASCADES, SHADOW_SIZE, SHADOWS_SIZE } from "./shadows.ts";
 import cullWgsl from "../shaders/cull.wgsl?raw";
 import scatterWgsl from "../shaders/scatter.wgsl?raw";
@@ -56,6 +57,12 @@ export interface Pipelines {
   shadowDoubleSided: GPURenderPipeline;
   shadowMasked: GPURenderPipeline;
   shadowMaskedDoubleSided: GPURenderPipeline;
+  /** The depth and normal prepass (ambient occlusion), and double-sided. */
+  prepass: GPURenderPipeline;
+  prepassDoubleSided: GPURenderPipeline;
+  /** Ambient occlusion (`ao.wgsl`): the horizon search, then the blur. */
+  aoTrace: GPUComputePipeline;
+  aoDenoise: GPUComputePipeline;
   present: GPURenderPipeline;
   overlay: GPURenderPipeline;
   overlayLayout: GPUBindGroupLayout;
@@ -96,6 +103,11 @@ export interface RenderContext {
   shadowMap: GPUTexture;
   shadowLayers: GPUTextureView[];
   currentShadowsBuffer: GPUBuffer;
+  /**
+   * Ambient occlusion by pixel, 8 bits each, for the view being drawn
+   * (rewritten per view before its opaque pass): up to `AO_MAX_PIXELS`.
+   */
+  aoBuffer: GPUBuffer;
   /**
    * The view bind group for drawing into the shadow maps: the same, with
    * a placeholder where the maps are bound (a texture can't be read and
@@ -156,6 +168,11 @@ export async function createRenderContext(
     format: "depth32float",
     usage: GPUTextureUsage.TEXTURE_BINDING,
   });
+  const aoBuffer = device.createBuffer({
+    label: "ambientOcclusion",
+    size: AO_MAX_PIXELS,
+    usage: GPUBufferUsage.STORAGE,
+  });
   const currentShadowsBuffer = device.createBuffer({
     label: "currentShadows",
     size: SHADOWS_SIZE,
@@ -185,6 +202,7 @@ export async function createRenderContext(
     { binding: 12, resource: { buffer: currentShadowsBuffer } },
     { binding: 13, resource: shadows },
     { binding: 14, resource: shadowSampler },
+    { binding: 15, resource: { buffer: aoBuffer } },
   ];
   const shadowViewBindGroup = device.createBindGroup({
     label: "currentView.shadowCasters",
@@ -240,9 +258,16 @@ export async function createRenderContext(
       }),
     ),
     currentShadowsBuffer,
+    aoBuffer,
     shadowViewBindGroup,
   };
 }
+
+/**
+ * The largest view (in pixels) ambient occlusion covers: one byte each in
+ * one buffer (16 MB, 4096 × 4096); larger views go without.
+ */
+export const AO_MAX_PIXELS = 4096 * 4096;
 
 function storage(
   binding: number,
@@ -308,6 +333,8 @@ async function createPipelines(
         texture: { sampleType: "depth", viewDimension: "2d-array" },
       },
       { binding: 14, visibility: FRAGMENT, sampler: { type: "comparison" } },
+      // Ambient occlusion by pixel (ao.wgsl).
+      storage(15, true, FRAGMENT),
     ],
   });
   const cullWorldLayout = device.createBindGroupLayout({
@@ -469,6 +496,36 @@ async function createPipelines(
       },
     });
 
+  // The prepass: single-sampled depth and normals, the casters' vertex
+  // stage (no aerial perspective) and discards.
+  const prepassPipeline = (label: string, cullMode: GPUCullMode) =>
+    device.createRenderPipelineAsync({
+      label,
+      layout: opaqueLayout,
+      vertex: {
+        module: casterModule,
+        entryPoint: "vsDepth",
+        buffers: [
+          {
+            arrayStride: 4,
+            stepMode: "instance",
+            attributes: [{ shaderLocation: 0, offset: 0, format: "uint32" }],
+          },
+        ],
+      },
+      fragment: {
+        module: casterModule,
+        entryPoint: "prepassFs",
+        targets: [{ format: "rgba16float" }],
+      },
+      primitive: { topology: "triangle-list", cullMode, frontFace: "ccw" },
+      depthStencil: {
+        format: "depth32float",
+        depthWriteEnabled: true,
+        depthCompare: "greater",
+      },
+    });
+
   const [
     cullRecords,
     cullInstances,
@@ -480,6 +537,10 @@ async function createPipelines(
     shadowDoubleSided,
     shadowMasked,
     shadowMaskedDoubleSided,
+    prepass,
+    prepassDoubleSided,
+    aoTrace,
+    aoDenoise,
     present,
     overlay,
     pick,
@@ -509,6 +570,18 @@ async function createPipelines(
     shadowPipeline("shadow.doubleSided", "none", false),
     shadowPipeline("shadow.masked", "back", true),
     shadowPipeline("shadow.maskedDoubleSided", "none", true),
+    prepassPipeline("prepass", "back"),
+    prepassPipeline("prepass.doubleSided", "none"),
+    device.createComputePipelineAsync({
+      label: "ao.trace",
+      layout: "auto",
+      compute: { module: module("ao", aoWgsl), entryPoint: "gtao" },
+    }),
+    device.createComputePipelineAsync({
+      label: "ao.denoise",
+      layout: "auto",
+      compute: { module: module("ao", aoWgsl), entryPoint: "denoise" },
+    }),
     device.createRenderPipelineAsync({
       label: "present",
       layout: "auto",
@@ -584,6 +657,10 @@ async function createPipelines(
     shadowDoubleSided,
     shadowMasked,
     shadowMaskedDoubleSided,
+    prepass,
+    prepassDoubleSided,
+    aoTrace,
+    aoDenoise,
     present,
     overlay,
     overlayLayout,

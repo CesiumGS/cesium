@@ -92,6 +92,8 @@ export interface ViewerOptions {
   stars?: boolean;
   /** The sun's shadows in the views (default true; `View.shadows`). */
   shadows?: boolean;
+  /** Ambient occlusion in the views (default true; `View.ambientOcclusion`). */
+  ambientOcclusion?: boolean;
 }
 
 /** 1.x's star map (Tycho), +x, −x, +y, −y, +z, −z in the celestial frame. */
@@ -182,8 +184,9 @@ export class Viewer {
   private credits_?: CreditsHandle;
   private inspector?: InspectorHandle;
   private frameRequest = 0;
-  /** New views (a split's second) get the main view's shadows. */
+  /** New views (a split's second) get the main view's shadows and AO. */
   private readonly shadows: boolean;
+  private readonly ambientOcclusion: boolean;
   private destroyed = false;
   private readonly accessToken: string | undefined;
 
@@ -220,10 +223,12 @@ export class Viewer {
       indexBytes: Math.min(384 << 20, Math.floor(limit / 4) * 4),
     });
     this.shadows = options.shadows ?? true;
+    this.ambientOcclusion = options.ambientOcclusion ?? true;
     this.view = engine.addView({
       target: this.target,
       world: this.world,
       shadows: this.shadows,
+      ambientOcclusion: this.ambientOcclusion,
     });
     this.controller = new GlobeController(this.view, canvas);
     // The whole Earth until the app frames something, as 1.x starts: the
@@ -674,6 +679,7 @@ export class Viewer {
         target: this.target,
         world: this.world,
         shadows: this.shadows,
+        ambientOcclusion: this.ambientOcclusion,
         viewport: { x: 0.5, y: 0, width: 0.5, height: 1 },
       }));
       Object.assign(second.lighting, this.view.lighting);
