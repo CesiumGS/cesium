@@ -1,5 +1,6 @@
 export {
   Engine,
+  STAR_MAP_LUMINANCE,
   type EngineOptions,
   type FrameStats,
   type GlobeOptions,
@@ -140,6 +141,7 @@ export {
 
 // Time: the scene's clock and the sun's position from it (plan §13.13).
 export { Clock, type ClockMode } from "./time/Clock.ts";
+export { icrfToFixed } from "./time/celestial.ts";
 export {
   greenwichSiderealTime,
   julianDate,

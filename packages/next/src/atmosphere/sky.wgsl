@@ -94,6 +94,48 @@ fn sunDisk(direction: vec3f) -> f32 {
   return (1.0 - 0.6 * (1.0 - sqrt(max(0.0, 1.0 - x * x)))) / (1.0 - 0.6 / 3.0) * coverage;
 }
 
+// --- the stars ------------------------------------------------------------------
+
+// The stars behind the atmosphere (plan §4.2, the night sky): a star map in
+// the celestial frame (ICRF), turned to Earth-fixed axes by the time, its
+// texels luminance in cd/m² per unit (linear). Seen through the
+// atmosphere: dimmed by its transmittance along the ray (to space), so they
+// fade toward the horizon and into twilight, and show as the exposure
+// opens at night; at a daylight exposure they're far below black.
+struct Stars {
+  // Earth-fixed to ICRF, by rows; rows[0].w: luminance per unit (cd/m²),
+  // 0 for none.
+  rows: array<vec4f, 3>,
+};
+
+@group(3) @binding(0) var<uniform> stars: Stars;
+@group(3) @binding(1) var starMap: texture_cube<f32>;
+@group(3) @binding(2) var starSampler: sampler;
+
+fn starLight(direction: vec3f) -> vec3f {
+  let d = vec3f(
+    dot(stars.rows[0].xyz, direction),
+    dot(stars.rows[1].xyz, direction),
+    dot(stars.rows[2].xyz, direction),
+  );
+  return textureSampleLevel(starMap, starSampler, d, 0.0).rgb * stars.rows[0].w;
+}
+
+// This group's share of a transmittance weighted by its bands' luminance:
+// the two groups' shares add up to the mean (the stars' dimming, gray).
+fn luminanceShare(t: vec4f, group: u32) -> f32 {
+  let y = vec3f(0.2126, 0.7152, 0.0722);
+  var total = 0.0;
+  for (var b = 0u; b < 8u; b++) {
+    total += dot(sky.weights[b].xyz, y);
+  }
+  let base = group * 4u;
+  return (t.x * dot(sky.weights[base].xyz, y)
+    + t.y * dot(sky.weights[base + 1u].xyz, y)
+    + t.z * dot(sky.weights[base + 2u].xyz, y)
+    + t.w * dot(sky.weights[base + 3u].xyz, y)) / total;
+}
+
 // --- per pixel (above the atmosphere) -------------------------------------------
 
 // The sky's light along `direction` (spectral, this group's wavelengths).
@@ -101,9 +143,15 @@ fn skyAlong(direction: vec3f) -> vec4f {
   return march(sky.position, direction, sky.sun, 1e9, i32(sky.steps), false).radiance * atmosphere.solarIrradiance;
 }
 
-@fragment
-fn skyFragment(in: SkyVarying) -> @location(0) vec4f {
-  let direction = viewDirection(in.position.xy);
+// The sky marched along a pixel's ray (pre-exposed), and this group's
+// share of the transmittance to space (0 where the ground is in the way).
+struct MarchedSky {
+  color: vec3f,
+  toSpace: f32,
+};
+
+fn marchedSky(pixel: vec2f, group: u32) -> MarchedSky {
+  let direction = viewDirection(pixel);
   let s = march(sky.position, direction, sky.sun, 1e9, i32(sky.steps), false);
   var spectral = s.radiance * atmosphere.solarIrradiance;
   // From far away the atmosphere's rim is a pixel or less across, its
@@ -133,10 +181,28 @@ fn skyFragment(in: SkyVarying) -> @location(0) vec4f {
   // the way.
   let r = length(sky.position);
   let mu = dot(sky.position, direction) / r;
-  if (!hitsGround(r, mu)) {
+  let ground = hitsGround(r, mu);
+  if (!ground) {
     spectral += atmosphere.solarIrradiance / sky.sunSolidAngle * sunDisk(direction) * s.transmittance;
   }
-  return vec4f(min(toRgb(spectral, in.group) * sky.exposure, vec3f(SKY_MAX)), 1.0);
+  return MarchedSky(
+    toRgb(spectral, group) * sky.exposure,
+    select(luminanceShare(s.transmittance, group), 0.0, ground),
+  );
+}
+
+// The sky alone (the environment's faces from above the atmosphere).
+@fragment
+fn skyFragment(in: SkyVarying) -> @location(0) vec4f {
+  return vec4f(min(marchedSky(in.position.xy, in.group).color, vec3f(SKY_MAX)), 1.0);
+}
+
+// The sky behind a view, with the stars through it.
+@fragment
+fn skyStarsFragment(in: SkyVarying) -> @location(0) vec4f {
+  let m = marchedSky(in.position.xy, in.group);
+  let starry = starLight(viewDirection(in.position.xy)) * m.toSpace * sky.exposure;
+  return vec4f(min(m.color + starry, vec3f(SKY_MAX)), 1.0);
 }
 
 // --- the sky-view table ---------------------------------------------------------
@@ -205,6 +271,7 @@ fn skyViewFragment(in: SkyVarying) -> @location(0) vec4f {
   let r = length(sky.position);
   let f = skyFrame();
   var spectral = vec4f(0.0);
+  var toSpace = 0.0;
   if (in.position.y >= SKY_VIEW_SIZE.y) {
     // The sun's mean radiance through the atmosphere (the disk's color).
     if (sky.sunCos <= 1.0) {
@@ -222,8 +289,13 @@ fn skyViewFragment(in: SkyVarying) -> @location(0) vec4f {
     let direction = f.up * cos(angles.x) + (f.toward * cosAzimuth + f.side * sinAzimuth) * sinZenith;
     let s = march(sky.position, direction, sky.sun, 1e9, SKY_VIEW_STEPS, false);
     spectral = s.radiance * atmosphere.solarIrradiance;
+    // Alpha: the transmittance to space, for the stars (the groups' shares
+    // add up).
+    if (!hitsGround(r, dot(sky.position, direction) / r)) {
+      toSpace = luminanceShare(s.transmittance, in.group);
+    }
   }
-  return vec4f(min(toRgb(spectral, in.group) * sky.exposure, vec3f(SKY_MAX)), 1.0);
+  return vec4f(min(toRgb(spectral, in.group) * sky.exposure, vec3f(SKY_MAX)), toSpace);
 }
 
 @group(2) @binding(1) var skyView: texture_2d<f32>;
@@ -234,6 +306,8 @@ fn skyViewFragment(in: SkyVarying) -> @location(0) vec4f {
 struct TableSky {
   color: vec3f,
   ground: bool,
+  // The transmittance to space (gray), for the stars.
+  toSpace: f32,
 };
 
 fn skyFromTable(direction: vec3f) -> TableSky {
@@ -252,10 +326,11 @@ fn skyFromTable(direction: vec3f) -> TableSky {
   var row = unitToTexel(unit.y, SKY_VIEW_SIZE.y) * SKY_VIEW_SIZE.y;
   row = select(min(row, half - 0.5), max(row, half + 0.5), ground);
   let uv = vec2f(unitToTexel(unit.x, SKY_VIEW_SIZE.x), row / SKY_VIEW_ROWS);
-  return TableSky(textureSampleLevel(skyView, skyViewSampler, uv, 0.0).rgb, ground);
+  let texel = textureSampleLevel(skyView, skyViewSampler, uv, 0.0);
+  return TableSky(texel.rgb, ground, texel.a);
 }
 
-// The sky from the table, and the sun's disk.
+// The sky from the table, the sun's disk and the stars.
 @fragment
 fn skyFromTableFragment(in: SkyVarying) -> @location(0) vec4f {
   let direction = viewDirection(in.position.xy);
@@ -264,6 +339,7 @@ fn skyFromTableFragment(in: SkyVarying) -> @location(0) vec4f {
   if (!s.ground) {
     let sun = textureLoad(skyView, vec2i(0, i32(SKY_VIEW_SIZE.y)), 0).rgb;
     color += sun * sunDisk(direction);
+    color += starLight(direction) * s.toSpace * sky.exposure;
   }
   return vec4f(min(color, vec3f(2.0 * SKY_MAX)), 1.0);
 }

@@ -652,6 +652,31 @@ any zoom. 2.0 draws the sky as it is, so the camera decides what shows:
 - Catalog licenses to check before shipping data (Yale BSC and Hipparcos
   are public; Gaia's data asks for attribution).
 
+Progress (r42): **a star map behind the sky**, the first step. The
+`Viewer` loads 1.x's Tycho star map (six cube faces, already in the
+repository) into `Engine.setStarMap`; the sky draws it behind the
+atmosphere, turned to Earth-fixed axes by the clock (`icrfToFixed`:
+precession to the date, IAU 1976, then sidereal time; nutation, under 20″,
+and polar motion left out; 1.x turns its sky box by sidereal time alone,
+0.36° off by 2026 from precession), and dimmed by the atmosphere's
+transmittance along the ray to space (gray, from the sky-view table's alpha
+inside the atmosphere and from the march above it), so stars fade toward
+the horizon and into twilight and vanish behind the ground. A full texel is
+0.2 cd/m² (`STAR_MAP_LUMINANCE`): the map's mean is then about 3 × 10⁻⁴
+cd/m², the natural night sky's, so the map stands for all of it (stars,
+airglow, zodiacal light) and shows only as the exposure opens: nothing at
+EV100 15, the stars at about EV100 −2. Its limits are the reason for the
+catalog: each star is blurred over texels that are magnified at ordinary
+fields of view (0.09° per texel against about 0.03° per pixel) and clipped
+at 8 bits, so a bright star's light, which belongs on one pixel, is spread
+over dozens (the brightest reach 0.07 of white at EV100 −2, where Vega
+drawn as a point would saturate). Tests check the rotation against Sirius's
+annual precession and Polaris. Next: the Yale Bright Star Catalogue as
+points (the data download needs a decision on where catalogs live, and
+its license check), then the moon (§13.14), then starlight and airglow in
+the environment, which light the ground at night (about 1 mlux without a
+moon).
+
 #### Fog and aerial perspective
 
 - **Aerial perspective from the atmosphere** (Hillaire's froxel volume of

@@ -170,6 +170,18 @@ export class Sky {
   readonly airTransmittance: GPUTexture;
   readonly airScattering: GPUTexture;
   /**
+   * The stars (sky.wgsl `starLight`): their uniform (Earth-fixed to ICRF,
+   * the luminance per unit), the map (a cube in the celestial frame; black
+   * until one is set) and the bind group drawing the sky reads.
+   */
+  private readonly starUniform: GPUBuffer;
+  private starMap: GPUTexture;
+  private starGroup: GPUBindGroup;
+  private readonly starLayout: GPUBindGroupLayout;
+  private readonly starSampler: GPUSampler;
+  private readonly starData = new Float32Array(12);
+  private starLuminance = 0;
+  /**
    * @internal For checks: how much aerial perspective is marched per vertex
    * whatever the altitude (Lab "Real-time sky"); undefined: by altitude.
    */
@@ -183,11 +195,12 @@ export class Sky {
     pipelines: Pipelines,
     aerialPipelines: [GPUComputePipeline, GPUComputePipeline],
     layouts: Record<
-      "atmosphere" | "tables" | "view" | "table" | "empty" | "aerial",
+      "atmosphere" | "tables" | "view" | "table" | "empty" | "aerial" | "stars",
       GPUBindGroupLayout
     >,
   ) {
     this.pipelines = pipelines;
+    this.starLayout = layouts.stars;
     this.aerialPipelines = aerialPipelines;
     this.aerialLayout = layouts.aerial;
     this.viewLayout = layouts.view;
@@ -250,6 +263,17 @@ export class Sky {
     this.airTransmittance = layers("sky.airTransmittance", 256, 64);
     this.airScattering = layers("sky.airScattering", 32, 32);
     this.buildAir();
+    this.starUniform = device.createBuffer({
+      label: "sky.stars",
+      size: 48,
+      usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+    });
+    this.starSampler = device.createSampler({
+      magFilter: "linear",
+      minFilter: "linear",
+    });
+    this.starMap = this.createStarMap(1);
+    this.starGroup = this.createStarGroup();
     const volume = (label: string, extra = 0) =>
       device.createTexture({
         label,
@@ -309,6 +333,82 @@ export class Sky {
     this.air.destroy();
     this.airTransmittance.destroy();
     this.airScattering.destroy();
+    this.starUniform.destroy();
+    this.starMap.destroy();
+  }
+
+  /**
+   * Sets the star map: six square faces of a cube in the celestial frame
+   * (ICRF), +x, −x, +y, −y, +z, −z (sRGB), and the luminance of a texel at
+   * full value, cd/m². Null: no stars.
+   */
+  setStarMap(
+    faces: readonly GPUCopyExternalImageSource[] | null,
+    luminance: number,
+  ): void {
+    const old = this.starMap;
+    if (!faces) {
+      this.starMap = this.createStarMap(1);
+      this.starLuminance = 0;
+    } else {
+      const size = (faces[0] as { width: number }).width;
+      this.starMap = this.createStarMap(size);
+      faces.forEach((source, face) =>
+        this.device.queue.copyExternalImageToTexture(
+          { source },
+          { texture: this.starMap, origin: [0, 0, face] },
+          [size, size],
+        ),
+      );
+      this.starLuminance = luminance;
+    }
+    this.starGroup = this.createStarGroup();
+    old.destroy();
+  }
+
+  /**
+   * Turns the stars: `icrfToFixed`, the celestial frame's rotation to
+   * Earth-fixed axes (row-major, `icrfToFixed` in time/celestial.ts).
+   */
+  writeStars(icrfToFixed: ArrayLike<number>): void {
+    const f = this.starData;
+    // The shader turns Earth-fixed directions back: the transpose, by rows.
+    for (let i = 0; i < 3; i++) {
+      f[i * 4] = icrfToFixed[i]!;
+      f[i * 4 + 1] = icrfToFixed[3 + i]!;
+      f[i * 4 + 2] = icrfToFixed[6 + i]!;
+      f[i * 4 + 3] = 0;
+    }
+    f[3] = this.starLuminance;
+    this.device.queue.writeBuffer(this.starUniform, 0, f);
+  }
+
+  private createStarMap(size: number): GPUTexture {
+    return this.device.createTexture({
+      label: "sky.starMap",
+      size: [size, size, 6],
+      dimension: "2d",
+      format: "rgba8unorm-srgb",
+      usage:
+        GPUTextureUsage.TEXTURE_BINDING |
+        GPUTextureUsage.COPY_DST |
+        GPUTextureUsage.RENDER_ATTACHMENT,
+    });
+  }
+
+  private createStarGroup(): GPUBindGroup {
+    return this.device.createBindGroup({
+      label: "sky.stars",
+      layout: this.starLayout,
+      entries: [
+        { binding: 0, resource: { buffer: this.starUniform } },
+        {
+          binding: 1,
+          resource: this.starMap.createView({ dimension: "cube" }),
+        },
+        { binding: 2, resource: this.starSampler },
+      ],
+    });
   }
 
   /**
@@ -551,6 +651,18 @@ export class Sky {
         ],
       }),
       empty: device.createBindGroupLayout({ label: "sky.empty", entries: [] }),
+      stars: device.createBindGroupLayout({
+        label: "sky.stars",
+        entries: [
+          { binding: 0, visibility: fragment, buffer: {} },
+          {
+            binding: 1,
+            visibility: fragment,
+            texture: { viewDimension: "cube" },
+          },
+          { binding: 2, visibility: fragment, sampler: {} },
+        ],
+      }),
     };
     const module = device.createShaderModule({
       label: "sky",
@@ -588,7 +700,12 @@ export class Sky {
       multisample: { count: targets.sampleCount },
     });
     const marching = [layouts.atmosphere, layouts.tables, layouts.view];
-    // A table of the groups' wavelengths added up, in linear sRGB.
+    // A table of the groups' wavelengths added up, in linear sRGB; alpha
+    // adds too (the sky-view table's transmittance to space, for the stars).
+    const summed: GPUBlendState = {
+      color: additive.color,
+      alpha: { srcFactor: "one", dstFactor: "one", operation: "add" },
+    };
     const table = (entryPoint: string): GPURenderPipelineDescriptor => ({
       label: `sky.${entryPoint}`,
       layout: device.createPipelineLayout({ bindGroupLayouts: marching }),
@@ -596,7 +713,7 @@ export class Sky {
       fragment: {
         module,
         entryPoint,
-        targets: [{ format: "rgba16float", blend: additive }],
+        targets: [{ format: "rgba16float", blend: summed }],
       },
       primitive: { topology: "triangle-list" },
     });
@@ -610,13 +727,16 @@ export class Sky {
       aerial0,
       aerial1,
     ] = await Promise.all([
-      device.createRenderPipelineAsync(scene("skyFragment", marching)),
+      device.createRenderPipelineAsync(
+        scene("skyStarsFragment", [...marching, layouts.stars]),
+      ),
       device.createRenderPipelineAsync(table("skyViewFragment")),
       device.createRenderPipelineAsync(
         scene("skyFromTableFragment", [
           layouts.empty,
           layouts.empty,
           layouts.table,
+          layouts.stars,
         ]),
       ),
       device.createRenderPipelineAsync(table("sunLightFragment")),
@@ -855,11 +975,13 @@ export class Sky {
       pass.setBindGroup(0, this.empty);
       pass.setBindGroup(1, this.empty);
       pass.setBindGroup(2, view.tableGroup);
+      pass.setBindGroup(3, this.starGroup);
       pass.draw(3);
       return;
     }
     pass.setPipeline(this.pipelines.march);
     pass.setBindGroup(2, view.group);
+    pass.setBindGroup(3, this.starGroup);
     for (let g = 0; g < this.groups.length; g++) {
       const [atmosphere, tables] = this.groups[g]!;
       pass.setBindGroup(0, atmosphere);

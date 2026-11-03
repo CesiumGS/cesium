@@ -64,6 +64,17 @@ import {
   type ModelOptions,
 } from "./gltfModel.ts";
 
+/**
+ * The luminance of a full-value texel of 1.x's star map (Tycho), cd/m²:
+ * its mean is then about 3 × 10⁻⁴ cd/m², the natural night sky's (stars,
+ * airglow and zodiacal light together, about 2 × 10⁻⁴), the map standing
+ * for all of it. Its stars are blurred over texels magnified at ordinary
+ * fields of view and clipped at full value (8 bits), so a bright star's
+ * light, which belongs on a pixel, is spread over dozens: catalog stars,
+ * drawn as points with their own illuminance, replace it (plan §4.2).
+ */
+export const STAR_MAP_LUMINANCE = 0.2;
+
 export interface EngineOptions extends GpuDeviceOptions {
   maxViews?: number;
   /** Replace built-in shaders with complete WGSL modules (e.g. from Slang). */
@@ -209,6 +220,12 @@ export class Engine {
   renderMode: "onDemand" | "continuous" = "onDemand";
   /** Unit vector toward the sun in Earth-fixed axes. Placeholder until the 1.x sun model lands. */
   readonly sunDirection: Vec3 = v3.vec3(1, 0, 0);
+  /**
+   * The celestial frame's rotation to Earth-fixed axes (row-major 3 × 3,
+   * `icrfToFixed(time)`): turns the stars. Identity until set (the Viewer
+   * sets it from its clock, with the sun).
+   */
+  readonly icrfToFixed = new Float64Array([1, 0, 0, 0, 1, 0, 0, 0, 1]);
 
   private readonly ctx: RenderContext;
   /** @internal The real-time atmosphere and the sky drawn from it. */
@@ -513,6 +530,21 @@ export class Engine {
       this.stats.environmentBuilds++;
     }
     this.ctx.environment.select(encoder, this.probeOf(view));
+  }
+
+  /**
+   * The stars behind the sky (the night sky): a star map, six square faces
+   * of a cube in the celestial frame (ICRF), in the order +x, −x, +y, −y,
+   * +z, −z, sRGB, and the luminance of a texel at full value, cd/m²
+   * (default `STAR_MAP_LUMINANCE`, for 1.x's Tycho map). They show as the
+   * exposure opens at night, dimmed by the air; null: none.
+   */
+  setStarMap(
+    faces: readonly GPUCopyExternalImageSource[] | null,
+    luminance = STAR_MAP_LUMINANCE,
+  ): void {
+    this.sky.setStarMap(faces, luminance);
+    this.requestRender();
   }
 
   /**
@@ -1589,6 +1621,7 @@ export class Engine {
     block.aerial = undefined;
     if (drawsSky(view)) {
       const sky = this.viewFrames.get(view)!.sky;
+      this.sky.writeStars(this.icrfToFixed);
       this.sky.write(
         sky,
         view.body.ellipsoid,
@@ -1992,7 +2025,7 @@ export class Engine {
     graph.addPass("aerial-perspective", { sideEffect: true }, (enc) => {
       // Marched per vertex instead from high up: no volume.
       if (drawsAerialPerspective(view) && frame.sky.march < 1) {
-        this.sky.encodeAerial(enc, frame.sky);
+        this.sky.encodeAerial(enc, frame.sky, this.timer.passWrites());
       }
     });
 

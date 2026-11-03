@@ -24,6 +24,7 @@ import {
   GlobeController,
   eastNorthUpToFixedFrame,
   fromDegrees,
+  icrfToFixed,
   mat4,
   resolveIonAsset,
   sunDirection,
@@ -84,7 +85,40 @@ export interface ViewerOptions {
   clock?: Clock;
   /** Show the time controls over the view (default true). */
   timeControls?: boolean | Omit<TimeControlsOptions, "place">;
+  /**
+   * The stars behind the sky (default true: 1.x's Tycho star map, turned
+   * by the clock); false: none.
+   */
+  stars?: boolean;
 }
+
+/** 1.x's star map (Tycho), +x, −x, +y, −y, +z, −z in the celestial frame. */
+const STAR_MAP = [
+  new URL(
+    "../../engine/Source/Assets/Textures/SkyBox/tycho2t3_80_px.jpg",
+    import.meta.url,
+  ),
+  new URL(
+    "../../engine/Source/Assets/Textures/SkyBox/tycho2t3_80_mx.jpg",
+    import.meta.url,
+  ),
+  new URL(
+    "../../engine/Source/Assets/Textures/SkyBox/tycho2t3_80_py.jpg",
+    import.meta.url,
+  ),
+  new URL(
+    "../../engine/Source/Assets/Textures/SkyBox/tycho2t3_80_my.jpg",
+    import.meta.url,
+  ),
+  new URL(
+    "../../engine/Source/Assets/Textures/SkyBox/tycho2t3_80_pz.jpg",
+    import.meta.url,
+  ),
+  new URL(
+    "../../engine/Source/Assets/Textures/SkyBox/tycho2t3_80_mz.jpg",
+    import.meta.url,
+  ),
+];
 
 /** A tileset by URL, or an ion asset. */
 export type TilesetSource =
@@ -204,10 +238,29 @@ export class Viewer {
     this.clockPlaced = options.clock !== undefined;
     this.clock = options.clock ?? new Clock({ mode: "paused" });
     this.clock.events.on("change", () => {
+      icrfToFixed(this.clock.time, this.engine.icrfToFixed);
       if (this.sunFromClock_) {
         this.applyClockSun();
+      } else {
+        this.engine.requestRender();
       }
     });
+    icrfToFixed(this.clock.time, this.engine.icrfToFixed);
+    if (options.stars !== false) {
+      void Promise.all(
+        STAR_MAP.map(async (url) =>
+          createImageBitmap(await (await fetch(url)).blob(), {
+            colorSpaceConversion: "none",
+          }),
+        ),
+      )
+        .then((faces) => {
+          if (!this.destroyed) {
+            this.engine.setStarMap(faces);
+          }
+        })
+        .catch(() => {});
+    }
     if (options.timeControls !== false) {
       this.time_ = attachTimeControls(container, this.clock, {
         ...(options.timeControls === true || !options.timeControls
