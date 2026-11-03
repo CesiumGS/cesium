@@ -156,7 +156,15 @@ export function Viewer() {
             ? { kind: "city" }
             : { kind: "model", path: MODELS[0]! };
   const sourceKey = JSON.stringify(source);
-  const at = search.at?.split(",").map(Number);
+  // A place: longitude, latitude (degrees) and an optional range (meters).
+  const place = search.at?.split(",").map(Number);
+  const at =
+    place &&
+    place.length >= 2 &&
+    place.length <= 3 &&
+    place.every(Number.isFinite)
+      ? place
+      : undefined;
 
   const [view, setView] = useStored<ViewSettings>(
     "dyno.viewer.view",

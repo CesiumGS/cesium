@@ -654,6 +654,10 @@ export class Viewer {
     heading: number,
     pitch: number,
   ): void {
+    if (![...center, radius, heading, pitch].every(Number.isFinite)) {
+      // A NaN camera hung the page (a NaN range from a bad URL).
+      throw new RangeError("zoomTo: the target is not a finite place");
+    }
     const range = radius * 2.6;
     // 1.x's near plane (0.1 m), closer for small models. Fixed, not scaled
     // to what is framed: zooming in from a globe-sized root kept a near

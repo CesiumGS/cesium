@@ -31,6 +31,14 @@ function stringifySearch(search: Record<string, unknown>): string {
   return query ? `?${query}` : "";
 }
 
+// A query before the hash (/?x=1#/viewer?asset=2) is not Dyno's: hash
+// history appends it to the hash's own, so the last search param took it
+// on ("2?x=1", NaN as a number; a NaN `at` sent the camera to NaN and hung
+// the page). Dropped before the router reads the location.
+if (location.search) {
+  history.replaceState(history.state, "", location.pathname + location.hash);
+}
+
 const router = createRouter({
   routeTree,
   parseSearch,
