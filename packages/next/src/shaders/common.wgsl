@@ -34,6 +34,8 @@ struct View {
   // Toward the Moon from the camera (unit, xyz), and its illuminance as a
   // share of the sun's above the atmosphere (w; 0: none).
   moonLight: vec4f,
+  // Seconds since the engine started (x), for custom shaders' animation.
+  time: vec4f,
 };
 
 struct DrawRecord {

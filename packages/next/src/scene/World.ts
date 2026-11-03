@@ -39,7 +39,8 @@ import type { Vec3 } from "../math/vec3.ts";
 import type { MeshData } from "./meshes.ts";
 import type { FeatureTable, FeatureValue } from "../io/gltfTypes.ts";
 import { featureName, featureProperties } from "../io/features.ts";
-import type { RenderContext } from "./RenderContext.ts";
+import type { RenderContext, SurfacePipelines } from "./RenderContext.ts";
+import type { CustomShader } from "./CustomShader.ts";
 import type { LightHandle, LightOptions } from "./lights.ts";
 
 export interface WorldOptions {
@@ -147,6 +148,12 @@ export interface DrawOptions {
   /** Index from `createTextureSet`; 0 binds the default 1×1 textures. */
   textureSet?: number;
   doubleSided?: boolean;
+  /**
+   * Its shader stages (`CustomShader`); the engine's by default. Draws
+   * batch by shader; until its pipelines compile the draw uses the
+   * engine's.
+   */
+  shader?: CustomShader;
   /** Application-level name, returned by picking. */
   name?: string;
   /** Properties of the mesh's features, indexed by local feature ID. */
@@ -234,6 +241,8 @@ interface Batch {
   /** Its material's index (shadow casters: cut out or not). */
   material: number;
   doubleSided: boolean;
+  /** Its custom shader; undefined: the engine's. */
+  shader: CustomShader | undefined;
   /** Draw items: records without instances plus instances. */
   items: number;
   itemBase: number;
@@ -1106,7 +1115,8 @@ export class World {
     const material = options.material ?? 0;
     const textureSet = options.textureSet ?? 0;
     const doubleSided = options.doubleSided ?? false;
-    const key = `${mesh.id}|${material}|${textureSet}|${doubleSided ? 1 : 0}`;
+    const shader = options.shader;
+    const key = `${mesh.id}|${material}|${textureSet}|${doubleSided ? 1 : 0}|${shader?.id ?? 0}`;
     let batch = this.batches.get(key);
     if (!batch) {
       const reused = this.freeBatches.pop();
@@ -1117,6 +1127,7 @@ export class World {
         batch.textureSet = textureSet;
         batch.material = material;
         batch.doubleSided = doubleSided;
+        batch.shader = shader;
       } else {
         batch = {
           index: this.batchList.length,
@@ -1125,6 +1136,7 @@ export class World {
           textureSet,
           material,
           doubleSided,
+          shader,
           items: 0,
           itemBase: 0,
         };
@@ -1137,6 +1149,7 @@ export class World {
 
     // Bounds live in the transform's local frame, so moving or rotating
     // the transform never stales them; an explicit radius is in meters.
+    // A custom vertex stage's displacement (model units) pads them.
     this.resolveTransforms();
     const scale = this.transformsF32Scale(transform);
     this.names[index] = options.name;
@@ -1150,9 +1163,9 @@ export class World {
       transform,
       center: mesh.center,
       radius:
-        options.radius !== undefined
+        (options.radius !== undefined
           ? options.radius / (scale || 1)
-          : mesh.radius,
+          : mesh.radius) + (shader?.displacement ?? 0),
       color: options.color ?? [1, 1, 1, 1],
       indexCount: mesh.indexCount,
       firstIndex: mesh.firstIndex,
@@ -2186,7 +2199,7 @@ export class World {
   private recordBundle(
     kind: "opaque" | "shadow" | "prepass" | "depth" = "opaque",
   ): GPURenderBundle {
-    const { device, pipelines, targets, currentViewBindGroup } = this.ctx;
+    const { device, targets, currentViewBindGroup } = this.ctx;
     const shadow = kind === "shadow";
     const prepass = kind === "prepass";
     const depth = kind === "depth";
@@ -2220,36 +2233,41 @@ export class World {
       (this.materialsU32[batch.material * MATERIAL_WORDS + 12]! &
         (MaterialFlags.alphaMask | MaterialFlags.alphaBlend)) !==
       0;
-    const pipelineOf = (batch: Batch) =>
-      prepass
+    const pipelineOf = (batch: Batch) => {
+      const set = this.surfacePipelines(batch);
+      return prepass
         ? batch.doubleSided
-          ? pipelines.prepassDoubleSided
-          : pipelines.prepass
+          ? set.prepassDoubleSided
+          : set.prepass
         : depth
           ? masked(batch)
             ? batch.doubleSided
-              ? pipelines.depthMaskedDoubleSided
-              : pipelines.depthMasked
+              ? set.depthMaskedDoubleSided
+              : set.depthMasked
             : batch.doubleSided
-              ? pipelines.depthDoubleSided
-              : pipelines.depth
+              ? set.depthDoubleSided
+              : set.depth
           : shadow
             ? masked(batch)
               ? batch.doubleSided
-                ? pipelines.shadowMaskedDoubleSided
-                : pipelines.shadowMasked
+                ? set.shadowMaskedDoubleSided
+                : set.shadowMasked
               : batch.doubleSided
-                ? pipelines.shadowDoubleSided
-                : pipelines.shadow
+                ? set.shadowDoubleSided
+                : set.shadow
             : batch.mesh.topology === "line-list"
-              ? pipelines.opaqueLines
+              ? set.opaqueLines
               : batch.doubleSided
-                ? pipelines.opaqueDoubleSided
-                : pipelines.opaque;
+                ? set.opaqueDoubleSided
+                : set.opaque;
+    };
     const rank = (batch: Batch) =>
       batch.mesh.topology === "line-list" ? 2 : Number(batch.doubleSided);
     const order = [...this.batchList].sort(
-      (a, b) => rank(a) - rank(b) || a.textureSet - b.textureSet,
+      (a, b) =>
+        rank(a) - rank(b) ||
+        (a.shader?.id ?? 0) - (b.shader?.id ?? 0) ||
+        a.textureSet - b.textureSet,
     );
     const direct = this._submission === "direct";
     const list = direct ? this.directListBuffer : this.itemListBuffer;
@@ -2289,6 +2307,25 @@ export class World {
     }
     return encoder.finish();
   }
+
+  /**
+   * A batch's pipelines: its custom shader's once compiled, else the
+   * engine's (then recorded again when they are ready).
+   */
+  private surfacePipelines(batch: Batch): SurfacePipelines {
+    return (
+      (batch.shader &&
+        this.ctx.shaders.pipelines(batch.shader, this.shaderReady)) ??
+      this.ctx.pipelines
+    );
+  }
+
+  /** A custom shader's pipelines compiled: draw with them from now on. */
+  private readonly shaderReady = () => {
+    this.bundle = undefined;
+    this.version++;
+    this.changedViews = ALL_VIEWS;
+  };
 
   /** A batch of blended triangles (alpha mode "BLEND"); lines stay opaque. */
   private translucent(batch: Batch): boolean {
@@ -2389,13 +2426,16 @@ export class World {
 
   /**
    * Encodes this world's blended surfaces into a translucent pass (after
-   * the view's cull): the pass's pipeline, one- or double-sided, and its
-   * group 3. Encoded directly, not bundled: group 3 is per view.
+   * the view's cull): the pass's pipeline from each batch's set, one- or
+   * double-sided, and its group 3. Encoded directly, not bundled: group 3
+   * is per view.
    */
   encodeTranslucent(
     pass: GPURenderPassEncoder,
-    pipeline: GPURenderPipeline,
-    doubleSided: GPURenderPipeline,
+    pipelineOf: (
+      set: SurfacePipelines,
+      doubleSided: boolean,
+    ) => GPURenderPipeline,
     group: GPUBindGroup,
   ): void {
     pass.setBindGroup(0, this.ctx.currentViewBindGroup);
@@ -2410,7 +2450,10 @@ export class World {
       if (batch.items === 0 || !this.translucent(batch)) {
         continue;
       }
-      const wanted = batch.doubleSided ? doubleSided : pipeline;
+      const wanted = pipelineOf(
+        this.surfacePipelines(batch),
+        batch.doubleSided,
+      );
       if (wanted !== current) {
         current = wanted;
         pass.setPipeline(wanted);

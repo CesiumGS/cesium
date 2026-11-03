@@ -15,6 +15,7 @@ import type {
   World,
 } from "../scene/World.ts";
 import type { ModelOptions } from "../scene/gltfModel.ts";
+import type { CustomShader } from "../scene/CustomShader.ts";
 import type { GltfAsset } from "../io/gltfTypes.ts";
 import type { Mat4 } from "../math/mat4.ts";
 import type { Rectangle } from "../globe/quantizedMesh.ts";
@@ -124,6 +125,8 @@ export interface TilesetOptions extends BudgetedOptions {
    * hit it (1.x `enableCollision`, default false).
    */
   enableCollision?: boolean;
+  /** Custom shader stages for all its content (1.x `customShader`). */
+  customShader?: CustomShader;
   /**
    * Float64 transform applied to the whole tileset (1.x `modelMatrix`),
    * e.g. a height offset; can change at runtime (`Tileset3D.modelMatrix`).
@@ -1216,6 +1219,9 @@ export class Tileset3D implements TileTree {
           parent: this.transform,
           viewMask: 0,
           collision: this.collision,
+          ...(this.options.customShader
+            ? { shader: this.options.customShader }
+            : {}),
         });
         tile.instance = instance;
         tile.bytes = instance.bytes;

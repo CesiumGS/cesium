@@ -39,6 +39,16 @@ export const HARNESSES: HarnessInfo[] = [
     load: () => import("../parity/translucency.ts").then((m) => m.harness),
   },
   {
+    id: "custom-shader",
+    group: "parity",
+    title: "Custom shaders",
+    description:
+      "User shader stages (WGSL vertexMain and fragmentMain) on boxes in every pass, against the engine's shader: unchanged stages and a failing shader must match it, the rest must differ.",
+    page: "/parity/customShader.html",
+    entry: "runCustomShader",
+    load: () => import("../parity/customShader.ts").then((m) => m.harness),
+  },
+  {
     id: "tileset",
     group: "parity",
     title: "Tileset content parity",

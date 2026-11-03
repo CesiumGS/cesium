@@ -8,8 +8,8 @@ import { splitVec3 } from "../math/transforms.ts";
  * `shaders/common.wgsl`.
  */
 
-/** `struct View` — 400 bytes, padded to a 256-aligned stride per view. */
-export const VIEW_SIZE = 400;
+/** `struct View` — 416 bytes, padded to a 256-aligned stride per view. */
+export const VIEW_SIZE = 416;
 /** Word offset of `View.viewBit` (u32): this view's bit in record view masks. */
 export const VIEW_BIT_WORD = 84;
 export const VIEW_STRIDE = 512;
@@ -57,6 +57,8 @@ export interface ViewBlock {
   moonAir: number;
   /** The globe's night lights show (`View.cityLights`). */
   cityLights: boolean;
+  /** Seconds since the engine started (custom shaders' `fsInput.time`). */
+  time: number;
 }
 
 /**
@@ -150,6 +152,10 @@ export function writeViewBlock(
   out[o + 97] = moon?.direction[1] ?? 0;
   out[o + 98] = moon?.direction[2] ?? 0;
   out[o + 99] = moon?.share ?? 0;
+  out[o + 100] = block.time;
+  out[o + 101] = 0;
+  out[o + 102] = 0;
+  out[o + 103] = 0;
 }
 
 /** `struct DrawRecord` — 128 bytes. */

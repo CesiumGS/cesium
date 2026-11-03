@@ -316,6 +316,60 @@ struct VsOut {
   // in-scatter and transmittance; unused where the view reads the volume.
   @location(7) airInscatter: vec3f,
   @location(8) airTransmittance: vec3f,
+  @location(9) positionMC: vec3f,  // the mesh's own (model) coordinates
+};
+
+// --- custom shaders (plan §3.4): the WGSL-level contract ---------------------------
+//
+// A custom shader (scene/CustomShader.ts) supplies `vertexMain` and
+// `fragmentMain`; the engine's defaults (custom.wgsl) change nothing. They
+// run in every pass that draws the content (opaque, depth, shadow,
+// ambient-occlusion prepass, translucent), so a vertex modifier moves
+// geometry the same way in all of them. Named as 1.x `CustomShader`'s.
+
+// A vertex as the mesh stores it, before its transform.
+struct VertexInput {
+  positionMC: vec3f,
+  normalMC: vec3f,
+  texCoord0: vec2f,   // (0, 0) without TEXCOORD_0
+  color0: vec4f,      // white without COLOR_0
+  featureId0: u32,    // local feature ID; 0xffffffff: none
+  vertexIndex: u32,
+  instanceIndex: u32, // index among the draw's instances; 0 when not instanced
+  time: f32,          // seconds since the engine started
+};
+
+// What `vertexMain` may change: the vertex in model coordinates.
+struct VertexOutput {
+  positionMC: vec3f,
+  normalMC: vec3f,
+};
+
+// A surface point as the fragment stage sees it.
+struct FragmentInput {
+  positionMC: vec3f,  // model coordinates, interpolated
+  positionEC: vec3f,  // relative to the camera, Earth-fixed axes (m)
+  positionWC: vec3f,  // Earth-fixed (float32: about a meter at the Earth's scale)
+  normal: vec3f,      // geometric normal, Earth-fixed axes, toward the viewer
+  texCoord0: vec2f,
+  color0: vec4f,      // the vertex color times the draw's and instance's tint
+  featureId: u32,     // global feature ID (the one picking returns); 0: none
+  screen: vec2f,      // framebuffer pixel
+  time: f32,
+};
+
+// The material `fragmentMain` may change, filled with the glTF material's
+// values first. Linear color; `normal` is the shading normal (Earth-fixed
+// axes, normal map applied).
+struct MaterialOutput {
+  baseColor: vec3f,
+  alpha: f32,
+  metallic: f32,
+  roughness: f32,
+  normal: vec3f,
+  occlusion: f32,
+  emissive: vec3f,
+  unlit: bool,
 };
 
 fn read2(offset: u32, index: u32) -> vec2f {
@@ -358,16 +412,36 @@ fn vertexOut(vertexIndex: u32, item: u32, withAir: bool) -> VsOut {
   if (r.uvOffset != NO_STREAM) {
     out.uv = read2(r.uvOffset, vertexIndex);
   }
-  out.color = unpack4x8unorm(p.tint);
+  var vertexColor = vec4f(1.0);
   if (r.colorOffset != NO_STREAM) {
-    out.color *= read4(r.colorOffset, vertexIndex);
+    vertexColor = read4(r.colorOffset, vertexIndex);
   }
+  out.color = unpack4x8unorm(p.tint) * vertexColor;
   out.tangent = vec4f(0.0);
   if (r.tangentOffset != NO_STREAM) {
     let t = read4(r.tangentOffset, vertexIndex);
     out.tangent = vec4f(normalize((m * vec4f(t.xyz, 0.0)).xyz), t.w);
   }
-  let world = m * vec4f(read3(r.positionOffset, vertexIndex), 1.0);
+  var localFeature = 0xffffffffu;
+  if (r.featureIdOffset != NO_STREAM) {
+    localFeature = bitcast<u32>(vertices[r.featureIdOffset + vertexIndex]);
+  }
+  // The custom shader's vertex stage (custom.wgsl's default: unchanged).
+  let vsInput = VertexInput(
+    read3(r.positionOffset, vertexIndex),
+    normal,
+    out.uv,
+    vertexColor,
+    localFeature,
+    vertexIndex,
+    p.instance,
+    view.time.x,
+  );
+  var vsOutput = VertexOutput(vsInput.positionMC, vsInput.normalMC);
+  vertexMain(vsInput, &vsOutput);
+  normal = vsOutput.normalMC;
+  out.positionMC = vsOutput.positionMC;
+  let world = m * vec4f(vsOutput.positionMC, 1.0);
   out.relPosition = world.xyz;
   out.position = view.viewProj * world;
   out.airInscatter = vec3f(0.0);
@@ -401,8 +475,7 @@ fn vertexOut(vertexIndex: u32, item: u32, withAir: bool) -> VsOut {
   if (p.feature != 0u) {
     out.feature = p.feature;
   } else if (r.featureIdOffset != NO_STREAM) {
-    let local = bitcast<u32>(vertices[r.featureIdOffset + vertexIndex]);
-    out.feature = select(r.featureId + local, 0u, local == 0xffffffffu);
+    out.feature = select(r.featureId + localFeature, 0u, localFeature == 0xffffffffu);
   }
   return out;
 }
@@ -843,10 +916,6 @@ fn shadeSurface(in: VsOut, frontFacing: bool, translucent: bool) -> Surface {
     emissive *= emissiveSample;
   }
 
-  if ((flags & 1u) != 0u || (r.flags & 2u) != 0u) {
-    return Surface(baseColor.rgb, baseColor.a, true);
-  }
-
   var metallic = material.metallic;
   var roughness = material.roughness;
   if ((flags & 32u) != 0u) {
@@ -880,6 +949,49 @@ fn shadeSurface(in: VsOut, frontFacing: bool, translucent: bool) -> Surface {
     let tsNormal = (normalSample * 2.0 - 1.0) * vec3f(material.normalScale, material.normalScale, 1.0);
     n = normalize(t * tsNormal.x + b * tsNormal.y + n * tsNormal.z);
   }
+  var occlusion = 1.0;
+  if ((flags & 128u) != 0u) {
+    occlusion = 1.0 + material.occlusionStrength * (occlusionSample - 1.0);
+  }
+  // 1.x clamps n·l to at least 0.001, which lets a little sun light reach
+  // surfaces facing away from it; 2.0 gives them none.
+  var geometric = normalize(in.normal);
+  if (!frontFacing) {
+    geometric = -geometric;
+  }
+
+  // The custom shader's material (custom.wgsl's default: unchanged).
+  let fsInput = FragmentInput(
+    in.positionMC,
+    in.relPosition,
+    in.relPosition + (view.cameraHi + view.cameraLo),
+    geometric,
+    in.uv,
+    in.color * r.color,
+    in.feature,
+    in.position.xy,
+    view.time.x,
+  );
+  var custom = MaterialOutput(
+    baseColor.rgb,
+    baseColor.a,
+    metallic,
+    roughness,
+    n,
+    occlusion,
+    emissive,
+    (flags & 1u) != 0u || (r.flags & 2u) != 0u,
+  );
+  fragmentMain(fsInput, &custom);
+  baseColor = vec4f(custom.baseColor, custom.alpha);
+  if (custom.unlit) {
+    return Surface(baseColor.rgb, baseColor.a, true);
+  }
+  metallic = clamp(custom.metallic, 0.0, 1.0);
+  roughness = clamp(custom.roughness, 0.0, 1.0);
+  n = normalize(custom.normal);
+  occlusion = custom.occlusion;
+  emissive = custom.emissive;
 
   let v = -normalize(in.relPosition);
   let l = normalize(view.sunDirection.xyz);
@@ -890,12 +1002,6 @@ fn shadeSurface(in: VsOut, frontFacing: bool, translucent: bool) -> Surface {
 
   // Direct sun light.
   let sunReflected = directReflectance(n, v, l, f0, diffuseColor, alpha, nDotV);
-  // 1.x clamps n·l to at least 0.001, which lets a little sun light reach
-  // surfaces facing away from it; 2.0 gives them none.
-  var geometric = normalize(in.normal);
-  if (!frontFacing) {
-    geometric = -geometric;
-  }
   let moonShadows = shadows.fade.w > 0.5;
   var sunVisible = select(0.0, 1.0, dot(n, l) > 0.0);
   if (sunVisible > 0.0 && !moonShadows) {
@@ -927,10 +1033,6 @@ fn shadeSurface(in: VsOut, frontFacing: bool, translucent: bool) -> Surface {
   let reflected = toEnvironment(reflect(-v, n));
   let radiance = textureSampleLevel(specularEnvironment, environmentSampler, reflected, roughness * view.specularMaxLod).rgb;
   let specularIbl = radiance * fssEss;
-  var occlusion = 1.0;
-  if ((flags & 128u) != 0u) {
-    occlusion = 1.0 + material.occlusionStrength * (occlusionSample - 1.0);
-  }
   // The sky's light where the surroundings hide it (screen-space ambient
   // occlusion), with light bouncing between bright surfaces (Jimenez et
   // al.'s multi-bounce fit on the diffuse color) and its share of the

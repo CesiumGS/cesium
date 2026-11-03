@@ -22,6 +22,7 @@ import type {
   TransformHandle,
   World,
 } from "./World.ts";
+import type { CustomShader } from "./CustomShader.ts";
 
 export interface ModelOptions {
   /**
@@ -33,6 +34,8 @@ export interface ModelOptions {
   parent?: TransformHandle;
   /** Force unlit shading for every draw (used by parity tests). */
   unlit?: boolean;
+  /** Custom shader stages for every draw (`CustomShader`). */
+  shader?: CustomShader;
   /**
    * How color textures are decoded: "srgb" (default) uses -srgb texture
    * formats; "gamma2.2" matches CesiumJS 1.x (unorm storage, pow 2.2 in the
@@ -315,6 +318,7 @@ export function addGltf(
       textureSet: material.textureSet,
       doubleSided: material.doubleSided || mirrored,
       unlit: options.unlit,
+      ...(options.shader ? { shader: options.shader } : {}),
       collision: options.collision,
       underlay: options.underlay,
       name: options.name,

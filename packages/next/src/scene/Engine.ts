@@ -90,6 +90,7 @@ import {
   type ModelInstance,
   type ModelOptions,
 } from "./gltfModel.ts";
+import type { CustomShader } from "./CustomShader.ts";
 
 /** Tone mappings by their index in present.wgsl's `PresentParams`. */
 const TONE_MAPPINGS: readonly ToneMapping[] = ["pbrNeutral", "agx", "aces"];
@@ -381,6 +382,8 @@ export class Engine {
   private readonly fxaaData = new DataView(new ArrayBuffer(32));
   private readonly overlayColor = new Float32Array(4);
   private readonly viewBlock: ViewBlock;
+  /** When the engine was created (`performance.now()`): views' `time`. */
+  private readonly startTime = performance.now();
   private readonly commandBuffers: GPUCommandBuffer[] = [];
   private frameNumber = 0;
   private frameHandle = 0;
@@ -484,6 +487,7 @@ export class Engine {
       moon: undefined,
       moonAir: 0,
       cityLights: true,
+      time: 0,
     };
     this.pickParams = device.createBuffer({
       size: 16,
@@ -855,6 +859,15 @@ export class Engine {
       },
       options.signal,
     );
+  }
+
+  /**
+   * Compiles a custom shader's pipelines ahead of use (content using it
+   * otherwise draws with the default until they are ready). Rejects with
+   * the compiler's messages.
+   */
+  async compileShader(shader: CustomShader): Promise<void> {
+    await this.ctx.shaders.compile(shader);
   }
 
   /**
@@ -2014,6 +2027,7 @@ export class Engine {
     block.exposure = view.exposureScale;
     block.body = view.body;
     block.cityLights = view.cityLights;
+    block.time = (performance.now() - this.startTime) / 1000;
     this.viewCityLight = this.cityLightAt(view);
     block.aerial = undefined;
     // The Moon's light: its full disk gives the albedo's share of the sun's
@@ -3059,8 +3073,10 @@ export class Engine {
           const pass = enc.beginRenderPass(listPass);
           world.encodeTranslucent(
             pass,
-            pipelines.translucentList,
-            pipelines.translucentListDoubleSided,
+            (set, doubleSided) =>
+              doubleSided
+                ? set.translucentListDoubleSided
+                : set.translucentList,
             this.translucentGroup(frame, 0, [
               lists,
               dummies.zero,
@@ -3088,8 +3104,10 @@ export class Engine {
         const first = enc.beginRenderPass(momentPass);
         world.encodeTranslucent(
           first,
-          pipelines.translucentMoments,
-          pipelines.translucentMomentsDoubleSided,
+          (set, doubleSided) =>
+            doubleSided
+              ? set.translucentMomentsDoubleSided
+              : set.translucentMoments,
           this.translucentGroup(frame, 1, [
             dummies.buffer,
             dummies.zero,
@@ -3103,8 +3121,10 @@ export class Engine {
         const second = enc.beginRenderPass(colorPass);
         world.encodeTranslucent(
           second,
-          pipelines.translucentColor,
-          pipelines.translucentColorDoubleSided,
+          (set, doubleSided) =>
+            doubleSided
+              ? set.translucentColorDoubleSided
+              : set.translucentColor,
           this.translucentGroup(frame, 2, [dummies.buffer, zero, higher]),
         );
         second.end();

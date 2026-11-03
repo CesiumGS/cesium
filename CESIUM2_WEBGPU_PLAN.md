@@ -2402,6 +2402,42 @@ whole ice sheet.
   stalls when a new shader arrives; batching cost per extra material type
   measured.
 
+**Increment 1 (r46): the WGSL contract, shader identity and pass variants
+(foundations 1, 4 and part of 5).**
+
+- `CustomShader({ vertex, fragment, displacement })`: WGSL stages named as
+  1.x's. `vertexMain(vsInput, vsOutput)` moves the vertex in model
+  coordinates (position, normal); `fragmentMain(fsInput, material)`
+  changes the glTF material's values after sampling and before lighting
+  (base color, alpha, metallic, roughness, shading normal, occlusion,
+  emissive, unlit). Inputs: model, camera-relative and Earth-fixed
+  positions, normal, first UV and color, feature ID, vertex and instance
+  index, screen pixel, `time` (new `View.time`, seconds since the engine
+  started). The contract's structs live in opaque.wgsl; the engine's own
+  module is the same code with no-op stages.
+- On `ModelOptions.shader`, `Tileset3DOptions.customShader` and
+  `DrawOptions.shader`. The batch key gains the shader; a displacement
+  bound pads the draws' culling spheres.
+- Pipelines: the 19 that draw content (opaque, lines, depth, shadow and
+  prepass, masked and double-sided variants, translucent lists and
+  moments) are one `SurfacePipelines` set built from one module, the
+  engine's or a shader's. `ShaderCache` compiles a shader's set in the
+  background once per distinct source; batches draw with the engine's
+  until it is ready, then the world records again (no stall), and keep it
+  if compiling fails. Errors are logged once, at the stage's own line
+  (`fragment line 2: …`). `Engine.compileShader` warms a shader ahead.
+- Harness `parity/customShader` (`bench/run.mjs customShader`), boxes on a
+  ground plane with shadows and AO: identity stages and a failing shader
+  match the default exactly (FLIP 0); color by height, a vertex twist
+  (no depth-prepass holes; its shadows move with it), unlit and a
+  translucent tint differ. Parity, models and translucency are unchanged
+  (318 image metrics, none moved).
+- Not yet: Slang authoring on this contract and runtime Slang (foundation
+  6); named attributes (glTF parsing keeps only the core six; foundation
+  2); parameter blocks and user textures (3); feature styling (needs
+  properties on the GPU); changing a tileset's shader after load; a custom
+  alpha doesn't reach the depth pass's alpha-to-coverage cutout.
+
 ### Real-time tracks (after Custom shading)
 
 - §13.11: track collections as instance data with a bulk update API,

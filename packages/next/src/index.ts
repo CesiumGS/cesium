@@ -6,6 +6,10 @@ export {
 } from "./scene/Engine.ts";
 export { type ShaderOverrides } from "./scene/RenderContext.ts";
 export {
+  CustomShader,
+  type CustomShaderOptions,
+} from "./scene/CustomShader.ts";
+export {
   World,
   type DrawHandle,
   type DrawOptions,
