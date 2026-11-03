@@ -8,8 +8,10 @@ import dracoWasmUrl from "draco3d/draco_decoder.wasm?url";
 import { read as readKtx2 } from "ktx-parse";
 // The Basis transcoder has no official npm package. For the PoC this uses the
 // copy vendored in the repo (Binomial's build, Apache-2.0); a published
-// @cesium/next would vendor its own copy.
-import basisSource from "../../../engine/Source/ThirdParty/Workers/basis_transcoder.js?raw";
+// @cesium/next would vendor its own copy. `?basis-esm` loads it as an ES
+// module that generates no code at runtime (basisTranscoderEsm.ts), so
+// workers need no 'unsafe-eval' under a Content Security Policy.
+import createBasisModule from "../../../engine/Source/ThirdParty/Workers/basis_transcoder.js?basis-esm";
 import basisWasmUrl from "../../../engine/Source/ThirdParty/basis_transcoder.wasm?url";
 import type { CompressedImage, CompressedFormat } from "./gltfTypes.ts";
 
@@ -32,14 +34,9 @@ function dracoModule(): Promise<any> {
 
 function basisModule(): Promise<any> {
   basis ??= (async () => {
-    // The transcoder ships as a UMD script; evaluate it to get its factory.
-
-    const factory = new Function(
-      "module",
-      "exports",
-      `${basisSource}\nreturn module.exports;`,
-    )({ exports: {} }, {}) as (options: object) => Promise<any>;
-    const module = await factory({ wasmBinary: await wasm(basisWasmUrl) });
+    const module = await createBasisModule({
+      wasmBinary: await wasm(basisWasmUrl),
+    });
     module.initializeBasis();
     return module;
   })();

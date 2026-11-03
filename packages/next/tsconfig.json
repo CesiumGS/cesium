@@ -28,6 +28,7 @@
     "lab",
     "test",
     "vite.config.ts",
-    "vite.lib.config.ts"
+    "vite.lib.config.ts",
+    "basisTranscoderEsm.ts"
   ]
 }

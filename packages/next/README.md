@@ -19,7 +19,9 @@ needs no bundler or TypeScript: a module script imports it, from its own
 server or another origin (a CDN, with CORS headers, as npm CDNs send).
 Browsers start workers only from the page's origin, so from another origin
 the worker starts through a same-origin `blob:` module that imports the
-real one (`WorkerPool`). `standalone/index.html` loads two compressed
+real one (`WorkerPool`). Nothing generates code at runtime: under a
+Content Security Policy only the workers need `'wasm-unsafe-eval'`, the
+page nothing (`basisTranscoderEsm.ts`). `standalone/index.html` loads two compressed
 models (Draco, Basis) that way; serve the folder (e.g. `python -m
 http.server` in `packages/next`; pages opened as `file://` load no modules
 or workers) and open `/standalone/`, with `?lib=<url of

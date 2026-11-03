@@ -6,6 +6,7 @@
 //                              Draco and Basis wasm, each found relative to
 //                              the module that loads it (import.meta.url)
 //   dist-lib/types/            type declarations (tsconfig.lib.json)
+//   dist-lib/LICENSE.md        the license and third-party notices
 //
 // A page imports it as a module:
 //
@@ -14,13 +15,36 @@
 //   </script>
 //
 // Served from another origin, the files need CORS headers (npm CDNs send
-// them); the worker starts through a same-origin blob (WorkerPool).
-import { defineConfig } from "vite";
+// them); the worker starts through a same-origin blob (WorkerPool). Nothing
+// generates code at runtime: a Content Security Policy needs only
+// 'wasm-unsafe-eval', and only for the worker (basisTranscoderEsm.ts).
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { defineConfig, type Plugin } from "vite";
+import { basisTranscoderEsm } from "./basisTranscoderEsm.ts";
+
+/** The repository's license and third-party notices, beside the library. */
+function licenses(): Plugin {
+  return {
+    name: "library-licenses",
+    generateBundle() {
+      this.emitFile({
+        type: "asset",
+        fileName: "LICENSE.md",
+        source: readFileSync(
+          fileURLToPath(new URL("../../LICENSE.md", import.meta.url)),
+          "utf8",
+        ),
+      });
+    },
+  };
+}
 
 export default defineConfig({
   // Asset URLs relative to the module that references them, not the page.
   base: "./",
   publicDir: false,
+  plugins: [basisTranscoderEsm(), licenses()],
   build: {
     outDir: "dist-lib",
     emptyOutDir: true,
@@ -40,6 +64,8 @@ export default defineConfig({
   },
   worker: {
     format: "es",
+    // Worker bundles take their own plugins (the Basis glue is decoded there).
+    plugins: () => [basisTranscoderEsm()],
     rollupOptions: {
       output: {
         entryFileNames: "assets/[name]-[hash].mjs",

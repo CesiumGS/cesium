@@ -12,6 +12,7 @@ import { homedir } from "node:os";
 import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig, type Plugin } from "vitest/config";
+import { basisTranscoderEsm } from "./basisTranscoderEsm.ts";
 
 // CesiumJS 1.x core math, used only as a test oracle for parity checks.
 const oracle = fileURLToPath(new URL("../core/Source", import.meta.url));
@@ -240,6 +241,7 @@ export default defineConfig({
     ],
   },
   plugins: [
+    basisTranscoderEsm(),
     serveDirectory("/cesium1x", cesium1x),
     serveDirectory("/specs-data", specsData),
     serveBenchResults("/bench-results", benchResults),
@@ -252,6 +254,8 @@ export default defineConfig({
     ),
     ...(slangWasm ? [serveDirectory("/slang-wasm", slangWasm)] : []),
   ],
+  // Worker bundles take their own plugins (the Basis glue is decoded there).
+  worker: { plugins: () => [basisTranscoderEsm()] },
   build: {
     // StrataKit icons are SVG sprites referenced by URL (#icon), never inlined.
     assetsInlineLimit: (file: string) =>
