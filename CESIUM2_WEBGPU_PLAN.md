@@ -778,6 +778,39 @@ What sets 2.0 up for them, decided before the atmosphere is written:
   `falsecolor` does: the check that the units are right, and a feature for
   design review.
 
+#### Scaling to the hardware
+
+Both programmatically and with options, in layers:
+
+- **Every feature has continuous knobs**: render scale of the expensive
+  passes (ambient occlusion, GI, volumetrics at half or quarter
+  resolution), sample counts, probe update rates, shadow resolution or
+  virtual shadow page budget, froxel resolution, LUT sizes. Discrete
+  switches (GI method: off, sky visibility, screen-space, probes) exist too
+  but change rarely, because switching them is visible.
+- **Tiers** (`low`, `medium`, `high`, `ultra`) are named sets of those
+  knobs. An application sets a tier or individual knobs per engine and per
+  view; anything it sets is never changed automatically.
+- **`"auto"` (the default) chooses a starting tier** from what the adapter
+  reports (vendor and architecture, limits, features such as subgroups,
+  `shader-f16` and timestamp queries) and a short calibration on start: a
+  known workload timed with GPU timestamps, cached per adapter so it runs
+  once.
+- **Then a frame-time controller adjusts the continuous knobs** from the
+  per-pass GPU timings (the same budget idea as streaming's per-frame
+  budgets, r38), with hysteresis so quality doesn't oscillate, and lowers a
+  tier only after sustained overload (or a device loss or memory pressure).
+- **Refine while still.** 2.0 renders on demand and knows when a view has
+  settled. In motion it renders at the budget; once still, it keeps
+  accumulating (more AO and GI samples, progressive shadows, eventually the
+  path tracer) until the image converges to the reference, then stops
+  rendering. A laptop and a workstation then show the same final image of a
+  design model, only at different speeds.
+- **Deterministic for tests and benchmarks.** The benchmark suite and the
+  parity harnesses pin a tier (no `"auto"`, no controller), so runs stay
+  comparable; the suite measures each tier separately, and tiers get
+  budgets in the catalog (§16).
+
 #### Order of work in M4
 
 1. References first: the brute-force atmosphere and the Monte Carlo IBL
