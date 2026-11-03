@@ -1638,8 +1638,13 @@ export class Engine {
       return;
     }
     state.pending = false;
-    if (average === undefined) {
+    // A reading that isn't a number (infinities in the image) says
+    // nothing; a state that isn't one starts over from the next reading.
+    if (average === undefined || !Number.isFinite(average)) {
       return;
+    }
+    if (!Number.isFinite(state.ev100)) {
+      state.metered = false;
     }
     const target = Math.min(
       Math.max(

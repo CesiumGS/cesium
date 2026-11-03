@@ -417,6 +417,8 @@ fn fs(in: VsOut, @builtin(front_facing) frontFacing: bool) -> FsOut {
     lit = lit * air.transmittance + air.inscatter;
     shown = emissive * air.transmittance;
   }
-  out.color = vec4f(lit * view.exposure + shown, 1.0);
+  // Below fp16's largest value: an overflow to infinity (a lit scene at a
+  // night exposure) poisoned the exposure meter's average with NaN.
+  out.color = vec4f(min(lit * view.exposure + shown, vec3f(60000.0)), 1.0);
   return out;
 }
