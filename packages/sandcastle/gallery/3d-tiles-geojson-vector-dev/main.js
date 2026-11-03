@@ -61,9 +61,9 @@ const geoJson = {
       [
         [
           [1.5, 1],
-          [2.5, 1],
-          [2.5, 2],
           [1.5, 2],
+          [2.5, 2],
+          [2.5, 1],
         ],
       ],
     ),
@@ -104,6 +104,7 @@ const [east, north] = toDegrees([10, 5]);
 const tilesetUrl = createJsonUrl({
   asset: { version: "1.1" },
   extensionsUsed: ["MAXAR_content_geojson"],
+  extensionsRequired: ["MAXAR_content_geojson"],
   geometricError: 100,
   root: {
     boundingVolume: {
