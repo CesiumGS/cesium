@@ -292,7 +292,11 @@ export class GlobeController {
     v3.scale(axis, axis, 1 / length);
     const angle = Math.atan2(length, v3.dot(hit, point));
     // Turning the camera by this angle brings the point under the pixel.
-    this.rotateGlobe(axis, angle);
+    // Not leveled after: a turn about the center keeps the roll (on a
+    // sphere), and leveling turns about the view direction, which moved an
+    // off-center point off its pixel (zoom slid sideways, worst in a narrow
+    // view such as split view's halves).
+    this.view.camera.rotateAroundCenter(axis, angle);
     return { axis, angle };
   }
 
@@ -326,10 +330,11 @@ export class GlobeController {
       this.ellipsoid.cartographicToCartesian(c, camera.position);
     }
     this.carryOrientation(from);
+    // Level first, then pin: the target ends under the pixel.
+    this.level();
     if (pixel) {
       this.pin(target, pixel[0], pixel[1]);
     }
-    this.level();
     this.keepAboveGround();
     camera.version++;
   }
