@@ -831,6 +831,16 @@ Next steps (r44, after the night work). Now, in this order:
 
 Later:
 
+- **The Moon's albedo**: its map without the mosaic's baked-in shading,
+  lit by our own: NASA's CGI Moon Kit (SVS 4720, public domain), its
+  color map adapted from the LROC WAC Hapke-normalized mosaic (over
+  100,000 WAC images, normalized to one geometry of sun and view; 70°N to
+  70°S, the poles from LOLA's albedo map), with LOLA's elevation for the
+  relief (a normal map: shadows at the terminator, flat at full). Its
+  files are TIFF and EXR: converted once to a PNG or JPEG, committed
+  (public domain) or fetched; the raw mosaic is in the LROC archive
+  (WAC_HAPKE). Others: Clementine's 750 nm mosaic (USGS), Kaguya's
+  Multiband Imager.
 - **Other bodies**: the Moon (Cesium Moon Terrain) and Mars as 3D Tiles
   in their own frames (a body's ellipsoid, `3DTILES_ellipsoid`, its
   orientation from the IAU model, its ephemeris), lit by the sun without
