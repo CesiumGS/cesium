@@ -54,10 +54,20 @@ const SKY_SIZE = 128;
 const SPECULAR_SIZE = 128;
 const SPECULAR_LEVELS = 6;
 const SH_SOURCE_LEVEL = 2; // 32×32 faces
-/** GGX samples per prefiltered texel (filtered importance sampling). */
-const PREFILTER_SAMPLES = 256;
-/** The irradiance cube's faces (it is smooth; the horizon needs ~1°). */
-const IRRADIANCE_SIZE = 32;
+/**
+ * GGX samples per prefiltered texel, by level from the first blurred one
+ * (filtered importance sampling: each sample reads a level as blurred as
+ * its share of the lobe, so a few dozen do what hundreds did, Křivánek
+ * and Colbert 2008). 256 at every level made the prefilter most of a
+ * rebuild's 4 ms.
+ */
+const PREFILTER_SAMPLES = [64, 32, 32, 32, 32];
+/**
+ * The irradiance cube's faces: irradiance is smooth (a cosine's integral),
+ * so 16 texels a face (5.6°) hold it, with a quarter of the integral's
+ * work of 32.
+ */
+const IRRADIANCE_SIZE = 16;
 /** The radiance it integrates: 16 × 16 faces (1,536 texels per output). */
 const IRRADIANCE_SOURCE_LEVEL = 3;
 const BRDF_SIZE = 64;
@@ -115,11 +125,8 @@ export class Environment {
    * Creates the environment with its kernels compiled off the main thread
    * (in parallel with whatever else is compiling), then builds the BRDF LUT.
    */
-  static async create(
-    device: GPUDevice,
-    mips: MipGenerator,
-  ): Promise<Environment> {
-    const environment = new Environment(device, mips);
+  static async create(device: GPUDevice): Promise<Environment> {
+    const environment = new Environment(device);
     await Promise.all([
       ...KERNELS.map(async (entry) => {
         environment.pipelines.set(
@@ -131,7 +138,6 @@ export class Environment {
           }),
         );
       }),
-      mips.prepare("rgba16float"),
     ]);
     const encoder = device.createCommandEncoder({ label: "env.brdf" });
     environment.run(encoder, "brdf", undefined, { 7: environment.brdfView }, [
@@ -143,10 +149,7 @@ export class Environment {
     return environment;
   }
 
-  private constructor(
-    private readonly device: GPUDevice,
-    private readonly mips: MipGenerator,
-  ) {
+  private constructor(private readonly device: GPUDevice) {
     this.specularCube = specularCube(device, "env.specular", COPY_DST);
     this.specularView = this.specularCube.createView({ dimension: "cube" });
     this.irradianceCube = irradianceCube(
@@ -185,7 +188,11 @@ export class Environment {
     });
     this.module = device.createShaderModule({ label: "ibl", code: iblWgsl });
     this.prefilterParams = Array.from({ length: SPECULAR_LEVELS }, (_, mip) =>
-      this.params(SPECULAR_SIZE >> mip, mip, PREFILTER_SAMPLES),
+      this.params(
+        SPECULAR_SIZE >> mip,
+        mip,
+        PREFILTER_SAMPLES[Math.max(mip - 1, 0)] ?? 32,
+      ),
     );
     this.procedural = this.createProbe("env.procedural");
   }
@@ -252,7 +259,18 @@ export class Environment {
    * cube and the SH.
    */
   build(probe: EnvironmentProbe, encoder: GPUCommandEncoder): void {
-    this.mips.generate(probe.skyCube, encoder);
+    for (let mip = 1; mip < probe.skyCube.mipLevelCount; mip++) {
+      this.run(
+        encoder,
+        "downsample",
+        undefined,
+        {
+          10: level(probe.skyCube, mip - 1),
+          11: level(probe.skyCube, mip),
+        },
+        faces(SKY_SIZE >> mip),
+      );
+    }
     const skyView = probe.skyCube.createView({ dimension: "cube" });
     for (let mip = 0; mip < SPECULAR_LEVELS; mip++) {
       this.run(
@@ -437,6 +455,7 @@ export class Environment {
 const KERNELS = [
   "brdf",
   "sky",
+  "downsample",
   "prefilter",
   "shFace",
   "shFinal",

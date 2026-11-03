@@ -772,7 +772,18 @@ Next steps (r44, after the night work). Now, in this order:
    degree (the sun's disk, refraction) or a step's span.
 3. **The environment's rebuild cost** (about 10 ms when the sun, the Moon
    or the exposure moves): fewer prefilter samples with filtered
-   importance sampling, the irradiance from a smaller level.
+   importance sampling, the irradiance from a smaller level. Done (r44): the
+   cost was mostly elsewhere. Timed alone, a rebuild took 3.0 ms of GPU
+   time and 0.8 ms to encode, 2.2 ms of it the sky cube's mips: a render
+   pass per face and level, 42 for the 128² cube, nearly all overhead. A
+   compute kernel now averages a level's six faces in one dispatch (7 in
+   all); the prefilter takes 64 samples at its first blurred level and 32
+   after (filtered importance sampling: 256 did no better, the IBL
+   reference within 0.0-2.6% of Monte Carlo for dielectrics as before);
+   the irradiance cube is 16² a face. A rebuild now: 0.6 ms of GPU, 0.07
+   ms to encode. The irradiance from 10 km up moved from 3.9% to 6.1% of
+   the integral (the zenith texels lean 3.6° toward the bright ground),
+   the ground's rows within 0.9% as before.
 4. **The eye's local adaptation**: the eye adapts to each region it
    looks at, not to the view as a whole: a moonless night is less black
    to a dark-adapted walker than one global adaptation shows, and bright

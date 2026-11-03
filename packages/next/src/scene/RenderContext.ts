@@ -148,7 +148,7 @@ export async function createRenderContext(
   const mips = new MipGenerator(device);
   const [pipelines, environment] = await Promise.all([
     createPipelines(device, outputFormat, overrides),
-    Environment.create(device, mips),
+    Environment.create(device),
     mips.prepare("rgba8unorm"),
     mips.prepare("rgba8unorm-srgb"),
   ]);

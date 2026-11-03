@@ -1,6 +1,7 @@
 // Image-based lighting, built on the GPU with compute shaders:
 //   sky      — render the environment radiance into a cube map (procedural
 //              sky for now; the M4 atmosphere renders here instead)
+//   downsample — its mips, all six faces of a level per dispatch
 //   prefilter— GGX-prefiltered specular mips (roughness = mip / (levels - 1))
 //   shFace   — per-face SH9 projection by workgroup reduction
 //   shFinal  — sum the faces into irradiance coefficients (E/π form)
@@ -259,6 +260,26 @@ fn irradianceCube(@builtin(global_invocation_id) id: vec3u) {
 // --- BRDF LUT (split sum: scale and bias of F0) -------------------------------
 
 @group(1) @binding(7) var brdfTarget: texture_storage_2d<rgba16float, write>;
+
+// --- the sky cube's mips ----------------------------------------------------------
+
+@group(1) @binding(10) var mipSource: texture_2d_array<f32>;
+@group(1) @binding(11) var mipTarget: texture_storage_2d_array<rgba16float, write>;
+
+// A level from the one above: the mean of each 2 × 2, every face at once.
+// A render pass per face and level (42 for the 128² cube) cost 2.2 ms of
+// GPU time, nearly all of it the passes' own overhead.
+@compute @workgroup_size(8, 8, 1)
+fn downsample(@builtin(global_invocation_id) id: vec3u) {
+  let size = textureDimensions(mipTarget).x;
+  if (id.x >= size || id.y >= size) {
+    return;
+  }
+  let s = id.xy * 2u;
+  let sum = textureLoad(mipSource, s, id.z, 0) + textureLoad(mipSource, s + vec2u(1u, 0u), id.z, 0)
+    + textureLoad(mipSource, s + vec2u(0u, 1u), id.z, 0) + textureLoad(mipSource, s + vec2u(1u, 1u), id.z, 0);
+  textureStore(mipTarget, id.xy, id.z, sum * 0.25);
+}
 
 @compute @workgroup_size(8, 8, 1)
 fn brdf(@builtin(global_invocation_id) id: vec3u) {
