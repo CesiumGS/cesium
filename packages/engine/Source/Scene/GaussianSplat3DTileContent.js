@@ -543,13 +543,19 @@ class GaussianSplat3DTileContent {
             );
             if (defined(attr) && defined(attr.typedArray)) {
               data = new Uint32Array(attr.typedArray);
+            } else if (defined(attr) && defined(attr.constant)) {
+              // Per glTF 2.0, an accessor without a bufferView is zero-filled.
+              // GltfLoader represents it as a constant (non-SPZ semantics are
+              // not routed through SPZ decoding), so expand it per splat.
+              data = new Uint32Array(this.pointsLength).fill(attr.constant);
             } else {
-              // A feature ID attribute was declared but carries no values. This
-              // is a data error; warn rather than hide it, then fall back to
-              // sequential IDs so the featureId_N shader slots stay aligned.
+              // The feature ID set references an attribute the primitive does
+              // not have. This is a data error; warn rather than hide it, then
+              // fall back to sequential IDs so the featureId_N shader slots
+              // stay aligned.
               oneTimeWarning(
                 "GaussianSplatMissingFeatureIdAttribute",
-                `Feature ID set ${i} declares attribute _FEATURE_ID_${fid.setIndex} but the primitive provides no values. Falling back to sequential IDs (0..N-1).`,
+                `Feature ID set ${i} references attribute _FEATURE_ID_${fid.setIndex} but the primitive does not provide it. Falling back to sequential IDs (0..N-1).`,
               );
             }
           }
