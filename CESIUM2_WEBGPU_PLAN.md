@@ -3560,6 +3560,43 @@ improved.
   phone. Built framework-free in `widgets/` like the Viewer, with Dyno's
   StrataKit version on top.
 
+**Built (r41).** `Clock` (`src/time/Clock.ts`: time in UTC milliseconds,
+rate, paused / playing / live) and the sun from it (`src/time/sun.ts`:
+Meeus's low-precision apparent position, about 0.01°, turned to Earth-fixed
+axes by Greenwich sidereal time; sunrise, solar noon and sunset by
+bisection; unit tests against the almanac: the solstice's and equinox's
+declinations, the subsolar longitude by the equation of time, Philadelphia's
+sunrise, noon and sunset within 1.5-3 minutes). The `Viewer` owns a clock
+and its sun follows it (`viewer.clock`, `sunFromClock`; `setSun` still
+places it by hand); the first framing sets an unset clock to 10:30 local
+solar time today there, a first look in daylight. The time controls
+(`widgets/timeControls.ts`, framework-free, on by default in the `Viewer`):
+the pill (date and time, play/pause), and its panel with the day strip
+(shaded by the sun's elevation at the place, sunrise and sunset marked, the
+wall clock's "now", dragged to scrub, a keyboard slider), the day before and
+after, a date, "Now" (live), presets for the light (sunrise, golden hour,
+noon, sunset, night) and the study dates (equinoxes, solstices), named
+speeds, and the time zone: local solar time at the place (default), UTC or
+this computer's. When the sun is down it offers an action (Dyno's: turn on
+automatic exposure). Dyno's Viewer: "Sun from date and time" (on by
+default; the azimuth and elevation sliders otherwise). Playing at 1 h/s
+re-renders every frame with the sky, environment and aerial perspective
+updating (about 6 ms of GPU at Dyno's size on the laptop GPU).
+
+Follow-ups: the sun with 1.x's exact algorithms (Simon 1994, the IAU 2006
+Earth orientation with its data) for L0 parity; a place's legal time zone
+(a boundary table); clocks per view (comparing two times side by side) and
+`Engine.sunDirection` per view; data time ranges on the strip; the moon and
+the night sky, without which a night is black at any exposure. Open
+(r41): with automatic exposure, a midnight view showed the terrain lit
+while the truck was black, and at noon the meter settled on an exposure
+that clipped the lit truck to white, as if the terrain were far darker than
+the sun should make it: the terrain's lighting (or the meter's reading of
+it) needs a look. Found on the way: an overflow to infinity (a lit scene
+at a night exposure) made the meter's average NaN and froze automatic
+exposure for good; the opaque pass now stays below fp16's largest value and
+the meter ignores readings that aren't numbers.
+
 ### 13.14 Bodies, frames and engineering coordinates
 
 Everything today is in Earth-fixed coordinates (ECEF): the globe, tiles,
