@@ -21,6 +21,8 @@ import {
   MeshEditor,
   MeshEditorGroup,
   MeshEditorStyle,
+  SelectTool,
+  TranslateTool,
 } from "../../index.js";
 import createCanvas from "../../../../Specs/createCanvas.js";
 import createScene from "../../../../Specs/createScene.js";
@@ -775,24 +777,66 @@ describe(
       });
     });
 
-    describe("tools", function () {
-      it("has the built-in select and translate tools", function () {});
-
-      it("returns the same tools on every read", function () {});
-    });
-
     describe("activeTool", function () {
-      it("is undefined initially", function () {});
+      it("is undefined initially", async function () {
+        const editor = await MeshEditor.addToScene(scene);
 
-      it("sets the active tool", function () {});
+        expect(editor.activeTool).toBeUndefined();
+      });
 
-      it("clears the active tool when set to undefined", function () {});
+      it("sets the active tool", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const selectTool = SelectTool.addTo(editor);
+        const translateTool = TranslateTool.addTo(editor);
+        editor.mode = EditMode.VERTEX;
 
-      it("throws for a tool from another editor", function () {});
+        editor.activeTool = selectTool;
+        expect(editor.activeTool).toBe(selectTool);
 
-      it("throws for a tool that doesn't support the current mode", function () {});
+        editor.activeTool = translateTool;
+        expect(editor.activeTool).toBe(translateTool);
+      });
 
-      it("is cleared when the mode is set to EditMode.NONE", function () {});
+      it("clears the active tool when set to undefined", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        editor.mode = EditMode.VERTEX;
+        editor.activeTool = SelectTool.addTo(editor);
+
+        editor.activeTool = undefined;
+
+        expect(editor.activeTool).toBeUndefined();
+      });
+
+      it("throws for a tool from another editor", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const otherEditor = await MeshEditor.addToScene(scene);
+        const otherTool = SelectTool.addTo(otherEditor);
+        editor.mode = EditMode.VERTEX;
+
+        expect(() => {
+          editor.activeTool = otherTool;
+        }).toThrowDeveloperError();
+      });
+
+      it("throws for a tool that doesn't support the current mode", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const selectTool = SelectTool.addTo(editor);
+
+        expect(() => {
+          editor.activeTool = selectTool;
+        }).toThrowDeveloperError();
+        expect(editor.activeTool).toBeUndefined();
+      });
+
+      it("is cleared when the mode is set to EditMode.NONE", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        editor.mode = EditMode.VERTEX;
+        editor.activeTool = TranslateTool.addTo(editor);
+
+        editor.mode = EditMode.NONE;
+
+        expect(editor.activeTool).toBeUndefined();
+      });
     });
 
     describe("pointer input", function () {
