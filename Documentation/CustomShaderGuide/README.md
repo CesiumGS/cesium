@@ -89,7 +89,7 @@ const voxelPrimitive = new Cesium.VoxelPrimitive({
 });
 ```
 
-Voxels only support a subset of custom shader functionality. See [Using custom shaders for voxel rendering](#using-custom-shaders-for-voxel-rendering).
+Voxels and Gaussian Splats only support subsets of custom shader functionality. See [Using custom shaders for voxel rendering](#using-custom-shaders-for-voxel-rendering) and [Using custom shaders for Gaussian splat rendering](#using-custom-shaders-for-gaussian-splat-rendering).
 
 ## Uniforms
 
