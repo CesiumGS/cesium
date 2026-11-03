@@ -1020,11 +1020,13 @@ show where cascades meet); far cascades could update every other frame or
 cache until the sun or the tiles move, leading to virtual shadow maps
 (pages rendered where the view needs them and cached, a good fit for
 streamed tiles); shadows from the moon at night and from the clouds later.
-Measured on the way: the aerial-perspective volume's compute takes about
-1 ms (1,024 threads each marching 256 steps; splitting each column's
-march across threads would fill the GPU better), and the opaque pass in a
-close oblique terrain view is about 9 ms at that size, mostly the lighting
-the imagery now gets (it took the unlit path before).
+Measured on the way: the aerial-perspective volume's compute looked like
+1 ms (1,024 threads each marching 256 steps), and the opaque pass in a
+close oblique terrain view about 9 ms at that size, mostly the lighting
+the imagery now gets (it took the unlit path before); both measured with
+idle gaps between frames, where this laptop's GPU clocks down. Back to
+back, the volume took 0.20 ms; with a thread per slice and a prefix scan
+(r43) it takes 0.07 ms.
 
 Progress (r42): **ambient occlusion** (`View.ambientOcclusion`,
 `ambientOcclusionRadius`, default 3 m; on in the `Viewer`, off by default
@@ -1251,9 +1253,12 @@ tables). Two ways to evaluate it, by the camera's altitude:
   × 128 distances, the same distances for every ray (spaced quadratically
   from the camera, or the atmosphere's nearest point from above it, to its
   far edge past the horizon), built per view per frame by a compute shader:
-  one thread per column marches once, front to back, writing every slice as
-  it passes (each slice is the one before plus one interval, two steps per
-  interval), one dispatch per group of four wavelengths (the second adds
+  a workgroup per column and a thread per slice, each marching its own
+  interval (two steps), then a parallel prefix scan in workgroup memory
+  chaining the intervals front to back, so each slice is the one before
+  plus one interval, as one thread marching the column whole wrote them
+  (that left 1,024 threads, 0.20 ms; the scan takes 0.07 ms), one
+  dispatch per group of four wavelengths (the second adds
   the first's share). Rays go on through the planet's sphere at its
   surface's air (the scene's surface, the WGS84 ellipsoid or terrain, is
   above it). Each of those choices fixed a banding seen while zooming: rays

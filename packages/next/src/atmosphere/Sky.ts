@@ -317,7 +317,7 @@ export class Sky {
       pass.setBindGroup(0, atmosphere);
       pass.setBindGroup(1, tables);
       pass.setBindGroup(2, view.aerialGroups[g]!);
-      pass.dispatchWorkgroups(AERIAL_SIZE / 8, AERIAL_SIZE / 8);
+      pass.dispatchWorkgroups(AERIAL_SIZE, AERIAL_SIZE);
     }
     pass.end();
   }
