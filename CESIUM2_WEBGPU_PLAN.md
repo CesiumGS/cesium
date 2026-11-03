@@ -998,8 +998,44 @@ wavelengths, double precision) at 0, 2 and 10 km and sun elevations from
 90° to 2°: within 0.4% everywhere (115.0 klx at sea level with the sun
 overhead, 12.8 klx at 2°, color from white to deep orange). Dyno's Viewer:
 "Sunlight from the atmosphere" (on by default), the lux slider otherwise.
-The environment lighting is still the procedural sky (daylight ambient
-under a sunset sun) until it comes from the atmosphere, the next step.
+
+**Environment lighting from the atmosphere** (r41;
+`ViewLighting.environment: "atmosphere"`, the default; "procedural" keeps
+`Engine.environment.setSky`'s gradient, which the 1.x parity harnesses pin).
+Each view has an environment probe: its sky rendered into a 128² cube in
+the environment frame at the camera (the per-pixel march, cd/m², no sun
+disk), then its mips, GGX-prefiltered specular cube and irradiance, rebuilt
+when the sun moves about 0.1° in the view's local frame (13 km along the
+ground) or the altitude 10% (500 m and below count as 500 m), and copied
+into the bound environment before the view's draws (`Environment.select`,
+skipped when already there). A body without an atmosphere gets a black
+environment.
+
+**Diffuse light from an irradiance cube, not SH9.** The atmosphere showed
+what SH9 can't do: against the cosine-weighted integral of the sky's own
+radiance over the hemisphere, the engine's SH (equal to an exact CPU
+projection within 0.1%, so the pipeline is right) is 3-6% high on a
+horizontal surface at the ground under a clear sky, 30% high at 10 km, and
+from orbit rings into negative colors (3.9 lux and a negative blue where
+the answer is 0), because nine coefficients can't hold a sharp horizon
+between a dark sky and a bright planet. Unreal's sky light has the same
+limit. Diffuse IBL now reads a 32² irradiance cube: the brute-force cosine
+integral of the radiance cube's 16² level (1,536 texels per output texel),
+within 0.4-1.4% on the ground, 3.9% at 10 km, exactly 0 from orbit. SH9 is
+still computed for reading back and the intent-parity statistics against
+1.x. Effects elsewhere: the IBL reference page unchanged (dielectrics within
+0.1-2.7% of Monte Carlo, the furnace at 0.9998); the models parity
+harness's `ibl-diffuse` mode, which compares with 1.x's SH9, moved by
++0.001 to +0.006 mean FLIP (a deliberate divergence); everything else
+bit-identical.
+
+Cost of a rebuild, GPU time on an RTX 3000 Ada laptop GPU: sky cube 1.5 ms,
+mips 0.6, specular prefilter 5.4 (256 samples per texel at every level),
+SH 0.2, irradiance 2.5; about 10 ms, fine for a sun that moves now and then,
+too much for scrubbing time (§13.13) or a zoom across altitudes. Next: the
+cube from the view's sky-view table (Unreal's sky light capture), fewer
+prefilter samples with filtered importance sampling, and spreading a
+rebuild over frames.
 
 **How the sun looks** (r41). At ordinary fields of view the disk is 3 to 4
 pixels across, so its edge is antialiased by each pixel's coverage. Its
