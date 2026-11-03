@@ -228,6 +228,52 @@ fn luminanceShare(t: vec4f, group: u32) -> f32 {
     + t.w * dot(sky.weights[base + 3u].xyz, y)) / total;
 }
 
+// --- the night sky's own light -------------------------------------------------
+
+// A moonless night is lit by the sky itself, about 1 mlux on the ground
+// (Leinert et al. 1998, "The 1997 reference of diffuse night sky
+// brightness"): airglow, a shell of the upper atmosphere (87-97 km:
+// oxygen's green line, OH, sodium) glowing by night, 1.1e-4 cd/m² at the
+// zenith seen from the ground (21.9 V mag/arcsec² for the whole sky, about
+// 60% of it), several times more toward the horizon where a ray runs
+// longer through the shell (van Rhijn), and from orbit a thin line along
+// the planet's edge; a mild yellow-green (the green line over the red
+// lines and the continuum, as long exposures show it); and from beyond the atmosphere, the zodiacal
+// light and the stars too faint for the star map, warm white, 0.8e-4
+// cd/m², dimmed by the air like the stars. Linear sRGB, cd/m² (per km of
+// the shell for airglow); a day sky is 10⁷ times brighter.
+const AIRGLOW_BOTTOM = 87.0;
+const AIRGLOW_TOP = 97.0;
+const AIRGLOW = vec3f(0.855, 1.069, 0.748) * 1.4e-5;
+const STARLIGHT = vec3f(1.07, 0.99, 0.86) * 0.8e-4;
+
+// How much of [a, b] along a ray (from radius r, zenith cosine mu) is
+// inside a sphere.
+fn sphereSpan(r: f32, mu: f32, radius: f32, a: f32, b: f32) -> f32 {
+  let disc = r * r * (mu * mu - 1.0) + radius * radius;
+  if (disc <= 0.0 || b <= a) {
+    return 0.0;
+  }
+  let s = sqrt(disc);
+  return max(min(-r * mu + s, b) - max(-r * mu - s, a), 0.0);
+}
+
+// The night sky's own light along a ray (pre-exposure), this group's part
+// (the groups add): `toSpace` is this group's share of the transmittance
+// to space (`luminanceShare`), 0 where the ground is in the way. Airglow
+// on the near side of the ray's lowest point is seen through the thin
+// air above it (from orbit), on the far side through the whole ray.
+fn nightGlow(r: f32, mu: f32, ground: bool, toSpace: f32) -> vec3f {
+  let bottom = atmosphere.bottomRadius;
+  let end = select(1e9, sphereDistance(r, mu, bottom, true), ground);
+  let lowest = clamp(-r * mu, 0.0, end);
+  let r1 = bottom + AIRGLOW_BOTTOM;
+  let r2 = bottom + AIRGLOW_TOP;
+  let near = sphereSpan(r, mu, r2, 0.0, lowest) - sphereSpan(r, mu, r1, 0.0, lowest);
+  let far = sphereSpan(r, mu, r2, lowest, end) - sphereSpan(r, mu, r1, lowest, end);
+  return AIRGLOW * (near * 0.5 + far * select(toSpace, 0.5, ground)) + STARLIGHT * toSpace;
+}
+
 // --- per pixel (above the atmosphere) -------------------------------------------
 
 // The sky's light along `direction` (spectral, this group's wavelengths).
@@ -291,9 +337,10 @@ fn marchedSky(pixel: vec2f, group: u32) -> MarchedSky {
     let moon = march(sky.position, direction, normalize(sky.shape * sky.moon), 1e9, i32(sky.steps), false);
     spectral += moon.radiance * atmosphere.solarIrradiance * sky.moonLight;
   }
+  let toSpace = select(luminanceShare(s.transmittance, group), 0.0, ground);
   return MarchedSky(
-    toRgb(spectral, group) * sky.exposure,
-    select(luminanceShare(s.transmittance, group), 0.0, ground),
+    (toRgb(spectral, group) + nightGlow(r, mu, ground, toSpace)) * sky.exposure,
+    toSpace,
     select(s.transmittance, vec4f(0.0), ground),
   );
 }
@@ -426,9 +473,13 @@ fn skyViewFragment(in: SkyVarying) -> @location(0) vec4f {
     spectral = s.radiance * atmosphere.solarIrradiance;
     // Alpha: the transmittance to space, for the stars (the groups' shares
     // add up).
-    if (!hitsGround(r, dot(sky.position, direction) / r)) {
+    let mu = dot(sky.position, direction) / r;
+    let ground = hitsGround(r, mu);
+    if (!ground) {
       toSpace = luminanceShare(s.transmittance, in.group);
     }
+    let glow = nightGlow(r, mu, ground, toSpace);
+    return vec4f(min((toRgb(spectral, in.group) + glow) * sky.exposure, vec3f(SKY_MAX)), toSpace);
   }
   return vec4f(min(toRgb(spectral, in.group) * sky.exposure, vec3f(SKY_MAX)), toSpace);
 }

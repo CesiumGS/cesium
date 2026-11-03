@@ -286,7 +286,13 @@ export class Engine {
    */
   private readonly probes = new Map<
     View,
-    { probe: EnvironmentProbe; key: Float64Array; pending: boolean }
+    {
+      probe: EnvironmentProbe;
+      key: Float64Array;
+      /** The exposure it was built at (its sky is pre-exposed). */
+      exposure: number;
+      pending: boolean;
+    }
   >();
   /** The environment of a body without an atmosphere: black. */
   private darkProbe: EnvironmentProbe | undefined;
@@ -508,7 +514,11 @@ export class Engine {
    * moved by about 0.1° in its local frame (or the camera about 13 km
    * along the ground), or its altitude by 10% (500 m and below count as
    * 500 m: below the 8 km scale height the sky changes slowly with
-   * altitude). About 10 ms of GPU work each time (plan §4.2: to cut).
+   * altitude); by night, when the Moon has moved as much or its light by
+   * 10%; and when the exposure has moved by a stop (the sky it's built
+   * from is pre-exposed: a night sky at a day's exposure is below fp16's
+   * smallest values). About 10 ms of GPU work each time (plan §4.2: to
+   * cut).
    */
   private updateEnvironment(view: View): void {
     if (view.lighting.environment !== "atmosphere" || !view.body.atmosphere) {
@@ -518,7 +528,8 @@ export class Engine {
     if (!entry) {
       entry = {
         probe: this.ctx.environment.createProbe("env.view"),
-        key: new Float64Array(4).fill(Number.NaN),
+        key: new Float64Array(8).fill(Number.NaN),
+        exposure: Number.NaN,
         pending: false,
       };
       this.probes.set(view, entry);
@@ -537,14 +548,41 @@ export class Engine {
     const k = entry.key;
     const turned = Math.hypot(east - k[0]!, up - k[1]!, south - k[2]!);
     const climbed = Math.abs(Math.log(altitude / k[3]!));
+    // The Moon by night (the air's share is 0 by day), and the exposure.
+    const moon = this.viewBlock.moonAir > 0 ? this.viewBlock.moon : undefined;
+    const moonEast = moon ? v3.dot(frame[0], moon.direction) : 0;
+    const moonUp = moon ? v3.dot(frame[1], moon.direction) : 0;
+    const moonSouth = moon ? v3.dot(frame[2], moon.direction) : 0;
+    const moonLight = this.viewBlock.moonAir;
+    const moonTurned = Math.hypot(
+      moonEast - k[4]!,
+      moonUp - k[5]!,
+      moonSouth - k[6]!,
+    );
+    const moonChanged =
+      moonLight === 0
+        ? k[7] !== 0
+        : !(Math.abs(Math.log(moonLight / k[7]!)) <= 0.1);
+    const stops = Math.abs(Math.log2(view.exposureScale / entry.exposure));
     // NaN (never built) compares false: rebuild.
-    if (turned <= 0.002 && climbed <= 0.1) {
+    if (
+      turned <= 0.002 &&
+      climbed <= 0.1 &&
+      moonTurned <= 0.002 &&
+      !moonChanged &&
+      stops <= 1
+    ) {
       return;
     }
     k[0] = east;
     k[1] = up;
     k[2] = south;
     k[3] = altitude;
+    k[4] = moonEast;
+    k[5] = moonUp;
+    k[6] = moonSouth;
+    k[7] = moonLight;
+    entry.exposure = view.exposureScale;
     entry.pending = true;
   }
 
