@@ -17,6 +17,8 @@ export const SUN_ANGULAR_DIAMETER = 0.00935;
 
 /** Bytes of the WGSL `Sky` uniform (sky.wgsl). */
 const SKY_SIZE = 320;
+/** The Earth's geometric albedo (earthshine on the Moon). */
+const EARTH_ALBEDO = 0.367;
 /** Bytes between the environment faces' `Sky` uniforms. */
 const FACE_STRIDE = 512;
 
@@ -66,6 +68,8 @@ export interface MoonView {
   toSun: ArrayLike<number>;
   /** At it, between the sun and the camera, radians (0: full). */
   phaseAngle: number;
+  /** The sine of the Earth's angular radius seen from it (earthshine). */
+  earthRadius: number;
   /**
    * Its illuminance as a share of the sun's above the atmosphere, for the
    * light the air scatters (0 while the sun is up: by day it's lost).
@@ -1043,8 +1047,18 @@ export class Sky {
         ((MOON_ALBEDO / Math.PI) * moonPhaseBrightness(alpha)) /
         lommelSeeliger(alpha) /
         this.moonMean;
+      // Earthshine: the Earth as a Lambertian sphere (geometric albedo
+      // 0.37) seen from the Moon at its phase (about π − the Moon's), its
+      // light on the Moon read as the Moon's full-phase brightness.
+      const earthPhase = Math.PI - moon.phaseAngle;
+      const lambert =
+        (Math.sin(earthPhase) + (Math.PI - earthPhase) * Math.cos(earthPhase)) /
+        Math.PI;
+      const earth = EARTH_ALBEDO * moon.earthRadius * moon.earthRadius;
+      f[71] = ((MOON_ALBEDO / Math.PI) * earth * lambert) / this.moonMean;
     } else {
       f[63] = 0;
+      f[71] = 0;
     }
     f[3] = exposure;
     f[4] = sun[0]!;

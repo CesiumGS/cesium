@@ -57,7 +57,9 @@ struct Sky {
   moonX: vec3f,
   moonScale: f32,
   moonZ: vec3f,
-  _pad2: f32,
+  // Earthshine: the Earth's light on the Moon's night side, per unit of
+  // the map's albedo, as a share of the sun's irradiance (sr⁻¹).
+  earthshine: f32,
   // From the Moon toward the sun (unit).
   moonSun: vec3f,
   _pad3: f32,
@@ -202,15 +204,15 @@ fn moonDisk(direction: vec3f) -> MoonSample {
   let mu = sqrt(max(0.0, 1.0 - dot(q, q)));
   let normal = q - m * mu;
   let mu0 = dot(normal, sky.moonSun);
-  if (mu0 <= 0.0) {
-    return MoonSample(0.0, coverage);
-  }
   let moonY = cross(sky.moonZ, sky.moonX);
   let longitude = atan2(dot(normal, moonY), dot(normal, sky.moonX));
   let latitude = asin(clamp(dot(normal, sky.moonZ), -1.0, 1.0));
   let uv = vec2f(0.5 + longitude / (2.0 * PI), 0.5 - latitude / PI);
   let albedo = dot(textureSampleLevel(moonMap, starSampler, uv, 0.0).rgb, vec3f(0.2126, 0.7152, 0.0722));
-  return MoonSample(sky.moonScale * albedo * 2.0 * mu0 / (mu0 + mu) * coverage, coverage);
+  // The sunlit part, and everywhere the Earth's light (seen from about
+  // where it comes from: flat, as at full).
+  let sunlit = select(0.0, sky.moonScale * 2.0 * mu0 / (mu0 + mu), mu0 > 0.0);
+  return MoonSample((sunlit + sky.earthshine) * albedo * coverage, coverage);
 }
 
 // This group's share of a transmittance weighted by its bands' luminance:

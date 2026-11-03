@@ -683,6 +683,7 @@ export class Engine {
     }
     v3.normalize(m.toSun, m.toSun);
     m.sinRadius = Math.min(MOON_RADIUS / distance, 1);
+    m.earthRadius = Math.min(EARTH_RADIUS / v3.length(moon), 1);
     m.phaseAngle = Math.acos(
       Math.min(Math.max(-v3.dot(m.toSun, toward), -1), 1),
     );
@@ -2826,9 +2827,12 @@ const scratchMoon = {
   north: v3.vec3(),
   toSun: v3.vec3(),
   phaseAngle: 0,
+  earthRadius: 0,
   airShare: 0,
 };
 const scratchMoonAxis = v3.vec3();
+/** The Earth's mean radius, m (its size from the Moon: earthshine). */
+const EARTH_RADIUS = 6_371_009;
 /** The mean distance to the sun, m (IAU 2012). */
 const ASTRONOMICAL_UNIT = 1.495978707e11;
 /** The ecliptic's tilt to the equator (J2000), radians. */
