@@ -98,6 +98,8 @@ const suites = {
     "runGlobe",
   ],
   imagery: ["/parity/imagery.html?bench", "runImagery"],
+  // Moment-based OIT against the exact per-pixel lists (plan §6 M4).
+  translucency: ["/parity/translucency.html?bench", "runTranslucency"],
   // Clamping heights on OSM Buildings vs 1.x (needs VITE_ION_TOKEN).
   heights: ["/parity/heights.html?bench", "runHeights"],
   tileset: [
