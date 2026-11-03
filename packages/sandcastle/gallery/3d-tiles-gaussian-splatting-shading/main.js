@@ -50,9 +50,9 @@ void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
 });
 
 // Classification-based colorization: splats are tinted according to a
-// per-feature classification code stored in the first two bytes of the
-// property table texture (16-bit little-endian integer).
-// Requires a dataset that contains EXT_structural_metadata classification data.
+// per-splat classification code read from the first feature ID set
+// (fsInput.attributes.featureId_0, from the _FEATURE_ID_0 vertex attribute).
+// Requires a dataset that contains EXT_mesh_features feature IDs.
 const classificationShader = new Cesium.CustomShader({
   fragmentShaderText: `
 void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {

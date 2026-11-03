@@ -75,7 +75,7 @@ function GaussianSplatRenderResources(primitive) {
    *
    * @private
    */
-  const uniformMap = defined(customShader)
+  this.uniformMap = defined(customShader)
     ? combine(primitive._uniformMap, customShader.uniformMap)
     : Object.assign({}, primitive._uniformMap);
 
@@ -109,8 +109,6 @@ function GaussianSplatRenderResources(primitive) {
       customShader.fragmentShaderText,
     ]);
   }
-
-  this.uniformMap = uniformMap;
 
   /**
    * An object storing options for creating a {@link RenderState}.
