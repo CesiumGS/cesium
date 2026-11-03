@@ -2068,8 +2068,8 @@ export class World {
     );
     encoder.setBindGroup(1, this.drawBindGroup);
     encoder.setIndexBuffer(this.indexBuffer, "uint32");
-    // Casters: depth only, so the GPU tests depth before shading; the
-    // fragment stage only where a material cuts out (alpha mask).
+    // Casters: depth, the fragment stage clipping placeholders, and where
+    // a material cuts out (alpha mask) its cutoff too.
     const masked = (batch: Batch) =>
       (this.materialsU32[batch.material * MATERIAL_WORDS + 12]! & 4) !== 0;
     const pipelineOf = (batch: Batch) =>

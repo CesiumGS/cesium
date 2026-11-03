@@ -391,6 +391,19 @@ fn shadowFs(in: VsOut) {
   cutOut(in);
 }
 
+// The other casters: only the placeholders' clip. Without it a coarse
+// tile kept while its children load cast its whole extent, over the
+// children drawn beside it (coarse terrain lies meters above the fine),
+// shadowing everything near the camera until they had all loaded.
+@fragment
+fn shadowPlaceholderFs(in: VsOut) {
+  let r = records[in.draw];
+  if ((r.placeholderMask & view.viewBit) != 0u &&
+      !insideClipBoxes(r.clipBlock, r.clipCount, in.relPosition)) {
+    discard;
+  }
+}
+
 // The depth and normal prepass (ambient occlusion reads it): the surface's
 // normal (geometric, facing the camera), with the opaque pass's discards.
 @fragment

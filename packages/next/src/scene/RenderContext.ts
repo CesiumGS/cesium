@@ -474,15 +474,14 @@ async function createPipelines(
           },
         ],
       },
-      ...(masked
-        ? {
-            fragment: {
-              module: casterModule,
-              entryPoint: "shadowFs",
-              targets: [],
-            },
-          }
-        : {}),
+      // Masked: the material's alpha cutoff and placeholders' clip; else
+      // the clip alone (a record turns placeholder without the bundle
+      // being recorded again, so every caster checks).
+      fragment: {
+        module: casterModule,
+        entryPoint: masked ? "shadowFs" : "shadowPlaceholderFs",
+        targets: [],
+      },
       primitive: { topology: "triangle-list", cullMode, frontFace: "ccw" },
       depthStencil: {
         format: "depth32float",
