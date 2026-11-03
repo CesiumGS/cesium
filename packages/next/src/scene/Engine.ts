@@ -229,7 +229,7 @@ export class Engine {
    */
   private readonly probes = new Map<
     View,
-    { probe: EnvironmentProbe; key: Float64Array }
+    { probe: EnvironmentProbe; key: Float64Array; pending: boolean }
   >();
   /** The environment of a body without an atmosphere: black. */
   private darkProbe: EnvironmentProbe | undefined;
@@ -411,7 +411,8 @@ export class Engine {
   }
 
   /**
-   * Rebuilds a view's environment from its atmosphere when the sun has
+   * Marks a view's environment for rebuilding from its atmosphere (this
+   * frame, `encodeEnvironment`) when the sun has
    * moved by about 0.1° in its local frame (or the camera about 13 km
    * along the ground), or its altitude by 10% (500 m and below count as
    * 500 m: below the 8 km scale height the sky changes slowly with
@@ -426,6 +427,7 @@ export class Engine {
       entry = {
         probe: this.ctx.environment.createProbe("env.view"),
         key: new Float64Array(4).fill(Number.NaN),
+        pending: false,
       };
       this.probes.set(view, entry);
     }
@@ -451,15 +453,40 @@ export class Engine {
     k[1] = up;
     k[2] = south;
     k[3] = altitude;
-    this.sky.renderEnvironment(
-      entry.probe.skyCube,
-      ellipsoid,
-      position,
-      frame,
-      sun,
-    );
-    this.ctx.environment.build(entry.probe);
-    this.stats.environmentBuilds++;
+    entry.pending = true;
+  }
+
+  /**
+   * Encodes a pending rebuild of a view's environment (after its sky-view
+   * table, which it reads when the view has one), then selects the view's
+   * environment for its draws.
+   */
+  private encodeEnvironment(
+    encoder: GPUCommandEncoder,
+    view: View,
+    frame: ViewFrame,
+  ): void {
+    const entry = this.probes.get(view);
+    if (entry?.pending) {
+      entry.pending = false;
+      const position = view.camera.position;
+      const ellipsoid = view.body.ellipsoid;
+      this.sky.encodeEnvironment(
+        encoder,
+        frame.sky,
+        entry.probe.skyCube,
+        ellipsoid,
+        position,
+        environmentFrame(position, ellipsoid),
+        this.sunDirection,
+        drawsSky(view) && frame.sky.inside
+          ? { exposure: view.exposureScale }
+          : undefined,
+      );
+      this.ctx.environment.build(entry.probe, encoder);
+      this.stats.environmentBuilds++;
+    }
+    this.ctx.environment.select(encoder, this.probeOf(view));
   }
 
   /** Image-based lighting environment shared by all worlds and views. */
@@ -1858,7 +1885,6 @@ export class Engine {
         0,
         VIEW_SIZE,
       );
-      this.ctx.environment.select(enc, this.probeOf(view));
     });
 
     graph.addPass("cull", { sideEffect: true }, (enc) => {
@@ -1870,6 +1896,11 @@ export class Engine {
       if (drawsSky(view) && frame.sky.inside) {
         this.sky.encodeTable(enc, frame.sky, this.timer.passWrites());
       }
+    });
+
+    // The view's environment lighting, rebuilt from its sky if due.
+    graph.addPass("environment", { sideEffect: true }, (enc) => {
+      this.encodeEnvironment(enc, view, frame);
     });
 
     graph.addPass(
@@ -2238,6 +2269,7 @@ function destroyViewFrame(frame: ViewFrame): void {
   frame.presentParams.destroy();
   frame.sky.buffer.destroy();
   frame.sky.table.destroy();
+  frame.sky.faceUniforms.destroy();
   frame.ids.destroy();
   frame.depth.destroy();
 }

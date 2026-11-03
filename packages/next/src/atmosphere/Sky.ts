@@ -36,10 +36,20 @@ export interface SkyView {
   tableGroup: GPUBindGroup;
   /** The camera is inside the atmosphere: the sky comes from the table. */
   inside: boolean;
+  /** Six `Sky` uniforms, 256 bytes apart: the environment cube's faces. */
+  faceUniforms: GPUBuffer;
+  /** Per face: its uniform alone (marching), and with the table. */
+  faceGroups: GPUBindGroup[];
+  faceTableGroups: GPUBindGroup[];
 }
 
 type Pipelines = Record<
-  "march" | "table" | "fromTable" | "sunLight" | "environment",
+  | "march"
+  | "table"
+  | "fromTable"
+  | "sunLight"
+  | "environment"
+  | "environmentFromTable",
   GPURenderPipeline
 >;
 
@@ -109,9 +119,6 @@ export class Sky {
    * sRGB lux × 1e-5 (sky.wgsl `sunLightFragment`); the opaque pass reads it.
    */
   readonly sunLight: GPUTexture;
-  /** Six `Sky` uniforms, 256 bytes apart: the environment cube's faces. */
-  private readonly faceUniforms: GPUBuffer;
-  private readonly faceGroups: GPUBindGroup[];
 
   private constructor(
     private readonly device: GPUDevice,
@@ -168,46 +175,31 @@ export class Sky {
         GPUTextureUsage.COPY_SRC,
     });
     this.buildSunLight();
-    this.faceUniforms = device.createBuffer({
-      label: "sky.environment",
-      size: 6 * 256,
-      usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-    });
-    this.faceGroups = CUBE_FACES.map((_, face) =>
-      device.createBindGroup({
-        label: "sky.environment",
-        layout: this.viewLayout,
-        entries: [
-          {
-            binding: 0,
-            resource: {
-              buffer: this.faceUniforms,
-              offset: face * 256,
-              size: SKY_SIZE,
-            },
-          },
-        ],
-      }),
-    );
   }
 
   /**
-   * Renders the sky as the environment around `position` (Earth-fixed,
-   * meters) into the top level of `cube`, in the environment frame `frame`
-   * (east, up, −north there): radiance in cd/m², not exposed, without the
-   * sun's disk (the sun lights the scene directly). The caller builds the
-   * probe's mips, specular cube and SH from it (`Environment.build`).
+   * Encodes rendering the sky as the environment around `position`
+   * (Earth-fixed, meters) into the top level of `cube`, in the environment
+   * frame `frame` (east, up, −north there): radiance in cd/m², not exposed,
+   * without the sun's disk (the sun lights the scene directly). With
+   * `fromTable`, from the view's sky-view table encoded earlier this frame
+   * (a lookup per texel; `exposure` is the view's, which the table carries);
+   * otherwise by marching each texel. The caller builds the probe's mips,
+   * specular and irradiance cubes from it (`Environment.build`).
    */
-  renderEnvironment(
+  encodeEnvironment(
+    encoder: GPUCommandEncoder,
+    view: SkyView,
     cube: GPUTexture,
     ellipsoid: Ellipsoid,
     position: Vec3,
     frame: readonly [Vec3, Vec3, Vec3],
     sun: ArrayLike<number>,
+    fromTable: { exposure: number } | undefined,
   ): void {
     const f = this.f32;
     this.placeCamera(ellipsoid, position);
-    f[3] = 1;
+    f[3] = fromTable ? 1 / fromTable.exposure : 1;
     f[4] = sun[0]!;
     f[5] = sun[1]!;
     f[6] = sun[2]!;
@@ -228,10 +220,7 @@ export class Sky {
       world(forward, 8);
       world(right, 12);
       world(up, 16);
-      this.device.queue.writeBuffer(this.faceUniforms, face * 256, this.data);
-    });
-    const encoder = this.device.createCommandEncoder({
-      label: "sky.environment",
+      this.device.queue.writeBuffer(view.faceUniforms, face * 256, this.data);
     });
     for (let face = 0; face < 6; face++) {
       const pass = encoder.beginRenderPass({
@@ -251,17 +240,24 @@ export class Sky {
           },
         ],
       });
-      pass.setPipeline(this.pipelines.environment);
-      pass.setBindGroup(2, this.faceGroups[face]!);
-      for (let g = 0; g < this.groups.length; g++) {
-        const [atmosphere, tables] = this.groups[g]!;
-        pass.setBindGroup(0, atmosphere);
-        pass.setBindGroup(1, tables);
-        pass.draw(3, 1, 0, g);
+      if (fromTable) {
+        pass.setPipeline(this.pipelines.environmentFromTable);
+        pass.setBindGroup(0, this.empty);
+        pass.setBindGroup(1, this.empty);
+        pass.setBindGroup(2, view.faceTableGroups[face]!);
+        pass.draw(3);
+      } else {
+        pass.setPipeline(this.pipelines.environment);
+        pass.setBindGroup(2, view.faceGroups[face]!);
+        for (let g = 0; g < this.groups.length; g++) {
+          const [atmosphere, tables] = this.groups[g]!;
+          pass.setBindGroup(0, atmosphere);
+          pass.setBindGroup(1, tables);
+          pass.draw(3, 1, 0, g);
+        }
       }
       pass.end();
     }
-    this.device.queue.submit([encoder.finish()]);
   }
 
   /**
@@ -405,24 +401,50 @@ export class Sky {
       },
       primitive: { topology: "triangle-list" },
     });
-    const [march, skyView, fromTable, sunLight, environment] =
-      await Promise.all([
-        device.createRenderPipelineAsync(scene("skyFragment", marching)),
-        device.createRenderPipelineAsync(table("skyViewFragment")),
-        device.createRenderPipelineAsync(
-          scene("skyFromTableFragment", [
-            layouts.empty,
-            layouts.empty,
-            layouts.table,
-          ]),
-        ),
-        device.createRenderPipelineAsync(table("sunLightFragment")),
-        device.createRenderPipelineAsync(table("skyFragment")),
-      ]);
+    const [
+      march,
+      skyView,
+      fromTable,
+      sunLight,
+      environment,
+      environmentFromTable,
+    ] = await Promise.all([
+      device.createRenderPipelineAsync(scene("skyFragment", marching)),
+      device.createRenderPipelineAsync(table("skyViewFragment")),
+      device.createRenderPipelineAsync(
+        scene("skyFromTableFragment", [
+          layouts.empty,
+          layouts.empty,
+          layouts.table,
+        ]),
+      ),
+      device.createRenderPipelineAsync(table("sunLightFragment")),
+      device.createRenderPipelineAsync(table("skyFragment")),
+      device.createRenderPipelineAsync({
+        label: "sky.environmentFromTable",
+        layout: device.createPipelineLayout({
+          bindGroupLayouts: [layouts.empty, layouts.empty, layouts.table],
+        }),
+        vertex: { module, entryPoint: "skyVertex" },
+        fragment: {
+          module,
+          entryPoint: "environmentFromTableFragment",
+          targets: [{ format: "rgba16float" }],
+        },
+        primitive: { topology: "triangle-list" },
+      }),
+    ]);
     return new Sky(
       device,
       atmosphere,
-      { march, table: skyView, fromTable, sunLight, environment },
+      {
+        march,
+        table: skyView,
+        fromTable,
+        sunLight,
+        environment,
+        environmentFromTable,
+      },
       layouts,
     );
   }
@@ -442,6 +464,17 @@ export class Sky {
       usage:
         GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
     });
+    const faceUniforms = device.createBuffer({
+      label: "sky.environment",
+      size: 6 * 256,
+      usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+    });
+    const face = (index: number): GPUBufferBinding => ({
+      buffer: faceUniforms,
+      offset: index * 256,
+      size: SKY_SIZE,
+    });
+    const tableView = table.createView();
     return {
       buffer,
       group: device.createBindGroup({
@@ -461,6 +494,25 @@ export class Sky {
         ],
       }),
       inside: true,
+      faceUniforms,
+      faceGroups: CUBE_FACES.map((_, i) =>
+        device.createBindGroup({
+          label: "sky.environment",
+          layout: this.viewLayout,
+          entries: [{ binding: 0, resource: face(i) }],
+        }),
+      ),
+      faceTableGroups: CUBE_FACES.map((_, i) =>
+        device.createBindGroup({
+          label: "sky.environmentFromTable",
+          layout: this.tableLayout,
+          entries: [
+            { binding: 0, resource: face(i) },
+            { binding: 1, resource: tableView },
+            { binding: 2, resource: this.atmosphere.sampler },
+          ],
+        }),
+      ),
     };
   }
 

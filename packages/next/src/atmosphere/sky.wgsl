@@ -193,10 +193,14 @@ fn skyViewFragment(in: SkyVarying) -> @location(0) vec4f {
 @group(2) @binding(1) var skyView: texture_2d<f32>;
 @group(2) @binding(2) var skyViewSampler: sampler;
 
-// The sky from the table, and the sun's disk.
-@fragment
-fn skyFromTableFragment(in: SkyVarying) -> @location(0) vec4f {
-  let direction = viewDirection(in.position.xy);
+// The sky in `direction` from the table (pre-exposed), and whether the
+// ground is in the way.
+struct TableSky {
+  color: vec3f,
+  ground: bool,
+};
+
+fn skyFromTable(direction: vec3f) -> TableSky {
   let r = length(sky.position);
   let f = skyFrame();
   let cosZenith = dot(direction, f.up);
@@ -212,12 +216,29 @@ fn skyFromTableFragment(in: SkyVarying) -> @location(0) vec4f {
   var row = unitToTexel(unit.y, SKY_VIEW_SIZE.y) * SKY_VIEW_SIZE.y;
   row = select(min(row, half - 0.5), max(row, half + 0.5), ground);
   let uv = vec2f(unitToTexel(unit.x, SKY_VIEW_SIZE.x), row / SKY_VIEW_ROWS);
-  var color = textureSampleLevel(skyView, skyViewSampler, uv, 0.0).rgb;
-  if (!ground) {
+  return TableSky(textureSampleLevel(skyView, skyViewSampler, uv, 0.0).rgb, ground);
+}
+
+// The sky from the table, and the sun's disk.
+@fragment
+fn skyFromTableFragment(in: SkyVarying) -> @location(0) vec4f {
+  let direction = viewDirection(in.position.xy);
+  let s = skyFromTable(direction);
+  var color = s.color;
+  if (!s.ground) {
     let sun = textureLoad(skyView, vec2i(0, i32(SKY_VIEW_SIZE.y)), 0).rgb;
     color += sun * sunDisk(direction);
   }
   return vec4f(min(color, vec3f(2.0 * SKY_MAX)), 1.0);
+}
+
+// A face of the environment cube from the view's table: the uniform is a
+// 90° face view at the same camera, its exposure the reciprocal of the
+// view's (the table is pre-exposed; the environment is in cd/m²).
+@fragment
+fn environmentFromTableFragment(in: SkyVarying) -> @location(0) vec4f {
+  let s = skyFromTable(viewDirection(in.position.xy));
+  return vec4f(s.color * sky.exposure, 1.0);
 }
 
 // --- the sun's light on the scene ----------------------------------------------

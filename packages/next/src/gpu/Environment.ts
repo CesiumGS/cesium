@@ -54,6 +54,8 @@ const SKY_SIZE = 128;
 const SPECULAR_SIZE = 128;
 const SPECULAR_LEVELS = 6;
 const SH_SOURCE_LEVEL = 2; // 32×32 faces
+/** GGX samples per prefiltered texel (filtered importance sampling). */
+const PREFILTER_SAMPLES = 256;
 /** The irradiance cube's faces (it is smooth; the horizon needs ~1°). */
 const IRRADIANCE_SIZE = 32;
 /** The radiance it integrates: 16 × 16 faces (1,536 texels per output). */
@@ -104,6 +106,8 @@ export class Environment {
   /** The probe last copied into the bound cube and SH. */
   private current: EnvironmentProbe | undefined;
   private readonly shPartial: GPUBuffer;
+  /** The prefilter's uniforms per specular level (constant). */
+  private readonly prefilterParams: GPUBuffer[];
   private readonly module: GPUShaderModule;
   private readonly pipelines = new Map<string, GPUComputePipeline>();
 
@@ -129,11 +133,13 @@ export class Environment {
       }),
       mips.prepare("rgba16float"),
     ]);
-    environment.run("brdf", undefined, { 7: environment.brdfView }, [
+    const encoder = device.createCommandEncoder({ label: "env.brdf" });
+    environment.run(encoder, "brdf", undefined, { 7: environment.brdfView }, [
       BRDF_SIZE / 8,
       BRDF_SIZE / 8,
       1,
     ]);
+    device.queue.submit([encoder.finish()]);
     return environment;
   }
 
@@ -178,6 +184,9 @@ export class Environment {
       mipmapFilter: "linear",
     });
     this.module = device.createShaderModule({ label: "ibl", code: iblWgsl });
+    this.prefilterParams = Array.from({ length: SPECULAR_LEVELS }, (_, mip) =>
+      this.params(SPECULAR_SIZE >> mip, mip, PREFILTER_SAMPLES),
+    );
     this.procedural = this.createProbe("env.procedural");
   }
 
@@ -222,36 +231,40 @@ export class Environment {
 
   /** Renders `sky` into the procedural probe, builds it and selects it. */
   setSky(sky: SkyOptions = DEFAULT_SKY): void {
+    const params = this.params(SKY_SIZE, 0, 0, sky);
+    const encoder = this.device.createCommandEncoder({ label: "env.sky" });
     this.run(
+      encoder,
       "sky",
-      this.params(SKY_SIZE, 0, 0, sky),
+      params,
       { 0: level(this.procedural.skyCube, 0) },
       faces(SKY_SIZE),
     );
-    this.build(this.procedural);
-    const encoder = this.device.createCommandEncoder({ label: "env.select" });
+    this.build(this.procedural, encoder);
     this.select(encoder, this.procedural);
     this.device.queue.submit([encoder.finish()]);
+    params.destroy();
   }
 
   /**
-   * Builds a probe from the radiance in its sky cube's top level: the
-   * cube's mips, the prefiltered specular cube and the irradiance SH.
-   * Submits its own work (after anything already submitted).
+   * Encodes building a probe from the radiance in its sky cube's top
+   * level: the cube's mips, the prefiltered specular cube, the irradiance
+   * cube and the SH.
    */
-  build(probe: EnvironmentProbe): void {
-    this.mips.generate(probe.skyCube);
+  build(probe: EnvironmentProbe, encoder: GPUCommandEncoder): void {
+    this.mips.generate(probe.skyCube, encoder);
     const skyView = probe.skyCube.createView({ dimension: "cube" });
     for (let mip = 0; mip < SPECULAR_LEVELS; mip++) {
-      const size = SPECULAR_SIZE >> mip;
       this.run(
+        encoder,
         "prefilter",
-        this.params(size, mip, 256),
+        this.prefilterParams[mip],
         { 1: skyView, 2: this.sampler, 3: level(probe.specularCube, mip) },
-        faces(size),
+        faces(SPECULAR_SIZE >> mip),
       );
     }
     this.run(
+      encoder,
       "shFace",
       undefined,
       {
@@ -261,12 +274,14 @@ export class Environment {
       [6, 1, 1],
     );
     this.run(
+      encoder,
       "shFinal",
       undefined,
       { 5: { buffer: this.shPartial }, 6: { buffer: probe.sh } },
       [1, 1, 1],
     );
     this.run(
+      encoder,
       "irradianceCube",
       undefined,
       {
@@ -382,13 +397,13 @@ export class Environment {
   }
 
   private run(
+    encoder: GPUCommandEncoder,
     entry: string,
     params: GPUBuffer | undefined,
     resources: Record<number, GPUBindingResource>,
     groups: Groups,
   ): void {
     const pipeline = this.pipeline(entry);
-    const encoder = this.device.createCommandEncoder({ label: `ibl.${entry}` });
     const pass = encoder.beginComputePass({ label: `ibl.${entry}` });
     pass.setPipeline(pipeline);
     if (params) {
@@ -412,8 +427,6 @@ export class Environment {
     );
     pass.dispatchWorkgroups(...groups);
     pass.end();
-    this.device.queue.submit([encoder.finish()]);
-    params?.destroy();
   }
 
   private pipeline(entry: string): GPUComputePipeline {

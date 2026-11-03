@@ -47,14 +47,16 @@ export class MipGenerator {
 
   /**
    * Fills levels 1..n-1 from level 0 for every array layer (cube faces
-   * included). The texture needs RENDER_ATTACHMENT usage.
+   * included). The texture needs RENDER_ATTACHMENT usage. Encodes into
+   * `into` when given; otherwise submits its own work.
    */
-  generate(texture: GPUTexture): void {
+  generate(texture: GPUTexture, into?: GPUCommandEncoder): void {
     if (texture.mipLevelCount < 2) {
       return;
     }
     const pipeline = this.pipeline(texture.format);
-    const encoder = this.device.createCommandEncoder({ label: "mipgen" });
+    const encoder =
+      into ?? this.device.createCommandEncoder({ label: "mipgen" });
     const view = (level: number, layer: number) =>
       texture.createView({
         dimension: "2d",
@@ -83,7 +85,9 @@ export class MipGenerator {
         pass.end();
       }
     }
-    this.device.queue.submit([encoder.finish()]);
+    if (!into) {
+      this.device.queue.submit([encoder.finish()]);
+    }
   }
 
   /**
