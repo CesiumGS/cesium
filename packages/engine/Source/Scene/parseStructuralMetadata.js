@@ -193,6 +193,7 @@ function createTextureForPropertyTable(
     gpuCompatiblePropertyInfo,
     numFeatures,
     textureWidth,
+    textureHeight,
   );
 
   // Create a sampler fit for sampling raw data without mipmapping / filtering etc.
@@ -328,10 +329,9 @@ function packPropertyTablePropertiesIntoRGBA8(
   propertyInfos,
   numFeatures,
   textureWidth,
+  textureHeight,
 ) {
   const numGpuCompatibleProperties = propertyInfos.length;
-  const totalTexels = numGpuCompatibleProperties * numFeatures;
-  const textureHeight = Math.ceil(totalTexels / textureWidth);
   const packedBufferView = new Uint8Array(
     textureWidth * textureHeight * NUM_CHANNELS,
   );

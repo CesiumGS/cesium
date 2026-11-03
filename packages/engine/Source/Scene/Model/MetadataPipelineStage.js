@@ -309,7 +309,7 @@ function getPropertyTableInfo(
   // during a texelFetch.
   let propertyInfoIndex = 0;
 
-  // See note in {@link parseStructuralMetadata.collectGpuCompatiblePropertyBufferViews} about
+  // See note in {@link parseStructuralMetadata.collectGpuCompatiblePropertyInfo} about
   // why we iterate over the class definition properties rather than the property table properties.
   for (const [propertyId, classProperty] of Object.entries(classProperties)) {
     if (!classProperty.isGpuCompatible(NUM_CHANNELS)) {

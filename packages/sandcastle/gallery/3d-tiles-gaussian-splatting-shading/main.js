@@ -10,10 +10,23 @@ const viewer = new Cesium.Viewer("cesiumContainer", {
 });
 
 // Height-based colorization: colors cycle through the rainbow every 10 metres.
+// The splat model frame is an east-north-up frame centered on the tileset's
+// bounding sphere, so positionMC.z is the height relative to that center.
+// u_referenceHeight (the ellipsoidal height of that center) converts it to
+// height above the ellipsoid, without the float precision loss of working
+// with world (ECEF) coordinates.
 const heightShader = new Cesium.CustomShader({
+  uniforms: {
+    u_referenceHeight: {
+      type: Cesium.UniformType.FLOAT,
+      value: 0.0,
+    },
+  },
   fragmentShaderText: `
 void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
-    float height = length(fsInput.attributes.positionWC) - 6378137.0;
+    vec3 positionEC = fsInput.attributes.positionEC;
+    vec3 positionMC = (czm_inverseModelView * vec4(positionEC, 1.0)).xyz;
+    float height = positionMC.z + u_referenceHeight;
 
     // Cycle through the rainbow every 10 metres
     float t = mod(height, 10.0) / 10.0;
@@ -80,6 +93,12 @@ try {
     modelMatrix,
   });
   viewer.scene.primitives.add(tileset);
+
+  heightShader.setUniform(
+    "u_referenceHeight",
+    Cesium.Cartographic.fromCartesian(tileset.boundingSphere.center).height,
+  );
+
   viewer.zoomTo(
     tileset,
     new Cesium.HeadingPitchRange(
