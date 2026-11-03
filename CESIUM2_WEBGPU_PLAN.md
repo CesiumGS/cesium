@@ -969,6 +969,38 @@ of a millisecond. The scene's light doesn't follow the sky yet (a sunset
 sky over a noon-lit city) until the sun's illuminance and the environment
 come from the atmosphere.
 
+**The sky-view table and the sun's light** (r41). Inside the atmosphere
+the sky now comes from Hillaire's sky-view table, rendered per view per
+frame (192 × 108 directions by zenith angle and azimuth from the sun, rows
+packed toward the horizon, columns toward the sun, both wavelength groups
+added into one linear sRGB target, pre-exposed), with an extra row for the
+sun's radiance through the atmosphere; the sky pass is one lookup per pixel
+plus the sun's disk, and lookups stay on their side of the horizon. Above
+the atmosphere each pixel still marches (rays that miss the atmosphere
+return at once). Against the per-pixel march in the same directions (Lab,
+a 16 × 9 grid per shot): sky pixels within 0.2% median and 0.9% worst in
+every shot; the bare planet's ground below the horizon differs more at
+sunset and twilight (median 6-14%, where its radiance falls by 10⁴ within a
+pixel of the horizon), which the globe covers in a scene. Cost at 480 × 270
+fell from 0.166 to 0.046 ms, nearly all of it the table (fixed per view).
+
+The scene is now lit by **the sun's light through the atmosphere, per
+pixel** (`ViewLighting.sunIlluminance: "atmosphere"`, the default; a number
+is still a white sun, lux or unitless). A 256 × 64 table of the sun's
+illuminance on a surface facing it, by altitude and the sun's zenith cosine
+(packed toward sunsets and low altitudes, with the part of the disk above
+the horizon as it sets), built once from the transmittance tables at the 8
+wavelengths, in linear sRGB lux; the opaque pass reads it at each pixel's
+height above the ellipsoid and the sun's angle to its normal, so mountain
+tops keep the sunset after the valleys lose it, and the terminator seen
+from orbit is colored. Against the CPU model's direct sunlight (81
+wavelengths, double precision) at 0, 2 and 10 km and sun elevations from
+90° to 2°: within 0.4% everywhere (115.0 klx at sea level with the sun
+overhead, 12.8 klx at 2°, color from white to deep orange). Dyno's Viewer:
+"Sunlight from the atmosphere" (on by default), the lux slider otherwise.
+The environment lighting is still the procedural sky (daylight ambient
+under a sunset sun) until it comes from the atmosphere, the next step.
+
 **How the sun looks** (r41). At ordinary fields of view the disk is 3 to 4
 pixels across, so its edge is antialiased by each pixel's coverage. Its
 luminance (about 1.6 × 10⁹ cd/m² overhead) is far beyond any exposure that
@@ -3509,6 +3541,27 @@ Bodies and engineering frames are one concept: a tree of frames (ICRF to a
 body's fixed frame to a model's engineering frame), rigid transforms in
 float64 along it, with the nonlinear ones (map projections) at the edges,
 resolved when tiles are made or when a point is measured.
+
+**Design rule (r41): every option and API that involves the globe, the
+sky, light, heights or coordinates names its body, Earth by default.** A
+`Body` is a name, a reference ellipsoid and an optional atmosphere
+(`src/scene/Body.ts`; `EARTH` today, the Moon and Mars to come with their
+frames). What is body-aware so far: `View.body` (whose sky and light a view
+sees), the sky and the sky-view table (heights and horizon from the body's
+ellipsoid), the per-pixel sunlight (the body's radii in the view uniform,
+no WGS84 constants in shaders), and a body without an atmosphere (a black
+sky, the sun's whole 132.5 klx; its stars and disk come with the night sky).
+The engine builds one atmosphere (the Earth's) and refuses a view of a body
+with another until per-body atmospheres exist. Still Earth-only, to convert
+as each is touched: the globe (terrain and imagery tiling, level-zero
+errors from the WGS84 radius), the camera controllers (GlobeController,
+OrbitController, InspectController), horizon culling (`math/horizon.ts`),
+height clamping, view links, tile volumes (`streaming/volumes.ts`),
+feature coordinates, the Viewer widget, and the sun's position (an Earth
+ephemeris). Content declares its body: `3DTILES_ellipsoid` today (the
+Moon's tilesets), and 3D Tiles 2.0's georeferencing when it settles (its
+draft extensions place content by a CRS and a position on an ellipsoid; the
+names and shape were still under discussion when checked, r41).
 
 ## 14. Follow-ups
 
