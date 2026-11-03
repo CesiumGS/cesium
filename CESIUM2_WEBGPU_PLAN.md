@@ -826,10 +826,42 @@ Both programmatically and with options, in layers:
 6. Shadows and ambient occlusion (GTAO with bent normals, the first GI
    step); then the daylighting sky, probe GI, clouds and the rest.
 
-Open decisions (§ product): the default exposure (automatic, or a fixed
-EV100 for daylight); whether globe imagery stays unlit by default (1.x) or
-is lit by the sun and sky; whether 1.x's environment knobs (brightness,
-saturation, gamma) get compatibility equivalents in the display transform.
+Progress (r40): **the atmosphere reference** (`src/atmosphere/`, Lab
+"Reference atmosphere", `bench/run.mjs atmosphere`). A spectral Monte
+Carlo volumetric path tracer in a compute shader: spectral tracking (four
+wavelengths per path, Kutz et al. 2017), ratio-tracked transmittance toward
+the sun, Rayleigh, aerosols (Cornette–Shanks) and ozone, a Lambertian
+ground, any altitude; positions in a frame where heights above the sphere
+have no cancellation. Bruneton's 2017 Earth parameters and spectral tables
+(BSD-3-Clause, credited in `LICENSE.md`). Checked two ways: the CPU model
+in double precision gives the photometric scale (132.5 klx outside the
+atmosphere, 115 klx direct at sea level with the sun overhead, unit tests),
+and the path tracer limited to one scattering event agrees with the CPU's
+deterministic single-scattering integral within its own noise (six views,
+256 independent estimates each, worst |z| 1.95). Full result, sea level:
+zenith 1,440 cd/m² with the sun at 45°, multiple scattering 5% to 23% of
+the zenith sky, diffuse horizontal illuminance 7.5 klx (this atmosphere's
+aerosols are very thin, optical depth 0.005; turbidity is a parameter).
+The Monte Carlo IBL reference is next.
+
+Decided (r40):
+
+- **Exposure**: a fixed daylight EV100 by default (about 15, the "sunny 16"
+  rule), with automatic exposure as an option.
+- **Globe imagery is lit by the sun and sky** by default (2.0's globe
+  material already is; 1.x's isn't). Imagery has no physical units: tiles
+  are 8-bit sRGB, display-referred photographs or composites, color balanced
+  and contrast stretched for appearance, with the capture's sun shading,
+  shadows and haze baked in. 2.0 decodes them with the exact sRGB curve and
+  uses the result as the surface's albedo, an estimate. So the lit globe
+  needs a calibration (scaling imagery to plausible albedos: land averages
+  about 0.1 to 0.3) and care with double shading (terrain normals add only
+  the low-frequency shading the imagery lacks). Imagery published as
+  surface reflectance (Sentinel-2 L2A, for example) would be true albedo.
+  The exact-parity tier keeps an unlit mode, which checks decoding against
+  1.x.
+- **No equivalents** of 1.x's environment color processing (brightness,
+  saturation, gamma, HSB shifts) for now.
 
 ## 5. Performance methodology
 
