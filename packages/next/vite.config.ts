@@ -277,6 +277,7 @@ export default defineConfig({
         lod: "parity/lod.html",
         precision: "spikes/precision.html",
         atmosphere: "spikes/atmosphere.html",
+        ibl: "spikes/ibl.html",
         worker: "spikes/worker.html",
         indirect: "spikes/indirect.html",
         alloc: "bench/alloc.html",

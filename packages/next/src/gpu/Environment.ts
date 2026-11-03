@@ -6,6 +6,8 @@ export interface SkyOptions {
   zenith: readonly [number, number, number];
   horizon: readonly [number, number, number];
   ground: readonly [number, number, number];
+  /** Just below the horizon, blending to `ground` (default: half `horizon`). */
+  belowHorizon?: readonly [number, number, number];
 }
 
 export const DEFAULT_SKY: SkyOptions = {
@@ -200,7 +202,7 @@ export class Environment {
     sampleCount = 0,
   ): GPUBuffer {
     const buffer = this.device.createBuffer({
-      size: 64,
+      size: 80,
       usage: GPUBufferUsage.UNIFORM,
       mappedAtCreation: true,
     });
@@ -210,10 +212,11 @@ export class Environment {
     f.set(sky.zenith, 0);
     f.set(sky.horizon, 4);
     f.set(sky.ground, 8);
-    u[12] = size;
-    u[13] = level;
-    u[14] = SPECULAR_LEVELS;
-    u[15] = sampleCount;
+    f.set(sky.belowHorizon ?? sky.horizon.map((c) => c * 0.5), 12);
+    u[16] = size;
+    u[17] = level;
+    u[18] = SPECULAR_LEVELS;
+    u[19] = sampleCount;
     buffer.unmap();
     return buffer;
   }

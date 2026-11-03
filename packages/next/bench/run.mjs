@@ -66,6 +66,8 @@ const suites = {
   precision: ["/spikes/precision.html?bench", "runPrecision"],
   // The reference atmosphere (plan §4.2): GPU path tracer vs CPU integral.
   atmosphere: ["/spikes/atmosphere.html?bench", "runAtmosphere"],
+  // 2.0's image-based lighting vs a Monte Carlo reference (plan §4.2).
+  ibl: ["/spikes/ibl.html?bench", "runIbl"],
   indirect: ["/spikes/indirect.html?bench", "runIndirect"],
   parity: ["/parity/?bench", "runParity"],
   models: [

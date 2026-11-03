@@ -15,6 +15,7 @@ struct SkyParams {
   zenith: vec4f,     // rgb radiance
   horizon: vec4f,
   ground: vec4f,
+  belowHorizon: vec4f, // just below the horizon, blending to the ground
   size: u32,         // face size of the target level
   level: u32,        // mip level being written (prefilter)
   levels: u32,       // total mip levels
@@ -44,7 +45,7 @@ fn skyRadiance(d: vec3f) -> vec3f {
     return mix(params.zenith.rgb, params.horizon.rgb, t);
   }
   let t = pow(1.0 + d.y, 6.0);
-  return mix(params.ground.rgb, params.horizon.rgb * 0.5, t);
+  return mix(params.ground.rgb, params.belowHorizon.rgb, t);
 }
 
 // --- sky --------------------------------------------------------------------

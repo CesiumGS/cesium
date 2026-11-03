@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Image-Based Lighting Reference</title>
+  </head>
+  <body>
+    <!-- The runner's entry (bench/run.mjs ibl); in Dyno: /#/lab/ibl. -->
+    <div id="root"></div>
+    <script type="module">
+      import { harness } from "./ibl.ts";
+      import { standalone } from "../lab/harness.ts";
+      standalone(harness, "runIbl");
+    </script>
+  </body>
+</html>

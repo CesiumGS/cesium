@@ -158,6 +158,16 @@ export const HARNESSES: HarnessInfo[] = [
     load: () => import("../spikes/atmosphere.ts").then((m) => m.harness),
   },
   {
+    id: "ibl",
+    group: "spikes",
+    title: "Image-based lighting vs reference",
+    description:
+      "Material balls lit by an environment: 2.0's real-time image-based lighting against a Monte Carlo integral of the glTF BRDF, and a white furnace for energy conservation.",
+    page: "/spikes/ibl.html",
+    entry: "runIbl",
+    load: () => import("../spikes/ibl.ts").then((m) => m.harness),
+  },
+  {
     id: "indirect",
     group: "spikes",
     title: "Indirect draws",

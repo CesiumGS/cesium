@@ -7,6 +7,7 @@
 // 3. fisheye images of the sky, for looking at.
 import "../lab/harness.css";
 import type { Harness } from "../lab/harness.ts";
+import { meanLuminance, picture, type HdrPixels } from "../lab/hdr.ts";
 import { GpuDevice } from "../src/gpu/GpuDevice.ts";
 import { AtmosphereReference } from "../src/atmosphere/AtmosphereReference.ts";
 import {
@@ -181,13 +182,26 @@ async function runAtmosphere() {
       directions: strip.directions,
       samples: 1024,
     });
+    const domePixels: HdrPixels = {
+      width: 64,
+      height: 64,
+      data: sky.rgb,
+      stride: 3,
+      mask: (i) => dome.inside[i]!,
+    };
+    const stripPixels: HdrPixels = {
+      width: 192,
+      height: 40,
+      data: horizon.rgb,
+      stride: 3,
+    };
     // One exposure for both pictures of a sun angle: the dome's mean.
-    const exposure = 0.18 / meanLuminance(sky.rgb, dome.inside);
+    const exposure = 0.18 / meanLuminance(domePixels);
     const figure = document.createElement("figure");
     figure.style.margin = "0";
     figure.append(
-      picture(sky.rgb, dome.inside, 64, 64, exposure, 3),
-      picture(horizon.rgb, strip.inside, 192, 40, exposure, 2),
+      picture(domePixels, exposure, 3),
+      picture(stripPixels, exposure, 2),
     );
     const caption = document.createElement("figcaption");
     caption.textContent = `sun ${90 - sunZenith}° above the horizon · mean sky ${Math.round(0.18 / exposure)} cd/m²`;
@@ -281,82 +295,6 @@ function fisheye(size: number) {
     }
   }
   return { directions, inside };
-}
-
-/** Mean luminance of the pixels inside. */
-function meanLuminance(rgb: Float64Array, inside: boolean[]): number {
-  let sum = 0;
-  let n = 0;
-  for (let i = 0; i < inside.length; i++) {
-    if (inside[i]) {
-      sum +=
-        0.2126 * rgb[i * 3]! +
-        0.7152 * rgb[i * 3 + 1]! +
-        0.0722 * rgb[i * 3 + 2]!;
-      n++;
-    }
-  }
-  return sum / Math.max(n, 1);
-}
-
-/** Khronos PBR Neutral, as present.wgsl. */
-function pbrNeutral(c: [number, number, number]): [number, number, number] {
-  const startCompression = 0.8 - 0.04;
-  const desaturation = 0.15;
-  const x = Math.min(c[0], c[1], c[2]);
-  const offset = x < 0.08 ? x - 6.25 * x * x : 0.04;
-  let color = c.map((v) => v - offset) as [number, number, number];
-  const peak = Math.max(...color);
-  if (peak < startCompression) {
-    return color;
-  }
-  const d = 1 - startCompression;
-  const newPeak = 1 - (d * d) / (peak + d - startCompression);
-  color = color.map((v) => (v * newPeak) / peak) as [number, number, number];
-  const g = 1 - 1 / (desaturation * (peak - newPeak) + 1);
-  return color.map((v) => v * (1 - g) + newPeak * g) as [
-    number,
-    number,
-    number,
-  ];
-}
-
-/** A canvas of radiance, exposed, tonemapped and sRGB-encoded. */
-function picture(
-  rgb: Float64Array,
-  inside: boolean[],
-  width: number,
-  height: number,
-  exposure: number,
-  zoom: number,
-): HTMLCanvasElement {
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-  canvas.style.width = `${width * zoom}px`;
-  canvas.style.height = `${height * zoom}px`;
-  canvas.style.display = "block";
-  canvas.style.marginBottom = "6px";
-  const g = canvas.getContext("2d")!;
-  const image = g.createImageData(width, height);
-  const encode = (c: number) => {
-    const x = Math.min(Math.max(c, 0), 1);
-    const s = x <= 0.0031308 ? 12.92 * x : 1.055 * x ** (1 / 2.4) - 0.055;
-    return Math.round(s * 255);
-  };
-  for (let i = 0; i < inside.length; i++) {
-    const color = pbrNeutral([
-      Math.max(0, rgb[i * 3]! * exposure),
-      Math.max(0, rgb[i * 3 + 1]! * exposure),
-      Math.max(0, rgb[i * 3 + 2]! * exposure),
-    ]);
-    for (let k = 0; k < 3; k++) {
-      image.data[i * 4 + k] = inside[i] ? encode(color[k]!) : 0;
-    }
-    image.data[i * 4 + 3] = 255;
-  }
-  g.putImageData(image, 0, 0);
-  return canvas;
 }
 
 /**
