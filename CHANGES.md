@@ -1,5 +1,13 @@
 # Change Log
 
+## 1.148 - 2026-12-01
+
+### @cesium/engine
+
+#### Additions :tada:
+
+- Added support for Custom Shaders in Gaussian Splat tilesets. [#13418](https://github.com/CesiumGS/cesium/pull/13418)
+
 ## 1.147 - 2026-11-02
 
 ### @cesium/core
