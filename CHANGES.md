@@ -1,5 +1,13 @@
 # Change Log
 
+## 1.148 - 2026-12-01
+
+### @cesium/engine
+
+#### Fixes :wrench:
+
+- Fixed picking for clamped vector tilesets and `GeoJsonPrimitive` polylines and polygons. [#13917](https://github.com/CesiumGS/cesium/pull/13917)
+
 ## 1.147 - 2026-11-02
 
 ### @cesium/core
@@ -17,7 +25,6 @@
 
 #### Fixes :wrench:
 
-- Fixed picking for clamped vector tilesets and `GeoJsonPrimitive` polylines and polygons. [#13917](https://github.com/CesiumGS/cesium/pull/13917)
 - Fixed `czm_passOverlay` and `czm_passCesium3DTileEdgesDirect` GLSL constants not matching `czm_pass` during their respective passes. Removed the unused `czm_passClassification` constant. [#13657](https://github.com/CesiumGS/cesium/issues/13657)
 - Fixed dynamic environment lighting on models and tilesets near or below the ellipsoid surface. [#13988](https://github.com/CesiumGS/cesium/pull/13988)
 - Fixed `pointCloudShading.backFaceCulling` not hiding back-facing points on some platforms. [#13989](https://github.com/CesiumGS/cesium/pull/13989)
