@@ -302,7 +302,9 @@ const CLIP_BOXES: u32 = 8u;
 @group(2) @binding(9) var emissiveSampler: sampler;
 
 struct VsOut {
-  @builtin(position) position: vec4f,
+  // Invariant: the opaque pass's depth (`vsDepth`) and its shading (`vs`)
+  // must agree to the bit (the shading tests for equal depth).
+  @builtin(position) @invariant position: vec4f,
   @location(0) normal: vec3f,
   @location(1) uv: vec2f,
   @location(2) color: vec4f,

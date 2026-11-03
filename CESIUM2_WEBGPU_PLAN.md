@@ -843,7 +843,16 @@ Next steps (r44, after the night work). Now, in this order:
    sampled), so lights cost per fragment, not per pixel. Next for many
    lights: a depth prepass in the MSAA pass and shading at equal depth
    (Forward+'s z-prepass, Harada et al. 2012), which also cuts the sun's
-   and the environment's shading of hidden fragments.
+   and the environment's shading of hidden fragments. Done (r44): the
+   opaque pass draws the world's depth first (`World.depthBundle`: the
+   shadow casters' vertex stage and discards, no color written), then its
+   triangles shade where their depth equals it (no depth written; lines
+   draw as before); positions are `@invariant`, so both stages agree to
+   the bit. An override shader keeps the old way. Over lower Manhattan by
+   night the opaque pass took 4.3 ms against 6.4 without lights (the
+   depth included), 6.9 against 10.0 with the 576 spots. Parity, models,
+   imagery, globe and tileset unchanged (models with and without the
+   prepass alike).
 
 Later:
 

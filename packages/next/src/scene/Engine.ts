@@ -2657,7 +2657,14 @@ export class Engine {
         opaqueDepth.view = get(depth);
         opaquePass.timestampWrites = this.timer.passWrites();
         const pass = enc.beginRenderPass(opaquePass);
-        frame.bundles[0] = frame.bundle!;
+        // Its depth first, then its shading where that depth is (each
+        // sample shaded once, not every fragment drawn over it).
+        if (this.ctx.pipelines.depthPrepass) {
+          frame.bundles[0] = view.world.depthBundle();
+          frame.bundles[1] = frame.bundle!;
+        } else {
+          frame.bundles[0] = frame.bundle!;
+        }
         pass.executeBundles(frame.bundles);
         if (atmosphere) {
           this.sky.draw(pass, frame.sky, get(starLayer));

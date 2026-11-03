@@ -63,6 +63,21 @@ export interface Pipelines {
   /** The depth and normal prepass (ambient occlusion), and double-sided. */
   prepass: GPURenderPipeline;
   prepassDoubleSided: GPURenderPipeline;
+  /**
+   * The opaque pass's depth, first (`World.depthBundle`): depth only, with
+   * the opaque pass's discards; masked (alpha cutoff) or not, one- or
+   * double-sided. Its triangles then shade at equal depth, each pixel's
+   * sample once, not every fragment drawn over it.
+   */
+  depth: GPURenderPipeline;
+  depthDoubleSided: GPURenderPipeline;
+  depthMasked: GPURenderPipeline;
+  depthMaskedDoubleSided: GPURenderPipeline;
+  /**
+   * The opaque pass draws its depth first (`depth`); false with an
+   * override shader, which may not compute the same depths.
+   */
+  depthPrepass: boolean;
   /** Ambient occlusion (`ao.wgsl`): the horizon search, then the blur. */
   aoTrace: GPUComputePipeline;
   aoDenoise: GPUComputePipeline;
@@ -467,6 +482,9 @@ async function createPipelines(
     bindGroupLayouts: [viewLayout, drawWorldLayout, textureSetLayout],
   });
 
+  // With the depth drawn first, triangles shade where their depth is the
+  // pass's (opaque.wgsl's positions are invariant); lines draw as before.
+  const depthPrepass = overrides.opaque === undefined;
   const opaquePipeline = (
     label: string,
     cullMode: GPUCullMode,
@@ -494,6 +512,50 @@ async function createPipelines(
         targets: SCENE_TARGETS.colorFormats.map((format) => ({ format })),
       },
       primitive: { topology, cullMode, frontFace: "ccw" },
+      depthStencil:
+        depthPrepass && topology === "triangle-list"
+          ? {
+              format: SCENE_TARGETS.depthFormat,
+              depthWriteEnabled: false,
+              depthCompare: "equal",
+            }
+          : {
+              format: SCENE_TARGETS.depthFormat,
+              depthWriteEnabled: true,
+              depthCompare: "greater",
+            },
+      multisample: { count: SCENE_TARGETS.sampleCount },
+    });
+  // The opaque pass's depth: the casters' vertex stage and discards, into
+  // the pass's targets (no color written).
+  const depthPipeline = (
+    label: string,
+    cullMode: GPUCullMode,
+    masked: boolean,
+  ) =>
+    device.createRenderPipelineAsync({
+      label,
+      layout: opaqueLayout,
+      vertex: {
+        module: opaqueModule,
+        entryPoint: "vsDepth",
+        buffers: [
+          {
+            arrayStride: 4,
+            stepMode: "instance",
+            attributes: [{ shaderLocation: 0, offset: 0, format: "uint32" }],
+          },
+        ],
+      },
+      fragment: {
+        module: opaqueModule,
+        entryPoint: masked ? "shadowFs" : "shadowPlaceholderFs",
+        targets: SCENE_TARGETS.colorFormats.map((format) => ({
+          format,
+          writeMask: 0,
+        })),
+      },
+      primitive: { topology: "triangle-list", cullMode, frontFace: "ccw" },
       depthStencil: {
         format: SCENE_TARGETS.depthFormat,
         depthWriteEnabled: true,
@@ -590,6 +652,10 @@ async function createPipelines(
     shadowMaskedDoubleSided,
     prepass,
     prepassDoubleSided,
+    depth,
+    depthDoubleSided,
+    depthMasked,
+    depthMaskedDoubleSided,
     aoTrace,
     aoDenoise,
     present,
@@ -626,6 +692,10 @@ async function createPipelines(
     shadowPipeline("shadow.maskedDoubleSided", "none", true),
     prepassPipeline("prepass", "back"),
     prepassPipeline("prepass.doubleSided", "none"),
+    depthPipeline("depth", "back", false),
+    depthPipeline("depth.doubleSided", "none", false),
+    depthPipeline("depth.masked", "back", true),
+    depthPipeline("depth.maskedDoubleSided", "none", true),
     device.createComputePipelineAsync({
       label: "ao.trace",
       layout: "auto",
@@ -731,6 +801,11 @@ async function createPipelines(
     shadowMaskedDoubleSided,
     prepass,
     prepassDoubleSided,
+    depth,
+    depthDoubleSided,
+    depthMasked,
+    depthMaskedDoubleSided,
+    depthPrepass,
     aoTrace,
     aoDenoise,
     present,
