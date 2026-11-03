@@ -1029,13 +1029,18 @@ harness's `ibl-diffuse` mode, which compares with 1.x's SH9, moved by
 +0.001 to +0.006 mean FLIP (a deliberate divergence); everything else
 bit-identical.
 
-Cost of a rebuild, GPU time on an RTX 3000 Ada laptop GPU: sky cube 1.5 ms,
-mips 0.6, specular prefilter 5.4 (256 samples per texel at every level),
-SH 0.2, irradiance 2.5; about 10 ms, fine for a sun that moves now and then,
-too much for scrubbing time (§13.13) or a zoom across altitudes. Next: the
-cube from the view's sky-view table (Unreal's sky light capture), fewer
-prefilter samples with filtered importance sampling, and spreading a
-rebuild over frames.
+Cost of a rebuild. Measured as separate submits it looked like 10 ms (sky
+cube 1.5, mips 0.6, specular prefilter 5.4, SH 0.2, irradiance 2.5), most of
+it the GPU idling between a dozen small submissions. Rebuilds are now
+encoded in the frame's own command encoder, in a graph pass after the
+view's sky-view table, and inside the atmosphere the cube is a lookup per
+texel in that table (Unreal's sky light capture) instead of a march, with
+the same accuracy (horizontal irradiance within 0.4-1.5% on the ground,
+3.9% at 10 km). A 1080p frame of the sky costs 0.64 ms on the GPU, 1.85 ms
+when the environment is rebuilt in it: about 1.2 ms per rebuild, affordable
+every frame while scrubbing time (§13.13), so the prefilter keeps its 256
+samples. Spreading a rebuild over frames stays available if it's needed on
+smaller GPUs.
 
 **How the sun looks** (r41). At ordinary fields of view the disk is 3 to 4
 pixels across, so its edge is antialiased by each pixel's coverage. Its
