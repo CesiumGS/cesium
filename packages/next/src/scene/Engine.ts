@@ -245,6 +245,13 @@ export class Engine {
    * default): no Moon; the Viewer sets it from its clock.
    */
   moonPosition: Float64Array | undefined = undefined;
+  /**
+   * The Moon's axes in Earth-fixed axes (`moonAxes(time)` turned by
+   * `icrfToFixed`): `[0..2]` toward its longitude and latitude 0, `[3..5]`
+   * its north pole; its face turns with them (libration). Undefined: it
+   * faces the Earth's center, north to the ecliptic's pole.
+   */
+  moonAxes: Float64Array | undefined = undefined;
 
   private readonly ctx: RenderContext;
   /** @internal The real-time atmosphere and the sky drawn from it. */
@@ -676,24 +683,32 @@ export class Engine {
     const toward = v3.sub(m.direction, moon, position);
     const distance = v3.length(toward);
     v3.scale(toward, toward, 1 / distance);
-    v3.normalize(m.toEarth, v3.negate(m.toEarth, moon));
-    // Its pole: the ecliptic's (1.5° off), turned to Earth-fixed axes and
-    // square to the axis toward the Earth.
-    const r = this.icrfToFixed;
-    const ey = -Math.sin(OBLIQUITY);
-    const ez = Math.cos(OBLIQUITY);
+    const axes = this.moonAxes;
     const north = m.north;
-    for (let i = 0; i < 3; i++) {
-      north[i] = r[i * 3 + 1]! * ey + r[i * 3 + 2]! * ez;
+    if (axes) {
+      for (let i = 0; i < 3; i++) {
+        m.meridian[i] = axes[i]!;
+        north[i] = axes[i + 3]!;
+      }
+    } else {
+      // Its face toward the Earth's center; its pole the ecliptic's (1.5°
+      // off), turned to Earth-fixed axes and square to the face's axis.
+      v3.normalize(m.meridian, v3.negate(m.meridian, moon));
+      const r = this.icrfToFixed;
+      const ey = -Math.sin(OBLIQUITY);
+      const ez = Math.cos(OBLIQUITY);
+      for (let i = 0; i < 3; i++) {
+        north[i] = r[i * 3 + 1]! * ey + r[i * 3 + 2]! * ez;
+      }
+      v3.normalize(
+        north,
+        v3.sub(
+          north,
+          north,
+          v3.scale(scratchMoonAxis, m.meridian, v3.dot(north, m.meridian)),
+        ),
+      );
     }
-    v3.normalize(
-      north,
-      v3.sub(
-        north,
-        north,
-        v3.scale(scratchMoonAxis, m.toEarth, v3.dot(north, m.toEarth)),
-      ),
-    );
     // Toward the sun from the Moon (the sun's direction is the Earth's).
     const sun = this.sunDirection;
     for (let i = 0; i < 3; i++) {
@@ -3019,7 +3034,7 @@ function destroyViewFrame(frame: ViewFrame): void {
 const scratchMoon = {
   direction: v3.vec3(),
   sinRadius: 0,
-  toEarth: v3.vec3(),
+  meridian: v3.vec3(),
   north: v3.vec3(),
   toSun: v3.vec3(),
   phaseAngle: 0,

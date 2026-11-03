@@ -144,7 +144,17 @@ export {
 // Time: the scene's clock and the sun's position from it (plan §13.13).
 export { Clock, type ClockMode } from "./time/Clock.ts";
 export { icrfToFixed } from "./time/celestial.ts";
-export { MOON_ALBEDO, MOON_RADIUS, moonPosition } from "./time/moon.ts";
+export {
+  MOON_ALBEDO,
+  MOON_RADIUS,
+  moonAxes,
+  moonPosition,
+} from "./time/moon.ts";
+export {
+  CESIUM_MOON_TERRAIN,
+  loadIonMoonMap,
+  type MoonMap,
+} from "./io/moonMap.ts";
 export {
   greenwichSiderealTime,
   julianDate,

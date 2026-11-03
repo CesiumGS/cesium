@@ -807,13 +807,35 @@ Next steps (r44, after the night work). Now, in this order:
    meter again.
 5. **The Moon**: its libration (its orientation from the IAU rotation
    model, so the face it shows wobbles as it does), and a sharper map
-   than 1.x's 256 × 128 (NASA's CGI Moon Kit, public domain).
+   than 1.x's 256 × 128 (NASA's CGI Moon Kit, public domain). Done (r44):
+   time/moon.ts `moonAxes`, the IAU model (Archinal et al. 2011, as 1.x's
+   `Iau2000Orientation`), within 0.15° of Meeus's example 53.a for the
+   Earth's selenographic longitude and latitude and its pole's position
+   angle; the Viewer turns it to Earth-fixed axes with the clock. The map
+   comes from Cesium Moon Terrain on ion when the token reaches it (the
+   Asset Depot; io/moonMap.ts): its tiles' textures are equirectangular
+   patches of their longitude and latitude (u and v linear in them within
+   10⁻⁷), so a level of the tree laid side by side is the map, 2048 ×
+   1024 from level 2's 32 tiles of 256², no geometry drawn; the band's
+   tiles stop at 85°, the last rows stretched over the caps. 1.x's map
+   until it arrives or without it. The disk reads it through its mips with
+   analytic gradients (the surface a pixel away), anisotropically: the
+   limb and the poles alias no more. Its imagery is the LROC WAC Global
+   Morphology Mosaic, built from images under a low sun for the relief:
+   shading baked in, so a full Moon shows craters it shouldn't. An albedo
+   map (the WAC normalized reflectance, the CGI Moon Kit's) lit by the
+   sun would not.
 6. **Lights in the scene**: point and spot lights (`KHR_lights_punctual`,
    candela), clustered forward shading, unshadowed (the order in "Lights
    beyond the sun", above).
 
 Later:
 
+- **Other bodies**: the Moon (Cesium Moon Terrain) and Mars as 3D Tiles
+  in their own frames (a body's ellipsoid, `3DTILES_ellipsoid`, its
+  orientation from the IAU model, its ephemeris), lit by the sun without
+  an atmosphere, for flying from one to another; the sky's disk is the
+  same Moon from afar.
 - **City light**: on a moonless night a city lights itself. The night
   lights' upward light scattered by the air (the sky glow, an urban sky
   some 100 times the natural one) into the sky and its environment, and

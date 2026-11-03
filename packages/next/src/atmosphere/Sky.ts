@@ -4,6 +4,7 @@ import type { RealtimeAtmosphere } from "./RealtimeAtmosphere.ts";
 import type { AerosolType } from "./model.ts";
 import type { Ellipsoid, Cartographic } from "../math/ellipsoid.ts";
 import * as v3 from "../math/vec3.ts";
+import { MipGenerator } from "../gpu/MipGenerator.ts";
 import type { Vec3 } from "../math/vec3.ts";
 import type { Camera } from "../scene/Camera.ts";
 import { STAR_FLOATS, type StarField } from "./stars.ts";
@@ -72,8 +73,11 @@ export interface MoonView {
   direction: ArrayLike<number>;
   /** The sine of its angular radius. */
   sinRadius: number;
-  /** Its axes: toward the Earth's center, and its north pole (unit). */
-  toEarth: ArrayLike<number>;
+  /**
+   * Its axes: toward its longitude and latitude 0 (the near side's
+   * center), and its north pole (unit).
+   */
+  meridian: ArrayLike<number>;
   north: ArrayLike<number>;
   /** From it toward the sun (unit). */
   toSun: ArrayLike<number>;
@@ -128,6 +132,7 @@ export interface SkyView {
   starGroup?: GPUBindGroup;
   starLayer?: GPUTextureView;
   starFor?: GPUBuffer;
+  starMoon?: GPUTexture;
 }
 
 type Pipelines = Record<
@@ -252,6 +257,8 @@ export class Sky {
   /** The Moon's albedo map (white until one is set) and its mean albedo. */
   private moonMap: GPUTexture;
   private moonMean = 1;
+  /** The Moon map's levels. */
+  private mips?: MipGenerator;
   /**
    * @internal For checks: how much aerial perspective is marched per vertex
    * whatever the altitude (Lab "Real-time sky"); undefined: by altitude.
@@ -375,9 +382,14 @@ export class Sky {
       size: 48,
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     });
+    // Filtered across the Moon map's levels, anisotropically (its disk's
+    // limb and poles squeeze it); the star background is read at its top
+    // level.
     this.starSampler = device.createSampler({
       magFilter: "linear",
       minFilter: "linear",
+      mipmapFilter: "linear",
+      maxAnisotropy: 16,
     });
     this.starBackground = this.createStarBackground(1);
     this.starPoints = this.createStarPoints(1);
@@ -545,6 +557,7 @@ export class Sky {
         { texture: this.moonMap },
         [width, height],
       );
+      (this.mips ??= new MipGenerator(this.device)).generate(this.moonMap);
       this.moonMean = meanAlbedo(image);
     }
     old.destroy();
@@ -554,6 +567,7 @@ export class Sky {
     return this.device.createTexture({
       label: "sky.moonMap",
       size: [width, height],
+      mipLevelCount: MipGenerator.levelCount(width, height),
       format: "rgba8unorm-srgb",
       usage:
         GPUTextureUsage.TEXTURE_BINDING |
@@ -613,10 +627,12 @@ export class Sky {
     if (
       !view.starGroup ||
       view.starLayer !== layer ||
-      view.starFor !== this.starPoints
+      view.starFor !== this.starPoints ||
+      view.starMoon !== this.moonMap
     ) {
       view.starLayer = layer;
       view.starFor = this.starPoints;
+      view.starMoon = this.moonMap;
       view.starGroup = this.device.createBindGroup({
         label: "sky.stars",
         layout: this.starLayout,
@@ -1274,7 +1290,7 @@ export class Sky {
     if (moon) {
       f.set(moon.direction, 60);
       f[63] = moon.sinRadius;
-      f.set(moon.toEarth, 64);
+      f.set(moon.meridian, 64);
       f.set(moon.north, 68);
       f.set(moon.toSun, 72);
       // A full disk's radiance is the albedo's share of a white Lambertian

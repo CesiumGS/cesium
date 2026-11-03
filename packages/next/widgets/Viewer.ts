@@ -27,7 +27,9 @@ import {
   eastNorthUpToFixedFrame,
   fromDegrees,
   icrfToFixed,
+  loadIonMoonMap,
   mat4,
+  moonAxes,
   moonPosition,
   resolveIonAsset,
   sunDirection,
@@ -95,8 +97,9 @@ export interface ViewerOptions {
    */
   stars?: boolean;
   /**
-   * The Moon in the sky and its light at night (default true: placed by
-   * the clock, with 1.x's moon map); false: none.
+   * The Moon in the sky and its light at night (default true: placed and
+   * turned by the clock, with Cesium Moon Terrain's map when the ion token
+   * reaches it, 1.x's until then or else); false: none.
    */
   moon?: boolean;
   /**
@@ -118,6 +121,9 @@ export interface ViewerOptions {
 
 /** 1.x's moon map (equirectangular, the near side in the middle). */
 const scratchMoon = new Float64Array(3);
+const scratchMoonAxes = new Float64Array(6);
+/** The Moon map's attributions' owner (`addAttributions`). */
+const MOON_CREDIT = {};
 
 const MOON_MAP = new URL(
   "../../engine/Source/Assets/Textures/moonSmall.jpg",
@@ -206,6 +212,8 @@ export class Viewer {
   private sunFromClock_ = true;
   /** The Moon is drawn (`ViewerOptions.moon`). */
   private readonly moon: boolean;
+  /** Cesium Moon Terrain's map arrived (1.x's no longer wanted). */
+  private moonMapSharp = false;
   /** The clock was given or has been set to the first framing's morning. */
   private clockPlaced: boolean;
   private time_?: TimeControlsHandle;
@@ -310,10 +318,22 @@ export class Viewer {
           }),
         )
         .then((image) => {
-          if (!this.destroyed) {
+          if (!this.destroyed && !this.moonMapSharp) {
             this.engine.setMoonMap(image);
           }
         })
+        .catch(() => {});
+      void loadIonMoonMap(this.tokenOptions())
+        .then(({ image, attributions }) => {
+          if (this.destroyed) {
+            image.close();
+            return;
+          }
+          this.moonMapSharp = true;
+          this.engine.setMoonMap(image);
+          this.addAttributions(MOON_CREDIT, attributions);
+        })
+        // Without the asset (not in the token's account): 1.x's map.
         .catch(() => {});
     }
     if (options.stars !== false) {
@@ -676,6 +696,16 @@ export class Viewer {
     for (let i = 0; i < 3; i++) {
       fixed[i] =
         m[i * 3]! * p[0]! + m[i * 3 + 1]! * p[1]! + m[i * 3 + 2]! * p[2]!;
+    }
+    const a = moonAxes(this.clock.time, scratchMoonAxes);
+    const axes = (this.engine.moonAxes ??= new Float64Array(6));
+    for (let k = 0; k < 6; k += 3) {
+      for (let i = 0; i < 3; i++) {
+        axes[k + i] =
+          m[i * 3]! * a[k]! +
+          m[i * 3 + 1]! * a[k + 1]! +
+          m[i * 3 + 2]! * a[k + 2]!;
+      }
     }
   }
 

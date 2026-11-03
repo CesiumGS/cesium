@@ -426,7 +426,7 @@ export async function parseGltf(
   };
 }
 
-function splitGlb(bytes: Uint8Array): { json: Json; bin?: Uint8Array } {
+export function splitGlb(bytes: Uint8Array): { json: Json; bin?: Uint8Array } {
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   if (bytes.byteLength >= 12 && view.getUint32(0, true) === 0x46546c67) {
     let offset = 12;

@@ -51,8 +51,9 @@ struct Sky {
   // and the sine of its angular radius (0: none).
   moon: vec3f,
   moonSize: f32,
-  // Its axes (Earth-fixed): toward the Earth's center (selenographic
-  // longitude and latitude 0) and its north pole; its radiance per unit of
+  // Its axes (Earth-fixed): toward selenographic longitude and latitude 0
+  // (the near side's center, within 8° of the Earth: libration) and its
+  // north pole; its radiance per unit of
   // the map's albedo, as a share of the sun's irradiance (sr⁻¹).
   moonX: vec3f,
   moonScale: f32,
@@ -267,6 +268,26 @@ struct MoonSample {
   coverage: f32,
 };
 
+// The Moon's surface seen along `direction` (rim pixels: the limb), its
+// normal facing the camera.
+fn moonSurface(direction: vec3f) -> vec3f {
+  let m = sky.moon;
+  var q = (direction - m * dot(direction, m)) / sky.moonSize;
+  let q2 = dot(q, q);
+  if (q2 > 1.0) {
+    q *= inverseSqrt(q2);
+  }
+  return q - m * sqrt(max(0.0, 1.0 - dot(q, q)));
+}
+
+// Where the map shows the surface of normal `normal`.
+fn moonUv(normal: vec3f) -> vec2f {
+  let moonY = cross(sky.moonZ, sky.moonX);
+  let longitude = atan2(dot(normal, moonY), dot(normal, sky.moonX));
+  let latitude = asin(clamp(dot(normal, sky.moonZ), -1.0, 1.0));
+  return vec2f(0.5 + longitude / (2.0 * PI), 0.5 - latitude / PI);
+}
+
 fn moonDisk(direction: vec3f) -> MoonSample {
   let m = sky.moon;
   let k = sky.moonSize;
@@ -281,20 +302,20 @@ fn moonDisk(direction: vec3f) -> MoonSample {
     return MoonSample(0.0, 0.0);
   }
   let coverage = clamp((k - sinAngle) / pixel + 0.5, 0.0, 1.0);
-  // The surface seen there (rim pixels: the limb), facing the camera.
-  var q = offset / k;
-  let q2 = dot(q, q);
-  if (q2 > 1.0) {
-    q *= inverseSqrt(q2);
-  }
-  let mu = sqrt(max(0.0, 1.0 - dot(q, q)));
-  let normal = q - m * mu;
+  let normal = moonSurface(direction);
+  let mu = -dot(normal, m);
   let mu0 = dot(normal, sky.moonSun);
-  let moonY = cross(sky.moonZ, sky.moonX);
-  let longitude = atan2(dot(normal, moonY), dot(normal, sky.moonX));
-  let latitude = asin(clamp(dot(normal, sky.moonZ), -1.0, 1.0));
-  let uv = vec2f(0.5 + longitude / (2.0 * PI), 0.5 - latitude / PI);
-  let albedo = dot(textureSampleLevel(moonMap, starSampler, uv, 0.0).rgb, vec3f(0.2126, 0.7152, 0.0722));
+  let uv = moonUv(normal);
+  // The map's footprint: the surface a pixel away, two ways across the
+  // line of sight (the pixel's footprint is round there, so any two do);
+  // toward the limb and the poles it stretches, and the map is filtered
+  // over it (anisotropically, across its levels).
+  let across = normalize(cross(m, select(vec3f(0.0, 0.0, 1.0), vec3f(1.0, 0.0, 0.0), abs(m.z) > 0.9)));
+  var dx = moonUv(moonSurface(direction + across * pixel)) - uv;
+  var dy = moonUv(moonSurface(direction + cross(m, across) * pixel)) - uv;
+  dx.x -= round(dx.x); // across the seam at 180°
+  dy.x -= round(dy.x);
+  let albedo = dot(textureSampleGrad(moonMap, starSampler, uv, dx, dy).rgb, vec3f(0.2126, 0.7152, 0.0722));
   // The sunlit part, and everywhere the Earth's light (seen from about
   // where it comes from: flat, as at full).
   let sunlit = select(0.0, sky.moonScale * 2.0 * mu0 / (mu0 + mu), mu0 > 0.0);

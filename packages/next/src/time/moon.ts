@@ -224,3 +224,95 @@ export function lommelSeeliger(alpha: number): number {
   }
   return 1 - Math.sin(a / 2) * Math.tan(a / 2) * Math.log(1 / Math.tan(a / 4));
 }
+
+/**
+ * The Moon's axes at a time in the celestial frame (ICRF), unit vectors:
+ * `out[0..2]` toward selenographic longitude and latitude 0 (the near
+ * side's center), `out[3..5]` its north pole. The IAU rotation model
+ * (Archinal et al. 2011, "Report of the IAU Working Group on Cartographic
+ * Coordinates and Rotational Elements: 2009", table 2; 1.x's
+ * `Iau2000Orientation.ComputeMoon`): the pole's right ascension and
+ * declination and the prime meridian's angle with their periodic terms,
+ * the mean-Earth frame within about 0.01°. The face toward the Earth
+ * wobbles by up to 8° (libration): the Moon turns evenly on its orbit's
+ * uneven pace, its equator tilted to the orbit. Turn it to Earth-fixed
+ * axes with `icrfToFixed`.
+ */
+export function moonAxes(
+  ms: number,
+  out: Float64Array = new Float64Array(6),
+): Float64Array {
+  const d = julianDate(ms + TT_MINUS_UTC) - 2_451_545.0;
+  const t = d / 36_525;
+  const e = (base: number, rate: number) => (base + rate * d) * deg;
+  const E1 = e(125.045, -0.0529921);
+  const E2 = e(250.089, -0.1059842);
+  const E3 = e(260.008, 13.0120009);
+  const E4 = e(176.625, 13.3407154);
+  const E5 = e(357.529, 0.9856003);
+  const E6 = e(311.589, 26.4057084);
+  const E7 = e(134.963, 13.064993);
+  const E8 = e(276.617, 0.3287146);
+  const E9 = e(34.226, 1.7484877);
+  const E10 = e(15.134, -0.1589763);
+  const E11 = e(119.743, 0.0036096);
+  const E12 = e(239.961, 0.1643573);
+  const E13 = e(25.053, 12.9590088);
+  const { sin, cos } = Math;
+  const alpha =
+    (269.9949 +
+      0.0031 * t -
+      3.8787 * sin(E1) -
+      0.1204 * sin(E2) +
+      0.07 * sin(E3) -
+      0.0172 * sin(E4) +
+      0.0072 * sin(E6) -
+      0.0052 * sin(E10) +
+      0.0043 * sin(E13)) *
+    deg;
+  const delta =
+    (66.5392 +
+      0.013 * t +
+      1.5419 * cos(E1) +
+      0.0239 * cos(E2) -
+      0.0278 * cos(E3) +
+      0.0068 * cos(E4) -
+      0.0029 * cos(E6) +
+      0.0009 * cos(E7) +
+      0.0008 * cos(E10) -
+      0.0009 * cos(E13)) *
+    deg;
+  const w =
+    (38.3213 +
+      13.17635815 * d -
+      1.4e-12 * d * d +
+      3.561 * sin(E1) +
+      0.1208 * sin(E2) -
+      0.0642 * sin(E3) +
+      0.0158 * sin(E4) +
+      0.0252 * sin(E5) -
+      0.0066 * sin(E6) -
+      0.0047 * sin(E7) -
+      0.0046 * sin(E8) +
+      0.0028 * sin(E9) +
+      0.0052 * sin(E10) +
+      0.004 * sin(E11) +
+      0.0019 * sin(E12) -
+      0.0044 * sin(E13)) *
+    deg;
+  // The prime meridian, `w` along the Moon's equator from where it rises
+  // through the celestial equator (the node, α + 90°).
+  const sa = sin(alpha);
+  const ca = cos(alpha);
+  const sd = sin(delta);
+  const cd = cos(delta);
+  const cw = cos(w);
+  const sw = sin(w);
+  out[0] = -sa * cw - sd * ca * sw;
+  out[1] = ca * cw - sd * sa * sw;
+  out[2] = cd * sw;
+  out[3] = cd * ca;
+  out[4] = cd * sa;
+  out[5] = sd;
+  return out;
+}
