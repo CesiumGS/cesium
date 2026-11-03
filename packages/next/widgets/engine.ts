@@ -255,11 +255,17 @@ export function engineSnapshot(
   return out;
 }
 
-/** Resolve, root tileset, to first content, to settled (or still streaming). */
+/**
+ * Resolve, root tileset, to first content, to settled (or still streaming),
+ * over the tilesets shown: a hidden one (the globe under photorealistic
+ * tiles) draws nothing, so it never settles and the load never ended.
+ */
 function loadPhases(
-  tilesets: readonly Tileset3D[],
+  all: readonly Tileset3D[],
   options: EngineSnapshotOptions,
 ): NonNullable<NonNullable<InspectorSnapshot["tiles"]>["load"]> {
+  const shown = all.filter((t) => t.show);
+  const tilesets = shown.length > 0 ? shown : all;
   const now = performance.now();
   const start =
     options.loadStartedAt ?? Math.min(...tilesets.map((t) => t.createdAt));
