@@ -490,7 +490,7 @@ function commitSnapshot(primitive, snapshot, frameState) {
 
   const featureIdTexture = defined(currentSnapshot)
     ? currentSnapshot.featureIdTexture
-    : primitive.featureIdTexture;
+    : primitive._splatFeatureIdTexture;
   if (
     defined(featureIdTexture) &&
     featureIdTexture !== snapshot.featureIdTexture
@@ -507,7 +507,7 @@ function commitSnapshot(primitive, snapshot, frameState) {
   primitive._featureIdCount = snapshot.featureIdCount ?? 0;
   primitive._hasFeatureIds =
     defined(snapshot.allFeatureIds) && snapshot.allFeatureIds.length > 0;
-  primitive.featureIdTexture = snapshot.featureIdTexture;
+  primitive._splatFeatureIdTexture = snapshot.featureIdTexture;
   primitive._shData = snapshot.shData;
   primitive._sphericalHarmonicsDegree = snapshot.sphericalHarmonicsDegree;
   primitive._numSplats = snapshot.numSplats;
@@ -992,7 +992,7 @@ function GaussianSplatPrimitive(options) {
    * @type {undefined|Texture}
    * @private
    */
-  this.featureIdTexture = undefined;
+  this._splatFeatureIdTexture = undefined;
   /**
    * Whether the current snapshot has per-splat feature IDs.
    * @type {boolean}
@@ -1428,7 +1428,7 @@ GaussianSplatPrimitive.prototype.destroy = function () {
   this._pendingSnapshot = undefined;
   this._snapshot = undefined;
   this._aggregateScratchBuffers = undefined;
-  this.featureIdTexture = undefined;
+  this._splatFeatureIdTexture = undefined;
   this.gaussianSplatTexture = undefined;
   this.sphericalHarmonicsTexture = undefined;
 
@@ -1879,7 +1879,7 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
       ShaderDestination.VERTEX,
     );
     uniformMap.u_featureIdTexture = function () {
-      return primitive.featureIdTexture;
+      return primitive._splatFeatureIdTexture;
     };
   }
 
