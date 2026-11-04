@@ -37,7 +37,6 @@ export async function copyEditAssets(destination) {
     "packages/edit/Source/**",
     "!packages/edit/Source/**/*.js",
     "!packages/edit/Source/**/*.ts",
-    "!packages/edit/Source/**/*.css",
     "!packages/edit/Source/**/*.glsl",
     "!packages/edit/Source/**/*.md",
   ];
