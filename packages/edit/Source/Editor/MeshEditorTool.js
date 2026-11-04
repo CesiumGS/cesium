@@ -58,9 +58,15 @@ class MeshEditorTool {
    *
    * @param {EditMode} mode The mode to check.
    * @returns {boolean} Whether the tool supports the mode.
+   *
+   * @exception {Error} The mode contains unknown components.
    */
   supportsMode(mode) {
-    throw new Error("MeshEditorTool.supportsMode is not implemented.");
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.number("mode", mode);
+    //>>includeEnd('debug');
+
+    return this.#wasmEditor.toolSupportsMode(this._id, mode);
   }
 
   /**
