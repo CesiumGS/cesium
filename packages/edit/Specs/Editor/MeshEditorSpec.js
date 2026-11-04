@@ -306,6 +306,32 @@ describe(
         expect(editor.mode).toBe(EditMode.EDGE);
       });
 
+      it("raises modeChanged after updating the mode and mesh", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const mesh = editor.addMesh(createSource(square));
+        editor.setMeshActive(mesh);
+        const listener = jasmine.createSpy("modeChanged").and.callFake(() => {
+          expect(editor.mode).toBe(EditMode.EDGE);
+          expect(renderInstanceCounts(mesh)).toEqual([5, 2]);
+        });
+        editor.modeChanged.addEventListener(listener);
+
+        editor.mode = EditMode.EDGE;
+
+        expect(listener).toHaveBeenCalledOnceWith(EditMode.EDGE, EditMode.NONE);
+      });
+
+      it("does not raise modeChanged when the mode is unchanged", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        editor.mode = EditMode.EDGE;
+        const listener = jasmine.createSpy("modeChanged");
+        editor.modeChanged.addEventListener(listener);
+
+        editor.mode = EditMode.EDGE;
+
+        expect(listener).not.toHaveBeenCalled();
+      });
+
       it("draws only the components the mode renders", async function () {
         const editor = await MeshEditor.addToScene(scene);
         const mesh = editor.addMesh(createSource(square));
@@ -359,11 +385,14 @@ describe(
       it("throws for unknown components and keeps the mode", async function () {
         const editor = await MeshEditor.addToScene(scene);
         editor.mode = EditMode.FACE;
+        const listener = jasmine.createSpy("modeChanged");
+        editor.modeChanged.addEventListener(listener);
 
         expect(() => {
           editor.mode = 8;
         }).toThrowError();
         expect(editor.mode).toBe(EditMode.FACE);
+        expect(listener).not.toHaveBeenCalled();
       });
     });
 
