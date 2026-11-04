@@ -786,35 +786,97 @@ describe(
         expect(editor.activeTool).toBeUndefined();
       });
 
+      it("raises activeToolChanged after activating, replacing, and clearing a tool", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        editor.mode = EditMode.VERTEX;
+        const selectTool = SelectTool.addTo(editor);
+        const translateTool = TranslateTool.addTo(editor);
+        const listener = jasmine
+          .createSpy("activeToolChanged")
+          .and.callFake((tool) => {
+            expect(editor.activeTool).toBe(tool);
+          });
+        editor.activeToolChanged.addEventListener(listener);
+
+        editor.activeTool = selectTool;
+        editor.activeTool = translateTool;
+        editor.activeTool = undefined;
+
+        expect(listener.calls.allArgs()).toEqual([
+          [selectTool, undefined],
+          [translateTool, selectTool],
+          [undefined, translateTool],
+        ]);
+      });
+
+      it("does not raise activeToolChanged when the tool is unchanged", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const listener = jasmine.createSpy("activeToolChanged");
+        editor.activeToolChanged.addEventListener(listener);
+
+        editor.activeTool = undefined;
+        expect(listener).not.toHaveBeenCalled();
+
+        const tool = SelectTool.addTo(editor);
+        editor.activeTool = tool;
+        listener.calls.reset();
+
+        editor.activeTool = tool;
+        editor.mode = EditMode.VERTEX;
+
+        expect(editor.activeTool).toBe(tool);
+        expect(listener).not.toHaveBeenCalled();
+      });
+
       it("throws for a tool from another editor", async function () {
         const editor = await MeshEditor.addToScene(scene);
         const otherEditor = await MeshEditor.addToScene(scene);
         const otherTool = SelectTool.addTo(otherEditor);
         editor.mode = EditMode.VERTEX;
+        const listener = jasmine.createSpy("activeToolChanged");
+        editor.activeToolChanged.addEventListener(listener);
 
         expect(() => {
           editor.activeTool = otherTool;
         }).toThrowDeveloperError();
+        expect(listener).not.toHaveBeenCalled();
       });
 
       it("throws for a tool that doesn't support the current mode", async function () {
         const editor = await MeshEditor.addToScene(scene);
         const translateTool = TranslateTool.addTo(editor);
+        const selectTool = SelectTool.addTo(editor);
+        editor.activeTool = selectTool;
+        const listener = jasmine.createSpy("activeToolChanged");
+        editor.activeToolChanged.addEventListener(listener);
 
         expect(() => {
           editor.activeTool = translateTool;
         }).toThrowDeveloperError();
-        expect(editor.activeTool).toBeUndefined();
+        expect(editor.activeTool).toBe(selectTool);
+        expect(listener).not.toHaveBeenCalled();
       });
 
       it("is cleared when the mode is set to EditMode.NONE", async function () {
         const editor = await MeshEditor.addToScene(scene);
         editor.mode = EditMode.VERTEX;
-        editor.activeTool = TranslateTool.addTo(editor);
+        const tool = TranslateTool.addTo(editor);
+        editor.activeTool = tool;
+        const listener = jasmine
+          .createSpy("activeToolChanged")
+          .and.callFake(() => {
+            expect(editor.mode).toBe(EditMode.NONE);
+            expect(editor.activeTool).toBeUndefined();
+          });
+        editor.activeToolChanged.addEventListener(listener);
+        const modeListener = jasmine.createSpy("modeChanged");
+        editor.modeChanged.addEventListener(modeListener);
 
         editor.mode = EditMode.NONE;
 
         expect(editor.activeTool).toBeUndefined();
+        expect(listener).toHaveBeenCalledOnceWith(undefined, tool);
+        expect(listener).toHaveBeenCalledBefore(modeListener);
       });
     });
 
