@@ -37,26 +37,6 @@ hidden by the wrong toggle).`;
 
 let tileset;
 
-// Groups are set on the external tileset content, not on the features below it,
-// so find the nearest ancestor content with a group. Returns the layer's position
-// in tileset.dataLayers (layer.index is only unique within one tileset JSON).
-function findLayerPosition(tile) {
-  for (let t = tile; Cesium.defined(t); t = t.parent) {
-    const group = t.content?.group;
-    if (Cesium.defined(group)) {
-      const name = group.metadata.getPropertyBySemantic("NAME");
-      const layer = tileset.dataLayers.getByName(name)[0];
-      for (let i = 0; i < tileset.dataLayers.length; i++) {
-        if (tileset.dataLayers.get(i) === layer) {
-          return i;
-        }
-      }
-      return undefined;
-    }
-  }
-  return undefined;
-}
-
 async function loadTileset(format) {
   viewer.scene.primitives.remove(tileset);
   togglesElement.innerHTML = "";
@@ -67,29 +47,19 @@ async function loadTileset(format) {
   tileset = await Cesium.Cesium3DTileset.fromUrl(
     `../../SampleData/Cesium3DTiles/Layers/${format}/tileset.json`,
   );
+  const layers = tileset.featureLayers;
 
   // Root layers exist as soon as fromUrl resolves, before any content is requested.
   // Hide the SE layer now: its external tileset won't be fetched until it's shown.
   if (format !== "external-groups") {
-    tileset.dataLayers.get(3).show = false;
+    layers.get(3).show = false;
   }
 
-  // Tint each content by layer, and log loads to show hidden layers aren't requested.
-  const loaded = [];
-  tileset.tileLoad.addEventListener(function (tile) {
-    const content = tile.content;
-    const position = findLayerPosition(tile);
-    if (Cesium.defined(position)) {
-      for (let i = 0; i < content.featuresLength; i++) {
-        content.getFeature(i).color = Cesium.Color[layerColors[position]];
-      }
-    }
-    loaded.push(content.url.split("/").pop());
-    logElement.textContent = `Loaded content:\n${loaded.join("\n")}`;
-  });
-
-  for (let i = 0; i < tileset.dataLayers.length; i++) {
-    const layer = tileset.dataLayers.get(i);
+  // Add a toggle per layer.
+  const colorByLayer = new Map();
+  for (let i = 0; i < layers.length; i++) {
+    const layer = layers.get(i);
+    colorByLayer.set(layer, Cesium.Color[layerColors[i]]);
     Sandcastle.addToggleButton(
       `${layer.name} (${layerColors[i].toLowerCase()})`,
       layer.show,
@@ -99,6 +69,22 @@ async function loadTileset(format) {
       "layerToggles",
     );
   }
+
+  // Everything below is optional, for demonstration only. It is not needed to toggle layers.
+  // Tint each content by its layer, and log loads to show hidden layers aren't requested.
+  const loaded = [];
+  tileset.tileLoad.addEventListener(function (tile) {
+    const content = tile.content;
+    for (let i = 0; i < content.featuresLength; i++) {
+      const feature = content.getFeature(i);
+      const color = colorByLayer.get(feature.featureLayer);
+      if (Cesium.defined(color)) {
+        feature.color = color;
+      }
+    }
+    loaded.push(content.url.split("/").pop());
+    logElement.textContent = `Loaded content:\n${loaded.join("\n")}`;
+  });
 
   let offset;
   if (format === "geojson") {

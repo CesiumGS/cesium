@@ -1,23 +1,32 @@
 import { Check, defined, Event } from "@cesium/core";
-import Cesium3DTilesetDataLayer from "./Cesium3DTilesetDataLayer.js";
+import FeatureLayer from "./FeatureLayer.js";
 
 /** @import Cesium3DTilesetMetadata from "./Cesium3DTilesetMetadata.js"; */
 /** @import GroupMetadata from "./GroupMetadata.js"; */
 
 /**
- * The data layers of a {@link Cesium3DTileset}. Currently created from 3D Tiles 1.1 groups.
+ * The feature layers of a {@link Cesium3DTileset}. Currently created from 3D Tiles 1.1 groups.
  * Read-only: layers come from the tileset's data.
  * <p>
  * Layers from external tilesets are added as those tilesets load. Listen to
- * {@link Cesium3DTilesetDataLayerCollection#layerAdded} to configure them before
+ * {@link FeatureLayerCollection#layerAdded} to configure them before
  * their tiles are requested.
  * </p>
+ *
+ * @example
+ * const tileset = await Cesium.Cesium3DTileset.fromUrl(url);
+ * // Layers from the root tileset exist once fromUrl resolves.
+ * tileset.featureLayers.getByName("Roads")[0].show = false;
+ * // Layers from external tilesets are added as they load.
+ * tileset.featureLayers.layerAdded.addEventListener((layer) => {
+ *   layer.show = layer.name !== "Vegetation";
+ * });
  *
  * @internalConstructor
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
-class Cesium3DTilesetDataLayerCollection {
+class FeatureLayerCollection {
   constructor() {
     this._layers = [];
     this._layerByGroup = new Map();
@@ -25,7 +34,7 @@ class Cesium3DTilesetDataLayerCollection {
     /**
      * Raised synchronously when a layer is added, before any of its tiles are requested.
      *
-     * @type {Event<function(Cesium3DTilesetDataLayer)>}
+     * @type {Event<function(FeatureLayer)>}
      */
     this.layerAdded = new Event();
   }
@@ -44,7 +53,7 @@ class Cesium3DTilesetDataLayerCollection {
    * Gets the layer at the given index.
    *
    * @param {number} index The index.
-   * @returns {Cesium3DTilesetDataLayer} The layer.
+   * @returns {FeatureLayer} The layer.
    */
   get(index) {
     //>>includeStart('debug', pragmas.debug);
@@ -56,7 +65,7 @@ class Cesium3DTilesetDataLayerCollection {
   /**
    * Checks whether this collection contains the given layer.
    *
-   * @param {Cesium3DTilesetDataLayer} [layer] The layer to check for.
+   * @param {FeatureLayer} [layer] The layer to check for.
    * @returns {boolean} <code>true</code> if the collection contains the layer, <code>false</code> otherwise.
    */
   contains(layer) {
@@ -67,7 +76,7 @@ class Cesium3DTilesetDataLayerCollection {
    * Gets all layers with the given name. Names are not required to be unique.
    *
    * @param {string} name The layer name.
-   * @returns {Cesium3DTilesetDataLayer[]} The matching layers.
+   * @returns {FeatureLayer[]} The matching layers.
    */
   getByName(name) {
     return this._layers.filter((layer) => layer.name === name);
@@ -85,7 +94,7 @@ class Cesium3DTilesetDataLayerCollection {
     }
     const groups = metadataExtension.groups;
     for (let i = 0; i < groups.length; i++) {
-      const layer = new Cesium3DTilesetDataLayer({
+      const layer = new FeatureLayer({
         metadata: groups[i],
         index: i,
       });
@@ -99,7 +108,7 @@ class Cesium3DTilesetDataLayerCollection {
    * Gets the layer backed by the given group metadata.
    *
    * @param {GroupMetadata} [groupMetadata] The group metadata.
-   * @returns {Cesium3DTilesetDataLayer|undefined} The layer, if any.
+   * @returns {FeatureLayer|undefined} The layer, if any.
    * @private
    */
   _getByGroup(groupMetadata) {
@@ -109,4 +118,4 @@ class Cesium3DTilesetDataLayerCollection {
   }
 }
 
-export default Cesium3DTilesetDataLayerCollection;
+export default FeatureLayerCollection;

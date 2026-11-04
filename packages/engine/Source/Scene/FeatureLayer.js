@@ -1,39 +1,36 @@
-import { Check } from "@cesium/core";
+import { Check, defined } from "@cesium/core";
 import MetadataSemantic from "./MetadataSemantic.js";
 
 /** @import GroupMetadata from "./GroupMetadata.js"; */
 
 /**
- * A data layer of a {@link Cesium3DTileset}: a named part of the tileset as defined
- * by its data, not a rendering or styling layer. Currently backed by a 3D Tiles 1.1 group.
+ * A named set of features defined by source data. It neither renders nor styles its
+ * features. Currently created from 3D Tiles 1.1 groups.
  * <p>
- * Do not construct this directly. Access layers through {@link Cesium3DTileset#dataLayers}.
+ * Do not construct this directly. Access layers through {@link Cesium3DTileset#featureLayers}.
  * </p>
  *
  * @internalConstructor
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
-class Cesium3DTilesetDataLayer {
+class FeatureLayer {
   /**
    * @privateParam {object} options An object with the following properties:
-   * @privateParam {GroupMetadata} options.metadata The group metadata backing this layer.
-   * @privateParam {number} options.index The index of the group in its tileset JSON.
+   * @privateParam {string} [options.name] The layer name. Defaults to a name from <code>options.metadata</code>.
+   * @privateParam {GroupMetadata} [options.metadata] The group metadata backing this layer.
+   * @privateParam {number} [options.index] The index of the group in its tileset JSON.
    */
   constructor(options) {
-    //>>includeStart('debug', pragmas.debug);
-    Check.typeOf.object("options.metadata", options.metadata);
-    Check.typeOf.number("options.index", options.index);
-    //>>includeEnd('debug');
-
     this._metadata = options.metadata;
     this._index = options.index;
-    this._name = getDefaultName(options.metadata);
+    this._name = options.name ?? getDefaultName(options.metadata);
     this._show = true;
   }
 
   /**
-   * Whether the layer is shown. Tiles in a hidden layer are not requested or rendered.
+   * Whether the layer is shown. In a {@link Cesium3DTileset}, tiles in a hidden
+   * layer are not requested or rendered.
    *
    * @type {boolean}
    * @default true
@@ -50,8 +47,9 @@ class Cesium3DTilesetDataLayer {
   }
 
   /**
-   * The layer name. Defaults to the group's property with the <code>NAME</code>
-   * semantic, then its <code>name</code> property, otherwise <code>undefined</code>.
+   * The layer name. For a 3D Tiles group, defaults to its property with the
+   * <code>NAME</code> semantic, then its <code>name</code> property, otherwise
+   * <code>undefined</code>.
    *
    * @type {string|undefined}
    */
@@ -64,9 +62,9 @@ class Cesium3DTilesetDataLayer {
   }
 
   /**
-   * The group metadata backing this layer.
+   * The group metadata backing this layer, if any.
    *
-   * @type {GroupMetadata}
+   * @type {GroupMetadata|undefined}
    * @readonly
    * @private
    */
@@ -75,10 +73,11 @@ class Cesium3DTilesetDataLayer {
   }
 
   /**
-   * The index of the group in the tileset JSON that defines it.
+   * The index of the group in the tileset JSON that defines it, if any.
    *
-   * @type {number}
+   * @type {number|undefined}
    * @readonly
+   * @private
    */
   get index() {
     return this._index;
@@ -86,6 +85,9 @@ class Cesium3DTilesetDataLayer {
 }
 
 function getDefaultName(metadata) {
+  if (!defined(metadata)) {
+    return undefined;
+  }
   if (metadata.hasPropertyBySemantic(MetadataSemantic.NAME)) {
     return metadata.getPropertyBySemantic(MetadataSemantic.NAME);
   }
@@ -94,4 +96,4 @@ function getDefaultName(metadata) {
     : undefined;
 }
 
-export default Cesium3DTilesetDataLayer;
+export default FeatureLayer;

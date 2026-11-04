@@ -562,13 +562,14 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
 
   this._request = undefined;
 
-  // Layer from this tile's single content's group. Tiles with multiple
-  // contents get no layer yet (needs per-content hiding).
-  const dataLayers = tileset.dataLayers;
-  this._layer =
-    defined(dataLayers) && defined(contentHeader) && !hasMultipleContents
-      ? dataLayers._getByGroup(findGroupMetadata(tileset, contentHeader))
+  // A parent's layer wins over this tile's own group, as in 3DTILES_layers. Tiles with
+  // multiple contents only inherit (needs per-content hiding).
+  const featureLayers = tileset.featureLayers;
+  const ownFeatureLayer =
+    defined(featureLayers) && defined(contentHeader) && !hasMultipleContents
+      ? featureLayers._getByGroup(findGroupMetadata(tileset, contentHeader))
       : undefined;
+  this._featureLayer = parent?._featureLayer ?? ownFeatureLayer;
 }
 
 // This can be overridden for testing purposes
@@ -1108,9 +1109,8 @@ Cesium3DTile.prototype.updateVisibility = function (frameState) {
     parentVisibilityPlaneMask,
   ); // Use parent's plane mask to speed up visibility test
   this._visible = this._visibilityPlaneMask !== CullingVolume.MASK_OUTSIDE;
-  // Culling a tile in a hidden layer also prunes its subtree, e.g. an external tileset.
-  // TODO: hide only this content, not its children, when it isn't an external tileset.
-  if (defined(this._layer) && !this._layer.show) {
+  // Descendants inherit this tile's layer, so culling it also prunes its subtree.
+  if (defined(this._featureLayer) && !this._featureLayer.show) {
     this._visible = false;
   }
   this._inRequestVolume = this.insideViewerRequestVolume(frameState);
