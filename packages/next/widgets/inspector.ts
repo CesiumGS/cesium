@@ -199,6 +199,13 @@ export function attachInspector(
   let shownError: string | undefined;
 
   // Hover over either section of sparklines: a moment's values in both.
+  // One tooltip beside the crosshair with every row's value at that
+  // moment (as the retired standalone viewer's history had), on the side
+  // with room.
+  const tip = document.createElement("div");
+  tip.className = "ci-tip";
+  tip.hidden = true;
+  root.append(tip);
   const hoverAt = (el: HTMLElement, e: PointerEvent) => {
     const plot = el.querySelector("svg");
     if (!plot) {
@@ -208,9 +215,37 @@ export function attachInspector(
     const f = (e.clientX - rect.left) / rect.width;
     hover = f < 0 || f > 1 ? undefined : Math.round(f * (HISTORY - 1));
     renderHistory();
+    if (hover === undefined) {
+      tip.hidden = true;
+      return;
+    }
+    tip.replaceChildren();
+    const when = document.createElement("div");
+    when.className = "ci-tip-when";
+    when.textContent = `${((HISTORY - 1 - hover) / 4).toFixed(1)} s ago`;
+    tip.append(when);
+    // The rows' heads show their values at the hovered moment.
+    for (const head of el.querySelectorAll(".ci-history-head")) {
+      const [name, value] = head.querySelectorAll("span");
+      const row = document.createElement("div");
+      row.className = "ci-tip-row";
+      const v = document.createElement("strong");
+      v.textContent = value?.textContent ?? "—";
+      const n = document.createElement("span");
+      n.textContent = name?.textContent ?? "";
+      row.append(v, n);
+      tip.append(row);
+    }
+    tip.hidden = false;
+    const box = root.getBoundingClientRect();
+    const x = e.clientX - box.left;
+    const right = e.clientX - rect.left < rect.width / 2;
+    tip.style.left = `${right ? x + 12 : x - tip.offsetWidth - 12}px`;
+    tip.style.top = `${Math.max(0, e.clientY - box.top - tip.offsetHeight / 2)}px`;
   };
   const hoverOff = () => {
     hover = undefined;
+    tip.hidden = true;
     renderHistory();
   };
   for (const key of ["history", "passes"] as const) {
@@ -1042,6 +1077,20 @@ const CSS = `
 .cesium-inspector .ci-content { padding-bottom: 6px; }
 .cesium-inspector .ci-num { font-variant-numeric: tabular-nums; color: var(--ci-strong); }
 .cesium-inspector .ci-note { color: var(--ci-muted); font-size: 11px; }
+.cesium-inspector .ci-tip {
+  position: absolute; z-index: 1; pointer-events: none; white-space: nowrap;
+  padding: 6px 8px; border-radius: 4px; font-size: 11px;
+  background: var(--ci-bg); border: 1px solid var(--ci-border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5); backdrop-filter: blur(6px);
+}
+.cesium-inspector .ci-tip[hidden] { display: none; }
+.cesium-inspector .ci-tip-when { color: var(--ci-muted); margin-bottom: 3px; }
+.cesium-inspector .ci-tip-row { display: flex; gap: 8px; }
+.cesium-inspector .ci-tip-row strong {
+  min-width: 64px; text-align: right; color: var(--ci-strong);
+  font-weight: 600; font-variant-numeric: tabular-nums;
+}
+.cesium-inspector .ci-tip-row span { color: var(--ci-text); }
 .cesium-inspector .ci-kv { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; }
 .cesium-inspector .ci-kv .ci-num { text-align: right; }
 .cesium-inspector .ci-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; margin-bottom: 8px; }
