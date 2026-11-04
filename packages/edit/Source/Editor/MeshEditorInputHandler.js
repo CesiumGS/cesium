@@ -1,9 +1,6 @@
 // @ts-check
 
-// TODO: Remove once the helpers are implemented and called.
-/* eslint-disable no-unused-private-class-members */
-
-import { DeveloperError } from "@cesium/core";
+import { Matrix4, Ray, defined } from "@cesium/core";
 import {
   KeyboardEventModifier,
   ScreenSpaceEventHandler,
@@ -11,10 +8,10 @@ import {
 } from "@cesium/engine";
 
 /** @import { Cartesian2 } from "@cesium/core"; */
-/** @import { Scene } from "@cesium/engine"; */
-/** @import { MeshEditor as WasmMeshEditor, PointerModifiers, PointerPick, PointerScene } from "@cesium/mesh-editor"; */
+/** @import { Scene, ScreenSpaceCameraController } from "@cesium/engine"; */
+/** @import { MeshEditor as WasmMeshEditor, PickHit, PointerModifiers, SceneInput } from "@cesium/mesh-editor"; */
 /** @import Mesh from "./Mesh.js"; */
-/** @import MeshEditor from "./MeshEditor.js"; */
+/** @import { OverlayPickObject } from "./OverlayRenderer.js"; */
 
 const { SHIFT, CTRL, ALT } = KeyboardEventModifier;
 
@@ -37,27 +34,56 @@ const MODIFIER_COMBINATIONS = [
   [SHIFT, CTRL, ALT],
 ];
 
+const scratchRay = new Ray();
+
 /**
  * Forwards pointer input on a scene's canvas to a mesh editor.
  *
  * @private
  */
 class MeshEditorInputHandler {
+  /** @type {Scene} */
+  #scene;
+
+  /**
+   * Kept separately because the scene drops it before destroying its
+   * primitives, including the editor.
+   *
+   * @type {ScreenSpaceCameraController}
+   */
+  #cameraController;
+
+  /** @type {WasmMeshEditor} */
+  #wasmEditor;
+
+  /** @type {ReadonlySet<Mesh>} */
+  #meshes;
+
   /** @type {ScreenSpaceEventHandler} */
   #eventHandler;
+
+  #isCameraPaused = false;
+
+  /**
+   * The camera controller's <code>enableInputs</code> before a drag paused
+   * it, restored when the drag ends.
+   */
+  #cameraEnableInputs = true;
 
   /**
    * @param {object} options
    * @param {Scene} options.scene The scene whose canvas, camera and picking to use.
-   * @param {MeshEditor} options.editor The editor whose active meshes clicks choose in EditMode.NONE.
    * @param {WasmMeshEditor} options.wasmEditor The wasm editor that receives pointer input.
    * @param {ReadonlySet<Mesh>} options.meshes The editor's meshes. Read only.
    */
   constructor(options) {
+    this.#scene = options.scene;
+    this.#cameraController = options.scene.screenSpaceCameraController;
+    this.#wasmEditor = options.wasmEditor;
+    this.#meshes = options.meshes;
+
     const eventHandler = new ScreenSpaceEventHandler(options.scene.canvas);
 
-    // Since Cesium's ScreenSpaceEventHandler only calls the action for the exact combination of modifier keys,
-    // we need to register each action for every combination.
     for (const modifiers of MODIFIER_COMBINATIONS) {
       const pointerModifiers =
         MeshEditorInputHandler.#createPointerModifiers(modifiers);
@@ -111,7 +137,19 @@ class MeshEditorInputHandler {
    * @ignore
    */
   #onPress(modifiers, event) {
-    throw new DeveloperError("Not implemented.");
+    if (!defined(this.#wasmEditor.activeTool)) {
+      return;
+    }
+
+    const isHandled = this.#wasmEditor.pointerDown({
+      modifiers,
+      ray: this.#getRay(event.position),
+      scene: this.#createSceneInput(),
+    });
+
+    if (isHandled) {
+      this.#pauseCamera();
+    }
   }
 
   /**
@@ -122,7 +160,14 @@ class MeshEditorInputHandler {
    * @ignore
    */
   #onMove(modifiers, event) {
-    throw new DeveloperError("Not implemented.");
+    if (!defined(this.#wasmEditor.activeTool)) {
+      return;
+    }
+
+    this.#wasmEditor.pointerMove({
+      modifiers,
+      ray: this.#getRay(event.endPosition),
+    });
   }
 
   /**
@@ -134,53 +179,94 @@ class MeshEditorInputHandler {
    * @ignore
    */
   #onRelease(modifiers, event) {
-    throw new DeveloperError("Not implemented.");
+    if (defined(this.#wasmEditor.activeTool)) {
+      this.#wasmEditor.pointerUp({
+        modifiers,
+        ray: this.#getRay(event.position),
+      });
+    }
+
+    this.#resumeCamera();
   }
 
   /**
-   * Picks under the pointer. In EditMode.NONE, chooses the active meshes;
-   * otherwise, sends the click to the active tool.
+   * Picks under the pointer and sends the click to the active tool.
    *
    * @param {PointerModifiers} modifiers The modifier keys held.
    * @param {ScreenSpaceEventHandler.PositionedEvent} event The click.
    * @ignore
    */
   #onClick(modifiers, event) {
-    throw new DeveloperError("Not implemented.");
+    if (!defined(this.#wasmEditor.activeTool)) {
+      return;
+    }
+
+    this.#wasmEditor.pointerClick({
+      modifiers,
+      pick: this.#pick(event.position),
+      ray: this.#getRay(event.position),
+    });
   }
 
   /**
    * Picks a component of one of the editor's meshes.
    *
    * @param {Cartesian2} position The window position to pick at.
-   * @returns {PointerPick | null} The picked component, or <code>null</code> if nothing the editor can select is there.
+   * @returns {PickHit | null} The picked component, or <code>null</code> if no mesh in the editor is there.
    * @ignore
    */
-  #createPick(position) {
-    throw new DeveloperError("Not implemented.");
+  #pick(position) {
+    /** @type {OverlayPickObject | undefined} */
+    const picked = this.#scene.pick(position);
+    const mesh = /** @type {Mesh | undefined} */ (picked?.primitive);
+    if (!defined(picked) || !this.#meshes.has(mesh)) {
+      return null;
+    }
+
+    return {
+      mesh: mesh._key,
+      componentType: picked.componentType,
+      index: picked.index,
+    };
+  }
+
+  /**
+   * @param {Cartesian2} position The window position.
+   * @returns {Ray | undefined} The world-space ray through the position, or <code>undefined</code> if there's none.
+   * @ignore
+   */
+  #getRay(position) {
+    return this.#scene.camera.getPickRay(position, scratchRay);
   }
 
   /**
    * Describes where the active meshes are in the world, for tools that work
    * in world space.
    *
-   * @returns {PointerScene} The camera's direction and the active meshes' world matrices.
+   * @returns {SceneInput} The camera's direction and the active meshes' world matrices.
    * @ignore
    */
-  #createPointerScene() {
-    throw new DeveloperError("Not implemented.");
-  }
+  #createSceneInput() {
+    // TODO: Each isMeshActive call crosses into wasm, and each press copies
+    // every active mesh's world matrix. If this gets slow with many meshes,
+    // consider having wasm keep each mesh's world matrix instead.
+    const wasmEditor = this.#wasmEditor;
+    const activeMeshes = [...this.#meshes].filter((mesh) =>
+      wasmEditor.isMeshActive(mesh._key),
+    );
 
-  /**
-   * In EditMode.NONE, makes the clicked mesh the only active mesh, or
-   * toggles it if shift is held.
-   *
-   * @param {Mesh | undefined} mesh The clicked mesh, or <code>undefined</code> if no mesh was clicked.
-   * @param {PointerModifiers} modifiers The modifier keys held.
-   * @ignore
-   */
-  #chooseActiveMeshes(mesh, modifiers) {
-    throw new DeveloperError("Not implemented.");
+    const meshKeys = new BigUint64Array(activeMeshes.length);
+    const matrices = new Float64Array(activeMeshes.length * 16);
+    activeMeshes.forEach((mesh, i) => {
+      meshKeys[i] = mesh._key;
+      matrices.set(Matrix4.toArray(mesh.source.worldMatrix), i * 16);
+    });
+
+    return {
+      viewDirection: this.#scene.camera.directionWC,
+      meshKeys,
+      matrices,
+    };
   }
 
   /**
@@ -189,7 +275,13 @@ class MeshEditorInputHandler {
    * @ignore
    */
   #pauseCamera() {
-    throw new DeveloperError("Not implemented.");
+    if (this.#isCameraPaused) {
+      return;
+    }
+
+    this.#isCameraPaused = true;
+    this.#cameraEnableInputs = this.#cameraController.enableInputs;
+    this.#cameraController.enableInputs = false;
   }
 
   /**
@@ -198,7 +290,12 @@ class MeshEditorInputHandler {
    * @ignore
    */
   #resumeCamera() {
-    throw new DeveloperError("Not implemented.");
+    if (!this.#isCameraPaused) {
+      return;
+    }
+
+    this.#isCameraPaused = false;
+    this.#cameraController.enableInputs = this.#cameraEnableInputs;
   }
 
   /**
