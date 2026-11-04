@@ -2641,6 +2641,36 @@ first part).**
   coordinates, texture transforms, more than 2 property textures per
   mesh, and property tables on the GPU (feature styling).
 
+**Increment 7 (r47): feature tables on the GPU.**
+
+- A mesh's feature table (`MeshData.featureTable`: an
+  `EXT_structural_metadata` property table or a b3dm/i3dm batch table, as
+  picking uses) reaches custom shaders as metadata too:
+  `fsInput.metadata.Height` is the fragment's feature's value, in either
+  stage, the same declaration whether the mesh stores the property per
+  vertex, in a texture or per feature. Numbers, booleans (0/1) and
+  numeric arrays of up to 4 are uploaded as float32 rows by local feature
+  ID, once per table object and shared by its meshes (freed with the
+  last); strings aren't; missing values read 0. Models pass each mesh's
+  table (an i3dm's for its instances).
+- The directory marks a column (`TABLE_PROPERTY`); the vertex stage
+  reads the vertex's feature's row (an instance's feature for instanced
+  draws; feature 0 for a draw without per-vertex IDs), and the fragment
+  stage reads its own feature's row exactly
+  (`readFragmentProperty`), not an interpolation.
+- Harness, 3 new cases (37 of 37 pass): a box with each face a feature
+  and a table (a scalar and a vec3 column, beside a string column that
+  isn't uploaded) matches the same values as per-vertex attributes
+  exactly, lifting faces in the vertex stage and tinting them in the
+  fragment stage; the streamed `BatchedColors` tileset colored by its
+  batch table's `Height`. Parity, models and translucency are unchanged
+  (318 image metrics, none moved); the bench passes 37 of 37.
+- Next for feature styling: a style API (show, color per feature) as the
+  target 3D Tiles styling expressions compile to, on these columns; a
+  way to hide features in every pass (depth, shadows) that a fragment
+  stage's alpha doesn't reach; string and enum properties (an index per
+  distinct value).
+
 ### Real-time tracks (after Custom shading)
 
 - §13.11: track collections as instance data with a bulk update API,

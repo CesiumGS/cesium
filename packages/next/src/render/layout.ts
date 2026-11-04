@@ -306,6 +306,11 @@ export const PROPERTY_TEXTURES = 2;
 export const PROPERTY_TEXTURE_BINDING = 20;
 /** A directory entry's components word: the property is in a texture. */
 export const TEXTURE_PROPERTY = 0x80000000;
+/**
+ * A directory entry's components word: the property is a column of the
+ * mesh's feature table, a row per local feature ID.
+ */
+export const TABLE_PROPERTY = 0x40000000;
 /** Words of a texture property's block in the arena (`World.addMesh`). */
 export const TEXTURE_PROPERTY_WORDS = 14;
 /** `PropertyComponentType` codes in texture property blocks. */

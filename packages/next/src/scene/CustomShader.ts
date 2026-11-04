@@ -118,7 +118,7 @@ const READ: Record<
   mat2x2f: { varying: "vec4f", read: "", unpack: "mat2x2f(#.xy, #.zw)" },
 };
 
-/** A varying as a vec4f (`readTextureProperty`'s fallback). */
+/** A varying as a vec4f (`readFragmentProperty`'s fallback). */
 const PAD: Record<string, string> = {
   f32: "vec4f(#, 0.0, 0.0, 0.0)",
   vec2f: "vec4f(#, 0.0, 0.0)",
@@ -169,17 +169,17 @@ export function namedCode(named: NamedDeclarations): {
       // WGSL has no empty structs.
       lines.push(
         `struct ${struct} { none: u32 };`,
-        `fn ${reader}(directory: u32, vertexIndex: u32) -> ${struct} { return ${struct}(0u); }`,
+        `fn ${reader}(directory: u32, vertexIndex: u32, feature: u32) -> ${struct} { return ${struct}(0u); }`,
         `fn ${back}(in: VsOut) -> ${struct} { return ${struct}(0u); }`,
       );
       continue;
     }
     lines.push(
       `struct ${struct} { ${own.map((f) => `${f.name}: ${f.type}`).join(", ")} };`,
-      `fn ${reader}(directory: u32, vertexIndex: u32) -> ${struct} {`,
+      `fn ${reader}(directory: u32, vertexIndex: u32, feature: u32) -> ${struct} {`,
       `  return ${struct}(${own
         .map((f) => {
-          const value = `readNamed(directory, ${attributeHash(f.key)}u, vertexIndex)${READ[f.type].read}`;
+          const value = `readNamed(directory, ${attributeHash(f.key)}u, vertexIndex, feature)${READ[f.type].read}`;
           return READ[f.type].unpack.replaceAll("#", `(${value})`);
         })
         .join(", ")});`,
@@ -189,12 +189,15 @@ export function namedCode(named: NamedDeclarations): {
         ? [
             // A property in a property texture is read here, per fragment;
             // else the interpolated attribute's (opaque.wgsl).
-            "  let directory = records[in.draw].attributes;",
+            "  let r = records[in.draw];",
+            "  let directory = r.attributes;",
+            // The fragment's feature, local to the draw (feature tables).
+            "  let feature = select(in.feature - r.featureId, 0xffffffffu, in.feature == 0u);",
             `  return ${struct}(${own
               .map((f) => {
                 const varying = `in.named${fields.indexOf(f)}`;
                 const padded = PAD[READ[f.type].varying]!.replace("#", varying);
-                const value = `readTextureProperty(directory, ${attributeHash(f.key)}u, in.uv, ${padded})${READ[f.type].read}`;
+                const value = `readFragmentProperty(directory, ${attributeHash(f.key)}u, in.uv, feature, ${padded})${READ[f.type].read}`;
                 return READ[f.type].unpack.replaceAll("#", `(${value})`);
               })
               .join(", ")});`,

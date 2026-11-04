@@ -11,6 +11,7 @@ import {
   COMPONENT_TYPE_CODES,
   PROPERTY_TEXTURES,
   PROPERTY_TEXTURE_BINDING,
+  TABLE_PROPERTY,
   TEXTURE_PROPERTY,
   TEXTURE_PROPERTY_WORDS,
   attributeHash,
@@ -511,7 +512,20 @@ export class World {
   /** Arena ranges per mesh id, as [byte offset, byte size]. */
   private readonly meshRanges = new Map<
     number,
-    { vertex: Array<[number, number]>; index: [number, number] }
+    {
+      vertex: Array<[number, number]>;
+      index: [number, number];
+      /** Its feature table's columns (`tableColumns`), shared. */
+      table?: FeatureTable;
+    }
+  >();
+  /**
+   * Feature tables' columns in the arena (directory entries: hash, offset,
+   * components with `TABLE_PROPERTY`), shared by the meshes using them.
+   */
+  private readonly tableColumns = new Map<
+    FeatureTable,
+    { entries: number[][]; ranges: Array<[number, number]>; meshes: number }
   >();
   private readonly names: Array<string | undefined> = [];
   private readonly featureTables: Array<FeatureTable | undefined> = [];
@@ -897,7 +911,9 @@ export class World {
       ),
     ];
     const textured = mesh.propertyTextures ?? [];
-    const entries = named.length + textured.length;
+    const table = mesh.featureTable && this.uploadTable(mesh.featureTable);
+    const tableEntries = table?.entries ?? [];
+    const entries = named.length + textured.length + tableEntries.length;
     if (entries > 0) {
       const directory = new Uint32Array(1 + entries * 3);
       directory[0] = entries;
@@ -907,7 +923,7 @@ export class World {
         directory[3 + i * 3] = components;
       });
       // Properties in textures: a block saying how to decode them, read
-      // per fragment (opaque.wgsl `readTextureProperty`).
+      // per fragment (opaque.wgsl `readFragmentProperty`).
       textured.forEach((p, j) => {
         const block = new Uint32Array(TEXTURE_PROPERTY_WORDS);
         const f32 = new Float32Array(block.buffer);
@@ -929,6 +945,10 @@ export class World {
         directory[2 + i * 3] = upload(block);
         directory[3 + i * 3] = TEXTURE_PROPERTY | p.components;
       });
+      // Feature table columns, read by feature ID (`readNamed`).
+      tableEntries.forEach((entry, j) => {
+        directory.set(entry, 1 + (named.length + textured.length + j) * 3);
+      });
       streams.attributes = upload(directory);
     }
     const indexOffset = this.indexAllocator.allocate(mesh.indices.byteLength);
@@ -944,6 +964,7 @@ export class World {
     this.meshRanges.set(id, {
       vertex: vertexRanges,
       index: [indexOffset, mesh.indices.byteLength],
+      ...(table ? { table: mesh.featureTable } : {}),
     });
     return {
       id,
@@ -977,7 +998,77 @@ export class World {
       bytes += size;
     }
     this.indexAllocator.release(ranges.index[0], ranges.index[1]);
+    const table = ranges.table && this.tableColumns.get(ranges.table);
+    if (table && --table.meshes === 0) {
+      this.tableColumns.delete(ranges.table!);
+      for (const [offset, size] of table.ranges) {
+        this.vertexAllocator.release(offset, size);
+        bytes += size;
+      }
+    }
     return bytes + ranges.index[1];
+  }
+
+  /**
+   * A feature table's columns in the arena, uploaded once per table
+   * object: numbers, booleans (0 or 1) and numeric arrays of up to 4
+   * (shorter rows padded with zero), as float32 rows by local feature ID;
+   * missing values (null) read 0. String columns aren't uploaded.
+   */
+  private uploadTable(table: FeatureTable): {
+    entries: number[][];
+  } {
+    let uploaded = this.tableColumns.get(table);
+    if (!uploaded) {
+      const entries: number[][] = [];
+      const ranges: Array<[number, number]> = [];
+      for (const [name, values] of Object.entries(table.columns)) {
+        let components = 0;
+        let numeric = true;
+        for (const v of values) {
+          if (typeof v === "number" || typeof v === "boolean") {
+            components = Math.max(components, 1);
+          } else if (
+            Array.isArray(v) &&
+            v.every((x) => typeof x === "number")
+          ) {
+            components = Math.max(components, v.length);
+          } else if (v !== null) {
+            numeric = false;
+            break;
+          }
+        }
+        if (!numeric || components === 0 || components > 4) {
+          continue;
+        }
+        const data = new Float32Array(Math.max(1, table.count) * components);
+        values.forEach((v, row) => {
+          if (Array.isArray(v)) {
+            data.set(v as number[], row * components);
+          } else if (v !== null) {
+            data[row * components] = Number(v);
+          }
+        });
+        const offset = this.vertexAllocator.allocate(data.byteLength);
+        if (offset === undefined) {
+          for (const [o, size] of ranges) {
+            this.vertexAllocator.release(o, size);
+          }
+          throw new Error("World vertex arena is full.");
+        }
+        ranges.push([offset, data.byteLength]);
+        this.queueUpload(this.vertexBuffer, offset, data);
+        entries.push([
+          attributeHash(metadataKey(name)),
+          offset / 4,
+          TABLE_PROPERTY | components,
+        ]);
+      }
+      uploaded = { entries, ranges, meshes: 0 };
+      this.tableColumns.set(table, uploaded);
+    }
+    uploaded.meshes++;
+    return uploaded;
   }
 
   /** Bytes in use in the vertex and index arenas. */

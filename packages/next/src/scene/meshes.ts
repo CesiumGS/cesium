@@ -1,6 +1,7 @@
 import * as v3 from "../math/vec3.ts";
 import type { Ellipsoid } from "../math/ellipsoid.ts";
 import type { Vec3 } from "../math/vec3.ts";
+import type { FeatureTable } from "../io/gltfTypes.ts";
 
 /**
  * Mesh geometry as separate float32 attribute streams plus uint32 indices.
@@ -38,6 +39,12 @@ export interface MeshData {
    * property textures (`TextureSetOptions.properties`).
    */
   propertyTextures?: PropertyTextureData[];
+  /**
+   * Properties of its features (by local feature ID): their numeric,
+   * boolean and short numeric array columns are uploaded for custom shaders
+   * (`metadata.<column>`), once per table object.
+   */
+  featureTable?: FeatureTable;
 }
 
 /** Component types of metadata properties in textures. */

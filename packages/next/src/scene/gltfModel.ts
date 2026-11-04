@@ -229,8 +229,16 @@ function uploadAsset(
   );
   const meshes: MeshHandle[] = asset.meshes.map((mesh, m) => {
     const slots = propertyTextures[m]!;
+    // Its features' table (as the draws' `features`), for custom shaders.
+    const table =
+      mesh.featureTable !== undefined
+        ? asset.featureTables[mesh.featureTable]
+        : asset.instances
+          ? asset.featureTables[0]
+          : undefined;
     return world.addMesh({
       ...mesh,
+      featureTable: table,
       propertyTextures: (mesh.propertyTextures ?? [])
         .filter((p) => slots.includes(p.texture))
         .map(({ texture, ...p }) => ({ ...p, slot: slots.indexOf(texture) })),

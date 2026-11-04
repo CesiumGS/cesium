@@ -75,6 +75,8 @@ interface Case {
   tileset?: boolean;
   /** The boxes' mesh has named attributes (`_SHEAR`, `_HEAT`). */
   named?: boolean;
+  /** The boxes' faces are features with a table (`featureBox`). */
+  featured?: boolean;
   /** A glTF model (e.g. `PROPERTY_MODEL`) instead of boxes. */
   model?: string;
   /** "Same" within float rounding (FLIP mean below 0.001), not exactly. */
@@ -265,6 +267,40 @@ const textureShader = (label: string, value: string | ImageData) =>
   (*material).baseColor = textureSample(logo, logoSampler, uv).rgb;
 }`,
   });
+
+/** Faces lifted and tinted by their feature's properties, from `source`. */
+const faceShader = (label: string, source: "table" | "attributes") => {
+  const read = source === "table" ? "metadata" : "attributes";
+  return new CustomShader({
+    label,
+    ...(source === "table"
+      ? { metadata: { heat: "f32", tint: "vec3f" } }
+      : {
+          attributes: {
+            heat: { semantic: "_HEAT", type: "f32" },
+            tint: { semantic: "_TINT", type: "vec3f" },
+          },
+        }),
+    displacement: 0.3,
+    vertex: `fn vertexMain(vsInput: VertexInput, vsOutput: ptr<function, VertexOutput>) {
+  (*vsOutput).positionMC += vsInput.normalMC * vsInput.${read}.heat * 0.2;
+}`,
+    fragment: `${FS}
+  (*material).baseColor = fsInput.${read}.tint * fsInput.${read}.heat;
+}`,
+  });
+};
+const FACES_TABLE = faceShader("faces (feature table)", "table");
+
+/** Buildings colored by their batch table's Height. */
+const HEIGHTS = new CustomShader({
+  label: "buildings by Height (feature table)",
+  metadata: { Height: "f32" },
+  fragment: `${FS}
+  let h = fsInput.metadata.Height;
+  (*material).baseColor = vec3f(fract(h / 20.0), 0.3, 1.0 - fract(h / 20.0));
+}`,
+});
 
 /** The boxes' named attributes as shear.slang declares them. */
 const SHEAR_ATTRIBUTES = {
@@ -603,6 +639,26 @@ const CASES: Case[] = [
     }),
   },
   {
+    name: "feature table: per face, both stages",
+    same: false,
+    featured: true,
+    shader: FACES_TABLE,
+  },
+  {
+    name: "feature table: vs the same as attributes",
+    same: true,
+    close: true,
+    featured: true,
+    against: FACES_TABLE,
+    shader: faceShader("faces (attributes)", "attributes"),
+  },
+  {
+    name: "feature table: tileset by Height (b3dm batch table)",
+    same: false,
+    tileset: true,
+    shader: HEIGHTS,
+  },
+  {
     name: "uniforms: every type (vs constants)",
     same: true,
     against: CONSTANTS,
@@ -692,6 +748,52 @@ function namedBox(): MeshData {
   };
 }
 
+/** Per face of the box: a scalar and a vec3 (the feature table's columns). */
+const FACE_HEAT = [0.1, 0.3, 0.5, 0.7, 0.9, 1.0];
+const FACE_TINT = [
+  [0.9, 0.2, 0.2],
+  [0.2, 0.9, 0.2],
+  [0.2, 0.2, 0.9],
+  [0.9, 0.9, 0.2],
+  [0.2, 0.9, 0.9],
+  [0.9, 0.2, 0.9],
+];
+
+/**
+ * The unit box with each face a feature (6), its properties in a feature
+ * table and the same values as per-vertex attributes (`_HEAT`, `_TINT`).
+ */
+function featureBox(): MeshData {
+  const mesh = createBox();
+  const count = mesh.positions.length / 3;
+  const featureIds = new Uint32Array(count);
+  const heat = new Float32Array(count);
+  const tint = new Float32Array(count * 3);
+  for (let i = 0; i < count; i++) {
+    const face = Math.floor(i / 4); // createBox: 4 vertices per face
+    featureIds[i] = face;
+    heat[i] = FACE_HEAT[face]!;
+    tint.set(FACE_TINT[face]!, i * 3);
+  }
+  return {
+    ...mesh,
+    featureIds,
+    featureCount: 6,
+    featureTable: {
+      count: 6,
+      columns: {
+        heat: FACE_HEAT,
+        tint: FACE_TINT,
+        label: FACE_HEAT.map(String),
+      },
+    },
+    attributes: {
+      _HEAT: { data: heat, components: 1 },
+      _TINT: { data: tint, components: 3 },
+    },
+  };
+}
+
 /** A ground plane and three boxes; the boxes with `shader`. */
 function build(world: World, c: Case, shader: CustomShader | undefined): void {
   const ellipsoid = Ellipsoid.WGS84;
@@ -712,7 +814,9 @@ function build(world: World, c: Case, shader: CustomShader | undefined): void {
     ),
     material: ground,
   });
-  const box = world.addMesh(c.named ? namedBox() : createBox());
+  const box = world.addMesh(
+    c.featured ? featureBox() : c.named ? namedBox() : createBox(),
+  );
   const colors = [
     [0.8, 0.2, 0.2],
     [0.2, 0.7, 0.3],

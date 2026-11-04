@@ -400,7 +400,7 @@ fn read4(offset: u32, index: u32) -> vec4f {
 // A named attribute or metadata property of a vertex from its mesh's
 // directory (layout.ts MeshStreams.attributes: count, then per entry the
 // name's hash, stream offset and components); zero where absent.
-fn readNamed(directory: u32, hash: u32, vertexIndex: u32) -> vec4f {
+fn readNamed(directory: u32, hash: u32, vertexIndex: u32, feature: u32) -> vec4f {
   var value = vec4f(0.0);
   if (directory == NO_STREAM) {
     return value;
@@ -414,8 +414,18 @@ fn readNamed(directory: u32, hash: u32, vertexIndex: u32) -> vec4f {
       if (components >= 0x80000000u) {
         break;
       }
-      let b = bitcast<u32>(vertices[entry + 1u]) + vertexIndex * components;
-      for (var c = 0u; c < components; c++) {
+      // A feature table column (TABLE_PROPERTY): the vertex's feature's row.
+      var row = vertexIndex;
+      var size = components;
+      if (components >= 0x40000000u) {
+        if (feature == 0xffffffffu) {
+          break;
+        }
+        row = feature;
+        size = components & 0xffu;
+      }
+      let b = bitcast<u32>(vertices[entry + 1u]) + row * size;
+      for (var c = 0u; c < size; c++) {
         value[c] = vertices[b + c];
       }
       break;
@@ -438,12 +448,16 @@ fn propertyTexel(slot: u32, uv: vec2f) -> vec4u {
   return vec4u(round(texel * 255.0));
 }
 
-// A metadata property in a property texture (World.addMesh's block: slot,
+// A metadata property per fragment: from a property texture, or a feature
+// table column at the fragment's feature (`feature`, local), else
+// `fallback` (the interpolated attribute's, or zero).
+//
+// In a property texture (World.addMesh's block: slot,
 // channel count, channels, component type, components, normalized, offset,
 // scale): its bytes from the texel's channels, little-endian per
 // component, as the component type, normalized, then offset and scaled;
 // `fallback` where the mesh's directory has it otherwise or not at all.
-fn readTextureProperty(directory: u32, hash: u32, uv: vec2f, fallback: vec4f) -> vec4f {
+fn readFragmentProperty(directory: u32, hash: u32, uv: vec2f, feature: u32, fallback: vec4f) -> vec4f {
   if (directory == NO_STREAM) {
     return fallback;
   }
@@ -453,8 +467,21 @@ fn readTextureProperty(directory: u32, hash: u32, uv: vec2f, fallback: vec4f) ->
     if (bitcast<u32>(vertices[entry]) != hash) {
       continue;
     }
-    if (bitcast<u32>(vertices[entry + 2u]) < 0x80000000u) {
+    let info = bitcast<u32>(vertices[entry + 2u]);
+    if (info < 0x40000000u) {
       return fallback;
+    }
+    if (info < 0x80000000u) {
+      // Exactly the feature's row, not interpolated.
+      var value = vec4f(0.0);
+      if (feature != 0xffffffffu) {
+        let size = info & 0xffu;
+        let row = bitcast<u32>(vertices[entry + 1u]) + feature * size;
+        for (var c = 0u; c < size; c++) {
+          value[c] = vertices[row + c];
+        }
+      }
+      return value;
     }
     let b = bitcast<u32>(vertices[entry + 1u]);
     let texel = propertyTexel(bitcast<u32>(vertices[b]), uv);
@@ -534,6 +561,13 @@ fn vertexOut(vertexIndex: u32, item: u32, withAir: bool) -> VsOut {
   if (r.featureIdOffset != NO_STREAM) {
     localFeature = bitcast<u32>(vertices[r.featureIdOffset + vertexIndex]);
   }
+  // The row of the draw's feature table this vertex reads: an instance's
+  // feature (cull.wgsl makes it global), else the vertex's; a draw without
+  // per-vertex IDs is feature 0 (as `out.feature` below).
+  var tableFeature = select(localFeature, 0u, r.featureIdOffset == NO_STREAM);
+  if (p.feature != 0u) {
+    tableFeature = p.feature - r.featureId;
+  }
   // The custom shader's vertex stage (custom.wgsl's default: unchanged).
   let vsInput = VertexInput(
     read3(r.positionOffset, vertexIndex),
@@ -544,8 +578,8 @@ fn vertexOut(vertexIndex: u32, item: u32, withAir: bool) -> VsOut {
     vertexIndex,
     p.instance,
     view.time.x,
-    vertexAttributes(r.attributes, vertexIndex),
-    vertexMetadata(r.attributes, vertexIndex),
+    vertexAttributes(r.attributes, vertexIndex, tableFeature),
+    vertexMetadata(r.attributes, vertexIndex, tableFeature),
   );
   passNamed(vsInput.attributes, vsInput.metadata, &out);
   var vsOutput = VertexOutput(vsInput.positionMC, vsInput.normalMC);
