@@ -60,6 +60,7 @@ function EntityCluster(options) {
 
   this._previousClusters = [];
   this._previousHeight = undefined;
+  this._previousMode = undefined;
 
   this._enabledDirty = false;
   this._clusterDirty = false;
@@ -914,6 +915,18 @@ EntityCluster.prototype.update = function (frameState) {
     frameState.commandList = commandList;
   }
 
+  // The camera's changed event is not raised for a scene mode change, and the
+  // clusters and camera height of the previous mode don't apply to the new one.
+  const mode = frameState.mode;
+  if (mode !== this._previousMode) {
+    if (defined(this._previousMode)) {
+      this._previousClusters = [];
+      this._previousHeight = undefined;
+      this._clusterDirty = true;
+    }
+    this._previousMode = mode;
+  }
+
   if (this._enabledDirty) {
     this._enabledDirty = false;
     updateEnable(this);
@@ -995,6 +1008,7 @@ EntityCluster.prototype.destroy = function () {
 
   this._previousClusters = [];
   this._previousHeight = undefined;
+  this._previousMode = undefined;
 
   this._enabledDirty = false;
   this._pixelRangeDirty = false;

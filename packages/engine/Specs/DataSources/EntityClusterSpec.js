@@ -10,6 +10,7 @@ import {
   DataSourceDisplay,
   Entity,
   EntityCluster,
+  SceneMode,
   SceneTransforms,
 } from "../../index.js";
 import createCanvas from "../../../../Specs/createCanvas.js";
@@ -302,6 +303,55 @@ describe(
 
       expect(cluster._clusterLabelCollection).toBeDefined();
       expect(cluster._clusterLabelCollection.length).toEqual(1);
+    });
+
+    it("reclusters when the scene mode changes", function () {
+      cluster = new EntityCluster();
+      cluster._initialize(scene);
+
+      let entity = new Entity();
+      let point = cluster.getPoint(entity);
+      point.id = entity;
+      point.pixelSize = 1;
+      point.position = SceneTransforms.drawingBufferToWorldCoordinates(
+        scene,
+        new Cartesian2(0.0, 0.0),
+        depth,
+      );
+
+      entity = new Entity();
+      point = cluster.getPoint(entity);
+      point.id = entity;
+      point.pixelSize = 1;
+      point.position = SceneTransforms.drawingBufferToWorldCoordinates(
+        scene,
+        new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight),
+        depth,
+      );
+
+      cluster.enabled = true;
+      return updateUntilDone(cluster).then(function () {
+        expect(cluster._clusterLabelCollection.length).toEqual(1);
+
+        const frameState = scene.frameState;
+        const mode = frameState.mode;
+        spyOn(cluster, "_cluster").and.callThrough();
+
+        cluster.update(frameState);
+        expect(cluster._cluster).not.toHaveBeenCalled();
+
+        // The camera doesn't move, so only the mode change can trigger reclustering.
+        frameState.mode = SceneMode.COLUMBUS_VIEW;
+        try {
+          cluster.update(frameState);
+          expect(cluster._cluster).toHaveBeenCalledTimes(1);
+
+          cluster.update(frameState);
+          expect(cluster._cluster).toHaveBeenCalledTimes(1);
+        } finally {
+          frameState.mode = mode;
+        }
+      });
     });
 
     it("clusters points that have labels", function () {

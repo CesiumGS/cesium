@@ -11,6 +11,7 @@
 #### Fixes :wrench:
 
 - Fixed picking for clamped vector tilesets and `GeoJsonPrimitive` polylines and polygons. [#13917](https://github.com/CesiumGS/cesium/pull/13917)
+- Fixed `EntityCluster` keeping the clusters of the previous scene mode when the camera is moved before the first frame in the new mode. [#14015](https://github.com/CesiumGS/cesium/issues/14015)
 
 ## 1.147 - 2026-11-02
 
