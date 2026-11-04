@@ -77,8 +77,6 @@
     "globals": "^17.11.0",
     "glsl-strip-comments": "^1.0.0",
     "gulp": "^5.0.0",
-    "gulp-rename": "^2.0.0",
-    "gulp-tap": "^2.0.0",
     "gulp-zip": "^6.0.0",
     "husky": "^9.0.7",
     "istanbul-lib-instrument": "^6.0.0",

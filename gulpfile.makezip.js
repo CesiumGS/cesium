@@ -2,16 +2,17 @@
 
 import { dirname, join } from "path";
 import gulp from "gulp";
-import gulpTap from "gulp-tap";
 import gulpZip from "gulp-zip";
-import gulpRename from "gulp-rename";
 import { glslToJavaScript } from "./scripts/build-utilities.js";
 import { release } from "./gulpfile.js";
 import { rmSync } from "fs";
 import { readFile, writeFile } from "fs/promises";
+import { Transform } from "stream";
 import { finished } from "stream/promises";
 import { createRequire } from "module";
 import { buildSandcastleApp } from "./scripts/buildSandcastle.js";
+
+/** @import Vinyl from "vinyl"; */
 
 const require = createRequire(import.meta.url);
 const packageJson = require("./package.json");
@@ -81,6 +82,23 @@ async function pruneScriptsForZip(packageJsonPath) {
   });
 }
 
+/**
+ * Creates a stream that calls a function on each file passing through it.
+ *
+ * @param {(file: Vinyl) => void} callback The function to call on each file. It may modify the file.
+ * @returns {Transform} A stream that passes each file through after calling the callback.
+ */
+function forEachFile(callback) {
+  return new Transform({
+    objectMode: true,
+    //eslint-disable-next-line no-unused-vars
+    transform(file, encoding, done) {
+      callback(file);
+      done(null, file);
+    },
+  });
+}
+
 export const makeZip = gulp.series(
   release,
   async function buildSandcastleStep() {
@@ -113,9 +131,9 @@ export const makeZip = gulp.series(
     const src = gulp
       .src("index.release.html")
       .pipe(
-        gulpRename((file) => {
-          if (file.basename === "index.release") {
-            file.basename = "index";
+        forEachFile((file) => {
+          if (file.stem === "index.release") {
+            file.stem = "index";
           }
         }),
       )
@@ -125,9 +143,9 @@ export const makeZip = gulp.series(
       .pipe(widgetsPackageJsonSrc)
       .pipe(packageJsonSrc)
       .pipe(
-        gulpRename((file) => {
-          if (file.basename === "package.noprepare") {
-            file.basename = "package";
+        forEachFile((file) => {
+          if (file.stem === "package.noprepare") {
+            file.stem = "package";
           }
         }),
       )
@@ -207,16 +225,6 @@ export const makeZip = gulp.series(
             base: ".",
           },
         ),
-      )
-      .pipe(
-        gulpTap(function (file) {
-          // Work around an issue with gulp-zip where archives generated on Windows do
-          // not properly have their directory executable mode set.
-          // see https://github.com/sindresorhus/gulp-zip/issues/64#issuecomment-205324031
-          if (file.isDirectory() && file.stat) {
-            file.stat.mode = parseInt("40777", 8);
-          }
-        }),
       )
       .pipe(gulpZip(`Cesium-${version}.zip`))
       .pipe(gulp.dest("."));
