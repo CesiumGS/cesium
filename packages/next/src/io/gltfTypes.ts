@@ -21,6 +21,16 @@ export interface GltfMesh {
   featureTable?: number;
   /** "line-list" for glTF LINES/LINE_STRIP/LINE_LOOP; default triangle-list. */
   topology?: "triangle-list" | "line-list";
+  /**
+   * Attributes the engine doesn't read itself, by glTF semantic
+   * (`_TEMPERATURE`, `TEXCOORD_1`), for custom shaders.
+   */
+  attributes?: Record<string, { data: Float32Array; components: number }>;
+  /**
+   * `EXT_structural_metadata` property attributes by property ID, offset
+   * and scale applied, for custom shaders.
+   */
+  metadata?: Record<string, { data: Float32Array; components: number }>;
 }
 
 /** A property value of one feature (null: the property's noData). */

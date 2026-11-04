@@ -13,6 +13,58 @@
  * stub's entry point stays in the module, unused.
  */
 
+/** Types of named attributes and metadata (`CustomShaderOptions`). */
+export type NamedType = "f32" | "vec2f" | "vec3f" | "vec4f" | "mat2x2f";
+
+/** A shader's named attributes and metadata: types by field name. */
+export interface NamedDeclarations {
+  attributes: Record<string, NamedType>;
+  metadata: Record<string, NamedType>;
+  /** Each attribute's glTF semantic. */
+  semantics: Record<string, string>;
+}
+
+const SLANG_TYPES: Record<NamedType, string> = {
+  f32: "float",
+  vec2f: "float2",
+  vec3f: "float3",
+  vec4f: "float4",
+  mat2x2f: "float2x2",
+};
+
+/** Where cesium.slang takes the generated `Attributes` and `Metadata`. */
+const SLANG_NAMED = "// @named";
+
+/**
+ * The `cesium` module's source with a shader's `Attributes` and
+ * `Metadata` structs (`none` alone without any, as in WGSL).
+ */
+export function cesiumModule(
+  source: string,
+  named: Pick<NamedDeclarations, "attributes" | "metadata">,
+): string {
+  if (!source.includes(SLANG_NAMED)) {
+    throw new Error("cesium.slang has no named structs marker.");
+  }
+  const struct = (name: string, fields: Record<string, NamedType>) => {
+    const entries = Object.entries(fields);
+    const body =
+      entries.length === 0
+        ? "  public uint none;"
+        : entries
+            .map(([field, type]) => `  public ${SLANG_TYPES[type]} ${field};`)
+            .join("\n");
+    return `public struct ${name} {\n${body}\n};`;
+  };
+  return source.replace(
+    SLANG_NAMED,
+    `${struct("Attributes", named.attributes)}\n${struct("Metadata", named.metadata)}`,
+  );
+}
+
+/** Contract fields that are structs of named values, converted by name. */
+const NESTED = new Set(["attributes", "metadata"]);
+
 /** The contract's structs' fields in order (opaque.wgsl, cesium.slang). */
 const FIELDS = {
   VertexInput: [
@@ -24,6 +76,8 @@ const FIELDS = {
     "vertexIndex",
     "instanceIndex",
     "time",
+    "attributes",
+    "metadata",
   ],
   VertexOutput: ["positionMC", "normalMC"],
   FragmentInput: [
@@ -36,6 +90,8 @@ const FIELDS = {
     "featureId",
     "screen",
     "time",
+    "attributes",
+    "metadata",
   ],
   MaterialOutput: [
     "baseColor",
@@ -97,14 +153,23 @@ export function slangStub(stages: SlangStages): string {
   return lines.join("\n");
 }
 
-/** Each struct's field names in order. */
-function structFields(wgsl: string): Map<string, string[]> {
-  const structs = new Map<string, string[]>();
+/** Each struct's fields in order, with their types. */
+function structFields(
+  wgsl: string,
+): Map<string, Array<{ name: string; type: string }>> {
+  const structs = new Map<string, Array<{ name: string; type: string }>>();
   for (const match of wgsl.matchAll(/struct\s+(\w+)\s*\{([^}]*)\}/g)) {
-    const fields = [...match[2]!.matchAll(/(\w+)\s*:/g)].map((m) => m[1]!);
+    const fields = [
+      ...match[2]!.matchAll(/(\w+)\s*:\s*([\w<>, ]+?)\s*(?:,|$)/gm),
+    ].map((m) => ({ name: m[1]!, type: m[2]!.trim() }));
     structs.set(match[1]!, fields);
   }
   return structs;
+}
+
+/** A Slang field's source name: Slang appends `_N` to each. */
+function sourceName(name: string): string {
+  return name.replace(/_\d+$/, "");
 }
 
 /**
@@ -113,7 +178,7 @@ function structFields(wgsl: string): Map<string, string[]> {
  */
 function adapter(
   wgsl: string,
-  structs: Map<string, string[]>,
+  structs: Map<string, Array<{ name: string; type: string }>>,
   stage: "vertexMain" | "fragmentMain",
 ): string {
   const header = new RegExp(
@@ -134,9 +199,10 @@ function adapter(
       : (["FragmentInput", "MaterialOutput", "fsInput", "material"] as const);
   const inFields = FIELDS[inStruct];
   const outFields = FIELDS[outStruct];
-  const outNames = structs.get(outType);
+  const inSlang = structs.get(inType);
+  const outNames = structs.get(outType)?.map((f) => f.name);
   if (
-    structs.get(inType)?.length !== inFields.length ||
+    inSlang?.length !== inFields.length ||
     outNames?.length !== outFields.length
   ) {
     throw new Error(
@@ -146,7 +212,25 @@ function adapter(
   return [
     `fn ${stage}(${input}: ${inStruct}, ${output}: ptr<function, ${outStruct}>) {`,
     `  var staged = ${outType}(${outFields.map((f) => `(*${output}).${f}`).join(", ")});`,
-    `  ${name}(${inType}(${inFields.map((f) => `${input}.${f}`).join(", ")}), &staged);`,
+    `  ${name}(${inType}(${inFields
+      .map((f, i) => {
+        // Slang's copy of `Attributes`/`Metadata`, field by field by name.
+        if (!NESTED.has(f)) {
+          return `${input}.${f}`;
+        }
+        const type = inSlang[i]!.type;
+        const fields = structs.get(type) ?? [];
+        // Matrices transposed: Slang's are row-major in meaning (`m[0]` a
+        // row, `mul(m, v)`), so `mul(m, v)` there is glTF's M v, as
+        // WGSL's `m * v` is.
+        return `${type}(${fields
+          .map((g) => {
+            const value = `${input}.${f}.${sourceName(g.name)}`;
+            return g.type.startsWith("mat") ? `transpose(${value})` : value;
+          })
+          .join(", ")})`;
+      })
+      .join(", ")}), &staged);`,
     ...outFields.map((f, i) => `  (*${output}).${f} = staged.${outNames[i]};`),
     "}",
   ].join("\n");

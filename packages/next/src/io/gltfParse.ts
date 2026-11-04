@@ -42,7 +42,7 @@ const SUPPORTED_EXTENSIONS = new Set([
   "KHR_texture_transform", // tolerated; transforms are ignored (warning)
   "CESIUM_primitive_outline", // tolerated; outlines are not drawn yet
   "EXT_mesh_features", // vertex-attribute feature IDs
-  "EXT_structural_metadata", // property tables
+  "EXT_structural_metadata", // property tables and property attributes
   "EXT_mesh_gpu_instancing", // instance ranges, culled per instance
   "EXT_instance_features", // per-instance feature IDs
   "KHR_lights_punctual", // point and spot lights (directional ones skipped)
@@ -305,6 +305,20 @@ export async function parseGltf(
       }
     }
     if (mesh) {
+      const attributes = namedAttributes(primitive, source, mesh.unwelded);
+      if (attributes) {
+        mesh.attributes = attributes;
+      }
+      const metadata = propertyAttributes(
+        json,
+        primitive,
+        source,
+        mesh.unwelded,
+        warnings,
+      );
+      if (metadata) {
+        mesh.metadata = metadata;
+      }
       delete mesh.unwelded;
       meshes.push(mesh);
     }
@@ -391,8 +405,11 @@ export async function parseGltf(
       mesh.tangents,
       mesh.indices,
       mesh.featureIds,
+      ...Object.values(mesh.attributes ?? {}).map((a) => a.data),
+      ...Object.values(mesh.metadata ?? {}).map((a) => a.data),
     ]) {
-      if (array) {
+      // Streams may share a buffer (an attribute not unwelded).
+      if (array && !transfer.includes(array.buffer)) {
         transfer.push(array.buffer);
       }
     }
@@ -647,9 +664,6 @@ function buildMesh(
     colors = color.components === 4 ? color.data : expandRgb(color.data);
   }
   const tangents = source.attribute("TANGENT")?.data;
-  if (primitive.attributes.TEXCOORD_1 !== undefined) {
-    warnings.push(`primitive ${key}: TEXCOORD_1 ignored`);
-  }
   let indices =
     source.indices ?? Uint32Array.from({ length: vertexCount }, (_, i) => i);
   if (mode === 5) {
@@ -682,6 +696,119 @@ function buildMesh(
     return mesh;
   }
   return flatShaded(mesh);
+}
+
+/** Semantics the engine reads itself (or doesn't draw yet: skinning). */
+const CORE_ATTRIBUTE =
+  /^(POSITION|NORMAL|TANGENT|TEXCOORD_0|COLOR_0|JOINTS_\d+|WEIGHTS_\d+|_FEATURE_ID_\d+|_BATCHID)$/;
+
+/**
+ * The primitive's other attributes (`_TEMPERATURE`, `TEXCOORD_1`, …) by
+ * glTF semantic, for custom shaders that declare them; unwelded like the
+ * mesh's own streams.
+ */
+function namedAttributes(
+  primitive: Json,
+  source: AttributeSource,
+  unwelded: Uint32Array | undefined,
+): GltfMesh["attributes"] {
+  let out: GltfMesh["attributes"];
+  for (const semantic of Object.keys(primitive.attributes)) {
+    if (CORE_ATTRIBUTE.test(semantic)) {
+      continue;
+    }
+    const attribute = source.attribute(semantic);
+    if (attribute) {
+      (out ??= {})[semantic] = unweld(attribute, unwelded);
+    }
+  }
+  return out;
+}
+
+/** Components of the property types a stream holds (MAT2 as 4). */
+const PROPERTY_COMPONENTS: Record<string, number> = {
+  SCALAR: 1,
+  VEC2: 2,
+  VEC3: 3,
+  VEC4: 4,
+  MAT2: 4,
+};
+
+/**
+ * `EXT_structural_metadata` property attributes of the primitive, by
+ * property ID, as float streams with the property's offset and scale
+ * applied (the property attribute's own, else its class's). Normalized
+ * integers are already in [0, 1] (or [-1, 1]) from the accessor.
+ */
+function propertyAttributes(
+  json: Json,
+  primitive: Json,
+  source: AttributeSource,
+  unwelded: Uint32Array | undefined,
+  warnings: string[],
+): GltfMesh["metadata"] {
+  const metadata = json.extensions?.EXT_structural_metadata;
+  const used: number[] =
+    primitive.extensions?.EXT_structural_metadata?.propertyAttributes ?? [];
+  let out: GltfMesh["metadata"];
+  for (const index of used) {
+    const table = metadata?.propertyAttributes?.[index];
+    const schema = metadata?.schema?.classes?.[table?.class];
+    if (!table || !schema) {
+      warnings.push(
+        `EXT_structural_metadata: property attribute ${index} not found`,
+      );
+      continue;
+    }
+    for (const [id, property] of Object.entries(
+      table.properties as Record<string, Json>,
+    )) {
+      const definition = schema.properties?.[id];
+      const components = PROPERTY_COMPONENTS[definition?.type];
+      const attribute = source.attribute(property.attribute);
+      if (!definition || components === undefined || !attribute) {
+        warnings.push(`EXT_structural_metadata: property ${id} not read`);
+        continue;
+      }
+      const offset = property.offset ?? definition.offset;
+      const scale = property.scale ?? definition.scale;
+      const data = Float32Array.from(attribute.data);
+      if (offset !== undefined || scale !== undefined) {
+        const component = (
+          v: number | number[] | undefined,
+          c: number,
+          none: number,
+        ) =>
+          v === undefined ? none : typeof v === "number" ? v : (v[c] ?? none);
+        for (let i = 0; i < data.length; i++) {
+          const c = i % components;
+          data[i] = data[i]! * component(scale, c, 1) + component(offset, c, 0);
+        }
+      }
+      (out ??= {})[id] = unweld({ data, components }, unwelded);
+    }
+  }
+  return out;
+}
+
+/** A stream copied through flat shading's vertex map (`unwelded`), if any. */
+function unweld(
+  stream: { data: Float32Array; components: number },
+  unwelded: Uint32Array | undefined,
+): { data: Float32Array; components: number } {
+  if (!unwelded) {
+    return stream;
+  }
+  const { data: welded, components } = stream;
+  const data = new Float32Array(unwelded.length * components);
+  for (let i = 0; i < unwelded.length; i++) {
+    const v = unwelded[i]!;
+    data.set(
+      welded.subarray(v * components, (v + 1) * components),
+      i * components,
+    );
+  }
+  return { data, components };
 }
 
 function expandRgb(rgb: Float32Array): Float32Array {

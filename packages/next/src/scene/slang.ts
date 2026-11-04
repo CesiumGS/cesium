@@ -2,7 +2,13 @@
 import slangWorkerUrl from "./slangWorker.ts?worker&url";
 import cesiumSlang from "../shaders/cesium.slang?raw";
 import { workerStart } from "../io/WorkerPool.ts";
-import { adaptSlangStages, slangStages, slangStub } from "./slangStages.ts";
+import {
+  adaptSlangStages,
+  cesiumModule,
+  slangStages,
+  slangStub,
+  type NamedType,
+} from "./slangStages.ts";
 
 /**
  * Runtime Slang compilation of custom shader stages (`CustomShader.fromSlang`):
@@ -36,10 +42,17 @@ function slangWorker(): Worker {
   return worker;
 }
 
-/** Slang stages (`import cesium;`) as custom shader WGSL. */
+/**
+ * Slang stages (`import cesium;`) as custom shader WGSL, against the
+ * shader's named attributes and metadata (`CustomShaderOptions`).
+ */
 export async function compileSlang(
   source: string,
   slangUrl = "/slang-wasm/slang-wasm.js",
+  named: {
+    attributes?: Record<string, { type: NamedType }>;
+    metadata?: Record<string, NamedType>;
+  } = {},
 ): Promise<string> {
   const stages = slangStages(source);
   if (!stages.vertex && !stages.fragment) {
@@ -53,7 +66,12 @@ export async function compileSlang(
     slangWorker().postMessage({
       id,
       url: new URL(slangUrl, globalThis.location?.href).href,
-      cesium: cesiumSlang,
+      cesium: cesiumModule(cesiumSlang, {
+        attributes: Object.fromEntries(
+          Object.entries(named.attributes ?? {}).map(([n, a]) => [n, a.type]),
+        ),
+        metadata: named.metadata ?? {},
+      }),
       user: source,
       stub: slangStub(stages),
     });

@@ -8,6 +8,7 @@ export { type ShaderOverrides } from "./scene/RenderContext.ts";
 export {
   CustomShader,
   type CustomShaderOptions,
+  type NamedType,
 } from "./scene/CustomShader.ts";
 export {
   World,

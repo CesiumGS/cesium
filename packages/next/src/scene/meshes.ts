@@ -20,6 +20,18 @@ export interface MeshData {
   featureCount?: number;
   /** Default "triangle-list". Lines are drawn unlit, like 1.x. */
   topology?: "triangle-list" | "line-list";
+  /**
+   * More per-vertex data by name (glTF semantic, e.g. `_TEMPERATURE`), 1–4
+   * float components each, read by custom shaders that declare them
+   * (`CustomShaderOptions.attributes`).
+   */
+  attributes?: Record<string, { data: Float32Array; components: number }>;
+  /**
+   * Per-vertex metadata by property ID (`EXT_structural_metadata` property
+   * attributes, offset and scale applied), read by custom shaders that
+   * declare it (`CustomShaderOptions.metadata`).
+   */
+  metadata?: Record<string, { data: Float32Array; components: number }>;
 }
 
 /** A unit cube centered at the origin, with flat per-face normals. */

@@ -158,8 +158,8 @@ export function writeViewBlock(
   out[o + 103] = 0;
 }
 
-/** `struct DrawRecord` — 128 bytes. */
-export const RECORD_SIZE = 128;
+/** `struct DrawRecord` — 144 bytes (132 used, padded to WGSL's 16-byte alignment). */
+export const RECORD_SIZE = 144;
 export const RECORD_WORDS = RECORD_SIZE / 4;
 /** Word offsets of `DrawRecord` fields written after creation. */
 export const TRANSFORM_WORD = 8;
@@ -289,6 +289,29 @@ export interface MeshStreams {
   tangent: number;
   /** Per-vertex local feature IDs (u32 words). */
   featureId: number;
+  /**
+   * The mesh's directory of named attributes (`MeshData.attributes`): u32
+   * words `count`, then per attribute its name's `attributeHash`, stream
+   * offset and components.
+   */
+  attributes: number;
+}
+
+/**
+ * A named attribute's key in mesh directories (FNV-1a of its name), which
+ * custom shaders' generated readers compare against.
+ */
+/** A metadata property's name in mesh directories (beside glTF semantics). */
+export function metadataKey(id: string): string {
+  return `metadata.${id}`;
+}
+
+export function attributeHash(name: string): number {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < name.length; i++) {
+    hash = Math.imul(hash ^ name.charCodeAt(i), 0x01000193);
+  }
+  return hash >>> 0;
 }
 
 export interface DrawRecordData {
@@ -357,6 +380,10 @@ export function writeDrawRecord(
   u32[o + 29] = r.instanceStreams ?? NO_STREAM;
   u32[o + 30] = r.instanceStride ?? 0;
   u32[o + 31] = 0; // night lights slice (packImagery)
+  u32[o + 32] = r.streams.attributes;
+  u32[o + 33] = 0;
+  u32[o + 34] = 0;
+  u32[o + 35] = 0;
 }
 
 /**

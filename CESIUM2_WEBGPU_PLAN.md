@@ -2502,6 +2502,64 @@ textures (3), feature styling with properties on the GPU
 (`IFeatureStyle`), and ports of 1.x `CustomShader` Sandcastles compared
 with 1.x (L2), which need 2 and 3.
 
+**Increment 4 (r47): named attributes and metadata property attributes
+(foundation 2).**
+
+- Decisions. glTF requires application attributes to start with `_`;
+  1.x then renames them for shaders (`_TEMPERATURE` →
+  `attributes.temperature`, stripped and lowercased), which is lossy
+  (`_Temp` and `_TEMP` collide), hides which attribute a name reads, and
+  types each shader per model. 2.0 instead has the shader declare what it
+  reads: `attributes: { temperature: { semantic: "_TEMPERATURE", type:
+"f32" } }`, a name of its choosing bound to the exact semantic. One
+  shader, one compile, whatever the model. For data with meaning
+  (temperatures, classifications) the primary path is metadata, not raw
+  attributes: `EXT_structural_metadata` gives an attribute a schema
+  (type, normalization, offset and scale), shared with 3D Tiles property
+  tables and textures, and 1.x already exposes it as
+  `fsInput.metadata.<property>`. Raw attributes are the layer under it.
+- glTF parsing keeps every attribute the engine doesn't read itself
+  (`TEXCOORD_1`, `COLOR_1`, `_TEMPERATURE`, …; not skinning or feature
+  IDs) by semantic, and each property attribute by property ID with its
+  offset and scale applied (the property attribute's own, else its
+  class's; normalized integers come from the accessor already in [0, 1]).
+  Both are unwelded with flat-shaded meshes. `MeshData.attributes` and
+  `.metadata` take the same from code.
+- The world uploads them as streams plus a per-mesh directory in the
+  arena (count, then name hash, stream offset and components per entry,
+  metadata under `metadata.<id>`); the draw record gains its offset
+  (`DrawRecord.attributes`, the record 128 → 144 bytes). Nothing is read
+  unless a shader declares it.
+- `CustomShader({ attributes, metadata })`: types `f32`, `vec2f`,
+  `vec3f`, `vec4f`, `mat2x2f` (glTF MAT2, column-major). The engine
+  generates per shader the `Attributes` and `Metadata` structs in
+  `VertexInput` and `FragmentInput`, a reader per value (`readNamed`: the
+  directory searched by hash; zero where a mesh hasn't it) and a varying
+  per value (locations 10–13, so at most 4 per shader), interpolated for
+  the fragment stage. The pipeline cache keys on the generated code with
+  the stages.
+- Slang: the `cesium` module (version 2) is generated per shader with
+  the same two structs (`fromSlang` takes the declarations; the CLI
+  `--attributes name:type,…` and `--metadata`), and the adapter converts
+  them by name. Matrices are transposed on the way in: Slang's are
+  row-major in meaning, so `mul(m, v)` there is glTF's M v, as `m * v` is
+  in WGSL.
+- Harness, 9 new cases (21 of 21 pass): an asymmetric shear (MAT2) and
+  heat on the boxes, in both stages, in WGSL and in Slang built both ways
+  (identical: the transpose is right); a declared attribute and property
+  a mesh hasn't read zero (identical to the default); 1.x's
+  `BoxTexturedWithPropertyAttributes`: `temperatures` (normalized UINT16,
+  offset/scale to °C) and `transformedWarpMatrix` (MAT2, offset/scaled)
+  match the raw attribute transformed by hand exactly, and the vertex
+  stage lifts by temperature. Parity, models and translucency are
+  unchanged (318 image metrics, none moved).
+- Not yet: integer attributes and metadata (all floats; flat
+  interpolation for IDs), `noData` and `default`, metadata enums and
+  strings, more than 4 values per shader (packing varyings would allow
+  16 components), property textures (with user textures, foundation 3)
+  and property tables on the GPU (with feature styling), and a 1.x
+  comparison (L2) of the property-attribute Sandcastle.
+
 ### Real-time tracks (after Custom shading)
 
 - §13.11: track collections as instance data with a bulk update API,

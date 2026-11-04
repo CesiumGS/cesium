@@ -2,6 +2,11 @@
 // WGSL at build time, the recommended path (plan §3.4):
 //
 //   SLANGC=/path/to/slangc node scripts/slangShader.mjs stages.slang [-o stages.wgsl]
+//     [--attributes name:type,...] [--metadata name:type,...]
+//
+// `--attributes` and `--metadata` give the types of the shader's named
+// attributes and metadata properties (`CustomShaderOptions`), e.g.
+// `--metadata temperatures:vec2f`; pass the same to `CustomShader`.
 //
 // The output is `CustomShader`'s `wgsl` option, e.g. from a `?raw` import.
 // Runtime compilation (`CustomShader.fromSlang`) produces the same.
@@ -14,6 +19,7 @@ import { fileURLToPath } from "node:url";
 import {
   SLANG_STUB_ENTRY,
   adaptSlangStages,
+  cesiumModule,
   slangStages,
   slangStub,
 } from "../src/scene/slangStages.ts";
@@ -23,7 +29,14 @@ if (!slangc) {
   throw new Error("Set SLANGC to the slangc executable.");
 }
 const args = process.argv.slice(2);
-const input = args.find((a, i) => !a.startsWith("-") && args[i - 1] !== "-o");
+const valued = new Set(["-o", "--attributes", "--metadata"]);
+const input = args.find((a, i) => !a.startsWith("-") && !valued.has(args[i - 1]));
+const declared = (flag) => {
+  const at = args.indexOf(flag);
+  return at < 0
+    ? {}
+    : Object.fromEntries(args[at + 1].split(",").map((d) => d.split(":")));
+};
 if (!input) {
   throw new Error("Usage: node scripts/slangShader.mjs stages.slang [-o out.wgsl]");
 }
@@ -42,7 +55,10 @@ const temp = mkdtempSync(join(tmpdir(), "slang-stages-"));
 try {
   writeFileSync(
     join(temp, "cesium.slang"),
-    readFileSync(join(here, "../src/shaders/cesium.slang")),
+    cesiumModule(readFileSync(join(here, "../src/shaders/cesium.slang"), "utf8"), {
+      attributes: declared("--attributes"),
+      metadata: declared("--metadata"),
+    }),
   );
   writeFileSync(join(temp, "user.slang"), source);
   writeFileSync(join(temp, "stages.slang"), slangStub(stages));

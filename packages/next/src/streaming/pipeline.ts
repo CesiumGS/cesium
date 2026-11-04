@@ -41,6 +41,8 @@ export function summarizeContent(asset: GltfAsset): ContentSummary {
       mesh.tangents,
       mesh.indices,
       mesh.featureIds,
+      ...Object.values(mesh.attributes ?? {}).map((a) => a.data),
+      ...Object.values(mesh.metadata ?? {}).map((a) => a.data),
     ]) {
       geometryBytes += array?.byteLength ?? 0;
     }

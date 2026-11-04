@@ -317,6 +317,9 @@ struct VsOut {
   @location(7) airInscatter: vec3f,
   @location(8) airTransmittance: vec3f,
   @location(9) positionMC: vec3f,  // the mesh's own (model) coordinates
+  // A custom shader's named attributes and metadata, from location 10
+  // (CustomShader.ts namedCode):
+  // @named
 };
 
 // --- custom shaders (plan §3.4): the WGSL-level contract ---------------------------
@@ -337,6 +340,8 @@ struct VertexInput {
   vertexIndex: u32,
   instanceIndex: u32, // index among the draw's instances; 0 when not instanced
   time: f32,          // seconds since the engine started
+  attributes: Attributes, // the shader's declared attributes (CustomShader)
+  metadata: Metadata,     // and metadata properties; zero where absent
 };
 
 // What `vertexMain` may change: the vertex in model coordinates.
@@ -356,6 +361,8 @@ struct FragmentInput {
   featureId: u32,     // global feature ID (the one picking returns); 0: none
   screen: vec2f,      // framebuffer pixel
   time: f32,
+  attributes: Attributes, // interpolated
+  metadata: Metadata,     // interpolated
 };
 
 // The material `fragmentMain` may change, filled with the glTF material's
@@ -385,6 +392,29 @@ fn read3(offset: u32, index: u32) -> vec3f {
 fn read4(offset: u32, index: u32) -> vec4f {
   let b = offset + index * 4u;
   return vec4f(vertices[b], vertices[b + 1u], vertices[b + 2u], vertices[b + 3u]);
+}
+
+// A named attribute or metadata property of a vertex from its mesh's
+// directory (layout.ts MeshStreams.attributes: count, then per entry the
+// name's hash, stream offset and components); zero where absent.
+fn readNamed(directory: u32, hash: u32, vertexIndex: u32) -> vec4f {
+  var value = vec4f(0.0);
+  if (directory == NO_STREAM) {
+    return value;
+  }
+  let count = bitcast<u32>(vertices[directory]);
+  for (var i = 0u; i < count; i++) {
+    let entry = directory + 1u + i * 3u;
+    if (bitcast<u32>(vertices[entry]) == hash) {
+      let components = bitcast<u32>(vertices[entry + 2u]);
+      let b = bitcast<u32>(vertices[entry + 1u]) + vertexIndex * components;
+      for (var c = 0u; c < components; c++) {
+        value[c] = vertices[b + c];
+      }
+      break;
+    }
+  }
+  return value;
 }
 
 @vertex
@@ -436,7 +466,10 @@ fn vertexOut(vertexIndex: u32, item: u32, withAir: bool) -> VsOut {
     vertexIndex,
     p.instance,
     view.time.x,
+    vertexAttributes(r.attributes, vertexIndex),
+    vertexMetadata(r.attributes, vertexIndex),
   );
+  passNamed(vsInput.attributes, vsInput.metadata, &out);
   var vsOutput = VertexOutput(vsInput.positionMC, vsInput.normalMC);
   vertexMain(vsInput, &vsOutput);
   normal = vsOutput.normalMC;
@@ -971,6 +1004,8 @@ fn shadeSurface(in: VsOut, frontFacing: bool, translucent: bool) -> Surface {
     in.feature,
     in.position.xy,
     view.time.x,
+    fragmentAttributes(in),
+    fragmentMetadata(in),
   );
   var custom = MaterialOutput(
     baseColor.rgb,

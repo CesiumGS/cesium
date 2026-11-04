@@ -23,6 +23,8 @@ import { CLUSTERS_SIZE, LIGHTS_SIZE } from "./lights.ts";
 import {
   DEFAULT_FRAGMENT_MAIN,
   DEFAULT_VERTEX_MAIN,
+  DEFAULT_NAMED,
+  withNamedVaryings,
   type CustomShader,
 } from "./CustomShader.ts";
 import { ShaderCache } from "./ShaderCache.ts";
@@ -595,7 +597,7 @@ async function createPipelines(
   const module = (label: string, ...sources: string[]) =>
     device.createShaderModule({ label, code: sources.join("\n") });
   // The engine's own stages: the custom shader contract's defaults.
-  const defaultStages = `${DEFAULT_VERTEX_MAIN}\n${DEFAULT_FRAGMENT_MAIN}\n`;
+  const defaultStages = `${DEFAULT_VERTEX_MAIN}\n${DEFAULT_FRAGMENT_MAIN}\n${DEFAULT_NAMED.code}`;
   const builtinOpaque = () =>
     module("opaque", commonWgsl, opaqueWgsl, defaultStages);
   const opaqueModule =
@@ -986,7 +988,9 @@ async function createPipelines(
     shader: CustomShader,
   ): Promise<(key: SurfaceKey) => Promise<GPURenderPipeline>> => {
     const { code, label, vertexLines } = shader;
-    const base = [commonWgsl, opaqueWgsl].join("\n");
+    // Its named values' varyings in VsOut.
+    const opaqueSource = withNamedVaryings(opaqueWgsl, shader.varyings);
+    const base = [commonWgsl, opaqueSource].join("\n");
     // Its errors are reported below, once, not as an uncaptured error too.
     device.pushErrorScope("validation");
     const opaque = module(`${label} opaque`, base, code);
@@ -1016,7 +1020,7 @@ async function createPipelines(
       translucent ??= module(
         `${label} translucent`,
         commonWgsl,
-        opaqueWgsl,
+        opaqueSource,
         translucentWgsl,
         code,
       );

@@ -8,6 +8,8 @@ import {
   NO_FEATURE,
   NO_RECORD,
   NO_STREAM,
+  attributeHash,
+  metadataKey,
   DRAW_ITEM_SIZE,
   RECORD_WORDS,
   TRANSFORM_WORDS,
@@ -864,7 +866,25 @@ export class World {
       color: upload(mesh.colors),
       tangent: upload(mesh.tangents),
       featureId: upload(mesh.featureIds),
+      attributes: NO_STREAM,
     };
+    // Metadata properties share the directory, their names prefixed.
+    const named = [
+      ...Object.entries(mesh.attributes ?? {}),
+      ...Object.entries(mesh.metadata ?? {}).map(
+        ([id, stream]) => [metadataKey(id), stream] as const,
+      ),
+    ];
+    if (named.length > 0) {
+      const directory = new Uint32Array(1 + named.length * 3);
+      directory[0] = named.length;
+      named.forEach(([name, { data, components }], i) => {
+        directory[1 + i * 3] = attributeHash(name);
+        directory[2 + i * 3] = upload(data);
+        directory[3 + i * 3] = components;
+      });
+      streams.attributes = upload(directory);
+    }
     const indexOffset = this.indexAllocator.allocate(mesh.indices.byteLength);
     if (indexOffset === undefined) {
       for (const [o, size] of vertexRanges) {

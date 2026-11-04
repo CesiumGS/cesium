@@ -17,9 +17,11 @@ import type { Harness } from "../lab/harness.ts";
 import { flip } from "./flip.ts";
 import twistHeightSlang from "./slang/twistHeight.slang?raw";
 import heightBandsSlang from "./slang/heightBands.slang?raw";
+import shearSlang from "./slang/shear.slang?raw";
 // Built from them with scripts/slangShader.mjs.
 import twistHeightWgsl from "./slang/twistHeight.wgsl?raw";
 import heightBandsWgsl from "./slang/heightBands.wgsl?raw";
+import shearWgsl from "./slang/shear.wgsl?raw";
 
 const TEMPLATE = `
 <h1>Custom shaders</h1>
@@ -69,7 +71,64 @@ interface Case {
   blended?: boolean;
   /** A streamed 3D Tiles tileset (`TILESET`) with the shader instead. */
   tileset?: boolean;
+  /** The boxes' mesh has named attributes (`_SHEAR`, `_HEAT`). */
+  named?: boolean;
+  /** The property-attribute glTF (`PROPERTY_MODEL`) instead of boxes. */
+  model?: boolean;
+  /** "Same" within float rounding (FLIP mean below 0.001), not exactly. */
+  close?: boolean;
 }
+
+/**
+ * 1.x's property-attribute test model: a 1 m textured box with
+ * `temperatures` (normalized UINT16 VEC2, offset/scale to °C) and
+ * `warpMatrix`/`transformedWarpMatrix` (MAT2, the latter offset/scaled)
+ * from the same attribute.
+ */
+const PROPERTY_MODEL =
+  "/specs-data/Models/glTF-2.0/BoxTexturedWithPropertyAttributes/glTF/BoxTexturedWithPropertyAttributes.gltf";
+
+const FS =
+  "fn fragmentMain(fsInput: FragmentInput, material: ptr<function, MaterialOutput>) {";
+
+/** Inside temperature (20–25 °C) to red, outside (10–30 °C) to blue. */
+const TEMPERATURES = new CustomShader({
+  label: "temperatures (metadata)",
+  metadata: { temperatures: "vec2f" },
+  fragment: `${FS}
+  let t = fsInput.metadata.temperatures;
+  (*material).baseColor = vec3f((t.x - 20.0) / 5.0, 0.2, (t.y - 10.0) / 20.0);
+}`,
+});
+
+/** The transformed warp matrix applied to the UVs. */
+const WARP = new CustomShader({
+  label: "transformed warp (metadata)",
+  metadata: { transformedWarpMatrix: "mat2x2f" },
+  fragment: `${FS}
+  let uv = fsInput.metadata.transformedWarpMatrix * fsInput.texCoord0;
+  (*material).baseColor = vec3f(fract(uv), 0.5);
+}`,
+});
+
+/** The boxes' named attributes as shear.slang declares them. */
+const SHEAR_ATTRIBUTES = {
+  shear: { semantic: "_SHEAR", type: "mat2x2f" },
+  heat: { semantic: "_HEAT", type: "f32" },
+} as const;
+
+/** Shear and heat in WGSL: what shear.slang must draw. */
+const SHEAR = new CustomShader({
+  label: "shear + heat (WGSL)",
+  attributes: SHEAR_ATTRIBUTES,
+  vertex: `fn vertexMain(vsInput: VertexInput, vsOutput: ptr<function, VertexOutput>) {
+  (*vsOutput).positionMC.z += vsInput.attributes.heat * 0.25;
+}`,
+  fragment: `${FS}
+  let p = fsInput.attributes.shear * (fsInput.positionMC.xy + 0.5);
+  (*material).baseColor = vec3f(fract(p * 3.0), fsInput.attributes.heat);
+}`,
+});
 
 /** Buildings with per-feature colors (batched b3dm), streamed. */
 const TILESET = "/specs-data/Cesium3DTiles/Batched/BatchedColors/tileset.json";
@@ -220,6 +279,104 @@ const CASES: Case[] = [
         slangUrl: SLANG_WASM,
       }),
   },
+  {
+    name: "attributes: shear (MAT2) and heat, both stages",
+    same: false,
+    named: true,
+    shader: SHEAR,
+  },
+  {
+    name: "attributes: Slang, build time (vs WGSL)",
+    same: true,
+    named: true,
+    against: SHEAR,
+    shader: new CustomShader({
+      label: "shear + heat (slangc)",
+      attributes: SHEAR_ATTRIBUTES,
+      wgsl: shearWgsl,
+    }),
+  },
+  {
+    name: "attributes: Slang, runtime (vs WGSL)",
+    same: true,
+    named: true,
+    against: SHEAR,
+    shader: () =>
+      CustomShader.fromSlang(shearSlang, {
+        label: "shear + heat (slang-wasm)",
+        attributes: SHEAR_ATTRIBUTES,
+        slangUrl: SLANG_WASM,
+      }),
+  },
+  {
+    name: "absent attribute and property read zero",
+    same: true,
+    named: true,
+    shader: new CustomShader({
+      label: "absent",
+      attributes: { missing: { semantic: "_MISSING", type: "vec4f" } },
+      metadata: { nothing: "f32" },
+      fragment: `${FS}
+  (*material).baseColor += fsInput.attributes.missing.xyz + fsInput.metadata.nothing;
+}`,
+    }),
+  },
+  {
+    name: "metadata: temperatures (property attribute)",
+    same: false,
+    model: true,
+    shader: TEMPERATURES,
+  },
+  {
+    name: "metadata: raw attribute, offset/scale by hand (vs metadata)",
+    same: true,
+    close: true,
+    model: true,
+    against: TEMPERATURES,
+    shader: new CustomShader({
+      label: "temperatures (attribute)",
+      attributes: { raw: { semantic: "_TEMPERATURES", type: "vec2f" } },
+      fragment: `${FS}
+  let t = fsInput.attributes.raw * vec2f(5.0, 20.0) + vec2f(20.0, 10.0);
+  (*material).baseColor = vec3f((t.x - 20.0) / 5.0, 0.2, (t.y - 10.0) / 20.0);
+}`,
+    }),
+  },
+  {
+    name: "metadata: MAT2 with offset/scale",
+    same: false,
+    model: true,
+    shader: WARP,
+  },
+  {
+    name: "metadata: MAT2 offset/scale by hand (vs metadata)",
+    same: true,
+    close: true,
+    model: true,
+    against: WARP,
+    shader: new CustomShader({
+      label: "transformed warp (by hand)",
+      metadata: { warpMatrix: "mat2x2f" },
+      fragment: `${FS}
+  let w = fsInput.metadata.warpMatrix;
+  let m = mat2x2f(w[0] * 2.0 + 0.5, w[1] * 2.0 + 0.5);
+  (*material).baseColor = vec3f(fract(m * fsInput.texCoord0), 0.5);
+}`,
+    }),
+  },
+  {
+    name: "metadata: vertex stage lifts by temperature",
+    same: false,
+    model: true,
+    shader: new CustomShader({
+      label: "lift",
+      metadata: { temperatures: "vec2f" },
+      displacement: 0.3,
+      vertex: `fn vertexMain(vsInput: VertexInput, vsOutput: ptr<function, VertexOutput>) {
+  (*vsOutput).positionMC.y += (vsInput.metadata.temperatures.y - 10.0) / 20.0 * 0.3;
+}`,
+    }),
+  },
 ];
 
 /** A unit square in its xy-plane, facing +z. */
@@ -231,6 +388,29 @@ function square(): MeshData {
     normals: new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1]),
     uvs: new Float32Array([0, 0, 1, 0, 1, 1, 0, 1]),
     indices: new Uint32Array([0, 1, 2, 0, 2, 3]),
+  };
+}
+
+/**
+ * The unit box with named attributes: `_SHEAR` an asymmetric MAT2 (x
+ * sheared by y, column-major as glTF) and `_HEAT` its height (0 at the
+ * bottom, 1 at the top).
+ */
+function namedBox(): MeshData {
+  const mesh = createBox();
+  const count = mesh.positions.length / 3;
+  const shear = new Float32Array(count * 4);
+  const heat = new Float32Array(count);
+  for (let i = 0; i < count; i++) {
+    shear.set([1, 0, 0.6, 1], i * 4);
+    heat[i] = mesh.positions[i * 3 + 2]! + 0.5;
+  }
+  return {
+    ...mesh,
+    attributes: {
+      _SHEAR: { data: shear, components: 4 },
+      _HEAT: { data: heat, components: 1 },
+    },
   };
 }
 
@@ -254,7 +434,7 @@ function build(world: World, c: Case, shader: CustomShader | undefined): void {
     ),
     material: ground,
   });
-  const box = world.addMesh(createBox());
+  const box = world.addMesh(c.named ? namedBox() : createBox());
   const colors = [
     [0.8, 0.2, 0.2],
     [0.2, 0.7, 0.3],
@@ -335,6 +515,53 @@ async function renderTileset(
   return image;
 }
 
+/** The property-attribute model, 8 m tall, with `shader`. */
+async function renderModel(
+  engine: Engine,
+  target: OffscreenTarget,
+  shader: CustomShader | undefined,
+): Promise<ImageData> {
+  const world = engine.createWorld({
+    maxDraws: 16,
+    maxMaterials: 16,
+    vertexBytes: 1 << 20,
+    indexBytes: 1 << 20,
+  });
+  const ellipsoid = Ellipsoid.WGS84;
+  const origin = ellipsoid.cartographicToCartesian(
+    { ...SITE, height: 4 },
+    vec3.vec3(),
+  );
+  const modelMatrix = eastNorthUpToFixedFrame(origin, ellipsoid, mat4.mat4());
+  mat4.multiply(modelMatrix, modelMatrix, mat4.fromScale(mat4.mat4(), 8, 8, 8));
+  const asset = await engine.loadGltf(
+    new URL(PROPERTY_MODEL, location.href).href,
+  );
+  engine.addModel(world, asset, { modelMatrix, ...(shader ? { shader } : {}) });
+  const camera = new Camera();
+  camera.near = 0.1;
+  camera.lookAt(origin, 30 * deg, -25 * deg, 22);
+  const view = engine.addView({
+    target,
+    world,
+    camera,
+    background: "color",
+    clearColor: [0.03, 0.04, 0.06],
+    lighting: { environment: "procedural" },
+    shadows: true,
+    ambientOcclusion: true,
+  });
+  for (let i = 0; i < 4; i++) {
+    engine.renderFrame();
+    await frame();
+  }
+  const image = new ImageData(await target.read(), WIDTH, HEIGHT);
+  engine.removeView(view);
+  engine.worlds.splice(engine.worlds.indexOf(world), 1);
+  world.destroy();
+  return image;
+}
+
 async function render(
   engine: Engine,
   target: OffscreenTarget,
@@ -343,6 +570,9 @@ async function render(
 ): Promise<ImageData> {
   if (c.tileset) {
     return renderTileset(engine, target, shader);
+  }
+  if (c.model) {
+    return renderModel(engine, target, shader);
   }
   const world = engine.createWorld({
     maxDraws: 16,
@@ -453,7 +683,7 @@ async function runCustomShader(): Promise<Row[]> {
       flipMean: f.mean,
       pass:
         failed === (c.fails ?? false) &&
-        (c.same ? f.mean === 0 : f.mean > 0.005),
+        (c.same ? (c.close ? f.mean < 0.001 : f.mean === 0) : f.mean > 0.005),
     });
     lastImages.push({ default: base, custom });
     renderTable(rows);

@@ -8,6 +8,16 @@ fn twist_0( v_0 : vec3<f32>,  a_0 : f32) -> vec3<f32>
     return vec3<f32>(c_0 * _S1 - s_0 * _S2, s_0 * _S1 + c_0 * _S2, v_0.z);
 }
 
+struct Attributes_0
+{
+     none_0 : u32,
+};
+
+struct Metadata_0
+{
+     none_1 : u32,
+};
+
 struct VertexInput_0
 {
      positionMC_0 : vec3<f32>,
@@ -18,6 +28,8 @@ struct VertexInput_0
      vertexIndex_0 : u32,
      instanceIndex_0 : u32,
      time_0 : f32,
+     attributes_0 : Attributes_0,
+     metadata_0 : Metadata_0,
 };
 
 struct VertexOutput_0
@@ -45,6 +57,8 @@ struct FragmentInput_0
      featureId_0 : u32,
      screen_0 : vec2<f32>,
      time_1 : f32,
+     attributes_1 : Attributes_0,
+     metadata_1 : Metadata_0,
 };
 
 struct MaterialOutput_0
@@ -77,16 +91,18 @@ fn cesiumStages(@builtin(position) p_0 : vec4<f32>) -> pixelOutput_0
     var result_0 : vec4<f32> = _S3;
     var _S4 : vec3<f32> = vec3<f32>(0.0f);
     var _S5 : vec2<f32> = vec2<f32>(0.0f);
-    var vi_0 : VertexInput_0 = VertexInput_0( _S4, _S4, _S5, _S3, u32(0), u32(0), u32(0), 0.0f );
+    var _S6 : Attributes_0 = Attributes_0( u32(0) );
+    var _S7 : Metadata_0 = Metadata_0( u32(0) );
+    var vi_0 : VertexInput_0 = VertexInput_0( _S4, _S4, _S5, _S3, u32(0), u32(0), u32(0), 0.0f, _S6, _S7 );
     var vo_0 : VertexOutput_0;
     vo_0.positionMC_1 = _S4;
     vo_0.normalMC_1 = _S4;
     vertexMain_0(vi_0, &(vo_0));
-    var _S6 : vec3<f32> = _S3.xyz + (vo_0.positionMC_1 + vo_0.normalMC_1);
-    result_0.x = _S6.x;
-    result_0.y = _S6.y;
-    result_0.z = _S6.z;
-    var fi_0 : FragmentInput_0 = FragmentInput_0( _S4, _S4, _S4, _S4, _S5, _S3, u32(0), _S5, 0.0f );
+    var _S8 : vec3<f32> = _S3.xyz + (vo_0.positionMC_1 + vo_0.normalMC_1);
+    result_0.x = _S8.x;
+    result_0.y = _S8.y;
+    result_0.z = _S8.z;
+    var fi_0 : FragmentInput_0 = FragmentInput_0( _S4, _S4, _S4, _S4, _S5, _S3, u32(0), _S5, 0.0f, _S6, _S7 );
     var mo_0 : MaterialOutput_0;
     mo_0.baseColor_0 = _S4;
     mo_0.alpha_0 = 0.0f;
@@ -97,22 +113,22 @@ fn cesiumStages(@builtin(position) p_0 : vec4<f32>) -> pixelOutput_0
     mo_0.emissive_0 = _S4;
     mo_0.unlit_0 = false;
     fragmentMain_0(fi_0, &(mo_0));
-    var _S7 : vec4<f32> = result_0 + vec4<f32>(mo_0.baseColor_0, mo_0.alpha_0);
-    result_0 = _S7;
-    var _S8 : pixelOutput_0 = pixelOutput_0( _S7 );
-    return _S8;
+    var _S9 : vec4<f32> = result_0 + vec4<f32>(mo_0.baseColor_0, mo_0.alpha_0);
+    result_0 = _S9;
+    var _S10 : pixelOutput_0 = pixelOutput_0( _S9 );
+    return _S10;
 }
 
 fn vertexMain(vsInput: VertexInput, vsOutput: ptr<function, VertexOutput>) {
   var staged = VertexOutput_0((*vsOutput).positionMC, (*vsOutput).normalMC);
-  vertexMain_0(VertexInput_0(vsInput.positionMC, vsInput.normalMC, vsInput.texCoord0, vsInput.color0, vsInput.featureId0, vsInput.vertexIndex, vsInput.instanceIndex, vsInput.time), &staged);
+  vertexMain_0(VertexInput_0(vsInput.positionMC, vsInput.normalMC, vsInput.texCoord0, vsInput.color0, vsInput.featureId0, vsInput.vertexIndex, vsInput.instanceIndex, vsInput.time, Attributes_0(vsInput.attributes.none), Metadata_0(vsInput.metadata.none)), &staged);
   (*vsOutput).positionMC = staged.positionMC_1;
   (*vsOutput).normalMC = staged.normalMC_1;
 }
 
 fn fragmentMain(fsInput: FragmentInput, material: ptr<function, MaterialOutput>) {
   var staged = MaterialOutput_0((*material).baseColor, (*material).alpha, (*material).metallic, (*material).roughness, (*material).normal, (*material).occlusion, (*material).emissive, (*material).unlit);
-  fragmentMain_0(FragmentInput_0(fsInput.positionMC, fsInput.positionEC, fsInput.positionWC, fsInput.normal, fsInput.texCoord0, fsInput.color0, fsInput.featureId, fsInput.screen, fsInput.time), &staged);
+  fragmentMain_0(FragmentInput_0(fsInput.positionMC, fsInput.positionEC, fsInput.positionWC, fsInput.normal, fsInput.texCoord0, fsInput.color0, fsInput.featureId, fsInput.screen, fsInput.time, Attributes_0(fsInput.attributes.none), Metadata_0(fsInput.metadata.none)), &staged);
   (*material).baseColor = staged.baseColor_0;
   (*material).alpha = staged.alpha_0;
   (*material).metallic = staged.metallic_0;

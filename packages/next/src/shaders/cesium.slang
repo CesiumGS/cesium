@@ -1,4 +1,4 @@
-// The `cesium` Slang module, version 1: custom shader stages' contract
+// The `cesium` Slang module, version 2: custom shader stages' contract
 // (opaque.wgsl's `VertexInput`, `VertexOutput`, `FragmentInput` and
 // `MaterialOutput`, field for field and in the same order; slangStages.ts
 // maps them by position). A shader imports it and defines either or both:
@@ -7,6 +7,11 @@
 //   public void vertexMain(VertexInput vsInput, inout VertexOutput vsOutput) { … }
 //   public void fragmentMain(FragmentInput fsInput, inout MaterialOutput material) { … }
 module cesium;
+
+// The shader's named attributes and metadata (`CustomShaderOptions`
+// `attributes`, `metadata`), generated per shader (slangStages.ts
+// `cesiumModule`); `none` alone when it declares none.
+// @named
 
 // A vertex as the mesh stores it, before its transform.
 public struct VertexInput {
@@ -18,6 +23,8 @@ public struct VertexInput {
   public uint vertexIndex;
   public uint instanceIndex; // index among the draw's instances
   public float time;         // seconds since the engine started
+  public Attributes attributes;
+  public Metadata metadata;
 };
 
 // What `vertexMain` may change: the vertex in model coordinates.
@@ -37,6 +44,8 @@ public struct FragmentInput {
   public uint featureId;     // global feature ID (picking's); 0: none
   public float2 screen;      // framebuffer pixel
   public float time;
+  public Attributes attributes;  // interpolated
+  public Metadata metadata;      // interpolated
 };
 
 // The material, filled with the glTF material's values first. Linear
