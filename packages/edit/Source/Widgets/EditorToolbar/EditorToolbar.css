@@ -1,0 +1,45 @@
+.cesium-editor-toolbar {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(48, 51, 54, 0.7);
+  border: 1px solid #444;
+  border-radius: 6px;
+  padding: 2px;
+}
+
+.cesium-editor-toolbar-dropdown-container {
+  display: inline-block;
+  position: relative;
+  vertical-align: middle;
+}
+
+.cesium-editor-toolbar-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  z-index: 1;
+}
+
+.cesium-editor-toolbar-dropdown > .cesium-button {
+  margin: 0;
+}
+
+.cesium-editor-toolbar-dropdown-container .cesium-editor-toolbar-selected {
+  border-color: #2e2;
+  box-shadow:
+    0 0 8px #fff,
+    0 0 8px #fff;
+}
+
+.cesium-editor-toolbar-dropdown .cesium-editor-toolbar-active {
+  border-color: #2e2;
+}
+
+.cesium-editor-toolbar-dropdown > .cesium-button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
