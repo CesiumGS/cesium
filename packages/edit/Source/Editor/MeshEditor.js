@@ -25,6 +25,7 @@ import EditMode from "./EditMode.js";
 import Mesh from "./Mesh.js";
 import MeshEditorGroup from "./MeshEditorGroup.js";
 import MeshEditorModule from "./MeshEditorModule.js";
+import MeshEditorInputHandler from "./MeshEditorInputHandler.js";
 import MeshEditorStyle from "./MeshEditorStyle.js";
 
 /** @import { FrameState, GeometryReadSession, GeometrySource, Scene } from "@cesium/engine"; */
@@ -125,14 +126,19 @@ class MeshEditor {
   /** @type {Set<MeshEditorTool>} */
   #tools = new Set();
 
+  /** @type {MeshEditorInputHandler} */
+  #inputHandler;
+
   /**
    * @param {object} options
    * @param {*} options.module The loaded wasm module.
+   * @param {Scene} options.scene The scene whose canvas receives pointer input.
    */
   constructor(options) {
     //>>includeStart('debug', pragmas.debug);
     Check.typeOf.object("options", options);
     Check.defined("options.module", options.module);
+    Check.typeOf.object("options.scene", options.scene);
     //>>includeEnd('debug');
 
     this.#module = options.module;
@@ -172,6 +178,12 @@ class MeshEditor {
      * @type {Event<function(MeshEditorGroup): void>}
      */
     this.meshGroupChanged = new Event();
+
+    this.#inputHandler = new MeshEditorInputHandler({
+      scene: options.scene,
+      wasmEditor: this.#wasmEditor,
+      meshes: this.#meshes,
+    });
   }
 
   /**
@@ -189,7 +201,7 @@ class MeshEditor {
     //>>includeEnd('debug');
 
     const module = await MeshEditorModule.load();
-    return scene.primitives.add(new MeshEditor({ module }));
+    return scene.primitives.add(new MeshEditor({ module, scene }));
   }
 
   /**
@@ -726,6 +738,8 @@ class MeshEditor {
    * @returns {void}
    */
   destroy() {
+    this.#inputHandler.destroy();
+
     for (const mesh of this.#meshes) {
       mesh._destroy();
     }
