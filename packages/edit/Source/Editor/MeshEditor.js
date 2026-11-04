@@ -3,6 +3,7 @@
 import {
   Check,
   DeveloperError,
+  Event,
   RuntimeError,
   destroyObject,
 } from "@cesium/core";
@@ -92,6 +93,14 @@ class MeshEditor {
     this.#module = options.module;
     this.#wasmEditor = new WasmMeshEditor();
     this.#updateResult = new UpdateResult();
+
+    /**
+     * Raised when {@link MeshEditor#mode} changes. The new mode and the
+     * previous mode are passed to listeners, in that order.
+     *
+     * @type {Event<function(EditMode, EditMode): void>}
+     */
+    this.modeChanged = new Event();
   }
 
   /**
@@ -132,6 +141,7 @@ class MeshEditor {
       return;
     }
 
+    const previousMode = this.#mode;
     this.#wasmEditor.setMode(value);
     this.#mode = value;
 
@@ -141,6 +151,8 @@ class MeshEditor {
         mesh._renderer.setShownComponents(renderableComponents);
       }
     }
+
+    this.modeChanged.raiseEvent(value, previousMode);
   }
 
   /**
