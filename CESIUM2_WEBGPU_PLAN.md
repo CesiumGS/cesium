@@ -3064,7 +3064,7 @@ The benchmark's view has no shadows (`View.shadows` is off by default),
 so the cascades never run there; the 138–180 ms readings were the GPU's
 clock. The GPU ran the benchmark at well under half its top clock
 (software thermal slowdown), and one commit read 71–88 ms from run to
-run; HEAD read 83–88 ms when measured beside the fix, never 160.
+run; HEAD read 67–88 ms when measured beside the fix, never 160.
 Instanced batches now draw outside the prepass, as point sets do
 (`opaqueInstanced`, one- and double-sided: depth tested and written as
 they shade): 100,000 milk trucks are about 360 million triangles, half
@@ -3079,7 +3079,10 @@ benchmark records it):
 | Instances outside it  | 0.8–2.3 |     0.07 |           0.07–0.2 |  39–40 | 40–42 |
 | `b7f9c8c039` (before) |         |          |                    |        | 37–40 |
 
-Runs alternated with HEAD (83–88 ms) and `b7f9c8c039`; 10,000
+Runs alternated with HEAD and `b7f9c8c039`; rerun with the GPU otherwise
+idle (checked before each run), the fix read 40.5 and 41.0 ms, HEAD 68.6
+and 67.2, `b7f9c8c039` 38.7 and 37.5 (earlier readings overlapped other
+GPU work and read HEAD at 83–88). 10,000
 instances take 4.7–5.0 ms against 8.0–10 with the prepass. No shadows,
 ambient occlusion, lights or translucency in this benchmark: the opaque
 pass is nearly all of it. Parity, models and customShader unchanged
@@ -3088,9 +3091,10 @@ apart at HEAD too); translucency unchanged but for the near-opaque
 stack's order check, which reads 0 or about 2e-7 from run to run with or
 without this change (likely ties between equal depths in the exact
 lists).
-Not yet: with the view's shadows on, the four cascades take 154 ms at
+Not yet: with the view's shadows on, the four cascades took 154 ms at
 100,000 instances against the opaque pass's 42 (15 against 5 at
-10,000): each cascade draws about as many trucks as the view does.
+10,000; one run, possibly beside other GPU work): each cascade draws
+about as many trucks as the view does.
 Casters too small to matter in a cascade (a few texels) are the next
 thing to cull there.
 
