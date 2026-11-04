@@ -1,7 +1,26 @@
 import { attributeHash, metadataKey } from "../render/layout.ts";
-import type { NamedDeclarations, NamedType } from "./slangStages.ts";
+import {
+  SLANG_STUB_ENTRY,
+  type NamedDeclarations,
+  type NamedType,
+} from "./slangStages.ts";
+import {
+  uniformLayout,
+  uniformsWgsl,
+  writeUniform,
+  type TextureUniform,
+  type UniformDeclaration,
+  type UniformLayout,
+} from "./uniforms.ts";
 
 export type { NamedType } from "./slangStages.ts";
+export type {
+  TextureSource,
+  TextureUniform,
+  UniformDeclaration,
+  UniformType,
+  ValueUniform,
+} from "./uniforms.ts";
 
 /**
  * A user's shader stages for models and tilesets (plan §3.4, "Custom
@@ -52,6 +71,14 @@ export interface CustomShaderOptions {
    * applied. Zero where a mesh hasn't the property.
    */
   metadata?: Record<string, NamedType>;
+  /**
+   * Typed values and textures the stages read, by name: a value as
+   * `uniforms.<name>`, a texture as `<name>` with its sampler
+   * `<name>Sampler` (`textureSample(palette, paletteSampler, uv)`; in the
+   * vertex stage `textureSampleLevel`). `setUniform` changes them. At most
+   * 4 textures.
+   */
+  uniforms?: Record<string, UniformDeclaration>;
   /**
    * The farthest `vertexMain` moves a vertex, in model units: it pads the
    * draws' culling bounds. Default 0.
@@ -241,8 +268,21 @@ export class CustomShader {
   readonly named: NamedDeclarations;
   /** `VsOut`'s varyings for them (`withNamedVaryings`). */
   readonly varyings: string;
+  /** Its uniforms' buffer layout and textures (`uniforms`). */
+  readonly uniformLayout: UniformLayout;
+  /** The uniform buffer's contents (`uniformLayout.bytes`). */
+  readonly uniformData: DataView;
+  /** Each texture uniform's current declaration, by name. */
+  readonly textures = new Map<string, TextureUniform>();
+  /** Bumped when a value uniform changes (the buffer is written again). */
+  uniformVersion = 0;
+  /** Bumped when a texture uniform changes (its bindings are made again). */
+  textureVersion = 0;
   readonly displacement: number;
   readonly label: string;
+  /** Slang's output: its matrices are written transposed (`writeUniform`). */
+  private readonly slang: boolean;
+  private readonly listeners = new Set<() => void>();
 
   constructor(options: CustomShaderOptions) {
     if (options.wgsl !== undefined) {
@@ -267,8 +307,60 @@ export class CustomShader {
     const named = namedCode(this.named);
     this.code += named.code;
     this.varyings = named.varyings;
+    const uniforms = options.uniforms ?? {};
+    this.uniformLayout = uniformLayout(uniforms);
+    this.slang = this.code.includes(`fn ${SLANG_STUB_ENTRY}(`);
+    this.code += uniformsWgsl(this.uniformLayout, this.code);
+    this.uniformData = new DataView(new ArrayBuffer(this.uniformLayout.bytes));
+    for (const field of this.uniformLayout.fields) {
+      const declaration = uniforms[field.name] as {
+        value?: number | ArrayLike<number>;
+      };
+      writeUniform(this.uniformData, field, declaration.value, this.slang);
+    }
+    for (const name of this.uniformLayout.textures) {
+      this.textures.set(name, uniforms[name] as TextureUniform);
+    }
     this.displacement = Math.max(0, options.displacement ?? 0);
     this.label = options.label ?? `custom shader ${this.id}`;
+  }
+
+  /**
+   * Changes a uniform: a value (number or components, matrices
+   * column-major) or a texture's image. Content drawing with the shader
+   * redraws.
+   */
+  setUniform(
+    name: string,
+    value: number | ArrayLike<number> | TextureUniform["value"],
+  ): void {
+    const texture = this.textures.get(name);
+    if (texture) {
+      if (typeof value === "number" || isArrayLike(value)) {
+        throw new Error(`setUniform: ${name} is a texture.`);
+      }
+      this.textures.set(name, { ...texture, value });
+      this.textureVersion++;
+    } else {
+      const field = this.uniformLayout.fields.find((f) => f.name === name);
+      if (!field) {
+        throw new Error(`setUniform: ${this.label} has no uniform ${name}.`);
+      }
+      if (typeof value !== "number" && !isArrayLike(value)) {
+        throw new Error(`setUniform: ${name} is a value, not a texture.`);
+      }
+      writeUniform(this.uniformData, field, value, this.slang);
+      this.uniformVersion++;
+    }
+    for (const listener of this.listeners) {
+      listener();
+    }
+  }
+
+  /** Calls `listener` on every `setUniform`; returns the unsubscribe. */
+  onChange(listener: () => void): () => void {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
   }
 
   /**
@@ -284,6 +376,7 @@ export class CustomShader {
     const wgsl = await compileSlang(source, options.slangUrl, options);
     return new CustomShader({
       wgsl,
+      ...(options.uniforms ? { uniforms: options.uniforms } : {}),
       ...(options.attributes ? { attributes: options.attributes } : {}),
       ...(options.metadata ? { metadata: options.metadata } : {}),
       ...(options.displacement !== undefined
@@ -292,4 +385,15 @@ export class CustomShader {
       ...(options.label !== undefined ? { label: options.label } : {}),
     });
   }
+}
+
+function isArrayLike(value: unknown): value is ArrayLike<number> {
+  return (
+    Array.isArray(value) ||
+    ArrayBuffer.isView(value) ||
+    (typeof value === "object" &&
+      value !== null &&
+      typeof (value as { length?: unknown }).length === "number" &&
+      !("width" in value))
+  );
 }

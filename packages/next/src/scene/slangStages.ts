@@ -13,6 +13,8 @@
  * stub's entry point stays in the module, unused.
  */
 
+import { uniformsSlang, type UniformDeclaration } from "./uniforms.ts";
+
 /** Types of named attributes and metadata (`CustomShaderOptions`). */
 export type NamedType = "f32" | "vec2f" | "vec3f" | "vec4f" | "mat2x2f";
 
@@ -41,7 +43,10 @@ const SLANG_NAMED = "// @named";
  */
 export function cesiumModule(
   source: string,
-  named: Pick<NamedDeclarations, "attributes" | "metadata">,
+  named: Pick<NamedDeclarations, "attributes" | "metadata"> & {
+    /** Its uniforms' types (`CustomShaderOptions.uniforms`). */
+    uniforms?: Record<string, { type: UniformDeclaration["type"] }>;
+  },
 ): string {
   if (!source.includes(SLANG_NAMED)) {
     throw new Error("cesium.slang has no named structs marker.");
@@ -58,7 +63,7 @@ export function cesiumModule(
   };
   return source.replace(
     SLANG_NAMED,
-    `${struct("Attributes", named.attributes)}\n${struct("Metadata", named.metadata)}`,
+    `${struct("Attributes", named.attributes)}\n${struct("Metadata", named.metadata)}\n${uniformsSlang(named.uniforms ?? {})}`,
   );
 }
 

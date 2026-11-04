@@ -18,10 +18,12 @@ import { flip } from "./flip.ts";
 import twistHeightSlang from "./slang/twistHeight.slang?raw";
 import heightBandsSlang from "./slang/heightBands.slang?raw";
 import shearSlang from "./slang/shear.slang?raw";
+import uniformsSlang from "./slang/uniforms.slang?raw";
 // Built from them with scripts/slangShader.mjs.
 import twistHeightWgsl from "./slang/twistHeight.wgsl?raw";
 import heightBandsWgsl from "./slang/heightBands.wgsl?raw";
 import shearWgsl from "./slang/shear.wgsl?raw";
+import uniformsWgsl from "./slang/uniforms.wgsl?raw";
 
 const TEMPLATE = `
 <h1>Custom shaders</h1>
@@ -77,6 +79,10 @@ interface Case {
   model?: boolean;
   /** "Same" within float rounding (FLIP mean below 0.001), not exactly. */
   close?: boolean;
+  /** Called on the shader before it draws (e.g. `setUniform`). */
+  prepare?: (shader: CustomShader) => void;
+  /** Frames drawn before reading (textures loading); default 4. */
+  frames?: number;
 }
 
 /**
@@ -110,6 +116,91 @@ const WARP = new CustomShader({
   (*material).baseColor = vec3f(fract(uv), 0.5);
 }`,
 });
+
+/** Values of every uniform type, in uniforms.slang's order. */
+const UNIFORM_VALUES = {
+  amplitude: 0.8,
+  offset: [0.1, -0.2],
+  tint: [0.9, 0.4, 0.2],
+  bands: 3,
+  shift: -2,
+  // Column-major: x to y, y to -x (asymmetric).
+  spin: [0, 1, 0, -1, 0, 0, 0, 0, 1],
+} as const;
+const UNIFORM_TYPES = {
+  amplitude: "f32",
+  offset: "vec2f",
+  tint: "vec3f",
+  bands: "u32",
+  shift: "i32",
+  spin: "mat3x3f",
+} as const;
+const declareUniforms = (values: Partial<typeof UNIFORM_VALUES> = {}) =>
+  Object.fromEntries(
+    Object.entries(UNIFORM_TYPES).map(([name, type]) => [
+      name,
+      {
+        type,
+        value:
+          (values as Record<string, number | readonly number[]>)[name] ??
+          UNIFORM_VALUES[name as keyof typeof UNIFORM_VALUES],
+      },
+    ]),
+  ) as Record<
+    string,
+    {
+      type: (typeof UNIFORM_TYPES)[keyof typeof UNIFORM_TYPES];
+      value: number | readonly number[];
+    }
+  >;
+
+/** uniforms.slang's body, reading `U` (the uniforms, or constants). */
+const UNIFORMS_BODY = `
+  let p = (U.spin * fsInput.positionMC).xy + U.offset;
+  let k = floor((p.x + 0.5) * f32(U.bands) + f32(U.shift));
+  (*material).baseColor = U.tint * U.amplitude * (0.5 + 0.5 * fract(k * 0.37));
+}`;
+
+/** The uniforms as written-in constants, with `amplitude` given. */
+function constantsShader(amplitude: number): CustomShader {
+  const v = UNIFORM_VALUES;
+  return new CustomShader({
+    label: `constants (amplitude ${amplitude})`,
+    fragment: `struct Consts { amplitude: f32, offset: vec2f, tint: vec3f, bands: u32, shift: i32, spin: mat3x3f };
+${FS}
+  let U = Consts(${amplitude}, vec2f(${v.offset.join(", ")}), vec3f(${v.tint.join(", ")}), ${v.bands}u, ${v.shift}i, mat3x3f(${v.spin.map((x) => x.toFixed(1)).join(", ")}));${UNIFORMS_BODY}`,
+  });
+}
+const CONSTANTS = constantsShader(UNIFORM_VALUES.amplitude);
+
+const uniformsShader = (label: string, values = {}) =>
+  new CustomShader({
+    label,
+    uniforms: declareUniforms(values),
+    fragment: `${FS}
+  let U = uniforms;${UNIFORMS_BODY}`,
+  });
+
+/** A texture by URL: the property model's logo. */
+const LOGO =
+  "/specs-data/Models/glTF-2.0/BoxTexturedWithPropertyAttributes/glTF/CesiumLogoFlat.png";
+
+/** The logo across each box's sides, lifting its tops where it's bright. */
+const textureShader = (label: string, value: string | ImageData) =>
+  new CustomShader({
+    label,
+    uniforms: { logo: { type: "texture2d", value } },
+    displacement: 0.3,
+    vertex: `fn vertexMain(vsInput: VertexInput, vsOutput: ptr<function, VertexOutput>) {
+  let top = step(0.4, vsInput.positionMC.z);
+  let bright = textureSampleLevel(logo, logoSampler, vsInput.positionMC.xy + 0.5, 0.0).g;
+  (*vsOutput).positionMC.z += top * bright * 0.3;
+}`,
+    fragment: `${FS}
+  let uv = vec2f(fsInput.positionMC.x + fsInput.positionMC.y + 1.0, 0.5 - fsInput.positionMC.z);
+  (*material).baseColor = textureSample(logo, logoSampler, uv).rgb;
+}`,
+  });
 
 /** The boxes' named attributes as shear.slang declares them. */
 const SHEAR_ATTRIBUTES = {
@@ -377,7 +468,60 @@ const CASES: Case[] = [
 }`,
     }),
   },
+  {
+    name: "uniforms: every type (vs constants)",
+    same: true,
+    against: CONSTANTS,
+    shader: uniformsShader("uniforms (WGSL)"),
+  },
+  {
+    name: "uniforms: differ from the default",
+    same: false,
+    shader: uniformsShader("uniforms (WGSL)"),
+  },
+  {
+    name: "uniforms: setUniform (vs constants)",
+    same: true,
+    against: constantsShader(0.35),
+    shader: uniformsShader("uniforms (set)", { amplitude: 0 }),
+    prepare: (shader) => shader.setUniform("amplitude", 0.35),
+  },
+  {
+    name: "uniforms: Slang, build time (vs constants)",
+    same: true,
+    against: CONSTANTS,
+    shader: new CustomShader({
+      label: "uniforms (slangc)",
+      uniforms: declareUniforms(),
+      wgsl: uniformsWgsl,
+    }),
+  },
+  {
+    name: "uniforms: Slang, runtime (vs constants)",
+    same: true,
+    against: CONSTANTS,
+    shader: () =>
+      CustomShader.fromSlang(uniformsSlang, {
+        label: "uniforms (slang-wasm)",
+        uniforms: declareUniforms(),
+        slangUrl: SLANG_WASM,
+      }),
+  },
+  {
+    name: "texture by URL, both stages (vs a white one)",
+    same: false,
+    frames: 20,
+    against: textureShader("white texture", whitePixel()),
+    shader: textureShader("logo texture", LOGO),
+  },
 ];
+
+/** A 1×1 white image. */
+function whitePixel(): ImageData {
+  const image = new ImageData(1, 1);
+  image.data.fill(255);
+  return image;
+}
 
 /** A unit square in its xy-plane, facing +z. */
 function square(): MeshData {
@@ -599,7 +743,7 @@ async function render(
     shadows: true,
     ambientOcclusion: true,
   });
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < (c.frames ?? 4); i++) {
     engine.renderFrame();
     await frame();
   }
@@ -646,9 +790,12 @@ async function runCustomShader(): Promise<Row[]> {
   const rows: Row[] = [];
   lastImages = [];
   // Runtime Slang needs the WebAssembly build served (SLANG_WASM_DIR).
-  const slangServed = (
-    await fetch(SLANG_WASM.replace(/\.js$/, ".wasm"), { method: "HEAD" })
-  ).ok;
+  // Vite answers missing paths with its HTML page (200), so check the type.
+  const probe = await fetch(SLANG_WASM.replace(/\.js$/, ".wasm"), {
+    method: "HEAD",
+  });
+  const slangServed =
+    probe.ok && (probe.headers.get("content-type") ?? "").includes("wasm");
   for (const c of CASES) {
     status.textContent = `${c.name}…`;
     const against = c.against ? ` vs ${c.against.label}` : "";
@@ -669,6 +816,11 @@ async function runCustomShader(): Promise<Row[]> {
     try {
       shader = typeof c.shader === "function" ? await c.shader() : c.shader;
       await engine.compileShader(shader);
+      c.prepare?.(shader);
+      // What it's compared with draws with its own pipelines too.
+      if (c.against) {
+        await engine.compileShader(c.against);
+      }
     } catch (error) {
       compiled = `failed: ${error instanceof Error ? error.message : String(error)}`;
     }

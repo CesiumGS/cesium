@@ -3,10 +3,13 @@
 //
 //   SLANGC=/path/to/slangc node scripts/slangShader.mjs stages.slang [-o stages.wgsl]
 //     [--attributes name:type,...] [--metadata name:type,...]
+//     [--uniforms name:type,...]
 //
-// `--attributes` and `--metadata` give the types of the shader's named
-// attributes and metadata properties (`CustomShaderOptions`), e.g.
-// `--metadata temperatures:vec2f`; pass the same to `CustomShader`.
+// `--attributes`, `--metadata` and `--uniforms` give the types of the
+// shader's named attributes, metadata properties and uniforms
+// (`CustomShaderOptions`), e.g. `--metadata temperatures:vec2f`,
+// `--uniforms amplitude:f32,palette:texture2d`; pass the same to
+// `CustomShader`.
 //
 // The output is `CustomShader`'s `wgsl` option, e.g. from a `?raw` import.
 // Runtime compilation (`CustomShader.fromSlang`) produces the same.
@@ -29,7 +32,7 @@ if (!slangc) {
   throw new Error("Set SLANGC to the slangc executable.");
 }
 const args = process.argv.slice(2);
-const valued = new Set(["-o", "--attributes", "--metadata"]);
+const valued = new Set(["-o", "--attributes", "--metadata", "--uniforms"]);
 const input = args.find((a, i) => !a.startsWith("-") && !valued.has(args[i - 1]));
 const declared = (flag) => {
   const at = args.indexOf(flag);
@@ -58,6 +61,9 @@ try {
     cesiumModule(readFileSync(join(here, "../src/shaders/cesium.slang"), "utf8"), {
       attributes: declared("--attributes"),
       metadata: declared("--metadata"),
+      uniforms: Object.fromEntries(
+        Object.entries(declared("--uniforms")).map(([n, type]) => [n, { type }]),
+      ),
     }),
   );
   writeFileSync(join(temp, "user.slang"), source);

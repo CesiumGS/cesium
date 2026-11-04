@@ -28,6 +28,8 @@ import {
   type CustomShader,
 } from "./CustomShader.ts";
 import { ShaderCache } from "./ShaderCache.ts";
+import { ShaderBindings } from "./ShaderBindings.ts";
+import { UNIFORM_BINDING, textureBinding } from "./uniforms.ts";
 
 /**
  * The single render-target configuration views draw their 3D content into.
@@ -138,6 +140,11 @@ export interface Pipelines extends SurfacePipelines {
     shader: CustomShader,
   ): Promise<(key: SurfaceKey) => Promise<GPURenderPipeline>>;
   /**
+   * A custom shader's group-2 layout: the texture set's and its uniforms'
+   * (uniforms.ts); undefined without uniforms.
+   */
+  setLayout(shader: CustomShader): GPUBindGroupLayout | undefined;
+  /**
    * The opaque pass draws its depth first (`depth`); false with an
    * override shader, which may not compute the same depths.
    */
@@ -196,6 +203,8 @@ export interface RenderContext {
   pipelines: Pipelines;
   /** Custom shaders' pipelines, compiled in the background. */
   shaders: ShaderCache;
+  /** Custom shaders' uniforms and textures (`flush` before frames). */
+  shaderBindings: ShaderBindings;
   defaults: Defaults;
   mips: MipGenerator;
   environment: Environment;
@@ -359,14 +368,16 @@ export async function createRenderContext(
     {},
     [1, 1],
   );
+  const whiteView = white.createView();
   return {
     device,
     caps,
     targets: SCENE_TARGETS,
     pipelines,
     shaders: new ShaderCache((shader) => pipelines.surface(shader)),
+    shaderBindings: new ShaderBindings(device, { whiteView }, mips),
     defaults: {
-      whiteView: white.createView(),
+      whiteView,
       sampler: device.createSampler({
         label: "default",
         magFilter: "linear",
@@ -522,21 +533,59 @@ async function createPipelines(
       },
     ],
   });
+  const textureSetEntries: GPUBindGroupLayoutEntry[] = [
+    ...[0, 1, 2, 3, 4].map((binding) => ({
+      binding,
+      visibility: FRAGMENT,
+      texture: { sampleType: "float" as const },
+    })),
+    ...[5, 6, 7, 8, 9].map((binding) => ({
+      binding,
+      visibility: FRAGMENT,
+      sampler: { type: "filtering" as const },
+    })),
+  ];
   const textureSetLayout = device.createBindGroupLayout({
     label: "textureSet",
-    entries: [
-      ...[0, 1, 2, 3, 4].map((binding) => ({
-        binding,
-        visibility: FRAGMENT,
-        texture: { sampleType: "float" as const },
-      })),
-      ...[5, 6, 7, 8, 9].map((binding) => ({
-        binding,
-        visibility: FRAGMENT,
-        sampler: { type: "filtering" as const },
-      })),
-    ],
+    entries: textureSetEntries,
   });
+  // A custom shader's group 2: the texture set's, then its uniforms and
+  // textures (uniforms.ts); one per distinct code, none without them.
+  const setLayouts = new Map<string, GPUBindGroupLayout | undefined>();
+  const setLayout = (shader: CustomShader) => {
+    if (setLayouts.has(shader.code)) {
+      return setLayouts.get(shader.code);
+    }
+    const { bytes, textures } = shader.uniformLayout;
+    let layout: GPUBindGroupLayout | undefined;
+    if (bytes > 0 || textures.length > 0) {
+      const visibility = VERTEX | FRAGMENT;
+      const entries = [...textureSetEntries];
+      if (bytes > 0) {
+        entries.push({
+          binding: UNIFORM_BINDING,
+          visibility,
+          buffer: { type: "uniform" },
+        });
+      }
+      textures.forEach((_, k) => {
+        entries.push(
+          { binding: textureBinding(k), visibility, texture: {} },
+          {
+            binding: textureBinding(k) + 1,
+            visibility,
+            sampler: { type: "filtering" },
+          },
+        );
+      });
+      layout = device.createBindGroupLayout({
+        label: `${shader.label} textureSet`,
+        entries,
+      });
+    }
+    setLayouts.set(shader.code, layout);
+    return layout;
+  };
   const scatterLayout = device.createBindGroupLayout({
     label: "scatter",
     entries: [
@@ -623,10 +672,11 @@ async function createPipelines(
     label: string,
     cullMode: GPUCullMode,
     topology: GPUPrimitiveTopology = "triangle-list",
+    layout: GPUPipelineLayout = opaqueLayout,
   ) =>
     device.createRenderPipelineAsync({
       label,
-      layout: opaqueLayout,
+      layout,
       vertex: {
         module: shaders,
         entryPoint: "vs",
@@ -671,10 +721,11 @@ async function createPipelines(
     label: string,
     cullMode: GPUCullMode,
     masked: boolean,
+    layout: GPUPipelineLayout = opaqueLayout,
   ) =>
     device.createRenderPipelineAsync({
       label,
-      layout: opaqueLayout,
+      layout,
       vertex: {
         module: shaders,
         entryPoint: "vsDepth",
@@ -715,10 +766,11 @@ async function createPipelines(
     label: string,
     cullMode: GPUCullMode,
     masked: boolean,
+    layout: GPUPipelineLayout = opaqueLayout,
   ) =>
     device.createRenderPipelineAsync({
       label,
-      layout: opaqueLayout,
+      layout,
       vertex: {
         module: shaders,
         entryPoint: "vsDepth",
@@ -785,10 +837,11 @@ async function createPipelines(
     entryPoint: string,
     targets: GPUColorTargetState[],
     sampleCount = 1,
+    layout: GPUPipelineLayout = translucentPipelineLayout,
   ) =>
     device.createRenderPipelineAsync({
       label,
-      layout: translucentPipelineLayout,
+      layout,
       multisample: { count: sampleCount },
       vertex: {
         module: shaders,
@@ -850,10 +903,11 @@ async function createPipelines(
     shaders: GPUShaderModule,
     label: string,
     cullMode: GPUCullMode,
+    layout: GPUPipelineLayout = opaqueLayout,
   ) =>
     device.createRenderPipelineAsync({
       label,
-      layout: opaqueLayout,
+      layout,
       vertex: {
         module: shaders,
         entryPoint: "vsDepth",
@@ -902,31 +956,42 @@ async function createPipelines(
     opaque: GPUShaderModule,
     caster: GPUShaderModule,
     translucent: () => GPUShaderModule,
+    // A custom shader's with its uniforms (group 2: `setLayout`).
+    layouts?: { opaque: GPUPipelineLayout; translucent: GPUPipelineLayout },
   ): (key: SurfaceKey) => Promise<GPURenderPipeline> {
     const name = (label: string) => `${prefix}${label}`;
+    const o = layouts?.opaque;
+    const t = layouts?.translucent;
+    const tri = "triangle-list";
     const builders: Record<SurfaceKey, () => Promise<GPURenderPipeline>> = {
-      opaque: () => opaquePipeline(opaque, name("opaque"), "back"),
+      opaque: () => opaquePipeline(opaque, name("opaque"), "back", tri, o),
       opaqueDoubleSided: () =>
-        opaquePipeline(opaque, name("opaque.doubleSided"), "none"),
+        opaquePipeline(opaque, name("opaque.doubleSided"), "none", tri, o),
       opaqueLines: () =>
-        opaquePipeline(opaque, name("opaque.lines"), "none", "line-list"),
-      shadow: () => shadowPipeline(caster, name("shadow"), "back", false),
+        opaquePipeline(opaque, name("opaque.lines"), "none", "line-list", o),
+      shadow: () => shadowPipeline(caster, name("shadow"), "back", false, o),
       shadowDoubleSided: () =>
-        shadowPipeline(caster, name("shadow.doubleSided"), "none", false),
+        shadowPipeline(caster, name("shadow.doubleSided"), "none", false, o),
       shadowMasked: () =>
-        shadowPipeline(caster, name("shadow.masked"), "back", true),
+        shadowPipeline(caster, name("shadow.masked"), "back", true, o),
       shadowMaskedDoubleSided: () =>
-        shadowPipeline(caster, name("shadow.maskedDoubleSided"), "none", true),
-      prepass: () => prepassPipeline(caster, name("prepass"), "back"),
+        shadowPipeline(
+          caster,
+          name("shadow.maskedDoubleSided"),
+          "none",
+          true,
+          o,
+        ),
+      prepass: () => prepassPipeline(caster, name("prepass"), "back", o),
       prepassDoubleSided: () =>
-        prepassPipeline(caster, name("prepass.doubleSided"), "none"),
-      depth: () => depthPipeline(opaque, name("depth"), "back", false),
+        prepassPipeline(caster, name("prepass.doubleSided"), "none", o),
+      depth: () => depthPipeline(opaque, name("depth"), "back", false, o),
       depthDoubleSided: () =>
-        depthPipeline(opaque, name("depth.doubleSided"), "none", false),
+        depthPipeline(opaque, name("depth.doubleSided"), "none", false, o),
       depthMasked: () =>
-        depthPipeline(opaque, name("depth.masked"), "back", true),
+        depthPipeline(opaque, name("depth.masked"), "back", true, o),
       depthMaskedDoubleSided: () =>
-        depthPipeline(opaque, name("depth.maskedDoubleSided"), "none", true),
+        depthPipeline(opaque, name("depth.maskedDoubleSided"), "none", true, o),
       translucentList: () =>
         translucentPipeline(
           translucent(),
@@ -935,6 +1000,7 @@ async function createPipelines(
           "fsList",
           listTargets,
           SCENE_TARGETS.sampleCount,
+          t,
         ),
       translucentListDoubleSided: () =>
         translucentPipeline(
@@ -944,6 +1010,7 @@ async function createPipelines(
           "fsList",
           listTargets,
           SCENE_TARGETS.sampleCount,
+          t,
         ),
       translucentMoments: () =>
         translucentPipeline(
@@ -952,6 +1019,8 @@ async function createPipelines(
           "back",
           "fsMoments",
           momentTargets,
+          1,
+          t,
         ),
       translucentMomentsDoubleSided: () =>
         translucentPipeline(
@@ -960,6 +1029,8 @@ async function createPipelines(
           "none",
           "fsMoments",
           momentTargets,
+          1,
+          t,
         ),
       translucentColor: () =>
         translucentPipeline(
@@ -968,6 +1039,8 @@ async function createPipelines(
           "back",
           "fsMomentColor",
           colorTargets,
+          1,
+          t,
         ),
       translucentColorDoubleSided: () =>
         translucentPipeline(
@@ -976,6 +1049,8 @@ async function createPipelines(
           "none",
           "fsMomentColor",
           colorTargets,
+          1,
+          t,
         ),
     };
     return (key) => builders[key]();
@@ -1016,16 +1091,33 @@ async function createPipelines(
       );
     }
     let translucent: GPUShaderModule | undefined;
-    return surfaceBuilder(`${label} `, opaque, opaque, () => {
-      translucent ??= module(
-        `${label} translucent`,
-        commonWgsl,
-        opaqueSource,
-        translucentWgsl,
-        code,
-      );
-      return translucent;
-    });
+    const set = setLayout(shader);
+    const layouts = set && {
+      opaque: device.createPipelineLayout({
+        label: `${label} opaque`,
+        bindGroupLayouts: [viewLayout, drawWorldLayout, set],
+      }),
+      translucent: device.createPipelineLayout({
+        label: `${label} translucent`,
+        bindGroupLayouts: [viewLayout, drawWorldLayout, set, translucentLayout],
+      }),
+    };
+    return surfaceBuilder(
+      `${label} `,
+      opaque,
+      opaque,
+      () => {
+        translucent ??= module(
+          `${label} translucent`,
+          commonWgsl,
+          opaqueSource,
+          translucentWgsl,
+          code,
+        );
+        return translucent;
+      },
+      layouts,
+    );
   };
 
   const [
@@ -1196,6 +1288,7 @@ async function createPipelines(
     writeDrawArgs,
     ...builtinSurface,
     surface,
+    setLayout,
     depthPrepass,
     aoTrace,
     aoDenoise,

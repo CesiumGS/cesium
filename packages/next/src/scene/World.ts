@@ -480,7 +480,18 @@ export class World {
    */
   changedViews = 0;
   private readonly textureSets: Array<GPUBindGroup | undefined> = [];
+  /** Each texture set's entries, for custom shaders' groups beside them. */
+  private readonly textureSetEntries: Array<GPUBindGroupEntry[] | undefined> =
+    [];
   private readonly freeTextureSets: number[] = [];
+  /**
+   * Group 2 of batches drawing with a custom shader that has uniforms:
+   * its texture set's entries and the shader's (ShaderBindings), by texture
+   * set, shader and the shader's texture version.
+   */
+  private readonly shaderGroups = new Map<string, GPUBindGroup>();
+  /** `ShaderBindings.generation` the bundles were recorded at. */
+  private bindingsGeneration = 0;
   private readonly freeMaterials: number[] = [];
   private readonly batches = new Map<string, Batch>();
   private readonly batchList: Batch[] = [];
@@ -1012,7 +1023,13 @@ export class World {
   removeTextureSet(index: number): void {
     if (index > 0 && this.textureSets[index]) {
       this.textureSets[index] = undefined;
+      this.textureSetEntries[index] = undefined;
       this.freeTextureSets.push(index);
+      for (const key of this.shaderGroups.keys()) {
+        if (key.startsWith(`${index}|`)) {
+          this.shaderGroups.delete(key);
+        }
+      }
     }
   }
 
@@ -1042,9 +1059,11 @@ export class World {
     const index = this.freeTextureSets.pop();
     if (index !== undefined) {
       this.textureSets[index] = group;
+      this.textureSetEntries[index] = entries;
       return index;
     }
     this.textureSets.push(group);
+    this.textureSetEntries.push(entries);
     return this.textureSets.length - 1;
   }
 
@@ -2069,6 +2088,13 @@ export class World {
       );
       this.materialsDirty = false;
     }
+    // A custom shader's texture loaded or changed: its groups are new.
+    const generation = this.ctx.shaderBindings.generation;
+    if (generation !== this.bindingsGeneration) {
+      this.bindingsGeneration = generation;
+      this.bundle = undefined;
+      this.translucentDraws = undefined;
+    }
     if (!this.bundle) {
       this.writeBatches();
       this.bundle = this.recordBundle();
@@ -2279,7 +2305,6 @@ export class World {
               : batch.doubleSided
                 ? "opaqueDoubleSided"
                 : "opaque";
-    const pipelineOf = (batch: Batch) => this.pipeline(batch, keyOf(batch));
     const rank = (batch: Batch) =>
       batch.mesh.topology === "line-list" ? 2 : Number(batch.doubleSided);
     const order = [...this.batchList].sort(
@@ -2291,7 +2316,7 @@ export class World {
     const direct = this._submission === "direct";
     const list = direct ? this.directListBuffer : this.itemListBuffer;
     let pipeline: GPURenderPipeline | undefined;
-    let textureSet = -1;
+    let group: GPUBindGroup | undefined;
     for (const batch of order) {
       if (
         batch.items === 0 ||
@@ -2299,14 +2324,16 @@ export class World {
       ) {
         continue;
       }
-      const wanted = pipelineOf(batch);
+      const key = keyOf(batch);
+      const wanted = this.pipeline(batch, key);
       if (wanted !== pipeline) {
         pipeline = wanted;
         encoder.setPipeline(pipeline);
       }
-      if (batch.textureSet !== textureSet) {
-        textureSet = batch.textureSet;
-        encoder.setBindGroup(2, this.textureSets[textureSet]!);
+      const wantedGroup = this.setGroup(batch, wanted, key);
+      if (wantedGroup !== group) {
+        group = wantedGroup;
+        encoder.setBindGroup(2, group);
       }
       encoder.setVertexBuffer(0, list, batch.itemBase * 4);
       if (direct) {
@@ -2337,6 +2364,44 @@ export class World {
         this.ctx.shaders.pipeline(batch.shader, key, this.shaderReady)) ??
       this.ctx.pipelines[key]
     );
+  }
+
+  /**
+   * A batch's group 2: its texture set's, or with its custom shader's
+   * pipeline (not the engine's stand-in) and uniforms, beside the shader's.
+   */
+  private setGroup(
+    batch: Batch,
+    pipeline: GPURenderPipeline,
+    key: SurfaceKey,
+  ): GPUBindGroup {
+    const shader = batch.shader;
+    const plain = this.textureSets[batch.textureSet]!;
+    if (!shader || pipeline === this.ctx.pipelines[key]) {
+      return plain;
+    }
+    const layout = this.ctx.pipelines.setLayout(shader);
+    if (!layout) {
+      return plain;
+    }
+    const own = this.ctx.shaderBindings.entries(shader);
+    const groupKey = `${batch.textureSet}|${shader.id}|${own.version}`;
+    let group = this.shaderGroups.get(groupKey);
+    if (!group) {
+      group = this.ctx.device.createBindGroup({
+        label: `world.textureSet ${shader.label}`,
+        layout,
+        entries: [...this.textureSetEntries[batch.textureSet]!, ...own.entries],
+      });
+      // Older versions of this shader's group are unused now.
+      for (const k of this.shaderGroups.keys()) {
+        if (k.startsWith(`${batch.textureSet}|${shader.id}|`)) {
+          this.shaderGroups.delete(k);
+        }
+      }
+      this.shaderGroups.set(groupKey, group);
+    }
+    return group;
   }
 
   /** A custom shader's pipeline is ready: draw with it from now on. */
@@ -2461,19 +2526,21 @@ export class World {
     const direct = this._submission === "direct";
     const list = direct ? this.directListBuffer : this.itemListBuffer;
     let current: GPURenderPipeline | undefined;
-    let textureSet = -1;
+    let bound: GPUBindGroup | undefined;
     for (const batch of this.batchList) {
       if (batch.items === 0 || !this.translucent(batch)) {
         continue;
       }
-      const wanted = this.pipeline(batch, keyOf(batch.doubleSided));
+      const key = keyOf(batch.doubleSided);
+      const wanted = this.pipeline(batch, key);
       if (wanted !== current) {
         current = wanted;
         pass.setPipeline(wanted);
       }
-      if (batch.textureSet !== textureSet) {
-        textureSet = batch.textureSet;
-        pass.setBindGroup(2, this.textureSets[textureSet]!);
+      const wantedGroup = this.setGroup(batch, wanted, key);
+      if (wantedGroup !== bound) {
+        bound = wantedGroup;
+        pass.setBindGroup(2, bound);
       }
       pass.setVertexBuffer(0, list, batch.itemBase * 4);
       if (direct) {

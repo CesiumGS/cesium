@@ -9,6 +9,11 @@ export {
   CustomShader,
   type CustomShaderOptions,
   type NamedType,
+  type TextureSource,
+  type TextureUniform,
+  type UniformDeclaration,
+  type UniformType,
+  type ValueUniform,
 } from "./scene/CustomShader.ts";
 export {
   World,

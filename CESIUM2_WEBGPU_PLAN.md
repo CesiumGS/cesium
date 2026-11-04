@@ -2560,6 +2560,53 @@ with 1.x (L2), which need 2 and 3.
   and property tables on the GPU (with feature styling), and a 1.x
   comparison (L2) of the property-attribute Sandcastle.
 
+**Increment 5 (r47): typed uniforms and user textures (foundation 3,
+first part).**
+
+- `CustomShader({ uniforms })`, as 1.x's: values (`f32`, `i32`, `u32`,
+  `vec2f`, `vec3f`, `vec4f`, `mat3x3f`, `mat4x4f`; matrices column-major)
+  read as `uniforms.<name>`, and textures (`type: "texture2d"`, a URL,
+  `ImageBitmap`, `ImageData` or canvas; read as stored, rgba8unorm with
+  mipmaps; repeat or clamp, linear or nearest) sampled as
+  `textureSample(<name>, <name>Sampler, uv)`, in either stage. At most 4
+  textures. `setUniform(name, value)` changes either; content redraws on
+  demand.
+- Binding. All four bind groups are in use, and a batch has one shader,
+  so they extend group 2, the batch's texture set: the values at binding
+  10, textures and samplers from 11 (8 of the device's 16 samplers were
+  in use). A shader with uniforms has its own group-2 layout, per
+  distinct code (`Pipelines.setLayout`); worlds make a group per texture
+  set and shader, and bind it only with the shader's own pipelines (the
+  engine's stand-in keeps the plain set). `ShaderBindings` keeps each
+  shader's uniform buffer and textures on the device, written before
+  frames (`flush`); a texture reads white until it has loaded, then the
+  worlds record again. One buffer per shader object: shaders with the
+  same code and different values share pipelines.
+- The buffer follows WGSL's uniform layout, which for these types is
+  std140's too, so Slang's `ConstantBuffer` matches it. Slang: the
+  `cesium` module declares the same bindings (`[[vk::binding]]`,
+  `--uniforms name:type,…` for the CLI); matrices are declared
+  `row_major` and written transposed, so `mul(m, v)` there is M v. The
+  pin matters: slangc 2026.20 stores uniform matrices column-major by
+  default and the slang-wasm build row-major, so the same source drew
+  differently until it was declared.
+- Harness, 6 new cases (27 of 27 pass): every value type, including an
+  asymmetric `mat3x3f` and a negative `i32`, matches the same values as
+  constants exactly, from WGSL and from Slang both ways; `setUniform`
+  after creation matches the constants with the new value; a texture by
+  URL, sampled in the vertex stage (lifting) and the fragment stage,
+  differs from a white one (it loaded). The harness now compiles the
+  shader each case is compared with too (it had drawn with the engine's
+  while compiling), and tells a missing slang-wasm from a served one by
+  its content type (Vite answers missing paths with its HTML page, 200,
+  so runtime cases ran and failed on a bench server without
+  `SLANG_WASM_DIR` instead of being skipped); with it set, the bench
+  passes 27 of 27. Parity, models and translucency are unchanged (318
+  image metrics, none moved).
+- Not yet: arrays and booleans, matrices other than 3×3 and 4×4, cube
+  and array textures, textures in sRGB, sharing a texture between
+  shaders, freeing a shader's buffers before the engine's end.
+
 ### Real-time tracks (after Custom shading)
 
 - §13.11: track collections as instance data with a bulk update API,

@@ -9,6 +9,7 @@ import {
   slangStub,
   type NamedType,
 } from "./slangStages.ts";
+import type { UniformDeclaration } from "./uniforms.ts";
 
 /**
  * Runtime Slang compilation of custom shader stages (`CustomShader.fromSlang`):
@@ -52,6 +53,7 @@ export async function compileSlang(
   named: {
     attributes?: Record<string, { type: NamedType }>;
     metadata?: Record<string, NamedType>;
+    uniforms?: Record<string, { type: UniformDeclaration["type"] }>;
   } = {},
 ): Promise<string> {
   const stages = slangStages(source);
@@ -71,6 +73,7 @@ export async function compileSlang(
           Object.entries(named.attributes ?? {}).map(([n, a]) => [n, a.type]),
         ),
         metadata: named.metadata ?? {},
+        uniforms: named.uniforms ?? {},
       }),
       user: source,
       stub: slangStub(stages),

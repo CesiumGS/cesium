@@ -1469,7 +1469,9 @@ export class Engine {
     // Which targets need a frame. A canvas gets a fresh texture each frame,
     // so a target redraws all its views when any of them changed; targets
     // with none changed are skipped and keep their last image.
-    const all = this.globalChanged() || this.renderRequested;
+    // A custom shader's uniform or texture changed: everything may show it.
+    const uniforms = this.ctx.shaderBindings.flush();
+    const all = this.globalChanged() || this.renderRequested || uniforms;
     const dirty = this.dirtyTargets;
     const dirtyViews = this.dirtyViews;
     dirty.clear();
@@ -1652,6 +1654,9 @@ export class Engine {
     const start = performance.now();
     this.renderRequested = false;
     this.stats.idle = false;
+    // Custom shaders' uniforms changed since the tick (or no tick ran);
+    // the tick still sees what changed for its views.
+    this.ctx.shaderBindings.flush(false);
     this.stats.framesRendered++;
     const device = this.ctx.device;
     const stamp = ++this.frameNumber;

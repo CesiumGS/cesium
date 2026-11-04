@@ -308,7 +308,8 @@ function wgslTarget(targets: unknown): number {
 async function runtimeCompile(device: GPUDevice): Promise<void> {
   const url = "/slang-wasm/slang-wasm.js";
   const probe = await fetch("/slang-wasm/slang-wasm.wasm", { method: "HEAD" });
-  if (!probe.ok) {
+  // Vite answers missing paths with its HTML page (200): check the type.
+  if (!probe.ok || !probe.headers.get("content-type")?.includes("wasm")) {
     report(
       "runtime compile (slang-wasm)",
       "skipped: WASM build not served (set SLANG_WASM_DIR)",
