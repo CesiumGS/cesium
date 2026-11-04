@@ -68,6 +68,8 @@ struct DrawRecord {
   lightsSlice: u32,        // a globe tile's slice of the night lights (as imagerySlice)
   attributes: u32,         // the mesh's named-attribute directory (MeshStreams.attributes)
   instanceDirectory: u32,  // named fields of the instance streams (DrawRecordData)
+  billboardSize: f32,      // billboards (flag 16): pixels per mesh unit
+  billboardDepthTest: f32, // billboards: drawn in front within this distance, m
 };
 
 // A placement composed in float64 on the CPU (World transform table).

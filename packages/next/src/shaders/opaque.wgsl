@@ -618,9 +618,27 @@ fn vertexOut(vertexIndex: u32, item: u32, withAir: bool) -> VsOut {
   vertexMain(vsInput, &vsOutput);
   normal = vsOutput.normalMC;
   out.positionMC = vsOutput.positionMC;
-  let world = m * vec4f(vsOutput.positionMC, 1.0);
+  var world = m * vec4f(vsOutput.positionMC, 1.0);
   out.relPosition = world.xyz;
   out.position = view.viewProj * world;
+  // A billboard (RecordFlags.billboard): the instance's position, its
+  // corner's model xy as pixels on screen (times the size and the
+  // instance's scale), facing the camera; in front of everything within
+  // its depth-test distance.
+  let billboard = (r.flags & 16u) != 0u;
+  if (billboard) {
+    world = m * vec4f(0.0, 0.0, 0.0, 1.0);
+    out.relPosition = world.xyz;
+    let corner = vsOutput.positionMC.xy * r.billboardSize * length(m[0].xyz);
+    out.position = view.viewProj * world;
+    out.position = vec4f(
+      out.position.xy + corner * 2.0 * view.viewport.zw * out.position.w,
+      out.position.zw,
+    );
+    if (length(world.xyz) < r.billboardDepthTest) {
+      out.position.z = out.position.w; // reverse-Z: the near plane
+    }
+  }
   out.airInscatter = vec3f(0.0);
   out.airTransmittance = vec3f(1.0);
   if (withAir && view.sunLight.w > 0.5 && view.bodyRadii.w > 0.0) {
@@ -643,6 +661,9 @@ fn vertexOut(vertexIndex: u32, item: u32, withAir: bool) -> VsOut {
   // Normalize before interpolation: under non-uniform scale the transformed
   // lengths vary with direction and would skew the interpolated normal.
   out.normal = normalize(cross(c1, c2) * normal.x + cross(c2, c0) * normal.y + cross(c0, c1) * normal.z) * sign(det);
+  if (billboard) {
+    out.normal = -normalize(world.xyz); // toward the camera
+  }
   out.draw = draw;
   // Per-vertex feature IDs (CAD elements, buildings) are local to the draw;
   // its first global ID offsets them. Flat interpolation takes the provoking
@@ -711,11 +732,7 @@ override cutOutInDepth: bool = false;
 fn depthCoverageFs(in: VsOut) -> @location(0) vec4f {
   let r = records[in.draw];
   let material = materials[r.materialIndex];
-  let sampled = textureSample(baseColorTexture, baseColorSampler, in.uv).a;
-  var alpha = material.baseColor.a * r.color.a * in.color.a;
-  if ((material.flags & 16u) != 0u) {
-    alpha *= sampled;
-  }
+  let alpha = materialAlpha(in);
   let ramp = max(fwidth(alpha), 1e-4);
   if ((r.placeholderMask & view.viewBit) != 0u &&
       !insideClipBoxes(r.clipBlock, r.clipCount, in.relPosition)) {
@@ -725,17 +742,41 @@ fn depthCoverageFs(in: VsOut) -> @location(0) vec4f {
   return vec4f(0.0, 0.0, 0.0, clamp((alpha - cutoff) / ramp + 0.5, 0.0, 1.0));
 }
 
+// A surface's alpha as the opaque pass's shading has it, for the passes
+// that cut out or blend by alpha without shading: the material's (factor,
+// tint, vertex color, base color texture), then the custom shader's
+// (`fragmentMain`'s material alpha; the engine's leaves it). Called in
+// uniform control flow: a `fragmentMain` may sample textures.
+fn materialAlpha(in: VsOut) -> f32 {
+  let r = records[in.draw];
+  let material = materials[r.materialIndex];
+  let sampled = textureSample(baseColorTexture, baseColorSampler, in.uv);
+  var color = material.baseColor * r.color * in.color;
+  if ((material.flags & 16u) != 0u) {
+    color *= sampled;
+  }
+  let geometric = normalize(in.normal);
+  var custom = MaterialOutput(
+    color.rgb,
+    color.a,
+    material.metallic,
+    material.roughness,
+    geometric,
+    1.0,
+    material.emissive,
+    (material.flags & 1u) != 0u || (r.flags & 2u) != 0u,
+  );
+  fragmentMain(fragmentInputOf(in, geometric), &custom);
+  return custom.alpha;
+}
+
 // The opaque pass's discards: alpha cutoff, blended surfaces' translucent
 // parts, mixed-LOD placeholders.
 fn cutOut(in: VsOut) {
   let r = records[in.draw];
   let material = materials[r.materialIndex];
-  let baseColorAlpha = textureSample(baseColorTexture, baseColorSampler, in.uv).a;
+  let alpha = materialAlpha(in);
   if ((material.flags & 12u) != 0u) {
-    var alpha = material.baseColor.a * r.color.a * in.color.a;
-    if ((material.flags & 16u) != 0u) {
-      alpha *= baseColorAlpha;
-    }
     let cutoff = select(material.alphaCutoff, OPAQUE_ALPHA, (material.flags & 8u) != 0u);
     if (alpha < cutoff) {
       discard;
@@ -1034,6 +1075,26 @@ fn fs(in: VsOut, @builtin(front_facing) frontFacing: bool) -> FsOut {
 
 // Translucent surfaces (`translucent`) take no ambient occlusion: the
 // screen's occlusion is that of the opaque surfaces behind them.
+// A fragment as custom shaders' `fragmentMain` sees it.
+fn fragmentInputOf(in: VsOut, geometric: vec3f) -> FragmentInput {
+  let r = records[in.draw];
+  return FragmentInput(
+    in.positionMC,
+    in.relPosition,
+    in.relPosition + (view.cameraHi + view.cameraLo),
+    geometric,
+    in.uv,
+    in.color * r.color,
+    in.feature,
+    in.position.xy,
+    view.time.x,
+    fragmentAttributes(in),
+    fragmentMetadata(in),
+    in.instanceIndex,
+    instanceValues(in.draw, in.instanceIndex),
+  );
+}
+
 fn shadeSurface(in: VsOut, frontFacing: bool, translucent: bool) -> Surface {
   let r = records[in.draw];
   let material = materials[r.materialIndex];
@@ -1078,9 +1139,6 @@ fn shadeSurface(in: VsOut, frontFacing: bool, translucent: bool) -> Surface {
   if (imageryPacked != 0u) {
     // The draw's tint (white unless a debug view tints tiles) still applies.
     baseColor = vec4f(srgbToLinear(imagerySample.rgb), 1.0) * r.color;
-  }
-  if (!cutOutInDepth && (flags & 4u) != 0u && baseColor.a < material.alphaCutoff) {
-    discard;
   }
   // Mixed-LOD placeholder: a coarse tile fills only the volumes of its
   // missing finer descendants, at its true depth (plan §13.1).
@@ -1138,21 +1196,7 @@ fn shadeSurface(in: VsOut, frontFacing: bool, translucent: bool) -> Surface {
   }
 
   // The custom shader's material (custom.wgsl's default: unchanged).
-  let fsInput = FragmentInput(
-    in.positionMC,
-    in.relPosition,
-    in.relPosition + (view.cameraHi + view.cameraLo),
-    geometric,
-    in.uv,
-    in.color * r.color,
-    in.feature,
-    in.position.xy,
-    view.time.x,
-    fragmentAttributes(in),
-    fragmentMetadata(in),
-    in.instanceIndex,
-    instanceValues(in.draw, in.instanceIndex),
-  );
+  let fsInput = fragmentInputOf(in, geometric);
   var custom = MaterialOutput(
     baseColor.rgb,
     baseColor.a,
@@ -1165,6 +1209,10 @@ fn shadeSurface(in: VsOut, frontFacing: bool, translucent: bool) -> Surface {
   );
   fragmentMain(fsInput, &custom);
   baseColor = vec4f(custom.baseColor, custom.alpha);
+  // Alpha mask, on the custom shader's alpha (the depth pass's cut, else here).
+  if (!cutOutInDepth && (flags & 4u) != 0u && baseColor.a < material.alphaCutoff) {
+    discard;
+  }
   if (custom.unlit) {
     return Surface(baseColor.rgb, baseColor.a, true);
   }

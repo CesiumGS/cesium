@@ -251,6 +251,12 @@ export const RecordFlags = {
    * ground): its depth is scaled by `UNDERLAY_DEPTH`.
    */
   underlay: 8,
+  /**
+   * A billboard: its mesh's model xy (after the custom vertex stage) are
+   * pixel offsets on screen from the instance's position, times
+   * `billboardSize` and the instance's scale (`DrawOptions.billboard`).
+   */
+  billboard: 16,
 } as const;
 
 /**
@@ -370,6 +376,13 @@ export interface DrawRecordData {
    * within an instance and components.
    */
   instanceDirectory?: number;
+  /** Billboards (`RecordFlags.billboard`): pixels per mesh unit. */
+  billboardSize?: number;
+  /**
+   * Billboards: within this distance (m) drawn in front of everything
+   * (1.x `disableDepthTestDistance`); 0: depth-tested.
+   */
+  billboardDepthTest?: number;
 }
 
 export function writeDrawRecord(
@@ -413,8 +426,8 @@ export function writeDrawRecord(
   u32[o + 31] = 0; // night lights slice (packImagery)
   u32[o + 32] = r.streams.attributes;
   u32[o + 33] = r.instanceDirectory ?? NO_STREAM;
-  u32[o + 34] = 0;
-  u32[o + 35] = 0;
+  f32[o + 34] = r.billboardSize ?? 0;
+  f32[o + 35] = r.billboardDepthTest ?? 0;
 }
 
 /**

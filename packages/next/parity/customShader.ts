@@ -6,6 +6,7 @@ import {
   Engine,
   MaterialFlags,
   OffscreenTarget,
+  createBillboard,
   createBox,
   eastNorthUpToFixedFrame,
   fromDegrees,
@@ -86,6 +87,16 @@ interface Case {
    * (`setInstanceStreams`).
    */
   instanced?: "streams" | "updated";
+  /** The boxes' materials cut out at alpha 0.5 (alpha mask). */
+  masked?: boolean;
+  /**
+   * Billboards above the boxes, with the shader (the boxes without):
+   * "red", 48 px unlit red in front of everything; "masked", one 400 px
+   * white cut-out billboard, depth-tested.
+   */
+  billboards?: "red" | "masked";
+  /** Checks the custom image; a message when it fails. */
+  check?: (image: ImageData) => string | undefined;
   /** A glTF model (e.g. `PROPERTY_MODEL`) instead of boxes. */
   model?: string;
   /** "Same" within float rounding (FLIP mean below 0.001), not exactly. */
@@ -410,6 +421,21 @@ const instanceByHand = (
   (*material).baseColor = tints[i] * (f32(symbols[i]) + 1.0) / 3.0;
 }`,
   });
+
+/** Cut out entirely by the custom shader's alpha. */
+const ALPHA_ZERO = new CustomShader({
+  label: "alpha 0",
+  fragment: `${FS}
+  (*material).alpha = 0.0;
+}`,
+});
+/** Hidden by collapsing: what a full cut-out must look like. */
+const COLLAPSED = new CustomShader({
+  label: "collapsed",
+  vertex: `fn vertexMain(vsInput: VertexInput, vsOutput: ptr<function, VertexOutput>) {
+  (*vsOutput).positionMC = vec3f(0.0);
+}`,
+});
 
 /** The boxes' named attributes as shear.slang declares them. */
 const SHEAR_ATTRIBUTES = {
@@ -845,6 +871,61 @@ const CASES: Case[] = [
       }),
   },
   {
+    name: "custom alpha cuts out in every pass (vs hidden)",
+    same: true,
+    masked: true,
+    against: COLLAPSED,
+    shader: ALPHA_ZERO,
+  },
+  {
+    name: "custom alpha: stripes cut out",
+    same: false,
+    masked: true,
+    shader: new CustomShader({
+      label: "stripes",
+      fragment: `${FS}
+  (*material).alpha = step(0.5, fract(fsInput.positionMC.z * 4.0));
+}`,
+    }),
+  },
+  {
+    name: "billboards: 48 px, in front of everything",
+    same: true,
+    billboards: "red",
+    shader: new CustomShader({ label: "unchanged" }),
+    check: (image) => {
+      const n = redPixels(image);
+      const want = 3 * BILLBOARD_PIXELS * BILLBOARD_PIXELS;
+      return Math.abs(n - want) / want < 0.03
+        ? undefined
+        : `${n} red pixels, want ${want}`;
+    },
+  },
+  {
+    name: "billboards: a full cut-out (vs hidden)",
+    same: true,
+    billboards: "masked",
+    against: COLLAPSED,
+    shader: ALPHA_ZERO,
+  },
+  {
+    name: "billboards: symbols from a texture by instance",
+    same: false,
+    billboards: "red",
+    frames: 20,
+    shader: new CustomShader({
+      label: "logo billboards",
+      uniforms: { logo: { type: "texture2d", value: LOGO } },
+      vertex: `fn vertexMain(vsInput: VertexInput, vsOutput: ptr<function, VertexOutput>) {
+  // Each instance a little larger.
+  (*vsOutput).positionMC *= 1.0 + 0.5 * f32(vsInput.instanceIndex);
+}`,
+      fragment: `${FS}
+  (*material).baseColor = textureSample(logo, logoSampler, fsInput.texCoord0).rgb;
+}`,
+    }),
+  },
+  {
     name: "uniforms: every type (vs constants)",
     same: true,
     against: CONSTANTS,
@@ -1052,7 +1133,12 @@ function build(world: World, c: Case, shader: CustomShader | undefined): void {
     const material = world.addMaterial({
       baseColor: [...color, c.blended ? 0.5 : 1],
       roughness: 0.5,
-      flags: c.blended ? MaterialFlags.alphaBlend : 0,
+      flags: c.blended
+        ? MaterialFlags.alphaBlend
+        : c.masked
+          ? MaterialFlags.alphaMask
+          : 0,
+      alphaCutoff: 0.5,
     });
     const local = mat4.fromScale(mat4.mat4(), 4, 4, 8);
     mat4.setTranslation(local, vec3.vec3((i - 1) * 9, 0, 4));
@@ -1062,9 +1148,64 @@ function build(world: World, c: Case, shader: CustomShader | undefined): void {
       model: mat4.multiply(mat4.mat4(), enu, local),
       material,
       doubleSided: c.blended ?? false,
-      ...(shader ? { shader } : {}),
+      ...(shader && !c.billboards ? { shader } : {}),
     });
   });
+  if (c.billboards) {
+    billboards(world, origin, enu, c.billboards, shader);
+  }
+}
+
+/** Billboards (`Case.billboards`) as one instanced draw, with `shader`. */
+function billboards(
+  world: World,
+  origin: vec3.Vec3,
+  enu: mat4.Mat4,
+  kind: "red" | "masked",
+  shader: CustomShader | undefined,
+): void {
+  const red = kind === "red";
+  const matrices: number[] = [];
+  for (let i = 0; i < (red ? 3 : 1); i++) {
+    const m = mat4.mat4();
+    mat4.setTranslation(m, vec3.vec3(red ? (i - 1) * 9 : 0, 0, 13));
+    matrices.push(...m);
+  }
+  world.addDraw({
+    mesh: world.addMesh(createBillboard()),
+    origin,
+    model: enu,
+    radius: 30,
+    material: world.addMaterial({
+      baseColor: red ? [1, 0, 0, 1] : [1, 1, 1, 1],
+      flags: red ? 0 : MaterialFlags.alphaMask,
+      alphaCutoff: 0.5,
+    }),
+    instances: { matrices },
+    billboard: {
+      size: red ? BILLBOARD_PIXELS : 400,
+      depthTestDistance: red ? 1e9 : 0,
+    },
+    ...(shader ? { shader } : {}),
+  });
+}
+
+/** The red billboards' side, px. */
+const BILLBOARD_PIXELS = 48;
+
+/** Pixels of pure red (the unlit billboards), as a check's count. */
+function redPixels(image: ImageData): number {
+  let n = 0;
+  for (let i = 0; i < image.data.length; i += 4) {
+    if (
+      image.data[i]! > 200 &&
+      image.data[i + 1]! < 60 &&
+      image.data[i + 2]! < 60
+    ) {
+      n++;
+    }
+  }
+  return n;
 }
 
 const frame = () => new Promise((resolve) => setTimeout(resolve, 30));
@@ -1294,6 +1435,10 @@ async function runCustomShader(): Promise<Row[]> {
     }
     const base = await render(engine, target, c, c.against);
     const custom = await render(engine, target, c, shader);
+    const problem = c.check?.(custom);
+    if (problem) {
+      compiled = `${compiled}; check failed: ${problem}`;
+    }
     const f = flip(base.data, custom.data, WIDTH, HEIGHT);
     const failed = compiled !== "yes";
     rows.push({
@@ -1302,6 +1447,7 @@ async function runCustomShader(): Promise<Row[]> {
       compiled,
       flipMean: f.mean,
       pass:
+        problem === undefined &&
         failed === (c.fails ?? false) &&
         (c.same ? (c.close ? f.mean < 0.001 : f.mean === 0) : f.mean > 0.005),
     });

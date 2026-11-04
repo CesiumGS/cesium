@@ -135,12 +135,7 @@ fn momentDepth(relPosition: vec3f) -> f32 {
 // opaque pass's placeholder clip.
 fn blendedAlpha(in: VsOut) -> f32 {
   let r = records[in.draw];
-  let material = materials[r.materialIndex];
-  let sampled = textureSample(baseColorTexture, baseColorSampler, in.uv).a;
-  var alpha = material.baseColor.a * r.color.a * in.color.a;
-  if ((material.flags & 16u) != 0u) {
-    alpha *= sampled;
-  }
+  let alpha = materialAlpha(in);
   if ((r.placeholderMask & view.viewBit) != 0u &&
       !insideClipBoxes(r.clipBlock, r.clipCount, in.relPosition)) {
     discard;

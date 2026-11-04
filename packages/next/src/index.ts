@@ -107,6 +107,7 @@ export {
 } from "./streaming/Budgeted.ts";
 export { Tile, tileHeaderKey } from "./streaming/Tile.ts";
 export {
+  createBillboard,
   createBox,
   createSurfacePatch,
   type MeshData,

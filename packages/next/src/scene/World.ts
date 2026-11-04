@@ -174,6 +174,15 @@ export interface DrawOptions {
   features?: FeatureTable;
   /** Views that draw it, one bit per view (`Engine.viewBit`); default all. */
   viewMask?: number;
+  /**
+   * Draws the mesh as a billboard (`createBillboard`): facing the camera,
+   * its model xy after the custom vertex stage are pixel offsets from the
+   * instance's (or draw's) position, times `size` and the instance's
+   * scale. Unlit, casting no shadows. Within `depthTestDistance` meters
+   * of the camera it draws in front of everything (1.x
+   * `disableDepthTestDistance`; default 0, depth-tested).
+   */
+  billboard?: { size: number; depthTestDistance?: number };
 }
 
 /** What a picked feature ID resolves to. */
@@ -266,6 +275,8 @@ interface Batch {
   doubleSided: boolean;
   /** Its custom shader; undefined: the engine's. */
   shader: CustomShader | undefined;
+  /** Billboards: not in the shadow and ambient-occlusion passes. */
+  billboard: boolean;
   /** Draw items: records without instances plus instances. */
   items: number;
   itemBase: number;
@@ -1343,7 +1354,8 @@ export class World {
     const textureSet = options.textureSet ?? 0;
     const doubleSided = options.doubleSided ?? false;
     const shader = options.shader;
-    const key = `${mesh.id}|${material}|${textureSet}|${doubleSided ? 1 : 0}|${shader?.id ?? 0}`;
+    const billboard = options.billboard !== undefined;
+    const key = `${mesh.id}|${material}|${textureSet}|${doubleSided ? 1 : 0}|${shader?.id ?? 0}|${billboard ? 1 : 0}`;
     let batch = this.batches.get(key);
     if (!batch) {
       const reused = this.freeBatches.pop();
@@ -1355,6 +1367,7 @@ export class World {
         batch.material = material;
         batch.doubleSided = doubleSided;
         batch.shader = shader;
+        batch.billboard = billboard;
       } else {
         batch = {
           index: this.batchList.length,
@@ -1364,6 +1377,7 @@ export class World {
           material,
           doubleSided,
           shader,
+          billboard,
           items: 0,
           itemBase: 0,
         };
@@ -1404,9 +1418,10 @@ export class World {
       viewMask: options.viewMask,
       // Lines have no surface to light; 1.x draws them unlit too.
       flags:
-        (options.unlit || mesh.topology === "line-list"
+        (options.unlit || mesh.topology === "line-list" || options.billboard
           ? RecordFlags.unlit
           : 0) |
+        (options.billboard ? RecordFlags.billboard : 0) |
         (options.collision ? RecordFlags.collision : 0) |
         (options.underlay ? RecordFlags.underlay : 0),
       instanceFirst,
@@ -1414,6 +1429,12 @@ export class World {
       instanceStreams,
       instanceStride,
       instanceDirectory,
+      ...(options.billboard
+        ? {
+            billboardSize: options.billboard.size,
+            billboardDepthTest: options.billboard.depthTestDistance ?? 0,
+          }
+        : {}),
     });
     this.markDirty(index);
     this.bundle = undefined;
@@ -2544,7 +2565,9 @@ export class World {
     for (const batch of order) {
       if (
         batch.items === 0 ||
-        ((shadow || prepass || depth) && batch.mesh.topology === "line-list")
+        ((shadow || prepass || depth) && batch.mesh.topology === "line-list") ||
+        // Billboards face the camera: no shadows, no ambient occlusion.
+        ((shadow || prepass) && batch.billboard)
       ) {
         continue;
       }

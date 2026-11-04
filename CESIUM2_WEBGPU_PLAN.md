@@ -2436,7 +2436,8 @@ whole ice sheet.
   6); named attributes (glTF parsing keeps only the core six; foundation
   2); parameter blocks and user textures (3); feature styling (needs
   properties on the GPU); changing a tileset's shader after load; a custom
-  alpha doesn't reach the depth pass's alpha-to-coverage cutout.
+  alpha doesn't reach the depth pass's alpha-to-coverage cutout (done in
+  r47, Real-time tracks increment 1).
 
 **Increment 2 (r46): Slang stages, at build time and at runtime
 (foundations 5 and 6).**
@@ -2742,6 +2743,45 @@ symbol: "u32" }` (the named types and `u32`, `i32`) and reads
 - _Exit_: 100,000 clamped tracks updated at 10 Hz from a synthetic feed
   over terrain and 3D Tiles hold frame rate with flat CPU cost, measured
   against 1.x entities in the benchmark suite.
+
+**Increments (r47).** (1) Billboards, and custom alpha in every pass.
+(2) A track collection: feed samples as instance streams with bulk
+updates, interpolation in time, model and billboard representations,
+and the model/symbol choice per instance in the cull pass. (3) Clamping
+on the GPU to terrain and 3D Tiles. (4) The showcase (Dyno's Examples
+section) and the benchmark against 1.x entities and billboard
+collections. (5) Labels with decluttering.
+
+**Increment 1 (r47): billboards; custom alpha in every pass.**
+
+- `DrawOptions.billboard: { size, depthTestDistance }` draws the mesh
+  (`createBillboard("center" | "bottom")`, a unit quad) facing the
+  camera: after the custom vertex stage, a corner's model xy is a pixel
+  offset on screen from the instance's (or draw's) position, times
+  `size` and the instance's scale, so a shader can rotate and scale
+  symbols per instance. Within `depthTestDistance` meters a billboard
+  draws in front of everything (1.x `disableDepthTestDistance`).
+  Billboards are unlit, cast no shadows and stay out of the
+  ambient-occlusion prepass (a batch flag); they pick per instance. The
+  record's last spare words hold the size and distance.
+- Custom alpha reaches every pass: the depth prepass's alpha to coverage,
+  the cut-outs of shadow casters and the ambient-occlusion prepass, and
+  the translucent passes now share `materialAlpha`, which runs the custom
+  shader's `fragmentMain` (in uniform control flow, as it may sample
+  textures); the opaque pass checks an alpha mask after it. Before, a
+  custom alpha cut only the color, leaving depth (holes) and shadows.
+  The engine's own shader leaves alpha unchanged, to the bit.
+- Harness, 5 new cases (51 of 51 pass): masked boxes cut out entirely by
+  a custom alpha match the boxes hidden exactly (no depth, shadow or
+  ambient-occlusion trace); stripes cut out; three 48 px billboards in
+  front of everything cover 3 × 48² px within 3%; a 400 px billboard
+  cut out entirely matches it hidden; symbols from a texture, scaled per
+  instance. A case can now check its image (`Case.check`). Parity,
+  models and translucency unchanged (318 image metrics) but for one run
+  in which translucency's near-opaque scene differed between draw orders
+  (order max 0.0054, its image metrics unchanged); two reruns gave 0 as
+  every run before, so it's recorded as a one-off to watch. The bench
+  passes 51 of 51.
 
 ### M5 — Performance hardening (≈3 wks)
 

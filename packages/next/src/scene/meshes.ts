@@ -68,6 +68,36 @@ export interface PropertyTextureData {
   scale?: number[];
 }
 
+/**
+ * A billboard's quad (`DrawOptions.billboard`): 1 unit square in xy,
+ * centered on the position ("center") or standing on it ("bottom"), its
+ * uvs with v down the image (an image's top at the top).
+ */
+export function createBillboard(
+  anchor: "center" | "bottom" = "center",
+): MeshData {
+  const low = anchor === "bottom" ? 0 : -0.5;
+  return {
+    positions: new Float32Array([
+      -0.5,
+      low,
+      0,
+      0.5,
+      low,
+      0,
+      0.5,
+      low + 1,
+      0,
+      -0.5,
+      low + 1,
+      0,
+    ]),
+    normals: new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1]),
+    uvs: new Float32Array([0, 1, 1, 1, 1, 0, 0, 0]),
+    indices: new Uint32Array([0, 1, 2, 0, 2, 3]),
+  };
+}
+
 /** A unit cube centered at the origin, with flat per-face normals. */
 export function createBox(): MeshData {
   const faces: Array<[Vec3, Vec3, Vec3]> = [
