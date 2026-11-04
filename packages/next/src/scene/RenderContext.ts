@@ -10,6 +10,8 @@ import commonWgsl from "../shaders/common.wgsl?raw";
 import aoWgsl from "../shaders/ao.wgsl?raw";
 import { SHADOW_CASCADES, SHADOW_SIZE, SHADOWS_SIZE } from "./shadows.ts";
 import cullWgsl from "../shaders/cull.wgsl?raw";
+import pointCullWgsl from "../shaders/pointCull.wgsl?raw";
+import splatWgsl from "../shaders/splat.wgsl?raw";
 import scatterWgsl from "../shaders/scatter.wgsl?raw";
 import raycastWgsl from "../shaders/raycast.wgsl?raw";
 import opaqueWgsl from "../shaders/opaque.wgsl?raw";
@@ -40,6 +42,16 @@ import { UNIFORM_BINDING, textureBinding } from "./uniforms.ts";
  * Render bundles are keyed on it, so every view shares one bundle per world.
  * Views differ only after the bundle runs (present, post, overlays).
  */
+/**
+ * The generic point cull's style (pointCull.wgsl): every point shown, none
+ * small enough to splat.
+ */
+export const POINT_STYLE_DEFAULTS = `fn styleShow(i: u32, distance: f32) -> bool { return true; }
+fn styleSize(i: u32, distance: f32) -> f32 { return 3.4e38; }
+fn styleColor(i: u32, distance: f32) -> vec4f { return vec4f(1.0); }
+fn styleShapeAt(i: u32, distance: f32, p: vec2f) -> f32 { return -1.0; }
+`;
+
 export const SCENE_TARGETS = {
   // r32uint cannot be multisampled in WebGPU, so 32-bit feature IDs are
   // split across the two channels of rg16uint (lo, hi).
@@ -167,10 +179,17 @@ export interface Pipelines extends SurfacePipelines {
   cullInstances: GPUComputePipeline;
   /** Per-batch indirect args. */
   writeDrawArgs: GPUComputePipeline;
-  /** Point sets' per-view cull into their lists, and their draws' args. */
+  /**
+   * Point draws' per-view cull into their lists and their indirect args
+   * (pointCull.wgsl, with the default style: no splats); group 2 of their
+   * pipelines (group 3: a style's uniforms, vector/PointCuller.ts).
+   */
   pointCullLayout: GPUBindGroupLayout;
   cullPoints: GPUComputePipeline;
   writePointArgs: GPUComputePipeline;
+  /** Point splats into the opaque pass (splat.wgsl) and its group 1. */
+  splatLayout: GPUBindGroupLayout;
+  splatResolve: GPURenderPipeline;
   /**
    * A custom shader's pipelines from its stages' WGSL, one by key; rejects
    * with the compiler's messages.
@@ -712,6 +731,25 @@ async function createPipelines(
       { binding: 0, visibility: COMPUTE, buffer: { type: "uniform" } },
       storage(1, false, COMPUTE), // the vertex arena
       storage(2, false, COMPUTE), // point counts
+      storage(3, false, COMPUTE), // splats: depth
+      storage(4, false, COMPUTE), // splats: color
+      storage(5, false, COMPUTE), // splats: feature
+    ],
+  });
+  // The generic point cull: every point drawn as a quad (no style).
+  const pointCullModule = module(
+    "cull.points",
+    commonWgsl,
+    cullWgsl,
+    pointCullWgsl,
+    POINT_STYLE_DEFAULTS,
+  );
+  const splatLayout = device.createBindGroupLayout({
+    label: "splats",
+    entries: [
+      storage(0, true, FRAGMENT),
+      storage(1, true, FRAGMENT),
+      storage(2, true, FRAGMENT),
     ],
   });
   const pointCullPipelineLayout = device.createPipelineLayout({
@@ -1230,6 +1268,7 @@ async function createPipelines(
     writeDrawArgs,
     cullPoints,
     writePointArgs,
+    splatResolve,
     builtinSurface,
     aoTrace,
     aoDenoise,
@@ -1266,13 +1305,35 @@ async function createPipelines(
     device.createComputePipelineAsync({
       label: "cull.points",
       layout: pointCullPipelineLayout,
-      compute: { module: cullModule, entryPoint: "cullPoints" },
+      compute: { module: pointCullModule, entryPoint: "cullPoints" },
     }),
     device.createComputePipelineAsync({
       label: "cull.pointArgs",
       layout: pointCullPipelineLayout,
-      compute: { module: cullModule, entryPoint: "writePointArgs" },
+      compute: { module: pointCullModule, entryPoint: "writePointArgs" },
     }),
+    (() => {
+      const splatModule = module("splats", commonWgsl, splatWgsl);
+      return device.createRenderPipelineAsync({
+        label: "splats",
+        layout: device.createPipelineLayout({
+          bindGroupLayouts: [viewLayout, splatLayout],
+        }),
+        vertex: { module: splatModule, entryPoint: "vs" },
+        fragment: {
+          module: splatModule,
+          entryPoint: "fs",
+          targets: SCENE_TARGETS.colorFormats.map((format) => ({ format })),
+        },
+        primitive: { topology: "triangle-list" },
+        depthStencil: {
+          format: SCENE_TARGETS.depthFormat,
+          depthWriteEnabled: true,
+          depthCompare: "greater",
+        },
+        multisample: { count: SCENE_TARGETS.sampleCount },
+      });
+    })(),
     surfacePipelines("", opaqueModule, casterModule, translucentModule),
     device.createComputePipelineAsync({
       label: "ao.trace",
@@ -1405,6 +1466,8 @@ async function createPipelines(
     pointCullLayout,
     cullPoints,
     writePointArgs,
+    splatLayout,
+    splatResolve,
     ...builtinSurface,
     surface,
     setLayout,

@@ -50,6 +50,9 @@ const CLAIMED = 129u;
 const NO_BIN = 0xffffffffu;
 const EARTH_RADIUS = 6371000.0;
 
+fn styleTime() -> f32 {
+  return pool.time;
+}
 fn pointF32(i: u32, word: u32) -> f32 {
   return vertices[pool.streams + i * pool.stride + word];
 }

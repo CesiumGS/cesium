@@ -129,6 +129,29 @@ describe("vector styles", () => {
     );
   });
 
+  it("compiles a point layer for its points' cull and splats", () => {
+    const layer = compile({
+      parameters: { near: { default: 500 } },
+      layers: [
+        {
+          filter: "${view.distance} >= ${param.near}",
+          shape: "diamond",
+          size: "${speed} * 0.5px",
+          fill: { color: "#ff0000" },
+          opacity: 0.5,
+        },
+      ],
+    }).layers[0] as CompiledShapeLayer;
+    expect(layer.kernel).toContain(
+      "fn styleShow(i: u32, distance: f32) -> bool { return (distance >= uniforms.param_near); }",
+    );
+    expect(layer.kernel).toContain(
+      "fn styleSize(i: u32, distance: f32) -> f32 { return (pointF32(i, 1u) * 0.5f); }",
+    );
+    expect(layer.kernel).toContain("return vec4f(fill.rgb, fill.a * 0.5f);");
+    expect(layer.kernel).toContain("return styleShape(u32(0.0f), p);");
+  });
+
   it("compiles a model layer for its pool's kernel", () => {
     const layer = compile({
       layers: [

@@ -577,15 +577,15 @@ fn vs(@builtin(vertex_index) vertexIndex: u32, @location(0) item: u32) -> VsOut 
   return vertexOut(vertexIndex, item, true);
 }
 
-// A point set's quads (RecordFlags.points, `opaquePoints`): six vertices
-// for each point the view's cull listed (cull.wgsl `cullPoints`, the list
-// after the anchors), in one draw. (Four-vertex strips as instances drew
-// slower: an instance of four vertices fills few of a vertex wave's lanes.)
+// A point draw's quads (RecordFlags.points, `opaquePoints`): six vertices
+// for each point the view's cull listed (pointCull.wgsl `cullPoints`; the
+// draw's list is at its record's `uvOffset`, points having no uvs), in one
+// draw. (Four-vertex strips as instances drew slower: an instance of four
+// vertices fills few of a vertex wave's lanes.)
 @vertex
 fn vsPoints(@builtin(vertex_index) vertexIndex: u32, @location(0) item: u32) -> VsOut {
   let r = records[items[item].record];
-  let list = r.positionOffset + (r.indexCount / 6u) * 4u;
-  let point = bitcast<u32>(vertices[list + vertexIndex / 6u]);
+  let point = bitcast<u32>(vertices[r.uvOffset + vertexIndex / 6u]);
   return vertexOut(point * 6u + vertexIndex % 6u, item, true);
 }
 
@@ -621,7 +621,8 @@ fn vertexOut(vertexIndex: u32, item: u32, withAir: bool) -> VsOut {
   if (r.normalOffset != NO_STREAM) {
     normal = read3(r.normalOffset, vertexIndex);
   }
-  if (r.uvOffset != NO_STREAM) {
+  // (A point draw's `uvOffset` is its list, not uvs.)
+  if (!points && r.uvOffset != NO_STREAM) {
     out.uv = read2(r.uvOffset, vertexIndex);
   }
   var vertexColor = vec4f(1.0);

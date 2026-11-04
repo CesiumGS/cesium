@@ -108,6 +108,12 @@ export interface CompiledShapeLayer {
   id: string | undefined;
   source: string | undefined;
   shader: CustomShader;
+  /**
+   * The layer as compute functions for its points' cull (pointCull.wgsl:
+   * `styleShow`, `styleSize`, `styleColor`, `styleShapeAt`), which
+   * rasterizes symbols too small for quads (`World.setPointCuller`).
+   */
+  kernel: string;
 }
 
 /**
@@ -474,7 +480,7 @@ export function compileVectorStyle(
           return {
             wgsl:
               stage === "kernel"
-                ? "pool.time"
+                ? "styleTime()"
                 : stage === "vertex"
                   ? "vsInput.time"
                   : "fsInput.time",
@@ -851,6 +857,22 @@ fn styleScale(i: u32, distance: f32) -> f32 { return ${scale}; }
       ? number(l.outline.width, 1, "fragment", "outline.width")
       : "0.0";
     const opacity = number(l.opacity, 1, "fragment", "opacity");
+    // The same in compute, for the points' cull and splats.
+    const showK = expect(
+      compile(filterSource, "kernel", lets, `${path}.filter`),
+      "boolean",
+      `${path}.filter`,
+    );
+    const sizeK = number(l.size, 12, "kernel", "size");
+    const fillK = color(l.fill?.color, "#444444", "kernel", "fill.color");
+    const opacityK = number(l.opacity, 1, "kernel", "opacity");
+    const shapeK = expect(
+      compile(shapeSource, "kernel", lets, `${path}.shape`, new Set(), (v) =>
+        shapeIndex(v),
+      ),
+      "number",
+      `${path}.shape`,
+    );
 
     const vertex = `// The point's angle on screen: clockwise from up to north (rotateWith map).
 fn styleNorth() -> f32 {
@@ -896,11 +918,29 @@ fn fragmentMain(fsInput: FragmentInput, material: ptr<function, MaterialOutput>)
   (*material).unlit = true;
 }
 `;
+    const kernel = `${STYLE_HELPERS}${MARK_WGSL}${symbolFunctions.join("")}
+fn styleShape(k: u32, p: vec2f) -> f32 {
+  switch k {
+${shapeCases}
+    default: { return 1.0; }
+  }
+}
+fn styleShow(i: u32, distance: f32) -> bool { return ${showK}; }
+fn styleSize(i: u32, distance: f32) -> f32 { return ${sizeK}; }
+fn styleColor(i: u32, distance: f32) -> vec4f {
+  let fill = ${fillK};
+  return vec4f(fill.rgb, fill.a * ${opacityK});
+}
+fn styleShapeAt(i: u32, distance: f32, p: vec2f) -> f32 {
+  return styleShape(u32(${shapeK}), p);
+}
+`;
     layers.push({
       kind: "shape",
       path,
       id: l.id,
       source,
+      kernel,
       shader: new CustomShader({
         label: `vector style ${l.id ?? path}`,
         instance,

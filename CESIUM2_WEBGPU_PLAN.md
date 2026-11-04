@@ -3063,11 +3063,31 @@ strips, one instance a point, drew slower than the six-vertex list (the
 opaque pass 70 ms at 10,000,000): an instance of four vertices fills few
 of a vertex wave's lanes, so quads stay six vertices in one draw.
 
+_Tiny symbols rasterized in compute (r48)._ Lists are now per point draw
+(a vector style's layers keep different points), and a draw's cull can be
+a compiled kernel (`World.setPointCuller`, `PointCuller`): each shape
+layer's style compiles to compute functions too (`styleShow`,
+`styleSize`, `styleColor`, `styleShapeAt`), and in each view its kernel
+(pointCull.wgsl) lists the points whose symbols are larger than
+`splatBelow` pixels (`VectorLayer`, default 6) for quads, and rasterizes
+the rest: their depth by `atomicMax` on each pixel their shape covers
+(always the one under the center), then their color and feature where
+their depth won, in per-view buffers a word a pixel. A triangle over the
+view in the opaque pass (splat.wgsl, after its other draws) writes their
+color (display-referred, as unlit symbols'), feature (picking) and depth,
+depth-tested, so hills still hide the points behind them. GPU time a
+frame, rendered one at a time to the GPU's completion on a 2,928 × 1,750
+canvas, against quads for the same points: 1,000,000 in the overview
+17.4 ms against 21.9; 10,000,000 in the overview 40.9 against 83.4;
+following a vehicle among 10,000,000 (10,000 trucks, symbols up close)
+45.4 against 44.7. (In a hidden Browser pane the page draws about one
+frame a second, which read as a stall: measure with the pane shown, or
+one frame at a time.)
+
 Not yet: fewer varyings for point sets (they share `VsOut` with every
-draw), compute rasterization for points smaller than a few pixels (the
-plan's two-pass compute point clouds: what the 10,000,000-point overview
-needs), labels (increment 5), Bézier symbol paths (Slug), `sizeWith`,
-heights in `placement.offset`, lines and polygons from live sources.
+draw), anti-aliased splats (coverage, not one sample a pixel), labels
+(increment 5), Bézier symbol paths (Slug), `sizeWith`, heights in
+`placement.offset`, lines and polygons from live sources.
 
 **Found on the way: the instances benchmark's GPU time grew 36 → 160 ms**
 at 100,000 instances (500,000 items) since 2026-11-02. A bisect over the

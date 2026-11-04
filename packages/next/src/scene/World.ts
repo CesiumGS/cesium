@@ -51,6 +51,8 @@ import type { FeatureTable, FeatureValue } from "../io/gltfTypes.ts";
 import { featureName, featureProperties } from "../io/features.ts";
 import type { RenderContext, SurfaceKey } from "./RenderContext.ts";
 import type { CustomShader } from "./CustomShader.ts";
+import { PointCuller } from "./PointCuller.ts";
+import type { UniformDeclaration } from "./uniforms.ts";
 import type { LightHandle, LightOptions } from "./lights.ts";
 
 export interface WorldOptions {
@@ -126,8 +128,6 @@ export interface PointMesh extends MeshHandle {
     readonly capacity: number;
     /** Arena word of point 0's anchor (x, y, z and a fourth float). */
     readonly anchors: number;
-    /** Arena word of the per-view list of points drawn (cull.wgsl). */
-    readonly list: number;
     /** Arena word of point 0's properties, `stride` words a point. */
     readonly streams: number;
     readonly stride: number;
@@ -666,23 +666,21 @@ export class World {
   private directListBuffer: GPUBuffer;
   /** Counts instance table growths (its buffers are replaced). */
   instanceGeneration = 0;
-  /** Point sets by mesh id: their per-view cull (cull.wgsl `cullPoints`). */
-  private readonly pointSets = new Map<
-    number,
-    {
-      mesh: PointMesh;
-      counter: number;
-      params: GPUBuffer;
-      group: GPUBindGroup;
-      /** Batches drawing it (written with the batches). */
-      batches: number;
-    }
-  >();
+  /** Point draws by draw index: their per-view cull (pointCull.wgsl). */
+  private readonly pointDraws = new Map<number, PointDraw>();
   private readonly pointCounts: GPUBuffer;
   private readonly freePointCounters = Array.from(
     { length: MAX_POINT_SETS },
     (_, k) => MAX_POINT_SETS - 1 - k,
   );
+  /** A view's point splats, a word per pixel each (pointCull.wgsl). */
+  private splats: {
+    pixels: number;
+    depth: GPUBuffer;
+    color: GPUBuffer;
+    feature: GPUBuffer;
+    group: GPUBindGroup;
+  };
   private readonly batchCountBuffer: GPUBuffer;
   private readonly batchBuffer: GPUBuffer;
   readonly indirectBuffer: GPUBuffer;
@@ -824,6 +822,7 @@ export class World {
       GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     );
     this.pointCounts = buffer("pointCounts", MAX_POINT_SETS * 4, storage);
+    this.splats = this.createSplats(1);
 
     this.createCullBindGroup();
     this.imageryView = device
@@ -1138,9 +1137,7 @@ export class World {
       });
     }
     const stride = streams?.stride ?? 0;
-    // Anchors, then the list a view's cull writes (opaque.wgsl `vsPoints`
-    // finds it after the anchors), then the properties.
-    const anchorBytes = Math.max(16, capacity * 16) + Math.max(4, capacity * 4);
+    const anchorBytes = Math.max(16, capacity * 16);
     const streamBytes = capacity * stride * 4;
     const bytes = anchorBytes + streamBytes + directory.byteLength;
     const offset = this.vertexAllocator.allocate(bytes);
@@ -1160,11 +1157,7 @@ export class World {
       index: [0, 0],
     });
     const anchors = offset / 4;
-    const counter = this.freePointCounters.pop();
-    if (counter === undefined) {
-      throw new Error(`World: at most ${MAX_POINT_SETS} point sets`);
-    }
-    const mesh: PointMesh = {
+    return {
       id,
       firstIndex: 0,
       indexCount: capacity * 6,
@@ -1185,7 +1178,6 @@ export class World {
       points: {
         capacity,
         anchors,
-        list: anchors + Math.max(4, capacity * 4),
         streams: stride ? (offset + anchorBytes) / 4 : NO_STREAM,
         stride,
         directory: directory.byteLength
@@ -1193,27 +1185,6 @@ export class World {
           : NO_STREAM,
       },
     };
-    const params = this.ctx.device.createBuffer({
-      label: "world.pointCull",
-      size: POINT_CULL_BYTES,
-      usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-    });
-    this.pointSets.set(id, {
-      mesh,
-      counter,
-      params,
-      group: this.ctx.device.createBindGroup({
-        label: "world.pointCull",
-        layout: this.ctx.pipelines.pointCullLayout,
-        entries: [
-          { binding: 0, resource: { buffer: params } },
-          { binding: 1, resource: { buffer: this.vertexBuffer } },
-          { binding: 2, resource: { buffer: this.pointCounts } },
-        ],
-      }),
-      batches: 0,
-    });
-    return mesh;
   }
 
   /** Writes points' properties (`addPointMesh` streams) from `first` on. */
@@ -1251,12 +1222,6 @@ export class World {
     // must not land on their next owner's.
     this.flushUploads();
     this.meshRanges.delete(mesh.id);
-    const set = this.pointSets.get(mesh.id);
-    if (set) {
-      set.params.destroy();
-      this.freePointCounters.push(set.counter);
-      this.pointSets.delete(mesh.id);
-    }
     let bytes = 0;
     for (const [offset, size] of ranges.vertex) {
       this.vertexAllocator.release(offset, size);
@@ -1490,6 +1455,28 @@ export class World {
         "addDraw: a point mesh draws as a billboard, without instances",
       );
     }
+    // A point draw's own list of points to draw (each view's cull writes
+    // it), and its slot among the per-view counts.
+    let pointList: number | undefined;
+    let pointCounter: number | undefined;
+    if (pointSet) {
+      pointCounter = this.freePointCounters.pop();
+      const bytes = Math.max(4, pointSet.capacity * 4);
+      pointList =
+        pointCounter === undefined
+          ? undefined
+          : this.vertexAllocator.allocate(bytes);
+      if (pointList === undefined) {
+        if (pointCounter !== undefined) {
+          this.freePointCounters.push(pointCounter);
+        }
+        throw new Error(
+          pointCounter === undefined
+            ? `World: at most ${MAX_POINT_SETS} point draws`
+            : "World vertex arena is full.",
+        );
+      }
+    }
     const index = this.freeSlots.pop() ?? this.drawCount++;
     if (index >= this.maxDraws) {
       this.drawCount--;
@@ -1681,7 +1668,11 @@ export class World {
       color: options.color ?? [1, 1, 1, 1],
       indexCount: mesh.indexCount,
       firstIndex: mesh.firstIndex,
-      streams: mesh.streams,
+      // A point draw's list where its uv would be (points have none).
+      streams:
+        pointList !== undefined
+          ? { ...mesh.streams, uv: pointList / 4 }
+          : mesh.streams,
       materialIndex: material,
       textureSet,
       batch: batch.index,
@@ -1712,11 +1703,142 @@ export class World {
     this.markDirty(index);
     this.bundle = undefined;
     this.translucentDraws = undefined;
+    if (pointSet) {
+      const params = this.ctx.device.createBuffer({
+        label: "world.pointCull",
+        size: POINT_CULL_BYTES,
+        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+      });
+      const draw: PointDraw = {
+        mesh: mesh as PointMesh,
+        list: pointList!,
+        counter: pointCounter!,
+        params,
+        group: undefined as never,
+        batch,
+        culler: undefined,
+        tiny: 0,
+      };
+      draw.group = this.pointGroup(draw);
+      this.pointDraws.set(index, draw);
+    }
     return {
       index,
       generation: this.drawGeneration[index]!,
       name: options.name,
     };
+  }
+
+  /**
+   * A point draw's cull in each view, by a compiled kernel (a vector
+   * style's layer, vector/PointCuller.ts) instead of the generic one:
+   * `encode` runs in the view's cull pass with groups 0–2 set (the view,
+   * the world's cull tables, the draw's `PointCull`) and dispatches the
+   * point cull, the splats and the draw's arguments. Symbols up to `tiny`
+   * pixels it splats (0: none). Undefined restores the generic cull.
+   */
+  setPointCuller(
+    handle: DrawHandle,
+    culler: PointCuller | undefined,
+    tiny = 0,
+  ): void {
+    const draw = this.pointDraws.get(handle.index);
+    if (!draw || !this.hasDraw(handle)) {
+      throw new Error("setPointCuller: not a point draw");
+    }
+    draw.culler = culler;
+    draw.tiny = culler ? tiny : 0;
+    this.writePointParams(draw, handle.index);
+  }
+
+  /**
+   * A point draw's cull with a style's functions (WGSL defining
+   * `styleShow`, `styleSize`, `styleColor` and `styleShapeAt`, reading
+   * `uniforms.<name>`), for `setPointCuller`.
+   */
+  createPointCuller(options: {
+    code: string;
+    uniforms: Record<string, UniformDeclaration>;
+    label?: string;
+  }): PointCuller {
+    return new PointCuller(this.ctx, options);
+  }
+
+  /** A point draw's group 2 (pointCull.wgsl), its splats the current ones. */
+  private pointGroup(draw: PointDraw): GPUBindGroup {
+    return this.ctx.device.createBindGroup({
+      label: "world.pointCull",
+      layout: this.ctx.pipelines.pointCullLayout,
+      entries: [
+        draw.params,
+        this.vertexBuffer,
+        this.pointCounts,
+        this.splats.depth,
+        this.splats.color,
+        this.splats.feature,
+      ].map((buffer, binding) => ({ binding, resource: { buffer } })),
+    });
+  }
+
+  /** Splat buffers for `pixels` (a word each), and the resolve's group. */
+  private createSplats(pixels: number): World["splats"] {
+    const { device } = this.ctx;
+    const make = (label: string) =>
+      device.createBuffer({
+        label: `world.splats.${label}`,
+        size: Math.max(4, pixels * 4),
+        usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
+      });
+    const depth = make("depth");
+    const color = make("color");
+    const feature = make("feature");
+    return {
+      pixels,
+      depth,
+      color,
+      feature,
+      group: device.createBindGroup({
+        label: "world.splats",
+        layout: this.ctx.pipelines.splatLayout,
+        entries: [depth, color, feature].map((buffer, binding) => ({
+          binding,
+          resource: { buffer },
+        })),
+      }),
+    };
+  }
+
+  /** A point draw's `PointCull` parameters. */
+  private writePointParams(draw: PointDraw, record: number): void {
+    const data = new Uint32Array(POINT_CULL_BYTES / 4);
+    const f32 = new Float32Array(data.buffer);
+    const p = draw.mesh.points;
+    data[0] = p.anchors;
+    data[1] = draw.list / 4;
+    data[2] = p.capacity;
+    data[3] = record;
+    data[4] = draw.counter;
+    data[5] = draw.batch.index;
+    data[6] = draw.tiny > 0 ? 1 : 0;
+    f32[7] = POINT_MARGIN;
+    f32[8] = draw.tiny;
+    data[9] = p.streams;
+    data[10] = p.stride;
+    this.ctx.device.queue.writeBuffer(draw.params, 0, data);
+  }
+
+  /**
+   * The view's point splats over its opaque draws (splat.wgsl), in its
+   * opaque pass after them; nothing when no draw splats.
+   */
+  drawSplats(pass: GPURenderPassEncoder): void {
+    if (![...this.pointDraws.values()].some((d) => d.tiny > 0)) {
+      return;
+    }
+    pass.setPipeline(this.ctx.pipelines.splatResolve);
+    pass.setBindGroup(0, this.ctx.currentViewBindGroup);
+    pass.setBindGroup(1, this.splats.group);
+    pass.draw(3);
   }
 
   /** Whether `handle` still names a live draw. */
@@ -1752,6 +1874,17 @@ export class World {
         instanceCount,
       );
       this.recordsU32[o + INSTANCE_COUNT_WORD] = 0;
+    }
+    const pointDraw = this.pointDraws.get(handle.index);
+    if (pointDraw) {
+      this.flushUploads();
+      this.vertexAllocator.release(
+        pointDraw.list,
+        Math.max(4, pointDraw.mesh.points.capacity * 4),
+      );
+      pointDraw.params.destroy();
+      this.freePointCounters.push(pointDraw.counter);
+      this.pointDraws.delete(handle.index);
     }
     const streams = this.instanceStreamRanges[handle.index];
     if (streams) {
@@ -2679,14 +2812,15 @@ export class World {
 
   /** Encodes this world's per-view culling: clear batch counts, cull, write args. */
   /**
-   * One view's cull. `points`: also its point sets' (cull.wgsl
-   * `cullPoints`), for views that draw them (not shadow cascades or height
-   * captures).
+   * One view's cull. `points`: also its point draws' (pointCull.wgsl),
+   * for views that draw them (not shadow cascades or height captures),
+   * `pixels` the view's (their splats' buffers).
    */
   encodeCull(
     encoder: GPUCommandEncoder,
     timestampWrites?: GPUComputePassTimestampWrites,
     points = true,
+    pixels = 0,
   ): void {
     const { pipelines, currentViewBindGroup } = this.ctx;
     encoder.clearBuffer(
@@ -2694,8 +2828,21 @@ export class World {
       0,
       Math.max(4, this.batchList.length * 4),
     );
-    if (points && this.pointSets.size) {
+    if (points && this.pointDraws.size) {
       encoder.clearBuffer(this.pointCounts);
+      if ([...this.pointDraws.values()].some((d) => d.tiny > 0)) {
+        if (pixels > this.splats.pixels) {
+          // Larger buffers: every point draw's group binds them.
+          this.splats.depth.destroy();
+          this.splats.color.destroy();
+          this.splats.feature.destroy();
+          this.splats = this.createSplats(pixels);
+          for (const draw of this.pointDraws.values()) {
+            draw.group = this.pointGroup(draw);
+          }
+        }
+        encoder.clearBuffer(this.splats.depth, 0, Math.max(4, pixels * 4));
+      }
     }
     this.cullPassDesc.timestampWrites = timestampWrites;
     const pass = encoder.beginComputePass(this.cullPassDesc);
@@ -2714,17 +2861,19 @@ export class World {
     }
     pass.setPipeline(pipelines.writeDrawArgs);
     pass.dispatchWorkgroups(Math.ceil(Math.max(this.batchList.length, 1) / 64));
-    // Point sets: their points in view into their lists, then their draws'
-    // arguments (over `writeDrawArgs`').
-    for (const set of points ? this.pointSets.values() : []) {
-      if (set.batches === 0) {
+    // Point draws: their points in view into their lists (or splatted),
+    // then their arguments (over `writeDrawArgs`').
+    for (const draw of points ? this.pointDraws.values() : []) {
+      pass.setBindGroup(2, draw.group);
+      const groups = Math.ceil(Math.max(1, draw.mesh.points.capacity) / 64);
+      const x = Math.min(groups, 65535);
+      const y = Math.ceil(groups / x);
+      if (draw.culler) {
+        draw.culler.encode(pass, x, y);
         continue;
       }
-      pass.setBindGroup(2, set.group);
       pass.setPipeline(pipelines.cullPoints);
-      const groups = Math.ceil(Math.max(1, set.mesh.points.capacity) / 64);
-      const x = Math.min(groups, 65535);
-      pass.dispatchWorkgroups(x, Math.ceil(groups / x));
+      pass.dispatchWorkgroups(x, y);
       pass.setPipeline(pipelines.writePointArgs);
       pass.dispatchWorkgroups(1);
     }
@@ -2822,28 +2971,8 @@ export class World {
     const queue = this.ctx.device.queue;
     queue.writeBuffer(this.batchBuffer, 0, table);
     queue.writeBuffer(this.directListBuffer, 0, direct);
-    // Point sets: a record of each (for its transform) and its batches.
-    for (const set of this.pointSets.values()) {
-      const data = new Uint32Array(POINT_CULL_BYTES / 4);
-      const f32 = new Float32Array(data.buffer);
-      let batches = 0;
-      for (let i = 0; i < this.drawCount && batches < 8; i++) {
-        const batch = this.drawBatches[i];
-        if (batch?.points && batch.mesh.id === set.mesh.id) {
-          if (batches === 0) {
-            data[3] = i;
-          }
-          data[8 + batches++] = batch.index;
-        }
-      }
-      data[0] = set.mesh.points.anchors;
-      data[1] = set.mesh.points.list;
-      data[2] = set.mesh.points.capacity;
-      data[4] = set.counter;
-      data[5] = batches;
-      f32[6] = POINT_MARGIN;
-      set.batches = batches;
-      queue.writeBuffer(set.params, 0, data);
+    for (const [record, draw] of this.pointDraws) {
+      this.writePointParams(draw, record);
     }
   }
 
@@ -3283,6 +3412,13 @@ export class World {
     for (const chunk of this.uploadChunks) {
       chunk.buffer.destroy();
     }
+    for (const draw of this.pointDraws.values()) {
+      draw.params.destroy();
+    }
+    this.splats.depth.destroy();
+    this.splats.color.destroy();
+    this.splats.feature.destroy();
+    this.pointCounts.destroy();
     this.records.destroy();
     this.transforms.destroy();
     this.instances.destroy();
@@ -3304,10 +3440,24 @@ export class World {
   }
 }
 
-/** Point sets a world draws at once (their counters in `pointCounts`). */
+/** A point draw (`World.addDraw` of a point mesh) and its per-view cull. */
+interface PointDraw {
+  mesh: PointMesh;
+  /** Arena byte offset of its list. */
+  list: number;
+  counter: number;
+  params: GPUBuffer;
+  group: GPUBindGroup;
+  batch: Batch;
+  culler: PointCuller | undefined;
+  /** Symbols up to this many pixels are splatted (0: none). */
+  tiny: number;
+}
+
+/** Point draws a world culls at once (their counters in `pointCounts`). */
 const MAX_POINT_SETS = 64;
-/** A point set's cull parameters (cull.wgsl `PointCull`). */
-const POINT_CULL_BYTES = 64;
+/** A point draw's cull parameters (pointCull.wgsl `PointCull`). */
+const POINT_CULL_BYTES = 48;
 /** Pixels past a view's edges a point's symbol may reach. */
 const POINT_MARGIN = 64;
 

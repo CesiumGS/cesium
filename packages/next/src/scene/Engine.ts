@@ -3013,7 +3013,12 @@ export class Engine {
     });
 
     graph.addPass("cull", { sideEffect: true }, (enc) => {
-      view.world.encodeCull(enc, this.timer.passWrites("cull"));
+      view.world.encodeCull(
+        enc,
+        this.timer.passWrites("cull"),
+        true,
+        frame.width * frame.height,
+      );
     });
 
     // The sky around the camera, before the opaque pass draws from it.
@@ -3190,6 +3195,8 @@ export class Engine {
           frame.bundles[0] = frame.bundle!;
         }
         pass.executeBundles(frame.bundles);
+        // Tiny point symbols the cull rasterized, depth-tested over them.
+        view.world.drawSplats(pass);
         if (atmosphere) {
           this.sky.draw(pass, frame.sky, get(starLayer));
         }

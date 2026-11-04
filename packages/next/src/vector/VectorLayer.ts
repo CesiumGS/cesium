@@ -3,6 +3,7 @@ import { MaterialFlags } from "../render/layout.ts";
 import { cssColor } from "../scene/styleExpression.ts";
 import type { Engine } from "../scene/Engine.ts";
 import type { DrawHandle, World } from "../scene/World.ts";
+import type { PointCuller } from "../scene/PointCuller.ts";
 import { ModelPool } from "./ModelPool.ts";
 import type { PointSource } from "./PointSource.ts";
 import {
@@ -28,6 +29,12 @@ export interface VectorLayerOptions {
    * (m; default 0, depth-tested), as 1.x `disableDepthTestDistance`.
    */
   depthTestDistance?: number;
+  /**
+   * Symbols this many pixels across or smaller are rasterized in compute
+   * (pointCull.wgsl) rather than drawn as quads: a few threads a point
+   * instead of six vertices (default 6; 0: always quads).
+   */
+  splatBelow?: number;
   /** Culling radius of the points around their source's origin (m; default 2,000 km). */
   radius?: number;
 }
@@ -46,6 +53,7 @@ export class VectorLayer {
   private readonly shapes: Array<{
     layer: CompiledShapeLayer;
     draw: DrawHandle;
+    culler: PointCuller;
   }> = [];
   private readonly pools: ModelPool[] = [];
   private readonly materials: number[] = [];
@@ -122,7 +130,14 @@ export class VectorLayer {
             shader: own.shader,
             name: own.id ?? own.path,
           });
-          layer.shapes.push({ layer: own, draw });
+          // Its points' cull with its style: tiny symbols splatted.
+          const culler = world.createPointCuller({
+            code: own.kernel,
+            uniforms: c.uniforms,
+            label: `vector style ${own.id ?? own.path} (cull)`,
+          });
+          world.setPointCuller(draw, culler, options.splatBelow ?? 6);
+          layer.shapes.push({ layer: own, draw, culler });
         } else {
           const url = options.models?.[own.model] ?? own.uri;
           if (!url) {
@@ -171,8 +186,9 @@ export class VectorLayer {
       uniform = Number(value);
     }
     this.values.set(name, value);
-    for (const { layer } of this.shapes) {
+    for (const { layer, culler } of this.shapes) {
       layer.shader.setUniform(p.uniform, uniform);
+      culler.setUniform(p.uniform, uniform);
     }
     for (const pool of this.pools) {
       pool.setUniform(p.uniform, uniform);
@@ -182,8 +198,9 @@ export class VectorLayer {
 
   /** Removes its draws and models (the sources stay). */
   destroy(): void {
-    for (const { draw } of this.shapes) {
+    for (const { draw, culler } of this.shapes) {
       this.world.removeDraw(draw);
+      culler.destroy();
     }
     this.shapes.length = 0;
     for (const pool of this.pools) {
