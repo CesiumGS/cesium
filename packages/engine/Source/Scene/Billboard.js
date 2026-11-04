@@ -1021,7 +1021,8 @@ Object.defineProperties(Billboard.prototype, {
       );
       if (this._mode === SceneMode.SCENE3D) {
         // In 3D mode the actual (rendered) position is the same as clamped position (ECEF).
-        Cartesian3.clone(value, this._actualPosition);
+        // Once clamping ends, it is the unclamped position again.
+        Cartesian3.clone(value ?? this._position, this._actualPosition);
       }
       makeDirty(this, POSITION_INDEX);
     },

@@ -2821,6 +2821,33 @@ describe("Scene/BillboardCollection", function () {
           expect(removeCallback).toHaveBeenCalled();
         });
 
+        it("uses the position again once the height reference is removed", async function () {
+          spyOn(scene, "updateHeight").and.returnValue(jasmine.createSpy());
+          spyOn(scene, "getHeight").and.returnValue(500.0);
+
+          const position = Cartesian3.fromDegrees(-72.0, 40.0, 1000.0);
+          const b = billboardsWithHeight.add({
+            heightReference: HeightReference.CLAMP_TO_GROUND,
+            position: position,
+            image: greenImage,
+          });
+          await pollToPromise(() => {
+            scene.renderForSpecs();
+            return b.ready;
+          });
+          const clamped = scene.globe.ellipsoid.cartesianToCartographic(
+            b._getActualPosition(),
+          );
+          expect(clamped.height).toEqualEpsilon(500.0, CesiumMath.EPSILON6);
+
+          b.heightReference = HeightReference.NONE;
+          scene.renderForSpecs();
+          expect(b._getActualPosition()).toEqualEpsilon(
+            position,
+            CesiumMath.EPSILON6,
+          );
+        });
+
         it("updates the callback when the terrain provider is changed", async function () {
           const removeCallback = jasmine.createSpy();
           spyOn(scene, "updateHeight").and.returnValue(removeCallback);

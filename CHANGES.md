@@ -11,6 +11,7 @@
 #### Fixes :wrench:
 
 - Fixed picking for clamped vector tilesets and `GeoJsonPrimitive` polylines and polygons. [#13917](https://github.com/CesiumGS/cesium/pull/13917)
+- Fixed billboards and label backgrounds staying at their clamped position in 3D once their height reference is removed, e.g. when an entity reuses the primitives of a removed clamped entity. [#14014](https://github.com/CesiumGS/cesium/issues/14014)
 
 ## 1.147 - 2026-11-02
 
