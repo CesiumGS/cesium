@@ -54,6 +54,8 @@ export interface InspectorSnapshot {
     cpuMs?: number;
     /** GPU time per frame, ms; undefined where the engine can't measure it. */
     gpuMs?: number;
+    /** Where `gpuMs` goes: GPU time per pass, ms, in the frame's order. */
+    gpuPasses?: Array<[string, number]>;
     /** Time between frames, ms. */
     intervalMs?: number;
     /** "continuous" or "on demand". */

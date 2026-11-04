@@ -390,6 +390,10 @@ function frameHtml(s: InspectorSnapshot, framesPerSecond?: number): string {
   const rows: [string, string][] = [
     ["CPU / frame", f.cpuMs !== undefined ? ms(f.cpuMs) : "—"],
     ["GPU / frame", f.gpuMs !== undefined ? ms(f.gpuMs) : "not exposed"],
+    ...(f.gpuPasses ?? []).map(([pass, t]): [string, string] => [
+      `<span class="ci-pass">${escape(pass)}</span>`,
+      ms(t),
+    ]),
   ];
   if (f.intervalMs !== undefined) {
     rows.push(["Frame interval", ms(f.intervalMs)]);
@@ -972,6 +976,7 @@ const CSS = `
 .cesium-inspector .ci-note { color: var(--ci-muted); font-size: 11px; }
 .cesium-inspector .ci-kv { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; }
 .cesium-inspector .ci-kv .ci-num { text-align: right; }
+.cesium-inspector .ci-pass { color: var(--ci-muted); padding-left: 12px; }
 .cesium-inspector .ci-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; margin-bottom: 8px; }
 .cesium-inspector .ci-tile-label { color: var(--ci-muted); font-size: 11px; }
 .cesium-inspector .ci-tile-value { color: var(--ci-strong); font-size: 15px; font-variant-numeric: tabular-nums; }

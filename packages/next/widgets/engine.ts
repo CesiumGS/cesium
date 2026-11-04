@@ -85,7 +85,15 @@ export function engineSnapshot(
         : "loading",
     frame: options.frame?.() ?? {
       cpuMs: s.cpuMs,
-      ...(Number.isNaN(s.gpuMs) ? {} : { gpuMs: s.gpuMs }),
+      ...(Number.isNaN(s.gpuMs)
+        ? {}
+        : {
+            gpuMs: s.gpuMs,
+            // Passes that stopped running fade to 0: not shown.
+            gpuPasses: Object.entries(engine.gpuPasses).filter(
+              ([, ms]) => ms >= 0.005,
+            ),
+          }),
       rendering:
         engine.renderMode === "continuous" ? "continuous" : "on demand",
       framesRendered: s.framesRendered,
