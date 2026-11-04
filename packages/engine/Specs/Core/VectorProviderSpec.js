@@ -16,6 +16,7 @@ import {
   HeightReference,
   VectorPipeline,
   VectorProvider,
+  _shadersVectorCommon,
 } from "../../index.js";
 import createContext from "../../../../Specs/createContext.js";
 
@@ -154,6 +155,48 @@ describe("Core/VectorProvider", function () {
         hasPolygons: true,
       }),
     ).toBe(9);
+  });
+
+  it("counts the texture samplers declared by the vector shader", function () {
+    function countShaderSamplers(defines) {
+      let count = 0;
+      const active = [true];
+      for (const line of _shadersVectorCommon.split("\n")) {
+        const ifdef = line.match(/^\s*#ifdef\s+(\w+)/);
+        if (ifdef) {
+          active.push(active.at(-1) && defines.includes(ifdef[1]));
+        } else if (/^\s*#endif/.test(line)) {
+          active.pop();
+        } else if (active.at(-1)) {
+          count += (line.match(/\bsampler2D\s+u_vector\w*/g) ?? []).length;
+        }
+      }
+      return count;
+    }
+
+    expect(
+      VectorProvider.getTextureCount({
+        show: true,
+        hasPolylines: true,
+        hasPolygons: false,
+      }),
+    ).toBe(countShaderSamplers(["HAS_VECTOR_POLYLINES"]));
+    expect(
+      VectorProvider.getTextureCount({
+        show: true,
+        hasPolylines: false,
+        hasPolygons: true,
+      }),
+    ).toBe(countShaderSamplers(["HAS_VECTOR_POLYGONS"]));
+    expect(
+      VectorProvider.getTextureCount({
+        show: true,
+        hasPolylines: true,
+        hasPolygons: true,
+      }),
+    ).toBe(
+      countShaderSamplers(["HAS_VECTOR_POLYLINES", "HAS_VECTOR_POLYGONS"]),
+    );
   });
 
   it("returns hidden vector data with no collections", function () {
