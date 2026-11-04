@@ -228,6 +228,7 @@ function Cesium3DTileset(options) {
   this._modelForwardAxis = undefined;
   this._tilesetUpAxis = undefined; // Up axis of a glTF tileset, applied to the root tile transform
   this._cache = new Cesium3DTilesetCache();
+  this._releaseCandidateTiles = new Set();
   this._processingQueue = [];
   this._selectedTiles = [];
   this._emptyTiles = [];
@@ -254,6 +255,10 @@ function Cesium3DTileset(options) {
 
   this._maximumScreenSpaceError = options.maximumScreenSpaceError ?? 16;
   this._memoryAdjustedScreenSpaceError = this._maximumScreenSpaceError;
+  // Set when memoryAdjustedScreenSpaceError is raised to fit the memory limit, along with the
+  // view matrix at that time. See processTiles.
+  this._memoryAdjustedScreenSpaceErrorHeld = false;
+  this._memoryAdjustedScreenSpaceErrorViewMatrix = new Matrix4();
 
   this._cacheBytes = options.cacheBytes ?? 512 * 1024 * 1024;
   //>>includeStart('debug', pragmas.debug);
@@ -1577,6 +1582,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
 
       this._maximumScreenSpaceError = value;
       this._memoryAdjustedScreenSpaceError = value;
+      this._memoryAdjustedScreenSpaceErrorHeld = false;
     },
   },
 
@@ -1619,6 +1625,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
       //>>includeEnd('debug');
 
       this._cacheBytes = value;
+      this._memoryAdjustedScreenSpaceErrorHeld = false;
     },
   },
 
@@ -1651,6 +1658,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
       //>>includeEnd('debug');
 
       this._maximumCacheOverflowBytes = value;
+      this._memoryAdjustedScreenSpaceErrorHeld = false;
     },
   },
 
@@ -3065,6 +3073,7 @@ Cesium3DTileset.prototype.postPassesUpdate = function (frameState) {
   cancelOutOfViewRequests(this, frameState);
   raiseLoadProgressEvent(this, frameState);
   this._cache.unloadTiles(this, unloadTile);
+  releaseImplicitTiles(this, frameState);
 
   // If the style wasn't able to be applied this frame (for example,
   // the tileset was hidden), keep it dirty so the engine can try
@@ -3113,7 +3122,8 @@ Cesium3DTileset.prototype.prePassesUpdate = function (frameState) {
     return;
   }
 
-  processTiles(this, frameState);
+  const memoryExceeded = processTiles(this, frameState);
+  updateMemoryAdjustedScreenSpaceError(this, frameState, memoryExceeded);
 
   // Update clipping planes
   const clippingPlanes = this._clippingPlanes;
@@ -3311,8 +3321,9 @@ function processUpdateHeight(tileset, tile, frameState) {
 /**
  * Process tiles in the PROCESSING state so they will eventually move to the READY state.
  * @private
- * @param {Cesium3DTileset} tileset
- * @param {Cesium3DTile} tile
+ * @param {Cesium3DTileset} tileset The tileset whose tiles are processed.
+ * @param {FrameState} frameState The current frame state.
+ * @returns {boolean} <code>true</code> if processing stopped because the tileset ran out of memory.
  */
 function processTiles(tileset, frameState) {
   filterProcessingQueue(tileset);
@@ -3321,11 +3332,9 @@ function processTiles(tileset, frameState) {
   const { cacheBytes, maximumCacheOverflowBytes, statistics } = tileset;
   const cacheByteLimit = cacheBytes + maximumCacheOverflowBytes;
 
-  let memoryExceeded = false;
   for (let i = 0; i < tiles.length; ++i) {
     if (tileset.totalMemoryUsageInBytes > cacheByteLimit) {
-      memoryExceeded = true;
-      break;
+      return true;
     }
 
     const tile = tiles[i];
@@ -3342,14 +3351,46 @@ function processTiles(tileset, frameState) {
     }
   }
 
-  if (tileset.totalMemoryUsageInBytes < cacheBytes) {
+  return false;
+}
+
+/**
+ * Adjusts the screen space error so the number of tiles needed fits in memory.
+ *
+ * @private
+ * @param {Cesium3DTileset} tileset The tileset whose screen space error is adjusted.
+ * @param {FrameState} frameState The current frame state.
+ * @param {boolean} memoryExceeded Whether tile processing stopped because the tileset ran out of memory.
+ */
+function updateMemoryAdjustedScreenSpaceError(
+  tileset,
+  frameState,
+  memoryExceeded,
+) {
+  if (tileset._memoryAdjustedScreenSpaceErrorHeld) {
+    const viewChanged = !Matrix4.equals(
+      frameState.camera.viewMatrix,
+      tileset._memoryAdjustedScreenSpaceErrorViewMatrix,
+    );
+    if (viewChanged || tileset._modelMatrixChanged) {
+      tileset._memoryAdjustedScreenSpaceErrorHeld = false;
+    }
+  }
+
+  const memoryAvailable = tileset.totalMemoryUsageInBytes < tileset.cacheBytes;
+  if (memoryAvailable && !tileset._memoryAdjustedScreenSpaceErrorHeld) {
     decreaseScreenSpaceError(tileset);
-  } else if (memoryExceeded && tiles.length > 0) {
-    increaseScreenSpaceError(tileset);
+  } else if (memoryExceeded) {
+    increaseScreenSpaceError(tileset, frameState);
   }
 }
 
-function increaseScreenSpaceError(tileset) {
+/**
+ * @private
+ * @param {Cesium3DTileset} tileset
+ * @param {FrameState} frameState
+ */
+function increaseScreenSpaceError(tileset, frameState) {
   //>>includeStart('debug', pragmas.debug);
   oneTimeWarning(
     "increase-screenSpaceError",
@@ -3360,6 +3401,11 @@ function increaseScreenSpaceError(tileset) {
   //>>includeEnd('debug');
 
   tileset._memoryAdjustedScreenSpaceError *= 1.02;
+  tileset._memoryAdjustedScreenSpaceErrorHeld = true;
+  Matrix4.clone(
+    frameState.camera.viewMatrix,
+    tileset._memoryAdjustedScreenSpaceErrorViewMatrix,
+  );
   const tiles = tileset._processingQueue;
   for (let i = 0; i < tiles.length; ++i) {
     tiles[i].updatePriority();
@@ -3696,6 +3742,89 @@ function destroySubtree(tileset, tile) {
 }
 
 /**
+ * Releases every implicit tile below the given tile, unless any of them has
+ * content loaded or loading. The given tile is kept: its parent still lists it,
+ * and it creates its children again if the traversal returns to it.
+ *
+ * @private
+ * @param {Cesium3DTileset} tileset
+ * @param {Cesium3DTile} tile
+ * @returns {boolean} Whether the tiles were released.
+ */
+function releaseDescendantsIfUnused(tileset, tile) {
+  const descendants = tile._children.slice();
+  for (let i = 0; i < descendants.length; ++i) {
+    const descendant = descendants[i];
+    const state = descendant._contentState;
+    // Empty tiles are READY without holding any content.
+    const hasContent =
+      !descendant.hasEmptyContent &&
+      (state === Cesium3DTileContentState.LOADING ||
+        state === Cesium3DTileContentState.PROCESSING ||
+        state === Cesium3DTileContentState.READY ||
+        state === Cesium3DTileContentState.EXPIRED);
+    if (hasContent) {
+      return false;
+    }
+    const children = descendant._children;
+    for (let j = 0; j < children.length; ++j) {
+      descendants.push(children[j]);
+    }
+  }
+
+  for (let i = 0; i < descendants.length; ++i) {
+    destroyTile(tileset, descendants[i]);
+  }
+  tileset._statistics.numberOfTilesTotal -= descendants.length;
+  tile._children.length = 0;
+  tile._implicitChildrenCreated = false;
+  return true;
+}
+
+/**
+ * Releases the implicit tiles below the branches whose content the cache
+ * unloaded. They are created again if the traversal returns to them.
+ *
+ * @private
+ * @param {Cesium3DTileset} tileset
+ * @param {FrameState} frameState
+ */
+function releaseImplicitTiles(tileset, frameState) {
+  const candidates = tileset._releaseCandidateTiles;
+  const retained = [];
+  for (const tile of candidates) {
+    candidates.delete(tile);
+    // The tile may have been released or destroyed since it was added.
+    if (!tile._implicitChildrenCreated) {
+      continue;
+    }
+
+    // A branch the traversal visited this frame is checked again next frame.
+    const visitedThisFrame = tile._children.some(
+      (child) => child._touchedFrame === frameState.frameNumber,
+    );
+    if (visitedThisFrame) {
+      retained.push(tile);
+      continue;
+    }
+
+    const parent = tile.parent;
+    if (
+      releaseDescendantsIfUnused(tileset, tile) &&
+      defined(parent) &&
+      parent._implicitChildrenCreated
+    ) {
+      // Releasing this branch may leave the level above it releasable too.
+      candidates.add(parent);
+    }
+  }
+
+  for (const tile of retained) {
+    candidates.add(tile);
+  }
+}
+
+/**
  * @private
  * @param {Cesium3DTileset} tileset
  * @param {Cesium3DTile} tile
@@ -3705,6 +3834,12 @@ function unloadTile(tileset, tile) {
   tileset._statistics.decrementLoadCounts(tile.content);
   --tileset._statistics.numberOfTilesWithContentReady;
   tile.unloadContent();
+
+  // Explicit tiles never create implicit children, so they are never candidates.
+  const parent = tile.parent;
+  if (defined(parent) && parent._implicitChildrenCreated) {
+    tileset._releaseCandidateTiles.add(parent);
+  }
 }
 
 /**

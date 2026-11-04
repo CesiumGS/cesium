@@ -1,10 +1,10 @@
+import { mkdirSync } from "fs";
 import { join } from "path";
 import { finished } from "stream/promises";
 
 import gulp from "gulp";
 import yargs from "yargs";
 import { buildSandcastleApp } from "./scripts/buildSandcastle.js";
-import { mkdirp } from "mkdirp";
 import {
   bundleWorkers,
   defaultESBuildOptions,
@@ -18,7 +18,7 @@ export async function buildCesiumViewer() {
   const cesiumViewerOutputDirectory = isProduction
     ? "Build/CesiumViewer"
     : "Build/Apps/CesiumViewer";
-  mkdirp.sync(cesiumViewerOutputDirectory);
+  mkdirSync(cesiumViewerOutputDirectory, { recursive: true });
 
   const config = defaultESBuildOptions();
   config.entryPoints = [
