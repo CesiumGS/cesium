@@ -19,14 +19,21 @@ export class GpuTimer {
   /**
    * Smoothed GPU time per pass label (`passWrites`), ms; passes sharing a
    * label (the shadow cascades) add up. For benchmarks: where the time goes.
+   * In the order the last measured frame ran them, then labels it didn't.
    */
   get passes(): Record<string, number> {
+    const labels = [...this.labelIndex.keys()];
     const out: Record<string, number> = {};
+    for (const i of this.order) {
+      out[labels[i]!] = this.labelMs[i]!;
+    }
     this.labelIndex.forEach((i, label) => {
-      out[label] = this.labelMs[i]!;
+      out[label] ??= this.labelMs[i]!;
     });
     return out;
   }
+  /** Label indices in the order the last measured frame's passes ran. */
+  private order: number[] = [];
   private readonly querySet?: GPUQuerySet;
   private readonly resolveBuffer?: GPUBuffer;
   private readonly readbacks: GPUBuffer[] = [];
@@ -176,7 +183,11 @@ export class GpuTimer {
     let first = timestamp(words, 0);
     let last = timestamp(words, 1);
     this.labelSum.fill(0);
+    const order: number[] = [];
     for (let i = 0; i < count; i += 2) {
+      if (!order.includes(labels[i / 2]!)) {
+        order.push(labels[i / 2]!);
+      }
       const begin = timestamp(words, i),
         end = timestamp(words, i + 1);
       if (end > begin) {
@@ -189,6 +200,7 @@ export class GpuTimer {
     }
     buffer.unmap();
     this.idle.push(buffer);
+    this.order = order;
     this.milliseconds = smooth(this.milliseconds, total / 1e6);
     for (let i = 0; i < this.labelIndex.size; i++) {
       this.labelMs[i] = smooth(this.labelMs[i]!, this.labelSum[i]! / 1e6);

@@ -52,6 +52,7 @@ const HISTORY = 120;
 const SECTIONS = [
   ["problems", "Problems"],
   ["frame", "Frame"],
+  ["passes", "GPU passes"],
   ["streaming", "Streaming"],
   ["pipeline", "Content pipeline"],
   ["memory", "Memory"],
@@ -163,6 +164,30 @@ export function attachInspector(
       s.shift();
     }
   };
+  /** Each GPU pass's time, in the frame's order (`FrameSnapshot.gpuPasses`). */
+  const passHistory = new Map<string, number[]>();
+  const pushPasses = (
+    passes: Array<[string, number]> | undefined,
+    drawing: boolean,
+  ) => {
+    const now = new Map(passes ?? []);
+    // Passes seen before, then new ones, as the frame orders them.
+    for (const [pass] of passes ?? []) {
+      if (!passHistory.has(pass)) {
+        passHistory.set(pass, []);
+      }
+    }
+    for (const [pass, series] of passHistory) {
+      series.push(drawing ? (now.get(pass) ?? 0) : 0);
+      if (series.length > HISTORY) {
+        series.shift();
+      }
+      // A pass that stopped running for the whole window: dropped.
+      if (series.length === HISTORY && series.every((v) => v === 0)) {
+        passHistory.delete(pass);
+      }
+    }
+  };
   let last: InspectorSnapshot | undefined;
   let lastAt = performance.now();
   let framesPerSecond: number | undefined;
@@ -173,9 +198,9 @@ export function attachInspector(
   let hover: number | undefined;
   let shownError: string | undefined;
 
-  const historyEl = bodies.get("history")!;
-  historyEl.addEventListener("pointermove", (e) => {
-    const plot = historyEl.querySelector("svg");
+  // Hover over either section of sparklines: a moment's values in both.
+  const hoverAt = (el: HTMLElement, e: PointerEvent) => {
+    const plot = el.querySelector("svg");
     if (!plot) {
       return;
     }
@@ -183,11 +208,16 @@ export function attachInspector(
     const f = (e.clientX - rect.left) / rect.width;
     hover = f < 0 || f > 1 ? undefined : Math.round(f * (HISTORY - 1));
     renderHistory();
-  });
-  historyEl.addEventListener("pointerleave", () => {
+  };
+  const hoverOff = () => {
     hover = undefined;
     renderHistory();
-  });
+  };
+  for (const key of ["history", "passes"] as const) {
+    const el = bodies.get(key)!;
+    el.addEventListener("pointermove", (e) => hoverAt(el, e));
+    el.addEventListener("pointerleave", hoverOff);
+  }
 
   let expanded = false;
   const setExpanded = (on: boolean) => {
@@ -213,6 +243,12 @@ export function attachInspector(
   function renderHistory(): void {
     if (expanded && last) {
       set("history", historyHtml(history, last, hover));
+      set(
+        "passes",
+        passHistory.size
+          ? passesHtml(passHistory, last.frame?.gpuPasses ?? [], hover)
+          : undefined,
+      );
     }
   }
 
@@ -261,6 +297,7 @@ export function attachInspector(
     const drawing = framesPerSecond === undefined || framesPerSecond > 0;
     push("cpu", drawing ? (snap.frame?.cpuMs ?? 0) : 0);
     push("gpu", drawing ? (snap.frame?.gpuMs ?? 0) : 0);
+    pushPasses(snap.frame?.gpuPasses, drawing);
 
     // The last move: from when the camera stopped until streaming settled,
     // with the requests and bytes it cost where the engine counts them (an
@@ -390,10 +427,6 @@ function frameHtml(s: InspectorSnapshot, framesPerSecond?: number): string {
   const rows: [string, string][] = [
     ["CPU / frame", f.cpuMs !== undefined ? ms(f.cpuMs) : "—"],
     ["GPU / frame", f.gpuMs !== undefined ? ms(f.gpuMs) : "not exposed"],
-    ...(f.gpuPasses ?? []).map(([pass, t]): [string, string] => [
-      `<span class="ci-pass">${escape(pass)}</span>`,
-      ms(t),
-    ]),
   ];
   if (f.intervalMs !== undefined) {
     rows.push(["Frame interval", ms(f.intervalMs)]);
@@ -704,7 +737,42 @@ function historyHtml(
   if (s.frame?.gpuMs !== undefined) {
     rows.push({ name: "GPU frame", series: h.gpu, format: ms });
   }
+  return sparklines(rows, hover);
+}
 
+/**
+ * Each GPU pass's time over the last 30 s, one row a pass, in the latest
+ * frame's order (passes that stopped running last).
+ */
+function passesHtml(
+  passes: Map<string, number[]>,
+  order: Array<[string, number]>,
+  hover: number | undefined,
+): string {
+  const rank = new Map(order.map(([pass], k) => [pass, k]));
+  const at = (pass: string) => rank.get(pass) ?? order.length;
+  return sparklines(
+    [...passes]
+      .sort(([a], [b]) => at(a) - at(b))
+      .map(([pass, series]) => ({
+        name: escape(pass),
+        series,
+        format: ms,
+      })),
+    hover,
+  );
+}
+
+/** Small multiples, one series per row, each on its own scale. */
+function sparklines(
+  rows: Array<{
+    name: string;
+    series: number[];
+    format: (v: number) => string;
+    limit?: number[];
+  }>,
+  hover: number | undefined,
+): string {
   const w = 240;
   const rowH = 20;
   const x = (i: number, n: number) =>
@@ -976,7 +1044,6 @@ const CSS = `
 .cesium-inspector .ci-note { color: var(--ci-muted); font-size: 11px; }
 .cesium-inspector .ci-kv { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; }
 .cesium-inspector .ci-kv .ci-num { text-align: right; }
-.cesium-inspector .ci-pass { color: var(--ci-muted); padding-left: 12px; }
 .cesium-inspector .ci-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; margin-bottom: 8px; }
 .cesium-inspector .ci-tile-label { color: var(--ci-muted); font-size: 11px; }
 .cesium-inspector .ci-tile-value { color: var(--ci-strong); font-size: 15px; font-variant-numeric: tabular-nums; }
