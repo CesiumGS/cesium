@@ -91,6 +91,16 @@ class MorphWeightSpline extends Spline {
   }
 
   /**
+   * Always <code>undefined</code>, since a morph weight spline stores its control values as weights. Use {@link MorphWeightSpline#weights} instead.
+   *
+   * @type {number[]|Cartesian3[]|Quaternion[]}
+   * @readonly
+   */
+  get points() {
+    return undefined;
+  }
+
+  /**
    * Evaluates the curve at a given time.
    *
    * @param {number} time The time at which to evaluate the curve.

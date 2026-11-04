@@ -9,7 +9,7 @@ import Quaternion from "./Quaternion.js";
  * and is not intended to be instantiated directly.
  *
  * @abstract
- * 
+ *
  * @see CatmullRomSpline
  * @see LinearSpline
  * @see HermiteSpline

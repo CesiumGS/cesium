@@ -43,6 +43,26 @@ class ConstantSpline extends Spline {
   }
 
   /**
+   * Always <code>undefined</code>, since a constant spline has no control point times.
+   *
+   * @type {number[]}
+   * @readonly
+   */
+  get times() {
+    return undefined;
+  }
+
+  /**
+   * Always <code>undefined</code>, since a constant spline has no control points. Use {@link ConstantSpline#value} instead.
+   *
+   * @type {number[]|Cartesian3[]|Quaternion[]}
+   * @readonly
+   */
+  get points() {
+    return undefined;
+  }
+
+  /**
    * Finds an index <code>i</code> in <code>times</code> such that the parameter
    * <code>time</code> is in the interval <code>[times[i], times[i + 1]]</code>.
    *
