@@ -49,6 +49,16 @@ export const HARNESSES: HarnessInfo[] = [
     load: () => import("../parity/customShader.ts").then((m) => m.harness),
   },
   {
+    id: "tracks",
+    group: "parity",
+    title: "Real-time tracks",
+    description:
+      "Tracks as instance data interpolated on the GPU: trucks up close, billboards from afar (chosen per instance in the cull pass), interpolation between feed samples, and a 100,000-track feed update's cost.",
+    page: "/parity/tracks.html",
+    entry: "runTracks",
+    load: () => import("../parity/tracks.ts").then((m) => m.harness),
+  },
+  {
     id: "tileset",
     group: "parity",
     title: "Tileset content parity",

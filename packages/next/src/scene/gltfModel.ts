@@ -86,6 +86,9 @@ export interface ModelInstances {
   tints?: ArrayLike<number>;
   /** Local feature ID per instance (picking and styling per instance). */
   featureIds?: ArrayLike<number>;
+  /** Drawn only within / beyond a distance (`InstanceOptions`). */
+  visibleWithin?: number;
+  visibleBeyond?: number;
 }
 
 /** A primitive's node frame, to express model-space instances in it. */
@@ -509,6 +512,12 @@ function modelInstances(
     matrices: out,
     ...(tints ? { tints } : {}),
     ...(featureIds ? { featureIds } : {}),
+    ...(user.visibleWithin !== undefined
+      ? { visibleWithin: user.visibleWithin }
+      : {}),
+    ...(user.visibleBeyond !== undefined
+      ? { visibleBeyond: user.visibleBeyond }
+      : {}),
   };
 }
 

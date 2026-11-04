@@ -13,6 +13,7 @@ import {
   PROPERTY_TEXTURES,
   PROPERTY_TEXTURE_BINDING,
   TABLE_PROPERTY,
+  instanceDistanceFlags,
   TEXTURE_PROPERTY,
   TEXTURE_PROPERTY_WORDS,
   attributeHash,
@@ -208,6 +209,14 @@ export interface InstanceOptions {
   featureIds?: ArrayLike<number>;
   /** Linear RGBA tint per instance, 4 numbers each (stored as 8 bits). */
   tints?: ArrayLike<number>;
+  /**
+   * Drawn only within this distance (m, up to 65,504) of each view's
+   * camera, per instance; or only beyond `visibleBeyond`. Two draws with
+   * the same distance switch representations (a model up close, a
+   * billboard from afar).
+   */
+  visibleWithin?: number;
+  visibleBeyond?: number;
   /**
    * Per-instance data for custom shaders: `stride` 32-bit words per
    * instance, uploaded to the arena and read by instance index the way
@@ -496,6 +505,8 @@ export class World {
   /** Instance slots in use or freed below the highest (cull dispatch size). */
   private instanceHighWater = 0;
   private uploadsPending = false;
+  private readonly frameComputes: Array<(pass: GPUComputePassEncoder) => void> =
+    [];
   private materialsF32: Float32Array;
   private materialsU32: Uint32Array;
   private materialCount = 0;
@@ -1285,6 +1296,10 @@ export class World {
         first + instanceCount,
       );
       const { f32, u32 } = this.instances;
+      const distanceFlags = instanceDistanceFlags(
+        instances.visibleWithin,
+        instances.visibleBeyond,
+      );
       for (let k = 0; k < instanceCount; k++) {
         const feature = instances.featureIds?.[k] ?? NO_FEATURE;
         if (feature !== NO_FEATURE) {
@@ -1298,7 +1313,7 @@ export class World {
           k * 16,
           index,
           feature,
-          0,
+          distanceFlags,
           instances.tints ? packTint(instances.tints, k * 4) : 0xffffffff,
         );
         this.instances.mark(first + k);
@@ -1553,7 +1568,8 @@ export class World {
       );
     }
     if (change.visible !== undefined) {
-      u32[w + 14] = change.visible ? 0 : 1;
+      // Its distance rule stays (InstanceFlags).
+      u32[w + 14] = (u32[w + 14]! & ~1) | (change.visible ? 0 : 1);
     }
     if (change.tint) {
       u32[w + 15] = packTint(change.tint);
@@ -2426,6 +2442,33 @@ export class World {
     this.records.upload(pass);
     this.transforms.upload(pass);
     this.instances.upload(pass);
+    // Kernels writing the tables each frame (tracks' instance rows), after
+    // the uploads and before any view culls.
+    for (const encode of this.frameComputes) {
+      encode(pass);
+    }
+  }
+
+  /**
+   * Runs `encode` once per frame in this world's first cull pass, after
+   * table uploads and before culling: for kernels that write the tables
+   * on the GPU (e.g. tracks' instance rows; their rows must not also be
+   * changed on the CPU). It sets its own pipeline and bind groups. Returns
+   * the remover.
+   */
+  addFrameCompute(encode: (pass: GPUComputePassEncoder) => void): () => void {
+    this.frameComputes.push(encode);
+    return () => {
+      const i = this.frameComputes.indexOf(encode);
+      if (i >= 0) {
+        this.frameComputes.splice(i, 1);
+      }
+    };
+  }
+
+  /** A draw's first row in the instance table (`instanceBuffer`). */
+  instanceFirst(handle: DrawHandle): number {
+    return this.recordsU32[handle.index * RECORD_WORDS + INSTANCE_FIRST_WORD]!;
   }
 
   /**

@@ -2783,6 +2783,48 @@ collections. (5) Labels with decluttering.
   every run before, so it's recorded as a one-off to watch. The bench
   passes 51 of 51.
 
+**Increment 2 (r47): the track collection.**
+
+- `new Tracks(engine, world, { capacity, origin, model, billboard,
+switchDistance, delay, clock })`: tracks as instance data. Positions
+  are meters in an east-north-up frame at `origin` (float32 keeps
+  centimeters within a few hundred kilometers), headings radians
+  clockwise. `update(first, samples)` takes a feed update for many
+  tracks as one `Float32Array` (x, y, z, heading each): the CPU shifts
+  each track's last sample to its start and stamps the new one with the
+  clock (27 ns a track), then one copy reaches a state buffer.
+  `count` shows the first tracks; `setSymbols` writes the billboards'
+  per-track data (symbol, color) for their custom shader.
+- Each frame a kernel (tracks.wgsl), dispatched once per world before
+  culling (`World.addFrameCompute`), interpolates every track between
+  its two samples at the clock minus `delay` (shorter way round for
+  heading), orients it in the local frame at its position (a sphere's
+  up; 0.1° over 100 km), and writes its instance rows straight into the
+  world's instance table: per model primitive the model-frame placement
+  conjugated into the primitive's frame (as `setModelInstance`), and the
+  billboard's position. No per-track CPU work while tracks move.
+- Model up close, symbol from afar: instances carry a distance rule
+  (`InstanceOptions.visibleWithin` / `visibleBeyond`; `InstanceFlags` 2
+  and 4 with the distance as a half float in the flags' high half), which
+  the cull kernel applies per instance and view. A collection's model
+  draws within `switchDistance`, its billboard beyond. (No hysteresis or
+  crossfade yet.)
+- Harness `parity/tracks` (`bench/run.mjs tracks`), 6 of 6 pass, with the
+  harness's clock: Cesium Milk Trucks within the switch distance and no
+  billboards; beyond it three 24 px billboards cover 3 × 24² px within
+  5% (area weighted by coverage); `count` shows one; halfway between two
+  samples matches a track placed at the midpoint exactly; heading turns
+  the trucks; a 100,000-track feed update costs 2.8 ms on the CPU.
+  Parity, models and translucency unchanged (318 image metrics; the
+  one-off order reading of increment 1 is back to 0); custom shaders 51
+  of 51.
+- Found: a glTF asset can be placed in only one world (its images are
+  released after the first world's upload); the harness loads it per
+  world. To fix with the asset cache.
+- Not yet: clamping (increment 3), hysteresis and crossfade, the
+  kernel's GPU time measured (the benchmark, increment 4), per-track
+  tints for models, removing single tracks (`count` and reordering).
+
 ### M5 — Performance hardening (≈3 wks)
 
 - Two-phase occlusion culling (optional if targets are already met).

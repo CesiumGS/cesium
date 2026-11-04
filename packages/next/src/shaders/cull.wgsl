@@ -118,7 +118,15 @@ fn cullInstances(@builtin(global_invocation_id) gid: vec3u) {
     length(local[0].xyz),
     max(length(local[1].xyz), length(local[2].xyz)),
   );
-  if ((inst.flags & 1u) == 0u && drawable(r, t) &&
+  // A distance rule (layout.ts InstanceFlags): within or beyond the
+  // distance in the high half, from this view's camera.
+  var shown = true;
+  if ((inst.flags & 6u) != 0u) {
+    let distance = unpack2x16float(inst.flags).y;
+    let within = length((m * vec4f(r.center, 1.0)).xyz) <= distance;
+    shown = select(!within, within, (inst.flags & 2u) != 0u);
+  }
+  if ((inst.flags & 1u) == 0u && shown && drawable(r, t) &&
       inFrustum(m, r.center, r.radius * scale)) {
     append(r.batch, item);
   }

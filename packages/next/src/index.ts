@@ -15,6 +15,7 @@ export {
   type UniformType,
   type ValueUniform,
 } from "./scene/CustomShader.ts";
+export { Tracks, type TracksOptions } from "./tracks/Tracks.ts";
 export {
   FeatureStyle,
   type FeatureStyleOptions,

@@ -1448,6 +1448,11 @@ export class Engine {
     this.renderRequested = true;
   }
 
+  /** Seconds since the engine started: `View.time`'s clock. */
+  get time(): number {
+    return (performance.now() - this.startTime) / 1000;
+  }
+
   /** Runs the frame loop with requestAnimationFrame until `stop()`. */
   start(): void {
     const tick = () => {

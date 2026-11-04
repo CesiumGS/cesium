@@ -467,6 +467,42 @@ export function writeTransform(
  * Writes an instance entry: `m` (column-major 4×4, affine) relative to the
  * record's transform, stored as three rows.
  */
+/**
+ * `Instance.flags` bits: 1 hidden; 2 drawn only within, 4 only beyond, a
+ * distance from the camera held as a half float in bits 16–31 (per view,
+ * in the cull pass): a representation switching with distance (a track's
+ * model up close, its symbol from afar).
+ */
+export const InstanceFlags = { hidden: 1, within: 2, beyond: 4 } as const;
+
+/** Instance flags for a distance rule (`InstanceFlags`), hidden clear. */
+export function instanceDistanceFlags(
+  within: number | undefined,
+  beyond: number | undefined,
+): number {
+  const distance = within ?? beyond;
+  if (distance === undefined) {
+    return 0;
+  }
+  const kind =
+    within !== undefined ? InstanceFlags.within : InstanceFlags.beyond;
+  return (kind | (toHalf(Math.min(distance, 65504)) << 16)) >>> 0;
+}
+
+/** A float as IEEE half bits (rounded toward zero; finite, non-negative). */
+function toHalf(value: number): number {
+  const f32 = new Float32Array([value]);
+  const bits = new Uint32Array(f32.buffer)[0]!;
+  const exponent = ((bits >>> 23) & 0xff) - 127 + 15;
+  if (exponent <= 0) {
+    return 0;
+  }
+  if (exponent >= 31) {
+    return 0x7bff;
+  }
+  return (exponent << 10) | ((bits >>> 13) & 0x3ff);
+}
+
 export function writeInstance(
   f32: Float32Array,
   u32: Uint32Array,
