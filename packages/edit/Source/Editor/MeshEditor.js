@@ -145,6 +145,14 @@ class MeshEditor {
      */
     this.meshRemoved = new Event();
 
+    /**
+     * Raised when {@link MeshEditor#activeTool} changes. The new tool and the
+     * previous tool are passed to listeners (either may be undefined).
+     *
+     * @type {Event<function((MeshEditorTool | undefined), (MeshEditorTool | undefined)): void>}
+     */
+    this.activeToolChanged = new Event();
+
     this.#inputHandler = new MeshEditorInputHandler({
       scene: options.scene,
       wasmEditor: this.#wasmEditor,
@@ -211,8 +219,12 @@ class MeshEditor {
   }
 
   set activeTool(value) {
+    const previousTool = this.activeTool;
     if (!defined(value)) {
       this.#wasmEditor.clearActiveTool();
+      if (defined(previousTool)) {
+        this.activeToolChanged.raiseEvent(undefined, previousTool);
+      }
       return;
     }
 
@@ -226,6 +238,10 @@ class MeshEditor {
       this.#wasmEditor.setActiveTool(value._id);
     } catch (error) {
       throw new DeveloperError(`The tool can't be activated: ${error.message}`);
+    }
+
+    if (value !== previousTool) {
+      this.activeToolChanged.raiseEvent(value, previousTool);
     }
   }
 
@@ -270,6 +286,7 @@ class MeshEditor {
     }
 
     const previousMode = this.#mode;
+    const previousTool = this.activeTool;
     this.#wasmEditor.setMode(value);
     this.#mode = value;
 
@@ -285,6 +302,10 @@ class MeshEditor {
       }
     }
 
+    const activeTool = this.activeTool;
+    if (activeTool !== previousTool) {
+      this.activeToolChanged.raiseEvent(activeTool, previousTool);
+    }
     this.modeChanged.raiseEvent(value, previousMode);
   }
 
