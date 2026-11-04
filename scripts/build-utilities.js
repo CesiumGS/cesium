@@ -251,7 +251,7 @@ export const defaultESBuildOptions = () => {
     logOverride: {
       "empty-import-meta": "silent",
     },
-    target: `es2020`,
+    target: `es2022`,
   };
 };
 
