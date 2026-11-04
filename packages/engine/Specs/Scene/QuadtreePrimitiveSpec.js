@@ -1006,6 +1006,97 @@ describe("Scene/QuadtreePrimitive", function () {
         );
       });
 
+      // All tiles are known to be available, so the quadtree refines past tiles that are
+      // still loading. Only the tiles on the way to the level-2 tile x=0, y=0 are visible,
+      // and only that tile meets the screen space error. Tiles load once their level is in
+      // loadableLevels. The height callback is at a position inside the level-1 tile x=0,
+      // y=0 but outside the rendered level-2 tile, and the picked height is 100 m per level.
+      function createQuadtreeWithAvailableTiles(loadableLevels) {
+        const tileProvider = createSpyTileProvider();
+        tileProvider.getReady.and.returnValue(true);
+        tileProvider.getLevelMaximumGeometricError.and.returnValue(1.0);
+        tileProvider.canRefine.and.returnValue(true);
+        tileProvider.terrainProvider = {
+          getTileDataAvailable: function () {
+            return true;
+          },
+        };
+        tileProvider.computeTileVisibility.and.callFake(function (tile) {
+          tile._distance = tile.level < 2 ? 1e-15 : 1e15;
+          return tile.x === 0 && tile.y === 0
+            ? Visibility.FULL
+            : Visibility.NONE;
+        });
+        tileProvider.loadTile.and.callFake(function (frameState, tile) {
+          if (!loadableLevels.has(tile.level)) {
+            return;
+          }
+          tile.state = QuadtreeTileLoadState.DONE;
+          tile.renderable = true;
+          tile.data = {
+            pick: function () {
+              return Cartesian3.fromDegrees(-100.0, 10.0, tile.level * 100.0);
+            },
+            mesh: {},
+          };
+        });
+
+        const result = {
+          quadtree: new QuadtreePrimitive({
+            tileProvider: tileProvider,
+          }),
+          height: undefined,
+          renderFrames: function (count) {
+            for (let i = 0; i < count; ++i) {
+              ++scene.frameState.frameNumber;
+              result.quadtree.update(scene.frameState);
+              result.quadtree.beginFrame(scene.frameState);
+              result.quadtree.render(scene.frameState);
+              result.quadtree.endFrame(scene.frameState);
+            }
+          },
+        };
+        result.quadtree.updateHeight(
+          Cartographic.fromDegrees(-100.0, 10.0),
+          function (p) {
+            result.height = p.height;
+          },
+        );
+        return result;
+      }
+
+      it("updates heights from tiles that are refined after their descendants were kicked", function () {
+        const loadableLevels = new Set([0]);
+        const quadtree = createQuadtreeWithAvailableTiles(loadableLevels);
+
+        quadtree.renderFrames(3);
+        expect(quadtree.height).toEqualEpsilon(0.0, CesiumMath.EPSILON3);
+
+        // Levels 1 and 2 load together, so level 1 is never rendered on its own.
+        loadableLevels.add(1).add(2);
+        quadtree.renderFrames(5);
+        expect(
+          quadtree.quadtree._tilesToRender.map((tile) => tile.level),
+        ).toEqual([2]);
+        expect(quadtree.height).toEqualEpsilon(100.0, CesiumMath.EPSILON3);
+      });
+
+      it("updates heights from refined tiles that become renderable", function () {
+        const loadableLevels = new Set([0, 2]);
+        const quadtree = createQuadtreeWithAvailableTiles(loadableLevels);
+
+        quadtree.renderFrames(5);
+        expect(
+          quadtree.quadtree._tilesToRender.map((tile) => tile.level),
+        ).toEqual([2]);
+        expect(quadtree.height).toEqualEpsilon(0.0, CesiumMath.EPSILON3);
+
+        // Level 1 is refined all along and loads last.
+        loadableLevels.add(1);
+        quadtree.renderFrames(3);
+        expect(quadtree.height).toEqualEpsilon(100.0, CesiumMath.EPSILON3);
+      });
+
       it("uses tiles position caching in update heights", function () {
         const tileProvider = createSpyTileProvider();
         tileProvider.getReady.and.returnValue(true);

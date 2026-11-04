@@ -11,6 +11,7 @@
 #### Fixes :wrench:
 
 - Fixed picking for clamped vector tilesets and `GeoJsonPrimitive` polylines and polygons. [#13917](https://github.com/CesiumGS/cesium/pull/13917)
+- Fixed terrain-clamped objects outside the view keeping a height far below the ground, picked from a coarse ancestor tile, when the tiles in between load together. [#14019](https://github.com/CesiumGS/cesium/issues/14019)
 
 ## 1.147 - 2026-11-02
 

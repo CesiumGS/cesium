@@ -970,6 +970,18 @@ function visitTile(
       }
     }
 
+    if (
+      tile._lastSelectionResult === TileSelectionResult.REFINED &&
+      tile.renderable &&
+      lastFrameSelectionResult !== TileSelectionResult.REFINED &&
+      lastFrameSelectionResult !== TileSelectionResult.RENDERED
+    ) {
+      // Tile is newly refined without having been rendered on its own, e.g. because its
+      // descendants were kicked while it was loading. Update its heights, or positions
+      // outside the rendered descendants keep the height picked from a coarser ancestor.
+      primitive._tileToUpdateHeights.push(tile);
+    }
+
     return;
   }
 
@@ -1379,9 +1391,22 @@ function processSinglePriorityLoadQueue(
     ++i
   ) {
     const tile = loadQueue[i];
+    const wasRenderable = tile.renderable;
     primitive._tileReplacementQueue.markTileRendered(tile);
     tileProvider.loadTile(frameState, tile);
     didSomeLoading = true;
+
+    if (
+      !wasRenderable &&
+      tile.renderable &&
+      tile._lastSelectionResultFrame === primitive._lastSelectionFrameNumber &&
+      tile._lastSelectionResult === TileSelectionResult.REFINED
+    ) {
+      // A refined tile is not queued for height updates when it becomes renderable,
+      // so do it here. Otherwise positions outside its rendered descendants keep the
+      // height picked from a coarser ancestor.
+      primitive._tileToUpdateHeights.push(tile);
+    }
   }
 
   return didSomeLoading;
