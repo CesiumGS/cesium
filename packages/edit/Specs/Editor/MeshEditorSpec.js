@@ -5,14 +5,11 @@ import {
   Matrix4,
   RuntimeError,
 } from "@cesium/core";
+import { SceneTransforms, StencilFunction } from "@cesium/engine";
 import {
-  GeometryAttributeDescriptor,
-  GeometryReader,
-  SceneTransforms,
-  StencilFunction,
-  VertexAttributeSemantic,
-} from "@cesium/engine";
-import { ComponentType } from "@cesium/mesh-editor";
+  ComponentType,
+  MeshEditor as WasmMeshEditor,
+} from "@cesium/mesh-editor";
 import {
   EditMode,
   Mesh,
@@ -23,21 +20,11 @@ import {
 } from "../../index.js";
 import createCanvas from "../../../../Specs/createCanvas.js";
 import createScene from "../../../../Specs/createScene.js";
+import DomEventSimulator from "../../../../Specs/DomEventSimulator.js";
+import createGeometrySource, { square } from "../createGeometrySource.js";
 
-// A 2 x 2 square in the xy-plane, made of two triangles. Its overlay has 4
-// vertices, 5 edges and 2 triangles.
-const square = {
-  positions: [
-    [-1.0, -1.0, 0.0],
-    [1.0, -1.0, 0.0],
-    [1.0, 1.0, 0.0],
-    [-1.0, 1.0, 0.0],
-  ],
-  primitives: [
-    [0, 1, 2],
-    [0, 2, 3],
-  ],
-};
+const pointColor = [0, 0, 0, 255];
+const selectedPointColor = [255, 122, 0, 255];
 
 // Two connected lines, which can't be faces.
 const lines = {
@@ -47,45 +34,6 @@ const lines = {
     [1, 2],
   ],
 };
-
-/**
- * Creates a geometry source that reads the given geometry.
- *
- * @param {object} geometry positions ([x, y, z] per vertex) and primitives (vertex indices per primitive).
- * @returns {object} The source, with an identity world matrix and a show property.
- */
-function createSource(geometry) {
-  const position = new GeometryAttributeDescriptor({
-    semantic: VertexAttributeSemantic.POSITION,
-  });
-
-  const copyInto = (values, result, offset = 0) => {
-    values.forEach((value, i) => {
-      result[offset + i] = value;
-    });
-    return result;
-  };
-
-  const geometryReader = new GeometryReader({
-    availableAttributes: [position],
-    createReadSession: () => ({
-      vertexCount: () => geometry.positions.length,
-      primitiveCount: () => geometry.primitives.length,
-      primitiveVertexCount: (i) => geometry.primitives[i].length,
-      primitiveReader: () => (i, result, offset) =>
-        copyInto(geometry.primitives[i], result, offset),
-      vertexAttributeReader: () => (i, result, offset) =>
-        copyInto(geometry.positions[i], result, offset),
-      destroy: () => {},
-    }),
-  });
-
-  return {
-    geometryReader,
-    worldMatrix: Matrix4.clone(Matrix4.IDENTITY),
-    show: true,
-  };
-}
 
 describe(
   "Editor/MeshEditor",
@@ -106,6 +54,9 @@ describe(
       camera.position = new Cartesian3(0.0, 0.0, 4.0);
       camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3());
       camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
+      // Without this, the camera keeps its previous right vector, and pick
+      // rays don't match window positions.
+      camera.right = Cartesian3.clone(Cartesian3.UNIT_X);
       scene.backgroundColor = Color.WHITE;
     });
 
@@ -180,6 +131,23 @@ describe(
     // Inside the square's bottom-right triangle.
     const facePosition = [0.5, -0.5, 0.0];
 
+    // Fires a pointer event of type "Down", "Move" or "Up" at a window
+    // position on the scene's canvas.
+    function firePointer(type, windowPosition, options = {}) {
+      const rect = scene.canvas.getBoundingClientRect();
+      DomEventSimulator[`firePointer${type}`](scene.canvas, {
+        ...options,
+        pointerType: "mouse",
+        clientX: windowPosition.x + rect.left,
+        clientY: windowPosition.y + rect.top,
+      });
+    }
+
+    function click(windowPosition, options) {
+      firePointer("Down", windowPosition, options);
+      firePointer("Up", windowPosition, options);
+    }
+
     describe("addToScene", function () {
       it("resolves to an editor in the scene's primitives", async function () {
         const editor = await MeshEditor.addToScene(scene);
@@ -198,7 +166,7 @@ describe(
     describe("addMesh", function () {
       it("returns a mesh with the source", async function () {
         const editor = await MeshEditor.addToScene(scene);
-        const source = createSource(square);
+        const source = createGeometrySource(square);
 
         const mesh = editor.addMesh(source);
 
@@ -209,7 +177,7 @@ describe(
 
       it("hides the source", async function () {
         const editor = await MeshEditor.addToScene(scene);
-        const source = createSource(square);
+        const source = createGeometrySource(square);
 
         editor.addMesh(source);
 
@@ -218,7 +186,7 @@ describe(
 
       it("accepts a source without show", async function () {
         const editor = await MeshEditor.addToScene(scene);
-        const source = createSource(square);
+        const source = createGeometrySource(square);
         delete source.show;
 
         const mesh = editor.addMesh(source);
@@ -230,7 +198,7 @@ describe(
       it("returns a shown, inactive mesh", async function () {
         const editor = await MeshEditor.addToScene(scene);
 
-        const mesh = editor.addMesh(createSource(square));
+        const mesh = editor.addMesh(createGeometrySource(square));
 
         expect(mesh.show).toBe(true);
         expect(editor.isMeshActive(mesh)).toBe(false);
@@ -238,7 +206,7 @@ describe(
 
       it("throws if the source was already added", async function () {
         const editor = await MeshEditor.addToScene(scene);
-        const source = createSource(square);
+        const source = createGeometrySource(square);
         editor.addMesh(source);
 
         expect(() => editor.addMesh(source)).toThrowDeveloperError();
@@ -246,7 +214,7 @@ describe(
 
       it("throws a RuntimeError if the geometry can't be edited", async function () {
         const editor = await MeshEditor.addToScene(scene);
-        const source = createSource(lines);
+        const source = createGeometrySource(lines);
 
         expect(() => editor.addMesh(source)).toThrowError(RuntimeError);
         expect(source.show).toBe(true);
@@ -259,7 +227,7 @@ describe(
         });
         editor.meshAdded.addEventListener(listener);
 
-        const mesh = editor.addMesh(createSource(square));
+        const mesh = editor.addMesh(createGeometrySource(square));
 
         expect(listener).toHaveBeenCalledOnceWith(mesh);
       });
@@ -269,7 +237,7 @@ describe(
         const listener = jasmine.createSpy("meshAdded");
         editor.meshAdded.addEventListener(listener);
 
-        expect(() => editor.addMesh(createSource(lines))).toThrowError(
+        expect(() => editor.addMesh(createGeometrySource(lines))).toThrowError(
           RuntimeError,
         );
         expect(listener).not.toHaveBeenCalled();
@@ -285,9 +253,9 @@ describe(
 
       it("lists the meshes in the order they were added", async function () {
         const editor = await MeshEditor.addToScene(scene);
-        const first = editor.addMesh(createSource(square));
-        const second = editor.addMesh(createSource(square));
-        const third = editor.addMesh(createSource(square));
+        const first = editor.addMesh(createGeometrySource(square));
+        const second = editor.addMesh(createGeometrySource(square));
+        const third = editor.addMesh(createGeometrySource(square));
         editor.removeMesh(second);
 
         expect(editor.meshes).toEqual([first, third]);
@@ -295,7 +263,7 @@ describe(
 
       it("returns a copy", async function () {
         const editor = await MeshEditor.addToScene(scene);
-        const mesh = editor.addMesh(createSource(square));
+        const mesh = editor.addMesh(createGeometrySource(square));
 
         editor.meshes.length = 0;
 
@@ -306,7 +274,7 @@ describe(
     describe("getMesh", function () {
       it("returns the mesh that edits the source", async function () {
         const editor = await MeshEditor.addToScene(scene);
-        const source = createSource(square);
+        const source = createGeometrySource(square);
         const mesh = editor.addMesh(source);
 
         expect(editor.getMesh(source)).toBe(mesh);
@@ -315,7 +283,7 @@ describe(
       it("returns undefined for a source that isn't in the editor", async function () {
         const editor = await MeshEditor.addToScene(scene);
         const otherEditor = await MeshEditor.addToScene(scene);
-        const source = createSource(square);
+        const source = createGeometrySource(square);
         otherEditor.addMesh(source);
 
         expect(editor.getMesh(source)).toBeUndefined();
@@ -323,7 +291,7 @@ describe(
 
       it("returns undefined once the mesh is removed", async function () {
         const editor = await MeshEditor.addToScene(scene);
-        const source = createSource(square);
+        const source = createGeometrySource(square);
         editor.removeMesh(editor.addMesh(source));
 
         expect(editor.getMesh(source)).toBeUndefined();
@@ -331,7 +299,7 @@ describe(
 
       it("allows a removed source to be added again", async function () {
         const editor = await MeshEditor.addToScene(scene);
-        const source = createSource(square);
+        const source = createGeometrySource(square);
         editor.removeMesh(editor.addMesh(source));
 
         const mesh = editor.addMesh(source);
@@ -343,7 +311,7 @@ describe(
     describe("removeMesh", function () {
       it("returns true and removes the mesh", async function () {
         const editor = await MeshEditor.addToScene(scene);
-        const mesh = editor.addMesh(createSource(square));
+        const mesh = editor.addMesh(createGeometrySource(square));
 
         expect(editor.removeMesh(mesh)).toBe(true);
         expect(editor.hasMesh(mesh)).toBe(false);
@@ -351,7 +319,7 @@ describe(
 
       it("destroys the mesh", async function () {
         const editor = await MeshEditor.addToScene(scene);
-        const mesh = editor.addMesh(createSource(square));
+        const mesh = editor.addMesh(createGeometrySource(square));
 
         editor.removeMesh(mesh);
 
@@ -360,7 +328,7 @@ describe(
 
       it("shows the source", async function () {
         const editor = await MeshEditor.addToScene(scene);
-        const source = createSource(square);
+        const source = createGeometrySource(square);
         const mesh = editor.addMesh(source);
 
         editor.removeMesh(mesh);
@@ -371,7 +339,7 @@ describe(
       it("returns false for a mesh that isn't in the editor", async function () {
         const editor = await MeshEditor.addToScene(scene);
         const otherEditor = await MeshEditor.addToScene(scene);
-        const mesh = otherEditor.addMesh(createSource(square));
+        const mesh = otherEditor.addMesh(createGeometrySource(square));
 
         expect(editor.removeMesh(mesh)).toBe(false);
         expect(otherEditor.hasMesh(mesh)).toBe(true);
@@ -379,7 +347,7 @@ describe(
 
       it("stops drawing the mesh's overlay", async function () {
         const editor = await MeshEditor.addToScene(scene);
-        const mesh = editor.addMesh(createSource(square));
+        const mesh = editor.addMesh(createGeometrySource(square));
         expect(renderCommands(mesh).length).toBeGreaterThan(0);
 
         editor.removeMesh(mesh);
@@ -389,7 +357,7 @@ describe(
 
       it("raises meshRemoved after removing the mesh and before destroying it", async function () {
         const editor = await MeshEditor.addToScene(scene);
-        const source = createSource(square);
+        const source = createGeometrySource(square);
         const mesh = editor.addMesh(source);
         const listener = jasmine
           .createSpy("meshRemoved")
@@ -410,7 +378,7 @@ describe(
       it("does not raise meshRemoved for a mesh that isn't in the editor", async function () {
         const editor = await MeshEditor.addToScene(scene);
         const otherEditor = await MeshEditor.addToScene(scene);
-        const mesh = otherEditor.addMesh(createSource(square));
+        const mesh = otherEditor.addMesh(createGeometrySource(square));
         const listener = jasmine.createSpy("meshRemoved");
         editor.meshRemoved.addEventListener(listener);
 
@@ -423,7 +391,7 @@ describe(
     describe("active meshes", function () {
       it("setMeshActive makes a mesh active", async function () {
         const editor = await MeshEditor.addToScene(scene);
-        const mesh = editor.addMesh(createSource(square));
+        const mesh = editor.addMesh(createGeometrySource(square));
 
         editor.setMeshActive(mesh);
 
@@ -432,7 +400,7 @@ describe(
 
       it("setMeshInactive makes a mesh inactive", async function () {
         const editor = await MeshEditor.addToScene(scene);
-        const mesh = editor.addMesh(createSource(square));
+        const mesh = editor.addMesh(createGeometrySource(square));
         editor.setMeshActive(mesh);
 
         editor.setMeshInactive(mesh);
@@ -443,7 +411,7 @@ describe(
       it("throws for a mesh that isn't in the editor", async function () {
         const editor = await MeshEditor.addToScene(scene);
         const otherEditor = await MeshEditor.addToScene(scene);
-        const mesh = otherEditor.addMesh(createSource(square));
+        const mesh = otherEditor.addMesh(createGeometrySource(square));
 
         expect(() => editor.setMeshActive(mesh)).toThrowDeveloperError();
         expect(() => editor.setMeshInactive(mesh)).toThrowDeveloperError();
@@ -452,7 +420,7 @@ describe(
 
       it("draws an inactive mesh as faces in every mode", async function () {
         const editor = await MeshEditor.addToScene(scene);
-        const mesh = editor.addMesh(createSource(square));
+        const mesh = editor.addMesh(createGeometrySource(square));
 
         expect(renderInstanceCounts(mesh)).toEqual([2]);
 
@@ -462,7 +430,7 @@ describe(
 
       it("draws a mesh as faces once it's inactive", async function () {
         const editor = await MeshEditor.addToScene(scene);
-        const mesh = editor.addMesh(createSource(square));
+        const mesh = editor.addMesh(createGeometrySource(square));
         editor.mode = EditMode.VERTEX;
         editor.setMeshActive(mesh);
 
@@ -515,10 +483,10 @@ describe(
 
       it("throws for a tool that doesn't support the current mode", async function () {
         const editor = await MeshEditor.addToScene(scene);
-        const selectTool = SelectTool.addTo(editor);
+        const translateTool = TranslateTool.addTo(editor);
 
         expect(() => {
-          editor.activeTool = selectTool;
+          editor.activeTool = translateTool;
         }).toThrowDeveloperError();
         expect(editor.activeTool).toBeUndefined();
       });
@@ -535,23 +503,189 @@ describe(
     });
 
     describe("pointer input", function () {
-      it("selects a clicked vertex with the select tool", function () {});
+      // The square's corners.
+      const corner0 = [-1.0, -1.0, 0.0];
+      const corner1 = [1.0, -1.0, 0.0];
 
-      it("toggles a shift-clicked vertex with the select tool", function () {});
+      // Outside the square, near the canvas's corner.
+      const emptyWindowPosition = new Cartesian2(5.0, 5.0);
 
-      it("clears the selection when clicking empty space", function () {});
+      // Renders a frame and reads the pixel under a window position.
+      function renderPixel(windowPosition) {
+        scene.renderForSpecs();
 
-      it("clears the selection when clicking a component the mode can't select", function () {});
+        // Window coordinates start at the top, and pixels at the bottom.
+        return scene.context.readPixels({
+          x: Math.floor(windowPosition.x),
+          y: scene.drawingBufferHeight - 1 - Math.floor(windowPosition.y),
+          width: 1,
+          height: 1,
+        });
+      }
 
-      it("moves the selection when dragging with the translate tool", function () {});
+      function expectPixel(windowPosition, color) {
+        const pixel = renderPixel(windowPosition);
 
-      it("restores the selection's position when the translate tool is cancelled mid-drag", function () {});
+        // The WebGL stub doesn't draw or pick, so like the renderer matchers, skip the check.
+        if (!window.webglStub) {
+          expect(pixel).toEqualEpsilon(color, 3);
+        }
+      }
 
-      it("makes a clicked mesh the only active mesh in EditMode.NONE", function () {});
+      // Creates an editor with an active square, rendered once so it's
+      // pickable.
+      async function createEditorWithSquare(mode) {
+        const editor = await MeshEditor.addToScene(scene);
+        const mesh = editor.addMesh(createGeometrySource(square));
+        editor.setMeshActive(mesh);
+        editor.mode = mode;
+        scene.renderForSpecs();
+        return { editor, mesh };
+      }
 
-      it("toggles a shift-clicked mesh in EditMode.NONE", function () {});
+      it("selects a clicked vertex with the select tool", async function () {
+        const { editor } = await createEditorWithSquare(EditMode.VERTEX);
+        editor.activeTool = SelectTool.addTo(editor);
 
-      it("makes every mesh inactive when clicking empty space in EditMode.NONE", function () {});
+        click(getWindowPosition(corner0));
+
+        expectPixel(getWindowPosition(corner0), selectedPointColor);
+        expectPixel(getWindowPosition(corner1), pointColor);
+      });
+
+      it("toggles a shift-clicked vertex with the select tool", async function () {
+        const { editor } = await createEditorWithSquare(EditMode.VERTEX);
+        editor.activeTool = SelectTool.addTo(editor);
+        click(getWindowPosition(corner0));
+
+        click(getWindowPosition(corner1), { shiftKey: true });
+        expectPixel(getWindowPosition(corner0), selectedPointColor);
+        expectPixel(getWindowPosition(corner1), selectedPointColor);
+
+        click(getWindowPosition(corner0), { shiftKey: true });
+        expectPixel(getWindowPosition(corner0), pointColor);
+        expectPixel(getWindowPosition(corner1), selectedPointColor);
+      });
+
+      it("clears the selection when clicking empty space", async function () {
+        const { editor } = await createEditorWithSquare(EditMode.VERTEX);
+        editor.activeTool = SelectTool.addTo(editor);
+        click(getWindowPosition(corner0));
+
+        click(emptyWindowPosition);
+
+        expectPixel(getWindowPosition(corner0), pointColor);
+      });
+
+      it("clears the selection when clicking a component the mode can't select", async function () {
+        const { editor } = await createEditorWithSquare(EditMode.VERTEX);
+        editor.activeTool = SelectTool.addTo(editor);
+        click(getWindowPosition(corner0));
+
+        click(getWindowPosition(facePosition));
+
+        expectPixel(getWindowPosition(corner0), pointColor);
+      });
+
+      it("moves the selection when dragging with the translate tool", async function () {
+        const { editor, mesh } = await createEditorWithSquare(EditMode.VERTEX);
+        editor.activeTool = SelectTool.addTo(editor);
+        click(getWindowPosition(corner0));
+        editor.activeTool = TranslateTool.addTo(editor);
+        const start = getWindowPosition(corner0);
+        const end = new Cartesian2(start.x + 20.0, start.y - 20.0);
+
+        firePointer("Down", start);
+        firePointer("Move", end);
+        firePointer("Up", end);
+
+        expectPixel(end, selectedPointColor);
+        scene.renderForSpecs();
+        if (!window.webglStub) {
+          expect(scene).toPickAndCall((result) => {
+            expect(result.primitive).toBe(mesh);
+            expect(result.componentType).toBe(ComponentType.Vertex);
+          }, end);
+        }
+      });
+
+      it("restores the selection's position when the translate tool is cancelled mid-drag", async function () {
+        const { editor } = await createEditorWithSquare(EditMode.VERTEX);
+        editor.activeTool = SelectTool.addTo(editor);
+        click(getWindowPosition(corner0));
+        const translateTool = TranslateTool.addTo(editor);
+        editor.activeTool = translateTool;
+        const start = getWindowPosition(corner0);
+        const end = new Cartesian2(start.x + 20.0, start.y - 20.0);
+
+        firePointer("Down", start);
+        firePointer("Move", end);
+        expectPixel(end, selectedPointColor);
+        translateTool.cancel();
+        firePointer("Up", end);
+
+        expectPixel(start, selectedPointColor);
+      });
+
+      it("makes a clicked mesh the only active mesh with the select tool in EditMode.NONE", async function () {
+        const { editor, mesh } = await createEditorWithSquare(EditMode.NONE);
+        editor.activeTool = SelectTool.addTo(editor);
+        editor.setMeshInactive(mesh);
+        const other = editor.addMesh(createGeometrySource(square));
+        editor.setMeshActive(other);
+        // Draws the other square behind the first, so clicks hit the first.
+        Matrix4.fromTranslation(
+          new Cartesian3(0.0, 0.0, -1.0),
+          other.source.worldMatrix,
+        );
+        scene.renderForSpecs();
+
+        click(getWindowPosition(facePosition));
+
+        if (!window.webglStub) {
+          expect(editor.isMeshActive(mesh)).toBe(true);
+          expect(editor.isMeshActive(other)).toBe(false);
+        }
+      });
+
+      it("toggles a shift-clicked mesh with the select tool in EditMode.NONE", async function () {
+        const { editor, mesh } = await createEditorWithSquare(EditMode.NONE);
+        editor.activeTool = SelectTool.addTo(editor);
+        editor.setMeshInactive(mesh);
+        const other = editor.addMesh(createGeometrySource(square));
+        editor.setMeshActive(other);
+        Matrix4.fromTranslation(
+          new Cartesian3(0.0, 0.0, -1.0),
+          other.source.worldMatrix,
+        );
+        scene.renderForSpecs();
+
+        click(getWindowPosition(facePosition), { shiftKey: true });
+
+        if (!window.webglStub) {
+          expect(editor.isMeshActive(mesh)).toBe(true);
+          expect(editor.isMeshActive(other)).toBe(true);
+        }
+
+        click(getWindowPosition(facePosition), { shiftKey: true });
+
+        if (!window.webglStub) {
+          expect(editor.isMeshActive(mesh)).toBe(false);
+          expect(editor.isMeshActive(other)).toBe(true);
+        }
+      });
+
+      it("makes every mesh inactive when clicking empty space with the select tool in EditMode.NONE", async function () {
+        const { editor, mesh } = await createEditorWithSquare(EditMode.NONE);
+        editor.activeTool = SelectTool.addTo(editor);
+        const other = editor.addMesh(createGeometrySource(square));
+        editor.setMeshActive(other);
+
+        click(emptyWindowPosition);
+
+        expect(editor.isMeshActive(mesh)).toBe(false);
+        expect(editor.isMeshActive(other)).toBe(false);
+      });
     });
 
     describe("mode", function () {
@@ -565,7 +699,7 @@ describe(
 
       it("raises modeChanged after updating the mode and mesh", async function () {
         const editor = await MeshEditor.addToScene(scene);
-        const mesh = editor.addMesh(createSource(square));
+        const mesh = editor.addMesh(createGeometrySource(square));
         editor.setMeshActive(mesh);
         const listener = jasmine.createSpy("modeChanged").and.callFake(() => {
           expect(editor.mode).toBe(EditMode.EDGE);
@@ -591,7 +725,7 @@ describe(
 
       it("draws only the components the mode renders", async function () {
         const editor = await MeshEditor.addToScene(scene);
-        const mesh = editor.addMesh(createSource(square));
+        const mesh = editor.addMesh(createGeometrySource(square));
         editor.setMeshActive(mesh);
 
         editor.mode = EditMode.VERTEX;
@@ -603,8 +737,8 @@ describe(
 
       it("picks only faces and the components the mode selects", async function () {
         const editor = await MeshEditor.addToScene(scene);
-        const mesh = editor.addMesh(createSource(square));
-        const inactive = editor.addMesh(createSource(square));
+        const mesh = editor.addMesh(createGeometrySource(square));
+        const inactive = editor.addMesh(createGeometrySource(square));
         editor.setMeshActive(mesh);
 
         expect(pickInstanceCounts(mesh)).toEqual([2]);
@@ -624,7 +758,7 @@ describe(
 
       it("draws faces and their outline in EditMode.NONE", async function () {
         const editor = await MeshEditor.addToScene(scene);
-        const mesh = editor.addMesh(createSource(square));
+        const mesh = editor.addMesh(createGeometrySource(square));
         editor.setMeshActive(mesh);
 
         // Faces, then the outline's edges and points.
@@ -634,7 +768,7 @@ describe(
       it("applies the mode to meshes activated later", async function () {
         const editor = await MeshEditor.addToScene(scene);
         editor.mode = EditMode.EDGE;
-        const mesh = editor.addMesh(createSource(square));
+        const mesh = editor.addMesh(createGeometrySource(square));
 
         editor.setMeshActive(mesh);
 
@@ -643,8 +777,8 @@ describe(
 
       it("doesn't affect inactive meshes", async function () {
         const editor = await MeshEditor.addToScene(scene);
-        const active = editor.addMesh(createSource(square));
-        const inactive = editor.addMesh(createSource(square));
+        const active = editor.addMesh(createGeometrySource(square));
+        const inactive = editor.addMesh(createGeometrySource(square));
         editor.setMeshActive(active);
 
         editor.mode = EditMode.VERTEX;
@@ -679,7 +813,7 @@ describe(
       it("draws the overlay", async function () {
         const editor = await MeshEditor.addToScene(scene);
         editor.mode = EditMode.VERTEX;
-        const mesh = editor.addMesh(createSource(square));
+        const mesh = editor.addMesh(createGeometrySource(square));
 
         editor.setMeshActive(mesh);
 
@@ -688,7 +822,7 @@ describe(
 
       it("draws the overlay at the source's world transform", async function () {
         const editor = await MeshEditor.addToScene(scene);
-        const source = createSource(square);
+        const source = createGeometrySource(square);
         Matrix4.fromTranslation(
           new Cartesian3(1.0, 2.0, 3.0),
           source.worldMatrix,
@@ -703,7 +837,7 @@ describe(
 
       it("follows changes to the source's world transform", async function () {
         const editor = await MeshEditor.addToScene(scene);
-        const source = createSource(square);
+        const source = createGeometrySource(square);
         const mesh = editor.addMesh(source);
         renderCommands(mesh);
 
@@ -721,7 +855,7 @@ describe(
 
       it("doesn't draw or pick a mesh whose show is false", async function () {
         const editor = await MeshEditor.addToScene(scene);
-        const mesh = editor.addMesh(createSource(square));
+        const mesh = editor.addMesh(createGeometrySource(square));
         mesh.show = false;
 
         expect(renderCommands(mesh)).toEqual([]);
@@ -738,7 +872,7 @@ describe(
 
         try {
           const editor = await MeshEditor.addToScene(scene2D);
-          const mesh = editor.addMesh(createSource(square));
+          const mesh = editor.addMesh(createGeometrySource(square));
 
           expect(renderCommands(mesh, scene2D)).toEqual([]);
         } finally {
@@ -748,7 +882,7 @@ describe(
 
       it("makes overlay components pickable as the mesh", async function () {
         const editor = await MeshEditor.addToScene(scene);
-        const mesh = editor.addMesh(createSource(square));
+        const mesh = editor.addMesh(createGeometrySource(square));
         scene.renderForSpecs();
 
         expect(scene).toPickAndCall((result) => {
@@ -760,8 +894,8 @@ describe(
 
       it("supports drillPick across meshes", async function () {
         const editor = await MeshEditor.addToScene(scene);
-        const far = editor.addMesh(createSource(square));
-        const nearSource = createSource(square);
+        const far = editor.addMesh(createGeometrySource(square));
+        const nearSource = createGeometrySource(square);
         Matrix4.fromTranslation(
           new Cartesian3(0.0, 0.0, 0.5),
           nearSource.worldMatrix,
@@ -792,7 +926,7 @@ describe(
 
       it("draws the meshes with its changes on the next frame", async function () {
         const editor = await MeshEditor.addToScene(scene);
-        editor.addMesh(createSource(square));
+        editor.addMesh(createGeometrySource(square));
         scene.renderForSpecs();
 
         editor.style.faceColor = Color.BLUE;
@@ -804,8 +938,8 @@ describe(
     describe("outline", function () {
       it("outlines only active meshes in EditMode.NONE", async function () {
         const editor = await MeshEditor.addToScene(scene);
-        const active = editor.addMesh(createSource(square));
-        const inactive = editor.addMesh(createSource(square));
+        const active = editor.addMesh(createGeometrySource(square));
+        const inactive = editor.addMesh(createGeometrySource(square));
         editor.setMeshActive(active);
 
         // Faces, then the outline's edges and points.
@@ -815,7 +949,7 @@ describe(
 
       it("outlines active meshes only while in EditMode.NONE", async function () {
         const editor = await MeshEditor.addToScene(scene);
-        const mesh = editor.addMesh(createSource(square));
+        const mesh = editor.addMesh(createGeometrySource(square));
         editor.setMeshActive(mesh);
 
         editor.mode = EditMode.EDGE;
@@ -827,7 +961,7 @@ describe(
 
       it("removes the outline when a mesh is deactivated", async function () {
         const editor = await MeshEditor.addToScene(scene);
-        const mesh = editor.addMesh(createSource(square));
+        const mesh = editor.addMesh(createGeometrySource(square));
         editor.setMeshActive(mesh);
 
         editor.setMeshInactive(mesh);
@@ -837,8 +971,8 @@ describe(
 
       it("adds outlines after every mesh's other commands", async function () {
         const editor = await MeshEditor.addToScene(scene);
-        const first = editor.addMesh(createSource(square));
-        const second = editor.addMesh(createSource(square));
+        const first = editor.addMesh(createGeometrySource(square));
+        const second = editor.addMesh(createGeometrySource(square));
         editor.setMeshActive(first);
         editor.setMeshActive(second);
         const renderers = [first._renderer, second._renderer];
@@ -854,7 +988,7 @@ describe(
 
       it("draws outlines in the style's color and width", async function () {
         const editor = await MeshEditor.addToScene(scene);
-        const mesh = editor.addMesh(createSource(square));
+        const mesh = editor.addMesh(createGeometrySource(square));
         editor.setMeshActive(mesh);
 
         editor.style.outlineColor = Color.RED;
@@ -869,7 +1003,10 @@ describe(
     describe("destroy", function () {
       it("destroys every mesh and shows its source", async function () {
         const editor = await MeshEditor.addToScene(scene);
-        const sources = [createSource(square), createSource(square)];
+        const sources = [
+          createGeometrySource(square),
+          createGeometrySource(square),
+        ];
         const meshes = sources.map((source) => editor.addMesh(source));
 
         scene.primitives.remove(editor);
@@ -884,7 +1021,7 @@ describe(
 
       it("does not raise meshRemoved", async function () {
         const editor = await MeshEditor.addToScene(scene);
-        editor.addMesh(createSource(square));
+        editor.addMesh(createGeometrySource(square));
         const listener = jasmine.createSpy("meshRemoved");
         editor.meshRemoved.addEventListener(listener);
 
@@ -916,7 +1053,21 @@ describe(
         expect(editor.isDestroyed()).toBe(false);
       });
 
-      it("stops handling pointer input", function () {});
+      it("stops handling pointer input", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        editor.setMeshActive(editor.addMesh(createGeometrySource(square)));
+        editor.mode = EditMode.VERTEX;
+        editor.activeTool = SelectTool.addTo(editor);
+        scene.renderForSpecs();
+        spyOn(WasmMeshEditor.prototype, "pointerDown").and.callThrough();
+        spyOn(WasmMeshEditor.prototype, "pointerClick").and.callThrough();
+
+        scene.primitives.remove(editor);
+        click(getWindowPosition(facePosition));
+
+        expect(WasmMeshEditor.prototype.pointerDown).not.toHaveBeenCalled();
+        expect(WasmMeshEditor.prototype.pointerClick).not.toHaveBeenCalled();
+      });
     });
   },
   "WebGL",
