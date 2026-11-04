@@ -93,7 +93,11 @@ try {
   );
   writeFileSync(
     output,
-    `// Generated from ${basename(input)} by scripts/slangShader.mjs; do not edit.\n${adaptSlangStages(readFileSync(wgsl, "utf8"), stages)}`,
+    `// Generated from ${basename(input)} by scripts/slangShader.mjs; do not edit.\n${adaptSlangStages(
+      // slangc writes CRLF on Windows; the repository's files are LF.
+      readFileSync(wgsl, "utf8").replace(/\r\n/g, "\n"),
+      stages,
+    )}`,
   );
   console.log(`wrote ${output}`);
 } finally {
