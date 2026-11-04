@@ -118,6 +118,11 @@ export function ExamplePage() {
     Viewer.create(host.current, {
       globe: info.globe,
       maxInstances: MAX_INSTANCES,
+      // Frame rate, timings, memory; top left (examples' panels are top right).
+      inspector: {
+        storageKey: "dyno.examples.inspector",
+        placement: "top-left",
+      },
       ...(token ? { accessToken: token } : {}),
     }).then(
       (v) => {

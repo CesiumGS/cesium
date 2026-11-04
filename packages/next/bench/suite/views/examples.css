@@ -46,10 +46,12 @@
   position: absolute;
   inset: 0;
 }
+/* Centered: the inspector is top left, the example's panel top right. */
 .examples-loading {
   position: absolute;
-  top: var(--stratakit-space-300);
-  left: var(--stratakit-space-300);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   display: flex;
   align-items: center;
   gap: var(--stratakit-space-200);
