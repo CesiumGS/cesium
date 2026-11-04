@@ -21,19 +21,43 @@ describe("Scene/MVTDataProvider", function () {
     provider.destroy();
   });
 
-  it("derives the minimum zoom level when the root's children are requested", async function () {
+  it("derives contentless tiles above the minimum zoom level", async function () {
     const provider = await MVTDataProvider.fromUrl(url, {
       minZoom: 2,
       maxZoom: 14,
     });
     const tileset = provider.tileset;
 
-    expect(tileset.root.children.length).toBe(16);
-    expect(tileset.statistics.numberOfTilesTotal).toBe(17);
-    for (const tile of tileset.root.children) {
+    const level0 = tileset.root.children;
+    expect(level0.length).toBe(1);
+    expect(level0[0].hasEmptyContent).toBe(true);
+
+    const level1 = level0[0].children;
+    expect(level1.length).toBe(4);
+    for (const tile of level1) {
+      expect(tile.hasEmptyContent).toBe(true);
+    }
+
+    const level2 = level1.flatMap((tile) => tile.children);
+    expect(level2.length).toBe(16);
+    for (const tile of level2) {
       expect(tile._contentResource.url).toMatch(/\/tiles\/2\/\d\/\d\.pbf$/);
       expect(tile._children.length).toBe(0);
     }
+    expect(tileset.statistics.numberOfTilesTotal).toBe(22);
+
+    provider.destroy();
+  });
+
+  it("does not create minimum zoom tiles before traversal reaches them", async function () {
+    const provider = await MVTDataProvider.fromUrl(url, {
+      minZoom: 12,
+      maxZoom: 14,
+    });
+    const tileset = provider.tileset;
+
+    expect(tileset.root.children.length).toBe(1);
+    expect(tileset.statistics.numberOfTilesTotal).toBe(2);
 
     provider.destroy();
   });
@@ -65,9 +89,9 @@ describe("Scene/MVTDataProvider", function () {
     const tileset = provider.tileset;
     const tilingScheme = new WebMercatorTilingScheme();
 
-    const tile = tileset.root.children.find((child) =>
-      child._contentResource.url.endsWith("/2/0/0.pbf"),
-    );
+    const tile = tileset.root.children[0].children
+      .flatMap((child) => child.children)
+      .find((child) => child._contentResource.url.endsWith("/2/0/0.pbf"));
     const rectangle = tile.boundingVolume.rectangle;
     expect(rectangle).toEqualEpsilon(
       tilingScheme.tileXYToRectangle(0, 0, 2),
@@ -104,8 +128,14 @@ describe("Scene/MVTDataProvider", function () {
     });
     const tileset = provider.tileset;
 
-    expect(tileset.root.children.length).toBe(1);
-    expect(tileset.root.children[0].children.length).toBe(1);
+    let tiles = tileset.root.children;
+    for (let level = 0; level < 10; level++) {
+      expect(tiles.length).toBe(1);
+      tiles = tiles[0].children;
+    }
+    expect(tiles.length).toBe(1);
+    expect(tiles[0]._contentResource.url).toContain("/tiles/10/");
+    expect(tiles[0].children.length).toBe(1);
 
     provider.destroy();
   });

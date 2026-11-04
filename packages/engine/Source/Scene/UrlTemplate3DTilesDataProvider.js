@@ -215,19 +215,16 @@ class UrlTemplate3DTilesDataProvider {
       tilingScheme: tilingScheme,
       resource: this._resource,
       extent: extent,
+      minZoom: options.minZoom,
       maxZoom: options.maxZoom,
     };
     const root = this._tileset._root;
-    const range = computeTileRangeForExtent(
-      tilingScheme,
-      extent,
-      options.minZoom,
-    );
+    const range = computeTileRangeForExtent(tilingScheme, extent, 0);
     root._implicitChildrenCallback = () =>
       deriveTiles(
         source,
         root,
-        options.minZoom,
+        0,
         range.minX,
         range.maxX,
         range.minY,
@@ -329,13 +326,16 @@ function buildRuntimeTilesetJson(extent) {
  * @property {TilingScheme} tilingScheme
  * @property {Resource} resource
  * @property {Rectangle} extent
+ * @property {number} minZoom
  * @property {number} maxZoom
  * @ignore
  */
 
 /**
  * Creates the tiles of one level within the given tile range as children of
- * <code>parent</code>, skipping tiles outside the extent.
+ * <code>parent</code>, skipping tiles outside the extent. Tiles above
+ * <code>minZoom</code> have no content, so traversal can cull their branches
+ * before any content tiles are created.
  *
  * @param {TileSource} source
  * @param {Cesium3DTile} parent
@@ -347,7 +347,7 @@ function buildRuntimeTilesetJson(extent) {
  * @ignore
  */
 function deriveTiles(source, parent, level, minX, maxX, minY, maxY) {
-  const { tileset, tilingScheme, resource, extent, maxZoom } = source;
+  const { tileset, tilingScheme, resource, extent, minZoom, maxZoom } = source;
   for (let y = minY; y <= maxY; y++) {
     for (let x = minX; x <= maxX; x++) {
       if (
@@ -364,6 +364,14 @@ function deriveTiles(source, parent, level, minX, maxX, minY, maxY) {
         continue;
       }
 
+      let geometricError = 0.0;
+      if (level < minZoom) {
+        // Keep the root's coarse error so refinement reaches minZoom.
+        geometricError = computeGeometricError(0);
+      } else if (level < maxZoom) {
+        geometricError = computeGeometricError(level);
+      }
+
       const tile = new Cesium3DTile(
         tileset,
         tileset._resource,
@@ -371,11 +379,12 @@ function deriveTiles(source, parent, level, minX, maxX, minY, maxY) {
           boundingVolume: {
             region: rectangleToRegion(scratchTileRectangle),
           },
-          geometricError: level < maxZoom ? computeGeometricError(level) : 0.0,
+          geometricError: geometricError,
           refine: "REPLACE",
-          content: {
-            uri: resolveTileUrl(resource, level, x, y),
-          },
+          content:
+            level >= minZoom
+              ? { uri: resolveTileUrl(resource, level, x, y) }
+              : undefined,
         },
         parent,
       );
