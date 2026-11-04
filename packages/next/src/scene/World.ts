@@ -8,6 +8,11 @@ import {
   NO_FEATURE,
   NO_RECORD,
   NO_STREAM,
+  COMPONENT_TYPE_CODES,
+  PROPERTY_TEXTURES,
+  PROPERTY_TEXTURE_BINDING,
+  TEXTURE_PROPERTY,
+  TEXTURE_PROPERTY_WORDS,
   attributeHash,
   metadataKey,
   DRAW_ITEM_SIZE,
@@ -115,6 +120,11 @@ export interface TextureSetOptions {
   normal?: TextureBinding;
   occlusion?: TextureBinding;
   emissive?: TextureBinding;
+  /**
+   * Up to 2 `EXT_structural_metadata` property textures (read with
+   * `textureLoad`, no filtering), for the meshes' `propertyTextures` slots.
+   */
+  properties?: Array<TextureBinding | undefined>;
 }
 
 export type MaterialOptions = Partial<MaterialData>;
@@ -886,13 +896,38 @@ export class World {
         ([id, stream]) => [metadataKey(id), stream] as const,
       ),
     ];
-    if (named.length > 0) {
-      const directory = new Uint32Array(1 + named.length * 3);
-      directory[0] = named.length;
+    const textured = mesh.propertyTextures ?? [];
+    const entries = named.length + textured.length;
+    if (entries > 0) {
+      const directory = new Uint32Array(1 + entries * 3);
+      directory[0] = entries;
       named.forEach(([name, { data, components }], i) => {
         directory[1 + i * 3] = attributeHash(name);
         directory[2 + i * 3] = upload(data);
         directory[3 + i * 3] = components;
+      });
+      // Properties in textures: a block saying how to decode them, read
+      // per fragment (opaque.wgsl `readTextureProperty`).
+      textured.forEach((p, j) => {
+        const block = new Uint32Array(TEXTURE_PROPERTY_WORDS);
+        const f32 = new Float32Array(block.buffer);
+        block[0] = p.slot;
+        block[1] = p.channels.length;
+        block[2] = p.channels.reduce(
+          (packed, c, k) => packed | (c << (k * 8)),
+          0,
+        );
+        block[3] = COMPONENT_TYPE_CODES[p.componentType];
+        block[4] = p.components;
+        block[5] = p.normalized ? 1 : 0;
+        for (let c = 0; c < 4; c++) {
+          f32[6 + c] = p.offset?.[c] ?? 0;
+          f32[10 + c] = p.scale?.[c] ?? 1;
+        }
+        const i = named.length + j;
+        directory[1 + i * 3] = attributeHash(metadataKey(p.id));
+        directory[2 + i * 3] = upload(block);
+        directory[3 + i * 3] = TEXTURE_PROPERTY | p.components;
       });
       streams.attributes = upload(directory);
     }
@@ -1051,6 +1086,13 @@ export class World {
         resource: slot?.sampler ?? defaults.sampler,
       });
     });
+    // Property textures (opaque.wgsl `propertyTexture0`, `1`).
+    for (let k = 0; k < PROPERTY_TEXTURES; k++) {
+      entries.push({
+        binding: PROPERTY_TEXTURE_BINDING + k,
+        resource: options.properties?.[k]?.view ?? defaults.whiteView,
+      });
+    }
     const group = this.ctx.device.createBindGroup({
       label: "world.textureSet",
       layout: this.ctx.pipelines.textureSetLayout,

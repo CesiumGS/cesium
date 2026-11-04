@@ -32,6 +32,33 @@ export interface MeshData {
    * declare it (`CustomShaderOptions.metadata`).
    */
   metadata?: Record<string, { data: Float32Array; components: number }>;
+  /**
+   * Metadata properties stored in textures (`EXT_structural_metadata`
+   * property textures), read per fragment from the draw's texture set's
+   * property textures (`TextureSetOptions.properties`).
+   */
+  propertyTextures?: PropertyTextureData[];
+}
+
+/** Component types of metadata properties in textures. */
+export type PropertyComponentType =
+  "UINT8" | "INT8" | "UINT16" | "INT16" | "UINT32" | "INT32" | "FLOAT32";
+
+/** How to read one metadata property from a property texture. */
+export interface PropertyTextureData {
+  /** Property ID (`metadata.<id>` in custom shaders). */
+  id: string;
+  /** Which of the texture set's property textures (0 or 1). */
+  slot: number;
+  /** Texel channels holding its bytes, in order (little-endian). */
+  channels: number[];
+  componentType: PropertyComponentType;
+  /** 1–4 (MAT2: 4). */
+  components: number;
+  normalized: boolean;
+  /** Per component; default 0 and 1. */
+  offset?: number[];
+  scale?: number[];
 }
 
 /** A unit cube centered at the origin, with flat per-face normals. */

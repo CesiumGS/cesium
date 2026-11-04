@@ -319,6 +319,10 @@ export async function parseGltf(
       if (metadata) {
         mesh.metadata = metadata;
       }
+      const textured = propertyTextures(json, primitive, warnings);
+      if (textured) {
+        mesh.propertyTextures = textured;
+      }
       delete mesh.unwelded;
       meshes.push(mesh);
     }
@@ -786,6 +790,84 @@ function propertyAttributes(
         }
       }
       (out ??= {})[id] = unweld({ data, components }, unwelded);
+    }
+  }
+  return out;
+}
+
+const COMPONENT_TYPES = new Set([
+  "UINT8",
+  "INT8",
+  "UINT16",
+  "INT16",
+  "UINT32",
+  "INT32",
+  "FLOAT32",
+]);
+
+/**
+ * `EXT_structural_metadata` property textures of the primitive: per
+ * property its texture, channels and type, to decode per fragment. Arrays,
+ * texture coordinates other than TEXCOORD_0 and texture transforms aren't
+ * read yet.
+ */
+function propertyTextures(
+  json: Json,
+  primitive: Json,
+  warnings: string[],
+): GltfMesh["propertyTextures"] {
+  const metadata = json.extensions?.EXT_structural_metadata;
+  const used: number[] =
+    primitive.extensions?.EXT_structural_metadata?.propertyTextures ?? [];
+  let out: GltfMesh["propertyTextures"];
+  for (const index of used) {
+    const table = metadata?.propertyTextures?.[index];
+    const schema = metadata?.schema?.classes?.[table?.class];
+    if (!table || !schema) {
+      warnings.push(
+        `EXT_structural_metadata: property texture ${index} not found`,
+      );
+      continue;
+    }
+    for (const [id, property] of Object.entries(
+      table.properties as Record<string, Json>,
+    )) {
+      const definition = schema.properties?.[id];
+      const components = PROPERTY_COMPONENTS[definition?.type];
+      const componentType = definition?.componentType ?? "UINT8";
+      const why = !definition
+        ? "no definition"
+        : components === undefined
+          ? `type ${definition.type}`
+          : definition.array
+            ? "arrays"
+            : !COMPONENT_TYPES.has(componentType)
+              ? componentType
+              : (property.texCoord ?? 0) !== 0
+                ? `TEXCOORD_${property.texCoord}`
+                : property.extensions?.KHR_texture_transform
+                  ? "texture transforms"
+                  : undefined;
+      if (why !== undefined) {
+        warnings.push(
+          `EXT_structural_metadata: property texture ${id} not read (${why})`,
+        );
+        continue;
+      }
+      const vector = (v: number | number[] | undefined) =>
+        v === undefined ? undefined : typeof v === "number" ? [v] : v;
+      const offset = vector(property.offset ?? definition.offset);
+      const scale = vector(property.scale ?? definition.scale);
+      (out ??= []).push({
+        id,
+        texture: property.index,
+        channels: property.channels ?? [0],
+        componentType,
+        components: components!,
+        normalized: definition.normalized ?? false,
+        ...(offset ? { offset } : {}),
+        ...(scale ? { scale } : {}),
+      });
     }
   }
   return out;

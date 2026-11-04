@@ -2607,6 +2607,40 @@ first part).**
   and array textures, textures in sRGB, sharing a texture between
   shaders, freeing a shader's buffers before the engine's end.
 
+**Increment 6 (r47): metadata property textures.**
+
+- `EXT_structural_metadata` property textures read the same as property
+  attributes: a shader declares `metadata: { insulation: "f32" }` and
+  reads `fsInput.metadata.insulation`, whichever way the mesh stores it.
+  As in 1.x, only the fragment stage reads them; the vertex stage reads
+  zero.
+- Parsing records per property its texture, channels, component type
+  (8-, 16- and 32-bit integers, FLOAT32), components, normalization and
+  offset/scale; arrays, texture coordinates other than TEXCOORD_0 and
+  `KHR_texture_transform` are warned about and skipped. Images were
+  already decoded without color conversion or premultiplication.
+- Up to 2 property textures per mesh join the texture set (group 2,
+  bindings 20 and 21, `TextureSetOptions.properties`); a model makes a
+  texture set per material and mesh where a mesh has them. The mesh's
+  directory marks such a property (`TEXTURE_PROPERTY`) and points at a
+  block describing its decoding; the vertex arena becomes readable by
+  fragments for it. `readTextureProperty` fetches the texel at
+  TEXCOORD_0 (repeating, nearest, `textureLoad`: the bytes exactly),
+  assembles each component little-endian from the listed channels,
+  converts, normalizes and applies offset and scale.
+- Harness, 7 new cases (34 of 34 pass) on 1.x's test models: UINT8 and
+  normalized UINT8 (`SimplePropertyTexture`), FLOAT32 over four channels
+  (`PropertyTextureWith32BitTypes`) and normalized VEC2 with and without
+  offset/scale (`PropertyTextureWithVectorProperties`) each match the
+  same image bound as a user texture and decoded by hand in WGSL
+  exactly; the vertex stage reads zero. Model cases are now framed by
+  the model's bounds. Parity, models and translucency are unchanged
+  (318 image metrics, none moved); the bench, with `SLANG_WASM_DIR`,
+  passes 34 of 34.
+- Not yet: arrays, `noData`/`default`, enums, other texture
+  coordinates, texture transforms, more than 2 property textures per
+  mesh, and property tables on the GPU (feature styling).
+
 ### Real-time tracks (after Custom shading)
 
 - §13.11: track collections as instance data with a bulk update API,

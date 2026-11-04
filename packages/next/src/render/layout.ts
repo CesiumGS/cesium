@@ -301,6 +301,24 @@ export interface MeshStreams {
  * A named attribute's key in mesh directories (FNV-1a of its name), which
  * custom shaders' generated readers compare against.
  */
+/** Property textures a texture set binds, from this binding (group 2). */
+export const PROPERTY_TEXTURES = 2;
+export const PROPERTY_TEXTURE_BINDING = 20;
+/** A directory entry's components word: the property is in a texture. */
+export const TEXTURE_PROPERTY = 0x80000000;
+/** Words of a texture property's block in the arena (`World.addMesh`). */
+export const TEXTURE_PROPERTY_WORDS = 14;
+/** `PropertyComponentType` codes in texture property blocks. */
+export const COMPONENT_TYPE_CODES = {
+  UINT8: 0,
+  INT8: 1,
+  UINT16: 2,
+  INT16: 3,
+  UINT32: 4,
+  INT32: 5,
+  FLOAT32: 6,
+} as const;
+
 /** A metadata property's name in mesh directories (beside glTF semantics). */
 export function metadataKey(id: string): string {
   return `metadata.${id}`;

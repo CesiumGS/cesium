@@ -118,6 +118,14 @@ const READ: Record<
   mat2x2f: { varying: "vec4f", read: "", unpack: "mat2x2f(#.xy, #.zw)" },
 };
 
+/** A varying as a vec4f (`readTextureProperty`'s fallback). */
+const PAD: Record<string, string> = {
+  f32: "vec4f(#, 0.0, 0.0, 0.0)",
+  vec2f: "vec4f(#, 0.0, 0.0)",
+  vec3f: "vec4f(#, 0.0)",
+  vec4f: "#",
+};
+
 /** Where `VsOut` takes the named values' varyings (opaque.wgsl). */
 export const NAMED_VARYINGS = "// @named";
 /** The first location of the named values' varyings. */
@@ -177,11 +185,30 @@ export function namedCode(named: NamedDeclarations): {
         .join(", ")});`,
       "}",
       `fn ${back}(in: VsOut) -> ${struct} {`,
-      `  return ${struct}(${own
-        .map((f) =>
-          READ[f.type].unpack.replaceAll("#", `in.named${fields.indexOf(f)}`),
-        )
-        .join(", ")});`,
+      ...(struct === "Metadata"
+        ? [
+            // A property in a property texture is read here, per fragment;
+            // else the interpolated attribute's (opaque.wgsl).
+            "  let directory = records[in.draw].attributes;",
+            `  return ${struct}(${own
+              .map((f) => {
+                const varying = `in.named${fields.indexOf(f)}`;
+                const padded = PAD[READ[f.type].varying]!.replace("#", varying);
+                const value = `readTextureProperty(directory, ${attributeHash(f.key)}u, in.uv, ${padded})${READ[f.type].read}`;
+                return READ[f.type].unpack.replaceAll("#", `(${value})`);
+              })
+              .join(", ")});`,
+          ]
+        : [
+            `  return ${struct}(${own
+              .map((f) =>
+                READ[f.type].unpack.replaceAll(
+                  "#",
+                  `in.named${fields.indexOf(f)}`,
+                ),
+              )
+              .join(", ")});`,
+          ]),
       "}",
     );
   }

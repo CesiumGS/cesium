@@ -4,6 +4,8 @@
  * node transforms. Everything here is transferable.
  */
 
+import type { PropertyTextureData } from "../scene/meshes.ts";
+
 export interface GltfMesh {
   positions: Float32Array;
   normals?: Float32Array;
@@ -31,6 +33,13 @@ export interface GltfMesh {
    * and scale applied, for custom shaders.
    */
   metadata?: Record<string, { data: Float32Array; components: number }>;
+  /**
+   * `EXT_structural_metadata` property textures' properties: as
+   * `MeshData.propertyTextures`, with the glTF texture in place of a slot.
+   */
+  propertyTextures?: Array<
+    Omit<PropertyTextureData, "slot"> & { texture: number }
+  >;
 }
 
 /** A property value of one feature (null: the property's noData). */

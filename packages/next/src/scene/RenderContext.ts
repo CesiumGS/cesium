@@ -1,7 +1,11 @@
 import type { Capabilities } from "../gpu/GpuDevice.ts";
 import { MipGenerator } from "../gpu/MipGenerator.ts";
 import { Environment } from "../gpu/Environment.ts";
-import { VIEW_SIZE } from "../render/layout.ts";
+import {
+  PROPERTY_TEXTURES,
+  PROPERTY_TEXTURE_BINDING,
+  VIEW_SIZE,
+} from "../render/layout.ts";
 import commonWgsl from "../shaders/common.wgsl?raw";
 import aoWgsl from "../shaders/ao.wgsl?raw";
 import { SHADOW_CASCADES, SHADOW_SIZE, SHADOWS_SIZE } from "./shadows.ts";
@@ -515,7 +519,8 @@ async function createPipelines(
     entries: [
       storage(0, true, VERTEX | FRAGMENT), // records
       storage(1, true, VERTEX), // draw items
-      storage(2, true, VERTEX), // vertex streams
+      // Vertex streams; fragments read texture properties' blocks.
+      storage(2, true, VERTEX | FRAGMENT),
       storage(3, true, FRAGMENT), // materials
       storage(4, true, FRAGMENT), // mixed-LOD clip boxes
       // Globe imagery: the world's composited texture array.
@@ -543,6 +548,12 @@ async function createPipelines(
       binding,
       visibility: FRAGMENT,
       sampler: { type: "filtering" as const },
+    })),
+    // Metadata property textures (read with textureLoad).
+    ...Array.from({ length: PROPERTY_TEXTURES }, (_, k) => ({
+      binding: PROPERTY_TEXTURE_BINDING + k,
+      visibility: FRAGMENT,
+      texture: { sampleType: "float" as const },
     })),
   ];
   const textureSetLayout = device.createBindGroupLayout({

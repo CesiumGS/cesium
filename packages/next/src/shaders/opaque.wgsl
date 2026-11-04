@@ -300,6 +300,9 @@ const CLIP_BOXES: u32 = 8u;
 @group(2) @binding(7) var normalSampler: sampler;
 @group(2) @binding(8) var occlusionSampler: sampler;
 @group(2) @binding(9) var emissiveSampler: sampler;
+// EXT_structural_metadata property textures (layout.ts PROPERTY_TEXTURES).
+@group(2) @binding(20) var propertyTexture0: texture_2d<f32>;
+@group(2) @binding(21) var propertyTexture1: texture_2d<f32>;
 
 struct VsOut {
   // Invariant: the opaque pass's depth (`vsDepth`) and its shading (`vs`)
@@ -407,6 +410,10 @@ fn readNamed(directory: u32, hash: u32, vertexIndex: u32) -> vec4f {
     let entry = directory + 1u + i * 3u;
     if (bitcast<u32>(vertices[entry]) == hash) {
       let components = bitcast<u32>(vertices[entry + 2u]);
+      // In a texture (layout.ts TEXTURE_PROPERTY): per fragment only.
+      if (components >= 0x80000000u) {
+        break;
+      }
       let b = bitcast<u32>(vertices[entry + 1u]) + vertexIndex * components;
       for (var c = 0u; c < components; c++) {
         value[c] = vertices[b + c];
@@ -415,6 +422,77 @@ fn readNamed(directory: u32, hash: u32, vertexIndex: u32) -> vec4f {
     }
   }
   return value;
+}
+
+// A property texture's texel at `uv` (repeating, nearest: the texel's
+// bytes exactly), its channels as bytes.
+fn propertyTexel(slot: u32, uv: vec2f) -> vec4u {
+  var texel: vec4f;
+  if (slot == 0u) {
+    let size = textureDimensions(propertyTexture0);
+    texel = textureLoad(propertyTexture0, min(vec2u(fract(uv) * vec2f(size)), size - 1u), 0);
+  } else {
+    let size = textureDimensions(propertyTexture1);
+    texel = textureLoad(propertyTexture1, min(vec2u(fract(uv) * vec2f(size)), size - 1u), 0);
+  }
+  return vec4u(round(texel * 255.0));
+}
+
+// A metadata property in a property texture (World.addMesh's block: slot,
+// channel count, channels, component type, components, normalized, offset,
+// scale): its bytes from the texel's channels, little-endian per
+// component, as the component type, normalized, then offset and scaled;
+// `fallback` where the mesh's directory has it otherwise or not at all.
+fn readTextureProperty(directory: u32, hash: u32, uv: vec2f, fallback: vec4f) -> vec4f {
+  if (directory == NO_STREAM) {
+    return fallback;
+  }
+  let count = bitcast<u32>(vertices[directory]);
+  for (var i = 0u; i < count; i++) {
+    let entry = directory + 1u + i * 3u;
+    if (bitcast<u32>(vertices[entry]) != hash) {
+      continue;
+    }
+    if (bitcast<u32>(vertices[entry + 2u]) < 0x80000000u) {
+      return fallback;
+    }
+    let b = bitcast<u32>(vertices[entry + 1u]);
+    let texel = propertyTexel(bitcast<u32>(vertices[b]), uv);
+    let channelCount = min(bitcast<u32>(vertices[b + 1u]), 4u);
+    let channels = bitcast<u32>(vertices[b + 2u]);
+    let kind = bitcast<u32>(vertices[b + 3u]);
+    let components = min(bitcast<u32>(vertices[b + 4u]), 4u);
+    let normalized = bitcast<u32>(vertices[b + 5u]) != 0u;
+    var bytes = array<u32, 4>();
+    for (var k = 0u; k < channelCount; k++) {
+      bytes[k] = texel[(channels >> (k * 8u)) & 3u];
+    }
+    // Bytes per component: 8-, 16- or 32-bit types (COMPONENT_TYPE_CODES).
+    let size = select(select(4u, 2u, kind == 2u || kind == 3u), 1u, kind <= 1u);
+    var value = vec4f(0.0);
+    for (var c = 0u; c < components; c++) {
+      var raw = 0u;
+      for (var k = 0u; k < size; k++) {
+        let at = c * size + k;
+        if (at < 4u) {
+          raw |= bytes[at] << (k * 8u);
+        }
+      }
+      var v: f32;
+      switch kind {
+        case 0u: { v = select(f32(raw), f32(raw) / 255.0, normalized); }
+        case 1u: { v = f32(i32(raw << 24u) >> 24u); if (normalized) { v = max(v / 127.0, -1.0); } }
+        case 2u: { v = select(f32(raw), f32(raw) / 65535.0, normalized); }
+        case 3u: { v = f32(i32(raw << 16u) >> 16u); if (normalized) { v = max(v / 32767.0, -1.0); } }
+        case 4u: { v = select(f32(raw), f32(raw) / 4294967295.0, normalized); }
+        case 5u: { v = f32(bitcast<i32>(raw)); if (normalized) { v = max(v / 2147483647.0, -1.0); } }
+        default: { v = bitcast<f32>(raw); }
+      }
+      value[c] = v * vertices[b + 10u + c] + vertices[b + 6u + c];
+    }
+    return value;
+  }
+  return fallback;
 }
 
 @vertex

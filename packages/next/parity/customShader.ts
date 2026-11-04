@@ -75,8 +75,8 @@ interface Case {
   tileset?: boolean;
   /** The boxes' mesh has named attributes (`_SHEAR`, `_HEAT`). */
   named?: boolean;
-  /** The property-attribute glTF (`PROPERTY_MODEL`) instead of boxes. */
-  model?: boolean;
+  /** A glTF model (e.g. `PROPERTY_MODEL`) instead of boxes. */
+  model?: string;
   /** "Same" within float rounding (FLIP mean below 0.001), not exactly. */
   close?: boolean;
   /** Called on the shader before it draws (e.g. `setUniform`). */
@@ -96,6 +96,70 @@ const PROPERTY_MODEL =
 
 const FS =
   "fn fragmentMain(fsInput: FragmentInput, material: ptr<function, MaterialOutput>) {";
+
+/** 1.x's property-texture test models (all read TEXCOORD_0, nearest). */
+const TEXTURE_MODELS = "/specs-data/Models/glTF-2.0";
+const SIMPLE_TEXTURE = `${TEXTURE_MODELS}/SimplePropertyTexture/glTF/SimplePropertyTexture.gltf`;
+const FLOAT_TEXTURE = `${TEXTURE_MODELS}/PropertyTextureWith32BitTypes/glTF/PropertyTextureWith32BitTypes.gltf`;
+const VECTOR_TEXTURE = `${TEXTURE_MODELS}/PropertyTextureWithVectorProperties/glTF/PropertyTextureWithVectorProperties.gltf`;
+
+/** A model's glTF texture's image (a data URI in these models). */
+async function textureImage(model: string, texture: number): Promise<string> {
+  const json = await (await fetch(model)).json();
+  return json.images[json.textures[texture].source].uri;
+}
+const [simpleImage, floatImage, vectorImage] = await Promise.all([
+  textureImage(SIMPLE_TEXTURE, 1),
+  textureImage(FLOAT_TEXTURE, 0),
+  textureImage(VECTOR_TEXTURE, 1),
+]);
+
+/**
+ * The property texture's image as a user texture, its texel's bytes at
+ * TEXCOORD_0 as `bytes` (vec4f, 0–255): the decoding done by hand.
+ */
+const byHand = (label: string, image: string, body: string) =>
+  new CustomShader({
+    label,
+    uniforms: { data: { type: "texture2d", value: image, nearest: true } },
+    fragment: `${FS}
+  let size = textureDimensions(data);
+  let texel = textureLoad(data, min(vec2u(fract(fsInput.texCoord0) * vec2f(size)), size - 1u), 0);
+  let bytes = round(texel * 255.0);
+${body}
+}`,
+  });
+
+const SIMPLE_METADATA = new CustomShader({
+  label: "temperatures, insulation (texture)",
+  metadata: {
+    insideTemperature: "f32",
+    outsideTemperature: "f32",
+    insulation: "f32",
+  },
+  fragment: `${FS}
+  let m = fsInput.metadata;
+  (*material).baseColor = vec3f(m.insideTemperature / 255.0, m.outsideTemperature / 255.0, m.insulation);
+}`,
+});
+
+const FLOAT_METADATA = new CustomShader({
+  label: "FLOAT32 temperature (texture)",
+  metadata: { insideTemperature: "f32" },
+  fragment: `${FS}
+  let t = fsInput.metadata.insideTemperature;
+  (*material).baseColor = vec3f(fract(t * 0.1), fract(t * 0.37), 0.5);
+}`,
+});
+
+const VECTOR_METADATA = new CustomShader({
+  label: "VEC2 properties (texture)",
+  metadata: { vec2Property: "vec2f", valueTransformProperty: "vec2f" },
+  fragment: `${FS}
+  let m = fsInput.metadata;
+  (*material).baseColor = vec3f(m.vec2Property, (m.valueTransformProperty.x - 1.0) / 2.0);
+}`,
+});
 
 /** Inside temperature (20–25 °C) to red, outside (10–30 °C) to blue. */
 const TEMPERATURES = new CustomShader({
@@ -415,14 +479,14 @@ const CASES: Case[] = [
   {
     name: "metadata: temperatures (property attribute)",
     same: false,
-    model: true,
+    model: PROPERTY_MODEL,
     shader: TEMPERATURES,
   },
   {
     name: "metadata: raw attribute, offset/scale by hand (vs metadata)",
     same: true,
     close: true,
-    model: true,
+    model: PROPERTY_MODEL,
     against: TEMPERATURES,
     shader: new CustomShader({
       label: "temperatures (attribute)",
@@ -436,14 +500,14 @@ const CASES: Case[] = [
   {
     name: "metadata: MAT2 with offset/scale",
     same: false,
-    model: true,
+    model: PROPERTY_MODEL,
     shader: WARP,
   },
   {
     name: "metadata: MAT2 offset/scale by hand (vs metadata)",
     same: true,
     close: true,
-    model: true,
+    model: PROPERTY_MODEL,
     against: WARP,
     shader: new CustomShader({
       label: "transformed warp (by hand)",
@@ -458,13 +522,83 @@ const CASES: Case[] = [
   {
     name: "metadata: vertex stage lifts by temperature",
     same: false,
-    model: true,
+    model: PROPERTY_MODEL,
     shader: new CustomShader({
       label: "lift",
       metadata: { temperatures: "vec2f" },
       displacement: 0.3,
       vertex: `fn vertexMain(vsInput: VertexInput, vsOutput: ptr<function, VertexOutput>) {
   (*vsOutput).positionMC.y += (vsInput.metadata.temperatures.y - 10.0) / 20.0 * 0.3;
+}`,
+    }),
+  },
+  {
+    name: "property texture: UINT8 and normalized",
+    same: false,
+    model: SIMPLE_TEXTURE,
+    shader: SIMPLE_METADATA,
+  },
+  {
+    name: "property texture: decoded by hand (vs metadata)",
+    same: true,
+    model: SIMPLE_TEXTURE,
+    frames: 20,
+    against: SIMPLE_METADATA,
+    shader: byHand(
+      "temperatures, insulation (by hand)",
+      simpleImage,
+      `  (*material).baseColor = vec3f(bytes.r / 255.0, bytes.g / 255.0, bytes.b / 255.0);`,
+    ),
+  },
+  {
+    name: "property texture: FLOAT32 over 4 channels",
+    same: false,
+    model: FLOAT_TEXTURE,
+    shader: FLOAT_METADATA,
+  },
+  {
+    name: "property texture: FLOAT32 by hand (vs metadata)",
+    same: true,
+    model: FLOAT_TEXTURE,
+    frames: 20,
+    against: FLOAT_METADATA,
+    shader: byHand(
+      "FLOAT32 temperature (by hand)",
+      floatImage,
+      `  let b = vec4u(bytes);
+  let t = bitcast<f32>(b.r | (b.g << 8u) | (b.b << 16u) | (b.a << 24u));
+  (*material).baseColor = vec3f(fract(t * 0.1), fract(t * 0.37), 0.5);`,
+    ),
+  },
+  {
+    name: "property texture: VEC2, offset/scale",
+    same: false,
+    model: VECTOR_TEXTURE,
+    shader: VECTOR_METADATA,
+  },
+  {
+    name: "property texture: VEC2 by hand (vs metadata)",
+    same: true,
+    model: VECTOR_TEXTURE,
+    frames: 20,
+    against: VECTOR_METADATA,
+    shader: byHand(
+      "VEC2 properties (by hand)",
+      vectorImage,
+      `  let v = bytes.gb / 255.0;
+  let t = bytes.rg / 255.0 * 2.0 + 1.0;
+  (*material).baseColor = vec3f(v, (t.x - 1.0) / 2.0);`,
+    ),
+  },
+  {
+    name: "property texture: the vertex stage reads zero",
+    same: true,
+    model: SIMPLE_TEXTURE,
+    shader: new CustomShader({
+      label: "lift by a texture property",
+      metadata: { insideTemperature: "f32" },
+      vertex: `fn vertexMain(vsInput: VertexInput, vsOutput: ptr<function, VertexOutput>) {
+  (*vsOutput).positionMC.y += vsInput.metadata.insideTemperature;
 }`,
     }),
   },
@@ -659,11 +793,13 @@ async function renderTileset(
   return image;
 }
 
-/** The property-attribute model, 8 m tall, with `shader`. */
+/** A glTF model (`url`), scaled 8×, with `shader`. */
 async function renderModel(
   engine: Engine,
   target: OffscreenTarget,
   shader: CustomShader | undefined,
+  url: string,
+  frames: number,
 ): Promise<ImageData> {
   const world = engine.createWorld({
     maxDraws: 16,
@@ -678,13 +814,15 @@ async function renderModel(
   );
   const modelMatrix = eastNorthUpToFixedFrame(origin, ellipsoid, mat4.mat4());
   mat4.multiply(modelMatrix, modelMatrix, mat4.fromScale(mat4.mat4(), 8, 8, 8));
-  const asset = await engine.loadGltf(
-    new URL(PROPERTY_MODEL, location.href).href,
-  );
-  engine.addModel(world, asset, { modelMatrix, ...(shader ? { shader } : {}) });
+  const asset = await engine.loadGltf(new URL(url, location.href).href);
+  const instance = engine.addModel(world, asset, {
+    modelMatrix,
+    ...(shader ? { shader } : {}),
+  });
+  // Framed by its bounds (as models.ts), whatever its size and orientation.
   const camera = new Camera();
   camera.near = 0.1;
-  camera.lookAt(origin, 30 * deg, -25 * deg, 22);
+  camera.lookAt(instance.center, 30 * deg, -25 * deg, instance.radius * 2.8);
   const view = engine.addView({
     target,
     world,
@@ -695,7 +833,7 @@ async function renderModel(
     shadows: true,
     ambientOcclusion: true,
   });
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < frames; i++) {
     engine.renderFrame();
     await frame();
   }
@@ -716,7 +854,7 @@ async function render(
     return renderTileset(engine, target, shader);
   }
   if (c.model) {
-    return renderModel(engine, target, shader);
+    return renderModel(engine, target, shader, c.model, c.frames ?? 4);
   }
   const world = engine.createWorld({
     maxDraws: 16,

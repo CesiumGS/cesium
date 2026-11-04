@@ -19,6 +19,7 @@ import type {
   InstanceOptions,
   MeshHandle,
   TextureBinding,
+  TextureSetOptions,
   TransformHandle,
   World,
 } from "./World.ts";
@@ -138,6 +139,8 @@ export interface UploadedAsset {
   materials: number[];
   textureSets: number[];
   textures: GPUTexture[];
+  /** Texture sets with property textures, by `${material}|${mesh}`. */
+  propertySets: Map<string, number>;
   /** Per glTF material, and the default material last. */
   readonly drawMaterials: Array<{
     index: number;
@@ -198,15 +201,16 @@ function uploadAsset(
     return existing;
   }
   const textures = new TextureUploader(ctx, asset);
-  const materials = asset.materials.map((m) => ({
+  const setOptions = asset.materials.map((m): TextureSetOptions => ({
+    baseColor: textures.binding(m.baseColorTexture, !gamma22),
+    metallicRoughness: textures.binding(m.metallicRoughnessTexture, false),
+    normal: textures.binding(m.normalTexture, false),
+    occlusion: textures.binding(m.occlusionTexture, false),
+    emissive: textures.binding(m.emissiveTexture, !gamma22),
+  }));
+  const materials = asset.materials.map((m, i) => ({
     index: world.addMaterial(materialData(m, gamma22)),
-    textureSet: world.createTextureSet({
-      baseColor: textures.binding(m.baseColorTexture, !gamma22),
-      metallicRoughness: textures.binding(m.metallicRoughnessTexture, false),
-      normal: textures.binding(m.normalTexture, false),
-      occlusion: textures.binding(m.occlusionTexture, false),
-      emissive: textures.binding(m.emissiveTexture, !gamma22),
-    }),
+    textureSet: world.createTextureSet(setOptions[i]!),
     doubleSided: m.doubleSided,
   }));
   // glTF default material: white, metallic 1, roughness 1.
@@ -216,13 +220,49 @@ function uploadAsset(
     doubleSided: false,
   };
   const arenaBefore = world.arenaBytes;
-  const meshes: MeshHandle[] = asset.meshes.map((mesh) => world.addMesh(mesh));
+  // Property textures: each mesh's (at most 2) bound in its texture sets.
+  const propertyTextures = asset.meshes.map((mesh) =>
+    [...new Set((mesh.propertyTextures ?? []).map((p) => p.texture))].slice(
+      0,
+      2,
+    ),
+  );
+  const meshes: MeshHandle[] = asset.meshes.map((mesh, m) => {
+    const slots = propertyTextures[m]!;
+    return world.addMesh({
+      ...mesh,
+      propertyTextures: (mesh.propertyTextures ?? [])
+        .filter((p) => slots.includes(p.texture))
+        .map(({ texture, ...p }) => ({ ...p, slot: slots.indexOf(texture) })),
+    });
+  });
+  // A texture set per material and mesh with property textures: the
+  // material's textures and the mesh's property textures.
+  const propertySets = new Map<string, number>();
+  for (const draw of asset.draws) {
+    const slots = propertyTextures[draw.mesh]!;
+    const key = `${draw.material}|${draw.mesh}`;
+    if (slots.length === 0 || propertySets.has(key)) {
+      continue;
+    }
+    propertySets.set(
+      key,
+      world.createTextureSet({
+        ...(draw.material >= 0 ? setOptions[draw.material] : {}),
+        properties: slots.map((t) => textures.binding(t, false)),
+      }),
+    );
+  }
   const arenaBytes = world.arenaBytes - arenaBefore;
   textures.release();
   const upload: UploadedAsset = {
     meshes,
     materials: [...materials.map((m) => m.index), defaultMaterial.index],
-    textureSets: materials.map((m) => m.textureSet),
+    textureSets: [
+      ...materials.map((m) => m.textureSet),
+      ...propertySets.values(),
+    ],
+    propertySets,
     textures: textures.textures,
     drawMaterials: [...materials, defaultMaterial],
     bytes: arenaBytes + textures.bytes,
@@ -315,7 +355,9 @@ export function addGltf(
       mesh,
       transform: node,
       material: material.index,
-      textureSet: material.textureSet,
+      textureSet:
+        upload.propertySets.get(`${draw.material}|${draw.mesh}`) ??
+        material.textureSet,
       doubleSided: material.doubleSided || mirrored,
       unlit: options.unlit,
       ...(options.shader ? { shader: options.shader } : {}),
