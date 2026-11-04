@@ -1,3 +1,5 @@
+// @ts-check
+
 import assert from "node:assert";
 import { existsSync, globSync, readFileSync, rmSync, statSync } from "node:fs";
 import { EOL } from "node:os";

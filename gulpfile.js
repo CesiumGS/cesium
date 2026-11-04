@@ -1,3 +1,5 @@
+// @ts-check
+
 import {
   writeFileSync,
   copyFileSync,
@@ -36,6 +38,10 @@ import {
 } from "./scripts/build.js";
 import { readNeedsShimList } from "./scripts/readNeedsShimList.js";
 
+/** @import { BuildContext, Plugin } from "esbuild"; */
+/** @import { FilePattern } from "karma"; */
+/** @import { Workspace } from "./scripts/build-utilities.js"; */
+
 // Determines the scope of the workspace packages. If the scope is set to cesium, the workspaces should be @cesium/engine.
 // This should match the scope of the dependencies of the root level package.json.
 const scope = "cesium";
@@ -62,7 +68,7 @@ function normalizeWorkspaceArg(workspace) {
  * test time (e.g. widgets needs engine's Workers/Assets/ThirdParty/CSS).
  * Workspaces that don't need any simply don't export this.
  * @param {string} workspace The workspace directory name, e.g. "engine" or "widgets".
- * @returns {Promise<object[]>}
+ * @returns {Promise<FilePattern[]>}
  */
 async function getRuntimeTestAssetFiles(workspace) {
   const { runtimeTestAssetFiles } = await import(
@@ -73,7 +79,37 @@ async function getRuntimeTestAssetFiles(workspace) {
 
 const devDeployUrl = process.env.DEPLOYED_URL;
 
-const argv = yargs(process.argv).argv;
+// Command line arguments read by the gulp tasks in this file.
+const argv = yargs(process.argv)
+  .options({
+    all: { type: "boolean" },
+    browsers: { type: "string", description: "Comma-separated browser names" },
+    buildVersion: { type: "string" },
+    debug: { type: "boolean" },
+    debugCanvasHeight: { type: "number" },
+    debugCanvasWidth: { type: "number" },
+    exclude: { type: "string" },
+    failTaskOnError: { type: "boolean" },
+    grep: { type: "string" },
+    include: { type: "string" },
+    includeName: { type: "string" },
+    message: { type: "string" },
+    minify: { type: "boolean" },
+    node: { type: "boolean" },
+    pragmas: { type: "boolean" },
+    private: { type: "boolean" },
+    production: { type: "boolean" },
+    release: { type: "boolean" },
+    removePragmas: { type: "boolean" },
+    sourcemap: { type: "boolean" },
+    status: { type: "string" },
+    suppressPassed: { type: "boolean" },
+    verbose: { type: "boolean" },
+    webglStub: { type: "boolean" },
+    webglValidation: { type: "boolean" },
+    workspace: { type: "string" },
+  })
+  .parseSync();
 const verbose = argv.verbose;
 
 const sourceFiles = [
@@ -121,24 +157,25 @@ export async function build() {
     sourcemap: sourcemap,
     node: node,
   };
+  const packageBuildOptions = { minify: minify };
 
   // Configure build target.
   const workspace = argv.workspace ? argv.workspace : undefined;
 
   if (workspace === `@${scope}/core`) {
-    return buildCore(buildOptions);
+    return buildCore(packageBuildOptions);
   } else if (workspace === `@${scope}/gltf`) {
-    return buildGltf(buildOptions);
+    return buildGltf(packageBuildOptions);
   } else if (workspace === `@${scope}/engine`) {
-    return buildEngine(buildOptions);
+    return buildEngine(packageBuildOptions);
   } else if (workspace === `@${scope}/widgets`) {
-    return buildWidgets(buildOptions);
+    return buildWidgets(packageBuildOptions);
   }
 
-  await buildCore(buildOptions);
-  await buildGltf(buildOptions);
-  await buildEngine(buildOptions);
-  await buildWidgets(buildOptions);
+  await buildCore(packageBuildOptions);
+  await buildGltf(packageBuildOptions);
+  await buildEngine(packageBuildOptions);
+  await buildWidgets(packageBuildOptions);
   await buildCesium(buildOptions);
 }
 export default build;
@@ -152,16 +189,17 @@ export const buildWatch = gulp.series(build, async function buildWatch() {
 
   const bundles = await buildCesium({
     minify: minify,
-    path: outputDirectory,
+    outputDirectory: outputDirectory,
     removePragmas: removePragmas,
     sourcemap: sourcemap,
     incremental: true,
   });
 
-  const esm = bundles.esm;
-  const cjs = bundles.node;
-  const iife = bundles.iife;
-  const specs = bundles.specs;
+  // Incremental builds return contexts that can be rebuilt and disposed.
+  const esm = /** @type {BuildContext} */ (bundles.esm);
+  const cjs = /** @type {BuildContext|undefined} */ (bundles.node);
+  const iife = /** @type {BuildContext|undefined} */ (bundles.iife);
+  const specs = /** @type {BuildContext} */ (bundles.specs);
 
   gulp.watch(shaderFiles, async () => {
     glslToJavaScript(minify, "Build/minifyShaders.state", "engine");
@@ -242,16 +280,18 @@ export const buildWatch = gulp.series(build, async function buildWatch() {
 });
 
 export async function buildTs() {
+  /** @type {string[]} */
   let workspaces;
-  if (argv.workspace && !Array.isArray(argv.workspace)) {
-    workspaces = [argv.workspace];
-  } else if (argv.workspace) {
+  if (Array.isArray(argv.workspace)) {
     workspaces = argv.workspace;
+  } else if (argv.workspace) {
+    workspaces = [argv.workspace];
   } else {
     workspaces = getWorkspaces(true);
   }
 
   // Earlier workspaces that aren't regenerated in this run are imported using their existing declarations.
+  /** @type {Object<string, Set<string>>} */
   const dependencyExports = {};
   const requested = workspaces.map(normalizeWorkspaceArg);
   const allWorkspaces = getWorkspaces(true);
@@ -355,7 +395,7 @@ async function clocSource() {
       }
       console.log("Source:");
       console.log(stdout);
-      resolve();
+      resolve(undefined);
     });
   });
 
@@ -373,7 +413,7 @@ async function clocSource() {
       }
       console.log("Specs:");
       console.log(stdout);
-      resolve();
+      resolve(undefined);
     });
   });
 }
@@ -458,6 +498,7 @@ export async function buildDocsWatch() {
 }
 
 export const websiteRelease = gulp.series(
+  // @ts-expect-error gulp passes its done callback as `options`; package builds only read optional properties from it.
   buildCore,
   buildGltf,
   buildEngine,
@@ -489,6 +530,7 @@ export const websiteRelease = gulp.series(
 );
 
 export const buildRelease = gulp.series(
+  // @ts-expect-error gulp passes its done callback as `options`; package builds only read optional properties from it.
   buildCore,
   buildGltf,
   buildEngine,
@@ -590,6 +632,15 @@ export async function deployStatus() {
   ]);
 }
 
+/**
+ * Sets a commit status on GitHub for the current deployment.
+ *
+ * @param {string|undefined} state The status state, e.g. "success".
+ * @param {string} targetUrl The URL linked from the status.
+ * @param {string|undefined} description A short description of the status.
+ * @param {string} context The label that identifies the status.
+ * @returns {Promise<object|undefined>} The GitHub API response, or undefined if no GITHUB_TOKEN is set.
+ */
 async function setStatus(state, targetUrl, description, context) {
   // skip if the environment does not have the token
   if (!process.env.GITHUB_TOKEN) {
@@ -631,7 +682,7 @@ async function setStatus(state, targetUrl, description, context) {
  * @param {boolean} [options.webglStub=false] True if WebGL stub should be used when running tests.
  * @param {boolean} [options.suppressPassed=false] True if output should be suppressed for tests that pass.
  * @param {boolean} [options.failTaskOnError=false] True if the gulp task should fail on errors in the tests.
- * @param {string} options.workspace The name of the workspace, if any.
+ * @param {string} [options.workspace] The name of the workspace, if any.
  */
 export async function runCoverage(options) {
   const webglStub = options.webglStub ?? false;
@@ -639,6 +690,7 @@ export async function runCoverage(options) {
   const failTaskOnError = options.failTaskOnError ?? false;
   const workspace = options.workspace;
 
+  /** @type {string[]} */
   const folders = [];
   let browsers = ["Chrome"];
   if (argv.browsers) {
@@ -651,6 +703,7 @@ export async function runCoverage(options) {
 
   // Setup plugin to use instrumenter on source files.
 
+  /** @type {Plugin} */
   const instrumentPlugin = {
     name: "instrument",
     setup: (build) => {
@@ -669,9 +722,11 @@ export async function runCoverage(options) {
             return { contents: generatedCode };
           } catch (e) {
             return {
-              errors: {
-                text: e.message,
-              },
+              errors: [
+                {
+                  text: /** @type {Error} */ (e).message,
+                },
+              ],
             };
           }
         },
@@ -704,6 +759,7 @@ export async function runCoverage(options) {
     logLevel: "error", // print errors immediately, and collect warnings so we can filter out known ones
   });
 
+  /** @type {FilePattern[]} */
   let files = [
     {
       pattern: karmaBundle,
@@ -746,6 +802,7 @@ export async function runCoverage(options) {
 
   // Setup Karma config.
 
+  // @ts-expect-error karma's types declare client.args as string[], but karma passes any values through to the specs.
   const config = await karma.config.parseConfig(
     karmaConfigFile,
     {
@@ -761,7 +818,7 @@ export async function runCoverage(options) {
       reporters: ["spec", "coverage"],
       coverageReporter: {
         dir: options.coverageDirectory,
-        subdir: function (browserName) {
+        subdir: function (/** @type {string} */ browserName) {
           folders.push(browserName);
           return browserName;
         },
@@ -805,7 +862,7 @@ export async function runCoverage(options) {
         return;
       }
 
-      resolve();
+      resolve(undefined);
     });
     server.start();
   });
@@ -822,7 +879,7 @@ export async function coverage() {
       outputDirectory: `packages/${workspace}/Build/Instrumented`,
       coverageDirectory: `packages/${workspace}/Build/Coverage`,
       specList: `packages/${workspace}/Specs/SpecList.js`,
-      filter: createCoverageFilter(workspace),
+      filter: createCoverageFilter(/** @type {Workspace} */ (workspace)),
       webglStub: argv.webglStub,
       suppressPassed: argv.suppressPassed,
       failTaskOnError: argv.failTaskOnError,
@@ -870,15 +927,15 @@ export async function test() {
   if (!isProduction && !release) {
     console.log("Building specs...");
     if (workspace === "core") {
-      await buildCore({ iife: true });
+      await buildCore({});
     } else if (workspace === "gltf") {
-      await buildGltf({ iife: true });
+      await buildGltf({});
     } else if (workspace === "engine") {
-      await buildEngine({ iife: true });
+      await buildEngine({});
       // Engine's TaskProcessor specs need these workers. TODO: why not do this inside buildEngine?
       await bundleTestWorkers();
     } else if (workspace === "widgets") {
-      await buildWidgets({ iife: true });
+      await buildWidgets({});
     } else {
       await buildCesium({ iife: true });
     }
@@ -889,6 +946,7 @@ export async function test() {
     browsers = argv.browsers.split(",");
   }
 
+  /** @type {FilePattern[]} */
   let files = [
     { pattern: "Specs/Data/**", included: false },
     { pattern: "Specs/TestWorkers/**/*.wasm", included: false },
@@ -936,6 +994,7 @@ export async function test() {
     ];
   }
 
+  // @ts-expect-error karma's types declare client.args as string[], but karma passes any values through to the specs.
   const config = await karma.config.parseConfig(
     karmaConfigFile,
     {
@@ -978,7 +1037,7 @@ export async function test() {
         return;
       }
 
-      resolve();
+      resolve(undefined);
     });
     server.start();
   });
@@ -1127,7 +1186,9 @@ function parseWorkspaceExports(source) {
   let match;
   while ((match = regex.exec(source))) {
     const nameMatch = match[2].match(/([^<\s|\(]+)/);
-    exportNames.add(nameMatch[1]);
+    if (nameMatch) {
+      exportNames.add(nameMatch[1]);
+    }
   }
   return exportNames;
 }
@@ -1148,6 +1209,10 @@ function readWorkspaceExports(workspaceName) {
   return parseWorkspaceExports(readFileSync(definitionsPath).toString());
 }
 
+/**
+ * @param {Set<string>} exportNames The names exported by the core workspace.
+ * @returns {Set<string>} The same set, with "Math" added.
+ */
 function addMathExport(exportNames) {
   // Math.js documents CesiumMath with @exports and @alias Math, so tsd-jsdoc emits it
   // as `declare module "Math"`, which parseWorkspaceExports doesn't match. Add the
@@ -1156,6 +1221,10 @@ function addMathExport(exportNames) {
   return exportNames;
 }
 
+/**
+ * @param {string} source The engine definitions source.
+ * @returns {string} The source, with the Viewer and Transforms workarounds added.
+ */
 function processEngineSource(source) {
   let newSource = source;
   // Manually add a type definition from Viewer to avoid circular dependency
@@ -1241,17 +1310,29 @@ ${source}
 }
 
 /**
+ * License information for a third-party dependency, as listed in ThirdParty.json.
+ *
+ * @typedef {object} LicenseData
+ * @property {string} name
+ * @property {string[]} license
+ * @property {string} version
+ * @property {string} url
+ * @property {string} [notes]
+ */
+
+/**
  * Reads `ThirdParty.extra.json` file
  * @param {string} path Path to `ThirdParty.extra.json`
  * @param {string[]} discoveredDependencies  List of previously discovered modules
- * @returns {Promise<object[]>} A promise to an array of objects with 'name`, `license`, and `url` strings
+ * @returns {Promise<Array<LicenseData|undefined>>} A promise to the license data for each entry, or undefined for entries already discovered
  */
 async function getLicenseDataFromThirdPartyExtra(path, discoveredDependencies) {
   if (!existsSync(path)) {
     return Promise.reject(`${path} does not exist`);
   }
 
-  const contents = await readFile(path);
+  const contents = await readFile(path, "utf8");
+  /** @type {LicenseData[]} */
   const thirdPartyExtra = JSON.parse(contents);
   return Promise.all(
     thirdPartyExtra.map(async function (module) {
@@ -1297,10 +1378,12 @@ async function getLicenseDataFromThirdPartyExtra(path, discoveredDependencies) {
 /**
  * Extracts name, license, and url from `package.json` file.
  *
+ * @param {{dependencies: Object<string, string>, devDependencies?: Object<string, string>}} packageJson The package.json that may list the package as a dependency.
  * @param {string} packageName Name of package
  * @param {string[]} discoveredDependencies List of previously discovered modules
- * @param {string[]} licenseOverride If specified, override info fetched from package.json. Useful in the case where there are multiple licenses and we might chose a single one.
- * @returns {Promise<object>} A promise to an object with 'name`, `license`, and `url` strings
+ * @param {string[]} [licenseOverride] If specified, override info fetched from package.json. Useful in the case where there are multiple licenses and we might chose a single one.
+ * @param {string} [notes] Notes to include in the license data.
+ * @returns {Promise<LicenseData|undefined>} A promise to the license data, or undefined if the package is not a dependency or was already discovered
  */
 async function getLicenseDataFromPackage(
   packageJson,
@@ -1317,7 +1400,7 @@ async function getLicenseDataFromPackage(
   }
 
   if (discoveredDependencies.includes(packageName)) {
-    return [];
+    return;
   }
 
   discoveredDependencies.push(packageName);
@@ -1327,7 +1410,7 @@ async function getLicenseDataFromPackage(
   let contents;
   if (existsSync(packagePath)) {
     // Package exists at top-level, so use it.
-    contents = await readFile(packagePath);
+    contents = await readFile(packagePath, "utf8");
   }
 
   if (!contents) {
@@ -1370,7 +1453,9 @@ async function getLicenseDataFromPackage(
 }
 
 export async function buildThirdParty() {
+  /** @type {LicenseData[]} */
   let licenseJson = [];
+  /** @type {string[]} */
   const discoveredDependencies = [];
 
   // Generate ThirdParty.json from ThirdParty.extra.json and package.json
@@ -1379,7 +1464,7 @@ export async function buildThirdParty() {
     discoveredDependencies,
   );
 
-  licenseJson = licenseJson.concat(licenseInfo);
+  licenseJson = licenseJson.concat(/** @type {LicenseData[]} */ (licenseInfo));
 
   licenseJson.sort(function (a, b) {
     const nameA = a.name.toLowerCase();

@@ -1,3 +1,5 @@
+// @ts-check
+
 import { mkdirSync } from "fs";
 import { join } from "path";
 import { finished } from "stream/promises";
@@ -83,7 +85,6 @@ export async function buildCesiumViewer() {
         ],
         {
           base: "Build/Cesium",
-          nodir: true,
           encoding: false,
         },
       ),

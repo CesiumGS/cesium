@@ -326,7 +326,7 @@ async function bundleCombinedSpecs(options) {
 
 /**
  * Bundles test worker in used specs.
- * @param {object} options
+ * @param {object} [options]
  * @param {boolean} [options.incremental=false] true if the build should be cached for repeated rebuilds
  * @param {boolean} [options.write=false] true if build output should be written to disk. If false, the files that would have been written as in-memory buffers
  * @returns {Promise<esbuild.BuildResult|esbuild.BuildContext>}
@@ -390,7 +390,7 @@ function cssGlobsFor(workspace) {
  * @param {boolean} [options.incremental=true] True if builds should be generated incrementally.
  * @param {boolean} [options.minify=false] True if bundles should be minified.
  * @param {boolean} [options.node=true] True if CommonJS bundle should be generated.
- * @param {string} options.outputDirectory The directory where the output should go.
+ * @param {string} [options.outputDirectory] The directory where the output should go.
  * @param {boolean} [options.removePragmas=false] True if debug pragmas should be removed.
  * @param {boolean} [options.sourcemap=true] True if sourcemap should be included in the generated bundles.
  * @param {boolean} [options.write=true] True if bundles generated are written to files instead of in-memory buffers.
