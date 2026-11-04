@@ -36,6 +36,22 @@ yarn add @cesium/edit
 
 The APIs in this package are experimental and are expected to evolve as CesiumJS editing workflows expand.
 
+### Editor toolbar
+
+`EditorToolbar` adds mode and tool dropdowns for an editor. It requires the
+widgets' stylesheet and its own:
+
+```js
+import { EditorToolbar, MeshEditor } from "@cesium/edit";
+import "@cesium/widgets/Source/widgets.css";
+import "@cesium/edit/Source/Widgets/EditorToolbar/EditorToolbar.css";
+
+const editor = await MeshEditor.addToScene(viewer.scene);
+const toolbar = new EditorToolbar("editorToolbarContainer", editor);
+```
+
+Pass `modes` or `tools` to replace the default entries.
+
 ## Community
 
 Have questions? Ask them on the [community forum](https://community.cesium.com/).

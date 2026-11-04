@@ -66,9 +66,8 @@ const defaultIcons = {
 };
 
 /**
- * A toolbar for choosing a {@link MeshEditor}'s mode and active tool.
- * Requires the widgets' base styles and
- * <code>@cesium/edit/Source/Widgets/EditorToolbar/EditorToolbar.css</code>.
+ * Dropdowns for choosing a {@link MeshEditor}'s mode and active tool.
+ * Requires <code>EditorToolbar.css</code>.
  *
  * @alias EditorToolbar
  * @constructor
@@ -125,9 +124,8 @@ class EditorToolbar {
   }
 
   /**
-   * Resolves the host element and validates a supplied element ID.
-   * @param {Element|string} container The element or element ID.
-   * @returns {Element} The host element.
+   * @param {Element|string} container
+   * @returns {Element}
    * @ignore
    */
   #getHostDomElement(container) {
@@ -148,7 +146,7 @@ class EditorToolbar {
   }
 
   /**
-   * Creates the mode and tool dropdowns with their icons and default icon sizes.
+   * Creates the mode and tool dropdowns.
    * @ignore
    */
   #createModeAndToolDropdowns() {
@@ -163,9 +161,8 @@ class EditorToolbar {
   }
 
   /**
-   * Creates the button and entry list for a mode or tool dropdown.
-   * @param {"mode"|"tool"} kind The dropdown to create.
-   * @returns {HTMLSpanElement} The dropdown container.
+   * @param {"mode"|"tool"} kind
+   * @returns {HTMLSpanElement}
    * @ignore
    */
   #createDropdown(kind) {
@@ -178,9 +175,9 @@ class EditorToolbar {
   }
 
   /**
-   * Creates the button that displays the current entry and toggles its dropdown.
-   * @param {"mode"|"tool"} kind The dropdown to toggle.
-   * @returns {HTMLButtonElement} The toggle button.
+   * Creates the button that shows the current entry and toggles the dropdown.
+   * @param {"mode"|"tool"} kind
+   * @returns {HTMLButtonElement}
    * @ignore
    */
   #createDropdownToggleButton(kind) {
@@ -204,9 +201,8 @@ class EditorToolbar {
   }
 
   /**
-   * Creates the dropdown's entry list and its bound entry-button template.
-   * @param {"mode"|"tool"} kind The entries to display.
-   * @returns {HTMLDivElement} The entry list.
+   * @param {"mode"|"tool"} kind
+   * @returns {HTMLDivElement}
    * @ignore
    */
   #createDropdownEntryList(kind) {
@@ -239,7 +235,7 @@ class EditorToolbar {
   }
 
   /**
-   * Binds selected icons, labels, dropdowns, and tool availability.
+   * Applies Knockout bindings to the toolbar.
    * @ignore
    */
   #applyViewModelBindings() {
@@ -268,10 +264,10 @@ class EditorToolbar {
   }
 
   /**
-   * Copies an entry with default icon dimensions and a built-in icon if available.
-   * @param {EditorToolbarModeEntry|EditorToolbarToolEntry|{id: string, label: string}} entry The entry.
-   * @param {"mode"|"tool"} kind The dropdown's kind.
-   * @returns {{id: string, label: string, iconPath: string, iconWidth: number, iconHeight: number}} The entry with its icon.
+   * Copies an entry, filling in a default icon and icon size.
+   * @param {EditorToolbarModeEntry|EditorToolbarToolEntry|{id: string, label: string}} entry
+   * @param {"mode"|"tool"} kind
+   * @returns {{id: string, label: string, iconPath: string, iconWidth: number, iconHeight: number}}
    * @ignore
    */
   #withEntryIcon(entry, kind) {
@@ -298,7 +294,7 @@ class EditorToolbar {
   }
 
   /**
-   * Registers the listener that closes dropdowns on outside clicks.
+   * Closes the dropdowns on clicks outside the toolbar.
    * @ignore
    */
   #listenForOutsideClicks() {
@@ -322,7 +318,7 @@ class EditorToolbar {
   }
 
   /**
-   * Removes bindings, listeners, and DOM elements, and destroys the view model.
+   * Removes the toolbar from the DOM and destroys its view model.
    */
   destroy() {
     for (const removeListener of this.#removeOutsideClickListeners) {
