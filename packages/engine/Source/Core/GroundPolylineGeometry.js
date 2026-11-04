@@ -162,7 +162,7 @@ Object.defineProperties(GroundPolylineGeometry.prototype, {
  * Used by GroundPolylinePrimitive to signal scene information to the geometry for generating 2D attributes.
  *
  * @param {GroundPolylineGeometry} groundPolylineGeometry GroundPolylinGeometry describing a polyline on terrain or 3D Tiles.
- * @param {Projection} mapProjection A MapProjection used for projecting cartographic coordinates to 2D.
+ * @param {MapProjection} mapProjection A MapProjection used for projecting cartographic coordinates to 2D.
  * @private
  */
 GroundPolylineGeometry.setProjectionAndEllipsoid = function (

@@ -2,7 +2,7 @@
  * The pass in which a 3D Tileset is updated.
  *
  * @enum {number}
- * @private
+ * @internal
  */
 const Cesium3DTilePass = {
   RENDER: 0,
@@ -74,6 +74,14 @@ passOptions[Cesium3DTilePass.MOST_DETAILED_PICK] = Object.freeze({
   ignoreCommands: false,
 });
 
+/**
+ * Get the options that describe how a tileset is updated in a pass.
+ *
+ * @param {Cesium3DTilePass} pass The pass.
+ * @returns {{pass: Cesium3DTilePass, isRender: boolean, requestTiles: boolean, ignoreCommands: boolean}} The options for the pass.
+ *
+ * @private
+ */
 Cesium3DTilePass.getPassOptions = function (pass) {
   return passOptions[pass];
 };
