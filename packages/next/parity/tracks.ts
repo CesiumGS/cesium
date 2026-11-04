@@ -3,27 +3,29 @@ import {
   Ellipsoid,
   Engine,
   OffscreenTarget,
-  Tracks,
+  PointSource,
+  VectorLayer,
   createSurfacePatch,
   eastNorthUpToFixedFrame,
   fromDegrees,
   mat4,
   vec3,
   type MeshData,
+  type VectorStyleDocument,
   type World,
 } from "../src/index.ts";
 import type { Harness } from "../lab/harness.ts";
 import { flip } from "./flip.ts";
 
 const TEMPLATE = `
-<h1>Real-time tracks</h1>
+<h1>Live points and styled layers</h1>
 <p>
-  Tracks (plan §13.11) as instance data: a feed update writes their
-  samples at once; each frame a kernel interpolates them on the GPU and
-  writes their instance rows; each draws as a truck within the switch
-  distance of the camera and a red billboard beyond it, chosen per
-  instance in the cull pass. The clock is the harness's, so motion is
-  exact. Click a row to see its image.
+  Tracks (plan §13.11) as a live point source drawn by a vector style: a
+  feed update writes their samples at once; each frame a kernel moves them
+  on the GPU and writes their anchors; a style draws each as a truck
+  within the switch distance of the camera (a model pool) and a red
+  square symbol beyond it (a point set, by vertex pulling). The clock is
+  the harness's, so motion is exact. Click a row to see its image.
 </p>
 <div class="status">Run to check every case.</div>
 <div class="images">
@@ -47,9 +49,34 @@ const TRUCK =
 /** Buildings with per-feature colors (batched b3dm). */
 const BUILDINGS =
   "/specs-data/Cesium3DTiles/Batched/BatchedColors/tileset.json";
-/** The billboards' side, px, and the switch distance, m. */
+/** The symbols' side, px, and the switch distance, m. */
 const PIXELS = 24;
 const SWITCH = 300;
+
+/** Red squares beyond the switch distance, trucks within it. */
+const styleOf = (pixels: number, models = true): VectorStyleDocument => ({
+  resources: {
+    full: { kind: "symbol", path: "M -1 -1 H 1 V 1 H -1 Z" },
+    truck: { kind: "model", uri: TRUCK },
+  },
+  layers: [
+    {
+      filter: models ? `\${view.distance} >= ${SWITCH}` : "true",
+      shape: "full",
+      size: `${pixels}px`,
+      fill: { color: "#ff0000" },
+    },
+    ...(models
+      ? [
+          {
+            filter: `\${view.distance} < ${SWITCH}`,
+            shape: "model('truck')",
+            heading: "${heading}",
+          },
+        ]
+      : []),
+  ],
+});
 
 interface Row {
   case: string;
@@ -73,13 +100,8 @@ function redPixels(image: ImageData): number {
   return Math.round(n);
 }
 
-/** Tracks along the x axis `spacing` m apart, heading east. */
-function line(
-  count: number,
-  x0 = 0,
-  heading = 90 * deg,
-  spacing = 30,
-): Float32Array {
+/** Tracks along the x axis `spacing` m apart, heading east (degrees). */
+function line(count: number, x0 = 0, heading = 90, spacing = 30): Float32Array {
   const out = new Float32Array(count * 4);
   for (let i = 0; i < count; i++) {
     out.set([x0 + (i - (count - 1) / 2) * spacing, 0, 0, heading], i * 4);
@@ -145,31 +167,31 @@ async function castDown(
   return hits.map((d) => (d === undefined ? undefined : top - d));
 }
 
-/** Instance rows' translations (x, y, z) from `first`, `count` of them. */
-async function rowPositions(
+/** Points' anchors (x, y, z, heading), as the frame kernel wrote them. */
+async function anchors(
   engine: Engine,
   world: World,
-  first: number,
+  source: PointSource,
   count: number,
 ): Promise<Float32Array> {
   const device = engine.gpu.device;
-  const bytes = count * 64;
+  const bytes = count * 16;
   const read = device.createBuffer({
     size: bytes,
     usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
   });
   const encoder = device.createCommandEncoder();
-  encoder.copyBufferToBuffer(world.instanceBuffer, first * 64, read, 0, bytes);
+  encoder.copyBufferToBuffer(
+    world.vertexBuffer,
+    source.mesh.points.anchors * 4,
+    read,
+    0,
+    bytes,
+  );
   device.queue.submit([encoder.finish()]);
   await read.mapAsync(GPUMapMode.READ);
-  const rows = new Float32Array(read.getMappedRange().slice(0));
+  const out = new Float32Array(read.getMappedRange().slice(0));
   read.destroy();
-  const out = new Float32Array(count * 3);
-  for (let i = 0; i < count; i++) {
-    out[i * 3] = rows[i * 16 + 3]!;
-    out[i * 3 + 1] = rows[i * 16 + 7]!;
-    out[i * 3 + 2] = rows[i * 16 + 11]!;
-  }
   return out;
 }
 
@@ -190,23 +212,18 @@ function rotation(frame: mat4.Mat4): mat4.Mat4 {
   return m;
 }
 
-/** Clamped tracks' heights (the billboards' rows) against ray casts. */
+/** Clamped points' heights (their anchors) against ray casts. */
 async function clampErrors(
   engine: Engine,
   world: World,
-  tracks: Tracks,
+  source: PointSource,
   reference: Array<number | undefined>,
 ): Promise<{ hits: number; max: number; p95: number; mean: number }> {
-  const rows = await rowPositions(
-    engine,
-    world,
-    world.instanceFirst(tracks.billboard!),
-    reference.length,
-  );
+  const placed = await anchors(engine, world, source, reference.length);
   const diffs: number[] = [];
   reference.forEach((z, i) => {
     if (z !== undefined) {
-      diffs.push(Math.abs(rows[i * 3 + 2]! - z));
+      diffs.push(Math.abs(placed[i * 4 + 2]! - z));
     }
   });
   return { hits: diffs.length, ...errors(diffs) };
@@ -225,7 +242,6 @@ async function runTracks(): Promise<Row[]> {
   // An asset's images are released once uploaded to a world, so each
   // scene (a world) loads the truck itself.
   const scene = async (capacity: number) => {
-    const asset = await engine.loadGltf(new URL(TRUCK, location.href).href);
     const world: World = engine.createWorld({
       maxDraws: 64,
       maxMaterials: 32,
@@ -250,20 +266,17 @@ async function runTracks(): Promise<Row[]> {
         roughness: 1,
       }),
     });
-    const tracks = new Tracks(engine, world, {
+    const tracks = new PointSource(engine, world, {
       capacity,
       origin,
-      model: { asset },
-      billboard: {
-        size: PIXELS,
-        anchor: "center",
-        lift: 2,
-        color: [1, 0, 0, 1],
-        depthTestDistance: 1e9,
-      },
-      switchDistance: SWITCH,
       delay: 0,
       clock: () => now,
+    });
+    const layer = await VectorLayer.create(engine, world, {
+      source: tracks,
+      style: styleOf(PIXELS),
+      slots: capacity,
+      depthTestDistance: 1e9,
     });
     const render = async (range: number, pitch = -35): Promise<ImageData> => {
       const camera = new Camera();
@@ -286,6 +299,7 @@ async function runTracks(): Promise<Row[]> {
       return image;
     };
     const dispose = () => {
+      layer.destroy();
       tracks.destroy();
       engine.worlds.splice(engine.worlds.indexOf(world), 1);
       world.destroy();
@@ -324,7 +338,7 @@ async function runTracks(): Promise<Row[]> {
     // From afar: billboards only (in front of everything), spread apart so
     // they don't overlap on screen.
     now += 1;
-    s.tracks.update(0, line(3, 0, 90 * deg, 300));
+    s.tracks.update(0, line(3, 0, 90, 300));
     now += 1;
     const far = await s.render(1500);
     const n = redPixels(far);
@@ -350,16 +364,19 @@ async function runTracks(): Promise<Row[]> {
     s.dispose();
   }
 
-  // Interpolation: halfway between two samples is the midpoint.
+  // Interpolation: halfway through a move is its midpoint. With a delay
+  // of 1 s, a point sampled at 10 and 11 is shown moving from the first
+  // to the second between 11 and 12.
   status.textContent = "interpolation…";
   {
     const moving = await scene(3);
+    moving.tracks.delay = 1;
     now = 10;
     moving.tracks.update(0, line(3, -40));
     now = 11;
     moving.tracks.update(0, line(3, 40));
     moving.tracks.count = 3;
-    now = 10.5;
+    now = 11.5;
     const halfway = await moving.render(90);
     moving.dispose();
     const fixed = await scene(3);
@@ -422,13 +439,16 @@ async function runTracks(): Promise<Row[]> {
       points.push([(random() - 0.5) * 3600, (random() - 0.5) * 3600]);
     }
     const reference = await castDown(world, enu, points, 500);
-    const tracks = new Tracks(engine, world, {
+    const tracks = new PointSource(engine, world, {
       capacity: count,
       origin,
-      billboard: { size: 8, anchor: "center", color: [1, 0, 0, 1] },
       clamp: { halfExtent: 2000, size: 2048, top: 500, bottom: -200 },
       delay: 0,
       clock: () => now,
+    });
+    const layer = await VectorLayer.create(engine, world, {
+      source: tracks,
+      style: styleOf(8, false),
     });
     tracks.update(
       0,
@@ -453,7 +473,7 @@ async function runTracks(): Promise<Row[]> {
     const e = await clampErrors(engine, world, tracks, reference);
     add(
       {
-        case: "clamped to hills, 1,000 tracks (vs ray casts)",
+        case: "clamped to hills, 1,000 points (vs ray casts)",
         measured: `${e.hits} hits; error max ${e.max.toFixed(3)} m, p95 ${e.p95.toFixed(3)}, mean ${e.mean.toFixed(3)} (texel ${((2 * 2000) / 2048).toFixed(2)} m)`,
         expected: "max under 0.25 m",
         pass: e.hits === count && e.max < 0.25,
@@ -461,6 +481,7 @@ async function runTracks(): Promise<Row[]> {
       image,
     );
     engine.removeView(view);
+    layer.destroy();
     tracks.destroy();
     engine.worlds.splice(engine.worlds.indexOf(world), 1);
     world.destroy();
@@ -517,13 +538,16 @@ async function runTracks(): Promise<Row[]> {
       }
     }
     const reference = await castDown(world, enu, points, 300);
-    const tracks = new Tracks(engine, world, {
+    const tracks = new PointSource(engine, world, {
       capacity: points.length,
       origin: ground,
-      billboard: { size: 6, anchor: "center", color: [1, 0, 0, 1] },
       clamp: { halfExtent: 150, size: 2048, top: 300, bottom: -100 },
       delay: 0,
       clock: () => now,
+    });
+    const layer = await VectorLayer.create(engine, world, {
+      source: tracks,
+      style: styleOf(6, false),
     });
     tracks.update(
       0,
@@ -546,26 +570,22 @@ async function runTracks(): Promise<Row[]> {
       image,
     );
     engine.removeView(view);
+    layer.destroy();
     tracks.destroy();
     engine.removeTileset(tileset);
     engine.worlds.splice(engine.worlds.indexOf(world), 1);
     world.destroy();
   }
 
-  // 100,000 tracks: a feed update's CPU cost and the kernel's GPU time.
-  status.textContent = "100,000 tracks…";
+  // 100,000 points: a feed update's CPU cost (one copy and a dispatch).
+  status.textContent = "100,000 points…";
   {
     const capacity = 100_000;
     const s = await scene(capacity);
     const samples = new Float32Array(capacity * 4);
     for (let i = 0; i < capacity; i++) {
       samples.set(
-        [
-          ((i % 316) - 158) * 25,
-          (Math.floor(i / 316) - 158) * 25,
-          0,
-          (i % 360) * deg,
-        ],
+        [((i % 316) - 158) * 25, (Math.floor(i / 316) - 158) * 25, 0, i % 360],
         i * 4,
       );
     }
@@ -582,10 +602,10 @@ async function runTracks(): Promise<Row[]> {
     const image = await s.render(6000, -50);
     add(
       {
-        case: "100,000 tracks: a feed update on the CPU",
-        measured: `median ${median.toFixed(2)} ms (${((median / capacity) * 1e6).toFixed(0)} ns a track)`,
-        expected: "under 10 ms",
-        pass: median < 10,
+        case: "100,000 points: a feed update on the CPU",
+        measured: `median ${median.toFixed(2)} ms (${((median / capacity) * 1e6).toFixed(1)} ns a point)`,
+        expected: "under 2 ms (a copy, no work per point)",
+        pass: median < 2,
       },
       image,
     );

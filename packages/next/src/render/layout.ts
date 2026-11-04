@@ -262,6 +262,12 @@ export const RecordFlags = {
    * so what clamps there (tracks) doesn't land on itself.
    */
   notGround: 32,
+  /**
+   * A point set (`World.addPointMesh`): six vertices per point, its
+   * anchor (four floats at the position stream) expanded on screen as a
+   * billboard; the point is the instance index and local feature.
+   */
+  points: 64,
 } as const;
 
 /**

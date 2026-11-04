@@ -62,7 +62,12 @@ export interface WorldOptions {
   maxClipBlocks?: number;
   /** Transform table entries (default: `maxDraws`). */
   maxTransforms?: number;
-  /** Instance table entries, shared by all instanced draws (default 16384). */
+  /**
+   * Instance table entries, shared by all instanced draws (default 16384).
+   * The GPU tables start at 16,384 rows (or fewer) and double as used up to
+   * this, within the device's buffer limits (80 bytes an item, draws
+   * first).
+   */
   maxInstances?: number;
 }
 
@@ -110,6 +115,23 @@ export interface MeshHandle {
   /** Bounding sphere in mesh-local coordinates. */
   readonly center: readonly [number, number, number];
   readonly radius: number;
+}
+
+/**
+ * A point set's mesh (`World.addPointMesh`): `capacity` anchors in the
+ * arena and the points' property streams beside them.
+ */
+export interface PointMesh extends MeshHandle {
+  readonly points: {
+    readonly capacity: number;
+    /** Arena word of point 0's anchor (x, y, z and a fourth float). */
+    readonly anchors: number;
+    /** Arena word of point 0's properties, `stride` words a point. */
+    readonly streams: number;
+    readonly stride: number;
+    /** Arena word of the properties' directory (NO_STREAM: none). */
+    readonly directory: number;
+  };
 }
 
 export interface TextureBinding {
@@ -291,6 +313,8 @@ interface Batch {
   shader: CustomShader | undefined;
   /** Billboards: not in the shadow and ambient-occlusion passes. */
   billboard: boolean;
+  /** A point set's: drawn without indices, six vertices per point. */
+  points: boolean;
   /** Draw items: records without instances plus instances. */
   items: number;
   itemBase: number;
@@ -300,14 +324,15 @@ interface Batch {
  * A CPU table mirrored to a GPU storage buffer. Changed entries upload once
  * per frame: a contiguous run with one write, entries spread across the
  * table as packed (index, data) pairs that a compute pass scatters
- * (`scatter.wgsl`), instead of the whole span between them. The GPU buffer
- * holds the full capacity; the CPU rows grow as entries are used
- * (`reserve`).
+ * (`scatter.wgsl`), instead of the whole span between them. The CPU rows
+ * grow as entries are used (`reserve`); the GPU buffer holds `gpuRows`,
+ * the full capacity unless given fewer, and grows by `growGpu`.
  */
 class MirroredTable {
   f32: Float32Array;
   u32: Uint32Array;
-  readonly buffer: GPUBuffer;
+  buffer: GPUBuffer;
+  gpuRows: number;
   private flags: Uint8Array;
   private readonly dirty: number[] = [];
   private readonly params: GPUBuffer;
@@ -318,30 +343,51 @@ class MirroredTable {
 
   constructor(
     private readonly ctx: RenderContext,
-    label: string,
+    private readonly label: string,
     readonly words: number,
     readonly capacity: number,
+    gpuRows = capacity,
   ) {
     const rows = Math.min(capacity, INITIAL_ROWS);
     const data = new ArrayBuffer(rows * words * 4);
     this.f32 = new Float32Array(data);
     this.u32 = new Uint32Array(data);
     this.flags = new Uint8Array(rows);
-    this.buffer = ctx.device.createBuffer({
-      label: `world.${label}`,
-      size: capacity * words * 4,
-      // COPY_SRC: tests compare the GPU copy with the CPU table.
-      usage:
-        GPUBufferUsage.STORAGE |
-        GPUBufferUsage.COPY_DST |
-        GPUBufferUsage.COPY_SRC,
-    });
+    this.gpuRows = gpuRows;
+    this.buffer = this.createBuffer(gpuRows);
     this.params = ctx.device.createBuffer({
       label: `world.${label}.scatter`,
       size: 16,
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     });
     this.paramsData[1] = words;
+  }
+
+  private createBuffer(rows: number): GPUBuffer {
+    return this.ctx.device.createBuffer({
+      label: `world.${this.label}`,
+      size: Math.max(1, rows) * this.words * 4,
+      // COPY_SRC: tests compare the GPU copy with the CPU table, and the
+      // table copies itself when it grows.
+      usage:
+        GPUBufferUsage.STORAGE |
+        GPUBufferUsage.COPY_DST |
+        GPUBufferUsage.COPY_SRC,
+    });
+  }
+
+  /** A larger GPU buffer holding the old one's rows (queued after its writes). */
+  growGpu(rows: number): void {
+    const old = this.buffer;
+    this.buffer = this.createBuffer(rows);
+    this.gpuRows = rows;
+    const { device } = this.ctx;
+    const encoder = device.createCommandEncoder({ label: "world.grow" });
+    encoder.copyBufferToBuffer(old, 0, this.buffer, 0, old.size);
+    device.queue.submit([encoder.finish()]);
+    old.destroy();
+    // The scatter's group binds the table.
+    this.bindGroup = undefined;
   }
 
   /** Rows on the CPU. */
@@ -410,12 +456,15 @@ class MirroredTable {
         size: size * 4,
         usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
       });
+      this.bindGroup = undefined;
+    }
+    if (!this.bindGroup) {
       this.bindGroup = this.ctx.device.createBindGroup({
         label: "world.scatter",
         layout: this.ctx.pipelines.scatterLayout,
         entries: [
           { binding: 0, resource: { buffer: this.params } },
-          { binding: 1, resource: { buffer: this.staging } },
+          { binding: 1, resource: { buffer: this.staging! } },
           { binding: 2, resource: { buffer: this.buffer } },
         ],
       });
@@ -600,21 +649,24 @@ export class World {
   readonly indexBuffer: GPUBuffer;
   readonly recordBuffer: GPUBuffer;
   readonly transformBuffer: GPUBuffer;
-  readonly instanceBuffer: GPUBuffer;
+  /** Replaced when the instance table grows (`instanceGeneration`). */
+  instanceBuffer: GPUBuffer;
   /** Per draw item and view: its camera-relative matrix and record (cull). */
-  readonly itemBuffer: GPUBuffer;
+  itemBuffer: GPUBuffer;
   readonly materialBuffer: GPUBuffer;
   /** Mixed-LOD clip boxes, `CLIP_BOXES` per block. */
   readonly clipBuffer: GPUBuffer;
   /** Visible draw items, compacted per batch by the cull kernels. */
-  readonly itemListBuffer: GPUBuffer;
+  itemListBuffer: GPUBuffer;
   /** All draw items per batch, for "direct" submission. */
-  private readonly directListBuffer: GPUBuffer;
+  private directListBuffer: GPUBuffer;
+  /** Counts instance table growths (its buffers are replaced). */
+  instanceGeneration = 0;
   private readonly batchCountBuffer: GPUBuffer;
   private readonly batchBuffer: GPUBuffer;
   readonly indirectBuffer: GPUBuffer;
   private readonly cullParams: GPUBuffer;
-  private readonly cullBindGroup: GPUBindGroup;
+  private cullBindGroup!: GPUBindGroup;
   private drawBindGroup!: GPUBindGroup;
   /** Globe imagery array (a 1×1 placeholder until imagery is attached). */
   private imageryView: GPUTextureView;
@@ -629,9 +681,19 @@ export class World {
     const device = ctx.device;
     this.maxDraws = options.maxDraws ?? 16384;
     this.maxTransforms = options.maxTransforms ?? this.maxDraws;
-    this.maxInstances = options.maxInstances ?? 16384;
     this.maxMaterials = options.maxMaterials ?? 4096;
-    const items = this.maxDraws + this.maxInstances;
+    // Rows the item buffer (80 bytes each, draws first) can address.
+    const limits = ctx.device.limits;
+    const itemLimit = Math.floor(
+      Math.min(limits.maxStorageBufferBindingSize, limits.maxBufferSize) /
+        DRAW_ITEM_SIZE,
+    );
+    this.maxInstances = Math.min(
+      options.maxInstances ?? 16384,
+      itemLimit - this.maxDraws,
+    );
+    const instanceRows = Math.max(1, Math.min(this.maxInstances, 16384));
+    const items = this.maxDraws + instanceRows;
     const vertexBytes = options.vertexBytes ?? 64 * 1024 * 1024;
     const indexBytes = options.indexBytes ?? 32 * 1024 * 1024;
     this.vertexAllocator = new RangeAllocator(vertexBytes, 4);
@@ -668,6 +730,7 @@ export class World {
       "instances",
       INSTANCE_WORDS,
       Math.max(1, this.maxInstances),
+      instanceRows,
     );
     this.instanceAllocator = new RangeAllocator(this.maxInstances, 1);
     const materials = new ArrayBuffer(
@@ -679,7 +742,13 @@ export class World {
     const buffer = (label: string, size: number, usage: GPUBufferUsageFlags) =>
       device.createBuffer({ label: `world.${label}`, size, usage });
     const storage = GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST;
-    this.vertexBuffer = buffer("vertices", vertexBytes, storage);
+    // COPY_SRC: harnesses read back what kernels write there (point
+    // sets' anchors).
+    this.vertexBuffer = buffer(
+      "vertices",
+      vertexBytes,
+      storage | GPUBufferUsage.COPY_SRC,
+    );
     // STORAGE: ray casts read triangles (`castRays`).
     this.indexBuffer = buffer(
       "indices",
@@ -734,21 +803,7 @@ export class World {
       GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     );
 
-    this.cullBindGroup = device.createBindGroup({
-      label: "world.cull",
-      layout: ctx.pipelines.cullWorldLayout,
-      entries: [
-        this.recordBuffer,
-        this.transformBuffer,
-        this.instanceBuffer,
-        this.itemBuffer,
-        this.itemListBuffer,
-        this.batchCountBuffer,
-        this.batchBuffer,
-        this.indirectBuffer,
-        this.cullParams,
-      ].map((b, binding) => ({ binding, resource: { buffer: b } })),
-    });
+    this.createCullBindGroup();
     this.imageryView = device
       .createTexture({
         label: "world.imagery.placeholder",
@@ -1018,6 +1073,122 @@ export class World {
   }
 
   /**
+   * A point set's mesh: `capacity` anchors (four floats each: x, y, z
+   * relative to the draw's transform, and a fourth value such as a
+   * heading) for the GPU or `setPointProperties`' caller to write, and the
+   * points' properties, `stride` words each, read by custom shaders as
+   * instance values (`streams.layout`, as `InstanceOptions.streams`). A
+   * draw of it (`billboard` required) draws six vertices per point and
+   * expands each on screen; points whose anchor's x is past 1e37 (or NaN)
+   * aren't drawn.
+   * Each point is a feature (picking). Nothing is uploaded: anchors start
+   * as whatever the arena held, so write them before the first frame.
+   */
+  addPointMesh(
+    capacity: number,
+    streams?: {
+      stride: number;
+      layout?: Record<string, { offset: number; components: number }>;
+    },
+  ): PointMesh {
+    const fields = Object.entries(streams?.layout ?? {});
+    for (const [name, { offset, components }] of fields) {
+      if (
+        components < 1 ||
+        components > 4 ||
+        offset < 0 ||
+        offset + components > streams!.stride
+      ) {
+        throw new RangeError(
+          `addPointMesh: field ${name} is outside the stride`,
+        );
+      }
+    }
+    const directory = new Uint32Array(
+      fields.length ? 1 + fields.length * 3 : 0,
+    );
+    if (fields.length) {
+      directory[0] = fields.length;
+      fields.forEach(([name, { offset, components }], i) => {
+        directory[1 + i * 3] = attributeHash(name);
+        directory[2 + i * 3] = offset;
+        directory[3 + i * 3] = components;
+      });
+    }
+    const stride = streams?.stride ?? 0;
+    const anchorBytes = Math.max(16, capacity * 16);
+    const streamBytes = capacity * stride * 4;
+    const bytes = anchorBytes + streamBytes + directory.byteLength;
+    const offset = this.vertexAllocator.allocate(bytes);
+    if (offset === undefined) {
+      throw new Error("World vertex arena is full.");
+    }
+    if (directory.byteLength) {
+      this.queueUpload(
+        this.vertexBuffer,
+        offset + anchorBytes + streamBytes,
+        directory,
+      );
+    }
+    const id = this.nextMeshId++;
+    this.meshRanges.set(id, {
+      vertex: [[offset, bytes]],
+      index: [0, 0],
+    });
+    const anchors = offset / 4;
+    return {
+      id,
+      firstIndex: 0,
+      indexCount: capacity * 6,
+      vertexCount: capacity,
+      streams: {
+        position: anchors,
+        normal: NO_STREAM,
+        uv: NO_STREAM,
+        color: NO_STREAM,
+        tangent: NO_STREAM,
+        featureId: NO_STREAM,
+        attributes: NO_STREAM,
+      },
+      featureCount: Math.max(1, capacity),
+      topology: "triangle-list",
+      center: [0, 0, 0],
+      radius: 0,
+      points: {
+        capacity,
+        anchors,
+        streams: stride ? (offset + anchorBytes) / 4 : NO_STREAM,
+        stride,
+        directory: directory.byteLength
+          ? (offset + anchorBytes + streamBytes) / 4
+          : NO_STREAM,
+      },
+    };
+  }
+
+  /** Writes points' properties (`addPointMesh` streams) from `first` on. */
+  setPointProperties(
+    mesh: PointMesh,
+    first: number,
+    data: Float32Array | Uint32Array,
+  ): void {
+    const { stride, streams, capacity } = mesh.points;
+    if (
+      stride === 0 ||
+      first < 0 ||
+      data.length % stride !== 0 ||
+      first + data.length / stride > capacity
+    ) {
+      throw new RangeError(
+        `setPointProperties: ${data.length / Math.max(1, stride)} points from ${first} don't fit`,
+      );
+    }
+    this.queueUpload(this.vertexBuffer, (streams + first * stride) * 4, data);
+    this.version++;
+    this.changedViews = ALL_VIEWS;
+  }
+
+  /**
    * Frees a mesh's arena ranges. Draws that use it must be removed first.
    * Returns the bytes released.
    */
@@ -1035,7 +1206,9 @@ export class World {
       this.vertexAllocator.release(offset, size);
       bytes += size;
     }
-    this.indexAllocator.release(ranges.index[0], ranges.index[1]);
+    if (ranges.index[1] > 0) {
+      this.indexAllocator.release(ranges.index[0], ranges.index[1]);
+    }
     const table = ranges.table && this.tableColumns.get(ranges.table);
     if (table && --table.meshes === 0) {
       this.tableColumns.delete(ranges.table!);
@@ -1255,6 +1428,12 @@ export class World {
         );
       }
     }
+    const pointSet = (options.mesh as Partial<PointMesh>).points;
+    if (pointSet && (!options.billboard || options.instances)) {
+      throw new Error(
+        "addDraw: a point mesh draws as a billboard, without instances",
+      );
+    }
     const index = this.freeSlots.pop() ?? this.drawCount++;
     if (index >= this.maxDraws) {
       this.drawCount--;
@@ -1295,6 +1474,9 @@ export class World {
         throw new Error("World instance table is full.");
       }
       this.instances.reserve(first + instanceCount);
+      if (first + instanceCount > this.instances.gpuRows) {
+        this.growInstances(first + instanceCount);
+      }
       instanceFirst = first;
       this.instanceHighWater = Math.max(
         this.instanceHighWater,
@@ -1369,6 +1551,12 @@ export class World {
       instanceStreams = offset / 4;
       instanceStride = instances.streams.stride;
     }
+    // A point set's properties are its mesh's, shared by its draws.
+    if (pointSet) {
+      instanceStreams = pointSet.streams;
+      instanceStride = pointSet.stride;
+      instanceDirectory = pointSet.directory;
+    }
 
     const material = options.material ?? 0;
     const textureSet = options.textureSet ?? 0;
@@ -1388,6 +1576,7 @@ export class World {
         batch.doubleSided = doubleSided;
         batch.shader = shader;
         batch.billboard = billboard;
+        batch.points = pointSet !== undefined;
       } else {
         batch = {
           index: this.batchList.length,
@@ -1398,6 +1587,7 @@ export class World {
           doubleSided,
           shader,
           billboard,
+          points: pointSet !== undefined,
           items: 0,
           itemBase: 0,
         };
@@ -1442,6 +1632,7 @@ export class World {
           ? RecordFlags.unlit
           : 0) |
         (options.billboard ? RecordFlags.billboard : 0) |
+        (pointSet ? RecordFlags.points : 0) |
         (options.ground === false ? RecordFlags.notGround : 0) |
         (options.collision ? RecordFlags.collision : 0) |
         (options.underlay ? RecordFlags.underlay : 0),
@@ -2446,7 +2637,10 @@ export class World {
     pass.dispatchWorkgroups(Math.ceil(Math.max(this.drawCount, 1) / 64));
     if (this.instanceHighWater > 0) {
       pass.setPipeline(pipelines.cullInstances);
-      pass.dispatchWorkgroups(Math.ceil(this.instanceHighWater / 64));
+      // Two dimensions past 65,535 groups (`cullInstances` reads them).
+      const groups = Math.ceil(this.instanceHighWater / 64);
+      const x = Math.min(groups, 65535);
+      pass.dispatchWorkgroups(x, Math.ceil(groups / x));
     }
     pass.setPipeline(pipelines.writeDrawArgs);
     pass.dispatchWorkgroups(Math.ceil(Math.max(this.batchList.length, 1) / 64));
@@ -2618,11 +2812,13 @@ export class World {
                 : batch.doubleSided
                   ? "shadowDoubleSided"
                   : "shadow"
-              : batch.mesh.topology === "line-list"
-                ? "opaqueLines"
-                : batch.doubleSided
-                  ? "opaqueDoubleSided"
-                  : "opaque";
+              : batch.points
+                ? "opaquePoints"
+                : batch.mesh.topology === "line-list"
+                  ? "opaqueLines"
+                  : batch.doubleSided
+                    ? "opaqueDoubleSided"
+                    : "opaque";
     const rank = (batch: Batch) =>
       batch.mesh.topology === "line-list" ? 2 : Number(batch.doubleSided);
     const order = [...this.batchList].sort(
@@ -2639,6 +2835,8 @@ export class World {
       if (
         batch.items === 0 ||
         ((shadow || prepass || depth) && batch.mesh.topology === "line-list") ||
+        // Point sets shade outside the opaque pass's depth prepass.
+        (depth && batch.points) ||
         // Billboards face the camera: no shadows, no ambient occlusion.
         ((shadow || prepass) && batch.billboard)
       ) {
@@ -2656,20 +2854,7 @@ export class World {
         encoder.setBindGroup(2, group);
       }
       encoder.setVertexBuffer(0, list, batch.itemBase * 4);
-      if (direct) {
-        encoder.drawIndexed(
-          batch.mesh.indexCount,
-          batch.items,
-          batch.mesh.firstIndex,
-          0,
-          0,
-        );
-      } else {
-        encoder.drawIndexedIndirect(
-          this.indirectBuffer,
-          batch.index * INDIRECT_SIZE,
-        );
-      }
+      this.drawBatch(encoder, batch, direct);
     }
     return encoder.finish();
   }
@@ -2863,21 +3048,94 @@ export class World {
         pass.setBindGroup(2, bound);
       }
       pass.setVertexBuffer(0, list, batch.itemBase * 4);
-      if (direct) {
-        pass.drawIndexed(
-          batch.mesh.indexCount,
-          batch.items,
-          batch.mesh.firstIndex,
-          0,
-          0,
-        );
-      } else {
-        pass.drawIndexedIndirect(
-          this.indirectBuffer,
-          batch.index * INDIRECT_SIZE,
-        );
-      }
+      this.drawBatch(pass, batch, direct);
     }
+  }
+
+  /**
+   * A batch's draw: indexed, or for a point set six vertices per point
+   * without indices. The indirect arguments serve both: the indexed
+   * layout's first four words (count, instances, first, 0) read as a
+   * non-indexed draw's.
+   */
+  private drawBatch(
+    pass: GPURenderPassEncoder | GPURenderBundleEncoder,
+    batch: Batch,
+    direct: boolean,
+  ): void {
+    const { mesh } = batch;
+    if (batch.points) {
+      if (direct) {
+        pass.draw(mesh.indexCount, batch.items, 0, 0);
+      } else {
+        pass.drawIndirect(this.indirectBuffer, batch.index * INDIRECT_SIZE);
+      }
+    } else if (direct) {
+      pass.drawIndexed(mesh.indexCount, batch.items, mesh.firstIndex, 0, 0);
+    } else {
+      pass.drawIndexedIndirect(
+        this.indirectBuffer,
+        batch.index * INDIRECT_SIZE,
+      );
+    }
+  }
+
+  private createCullBindGroup(): void {
+    this.cullBindGroup = this.ctx.device.createBindGroup({
+      label: "world.cull",
+      layout: this.ctx.pipelines.cullWorldLayout,
+      entries: [
+        this.recordBuffer,
+        this.transformBuffer,
+        this.instanceBuffer,
+        this.itemBuffer,
+        this.itemListBuffer,
+        this.batchCountBuffer,
+        this.batchBuffer,
+        this.indirectBuffer,
+        this.cullParams,
+      ].map((b, binding) => ({ binding, resource: { buffer: b } })),
+    });
+  }
+
+  /**
+   * Room for instance rows below `count` on the GPU: the instance table and
+   * the per-item buffers double (up to `maxInstances`), and what binds them
+   * is rebuilt.
+   */
+  private growInstances(count: number): void {
+    const rows = grownSize(this.instances.gpuRows, count, this.maxInstances);
+    this.instances.growGpu(rows);
+    this.instanceBuffer = this.instances.buffer;
+    const items = this.maxDraws + rows;
+    const { device } = this.ctx;
+    this.itemBuffer.destroy();
+    this.itemListBuffer.destroy();
+    this.directListBuffer.destroy();
+    this.itemBuffer = device.createBuffer({
+      label: "world.items",
+      size: items * DRAW_ITEM_SIZE,
+      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
+    });
+    this.itemListBuffer = device.createBuffer({
+      label: "world.itemList",
+      size: items * 4,
+      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.VERTEX,
+    });
+    this.directListBuffer = device.createBuffer({
+      label: "world.directList",
+      size: items * 4,
+      usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
+    });
+    this.createCullBindGroup();
+    this.createDrawBindGroup();
+    // Bundles bind the old groups and lists; the direct list is rewritten
+    // with the batches.
+    this.bundle = undefined;
+    this.translucentDraws = undefined;
+    this.changedViews = ALL_VIEWS;
+    this.version++;
+    this.instanceGeneration++;
   }
 
   private createDrawBindGroup(): void {

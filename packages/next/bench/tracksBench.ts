@@ -3,7 +3,8 @@ import {
   CanvasTarget,
   Ellipsoid,
   Engine,
-  Tracks,
+  PointSource,
+  VectorLayer,
   eastNorthUpToFixedFrame,
   fromDegrees,
   mat4,
@@ -18,8 +19,9 @@ declare const Cesium: any;
 
 /**
  * Real-time tracks benchmark (plan §13.11): N tracks circling, fed at 10 Hz
- * by a synthetic feed, drawn as 16 px symbols, in 2.0 (`Tracks`: one
- * typed-array update, interpolated on the GPU) and in 1.x as a
+ * by a synthetic feed, drawn as 16 px symbols, in 2.0 (a `PointSource`:
+ * one typed-array update, moved on the GPU, drawn by a `VectorLayer`) and
+ * in 1.x as a
  * `BillboardCollection` (its fast path) and as entities with billboards
  * (what applications usually write). No globe on either side; the same
  * canvas, camera and symbol; 2.0 also clamped to hilly ground (a height
@@ -33,7 +35,8 @@ const TEMPLATE = `
 <h1>Real-time tracks: 2.0 against 1.x</h1>
 <p>
   N tracks circling, updated by a 10 Hz feed, drawn as 16 px symbols: 2.0
-  <code>Tracks</code>; 1.x <code>BillboardCollection</code> and entities.
+  live points (<code>PointSource</code>, <code>VectorLayer</code>); 1.x
+  <code>BillboardCollection</code> and entities.
   CPU per feed update and per frame, frame intervals, GPU (2.0).
 </p>
 <div class="status">Run to measure every engine and track count.</div>
@@ -88,7 +91,7 @@ function feed(n: number, t: number, out: Float32Array): void {
     out[i * 4] = cx + r * Math.cos(a);
     out[i * 4 + 1] = cy + r * Math.sin(a);
     out[i * 4 + 2] = 0;
-    out[i * 4 + 3] = -a; // tangent, clockwise from north
+    out[i * 4 + 3] = (-a * 180) / Math.PI; // tangent, degrees clockwise from north
   }
 }
 
@@ -201,14 +204,25 @@ async function runNext(n: number, clamped = false): Promise<Row> {
     });
   }
   const t0 = performance.now();
-  const tracks = new Tracks(engine, world, {
+  const tracks = new PointSource(engine, world, {
     capacity: n,
     origin,
-    billboard: { size: PIXELS, anchor: "center", color: [1, 0.12, 0.12, 1] },
     delay: FEED,
     ...(clamped
       ? { clamp: { halfExtent: 12_000, size: 4096, top: 200, bottom: -200 } }
       : {}),
+  });
+  const layer = await VectorLayer.create(engine, world, {
+    source: tracks,
+    style: {
+      layers: [
+        {
+          shape: "square",
+          size: `${PIXELS / 0.85}px`,
+          fill: { color: "#ff2020" },
+        },
+      ],
+    },
   });
   const samples = new Float32Array(n * 4);
   feed(n, 0, samples);
@@ -246,10 +260,11 @@ async function runNext(n: number, clamped = false): Promise<Row> {
     },
   );
   engine.removeView(view);
+  layer.destroy();
   tracks.destroy();
   engine.destroy();
   return {
-    engine: clamped ? "2.0 Tracks, clamped" : "2.0 Tracks",
+    engine: clamped ? "2.0 points, clamped" : "2.0 points",
     tracks: n,
     createMs,
     updateMs: median(m.update),

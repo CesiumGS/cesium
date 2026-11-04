@@ -9,8 +9,8 @@
 // burned out the day half; the brightest 2% (the sun's glare, the Moon,
 // lamps) is left out too. Center-weighted, as the eye adapts mostly to
 // where it looks and cameras meter: the middle of the view counts up to
-// four times its edges. Pixels the scene didn't cover (alpha 0: the
-// background) are left out.
+// four times its edges. Pixels with no scene light (alpha 0: the
+// background, and unlit content, which isn't exposed) are left out.
 
 struct MeterParams {
   exposure: f32,

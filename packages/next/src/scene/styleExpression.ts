@@ -10,6 +10,13 @@
  * `${feature['name']}` keys; comparing string properties, regular
  * expressions and `undefined` checks need properties the GPU doesn't have
  * and are refused with an error naming them.
+ *
+ * The vector styling language's additions (vector/VectorStyle.ts) parse
+ * here too: lengths and angles with units (`14px`, `2km`, `90deg`, read as
+ * pixels, meters and degrees), `a ?? b` (`a` when it compiles: the GPU has
+ * no undefined values), `match(v, k1, r1, …, default)`, and enum
+ * properties (`StyleValue.enum`) compared with their names. Callers add
+ * functions (`scale()`) and give string literals meaning (`options`).
  */
 
 export type StyleType = "number" | "boolean" | "vec2" | "vec3" | "vec4";
@@ -18,6 +25,22 @@ export type StyleType = "number" | "boolean" | "vec2" | "vec3" | "vec4";
 export interface StyleValue {
   wgsl: string;
   type: StyleType;
+  /** An enum property's names, by index (its value is the index). */
+  enum?: readonly string[];
+}
+
+/** A parsed expression. */
+export type StyleNode = Node;
+
+/** Extensions for a caller's language (the vector styling language). */
+export interface StyleCompileOptions {
+  /** Functions beyond 1.x's, given their arguments unevaluated. */
+  functions?: Record<
+    string,
+    (args: StyleNode[], compile: (node: StyleNode) => StyleValue) => StyleValue
+  >;
+  /** A string literal's value outside `color()` (a shape's name, say). */
+  string?: (value: string) => StyleValue | undefined;
 }
 
 /** What expressions read: each `${property}` as WGSL of a type. */
@@ -43,6 +66,7 @@ type Token =
   | { t: "end" };
 
 const OPS = [
+  "??",
   "===",
   "!==",
   "==",
@@ -116,8 +140,15 @@ function tokenize(source: string): Token[] {
       const m = /^(?:[0-9]*\.?[0-9]+|[0-9]+\.)(?:[eE][+-]?[0-9]+)?/.exec(
         source.slice(i),
       )!;
-      tokens.push({ t: "number", v: Number(m[0]) });
       i += m[0].length;
+      // A unit (the vector language's lengths and angles): pixels,
+      // meters and degrees.
+      const unit = /^(px|mm|km|m|deg|rad|ms|s)(?![A-Za-z0-9_])/.exec(
+        source.slice(i),
+      );
+      const scale = unit ? UNITS[unit[1]!]! : 1;
+      tokens.push({ t: "number", v: Number(m[0]) * scale });
+      i += unit ? unit[0].length : 0;
     } else if (c === "'" || c === '"') {
       const end = source.indexOf(c, i + 1);
       if (end < 0) {
@@ -143,9 +174,21 @@ function tokenize(source: string): Token[] {
   return tokens;
 }
 
+/** Units to pixels, meters, degrees and seconds (`mm` at 96 px an inch). */
+const UNITS: Record<string, number> = {
+  px: 1,
+  mm: 96 / 25.4,
+  m: 1,
+  km: 1000,
+  deg: 1,
+  rad: 180 / Math.PI,
+  s: 1,
+  ms: 0.001,
+};
+
 /** Binary operators by precedence, loosest first (as JavaScript's). */
 const LEVELS = [
-  ["||"],
+  ["??", "||"],
   ["&&"],
   ["===", "!==", "==", "!=", "=~", "!~"],
   ["<", "<=", ">", ">="],
@@ -530,6 +573,7 @@ export function cssColor(
 export function compileStyleExpression(
   source: string,
   read: PropertyReader,
+  options: StyleCompileOptions = {},
 ): StyleValue {
   const compile = (node: Node): StyleValue => {
     switch (node.kind) {
@@ -538,9 +582,12 @@ export function compileStyleExpression(
       case "boolean":
         return { wgsl: String(node.value), type: "boolean" };
       case "string":
-        return fail(
-          source,
-          `string '${node.value}' outside color() (string properties aren't on the GPU)`,
+        return (
+          options.string?.(node.value) ??
+          fail(
+            source,
+            `string '${node.value}' outside color() (string properties aren't on the GPU)`,
+          )
         );
       case "property":
         return read(node.name);
@@ -560,8 +607,39 @@ export function compileStyleExpression(
           type: arg.type,
         };
       }
-      case "binary":
+      case "binary": {
+        if (node.op === "??") {
+          // No undefined on the GPU: the left side, where it compiles.
+          try {
+            return compile(node.left);
+          } catch {
+            return compile(node.right);
+          }
+        }
+        // An enum compared with a name: with its index.
+        const named = (a: Node, b: Node) =>
+          b.kind === "string" &&
+          ["===", "!==", "==", "!="].includes(node.op) &&
+          a.kind !== "string";
+        if (named(node.left, node.right) || named(node.right, node.left)) {
+          const [value, name] = named(node.left, node.right)
+            ? [compile(node.left), node.right as { value: string }]
+            : [compile(node.right), node.left as { value: string }];
+          if (!value.enum) {
+            fail(
+              source,
+              `string '${name.value}' compared with a value that isn't an enum (string properties aren't on the GPU)`,
+            );
+          }
+          const index = value.enum.indexOf(name.value);
+          const eq = index < 0 ? "false" : `(${value.wgsl} == ${f32(index)})`;
+          return {
+            wgsl: node.op.startsWith("!") ? `(!${eq})` : eq,
+            type: "boolean",
+          };
+        }
         return binary(node.op, compile(node.left), compile(node.right));
+      }
       case "ternary": {
         const test = compile(node.test);
         const then = compile(node.then);
@@ -652,7 +730,46 @@ export function compileStyleExpression(
       );
 
   const call = (name: string, args: Node[]): StyleValue => {
+    const extension = options.functions?.[name];
+    if (extension) {
+      return extension(args, compile);
+    }
     switch (name) {
+      case "match": {
+        // match(value, key, result, …, default): keys are numbers, or an
+        // enum's names.
+        if (args.length < 2 || args.length % 2 !== 0) {
+          fail(source, "match(value, key, result, …, default)");
+        }
+        const value = compile(args[0]!);
+        let out = compile(args[args.length - 1]!);
+        for (let k = args.length - 3; k >= 1; k -= 2) {
+          const key = args[k]!;
+          let test: string;
+          if (key.kind === "string") {
+            const index = value.enum?.indexOf(key.value) ?? -1;
+            if (!value.enum) {
+              fail(source, `match: '${key.value}' against a non-enum value`);
+            }
+            test = index < 0 ? "false" : `(${value.wgsl} == ${f32(index)})`;
+          } else {
+            const kv = compile(key);
+            if (kv.type !== value.type) {
+              fail(source, "match: keys differ in type from the value");
+            }
+            test = `(${value.wgsl} == ${kv.wgsl})`;
+          }
+          const result = compile(args[k + 1]!);
+          if (result.type !== out.type) {
+            fail(source, `match: results differ (${result.type}, ${out.type})`);
+          }
+          out = {
+            wgsl: `select(${out.wgsl}, ${result.wgsl}, ${test})`,
+            type: out.type,
+          };
+        }
+        return out;
+      }
       case "color": {
         if (args.length === 0) {
           return { wgsl: "vec4f(1.0)", type: "vec4" };

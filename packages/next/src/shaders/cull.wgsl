@@ -93,8 +93,12 @@ fn cullRecords(@builtin(global_invocation_id) gid: vec3u) {
 }
 
 @compute @workgroup_size(64)
-fn cullInstances(@builtin(global_invocation_id) gid: vec3u) {
-  let j = gid.x;
+fn cullInstances(
+  @builtin(global_invocation_id) gid: vec3u,
+  @builtin(num_workgroups) groups: vec3u,
+) {
+  // Rows past 65,535 groups come as a second dimension.
+  let j = gid.x + gid.y * groups.x * 64u;
   if (j >= params.instanceCount) {
     return;
   }

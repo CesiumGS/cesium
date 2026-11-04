@@ -51,9 +51,9 @@ export const HARNESSES: HarnessInfo[] = [
   {
     id: "tracks",
     group: "parity",
-    title: "Real-time tracks",
+    title: "Live points and styled layers",
     description:
-      "Tracks as instance data interpolated on the GPU: trucks up close, billboards from afar (chosen per instance in the cull pass), interpolation between feed samples, and a 100,000-track feed update's cost.",
+      "Tracks as a live point source drawn by a vector style: trucks up close (a model pool), symbols from afar (point sets), interpolation between feed samples, clamping against ray casts, and a 100,000-point feed update's cost.",
     page: "/parity/tracks.html",
     entry: "runTracks",
     load: () => import("../parity/tracks.ts").then((m) => m.harness),
@@ -171,7 +171,7 @@ export const HARNESSES: HarnessInfo[] = [
     group: "microbenchmarks",
     title: "Real-time tracks against 1.x",
     description:
-      "N tracks fed at 10 Hz as 16 px symbols: 2.0 Tracks against 1.x BillboardCollection and entities. Creation, CPU per feed update and per frame, frame intervals, GPU.",
+      "N tracks fed at 10 Hz as 16 px symbols: 2.0 live points against 1.x BillboardCollection and entities. Creation, CPU per feed update and per frame, frame intervals, GPU.",
     page: "/bench/tracksBench.html",
     entry: "runTracksBench",
     cesium1x: true,

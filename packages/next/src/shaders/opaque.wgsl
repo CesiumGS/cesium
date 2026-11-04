@@ -327,6 +327,26 @@ struct VsOut {
   // @named
 };
 
+// The camera-relative position of what is being drawn, set before
+// `vertexMain` and `fragmentMain` run, so styles compiled to them
+// (vector/VectorStyle.ts) read a feature's distance from the camera
+// (`${view.distance}`): in the vertex stage a point set's point, an
+// instance's origin or the draw's; in the fragment stage the fragment's
+// position, which for billboards and points is their anchor (their
+// corners are offsets on screen). No varying of its own: every
+// inter-stage location is in use.
+var<private> cesiumAnchor: vec3f;
+
+// A point set's quad (RecordFlags.points): six vertices as four corners,
+// each corner's offset from the point (a unit square, centered) and uv.
+const POINT_CORNER = array<u32, 6>(0u, 1u, 2u, 0u, 2u, 3u);
+const POINT_OFFSET = array<vec2f, 4>(
+  vec2f(-0.5, -0.5), vec2f(0.5, -0.5), vec2f(0.5, 0.5), vec2f(-0.5, 0.5),
+);
+const POINT_UV = array<vec2f, 4>(
+  vec2f(0.0, 1.0), vec2f(1.0, 1.0), vec2f(1.0, 0.0), vec2f(0.0, 0.0),
+);
+
 // --- custom shaders (plan §3.4): the WGSL-level contract ---------------------------
 //
 // A custom shader (scene/CustomShader.ts) supplies `vertexMain` and
@@ -569,11 +589,26 @@ fn vertexOut(vertexIndex: u32, item: u32, withAir: bool) -> VsOut {
   let r = records[draw];
   let m = p.relModel;
   var out: VsOut;
+  // A point set (RecordFlags.points): six vertices a point, its anchor
+  // pulled from the position stream; the point is the instance.
+  let points = (r.flags & 64u) != 0u;
+  var instance = p.instance;
+  var position = vec3f(0.0);
+  var anchor = vec4f(0.0);
+  if (points) {
+    let corner = POINT_CORNER[vertexIndex % 6u];
+    instance = vertexIndex / 6u;
+    anchor = read4(r.positionOffset, instance);
+    position = vec3f(POINT_OFFSET[corner], 0.0);
+    out.uv = POINT_UV[corner];
+  } else {
+    position = read3(r.positionOffset, vertexIndex);
+  }
+  cesiumAnchor = (m * vec4f(anchor.xyz, 1.0)).xyz;
   var normal = vec3f(0.0, 0.0, 1.0);
   if (r.normalOffset != NO_STREAM) {
     normal = read3(r.normalOffset, vertexIndex);
   }
-  out.uv = vec2f(0.0);
   if (r.uvOffset != NO_STREAM) {
     out.uv = read2(r.uvOffset, vertexIndex);
   }
@@ -598,21 +633,25 @@ fn vertexOut(vertexIndex: u32, item: u32, withAir: bool) -> VsOut {
   if (p.feature != 0u) {
     tableFeature = p.feature - r.featureId;
   }
+  if (points) {
+    localFeature = instance;
+    tableFeature = instance;
+  }
   // The custom shader's vertex stage (custom.wgsl's default: unchanged).
   let vsInput = VertexInput(
-    read3(r.positionOffset, vertexIndex),
+    position,
     normal,
     out.uv,
     vertexColor,
     localFeature,
     vertexIndex,
-    p.instance,
+    instance,
     view.time.x,
     vertexAttributes(r.attributes, vertexIndex, tableFeature),
     vertexMetadata(r.attributes, vertexIndex, tableFeature),
-    instanceValues(draw, p.instance),
+    instanceValues(draw, instance),
   );
-  out.instanceIndex = p.instance;
+  out.instanceIndex = instance;
   passNamed(vsInput.attributes, vsInput.metadata, &out);
   var vsOutput = VertexOutput(vsInput.positionMC, vsInput.normalMC);
   vertexMain(vsInput, &vsOutput);
@@ -627,7 +666,7 @@ fn vertexOut(vertexIndex: u32, item: u32, withAir: bool) -> VsOut {
   // its depth-test distance.
   let billboard = (r.flags & 16u) != 0u;
   if (billboard) {
-    world = m * vec4f(0.0, 0.0, 0.0, 1.0);
+    world = m * vec4f(anchor.xyz, 1.0);
     out.relPosition = world.xyz;
     let corner = vsOutput.positionMC.xy * r.billboardSize * length(m[0].xyz);
     out.position = view.viewProj * world;
@@ -638,10 +677,18 @@ fn vertexOut(vertexIndex: u32, item: u32, withAir: bool) -> VsOut {
     if (length(world.xyz) < r.billboardDepthTest) {
       out.position.z = out.position.w; // reverse-Z: the near plane
     }
+    // A point not drawn (x past 1e37: hidden, or never placed): a quad
+    // of no area, outside the clip volume.
+    if (points && !(abs(anchor.x) < 1e37)) {
+      out.position = vec4f(0.0, 0.0, -1.0, 1.0);
+    }
   }
   out.airInscatter = vec3f(0.0);
   out.airTransmittance = vec3f(1.0);
-  if (withAir && view.sunLight.w > 0.5 && view.bodyRadii.w > 0.0) {
+  // Unlit draws (billboards, point sets, lines) show their color as is,
+  // without the air (`shade`'s unlit path): no march for them.
+  let unlitDraw = (r.flags & 2u) != 0u;
+  if (withAir && !unlitDraw && view.sunLight.w > 0.5 && view.bodyRadii.w > 0.0) {
     let air = aerialMarch(world.xyz);
     out.airInscatter = air.inscatter;
     out.airTransmittance = air.transmittance;
@@ -670,7 +717,9 @@ fn vertexOut(vertexIndex: u32, item: u32, withAir: bool) -> VsOut {
   // vertex: feature IDs are constant across a triangle.
   // An instance with its own feature ID is one feature.
   out.feature = r.featureId;
-  if (p.feature != 0u) {
+  if (points) {
+    out.feature = r.featureId + instance;
+  } else if (p.feature != 0u) {
     out.feature = p.feature;
   } else if (r.featureIdOffset != NO_STREAM) {
     out.feature = select(r.featureId + localFeature, 0u, localFeature == 0xffffffffu);
@@ -1063,8 +1112,10 @@ fn fs(in: VsOut, @builtin(front_facing) frontFacing: bool) -> FsOut {
     // Unlit color is display-referred (photographs: globe imagery,
     // photogrammetry such as Google's tiles): it goes to the display target,
     // which the present pass shows as is, as glTF's KHR_materials_unlit and
-    // 1.x (HDR off by default) do. No light reaches the scene target here.
-    out.color = vec4f(0.0, 0.0, 0.0, 1.0);
+    // 1.x (HDR off by default) do. No light reaches the scene target here,
+    // and alpha 0 keeps it out of the exposure meter (meter.wgsl): a view
+    // full of symbols, or of unlit photogrammetry, doesn't meter as black.
+    out.color = vec4f(0.0);
     out.display = vec4f(surface.color, 1.0);
   } else {
     out.color = vec4f(surface.color, 1.0);
@@ -1078,6 +1129,7 @@ fn fs(in: VsOut, @builtin(front_facing) frontFacing: bool) -> FsOut {
 // A fragment as custom shaders' `fragmentMain` sees it.
 fn fragmentInputOf(in: VsOut, geometric: vec3f) -> FragmentInput {
   let r = records[in.draw];
+  cesiumAnchor = in.relPosition;
   return FragmentInput(
     in.positionMC,
     in.relPosition,

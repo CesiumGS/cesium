@@ -66,6 +66,12 @@ export interface SurfacePipelines {
   /** Line-list variant (CAD edges, glTF LINES); same shaders, no culling. */
   opaqueLines: GPURenderPipeline;
   /**
+   * Point sets (`World.addPointMesh`): triangles outside the depth
+   * prepass, depth-tested and written as they shade, as lines are; their
+   * six vertices a point would cost twice in the prepass.
+   */
+  opaquePoints: GPURenderPipeline;
+  /**
    * The sun's shadow-map casters: depth only, and double-sided; "masked"
    * for materials that cut out (a fragment stage that discards).
    */
@@ -116,6 +122,7 @@ export const SURFACE_KEYS: readonly SurfaceKey[] = [
   "opaque",
   "opaqueDoubleSided",
   "opaqueLines",
+  "opaquePoints",
   "shadow",
   "shadowDoubleSided",
   "shadowMasked",
@@ -697,6 +704,7 @@ async function createPipelines(
     cullMode: GPUCullMode,
     topology: GPUPrimitiveTopology = "triangle-list",
     layout: GPUPipelineLayout = opaqueLayout,
+    prepassed = topology === "triangle-list",
   ) =>
     device.createRenderPipelineAsync({
       label,
@@ -718,14 +726,14 @@ async function createPipelines(
         module: shaders,
         entryPoint: "fs",
         // Cutouts were decided per sample by the depth (`depthCoverageFs`).
-        ...(depthPrepass && topology === "triangle-list"
+        ...(depthPrepass && prepassed
           ? { constants: { cutOutInDepth: 1 } }
           : {}),
         targets: SCENE_TARGETS.colorFormats.map((format) => ({ format })),
       },
       primitive: { topology, cullMode, frontFace: "ccw" },
       depthStencil:
-        depthPrepass && topology === "triangle-list"
+        depthPrepass && prepassed
           ? {
               format: SCENE_TARGETS.depthFormat,
               depthWriteEnabled: false,
@@ -994,6 +1002,8 @@ async function createPipelines(
         opaquePipeline(opaque, name("opaque.doubleSided"), "none", tri, o),
       opaqueLines: () =>
         opaquePipeline(opaque, name("opaque.lines"), "none", "line-list", o),
+      opaquePoints: () =>
+        opaquePipeline(opaque, name("opaque.points"), "none", tri, o, false),
       shadow: () => shadowPipeline(caster, name("shadow"), "back", false, o),
       shadowDoubleSided: () =>
         shadowPipeline(caster, name("shadow.doubleSided"), "none", false, o),

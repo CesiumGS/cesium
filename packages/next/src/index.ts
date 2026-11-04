@@ -15,7 +15,23 @@ export {
   type UniformType,
   type ValueUniform,
 } from "./scene/CustomShader.ts";
-export { Tracks, type TracksOptions } from "./tracks/Tracks.ts";
+export {
+  PointSource,
+  type PointProperty,
+  type PointPropertyType,
+  type PointSourceOptions,
+} from "./vector/PointSource.ts";
+export { VectorLayer, type VectorLayerOptions } from "./vector/VectorLayer.ts";
+export {
+  compileVectorStyle,
+  type CompiledStyle,
+  type StyleField,
+  type StyleLayer,
+  type StyleParameter,
+  type StyleScale,
+  type VectorStyleDocument,
+} from "./vector/VectorStyle.ts";
+export { ModelPool } from "./vector/ModelPool.ts";
 export {
   FeatureStyle,
   type FeatureStyleOptions,
