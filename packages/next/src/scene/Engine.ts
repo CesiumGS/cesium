@@ -108,6 +108,18 @@ export interface EngineOptions extends GpuDeviceOptions {
   aerosol?: AerosolType;
 }
 
+/**
+ * Maps a readback buffer for reading, then calls `then`. The mapping is
+ * abandoned without error when the engine is destroyed first.
+ */
+function whenMapped(buffer: GPUBuffer, then: () => void): void {
+  void buffer.mapAsync(GPUMapMode.READ).then(then, (error: unknown) => {
+    if (!(error instanceof DOMException && error.name === "AbortError")) {
+      throw error;
+    }
+  });
+}
+
 export interface FrameStats {
   /** Smoothed main-thread time spent in `renderFrame`, ms. */
   cpuMs: number;
@@ -1920,7 +1932,7 @@ export class Engine {
       this.picks.length = 0;
     }
     for (const meter of this.meters.splice(0)) {
-      void meter.readback.mapAsync(GPUMapMode.READ).then(() => {
+      whenMapped(meter.readback, () => {
         const [sum, count, rodSum, rodCount] = new Float32Array(
           meter.readback.getMappedRange(),
         );
@@ -1934,7 +1946,7 @@ export class Engine {
       });
     }
     for (const range of this.depthRanges.splice(0)) {
-      void range.readback.mapAsync(GPUMapMode.READ).then(() => {
+      whenMapped(range.readback, () => {
         const [near, far] = new Float32Array(range.readback.getMappedRange());
         range.readback.destroy();
         range.scratch.forEach((b) => b.destroy());
@@ -1945,7 +1957,7 @@ export class Engine {
       });
     }
     for (const readback of this.listCounts.splice(0)) {
-      void readback.mapAsync(GPUMapMode.READ).then(() => {
+      whenMapped(readback, () => {
         const needed = new Uint32Array(readback.getMappedRange())[0]!;
         readback.destroy();
         this.listCountPending = false;
@@ -1956,7 +1968,7 @@ export class Engine {
       });
     }
     for (const read of this.hdrReads.splice(0)) {
-      void read.buffer.mapAsync(GPUMapMode.READ).then(() => {
+      whenMapped(read.buffer, () => {
         const halves = new Uint16Array(read.buffer.getMappedRange());
         const data = new Float32Array(read.width * read.height * 4);
         const rowHalves = read.bytesPerRow / 2;
@@ -3739,7 +3751,7 @@ export class Engine {
 
   private resolvePicks(picks: PendingPick[]): void {
     for (const { view, readback, request, camera: c } of picks) {
-      void readback.mapAsync(GPUMapMode.READ).then(() => {
+      whenMapped(readback, () => {
         const words = new Uint32Array(readback.getMappedRange());
         const featureId = words[0]!;
         const depth = new Float32Array(words.buffer, 4, 1)[0]!;

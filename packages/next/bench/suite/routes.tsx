@@ -213,6 +213,24 @@ export const imagesRoute = createRoute({
   component: lazyRouteComponent(() => import("./views/Images.tsx"), "Images"),
 });
 
+/** The gallery (plan §13.12): examples in one viewer, with their source. */
+export const examplesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/examples",
+  component: lazyRouteComponent(
+    () => import("./views/Examples.tsx"),
+    "Examples",
+  ),
+});
+export const exampleRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/examples/$id",
+  component: lazyRouteComponent(
+    () => import("./views/Examples.tsx"),
+    "ExamplePage",
+  ),
+});
+
 // ------------------------------------------------------------ workbench
 
 export interface AnalysisSearch {
@@ -278,6 +296,8 @@ export const routeTree = rootRoute.addChildren([
   explorerRoute,
   viewerRoute,
   imagesRoute,
+  examplesRoute,
+  exampleRoute,
   analysisRoute,
   labRoute,
   labPageRoute,

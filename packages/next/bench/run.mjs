@@ -102,6 +102,7 @@ const suites = {
   translucency: ["/parity/translucency.html?bench", "runTranslucency"],
   customShader: ["/parity/customShader.html?bench", "runCustomShader"],
   tracks: ["/parity/tracks.html?bench", "runTracks"],
+  tracksBench: ["/bench/tracksBench.html?bench", "runTracksBench"],
   shaderCost: ["/bench/shaderCost.html?bench", "runShaderCost"],
   // Clamping heights on OSM Buildings vs 1.x (needs VITE_ION_TOKEN).
   heights: ["/parity/heights.html?bench", "runHeights"],

@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tracks benchmark</title>
+    <link rel="stylesheet" href="/cesium1x/Widgets/widgets.css" />
+  </head>
+  <body>
+    <!-- The runner's entry (bench/run.mjs tracksBench); in Dyno: /#/lab/tracks-bench. -->
+    <div id="root"></div>
+    <script>
+      window.CESIUM_BASE_URL = "/cesium1x/";
+    </script>
+    <script src="/cesium1x/Cesium.js"></script>
+    <script type="module">
+      import { harness } from "./tracksBench.ts";
+      import { standalone } from "../lab/harness.ts";
+      standalone(harness, "runTracksBench");
+    </script>
+  </body>
+</html>

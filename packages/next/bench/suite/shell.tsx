@@ -29,12 +29,14 @@ import { svgListLarge } from "@stratakit/icons/list";
 import { svgModelCubeLarge } from "@stratakit/icons/model-cube";
 import { svgMoonLarge } from "@stratakit/icons/moon";
 import { svgNotificationsLarge } from "@stratakit/icons/notifications";
+import { svgPlayCircleLarge } from "@stratakit/icons/play-circle";
 import { svgSearchLarge } from "@stratakit/icons/search";
 import { svgSunLarge } from "@stratakit/icons/sun";
 import { Icon } from "@stratakit/mui";
 import { unstable_NavigationRail as NavigationRail } from "@stratakit/structures";
 import { Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { EXAMPLES } from "../../examples/index.ts";
 import { HARNESSES } from "../../lab/pages.ts";
 import { ALERT_METRICS, detectAlerts } from "./changepoints.mjs";
 import { cellKey, cellTitle, runLabel, type Summary } from "./data.ts";
@@ -74,6 +76,7 @@ const GROUPS: Destination[][] = [
     { to: "/explorer", label: "Explorer", icon: svgGlobeLarge, key: "e" },
     { to: "/viewer", label: "Viewer", icon: svg3DObjectLarge, key: "v" },
     { to: "/images", label: "Images", icon: svgImageLarge, key: "i" },
+    { to: "/examples", label: "Examples", icon: svgPlayCircleLarge, key: "x" },
   ],
   [
     { to: "/analysis", label: "Analysis", icon: svgChartBarLarge, key: "n" },
@@ -83,7 +86,7 @@ const GROUPS: Destination[][] = [
 const DESTINATIONS = GROUPS.flat();
 
 /** Paths that work without runs; the others show the guided first run. */
-const WITHOUT_RUNS = /^\/(explorer|viewer|images|start|lab)(\/|$)/;
+const WITHOUT_RUNS = /^\/(explorer|viewer|images|examples|start|lab)(\/|$)/;
 
 /** The rail item a path belongs to (a run's report belongs to Runs). */
 const destinationOf = (path: string) =>
@@ -189,7 +192,10 @@ export function Shell() {
     const harness = path.startsWith("/lab/")
       ? HARNESSES.find((h) => `/lab/${h.id}` === path)
       : undefined;
-    const name = harness?.title ?? active?.label;
+    const example = path.startsWith("/examples/")
+      ? EXAMPLES.find((x) => `/examples/${x.id}` === path)
+      : undefined;
+    const name = harness?.title ?? example?.title ?? active?.label;
     document.title = name ? `${name} · Dyno` : "Dyno";
   }, [path, active]);
 
@@ -392,7 +398,9 @@ export function Shell() {
                 <TableCell>
                   <kbd>Ctrl</kbd> <kbd>K</kbd>
                 </TableCell>
-                <TableCell>Go to a view, scene, run or Lab page</TableCell>
+                <TableCell>
+                  Go to a view, scene, run, example or Lab page
+                </TableCell>
               </TableRow>
               {DESTINATIONS.map((d) => (
                 <TableRow key={d.to}>
@@ -477,6 +485,14 @@ function CommandPalette({
         kind: "scene",
         to: "/scenes/$scene",
         params: { scene },
+      });
+    }
+    for (const x of EXAMPLES) {
+      out.push({
+        label: x.title,
+        kind: "example",
+        to: "/examples/$id",
+        params: { id: x.id },
       });
     }
     for (const h of HARNESSES) {

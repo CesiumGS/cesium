@@ -1,0 +1,148 @@
+/* Examples (views/Examples.tsx): the list, and an example's view with its panel. */
+
+.examples-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--stratakit-space-300);
+}
+.examples-grid > li {
+  display: flex;
+}
+.examples-card {
+  flex: 1;
+}
+.examples-card-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--stratakit-space-200);
+}
+.examples-labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--stratakit-space-100);
+}
+.examples-back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+}
+.examples-error {
+  margin-bottom: var(--stratakit-space-500);
+  max-width: 900px;
+}
+
+.examples-stage {
+  position: relative;
+  height: max(420px, calc(100vh - 220px));
+  border-radius: var(--stratakit-radius-md);
+  overflow: hidden;
+  background: #000;
+}
+.examples-view {
+  position: absolute;
+  inset: 0;
+}
+.examples-loading {
+  position: absolute;
+  top: var(--stratakit-space-300);
+  left: var(--stratakit-space-300);
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-200);
+  color: #fff;
+}
+
+/* The example's controls and readouts (plain elements, styled here). */
+.examples-panel {
+  position: absolute;
+  top: var(--stratakit-space-300);
+  right: var(--stratakit-space-300);
+  width: min(300px, calc(100% - 2 * var(--stratakit-space-300)));
+  max-height: calc(100% - 2 * var(--stratakit-space-300));
+  overflow: auto;
+  box-sizing: border-box;
+  padding: var(--stratakit-space-300);
+  border-radius: var(--stratakit-radius-md);
+  background: var(--stratakit-color-bg-page-base);
+  color: var(--stratakit-color-text-neutral-primary);
+  box-shadow: var(--stratakit-shadow-surface-xl);
+  font-size: var(--stratakit-font-size-body-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-200);
+}
+.examples-panel:empty {
+  display: none;
+}
+.examples-panel label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--stratakit-space-200);
+}
+.examples-panel select,
+.examples-panel button {
+  font: inherit;
+  color: inherit;
+  background: var(--stratakit-color-bg-page-depth);
+  border: 1px solid var(--stratakit-color-border-neutral-base);
+  border-radius: var(--stratakit-radius-sm);
+  padding: var(--stratakit-space-100) var(--stratakit-space-200);
+}
+.examples-panel button {
+  cursor: pointer;
+}
+.examples-panel .buttons {
+  display: flex;
+  gap: var(--stratakit-space-200);
+}
+.examples-panel dl {
+  margin: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--stratakit-space-100) var(--stratakit-space-200);
+}
+.examples-panel dt {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.examples-panel dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+.examples-panel .legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--stratakit-space-100);
+}
+.examples-panel .legend li {
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+}
+.examples-panel .legend svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+}
+.examples-panel p {
+  margin: 0;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+
+.examples-source {
+  margin: 0;
+  padding: var(--stratakit-space-300);
+  border-radius: var(--stratakit-radius-md);
+  background: var(--stratakit-color-bg-mono-muted);
+  font-family: var(--stratakit-font-family-mono);
+  font-size: var(--stratakit-font-size-mono-sm);
+  overflow: auto;
+  max-height: 70vh;
+}

@@ -26,7 +26,7 @@ import {
   type ToneMapping,
   type Translucency,
 } from "../../../src/index.ts";
-import ionSource from "../../../../engine/Source/Core/Ion.js?raw";
+import { DEFAULT_ION_TOKEN } from "../ionToken.ts";
 import {
   engineSnapshot,
   Viewer,
@@ -117,14 +117,6 @@ export function sourceName(source: Source): string {
       return "Synthetic city";
   }
 }
-
-/**
- * CesiumJS's public evaluation token, read from the 1.x source (kept current
- * by the repo's token workflow) rather than copied here.
- */
-export const DEFAULT_ION_TOKEN = /defaultAccessToken =\s*"([^"]+)"/.exec(
-  ionSource,
-)?.[1];
 
 // ---------------------------------------------------------------- settings
 

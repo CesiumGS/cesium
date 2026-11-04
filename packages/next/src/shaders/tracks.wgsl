@@ -20,7 +20,7 @@ struct TrackParams {
 };
 
 // Two samples: where the track was (0) and is (1), their times and
-// headings (radians, clockwise seen from above).
+// headings (radians clockwise from north, as a compass course).
 struct Track {
   p0: vec3f,
   t0: f32,
@@ -121,10 +121,11 @@ fn updateTracks(@builtin(global_invocation_id) gid: vec3u) {
       vec4f(p + up * params.lift, 1.0),
     );
   } else {
+    // The model's forward (+x, 1.x's axes) along the heading, +y to its left.
     let c = cos(heading);
     let sn = sin(heading);
-    let x = (east * c - north * sn) * params.scale;
-    let y = (east * sn + north * c) * params.scale;
+    let x = (north * c + east * sn) * params.scale;
+    let y = (north * sn - east * c) * params.scale;
     let placement = mat4x4f(
       vec4f(x, 0.0),
       vec4f(y, 0.0),

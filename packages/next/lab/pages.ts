@@ -167,6 +167,17 @@ export const HARNESSES: HarnessInfo[] = [
     load: () => import("../bench/instances.ts").then((m) => m.harness),
   },
   {
+    id: "tracks-bench",
+    group: "microbenchmarks",
+    title: "Real-time tracks against 1.x",
+    description:
+      "N tracks fed at 10 Hz as 16 px symbols: 2.0 Tracks against 1.x BillboardCollection and entities. Creation, CPU per feed update and per frame, frame intervals, GPU.",
+    page: "/bench/tracksBench.html",
+    entry: "runTracksBench",
+    cesium1x: true,
+    load: () => import("../bench/tracksBench.ts").then((m) => m.harness),
+  },
+  {
     id: "alloc",
     group: "microbenchmarks",
     title: "Frame-loop allocations",

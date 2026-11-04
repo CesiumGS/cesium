@@ -117,6 +117,12 @@ export interface ViewerOptions {
   shadows?: boolean;
   /** Ambient occlusion in the views (default true; `View.ambientOcclusion`). */
   ambientOcclusion?: boolean;
+  /**
+   * Instance rows the world holds (default 16,384; 64 bytes each of GPU
+   * memory from the start): instanced models and track collections take
+   * one per instance and part.
+   */
+  maxInstances?: number;
 }
 
 /** 1.x's moon map (equirectangular, the near side in the middle). */
@@ -257,6 +263,9 @@ export class Viewer {
     this.world = engine.createWorld({
       maxDraws: 1 << 16,
       maxMaterials: 1 << 13,
+      ...(options.maxInstances !== undefined
+        ? { maxInstances: options.maxInstances }
+        : {}),
       vertexBytes: Math.min(768 << 20, Math.floor(limit / 4) * 4),
       indexBytes: Math.min(384 << 20, Math.floor(limit / 4) * 4),
     });

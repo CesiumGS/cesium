@@ -45,6 +45,11 @@ import { attachInspector } from "../../../widgets/index.ts";
 import { Choice, Page, toast, useRuns, useStored } from "./common.tsx";
 import {
   DEFAULT_ION_TOKEN,
+  envToken,
+  readToken,
+  TOKEN_KEY,
+} from "../ionToken.ts";
+import {
   IMODELS,
   ION_ASSETS,
   LegacyViewerHost,
@@ -120,21 +125,6 @@ const LIGHTING_DEFAULTS: Lighting = {
   fxaa: false,
 };
 
-const TOKEN_KEY = "viewer.ionToken";
-
-/** The pasted ion token (this session, or remembered on this device). */
-function readToken(): string | undefined {
-  try {
-    return (
-      sessionStorage.getItem(TOKEN_KEY) ??
-      localStorage.getItem(TOKEN_KEY) ??
-      undefined
-    );
-  } catch {
-    return undefined;
-  }
-}
-
 type Phase =
   | { phase: "starting" | "loading" | "ready" }
   | { phase: "failed"; error: string };
@@ -203,7 +193,6 @@ export function Viewer() {
 
   // ion token, first found: pasted here, VITE_ION_TOKEN, CesiumJS's
   // evaluation token (public assets only).
-  const envToken = import.meta.env.VITE_ION_TOKEN as string | undefined;
   const token = pastedToken ?? envToken ?? DEFAULT_ION_TOKEN;
   const tokenRef = useRef(token);
   tokenRef.current = token;

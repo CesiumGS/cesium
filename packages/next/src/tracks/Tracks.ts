@@ -10,6 +10,7 @@ import type { CustomShader } from "../scene/CustomShader.ts";
 import type { GltfAsset } from "../io/gltfTypes.ts";
 import type { ModelInstance } from "../scene/gltfModel.ts";
 import { createBillboard } from "../scene/meshes.ts";
+import { MaterialFlags } from "../render/layout.ts";
 
 export interface TracksOptions {
   /** Tracks the collection holds (its instance rows are made up front). */
@@ -45,6 +46,11 @@ export interface TracksOptions {
     };
     /** Its material's base color (linear RGBA; default white). */
     color?: readonly [number, number, number, number];
+    /**
+     * Cut out where the shader's alpha is below this, for symbols shaped
+     * inside the quad (default: none, the whole quad drawn).
+     */
+    alphaCutoff?: number;
   };
   /**
    * Clamp to the ground (terrain, 3D Tiles: what the world draws, as its
@@ -178,6 +184,9 @@ export class Tracks {
         ...(options.clamp ? { ground: false } : {}),
         material: world.addMaterial({
           baseColor: [...(b.color ?? [1, 1, 1, 1])],
+          ...(b.alphaCutoff !== undefined
+            ? { alphaCutoff: b.alphaCutoff, flags: MaterialFlags.alphaMask }
+            : {}),
         }),
         billboard: {
           size: b.size ?? 32,
@@ -306,9 +315,10 @@ export class Tracks {
 
   /**
    * A feed update: tracks `first` on take new samples, 4 floats each (x,
-   * y, z in the collection's frame, m; heading, radians clockwise seen
-   * from above), stamped with the clock. Each moves from where it is shown
-   * now to the new sample over the next `delay`. One copy to the GPU.
+   * y, z in the collection's frame, m; heading, radians clockwise from
+   * north, as a feed's course: the model's forward, +x in 1.x's axes,
+   * points along it), stamped with the clock. Each moves from where it is
+   * shown now to the new sample over the next `delay`. One copy to the GPU.
    */
   update(first: number, samples: Float32Array): void {
     const n = samples.length / 4;

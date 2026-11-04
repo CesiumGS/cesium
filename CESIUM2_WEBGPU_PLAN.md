@@ -2862,6 +2862,73 @@ switchDistance, delay, clock })`: tracks as instance data. Positions
   tilting models to the slope, roof edges (a track straddling one takes
   the higher side), and the capture's GPU cost measured.
 
+**Increment 4 (r47): the showcase and the benchmark against 1.x.**
+
+- _Dyno's Examples_ (§13.12): a rail entry and `/#/examples/<id>`. An
+  example is a module under `examples/<slug>/` (`examples/types.ts`):
+  metadata (title, description, labels, the globe it needs) and
+  `run({ viewer, panel, accessToken, signal })`, which builds its scene
+  in the gallery's viewer, fills a panel over the view with plain
+  elements, and returns its disposer. The page keeps one viewer while
+  examples come and go, and shows the module's source. Dyno's ion token
+  lookup (pasted, `VITE_ION_TOKEN`, the evaluation token) moved to
+  `bench/suite/ionToken.ts` for the Viewer and the gallery.
+- _Real-time tracks_, the first example: 1,000 to 100,000 vehicles on
+  Lissajous loops within 10 km of Boulder, Colorado (the Flatirons and
+  the plains), from a synthetic 10 Hz feed, clamped to Cesium World
+  Terrain through a 4,096² capture (5 m texels). Cesium Milk Trucks
+  within 500 m of the camera, symbols beyond: four MIL-STD-2525-style
+  affiliation frames (rectangle, diamond, square, circle) shaped and
+  filled by a custom shader from two per-vehicle values (`symbol`,
+  `fill`), cut out of the quad by `billboard.alphaCutoff` (new). Symbols
+  shrink as they crowd (18 px at 1,000, 10 px at 100,000), so the
+  meter's exposure keeps to the terrain. "Follow a vehicle" chases one
+  from behind until the camera is moved.
+- In Dyno (the full viewer: terrain, imagery, atmosphere, shadows, AO),
+  60 fps throughout: 10,000 vehicles CPU 0.8 to 1.0 ms and GPU 2.4 to
+  2.8 ms per frame; 100,000 CPU 0.8 to 1.0 ms and GPU 5.5 to 7.0 ms. A
+  feed update at 100,000 is 1.4 ms in the engine; making the synthetic
+  samples in JavaScript is 9 ms on the main thread (a real feed would
+  arrive decoded, or be decoded in a worker).
+- Fixes it found: track headings are now compass courses (clockwise
+  from north, the model's forward along them), as feeds give them; the
+  kernel had 1.x's model convention (0 east), so trucks drove sideways.
+  `ViewerOptions.maxInstances` (the default 16,384 rows hold no
+  100,000-track collection). The engine's frame readbacks (exposure
+  meter, depth range, list counts, HDR reads, picks) no longer reject
+  unhandled when the engine is destroyed mid-frame.
+- _The benchmark_ (`bench/tracksBench`, the Lab's "Tracks against
+  1.x"): a 10 Hz feed, 16 px symbols, 4 s per configuration; update is
+  the engine's part only (2.0 `Tracks.update`; 1.x setting each
+  billboard's or entity's position). Median frame CPU, p95 frame
+  interval, and GPU time (2.0's timestamp queries), on the NVIDIA
+  Lovelace laptop GPU:
+
+  | Tracks  | Configuration             | Create ms | Update ms | Frame CPU ms | p95 frame ms | GPU ms |
+  | ------- | ------------------------- | --------: | --------: | -----------: | -----------: | -----: |
+  | 1,000   | 2.0 `Tracks`              |         4 |       0.1 |          0.4 |         16.8 |   0.08 |
+  | 1,000   | 2.0, clamped              |         2 |       0.1 |          0.4 |         16.7 |   0.38 |
+  | 1,000   | 1.x `BillboardCollection` |         9 |       0.2 |          0.9 |         16.8 |      – |
+  | 1,000   | 1.x entities              |        12 |       3.4 |          1.1 |         16.8 |      – |
+  | 10,000  | 2.0 `Tracks`              |        10 |       0.3 |          0.4 |         16.8 |   0.31 |
+  | 10,000  | 2.0, clamped              |         8 |       0.4 |          0.4 |         16.8 |   0.81 |
+  | 10,000  | 1.x `BillboardCollection` |        35 |       0.8 |          1.0 |         16.8 |      – |
+  | 10,000  | 1.x entities              |        65 |      33.2 |          5.5 |         33.4 |      – |
+  | 100,000 | 2.0 `Tracks`              |        84 |       1.4 |          0.3 |         16.8 |   3.56 |
+  | 100,000 | 2.0, clamped              |        53 |       1.3 |          0.4 |         16.8 |   3.78 |
+  | 100,000 | 1.x `BillboardCollection` |       286 |       8.1 |         32.6 |         50.1 |      – |
+  | 100,000 | 1.x entities              |       822 |     364.4 |         55.1 |        599.9 |      – |
+
+  2.0's CPU per frame is flat in the count; its update grows with the
+  bytes copied (1.4 ms for 1.6 MB at 100,000). Clamping costs the
+  capture's GPU time (about 0.3 ms at 4,096² over hills) and no CPU. 1.x
+  entities miss the frame from 10,000 (2 fps at 100,000); the
+  `BillboardCollection` holds 10,000 and drops to 20 to 30 fps at
+  100,000. Its frame CPU at 100,000 read 3.7 ms in an earlier run (p95
+  49.9 ms both times), so that figure is noisy. Not measured yet: 1.x
+  clamped (`HeightReference.CLAMP_TO_GROUND` on 100,000 billboards),
+  over 3D Tiles, update-to-display latency.
+
 ### M5 — Performance hardening (≈3 wks)
 
 - Two-phase occlusion culling (optional if targets are already met).
@@ -4553,6 +4620,9 @@ exercises content in and out of a live world, which the engine is built
 for (r27). Kept small and self-contained in the PoC; eventually the
 gallery is Sandcastle (`packages/sandcastle`), so example modules follow a
 shape Sandcastle can host (editable source, sharing, gallery metadata).
+Built in Dyno (r47, Real-time tracks increment 4) with the real-time
+tracks example; not yet: search and labels as filters, editing the
+source.
 
 **Pages without a build step (r39).** `npm run build:lib` writes
 `dist-lib/`: one ES module (`cesium-next.mjs`, WGSL inlined), the content
