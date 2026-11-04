@@ -320,6 +320,8 @@ struct VsOut {
   @location(7) airInscatter: vec3f,
   @location(8) airTransmittance: vec3f,
   @location(9) positionMC: vec3f,  // the mesh's own (model) coordinates
+  // The instance among the draw's (custom shaders' `instance` values).
+  @location(14) @interpolate(flat) instanceIndex: u32,
   // A custom shader's named attributes and metadata, from location 10
   // (CustomShader.ts namedCode):
   // @named
@@ -345,6 +347,7 @@ struct VertexInput {
   time: f32,          // seconds since the engine started
   attributes: Attributes, // the shader's declared attributes (CustomShader)
   metadata: Metadata,     // and metadata properties; zero where absent
+  instance: InstanceValues,     // and per-instance values; zero where absent
 };
 
 // What `vertexMain` may change: the vertex in model coordinates.
@@ -366,6 +369,8 @@ struct FragmentInput {
   time: f32,
   attributes: Attributes, // interpolated
   metadata: Metadata,     // interpolated
+  instanceIndex: u32,     // index among the draw's instances
+  instance: InstanceValues,     // exact (flat)
 };
 
 // The material `fragmentMain` may change, filled with the glTF material's
@@ -432,6 +437,31 @@ fn readNamed(directory: u32, hash: u32, vertexIndex: u32, feature: u32) -> vec4f
     }
   }
   return value;
+}
+
+// A named field of an instance's streams (`InstanceOptions.streams.layout`)
+// as raw bits, through the draw's directory (DrawRecord.instanceDirectory:
+// count, then per field its name's hash, word offset and components);
+// zero where absent.
+fn readInstance(draw: u32, instance: u32, hash: u32) -> vec4u {
+  let r = records[draw];
+  var bits = vec4u(0u);
+  if (r.instanceDirectory == NO_STREAM || r.instanceStreams == NO_STREAM) {
+    return bits;
+  }
+  let count = bitcast<u32>(vertices[r.instanceDirectory]);
+  for (var i = 0u; i < count; i++) {
+    let entry = r.instanceDirectory + 1u + i * 3u;
+    if (bitcast<u32>(vertices[entry]) == hash) {
+      let b = r.instanceStreams + instance * r.instanceStride + bitcast<u32>(vertices[entry + 1u]);
+      let components = min(bitcast<u32>(vertices[entry + 2u]), 4u);
+      for (var c = 0u; c < components; c++) {
+        bits[c] = bitcast<u32>(vertices[b + c]);
+      }
+      break;
+    }
+  }
+  return bits;
 }
 
 // A property texture's texel at `uv` (repeating, nearest: the texel's
@@ -580,7 +610,9 @@ fn vertexOut(vertexIndex: u32, item: u32, withAir: bool) -> VsOut {
     view.time.x,
     vertexAttributes(r.attributes, vertexIndex, tableFeature),
     vertexMetadata(r.attributes, vertexIndex, tableFeature),
+    instanceValues(draw, p.instance),
   );
+  out.instanceIndex = p.instance;
   passNamed(vsInput.attributes, vsInput.metadata, &out);
   var vsOutput = VertexOutput(vsInput.positionMC, vsInput.normalMC);
   vertexMain(vsInput, &vsOutput);
@@ -1118,6 +1150,8 @@ fn shadeSurface(in: VsOut, frontFacing: bool, translucent: bool) -> Surface {
     view.time.x,
     fragmentAttributes(in),
     fragmentMetadata(in),
+    in.instanceIndex,
+    instanceValues(in.draw, in.instanceIndex),
   );
   var custom = MaterialOutput(
     baseColor.rgb,

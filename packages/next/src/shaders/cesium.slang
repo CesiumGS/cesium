@@ -8,8 +8,9 @@
 //   public void fragmentMain(FragmentInput fsInput, inout MaterialOutput material) { … }
 module cesium;
 
-// The shader's named attributes and metadata (`CustomShaderOptions`
-// `attributes`, `metadata`), generated per shader (slangStages.ts
+// The shader's named attributes, metadata and per-instance values
+// (`CustomShaderOptions` `attributes`, `metadata`, `instance`), generated
+// per shader (slangStages.ts
 // `cesiumModule`); `none` alone when it declares none.
 // @named
 
@@ -25,6 +26,7 @@ public struct VertexInput {
   public float time;         // seconds since the engine started
   public Attributes attributes;
   public Metadata metadata;
+  public InstanceValues instance;  // per-instance values (exact)
 };
 
 // What `vertexMain` may change: the vertex in model coordinates.
@@ -46,6 +48,8 @@ public struct FragmentInput {
   public float time;
   public Attributes attributes;  // interpolated
   public Metadata metadata;      // interpolated
+  public uint instanceIndex;     // index among the draw's instances
+  public InstanceValues instance;      // per-instance values (exact)
 };
 
 // The material, filled with the glTF material's values first. Linear

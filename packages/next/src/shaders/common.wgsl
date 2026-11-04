@@ -67,6 +67,7 @@ struct DrawRecord {
   instanceStride: u32,     // their words per instance
   lightsSlice: u32,        // a globe tile's slice of the night lights (as imagerySlice)
   attributes: u32,         // the mesh's named-attribute directory (MeshStreams.attributes)
+  instanceDirectory: u32,  // named fields of the instance streams (DrawRecordData)
 };
 
 // A placement composed in float64 on the CPU (World transform table).

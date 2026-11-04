@@ -7,6 +7,7 @@ import {
   cesiumModule,
   slangStages,
   slangStub,
+  type InstanceType,
   type NamedType,
 } from "./slangStages.ts";
 import type { UniformDeclaration } from "./uniforms.ts";
@@ -54,6 +55,7 @@ export async function compileSlang(
     attributes?: Record<string, { type: NamedType }>;
     metadata?: Record<string, NamedType | { type: NamedType }>;
     uniforms?: Record<string, { type: UniformDeclaration["type"] }>;
+    instance?: Record<string, InstanceType>;
   } = {},
 ): Promise<string> {
   const stages = slangStages(source);
@@ -79,6 +81,7 @@ export async function compileSlang(
           ]),
         ),
         uniforms: named.uniforms ?? {},
+        instance: named.instance ?? {},
       }),
       user: source,
       stub: slangStub(stages),

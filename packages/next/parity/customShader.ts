@@ -20,11 +20,13 @@ import twistHeightSlang from "./slang/twistHeight.slang?raw";
 import heightBandsSlang from "./slang/heightBands.slang?raw";
 import shearSlang from "./slang/shear.slang?raw";
 import uniformsSlang from "./slang/uniforms.slang?raw";
+import instancesSlang from "./slang/instances.slang?raw";
 // Built from them with scripts/slangShader.mjs.
 import twistHeightWgsl from "./slang/twistHeight.wgsl?raw";
 import heightBandsWgsl from "./slang/heightBands.wgsl?raw";
 import shearWgsl from "./slang/shear.wgsl?raw";
 import uniformsWgsl from "./slang/uniforms.wgsl?raw";
+import instancesWgsl from "./slang/instances.wgsl?raw";
 
 const TEMPLATE = `
 <h1>Custom shaders</h1>
@@ -78,6 +80,12 @@ interface Case {
   named?: boolean;
   /** The boxes' faces are features with a table (`featureBox`). */
   featured?: boolean;
+  /**
+   * The boxes as one instanced draw with per-instance streams
+   * (`INSTANCE_DATA`); "updated": instance 1 rewritten afterwards
+   * (`setInstanceStreams`).
+   */
+  instanced?: "streams" | "updated";
   /** A glTF model (e.g. `PROPERTY_MODEL`) instead of boxes. */
   model?: string;
   /** "Same" within float rounding (FLIP mean below 0.001), not exactly. */
@@ -343,6 +351,65 @@ const COLOR_BY_HAND = new CustomShader({
   (*material).baseColor *= c;
 }`,
 });
+
+/** Per instance: lift, tint (vec3) and symbol (u32), 5 words each. */
+const INSTANCE_DATA = [
+  { lift: 0.0, tint: [0.9, 0.2, 0.2], symbol: 2 },
+  { lift: 0.15, tint: [0.2, 0.9, 0.2], symbol: 0 },
+  { lift: 0.3, tint: [0.2, 0.2, 0.9], symbol: 1 },
+];
+/** Instance 1 after `setInstanceStreams`. */
+const INSTANCE_UPDATE = { lift: 0.45, tint: [0.9, 0.9, 0.2], symbol: 2 };
+const INSTANCE_LAYOUT = {
+  lift: { offset: 0, components: 1 },
+  tint: { offset: 1, components: 3 },
+  symbol: { offset: 4, components: 1 },
+};
+
+/** Instances as interleaved words (floats, and the symbol as u32). */
+function instanceWords(
+  instances: Array<{ lift: number; tint: number[]; symbol: number }>,
+): Float32Array {
+  const f32 = new Float32Array(instances.length * 5);
+  const u32 = new Uint32Array(f32.buffer);
+  instances.forEach((v, i) => {
+    f32[i * 5] = v.lift;
+    f32.set(v.tint, i * 5 + 1);
+    u32[i * 5 + 4] = v.symbol;
+  });
+  return f32;
+}
+
+/** Per-instance values (instances.slang in WGSL). */
+const INSTANCE_VALUES = new CustomShader({
+  label: "instance values (WGSL)",
+  instance: { lift: "f32", tint: "vec3f", symbol: "u32" },
+  vertex: `fn vertexMain(vsInput: VertexInput, vsOutput: ptr<function, VertexOutput>) {
+  (*vsOutput).positionMC.z += vsInput.instance.lift * step(0.0, vsInput.positionMC.z);
+}`,
+  fragment: `${FS}
+  (*material).baseColor = fsInput.instance.tint * (f32(fsInput.instance.symbol) + 1.0) / 3.0;
+}`,
+});
+
+/** The same values as constants indexed by `instanceIndex`. */
+const instanceByHand = (
+  label: string,
+  values: Array<{ lift: number; tint: number[]; symbol: number }>,
+) =>
+  new CustomShader({
+    label,
+    vertex: `fn vertexMain(vsInput: VertexInput, vsOutput: ptr<function, VertexOutput>) {
+  var lifts = array<f32, 3>(${values.map((v) => v.lift.toFixed(2)).join(", ")});
+  (*vsOutput).positionMC.z += lifts[vsInput.instanceIndex] * step(0.0, vsInput.positionMC.z);
+}`,
+    fragment: `${FS}
+  var tints = array<vec3f, 3>(${values.map((v) => `vec3f(${v.tint.map((x) => x.toFixed(2)).join(", ")})`).join(", ")});
+  var symbols = array<u32, 3>(${values.map((v) => `${v.symbol}u`).join(", ")});
+  let i = fsInput.instanceIndex;
+  (*material).baseColor = tints[i] * (f32(symbols[i]) + 1.0) / 3.0;
+}`,
+  });
 
 /** The boxes' named attributes as shear.slang declares them. */
 const SHEAR_ATTRIBUTES = {
@@ -731,6 +798,53 @@ const CASES: Case[] = [
     }).shader,
   },
   {
+    name: "instance values: both stages (vs constants by index)",
+    same: true,
+    instanced: "streams",
+    against: instanceByHand("instance values (by hand)", INSTANCE_DATA),
+    shader: INSTANCE_VALUES,
+  },
+  {
+    name: "instance values: differ from the default",
+    same: false,
+    instanced: "streams",
+    shader: INSTANCE_VALUES,
+  },
+  {
+    name: "instance values: setInstanceStreams (vs constants)",
+    same: true,
+    instanced: "updated",
+    against: instanceByHand("instance values updated (by hand)", [
+      INSTANCE_DATA[0]!,
+      INSTANCE_UPDATE,
+      INSTANCE_DATA[2]!,
+    ]),
+    shader: INSTANCE_VALUES,
+  },
+  {
+    name: "instance values: Slang, build time (vs WGSL)",
+    same: true,
+    instanced: "streams",
+    against: INSTANCE_VALUES,
+    shader: new CustomShader({
+      label: "instance values (slangc)",
+      instance: { lift: "f32", tint: "vec3f", symbol: "u32" },
+      wgsl: instancesWgsl,
+    }),
+  },
+  {
+    name: "instance values: Slang, runtime (vs WGSL)",
+    same: true,
+    instanced: "streams",
+    against: INSTANCE_VALUES,
+    shader: () =>
+      CustomShader.fromSlang(instancesSlang, {
+        label: "instance values (slang-wasm)",
+        instance: { lift: "f32", tint: "vec3f", symbol: "u32" },
+        slangUrl: SLANG_WASM,
+      }),
+  },
+  {
     name: "uniforms: every type (vs constants)",
     same: true,
     against: CONSTANTS,
@@ -866,6 +980,42 @@ function featureBox(): MeshData {
   };
 }
 
+/** The three boxes as one instanced draw, white, with instance streams. */
+function instancedBoxes(
+  world: World,
+  box: ReturnType<World["addMesh"]>,
+  origin: vec3.Vec3,
+  enu: mat4.Mat4,
+  shader: CustomShader | undefined,
+  update: boolean,
+): void {
+  const matrices: number[] = [];
+  for (let i = 0; i < 3; i++) {
+    const local = mat4.fromScale(mat4.mat4(), 4, 4, 8);
+    mat4.setTranslation(local, vec3.vec3((i - 1) * 9, 0, 4));
+    matrices.push(...local);
+  }
+  const handle = world.addDraw({
+    mesh: box,
+    origin,
+    model: enu,
+    radius: 30,
+    material: world.addMaterial({ baseColor: [1, 1, 1, 1], roughness: 0.5 }),
+    instances: {
+      matrices,
+      streams: {
+        data: instanceWords(INSTANCE_DATA),
+        stride: 5,
+        layout: INSTANCE_LAYOUT,
+      },
+    },
+    ...(shader ? { shader } : {}),
+  });
+  if (update) {
+    world.setInstanceStreams(handle, 1, instanceWords([INSTANCE_UPDATE]));
+  }
+}
+
 /** A ground plane and three boxes; the boxes with `shader`. */
 function build(world: World, c: Case, shader: CustomShader | undefined): void {
   const ellipsoid = Ellipsoid.WGS84;
@@ -889,6 +1039,10 @@ function build(world: World, c: Case, shader: CustomShader | undefined): void {
   const box = world.addMesh(
     c.featured ? featureBox() : c.named ? namedBox() : createBox(),
   );
+  if (c.instanced) {
+    instancedBoxes(world, box, origin, enu, shader, c.instanced === "updated");
+    return;
+  }
   const colors = [
     [0.8, 0.2, 0.2],
     [0.2, 0.7, 0.3],

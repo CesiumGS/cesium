@@ -186,6 +186,8 @@ export const CLIP_COUNT_WORD = 26;
 /** Word offsets of a record's range in the instance table (count 0: none). */
 export const INSTANCE_FIRST_WORD = 27;
 export const INSTANCE_COUNT_WORD = 28;
+/** Word offset of a record's instance streams' stride (words). */
+export const INSTANCE_STRIDE_WORD = 30;
 /** Clip boxes per block; each box is 5 vec4s (center hi, lo, 3 rows). */
 export const CLIP_BOXES = 8;
 export const CLIP_BOX_FLOATS = 20;
@@ -362,6 +364,12 @@ export interface DrawRecordData {
   /** Per-instance streams in the arena: word offset and words per instance. */
   instanceStreams?: number;
   instanceStride?: number;
+  /**
+   * The streams' named fields (`InstanceOptions.streams.layout`): u32
+   * words `count`, then per field its name's `attributeHash`, word offset
+   * within an instance and components.
+   */
+  instanceDirectory?: number;
 }
 
 export function writeDrawRecord(
@@ -404,7 +412,7 @@ export function writeDrawRecord(
   u32[o + 30] = r.instanceStride ?? 0;
   u32[o + 31] = 0; // night lights slice (packImagery)
   u32[o + 32] = r.streams.attributes;
-  u32[o + 33] = 0;
+  u32[o + 33] = r.instanceDirectory ?? NO_STREAM;
   u32[o + 34] = 0;
   u32[o + 35] = 0;
 }

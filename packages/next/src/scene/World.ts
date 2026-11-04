@@ -3,6 +3,7 @@ import {
   INDIRECT_SIZE,
   INSTANCE_WORDS,
   INSTANCE_COUNT_WORD,
+  INSTANCE_STRIDE_WORD,
   INSTANCE_FIRST_WORD,
   MATERIAL_SIZE,
   NO_FEATURE,
@@ -203,7 +204,16 @@ export interface InstanceOptions {
    * instance, uploaded to the arena and read by instance index the way
    * vertex streams are (`DrawRecord.instanceStreams`).
    */
-  streams?: { data: Float32Array | Uint32Array; stride: number };
+  streams?: {
+    data: Float32Array | Uint32Array;
+    stride: number;
+    /**
+     * Named fields of each instance's `stride` words, read by custom
+     * shaders that declare them (`CustomShaderOptions.instance`): the word
+     * offset within an instance and components (1–4).
+     */
+    layout?: Record<string, { offset: number; components: number }>;
+  };
 }
 
 /**
@@ -442,8 +452,9 @@ export class World {
   /** Transform a draw owns (placed by origin and model), or -1. */
   private drawOwnedTransform: Int32Array;
   /** Per-instance stream ranges in the vertex arena, by draw slot. */
-  private readonly instanceStreamRanges: Array<[number, number] | undefined> =
-    [];
+  private readonly instanceStreamRanges: Array<
+    [offset: number, size: number, dataBytes: number] | undefined
+  > = [];
 
   // The transform table: float64 local and world matrices on the CPU,
   // composed parents first; GPU entries mirror the world matrices.
@@ -1201,6 +1212,22 @@ export class World {
   }
 
   addDraw(options: DrawOptions): DrawHandle {
+    // Checked before anything is allocated.
+    const streams = options.instances?.streams;
+    for (const [name, { offset, components }] of Object.entries(
+      streams?.layout ?? {},
+    )) {
+      if (
+        components < 1 ||
+        components > 4 ||
+        offset < 0 ||
+        offset + components > streams!.stride
+      ) {
+        throw new RangeError(
+          `addDraw: instance field ${name} is outside the stride`,
+        );
+      }
+    }
     const index = this.freeSlots.pop() ?? this.drawCount++;
     if (index >= this.maxDraws) {
       this.drawCount--;
@@ -1268,10 +1295,26 @@ export class World {
     }
     let instanceStreams = NO_STREAM;
     let instanceStride = 0;
+    let instanceDirectory = NO_STREAM;
     this.instanceStreamRanges[index] = undefined;
     if (instances?.streams && instanceCount > 0) {
       const data = instances.streams.data;
-      const offset = this.vertexAllocator.allocate(data.byteLength);
+      // The fields' directory right after the data, in one range.
+      const fields = Object.entries(instances.streams.layout ?? {});
+      const directory = new Uint32Array(
+        fields.length ? 1 + fields.length * 3 : 0,
+      );
+      if (fields.length) {
+        directory[0] = fields.length;
+        fields.forEach(([name, { offset, components }], i) => {
+          directory[1 + i * 3] = attributeHash(name);
+          directory[2 + i * 3] = offset;
+          directory[3 + i * 3] = components;
+        });
+      }
+      const offset = this.vertexAllocator.allocate(
+        data.byteLength + directory.byteLength,
+      );
       if (offset === undefined) {
         this.releaseInstances(instanceFirst, instanceCount);
         this.releaseOwnedTransform(index);
@@ -1279,7 +1322,19 @@ export class World {
         throw new Error("World vertex arena is full.");
       }
       this.queueUpload(this.vertexBuffer, offset, data);
-      this.instanceStreamRanges[index] = [offset, data.byteLength];
+      if (fields.length) {
+        this.queueUpload(
+          this.vertexBuffer,
+          offset + data.byteLength,
+          directory,
+        );
+        instanceDirectory = (offset + data.byteLength) / 4;
+      }
+      this.instanceStreamRanges[index] = [
+        offset,
+        data.byteLength + directory.byteLength,
+        data.byteLength,
+      ];
       instanceStreams = offset / 4;
       instanceStride = instances.streams.stride;
     }
@@ -1358,6 +1413,7 @@ export class World {
       instanceCount,
       instanceStreams,
       instanceStride,
+      instanceDirectory,
     });
     this.markDirty(index);
     this.bundle = undefined;
@@ -1484,6 +1540,41 @@ export class World {
     this.instances.mark(slot);
     this.version++;
     this.changedViews |= this.recordsU32[o + VIEW_MASK_WORD]!;
+  }
+
+  /**
+   * Overwrites instances' streams from `firstInstance` on: `data` is
+   * whole instances (`stride` words each), uploaded in one copy (a feed
+   * update of many tracks). The data is copied; the array may be reused.
+   */
+  setInstanceStreams(
+    handle: DrawHandle,
+    firstInstance: number,
+    data: Float32Array | Uint32Array,
+  ): void {
+    if (!this.hasDraw(handle)) {
+      return;
+    }
+    const range = this.instanceStreamRanges[handle.index];
+    const stride =
+      this.recordsU32[handle.index * RECORD_WORDS + INSTANCE_STRIDE_WORD]!;
+    if (!range || stride === 0) {
+      throw new Error("setInstanceStreams: the draw has no instance streams");
+    }
+    const at = firstInstance * stride * 4;
+    if (
+      firstInstance < 0 ||
+      data.length % stride !== 0 ||
+      at + data.byteLength > range[2]
+    ) {
+      throw new RangeError(
+        `setInstanceStreams: ${data.length / stride} instances from ${firstInstance} don't fit`,
+      );
+    }
+    this.queueUpload(this.vertexBuffer, range[0] + at, data);
+    this.version++;
+    this.changedViews |=
+      this.recordsU32[handle.index * RECORD_WORDS + VIEW_MASK_WORD]!;
   }
 
   // ------------------------------------------------------------ transforms

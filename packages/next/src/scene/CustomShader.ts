@@ -1,6 +1,7 @@
 import { attributeHash, metadataKey } from "../render/layout.ts";
 import {
   SLANG_STUB_ENTRY,
+  type InstanceType,
   type NamedDeclarations,
   type NamedType,
 } from "./slangStages.ts";
@@ -13,7 +14,7 @@ import {
   type UniformLayout,
 } from "./uniforms.ts";
 
-export type { NamedType } from "./slangStages.ts";
+export type { InstanceType, NamedType } from "./slangStages.ts";
 export type {
   TextureSource,
   TextureUniform,
@@ -71,6 +72,13 @@ export interface CustomShaderOptions {
    * applied. Zero where a mesh hasn't the property.
    */
   metadata?: Record<string, NamedType | { property: string; type: NamedType }>;
+  /**
+   * Per-instance values the stages read (`vsInput.instance.heading`,
+   * `fsInput.instance.symbol`), by name: the instanced draw's stream fields
+   * (`InstanceOptions.streams.layout`) with their types; exact in both
+   * stages (integers too), zero where a draw hasn't them.
+   */
+  instance?: Record<string, InstanceType>;
   /**
    * Typed values and textures the stages read, by name: a value as
    * `uniforms.<name>`, a texture as `<name>` with its sampler
@@ -230,6 +238,7 @@ export function namedCode(named: NamedDeclarations): {
     ...pass,
     "}",
   );
+  lines.push(instanceCode(named.instance));
   return { code: `${lines.join("\n")}\n`, varyings: varyings.join("\n  ") };
 }
 
@@ -247,7 +256,47 @@ export const DEFAULT_NAMED = namedCode({
   metadata: {},
   semantics: {},
   properties: {},
+  instance: {},
 });
+
+/** WGSL types of per-instance values, from `readInstance`'s raw bits. */
+const INSTANCE: Record<InstanceType, string> = {
+  f32: "bitcast<f32>(#.x)",
+  vec2f: "bitcast<vec2f>(#.xy)",
+  vec3f: "bitcast<vec3f>(#.xyz)",
+  vec4f: "bitcast<vec4f>(#)",
+  mat2x2f: "mat2x2f(bitcast<vec2f>(#.xy), bitcast<vec2f>(#.zw))",
+  u32: "#.x",
+  i32: "bitcast<i32>(#.x)",
+};
+
+/**
+ * WGSL for a shader's per-instance values: `struct InstanceValues` and
+ * `instanceValues(draw, instance)`, read from the draw's instance streams
+ * (opaque.wgsl `readInstance`) in either stage, exactly.
+ */
+function instanceCode(instance: Record<string, InstanceType>): string {
+  const fields = Object.entries(instance);
+  if (fields.length === 0) {
+    return [
+      "struct InstanceValues { none: u32 };",
+      "fn instanceValues(draw: u32, instance: u32) -> InstanceValues { return InstanceValues(0u); }",
+    ].join("\n");
+  }
+  return [
+    `struct InstanceValues { ${fields.map(([name, type]) => `${name}: ${type}`).join(", ")} };`,
+    "fn instanceValues(draw: u32, instance: u32) -> InstanceValues {",
+    `  return InstanceValues(${fields
+      .map(([name, type]) =>
+        INSTANCE[type].replaceAll(
+          "#",
+          `readInstance(draw, instance, ${attributeHash(name)}u)`,
+        ),
+      )
+      .join(", ")});`,
+    "}",
+  ].join("\n");
+}
 
 /** A shader's declarations as the generators take them. */
 function declarations(options: CustomShaderOptions): NamedDeclarations {
@@ -291,7 +340,16 @@ function declarations(options: CustomShaderOptions): NamedDeclarations {
       `Custom shader: ${names.length} attributes and metadata properties; at most ${MAX_NAMED}.`,
     );
   }
-  return { attributes, metadata, semantics, properties };
+  const instance = { ...options.instance };
+  for (const [name, type] of Object.entries(instance)) {
+    if (!identifier.test(name) || name.startsWith("__")) {
+      throw new Error(`Custom shader: "${name}" isn't a valid field name.`);
+    }
+    if (!(type in INSTANCE)) {
+      throw new Error(`Custom shader: unknown instance type "${type}".`);
+    }
+  }
+  return { attributes, metadata, semantics, properties, instance };
 }
 
 let nextId = 1;
@@ -419,6 +477,7 @@ export class CustomShader {
     return new CustomShader({
       wgsl,
       ...(options.uniforms ? { uniforms: options.uniforms } : {}),
+      ...(options.instance ? { instance: options.instance } : {}),
       ...(options.attributes ? { attributes: options.attributes } : {}),
       ...(options.metadata ? { metadata: options.metadata } : {}),
       ...(options.displacement !== undefined

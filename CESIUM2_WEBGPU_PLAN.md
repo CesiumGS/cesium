@@ -2708,6 +2708,32 @@ first part).**
   expressions, more than 4 properties per style, and a 1.x comparison
   (L2) of styled tilesets.
 
+**Increment 9 (r47): per-instance values (ahead of real-time tracks).**
+
+- An instanced draw's streams (`InstanceOptions.streams`: `stride` words
+  per instance, interleaved) name their fields (`layout: { heading: {
+offset: 0, components: 1 }, … }`); the world stores a per-draw
+  directory beside the data (`DrawRecord.instanceDirectory`, the
+  record's spare word). A shader declares `instance: { heading: "f32",
+symbol: "u32" }` (the named types and `u32`, `i32`) and reads
+  `vsInput.instance.<name>`, `fsInput.instance.<name>`: exact in both
+  stages, integers too (the fragment stage reads the arena by the
+  instance's index, carried in one flat varying, location 14);
+  `FragmentInput.instanceIndex` is new. Zero where a draw hasn't them.
+- `World.setInstanceStreams(draw, firstInstance, data)` rewrites whole
+  instances from one in a single copy: the bulk update tracks need (a
+  feed's tracks as one typed array, no per-track call).
+- The struct is `InstanceValues` (the engine's `Instance` is the
+  instance table's). Slang: the same struct in the `cesium` module,
+  `--instance name:type,…` for the CLI.
+- Harness, 5 new cases (46 of 46 pass): three boxes as one instanced
+  draw with lift, tint and an integer symbol per instance match the same
+  constants indexed by `instanceIndex` exactly, in both stages; after
+  `setInstanceStreams` rewrites one instance, the constants with it
+  changed; Slang built both ways matches the WGSL. Parity, models and
+  translucency are unchanged (318 image metrics, none moved); the bench
+  passes 46 of 46.
+
 ### Real-time tracks (after Custom shading)
 
 - §13.11: track collections as instance data with a bulk update API,
@@ -4365,9 +4391,10 @@ all anchors, per-instance updates without allocation (100,000 instances:
   `disableDepthTestDistance` (symbols behind a ridge visible when
   wanted). Symbols are drawn once into an atlas (e.g. milsymbol to a
   canvas), chosen and colored per instance by custom shading.
-- _Before the milestone:_ custom shaders read per-instance streams
-  (`InstanceOptions.streams` exist in the world; no shader reads them
-  yet): `vsInput.instance.<name>`, declared like attributes.
+- _Before the milestone (done, r47):_ custom shaders read per-instance
+  streams by name (`vsInput.instance.<name>`, Custom shading increment
+  9), and `World.setInstanceStreams` rewrites many instances in one
+  copy.
 - _The showcase:_ the first showcase example (§13.12), in the gallery as
   an Examples section of Dyno (one engine and canvas, deep links), its
   module following the `run(context)` contract so it can move to

@@ -18,6 +18,9 @@ import { uniformsSlang, type UniformDeclaration } from "./uniforms.ts";
 /** Types of named attributes and metadata (`CustomShaderOptions`). */
 export type NamedType = "f32" | "vec2f" | "vec3f" | "vec4f" | "mat2x2f";
 
+/** Types of per-instance values: the named types, and integers. */
+export type InstanceType = NamedType | "u32" | "i32";
+
 /** A shader's named attributes and metadata: types by field name. */
 export interface NamedDeclarations {
   attributes: Record<string, NamedType>;
@@ -26,9 +29,13 @@ export interface NamedDeclarations {
   semantics: Record<string, string>;
   /** Each metadata field's property ID (its name where absent). */
   properties: Record<string, string>;
+  /** Per-instance values (`CustomShaderOptions.instance`). */
+  instance: Record<string, InstanceType>;
 }
 
-const SLANG_TYPES: Record<NamedType, string> = {
+const SLANG_TYPES: Record<InstanceType, string> = {
+  u32: "uint",
+  i32: "int",
   f32: "float",
   vec2f: "float2",
   vec3f: "float3",
@@ -46,6 +53,8 @@ const SLANG_NAMED = "// @named";
 export function cesiumModule(
   source: string,
   named: Pick<NamedDeclarations, "attributes" | "metadata"> & {
+    /** Its per-instance values' types (`CustomShaderOptions.instance`). */
+    instance?: Record<string, InstanceType>;
     /** Its uniforms' types (`CustomShaderOptions.uniforms`). */
     uniforms?: Record<string, { type: UniformDeclaration["type"] }>;
   },
@@ -53,7 +62,7 @@ export function cesiumModule(
   if (!source.includes(SLANG_NAMED)) {
     throw new Error("cesium.slang has no named structs marker.");
   }
-  const struct = (name: string, fields: Record<string, NamedType>) => {
+  const struct = (name: string, fields: Record<string, InstanceType>) => {
     const entries = Object.entries(fields);
     const body =
       entries.length === 0
@@ -65,12 +74,12 @@ export function cesiumModule(
   };
   return source.replace(
     SLANG_NAMED,
-    `${struct("Attributes", named.attributes)}\n${struct("Metadata", named.metadata)}\n${uniformsSlang(named.uniforms ?? {})}`,
+    `${struct("Attributes", named.attributes)}\n${struct("Metadata", named.metadata)}\n${struct("InstanceValues", named.instance ?? {})}\n${uniformsSlang(named.uniforms ?? {})}`,
   );
 }
 
 /** Contract fields that are structs of named values, converted by name. */
-const NESTED = new Set(["attributes", "metadata"]);
+const NESTED = new Set(["attributes", "metadata", "instance"]);
 
 /** The contract's structs' fields in order (opaque.wgsl, cesium.slang). */
 const FIELDS = {
@@ -85,6 +94,7 @@ const FIELDS = {
     "time",
     "attributes",
     "metadata",
+    "instance",
   ],
   VertexOutput: ["positionMC", "normalMC"],
   FragmentInput: [
@@ -99,6 +109,8 @@ const FIELDS = {
     "time",
     "attributes",
     "metadata",
+    "instanceIndex",
+    "instance",
   ],
   MaterialOutput: [
     "baseColor",
