@@ -26,6 +26,7 @@ import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 
 /** @import FrameState from "./FrameState.js"; */
 /** @import Scene from "./Scene.js"; */
+/** @import FeatureLayer from "./FeatureLayer.js"; */
 /** @import {GeoJson, GeoJsonFeature, GeoJsonGeometry, GeoJsonPosition} from "../Core/globalTypes.js"; */
 /** @import VectorProvider from "../Core/VectorProvider.js"; */
 
@@ -113,6 +114,12 @@ class GeoJsonPrimitive {
     this._properties = parseResult.properties;
     this._featureCount = parseResult.ids.length;
     this._pickObjectFactory = options.pickObjectFactory;
+
+    /**
+     * @type {FeatureLayer|undefined}
+     * @ignore
+     */
+    this._featureLayer = undefined;
     this._points = undefined;
     this._polylines = undefined;
     this._polygons = undefined;
@@ -366,6 +373,35 @@ class GeoJsonPrimitive {
   }
 
   /**
+   * Creates a primitive that draws the features of a {@link FeatureLayer} created
+   * with {@link GeoJsonFeatureLoader}. Nothing is drawn while the layer is hidden.
+   * Temporary, for development only, until a vector styling API can draw feature layers.
+   *
+   * @param {FeatureLayer} featureLayer
+   * @param {GeoJsonPrimitiveConstructorOptions} [options]
+   * @returns {GeoJsonPrimitive}
+   *
+   * @private
+   */
+  static fromFeatureLayer(featureLayer, options) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("featureLayer", featureLayer);
+    if (!defined(featureLayer._geoJson)) {
+      throw new DeveloperError(
+        "featureLayer must be created with GeoJsonFeatureLoader.",
+      );
+    }
+    //>>includeEnd('debug');
+
+    const primitive = GeoJsonPrimitive.fromGeoJson(
+      featureLayer._geoJson,
+      options,
+    );
+    primitive._featureLayer = featureLayer;
+    return primitive;
+  }
+
+  /**
    * @param {number} featureId
    */
   getId(featureId) {
@@ -392,7 +428,8 @@ class GeoJsonPrimitive {
    * @private
    */
   update(frameState) {
-    if (!this.show) {
+    const featureLayer = this._featureLayer;
+    if (!this.show || (defined(featureLayer) && !featureLayer.show)) {
       return;
     }
 
@@ -494,6 +531,9 @@ function createPickObject(
     },
     parentPrimitive: loader,
     properties,
+    get featureLayer() {
+      return loader._featureLayer;
+    },
   };
 }
 

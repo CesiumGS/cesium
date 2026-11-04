@@ -9,6 +9,8 @@ import Sandcastle from "Sandcastle";
 // uses MAXAR_content_geojson vector content instead.
 // The "external groups" variant shows a known gap (#13900): its external
 // tilesets define their own groups, which aren't resolved correctly yet.
+// The standalone GeoJSON mode loads the same GeoJSON files without a tileset,
+// one feature layer per file.
 const viewer = new Cesium.Viewer("cesiumContainer");
 
 const layerColors = [
@@ -35,14 +37,39 @@ groups, so the SW building acts as "Buildings East" and
 the NE building as "Buildings West" (wrong tint, and
 hidden by the wrong toggle).`;
 
+const geoJsonDirectory = "../../SampleData/Cesium3DTiles/Layers/geojson/";
+
 let tileset;
+let geoJsonPrimitives = [];
+
+function reset(note) {
+  viewer.scene.primitives.remove(tileset);
+  tileset = undefined;
+  for (const primitive of geoJsonPrimitives) {
+    viewer.scene.primitives.remove(primitive);
+  }
+  geoJsonPrimitives = [];
+  togglesElement.innerHTML = "";
+  noteElement.textContent = note ?? "";
+  logElement.textContent = "";
+}
+
+// Add a toggle per layer. Works the same for layers from any source.
+function addToggles(layers) {
+  layers.forEach(function (layer, i) {
+    Sandcastle.addToggleButton(
+      `${layer.name} (${layerColors[i].toLowerCase()})`,
+      layer.show,
+      function (checked) {
+        layer.show = checked;
+      },
+      "layerToggles",
+    );
+  });
+}
 
 async function loadTileset(format) {
-  viewer.scene.primitives.remove(tileset);
-  togglesElement.innerHTML = "";
-  noteElement.textContent =
-    format === "external-groups" ? externalGroupsNote : "";
-  logElement.textContent = "";
+  reset(format === "external-groups" ? externalGroupsNote : undefined);
 
   tileset = await Cesium.Cesium3DTileset.fromUrl(
     `../../SampleData/Cesium3DTiles/Layers/${format}/tileset.json`,
@@ -55,23 +82,17 @@ async function loadTileset(format) {
     layers.get(3).show = false;
   }
 
-  // Add a toggle per layer.
-  const colorByLayer = new Map();
+  const layerList = [];
   for (let i = 0; i < layers.length; i++) {
-    const layer = layers.get(i);
-    colorByLayer.set(layer, Cesium.Color[layerColors[i]]);
-    Sandcastle.addToggleButton(
-      `${layer.name} (${layerColors[i].toLowerCase()})`,
-      layer.show,
-      function (checked) {
-        layer.show = checked;
-      },
-      "layerToggles",
-    );
+    layerList.push(layers.get(i));
   }
+  addToggles(layerList);
 
   // Everything below is optional, for demonstration only. It is not needed to toggle layers.
   // Tint each content by its layer, and log loads to show hidden layers aren't requested.
+  const colorByLayer = new Map(
+    layerList.map((layer, i) => [layer, Cesium.Color[layerColors[i]]]),
+  );
   const loaded = [];
   tileset.tileLoad.addEventListener(function (tile) {
     const content = tile.content;
@@ -100,6 +121,68 @@ async function loadTileset(format) {
   viewer.zoomTo(tileset, offset);
 }
 
+async function loadGeoJson() {
+  reset();
+
+  const files = {
+    "Points NW": "points.geojson",
+    "Lines NE": "lines.geojson",
+    "Polygons SW": "polygons.geojson",
+  };
+  const layers = [];
+  for (const [name, file] of Object.entries(files)) {
+    const layer = await Cesium.GeoJsonFeatureLoader.fromUrl(
+      geoJsonDirectory + file,
+      { name: name },
+    );
+    const primitive = Cesium.GeoJsonPrimitive.fromFeatureLayer(layer);
+    viewer.scene.primitives.add(primitive);
+    geoJsonPrimitives.push(primitive);
+    layers.push(layer);
+  }
+  addToggles(layers);
+
+  // Everything below is optional, for demonstration only. It is not needed to toggle layers.
+  // Tint each layer, and enlarge points (1px by default).
+  geoJsonPrimitives.forEach(function (primitive, i) {
+    const color = Cesium.Color[layerColors[i]];
+    setMaterial(
+      primitive.points,
+      Cesium.BufferPoint,
+      new Cesium.BufferPointMaterial({ color: color, size: 8 }),
+    );
+    setMaterial(
+      primitive.polylines,
+      Cesium.BufferPolyline,
+      new Cesium.BufferPolylineMaterial({ color: color, width: 3 }),
+    );
+    setMaterial(
+      primitive.polygons,
+      Cesium.BufferPolygon,
+      new Cesium.BufferPolygonMaterial({ color: color }),
+    );
+  });
+
+  viewer.camera.setView({
+    destination: new Cesium.Rectangle(
+      -1.3197209591796106,
+      0.6988424218,
+      -1.3196390408203893,
+      0.6989055782,
+    ),
+  });
+}
+
+function setMaterial(collection, PrimitiveClass, material) {
+  if (!Cesium.defined(collection)) {
+    return;
+  }
+  const primitive = new PrimitiveClass();
+  for (let i = 0; i < collection.primitiveCount; i++) {
+    collection.get(i, primitive).setMaterial(material);
+  }
+}
+
 Sandcastle.addToolbarMenu(
   [
     { text: "b3dm content", onselect: () => loadTileset("b3dm") },
@@ -109,6 +192,7 @@ Sandcastle.addToolbarMenu(
       text: "External groups (known gap)",
       onselect: () => loadTileset("external-groups"),
     },
+    { text: "Standalone GeoJSON (no tileset)", onselect: loadGeoJson },
   ],
   "formatMenu",
 );

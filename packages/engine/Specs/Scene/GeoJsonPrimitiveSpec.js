@@ -3,6 +3,8 @@ import {
   BufferPoint,
   BufferPolygon,
   BufferPolyline,
+  FeatureLayer,
+  GeoJsonFeatureLoader,
   GeoJsonPrimitive,
   GeographicTilingScheme,
   HeightReference,
@@ -234,5 +236,44 @@ describe("Scene/GeoJsonPrimitive", function () {
     expect(polygons._renderContext).toBeNull();
 
     context.destroyForSpecs();
+  });
+  describe("fromFeatureLayer", function () {
+    const geoJson = {
+      type: "Feature",
+      properties: { kind: "tower" },
+      geometry: { type: "Point", coordinates: [0.0, 0.0] },
+    };
+
+    it("draws the features of a layer", function () {
+      const layer = GeoJsonFeatureLoader.fromJson(geoJson);
+      const primitive = GeoJsonPrimitive.fromFeatureLayer(layer);
+      expect(primitive.featureCount).toBe(1);
+      expect(primitive.points.get(0, new BufferPoint()).pickObject).toEqual(
+        jasmine.objectContaining({
+          featureLayer: layer,
+          properties: { kind: "tower" },
+        }),
+      );
+    });
+
+    it("draws nothing while the layer is hidden", function () {
+      const layer = GeoJsonFeatureLoader.fromJson(geoJson);
+      const primitive = GeoJsonPrimitive.fromFeatureLayer(layer);
+      const update = spyOn(primitive.points, "update");
+
+      layer.show = false;
+      primitive.update({});
+      expect(update).not.toHaveBeenCalled();
+
+      layer.show = true;
+      primitive.update({});
+      expect(update).toHaveBeenCalled();
+    });
+
+    it("throws for a layer without GeoJSON", function () {
+      expect(function () {
+        GeoJsonPrimitive.fromFeatureLayer(new FeatureLayer({}));
+      }).toThrowDeveloperError();
+    });
   });
 });
