@@ -27,6 +27,7 @@ import { buildWidgets } from "./packages/widgets/scripts/build.js";
 import {
   bundleWorkers,
   createCoverageFilter,
+  defaultESBuildOptions,
   getWorkspaces,
   glslToJavaScript,
   shaderFiles,
@@ -736,11 +737,10 @@ export async function runCoverage(options) {
 
   const karmaBundle = join(options.outputDirectory, "karma-main.js");
   await esbuild({
+    ...defaultESBuildOptions(),
     entryPoints: ["Specs/karma-main.js"],
-    bundle: true,
     sourcemap: true,
     format: "esm",
-    target: "es2020",
     outfile: karmaBundle,
     logLevel: "error", // print errors immediately, and collect warnings so we can filter out known ones
   });
@@ -749,11 +749,10 @@ export async function runCoverage(options) {
 
   const specListBundle = join(options.outputDirectory, "SpecList.js");
   await esbuild({
+    ...defaultESBuildOptions(),
     entryPoints: [options.specList],
-    bundle: true,
     sourcemap: true,
     format: "esm",
-    target: "es2020",
     outfile: specListBundle,
     plugins: [instrumentPlugin],
     logLevel: "error", // print errors immediately, and collect warnings so we can filter out known ones
