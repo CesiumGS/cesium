@@ -420,14 +420,17 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     }
   }
 
+  /**
+   * The whole area, around the site at its height: the same place whether
+   * or not terrain has loaded, so the first frames show it and nothing
+   * moves once the vehicles arrive.
+   */
   function overview() {
     follow = undefined;
-    if (source) {
-      viewer.zoomTo({
-        center: ground(0, 0),
-        radius: ((settings.area * 1000) / 2) * 0.9,
-      });
-    }
+    viewer.zoomTo({
+      center: origin,
+      radius: ((settings.area * 1000) / 2) * 0.9,
+    });
   }
 
   // ------------------------------------------------------------ the panel
@@ -667,6 +670,8 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     updateOut.textContent = `${stats.updateMs.toFixed(2)} ms a slice of ${stats.per.toLocaleString()}`;
   }, 500);
 
+  // Framed first: the truck model and the style take seconds to load.
+  overview();
   await build();
 
   return () => {
