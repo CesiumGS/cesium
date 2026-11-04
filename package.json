@@ -52,8 +52,8 @@
   ],
   "dependencies": {
     "@cesium/core": "^0.1.1",
-    "@cesium/gltf": "^0.1.1",
     "@cesium/engine": "^26.5.0",
+    "@cesium/gltf": "^0.1.1",
     "@cesium/widgets": "^16.3.1",
     "protobufjs": "^8.8.0"
   },
@@ -62,6 +62,7 @@
     "@cesium/eslint-config": "^14.0.0",
     "@playwright/test": "^1.62.1",
     "@types/express": "^5.0.6",
+    "@types/yazl": "^3.3.1",
     "chokidar": "^5.0.0",
     "cloc": "^2.6.0-cloc",
     "compression": "^1.7.4",
@@ -77,7 +78,6 @@
     "globals": "^17.11.0",
     "glsl-strip-comments": "^1.0.0",
     "gulp": "^5.0.0",
-    "gulp-zip": "^6.0.0",
     "husky": "^9.0.7",
     "istanbul-lib-instrument": "^6.0.0",
     "jasmine-core": "^5.9.0",
@@ -102,7 +102,8 @@
     "tsd-jsdoc": "^2.5.0",
     "typescript": "^6.0.2",
     "typescript-eslint": "^8.68.0",
-    "yargs": "^18.1.0"
+    "yargs": "^18.1.0",
+    "yazl": "^3.3.1"
   },
   "scripts": {
     "prepare": "gulp prepare && husky && node scripts/isCI.js || playwright install --with-deps",

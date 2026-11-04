@@ -2,12 +2,12 @@
 
 import { dirname, join } from "path";
 import gulp from "gulp";
-import gulpZip from "gulp-zip";
+import { ZipFile } from "yazl";
 import { glslToJavaScript } from "./scripts/build-utilities.js";
 import { release } from "./gulpfile.js";
-import { rmSync } from "fs";
+import { createWriteStream, rmSync } from "fs";
 import { readFile, writeFile } from "fs/promises";
-import { Transform } from "stream";
+import { Transform, Writable } from "stream";
 import { finished } from "stream/promises";
 import { createRequire } from "module";
 import { buildSandcastleApp } from "./scripts/buildSandcastle.js";
@@ -95,6 +95,42 @@ function forEachFile(callback) {
     transform(file, encoding, done) {
       callback(file);
       done(null, file);
+    },
+  });
+}
+
+/**
+ * Creates a stream that writes the files piped into it to a ZIP file, using each file's
+ * relative path as its path in the ZIP file. The stream finishes once the ZIP file has been written.
+ *
+ * @param {string} zipPath The path of the ZIP file to write.
+ * @returns {Writable} The stream to pipe files into.
+ */
+function createZipWriter(zipPath) {
+  const zipFile = new ZipFile();
+  const output = zipFile.outputStream.pipe(createWriteStream(zipPath));
+
+  return new Writable({
+    objectMode: true,
+    //eslint-disable-next-line no-unused-vars
+    write(file, encoding, done) {
+      // Paths in ZIP files always use forward slashes.
+      const pathInZip = file.relative.replaceAll("\\", "/");
+
+      if (file.isDirectory()) {
+        // Directory modes are omitted because they make ZIP files created on Windows unreadable on macOS.
+        zipFile.addEmptyDirectory(pathInZip, { mtime: file.stat?.mtime });
+      } else if (file.isBuffer()) {
+        zipFile.addBuffer(file.contents, pathInZip, {
+          mtime: file.stat?.mtime,
+          mode: file.stat?.mode,
+        });
+      }
+      done();
+    },
+    final(done) {
+      zipFile.end();
+      finished(output).then(() => done(), done);
     },
   });
 }
@@ -226,8 +262,7 @@ export const makeZip = gulp.series(
           },
         ),
       )
-      .pipe(gulpZip(`Cesium-${version}.zip`))
-      .pipe(gulp.dest("."));
+      .pipe(createZipWriter(`Cesium-${version}.zip`));
 
     await finished(src);
 
@@ -236,7 +271,5 @@ export const makeZip = gulp.series(
     rmSync("./packages/gltf/package.noprepare.json", { force: true });
     rmSync("./packages/engine/package.noprepare.json", { force: true });
     rmSync("./packages/widgets/package.noprepare.json", { force: true });
-
-    return src;
   },
 );
