@@ -2,6 +2,7 @@ import {
   Camera,
   CustomShader,
   Ellipsoid,
+  FeatureStyle,
   Engine,
   MaterialFlags,
   OffscreenTarget,
@@ -299,6 +300,47 @@ const HEIGHTS = new CustomShader({
   fragment: `${FS}
   let h = fsInput.metadata.Height;
   (*material).baseColor = vec3f(fract(h / 20.0), 0.3, 1.0 - fract(h / 20.0));
+}`,
+});
+
+/** 1.x-style 3D Tiles styles and the same written by hand in WGSL. */
+const SHOW_STYLE = new FeatureStyle({
+  label: "style: show low buildings",
+  show: "${Height} < 10",
+});
+const SHOW_BY_HAND = new CustomShader({
+  label: "show low buildings (by hand)",
+  metadata: { Height: "f32" },
+  vertex: `fn vertexMain(vsInput: VertexInput, vsOutput: ptr<function, VertexOutput>) {
+  if (vsInput.metadata.Height >= 10.0) {
+    (*vsOutput).positionMC = vec3f(0.0);
+  }
+}`,
+});
+const COLOR_STYLE = new FeatureStyle({
+  label: "style: color by Height",
+  defines: { tall: "${feature['Height']} > 12" },
+  color: {
+    conditions: [
+      ["${tall}", "color('red')"],
+      ["${Height} > 7", "rgb(30, 144, 255)"],
+      ["true", "hsl(0.3, 0.6, 0.5)"],
+    ],
+  },
+});
+// hsl(0.3, 0.6, 0.5) is (0.32, 0.8, 0.2); rgb(30, 144, 255) in bytes.
+const COLOR_BY_HAND = new CustomShader({
+  label: "color by Height (by hand)",
+  metadata: { Height: "f32" },
+  fragment: `${FS}
+  let h = fsInput.metadata.Height;
+  var c = vec3f(0.32, 0.8, 0.2);
+  if (h > 12.0) {
+    c = vec3f(1.0, 0.0, 0.0);
+  } else if (h > 7.0) {
+    c = vec3f(30.0, 144.0, 255.0) / 255.0;
+  }
+  (*material).baseColor *= c;
 }`,
 });
 
@@ -657,6 +699,36 @@ const CASES: Case[] = [
     same: false,
     tileset: true,
     shader: HEIGHTS,
+  },
+  {
+    name: "style: show (hides tall buildings)",
+    same: false,
+    tileset: true,
+    shader: SHOW_STYLE.shader,
+  },
+  {
+    name: "style: show (vs WGSL by hand)",
+    same: true,
+    tileset: true,
+    against: SHOW_BY_HAND,
+    shader: SHOW_STYLE.shader,
+  },
+  {
+    name: "style: color conditions, defines (vs WGSL by hand)",
+    same: true,
+    close: true,
+    tileset: true,
+    against: COLOR_BY_HAND,
+    shader: COLOR_STYLE.shader,
+  },
+  {
+    name: "style: hidden faces cast no shadows",
+    same: false,
+    featured: true,
+    shader: new FeatureStyle({
+      label: "style: hide hot faces",
+      show: "${heat} < 0.6",
+    }).shader,
   },
   {
     name: "uniforms: every type (vs constants)",

@@ -24,6 +24,8 @@ export interface NamedDeclarations {
   metadata: Record<string, NamedType>;
   /** Each attribute's glTF semantic. */
   semantics: Record<string, string>;
+  /** Each metadata field's property ID (its name where absent). */
+  properties: Record<string, string>;
 }
 
 const SLANG_TYPES: Record<NamedType, string> = {

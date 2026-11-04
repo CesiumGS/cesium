@@ -52,7 +52,7 @@ export async function compileSlang(
   slangUrl = "/slang-wasm/slang-wasm.js",
   named: {
     attributes?: Record<string, { type: NamedType }>;
-    metadata?: Record<string, NamedType>;
+    metadata?: Record<string, NamedType | { type: NamedType }>;
     uniforms?: Record<string, { type: UniformDeclaration["type"] }>;
   } = {},
 ): Promise<string> {
@@ -72,7 +72,12 @@ export async function compileSlang(
         attributes: Object.fromEntries(
           Object.entries(named.attributes ?? {}).map(([n, a]) => [n, a.type]),
         ),
-        metadata: named.metadata ?? {},
+        metadata: Object.fromEntries(
+          Object.entries(named.metadata ?? {}).map(([n, d]) => [
+            n,
+            typeof d === "string" ? d : d.type,
+          ]),
+        ),
         uniforms: named.uniforms ?? {},
       }),
       user: source,

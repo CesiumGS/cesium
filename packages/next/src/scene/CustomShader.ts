@@ -70,7 +70,7 @@ export interface CustomShaderOptions {
    * property ID, with their type: property attributes, offset and scale
    * applied. Zero where a mesh hasn't the property.
    */
-  metadata?: Record<string, NamedType>;
+  metadata?: Record<string, NamedType | { property: string; type: NamedType }>;
   /**
    * Typed values and textures the stages read, by name: a value as
    * `uniforms.<name>`, a texture as `<name>` with its sampler
@@ -154,7 +154,7 @@ export function namedCode(named: NamedDeclarations): {
       struct: "Metadata",
       name,
       type,
-      key: metadataKey(name),
+      key: metadataKey(named.properties[name] ?? name),
     })),
   ];
   const lines: string[] = [];
@@ -246,6 +246,7 @@ export const DEFAULT_NAMED = namedCode({
   attributes: {},
   metadata: {},
   semantics: {},
+  properties: {},
 });
 
 /** A shader's declarations as the generators take them. */
@@ -259,7 +260,18 @@ function declarations(options: CustomShaderOptions): NamedDeclarations {
     attributes[name] = type;
     semantics[name] = semantic;
   }
-  const metadata = { ...options.metadata };
+  // Metadata by field name: a property ID that isn't an identifier
+  // (`building:material`) is read under another name.
+  const metadata: Record<string, NamedType> = {};
+  const properties: Record<string, string> = {};
+  for (const [name, declared] of Object.entries(options.metadata ?? {})) {
+    if (typeof declared === "string") {
+      metadata[name] = declared;
+    } else {
+      metadata[name] = declared.type;
+      properties[name] = declared.property;
+    }
+  }
   const names = [...Object.keys(attributes), ...Object.keys(metadata)];
   for (const name of names) {
     if (!identifier.test(name) || name.startsWith("__")) {
@@ -279,7 +291,7 @@ function declarations(options: CustomShaderOptions): NamedDeclarations {
       `Custom shader: ${names.length} attributes and metadata properties; at most ${MAX_NAMED}.`,
     );
   }
-  return { attributes, metadata, semantics };
+  return { attributes, metadata, semantics, properties };
 }
 
 let nextId = 1;

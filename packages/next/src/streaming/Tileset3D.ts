@@ -16,6 +16,7 @@ import type {
 } from "../scene/World.ts";
 import type { ModelOptions } from "../scene/gltfModel.ts";
 import type { CustomShader } from "../scene/CustomShader.ts";
+import type { FeatureStyle } from "../scene/FeatureStyle.ts";
 import type { GltfAsset } from "../io/gltfTypes.ts";
 import type { Mat4 } from "../math/mat4.ts";
 import type { Rectangle } from "../globe/quantizedMesh.ts";
@@ -127,6 +128,11 @@ export interface TilesetOptions extends BudgetedOptions {
   enableCollision?: boolean;
   /** Custom shader stages for all its content (1.x `customShader`). */
   customShader?: CustomShader;
+  /**
+   * A 3D Tiles style (1.x `style`: show and color per feature), as a
+   * custom shader; not with `customShader`.
+   */
+  style?: FeatureStyle;
   /**
    * Float64 transform applied to the whole tileset (1.x `modelMatrix`),
    * e.g. a height offset; can change at runtime (`Tileset3D.modelMatrix`).
@@ -631,6 +637,9 @@ export class Tileset3D implements TileTree {
     readonly geometricError: number,
     source?: TileSource,
   ) {
+    if (options.customShader && options.style) {
+      throw new Error("Tileset3D: give a customShader or a style, not both.");
+    }
     this.options = options;
     this.collision = options.enableCollision ?? false;
     this.loadMatrix = m4.copy(m4.mat4(), options.modelMatrix ?? m4.mat4());
@@ -1219,8 +1228,11 @@ export class Tileset3D implements TileTree {
           parent: this.transform,
           viewMask: 0,
           collision: this.collision,
-          ...(this.options.customShader
-            ? { shader: this.options.customShader }
+          ...((this.options.customShader ?? this.options.style?.shader)
+            ? {
+                shader: (this.options.customShader ??
+                  this.options.style?.shader)!,
+              }
             : {}),
         });
         tile.instance = instance;

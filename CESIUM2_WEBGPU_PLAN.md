@@ -2671,6 +2671,43 @@ first part).**
   stage's alpha doesn't reach; string and enum properties (an index per
   distinct value).
 
+**Increment 8 (r47): 3D Tiles styles (feature styling).**
+
+- `FeatureStyle({ show, color, defines, colorBlendMode })`: 1.x's style
+  JSON, expressions and `conditions`, compiled to WGSL
+  (styleExpression.ts) over the features' metadata, whichever way a mesh
+  stores it, as a custom shader (`style.shader`, or
+  `Tileset3DOptions.style`). Semantics as 1.x's `Expression`: JavaScript
+  precedence, `rgb` in bytes, `rgba`/`color` alpha 0–1, `hsl` hue 0–1,
+  CSS names and hex in `color()`, component-wise math (`round` halves
+  up, as `Math.round`), vectors and `.x`/`.r` members, strict equality
+  false across types, `${feature['name']}` for names that aren't
+  identifiers. Types are checked at compile time; strings (other than
+  `color()`'s), regular expressions and `undefined` are refused by name,
+  since the GPU has no string properties.
+- `show` false, or a color with alpha 0, hides a feature in the vertex
+  stage: its vertices collapse to a point, so its triangles have no area
+  in any pass (depth prepass, shadows, picking). A fragment discard
+  would have left its depth in the prepass, a hole. `color` applies in
+  the fragment stage ("highlight" multiplies, "replace", "mix" by
+  amount); its alpha scales the material's.
+- Custom shaders' `metadata` may name a field apart from its property
+  (`{ property: "building:levels", type }`), as styles need.
+- Unit tests (7) for precedence, property forms, 1.x's color
+  conventions, vector typing and refusals; harness, 4 new cases (41 of
+  41 pass): on `BatchedColors`, a show and a color style with conditions,
+  a define, `color()`, `rgb()` and `hsl()` match the same written by hand
+  in WGSL exactly; hidden faces of the feature box cast no shadows.
+  Parity, models and translucency are unchanged (318 image metrics, none
+  moved); the bench passes 41 of 41.
+- Not yet: changing a tileset's style or shader after load (the batch
+  key holds the shader; draws would move between batches), translucency
+  from a style's alpha (1.x moves such features to the translucent pass),
+  string properties (an index per distinct value would allow `===` on
+  them), `pointSize` and the point-cloud style fields, regular
+  expressions, more than 4 properties per style, and a 1.x comparison
+  (L2) of styled tilesets.
+
 ### Real-time tracks (after Custom shading)
 
 - §13.11: track collections as instance data with a bulk update API,
@@ -4317,6 +4354,24 @@ all anchors, per-instance updates without allocation (100,000 instances:
   APP-6 style) from per-instance attributes; decals for areas; labels
   with GPU decluttering.
 - _Picking and selection per track_ through per-instance feature IDs.
+- _Model up close, symbol from afar (r47):_ each track is an instance in
+  two draws, an instanced model (e.g. 1.x's Cesium Milk Truck, oriented
+  by heading) and a billboard set with its symbol. The cull pass, which
+  already visits every instance on the GPU, picks one per instance and
+  view by the track's projected size, writing it into that draw's list,
+  with hysteresis and a short crossfade so tracks at the threshold don't
+  flicker; no CPU work, so it scales with the track count. Billboards
+  clamp with the same GPU clamping, with a depth policy like 1.x's
+  `disableDepthTestDistance` (symbols behind a ridge visible when
+  wanted). Symbols are drawn once into an atlas (e.g. milsymbol to a
+  canvas), chosen and colored per instance by custom shading.
+- _Before the milestone:_ custom shaders read per-instance streams
+  (`InstanceOptions.streams` exist in the world; no shader reads them
+  yet): `vsInput.instance.<name>`, declared like attributes.
+- _The showcase:_ the first showcase example (§13.12), in the gallery as
+  an Examples section of Dyno (one engine and canvas, deep links), its
+  module following the `run(context)` contract so it can move to
+  Sandcastle or get a standalone page.
 
 **Measure** (benchmark suite v1, §16.4 group C; instanced models until
 billboards exist): 10,000 and 100,000 tracks updated at 1 Hz and 10 Hz

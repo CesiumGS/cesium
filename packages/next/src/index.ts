@@ -16,6 +16,11 @@ export {
   type ValueUniform,
 } from "./scene/CustomShader.ts";
 export {
+  FeatureStyle,
+  type FeatureStyleOptions,
+  type StyleExpression,
+} from "./scene/FeatureStyle.ts";
+export {
   World,
   type DrawHandle,
   type DrawOptions,
