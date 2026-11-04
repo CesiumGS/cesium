@@ -1,9 +1,12 @@
 // @ts-check
 
+import { Check, DeveloperError, defined } from "@cesium/core";
+import EditorToolbar from "../EditorToolbar/EditorToolbar.js";
+
 /** @import { Viewer } from "@cesium/widgets"; */
 /** @import MeshEditor from "../../Editor/MeshEditor.js"; */
-/** @import EditorToolbar from "../EditorToolbar/EditorToolbar.js"; */
-/** @import { EditorToolbarOptions } from "../EditorToolbar/EditorToolbarViewModel.js"; */
+/** @import { EditorToolbarOptions, EditorToolbarModeEntry, EditorToolbarToolEntry } from "../EditorToolbar/EditorToolbarViewModel.js"; */
+/** @import { Command } from "@cesium/widgets"; */
 
 /**
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
@@ -15,21 +18,16 @@
 /**
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  * @typedef {object} ViewerEditorMixinOptions
- * @property {MeshEditor} editor An editor already added to this viewer's scene.
- * @property {boolean} [toolbar=true] Whether to attach the toolbar.
- * @property {EditorToolbarOptions} [toolbarOptions] Options passed to the toolbar.
- * @property {EditorKeyBindings|false} [keyBindings] Custom entry shortcuts, or false to disable keyboard handling.
+ * @property {MeshEditor} editor An editor in the viewer's scene.
+ * @property {boolean} [toolbar=true] Whether to add a toolbar.
+ * @property {EditorToolbarOptions} [toolbarOptions] The toolbar's options.
+ * @property {EditorKeyBindings|false} [keyBindings] Replacement shortcuts, or false to disable them.
  */
 
 /**
- * Adds a mesh editor toolbar and keyboard shortcuts to a {@link Viewer}.
- * Exposes the supplied editor as <code>viewer.editor</code> and the optional
- * toolbar as <code>viewer.editorToolbar</code>. Register meshes with the editor
- * programmatically before editing them.
- *
- * The default mode keys are 0 (Object), 1 (Vertex), 2 (Edge), and 3 (Face).
- * Tool keys are s (Select) and g (Translate). Escape cancels the active tool's
- * interaction. Shortcuts require the toolbar and are ignored in text inputs.
+ * Adds an {@link EditorToolbar} and keyboard shortcuts to a {@link Viewer},
+ * exposing them as <code>viewer.editor</code> and <code>viewer.editorToolbar</code>.
+ * Escape cancels the active tool's interaction.
  *
  * @function viewerEditorMixin
  *
@@ -38,69 +36,303 @@
  * @param {Viewer} viewer The viewer to extend.
  * @param {ViewerEditorMixinOptions} options The editor and widget options.
  *
+ * @exception {DeveloperError} options.editor must be in the viewer's scene.
+ * @exception {DeveloperError} editor or editorToolbar is already defined by another mixin.
+ * @exception {DeveloperError} A key binding refers to an unknown entry.
+ *
  * @example
  * const viewer = new Cesium.Viewer("cesiumContainer");
  * const editor = await Cesium.MeshEditor.addToScene(viewer.scene);
  * viewer.extend(Cesium.viewerEditorMixin, { editor });
  */
 function viewerEditorMixin(viewer, options) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("viewer", viewer);
+  Check.typeOf.object("options", options);
+  Check.typeOf.object("options.editor", options.editor);
+  if (!viewer.scene.primitives.contains(options.editor)) {
+    throw new DeveloperError(
+      "options.editor must be added to the viewer's scene.",
+    );
+  }
+  //>>includeEnd('debug');
+
+  if (viewer.hasOwnProperty("editor")) {
+    throw new DeveloperError("editor is already defined by another mixin.");
+  }
+
+  if (viewer.hasOwnProperty("editorToolbar")) {
+    throw new DeveloperError(
+      "editorToolbar is already defined by another mixin.",
+    );
+  }
+
   const toolbar = createToolbar(viewer, options);
-  const removeKeyBindings = installKeyBindings(
-    viewer,
-    toolbar,
-    options.editor,
-    options.keyBindings,
-  );
+  let removeKeyBindings;
+  try {
+    removeKeyBindings = installKeyBindings(
+      viewer,
+      toolbar,
+      options.editor,
+      options.keyBindings,
+    );
+  } catch (error) {
+    destroyToolbar(toolbar);
+    throw error;
+  }
   defineViewerEditorProperties(viewer, options.editor, toolbar);
   installCleanup(viewer, toolbar, removeKeyBindings);
 }
 
+/** @ignore */
+const defaultKeyBindings = Object.freeze({
+  modes: Object.freeze({ 0: "none", 1: "vertex", 2: "edge", 3: "face" }),
+  tools: Object.freeze({ s: "select", g: "translate" }),
+});
+
 /**
- * Creates and attaches the optional toolbar and its container.
- *
- * @param {Viewer} viewer The viewer.
- * @param {ViewerEditorMixinOptions} options The widget options.
- * @returns {EditorToolbar|undefined} The toolbar, if enabled.
+ * @param {Viewer} viewer
+ * @param {ViewerEditorMixinOptions} options
+ * @returns {EditorToolbar|undefined}
  * @ignore
  */
 function createToolbar(viewer, options) {
-  throw new Error("Editor toolbar attachment is not implemented.");
+  if (options.toolbar === false) {
+    return undefined;
+  }
+
+  const toolbarContainer = document.createElement("div");
+  toolbarContainer.className = "cesium-viewer-editorToolbarContainer";
+  viewer.container.appendChild(toolbarContainer);
+  try {
+    return new EditorToolbar(
+      toolbarContainer,
+      options.editor,
+      options.toolbarOptions,
+    );
+  } catch (error) {
+    toolbarContainer.remove();
+    throw error;
+  }
 }
 
 /**
- * Defines editor and editorToolbar properties on the supplied viewer so
- * application code can access the editor and toolbar through that viewer.
- *
- * @param {Viewer} viewer The viewer.
- * @param {MeshEditor} editor The editor.
- * @param {EditorToolbar|undefined} toolbar The optional toolbar.
+ * @param {EditorToolbar|undefined} toolbar
  * @ignore
  */
-function defineViewerEditorProperties(viewer, editor, toolbar) {}
+function destroyToolbar(toolbar) {
+  if (!defined(toolbar)) {
+    return;
+  }
+  const toolbarContainer = toolbar.container;
+  toolbar.destroy();
+  toolbarContainer.remove();
+}
 
 /**
- * Wraps viewer destruction to clean up widgets, their container, and listeners.
- * The scene retains ownership of editor destruction.
- *
- * @param {Viewer} viewer The viewer.
- * @param {EditorToolbar|undefined} toolbar The optional toolbar.
- * @param {Function} removeKeyBindings Removes keyboard and focus listeners.
+ * @param {Viewer} viewer
+ * @param {MeshEditor} editor
+ * @param {EditorToolbar|undefined} toolbar
  * @ignore
  */
-function installCleanup(viewer, toolbar, removeKeyBindings) {}
+function defineViewerEditorProperties(viewer, editor, toolbar) {
+  Object.defineProperties(viewer, {
+    editor: {
+      get: () => editor,
+    },
+    editorToolbar: {
+      get: () => toolbar,
+    },
+  });
+}
 
 /**
- * Installs entry shortcuts, Escape cancellation, and iframe focus handling.
+ * Cleans up before the viewer destroys the scene, which owns the editor.
  *
- * @param {Viewer} viewer The viewer.
- * @param {EditorToolbar|undefined} toolbar The optional toolbar.
- * @param {MeshEditor} editor The editor.
- * @param {EditorKeyBindings|false} [keyBindings] Custom entry shortcuts, or false.
- * @returns {Function} Removes keyboard and focus listeners.
+ * @param {Viewer} viewer
+ * @param {EditorToolbar|undefined} toolbar
+ * @param {Function} removeKeyBindings
+ * @ignore
+ */
+function installCleanup(viewer, toolbar, removeKeyBindings) {
+  const destroyViewer = viewer.destroy;
+  viewer.destroy = function () {
+    removeKeyBindings();
+    destroyToolbar(toolbar);
+    return destroyViewer.apply(viewer, arguments);
+  };
+}
+
+/**
+ * @param {Viewer} viewer
+ * @param {EditorToolbar|undefined} toolbar
+ * @param {MeshEditor} editor
+ * @param {EditorKeyBindings|false} [keyBindings]
+ * @returns {Function} Removes the listeners.
  * @ignore
  */
 function installKeyBindings(viewer, toolbar, editor, keyBindings) {
-  throw new Error("Editor key bindings are not implemented.");
+  if (keyBindings === false) {
+    return () => {};
+  }
+
+  const shortcuts = createShortcuts(toolbar, editor, keyBindings);
+
+  /** @param {KeyboardEvent} event */
+  function onKeyDown(event) {
+    if (isShortcutCandidate(event) && shortcuts.get(event.key)?.()) {
+      event.preventDefault();
+    }
+  }
+
+  const ownerDocument = viewer.container.ownerDocument;
+  ownerDocument.addEventListener("keydown", onKeyDown);
+  const removeFocusListener = focusWindowOnPointerDown(viewer.container);
+
+  return () => {
+    ownerDocument.removeEventListener("keydown", onKeyDown);
+    removeFocusListener();
+  };
+}
+
+/**
+ * Maps KeyboardEvent.key values to actions that return whether they handled
+ * the key.
+ *
+ * @param {EditorToolbar|undefined} toolbar
+ * @param {MeshEditor} editor
+ * @param {EditorKeyBindings} [keyBindings]
+ * @returns {Map<string, function(): boolean>}
+ * @ignore
+ */
+function createShortcuts(toolbar, editor, keyBindings) {
+  const shortcuts = new Map();
+  shortcuts.set("Escape", () => {
+    const activeTool = editor.activeTool;
+    activeTool?.cancel();
+    return defined(activeTool);
+  });
+
+  const viewModel = toolbar?.viewModel;
+  if (!defined(viewModel)) {
+    return shortcuts;
+  }
+
+  // Default bindings may name entries that custom toolbar options omit.
+  const requireEntries = defined(keyBindings);
+  const bindings = keyBindings ?? defaultKeyBindings;
+  const modeEntries = mapKeysToEntries(
+    bindings.modes,
+    viewModel.modeEntries,
+    "mode",
+    requireEntries,
+  );
+  const toolEntries = mapKeysToEntries(
+    bindings.tools,
+    viewModel.toolEntries,
+    "tool",
+    requireEntries,
+  );
+
+  // Earlier shortcuts win: Escape, then modes, then tools.
+  for (const [key, entry] of modeEntries) {
+    if (!shortcuts.has(key)) {
+      shortcuts.set(key, () => {
+        callCommand(viewModel.selectModeEntry, entry);
+        return true;
+      });
+    }
+  }
+  for (const [key, entry] of toolEntries) {
+    if (!shortcuts.has(key)) {
+      shortcuts.set(key, () => {
+        if (!viewModel.isToolEnabled(entry)) {
+          return false;
+        }
+        callCommand(viewModel.selectToolEntry, entry);
+        return true;
+      });
+    }
+  }
+  return shortcuts;
+}
+
+/**
+ * Focuses the container's window on pointerdown. Clicking the canvas doesn't
+ * focus its window, so keys wouldn't reach a viewer in an iframe (e.g. Sandcastle).
+ *
+ * @param {Element} container
+ * @returns {Function} Removes the listener.
+ * @ignore
+ */
+function focusWindowOnPointerDown(container) {
+  const ownerWindow = container.ownerDocument.defaultView ?? window;
+  const focusWindow = () => ownerWindow.focus();
+  container.addEventListener("pointerdown", focusWindow);
+  return () => container.removeEventListener("pointerdown", focusWindow);
+}
+
+/**
+ * Calls a command; its generated type isn't callable.
+ *
+ * @param {Command} command
+ * @param {EditorToolbarModeEntry|EditorToolbarToolEntry} entry
+ * @ignore
+ */
+function callCommand(command, entry) {
+  /** @type {function(*): void} */ (/** @type {unknown} */ (command))(entry);
+}
+
+/**
+ * @template {EditorToolbarModeEntry|EditorToolbarToolEntry} T
+ * @param {Object<string, string>|undefined} entryIdsByKey
+ * @param {T[]} entries
+ * @param {string} kind
+ * @param {boolean} requireEntries Whether unknown IDs throw rather than being skipped.
+ * @returns {Map<string, T>}
+ * @ignore
+ */
+function mapKeysToEntries(entryIdsByKey, entries, kind, requireEntries) {
+  const entriesByKey = new Map();
+  for (const [key, id] of Object.entries(entryIdsByKey ?? {})) {
+    const entry = entries.find((candidate) => candidate.id === id);
+    if (defined(entry)) {
+      entriesByKey.set(key, entry);
+    } else if (requireEntries) {
+      throw new DeveloperError(
+        `The ${kind} key binding "${key}" refers to unknown entry "${id}".`,
+      );
+    }
+  }
+  return entriesByKey;
+}
+
+/**
+ * Whether a key event is unhandled, unmodified, and outside text input.
+ *
+ * @param {KeyboardEvent} event
+ * @returns {boolean}
+ * @ignore
+ */
+function isShortcutCandidate(event) {
+  if (
+    event.defaultPrevented ||
+    event.ctrlKey ||
+    event.metaKey ||
+    event.altKey
+  ) {
+    return false;
+  }
+  const target = event.target;
+  if (!(target instanceof Element)) {
+    return true;
+  }
+  return !(
+    target.tagName === "INPUT" ||
+    target.tagName === "TEXTAREA" ||
+    target.tagName === "SELECT" ||
+    (target instanceof HTMLElement && target.isContentEditable)
+  );
 }
 
 export default viewerEditorMixin;
