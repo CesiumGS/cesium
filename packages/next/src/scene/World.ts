@@ -126,6 +126,8 @@ export interface PointMesh extends MeshHandle {
     readonly capacity: number;
     /** Arena word of point 0's anchor (x, y, z and a fourth float). */
     readonly anchors: number;
+    /** Arena word of the per-view list of points drawn (cull.wgsl). */
+    readonly list: number;
     /** Arena word of point 0's properties, `stride` words a point. */
     readonly streams: number;
     readonly stride: number;
@@ -664,6 +666,23 @@ export class World {
   private directListBuffer: GPUBuffer;
   /** Counts instance table growths (its buffers are replaced). */
   instanceGeneration = 0;
+  /** Point sets by mesh id: their per-view cull (cull.wgsl `cullPoints`). */
+  private readonly pointSets = new Map<
+    number,
+    {
+      mesh: PointMesh;
+      counter: number;
+      params: GPUBuffer;
+      group: GPUBindGroup;
+      /** Batches drawing it (written with the batches). */
+      batches: number;
+    }
+  >();
+  private readonly pointCounts: GPUBuffer;
+  private readonly freePointCounters = Array.from(
+    { length: MAX_POINT_SETS },
+    (_, k) => MAX_POINT_SETS - 1 - k,
+  );
   private readonly batchCountBuffer: GPUBuffer;
   private readonly batchBuffer: GPUBuffer;
   readonly indirectBuffer: GPUBuffer;
@@ -804,6 +823,7 @@ export class World {
       16,
       GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     );
+    this.pointCounts = buffer("pointCounts", MAX_POINT_SETS * 4, storage);
 
     this.createCullBindGroup();
     this.imageryView = device
@@ -1118,7 +1138,9 @@ export class World {
       });
     }
     const stride = streams?.stride ?? 0;
-    const anchorBytes = Math.max(16, capacity * 16);
+    // Anchors, then the list a view's cull writes (opaque.wgsl `vsPoints`
+    // finds it after the anchors), then the properties.
+    const anchorBytes = Math.max(16, capacity * 16) + Math.max(4, capacity * 4);
     const streamBytes = capacity * stride * 4;
     const bytes = anchorBytes + streamBytes + directory.byteLength;
     const offset = this.vertexAllocator.allocate(bytes);
@@ -1138,7 +1160,11 @@ export class World {
       index: [0, 0],
     });
     const anchors = offset / 4;
-    return {
+    const counter = this.freePointCounters.pop();
+    if (counter === undefined) {
+      throw new Error(`World: at most ${MAX_POINT_SETS} point sets`);
+    }
+    const mesh: PointMesh = {
       id,
       firstIndex: 0,
       indexCount: capacity * 6,
@@ -1159,6 +1185,7 @@ export class World {
       points: {
         capacity,
         anchors,
+        list: anchors + Math.max(4, capacity * 4),
         streams: stride ? (offset + anchorBytes) / 4 : NO_STREAM,
         stride,
         directory: directory.byteLength
@@ -1166,6 +1193,27 @@ export class World {
           : NO_STREAM,
       },
     };
+    const params = this.ctx.device.createBuffer({
+      label: "world.pointCull",
+      size: POINT_CULL_BYTES,
+      usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+    });
+    this.pointSets.set(id, {
+      mesh,
+      counter,
+      params,
+      group: this.ctx.device.createBindGroup({
+        label: "world.pointCull",
+        layout: this.ctx.pipelines.pointCullLayout,
+        entries: [
+          { binding: 0, resource: { buffer: params } },
+          { binding: 1, resource: { buffer: this.vertexBuffer } },
+          { binding: 2, resource: { buffer: this.pointCounts } },
+        ],
+      }),
+      batches: 0,
+    });
+    return mesh;
   }
 
   /** Writes points' properties (`addPointMesh` streams) from `first` on. */
@@ -1203,6 +1251,12 @@ export class World {
     // must not land on their next owner's.
     this.flushUploads();
     this.meshRanges.delete(mesh.id);
+    const set = this.pointSets.get(mesh.id);
+    if (set) {
+      set.params.destroy();
+      this.freePointCounters.push(set.counter);
+      this.pointSets.delete(mesh.id);
+    }
     let bytes = 0;
     for (const [offset, size] of ranges.vertex) {
       this.vertexAllocator.release(offset, size);
@@ -1566,7 +1620,9 @@ export class World {
     const shader = options.shader;
     const billboard = options.billboard !== undefined;
     const instanced = instanceCount > 0;
-    const key = `${mesh.id}|${material}|${textureSet}|${doubleSided ? 1 : 0}|${shader?.id ?? 0}|${billboard ? 1 : 0}|${instanced ? 1 : 0}`;
+    // A point set's draws batch alone: each batch's arguments are its
+    // set's list (cull.wgsl `writePointArgs`).
+    const key = `${mesh.id}|${material}|${textureSet}|${doubleSided ? 1 : 0}|${shader?.id ?? 0}|${billboard ? 1 : 0}|${instanced ? 1 : 0}${pointSet ? `|${index}` : ""}`;
     let batch = this.batches.get(key);
     if (!batch) {
       const reused = this.freeBatches.pop();
@@ -2622,9 +2678,15 @@ export class World {
   }
 
   /** Encodes this world's per-view culling: clear batch counts, cull, write args. */
+  /**
+   * One view's cull. `points`: also its point sets' (cull.wgsl
+   * `cullPoints`), for views that draw them (not shadow cascades or height
+   * captures).
+   */
   encodeCull(
     encoder: GPUCommandEncoder,
     timestampWrites?: GPUComputePassTimestampWrites,
+    points = true,
   ): void {
     const { pipelines, currentViewBindGroup } = this.ctx;
     encoder.clearBuffer(
@@ -2632,6 +2694,9 @@ export class World {
       0,
       Math.max(4, this.batchList.length * 4),
     );
+    if (points && this.pointSets.size) {
+      encoder.clearBuffer(this.pointCounts);
+    }
     this.cullPassDesc.timestampWrites = timestampWrites;
     const pass = encoder.beginComputePass(this.cullPassDesc);
     // Once per frame, before any view's culling reads the tables.
@@ -2649,6 +2714,20 @@ export class World {
     }
     pass.setPipeline(pipelines.writeDrawArgs);
     pass.dispatchWorkgroups(Math.ceil(Math.max(this.batchList.length, 1) / 64));
+    // Point sets: their points in view into their lists, then their draws'
+    // arguments (over `writeDrawArgs`').
+    for (const set of points ? this.pointSets.values() : []) {
+      if (set.batches === 0) {
+        continue;
+      }
+      pass.setBindGroup(2, set.group);
+      pass.setPipeline(pipelines.cullPoints);
+      const groups = Math.ceil(Math.max(1, set.mesh.points.capacity) / 64);
+      const x = Math.min(groups, 65535);
+      pass.dispatchWorkgroups(x, Math.ceil(groups / x));
+      pass.setPipeline(pipelines.writePointArgs);
+      pass.dispatchWorkgroups(1);
+    }
     pass.end();
   }
 
@@ -2743,6 +2822,29 @@ export class World {
     const queue = this.ctx.device.queue;
     queue.writeBuffer(this.batchBuffer, 0, table);
     queue.writeBuffer(this.directListBuffer, 0, direct);
+    // Point sets: a record of each (for its transform) and its batches.
+    for (const set of this.pointSets.values()) {
+      const data = new Uint32Array(POINT_CULL_BYTES / 4);
+      const f32 = new Float32Array(data.buffer);
+      let batches = 0;
+      for (let i = 0; i < this.drawCount && batches < 8; i++) {
+        const batch = this.drawBatches[i];
+        if (batch?.points && batch.mesh.id === set.mesh.id) {
+          if (batches === 0) {
+            data[3] = i;
+          }
+          data[8 + batches++] = batch.index;
+        }
+      }
+      data[0] = set.mesh.points.anchors;
+      data[1] = set.mesh.points.list;
+      data[2] = set.mesh.points.capacity;
+      data[4] = set.counter;
+      data[5] = batches;
+      f32[6] = POINT_MARGIN;
+      set.batches = batches;
+      queue.writeBuffer(set.params, 0, data);
+    }
   }
 
   /**
@@ -2845,8 +2947,10 @@ export class World {
         batch.items === 0 ||
         ((shadow || prepass || depth) && batch.mesh.topology === "line-list") ||
         // Point sets and instances shade outside the opaque pass's depth
-        // prepass.
+        // prepass; point sets aren't ground either (their strips are the
+        // opaque pass's alone).
         (depth && (batch.points || batch.instanced)) ||
+        (height && batch.points) ||
         // Billboards face the camera: no shadows, no ambient occlusion.
         ((shadow || prepass) && batch.billboard)
       ) {
@@ -3075,9 +3179,8 @@ export class World {
   ): void {
     const { mesh } = batch;
     if (batch.points) {
-      if (direct) {
-        pass.draw(mesh.indexCount, batch.items, 0, 0);
-      } else {
+      // Only as the view's cull listed them ("direct" has no list).
+      if (!direct) {
         pass.drawIndirect(this.indirectBuffer, batch.index * INDIRECT_SIZE);
       }
     } else if (direct) {
@@ -3200,6 +3303,13 @@ export class World {
     }
   }
 }
+
+/** Point sets a world draws at once (their counters in `pointCounts`). */
+const MAX_POINT_SETS = 64;
+/** A point set's cull parameters (cull.wgsl `PointCull`). */
+const POINT_CULL_BYTES = 64;
+/** Pixels past a view's edges a point's symbol may reach. */
+const POINT_MARGIN = 64;
 
 /** Hit distance bits meaning "no hit" (the largest finite float). */
 const NO_HIT = 0x7f7fffff;

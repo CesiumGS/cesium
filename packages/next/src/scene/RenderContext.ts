@@ -167,6 +167,10 @@ export interface Pipelines extends SurfacePipelines {
   cullInstances: GPUComputePipeline;
   /** Per-batch indirect args. */
   writeDrawArgs: GPUComputePipeline;
+  /** Point sets' per-view cull into their lists, and their draws' args. */
+  pointCullLayout: GPUBindGroupLayout;
+  cullPoints: GPUComputePipeline;
+  writePointArgs: GPUComputePipeline;
   /**
    * A custom shader's pipelines from its stages' WGSL, one by key; rejects
    * with the compiler's messages.
@@ -702,6 +706,17 @@ async function createPipelines(
   const cullLayout = device.createPipelineLayout({
     bindGroupLayouts: [viewLayout, cullWorldLayout],
   });
+  const pointCullLayout = device.createBindGroupLayout({
+    label: "cull.points",
+    entries: [
+      { binding: 0, visibility: COMPUTE, buffer: { type: "uniform" } },
+      storage(1, false, COMPUTE), // the vertex arena
+      storage(2, false, COMPUTE), // point counts
+    ],
+  });
+  const pointCullPipelineLayout = device.createPipelineLayout({
+    bindGroupLayouts: [viewLayout, cullWorldLayout, pointCullLayout],
+  });
   const opaqueLayout = device.createPipelineLayout({
     bindGroupLayouts: [viewLayout, drawWorldLayout, textureSetLayout],
   });
@@ -716,13 +731,15 @@ async function createPipelines(
     topology: GPUPrimitiveTopology = "triangle-list",
     layout: GPUPipelineLayout = opaqueLayout,
     prepassed = topology === "triangle-list",
+    points = false,
   ) =>
     device.createRenderPipelineAsync({
       label,
       layout,
       vertex: {
         module: shaders,
-        entryPoint: "vs",
+        // Point sets: six vertices per listed point, the batch's one item.
+        entryPoint: points ? "vsPoints" : "vs",
         // The draw index: one u32 per instance from the batch's slice of the
         // instance list, bound at the batch's offset.
         buffers: [
@@ -1014,7 +1031,15 @@ async function createPipelines(
       opaqueLines: () =>
         opaquePipeline(opaque, name("opaque.lines"), "none", "line-list", o),
       opaquePoints: () =>
-        opaquePipeline(opaque, name("opaque.points"), "none", tri, o, false),
+        opaquePipeline(
+          opaque,
+          name("opaque.points"),
+          "none",
+          tri,
+          o,
+          false,
+          true,
+        ),
       opaqueInstanced: () =>
         opaquePipeline(opaque, name("opaque.instanced"), "back", tri, o, false),
       opaqueInstancedDoubleSided: () =>
@@ -1203,6 +1228,8 @@ async function createPipelines(
     cullRecords,
     cullInstances,
     writeDrawArgs,
+    cullPoints,
+    writePointArgs,
     builtinSurface,
     aoTrace,
     aoDenoise,
@@ -1235,6 +1262,16 @@ async function createPipelines(
       label: "cull.args",
       layout: cullLayout,
       compute: { module: cullModule, entryPoint: "writeDrawArgs" },
+    }),
+    device.createComputePipelineAsync({
+      label: "cull.points",
+      layout: pointCullPipelineLayout,
+      compute: { module: cullModule, entryPoint: "cullPoints" },
+    }),
+    device.createComputePipelineAsync({
+      label: "cull.pointArgs",
+      layout: pointCullPipelineLayout,
+      compute: { module: cullModule, entryPoint: "writePointArgs" },
     }),
     surfacePipelines("", opaqueModule, casterModule, translucentModule),
     device.createComputePipelineAsync({
@@ -1365,6 +1402,9 @@ async function createPipelines(
     cullRecords,
     cullInstances,
     writeDrawArgs,
+    pointCullLayout,
+    cullPoints,
+    writePointArgs,
     ...builtinSurface,
     surface,
     setLayout,

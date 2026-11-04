@@ -2932,7 +2932,8 @@ export class Engine {
           0,
           VIEW_SIZE,
         );
-        view.world.encodeCull(enc);
+        // Point sets cast no shadows: their cull is the view's alone.
+        view.world.encodeCull(enc, undefined, false);
         shadowDepth.view = this.ctx.shadowLayers[k]!;
         shadowPass.timestampWrites = this.timer.passWrites("shadows");
         const pass = enc.beginRenderPass(shadowPass);
@@ -2954,7 +2955,7 @@ export class Engine {
           0,
           VIEW_SIZE,
         );
-        view.world.encodeCull(enc);
+        view.world.encodeCull(enc, undefined, false);
         const pass = enc.beginRenderPass({
           label: "heightCapture",
           colorAttachments: [],

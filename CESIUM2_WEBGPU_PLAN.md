@@ -3049,10 +3049,24 @@ Over 400 km, 100,000 take 3.4 ms of GPU and 10,000,000 57.5 ms. Before the
 prepass and air changes, 1,000,000 took 45 ms and 10,000,000 70 ms. Ten
 million is bound by its 60 million vertex invocations a frame.
 
-Not yet: per-point culling and compaction (only visible points' vertices),
-four-vertex quads and fewer varyings for point sets, compute rasterization
-for points smaller than a few pixels (the plan's two-pass compute point
-clouds), labels (increment 5), Bézier symbol paths (Slug), `sizeWith`,
+_Per-point culling (r48)._ Each view's cull pass (cull.wgsl `cullPoints`,
+not the shadow cascades' or height captures', which don't draw points)
+lists the points in or near its frustum (64 pixels of slack) in the set's
+list in the arena, counted per workgroup and then once globally (ten
+million adds to one counter serialized for seconds a frame: the first
+version stalled at 10 million); `writePointArgs` then draws six vertices
+per listed point (`vsPoints`). Measured on a 2,928 × 1,750 canvas against
+the commit before: following a vehicle among 10,000,000, 23–27 ms of GPU
+against 32 (the opaque pass 10–13 ms); in the overview, with every point
+in view, unchanged (76 against 74 ms), the cull itself 1.2 ms. Four-vertex
+strips, one instance a point, drew slower than the six-vertex list (the
+opaque pass 70 ms at 10,000,000): an instance of four vertices fills few
+of a vertex wave's lanes, so quads stay six vertices in one draw.
+
+Not yet: fewer varyings for point sets (they share `VsOut` with every
+draw), compute rasterization for points smaller than a few pixels (the
+plan's two-pass compute point clouds: what the 10,000,000-point overview
+needs), labels (increment 5), Bézier symbol paths (Slug), `sizeWith`,
 heights in `placement.offset`, lines and polygons from live sources.
 
 **Found on the way: the instances benchmark's GPU time grew 36 → 160 ms**

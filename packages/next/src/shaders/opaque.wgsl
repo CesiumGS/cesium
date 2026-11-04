@@ -577,6 +577,18 @@ fn vs(@builtin(vertex_index) vertexIndex: u32, @location(0) item: u32) -> VsOut 
   return vertexOut(vertexIndex, item, true);
 }
 
+// A point set's quads (RecordFlags.points, `opaquePoints`): six vertices
+// for each point the view's cull listed (cull.wgsl `cullPoints`, the list
+// after the anchors), in one draw. (Four-vertex strips as instances drew
+// slower: an instance of four vertices fills few of a vertex wave's lanes.)
+@vertex
+fn vsPoints(@builtin(vertex_index) vertexIndex: u32, @location(0) item: u32) -> VsOut {
+  let r = records[items[item].record];
+  let list = r.positionOffset + (r.indexCount / 6u) * 4u;
+  let point = bitcast<u32>(vertices[list + vertexIndex / 6u]);
+  return vertexOut(point * 6u + vertexIndex % 6u, item, true);
+}
+
 // The same without the air (shadow maps: no aerial perspective there).
 @vertex
 fn vsDepth(@builtin(vertex_index) vertexIndex: u32, @location(0) item: u32) -> VsOut {
