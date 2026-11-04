@@ -19,6 +19,7 @@ import { dirname, join } from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { chromium } from "@playwright/test";
+import { keepAwake } from "./suite/telemetry.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 let BASE = process.env.BENCH_URL;
@@ -228,6 +229,9 @@ for (const name of names) {
   }
 }
 
+// The machine and display stay awake for the run (a GPU clocked down
+// mid-run reads as a regression).
+const awake = keepAwake();
 const browser = await chromium.launch({
   headless: process.env.BENCH_HEADED ? false : true,
   // Edge: Chromium with the same WebGPU stack, installed under Program Files.
@@ -300,6 +304,7 @@ for (const name of names) {
 }
 await browser.close();
 await server?.close();
+awake.release();
 
 const stamp = new Date().toISOString().replace(/[:.]/g, "-");
 const gpu =
