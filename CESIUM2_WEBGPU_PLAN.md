@@ -3084,8 +3084,22 @@ following a vehicle among 10,000,000 (10,000 trucks, symbols up close)
 frame a second, which read as a stall: measure with the pane shown, or
 one frame at a time.)
 
+_Antialiased symbols (r48)._ Symbols were cut out at alpha 0.5 per pixel
+(quads) and one sample a pixel (splats): jagged edges that flickered as
+points moved. Now a style's symbol is its signed distance in pixels:
+quads (a pixel larger each way) give each pixel its coverage, written as
+the share of the pixel's four MSAA samples it covers (`fsPoints`, its
+`sample_mask`; alpha-to-coverage would read the scene target's alpha,
+which unlit draws leave 0 for the exposure meter), and outlines' inner
+edges blend by it too. Splats keep their coverage in the color's alpha
+and the resolve blends the display color over what is drawn by it. Their
+depth stays the anchor's: a symbol centered on a point on the ground is
+half under the ground in front of it, so the demo stands its symbols on
+their points (`placement.offset`, which the splat kernel now reads too,
+`styleOffset`), as 1.x's `verticalOrigin: BOTTOM`.
+
 Not yet: fewer varyings for point sets (they share `VsOut` with every
-draw), anti-aliased splats (coverage, not one sample a pixel), labels
+draw), labels
 (increment 5), Bézier symbol paths (Slug), `sizeWith`, heights in
 `placement.offset`, lines and polygons from live sources.
 

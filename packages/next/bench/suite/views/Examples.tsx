@@ -93,6 +93,8 @@ const backToExamples = (
 
 const message = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
+const PANEL_COLLAPSED = "dyno.examples.panel.collapsed";
+
 export function ExamplePage() {
   const { id } = exampleRoute.useParams();
   const info = EXAMPLES.find((x) => x.id === id);
@@ -104,6 +106,24 @@ export function ExamplePage() {
   const [error, setError] = useState<string>();
   const [showSource, setShowSource] = useState(false);
   const [source, setSource] = useState<string>();
+  // The controls panel collapses to its header, as the inspector does (kept
+  // across examples and visits).
+  const [collapsed, setCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem(PANEL_COLLAPSED) === "1";
+    } catch {
+      return false;
+    }
+  });
+  const toggleCollapsed = () =>
+    setCollapsed((was) => {
+      try {
+        localStorage.setItem(PANEL_COLLAPSED, was ? "0" : "1");
+      } catch {
+        // Not kept (storage blocked): only this visit's.
+      }
+      return !was;
+    });
   const exists = !!info;
 
   // One viewer while the page is open, on the first example's globe.
@@ -252,7 +272,25 @@ export function ExamplePage() {
       )}
       <div className="examples-stage">
         <div ref={host} className="examples-view" />
-        <div ref={panel} className="examples-panel" aria-label="Controls" />
+        <div className="examples-panel">
+          <button
+            type="button"
+            className="examples-panel-header"
+            aria-expanded={!collapsed}
+            aria-controls="example-controls"
+            onClick={toggleCollapsed}
+          >
+            Controls
+            <span className="examples-panel-chevron" aria-hidden="true" />
+          </button>
+          <div
+            ref={panel}
+            id="example-controls"
+            className="examples-panel-body"
+            aria-label="Controls"
+            hidden={collapsed}
+          />
+        </div>
         {running && !error && (
           <div className="examples-loading" role="status">
             <CircularProgress size={20} />

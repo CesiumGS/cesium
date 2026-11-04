@@ -86,11 +86,17 @@ const STYLE: VectorStyleDocument = {
       shape:
         "match(${affiliation}, 'friend', 'friendFrame', 'hostile', 'diamond', 'neutral', 'square', 'circle')",
       size: "${param.symbolSize} * 1px",
+      // Standing on the vehicle's place (bottom-centered): centered, the
+      // ground in front of it would hide its lower half.
+      placement: { offset: [0, "${param.symbolSize} * -0.5px"] },
       fill: { color: "scale('affiliationFill', ${affiliation})" },
-      // No outline on symbols too small to show one.
+      // Thinner on small symbols (an eighth of their size, 0.75–1.5 px):
+      // a full outline would be most of a few-pixel symbol. Splatted ones
+      // (6 px and under) draw none.
       outline: {
         color: "#000000",
-        width: "${param.outline} && ${param.symbolSize} >= 10 ? 1.5 : 0",
+        width:
+          "${param.outline} ? min(1.5, max(0.75, ${param.symbolSize} / 8)) : 0",
       },
     },
     {
@@ -368,7 +374,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
       stride: next.stride,
       affiliation: next.layout.affiliation!.offset,
     });
-    overview();
+    // The camera stays where it is (the Overview button frames the area).
   }
 
   /** The ground at `east`, `north` (m from the site), Earth-fixed. */
@@ -542,19 +548,12 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
   const feedOut = readout("Feed");
   const latencyOut = readout("Each vehicle");
   const updateOut = readout("Update");
-  const legend = el("ul", { className: "legend" });
-  const fills = ["128,224,255", "255,128,128", "170,255,170", "255,255,128"];
-  const shapes = [
-    '<rect x="1" y="4" width="16" height="10"/>',
-    '<path d="M9 1 17 9 9 17 1 9Z"/>',
-    '<rect x="2.5" y="2.5" width="13" height="13"/>',
-    '<circle cx="9" cy="9" r="7.5"/>',
-  ];
-  AFFILIATIONS.forEach((a, k) => {
-    const item = el("li");
-    item.innerHTML = `<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><g fill="rgb(${fills[k]})" stroke="#000" stroke-width="1.5">${shapes[k]}</g></svg>`;
-    item.append(a[0]!.toUpperCase() + a.slice(1));
-    legend.append(item);
+  const fxaa = el("input", {
+    type: "checkbox",
+    checked: viewer.view.fxaa,
+    onchange: () => {
+      viewer.view.fxaa = fxaa.checked;
+    },
   });
   const pause = el("input", {
     type: "checkbox",
@@ -620,6 +619,8 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     el("label", {}, "Paused", pause),
     heading("Style"),
     ...styleControls,
+    // FXAA after tonemapping, on top of 4× MSAA.
+    el("label", {}, "FXAA", fxaa),
     el(
       "div",
       { className: "buttons" },
@@ -644,7 +645,6 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
       el("button", { type: "button", onclick: overview }, "Overview"),
     ),
     readouts,
-    legend,
     el(
       "p",
       {},

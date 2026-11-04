@@ -35,9 +35,10 @@ fn fs(@builtin(position) frag: vec4f) -> SplatOut {
   let srgb = unpack4x8unorm(splatColor[at]);
   let feature = splatFeature[at];
   var out: SplatOut;
-  // Unlit: no scene light (alpha 0 keeps it out of the exposure meter).
+  // Unlit: no scene light (the scene target isn't written). Over what is
+  // drawn by its coverage of the pixel, premultiplied (antialiased edges).
   out.color = vec4f(0.0);
-  out.display = vec4f(pow(srgb.rgb, vec3f(2.2)), 1.0);
+  out.display = vec4f(pow(srgb.rgb, vec3f(2.2)) * srgb.a, srgb.a);
   out.featureId = vec2u(feature & 0xffffu, feature >> 16u);
   out.depth = bitcast<f32>(bits);
   return out;

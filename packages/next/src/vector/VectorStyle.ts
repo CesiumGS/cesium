@@ -110,7 +110,7 @@ export interface CompiledShapeLayer {
   shader: CustomShader;
   /**
    * The layer as compute functions for its points' cull (pointCull.wgsl:
-   * `styleShow`, `styleSize`, `styleColor`, `styleShapeAt`), which
+   * `styleShow`, `styleSize`, `styleColor`, `styleShapeAt`, `styleOffset`), which
    * rasterizes symbols too small for quads (`World.setPointCuller`).
    */
   kernel: string;
@@ -864,6 +864,8 @@ fn styleScale(i: u32, distance: f32) -> f32 { return ${scale}; }
       `${path}.filter`,
     );
     const sizeK = number(l.size, 12, "kernel", "size");
+    const offsetXK = number(offset[0], 0, "kernel", "placement.offset[0]");
+    const offsetYK = number(offset[1], 0, "kernel", "placement.offset[1]");
     const fillK = color(l.fill?.color, "#444444", "kernel", "fill.color");
     const opacityK = number(l.opacity, 1, "kernel", "opacity");
     const shapeK = expect(
@@ -891,7 +893,8 @@ fn vertexMain(vsInput: VertexInput, vsOutput: ptr<function, VertexOutput>) {
   // Clockwise on screen (y up); the offset in pixels, y down.
   let c = cos(angle);
   let s = sin(angle);
-  let q = vsInput.positionMC.xy * size;
+  // A pixel larger each way: room for the antialiased edge.
+  let q = vsInput.positionMC.xy * (size + 2.0);
   let turned = vec2f(q.x * c + q.y * s, -q.x * s + q.y * c);
   let corner = turned + vec2f(${offsetX}, -(${offsetY}));
   (*vsOutput).positionMC = vec3f(select(vec2f(0.0), corner, show), 0.0);
@@ -906,15 +909,20 @@ ${shapeCases}
 }
 fn fragmentMain(fsInput: FragmentInput, material: ptr<function, MaterialOutput>) {
   let size = max(${sizeF}, 1e-3);
-  let p = fsInput.texCoord0 * 2.0 - 1.0;
-  let d = styleShape(u32(${shapeValue}), p);
-  // An outline on the edge's inside, its width in pixels.
-  let outline = ${outlineWidth} * 2.0 / size;
+  // The quad is a pixel larger each way than the symbol (the vertex stage).
+  let p = (fsInput.texCoord0 * 2.0 - 1.0) * (size + 2.0) / size;
+  // The signed distance in pixels: the pixel's coverage, antialiased.
+  let d = styleShape(u32(${shapeValue}), p) * size * 0.5;
+  let coverage = clamp(0.5 - d, 0.0, 1.0);
+  // An outline on the edge's inside, its width in pixels, its own edge
+  // antialiased too.
+  let outline = ${outlineWidth};
   let fill = ${fill};
   let edge = ${outlineColor};
-  let color = select(fill, edge, outline > 0.0 && d > -outline);
+  let toEdge = select(0.0, clamp(d + outline + 0.5, 0.0, 1.0), outline > 0.0);
+  let color = mix(fill, edge, toEdge);
   (*material).baseColor = pow(color.rgb, vec3f(2.2));
-  (*material).alpha = select(0.0, color.a * ${opacity}, d < 0.0);
+  (*material).alpha = coverage * color.a * ${opacity};
   (*material).unlit = true;
 }
 `;
@@ -933,6 +941,9 @@ fn styleColor(i: u32, distance: f32) -> vec4f {
 }
 fn styleShapeAt(i: u32, distance: f32, p: vec2f) -> f32 {
   return styleShape(u32(${shapeK}), p);
+}
+fn styleOffset(i: u32, distance: f32) -> vec2f {
+  return vec2f(${offsetXK}, ${offsetYK});
 }
 `;
     layers.push({

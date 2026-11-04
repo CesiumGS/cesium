@@ -50,6 +50,7 @@ export const POINT_STYLE_DEFAULTS = `fn styleShow(i: u32, distance: f32) -> bool
 fn styleSize(i: u32, distance: f32) -> f32 { return 3.4e38; }
 fn styleColor(i: u32, distance: f32) -> vec4f { return vec4f(1.0); }
 fn styleShapeAt(i: u32, distance: f32, p: vec2f) -> f32 { return -1.0; }
+fn styleOffset(i: u32, distance: f32) -> vec2f { return vec2f(0.0); }
 `;
 
 export const SCENE_TARGETS = {
@@ -790,7 +791,8 @@ async function createPipelines(
       },
       fragment: {
         module: shaders,
-        entryPoint: "fs",
+        // Point sets: their symbols' coverage as the sample mask.
+        entryPoint: points ? "fsPoints" : "fs",
         // Cutouts were decided per sample by the depth (`depthCoverageFs`).
         ...(depthPrepass && prepassed
           ? { constants: { cutOutInDepth: 1 } }
@@ -1323,7 +1325,25 @@ async function createPipelines(
         fragment: {
           module: splatModule,
           entryPoint: "fs",
-          targets: SCENE_TARGETS.colorFormats.map((format) => ({ format })),
+          // The scene's light untouched; the display color over what is
+          // drawn by the splat's coverage (premultiplied).
+          targets: [
+            { format: SCENE_TARGETS.colorFormats[0]!, writeMask: 0 },
+            { format: SCENE_TARGETS.colorFormats[1]! },
+            {
+              format: SCENE_TARGETS.colorFormats[2]!,
+              blend: {
+                color: {
+                  srcFactor: "one",
+                  dstFactor: "one-minus-src-alpha",
+                },
+                alpha: {
+                  srcFactor: "one",
+                  dstFactor: "one-minus-src-alpha",
+                },
+              },
+            },
+          ],
         },
         primitive: { topology: "triangle-list" },
         depthStencil: {

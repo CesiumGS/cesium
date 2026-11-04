@@ -67,18 +67,50 @@
   max-height: calc(100% - 2 * var(--stratakit-space-300));
   overflow: auto;
   box-sizing: border-box;
-  padding: var(--stratakit-space-300);
   border-radius: var(--stratakit-radius-md);
   background: var(--stratakit-color-bg-page-base);
   color: var(--stratakit-color-text-neutral-primary);
   box-shadow: var(--stratakit-shadow-surface-xl);
   font-size: var(--stratakit-font-size-body-sm);
+}
+/* An example without controls: no panel. */
+.examples-panel:has(> .examples-panel-body:empty) {
+  display: none;
+}
+.examples-panel-body {
   display: flex;
   flex-direction: column;
   gap: var(--stratakit-space-200);
+  padding: 0 var(--stratakit-space-300) var(--stratakit-space-300);
 }
-.examples-panel:empty {
+.examples-panel-body[hidden] {
   display: none;
+}
+/* Collapses the panel to itself, as the inspector's header does. */
+.examples-panel .examples-panel-header {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: var(--stratakit-space-200) var(--stratakit-space-300);
+  font-weight: 600;
+  cursor: pointer;
+}
+.examples-panel .examples-panel-header:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong, currentColor);
+  outline-offset: -2px;
+}
+.examples-panel-chevron {
+  margin-inline-start: auto;
+  inline-size: 6px;
+  block-size: 6px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg) translateY(-2px);
+}
+.examples-panel-header[aria-expanded="true"] .examples-panel-chevron {
+  transform: rotate(-135deg) translateY(-1px);
 }
 .examples-panel label {
   display: flex;
@@ -114,24 +146,6 @@
 .examples-panel dd {
   margin: 0;
   font-variant-numeric: tabular-nums;
-}
-.examples-panel .legend {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--stratakit-space-100);
-}
-.examples-panel .legend li {
-  display: flex;
-  align-items: center;
-  gap: var(--stratakit-space-100);
-}
-.examples-panel .legend svg {
-  flex: none;
-  width: 18px;
-  height: 18px;
 }
 .examples-panel p {
   margin: 0;

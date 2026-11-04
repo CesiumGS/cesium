@@ -1137,6 +1137,40 @@ fn fs(in: VsOut, @builtin(front_facing) frontFacing: bool) -> FsOut {
   return out;
 }
 
+// A point's symbol, antialiased (`opaquePoints`): its alpha, the style's
+// coverage of the pixel (vector/VectorStyle.ts), as the share of the
+// pixel's four samples it covers, as alpha-to-coverage does; that reads
+// location 0's alpha, which unlit draws leave 0 (the exposure meter). The
+// samples covered turn with the pixel, so overlapping symbols mix.
+struct FsPointsOut {
+  @location(0) color: vec4f,
+  @location(1) featureId: vec2u,
+  @location(2) display: vec4f,
+  @builtin(sample_mask) mask: u32,
+};
+
+@fragment
+fn fsPoints(in: VsOut, @builtin(front_facing) frontFacing: bool) -> FsPointsOut {
+  let surface = shadeSurface(in, frontFacing, false);
+  let samples = u32(round(clamp(surface.alpha, 0.0, 1.0) * 4.0));
+  if (samples == 0u) {
+    discard;
+  }
+  let turn = (u32(in.position.x) + 2u * u32(in.position.y)) % 4u;
+  let covered = (1u << samples) - 1u;
+  var out: FsPointsOut;
+  out.mask = ((covered << turn) | (covered >> (4u - turn))) & 15u;
+  out.featureId = vec2u(in.feature & 0xffffu, in.feature >> 16u);
+  if (surface.unlit) {
+    out.color = vec4f(0.0);
+    out.display = vec4f(surface.color, 1.0);
+  } else {
+    out.color = vec4f(surface.color, 1.0);
+    out.display = vec4f(0.0);
+  }
+  return out;
+}
+
 // Translucent surfaces (`translucent`) take no ambient occlusion: the
 // screen's occlusion is that of the opaque surfaces behind them.
 // A fragment as custom shaders' `fragmentMain` sees it.

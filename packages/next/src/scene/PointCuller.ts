@@ -11,6 +11,7 @@ import {
 /**
  * A point draw's cull with a style's functions (pointCull.wgsl; a vector
  * style's layer: `styleShow`, `styleSize`, `styleColor`, `styleShapeAt`,
+ * `styleOffset`,
  * reading `uniforms.<name>` at group 3): in each view it lists the points
  * whose symbols draw as quads and splats those up to the draw's `tiny`
  * pixels (`World.setPointCuller`). Until its pipelines compile it culls as
@@ -31,7 +32,7 @@ export class PointCuller {
   constructor(
     private readonly ctx: RenderContext,
     options: {
-      /** WGSL defining the four style functions. */
+      /** WGSL defining the five style functions. */
       code: string;
       /** The style's parameters (`uniforms.<name>`). */
       uniforms: Record<string, UniformDeclaration>;

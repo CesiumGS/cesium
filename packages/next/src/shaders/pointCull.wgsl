@@ -10,9 +10,9 @@
 //
 // common.wgsl and cull.wgsl (group 0 the view, group 1 the world's cull
 // tables, `relativeMatrix`) precede; the style follows: `styleShow`,
-// `styleSize` (pixels), `styleColor` (sRGB with alpha) and `styleShapeAt`
-// (a signed distance in the symbol's −1…1 box, y down), by point and its
-// distance from the camera.
+// `styleSize` (pixels), `styleColor` (sRGB with alpha), `styleShapeAt`
+// (a signed distance in the symbol's −1…1 box, y down) and `styleOffset`
+// (pixels, y down), by point and its distance from the camera.
 
 struct PointCull {
   anchors: u32,    // arena word of point 0's anchor (four floats a point)
@@ -75,8 +75,11 @@ fn placePoint(i: u32) -> vec4f {
   return vec4f(c, 1.0);
 }
 
-/** A splatted point's pixel center (x right, y down) and reverse-Z depth. */
-fn onScreen(rel: vec3f) -> vec4f {
+/**
+ * A splatted point's symbol's pixel center (x right, y down; its anchor's,
+ * moved by the style's offset) and its anchor's reverse-Z depth.
+ */
+fn onScreen(i: u32, distance: f32, rel: vec3f) -> vec4f {
   let clip = view.viewProj * vec4f(rel, 1.0);
   if (clip.w <= 0.0) {
     return vec4f(0.0);
@@ -85,9 +88,10 @@ fn onScreen(rel: vec3f) -> vec4f {
   if (ndc.z <= 0.0 || ndc.z > 1.0) {
     return vec4f(0.0);
   }
+  let offset = styleOffset(i, distance);
   return vec4f(
-    (ndc.x * 0.5 + 0.5) * view.viewport.x,
-    (0.5 - ndc.y * 0.5) * view.viewport.y,
+    (ndc.x * 0.5 + 0.5) * view.viewport.x + offset.x,
+    (0.5 - ndc.y * 0.5) * view.viewport.y + offset.y,
     ndc.z,
     1.0,
   );
@@ -100,9 +104,16 @@ fn splatted(i: u32, distance: f32) -> bool {
     styleColor(i, distance).a >= 0.5;
 }
 
-// The footprint: the pixels whose centers the symbol's shape covers, and
+// The footprint: the pixels the symbol's shape covers at all (antialiased:
+// a pixel's coverage from its center's signed distance in pixels), and
 // always the one under its center (a symbol never vanishes).
-const MAX_FOOTPRINT = 8;
+const MAX_FOOTPRINT = 9;
+
+/** A pixel's coverage by a splatted symbol (`p` in its −1…1 box). */
+fn splatCoverage(i: u32, distance: f32, p: vec2f, half: f32, center: bool) -> f32 {
+  let c = clamp(0.5 - styleShapeAt(i, distance, p) * half, 0.0, 1.0);
+  return select(c, max(c, 0.5), center);
+}
 
 var<workgroup> pointsKept: atomic<u32>;
 var<workgroup> pointsBase: u32;
@@ -125,24 +136,24 @@ fn cullPoints(
     if (styleShow(i, distance)) {
       if (splatted(i, distance)) {
         // Its depth on each pixel it covers (the nearest wins).
-        let s = onScreen(placed.xyz);
+        let s = onScreen(i, distance, placed.xyz);
         if (s.w > 0.0) {
           let size = max(styleSize(i, distance), 1.0);
           let half = size * 0.5;
           let bits = bitcast<u32>(s.z);
           let w = i32(view.viewport.x);
           let h = i32(view.viewport.y);
-          let x0 = i32(floor(s.x - half));
-          let y0 = i32(floor(s.y - half));
+          let x0 = i32(floor(s.x - half - 0.5));
+          let y0 = i32(floor(s.y - half - 0.5));
           let center = vec2i(floor(s.xy));
           for (var dy = 0; dy < MAX_FOOTPRINT; dy++) {
             for (var dx = 0; dx < MAX_FOOTPRINT; dx++) {
               let px = vec2i(x0 + dx, y0 + dy);
-              if (f32(dx) > size + 1.0 || f32(dy) > size + 1.0 || any(px < vec2i(0)) || px.x >= w || px.y >= h) {
+              if (f32(dx) > size + 2.0 || f32(dy) > size + 2.0 || any(px < vec2i(0)) || px.x >= w || px.y >= h) {
                 continue;
               }
               let p = (vec2f(px) + 0.5 - s.xy) / half;
-              if (all(px == center) || styleShapeAt(i, distance, p) < 0.0) {
+              if (splatCoverage(i, distance, p, half, all(px == center)) > 0.0) {
                 atomicMax(&splatDepth[u32(px.y * w + px.x)], bits);
               }
             }
@@ -184,30 +195,32 @@ fn splatPoints(
   if (!styleShow(i, distance) || !splatted(i, distance)) {
     return;
   }
-  let s = onScreen(placed.xyz);
+  let s = onScreen(i, distance, placed.xyz);
   if (s.w == 0.0) {
     return;
   }
   let size = max(styleSize(i, distance), 1.0);
   let half = size * 0.5;
   let bits = bitcast<u32>(s.z);
-  let color = pack4x8unorm(styleColor(i, distance));
+  let color = styleColor(i, distance);
   let feature = records[pointCull.record].featureId + i;
   let w = i32(view.viewport.x);
   let h = i32(view.viewport.y);
-  let x0 = i32(floor(s.x - half));
-  let y0 = i32(floor(s.y - half));
+  let x0 = i32(floor(s.x - half - 0.5));
+  let y0 = i32(floor(s.y - half - 0.5));
   let center = vec2i(floor(s.xy));
   for (var dy = 0; dy < MAX_FOOTPRINT; dy++) {
     for (var dx = 0; dx < MAX_FOOTPRINT; dx++) {
       let px = vec2i(x0 + dx, y0 + dy);
-      if (f32(dx) > size + 1.0 || f32(dy) > size + 1.0 || any(px < vec2i(0)) || px.x >= w || px.y >= h) {
+      if (f32(dx) > size + 2.0 || f32(dy) > size + 2.0 || any(px < vec2i(0)) || px.x >= w || px.y >= h) {
         continue;
       }
       let p = (vec2f(px) + 0.5 - s.xy) / half;
       let at = u32(px.y * w + px.x);
-      if ((all(px == center) || styleShapeAt(i, distance, p) < 0.0) && atomicLoad(&splatDepth[at]) == bits) {
-        splatColor[at] = color;
+      let coverage = splatCoverage(i, distance, p, half, all(px == center));
+      if (coverage > 0.0 && atomicLoad(&splatDepth[at]) == bits) {
+        // Its coverage of the pixel as alpha: the resolve blends by it.
+        splatColor[at] = pack4x8unorm(vec4f(color.rgb, coverage));
         splatFeature[at] = feature;
       }
     }

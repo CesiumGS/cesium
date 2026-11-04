@@ -107,10 +107,10 @@ export class VectorLayer {
         }
         const own = c.layers.find((x) => x.path === l.path)!;
         if (own.kind === "shape") {
+          // Opaque: the symbol's coverage is the sample mask (`fsPoints`).
           const material = world.addMaterial({
             baseColor: [1, 1, 1, 1],
-            alphaCutoff: 0.5,
-            flags: MaterialFlags.alphaMask | MaterialFlags.unlit,
+            flags: MaterialFlags.unlit,
           });
           layer.materials.push(material);
           const rotation = m4.copy(m4.mat4(), source.frame);

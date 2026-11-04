@@ -1753,7 +1753,8 @@ export class World {
 
   /**
    * A point draw's cull with a style's functions (WGSL defining
-   * `styleShow`, `styleSize`, `styleColor` and `styleShapeAt`, reading
+   * `styleShow`, `styleSize`, `styleColor`, `styleShapeAt` and
+   * `styleOffset`, reading
    * `uniforms.<name>`), for `setPointCuller`.
    */
   createPointCuller(options: {
