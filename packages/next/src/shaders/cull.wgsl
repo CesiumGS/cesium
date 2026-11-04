@@ -51,8 +51,11 @@ fn relativeMatrix(t: Transform) -> mat4x4f {
 // Hidden, empty, or not selected for this view (multi-view tile selection
 // shares one draw table and picks LOD per view through the mask).
 fn drawable(r: DrawRecord, t: Transform) -> bool {
+  // A height capture's view (View.time.y 1) culls what isn't ground
+  // (RecordFlags.notGround).
   return (r.flags & 1u) == 0u && (t.flags & 1u) == 0u && r.indexCount != 0u &&
-    (r.viewMask & view.viewBit) != 0u;
+    (r.viewMask & view.viewBit) != 0u &&
+    !(view.time.y > 0.5 && (r.flags & 32u) != 0u);
 }
 
 fn inFrustum(m: mat4x4f, center: vec3f, radius: f32) -> bool {

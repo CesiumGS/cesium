@@ -257,6 +257,11 @@ export const RecordFlags = {
    * `billboardSize` and the instance's scale (`DrawOptions.billboard`).
    */
   billboard: 16,
+  /**
+   * Not ground: left out of height captures (Engine `addHeightCapture`),
+   * so what clamps there (tracks) doesn't land on itself.
+   */
+  notGround: 32,
 } as const;
 
 /**

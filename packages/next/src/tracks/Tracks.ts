@@ -4,7 +4,7 @@ import { eastNorthUpToFixedFrame } from "../math/transforms.ts";
 import { Ellipsoid } from "../math/ellipsoid.ts";
 import * as m4 from "../math/mat4.ts";
 import type { Vec3 } from "../math/vec3.ts";
-import type { Engine } from "../scene/Engine.ts";
+import type { Engine, HeightCapture } from "../scene/Engine.ts";
 import type { World, DrawHandle } from "../scene/World.ts";
 import type { CustomShader } from "../scene/CustomShader.ts";
 import type { GltfAsset } from "../io/gltfTypes.ts";
@@ -46,6 +46,14 @@ export interface TracksOptions {
     /** Its material's base color (linear RGBA; default white). */
     color?: readonly [number, number, number, number];
   };
+  /**
+   * Clamp to the ground (terrain, 3D Tiles: what the world draws, as its
+   * first view selected it) over a square around `origin` (`halfExtent`
+   * meters each way), captured from above each frame in a `size`² depth
+   * texture (default 2,048) from `top` down to `bottom` (m; defaults 9,000
+   * and −1,000). Samples' z is then the height above the ground.
+   */
+  clamp?: { halfExtent: number; size?: number; top?: number; bottom?: number };
   /**
    * With both: the model within this distance of each view's camera, the
    * billboard beyond (m; default 2,000).
@@ -89,7 +97,10 @@ export class Tracks {
   private readonly stateBuffer: GPUBuffer;
   private readonly partBuffer: GPUBuffer;
   private readonly params: GPUBuffer;
-  private readonly paramsData = new ArrayBuffer(32);
+  private readonly paramsData = new ArrayBuffer(48);
+  /** The ground captured from above (`clamp`), if clamped. */
+  readonly heights: HeightCapture | undefined;
+  private readonly noHeights: GPUTexture | undefined;
   private readonly bindGroup: GPUBindGroup;
   private readonly parts: number;
   private readonly clock: () => number;
@@ -130,6 +141,7 @@ export class Tracks {
     if (options.model) {
       this.model = engine.addModel(world, options.model.asset, {
         modelMatrix: frame,
+        ...(options.clamp ? { ground: false } : {}),
         instances: {
           matrices: identities,
           ...(both ? { visibleWithin: distance } : {}),
@@ -163,6 +175,7 @@ export class Tracks {
           return m;
         })(),
         radius: 10,
+        ...(options.clamp ? { ground: false } : {}),
         material: world.addMaterial({
           baseColor: [...(b.color ?? [1, 1, 1, 1])],
         }),
@@ -217,9 +230,27 @@ export class Tracks {
       size: Math.max(16, this.state.byteLength),
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
     });
+    const clamp = options.clamp;
+    if (clamp) {
+      this.heights = engine.addHeightCapture(world, {
+        origin: options.origin,
+        halfExtent: clamp.halfExtent,
+        ...(clamp.size !== undefined ? { size: clamp.size } : {}),
+        ...(clamp.top !== undefined ? { top: clamp.top } : {}),
+        ...(clamp.bottom !== undefined ? { bottom: clamp.bottom } : {}),
+      });
+    } else {
+      this.noHeights = device.createTexture({
+        label: "tracks.noHeights",
+        size: [1, 1],
+        format: "depth32float",
+        usage:
+          GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT,
+      });
+    }
     this.params = device.createBuffer({
       label: "tracks.params",
-      size: 32,
+      size: 48,
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     });
     let pipeline = pipelines.get(device);
@@ -245,6 +276,10 @@ export class Tracks {
         { binding: 1, resource: { buffer: this.stateBuffer } },
         { binding: 2, resource: { buffer: this.partBuffer } },
         { binding: 3, resource: { buffer: world.instanceBuffer } },
+        {
+          binding: 4,
+          resource: (this.heights?.texture ?? this.noHeights!).createView(),
+        },
       ],
     });
     const kernel = pipeline;
@@ -258,6 +293,10 @@ export class Tracks {
       u32[4] = this.parts;
       f32[5] = this.scale;
       f32[6] = this.lift;
+      u32[7] = this.heights ? 1 : 0;
+      f32[8] = this.heights?.halfExtent ?? 1;
+      f32[9] = this.heights?.top ?? 0;
+      f32[10] = this.heights?.bottom ?? 0;
       device.queue.writeBuffer(this.params, 0, this.paramsData);
       pass.setPipeline(kernel);
       pass.setBindGroup(0, this.bindGroup);
@@ -327,5 +366,9 @@ export class Tracks {
     this.stateBuffer.destroy();
     this.partBuffer.destroy();
     this.params.destroy();
+    if (this.heights) {
+      this.engine.removeHeightCapture(this.heights);
+    }
+    this.noHeights?.destroy();
   }
 }

@@ -34,7 +34,8 @@ struct View {
   // Toward the Moon from the camera (unit, xyz), and its illuminance as a
   // share of the sun's above the atmosphere (w; 0: none).
   moonLight: vec4f,
-  // Seconds since the engine started (x), for custom shaders' animation.
+  // Seconds since the engine started (x), for custom shaders' animation;
+  // y: 1 in a height capture's view (cull.wgsl `drawable`).
   time: vec4f,
 };
 

@@ -12,6 +12,10 @@ struct TrackParams {
   parts: u32,
   scale: f32,      // the model's scale
   lift: f32,       // the billboard above the track, m
+  clamped: u32,    // 1: on the ground of `heights` (z: above it)
+  halfExtent: f32, // the height capture's square, each way, m
+  top: f32,        // its depth range along up, m
+  bottom: f32,
   _pad: u32,
 };
 
@@ -44,6 +48,36 @@ struct Part {
 @group(0) @binding(1) var<storage, read> tracks: array<Track>;
 @group(0) @binding(2) var<storage, read> parts: array<Part>;
 @group(0) @binding(3) var<storage, read_write> instanceRows: array<Instance>;
+// The ground seen from above (Engine addHeightCapture), last frame's.
+@group(0) @binding(4) var heights: texture_depth_2d;
+
+// The ground's height (m along up) under (x, y), bilinear between four
+// texels (the highest where some have no ground); `none` where none have.
+fn groundHeight(x: f32, y: f32, none: f32) -> f32 {
+  let size = vec2i(textureDimensions(heights));
+  let uv = vec2f(x, -y) / params.halfExtent * 0.5 + 0.5;
+  if (any(uv < vec2f(0.0)) || any(uv > vec2f(1.0))) {
+    return none;
+  }
+  let texel = uv * vec2f(size) - 0.5;
+  let base = floor(texel);
+  let f = texel - base;
+  let i = vec2i(base);
+  let top = size - 1;
+  let d00 = textureLoad(heights, clamp(i, vec2i(0), top), 0);
+  let d10 = textureLoad(heights, clamp(i + vec2i(1, 0), vec2i(0), top), 0);
+  let d01 = textureLoad(heights, clamp(i + vec2i(0, 1), vec2i(0), top), 0);
+  let d11 = textureLoad(heights, clamp(i + vec2i(1, 1), vec2i(0), top), 0);
+  let highest = max(max(d00, d10), max(d01, d11));
+  if (highest <= 0.0) {
+    return none;
+  }
+  var d = mix(mix(d00, d10, f.x), mix(d01, d11, f.x), f.y);
+  if (min(min(d00, d10), min(d01, d11)) <= 0.0) {
+    d = highest;
+  }
+  return params.bottom + d * (params.top - params.bottom);
+}
 
 const EARTH_RADIUS = 6371000.0;
 const PI = 3.141592653589793;
@@ -65,7 +99,11 @@ fn updateTracks(@builtin(global_invocation_id) gid: vec3u) {
   let s = tracks[i];
   let t = params.time - params.delay;
   let a = clamp((t - s.t0) / max(s.t1 - s.t0, 1e-6), 0.0, 1.0);
-  let p = mix(s.p0, s.p1, a);
+  var p = mix(s.p0, s.p1, a);
+  if (params.clamped != 0u) {
+    // z is the height above the ground; off the capture, above the frame.
+    p.z += groundHeight(p.x, p.y, 0.0);
+  }
   // The shorter way round.
   let turn = s.h1 - s.h0 - 2.0 * PI * round((s.h1 - s.h0) / (2.0 * PI));
   let heading = s.h0 + turn * a;

@@ -37,6 +37,8 @@ export interface ModelOptions {
   unlit?: boolean;
   /** Custom shader stages for every draw (`CustomShader`). */
   shader?: CustomShader;
+  /** Ground for height captures (default true; `DrawOptions.ground`). */
+  ground?: boolean;
   /**
    * How color textures are decoded: "srgb" (default) uses -srgb texture
    * formats; "gamma2.2" matches CesiumJS 1.x (unorm storage, pow 2.2 in the
@@ -374,6 +376,7 @@ export function addGltf(
       ...(options.shader ? { shader: options.shader } : {}),
       collision: options.collision,
       underlay: options.underlay,
+      ...(options.ground === false ? { ground: false } : {}),
       name: options.name,
       viewMask: options.viewMask,
       features:

@@ -384,6 +384,8 @@ export class Engine {
   private readonly viewBlock: ViewBlock;
   /** When the engine was created (`performance.now()`): views' `time`. */
   private readonly startTime = performance.now();
+  /** Height captures (`addHeightCapture`). */
+  private readonly captures: HeightCapture[] = [];
   private readonly commandBuffers: GPUCommandBuffer[] = [];
   private frameNumber = 0;
   private frameHandle = 0;
@@ -1448,6 +1450,81 @@ export class Engine {
     this.renderRequested = true;
   }
 
+  /**
+   * A height capture: `world`'s ground (draws not marked `ground: false`)
+   * seen straight down over a square around `origin` (`halfExtent` meters
+   * each way in its east-north-up frame), its depth from `top` down to
+   * `bottom` (meters along up) in a `size`² depth texture, drawn each frame
+   * by the first view of the world (with what it selected). Height at a
+   * texel: bottom + depth × (top − bottom); depth 0: no ground. For
+   * clamping many things on the GPU (tracks).
+   */
+  addHeightCapture(
+    world: World,
+    options: {
+      origin: Vec3;
+      halfExtent: number;
+      top?: number;
+      bottom?: number;
+      size?: number;
+    },
+  ): HeightCapture {
+    const device = this.ctx.device;
+    const size = options.size ?? 2048;
+    const texture = device.createTexture({
+      label: "heightCapture",
+      size: [size, size],
+      format: "depth32float",
+      usage:
+        GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
+    });
+    const frame = eastNorthUpToFixedFrame(
+      options.origin,
+      Ellipsoid.WGS84,
+      m4.mat4(),
+    );
+    const capture: HeightCapture = {
+      world,
+      origin: v3.vec3(
+        options.origin[0]!,
+        options.origin[1]!,
+        options.origin[2]!,
+      ),
+      axes: [
+        v3.vec3(frame[0]!, frame[1]!, frame[2]!),
+        v3.vec3(frame[4]!, frame[5]!, frame[6]!),
+        v3.vec3(frame[8]!, frame[9]!, frame[10]!),
+      ],
+      halfExtent: options.halfExtent,
+      top: options.top ?? 9000,
+      bottom: options.bottom ?? -1000,
+      size,
+      texture,
+      view: texture.createView(),
+      captured: 0,
+      stamp: -1,
+      by: undefined,
+      data: new Float32Array(VIEW_SIZE / 4),
+      block: device.createBuffer({
+        label: "heightCapture.view",
+        size: VIEW_SIZE,
+        usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
+      }),
+    };
+    this.captures.push(capture);
+    this.renderRequested = true;
+    return capture;
+  }
+
+  removeHeightCapture(capture: HeightCapture): void {
+    const i = this.captures.indexOf(capture);
+    if (i >= 0) {
+      this.captures.splice(i, 1);
+      capture.texture.destroy();
+      capture.block.destroy();
+    }
+  }
+
   /** Seconds since the engine started: `View.time`'s clock. */
   get time(): number {
     return (performance.now() - this.startTime) / 1000;
@@ -2241,6 +2318,69 @@ export class Engine {
    * the camera is): their view blocks, copies of the view's with the sun's
    * projection and box, and the receivers' uniform.
    */
+  /**
+   * The height captures of `view`'s world not yet drawn this frame: their
+   * block (the view's, with a straight-down orthographic projection over
+   * the capture's square, its culling box, and View.time.y 1: ground
+   * only), drawn by `view` (the `height-captures` pass).
+   */
+  private writeCaptures(view: View): void {
+    const block = this.viewBlock;
+    const camera = view.camera.position;
+    for (const c of this.captures) {
+      if (c.world !== view.world || c.stamp === this.frameNumber) {
+        continue;
+      }
+      c.stamp = this.frameNumber;
+      c.by = view;
+      const [e, n, u] = c.axes;
+      const rel = v3.sub(v3.vec3(), c.origin, camera);
+      const h = c.halfExtent;
+      const depth = c.top - c.bottom;
+      const ce = v3.dot(e, rel);
+      const cn = v3.dot(n, rel);
+      const cu = v3.dot(u, rel);
+      // Column-major: clip = M · (camera-relative p, 1), reverse-Z (top 1).
+      const m = scratchCapture;
+      m.fill(0);
+      for (let k = 0; k < 3; k++) {
+        m[k * 4] = e[k]! / h;
+        m[k * 4 + 1] = n[k]! / h;
+        m[k * 4 + 2] = u[k]! / depth;
+      }
+      m[12] = -ce / h;
+      m[13] = -cn / h;
+      m[14] = (-cu - c.bottom) / depth;
+      m[15] = 1;
+      // Culling: the square's four sides and its bottom.
+      const p = scratchCapturePlanes;
+      const plane = (i: number, a: Vec3, sign: number, w: number) => {
+        p[i * 4] = a[0]! * sign;
+        p[i * 4 + 1] = a[1]! * sign;
+        p[i * 4 + 2] = a[2]! * sign;
+        p[i * 4 + 3] = w;
+      };
+      plane(0, e, 1, -(ce - h));
+      plane(1, e, -1, ce + h);
+      plane(2, n, 1, -(cn - h));
+      plane(3, n, -1, cn + h);
+      plane(4, u, 1, -(cu + c.bottom));
+      const viewProj = block.viewProj;
+      const planes = block.planes;
+      const aerial = block.aerial;
+      block.viewProj = m;
+      block.planes = p;
+      block.aerial = undefined;
+      writeViewBlock(c.data, 0, block);
+      block.viewProj = viewProj;
+      block.planes = planes;
+      block.aerial = aerial;
+      new Uint32Array(c.data.buffer)[VIEW_BIT_WORD] = this.viewBit(view);
+      c.data[101] = 1; // View.time.y: ground only
+      this.ctx.device.queue.writeBuffer(c.block, 0, c.data);
+    }
+  }
+
   private writeShadows(view: View, index: number, aspect: number): void {
     const frame = this.viewFrames.get(view)!;
     const camera = view.camera;
@@ -2286,6 +2426,7 @@ export class Engine {
       block.planes = planes;
       block.aerial = aerial;
     }
+    this.writeCaptures(view);
     // Ambient occlusion: its prepass and kernels' parameters.
     frame.ambient =
       view.ambientOcclusion && frame.width * frame.height <= AO_MAX_PIXELS;
@@ -2778,6 +2919,36 @@ export class Engine {
         const pass = enc.beginRenderPass(shadowPass);
         pass.executeBundles([casters]);
         pass.end();
+      }
+    });
+
+    // Height captures this view draws: ground only, straight down.
+    graph.addPass("height-captures", { sideEffect: true }, (enc) => {
+      for (const c of this.captures) {
+        if (c.by !== view || c.stamp !== this.frameNumber) {
+          continue;
+        }
+        enc.copyBufferToBuffer(
+          c.block,
+          0,
+          this.ctx.currentViewBuffer,
+          0,
+          VIEW_SIZE,
+        );
+        view.world.encodeCull(enc);
+        const pass = enc.beginRenderPass({
+          label: "heightCapture",
+          colorAttachments: [],
+          depthStencilAttachment: {
+            view: c.view,
+            depthClearValue: 0, // reverse-Z: nothing (below `bottom`) is 0
+            depthLoadOp: "clear",
+            depthStoreOp: "store",
+          },
+        });
+        pass.executeBundles([view.world.heightBundle()]);
+        pass.end();
+        c.captured++;
       }
     });
 
@@ -3834,3 +4005,27 @@ const scratchShadowUp = v3.vec3();
 const scratchAo = new Float32Array(16);
 const scratchViewProj = m4.mat4();
 const scratchPlanes = new Float32Array(20);
+
+/** A height capture (`Engine.addHeightCapture`). */
+export interface HeightCapture {
+  readonly world: World;
+  readonly origin: Vec3;
+  /** East, north and up at `origin`. */
+  readonly axes: readonly [Vec3, Vec3, Vec3];
+  readonly halfExtent: number;
+  readonly top: number;
+  readonly bottom: number;
+  readonly size: number;
+  readonly texture: GPUTexture;
+  readonly view: GPUTextureView;
+  /** Frames it has been drawn. */
+  captured: number;
+  /** The frame its block was written for, and the view drawing it. */
+  stamp: number;
+  by: View | undefined;
+  readonly data: Float32Array;
+  readonly block: GPUBuffer;
+}
+
+const scratchCapture = m4.mat4();
+const scratchCapturePlanes = new Float32Array(20);

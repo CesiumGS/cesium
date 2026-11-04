@@ -184,6 +184,11 @@ export interface DrawOptions {
    * `disableDepthTestDistance`; default 0, depth-tested).
    */
   billboard?: { size: number; depthTestDistance?: number };
+  /**
+   * Ground for height captures (default true); false for what clamps to
+   * the ground itself (tracks), so it doesn't land on itself.
+   */
+  ground?: boolean;
 }
 
 /** What a picked feature ID resolves to. */
@@ -1437,6 +1442,7 @@ export class World {
           ? RecordFlags.unlit
           : 0) |
         (options.billboard ? RecordFlags.billboard : 0) |
+        (options.ground === false ? RecordFlags.notGround : 0) |
         (options.collision ? RecordFlags.collision : 0) |
         (options.underlay ? RecordFlags.underlay : 0),
       instanceFirst,
@@ -2381,6 +2387,20 @@ export class World {
   }
 
   /**
+   * The bundle drawing this world's ground into a height capture (the
+   * casters, without depth bias; Engine `addHeightCapture`).
+   */
+  heightBundle(): GPURenderBundle {
+    if (!this.heights || this.heightsFor !== this.bundle) {
+      this.heights = this.recordBundle("height");
+      this.heightsFor = this.bundle;
+    }
+    return this.heights;
+  }
+  private heights: GPURenderBundle | undefined;
+  private heightsFor: GPURenderBundle | undefined;
+
+  /**
    * The bundle drawing this world into the depth and normal prepass (after
    * the view's cull), current with `prepareFrame`'s.
    */
@@ -2531,10 +2551,12 @@ export class World {
    * pass's, or the sun's shadow casters' (depth only; no lines).
    */
   private recordBundle(
-    kind: "opaque" | "shadow" | "prepass" | "depth" = "opaque",
+    kind: "opaque" | "shadow" | "height" | "prepass" | "depth" = "opaque",
   ): GPURenderBundle {
     const { device, targets, currentViewBindGroup } = this.ctx;
-    const shadow = kind === "shadow";
+    // Height captures draw the casters, with their own pipelines.
+    const height = kind === "height";
+    const shadow = kind === "shadow" || height;
     const prepass = kind === "prepass";
     const depth = kind === "depth";
     const encoder = device.createRenderBundleEncoder(
@@ -2580,19 +2602,27 @@ export class World {
             : batch.doubleSided
               ? "depthDoubleSided"
               : "depth"
-          : shadow
+          : height
             ? masked(batch)
               ? batch.doubleSided
-                ? "shadowMaskedDoubleSided"
-                : "shadowMasked"
+                ? "heightMaskedDoubleSided"
+                : "heightMasked"
               : batch.doubleSided
-                ? "shadowDoubleSided"
-                : "shadow"
-            : batch.mesh.topology === "line-list"
-              ? "opaqueLines"
-              : batch.doubleSided
-                ? "opaqueDoubleSided"
-                : "opaque";
+                ? "heightDoubleSided"
+                : "height"
+            : shadow
+              ? masked(batch)
+                ? batch.doubleSided
+                  ? "shadowMaskedDoubleSided"
+                  : "shadowMasked"
+                : batch.doubleSided
+                  ? "shadowDoubleSided"
+                  : "shadow"
+              : batch.mesh.topology === "line-list"
+                ? "opaqueLines"
+                : batch.doubleSided
+                  ? "opaqueDoubleSided"
+                  : "opaque";
     const rank = (batch: Batch) =>
       batch.mesh.topology === "line-list" ? 2 : Number(batch.doubleSided);
     const order = [...this.batchList].sort(

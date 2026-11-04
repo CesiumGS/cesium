@@ -73,6 +73,15 @@ export interface SurfacePipelines {
   shadowDoubleSided: GPURenderPipeline;
   shadowMasked: GPURenderPipeline;
   shadowMaskedDoubleSided: GPURenderPipeline;
+  /**
+   * Height captures (Engine `addHeightCapture`): the casters' depth from
+   * above without the shadows' depth bias, which would offset heights on
+   * slopes.
+   */
+  height: GPURenderPipeline;
+  heightDoubleSided: GPURenderPipeline;
+  heightMasked: GPURenderPipeline;
+  heightMaskedDoubleSided: GPURenderPipeline;
   /** The depth and normal prepass (ambient occlusion), and double-sided. */
   prepass: GPURenderPipeline;
   prepassDoubleSided: GPURenderPipeline;
@@ -111,6 +120,10 @@ export const SURFACE_KEYS: readonly SurfaceKey[] = [
   "shadowDoubleSided",
   "shadowMasked",
   "shadowMaskedDoubleSided",
+  "height",
+  "heightDoubleSided",
+  "heightMasked",
+  "heightMaskedDoubleSided",
   "prepass",
   "prepassDoubleSided",
   "depth",
@@ -778,6 +791,7 @@ async function createPipelines(
     cullMode: GPUCullMode,
     masked: boolean,
     layout: GPUPipelineLayout = opaqueLayout,
+    bias = true,
   ) =>
     device.createRenderPipelineAsync({
       label,
@@ -807,9 +821,9 @@ async function createPipelines(
         depthWriteEnabled: true,
         depthCompare: "greater",
         // Away from the sun (reverse-Z: smaller), more where the surface
-        // slopes away from it.
-        depthBias: -2,
-        depthBiasSlopeScale: -1.5,
+        // slopes away from it; none for height captures.
+        depthBias: bias ? -2 : 0,
+        depthBiasSlopeScale: bias ? -1.5 : 0,
         depthBiasClamp: 0,
       },
     });
@@ -985,6 +999,28 @@ async function createPipelines(
         shadowPipeline(caster, name("shadow.doubleSided"), "none", false, o),
       shadowMasked: () =>
         shadowPipeline(caster, name("shadow.masked"), "back", true, o),
+      height: () =>
+        shadowPipeline(caster, name("height"), "back", false, o, false),
+      heightDoubleSided: () =>
+        shadowPipeline(
+          caster,
+          name("height.doubleSided"),
+          "none",
+          false,
+          o,
+          false,
+        ),
+      heightMasked: () =>
+        shadowPipeline(caster, name("height.masked"), "back", true, o, false),
+      heightMaskedDoubleSided: () =>
+        shadowPipeline(
+          caster,
+          name("height.maskedDoubleSided"),
+          "none",
+          true,
+          o,
+          false,
+        ),
       shadowMaskedDoubleSided: () =>
         shadowPipeline(
           caster,

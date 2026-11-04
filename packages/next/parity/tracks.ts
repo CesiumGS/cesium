@@ -5,8 +5,11 @@ import {
   OffscreenTarget,
   Tracks,
   createSurfacePatch,
+  eastNorthUpToFixedFrame,
   fromDegrees,
+  mat4,
   vec3,
+  type MeshData,
   type World,
 } from "../src/index.ts";
 import type { Harness } from "../lab/harness.ts";
@@ -41,6 +44,9 @@ const deg = Math.PI / 180;
 const SITE = fromDegrees(-75.1652, 39.9526, 0);
 const TRUCK =
   "/specs-data/Models/glTF-2.0/CesiumMilkTruck/glTF-Draco/CesiumMilkTruck.gltf";
+/** Buildings with per-feature colors (batched b3dm). */
+const BUILDINGS =
+  "/specs-data/Cesium3DTiles/Batched/BatchedColors/tileset.json";
 /** The billboards' side, px, and the switch distance, m. */
 const PIXELS = 24;
 const SWITCH = 300;
@@ -82,6 +88,129 @@ function line(
 }
 
 const frame = () => new Promise((resolve) => setTimeout(resolve, 30));
+
+/** Hills in a frame's east and north (m): ±40 m, a few hundred m across. */
+const hill = (x: number, y: number) =>
+  40 * Math.sin(x / 300) * Math.cos(y / 250);
+
+/** The hills as a grid mesh over ±`half` m, `step` m apart, in that frame. */
+function hills(half: number, step: number): MeshData {
+  const n = Math.round((2 * half) / step) + 1;
+  const positions = new Float32Array(n * n * 3);
+  const normals = new Float32Array(n * n * 3);
+  for (let j = 0; j < n; j++) {
+    for (let i = 0; i < n; i++) {
+      const x = -half + i * step;
+      const y = -half + j * step;
+      positions.set([x, y, hill(x, y)], (j * n + i) * 3);
+      normals.set([0, 0, 1], (j * n + i) * 3);
+    }
+  }
+  const indices = new Uint32Array((n - 1) * (n - 1) * 6);
+  let k = 0;
+  for (let j = 0; j < n - 1; j++) {
+    for (let i = 0; i < n - 1; i++) {
+      const a = j * n + i;
+      indices.set([a, a + 1, a + n + 1, a, a + n + 1, a + n], k);
+      k += 6;
+    }
+  }
+  return { positions, normals, indices };
+}
+
+/**
+ * Ground heights at (x, y) in `frame` (east-north-up at an origin) by the
+ * world's exact ray casts straight down from `top` (undefined: no hit).
+ */
+async function castDown(
+  world: World,
+  frame: mat4.Mat4,
+  points: Array<[number, number]>,
+  top: number,
+): Promise<Array<number | undefined>> {
+  const down = [-frame[8]!, -frame[9]!, -frame[10]!];
+  const hits = await world.castRays(
+    points.map(([x, y]) => ({
+      origin: [0, 1, 2].map(
+        (k) =>
+          frame[12 + k]! +
+          frame[k]! * x +
+          frame[4 + k]! * y +
+          frame[8 + k]! * top,
+      ),
+      direction: down,
+      maxDistance: 5000,
+    })),
+  );
+  return hits.map((d) => (d === undefined ? undefined : top - d));
+}
+
+/** Instance rows' translations (x, y, z) from `first`, `count` of them. */
+async function rowPositions(
+  engine: Engine,
+  world: World,
+  first: number,
+  count: number,
+): Promise<Float32Array> {
+  const device = engine.gpu.device;
+  const bytes = count * 64;
+  const read = device.createBuffer({
+    size: bytes,
+    usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
+  });
+  const encoder = device.createCommandEncoder();
+  encoder.copyBufferToBuffer(world.instanceBuffer, first * 64, read, 0, bytes);
+  device.queue.submit([encoder.finish()]);
+  await read.mapAsync(GPUMapMode.READ);
+  const rows = new Float32Array(read.getMappedRange().slice(0));
+  read.destroy();
+  const out = new Float32Array(count * 3);
+  for (let i = 0; i < count; i++) {
+    out[i * 3] = rows[i * 16 + 3]!;
+    out[i * 3 + 1] = rows[i * 16 + 7]!;
+    out[i * 3 + 2] = rows[i * 16 + 11]!;
+  }
+  return out;
+}
+
+/** |a − b| statistics, meters. */
+function errors(a: number[]): { max: number; p95: number; mean: number } {
+  const s = [...a].sort((x, y) => x - y);
+  return {
+    max: s.at(-1) ?? 0,
+    p95: s[Math.floor(s.length * 0.95)] ?? 0,
+    mean: s.reduce((t, x) => t + x, 0) / Math.max(1, s.length),
+  };
+}
+
+/** The frame's rotation alone (a draw placed by `origin` and `model`). */
+function rotation(frame: mat4.Mat4): mat4.Mat4 {
+  const m = mat4.copy(mat4.mat4(), frame);
+  m[12] = m[13] = m[14] = 0;
+  return m;
+}
+
+/** Clamped tracks' heights (the billboards' rows) against ray casts. */
+async function clampErrors(
+  engine: Engine,
+  world: World,
+  tracks: Tracks,
+  reference: Array<number | undefined>,
+): Promise<{ hits: number; max: number; p95: number; mean: number }> {
+  const rows = await rowPositions(
+    engine,
+    world,
+    world.instanceFirst(tracks.billboard!),
+    reference.length,
+  );
+  const diffs: number[] = [];
+  reference.forEach((z, i) => {
+    if (z !== undefined) {
+      diffs.push(Math.abs(rows[i * 3 + 2]! - z));
+    }
+  });
+  return { hits: diffs.length, ...errors(diffs) };
+}
 
 async function runTracks(): Promise<Row[]> {
   const status = root.querySelector(".status")!;
@@ -262,6 +391,165 @@ async function runTracks(): Promise<Row[]> {
       turned,
     );
     fixed.dispose();
+  }
+
+  // Clamping to hills: against exact ray casts.
+  status.textContent = "clamped to hills…";
+  {
+    const world = engine.createWorld({
+      maxDraws: 16,
+      maxMaterials: 8,
+      maxInstances: 4096,
+      vertexBytes: 32 << 20,
+      indexBytes: 16 << 20,
+    });
+    const enu = eastNorthUpToFixedFrame(origin, Ellipsoid.WGS84, mat4.mat4());
+    world.addDraw({
+      mesh: world.addMesh(hills(2000, 20)),
+      origin,
+      model: rotation(enu),
+      radius: 3000,
+      material: world.addMaterial({
+        baseColor: [0.35, 0.4, 0.3, 1],
+        roughness: 1,
+      }),
+    });
+    const count = 1000;
+    const points: Array<[number, number]> = [];
+    let seed = 7;
+    const random = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    for (let i = 0; i < count; i++) {
+      points.push([(random() - 0.5) * 3600, (random() - 0.5) * 3600]);
+    }
+    const reference = await castDown(world, enu, points, 500);
+    const tracks = new Tracks(engine, world, {
+      capacity: count,
+      origin,
+      billboard: { size: 8, anchor: "center", color: [1, 0, 0, 1] },
+      clamp: { halfExtent: 2000, size: 2048, top: 500, bottom: -200 },
+      delay: 0,
+      clock: () => now,
+    });
+    tracks.update(
+      0,
+      new Float32Array(points.flatMap(([x, y]) => [x, y, 0, 0])),
+    );
+    tracks.count = count;
+    const camera = new Camera();
+    camera.near = 1;
+    camera.lookAt(origin, 20 * deg, -40 * deg, 5000);
+    const view = engine.addView({
+      target,
+      world,
+      camera,
+      background: "color",
+      clearColor: [0.03, 0.04, 0.06],
+    });
+    for (let i = 0; i < 4; i++) {
+      engine.renderFrame();
+      await frame();
+    }
+    const image = new ImageData(await target.read(), WIDTH, HEIGHT);
+    const e = await clampErrors(engine, world, tracks, reference);
+    add(
+      {
+        case: "clamped to hills, 1,000 tracks (vs ray casts)",
+        measured: `${e.hits} hits; error max ${e.max.toFixed(3)} m, p95 ${e.p95.toFixed(3)}, mean ${e.mean.toFixed(3)} (texel ${((2 * 2000) / 2048).toFixed(2)} m)`,
+        expected: "max under 0.25 m",
+        pass: e.hits === count && e.max < 0.25,
+      },
+      image,
+    );
+    engine.removeView(view);
+    tracks.destroy();
+    engine.worlds.splice(engine.worlds.indexOf(world), 1);
+    world.destroy();
+  }
+
+  // Clamping to buildings (3D Tiles): against exact ray casts.
+  status.textContent = "clamped to buildings…";
+  {
+    const world = engine.createWorld({
+      maxDraws: 1024,
+      maxMaterials: 256,
+      maxInstances: 8192,
+      vertexBytes: 32 << 20,
+      indexBytes: 16 << 20,
+    });
+    const tileset = await engine.addTileset(
+      world,
+      new URL(BUILDINGS, location.href),
+      {},
+    );
+    const center = (tileset.root.contentVolume ?? tileset.root.volume).sphere
+      .center;
+    const at = Ellipsoid.WGS84.cartesianToCartographic(center, {
+      longitude: 0,
+      latitude: 0,
+      height: 0,
+    })!;
+    const ground = Ellipsoid.WGS84.cartographicToCartesian(
+      { ...at, height: 0 },
+      vec3.vec3(),
+    );
+    const enu = eastNorthUpToFixedFrame(ground, Ellipsoid.WGS84, mat4.mat4());
+    const camera = new Camera();
+    camera.near = 1;
+    camera.lookAt(center, 30 * deg, -50 * deg, 400);
+    const view = engine.addView({
+      target,
+      world,
+      camera,
+      background: "color",
+      clearColor: [0.03, 0.04, 0.06],
+    });
+    let quiet = 0;
+    for (let i = 0; i < 160 && quiet < 10; i++) {
+      engine.renderFrame();
+      await frame();
+      quiet = tileset.idle && tileset.stats.inFlight === 0 ? quiet + 1 : 0;
+    }
+    const points: Array<[number, number]> = [];
+    // Every 2.5 m over ±100 m: the buildings are sparse.
+    for (let j = 0; j < 80; j++) {
+      for (let i = 0; i < 80; i++) {
+        points.push([(i - 39.5) * 2.5, (j - 39.5) * 2.5]);
+      }
+    }
+    const reference = await castDown(world, enu, points, 300);
+    const tracks = new Tracks(engine, world, {
+      capacity: points.length,
+      origin: ground,
+      billboard: { size: 6, anchor: "center", color: [1, 0, 0, 1] },
+      clamp: { halfExtent: 150, size: 2048, top: 300, bottom: -100 },
+      delay: 0,
+      clock: () => now,
+    });
+    tracks.update(
+      0,
+      new Float32Array(points.flatMap(([x, y]) => [x, y, 0, 0])),
+    );
+    tracks.count = points.length;
+    for (let i = 0; i < 4; i++) {
+      engine.renderFrame();
+      await frame();
+    }
+    const image = new ImageData(await target.read(), WIDTH, HEIGHT);
+    const e = await clampErrors(engine, world, tracks, reference);
+    add(
+      {
+        case: "clamped to buildings, BatchedColors (vs ray casts)",
+        measured: `${e.hits} on roofs of ${points.length}; error max ${e.max.toFixed(3)} m, p95 ${e.p95.toFixed(3)}, mean ${e.mean.toFixed(3)} (texel ${((2 * 150) / 2048).toFixed(3)} m)`,
+        expected: "p95 under 0.1 m (at roof edges up to a wall's height)",
+        pass: e.hits > 100 && e.p95 < 0.1,
+      },
+      image,
+    );
+    engine.removeView(view);
+    tracks.destroy();
+    engine.removeTileset(tileset);
+    engine.worlds.splice(engine.worlds.indexOf(world), 1);
+    world.destroy();
   }
 
   // 100,000 tracks: a feed update's CPU cost and the kernel's GPU time.

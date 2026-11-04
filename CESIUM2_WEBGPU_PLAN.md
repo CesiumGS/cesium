@@ -2779,9 +2779,11 @@ collections. (5) Labels with decluttering.
   instance. A case can now check its image (`Case.check`). Parity,
   models and translucency unchanged (318 image metrics) but for one run
   in which translucency's near-opaque scene differed between draw orders
-  (order max 0.0054, its image metrics unchanged); two reruns gave 0 as
-  every run before, so it's recorded as a one-off to watch. The bench
-  passes 51 of 51.
+  (order max 0.0054, its image metrics unchanged). It isn't this
+  increment's: the commit before it does the same in 2 of 8 runs
+  (increment 3), so it's a latent intermittent in that scene's order
+  check, recorded under translucency to look into. The bench passes 51
+  of 51.
 
 **Increment 2 (r47): the track collection.**
 
@@ -2824,6 +2826,41 @@ switchDistance, delay, clock })`: tracks as instance data. Positions
 - Not yet: clamping (increment 3), hysteresis and crossfade, the
   kernel's GPU time measured (the benchmark, increment 4), per-track
   tints for models, removing single tracks (`count` and reordering).
+
+**Increment 3 (r47): clamping on the GPU.**
+
+- Ray casts (`castRays`) don't scale to 100,000 tracks at 10 Hz: the CPU
+  picks candidate draws and splits jobs per ray. Instead a _height
+  capture_ (`Engine.addHeightCapture`): the world's ground seen straight
+  down over a square in an east-north-up frame, drawn each frame into a
+  depth texture by the first view of the world, with what that view
+  selected (terrain, 3D Tiles). Its view block is the view's with an
+  orthographic projection and culling box, built like a shadow
+  cascade's, and `View.time.y` 1 so the cull kernel drops draws marked
+  `ground: false` (`RecordFlags.notGround`: tracks don't land on
+  themselves). It draws the casters with their own pipelines (`height*`
+  surface keys): the shadows' slope-scaled depth bias would put meters
+  of error on slopes at 2 m texels.
+- `Tracks` `clamp: { halfExtent, size, top, bottom }` registers one
+  around its origin; the kernel reads the ground under each track
+  bilinearly from four texels (the highest where some have none) and
+  adds the sample's z as the height above it. One frame of latency (the
+  kernel runs before the frame's capture). Billboards clamp the same.
+- Harness, 2 new cases (8 of 8 pass), against exact ray casts: 1,000
+  tracks on ±40 m hills (a 20 m mesh), 2 m texels: error at most 5 mm,
+  mean 1 mm; 6,400 tracks over `BatchedColors`' buildings, 0.15 m
+  texels: the 128 on roofs within half a millimetre. The 100,000-track
+  update read 2.3 to 8.8 ms across runs (to watch on the benchmark).
+  Parity, models and translucency unchanged (318 image metrics) but for
+  the near-opaque scene's order reading (0.0045 in 1 of 7 runs here);
+  the commit before increment 1 does the same in 2 of 8 runs (orders
+  0.0054 and 0.0012), so it's latent, not these increments': an
+  intermittent in that scene's two draw orders to look into. Custom
+  shaders 51 of 51.
+- Not yet: captures over areas too large for one texture at the needed
+  resolution (a clipmap around the camera, or per-tile captures),
+  tilting models to the slope, roof edges (a track straddling one takes
+  the higher side), and the capture's GPU cost measured.
 
 ### M5 — Performance hardening (≈3 wks)
 
