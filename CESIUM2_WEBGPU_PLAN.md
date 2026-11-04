@@ -2750,7 +2750,9 @@ updates, interpolation in time, model and billboard representations,
 and the model/symbol choice per instance in the cull pass. (3) Clamping
 on the GPU to terrain and 3D Tiles. (4) The showcase (Dyno's Examples
 section) and the benchmark against 1.x entities and billboard
-collections. (5) Labels with decluttering.
+collections. (5) Labels with decluttering. (4b, r48) The collection
+reshaped as a live point source drawn by styled layers (below), which
+reaches 10 million points.
 
 **Increment 1 (r47): billboards; custom alpha in every pass.**
 
@@ -2928,6 +2930,138 @@ switchDistance, delay, clock })`: tracks as instance data. Positions
   49.9 ms both times), so that figure is noisy. Not measured yet: 1.x
   clamped (`HeightReference.CLAMP_TO_GROUND` on 100,000 billboards),
   over 3D Tiles, update-to-display latency.
+
+**Increment 4b (r48): live points drawn by the vector styling language.**
+
+The track collection mixed three jobs: a live data source (bulk updates,
+interpolation in time, clamping), a representation (a model near the
+camera, a billboard beyond) and symbology (a hand-written custom shader
+over anonymous per-instance values). The second and third are styling,
+and the vector styling language (the plan owner's vector style lab, a
+draft successor to 3D Tiles styling) already expresses them: `shape`
+marks with well-known marks and symbol resources, `model()` shapes with
+`heading` (`EXT_models`), `filter`, `scales`, `parameters`. So the public
+shape became a source and a styled layer, and "tracks" is only the
+example's name:
+
+- _`PointSource`_ (vector/PointSource.ts): points as GPU data, not
+  objects. `update(first, samples)` is one copy of four floats a point
+  (x, y, z in an east-north-up frame, heading in degrees clockwise from
+  north) and one dispatch: a kernel (points.wgsl `applySamples`) moves
+  each point from where it is shown now to its new sample over the next
+  `delay`, so updates arriving at any rate never jump. Each frame
+  `placePoints` interpolates, clamps to the height capture, and writes
+  each point's anchor into the world's vertex arena and its heading into
+  its properties. Properties are typed columns (numbers, vectors,
+  integers, enums by name), written with `setProperties`
+  (`packProperties` builds them by name). No CPU work per point per frame.
+- _Point sets in the world_ (`World.addPointMesh`): the plan's point
+  expansion by vertex pulling, built. A point mesh holds anchors and the
+  points' property streams in the arena, shared by every draw of it; a
+  draw (`RecordFlags.points`) draws six vertices a point, expanded on
+  screen like a billboard, the point being the instance index (styles'
+  `instance` values) and the local feature (picking). No instance rows:
+  the indirect arguments already serve a non-indexed draw (the indexed
+  layout's first four words read as `drawIndirect`'s). Points shade
+  outside the opaque pass's depth prepass (`opaquePoints`: depth tested
+  and written as they shade, as lines are), since six vertices a point
+  would cost twice there.
+- _`VectorLayer` and `compileVectorStyle`_ (vector/VectorStyle.ts): a
+  style compiled to WGSL per point layer. Supported so far: `parameters`
+  (numbers, booleans, colors, as uniforms: `setParameter` changes them on
+  the GPU without recompiling), `defines`, `let`, layer groups with
+  inherited `filter`, `let` and `placement`, categorical and linear
+  `scales`, `match()`, `??` (the left side where it compiles: the GPU has
+  no undefined), enums compared with their names, units (`14px`, `2km`,
+  `90deg`); at points the `shape` mark with the well-known marks and
+  straight-line symbol paths as signed distances in the fragment stage,
+  `size`, `rotation` (`rotateWith` screen or map), `fill.color`,
+  `outline`, `opacity`, `placement.offset`; and `model('name')` shapes
+  with `heading` and `scale`. Anything else is refused at its path.
+- _A scope the spec lacks: `${view.distance}`_, a feature's distance from
+  the camera, per point and per view (the vertex stage reads the point's
+  camera-relative position, `cesiumAnchor`). The spec's `${view.…}` values
+  are global to a view (`scale`, `zoom`), so a model up close and a symbol
+  far away weren't expressible; with it they are two filtered layers:
+  `"${view.distance} < ${param.switchDistance}"` and its opposite. To
+  propose for the draft.
+- _`ModelPool`_ (vector/ModelPool.ts): a `model()` layer's instances, a
+  fixed number of slots given each frame on the GPU to the nearest points
+  its compiled filter passes: the points that pass are counted by
+  distance in a log histogram (eight bins an octave), the cut is the
+  farthest bin whose points all fit, and each point nearer than it claims
+  a slot and writes the model's instance rows (oriented by the style's
+  heading). Memory follows the slots, not the points. With several views,
+  "distance" for models is the nearest view's (shapes use each view's).
+- _The world's instance tables grow as used_ (`maxInstances` is now a
+  ceiling within the device's limits; the GPU tables start at 16,384 rows
+  and double, rebinding what reads them), and instance culling dispatches
+  in two dimensions past 65,535 groups.
+- _`Tracks` is gone_: its harness (the Lab's "Live points and styled
+  layers", 8 of 8) and the benchmark against 1.x run on a `PointSource`
+  and a `VectorLayer`. Clamping errors are unchanged (hills within 5 mm,
+  roofs within half a millimetre); a 100,000-point feed update is 1.0 ms
+  on the CPU (2.7 with `Tracks`, which shuffled samples per track there).
+  With a delay of 0 a point shows its latest sample; interpolation needs a
+  delay (the feed's interval), since points move from where they're shown.
+- _The benchmark against 1.x, rerun_ with points: at 100,000 tracks 2.0
+  creates them in 18 ms (84 with `Tracks`), updates in 1.0 ms (1.4),
+  spends 0.4 ms of CPU and 2.7 ms of GPU a frame (3.6), clamped 3.0; 1.x's
+  `BillboardCollection` 552 ms, 10.1 ms, 4.0 ms (p95 frame 50 ms), its
+  entities 1,837 ms, 614 ms, 88 ms (6 frames in 4 s). 1.x read slower than
+  in increment 4's runs: its figures vary between runs.
+- _No varying of its own for `${view.distance}`_: every inter-stage
+  location is in use (a custom shader's four named values take 10–13,
+  and translucency's list pass reads `front_facing`, which counts against
+  the 16), and a 17th failed to compile there. The vertex stage sets it
+  from the point, instance or draw; the fragment stage from the fragment's
+  position, which for billboards and points is their anchor.
+- _Unlit draws_ (billboards, point sets, lines, unlit photogrammetry) no
+  longer march the air per vertex (their color shows as is, so the march
+  was wasted: from above 5 km every symbol vertex marched 24 steps), and
+  write alpha 0 to the scene target, so the exposure meter leaves them out:
+  a view full of symbols no longer metered as black and burned out the
+  terrain.
+
+**The example, rebuilt** (examples/realtime-tracks): a worker stands in
+for a database or message stream: each vehicle a row (position, course,
+speed, turn rate), dead-reckoned with wandering turns and turned back at
+the area's edge, sent in slices within a stream's budget (2.5 million
+records a second), so at 10 million vehicles each reports every 4 s and
+is shown that far behind. The panel: vehicles (1,000 to 10,000,000), area
+(5 to 400 km across), the feed's updates a second, speed, turning and
+pause; and the style's own parameters as controls (trucks within: none,
+250 m to 2 km, or all of the nearest 10,000; symbol size; outlines), with
+"Follow a vehicle" chasing one from behind. The style is in the example's
+source, in the language.
+
+Measured in Dyno (the full viewer: terrain, imagery, atmosphere,
+shadows, AO; NVIDIA Lovelace laptop GPU), the overview of 20 km:
+
+| Vehicles   | GPU per frame | CPU per frame | Frame rate | Feed (CPU per slice)        |
+| ---------- | ------------: | ------------: | ---------: | --------------------------- |
+| 100,000    |        3.7 ms |        1.0 ms |     60 fps | 0.5 ms for 100,000 at 10 Hz |
+| 1,000,000  |       13.1 ms |        1.5 ms |     60 fps | 2.3 ms for 250,000 at 10 Hz |
+| 10,000,000 |         60 ms |        3.2 ms |  12–16 fps | 2.4 ms for 250,000 at 10 Hz |
+
+Over 400 km, 100,000 take 3.4 ms of GPU and 10,000,000 57.5 ms. Before the
+prepass and air changes, 1,000,000 took 45 ms and 10,000,000 70 ms. Ten
+million is bound by its 60 million vertex invocations a frame.
+
+Not yet: per-point culling and compaction (only visible points' vertices),
+four-vertex quads and fewer varyings for point sets, compute rasterization
+for points smaller than a few pixels (the plan's two-pass compute point
+clouds), labels (increment 5), Bézier symbol paths (Slug), `sizeWith`,
+heights in `placement.offset`, lines and polygons from live sources.
+
+**Found on the way: the instances benchmark's GPU time grew 36 → 160 ms**
+at 100,000 instances (500,000 items) since 2026-11-02. A bisect over the
+benchmark (noisy: three readings of 66–70 ms before a commit that read 39) points at two steps, both new passes over every item rather than
+bugs: the depth prepass in the MSAA opaque pass (`fc29bf1797`, 39 → 79
+ms) and shadow cascades fitted to the depth on screen (`386da0c21d`, →
+138 ms). To look into: what the prepass and the cascades cost per
+instance, and whether instanced draws should skip the prepass as point
+sets now do.
 
 ### M5 — Performance hardening (≈3 wks)
 

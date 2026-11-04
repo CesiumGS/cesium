@@ -8,8 +8,8 @@ export const EXAMPLES: ExampleInfo[] = [
     id: "realtime-tracks",
     title: "Real-time tracks",
     description:
-      "Up to 100,000 vehicles from a 10 Hz feed, moved and clamped to terrain on the GPU: trucks up close, symbols from afar.",
-    labels: ["Tracks", "Terrain", "Custom shading"],
+      "Up to 10 million vehicles from a simulated feed, moved and clamped to terrain on the GPU and drawn by a vector style: trucks up close, symbols from afar.",
+    labels: ["Live points", "Vector styling", "Terrain"],
     globe: "terrain",
     load: () => import("./realtime-tracks/main.ts"),
     source: () =>

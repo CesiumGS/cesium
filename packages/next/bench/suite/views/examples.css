@@ -137,6 +137,28 @@
   margin: 0;
   color: var(--stratakit-color-text-neutral-secondary);
 }
+.examples-panel h3 {
+  margin: var(--stratakit-space-100) 0 0;
+  font-size: var(--stratakit-font-size-caption-lg);
+  font-weight: 600;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.examples-panel h3:first-child {
+  margin-top: 0;
+}
+.examples-panel .slider {
+  display: grid;
+  grid-template-columns: auto 1fr 3.5em;
+  gap: var(--stratakit-space-200);
+}
+.examples-panel input[type="range"] {
+  min-width: 0;
+  width: 100%;
+}
+.examples-panel output {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
 
 .examples-source {
   margin: 0;

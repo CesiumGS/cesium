@@ -1,111 +1,228 @@
 import {
-  CustomShader,
   Ellipsoid,
-  Tracks,
+  PointSource,
+  VectorLayer,
   cartographic,
-  eastNorthUpToFixedFrame,
   fromDegrees,
-  mat4,
   vec3,
+  type VectorStyleDocument,
 } from "../../src/index.ts";
 import type { ExampleContext } from "../types.ts";
 
 /**
- * Real-time tracks: vehicles from a synthetic 10 Hz feed, driving over
- * the terrain around Boulder, Colorado (the Flatirons to the west, the
- * plains to the east).
+ * Real-time tracks: vehicles reported by a feed, as a database or a
+ * message stream would send them, over the terrain around Boulder,
+ * Colorado.
  *
- * Each feed update is one typed array, four numbers per vehicle (east,
- * north, height above the ground, heading). The GPU does the rest every
- * frame: it moves each vehicle between its last two samples, clamps it
- * to the terrain the view draws, and draws a Cesium truck within 500 m of
- * the camera and a symbol beyond. The symbols are shaped and colored by
- * a custom shader from per-vehicle values (an affiliation, as
- * MIL-STD-2525 frames show it), so changing one is a write of a few
- * bytes, not a new image.
+ * A worker stands in for the feed: it keeps each vehicle's position,
+ * course and speed, moves them on (dead reckoning, with turns), and sends
+ * records in slices, as many a second as a stream would carry. Each slice
+ * goes to the GPU as one typed array (`PointSource.update`); there the
+ * vehicles move between their last two reports, clamp to the terrain the
+ * view draws, and are drawn by the style below: symbols from afar, trucks
+ * up close. The style is the vector styling language (3D Tiles styling's
+ * successor draft), compiled to the GPU, so its parameters (the switch
+ * distance, the symbols' size) change without a frame's CPU work per
+ * vehicle.
  */
 
 const SITE = { longitude: -105.25, latitude: 40.02, height: 1650 };
-/** Vehicles drive within this many meters of the site, each way. */
-const EXTENT = 10_000;
-const COUNTS = [1_000, 10_000, 100_000];
-const FEED_HZ = 10;
-const SWITCH_DISTANCE = 500;
-const TRUCK =
-  "/specs-data/Models/glTF-2.0/CesiumMilkTruck/glTF-Draco/CesiumMilkTruck.gltf";
+const COUNTS = [1_000, 10_000, 100_000, 1_000_000, 10_000_000];
+/** Area across (km). */
+const AREAS = [5, 20, 100, 400];
+const RATES = [1, 2, 5, 10];
+/** Trucks shown at once, the nearest. */
+const TRUCKS = 10_000;
+const AFFILIATIONS = ["friend", "hostile", "neutral", "unknown"] as const;
 
-/** Affiliations: a frame shape (in the shader) and a fill (sRGB). */
-const AFFILIATIONS = [
-  { name: "Friend", fill: [128, 224, 255], share: 0.55 },
-  { name: "Hostile", fill: [255, 128, 128], share: 0.15 },
-  { name: "Neutral", fill: [170, 255, 170], share: 0.2 },
-  { name: "Unknown", fill: [255, 255, 128], share: 0.1 },
-];
+/** The style: symbols beyond the switch distance, trucks within it. */
+const STYLE: VectorStyleDocument = {
+  extensionsUsed: ["EXT_models"],
+  parameters: {
+    switchDistance: {
+      label: "Trucks within",
+      default: 500,
+      options: [
+        { label: "None (all symbols)", value: 0 },
+        { label: "250 m", value: 250 },
+        { label: "500 m", value: 500 },
+        { label: "1 km", value: 1000 },
+        { label: "2 km", value: 2000 },
+        { label: `All (the nearest ${TRUCKS.toLocaleString()})`, value: 1e9 },
+      ],
+    },
+    symbolSize: {
+      label: "Symbol size (px)",
+      default: 14,
+      min: 4,
+      max: 32,
+      step: 1,
+    },
+    outline: { label: "Outlines", default: true },
+  },
+  resources: {
+    // MIL-STD-2525's friendly frame: a rectangle 3:2.
+    friendFrame: { kind: "symbol", path: "M -1 -0.67 H 1 V 0.67 H -1 Z" },
+    truck: {
+      kind: "model",
+      uri: "/specs-data/Models/glTF-2.0/CesiumMilkTruck/glTF-Draco/CesiumMilkTruck.gltf",
+    },
+  },
+  scales: {
+    affiliationFill: {
+      type: "categorical",
+      range: {
+        friend: "#80e0ff",
+        hostile: "#ff8080",
+        neutral: "#aaffaa",
+        unknown: "#ffff80",
+      },
+    },
+  },
+  layers: [
+    {
+      id: "symbols",
+      filter: "${view.distance} >= ${param.switchDistance}",
+      shape:
+        "match(${affiliation}, 'friend', 'friendFrame', 'hostile', 'diamond', 'neutral', 'square', 'circle')",
+      size: "${param.symbolSize} * 1px",
+      fill: { color: "scale('affiliationFill', ${affiliation})" },
+      // No outline on symbols too small to show one.
+      outline: {
+        color: "#000000",
+        width: "${param.outline} && ${param.symbolSize} >= 10 ? 1.5 : 0",
+      },
+    },
+    {
+      id: "trucks",
+      filter: "${view.distance} < ${param.switchDistance}",
+      shape: "model('truck')",
+      heading: "${heading}",
+    },
+  ],
+};
 
-/** The symbols: frame and fill from each vehicle's `symbol` and `fill`. */
-const SYMBOLS = new CustomShader({
-  label: "track symbols",
-  instance: { symbol: "u32", fill: "vec3f" },
-  fragment: `fn fragmentMain(fsInput: FragmentInput, material: ptr<function, MaterialOutput>) {
-  // The quad from -1 to 1 each way.
-  let p = fsInput.texCoord0 * 2.0 - 1.0;
-  let a = abs(p);
-  var d: f32; // below 0 inside the frame
-  switch fsInput.instance.symbol {
-    case 0u: { d = max(a.x - 0.95, a.y - 0.65); }       // friend: rectangle
-    case 1u: { d = (a.x + a.y - 0.95) * 0.7071; }       // hostile: diamond
-    case 2u: { d = max(a.x, a.y) - 0.75; }              // neutral: square
-    default: { d = length(p) - 0.85; }                  // unknown: circle
-  }
-  (*material).alpha = select(0.0, 1.0, d < 0.0);
-  (*material).baseColor = select(fsInput.instance.fill, vec3f(0.01), d > -0.12);
-}`,
-});
-
-/** Where each vehicle drives: a Lissajous loop (center, sizes, rates, phases). */
-const PATH_WORDS = 8;
-
-function makePaths(count: number, random: () => number): Float32Array {
-  const paths = new Float32Array(count * PATH_WORDS);
-  for (let i = 0; i < count; i++) {
-    const o = i * PATH_WORDS;
-    const speed = 8 + random() * 17; // m/s
-    const ax = 300 + random() * 2700;
-    const ay = 300 + random() * 2700;
-    const wx = speed / ax;
-    paths[o] = (random() * 2 - 1) * (EXTENT - ax);
-    paths[o + 1] = (random() * 2 - 1) * (EXTENT - ay);
-    paths[o + 2] = ax;
-    paths[o + 3] = ay;
-    paths[o + 4] = wx;
-    paths[o + 5] = wx * (0.5 + random() * 1.5);
-    paths[o + 6] = random() * Math.PI * 2;
-    paths[o + 7] = random() * Math.PI * 2;
-  }
-  return paths;
-}
-
-/** Vehicle `i` at time `t`: east, north (m) and heading (clockwise from north). */
-function sample(paths: Float32Array, i: number, t: number, out: Float32Array) {
-  const o = i * PATH_WORDS;
-  const ax = paths[o + 2]!,
-    ay = paths[o + 3]!,
-    wx = paths[o + 4]!,
-    wy = paths[o + 5]!;
-  const x = wx * t + paths[o + 6]!;
-  const y = wy * t + paths[o + 7]!;
-  out[0] = paths[o]! + ax * Math.sin(x);
-  out[1] = paths[o + 1]! + ay * Math.sin(y);
-  out[2] = Math.atan2(ax * wx * Math.cos(x), ay * wy * Math.cos(y));
-}
-
-/** A seeded generator, so each count shows the same vehicles. */
-function mulberry32(seed: number): () => number {
-  return () => {
-    seed = (seed + 0x6d2b79f5) | 0;
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+/**
+ * The feed, in a worker: vehicles as rows (x, y, course, speed factor,
+ * turn rate), moved on and sent in slices of at most `BUDGET / rate`, the
+ * records a stream carries a second. Self-contained: it runs from its
+ * source text.
+ */
+function feedWorker() {
+  const BUDGET = 2_500_000;
+  const ROW = 5;
+  let n = 0;
+  let half = 10000;
+  let rows = new Float32Array(0);
+  let rate = 10;
+  let speed = 15;
+  let turning = 20;
+  let paused = false;
+  let cursor = 0;
+  let timer: ReturnType<typeof setInterval> | undefined;
+  const post = (message: unknown, transfer: Transferable[] = []) =>
+    (self as unknown as Worker).postMessage(message, transfer);
+  /** Vehicles a tick, and the seconds between a vehicle's reports. */
+  const plan = () => {
+    const per = Math.min(n, Math.max(1, Math.ceil(BUDGET / rate)));
+    return { per, interval: Math.ceil(n / per) / rate };
+  };
+  const tick = () => {
+    if (paused || n === 0) {
+      return;
+    }
+    const { per, interval } = plan();
+    const first = cursor;
+    const count = Math.min(per, n - first);
+    const out = new Float32Array(count * 4);
+    for (let k = 0; k < count; k++) {
+      const o = (first + k) * ROW;
+      // A course that wanders (the turn rate drifts within ±turning).
+      let turn = rows[o + 4]! + (Math.random() * 2 - 1) * turning * 0.3;
+      turn = Math.max(-turning, Math.min(turning, turn));
+      rows[o + 4] = turn;
+      let h = rows[o + 2]! + turn * interval;
+      const v = speed * rows[o + 3]!;
+      const r = (h * Math.PI) / 180;
+      let x = rows[o]! + v * interval * Math.sin(r);
+      let y = rows[o + 1]! + v * interval * Math.cos(r);
+      // Turned back at the area's edge.
+      if (Math.abs(x) > half) {
+        x = Math.sign(x) * half;
+        h = 360 - h;
+      }
+      if (Math.abs(y) > half) {
+        y = Math.sign(y) * half;
+        h = 180 - h;
+      }
+      h = ((h % 360) + 360) % 360;
+      rows[o] = x;
+      rows[o + 1] = y;
+      rows[o + 2] = h;
+      out[k * 4] = x;
+      out[k * 4 + 1] = y;
+      out[k * 4 + 2] = 0;
+      out[k * 4 + 3] = h;
+    }
+    cursor = (first + count) % n;
+    post({ type: "samples", first, data: out, ...plan() }, [out.buffer]);
+  };
+  const restart = () => {
+    if (timer !== undefined) {
+      clearInterval(timer);
+    }
+    timer = setInterval(tick, 1000 / rate);
+  };
+  self.onmessage = (e: MessageEvent) => {
+    const m = e.data;
+    if (m.type === "start") {
+      n = m.count;
+      half = m.half;
+      rate = m.rate;
+      speed = m.speed;
+      turning = m.turning;
+      paused = m.paused;
+      cursor = 0;
+      rows = new Float32Array(n * ROW);
+      // The first query: every vehicle's row and properties, in chunks.
+      const CHUNK = 1 << 20;
+      for (let first = 0; first < n; first += CHUNK) {
+        const count = Math.min(CHUNK, n - first);
+        const samples = new Float32Array(count * 4);
+        const props = new Float32Array(count * m.stride);
+        const words = new Uint32Array(props.buffer);
+        for (let k = 0; k < count; k++) {
+          const o = (first + k) * ROW;
+          rows[o] = (Math.random() * 2 - 1) * half;
+          rows[o + 1] = (Math.random() * 2 - 1) * half;
+          rows[o + 2] = Math.random() * 360;
+          rows[o + 3] = 0.5 + Math.random();
+          rows[o + 4] = 0;
+          samples[k * 4] = rows[o]!;
+          samples[k * 4 + 1] = rows[o + 1]!;
+          samples[k * 4 + 3] = rows[o + 2]!;
+          const r = Math.random();
+          words[k * m.stride + m.affiliation] =
+            r < 0.55 ? 0 : r < 0.7 ? 1 : r < 0.9 ? 2 : 3;
+        }
+        post({ type: "properties", first, data: props }, [props.buffer]);
+        post({ type: "samples", first, data: samples, ...plan() }, [
+          samples.buffer,
+        ]);
+      }
+      restart();
+    } else if (m.type === "config") {
+      speed = m.speed;
+      turning = m.turning;
+      paused = m.paused;
+      if (m.rate !== rate) {
+        rate = m.rate;
+        restart();
+      }
+      post({ type: "plan", ...plan() });
+    } else if (m.type === "stop" && timer !== undefined) {
+      clearInterval(timer);
+    }
   };
 }
 
@@ -116,100 +233,147 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     fromDegrees(SITE.longitude, SITE.latitude, SITE.height),
     vec3.vec3(),
   );
-  const frame = eastNorthUpToFixedFrame(origin, ellipsoid, mat4.mat4());
   const renderMode = engine.renderMode;
-  // Vehicles move between feed updates: render every frame.
+  // Vehicles move between reports: render every frame.
   engine.renderMode = "continuous";
 
-  let tracks: Tracks | undefined;
-  let paths: Float32Array = new Float32Array(0);
-  let samples: Float32Array = new Float32Array(0);
-  let count = 0;
+  const feed = new Worker(
+    URL.createObjectURL(
+      new Blob([`(${feedWorker.toString()})()`], { type: "text/javascript" }),
+    ),
+  );
+  const settings = {
+    count: 100_000,
+    area: 20,
+    rate: 10,
+    speed: 15,
+    turning: 20,
+    paused: false,
+  };
+  let source: PointSource | undefined;
+  let layer: VectorLayer | undefined;
   let building = 0;
-  const startedAt = performance.now();
-  const feedTime = () => (performance.now() - startedAt) / 1000;
-  const timing = { feedMs: 0, engineMs: 0 };
+  const stats = {
+    records: 0,
+    updateMs: 0,
+    since: performance.now(),
+    per: 0,
+    interval: 0,
+  };
+  /** The followed vehicle's last two reports, as the GPU moves it. */
+  let follow:
+    | {
+        vehicle: number;
+        inputs: number;
+        p0: number[];
+        p1: number[];
+        t1: number;
+      }
+    | undefined;
 
-  /** A collection of `n` vehicles, replacing the last. */
-  async function build(n: number) {
-    const token = ++building;
-    // An asset is placed in one world, once: loaded for each collection.
-    const asset = await engine.loadGltf(new URL(TRUCK, location.href).href);
-    if (token !== building || signal.aborted) {
+  feed.onmessage = (e: MessageEvent) => {
+    const m = e.data;
+    if (!source || signal.aborted) {
       return;
     }
-    tracks?.destroy();
-    tracks = new Tracks(engine, world, {
+    if (m.type === "properties") {
+      source.setProperties(m.first, m.data);
+    } else if (m.type === "samples") {
+      const start = performance.now();
+      source.delay = m.interval;
+      source.update(m.first, m.data);
+      stats.updateMs = stats.updateMs * 0.8 + (performance.now() - start) * 0.2;
+      stats.records += m.data.length / 4;
+      stats.per = m.per;
+      stats.interval = m.interval;
+      const n = m.data.length / 4;
+      if (follow && follow.vehicle >= m.first && follow.vehicle < m.first + n) {
+        const k = (follow.vehicle - m.first) * 4;
+        const next = Array.from(m.data.subarray(k, k + 4) as Float32Array);
+        follow.p0 = followShown() ?? next;
+        follow.p1 = next;
+        follow.t1 = engine.time;
+      }
+    } else if (m.type === "plan") {
+      stats.per = m.per;
+      stats.interval = m.interval;
+      source.delay = m.interval;
+    }
+  };
+
+  // The style's parameters, kept across rebuilds; controls showing them.
+  const parameterValues = new Map<string, number | boolean | string>();
+  const refreshers: Array<() => void> = [];
+  const setParameter = (name: string, value: number | boolean | string) => {
+    parameterValues.set(name, value);
+    layer?.setParameter(name, value);
+  };
+
+  /** A collection of `count` vehicles over `area` km, replacing the last. */
+  async function build() {
+    const token = ++building;
+    const half = (settings.area * 1000) / 2;
+    const n = settings.count;
+    feed.postMessage({ type: "stop" });
+    layer?.destroy();
+    source?.destroy();
+    layer = undefined;
+    follow = undefined;
+    // The ground's drop at the edge (the capture is flat).
+    const drop = (half * half) / (2 * 6371000);
+    const next = new PointSource(engine, world, {
       capacity: n,
       origin,
-      model: { asset },
-      billboard: {
-        // Smaller as they crowd: 18 px for 1,000, 14 for 10,000, 10 for 100,000.
-        size: Math.round(30 - 4 * Math.log10(n)),
-        anchor: "center",
-        lift: 6,
-        shader: SYMBOLS,
-        streams: {
-          stride: 4,
-          layout: {
-            symbol: { offset: 0, components: 1 },
-            fill: { offset: 1, components: 3 },
-          },
-        },
-        alphaCutoff: 0.5,
+      properties: { affiliation: { enum: AFFILIATIONS } },
+      clamp: {
+        halfExtent: half * 1.05,
+        size: 4096,
+        top: 3000,
+        bottom: -(1000 + drop),
       },
-      clamp: { halfExtent: EXTENT + 500, size: 4096, top: 1500, bottom: -800 },
-      switchDistance: SWITCH_DISTANCE,
-      delay: 1 / FEED_HZ,
     });
-    const random = mulberry32(2026);
-    paths = makePaths(n, random);
-    samples = new Float32Array(n * 4);
-    // Affiliations by share, as the symbols' values (fill in linear color).
-    const symbols = new Float32Array(n * 4);
-    const words = new Uint32Array(symbols.buffer);
-    for (let i = 0; i < n; i++) {
-      let r = random();
-      let k = 0;
-      while (k < AFFILIATIONS.length - 1 && r >= AFFILIATIONS[k]!.share) {
-        r -= AFFILIATIONS[k]!.share;
-        k++;
-      }
-      words[i * 4] = k;
-      AFFILIATIONS[k]!.fill.forEach((c, j) => {
-        symbols[i * 4 + 1 + j] = (c / 255) ** 2.2;
-      });
-    }
-    tracks.setSymbols(0, symbols);
-    tracks.count = count = n;
-    feed();
-  }
-
-  /** One feed update: every vehicle's new sample, in one array. */
-  function feed() {
-    if (!tracks) {
+    next.count = n;
+    source = next;
+    const created = await VectorLayer.create(engine, world, {
+      source: next,
+      style: STYLE,
+      slots: Math.min(n, TRUCKS),
+    });
+    if (token !== building || signal.aborted) {
+      created.destroy();
       return;
     }
-    const start = performance.now();
-    const t = feedTime();
-    const s = new Float32Array(3);
-    for (let i = 0; i < count; i++) {
-      sample(paths, i, t, s);
-      samples[i * 4] = s[0]!;
-      samples[i * 4 + 1] = s[1]!;
-      samples[i * 4 + 2] = 0; // on the ground
-      samples[i * 4 + 3] = s[2]!;
+    layer = created;
+    // Symbols as large as the overview's crowd allows (the whole area is
+    // in view, whatever its size): 18 px for 1,000 vehicles, 4 px smaller
+    // for each tenfold more (the slider overrides).
+    parameterValues.set(
+      "symbolSize",
+      Math.max(3, Math.min(20, Math.round(30 - 4 * Math.log10(n)))),
+    );
+    for (const [name, value] of parameterValues) {
+      layer.setParameter(name, value);
     }
-    const engineStart = performance.now();
-    tracks.update(0, samples);
-    const end = performance.now();
-    timing.feedMs = timing.feedMs * 0.8 + (engineStart - start) * 0.2;
-    timing.engineMs = timing.engineMs * 0.8 + (end - engineStart) * 0.2;
+    for (const refresh of refreshers) {
+      refresh();
+    }
+    feed.postMessage({
+      type: "start",
+      count: n,
+      half,
+      rate: settings.rate,
+      speed: settings.speed,
+      turning: settings.turning,
+      paused: settings.paused,
+      stride: next.stride,
+      affiliation: next.layout.affiliation!.offset,
+    });
+    overview();
   }
-  const feedTimer = setInterval(feed, 1000 / FEED_HZ);
 
   /** The ground at `east`, `north` (m from the site), Earth-fixed. */
   function ground(east: number, north: number) {
+    const frame = source!.frame;
     const p = vec3.vec3(
       frame[12]! + east * frame[0]! + north * frame[4]!,
       frame[13]! + east * frame[1]! + north * frame[5]!,
@@ -221,33 +385,52 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     return ellipsoid.cartographicToCartesian(c, p);
   }
 
-  /** The vehicle the camera follows, until the camera is moved. */
-  let follow: { vehicle: number; inputs: number } | undefined;
-  const followed = new Float32Array(3);
+  /** Where the followed vehicle is shown now (as points.wgsl moves it). */
+  function followShown(): number[] | undefined {
+    if (!follow || !source || follow.p1.length === 0) {
+      return undefined;
+    }
+    const delay = Math.max(source.delay, 1e-6);
+    const a = Math.min(
+      1,
+      Math.max(0, (engine.time - delay - (follow.t1 - delay)) / delay),
+    );
+    const [x0, y0, , h0] = follow.p0 as [number, number, number, number];
+    const [x1, y1, , h1] = follow.p1 as [number, number, number, number];
+    const turn = h1 - h0 - 360 * Math.round((h1 - h0) / 360);
+    return [x0 + (x1 - x0) * a, y0 + (y1 - y0) * a, 0, h0 + turn * a];
+  }
+
   function chase() {
     if (!follow) {
       return;
     }
-    if (viewer.controller.inputs !== follow.inputs || follow.vehicle >= count) {
+    if (viewer.controller.inputs !== follow.inputs) {
       follow = undefined;
       return;
     }
-    // Where the vehicle is shown: a feed interval behind the feed.
-    sample(paths, follow.vehicle, feedTime() - 1 / FEED_HZ, followed);
-    viewer.view.camera.lookAt(
-      ground(followed[0]!, followed[1]!),
-      followed[2]!,
-      -0.3,
-      40,
-    );
+    const shown = followShown();
+    if (shown) {
+      viewer.view.camera.lookAt(
+        ground(shown[0]!, shown[1]!),
+        (shown[3]! * Math.PI) / 180,
+        -0.25,
+        22,
+      );
+    }
   }
 
   function overview() {
     follow = undefined;
-    viewer.zoomTo({ center: ground(0, 0), radius: 8000 });
+    if (source) {
+      viewer.zoomTo({
+        center: ground(0, 0),
+        radius: ((settings.area * 1000) / 2) * 0.9,
+      });
+    }
   }
 
-  // The panel: count, camera, readouts, legend.
+  // ------------------------------------------------------------ the panel
   const el = <K extends keyof HTMLElementTagNameMap>(
     tag: K,
     props: Record<string, unknown> = {},
@@ -257,17 +440,96 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     e.append(...children);
     return e;
   };
-  const select = el(
-    "select",
-    { onchange: () => void build(Number(select.value)) },
-    ...COUNTS.map((n) =>
-      el(
-        "option",
-        { value: String(n), selected: n === 10_000 },
-        n.toLocaleString(),
+  const choice = (
+    label: string,
+    values: number[],
+    format: (v: number) => string,
+    get: () => number,
+    set: (v: number) => void,
+  ) => {
+    const select = el(
+      "select",
+      { onchange: () => set(Number(select.value)) },
+      ...values.map((v) =>
+        el("option", { value: String(v), selected: v === get() }, format(v)),
       ),
-    ),
-  );
+    );
+    return el("label", {}, label, select);
+  };
+  const slider = (
+    label: string,
+    range: { min: number; max: number; step: number },
+    get: () => number,
+    set: (v: number) => void,
+    unit = "",
+  ) => {
+    const value = el("output", {}, `${get()}${unit}`);
+    const input = el("input", {
+      type: "range",
+      min: String(range.min),
+      max: String(range.max),
+      step: String(range.step),
+      value: String(get()),
+      oninput: () => {
+        set(Number(input.value));
+        value.textContent = `${input.value}${unit}`;
+      },
+    });
+    refreshers.push(() => {
+      input.value = String(get());
+      value.textContent = `${get()}${unit}`;
+    });
+    return el("label", { className: "slider" }, label, input, value);
+  };
+  const sendConfig = () =>
+    feed.postMessage({
+      type: "config",
+      rate: settings.rate,
+      speed: settings.speed,
+      turning: settings.turning,
+      paused: settings.paused,
+    });
+  const heading = (text: string) => el("h3", {}, text);
+
+  // The style's parameters, as the style declares them.
+  const styleControls: HTMLElement[] = [];
+  for (const [name, p] of Object.entries(STYLE.parameters ?? {})) {
+    const current = () => parameterValues.get(name) ?? p.default;
+    if (p.options) {
+      const options = p.options.map((o) =>
+        typeof o === "object" ? o : { label: String(o), value: o },
+      );
+      const select = el(
+        "select",
+        { onchange: () => setParameter(name, Number(select.value)) },
+        ...options.map((o) =>
+          el(
+            "option",
+            { value: String(o.value), selected: o.value === current() },
+            o.label ?? String(o.value),
+          ),
+        ),
+      );
+      styleControls.push(el("label", {}, p.label ?? name, select));
+    } else if (typeof p.default === "boolean") {
+      const box = el("input", {
+        type: "checkbox",
+        checked: Boolean(current()),
+        onchange: () => setParameter(name, box.checked),
+      });
+      styleControls.push(el("label", {}, p.label ?? name, box));
+    } else {
+      styleControls.push(
+        slider(
+          p.label ?? name,
+          { min: p.min ?? 0, max: p.max ?? 100, step: p.step ?? 1 },
+          () => Number(current()),
+          (v) => setParameter(name, v),
+        ),
+      );
+    }
+  }
+
   const readouts = el("dl");
   const readout = (term: string) => {
     const value = el("dd");
@@ -275,22 +537,86 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     return value;
   };
   const feedOut = readout("Feed");
-  const frameOut = readout("Frame");
+  const latencyOut = readout("Each vehicle");
+  const updateOut = readout("Update");
   const legend = el("ul", { className: "legend" });
+  const fills = ["128,224,255", "255,128,128", "170,255,170", "255,255,128"];
+  const shapes = [
+    '<rect x="1" y="4" width="16" height="10"/>',
+    '<path d="M9 1 17 9 9 17 1 9Z"/>',
+    '<rect x="2.5" y="2.5" width="13" height="13"/>',
+    '<circle cx="9" cy="9" r="7.5"/>',
+  ];
   AFFILIATIONS.forEach((a, k) => {
-    const shape = [
-      '<rect x="1" y="4" width="16" height="10"/>',
-      '<path d="M9 1 17 9 9 17 1 9Z"/>',
-      '<rect x="3" y="3" width="12" height="12"/>',
-      '<circle cx="9" cy="9" r="7.5"/>',
-    ][k];
     const item = el("li");
-    item.innerHTML = `<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><g fill="rgb(${a.fill})" stroke="#000" stroke-width="2">${shape}</g></svg>`;
-    item.append(a.name);
+    item.innerHTML = `<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><g fill="rgb(${fills[k]})" stroke="#000" stroke-width="1.5">${shapes[k]}</g></svg>`;
+    item.append(a[0]!.toUpperCase() + a.slice(1));
     legend.append(item);
   });
+  const pause = el("input", {
+    type: "checkbox",
+    onchange: () => {
+      settings.paused = pause.checked;
+      sendConfig();
+    },
+  });
+
   panel.append(
-    el("label", {}, "Vehicles ", select),
+    heading("Scene"),
+    choice(
+      "Vehicles",
+      COUNTS,
+      (v) => v.toLocaleString(),
+      () => settings.count,
+      (v) => {
+        settings.count = v;
+        void build();
+      },
+    ),
+    choice(
+      "Area across",
+      AREAS,
+      (v) => `${v} km`,
+      () => settings.area,
+      (v) => {
+        settings.area = v;
+        void build();
+      },
+    ),
+    heading("Feed"),
+    choice(
+      "Updates a second",
+      RATES,
+      (v) => `${v}`,
+      () => settings.rate,
+      (v) => {
+        settings.rate = v;
+        sendConfig();
+      },
+    ),
+    slider(
+      "Speed",
+      { min: 0, max: 60, step: 1 },
+      () => settings.speed,
+      (v) => {
+        settings.speed = v;
+        sendConfig();
+      },
+      " m/s",
+    ),
+    slider(
+      "Turning",
+      { min: 0, max: 90, step: 1 },
+      () => settings.turning,
+      (v) => {
+        settings.turning = v;
+        sendConfig();
+      },
+      "°/s",
+    ),
+    el("label", {}, "Paused", pause),
+    heading("Style"),
+    ...styleControls,
     el(
       "div",
       { className: "buttons" },
@@ -299,10 +625,13 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
         {
           type: "button",
           onclick: () => {
-            if (count) {
+            if (source?.count) {
               follow = {
-                vehicle: Math.floor(Math.random() * count),
+                vehicle: Math.floor(Math.random() * source.count),
                 inputs: viewer.controller.inputs,
+                p0: [],
+                p1: [],
+                t1: 0,
               };
             }
           },
@@ -316,37 +645,38 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     el(
       "p",
       {},
-      `Trucks within ${SWITCH_DISTANCE} m of the camera, symbols beyond. Moving the camera stops following.`,
+      "Moving the camera stops following; a followed vehicle shows once its next report arrives.",
     ),
   );
 
-  // Readouts twice a second.
-  let frames = 0;
-  let lastFrame = performance.now();
   let raf = requestAnimationFrame(function tick() {
-    frames++;
     chase();
     raf = requestAnimationFrame(tick);
   });
   const readoutTimer = setInterval(() => {
     const now = performance.now();
-    const fps = (frames * 1000) / (now - lastFrame);
-    frames = 0;
-    lastFrame = now;
-    const ms = (x: number) => (Number.isFinite(x) ? x.toFixed(1) : "–");
-    feedOut.textContent = `${count.toLocaleString()} at ${FEED_HZ} Hz: ${ms(timing.feedMs)} ms making samples, ${ms(timing.engineMs)} ms in the engine`;
-    frameOut.textContent = `${fps.toFixed(0)} fps, CPU ${ms(engine.stats.cpuMs)} ms, GPU ${ms(engine.stats.gpuMs)} ms`;
+    const perSecond = (stats.records * 1000) / (now - stats.since);
+    stats.records = 0;
+    stats.since = now;
+    feedOut.textContent = settings.paused
+      ? "paused"
+      : `${Math.round(perSecond).toLocaleString()} records/s at ${settings.rate} Hz`;
+    latencyOut.textContent = stats.interval
+      ? `reported every ${stats.interval.toFixed(1)} s, shown that far behind`
+      : "–";
+    updateOut.textContent = `${stats.updateMs.toFixed(2)} ms a slice of ${stats.per.toLocaleString()}`;
   }, 500);
 
-  overview();
-  await build(Number(select.value));
+  await build();
 
   return () => {
     building++;
-    clearInterval(feedTimer);
+    feed.postMessage({ type: "stop" });
+    feed.terminate();
     clearInterval(readoutTimer);
     cancelAnimationFrame(raf);
-    tracks?.destroy();
+    layer?.destroy();
+    source?.destroy();
     engine.renderMode = renderMode;
     panel.replaceChildren();
   };
