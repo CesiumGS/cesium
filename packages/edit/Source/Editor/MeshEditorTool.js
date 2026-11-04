@@ -3,6 +3,7 @@
 import { Check } from "@cesium/core";
 
 /** @import { MeshEditor as WasmMeshEditor } from "@cesium/mesh-editor"; */
+/** @import EditMode from "./EditMode.js"; */
 
 /**
  * <div class="notice">
@@ -50,6 +51,16 @@ class MeshEditorTool {
      * @ignore
      */
     this._id = options.id;
+  }
+
+  /**
+   * Whether the tool can be activated in the given mode.
+   *
+   * @param {EditMode} mode The mode to check.
+   * @returns {boolean} Whether the tool supports the mode.
+   */
+  supportsMode(mode) {
+    throw new Error("MeshEditorTool.supportsMode is not implemented.");
   }
 
   /**
