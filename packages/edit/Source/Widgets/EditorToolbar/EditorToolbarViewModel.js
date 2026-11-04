@@ -1,7 +1,12 @@
 // @ts-check
 
+import { Check, DeveloperError, EventHelper } from "@cesium/core";
+import { createCommand, knockout } from "@cesium/widgets";
+import EditMode from "../../Editor/EditMode.js";
+import SelectTool from "../../Editor/SelectTool.js";
+import TranslateTool from "../../Editor/TranslateTool.js";
+
 /** @import { Command } from "@cesium/widgets"; */
-/** @import EditMode from "../../Editor/EditMode.js"; */
 /** @import MeshEditor from "../../Editor/MeshEditor.js"; */
 /** @import MeshEditorTool from "../../Editor/MeshEditorTool.js"; */
 
@@ -67,26 +72,36 @@ class EditorToolbarViewModel {
   /** @type {Command} */
   #toggleToolDropDown;
 
+  #eventHelper = new EventHelper();
+
+  #mode = knockout.observable(EditMode.NONE);
+
   /**
    * @param {MeshEditor} editor The editor to control.
    * @param {EditorToolbarOptions} [options] The dropdown entries.
    */
   constructor(editor, options) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.object("editor", editor);
+    //>>includeEnd('debug');
+
     this.#editor = editor;
     this.#modeEntries = options?.modes ?? this.#createModeEntries();
     this.#toolEntries = options?.tools ?? this.#createToolEntries();
 
     /**
-     * The selected mode entry's identifier. Observable.
-     * @type {string}
+     * The selected mode entry's identifier, or undefined if no entry matches.
+     * Observable.
+     * @type {string|undefined}
      */
-    this.modeId = "";
+    this.modeId = undefined;
 
     /**
-     * The selected tool entry's identifier. Observable.
-     * @type {string}
+     * The selected tool entry's identifier, or undefined if no entry matches.
+     * Observable.
+     * @type {string|undefined}
      */
-    this.toolId = "";
+    this.toolId = undefined;
 
     /**
      * Whether the mode dropdown is open. Observable.
@@ -153,7 +168,7 @@ class EditorToolbarViewModel {
    * @returns {boolean} Whether the entry is enabled.
    */
   isToolEnabled(entry) {
-    throw new Error("EditorToolbarViewModel.isToolEnabled is not implemented.");
+    return entry.tool?.supportsMode(this.#mode()) ?? true;
   }
 
   /**
@@ -162,7 +177,12 @@ class EditorToolbarViewModel {
    * @ignore
    */
   #createModeEntries() {
-    throw new Error("EditorToolbarViewModel mode entries are not implemented.");
+    return [
+      { id: "none", label: "Object Mode", mode: EditMode.NONE },
+      { id: "vertex", label: "Vertex", mode: EditMode.VERTEX },
+      { id: "edge", label: "Edge", mode: EditMode.EDGE },
+      { id: "face", label: "Face", mode: EditMode.FACE },
+    ];
   }
 
   /**
@@ -171,31 +191,98 @@ class EditorToolbarViewModel {
    * @ignore
    */
   #createToolEntries() {
-    throw new Error("EditorToolbarViewModel tool entries are not implemented.");
+    return [
+      { id: "none", label: "Tools", tool: undefined },
+      { id: "select", label: "Select", tool: SelectTool.addTo(this.#editor) },
+      {
+        id: "translate",
+        label: "Translate",
+        tool: TranslateTool.addTo(this.#editor),
+      },
+    ];
   }
 
   /**
    * Creates observable properties and dropdown/selection commands.
    * @ignore
    */
-  #createCommands() {}
+  #createCommands() {
+    knockout.track(this, [
+      "modeId",
+      "toolId",
+      "modeDropDownVisible",
+      "toolDropDownVisible",
+    ]);
+
+    this.#selectModeEntry = createCommand(
+      /** @param {EditorToolbarModeEntry} entry */
+      (entry) => {
+        this.#editor.mode = entry.mode;
+        this.modeDropDownVisible = false;
+      },
+    );
+
+    this.#selectToolEntry = createCommand(
+      /** @param {EditorToolbarToolEntry} entry */
+      (entry) => {
+        if (!this.isToolEnabled(entry)) {
+          throw new DeveloperError(
+            "The tool doesn't support the current mode.",
+          );
+        }
+
+        this.#editor.activeTool = entry.tool;
+        this.toolDropDownVisible = false;
+      },
+    );
+
+    this.#toggleModeDropDown = createCommand(() => {
+      this.modeDropDownVisible = !this.modeDropDownVisible;
+      if (this.modeDropDownVisible) {
+        this.toolDropDownVisible = false;
+      }
+    });
+
+    this.#toggleToolDropDown = createCommand(() => {
+      this.toolDropDownVisible = !this.toolDropDownVisible;
+      if (this.toolDropDownVisible) {
+        this.modeDropDownVisible = false;
+      }
+    });
+  }
 
   /**
    * Reads the editor's mode and tool into observable state.
    * @ignore
    */
-  #updateSelectedEntriesFromEditor() {}
+  #updateSelectedEntriesFromEditor() {
+    const { mode, activeTool } = this.#editor;
+    this.modeId = this.#modeEntries.find((entry) => entry.mode === mode)?.id;
+    this.toolId = this.#toolEntries.find(
+      (entry) => entry.tool === activeTool,
+    )?.id;
+    this.#mode(mode);
+  }
 
   /**
    * Subscribes to modeChanged and activeToolChanged.
    * @ignore
    */
-  #listenForEditorChanges() {}
+  #listenForEditorChanges() {
+    this.#eventHelper.add(this.#editor.modeChanged, () => {
+      this.#updateSelectedEntriesFromEditor();
+    });
+    this.#eventHelper.add(this.#editor.activeToolChanged, () => {
+      this.#updateSelectedEntriesFromEditor();
+    });
+  }
 
   /**
    * Removes subscriptions to the editor.
    */
-  destroy() {}
+  destroy() {
+    this.#eventHelper.removeAll();
+  }
 }
 
 export default EditorToolbarViewModel;
