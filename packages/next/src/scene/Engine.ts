@@ -254,6 +254,13 @@ export class Engine {
     environmentBuilds: 0,
   };
   /**
+   * Smoothed GPU time per pass, ms, by pass name (shadow cascades added
+   * up): where `stats.gpuMs` goes. Empty without `timestamp-query`.
+   */
+  get gpuPasses(): Record<string, number> {
+    return this.timer.passes;
+  }
+  /**
    * "onDemand" (default): `start()` renders a frame only when something
    * visible changed (a camera, view, world, the sun, streamed content) or
    * `requestRender()` was called; "continuous": every animation frame.
@@ -2927,7 +2934,7 @@ export class Engine {
         );
         view.world.encodeCull(enc);
         shadowDepth.view = this.ctx.shadowLayers[k]!;
-        shadowPass.timestampWrites = this.timer.passWrites();
+        shadowPass.timestampWrites = this.timer.passWrites("shadows");
         const pass = enc.beginRenderPass(shadowPass);
         pass.executeBundles([casters]);
         pass.end();
@@ -2995,7 +3002,7 @@ export class Engine {
       }
       const pass = enc.beginComputePass({
         label: "lights",
-        timestampWrites: this.timer.passWrites(),
+        timestampWrites: this.timer.passWrites("lights"),
       });
       pass.setPipeline(this.ctx.pipelines.lightsAssign);
       pass.setBindGroup(0, this.ctx.lightAssignGroup);
@@ -3005,13 +3012,13 @@ export class Engine {
     });
 
     graph.addPass("cull", { sideEffect: true }, (enc) => {
-      view.world.encodeCull(enc, this.timer.passWrites());
+      view.world.encodeCull(enc, this.timer.passWrites("cull"));
     });
 
     // The sky around the camera, before the opaque pass draws from it.
     graph.addPass("sky-view", { sideEffect: true }, (enc) => {
       if (drawsSky(view) && frame.sky.inside) {
-        this.sky.encodeTable(enc, frame.sky, this.timer.passWrites());
+        this.sky.encodeTable(enc, frame.sky, this.timer.passWrites("sky-view"));
       }
     });
 
@@ -3024,7 +3031,11 @@ export class Engine {
     graph.addPass("aerial-perspective", { sideEffect: true }, (enc) => {
       // Marched per vertex instead from high up: no volume.
       if (drawsAerialPerspective(view) && frame.sky.march < 1) {
-        this.sky.encodeAerial(enc, frame.sky, this.timer.passWrites());
+        this.sky.encodeAerial(
+          enc,
+          frame.sky,
+          this.timer.passWrites("aerial-perspective"),
+        );
       }
       if (drawsAerialPerspective(view) && frame.sky.screenHaze > 0) {
         this.sky.encodeAerialScreen(enc, frame.sky);
@@ -3078,7 +3089,7 @@ export class Engine {
         }
         prepassColor.view = get(prepassNormal);
         prepassDepthAttachment.view = get(prepassDepth);
-        prepassPass.timestampWrites = this.timer.passWrites();
+        prepassPass.timestampWrites = this.timer.passWrites("prepass");
         const pass = enc.beginRenderPass(prepassPass);
         pass.executeBundles([view.world.prepassBundle()]);
         pass.end();
@@ -3113,7 +3124,7 @@ export class Engine {
             { binding: 5, resource: { buffer: this.ctx.aoBuffer } },
           ],
         });
-        const timestampWrites = this.timer.passWrites();
+        const timestampWrites = this.timer.passWrites("ambient-occlusion");
         const pass = enc.beginComputePass({
           label: "ambient-occlusion",
           ...(timestampWrites ? { timestampWrites } : {}),
@@ -3122,7 +3133,7 @@ export class Engine {
         pass.setBindGroup(0, trace);
         pass.dispatchWorkgroups(Math.ceil(width / 16), Math.ceil(height / 16));
         pass.end();
-        const blurWrites = this.timer.passWrites();
+        const blurWrites = this.timer.passWrites("ambient-occlusion.blur");
         const second = enc.beginComputePass({
           label: "ambient-occlusion.blur",
           ...(blurWrites ? { timestampWrites: blurWrites } : {}),
@@ -3167,7 +3178,7 @@ export class Engine {
         opaqueDisplay.view = get(display);
         opaqueDisplay.resolveTarget = get(displayResolved);
         opaqueDepth.view = get(depth);
-        opaquePass.timestampWrites = this.timer.passWrites();
+        opaquePass.timestampWrites = this.timer.passWrites("opaque");
         const pass = enc.beginRenderPass(opaquePass);
         // Its depth first, then its shading where that depth is (each
         // sample shaded once, not every fragment drawn over it).
@@ -3262,7 +3273,7 @@ export class Engine {
           const lists = this.lists!;
           enc.clearBuffer(lists, 0, (LIST_HEADER + width * height) * 4);
           listTarget.view = get(color);
-          listPass.timestampWrites = this.timer.passWrites();
+          listPass.timestampWrites = this.timer.passWrites("translucent-lists");
           const pass = enc.beginRenderPass(listPass);
           world.encodeTranslucent(
             pass,
@@ -3291,7 +3302,9 @@ export class Engine {
         const higher = get(momentsHigher);
         momentTargets[0]!.view = zero;
         momentTargets[1]!.view = higher;
-        momentPass.timestampWrites = this.timer.passWrites();
+        momentPass.timestampWrites = this.timer.passWrites(
+          "translucent-moments",
+        );
         const first = enc.beginRenderPass(momentPass);
         world.encodeTranslucent(
           first,
@@ -3308,7 +3321,7 @@ export class Engine {
         first.end();
         colorTargets[0]!.view = get(accumulatedLit);
         colorTargets[1]!.view = get(accumulatedUnlit);
-        colorPass.timestampWrites = this.timer.passWrites();
+        colorPass.timestampWrites = this.timer.passWrites("translucent-color");
         const second = enc.beginRenderPass(colorPass);
         world.encodeTranslucent(
           second,
@@ -3345,7 +3358,9 @@ export class Engine {
         }
         compositeScene.view = get(resolved);
         compositeDisplay.view = get(displayResolved);
-        compositePass.timestampWrites = this.timer.passWrites();
+        compositePass.timestampWrites = this.timer.passWrites(
+          "translucent-composite",
+        );
         const pass = enc.beginRenderPass(compositePass);
         if (view.translucency === "exact") {
           pass.setPipeline(pipelines.compositeExact);

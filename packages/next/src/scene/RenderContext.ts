@@ -72,6 +72,15 @@ export interface SurfacePipelines {
    */
   opaquePoints: GPURenderPipeline;
   /**
+   * Instanced triangles (`ModelOptions.instances`), one- and double-sided:
+   * outside the depth prepass too. Instances are many small copies whose
+   * vertices outnumber the samples they cover, so drawing them twice
+   * costs more than shading over each other saves (100,000 milk trucks:
+   * 40 ms against 75).
+   */
+  opaqueInstanced: GPURenderPipeline;
+  opaqueInstancedDoubleSided: GPURenderPipeline;
+  /**
    * The sun's shadow-map casters: depth only, and double-sided; "masked"
    * for materials that cut out (a fragment stage that discards).
    */
@@ -123,6 +132,8 @@ export const SURFACE_KEYS: readonly SurfaceKey[] = [
   "opaqueDoubleSided",
   "opaqueLines",
   "opaquePoints",
+  "opaqueInstanced",
+  "opaqueInstancedDoubleSided",
   "shadow",
   "shadowDoubleSided",
   "shadowMasked",
@@ -1004,6 +1015,17 @@ async function createPipelines(
         opaquePipeline(opaque, name("opaque.lines"), "none", "line-list", o),
       opaquePoints: () =>
         opaquePipeline(opaque, name("opaque.points"), "none", tri, o, false),
+      opaqueInstanced: () =>
+        opaquePipeline(opaque, name("opaque.instanced"), "back", tri, o, false),
+      opaqueInstancedDoubleSided: () =>
+        opaquePipeline(
+          opaque,
+          name("opaque.instanced.doubleSided"),
+          "none",
+          tri,
+          o,
+          false,
+        ),
       shadow: () => shadowPipeline(caster, name("shadow"), "back", false, o),
       shadowDoubleSided: () =>
         shadowPipeline(caster, name("shadow.doubleSided"), "none", false, o),

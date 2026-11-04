@@ -51,6 +51,8 @@ interface Row {
   tableMiB: number;
   cpuMs: number;
   gpuMs: number;
+  /** Median GPU time per pass, ms (`Engine.gpuPasses`). */
+  gpuPasses: Record<string, number>;
   frameP50: number;
   frameP95: number;
   move1PctMs: number;
@@ -158,6 +160,7 @@ async function runInstances(): Promise<Row[]> {
     // Orbit the grid, half of it in view.
     const cpu: number[] = [];
     const gpu: number[] = [];
+    const passes: Record<string, number[]> = {};
     const intervals: number[] = [];
     let last = await frame();
     for (let i = 0; i < FRAMES; i++) {
@@ -167,6 +170,9 @@ async function runInstances(): Promise<Row[]> {
       last = t;
       cpu.push(engine.stats.cpuMs);
       gpu.push(engine.stats.gpuMs);
+      for (const [name, ms] of Object.entries(engine.gpuPasses)) {
+        (passes[name] ??= []).push(ms);
+      }
     }
     // Move 1% of the instances every frame (a fleet of vehicles).
     const move: number[] = [];
@@ -198,6 +204,9 @@ async function runInstances(): Promise<Row[]> {
       tableMiB: memory.tableBytes / (1 << 20),
       cpuMs: quantile(cpu, 0.5),
       gpuMs: quantile(gpu, 0.5),
+      gpuPasses: Object.fromEntries(
+        Object.entries(passes).map(([name, ms]) => [name, quantile(ms, 0.5)]),
+      ),
       frameP50: quantile(intervals, 0.5),
       frameP95: quantile(intervals, 0.95),
       move1PctMs: quantile(move, 0.5),

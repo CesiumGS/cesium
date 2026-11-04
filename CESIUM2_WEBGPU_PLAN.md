@@ -869,7 +869,8 @@ Next steps (r44, after the night work). Now, in this order:
    night the opaque pass took 4.3 ms against 6.4 without lights (the
    depth included), 6.9 against 10.0 with the 576 spots. Parity, models,
    imagery, globe and tileset unchanged (models with and without the
-   prepass alike).
+   prepass alike). Point sets and instances draw outside it (r48, r49:
+   their vertices cost more twice than their overdraw does).
 
 Later:
 
@@ -3056,12 +3057,42 @@ heights in `placement.offset`, lines and polygons from live sources.
 
 **Found on the way: the instances benchmark's GPU time grew 36 → 160 ms**
 at 100,000 instances (500,000 items) since 2026-11-02. A bisect over the
-benchmark (noisy: three readings of 66–70 ms before a commit that read 39) points at two steps, both new passes over every item rather than
-bugs: the depth prepass in the MSAA opaque pass (`fc29bf1797`, 39 → 79
-ms) and shadow cascades fitted to the depth on screen (`386da0c21d`, →
-138 ms). To look into: what the prepass and the cascades cost per
-instance, and whether instanced draws should skip the prepass as point
-sets now do.
+benchmark (noisy: three readings of 66–70 ms before a commit that read 39) pointed at two steps: the depth prepass in the MSAA opaque pass
+(`fc29bf1797`, 39 → 79 ms) and shadow cascades fitted to the depth on
+screen (`386da0c21d`, → 138 ms). Done (r49): only the prepass was real.
+The benchmark's view has no shadows (`View.shadows` is off by default),
+so the cascades never run there; the 138–180 ms readings were the GPU's
+clock. The GPU ran the benchmark at well under half its top clock
+(software thermal slowdown), and one commit read 71–88 ms from run to
+run; HEAD read 83–88 ms when measured beside the fix, never 160.
+Instanced batches now draw outside the prepass, as point sets do
+(`opaqueInstanced`, one- and double-sided: depth tested and written as
+they shade): 100,000 milk trucks are about 360 million triangles, half
+of them in view, each truck a few pixels, so the pass is bound by
+vertices, and drawing them twice cost what equal-depth shading saves.
+`Engine.gpuPasses` gives the GPU time per pass (the timer's labels; the
+benchmark records it):
+
+| 100,000 instances, ms |    cull | sky-view | aerial-perspective | opaque | total |
+| --------------------- | ------: | -------: | -----------------: | -----: | ----: |
+| With the prepass      | 0.9–1.2 |     0.07 |                0.1 |  70–79 | 72–81 |
+| Instances outside it  | 0.8–2.3 |     0.07 |           0.07–0.2 |  39–40 | 40–42 |
+| `b7f9c8c039` (before) |         |          |                    |        | 37–40 |
+
+Runs alternated with HEAD (83–88 ms) and `b7f9c8c039`; 10,000
+instances take 4.7–5.0 ms against 8.0–10 with the prepass. No shadows,
+ambient occlusion, lights or translucency in this benchmark: the opaque
+pass is nearly all of it. Parity, models and customShader unchanged
+(customShader's property-attribute case reads one of two values a 1e-7
+apart at HEAD too); translucency unchanged but for the near-opaque
+stack's order check, which reads 0 or about 2e-7 from run to run with or
+without this change (likely ties between equal depths in the exact
+lists).
+Not yet: with the view's shadows on, the four cascades take 154 ms at
+100,000 instances against the opaque pass's 42 (15 against 5 at
+10,000): each cascade draws about as many trucks as the view does.
+Casters too small to matter in a cascade (a few texels) are the next
+thing to cull there.
 
 ### M5 — Performance hardening (≈3 wks)
 

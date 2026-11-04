@@ -7,6 +7,7 @@
  * enabled, so treat values as benchmark data, not a product feature.
  */
 export class GpuTimer {
+  private static readonly maxPasses = 32;
   /** Smoothed GPU frame time in milliseconds, or NaN when unsupported. */
   milliseconds = Number.NaN;
   /**
@@ -15,19 +16,41 @@ export class GpuTimer {
    * between passes (e.g. indirect-draw validation) and idle gaps.
    */
   spanMilliseconds = Number.NaN;
+  /**
+   * Smoothed GPU time per pass label (`passWrites`), ms; passes sharing a
+   * label (the shadow cascades) add up. For benchmarks: where the time goes.
+   */
+  get passes(): Record<string, number> {
+    const out: Record<string, number> = {};
+    this.labelIndex.forEach((i, label) => {
+      out[label] = this.labelMs[i]!;
+    });
+    return out;
+  }
   private readonly querySet?: GPUQuerySet;
   private readonly resolveBuffer?: GPUBuffer;
   private readonly readbacks: GPUBuffer[] = [];
   private readonly idle: GPUBuffer[] = [];
   private readonly handlers = new Map<
     GPUBuffer,
-    { count: number; mapped: () => void; failed: () => void }
+    {
+      count: number;
+      /** Each pass's label index, as of `afterSubmit`. */
+      labels: Uint8Array;
+      mapped: () => void;
+      failed: () => void;
+    }
   >();
+  /** Label to index into `labelMs`, interned once. */
+  private readonly labelIndex = new Map<string, number>();
+  private readonly labelMs = new Float64Array(GpuTimer.maxPasses);
+  private readonly labelSum = new Float64Array(GpuTimer.maxPasses);
+  /** This frame's passes' label indices. */
+  private readonly frameLabels = new Uint8Array(GpuTimer.maxPasses);
   /** Per-pass timestamp-write descriptors, created once. */
   private readonly writes: GPUComputePassTimestampWrites[] = [];
   private pending?: GPUBuffer;
   private nextIndex = 0;
-  private static readonly maxPasses = 32;
 
   constructor(private readonly device: GPUDevice) {
     if (!device.features.has("timestamp-query")) {
@@ -48,6 +71,7 @@ export class GpuTimer {
       this.idle.push(buffer);
       this.handlers.set(buffer, {
         count: 0,
+        labels: new Uint8Array(GpuTimer.maxPasses),
         mapped: () => this.onMapped(buffer),
         failed: () => this.idle.push(buffer),
       });
@@ -68,8 +92,11 @@ export class GpuTimer {
     return this.pending !== undefined;
   }
 
-  /** Timestamp writes for one pass, or undefined when not measuring. */
-  passWrites(): GPUComputePassTimestampWrites | undefined {
+  /**
+   * Timestamp writes for one pass, or undefined when not measuring. `label`
+   * names it in `passes`.
+   */
+  passWrites(label: string): GPUComputePassTimestampWrites | undefined {
     if (
       !this.querySet ||
       !this.pending ||
@@ -77,6 +104,16 @@ export class GpuTimer {
     ) {
       return undefined;
     }
+    let index = this.labelIndex.get(label);
+    if (index === undefined) {
+      if (this.labelIndex.size >= GpuTimer.maxPasses) {
+        return undefined;
+      }
+      index = this.labelIndex.size;
+      this.labelIndex.set(label, index);
+      this.labelMs[index] = Number.NaN;
+    }
+    this.frameLabels[this.nextIndex / 2] = index;
     const writes = this.writes[this.nextIndex / 2];
     this.nextIndex += 2;
     return writes;
@@ -126,22 +163,26 @@ export class GpuTimer {
     }
     const handler = this.handlers.get(buffer)!;
     handler.count = count;
+    handler.labels.set(this.frameLabels);
     void buffer
       .mapAsync(GPUMapMode.READ, 0, count * 8)
       .then(handler.mapped, handler.failed);
   }
 
   private onMapped(buffer: GPUBuffer): void {
-    const count = this.handlers.get(buffer)!.count;
+    const { count, labels } = this.handlers.get(buffer)!;
     const words = new Uint32Array(buffer.getMappedRange(0, count * 8));
     let total = 0;
     let first = timestamp(words, 0);
     let last = timestamp(words, 1);
+    this.labelSum.fill(0);
     for (let i = 0; i < count; i += 2) {
       const begin = timestamp(words, i),
         end = timestamp(words, i + 1);
       if (end > begin) {
         total += end - begin;
+        const k = labels[i / 2]!;
+        this.labelSum[k] = this.labelSum[k]! + end - begin;
       }
       first = begin < first ? begin : first;
       last = end > last ? end : last;
@@ -149,6 +190,9 @@ export class GpuTimer {
     buffer.unmap();
     this.idle.push(buffer);
     this.milliseconds = smooth(this.milliseconds, total / 1e6);
+    for (let i = 0; i < this.labelIndex.size; i++) {
+      this.labelMs[i] = smooth(this.labelMs[i]!, this.labelSum[i]! / 1e6);
+    }
     if (last > first) {
       this.spanMilliseconds = smooth(
         this.spanMilliseconds,

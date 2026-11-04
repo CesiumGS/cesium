@@ -315,6 +315,8 @@ interface Batch {
   billboard: boolean;
   /** A point set's: drawn without indices, six vertices per point. */
   points: boolean;
+  /** Its draws have instances: outside the opaque pass's depth prepass. */
+  instanced: boolean;
   /** Draw items: records without instances plus instances. */
   items: number;
   itemBase: number;
@@ -1563,7 +1565,8 @@ export class World {
     const doubleSided = options.doubleSided ?? false;
     const shader = options.shader;
     const billboard = options.billboard !== undefined;
-    const key = `${mesh.id}|${material}|${textureSet}|${doubleSided ? 1 : 0}|${shader?.id ?? 0}|${billboard ? 1 : 0}`;
+    const instanced = instanceCount > 0;
+    const key = `${mesh.id}|${material}|${textureSet}|${doubleSided ? 1 : 0}|${shader?.id ?? 0}|${billboard ? 1 : 0}|${instanced ? 1 : 0}`;
     let batch = this.batches.get(key);
     if (!batch) {
       const reused = this.freeBatches.pop();
@@ -1577,6 +1580,7 @@ export class World {
         batch.shader = shader;
         batch.billboard = billboard;
         batch.points = pointSet !== undefined;
+        batch.instanced = instanced;
       } else {
         batch = {
           index: this.batchList.length,
@@ -1588,6 +1592,7 @@ export class World {
           shader,
           billboard,
           points: pointSet !== undefined,
+          instanced,
           items: 0,
           itemBase: 0,
         };
@@ -2816,9 +2821,13 @@ export class World {
                 ? "opaquePoints"
                 : batch.mesh.topology === "line-list"
                   ? "opaqueLines"
-                  : batch.doubleSided
-                    ? "opaqueDoubleSided"
-                    : "opaque";
+                  : batch.instanced
+                    ? batch.doubleSided
+                      ? "opaqueInstancedDoubleSided"
+                      : "opaqueInstanced"
+                    : batch.doubleSided
+                      ? "opaqueDoubleSided"
+                      : "opaque";
     const rank = (batch: Batch) =>
       batch.mesh.topology === "line-list" ? 2 : Number(batch.doubleSided);
     const order = [...this.batchList].sort(
@@ -2835,8 +2844,9 @@ export class World {
       if (
         batch.items === 0 ||
         ((shadow || prepass || depth) && batch.mesh.topology === "line-list") ||
-        // Point sets shade outside the opaque pass's depth prepass.
-        (depth && batch.points) ||
+        // Point sets and instances shade outside the opaque pass's depth
+        // prepass.
+        (depth && (batch.points || batch.instanced)) ||
         // Billboards face the camera: no shadows, no ambient occlusion.
         ((shadow || prepass) && batch.billboard)
       ) {
