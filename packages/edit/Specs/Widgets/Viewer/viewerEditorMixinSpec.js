@@ -1,0 +1,21 @@
+describe("Widgets/Viewer/viewerEditorMixin", function () {
+  it("exposes the provided editor and creates a toolbar by default");
+  it("requires a viewer and an editor in its scene");
+  it("rejects properties already defined by another mixin");
+  it("forwards toolbar options");
+  it("can omit the toolbar");
+  it("maps 0 to Object and 1, 2, and 3 to component modes");
+  it("selects tools with s and g");
+  it("does not activate an unsupported tool with a shortcut");
+  it("cancels the active tool with Escape without changing mode");
+  it("ignores Escape when there is no active tool");
+  it("supports custom entry shortcuts");
+  it("can disable keyboard handling");
+  it("does not install shortcuts without a toolbar");
+  it("ignores handled events, modified shortcuts, and text input");
+  it("leaves Tab available for focus navigation");
+  it("focuses the owning window on pointerdown");
+  it("does not register or select meshes with a separate click handler");
+  it("destroys the toolbar and removes listeners with the viewer");
+  it("leaves editor destruction to the scene");
+});

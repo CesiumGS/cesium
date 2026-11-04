@@ -59,6 +59,13 @@ describe(
       });
     });
 
+    describe("supportsMode", function () {
+      it("queries wasm with the tool's ID and the requested mode");
+      it("supports every mode for the select tool");
+      it("does not support Object mode for the translate tool");
+      it("does not activate the tool or change the editor's mode");
+    });
+
     describe("confirm", function () {
       it("confirms the interaction of the active tool", function () {
         spyOn(WasmMeshEditor.prototype, "confirm").and.callThrough();
