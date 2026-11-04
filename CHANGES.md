@@ -11,6 +11,7 @@
 #### Fixes :wrench:
 
 - Fixed picking for clamped vector tilesets and `GeoJsonPrimitive` polylines and polygons. [#13917](https://github.com/CesiumGS/cesium/pull/13917)
+- Fixed `MVTDataProvider` freezing or running out of memory on load when `maxZoom` is high. Tiles are now created as they come into view. [#13867](https://github.com/CesiumGS/cesium/pull/13867)
 
 ## 1.147 - 2026-11-02
 
