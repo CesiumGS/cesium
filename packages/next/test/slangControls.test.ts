@@ -66,6 +66,8 @@ describe("declaredUniforms", () => {
       max: 2,
     });
     expect(declared.controls[3]!.step).toBe(1);
+    // A power of ten the default lands on (0..2 steps by 0.01).
+    expect(glow.step).toBe(0.01);
     expect(declared.uniforms.tint).toEqual({
       type: "vec3f",
       value: [1, 0.5, 0.25],
@@ -92,30 +94,48 @@ describe("declaredUniforms", () => {
 describe("bindDeclaredUniforms", () => {
   const declared = declaredUniforms(params.slice(0, 4), new Set());
 
-  it("replaces declarations in place, keeping every line's number", () => {
+  it("blanks declarations and rewrites uses, keeping every line's number", () => {
     const source = `import cesium;
 // uniform float glow; (a comment, left alone)
 [Slider(0.5, 0, 2)] [Label("Glow amount")]
 uniform float glow;
 [Color(1, 0.5, 0.25)] uniform float3 tint;
-  [Toggle(true)] uniform bool outlines;
-[Slider(4, 1, 8)] uniform int steps;
-public void fragmentMain() { float x = glow; }`;
+  [Toggle(true)]      uniform bool   outlines;
+[Slider(4, 1, 8)]     uniform int    steps;
+public void fragmentMain(FragmentInput f, inout MaterialOutput m) {
+  m.baseColor = tint * glow * float(steps); // glow here stays
+  m.glow = outlines ? 1.0 : 0.0;
+}`;
     const bound = bindDeclaredUniforms(source, declared);
-    expect(bound.split("\n").length).toBe(source.split("\n").length);
-    expect(bound).toContain("// uniform float glow; (a comment, left alone)");
-    expect(bound).toContain("#define glow (uniforms.glow)\n");
-    expect(bound).toContain("#define tint (uniforms.tint)");
-    expect(bound).toContain("  #define outlines (uniforms.outlines != 0u)");
-    expect(bound.split("\n")[7]).toBe(
-      "public void fragmentMain() { float x = glow; }",
+    const lines = bound.split("\n");
+    expect(lines.length).toBe(source.split("\n").length);
+    expect(lines[1]).toBe("// uniform float glow; (a comment, left alone)");
+    expect(lines[3]!.trim()).toBe("");
+    expect(lines[8]).toBe(
+      "  m.baseColor = uniforms.tint * uniforms.glow * float(uniforms.steps); // glow here stays",
     );
+    // A member of the same name is left alone.
+    expect(lines[9]).toBe("  m.glow = (uniforms.outlines != 0u) ? 1.0 : 0.0;");
   });
 
-  it("asks for a line of its own when code comes before a declaration", () => {
+  it("says when a local shadows a declared uniform", () => {
     const one = declaredUniforms(params.slice(0, 1), new Set());
     expect(() =>
-      bindDeclaredUniforms("float a = 1; uniform float glow;", one),
-    ).toThrow(/line of its own/);
+      bindDeclaredUniforms(
+        "[Slider(0.5, 0, 2)] uniform float glow;\nvoid f() { float glow = 1.0; }",
+        one,
+      ),
+    ).toThrow(/shadows/);
+  });
+});
+
+describe("words", () => {
+  it("labels a name in words", async () => {
+    const { words } = await import("../src/scene/slangControls.ts");
+    expect(words("glowColor")).toBe("Glow color");
+    expect(words("linesPerUnit")).toBe("Lines per unit");
+    expect(words("colorA")).toBe("Color A");
+    expect(words("rgbScale")).toBe("Rgb scale");
+    expect(words("edge_width")).toBe("Edge width");
   });
 });

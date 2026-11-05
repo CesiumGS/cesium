@@ -5225,13 +5225,20 @@ max)`, `Color(r, g, b)` (linear RGB), `Toggle(on)` and `Label("…")`. A
        global's type and its attributes with their arguments, so the
        declarations are checked by the compiler.
     2. Each declared uniform becomes a field of the shader's uniform
-       buffer. Its declaration is replaced in place by
-       `#define steps (uniforms.steps)` (`!= 0u` for a `bool`, stored as a
-       `u32`), with the same number of lines, so errors keep their line
-       numbers.
+       buffer. Its declaration is blanked, and each use of its name is
+       rewritten to the field (`uniforms.steps`; a `bool`, stored as a
+       `u32`, as `!= 0u`). The rewrite works on identifier tokens outside
+       comments and strings, and leaves names after a `.` alone, so a
+       parameter named `roughness` doesn't touch `material.roughness`. A
+       local that shadows a parameter is an error that says so. Lines keep
+       their numbers in errors. (A first version used `#define`, which
+       rewrote member accesses too.)
     3. The real compile follows.
        Supported types are float, int, uint, bool and float2-4, one
        declaration per line.
+  - **Labels come from names** unless `Label` gives one (`linesPerUnit`
+    reads "Lines per unit"). Slider steps are a power of ten about a
+    hundredth of the range, so written defaults land on a step.
   - **`CustomShader.controls`** describes each one: name, label, kind
     (slider, color, toggle, number), type, default and range. A host sets
     them with `setUniform`, no recompile.
@@ -5240,8 +5247,9 @@ max)`, `Color(r, g, b)` (linear RGB), `Toggle(on)` and `Label("…")`. A
     the model. It builds sliders, color pickers, toggles and number fields
     from them. Values are kept by name across
     compiles and visits until the shader changes that uniform's type or
-    default, and Reset restores the defaults. Rim glow, Toon steps and
-    Hologram use controls.
+    default, and Reset restores the defaults. Every preset where it makes
+    sense has parameters (all but Normals), written one compact line each:
+    `[Slider(1.5, 0.5, 6)] uniform float falloff;`.
 - _Playground details (r53)._
   - **New:** starts a minimal shader, the model's own material, with the
     contract's inputs described. It is one undoable edit.

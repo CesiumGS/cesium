@@ -9,14 +9,15 @@ import type { UniformType, ValueUniform } from "./uniforms.ts";
  * Slang's reflection reads them (each parameter's type and its user
  * attributes with their arguments, `toJsonObject`), so the declarations
  * are checked by the compiler, not parsed from comments. Each becomes a
- * field of the shader's uniform buffer (`uniforms.glow`), its declaration
- * replaced in place by `#define glow (uniforms.glow)` so the shader uses it
- * by name and its lines keep their numbers in errors.
+ * field of the shader's uniform buffer (`uniforms.glow`): its declaration
+ * is blanked and each use of the name rewritten to the field
+ * (`bindDeclaredUniforms`), so the shader uses it by name and its lines
+ * keep their numbers in errors.
  */
 export interface ShaderControl {
   /** The uniform's name in the shader. */
   name: string;
-  /** What to show (`Label`, else the name). */
+  /** What to show (`Label`, else the name in words: "glowColor", "Glow color"). */
   label: string;
   kind: "slider" | "color" | "toggle" | "number";
   type: UniformType;
@@ -95,7 +96,7 @@ export function declaredUniforms(
     const numbers = (args: Array<number | string> | undefined) =>
       (args ?? []).map(Number);
     const components = type.startsWith("vec") ? Number(type[3]) : 1;
-    const label = String(attribute("Label")?.[0] ?? p.name);
+    const label = String(attribute("Label")?.[0] ?? words(p.name));
     let control: ShaderControl;
     const color = attribute("Color");
     const slider = attribute("Slider");
@@ -128,7 +129,7 @@ export function declaredUniforms(
         value,
         min,
         max,
-        step: integer ? 1 : (max - min) / 200,
+        step: integer ? 1 : niceStep(max - min),
       };
     } else {
       control = {
@@ -149,52 +150,93 @@ export function declaredUniforms(
 }
 
 /**
- * The source with each declared uniform's declaration (and its
- * attributes) replaced in place by a `#define` reading the buffer, the
- * same number of lines, so errors keep their line numbers.
+ * A slider's step for a range: a power of ten, about a hundredth of it, so
+ * defaults and bounds written with a few decimals land on a step (a range
+ * of 5.5 steps by 0.01, not 0.0275).
+ */
+function niceStep(range: number): number {
+  return range > 0 ? 10 ** Math.floor(Math.log10(range / 100)) : 0.01;
+}
+
+/** A name in words: "glowColor" → "Glow color", "colorA" → "Color A". */
+export function words(name: string): string {
+  const parts = name
+    .replace(/_/g, " ")
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/([A-Z])([A-Z][a-z])/g, "$1 $2")
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((w) => (w.length > 1 && w !== w.toUpperCase() ? w.toLowerCase() : w));
+  const text = parts.join(" ");
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+/**
+ * The source with each declared uniform bound to the shader's buffer: its
+ * declaration (and its attributes) blanked, and every use of its name, as
+ * an identifier not after `.` (so `material.roughness` stays), rewritten to
+ * the field (`uniforms.name`; a `bool` as `(uniforms.name != 0u)`). Lines
+ * keep their numbers. A local of the same name, which would shadow it, is
+ * an error that says so.
  */
 export function bindDeclaredUniforms(
   source: string,
   declared: DeclaredUniforms,
 ): string {
+  const names = new Set(declared.controls.map((c) => c.name));
+  if (!names.size) {
+    return source;
+  }
+  // 1. Blank each declaration, newlines kept.
+  let text = source;
   const blank = blankComments(source);
-  let out = source;
-  // From the end, so earlier indices stay valid.
-  const edits: Array<{ start: number; end: number; text: string }> = [];
-  for (const { name } of declared.controls) {
+  for (const name of names) {
     const pattern = new RegExp(
       `(?:\\[[^\\]\\n]*\\]\\s*)*\\buniform\\s+\\w+\\s+${name}\\s*;`,
-      "g",
     );
     const match = pattern.exec(blank);
     if (!match) {
       throw new Error(
-        `uniform ${name}: put its declaration on a line of its own (\`[Slider(…)] uniform float ${name};\`).`,
+        `uniform ${name}: declare it on its own (\`[Slider(…)] uniform float ${name};\`), not with others in one statement.`,
       );
     }
     const start = match.index;
-    const lineStart = blank.lastIndexOf("\n", start - 1) + 1;
-    if (blank.slice(lineStart, start).trim() !== "") {
-      throw new Error(
-        `uniform ${name}: put its declaration on a line of its own.`,
-      );
-    }
-    const lines = match[0].split("\n").length - 1;
-    const read = declared.bools.has(name)
-      ? `(uniforms.${name} != 0u)`
-      : `(uniforms.${name})`;
-    edits.push({
-      start,
-      end: start + match[0].length,
-      text: `#define ${name} ${read}${"\n".repeat(lines)}`,
-    });
+    const end = start + match[0].length;
+    text =
+      text.slice(0, start) +
+      text.slice(start, end).replace(/[^\n]/g, " ") +
+      text.slice(end);
   }
-  edits.sort((a, b) => b.start - a.start);
-  for (const e of edits) {
-    out = out.slice(0, e.start) + e.text + out.slice(e.end);
+  // 2. Rewrite uses: identifiers outside comments and strings, not after a
+  // `.` (a member of the same name), not where a local declares the name.
+  const token =
+    /\/\/[^\n]*|\/\*[\s\S]*?\*\/|"(?:\\.|[^"\\\n])*"|[A-Za-z_]\w*|[\s\S]/g;
+  let out = "";
+  let previous = "";
+  let typeBefore = false;
+  for (const m of text.matchAll(token)) {
+    const t = m[0];
+    if (/^[A-Za-z_]/.test(t) && names.has(t) && previous !== ".") {
+      if (typeBefore) {
+        throw new Error(
+          `uniform ${t}: a local of the same name shadows it; rename one of them.`,
+        );
+      }
+      out += declared.bools.has(t) ? `(uniforms.${t} != 0u)` : `uniforms.${t}`;
+    } else {
+      out += t;
+    }
+    if (!/^\s+$/.test(t) && !t.startsWith("//") && !t.startsWith("/*")) {
+      typeBefore = TYPE.test(t);
+      previous = t;
+    }
   }
   return out;
 }
+
+/** A type a local could be declared with, before its name. */
+const TYPE =
+  /^(?:float|int|uint|bool|half|double|float[234](?:x[234])?|int[234]|uint[234]|bool[234]|var|let)$/;
 
 /** The source with its comments blanked, positions and lines unchanged. */
 function blankComments(source: string): string {
