@@ -767,10 +767,11 @@ const AERIAL_SUBSTEPS = 2;
 
 override AERIAL_GROUP: u32 = 0u;
 
-@group(2) @binding(5) var aerialPartialInscatter: texture_3d<f32>;
-@group(2) @binding(6) var aerialPartialTransmittance: texture_3d<f32>;
-@group(2) @binding(7) var aerialInscatterOut: texture_storage_3d<rgba16float, write>;
-@group(2) @binding(8) var aerialTransmittanceOut: texture_storage_3d<rgba16float, write>;
+// In-scatter in slices 0..AERIAL_SLICES-1, transmittance in the next
+// AERIAL_SLICES: one volume each (one sampled texture in the opaque pass,
+// CESIUM2_WEBGPU_PLAN.md §13.15).
+@group(2) @binding(5) var aerialPartial: texture_3d<f32>;
+@group(2) @binding(7) var aerialOut: texture_storage_3d<rgba16float, write>;
 
 var<workgroup> scanRadiance: array<vec4f, AERIAL_SLICES>;
 var<workgroup> scanTransmittance: array<vec4f, AERIAL_SLICES>;
@@ -852,12 +853,13 @@ fn aerialCompute(
     + transmittance.z * sky.weights[base + 2u].xyz
     + transmittance.w * sky.weights[base + 3u].xyz) / total;
   let at = vec3u(column.xy, j);
+  let atTransmittance = vec3u(column.xy, j + AERIAL_SLICES);
   if (group == 1u) {
-    inscatter += textureLoad(aerialPartialInscatter, at, 0).rgb;
-    t += textureLoad(aerialPartialTransmittance, at, 0).rgb;
+    inscatter += textureLoad(aerialPartial, at, 0).rgb;
+    t += textureLoad(aerialPartial, atTransmittance, 0).rgb;
   }
-  textureStore(aerialInscatterOut, at, vec4f(min(inscatter, vec3f(2.0 * SKY_MAX)), 1.0));
-  textureStore(aerialTransmittanceOut, at, vec4f(t, 1.0));
+  textureStore(aerialOut, at, vec4f(min(inscatter, vec3f(2.0 * SKY_MAX)), 1.0));
+  textureStore(aerialOut, atTransmittance, vec4f(t, 1.0));
 }
 
 // --- aerial perspective from high up, per screen texel -------------------------

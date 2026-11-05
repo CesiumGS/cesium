@@ -1,7 +1,7 @@
 import type { Mat4 } from "../math/mat4.ts";
 import type { Vec3 } from "../math/vec3.ts";
 import { SOLAR_ILLUMINANCE, type Body } from "../scene/Body.ts";
-import { splitVec3 } from "../math/transforms.ts";
+import { splitHigh, splitVec3 } from "../math/transforms.ts";
 
 /**
  * Byte layouts shared between TypeScript and WGSL. Keep in sync with
@@ -456,7 +456,7 @@ export function writeTransform(
   const o = index * TRANSFORM_WORDS;
   for (let i = 0; i < 3; i++) {
     const value = m[12 + i]!;
-    const h = Math.fround(value);
+    const h = splitHigh(value);
     f32[o + i] = h;
     f32[o + 4 + i] = Math.fround(value - h);
   }

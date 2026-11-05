@@ -1,4 +1,5 @@
 import { RangeAllocator } from "../gpu/RangeAllocator.ts";
+import { CapacityError } from "./CapacityError.ts";
 import {
   INDIRECT_SIZE,
   INSTANCE_WORDS,
@@ -43,7 +44,7 @@ import {
   type MaterialData,
   type MeshStreams,
 } from "../render/layout.ts";
-import { splitVec3 } from "../math/transforms.ts";
+import { splitHigh, splitVec3 } from "../math/transforms.ts";
 import type { Mat4 } from "../math/mat4.ts";
 import type { Vec3 } from "../math/vec3.ts";
 import type { MeshData } from "./meshes.ts";
@@ -55,15 +56,26 @@ import { PointCuller } from "./PointCuller.ts";
 import type { UniformDeclaration } from "./uniforms.ts";
 import type { LightHandle, LightOptions } from "./lights.ts";
 
+/**
+ * A world's ceilings (CESIUM2_WEBGPU_PLAN.md §13.15, "Growable tables"):
+ * every per-slot GPU table starts small and doubles as slots are used, up to
+ * these and to what the device's largest storage binding holds. A pool at
+ * its ceiling throws `CapacityError`, which streaming answers by evicting
+ * (`World.pressure` lets it act before then).
+ */
 export interface WorldOptions {
+  /** Draw records (default 262,144). */
   maxDraws?: number;
+  /** Distinct materials, after sharing (default 65,536). */
   maxMaterials?: number;
   vertexBytes?: number;
   indexBytes?: number;
-  /** Mixed-LOD clip blocks (placeholder tiles drawn at once; default 2048). */
+  /** Mixed-LOD clip blocks (placeholder tiles drawn at once; default 16,384). */
   maxClipBlocks?: number;
   /** Transform table entries (default: `maxDraws`). */
   maxTransforms?: number;
+  /** Point draws culled at once (default 4096). */
+  maxPointSets?: number;
   /**
    * Instance table entries, shared by all instanced draws (default 16384).
    * The GPU tables start at 16,384 rows (or fewer) and double as used up to
@@ -595,6 +607,14 @@ export class World {
   /** `ShaderBindings.generation` the bundles were recorded at. */
   private bindingsGeneration = 0;
   private readonly freeMaterials: number[] = [];
+  /** Shared materials: slot by record key, key and references by slot. */
+  private readonly materialByKey = new Map<string, number>();
+  private readonly materialKeys: Array<string | undefined> = [];
+  private readonly materialReferences: number[] = [];
+  private readonly materialScratch = (() => {
+    const data = new ArrayBuffer(MATERIAL_SIZE);
+    return { f32: new Float32Array(data), u32: new Uint32Array(data) };
+  })();
   private readonly batches = new Map<string, Batch>();
   private readonly batchList: Batch[] = [];
   /** Emptied batches, reused (index kept) so live records stay valid. */
@@ -651,28 +671,35 @@ export class World {
 
   readonly vertexBuffer: GPUBuffer;
   readonly indexBuffer: GPUBuffer;
-  readonly recordBuffer: GPUBuffer;
-  readonly transformBuffer: GPUBuffer;
+  /** Replaced as the tables grow (`tableGeneration`). */
+  recordBuffer: GPUBuffer;
+  transformBuffer: GPUBuffer;
   /** Replaced when the instance table grows (`instanceGeneration`). */
   instanceBuffer: GPUBuffer;
   /** Per draw item and view: its camera-relative matrix and record (cull). */
   itemBuffer: GPUBuffer;
-  readonly materialBuffer: GPUBuffer;
+  materialBuffer: GPUBuffer;
   /** Mixed-LOD clip boxes, `CLIP_BOXES` per block. */
-  readonly clipBuffer: GPUBuffer;
+  clipBuffer: GPUBuffer;
   /** Visible draw items, compacted per batch by the cull kernels. */
   itemListBuffer: GPUBuffer;
   /** All draw items per batch, for "direct" submission. */
   private directListBuffer: GPUBuffer;
-  /** Counts instance table growths (its buffers are replaced). */
+  /**
+   * Counts table growths: whatever binds a world table's buffer (the
+   * instance table, records, transforms, materials) rebinds when it
+   * changes. Bindless: with resource tables the buffers would stay bound by
+   * index and only this counter's users change.
+   */
   instanceGeneration = 0;
+  /** `instanceGeneration` by its general name. */
+  get tableGeneration(): number {
+    return this.instanceGeneration;
+  }
   /** Point draws by draw index: their per-view cull (pointCull.wgsl). */
   private readonly pointDraws = new Map<number, PointDraw>();
-  private readonly pointCounts: GPUBuffer;
-  private readonly freePointCounters = Array.from(
-    { length: MAX_POINT_SETS },
-    (_, k) => MAX_POINT_SETS - 1 - k,
-  );
+  private pointCounts: GPUBuffer;
+  private readonly freePointCounters: number[] = [];
   /** A view's point splats, a word per pixel each (pointCull.wgsl). */
   private splats: {
     pixels: number;
@@ -681,16 +708,25 @@ export class World {
     feature: GPUBuffer;
     group: GPUBindGroup;
   };
-  private readonly batchCountBuffer: GPUBuffer;
-  private readonly batchBuffer: GPUBuffer;
-  readonly indirectBuffer: GPUBuffer;
+  private batchBuffer: GPUBuffer;
+  indirectBuffer: GPUBuffer;
+  /**
+   * GPU rows of the draw tables (records, batches, their counts and
+   * arguments, the items' draw part); grows to `maxDraws`.
+   */
+  private drawRows: number;
+  /** GPU rows of the material table; grows to `maxMaterials`. */
+  private materialRows: number;
+  /** GPU blocks of clip boxes; grows to `maxClipBlocks`. */
+  private clipRows: number;
+  readonly maxPointSets: number;
+  private pointSetCount = 0;
   private readonly cullParams: GPUBuffer;
   private cullBindGroup!: GPUBindGroup;
+  private pointCullBindGroup!: GPUBindGroup;
   private drawBindGroup!: GPUBindGroup;
   /** Globe imagery array (a 1×1 placeholder until imagery is attached). */
   private imageryView: GPUTextureView;
-  /** Night lights array (the same until lights are attached). */
-  private lightsView: GPUTextureView;
   private readonly imagerySampler: GPUSampler;
 
   constructor(
@@ -698,21 +734,38 @@ export class World {
     options: WorldOptions = {},
   ) {
     const device = ctx.device;
-    this.maxDraws = options.maxDraws ?? 16384;
-    this.maxTransforms = options.maxTransforms ?? this.maxDraws;
-    this.maxMaterials = options.maxMaterials ?? 4096;
-    // Rows the item buffer (80 bytes each, draws first) can address.
+    // Ceilings: the option, and what one storage binding holds (the
+    // device's capacity limits; the tables start small and grow to them).
     const limits = ctx.device.limits;
-    const itemLimit = Math.floor(
-      Math.min(limits.maxStorageBufferBindingSize, limits.maxBufferSize) /
-        DRAW_ITEM_SIZE,
+    const binding = Math.min(
+      limits.maxStorageBufferBindingSize,
+      limits.maxBufferSize,
     );
+    const fits = (rowBytes: number) => Math.floor(binding / rowBytes);
+    // Rows the item buffer (80 bytes each, draws first) can address.
+    const itemLimit = fits(DRAW_ITEM_SIZE);
+    this.maxDraws = Math.min(
+      options.maxDraws ?? 1 << 18,
+      fits(RECORD_WORDS * 4),
+      Math.floor(itemLimit / 2),
+    );
+    this.maxTransforms = Math.min(
+      options.maxTransforms ?? this.maxDraws,
+      fits(TRANSFORM_WORDS * 4),
+    );
+    this.maxMaterials = Math.min(
+      options.maxMaterials ?? 1 << 16,
+      fits(MATERIAL_SIZE),
+    );
+    this.maxPointSets = options.maxPointSets ?? 4096;
+    this.drawRows = Math.min(this.maxDraws, INITIAL_ROWS);
+    this.materialRows = Math.min(this.maxMaterials, INITIAL_ROWS);
     this.maxInstances = Math.min(
       options.maxInstances ?? 16384,
       itemLimit - this.maxDraws,
     );
     const instanceRows = Math.max(1, Math.min(this.maxInstances, 16384));
-    const items = this.maxDraws + instanceRows;
+    const items = this.drawRows + instanceRows;
     const vertexBytes = options.vertexBytes ?? 64 * 1024 * 1024;
     const indexBytes = options.indexBytes ?? 32 * 1024 * 1024;
     this.vertexAllocator = new RangeAllocator(vertexBytes, 4);
@@ -723,6 +776,7 @@ export class World {
       "records",
       RECORD_WORDS,
       this.maxDraws,
+      this.drawRows,
     );
     this.recordsF32 = this.records.f32;
     this.recordsU32 = this.records.u32;
@@ -733,6 +787,7 @@ export class World {
       "transforms",
       TRANSFORM_WORDS,
       this.maxTransforms,
+      Math.min(this.maxTransforms, INITIAL_ROWS),
     );
     const t = this.transforms.rows;
     this.transformLocal = new Float64Array(t * 16);
@@ -783,17 +838,22 @@ export class World {
       items * DRAW_ITEM_SIZE,
       GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     );
-    // Full size: the CPU mirror grows (reserveMaterials), the table doesn't.
+    // Grows with the CPU mirror (`addMaterial`), rewritten when changed.
     this.materialBuffer = buffer(
       "materials",
-      this.maxMaterials * MATERIAL_SIZE,
+      this.materialRows * MATERIAL_SIZE,
       storage,
     );
-    this.maxClipBlocks = options.maxClipBlocks ?? 2048;
+    this.maxClipBlocks = Math.min(
+      options.maxClipBlocks ?? 1 << 14,
+      fits(this.clipScratch.byteLength),
+    );
+    this.clipRows = Math.min(this.maxClipBlocks, 256);
+    // COPY_SRC: copied into a larger buffer as it grows.
     this.clipBuffer = buffer(
       "clipBoxes",
-      this.maxClipBlocks * this.clipScratch.byteLength,
-      storage,
+      this.clipRows * this.clipScratch.byteLength,
+      storage | GPUBufferUsage.COPY_SRC,
     );
     this.itemListBuffer = buffer(
       "itemList",
@@ -805,23 +865,16 @@ export class World {
       items * 4,
       GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
     );
-    this.batchCountBuffer = buffer(
-      "batchCounts",
-      this.maxDraws * 4,
-      GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
-    );
-    this.batchBuffer = buffer("batches", this.maxDraws * 16, storage);
-    this.indirectBuffer = buffer(
-      "indirect",
-      this.maxDraws * INDIRECT_SIZE,
-      GPUBufferUsage.STORAGE | GPUBufferUsage.INDIRECT,
+    [this.batchBuffer, this.indirectBuffer] = this.createBatchBuffers(
+      this.drawRows,
     );
     this.cullParams = buffer(
       "cullParams",
       16,
       GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     );
-    this.pointCounts = buffer("pointCounts", MAX_POINT_SETS * 4, storage);
+    this.pointCounts = buffer("pointCounts", 64 * 4, storage);
+    this.growPointSets(64);
     this.splats = this.createSplats(1);
 
     this.createCullBindGroup();
@@ -833,7 +886,6 @@ export class World {
         usage: GPUTextureUsage.TEXTURE_BINDING,
       })
       .createView({ dimension: "2d-array" });
-    this.lightsView = this.imageryView;
     this.imagerySampler = device.createSampler({
       label: "world.imagery",
       magFilter: "linear",
@@ -893,6 +945,48 @@ export class World {
         this.itemListBuffer.size +
         this.indirectBuffer.size,
     };
+  }
+
+  /**
+   * How full the fullest pool is (0 to 1) and which it is: tables against
+   * their ceilings, the arenas by bytes. Streaming evicts as it does over its
+   * byte budget once this passes a threshold, so uploads rarely meet a full
+   * pool (CESIUM2_WEBGPU_PLAN.md §13.15, "Capacity in the residency
+   * budget").
+   */
+  pressure(): { fraction: number; pool: string } {
+    const pools: Array<[string, number, number]> = [
+      ["draw table", this.drawCount - this.freeSlots.length, this.maxDraws],
+      [
+        "transform table",
+        this.transformCount - this.freeTransforms.length,
+        this.maxTransforms,
+      ],
+      ["instance table", this.instanceAllocator.used, this.maxInstances],
+      ["material table", this.materialByKey.size, this.maxMaterials],
+      [
+        "vertex arena",
+        this.vertexAllocator.used,
+        this.vertexAllocator.capacity,
+      ],
+      ["index arena", this.indexAllocator.used, this.indexAllocator.capacity],
+      [
+        "clip blocks",
+        this.clipBlockCount - this.freeClipBlocks.length,
+        this.maxClipBlocks,
+      ],
+      ["point sets", this.pointDraws.size, this.maxPointSets],
+    ];
+    let fraction = 0;
+    let pool = "none";
+    for (const [name, used, capacity] of pools) {
+      const f = capacity > 0 ? used / capacity : 0;
+      if (f > fraction) {
+        fraction = f;
+        pool = name;
+      }
+    }
+    return { fraction, pool };
   }
 
   /** Live batches: indirect draws per view. */
@@ -1002,7 +1096,7 @@ export class World {
         for (const [o, size] of vertexRanges) {
           this.vertexAllocator.release(o, size);
         }
-        throw new Error("World vertex arena is full.");
+        throw new CapacityError("vertex arena");
       }
       vertexRanges.push([offset, data.byteLength]);
       this.queueUpload(this.vertexBuffer, offset, data);
@@ -1070,7 +1164,7 @@ export class World {
       for (const [o, size] of vertexRanges) {
         this.vertexAllocator.release(o, size);
       }
-      throw new Error("World index arena is full.");
+      throw new CapacityError("index arena");
     }
     this.queueUpload(this.indexBuffer, indexOffset, mesh.indices);
     const { center, radius } = boundingSphere(mesh.positions);
@@ -1142,7 +1236,7 @@ export class World {
     const bytes = anchorBytes + streamBytes + directory.byteLength;
     const offset = this.vertexAllocator.allocate(bytes);
     if (offset === undefined) {
-      throw new Error("World vertex arena is full.");
+      throw new CapacityError("vertex arena");
     }
     if (directory.byteLength) {
       this.queueUpload(
@@ -1286,7 +1380,7 @@ export class World {
           for (const [o, size] of ranges) {
             this.vertexAllocator.release(o, size);
           }
-          throw new Error("World vertex arena is full.");
+          throw new CapacityError("vertex arena");
         }
         ranges.push([offset, data.byteLength]);
         this.queueUpload(this.vertexBuffer, offset, data);
@@ -1348,15 +1442,20 @@ export class World {
     }
   }
 
-  /** Adds a material to the table and returns its index. */
+  /**
+   * Adds a material to the table and returns its index. Materials are
+   * immutable and shared by content (§13.15, "Shared materials"): a record
+   * equal to one in the table returns that index with one more reference,
+   * so every terrain tile shares one or two slots instead of taking two
+   * each. Each `addMaterial` is balanced by one `removeMaterial`.
+   *
+   * Bindless: the record will also carry texture references (an array
+   * layer today, a resource-table index later), and they join the key the
+   * same way; sharing doesn't change when bindless arrives.
+   */
   addMaterial(options: MaterialOptions): number {
-    const index = this.freeMaterials.pop() ?? this.materialCount++;
-    if (index >= this.maxMaterials) {
-      this.materialCount--;
-      throw new Error("World material table is full.");
-    }
-    this.reserveMaterials(index + 1);
-    writeMaterial(this.materialsF32, this.materialsU32, index, {
+    const scratch = this.materialScratch;
+    writeMaterial(scratch.f32, scratch.u32, 0, {
       baseColor: options.baseColor ?? [1, 1, 1, 1],
       emissive: options.emissive ?? [0, 0, 0],
       metallic: options.metallic ?? 0,
@@ -1366,15 +1465,58 @@ export class World {
       occlusionStrength: options.occlusionStrength ?? 1,
       flags: options.flags ?? 0,
     });
+    // The record's words are the key (NaN payloads and -0 included, so
+    // equal keys are bit-identical records).
+    const key = scratch.u32.join(",");
+    const shared = this.materialByKey.get(key);
+    if (shared !== undefined) {
+      this.materialReferences[shared]!++;
+      return shared;
+    }
+    const index = this.freeMaterials.pop() ?? this.materialCount++;
+    if (index >= this.maxMaterials) {
+      this.materialCount--;
+      throw new CapacityError("material table");
+    }
+    this.reserveMaterials(index + 1);
+    if (index >= this.materialRows) {
+      this.growMaterials(index + 1);
+    }
+    this.materialsU32.set(scratch.u32, index * MATERIAL_WORDS);
+    this.materialByKey.set(key, index);
+    this.materialKeys[index] = key;
+    this.materialReferences[index] = 1;
     this.materialsDirty = true;
     this.version++;
     this.changedViews = ALL_VIEWS;
     return index;
   }
 
-  /** Frees a material slot. Draws that use it must be removed first. */
+  /**
+   * Drops one reference to a material (one per `addMaterial`); the slot is
+   * freed with the last. Draws that use it must be removed first.
+   */
   removeMaterial(index: number): void {
+    const references = this.materialReferences[index] ?? 0;
+    if (references <= 0) {
+      return;
+    }
+    if (references > 1) {
+      this.materialReferences[index] = references - 1;
+      return;
+    }
+    this.materialReferences[index] = 0;
+    const key = this.materialKeys[index];
+    if (key !== undefined) {
+      this.materialByKey.delete(key);
+      this.materialKeys[index] = undefined;
+    }
     this.freeMaterials.push(index);
+  }
+
+  /** Materials in use: distinct records, after sharing. */
+  get materialsInUse(): number {
+    return this.materialByKey.size;
   }
 
   /** Frees a texture set (not its textures). Draws must be removed first. */
@@ -1416,10 +1558,12 @@ export class World {
         resource: options.properties?.[k]?.view ?? defaults.whiteView,
       });
     }
+    // The built-in pipelines' group has no property textures; custom
+    // shaders reading metadata get them in their own group (setGroup).
     const group = this.ctx.device.createBindGroup({
       label: "world.textureSet",
       layout: this.ctx.pipelines.textureSetLayout,
-      entries,
+      entries: entries.filter((e) => e.binding < PROPERTY_TEXTURE_BINDING),
     });
     const index = this.freeTextureSets.pop();
     if (index !== undefined) {
@@ -1460,6 +1604,12 @@ export class World {
     let pointList: number | undefined;
     let pointCounter: number | undefined;
     if (pointSet) {
+      if (
+        this.freePointCounters.length === 0 &&
+        this.pointSetCount < this.maxPointSets
+      ) {
+        this.growPointSets(Math.min(this.maxPointSets, this.pointSetCount * 2));
+      }
       pointCounter = this.freePointCounters.pop();
       const bytes = Math.max(4, pointSet.capacity * 4);
       pointList =
@@ -1470,17 +1620,29 @@ export class World {
         if (pointCounter !== undefined) {
           this.freePointCounters.push(pointCounter);
         }
-        throw new Error(
-          pointCounter === undefined
-            ? `World: at most ${MAX_POINT_SETS} point draws`
-            : "World vertex arena is full.",
+        throw new CapacityError(
+          pointCounter === undefined ? "point sets" : "vertex arena",
         );
       }
     }
+    // Nothing taken may outlive a failure below (transactional, §13.15).
+    const releasePoints = () => {
+      if (pointList !== undefined) {
+        this.vertexAllocator.release(
+          pointList,
+          Math.max(4, pointSet!.capacity * 4),
+        );
+        this.freePointCounters.push(pointCounter!);
+      }
+    };
     const index = this.freeSlots.pop() ?? this.drawCount++;
     if (index >= this.maxDraws) {
       this.drawCount--;
-      throw new Error("World draw table is full.");
+      releasePoints();
+      throw new CapacityError("draw table");
+    }
+    if (index >= this.drawRows) {
+      this.growDraws(index + 1);
     }
     this.reserveDraws(index + 1);
     const mesh = options.mesh;
@@ -1489,6 +1651,7 @@ export class World {
     if (options.transform) {
       if (!this.transformAlive(options.transform)) {
         this.freeSlots.push(index);
+        releasePoints();
         throw new Error("addDraw: the transform was removed.");
       }
       transform = options.transform.index;
@@ -1500,7 +1663,13 @@ export class World {
       m[12] = origin[0]! + m[12]!;
       m[13] = origin[1]! + m[13]!;
       m[14] = origin[2]! + m[14]!;
-      transform = this.addTransform(m).index;
+      try {
+        transform = this.addTransform(m).index;
+      } catch (error) {
+        this.freeSlots.push(index);
+        releasePoints();
+        throw error;
+      }
       this.drawOwnedTransform[index] = transform;
     }
 
@@ -1514,7 +1683,8 @@ export class World {
       if (first === undefined) {
         this.releaseOwnedTransform(index);
         this.freeSlots.push(index);
-        throw new Error("World instance table is full.");
+        releasePoints();
+        throw new CapacityError("instance table");
       }
       this.instances.reserve(first + instanceCount);
       if (first + instanceCount > this.instances.gpuRows) {
@@ -1575,7 +1745,8 @@ export class World {
         this.releaseInstances(instanceFirst, instanceCount);
         this.releaseOwnedTransform(index);
         this.freeSlots.push(index);
-        throw new Error("World vertex arena is full.");
+        releasePoints();
+        throw new CapacityError("vertex arena");
       }
       this.queueUpload(this.vertexBuffer, offset, data);
       if (fields.length) {
@@ -2023,9 +2194,12 @@ export class World {
     const index = this.freeTransforms.pop() ?? this.transformCount++;
     if (index >= this.maxTransforms) {
       this.transformCount--;
-      throw new Error("World transform table is full.");
+      throw new CapacityError("transform table");
     }
     this.reserveTransforms(index + 1);
+    if (index >= this.transforms.gpuRows) {
+      this.growTransforms(index + 1);
+    }
     this.transformLocal.set(matrix, index * 16);
     this.transformParent[index] = parent ? parent.index : -1;
     if (parent) {
@@ -2305,16 +2479,6 @@ export class World {
     this.version++;
   }
 
-  /** Binds the night lights array (`GlobeImagery`, "lights") for draws. */
-  setLightsArray(view: GPUTextureView): void {
-    this.lightsView = view;
-    this.createDrawBindGroup();
-    // The cached bundle binds the old group (and its soon-destroyed array).
-    this.bundle = undefined;
-    this.changedViews = ALL_VIEWS;
-    this.version++;
-  }
-
   /**
    * Points a globe tile's record at its night lights (`packImagery`, 0:
    * none): light the surface emits (cities), in cd/m², added to what it
@@ -2382,6 +2546,9 @@ export class World {
       (this.clipBlockCount < this.maxClipBlocks ? this.clipBlockCount++ : -1);
     if (block < 0) {
       return undefined;
+    }
+    if (block >= this.clipRows) {
+      this.growClips(block + 1);
     }
     const f = this.clipScratch;
     f.fill(0);
@@ -2470,7 +2637,7 @@ export class World {
     rays.forEach((ray, i) => {
       for (let k = 0; k < 3; k++) {
         const value = ray.origin[k]!;
-        const hi = Math.fround(value);
+        const hi = splitHigh(value);
         rayData[i * 12 + k] = hi;
         rayData[i * 12 + 4 + k] = Math.fround(value - hi);
         rayData[i * 12 + 8 + k] = ray.direction[k]!;
@@ -2755,7 +2922,8 @@ export class World {
     this.cullParamsData[0] = this.drawCount;
     this.cullParamsData[1] = this.batchList.length;
     this.cullParamsData[2] = this.instanceHighWater;
-    this.cullParamsData[3] = this.maxDraws;
+    // Instance items follow the draw rows (cull.wgsl `firstInstanceItem`).
+    this.cullParamsData[3] = this.drawRows;
     queue.writeBuffer(this.cullParams, 0, this.cullParamsData);
     return this.bundle;
   }
@@ -2824,10 +2992,12 @@ export class World {
     pixels = 0,
   ): void {
     const { pipelines, currentViewBindGroup } = this.ctx;
+    // The batches' instance counts start at zero (cull.wgsl `append`
+    // counts into them); the rest of the arguments `writeDrawArgs` writes.
     encoder.clearBuffer(
-      this.batchCountBuffer,
+      this.indirectBuffer,
       0,
-      Math.max(4, this.batchList.length * 4),
+      Math.max(INDIRECT_SIZE, this.batchList.length * INDIRECT_SIZE),
     );
     if (points && this.pointDraws.size) {
       encoder.clearBuffer(this.pointCounts);
@@ -2863,7 +3033,11 @@ export class World {
     pass.setPipeline(pipelines.writeDrawArgs);
     pass.dispatchWorkgroups(Math.ceil(Math.max(this.batchList.length, 1) / 64));
     // Point draws: their points in view into their lists (or splatted),
-    // then their arguments (over `writeDrawArgs`').
+    // then their arguments (over `writeDrawArgs`'), with the narrower
+    // world group their kernels read.
+    if (points && this.pointDraws.size) {
+      pass.setBindGroup(1, this.pointCullBindGroup);
+    }
     for (const draw of points ? this.pointDraws.values() : []) {
       pass.setBindGroup(2, draw.group);
       const groups = Math.ceil(Math.max(1, draw.mesh.points.capacity) / 64);
@@ -2963,7 +3137,7 @@ export class World {
       if (count === 0) {
         direct[batch.itemBase + fill[batch.index]!++] = i;
       } else {
-        const first = this.maxDraws + this.recordsU32[o + INSTANCE_FIRST_WORD]!;
+        const first = this.drawRows + this.recordsU32[o + INSTANCE_FIRST_WORD]!;
         for (let k = 0; k < count; k++) {
           direct[batch.itemBase + fill[batch.index]!++] = first + k;
         }
@@ -3140,7 +3314,14 @@ export class World {
       group = this.ctx.device.createBindGroup({
         label: `world.textureSet ${shader.label}`,
         layout,
-        entries: [...this.textureSetEntries[batch.textureSet]!, ...own.entries],
+        entries: [
+          ...this.textureSetEntries[batch.textureSet]!.filter(
+            (e) =>
+              shader.readsPropertyTextures ||
+              e.binding < PROPERTY_TEXTURE_BINDING,
+          ),
+          ...own.entries,
+        ],
       });
       // Older versions of this shader's group are unused now.
       for (const k of this.shaderGroups.keys()) {
@@ -3327,17 +3508,29 @@ export class World {
     this.cullBindGroup = this.ctx.device.createBindGroup({
       label: "world.cull",
       layout: this.ctx.pipelines.cullWorldLayout,
+      // Binding 5 (batch counts) is gone: the cull counts into the
+      // arguments' instance counts.
+      entries: (
+        [
+          [0, this.recordBuffer],
+          [1, this.transformBuffer],
+          [2, this.instanceBuffer],
+          [3, this.itemBuffer],
+          [4, this.itemListBuffer],
+          [6, this.batchBuffer],
+          [7, this.indirectBuffer],
+          [8, this.cullParams],
+        ] as const
+      ).map(([binding, b]) => ({ binding, resource: { buffer: b } })),
+    });
+    this.pointCullBindGroup = this.ctx.device.createBindGroup({
+      label: "world.cull.points",
+      layout: this.ctx.pipelines.cullPointWorldLayout,
       entries: [
-        this.recordBuffer,
-        this.transformBuffer,
-        this.instanceBuffer,
-        this.itemBuffer,
-        this.itemListBuffer,
-        this.batchCountBuffer,
-        this.batchBuffer,
-        this.indirectBuffer,
-        this.cullParams,
-      ].map((b, binding) => ({ binding, resource: { buffer: b } })),
+        { binding: 0, resource: { buffer: this.recordBuffer } },
+        { binding: 1, resource: { buffer: this.transformBuffer } },
+        { binding: 7, resource: { buffer: this.indirectBuffer } },
+      ],
     });
   }
 
@@ -3350,7 +3543,124 @@ export class World {
     const rows = grownSize(this.instances.gpuRows, count, this.maxInstances);
     this.instances.growGpu(rows);
     this.instanceBuffer = this.instances.buffer;
-    const items = this.maxDraws + rows;
+    this.recreateItemBuffers();
+    this.tablesReplaced();
+  }
+
+  /**
+   * Room for draw slots below `count` on the GPU (§13.15, growable tables):
+   * the records double (copied), the per-batch buffers and the items are
+   * recreated (rewritten every frame or with the bundle), and what binds
+   * them is rebuilt.
+   */
+  private growDraws(count: number): void {
+    const rows = grownSize(this.drawRows, count, this.maxDraws);
+    this.records.growGpu(rows);
+    this.recordBuffer = this.records.buffer;
+    this.batchBuffer.destroy();
+    this.indirectBuffer.destroy();
+    [this.batchBuffer, this.indirectBuffer] = this.createBatchBuffers(rows);
+    this.drawRows = rows;
+    this.recreateItemBuffers();
+    this.tablesReplaced();
+  }
+
+  /** Room for transforms below `count` on the GPU (copied, rebound). */
+  private growTransforms(count: number): void {
+    this.transforms.growGpu(
+      grownSize(this.transforms.gpuRows, count, this.maxTransforms),
+    );
+    this.transformBuffer = this.transforms.buffer;
+    this.tablesReplaced();
+  }
+
+  /** Room for materials below `count` on the GPU (rewritten, rebound). */
+  private growMaterials(count: number): void {
+    this.materialRows = grownSize(this.materialRows, count, this.maxMaterials);
+    this.materialBuffer.destroy();
+    this.materialBuffer = this.ctx.device.createBuffer({
+      label: "world.materials",
+      size: this.materialRows * MATERIAL_SIZE,
+      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
+    });
+    // The whole table is written with the next frame.
+    this.materialsDirty = true;
+    this.tablesReplaced();
+  }
+
+  /** Room for clip blocks below `count` on the GPU (copied, rebound). */
+  private growClips(count: number): void {
+    const rows = grownSize(this.clipRows, count, this.maxClipBlocks);
+    const { device } = this.ctx;
+    const old = this.clipBuffer;
+    this.clipBuffer = device.createBuffer({
+      label: "world.clipBoxes",
+      size: rows * this.clipScratch.byteLength,
+      usage:
+        GPUBufferUsage.STORAGE |
+        GPUBufferUsage.COPY_DST |
+        GPUBufferUsage.COPY_SRC,
+    });
+    const encoder = device.createCommandEncoder({ label: "world.grow" });
+    encoder.copyBufferToBuffer(old, 0, this.clipBuffer, 0, old.size);
+    device.queue.submit([encoder.finish()]);
+    old.destroy();
+    this.clipRows = rows;
+    this.tablesReplaced();
+  }
+
+  /**
+   * Point-draw counters up to `count` (cleared every frame, so the buffer is
+   * only recreated), and the point draws' groups that bind it.
+   */
+  private growPointSets(count: number): void {
+    if (count <= this.pointSetCount) {
+      return;
+    }
+    if (this.pointCounts.size < count * 4) {
+      this.pointCounts.destroy();
+      this.pointCounts = this.ctx.device.createBuffer({
+        label: "world.pointCounts",
+        size: count * 4,
+        usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
+      });
+      for (const draw of this.pointDraws.values()) {
+        draw.group = this.pointGroup(draw);
+      }
+    }
+    // The lowest counters first.
+    for (let k = count - 1; k >= this.pointSetCount; k--) {
+      this.freePointCounters.push(k);
+    }
+    this.pointSetCount = count;
+  }
+
+  /**
+   * The per-batch buffers for `rows` batches: batches, and their indirect
+   * arguments (whose instance counts the cull counts in, cleared per view).
+   */
+  private createBatchBuffers(rows: number): [GPUBuffer, GPUBuffer] {
+    const { device } = this.ctx;
+    return [
+      device.createBuffer({
+        label: "world.batches",
+        size: rows * 16,
+        usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
+      }),
+      device.createBuffer({
+        label: "world.indirect",
+        size: rows * INDIRECT_SIZE,
+        usage:
+          GPUBufferUsage.STORAGE |
+          GPUBufferUsage.INDIRECT |
+          GPUBufferUsage.COPY_DST,
+      }),
+    ];
+  }
+
+  /** The items and their lists for the current draw and instance rows. */
+  private recreateItemBuffers(): void {
+    const items = this.drawRows + this.instances.gpuRows;
     const { device } = this.ctx;
     this.itemBuffer.destroy();
     this.itemListBuffer.destroy();
@@ -3370,10 +3680,16 @@ export class World {
       size: items * 4,
       usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
     });
+  }
+
+  /**
+   * A table's buffer was replaced: rebuild the groups that bind it, drop the
+   * bundles that baked them (the direct list is rewritten with the
+   * batches), and tell outside binders (`tableGeneration`).
+   */
+  private tablesReplaced(): void {
     this.createCullBindGroup();
     this.createDrawBindGroup();
-    // Bundles bind the old groups and lists; the direct list is rewritten
-    // with the batches.
     this.bundle = undefined;
     this.translucentDraws = undefined;
     this.changedViews = ALL_VIEWS;
@@ -3396,7 +3712,6 @@ export class World {
         ...buffers.map((b, binding) => ({ binding, resource: { buffer: b } })),
         { binding: 5, resource: this.imageryView },
         { binding: 6, resource: this.imagerySampler },
-        { binding: 7, resource: this.lightsView },
       ],
     });
   }
@@ -3431,7 +3746,6 @@ export class World {
       this.clipBuffer,
       this.itemListBuffer,
       this.directListBuffer,
-      this.batchCountBuffer,
       this.batchBuffer,
       this.indirectBuffer,
       this.cullParams,
@@ -3455,8 +3769,6 @@ interface PointDraw {
   tiny: number;
 }
 
-/** Point draws a world culls at once (their counters in `pointCounts`). */
-const MAX_POINT_SETS = 64;
 /** A point draw's cull parameters (pointCull.wgsl `PointCull`). */
 const POINT_CULL_BYTES = 48;
 /** Pixels past a view's edges a point's symbol may reach. */

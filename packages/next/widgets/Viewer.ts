@@ -34,6 +34,7 @@ import {
   resolveIonAsset,
   sunDirection,
   vec3,
+  type EngineOptions,
   type Exposure,
   type GltfAsset,
   type ImageryProvider,
@@ -64,6 +65,12 @@ import {
 export type GlobeKind = "ellipsoid" | "terrain" | false;
 
 export interface ViewerOptions {
+  /**
+   * Options for the viewer's engine (`Engine.create`): its device's limits
+   * tier (`limits: "minimum"` shows what the smallest device would), power
+   * preference and so on.
+   */
+  engine?: EngineOptions;
   /**
    * The globe: the WGS84 ellipsoid (default), Cesium World Terrain (ion
    * asset 1), or none.
@@ -399,7 +406,12 @@ export class Viewer {
     // Settled here so a failure surfaces where it is used, not unhandled.
     early.imagery?.catch(() => {});
     early.terrain?.catch(() => {});
-    return new Viewer(container, await Engine.create(), options, early);
+    return new Viewer(
+      container,
+      await Engine.create(options.engine),
+      options,
+      early,
+    );
   }
 
   // ------------------------------------------------------------- globe

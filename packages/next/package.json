@@ -16,7 +16,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "bench": "node bench/run.mjs",
-    "slang": "node scripts/slangShader.mjs"
+    "slang": "node scripts/slangShader.mjs",
+    "setup": "node scripts/setup.mjs"
   },
   "dependencies": {
     "@emotion/react": "11.14.0",

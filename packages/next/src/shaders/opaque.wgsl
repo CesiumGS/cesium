@@ -27,10 +27,15 @@ fn aerialPerspective(fragment: vec2f, relPosition: vec3f) -> AerialPerspective {
   let w = sqrt(clamp((distance - view.aerialStart) / max(view.aerialEnd - view.aerialStart, 1e-6), 0.0, 1.0));
   // A slice's texel center, w = (slice + 0.5) / 128, holds the integral to
   // its distance; before the first, fade in from none.
-  let uvw = vec3f(fragment * view.viewport.zw, w);
+  let uv = fragment * view.viewport.zw;
   let near = clamp(w * 256.0, 0.0, 1.0);
-  let inscatter = textureSampleLevel(aerialInscatter, environmentSampler, uvw, 0.0).rgb;
-  let transmittance = textureSampleLevel(aerialTransmittance, environmentSampler, uvw, 0.0).rgb;
+  // In-scatter and transmittance are the two halves of one volume (128
+  // slices each): w clamped to its half's outer texel centers samples
+  // exactly what clamp-to-edge did with a volume each.
+  let edge = 0.5 / 128.0;
+  let half = clamp(w, edge, 1.0 - edge) * 0.5;
+  let inscatter = textureSampleLevel(aerialVolume, environmentSampler, vec3f(uv, half), 0.0).rgb;
+  let transmittance = textureSampleLevel(aerialVolume, environmentSampler, vec3f(uv, 0.5 + half), 0.0).rgb;
   return AerialPerspective(inscatter * near, mix(vec3f(1.0), transmittance, near));
 }
 
@@ -83,7 +88,7 @@ fn aerialMarch(relPosition: vec3f) -> AerialPerspective {
   let meters = length(relPosition);
   let direction = relPosition / max(meters, 1e-6);
   let radii = view.bodyRadii.xyz / 1000.0;
-  let origin = (view.cameraHi + view.cameraLo) / 1000.0;
+  let origin = hiLoSum(view.cameraHi, view.cameraLo) / 1000.0;
   let r = length(origin);
   let mu = dot(origin, direction) / r;
   // From above, where the ray enters the atmosphere (over the ellipsoid's
@@ -211,7 +216,7 @@ fn sunIlluminance(relPosition: vec3f) -> vec3f {
 // The sun's light through the atmosphere arriving from `direction` (the
 // sun-light table): the sun's own, or the Moon's color and dimming.
 fn sunlightThroughAir(relPosition: vec3f, direction: vec3f) -> vec3f {
-  let p = relPosition + view.cameraHi + view.cameraLo;
+  let p = relPosition + hiLoSum(view.cameraHi, view.cameraLo);
   let radii = view.bodyRadii.xyz;
   let distance = length(p);
   let height = (distance - distance / length(p / radii)) / 1000.0;
@@ -240,8 +245,8 @@ fn sunlightThroughAir(relPosition: vec3f, direction: vec3f) -> vec3f {
 @group(0) @binding(6) var irradianceCube: texture_cube<f32>;
 // Aerial perspective: in-scattered light (cd/m²) and transmittance by
 // screen position and distance (atmosphere/sky.wgsl `aerialCompute`).
-@group(0) @binding(7) var aerialInscatter: texture_3d<f32>;
-@group(0) @binding(8) var aerialTransmittance: texture_3d<f32>;
+// In-scatter (slices 0-127) and transmittance (128-255): one binding.
+@group(0) @binding(7) var aerialVolume: texture_3d<f32>;
 // The air for marching aerial perspective per pixel (atmosphere/Sky.ts
 // `buildAir`): both groups' parameters (atmosphere.wgsl `Atmosphere`) and
 // the bands' weights to linear sRGB, and their tables, a layer per group.
@@ -278,8 +283,9 @@ struct Air {
 // Globe imagery: one slice per terrain tile, composited (GlobeImagery).
 @group(1) @binding(5) var imagery: texture_2d_array<f32>;
 @group(1) @binding(6) var imagerySampler: sampler;
-// The night lights: light the surface emits (GlobeImagery "lights").
-@group(1) @binding(7) var lightsImagery: texture_2d_array<f32>;
+// The night lights (light the surface emits, GlobeImagery "lights") are
+// slices of the same array (SlicePool): one binding for every imagery
+// layer, within the base tier's 16 sampled textures (§13.15).
 
 // The night image's brightest white, cd/m² as seen from above (a city's
 // lamps averaged over the image's half-kilometer texels): VIIRS's
@@ -874,12 +880,11 @@ struct Shadows {
 // Aerial perspective from high up, a ray per texel of a screen grid
 // (sky.wgsl `aerialScreenFragment`): in-scatter (pre-exposed) and
 // transmittance.
-@group(0) @binding(16) var aerialScreenInscatter: texture_2d<f32>;
-@group(0) @binding(17) var aerialScreenTransmittance: texture_2d<f32>;
-// Point and spot lights (scene/lights.ts) and their froxels' lists
-// (lights.wgsl).
+// Layer 0 in-scatter, layer 1 transmittance (one binding, §13.15).
+@group(0) @binding(16) var aerialScreen: texture_2d_array<f32>;
+// Point and spot lights (scene/lights.ts) and, after them, their froxels'
+// lists (lights.wgsl): one binding.
 @group(0) @binding(18) var<storage, read> lightTable: LightTable;
-@group(0) @binding(19) var<storage, read> clusters: array<u32>;
 
 // The point and spot lights of the pixel's froxel, reflected toward the
 // camera: candela over distance squared, faded to nothing at its reach
@@ -910,9 +915,9 @@ fn punctualLight(
   let j = min(u32(uv.y * f32(dims.y)), dims.y - 1u);
   let k = min(u32(log(z / h.depth.x) * h.depth.y), dims.z - 1u);
   let base = ((k * dims.y + j) * dims.x + i) * (1u + CLUSTER_LIGHTS);
-  let count = clusters[base];
+  let count = lightTable.clusters[base];
   for (var t = 0u; t < count; t++) {
-    let light = lightTable.lights[clusters[base + 1u + t]];
+    let light = lightTable.lights[lightTable.clusters[base + 1u + t]];
     let toLight = light.position.xyz - relPosition;
     let d2 = max(dot(toLight, toLight), 1e-4);
     let l = toLight * inverseSqrt(d2);
@@ -1075,7 +1080,7 @@ fn toEnvironment(d: vec3f) -> vec3f {
 fn insideClipBoxes(block: u32, count: u32, p: vec3f) -> bool {
   for (var i = 0u; i < count; i++) {
     let b = (block * CLIP_BOXES + i) * 5u;
-    let d = p - ((clipBoxes[b].xyz - view.cameraHi) + (clipBoxes[b + 1u].xyz - view.cameraLo));
+    let d = p - hiLoDifference(clipBoxes[b].xyz, clipBoxes[b + 1u].xyz, view.cameraHi, view.cameraLo);
     let u = abs(vec3f(
       dot(clipBoxes[b + 2u].xyz, d),
       dot(clipBoxes[b + 3u].xyz, d),
@@ -1180,7 +1185,7 @@ fn fragmentInputOf(in: VsOut, geometric: vec3f) -> FragmentInput {
   return FragmentInput(
     in.positionMC,
     in.relPosition,
-    in.relPosition + (view.cameraHi + view.cameraLo),
+    in.relPosition + hiLoSum(view.cameraHi, view.cameraLo),
     geometric,
     in.uv,
     in.color * r.color,
@@ -1215,7 +1220,7 @@ fn shadeSurface(in: VsOut, frontFacing: bool, translucent: bool) -> Surface {
   );
   let lightsPacked = r.lightsSlice;
   let lightsSample = textureSample(
-    lightsImagery,
+    imagery,
     imagerySampler,
     imageryUv(lightsPacked, in.uv),
     max(lightsPacked & 4095u, 1u) - 1u,
@@ -1398,8 +1403,8 @@ fn shadeSurface(in: VsOut, frontFacing: bool, translucent: bool) -> Surface {
       if (screen > 0.0) {
         let uv = in.position.xy * view.viewport.zw;
         air = AerialPerspective(
-          mix(air.inscatter, textureSampleLevel(aerialScreenInscatter, environmentSampler, uv, 0.0).rgb, screen),
-          mix(air.transmittance, textureSampleLevel(aerialScreenTransmittance, environmentSampler, uv, 0.0).rgb, screen),
+          mix(air.inscatter, textureSampleLevel(aerialScreen, environmentSampler, uv, 0u, 0.0).rgb, screen),
+          mix(air.transmittance, textureSampleLevel(aerialScreen, environmentSampler, uv, 1u, 0.0).rgb, screen),
         );
       }
       ap = AerialPerspective(

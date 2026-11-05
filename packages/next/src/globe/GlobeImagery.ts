@@ -27,6 +27,7 @@ import {
 } from "../render/layout.ts";
 import type { ImageryProvider } from "./ImageryProvider.ts";
 import imageryWgsl from "../shaders/imagery.wgsl?raw";
+import { SlicePool } from "./SlicePool.ts";
 
 const WGS84_RADIUS = 6378137;
 /** Web Mercator's latitude limit. */
@@ -92,7 +93,10 @@ interface Job {
 }
 
 export class GlobeImagery {
-  readonly texture: GPUTexture;
+  /** The world's slices, shared with its other imagery layers. */
+  private readonly pool: SlicePool;
+  /** Slices this layer asked the pool for. */
+  private readonly requested: number;
   readonly size: number;
   readonly stats: ImageryStats = {
     requests: 0,
@@ -102,7 +106,6 @@ export class GlobeImagery {
   };
   /** Slice per terrain tile, and the frame it was last wanted. */
   private readonly slices = new Map<Tile, { slice: number; used: number }>();
-  private readonly free: number[] = [];
   private readonly jobs = new Map<Tile, Job>();
   private readonly sources = new Map<string, Source>();
   private readonly applied = new WeakMap<ModelInstance, number>();
@@ -133,30 +136,21 @@ export class GlobeImagery {
     options: GlobeImageryOptions = {},
   ) {
     const device = ctx.device;
-    this.size = options.size ?? 256;
-    const slices = Math.min(
-      options.slices ?? 512,
-      device.limits.maxTextureArrayLayers,
-      MAX_IMAGERY_SLICES,
+    // Every layer of a world composites into one array (SlicePool), so
+    // they share its size: the first layer's.
+    this.requested = Math.min(options.slices ?? 512, MAX_IMAGERY_SLICES);
+    this.pool = SlicePool.acquire(
+      device,
+      world,
+      options.size ?? 256,
+      this.requested,
     );
+    this.size = this.pool.size;
     this.role = options.role ?? "surface";
     // No lights where the night image has none.
     this.baseColor =
       options.baseColor ?? (this.role === "lights" ? [0, 0, 0] : [0, 0, 0.5]);
     this.lit = options.lit ?? true;
-    this.texture = device.createTexture({
-      label: `globe.${this.role}`,
-      size: [this.size, this.size, slices],
-      format: "rgba8unorm",
-      mipLevelCount: Math.log2(this.size) + 1,
-      usage:
-        GPUTextureUsage.TEXTURE_BINDING |
-        GPUTextureUsage.STORAGE_BINDING |
-        GPUTextureUsage.COPY_DST,
-    });
-    for (let i = slices - 1; i >= 0; i--) {
-      this.free.push(i);
-    }
     this.layout = device.createBindGroupLayout({
       label: "globe.imagery.composite",
       entries: [
@@ -224,12 +218,11 @@ export class GlobeImagery {
       provider.tileUrl(0, 0, Math.max(provider.minimumLevel, 1)),
     ).origin;
     requests.register(this.origin);
-    const array = this.texture.createView({ dimension: "2d-array" });
-    if (this.role === "lights") {
-      world.setLightsArray(array);
-    } else {
-      world.setImageryArray(array);
-    }
+  }
+
+  /** The world's slice array (replaced when the pool grows). */
+  get texture(): GPUTexture {
+    return this.pool.texture;
   }
 
   /**
@@ -379,7 +372,9 @@ export class GlobeImagery {
       source.texture?.destroy();
     }
     this.sources.clear();
-    this.texture.destroy();
+    this.pool.give([...this.slices.values()].map((s) => s.slice));
+    this.slices.clear();
+    this.pool.release(this.requested);
     this.params.destroy();
   }
 
@@ -704,12 +699,23 @@ export class GlobeImagery {
     });
   }
 
-  /** A free slice, or the least recently used one not wanted this frame. */
+  /**
+   * A free slice from the pool, or this layer's least recently used one not
+   * wanted this frame: that first once the layer holds its share of the
+   * pool, so layers sharing it can't starve one another.
+   */
   private allocate(frame: number): number | undefined {
-    const free = this.free.pop();
-    if (free !== undefined) {
-      return free;
+    if (this.slices.size < this.pool.share) {
+      const free = this.pool.take();
+      if (free !== undefined) {
+        return free;
+      }
     }
+    return this.recycle(frame) ?? this.pool.take();
+  }
+
+  /** This layer's least recently used slice not wanted this frame. */
+  private recycle(frame: number): number | undefined {
     let oldest: Tile | undefined;
     let used = frame;
     for (const [tile, s] of this.slices) {

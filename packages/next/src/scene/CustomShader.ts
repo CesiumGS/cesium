@@ -370,6 +370,13 @@ export class CustomShader {
   readonly varyings: string;
   /** Its uniforms' buffer layout and textures (`uniforms`). */
   readonly uniformLayout: UniformLayout;
+  /**
+   * Reads metadata per fragment (`readFragmentProperty`), so its pipelines
+   * bind the texture set's property textures; others don't (§13.15).
+   */
+  get readsPropertyTextures(): boolean {
+    return this.code.includes("readFragmentProperty(");
+  }
   /** The uniform buffer's contents (`uniformLayout.bytes`). */
   readonly uniformData: DataView;
   /** Each texture uniform's current declaration, by name. */

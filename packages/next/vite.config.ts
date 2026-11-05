@@ -67,6 +67,99 @@ function serveDirectory(prefix: string, root: string): Plugin {
 }
 
 /**
+ * Released CesiumJS builds at `prefix/<version>/…` from the store outside
+ * the repo (bench/suite/release.mjs): a version not there yet is fetched
+ * from npm (`npm pack`, checked against the registry's integrity hash) the
+ * first time a page asks for it, so a fresh machine needs no setup step for
+ * Dyno's 1.x engines. `npm run setup` fetches the catalog's ahead of time.
+ */
+function serveReleases(prefix: string, root: string): Plugin {
+  const fetched = new Set<string>();
+  const serve = serveDirectory(prefix, root);
+  // npm's recent stable releases, asked at most once an hour.
+  let recent: { at: number; versions: string[] } | undefined;
+  const recentReleases = async (): Promise<string[]> => {
+    if (recent && Date.now() - recent.at < 3600_000) {
+      return recent.versions;
+    }
+    const { execFile } = await import("node:child_process");
+    const versions = await new Promise<string[]>((resolve) => {
+      execFile(
+        process.platform === "win32" ? "npm.cmd" : "npm",
+        ["view", "cesium", "versions", "--json"],
+        { timeout: 15_000, shell: process.platform === "win32" },
+        (error, stdout) => {
+          if (error) {
+            resolve([]);
+            return;
+          }
+          try {
+            const all = JSON.parse(stdout) as string[];
+            resolve(
+              all
+                .filter((v) => /^1\.\d+\.\d+$/.test(v))
+                .slice(-RECENT_RELEASES),
+            );
+          } catch {
+            resolve([]);
+          }
+        },
+      );
+    });
+    recent = { at: Date.now(), versions };
+    return versions;
+  };
+  return {
+    name: "serve-releases",
+    configureServer(server) {
+      // The releases Dyno can offer: in the store, and npm's latest few
+      // (fetched from npm on first use, below).
+      server.middlewares.use(`${prefix}/index.json`, (_req, res) => {
+        const installed = existsSync(root)
+          ? readdirSync(root).filter(
+              (v) =>
+                /^\d+\.\d+\.\d+$/.test(v) &&
+                existsSync(join(root, v, "release.json")),
+            )
+          : [];
+        void recentReleases().then((versions) => {
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ installed, recent: versions }));
+        });
+      });
+      server.middlewares.use(prefix, (req, _res, next) => {
+        const version = /^\/(\d+\.\d+\.\d+)\//.exec(req.url ?? "")?.[1];
+        // Only a page loading the release fetches it: probes (HEAD, as the
+        // first-run check sends) don't.
+        if (
+          req.method !== "GET" ||
+          !version ||
+          fetched.has(version) ||
+          existsSync(join(root, version, "release.json"))
+        ) {
+          next();
+          return;
+        }
+        fetched.add(version);
+        import("./bench/suite/release.mjs")
+          .then(({ ensureRelease }) =>
+            ensureRelease(version, (line: string) =>
+              server.config.logger.info(`[dyno] ${line}`),
+            ),
+          )
+          .catch((error: unknown) =>
+            server.config.logger.error(
+              `[dyno] cesium@${version}: ${error instanceof Error ? error.message : String(error)}`,
+            ),
+          )
+          .finally(() => next());
+      });
+      (serve.configureServer as (server: unknown) => void)(server);
+    },
+  };
+}
+
+/**
  * Benchmark suite results (outside the repo: they carry machine details),
  * for the results page: `index.json` lists the runs, newest first.
  */
@@ -213,6 +306,8 @@ function serveBenchResults(prefix: string, root: string): Plugin {
 const benchResults =
   process.env.BENCH_RESULTS ?? join(homedir(), ".cesium-bench", "results");
 // Released CesiumJS builds fetched by the suite (bench/suite/release.mjs).
+/** npm's latest stable CesiumJS releases Dyno offers beside its own. */
+const RECENT_RELEASES = 6;
 const cesiumReleases =
   process.env.BENCH_CESIUM_DIR ?? join(homedir(), ".cesium-bench", "cesium");
 
@@ -246,7 +341,7 @@ export default defineConfig({
     serveDirectory("/specs-data", specsData),
     serveBenchResults("/bench-results", benchResults),
     serveDirectory("/bench-results", benchResults),
-    serveDirectory("/cesium-release", cesiumReleases),
+    serveReleases("/cesium-release", cesiumReleases),
     // 1.x built at git refs, in snapshot worktrees (<repo>/.bench/<sha>).
     serveDirectory(
       "/cesium-ref",

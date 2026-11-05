@@ -99,3 +99,16 @@ public struct Material {
 };
 
 public static const uint NO_STREAM = 0xffffffffu;
+
+// a − b for float64 positions split into float32 pairs, the highs whole
+// meters subtracted as integers (src/shaders/common.wgsl `hiLoDifference`:
+// relaxed math on Apple GPUs may reassociate the float form).
+public float3 hiLoDifference(float3 aHi, float3 aLo, float3 bHi, float3 bLo) {
+  return float3(int3(aHi) - int3(bHi)) + (aLo - bLo);
+}
+
+// A split position as one float (about 0.5 m at the Earth's radius): only
+// where that's enough (common.wgsl `hiLoSum`).
+public float3 hiLoSum(float3 hi, float3 lo) {
+  return hi + lo;
+}

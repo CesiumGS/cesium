@@ -62,9 +62,15 @@ function useChecks(): Record<"webgpu" | "release" | "repo", Check> {
             },
       );
     })();
+    // The dev server answers a missing file with the app's page (200,
+    // text/html), so only a non-HTML answer means the file is there.
     const exists = (url: string) =>
       fetch(url, { method: "HEAD" })
-        .then((r) => r.ok)
+        .then(
+          (r) =>
+            r.ok &&
+            !(r.headers.get("content-type") ?? "").includes("text/html"),
+        )
         .catch(() => false);
     void exists("/cesium-release/1.146.0/package/Build/Cesium/Cesium.js").then(
       (ok) =>

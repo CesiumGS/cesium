@@ -530,12 +530,8 @@ export class Engine {
       gpu.preferredCanvasFormat,
       {
         sunLight: sky.sunLight.createView(),
-        aerialInscatter: sky.aerialInscatter.createView({ dimension: "3d" }),
-        aerialTransmittance: sky.aerialTransmittance.createView({
-          dimension: "3d",
-        }),
-        aerialScreenInscatter: sky.aerialScreen[0].createView(),
-        aerialScreenTransmittance: sky.aerialScreen[1].createView(),
+        aerialVolume: sky.aerialVolume.createView({ dimension: "3d" }),
+        aerialScreen: sky.aerialScreen.createView({ dimension: "2d-array" }),
         air: sky.air,
         airTransmittance: sky.airTransmittance.createView({
           dimension: "2d-array",

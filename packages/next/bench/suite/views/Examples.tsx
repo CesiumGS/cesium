@@ -19,6 +19,7 @@ import { useEffect, useRef, useState } from "react";
 import { EXAMPLES } from "../../../examples/index.ts";
 import { Viewer, type GlobeKind } from "../../../widgets/index.ts";
 import { ionToken } from "../ionToken.ts";
+import { limitsTier } from "../limitsTier.ts";
 import { Empty, Page, Section } from "./common.tsx";
 
 /**
@@ -136,6 +137,7 @@ export function ExamplePage() {
     globe.current = info.globe;
     const token = ionToken();
     Viewer.create(host.current, {
+      engine: { limits: limitsTier() },
       globe: info.globe,
       maxInstances: MAX_INSTANCES,
       // Frame rate, timings, memory; top left (examples' panels are top right).

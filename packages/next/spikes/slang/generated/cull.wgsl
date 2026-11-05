@@ -95,7 +95,7 @@ struct DrawItem_std430_0
 
 @binding(3) @group(1) var<storage, read_write> items_0 : array<DrawItem_std430_0>;
 
-@binding(5) @group(1) var<storage, read_write> batchCounts_0 : array<atomic<u32>>;
+@binding(7) @group(1) var<storage, read_write> args_0 : array<atomic<u32>>;
 
 struct Batch_std430_0
 {
@@ -122,7 +122,10 @@ struct Instance_std430_0
 
 @binding(2) @group(1) var<storage, read> instanceTable_0 : array<Instance_std430_0>;
 
-@binding(7) @group(1) var<storage, read_write> args_0 : array<u32>;
+fn hiLoDifference_0( aHi_0 : vec3<f32>,  aLo_0 : vec3<f32>,  bHi_0 : vec3<f32>,  bLo_0 : vec3<f32>) -> vec3<f32>
+{
+    return vec3<f32>(vec3<i32>(aHi_0) - vec3<i32>(bHi_0)) + (aLo_0 - bLo_0);
+}
 
 struct DrawItem_0
 {
@@ -168,14 +171,14 @@ fn inFrustum_0( m_1 : mat4x4<f32>,  center_1 : vec3<f32>,  radius_1 : f32) -> bo
 
 fn append_0( batch_1 : u32,  item_0 : u32)
 {
-    var slot_0 : u32 = atomicAdd(&(batchCounts_0[batch_1]), u32(1));
+    var slot_0 : u32 = atomicAdd(&(args_0[batch_1 * u32(5) + u32(1)]), u32(1));
     itemList_0[batches_0[batch_1].itemBase_0 + slot_0] = item_0;
     return;
 }
 
 fn relativeMatrix_0( _S2 : u32) -> mat4x4<f32>
 {
-    var rel_0 : vec3<f32> = transforms_0[_S2].originHi_0 - view_0.cameraHi_0 + (transforms_0[_S2].originLo_0 - view_0.cameraLo_0);
+    var rel_0 : vec3<f32> = hiLoDifference_0(transforms_0[_S2].originHi_0, transforms_0[_S2].originLo_0, view_0.cameraHi_0, view_0.cameraLo_0);
     return mat4x4<f32>(transforms_0[_S2].linear_0[i32(0)].x, transforms_0[_S2].linear_0[i32(1)].x, transforms_0[_S2].linear_0[i32(2)].x, rel_0.x, transforms_0[_S2].linear_0[i32(0)].y, transforms_0[_S2].linear_0[i32(1)].y, transforms_0[_S2].linear_0[i32(2)].y, rel_0.y, transforms_0[_S2].linear_0[i32(0)].z, transforms_0[_S2].linear_0[i32(1)].z, transforms_0[_S2].linear_0[i32(2)].z, rel_0.z, 0.0f, 0.0f, 0.0f, 1.0f);
 }
 
@@ -223,25 +226,26 @@ fn cullRecords(@builtin(global_invocation_id) gid_0 : vec3<u32>)
     {
         return;
     }
-    var _S7 : mat4x4<f32> = relativeMatrix_0(_S6.transform_0);
-    var _S8 : DrawItem_0 = makeDrawItem_0(_S7, i_0, u32(0), u32(0), u32(4294967295));
-    var _S9 : array<vec4<f32>, i32(4)> = array<vec4<f32>, i32(4)>( vec4<f32>(_S8.relModel_0[i32(0)][i32(0)], _S8.relModel_0[i32(1)][i32(0)], _S8.relModel_0[i32(2)][i32(0)], _S8.relModel_0[i32(3)][i32(0)]), vec4<f32>(_S8.relModel_0[i32(0)][i32(1)], _S8.relModel_0[i32(1)][i32(1)], _S8.relModel_0[i32(2)][i32(1)], _S8.relModel_0[i32(3)][i32(1)]), vec4<f32>(_S8.relModel_0[i32(0)][i32(2)], _S8.relModel_0[i32(1)][i32(2)], _S8.relModel_0[i32(2)][i32(2)], _S8.relModel_0[i32(3)][i32(2)]), vec4<f32>(_S8.relModel_0[i32(0)][i32(3)], _S8.relModel_0[i32(1)][i32(3)], _S8.relModel_0[i32(2)][i32(3)], _S8.relModel_0[i32(3)][i32(3)]) );
-    items_0[i_0].relModel_0.data_1 = _S9;
-    items_0[i_0].record_0 = _S8.record_0;
-    items_0[i_0].feature_0 = _S8.feature_0;
-    items_0[i_0].instance_0 = _S8.instance_0;
-    items_0[i_0].tint_0 = _S8.tint_0;
-    var _S10 : bool = drawable_0(&(_S6), _S6.transform_0);
-    var _S11 : bool;
-    if(_S10)
+    var _S7 : u32 = _S6.transform_0;
+    var _S8 : mat4x4<f32> = relativeMatrix_0(_S6.transform_0);
+    var _S9 : DrawItem_0 = makeDrawItem_0(_S8, i_0, u32(0), u32(0), u32(4294967295));
+    var _S10 : array<vec4<f32>, i32(4)> = array<vec4<f32>, i32(4)>( vec4<f32>(_S9.relModel_0[i32(0)][i32(0)], _S9.relModel_0[i32(1)][i32(0)], _S9.relModel_0[i32(2)][i32(0)], _S9.relModel_0[i32(3)][i32(0)]), vec4<f32>(_S9.relModel_0[i32(0)][i32(1)], _S9.relModel_0[i32(1)][i32(1)], _S9.relModel_0[i32(2)][i32(1)], _S9.relModel_0[i32(3)][i32(1)]), vec4<f32>(_S9.relModel_0[i32(0)][i32(2)], _S9.relModel_0[i32(1)][i32(2)], _S9.relModel_0[i32(2)][i32(2)], _S9.relModel_0[i32(3)][i32(2)]), vec4<f32>(_S9.relModel_0[i32(0)][i32(3)], _S9.relModel_0[i32(1)][i32(3)], _S9.relModel_0[i32(2)][i32(3)], _S9.relModel_0[i32(3)][i32(3)]) );
+    items_0[i_0].relModel_0.data_1 = _S10;
+    items_0[i_0].record_0 = _S9.record_0;
+    items_0[i_0].feature_0 = _S9.feature_0;
+    items_0[i_0].instance_0 = _S9.instance_0;
+    items_0[i_0].tint_0 = _S9.tint_0;
+    var _S11 : bool = drawable_0(&(_S6), _S6.transform_0);
+    var _S12 : bool;
+    if(_S11)
     {
-        _S11 = inFrustum_0(_S7, _S6.center_0, _S6.radius_0 * transforms_0[_S6.transform_0].scale_0);
+        _S12 = inFrustum_0(_S8, _S6.center_0, _S6.radius_0 * transforms_0[_S7].scale_0);
     }
     else
     {
-        _S11 = false;
+        _S12 = false;
     }
-    if(_S11)
+    if(_S12)
     {
         append_0(_S6.batch_0, i_0);
     }
@@ -262,56 +266,57 @@ fn cullInstances(@builtin(global_invocation_id) gid_1 : vec3<u32>)
     {
         return;
     }
-    var _S12 : DrawRecord_std430_0 = records_0[inst_0.record_1];
-    var _S13 : u32 = _S12.transform_0;
-    var m_2 : mat4x4<f32> = (((mat4x4<f32>(inst_0.row0_0, inst_0.row1_0, inst_0.row2_0, vec4<f32>(0.0f, 0.0f, 0.0f, 1.0f))) * (relativeMatrix_0(_S12.transform_0))));
-    var _S14 : bool;
+    var _S13 : DrawRecord_std430_0 = records_0[inst_0.record_1];
+    var _S14 : u32 = _S13.transform_0;
+    var _S15 : u32 = _S13.transform_0;
+    var m_2 : mat4x4<f32> = (((mat4x4<f32>(inst_0.row0_0, inst_0.row1_0, inst_0.row2_0, vec4<f32>(0.0f, 0.0f, 0.0f, 1.0f))) * (relativeMatrix_0(_S13.transform_0))));
+    var _S16 : bool;
     if((inst_0.feature_1) != u32(4294967295))
     {
-        _S14 = (_S12.featureId_0) != u32(0);
+        _S16 = (_S13.featureId_0) != u32(0);
     }
     else
     {
-        _S14 = false;
+        _S16 = false;
     }
     var feature_3 : u32;
-    if(_S14)
+    if(_S16)
     {
-        feature_3 = _S12.featureId_0 + inst_0.feature_1;
+        feature_3 = _S13.featureId_0 + inst_0.feature_1;
     }
     else
     {
         feature_3 = u32(0);
     }
     var item_1 : u32 = params_0.firstInstanceItem_0 + j_0;
-    var _S15 : DrawItem_0 = makeDrawItem_0(m_2, inst_0.record_1, feature_3, j_0 - _S12.instanceFirst_0, inst_0.tint_1);
-    var _S16 : array<vec4<f32>, i32(4)> = array<vec4<f32>, i32(4)>( vec4<f32>(_S15.relModel_0[i32(0)][i32(0)], _S15.relModel_0[i32(1)][i32(0)], _S15.relModel_0[i32(2)][i32(0)], _S15.relModel_0[i32(3)][i32(0)]), vec4<f32>(_S15.relModel_0[i32(0)][i32(1)], _S15.relModel_0[i32(1)][i32(1)], _S15.relModel_0[i32(2)][i32(1)], _S15.relModel_0[i32(3)][i32(1)]), vec4<f32>(_S15.relModel_0[i32(0)][i32(2)], _S15.relModel_0[i32(1)][i32(2)], _S15.relModel_0[i32(2)][i32(2)], _S15.relModel_0[i32(3)][i32(2)]), vec4<f32>(_S15.relModel_0[i32(0)][i32(3)], _S15.relModel_0[i32(1)][i32(3)], _S15.relModel_0[i32(2)][i32(3)], _S15.relModel_0[i32(3)][i32(3)]) );
-    items_0[item_1].relModel_0.data_1 = _S16;
-    items_0[item_1].record_0 = _S15.record_0;
-    items_0[item_1].feature_0 = _S15.feature_0;
-    items_0[item_1].instance_0 = _S15.instance_0;
-    items_0[item_1].tint_0 = _S15.tint_0;
-    var scale_1 : f32 = transforms_0[_S12.transform_0].scale_0 * max(length(vec3<f32>(inst_0.row0_0.x, inst_0.row1_0.x, inst_0.row2_0.x)), max(length(vec3<f32>(inst_0.row0_0.y, inst_0.row1_0.y, inst_0.row2_0.y)), length(vec3<f32>(inst_0.row0_0.z, inst_0.row1_0.z, inst_0.row2_0.z))));
+    var _S17 : DrawItem_0 = makeDrawItem_0(m_2, inst_0.record_1, feature_3, j_0 - _S13.instanceFirst_0, inst_0.tint_1);
+    var _S18 : array<vec4<f32>, i32(4)> = array<vec4<f32>, i32(4)>( vec4<f32>(_S17.relModel_0[i32(0)][i32(0)], _S17.relModel_0[i32(1)][i32(0)], _S17.relModel_0[i32(2)][i32(0)], _S17.relModel_0[i32(3)][i32(0)]), vec4<f32>(_S17.relModel_0[i32(0)][i32(1)], _S17.relModel_0[i32(1)][i32(1)], _S17.relModel_0[i32(2)][i32(1)], _S17.relModel_0[i32(3)][i32(1)]), vec4<f32>(_S17.relModel_0[i32(0)][i32(2)], _S17.relModel_0[i32(1)][i32(2)], _S17.relModel_0[i32(2)][i32(2)], _S17.relModel_0[i32(3)][i32(2)]), vec4<f32>(_S17.relModel_0[i32(0)][i32(3)], _S17.relModel_0[i32(1)][i32(3)], _S17.relModel_0[i32(2)][i32(3)], _S17.relModel_0[i32(3)][i32(3)]) );
+    items_0[item_1].relModel_0.data_1 = _S18;
+    items_0[item_1].record_0 = _S17.record_0;
+    items_0[item_1].feature_0 = _S17.feature_0;
+    items_0[item_1].instance_0 = _S17.instance_0;
+    items_0[item_1].tint_0 = _S17.tint_0;
+    var scale_1 : f32 = transforms_0[_S15].scale_0 * max(length(vec3<f32>(inst_0.row0_0.x, inst_0.row1_0.x, inst_0.row2_0.x)), max(length(vec3<f32>(inst_0.row0_0.y, inst_0.row1_0.y, inst_0.row2_0.y)), length(vec3<f32>(inst_0.row0_0.z, inst_0.row1_0.z, inst_0.row2_0.z))));
     if((((inst_0.flags_2) & (u32(1)))) == u32(0))
     {
-        var _S17 : bool = drawable_0(&(_S12), _S13);
-        _S14 = _S17;
+        var _S19 : bool = drawable_0(&(_S13), _S14);
+        _S16 = _S19;
     }
     else
     {
-        _S14 = false;
+        _S16 = false;
     }
-    if(_S14)
+    if(_S16)
     {
-        _S14 = inFrustum_0(m_2, _S12.center_0, _S12.radius_0 * scale_1);
+        _S16 = inFrustum_0(m_2, _S13.center_0, _S13.radius_0 * scale_1);
     }
     else
     {
-        _S14 = false;
+        _S16 = false;
     }
-    if(_S14)
+    if(_S16)
     {
-        append_0(_S12.batch_0, item_1);
+        append_0(_S13.batch_0, item_1);
     }
     return;
 }
@@ -327,12 +332,10 @@ fn writeDrawArgs(@builtin(global_invocation_id) gid_2 : vec3<u32>)
     }
     var batch_2 : Batch_std430_0 = batches_0[b_0];
     var a_0 : u32 = b_0 * u32(5);
-    args_0[a_0] = batch_2.indexCount_1;
-    var _S18 : u32 = atomicLoad(&(batchCounts_0[b_0]));
-    args_0[a_0 + u32(1)] = _S18;
-    args_0[a_0 + u32(2)] = batch_2.firstIndex_1;
-    args_0[a_0 + u32(3)] = u32(0);
-    args_0[a_0 + u32(4)] = u32(0);
+    atomicStore(&(args_0[a_0]), batch_2.indexCount_1);
+    atomicStore(&(args_0[a_0 + u32(2)]), batch_2.firstIndex_1);
+    atomicStore(&(args_0[a_0 + u32(3)]), u32(0));
+    atomicStore(&(args_0[a_0 + u32(4)]), u32(0));
     return;
 }
 

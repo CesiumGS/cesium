@@ -128,11 +128,6 @@ struct Sh_std140_0
 @binding(4) @group(0) var<uniform> irradianceSh_0 : Sh_std140_0;
 @binding(1) @group(0) var specularEnvironment_0 : texture_cube<f32>;
 
-fn rsqrt_0( x_0 : f32) -> f32
-{
-    return 1.0f / sqrt(x_0);
-}
-
 fn read3_0( offset_0 : u32,  i_0 : u32) -> vec3<f32>
 {
     var b_0 : u32 = offset_0 + i_0 * u32(3);
@@ -165,7 +160,7 @@ struct VsOut_0
 
 struct vertexInput_0
 {
-    @location(0) item_0 : u32,
+    @interpolate(flat) @location(0) item_0 : u32,
 };
 
 @vertex
@@ -235,6 +230,11 @@ fn vs( _S1 : vertexInput_0, @builtin(vertex_index) vertexIndex_0 : u32) -> VsOut
     return o_0;
 }
 
+fn hiLoDifference_0( aHi_0 : vec3<f32>,  aLo_0 : vec3<f32>,  bHi_0 : vec3<f32>,  bLo_0 : vec3<f32>) -> vec3<f32>
+{
+    return vec3<f32>(vec3<i32>(aHi_0) - vec3<i32>(bHi_0)) + (aLo_0 - bLo_0);
+}
+
 fn insideClipBoxes_0( block_0 : u32,  count_0 : u32,  p_1 : vec3<f32>) -> bool
 {
     var i_3 : u32 = u32(0);
@@ -248,7 +248,7 @@ fn insideClipBoxes_0( block_0 : u32,  count_0 : u32,  p_1 : vec3<f32>) -> bool
             break;
         }
         var b_3 : u32 = (block_0 * u32(8) + i_3) * u32(5);
-        var d_0 : vec3<f32> = p_1 - (clipBoxes_0[b_3].xyz - view_0.cameraHi_0 + (clipBoxes_0[b_3 + u32(1)].xyz - view_0.cameraLo_0));
+        var d_0 : vec3<f32> = p_1 - hiLoDifference_0(clipBoxes_0[b_3].xyz, clipBoxes_0[b_3 + u32(1)].xyz, view_0.cameraHi_0, view_0.cameraLo_0);
         var u_0 : vec3<f32> = abs(vec3<f32>(dot(clipBoxes_0[b_3 + u32(2)].xyz, d_0), dot(clipBoxes_0[b_3 + u32(3)].xyz, d_0), dot(clipBoxes_0[b_3 + u32(4)].xyz, d_0)));
         if(((max(u_0.x, max(u_0.y, u_0.z))) <= 1.0f))
         {
@@ -261,9 +261,9 @@ fn insideClipBoxes_0( block_0 : u32,  count_0 : u32,  p_1 : vec3<f32>) -> bool
 
 fn fresnelSchlick_0( f0_0 : vec3<f32>,  f90_0 : vec3<f32>,  cosTheta_0 : f32) -> vec3<f32>
 {
-    var x_1 : f32 = 1.0f - cosTheta_0;
-    var _S6 : vec3<f32> = vec3<f32>((x_1 * x_1));
-    return f0_0 + (f90_0 - f0_0) * _S6 * _S6 * vec3<f32>(x_1);
+    var x_0 : f32 = 1.0f - cosTheta_0;
+    var _S6 : vec3<f32> = vec3<f32>((x_0 * x_0));
+    return f0_0 + (f90_0 - f0_0) * _S6 * _S6 * vec3<f32>(x_0);
 }
 
 fn smithVisibility_0( alpha_0 : f32,  nDotL_0 : f32,  nDotV_0 : f32) -> f32
@@ -297,16 +297,16 @@ fn toEnvironment_0( d_1 : vec3<f32>) -> vec3<f32>
 
 fn irradiance_0( n_0 : vec3<f32>) -> vec3<f32>
 {
-    var x_2 : f32 = n_0.x;
+    var x_1 : f32 = n_0.x;
     var y_0 : f32 = n_0.y;
     var z_0 : f32 = n_0.z;
-    return max(irradianceSh_0.c_0[i32(0)].xyz + irradianceSh_0.c_0[i32(1)].xyz * vec3<f32>(y_0) + irradianceSh_0.c_0[i32(2)].xyz * vec3<f32>(z_0) + irradianceSh_0.c_0[i32(3)].xyz * vec3<f32>(x_2) + irradianceSh_0.c_0[i32(4)].xyz * vec3<f32>((x_2 * y_0)) + irradianceSh_0.c_0[i32(5)].xyz * vec3<f32>((y_0 * z_0)) + irradianceSh_0.c_0[i32(6)].xyz * vec3<f32>((3.0f * z_0 * z_0 - 1.0f)) + irradianceSh_0.c_0[i32(7)].xyz * vec3<f32>((z_0 * x_2)) + irradianceSh_0.c_0[i32(8)].xyz * vec3<f32>((x_2 * x_2 - y_0 * y_0)), vec3<f32>(0.0f));
+    return max(irradianceSh_0.c_0[i32(0)].xyz + irradianceSh_0.c_0[i32(1)].xyz * vec3<f32>(y_0) + irradianceSh_0.c_0[i32(2)].xyz * vec3<f32>(z_0) + irradianceSh_0.c_0[i32(3)].xyz * vec3<f32>(x_1) + irradianceSh_0.c_0[i32(4)].xyz * vec3<f32>((x_1 * y_0)) + irradianceSh_0.c_0[i32(5)].xyz * vec3<f32>((y_0 * z_0)) + irradianceSh_0.c_0[i32(6)].xyz * vec3<f32>((3.0f * z_0 * z_0 - 1.0f)) + irradianceSh_0.c_0[i32(7)].xyz * vec3<f32>((z_0 * x_1)) + irradianceSh_0.c_0[i32(8)].xyz * vec3<f32>((x_1 * x_1 - y_0 * y_0)), vec3<f32>(0.0f));
 }
 
 struct FsOut_0
 {
     @location(0) color_2 : vec4<f32>,
-    @location(1) featureId_1 : vec2<u32>,
+    @interpolate(flat) @location(1) featureId_1 : vec2<u32>,
     @location(2) display_0 : vec4<f32>,
 };
 
@@ -422,7 +422,7 @@ fn DefaultMaterial_surface_0( i_4 : SurfaceInput_0) -> Surface_0
             var dp1perp_0 : vec3<f32> = cross(i_4.normal_3, i_4.dPdx_0);
             var tt_0 : vec3<f32> = dp2perp_0 * vec3<f32>(i_4.dUVdx_0.x) + dp1perp_0 * vec3<f32>(i_4.dUVdy_0.x);
             var bb_0 : vec3<f32> = dp2perp_0 * vec3<f32>(i_4.dUVdx_0.y) + dp1perp_0 * vec3<f32>(i_4.dUVdy_0.y);
-            var _S14 : vec3<f32> = vec3<f32>(rsqrt_0(max(dot(tt_0, tt_0), dot(bb_0, bb_0)) + 9.99999968265522539e-21f));
+            var _S14 : vec3<f32> = vec3<f32>(inverseSqrt(max(dot(tt_0, tt_0), dot(bb_0, bb_0)) + 9.99999968265522539e-21f));
             var _S15 : vec3<f32> = bb_0 * _S14;
             t_1 = tt_0 * _S14;
             b_4 = _S15;

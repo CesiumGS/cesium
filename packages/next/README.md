@@ -2,6 +2,19 @@
 
 Clean-slate, WebGPU-only engine prototype. See `CESIUM2_WEBGPU_PLAN.md` at the repo root.
 
+**Setup, once per machine** (nothing here is committed):
+
+```sh
+npm install                                 # at the repo root
+npm run setup --workspace @cesium/next      # the 1.x build, and the CesiumJS releases Dyno and the benchmarks run
+```
+
+`setup` builds this repository's 1.x (`npm run build` at the root) if
+`Build/CesiumUnminified` is missing, and fetches the catalog's default
+CesiumJS releases from npm into `~/.cesium-bench/cesium` (or
+`BENCH_CESIUM_DIR`), checked against the registry's integrity hash. The dev
+server also fetches a missing release the first time a page asks for it.
+
 ```sh
 npm run build                               # at the repo root: 1.x build used by the parity harness
 npm run dev --workspace @cesium/next        # dev server at http://127.0.0.1:5190

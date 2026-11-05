@@ -36,6 +36,7 @@ import type {
   Scenario,
   Scene,
 } from "./schema.ts";
+import { limitsTier } from "./limitsTier.ts";
 
 // CesiumJS 1.x, a global on 1.x runs' pages only (see suite.html).
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped global
@@ -553,7 +554,9 @@ export class NextAdapter implements Adapter {
     ]) {
       p?.catch(() => {});
     }
-    const engine = (this.engine = await Engine.create());
+    const engine = (this.engine = await Engine.create({
+      limits: limitsTier(),
+    }));
     engine.environment.setSky(UNITLESS_SKY);
     const limit = engine.gpu.device.limits.maxStorageBufferBindingSize;
     const world = engine.createWorld({

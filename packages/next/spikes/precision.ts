@@ -53,6 +53,19 @@ interface Row {
   distance: number;
   hiLo: number;
   naive: number;
+  /** Within `bound(distance)`: the hi/lo path keeps float32 precision. */
+  pass: boolean;
+}
+
+/**
+ * The most a camera-relative offset may err: float32's half-ulp at the
+ * distance with room for the last addition (measured 4e-8 × distance on
+ * D3D12 and Metal), and a micrometer near zero. Relaxed math folding the
+ * hi/lo split back into float32 errs by 0.25 to 0.47 m and fails at every
+ * distance (an M-series Mac before r50, plan §3.3 "Precision").
+ */
+function bound(distance: number): number {
+  return 1.5e-7 * distance + 1e-6;
 }
 
 async function runPrecision(): Promise<Row[]> {
@@ -134,20 +147,29 @@ async function runPrecision(): Promise<Row[]> {
           );
         }
       }
-      rows.push({ site, distance, hiLo, naive });
+      rows.push({ site, distance, hiLo, naive, pass: hiLo <= bound(distance) });
     });
   }
 
   const info = engine.gpu.adapter.info;
   stop(engine);
-  status.textContent = "done";
+  const failed = rows.filter((r) => !r.pass);
+  status.textContent = failed.length
+    ? `FAIL: ${failed.length} of ${rows.length} past the bound (hi/lo precision lost on this GPU)`
+    : `pass: all ${rows.length} within 1.5e-7 × distance + 1 µm`;
+  if (failed.length) {
+    // The benchmark runner (bench/run.mjs) fails a suite on console errors.
+    console.error(
+      `[precision] hi/lo precision lost: ${failed.map((r) => `${r.site} at ${r.distance} m: ${format(r.hiLo)}`).join("; ")}`,
+    );
+  }
   $("adapter").textContent =
     `Adapter: ${info.vendor} ${info.architecture} ${info.description}`;
   $("results").innerHTML =
-    `<tr><th>site</th><th>distance to camera</th><th>max error, hi/lo (GPU)</th><th>max error, naive float32</th></tr>${rows
+    `<tr><th>site</th><th>distance to camera</th><th>max error, hi/lo (GPU)</th><th>bound</th><th>max error, naive float32</th></tr>${rows
       .map(
         (r) =>
-          `<tr><td>${r.site}</td><td>${r.distance} m</td><td>${format(r.hiLo)}</td><td>${format(r.naive)}</td></tr>`,
+          `<tr><td>${r.site}</td><td>${r.distance} m</td><td>${r.pass ? "" : "✗ "}${format(r.hiLo)}</td><td>${format(bound(r.distance))}</td><td>${format(r.naive)}</td></tr>`,
       )
       .join("")}`;
   return rows;

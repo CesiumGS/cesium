@@ -233,9 +233,9 @@ fn writePointArgs() {
   let a = pointCull.batch * 5u;
   // `writeDrawArgs` counted the record's item: 1 where it passed this
   // view's cull (and its view mask), else 0.
-  let shown = args[a + 1u] > 0u;
-  args[a] = select(0u, atomicLoad(&pointCounts[pointCull.counter]) * 6u, shown);
-  args[a + 1u] = select(0u, 1u, shown);
-  args[a + 2u] = 0u;
-  args[a + 3u] = 0u;
+  let shown = atomicLoad(&args[a + 1u]) > 0u;
+  atomicStore(&args[a], select(0u, atomicLoad(&pointCounts[pointCull.counter]) * 6u, shown));
+  atomicStore(&args[a + 1u], select(0u, 1u, shown));
+  atomicStore(&args[a + 2u], 0u);
+  atomicStore(&args[a + 3u], 0u);
 }

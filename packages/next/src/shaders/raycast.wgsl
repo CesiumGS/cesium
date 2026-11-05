@@ -56,9 +56,9 @@ fn main(
   }
   let t = transforms[r.transform];
   let ray = rays[job.ray];
-  // Relative to the transform's origin: hi and lo cancel separately, so
-  // nearby geometry keeps float32 precision.
-  let origin = (ray.originHi - t.originHi) + (ray.originLo - t.originLo);
+  // Relative to the transform's origin: hi (as integers) and lo cancel
+  // separately, so nearby geometry keeps float32 precision.
+  let origin = hiLoDifference(ray.originHi, ray.originLo, t.originHi, t.originLo);
   var local = mat3x3f(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
   var offset = vec3f(0.0);
   if (job.instance != NONE) {

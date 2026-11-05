@@ -1,4 +1,5 @@
 import { Emitter } from "../core/Emitter.ts";
+import { checkLayouts, requiredLimitsFor, type LimitsTier } from "./limits.ts";
 
 /**
  * Optional WebGPU features, grouped by what they unlock. Every entry has a
@@ -34,6 +35,13 @@ export interface GpuDeviceOptions {
   powerPreference?: GPUPowerPreference;
   /** Recreate the device automatically after an unexpected loss. Default true. */
   recoverFromLoss?: boolean;
+  /**
+   * Which limits the device gets (`gpu/limits.ts`, §13.15). `base` (the
+   * default): binding counts at the spec defaults, capacities at the
+   * adapter's. `minimum`: everything at the spec defaults, to see what the
+   * smallest device would. `adapter`: everything raised, for experiments.
+   */
+  limits?: LimitsTier;
 }
 
 export interface DeviceEvents {
@@ -73,8 +81,12 @@ export class GpuDevice {
     const resolved: Required<GpuDeviceOptions> = {
       powerPreference: options.powerPreference ?? "high-performance",
       recoverFromLoss: options.recoverFromLoss ?? true,
+      limits: options.limits ?? "base",
     };
-    const { adapter, device } = await requestDevice(resolved.powerPreference);
+    const { adapter, device } = await requestDevice(
+      resolved.powerPreference,
+      resolved.limits,
+    );
     return new GpuDevice(adapter, device, resolved);
   }
 
@@ -88,6 +100,11 @@ export class GpuDevice {
 
   get caps(): Capabilities {
     return this._caps;
+  }
+
+  /** The limits tier the device was created with. */
+  get limitsTier(): LimitsTier {
+    return this.options.limits;
   }
 
   destroy(): void {
@@ -116,6 +133,7 @@ export class GpuDevice {
       }
       const { adapter, device: replacement } = await requestDevice(
         this.options.powerPreference,
+        this.options.limits,
       );
       this._adapter = adapter;
       this._device = replacement;
@@ -128,6 +146,7 @@ export class GpuDevice {
 
 async function requestDevice(
   powerPreference: GPUPowerPreference,
+  tier: LimitsTier,
 ): Promise<{ adapter: GPUAdapter; device: GPUDevice }> {
   if (typeof navigator === "undefined" || !navigator.gpu) {
     throw new Error("WebGPU is not available in this browser.");
@@ -139,21 +158,15 @@ async function requestDevice(
   const requiredFeatures = OPTIONAL_FEATURES.filter((f) =>
     adapter.features.has(f),
   );
-  // Ask for the adapter's real storage limits: vertex pulling and draw records
-  // live in large storage buffers.
-  const limits = adapter.limits;
+  // Capacities at the adapter's values (vertex pulling and draw records live
+  // in large storage buffers; imagery in array layers); binding counts at
+  // the tier's, which for `base` means none raised (gpu/limits.ts).
   const device = await adapter.requestDevice({
     requiredFeatures,
-    requiredLimits: {
-      maxStorageBufferBindingSize: limits.maxStorageBufferBindingSize,
-      maxBufferSize: limits.maxBufferSize,
-      maxStorageBuffersPerShaderStage: limits.maxStorageBuffersPerShaderStage,
-      maxComputeWorkgroupStorageSize: limits.maxComputeWorkgroupStorageSize,
-      // Translucent surfaces read the opaque depth and their moments on
-      // top of everything the opaque pass samples (19; the default is 16).
-      maxSampledTexturesPerShaderStage: limits.maxSampledTexturesPerShaderStage,
-    },
+    requiredLimits: requiredLimitsFor(tier, adapter.limits),
   });
+  // Layouts over the limits fail here with a readable message.
+  checkLayouts(device);
   return { adapter, device };
 }
 

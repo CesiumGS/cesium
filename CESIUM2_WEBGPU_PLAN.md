@@ -127,6 +127,7 @@ The package lives in the existing monorepo so the parity harness can import 1.x 
   - `dual-source-blending`
   - **immediates** (`var<immediate>` / `setImmediates`, shipping in Chrome 149–150, usable in render bundles)
   - **`TRANSIENT_ATTACHMENT`** for MSAA targets (Chrome 146+)
+- **Limits** (r50, §13.15): binding counts per stage fit the `base` tier (the spec defaults), checked by a test; capacities (table rows, arena bytes, array layers) grow to the device's limits and press on the residency budget when full.
 - Resources are typed handles with explicit ownership. `dispose()` also supports `Symbol.dispose`, so `using` works.
 - **Allocators**:
   - Geometry arenas: 64–256 MB chunks managed by an offset allocator such as TLSF.
@@ -202,6 +203,55 @@ Engine (1 GPUDevice, PipelineCache, ContentCache, RequestScheduler, WorkerPool)
 - A per-view **draw-prep compute pass** computes `(tileOriginHi − camHi) + (tileOriginLo − camLo)` for every visible record and writes the result as float32. Vertex shaders only see small numbers.
 - WGSL lets compilers reassociate and fuse arithmetic (to verify against the spec), and Dawn uses relaxed math on macOS. The subtraction therefore runs in **one place, written so the compiler can't fold it** (integer-assisted if needed, as luma.gl does on Apple GPUs).
 - It gets a **dedicated precision test on Metal/Safari in M0**.
+- **Measured on Metal (r50): the float form failed.** On an M-series Mac
+  (Chrome, Dawn's Metal backend) `spikes/precision.html` read the hi/lo
+  path's error equal to plain float32's at every site and distance
+  (0.25 to 0.47 m): relaxed math folded the split back. The fix is the
+  integer-assisted form, everywhere (one path, tested on every machine,
+  not a Metal-only branch): the CPU splits each coordinate with a high of
+  whole meters (`splitHigh`; every float32 from 2^23 up is already an
+  integer, valid to ±2^31 m), and shaders subtract the highs as `i32`
+  (`hiLoDifference` in common.wgsl: `vec3f(vec3i(aHi) - vec3i(bHi)) +
+(aLo - bLo)`), which no float reassociation can touch. Its cost is a few
+  integer operations per draw item in the cull kernel, not per vertex.
+  After: 0.04 µm at 1 m, 30 µm at 1 km, 3.8 mm at 100 km, as on D3D12.
+- **Kept that way structurally (r50).**
+  - Shaders reach split values only through two helpers:
+    `hiLoDifference` (an offset between positions) and `hiLoSum` (a
+    coarse absolute position, about 0.5 m at the Earth's radius, for
+    directions from the center or altitude).
+  - `test/precision.test.ts` fails on any other arithmetic on hi/lo
+    fields in WGSL, WGSL in TypeScript, and the Slang ports, and on any
+    CPU split written outside `splitVec3`/`splitHigh`.
+  - The precision page has a bound (1.5e-7 × distance + 1 µm) and fails
+    past it, so `npm run bench -- precision` catches a regression on each
+    platform it runs on.
+  - Planned with Slang materials: a `SplitPosition` type in a module with
+    private hi/lo fields and the two helpers as its only operations, so
+    material code can't misuse the parts (WGSL has no access control; the
+    test covers the hand-written kernels).
+- **Compared with other engines (r50).**
+  - Unreal 5's Large World Coordinates keep float64 on the CPU and a
+    tile-plus-offset pair on the GPU, with a camera-relative
+    ("translated world") frame per view. That is this design, its tile
+    the whole meter.
+  - Unity and Godot (double builds) and 1.x for models, tilesets and
+    terrain compute camera-relative matrices on the CPU in float64. It is
+    exact, but every transform's matrix is re-uploaded per view per frame
+    as the camera moves, which the GPU-driven cull avoids.
+  - 1.x's per-vertex split (`EncodedCartesian3`, highs in multiples of
+    65,536 m; `czm_translateRelativeToEye`) is for billboards, labels,
+    points, polylines and primitives. It uses the same float form that
+    failed here.
+  - What this leaves open: vector data whose single draw spans a
+    continent (one origin isn't enough for its vertices). There we need
+    local origins per chunk at load, as tiles have, rather than a
+    per-vertex split: half the bandwidth, and the same one subtraction
+    site.
+  - WebGPU has no float64 in shaders. An emulated 64-bit fixed-point
+    position (two `u32` with carry) would be exact everywhere, but it
+    isn't needed while offsets reach the GPU only through this
+    subtraction.
 
 **Bind group tiers.** Group 3 is draw data; immediates are used when available.
 
@@ -3402,7 +3452,8 @@ gate is **not resolved, not failed**. It moves to M1, measured on the PBR shader
 with FLIP, precision, worker, Slang correctness and 1.x baselines are done on
 Windows. Carried into M1: the Slang performance gate, steady-state allocation
 measurement, the 2.0 first-frame cost, and the per-indirect-call cost
-(batching). Deferred: the Metal precision run.
+(batching). Deferred: the Metal precision run (done r50: it failed in the
+float form and passes in the integer-assisted one, §3.3).
 
 ## 11. M1 progress
 
@@ -4400,7 +4451,9 @@ views and asymmetric weights.
   compressed bytes, nothing) trades memory against refetch and decode time.
   The HTTP cache already keeps raw bytes.
 - **Fragmentation:** the arena allocator is first-fit. Measure churn under
-  streaming, and move to TLSF or size classes if it fragments.
+  streaming, and move to TLSF or size classes if it fragments. (r50: size
+  classes come with the arena slabs, §13.15; the pools' capacity joins the
+  budget there too.)
 - **Visibility:** the viewer's memory panel shows every pool against its cap,
   so budget changes are visible in real time.
 
@@ -4690,6 +4743,24 @@ polygons to drape as decals, all shaded programmatically:
   vector styling and rendering pipeline on Slug, driven by the 3D Tiles
   styling language with prototype extensions; it is to be evaluated for
   this engine (decals and vector tiles) when that work starts.
+- _A general vector pipeline_ (r50, to design with the vector work). The
+  point cull (`pointCull.wgsl`, `PointCuller`, `VectorLayer`) grew around
+  points: a style compiles to WGSL functions that one kernel per point
+  draw calls, with its own bind group layouts. Points, lines, polygons,
+  b-reps and curves need one design that keeps both sides:
+  - _Performance_: GPU-driven, per geometry kind (cull and list in
+    compute, splat what's tiny, draw the rest indirectly), sharing the
+    world's tables instead of a layout per kind.
+  - _The styling language_: 3D Tiles styling and its successor (the
+    vector style lab's `shape`, `model()`, `filter`, `scales`,
+    `parameters`, and what comes next) compile to the same kernel
+    interface for every kind, so a new expression or property is a
+    compiler change, not a new pipeline.
+  - _The binding budget_ (§13.15): style kernels get a fixed slot (one
+    group: the style's uniforms and its symbol resources), and feature
+    data reaches them through the world's tables and arena, so a richer
+    style never adds per-stage bindings. r50 only narrowed the point
+    cull's world group to fit `base`; the refactor is still open.
 
 **Designed for, built later.**
 
@@ -4700,6 +4771,7 @@ polygons to drape as decals, all shaded programmatically:
 - _Arena pages:_ one vertex buffer runs into the device's largest storage
   binding (the viewer caps the arena at a quarter of it; mobile allows
   far less). The arena becomes several pages, with occasional compaction.
+  Designed in §13.15 as slabs (r50).
 - _Clusters (meshlets) and two-phase occlusion culling_ (Nanite, Bevy,
   Unity's GPU Resident Drawer) in compute, since WebGPU has no mesh
   shaders: ~128-triangle clusters built in the worker (meshoptimizer),
@@ -5120,6 +5192,220 @@ ephemeris). Content declares its body: `3DTILES_ellipsoid` today (the
 Moon's tilesets), and 3D Tiles 2.0's georeferencing when it settles (its
 draft extensions place content by a CRS and a position on an ellipsoid; the
 names and shape were still under discussion when checked, r41).
+
+### 13.15 GPU resource limits and capacities (r50, design)
+
+**What broke.** The first run on a Mac (Apple M-series, Chrome) failed at
+device start. The point cull's pipeline layout binds 13 storage buffers in
+the compute stage: 8 in `cull.world` and 5 in `cull.points`. Apple's
+adapter allows 10. The engine asked for the adapter's maximum
+(`GpuDevice.ts`) and nothing checked layouts against it, so a layout that
+fit the development machine became the engine's floor without anyone
+choosing it. The same audit found:
+
+- **Sampled textures**: the opaque pass samples 18 and translucent 21,
+  against the spec default of 16.
+- **Fixed capacities**: materials (4,096), draws and transforms (16,384),
+  clip blocks (2,048), point sets (64) and the arenas (64 + 32 MB) are
+  fixed and throw when full. Instances are the only table that grows.
+- **Imagery slices**: 256, because `maxTextureArrayLayers` was never
+  requested.
+- **Cesium World Terrain breaks during long loads**: each terrain tile
+  allocates 2 materials, its own and a per-asset copy of the glTF default
+  material. So the table fills at about 2,047 resident tiles while the
+  512 MiB byte budget still has room. Then:
+  - the upload leaks the slots it took (`uploadAsset` has no rollback);
+  - the tile stays `failed` and is never retried;
+  - nothing in eviction knows about material slots.
+
+**What devices report** (web3dsurvey.com, read November 2026; percentages
+of reports at or above a value):
+
+| Limit                      | Spec default | Devices                                                                         |
+| -------------------------- | ------------ | ------------------------------------------------------------------------------- |
+| Storage buffers per stage  | 8            | ≥ 10 on 99% overall but 95% of Macs; ≥ 16 on 80% (30% of Macs)                  |
+| Sampled textures per stage | 16           | ≥ 44 on 91%: about 9% report 16 (most of ChromeOS, a third of Linux)            |
+| Largest storage binding    | 128 MiB      | ≥ 256 MiB on 98% overall but 74% of Android; a quarter of Android is at 128 MiB |
+| Texture array layers       | 256          | ≥ 2048 on 99%                                                                   |
+| Bind groups                | 4            | Exactly 4 on all Android and ChromeOS                                           |
+
+**Two kinds of limit.**
+
+- _Binding counts_ (storage buffers, sampled textures, samplers, bind
+  groups per stage) are **code**: every `@binding` is written into the WGSL
+  and the layouts. Adapting them to the hardware needs a shader and layout
+  variant per tier, and only the variant on the developer's machine gets
+  tested. Fewer, larger bindings cost nothing at run time (an offset add,
+  the same memory traffic). So binding counts are **designed to a floor**
+  and checked by a test.
+- _Capacities_ (table rows, arena bytes, array layers, pool sizes) are
+  **data**: a number given to `createBuffer`. They **grow** to a ceiling
+  taken from the device, and a pool at its ceiling becomes **pressure on
+  the residency budget**, not an exception.
+
+**Tiers.** A few named tiers with a tested floor each, as Unreal's feature
+levels, Filament's feature levels and Godot's Mobile/Forward+ renderers do.
+
+- `base` = the spec defaults: 8 storage buffers, 16 sampled textures,
+  16 samplers and 4 bind groups per stage, a 128 MiB storage binding and
+  256 MiB buffers. Every pipeline fits it. `GpuDevice` still requests the
+  adapter's capacity limits (binding size, buffer size, array layers),
+  since those only change numbers.
+- Higher tiers are opt-in, one measured win at a time (for example Apple's
+  48 sampled textures for larger material arrays). Each comes with its
+  fallback, and the `base` path stays tested.
+- **No shader variants for binding counts.** Unreal and Unity compile
+  variants per feature level; a web engine can't precompile per platform,
+  and HypeHype (Aaltonen, REAC 2023) keeps one binding model on mobile.
+
+**Checking the floor.**
+
+- `limits: "base"` (`GpuDevice`, the `Engine` option, Dyno's
+  `?limits=base`) creates the device with no raised binding-count limits.
+  Any machine then shows what a low-end device would hit, as Unreal's
+  Mobile Previewer and Unity's graphics emulation do.
+- A unit test records every bind group and pipeline layout the engine
+  creates (a recording fake device in Node) and checks each stage's
+  counts against `base`. Pipelines with `layout: "auto"` are checked from
+  their WGSL declarations (an upper bound).
+- At run time a layout over the device's limits fails with a message
+  that names the layout, the stage, the count and the limit, not Dawn's
+  "invalid PipelineLayout".
+
+**Fewer, larger bindings.** The industry converged on one big scene buffer
+read at offsets: Unreal's GPUScene, Unity's BatchRendererGroup (one raw
+buffer with metadata offsets; constant-buffer windows on GLES), HypeHype.
+
+- The cull group's read-write outputs that are plain words (item list,
+  batch counts, indirect arguments) become one buffer with sections at
+  offsets in the cull uniform: 8 → 6 in `cull.world`.
+- The lights' table and froxel lists become one buffer: 3 → 2 storage in
+  the view group, so the translucent fragment stage goes 8 → 7.
+- Packing records, transforms and instances into one read-only buffer
+  with generated accessors is the next step if a pass needs more headroom.
+- Sampled textures to 16 first through merges that need no new machinery:
+  the two high-altitude aerial-perspective grids into one array, the two
+  aerial-perspective volumes into one volume, night lights into the
+  imagery array. Translucent's own three textures fit after material
+  arrays (below).
+
+**Growable tables.** One `GrowableTable` for every per-slot GPU table
+(records, transforms, instances, materials, batches and their counts and
+arguments, clip blocks, point sets), generalizing what instances do since
+r48: start small, double by `copyBufferToBuffer`, rebind, re-record the
+bundles that bake the bind groups (`World.tableGeneration`). The ceiling
+is the smaller of the option, `maxStorageBufferBindingSize` and
+`maxBufferSize` over the row size.
+
+**Arena slabs** (replacing §13.9's "arena pages"). Bevy's mesh allocator
+solved this for WebGPU: meshes go into _slabs_ suballocated with Aaltonen's
+OffsetAllocator; a slab starts small and grows to a cap; oversized meshes
+get their own buffer; draws batch per slab. Vulkan Memory Allocator and
+D3D12MA use the same blocks-plus-suballocation model for raw memory.
+Nanite's fixed pages with a page table need indirection that only works
+inside one binding, so they don't get past the binding limit here.
+
+- A slab holds a vertex buffer and an index buffer, each at most the
+  device's storage binding size and a configured cap (256 MiB).
+- A mesh's streams, its instances' streams and its feature table's columns
+  live in one slab; a feature table used from two slabs is copied into
+  each (rare: tables belong to one tile's content).
+- The slab is part of the batch key. Each slab has its own draw group
+  (group 1), set per batch like texture sets; ray casts dispatch per slab.
+- A new slab opens only when the last one can't grow. An emptied slab
+  (other than the first) is destroyed.
+- The allocator becomes constant-time size classes (OffsetAllocator's
+  scheme) instead of first-fit, which §13.6 asked for if streaming
+  fragmented it.
+
+**Capacity in the residency budget.** Unreal's texture and Nanite streaming
+pools are fixed-size pools sized by a scalability setting, admitting and
+evicting by priority instead of failing.
+
+- Each pool reports used and ceiling (`World.pressure()`): the largest
+  fraction over the tables, the slabs' bytes and the imagery slices.
+- Streaming treats pressure above a threshold (90%) like being over the
+  byte budget: it evicts by its usual order and stops admitting uploads
+  until there is room again.
+- Allocation is **transactional**: an upload that fails releases everything
+  it took. A tile that fails for capacity (`CapacityError`) returns to
+  `unloaded` and is retried when selected again; bad content stays `failed`.
+- Pools are sized by tier and quality setting, not only by device maximums
+  (WebGPU has no VRAM query, so "as much as the device allows" isn't a
+  safe default).
+
+**Shared materials.** Material records are keyed by their content and
+texture set, with reference counts (as Unity's SRP Batcher, Unreal's
+material instances and Bevy's asset handles share them), and every world
+has one glTF default material. Cesium World Terrain then needs about two
+materials in total, and tiles that share a material can batch together.
+
+**Material textures and bindless.** WebGPU has no bindless yet: the WGSL
+group called its October 2025 work groundwork for bindless, and Chrome's
+texture and sampler "lets" (desktop 146) are a step toward it (§7.1).
+Before bindless, engines grouped textures into arrays by size and format,
+or into a virtual-texture physical cache (the globe's imagery slices
+already are one).
+
+- A material's textures are **texture references** in its record: today an
+  array (by size and format class) and a layer; with bindless, an index
+  into a resource table. Shaders read them only through
+  `materialTexture(ref, uv)`, so the bindless backend replaces that
+  function and the allocator, and nothing else.
+- Texture sets (one bind group per set) remain for textures that fit no
+  class, as the fallback the bindless path also needs where it isn't
+  supported.
+- Photogrammetry and Google tiles use a few standard sizes, so arrays by
+  class let their tiles batch together.
+
+**Increments.**
+
+1. Quick unblocks: shared materials and the world's default material,
+   transactional uploads, retries after capacity failures, requesting
+   `maxTextureArrayLayers`, a point-cull layout with only what it reads
+   (a stopgap: the vector pipeline is to be generalized, §13.9).
+2. The `base` tier: the limits option, the recording-device layout test,
+   readable layout errors.
+3. Per-stage counts: textures to 16 (property textures only in the
+   layouts of custom shaders that read metadata; the two high-altitude
+   aerial grids, the two aerial volumes and night lights merged into
+   arrays), cull outputs and lights packed. Custom shaders get what is
+   left of the budget, and a shader over it fails with the layout error.
+4. Growable tables and capacity pressure in streaming.
+5. Arena slabs.
+6. Material texture arrays behind texture references.
+
+**Progress (r50).** Increments 1 to 4 are built and checked on an
+M-series Mac (2.0 now starts there; it didn't). Increments 5 (slabs) and 6
+(material arrays) are next.
+
+- _1._ Point cull's narrow group 1 (`cull.pointWorld`: 8 storage, was
+  13); shared, reference-counted materials with one glTF default per
+  world (terrain: 144 draws on 6 materials, was 2 per tile);
+  transactional `uploadAsset`, placement and `addDraw` (the draw-table
+  and transform paths leaked point lists and slots); `CapacityError`,
+  and streaming keeps a tile that hit it queued and evicts instead of
+  marking it failed; `maxTextureArrayLayers` requested.
+- _2._ `gpu/limits.ts`: tiers `base` (default), `minimum` and `adapter`,
+  layouts checked as they are created with readable errors, Dyno's
+  `/?limits=minimum`. `test/limits.test.ts` starts the engine on a
+  recording fake device in Node (`test/fakeGpu.ts`) and checks every
+  layout against `base`, `layout: "auto"` pipelines from their entry
+  points' statically used WGSL.
+- _3._ Sampled textures: opaque 18 → 13, translucent 21 → 16 (property
+  textures only for metadata-reading custom shaders; night lights in the
+  imagery array, a per-world `SlicePool` that grows by copy as layers
+  join; aerial-perspective grids and volumes merged). Storage: lights and
+  their froxel lists in one buffer; the cull counts visible items
+  straight into the indirect arguments' instance counts, so the batch
+  counts buffer is gone (`cull.world` 8 → 7). The Slang spike's cull
+  port is regenerated with slangc 2026.21.
+- _4._ Draws, transforms, materials, clip blocks and point sets start
+  at 1,024 rows (64 point sets) and double up to ceilings from the
+  device's binding size (`tableGeneration` tells outside binders);
+  `World.pressure()`, and streaming evicts above 90%. 3,000 draws added
+  to a live Viewer grew the tables twice and drew correctly.
+  `test/world.test.ts` covers sharing, ceilings and growth.
 
 ## 14. Follow-ups
 
@@ -5815,6 +6101,37 @@ changed release by release on the same scenes and hardware. The adapter
 uses 1.x's asynchronous loading APIs (about 1.104 and later); older
 releases need an older adapter variant and are reported as errors until
 then.
+
+**Engines on a new machine (r50).** The first run on a second machine
+(a Mac) found the release store empty: only a benchmark run filled it,
+so Dyno's Viewer listed 1.146.0 and 1.147.0 and failed to start either
+("not found"), while the first-run check said "Ready" (the dev server
+answers a missing file with the app's page, 200). Now:
+
+- `npm run setup --workspace @cesium/next` (scripts/setup.mjs) builds
+  this repository's 1.x if `Build/CesiumUnminified` is missing and
+  fetches the catalog's default releases into the store. Neither is
+  committed.
+- The dev server fetches a release the first time a page loads it
+  (GET only, so probes never download), and lists what it can serve at
+  `/cesium-release/index.json`: the store's releases and npm's latest six
+  stable ones. The Viewer offers those beside the catalog's, marking the
+  ones that download on first use.
+- The first-run check counts a file as present only when the answer
+  isn't the app's page.
+
+**Planned: engines at git refs from Dyno.** The CLI already builds any
+ref (`1.x@v1.140`, `2.0@main`: snapshot worktrees in `.bench/<sha>`, 1.x
+built there on first use, 2.0 on a dev server of its own). Dyno should
+offer the same: type a branch, tag or commit in the engine picker, and
+the dev server resolves it (`git rev-parse`, fetching the remote ref if
+needed), checks it out into a snapshot worktree and builds it, with the
+build's progress and log in the page; the engine then joins the
+Viewer's and the Explorer's choices beside releases and the working
+tree. Open: building a ref's 1.x takes minutes and a gigabyte, so the
+store needs a size cap and an LRU (or a "remove" action), and 2.0 at a
+ref needs its own dev server, which the Viewer would load in an iframe
+or through a proxy path.
 
 ### 16.7 Scope of v1 (milestone "Benchmark suite v1")
 

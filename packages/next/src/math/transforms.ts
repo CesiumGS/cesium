@@ -41,9 +41,29 @@ export function eastNorthUpToFixedFrame(
 }
 
 /**
- * Splits each float64 component into a float32 pair (`hi = fround(v)`,
- * `lo = fround(v - hi)`). The GPU recovers small camera-relative offsets as
- * `(hiA - hiB) + (loA - loB)` without ever forming the large value in float32.
+ * The high part of a float64 split into a float32 pair: a whole number of
+ * meters, so the GPU subtracts two highs as integers (`hiLoDifference` in
+ * common.wgsl). A float32 at or above 2^23 is already an integer; below
+ * 2^24 the nearest integer is exact in float32. Valid to ±2^31 m (the
+ * Moon's distance is 2^28.5).
+ *
+ * Why integers (CESIUM2_WEBGPU_PLAN.md §3.3, "Precision"): on Apple GPUs
+ * Dawn compiles with relaxed math, which may reassociate
+ * `(hiA - hiB) + (loA - loB)` into a sum of the large values; measured on
+ * an M-series Mac (r50) the hi/lo path then erred as much as plain float32
+ * (0.45 m at Philadelphia). Integer subtraction can't be reassociated with
+ * float arithmetic.
+ */
+export function splitHigh(value: number): number {
+  return Math.abs(value) < 2 ** 24 ? Math.round(value) : Math.fround(value);
+}
+
+/**
+ * Splits each float64 component into a float32 pair: `hi` a whole number
+ * of meters (`splitHigh`), `lo = fround(v - hi)`. The GPU recovers small
+ * camera-relative offsets as `(hiA - hiB as integers) + (loA - loB)`
+ * (common.wgsl `hiLoDifference`) without ever forming the large value in
+ * float32.
  */
 export function splitVec3(
   v: Vec3,
@@ -54,7 +74,7 @@ export function splitVec3(
 ): void {
   for (let i = 0; i < 3; i++) {
     const value = v[i]!;
-    const h = Math.fround(value);
+    const h = splitHigh(value);
     hi[hiOffset + i] = h;
     lo[loOffset + i] = Math.fround(value - h);
   }

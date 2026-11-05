@@ -1,4 +1,6 @@
 import "./dyno.css";
+// First: reads the page's `?limits=` before the router rewrites the URL.
+import "./limitsTier.ts";
 import {
   createHashHistory,
   createRouter,

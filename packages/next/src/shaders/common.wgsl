@@ -138,11 +138,35 @@ struct Light {
   cone: vec4f, // .x its cone's offset: (cos θ · scale + offset)²
 };
 
+// The view's lights, then their froxels' lists, in one buffer: one storage
+// binding for the fragment stage instead of two (the base tier's 8,
+// CESIUM2_WEBGPU_PLAN.md §13.15). Sizes as scene/lights.ts LIGHTS_SIZE.
 struct LightTable {
   header: LightHeader,
-  lights: array<Light>,
+  lights: array<Light, 1024>, // MAX_VIEW_LIGHTS
+  clusters: array<u32>,
 };
 
 // A froxel's lights: its count, then up to CLUSTER_LIGHTS indices (its
 // brightest; scene/lights.ts the same).
 const CLUSTER_LIGHTS: u32 = 16u;
+
+// a − b for float64 positions split into float32 pairs (math/transforms.ts
+// `splitVec3`: highs are whole meters), exact to float32 near each other.
+// The highs subtract as integers: Dawn compiles with relaxed math on Apple
+// GPUs, which may reassociate `(aHi - bHi) + (aLo - bLo)` into a sum of
+// the large values, and on an M-series Mac that erred as much as plain
+// float32 (0.45 m at Philadelphia, r50; plan §3.3 "Precision"). Integer
+// arithmetic can't be reassociated with float arithmetic.
+fn hiLoDifference(aHi: vec3f, aLo: vec3f, bHi: vec3f, bLo: vec3f) -> vec3f {
+  return vec3f(vec3i(aHi) - vec3i(bHi)) + (aLo - bLo);
+}
+
+// A float64 position split into a float32 pair, as one float32 value: about
+// half a meter of error at the Earth's radius. Only for what doesn't need
+// more (a direction from the Earth's center, an altitude); offsets between
+// positions go through `hiLoDifference`. test/precision.test.ts keeps
+// hi/lo values out of any other arithmetic.
+fn hiLoSum(hi: vec3f, lo: vec3f) -> vec3f {
+  return hi + lo;
+}

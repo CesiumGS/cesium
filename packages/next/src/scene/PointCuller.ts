@@ -85,7 +85,7 @@ ${options.code}`,
     const layout = device.createPipelineLayout({
       bindGroupLayouts: [
         pipelines.viewLayout,
-        pipelines.cullWorldLayout,
+        pipelines.cullPointWorldLayout,
         pipelines.pointCullLayout,
         styleLayout,
       ],

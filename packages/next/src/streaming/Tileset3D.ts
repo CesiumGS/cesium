@@ -28,6 +28,7 @@ import {
   type TileSelection,
 } from "./Stepwise.ts";
 import { Emitter } from "../core/Emitter.ts";
+import { isCapacityError } from "../scene/CapacityError.ts";
 import { BudgetedSelection, type BudgetedOptions } from "./Budgeted.ts";
 import {
   fetchTilesetJson,
@@ -58,6 +59,11 @@ import {
 } from "./pipeline.ts";
 
 /** Recent content loads kept for stage percentiles. */
+/**
+ * World pool pressure (World.pressure) past which streaming evicts as if
+ * over its byte budget (§13.15).
+ */
+const CAPACITY_PRESSURE = 0.9;
 const PIPELINE_WINDOW = 256;
 /** Imagery priority offset of loading tiles: after drawn and waiting ones. */
 const LOADING_IMAGERY = 1e15;
@@ -593,6 +599,12 @@ export class Tileset3D implements TileTree {
   /** Last frame in which an update changed anything. */
   private lastChange = 0;
   private readonly cacheBytes: number;
+  /** The world pool an upload last found full (`CapacityError.pool`). */
+  private capacityFull?: string;
+  /** Frames to wait before retrying uploads after a capacity failure. */
+  private capacityWait = 0;
+  /** `capacityFull` came from a failed upload, not only from pressure. */
+  private capacityFailed = false;
   private readonly overflowBytes: number;
   private readonly fixedWindow?: number;
   /** The root's origin, and every origin this tileset requested from. */
@@ -1206,7 +1218,17 @@ export class Tileset3D implements TileTree {
     const limit = this.cacheBytes + this.overflowBytes;
     let exceeded = false;
     const budget = this.engine.uploadBudget;
-    for (let n = 0; n < this.uploadsPerFrame && this.ready.length > 0; n++) {
+    // After a capacity failure that eviction couldn't relieve, wait before
+    // retrying: each attempt creates (and rolls back) its textures.
+    if (this.capacityWait > 0) {
+      this.capacityWait--;
+      exceeded = this.ready.length > 0;
+    }
+    for (
+      let n = 0;
+      n < this.uploadsPerFrame && this.ready.length > 0 && !exceeded;
+      n++
+    ) {
       if (this.stats.bytes > limit) {
         exceeded = true;
         break;
@@ -1280,6 +1302,16 @@ export class Tileset3D implements TileTree {
         this.stats.bytes += tile.bytes;
         this.stats.bytesTotal += tile.bytes;
       } catch (error) {
+        if (isCapacityError(error)) {
+          // A pool is full, not the content bad (§13.15): the upload took
+          // nothing, so the tile waits at the front of the queue while
+          // eviction frees room and the error threshold rises, as for bytes.
+          this.ready.unshift({ tile, asset, arrivedAt });
+          this.capacityFull = error.pool;
+          this.capacityFailed = true;
+          exceeded = true;
+          break;
+        }
         tile.state = "failed";
         this.warnings.add(
           `upload failed: ${error instanceof Error ? error.message : String(error)}`,
@@ -1300,6 +1332,19 @@ export class Tileset3D implements TileTree {
 
   /** Least-recently-touched first, never a tile touched this frame. */
   private evict(frame: number): void {
+    // A world pool at capacity (an upload's CapacityError), or nearly so
+    // (World.pressure), evicts as being over the byte budget does, until
+    // uploads fit again.
+    if (this.capacityFull === undefined) {
+      const { fraction, pool } = this.world.pressure();
+      if (fraction >= CAPACITY_PRESSURE) {
+        this.capacityFull = pool;
+      }
+    }
+    if (this.capacityFull !== undefined) {
+      this.evictForCapacity(frame);
+      return;
+    }
     // Eviction starts at the budget; the overflow is for content in use.
     if (this.stats.bytes <= this.cacheBytes) {
       return;
@@ -1322,6 +1367,30 @@ export class Tileset3D implements TileTree {
       allowance -= tile.bytes;
       this.unload(tile);
     }
+  }
+
+  /**
+   * Frees room in a full world pool: the least recently touched tiles not
+   * touched this frame, a few per frame (as for bytes, so a frame doesn't
+   * stall on frees). The pool's warning is kept for the session's stats.
+   */
+  private evictForCapacity(frame: number): void {
+    this.warnings.add(
+      `capacity: world ${this.capacityFull} ${this.capacityFailed ? "full" : "nearly full"}, evicting`,
+    );
+    this.capacityFull = undefined;
+    const candidates = [...this.loaded]
+      .filter((t) => t.touchedFrame < frame)
+      .sort((a, b) => a.touchedFrame - b.touchedFrame);
+    const count = Math.min(candidates.length, this.uploadsPerFrame);
+    for (let k = 0; k < count; k++) {
+      this.unload(candidates[k]!);
+    }
+    // After a failed upload with nothing to free here (everything is in
+    // view, or another tileset holds the pool): retry in half a second,
+    // while the error threshold rises. Pressure alone doesn't hold uploads.
+    this.capacityWait = this.capacityFailed && count === 0 ? 30 : 0;
+    this.capacityFailed = false;
   }
 
   private unload(tile: Tile): void {

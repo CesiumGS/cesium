@@ -879,7 +879,7 @@ fn styleScale(i: u32, distance: f32) -> f32 { return ${scale}; }
     const vertex = `// The point's angle on screen: clockwise from up to north (rotateWith map).
 fn styleNorth() -> f32 {
   let rel = cesiumAnchor;
-  let up = normalize(rel + (view.cameraHi + view.cameraLo));
+  let up = normalize(rel + hiLoSum(view.cameraHi, view.cameraLo));
   let north = normalize(vec3f(0.0, 0.0, 1.0) - up * up.z);
   let a = view.viewProj * vec4f(rel, 1.0);
   let b = view.viewProj * vec4f(rel + north, 1.0);

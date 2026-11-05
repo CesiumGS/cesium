@@ -320,7 +320,8 @@ async function inTheEngine(realtime: RealtimeAtmosphere) {
     });
     const encoder = device.createCommandEncoder();
     encoder.copyTextureToBuffer(
-      { texture: engine.sky.aerialInscatter },
+      // In-scatter: the volume's first 128 slices.
+      { texture: engine.sky.aerialVolume },
       { buffer, bytesPerRow: n * 8, rowsPerImage: n },
       [n, n, slices],
     );

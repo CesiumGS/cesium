@@ -17,6 +17,7 @@ import type { LightHandle } from "./lights.ts";
 import type {
   DrawHandle,
   InstanceOptions,
+  MaterialOptions,
   MeshHandle,
   TextureBinding,
   TextureSetOptions,
@@ -206,6 +207,57 @@ function uploadAsset(
     return existing;
   }
   const textures = new TextureUploader(ctx, asset);
+  // Transactional (§13.15): everything taken so far is released if any
+  // allocation fails, so a world at capacity loses nothing to the attempt
+  // and streaming can retry the tile once eviction frees room.
+  const taken = {
+    materials: [] as number[],
+    textureSets: [] as number[],
+    meshes: [] as MeshHandle[],
+  };
+  try {
+    return uploadAssetInto(ctx, world, asset, gamma22, textures, taken, {
+      byTransfer,
+      key,
+    });
+  } catch (error) {
+    for (const mesh of taken.meshes) {
+      world.removeMesh(mesh);
+    }
+    for (const material of taken.materials) {
+      world.removeMaterial(material);
+    }
+    for (const set of taken.textureSets) {
+      world.removeTextureSet(set);
+    }
+    // The images stay open (no `textures.release()`): a retry of the same
+    // parsed asset uploads them again.
+    for (const texture of textures.textures) {
+      texture.destroy();
+    }
+    throw error;
+  }
+}
+
+function uploadAssetInto(
+  ctx: RenderContext,
+  world: World,
+  asset: GltfAsset,
+  gamma22: boolean,
+  textures: TextureUploader,
+  taken: { materials: number[]; textureSets: number[]; meshes: MeshHandle[] },
+  cache: { byTransfer: Map<string, UploadedAsset>; key: string },
+): UploadedAsset {
+  const addMaterial = (options: MaterialOptions) => {
+    const index = world.addMaterial(options);
+    taken.materials.push(index);
+    return index;
+  };
+  const createTextureSet = (options: TextureSetOptions) => {
+    const index = world.createTextureSet(options);
+    taken.textureSets.push(index);
+    return index;
+  };
   const setOptions = asset.materials.map((m): TextureSetOptions => ({
     baseColor: textures.binding(m.baseColorTexture, !gamma22),
     metallicRoughness: textures.binding(m.metallicRoughnessTexture, false),
@@ -214,13 +266,14 @@ function uploadAsset(
     emissive: textures.binding(m.emissiveTexture, !gamma22),
   }));
   const materials = asset.materials.map((m, i) => ({
-    index: world.addMaterial(materialData(m, gamma22)),
-    textureSet: world.createTextureSet(setOptions[i]!),
+    index: addMaterial(materialData(m, gamma22)),
+    textureSet: createTextureSet(setOptions[i]!),
     doubleSided: m.doubleSided,
   }));
-  // glTF default material: white, metallic 1, roughness 1.
+  // glTF default material: white, metallic 1, roughness 1. Shared by
+  // content (World.addMaterial), so one slot serves every asset.
   const defaultMaterial = {
-    index: world.addMaterial({ metallic: 1, roughness: 1 }),
+    index: addMaterial({ metallic: 1, roughness: 1 }),
     textureSet: 0,
     doubleSided: false,
   };
@@ -241,13 +294,15 @@ function uploadAsset(
         : asset.instances
           ? asset.featureTables[0]
           : undefined;
-    return world.addMesh({
+    const handle = world.addMesh({
       ...mesh,
       featureTable: table,
       propertyTextures: (mesh.propertyTextures ?? [])
         .filter((p) => slots.includes(p.texture))
         .map(({ texture, ...p }) => ({ ...p, slot: slots.indexOf(texture) })),
     });
+    taken.meshes.push(handle);
+    return handle;
   });
   // A texture set per material and mesh with property textures: the
   // material's textures and the mesh's property textures.
@@ -260,7 +315,7 @@ function uploadAsset(
     }
     propertySets.set(
       key,
-      world.createTextureSet({
+      createTextureSet({
         ...(draw.material >= 0 ? setOptions[draw.material] : {}),
         properties: slots.map((t) => textures.binding(t, false)),
       }),
@@ -281,7 +336,7 @@ function uploadAsset(
     bytes: arenaBytes + textures.bytes,
     references: 1,
   };
-  byTransfer.set(key, upload);
+  cache.byTransfer.set(cache.key, upload);
   return upload;
 }
 
@@ -305,6 +360,40 @@ export function addGltf(
     asset,
     options.colorTransfer === "gamma2.2",
   );
+  // Transactional, as the upload (§13.15): a placement that runs out of
+  // draws or transforms removes what it placed and its upload reference.
+  const placed: { draws: DrawHandle[]; lights: LightHandle[] } = {
+    draws: [],
+    lights: [],
+  };
+  let root: TransformHandle | undefined;
+  try {
+    return placeGltf(world, asset, options, upload, placed, (handle) => {
+      root = handle;
+    });
+  } catch (error) {
+    for (const light of placed.lights) {
+      world.removeLight(light);
+    }
+    for (const draw of placed.draws) {
+      world.removeDraw(draw);
+    }
+    if (root) {
+      world.removeTransform(root);
+    }
+    releaseUpload(world, upload);
+    throw error;
+  }
+}
+
+function placeGltf(
+  world: World,
+  asset: GltfAsset,
+  options: ModelOptions,
+  upload: UploadedAsset,
+  placed: { draws: DrawHandle[]; lights: LightHandle[] },
+  onRoot: (root: TransformHandle) => void,
+): ModelInstance {
   // i3dm content: its instances, relative to their origin in tile space.
   const assetInstances =
     options.instances === undefined ? asset.instances : undefined;
@@ -318,6 +407,7 @@ export function addGltf(
     rootMatrix = m4.multiply(m4.mat4(), options.modelMatrix, translation);
   }
   const root = world.addTransform(rootMatrix, options.parent);
+  onRoot(root);
 
   // Below the root: RTC_CENTER × axis correction × node, as 1.x
   // ModelSceneGraph composes modelMatrix × RTC_CENTER × axis × node.
@@ -336,7 +426,7 @@ export function addGltf(
   }
   const rootWorld = world.worldMatrix(root);
   const nodes = new Map<Float64Array, TransformHandle>();
-  const draws: DrawHandle[] = [];
+  const draws = placed.draws;
   const spheres: Array<{ center: Vec3; radius: number }> = [];
   const user: ModelInstances | undefined =
     options.instances ??
@@ -418,7 +508,7 @@ export function addGltf(
     }
   }
   // Its lights, at their nodes (one placement: not for instanced models).
-  const lights: LightHandle[] = [];
+  const lights = placed.lights;
   for (const light of user ? [] : (asset.lights ?? [])) {
     let node = nodes.get(light.matrix);
     if (!node) {
@@ -668,7 +758,11 @@ export function removeGltf(world: World, instance: ModelInstance): void {
   }
   instance.draws.length = 0;
   world.removeTransform(instance.transform);
-  const upload = instance.resources;
+  releaseUpload(world, instance.resources);
+}
+
+/** Drops a placement's reference to its upload, freeing it with the last. */
+function releaseUpload(world: World, upload: UploadedAsset): void {
   if (upload.references === 0 || --upload.references > 0) {
     return;
   }

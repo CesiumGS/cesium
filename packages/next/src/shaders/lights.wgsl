@@ -4,8 +4,8 @@
 // brightest there (candela over the squared distance to the box) when more
 // do; the opaque pass shades a pixel's froxel's lights.
 
-@group(0) @binding(0) var<storage, read> lightTable: LightTable;
-@group(0) @binding(1) var<storage, read_write> clusters: array<u32>;
+// The lights read, their froxels' lists (`lightTable.clusters`) written.
+@group(0) @binding(0) var<storage, read_write> lightTable: LightTable;
 
 // A workgroup per tile of the screen, a thread per slice in depth: the
 // tile's column culls the view's lights into `tileLights` together, then
@@ -86,7 +86,7 @@ fn assign(
     count = min(count + 1u, CLUSTER_LIGHTS);
   }
   for (var t = 0u; t < count; t++) {
-    clusters[base + 1u + t] = kept[t];
+    lightTable.clusters[base + 1u + t] = kept[t];
   }
-  clusters[base] = count;
+  lightTable.clusters[base] = count;
 }

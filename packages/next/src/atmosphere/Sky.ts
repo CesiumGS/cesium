@@ -219,15 +219,20 @@ export class Sky {
    * distance. One pair, rewritten for each view before its opaque pass
    * reads it; another holds the first wavelength group's share.
    */
-  readonly aerialInscatter: GPUTexture;
-  readonly aerialTransmittance: GPUTexture;
+  /**
+   * The view's aerial-perspective volume: in-scatter in slices
+   * 0..AERIAL_SLICES-1, transmittance in the next AERIAL_SLICES (one
+   * sampled texture in the opaque pass instead of two, §13.15).
+   */
+  readonly aerialVolume: GPUTexture;
   /**
    * Aerial perspective from high up on a screen grid (sky.wgsl
    * `aerialScreenFragment`): in-scattered light and transmittance.
    */
-  readonly aerialScreen: [GPUTexture, GPUTexture];
+  readonly aerialScreen: GPUTexture;
   private readonly aerialScreenPass: GPURenderPassDescriptor;
-  private readonly aerialPartial: [GPUTexture, GPUTexture];
+  /** The first wavelength group's share, as `aerialVolume` is laid out. */
+  private readonly aerialPartial: GPUTexture;
   /**
    * For the opaque pass's per-vertex march (opaque.wgsl `aerialMarch`): both
    * wavelength groups' parameters and the bands' weights (`Air`), and their
@@ -294,22 +299,24 @@ export class Sky {
       storeOp: "store",
     };
     this.starPass = { label: "stars", colorAttachments: [this.starAttachment] };
-    const screen = (label: string) =>
-      device.createTexture({
-        label,
-        size: AERIAL_SCREEN,
-        format: "rgba16float",
-        usage:
-          GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
-      });
-    this.aerialScreen = [
-      screen("sky.aerialScreenInscatter"),
-      screen("sky.aerialScreenTransmittance"),
-    ];
+    // In-scatter (layer 0) and transmittance (layer 1) in one array: one
+    // sampled texture in the opaque pass instead of two (the base tier's
+    // 16, §13.15), each layer one of the pass's two targets.
+    this.aerialScreen = device.createTexture({
+      label: "sky.aerialScreen",
+      size: [...AERIAL_SCREEN, 2],
+      format: "rgba16float",
+      usage:
+        GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
+    });
     this.aerialScreenPass = {
       label: "aerial-screen",
-      colorAttachments: this.aerialScreen.map((texture) => ({
-        view: texture.createView(),
+      colorAttachments: [0, 1].map((layer) => ({
+        view: this.aerialScreen.createView({
+          dimension: "2d",
+          baseArrayLayer: layer,
+          arrayLayerCount: 1,
+        }),
         clearValue: { r: 0, g: 0, b: 0, a: 0 },
         loadOp: "clear" as const,
         storeOp: "store" as const,
@@ -404,7 +411,7 @@ export class Sky {
     const volume = (label: string, extra = 0) =>
       device.createTexture({
         label,
-        size: [AERIAL_SIZE, AERIAL_SIZE, AERIAL_SLICES],
+        size: [AERIAL_SIZE, AERIAL_SIZE, 2 * AERIAL_SLICES],
         dimension: "3d",
         format: "rgba16float",
         usage:
@@ -413,15 +420,8 @@ export class Sky {
           extra,
       });
     // COPY_SRC: checked against the march (Lab "Real-time sky").
-    this.aerialInscatter = volume(
-      "sky.aerialInscatter",
-      GPUTextureUsage.COPY_SRC,
-    );
-    this.aerialTransmittance = volume("sky.aerialTransmittance");
-    this.aerialPartial = [
-      volume("sky.aerialPartialInscatter"),
-      volume("sky.aerialPartialTransmittance"),
-    ];
+    this.aerialVolume = volume("sky.aerialVolume", GPUTextureUsage.COPY_SRC);
+    this.aerialPartial = volume("sky.aerialPartial");
   }
 
   /**
@@ -468,14 +468,11 @@ export class Sky {
 
   /** Releases the sun-light table and the aerial-perspective volumes. */
   destroy(): void {
-    for (const texture of this.aerialScreen) {
-      texture.destroy();
-    }
+    this.aerialScreen.destroy();
     this.sunLight.destroy();
-    this.aerialInscatter.destroy();
-    this.aerialTransmittance.destroy();
-    for (const texture of this.aerialPartial) {
-      texture.destroy();
+    this.aerialVolume.destroy();
+    {
+      this.aerialPartial.destroy();
     }
     this.air.destroy();
     this.airTransmittance.destroy();
@@ -904,9 +901,7 @@ export class Sky {
         entries: [
           { binding: 0, visibility: compute, buffer: {} },
           volume(5),
-          volume(6),
           store(7),
-          store(8),
         ],
       }),
       view: device.createBindGroupLayout({
@@ -1182,18 +1177,16 @@ export class Sky {
       // Group 0 writes its share into the partial volume (the final one is
       // bound, unused, as its input); group 1 adds it and writes the final.
       aerialGroups: [
-        [this.aerialInscatter, this.aerialTransmittance, ...this.aerialPartial],
-        [...this.aerialPartial, this.aerialInscatter, this.aerialTransmittance],
-      ].map(([inI, inT, outI, outT]) =>
+        [this.aerialVolume, this.aerialPartial],
+        [this.aerialPartial, this.aerialVolume],
+      ].map(([input, output]) =>
         device.createBindGroup({
           label: "sky.aerial",
           layout: this.aerialLayout,
           entries: [
             { binding: 0, resource: { buffer } },
-            { binding: 5, resource: inI!.createView() },
-            { binding: 6, resource: inT!.createView() },
-            { binding: 7, resource: outI!.createView() },
-            { binding: 8, resource: outT!.createView() },
+            { binding: 5, resource: input!.createView() },
+            { binding: 7, resource: output!.createView() },
           ],
         }),
       ) as [GPUBindGroup, GPUBindGroup],

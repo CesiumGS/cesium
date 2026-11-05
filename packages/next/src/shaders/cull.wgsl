@@ -4,7 +4,10 @@
 // camera-relative matrix, culls it and compacts visible items into their
 // batch's slice of the item list. `writeDrawArgs` then runs once per batch and
 // writes one indirect draw per batch, so the bundle issues one indirect call
-// per batch rather than per item. `batchCounts` is cleared before each view.
+// per batch rather than per item. Each batch's visible items are counted
+// straight into its arguments' instance count (cleared before each view):
+// no separate counts buffer, one storage binding fewer (the base tier's 8,
+// CESIUM2_WEBGPU_PLAN.md §13.15).
 
 struct CullParams {
   recordCount: u32,
@@ -26,9 +29,11 @@ struct Batch {
 @group(1) @binding(2) var<storage, read> instanceTable: array<Instance>;
 @group(1) @binding(3) var<storage, read_write> items: array<DrawItem>;
 @group(1) @binding(4) var<storage, read_write> itemList: array<u32>;
-@group(1) @binding(5) var<storage, read_write> batchCounts: array<atomic<u32>>;
 @group(1) @binding(6) var<storage, read> batches: array<Batch>;
-@group(1) @binding(7) var<storage, read_write> args: array<u32>;
+// Five words a batch (drawIndexedIndirect): index count, instance count
+// (the visible items, counted by `append`), first index, base vertex,
+// first instance.
+@group(1) @binding(7) var<storage, read_write> args: array<atomic<u32>>;
 @group(1) @binding(8) var<uniform> params: CullParams;
 
 const NONE: u32 = 0xffffffffu;
@@ -39,7 +44,7 @@ const WHITE: u32 = 0xffffffffu;
 // exactly before they are combined, so the result keeps float32 precision
 // relative to the (small) camera distance.
 fn relativeMatrix(t: Transform) -> mat4x4f {
-  let rel = (t.originHi - view.cameraHi) + (t.originLo - view.cameraLo);
+  let rel = hiLoDifference(t.originHi, t.originLo, view.cameraHi, view.cameraLo);
   return mat4x4f(
     vec4f(t.linear[0], 0.0),
     vec4f(t.linear[1], 0.0),
@@ -70,7 +75,7 @@ fn inFrustum(m: mat4x4f, center: vec3f, radius: f32) -> bool {
 }
 
 fn append(batch: u32, item: u32) {
-  let slot = atomicAdd(&batchCounts[batch], 1u);
+  let slot = atomicAdd(&args[batch * 5u + 1u], 1u);
   itemList[batches[batch].itemBase + slot] = item;
 }
 
@@ -147,12 +152,12 @@ fn writeDrawArgs(@builtin(global_invocation_id) gid: vec3u) {
   }
   let batch = batches[b];
   let a = b * 5u;
-  args[a] = batch.indexCount;
-  args[a + 1u] = atomicLoad(&batchCounts[b]);
-  args[a + 2u] = batch.firstIndex;
-  args[a + 3u] = 0u;
+  atomicStore(&args[a], batch.indexCount);
+  // args[a + 1]: the instance count `append` counted.
+  atomicStore(&args[a + 2u], batch.firstIndex);
+  atomicStore(&args[a + 3u], 0u);
   // The item index comes from `itemList` bound as an instance-step
   // vertex buffer at the batch's offset, so firstInstance stays 0 and the
   // `indirect-first-instance` feature is not needed.
-  args[a + 4u] = 0u;
+  atomicStore(&args[a + 4u], 0u);
 }

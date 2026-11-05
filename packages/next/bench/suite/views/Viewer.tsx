@@ -43,6 +43,7 @@ import { compareEngines, engineLabel, isRelease } from "../engines.mjs";
 import { AEROSOLS, ionDefaults, type AerosolType } from "../../../src/index.ts";
 import { attachInspector } from "../../../widgets/index.ts";
 import { Choice, Page, toast, useRuns, useStored } from "./common.tsx";
+import { useAvailableReleases } from "../releases.ts";
 import {
   DEFAULT_ION_TOKEN,
   envToken,
@@ -133,6 +134,7 @@ export function Viewer() {
   const search = route.useSearch();
   const navigate = route.useNavigate();
   const { index, summaries } = useRuns();
+  const available = useAvailableReleases();
   const engine = search.engine ?? "2.0";
   const source: Source = search.model
     ? { kind: "model", path: search.model }
@@ -340,16 +342,28 @@ export function Viewer() {
     });
   };
 
-  // Releases: the catalog's and any a run measured, newest first.
+  // Releases: the catalog's, any a run measured, the store's and npm's
+  // latest few, newest first. One not in the store yet is fetched from npm
+  // when picked (the dev server's `serveReleases`), once.
   const releases = [
     ...new Set([
       ...catalog.engines.default.filter(isRelease),
       ...summaries.flatMap((s) => s.configs.filter(isRelease)),
+      ...available.installed,
+      ...available.recent,
     ]),
   ].sort((a, b) => compareEngines(b, a));
   const engineOptions = [
     ["2.0", engineName("2.0", index.branch)] as const,
-    ...releases.map((r) => [r, r] as const),
+    ...releases.map(
+      (r) =>
+        [
+          r,
+          available.installed.includes(r) || !available.recent.length
+            ? r
+            : `${r} (downloads on first use)`,
+        ] as const,
+    ),
   ];
   const unsupported = (host?.unsupported ?? {}) as Partial<
     Record<Capability, string>

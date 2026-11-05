@@ -27,7 +27,7 @@ static const uint CLIP_BOXES = 8;
 bool insideClipBoxes(uint block, uint count, float3 p) {
   for (uint i = 0; i < count; i++) {
     uint b = (block * CLIP_BOXES + i) * 5u;
-    float3 d = p - ((clipBoxes[b].xyz - view.cameraHi) + (clipBoxes[b + 1u].xyz - view.cameraLo));
+    float3 d = p - hiLoDifference(clipBoxes[b].xyz, clipBoxes[b + 1u].xyz, view.cameraHi, view.cameraLo);
     float3 u = abs(float3(dot(clipBoxes[b + 2u].xyz, d), dot(clipBoxes[b + 3u].xyz, d), dot(clipBoxes[b + 4u].xyz, d)));
     if (max(u.x, max(u.y, u.z)) <= 1.0) {
       return true;

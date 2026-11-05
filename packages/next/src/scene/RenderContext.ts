@@ -172,6 +172,8 @@ export const SURFACE_KEYS: readonly SurfaceKey[] = [
 export interface Pipelines extends SurfacePipelines {
   viewLayout: GPUBindGroupLayout;
   cullWorldLayout: GPUBindGroupLayout;
+  /** The point cull's group 1: records, transforms, indirect arguments. */
+  cullPointWorldLayout: GPUBindGroupLayout;
   drawWorldLayout: GPUBindGroupLayout;
   textureSetLayout: GPUBindGroupLayout;
   /** Per-record cull and compaction. */
@@ -316,10 +318,10 @@ export async function createRenderContext(
   outputFormat: GPUTextureFormat,
   sky: {
     sunLight: GPUTextureView;
-    aerialInscatter: GPUTextureView;
-    aerialTransmittance: GPUTextureView;
-    aerialScreenInscatter: GPUTextureView;
-    aerialScreenTransmittance: GPUTextureView;
+    /** In-scatter, then transmittance, along depth (Sky.aerialVolume). */
+    aerialVolume: GPUTextureView;
+    /** In-scatter (layer 0) and transmittance (layer 1). */
+    aerialScreen: GPUTextureView;
     air: GPUBuffer;
     airTransmittance: GPUTextureView;
     airScattering: GPUTextureView;
@@ -358,15 +360,12 @@ export async function createRenderContext(
     size: AO_MAX_PIXELS,
     usage: GPUBufferUsage.STORAGE,
   });
+  // The lights (written by the CPU), then their froxels' lists (written by
+  // lights.assign): one buffer, one binding (common.wgsl `LightTable`).
   const lightBuffer = device.createBuffer({
     label: "currentLights",
-    size: LIGHTS_SIZE,
+    size: LIGHTS_SIZE + CLUSTERS_SIZE,
     usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
-  });
-  const clusterBuffer = device.createBuffer({
-    label: "lightClusters",
-    size: CLUSTERS_SIZE,
-    usage: GPUBufferUsage.STORAGE,
   });
   const currentShadowsBuffer = device.createBuffer({
     label: "currentShadows",
@@ -389,8 +388,7 @@ export async function createRenderContext(
     { binding: 4, resource: { buffer: environment.shBuffer } },
     { binding: 5, resource: sky.sunLight },
     { binding: 6, resource: environment.irradianceView },
-    { binding: 7, resource: sky.aerialInscatter },
-    { binding: 8, resource: sky.aerialTransmittance },
+    { binding: 7, resource: sky.aerialVolume },
     { binding: 9, resource: { buffer: sky.air } },
     { binding: 10, resource: sky.airTransmittance },
     { binding: 11, resource: sky.airScattering },
@@ -398,10 +396,8 @@ export async function createRenderContext(
     { binding: 13, resource: shadows },
     { binding: 14, resource: shadowSampler },
     { binding: 15, resource: { buffer: aoBuffer } },
-    { binding: 16, resource: sky.aerialScreenInscatter },
-    { binding: 17, resource: sky.aerialScreenTransmittance },
+    { binding: 16, resource: sky.aerialScreen },
     { binding: 18, resource: { buffer: lightBuffer } },
-    { binding: 19, resource: { buffer: clusterBuffer } },
   ];
   const shadowViewBindGroup = device.createBindGroup({
     label: "currentView.shadowCasters",
@@ -465,10 +461,7 @@ export async function createRenderContext(
     lightAssignGroup: device.createBindGroup({
       label: "lights.assign",
       layout: pipelines.lightsAssign.getBindGroupLayout(0),
-      entries: [
-        { binding: 0, resource: { buffer: lightBuffer } },
-        { binding: 1, resource: { buffer: clusterBuffer } },
-      ],
+      entries: [{ binding: 0, resource: { buffer: lightBuffer } }],
     }),
     shadowViewBindGroup,
   };
@@ -521,9 +514,9 @@ async function createPipelines(
       { binding: 5, visibility: FRAGMENT, texture: {} },
       // Diffuse irradiance by normal (the environment's irradiance cube).
       { binding: 6, visibility: FRAGMENT, texture: { viewDimension: "cube" } },
-      // Aerial perspective: in-scatter and transmittance volumes.
+      // Aerial perspective: in-scatter, then transmittance, along depth
+      // (one volume, §13.15).
       { binding: 7, visibility: FRAGMENT, texture: { viewDimension: "3d" } },
-      { binding: 8, visibility: FRAGMENT, texture: { viewDimension: "3d" } },
       // The air marched per vertex: parameters, then transmittance and
       // multiple-scattering tables (a layer per group of wavelengths).
       { binding: 9, visibility: VERTEX, buffer: { type: "uniform" } },
@@ -547,12 +540,15 @@ async function createPipelines(
       { binding: 14, visibility: FRAGMENT, sampler: { type: "comparison" } },
       // Ambient occlusion by pixel (ao.wgsl).
       storage(15, true, FRAGMENT),
-      // Aerial perspective from high up, on a screen grid.
-      { binding: 16, visibility: FRAGMENT, texture: {} },
-      { binding: 17, visibility: FRAGMENT, texture: {} },
-      // Point and spot lights, and their froxels' lists (scene/lights.ts).
+      // Aerial perspective from high up, on a screen grid: in-scatter and
+      // transmittance as two layers of one array.
+      {
+        binding: 16,
+        visibility: FRAGMENT,
+        texture: { viewDimension: "2d-array" },
+      },
+      // Point and spot lights, then their froxels' lists (scene/lights.ts).
       storage(18, true, FRAGMENT),
-      storage(19, true, FRAGMENT),
     ],
   });
   const cullWorldLayout = device.createBindGroupLayout({
@@ -563,10 +559,21 @@ async function createPipelines(
       storage(2, true, COMPUTE), // instance table
       storage(3, false, COMPUTE), // draw items
       storage(4, false, COMPUTE), // item list
-      storage(5, false, COMPUTE), // batch counts
+      // (5: batch counts, now the indirect arguments' instance counts.)
       storage(6, true, COMPUTE), // batches
-      storage(7, false, COMPUTE), // indirect args
+      storage(7, false, COMPUTE), // indirect args, visible items counted in
       { binding: 8, visibility: COMPUTE, buffer: { type: "uniform" } },
+    ],
+  });
+  // The point cull's world tables: only what its kernels read (records,
+  // transforms, indirect arguments), so with its own group 2 the compute
+  // stage binds 8 storage buffers, not 13 (the base tier, §13.15).
+  const cullPointWorldLayout = device.createBindGroupLayout({
+    label: "cull.pointWorld",
+    entries: [
+      storage(0, true, COMPUTE), // records
+      storage(1, true, COMPUTE), // transforms
+      storage(7, false, COMPUTE), // indirect args
     ],
   });
   const drawWorldLayout = device.createBindGroupLayout({
@@ -585,12 +592,7 @@ async function createPipelines(
         texture: { sampleType: "float", viewDimension: "2d-array" },
       },
       { binding: 6, visibility: FRAGMENT, sampler: { type: "filtering" } },
-      // Night lights: the same, emitted light.
-      {
-        binding: 7,
-        visibility: FRAGMENT,
-        texture: { sampleType: "float", viewDimension: "2d-array" },
-      },
+      // Night lights are slices of the same array (globe/SlicePool.ts).
     ],
   });
   const textureSetEntries: GPUBindGroupLayoutEntry[] = [
@@ -604,13 +606,19 @@ async function createPipelines(
       visibility: FRAGMENT,
       sampler: { type: "filtering" as const },
     })),
-    // Metadata property textures (read with textureLoad).
-    ...Array.from({ length: PROPERTY_TEXTURES }, (_, k) => ({
+  ];
+  // Metadata property textures (read with textureLoad): only in the layouts
+  // of custom shaders that read metadata per fragment, so the built-in
+  // pipelines don't spend two of the base tier's 16 sampled textures on
+  // them (§13.15). Bindless: they become texture references too.
+  const propertyTextureEntries: GPUBindGroupLayoutEntry[] = Array.from(
+    { length: PROPERTY_TEXTURES },
+    (_, k) => ({
       binding: PROPERTY_TEXTURE_BINDING + k,
       visibility: FRAGMENT,
       texture: { sampleType: "float" as const },
-    })),
-  ];
+    }),
+  );
   const textureSetLayout = device.createBindGroupLayout({
     label: "textureSet",
     entries: textureSetEntries,
@@ -624,9 +632,12 @@ async function createPipelines(
     }
     const { bytes, textures } = shader.uniformLayout;
     let layout: GPUBindGroupLayout | undefined;
-    if (bytes > 0 || textures.length > 0) {
+    if (bytes > 0 || textures.length > 0 || shader.readsPropertyTextures) {
       const visibility = VERTEX | FRAGMENT;
-      const entries = [...textureSetEntries];
+      const entries = [
+        ...textureSetEntries,
+        ...(shader.readsPropertyTextures ? propertyTextureEntries : []),
+      ];
       if (bytes > 0) {
         entries.push({
           binding: UNIFORM_BINDING,
@@ -754,7 +765,7 @@ async function createPipelines(
     ],
   });
   const pointCullPipelineLayout = device.createPipelineLayout({
-    bindGroupLayouts: [viewLayout, cullWorldLayout, pointCullLayout],
+    bindGroupLayouts: [viewLayout, cullPointWorldLayout, pointCullLayout],
   });
   const opaqueLayout = device.createPipelineLayout({
     bindGroupLayouts: [viewLayout, drawWorldLayout, textureSetLayout],
@@ -1478,6 +1489,7 @@ async function createPipelines(
   return {
     viewLayout,
     cullWorldLayout,
+    cullPointWorldLayout,
     drawWorldLayout,
     textureSetLayout,
     cullRecords,

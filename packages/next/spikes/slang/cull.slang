@@ -24,16 +24,17 @@ struct Batch {
 [[vk::binding(2, 1)]] StructuredBuffer<Instance> instanceTable;
 [[vk::binding(3, 1)]] RWStructuredBuffer<DrawItem> items;
 [[vk::binding(4, 1)]] RWStructuredBuffer<uint> itemList;
-[[vk::binding(5, 1)]] RWStructuredBuffer<Atomic<uint>> batchCounts;
 [[vk::binding(6, 1)]] StructuredBuffer<Batch> batches;
-[[vk::binding(7, 1)]] RWStructuredBuffer<uint> args;
+// Five words a batch; the instance count is the visible items, counted by
+// `append` (no separate counts buffer, CESIUM2_WEBGPU_PLAN.md §13.15).
+[[vk::binding(7, 1)]] RWStructuredBuffer<Atomic<uint>> args;
 [[vk::binding(8, 1)]] ConstantBuffer<CullParams> params;
 
 static const uint NONE = 0xffffffffu;
 
 // Hi and lo differences cancel separately before they are combined.
 float4x4 relativeMatrix(Transform t) {
-  float3 rel = (t.originHi - view.cameraHi) + (t.originLo - view.cameraLo);
+  float3 rel = hiLoDifference(t.originHi, t.originLo, view.cameraHi, view.cameraLo);
   return float4x4(
     t.linear[0].x, t.linear[1].x, t.linear[2].x, rel.x,
     t.linear[0].y, t.linear[1].y, t.linear[2].y, rel.y,
@@ -58,7 +59,7 @@ bool inFrustum(float4x4 m, float3 center, float radius) {
 }
 
 void append(uint batch, uint item) {
-  uint slot = batchCounts[batch].add(1u);
+  uint slot = args[batch * 5 + 1].add(1u);
   itemList[batches[batch].itemBase + slot] = item;
 }
 
@@ -128,9 +129,9 @@ void writeDrawArgs(uint3 gid : SV_DispatchThreadID) {
   }
   Batch batch = batches[b];
   uint a = b * 5;
-  args[a] = batch.indexCount;
-  args[a + 1] = batchCounts[b].load();
-  args[a + 2] = batch.firstIndex;
-  args[a + 3] = 0;
-  args[a + 4] = 0;
+  args[a].store(batch.indexCount);
+  // args[a + 1]: the instance count `append` counted.
+  args[a + 2].store(batch.firstIndex);
+  args[a + 3].store(0);
+  args[a + 4].store(0);
 }

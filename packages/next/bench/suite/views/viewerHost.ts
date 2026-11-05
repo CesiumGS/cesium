@@ -27,6 +27,7 @@ import {
   type Translucency,
 } from "../../../src/index.ts";
 import { DEFAULT_ION_TOKEN } from "../ionToken.ts";
+import { limitsTier } from "../limitsTier.ts";
 import {
   engineSnapshot,
   Viewer,
@@ -262,6 +263,7 @@ export class NextViewerHost implements ViewerHost {
     settings: ViewSettings,
   ): Promise<NextViewerHost> {
     const viewer = await Viewer.create(element, {
+      engine: { limits: limitsTier() },
       globe: settings.terrain ? "terrain" : "ellipsoid",
       policy: settings.policy,
       renderMode: settings.continuous ? "continuous" : "onDemand",
