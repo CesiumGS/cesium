@@ -12,15 +12,15 @@ import aoWgsl from "../shaders/ao.wgsl?raw";
 import { SHADOW_CASCADES, SHADOW_SIZE, SHADOWS_SIZE } from "./shadows.ts";
 import cullWgsl from "../shaders/generated/cull.wgsl?raw";
 import pointCullWgsl from "../shaders/generated/pointCull.wgsl?raw";
-import splatWgsl from "../shaders/splat.wgsl?raw";
+import splatWgsl from "../shaders/generated/splat.wgsl?raw";
 import scatterWgsl from "../shaders/generated/scatter.wgsl?raw";
 import raycastWgsl from "../shaders/generated/raycast.wgsl?raw";
 import opaqueWgsl from "../shaders/opaque.wgsl?raw";
 import presentWgsl from "../shaders/present.wgsl?raw";
-import overlayWgsl from "../shaders/overlay.wgsl?raw";
+import overlayWgsl from "../shaders/generated/overlay.wgsl?raw";
 import pickWgsl from "../shaders/generated/pick.wgsl?raw";
 import meterWgsl from "../shaders/meter.wgsl?raw";
-import adaptWgsl from "../shaders/adapt.wgsl?raw";
+import adaptWgsl from "../shaders/generated/adapt.wgsl?raw";
 import lightsWgsl from "../shaders/generated/lights.wgsl?raw";
 import depthRangeWgsl from "../shaders/generated/depthRange.wgsl?raw";
 import translucentWgsl from "../shaders/translucent.wgsl?raw";
@@ -1334,7 +1334,7 @@ async function createPipelines(
       compute: { module: pointCullModule, entryPoint: "writePointArgs" },
     }),
     (() => {
-      const splatModule = module("splats", commonWgsl, splatWgsl);
+      const splatModule = module("splats", splatWgsl);
       return device.createRenderPipelineAsync({
         label: "splats",
         layout: device.createPipelineLayout({
@@ -1423,7 +1423,7 @@ async function createPipelines(
         bindGroupLayouts: [viewLayout, overlayLayout],
       }),
       vertex: {
-        module: module("overlay", commonWgsl, overlayWgsl),
+        module: module("overlay", overlayWgsl),
         entryPoint: "vs",
         buffers: [
           {
@@ -1433,7 +1433,7 @@ async function createPipelines(
         ],
       },
       fragment: {
-        module: module("overlay", commonWgsl, overlayWgsl),
+        module: module("overlay", overlayWgsl),
         entryPoint: "fs",
         targets: [{ format: outputFormat }],
       },

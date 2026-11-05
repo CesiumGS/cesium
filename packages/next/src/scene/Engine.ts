@@ -3570,7 +3570,7 @@ export class Engine {
     });
 
     // The eye's local adaptation: a bilateral grid of the image's log
-    // luminance, a sixteenth of its size by 16 levels, blurred (adapt.wgsl).
+    // luminance, a sixteenth of its size by 16 levels, blurred (adapt.slang).
     const adaptSize = {
       width: Math.ceil(width / 16),
       height: Math.ceil(height / 16),
@@ -3612,7 +3612,8 @@ export class Engine {
         ] as const;
         pass.setPipeline(pipelines.adaptReduce);
         pass.setBindGroup(0, reduce);
-        pass.dispatchWorkgroups(...groups);
+        // A workgroup a cell (adapt.slang `reduce`).
+        pass.dispatchWorkgroups(adaptSize.width, adaptSize.height);
         pass.setPipeline(pipelines.adaptBlur);
         pass.setBindGroup(0, blur);
         pass.dispatchWorkgroups(...groups, adaptSize.depth);

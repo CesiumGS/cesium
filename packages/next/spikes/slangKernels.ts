@@ -11,11 +11,19 @@ import cullReference from "./slang/reference/cull.wgsl?raw";
 import depthRangeReference from "./slang/reference/depthRange.wgsl?raw";
 import lightsReference from "./slang/reference/lights.wgsl?raw";
 import raycastReference from "./slang/reference/raycast.wgsl?raw";
+import overlayReference from "./slang/reference/overlay.wgsl?raw";
+import splatReference from "./slang/reference/splat.wgsl?raw";
+import imageryReference from "./slang/reference/imagery.wgsl?raw";
+import adaptReference from "./slang/reference/adapt.wgsl?raw";
 import scatterReference from "./slang/reference/scatter.wgsl?raw";
 import cullSlang from "../src/shaders/generated/cull.wgsl?raw";
 import depthRangeSlang from "../src/shaders/generated/depthRange.wgsl?raw";
 import lightsSlang from "../src/shaders/generated/lights.wgsl?raw";
 import raycastSlang from "../src/shaders/generated/raycast.wgsl?raw";
+import overlaySlang from "../src/shaders/generated/overlay.wgsl?raw";
+import splatSlang from "../src/shaders/generated/splat.wgsl?raw";
+import imagerySlang from "../src/shaders/generated/imagery.wgsl?raw";
+import adaptSlang from "../src/shaders/generated/adapt.wgsl?raw";
 import scatterSlang from "../src/shaders/generated/scatter.wgsl?raw";
 
 /**
@@ -27,32 +35,58 @@ import scatterSlang from "../src/shaders/generated/scatter.wgsl?raw";
  * outputs from the same inputs compared word for word. No scene, so
  * nothing else loads the GPU. Gate: the Slang within 5%, outputs equal.
  */
+/** How an output's elements compare: their bits as ordered integers. */
+type Element = "u32" | "f32" | "f16" | "unorm8";
 interface Output {
-  buffer: GPUBuffer;
-  /** Its contents before the dispatch (default zeros). */
+  /** A buffer the kernel writes, or a texture (storage or attachment). */
+  buffer?: GPUBuffer;
+  texture?: GPUTexture;
+  /** A texture's bytes per texel (default 4). */
+  texelBytes?: number;
+  /** A buffer's contents before the dispatch (default zeros). */
   initial?: Uint32Array;
+  /** Its elements (default u32: bit for bit). */
+  element?: Element;
   /**
-   * For float results (non-negative, so their bits order as u32s): how
-   * many units in the last place may differ. Two compilers may order a
-   * dot product's sum differently; that is rounding, not a wrong port.
+   * How many units in the last place an element may differ. Two
+   * compilers may order a sum differently, or fuse a multiply-add one
+   * way and not the other; that is rounding, not a wrong port.
    */
   ulps?: number;
+}
+/** A render pipeline's case: its attachments are its outputs. */
+interface RenderSetup {
+  vertex: string;
+  fragment: string;
+  targets: GPUColorTargetState[];
+  depthStencil?: GPUDepthStencilState;
+  vertexBuffers?: GPUVertexBufferLayout[];
+}
+interface Resources {
+  /** Each group's entries. */
+  groups: GPUBindGroupEntry[][];
+  /** Workgroups (compute), or vertices to draw (render: `[count]`). */
+  dispatch: [number, number?, number?];
+  /** The Slang's, where the port changed its workgroups' shape. */
+  slangDispatch?: [number, number?, number?];
+  /** What the kernel writes: reset, then compared between the two. */
+  outputs: Output[];
+  /** Render: the color attachments (outputs too) and depth. */
+  colors?: GPUTexture[];
+  depth?: GPUTexture;
+  vertexBuffers?: GPUBuffer[];
 }
 interface Case {
   name: string;
   reference: string;
   slang: string;
-  /** The entry point (default `main`). */
+  /** The entry point (default `main`; compute only). */
   entry?: string;
+  /** A render pipeline instead of a compute one. */
+  render?: RenderSetup;
   /** The engine's bind group layouts, by group (default: `auto`). */
   layout?: GPUBindGroupLayoutEntry[][];
-  setup(device: GPUDevice): {
-    /** Each group's entries. */
-    groups: GPUBindGroupEntry[][];
-    dispatch: [number, number?, number?];
-    /** What the kernel writes: reset, then compared between the two. */
-    outputs: Output[];
-  };
+  setup(device: GPUDevice): Resources;
 }
 
 const W = 1920;
@@ -371,9 +405,177 @@ function raycastInputs(device: GPUDevice) {
       {
         buffer: hits,
         initial: new Uint32Array(rayCount).fill(0x7f7fffff),
+        element: "f32",
         ulps: 4,
       },
     ],
+  };
+}
+
+/** A seeded random source (the same inputs for both pipelines). */
+function randoms(seed: number): () => number {
+  return () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+}
+
+/** A float as half-float bits (round to nearest; finite, normal range). */
+function toHalf(x: number): number {
+  const f = new Float32Array([x]);
+  const b = new Uint32Array(f.buffer)[0]!;
+  const sign = (b >>> 16) & 0x8000;
+  const exp = ((b >>> 23) & 0xff) - 127 + 15;
+  if (exp <= 0) {
+    return sign;
+  }
+  const mantissa = (b >>> 13) & 0x3ff;
+  return sign | (Math.min(exp, 30) << 10) | mantissa;
+}
+
+const T = GPUTextureUsage;
+
+/** A texture of random texels (`bytes` per texel), sampled or stored. */
+function texture(
+  device: GPUDevice,
+  descriptor: Omit<GPUTextureDescriptor, "usage"> & { usage?: number },
+  fill?: (i: number) => number,
+  texelBytes = 4,
+): GPUTexture {
+  const size = descriptor.size as [number, number, number?];
+  const [w, h, d = 1] = size;
+  const t = device.createTexture({
+    dimension: d > 1 ? "3d" : "2d",
+    ...descriptor,
+    usage:
+      (descriptor.usage ?? 0) | T.TEXTURE_BINDING | T.COPY_DST | T.COPY_SRC,
+  });
+  if (fill) {
+    const bytes = new Uint8Array(w * h * d * texelBytes);
+    const view =
+      texelBytes === 8
+        ? new Uint16Array(bytes.buffer)
+        : new Uint8Array(bytes.buffer);
+    for (let i = 0; i < view.length; i++) {
+      view[i] = fill(i);
+    }
+    device.queue.writeTexture(
+      { texture: t },
+      bytes,
+      { bytesPerRow: w * texelBytes, rowsPerImage: h },
+      [w, h, d],
+    );
+  }
+  return t;
+}
+
+/** A view uniform: identity view-projection, the gate's viewport. */
+function viewUniform(device: GPUDevice): GPUBuffer {
+  const f = new Float32Array(ViewLayout.size / 4);
+  for (let c = 0; c < 4; c++) {
+    f[ViewLayout.viewProj / 4 + c * 4 + c] = 1;
+  }
+  f.set([W, H, 1 / W, 1 / H], ViewLayout.viewport / 4);
+  return buffer(device, f, GPUBufferUsage.UNIFORM);
+}
+
+const IMAGERY = 256;
+/** As GlobeImagery's `globe.imagery.composite` layout. */
+const IMAGERY_LAYOUT: GPUBindGroupLayoutEntry[][] = [
+  [
+    { binding: 0, visibility: COMPUTE, texture: { sampleType: "float" } },
+    { binding: 1, visibility: COMPUTE, sampler: { type: "filtering" } },
+    {
+      binding: 2,
+      visibility: COMPUTE,
+      storageTexture: { access: "write-only", format: "rgba8unorm" },
+    },
+    uniform(3),
+  ],
+];
+
+/** One imagery entry: a 256² source tile into a 256² slice (or a mip). */
+function imageryInputs(device: GPUDevice, size: number): Resources {
+  const random = randoms(5);
+  const source = texture(
+    device,
+    { size: [IMAGERY, IMAGERY], format: "rgba8unorm" },
+    () => Math.floor(random() * 256),
+  );
+  const destination = texture(device, {
+    size: [size, size],
+    format: "rgba8unorm",
+    usage: T.STORAGE_BINDING,
+  });
+  const params = new Float32Array(4 + 4 + 256);
+  // A source tile covering most of the slice, offset (as a neighbor's).
+  params.set([-0.1, 1.2 / size, size, 0], 0);
+  params.set([0.2, 0.4, 0.6, 1], 4);
+  for (let y = 0; y < 256; y++) {
+    params[8 + y] = -0.05 + (1.1 * (y + 0.5)) / size + 0.02 * Math.sin(y / 9);
+  }
+  return {
+    groups: [
+      [
+        { binding: 0, resource: source.createView() },
+        {
+          binding: 1,
+          resource: device.createSampler({
+            magFilter: "linear",
+            minFilter: "linear",
+          }),
+        },
+        { binding: 2, resource: destination.createView() },
+        {
+          binding: 3,
+          resource: { buffer: buffer(device, params, GPUBufferUsage.UNIFORM) },
+        },
+      ],
+    ],
+    dispatch: [size / 8, size / 8],
+    outputs: [{ texture: destination, element: "unorm8" }],
+  };
+}
+
+/** The adaptation grid's cells (16 px) over the gate's view. */
+const GRID = [Math.ceil(W / 16), Math.ceil(H / 16), 16] as const;
+
+/** A random HDR image (rgba16float), log-spread over 8 decades. */
+function hdrImage(device: GPUDevice, w: number, h: number, d = 1): GPUTexture {
+  const random = randoms(9);
+  return texture(
+    device,
+    { size: [w, h, d], format: "rgba16float" },
+    (i) => (i % 4 === 3 ? toHalf(1) : toHalf(10 ** (random() * 8 - 4))),
+    8,
+  );
+}
+
+/** The adaptation reduce: the gate's HDR view into its grid. */
+function adaptReduceInputs(device: GPUDevice): Resources {
+  const grid = texture(device, {
+    size: [...GRID],
+    format: "rgba16float",
+    usage: T.STORAGE_BINDING,
+  });
+  return {
+    groups: [
+      [
+        { binding: 0, resource: hdrImage(device, W, H).createView() },
+        {
+          binding: 1,
+          resource: {
+            buffer: buffer(
+              device,
+              new Float32Array([1, 0.5, 0, 0]),
+              GPUBufferUsage.UNIFORM,
+            ),
+          },
+        },
+        { binding: 2, resource: grid.createView() },
+      ],
+    ],
+    dispatch: [Math.ceil(GRID[0] / 8), Math.ceil(GRID[1] / 8)],
+    // A workgroup a cell (adapt.slang `reduce`).
+    slangDispatch: [GRID[0], GRID[1]],
+    outputs: [{ texture: grid, texelBytes: 8, element: "f16", ulps: 2 }],
   };
 }
 
@@ -487,6 +689,187 @@ const CASES: Case[] = [
     setup: raycastInputs,
   },
   {
+    name: "overlay",
+    reference: `${commonReference}\n${overlayReference}`,
+    slang: overlaySlang,
+    render: {
+      vertex: "vs",
+      fragment: "fs",
+      targets: [{ format: "rgba8unorm" }],
+      vertexBuffers: [
+        {
+          arrayStride: 12,
+          attributes: [{ shaderLocation: 0, offset: 0, format: "float32x3" }],
+        },
+      ],
+    },
+    setup(device) {
+      // Large triangles over the view (the engine draws lines; the
+      // shader is the same).
+      const random = randoms(2);
+      const positions = new Float32Array(300 * 9).map(() => random() * 3 - 1.5);
+      const color = texture(device, {
+        size: [W, H],
+        format: "rgba8unorm",
+        usage: T.RENDER_ATTACHMENT,
+      });
+      return {
+        groups: [
+          [{ binding: 0, resource: { buffer: viewUniform(device) } }],
+          [
+            {
+              binding: 0,
+              resource: {
+                buffer: buffer(
+                  device,
+                  new Float32Array([0.3, 0.6, 0.9, 1]),
+                  GPUBufferUsage.UNIFORM,
+                ),
+              },
+            },
+          ],
+        ],
+        dispatch: [positions.length / 3],
+        outputs: [{ texture: color, element: "unorm8" }],
+        colors: [color],
+        vertexBuffers: [buffer(device, positions, GPUBufferUsage.VERTEX)],
+      };
+    },
+  },
+  {
+    name: "splat",
+    reference: `${commonReference}\n${splatReference}`,
+    slang: splatSlang,
+    render: {
+      vertex: "vs",
+      fragment: "fs",
+      targets: [
+        { format: "rgba16float", writeMask: 0 },
+        { format: "rg16uint" },
+        {
+          format: "rgba8unorm-srgb",
+          blend: {
+            color: { srcFactor: "one", dstFactor: "one-minus-src-alpha" },
+            alpha: { srcFactor: "one", dstFactor: "one-minus-src-alpha" },
+          },
+        },
+      ],
+      depthStencil: {
+        format: "depth32float",
+        depthWriteEnabled: true,
+        depthCompare: "greater",
+      },
+    },
+    setup(device) {
+      // A third of the pixels splatted, at random depths and colors.
+      const random = randoms(4);
+      const n = W * H;
+      const depth = new Float32Array(n).map(() =>
+        random() < 0.33 ? 0.01 + random() * 0.98 : 0,
+      );
+      const words = (f: () => number) => Uint32Array.from({ length: n }, f);
+      const S = GPUBufferUsage.STORAGE;
+      const attachment = (format: GPUTextureFormat) =>
+        texture(device, { size: [W, H], format, usage: T.RENDER_ATTACHMENT });
+      const colors = [
+        attachment("rgba16float"),
+        attachment("rg16uint"),
+        attachment("rgba8unorm-srgb"),
+      ];
+      const depthTarget = attachment("depth32float");
+      return {
+        groups: [
+          [{ binding: 0, resource: { buffer: viewUniform(device) } }],
+          [
+            { binding: 0, resource: { buffer: buffer(device, depth, S) } },
+            {
+              binding: 1,
+              resource: {
+                buffer: buffer(
+                  device,
+                  words(() => (random() * 2 ** 32) >>> 0),
+                  S,
+                ),
+              },
+            },
+            {
+              binding: 2,
+              resource: {
+                buffer: buffer(
+                  device,
+                  words(() => (random() * 2 ** 32) >>> 0),
+                  S,
+                ),
+              },
+            },
+          ],
+        ],
+        dispatch: [3],
+        outputs: [
+          { texture: colors[1]! },
+          { texture: colors[2]!, element: "unorm8" },
+          { texture: depthTarget, element: "f32" },
+        ],
+        colors,
+        depth: depthTarget,
+      };
+    },
+  },
+  {
+    name: "imagery.fill",
+    reference: imageryReference,
+    slang: imagerySlang,
+    entry: "fill",
+    layout: IMAGERY_LAYOUT,
+    setup: (device) => imageryInputs(device, IMAGERY),
+  },
+  {
+    name: "imagery.composite",
+    reference: imageryReference,
+    slang: imagerySlang,
+    entry: "composite",
+    layout: IMAGERY_LAYOUT,
+    setup: (device) => imageryInputs(device, IMAGERY),
+  },
+  {
+    name: "imagery.downsample",
+    reference: imageryReference,
+    slang: imagerySlang,
+    entry: "downsample",
+    layout: IMAGERY_LAYOUT,
+    setup: (device) => imageryInputs(device, IMAGERY / 2),
+  },
+  {
+    name: "adapt.reduce",
+    reference: adaptReference,
+    slang: adaptSlang,
+    entry: "reduce",
+    setup: adaptReduceInputs,
+  },
+  {
+    name: "adapt.blur",
+    reference: adaptReference,
+    slang: adaptSlang,
+    entry: "blur",
+    setup(device) {
+      const blurred = texture(device, {
+        size: [...GRID],
+        format: "rgba16float",
+        usage: T.STORAGE_BINDING,
+      });
+      return {
+        groups: [
+          [
+            { binding: 3, resource: hdrImage(device, ...GRID).createView() },
+            { binding: 4, resource: blurred.createView() },
+          ],
+        ],
+        dispatch: [Math.ceil(GRID[0] / 8), Math.ceil(GRID[1] / 8), GRID[2]],
+        outputs: [{ texture: blurred, texelBytes: 8, element: "f16", ulps: 2 }],
+      };
+    },
+  },
+  {
     name: "cullRecords",
     reference: `${commonReference}\n${cullReference}`,
     slang: cullSlang,
@@ -559,45 +942,164 @@ function render(rows: Row[]): void {
   );
 }
 
-function bind(pass: GPUComputePassEncoder, groups: GPUBindGroup[]): void {
+type Pipeline = GPUComputePipeline | GPURenderPipeline;
+
+/** One pass of `repeat` dispatches or draws, optionally timed. */
+function encodePass(
+  encoder: GPUCommandEncoder,
+  c: Case,
+  resources: Resources,
+  pipeline: Pipeline,
+  groups: GPUBindGroup[],
+  repeat: number,
+  which: number,
+  timestampWrites?: GPUComputePassTimestampWrites,
+): void {
+  const dispatch =
+    which === 1 && resources.slangDispatch
+      ? resources.slangDispatch
+      : resources.dispatch;
+  if (!c.render) {
+    const pass = encoder.beginComputePass({ timestampWrites });
+    pass.setPipeline(pipeline as GPUComputePipeline);
+    groups.forEach((g, k) => pass.setBindGroup(k, g));
+    for (let n = 0; n < repeat; n++) {
+      pass.dispatchWorkgroups(...(dispatch as [number, number, number]));
+    }
+    pass.end();
+    return;
+  }
+  const pass = encoder.beginRenderPass({
+    colorAttachments: (resources.colors ?? []).map((t) => ({
+      view: t.createView(),
+      loadOp: "clear",
+      storeOp: "store",
+      clearValue: [0, 0, 0, 0],
+    })),
+    depthStencilAttachment: resources.depth
+      ? {
+          view: resources.depth.createView(),
+          depthLoadOp: "clear",
+          depthStoreOp: "store",
+          depthClearValue: 0,
+        }
+      : undefined,
+    timestampWrites,
+  });
+  pass.setPipeline(pipeline as GPURenderPipeline);
   groups.forEach((g, k) => pass.setBindGroup(k, g));
+  resources.vertexBuffers?.forEach((b, k) => pass.setVertexBuffer(k, b));
+  for (let n = 0; n < repeat; n++) {
+    pass.draw(dispatch[0]);
+  }
+  pass.end();
 }
 
-/** One dispatch from reset outputs; each output's words. */
+/** A texture's bytes per row, as a copy to a buffer needs them. */
+const paddedRow = (bytes: number) => Math.ceil(bytes / 256) * 256;
+
+/** One pass from reset outputs; each output's bytes (rows unpadded). */
 async function outputs(
   device: GPUDevice,
-  pipeline: GPUComputePipeline,
+  c: Case,
+  resources: Resources,
+  pipeline: Pipeline,
   groups: GPUBindGroup[],
-  dispatch: [number, number?, number?],
-  buffers: Output[],
-): Promise<Uint32Array[]> {
-  for (const { buffer: b, initial } of buffers) {
-    device.queue.writeBuffer(b, 0, initial ?? new Uint32Array(b.size / 4));
-  }
-  const reads = buffers.map(({ buffer: b }) =>
-    device.createBuffer({
-      size: b.size,
-      usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
-    }),
-  );
+  which: number,
+): Promise<Uint8Array[]> {
   const encoder = device.createCommandEncoder();
-  const pass = encoder.beginComputePass();
-  pass.setPipeline(pipeline);
-  bind(pass, groups);
-  pass.dispatchWorkgroups(...(dispatch as [number, number, number]));
-  pass.end();
-  buffers.forEach(({ buffer: b }, k) =>
-    encoder.copyBufferToBuffer(b, 0, reads[k]!, 0, b.size),
-  );
+  const reads = resources.outputs.map((o) => {
+    if (o.buffer) {
+      device.queue.writeBuffer(
+        o.buffer,
+        0,
+        o.initial ?? new Uint32Array(o.buffer.size / 4),
+      );
+      return device.createBuffer({
+        size: o.buffer.size,
+        usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
+      });
+    }
+    const t = o.texture!;
+    const row = paddedRow(t.width * (o.texelBytes ?? 4));
+    if (!c.render) {
+      // Storage textures: zeros first (attachments are cleared).
+      device.queue.writeTexture(
+        { texture: t },
+        new Uint8Array(row * t.height * t.depthOrArrayLayers),
+        { bytesPerRow: row, rowsPerImage: t.height },
+        [t.width, t.height, t.depthOrArrayLayers],
+      );
+    }
+    return device.createBuffer({
+      size: row * t.height * t.depthOrArrayLayers,
+      usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
+    });
+  });
+  encodePass(encoder, c, resources, pipeline, groups, 1, which);
+  resources.outputs.forEach((o, k) => {
+    if (o.buffer) {
+      encoder.copyBufferToBuffer(o.buffer, 0, reads[k]!, 0, o.buffer.size);
+    } else {
+      const t = o.texture!;
+      encoder.copyTextureToBuffer(
+        { texture: t },
+        {
+          buffer: reads[k]!,
+          bytesPerRow: paddedRow(t.width * (o.texelBytes ?? 4)),
+          rowsPerImage: t.height,
+        },
+        [t.width, t.height, t.depthOrArrayLayers],
+      );
+    }
+  });
   device.queue.submit([encoder.finish()]);
-  const out: Uint32Array[] = [];
-  for (const read of reads) {
+  const out: Uint8Array[] = [];
+  for (const [k, read] of reads.entries()) {
     await read.mapAsync(GPUMapMode.READ);
-    out.push(new Uint32Array(read.getMappedRange().slice(0)));
+    const bytes = new Uint8Array(read.getMappedRange().slice(0));
     read.unmap();
     read.destroy();
+    const o = resources.outputs[k]!;
+    if (o.buffer) {
+      out.push(bytes);
+      continue;
+    }
+    // Drop each row's padding.
+    const t = o.texture!;
+    const rowBytes = t.width * (o.texelBytes ?? 4);
+    const row = paddedRow(rowBytes);
+    const packed = new Uint8Array(rowBytes * t.height * t.depthOrArrayLayers);
+    for (let y = 0; y < t.height * t.depthOrArrayLayers; y++) {
+      packed.set(bytes.subarray(y * row, y * row + rowBytes), y * rowBytes);
+    }
+    out.push(packed);
   }
   return out;
+}
+
+/** An element's bits as an integer that orders as the value does. */
+function ordered(bytes: Uint8Array, element: Element): Int32Array | Uint8Array {
+  if (element === "unorm8") {
+    return bytes;
+  }
+  if (element === "f16") {
+    const h = new Uint16Array(
+      bytes.buffer,
+      bytes.byteOffset,
+      bytes.byteLength / 2,
+    );
+    return Int32Array.from(h, (b) => (b & 0x8000 ? -(b & 0x7fff) : b));
+  }
+  const w = new Uint32Array(
+    bytes.buffer,
+    bytes.byteOffset,
+    bytes.byteLength / 4,
+  );
+  if (element === "u32") {
+    return Int32Array.from(w, (b) => b | 0);
+  }
+  return Int32Array.from(w, (b) => (b & 0x80000000 ? -(b & 0x7fffffff) : b));
 }
 
 /**
@@ -610,9 +1112,10 @@ const REPEAT = 64;
 /** The median GPU time of one dispatch of each pipeline, alternating. */
 async function time(
   device: GPUDevice,
-  pipelines: [GPUComputePipeline, GPUComputePipeline],
+  c: Case,
+  resources: Resources,
+  pipelines: [Pipeline, Pipeline],
   groups: [GPUBindGroup[], GPUBindGroup[]],
-  dispatch: [number, number?, number?],
   runs: number,
 ): Promise<[number, number]> {
   const querySet = device.createQuerySet({
@@ -633,19 +1136,20 @@ async function time(
       // Alternating which goes first, so neither is always the warm one.
       const which = (r + k) % 2;
       const q = (r * 2 + which) * 2;
-      const pass = encoder.beginComputePass({
-        timestampWrites: {
+      encodePass(
+        encoder,
+        c,
+        resources,
+        pipelines[which]!,
+        groups[which]!,
+        REPEAT,
+        which,
+        {
           querySet,
           beginningOfPassWriteIndex: q,
           endOfPassWriteIndex: q + 1,
         },
-      });
-      pass.setPipeline(pipelines[which]!);
-      bind(pass, groups[which]!);
-      for (let n = 0; n < REPEAT; n++) {
-        pass.dispatchWorkgroups(...(dispatch as [number, number, number]));
-      }
-      pass.end();
+      );
     }
   }
   encoder.resolveQuerySet(querySet, 0, 4 * runs, resolve, 0);
@@ -665,6 +1169,40 @@ async function time(
   return [median(durations[0]!), median(durations[1]!)];
 }
 
+/** The pipeline for a case's code. */
+function pipelineFor(
+  device: GPUDevice,
+  c: Case,
+  layouts: GPUBindGroupLayout[] | undefined,
+  code: string,
+): Pipeline {
+  const module = device.createShaderModule({ code });
+  const layout = layouts
+    ? device.createPipelineLayout({ bindGroupLayouts: layouts })
+    : "auto";
+  if (!c.render) {
+    return device.createComputePipeline({
+      layout,
+      compute: { module, entryPoint: c.entry ?? "main" },
+    });
+  }
+  return device.createRenderPipeline({
+    layout,
+    vertex: {
+      module,
+      entryPoint: c.render.vertex,
+      buffers: c.render.vertexBuffers,
+    },
+    fragment: {
+      module,
+      entryPoint: c.render.fragment,
+      targets: c.render.targets,
+    },
+    depthStencil: c.render.depthStencil,
+    primitive: { topology: "triangle-list" },
+  });
+}
+
 async function runKernels(): Promise<Row[]> {
   const status = root.querySelector<HTMLElement>(".status")!;
   const adapter = await navigator.gpu.requestAdapter();
@@ -673,27 +1211,26 @@ async function runKernels(): Promise<Row[]> {
   }
   const device = await adapter.requestDevice({
     requiredFeatures: ["timestamp-query"],
+    requiredLimits: {
+      maxStorageBuffersPerShaderStage:
+        adapter.limits.maxStorageBuffersPerShaderStage,
+    },
   });
+  // `?only=a,b`: just those cases (by name prefix).
+  const only = new URLSearchParams(location.search).get("only")?.split(",");
+  const cases = only
+    ? CASES.filter((c) => only.some((o) => c.name.startsWith(o)))
+    : CASES;
   const rows: Row[] = [];
-  for (const c of CASES) {
+  for (const c of cases) {
     status.textContent = `Timing ${c.name}…`;
     const resources = c.setup(device);
     const layouts = c.layout?.map((entries) =>
       device.createBindGroupLayout({ entries }),
     );
-    const pipeline = (code: string) =>
-      device.createComputePipeline({
-        layout: layouts
-          ? device.createPipelineLayout({ bindGroupLayouts: layouts })
-          : "auto",
-        compute: {
-          module: device.createShaderModule({ code }),
-          entryPoint: c.entry ?? "main",
-        },
-      });
-    const pipelines: [GPUComputePipeline, GPUComputePipeline] = [
-      pipeline(c.reference),
-      pipeline(c.slang),
+    const pipelines: [Pipeline, Pipeline] = [
+      pipelineFor(device, c, layouts, c.reference),
+      pipelineFor(device, c, layouts, c.slang),
     ];
     const groups = pipelines.map((p) =>
       resources.groups.map((entries, k) =>
@@ -703,31 +1240,22 @@ async function runKernels(): Promise<Row[]> {
         }),
       ),
     ) as [GPUBindGroup[], GPUBindGroup[]];
-    // The same outputs from the same inputs, word for word.
-    const a = await outputs(
-      device,
-      pipelines[0],
-      groups[0],
-      resources.dispatch,
-      resources.outputs,
-    );
-    const b = await outputs(
-      device,
-      pipelines[1],
-      groups[1],
-      resources.dispatch,
-      resources.outputs,
-    );
+    // The same outputs from the same inputs, element for element.
+    const a = await outputs(device, c, resources, pipelines[0], groups[0], 0);
+    const b = await outputs(device, c, resources, pipelines[1], groups[1], 1);
     let differ = 0;
     let beyond = 0;
     let worst = 0;
-    a.forEach((words, k) => {
-      const ulps = resources.outputs[k]!.ulps ?? 0;
-      for (let i = 0; i < words.length; i++) {
-        if (words[i] !== b[k]![i]) {
-          const d = Math.abs(words[i]! - b[k]![i]!);
+    a.forEach((bytes, k) => {
+      const o = resources.outputs[k]!;
+      const element = o.element ?? "u32";
+      const x = ordered(bytes, element);
+      const y = ordered(b[k]!, element);
+      for (let i = 0; i < x.length; i++) {
+        if (x[i] !== y[i]) {
+          const d = Math.abs(x[i]! - y[i]!);
           differ += 1;
-          beyond += d > ulps ? 1 : 0;
+          beyond += d > (o.ulps ?? 0) ? 1 : 0;
           worst = Math.max(worst, d);
         }
       }
@@ -736,15 +1264,16 @@ async function runKernels(): Promise<Row[]> {
       differ === 0
         ? "identical"
         : beyond === 0
-          ? `${differ} words within ${worst} ulp`
-          : `${beyond} words differ (up to ${worst})`;
+          ? `${differ} within ${worst} ulp`
+          : `${beyond} differ (up to ${worst})`;
     // Warm both, then measure.
-    await time(device, pipelines, groups, resources.dispatch, 10);
+    await time(device, c, resources, pipelines, groups, 10);
     const [wgsl, slang] = await time(
       device,
+      c,
+      resources,
       pipelines,
       groups,
-      resources.dispatch,
       40,
     );
     const ratio = slang / wgsl;

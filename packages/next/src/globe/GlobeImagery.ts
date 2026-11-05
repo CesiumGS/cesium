@@ -26,7 +26,7 @@ import {
   packImagery,
 } from "../render/layout.ts";
 import type { ImageryProvider } from "./ImageryProvider.ts";
-import imageryWgsl from "../shaders/imagery.wgsl?raw";
+import imageryWgsl from "../shaders/generated/imagery.wgsl?raw";
 import { SlicePool } from "./SlicePool.ts";
 
 const WGS84_RADIUS = 6378137;

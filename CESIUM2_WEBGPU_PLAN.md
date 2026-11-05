@@ -385,7 +385,14 @@ _Migration, in steps that each leave the engine working:_
    cull (ported once already; checked by the precision page), pointCull,
    raycast, lights, imagery, adapt, ao, meter, composite, present, fxaa.
    Each is checked by its existing tests and pages before the WGSL file
-   goes.
+   goes, and by the performance gate (`/#/lab/slang-kernels`: each port
+   against the hand-written WGSL it replaced, timed and its outputs
+   compared). **The gate and the probes have run only on an Apple GPU
+   (Metal) so far: re-run both on Windows (D3D12, an NVIDIA and an AMD or
+   Intel GPU) before the migration counts as done.** Slang's output
+   reaches each backend's compiler through Dawn, and what costs time on
+   Metal (a conditional write into a local array, loop shapes it won't
+   unroll) may not be what costs it on D3D12, or the reverse.
 5. **The surface shaders.** opaque and translucent on `IMaterial`,
    `IMaterialTextures` and `SplitPosition`, with the custom-shader ABI
    exported from the generated module. Checked by image regression in Dyno
