@@ -4,6 +4,11 @@ import { Ephemeris } from "./Ephemeris.ts";
 
 /** Everything the frames layer needs, loaded from the store `npm run setup` fills. */
 export interface FrameData {
+  /**
+   * The store's `Leap_Second.dat` when it expires after the built-in table
+   * (`LeapSeconds.builtIn()`, NAIF naif0012.tls); otherwise, or when the store
+   * has none, the built-in table.
+   */
   leapSeconds: LeapSeconds;
   eop: EarthOrientationParameters;
   ephemeris: Ephemeris;
@@ -23,8 +28,9 @@ interface ManifestEntry {
 const SETUP_HINT =
   "run `npm run setup` (it fills the store the dev server serves at /frames-data/; FRAMES_DATA_DIR moves the store)";
 
-const ROLES = ["planets", "moon", "leapSeconds", "eop"] as const;
-type Role = (typeof ROLES)[number];
+/** Roles the store must have; `leapSeconds` is optional (there is a built-in table). */
+const ROLES = ["planets", "moon", "eop"] as const;
+type Role = (typeof ROLES)[number] | "leapSeconds";
 
 const hex = (bytes: ArrayBuffer): string =>
   Array.from(new Uint8Array(bytes), (b) =>
@@ -97,10 +103,11 @@ async function loadFile(
 }
 
 /**
- * Load the leap-second table, Earth orientation parameters and ephemeris that
- * `npm run setup` wrote: fetch `manifest.json`, then the four role files in
+ * Load the Earth orientation parameters, ephemeris and leap-second table that
+ * `npm run setup` wrote: fetch `manifest.json`, then the role files in
  * parallel, each checked against its SHA-256. Rejects with a message saying to
- * run setup when the store is missing or incomplete.
+ * run setup when the store is missing or incomplete. The leap-second table is
+ * the store's only when it expires after the built-in one.
  *
  * Data past its validity is not an error here (an instant outside the data is
  * handled where it is used), but `warnings` says so, and each warning is also
@@ -111,13 +118,18 @@ export async function loadFrameData(
 ): Promise<FrameData> {
   const base = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
   const manifest = await loadManifest(base);
-  const [planets, moon, leap, eop] = await Promise.all(
-    ROLES.map((role) => loadFile(base, manifest.get(role)!)),
-  );
+  const leapEntry = manifest.get("leapSeconds");
+  const [planets, moon, eop, leap] = await Promise.all([
+    ...ROLES.map((role) => loadFile(base, manifest.get(role)!)),
+    leapEntry ? loadFile(base, leapEntry) : undefined,
+  ]);
   const decode = (bytes: ArrayBuffer | undefined): string =>
     new TextDecoder().decode(bytes);
 
-  const leapSeconds = LeapSeconds.fromIers(decode(leap));
+  const builtIn = LeapSeconds.builtIn();
+  const stored = leap ? LeapSeconds.fromIers(decode(leap)) : undefined;
+  const leapSeconds =
+    stored && stored.expires > builtIn.expires ? stored : builtIn;
   const earthOrientation = EarthOrientationParameters.fromCelestrakCsv(
     decode(eop),
   );

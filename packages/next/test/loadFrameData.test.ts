@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { loadFrameData } from "../src/ephemeris/loadFrameData.ts";
 import { writePack } from "../src/ephemeris/pack.ts";
 import { readDaf } from "../src/ephemeris/spk.ts";
+import { LeapSeconds } from "../src/time/leapSeconds.ts";
 import { writeSpk } from "./spkWriter.ts";
 
 const INIT = -200;
@@ -200,6 +201,7 @@ describe("loadFrameData", () => {
     const data = await loadFrameData("/frames-data/");
     expect(data.ephemeris.span).toEqual([INIT, INIT + COUNT * LEN]);
     expect(data.leapSeconds.expires).toBe(Date.UTC(2027, 5, 28));
+    expect(data.leapSeconds.taiMinusUtc(NOW)).toBe(37);
     expect(data.eop.last).toBeGreaterThan(NOW);
     expect(data.warnings).toEqual([]);
     expect(console.warn).not.toHaveBeenCalled();
@@ -224,16 +226,52 @@ describe("loadFrameData", () => {
     expect(requested).toContain("/other/manifest.json");
   });
 
-  it("warns when the leap-second table has expired", async () => {
+  it("uses the store's leap-second table when it expires after the built-in one", async () => {
     const s = await store(
-      leapText("28 June 2025"),
+      leapText("28 December 2027"),
       eopText(Math.floor(nowMjd), 400),
     );
     serve(s);
     const data = await loadFrameData();
+    expect(data.leapSeconds.expires).toBe(Date.UTC(2027, 11, 28));
+    expect(data.leapSeconds).not.toBe(LeapSeconds.builtIn());
+  });
+
+  it("uses the built-in table when the store's expires no later", async () => {
+    for (const expires of ["28 June 2025", "28 June 2027"]) {
+      const s = await store(
+        leapText(expires),
+        eopText(Math.floor(nowMjd), 400),
+      );
+      serve(s);
+      const data = await loadFrameData();
+      expect(data.leapSeconds).toBe(LeapSeconds.builtIn());
+      expect(data.warnings).toEqual([]);
+    }
+  });
+
+  it("uses the built-in table when the manifest has no leapSeconds entry", async () => {
+    const s = await store(
+      leapText("28 December 2027"),
+      eopText(Math.floor(nowMjd), 400),
+    );
+    s.manifest.files = s.manifest.files.filter((f) => f.role !== "leapSeconds");
+    const requested = serve(s);
+    const data = await loadFrameData();
+    expect(data.leapSeconds).toBe(LeapSeconds.builtIn());
+    expect(requested).not.toContain("/frames-data/Leap_Second.dat");
+  });
+
+  it("warns when every leap-second table has expired", async () => {
+    const later = Date.UTC(2028, 0, 1);
+    vi.setSystemTime(later);
+    const laterMjd = later / 86_400_000 + MJD_UNIX_EPOCH;
+    const s = await store(leapText("28 June 2025"), eopText(laterMjd - 5, 400));
+    serve(s);
+    const data = await loadFrameData();
     expect(data.warnings).toHaveLength(1);
     expect(data.warnings[0]).toContain(
-      "leap-second table expired on 2025-06-28",
+      "leap-second table expired on 2027-06-28",
     );
     expect(console.warn).toHaveBeenCalledTimes(1);
   });
