@@ -28,9 +28,9 @@ export type {
 
 /**
  * A user's shader stages for models and tilesets (plan §3.4, "Custom
- * shading"): WGSL against the engine's contract in opaque.wgsl
- * (`VertexInput`, `VertexOutput`, `FragmentInput`, `MaterialOutput`), named
- * as CesiumJS 1.x `CustomShader`'s:
+ * shading"): WGSL against the contract (`VertexInput`, `VertexOutput`,
+ * `FragmentInput`, generated here with the shader's own types, and the
+ * engine's `MaterialOutput`), named as CesiumJS 1.x `CustomShader`'s:
  *
  *   fn vertexMain(vsInput: VertexInput, vsOutput: ptr<function, VertexOutput>)
  *   fn fragmentMain(fsInput: FragmentInput, material: ptr<function, MaterialOutput>)
@@ -125,44 +125,137 @@ export const DEFAULT_FRAGMENT_MAIN =
 /** WGSL types of named attributes and metadata (float components). */
 const READ: Record<
   NamedType,
-  { varying: string; read: string; unpack: string }
+  { components: number; read: string; unpack: string }
 > = {
-  f32: { varying: "f32", read: ".x", unpack: "#" },
-  vec2f: { varying: "vec2f", read: ".xy", unpack: "#" },
-  vec3f: { varying: "vec3f", read: ".xyz", unpack: "#" },
-  vec4f: { varying: "vec4f", read: "", unpack: "#" },
+  f32: { components: 1, read: ".x", unpack: "#" },
+  vec2f: { components: 2, read: ".xy", unpack: "#" },
+  vec3f: { components: 3, read: ".xyz", unpack: "#" },
+  vec4f: { components: 4, read: "", unpack: "#" },
   // Columns from the stream's (c0r0, c0r1, c1r0, c1r1), as glTF's MAT2.
-  mat2x2f: { varying: "vec4f", read: "", unpack: "mat2x2f(#.xy, #.zw)" },
+  mat2x2f: { components: 4, read: "", unpack: "mat2x2f(#.xy, #.zw)" },
 };
 
-/** A varying as a vec4f (`readFragmentProperty`'s fallback). */
-const PAD: Record<string, string> = {
-  f32: "vec4f(#, 0.0, 0.0, 0.0)",
-  vec2f: "vec4f(#, 0.0, 0.0)",
-  vec3f: "vec4f(#, 0.0)",
-  vec4f: "#",
-};
-
-/** Where `VsOut` takes the named values' varyings (opaque.wgsl). */
-export const NAMED_VARYINGS = "// @named";
-/** The first location of the named values' varyings. */
-const FIRST_NAMED_LOCATION = 10;
-/**
- * Locations left after VsOut's 9 (opaque.wgsl) and the fragment built-ins
- * a pass takes, at most 3 (translucent.wgsl `fsListSamples`): 16 in all.
- */
+/** The slots `VsOut` passes named values in (opaque.wgsl `named0`…). */
 export const MAX_NAMED = 4;
+
+/**
+ * The custom-shader contract (plan §3.4, step 5): `VertexInput`,
+ * `VertexOutput` and `FragmentInput` hold the shader's own types, so they
+ * are defined here, beside them, not by the engine, with the two stage
+ * functions the engine calls by name (opaque.wgsl's boundary): each
+ * builds the contract from the engine's `CesiumVertex` or
+ * `CesiumFragment` and calls the shader's stage. Same for every shader;
+ * `namedCode` supplies the shader's types and their readers.
+ */
+const CONTRACT = `// A vertex as the mesh stores it, before its transform.
+struct VertexInput {
+  positionMC: vec3f,
+  normalMC: vec3f,
+  texCoord0: vec2f,   // (0, 0) without TEXCOORD_0
+  color0: vec4f,      // white without COLOR_0
+  featureId0: u32,    // local feature ID; 0xffffffff: none
+  vertexIndex: u32,
+  instanceIndex: u32, // index among the draw's instances; 0 when not instanced
+  time: f32,          // seconds since the engine started
+  attributes: Attributes, // the shader's declared attributes
+  metadata: Metadata,     // and metadata properties; zero where absent
+  instance: InstanceValues, // and per-instance values; zero where absent
+};
+// What vertexMain may change: the vertex in model coordinates.
+struct VertexOutput {
+  positionMC: vec3f,
+  normalMC: vec3f,
+};
+// A surface point as the fragment stage sees it.
+struct FragmentInput {
+  positionMC: vec3f,  // model coordinates, interpolated
+  positionEC: vec3f,  // relative to the camera, Earth-fixed axes (m)
+  positionWC: vec3f,  // Earth-fixed (float32: about a meter)
+  normal: vec3f,      // geometric normal, Earth-fixed axes, toward the viewer
+  texCoord0: vec2f,
+  color0: vec4f,      // the vertex color times the draw's and instance's tint
+  featureId: u32,     // global feature ID (the one picking returns); 0: none
+  screen: vec2f,      // framebuffer pixel
+  time: f32,
+  attributes: Attributes, // interpolated
+  metadata: Metadata,     // interpolated
+  instanceIndex: u32,     // index among the draw's instances
+  instance: InstanceValues, // exact (flat)
+};
+fn cesiumVertexStage(v: CesiumVertex) -> CesiumVertexResult {
+  let vsInput = VertexInput(
+    v.positionMC, v.normalMC, v.texCoord0, v.color0, v.featureId0,
+    v.vertexIndex, v.instanceIndex, v.time,
+    vertexAttributes(v.directory, v.vertexIndex, v.tableFeature),
+    vertexMetadata(v.directory, v.vertexIndex, v.tableFeature),
+    instanceValues(v.draw, v.instanceIndex),
+  );
+  var vsOutput = VertexOutput(vsInput.positionMC, vsInput.normalMC);
+  vertexMain(vsInput, &vsOutput);
+  var result = CesiumVertexResult(vsOutput.positionMC, vsOutput.normalMC,
+    vec4f(0.0), vec4f(0.0), vec4f(0.0), vec4f(0.0));
+  packNamed(vsInput.attributes, vsInput.metadata, &result);
+  return result;
+}
+fn cesiumFragmentStage(f: CesiumFragment, material: ptr<function, MaterialOutput>) {
+  let fsInput = FragmentInput(
+    f.positionMC, f.positionEC, f.positionWC, f.normal, f.texCoord0,
+    f.color0, f.featureId, f.screen, f.time,
+    fragmentAttributes(f), fragmentMetadata(f),
+    f.instanceIndex, instanceValues(f.draw, f.instanceIndex),
+  );
+  fragmentMain(fsInput, material);
+}
+`;
+
+/**
+ * The engine's own stages, for content without a custom shader: the
+ * vertex unchanged, no named values, the material as it is.
+ */
+export const DEFAULT_STAGES = `fn cesiumVertexStage(v: CesiumVertex) -> CesiumVertexResult {
+  return CesiumVertexResult(v.positionMC, v.normalMC,
+    vec4f(0.0), vec4f(0.0), vec4f(0.0), vec4f(0.0));
+}
+fn cesiumFragmentStage(f: CesiumFragment, material: ptr<function, MaterialOutput>) {}
+`;
+
+/** A named value's place in the slots: which, and its first component. */
+interface Place {
+  slot: number;
+  offset: number;
+}
+
+/**
+ * Where each named value goes in `VsOut`'s four slots: the largest first,
+ * each into the first slot with room (two floats and a vec2f share one).
+ * Undefined if they don't fit.
+ */
+export function packNamed(types: readonly NamedType[]): Place[] | undefined {
+  const used = new Array<number>(MAX_NAMED).fill(0);
+  const places = new Array<Place>(types.length);
+  const order = types
+    .map((type, i) => ({ i, n: READ[type].components }))
+    .sort((a, b) => b.n - a.n || a.i - b.i);
+  for (const { i, n } of order) {
+    const slot = used.findIndex((u) => u + n <= 4);
+    if (slot < 0) {
+      return undefined;
+    }
+    places[i] = { slot, offset: used[slot]! };
+    used[slot]! += n;
+  }
+  return places;
+}
+
+const SWIZZLE = "xyzw";
 
 /**
  * WGSL for a shader's named attributes and metadata: their structs
  * (`Attributes`, `Metadata`), read per vertex from the mesh's directory
- * (opaque.wgsl `readNamed`), passed as varyings and read back per
- * fragment; and the varyings for `VsOut`.
+ * (opaque.wgsl `readNamed`), packed into the slots (`packNamed`) and read
+ * back per fragment; with the contract and its stage functions.
  */
-export function namedCode(named: NamedDeclarations): {
-  code: string;
-  varyings: string;
-} {
+export function namedCode(named: NamedDeclarations): string {
   const fields = [
     ...Object.entries(named.attributes).map(([name, type]) => ({
       struct: "Attributes",
@@ -177,8 +270,20 @@ export function namedCode(named: NamedDeclarations): {
       key: metadataKey(named.properties[name] ?? name),
     })),
   ];
-  const lines: string[] = [];
-  const varyings: string[] = [];
+  const places = packNamed(fields.map((f) => f.type));
+  if (!places) {
+    throw new Error(
+      `Custom shader: its attributes and metadata properties don't fit ${MAX_NAMED} vec4f.`,
+    );
+  }
+  // A value's slot read back, as its type's components.
+  const slotRead = (i: number) => {
+    const f = fields[i]!;
+    const { slot, offset } = places[i]!;
+    const n = READ[f.type].components;
+    return `f.named${slot}.${SWIZZLE.slice(offset, offset + n)}`;
+  };
+  const lines: string[] = [CONTRACT];
   for (const struct of ["Attributes", "Metadata"] as const) {
     const own = fields.filter((f) => f.struct === struct);
     const reader =
@@ -190,7 +295,7 @@ export function namedCode(named: NamedDeclarations): {
       lines.push(
         `struct ${struct} { none: u32 };`,
         `fn ${reader}(directory: u32, vertexIndex: u32, feature: u32) -> ${struct} { return ${struct}(0u); }`,
-        `fn ${back}(in: VsOut) -> ${struct} { return ${struct}(0u); }`,
+        `fn ${back}(f: CesiumFragment) -> ${struct} { return ${struct}(0u); }`,
       );
       continue;
     }
@@ -204,72 +309,59 @@ export function namedCode(named: NamedDeclarations): {
         })
         .join(", ")});`,
       "}",
-      `fn ${back}(in: VsOut) -> ${struct} {`,
-      ...(struct === "Metadata"
-        ? [
-            // A property in a property texture is read here, per fragment;
-            // else the interpolated attribute's (opaque.wgsl).
-            "  let r = records[in.ids.x];",
-            "  let directory = r.attributes;",
-            // The fragment's feature, local to the draw (feature tables).
-            "  let feature = select(in.ids.y - r.featureId, 0xffffffffu, in.ids.y == 0u);",
-            `  return ${struct}(${own
-              .map((f) => {
-                const varying = `in.named${fields.indexOf(f)}`;
-                const padded = PAD[READ[f.type].varying]!.replace("#", varying);
-                const value = `readFragmentProperty(directory, ${attributeHash(f.key)}u, in.uv, feature, ${padded})${READ[f.type].read}`;
-                return READ[f.type].unpack.replaceAll("#", `(${value})`);
-              })
-              .join(", ")});`,
-          ]
-        : [
-            `  return ${struct}(${own
-              .map((f) =>
-                READ[f.type].unpack.replaceAll(
-                  "#",
-                  `in.named${fields.indexOf(f)}`,
-                ),
-              )
-              .join(", ")});`,
-          ]),
+      `fn ${back}(f: CesiumFragment) -> ${struct} {`,
+      `  return ${struct}(${own
+        .map((f) => {
+          const varying = slotRead(fields.indexOf(f));
+          if (struct === "Attributes") {
+            return READ[f.type].unpack.replaceAll("#", varying);
+          }
+          // A property in a property texture is read here, per fragment;
+          // else the interpolated attribute's (opaque.wgsl).
+          const n = READ[f.type].components;
+          const padded =
+            n === 4 ? varying : `vec4f(${varying}${", 0.0".repeat(4 - n)})`;
+          const value = `readFragmentProperty(f.directory, ${attributeHash(f.key)}u, f.texCoord0, f.localFeature, ${padded})${READ[f.type].read}`;
+          return READ[f.type].unpack.replaceAll("#", `(${value})`);
+        })
+        .join(", ")});`,
       "}",
     );
   }
-  // Varyings: each value as itself, matrices as their columns.
-  const pass = fields.map((f, i) => {
-    const value = `${f.struct === "Attributes" ? "attributes" : "metadata"}.${f.name}`;
-    varyings.push(
-      `@location(${FIRST_NAMED_LOCATION + i}) named${i}: ${READ[f.type].varying},`,
-    );
-    return f.type === "mat2x2f"
-      ? `  (*out).named${i} = vec4f(${value}[0], ${value}[1]);`
-      : `  (*out).named${i} = ${value};`;
-  });
+  // Each slot's components, from the values placed in it.
+  const pack: string[] = [];
+  for (let slot = 0; slot < MAX_NAMED; slot++) {
+    const components = ["0.0", "0.0", "0.0", "0.0"];
+    let any = false;
+    fields.forEach((f, i) => {
+      if (places[i]!.slot !== slot) {
+        return;
+      }
+      any = true;
+      const value = `${f.struct === "Attributes" ? "attributes" : "metadata"}.${f.name}`;
+      const n = READ[f.type].components;
+      const parts =
+        f.type === "mat2x2f"
+          ? [`${value}[0].x`, `${value}[0].y`, `${value}[1].x`, `${value}[1].y`]
+          : n === 1
+            ? [value]
+            : Array.from({ length: n }, (_, c) => `${value}.${SWIZZLE[c]}`);
+      parts.forEach((part, c) => {
+        components[places[i]!.offset + c] = part;
+      });
+    });
+    if (any) {
+      pack.push(`  (*out).named${slot} = vec4f(${components.join(", ")});`);
+    }
+  }
   lines.push(
-    "fn passNamed(attributes: Attributes, metadata: Metadata, out: ptr<function, VsOut>) {",
-    ...pass,
+    "fn packNamed(attributes: Attributes, metadata: Metadata, out: ptr<function, CesiumVertexResult>) {",
+    ...pack,
     "}",
   );
   lines.push(instanceCode(named.instance));
-  return { code: `${lines.join("\n")}\n`, varyings: varyings.join("\n  ") };
+  return `${lines.join("\n")}\n`;
 }
-
-/** `VsOut` (in opaque.wgsl's source) with a shader's named varyings. */
-export function withNamedVaryings(opaque: string, varyings: string): string {
-  if (!opaque.includes(NAMED_VARYINGS)) {
-    throw new Error("opaque.wgsl has no named varyings marker.");
-  }
-  return opaque.replace(NAMED_VARYINGS, varyings || NAMED_VARYINGS);
-}
-
-/** The engine's own: no named values. */
-export const DEFAULT_NAMED = namedCode({
-  attributes: {},
-  metadata: {},
-  semantics: {},
-  properties: {},
-  instance: {},
-});
 
 /** WGSL types of per-instance values, from `readInstance`'s raw bits. */
 const INSTANCE: Record<InstanceType, string> = {
@@ -347,11 +439,6 @@ function declarations(options: CustomShaderOptions): NamedDeclarations {
       throw new Error(`Custom shader: unknown type "${type}".`);
     }
   }
-  if (names.length > MAX_NAMED) {
-    throw new Error(
-      `Custom shader: ${names.length} attributes and metadata properties; at most ${MAX_NAMED}.`,
-    );
-  }
   const instance = { ...options.instance };
   for (const [name, type] of Object.entries(instance)) {
     if (!identifier.test(name) || name.startsWith("__")) {
@@ -378,8 +465,6 @@ export class CustomShader {
   readonly vertexLines: number | undefined;
   /** Its attributes and metadata (`CustomShaderOptions`). */
   readonly named: NamedDeclarations;
-  /** `VsOut`'s varyings for them (`withNamedVaryings`). */
-  readonly varyings: string;
   /** Its uniforms' buffer layout and textures (`uniforms`). */
   readonly uniformLayout: UniformLayout;
   /**
@@ -427,9 +512,7 @@ export class CustomShader {
     // The named values' code after the stages, so stage lines keep their
     // numbers in errors.
     this.named = declarations(options);
-    const named = namedCode(this.named);
-    this.code += named.code;
-    this.varyings = named.varyings;
+    this.code += namedCode(this.named);
     const uniforms = options.uniforms ?? {};
     this.uniformLayout = uniformLayout(uniforms);
     this.slang = this.code.includes(`fn ${SLANG_STUB_ENTRY}(`);

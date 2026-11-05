@@ -589,6 +589,43 @@ rewriting the compiler's output:
 - Switches inside the surface shaders stay `override` constants where
   they can (settled at pipeline creation, not compiled again); variants
   only where a struct or binding changes.
+- **Measured (r55, Apple M-series, Metal):** a vertex-heavy pass (2
+  million triangles of about a pixel, 4× MSAA) costs what the fragment
+  stage reads, not what the vertex stage declares: four slots with one
+  read cost the same as one slot with one read. Metal drops outputs the
+  linked fragment stage doesn't read, so one module with four slots serves
+  every pipeline, the engine's own included. To check on D3D12 and Vulkan
+  (§3.4 step 4's Windows runs).
+
+_Step 5 architecture: compilation units and a linker._ Composition is a
+first-class step, not string joining spread through `RenderContext`:
+
+- **A unit** (`ShaderUnit`) is WGSL with a name and its symbol table:
+  what it defines (structs, functions, bindings) and what it uses from
+  other units. Engine units are the generated surface WGSL, common
+  structs and kernels' modules; run-time units come from front ends: a
+  custom shader's stages, its generated contract and glue, its uniforms'
+  bindings, a style's helpers. Symbols are declared, or read from the
+  WGSL by a scanner of its top-level declarations (reading, never
+  rewriting).
+- **A boundary** (`Boundary`) names what one side exports and what it
+  requires the other to define, with signatures: the surface shaders'
+  (`cesiumVertexStage`, `cesiumFragmentStage`, the helpers, the fixed
+  structs) is the first; the point cull's and the model pool's styles are
+  others. Generated from Slang reflection once the surfaces are Slang;
+  until then declared beside the WGSL.
+- **A linker** (`Linker`) takes units and a boundary and gives a module
+  or diagnostics: each required symbol defined exactly once, no name
+  defined twice, signatures as the boundary says. Errors from the
+  compiler map back to a unit and its own line (one table, from the
+  link). Today's linker joins checked units in order; others can sit
+  behind the same interface: Slang module linking where the compiler is
+  loaded anyway, WESL-style imports, or WGSL linking if the language gets
+  it.
+- **Front ends** produce units: WGSL custom shaders as written, Slang
+  ones offline (`scripts/slangShader.mjs`) or in the browser (the WASM
+  compiler, cached), styles from their expression compilers. Pipelines
+  are made from links, cached by the linked code.
 
 _Explore when the surface shaders move (step 5): runtime Slang for the
 user contract._ Today 3D Tiles styles, the vector styling language and
@@ -5564,6 +5601,10 @@ max)`, `Color(r, g, b)` (linear RGB), `Toggle(on)` and `Label("…")`. A
     - Run it when an example changes, or check in CI that every example
       has one.
   - Tilesets with metadata (`fsInput.metadata`).
+  - **A boundary-representation (B-rep) drawing example**: CAD solids
+    drawn from their faces, edges and vertices, after vector drawing is
+    generalized (lines and their styles beyond points), since it will
+    want that drawing code for its edges and silhouettes.
   - The same editor for vector styles (§13.9).
   - Exact highlighting from the server's semantic tokens, instead of the
     stream mode.

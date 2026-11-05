@@ -472,7 +472,10 @@ export function compileVectorStyle(
         const which = name.slice(5);
         if (which === "distance") {
           return {
-            wgsl: stage === "kernel" ? "distance" : "length(cesiumAnchor)",
+            wgsl:
+              stage === "kernel"
+                ? "distance"
+                : "length(cesiumAnchorPosition())",
             type: "number",
           };
         }
@@ -878,12 +881,12 @@ fn styleScale(i: u32, distance: f32) -> f32 { return ${scale}; }
 
     const vertex = `// The point's angle on screen: clockwise from up to north (rotateWith map).
 fn styleNorth() -> f32 {
-  let rel = cesiumAnchor;
-  let up = normalize(rel + hiLoSum(view.cameraHi, view.cameraLo));
+  let rel = cesiumAnchorPosition();
+  let up = normalize(rel + cesiumCameraPosition());
   let north = normalize(vec3f(0.0, 0.0, 1.0) - up * up.z);
-  let a = view.viewProj * vec4f(rel, 1.0);
-  let b = view.viewProj * vec4f(rel + north, 1.0);
-  let d = (b.xy / b.w - a.xy / a.w) / view.viewport.zw;
+  let a = cesiumViewProjection() * vec4f(rel, 1.0);
+  let b = cesiumViewProjection() * vec4f(rel + north, 1.0);
+  let d = (b.xy / b.w - a.xy / a.w) / cesiumPixelSize();
   return atan2(d.x, d.y);
 }
 fn vertexMain(vsInput: VertexInput, vsOutput: ptr<function, VertexOutput>) {

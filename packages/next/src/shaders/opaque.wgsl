@@ -359,9 +359,14 @@ struct VsOut {
   @location(7) airInscatter: vec3f,
   @location(8) airTransmittance: vec3f,
   @location(9) positionMC: vec3f,  // the mesh's own (model) coordinates
-  // A custom shader's named attributes and metadata, from location 10
-  // (CustomShader.ts namedCode):
-  // @named
+  // A custom shader's named attributes and metadata, packed into four
+  // slots (CustomShader.ts `namedCode`). The engine's own stages leave
+  // them zero and read none: slots a fragment stage doesn't read cost
+  // nothing (the stages are linked; plan §3.4, step 5).
+  @location(10) named0: vec4f,
+  @location(11) named1: vec4f,
+  @location(12) named2: vec4f,
+  @location(13) named3: vec4f,
 };
 
 // The camera-relative position of what is being drawn, set before
@@ -384,16 +389,26 @@ const POINT_UV = array<vec2f, 4>(
   vec2f(0.0, 1.0), vec2f(1.0, 1.0), vec2f(1.0, 0.0), vec2f(0.0, 0.0),
 );
 
-// --- custom shaders (plan §3.4): the WGSL-level contract ---------------------------
+// --- custom shaders (plan §3.4): the boundary with run-time code ----------------
 //
 // A custom shader (scene/CustomShader.ts) supplies `vertexMain` and
-// `fragmentMain`; the engine's defaults (CustomShader.ts) change nothing. They
-// run in every pass that draws the content (opaque, depth, shadow,
-// ambient-occlusion prepass, translucent), so a vertex modifier moves
-// geometry the same way in all of them. Named as 1.x `CustomShader`'s.
+// `fragmentMain` against its contract (`VertexInput`, `VertexOutput`,
+// `FragmentInput`), which CustomShader.ts generates with the shader's own
+// types (its attributes, metadata and instance values), and with the two
+// stage functions the engine calls by name here: `cesiumVertexStage` and
+// `cesiumFragmentStage`. They take what the engine knows of a vertex and
+// a fragment (the structs below, fixed), build the contract from it, and
+// call the shader's stages. The engine's own (CustomShader.ts
+// `DEFAULT_STAGES`) change nothing. They run in every pass that draws the
+// content (opaque, depth, shadow, ambient-occlusion prepass,
+// translucent), so a vertex modifier moves geometry the same way in all
+// of them. Named as 1.x `CustomShader`'s. Run-time code reads the engine
+// only through these structs and the functions marked "(boundary)".
 
-// A vertex as the mesh stores it, before its transform.
-struct VertexInput {
+// A vertex as the mesh stores it, before its transform, and where its
+// named values are read from (the draw's attribute directory, the row of
+// its feature table).
+struct CesiumVertex {
   positionMC: vec3f,
   normalMC: vec3f,
   texCoord0: vec2f,   // (0, 0) without TEXCOORD_0
@@ -402,19 +417,24 @@ struct VertexInput {
   vertexIndex: u32,
   instanceIndex: u32, // index among the draw's instances; 0 when not instanced
   time: f32,          // seconds since the engine started
-  attributes: Attributes, // the shader's declared attributes (CustomShader)
-  metadata: Metadata,     // and metadata properties; zero where absent
-  instance: InstanceValues,     // and per-instance values; zero where absent
+  draw: u32,
+  directory: u32,     // DrawRecord.attributes
+  tableFeature: u32,
 };
 
-// What `vertexMain` may change: the vertex in model coordinates.
-struct VertexOutput {
+// What the vertex stage gives back: the vertex in model coordinates and
+// the named values, packed (`VsOut.named0`…).
+struct CesiumVertexResult {
   positionMC: vec3f,
   normalMC: vec3f,
+  named0: vec4f,
+  named1: vec4f,
+  named2: vec4f,
+  named3: vec4f,
 };
 
-// A surface point as the fragment stage sees it.
-struct FragmentInput {
+// A surface point as the engine knows it.
+struct CesiumFragment {
   positionMC: vec3f,  // model coordinates, interpolated
   positionEC: vec3f,  // relative to the camera, Earth-fixed axes (m)
   positionWC: vec3f,  // Earth-fixed (float32: about a meter at the Earth's scale)
@@ -424,15 +444,19 @@ struct FragmentInput {
   featureId: u32,     // global feature ID (the one picking returns); 0: none
   screen: vec2f,      // framebuffer pixel
   time: f32,
-  attributes: Attributes, // interpolated
-  metadata: Metadata,     // interpolated
-  instanceIndex: u32,     // index among the draw's instances
-  instance: InstanceValues,     // exact (flat)
+  instanceIndex: u32, // index among the draw's instances
+  draw: u32,
+  directory: u32,     // DrawRecord.attributes
+  localFeature: u32,  // the feature local to the draw; 0xffffffff: none
+  named0: vec4f,      // the named values, interpolated (packed)
+  named1: vec4f,
+  named2: vec4f,
+  named3: vec4f,
 };
 
 // The material `fragmentMain` may change, filled with the glTF material's
 // values first. Linear color; `normal` is the shading normal (Earth-fixed
-// axes, normal map applied).
+// axes, normal map applied). (boundary)
 struct MaterialOutput {
   baseColor: vec3f,
   alpha: f32,
@@ -443,6 +467,24 @@ struct MaterialOutput {
   emissive: vec3f,
   unlit: bool,
 };
+
+// What styles read of the view (vector/VectorStyle.ts). (boundary)
+// The camera-relative position of what is being drawn (`cesiumAnchor`).
+fn cesiumAnchorPosition() -> vec3f {
+  return cesiumAnchor;
+}
+// The camera, Earth-fixed (float32).
+fn cesiumCameraPosition() -> vec3f {
+  return hiLoSum(view.cameraHi, view.cameraLo);
+}
+// Camera-relative positions to clip space.
+fn cesiumViewProjection() -> mat4x4f {
+  return view.viewProj;
+}
+// A pixel in clip units over two (the viewport's 1 / size).
+fn cesiumPixelSize() -> vec2f {
+  return view.viewport.zw;
+}
 
 fn read2(offset: u32, index: u32) -> vec2f {
   let b = offset + index * 2u;
@@ -462,6 +504,7 @@ fn read4(offset: u32, index: u32) -> vec4f {
 // A named attribute or metadata property of a vertex from its mesh's
 // directory (layout.ts MeshStreams.attributes: count, then per entry the
 // name's hash, stream offset and components); zero where absent.
+// (boundary)
 fn readNamed(directory: u32, hash: u32, vertexIndex: u32, feature: u32) -> vec4f {
   var value = vec4f(0.0);
   if (directory == NO_STREAM) {
@@ -499,7 +542,7 @@ fn readNamed(directory: u32, hash: u32, vertexIndex: u32, feature: u32) -> vec4f
 // A named field of an instance's streams (`InstanceOptions.streams.layout`)
 // as raw bits, through the draw's directory (DrawRecord.instanceDirectory:
 // count, then per field its name's hash, word offset and components);
-// zero where absent.
+// zero where absent. (boundary)
 fn readInstance(draw: u32, instance: u32, hash: u32) -> vec4u {
   let r = records[draw];
   var bits = vec4u(0u);
@@ -544,6 +587,7 @@ fn propertyTexel(slot: u32, uv: vec2f) -> vec4u {
 // scale): its bytes from the texel's channels, little-endian per
 // component, as the component type, normalized, then offset and scaled;
 // `fallback` where the mesh's directory has it otherwise or not at all.
+// (boundary)
 fn readFragmentProperty(directory: u32, hash: u32, uv: vec2f, feature: u32, fallback: vec4f) -> vec4f {
   if (directory == NO_STREAM) {
     return fallback;
@@ -688,7 +732,7 @@ fn vertexOut(vertexIndex: u32, item: u32, withAir: bool) -> VsOut {
     tableFeature = instance;
   }
   // The custom shader's vertex stage (CustomShader.ts's defaults: unchanged).
-  let vsInput = VertexInput(
+  let stage = cesiumVertexStage(CesiumVertex(
     position,
     normal,
     out.uv,
@@ -697,17 +741,18 @@ fn vertexOut(vertexIndex: u32, item: u32, withAir: bool) -> VsOut {
     vertexIndex,
     instance,
     view.time.x,
-    vertexAttributes(r.attributes, vertexIndex, tableFeature),
-    vertexMetadata(r.attributes, vertexIndex, tableFeature),
-    instanceValues(draw, instance),
-  );
+    draw,
+    r.attributes,
+    tableFeature,
+  ));
   out.ids.z = instance;
-  passNamed(vsInput.attributes, vsInput.metadata, &out);
-  var vsOutput = VertexOutput(vsInput.positionMC, vsInput.normalMC);
-  vertexMain(vsInput, &vsOutput);
-  normal = vsOutput.normalMC;
-  out.positionMC = vsOutput.positionMC;
-  var world = m * vec4f(vsOutput.positionMC, 1.0);
+  out.named0 = stage.named0;
+  out.named1 = stage.named1;
+  out.named2 = stage.named2;
+  out.named3 = stage.named3;
+  normal = stage.normalMC;
+  out.positionMC = stage.positionMC;
+  var world = m * vec4f(stage.positionMC, 1.0);
   out.relPosition = world.xyz;
   out.position = view.viewProj * world;
   // A billboard (RecordFlags.billboard): the instance's position, its
@@ -718,7 +763,7 @@ fn vertexOut(vertexIndex: u32, item: u32, withAir: bool) -> VsOut {
   if (billboard) {
     world = m * vec4f(anchor.xyz, 1.0);
     out.relPosition = world.xyz;
-    let corner = vsOutput.positionMC.xy * r.billboardSize * length(m[0].xyz);
+    let corner = stage.positionMC.xy * r.billboardSize * length(m[0].xyz);
     out.position = view.viewProj * world;
     out.position = vec4f(
       out.position.xy + corner * 2.0 * view.viewport.zw * out.position.w,
@@ -865,7 +910,7 @@ fn materialAlpha(in: VsOut) -> f32 {
     material.emissive,
     (material.flags & 1u) != 0u || (r.flags & 2u) != 0u,
   );
-  fragmentMain(fragmentInputOf(in, geometric), &custom);
+  cesiumFragmentStage(fragmentOf(in, geometric), &custom);
   return custom.alpha;
 }
 
@@ -1209,11 +1254,11 @@ fn fsPoints(in: VsOut, @builtin(front_facing) frontFacing: bool) -> FsPointsOut 
 
 // Translucent surfaces (`translucent`) take no ambient occlusion: the
 // screen's occlusion is that of the opaque surfaces behind them.
-// A fragment as custom shaders' `fragmentMain` sees it.
-fn fragmentInputOf(in: VsOut, geometric: vec3f) -> FragmentInput {
+// A fragment as the custom shader's fragment stage takes it.
+fn fragmentOf(in: VsOut, geometric: vec3f) -> CesiumFragment {
   let r = records[in.ids.x];
   cesiumAnchor = in.relPosition;
-  return FragmentInput(
+  return CesiumFragment(
     in.positionMC,
     in.relPosition,
     in.relPosition + hiLoSum(view.cameraHi, view.cameraLo),
@@ -1223,10 +1268,15 @@ fn fragmentInputOf(in: VsOut, geometric: vec3f) -> FragmentInput {
     in.ids.y,
     in.position.xy,
     view.time.x,
-    fragmentAttributes(in),
-    fragmentMetadata(in),
     in.ids.z,
-    instanceValues(in.ids.x, in.ids.z),
+    in.ids.x,
+    r.attributes,
+    // The fragment's feature, local to the draw (feature tables).
+    select(in.ids.y - r.featureId, 0xffffffffu, in.ids.y == 0u),
+    in.named0,
+    in.named1,
+    in.named2,
+    in.named3,
   );
 }
 
@@ -1335,7 +1385,7 @@ fn shadeSurface(in: VsOut, frontFacing: bool, translucent: bool) -> Surface {
   }
 
   // The custom shader's material (CustomShader.ts's defaults: unchanged).
-  let fsInput = fragmentInputOf(in, geometric);
+  let fragment = fragmentOf(in, geometric);
   var custom = MaterialOutput(
     baseColor.rgb,
     baseColor.a,
@@ -1346,7 +1396,7 @@ fn shadeSurface(in: VsOut, frontFacing: bool, translucent: bool) -> Surface {
     emissive,
     (flags & 1u) != 0u || (r.flags & 2u) != 0u,
   );
-  fragmentMain(fsInput, &custom);
+  cesiumFragmentStage(fragment, &custom);
   baseColor = vec4f(custom.baseColor, custom.alpha);
   // Alpha mask, on the custom shader's alpha (the depth pass's cut, else here).
   if (!cutOutInDepth && (flags & 4u) != 0u && baseColor.a < material.alphaCutoff) {

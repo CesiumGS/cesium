@@ -78,7 +78,7 @@ describe("vector styles", () => {
       ],
     });
     expect(shader.code).toContain(
-      "let show = (length(cesiumAnchor) >= uniforms.param_near);",
+      "let show = (length(cesiumAnchorPosition()) >= uniforms.param_near);",
     );
     expect(shader.code).toContain(
       "let size = (vsInput.instance.speed * 0.5f);",
