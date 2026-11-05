@@ -50,7 +50,14 @@ const LEAP_DAT = `#  Value of TAI-UTC in second valid beginning at the date give
 
 const leap = LeapSeconds.fromIers(LEAP_DAT);
 
-const sample = (r: (typeof earth)[number]): EopSample => ({
+type Row = (typeof earth)[number];
+
+// Leap rows carry TT because UTC ms cannot name 23:59:60.5; the rest are
+// built from UTC, like a Clock would.
+const instantOf = (r: Row): Instant =>
+  r.utcMs === null ? Instant.fromTt(r.tt!) : Instant.fromUtc(r.utcMs, leap);
+
+const sample = (r: Row): EopSample => ({
   ut1MinusUtc: r.dut1,
   xp: r.xp,
   yp: r.yp,
@@ -89,11 +96,7 @@ describe("Earth orientation (IAU 2006/2000A)", () => {
   it("celestialToTerrestrial matches the pyerfa matrix to 1e-11", () => {
     let worst = 0;
     for (const r of earth) {
-      const m = celestialToTerrestrial(
-        Instant.fromUtc(r.utcMs, leap),
-        sample(r),
-        leap,
-      );
+      const m = celestialToTerrestrial(instantOf(r), sample(r), leap);
       for (let i = 0; i < 9; i++) {
         worst = Math.max(worst, Math.abs(m[i]! - r.matrix[i]!));
       }
@@ -101,13 +104,32 @@ describe("Earth orientation (IAU 2006/2000A)", () => {
     expect(worst).toBeLessThan(1e-11);
   });
 
+  it("keeps the Earth rotation continuous across the 2016 leap second", () => {
+    // UT1-UTC steps by +1 s as TAI-UTC does, so UT1 advances with TT. A wrong
+    // leap-second row would put a 1 s (7.3e-5 rad) jump in the rotation.
+    const rows = earth.filter((r) => "label" in r);
+    expect(rows).toHaveLength(4);
+    const matrices = rows.map((r) =>
+      celestialToTerrestrial(instantOf(r), sample(r), leap),
+    );
+    for (let i = 1; i < rows.length; i++) {
+      // Relative rotation angle from the trace of m_i * m_(i-1)^T.
+      const a = matrices[i - 1]!;
+      const b = matrices[i]!;
+      let trace = 0;
+      for (let k = 0; k < 9; k++) {
+        trace += a[k]! * b[k]!;
+      }
+      const angle = Math.acos(Math.min(1, (trace - 1) / 2));
+      const elapsed = rows[i]!.tt! - rows[i - 1]!.tt!;
+      // Sidereal rate (rad/s) times the UT1 elapsed, which equals TT elapsed.
+      expect(Math.abs(angle - 7.292115e-5 * elapsed)).toBeLessThan(1e-8);
+    }
+  });
+
   it("is a rotation", () => {
     for (const r of earth) {
-      const m = celestialToTerrestrial(
-        Instant.fromUtc(r.utcMs, leap),
-        sample(r),
-        leap,
-      );
+      const m = celestialToTerrestrial(instantOf(r), sample(r), leap);
       for (let i = 0; i < 3; i++) {
         for (let j = 0; j < 3; j++) {
           let dot = 0;
@@ -128,12 +150,7 @@ describe("Earth orientation (IAU 2006/2000A)", () => {
   it("writes into the output array when given one", () => {
     const r = earth[0]!;
     const out = new Float64Array(9);
-    const m = celestialToTerrestrial(
-      Instant.fromUtc(r.utcMs, leap),
-      sample(r),
-      leap,
-      out,
-    );
+    const m = celestialToTerrestrial(instantOf(r), sample(r), leap, out);
     expect(m).toBe(out);
   });
 

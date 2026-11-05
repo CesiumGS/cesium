@@ -104,6 +104,29 @@ export class LeapSeconds {
     return this.#offsets[lo]!;
   }
 
+  /**
+   * TAI-UTC in seconds at a TAI time, given as `taiMs`: TAI milliseconds on
+   * the same scale as UTC ms since 1970 (a UTC ms plus 1000 * TAI-UTC). Unlike
+   * `taiMinusUtc` it is exact inside a leap second, where UTC ms cannot name
+   * the instant: a step row applies from its own TAI start, `start + 1000 *
+   * offset`, so the second 23:59:60 still reads the old offset.
+   */
+  taiMinusUtcAtTai(taiMs: number): number {
+    const s = this.#starts;
+    const o = this.#offsets;
+    let lo = 0;
+    let hi = s.length - 1;
+    while (lo < hi) {
+      const mid = (lo + hi + 1) >> 1;
+      if (s[mid]! + o[mid]! * 1000 <= taiMs) {
+        lo = mid;
+      } else {
+        hi = mid - 1;
+      }
+    }
+    return o[lo]!;
+  }
+
   /** Whether the table is past its expiry at a UTC time. */
   isExpired(utcMs: number): boolean {
     return utcMs > this.expires;

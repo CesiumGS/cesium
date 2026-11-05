@@ -35,12 +35,46 @@ def dtdb():
     write("dtdb", rows)
 
 
+def earth_row(utc1, utc2, utc_ms, tt, dut1, xp, yp, dx, dy):
+    """One GCRS->ITRS reference row. `tt` is TT seconds past J2000 when given."""
+    tai1, tai2 = erfa.utctai(utc1, utc2)
+    tt1, tt2 = erfa.taitt(tai1, tai2)
+    ut11, ut12 = erfa.utcut1(utc1, utc2, dut1)
+    x, y = erfa.xy06(tt1, tt2)
+    s = erfa.s06(tt1, tt2, x, y)
+    era = erfa.era00(ut11, ut12)
+    rc2i = erfa.c2ixys(x + dx, y + dy, s)
+    rpom = erfa.pom00(xp, yp, erfa.sp00(tt1, tt2))
+    m = erfa.c2tcio(rc2i, era, rpom)
+    return {
+        "utcMs": utc_ms,
+        "tt": tt,
+        "dut1": float(dut1),
+        "xp": xp,
+        "yp": yp,
+        "dx": dx,
+        "dy": dy,
+        "tt1": float(tt1),
+        "tt2": float(tt2),
+        "ut11": float(ut11),
+        "ut12": float(ut12),
+        "x": float(x),
+        "y": float(y),
+        "s": float(s),
+        "era": float(era),
+        "matrix": [float(v) for v in np.asarray(m).reshape(9)],
+    }
+
+
 def earth():
-    """GCRS->ITRS (IAU 2006/2000A, CIO-based) at 30 UTC instants, 2000-2050.
+    """GCRS->ITRS (IAU 2006/2000A, CIO-based): 30 UTC instants 2000-2050, then
+    four rows across the 2016-12-31 leap second.
 
     The EOP values are assumed, of realistic size, not measured: pyerfa has
     no c2t06a taking dX/dY, so the matrix composes c2ixys(x+dx, y+dy, s06),
-    era00, pom00(xp, yp, sp00) and c2tcio, as the TypeScript does.
+    era00, pom00(xp, yp, sp00) and c2tcio, as the TypeScript does. Leap rows
+    carry `tt` (TT seconds past J2000) because UTC ms cannot name 23:59:60.5;
+    the others have `tt: null` and are built from `utcMs`.
     """
     arcsec = np.pi / 648000.0
     rng = np.random.default_rng(20261105)
@@ -50,42 +84,32 @@ def earth():
         utc_ms = 946_728_000_000 + i * 54_500_000_000 + 12_345_000
         day = utc_ms // 86_400_000
         sec = (utc_ms % 86_400_000) / 1000.0
-        # Unix day -> JD of 0h UTC.
-        utc1 = 2440587.5 + day
-        utc2 = sec / 86400.0
         dut1 = float(rng.uniform(-0.9, 0.9))
         xp = float(rng.uniform(-0.3, 0.3) * arcsec)
         yp = float(rng.uniform(0.1, 0.5) * arcsec)
         dx = float(rng.uniform(-0.3, 0.3) * 1e-3 * arcsec)
         dy = float(rng.uniform(-0.3, 0.3) * 1e-3 * arcsec)
-        tai1, tai2 = erfa.utctai(utc1, utc2)
-        tt1, tt2 = erfa.taitt(tai1, tai2)
-        ut11, ut12 = erfa.utcut1(utc1, utc2, dut1)
-        x, y = erfa.xy06(tt1, tt2)
-        s = erfa.s06(tt1, tt2, x, y)
-        era = erfa.era00(ut11, ut12)
-        rc2i = erfa.c2ixys(x + dx, y + dy, s)
-        rpom = erfa.pom00(xp, yp, erfa.sp00(tt1, tt2))
-        m = erfa.c2tcio(rc2i, era, rpom)
         rows.append(
-            {
-                "utcMs": int(utc_ms),
-                "dut1": dut1,
-                "xp": xp,
-                "yp": yp,
-                "dx": dx,
-                "dy": dy,
-                "tt1": float(tt1),
-                "tt2": float(tt2),
-                "ut11": float(ut11),
-                "ut12": float(ut12),
-                "x": float(x),
-                "y": float(y),
-                "s": float(s),
-                "era": float(era),
-                "matrix": [float(v) for v in np.asarray(m).reshape(9)],
-            }
+            earth_row(2440587.5 + day, sec / 86400.0, int(utc_ms), None, dut1, xp, yp, dx, dy)
         )
+
+    # Leap second at the end of 2016-12-31 (TAI-UTC 36 -> 37). UT1-UTC steps
+    # by +1 s with it, from about -0.41 to +0.59, so UT1 stays continuous.
+    # TT seconds past J2000 of 2017-01-01T00:00:00 UTC, exact in decimal.
+    new_year_tt = (1_483_228_800 - 946_728_000) + 37 + 32.184
+    for label, h, mi, sec, utc_ms, tt, dut1 in [
+        ("2016-12-31T23:59:59", 23, 59, 59.0, 1_483_228_799_000, new_year_tt - 2.0, -0.41),
+        ("2016-12-31T23:59:60.5", 23, 59, 60.5, None, new_year_tt - 0.5, -0.41),
+        ("2017-01-01T00:00:00", 0, 0, 0.0, 1_483_228_800_000, new_year_tt, 0.59),
+        ("2017-01-01T00:00:01", 0, 0, 1.0, 1_483_228_801_000, new_year_tt + 1.0, 0.59),
+    ]:
+        year, month, day = (2016, 12, 31) if h == 23 else (2017, 1, 1)
+        utc1, utc2 = erfa.dtf2d("UTC", year, month, day, h, mi, sec)
+        row = earth_row(
+            utc1, utc2, utc_ms, tt, dut1, 0.15 * arcsec, 0.35 * arcsec, 0.1e-3 * arcsec, -0.1e-3 * arcsec
+        )
+        row["label"] = label
+        rows.append(row)
     write("earth", rows)
 
 
