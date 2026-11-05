@@ -384,7 +384,9 @@ export class Viewer {
     }
     this.ready = this.buildGlobe(options.imagery ?? true);
     if (options.suspendPresentation) {
-      this.resumeStart = this.suspendPresentation();
+      // Nothing to keep before the first frame: hidden, so the container's
+      // background (or a loading screen) shows.
+      this.resumeStart = this.suspendPresentation({ hide: true });
     }
     engine.start();
     const tick = () => {
@@ -394,6 +396,16 @@ export class Viewer {
       this.controller.update();
       this.secondController?.update();
       this.clock.tick(performance.now());
+      if (
+        this.unhideAfter !== undefined &&
+        (this.hidingSuspensions > 0 ||
+          this.engine.stats.framesRendered > this.unhideAfter)
+      ) {
+        if (this.hidingSuspensions === 0) {
+          this.canvas.style.visibility = "";
+        }
+        this.unhideAfter = undefined;
+      }
       this.frameRequest = requestAnimationFrame(tick);
     };
     this.frameRequest = requestAnimationFrame(tick);
@@ -1006,7 +1018,11 @@ export class Viewer {
    * Suspends presentation while a scene is set up in steps (load, place,
    * frame) that shouldn't be seen: the view isn't drawn, so the canvas
    * keeps its last frame (or shows the container's background before the
-   * first), until every suspension is resumed. While suspended the
+   * first), until every suspension is resumed. With `hide`, the canvas is
+   * hidden meanwhile instead: for new content, where the last frame is of
+   * what is going away (switching scenes or examples); without it, for an
+   * edit of the scene in view, where the last frame is the right thing to
+   * keep showing. While suspended the
    * container has `data-cesium-presentation-suspended`, for a loading
    * screen in CSS, and `onPresentationChange` is called. The pattern of
    * Android's `postponeEnterTransition` and Unity's
@@ -1017,18 +1033,29 @@ export class Viewer {
    * disposable, so `using _ = viewer.suspendPresentation();` resumes when
    * the block ends, setup errors included.
    */
-  suspendPresentation(): (() => void) & Disposable {
+  suspendPresentation(
+    options: { hide?: boolean } = {},
+  ): (() => void) & Disposable {
     let resumed = false;
     if (this.suspensions++ === 0) {
       this.view.enabled = false;
       this.container.dataset.cesiumPresentationSuspended = "";
       this.onPresentationChange?.(true);
     }
+    const hide = options.hide === true;
+    if (hide && this.hidingSuspensions++ === 0) {
+      this.canvas.style.visibility = "hidden";
+    }
     const resume = () => {
       if (resumed) {
         return;
       }
       resumed = true;
+      if (hide && --this.hidingSuspensions === 0) {
+        // Shown once a new frame is drawn (`tick`): shown now, the canvas
+        // would present its last frame, of what went away, for a frame.
+        this.unhideAfter = this.engine.stats.framesRendered;
+      }
       if (--this.suspensions === 0) {
         this.view.enabled = true;
         delete this.container.dataset.cesiumPresentationSuspended;
@@ -1069,6 +1096,9 @@ export class Viewer {
   /** Called when presentation is suspended (true) or resumes (false). */
   onPresentationChange?: (suspended: boolean) => void;
   private suspensions = 0;
+  private hidingSuspensions = 0;
+  /** Frames rendered when the last hiding suspension ended, until shown. */
+  private unhideAfter?: number;
   private resumeStart?: () => void;
 
   /** The current controls (`setControls`). */

@@ -5102,6 +5102,12 @@ them on content as you type.
     is ready, and the engine holds that frame until then.
   - The gallery creates its viewer suspended and resumes after each
     example's setup. Its spinner is centered on the view.
+  - `suspendPresentation({ hide: true })` hides the canvas instead of
+    keeping its last frame. Use it for new content; keep the last frame
+    for an edit of the scene in view. The canvas shows again only once a
+    new frame is drawn, otherwise it would present the stale frame once.
+    The gallery hides on every switch, in a layout effect, so the old
+    example never paints under the new one's title (r52).
 - _Lookdev only (r52)._ The stage has no globe, timeline or credits. The
   key light is the sun, set by direction at the stage (`setSun`: key, soft
   key, top, back, off), and `Viewer.creditsShown` hides the credits while

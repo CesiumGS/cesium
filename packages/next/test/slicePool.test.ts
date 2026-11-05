@@ -16,7 +16,7 @@ describe("SlicePool", () => {
       },
     } as unknown as World;
     const pool = SlicePool.acquire(fakeDevice({}), world, 256, 4);
-    pool.texture.destroy = () => log.push("destroy");
+    pool.texture.destroy = () => void log.push("destroy");
     pool.release(4);
     expect(log).toEqual(["bind", "unbind", "destroy"]);
   });
@@ -31,7 +31,7 @@ describe("SlicePool", () => {
     const device = fakeDevice({});
     const pool = SlicePool.acquire(device, world, 256, 4);
     SlicePool.acquire(device, world, 256, 4);
-    pool.texture.destroy = () => log.push("destroy");
+    pool.texture.destroy = () => void log.push("destroy");
     pool.release(4);
     expect(log).not.toContain("unbind");
     expect(log).not.toContain("destroy");

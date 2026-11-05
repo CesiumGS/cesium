@@ -15,7 +15,7 @@ import {
 import { svgArrowLeft } from "@stratakit/icons/arrow-left";
 import { Icon } from "@stratakit/mui";
 import { getRouteApi, Link as RouterLink } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { EXAMPLES } from "../../../examples/index.ts";
 import { Viewer, type GlobeKind } from "../../../widgets/index.ts";
 import { ionToken } from "../ionToken.ts";
@@ -170,8 +170,10 @@ export function ExamplePage() {
     // The viewer outlives example switches.
   }, [exists]);
 
-  // The example: run in the viewer, undone when left.
-  useEffect(() => {
+  // The example: run in the viewer, undone when left. A layout effect, so
+  // the switch (the last example undone, the canvas hidden) happens before
+  // the browser paints the new route, not a frame or two after it.
+  useLayoutEffect(() => {
     if (!viewer || !info || !panel.current) {
       return;
     }
@@ -181,9 +183,10 @@ export function ExamplePage() {
     setError(undefined);
     setRunning(true);
     const box = panel.current;
-    // Nothing new shows while the example sets its scene up (its globe,
-    // content, framing): the last frame stays, the loading overlay over it.
-    const resume = viewer.suspendPresentation();
+    // Nothing shows while the example sets its scene up (its globe,
+    // content, framing), and not the last example's frame either: the
+    // canvas is hidden, the loading overlay on the stage's background.
+    const resume = viewer.suspendPresentation({ hide: true });
     void (async () => {
       try {
         if (globe.current !== info.globe) {
