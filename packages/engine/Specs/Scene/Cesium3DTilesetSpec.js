@@ -51,6 +51,7 @@ import {
   ResourceCache,
   TileBoundingRegion,
   TileOrientedBoundingBox,
+  VectorGltf3DTileContent,
 } from "../../index.js";
 import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
 import createScene from "../../../../Specs/createScene.js";
@@ -6400,6 +6401,19 @@ describe(
           );
           const groupedChild = tileset.root.children[1];
           expect(groupedChild.content.getFeature(0).featureLayer).toBe(
+            tileset.featureLayers.get(0),
+          );
+        });
+
+        it("gives GeoJSON vector features their layer", async function () {
+          const tileset = await Cesium3DTilesTester.loadTileset(
+            scene,
+            "Data/Cesium3DTiles/Metadata/Layers/geojson.json",
+            { vectorGeoJson: true },
+          );
+          const content = tileset.root.children[0].content;
+          expect(content).toBeInstanceOf(VectorGltf3DTileContent);
+          expect(content.getFeature(0, 0).featureLayer).toBe(
             tileset.featureLayers.get(0),
           );
         });

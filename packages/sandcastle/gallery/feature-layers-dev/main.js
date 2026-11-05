@@ -6,7 +6,8 @@ import Sandcastle from "Sandcastle";
 // - Each group is set on a child content that points to an external tileset.
 // - The center content has no group, so it's always shown.
 // Buildings are available as b3dm (legacy) or glb content. The GeoJSON variant
-// uses MAXAR_content_geojson vector content instead.
+// uses MAXAR_content_geojson vector content instead, loaded either as a model
+// (default) or as vector primitives (vectorGeoJson).
 // The "external groups" variant shows a known gap (#13900): its external
 // tilesets define their own groups, which aren't resolved correctly yet.
 // The standalone GeoJSON mode loads the same GeoJSON files without a tileset,
@@ -68,11 +69,12 @@ function addToggles(layers) {
   });
 }
 
-async function loadTileset(format) {
+async function loadTileset(format, options) {
   reset(format === "external-groups" ? externalGroupsNote : undefined);
 
   tileset = await Cesium.Cesium3DTileset.fromUrl(
     `../../SampleData/Cesium3DTiles/Layers/${format}/tileset.json`,
+    options,
   );
   const layers = tileset.featureLayers;
 
@@ -97,10 +99,16 @@ async function loadTileset(format) {
   tileset.tileLoad.addEventListener(function (tile) {
     const content = tile.content;
     for (let i = 0; i < content.featuresLength; i++) {
-      const feature = content.getFeature(i);
+      // Vector content takes a feature table id; model content ignores it.
+      const feature = content.getFeature(i, 0);
       const color = colorByLayer.get(feature.featureLayer);
       if (Cesium.defined(color)) {
         feature.color = color;
+      }
+      // Vector points and lines draw at 1px by default; enlarge them.
+      if (tileset.vectorGeoJson) {
+        feature.pointSize = 8;
+        feature.lineWidth = 2;
       }
     }
     loaded.push(content.url.split("/").pop());
@@ -108,12 +116,14 @@ async function loadTileset(format) {
   });
 
   let offset;
-  if (format === "geojson") {
+  if (format === "geojson" && !tileset.vectorGeoJson) {
     // GeoJSON points render at 1px by default. A style's pointSize would reset
     // the per-layer tint above, so enlarge them with point attenuation instead.
     tileset.pointCloudShading.attenuation = true;
     tileset.pointCloudShading.maximumAttenuation = 10;
     tileset.pointCloudShading.baseResolution = 4;
+  }
+  if (format === "geojson") {
     offset = new Cesium.HeadingPitchRange(0, -Cesium.Math.PI_OVER_TWO, 0);
   }
 
@@ -188,6 +198,10 @@ Sandcastle.addToolbarMenu(
     { text: "b3dm content", onselect: () => loadTileset("b3dm") },
     { text: "glb content", onselect: () => loadTileset("glb") },
     { text: "GeoJSON content", onselect: () => loadTileset("geojson") },
+    {
+      text: "GeoJSON content (vector primitives)",
+      onselect: () => loadTileset("geojson", { vectorGeoJson: true }),
+    },
     {
       text: "External groups (known gap)",
       onselect: () => loadTileset("external-groups"),
