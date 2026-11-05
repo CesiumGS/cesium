@@ -45,7 +45,7 @@ describe("EarthOrientationParameters", () => {
 
   it("returns a row exactly at its midnight, in radians and seconds", () => {
     const s = eop.at(msOf(57752));
-    expect(s.ut1MinusUtc).toBeCloseTo(-0.111, 14);
+    expect(s.ut1MinusUtc).toBe(-0.111);
     expect(s.xp).toBeCloseTo(0.11 * ARCSEC, 18);
     expect(s.yp).toBeCloseTo(0.31 * ARCSEC, 18);
     expect(s.dX).toBeCloseTo(0.0002 * ARCSEC, 18);
@@ -56,10 +56,6 @@ describe("EarthOrientationParameters", () => {
 
   it("uses 4-point Lagrange halfway between rows", () => {
     const s = eop.at(msOf(57752.5));
-    expect(s.xp / ARCSEC).toBeCloseTo(
-      lagrange(mjds.slice(0, 4), X.slice(0, 4), 57752.5),
-      12,
-    );
     expect(
       Math.abs(
         s.xp / ARCSEC - lagrange(mjds.slice(0, 4), X.slice(0, 4), 57752.5),
@@ -75,6 +71,73 @@ describe("EarthOrientationParameters", () => {
     // Naive UT1-UTC interpolation would be off by a large fraction of a second.
     const naive = lagrange(mjds.slice(1, 5), U.slice(1, 5), 57753.5);
     expect(Math.abs(naive - s.ut1MinusUtc)).toBeGreaterThan(0.1);
+  });
+
+  it("shifts the window inward at both table edges", () => {
+    const Y = [0.3, 0.31, 0.34, 0.36, 0.37, 0.39];
+    // First interval: window is rows 0..3.
+    const a = eop.at(msOf(57751.5));
+    expect(
+      Math.abs(
+        a.xp / ARCSEC - lagrange(mjds.slice(0, 4), X.slice(0, 4), 57751.5),
+      ),
+    ).toBeLessThan(1e-12);
+    expect(
+      Math.abs(
+        a.yp / ARCSEC - lagrange(mjds.slice(0, 4), Y.slice(0, 4), 57751.5),
+      ),
+    ).toBeLessThan(1e-12);
+    // Last interval: window is rows n-4..n-1 (2..5).
+    const b = eop.at(msOf(57755.5));
+    expect(
+      Math.abs(b.xp / ARCSEC - lagrange(mjds.slice(2), X.slice(2), 57755.5)),
+    ).toBeLessThan(1e-12);
+    expect(
+      Math.abs(b.yp / ARCSEC - lagrange(mjds.slice(2), Y.slice(2), 57755.5)),
+    ).toBeLessThan(1e-12);
+    expect(b.degraded).toBe(false);
+  });
+
+  it("interpolates every field, not just xp, away from the leap second", () => {
+    const Y = [0.3, 0.31, 0.34, 0.36];
+    const DX = [0.0001, 0.0002, 0.0004, 0.0005];
+    const DY = [-0.0002, -0.0003, -0.0004, -0.0006];
+    const m = mjds.slice(0, 4);
+    const s = eop.at(msOf(57752.5));
+    expect(Math.abs(s.yp / ARCSEC - lagrange(m, Y, 57752.5))).toBeLessThan(
+      1e-12,
+    );
+    expect(Math.abs(s.dX / ARCSEC - lagrange(m, DX, 57752.5))).toBeLessThan(
+      1e-12,
+    );
+    expect(Math.abs(s.dY / ARCSEC - lagrange(m, DY, 57752.5))).toBeLessThan(
+      1e-12,
+    );
+    const tai = U.map((u, i) => u - DAT[i]!);
+    const expectedUt = lagrange(m, tai.slice(0, 4), 57752.5) + 36;
+    expect(Math.abs(s.ut1MinusUtc - expectedUt)).toBeLessThan(1e-12);
+  });
+
+  it("flags an interpolated sample predicted when any window row is", () => {
+    // Interval 57753..57754: window is rows 1..4, and row 4 is predicted.
+    expect(eop.at(msOf(57753.5)).predicted).toBe(true);
+    expect(eop.at(msOf(57752.5)).predicted).toBe(false);
+    const small = EarthOrientationParameters.fromCelestrakCsv(
+      `${[HEADER, ...ROWS.slice(0, 4)].join("\n")}\n`,
+    );
+    expect(small.at(msOf(57752.5)).predicted).toBe(false);
+    expect(small.at(msOf(57753.5)).predicted).toBe(false);
+  });
+
+  it("returns NaN fields, degraded, for a NaN instant", () => {
+    const s = eop.at(NaN);
+    expect(s.degraded).toBe(true);
+    expect(s.xp).toBeNaN();
+    expect(s.ut1MinusUtc).toBeNaN();
+  });
+
+  it("is not degraded at the last row", () => {
+    expect(eop.at(msOf(57756)).degraded).toBe(false);
   });
 
   it("flags predicted rows", () => {
@@ -117,5 +180,52 @@ describe("EarthOrientationParameters", () => {
     for (const mjd of [57751, 57752.5, 57754.25, 57756, 57757]) {
       expect(other.at(msOf(mjd))).toEqual(eop.at(msOf(mjd)));
     }
+  });
+
+  describe("parse errors", () => {
+    const parse = (rows: string[], header = HEADER) =>
+      EarthOrientationParameters.fromCelestrakCsv(
+        `${[header, ...rows].join("\n")}\n`,
+      );
+
+    it("throws on a missing column", () => {
+      expect(() => parse(ROWS, HEADER.replace("DAT,", "DATX,"))).toThrow(
+        /missing column DAT/,
+      );
+    });
+
+    it("throws on a bad number, naming row and column", () => {
+      const bad = ROWS.map((r, i) => (i === 2 ? r.replace("0.13", "abc") : r));
+      expect(() => parse(bad)).toThrow(/row 4 has a bad X: abc/);
+    });
+
+    it("throws when there are no data rows", () => {
+      expect(() => parse([])).toThrow(/no data rows/);
+    });
+
+    it("throws on a blank UT1-UTC, naming row and column", () => {
+      const bad = ROWS.map((r, i) => (i === 1 ? r.replace("-0.1110", "") : r));
+      expect(() => parse(bad)).toThrow(/row 3 has a blank UT1-UTC/);
+    });
+
+    it("treats blank DX and DY as zero", () => {
+      const blank = ROWS.map((r, i) =>
+        i === 1 ? r.replace("0.0002,-0.0003", ",") : r,
+      );
+      const s = parse(blank).at(msOf(57752));
+      expect(s.dX).toBe(0);
+      expect(s.dY).toBe(0);
+    });
+
+    it("throws on a row shorter than the header", () => {
+      const bad = ROWS.map((r, i) =>
+        i === 3 ? r.split(",").slice(0, 8).join(",") : r,
+      );
+      expect(() => parse(bad)).toThrow(/row 5 has 8 cells, expected 12/);
+    });
+
+    it("throws on duplicate MJDs", () => {
+      expect(() => parse([...ROWS, ROWS[5]!])).toThrow(/duplicate/);
+    });
   });
 });

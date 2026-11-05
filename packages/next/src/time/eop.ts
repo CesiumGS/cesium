@@ -13,7 +13,10 @@ export interface EopSample {
   /** Celestial pole offsets, radians. */
   dX: number;
   dY: number;
-  /** The nearest tabulated row is a prediction, not a measurement. */
+  /**
+   * The sample is a prediction, not a measurement. For an interpolated sample
+   * this is true when any row in its 4-point window is predicted.
+   */
   predicted: boolean;
   /** The instant is outside the table, so the values are held or zero. */
   degraded: boolean;
@@ -35,6 +38,7 @@ export class EarthOrientationParameters {
     private readonly y: Float64Array, // arcsec
     private readonly dx: Float64Array, // arcsec
     private readonly dy: Float64Array, // arcsec
+    private readonly ut: Float64Array, // UT1-UTC, s
     private readonly ut1Tai: Float64Array, // UT1-UTC - DAT, s
     private readonly dat: Float64Array, // TAI-UTC, s
     private readonly predictedRow: Uint8Array,
@@ -66,28 +70,51 @@ export class EarthOrientationParameters {
     const cDat = col("DAT");
     const cType = col("DATA_TYPE");
 
-    const rows = lines.slice(1).map((line) => {
+    const rows = lines.slice(1).map((line, r) => {
+      const rowNumber = r + 2; // 1-based, counting the header
       const f = line.split(",").map((s) => s.trim());
-      const num = (i: number): number => {
-        // Empty cells (e.g. DX/DY on some rows) mean no offset.
-        const v = f[i]! === "" ? 0 : Number(f[i]!);
+      if (f.length < header.length) {
+        throw new Error(
+          `EOP CSV row ${rowNumber} has ${f.length} cells, expected ${header.length}`,
+        );
+      }
+      // Only DX and DY may be blank (meaning no offset); everything else is
+      // required.
+      const num = (i: number, name: string, optional = false): number => {
+        const cell = f[i]!;
+        if (cell === "") {
+          if (optional) {
+            return 0;
+          }
+          throw new Error(`EOP CSV row ${rowNumber} has a blank ${name}`);
+        }
+        const v = Number(cell);
         if (!Number.isFinite(v)) {
-          throw new Error(`EOP CSV has a bad number: ${f[i]!}`);
+          throw new Error(
+            `EOP CSV row ${rowNumber} has a bad ${name}: ${cell}`,
+          );
         }
         return v;
       };
       return {
-        mjd: num(cMjd),
-        x: num(cX),
-        y: num(cY),
-        ut: num(cUt),
-        dx: num(cDx),
-        dy: num(cDy),
-        dat: num(cDat),
+        mjd: num(cMjd, "MJD"),
+        x: num(cX, "X"),
+        y: num(cY, "Y"),
+        ut: num(cUt, "UT1-UTC"),
+        dx: num(cDx, "DX", true),
+        dy: num(cDy, "DY", true),
+        dat: num(cDat, "DAT"),
         predicted: f[cType]! === "P",
       };
     });
     rows.sort((a, b) => a.mjd - b.mjd);
+    for (let i = 1; i < rows.length; i++) {
+      if (!(rows[i]!.mjd > rows[i - 1]!.mjd)) {
+        throw new Error(
+          `EOP CSV has a duplicate or non-increasing MJD: ${rows[i]!.mjd}`,
+        );
+      }
+    }
 
     return new EarthOrientationParameters(
       Float64Array.from(rows, (r) => r.mjd),
@@ -95,16 +122,31 @@ export class EarthOrientationParameters {
       Float64Array.from(rows, (r) => r.y),
       Float64Array.from(rows, (r) => r.dx),
       Float64Array.from(rows, (r) => r.dy),
+      Float64Array.from(rows, (r) => r.ut),
       Float64Array.from(rows, (r) => r.ut - r.dat),
       Float64Array.from(rows, (r) => r.dat),
       Uint8Array.from(rows, (r) => (r.predicted ? 1 : 0)),
     );
   }
 
-  /** Earth orientation at a UTC instant (ms since 1970). */
+  /**
+   * Earth orientation at a UTC instant (ms since 1970). A NaN instant yields
+   * NaN fields with `degraded: true` rather than throwing.
+   */
   at(utcMs: number): EopSample {
     const mjd = utcMs / MS_PER_DAY + MJD_UNIX_EPOCH;
     const n = this.mjd.length;
+    if (Number.isNaN(mjd)) {
+      return {
+        ut1MinusUtc: NaN,
+        xp: NaN,
+        yp: NaN,
+        dX: NaN,
+        dY: NaN,
+        predicted: false,
+        degraded: true,
+      };
+    }
     if (mjd < this.mjd[0]!) {
       return {
         ut1MinusUtc: 0,
@@ -154,15 +196,23 @@ export class EarthOrientationParameters {
       yp: dot(this.y) * ARCSEC_TO_RAD,
       dX: dot(this.dx) * ARCSEC_TO_RAD,
       dY: dot(this.dy) * ARCSEC_TO_RAD,
-      predicted:
-        this.predictedRow[lo]! === 1 || this.predictedRow[lo + 1]! === 1,
+      predicted: this.anyPredicted(start, count),
       degraded: false,
     };
   }
 
+  private anyPredicted(start: number, count: number): boolean {
+    for (let i = 0; i < count; i++) {
+      if (this.predictedRow[start + i]! === 1) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   private row(k: number, degraded: boolean): EopSample {
     return {
-      ut1MinusUtc: this.ut1Tai[k]! + this.dat[k]!,
+      ut1MinusUtc: this.ut[k]!,
       xp: this.x[k]! * ARCSEC_TO_RAD,
       yp: this.y[k]! * ARCSEC_TO_RAD,
       dX: this.dx[k]! * ARCSEC_TO_RAD,
