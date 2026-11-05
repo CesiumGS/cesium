@@ -11,8 +11,10 @@ import { splitHigh, splitVec3 } from "../src/math/transforms.ts";
  * - Shaders combine hi/lo values only through `hiLoDifference` (an offset
  *   between positions, the highs subtracted as integers so relaxed math
  *   can't reassociate them: on an M-series Mac the float form erred
- *   0.45 m) and `hiLoSum` (a coarse absolute position). Any other
- *   arithmetic on them fails this test.
+ *   0.45 m) and `hiLoSum` (a coarse absolute position); in Slang only
+ *   through `SplitPosition` (common.slang: its `difference` and
+ *   `approximate` are those two). Any other arithmetic on them fails
+ *   this test.
  * - The CPU splits with `splitVec3`/`splitHigh` only (whole-meter highs).
  *
  * The GPU side of the guarantee is measured by spikes/precision.html
@@ -20,9 +22,9 @@ import { splitHigh, splitVec3 } from "../src/math/transforms.ts";
  */
 
 const root = fileURLToPath(new URL("..", import.meta.url));
-/** The hi/lo fields shaders see (common.wgsl View and Transform, rays). */
+/** The hi/lo fields shaders see (common.slang View and Transform, rays). */
 const SPLIT = /\b(cameraHi|cameraLo|originHi|originLo)\b/;
-const HELPERS = /\bhiLo(Difference|Sum)\s*\(/g;
+const HELPERS = /\b(hiLoDifference|hiLoSum|SplitPosition)\s*\(/g;
 
 function files(directory: string, pattern: RegExp): string[] {
   return readdirSync(directory).flatMap((name) => {
@@ -102,11 +104,20 @@ describe("hi/lo precision", () => {
       ),
     ).toBe(false);
     expect(misusesSplit("  cameraHi: vec3f,", false)).toBe(false);
+    expect(
+      misusesSplit(
+        "  return SplitPosition(view.cameraHi, view.cameraLo).approximate();",
+        false,
+      ),
+    ).toBe(false);
+    expect(
+      misusesSplit("  float3 p = view.cameraHi + view.cameraLo;", false),
+    ).toBe(true);
   });
 
   it("combines split positions only through hiLoDifference and hiLoSum", () => {
     const sources = [
-      ...files(join(root, "src"), /\.(wgsl|ts)$/),
+      ...files(join(root, "src"), /\.(wgsl|slang|ts)$/),
       ...files(join(root, "spikes", "slang"), /\.slang$/),
     ];
     const violations: string[] = [];

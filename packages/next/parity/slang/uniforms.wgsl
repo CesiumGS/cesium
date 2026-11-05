@@ -65,20 +65,16 @@ fn fragmentMain_0( fsInput_0 : FragmentInput_0,  material_0 : ptr<function, Mate
     return;
 }
 
-struct pixelOutput_0
-{
-    @location(0) output_0 : vec4<f32>,
-};
-
 @fragment
-fn cesiumStages(@builtin(position) p_0 : vec4<f32>) -> pixelOutput_0
+fn cesiumStages(@builtin(position) p_0 : vec4<f32>)
 {
     var _S1 : vec3<f32> = vec3<f32>(0.0f);
     var _S2 : vec2<f32> = vec2<f32>(0.0f);
-    var _S3 : Attributes_0 = Attributes_0( u32(0) );
-    var _S4 : Metadata_0 = Metadata_0( u32(0) );
-    var _S5 : InstanceValues_0 = InstanceValues_0( u32(0) );
-    var fi_0 : FragmentInput_0 = FragmentInput_0( _S1, _S1, _S1, _S1, _S2, vec4<f32>(0.0f), u32(0), _S2, 0.0f, _S3, _S4, u32(0), _S5 );
+    var _S3 : vec4<f32> = vec4<f32>(0.0f);
+    var _S4 : Attributes_0 = Attributes_0( u32(0) );
+    var _S5 : Metadata_0 = Metadata_0( u32(0) );
+    var _S6 : InstanceValues_0 = InstanceValues_0( u32(0) );
+    var fi_0 : FragmentInput_0 = FragmentInput_0( _S1, _S1, _S1, _S1, _S2, _S3, u32(0), _S2, 0.0f, _S4, _S5, u32(0), _S6 );
     var mo_0 : MaterialOutput_0;
     mo_0.baseColor_0 = _S1;
     mo_0.alpha_0 = 0.0f;
@@ -89,8 +85,11 @@ fn cesiumStages(@builtin(position) p_0 : vec4<f32>) -> pixelOutput_0
     mo_0.emissive_0 = _S1;
     mo_0.unlit_0 = false;
     fragmentMain_0(fi_0, &(mo_0));
-    var _S6 : pixelOutput_0 = pixelOutput_0( vec4<f32>(mo_0.baseColor_0, mo_0.alpha_0) );
-    return _S6;
+    if((any((vec4<f32>(mo_0.baseColor_0, mo_0.alpha_0) != _S3))))
+    {
+        discard;
+    }
+    return;
 }
 
 fn fragmentMain(fsInput: FragmentInput, material: ptr<function, MaterialOutput>) {

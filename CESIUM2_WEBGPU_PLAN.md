@@ -627,6 +627,56 @@ first-class step, not string joining spread through `RenderContext`:
   compiler, cached), styles from their expression compilers. Pipelines
   are made from links, cached by the linked code.
 
+_Step 5 progress (r56): the surfaces are Slang._ `surface.slang` (opaque
+and translucent in one module, one compile for every pass) plus
+`surfaceVertex.wgsl`, the three vertex entry points hand-written because
+Slang emits no `@invariant`; they call `surfaceVertex`,
+`surfacePointVertex` and `surfaceDepthVertex` across a second boundary
+(`SURFACE_VERTEX_BOUNDARY`). Slang gives varyings locations in field
+order (its `vk::location` doesn't reach WGSL, and semantics ending in a
+digit are one semantic's indices, placed out of order), so a test checks
+`VsOut` against every fragment entry point's inputs. `cutOutInDepth` is
+pipeline constant `0` (`[vk::constant_id(0)]`). Custom shaders 51/51,
+translucency 8/8, models, tileset and tracks pass.
+
+- **Found by the linker:** Slang-compiled custom stages and the
+  Slang-generated surface both carry Slang's synthesized names
+  (`pixelOutput_0` from the stub's output); the link stopped it with
+  both places named. The stub now has no outputs (it `discard`s), but two
+  separately compiled Slang modules share one naming scheme, so a
+  collision can come back with any synthesized helper.
+- **To replace: `slangStages.ts`'s reading of Slang's output.** It finds
+  `vertexMain_N` and Slang's copies of the contract structs by pattern
+  and strips the `_N` suffix to match fields (`sourceName`): string
+  matching on names the compiler chose, the one place left that does it
+  (the engine side reads only `__extern_cpp` names, which Slang keeps).
+  Two ways out, both behind `Linker`:
+  - _Name the boundary in the user's module too:_ cesium.slang's contract
+    structs and the stage glue (`cesiumVertexStage`,
+    `cesiumFragmentStage`) in Slang, `__extern_cpp`, so the user module's
+    WGSL defines the boundary functions under their names and no adapter
+    is written. The engine structs it takes (`CesiumVertex`…) are then
+    defined on both sides: the boundary has to own shared types (declared
+    once, by one unit, checked identical in the other) rather than each
+    compile emitting its own.
+  - _One Slang compile (a `SlangLinker`):_ the user module compiled with
+    `surface.slang` from source, the stages ordinary Slang calls (link-time
+    `extern`/`export`), no second naming scheme and no glue. Offline it
+    costs nothing; in the browser it compiles the whole surface (cached in
+    IndexedDB like the rest).
+    Decide with the boundary generated from reflection (the next step), which
+    produces the symbol table either way would use.
+- **Later (with the 2.0 package's tooling): ahead-of-time Slang for
+  apps.** `scripts/slangShader.mjs` is the package's own script. Apps
+  that don't want the WASM compiler need it published: a CLI in the
+  package (`npx @cesium/next slang …`) and a Vite/Rollup plugin turning
+  `import shader from "./x.slang?cesium"` into `CustomShader` options,
+  with the same compile as `fromSlang`, pinned to the engine's Slang
+  version (the contract is versioned with it). Its output must link
+  against the engine version it runs on: the boundary's description,
+  carried in the output and checked by the linker, says so in the
+  author's terms rather than as a WGSL error.
+
 _Explore when the surface shaders move (step 5): runtime Slang for the
 user contract._ Today 3D Tiles styles, the vector styling language and
 `CustomShader` generate WGSL strings against the WGSL ABI

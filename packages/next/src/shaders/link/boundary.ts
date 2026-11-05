@@ -23,9 +23,10 @@ export interface Boundary {
 }
 
 /**
- * The surface shaders' (opaque.wgsl, translucent.wgsl): the stages the
- * engine calls (a custom shader's generated glue, or CustomShader.ts
- * `DEFAULT_STAGES`), and what that code may use of the engine.
+ * The surface shaders' (surface.slang): the stages the engine calls (a
+ * custom shader's generated glue, or CustomShader.ts `DEFAULT_STAGES`),
+ * and what that code may use of the engine (surface.slang's
+ * `__extern_cpp` declarations, which keep their names in its WGSL).
  */
 export const SURFACE_BOUNDARY: Boundary = {
   name: "surface",
@@ -53,6 +54,18 @@ export const SURFACE_BOUNDARY: Boundary = {
     "cesiumViewProjection",
     "cesiumPixelSize",
   ],
+};
+
+/**
+ * Between surface.slang and its vertex entry points (surfaceVertex.wgsl,
+ * hand-written for `@invariant`): the vertex functions they call.
+ */
+export const SURFACE_VERTEX_BOUNDARY: Boundary = {
+  name: "surface vertex",
+  requires: ["surfaceVertex", "surfacePointVertex", "surfaceDepthVertex"].map(
+    (name) => ({ name, params: ["u32", "u32"], result: "SurfaceVertex" }),
+  ),
+  provides: ["vs", "vsPoints", "vsDepth"],
 };
 
 /** The point cull's (pointCull.slang): a vector style's symbols' kernel. */

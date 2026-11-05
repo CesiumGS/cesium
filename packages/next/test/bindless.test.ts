@@ -10,8 +10,8 @@ import {
 
 /**
  * The bindless seam (CESIUM2_WEBGPU_PLAN.md §7.1, §13.15): material
- * textures are read only through opaque.wgsl `materialTexture` (and their
- * presence through `materialHasTexture`), so a resource-table backend
+ * textures are read only through surface.slang `materialTexture` (and
+ * their presence through `materialHasTexture`), so a resource-table backend
  * replaces that one function, the records' references
  * (`World.textureRefs`) and the group-2 layout, and nothing else.
  */
@@ -32,9 +32,14 @@ function files(directory: string, pattern: RegExp): string[] {
 
 /** Lines of `source` that read material texture bindings outside the seam. */
 export function readsOutsideSeam(source: string): number[] {
-  // Only modules with the material texture set (ao.wgsl has its own
-  // `normalTexture`, a G-buffer).
-  if (!/@group\(2\)\s*@binding\(0\)\s*var\s+baseColorTexture\b/.test(source)) {
+  // Only modules with the material texture set (ao.slang has its own
+  // `normalTexture`, a G-buffer), in WGSL or Slang.
+  if (
+    !/@group\(2\)\s*@binding\(0\)\s*var\s+baseColorTexture\b/.test(source) &&
+    !/\[\[vk::binding\(0,\s*2\)\]\]\s*Texture2D<float4>\s+baseColorTexture\b/.test(
+      source,
+    )
+  ) {
     return [];
   }
   const lines = source.split("\n");
@@ -43,7 +48,7 @@ export function readsOutsideSeam(source: string): number[] {
   let depth = 0;
   lines.forEach((text, i) => {
     const line = text.replace(/\/\/.*$/, "");
-    if (/\bfn\s+materialTexture\s*\(/.test(line)) {
+    if (/^\s*(fn|float4)\s+materialTexture\s*\(/.test(line)) {
       inSeam = true;
       depth = 0;
     }
@@ -57,7 +62,10 @@ export function readsOutsideSeam(source: string): number[] {
       return;
     }
     // The declarations themselves.
-    if (/^\s*@group\(2\)\s*@binding\(\d+\)\s*var\s+\w+\s*:/.test(line)) {
+    if (
+      /^\s*@group\(2\)\s*@binding\(\d+\)\s*var\s+\w+\s*:/.test(line) ||
+      /^\s*\[\[vk::binding\(\d+,\s*2\)\]\]/.test(line)
+    ) {
       return;
     }
     if (BINDINGS.test(line)) {
@@ -82,15 +90,41 @@ fn shade() {
   let b = textureSample(baseColorTexture, baseColorSampler, uv);
 }`;
     expect(readsOutsideSeam(module)).toEqual([10]);
+    const slang = `[[vk::binding(0, 2)]] Texture2D<float4> baseColorTexture;
+[[vk::binding(5, 2)]] SamplerState baseColorSampler;
+float4 materialTexture(Material m, uint slot, float2 uv) {
+  switch (slot) {
+  default: return baseColorTexture.Sample(baseColorSampler, uv);
+  }
+}
+void shade() {
+  float4 b = baseColorTexture.Sample(baseColorSampler, uv);
+}`;
+    expect(readsOutsideSeam(slang)).toEqual([9]);
   });
 
   it("reads material textures only through materialTexture", () => {
     const violations: string[] = [];
-    for (const path of files(join(root, "src"), /\.wgsl$/)) {
+    // The sources (generated WGSL renames the bindings: its Slang is read).
+    for (const path of files(join(root, "src"), /\.(wgsl|slang)$/)) {
+      if (path.includes(join("shaders", "generated"))) {
+        continue;
+      }
       for (const line of readsOutsideSeam(readFileSync(path, "utf8"))) {
         violations.push(`${relative(root, path)}:${line}`);
       }
     }
+    // The seam is where the surface shaders read textures.
+    expect(
+      readsOutsideSeam(
+        readFileSync(join(root, "src", "shaders", "surface.slang"), "utf8"),
+      ),
+    ).toEqual([]);
+    expect(
+      /\[\[vk::binding\(0,\s*2\)\]\]\s*Texture2D<float4>\s+baseColorTexture\b/.test(
+        readFileSync(join(root, "src", "shaders", "surface.slang"), "utf8"),
+      ),
+    ).toBe(true);
     expect(violations).toEqual([]);
   });
 
@@ -112,7 +146,7 @@ fn shade() {
       ...material,
       textures: [0, NO_TEXTURE, 2, NO_TEXTURE, 4],
     });
-    // common.wgsl `materialTextureRef`.
+    // common.slang `materialTextureRef`.
     const ref = (slot: number) => {
       const word = slot < 2 ? u32[13]! : slot < 4 ? u32[14]! : u32[15]!;
       return (word >>> ((slot & 1) * 16)) & 0xffff;

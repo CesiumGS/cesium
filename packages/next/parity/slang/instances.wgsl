@@ -78,13 +78,8 @@ fn fragmentMain_0( fsInput_0 : FragmentInput_0,  material_0 : ptr<function, Mate
     return;
 }
 
-struct pixelOutput_0
-{
-    @location(0) output_0 : vec4<f32>,
-};
-
 @fragment
-fn cesiumStages(@builtin(position) p_0 : vec4<f32>) -> pixelOutput_0
+fn cesiumStages(@builtin(position) p_0 : vec4<f32>)
 {
     var _S1 : vec4<f32> = vec4<f32>(0.0f);
     var result_0 : vec4<f32> = _S1;
@@ -115,8 +110,11 @@ fn cesiumStages(@builtin(position) p_0 : vec4<f32>) -> pixelOutput_0
     fragmentMain_0(fi_0, &(mo_0));
     var _S8 : vec4<f32> = result_0 + vec4<f32>(mo_0.baseColor_0, mo_0.alpha_0);
     result_0 = _S8;
-    var _S9 : pixelOutput_0 = pixelOutput_0( _S8 );
-    return _S9;
+    if((any((_S8 != _S1))))
+    {
+        discard;
+    }
+    return;
 }
 
 fn vertexMain(vsInput: VertexInput, vsOutput: ptr<function, VertexOutput>) {

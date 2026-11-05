@@ -7,6 +7,7 @@ export {
   POINT_STYLE_BOUNDARY,
   POOL_STYLE_BOUNDARY,
   SURFACE_BOUNDARY,
+  SURFACE_VERTEX_BOUNDARY,
 } from "./boundary.ts";
 export type { Boundary, FunctionSignature } from "./boundary.ts";
 export {

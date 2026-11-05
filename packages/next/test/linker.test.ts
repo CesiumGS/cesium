@@ -4,6 +4,7 @@ import {
   POINT_STYLE_BOUNDARY,
   POOL_STYLE_BOUNDARY,
   SURFACE_BOUNDARY,
+  SURFACE_VERTEX_BOUNDARY,
   WgslLinker,
   compileFailure,
   declarations,
@@ -18,11 +19,13 @@ import { compileVectorStyle } from "../src/vector/VectorStyle.ts";
 
 const source = (path: string) =>
   readFileSync(new URL(`../src/${path}`, import.meta.url), "utf8");
-const common = wgslUnit("common.wgsl", source("shaders/common.wgsl"));
-const opaque = wgslUnit("opaque.wgsl", source("shaders/opaque.wgsl"));
-const translucent = wgslUnit(
-  "translucent.wgsl",
-  source("shaders/translucent.wgsl"),
+const surface = wgslUnit(
+  "surface.slang",
+  source("shaders/generated/surface.wgsl"),
+);
+const vertex = wgslUnit(
+  "surfaceVertex.wgsl",
+  source("shaders/surfaceVertex.wgsl"),
 );
 const moments = wgslUnit(
   "moment bindings",
@@ -36,6 +39,22 @@ const stages = wgslUnit("engine stages", DEFAULT_STAGES);
 const linker = new WgslLinker();
 const link = (units: ShaderUnit[], boundaries: Boundary[]) =>
   linker.link({ label: "test", units, boundaries });
+const SURFACE = [SURFACE_BOUNDARY, SURFACE_VERTEX_BOUNDARY];
+/** The engine's side of the surface boundary, as RenderContext links it. */
+const engine = [surface, vertex, moments];
+
+/** A struct's `@location`ed fields by name (Slang's numbered suffix off). */
+function locations(code: string, struct: string): Map<string, number> {
+  const body = new RegExp(`struct ${struct}\\s*\\{([^}]*)\\}`).exec(code);
+  expect(body, struct).not.toBeNull();
+  return new Map(
+    [
+      ...body![1]!.matchAll(
+        /@location\((\d+)\)\s*(?:@\w+\([^)]*\)\s*)*(\w+?)(?:_\d+)?\s*:/g,
+      ),
+    ].map((m) => [m[2]!, Number(m[1])]),
+  );
+}
 
 /** Every name a boundary says its side provides, defined by those units. */
 function expectProvides(boundary: Boundary, units: ShaderUnit[]) {
@@ -85,17 +104,32 @@ fn f(a: u32, out: ptr<function, S>, @builtin(position) p: vec4f) -> vec4f {
 });
 
 describe("the surface boundary", () => {
-  it("is what opaque.wgsl and common.wgsl define", () => {
-    expectProvides(SURFACE_BOUNDARY, [common, opaque]);
+  it("is what surface.slang exports", () => {
+    expectProvides(SURFACE_BOUNDARY, [surface]);
+    expectProvides(SURFACE_VERTEX_BOUNDARY, [vertex]);
   });
 
-  it("is met by the engine's own stages, opaque and translucent", () => {
-    for (const units of [
-      [common, opaque, stages],
-      [common, opaque, translucent, moments, stages],
-    ]) {
-      expect(link(units, [SURFACE_BOUNDARY]).diagnostics).toEqual([]);
+  it("is met by the engine's own stages", () => {
+    expect(link([...engine, stages], SURFACE).diagnostics).toEqual([]);
+  });
+
+  it("passes the vertex entries' outputs to the fragment entries' inputs", () => {
+    const out = locations(vertex.code, "VsOut");
+    const fields = [...surface.code.matchAll(/struct (pixelInput_\d+)/g)].map(
+      (m) => m[1]!,
+    );
+    expect(fields.length, "every fragment entry point's inputs").toBe(10);
+    for (const name of fields) {
+      // Each entry point's inputs are those `VsOut` puts out, at its
+      // locations (an entry may read fewer: none here do).
+      expect(locations(surface.code, name), name).toEqual(out);
     }
+    // And `SurfaceVertex` is `VsOut`'s fields in its order.
+    const vertexFields = /struct SurfaceVertex\s*\{([^}]*)\}/
+      .exec(surface.code)![1]!
+      .match(/\b(\w+)\s*:/g)!
+      .map((f) => f.replace(/\s*:$/, ""));
+    expect(vertexFields).toEqual(["position", ...out.keys()]);
   });
 
   it("is met by a custom shader's units, named values included", () => {
@@ -110,7 +144,7 @@ describe("the surface boundary", () => {
       shader.units.map((u) => u.name),
       "its units, each named for its diagnostics",
     ).toEqual(["vertex stage", "fragment stage", "contract", "uniforms"]);
-    const linked = link([common, opaque, ...shader.units], [SURFACE_BOUNDARY]);
+    const linked = link([...engine, ...shader.units], SURFACE);
     expect(linked.diagnostics).toEqual([]);
   });
 
@@ -121,16 +155,14 @@ describe("the surface boundary", () => {
         "fn fragmentMain(fsInput: FragmentInput, material: ptr<function, MaterialOutput>) {}",
       ].join("\n"),
     });
-    const message = linkFailure(
-      link([common, opaque, ...shader.units], [SURFACE_BOUNDARY]),
-    );
+    const message = linkFailure(link([...engine, ...shader.units], SURFACE));
     expect(message).toMatch(
-      /fragment stage line 1: `readNamed` is already defined \(opaque\.wgsl, line \d+\)/,
+      /fragment stage line 1: `readNamed` is already defined \(surface\.slang, line \d+\)/,
     );
   });
 
   it("reports a stage missing, or defined with other types", () => {
-    const missing = link([common, opaque], [SURFACE_BOUNDARY]);
+    const missing = link(engine, SURFACE);
     expect(linkFailure(missing)).toMatch(
       /needs `fn cesiumVertexStage\(CesiumVertex\) -> CesiumVertexResult`; no unit defines it/,
     );
@@ -139,16 +171,14 @@ describe("the surface boundary", () => {
       `${DEFAULT_STAGES.replace("fn cesiumFragmentStage(f: CesiumFragment, material: ptr<function, MaterialOutput>) {}", "")}
 fn cesiumFragmentStage(f: CesiumFragment) {}`,
     );
-    expect(
-      linkFailure(link([common, opaque, wrong], [SURFACE_BOUNDARY])),
-    ).toMatch(
+    expect(linkFailure(link([...engine, wrong], SURFACE))).toMatch(
       /stages line 7: `cesiumFragmentStage` must be `fn cesiumFragmentStage\(CesiumFragment, ptr<function, MaterialOutput>\)`/,
     );
   });
 
   it("wants directives in the first unit", () => {
     const late = wgslUnit("late", "enable f16;\nfn x() {}");
-    expect(linkFailure(link([common, late], []))).toMatch(
+    expect(linkFailure(link([surface, late], []))).toMatch(
       /late line 1: `enable` must come first in the module/,
     );
   });

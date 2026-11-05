@@ -81,7 +81,7 @@ export function cesiumModule(
 /** Contract fields that are structs of named values, converted by name. */
 const NESTED = new Set(["attributes", "metadata", "instance"]);
 
-/** The contract's structs' fields in order (opaque.wgsl, cesium.slang). */
+/** The contract's structs' fields in order (CustomShader.ts, cesium.slang). */
 const FIELDS = {
   VertexInput: [
     "positionMC",
@@ -159,7 +159,9 @@ export function slangStub(stages: SlangStages): string {
     "import cesium;",
     "import user;",
     '[shader("fragment")]',
-    `float4 ${SLANG_STUB_ENTRY}(float4 p : SV_Position) : SV_Target {`,
+    // No outputs (`discard` keeps the calls): an entry point's outputs are
+    // a struct Slang synthesizes, named as the surface module's are.
+    `void ${SLANG_STUB_ENTRY}(float4 p : SV_Position) {`,
     "  float4 result = float4(0.0);",
   ];
   if (stages.vertex) {
@@ -178,7 +180,13 @@ export function slangStub(stages: SlangStages): string {
       "  result += float4(mo.baseColor, mo.alpha);",
     );
   }
-  lines.push("  return result;", "}", "");
+  lines.push(
+    "  if (any(result != float4(0.0))) {",
+    "    discard;",
+    "  }",
+    "}",
+    "",
+  );
   return lines.join("\n");
 }
 
