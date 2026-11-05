@@ -2334,27 +2334,25 @@ export class Engine {
     );
   }
 
-  /** A view's composite's group (composite.wgsl): the lists, or the moments' sums. */
+  /**
+   * A view's composite's group (composite.slang): what "exact" blended
+   * (lit, unlit: bindings 3, 4), or the moments' zeroth and sums (2–4).
+   */
   private compositeGroup(
     frame: ViewFrame,
     role: number,
     pipeline: GPURenderPipeline,
-    inputs: [GPUBuffer] | [GPUTextureView, GPUTextureView, GPUTextureView],
+    inputs: GPUTextureView[],
   ): GPUBindGroup {
+    const first = 5 - inputs.length;
     return this.keptGroup(frame, role, inputs, () =>
       this.ctx.device.createBindGroup({
         label: "composite",
         layout: pipeline.getBindGroupLayout(0),
-        entries:
-          inputs.length === 1
-            ? [
-                { binding: 0, resource: { buffer: frame.translucentParams } },
-                { binding: 1, resource: { buffer: inputs[0] } },
-              ]
-            : inputs.map((resource, i) => ({
-                binding: 2 + i,
-                resource: resource as GPUTextureView,
-              })),
+        entries: inputs.map((resource, i) => ({
+          binding: first + i,
+          resource,
+        })),
       }),
     );
   }
@@ -3262,17 +3260,22 @@ export class Engine {
       format: pipelines.momentFormats[1],
       usage: attachment | GPUTextureUsage.TEXTURE_BINDING,
     });
+    // The moments' weighted light, or what "exact" blended (`sortLists`).
+    const blended =
+      attachment |
+      GPUTextureUsage.TEXTURE_BINDING |
+      GPUTextureUsage.STORAGE_BINDING;
     const accumulatedLit = graph.createTexture("translucent.lit", {
       width,
       height,
       format: "rgba16float",
-      usage: attachment | GPUTextureUsage.TEXTURE_BINDING,
+      usage: blended,
     });
     const accumulatedUnlit = graph.createTexture("translucent.unlit", {
       width,
       height,
       format: "rgba16float",
-      usage: attachment | GPUTextureUsage.TEXTURE_BINDING,
+      usage: blended,
     });
     const cleared = (): GPURenderPassColorAttachment => ({
       view: undefined as never,
@@ -3336,6 +3339,32 @@ export class Engine {
             ]),
           );
           pass.end();
+          // Each pixel's list sorted and blended, into the accumulation
+          // targets (composite.slang `sortLists`).
+          const lit = get(accumulatedLit);
+          const unlit = get(accumulatedUnlit);
+          const sort = enc.beginComputePass({
+            label: "translucent.sort",
+            timestampWrites: this.timer.passWrites("translucent-sort"),
+          });
+          sort.setPipeline(pipelines.translucentSort);
+          sort.setBindGroup(
+            0,
+            this.keptGroup(frame, 5, [lists, lit, unlit], () =>
+              device.createBindGroup({
+                label: "translucent.sort",
+                layout: pipelines.translucentSort.getBindGroupLayout(0),
+                entries: [
+                  { binding: 0, resource: { buffer: frame.translucentParams } },
+                  { binding: 1, resource: { buffer: lists } },
+                  { binding: 5, resource: lit },
+                  { binding: 6, resource: unlit },
+                ],
+              }),
+            ),
+          );
+          sort.dispatchWorkgroups(Math.ceil(width / 8), Math.ceil(height / 4));
+          sort.end();
           if (!this.listCountPending) {
             this.listCountPending = true;
             const readback = device.createBuffer({
@@ -3417,7 +3446,8 @@ export class Engine {
           pass.setBindGroup(
             0,
             this.compositeGroup(frame, 3, pipelines.compositeExact, [
-              this.lists!,
+              get(accumulatedLit),
+              get(accumulatedUnlit),
             ]),
           );
         } else {

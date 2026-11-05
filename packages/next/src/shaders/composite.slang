@@ -38,17 +38,34 @@ struct CompositeOut {
   float4 display : SV_Target1;
 };
 
-// The exact way: the pixel's list sorted nearest first, blended front to
-// back until next to nothing shows through.
-[shader("fragment")]
-CompositeOut fsExact(float4 frag : SV_Position) {
-  uint pixel = uint(frag.y) * translucency.width + uint(frag.x);
-  uint next = lists[LIST_HEADER + pixel];
-  if (next == 0u) {
-    discard;
+// The exact way, in two steps. First a compute pass (`sortLists`), a thread
+// a pixel: its list sorted nearest first, blended front to back until next
+// to nothing shows through, into `sortedLit` and `sortedUnlit` (the moments'
+// accumulation targets, which this way doesn't otherwise use); then
+// `fsSorted` puts them over the opaque pass's. The sort is in workgroup
+// memory, each thread its own MAX_LAYERS slots: done in the fragment
+// shader, two private arrays of MAX_LAYERS held every pixel's registers,
+// light lists or none, and the pass took tens of milliseconds.
+[[vk::binding(5, 0)]] [[vk::image_format("rgba16f")]] WTexture2D<float4> sortedLit;
+[[vk::binding(6, 0)]] [[vk::image_format("rgba16f")]] WTexture2D<float4> sortedUnlit;
+
+static const uint SORT_THREADS = 32u; // 8 × 4: MAX_LAYERS × 8 bytes each, 8 KB
+groupshared float sortDepths[MAX_LAYERS * SORT_THREADS];
+groupshared uint sortNodes[MAX_LAYERS * SORT_THREADS];
+
+// A thread's slot i: interleaved, so the threads' slots i are adjacent
+// (no bank conflicts).
+uint slot(uint i, uint lane) {
+  return i * SORT_THREADS + lane;
+}
+
+[shader("compute")]
+[numthreads(8, 4, 1)]
+void sortLists(uint3 id : SV_DispatchThreadID, uint lane : SV_GroupIndex) {
+  if (id.x >= translucency.width || id.y >= translucency.height) {
+    return;
   }
-  float depths[MAX_LAYERS];
-  uint nodes[MAX_LAYERS];
+  uint next = lists[LIST_HEADER + id.y * translucency.width + id.x];
   uint count = 0u;
   while (next != 0u) {
     uint node = translucency.nodesBase + (next - 1u) * 4u;
@@ -58,26 +75,26 @@ CompositeOut fsExact(float4 frag : SV_Position) {
     // one is dropped; nearer, it takes the farthest's place.
     uint i = count;
     if (count == MAX_LAYERS) {
-      if (depth <= depths[MAX_LAYERS - 1u]) {
+      if (depth <= sortDepths[slot(MAX_LAYERS - 1u, lane)]) {
         continue;
       }
       i = MAX_LAYERS - 1u;
     } else {
       count++;
     }
-    while (i > 0u && depths[i - 1u] < depth) {
-      depths[i] = depths[i - 1u];
-      nodes[i] = nodes[i - 1u];
+    while (i > 0u && sortDepths[slot(i - 1u, lane)] < depth) {
+      sortDepths[slot(i, lane)] = sortDepths[slot(i - 1u, lane)];
+      sortNodes[slot(i, lane)] = sortNodes[slot(i - 1u, lane)];
       i--;
     }
-    depths[i] = depth;
-    nodes[i] = node;
+    sortDepths[slot(i, lane)] = depth;
+    sortNodes[slot(i, lane)] = node;
   }
   float3 lit = float3(0.0);
   float3 unlit = float3(0.0);
   float through = 1.0;
   for (uint k = 0u; k < count && through > 1e-3; k++) {
-    uint node = nodes[k];
+    uint node = sortNodes[slot(k, lane)];
     float2 rg = unpackHalf2x16ToFloat(lists[node]);
     float2 ba = unpackHalf2x16ToFloat(lists[node + 1u]);
     float alpha = abs(ba.y);
@@ -89,9 +106,23 @@ CompositeOut fsExact(float4 frag : SV_Position) {
     }
     through *= 1.0 - alpha;
   }
+  // Every pixel written: no list, no light and nothing hidden (alpha 0).
+  sortedLit.Store(id.xy, float4(lit, 1.0 - through));
+  sortedUnlit.Store(id.xy, float4(unlit, 1.0 - through));
+}
+
+// The exact way's second step: what `sortLists` blended, over the opaque
+// pass's targets (as premultiplied color; alpha 0 changes nothing).
+[shader("fragment")]
+CompositeOut fsSorted(float4 frag : SV_Position) {
+  int3 p = int3(int2(frag.xy), 0);
+  float4 lit = accumulatedLit.Load(p);
+  if (!(lit.a > 0.0)) {
+    discard;
+  }
   CompositeOut out;
-  out.scene = float4(lit, 1.0 - through);
-  out.display = float4(unlit, 1.0 - through);
+  out.scene = lit;
+  out.display = accumulatedUnlit.Load(p);
   return out;
 }
 

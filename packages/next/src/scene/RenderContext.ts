@@ -240,7 +240,12 @@ export interface Pipelines extends SurfacePipelines {
   depthRange: GPUComputePipeline;
   /** The translucent passes' group 3 (`SurfacePipelines.translucent*`). */
   translucentLayout: GPUBindGroupLayout;
-  /** Either way's layers over the opaque pass's targets (composite.wgsl). */
+  /**
+   * "exact": each pixel's list sorted and blended (composite.slang
+   * `sortLists`), into the accumulation targets the moments use.
+   */
+  translucentSort: GPUComputePipeline;
+  /** Either way's layers over the opaque pass's targets (composite.slang). */
   compositeExact: GPURenderPipeline;
   compositeMoments: GPURenderPipeline;
   /**
@@ -1305,6 +1310,7 @@ async function createPipelines(
     adaptBlur,
     lightsAssign,
     depthRange,
+    translucentSort,
     compositeExact,
     compositeMoments,
   ] = await Promise.all([
@@ -1490,7 +1496,12 @@ async function createPipelines(
         entryPoint: "main",
       },
     }),
-    compositePipeline("composite.exact", "fsExact"),
+    device.createComputePipelineAsync({
+      label: "translucent.sort",
+      layout: "auto",
+      compute: { module: compositeModule, entryPoint: "sortLists" },
+    }),
+    compositePipeline("composite.exact", "fsSorted"),
     compositePipeline("composite.moments", "fsMoments"),
   ]);
 
@@ -1529,6 +1540,7 @@ async function createPipelines(
     lightsAssign,
     depthRange,
     translucentLayout,
+    translucentSort,
     compositeExact,
     compositeMoments,
     momentFormats,

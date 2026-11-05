@@ -85,6 +85,15 @@ interface Resources {
   colors?: GPUTexture[];
   depth?: GPUTexture;
   vertexBuffers?: GPUBuffer[];
+  /** The Slang's draw's groups, where they differ (`slangFragment`). */
+  slangGroups?: GPUBindGroupEntry[][];
+  /** The Slang's compute pass before the draw (`slangPrepass`). */
+  prepass?: {
+    groups: GPUBindGroupEntry[][];
+    dispatch: [number, number?, number?];
+  };
+  /** Set by the runner: the prepass's pipeline and bound groups. */
+  prepassBound?: { pipeline: GPUComputePipeline; groups: GPUBindGroup[] };
 }
 interface Case {
   name: string;
@@ -94,6 +103,12 @@ interface Case {
   entry?: string;
   /** A render pipeline instead of a compute one. */
   render?: RenderSetup;
+  /**
+   * Where the port split the work: the Slang's own fragment entry, and a
+   * compute pass (its entry) before the draw, timed together with it.
+   */
+  slangFragment?: string;
+  slangPrepass?: string;
   /** The engine's bind group layouts, by group (default: `auto`). */
   layout?: GPUBindGroupLayoutEntry[][];
   /**
@@ -805,16 +820,37 @@ function compositeInputs(device: GPUDevice, exact: boolean): Resources {
     const lists = new Uint32Array(4 + w * h + nodes.length);
     lists.set(heads, 4);
     lists.set(nodes, 4 + w * h);
+    const blended = () =>
+      texture(device, {
+        size: [w, h],
+        format: "rgba16float",
+        usage: T.STORAGE_BINDING,
+      });
+    const lit = blended();
+    const unlit = blended();
+    const listBuffer = buffer(device, lists, S);
     return {
-      groups: [
-        [
-          uniform,
-          { binding: 1, resource: { buffer: buffer(device, lists, S) } },
-        ],
-      ],
+      groups: [[uniform, { binding: 1, resource: { buffer: listBuffer } }]],
       dispatch: [3],
       outputs,
       colors,
+      prepass: {
+        groups: [
+          [
+            uniform,
+            { binding: 1, resource: { buffer: listBuffer } },
+            { binding: 5, resource: lit.createView() },
+            { binding: 6, resource: unlit.createView() },
+          ],
+        ],
+        dispatch: [Math.ceil(w / 8), Math.ceil(h / 4)],
+      },
+      slangGroups: [
+        [
+          { binding: 3, resource: lit.createView() },
+          { binding: 4, resource: unlit.createView() },
+        ],
+      ],
     };
   }
   const moments = (fill: (i: number) => number) =>
@@ -1328,6 +1364,9 @@ const CASES: Case[] = [
     reference: compositeReference,
     slang: compositeSlang,
     render: fullscreen("fsExact", ["rgba16float", "rgba16float"]),
+    // The port sorts in a compute pass, then draws what it blended.
+    slangPrepass: "sortLists",
+    slangFragment: "fsSorted",
     repeat: 4,
     setup: (device) => compositeInputs(device, true),
   },
@@ -1438,6 +1477,23 @@ function encodePass(
     pass.end();
     return;
   }
+  const prepass = which === 1 ? resources.prepassBound : undefined;
+  if (prepass) {
+    const compute = encoder.beginComputePass({
+      timestampWrites: timestampWrites && {
+        querySet: timestampWrites.querySet,
+        beginningOfPassWriteIndex: timestampWrites.beginningOfPassWriteIndex,
+      },
+    });
+    compute.setPipeline(prepass.pipeline);
+    prepass.groups.forEach((g, k) => compute.setBindGroup(k, g));
+    for (let n = 0; n < repeat; n++) {
+      compute.dispatchWorkgroups(
+        ...(resources.prepass!.dispatch as [number, number, number]),
+      );
+    }
+    compute.end();
+  }
   const pass = encoder.beginRenderPass({
     colorAttachments: (resources.colors ?? []).map((t) => ({
       view: t.createView(),
@@ -1453,7 +1509,13 @@ function encodePass(
           depthClearValue: 0,
         }
       : undefined,
-    timestampWrites,
+    timestampWrites:
+      prepass && timestampWrites
+        ? {
+            querySet: timestampWrites.querySet,
+            endOfPassWriteIndex: timestampWrites.endOfPassWriteIndex,
+          }
+        : timestampWrites,
   });
   pass.setPipeline(pipeline as GPURenderPipeline);
   groups.forEach((g, k) => pass.setBindGroup(k, g));
@@ -1646,6 +1708,7 @@ function pipelineFor(
   c: Case,
   layouts: GPUBindGroupLayout[] | undefined,
   code: string,
+  which: number,
 ): Pipeline {
   const module = device.createShaderModule({ code });
   const layout = layouts
@@ -1666,7 +1729,8 @@ function pipelineFor(
     },
     fragment: {
       module,
-      entryPoint: c.render.fragment,
+      entryPoint:
+        which === 1 && c.slangFragment ? c.slangFragment : c.render.fragment,
       targets: c.render.targets,
     },
     depthStencil: c.render.depthStencil,
@@ -1708,11 +1772,32 @@ async function runKernels(): Promise<Row[]> {
       device.createBindGroupLayout({ entries }),
     );
     const pipelines: [Pipeline, Pipeline] = [
-      pipelineFor(device, c, layouts, c.reference),
-      pipelineFor(device, c, layouts, c.slang),
+      pipelineFor(device, c, layouts, c.reference, 0),
+      pipelineFor(device, c, layouts, c.slang, 1),
     ];
-    const groups = pipelines.map((p) =>
-      resources.groups.map((entries, k) =>
+    if (c.slangPrepass && resources.prepass) {
+      const pipeline = device.createComputePipeline({
+        layout: "auto",
+        compute: {
+          module: device.createShaderModule({ code: c.slang }),
+          entryPoint: c.slangPrepass,
+        },
+      });
+      resources.prepassBound = {
+        pipeline,
+        groups: resources.prepass.groups.map((entries, k) =>
+          device.createBindGroup({
+            layout: pipeline.getBindGroupLayout(k),
+            entries,
+          }),
+        ),
+      };
+    }
+    const groups = pipelines.map((p, which) =>
+      (which === 1 && resources.slangGroups
+        ? resources.slangGroups
+        : resources.groups
+      ).map((entries, k) =>
         device.createBindGroup({
           layout: layouts ? layouts[k]! : p.getBindGroupLayout(k),
           entries,

@@ -285,6 +285,48 @@
                     {"kind": "descriptorTableSlot", "value": 1}
                 ]
             }
+        },
+        {
+            "name": "sortedLit",
+            "binding": {"kind": "descriptorTableSlot", "index": 5},
+            "format": "rgba16f",
+            "type": {
+                "kind": "resource",
+                "baseShape": "texture2D",
+                "access": "write",
+                "resultType": {
+                    "kind": "vector",
+                    "elementCount": 4,
+                    "elementType": {
+                        "kind": "scalar",
+                        "scalarType": "float32"
+                    }
+                },
+                "sizes": [
+                    {"kind": "descriptorTableSlot", "value": 1}
+                ]
+            }
+        },
+        {
+            "name": "sortedUnlit",
+            "binding": {"kind": "descriptorTableSlot", "index": 6},
+            "format": "rgba16f",
+            "type": {
+                "kind": "resource",
+                "baseShape": "texture2D",
+                "access": "write",
+                "resultType": {
+                    "kind": "vector",
+                    "elementCount": 4,
+                    "elementType": {
+                        "kind": "scalar",
+                        "scalarType": "float32"
+                    }
+                },
+                "sizes": [
+                    {"kind": "descriptorTableSlot", "value": 1}
+                ]
+            }
         }
     ],
     "globalScope": {
@@ -574,6 +616,48 @@
                         {"kind": "descriptorTableSlot", "value": 1}
                     ]
                 }
+            },
+            {
+                "name": "sortedLit",
+                "binding": {"kind": "descriptorTableSlot", "index": 5},
+                "format": "rgba16f",
+                "type": {
+                    "kind": "resource",
+                    "baseShape": "texture2D",
+                    "access": "write",
+                    "resultType": {
+                        "kind": "vector",
+                        "elementCount": 4,
+                        "elementType": {
+                            "kind": "scalar",
+                            "scalarType": "float32"
+                        }
+                    },
+                    "sizes": [
+                        {"kind": "descriptorTableSlot", "value": 1}
+                    ]
+                }
+            },
+            {
+                "name": "sortedUnlit",
+                "binding": {"kind": "descriptorTableSlot", "index": 6},
+                "format": "rgba16f",
+                "type": {
+                    "kind": "resource",
+                    "baseShape": "texture2D",
+                    "access": "write",
+                    "resultType": {
+                        "kind": "vector",
+                        "elementCount": 4,
+                        "elementType": {
+                            "kind": "scalar",
+                            "scalarType": "float32"
+                        }
+                    },
+                    "sizes": [
+                        {"kind": "descriptorTableSlot", "value": 1}
+                    ]
+                }
             }
         ]
     },
@@ -644,11 +728,117 @@
                 {
                     "name": "accumulatedUnlit",
                     "binding": {"kind": "descriptorTableSlot", "index": 4}
+                },
+                {
+                    "name": "sortedLit",
+                    "binding": {"kind": "descriptorTableSlot", "index": 5},
+                    "format": "rgba16f"
+                },
+                {
+                    "name": "sortedUnlit",
+                    "binding": {"kind": "descriptorTableSlot", "index": 6},
+                    "format": "rgba16f"
                 }
             ]
         },
         {
-            "name": "fsExact",
+            "name": "sortLists",
+            "stage": "compute",
+            "scope": {
+                "kind": "none",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "semanticName": "SV_DISPATCHTHREADID",
+                        "type": {
+                            "kind": "vector",
+                            "elementCount": 3,
+                            "elementType": {
+                                "kind": "scalar",
+                                "scalarType": "uint32"
+                            },
+                            "sizes": [
+
+                            ]
+                        }
+                    },
+                    {
+                        "name": "lane",
+                        "semanticName": "SV_GROUPINDEX",
+                        "type": {
+                            "kind": "scalar",
+                            "scalarType": "uint32",
+                            "sizes": [
+
+                            ]
+                        }
+                    }
+                ]
+            },
+            "parameters": [
+                {
+                    "name": "id",
+                    "semanticName": "SV_DISPATCHTHREADID",
+                    "type": {
+                        "kind": "vector",
+                        "elementCount": 3,
+                        "elementType": {
+                            "kind": "scalar",
+                            "scalarType": "uint32"
+                        },
+                        "sizes": [
+
+                        ]
+                    }
+                },
+                {
+                    "name": "lane",
+                    "semanticName": "SV_GROUPINDEX",
+                    "type": {
+                        "kind": "scalar",
+                        "scalarType": "uint32",
+                        "sizes": [
+
+                        ]
+                    }
+                }
+            ],
+            "threadGroupSize": [8, 4, 1],
+            "bindings": [
+                {
+                    "name": "translucency",
+                    "binding": {"kind": "descriptorTableSlot", "index": 0}
+                },
+                {
+                    "name": "lists",
+                    "binding": {"kind": "descriptorTableSlot", "index": 1}
+                },
+                {
+                    "name": "momentsZero",
+                    "binding": {"kind": "descriptorTableSlot", "index": 2}
+                },
+                {
+                    "name": "accumulatedLit",
+                    "binding": {"kind": "descriptorTableSlot", "index": 3}
+                },
+                {
+                    "name": "accumulatedUnlit",
+                    "binding": {"kind": "descriptorTableSlot", "index": 4}
+                },
+                {
+                    "name": "sortedLit",
+                    "binding": {"kind": "descriptorTableSlot", "index": 5},
+                    "format": "rgba16f"
+                },
+                {
+                    "name": "sortedUnlit",
+                    "binding": {"kind": "descriptorTableSlot", "index": 6},
+                    "format": "rgba16f"
+                }
+            ]
+        },
+        {
+            "name": "fsSorted",
             "stage": "fragment",
             "scope": {
                 "kind": "none",
@@ -755,6 +945,16 @@
                 {
                     "name": "accumulatedUnlit",
                     "binding": {"kind": "descriptorTableSlot", "index": 4}
+                },
+                {
+                    "name": "sortedLit",
+                    "binding": {"kind": "descriptorTableSlot", "index": 5},
+                    "format": "rgba16f"
+                },
+                {
+                    "name": "sortedUnlit",
+                    "binding": {"kind": "descriptorTableSlot", "index": 6},
+                    "format": "rgba16f"
                 }
             ]
         },
@@ -866,6 +1066,16 @@
                 {
                     "name": "accumulatedUnlit",
                     "binding": {"kind": "descriptorTableSlot", "index": 4}
+                },
+                {
+                    "name": "sortedLit",
+                    "binding": {"kind": "descriptorTableSlot", "index": 5},
+                    "format": "rgba16f"
+                },
+                {
+                    "name": "sortedUnlit",
+                    "binding": {"kind": "descriptorTableSlot", "index": 6},
+                    "format": "rgba16f"
                 }
             ]
         }
