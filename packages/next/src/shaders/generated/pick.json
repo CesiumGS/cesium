@@ -1,0 +1,343 @@
+{
+    "version": "1.1",
+    "parameters": [
+        {
+            "name": "ids",
+            "binding": {"kind": "descriptorTableSlot", "index": 0},
+            "format": "rgba32ui",
+            "type": {
+                "kind": "resource",
+                "baseShape": "texture2D",
+                "multisample": true,
+                "resultType": {
+                    "kind": "vector",
+                    "elementCount": 4,
+                    "elementType": {
+                        "kind": "scalar",
+                        "scalarType": "uint32"
+                    }
+                },
+                "sizes": [
+                    {"kind": "descriptorTableSlot", "value": 1}
+                ]
+            }
+        },
+        {
+            "name": "params",
+            "binding": {"kind": "descriptorTableSlot", "index": 1},
+            "type": {
+                "kind": "constantBuffer",
+                "elementType": {
+                    "kind": "struct",
+                    "name": "PickParams",
+                    "fields": [
+                        {
+                            "name": "pixel",
+                            "type": {
+                                "kind": "vector",
+                                "elementCount": 2,
+                                "elementType": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32"
+                                },
+                                "sizes": [
+                                    {"kind": "uniform", "value": 8, "alignment": 8}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 0, "size": 8, "elementStride": 4}
+                        },
+                        {
+                            "name": "pad",
+                            "type": {
+                                "kind": "vector",
+                                "elementCount": 2,
+                                "elementType": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32"
+                                },
+                                "sizes": [
+                                    {"kind": "uniform", "value": 8, "alignment": 8}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 8, "size": 8, "elementStride": 4}
+                        }
+                    ],
+                    "sizes": [
+                        {"kind": "uniform", "value": 16, "alignment": 16}
+                    ]
+                },
+                "containerVarLayout": {
+                    "binding": {"kind": "descriptorTableSlot", "index": 0}
+                },
+                "elementVarLayout": {
+                    "type": {
+                        "kind": "struct",
+                        "name": "PickParams",
+                        "fields": [
+                            {
+                                "name": "pixel",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 2,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "uint32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 8, "alignment": 8}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 0, "size": 8, "elementStride": 4}
+                            },
+                            {
+                                "name": "pad",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 2,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "uint32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 8, "alignment": 8}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 8, "size": 8, "elementStride": 4}
+                            }
+                        ],
+                        "sizes": [
+                            {"kind": "uniform", "value": 16, "alignment": 16}
+                        ]
+                    },
+                    "binding": {"kind": "uniform", "offset": 0, "size": 16, "elementStride": 0}
+                },
+                "sizes": [
+                    {"kind": "descriptorTableSlot", "value": 1}
+                ]
+            }
+        },
+        {
+            "name": "result",
+            "binding": {"kind": "descriptorTableSlot", "index": 2},
+            "type": {
+                "kind": "resource",
+                "baseShape": "structuredBuffer",
+                "access": "readWrite",
+                "resultType": {
+                    "kind": "scalar",
+                    "scalarType": "uint32",
+                    "sizes": [
+                        {"kind": "uniform", "value": 4, "alignment": 4}
+                    ]
+                },
+                "sizes": [
+                    {"kind": "descriptorTableSlot", "value": 1}
+                ]
+            }
+        },
+        {
+            "name": "depth",
+            "binding": {"kind": "descriptorTableSlot", "index": 3},
+            "type": {
+                "kind": "resource",
+                "baseShape": "texture2D",
+                "multisample": true,
+                "resultType": {
+                    "kind": "scalar",
+                    "scalarType": "float32"
+                },
+                "sizes": [
+                    {"kind": "descriptorTableSlot", "value": 1}
+                ]
+            }
+        }
+    ],
+    "globalScope": {
+        "kind": "none",
+        "parameters": [
+            {
+                "name": "ids",
+                "binding": {"kind": "descriptorTableSlot", "index": 0},
+                "format": "rgba32ui",
+                "type": {
+                    "kind": "resource",
+                    "baseShape": "texture2D",
+                    "multisample": true,
+                    "resultType": {
+                        "kind": "vector",
+                        "elementCount": 4,
+                        "elementType": {
+                            "kind": "scalar",
+                            "scalarType": "uint32"
+                        }
+                    },
+                    "sizes": [
+                        {"kind": "descriptorTableSlot", "value": 1}
+                    ]
+                }
+            },
+            {
+                "name": "params",
+                "binding": {"kind": "descriptorTableSlot", "index": 1},
+                "type": {
+                    "kind": "constantBuffer",
+                    "elementType": {
+                        "kind": "struct",
+                        "name": "PickParams",
+                        "fields": [
+                            {
+                                "name": "pixel",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 2,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "uint32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 8, "alignment": 8}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 0, "size": 8, "elementStride": 4}
+                            },
+                            {
+                                "name": "pad",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 2,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "uint32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 8, "alignment": 8}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 8, "size": 8, "elementStride": 4}
+                            }
+                        ],
+                        "sizes": [
+                            {"kind": "uniform", "value": 16, "alignment": 16}
+                        ]
+                    },
+                    "containerVarLayout": {
+                        "binding": {"kind": "descriptorTableSlot", "index": 0}
+                    },
+                    "elementVarLayout": {
+                        "type": {
+                            "kind": "struct",
+                            "name": "PickParams",
+                            "fields": [
+                                {
+                                    "name": "pixel",
+                                    "type": {
+                                        "kind": "vector",
+                                        "elementCount": 2,
+                                        "elementType": {
+                                            "kind": "scalar",
+                                            "scalarType": "uint32"
+                                        },
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 8, "alignment": 8}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 0, "size": 8, "elementStride": 4}
+                                },
+                                {
+                                    "name": "pad",
+                                    "type": {
+                                        "kind": "vector",
+                                        "elementCount": 2,
+                                        "elementType": {
+                                            "kind": "scalar",
+                                            "scalarType": "uint32"
+                                        },
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 8, "alignment": 8}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 8, "size": 8, "elementStride": 4}
+                                }
+                            ],
+                            "sizes": [
+                                {"kind": "uniform", "value": 16, "alignment": 16}
+                            ]
+                        },
+                        "binding": {"kind": "uniform", "offset": 0, "size": 16, "elementStride": 0}
+                    },
+                    "sizes": [
+                        {"kind": "descriptorTableSlot", "value": 1}
+                    ]
+                }
+            },
+            {
+                "name": "result",
+                "binding": {"kind": "descriptorTableSlot", "index": 2},
+                "type": {
+                    "kind": "resource",
+                    "baseShape": "structuredBuffer",
+                    "access": "readWrite",
+                    "resultType": {
+                        "kind": "scalar",
+                        "scalarType": "uint32",
+                        "sizes": [
+                            {"kind": "uniform", "value": 4, "alignment": 4}
+                        ]
+                    },
+                    "sizes": [
+                        {"kind": "descriptorTableSlot", "value": 1}
+                    ]
+                }
+            },
+            {
+                "name": "depth",
+                "binding": {"kind": "descriptorTableSlot", "index": 3},
+                "type": {
+                    "kind": "resource",
+                    "baseShape": "texture2D",
+                    "multisample": true,
+                    "resultType": {
+                        "kind": "scalar",
+                        "scalarType": "float32"
+                    },
+                    "sizes": [
+                        {"kind": "descriptorTableSlot", "value": 1}
+                    ]
+                }
+            }
+        ]
+    },
+    "entryPoints": [
+        {
+            "name": "main",
+            "stage": "compute",
+            "scope": {
+                "kind": "none",
+                "parameters": [
+
+                ]
+            },
+            "threadGroupSize": [1, 1, 1],
+            "bindings": [
+                {
+                    "name": "ids",
+                    "binding": {"kind": "descriptorTableSlot", "index": 0},
+                    "format": "rgba32ui"
+                },
+                {
+                    "name": "params",
+                    "binding": {"kind": "descriptorTableSlot", "index": 1}
+                },
+                {
+                    "name": "result",
+                    "binding": {"kind": "descriptorTableSlot", "index": 2}
+                },
+                {
+                    "name": "depth",
+                    "binding": {"kind": "descriptorTableSlot", "index": 3}
+                }
+            ]
+        }
+    ],
+    "bindlessSpaceIndex": 1
+}

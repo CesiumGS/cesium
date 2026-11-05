@@ -395,6 +395,71 @@ _Migration, in steps that each leave the engine working:_
 7. **Retire the spike.** Its port is the engine's source by then, and the
    page becomes a check that `ToonMaterial` links against it.
 
+_Step 1 results (r53, Slang 2026.21, Apple M-series GPU on Metal)._ The
+checks are a suite now: `spikes/slang/probes/*.slang`, compiled by
+`node spikes/slang/probes.mjs` and validated in WebGPU by the probe page
+(`/#/lab/slang-probes`). Re-run it on each Slang release; 13 of 16 behave
+as expected today.
+
+| Feature                                                    | Result                                                                                                                                                    |
+| ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Sample mask in and out, flat interpolation, instance_index | Works (sample mask through an output struct)                                                                                                              |
+| 32-bit atomics                                             | Works through typed buffers (`RWStructuredBuffer<Atomic<uint>>`, `groupshared Atomic<uint>`); `InterlockedAdd` on a plain buffer isn't available for WGSL |
+| Scalar `override` constants                                | Work (`[vk::constant_id]`)                                                                                                                                |
+| Override-sized workgroup arrays                            | **Compiler crash** (E99999). None of the engine's arrays need it: theirs are const-sized                                                                  |
+| 3D `rgba16float` storage textures                          | Work write-only (`WTexture3D`, `Store`); read-write isn't allowed for that format in WGSL                                                                 |
+| Subgroups                                                  | **Work now** (`enable subgroups`); the M0 gap is closed                                                                                                   |
+| `primitive_index`, clip distances                          | Still unsupported: CAD edges and clip planes would stay WGSL                                                                                              |
+| Uniformity                                                 | Slang emits sampling as written; WebGPU rejects non-uniform `textureSample` as for hand-written code                                                      |
+| hi/lo as a type                                            | `SplitPosition` (private parts, one `difference`) is bit-equal to the WGSL on 4,096 Earth-scale pairs (worst 0.49 mm); misuse is a compile error          |
+| `ParameterBlock`                                           | One bind group each, in order                                                                                                                             |
+| Matrices in buffers                                        | Stored as arrays of `vec4` and rebuilt element by element on each read (to measure in the kernels' timing)                                                |
+| Names                                                      | Suffixed by default (`records_0`); entry points keep theirs. See the boundary below                                                                       |
+| WASM compiler                                              | 24.1 MB; a custom shader in 1.9 s cold (worker and WASM load), 260 ms warm here (30–90 ms in the playground after a few compiles)                         |
+
+**Names: the runtime boundary is declared in source, never rewritten.**
+Code composed at run time (custom shaders, 3D Tiles and vector styles)
+refers to engine names. Slang documents no naming guarantees, and its
+maintainers advise against relying on emitted names (issue #8391), so
+renaming its output with text manipulation is out.
+
+- The boundary is marked `__extern_cpp` in the Slang source: the
+  contract's value structs and their fields, the helpers runtime code calls,
+  and the few bindings it reads. They keep their names, checked by the
+  `boundary` probe.
+- Two caveats apply:
+  - `__extern_cpp` is documented only for the CPU target. Slang issue
+    #14028 says same-named fields in different structs can merge (the
+    probe checks they don't today).
+  - The probe and golden tests of the generated boundary therefore guard
+    every Slang upgrade, and the version stays pinned.
+- Buffer-backed structs keep a layout copy (`View_std140_0`, fields named)
+  and wrapped matrices. Runtime code never reads them directly: what it
+  needs comes through the contract structs (as the custom-shader contract
+  already does) or accessor functions.
+- The engine calls functions the runtime code defines (the user's
+  `vertexMain` and `fragmentMain`, a style's functions) by literal name
+  through `__target_intrinsic(wgsl, …)`. That is internal Slang API, so it
+  is kept to those call sites and tested the same way.
+- Most kernels need none of this. The engine joins `common.wgsl` to each
+  kernel as text today; with Slang each kernel's WGSL is self-contained
+  (`import common;`), and the host binds it by group and binding number.
+  Names matter only where code is spliced in at run time: the opaque and
+  translucent surfaces, the point cull and the model pool.
+
+_Step 2 started (r53)._
+
+- `scripts/slangBuild.mjs` compiles each `.slang` under `src/` that has
+  entry points to `src/shaders/generated/<name>.wgsl`, every entry point
+  in it, plus its reflection (`<name>.json`). The output is checked in with
+  a do-not-edit header.
+- `npm run shaders` regenerates; `npm run shaders:check` fails on anything
+  stale (for CI, which needs the pinned slangc).
+- In dev a Vite plugin regenerates a `.slang`'s WGSL and its importers'
+  on save; without slangc it says so once and the checked-in files serve.
+- Scatter and pick are the first two kernels ported. They are identical in
+  use, verified by the tests and by pick positions in the browser.
+
 _Explore when the surface shaders move (step 5): runtime Slang for the
 user contract._ Today 3D Tiles styles, the vector styling language and
 `CustomShader` generate WGSL strings against the WGSL ABI

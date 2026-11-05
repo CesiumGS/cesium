@@ -382,7 +382,7 @@ interface Batch {
  * A CPU table mirrored to a GPU storage buffer. Changed entries upload once
  * per frame: a contiguous run with one write, entries spread across the
  * table as packed (index, data) pairs that a compute pass scatters
- * (`scatter.wgsl`), instead of the whole span between them. The CPU rows
+ * (`scatter.slang`), instead of the whole span between them. The CPU rows
  * grow as entries are used (`reserve`); the GPU buffer holds `gpuRows`,
  * the full capacity unless given fewer, and grows by `growGpu`.
  */

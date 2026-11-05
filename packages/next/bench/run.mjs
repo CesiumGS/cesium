@@ -78,6 +78,7 @@ const suites = {
     "runModels",
   ],
   slang: ["/spikes/slang.html?bench", "runSlang"],
+  "slang-probes": ["/spikes/slang-probes.html?bench", "runSlangProbes"],
   baseline: ["/bench/baseline.html?bench", "runBaseline"],
   // Content in and out of a live world (needs VITE_ION_TOKEN).
   hitch: ["/bench/hitch.html?bench", "runHitch"],

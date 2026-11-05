@@ -4,23 +4,24 @@
 // upload as packed pairs instead of the whole span between them.
 
 struct ScatterParams {
-  count: u32,
-  words: u32,
-  _pad0: u32,
-  _pad1: u32,
+  uint count;
+  uint words;
+  uint pad0;
+  uint pad1;
 };
 
-@group(0) @binding(0) var<uniform> params: ScatterParams;
-@group(0) @binding(1) var<storage, read> src: array<u32>;
-@group(0) @binding(2) var<storage, read_write> dst: array<u32>;
+[[vk::binding(0, 0)]] ConstantBuffer<ScatterParams> params;
+[[vk::binding(1, 0)]] StructuredBuffer<uint> src;
+[[vk::binding(2, 0)]] RWStructuredBuffer<uint> dst;
 
-@compute @workgroup_size(64)
-fn main(@builtin(global_invocation_id) gid: vec3u) {
-  let k = gid.x;
+[shader("compute")]
+[numthreads(64, 1, 1)]
+void main(uint3 gid : SV_DispatchThreadID) {
+  uint k = gid.x;
   if (k >= params.count * params.words) {
     return;
   }
-  let entry = k / params.words;
-  let word = k - entry * params.words;
+  uint entry = k / params.words;
+  uint word = k - entry * params.words;
   dst[src[entry] * params.words + word] = src[params.count + k];
 }

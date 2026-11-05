@@ -13,12 +13,12 @@ import { SHADOW_CASCADES, SHADOW_SIZE, SHADOWS_SIZE } from "./shadows.ts";
 import cullWgsl from "../shaders/cull.wgsl?raw";
 import pointCullWgsl from "../shaders/pointCull.wgsl?raw";
 import splatWgsl from "../shaders/splat.wgsl?raw";
-import scatterWgsl from "../shaders/scatter.wgsl?raw";
+import scatterWgsl from "../shaders/generated/scatter.wgsl?raw";
 import raycastWgsl from "../shaders/raycast.wgsl?raw";
 import opaqueWgsl from "../shaders/opaque.wgsl?raw";
 import presentWgsl from "../shaders/present.wgsl?raw";
 import overlayWgsl from "../shaders/overlay.wgsl?raw";
-import pickWgsl from "../shaders/pick.wgsl?raw";
+import pickWgsl from "../shaders/generated/pick.wgsl?raw";
 import meterWgsl from "../shaders/meter.wgsl?raw";
 import adaptWgsl from "../shaders/adapt.wgsl?raw";
 import lightsWgsl from "../shaders/lights.wgsl?raw";
@@ -224,7 +224,7 @@ export interface Pipelines extends SurfacePipelines {
   overlay: GPURenderPipeline;
   overlayLayout: GPUBindGroupLayout;
   pick: GPUComputePipeline;
-  /** Scatter upload of table entries (`scatter.wgsl`). */
+  /** Scatter upload of table entries (`scatter.slang`). */
   scatter: GPUComputePipeline;
   scatterLayout: GPUBindGroupLayout;
   /** Rays against draw geometry (`World.castRays`, `raycast.wgsl`). */

@@ -13,6 +13,7 @@ import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig, type Plugin } from "vitest/config";
 import { basisTranscoderEsm } from "./basisTranscoderEsm.ts";
+import { slangShaders } from "./scripts/vitePluginSlang.ts";
 import { slangWasmDirectory } from "./scripts/slangTools.mjs";
 
 // CesiumJS 1.x core math, used only as a test oracle for parity checks.
@@ -353,6 +354,7 @@ export default defineConfig({
   },
   plugins: [
     basisTranscoderEsm(),
+    slangShaders(),
     serveDirectory("/cesium1x", cesium1x),
     serveDirectory("/specs-data", specsData),
     serveBenchResults("/bench-results", benchResults),
