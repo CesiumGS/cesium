@@ -5604,7 +5604,15 @@ max)`, `Color(r, g, b)` (linear RGB), `Toggle(on)` and `Label("…")`. A
   - **A boundary-representation (B-rep) drawing example**: CAD solids
     drawn from their faces, edges and vertices, after vector drawing is
     generalized (lines and their styles beyond points), since it will
-    want that drawing code for its edges and silhouettes.
+    want that drawing code for its edges and silhouettes. The geometry
+    side: NVIDIA's open-sourced USD BRep
+    (github.com/NVIDIA-Omniverse/usd-brep, Apache 2.0), which includes
+    SMLib, a NURBS B-rep kernel (booleans, fillets, intersections,
+    healing) with OpenUSD interop, in C++ and Python. To work out: how
+    to use it from the engine, e.g. built to WebAssembly in a worker
+    (tessellating faces and edges at the view's tolerance), or offline,
+    converting B-rep to tiles with exact edges, and what it costs in
+    size.
   - The same editor for vector styles (§13.9).
   - Exact highlighting from the server's semantic tokens, instead of the
     stream mode.
