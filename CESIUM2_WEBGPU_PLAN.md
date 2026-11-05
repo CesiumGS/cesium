@@ -6130,24 +6130,41 @@ landed in `src/time/` and `src/ephemeris/`. The engine's rendering is
 unchanged: it still uses `icrfToFixed` and `moonAxes`, and plan 2 switches
 it over. What landed, with the worst agreement the tests measured:
 
-- **`Instant`** (TT seconds past J2000, float64) with IERS leap seconds. TT
-  advances 2 s across the 2016/2017 leap. TAI−UTC inside the inserted
-  second is looked up by TAI (`taiMinusUtcAtTai`), so ms rounding can't
-  pick the wrong row.
+- **`Instant`** (TT seconds past J2000, float64; `fromUtc`, `fromTt`,
+  `fromTdb`) with leap seconds bundled from NAIF's `naif0012.tls`
+  (`LeapSeconds.builtIn()`, expiring 2027-06-28 per IERS Bulletin C 72).
+  The store's IERS copy is used only when it expires later.
+  - TT advances 2 s across the 2016/2017 leap.
+  - TAI−UTC is looked up by TAI (`taiMinusUtcAtTai`), and `toUtc` is exact
+    and monotonic: it holds at 23:59:59.999 through the inserted second.
+  - UTC→TT and TDB agree with pyerfa's chain within 2.4e-7 s, out to
+    2049-12-31.
 - **TDB−TT** from ERFA `dtdb`: within 1 ns of pyerfa.
 - **EOP** from CelesTrak's `EOP-All.csv` (IERS data): 4-point Lagrange,
   stepping through UT1−TAI across a DAT change. Outside the table it holds
-  the last row or returns zeros, flagged `degraded`.
-- **GCRS→ITRS** (IAU 2006/2000A, CIO-based, ported from ERFA, BSD-3):
+  the last row or returns zero corrections, flagged `degraded`. Samples
+  carry `ut1MinusTai`. `atInstant(instant, leap)` locates an instant by
+  TAI, so a time inside an inserted second reads the pre-leap day.
+  `eop.at(instant.toUtc(leap))` read the post-leap day there, putting UT1
+  1 s fast; the final review found it.
+- **GCRS→ITRS** (IAU 2006/2000A, CIO-based, ported from ERFA, BSD-3),
+  `celestialToTerrestrial(instant, eopSample)` with UT1 = TAI +
+  `ut1MinusTai`:
   - against pyerfa: `xy06` 3e-18 rad, `s06` 1e-22 rad, `era00` 6e-14 rad,
     and the full matrix 7.4e-12 (limit 1e-11), over 34 instants that
     include four across the 2016/2017 leap;
+  - inside the inserted second, using real EOP lookups: 2.1e-12;
   - 0.0023° from the old `icrfToFixed`.
 - **SPICE DAF reader** (SPK and binary PCK, type 2) and **Chebyshev packs**:
-  excerpts that record their NAIF source, its SHA-256 and the span.
+  excerpts that record their NAIF source, its SHA-256 and the span. Both
+  reject malformed layouts with named errors. The DAF bounds and NEXT
+  checks stop a crafted file from looping. Reading segments of other types
+  (13, 21 for trajectories) is plan 2's first task.
 - **`Ephemeris`** from DE440 (`de440s.bsp`) and the lunar PCK
   (`moon_pa_de440_200625.bpc`, MOON_PA = 31008):
-  - Sun, EMB, Earth and Moon within 1.5e-5 m of jplephem;
+  - Sun, EMB, Earth and Moon within 1.5e-5 m of jplephem at the
+    fixtures' TDB, and within 7.1 mm when built from UTC (the float64
+    floor below);
   - Moon Euler angles identical to SPICE;
   - J2000→MOON_PA and →MOON_ME within 2.6e-13 of SPICE `pxform`;
   - PA→ME (`moon_de440_250416.tf`) within 5e-20.
@@ -6163,10 +6180,10 @@ it over. What landed, with the worst agreement the tests measured:
   refreshed tables before replacing a good copy, and writes 2000–2050 packs
   (`--frames-span`, inclusive). The dev server serves the store at
   `/frames-data/`, and `npm run test:data` runs the tests against it.
-- **`loadFrameData()`** verifies each file's SHA-256 and returns `warnings`
-  for an expired leap table or EOP data that ends before now. In the
-  browser it resolves, with the geocentric Moon at 386,775 km on
-  2026-11-05.
+- **`loadFrameData()`** verifies each file's SHA-256 and returns typed
+  `warnings` (`leapSecondsExpired`, `eopEnded`). `Ephemeris.contains`
+  tests the span without a throw. In the browser it resolves, with the
+  geocentric Moon at 386,847 km on 2026-11-05.
 
 The precision floor is `Instant`'s single float64: 2.4e-7 s near 2050. That
 is about 1.7e-11 rad of Earth rotation (0.1 mm at the surface), about 7 mm
