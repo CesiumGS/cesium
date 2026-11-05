@@ -4,8 +4,7 @@ import * as m4 from "../math/mat4.ts";
 import * as v3 from "../math/vec3.ts";
 import type { Engine } from "../scene/Engine.ts";
 import type { World } from "../scene/World.ts";
-import type { GltfAsset } from "../io/gltfTypes.ts";
-import type { ModelInstance } from "../scene/gltfModel.ts";
+import type { ModelPlacement, ModelResource } from "../scene/gltfModel.ts";
 import {
   uniformLayout,
   writeUniform,
@@ -25,7 +24,7 @@ const PARAMS_BYTES = 48 + 64;
  * a million points may show a few thousand trucks up close.
  */
 export class ModelPool {
-  readonly model: ModelInstance;
+  readonly placement: ModelPlacement;
   readonly slots: number;
   private readonly parts: number;
   private readonly partBuffer: GPUBuffer;
@@ -51,7 +50,7 @@ export class ModelPool {
     private readonly engine: Engine,
     private readonly world: World,
     private readonly source: PointSource,
-    asset: GltfAsset,
+    model: ModelResource,
     options: {
       slots: number;
       /** The style's WGSL: `styleShow`, `styleHeading`, `styleScale`. */
@@ -68,18 +67,18 @@ export class ModelPool {
       identities.set(m4.mat4(), i * 16);
     }
     // Hidden until claimed: no models at the origin on the first frame.
-    this.model = engine.addModel(world, asset, {
+    this.placement = model.place({
       modelMatrix: source.frame,
       ground: false,
       instances: { matrices: identities },
     });
-    const frames = this.model.instanceFrames!;
+    const frames = this.placement.instanceFrames!;
     const partData = new ArrayBuffer(
-      Math.max(1, this.model.draws.length) * PART_WORDS * 4,
+      Math.max(1, this.placement.draws.length) * PART_WORDS * 4,
     );
     const pf = new Float32Array(partData);
     const pu = new Uint32Array(partData);
-    this.model.draws.forEach((draw, k) => {
+    this.placement.draws.forEach((draw, k) => {
       const f = frames[k]!;
       if (f.gltf) {
         throw new Error(
@@ -90,7 +89,7 @@ export class ModelPool {
       pf.set(Array.from(f.inverse, Number), k * PART_WORDS + 16);
       pu[k * PART_WORDS + 32] = world.instanceFirst(draw);
     });
-    this.parts = this.model.draws.length;
+    this.parts = this.placement.draws.length;
     this.partBuffer = device.createBuffer({
       label: "modelPool.parts",
       size: partData.byteLength,
@@ -271,7 +270,7 @@ ${options.code}`,
 
   destroy(): void {
     this.removeHook();
-    this.engine.removeModel(this.world, this.model);
+    this.placement.remove();
     this.partBuffer.destroy();
     this.params.destroy();
     this.counters.destroy();

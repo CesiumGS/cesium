@@ -372,11 +372,13 @@ async function runTileset(): Promise<Row[]> {
           });
           const spheres = assets.map((asset, i) => {
             asset.warnings.forEach((w) => warnings.add(w));
-            return engine.addModel(world, asset, {
-              modelMatrix: contents[i]!.transform,
-              unlit: mode === "unlit",
+            using model = engine.uploadModel(world, asset, {
               colorTransfer,
               axes: "3d-tiles",
+            });
+            return model.place({
+              modelMatrix: contents[i]!.transform,
+              unlit: mode === "unlit",
             });
           });
           draws = spheres.reduce((n, s) => n + s.draws.length, 0);
@@ -385,7 +387,7 @@ async function runTileset(): Promise<Row[]> {
           properties = table ? Object.keys(table.columns).join(", ") : "";
           if (colorTransfer === "srgb") {
             const bounds = unionSpheres(
-              spheres.filter((s) => s.draws.length > 0),
+              spheres.filter((s) => s.draws.length > 0).map((s) => s.bounds()),
             );
             camera.near = Math.max(0.01, bounds.radius * 0.01);
             // ?zoom=k moves k× closer than the whole-tileset framing.

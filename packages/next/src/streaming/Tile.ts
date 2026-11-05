@@ -11,7 +11,7 @@ import * as m4 from "../math/mat4.ts";
 import * as v3 from "../math/vec3.ts";
 import type { Mat4 } from "../math/mat4.ts";
 import { resolveUri } from "../io/ion.ts";
-import type { ModelInstance } from "../scene/gltfModel.ts";
+import type { ModelPlacement } from "../scene/gltfModel.ts";
 import {
   compactVolume,
   volumeFromJson,
@@ -100,7 +100,7 @@ export class Tile {
    * finer content under a tile without walking its whole subtree.
    */
   residentBelow = 0;
-  instance?: ModelInstance;
+  placement?: ModelPlacement;
   /** Debug tint currently on the draws (linear RGBA; none is white). */
   debugColor?: readonly number[];
   /** Bytes of the loaded content (geometry + textures). */

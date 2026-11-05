@@ -111,7 +111,7 @@ const CAST_INTERVAL = 10;
  * - Ground is the highest of the surfaces the reference allows.
  *
  * Content moves along the local vertical only, as 1.x models do: its root
- * transform (Earth-fixed, without a parent, e.g. `ModelInstance.transform`)
+ * transform (Earth-fixed, without a parent, e.g. `ModelPlacement.transform`)
  * is translated, so everything placed by it follows.
  */
 export class HeightClamping {

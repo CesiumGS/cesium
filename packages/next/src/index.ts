@@ -170,10 +170,13 @@ export {
   type StageStats,
 } from "./streaming/pipeline.ts";
 export {
-  type ModelInstance,
-  type ModelOptions,
+  ModelPlacement,
+  ModelResource,
+  modelUsage,
   type ModelInstances,
-  type UploadedAsset,
+  type ModelResourceOptions,
+  type ModelUsage,
+  type PlacementOptions,
 } from "./scene/gltfModel.ts";
 export { MaterialFlags } from "./render/layout.ts";
 export {

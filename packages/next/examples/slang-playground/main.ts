@@ -7,9 +7,9 @@ import {
   fromDegrees,
   mat4,
   vec3,
-  type GltfAsset,
   type MeshData,
-  type ModelInstance,
+  type ModelPlacement,
+  type ModelResource,
   type SkyOptions,
 } from "../../src/index.ts";
 import type { ExampleContext } from "../types.ts";
@@ -298,9 +298,10 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
 
   /** What's on the stage: a placed glTF, or a shape's draw. */
   let placed:
-    | { kind: "model"; instance: ModelInstance; url: string }
+    | { kind: "model"; key: string; placement: ModelPlacement; url: string }
     | {
         kind: "shape";
+        key: string;
         mesh: ReturnType<typeof world.addMesh>;
         material: number;
         transform: ReturnType<typeof world.addTransform>;
@@ -308,7 +309,19 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
         radius: number;
       }
     | undefined;
-  const assets = new Map<string, Promise<GltfAsset>>();
+  /**
+   * The model on the stage, as a handle (`viewer.loadModel`): its shader
+   * changes in place (`setShader`), and it is released when another model
+   * takes the stage.
+   */
+  const models = new Map<string, Promise<ModelResource>>();
+  const releaseModel = (url: string) => {
+    void models.get(url)?.then(
+      (m) => m.release(),
+      () => {},
+    );
+    models.delete(url);
+  };
   const shapes = new Map<string, MeshData>();
 
   /** The stage's matrix: standing at the site, turned by the turntable. */
@@ -324,17 +337,12 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     return mat4.multiply(mat4.mat4(), frame, turn);
   };
 
-  /**
-   * Removes what was placed. Removing a model's last placement frees its
-   * upload and its decoded images with it (Engine.addModel), so its parsed
-   * asset is dropped too unless `keepUrl` replaces it: placing that model
-   * again loads it again.
-   */
+  /** Removes what was placed, releasing its model unless it is `keepUrl`'s. */
   const removePlaced = (old: typeof placed, keepUrl?: string) => {
     if (old?.kind === "model") {
-      viewer.remove(old.instance);
+      old.placement.remove();
       if (old.url !== keepUrl) {
-        assets.delete(old.url);
+        releaseModel(old.url);
       }
     } else if (old?.kind === "shape") {
       world.removeDraw(old.draw);
@@ -349,7 +357,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
 
   const focus = () => {
     if (placed?.kind === "model") {
-      viewer.zoomTo(placed.instance, 35 * DEG, -20 * DEG);
+      viewer.zoomTo(placed.placement, 35 * DEG, -20 * DEG);
     } else if (placed?.kind === "shape") {
       const m = stageMatrix(placed.radius);
       const center = vec3.vec3(m[12], m[13], m[14]);
@@ -383,6 +391,15 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
         const key = customUrl ?? modelName;
         attempt = target.kind === "url" ? target.url : modelName;
         showModelError(undefined);
+        // The same thing on the stage: only its shader changes, in place.
+        if (placed?.key === key) {
+          if (placed.kind === "model") {
+            placed.placement.setShader(shader);
+          } else {
+            world.setDrawShader(placed.draw, shader);
+          }
+          return;
+        }
         if (target.kind === "shape") {
           let data = shapes.get(modelName);
           if (!data) {
@@ -405,26 +422,43 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
             doubleSided: modelName === "Plane",
             ...(shader ? { shader } : {}),
           });
-          placed = { kind: "shape", mesh, material, transform, draw, radius };
+          placed = {
+            kind: "shape",
+            key,
+            mesh,
+            material,
+            transform,
+            draw,
+            radius,
+          };
           removePlaced(previous);
         } else {
-          let asset = assets.get(target.url);
-          if (!asset) {
-            asset = engine.loadGltf(target.url);
-            assets.set(target.url, asset);
+          let loading = models.get(target.url);
+          if (!loading) {
+            loading = viewer.loadModel(target.url);
+            models.set(target.url, loading);
           }
-          const loaded = await asset;
+          let model: ModelResource;
+          try {
+            model = await loading;
+          } catch (e) {
+            models.delete(target.url);
+            throw e;
+          }
           if (signal.aborted) {
             return;
           }
-          // The new placement before the old one goes: the asset's upload
-          // is shared, never freed between them, and no frame is empty.
+          // The new placement before the old one goes: no empty frame.
           const previous = placed;
-          const instance = await viewer.addModel(loaded, {
-            modelMatrix: stageMatrix(0),
-            ...(shader ? { shader } : {}),
-          });
-          placed = { kind: "model", instance, url: target.url };
+          placed = {
+            kind: "model",
+            key,
+            placement: model.place({
+              modelMatrix: stageMatrix(0),
+              ...(shader ? { shader } : {}),
+            }),
+            url: target.url,
+          };
           removePlaced(previous, target.url);
         }
         shown = { customUrl, modelName };
@@ -461,7 +495,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     if (settings.turntable && placed) {
       spin += dt * 20 * DEG;
       if (placed.kind === "model") {
-        world.setTransform(placed.instance.transform, stageMatrix(0));
+        placed.placement.setTransform(stageMatrix(0));
       } else {
         world.setTransform(placed.transform, stageMatrix(placed.radius));
       }
@@ -764,6 +798,9 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     clearTimeout(timer);
     cancelAnimationFrame(raf);
     removePlaced(placed);
+    for (const url of [...models.keys()]) {
+      releaseModel(url);
+    }
     server?.dispose();
     editor.destroy();
     contract.destroy();

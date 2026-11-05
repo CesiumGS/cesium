@@ -162,6 +162,9 @@ export function writeViewBlock(
 export const RECORD_SIZE = 144;
 export const RECORD_WORDS = RECORD_SIZE / 4;
 /** Word offsets of `DrawRecord` fields written after creation. */
+/** A draw record's bounding radius (f32) and batch index (u32). */
+export const RADIUS_WORD = 3;
+export const BATCH_WORD = 14;
 export const TRANSFORM_WORD = 8;
 export const FLAGS_WORD = 9;
 /**
@@ -406,7 +409,7 @@ export function writeDrawRecord(
   f32[o] = r.center[0]!;
   f32[o + 1] = r.center[1]!;
   f32[o + 2] = r.center[2]!;
-  f32[o + 3] = r.radius;
+  f32[o + RADIUS_WORD] = r.radius;
   f32[o + 4] = r.color[0];
   f32[o + 5] = r.color[1];
   f32[o + 6] = r.color[2];
@@ -417,7 +420,7 @@ export function writeDrawRecord(
   u32[o + 11] = r.indexCount;
   u32[o + 12] = r.firstIndex;
   u32[o + 13] = r.featureId;
-  u32[o + 14] = r.batch;
+  u32[o + BATCH_WORD] = r.batch;
   u32[o + 15] = r.streams.position;
   u32[o + 16] = r.streams.normal;
   u32[o + 17] = r.streams.uv;

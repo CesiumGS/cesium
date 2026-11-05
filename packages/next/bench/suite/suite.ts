@@ -714,7 +714,8 @@ export class NextAdapter implements Adapter {
       fromDegrees(...at),
       new Float64Array(3),
     );
-    this.engine.addModel(world, asset, {
+    using model = this.engine.uploadModel(world, asset);
+    model.place({
       modelMatrix: eastNorthUpToFixedFrame(
         site,
         Ellipsoid.WGS84,

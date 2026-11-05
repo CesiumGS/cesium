@@ -19,7 +19,7 @@ import type { World } from "../scene/World.ts";
 import type { RenderContext } from "../scene/RenderContext.ts";
 import type { RequestScheduler } from "../streaming/RequestScheduler.ts";
 import type { WorkerPool } from "../io/WorkerPool.ts";
-import type { ModelInstance } from "../scene/gltfModel.ts";
+import type { ModelPlacement } from "../scene/gltfModel.ts";
 import {
   MAX_IMAGERY_LEVELS_UP,
   MAX_IMAGERY_SLICES,
@@ -108,7 +108,7 @@ export class GlobeImagery {
   private readonly slices = new Map<Tile, { slice: number; used: number }>();
   private readonly jobs = new Map<Tile, Job>();
   private readonly sources = new Map<string, Source>();
-  private readonly applied = new WeakMap<ModelInstance, number>();
+  private readonly applied = new WeakMap<ModelPlacement, number>();
   /** Compiled asynchronously: a synchronous compile stalls frames. */
   private pipelines?: {
     fill: GPUComputePipeline;
@@ -736,8 +736,8 @@ export class GlobeImagery {
 
   /** Points the tile's draws at its slice, or its nearest ancestor's. */
   private apply(tile: Tile): void {
-    const instance = tile.instance;
-    if (!instance) {
+    const placement = tile.placement;
+    if (!placement) {
       return;
     }
     let packed = 0;
@@ -759,15 +759,15 @@ export class GlobeImagery {
         break;
       }
     }
-    if (this.applied.get(instance) !== packed) {
-      for (const draw of instance.draws) {
+    if (this.applied.get(placement) !== packed) {
+      for (const draw of placement.draws) {
         if (this.role === "lights") {
           this.world.setLights(draw, packed);
         } else {
           this.world.setImagery(draw, packed, !this.lit);
         }
       }
-      this.applied.set(instance, packed);
+      this.applied.set(placement, packed);
     }
   }
 }

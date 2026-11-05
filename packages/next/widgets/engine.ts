@@ -5,6 +5,7 @@
  */
 import {
   SlicePool,
+  modelUsage,
   type ContentSummary,
   type Engine,
   type RequestPurpose,
@@ -246,6 +247,12 @@ export function engineSnapshot(
       detail: `${mb(allocated(key))} allocated in ${slabs.length} slab${slabs.length === 1 ? "" : "s"} of up to ${mb(m.slabBytes)} each; the budget is across slabs.`,
     });
     const slices = SlicePool.usage(world);
+    // Model handles: held ones are the application's to release; leaked
+    // ones were garbage-collected unreleased and keep their GPU memory.
+    const models = modelUsage(world);
+    const held = models.filter((x) => !x.released && !x.leaked);
+    const leaked = models.filter((x) => x.leaked);
+    const modelBytes = models.reduce((n, x) => n + x.bytes, 0);
     const rows: MemoryRow[] = [
       // What streaming answers: past 90% it evicts as over its byte budget.
       {
@@ -282,6 +289,23 @@ export function engineSnapshot(
             },
           ]
         : []),
+      {
+        label: "Models",
+        unit: "bytes",
+        used: modelBytes,
+        text: `${models.length} · ${held.length} held${leaked.length ? ` · ${leaked.length} leaked` : ""} · ${mb(modelBytes)}`,
+        detail: `Uploaded models (tiles' included) and their GPU bytes. Held: handles not yet released (${held
+          .slice(0, 5)
+          .map((x) => `${x.name} ×${x.placements}`)
+          .join(", ")}${held.length > 5 ? ", …" : ""}).${
+          leaked.length
+            ? ` Leaked: garbage-collected without release(), their memory kept until the world is destroyed (${leaked
+                .slice(0, 5)
+                .map((x) => x.name)
+                .join(", ")}).`
+            : ""
+        }`,
+      },
       {
         label: "Render targets",
         unit: "bytes",

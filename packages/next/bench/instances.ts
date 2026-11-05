@@ -4,7 +4,7 @@ import {
   Engine,
   eastNorthUpToFixedFrame,
   fromDegrees,
-  type ModelInstance,
+  type ModelPlacement,
 } from "../src/index.ts";
 import type { Harness } from "../lab/harness.ts";
 import "./instances.css";
@@ -12,7 +12,7 @@ import "./instances.css";
 /**
  * Instancing benchmark (plan §13.9): a multi-primitive glTF (the Cesium
  * milk truck: several nodes and textured materials) placed N times through
- * `ModelOptions.instances`, one draw per primitive culled per instance on
+ * `PlacementOptions.instances`, one draw per primitive culled per instance on
  * the GPU. Per N: time to place, instance-table use, CPU and GPU time per
  * frame while orbiting, frame intervals, and the CPU cost of moving 1% of
  * the instances every frame and all of them once.
@@ -22,7 +22,7 @@ const TEMPLATE = `
 <h1>Instancing benchmark: one multi-primitive model, many instances</h1>
 <p>
   The Cesium milk truck placed N times with
-  <code>ModelOptions.instances</code>: one draw per primitive, culled per
+  <code>PlacementOptions.instances</code>: one draw per primitive, culled per
   instance on the GPU. Placement time, tables, CPU and GPU time per frame
   while orbiting, and the cost of moving instances.
 </p>
@@ -133,7 +133,7 @@ async function runInstances(): Promise<Row[]> {
       throw new Error("stopped");
     }
     status.textContent = `${n.toLocaleString()} instances…`;
-    // Per world: an upload consumes the asset's images.
+    // Per world: an upload releases the asset's images.
     const asset = await engine.loadGltf(MODEL);
     const primitives = asset.draws.length;
     const world = engine.createWorld({
@@ -146,7 +146,9 @@ async function runInstances(): Promise<Row[]> {
     engine.start();
     const matrices = grid(n);
     const t0 = performance.now();
-    const model: ModelInstance = engine.addModel(world, asset, {
+    // The placement holds the upload: released with it.
+    using resource = engine.uploadModel(world, asset);
+    const model: ModelPlacement = resource.place({
       modelMatrix: enu,
       instances: { matrices },
     });
@@ -182,7 +184,7 @@ async function runInstances(): Promise<Row[]> {
       for (let i = f % 100; i < n; i += 100) {
         m.set(matrices.subarray(i * 16, i * 16 + 16));
         m[14] = (f % 2) * 0.5;
-        engine.setModelInstance(world, model, i, { matrix: m });
+        model.setInstance(i, { matrix: m });
       }
       move.push(performance.now() - t);
       await frame();
@@ -191,7 +193,7 @@ async function runInstances(): Promise<Row[]> {
     for (let i = 0; i < n; i++) {
       m.set(matrices.subarray(i * 16, i * 16 + 16));
       m[14] = 1;
-      engine.setModelInstance(world, model, i, { matrix: m });
+      model.setInstance(i, { matrix: m });
     }
     const moveAllMs = performance.now() - tAll;
     await frame();
@@ -214,7 +216,7 @@ async function runInstances(): Promise<Row[]> {
     });
     renderTable(rows);
     engine.stop();
-    engine.removeModel(world, model);
+    model.remove();
     engine.removeView(view);
     engine.removeWorld(world);
   }

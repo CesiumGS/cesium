@@ -84,11 +84,9 @@ import { Tileset3D, type TilesetOptions } from "../streaming/Tileset3D.ts";
 import type { SelectionView } from "../streaming/Stepwise.ts";
 import type { GltfAsset } from "../io/gltfTypes.ts";
 import {
-  addGltf,
-  removeGltf,
-  setModelInstance,
-  type ModelInstance,
-  type ModelOptions,
+  uploadModel,
+  type ModelResource,
+  type ModelResourceOptions,
 } from "./gltfModel.ts";
 import type { CustomShader } from "./CustomShader.ts";
 
@@ -226,7 +224,7 @@ export class Engine {
   readonly tilesets: Tileset3D[] = [];
   /**
    * Keeps content with a `heightReference` on terrain and collision
-   * tilesets as they load (`addModel`).
+   * tilesets as they load (`heightReference` placements).
    */
   readonly clamping = new HeightClamping(
     () => this.tilesets,
@@ -860,7 +858,7 @@ export class Engine {
 
   /**
    * Fetches and decodes a glTF, GLB or b3dm in a worker. Upload it with
-   * `addModel`. `headers` go with every request (e.g. ion authorization).
+   * `uploadModel`. `headers` go with every request (e.g. ion authorization).
    */
   loadGltf(
     url: string | URL,
@@ -888,43 +886,48 @@ export class Engine {
   }
 
   /**
-   * Places a parsed glTF asset in a world. With a `heightReference` the
-   * model is anchored at its `modelMatrix` translation and kept on the
-   * ground (`clamping`).
-   *
-   * Placements of one asset share its upload, and the asset's decoded
-   * images are closed once they are on the GPU (the CPU copy freed, as 1.x
-   * does). Removing the last placement frees the upload, so the asset can't
-   * be placed again: load it again, or add the new placement before
-   * removing the old one (as a swap does).
+   * Fetches, decodes and uploads a glTF, GLB or b3dm into `world`: a
+   * `ModelResource` to place (`model.place`) and release when done. Its
+   * source data is released once uploaded unless `releaseSourceData` is
+   * false.
    */
-  addModel(
+  async loadModel(
+    world: World,
+    url: string | URL,
+    options: ModelResourceOptions & {
+      headers?: Record<string, string>;
+      signal?: AbortSignal;
+    } = {},
+  ): Promise<ModelResource> {
+    const { headers, signal, ...upload } = options;
+    const asset = await this.loadGltf(url, {
+      ...(headers ? { headers } : {}),
+      ...(signal ? { signal } : {}),
+    });
+    signal?.throwIfAborted();
+    return this.uploadModel(world, asset, {
+      name: String(url).split("/").pop(),
+      ...upload,
+    });
+  }
+
+  /**
+   * Uploads a parsed glTF asset into `world` (meshes, materials, textures):
+   * a `ModelResource` the caller owns, placed with `model.place` and freed
+   * once released with no placements left. By default the asset's decoded
+   * images are closed once uploaded (`releaseSourceData`).
+   */
+  uploadModel(
     world: World,
     asset: GltfAsset,
-    options: ModelOptions,
-  ): ModelInstance {
-    const reference = options.heightReference ?? "none";
-    if (reference !== "none" && options.parent) {
-      throw new Error("addModel: heightReference needs a model without parent");
-    }
-    const instance = addGltf(this.ctx, world, asset, options);
-    if (reference !== "none") {
-      const m = options.modelMatrix;
-      const anchor = Ellipsoid.WGS84.cartesianToCartographic(
-        v3.vec3(m[12]!, m[13]!, m[14]!),
-        { longitude: 0, latitude: 0, height: 0 },
-      );
-      if (anchor) {
-        instance.clamp = this.clamping.add(world, instance.transform, {
-          heightReference: reference,
-          ...anchor,
-          ...(options.heightOffset !== undefined
-            ? { offset: options.heightOffset }
-            : {}),
-        });
-      }
-    }
-    return instance;
+    options: ModelResourceOptions = {},
+  ): ModelResource {
+    return uploadModel(
+      { ctx: this.ctx, clamping: this.clamping },
+      world,
+      asset,
+      options,
+    );
   }
 
   /**
@@ -1253,32 +1256,6 @@ export class Engine {
       }),
     );
     return heights;
-  }
-
-  /**
-   * Moves, hides or tints one instance of a model placed with
-   * `ModelOptions.instances` (matrix in the model's frame).
-   */
-  setModelInstance(
-    world: World,
-    model: ModelInstance,
-    index: number,
-    change: {
-      matrix?: ArrayLike<number>;
-      visible?: boolean;
-      tint?: ArrayLike<number>;
-    },
-  ): void {
-    setModelInstance(world, model, index, change);
-  }
-
-  /**
-   * Removes a placement. The last one of an asset frees its upload, and
-   * the asset can't be placed again (see `addModel`).
-   */
-  removeModel(world: World, instance: ModelInstance): void {
-    instance.clamp?.remove();
-    removeGltf(world, instance);
   }
 
   createWorld(options?: WorldOptions): World {

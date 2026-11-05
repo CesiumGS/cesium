@@ -4,15 +4,25 @@ import * as m4 from "../math/mat4.ts";
 import * as v3 from "../math/vec3.ts";
 import type { Mat4 } from "../math/mat4.ts";
 import type { Vec3 } from "../math/vec3.ts";
+import { Ellipsoid, fromDegrees } from "../math/ellipsoid.ts";
+import { eastNorthUpToFixedFrame } from "../math/transforms.ts";
 import type {
   CompressedFormat,
   CompressedImage,
+  FeatureTable,
   GltfAsset,
+  GltfDraw,
+  GltfImage,
+  GltfLight,
   GltfMaterial,
   GltfSampler,
 } from "../io/gltfTypes.ts";
 import type { RenderContext } from "./RenderContext.ts";
-import type { Clamp, HeightReference } from "./HeightClamping.ts";
+import type {
+  Clamp,
+  HeightClamping,
+  HeightReference,
+} from "./HeightClamping.ts";
 import type { LightHandle } from "./lights.ts";
 import type {
   DrawHandle,
@@ -26,62 +36,112 @@ import type {
 } from "./World.ts";
 import type { CustomShader } from "./CustomShader.ts";
 
-export interface ModelOptions {
-  /**
-   * Float64 transform of the model (e.g. an east-north-up frame):
-   * Earth-fixed, or relative to `parent`.
-   */
-  modelMatrix: Mat4;
-  /** A transform the model hangs off (e.g. a tileset's root transform). */
-  parent?: TransformHandle;
-  /** Force unlit shading for every draw (used by parity tests). */
-  unlit?: boolean;
-  /** Custom shader stages for every draw (`CustomShader`). */
-  shader?: CustomShader;
-  /** Ground for height captures (default true; `DrawOptions.ground`). */
-  ground?: boolean;
+/**
+ * How a model is uploaded (`engine.loadModel`, `engine.uploadModel`): what
+ * belongs to the data, the same for every placement of it.
+ */
+export interface ModelResourceOptions {
   /**
    * How color textures are decoded: "srgb" (default) uses -srgb texture
    * formats; "gamma2.2" matches CesiumJS 1.x (unorm storage, pow 2.2 in the
    * shader, filtering in gamma space).
    */
   colorTransfer?: "srgb" | "gamma2.2";
-  name?: string;
   /**
-   * Axis convention: "gltf" (default) is y-up, z-forward like 1.x `Model`;
-   * "3d-tiles" is tile content (b3dm/glb in a tileset), y-up, x-forward, like
-   * 1.x `Cesium3DTileset`. "none": already in the frame of `modelMatrix`
-   * (terrain, whose positions are Earth-fixed).
+   * The data's axis convention: "gltf" (default) is y-up, z-forward like
+   * 1.x `Model`; "3d-tiles" is tile content (b3dm/glb in a tileset), y-up,
+   * x-forward, like 1.x `Cesium3DTileset`; "none": already in the frame of
+   * the placement's matrix (terrain, georeferenced data).
    */
   axes?: "gltf" | "3d-tiles" | "none";
+  /**
+   * Close the asset's decoded images once they are on the GPU (default
+   * true), freeing the CPU copy; the asset can't be uploaded again. False
+   * keeps them until `releaseSourceData()`. Freeing source data is the
+   * caller's explicit choice, as Filament's `releaseSourceData()` and
+   * Unity's `UploadMeshData(markNoLongerReadable)`.
+   */
+  releaseSourceData?: boolean;
+  /** A name, for the inspector and warnings. */
+  name?: string;
+}
+
+/** Where a placement stands: a matrix, or a place on the ellipsoid. */
+type PlacementWhere =
+  | {
+      /**
+       * Float64 transform (e.g. an east-north-up frame): Earth-fixed, or
+       * relative to `parent`.
+       */
+      modelMatrix: Mat4;
+      at?: never;
+    }
+  | {
+      /** An east-north-up frame there: degrees, and meters (default 0). */
+      at: { longitude: number; latitude: number; height?: number };
+      modelMatrix?: never;
+    };
+
+/** What a placement hangs from: a parent transform, or the ground. */
+type PlacementAnchor =
+  | {
+      /** A transform the model hangs off (e.g. a tileset's root). */
+      parent?: TransformHandle;
+      heightReference?: never;
+      heightOffset?: never;
+    }
+  | {
+      /**
+       * How the model's height relates to the ground (1.x
+       * `heightReference`), anchored at its translation; kept current as
+       * terrain and 3D Tiles load. Not with a `parent`.
+       */
+      heightReference: HeightReference;
+      /**
+       * Meters above the ground: added to "clamp" references, replacing the
+       * anchor's own height for "relative" ones.
+       */
+      heightOffset?: number;
+      parent?: never;
+    };
+
+interface PlacementCommon {
+  /** Unlit shading for every draw (1.x `LightingModel.UNLIT`). */
+  unlit?: boolean;
+  /** Custom shader stages for every draw (`setShader` changes them). */
+  shader?: CustomShader;
+  /** Ground for height captures (default true; `DrawOptions.ground`). */
+  ground?: boolean;
+  name?: string;
   /** Initial view mask of every draw (default: all views). */
   viewMask?: number;
-  /** Ray casts may hit it (tilesets with `enableCollision`). */
-  collision?: boolean;
-  /** Drawn behind all other content (the bare ellipsoid's tiles). */
-  underlay?: boolean;
-  /**
-   * How the model's height relates to the ground (1.x `heightReference`),
-   * anchored at the `modelMatrix` translation; needs a model without
-   * `parent`. Kept current as terrain and 3D Tiles load (`engine.addModel`).
-   */
-  heightReference?: HeightReference;
-  /**
-   * Meters above the ground: added to "clamp" references, and replacing
-   * the anchor's own height for "relative" ones.
-   */
-  heightOffset?: number;
   /**
    * Draws the model once per instance (GPU instancing, culled per
    * instance): one draw per primitive however many instances. Matrices are
-   * in the frame of `modelMatrix` (e.g. east-north-up offsets), applied
-   * before the glTF axis correction, like 1.x `ModelInstanceCollection`
-   * instances relative to a shared frame.
+   * in the placement's frame (e.g. east-north-up offsets), applied before
+   * the axis correction, like 1.x `ModelInstanceCollection` instances
+   * relative to a shared frame.
    */
   instances?: ModelInstances;
 }
 
-/** Instances of a whole model (`ModelOptions.instances`). */
+/**
+ * How a model is placed (`ModelResource.place`). A matrix or a place, and
+ * a parent or a height reference: each pair one or the other, in the type.
+ */
+export type PlacementOptions = PlacementCommon &
+  PlacementWhere &
+  PlacementAnchor;
+
+/** Placement options only engine content uses (tiles, terrain). */
+export type InternalPlacementOptions = PlacementOptions & {
+  /** Ray casts may hit it (tilesets with `enableCollision`). */
+  collision?: boolean;
+  /** Drawn behind all other content (the bare ellipsoid's tiles). */
+  underlay?: boolean;
+};
+
+/** GPU instances of a whole model (`PlacementOptions.instances`). */
 export interface ModelInstances {
   /** Column-major 4×4 affine matrices, 16 numbers per instance. */
   matrices: ArrayLike<number>;
@@ -102,45 +162,11 @@ interface InstanceFrame {
   gltf?: Float32Array;
 }
 
-export interface ModelInstance {
-  draws: DrawHandle[];
-  /** Its `KHR_lights_punctual` lights (`World.setLight` changes them). */
-  lights: LightHandle[];
-  /**
-   * The model's root transform (`modelMatrix`): `World.setTransform` moves
-   * the whole model, `setTransformVisible` hides it. Node transforms hang
-   * off it.
-   */
-  readonly transform: TransformHandle;
-  /** Bounding sphere where the model was placed, Earth-fixed. */
-  center: Vec3;
-  radius: number;
-  /**
-   * Bounding sphere where the model stands now: as placed, moved by its
-   * clamp (`clamp.settled` says it won't move further on its own).
-   */
-  bounds(): { center: Vec3; radius: number };
-  /**
-   * GPU bytes of the asset (arena geometry plus textures), shared by every
-   * instance of it in the world.
-   */
-  bytes: number;
-  /** The uploaded asset, freed when its last instance is removed. */
-  readonly resources: UploadedAsset;
-  /** Its clamping, with `heightReference` (`engine.addModel`). */
-  clamp?: Clamp;
-  /** Instances placed with `ModelOptions.instances` (0: none). */
-  readonly instanceCount: number;
-  /** Per draw, for `setModelInstance`. */
-  readonly instanceFrames?: InstanceFrame[];
-}
-
 /**
  * A glTF asset's GPU resources in one world: uploaded once, shared by all
- * of its instances (glTF 2.1 external assets and repeated placements),
- * freed with the last.
+ * of a `ModelResource`'s placements, freed with it.
  */
-export interface UploadedAsset {
+interface UploadedAsset {
   meshes: MeshHandle[];
   materials: number[];
   textureSets: number[];
@@ -154,24 +180,244 @@ export interface UploadedAsset {
     doubleSided: boolean;
   }>;
   bytes: number;
-  references: number;
 }
 
 /**
- * Uploads per world, asset and color transfer. Weak keys: a cached upload
- * never keeps a parsed asset (and its CPU geometry) alive.
+ * What placing needs from a parsed asset, kept by its `ModelResource`: the
+ * node tree, lights and feature tables, not the geometry or images (on the
+ * GPU already), so a held model doesn't keep its CPU data alive.
  */
-const uploads = new WeakMap<
-  World,
-  WeakMap<GltfAsset, Map<string, UploadedAsset>>
->();
+interface PlacementTemplate {
+  draws: GltfDraw[];
+  lights: GltfLight[];
+  rtcCenter?: [number, number, number];
+  instances?: GltfAsset["instances"];
+  /** Per draw, the feature table of its mesh, if any. */
+  drawTables: Array<FeatureTable | undefined>;
+  /** The first table (i3dm's batch table, for its instances). */
+  firstTable?: FeatureTable;
+}
+
+/** What a placement's engine provides: its context and ground clamping. */
+export interface ModelHost {
+  readonly ctx: RenderContext;
+  readonly clamping: HeightClamping;
+}
+
+/** A model's state, shared with the inspector and the leak check. */
+export interface ModelUsage {
+  name: string;
+  bytes: number;
+  placements: number;
+  released: boolean;
+  freed: boolean;
+  /** Garbage-collected without `release()`: its GPU memory stays. */
+  leaked: boolean;
+}
+
+/** The leak check's view of a model: its state and (weakly) its world. */
+interface Tracked {
+  state: ModelUsage;
+  world: WeakRef<World>;
+}
+
+/** Each world's models, for the inspector (`modelUsage`). */
+const models = new WeakMap<World, Set<ModelUsage>>();
 
 /**
- * Assets whose decoded images were closed after their upload (to free the
- * CPU copy). Once the last placement in a world is removed the upload goes
- * too, and the asset can't be uploaded again: it must be loaded again.
+ * Models garbage-collected without `release()`: their GPU memory stays
+ * until the world is destroyed, so say so (the handle is the caller's to
+ * release, as a file handle is).
  */
-const imagesReleased = new WeakSet<GltfAsset>();
+const leakCheck =
+  typeof FinalizationRegistry === "undefined"
+    ? undefined
+    : new FinalizationRegistry<Tracked>(({ state, world }) => {
+        // A destroyed world took its models' GPU memory with it.
+        const alive = world.deref();
+        if (state.released || state.freed || !alive || alive.destroyed) {
+          return;
+        }
+        state.leaked = true;
+        console.warn(
+          `ModelResource "${state.name}" was garbage-collected without release(): its ${(state.bytes / 1048576).toFixed(1)} MB of GPU memory stays until its world is destroyed.`,
+        );
+      });
+
+/**
+ * A world's models: name, GPU bytes, placements, and whether released or
+ * leaked (the inspector's memory section).
+ */
+export function modelUsage(world: World): ModelUsage[] {
+  return [...(models.get(world) ?? [])].map((m) => ({ ...m }));
+}
+
+/** Assets whose decoded images an upload closed (`releaseSourceData`). */
+const sourceReleased = new WeakSet<GltfAsset>();
+
+/**
+ * A glTF asset uploaded into one world: its meshes, materials and textures
+ * on the GPU, placed any number of times (`place`). The handle is the
+ * caller's reference: the model is freed once it is released and no
+ * placements remain, so removing placements never frees a model still
+ * held, and a one-off model is released right after placing it (the
+ * placement keeps it):
+ *
+ * ```ts
+ * using model = await engine.loadModel(world, url);
+ * model.place({ modelMatrix }); // freed when this placement is removed
+ * ```
+ *
+ * As a handle in Bevy (`Handle<T>`) or Filament (`FilamentAsset`): uploads
+ * are explicit and owned, never shared behind the caller's back.
+ */
+export class ModelResource implements Disposable {
+  readonly world: World;
+  readonly name: string | undefined;
+  readonly colorTransfer: "srgb" | "gamma2.2";
+  readonly axes: "gltf" | "3d-tiles" | "none";
+  /** @internal The GPU resources. */
+  readonly upload: UploadedAsset;
+  /** @internal What placing needs. */
+  readonly template: PlacementTemplate;
+  /** @internal The engine's context and clamping. */
+  readonly host: ModelHost;
+  /** The asset until its source data is released. */
+  private asset: GltfAsset | undefined;
+  private readonly state: ModelUsage;
+
+  /** @internal Use `engine.loadModel` or `engine.uploadModel`. */
+  constructor(
+    host: ModelHost,
+    world: World,
+    asset: GltfAsset,
+    upload: UploadedAsset,
+    options: ModelResourceOptions,
+  ) {
+    this.host = host;
+    this.world = world;
+    this.asset = asset;
+    this.upload = upload;
+    this.name = options.name;
+    this.colorTransfer = options.colorTransfer ?? "srgb";
+    this.axes = options.axes ?? "gltf";
+    this.template = {
+      draws: asset.draws,
+      lights: asset.lights ?? [],
+      ...(asset.rtcCenter ? { rtcCenter: asset.rtcCenter } : {}),
+      ...(asset.instances ? { instances: asset.instances } : {}),
+      drawTables: asset.draws.map((d) => {
+        const table = asset.meshes[d.mesh]?.featureTable;
+        return table !== undefined ? asset.featureTables[table] : undefined;
+      }),
+      ...(asset.featureTables[0] ? { firstTable: asset.featureTables[0] } : {}),
+    };
+    this.state = {
+      name: options.name ?? "model",
+      bytes: upload.bytes,
+      placements: 0,
+      released: false,
+      freed: false,
+      leaked: false,
+    };
+    let set = models.get(world);
+    if (!set) {
+      set = new Set();
+      models.set(world, set);
+    }
+    set.add(this.state);
+    leakCheck?.register(
+      this,
+      { state: this.state, world: new WeakRef(world) },
+      this.state,
+    );
+  }
+
+  /** GPU bytes: arena geometry plus textures, shared by its placements. */
+  get bytes(): number {
+    return this.upload.bytes;
+  }
+
+  /** Placements not yet removed. */
+  get placementCount(): number {
+    return this.state.placements;
+  }
+
+  /** The handle was released (`release`); it can't place any more. */
+  get released(): boolean {
+    return this.state.released;
+  }
+
+  /** Its GPU resources are freed (released, and no placements left). */
+  get freed(): boolean {
+    return this.state.freed;
+  }
+
+  /** Places it in its world: one root transform and a draw per primitive. */
+  place(options: PlacementOptions): ModelPlacement {
+    return placeModel(this, options);
+  }
+
+  /**
+   * Closes the asset's decoded images (when `releaseSourceData: false`
+   * kept them): the CPU copy freed, the asset no longer uploadable.
+   */
+  releaseSourceData(): void {
+    const asset = this.asset;
+    if (!asset) {
+      return;
+    }
+    this.asset = undefined;
+    closeImages(asset.images);
+    sourceReleased.add(asset);
+  }
+
+  /**
+   * Gives up the handle: the model is freed now, or with its last
+   * placement. Placing from a released handle throws.
+   */
+  release(): void {
+    if (this.state.released) {
+      return;
+    }
+    this.state.released = true;
+    leakCheck?.unregister(this.state);
+    this.freeIfUnused();
+  }
+
+  [Symbol.dispose](): void {
+    this.release();
+  }
+
+  /** @internal A placement was added. */
+  placed(): void {
+    this.state.placements++;
+  }
+
+  /** @internal A placement was removed. */
+  unplaced(): void {
+    this.state.placements--;
+    this.freeIfUnused();
+  }
+
+  private freeIfUnused(): void {
+    if (!this.state.released || this.state.placements > 0 || this.state.freed) {
+      return;
+    }
+    this.state.freed = true;
+    models.get(this.world)?.delete(this.state);
+    freeUpload(this.world, this.upload);
+  }
+}
+
+/** Closes decoded images (their CPU memory freed now, not at GC). */
+function closeImages(images: GltfImage[]): void {
+  for (const image of images) {
+    if (image instanceof ImageBitmap) {
+      image.close();
+    }
+  }
+}
 
 /**
  * glTF is y-up and z-forward; CesiumJS 1.x maps it to z-up, x-forward with
@@ -187,56 +433,33 @@ const Z_UP_TO_X_UP = Float64Array.from([
 const AXIS_CORRECTION = m4.multiply(m4.mat4(), Y_UP_TO_Z_UP, Z_UP_TO_X_UP);
 
 /**
- * Uploads a glTF asset into a world once: textures (sRGB where glTF says so,
- * with mips), materials and texture sets, and meshes. Later placements of
- * the same asset in the same world share them.
+ * Uploads a parsed glTF asset into a world: textures (sRGB where glTF says
+ * so, with mips), materials and texture sets, and meshes, as a
+ * `ModelResource` the caller owns. Transactional (§13.15): an upload that
+ * runs out of room releases what it took and leaves the asset as it was,
+ * so streaming can retry the tile once eviction frees room.
  */
-function uploadAsset(
-  ctx: RenderContext,
+export function uploadModel(
+  host: ModelHost,
   world: World,
   asset: GltfAsset,
-  gamma22: boolean,
-): UploadedAsset {
-  let byAsset = uploads.get(world);
-  if (!byAsset) {
-    byAsset = new WeakMap();
-    uploads.set(world, byAsset);
-  }
-  let byTransfer = byAsset.get(asset);
-  if (!byTransfer) {
-    byTransfer = new Map();
-    byAsset.set(asset, byTransfer);
-  }
-  const key = gamma22 ? "gamma2.2" : "srgb";
-  const existing = byTransfer.get(key);
-  if (existing && existing.references > 0) {
-    existing.references++;
-    return existing;
-  }
-  if (
-    imagesReleased.has(asset) &&
-    asset.images.some((image) => image instanceof ImageBitmap)
-  ) {
+  options: ModelResourceOptions = {},
+): ModelResource {
+  if (sourceReleased.has(asset)) {
     throw new Error(
-      "This glTF asset's images were released when its upload was freed " +
-        "(its last placement was removed). Load it again (engine.loadGltf) " +
-        "to place it, or add the new placement before removing the old one.",
+      "uploadModel: this asset's source data (its decoded images) was released by an earlier upload; place that ModelResource, or load the asset again.",
     );
   }
-  const textures = new TextureUploader(ctx, asset);
-  // Transactional (§13.15): everything taken so far is released if any
-  // allocation fails, so a world at capacity loses nothing to the attempt
-  // and streaming can retry the tile once eviction frees room.
+  const gamma22 = options.colorTransfer === "gamma2.2";
+  const textures = new TextureUploader(host.ctx, asset);
   const taken = {
     materials: [] as number[],
     textureSets: [] as number[],
     meshes: [] as MeshHandle[],
   };
+  let upload: UploadedAsset;
   try {
-    return uploadAssetInto(ctx, world, asset, gamma22, textures, taken, {
-      byTransfer,
-      key,
-    });
+    upload = uploadAssetInto(host.ctx, world, asset, gamma22, textures, taken);
   } catch (error) {
     for (const mesh of taken.meshes) {
       world.removeMesh(mesh);
@@ -247,13 +470,17 @@ function uploadAsset(
     for (const set of taken.textureSets) {
       world.removeTextureSet(set);
     }
-    // The images stay open (no `textures.release()`): a retry of the same
-    // parsed asset uploads them again.
+    // The images stay open: a retry of the same asset uploads them again.
     for (const texture of textures.textures) {
       texture.destroy();
     }
     throw error;
   }
+  const model = new ModelResource(host, world, asset, upload, options);
+  if (options.releaseSourceData !== false) {
+    model.releaseSourceData();
+  }
+  return model;
 }
 
 function uploadAssetInto(
@@ -263,7 +490,6 @@ function uploadAssetInto(
   gamma22: boolean,
   textures: TextureUploader,
   taken: { materials: number[]; textureSets: number[]; meshes: MeshHandle[] },
-  cache: { byTransfer: Map<string, UploadedAsset>; key: string },
 ): UploadedAsset {
   const addMaterial = (options: MaterialOptions) => {
     const index = world.addMaterial(options);
@@ -343,8 +569,7 @@ function uploadAssetInto(
     );
   }
   const arenaBytes = world.arenaBytes - arenaBefore;
-  textures.release();
-  const upload: UploadedAsset = {
+  return {
     meshes,
     materials: [...materials.map((m) => m.index), defaultMaterial.index],
     textureSets: [
@@ -355,43 +580,44 @@ function uploadAssetInto(
     textures: textures.textures,
     drawMaterials: [...materials, defaultMaterial],
     bytes: arenaBytes + textures.bytes,
-    references: 1,
   };
-  cache.byTransfer.set(cache.key, upload);
-  return upload;
 }
 
 /**
- * Places a parsed glTF asset in a world: its resources are uploaded once
- * per world (`uploadAsset`); each placement adds a root transform
- * (`modelMatrix`), a transform per node below it and one draw per node
- * primitive. Transforms compose in float64, so large Earth-fixed
- * coordinates never reach float32. `EXT_mesh_gpu_instancing` nodes draw
- * their mesh once per instance, culled per instance on the GPU.
+ * Places a model in its world: a root transform (`modelMatrix` or `at`), a
+ * transform per node below it and one draw per node primitive. Transforms
+ * compose in float64, so large Earth-fixed coordinates never reach
+ * float32. `EXT_mesh_gpu_instancing` nodes draw their mesh once per
+ * instance, culled per instance on the GPU. Transactional, as the upload
+ * (§13.15): a placement that runs out of draws or transforms removes what
+ * it placed.
  */
-export function addGltf(
-  ctx: RenderContext,
-  world: World,
-  asset: GltfAsset,
-  options: ModelOptions,
-): ModelInstance {
-  const upload = uploadAsset(
-    ctx,
-    world,
-    asset,
-    options.colorTransfer === "gamma2.2",
-  );
-  // Transactional, as the upload (§13.15): a placement that runs out of
-  // draws or transforms removes what it placed and its upload reference.
+export function placeModel(
+  model: ModelResource,
+  options: InternalPlacementOptions,
+): ModelPlacement {
+  if (model.released) {
+    throw new Error(
+      `ModelResource "${model.name ?? "model"}" was released: it can't be placed. Keep the handle while placing, and release it after.`,
+    );
+  }
+  // The type allows one or the other; JavaScript callers can pass both.
+  const both = options as { parent?: unknown; heightReference?: string };
+  if (both.parent && both.heightReference && both.heightReference !== "none") {
+    throw new Error("place: a heightReference needs a model without parent");
+  }
+  const world = model.world;
   const placed: { draws: DrawHandle[]; lights: LightHandle[] } = {
     draws: [],
     lights: [],
   };
   let root: TransformHandle | undefined;
   try {
-    return placeGltf(world, asset, options, upload, placed, (handle) => {
+    const placement = placeGltf(model, options, placed, (handle) => {
       root = handle;
     });
+    model.placed();
+    return placement;
   } catch (error) {
     for (const light of placed.lights) {
       world.removeLight(light);
@@ -402,30 +628,46 @@ export function addGltf(
     if (root) {
       world.removeTransform(root);
     }
-    releaseUpload(world, upload);
     throw error;
   }
 }
 
+/** The placement's matrix: `modelMatrix`, or east-north-up at `at`. */
+function placementMatrix(options: PlacementOptions): Mat4 {
+  if (options.modelMatrix) {
+    return options.modelMatrix;
+  }
+  const { longitude, latitude, height = 0 } = options.at!;
+  const ellipsoid = Ellipsoid.WGS84;
+  return eastNorthUpToFixedFrame(
+    ellipsoid.cartographicToCartesian(
+      fromDegrees(longitude, latitude, height),
+      v3.vec3(),
+    ),
+    ellipsoid,
+    m4.mat4(),
+  );
+}
+
 function placeGltf(
-  world: World,
-  asset: GltfAsset,
-  options: ModelOptions,
-  upload: UploadedAsset,
+  model: ModelResource,
+  options: InternalPlacementOptions,
   placed: { draws: DrawHandle[]; lights: LightHandle[] },
   onRoot: (root: TransformHandle) => void,
-): ModelInstance {
+): ModelPlacement {
+  const { world, upload, template: asset } = model;
+  const modelMatrix = placementMatrix(options);
   // i3dm content: its instances, relative to their origin in tile space.
   const assetInstances =
     options.instances === undefined ? asset.instances : undefined;
-  let rootMatrix: Mat4 = options.modelMatrix;
+  let rootMatrix: Mat4 = modelMatrix;
   if (assetInstances) {
     const [x, y, z] = assetInstances.origin;
     const translation = m4.mat4();
     translation[12] = x;
     translation[13] = y;
     translation[14] = z;
-    rootMatrix = m4.multiply(m4.mat4(), options.modelMatrix, translation);
+    rootMatrix = m4.multiply(m4.mat4(), modelMatrix, translation);
   }
   const root = world.addTransform(rootMatrix, options.parent);
   onRoot(root);
@@ -438,11 +680,11 @@ function placeGltf(
     correction[13] = asset.rtcCenter[1];
     correction[14] = asset.rtcCenter[2];
   }
-  if (options.axes !== "none") {
+  if (model.axes !== "none") {
     m4.multiply(
       correction,
       correction,
-      options.axes === "3d-tiles" ? Y_UP_TO_Z_UP : AXIS_CORRECTION,
+      model.axes === "3d-tiles" ? Y_UP_TO_Z_UP : AXIS_CORRECTION,
     );
   }
   const rootWorld = world.worldMatrix(root);
@@ -459,7 +701,8 @@ function placeGltf(
       : undefined);
   const userCount = user ? user.matrices.length / 16 : 0;
   const frames: InstanceFrame[] | undefined = user ? [] : undefined;
-  for (const draw of asset.draws) {
+  for (let d = 0; d < asset.draws.length; d++) {
+    const draw = asset.draws[d]!;
     // One transform per node: its primitives share the node's matrix.
     const local = m4.multiply(m4.mat4(), correction, draw.matrix);
     let node = nodes.get(draw.matrix);
@@ -491,11 +734,7 @@ function placeGltf(
       name: options.name,
       viewMask: options.viewMask,
       features:
-        asset.meshes[draw.mesh]!.featureTable !== undefined
-          ? asset.featureTables[asset.meshes[draw.mesh]!.featureTable!]
-          : assetInstances
-            ? asset.featureTables[0]
-            : undefined,
+        asset.drawTables[d] ?? (assetInstances ? asset.firstTable : undefined),
       ...(user
         ? { instances: modelInstances(user, local, draw.instances, frames!) }
         : draw.instances
@@ -530,7 +769,7 @@ function placeGltf(
   }
   // Its lights, at their nodes (one placement: not for instanced models).
   const lights = placed.lights;
-  for (const light of user ? [] : (asset.lights ?? [])) {
+  for (const light of user ? [] : asset.lights) {
     let node = nodes.get(light.matrix);
     if (!node) {
       node = world.addTransform(
@@ -555,24 +794,26 @@ function placeGltf(
   if (user) {
     bounds = instanceBounds(bounds, rootWorld, user.matrices);
   }
-  return {
+  const placement = new ModelPlacement(
+    model,
     draws,
     lights,
-    transform: root,
-    ...bounds,
-    bounds() {
-      return {
-        center: this.clamp
-          ? v3.add(v3.vec3(), this.center, this.clamp.displacement)
-          : this.center,
-        radius: this.radius,
-      };
-    },
-    bytes: upload.bytes,
-    resources: upload,
-    instanceCount: userCount,
-    ...(frames ? { instanceFrames: frames } : {}),
-  };
+    root,
+    // The bounds in the root's frame: they follow it (moves, clamping).
+    m4.transformPoint(
+      v3.vec3(),
+      m4.invertAffine(m4.mat4(), rootWorld),
+      bounds.center,
+    ),
+    bounds.radius,
+    userCount,
+    frames,
+  );
+  const reference = options.heightReference ?? "none";
+  if (reference !== "none") {
+    placement.anchor(reference, options.heightOffset);
+  }
+  return placement;
 }
 
 /**
@@ -636,54 +877,198 @@ function modelInstances(
 }
 
 /**
- * Moves, hides or tints instance `index` of a model placed with
- * `ModelOptions.instances`; `matrix` is in the model's frame, as when
- * placed.
+ * A model placed in its world (`ModelResource.place`): a root transform,
+ * its draws and lights. Remove it with `remove()` (or `using`); calling
+ * anything else on a removed placement throws, rather than touching
+ * handles the world has given to something else.
  */
-export function setModelInstance(
-  world: World,
-  model: ModelInstance,
-  index: number,
-  change: {
-    matrix?: ArrayLike<number>;
-    visible?: boolean;
-    tint?: ArrayLike<number>;
-  },
-): void {
-  const frames = model.instanceFrames;
-  if (!frames || index < 0 || index >= model.instanceCount) {
-    throw new RangeError(`instance ${index} of ${model.instanceCount}`);
+export class ModelPlacement implements Disposable {
+  readonly model: ModelResource;
+  /** One per node primitive. */
+  readonly draws: readonly DrawHandle[];
+  /** Its `KHR_lights_punctual` lights (`World.setLight` changes them). */
+  readonly lights: readonly LightHandle[];
+  /** The root transform; node transforms hang off it. */
+  readonly transform: TransformHandle;
+  /** GPU instances placed with `instances` (0: none). */
+  readonly instanceCount: number;
+  /** @internal Per draw, for `setInstance`. */
+  readonly instanceFrames: readonly InstanceFrame[] | undefined;
+  private clamp_: Clamp | undefined;
+  private removed_ = false;
+
+  /** @internal Use `ModelResource.place`. */
+  constructor(
+    model: ModelResource,
+    draws: DrawHandle[],
+    lights: LightHandle[],
+    transform: TransformHandle,
+    private readonly localCenter: Vec3,
+    private readonly radius: number,
+    instanceCount: number,
+    instanceFrames: InstanceFrame[] | undefined,
+  ) {
+    this.model = model;
+    this.draws = draws;
+    this.lights = lights;
+    this.transform = transform;
+    this.instanceCount = instanceCount;
+    this.instanceFrames = instanceFrames;
   }
-  // Scratch only: moving every instance of a large fleet each frame must
-  // not allocate per call.
-  const matrix = change.matrix;
-  if (matrix) {
-    for (let k = 0; k < 16; k++) {
-      scratchP[k] = matrix[k]!;
+
+  /** Its ground clamping, with a `heightReference`. */
+  get clamp(): Clamp | undefined {
+    return this.clamp_;
+  }
+
+  get removed(): boolean {
+    return this.removed_;
+  }
+
+  /** Where it stands now (moves and clamping included), Earth-fixed. */
+  bounds(): { center: Vec3; radius: number } {
+    this.alive("bounds");
+    const m = this.model.world.worldMatrix(this.transform);
+    return {
+      center: m4.transformPoint(v3.vec3(), m, this.localCenter),
+      radius: this.radius,
+    };
+  }
+
+  /**
+   * Moves it: Earth-fixed, or relative to its parent. A clamped placement
+   * is anchored again where it now stands.
+   */
+  setTransform(matrix: Mat4): void {
+    this.alive("setTransform");
+    this.model.world.setTransform(this.transform, matrix);
+    const clamp = this.clamp_;
+    if (clamp) {
+      clamp.remove();
+      this.clamp_ = undefined;
+      this.anchor(clamp.options.heightReference, clamp.options.offset);
     }
   }
-  scratchChange.matrix = matrix ? scratchOut : undefined;
-  scratchChange.visible = change.visible;
-  scratchChange.tint = change.tint;
-  const draws = model.draws;
-  for (let d = 0; d < draws.length; d++) {
-    const frame = frames[d]!;
+
+  /** Shows or hides all of it. */
+  setVisible(visible: boolean): void {
+    this.alive("setVisible");
+    this.model.world.setTransformVisible(this.transform, visible);
+  }
+
+  /**
+   * Changes the custom shader of every draw (undefined: the default), in
+   * place: the draws move between batches, nothing is placed again.
+   */
+  setShader(shader: CustomShader | undefined): void {
+    this.alive("setShader");
+    for (const draw of this.draws) {
+      this.model.world.setDrawShader(draw, shader);
+    }
+  }
+
+  /**
+   * Moves, hides or tints GPU instance `index` (placed with `instances`);
+   * `matrix` is in the placement's frame, as when placed.
+   */
+  setInstance(
+    index: number,
+    change: {
+      matrix?: ArrayLike<number>;
+      visible?: boolean;
+      tint?: ArrayLike<number>;
+    },
+  ): void {
+    this.alive("setInstance");
+    const frames = this.instanceFrames;
+    if (!frames || index < 0 || index >= this.instanceCount) {
+      throw new RangeError(`instance ${index} of ${this.instanceCount}`);
+    }
+    // Scratch only: moving every instance of a large fleet each frame must
+    // not allocate per call.
+    const matrix = change.matrix;
     if (matrix) {
-      conjugate(scratchM, frame.inverse, scratchP, frame.local);
-    }
-    const perUser = frame.gltf ? frame.gltf.length / 16 : 1;
-    for (let j = 0; j < perUser; j++) {
-      if (matrix) {
-        if (frame.gltf) {
-          multiplyAffineInto(scratchOut, 0, scratchM, frame.gltf, j * 16);
-        } else {
-          scratchOut.set(scratchM);
-        }
+      for (let k = 0; k < 16; k++) {
+        scratchP[k] = matrix[k]!;
       }
-      world.setInstance(draws[d]!, index * perUser + j, scratchChange);
+    }
+    scratchChange.matrix = matrix ? scratchOut : undefined;
+    scratchChange.visible = change.visible;
+    scratchChange.tint = change.tint;
+    const world = this.model.world;
+    const draws = this.draws;
+    for (let d = 0; d < draws.length; d++) {
+      const frame = frames[d]!;
+      if (matrix) {
+        conjugate(scratchM, frame.inverse, scratchP, frame.local);
+      }
+      const perUser = frame.gltf ? frame.gltf.length / 16 : 1;
+      for (let j = 0; j < perUser; j++) {
+        if (matrix) {
+          if (frame.gltf) {
+            multiplyAffineInto(scratchOut, 0, scratchM, frame.gltf, j * 16);
+          } else {
+            scratchOut.set(scratchM);
+          }
+        }
+        world.setInstance(draws[d]!, index * perUser + j, scratchChange);
+      }
+    }
+  }
+
+  /**
+   * Removes it from its world (again: nothing); its model is freed with
+   * its last placement once the model's handle is released.
+   */
+  remove(): void {
+    if (this.removed_) {
+      return;
+    }
+    this.removed_ = true;
+    this.clamp_?.remove();
+    this.clamp_ = undefined;
+    const world = this.model.world;
+    for (const light of this.lights) {
+      world.removeLight(light);
+    }
+    for (const draw of this.draws) {
+      world.removeDraw(draw);
+    }
+    world.removeTransform(this.transform);
+    this.model.unplaced();
+  }
+
+  [Symbol.dispose](): void {
+    this.remove();
+  }
+
+  /** @internal Clamps it to the ground at its translation. */
+  anchor(reference: HeightReference, offset: number | undefined): void {
+    const m = this.model.world.localMatrix(this.transform);
+    const anchor = Ellipsoid.WGS84.cartesianToCartographic(
+      v3.vec3(m[12]!, m[13]!, m[14]!),
+      { longitude: 0, latitude: 0, height: 0 },
+    );
+    if (anchor) {
+      this.clamp_ = this.model.host.clamping.add(
+        this.model.world,
+        this.transform,
+        {
+          heightReference: reference,
+          ...anchor,
+          ...(offset !== undefined ? { offset } : {}),
+        },
+      );
+    }
+  }
+
+  private alive(what: string): void {
+    if (this.removed_) {
+      throw new Error(`ModelPlacement.${what}: the placement was removed.`);
     }
   }
 }
+
 const scratchP = new Float64Array(16);
 const scratchM = new Float64Array(16);
 const scratchT = new Float64Array(16);
@@ -765,28 +1150,8 @@ function instanceBounds(
   return unionSphere(spheres);
 }
 
-/**
- * Removes a placed glTF from its world; the asset's GPU resources are freed
- * with its last instance there.
- */
-export function removeGltf(world: World, instance: ModelInstance): void {
-  for (const light of instance.lights) {
-    world.removeLight(light);
-  }
-  instance.lights.length = 0;
-  for (const draw of instance.draws) {
-    world.removeDraw(draw);
-  }
-  instance.draws.length = 0;
-  world.removeTransform(instance.transform);
-  releaseUpload(world, instance.resources);
-}
-
-/** Drops a placement's reference to its upload, freeing it with the last. */
-function releaseUpload(world: World, upload: UploadedAsset): void {
-  if (upload.references === 0 || --upload.references > 0) {
-    return;
-  }
+/** Frees a model's GPU resources. */
+function freeUpload(world: World, upload: UploadedAsset): void {
   for (const mesh of upload.meshes) {
     world.removeMesh(mesh);
   }
@@ -848,7 +1213,7 @@ function materialData(m: GltfMaterial, gamma22: boolean) {
 
 /** Creates GPU textures and samplers on demand, one per (image, color space). */
 class TextureUploader {
-  /** Every texture created, for `removeGltf`. */
+  /** Every texture created, freed with the model. */
   readonly textures: GPUTexture[] = [];
   /** Approximate GPU bytes of those textures (mips included). */
   bytes = 0;
@@ -875,16 +1240,6 @@ class TextureUploader {
       view: this.view(texture.image, srgb, texture.sampler.mipmaps),
       sampler: this.sampler(texture.sampler),
     };
-  }
-
-  /** Closes the decoded images once every texture is on the GPU. */
-  release(): void {
-    imagesReleased.add(this.asset);
-    for (const image of this.asset.images) {
-      if (image instanceof ImageBitmap) {
-        image.close();
-      }
-    }
   }
 
   private view(

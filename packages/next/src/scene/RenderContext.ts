@@ -85,7 +85,7 @@ export interface SurfacePipelines {
    */
   opaquePoints: GPURenderPipeline;
   /**
-   * Instanced triangles (`ModelOptions.instances`), one- and double-sided:
+   * Instanced triangles (`PlacementOptions.instances`), one- and double-sided:
    * outside the depth prepass too. Instances are many small copies whose
    * vertices outnumber the samples they cover, so drawing them twice
    * costs more than shading over each other saves (100,000 milk trucks:

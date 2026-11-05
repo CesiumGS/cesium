@@ -320,20 +320,21 @@ async function runModels(): Promise<Row[]> {
             vertexBytes: 16 << 20,
             indexBytes: 8 << 20,
           });
-          const instance = engine.addModel(world, asset, {
+          using model = engine.uploadModel(world, asset, { colorTransfer });
+          const instance = model.place({
             modelMatrix,
             unlit: mode === "unlit",
-            colorTransfer,
           });
-          placed ??= instance;
+          const bounds = instance.bounds();
+          placed ??= bounds;
           draws = instance.draws.length;
           if (colorTransfer === "srgb") {
-            camera.near = Math.max(0.01, instance.radius * 0.01);
+            camera.near = Math.max(0.01, bounds.radius * 0.01);
             camera.lookAt(
-              instance.center,
+              bounds.center,
               35 * deg,
               -25 * deg,
-              instance.radius * 2.8,
+              bounds.radius * 2.8,
             );
           }
           const view = engine.addView({

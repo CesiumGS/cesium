@@ -37,11 +37,11 @@ import {
   vec3,
   type EngineOptions,
   type Exposure,
-  type GltfAsset,
   type ImageryProvider,
   type IonAttribution,
-  type ModelInstance,
-  type ModelOptions,
+  ModelPlacement,
+  type ModelResource,
+  type ModelResourceOptions,
   type PickResult,
   type Tileset3D,
   type TilesetOptions,
@@ -186,7 +186,7 @@ export type TilesetSource =
 /** What `zoomTo` frames. */
 export type ZoomTarget =
   | Tileset3D
-  | ModelInstance
+  | ModelPlacement
   | { center: ArrayLike<number>; radius: number }
   | { longitude: number; latitude: number; range?: number };
 
@@ -568,37 +568,19 @@ export class Viewer {
   }
 
   /**
-   * Adds a glTF model (a URL or a loaded asset). Without a `modelMatrix`,
-   * it stands at `at` (longitude and latitude, degrees) on the ground.
+   * Loads a glTF model into the viewer's world: a `ModelResource` to place
+   * and release (`engine.loadModel`). For one placement:
+   *
+   * ```ts
+   * using model = await viewer.loadModel(url);
+   * model.place({ at: { longitude, latitude }, heightReference: "clampToGround" });
+   * ```
    */
-  async addModel(
-    source: string | URL | GltfAsset,
-    options: Partial<ModelOptions> & {
-      at?: { longitude: number; latitude: number };
-    } = {},
-  ): Promise<ModelInstance> {
-    const asset =
-      typeof source === "string" || source instanceof URL
-        ? await this.engine.loadGltf(source)
-        : source;
-    const { at, ...rest } = options;
-    const place = at ?? { longitude: 0, latitude: 0 };
-    return this.engine.addModel(this.world, asset, {
-      ...(rest.modelMatrix
-        ? {}
-        : {
-            modelMatrix: eastNorthUpToFixedFrame(
-              ellipsoid.cartographicToCartesian(
-                fromDegrees(place.longitude, place.latitude, 0),
-                vec3.vec3(),
-              ),
-              ellipsoid,
-              mat4.mat4(),
-            ),
-            heightReference: "clampToGround" as const,
-          }),
-      ...rest,
-    } as ModelOptions);
+  loadModel(
+    url: string | URL,
+    options: ModelResourceOptions & { signal?: AbortSignal } = {},
+  ): Promise<ModelResource> {
+    return this.engine.loadModel(this.world, url, options);
   }
 
   /** Credits that content added outside the viewer requires. */
@@ -606,13 +588,14 @@ export class Viewer {
     this.attributions.set(owner, attributions);
   }
 
-  /** Removes content added through the viewer (or attributions' owner). */
-  remove(content: Tileset3D | ModelInstance | object): void {
+  /**
+   * Removes a tileset added through the viewer, or attributions' owner's
+   * credits. (A model placement removes itself: `placement.remove()`.)
+   */
+  remove(content: Tileset3D | object): void {
     this.attributions.delete(content);
     if (this.tilesets.delete(content as Tileset3D)) {
       this.engine.removeTileset(content as Tileset3D);
-    } else if ("draws" in content && "transform" in content) {
-      this.engine.removeModel(this.world, content as ModelInstance);
     }
   }
 
@@ -628,7 +611,7 @@ export class Viewer {
    */
   zoomTo(target: ZoomTarget, heading = 35 * deg, pitch = -30 * deg): void {
     const token = ++this.zoomToken;
-    if ("draws" in target) {
+    if (target instanceof ModelPlacement) {
       const model = target;
       const { center, radius } = model.bounds();
       this.frame(Float64Array.from(center), radius, heading, pitch);

@@ -14,7 +14,11 @@ import type {
   TransformHandle,
   World,
 } from "../scene/World.ts";
-import type { ModelOptions } from "../scene/gltfModel.ts";
+import {
+  placeModel,
+  type ModelPlacement,
+  type ModelResourceOptions,
+} from "../scene/gltfModel.ts";
 import type { CustomShader } from "../scene/CustomShader.ts";
 import type { FeatureStyle } from "../scene/FeatureStyle.ts";
 import type { GltfAsset } from "../io/gltfTypes.ts";
@@ -84,9 +88,11 @@ export interface TileSource {
   /** Decoded content of one tile. */
   loadTile(tile: Tile, signal: AbortSignal): Promise<GltfAsset>;
   /** Placement of a tile's content. */
-  modelOptions(
-    tile: Tile,
-  ): Pick<ModelOptions, "modelMatrix" | "axes" | "underlay">;
+  modelOptions(tile: Tile): {
+    modelMatrix: Mat4;
+    axes?: ModelResourceOptions["axes"];
+    underlay?: boolean;
+  };
   /** Height of the surface at a longitude and latitude (terrain sources). */
   sampleHeight?(longitude: number, latitude: number): number | undefined;
   /**
@@ -267,7 +273,7 @@ export class Tileset3D implements TileTree {
     this.collision = value;
     this.lastChange = this.frame;
     const visit = (tile: Tile) => {
-      for (const draw of tile.instance?.draws ?? []) {
+      for (const draw of tile.placement?.draws ?? []) {
         this.world.setCollision(draw, value);
       }
       tile.children.forEach(visit);
@@ -391,9 +397,9 @@ export class Tileset3D implements TileTree {
       }
       if (!pending) {
         query.done = true;
-        query.pinned = [...tiles].filter((t) => t.instance);
+        query.pinned = [...tiles].filter((t) => t.placement);
         query.resolve({
-          draws: query.pinned.flatMap((t) => t.instance!.draws),
+          draws: query.pinned.flatMap((t) => t.placement!.draws),
           release: () => {
             const at = this.queries.indexOf(query);
             if (at >= 0) {
@@ -492,7 +498,7 @@ export class Tileset3D implements TileTree {
   }
   private tileColor?: (tile: Tile) => DebugColor | undefined;
   private applyDebugColor(tile: Tile): void {
-    if (!tile.instance) {
+    if (!tile.placement) {
       return;
     }
     const color =
@@ -507,7 +513,7 @@ export class Tileset3D implements TileTree {
     ) {
       return;
     }
-    for (const draw of tile.instance.draws) {
+    for (const draw of tile.placement.draws) {
       this.world.setColor(draw, color ?? WHITE);
     }
     tile.debugColor = color;
@@ -942,12 +948,12 @@ export class Tileset3D implements TileTree {
     // View masks: only tiles whose mask changed touch their draw records.
     for (const tile of new Set([...this.masked, ...nowMasked])) {
       this.applyDebugColor(tile);
-      if (tile.instance && tile.appliedMask !== tile.viewMask) {
+      if (tile.placement && tile.appliedMask !== tile.viewMask) {
         if (tile.viewMask !== 0 && tile.purpose) {
           this.stats.purposes[tile.purpose].drawn++;
           tile.purpose = undefined;
         }
-        for (const draw of tile.instance.draws) {
+        for (const draw of tile.placement.draws) {
           this.world.setViewMask(draw, tile.viewMask);
         }
         tile.appliedMask = tile.viewMask;
@@ -958,7 +964,7 @@ export class Tileset3D implements TileTree {
     // in the views where finer content draws beside them.
     for (const tile of new Set([...this.placeholders, ...nowPlaceholders])) {
       if (
-        tile.instance &&
+        tile.placement &&
         (tile.appliedPlaceholderMask !== tile.placeholderMask ||
           !sameTiles(tile.appliedHoles, tile.holes))
       ) {
@@ -971,7 +977,7 @@ export class Tileset3D implements TileTree {
             [...tile.holes].map((hole) => clipBox(hole, tile.geometricError)),
           );
         }
-        for (const draw of tile.instance.draws) {
+        for (const draw of tile.placement.draws) {
           this.world.setPlaceholder(draw, tile.placeholderMask, tile.clip);
         }
         tile.appliedPlaceholderMask = tile.placeholderMask;
@@ -1239,27 +1245,39 @@ export class Tileset3D implements TileTree {
       }
       const { tile, asset, arrivedAt } = this.ready.shift()!;
       asset.warnings.forEach((w) => this.warnings.add(w));
-      // Before the upload, which consumes the images.
+      // Before the upload, whose source data is released after placing.
       const summary = summarizeContent(asset);
       const uploadStart = performance.now();
       try {
-        const instance = this.engine.addModel(this.world, asset, {
-          ...(this.source
-            ? this.source.modelOptions(tile)
-            : { modelMatrix: tile.transform, axes: "3d-tiles" as const }),
-          parent: this.transform,
-          viewMask: 0,
-          collision: this.collision,
-          ...((this.options.customShader ?? this.options.style?.shader)
-            ? {
-                shader: (this.options.customShader ??
-                  this.options.style?.shader)!,
-              }
-            : {}),
+        const placing = this.source?.modelOptions(tile);
+        // The source kept until the placement succeeds: a capacity failure
+        // anywhere leaves the asset whole for the retry.
+        const model = this.engine.uploadModel(this.world, asset, {
+          axes: placing?.axes ?? "3d-tiles",
+          releaseSourceData: false,
         });
-        tile.instance = instance;
-        tile.bytes = instance.bytes;
-        budget.bytes -= instance.bytes;
+        let placement: ModelPlacement;
+        try {
+          const shader =
+            this.options.customShader ?? this.options.style?.shader;
+          placement = placeModel(model, {
+            modelMatrix: placing?.modelMatrix ?? tile.transform,
+            ...(placing?.underlay ? { underlay: true } : {}),
+            parent: this.transform,
+            viewMask: 0,
+            collision: this.collision,
+            ...(shader ? { shader } : {}),
+          });
+        } catch (error) {
+          model.release();
+          throw error;
+        }
+        model.releaseSourceData();
+        // The placement holds the model: freed when the tile unloads.
+        model.release();
+        tile.placement = placement;
+        tile.bytes = model.bytes;
+        budget.bytes -= model.bytes;
         budget.uploads++;
         const uploaded = performance.now();
         const network = asset.timing?.networkMs ?? 0;
@@ -1399,9 +1417,9 @@ export class Tileset3D implements TileTree {
       this.stats.purposes[tile.purpose].unused++;
       tile.purpose = undefined;
     }
-    if (tile.instance) {
-      this.engine.removeModel(this.world, tile.instance);
-      tile.instance = undefined;
+    if (tile.placement) {
+      tile.placement.remove();
+      tile.placement = undefined;
     }
     this.stats.bytes -= tile.bytes;
     this.stats.loaded--;

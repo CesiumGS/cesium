@@ -4,6 +4,7 @@ import { cssColor } from "../scene/styleExpression.ts";
 import type { Engine } from "../scene/Engine.ts";
 import type { DrawHandle, World } from "../scene/World.ts";
 import type { PointCuller } from "../scene/PointCuller.ts";
+import type { ModelResource } from "../scene/gltfModel.ts";
 import { ModelPool } from "./ModelPool.ts";
 import type { PointSource } from "./PointSource.ts";
 import {
@@ -97,6 +98,8 @@ export class VectorLayer {
     const style = compileVectorStyle(options.style, first.layout);
     compiled.set(first, style);
     const layer = new VectorLayer(engine, world, style.parameters);
+    // Each model's handle while its pools are placed: then theirs alone.
+    const models = new Map<string, Promise<ModelResource>>();
     try {
       for (const l of style.layers) {
         const source = sourceOf(l.source);
@@ -145,10 +148,15 @@ export class VectorLayer {
               `VectorLayer: ${own.path}: no URL for model ${own.model} (options.models or the style's resources)`,
             );
           }
-          // An asset is placed in one world, once: loaded for each layer.
-          const asset = await engine.loadGltf(new URL(url, location.href).href);
+          // One upload per model, placed by every pool that draws it.
+          const href = new URL(url, location.href).href;
+          let model = models.get(href);
+          if (!model) {
+            model = engine.loadModel(world, href);
+            models.set(href, model);
+          }
           layer.pools.push(
-            new ModelPool(engine, world, source, asset, {
+            new ModelPool(engine, world, source, await model, {
               slots: options.slots ?? 4096,
               code: own.code,
               uniforms: c.uniforms,
@@ -160,6 +168,13 @@ export class VectorLayer {
     } catch (e) {
       layer.destroy();
       throw e;
+    } finally {
+      for (const model of models.values()) {
+        void model.then(
+          (m) => m.release(),
+          () => {},
+        );
+      }
     }
     return layer;
   }

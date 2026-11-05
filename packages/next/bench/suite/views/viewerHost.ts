@@ -313,7 +313,7 @@ export class NextViewerHost implements ViewerHost {
           throw new Error("superseded");
         }
         asset.warnings.forEach((w) => warnings.add(w));
-        // Before the upload, which consumes the images.
+        // Before the upload, which releases the images.
         const summary = summarizeContent(asset);
         const uploadStart = performance.now();
         // A model whose nodes already sit at Earth-fixed coordinates
@@ -327,15 +327,22 @@ export class NextViewerHost implements ViewerHost {
             "georeferenced model: placed at its own Earth-fixed position",
           );
         }
-        const model = await viewer.addModel(asset, {
-          unlit: settings.unlit,
-          ...(georeferenced
-            ? { modelMatrix: mat4.mat4(), axes: "3d-tiles" as const }
+        // The placement holds the upload: freed when it's removed.
+        using resource = engine.uploadModel(
+          viewer.world,
+          asset,
+          georeferenced ? { axes: "3d-tiles" } : {},
+        );
+        const model = resource.place(
+          georeferenced
+            ? { modelMatrix: mat4.mat4(), unlit: settings.unlit }
             : {
                 at: { longitude: SITE_DEGREES[0], latitude: SITE_DEGREES[1] },
-              }),
-        });
-        next = { remove: () => viewer.remove(model) };
+                heightReference: "clampToGround",
+                unlit: settings.unlit,
+              },
+        );
+        next = { remove: () => model.remove() };
         focus = model;
         info.model = {
           summary,

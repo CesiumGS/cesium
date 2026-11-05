@@ -24,6 +24,8 @@ import {
   RECORD_WORDS,
   TRANSFORM_WORDS,
   TRANSFORM_WORD,
+  RADIUS_WORD,
+  BATCH_WORD,
   FLAGS_WORD,
   VIEW_MASK_WORD,
   IMAGERY_SLICE_WORD,
@@ -1907,42 +1909,17 @@ export class World {
     const shader = options.shader;
     const billboard = options.billboard !== undefined;
     const instanced = instanceCount > 0;
-    // A point set's draws batch alone: each batch's arguments are its
-    // set's list (cull.wgsl `writePointArgs`).
-    const key = `${mesh.id}|${material}|${textureSet}|${doubleSided ? 1 : 0}|${shader?.id ?? 0}|${billboard ? 1 : 0}|${instanced ? 1 : 0}${pointSet ? `|${index}` : ""}`;
-    let batch = this.batches.get(key);
-    if (!batch) {
-      const reused = this.freeBatches.pop();
-      if (reused) {
-        batch = reused;
-        batch.key = key;
-        batch.mesh = mesh;
-        batch.textureSet = textureSet;
-        batch.material = material;
-        batch.doubleSided = doubleSided;
-        batch.shader = shader;
-        batch.billboard = billboard;
-        batch.points = pointSet !== undefined;
-        batch.instanced = instanced;
-      } else {
-        batch = {
-          index: this.batchList.length,
-          key,
-          mesh,
-          textureSet,
-          material,
-          doubleSided,
-          shader,
-          billboard,
-          points: pointSet !== undefined,
-          instanced,
-          items: 0,
-          itemBase: 0,
-        };
-        this.batchList.push(batch);
-      }
-      this.batches.set(key, batch);
-    }
+    const batch = this.batchFor({
+      mesh,
+      material,
+      textureSet,
+      doubleSided,
+      shader,
+      billboard,
+      points: pointSet !== undefined,
+      instanced,
+      draw: index,
+    });
     batch.items += instanceCount > 0 ? instanceCount : 1;
     this.drawBatches[index] = batch;
 
@@ -2140,6 +2117,114 @@ export class World {
     pass.setBindGroup(0, this.ctx.currentViewBindGroup);
     pass.setBindGroup(1, this.splats.group);
     pass.draw(3);
+  }
+
+  /**
+   * The batch for draws of these fields, made (or a free one reused) when
+   * none exists. A point set's draws batch alone: each batch's arguments
+   * are its set's list (cull.wgsl `writePointArgs`).
+   */
+  private batchFor(f: {
+    mesh: Batch["mesh"];
+    material: number;
+    textureSet: number;
+    doubleSided: boolean;
+    shader: CustomShader | undefined;
+    billboard: boolean;
+    points: boolean;
+    instanced: boolean;
+    draw: number;
+  }): Batch {
+    const key = `${f.mesh.id}|${f.material}|${f.textureSet}|${f.doubleSided ? 1 : 0}|${f.shader?.id ?? 0}|${f.billboard ? 1 : 0}|${f.instanced ? 1 : 0}${f.points ? `|${f.draw}` : ""}`;
+    let batch = this.batches.get(key);
+    if (batch) {
+      return batch;
+    }
+    const reused = this.freeBatches.pop();
+    if (reused) {
+      batch = reused;
+      batch.key = key;
+      batch.mesh = f.mesh;
+      batch.textureSet = f.textureSet;
+      batch.material = f.material;
+      batch.doubleSided = f.doubleSided;
+      batch.shader = f.shader;
+      batch.billboard = f.billboard;
+      batch.points = f.points;
+      batch.instanced = f.instanced;
+    } else {
+      batch = {
+        index: this.batchList.length,
+        key,
+        mesh: f.mesh,
+        textureSet: f.textureSet,
+        material: f.material,
+        doubleSided: f.doubleSided,
+        shader: f.shader,
+        billboard: f.billboard,
+        points: f.points,
+        instanced: f.instanced,
+        items: 0,
+        itemBase: 0,
+      };
+      this.batchList.push(batch);
+    }
+    this.batches.set(key, batch);
+    return batch;
+  }
+
+  /**
+   * Changes a draw's custom shader (undefined: the engine's) in place: the
+   * draw moves to the batch for its new shader, keeping its record,
+   * instances, features and handle. Until the new shader's pipelines
+   * compile it draws with the engine's, as a new draw would.
+   */
+  setDrawShader(handle: DrawHandle, shader: CustomShader | undefined): void {
+    if (!this.hasDraw(handle)) {
+      throw new Error("setDrawShader: the draw was removed");
+    }
+    const index = handle.index;
+    const old = this.drawBatches[index]!;
+    if (old.shader === shader) {
+      return;
+    }
+    const o = index * RECORD_WORDS;
+    const instanceCount = this.recordsU32[o + INSTANCE_COUNT_WORD]!;
+    const items = instanceCount > 0 ? instanceCount : 1;
+    const batch = this.batchFor({
+      mesh: old.mesh,
+      material: old.material,
+      textureSet: old.textureSet,
+      doubleSided: old.doubleSided,
+      shader,
+      billboard: old.billboard,
+      points: old.points,
+      instanced: old.instanced,
+      draw: index,
+    });
+    old.items -= items;
+    if (old.items === 0) {
+      this.batches.delete(old.key);
+      old.key = "";
+      this.freeBatches.push(old);
+    }
+    batch.items += items;
+    this.drawBatches[index] = batch;
+    this.recordsU32[o + BATCH_WORD] = batch.index;
+    // The bounds' padding for a vertex stage's displacement follows it.
+    this.recordsF32[o + RADIUS_WORD] =
+      this.recordsF32[o + RADIUS_WORD]! -
+      (old.shader?.displacement ?? 0) +
+      (shader?.displacement ?? 0);
+    const point = this.pointDraws.get(index);
+    if (point) {
+      point.batch = batch;
+      this.writePointParams(point, index);
+    }
+    this.markDirty(index);
+    this.bundle = undefined;
+    this.translucentDraws = undefined;
+    this.version++;
   }
 
   /** Whether `handle` still names a live draw. */
@@ -3947,7 +4032,14 @@ export class World {
       this.recordsU32[index * RECORD_WORDS + VIEW_MASK_WORD]!;
   }
 
+  /** The world was destroyed (`destroy`): its GPU resources are gone. */
+  get destroyed(): boolean {
+    return this.destroyed_;
+  }
+  private destroyed_ = false;
+
   destroy(): void {
+    this.destroyed_ = true;
     for (const chunk of this.uploadChunks) {
       chunk.buffer.destroy();
     }

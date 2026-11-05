@@ -87,7 +87,8 @@ async function allocSetup(
     eastNorthUpToFixedFrame(centerCartesian, ellipsoid, mat4.mat4()),
     mat4.fromScale(mat4.mat4(), 400, 400, 400),
   );
-  engine.addModel(world, asset, { modelMatrix });
+  using model = engine.uploadModel(world, asset);
+  model.place({ modelMatrix });
 
   const a = new CanvasTarget($<HTMLCanvasElement>("a"));
   const main = engine.addView({ target: a, world });

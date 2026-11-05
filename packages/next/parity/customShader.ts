@@ -1286,14 +1286,13 @@ async function renderModel(
   const modelMatrix = eastNorthUpToFixedFrame(origin, ellipsoid, mat4.mat4());
   mat4.multiply(modelMatrix, modelMatrix, mat4.fromScale(mat4.mat4(), 8, 8, 8));
   const asset = await engine.loadGltf(new URL(url, location.href).href);
-  const instance = engine.addModel(world, asset, {
-    modelMatrix,
-    ...(shader ? { shader } : {}),
-  });
+  using model = engine.uploadModel(world, asset);
+  const instance = model.place({ modelMatrix, ...(shader ? { shader } : {}) });
+  const bounds = instance.bounds();
   // Framed by its bounds (as models.ts), whatever its size and orientation.
   const camera = new Camera();
   camera.near = 0.1;
-  camera.lookAt(instance.center, 30 * deg, -25 * deg, instance.radius * 2.8);
+  camera.lookAt(bounds.center, 30 * deg, -25 * deg, bounds.radius * 2.8);
   const view = engine.addView({
     target,
     world,

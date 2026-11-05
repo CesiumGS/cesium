@@ -93,14 +93,17 @@
         const placed = [];
         for (const [i, path] of models.entries()) {
           show(`Loading ${path}…`);
-          // Fetched, parsed and decoded (Draco, Basis) in a worker.
-          const asset = await engine.loadGltf(new URL(path, data));
+          // Fetched, parsed and decoded (Draco, Basis) in a worker, then
+          // uploaded: a handle, released once placed (the placement keeps
+          // it until removed).
+          const model = await engine.loadModel(world, new URL(path, data));
           const modelMatrix = Float64Array.from(frame);
           const east = (i - (models.length - 1) / 2) * 2;
           for (let k = 0; k < 3; k++) {
             modelMatrix[12 + k] += frame[k] * east;
           }
-          placed.push(engine.addModel(world, asset, { modelMatrix }));
+          placed.push(model.place({ modelMatrix }));
+          model.release();
         }
         const draws = placed.reduce((n, m) => n + m.draws.length, 0);
         controller.focus(center, 0.4, -0.35, 7);
