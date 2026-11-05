@@ -1,4 +1,9 @@
 import poolWgsl from "../shaders/generated/modelPool.wgsl?raw";
+import {
+  POOL_STYLE_BOUNDARY,
+  linkChecked,
+  wgslUnit,
+} from "../shaders/link/index.ts";
 import * as m4 from "../math/mat4.ts";
 import * as v3 from "../math/vec3.ts";
 import type { Engine } from "../scene/Engine.ts";
@@ -129,14 +134,23 @@ export class ModelPool {
     const uniformStruct = this.styleLayout.fields.length
       ? `struct Uniforms { ${this.styleLayout.fields.map((f) => `${f.name}: ${f.type}`).join(", ")} };`
       : "struct Uniforms { _unused: f32 };";
-    const module = device.createShaderModule({
+    // The style after the pool's kernels, across their boundary
+    // (modelPool.slang: the functions it calls and exports by name).
+    const linked = linkChecked({
       label: options.label ?? "modelPool",
-      // The style after the pool's kernels: the boundary modelPool.slang
-      // declares (the functions it calls and exports by name).
-      code: `${poolWgsl}
-${uniformStruct}
-@group(0) @binding(6) var<uniform> uniforms: Uniforms;
-${options.code}`,
+      units: [
+        wgslUnit("modelPool.slang", poolWgsl),
+        wgslUnit(
+          "style uniforms",
+          `${uniformStruct}\n@group(0) @binding(6) var<uniform> uniforms: Uniforms;`,
+        ),
+        wgslUnit("style", options.code),
+      ],
+      boundaries: [POOL_STYLE_BOUNDARY],
+    });
+    const module = device.createShaderModule({
+      label: linked.label,
+      code: linked.code,
     });
     // One layout for every kernel, so one bind group serves them all.
     const entry = (

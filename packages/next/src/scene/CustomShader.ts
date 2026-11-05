@@ -1,11 +1,11 @@
 import { attributeHash, metadataKey } from "../render/layout.ts";
 import {
   SLANG_STUB_ENTRY,
-  withoutComments,
   type InstanceType,
   type NamedDeclarations,
   type NamedType,
 } from "./slangStages.ts";
+import { wgslUnit, type ShaderUnit } from "../shaders/link/index.ts";
 import {
   uniformLayout,
   uniformsWgsl,
@@ -456,13 +456,14 @@ let nextId = 1;
 export class CustomShader {
   /** Unique per shader object; batches key on it (0: the default). */
   readonly id = nextId++;
-  /** Both stages' WGSL, defaults filled in: what pipelines are cached by. */
-  readonly code: string;
   /**
-   * Lines of `code` that are the vertex stage's, for error messages;
-   * undefined for `wgsl` (lines count from its start).
+   * Its compilation units (plan §3.4, step 5), linked after the engine's
+   * surface units: its stages (defaults filled in), the contract and its
+   * named values' code, its uniforms' bindings.
    */
-  readonly vertexLines: number | undefined;
+  readonly units: readonly ShaderUnit[];
+  /** The units' WGSL joined: what pipelines are cached by. */
+  readonly code: string;
   /** Its attributes and metadata (`CustomShaderOptions`). */
   readonly named: NamedDeclarations;
   /** Its uniforms' buffer layout and textures (`uniforms`). */
@@ -491,32 +492,36 @@ export class CustomShader {
   private readonly listeners = new Set<() => void>();
 
   constructor(options: CustomShaderOptions) {
+    const units: ShaderUnit[] = [];
     if (options.wgsl !== undefined) {
-      const wgsl = options.wgsl;
-      // Outside comments: a comment naming a stage defines nothing.
-      const code = withoutComments(wgsl);
+      const stages = wgslUnit("stages", options.wgsl);
       const defines = (stage: string) =>
-        new RegExp(`\\bfn\\s+${stage}\\s*\\(`).test(code);
-      this.code = [
-        wgsl,
-        defines("vertexMain") ? "" : DEFAULT_VERTEX_MAIN,
-        defines("fragmentMain") ? "" : DEFAULT_FRAGMENT_MAIN,
-        "",
-      ].join("\n");
-      this.vertexLines = undefined;
+        stages.declarations.some((d) => d.kind === "fn" && d.name === stage);
+      units.push(stages);
+      if (!defines("vertexMain")) {
+        units.push(wgslUnit("default vertex stage", DEFAULT_VERTEX_MAIN));
+      }
+      if (!defines("fragmentMain")) {
+        units.push(wgslUnit("default fragment stage", DEFAULT_FRAGMENT_MAIN));
+      }
     } else {
-      const vertex = options.vertex ?? DEFAULT_VERTEX_MAIN;
-      this.code = `${vertex}\n${options.fragment ?? DEFAULT_FRAGMENT_MAIN}\n`;
-      this.vertexLines = vertex.split("\n").length;
+      units.push(
+        wgslUnit("vertex stage", options.vertex ?? DEFAULT_VERTEX_MAIN),
+        wgslUnit("fragment stage", options.fragment ?? DEFAULT_FRAGMENT_MAIN),
+      );
     }
-    // The named values' code after the stages, so stage lines keep their
-    // numbers in errors.
     this.named = declarations(options);
-    this.code += namedCode(this.named);
+    units.push(wgslUnit("contract", namedCode(this.named)));
     const uniforms = options.uniforms ?? {};
     this.uniformLayout = uniformLayout(uniforms);
-    this.slang = this.code.includes(`fn ${SLANG_STUB_ENTRY}(`);
-    this.code += uniformsWgsl(this.uniformLayout, this.code);
+    const stagesCode = units.map((u) => u.code).join("\n");
+    this.slang = stagesCode.includes(`fn ${SLANG_STUB_ENTRY}(`);
+    const bindings = uniformsWgsl(this.uniformLayout, stagesCode);
+    if (bindings !== "") {
+      units.push(wgslUnit("uniforms", bindings));
+    }
+    this.units = units;
+    this.code = units.map((u) => u.code).join("\n");
     this.uniformData = new DataView(new ArrayBuffer(this.uniformLayout.bytes));
     for (const field of this.uniformLayout.fields) {
       const declaration = uniforms[field.name] as {

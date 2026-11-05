@@ -1,6 +1,11 @@
 // The point cull's kernels (pointCull.slang); the style is appended, the
 // runtime boundary that module declares.
 import pointCullWgsl from "../shaders/generated/pointCull.wgsl?raw";
+import {
+  POINT_STYLE_BOUNDARY,
+  linkChecked,
+  wgslUnit,
+} from "../shaders/link/index.ts";
 import type { RenderContext } from "./RenderContext.ts";
 import {
   uniformLayout,
@@ -73,12 +78,23 @@ export class PointCuller {
     const uniformStruct = this.layout.fields.length
       ? `struct Uniforms { ${this.layout.fields.map((f) => `${f.name}: ${f.type}`).join(", ")} };`
       : "struct Uniforms { _unused: f32 };";
-    const module = device.createShaderModule({
+    // The style after the kernels, across their boundary (pointCull.slang:
+    // the functions it calls and exports by name).
+    const linked = linkChecked({
       label: options.label ?? "pointCuller",
-      code: `${pointCullWgsl}
-${uniformStruct}
-@group(3) @binding(0) var<uniform> uniforms: Uniforms;
-${options.code}`,
+      units: [
+        wgslUnit("pointCull.slang", pointCullWgsl),
+        wgslUnit(
+          "style uniforms",
+          `${uniformStruct}\n@group(3) @binding(0) var<uniform> uniforms: Uniforms;`,
+        ),
+        wgslUnit("style", options.code),
+      ],
+      boundaries: [POINT_STYLE_BOUNDARY],
+    });
+    const module = device.createShaderModule({
+      label: linked.label,
+      code: linked.code,
     });
     const layout = device.createPipelineLayout({
       bindGroupLayouts: [

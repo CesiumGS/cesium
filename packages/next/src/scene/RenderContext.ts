@@ -29,6 +29,17 @@ import compositeWgsl from "../shaders/generated/composite.wgsl?raw";
 import fxaaWgsl from "../shaders/generated/fxaa.wgsl?raw";
 import { CLUSTERS_SIZE, LIGHTS_SIZE } from "./lights.ts";
 import { DEFAULT_STAGES, type CustomShader } from "./CustomShader.ts";
+import { POINT_STYLE_DEFAULTS } from "./pointStyle.ts";
+import {
+  SURFACE_BOUNDARY,
+  WgslLinker,
+  compileFailure,
+  linkChecked,
+  wgslUnit,
+  type LinkedModule,
+  type Linker,
+  type ShaderUnit,
+} from "../shaders/link/index.ts";
 import { ShaderCache } from "./ShaderCache.ts";
 import { ShaderBindings } from "./ShaderBindings.ts";
 import { UNIFORM_BINDING, textureBinding } from "./uniforms.ts";
@@ -38,16 +49,7 @@ import { UNIFORM_BINDING, textureBinding } from "./uniforms.ts";
  * Render bundles are keyed on it, so every view shares one bundle per world.
  * Views differ only after the bundle runs (present, post, overlays).
  */
-/**
- * The generic point cull's style (pointCull.slang): every point shown, none
- * small enough to splat.
- */
-export const POINT_STYLE_DEFAULTS = `fn styleShow(i: u32, distance: f32) -> bool { return true; }
-fn styleSize(i: u32, distance: f32) -> f32 { return 3.4e38; }
-fn styleColor(i: u32, distance: f32) -> vec4f { return vec4f(1.0); }
-fn styleShapeAt(i: u32, distance: f32, p: vec2f) -> f32 { return -1.0; }
-fn styleOffset(i: u32, distance: f32) -> vec2f { return vec2f(0.0); }
-`;
+export { POINT_STYLE_DEFAULTS };
 
 export const SCENE_TARGETS = {
   // r32uint cannot be multisampled in WebGPU, so 32-bit feature IDs are
@@ -319,6 +321,11 @@ export interface RenderContext {
 export interface ShaderOverrides {
   opaque?: string;
   cull?: string;
+  /**
+   * How the surface shaders are composed with run-time code (plan §3.4,
+   * step 5). Default `WgslLinker`: checked units joined.
+   */
+  linker?: Linker;
 }
 
 export async function createRenderContext(
@@ -745,11 +752,32 @@ async function createPipelines(
 
   const module = (label: string, ...sources: string[]) =>
     device.createShaderModule({ label, code: sources.join("\n") });
-  // The engine's own stages: the custom shader contract's defaults.
-  // The engine's own stages (opaque.wgsl's boundary): no custom shader.
-  const defaultStages = DEFAULT_STAGES;
+  const linker = overrides.linker ?? new WgslLinker();
+  // The surface shaders as compilation units (plan §3.4, step 5), linked
+  // with a custom shader's or the engine's own stages across the surface
+  // boundary.
+  const surfaceUnits = {
+    common: wgslUnit("common.wgsl", commonWgsl),
+    opaque: wgslUnit("opaque.wgsl", opaqueWgsl),
+    translucent: wgslUnit("translucent.wgsl", translucentWgsl),
+    // translucent.wgsl's bindings 3 and 4, for this device's formats.
+    moments: wgslUnit("moment bindings", momentBindings),
+    // The engine's own stages: no custom shader.
+    stages: wgslUnit("engine stages", DEFAULT_STAGES),
+  };
+  /** Units linked across the surface boundary; throws what stops it. */
+  const surfaceLink = (label: string, units: ShaderUnit[]): LinkedModule =>
+    linkChecked({ label, units, boundaries: [SURFACE_BOUNDARY] }, linker);
+  const linkedModule = (linked: LinkedModule) =>
+    device.createShaderModule({ label: linked.label, code: linked.code });
   const builtinOpaque = () =>
-    module("opaque", commonWgsl, opaqueWgsl, defaultStages);
+    linkedModule(
+      surfaceLink("opaque", [
+        surfaceUnits.common,
+        surfaceUnits.opaque,
+        surfaceUnits.stages,
+      ]),
+    );
   const opaqueModule =
     overrides.opaque !== undefined
       ? module("opaque (override)", overrides.opaque)
@@ -943,13 +971,14 @@ async function createPipelines(
   // depth itself); the lists' pass multisampled, the moments' single-
   // sampled. Override shaders have no translucent entry points: the
   // built-in module draws them.
-  const translucentModule = module(
-    "translucent",
-    commonWgsl,
-    opaqueWgsl,
-    translucentWgsl,
-    momentBindings,
-    defaultStages,
+  const translucentModule = linkedModule(
+    surfaceLink("translucent", [
+      surfaceUnits.common,
+      surfaceUnits.opaque,
+      surfaceUnits.translucent,
+      surfaceUnits.moments,
+      surfaceUnits.stages,
+    ]),
   );
   const translucentPipelineLayout = device.createPipelineLayout({
     bindGroupLayouts: [
@@ -1243,33 +1272,22 @@ async function createPipelines(
   const surface = async (
     shader: CustomShader,
   ): Promise<(key: SurfaceKey) => Promise<GPURenderPipeline>> => {
-    const { code, label, vertexLines } = shader;
-    // The engine's source as it is: the shader links to its boundary.
-    const opaqueSource = opaqueWgsl;
-    const base = [commonWgsl, opaqueSource].join("\n");
+    const { label } = shader;
+    // The shader's units after the engine's: a name it defines twice, or a
+    // stage the boundary wants missing, stops it here, in its own terms.
+    const linked = surfaceLink(`${label} opaque`, [
+      surfaceUnits.common,
+      surfaceUnits.opaque,
+      ...shader.units,
+    ]);
     // Its errors are reported below, once, not as an uncaptured error too.
     device.pushErrorScope("validation");
-    const opaque = module(`${label} opaque`, base, code);
+    const opaque = linkedModule(linked);
     void device.popErrorScope();
     const info = await opaque.getCompilationInfo();
-    const errors = info.messages.filter((m) => m.type === "error");
-    if (errors.length > 0) {
-      const offset = base.split("\n").length;
-      const where = (line: number) =>
-        vertexLines === undefined
-          ? `line ${line}`
-          : line <= vertexLines
-            ? `vertex line ${line}`
-            : `fragment line ${line - vertexLines}`;
-      throw new Error(
-        `${label}: ${errors
-          .map((m) =>
-            m.lineNum > offset
-              ? `${where(m.lineNum - offset)}: ${m.message}`
-              : m.message,
-          )
-          .join("; ")}`,
-      );
+    const failure = compileFailure(linked, info.messages);
+    if (failure !== undefined) {
+      throw new Error(failure);
     }
     let translucent: GPUShaderModule | undefined;
     const set = setLayout(shader);
@@ -1288,13 +1306,14 @@ async function createPipelines(
       opaque,
       opaque,
       () => {
-        translucent ??= module(
-          `${label} translucent`,
-          commonWgsl,
-          opaqueSource,
-          translucentWgsl,
-          momentBindings,
-          code,
+        translucent ??= linkedModule(
+          surfaceLink(`${label} translucent`, [
+            surfaceUnits.common,
+            surfaceUnits.opaque,
+            surfaceUnits.translucent,
+            surfaceUnits.moments,
+            ...shader.units,
+          ]),
         );
         return translucent;
       },
