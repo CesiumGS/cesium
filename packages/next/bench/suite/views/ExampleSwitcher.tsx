@@ -8,6 +8,7 @@ import { Link as RouterLink, useNavigate } from "@tanstack/react-router";
 import { useEffect, useId, useState } from "react";
 import { EXAMPLES } from "../../../examples/index.ts";
 import type { ExampleInfo } from "../../../examples/types.ts";
+import { readThumbnail } from "./thumbnails.ts";
 
 /**
  * The example page's way between examples, in the space the back link
@@ -116,7 +117,7 @@ export function ExampleSwitcher({ current }: { current: ExampleInfo }) {
                 aria-current={x.id === current.id ? "page" : undefined}
                 onClick={() => setAnchor(null)}
               >
-                <Thumbnail example={x} />
+                <ExampleThumbnail example={x} />
                 <span className="examples-switcher-text">
                   <Typography variant="body-sm" render={<strong />}>
                     {x.title}
@@ -134,83 +135,44 @@ export function ExampleSwitcher({ current }: { current: ExampleInfo }) {
   );
 }
 
-/** The example as it last looked here, or its initials until it has run. */
-function Thumbnail({ example }: { example: ExampleInfo }) {
+/**
+ * The example as it last looked here, or until it has run a placeholder:
+ * its initials on a gradient of its own (a hue from its id).
+ */
+export function ExampleThumbnail({
+  example,
+  className = "examples-switcher-thumb",
+  hint,
+}: {
+  example: ExampleInfo;
+  className?: string;
+  /** Shown on the placeholder (the gallery: how to get a picture). */
+  hint?: string;
+}) {
   const url = readThumbnail(example.id);
-  return url ? (
-    <img className="examples-switcher-thumb" src={url} alt="" />
-  ) : (
-    <span className="examples-switcher-thumb placeholder" aria-hidden="true">
-      {example.title
-        .split(/\s+/)
-        .slice(0, 2)
-        .map((w) => w[0]!.toUpperCase())
-        .join("")}
+  if (url) {
+    return <img className={className} src={url} alt="" />;
+  }
+  let hue = 0;
+  for (const c of example.id) {
+    hue = (hue * 31 + c.charCodeAt(0)) % 360;
+  }
+  return (
+    <span
+      className={`${className} placeholder`}
+      aria-hidden="true"
+      style={{
+        background: `linear-gradient(135deg, hsl(${hue} 45% 22%), hsl(${(hue + 60) % 360} 40% 14%))`,
+      }}
+    >
+      <span className="placeholder-initials">
+        {example.title
+          .split(/\s+/)
+          .slice(0, 2)
+          .map((w) => w[0]!.toUpperCase())
+          .join("")}
+      </span>
+      {hint && <span className="placeholder-hint">{hint}</span>}
     </span>
   );
-}
-
-const THUMBNAILS = "dyno.examples.thumbnail.";
-/** Thumbnail size, 16:9 CSS pixels at 2× (menu cards are 120×68). */
-const THUMB_WIDTH = 240;
-const THUMB_HEIGHT = 135;
-
-/** Only what `captureThumbnail` writes: a base64 JPEG data URL. */
-const THUMBNAIL_URL = /^data:image\/jpeg;base64,[A-Za-z0-9+/]+={0,2}$/;
-
-function readThumbnail(id: string): string | undefined {
-  try {
-    // Storage is shared with the origin: anything else in it is ignored.
-    const url = localStorage.getItem(THUMBNAILS + id);
-    return url && THUMBNAIL_URL.test(url) ? url : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
-/**
- * A picture of the example for the menu: `render` draws a frame, read in
- * the same task (a WebGPU canvas's image is valid until the task ends),
- * cropped to 16:9 and kept as a small JPEG.
- */
-export function captureThumbnail(
-  id: string,
-  canvas: HTMLCanvasElement,
-  render: () => void,
-): void {
-  if (canvas.width === 0 || canvas.height === 0) {
-    return;
-  }
-  try {
-    render();
-    const out = document.createElement("canvas");
-    out.width = THUMB_WIDTH;
-    out.height = THUMB_HEIGHT;
-    const ctx = out.getContext("2d");
-    if (!ctx) {
-      return;
-    }
-    // Cover: the largest centered 16:9 rectangle of the view.
-    const aspect = THUMB_WIDTH / THUMB_HEIGHT;
-    let w = canvas.width;
-    let h = w / aspect;
-    if (h > canvas.height) {
-      h = canvas.height;
-      w = h * aspect;
-    }
-    ctx.drawImage(
-      canvas,
-      (canvas.width - w) / 2,
-      (canvas.height - h) / 2,
-      w,
-      h,
-      0,
-      0,
-      THUMB_WIDTH,
-      THUMB_HEIGHT,
-    );
-    localStorage.setItem(THUMBNAILS + id, out.toDataURL("image/jpeg", 0.8));
-  } catch {
-    // No picture (storage full or blocked): the menu shows initials.
-  }
 }

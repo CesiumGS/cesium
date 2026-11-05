@@ -5211,6 +5211,10 @@ them on content as you type.
         typing in a field or the editor).
       - Each example is a fresh viewer on the shared engine, so a switch
         costs only the example's own setup.
+    - **The gallery page (r53)** is a grid of picture tiles. Each tile shows
+      the example's captured thumbnail at 480×270 (a gradient with its
+      initials until it has run), its title, two lines of description and
+      its labels, and the whole tile is the link.
 - _Playground details (r53)._
   - **New:** starts a minimal shader, the model's own material, with the
     contract's inputs described. It is one undoable edit.
@@ -5221,7 +5225,24 @@ them on content as you type.
     line between the view and the panel), and the Preset and Model rows
     share one label and control grid.
 - _Later._
-  - Declared uniforms as sliders.
+  - **Declared uniforms as controls.** Slang's user-defined attributes do
+    this without inventing a comment syntax. Declaring
+    `[__AttributeUsage(_AttributeTargets.Var)] struct SliderAttribute {
+float defaultValue; float minValue; float maxValue; }` lets a shader
+    write `[Slider(0.5, 0, 1)] uniform float glow;`. The linked program's
+    reflection (`getLayout(0).toJsonObject()`, checked in the WebAssembly
+    build, r53) returns
+    `userAttribs: [{ name: "Slider", arguments: [0.5, 0, 1] }]` with each
+    parameter's type and binding.
+    - The attribute structs would live in the `cesium` module, so users
+      write only the attribute: `Slider`, `Color` (a picker for float3 or
+      float4), `Toggle` (bool), `Choice` (an int from labels), perhaps
+      `Range` for a vec2.
+    - Reflection gives the panel its controls, and `CustomShader.uniforms`
+      gives their values, set without recompiling.
+    - Slang's own playground has a uniform panel
+      (`engine/playground-uniform-panel`); its attribute names weren't
+      checked, and matching them would let shaders move between the two.
   - Sharing a shader by URL (the source compressed in the hash).
   - Tilesets with metadata (`fsInput.metadata`).
   - The same editor for vector styles (§13.9).

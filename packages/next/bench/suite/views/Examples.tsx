@@ -4,10 +4,6 @@ import {
   AlertTitle,
   Badge,
   Button,
-  Card,
-  CardActionArea,
-  CardContent,
-  CardHeader,
   CircularProgress,
   Link,
   Typography,
@@ -22,7 +18,8 @@ import { Viewer } from "../../../widgets/index.ts";
 import { ionToken } from "../ionToken.ts";
 import { limitsTier } from "../limitsTier.ts";
 import { Empty, Page, Section } from "./common.tsx";
-import { captureThumbnail, ExampleSwitcher } from "./ExampleSwitcher.tsx";
+import { ExampleSwitcher, ExampleThumbnail } from "./ExampleSwitcher.tsx";
+import { captureThumbnail } from "./thumbnails.ts";
 
 /**
  * Examples (plan §13.12): what 2.0 is for, one feature or use case each,
@@ -40,50 +37,51 @@ export function Examples() {
   return (
     <Page
       title="Examples"
-      description="What 2.0 is for, one feature or use case each. Open one to run it and read its source."
+      description="What 2.0 is for, one feature or use case each. Open one to run it and read its source; switch between them from its header."
     >
-      <Section title="All examples">
-        <ul className="examples-grid">
-          {EXAMPLES.map((x) => (
-            <li key={x.id}>
-              <Card className="examples-card">
-                <CardHeader
-                  title={
-                    <CardActionArea
-                      render={
-                        <RouterLink to="/examples/$id" params={{ id: x.id }} />
-                      }
-                      nativeButton={false}
-                    >
-                      {x.title}
-                    </CardActionArea>
-                  }
-                  slotProps={{
-                    title: { variant: "subtitle-sm", render: <h3 /> },
-                  }}
+      <ul className="examples-gallery">
+        {EXAMPLES.map((x) => (
+          <li key={x.id}>
+            <RouterLink
+              to="/examples/$id"
+              params={{ id: x.id }}
+              className="examples-tile"
+            >
+              <span className="examples-tile-picture">
+                <ExampleThumbnail
+                  example={x}
+                  className="examples-tile-thumb"
+                  hint="Open it once for a preview"
                 />
-                <CardContent className="examples-card-content">
-                  <Typography variant="body-sm" color="textSecondary">
-                    {x.description}
-                  </Typography>
-                  <div className="examples-labels">
-                    {x.labels.map((l) => (
-                      <Badge
-                        key={l}
-                        variant="inline"
-                        color="secondary"
-                        type="outlined"
-                        size="small"
-                        badgeContent={l}
-                      />
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </li>
-          ))}
-        </ul>
-      </Section>
+              </span>
+              <span className="examples-tile-body">
+                <Typography variant="subtitle-md" render={<h3 />}>
+                  {x.title}
+                </Typography>
+                <Typography
+                  variant="body-sm"
+                  color="textSecondary"
+                  render={<p />}
+                >
+                  {x.description}
+                </Typography>
+                <span className="examples-labels">
+                  {x.labels.map((l) => (
+                    <Badge
+                      key={l}
+                      variant="inline"
+                      color="secondary"
+                      type="outlined"
+                      size="small"
+                      badgeContent={l}
+                    />
+                  ))}
+                </span>
+              </span>
+            </RouterLink>
+          </li>
+        ))}
+      </ul>
     </Page>
   );
 }
