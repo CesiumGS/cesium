@@ -5,6 +5,15 @@ import type { EopSample } from "./eop.ts";
 import type { Instant } from "./Instant.ts";
 import type { LeapSeconds } from "./leapSeconds.ts";
 
+/** Unix ms of J2000 (2000-01-01T12:00:00) read as a UTC label. */
+const J2000_UNIX_MS = 946_728_000_000;
+
+/** Seconds past J2000 as a two-part JD: J2000 plus whole days, then the rest. */
+function splitJd(seconds: number): [number, number] {
+  const days = Math.floor(seconds / 86_400);
+  return [2_451_545.0 + days, (seconds - days * 86_400) / 86_400];
+}
+
 /**
  * The rotation from GCRS to ITRS, `itrs = M * gcrs` (row-major 3x3), by the
  * IAU 2006/2000A CIO-based model: ERFA's
@@ -24,13 +33,14 @@ export function celestialToTerrestrial(
   leap: LeapSeconds,
   out: Float64Array = new Float64Array(9),
 ): Float64Array {
-  const [tt1, tt2] = instant.jdTt();
-
-  // UT1 = TAI - (TAI - UTC) + (UT1 - UTC), kept in seconds past J2000 so the
-  // millisecond rounding of toUtc does not reach the Earth rotation angle
-  // (1 ms is 15 mas); toUtc only picks the leap-second row.
-  const dat = leap.taiMinusUtc(instant.toUtc(leap));
-  const era = era00(tt1, (instant.tai() - dat + eop.ut1MinusUtc) / 86_400);
+  // Two-part JDs as whole days plus a remainder, so neither part loses
+  // precision to the other.
+  const [tt1, tt2] = splitJd(instant.tt);
+  // UT1 = TAI - (TAI - UTC) + (UT1 - UTC). The leap-second row is chosen from
+  // the TAI instant itself, exact at and inside a leap second.
+  const dat = leap.taiMinusUtcAtTai(J2000_UNIX_MS + instant.tai() * 1000);
+  const [ut11, ut12] = splitJd(instant.tai() - dat + eop.ut1MinusUtc);
+  const era = era00(ut11, ut12);
 
   const [x, y] = xy06(tt1, tt2);
   const s = s06(tt1, tt2, x, y);

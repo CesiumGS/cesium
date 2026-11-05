@@ -44,6 +44,16 @@ const LEAP_DAT = `#  Value of TAI-UTC in second valid beginning at the date give
 const leap = LeapSeconds.fromIers(LEAP_DAT);
 
 describe("LeapSeconds", () => {
+  it("reads TAI-UTC from a TAI time, including inside a leap second", () => {
+    // TAI on the UTC-ms scale: UTC ms plus 1000 * TAI-UTC.
+    const b = Date.UTC(2017, 0, 1);
+    expect(leap.taiMinusUtcAtTai(b + 36_000 - 1)).toBe(36);
+    // 23:59:60.5 is TAI 36.5 s past the boundary: still the old offset.
+    expect(leap.taiMinusUtcAtTai(b + 36_500)).toBe(36);
+    expect(leap.taiMinusUtcAtTai(b + 37_000)).toBe(37);
+    expect(leap.taiMinusUtcAtTai(Date.UTC(1972, 0, 1) + 10_000)).toBe(10);
+  });
+
   it("steps TAI-UTC at each leap second", () => {
     expect(leap.taiMinusUtc(Date.UTC(2016, 0, 1))).toBe(36);
     expect(leap.taiMinusUtc(Date.UTC(2017, 0, 1))).toBe(37);
