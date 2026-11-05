@@ -2,7 +2,7 @@
 
 Usage: uv run --with pyerfa --with numpy python scripts/frameFixtures.py <section> [args]
 
-Sections: dtdb (later tasks add earth, ephemeris, moon).
+Sections: dtdb, earth (later tasks add ephemeris, moon).
 """
 
 import json
@@ -35,7 +35,61 @@ def dtdb():
     write("dtdb", rows)
 
 
-SECTIONS = {"dtdb": dtdb}
+def earth():
+    """GCRS->ITRS (IAU 2006/2000A, CIO-based) at 30 UTC instants, 2000-2050.
+
+    The EOP values are assumed, of realistic size, not measured: pyerfa has
+    no c2t06a taking dX/dY, so the matrix composes c2ixys(x+dx, y+dy, s06),
+    era00, pom00(xp, yp, sp00) and c2tcio, as the TypeScript does.
+    """
+    arcsec = np.pi / 648000.0
+    rng = np.random.default_rng(20261105)
+    rows = []
+    for i in range(30):
+        # Whole UTC seconds, clear of the 2016 and 2017 leap seconds.
+        utc_ms = 946_728_000_000 + i * 54_500_000_000 + 12_345_000
+        day = utc_ms // 86_400_000
+        sec = (utc_ms % 86_400_000) / 1000.0
+        # Unix day -> JD of 0h UTC.
+        utc1 = 2440587.5 + day
+        utc2 = sec / 86400.0
+        dut1 = float(rng.uniform(-0.9, 0.9))
+        xp = float(rng.uniform(-0.3, 0.3) * arcsec)
+        yp = float(rng.uniform(0.1, 0.5) * arcsec)
+        dx = float(rng.uniform(-0.3, 0.3) * 1e-3 * arcsec)
+        dy = float(rng.uniform(-0.3, 0.3) * 1e-3 * arcsec)
+        tai1, tai2 = erfa.utctai(utc1, utc2)
+        tt1, tt2 = erfa.taitt(tai1, tai2)
+        ut11, ut12 = erfa.utcut1(utc1, utc2, dut1)
+        x, y = erfa.xy06(tt1, tt2)
+        s = erfa.s06(tt1, tt2, x, y)
+        era = erfa.era00(ut11, ut12)
+        rc2i = erfa.c2ixys(x + dx, y + dy, s)
+        rpom = erfa.pom00(xp, yp, erfa.sp00(tt1, tt2))
+        m = erfa.c2tcio(rc2i, era, rpom)
+        rows.append(
+            {
+                "utcMs": int(utc_ms),
+                "dut1": dut1,
+                "xp": xp,
+                "yp": yp,
+                "dx": dx,
+                "dy": dy,
+                "tt1": float(tt1),
+                "tt2": float(tt2),
+                "ut11": float(ut11),
+                "ut12": float(ut12),
+                "x": float(x),
+                "y": float(y),
+                "s": float(s),
+                "era": float(era),
+                "matrix": [float(v) for v in np.asarray(m).reshape(9)],
+            }
+        )
+    write("earth", rows)
+
+
+SECTIONS = {"dtdb": dtdb, "earth": earth}
 
 if __name__ == "__main__":
     if len(sys.argv) < 2 or sys.argv[1] not in SECTIONS:
