@@ -4,6 +4,11 @@ import {
   AlertTitle,
   Badge,
   Button,
+  Card,
+  CardActionArea,
+  CardContent,
+  CardHeader,
+  CardMedia,
   CircularProgress,
   Link,
   Typography,
@@ -42,27 +47,33 @@ export function Examples() {
       <ul className="examples-gallery">
         {EXAMPLES.map((x) => (
           <li key={x.id}>
-            <RouterLink
-              to="/examples/$id"
-              params={{ id: x.id }}
-              className="examples-tile"
-            >
-              <span className="examples-tile-picture">
+            {/* StrataKit's card, as the Lab's: the title is the link, and
+                the whole card follows it (its own hover and focus). */}
+            <Card className="examples-card">
+              <CardMedia component="div" className="examples-card-media">
                 <ExampleThumbnail
                   example={x}
-                  className="examples-tile-thumb"
+                  className="examples-card-thumb"
                   hint="Open it once for a preview"
                 />
-              </span>
-              <span className="examples-tile-body">
-                <Typography variant="subtitle-md" render={<h3 />}>
-                  {x.title}
-                </Typography>
-                <Typography
-                  variant="body-sm"
-                  color="textSecondary"
-                  render={<p />}
-                >
+              </CardMedia>
+              <CardHeader
+                title={
+                  <CardActionArea
+                    render={
+                      <RouterLink to="/examples/$id" params={{ id: x.id }} />
+                    }
+                    nativeButton={false}
+                  >
+                    {x.title}
+                  </CardActionArea>
+                }
+                slotProps={{
+                  title: { variant: "subtitle-sm", render: <h3 /> },
+                }}
+              />
+              <CardContent className="examples-card-content">
+                <Typography variant="body-sm" color="textSecondary">
                   {x.description}
                 </Typography>
                 <span className="examples-labels">
@@ -77,8 +88,8 @@ export function Examples() {
                     />
                   ))}
                 </span>
-              </span>
-            </RouterLink>
+              </CardContent>
+            </Card>
           </li>
         ))}
       </ul>
