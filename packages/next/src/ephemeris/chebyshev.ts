@@ -53,7 +53,9 @@ export function chebyshev(
     const c = base + 2 + axis * n;
     let p = 0;
     let v = 0;
-    for (let k = 0; k < n; k++) {
+    // Smallest terms first, so the large c0 (a PCK angle runs to thousands of
+    // radians) is rounded once, by the last addition, not once per term.
+    for (let k = n - 1; k >= 0; k--) {
       p += records[c + k]! * T[k]!;
       v += records[c + k]! * dT[k]!;
     }
