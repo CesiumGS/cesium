@@ -16,7 +16,7 @@ import splatWgsl from "../shaders/generated/splat.wgsl?raw";
 import scatterWgsl from "../shaders/generated/scatter.wgsl?raw";
 import raycastWgsl from "../shaders/generated/raycast.wgsl?raw";
 import opaqueWgsl from "../shaders/opaque.wgsl?raw";
-import presentWgsl from "../shaders/present.wgsl?raw";
+import presentWgsl from "../shaders/generated/present.wgsl?raw";
 import overlayWgsl from "../shaders/generated/overlay.wgsl?raw";
 import pickWgsl from "../shaders/generated/pick.wgsl?raw";
 import meterWgsl from "../shaders/generated/meter.wgsl?raw";
@@ -24,8 +24,8 @@ import adaptWgsl from "../shaders/generated/adapt.wgsl?raw";
 import lightsWgsl from "../shaders/generated/lights.wgsl?raw";
 import depthRangeWgsl from "../shaders/generated/depthRange.wgsl?raw";
 import translucentWgsl from "../shaders/translucent.wgsl?raw";
-import compositeWgsl from "../shaders/composite.wgsl?raw";
-import fxaaWgsl from "../shaders/fxaa.wgsl?raw";
+import compositeWgsl from "../shaders/generated/composite.wgsl?raw";
+import fxaaWgsl from "../shaders/generated/fxaa.wgsl?raw";
 import { CLUSTERS_SIZE, LIGHTS_SIZE } from "./lights.ts";
 import {
   DEFAULT_FRAGMENT_MAIN,

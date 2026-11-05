@@ -17,6 +17,9 @@ import imageryReference from "./slang/reference/imagery.wgsl?raw";
 import adaptReference from "./slang/reference/adapt.wgsl?raw";
 import meterReference from "./slang/reference/meter.wgsl?raw";
 import aoReference from "./slang/reference/ao.wgsl?raw";
+import presentReference from "./slang/reference/present.wgsl?raw";
+import fxaaReference from "./slang/reference/fxaa.wgsl?raw";
+import compositeReference from "./slang/reference/composite.wgsl?raw";
 import scatterReference from "./slang/reference/scatter.wgsl?raw";
 import cullSlang from "../src/shaders/generated/cull.wgsl?raw";
 import depthRangeSlang from "../src/shaders/generated/depthRange.wgsl?raw";
@@ -28,6 +31,9 @@ import imagerySlang from "../src/shaders/generated/imagery.wgsl?raw";
 import adaptSlang from "../src/shaders/generated/adapt.wgsl?raw";
 import meterSlang from "../src/shaders/generated/meter.wgsl?raw";
 import aoSlang from "../src/shaders/generated/ao.wgsl?raw";
+import presentSlang from "../src/shaders/generated/present.wgsl?raw";
+import fxaaSlang from "../src/shaders/generated/fxaa.wgsl?raw";
+import compositeSlang from "../src/shaders/generated/composite.wgsl?raw";
 import scatterSlang from "../src/shaders/generated/scatter.wgsl?raw";
 
 /**
@@ -90,6 +96,11 @@ interface Case {
   render?: RenderSetup;
   /** The engine's bind group layouts, by group (default: `auto`). */
   layout?: GPUBindGroupLayoutEntry[][];
+  /**
+   * Dispatches or draws per timed pass (default REPEAT): fewer for a
+   * heavy case, so a submission stays within the GPU's watchdog.
+   */
+  repeat?: number;
   setup(device: GPUDevice): Resources;
 }
 
@@ -662,6 +673,187 @@ function aoParams(device: GPUDevice): GPUBuffer {
 
 const HALF = [Math.ceil(W / 2), Math.ceil(H / 2)] as const;
 
+const fullscreen = (fragment: string, formats: GPUTextureFormat[]) => ({
+  vertex: "vs",
+  fragment,
+  targets: formats.map((format) => ({ format })),
+});
+
+/** A present pass's inputs: tone mapping, encoding, and the eye or not. */
+function presentInputs(
+  device: GPUDevice,
+  toneMapping: number,
+  encoding: number,
+  eye: boolean,
+): Resources {
+  const random = randoms(21);
+  const hdr = texture(
+    device,
+    { size: [W, H], format: "rgba16float" },
+    (i) => toHalf(i % 4 === 3 ? 1 : 10 ** (random() * 5 - 3)),
+    8,
+  );
+  // A fifth of the pixels partly display-referred (unlit) color.
+  const display = texture(
+    device,
+    { size: [W, H], format: "rgba16float" },
+    (i) => toHalf(random() < 0.2 ? random() * 0.5 : 0),
+    8,
+  );
+  const params = new ArrayBuffer(48);
+  const f = new Float32Array(params);
+  const u = new Uint32Array(params);
+  u[2] = toneMapping;
+  u[3] = encoding;
+  f[4] = eye ? 1 : 0.7;
+  u[5] = eye ? 1 : 0;
+  f[6] = 0.5; // cones, log10 cd/m²
+  f[7] = -0.5; // rods
+  f[8] = 0.3; // compensation, stops
+  const color = texture(device, {
+    size: [W, H],
+    format: "rgba8unorm",
+    usage: T.RENDER_ATTACHMENT,
+  });
+  return {
+    groups: [
+      [
+        { binding: 0, resource: hdr.createView() },
+        {
+          binding: 1,
+          resource: {
+            buffer: buffer(
+              device,
+              new Uint8Array(params),
+              GPUBufferUsage.UNIFORM,
+            ),
+          },
+        },
+        { binding: 2, resource: display.createView() },
+        // The adaptation's grid: log2 luminance sums and weights.
+        {
+          binding: 3,
+          resource: texture(
+            device,
+            { size: [...GRID], format: "rgba16float" },
+            (i) => toHalf(i % 4 === 2 ? 0.5 + random() : random() * 4 - 2),
+            8,
+          ).createView(),
+        },
+        {
+          binding: 4,
+          resource: device.createSampler({
+            magFilter: "linear",
+            minFilter: "linear",
+          }),
+        },
+      ],
+    ],
+    dispatch: [3],
+    outputs: [{ texture: color, element: "unorm8", ulps: 1 }],
+    colors: [color],
+  };
+}
+
+/** Translucency's per-pixel lists (TranslucentLists), at a quarter size. */
+const LISTS = [W / 2, H / 2] as const;
+function compositeInputs(device: GPUDevice, exact: boolean): Resources {
+  const random = randoms(23);
+  const [w, h] = LISTS;
+  const half2 = (a: number, b: number) => toHalf(a) | (toHalf(b) << 16);
+  const S = GPUBufferUsage.STORAGE;
+  const attachment = () =>
+    texture(device, {
+      size: [w, h],
+      format: "rgba16float",
+      usage: T.RENDER_ATTACHMENT,
+    });
+  const colors = [attachment(), attachment()];
+  const params = new ArrayBuffer(32);
+  new Uint32Array(params).set([w, h, 4 + w * h, 0]);
+  const uniform = {
+    binding: 0,
+    resource: {
+      buffer: buffer(device, new Uint8Array(params), GPUBufferUsage.UNIFORM),
+    },
+  };
+  const outputs: Output[] = colors.map((t) => ({
+    texture: t,
+    texelBytes: 8,
+    element: "f16",
+    ulps: 2,
+  }));
+  if (exact) {
+    // Most pixels 0–3 layers; a few hundred over MAX_LAYERS (32).
+    const heads = new Uint32Array(w * h);
+    const nodes: number[] = [];
+    for (let p = 0; p < w * h; p++) {
+      const r = random();
+      const layers = r < 0.0005 ? 40 : Math.floor(r * 4);
+      for (let k = 0; k < layers; k++) {
+        const alpha = 0.1 + random() * 0.6;
+        const depth = new Uint32Array(new Float32Array([random()]).buffer)[0]!;
+        nodes.push(
+          half2(random(), random()),
+          half2(random(), random() < 0.3 ? -alpha : alpha),
+          depth,
+          heads[p]!,
+        );
+        heads[p] = nodes.length / 4;
+      }
+    }
+    const lists = new Uint32Array(4 + w * h + nodes.length);
+    lists.set(heads, 4);
+    lists.set(nodes, 4 + w * h);
+    return {
+      groups: [
+        [
+          uniform,
+          { binding: 1, resource: { buffer: buffer(device, lists, S) } },
+        ],
+      ],
+      dispatch: [3],
+      outputs,
+      colors,
+    };
+  }
+  const moments = (fill: (i: number) => number) =>
+    texture(
+      device,
+      { size: [w, h], format: "rgba16float" },
+      fill,
+      8,
+    ).createView();
+  return {
+    groups: [
+      [
+        // fsMoments reads no uniform: its layout has no binding 0.
+        {
+          binding: 2,
+          resource: moments(() => toHalf(random() < 0.3 ? 0 : random() * 3)),
+        },
+        { binding: 3, resource: moments(() => toHalf(random())) },
+        { binding: 4, resource: moments(() => toHalf(random())) },
+      ],
+    ],
+    dispatch: [3],
+    outputs,
+    colors,
+  };
+}
+
+/** A blocky image (FXAA's edges): 7-pixel squares of random colors. */
+function blocks(device: GPUDevice): GPUTexture {
+  const random = randoms(29);
+  const colors = Array.from({ length: 4096 }, () => Math.floor(random() * 256));
+  return texture(device, { size: [W, H], format: "rgba8unorm" }, (i) => {
+    const t = i >> 2;
+    const x = Math.floor((t % W) / 7);
+    const y = Math.floor(Math.floor(t / W) / 7);
+    return i % 4 === 3 ? 255 : colors[(x * 31 + y * 17 + (i % 4) * 7) % 4096]!;
+  });
+}
+
 const CASES: Case[] = [
   {
     name: "depthRange",
@@ -1071,6 +1263,82 @@ const CASES: Case[] = [
     },
   },
   {
+    name: "present.neutral",
+    reference: presentReference,
+    slang: presentSlang,
+    render: fullscreen("fs", ["rgba8unorm"]),
+    setup: (device) => presentInputs(device, 0, 1, false),
+  },
+  {
+    name: "present.agx-eye",
+    reference: presentReference,
+    slang: presentSlang,
+    render: fullscreen("fs", ["rgba8unorm"]),
+    setup: (device) => presentInputs(device, 1, 2, true),
+  },
+  {
+    name: "present.aces",
+    reference: presentReference,
+    slang: presentSlang,
+    render: fullscreen("fs", ["rgba8unorm"]),
+    setup: (device) => presentInputs(device, 2, 0, false),
+  },
+  {
+    name: "fxaa",
+    reference: fxaaReference,
+    slang: fxaaSlang,
+    render: fullscreen("fs", ["rgba8unorm"]),
+    setup(device) {
+      const color = texture(device, {
+        size: [W, H],
+        format: "rgba8unorm",
+        usage: T.RENDER_ATTACHMENT,
+      });
+      return {
+        groups: [
+          [
+            { binding: 0, resource: blocks(device).createView() },
+            {
+              binding: 1,
+              resource: device.createSampler({
+                magFilter: "linear",
+                minFilter: "linear",
+              }),
+            },
+            {
+              binding: 2,
+              resource: {
+                buffer: buffer(
+                  device,
+                  new Float32Array([0, 0, 1 / W, 1 / H, 0, 0, 0, 0]),
+                  GPUBufferUsage.UNIFORM,
+                ),
+              },
+            },
+          ],
+        ],
+        dispatch: [3],
+        outputs: [{ texture: color, element: "unorm8", ulps: 1 }],
+        colors: [color],
+      };
+    },
+  },
+  {
+    name: "composite.exact",
+    reference: compositeReference,
+    slang: compositeSlang,
+    render: fullscreen("fsExact", ["rgba16float", "rgba16float"]),
+    repeat: 4,
+    setup: (device) => compositeInputs(device, true),
+  },
+  {
+    name: "composite.moments",
+    reference: compositeReference,
+    slang: compositeSlang,
+    render: fullscreen("fsMoments", ["rgba16float", "rgba16float"]),
+    setup: (device) => compositeInputs(device, false),
+  },
+  {
     name: "cullRecords",
     reference: `${commonReference}\n${cullReference}`,
     slang: cullSlang,
@@ -1343,7 +1611,7 @@ async function time(
         resources,
         pipelines[which]!,
         groups[which]!,
-        REPEAT,
+        c.repeat ?? REPEAT,
         which,
         {
           querySet,
@@ -1363,7 +1631,9 @@ async function time(
   for (let r = 0; r < runs; r++) {
     for (let which = 0; which < 2; which++) {
       const q = (r * 2 + which) * 2;
-      durations[which]!.push(Number(t[q + 1]! - t[q]!) / 1000 / REPEAT);
+      durations[which]!.push(
+        Number(t[q + 1]! - t[q]!) / 1000 / (c.repeat ?? REPEAT),
+      );
     }
   }
   const median = (xs: number[]) => xs.sort((a, b) => a - b)[xs.length >> 1]!;
@@ -1417,6 +1687,14 @@ async function runKernels(): Promise<Row[]> {
         adapter.limits.maxStorageBuffersPerShaderStage,
     },
   });
+  void device.lost.then((info) => {
+    if (info.reason !== "destroyed") {
+      console.error(`Device lost: ${info.message}`);
+    }
+  });
+  device.addEventListener("uncapturederror", (e) =>
+    console.error((e as GPUUncapturedErrorEvent).error.message),
+  );
   // `?only=a,b`: just those cases (by name prefix).
   const only = new URLSearchParams(location.search).get("only")?.split(",");
   const cases = only
@@ -1461,8 +1739,12 @@ async function runKernels(): Promise<Row[]> {
         }
       }
     });
-    const same =
-      differ === 0
+    // Outputs all zeros compare equal and prove nothing: a case's inputs
+    // must make its kernel write.
+    const empty = a.every((bytes) => bytes.every((x) => x === 0));
+    const same = empty
+      ? "all zero"
+      : differ === 0
         ? "identical"
         : beyond === 0
           ? `${differ} within ${worst} ulp`
@@ -1484,7 +1766,13 @@ async function runKernels(): Promise<Row[]> {
       slang,
       ratio,
       same,
-      gate: beyond > 0 ? "✗ differs" : ratio <= 1.05 ? "✓" : "✗ slower",
+      gate: empty
+        ? "✗ no output"
+        : beyond > 0
+          ? "✗ differs"
+          : ratio <= 1.05
+            ? "✓"
+            : "✗ slower",
     });
     render(rows);
   }
