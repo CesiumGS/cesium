@@ -25,6 +25,7 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: "22"
+          package-manager-cache: false
       - name: npm install
         run: npm install
       - name: lint *.js
@@ -54,6 +55,7 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: "22"
+          package-manager-cache: false
       - name: npm install
         run: npm install
       - name: build website release
@@ -91,6 +93,7 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: "22"
+          package-manager-cache: false
       - name: npm install
         run: npm install
       - name: build docs
@@ -110,6 +113,7 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: "22"
+          package-manager-cache: false
       - name: npm install
         run: npm install
       - name: build website release
@@ -131,6 +135,7 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: "22"
+          package-manager-cache: false
       - name: npm install
         run: npm install
       - name: build website release
@@ -162,6 +167,7 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: "22"
+          package-manager-cache: false
       - name: npm install
         working-directory: ./.github/actions/update-tokens
         run: npm install
