@@ -1,0 +1,1705 @@
+{
+    "version": "1.1",
+    "parameters": [
+        {
+            "name": "params",
+            "binding": {"kind": "descriptorTableSlot", "index": 0},
+            "type": {
+                "kind": "constantBuffer",
+                "elementType": {
+                    "kind": "struct",
+                    "name": "SkyParams",
+                    "fields": [
+                        {
+                            "name": "zenith",
+                            "type": {
+                                "kind": "vector",
+                                "elementCount": 4,
+                                "elementType": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32"
+                                },
+                                "sizes": [
+                                    {"kind": "uniform", "value": 16, "alignment": 16}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 0, "size": 16, "elementStride": 4}
+                        },
+                        {
+                            "name": "horizon",
+                            "type": {
+                                "kind": "vector",
+                                "elementCount": 4,
+                                "elementType": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32"
+                                },
+                                "sizes": [
+                                    {"kind": "uniform", "value": 16, "alignment": 16}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 16, "size": 16, "elementStride": 4}
+                        },
+                        {
+                            "name": "ground",
+                            "type": {
+                                "kind": "vector",
+                                "elementCount": 4,
+                                "elementType": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32"
+                                },
+                                "sizes": [
+                                    {"kind": "uniform", "value": 16, "alignment": 16}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 32, "size": 16, "elementStride": 4}
+                        },
+                        {
+                            "name": "belowHorizon",
+                            "type": {
+                                "kind": "vector",
+                                "elementCount": 4,
+                                "elementType": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32"
+                                },
+                                "sizes": [
+                                    {"kind": "uniform", "value": 16, "alignment": 16}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 48, "size": 16, "elementStride": 4}
+                        },
+                        {
+                            "name": "size",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 64, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "level",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 68, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "levels",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 72, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "sampleCount",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 76, "size": 4, "elementStride": 0}
+                        }
+                    ],
+                    "sizes": [
+                        {"kind": "uniform", "value": 80, "alignment": 16}
+                    ]
+                },
+                "containerVarLayout": {
+                    "binding": {"kind": "descriptorTableSlot", "index": 0}
+                },
+                "elementVarLayout": {
+                    "type": {
+                        "kind": "struct",
+                        "name": "SkyParams",
+                        "fields": [
+                            {
+                                "name": "zenith",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 0, "size": 16, "elementStride": 4}
+                            },
+                            {
+                                "name": "horizon",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 16, "size": 16, "elementStride": 4}
+                            },
+                            {
+                                "name": "ground",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 32, "size": 16, "elementStride": 4}
+                            },
+                            {
+                                "name": "belowHorizon",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 48, "size": 16, "elementStride": 4}
+                            },
+                            {
+                                "name": "size",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 64, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "level",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 68, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "levels",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 72, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "sampleCount",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 76, "size": 4, "elementStride": 0}
+                            }
+                        ],
+                        "sizes": [
+                            {"kind": "uniform", "value": 80, "alignment": 16}
+                        ]
+                    },
+                    "binding": {"kind": "uniform", "offset": 0, "size": 80, "elementStride": 0}
+                },
+                "sizes": [
+                    {"kind": "descriptorTableSlot", "value": 1}
+                ]
+            }
+        },
+        {
+            "name": "skyTarget",
+            "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 0},
+            "format": "rgba16f",
+            "type": {
+                "kind": "resource",
+                "baseShape": "texture2D",
+                "array": true,
+                "access": "write",
+                "resultType": {
+                    "kind": "vector",
+                    "elementCount": 4,
+                    "elementType": {
+                        "kind": "scalar",
+                        "scalarType": "float32"
+                    }
+                },
+                "sizes": [
+                    {"kind": "descriptorTableSlot", "value": 1}
+                ]
+            }
+        },
+        {
+            "name": "source",
+            "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 1},
+            "type": {
+                "kind": "resource",
+                "baseShape": "textureCube",
+                "resultType": {
+                    "kind": "vector",
+                    "elementCount": 4,
+                    "elementType": {
+                        "kind": "scalar",
+                        "scalarType": "float32"
+                    }
+                },
+                "sizes": [
+                    {"kind": "descriptorTableSlot", "value": 1}
+                ]
+            }
+        },
+        {
+            "name": "linearSampler",
+            "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 2},
+            "type": {
+                "kind": "samplerState",
+                "sizes": [
+                    {"kind": "descriptorTableSlot", "value": 1}
+                ]
+            }
+        },
+        {
+            "name": "prefilterTarget",
+            "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 3},
+            "format": "rgba16f",
+            "type": {
+                "kind": "resource",
+                "baseShape": "texture2D",
+                "array": true,
+                "access": "write",
+                "resultType": {
+                    "kind": "vector",
+                    "elementCount": 4,
+                    "elementType": {
+                        "kind": "scalar",
+                        "scalarType": "float32"
+                    }
+                },
+                "sizes": [
+                    {"kind": "descriptorTableSlot", "value": 1}
+                ]
+            }
+        },
+        {
+            "name": "shSource",
+            "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 4},
+            "type": {
+                "kind": "resource",
+                "baseShape": "texture2D",
+                "array": true,
+                "resultType": {
+                    "kind": "vector",
+                    "elementCount": 4,
+                    "elementType": {
+                        "kind": "scalar",
+                        "scalarType": "float32"
+                    }
+                },
+                "sizes": [
+                    {"kind": "descriptorTableSlot", "value": 1}
+                ]
+            }
+        },
+        {
+            "name": "shPartial",
+            "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 5},
+            "type": {
+                "kind": "resource",
+                "baseShape": "structuredBuffer",
+                "access": "readWrite",
+                "resultType": {
+                    "kind": "vector",
+                    "elementCount": 4,
+                    "elementType": {
+                        "kind": "scalar",
+                        "scalarType": "float32"
+                    },
+                    "sizes": [
+                        {"kind": "uniform", "value": 16, "alignment": 16}
+                    ]
+                },
+                "sizes": [
+                    {"kind": "descriptorTableSlot", "value": 1}
+                ]
+            }
+        },
+        {
+            "name": "shOut",
+            "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 6},
+            "type": {
+                "kind": "resource",
+                "baseShape": "structuredBuffer",
+                "access": "readWrite",
+                "resultType": {
+                    "kind": "vector",
+                    "elementCount": 4,
+                    "elementType": {
+                        "kind": "scalar",
+                        "scalarType": "float32"
+                    },
+                    "sizes": [
+                        {"kind": "uniform", "value": 16, "alignment": 16}
+                    ]
+                },
+                "sizes": [
+                    {"kind": "descriptorTableSlot", "value": 1}
+                ]
+            }
+        },
+        {
+            "name": "irradianceSource",
+            "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 8},
+            "type": {
+                "kind": "resource",
+                "baseShape": "texture2D",
+                "array": true,
+                "resultType": {
+                    "kind": "vector",
+                    "elementCount": 4,
+                    "elementType": {
+                        "kind": "scalar",
+                        "scalarType": "float32"
+                    }
+                },
+                "sizes": [
+                    {"kind": "descriptorTableSlot", "value": 1}
+                ]
+            }
+        },
+        {
+            "name": "irradianceTarget",
+            "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 9},
+            "format": "rgba16f",
+            "type": {
+                "kind": "resource",
+                "baseShape": "texture2D",
+                "array": true,
+                "access": "write",
+                "resultType": {
+                    "kind": "vector",
+                    "elementCount": 4,
+                    "elementType": {
+                        "kind": "scalar",
+                        "scalarType": "float32"
+                    }
+                },
+                "sizes": [
+                    {"kind": "descriptorTableSlot", "value": 1}
+                ]
+            }
+        },
+        {
+            "name": "brdfTarget",
+            "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 7},
+            "format": "rgba16f",
+            "type": {
+                "kind": "resource",
+                "baseShape": "texture2D",
+                "access": "write",
+                "resultType": {
+                    "kind": "vector",
+                    "elementCount": 4,
+                    "elementType": {
+                        "kind": "scalar",
+                        "scalarType": "float32"
+                    }
+                },
+                "sizes": [
+                    {"kind": "descriptorTableSlot", "value": 1}
+                ]
+            }
+        },
+        {
+            "name": "mipSource",
+            "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 10},
+            "type": {
+                "kind": "resource",
+                "baseShape": "texture2D",
+                "array": true,
+                "resultType": {
+                    "kind": "vector",
+                    "elementCount": 4,
+                    "elementType": {
+                        "kind": "scalar",
+                        "scalarType": "float32"
+                    }
+                },
+                "sizes": [
+                    {"kind": "descriptorTableSlot", "value": 1}
+                ]
+            }
+        },
+        {
+            "name": "mipTarget",
+            "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 11},
+            "format": "rgba16f",
+            "type": {
+                "kind": "resource",
+                "baseShape": "texture2D",
+                "array": true,
+                "access": "write",
+                "resultType": {
+                    "kind": "vector",
+                    "elementCount": 4,
+                    "elementType": {
+                        "kind": "scalar",
+                        "scalarType": "float32"
+                    }
+                },
+                "sizes": [
+                    {"kind": "descriptorTableSlot", "value": 1}
+                ]
+            }
+        }
+    ],
+    "globalScope": {
+        "kind": "none",
+        "parameters": [
+            {
+                "name": "params",
+                "binding": {"kind": "descriptorTableSlot", "index": 0},
+                "type": {
+                    "kind": "constantBuffer",
+                    "elementType": {
+                        "kind": "struct",
+                        "name": "SkyParams",
+                        "fields": [
+                            {
+                                "name": "zenith",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 0, "size": 16, "elementStride": 4}
+                            },
+                            {
+                                "name": "horizon",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 16, "size": 16, "elementStride": 4}
+                            },
+                            {
+                                "name": "ground",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 32, "size": 16, "elementStride": 4}
+                            },
+                            {
+                                "name": "belowHorizon",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 48, "size": 16, "elementStride": 4}
+                            },
+                            {
+                                "name": "size",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 64, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "level",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 68, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "levels",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 72, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "sampleCount",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 76, "size": 4, "elementStride": 0}
+                            }
+                        ],
+                        "sizes": [
+                            {"kind": "uniform", "value": 80, "alignment": 16}
+                        ]
+                    },
+                    "containerVarLayout": {
+                        "binding": {"kind": "descriptorTableSlot", "index": 0}
+                    },
+                    "elementVarLayout": {
+                        "type": {
+                            "kind": "struct",
+                            "name": "SkyParams",
+                            "fields": [
+                                {
+                                    "name": "zenith",
+                                    "type": {
+                                        "kind": "vector",
+                                        "elementCount": 4,
+                                        "elementType": {
+                                            "kind": "scalar",
+                                            "scalarType": "float32"
+                                        },
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 16, "alignment": 16}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 0, "size": 16, "elementStride": 4}
+                                },
+                                {
+                                    "name": "horizon",
+                                    "type": {
+                                        "kind": "vector",
+                                        "elementCount": 4,
+                                        "elementType": {
+                                            "kind": "scalar",
+                                            "scalarType": "float32"
+                                        },
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 16, "alignment": 16}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 16, "size": 16, "elementStride": 4}
+                                },
+                                {
+                                    "name": "ground",
+                                    "type": {
+                                        "kind": "vector",
+                                        "elementCount": 4,
+                                        "elementType": {
+                                            "kind": "scalar",
+                                            "scalarType": "float32"
+                                        },
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 16, "alignment": 16}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 32, "size": 16, "elementStride": 4}
+                                },
+                                {
+                                    "name": "belowHorizon",
+                                    "type": {
+                                        "kind": "vector",
+                                        "elementCount": 4,
+                                        "elementType": {
+                                            "kind": "scalar",
+                                            "scalarType": "float32"
+                                        },
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 16, "alignment": 16}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 48, "size": 16, "elementStride": 4}
+                                },
+                                {
+                                    "name": "size",
+                                    "type": {
+                                        "kind": "scalar",
+                                        "scalarType": "uint32",
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 4, "alignment": 4}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 64, "size": 4, "elementStride": 0}
+                                },
+                                {
+                                    "name": "level",
+                                    "type": {
+                                        "kind": "scalar",
+                                        "scalarType": "uint32",
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 4, "alignment": 4}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 68, "size": 4, "elementStride": 0}
+                                },
+                                {
+                                    "name": "levels",
+                                    "type": {
+                                        "kind": "scalar",
+                                        "scalarType": "uint32",
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 4, "alignment": 4}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 72, "size": 4, "elementStride": 0}
+                                },
+                                {
+                                    "name": "sampleCount",
+                                    "type": {
+                                        "kind": "scalar",
+                                        "scalarType": "uint32",
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 4, "alignment": 4}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 76, "size": 4, "elementStride": 0}
+                                }
+                            ],
+                            "sizes": [
+                                {"kind": "uniform", "value": 80, "alignment": 16}
+                            ]
+                        },
+                        "binding": {"kind": "uniform", "offset": 0, "size": 80, "elementStride": 0}
+                    },
+                    "sizes": [
+                        {"kind": "descriptorTableSlot", "value": 1}
+                    ]
+                }
+            },
+            {
+                "name": "skyTarget",
+                "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 0},
+                "format": "rgba16f",
+                "type": {
+                    "kind": "resource",
+                    "baseShape": "texture2D",
+                    "array": true,
+                    "access": "write",
+                    "resultType": {
+                        "kind": "vector",
+                        "elementCount": 4,
+                        "elementType": {
+                            "kind": "scalar",
+                            "scalarType": "float32"
+                        }
+                    },
+                    "sizes": [
+                        {"kind": "descriptorTableSlot", "value": 1}
+                    ]
+                }
+            },
+            {
+                "name": "source",
+                "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 1},
+                "type": {
+                    "kind": "resource",
+                    "baseShape": "textureCube",
+                    "resultType": {
+                        "kind": "vector",
+                        "elementCount": 4,
+                        "elementType": {
+                            "kind": "scalar",
+                            "scalarType": "float32"
+                        }
+                    },
+                    "sizes": [
+                        {"kind": "descriptorTableSlot", "value": 1}
+                    ]
+                }
+            },
+            {
+                "name": "linearSampler",
+                "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 2},
+                "type": {
+                    "kind": "samplerState",
+                    "sizes": [
+                        {"kind": "descriptorTableSlot", "value": 1}
+                    ]
+                }
+            },
+            {
+                "name": "prefilterTarget",
+                "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 3},
+                "format": "rgba16f",
+                "type": {
+                    "kind": "resource",
+                    "baseShape": "texture2D",
+                    "array": true,
+                    "access": "write",
+                    "resultType": {
+                        "kind": "vector",
+                        "elementCount": 4,
+                        "elementType": {
+                            "kind": "scalar",
+                            "scalarType": "float32"
+                        }
+                    },
+                    "sizes": [
+                        {"kind": "descriptorTableSlot", "value": 1}
+                    ]
+                }
+            },
+            {
+                "name": "shSource",
+                "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 4},
+                "type": {
+                    "kind": "resource",
+                    "baseShape": "texture2D",
+                    "array": true,
+                    "resultType": {
+                        "kind": "vector",
+                        "elementCount": 4,
+                        "elementType": {
+                            "kind": "scalar",
+                            "scalarType": "float32"
+                        }
+                    },
+                    "sizes": [
+                        {"kind": "descriptorTableSlot", "value": 1}
+                    ]
+                }
+            },
+            {
+                "name": "shPartial",
+                "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 5},
+                "type": {
+                    "kind": "resource",
+                    "baseShape": "structuredBuffer",
+                    "access": "readWrite",
+                    "resultType": {
+                        "kind": "vector",
+                        "elementCount": 4,
+                        "elementType": {
+                            "kind": "scalar",
+                            "scalarType": "float32"
+                        },
+                        "sizes": [
+                            {"kind": "uniform", "value": 16, "alignment": 16}
+                        ]
+                    },
+                    "sizes": [
+                        {"kind": "descriptorTableSlot", "value": 1}
+                    ]
+                }
+            },
+            {
+                "name": "shOut",
+                "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 6},
+                "type": {
+                    "kind": "resource",
+                    "baseShape": "structuredBuffer",
+                    "access": "readWrite",
+                    "resultType": {
+                        "kind": "vector",
+                        "elementCount": 4,
+                        "elementType": {
+                            "kind": "scalar",
+                            "scalarType": "float32"
+                        },
+                        "sizes": [
+                            {"kind": "uniform", "value": 16, "alignment": 16}
+                        ]
+                    },
+                    "sizes": [
+                        {"kind": "descriptorTableSlot", "value": 1}
+                    ]
+                }
+            },
+            {
+                "name": "irradianceSource",
+                "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 8},
+                "type": {
+                    "kind": "resource",
+                    "baseShape": "texture2D",
+                    "array": true,
+                    "resultType": {
+                        "kind": "vector",
+                        "elementCount": 4,
+                        "elementType": {
+                            "kind": "scalar",
+                            "scalarType": "float32"
+                        }
+                    },
+                    "sizes": [
+                        {"kind": "descriptorTableSlot", "value": 1}
+                    ]
+                }
+            },
+            {
+                "name": "irradianceTarget",
+                "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 9},
+                "format": "rgba16f",
+                "type": {
+                    "kind": "resource",
+                    "baseShape": "texture2D",
+                    "array": true,
+                    "access": "write",
+                    "resultType": {
+                        "kind": "vector",
+                        "elementCount": 4,
+                        "elementType": {
+                            "kind": "scalar",
+                            "scalarType": "float32"
+                        }
+                    },
+                    "sizes": [
+                        {"kind": "descriptorTableSlot", "value": 1}
+                    ]
+                }
+            },
+            {
+                "name": "brdfTarget",
+                "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 7},
+                "format": "rgba16f",
+                "type": {
+                    "kind": "resource",
+                    "baseShape": "texture2D",
+                    "access": "write",
+                    "resultType": {
+                        "kind": "vector",
+                        "elementCount": 4,
+                        "elementType": {
+                            "kind": "scalar",
+                            "scalarType": "float32"
+                        }
+                    },
+                    "sizes": [
+                        {"kind": "descriptorTableSlot", "value": 1}
+                    ]
+                }
+            },
+            {
+                "name": "mipSource",
+                "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 10},
+                "type": {
+                    "kind": "resource",
+                    "baseShape": "texture2D",
+                    "array": true,
+                    "resultType": {
+                        "kind": "vector",
+                        "elementCount": 4,
+                        "elementType": {
+                            "kind": "scalar",
+                            "scalarType": "float32"
+                        }
+                    },
+                    "sizes": [
+                        {"kind": "descriptorTableSlot", "value": 1}
+                    ]
+                }
+            },
+            {
+                "name": "mipTarget",
+                "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 11},
+                "format": "rgba16f",
+                "type": {
+                    "kind": "resource",
+                    "baseShape": "texture2D",
+                    "array": true,
+                    "access": "write",
+                    "resultType": {
+                        "kind": "vector",
+                        "elementCount": 4,
+                        "elementType": {
+                            "kind": "scalar",
+                            "scalarType": "float32"
+                        }
+                    },
+                    "sizes": [
+                        {"kind": "descriptorTableSlot", "value": 1}
+                    ]
+                }
+            }
+        ]
+    },
+    "entryPoints": [
+        {
+            "name": "sky",
+            "stage": "compute",
+            "scope": {
+                "kind": "none",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "semanticName": "SV_DISPATCHTHREADID",
+                        "type": {
+                            "kind": "vector",
+                            "elementCount": 3,
+                            "elementType": {
+                                "kind": "scalar",
+                                "scalarType": "uint32"
+                            },
+                            "sizes": [
+
+                            ]
+                        }
+                    }
+                ]
+            },
+            "parameters": [
+                {
+                    "name": "id",
+                    "semanticName": "SV_DISPATCHTHREADID",
+                    "type": {
+                        "kind": "vector",
+                        "elementCount": 3,
+                        "elementType": {
+                            "kind": "scalar",
+                            "scalarType": "uint32"
+                        },
+                        "sizes": [
+
+                        ]
+                    }
+                }
+            ],
+            "threadGroupSize": [8, 8, 1],
+            "bindings": [
+                {
+                    "name": "params",
+                    "binding": {"kind": "descriptorTableSlot", "index": 0}
+                },
+                {
+                    "name": "skyTarget",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 0},
+                    "format": "rgba16f"
+                },
+                {
+                    "name": "source",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 1}
+                },
+                {
+                    "name": "linearSampler",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 2}
+                },
+                {
+                    "name": "prefilterTarget",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 3},
+                    "format": "rgba16f"
+                },
+                {
+                    "name": "shSource",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 4}
+                },
+                {
+                    "name": "shPartial",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 5}
+                },
+                {
+                    "name": "shOut",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 6}
+                },
+                {
+                    "name": "irradianceSource",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 8}
+                },
+                {
+                    "name": "irradianceTarget",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 9},
+                    "format": "rgba16f"
+                },
+                {
+                    "name": "brdfTarget",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 7},
+                    "format": "rgba16f"
+                },
+                {
+                    "name": "mipSource",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 10}
+                },
+                {
+                    "name": "mipTarget",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 11},
+                    "format": "rgba16f"
+                }
+            ]
+        },
+        {
+            "name": "prefilter",
+            "stage": "compute",
+            "scope": {
+                "kind": "none",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "semanticName": "SV_DISPATCHTHREADID",
+                        "type": {
+                            "kind": "vector",
+                            "elementCount": 3,
+                            "elementType": {
+                                "kind": "scalar",
+                                "scalarType": "uint32"
+                            },
+                            "sizes": [
+
+                            ]
+                        }
+                    }
+                ]
+            },
+            "parameters": [
+                {
+                    "name": "id",
+                    "semanticName": "SV_DISPATCHTHREADID",
+                    "type": {
+                        "kind": "vector",
+                        "elementCount": 3,
+                        "elementType": {
+                            "kind": "scalar",
+                            "scalarType": "uint32"
+                        },
+                        "sizes": [
+
+                        ]
+                    }
+                }
+            ],
+            "threadGroupSize": [8, 8, 1],
+            "bindings": [
+                {
+                    "name": "params",
+                    "binding": {"kind": "descriptorTableSlot", "index": 0}
+                },
+                {
+                    "name": "skyTarget",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 0},
+                    "format": "rgba16f"
+                },
+                {
+                    "name": "source",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 1}
+                },
+                {
+                    "name": "linearSampler",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 2}
+                },
+                {
+                    "name": "prefilterTarget",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 3},
+                    "format": "rgba16f"
+                },
+                {
+                    "name": "shSource",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 4}
+                },
+                {
+                    "name": "shPartial",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 5}
+                },
+                {
+                    "name": "shOut",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 6}
+                },
+                {
+                    "name": "irradianceSource",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 8}
+                },
+                {
+                    "name": "irradianceTarget",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 9},
+                    "format": "rgba16f"
+                },
+                {
+                    "name": "brdfTarget",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 7},
+                    "format": "rgba16f"
+                },
+                {
+                    "name": "mipSource",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 10}
+                },
+                {
+                    "name": "mipTarget",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 11},
+                    "format": "rgba16f"
+                }
+            ]
+        },
+        {
+            "name": "shFace",
+            "stage": "compute",
+            "scope": {
+                "kind": "none",
+                "parameters": [
+                    {
+                        "name": "lid",
+                        "semanticName": "SV_GROUPINDEX",
+                        "type": {
+                            "kind": "scalar",
+                            "scalarType": "uint32",
+                            "sizes": [
+
+                            ]
+                        }
+                    },
+                    {
+                        "name": "wg",
+                        "semanticName": "SV_GROUPID",
+                        "type": {
+                            "kind": "vector",
+                            "elementCount": 3,
+                            "elementType": {
+                                "kind": "scalar",
+                                "scalarType": "uint32"
+                            },
+                            "sizes": [
+
+                            ]
+                        }
+                    }
+                ]
+            },
+            "parameters": [
+                {
+                    "name": "lid",
+                    "semanticName": "SV_GROUPINDEX",
+                    "type": {
+                        "kind": "scalar",
+                        "scalarType": "uint32",
+                        "sizes": [
+
+                        ]
+                    }
+                },
+                {
+                    "name": "wg",
+                    "semanticName": "SV_GROUPID",
+                    "type": {
+                        "kind": "vector",
+                        "elementCount": 3,
+                        "elementType": {
+                            "kind": "scalar",
+                            "scalarType": "uint32"
+                        },
+                        "sizes": [
+
+                        ]
+                    }
+                }
+            ],
+            "threadGroupSize": [64, 1, 1],
+            "bindings": [
+                {
+                    "name": "params",
+                    "binding": {"kind": "descriptorTableSlot", "index": 0}
+                },
+                {
+                    "name": "skyTarget",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 0},
+                    "format": "rgba16f"
+                },
+                {
+                    "name": "source",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 1}
+                },
+                {
+                    "name": "linearSampler",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 2}
+                },
+                {
+                    "name": "prefilterTarget",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 3},
+                    "format": "rgba16f"
+                },
+                {
+                    "name": "shSource",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 4}
+                },
+                {
+                    "name": "shPartial",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 5}
+                },
+                {
+                    "name": "shOut",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 6}
+                },
+                {
+                    "name": "irradianceSource",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 8}
+                },
+                {
+                    "name": "irradianceTarget",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 9},
+                    "format": "rgba16f"
+                },
+                {
+                    "name": "brdfTarget",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 7},
+                    "format": "rgba16f"
+                },
+                {
+                    "name": "mipSource",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 10}
+                },
+                {
+                    "name": "mipTarget",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 11},
+                    "format": "rgba16f"
+                }
+            ]
+        },
+        {
+            "name": "shFinal",
+            "stage": "compute",
+            "scope": {
+                "kind": "none",
+                "parameters": [
+
+                ]
+            },
+            "threadGroupSize": [1, 1, 1],
+            "bindings": [
+                {
+                    "name": "params",
+                    "binding": {"kind": "descriptorTableSlot", "index": 0}
+                },
+                {
+                    "name": "skyTarget",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 0},
+                    "format": "rgba16f"
+                },
+                {
+                    "name": "source",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 1}
+                },
+                {
+                    "name": "linearSampler",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 2}
+                },
+                {
+                    "name": "prefilterTarget",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 3},
+                    "format": "rgba16f"
+                },
+                {
+                    "name": "shSource",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 4}
+                },
+                {
+                    "name": "shPartial",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 5}
+                },
+                {
+                    "name": "shOut",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 6}
+                },
+                {
+                    "name": "irradianceSource",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 8}
+                },
+                {
+                    "name": "irradianceTarget",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 9},
+                    "format": "rgba16f"
+                },
+                {
+                    "name": "brdfTarget",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 7},
+                    "format": "rgba16f"
+                },
+                {
+                    "name": "mipSource",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 10}
+                },
+                {
+                    "name": "mipTarget",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 11},
+                    "format": "rgba16f"
+                }
+            ]
+        },
+        {
+            "name": "irradianceCube",
+            "stage": "compute",
+            "scope": {
+                "kind": "none",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "semanticName": "SV_DISPATCHTHREADID",
+                        "type": {
+                            "kind": "vector",
+                            "elementCount": 3,
+                            "elementType": {
+                                "kind": "scalar",
+                                "scalarType": "uint32"
+                            },
+                            "sizes": [
+
+                            ]
+                        }
+                    },
+                    {
+                        "name": "lane",
+                        "semanticName": "SV_GROUPINDEX",
+                        "type": {
+                            "kind": "scalar",
+                            "scalarType": "uint32",
+                            "sizes": [
+
+                            ]
+                        }
+                    }
+                ]
+            },
+            "parameters": [
+                {
+                    "name": "id",
+                    "semanticName": "SV_DISPATCHTHREADID",
+                    "type": {
+                        "kind": "vector",
+                        "elementCount": 3,
+                        "elementType": {
+                            "kind": "scalar",
+                            "scalarType": "uint32"
+                        },
+                        "sizes": [
+
+                        ]
+                    }
+                },
+                {
+                    "name": "lane",
+                    "semanticName": "SV_GROUPINDEX",
+                    "type": {
+                        "kind": "scalar",
+                        "scalarType": "uint32",
+                        "sizes": [
+
+                        ]
+                    }
+                }
+            ],
+            "threadGroupSize": [8, 8, 1],
+            "bindings": [
+                {
+                    "name": "params",
+                    "binding": {"kind": "descriptorTableSlot", "index": 0}
+                },
+                {
+                    "name": "skyTarget",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 0},
+                    "format": "rgba16f"
+                },
+                {
+                    "name": "source",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 1}
+                },
+                {
+                    "name": "linearSampler",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 2}
+                },
+                {
+                    "name": "prefilterTarget",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 3},
+                    "format": "rgba16f"
+                },
+                {
+                    "name": "shSource",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 4}
+                },
+                {
+                    "name": "shPartial",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 5}
+                },
+                {
+                    "name": "shOut",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 6}
+                },
+                {
+                    "name": "irradianceSource",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 8}
+                },
+                {
+                    "name": "irradianceTarget",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 9},
+                    "format": "rgba16f"
+                },
+                {
+                    "name": "brdfTarget",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 7},
+                    "format": "rgba16f"
+                },
+                {
+                    "name": "mipSource",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 10}
+                },
+                {
+                    "name": "mipTarget",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 11},
+                    "format": "rgba16f"
+                }
+            ]
+        },
+        {
+            "name": "downsample",
+            "stage": "compute",
+            "scope": {
+                "kind": "none",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "semanticName": "SV_DISPATCHTHREADID",
+                        "type": {
+                            "kind": "vector",
+                            "elementCount": 3,
+                            "elementType": {
+                                "kind": "scalar",
+                                "scalarType": "uint32"
+                            },
+                            "sizes": [
+
+                            ]
+                        }
+                    }
+                ]
+            },
+            "parameters": [
+                {
+                    "name": "id",
+                    "semanticName": "SV_DISPATCHTHREADID",
+                    "type": {
+                        "kind": "vector",
+                        "elementCount": 3,
+                        "elementType": {
+                            "kind": "scalar",
+                            "scalarType": "uint32"
+                        },
+                        "sizes": [
+
+                        ]
+                    }
+                }
+            ],
+            "threadGroupSize": [8, 8, 1],
+            "bindings": [
+                {
+                    "name": "params",
+                    "binding": {"kind": "descriptorTableSlot", "index": 0}
+                },
+                {
+                    "name": "skyTarget",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 0},
+                    "format": "rgba16f"
+                },
+                {
+                    "name": "source",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 1}
+                },
+                {
+                    "name": "linearSampler",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 2}
+                },
+                {
+                    "name": "prefilterTarget",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 3},
+                    "format": "rgba16f"
+                },
+                {
+                    "name": "shSource",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 4}
+                },
+                {
+                    "name": "shPartial",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 5}
+                },
+                {
+                    "name": "shOut",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 6}
+                },
+                {
+                    "name": "irradianceSource",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 8}
+                },
+                {
+                    "name": "irradianceTarget",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 9},
+                    "format": "rgba16f"
+                },
+                {
+                    "name": "brdfTarget",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 7},
+                    "format": "rgba16f"
+                },
+                {
+                    "name": "mipSource",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 10}
+                },
+                {
+                    "name": "mipTarget",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 11},
+                    "format": "rgba16f"
+                }
+            ]
+        },
+        {
+            "name": "brdf",
+            "stage": "compute",
+            "scope": {
+                "kind": "none",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "semanticName": "SV_DISPATCHTHREADID",
+                        "type": {
+                            "kind": "vector",
+                            "elementCount": 3,
+                            "elementType": {
+                                "kind": "scalar",
+                                "scalarType": "uint32"
+                            },
+                            "sizes": [
+
+                            ]
+                        }
+                    }
+                ]
+            },
+            "parameters": [
+                {
+                    "name": "id",
+                    "semanticName": "SV_DISPATCHTHREADID",
+                    "type": {
+                        "kind": "vector",
+                        "elementCount": 3,
+                        "elementType": {
+                            "kind": "scalar",
+                            "scalarType": "uint32"
+                        },
+                        "sizes": [
+
+                        ]
+                    }
+                }
+            ],
+            "threadGroupSize": [8, 8, 1],
+            "bindings": [
+                {
+                    "name": "params",
+                    "binding": {"kind": "descriptorTableSlot", "index": 0}
+                },
+                {
+                    "name": "skyTarget",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 0},
+                    "format": "rgba16f"
+                },
+                {
+                    "name": "source",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 1}
+                },
+                {
+                    "name": "linearSampler",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 2}
+                },
+                {
+                    "name": "prefilterTarget",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 3},
+                    "format": "rgba16f"
+                },
+                {
+                    "name": "shSource",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 4}
+                },
+                {
+                    "name": "shPartial",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 5}
+                },
+                {
+                    "name": "shOut",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 6}
+                },
+                {
+                    "name": "irradianceSource",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 8}
+                },
+                {
+                    "name": "irradianceTarget",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 9},
+                    "format": "rgba16f"
+                },
+                {
+                    "name": "brdfTarget",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 7},
+                    "format": "rgba16f"
+                },
+                {
+                    "name": "mipSource",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 10}
+                },
+                {
+                    "name": "mipTarget",
+                    "binding": {"kind": "descriptorTableSlot", "space": 1, "index": 11},
+                    "format": "rgba16f"
+                }
+            ]
+        }
+    ],
+    "bindlessSpaceIndex": 2
+}

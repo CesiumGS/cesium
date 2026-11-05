@@ -152,7 +152,7 @@ const ENVIRONMENT_SIZE = 128;
 
 /**
  * Cube faces as 90° views in the environment frame (east, up, −north):
- * forward, right and up, matching ibl.wgsl `cubeDirection` (WebGPU layer
+ * forward, right and up, matching ibl.slang `cubeDirection` (WebGPU layer
  * order +X, −X, +Y, −Y, +Z, −Z).
  */
 const CUBE_FACES: ReadonlyArray<readonly [V3, V3, V3]> = [

@@ -1,4 +1,4 @@
-import iblReferenceWgsl from "./iblReference.wgsl?raw";
+import iblReferenceWgsl from "../shaders/generated/iblReference.wgsl?raw";
 
 type V3 = ArrayLike<number>;
 
@@ -44,7 +44,7 @@ const SAMPLES_PER_DISPATCH = 64;
 
 /**
  * Environment lighting by Monte Carlo integration of the glTF BRDF
- * (iblReference.wgsl): the reference 2.0's real-time image-based lighting
+ * (iblReference.slang): the reference 2.0's real-time image-based lighting
  * (spherical harmonics, prefiltered specular, split sum) is judged against.
  */
 export class IblReference {

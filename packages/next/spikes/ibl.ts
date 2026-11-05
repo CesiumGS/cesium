@@ -2,7 +2,7 @@
 // balls rendered by the engine (spherical harmonics for diffuse, GGX-
 // prefiltered specular, split-sum BRDF table, Fdez-Agüera multiple
 // scattering) and by Monte Carlo integration of the glTF BRDF under the
-// same environment cube (src/lighting/iblReference.wgsl). Plus a white
+// same environment cube (src/lighting/iblReference.slang). Plus a white
 // furnace: in uniform light a white metal reflects exactly all of it at any
 // roughness, which single-scattering microfacet models fall short of.
 import "../lab/harness.css";

@@ -21,6 +21,8 @@ import presentReference from "./slang/reference/present.wgsl?raw";
 import fxaaReference from "./slang/reference/fxaa.wgsl?raw";
 import compositeReference from "./slang/reference/composite.wgsl?raw";
 import scatterReference from "./slang/reference/scatter.wgsl?raw";
+import iblReference from "./slang/reference/ibl.wgsl?raw";
+import iblMonteCarloReference from "./slang/reference/iblReference.wgsl?raw";
 import cullSlang from "../src/shaders/generated/cull.wgsl?raw";
 import depthRangeSlang from "../src/shaders/generated/depthRange.wgsl?raw";
 import lightsSlang from "../src/shaders/generated/lights.wgsl?raw";
@@ -35,6 +37,8 @@ import presentSlang from "../src/shaders/generated/present.wgsl?raw";
 import fxaaSlang from "../src/shaders/generated/fxaa.wgsl?raw";
 import compositeSlang from "../src/shaders/generated/composite.wgsl?raw";
 import scatterSlang from "../src/shaders/generated/scatter.wgsl?raw";
+import iblSlang from "../src/shaders/generated/ibl.wgsl?raw";
+import iblMonteCarloSlang from "../src/shaders/generated/iblReference.wgsl?raw";
 
 /**
  * The Slang-first migration's performance gate (CESIUM2_WEBGPU_PLAN.md
@@ -63,6 +67,12 @@ interface Output {
    * way and not the other; that is rounding, not a wrong port.
    */
   ulps?: number;
+  /**
+   * f32 only: how far apart two elements may be, as well (or instead).
+   * For sums that cancel: a coefficient near zero is many ulps from its
+   * twin while both are 1e-7 from the truth.
+   */
+  absolute?: number;
 }
 /** A render pipeline's case: its attachments are its outputs. */
 interface RenderSetup {
@@ -898,7 +908,287 @@ function blocks(device: GPUDevice): GPUTexture {
   });
 }
 
+/** ibl's parameters: the sky's four colors, then size, level, levels, samples. */
+function skyParams(
+  device: GPUDevice,
+  size: number,
+  level = 0,
+  levels = 1,
+  samples = 0,
+): GPUBuffer {
+  const data = new ArrayBuffer(80);
+  new Float32Array(data, 0, 16).set([
+    0.2, 0.4, 0.9, 1, 0.8, 0.85, 0.9, 1, 0.3, 0.25, 0.2, 1, 0.5, 0.45, 0.4, 1,
+  ]);
+  new Uint32Array(data, 64, 4).set([size, level, levels, samples]);
+  return buffer(device, new Uint8Array(data), GPUBufferUsage.UNIFORM);
+}
+
+/** A cube's six faces, `size` square, random HDR texels (rgba16float). */
+function cubeFaces(
+  device: GPUDevice,
+  size: number,
+  seed: number,
+  usage = 0,
+  mipLevelCount = 1,
+): GPUTexture {
+  const random = randoms(seed);
+  return texture(
+    device,
+    {
+      size: [size, size, 6],
+      dimension: "2d",
+      format: "rgba16float",
+      usage,
+      mipLevelCount,
+    },
+    (i) => toHalf(i % 4 === 3 ? 1 : random() * random() * 8),
+    8,
+  );
+}
+
+/** An rgba16float target of six faces (or one plane), for storage writes. */
+function faceTarget(device: GPUDevice, size: number, layers = 6): GPUTexture {
+  return texture(device, {
+    size: [size, size, layers],
+    dimension: "2d",
+    format: "rgba16float",
+    usage: T.STORAGE_BINDING,
+  });
+}
+
+const arrayView = (t: GPUTexture, mip = 0) =>
+  t.createView({ dimension: "2d-array", baseMipLevel: mip, mipLevelCount: 1 });
+
+const IBL_CASES: Case[] = [
+  {
+    name: "ibl.sky",
+    reference: iblReference,
+    slang: iblSlang,
+    entry: "sky",
+    setup(device) {
+      const target = faceTarget(device, 128);
+      return {
+        groups: [
+          [{ binding: 0, resource: { buffer: skyParams(device, 128) } }],
+          [{ binding: 0, resource: arrayView(target) }],
+        ],
+        dispatch: [16, 16, 6],
+        outputs: [{ texture: target, texelBytes: 8, element: "f16", ulps: 1 }],
+      };
+    },
+  },
+  {
+    name: "ibl.downsample",
+    reference: iblReference,
+    slang: iblSlang,
+    entry: "downsample",
+    setup(device) {
+      const target = faceTarget(device, 64);
+      return {
+        groups: [
+          [],
+          [
+            { binding: 10, resource: arrayView(cubeFaces(device, 128, 41)) },
+            { binding: 11, resource: arrayView(target) },
+          ],
+        ],
+        dispatch: [8, 8, 6],
+        outputs: [{ texture: target, texelBytes: 8, element: "f16", ulps: 1 }],
+      };
+    },
+  },
+  {
+    name: "ibl.prefilter",
+    reference: iblReference,
+    slang: iblSlang,
+    entry: "prefilter",
+    setup(device) {
+      // Level 2 of 6 from a 128² cube: 32 GGX samples a texel.
+      const source = cubeFaces(device, 128, 43, 0, 8);
+      const target = faceTarget(device, 32);
+      return {
+        groups: [
+          [
+            {
+              binding: 0,
+              resource: { buffer: skyParams(device, 32, 2, 6, 32) },
+            },
+          ],
+          [
+            { binding: 1, resource: source.createView({ dimension: "cube" }) },
+            {
+              binding: 2,
+              resource: device.createSampler({
+                magFilter: "linear",
+                minFilter: "linear",
+                mipmapFilter: "linear",
+              }),
+            },
+            { binding: 3, resource: arrayView(target) },
+          ],
+        ],
+        dispatch: [4, 4, 6],
+        outputs: [{ texture: target, texelBytes: 8, element: "f16", ulps: 2 }],
+      };
+    },
+  },
+  {
+    name: "ibl.shFace",
+    reference: iblReference,
+    slang: iblSlang,
+    entry: "shFace",
+    setup(device) {
+      const partial = buffer(device, 6 * 9 * 16, GPUBufferUsage.STORAGE);
+      return {
+        groups: [
+          [],
+          [
+            { binding: 4, resource: arrayView(cubeFaces(device, 32, 47)) },
+            { binding: 5, resource: { buffer: partial } },
+          ],
+        ],
+        dispatch: [6],
+        // Sums of 1,024 texels that partly cancel: within 1e-6 (the
+        // largest coefficients ~2, one ulp 1.2e-7).
+        outputs: [{ buffer: partial, element: "f32", ulps: 4, absolute: 1e-6 }],
+      };
+    },
+  },
+  {
+    name: "ibl.shFinal",
+    reference: iblReference,
+    slang: iblSlang,
+    entry: "shFinal",
+    setup(device) {
+      const random = randoms(53);
+      const partial = buffer(
+        device,
+        Float32Array.from({ length: 6 * 9 * 4 }, () => random() * 2 - 0.5),
+        GPUBufferUsage.STORAGE,
+      );
+      const out = buffer(device, 9 * 16, GPUBufferUsage.STORAGE);
+      return {
+        groups: [
+          [],
+          [
+            { binding: 5, resource: { buffer: partial } },
+            { binding: 6, resource: { buffer: out } },
+          ],
+        ],
+        dispatch: [1],
+        outputs: [{ buffer: out, element: "f32", ulps: 2 }],
+      };
+    },
+  },
+  {
+    name: "ibl.irradianceCube",
+    reference: iblReference,
+    slang: iblSlang,
+    entry: "irradianceCube",
+    setup(device) {
+      const target = faceTarget(device, 16);
+      return {
+        groups: [
+          [],
+          [
+            { binding: 8, resource: arrayView(cubeFaces(device, 16, 59)) },
+            { binding: 9, resource: arrayView(target) },
+          ],
+        ],
+        dispatch: [2, 2, 6],
+        outputs: [{ texture: target, texelBytes: 8, element: "f16", ulps: 1 }],
+      };
+    },
+  },
+  {
+    name: "ibl.brdf",
+    reference: iblReference,
+    slang: iblSlang,
+    entry: "brdf",
+    setup(device) {
+      const target = texture(device, {
+        size: [64, 64],
+        format: "rgba16float",
+        usage: T.STORAGE_BINDING,
+      });
+      return {
+        groups: [[], [{ binding: 7, resource: target.createView() }]],
+        dispatch: [8, 8, 1],
+        outputs: [{ texture: target, texelBytes: 8, element: "f16", ulps: 1 }],
+      };
+    },
+  },
+  {
+    name: "ibl.reference",
+    reference: iblMonteCarloReference,
+    slang: iblMonteCarloSlang,
+    setup(device) {
+      const [w, h] = [256, 160];
+      const p = new ArrayBuffer(112);
+      const u = new Uint32Array(p);
+      const f = new Float32Array(p);
+      u.set([w, h, 16, 3]);
+      f.set([0, 0, 1, Math.tan(0.6)], 4); // direction, tanX
+      f.set([0, 1, 0, Math.tan(0.6) * (h / w)], 8); // up, tanY
+      f.set([1, 0, 0], 12); // right
+      u[15] = 3; // spheres
+      f.set([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0], 16); // env rows
+      const spheres = new Float32Array([
+        // center, radius, baseColor, metallic, roughness, pad ×3
+        -1.2, 0, 5, 1, 0.9, 0.2, 0.1, 0, 0.6, 0, 0, 0, 1.2, 0, 5, 1, 0.9, 0.9,
+        0.9, 1, 0.25, 0, 0, 0, 0, 0.9, 7, 1.4, 0.2, 0.5, 0.9, 0.5, 0.05, 0, 0,
+        0,
+      ]);
+      const accum = buffer(device, w * h * 16, GPUBufferUsage.STORAGE);
+      return {
+        groups: [
+          [
+            {
+              binding: 0,
+              resource: {
+                buffer: buffer(
+                  device,
+                  new Uint8Array(p),
+                  GPUBufferUsage.UNIFORM,
+                ),
+              },
+            },
+            {
+              binding: 1,
+              resource: {
+                buffer: buffer(device, spheres, GPUBufferUsage.STORAGE),
+              },
+            },
+            {
+              binding: 2,
+              resource: cubeFaces(device, 64, 61).createView({
+                dimension: "cube",
+              }),
+            },
+            {
+              binding: 3,
+              resource: device.createSampler({
+                magFilter: "linear",
+                minFilter: "linear",
+              }),
+            },
+            { binding: 4, resource: { buffer: accum } },
+          ],
+        ],
+        dispatch: [w / 8, h / 8],
+        // Sums of 32 samples a pixel, up to 84. On the near-mirror sphere
+        // (roughness 0.05) a direction a rounding apart lands elsewhere
+        // on the GGX peak: 119 pixels there differ by up to 0.02 (8e-4
+        // of their value; 1e-6 on average). Equally good estimates.
+        outputs: [{ buffer: accum, element: "f32", ulps: 16, absolute: 0.05 }],
+      };
+    },
+  },
+];
+
 const CASES: Case[] = [
+  ...IBL_CASES,
   {
     name: "depthRange",
     reference: depthRangeReference,
@@ -1818,17 +2108,35 @@ async function runKernels(): Promise<Row[]> {
     let differ = 0;
     let beyond = 0;
     let worst = 0;
+    let absolute: number | undefined;
     a.forEach((bytes, k) => {
       const o = resources.outputs[k]!;
       const element = o.element ?? "u32";
       const x = ordered(bytes, element);
       const y = ordered(b[k]!, element);
+      const fx = new Float32Array(
+        bytes.buffer,
+        bytes.byteOffset,
+        bytes.byteLength / 4,
+      );
+      const fy = new Float32Array(
+        b[k]!.buffer,
+        b[k]!.byteOffset,
+        b[k]!.byteLength / 4,
+      );
       for (let i = 0; i < x.length; i++) {
         if (x[i] !== y[i]) {
           const d = Math.abs(x[i]! - y[i]!);
+          const near =
+            o.absolute !== undefined &&
+            element === "f32" &&
+            Math.abs(fx[i]! - fy[i]!) <= o.absolute;
           differ += 1;
-          beyond += d > (o.ulps ?? 0) ? 1 : 0;
+          beyond += d > (o.ulps ?? 0) && !near ? 1 : 0;
           worst = Math.max(worst, d);
+          if (near && d > (o.ulps ?? 0)) {
+            absolute = o.absolute;
+          }
         }
       }
     });
@@ -1840,7 +2148,9 @@ async function runKernels(): Promise<Row[]> {
       : differ === 0
         ? "identical"
         : beyond === 0
-          ? `${differ} within ${worst} ulp`
+          ? absolute !== undefined
+            ? `${differ} within ${absolute}`
+            : `${differ} within ${worst} ulp`
           : `${beyond} differ (up to ${worst})`;
     // Warm both, then measure.
     await time(device, c, resources, pipelines, groups, 10);

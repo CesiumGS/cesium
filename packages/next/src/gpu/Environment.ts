@@ -1,4 +1,4 @@
-import iblWgsl from "../shaders/ibl.wgsl?raw";
+import iblWgsl from "../shaders/generated/ibl.wgsl?raw";
 import { MipGenerator } from "./MipGenerator.ts";
 
 export interface SkyOptions {
@@ -90,7 +90,7 @@ export interface EnvironmentProbe {
 
 /**
  * Image-based lighting resources, built entirely on the GPU by compute
- * shaders (src/shaders/ibl.wgsl): environment radiance cubes, GGX-
+ * shaders (src/shaders/ibl.slang): environment radiance cubes, GGX-
  * prefiltered specular cubes, SH9 irradiance coefficients and the
  * split-sum BRDF table.
  *
@@ -107,7 +107,7 @@ export class Environment {
   readonly irradianceView: GPUTextureView;
   readonly brdfLut: GPUTexture;
   readonly brdfView: GPUTextureView;
-  /** 9 × vec4: irradiance SH in E/π form (see shFinal in ibl.wgsl). */
+  /** 9 × vec4: irradiance SH in E/π form (see shFinal in ibl.slang). */
   readonly shBuffer: GPUBuffer;
   readonly sampler: GPUSampler;
   readonly maxLod = SPECULAR_LEVELS - 1;
