@@ -16,6 +16,17 @@ export const EXAMPLES: ExampleInfo[] = [
       import("./realtime-tracks/main.ts?raw").then((m) => m.default),
   },
   {
+    id: "translucency",
+    title: "Translucency: moments and exact",
+    description:
+      "Moment-based OIT and exact sorted per-pixel lists one above the other on one camera, over glass from nearly clear to nearly opaque, stacked, crossing and boxed, with sliders and each way's cost.",
+    labels: ["Translucency", "Rendering"],
+    globe: false,
+    layout: "side",
+    load: () => import("./translucency/main.ts"),
+    source: () => import("./translucency/main.ts?raw").then((m) => m.default),
+  },
+  {
     id: "slang-playground",
     title: "Slang playground",
     description:
