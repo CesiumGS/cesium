@@ -29,8 +29,14 @@ function createTestUrl(pageServer, assetServer, artifact) {
     gaussianSplatsFixture: fixture("GaussianSplats/sh_unit_cube/tileset.json"),
     distribution: artifact.distribution,
   });
-  if (artifact.coreEntry) {
-    query.set("coreEntry", `${assetOrigin}${artifact.coreEntry}`);
+  if (artifact.imports) {
+    const imports = Object.fromEntries(
+      Object.entries(artifact.imports).map(([specifier, entry]) => [
+        specifier,
+        `${assetOrigin}${entry}`,
+      ]),
+    );
+    query.set("imports", JSON.stringify(imports));
   }
   return `${pageServer.url}/?${query}`;
 }

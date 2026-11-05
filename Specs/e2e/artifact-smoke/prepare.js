@@ -104,6 +104,9 @@ async function prepare() {
   const corePackage = await readJson(
     path.join(repositoryRoot, "packages/core/package.json"),
   );
+  const gltfPackage = await readJson(
+    path.join(repositoryRoot, "packages/gltf/package.json"),
+  );
   const zipVersion = rootPackage.version.endsWith(".0")
     ? rootPackage.version.slice(0, -2)
     : rootPackage.version;
@@ -118,6 +121,10 @@ async function prepare() {
   );
   const coreArchive = await findArchive(
     `cesium-core-${corePackage.version}`,
+    ".tgz",
+  );
+  const gltfArchive = await findArchive(
+    `cesium-gltf-${gltfPackage.version}`,
     ".tgz",
   );
   const zipArchive = path.join(repositoryRoot, `Cesium-${zipVersion}.zip`);
@@ -217,8 +224,9 @@ async function prepare() {
           path.join(cesiumRoot, "ThirdParty/Workers"),
         );
 
-        // Core ships source modules, so bundle the packed code with installed
-        // dependencies. The temporary directory has no node_modules folder.
+        // Core and glTF ship source modules, so bundle the packed code with
+        // installed dependencies. The temporary directory has no node_modules
+        // folder. glTF keeps Core external so the page loads one Core instance.
         const coreExtractionRoot = path.join(extractionRoot, "core");
         await mkdir(coreExtractionRoot);
         extractTarball(coreArchive, coreExtractionRoot);
@@ -226,6 +234,19 @@ async function prepare() {
           entryPoints: [path.join(coreExtractionRoot, "package/index.js")],
           outfile: path.join(destination, "core/index.js"),
           nodePaths: [path.join(repositoryRoot, "node_modules")],
+          bundle: true,
+          format: "esm",
+          minify: true,
+        });
+
+        const gltfExtractionRoot = path.join(extractionRoot, "gltf");
+        await mkdir(gltfExtractionRoot);
+        extractTarball(gltfArchive, gltfExtractionRoot);
+        await build({
+          entryPoints: [path.join(gltfExtractionRoot, "package/index.js")],
+          outfile: path.join(destination, "gltf/index.js"),
+          nodePaths: [path.join(repositoryRoot, "node_modules")],
+          external: ["@cesium/core"],
           bundle: true,
           format: "esm",
           minify: true,
@@ -241,7 +262,10 @@ async function prepare() {
     distribution: "esm",
     entry: "/deployment/engine/index.js",
     base: "/deployment/cesium/",
-    coreEntry: "/deployment/core/index.js",
+    imports: {
+      "@cesium/core": "/deployment/core/index.js",
+      "@cesium/gltf": "/deployment/gltf/index.js",
+    },
   });
 
   const zipRoot = await createDeployment("zip", async (destination) => {

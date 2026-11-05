@@ -59,9 +59,9 @@ export async function startServer(
   });
 
   app.get("/", (request, response) => {
-    const importMap = request.query.coreEntry
+    const importMap = request.query.imports
       ? `<script type="importmap">${JSON.stringify({
-          imports: { "@cesium/core": request.query.coreEntry },
+          imports: JSON.parse(request.query.imports),
         }).replaceAll("<", "\\u003c")}</script>`
       : "";
     response.type("html").send(`<!doctype html>

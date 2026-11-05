@@ -3,6 +3,7 @@ import { build } from "esbuild";
 import { fileURLToPath } from "node:url";
 import { buildCore } from "../../../packages/core/scripts/build.js";
 import { buildEngine } from "../../../packages/engine/scripts/build.js";
+import { buildGltf } from "../../../packages/gltf/scripts/build.js";
 import { buildWidgets } from "../../../packages/widgets/scripts/build.js";
 import { buildCesium } from "../../../scripts/build.js";
 
@@ -34,6 +35,9 @@ export default async function globalSetup() {
       bundle: true,
       format: "esm",
       external: ["fs", "path"],
+    });
+    await buildGltf({
+      minify: false,
     });
     await buildEngine({
       minify: false,

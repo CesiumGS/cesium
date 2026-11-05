@@ -35,6 +35,7 @@ const thirdPartyDirectory = path.resolve(
 const importMap = JSON.stringify({
   imports: {
     "@cesium/core": "/packages/core/Build/Unminified/index.js",
+    "@cesium/gltf": "/packages/gltf/Build/Unminified/index.js",
   },
 });
 const importMapHash = `'sha256-${createHash("sha256").update(importMap).digest("base64")}'`;
