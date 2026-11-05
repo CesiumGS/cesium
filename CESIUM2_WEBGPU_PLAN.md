@@ -274,7 +274,7 @@ Engine (1 GPUDevice, PipelineCache, ContentCache, RequestScheduler, WorkerPool)
 
 **Measure early.** Dawn may insert an indirect-args validation pass on D3D12/Vulkan. M0 measures that overhead.
 
-### 3.4 Shaders: Slang for materials, WGSL for kernels, a WGSL-level user contract
+### 3.4 Shaders: Slang as the one source, WGSL where it must be, a WGSL-level user contract
 
 **Why decide now.** The user-facing shader contract is public API.
 
@@ -315,6 +315,90 @@ Engine (1 GPUDevice, PipelineCache, ContentCache, RequestScheduler, WorkerPool)
 - WASM compiler payload size and cold/warm compile latency are measured
 - the output is readable enough to debug
 - the license is reviewed
+
+**Slang-first, for real (r50: decision and migration).** The model above
+says engine material, vertex and fragment code is authored in Slang. In
+practice every engine shader grew as hand-written WGSL: 26 files, about
+7,800 lines, `opaque.wgsl` alone 1,451. The Slang spike's M0-era port
+became a second copy that nobody kept in sync. By r50 its `View` had 19
+of the engine's 26 fields and its `DrawRecord` lacked five, so it
+rendered garbage, and the page had failed outright since r48 (§13.15).
+Two copies of a shader drift. The fix is one source, Slang, with WGSL
+generated from it, not a better-kept copy.
+
+_What one Slang source buys, from this revision's own problems:_
+
+- **Layouts in one place.** Structs are defined once in Slang. The
+  TypeScript offsets (`render/layout.ts`) come from Slang's reflection
+  (`-reflection-json`), and so do the bind group layouts and the binding
+  budget test, which today reads WGSL with regular expressions.
+- **Types that refuse mistakes.**
+  - A `SplitPosition` with private hi/lo fields whose only operations are
+    `difference` (integer-assisted) and `approximate`. Misuse is a compile
+    error, not a test failure.
+  - Types don't stop the compiler reassociating floats, so the integer
+    form stays inside that type.
+- **The bindless seam as an interface.** An `IMaterialTextures` with two
+  implementations, a texture set per batch now and a resource table
+  later, chosen at link time where today it's a WGSL function swap.
+- **Materials as `IMaterial`** (the spike's model), with parameter blocks
+  sized from reflection (the "generic material parameters" item below).
+- **One language for the vector pipeline's kernels** (§13.9): a style
+  compiles to an interface implementation, not to string-pasted WGSL.
+
+_What stays WGSL:_
+
+- **Kernels that need what Slang's WGSL backend lacks.** Subgroups (sorts,
+  compaction), `primitive_index` (CAD edges) and clip distances stay WGSL
+  until it has them, behind the same reflected layouts. None of today's
+  shaders use them.
+- **The user contract** (custom shaders, 3D Tiles styles, the vector
+  styling language). Generators emit code at run time, and a style edit
+  can't wait for an offline compiler. The contract stays a WGSL-level ABI
+  (struct layouts, entry points, a few named helpers) that the generated
+  engine WGSL exports under stable names. Runtime Slang through the
+  lazily loaded WASM compiler stays an option, decided by its measured
+  size and compile latency.
+
+_Migration, in steps that each leave the engine working:_
+
+1. **Re-run the M0 checks on today's Slang (2026.21) and today's
+   features.** The checks above, plus what the engine now uses:
+   `@builtin(sample_mask)` (`SV_Coverage`), flat interpolation,
+   `override` constants sizing workgroup arrays, 32-bit atomics, 3D
+   `rgba16float` storage textures, and exported names stable enough for
+   the user ABI (Slang suffixes names, `records_0`). Gate: kernels within
+   5% of the hand-written WGSL's GPU time, images within ΔE 0.5.
+2. **The toolchain.**
+   - `slangc` pinned to a release and fetched by `npm run setup`.
+   - A Vite plugin compiles `.slang` imports to WGSL, cached by content
+     hash.
+   - The generated WGSL is checked in, so the library build and readers
+     need no compiler, and CI regenerates it and fails on a difference.
+   - Slang's line directives map shader errors back to the `.slang`
+     source.
+3. **Shared layouts.** `common.slang` becomes the source of `View`,
+   `DrawRecord`, `Transform`, `Instance`, `Material`, `LightTable` and the
+   cull structs. `common.wgsl` and the hand-kept offsets in `layout.ts`
+   are generated from it. The layout budget test reads reflection.
+4. **Kernels**, smallest and best tested first: scatter, pick, depthRange,
+   cull (ported once already; checked by the precision page), pointCull,
+   raycast, lights, imagery, adapt, ao, meter, composite, present, fxaa.
+   Each is checked by its existing tests and pages before the WGSL file
+   goes.
+5. **The surface shaders.** opaque and translucent on `IMaterial`,
+   `IMaterialTextures` and `SplitPosition`, with the custom-shader ABI
+   exported from the generated module. Checked by image regression in Dyno
+   (§16.10), the parity pages and the custom-shader parity page.
+6. **Sky, atmosphere and IBL** (`sky.wgsl`, `atmosphere.wgsl`, the
+   references), checked by their reference comparisons (§4.2).
+7. **Retire the spike.** Its port is the engine's source by then, and the
+   page becomes a check that `ToonMaterial` links against it.
+
+_Open:_ how stable exported names are across Slang releases (the user ABI
+depends on them); whether generated code passes Tint's uniformity
+analysis at the surface shaders' size; the WASM compiler's size, for
+runtime user Slang.
 
 **Engine foundations for user shaders (r28; built in the PoC, milestone
 "Custom shading").** The r28 spike state: `ShaderOverrides` swaps the
@@ -5452,8 +5536,9 @@ would resample them or need a virtual-texture page cache.
   come from the built-in module (`caster`), and the page runs again. Its
   image check reads mean ΔE 35.7 (every pixel past 2.3): the port's View
   and shading predate the atmosphere, exposure and view-struct changes,
-  so it renders black. A second hand-kept copy of a shader drifts; see the
-  open decision on writing internal shaders in Slang (§3.4).
+  so it renders garbage. A second hand-kept copy of a shader drifts; see the
+  decision to make Slang the one source of engine shaders, and its
+  migration (§3.4, "Slang-first, for real").
 
 ## 14. Follow-ups
 
