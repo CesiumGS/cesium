@@ -43,7 +43,12 @@ import iblSlang from "../src/shaders/generated/ibl.wgsl?raw";
 import iblMonteCarloSlang from "../src/shaders/generated/iblReference.wgsl?raw";
 import pointsSlang from "../src/shaders/generated/points.wgsl?raw";
 import modelPoolSlang from "../src/shaders/generated/modelPool.wgsl?raw";
-
+import atmosphereReference from "./slang/reference/atmosphere.wgsl?raw";
+import skyReference from "./slang/reference/sky.wgsl?raw";
+import pathReference from "./slang/reference/atmosphereReference.wgsl?raw";
+import atmosphereSlang from "../src/shaders/generated/atmosphere.wgsl?raw";
+import skySlang from "../src/shaders/generated/sky.wgsl?raw";
+import pathSlang from "../src/shaders/generated/reference.wgsl?raw";
 /**
  * The Slang-first migration's performance gate (CESIUM2_WEBGPU_PLAN.md
  * §3.4, step 4): each ported kernel against the hand-written WGSL it
@@ -78,6 +83,12 @@ interface Output {
    */
   absolute?: number;
   /**
+   * f32 only: how far apart two elements may be relative to the larger.
+   * For values made from sampled tables: filtering's fixed-point weights
+   * step where a coordinate a rounding apart crosses one.
+   */
+  relative?: number;
+  /**
    * Compared as a set of rows of this many 32-bit words, sorted, where
    * which row a result lands in depends on the threads' order (slots
    * claimed by atomics).
@@ -95,7 +106,10 @@ interface RenderSetup {
 interface Resources {
   /** Each group's entries. */
   groups: GPUBindGroupEntry[][];
-  /** Workgroups (compute), or vertices to draw (render: `[count]`). */
+  /**
+   * Workgroups (compute), or what to draw (render: vertices, instances,
+   * the first instance).
+   */
   dispatch: [number, number?, number?];
   /** The Slang's, where the port changed its workgroups' shape. */
   slangDispatch?: [number, number?, number?];
@@ -121,6 +135,10 @@ interface Case {
   slang: string;
   /** The entry point (default `main`; compute only). */
   entry?: string;
+  /** The Slang's, where the port named it otherwise (compute only). */
+  slangEntry?: string;
+  /** The reference's pipeline constants (its `override`s), by name. */
+  constants?: Record<string, number>;
   /** A render pipeline instead of a compute one. */
   render?: RenderSetup;
   /**
@@ -132,12 +150,24 @@ interface Case {
   /** The engine's bind group layouts, by group (default: `auto`). */
   layout?: GPUBindGroupLayoutEntry[][];
   /**
+   * A time budget other than the gate's 5%, and why: for kernels outside
+   * any frame (an offline reference), shown with the verdict.
+   */
+  budget?: { ratio: number; why: string };
+  /**
    * Dispatches or draws per timed pass (default REPEAT): fewer for a
    * heavy case, so a submission stays within the GPU's watchdog.
    */
   repeat?: number;
   setup(device: GPUDevice): Resources;
 }
+
+/**
+ * Dispatches per timed pass. Chrome quantizes timestamps to 2^16 ns
+ * (65.5 µs) without its developer features, coarser than these kernels;
+ * timing 64 back-to-back dispatches puts that quantization under 1%.
+ */
+const REPEAT = 64;
 
 const W = 1920;
 const H = 1080;
@@ -1524,9 +1554,661 @@ const VECTOR_CASES: Case[] = [
   },
 ];
 
+// --- the atmosphere (step 6): air.slang, atmosphere.slang, sky.slang,
+// reference.slang against the WGSL they replaced ---------------------------
+
+type V3 = [number, number, number];
+const norm = (v: V3): V3 => {
+  const l = Math.hypot(...v);
+  return [v[0] / l, v[1] / l, v[2] / l];
+};
+const cross3 = (a: V3, b: V3): V3 => [
+  a[1] * b[2] - a[2] * b[1],
+  a[2] * b[0] - a[0] * b[2],
+  a[0] * b[1] - a[1] * b[0],
+];
+
+/** air.slang `Atmosphere`: Earth's, at four wavelengths (km). */
+function airUniform(device: GPUDevice): GPUBuffer {
+  const f = new Float32Array(28);
+  f.set([5.8e-3, 1.35e-2, 3.31e-2, 4.1e-2], 0); // Rayleigh
+  f.set([3.996e-3, 3.996e-3, 3.996e-3, 3.996e-3], 4); // Mie scattering
+  f.set([4.44e-3, 4.44e-3, 4.44e-3, 4.44e-3], 8); // Mie extinction
+  f.set([6.5e-4, 1.881e-3, 8.5e-5, 1.2e-3], 12); // ozone
+  f.set([1.47, 1.85, 1.91, 1.7], 16); // solar irradiance
+  f.set([6360, 6420, 8, 1.2, 0.8, 0.3, 0, 0], 20);
+  return buffer(device, f, GPUBufferUsage.UNIFORM);
+}
+
+const linearClamp = (device: GPUDevice) =>
+  device.createSampler({
+    magFilter: "linear",
+    minFilter: "linear",
+    addressModeU: "clamp-to-edge",
+    addressModeV: "clamp-to-edge",
+  });
+
+const airTableCache = new WeakMap<GPUDevice, [GPUTexture, GPUTexture]>();
+
+/**
+ * The tables (air.slang group 1, bindings 1 to 3) as the engine has them:
+ * made by the reference's own passes (`transmittanceLut`, then
+ * `multipleScatteringLut` from it). Smooth: random texels made a rounding
+ * apart in a texture coordinate a large step in what is sampled.
+ */
+function airTables(device: GPUDevice): GPUBindGroupEntry[] {
+  let tables = airTableCache.get(device);
+  if (!tables) {
+    const usage = T.STORAGE_BINDING;
+    const transmittance = texture(device, {
+      size: [256, 64],
+      format: "rgba16float",
+      usage,
+    });
+    const multiple = texture(device, {
+      size: [32, 32],
+      format: "rgba16float",
+      usage,
+    });
+    const module = device.createShaderModule({ code: atmosphereReference });
+    const air = airUniform(device);
+    const encoder = device.createCommandEncoder();
+    const pass = encoder.beginComputePass();
+    for (const [entry, groups, count] of [
+      [
+        "transmittanceLut",
+        [{ binding: 0, resource: transmittance.createView() }],
+        [32, 8],
+      ],
+      [
+        "multipleScatteringLut",
+        [
+          { binding: 1, resource: transmittance.createView() },
+          { binding: 2, resource: linearClamp(device) },
+          { binding: 3, resource: transmittance.createView() },
+          { binding: 4, resource: multiple.createView() },
+        ],
+        [4, 4],
+      ],
+    ] as const) {
+      const pipeline = device.createComputePipeline({
+        layout: "auto",
+        compute: { module, entryPoint: entry },
+      });
+      pass.setPipeline(pipeline);
+      pass.setBindGroup(
+        0,
+        device.createBindGroup({
+          layout: pipeline.getBindGroupLayout(0),
+          entries: [{ binding: 0, resource: { buffer: air } }],
+        }),
+      );
+      pass.setBindGroup(
+        1,
+        device.createBindGroup({
+          layout: pipeline.getBindGroupLayout(1),
+          entries: [...groups],
+        }),
+      );
+      pass.dispatchWorkgroups(count[0], count[1]);
+    }
+    pass.end();
+    device.queue.submit([encoder.finish()]);
+    tables = [transmittance, multiple];
+    airTableCache.set(device, tables);
+  }
+  return [
+    { binding: 1, resource: tables[0].createView() },
+    { binding: 2, resource: linearClamp(device) },
+    { binding: 3, resource: tables[1].createView() },
+  ];
+}
+
+interface SkyView {
+  /** The camera (km, planet-centered). */
+  position: V3;
+  forward: V3;
+  sun: V3;
+  /** By night: the Moon's light (a share of the sun's) and direction. */
+  moonLight?: number;
+  moon?: V3;
+  size?: [number, number];
+}
+
+/** sky.slang `Sky` (320 bytes), its camera looking along `forward`. */
+function skyUniform(device: GPUDevice, v: SkyView): GPUBuffer {
+  const random = randoms(67);
+  const [w, h] = v.size ?? [640, 400];
+  const forward = norm(v.forward);
+  const right = norm(cross3(forward, norm(v.position)));
+  const up = cross3(right, forward);
+  const tanY = Math.tan((50 * Math.PI) / 360);
+  const moon = norm(v.moon ?? forward);
+  const moonX = norm(cross3(moon, [0, 0, 1]));
+  const moonZ = cross3(moonX, moon);
+  const f = new Float32Array(80);
+  f.set([...v.position, 1e-3], 0); // exposure
+  f.set([...norm(v.sun), Math.cos(0.004675)], 4);
+  f.set([...forward, tanY * (w / h)], 8);
+  f.set([...right, tanY], 12);
+  f.set([...up, 6.8e-5], 16); // the sun's solid angle
+  f.set([w, h, 24, 6360], 20); // size, steps, bottom radius
+  for (let k = 0; k < 32; k++) {
+    f[24 + k] = k % 4 === 3 ? 0 : 0.5 + random();
+  }
+  f.set([0.05, 300, 0.5, v.moonLight ?? 0], 56);
+  // A large Moon, so its disk covers many pixels.
+  f.set([...moon, v.moonLight ? 0.05 : 0], 60);
+  f.set([...moonX, 0.1], 64);
+  f.set([...moonZ, 0.001], 68);
+  f.set([...norm([1, 0.3, 0.2]), 0.2], 72); // toward the sun; city light
+  f.set([1, 1, 1, 1], 76); // shape; star pixel
+  return buffer(device, f, GPUBufferUsage.UNIFORM);
+}
+
+/** sky.slang group 3: the stars, their background, the Moon's map. */
+function starGroup(
+  device: GPUDevice,
+  size: [number, number],
+): GPUBindGroupEntry[] {
+  const random = randoms(71);
+  const rows = new Float32Array([1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0]);
+  return [
+    {
+      binding: 0,
+      resource: { buffer: buffer(device, rows, GPUBufferUsage.UNIFORM) },
+    },
+    {
+      binding: 1,
+      resource: cubeFaces(device, 32, 73).createView({ dimension: "cube" }),
+    },
+    { binding: 2, resource: linearClamp(device) },
+    {
+      binding: 3,
+      resource: texture(
+        device,
+        { size: [256, 128], format: "rgba8unorm" },
+        () => Math.floor(random() * 256),
+      ).createView(),
+    },
+    {
+      binding: 4,
+      resource: texture(
+        device,
+        { size, format: "rgba16float" },
+        (i) => toHalf(i % 4 === 3 ? 0 : 1e-3 * random()),
+        8,
+      ).createView(),
+    },
+  ];
+}
+
+/** Stars: per star, its direction (ICRF) and illuminance, then its color. */
+function starPoints(device: GPUDevice, count: number): GPUBuffer {
+  const random = randoms(79);
+  const f = new Float32Array(count * 8);
+  for (let s = 0; s < count; s++) {
+    const d = norm([random() - 0.5, random() - 0.5, random() - 0.5]);
+    f.set([...d, 1e-6 * Math.exp(8 * random())], s * 8);
+    f.set([0.8 + 0.4 * random(), 0.9, 0.8 + 0.4 * random(), 0], s * 8 + 4);
+  }
+  return buffer(device, f, GPUBufferUsage.STORAGE);
+}
+
+const f16Target = (device: GPUDevice, size: [number, number]) =>
+  texture(device, { size, format: "rgba16float", usage: T.RENDER_ATTACHMENT });
+// A unit in the last place: Metal's compiler fuses and orders the same
+// arithmetic differently in two modules (as the IBL ports, `IBL_CASES`).
+const f16Out = (texture: GPUTexture): Output => ({
+  texture,
+  texelBytes: 8,
+  element: "f16",
+  ulps: 1,
+});
+
+const DAY: SkyView = {
+  position: [0, 0, 6360.5],
+  forward: [1, 0, 0.15],
+  sun: [0.6, 0.2, 0.3],
+};
+const NIGHT: SkyView = {
+  position: [0, 0, 6360.5],
+  forward: [1, 0, 0.3],
+  sun: [-0.3, 0.1, -0.2],
+  moonLight: 2e-6,
+  moon: [1, 0.05, 0.32],
+};
+// From 20,000 km, the planet and its limb in view, the Moon beside it.
+const SPACE: SkyView = {
+  position: [0, 0, 26000],
+  forward: [0.2, 0, -1],
+  sun: [0.7, 0.3, 0.2],
+  moonLight: 2e-6,
+  moon: [0.35, 0.02, -1],
+};
+
+const DRAW = 1 | 2; // GPUShaderStage.VERTEX | FRAGMENT
+/**
+ * Sky.ts's groups for the sky passes, every binding: explicit, so each
+ * case binds the same set whatever its entry points read.
+ */
+const SKY_LAYOUT: GPUBindGroupLayoutEntry[][] = [
+  [{ binding: 0, visibility: DRAW, buffer: { type: "uniform" } }],
+  [
+    { binding: 1, visibility: DRAW, texture: {} },
+    { binding: 2, visibility: DRAW, sampler: {} },
+    { binding: 3, visibility: DRAW, texture: {} },
+  ],
+  [
+    { binding: 0, visibility: DRAW, buffer: { type: "uniform" } },
+    { binding: 1, visibility: DRAW, texture: {} },
+    { binding: 2, visibility: DRAW, sampler: {} },
+  ],
+  [
+    { binding: 0, visibility: DRAW, buffer: { type: "uniform" } },
+    { binding: 1, visibility: DRAW, texture: { viewDimension: "cube" } },
+    { binding: 2, visibility: DRAW, sampler: {} },
+    { binding: 3, visibility: DRAW, texture: {} },
+    { binding: 4, visibility: DRAW, texture: {} },
+    { binding: 5, visibility: DRAW, buffer: { type: "read-only-storage" } },
+  ],
+];
+
+/** The sky passes' groups (`SKY_LAYOUT`) for a view. */
+function skyGroups(
+  device: GPUDevice,
+  view: SkyView,
+  size: [number, number],
+): GPUBindGroupEntry[][] {
+  const phase = randoms(97)() * 6;
+  return [
+    [{ binding: 0, resource: { buffer: airUniform(device) } }],
+    airTables(device),
+    [
+      {
+        binding: 0,
+        resource: { buffer: skyUniform(device, { ...view, size }) },
+      },
+      {
+        binding: 1,
+        // Smooth, as a sky is (random texels: see `airTables`).
+        resource: texture(
+          device,
+          { size: [192, 217], format: "rgba16float" },
+          (i) => {
+            const t = i >> 2;
+            const x = t % 192;
+            const y = Math.floor(t / 192);
+            const c = i % 4;
+            return toHalf(
+              c === 3
+                ? 0.5
+                : 0.3 +
+                    0.2 * Math.sin(x * 0.05 + c) * Math.cos(y * 0.04 + phase),
+            );
+          },
+          8,
+        ).createView(),
+      },
+      { binding: 2, resource: linearClamp(device) },
+    ],
+    [
+      ...starGroup(device, size),
+      { binding: 5, resource: { buffer: starPoints(device, 16) } },
+    ],
+  ];
+}
+
+/** A sky pass drawn by `fragment` into one rgba16float target. */
+function skyCase(
+  name: string,
+  fragment: string,
+  view: SkyView,
+  size: [number, number],
+  group = 0,
+  // The small passes drawn more times a timed pass, so it lasts long
+  // enough to time (a few µs is a few timer steps).
+  repeat = REPEAT,
+): Case {
+  return {
+    name,
+    repeat,
+    reference: `${atmosphereReference}\n${skyReference}`,
+    slang: skySlang,
+    layout: SKY_LAYOUT,
+    render: {
+      vertex: "skyVertex",
+      fragment,
+      targets: [{ format: "rgba16float" }],
+    },
+    setup(device) {
+      const color = f16Target(device, size);
+      return {
+        groups: skyGroups(device, view, size),
+        dispatch: [3, 1, group],
+        colors: [color],
+        outputs: [f16Out(color)],
+      };
+    },
+  };
+}
+
+const ATMOSPHERE_CASES: Case[] = [
+  {
+    name: "atmosphere.transmittance",
+    reference: atmosphereReference,
+    slang: atmosphereSlang,
+    entry: "transmittanceLut",
+    setup(device) {
+      const target = texture(device, {
+        size: [256, 64],
+        format: "rgba16float",
+        usage: T.STORAGE_BINDING,
+      });
+      return {
+        groups: [
+          [{ binding: 0, resource: { buffer: airUniform(device) } }],
+          [{ binding: 0, resource: target.createView() }],
+        ],
+        dispatch: [32, 8],
+        outputs: [f16Out(target)],
+      };
+    },
+  },
+  {
+    name: "atmosphere.multipleScattering",
+    reference: atmosphereReference,
+    slang: atmosphereSlang,
+    entry: "multipleScatteringLut",
+    setup(device) {
+      const target = texture(device, {
+        size: [32, 32],
+        format: "rgba16float",
+        usage: T.STORAGE_BINDING,
+      });
+      return {
+        groups: [
+          [{ binding: 0, resource: { buffer: airUniform(device) } }],
+          [...airTables(device), { binding: 4, resource: target.createView() }],
+        ],
+        dispatch: [4, 4],
+        outputs: [f16Out(target)],
+      };
+    },
+  },
+  {
+    name: "atmosphere.skyProbe",
+    reference: atmosphereReference,
+    slang: atmosphereSlang,
+    entry: "skyProbe",
+    setup(device) {
+      const count = 4096;
+      const random = randoms(83);
+      const directions = new Float32Array(count * 4);
+      for (let i = 0; i < count; i++) {
+        directions.set(
+          norm([random() - 0.5, random() - 0.5, random() - 0.3]),
+          i * 4,
+        );
+      }
+      const probe = new ArrayBuffer(48);
+      new Float32Array(probe).set([
+        0,
+        0,
+        6361,
+        0,
+        ...norm([0.6, 0.2, 0.3]),
+        0,
+        1e9,
+      ]);
+      new Uint32Array(probe, 12, 1)[0] = count;
+      new Uint32Array(probe, 28, 1)[0] = 30;
+      const radiance = buffer(device, count * 16, GPUBufferUsage.STORAGE);
+      return {
+        groups: [
+          [{ binding: 0, resource: { buffer: airUniform(device) } }],
+          [
+            ...airTables(device),
+            {
+              binding: 5,
+              resource: {
+                buffer: buffer(
+                  device,
+                  new Uint8Array(probe),
+                  GPUBufferUsage.UNIFORM,
+                ),
+              },
+            },
+            {
+              binding: 6,
+              resource: {
+                buffer: buffer(device, directions, GPUBufferUsage.STORAGE),
+              },
+            },
+            { binding: 7, resource: { buffer: radiance } },
+          ],
+        ],
+        dispatch: [count / 64],
+        // Sampled tables: filtering's fixed-point weights step where a
+        // coordinate a rounding apart crosses one (measured worst 1.1e-4).
+        outputs: [{ buffer: radiance, element: "f32", relative: 2.5e-4 }],
+      };
+    },
+  },
+  {
+    name: "atmosphere.reference",
+    reference: pathReference,
+    slang: pathSlang,
+    // Measured 6 to 7% slower with identical output, after `select` and
+    // `any` took back 4 points: Tint's 64-bit loop guard on Slang's every
+    // loop (reference.slang); an offline reference, not frame time.
+    budget: {
+      ratio: 1.1,
+      why: "offline reference; Tint's loop guard: 10% budget",
+    },
+    setup(device) {
+      const count = 1024;
+      const random = randoms(89);
+      const directions = new Float32Array(count * 4);
+      for (let i = 0; i < count; i++) {
+        directions.set(
+          norm([random() - 0.5, random() - 0.5, random() - 0.2]),
+          i * 4,
+        );
+      }
+      const params = new ArrayBuffer(80);
+      const pf = new Float32Array(params);
+      const pu = new Uint32Array(params);
+      pf[0] = 1000; // observer height, m
+      pu[1] = 4; // samples
+      pu[2] = 7; // seed
+      pu[3] = count;
+      pf.set(norm([0.6, 0.2, 0.4]), 4);
+      pu[7] = 6; // max scattering
+      pf.set(
+        [6360000, 6420000, 1.19e-6, 8000, 0.0048, 1.3, 1200, 0.9, 0.8, 1, 0.3],
+        8,
+      );
+      pu[19] = 1; // ground reflection
+      const spectra = new Float32Array(48 + 48 + 285);
+      for (let i = 0; i < 48; i++) {
+        spectra[i] = 1.5 + 0.5 * Math.sin(i / 6);
+        spectra[48 + i] = 1e-6 * (1 + Math.cos(i / 5));
+      }
+      for (let i = 0; i < 285; i++) {
+        spectra[96 + i] = Math.max(0, Math.sin(i / 20));
+      }
+      const accum = buffer(device, count * 16, GPUBufferUsage.STORAGE);
+      return {
+        groups: [
+          [
+            {
+              binding: 0,
+              resource: {
+                buffer: buffer(
+                  device,
+                  new Uint8Array(params),
+                  GPUBufferUsage.UNIFORM,
+                ),
+              },
+            },
+            {
+              binding: 1,
+              resource: {
+                buffer: buffer(device, directions, GPUBufferUsage.STORAGE),
+              },
+            },
+            { binding: 2, resource: { buffer: accum } },
+            {
+              binding: 3,
+              resource: {
+                buffer: buffer(device, spectra, GPUBufferUsage.STORAGE),
+              },
+            },
+          ],
+        ],
+        dispatch: [count / 64],
+        outputs: [{ buffer: accum, element: "f32" }],
+      };
+    },
+  },
+  skyCase("sky.skyView", "skyViewFragment", DAY, [192, 217], 0, 4 * REPEAT),
+  skyCase(
+    "sky.skyView.night",
+    "skyViewFragment",
+    NIGHT,
+    [192, 217],
+    1,
+    4 * REPEAT,
+  ),
+  skyCase("sky.sunLight", "sunLightFragment", DAY, [256, 64], 0, 16 * REPEAT),
+  skyCase("sky.fromTable", "skyFromTableFragment", NIGHT, [640, 400]),
+  skyCase(
+    "sky.environment",
+    "environmentFromTableFragment",
+    NIGHT,
+    [128, 128],
+    0,
+    16 * REPEAT,
+  ),
+  skyCase("sky.marched", "skyFragment", SPACE, [640, 400]),
+  skyCase("sky.marchedStars", "skyStarsFragment", SPACE, [640, 400], 1),
+  {
+    name: "sky.aerialScreen",
+    reference: `${atmosphereReference}\n${skyReference}`,
+    slang: skySlang,
+    layout: SKY_LAYOUT,
+    render: {
+      vertex: "skyVertex",
+      fragment: "aerialScreenFragment",
+      targets: [{ format: "rgba16float" }, { format: "rgba16float" }],
+    },
+    setup(device) {
+      const size: [number, number] = [640, 400];
+      const colors = [f16Target(device, size), f16Target(device, size)];
+      return {
+        groups: skyGroups(device, SPACE, size),
+        dispatch: [3],
+        colors,
+        outputs: colors.map(f16Out),
+      };
+    },
+  },
+  ...[0, 1].map((group): Case => ({
+    name: `sky.aerial${group}`,
+    reference: `${atmosphereReference}\n${skyReference}`,
+    slang: skySlang,
+    entry: "aerialCompute",
+    slangEntry: `aerialCompute${group}`,
+    constants: { AERIAL_GROUP: group },
+    setup(device) {
+      const out = texture(device, {
+        size: [32, 32, 256],
+        format: "rgba16float",
+        usage: T.STORAGE_BINDING,
+      });
+      const random = randoms(101);
+      const partial = texture(
+        device,
+        { size: [32, 32, 256], format: "rgba16float" },
+        (i) => toHalf(i % 4 === 3 ? 1 : 0.5 * random()),
+        8,
+      );
+      const sky: GPUBindGroupEntry[] = [
+        { binding: 0, resource: { buffer: skyUniform(device, NIGHT) } },
+        { binding: 7, resource: out.createView() },
+      ];
+      const groups = [
+        [{ binding: 0, resource: { buffer: airUniform(device) } }],
+        airTables(device),
+        [...sky, { binding: 5, resource: partial.createView() }],
+      ];
+      return {
+        groups,
+        // The first group's pass doesn't read the partial volume: its
+        // Slang (specialized for the group) doesn't declare it.
+        ...(group === 0 ? { slangGroups: [groups[0]!, groups[1]!, sky] } : {}),
+        dispatch: [32, 32],
+        outputs: [f16Out(out)],
+      };
+    },
+  })),
+  {
+    name: "sky.stars",
+    reference: `${atmosphereReference}\n${skyReference}`,
+    slang: skySlang,
+    render: {
+      vertex: "starVertex",
+      fragment: "starFragment",
+      targets: [
+        {
+          format: "rgba16float",
+          blend: {
+            color: { srcFactor: "one", dstFactor: "one", operation: "add" },
+            alpha: { srcFactor: "one", dstFactor: "one", operation: "add" },
+          },
+        },
+      ],
+    },
+    setup(device) {
+      const size: [number, number] = [640, 400];
+      const color = f16Target(device, size);
+      // Enough that the pass takes long enough to time (at 4,000 its
+      // 32 µs was a few timer steps).
+      const count = 40000;
+      const rows = new Float32Array([1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0]);
+      return {
+        groups: [
+          [],
+          [],
+          [
+            {
+              binding: 0,
+              resource: { buffer: skyUniform(device, { ...NIGHT, size }) },
+            },
+          ],
+          [
+            {
+              binding: 0,
+              resource: {
+                buffer: buffer(device, rows, GPUBufferUsage.UNIFORM),
+              },
+            },
+            { binding: 5, resource: { buffer: starPoints(device, count) } },
+          ],
+        ],
+        dispatch: [6, count],
+        colors: [color],
+        outputs: [f16Out(color)],
+      };
+    },
+  },
+];
+
 const CASES: Case[] = [
   ...IBL_CASES,
   ...VECTOR_CASES,
+  ...ATMOSPHERE_CASES,
   {
     name: "depthRange",
     reference: depthRangeReference,
@@ -2157,7 +2839,7 @@ function encodePass(
   groups.forEach((g, k) => pass.setBindGroup(k, g));
   resources.vertexBuffers?.forEach((b, k) => pass.setVertexBuffer(k, b));
   for (let n = 0; n < repeat; n++) {
-    pass.draw(dispatch[0]);
+    pass.draw(dispatch[0], dispatch[1] ?? 1, 0, dispatch[2] ?? 0);
   }
   pass.end();
 }
@@ -2269,13 +2951,6 @@ function ordered(bytes: Uint8Array, element: Element): Int32Array | Uint8Array {
   return Int32Array.from(w, (b) => (b & 0x80000000 ? -(b & 0x7fffffff) : b));
 }
 
-/**
- * Dispatches per timed pass. Chrome quantizes timestamps to 2^16 ns
- * (65.5 µs) without its developer features, coarser than these kernels;
- * timing 64 back-to-back dispatches puts that quantization under 1%.
- */
-const REPEAT = 64;
-
 /** The median GPU time of one dispatch of each pipeline, alternating. */
 async function time(
   device: GPUDevice,
@@ -2350,10 +3025,16 @@ function pipelineFor(
   const layout = layouts
     ? device.createPipelineLayout({ bindGroupLayouts: layouts })
     : "auto";
+  const constants = which === 0 ? c.constants : undefined;
   if (!c.render) {
     return device.createComputePipeline({
       layout,
-      compute: { module, entryPoint: c.entry ?? "main" },
+      compute: {
+        module,
+        entryPoint:
+          which === 1 && c.slangEntry ? c.slangEntry : (c.entry ?? "main"),
+        ...(constants ? { constants } : {}),
+      },
     });
   }
   return device.createRenderPipeline({
@@ -2368,6 +3049,7 @@ function pipelineFor(
       entryPoint:
         which === 1 && c.slangFragment ? c.slangFragment : c.render.fragment,
       targets: c.render.targets,
+      ...(constants ? { constants } : {}),
     },
     depthStencil: c.render.depthStencil,
     primitive: { topology: "triangle-list" },
@@ -2447,6 +3129,7 @@ async function runKernels(): Promise<Row[]> {
     let beyond = 0;
     let worst = 0;
     let absolute: number | undefined;
+    let relativeWorst: number | undefined;
     const sortRows = (bytes: Uint8Array, words: number): Uint8Array => {
       const f = new Float32Array(
         bytes.buffer,
@@ -2485,14 +3168,19 @@ async function runKernels(): Promise<Row[]> {
       for (let i = 0; i < x.length; i++) {
         if (x[i] !== y[i]) {
           const d = Math.abs(x[i]! - y[i]!);
+          const gap = Math.abs(fx[i]! - fy[i]!);
+          const relative = gap / Math.max(Math.abs(fx[i]!), Math.abs(fy[i]!));
+          if (o.relative !== undefined && element === "f32") {
+            relativeWorst = Math.max(relativeWorst ?? 0, relative);
+          }
           const near =
-            o.absolute !== undefined &&
             element === "f32" &&
-            Math.abs(fx[i]! - fy[i]!) <= o.absolute;
+            ((o.absolute !== undefined && gap <= o.absolute) ||
+              (o.relative !== undefined && relative <= o.relative));
           differ += 1;
           beyond += d > (o.ulps ?? 0) && !near ? 1 : 0;
           worst = Math.max(worst, d);
-          if (near && d > (o.ulps ?? 0)) {
+          if (near && d > (o.ulps ?? 0) && o.absolute !== undefined) {
             absolute = o.absolute;
           }
         }
@@ -2506,10 +3194,12 @@ async function runKernels(): Promise<Row[]> {
       : differ === 0
         ? "identical"
         : beyond === 0
-          ? absolute !== undefined
-            ? `${differ} within ${absolute}`
-            : `${differ} within ${worst} ulp`
-          : `${beyond} differ (up to ${worst})`;
+          ? relativeWorst !== undefined
+            ? `${differ} within ${relativeWorst.toExponential(1)} relative`
+            : absolute !== undefined
+              ? `${differ} within ${absolute}`
+              : `${differ} within ${worst} ulp`
+          : `${beyond} differ (up to ${worst}${relativeWorst !== undefined ? `, ${relativeWorst.toExponential(1)} relative` : ""})`;
     // Warm both, then measure.
     await time(device, c, resources, pipelines, groups, 10);
     const [wgsl, slang] = await time(
@@ -2531,14 +3221,16 @@ async function runKernels(): Promise<Row[]> {
         ? "✗ no output"
         : beyond > 0
           ? "✗ differs"
-          : ratio <= 1.05
-            ? "✓"
+          : ratio <= (c.budget?.ratio ?? 1.05)
+            ? c.budget && ratio > 1.05
+              ? `✓ (${c.budget.why})`
+              : "✓"
             : "✗ slower",
     });
     render(rows);
   }
   device.destroy();
-  status.textContent = `${rows.filter((r) => r.gate === "✓").length} of ${rows.length} within the gate.`;
+  status.textContent = `${rows.filter((r) => r.gate.startsWith("✓")).length} of ${rows.length} within the gate.`;
   return rows;
 }
 

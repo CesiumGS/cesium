@@ -43,17 +43,17 @@ struct AerialPerspective {
 [[vk::binding(2, 0)]] SamplerState environmentSampler;
 [[vk::binding(3, 0)]] Texture2D<float4> brdfLut;
 // The sun's illuminance through the atmosphere by altitude and sun angle
-// (atmosphere/sky.wgsl `sunLightFragment`).
+// (atmosphere/sky.slang `sunLightFragment`).
 [[vk::binding(5, 0)]] Texture2D<float4> sunLightTable;
 // Diffuse irradiance E/π by normal (gpu/Environment.ts).
 [[vk::binding(6, 0)]] TextureCube<float4> irradianceCube;
 // Aerial perspective: in-scattered light (cd/m²) and transmittance by
-// screen position and distance (atmosphere/sky.wgsl `aerialCompute`).
+// screen position and distance (atmosphere/sky.slang `aerialColumn`).
 // In-scatter (slices 0-127) and transmittance (128-255): one binding.
 [[vk::binding(7, 0)]] Texture3D<float4> aerialVolume;
 
 // The air for marching aerial perspective per pixel (atmosphere/Sky.ts
-// `buildAir`): both groups' parameters (atmosphere.wgsl `Atmosphere`) and
+// `buildAir`): both groups' parameters (air.slang `Atmosphere`) and
 // the bands' weights to linear sRGB, and their tables, a layer per group.
 struct AirGroup {
   float4 rayleighScattering;
@@ -97,7 +97,7 @@ struct Shadows {
 // each, rows of ceil(width / 4) words.
 [[vk::binding(15, 0)]] StructuredBuffer<uint> aoWords;
 // Aerial perspective from high up, a ray per texel of a screen grid
-// (sky.wgsl `aerialScreenFragment`): layer 0 in-scatter (pre-exposed),
+// (sky.slang `aerialScreenFragment`): layer 0 in-scatter (pre-exposed),
 // layer 1 transmittance (one binding, §13.15).
 [[vk::binding(16, 0)]] Texture2DArray<float4> aerialScreen;
 // Point and spot lights (scene/lights.ts) and, after them, their froxels'
@@ -359,7 +359,7 @@ float3 sunlightThroughAir(float3 relPosition, float3 direction) {
 // The sun's illuminance at a camera-relative position: white and uniform
 // (`view.sunIlluminance`), or through the body's atmosphere from the
 // sun-light table, at the point's height above the body's ellipsoid and the
-// sun's angle to its normal (the table's mapping: sky.wgsl
+// sun's angle to its normal (the table's mapping: sky.slang
 // `sunLightFragment`).
 float3 sunIlluminance(float3 relPosition) {
   if (view.sunLight.z < 0.5) {

@@ -1,4 +1,4 @@
-import referenceWgsl from "./reference.wgsl?raw";
+import referenceWgsl from "../shaders/generated/reference.wgsl?raw";
 import { EARTH, type AtmosphereParameters } from "./model.ts";
 import {
   CIE_1931,
@@ -38,7 +38,7 @@ export interface ReferenceResult {
 const SAMPLES_PER_DISPATCH = 32;
 
 /**
- * The reference atmosphere (reference.wgsl): sky radiance by spectral
+ * The reference atmosphere (reference.slang): sky radiance by spectral
  * Monte Carlo path tracing, for judging real-time approximations. A test
  * oracle, not a renderer: seconds per call.
  */

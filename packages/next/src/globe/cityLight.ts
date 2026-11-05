@@ -3,7 +3,7 @@
  * image (`GlobeOptions.lights`, e.g. NASA's Black Marble): the mean light
  * the ground emits within `RADIUS` of it, nearer counting more. The sky
  * glows with it (a city's light scattered back down by its air) and lights
- * what stands there from below (sky.wgsl `cityGlow`), wherever the camera
+ * what stands there from below (sky.slang `cityGlow`), wherever the camera
  * looks. Read from a coarse level of the image, a block of 2 × 2 tiles
  * around the place, each fetched once.
  */

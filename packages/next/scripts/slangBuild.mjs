@@ -37,8 +37,11 @@ export const GENERATED = join(root, "src", "shaders", "generated");
 export const LAYOUTS_TS = join(root, "src", "render", "generated", "layouts.ts");
 /** The surface boundary's description, from reflection (`boundaryTs`). */
 export const BOUNDARY_TS = join(root, "src", "shaders", "generated", "boundary.ts");
-/** Where `import name;` looks: the shaders' folder, then the source tree. */
-const INCLUDES = [join(root, "src", "shaders"), SOURCES];
+/**
+ * Where `import name;` looks: the folders holding modules (the shaders',
+ * the atmosphere's), then the source tree.
+ */
+const INCLUDES = [join(root, "src", "shaders"), join(root, "src", "atmosphere"), SOURCES];
 
 /** Every `.slang` under src/ (the generated folder and cesium.slang aside). */
 export function slangSources() {

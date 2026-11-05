@@ -1,5 +1,4 @@
-import atmosphereWgsl from "./atmosphere.wgsl?raw";
-import skyWgsl from "./sky.wgsl?raw";
+import skyWgsl from "../shaders/generated/sky.wgsl?raw";
 import type { RealtimeAtmosphere } from "./RealtimeAtmosphere.ts";
 import type { AerosolType } from "./model.ts";
 import type { Ellipsoid, Cartographic } from "../math/ellipsoid.ts";
@@ -17,7 +16,7 @@ import {
 /** The sun's angular diameter seen from the Earth, radians (mean). */
 export const SUN_ANGULAR_DIAMETER = 0.00935;
 
-/** Bytes of the WGSL `Sky` uniform (sky.wgsl). */
+/** Bytes of the `Sky` uniform (sky.slang). */
 const SKY_SIZE = 320;
 /** The Earth's geometric albedo (earthshine on the Moon). */
 const EARTH_ALBEDO = 0.367;
@@ -26,13 +25,13 @@ const FACE_STRIDE = 512;
 
 /**
  * Camera altitudes, km, across which aerial perspective from high up moves
- * from the per-vertex march to the screen grid (sky.wgsl
+ * from the per-vertex march to the screen grid (sky.slang
  * `aerialScreenFragment`): there the coarsest tiles' triangles span
  * hundreds of kilometers.
  */
 const SCREEN_HAZE_FROM = 500;
 const SCREEN_HAZE_TO = 1000;
-/** The screen grid's size (sky.wgsl `AERIAL_SCREEN`). */
+/** The screen grid's size (sky.slang `AERIAL_SCREEN`). */
 const AERIAL_SCREEN: [number, number] = [640, 400];
 /** The aerial-perspective volume: 32 × 32 directions × 128 distances. */
 const AERIAL_SIZE = 32;
@@ -55,7 +54,7 @@ const SKY_STEPS = 32;
 
 /**
  * The sky-view table: 192 × 108 directions, a row for the sun, then 108
- * for the Moon's sky (sky.wgsl `skyViewFragment`).
+ * for the Moon's sky (sky.slang `skyViewFragment`).
  */
 const SKY_VIEW_WIDTH = 192;
 const SKY_VIEW_ROWS = 217;
@@ -192,7 +191,7 @@ type V3 = readonly [number, number, number];
 
 /**
  * Draws a real-time atmosphere's sky and the sun's disk behind a view's
- * scene (sky.wgsl): inside the atmosphere from a sky-view table rendered
+ * scene (sky.slang): inside the atmosphere from a sky-view table rendered
  * per frame (`encodeTable`), above it by marching each pixel; either way
  * inside the opaque pass after the scene (`draw`), where the depth is still
  * the cleared far plane.
@@ -210,11 +209,11 @@ export class Sky {
   private readonly tableAttachment: GPURenderPassColorAttachment;
   /**
    * The sun's illuminance on the scene by altitude and sun angle, linear
-   * sRGB lux × 1e-5 (sky.wgsl `sunLightFragment`); the opaque pass reads it.
+   * sRGB lux × 1e-5 (sky.slang `sunLightFragment`); the opaque pass reads it.
    */
   readonly sunLight: GPUTexture;
   /**
-   * The aerial-perspective volume (sky.wgsl `aerialCompute`): in-scattered
+   * The aerial-perspective volume (sky.slang `aerialColumn`): in-scattered
    * light (cd/m², pre-exposed) and transmittance, by screen position and
    * distance. One pair, rewritten for each view before its opaque pass
    * reads it; another holds the first wavelength group's share.
@@ -226,7 +225,7 @@ export class Sky {
    */
   readonly aerialVolume: GPUTexture;
   /**
-   * Aerial perspective from high up on a screen grid (sky.wgsl
+   * Aerial perspective from high up on a screen grid (sky.slang
    * `aerialScreenFragment`): in-scattered light and transmittance.
    */
   readonly aerialScreen: GPUTexture;
@@ -242,7 +241,7 @@ export class Sky {
   readonly airTransmittance: GPUTexture;
   readonly airScattering: GPUTexture;
   /**
-   * The stars (sky.wgsl `starLight`, atmosphere/stars.ts): their uniform
+   * The stars (sky.slang `starLight`, atmosphere/stars.ts): their uniform
    * (Earth-fixed to ICRF, and whether there are any), the points (one
    * placeholder until set), the background (a cube in the celestial frame,
    * cd/m²; black until set), and the groups splatting and reading them.
@@ -955,7 +954,7 @@ export class Sky {
     };
     const module = device.createShaderModule({
       label: "sky",
-      code: `${atmosphereWgsl}\n${skyWgsl}`,
+      code: skyWgsl, // sky.slang, with air.slang
     });
     const [color, ...others] = targets.colorFormats;
     // The groups' wavelengths add up; alpha 1 marks the sky as drawn (the
@@ -1055,11 +1054,8 @@ export class Sky {
               layouts.aerial,
             ],
           }),
-          compute: {
-            module,
-            entryPoint: "aerialCompute",
-            constants: { AERIAL_GROUP: group },
-          },
+          // One entry point per group of wavelengths (sky.slang).
+          compute: { module, entryPoint: `aerialCompute${group}` },
         }),
       ),
       // The stars' splats into the view's star layer, adding up.
@@ -1245,7 +1241,7 @@ export class Sky {
     f[79] = globalThis.devicePixelRatio ?? 1;
     if (!view.inside) {
       // From above, the sky is marched where the ellipsoid is the ground
-      // sphere (sky.wgsl `marchedSky`): the sphere under the camera alone
+      // sphere (sky.slang `marchedSky`): the sphere under the camera alone
       // is up to 20 km off the ellipsoid's edge, the glow along it with it.
       const radii = ellipsoid.radii;
       for (let i = 0; i < 3; i++) {

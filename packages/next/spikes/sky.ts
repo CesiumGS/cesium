@@ -759,7 +759,7 @@ async function checkSunLight(engine: Engine) {
   await buffer.mapAsync(GPUMapMode.READ);
   const halves = new Uint16Array(buffer.getMappedRange().slice(0));
   buffer.destroy();
-  // The table's mapping (sky.wgsl sunLightFragment), texel to (mu, r).
+  // The table's mapping (sky.slang sunLightFragment), texel to (mu, r).
   const unit = (i: number, size: number) => i / (size - 1);
   const rows: Array<Record<string, string | number>> = [];
   let worst = 0;

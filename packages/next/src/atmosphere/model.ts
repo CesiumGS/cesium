@@ -1,5 +1,5 @@
 // A planet's atmosphere as participating media, spectrally: the parameters
-// shared by the reference integrators (here on the CPU, reference.wgsl on
+// shared by the reference integrators (here on the CPU, reference.slang on
 // the GPU) and the real-time model to come (plan §4.2). Lengths in meters,
 // wavelengths in nanometers, positions relative to the planet's center.
 //
@@ -385,7 +385,7 @@ export function directSunIlluminance(
 /**
  * Single-scattered radiance reaching `x` from direction `-d` (looking along
  * `d`), excluding the sun's disk and the ground's reflection: the
- * deterministic reference for reference.wgsl with one scattering event.
+ * deterministic reference for reference.slang with one scattering event.
  * cd/m² in linear sRGB.
  */
 export function singleScattering(

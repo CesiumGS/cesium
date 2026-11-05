@@ -92,9 +92,21 @@ const centerCartesian = ellipsoid.cartographicToCartesian(center, vec3.vec3());
 const rows: Array<[string, string]> = [];
 function report(check: string, result: string): void {
   rows.push([check, result]);
-  $("results").innerHTML = `<tr><th>check</th><th>result</th></tr>${rows
-    .map(([c, r]) => `<tr><td>${c}</td><td>${r}</td></tr>`)
-    .join("")}`;
+  // As text: a result may be an error's message.
+  const table = $("results");
+  const row = (cells: string[], tag: "th" | "td") => {
+    const tr = document.createElement("tr");
+    for (const text of cells) {
+      const cell = document.createElement(tag);
+      cell.textContent = text;
+      tr.append(cell);
+    }
+    return tr;
+  };
+  table.replaceChildren(
+    row(["check", "result"], "th"),
+    ...rows.map((r) => row(r, "td")),
+  );
 }
 
 function populate(world: World, side: number): void {

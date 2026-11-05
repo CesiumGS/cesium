@@ -4075,7 +4075,7 @@ const scratchMoon = {
 };
 const scratchMoonAxis = v3.vec3();
 /**
- * The stars as the eye sees them against a dark sky, EV100 (sky.wgsl
+ * The stars as the eye sees them against a dark sky, EV100 (sky.slang
  * `starExposure`): shown where the view's own adaptation is less open
  * (from orbit by day); about as bright as 1.x draws its star map.
  */

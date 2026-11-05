@@ -523,6 +523,31 @@ done:
   port was 2.5× and the fragment-shader sort tens of milliseconds.
   Shared memory replaced them (above); `[ForceUnroll]` for loops over a
   constant count keeps their indices constant.
+- **Every Slang loop pays Tint's loop guard (Chrome, Metal; found r59).**
+  Metal treats an infinite loop as undefined behaviour, so Tint, writing
+  MSL, guards every loop it can't prove finite with a 64-bit counter
+  (`uint2 tint_loop_idx`: a decrement with carry, an `all()` test and a
+  branch per iteration). Only a `for` with a counter and a constant bound
+  is exempt; a `while`, a `for` to a uniform's count and every `loop {}`
+  are guarded, and Slang writes every loop as `loop {}`. Where a loop's
+  body is cheap it shows: the atmosphere's path tracer (ratio tracking: a
+  `log`, a random number and a few multiplies a step) stayed 5% slower
+  than its hand WGSL, whose two inner loops were constant-bounded `for`s
+  and unguarded. Found by transplanting the hand WGSL's functions one at a
+  time into Slang's output (the ratio-tracking loop alone took back the
+  difference), then loop forms: the same body as a `for` was even, as a
+  `while` or `loop { if … break }` 5 to 7% slower, wherever the exit test
+  sat; Dawn's MSL (`scripts/dumpMsl.mjs`: Chromium with
+  `--enable-dawn-features=dump_shaders,disable_symbol_renaming`) showed
+  the guard. Nothing in Slang's source avoids it; `[ForceUnroll]` removes
+  small constant loops altogether. Upstream, either fixes it: Slang
+  emitting WGSL `for` for counted loops, or Tint recognizing a counted
+  loop in `loop {}` form. To raise with both (and to check the other
+  backends: Tint's HLSL and SPIR-V writers on Windows, step 4's runs).
+  Two smaller lessons from the same kernel: `select(c, a, b)`, not `?:`,
+  where the WGSL had `select` (Slang's `?:` is a branch, which rounded
+  otherwise: paths drifted a few ulps), and `any(bool3(…))` over a `||`
+  chain (Slang emits nested branches: 4 of the 11 points).
 - **Large struct loads are split per field at each use** (deferred buffer
   loads): raycast was 30% slower until it read its draw record's fields
   once.
@@ -544,8 +569,42 @@ done:
   work loses the device on the heaviest case (ao.gtao, which also
   happened at the commit where the whole gate had passed).
 
-Still WGSL: `common.wgsl`, `opaque.wgsl` and `translucent.wgsl` (step 5),
-`sky.wgsl`, `atmosphere.wgsl` and `reference.wgsl` (step 6).
+Still WGSL: `common.wgsl` (step 7: test/layouts.test.ts reads it) and
+`surfaceVertex.wgsl`, by design (Slang emits no `@invariant`).
+
+_Step 6 results (r59): the atmosphere in Slang._ `air.slang` (a module:
+the medium, the geometry, the tables' mappings and reads, the march),
+`atmosphere.slang` (the tables and the probe), `sky.slang` (the sky-view
+table, the sky from space, stars, the Moon, the sun-light table, aerial
+perspective) and `reference.slang` (the Monte Carlo reference). The gate
+(spikes/slangKernels.ts `ATMOSPHERE_CASES`): 15 of 15, every output
+identical or within 1 ulp of f16, the probe within 1.1e-4 relative
+(f32), all within 5% but the path tracer (7%, the loop guard above; an
+offline reference, given 10%, stated in the gate). The reference path
+tracer passes its own check against the CPU integral (|z| < 1.94); the
+sky spike runs on them with its measures in range (the sky within 1% of
+its tables' march, aerial perspective 1.8%, sunlight 1.1%); globe parity
+passes and imagery's first view matches the previous run to the digit.
+
+- **The aerial pass is two entry points, not a pipeline constant.** With
+  its wavelength group a `[vk::constant_id]` constant, slangc ran for
+  minutes and gigabytes on that one kernel; a generic's value parameter
+  (`aerialColumn<let group : uint>`) makes each entry its own specialized
+  copy. A plain function argument also compiled, but the first group's
+  pass kept the second's reads and indexed the weights at run time: 40%
+  slower.
+- **Test inputs must be what the engine has.** With random tables the sky
+  from space differed by up to 110 ulps of f16 and the probe by 5,540 of
+  f32: a coordinate a rounding apart crosses a fixed-point filter weight's
+  step, and between random texels that step is large. Made by the
+  reference's own table passes, 1 ulp. Discontinuities (the horizon test,
+  the rim's eight-ray average) flip on a rounding with random input too.
+- **Small passes need many draws per timing:** Chrome quantizes
+  timestamps to 65.5 µs, so a pass of a few µs drawn 64 times was 13%
+  noise (cases now set `repeat`).
+- **A varying `nointerpolation` struct passed whole** to a helper is
+  copied with its `@interpolate(flat)` onto a struct WGSL forbids it on;
+  fragment entries read such inputs by field (sky.slang `starFragment`).
 
 _Step 5 design (decided): the surface shaders as a precompiled unit,
 linked by name._ The custom-shader contract (`VertexInput`,

@@ -1,4 +1,4 @@
-import atmosphereWgsl from "./atmosphere.wgsl?raw";
+import atmosphereWgsl from "../shaders/generated/atmosphere.wgsl?raw";
 import {
   EARTH,
   coefficients,
@@ -20,7 +20,7 @@ export interface AtmosphereGroup {
 }
 
 /**
- * The real-time atmosphere (atmosphere.wgsl, Hillaire 2020): transmittance
+ * The real-time atmosphere (atmosphere.slang and air.slang, Hillaire 2020): transmittance
  * and multiple-scattering tables built on the GPU for a set of parameters,
  * at 8 wavelengths (two groups of four, one RGBA table each), and sky
  * radiance from them in linear sRGB, cd/m². `radiance` evaluates directions
