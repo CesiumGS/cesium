@@ -2,9 +2,11 @@
 
 /**
  * Compiles Slang custom shader stages to WGSL with the Slang WebAssembly
- * build, loaded once on the first request (slang.ts). Each request is
- * `{ id, url, cesium, user, stub }` (slangStages.ts `slangStub`); each reply
- * `{ id, wgsl }` or `{ id, error }`.
+ * build, loaded once on the first request (slang.ts). A request is
+ * `{ id, url, cesium, user, stub }` (slangStages.ts `slangStub`), replied
+ * `{ id, wgsl }`; or `{ id, op: "reflect", url, cesium, user }`, the user
+ * module's parameters (its declared uniforms, with their attributes:
+ * slangControls.ts), replied `{ id, parameters }`. Errors: `{ id, error }`.
  */
 
 interface SlangModule {
@@ -29,6 +31,7 @@ interface SlangComponent {
   findAndCheckEntryPoint(name: string, stage: number): SlangComponent | null;
   link(): SlangComponent | null;
   getTargetCode(target: number): string;
+  getLayout(target: number): { toJsonObject(): { parameters?: unknown[] } };
 }
 
 const STAGE_FRAGMENT = 5;
@@ -65,13 +68,14 @@ async function load(url: string): Promise<Compiler> {
 self.onmessage = async (
   event: MessageEvent<{
     id: number;
+    op?: "reflect";
     url: string;
     cesium: string;
     user: string;
-    stub: string;
+    stub?: string;
   }>,
 ) => {
-  const { id, url, cesium, user, stub } = event.data;
+  const { id, op, url, cesium, user, stub } = event.data;
   try {
     compiler ??= load(url);
     const { slang, global, target } = await compiler;
@@ -83,9 +87,17 @@ self.onmessage = async (
     };
     const session = check(global.createSession(target));
     check(session.loadModuleFromSource(cesium, "cesium", "/cesium.slang"));
-    check(session.loadModuleFromSource(user, "user", "/user.slang"));
+    const userModule = check(
+      session.loadModuleFromSource(user, "user", "/user.slang"),
+    );
+    if (op === "reflect") {
+      // The module alone, linked: its globals and their user attributes.
+      const layout = check(userModule.link()).getLayout(0).toJsonObject();
+      self.postMessage({ id, parameters: layout.parameters ?? [] });
+      return;
+    }
     const stages = check(
-      session.loadModuleFromSource(stub, "stages", "/stages.slang"),
+      session.loadModuleFromSource(stub!, "stages", "/stages.slang"),
     );
     const entry = check(
       stages.findAndCheckEntryPoint("cesiumStages", STAGE_FRAGMENT),

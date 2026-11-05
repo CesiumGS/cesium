@@ -16,6 +16,8 @@ import {
 } from "./uniforms.ts";
 
 export type { InstanceType, NamedType } from "./slangStages.ts";
+export type { ShaderControl } from "./slangControls.ts";
+import type { ShaderControl } from "./slangControls.ts";
 export type {
   TextureSource,
   TextureUniform,
@@ -88,6 +90,12 @@ export interface CustomShaderOptions {
    * 4 textures.
    */
   uniforms?: Record<string, UniformDeclaration>;
+  /**
+   * Controls for the shader's uniforms (a Slang shader's declared ones:
+   * `[Slider(…)] uniform float x;`), for a host to show; set with
+   * `setUniform`.
+   */
+  controls?: ShaderControl[];
   /**
    * The farthest `vertexMain` moves a vertex, in model units: it pads the
    * draws' culling bounds. Default 0.
@@ -388,6 +396,8 @@ export class CustomShader {
   textureVersion = 0;
   readonly displacement: number;
   readonly label: string;
+  /** Controls for its uniforms (`CustomShaderOptions.controls`). */
+  readonly controls: readonly ShaderControl[];
   /** Slang's output: its matrices are written transposed (`writeUniform`). */
   private readonly slang: boolean;
   private readonly listeners = new Set<() => void>();
@@ -431,6 +441,7 @@ export class CustomShader {
     for (const name of this.uniformLayout.textures) {
       this.textures.set(name, uniforms[name] as TextureUniform);
     }
+    this.controls = options.controls ?? [];
     this.displacement = Math.max(0, options.displacement ?? 0);
     this.label = options.label ?? `custom shader ${this.id}`;
   }
@@ -483,10 +494,17 @@ export class CustomShader {
     options: SlangShaderOptions = {},
   ): Promise<CustomShader> {
     const { compileSlang } = await import("./slang.ts");
-    const wgsl = await compileSlang(source, options.slangUrl, options);
+    const { wgsl, controls, uniforms } = await compileSlang(
+      source,
+      options.slangUrl,
+      options,
+    );
     return new CustomShader({
       wgsl,
-      ...(options.uniforms ? { uniforms: options.uniforms } : {}),
+      // The options' uniforms and those the shader declared (`controls`),
+      // in the order the compiled buffer has them.
+      uniforms,
+      controls,
       ...(options.instance ? { instance: options.instance } : {}),
       ...(options.attributes ? { attributes: options.attributes } : {}),
       ...(options.metadata ? { metadata: options.metadata } : {}),

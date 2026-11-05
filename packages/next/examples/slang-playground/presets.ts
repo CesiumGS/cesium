@@ -59,12 +59,22 @@ export const PRESETS: Preset[] = [
 
 // A glow where the surface turns away from the camera, pulsing in time.
 // Emission is display-relative: 1 is white whatever the exposure.
+// The declared uniforms below are the Parameters panel's controls.
+[Color(0.2, 0.6, 1.0)] [Label("Glow color")]
+uniform float3 glowColor;
+[Slider(1.5, 0.5, 6.0)] [Label("Falloff")]
+uniform float falloff;
+[Slider(1.5, 0.0, 4.0)] [Label("Strength")]
+uniform float strength;
+[Toggle(true)] [Label("Pulse")]
+uniform bool pulse;
+
 public void fragmentMain(FragmentInput fsInput, inout MaterialOutput material) {
   float3 toCamera = normalize(-fsInput.positionEC);
   float rim = 1.0 - saturate(dot(toCamera, normalize(fsInput.normal)));
-  float pulse = 0.6 + 0.4 * sin(fsInput.time * 3.0);
+  float beat = pulse ? 0.6 + 0.4 * sin(fsInput.time * 3.0) : 1.0;
   material.baseColor *= 0.5;
-  material.emissive += float3(0.2, 0.6, 1.0) * pow(rim, 1.5) * pulse * 1.5;
+  material.emissive += glowColor * pow(rim, falloff) * beat * strength;
 }
 `,
   },
@@ -91,12 +101,20 @@ public void fragmentMain(FragmentInput fsInput, inout MaterialOutput material) {
 
 // Flat steps of the material's color by how much the surface faces up,
 // unlit, with dark edges where it turns away from the camera.
+[Slider(4, 2, 10)] [Label("Steps")]
+uniform int steps;
+[Toggle(true)] [Label("Outlines")]
+uniform bool outlines;
+[Slider(0.25, 0.05, 0.6)] [Label("Outline width")]
+uniform float outlineWidth;
+
 public void fragmentMain(FragmentInput fsInput, inout MaterialOutput material) {
   float3 up = normalize(fsInput.positionWC);
   float3 n = normalize(fsInput.normal);
-  float light = floor(saturate(dot(n, up) * 0.5 + 0.5) * 4.0) / 4.0;
+  float bands = float(steps);
+  float light = floor(saturate(dot(n, up) * 0.5 + 0.5) * bands) / bands;
   float3 toCamera = normalize(-fsInput.positionEC);
-  float edge = step(0.25, dot(toCamera, n));
+  float edge = outlines ? step(outlineWidth, dot(toCamera, n)) : 1.0;
   material.baseColor = material.baseColor * (0.35 + 0.65 * light) * edge;
   material.unlit = true;
 }
@@ -107,14 +125,20 @@ public void fragmentMain(FragmentInput fsInput, inout MaterialOutput material) {
     group: "Light and view",
     code: `import cesium;
 
-// Scan lines climbing the model, a cyan rim, and a flicker: unlit.
+// Scan lines climbing the model, a rim, and a flicker: unlit.
+[Color(0.2, 0.9, 1.0)] [Label("Color")]
+uniform float3 holoColor;
+[Slider(40, 5, 120)] [Label("Lines per unit")]
+uniform float density;
+[Slider(2.0, 0.0, 8.0)] [Label("Scroll speed")]
+uniform float speed;
+
 public void fragmentMain(FragmentInput fsInput, inout MaterialOutput material) {
   float3 toCamera = normalize(-fsInput.positionEC);
   float rim = 1.0 - saturate(dot(toCamera, normalize(fsInput.normal)));
-  float lines = step(0.5, frac(fsInput.positionMC.z * 40.0 - fsInput.time * 2.0));
+  float lines = step(0.5, frac(fsInput.positionMC.z * density - fsInput.time * speed));
   float flicker = 0.85 + 0.15 * sin(fsInput.time * 37.0) * sin(fsInput.time * 11.0);
-  float3 cyan = float3(0.2, 0.9, 1.0);
-  material.baseColor = cyan * (0.15 + 0.35 * lines + 0.8 * rim) * flicker;
+  material.baseColor = holoColor * (0.15 + 0.35 * lines + 0.8 * rim) * flicker;
   material.unlit = true;
 }
 `,
@@ -467,6 +491,8 @@ export const NEW_SHADER = `import cesium;
 // metallic, roughness, normal, occlusion, emissive, unlit) from what the
 // surface point knows (FragmentInput: positionEC, normal, uv, time, ...).
 // Add vertexMain(VertexInput, inout VertexOutput) to move vertices.
+// Controls: declare a uniform with an attribute and use it by name, e.g.
+//   [Slider(0.5, 0.0, 1.0)] uniform float amount;   (also Color, Toggle, Label)
 // Ctrl-Space completes; hover for docs; Cmd/Ctrl-click goes to definitions.
 public void fragmentMain(FragmentInput fsInput, inout MaterialOutput material)
 {

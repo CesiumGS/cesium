@@ -9,6 +9,7 @@ import {
   type MeshData,
   type ModelPlacement,
   type ModelResource,
+  type ShaderControl,
   type SkyOptions,
 } from "../../src/index.ts";
 import type { ExampleContext } from "../types.ts";
@@ -665,6 +666,151 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
   });
 
   const editorHost = el("div", { className: "slang-editor" });
+
+  // ------------------------------------------------------------ parameters
+  // The shader's declared uniforms (`[Slider(…)] uniform float x;`, the
+  // cesium module's attributes) as controls: set on the shader as they
+  // change, no recompile. Values are kept by name across compiles (and
+  // visits) until the shader changes that uniform's type or default.
+  const params = el("div", { className: "slang-params" });
+  params.hidden = true;
+  type Kept = { type: string; default: string; value: number | number[] };
+  const kept = new Map<string, Kept>(
+    Object.entries(
+      ((): Record<string, Kept> => {
+        try {
+          return JSON.parse(read("values") ?? "{}") as Record<string, Kept>;
+        } catch {
+          return {};
+        }
+      })(),
+    ),
+  );
+  const keep = () => write("values", JSON.stringify(Object.fromEntries(kept)));
+  let paramsFor = "";
+  /** The shader's controls: kept values applied, the panel made again if new. */
+  const applyControls = (next: CustomShader) => {
+    for (const c of next.controls) {
+      const was = kept.get(c.name);
+      const fallback = JSON.stringify(c.value);
+      if (
+        was &&
+        was.type === c.type &&
+        was.default === fallback &&
+        sameShape(was.value, c.value)
+      ) {
+        next.setUniform(c.name, was.value);
+      } else {
+        kept.set(c.name, { type: c.type, default: fallback, value: c.value });
+      }
+    }
+    keep();
+    const signature = JSON.stringify(next.controls);
+    if (signature !== paramsFor) {
+      paramsFor = signature;
+      renderControls(next.controls);
+    }
+  };
+  const setValue = (name: string, value: number | number[]) => {
+    const k = kept.get(name);
+    if (k) {
+      k.value = value;
+      keep();
+    }
+    shader?.setUniform(name, value);
+  };
+  const renderControls = (controls: readonly ShaderControl[]) => {
+    params.hidden = controls.length === 0;
+    if (!controls.length) {
+      params.replaceChildren();
+      return;
+    }
+    const rows = controls.map((c) => {
+      const value = kept.get(c.name)?.value ?? c.value;
+      return el(
+        "div",
+        { className: "slang-field slang-param" },
+        el("span", { title: c.name }, c.label),
+        controlFor(c, value),
+      );
+    });
+    params.replaceChildren(
+      el(
+        "div",
+        { className: "slang-params-header" },
+        el("span", {}, "Parameters"),
+        el(
+          "button",
+          {
+            type: "button",
+            title: "Every parameter back to the shader's default",
+            onclick: () => {
+              for (const c of controls) {
+                setValue(c.name, c.value);
+              }
+              renderControls(controls);
+            },
+          },
+          "Reset",
+        ),
+      ),
+      ...rows,
+    );
+  };
+  const controlFor = (c: ShaderControl, value: number | number[]) => {
+    if (c.kind === "toggle") {
+      return el("input", {
+        type: "checkbox",
+        checked: Number(value) !== 0,
+        onchange: (e: Event) =>
+          setValue(c.name, (e.target as HTMLInputElement).checked ? 1 : 0),
+      });
+    }
+    if (c.kind === "color") {
+      const v = value as number[];
+      return el("input", {
+        type: "color",
+        value: linearToHex(v),
+        oninput: (e: Event) => {
+          const rgb = srgbToLinear((e.target as HTMLInputElement).value);
+          setValue(c.name, v.length === 4 ? [...rgb, v[3]!] : rgb);
+        },
+      });
+    }
+    if (c.kind === "slider") {
+      const shown = el("output", {}, format(Number(value), c));
+      const range = el("input", {
+        type: "range",
+        min: String(c.min),
+        max: String(c.max),
+        step: String(c.step),
+        value: String(value),
+        oninput: () => {
+          const v = Number(range.value);
+          shown.textContent = format(v, c);
+          setValue(c.name, v);
+        },
+      });
+      return el("span", { className: "slang-row" }, range, shown);
+    }
+    // No attribute: a number per component.
+    const values = Array.isArray(value) ? [...value] : [Number(value)];
+    return el(
+      "span",
+      { className: "slang-row" },
+      ...values.map((v, i) =>
+        el("input", {
+          type: "number",
+          step: c.type === "f32" || c.type.startsWith("vec") ? "0.01" : "1",
+          value: String(v),
+          oninput: (e: Event) => {
+            values[i] = Number((e.target as HTMLInputElement).value);
+            setValue(c.name, values.length === 1 ? values[0]! : [...values]);
+          },
+        }),
+      ),
+    );
+  };
   // The contract reference (Shadertoy's "Shader Inputs"): what
   // `import cesium;` declares, where go to definition and the hover's link
   // land in it.
@@ -748,6 +894,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
         el("label", {}, "Turntable", turntable),
       ),
     ),
+    params,
     editorHost,
     errorBox,
     el("p", { className: "slang-status" }, status.compile),
@@ -756,7 +903,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     el(
       "p",
       { className: "slang-help" },
-      "Stages against the cesium module (vertexMain, fragmentMain). Completion (Ctrl-Space), hover, errors and go to definition (Cmd/Ctrl-click, F12) come from the Slang language server; Cmd/Ctrl-Enter compiles now. Drag orbits, right- or shift-drag pans, the wheel zooms.",
+      "Stages against the cesium module (vertexMain, fragmentMain). Declare a uniform with [Slider(…)], [Color(…)] or [Toggle(…)] for a control in Parameters. Completion (Ctrl-Space), hover, errors and go to definition (Cmd/Ctrl-click, F12) come from the Slang language server; Cmd/Ctrl-Enter compiles now. Drag orbits, right- or shift-drag pans, the wheel zooms.",
     ),
   );
 
@@ -780,6 +927,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
         return;
       }
       shader = next;
+      applyControls(next);
       showCompileErrors(
         editor.setCompileErrors(undefined, source),
         undefined,
@@ -843,6 +991,35 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     clearTimeout(viewErrorTimer);
     viewError.remove();
   };
+}
+
+/** A kept value (from storage) shaped as the control's: numbers only. */
+function sameShape(kept: unknown, value: number | number[]): boolean {
+  if (typeof value === "number") {
+    return typeof kept === "number" && Number.isFinite(kept);
+  }
+  return (
+    Array.isArray(kept) &&
+    kept.length === value.length &&
+    kept.every((v) => typeof v === "number" && Number.isFinite(v))
+  );
+}
+
+/** A slider's value as shown: integers whole, floats to two places. */
+function format(value: number, c: ShaderControl): string {
+  return c.type === "f32" ? value.toFixed(2) : String(Math.round(value));
+}
+
+/** Linear RGB as "#rrggbb" (sRGB), for a color input. */
+function linearToHex(rgb: number[]): string {
+  const c = (v: number) => {
+    const x = Math.min(Math.max(v, 0), 1);
+    const s = x <= 0.0031308 ? x * 12.92 : 1.055 * x ** (1 / 2.4) - 0.055;
+    return Math.round(s * 255)
+      .toString(16)
+      .padStart(2, "0");
+  };
+  return `#${c(rgb[0] ?? 0)}${c(rgb[1] ?? 0)}${c(rgb[2] ?? 0)}`;
 }
 
 /** "#rrggbb" (sRGB) as linear RGB. */

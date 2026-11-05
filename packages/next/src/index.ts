@@ -9,6 +9,7 @@ export {
   CustomShader,
   type CustomShaderOptions,
   type NamedType,
+  type ShaderControl,
   type TextureSource,
   type TextureUniform,
   type UniformDeclaration,

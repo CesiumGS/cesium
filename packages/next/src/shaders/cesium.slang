@@ -8,6 +8,26 @@
 //   public void fragmentMain(FragmentInput fsInput, inout MaterialOutput material) { … }
 module cesium;
 
+// Controls for uniforms. A shader declares a uniform with one and uses it
+// by name; the host shows it as a control (`CustomShader.controls`) and
+// sets it without recompiling:
+//
+//   [Slider(0.5, 0.0, 1.0)] [Label("Glow")] uniform float glow;
+//   [Color(0.2, 0.6, 1.0)] uniform float3 tint;      // linear RGB
+//   [Toggle(true)] uniform bool outlines;
+//   [Slider(4, 1, 8)] uniform int steps;
+//
+// Values are the defaults. Supported types: float, int, uint, bool and
+// float2-4. Each declaration on a line of its own.
+[__AttributeUsage(_AttributeTargets.Var)]
+public struct SliderAttribute { float defaultValue; float minValue; float maxValue; };
+[__AttributeUsage(_AttributeTargets.Var)]
+public struct ColorAttribute { float r; float g; float b; };
+[__AttributeUsage(_AttributeTargets.Var)]
+public struct ToggleAttribute { bool on; };
+[__AttributeUsage(_AttributeTargets.Var)]
+public struct LabelAttribute { string text; };
+
 // The shader's named attributes, metadata and per-instance values
 // (`CustomShaderOptions` `attributes`, `metadata`, `instance`), generated
 // per shader (slangStages.ts

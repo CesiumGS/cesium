@@ -456,6 +456,70 @@
 .slang-stage[open] > .slang-toolbar {
   margin-top: var(--stratakit-space-150, 6px);
 }
+/* The shader's declared uniforms as controls (Slider, Color, Toggle). */
+.slang-params {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-100);
+  padding: var(--stratakit-space-150, 6px) var(--stratakit-space-200);
+  border-radius: var(--stratakit-radius-sm, 4px);
+  border: 1px solid var(--stratakit-color-border-neutral-muted, #333);
+  max-height: 30vh;
+  overflow: auto;
+  flex: none;
+}
+.slang-params[hidden] {
+  display: none;
+}
+.slang-params-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 600;
+}
+.slang-params-header button {
+  padding: 0 var(--stratakit-space-150, 6px);
+}
+.slang-param {
+  grid-template-columns: minmax(70px, 30%) minmax(0, 1fr);
+}
+.slang-param > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.slang-param input[type="range"] {
+  flex: 1;
+  min-width: 0;
+}
+.slang-param output {
+  flex: none;
+  width: 3.5em;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.slang-param input[type="number"] {
+  flex: 1;
+  min-width: 0;
+  width: 0;
+  font: inherit;
+  color: inherit;
+  background: var(--stratakit-color-bg-page-depth, #111);
+  border: 1px solid var(--stratakit-color-border-neutral-base, #555);
+  border-radius: var(--stratakit-radius-sm, 4px);
+  padding: 2px 4px;
+}
+.slang-param input[type="color"] {
+  width: 48px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid var(--stratakit-color-border-neutral-base, #555);
+  border-radius: var(--stratakit-radius-sm, 4px);
+  background: none;
+}
+.slang-param input[type="checkbox"] {
+  justify-self: start;
+}
 .slang-editor {
   flex: 1;
   min-height: 260px;

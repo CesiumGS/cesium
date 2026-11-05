@@ -7,10 +7,16 @@ import {
   cesiumModule,
   slangStages,
   slangStub,
+  withoutComments,
   type InstanceType,
   type NamedType,
 } from "./slangStages.ts";
 import type { UniformDeclaration } from "./uniforms.ts";
+import {
+  bindDeclaredUniforms,
+  declaredUniforms,
+  type ShaderControl,
+} from "./slangControls.ts";
 
 /**
  * Runtime Slang compilation of custom shader stages (`CustomShader.fromSlang`):
@@ -20,7 +26,10 @@ let worker: Worker | undefined;
 let nextId = 0;
 const pending = new Map<
   number,
-  { resolve: (wgsl: string) => void; reject: (error: Error) => void }
+  {
+    resolve: (reply: { wgsl?: string; parameters?: unknown[] }) => void;
+    reject: (error: Error) => void;
+  }
 >();
 
 function slangWorker(): Worker {
@@ -29,19 +38,43 @@ function slangWorker(): Worker {
       type: "module",
     });
     worker.onmessage = (
-      event: MessageEvent<{ id: number; wgsl?: string; error?: string }>,
+      event: MessageEvent<{
+        id: number;
+        wgsl?: string;
+        parameters?: unknown[];
+        error?: string;
+      }>,
     ) => {
-      const { id, wgsl, error } = event.data;
+      const { id, error, ...reply } = event.data;
       const request = pending.get(id);
       pending.delete(id);
-      if (wgsl !== undefined) {
-        request?.resolve(wgsl);
+      if (error === undefined) {
+        request?.resolve(reply);
       } else {
-        request?.reject(new Error(error ?? "Slang compilation failed."));
+        request?.reject(new Error(error || "Slang compilation failed."));
       }
     };
   }
   return worker;
+}
+
+function request(
+  message: Record<string, unknown>,
+): Promise<{ wgsl?: string; parameters?: unknown[] }> {
+  const id = nextId++;
+  return new Promise((resolve, reject) => {
+    pending.set(id, { resolve, reject });
+    slangWorker().postMessage({ id, ...message });
+  });
+}
+
+/** What `compileSlang` makes: the WGSL, and the uniforms the shader declared. */
+export interface CompiledSlang {
+  wgsl: string;
+  /** Its declared uniforms' controls (`ShaderControl`). */
+  controls: ShaderControl[];
+  /** All its uniforms: the options' and the declared ones, in buffer order. */
+  uniforms: Record<string, UniformDeclaration>;
 }
 
 /**
@@ -54,38 +87,56 @@ export async function compileSlang(
   named: {
     attributes?: Record<string, { type: NamedType }>;
     metadata?: Record<string, NamedType | { type: NamedType }>;
-    uniforms?: Record<string, { type: UniformDeclaration["type"] }>;
+    uniforms?: Record<string, UniformDeclaration>;
     instance?: Record<string, InstanceType>;
   } = {},
-): Promise<string> {
+): Promise<CompiledSlang> {
   const stages = slangStages(source);
   if (!stages.vertex && !stages.fragment) {
     throw new Error(
       "Slang shader defines neither vertexMain nor fragmentMain.",
     );
   }
-  const id = nextId++;
-  const wgsl = await new Promise<string>((resolve, reject) => {
-    pending.set(id, { resolve, reject });
-    slangWorker().postMessage({
-      id,
-      url: new URL(slangUrl, globalThis.location?.href).href,
-      cesium: cesiumModule(cesiumSlang, {
-        attributes: Object.fromEntries(
-          Object.entries(named.attributes ?? {}).map(([n, a]) => [n, a.type]),
-        ),
-        metadata: Object.fromEntries(
-          Object.entries(named.metadata ?? {}).map(([n, d]) => [
-            n,
-            typeof d === "string" ? d : d.type,
-          ]),
-        ),
-        uniforms: named.uniforms ?? {},
-        instance: named.instance ?? {},
-      }),
-      user: source,
-      stub: slangStub(stages),
+  const url = new URL(slangUrl, globalThis.location?.href).href;
+  const cesium = (uniforms: Record<string, UniformDeclaration>) =>
+    cesiumModule(cesiumSlang, {
+      attributes: Object.fromEntries(
+        Object.entries(named.attributes ?? {}).map(([n, a]) => [n, a.type]),
+      ),
+      metadata: Object.fromEntries(
+        Object.entries(named.metadata ?? {}).map(([n, d]) => [
+          n,
+          typeof d === "string" ? d : d.type,
+        ]),
+      ),
+      uniforms,
+      instance: named.instance ?? {},
     });
+  let user = source;
+  let controls: ShaderControl[] = [];
+  let uniforms: Record<string, UniformDeclaration> = { ...named.uniforms };
+  // Uniforms the shader declares itself: found by reflection (a pass over
+  // the module alone), then bound to the shader's buffer.
+  if (/\buniform\b/.test(withoutComments(source))) {
+    const { parameters = [] } = await request({
+      op: "reflect",
+      url,
+      cesium: cesium(uniforms),
+      user: source,
+    });
+    const declared = declaredUniforms(
+      parameters as Parameters<typeof declaredUniforms>[0],
+      new Set(["uniforms", ...Object.keys(uniforms)]),
+    );
+    controls = declared.controls;
+    uniforms = { ...uniforms, ...declared.uniforms };
+    user = bindDeclaredUniforms(source, declared);
+  }
+  const { wgsl = "" } = await request({
+    url,
+    cesium: cesium(uniforms),
+    user,
+    stub: slangStub(stages),
   });
-  return adaptSlangStages(wgsl, stages);
+  return { wgsl: adaptSlangStages(wgsl, stages), controls, uniforms };
 }
