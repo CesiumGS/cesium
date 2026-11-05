@@ -1,6 +1,6 @@
-import commonWgsl from "../shaders/common.wgsl?raw";
-import cullWgsl from "../shaders/cull.wgsl?raw";
-import pointCullWgsl from "../shaders/pointCull.wgsl?raw";
+// The point cull's kernels (pointCull.slang); the style is appended, the
+// runtime boundary that module declares.
+import pointCullWgsl from "../shaders/generated/pointCull.wgsl?raw";
 import type { RenderContext } from "./RenderContext.ts";
 import {
   uniformLayout,
@@ -9,7 +9,7 @@ import {
 } from "./uniforms.ts";
 
 /**
- * A point draw's cull with a style's functions (pointCull.wgsl; a vector
+ * A point draw's cull with a style's functions (pointCull.slang; a vector
  * style's layer: `styleShow`, `styleSize`, `styleColor`, `styleShapeAt`,
  * `styleOffset`,
  * reading `uniforms.<name>` at group 3): in each view it lists the points
@@ -75,9 +75,7 @@ export class PointCuller {
       : "struct Uniforms { _unused: f32 };";
     const module = device.createShaderModule({
       label: options.label ?? "pointCuller",
-      code: `${commonWgsl}
-${cullWgsl}
-${pointCullWgsl}
+      code: `${pointCullWgsl}
 ${uniformStruct}
 @group(3) @binding(0) var<uniform> uniforms: Uniforms;
 ${options.code}`,

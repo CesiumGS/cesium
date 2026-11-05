@@ -10,8 +10,8 @@ import {
 import commonWgsl from "../shaders/common.wgsl?raw";
 import aoWgsl from "../shaders/ao.wgsl?raw";
 import { SHADOW_CASCADES, SHADOW_SIZE, SHADOWS_SIZE } from "./shadows.ts";
-import cullWgsl from "../shaders/cull.wgsl?raw";
-import pointCullWgsl from "../shaders/pointCull.wgsl?raw";
+import cullWgsl from "../shaders/generated/cull.wgsl?raw";
+import pointCullWgsl from "../shaders/generated/pointCull.wgsl?raw";
 import splatWgsl from "../shaders/splat.wgsl?raw";
 import scatterWgsl from "../shaders/generated/scatter.wgsl?raw";
 import raycastWgsl from "../shaders/raycast.wgsl?raw";
@@ -44,7 +44,7 @@ import { UNIFORM_BINDING, textureBinding } from "./uniforms.ts";
  * Views differ only after the bundle runs (present, post, overlays).
  */
 /**
- * The generic point cull's style (pointCull.wgsl): every point shown, none
+ * The generic point cull's style (pointCull.slang): every point shown, none
  * small enough to splat.
  */
 export const POINT_STYLE_DEFAULTS = `fn styleShow(i: u32, distance: f32) -> bool { return true; }
@@ -185,7 +185,7 @@ export interface Pipelines extends SurfacePipelines {
   writeDrawArgs: GPUComputePipeline;
   /**
    * Point draws' per-view cull into their lists and their indirect args
-   * (pointCull.wgsl, with the default style: no splats); group 2 of their
+   * (pointCull.slang, with the default style: no splats); group 2 of their
    * pipelines (group 3: a style's uniforms, vector/PointCuller.ts).
    */
   pointCullLayout: GPUBindGroupLayout;
@@ -738,7 +738,7 @@ async function createPipelines(
   const cullModule =
     overrides.cull !== undefined
       ? module("cull (override)", overrides.cull)
-      : module("cull", commonWgsl, cullWgsl);
+      : module("cull", cullWgsl);
   const cullLayout = device.createPipelineLayout({
     bindGroupLayouts: [viewLayout, cullWorldLayout],
   });
@@ -756,8 +756,6 @@ async function createPipelines(
   // The generic point cull: every point drawn as a quad (no style).
   const pointCullModule = module(
     "cull.points",
-    commonWgsl,
-    cullWgsl,
     pointCullWgsl,
     POINT_STYLE_DEFAULTS,
   );

@@ -613,7 +613,7 @@ fn vs(@builtin(vertex_index) vertexIndex: u32, @location(0) item: u32) -> VsOut 
 }
 
 // A point draw's quads (RecordFlags.points, `opaquePoints`): six vertices
-// for each point the view's cull listed (pointCull.wgsl `cullPoints`; the
+// for each point the view's cull listed (pointCull.slang `cullPoints`; the
 // draw's list is at its record's `uvOffset`, points having no uvs), in one
 // draw. (Four-vertex strips as instances drew slower: an instance of four
 // vertices fills few of a vertex wave's lanes.)
@@ -675,7 +675,7 @@ fn vertexOut(vertexIndex: u32, item: u32, withAir: bool) -> VsOut {
     localFeature = bitcast<u32>(vertices[r.featureIdOffset + vertexIndex]);
   }
   // The row of the draw's feature table this vertex reads: an instance's
-  // feature (cull.wgsl makes it global), else the vertex's; a draw without
+  // feature (cull.slang makes it global), else the vertex's; a draw without
   // per-vertex IDs is feature 0 (as `out.feature` below).
   var tableFeature = select(localFeature, 0u, r.featureIdOffset == NO_STREAM);
   if (p.feature != 0u) {

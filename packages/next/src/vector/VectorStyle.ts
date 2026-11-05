@@ -109,7 +109,7 @@ export interface CompiledShapeLayer {
   source: string | undefined;
   shader: CustomShader;
   /**
-   * The layer as compute functions for its points' cull (pointCull.wgsl:
+   * The layer as compute functions for its points' cull (pointCull.slang:
    * `styleShow`, `styleSize`, `styleColor`, `styleShapeAt`, `styleOffset`), which
    * rasterizes symbols too small for quads (`World.setPointCuller`).
    */

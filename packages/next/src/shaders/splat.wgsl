@@ -1,5 +1,5 @@
 // Point splats into the opaque pass (World.drawSplats): the tiny symbols
-// pointCull.wgsl rasterized in the view's cull pass, drawn as a triangle
+// pointCull.slang rasterized in the view's cull pass, drawn as a triangle
 // over the view, after its other opaque draws: each pixel a splat covers
 // takes its color (display-referred, as unlit symbols' is), its feature
 // (picking) and its depth, depth-tested against what is drawn (a hill

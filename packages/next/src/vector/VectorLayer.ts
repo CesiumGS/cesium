@@ -32,7 +32,7 @@ export interface VectorLayerOptions {
   depthTestDistance?: number;
   /**
    * Symbols this many pixels across or smaller are rasterized in compute
-   * (pointCull.wgsl) rather than drawn as quads: a few threads a point
+   * (pointCull.slang) rather than drawn as quads: a few threads a point
    * instead of six vertices (default 6; 0: always quads).
    */
   splatBelow?: number;
