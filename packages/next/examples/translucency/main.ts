@@ -496,28 +496,29 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     el(
       "p",
       {},
-      "Each way alone at this view's size, against the scene without its glass: the time a frame takes, each frame waited on, the fastest of five rounds taken in turn (other work on the GPU slows a round, not the answer). Moments cost the same however the layers lie; the lists grow with the layers a pixel sees.",
+      "Each way alone at this view's size, against the scene without its glass: the time a frame takes, frames rendered back to back, the fastest of five rounds taken in turn (other work on the GPU slows a round, not the answer). Moments cost the same however the layers lie; the lists grow with the layers a pixel sees.",
     ),
   );
 
   /**
    * Each way's frame time against the scene without its glass, the view
-   * alone (the split undone for it), frames rendered back to back and
-   * waited on (`onSubmittedWorkDone`, not timers or timestamps: a render
-   * pass's timestamps aren't its own on every GPU). The three take turns
-   * over several rounds and each keeps its fastest: anything else on the
-   * GPU (another tab, the first frames' warming up) only slows a round,
-   * and measured once each in a row, a slow first one made moments look
-   * cheaper than no glass at all.
+   * alone (the split undone for it): frames rendered back to back, then
+   * waited for (`onSubmittedWorkDone`; not timestamps, a render pass's
+   * aren't its own on every GPU). The three take turns over several
+   * rounds and each keeps its fastest: anything else on the GPU (another
+   * tab, the first frames' warming up) only slows a round.
    */
   async function measureCost() {
     const queue = engine.gpu.device.queue;
     const was = settings.compare;
+    // Back to back, waited on once: waited on each, a frame quicker than
+    // the display's refresh heard it was done only at the next one (16.7
+    // ms at 60 Hz), and the scene without glass came out slower than with.
     const frames = async (count: number) => {
       for (let i = 0; i < count; i++) {
         engine.renderFrame();
-        await queue.onSubmittedWorkDone();
       }
+      await queue.onSubmittedWorkDone();
     };
     const visible = (on: boolean) => {
       for (const g of glass) {

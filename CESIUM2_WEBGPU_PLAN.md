@@ -2623,7 +2623,16 @@ runs each), the lone glass box +8 against +4.5 to +6. Shared memory
 can't help there (fragment shaders have none); the sort, which uses it,
 stays at 3 to 4 ms either way. The runs that write nothing stop shading
 at their alpha (opaque.wgsl `surfaceLight`: their lighting doubled the
-pass), 1 to 2 ms of it. Where the probe finds once a pixel, the pass
+pass), 1 to 2 ms of it. Letting them return before any shading at all (an
+experiment, derivatives off) saved about 1 ms more: what is left is the
+runs themselves, how this GPU runs a multisampled pass with storage
+writes, not their work. In the gallery example's default scene
+(1164 × 1406, lit): moments +1.9 ms, exact +7.3 antialiased against +4.7
+single-sampled. Timed one frame at a time on a canvas, a frame quicker
+than the display's refresh heard it was done only at the next one (16.7
+ms at 60 Hz), so the scene without glass came out slower than with
+moments and exact at +22; both cost measurements now render their frames
+back to back and wait once. Where the probe finds once a pixel, the pass
 costs what it did at r45. Exact stays the reference, antialiased;
 moments stay the default; the Windows runs (§3.4 step 4) measure both
 again.

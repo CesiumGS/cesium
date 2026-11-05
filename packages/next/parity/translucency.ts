@@ -682,11 +682,14 @@ interface CostRow {
 
 /**
  * What each way costs: the scenes at 1920 × 1080, a frame's time with each
- * way against the scene without its blended parts. Wall time per frame,
- * each frame waited on (`onSubmittedWorkDone`), not timers (a hidden
- * page's are throttled), nor the passes' timestamps: on Apple's GPUs a
- * render pass's took in the passes before it. For comparing, not budgets.
- * The runner's `runTranslucencyCost`.
+ * way against the scene without its blended parts: frames rendered back
+ * to back and waited for once (`onSubmittedWorkDone`), the fastest of
+ * three batches. Waited on each, a frame quicker than the display's
+ * refresh heard it was done only at the next (16.7 ms at 60 Hz: the
+ * scene without glass came out slower than with). Not timers (a hidden
+ * page's are throttled), nor the passes' timestamps (on Apple's GPUs a
+ * render pass's took in the passes before it). For comparing, not
+ * budgets. The runner's `runTranslucencyCost`.
  */
 async function runTranslucencyCost(): Promise<CostRow[]> {
   const status = root.querySelector(".status")!;
@@ -698,13 +701,17 @@ async function runTranslucencyCost(): Promise<CostRow[]> {
       const run = async (frames: number) => {
         for (let i = 0; i < frames; i++) {
           engine.renderFrame();
-          await queue.onSubmittedWorkDone();
         }
+        await queue.onSubmittedWorkDone();
       };
       await run(20);
-      const start = performance.now();
-      await run(100);
-      return (performance.now() - start) / 100;
+      let best = Infinity;
+      for (let batch = 0; batch < 3; batch++) {
+        const start = performance.now();
+        await run(40);
+        best = Math.min(best, (performance.now() - start) / 40);
+      }
+      return best;
     });
   const rows: CostRow[] = [];
   const f = (v: number) => v.toFixed(2);
