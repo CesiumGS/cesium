@@ -1,5 +1,4 @@
-import commonWgsl from "../shaders/common.wgsl?raw";
-import poolWgsl from "./modelPool.wgsl?raw";
+import poolWgsl from "../shaders/generated/modelPool.wgsl?raw";
 import * as m4 from "../math/mat4.ts";
 import * as v3 from "../math/vec3.ts";
 import type { Engine } from "../scene/Engine.ts";
@@ -12,7 +11,7 @@ import {
 } from "../scene/uniforms.ts";
 import { dispatchSize, type PointSource } from "./PointSource.ts";
 
-/** Words per part (modelPool.wgsl `Part`). */
+/** Words per part (modelPool.slang `Part`). */
 const PART_WORDS = 36;
 const PARAMS_BYTES = 48 + 64;
 
@@ -20,7 +19,7 @@ const PARAMS_BYTES = 48 + 64;
  * A styled model layer's models (vector/VectorStyle.ts `model()` layers):
  * `slots` instances of one model, given each frame on the GPU to the
  * nearest points of a source its compiled style passes, oriented and
- * scaled by it (modelPool.wgsl). Memory follows the slots, not the points:
+ * scaled by it (modelPool.slang). Memory follows the slots, not the points:
  * a million points may show a few thousand trucks up close.
  */
 export class ModelPool {
@@ -132,8 +131,9 @@ export class ModelPool {
       : "struct Uniforms { _unused: f32 };";
     const module = device.createShaderModule({
       label: options.label ?? "modelPool",
-      code: `${commonWgsl}
-${poolWgsl}
+      // The style after the pool's kernels: the boundary modelPool.slang
+      // declares (the functions it calls and exports by name).
+      code: `${poolWgsl}
 ${uniformStruct}
 @group(0) @binding(6) var<uniform> uniforms: Uniforms;
 ${options.code}`,

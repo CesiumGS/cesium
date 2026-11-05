@@ -391,7 +391,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     return ellipsoid.cartographicToCartesian(c, p);
   }
 
-  /** Where the followed vehicle is shown now (as points.wgsl moves it). */
+  /** Where the followed vehicle is shown now (as points.slang moves it). */
   function followShown(): number[] | undefined {
     if (!follow || !source || follow.p1.length === 0) {
       return undefined;

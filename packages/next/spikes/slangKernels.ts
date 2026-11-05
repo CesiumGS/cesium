@@ -23,6 +23,8 @@ import compositeReference from "./slang/reference/composite.wgsl?raw";
 import scatterReference from "./slang/reference/scatter.wgsl?raw";
 import iblReference from "./slang/reference/ibl.wgsl?raw";
 import iblMonteCarloReference from "./slang/reference/iblReference.wgsl?raw";
+import pointsReference from "./slang/reference/points.wgsl?raw";
+import modelPoolReference from "./slang/reference/modelPool.wgsl?raw";
 import cullSlang from "../src/shaders/generated/cull.wgsl?raw";
 import depthRangeSlang from "../src/shaders/generated/depthRange.wgsl?raw";
 import lightsSlang from "../src/shaders/generated/lights.wgsl?raw";
@@ -39,6 +41,8 @@ import compositeSlang from "../src/shaders/generated/composite.wgsl?raw";
 import scatterSlang from "../src/shaders/generated/scatter.wgsl?raw";
 import iblSlang from "../src/shaders/generated/ibl.wgsl?raw";
 import iblMonteCarloSlang from "../src/shaders/generated/iblReference.wgsl?raw";
+import pointsSlang from "../src/shaders/generated/points.wgsl?raw";
+import modelPoolSlang from "../src/shaders/generated/modelPool.wgsl?raw";
 
 /**
  * The Slang-first migration's performance gate (CESIUM2_WEBGPU_PLAN.md
@@ -73,6 +77,12 @@ interface Output {
    * twin while both are 1e-7 from the truth.
    */
   absolute?: number;
+  /**
+   * Compared as a set of rows of this many 32-bit words, sorted, where
+   * which row a result lands in depends on the threads' order (slots
+   * claimed by atomics).
+   */
+  sortedRows?: number;
 }
 /** A render pipeline's case: its attachments are its outputs. */
 interface RenderSetup {
@@ -1187,8 +1197,336 @@ const IBL_CASES: Case[] = [
   },
 ];
 
+// --- vector: live points and model pools ------------------------------------
+
+const POINTS = 200_000;
+const depthEntry = (binding: number): GPUBindGroupLayoutEntry => ({
+  binding,
+  visibility: GPUShaderStage.COMPUTE,
+  texture: { sampleType: "depth" },
+});
+// PointSource's layouts: the state, then the samples.
+const POINTS_LAYOUT: GPUBindGroupLayoutEntry[][] = [
+  [uniform(0), storage(1, false), storage(2, false), depthEntry(3)],
+  [uniform(0), storage(1, true)],
+];
+// ModelPool's one layout, the style's uniforms at 6.
+const POOL_LAYOUT: GPUBindGroupLayoutEntry[][] = [
+  [
+    uniform(0),
+    storage(1, true),
+    storage(2, true),
+    storage(3, false),
+    storage(4, false),
+    storage(5, false),
+    uniform(6),
+  ],
+];
+
+/** Points' states: two samples each, nine in ten sampled. */
+function pointStates(seed: number): Float32Array {
+  const random = randoms(seed);
+  const f = new Float32Array(POINTS * 12);
+  for (let i = 0; i < POINTS; i++) {
+    const o = i * 12;
+    const at = () => (random() - 0.5) * 9000;
+    f.set([at(), at(), random() * 50, 10 + random()], o);
+    f.set([at(), at(), random() * 50, 11.5 + random()], o + 4);
+    f.set(
+      [random() * 360, random() * 720 - 360, random() < 0.9 ? 1 : 0],
+      o + 8,
+    );
+  }
+  return f;
+}
+
+function pointsInputs(device: GPUDevice) {
+  const params = new ArrayBuffer(64);
+  const u = new Uint32Array(params);
+  const f = new Float32Array(params);
+  const groupsX = Math.ceil(POINTS / 64);
+  f.set([12, 0.5]);
+  u.set([POINTS - 1000, POINTS, 0, POINTS * 4, 3, 1, 1], 2);
+  f.set([5000, 3000, -1000], 9);
+  u[12] = groupsX * 64;
+  const state = buffer(device, pointStates(71), GPUBufferUsage.STORAGE);
+  const vertices = buffer(device, POINTS * 7 * 4, GPUBufferUsage.STORAGE);
+  const group0 = [
+    {
+      binding: 0,
+      resource: {
+        buffer: buffer(device, new Uint8Array(params), GPUBufferUsage.UNIFORM),
+      },
+    },
+    { binding: 1, resource: { buffer: state } },
+    { binding: 2, resource: { buffer: vertices } },
+    { binding: 3, resource: sceneDepth(device).createView() },
+  ];
+  return { group0, state, vertices, groupsX };
+}
+
+// A style, as VectorStyle compiles one: the pool's boundary both ways.
+const POOL_STYLE = `
+struct Uniforms { near: f32 };
+@group(0) @binding(6) var<uniform> uniforms: Uniforms;
+fn styleShow(i: u32, distance: f32) -> bool {
+  return pointF32(i, 0u) > 0.3 && distance < uniforms.near;
+}
+fn styleHeading(i: u32, distance: f32) -> f32 {
+  return pointF32(i, 1u) * 360.0 + styleTime();
+}
+fn styleScale(i: u32, distance: f32) -> f32 {
+  return 1.0 + f32(pointU32(i, 2u) & 7u);
+}`;
+
+const SLOTS = 4096;
+const PARTS = 3;
+
+/** A pool's inputs: anchors and properties, three parts, its counters. */
+function poolInputs(device: GPUDevice, stage: "bin" | "claim") {
+  const random = randoms(73);
+  // Anchors (x, y, z, heading), then three property words a point.
+  const vertices = new Float32Array(POINTS * 7);
+  const words = new Uint32Array(vertices.buffer);
+  for (let i = 0; i < POINTS; i++) {
+    const x = random() < 0.05 ? 3e38 : (random() - 0.5) * 9000;
+    vertices.set([x, (random() - 0.5) * 9000, random() * 30, 0], i * 4);
+    const p = POINTS * 4 + i * 3;
+    vertices[p] = random();
+    vertices[p + 1] = random();
+    words[p + 2] = Math.floor(random() * 1000);
+  }
+  const params = new ArrayBuffer(128);
+  const u = new Uint32Array(params);
+  const f = new Float32Array(params);
+  const groupsX = Math.ceil(POINTS / 64);
+  u.set([POINTS, SLOTS, PARTS, groupsX * 64, 0, POINTS * 4, 3, 2]);
+  f[8] = 7.5;
+  f.set([100, -200, 400, 0, -3000, 1500, 600, 0], 16);
+  // Parts: an affine local and its inverse (any matrices will do), each
+  // part's slots in their own rows.
+  const parts = new Float32Array(PARTS * 36);
+  for (let k = 0; k < PARTS; k++) {
+    const m = Array.from({ length: 16 }, (_, j) =>
+      j % 5 === 0
+        ? 1 + random() * 0.2
+        : j >= 12 && j < 15
+          ? random() * 4
+          : random() * 0.1,
+    );
+    m[15] = 1;
+    m[3] = m[7] = m[11] = 0;
+    parts.set(m, k * 36);
+    parts.set(
+      m.map((v, j) => (j % 5 === 0 ? 1 / v : -v)),
+      k * 36 + 16,
+    );
+    new Uint32Array(parts.buffer)[k * 36 + 32] = k * SLOTS;
+  }
+  // Instance rows (16 words each): 3 parts × slots, flags 0.
+  const instances = buffer(device, PARTS * SLOTS * 64, GPUBufferUsage.STORAGE);
+  // Counters: for `claim`, as `binPoints` and `cutPool` left them.
+  const counters = new Uint32Array(132);
+  const bins = new Uint32Array(POINTS).fill(0xffffffff);
+  if (stage === "claim") {
+    for (let i = 0; i < POINTS; i++) {
+      // Visible points only, as `binPoints` bins them.
+      if (random() < 0.4 && vertices[i * 4]! < 1e37) {
+        const b = Math.floor(random() * 128);
+        bins[i] = b;
+        counters[b]! += 1;
+      }
+    }
+    // The cut as `cutPool` finds it: every point below it gets a slot,
+    // so which points do doesn't depend on the threads' order.
+    let sum = 0;
+    let cut = 128;
+    for (let b = 0; b < 128; b++) {
+      if (sum + counters[b]! > SLOTS) {
+        cut = b;
+        break;
+      }
+      sum += counters[b]!;
+    }
+    counters[128] = cut;
+  }
+  const counterBuffer = buffer(device, counters, GPUBufferUsage.STORAGE);
+  const binBuffer = buffer(device, bins, GPUBufferUsage.STORAGE);
+  const group = [
+    {
+      binding: 0,
+      resource: {
+        buffer: buffer(device, new Uint8Array(params), GPUBufferUsage.UNIFORM),
+      },
+    },
+    {
+      binding: 1,
+      resource: { buffer: buffer(device, vertices, GPUBufferUsage.STORAGE) },
+    },
+    {
+      binding: 2,
+      resource: { buffer: buffer(device, parts, GPUBufferUsage.STORAGE) },
+    },
+    { binding: 3, resource: { buffer: instances } },
+    { binding: 4, resource: { buffer: counterBuffer } },
+    { binding: 5, resource: { buffer: binBuffer } },
+    {
+      binding: 6,
+      resource: {
+        buffer: buffer(
+          device,
+          new Float32Array([2500, 0, 0, 0]),
+          GPUBufferUsage.UNIFORM,
+        ),
+      },
+    },
+  ];
+  return {
+    group,
+    instances,
+    counters,
+    counterBuffer,
+    bins,
+    binBuffer,
+    groupsX,
+  };
+}
+
+const VECTOR_CASES: Case[] = [
+  {
+    name: "points.applySamples",
+    reference: pointsReference,
+    slang: pointsSlang,
+    entry: "applySamples",
+    layout: POINTS_LAYOUT,
+    setup(device) {
+      const { group0, state } = pointsInputs(device);
+      const random = randoms(79);
+      const n = POINTS - 200;
+      const samples = Float32Array.from({ length: n * 4 }, (_, j) =>
+        j % 4 === 3 ? random() * 360 : (random() - 0.5) * 9000,
+      );
+      const update = new ArrayBuffer(32);
+      const groupsX = Math.ceil(n / 64);
+      new Uint32Array(update).set([100, n, 0, 0, groupsX * 64]);
+      new Float32Array(update).set([12.25, 0.75], 2);
+      return {
+        groups: [
+          group0,
+          [
+            {
+              binding: 0,
+              resource: {
+                buffer: buffer(
+                  device,
+                  new Uint8Array(update),
+                  GPUBufferUsage.UNIFORM,
+                ),
+              },
+            },
+            {
+              binding: 1,
+              resource: {
+                buffer: buffer(device, samples, GPUBufferUsage.STORAGE),
+              },
+            },
+          ],
+        ],
+        dispatch: [groupsX],
+        outputs: [
+          {
+            buffer: state,
+            initial: new Uint32Array(pointStates(71).buffer),
+            element: "f32",
+            ulps: 1,
+          },
+        ],
+      };
+    },
+  },
+  {
+    name: "points.placePoints",
+    reference: pointsReference,
+    slang: pointsSlang,
+    entry: "placePoints",
+    layout: [POINTS_LAYOUT[0]!],
+    setup(device) {
+      const { group0, vertices, groupsX } = pointsInputs(device);
+      return {
+        groups: [group0],
+        dispatch: [groupsX],
+        outputs: [{ buffer: vertices, element: "f32", ulps: 1 }],
+      };
+    },
+  },
+  {
+    name: "modelPool.binPoints",
+    reference: `${commonReference}\n${modelPoolReference}\n${POOL_STYLE}`,
+    slang: `${modelPoolSlang}\n${POOL_STYLE}`,
+    entry: "binPoints",
+    layout: POOL_LAYOUT,
+    setup(device) {
+      const { group, counterBuffer, counters, binBuffer, bins, groupsX } =
+        poolInputs(device, "bin");
+      return {
+        groups: [group],
+        dispatch: [groupsX],
+        outputs: [
+          { buffer: counterBuffer, initial: counters },
+          { buffer: binBuffer, initial: bins },
+        ],
+      };
+    },
+  },
+  {
+    name: "modelPool.claimSlots",
+    reference: `${commonReference}\n${modelPoolReference}\n${POOL_STYLE}`,
+    slang: `${modelPoolSlang}\n${POOL_STYLE}`,
+    entry: "claimSlots",
+    layout: POOL_LAYOUT,
+    setup(device) {
+      // Which point gets which slot depends on the threads' order: one
+      // slot a point, so the rows are compared as a set (sorted), and
+      // the count exactly.
+      const { group, counterBuffer, counters, instances, groupsX } = poolInputs(
+        device,
+        "claim",
+      );
+      return {
+        groups: [group],
+        dispatch: [groupsX],
+        outputs: [
+          { buffer: counterBuffer, initial: counters },
+          { buffer: instances, element: "f32", ulps: 1, sortedRows: 16 },
+        ],
+      };
+    },
+  },
+  {
+    name: "modelPool.hideRest",
+    reference: `${commonReference}\n${modelPoolReference}\n${POOL_STYLE}`,
+    slang: `${modelPoolSlang}\n${POOL_STYLE}`,
+    entry: "hideRest",
+    layout: POOL_LAYOUT,
+    setup(device) {
+      const { group, counterBuffer, counters, instances } = poolInputs(
+        device,
+        "bin",
+      );
+      counters[129] = 1234;
+      device.queue.writeBuffer(counterBuffer, 0, counters);
+      return {
+        groups: [group],
+        dispatch: [Math.ceil((SLOTS * PARTS) / 64)],
+        outputs: [{ buffer: instances }],
+      };
+    },
+  },
+];
+
 const CASES: Case[] = [
   ...IBL_CASES,
+  ...VECTOR_CASES,
   {
     name: "depthRange",
     reference: depthRangeReference,
@@ -2109,8 +2447,28 @@ async function runKernels(): Promise<Row[]> {
     let beyond = 0;
     let worst = 0;
     let absolute: number | undefined;
-    a.forEach((bytes, k) => {
+    const sortRows = (bytes: Uint8Array, words: number): Uint8Array => {
+      const f = new Float32Array(
+        bytes.buffer,
+        bytes.byteOffset,
+        bytes.byteLength / 4,
+      );
+      const rows = Array.from({ length: f.length / words }, (_, r) =>
+        f.slice(r * words, (r + 1) * words),
+      );
+      // By the row's translation (its fourth, eighth and twelfth words):
+      // a rounding apart doesn't reorder rows that far apart.
+      rows.sort((x, y) => x[3]! - y[3]! || x[7]! - y[7]! || x[11]! - y[11]!);
+      const out = new Float32Array(f.length);
+      rows.forEach((row, r) => out.set(row, r * words));
+      return new Uint8Array(out.buffer);
+    };
+    a.forEach((bytes0, k) => {
       const o = resources.outputs[k]!;
+      const bytes = o.sortedRows ? sortRows(bytes0, o.sortedRows) : bytes0;
+      if (o.sortedRows) {
+        b[k] = sortRows(b[k]!, o.sortedRows);
+      }
       const element = o.element ?? "u32";
       const x = ordered(bytes, element);
       const y = ordered(b[k]!, element);

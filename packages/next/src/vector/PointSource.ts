@@ -1,4 +1,4 @@
-import pointsWgsl from "./points.wgsl?raw";
+import pointsWgsl from "../shaders/generated/points.wgsl?raw";
 import { eastNorthUpToFixedFrame } from "../math/transforms.ts";
 import { Ellipsoid } from "../math/ellipsoid.ts";
 import * as m4 from "../math/mat4.ts";
@@ -49,7 +49,7 @@ export interface PointSourceOptions {
   clock?: () => number;
 }
 
-/** Words per point in the state buffer (points.wgsl `State`). */
+/** Words per point in the state buffer (points.slang `State`). */
 const STATE_WORDS = 12;
 const COMPONENTS = { f32: 1, u32: 1, vec2f: 2, vec3f: 3, vec4f: 4 } as const;
 
