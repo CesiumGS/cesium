@@ -3,14 +3,13 @@ import slangWorkerUrl from "./slangWorker.ts?worker&url";
 import cesiumSlang from "../shaders/cesium.slang?raw";
 import { workerStart } from "../io/WorkerPool.ts";
 import {
-  adaptSlangStages,
   cesiumModule,
   slangStages,
-  slangStub,
   withoutComments,
   type InstanceType,
   type NamedType,
 } from "./slangStages.ts";
+import { slangBridge, type NamedFields } from "./contract.ts";
 import type { UniformDeclaration } from "./uniforms.ts";
 import {
   bindDeclaredUniforms,
@@ -98,20 +97,20 @@ export async function compileSlang(
     );
   }
   const url = new URL(slangUrl, globalThis.location?.href).href;
+  const fields: NamedFields = {
+    attributes: Object.fromEntries(
+      Object.entries(named.attributes ?? {}).map(([n, a]) => [n, a.type]),
+    ),
+    metadata: Object.fromEntries(
+      Object.entries(named.metadata ?? {}).map(([n, d]) => [
+        n,
+        typeof d === "string" ? d : d.type,
+      ]),
+    ),
+    instance: named.instance ?? {},
+  };
   const cesium = (uniforms: Record<string, UniformDeclaration>) =>
-    cesiumModule(cesiumSlang, {
-      attributes: Object.fromEntries(
-        Object.entries(named.attributes ?? {}).map(([n, a]) => [n, a.type]),
-      ),
-      metadata: Object.fromEntries(
-        Object.entries(named.metadata ?? {}).map(([n, d]) => [
-          n,
-          typeof d === "string" ? d : d.type,
-        ]),
-      ),
-      uniforms,
-      instance: named.instance ?? {},
-    });
+    cesiumModule(cesiumSlang, { ...fields, uniforms });
   let user = source;
   let controls: ShaderControl[] = [];
   let uniforms: Record<string, UniformDeclaration> = { ...named.uniforms };
@@ -136,7 +135,8 @@ export async function compileSlang(
     url,
     cesium: cesium(uniforms),
     user,
-    stub: slangStub(stages),
+    stub: slangBridge(stages, fields),
   });
-  return { wgsl: adaptSlangStages(wgsl, stages), controls, uniforms };
+  // Slang's output as it is: CustomShader finds the bridge in it.
+  return { wgsl, controls, uniforms };
 }

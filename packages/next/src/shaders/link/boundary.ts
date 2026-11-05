@@ -1,9 +1,11 @@
 /**
  * A boundary between units (plan §3.4, step 5): the functions one side
  * calls by name and the other must define, with their types, and the
- * names the providing side exports for the other to use. Declared beside
- * the WGSL while the surfaces are WGSL; generated from Slang's reflection
- * once they are Slang (as `layouts.ts` is).
+ * names the providing side exports for the other to use. The structs that
+ * cross the surface boundary are described from Slang's reflection
+ * (shaders/generated/boundary.ts); its functions are declared here, Slang's
+ * reflection having no functions' signatures, and test/linker.test.ts
+ * checks the generated WGSL against them.
  */
 export interface FunctionSignature {
   name: string;

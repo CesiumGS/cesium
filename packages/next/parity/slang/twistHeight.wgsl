@@ -1,4 +1,10 @@
 // Generated from twistHeight.slang by scripts/slangShader.mjs; do not edit.
+@fragment
+fn cesiumStages()
+{
+    return;
+}
+
 fn twist_0( v_0 : vec3<f32>,  a_0 : f32) -> vec3<f32>
 {
     var c_0 : f32 = cos(a_0);
@@ -52,6 +58,45 @@ fn vertexMain_0( vsInput_0 : VertexInput_0,  vsOutput_0 : ptr<function, VertexOu
     return;
 }
 
+fn cesiumSlangVertex( in_positionMC_0 : vec3<f32>,  in_normalMC_0 : vec3<f32>,  in_texCoord0_0 : vec2<f32>,  in_color0_0 : vec4<f32>,  in_featureId0_0 : u32,  in_vertexIndex_0 : u32,  in_instanceIndex_0 : u32,  in_time_0 : f32,  out_positionMC_0 : ptr<function, vec3<f32>>,  out_normalMC_0 : ptr<function, vec3<f32>>)
+{
+    var _S3 : vec3<f32> = vec3<f32>(0.0f);
+    var _S4 : vec2<f32> = vec2<f32>(0.0f);
+    var _S5 : vec4<f32> = vec4<f32>(0.0f);
+    var _S6 : Attributes_0 = Attributes_0( u32(0) );
+    var _S7 : Metadata_0 = Metadata_0( u32(0) );
+    var _S8 : InstanceValues_0 = InstanceValues_0( u32(0) );
+    var i_0 : VertexInput_0;
+    i_0.positionMC_0 = _S3;
+    i_0.normalMC_0 = _S3;
+    i_0.texCoord0_0 = _S4;
+    i_0.color0_0 = _S5;
+    i_0.featureId0_0 = u32(0);
+    i_0.vertexIndex_0 = u32(0);
+    i_0.instanceIndex_0 = u32(0);
+    i_0.time_0 = 0.0f;
+    i_0.attributes_0 = _S6;
+    i_0.metadata_0 = _S7;
+    i_0.instance_0 = _S8;
+    i_0.positionMC_0 = in_positionMC_0;
+    i_0.normalMC_0 = in_normalMC_0;
+    i_0.texCoord0_0 = in_texCoord0_0;
+    i_0.color0_0 = in_color0_0;
+    i_0.featureId0_0 = in_featureId0_0;
+    i_0.vertexIndex_0 = in_vertexIndex_0;
+    i_0.instanceIndex_0 = in_instanceIndex_0;
+    i_0.time_0 = in_time_0;
+    var o_0 : VertexOutput_0;
+    o_0.positionMC_1 = _S3;
+    o_0.normalMC_1 = _S3;
+    o_0.positionMC_1 = (*out_positionMC_0);
+    o_0.normalMC_1 = (*out_normalMC_0);
+    vertexMain_0(i_0, &(o_0));
+    (*out_positionMC_0) = o_0.positionMC_1;
+    (*out_normalMC_0) = o_0.normalMC_1;
+    return;
+}
+
 struct FragmentInput_0
 {
      positionMC_2 : vec3<f32>,
@@ -87,61 +132,64 @@ fn fragmentMain_0( fsInput_0 : FragmentInput_0,  material_0 : ptr<function, Mate
     return;
 }
 
-@fragment
-fn cesiumStages(@builtin(position) p_0 : vec4<f32>)
+fn cesiumSlangFragment( in_positionMC_1 : vec3<f32>,  in_positionEC_0 : vec3<f32>,  in_positionWC_0 : vec3<f32>,  in_normal_0 : vec3<f32>,  in_texCoord0_1 : vec2<f32>,  in_color0_1 : vec4<f32>,  in_featureId_0 : u32,  in_screen_0 : vec2<f32>,  in_time_1 : f32,  in_instanceIndex_1 : u32,  out_baseColor_0 : ptr<function, vec3<f32>>,  out_alpha_0 : ptr<function, f32>,  out_metallic_0 : ptr<function, f32>,  out_roughness_0 : ptr<function, f32>,  out_normal_0 : ptr<function, vec3<f32>>,  out_occlusion_0 : ptr<function, f32>,  out_emissive_0 : ptr<function, vec3<f32>>,  out_unlit_0 : ptr<function, bool>)
 {
-    var _S3 : vec4<f32> = vec4<f32>(0.0f);
-    var result_0 : vec4<f32> = _S3;
-    var _S4 : vec3<f32> = vec3<f32>(0.0f);
-    var _S5 : vec2<f32> = vec2<f32>(0.0f);
-    var _S6 : Attributes_0 = Attributes_0( u32(0) );
-    var _S7 : Metadata_0 = Metadata_0( u32(0) );
-    var _S8 : InstanceValues_0 = InstanceValues_0( u32(0) );
-    var vi_0 : VertexInput_0 = VertexInput_0( _S4, _S4, _S5, _S3, u32(0), u32(0), u32(0), 0.0f, _S6, _S7, _S8 );
-    var vo_0 : VertexOutput_0;
-    vo_0.positionMC_1 = _S4;
-    vo_0.normalMC_1 = _S4;
-    vertexMain_0(vi_0, &(vo_0));
-    var _S9 : vec3<f32> = _S3.xyz + (vo_0.positionMC_1 + vo_0.normalMC_1);
-    result_0.x = _S9.x;
-    result_0.y = _S9.y;
-    result_0.z = _S9.z;
-    var fi_0 : FragmentInput_0 = FragmentInput_0( _S4, _S4, _S4, _S4, _S5, _S3, u32(0), _S5, 0.0f, _S6, _S7, u32(0), _S8 );
-    var mo_0 : MaterialOutput_0;
-    mo_0.baseColor_0 = _S4;
-    mo_0.alpha_0 = 0.0f;
-    mo_0.metallic_0 = 0.0f;
-    mo_0.roughness_0 = 0.0f;
-    mo_0.normal_1 = _S4;
-    mo_0.occlusion_0 = 0.0f;
-    mo_0.emissive_0 = _S4;
-    mo_0.unlit_0 = false;
-    fragmentMain_0(fi_0, &(mo_0));
-    var _S10 : vec4<f32> = result_0 + vec4<f32>(mo_0.baseColor_0, mo_0.alpha_0);
-    result_0 = _S10;
-    if((any((_S10 != _S3))))
-    {
-        discard;
-    }
+    var _S9 : vec3<f32> = vec3<f32>(0.0f);
+    var _S10 : vec2<f32> = vec2<f32>(0.0f);
+    var _S11 : vec4<f32> = vec4<f32>(0.0f);
+    var _S12 : Attributes_0 = Attributes_0( u32(0) );
+    var _S13 : Metadata_0 = Metadata_0( u32(0) );
+    var _S14 : InstanceValues_0 = InstanceValues_0( u32(0) );
+    var i_1 : FragmentInput_0;
+    i_1.positionMC_2 = _S9;
+    i_1.positionEC_0 = _S9;
+    i_1.positionWC_0 = _S9;
+    i_1.normal_0 = _S9;
+    i_1.texCoord0_1 = _S10;
+    i_1.color0_1 = _S11;
+    i_1.featureId_0 = u32(0);
+    i_1.screen_0 = _S10;
+    i_1.time_1 = 0.0f;
+    i_1.attributes_1 = _S12;
+    i_1.metadata_1 = _S13;
+    i_1.instanceIndex_1 = u32(0);
+    i_1.instance_1 = _S14;
+    i_1.positionMC_2 = in_positionMC_1;
+    i_1.positionEC_0 = in_positionEC_0;
+    i_1.positionWC_0 = in_positionWC_0;
+    i_1.normal_0 = in_normal_0;
+    i_1.texCoord0_1 = in_texCoord0_1;
+    i_1.color0_1 = in_color0_1;
+    i_1.featureId_0 = in_featureId_0;
+    i_1.screen_0 = in_screen_0;
+    i_1.time_1 = in_time_1;
+    i_1.instanceIndex_1 = in_instanceIndex_1;
+    var o_1 : MaterialOutput_0;
+    o_1.baseColor_0 = _S9;
+    o_1.alpha_0 = 0.0f;
+    o_1.metallic_0 = 0.0f;
+    o_1.roughness_0 = 0.0f;
+    o_1.normal_1 = _S9;
+    o_1.occlusion_0 = 0.0f;
+    o_1.emissive_0 = _S9;
+    o_1.unlit_0 = false;
+    o_1.baseColor_0 = (*out_baseColor_0);
+    o_1.alpha_0 = (*out_alpha_0);
+    o_1.metallic_0 = (*out_metallic_0);
+    o_1.roughness_0 = (*out_roughness_0);
+    o_1.normal_1 = (*out_normal_0);
+    o_1.occlusion_0 = (*out_occlusion_0);
+    o_1.emissive_0 = (*out_emissive_0);
+    o_1.unlit_0 = (*out_unlit_0);
+    fragmentMain_0(i_1, &(o_1));
+    (*out_baseColor_0) = o_1.baseColor_0;
+    (*out_alpha_0) = o_1.alpha_0;
+    (*out_metallic_0) = o_1.metallic_0;
+    (*out_roughness_0) = o_1.roughness_0;
+    (*out_normal_0) = o_1.normal_1;
+    (*out_occlusion_0) = o_1.occlusion_0;
+    (*out_emissive_0) = o_1.emissive_0;
+    (*out_unlit_0) = o_1.unlit_0;
     return;
 }
 
-fn vertexMain(vsInput: VertexInput, vsOutput: ptr<function, VertexOutput>) {
-  var staged = VertexOutput_0((*vsOutput).positionMC, (*vsOutput).normalMC);
-  vertexMain_0(VertexInput_0(vsInput.positionMC, vsInput.normalMC, vsInput.texCoord0, vsInput.color0, vsInput.featureId0, vsInput.vertexIndex, vsInput.instanceIndex, vsInput.time, Attributes_0(vsInput.attributes.none), Metadata_0(vsInput.metadata.none), InstanceValues_0(vsInput.instance.none)), &staged);
-  (*vsOutput).positionMC = staged.positionMC_1;
-  (*vsOutput).normalMC = staged.normalMC_1;
-}
-
-fn fragmentMain(fsInput: FragmentInput, material: ptr<function, MaterialOutput>) {
-  var staged = MaterialOutput_0((*material).baseColor, (*material).alpha, (*material).metallic, (*material).roughness, (*material).normal, (*material).occlusion, (*material).emissive, (*material).unlit);
-  fragmentMain_0(FragmentInput_0(fsInput.positionMC, fsInput.positionEC, fsInput.positionWC, fsInput.normal, fsInput.texCoord0, fsInput.color0, fsInput.featureId, fsInput.screen, fsInput.time, Attributes_0(fsInput.attributes.none), Metadata_0(fsInput.metadata.none), fsInput.instanceIndex, InstanceValues_0(fsInput.instance.none)), &staged);
-  (*material).baseColor = staged.baseColor_0;
-  (*material).alpha = staged.alpha_0;
-  (*material).metallic = staged.metallic_0;
-  (*material).roughness = staged.roughness_0;
-  (*material).normal = staged.normal_1;
-  (*material).occlusion = staged.occlusion_0;
-  (*material).emissive = staged.emissive_0;
-  (*material).unlit = staged.unlit_0;
-}

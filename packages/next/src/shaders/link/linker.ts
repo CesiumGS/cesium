@@ -37,7 +37,32 @@ export interface Linker {
   link(request: LinkRequest): LinkedModule;
 }
 
-const normalize = (type: string) => type.replace(/\s+/g, "");
+const SCALARS: Record<string, string> = {
+  f: "f32",
+  u: "u32",
+  i: "i32",
+  h: "f16",
+};
+
+/**
+ * A WGSL type spelled one way: spaces dropped, the predeclared aliases
+ * (`vec3f`, `mat2x2f`) as the types they stand for (`vec3<f32>`,
+ * `mat2x2<f32>`), as Slang writes them.
+ */
+export function canonicalType(type: string): string {
+  return type
+    .replace(/\s+/g, "")
+    .replace(
+      /\bvec([234])([fuih])\b/g,
+      (_, n: string, s: string) => `vec${n}<${SCALARS[s]}>`,
+    )
+    .replace(
+      /\bmat([234])x([234])([fh])\b/g,
+      (_, c: string, r: string, s: string) => `mat${c}x${r}<${SCALARS[s]}>`,
+    );
+}
+
+const normalize = canonicalType;
 
 /**
  * Joins units in order, after checking them: a name defined in two units

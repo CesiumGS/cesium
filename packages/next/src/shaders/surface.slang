@@ -27,6 +27,7 @@
 // `__extern_cpp` here (shaders/link SURFACE_BOUNDARY).
 
 import common;
+import surfaceBoundary;
 
 static const float PI = 3.14159265358979;
 
@@ -398,39 +399,6 @@ float4 materialTexture(Material m, uint slot, float2 uv) {
 
 // --- what passes between the stages ------------------------------------------
 
-// A vertex as the vertex entry points (surfaceVertex.wgsl) put it out, in
-// their `VsOut`'s order; `SurfaceVaryings` the same as the fragment
-// entry points read it: Slang gives its fields locations in their order
-// (their semantics distinct: a trailing digit is an index, and NAMED0…3
-// as one semantic's indices were placed out of order), which the vertex
-// entries' `VsOut` declares (test/linker.test.ts checks they agree).
-export __extern_cpp struct SurfaceVertex {
-  __extern_cpp float4 position;
-  __extern_cpp float3 normal;
-  __extern_cpp float2 uv;
-  __extern_cpp float4 color;
-  // The draw (x), its global feature ID (y, 0 = none) and the instance
-  // among the draw's (z, custom shaders' `instance` values), in one
-  // location: a fragment stage's inputs are at most 16 with its built-ins
-  // (front_facing, sample_mask and sample_index each count: `fsListSamples`).
-  __extern_cpp uint3 ids;
-  __extern_cpp float3 relPosition; // camera-relative world position
-  __extern_cpp float4 tangent;     // xyz world tangent, w handedness; w = 0: none
-  // Aerial perspective marched per vertex (`aerialMarch`), pre-exposed
-  // in-scatter and transmittance; unused where the view reads the volume.
-  __extern_cpp float3 airInscatter;
-  __extern_cpp float3 airTransmittance;
-  __extern_cpp float3 positionMC;  // the mesh's own (model) coordinates
-  // A custom shader's named attributes and metadata, packed into four
-  // slots (CustomShader.ts `namedCode`). The engine's own stages leave
-  // them zero and read none: slots a fragment stage doesn't read cost
-  // nothing (the stages are linked; plan §3.4, step 5).
-  __extern_cpp float4 named0;
-  __extern_cpp float4 named1;
-  __extern_cpp float4 named2;
-  __extern_cpp float4 named3;
-};
-
 struct SurfaceVaryings {
   float4 position : SV_Position;
   float3 normal : NORMAL;
@@ -466,91 +434,6 @@ static const float2 POINT_OFFSET[4] = {
 static const float2 POINT_UV[4] = {
   float2(0.0, 1.0), float2(1.0, 1.0), float2(1.0, 0.0), float2(0.0, 0.0)
 };
-
-// --- custom shaders (plan §3.4): the boundary with run-time code ----------------
-//
-// A custom shader (scene/CustomShader.ts) supplies `vertexMain` and
-// `fragmentMain` against its contract (`VertexInput`, `VertexOutput`,
-// `FragmentInput`), which CustomShader.ts generates with the shader's own
-// types (its attributes, metadata and instance values), and with the two
-// stage functions the engine calls by name here: `cesiumVertexStage` and
-// `cesiumFragmentStage`. They take what the engine knows of a vertex and
-// a fragment (the structs below, fixed), build the contract from it, and
-// call the shader's stages. The engine's own (CustomShader.ts
-// `DEFAULT_STAGES`) change nothing. They run in every pass that draws the
-// content (opaque, depth, shadow, ambient-occlusion prepass,
-// translucent), so a vertex modifier moves geometry the same way in all
-// of them. Named as 1.x `CustomShader`'s.
-
-// A vertex as the mesh stores it, before its transform, and where its
-// named values are read from (the draw's attribute directory, the row of
-// its feature table).
-export __extern_cpp struct CesiumVertex {
-  __extern_cpp float3 positionMC;
-  __extern_cpp float3 normalMC;
-  __extern_cpp float2 texCoord0;   // (0, 0) without TEXCOORD_0
-  __extern_cpp float4 color0;      // white without COLOR_0
-  __extern_cpp uint featureId0;    // local feature ID; 0xffffffff: none
-  __extern_cpp uint vertexIndex;
-  __extern_cpp uint instanceIndex; // index among the draw's instances; 0 when not instanced
-  __extern_cpp float time;         // seconds since the engine started
-  __extern_cpp uint draw;
-  __extern_cpp uint directory;     // DrawRecord.attributes
-  __extern_cpp uint tableFeature;
-};
-
-// What the vertex stage gives back: the vertex in model coordinates and
-// the named values, packed (`SurfaceVertex.named0`…).
-export __extern_cpp struct CesiumVertexResult {
-  __extern_cpp float3 positionMC;
-  __extern_cpp float3 normalMC;
-  __extern_cpp float4 named0;
-  __extern_cpp float4 named1;
-  __extern_cpp float4 named2;
-  __extern_cpp float4 named3;
-};
-
-// A surface point as the engine knows it.
-export __extern_cpp struct CesiumFragment {
-  __extern_cpp float3 positionMC;  // model coordinates, interpolated
-  __extern_cpp float3 positionEC;  // relative to the camera, Earth-fixed axes (m)
-  __extern_cpp float3 positionWC;  // Earth-fixed (float32: about a meter at the Earth's scale)
-  __extern_cpp float3 normal;      // geometric normal, Earth-fixed axes, toward the viewer
-  __extern_cpp float2 texCoord0;
-  __extern_cpp float4 color0;      // the vertex color times the draw's and instance's tint
-  __extern_cpp uint featureId;     // global feature ID (the one picking returns); 0: none
-  __extern_cpp float2 screen;      // framebuffer pixel
-  __extern_cpp float time;
-  __extern_cpp uint instanceIndex; // index among the draw's instances
-  __extern_cpp uint draw;
-  __extern_cpp uint directory;     // DrawRecord.attributes
-  __extern_cpp uint localFeature;  // the feature local to the draw; 0xffffffff: none
-  __extern_cpp float4 named0;      // the named values, interpolated (packed)
-  __extern_cpp float4 named1;
-  __extern_cpp float4 named2;
-  __extern_cpp float4 named3;
-};
-
-// The material `fragmentMain` may change, filled with the glTF material's
-// values first. Linear color; `normal` is the shading normal (Earth-fixed
-// axes, normal map applied).
-export __extern_cpp struct MaterialOutput {
-  __extern_cpp float3 baseColor;
-  __extern_cpp float alpha;
-  __extern_cpp float metallic;
-  __extern_cpp float roughness;
-  __extern_cpp float3 normal;
-  __extern_cpp float occlusion;
-  __extern_cpp float3 emissive;
-  __extern_cpp bool unlit;
-};
-
-// Defined by the run-time unit (a custom shader's glue, or the engine's
-// own stages), called by name.
-__target_intrinsic(wgsl, "cesiumVertexStage($0)")
-CesiumVertexResult cesiumVertexStage(CesiumVertex v);
-__target_intrinsic(wgsl, "cesiumFragmentStage($0, &($1))")
-void cesiumFragmentStage(CesiumFragment f, inout MaterialOutput material);
 
 // What styles read of the view (vector/VectorStyle.ts).
 // The camera-relative position of what is being drawn (`cesiumAnchor`).

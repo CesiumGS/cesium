@@ -1,7 +1,11 @@
-// The `cesium` Slang module, version 2: custom shader stages' contract
-// (opaque.wgsl's `VertexInput`, `VertexOutput`, `FragmentInput` and
-// `MaterialOutput`, field for field and in the same order; slangStages.ts
-// maps them by position). A shader imports it and defines either or both:
+// The `cesium` Slang module, version 2: custom shader stages' contract,
+// the one source of `VertexInput`, `VertexOutput`, `FragmentInput` and
+// `MaterialOutput`. The build reads its reflection into the boundary's
+// description (src/shaders/generated/boundary.ts), from which WGSL shaders'
+// contract and Slang shaders' bridge are generated (scene/contract.ts); a
+// field added here must be one the engine passes (surfaceBoundary.slang),
+// and `MaterialOutput` must be the engine's (test/contract.test.ts). A
+// shader imports it and defines either or both:
 //
 //   import cesium;
 //   public void vertexMain(VertexInput vsInput, inout VertexOutput vsOutput) { … }

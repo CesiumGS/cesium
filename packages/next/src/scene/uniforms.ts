@@ -152,16 +152,13 @@ export function writeUniform(
 
 /**
  * WGSL declaring the uniforms (`uniforms.<name>`) and textures (`<name>`,
- * `<name>Sampler`), less the bindings `code` declares itself (Slang's
+ * `<name>Sampler`), less the group-2 bindings `declared` (Slang's
  * output declares its own).
  */
-export function uniformsWgsl(layout: UniformLayout, code: string): string {
-  const declared = new Set<number>();
-  for (const m of code.matchAll(
-    /@(?:binding\((\d+)\)\s*@group\(2\)|group\(2\)\s*@binding\((\d+)\))/g,
-  )) {
-    declared.add(Number(m[1] ?? m[2]));
-  }
+export function uniformsWgsl(
+  layout: UniformLayout,
+  declared: ReadonlySet<number>,
+): string {
   const lines: string[] = [];
   if (layout.bytes > 0 && !declared.has(UNIFORM_BINDING)) {
     lines.push(

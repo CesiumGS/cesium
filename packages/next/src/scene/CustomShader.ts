@@ -1,11 +1,20 @@
 import { attributeHash, metadataKey } from "../render/layout.ts";
-import {
-  SLANG_STUB_ENTRY,
-  type InstanceType,
-  type NamedDeclarations,
-  type NamedType,
+import type {
+  InstanceType,
+  NamedDeclarations,
+  NamedType,
 } from "./slangStages.ts";
-import { wgslUnit, type ShaderUnit } from "../shaders/link/index.ts";
+import {
+  CONTRACT_WGSL,
+  SLANG_BRIDGE,
+  slangAdapter,
+  slangBridgeBoundary,
+} from "./contract.ts";
+import {
+  wgslUnit,
+  type Boundary,
+  type ShaderUnit,
+} from "../shaders/link/index.ts";
 import {
   uniformLayout,
   uniformsWgsl,
@@ -139,76 +148,6 @@ const READ: Record<
 export const MAX_NAMED = 4;
 
 /**
- * The custom-shader contract (plan §3.4, step 5): `VertexInput`,
- * `VertexOutput` and `FragmentInput` hold the shader's own types, so they
- * are defined here, beside them, not by the engine, with the two stage
- * functions the engine calls by name (opaque.wgsl's boundary): each
- * builds the contract from the engine's `CesiumVertex` or
- * `CesiumFragment` and calls the shader's stage. Same for every shader;
- * `namedCode` supplies the shader's types and their readers.
- */
-const CONTRACT = `// A vertex as the mesh stores it, before its transform.
-struct VertexInput {
-  positionMC: vec3f,
-  normalMC: vec3f,
-  texCoord0: vec2f,   // (0, 0) without TEXCOORD_0
-  color0: vec4f,      // white without COLOR_0
-  featureId0: u32,    // local feature ID; 0xffffffff: none
-  vertexIndex: u32,
-  instanceIndex: u32, // index among the draw's instances; 0 when not instanced
-  time: f32,          // seconds since the engine started
-  attributes: Attributes, // the shader's declared attributes
-  metadata: Metadata,     // and metadata properties; zero where absent
-  instance: InstanceValues, // and per-instance values; zero where absent
-};
-// What vertexMain may change: the vertex in model coordinates.
-struct VertexOutput {
-  positionMC: vec3f,
-  normalMC: vec3f,
-};
-// A surface point as the fragment stage sees it.
-struct FragmentInput {
-  positionMC: vec3f,  // model coordinates, interpolated
-  positionEC: vec3f,  // relative to the camera, Earth-fixed axes (m)
-  positionWC: vec3f,  // Earth-fixed (float32: about a meter)
-  normal: vec3f,      // geometric normal, Earth-fixed axes, toward the viewer
-  texCoord0: vec2f,
-  color0: vec4f,      // the vertex color times the draw's and instance's tint
-  featureId: u32,     // global feature ID (the one picking returns); 0: none
-  screen: vec2f,      // framebuffer pixel
-  time: f32,
-  attributes: Attributes, // interpolated
-  metadata: Metadata,     // interpolated
-  instanceIndex: u32,     // index among the draw's instances
-  instance: InstanceValues, // exact (flat)
-};
-fn cesiumVertexStage(v: CesiumVertex) -> CesiumVertexResult {
-  let vsInput = VertexInput(
-    v.positionMC, v.normalMC, v.texCoord0, v.color0, v.featureId0,
-    v.vertexIndex, v.instanceIndex, v.time,
-    vertexAttributes(v.directory, v.vertexIndex, v.tableFeature),
-    vertexMetadata(v.directory, v.vertexIndex, v.tableFeature),
-    instanceValues(v.draw, v.instanceIndex),
-  );
-  var vsOutput = VertexOutput(vsInput.positionMC, vsInput.normalMC);
-  vertexMain(vsInput, &vsOutput);
-  var result = CesiumVertexResult(vsOutput.positionMC, vsOutput.normalMC,
-    vec4f(0.0), vec4f(0.0), vec4f(0.0), vec4f(0.0));
-  packNamed(vsInput.attributes, vsInput.metadata, &result);
-  return result;
-}
-fn cesiumFragmentStage(f: CesiumFragment, material: ptr<function, MaterialOutput>) {
-  let fsInput = FragmentInput(
-    f.positionMC, f.positionEC, f.positionWC, f.normal, f.texCoord0,
-    f.color0, f.featureId, f.screen, f.time,
-    fragmentAttributes(f), fragmentMetadata(f),
-    f.instanceIndex, instanceValues(f.draw, f.instanceIndex),
-  );
-  fragmentMain(fsInput, material);
-}
-`;
-
-/**
  * The engine's own stages, for content without a custom shader: the
  * vertex unchanged, no named values, the material as it is.
  */
@@ -283,7 +222,7 @@ export function namedCode(named: NamedDeclarations): string {
     const n = READ[f.type].components;
     return `f.named${slot}.${SWIZZLE.slice(offset, offset + n)}`;
   };
-  const lines: string[] = [CONTRACT];
+  const lines: string[] = [CONTRACT_WGSL];
   for (const struct of ["Attributes", "Metadata"] as const) {
     const own = fields.filter((f) => f.struct === struct);
     const reader =
@@ -487,21 +426,42 @@ export class CustomShader {
   readonly label: string;
   /** Controls for its uniforms (`CustomShaderOptions.controls`). */
   readonly controls: readonly ShaderControl[];
+  /**
+   * Boundaries its units must meet besides the surface's: a Slang
+   * shader's bridge (contract.ts `slangBridgeBoundary`).
+   */
+  readonly boundaries: readonly Boundary[];
   /** Slang's output: its matrices are written transposed (`writeUniform`). */
   private readonly slang: boolean;
   private readonly listeners = new Set<() => void>();
 
   constructor(options: CustomShaderOptions) {
     const units: ShaderUnit[] = [];
+    this.named = declarations(options);
+    let slang = false;
+    let boundaries: Boundary[] = [];
     if (options.wgsl !== undefined) {
       const stages = wgslUnit("stages", options.wgsl);
-      const defines = (stage: string) =>
-        stages.declarations.some((d) => d.kind === "fn" && d.name === stage);
+      const defines = (name: string) =>
+        stages.declarations.some((d) => d.kind === "fn" && d.name === name);
       units.push(stages);
-      if (!defines("vertexMain")) {
+      // Slang's output (scripts/slangShader.mjs, `fromSlang`) defines the
+      // bridge (contract.ts): the contract's stages call it.
+      const bridged = {
+        vertex: defines(SLANG_BRIDGE.vertex),
+        fragment: defines(SLANG_BRIDGE.fragment),
+      };
+      if (bridged.vertex || bridged.fragment) {
+        slang = true;
+        units.push(
+          wgslUnit("Slang adapter", slangAdapter(bridged, this.named)),
+        );
+        boundaries = [slangBridgeBoundary(bridged, this.named)];
+      }
+      if (!defines("vertexMain") && !bridged.vertex) {
         units.push(wgslUnit("default vertex stage", DEFAULT_VERTEX_MAIN));
       }
-      if (!defines("fragmentMain")) {
+      if (!defines("fragmentMain") && !bridged.fragment) {
         units.push(wgslUnit("default fragment stage", DEFAULT_FRAGMENT_MAIN));
       }
     } else {
@@ -510,13 +470,21 @@ export class CustomShader {
         wgslUnit("fragment stage", options.fragment ?? DEFAULT_FRAGMENT_MAIN),
       );
     }
-    this.named = declarations(options);
     units.push(wgslUnit("contract", namedCode(this.named)));
     const uniforms = options.uniforms ?? {};
     this.uniformLayout = uniformLayout(uniforms);
-    const stagesCode = units.map((u) => u.code).join("\n");
-    this.slang = stagesCode.includes(`fn ${SLANG_STUB_ENTRY}(`);
-    const bindings = uniformsWgsl(this.uniformLayout, stagesCode);
+    this.slang = slang;
+    this.boundaries = boundaries;
+    // Group 2's bindings the stages declare themselves (Slang's output
+    // does): the uniforms' are declared only where they don't.
+    const declared = new Set(
+      units.flatMap((u) =>
+        u.declarations
+          .filter((d) => d.kind === "var" && d.attributes?.group === "2")
+          .map((d) => Number(d.attributes!.binding)),
+      ),
+    );
+    const bindings = uniformsWgsl(this.uniformLayout, declared);
     if (bindings !== "") {
       units.push(wgslUnit("uniforms", bindings));
     }

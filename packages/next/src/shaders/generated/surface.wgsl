@@ -1865,49 +1865,6 @@ fn fsMomentColor( _S174 : pixelInput_9, @builtin(front_facing) frontFacing_6 : b
     return out_3;
 }
 
-struct SurfaceVertex
-{
-     position : vec4<f32>,
-     normal : vec3<f32>,
-     uv : vec2<f32>,
-     color : vec4<f32>,
-     ids : vec3<u32>,
-     relPosition : vec3<f32>,
-     tangent : vec4<f32>,
-     airInscatter : vec3<f32>,
-     airTransmittance : vec3<f32>,
-     positionMC : vec3<f32>,
-     named0 : vec4<f32>,
-     named1 : vec4<f32>,
-     named2 : vec4<f32>,
-     named3 : vec4<f32>,
-};
-
-struct CesiumVertex
-{
-     positionMC : vec3<f32>,
-     normalMC : vec3<f32>,
-     texCoord0 : vec2<f32>,
-     color0 : vec4<f32>,
-     featureId0 : u32,
-     vertexIndex : u32,
-     instanceIndex : u32,
-     time : f32,
-     draw : u32,
-     directory : u32,
-     tableFeature : u32,
-};
-
-struct CesiumVertexResult
-{
-     positionMC : vec3<f32>,
-     normalMC : vec3<f32>,
-     named0 : vec4<f32>,
-     named1 : vec4<f32>,
-     named2 : vec4<f32>,
-     named3 : vec4<f32>,
-};
-
 fn cesiumAnchorPosition() -> vec3<f32>
 {
     return cesiumAnchor_0;
@@ -2281,6 +2238,49 @@ fn readFragmentProperty( directory_1 : u32,  hash_2 : u32,  uv_18 : vec2<f32>,  
     }
     return fallback_0;
 }
+
+struct SurfaceVertex
+{
+     position : vec4<f32>,
+     normal : vec3<f32>,
+     uv : vec2<f32>,
+     color : vec4<f32>,
+     ids : vec3<u32>,
+     relPosition : vec3<f32>,
+     tangent : vec4<f32>,
+     airInscatter : vec3<f32>,
+     airTransmittance : vec3<f32>,
+     positionMC : vec3<f32>,
+     named0 : vec4<f32>,
+     named1 : vec4<f32>,
+     named2 : vec4<f32>,
+     named3 : vec4<f32>,
+};
+
+struct CesiumVertex
+{
+     positionMC : vec3<f32>,
+     normalMC : vec3<f32>,
+     texCoord0 : vec2<f32>,
+     color0 : vec4<f32>,
+     featureId0 : u32,
+     vertexIndex : u32,
+     instanceIndex : u32,
+     time : f32,
+     draw : u32,
+     directory : u32,
+     tableFeature : u32,
+};
+
+struct CesiumVertexResult
+{
+     positionMC : vec3<f32>,
+     normalMC : vec3<f32>,
+     named0 : vec4<f32>,
+     named1 : vec4<f32>,
+     named2 : vec4<f32>,
+     named3 : vec4<f32>,
+};
 
 fn read4_0( offset_0 : u32,  index_1 : u32) -> vec4<f32>
 {

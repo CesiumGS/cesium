@@ -19,13 +19,8 @@ import { tmpdir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
-import {
-  SLANG_STUB_ENTRY,
-  adaptSlangStages,
-  cesiumModule,
-  slangStages,
-  slangStub,
-} from "../src/scene/slangStages.ts";
+import { cesiumModule, slangStages } from "../src/scene/slangStages.ts";
+import { SLANG_STUB_ENTRY, slangBridge } from "../src/scene/contract.ts";
 import { slangcPath } from "./slangTools.mjs";
 
 // SLANGC, else the pinned one `npm run setup` fetched (scripts/slangTools.mjs).
@@ -69,15 +64,18 @@ if (!stages.vertex && !stages.fragment) {
 }
 // Slang resolves `import user;` and `import cesium;` by file name.
 const temp = mkdtempSync(join(tmpdir(), "slang-stages-"));
+const fields = {
+  attributes: declared("--attributes"),
+  metadata: declared("--metadata"),
+  instance: declared("--instance"),
+};
 try {
   writeFileSync(
     join(temp, "cesium.slang"),
     cesiumModule(
       readFileSync(join(here, "../src/shaders/cesium.slang"), "utf8"),
       {
-        attributes: declared("--attributes"),
-        metadata: declared("--metadata"),
-        instance: declared("--instance"),
+        ...fields,
         uniforms: Object.fromEntries(
           Object.entries(declared("--uniforms")).map(([n, type]) => [
             n,
@@ -88,7 +86,7 @@ try {
     ),
   );
   writeFileSync(join(temp, "user.slang"), source);
-  writeFileSync(join(temp, "stages.slang"), slangStub(stages));
+  writeFileSync(join(temp, "stages.slang"), slangBridge(stages, fields));
   const wgsl = join(temp, "stages.wgsl");
   execFileSync(
     slangc,
@@ -107,11 +105,12 @@ try {
   );
   writeFileSync(
     output,
-    `// Generated from ${basename(input)} by scripts/slangShader.mjs; do not edit.\n${adaptSlangStages(
-      // slangc writes CRLF on Windows; the repository's files are LF.
-      readFileSync(wgsl, "utf8").replace(/\r\n/g, "\n"),
-      stages,
-    )}`,
+    // Slang's output as it is (CustomShader finds the bridge in it);
+    // slangc writes CRLF on Windows, the repository's files are LF.
+    `// Generated from ${basename(input)} by scripts/slangShader.mjs; do not edit.\n${readFileSync(
+      wgsl,
+      "utf8",
+    ).replace(/\r\n/g, "\n")}`,
   );
   console.log(`wrote ${output}`);
 } finally {

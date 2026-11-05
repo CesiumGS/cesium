@@ -36,6 +36,7 @@ import {
   compileFailure,
   linkChecked,
   wgslUnit,
+  type Boundary,
   type LinkedModule,
   type Linker,
   type ShaderUnit,
@@ -771,12 +772,13 @@ async function createPipelines(
   const surfaceLink = (
     label: string,
     stages: readonly ShaderUnit[],
+    boundaries: readonly Boundary[] = [],
   ): LinkedModule =>
     linkChecked(
       {
         label,
         units: [...surfaceUnits, ...stages],
-        boundaries: [SURFACE_BOUNDARY, SURFACE_VERTEX_BOUNDARY],
+        boundaries: [SURFACE_BOUNDARY, SURFACE_VERTEX_BOUNDARY, ...boundaries],
       },
       linker,
     );
@@ -1272,7 +1274,7 @@ async function createPipelines(
     const { label } = shader;
     // The shader's units after the engine's: a name it defines twice, or a
     // stage the boundary wants missing, stops it here, in its own terms.
-    const linked = surfaceLink(label, shader.units);
+    const linked = surfaceLink(label, shader.units, shader.boundaries);
     // Its errors are reported below, once, not as an uncaptured error too.
     device.pushErrorScope("validation");
     const opaque = linkedModule(linked);

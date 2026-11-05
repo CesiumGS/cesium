@@ -35,6 +35,8 @@ const SOURCES = join(root, "src");
 export const GENERATED = join(root, "src", "shaders", "generated");
 /** The TypeScript layouts, from `layouts.slang`'s reflection. */
 export const LAYOUTS_TS = join(root, "src", "render", "generated", "layouts.ts");
+/** The surface boundary's description, from reflection (`boundaryTs`). */
+export const BOUNDARY_TS = join(root, "src", "shaders", "generated", "boundary.ts");
 /** Where `import name;` looks: the shaders' folder, then the source tree. */
 const INCLUDES = [join(root, "src", "shaders"), SOURCES];
 
@@ -93,6 +95,11 @@ export function dependents(changed, sources = slangSources()) {
       }
     }
   }
+  // cesium.slang isn't imported by the engine, but the boundary's
+  // description reads it (`boundaryTs`).
+  if (name === "cesium") {
+    affected.add(join(root, "src", "shaders", "boundary.slang"));
+  }
   return [...affected].filter((s) => existsSync(s) && definesEntryPoints(s));
 }
 
@@ -107,7 +114,7 @@ function header(source) {
  * Compiles one entry source into `outDir`: `<name>.wgsl` and
  * `<name>.json`. Throws with slangc's messages on an error.
  */
-export function compile(slangc, source, outDir = GENERATED) {
+export function compile(slangc, source, outDir = GENERATED, includes = []) {
   const name = basename(source, ".slang");
   const temp = mkdtempSync(join(tmpdir(), "slang-build-"));
   try {
@@ -119,7 +126,7 @@ export function compile(slangc, source, outDir = GENERATED) {
         source,
         "-target",
         "wgsl",
-        ...INCLUDES.flatMap((i) => ["-I", i]),
+        ...[...includes, ...INCLUDES].flatMap((i) => ["-I", i]),
         "-reflection-json",
         json,
         "-o",
@@ -176,6 +183,109 @@ ${blocks.join("\n\n")}
   return prettier.format(text, { ...options, filepath: LAYOUTS_TS });
 }
 
+/** A reflected type as WGSL writes it; a struct by its name. */
+function wgslType(type) {
+  const scalar = (t) =>
+    ({ float32: "f32", uint32: "u32", int32: "i32", bool: "bool" })[t.scalarType];
+  switch (type.kind) {
+    case "scalar":
+      return { type: scalar(type) };
+    case "vector": {
+      const s = scalar(type.elementType);
+      return { type: s === "bool" ? `vec${type.elementCount}<bool>` : `vec${type.elementCount}${s[0]}` };
+    }
+    case "matrix":
+      return { type: `mat${type.columnCount}x${type.rowCount}f` };
+    case "struct":
+      return { type: type.name, struct: true };
+    default:
+      throw new Error(`boundary: no WGSL spelling for a ${type.kind}`);
+  }
+}
+
+/** Each struct bound in a reflection's buffers: its fields in order. */
+function reflectedStructs(reflection) {
+  const structs = {};
+  for (const parameter of reflection.parameters) {
+    const struct = parameter.type.resultType ?? parameter.type.elementType;
+    if (struct?.kind === "struct") {
+      structs[struct.name] = struct.fields.map((f) => ({ name: f.name, ...wgslType(f.type) }));
+    }
+  }
+  return structs;
+}
+
+/**
+ * The custom shader contract's reflection: cesium.slang (its named
+ * values' structs empty, as `cesiumModule` writes them for a shader that
+ * declares none) with its structs in buffers, compiled in a scratch folder.
+ */
+async function contractReflection(slangc) {
+  const { cesiumModule } = await import("../src/scene/slangStages.ts");
+  const temp = mkdtempSync(join(tmpdir(), "slang-contract-"));
+  try {
+    writeFileSync(
+      join(temp, "cesium.slang"),
+      cesiumModule(readFileSync(join(root, "src", "shaders", "cesium.slang"), "utf8"), {
+        attributes: {},
+        metadata: {},
+      }),
+    );
+    const names = ["VertexInput", "VertexOutput", "FragmentInput", "MaterialOutput"];
+    const entry = join(temp, "contract.slang");
+    writeFileSync(
+      entry,
+      [
+        "import cesium;",
+        ...names.map((n, i) => `[[vk::binding(${i}, 0)]] StructuredBuffer<${n}> b${i};`),
+        `[[vk::binding(${names.length}, 0)]] RWStructuredBuffer<float> out;`,
+        '[shader("compute")] [numthreads(1, 1, 1)] void contract() {',
+        `  out[0] = b0[0].time + b1[0].positionMC.x + b2[0].time + b3[0].alpha;`,
+        "}",
+        "",
+      ].join("\n"),
+    );
+    const out = join(temp, "out");
+    compile(slangc, entry, out, [temp]);
+    return JSON.parse(readFileSync(join(out, "contract.json"), "utf8"));
+  } finally {
+    rmSync(temp, { recursive: true, force: true });
+  }
+}
+
+/**
+ * The surface boundary's description (plan §3.4, step 5): the structs that
+ * cross it, field by field in order with their WGSL types, from Slang's
+ * reflection: the engine's (`boundary.slang`, surfaceBoundary.slang's) and
+ * the custom shader contract's (cesium.slang). CustomShader.ts and
+ * slangStages.ts generate the contract's glue and the Slang bridge from it.
+ */
+export async function boundaryTs(slangc, engineJson) {
+  const engine = reflectedStructs(JSON.parse(engineJson));
+  const contract = reflectedStructs(await contractReflection(slangc));
+  const block = (name, doc, structs) =>
+    `/** ${doc} */\nexport const ${name} = ${JSON.stringify(structs)} as const satisfies Record<string, readonly BoundaryField[]>;`;
+  const text = `// Generated from the reflection of src/shaders/boundary.slang and
+// src/shaders/cesium.slang by scripts/slangBuild.mjs (slangc ${SLANG_VERSION}).
+// Do not edit: change surfaceBoundary.slang or cesium.slang and regenerate.
+
+/** A field of a boundary struct: its WGSL type, or a struct's name. */
+export interface BoundaryField {
+  readonly name: string;
+  readonly type: string;
+  /** \`type\` names a struct (the contract's named values'). */
+  readonly struct?: true;
+}
+
+${block("ENGINE_STRUCTS", "What the engine passes the stages and takes back (surfaceBoundary.slang).", engine)}
+
+${block("CONTRACT_STRUCTS", "What custom shader stages take and change (cesium.slang).", { VertexInput: contract.VertexInput, VertexOutput: contract.VertexOutput, FragmentInput: contract.FragmentInput, MaterialOutput: contract.MaterialOutput })}
+`;
+  const prettier = await import("prettier");
+  const options = (await prettier.resolveConfig(BOUNDARY_TS)) ?? {};
+  return prettier.format(text, { ...options, filepath: BOUNDARY_TS });
+}
+
 async function main() {
   const args = process.argv.slice(2);
   const check = args.includes("--check");
@@ -201,6 +311,13 @@ async function main() {
           await layoutsTs(readFileSync(join(GENERATED, "layouts.json"), "utf8")),
         );
         console.log("  → src/render/generated/layouts.ts");
+      }
+      if (basename(source) === "boundary.slang") {
+        writeFileSync(
+          BOUNDARY_TS,
+          await boundaryTs(slangc, readFileSync(join(GENERATED, "boundary.json"), "utf8")),
+        );
+        console.log("  → src/shaders/generated/boundary.ts");
       }
     }
     return;
@@ -228,6 +345,13 @@ async function main() {
           stale.push("src/render/generated/layouts.ts");
         }
       }
+      if (basename(source) === "boundary.slang") {
+        const fresh = await boundaryTs(slangc, readFileSync(join(temp, "boundary.json"), "utf8"));
+        const kept = existsSync(BOUNDARY_TS) ? readFileSync(BOUNDARY_TS, "utf8") : undefined;
+        if (fresh !== kept) {
+          stale.push("src/shaders/generated/boundary.ts");
+        }
+      }
     }
     // Generated files without a source any more.
     const expected = new Set(
@@ -237,7 +361,7 @@ async function main() {
       }),
     );
     for (const file of existsSync(GENERATED) ? readdirSync(GENERATED) : []) {
-      if (!expected.has(file) && file !== "README.md") {
+      if (!expected.has(file) && file !== "README.md" && file !== "boundary.ts") {
         stale.push(`${file} (no source)`);
       }
     }

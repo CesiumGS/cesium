@@ -1,25 +1,19 @@
 /**
- * Slang custom shader stages (plan §3.4) onto the WGSL contract: shared by
- * runtime compilation (`CustomShader.fromSlang`) and the build-time CLI
+ * Slang custom shader stages' sources (plan §3.4): the `cesium` module
+ * for a shader's declarations, and which stages a source defines. Shared
+ * by runtime compilation (`CustomShader.fromSlang`) and the build-time CLI
  * (scripts/slangShader.mjs). No browser or bundler APIs here.
  *
  * A user module imports `cesium` (shaders/cesium.slang) and defines
- * `vertexMain`, `fragmentMain` or both. Slang compiles functions only
- * from an entry point, so a stub fragment entry point (`slangStub`) calls
- * the stages; Slang keeps them as functions (`vertexMain_0`, …) with its
- * own copies of the contract's structs (`VertexInput_0`, fields renamed
- * `positionMC_0`, … in declaration order). `adaptSlangStages` appends the
- * contract's `vertexMain`/`fragmentMain`, converting by position. The
- * stub's entry point stays in the module, unused.
+ * `vertexMain`, `fragmentMain` or both; it is compiled with the bridge
+ * (contract.ts `slangBridge`), which is how its stages are called.
  */
 
 import { uniformsSlang, type UniformDeclaration } from "./uniforms.ts";
 
-/** Types of named attributes and metadata (`CustomShaderOptions`). */
-export type NamedType = "f32" | "vec2f" | "vec3f" | "vec4f" | "mat2x2f";
+import type { InstanceType, NamedType, SlangStages } from "./contract.ts";
 
-/** Types of per-instance values: the named types, and integers. */
-export type InstanceType = NamedType | "u32" | "i32";
+export type { InstanceType, NamedType } from "./contract.ts";
 
 /** A shader's named attributes and metadata: types by field name. */
 export interface NamedDeclarations {
@@ -78,59 +72,7 @@ export function cesiumModule(
   );
 }
 
-/** Contract fields that are structs of named values, converted by name. */
-const NESTED = new Set(["attributes", "metadata", "instance"]);
-
-/** The contract's structs' fields in order (CustomShader.ts, cesium.slang). */
-const FIELDS = {
-  VertexInput: [
-    "positionMC",
-    "normalMC",
-    "texCoord0",
-    "color0",
-    "featureId0",
-    "vertexIndex",
-    "instanceIndex",
-    "time",
-    "attributes",
-    "metadata",
-    "instance",
-  ],
-  VertexOutput: ["positionMC", "normalMC"],
-  FragmentInput: [
-    "positionMC",
-    "positionEC",
-    "positionWC",
-    "normal",
-    "texCoord0",
-    "color0",
-    "featureId",
-    "screen",
-    "time",
-    "attributes",
-    "metadata",
-    "instanceIndex",
-    "instance",
-  ],
-  MaterialOutput: [
-    "baseColor",
-    "alpha",
-    "metallic",
-    "roughness",
-    "normal",
-    "occlusion",
-    "emissive",
-    "unlit",
-  ],
-} as const;
-
-/** The stub's entry point (`slangStub`), left unused in the module. */
-export const SLANG_STUB_ENTRY = "cesiumStages";
-
-export interface SlangStages {
-  vertex: boolean;
-  fragment: boolean;
-}
+export type { SlangStages } from "./contract.ts";
 
 /**
  * Which stages a Slang source defines: a `void vertexMain(` or
@@ -148,144 +90,4 @@ export function slangStages(source: string): SlangStages {
 /** C-style source without its `//` and `/* *\/` comments. */
 export function withoutComments(source: string): string {
   return source.replace(/\/\*[\s\S]*?\*\/|\/\/[^\n]*/g, " ");
-}
-
-/**
- * The stub module (`stages`) whose fragment entry point calls the user
- * module's (`user`) stages, so Slang emits them.
- */
-export function slangStub(stages: SlangStages): string {
-  const lines = [
-    "import cesium;",
-    "import user;",
-    '[shader("fragment")]',
-    // No outputs (`discard` keeps the calls): an entry point's outputs are
-    // a struct Slang synthesizes, named as the surface module's are.
-    `void ${SLANG_STUB_ENTRY}(float4 p : SV_Position) {`,
-    "  float4 result = float4(0.0);",
-  ];
-  if (stages.vertex) {
-    lines.push(
-      "  VertexInput vi = (VertexInput)0;",
-      "  VertexOutput vo = (VertexOutput)0;",
-      "  vertexMain(vi, vo);",
-      "  result.xyz += vo.positionMC + vo.normalMC;",
-    );
-  }
-  if (stages.fragment) {
-    lines.push(
-      "  FragmentInput fi = (FragmentInput)0;",
-      "  MaterialOutput mo = (MaterialOutput)0;",
-      "  fragmentMain(fi, mo);",
-      "  result += float4(mo.baseColor, mo.alpha);",
-    );
-  }
-  lines.push(
-    "  if (any(result != float4(0.0))) {",
-    "    discard;",
-    "  }",
-    "}",
-    "",
-  );
-  return lines.join("\n");
-}
-
-/** Each struct's fields in order, with their types. */
-function structFields(
-  wgsl: string,
-): Map<string, Array<{ name: string; type: string }>> {
-  const structs = new Map<string, Array<{ name: string; type: string }>>();
-  for (const match of wgsl.matchAll(/struct\s+(\w+)\s*\{([^}]*)\}/g)) {
-    const fields = [
-      ...match[2]!.matchAll(/(\w+)\s*:\s*([\w<>, ]+?)\s*(?:,|$)/gm),
-    ].map((m) => ({ name: m[1]!, type: m[2]!.trim() }));
-    structs.set(match[1]!, fields);
-  }
-  return structs;
-}
-
-/** A Slang field's source name: Slang appends `_N` to each. */
-function sourceName(name: string): string {
-  return name.replace(/_\d+$/, "");
-}
-
-/**
- * The adapter for one stage: the contract's function calling Slang's
- * (`name`), its input built and its output read back by position.
- */
-function adapter(
-  wgsl: string,
-  structs: Map<string, Array<{ name: string; type: string }>>,
-  stage: "vertexMain" | "fragmentMain",
-): string {
-  const header = new RegExp(
-    `fn\\s+(${stage}_\\d+)\\s*\\(\\s*\\w+\\s*:\\s*(\\w+)\\s*,\\s*\\w+\\s*:\\s*ptr<function,\\s*(\\w+)>\\s*\\)`,
-  ).exec(wgsl);
-  if (!header) {
-    throw new Error(`Slang output has no ${stage} function.`);
-  }
-  const [, name, inType, outType] = header as unknown as [
-    string,
-    string,
-    string,
-    string,
-  ];
-  const [inStruct, outStruct, input, output] =
-    stage === "vertexMain"
-      ? (["VertexInput", "VertexOutput", "vsInput", "vsOutput"] as const)
-      : (["FragmentInput", "MaterialOutput", "fsInput", "material"] as const);
-  const inFields = FIELDS[inStruct];
-  const outFields = FIELDS[outStruct];
-  const inSlang = structs.get(inType);
-  const outNames = structs.get(outType)?.map((f) => f.name);
-  if (
-    inSlang?.length !== inFields.length ||
-    outNames?.length !== outFields.length
-  ) {
-    throw new Error(
-      `Slang output's ${inStruct} or ${outStruct} doesn't match the contract (cesium.slang out of date?).`,
-    );
-  }
-  return [
-    `fn ${stage}(${input}: ${inStruct}, ${output}: ptr<function, ${outStruct}>) {`,
-    `  var staged = ${outType}(${outFields.map((f) => `(*${output}).${f}`).join(", ")});`,
-    `  ${name}(${inType}(${inFields
-      .map((f, i) => {
-        // Slang's copy of `Attributes`/`Metadata`, field by field by name.
-        if (!NESTED.has(f)) {
-          return `${input}.${f}`;
-        }
-        const type = inSlang[i]!.type;
-        const fields = structs.get(type) ?? [];
-        // Matrices transposed: Slang's are row-major in meaning (`m[0]` a
-        // row, `mul(m, v)`), so `mul(m, v)` there is glTF's M v, as
-        // WGSL's `m * v` is.
-        return `${type}(${fields
-          .map((g) => {
-            const value = `${input}.${f}.${sourceName(g.name)}`;
-            return g.type.startsWith("mat") ? `transpose(${value})` : value;
-          })
-          .join(", ")})`;
-      })
-      .join(", ")}), &staged);`,
-    ...outFields.map((f, i) => `  (*${output}).${f} = staged.${outNames[i]};`),
-    "}",
-  ].join("\n");
-}
-
-/**
- * Slang's WGSL for the stub (`slangStub`) as custom shader code: its
- * functions and structs, then the contract's stages that the source
- * defines (`CustomShader` fills in the others).
- */
-export function adaptSlangStages(wgsl: string, stages: SlangStages): string {
-  const structs = structFields(wgsl);
-  const parts = [wgsl.trim()];
-  if (stages.vertex) {
-    parts.push(adapter(wgsl, structs, "vertexMain"));
-  }
-  if (stages.fragment) {
-    parts.push(adapter(wgsl, structs, "fragmentMain"));
-  }
-  return `${parts.join("\n\n")}\n`;
 }

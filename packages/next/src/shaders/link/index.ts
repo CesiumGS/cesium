@@ -12,6 +12,7 @@ export {
 export type { Boundary, FunctionSignature } from "./boundary.ts";
 export {
   WgslLinker,
+  canonicalType,
   compileFailure,
   linkChecked,
   linkFailure,

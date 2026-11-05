@@ -3,7 +3,7 @@
 /**
  * Compiles Slang custom shader stages to WGSL with the Slang WebAssembly
  * build, loaded once on the first request (slang.ts). A request is
- * `{ id, url, cesium, user, stub }` (slangStages.ts `slangStub`), replied
+ * `{ id, url, cesium, user, stub }` (contract.ts `slangBridge`), replied
  * `{ id, wgsl }`; or `{ id, op: "reflect", url, cesium, user }`, the user
  * module's parameters (its declared uniforms, with their attributes:
  * slangControls.ts), replied `{ id, parameters }`. Errors: `{ id, error }`.

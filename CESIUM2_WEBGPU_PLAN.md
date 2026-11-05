@@ -645,27 +645,37 @@ translucency 8/8, models, tileset and tracks pass.
   both places named. The stub now has no outputs (it `discard`s), but two
   separately compiled Slang modules share one naming scheme, so a
   collision can come back with any synthesized helper.
-- **To replace: `slangStages.ts`'s reading of Slang's output.** It finds
-  `vertexMain_N` and Slang's copies of the contract structs by pattern
-  and strips the `_N` suffix to match fields (`sourceName`): string
-  matching on names the compiler chose, the one place left that does it
-  (the engine side reads only `__extern_cpp` names, which Slang keeps).
-  Two ways out, both behind `Linker`:
-  - _Name the boundary in the user's module too:_ cesium.slang's contract
-    structs and the stage glue (`cesiumVertexStage`,
-    `cesiumFragmentStage`) in Slang, `__extern_cpp`, so the user module's
-    WGSL defines the boundary functions under their names and no adapter
-    is written. The engine structs it takes (`CesiumVertex`…) are then
-    defined on both sides: the boundary has to own shared types (declared
-    once, by one unit, checked identical in the other) rather than each
-    compile emitting its own.
-  - _One Slang compile (a `SlangLinker`):_ the user module compiled with
-    `surface.slang` from source, the stages ordinary Slang calls (link-time
-    `extern`/`export`), no second naming scheme and no glue. Offline it
-    costs nothing; in the browser it compiles the whole surface (cached in
-    IndexedDB like the rest).
-    Decide with the boundary generated from reflection (the next step), which
-    produces the symbol table either way would use.
+- **Replaced (r57): `slangStages.ts`'s reading of Slang's output.** It
+  found `vertexMain_N` and Slang's copies of the contract structs by
+  pattern and stripped the `_N` suffix to match fields. Slang writes no
+  symbol map, and `__extern_cpp` fixes the names of every struct it
+  touches, so sharing contract structs between two compiles would emit
+  them twice. What crosses now is only functions over built-in types:
+  - _The boundary's description_ (`src/shaders/generated/boundary.ts`):
+    the structs that cross, field by field with their WGSL types, from
+    Slang's reflection of `surfaceBoundary.slang` (the engine's, through
+    the reflection-only `boundary.slang`) and of cesium.slang (the
+    contract's, compiled with empty named values). `shaders:check` keeps
+    it current. Slang's reflection has no functions' signatures, so the
+    functions stay declared in `shaders/link/boundary.ts`, checked against
+    the generated WGSL.
+  - _WGSL shaders:_ the contract's structs and stage glue are generated
+    from the description (`scene/contract.ts` `CONTRACT_WGSL`): cesium.slang
+    is their one source, and a field it adds must be one the engine
+    passes.
+  - _Slang shaders:_ compiled with a bridge (`slangBridge`):
+    `cesiumSlangVertex` and `cesiumSlangFragment`, `__extern_cpp`, whose
+    parameters are the contract's fields and named values flattened
+    (built-in types only, named values sorted by name). Slang's output is
+    used as it is; `CustomShader` finds the bridge in its symbol table and
+    adds the WGSL side (`slangAdapter`; outputs through variables of their
+    own, WGSL forbidding aliased pointer arguments) and a boundary for its
+    signatures (`slangBridgeBoundary`: a shader compiled against other
+    named values fails the link, named). Uniform bindings are read from the
+    units' declarations, not matched in their code.
+  - _Still open:_ a `SlangLinker` (one compile with `surface.slang`) stays
+    an option behind `Linker`, for when a compile per shader of the whole
+    surface is affordable (with the IndexedDB cache).
 - **Later (with the 2.0 package's tooling): ahead-of-time Slang for
   apps.** `scripts/slangShader.mjs` is the package's own script. Apps
   that don't want the WASM compiler need it published: a CLI in the
