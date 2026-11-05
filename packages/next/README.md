@@ -27,6 +27,28 @@ It also fetches the Slang toolchain, pinned to one release in
 `node scripts/slangTools.mjs` fetches just these. `SLANGC` and
 `SLANG_WASM_DIR` still point elsewhere if set.
 
+**Frames data** (`src/time`, `src/ephemeris`; `loadFrameData()`). `setup`
+also fetches the data the frames layer needs, into `~/.cesium-bench/frames`
+(or `FRAMES_DATA_DIR`), from the four URLs in `scripts/frameData.mjs`:
+
+- NAIF's `de440s.bsp` (planets) and `moon_pa_de440_200625.bpc` (lunar
+  orientation), each checked against a SHA-256 pinned in the script;
+- IERS `Leap_Second.dat` (leap seconds), from `hpiers.obspm.fr`;
+- `EOP-All.csv` (Earth orientation), from CelesTrak.
+
+NAIF's generic kernels are public, but what the runtime loads are packs,
+derived excerpts of them (each pack's manifest names its source file, that
+file's SHA-256 and the span). The packs are written on your machine and never
+redistributed by this repository. Credit: EOP data is "IERS, via CelesTrak";
+leap seconds are "IERS". `--frames-span y0-y1` sets the excerpted years, both
+included (default `2000-2050`):
+`npm run setup --workspace @cesium/next -- --frames-span 2000-2050`.
+
+The dev server serves the store at `/frames-data/`, so restart it after a
+first setup. `npm run test:data --workspace @cesium/next` runs the tests that
+compare against the real store (they need setup to have run). Without a store,
+`loadFrameData` rejects with a message saying to run `npm run setup`.
+
 ```sh
 npm run build                               # at the repo root: 1.x build used by the parity harness
 npm run dev --workspace @cesium/next        # dev server at http://127.0.0.1:5190

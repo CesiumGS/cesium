@@ -224,3 +224,12 @@ export {
 
 // The atmosphere's haze: kinds of aerosols (Engine.visibility, .aerosol).
 export { AEROSOLS, type AerosolType } from "./atmosphere/model.ts";
+
+// Frames: exact time scales, Earth orientation and ephemerides (data from `npm run setup`).
+export { Instant } from "./time/Instant.ts";
+export { LeapSeconds } from "./time/leapSeconds.ts";
+export { EarthOrientationParameters, type EopSample } from "./time/eop.ts";
+export { celestialToTerrestrial } from "./time/earthOrientation.ts";
+export { tdbMinusTt } from "./time/erfa/dtdb.ts";
+export { Ephemeris } from "./ephemeris/Ephemeris.ts";
+export { loadFrameData, type FrameData } from "./ephemeris/loadFrameData.ts";
