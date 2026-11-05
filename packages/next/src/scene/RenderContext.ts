@@ -192,7 +192,7 @@ export interface Pipelines extends SurfacePipelines {
   pointCullLayout: GPUBindGroupLayout;
   cullPoints: GPUComputePipeline;
   writePointArgs: GPUComputePipeline;
-  /** Point splats into the opaque pass (splat.wgsl) and its group 1. */
+  /** Point splats into the opaque pass (splat.slang) and its group 1. */
   splatLayout: GPUBindGroupLayout;
   splatResolve: GPURenderPipeline;
   /**
@@ -212,13 +212,13 @@ export interface Pipelines extends SurfacePipelines {
    * override shader, which may not compute the same depths.
    */
   depthPrepass: boolean;
-  /** Ambient occlusion (`ao.wgsl`): the horizon search, then the blur. */
+  /** Ambient occlusion (`ao.slang`): the horizon search, then the blur. */
   aoTrace: GPUComputePipeline;
   aoDenoise: GPUComputePipeline;
   present: GPURenderPipeline;
   /**
    * With FXAA (View.fxaa): the present pass into an encoded 8-bit image,
-   * then FXAA from it into the target (`fxaa.wgsl`).
+   * then FXAA from it into the target (`fxaa.slang`).
    */
   presentLdr: GPURenderPipeline;
   fxaa: GPURenderPipeline;
@@ -230,12 +230,12 @@ export interface Pipelines extends SurfacePipelines {
   scatterLayout: GPUBindGroupLayout;
   /** Rays against draw geometry (`World.castRays`, `raycast.slang`). */
   raycast: GPUComputePipeline;
-  /** Average log luminance for automatic exposure (`meter.wgsl`). */
+  /** Average log luminance for automatic exposure (`meter.slang`). */
   meter: GPUComputePipeline;
-  /** The eye's local adaptation map (`adapt.wgsl`): reduce, then blur. */
+  /** The eye's local adaptation map (`adapt.slang`): reduce, then blur. */
   adaptReduce: GPUComputePipeline;
   adaptBlur: GPUComputePipeline;
-  /** Point and spot lights into the view's froxels (`lights.wgsl`). */
+  /** Point and spot lights into the view's froxels (`lights.slang`). */
   lightsAssign: GPUComputePipeline;
   /** The nearest and farthest surface a view shows (`depthRange.slang`). */
   depthRange: GPUComputePipeline;
@@ -556,7 +556,7 @@ async function createPipelines(
         texture: { sampleType: "depth", viewDimension: "2d-array" },
       },
       { binding: 14, visibility: FRAGMENT, sampler: { type: "comparison" } },
-      // Ambient occlusion by pixel (ao.wgsl).
+      // Ambient occlusion by pixel (ao.slang).
       storage(15, true, FRAGMENT),
       // Aerial perspective from high up, on a screen grid: in-scatter and
       // transmittance as two layers of one array.
@@ -933,9 +933,10 @@ async function createPipelines(
 
   // The prepass: single-sampled depth and normals, the casters' vertex
   // stage (no aerial perspective) and discards.
-  // Translucency: single-sampled, no depth attachment (translucent.wgsl
-  // tests the opaque depth itself). Override shaders have no translucent
-  // entry points: the built-in module draws them.
+  // Translucency: no depth attachment (translucent.wgsl tests the opaque
+  // depth itself); the lists' pass multisampled, the moments' single-
+  // sampled. Override shaders have no translucent entry points: the
+  // built-in module draws them.
   const translucentModule = module(
     "translucent",
     commonWgsl,

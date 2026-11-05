@@ -8,7 +8,7 @@
 export const luminance = (r: number, g: number, b: number): number =>
   0.2126 * r + 0.7152 * g + 0.0722 * b;
 
-/** Khronos PBR Neutral, as present.wgsl. */
+/** Khronos PBR Neutral, as present.slang. */
 export function pbrNeutral(
   r: number,
   g: number,

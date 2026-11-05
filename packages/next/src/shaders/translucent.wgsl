@@ -1,6 +1,6 @@
 // Translucency (plan §3.5): blended materials' surfaces, shaded as the
 // opaque pass shades them (`shadeSurface`), then put in order over what the
-// opaque pass drew (composite.wgsl). Two ways:
+// opaque pass drew (composite.slang). Two ways:
 //
 // - "exact": every fragment into a list per pixel (`fsList`), sorted and
 //   blended front to back when composited. Exact up to the lists' memory,

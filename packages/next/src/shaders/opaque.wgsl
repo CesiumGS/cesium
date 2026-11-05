@@ -385,7 +385,7 @@ const POINT_UV = array<vec2f, 4>(
 // --- custom shaders (plan §3.4): the WGSL-level contract ---------------------------
 //
 // A custom shader (scene/CustomShader.ts) supplies `vertexMain` and
-// `fragmentMain`; the engine's defaults (custom.wgsl) change nothing. They
+// `fragmentMain`; the engine's defaults (CustomShader.ts) change nothing. They
 // run in every pass that draws the content (opaque, depth, shadow,
 // ambient-occlusion prepass, translucent), so a vertex modifier moves
 // geometry the same way in all of them. Named as 1.x `CustomShader`'s.
@@ -685,7 +685,7 @@ fn vertexOut(vertexIndex: u32, item: u32, withAir: bool) -> VsOut {
     localFeature = instance;
     tableFeature = instance;
   }
-  // The custom shader's vertex stage (custom.wgsl's default: unchanged).
+  // The custom shader's vertex stage (CustomShader.ts's defaults: unchanged).
   let vsInput = VertexInput(
     position,
     normal,
@@ -903,7 +903,7 @@ struct Shadows {
 @group(0) @binding(12) var<uniform> shadows: Shadows;
 @group(0) @binding(13) var shadowMap: texture_depth_2d_array;
 @group(0) @binding(14) var shadowSampler: sampler_comparison;
-// Ambient occlusion by pixel (ao.wgsl `denoise`): 4 pixels a word, 8 bits
+// Ambient occlusion by pixel (ao.slang `denoise`): 4 pixels a word, 8 bits
 // each, rows of ceil(width / 4) words.
 @group(0) @binding(15) var<storage, read> aoWords: array<u32>;
 // Aerial perspective from high up, a ray per texel of a screen grid
@@ -912,7 +912,7 @@ struct Shadows {
 // Layer 0 in-scatter, layer 1 transmittance (one binding, §13.15).
 @group(0) @binding(16) var aerialScreen: texture_2d_array<f32>;
 // Point and spot lights (scene/lights.ts) and, after them, their froxels'
-// lists (lights.wgsl): one binding.
+// lists (lights.slang): one binding.
 @group(0) @binding(18) var<storage, read> lightTable: LightTable;
 
 // The point and spot lights of the pixel's froxel, reflected toward the
@@ -1160,7 +1160,7 @@ fn fs(in: VsOut, @builtin(front_facing) frontFacing: bool) -> FsOut {
     // photogrammetry such as Google's tiles): it goes to the display target,
     // which the present pass shows as is, as glTF's KHR_materials_unlit and
     // 1.x (HDR off by default) do. No light reaches the scene target here,
-    // and alpha 0 keeps it out of the exposure meter (meter.wgsl): a view
+    // and alpha 0 keeps it out of the exposure meter (meter.slang): a view
     // full of symbols, or of unlit photogrammetry, doesn't meter as black.
     out.color = vec4f(0.0);
     out.display = vec4f(surface.color, 1.0);
@@ -1332,7 +1332,7 @@ fn shadeSurface(in: VsOut, frontFacing: bool, translucent: bool) -> Surface {
     geometric = -geometric;
   }
 
-  // The custom shader's material (custom.wgsl's default: unchanged).
+  // The custom shader's material (CustomShader.ts's defaults: unchanged).
   let fsInput = fragmentInputOf(in, geometric);
   var custom = MaterialOutput(
     baseColor.rgb,

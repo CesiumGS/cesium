@@ -5,7 +5,7 @@
 // points smaller than `tiny` pixels rasterized here instead: their depth by
 // atomic max per pixel (`cullPoints`), then their color and feature where
 // their depth won (`splatPoints`), resolved into the opaque pass by
-// splat.wgsl. Ten million points a few pixels each cost a few compute
+// splat.slang. Ten million points a few pixels each cost a few compute
 // threads each, not six vertices.
 //
 // The style is WGSL composed at run time (vector/VectorStyle.ts, or

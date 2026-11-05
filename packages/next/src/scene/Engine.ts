@@ -91,7 +91,7 @@ import {
 } from "./gltfModel.ts";
 import type { CustomShader } from "./CustomShader.ts";
 
-/** Tone mappings by their index in present.wgsl's `PresentParams`. */
+/** Tone mappings by their index in present.slang's `PresentParams`. */
 const TONE_MAPPINGS: readonly ToneMapping[] = ["pbrNeutral", "agx", "aces"];
 
 export interface EngineOptions extends GpuDeviceOptions {
@@ -2606,7 +2606,7 @@ export class Engine {
       });
       if ("eye" in e) {
         // Pre-exposed for the stronger of the two (fp16's range); the
-        // present pass sees the light per pixel (present.wgsl `eyeSees`).
+        // present pass sees the light per pixel (present.slang `eyeSees`).
         const r = eyeResponse(
           10 ** state.cones,
           10 ** state.rods,
@@ -3050,7 +3050,7 @@ export class Engine {
       );
     });
 
-    // Its point and spot lights into its froxels (lights.wgsl).
+    // Its point and spot lights into its froxels (lights.slang).
     graph.addPass("lights", { sideEffect: true }, (enc) => {
       if (frame.lightCount === 0) {
         return;
@@ -3061,7 +3061,7 @@ export class Engine {
       });
       pass.setPipeline(this.ctx.pipelines.lightsAssign);
       pass.setBindGroup(0, this.ctx.lightAssignGroup);
-      // A workgroup per tile, a thread per slice (lights.wgsl).
+      // A workgroup per tile, a thread per slice (lights.slang).
       pass.dispatchWorkgroups(CLUSTERS[0], CLUSTERS[1]);
       pass.end();
     });
@@ -3261,7 +3261,7 @@ export class Engine {
     // Translucency (translucent.wgsl): blended surfaces into per-pixel
     // lists ("exact"), or their moments and then their weighted light
     // ("moments"); then composited over the opaque pass's resolved targets
-    // (composite.wgsl), before anything reads them.
+    // (composite.slang), before anything reads them.
     const momentsZero = graph.createTexture("moments.zero", {
       width,
       height,
@@ -3989,7 +3989,7 @@ interface ViewFrame {
   shadowed: boolean;
   /** Ambient occlusion is computed for this view this frame. */
   ambient: boolean;
-  /** Its kernels' parameters (ao.wgsl `AoParams`). */
+  /** Its kernels' parameters (ao.slang `AoParams`). */
   readonly aoParams: GPUBuffer;
   /** It draws blended surfaces this frame (`writeTranslucency`). */
   translucent: boolean;

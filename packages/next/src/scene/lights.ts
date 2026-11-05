@@ -3,7 +3,7 @@
  * spot lights in candela, as glTF's `KHR_lights_punctual` gives them,
  * shaded by clustered forward shading (Olsson, Billeter and Assarsson
  * 2012): each view culls its lights to its frustum here, a compute pass
- * sorts them into a grid of froxels (lights.wgsl), and each pixel shades
+ * sorts them into a grid of froxels (lights.slang), and each pixel shades
  * the lights of its froxel (opaque.wgsl). Unshadowed.
  */
 
@@ -47,7 +47,7 @@ export const CLUSTER_LIGHTS = 16;
 export const MAX_VIEW_LIGHTS = 1024;
 /** The header: the grid's parameters and the camera's axes (5 vec4). */
 export const LIGHT_HEADER_FLOATS = 20;
-/** A light: 4 vec4 (lights.wgsl `Light`). */
+/** A light: 4 vec4 (lights.slang `Light`). */
 export const LIGHT_FLOATS = 16;
 export const LIGHTS_SIZE =
   (LIGHT_HEADER_FLOATS + MAX_VIEW_LIGHTS * LIGHT_FLOATS) * 4;

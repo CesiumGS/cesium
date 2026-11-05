@@ -740,11 +740,11 @@ export class World {
   get tableGeneration(): number {
     return this.instanceGeneration;
   }
-  /** Point draws by draw index: their per-view cull (pointCull.wgsl). */
+  /** Point draws by draw index: their per-view cull (pointCull.slang). */
   private readonly pointDraws = new Map<number, PointDraw>();
   private pointCounts: GPUBuffer;
   private readonly freePointCounters: number[] = [];
-  /** A view's point splats, a word per pixel each (pointCull.wgsl). */
+  /** A view's point splats, a word per pixel each (pointCull.slang). */
   private splats: {
     pixels: number;
     depth: GPUBuffer;
@@ -2132,7 +2132,7 @@ export class World {
     return new PointCuller(this.ctx, options);
   }
 
-  /** A point draw's group 2 (pointCull.wgsl), its splats the current ones. */
+  /** A point draw's group 2 (pointCull.slang), its splats the current ones. */
   private pointGroup(draw: PointDraw): GPUBindGroup {
     return this.ctx.device.createBindGroup({
       label: "world.pointCull",
@@ -2196,7 +2196,7 @@ export class World {
   }
 
   /**
-   * The view's point splats over its opaque draws (splat.wgsl), in its
+   * The view's point splats over its opaque draws (splat.slang), in its
    * opaque pass after them; nothing when no draw splats.
    */
   drawSplats(pass: GPURenderPassEncoder): void {
@@ -2212,7 +2212,7 @@ export class World {
   /**
    * The batch for draws of these fields, made (or a free one reused) when
    * none exists. A point set's draws batch alone: each batch's arguments
-   * are its set's list (cull.wgsl `writePointArgs`).
+   * are its set's list (cull.slang `writePointArgs`).
    */
   private batchFor(f: {
     mesh: Batch["mesh"];
@@ -2935,7 +2935,7 @@ export class World {
    * Casts rays (float64 Earth-fixed origins, unit directions) against the
    * triangles of the draws they may hit and resolves each ray's nearest
    * hit distance in meters, or undefined. Brute force on the GPU over the
-   * draws whose bounds a ray crosses (`raycast.wgsl`); one readback.
+   * draws whose bounds a ray crosses (`raycast.slang`); one readback.
    */
   async castRays(
     rays: readonly CastRay[],
@@ -3262,7 +3262,7 @@ export class World {
     this.cullParamsData[0] = this.drawCount;
     this.cullParamsData[1] = this.batchList.length;
     this.cullParamsData[2] = this.instanceHighWater;
-    // Instance items follow the draw rows (cull.wgsl `firstInstanceItem`).
+    // Instance items follow the draw rows (cull.slang `firstInstanceItem`).
     this.cullParamsData[3] = this.drawRows;
     queue.writeBuffer(this.cullParams, 0, this.cullParamsData);
     return this.bundle;
@@ -3321,7 +3321,7 @@ export class World {
 
   /** Encodes this world's per-view culling: clear batch counts, cull, write args. */
   /**
-   * One view's cull. `points`: also its point draws' (pointCull.wgsl),
+   * One view's cull. `points`: also its point draws' (pointCull.slang),
    * for views that draw them (not shadow cascades or height captures),
    * `pixels` the view's (their splats' buffers).
    */
@@ -3332,7 +3332,7 @@ export class World {
     pixels = 0,
   ): void {
     const { pipelines, currentViewBindGroup } = this.ctx;
-    // The batches' instance counts start at zero (cull.wgsl `append`
+    // The batches' instance counts start at zero (cull.slang `append`
     // counts into them); the rest of the arguments `writeDrawArgs` writes.
     encoder.clearBuffer(
       this.indirectBuffer,
@@ -4179,7 +4179,7 @@ interface PointDraw {
   tiny: number;
 }
 
-/** A point draw's cull parameters (pointCull.wgsl `PointCull`). */
+/** A point draw's cull parameters (pointCull.slang `PointCull`). */
 const POINT_CULL_BYTES = 48;
 /** Pixels past a view's edges a point's symbol may reach. */
 const POINT_MARGIN = 64;
