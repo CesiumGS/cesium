@@ -18,3 +18,13 @@ export function ensureFrameData(
     credit?: string;
   }[];
 }>;
+/**
+ * A table refreshed when older than 7 days; `validate` throws on a bad file.
+ * A failed or invalid refresh keeps a valid stored copy, else throws.
+ */
+export function ensureFresh(
+  dir: string,
+  source: { file: string; url: string },
+  log: (line: string) => void,
+  validate: (text: string) => void,
+): Promise<Buffer>;
