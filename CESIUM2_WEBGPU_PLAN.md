@@ -2644,6 +2644,29 @@ overflowed, the engine grew them from its count but drew nothing more
 on demand, so glass stayed missing until the camera moved. It now
 requests the frame.
 
+Later (the antialiased lists' cost):
+
+- Measure on NVIDIA and on Windows first: there the probe should choose
+  `fsList` (once a pixel), and the antialiased lists should cost about
+  the single-sampled ones plus the sort's 13%. If they do, the items
+  below are only for Apple's GPUs.
+- Shade once, cover separately: a single-sampled pass shades each
+  fragment and writes its node, and a trivial multisampled pass (no
+  shading, only the samples) sets the nodes' sample bits, the two
+  matched by draw and `@builtin(primitive_index)` (the optional
+  `primitive-index` feature, which the Apple adapter has; without it,
+  per sample as now). Should bring Apple near the single-sampled cost.
+  The trivial pass's floor, measured with every run returning at once:
+  about 2.6 ms in the example's default scene, the sort and composite
+  included.
+- Or, where the probe finds per-sample runs, single-sampled lists with
+  FXAA as an option (`View.fxaa` exists): cheaper, but glass's own
+  silhouettes smoothed, not resolved.
+- Not to try: shared memory (fragment shaders have none in WebGPU; the
+  sort, a compute pass, uses it already and isn't the cost), and
+  shading edges per sample and interiors once (WebGPU has no
+  variable-rate shading).
+
 **FXAA** (r45, `View.fxaa`, off by default): FXAA 3.11's quality version
 (Lottes) after tonemapping, on top of 4× MSAA: the present pass tonemaps
 into an encoded 8-bit image and FXAA reads it into the view's rectangle,
