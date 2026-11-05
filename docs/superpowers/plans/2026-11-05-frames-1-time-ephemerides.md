@@ -61,20 +61,20 @@
 - `tt` is TT seconds past J2000 (JD 2451545.0 TT).
 - `jdTt()` returns a two-part Julian date `[2451545.0, tt / 86400]` for ERFA-style calls.
 
-- [ ] **Step 1: Write the failing tests** in `test/instant.test.ts`. Embed an excerpt of `Leap_Second.dat` as a string, with its `#File expires on 28 June 2027` line and the rows for 1972 (10 s) through 2017-01-01 (37 s). Tests:
+- [x] **Step 1: Write the failing tests** in `test/instant.test.ts`. Embed an excerpt of `Leap_Second.dat` as a string, with its `#File expires on 28 June 2027` line and the rows for 1972 (10 s) through 2017-01-01 (37 s). Tests:
   - `taiMinusUtc` is 36 at `Date.UTC(2016,0,1)` and 37 at `Date.UTC(2017,0,1)`.
   - `Instant.fromUtc(Date.UTC(2000,0,1,11,58,55,816), leap).tt` equals 0 to within 1e-9 s (J2000 TT).
   - Across the 2016 leap, `Instant.fromUtc(Date.UTC(2017,0,1)).tt − Instant.fromUtc(Date.UTC(2016,11,31,23,59,59)).tt === 2` (within 1e-9). This is Review Focus 2.
   - Round trip: for `Date.UTC(2049,11,31,23,59,59,999)` and `Date.UTC(2026,3,6,22,44,0)`, `fromUtc(ms).toUtc(leap) === ms` exactly. This is Review Focus 4.
   - `tai() === tt − 32.184` exactly.
   - `isExpired(Date.UTC(2027,5,29))` is true and `isExpired(Date.UTC(2026,0,1))` is false (Review Focus 1).
-- [ ] **Step 2: Run** `npx vitest run test/instant.test.ts` and confirm it fails (modules missing).
-- [ ] **Step 3: Implement.**
+- [x] **Step 2: Run** `npx vitest run test/instant.test.ts` and confirm it fails (modules missing).
+- [x] **Step 3: Implement.**
   - `LeapSeconds.fromIers` parses the data lines into sorted UTC-ms thresholds (from each MJD), and the expiry line into `expires`.
   - `Instant.fromUtc` computes `tt = ((utcMs − 946_728_000_000) / 1000) + taiMinusUtc(utcMs) + 32.184`. 946,728,000,000 is the Unix ms of 2000-01-01T12:00:00, as if TT were UTC-labelled; the integer subtraction happens first. Check: at J2000 TT, UTC is 11:58:55.816 and TAI−UTC is 32.
   - `toUtc` inverts it, iterating once on `taiMinusUtc` at a leap boundary, and rounds to the millisecond.
-- [ ] **Step 4: Run** the test and confirm it passes.
-- [ ] **Step 5: Commit** `test/instant.test.ts src/time/leapSeconds.ts src/time/Instant.ts` with "frames: Instant and leap seconds".
+- [x] **Step 4: Run** the test and confirm it passes.
+- [x] **Step 5: Commit** `test/instant.test.ts src/time/leapSeconds.ts src/time/Instant.ts` with "frames: Instant and leap seconds".
 
 ### Task 2: TDB−TT, ported from ERFA, and the fixture generator
 
@@ -97,13 +97,13 @@
 - `scripts/erfaTables.mjs <erfa-src-dir>` reads the `static const` term tables of `dtdb.c`, `xy06.c` and `s06.c` and writes them as `export const` arrays of numbers. Task 4 uses its xy06 and s06 output.
 - `scripts/frameFixtures.py <section> [args]` takes a section name (`dtdb`, `earth`, `ephemeris`, `moon`), so each task adds its own section.
 
-- [ ] **Step 1: Fetch ERFA and generate the tables.** Download liberfa `v2.0.1` (`https://github.com/liberfa/erfa/archive/refs/tags/v2.0.1.tar.gz`) into the session scratchpad, not the repo. Run `node scripts/erfaTables.mjs <scratch>/erfa-2.0.1/src` and check that `src/time/erfa/dtdbTable.ts` exists with ERFA's term count. Copy ERFA's `LICENSE` to `src/time/erfa/LICENSE`.
-- [ ] **Step 2: Generate fixtures.** Run `uv run --with pyerfa --with numpy python scripts/frameFixtures.py dtdb`. It writes `test/fixtures/frames/dtdb.json` with `[{jd1, jd2, dtdb}]` for 50 TT instants from 2000-01-01 to 2050-12-31, using `erfa.dtdb(jd1, jd2, 0, 0, 0, 0)`.
-- [ ] **Step 3: Write the failing test.** `test/erfa.test.ts › tdbMinusTt matches pyerfa`: for every fixture row, `|tdbMinusTt(jd1, jd2) − dtdb| < 1e-9`, and the annual amplitude, max |value| over the fixtures, lies between 1.6e-3 and 1.7e-3 s.
-- [ ] **Step 4: Run** it and confirm it fails.
-- [ ] **Step 5: Implement `tdbMinusTt`** by transcribing `eraDtdb` against the generated table, then `Instant.tdb() = tt + tdbMinusTt(...this.jdTt())`.
-- [ ] **Step 6: Run** it and confirm it passes.
-- [ ] **Step 7: Commit** the scripts, LICENSE, table, `dtdb.ts`, fixture, test and `Instant.ts` with "frames: TDB−TT from ERFA, fixture generator".
+- [x] **Step 1: Fetch ERFA and generate the tables.** Download liberfa `v2.0.1` (`https://github.com/liberfa/erfa/archive/refs/tags/v2.0.1.tar.gz`) into the session scratchpad, not the repo. Run `node scripts/erfaTables.mjs <scratch>/erfa-2.0.1/src` and check that `src/time/erfa/dtdbTable.ts` exists with ERFA's term count. Copy ERFA's `LICENSE` to `src/time/erfa/LICENSE`.
+- [x] **Step 2: Generate fixtures.** Run `uv run --with pyerfa --with numpy python scripts/frameFixtures.py dtdb`. It writes `test/fixtures/frames/dtdb.json` with `[{jd1, jd2, dtdb}]` for 50 TT instants from 2000-01-01 to 2050-12-31, using `erfa.dtdb(jd1, jd2, 0, 0, 0, 0)`.
+- [x] **Step 3: Write the failing test.** `test/erfa.test.ts › tdbMinusTt matches pyerfa`: for every fixture row, `|tdbMinusTt(jd1, jd2) − dtdb| < 1e-9`, and the annual amplitude, max |value| over the fixtures, lies between 1.6e-3 and 1.7e-3 s.
+- [x] **Step 4: Run** it and confirm it fails.
+- [x] **Step 5: Implement `tdbMinusTt`** by transcribing `eraDtdb` against the generated table, then `Instant.tdb() = tt + tdbMinusTt(...this.jdTt())`.
+- [x] **Step 6: Run** it and confirm it passes.
+- [x] **Step 7: Commit** the scripts, LICENSE, table, `dtdb.ts`, fixture, test and `Instant.ts` with "frames: TDB−TT from ERFA, fixture generator".
 
 ### Task 3: Earth orientation parameters (EOP)
 
@@ -119,16 +119,16 @@
   - `class EarthOrientationParameters { static fromCelestrakCsv(text: string): EarthOrientationParameters; at(utcMs: number): EopSample; readonly first: number; readonly last: number /* UTC ms */ }`
 - Units: CelesTrak gives X, Y, DX and DY in arcseconds and UT1-UTC in seconds; convert to radians and seconds.
 
-- [ ] **Step 1: Write the failing tests** with an embedded six-row CSV in CelesTrak's `EOP-All.csv` header form (`DATE,MJD,X,Y,UT1-UTC,LOD,DPSI,DEPS,DX,DY,DAT,DATA_TYPE`, `DATA_TYPE` being `O` or `P`), with known values. Tests:
+- [x] **Step 1: Write the failing tests** with an embedded six-row CSV in CelesTrak's `EOP-All.csv` header form (`DATE,MJD,X,Y,UT1-UTC,LOD,DPSI,DEPS,DX,DY,DAT,DATA_TYPE`, `DATA_TYPE` being `O` or `P`), with known values. Tests:
   - `at()` at a row's midnight returns that row exactly.
   - Halfway between rows it returns the 4-point Lagrange interpolate, within 1e-12 of a value computed in the test.
   - `predicted` is true on `P` rows.
   - Past `last` it returns the last row's values with `degraded: true`, and `predicted` true if that row was. Before `first` it returns zeros with `degraded: true`. This is Review Focus 1.
   - Parsing is by header name: shuffled columns parse the same.
-- [ ] **Step 2: Run** `npx vitest run test/eop.test.ts` and confirm it fails.
-- [ ] **Step 3: Implement** as specified, with 4-point Lagrange interpolation in MJD on each quantity. UT1−UTC is not interpolated across a leap-second step: across a row where DAT changes, interpolate `UT1−TAI` instead.
-- [ ] **Step 4: Run** it and confirm it passes.
-- [ ] **Step 5: Commit** with "frames: Earth orientation parameters".
+- [x] **Step 2: Run** `npx vitest run test/eop.test.ts` and confirm it fails.
+- [x] **Step 3: Implement** as specified, with 4-point Lagrange interpolation in MJD on each quantity. UT1−UTC is not interpolated across a leap-second step: across a row where DAT changes, interpolate `UT1−TAI` instead.
+- [x] **Step 4: Run** it and confirm it passes.
+- [x] **Step 5: Commit** with "frames: Earth orientation parameters".
 
 ### Task 4: The GCRS→ITRS rotation (IAU 2006/2000A, CIO-based)
 
@@ -153,18 +153,18 @@
 - The CIP is X+dX, Y+dY. `s'` comes from `sp00`, polar motion from `pom00(xp, yp, sp)`.
 - The composition is ERFA's `c2tcio(c2ixys(x, y, s), era, rpom)`.
 
-- [ ] **Step 1: Generate fixtures.** `frameFixtures.py earth` writes, for 30 UTC instants from 2000 to 2050 with assumed EOP values (stated in the fixture: `xp`, `yp`, `dut1`, `dx`, `dy` per row, of realistic size), pyerfa's `xy06`, `s06`, `era00` and `c2t06a`-with-dX/dY matrix. pyerfa has no `c2t06a` taking dX/dY, so compose `c2ixys(x+dx, y+dy, s06)`, `era00`, `pom00(xp, yp, sp00)` and `c2tcio` the same way.
-- [ ] **Step 2: Write the failing tests:**
+- [x] **Step 1: Generate fixtures.** `frameFixtures.py earth` writes, for 30 UTC instants from 2000 to 2050 with assumed EOP values (stated in the fixture: `xp`, `yp`, `dut1`, `dx`, `dy` per row, of realistic size), pyerfa's `xy06`, `s06`, `era00` and `c2t06a`-with-dX/dY matrix. pyerfa has no `c2t06a` taking dX/dY, so compose `c2ixys(x+dx, y+dy, s06)`, `era00`, `pom00(xp, yp, sp00)` and `c2tcio` the same way.
+- [x] **Step 2: Write the failing tests:**
   - `xy06` within 1e-12 rad.
   - `s06` within 1e-13 rad.
   - `era00` within 1e-13 rad.
   - Every element of `celestialToTerrestrial` within 1e-11 of the fixture matrix.
   - The result is a rotation (orthonormal to 1e-14).
   - It stays within 0.01° of the existing `icrfToFixed(utcMs)` from `src/time/celestial.ts` at 2026-01-01. That function omits nutation, the equation of the equinoxes and polar motion, together a few thousandths of a degree.
-- [ ] **Step 3: Run** `npx vitest run test/earthOrientation.test.ts` and confirm it fails.
-- [ ] **Step 4: Implement** by transcribing the named ERFA routines over the generated tables, keeping ERFA's argument order and units.
-- [ ] **Step 5: Run** it and confirm it passes.
-- [ ] **Step 6: Commit** with "frames: IAU 2006/2000A Earth orientation from ERFA".
+- [x] **Step 3: Run** `npx vitest run test/earthOrientation.test.ts` and confirm it fails.
+- [x] **Step 4: Implement** by transcribing the named ERFA routines over the generated tables, keeping ERFA's argument order and units.
+- [x] **Step 5: Run** it and confirm it passes.
+- [x] **Step 6: Commit** with "frames: IAU 2006/2000A Earth orientation from ERFA".
 
 ### Task 5: Reading SPICE DAF files: SPK and binary PCK, type 2
 
@@ -185,18 +185,18 @@
 - Record choice: `index = floor((t − init) / intervalLength)`, clamped to `[0, count−1]`, so an exact boundary takes the later record. This is jplephem's rule.
 - Velocity is the derivative of the polynomial, scaled by `1 / RADIUS`.
 
-- [ ] **Step 1: Write the failing tests.** `spkWriter.ts` builds a DAF with one type-2 segment whose coefficients encode a known cubic per axis over 4 records. Tests:
+- [x] **Step 1: Write the failing tests.** `spkWriter.ts` builds a DAF with one type-2 segment whose coefficients encode a known cubic per axis over 4 records. Tests:
   - `readDaf` returns the segment's ids, span and record layout.
   - `chebyshev` reproduces the cubic within 1e-9 km, and its derivative within 1e-12 km/s.
   - At an exact record boundary it uses the later record, and the positions on either side agree within 1e-6 km. This is Review Focus 5.
   - A big-endian (`BIG-IEEE`) file throws `"DAF: only little-endian (LTL-IEEE) files are supported"`.
   - A type-3 segment throws `"SPK: segment type 3 is not supported (type 2 only)"`.
-- [ ] **Step 2: Run** `npx vitest run test/spk.test.ts` and confirm it fails.
-- [ ] **Step 3: Implement** as specified.
+- [x] **Step 2: Run** `npx vitest run test/spk.test.ts` and confirm it fails.
+- [x] **Step 3: Implement** as specified.
   - DAF layout follows NAIF's DAF Required Reading: the file record is 1024 bytes; summaries hold ND doubles and NI integers; the segment data comes from the summary's initial and final addresses, which are 1-based in doubles.
   - The type-2 trailer is `[INIT, INTLEN, RSIZE, N]`.
-- [ ] **Step 4: Run** it and confirm it passes.
-- [ ] **Step 5: Commit** with "frames: SPICE DAF and type-2 Chebyshev reader".
+- [x] **Step 4: Run** it and confirm it passes.
+- [x] **Step 5: Commit** with "frames: SPICE DAF and type-2 Chebyshev reader".
 
 ### Task 6: Chebyshev packs
 
@@ -215,14 +215,14 @@
   - `function readPack(bytes: ArrayBuffer): { manifest: PackManifest; data: Float64Array }`
 - Layout: bytes `"CPK1"`, then a u32 manifest byte length (little-endian), then the manifest JSON (UTF-8), then zero padding to an 8-byte boundary, then little-endian float64 records.
 
-- [ ] **Step 1: Write the failing tests.**
+- [x] **Step 1: Write the failing tests.**
   - Round trip: write the synthetic segment from Task 5's `spkWriter` excerpted to its middle two records, read it back, and check that `chebyshev` over the pack equals `chebyshev` over the source at 20 instants.
   - Excerpting keeps the source's record boundaries, so `init` moves forward by whole intervals.
   - A file without the `CPK1` magic throws `"pack: not a Chebyshev pack"`.
-- [ ] **Step 2: Run** it and confirm it fails.
-- [ ] **Step 3: Implement** as specified.
-- [ ] **Step 4: Run** it and confirm it passes.
-- [ ] **Step 5: Commit** with "frames: Chebyshev packs".
+- [x] **Step 2: Run** it and confirm it fails.
+- [x] **Step 3: Implement** as specified.
+- [x] **Step 4: Run** it and confirm it passes.
+- [x] **Step 5: Commit** with "frames: Chebyshev packs".
 
 ### Task 7: Setup and the data store
 
@@ -249,15 +249,15 @@
   - It writes `planets-de440-<y0>-<y1>.pack` (segments 10/0, 3/0 and 301/3) and `moon-pa-de440-<y0>-<y1>.pack`, plus `manifest.json` listing every file with its SHA-256, source URL and role (`planets`, `moon`, `leapSeconds`, `eop`).
 - The store layout is the contract with Task 9's `loadFrameData`.
 
-- [ ] **Step 1: Write the failing data test** `test/data/frameData.test.ts`, reading the store with `node:fs`:
+- [x] **Step 1: Write the failing data test** `test/data/frameData.test.ts`, reading the store with `node:fs`:
   - the manifest lists both packs, and their spans cover 2000–2050;
   - both packs pass `readPack`;
   - `LeapSeconds.fromIers` on the stored file gives 37 now and isn't expired;
   - `EarthOrientationParameters.fromCelestrakCsv` on the stored file covers today.
-- [ ] **Step 2: Run** `FRAMES_DATA=1 npx vitest run test/data/frameData.test.ts` and confirm it fails (no store).
-- [ ] **Step 3: Implement** `frameData.mjs`, the setup hook, vite serving and the `test:data` script.
-- [ ] **Step 4: Run** `npm run setup -- --skip-build` and confirm the store has the four sources, the two packs and `manifest.json`. Then `npm run test:data` passes, and `npx vitest run` still excludes `test/data`.
-- [ ] **Step 5: Commit** with "frames: setup data store and serving".
+- [x] **Step 2: Run** `FRAMES_DATA=1 npx vitest run test/data/frameData.test.ts` and confirm it fails (no store).
+- [x] **Step 3: Implement** `frameData.mjs`, the setup hook, vite serving and the `test:data` script.
+- [x] **Step 4: Run** `npm run setup -- --skip-build` and confirm the store has the four sources, the two packs and `manifest.json`. Then `npm run test:data` passes, and `npx vitest run` still excludes `test/data`.
+- [x] **Step 5: Commit** with "frames: setup data store and serving".
 
 ### Task 8: `Ephemeris`: the Sun, Earth and Moon, and the Moon's orientation
 
@@ -283,21 +283,21 @@
   - The Earth is `emb − moonWrtEmb / (1 + EMRAT)`.
 - An instant outside `span` throws `"ephemeris: <ISO time> is outside the loaded span <start>–<end> (npm run setup -- --frames-span)"`. This is Review Focus 1.
 
-- [ ] **Step 1: Generate fixtures** from the store (Task 7):
+- [x] **Step 1: Generate fixtures** from the store (Task 7):
   - `uv run --with jplephem --with numpy python scripts/frameFixtures.py ephemeris <store>` uses jplephem on `de440s.bsp` to write `[{tdb, sun, emb, moonWrtEmb}]` in km at 40 instants over 2000–2050, including 2049-12-31 and an exact record boundary.
   - `uv run --with spiceypy --with numpy python scripts/frameFixtures.py moon <store> <scratch>/moon_de440_250416.tf`, with the frame kernel downloaded into the scratchpad from NAIF's `generic_kernels/fk/satellites/`. It furnishes `de440s.bsp`, `moon_pa_de440_200625.bpc` and the frame kernel, and writes at the same instants:
     - SPICE's Euler angles (`pckeul` or the type-2 evaluation);
     - `pxform("J2000", "MOON_PA", et)`, `pxform("J2000", "MOON_ME", et)` and `pxform("MOON_PA", "MOON_ME", et)`.
-- [ ] **Step 2: Write the failing tests:**
+- [x] **Step 2: Write the failing tests:**
   - Positions within 1 mm of the fixture, velocities within 1e-6 m/s, including at 2049-12-31 and at a record boundary (Review Focus 4 and 5).
   - Euler angles within 1e-12 rad. Our PA matrix, ME matrix and `MOON_PA_TO_ME` each within 1e-12 of SPICE's `pxform` values.
   - The ME z-axis in ICRF lies within 0.02° of the existing `moonAxes` pole (IAU 2009, `src/time/moon.ts`) at 2026-01-01.
   - The ME x-axis points within 10° of the direction to the Earth: the mean-Earth convention.
   - An instant in 2051 throws the span error.
-- [ ] **Step 3: Run** `FRAMES_DATA=1 npx vitest run test/data/ephemeris.test.ts` and confirm it fails.
-- [ ] **Step 4: Implement** as specified.
-- [ ] **Step 5: Run** it and confirm it passes.
-- [ ] **Step 6: Commit** with "frames: Ephemeris from DE440 and the lunar PCK".
+- [x] **Step 3: Run** `FRAMES_DATA=1 npx vitest run test/data/ephemeris.test.ts` and confirm it fails.
+- [x] **Step 4: Implement** as specified.
+- [x] **Step 5: Run** it and confirm it passes.
+- [x] **Step 6: Commit** with "frames: Ephemeris from DE440 and the lunar PCK".
 
 ### Task 9: `loadFrameData` and the public API
 
@@ -315,17 +315,17 @@
   - `function loadFrameData(baseUrl?: string /* default "/frames-data/" */): Promise<FrameData>`: fetches `manifest.json`, then the files it lists by role.
 - Exported from `src/index.ts`: `Instant`, `LeapSeconds`, `EarthOrientationParameters`, `EopSample`, `celestialToTerrestrial`, `Ephemeris`, `loadFrameData`, `FrameData`, `tdbMinusTt`.
 
-- [ ] **Step 1: Write the failing tests** in `test/loadFrameData.test.ts`:
+- [x] **Step 1: Write the failing tests** in `test/loadFrameData.test.ts`:
   - With `fetch` stubbed to return 404 for `manifest.json`, `loadFrameData("/frames-data/")` rejects with a message containing `"npm run setup"` and `"FRAMES_DATA_DIR"` (Review Focus 3).
   - With `fetch` stubbed to serve a manifest and small files built in the test (an IERS excerpt, a six-row EOP CSV, the synthetic packs from Task 6's test), it resolves, and `ephemeris.span` matches the packs.
-- [ ] **Step 2: Run** `npx vitest run test/loadFrameData.test.ts` and confirm it fails.
-- [ ] **Step 3: Implement** `loadFrameData`, the exports and the README section. The README says what setup fetches, from where, under what terms (NAIF's redistribution rule, IERS credit), where it's stored, and how to change the span.
-- [ ] **Step 4: Run** it and confirm it passes.
-- [ ] **Step 5: Verify end to end:**
+- [x] **Step 2: Run** `npx vitest run test/loadFrameData.test.ts` and confirm it fails.
+- [x] **Step 3: Implement** `loadFrameData`, the exports and the README section. The README says what setup fetches, from where, under what terms (NAIF's redistribution rule, IERS credit), where it's stored, and how to change the span.
+- [x] **Step 4: Run** it and confirm it passes.
+- [x] **Step 5: Verify end to end:**
   - `npx tsc --noEmit -p .`, `npx vitest run` and `npm run test:data` all pass.
   - In the dev server, `await (await import("/src/index.ts")).loadFrameData()` resolves in the browser, and its `ephemeris.moonFromEarth` for now is between 356,000 and 407,000 km.
   - Run `snyk_code_scan` on `src/time`, `src/ephemeris` and `scripts`, and fix what it reports.
-- [ ] **Step 6: Commit** with "frames: loadFrameData and the public API".
+- [x] **Step 6: Commit** with "frames: loadFrameData and the public API".
 
 ### Task 10: Plan bookkeeping
 
@@ -333,5 +333,5 @@
 
 - Modify: `CESIUM2_WEBGPU_PLAN.md` §13.14 (a short "Frames 1 (r61)" results note pointing to the design and this plan, with the measured agreement figures from the tests), and this plan's checkboxes.
 
-- [ ] **Step 1: Write the note:** what landed, the measured worst agreement for each check, the data span, and that the engine's rendering is unchanged (plan 2 switches it over).
-- [ ] **Step 2: Commit** with "Plan: frames 1 results".
+- [x] **Step 1: Write the note:** what landed, the measured worst agreement for each check, the data span, and that the engine's rendering is unchanged (plan 2 switches it over).
+- [x] **Step 2: Commit** with "Plan: frames 1 results".
