@@ -730,6 +730,20 @@ export class Viewer {
   }
 
   /**
+   * Whether the credits show over the view (with `credits`, the default).
+   * An application whose view shows no attributed data (a model on a
+   * stage, the globe off) may hide them; one that shows such data must
+   * credit it, here or elsewhere on the page.
+   */
+  get creditsShown(): boolean {
+    return this.credits_?.shown ?? false;
+  }
+
+  set creditsShown(on: boolean) {
+    this.credits_?.show(on);
+  }
+
+  /**
    * The sun follows the clock (default), or stays where `setSun` put it.
    * The time controls show while it follows the clock.
    */

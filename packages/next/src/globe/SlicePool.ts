@@ -109,6 +109,9 @@ export class SlicePool {
       return;
     }
     this.destroyed = true;
+    // Unbind before destroying: the world's draw bind group names the array,
+    // and a destroyed texture in a submit fails the whole frame.
+    this.world.setImageryArray(undefined);
     this.texture.destroy();
   }
 

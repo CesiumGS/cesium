@@ -167,6 +167,13 @@ const uploads = new WeakMap<
 >();
 
 /**
+ * Assets whose decoded images were closed after their upload (to free the
+ * CPU copy). Once the last placement in a world is removed the upload goes
+ * too, and the asset can't be uploaded again: it must be loaded again.
+ */
+const imagesReleased = new WeakSet<GltfAsset>();
+
+/**
  * glTF is y-up and z-forward; CesiumJS 1.x maps it to z-up, x-forward with
  * `Y_UP_TO_Z_UP × Z_UP_TO_X_UP` (ModelUtility.getAxisCorrectionMatrix).
  * Column-major, matching 1.x `Axis`.
@@ -205,6 +212,16 @@ function uploadAsset(
   if (existing && existing.references > 0) {
     existing.references++;
     return existing;
+  }
+  if (
+    imagesReleased.has(asset) &&
+    asset.images.some((image) => image instanceof ImageBitmap)
+  ) {
+    throw new Error(
+      "This glTF asset's images were released when its upload was freed " +
+        "(its last placement was removed). Load it again (engine.loadGltf) " +
+        "to place it, or add the new placement before removing the old one.",
+    );
   }
   const textures = new TextureUploader(ctx, asset);
   // Transactional (§13.15): everything taken so far is released if any
@@ -862,6 +879,7 @@ class TextureUploader {
 
   /** Closes the decoded images once every texture is on the GPU. */
   release(): void {
+    imagesReleased.add(this.asset);
     for (const image of this.asset.images) {
       if (image instanceof ImageBitmap) {
         image.close();

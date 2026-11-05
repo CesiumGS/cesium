@@ -763,6 +763,8 @@ export class World {
   private pointCullBindGroup!: GPUBindGroup;
   /** Globe imagery array (a 1×1 placeholder until imagery is attached). */
   private imageryView: GPUTextureView;
+  /** Bound while no imagery array is (no globe imagery in this world). */
+  private readonly imageryPlaceholder: GPUTextureView;
   private readonly imagerySampler: GPUSampler;
 
   constructor(
@@ -908,7 +910,7 @@ export class World {
     this.splats = this.createSplats(1);
 
     this.createCullBindGroup();
-    this.imageryView = device
+    this.imageryPlaceholder = device
       .createTexture({
         label: "world.imagery.placeholder",
         size: [1, 1, 1],
@@ -916,6 +918,7 @@ export class World {
         usage: GPUTextureUsage.TEXTURE_BINDING,
       })
       .createView({ dimension: "2d-array" });
+    this.imageryView = this.imageryPlaceholder;
     this.imagerySampler = device.createSampler({
       label: "world.imagery",
       magFilter: "linear",
@@ -2602,7 +2605,17 @@ export class World {
    * per-view tile selection over one shared draw table.
    */
   /** Binds the globe imagery array (`GlobeImagery`) for this world's draws. */
-  setImageryArray(view: GPUTextureView): void {
+  /**
+   * The imagery array the globe's tiles sample (`SlicePool`), or none: the
+   * placeholder again, before the array is destroyed. A bind group that
+   * still names a destroyed texture fails every submit it's in (the whole
+   * frame draws nothing).
+   */
+  setImageryArray(view: GPUTextureView | undefined): void {
+    view ??= this.imageryPlaceholder;
+    if (view === this.imageryView) {
+      return;
+    }
     this.imageryView = view;
     this.createDrawBindGroup();
     // The cached bundle binds the old group (and its soon-destroyed array).

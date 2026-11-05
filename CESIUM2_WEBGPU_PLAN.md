@@ -5102,6 +5102,50 @@ them on content as you type.
     is ready, and the engine holds that frame until then.
   - The gallery creates its viewer suspended and resumes after each
     example's setup. Its spinner is centered on the view.
+- _Lookdev only (r52)._ The stage has no globe, timeline or credits. The
+  key light is the sun, set by direction at the stage (`setSun`: key, soft
+  key, top, back, off), and `Viewer.creditsShown` hides the credits while
+  no attributed data is in view. The example restores all three when it's
+  left.
+- _Errors where they're seen (r52)._ Compile errors appear in a list under
+  the editor, each a link to its line, with a lint gutter. Model errors
+  appear as a banner over the view that says what failed to load and why.
+  A failed model returns the selection to what is shown, so recompiles
+  don't retry it. Compile errors are kept against the text that was
+  compiled, so an edit never leaves a stale mark.
+- _Fixed on the way (r52)._
+  - **Re-placing a model lost its textures.** `addModel` closes an
+    asset's decoded images after upload, and removing its last placement
+    frees the upload. Placing the same parsed asset again uploaded from
+    closed, 0×0 images, and WebGPU rejected the infinite mip count. The
+    engine now says so, naming the fix. The playground adds the new
+    placement before removing the old one.
+  - **Turning the globe off drew black frames.** `SlicePool.release`
+    destroyed the imagery array while the world's bind group still named
+    it, so every submit failed. It now unbinds the array (the placeholder
+    again) first (test/slicePool.test.ts).
+- _Open: three design problems these bugs show._
+  - **Asset ownership is implicit.** `addModel` consumes part of a
+    caller-owned object (it closes the images) behind a reference-counted
+    cache keyed by identity. Options:
+    - explicit resource handles: `uploadModel(asset)` returns a
+      `ModelResource` that the caller places and releases, and the asset is
+      consumed at upload;
+    - or an option that keeps the CPU data (Unity's Read/Write).
+  - **No fault isolation.** One invalid resource or pipeline fails the
+    whole frame, which goes black, with only a console message. The engine
+    should catch this before submit and skip the bad draw, and report
+    engine errors through an event or the inspector.
+  - **Resetting between gallery items (and Sandcastle).** The gallery
+    keeps one viewer, and each example restores by hand what it changed:
+    controls, sun, credits, sky, background, render mode, globe. That's
+    easy to miss, and the globe swap is what exposed the bug above.
+    - The fix is isolation by construction: one shared `Engine` (device,
+      pipelines, workers: the expensive part), with a fresh `World` and
+      `Viewer` per example. That needs `Viewer.create({ engine })` and a
+      complete `destroy()`.
+    - 1.x Sandcastle gets the same isolation by recreating the Viewer in a
+      fresh iframe on every run.
 - _Later._
   - Declared uniforms as sliders.
   - Sharing a shader by URL (the source compressed in the hash).

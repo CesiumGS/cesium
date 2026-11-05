@@ -12,7 +12,6 @@ import {
   type ModelInstance,
   type SkyOptions,
 } from "../../src/index.ts";
-import type { GlobeKind } from "../../widgets/index.ts";
 import type { ExampleContext } from "../types.ts";
 import { createContractView, createSlangEditor } from "./editor.ts";
 import { CONTRACT, SlangLanguageServer } from "./languageServer.ts";
@@ -23,8 +22,9 @@ import { plane, sphere } from "./shapes.ts";
  * The Slang playground, a small lookdev tool: custom shader stages written
  * in Slang, compiled in the page as you type (the Slang WebAssembly build,
  * in a worker: `CustomShader.fromSlang`) and drawn on a model on a stage
- * of its own: no globe by default, a background color, studio light from
- * a procedural environment, orbit controls around the model.
+ * of its own: no globe, no timeline or credits, a background color, studio
+ * light from a procedural environment and a key light, orbit controls
+ * around the model.
  *
  * A shader imports the `cesium` module (the custom shader contract,
  * src/shaders/cesium.slang) and defines `vertexMain`, `fragmentMain` or
@@ -127,7 +127,7 @@ const MODELS: Array<[group: string, items: Array<[string, Target]>]> = [
 ];
 
 /** Environment light (a procedural sky, cd/m²) for lookdev. */
-const ENVIRONMENTS: Record<string, SkyOptions | "atmosphere"> = {
+const ENVIRONMENTS: Record<string, SkyOptions> = {
   Studio: {
     zenith: [9000, 9000, 9000],
     horizon: [6500, 6500, 6500],
@@ -148,28 +148,44 @@ const ENVIRONMENTS: Record<string, SkyOptions | "atmosphere"> = {
     horizon: [400, 400, 450],
     ground: [120, 120, 120],
   },
-  "Sky (atmosphere)": "atmosphere",
 };
 
-const BACKGROUNDS: Record<string, string | "atmosphere"> = {
+const BACKGROUNDS: Record<string, string> = {
   Charcoal: "#24262b",
   Black: "#000000",
   Grey: "#7a7d84",
   White: "#f2f2f2",
-  "Sky (atmosphere)": "atmosphere",
 };
 
-const SUNS: Record<string, number | "atmosphere"> = {
-  "Key light": DAYLIGHT_SUN_ILLUMINANCE,
-  "Soft key": DAYLIGHT_SUN_ILLUMINANCE * 0.25,
-  Off: 0,
-  "Time of day (atmosphere)": "atmosphere",
-};
-
-const GLOBES: Record<string, GlobeKind> = {
-  Off: false,
-  Ellipsoid: "ellipsoid",
-  Terrain: "terrain",
+/**
+ * The key light (the sun, set by direction at the stage, not by the clock):
+ * azimuth and elevation in degrees, illuminance in lux.
+ */
+const KEYS: Record<
+  string,
+  { azimuth: number; elevation: number; illuminance: number }
+> = {
+  "Key light": {
+    azimuth: 135,
+    elevation: 40,
+    illuminance: DAYLIGHT_SUN_ILLUMINANCE,
+  },
+  "Soft key": {
+    azimuth: 135,
+    elevation: 40,
+    illuminance: DAYLIGHT_SUN_ILLUMINANCE * 0.25,
+  },
+  "Top light": {
+    azimuth: 180,
+    elevation: 85,
+    illuminance: DAYLIGHT_SUN_ILLUMINANCE,
+  },
+  "Back light": {
+    azimuth: 330,
+    elevation: 20,
+    illuminance: DAYLIGHT_SUN_ILLUMINANCE,
+  },
+  Off: { azimuth: 135, elevation: 40, illuminance: 0 },
 };
 
 const STORAGE = "dyno.slangPlayground";
@@ -185,7 +201,12 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     clearColor: view.clearColor,
     lighting: { ...view.lighting },
     controls: viewer.controls,
+    sunFromClock: viewer.sunFromClock,
+    creditsShown: viewer.creditsShown,
   };
+  // Lookdev, not the globe: no timeline (the key light is set by
+  // direction) and no credits (the stage shows no attributed data).
+  viewer.creditsShown = false;
   // Shaders animate with `time`: render every frame while open.
   engine.renderMode = "continuous";
   viewer.setControls("orbit");
@@ -241,29 +262,23 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
 
   // ------------------------------------------------------------ the stage
   const settings = {
-    globe: pick(GLOBES, read("globe") ?? "Off", "Off"),
     background: pick(BACKGROUNDS, read("background") ?? "Charcoal", "Charcoal"),
     environment: pick(ENVIRONMENTS, read("environment") ?? "Studio", "Studio"),
-    sun: pick(SUNS, read("sun") ?? "Key light", "Key light"),
+    key: pick(KEYS, read("key") ?? "Key light", "Key light"),
     turntable: read("turntable") === "1",
   };
-  const applyStage = async () => {
-    await viewer.setGlobe(GLOBES[settings.globe]!);
-    const background = BACKGROUNDS[settings.background]!;
-    if (background === "atmosphere") {
-      view.background = "atmosphere";
-    } else {
-      view.background = "color";
-      view.clearColor = srgbToLinear(background);
-    }
-    const environment = ENVIRONMENTS[settings.environment]!;
-    if (environment === "atmosphere") {
-      view.lighting.environment = "atmosphere";
-    } else {
-      view.lighting.environment = "procedural";
-      engine.environment.setSky(environment);
-    }
-    view.lighting.sunIlluminance = SUNS[settings.sun]!;
+  /** The key light, by direction at the stage (after framing moves it). */
+  const applyKey = () => {
+    const key = KEYS[settings.key]!;
+    viewer.setSun(key.azimuth, key.elevation);
+    view.lighting.sunIlluminance = key.illuminance;
+  };
+  const applyStage = () => {
+    view.background = "color";
+    view.clearColor = srgbToLinear(BACKGROUNDS[settings.background]!);
+    view.lighting.environment = "procedural";
+    engine.environment.setSky(ENVIRONMENTS[settings.environment]!);
+    applyKey();
     engine.requestRender();
   };
 
@@ -283,7 +298,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
 
   /** What's on the stage: a placed glTF, or a shape's draw. */
   let placed:
-    | { kind: "model"; instance: ModelInstance }
+    | { kind: "model"; instance: ModelInstance; url: string }
     | {
         kind: "shape";
         mesh: ReturnType<typeof world.addMesh>;
@@ -309,16 +324,27 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     return mat4.multiply(mat4.mat4(), frame, turn);
   };
 
-  const removePlaced = () => {
-    if (placed?.kind === "model") {
-      viewer.remove(placed.instance);
-    } else if (placed?.kind === "shape") {
-      world.removeDraw(placed.draw);
-      world.removeTransform(placed.transform);
-      world.removeMaterial(placed.material);
-      world.removeMesh(placed.mesh);
+  /**
+   * Removes what was placed. Removing a model's last placement frees its
+   * upload and its decoded images with it (Engine.addModel), so its parsed
+   * asset is dropped too unless `keepUrl` replaces it: placing that model
+   * again loads it again.
+   */
+  const removePlaced = (old: typeof placed, keepUrl?: string) => {
+    if (old?.kind === "model") {
+      viewer.remove(old.instance);
+      if (old.url !== keepUrl) {
+        assets.delete(old.url);
+      }
+    } else if (old?.kind === "shape") {
+      world.removeDraw(old.draw);
+      world.removeTransform(old.transform);
+      world.removeMaterial(old.material);
+      world.removeMesh(old.mesh);
     }
-    placed = undefined;
+    if (old === placed) {
+      placed = undefined;
+    }
   };
 
   const focus = () => {
@@ -333,11 +359,17 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
         -20 * DEG,
       );
     }
+    // The key light's direction is at what is framed.
+    applyKey();
   };
 
   /** Places the current model with the current shader (uploads cached). */
   let placing = Promise.resolve();
   let framedFor: string | undefined;
+  /** What is on the stage now, to go back to when a new model fails. */
+  let shown: { customUrl: string | undefined; modelName: string } | undefined;
+  /** What place() is loading, for its error. */
+  let attempt = "";
   const place = () =>
     (placing = placing
       .then(async () => {
@@ -349,14 +381,15 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
           return;
         }
         const key = customUrl ?? modelName;
-        status.model.textContent = "";
+        attempt = target.kind === "url" ? target.url : modelName;
+        showModelError(undefined);
         if (target.kind === "shape") {
           let data = shapes.get(modelName);
           if (!data) {
             data = target.mesh();
             shapes.set(modelName, data);
           }
-          removePlaced();
+          const previous = placed;
           const mesh = world.addMesh(data);
           const material = world.addMaterial({
             baseColor: [0.8, 0.8, 0.8, 1],
@@ -373,6 +406,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
             ...(shader ? { shader } : {}),
           });
           placed = { kind: "shape", mesh, material, transform, draw, radius };
+          removePlaced(previous);
         } else {
           let asset = assets.get(target.url);
           if (!asset) {
@@ -383,20 +417,40 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
           if (signal.aborted) {
             return;
           }
-          removePlaced();
+          // The new placement before the old one goes: the asset's upload
+          // is shared, never freed between them, and no frame is empty.
+          const previous = placed;
           const instance = await viewer.addModel(loaded, {
             modelMatrix: stageMatrix(0),
             ...(shader ? { shader } : {}),
           });
-          placed = { kind: "model", instance };
+          placed = { kind: "model", instance, url: target.url };
+          removePlaced(previous, target.url);
         }
+        shown = { customUrl, modelName };
         if (framedFor !== key) {
           framedFor = key;
           focus();
         }
       })
       .catch((e: unknown) => {
-        status.model.textContent = `Could not load the model: ${e instanceof Error ? e.message : String(e)}`;
+        const message = e instanceof Error ? e.message : String(e);
+        const where = attempt.startsWith("blob:") ? "the file" : attempt;
+        showModelError(
+          /failed to fetch|networkerror|load failed/i.test(message)
+            ? `${where} couldn't be fetched: the address may be wrong, or the server down or not allowing cross-origin requests (CORS).`
+            : `${where}: ${message}`,
+        );
+        // Back to what is shown, so the next compile doesn't load the
+        // failing model again (and show the same error again).
+        if (shown) {
+          if (customUrl !== shown.customUrl && customUrl?.startsWith("blob:")) {
+            URL.revokeObjectURL(customUrl);
+          }
+          customUrl = shown.customUrl;
+          modelName = shown.modelName;
+          modelSelect.value = modelName;
+        }
       }));
 
   // Turntable: the model turns about its up axis, 20° a second.
@@ -424,7 +478,70 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     .catch(() => false);
   const server = served ? new SlangLanguageServer(SLANG_URL) : undefined;
 
-  const status = { compile: el("span", {}), model: el("span", {}) };
+  const status = { compile: el("span", {}) };
+  // Errors where they're seen: the compiler's in a list under the editor
+  // (each a link to its line), the model's as a banner over the view.
+  const errorBox = el("div", { className: "slang-errors", role: "alert" });
+  errorBox.hidden = true;
+  const viewError = el("div", { className: "slang-view-error", role: "alert" });
+  viewError.hidden = true;
+  viewer.container.append(viewError);
+  let viewErrorTimer: ReturnType<typeof setTimeout> | undefined;
+  const showModelError = (message: string | undefined) => {
+    clearTimeout(viewErrorTimer);
+    viewError.hidden = !message;
+    viewError.replaceChildren();
+    if (message) {
+      viewError.append(
+        el("span", {}, `Could not load the model. ${message}`),
+        el(
+          "button",
+          {
+            type: "button",
+            title: "Dismiss",
+            onclick: () => showModelError(undefined),
+          },
+          "×",
+        ),
+      );
+      viewErrorTimer = setTimeout(() => showModelError(undefined), 10_000);
+    }
+  };
+  const showCompileErrors = (
+    errors: Array<{ line: number; message: string }>,
+    raw: string | undefined,
+    kept: boolean,
+  ) => {
+    errorBox.hidden = raw === undefined;
+    if (raw === undefined) {
+      errorBox.replaceChildren();
+      return;
+    }
+    const count = Math.max(errors.length, 1);
+    errorBox.replaceChildren(
+      el(
+        "div",
+        { className: "slang-errors-title" },
+        `${count} error${count === 1 ? "" : "s"}`,
+        kept ? " · the model keeps the last shader that compiled" : "",
+      ),
+      ...(errors.length
+        ? errors.map(({ line, message }) =>
+            el(
+              "button",
+              {
+                type: "button",
+                className: "slang-error",
+                title: "Go to the line",
+                onclick: () => editor.goTo(line),
+              },
+              el("span", { className: "slang-error-line" }, `Line ${line}`),
+              message,
+            ),
+          )
+        : [el("pre", { className: "slang-error-raw" }, raw)]),
+    );
+  };
   const wgsl = el("pre", { className: "slang-wgsl" });
   const urlInput = el("input", {
     type: "url",
@@ -474,7 +591,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
   const stageControl = (
     label: string,
     table: Record<string, unknown>,
-    key: "globe" | "background" | "environment" | "sun",
+    key: "background" | "environment" | "key",
   ) =>
     el(
       "label",
@@ -483,7 +600,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
       select(Object.keys(table), settings[key], (v) => {
         settings[key] = v;
         write(key, v);
-        void applyStage();
+        applyStage();
       }),
     );
   const turntable = el("input", {
@@ -559,15 +676,15 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
       el(
         "div",
         { className: "slang-toolbar" },
-        stageControl("Globe", GLOBES, "globe"),
         stageControl("Background", BACKGROUNDS, "background"),
         stageControl("Environment light", ENVIRONMENTS, "environment"),
-        stageControl("Sun", SUNS, "sun"),
+        stageControl("Key light", KEYS, "key"),
         el("label", {}, "Turntable", turntable),
       ),
     ),
     editorHost,
-    el("p", { className: "slang-status" }, status.compile, " ", status.model),
+    errorBox,
+    el("p", { className: "slang-status" }, status.compile),
     contractDetails,
     el("details", {}, el("summary", {}, "Generated WGSL"), wgsl),
     el(
@@ -597,7 +714,11 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
         return;
       }
       shader = next;
-      editor.setCompileErrors(undefined);
+      showCompileErrors(
+        editor.setCompileErrors(undefined, source),
+        undefined,
+        false,
+      );
       wgsl.textContent = next.code;
       status.compile.textContent = `Compiled in ${(performance.now() - started).toFixed(0)} ms · ${(next.code.length / 1024).toFixed(1)} KB of WGSL`;
       await place();
@@ -605,10 +726,9 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
       if (mine !== generation || signal.aborted) {
         return;
       }
-      editor.setCompileErrors(e instanceof Error ? e.message : String(e));
-      status.compile.textContent = shader
-        ? "Errors, marked in the editor: the model keeps the last shader that compiled."
-        : "Errors, marked in the editor.";
+      const raw = e instanceof Error ? e.message : String(e);
+      showCompileErrors(editor.setCompileErrors(raw, source), raw, !!shader);
+      status.compile.textContent = "";
     }
   };
   const editor = createSlangEditor(editorHost, {
@@ -626,7 +746,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
   });
 
   // The stage and the model before the gallery shows the view.
-  await applyStage();
+  applyStage();
   if (!served) {
     status.compile.textContent =
       "The Slang WebAssembly build isn't served here: run `npm run setup --workspace @cesium/next` (it fetches it) and restart the dev server.";
@@ -643,7 +763,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     generation++;
     clearTimeout(timer);
     cancelAnimationFrame(raf);
-    removePlaced();
+    removePlaced(placed);
     server?.dispose();
     editor.destroy();
     contract.destroy();
@@ -656,7 +776,11 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     Object.assign(view.lighting, restore.lighting);
     engine.environment.setSky(DEFAULT_SKY);
     viewer.setControls(restore.controls);
+    viewer.sunFromClock = restore.sunFromClock;
+    viewer.creditsShown = restore.creditsShown;
     panel.replaceChildren();
+    clearTimeout(viewErrorTimer);
+    viewError.remove();
   };
 }
 

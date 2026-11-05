@@ -891,6 +891,12 @@ export class Engine {
    * Places a parsed glTF asset in a world. With a `heightReference` the
    * model is anchored at its `modelMatrix` translation and kept on the
    * ground (`clamping`).
+   *
+   * Placements of one asset share its upload, and the asset's decoded
+   * images are closed once they are on the GPU (the CPU copy freed, as 1.x
+   * does). Removing the last placement frees the upload, so the asset can't
+   * be placed again: load it again, or add the new placement before
+   * removing the old one (as a swap does).
    */
   addModel(
     world: World,
@@ -1266,6 +1272,10 @@ export class Engine {
     setModelInstance(world, model, index, change);
   }
 
+  /**
+   * Removes a placement. The last one of an asset frees its upload, and
+   * the asset can't be placed again (see `addModel`).
+   */
   removeModel(world: World, instance: ModelInstance): void {
     instance.clamp?.remove();
     removeGltf(world, instance);

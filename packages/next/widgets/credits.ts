@@ -23,6 +23,10 @@ export interface CreditSource {
 
 export interface CreditsHandle {
   readonly element: HTMLElement;
+  /** Whether the credits show (when there are any). */
+  readonly shown: boolean;
+  /** Shows or hides the credits (shown by default). */
+  show(on: boolean): void;
   dispose(): void;
 }
 
@@ -82,6 +86,7 @@ export function attachCredits(
   document.addEventListener("keydown", escape);
 
   let key = "";
+  let shown = true;
   const refresh = () => {
     const { attributions, credits } = source();
     const next = JSON.stringify([attributions, credits]);
@@ -141,7 +146,7 @@ export function attachCredits(
     const count = list.childElementCount;
     toggle.hidden = count === 0;
     toggle.textContent = `Data attribution (${count})`;
-    root.hidden = logos.childElementCount === 0 && count === 0;
+    root.hidden = !shown || (logos.childElementCount === 0 && count === 0);
     if (count === 0) {
       setOpen(false);
     }
@@ -151,6 +156,14 @@ export function attachCredits(
 
   return {
     element: root,
+    get shown() {
+      return shown;
+    },
+    show(on: boolean) {
+      shown = on;
+      key = ""; // Redraw, though the credits are the same.
+      refresh();
+    },
     dispose() {
       clearInterval(timer);
       document.removeEventListener("pointerdown", outside);

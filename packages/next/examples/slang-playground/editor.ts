@@ -7,6 +7,7 @@ import { indentWithTab } from "@codemirror/commands";
 import { indentUnit } from "@codemirror/language";
 import {
   forceLinting,
+  lintGutter,
   linter,
   type Diagnostic as CmDiagnostic,
 } from "@codemirror/lint";
@@ -39,8 +40,17 @@ export interface SlangEditor {
   readonly view: EditorView;
   text(): string;
   setText(text: string): void;
-  /** The compiler's errors (Slang's output, parsed for `/user.slang` lines). */
-  setCompileErrors(message: string | undefined): void;
+  /**
+   * The compiler's errors (Slang's output, parsed for `/user.slang` lines),
+   * marked in the editor; returned by line, for a list beside it.
+   */
+  setCompileErrors(
+    message: string | undefined,
+    /** The text that was compiled (default: the document now). */
+    source?: string,
+  ): Array<{ line: number; message: string }>;
+  /** Moves the cursor to a line (from 1) and scrolls it into view. */
+  goTo(line: number): void;
   destroy(): void;
 }
 
@@ -76,7 +86,17 @@ export function createSlangEditor(
   },
 ): SlangEditor {
   const { server } = options;
-  let compileErrors: CmDiagnostic[] = [];
+  /**
+   * The compiler's last errors, by line and column (from 1), and the text
+   * they are about: shown only while the document is that text, since an
+   * edit moves lines under them (the next compile reports again).
+   */
+  let compileErrors: Array<{ line: number; column: number; message: string }> =
+    [];
+  let compiledText: string | undefined;
+  // Tells the linter the compiler's errors changed (it otherwise reruns
+  // only on edits; `forceLinting` runs only a lint already pending).
+  const compileErrorsChanged = StateEffect.define<null>();
 
   const toPos = (state: EditorState, offset: number): Position => {
     const line = state.doc.lineAt(offset);
@@ -118,14 +138,30 @@ export function createSlangEditor(
       const lines = new Set(
         fromServer.map((d) => state.doc.lineAt(d.from).number),
       );
-      const extra = compileErrors.filter(
-        (d) =>
-          d.from <= state.doc.length &&
-          !lines.has(state.doc.lineAt(d.from).number),
-      );
+      const extra: CmDiagnostic[] =
+        compiledText === state.doc.toString()
+          ? compileErrors
+              .filter((e) => e.line <= state.doc.lines && !lines.has(e.line))
+              .map((e) => {
+                const at = state.doc.line(e.line);
+                return {
+                  from: Math.min(at.from + e.column - 1, at.to),
+                  to: at.to,
+                  severity: "error",
+                  message: e.message,
+                  source: "slangc",
+                };
+              })
+          : [];
       return [...fromServer, ...extra];
     },
-    { delay: 250 },
+    {
+      delay: 250,
+      needsRefresh: (update) =>
+        update.transactions.some((tr) =>
+          tr.effects.some((e) => e.is(compileErrorsChanged)),
+        ),
+    },
   );
 
   // Completion from the server, after a word, `.` or `::`.
@@ -364,6 +400,7 @@ export function createSlangEditor(
         slang.data.of({ autocomplete: complete }),
         autocompletion({ activateOnTyping: true }),
         lint,
+        lintGutter(),
         hover,
         signatureField,
         signatureHelp,
@@ -416,24 +453,36 @@ export function createSlangEditor(
         changes: { from: 0, to: view.state.doc.length, insert: text },
       });
     },
-    setCompileErrors(message) {
+    setCompileErrors(message, source) {
       compileErrors = [];
+      compiledText = source ?? view.state.doc.toString();
+      const byLine: Array<{ line: number; message: string }> = [];
       const state = view.state;
       for (const m of (message ?? "").matchAll(
         /\/user\.slang:(\d+):(\d+)[^\n]*\n?(?:[\s\S]*?\^+\s*([^\n]*))?/g,
       )) {
         const line = Math.min(Math.max(Number(m[1]), 1), state.doc.lines);
-        const at = state.doc.line(line);
-        const from = Math.min(at.from + Math.max(Number(m[2]) - 1, 0), at.to);
+        const text = (m[3] || message || "").trim();
         compileErrors.push({
-          from,
-          to: at.to,
-          severity: "error",
-          message: (m[3] || message || "").trim(),
-          source: "slangc",
+          line,
+          column: Math.max(Number(m[2]), 1),
+          message: text,
         });
+        byLine.push({ line, message: text });
       }
+      view.dispatch({ effects: compileErrorsChanged.of(null) });
       forceLinting(view);
+      return byLine;
+    },
+    goTo(line) {
+      const at = view.state.doc.line(
+        Math.min(Math.max(line, 1), view.state.doc.lines),
+      );
+      view.dispatch({
+        selection: { anchor: at.from, head: at.to },
+        effects: EditorView.scrollIntoView(at.from, { y: "center" }),
+      });
+      view.focus();
     },
     destroy() {
       view.destroy();
