@@ -5,7 +5,7 @@ import {
   PrimitiveType,
   destroyObject,
 } from "@cesium/core";
-import { SceneTransforms } from "@cesium/engine";
+import { DepthFunction, SceneTransforms } from "@cesium/engine";
 import { ComponentType } from "@cesium/mesh-editor";
 import { MeshEditorModule, OverlayRenderer } from "../../index.js";
 import createCanvas from "../../../../Specs/createCanvas.js";
@@ -367,8 +367,8 @@ describe(
 
         const commands = renderCommands(overlay);
 
-        // Points and faces.
-        expect(getInstanceCounts(commands)).toEqual([4, 2]);
+        // Faces and points.
+        expect(getInstanceCounts(commands)).toEqual([2, 4]);
 
         overlay.renderer.setShownComponents(0);
 
@@ -389,11 +389,11 @@ describe(
 
         overlay.renderer.show = true;
 
-        expect(getInstanceCounts(renderCommands(overlay))).toEqual([4, 5, 2]);
+        expect(getInstanceCounts(renderCommands(overlay))).toEqual([2, 5, 4]);
       });
 
       it("draws points and edges as instanced triangle strips", function () {
-        const [pointCommand, edgeCommand] = renderCommands(addSquare());
+        const [, edgeCommand, pointCommand] = renderCommands(addSquare());
 
         expect(pointCommand.primitiveType).toBe(PrimitiveType.TRIANGLE_STRIP);
         expect(pointCommand.count).toBe(4);
@@ -402,16 +402,36 @@ describe(
       });
 
       it("draws faces as instanced triangles", function () {
-        const [, , faceCommand] = renderCommands(addSquare());
+        const [faceCommand] = renderCommands(addSquare());
 
         expect(faceCommand.primitiveType).toBe(PrimitiveType.TRIANGLES);
         expect(faceCommand.count).toBe(3);
       });
 
+      it("writes depth for faces but not for points and edges", function () {
+        const [faceCommand, edgeCommand, pointCommand] =
+          renderCommands(addSquare());
+
+        expect(faceCommand.renderState.depthMask).toBe(true);
+        expect(edgeCommand.renderState.depthMask).toBe(false);
+        expect(pointCommand.renderState.depthMask).toBe(false);
+      });
+
+      it("draws and picks the last of coincident points and edges", function () {
+        const [, edgeCommand, pointCommand] = renderCommands(addSquare());
+
+        expect(edgeCommand.renderState.depthTest.func).toBe(
+          DepthFunction.LESS_OR_EQUAL,
+        );
+        expect(pointCommand.renderState.depthTest.func).toBe(
+          DepthFunction.LESS_OR_EQUAL,
+        );
+      });
+
       it("draws one instance per vertex, edge and triangle", function () {
         const commands = renderCommands(addSquare());
 
-        expect(getInstanceCounts(commands)).toEqual([4, 5, 2]);
+        expect(getInstanceCounts(commands)).toEqual([2, 5, 4]);
       });
 
       it("uses the model matrix", function () {
@@ -445,10 +465,10 @@ describe(
         renderCommands(overlay);
 
         overlay.setOverlay(twoSquares);
-        expect(getInstanceCounts(renderCommands(overlay))).toEqual([6, 9, 4]);
+        expect(getInstanceCounts(renderCommands(overlay))).toEqual([4, 9, 6]);
 
         overlay.setOverlay(triangle);
-        expect(getInstanceCounts(renderCommands(overlay))).toEqual([3, 3, 1]);
+        expect(getInstanceCounts(renderCommands(overlay))).toEqual([1, 3, 3]);
       });
 
       it("skips component kinds with no components", function () {
@@ -472,8 +492,8 @@ describe(
         expectPixel(overlay, [1.5, 0.0, 0.0], background);
       });
 
-      // Viewed head-on, draw order alone gives this result, so it doesn't
-      // exercise the depth bias, which matters at oblique angles.
+      // Viewed head-on, only the depth bias puts points and edges in front of
+      // what's drawn before them, so this doesn't exercise oblique angles.
       it("draws points over edges and edges over faces where they overlap", function () {
         const overlay = new OverlayTestPrimitive(shaders);
         overlay.setOverlay({
@@ -600,6 +620,33 @@ describe(
       });
 
       it("picks transparent faces");
+
+      it("picks only pickable component types", function () {
+        const overlay = addSquare();
+        // Inside face 0, within the bottom edge's enlarged pick width.
+        const nearEdge = [0.0, -0.95, 0.0];
+
+        expectPick(overlay, nearEdge, {
+          primitive: overlay.mesh,
+          componentType: ComponentType.Edge,
+          index: 0,
+        });
+
+        overlay.renderer.setPickableComponents(1 << ComponentType.Face);
+
+        expectPick(overlay, nearEdge, {
+          primitive: overlay.mesh,
+          componentType: ComponentType.Face,
+          index: 0,
+        });
+      });
+
+      it("draws unpickable component types outside the pick pass", function () {
+        const overlay = addSquare();
+        overlay.renderer.setPickableComponents(1 << ComponentType.Face);
+
+        expect(getInstanceCounts(renderCommands(overlay))).toEqual([2, 5, 4]);
+      });
 
       it("returns pick objects with its mesh as primitive", function () {
         const overlay = addSquare();
