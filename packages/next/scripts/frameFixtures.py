@@ -2,9 +2,10 @@
 
 Usage: uv run --with pyerfa --with numpy python scripts/frameFixtures.py <section> [args]
 
-Sections: dtdb, earth, ephemeris <store> (needs jplephem), moon <store> <frame kernel>
-(needs spiceypy and jplephem). The last two read the NAIF kernels `npm run setup`
-downloaded to <store>; only their small JSON output is committed.
+Sections: dtdb, earth, earthLeap <store>, ephemeris <store> (needs jplephem), moon
+<store> <frame kernel> (needs spiceypy and jplephem). earthLeap reads the store's
+EOP-All.csv; the last two read the NAIF kernels `npm run setup` downloaded to
+<store>. Only their small JSON output is committed.
 """
 
 import json
@@ -25,7 +26,8 @@ def write(name, rows):
     OUT.mkdir(parents=True, exist_ok=True)
     # Python's json writes float repr, which round-trips float64.
     (OUT / f"{name}.json").write_text(json.dumps(rows, indent=1) + "\n")
-    print(f"wrote {name}.json ({len(rows)} rows)")
+    count = len(rows["rows"]) if isinstance(rows, dict) else len(rows)
+    print(f"wrote {name}.json ({count} rows)")
 
 
 def dtdb():
@@ -119,6 +121,61 @@ def earth():
     write("earth", rows)
 
 
+def lagrange(xs, ys, x):
+    """4-point Lagrange through (xs, ys) at x."""
+    total = 0.0
+    for i in range(len(xs)):
+        w = ys[i]
+        for j in range(len(xs)):
+            if j != i:
+                w *= (x - xs[j]) / (xs[i] - xs[j])
+        total += w
+    return total
+
+
+def earth_leap(store):
+    """GCRS->ITRS inside the 2016-12-31 leap second, with EOP from the store's
+    EOP-All.csv rows 2016-12-29..2017-01-03 (the real DAT 36 -> 37 step).
+
+    Written as {csv, rows}: the TypeScript parses `csv` and looks the EOP up
+    itself, so the test checks the lookup as well as the rotation. The EOP
+    here is interpolated independently: 4-point Lagrange of UT1-TAI (and
+    xp, yp, dX, dY) at ERFA's own UTC date for 23:59:60.x, which dtf2d puts
+    inside 2016-12-31 (a 86401 s day). UT1-UTC is then UT1-TAI + 36, the
+    pre-leap day's TAI-UTC (erfa.dat), as utcut1 expects.
+    """
+    arcsec = np.pi / 648000.0
+    lines = (Path(store) / "EOP-All.csv").read_text().splitlines()
+    header = lines[0].split(",")
+    wanted = [ln for ln in lines[1:] if ln[:10] >= "2016-12-29" and ln[:10] <= "2017-01-03"]
+    assert len(wanted) == 6, wanted
+    col = {name: i for i, name in enumerate(header)}
+    table = [ln.split(",") for ln in wanted]
+    mjd = [float(f[col["MJD"]]) for f in table]
+    dat = [float(f[col["DAT"]]) for f in table]
+    ut1_tai = [float(f[col["UT1-UTC"]]) - d for f, d in zip(table, dat)]
+    fields = {name: [float(f[col[name]]) for f in table] for name in ("X", "Y", "DX", "DY")}
+
+    new_year_tt = (1_483_228_800 - 946_728_000) + 37 + 32.184
+    rows = []
+    for label, sec, back in [
+        ("2016-12-31T23:59:60.000", 60.0, 1.0),
+        ("2016-12-31T23:59:60.500", 60.5, 0.5),
+        ("2016-12-31T23:59:60.999", 60.999, 0.001),
+    ]:
+        utc1, utc2 = erfa.dtf2d("UTC", 2016, 12, 31, 23, 59, sec)
+        x = (utc1 - 2400000.5) + utc2  # ERFA's UTC MJD, inside 57753
+        lo = max(i for i in range(len(mjd)) if mjd[i] <= x)
+        w = slice(lo - 1, lo + 3)
+        day_dat = float(erfa.dat(2016, 12, 31, 0.0))
+        dut1 = lagrange(mjd[w], ut1_tai[w], x) + day_dat
+        xp, yp, dx, dy = (lagrange(mjd[w], fields[n][w], x) * arcsec for n in ("X", "Y", "DX", "DY"))
+        row = earth_row(utc1, utc2, None, new_year_tt - back, dut1, xp, yp, dx, dy)
+        row["label"] = label
+        rows.append(row)
+    write("earthLeap", {"csv": "\n".join([lines[0]] + wanted) + "\n", "rows": rows})
+
+
 def pack_segment(store, pack, name):
     """A segment's manifest entry from a pack file (CPK1, u32 length, JSON)."""
     raw = (Path(store) / pack).read_bytes()
@@ -196,7 +253,13 @@ def moon(store, frame_kernel):
     write("moon", rows)
 
 
-SECTIONS = {"dtdb": dtdb, "earth": earth, "ephemeris": ephemeris, "moon": moon}
+SECTIONS = {
+    "dtdb": dtdb,
+    "earth": earth,
+    "earthLeap": earth_leap,
+    "ephemeris": ephemeris,
+    "moon": moon,
+}
 
 if __name__ == "__main__":
     if len(sys.argv) < 2 or sys.argv[1] not in SECTIONS:

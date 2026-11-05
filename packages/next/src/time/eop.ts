@@ -1,12 +1,24 @@
+import type { Instant } from "./Instant.ts";
+import type { LeapSeconds } from "./leapSeconds.ts";
+
 const ARCSEC_TO_RAD = Math.PI / (180 * 3600);
 const MS_PER_DAY = 86_400_000;
 /** MJD of the Unix epoch (1970-01-01). */
 const MJD_UNIX_EPOCH = 40_587;
+/** Unix ms of 2000-01-01T12:00:00, J2000 read as if TAI were UTC-labelled. */
+const J2000_UNIX_MS = 946_728_000_000;
 
 /** Earth orientation values at one instant, in radians and seconds. */
 export interface EopSample {
-  /** UT1 - UTC, seconds. */
+  /** UT1 - UTC, seconds. It steps by 1 s at a leap second. */
   ut1MinusUtc: number;
+  /**
+   * UT1 - TAI, seconds, interpolated in the same window as the other fields.
+   * It is continuous across leap seconds, so UT1 = TAI + this needs no
+   * leap-second table. Held past the table; before it (zero corrections,
+   * UT1 = UTC) it is minus TAI-UTC.
+   */
+  ut1MinusTai: number;
   /** Polar motion, radians. */
   xp: number;
   yp: number;
@@ -151,8 +163,32 @@ export class EarthOrientationParameters {
   }
 
   /**
+   * Earth orientation at an instant. TAI-UTC is read at the instant's TAI, so
+   * a time inside an inserted second (23:59:60, which UTC ms cannot name)
+   * reads the pre-leap day, holding at its last millisecond, and UT1 - UTC
+   * agrees with TAI-UTC there. Prefer this to `at(instant.toUtc(leap))`.
+   */
+  atInstant(instant: Instant, leap: LeapSeconds): EopSample {
+    const taiMs = J2000_UNIX_MS + instant.tai() * 1000;
+    const dat = leap.taiMinusUtcAtTai(taiMs);
+    let utcMs = taiMs - 1000 * dat;
+    if (leap.taiMinusUtc(utcMs) !== dat) {
+      // Inside an inserted second `utcMs` reads the next day. Leap seconds
+      // end a UTC day, so hold at the last ms before that day boundary.
+      utcMs = Math.floor(utcMs / MS_PER_DAY) * MS_PER_DAY - 1;
+    }
+    const sample = this.at(utcMs);
+    if (sample.degraded && utcMs < this.first) {
+      // Zero corrections mean UT1 = UTC, under the instant's own TAI-UTC.
+      sample.ut1MinusTai = -dat;
+    }
+    return sample;
+  }
+
+  /**
    * Earth orientation at a UTC instant (ms since 1970). A NaN instant yields
-   * NaN fields with `degraded: true` rather than throwing.
+   * NaN fields with `degraded: true` rather than throwing. Inside a leap
+   * second use `atInstant`: UTC ms there already reads the next day.
    */
   at(utcMs: number): EopSample {
     const mjd = utcMs / MS_PER_DAY + MJD_UNIX_EPOCH;
@@ -160,6 +196,7 @@ export class EarthOrientationParameters {
     if (Number.isNaN(mjd)) {
       return {
         ut1MinusUtc: NaN,
+        ut1MinusTai: NaN,
         xp: NaN,
         yp: NaN,
         dX: NaN,
@@ -169,8 +206,11 @@ export class EarthOrientationParameters {
       };
     }
     if (mjd < this.mjd[0]!) {
+      // Zero corrections: UT1 = UTC, under the table's earliest TAI-UTC
+      // (`atInstant` substitutes the leap-second table's).
       return {
         ut1MinusUtc: 0,
+        ut1MinusTai: -this.dat[0]!,
         xp: 0,
         yp: 0,
         dX: 0,
@@ -210,9 +250,11 @@ export class EarthOrientationParameters {
       }
       return s;
     };
+    // UT1-TAI is continuous across leap seconds; add back the DAT of the day.
+    const ut1MinusTai = dot(this.ut1Tai);
     return {
-      // UT1-TAI is continuous across leap seconds; add back the DAT of the day.
-      ut1MinusUtc: dot(this.ut1Tai) + this.dat[lo]!,
+      ut1MinusUtc: ut1MinusTai + this.dat[lo]!,
+      ut1MinusTai,
       xp: dot(this.x) * ARCSEC_TO_RAD,
       yp: dot(this.y) * ARCSEC_TO_RAD,
       dX: dot(this.dx) * ARCSEC_TO_RAD,
@@ -234,6 +276,7 @@ export class EarthOrientationParameters {
   private row(k: number, degraded: boolean): EopSample {
     return {
       ut1MinusUtc: this.ut[k]!,
+      ut1MinusTai: this.ut1Tai[k]!,
       xp: this.x[k]! * ARCSEC_TO_RAD,
       yp: this.y[k]! * ARCSEC_TO_RAD,
       dX: this.dx[k]! * ARCSEC_TO_RAD,
