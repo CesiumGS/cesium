@@ -30,6 +30,114 @@
   align-items: center;
   gap: var(--stratakit-space-100);
 }
+
+/*
+ * The example page's switcher, where the back link was: "Examples / this
+ * one ▾ ‹ ›", the menu a list of every example with its picture.
+ */
+.examples-switcher {
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+  font-size: 0.875rem;
+}
+.examples-switcher-home {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+  color: var(--stratakit-color-text-neutral-secondary);
+  text-decoration: none;
+}
+.examples-switcher-home:hover {
+  color: var(--stratakit-color-text-neutral-primary);
+  text-decoration: underline;
+}
+.examples-switcher-sep {
+  color: var(--stratakit-color-text-neutral-tertiary, #777);
+}
+.examples-switcher-current,
+.examples-switcher-step {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-50, 2px);
+  padding: 2px var(--stratakit-space-100);
+  border: 1px solid transparent;
+  border-radius: var(--stratakit-radius-sm, 4px);
+  background: none;
+  color: var(--stratakit-color-text-neutral-primary);
+  font: inherit;
+  cursor: pointer;
+}
+.examples-switcher-current:hover,
+.examples-switcher-step:hover,
+.examples-switcher-current[aria-expanded="true"] {
+  border-color: var(--stratakit-color-border-neutral-base, #555);
+  background: var(
+    --stratakit-color-bg-glow-on-surface-neutral-hover,
+    #ffffff10
+  );
+}
+.examples-switcher-steps {
+  display: inline-flex;
+  margin-left: var(--stratakit-space-100);
+}
+.examples-switcher-step {
+  padding: 2px;
+}
+.examples-switcher-menu {
+  list-style: none;
+  margin: 0;
+  padding: var(--stratakit-space-100);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: min(520px, 90vw);
+  max-height: 70vh;
+  overflow: auto;
+}
+.examples-switcher-item {
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-200);
+  padding: var(--stratakit-space-100);
+  border-radius: var(--stratakit-radius-sm, 4px);
+  color: inherit;
+  text-decoration: none;
+}
+.examples-switcher-item:hover,
+.examples-switcher-item:focus-visible {
+  background: var(
+    --stratakit-color-bg-glow-on-surface-neutral-hover,
+    #ffffff10
+  );
+}
+.examples-switcher-item[aria-current="page"] {
+  background: var(
+    --stratakit-color-bg-glow-on-surface-accent-pressed,
+    #3b82f620
+  );
+}
+.examples-switcher-thumb {
+  flex: none;
+  width: 120px;
+  height: 68px;
+  border-radius: var(--stratakit-radius-sm, 4px);
+  object-fit: cover;
+  background: #000;
+}
+.examples-switcher-thumb.placeholder {
+  display: grid;
+  place-items: center;
+  font-weight: 600;
+  color: var(--stratakit-color-text-neutral-secondary);
+  background: linear-gradient(135deg, #1d2633, #2a1f33);
+}
+.examples-switcher-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
 .examples-error {
   margin-bottom: var(--stratakit-space-500);
   max-width: 900px;

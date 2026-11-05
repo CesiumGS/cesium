@@ -5201,6 +5201,16 @@ them on content as you type.
     - The playground's restore code is gone.
     - Sandcastle can work the same way: one engine per page, a viewer per
       run.
+    - **Switching between examples (r53).** The example page's back link is
+      now a switcher in the same space: "Examples / this one ▾ ‹ ›".
+      - The menu lists every example with a picture of it, captured from
+        its own canvas a moment after it starts (a frame rendered and read
+        in one task, kept as a small JPEG in `localStorage`). Initials stand
+        in until an example has run.
+      - ‹ › and the `[` / `]` keys step through the examples (not while
+        typing in a field or the editor).
+      - Each example is a fresh viewer on the shared engine, so a switch
+        costs only the example's own setup.
 - _Playground details (r53)._
   - **New:** starts a minimal shader, the model's own material, with the
     contract's inputs described. It is one undoable edit.

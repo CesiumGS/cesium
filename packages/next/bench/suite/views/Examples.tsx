@@ -22,6 +22,7 @@ import { Viewer } from "../../../widgets/index.ts";
 import { ionToken } from "../ionToken.ts";
 import { limitsTier } from "../limitsTier.ts";
 import { Empty, Page, Section } from "./common.tsx";
+import { captureThumbnail, ExampleSwitcher } from "./ExampleSwitcher.tsx";
 
 /**
  * Examples (plan §13.12): what 2.0 is for, one feature or use case each,
@@ -170,6 +171,7 @@ export function ExamplePage() {
     const scope = new DisposableStack();
     let viewer: Viewer | undefined;
     let dispose: (() => void) | undefined;
+    let thumbnail: ReturnType<typeof setTimeout> | undefined;
     setError(undefined);
     setRunning(true);
     const box = panel.current;
@@ -211,6 +213,12 @@ export function ExamplePage() {
           undo();
         } else {
           dispose = undo;
+          // The switcher's picture of it, once its scene has had a moment.
+          thumbnail = setTimeout(() => {
+            if (!signal.aborted) {
+              captureThumbnail(info.id, v.canvas, () => engine.renderFrame());
+            }
+          }, 2500);
         }
       } catch (e) {
         if (!signal.aborted) {
@@ -225,6 +233,7 @@ export function ExamplePage() {
     })();
     return () => {
       controller.abort();
+      clearTimeout(thumbnail);
       dispose?.();
       scope.dispose();
       box.replaceChildren();
@@ -272,7 +281,7 @@ export function ExamplePage() {
     <Page
       title={info.title}
       description={info.description}
-      back={backToExamples}
+      back={<ExampleSwitcher current={info} />}
       actions={
         <Button
           variant="outlined"
