@@ -14,6 +14,7 @@ import { fileURLToPath } from "node:url";
 import { defineConfig, type Plugin } from "vitest/config";
 import { basisTranscoderEsm } from "./basisTranscoderEsm.ts";
 import { slangShaders } from "./scripts/vitePluginSlang.ts";
+import { framesDataDirectory } from "./scripts/frameData.mjs";
 import { slangWasmDirectory } from "./scripts/slangTools.mjs";
 
 // CesiumJS 1.x core math, used only as a test oracle for parity checks.
@@ -321,6 +322,13 @@ const slangWasm = existsSync(join(slangWasmDirectory(), "slang-wasm.js"))
 // Sample models and tilesets checked into the 1.x repo, for parity tests.
 const specsData = fileURLToPath(new URL("../../Specs/Data", import.meta.url));
 
+// The frames data `npm run setup` fills (scripts/frameData.mjs), served at
+// /frames-data/. The data-store tests (test/data) read it, so they only run
+// when FRAMES_DATA is set (`npm run test:data`).
+const framesData = existsSync(join(framesDataDirectory(), "manifest.json"))
+  ? framesDataDirectory()
+  : undefined;
+
 export default defineConfig({
   server: { host: "127.0.0.1", port: 5190, strictPort: true },
   // Every bare import, bundled at startup: a dependency discovered later
@@ -365,6 +373,7 @@ export default defineConfig({
       "/cesium-ref",
       fileURLToPath(new URL("../../.bench", import.meta.url)),
     ),
+    ...(framesData ? [serveDirectory("/frames-data", framesData)] : []),
     ...(slangWasm ? [serveDirectory("/slang-wasm", slangWasm)] : []),
   ],
   // Worker bundles take their own plugins (the Basis glue is decoded there).
@@ -414,6 +423,9 @@ export default defineConfig({
   },
   test: {
     include: ["test/**/*.test.ts"],
+    exclude: process.env.FRAMES_DATA
+      ? ["node_modules/**"]
+      : ["node_modules/**", "test/data/**"],
     environment: "node",
   },
 });
