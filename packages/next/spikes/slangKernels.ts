@@ -829,6 +829,14 @@ function compositeInputs(device: GPUDevice, exact: boolean): Resources {
     const lit = blended();
     const unlit = blended();
     const listBuffer = buffer(device, lists, S);
+    // The port's nodes carry the samples they cover (`next`'s top four
+    // bits, translucent.wgsl `appendNode`), all four here: the reference
+    // predates them.
+    const covered = lists.slice();
+    for (let n = 4 + w * h + 3; n < covered.length; n += 4) {
+      covered[n] = (covered[n]! | (0xf << 28)) >>> 0;
+    }
+    const coveredBuffer = buffer(device, covered, S);
     return {
       groups: [[uniform, { binding: 1, resource: { buffer: listBuffer } }]],
       dispatch: [3],
@@ -838,7 +846,7 @@ function compositeInputs(device: GPUDevice, exact: boolean): Resources {
         groups: [
           [
             uniform,
-            { binding: 1, resource: { buffer: listBuffer } },
+            { binding: 1, resource: { buffer: coveredBuffer } },
             { binding: 5, resource: lit.createView() },
             { binding: 6, resource: unlit.createView() },
           ],

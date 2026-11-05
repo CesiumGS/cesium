@@ -1228,6 +1228,9 @@ fn fragmentInputOf(in: VsOut, geometric: vec3f) -> FragmentInput {
   );
 }
 
+// Whether `shadeSurface` lights the surface (else stops at its alpha).
+var<private> surfaceLight = true;
+
 fn shadeSurface(in: VsOut, frontFacing: bool, translucent: bool) -> Surface {
   let r = records[in.draw];
   let material = materials[r.materialIndex];
@@ -1349,6 +1352,13 @@ fn shadeSurface(in: VsOut, frontFacing: bool, translucent: bool) -> Surface {
   }
   if (custom.unlit) {
     return Surface(baseColor.rgb, baseColor.a, true);
+  }
+  // Runs whose light nobody uses stop here, their alpha known
+  // (translucent.wgsl `fsListSamples`). Nothing below may need uniform
+  // control flow (implicit derivatives, textureSample): this return
+  // isn't uniform.
+  if (!surfaceLight) {
+    return Surface(vec3f(0.0), baseColor.a, false);
   }
   metallic = clamp(custom.metallic, 0.0, 1.0);
   roughness = clamp(custom.roughness, 0.0, 1.0);

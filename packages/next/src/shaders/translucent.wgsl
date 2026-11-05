@@ -14,17 +14,22 @@
 //   Bounded memory, two passes over the translucent geometry.
 //
 // Their parts at least `OPAQUE_ALPHA` opaque draw in the opaque pass
-// instead (opaque.wgsl `depthCoverageFs`). Both run single-sampled, with
-// no depth attachment: a fragment's share of the pixel is the share of the
-// opaque pass's samples it is in front of, read from that pass's depth (a
-// storage write disables early depth tests, so occluded fragments are
-// tested here, not by the hardware). Edges against opaque surfaces
-// antialias; glass's own silhouette doesn't. The lists' pass was
-// multisampled once, its fragments' coverage antialiasing those edges, but
-// a fragment shader's storage writes may run once per sample: on Apple's
-// GPUs (Metal) at 4× they ran four times a pixel, each run seeing the
-// whole coverage mask, and every layer went into its list four times
-// (plan §3.5). At one sample, once per sample is once per pixel.
+// instead (opaque.wgsl `depthCoverageFs`). Neither has a depth
+// attachment: a fragment tests the opaque pass's depth itself, at each of
+// its samples (a storage write disables early depth tests, so occluded
+// fragments are tested here, not by the hardware).
+//
+// The lists' pass runs multisampled, so glass's own edges antialias: each
+// node keeps the samples its fragment covers and is in front of (`next`'s
+// top four bits), and `sortLists` blends each sample on its own. Where a
+// fragment shader's storage writes run once per covered sample (Apple's
+// GPUs, Metal: each run seeing the whole coverage mask, so every layer went
+// into its list once a sample, plan §3.5), the pass runs per sample
+// explicitly (`fsListSamples`) and only the first covered sample's run
+// writes; elsewhere once a pixel (`fsList`). RenderContext probes which.
+// The moments' passes run single-sampled (their targets multisampled
+// would take four times the memory): their share of a pixel is the share
+// of the opaque samples they are in front of, and glass's own edges alias.
 //
 // Appended to common.wgsl and opaque.wgsl.
 
@@ -47,7 +52,8 @@ struct TranslucentParams {
 // Word 0: the nodes used (past `capacity`: those that didn't fit);
 // from LIST_HEADER, each pixel's first node plus one (0: none); from
 // `nodesBase`, nodes of four words: color (rg, then b and alpha as halves,
-// alpha negative for display-referred color), depth, next node plus one.
+// alpha negative for display-referred color), depth, and the next node
+// plus one (low 28 bits) with the samples the node covers (top four).
 @group(3) @binding(1) var<storage, read_write> lists: array<atomic<u32>>;
 @group(3) @binding(2) var opaqueDepth: texture_depth_multisampled_2d;
 // The moments pass's sums, read by the color pass.
@@ -55,6 +61,8 @@ struct TranslucentParams {
 @group(3) @binding(4) var momentsHigher: texture_2d<f32>;
 
 const LIST_HEADER = 4u;
+// A node's `next` word: the next node plus one, below its samples' bits.
+const LIST_SAMPLE_SHIFT = 28u;
 
 // Blended surfaces draw here below this alpha: a little past where the
 // opaque pass takes them (opaque.wgsl `OPAQUE_ALPHA`), so a pixel its depth
@@ -71,25 +79,34 @@ const SAMPLE_OFFSETS = array<vec2f, 4>(
   vec2f(0.125, 0.375),
 );
 
-// The share of the opaque pass's samples a fragment is in front of
-// (reverse-Z: nearer is greater), its depth taken at each sample from its
-// slope (`depthSlope`), as the hardware tests it: at the pixel's center
-// alone, glass meeting its frame, the depths nearly equal, came out in
-// front of some samples and behind others at random, speckling the seam.
-fn uncovered(position: vec4f, slope: vec2f) -> f32 {
+// Of the samples in `mask`, those where a fragment is in front of the
+// opaque pass's depth (reverse-Z: nearer is greater), its depth taken at
+// each from its slope (`depthSlope`), as the hardware tests it: at the
+// pixel's center alone, glass meeting its frame, the depths nearly equal,
+// came out in front of some samples and behind others at random, speckling
+// the seam. `position` may be a sample's (shading per sample) or the
+// pixel's center.
+fn visibleSamples(position: vec4f, slope: vec2f, mask: u32) -> u32 {
   let p = vec2u(position.xy);
   let samples = textureNumSamples(opaqueDepth);
-  var n = 0u;
+  let center = fract(position.xy) - 0.5;
+  var visible = 0u;
   for (var i = 0u; i < samples; i++) {
     var z = position.z;
     if (samples == 4u) {
-      z += dot(slope, SAMPLE_OFFSETS[i]);
+      z += dot(slope, SAMPLE_OFFSETS[i] - center);
     }
-    if (z >= textureLoad(opaqueDepth, p, i)) {
-      n++;
+    if ((mask & (1u << i)) != 0u && z >= textureLoad(opaqueDepth, p, i)) {
+      visible |= 1u << i;
     }
   }
-  return f32(n) / f32(samples);
+  return visible;
+}
+
+// The share of the opaque pass's samples a fragment is in front of.
+fn uncovered(position: vec4f, slope: vec2f) -> f32 {
+  let visible = visibleSamples(position, slope, 0xffffffffu);
+  return f32(countOneBits(visible)) / f32(textureNumSamples(opaqueDepth));
 }
 
 // Depth's change per pixel (in uniform control flow, before any discard).
@@ -97,15 +114,15 @@ fn depthSlope(position: vec4f) -> vec2f {
   return vec2f(dpdx(position.z), dpdy(position.z));
 }
 
-@fragment
-fn fsList(in: VsOut, @builtin(front_facing) frontFacing: bool) {
-  let slope = depthSlope(in.position);
-  let surface = shadeSurface(in, frontFacing, true);
+// A fragment into its pixel's list, with the samples (of `mask`, those
+// it covers) it is in front of the opaque surfaces at.
+fn appendNode(in: VsOut, slope: vec2f, surface: Surface, mask: u32) {
   if (surface.alpha >= TRANSLUCENT_ALPHA) {
     return; // drawn opaque (opaque.wgsl `cutOut`)
   }
-  let alpha = clamp(surface.alpha, 0.0, 1.0) * uncovered(in.position, slope);
-  if (alpha <= 0.0) {
+  let alpha = clamp(surface.alpha, 0.0, 1.0);
+  let visible = visibleSamples(in.position, slope, mask);
+  if (alpha <= 0.0 || visible == 0u) {
     return;
   }
   let index = atomicAdd(&lists[0], 1u);
@@ -117,7 +134,42 @@ fn fsList(in: VsOut, @builtin(front_facing) frontFacing: bool) {
   atomicStore(&lists[node + 1u], pack2x16float(vec2f(surface.color.b, select(alpha, -alpha, surface.unlit))));
   atomicStore(&lists[node + 2u], bitcast<u32>(in.position.z));
   let pixel = u32(in.position.y) * translucency.width + u32(in.position.x);
-  atomicStore(&lists[node + 3u], atomicExchange(&lists[LIST_HEADER + pixel], index + 1u));
+  let next = atomicExchange(&lists[LIST_HEADER + pixel], index + 1u);
+  atomicStore(&lists[node + 3u], next | (visible << LIST_SAMPLE_SHIFT));
+}
+
+// Once a pixel: the fragment and the samples it covers.
+@fragment
+fn fsList(
+  in: VsOut,
+  @builtin(front_facing) frontFacing: bool,
+  @builtin(sample_mask) mask: u32,
+) {
+  let slope = depthSlope(in.position);
+  let surface = shadeSurface(in, frontFacing, true);
+  appendNode(in, slope, surface, mask);
+}
+
+// Once a covered sample. Only the run for the first sample in `mask`
+// writes: where every run sees the whole coverage mask (Metal), that is
+// one node with all of it; where a run's mask is its own sample alone,
+// every run writes, one node a sample. The others stop shading once its
+// textures are sampled (in uniform control flow): lighting each sample
+// doubled the pass's time on Metal.
+@fragment
+fn fsListSamples(
+  in: VsOut,
+  @builtin(front_facing) frontFacing: bool,
+  @builtin(sample_mask) mask: u32,
+  @builtin(sample_index) sample: u32,
+) {
+  let slope = depthSlope(in.position);
+  let writes = sample == firstTrailingBit(mask);
+  surfaceLight = writes;
+  let surface = shadeSurface(in, frontFacing, true);
+  if (writes) {
+    appendNode(in, slope, surface, mask);
+  }
 }
 
 // --- moments ---------------------------------------------------------------------

@@ -181,6 +181,8 @@ const PREFETCH_MARGIN = 1.1;
 
 /** Words before the translucent lists' heads (translucent.wgsl `LIST_HEADER`). */
 const LIST_HEADER = 4;
+/** Nodes a list's `next` word can address (28 bits, the node plus one). */
+const LIST_NODES_MAX = (1 << 28) - 2;
 
 /** A view's camera at its last selection, and its velocity per second. */
 interface ViewMotion {
@@ -2010,9 +2012,13 @@ export class Engine {
         const needed = new Uint32Array(readback.getMappedRange())[0]!;
         readback.destroy();
         this.listCountPending = false;
-        // Room for a quarter more than the frame needed (`writeTranslucency`).
+        // Room for a quarter more than the frame needed (`writeTranslucency`),
+        // and a frame drawn with it: that one dropped what didn't fit, and
+        // drawing on demand, nothing else might come (glass missing until
+        // the camera moved).
         if (needed > this.listNodes) {
           this.listNodes = Math.ceil(needed * 1.25);
+          this.requestRender();
         }
       });
     }
@@ -2245,10 +2251,15 @@ export class Engine {
     if (view.translucency === "exact") {
       const { limits } = this.ctx.device;
       const heads = (LIST_HEADER + pixels) * 4;
-      const most = Math.floor(
-        (Math.min(limits.maxStorageBufferBindingSize, limits.maxBufferSize) -
-          heads) /
-          16,
+      // At most what a node's `next` can address (translucent.wgsl
+      // LIST_SAMPLE_SHIFT: 28 bits, the node plus one).
+      const most = Math.min(
+        Math.floor(
+          (Math.min(limits.maxStorageBufferBindingSize, limits.maxBufferSize) -
+            heads) /
+            16,
+        ),
+        LIST_NODES_MAX,
       );
       // Half a layer a pixel to start; more once a frame needs it.
       this.listNodes = Math.max(this.listNodes, Math.ceil(pixels / 2));
@@ -2265,7 +2276,10 @@ export class Engine {
             GPUBufferUsage.COPY_DST,
         });
       }
-      capacity = Math.floor((this.lists.size - heads) / 16);
+      capacity = Math.min(
+        Math.floor((this.lists.size - heads) / 16),
+        LIST_NODES_MAX,
+      );
     }
     // The moments' depths: the blended surfaces' own range (the moments
     // can't tell apart layers whose warped depths nearly agree: a range
@@ -3307,7 +3321,13 @@ export class Engine {
       "translucent",
       {
         reads: [depth],
-        writes: [momentsZero, momentsHigher, accumulatedLit, accumulatedUnlit],
+        writes: [
+          momentsZero,
+          momentsHigher,
+          accumulatedLit,
+          accumulatedUnlit,
+          color,
+        ],
         sideEffect: true,
       },
       (enc, get) => {
@@ -3319,8 +3339,7 @@ export class Engine {
         if (view.translucency === "exact") {
           const lists = this.lists!;
           enc.clearBuffer(lists, 0, (LIST_HEADER + width * height) * 4);
-          // Single-sampled, writing nothing: `sortLists` fills it after.
-          listTarget.view = get(accumulatedLit);
+          listTarget.view = get(color);
           listPass.timestampWrites = this.timer.passWrites("translucent-lists");
           const pass = enc.beginRenderPass(listPass);
           world.encodeTranslucent(

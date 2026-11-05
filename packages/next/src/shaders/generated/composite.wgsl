@@ -78,7 +78,7 @@ fn sortLists(@builtin(global_invocation_id) id_0 : vec3<u32>, @builtin(local_inv
         }
         var node_0 : u32 = translucency_0.nodesBase_0 + (next_0 - u32(1)) * u32(4);
         var depth_0 : f32 = (bitcast<f32>((lists_0[node_0 + u32(2)])));
-        var _S4 : u32 = lists_0[node_0 + u32(3)];
+        var _S4 : u32 = (lists_0[node_0 + u32(3)] & (u32(268435455)));
         if(count_0 == u32(32))
         {
             if((depth_0 <= (sortDepths_0[slot_0(u32(31), lane_1)])))
@@ -122,16 +122,24 @@ fn sortLists(@builtin(global_invocation_id) id_0 : vec3<u32>, @builtin(local_inv
         sortNodes_0[slot_0(i_3, lane_1)] = node_0;
         next_0 = _S4;
     }
+    var lit_0 : array<vec3<f32>, i32(4)>;
+    var unlit_0 : array<vec3<f32>, i32(4)>;
+    var through_0 : vec4<f32> = vec4<f32>(1.0f);
     var _S8 : vec3<f32> = vec3<f32>(0.0f);
+    lit_0[u32(0)] = _S8;
+    unlit_0[u32(0)] = _S8;
+    lit_0[u32(1)] = _S8;
+    unlit_0[u32(1)] = _S8;
+    lit_0[u32(2)] = _S8;
+    unlit_0[u32(2)] = _S8;
+    lit_0[u32(3)] = _S8;
+    unlit_0[u32(3)] = _S8;
     i_2 = u32(0);
-    var through_0 : f32 = 1.0f;
-    var unlit_0 : vec3<f32> = _S8;
-    var lit_0 : vec3<f32> = _S8;
     loop
     {
         if((i_2 < count_0))
         {
-            _S3 = (through_0 > 0.0010000000474974513f);
+            _S3 = (any(((through_0 > vec4<f32>(0.0010000000474974513f)))));
         }
         else
         {
@@ -145,25 +153,66 @@ fn sortLists(@builtin(global_invocation_id) id_0 : vec3<u32>, @builtin(local_inv
             break;
         }
         var ba_0 : vec2<f32> = unpack2x16float(lists_0[sortNodes_0[slot_0(i_2, lane_1)] + u32(1)]);
-        var _S9 : f32 = ba_0.y;
-        var alpha_0 : f32 = abs(_S9);
-        var light_0 : vec3<f32> = vec3<f32>(unpack2x16float(lists_0[sortNodes_0[slot_0(i_2, lane_1)]]), ba_0.x) * vec3<f32>((through_0 * alpha_0));
-        if((_S9 < 0.0f))
+        var _S9 : u32 = (lists_0[sortNodes_0[slot_0(i_2, lane_1)] + u32(3)] >> (u32(28)));
+        var _S10 : f32 = ba_0.y;
+        var alpha_0 : f32 = abs(_S10);
+        var _S11 : vec3<f32> = vec3<f32>(unpack2x16float(lists_0[sortNodes_0[slot_0(i_2, lane_1)]]), ba_0.x) * vec3<f32>(alpha_0);
+        if(((_S9 & (u32(1)))) != u32(0))
         {
-            unlit_0 = unlit_0 + light_0;
+            if((_S10 < 0.0f))
+            {
+                unlit_0[u32(0)] = unlit_0[u32(0)] + _S11 * vec3<f32>(through_0[u32(0)]);
+            }
+            else
+            {
+                lit_0[u32(0)] = lit_0[u32(0)] + _S11 * vec3<f32>(through_0[u32(0)]);
+            }
+            through_0[u32(0)] = through_0[u32(0)] * (1.0f - alpha_0);
         }
-        else
+        if(((_S9 & (u32(2)))) != u32(0))
         {
-            lit_0 = lit_0 + light_0;
+            if((_S10 < 0.0f))
+            {
+                unlit_0[u32(1)] = unlit_0[u32(1)] + _S11 * vec3<f32>(through_0[u32(1)]);
+            }
+            else
+            {
+                lit_0[u32(1)] = lit_0[u32(1)] + _S11 * vec3<f32>(through_0[u32(1)]);
+            }
+            through_0[u32(1)] = through_0[u32(1)] * (1.0f - alpha_0);
         }
-        var through_1 : f32 = through_0 * (1.0f - alpha_0);
+        if(((_S9 & (u32(4)))) != u32(0))
+        {
+            if((_S10 < 0.0f))
+            {
+                unlit_0[u32(2)] = unlit_0[u32(2)] + _S11 * vec3<f32>(through_0[u32(2)]);
+            }
+            else
+            {
+                lit_0[u32(2)] = lit_0[u32(2)] + _S11 * vec3<f32>(through_0[u32(2)]);
+            }
+            through_0[u32(2)] = through_0[u32(2)] * (1.0f - alpha_0);
+        }
+        if(((_S9 & (u32(8)))) != u32(0))
+        {
+            if((_S10 < 0.0f))
+            {
+                unlit_0[u32(3)] = unlit_0[u32(3)] + _S11 * vec3<f32>(through_0[u32(3)]);
+            }
+            else
+            {
+                lit_0[u32(3)] = lit_0[u32(3)] + _S11 * vec3<f32>(through_0[u32(3)]);
+            }
+            through_0[u32(3)] = through_0[u32(3)] * (1.0f - alpha_0);
+        }
         i_2 = i_2 + u32(1);
-        through_0 = through_1;
     }
-    var _S10 : vec2<u32> = id_0.xy;
-    var _S11 : f32 = 1.0f - through_0;
-    textureStore((sortedLit_0), (_S10), (vec4<f32>(lit_0, _S11)));
-    textureStore((sortedUnlit_0), (_S10), (vec4<f32>(unlit_0, _S11)));
+    var hidden_0 : f32 = 1.0f - dot(through_0, vec4<f32>(0.25f));
+    var _S12 : vec3<f32> = vec3<f32>(4.0f);
+    var unlitSum_0 : vec3<f32> = (unlit_0[i32(0)] + unlit_0[i32(1)] + unlit_0[i32(2)] + unlit_0[i32(3)]) / _S12;
+    var _S13 : vec2<u32> = id_0.xy;
+    textureStore((sortedLit_0), (_S13), (vec4<f32>((lit_0[i32(0)] + lit_0[i32(1)] + lit_0[i32(2)] + lit_0[i32(3)]) / _S12, hidden_0)));
+    textureStore((sortedUnlit_0), (_S13), (vec4<f32>(unlitSum_0, hidden_0)));
     return;
 }
 
@@ -199,16 +248,16 @@ fn fsMoments(@builtin(position) frag_1 : vec4<f32>) -> CompositeOut_0
     }
     var lit_2 : vec4<f32> = (textureLoad((accumulatedLit_0), ((p_1)).xy, ((p_1)).z));
     var unlit_1 : vec4<f32> = (textureLoad((accumulatedUnlit_0), ((p_1)).xy, ((p_1)).z));
-    var _S12 : f32 = lit_2.w;
-    if(!(_S12 > 0.0f))
+    var _S14 : f32 = lit_2.w;
+    if(!(_S14 > 0.0f))
     {
         discard;
     }
     var opacity_0 : f32 = 1.0f - exp(- b0_0);
     var out_1 : CompositeOut_0;
-    var _S13 : vec3<f32> = vec3<f32>((opacity_0 / _S12));
-    out_1.scene_0 = vec4<f32>(lit_2.xyz * _S13, opacity_0);
-    out_1.display_0 = vec4<f32>(unlit_1.xyz * _S13, opacity_0);
+    var _S15 : vec3<f32> = vec3<f32>((opacity_0 / _S14));
+    out_1.scene_0 = vec4<f32>(lit_2.xyz * _S15, opacity_0);
+    out_1.display_0 = vec4<f32>(unlit_1.xyz * _S15, opacity_0);
     return out_1;
 }
 

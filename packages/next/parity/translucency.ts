@@ -28,7 +28,8 @@ const TEMPLATE = `
   independence: should be 0). Unlit layers over an unlit backdrop are also
   checked against the ground truth, their sorted "over" computed here from
   each layer's coverage (rendered alone): the exact lists must match it to
-  the 8-bit rounding, moments come close. Click a row to see its images.
+  the 8-bit rounding, glass's antialiased edges too; moments come close
+  (off the edges, which they don't antialias). Click a row to see its images.
 </p>
 <div class="status">Run to render every scene both ways.</div>
 <div class="images">
@@ -282,18 +283,22 @@ interface Row {
 }
 
 interface Truth {
-  /** Pixels checked: inside or outside every layer (not on an edge). */
+  /** Pixels checked: at most one layer's edge crossing each. */
   pixels: number;
+  /** Of those, on a layer's edge (exact's antialiasing). */
+  edges: number;
   exactMax: number;
+  /** Off the edges (the moments' passes don't antialias glass's own). */
   momentsMean: number;
   momentsMax: number;
 }
 
 // What passes (plan §3.5's record, with margin). The exact lists match
 // the ground truth to the 8-bit rounding (fp16 color, sRGB encoding);
-// moments approximate it, worst where layers are near opaque.
+// moments approximate it, worst where layers are near opaque, and alias
+// glass's own edges, which exact antialiases (near-opaque's mean 0.020).
 const LIMITS = {
-  flipMean: 0.02,
+  flipMean: 0.03,
   flipP95: 0.15,
   orderMax: 0.001,
   exactMax: 2,
@@ -306,8 +311,14 @@ const passes = (r: Omit<Row, "pass">): boolean =>
   r.orderMax <= LIMITS.orderMax &&
   (!r.truth ||
     (r.truth.pixels > 0 &&
+      r.truth.edges > 0 &&
       r.truth.exactMax <= LIMITS.exactMax &&
       r.truth.momentsMean <= LIMITS.momentsMean));
+
+const decode = (v: number): number => {
+  const c = v / 255;
+  return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+};
 
 const encode = (c: number): number =>
   255 * (c <= 0.0031308 ? c * 12.92 : 1.055 * Math.pow(c, 1 / 2.4) - 0.055);
@@ -316,9 +327,11 @@ const encode = (c: number): number =>
  * An unlit scene's ground truth: per pixel, its blended layers sorted
  * nearest first (the further south, as `truth` scenes are built) and put
  * "over" the backdrop in linear light, then sRGB encoded as the present
- * pass does. Each layer's coverage is rendered alone (opaque white on
- * black); pixels on any layer's edge (the opaque render antialiased,
- * the lists' pass not) are left out. Compares `exact` and `moments`.
+ * pass does. Each layer's coverage is rendered alone, opaque white on
+ * black: its samples covered, of the four, from the resolved value. A
+ * pixel on one layer's edge is that layer's share of the samples over
+ * the rest and the rest alone; pixels on two layers' edges are left out
+ * (which samples each covers isn't known). Compares `exact` and `moments`.
  */
 async function groundTruth(
   engine: Engine,
@@ -342,19 +355,12 @@ async function groundTruth(
     };
     masks.push((await render(engine, target, alone, "exact")).data);
   }
-  let pixels = 0;
-  let exactMax = 0;
-  let momentsSum = 0;
-  let momentsMax = 0;
-  for (let i = 0; i < WIDTH * HEIGHT; i++) {
-    const inside = masks.map((m) => m[i * 4]!);
-    if (inside.some((v) => v !== 0 && v !== 255)) {
-      continue;
-    }
+  // The layers (by `has`) over the backdrop, linear.
+  const over = (has: (k: number) => boolean): number[] => {
     const color = [0, 0, 0];
     let through = 1;
     layers.forEach((layer, k) => {
-      if (inside[k] === 255) {
+      if (has(k)) {
         const a = layer.color[3];
         for (let c = 0; c < 3; c++) {
           color[c]! += layer.color[c]! * a * through;
@@ -362,20 +368,48 @@ async function groundTruth(
         through *= 1 - a;
       }
     });
+    return color.map((v, c) => v + backdrop.color[c]! * through);
+  };
+  let pixels = 0;
+  let edges = 0;
+  let interior = 0;
+  let exactMax = 0;
+  let momentsSum = 0;
+  let momentsMax = 0;
+  for (let i = 0; i < WIDTH * HEIGHT; i++) {
+    const samples = masks.map((m) => Math.round(decode(m[i * 4]!) * 4));
+    const partial = samples.flatMap((n, k) => (n > 0 && n < 4 ? [k] : []));
+    if (partial.length > 1) {
+      continue;
+    }
+    const edge = partial[0];
+    const share = edge === undefined ? 0 : samples[edge]! / 4;
+    const without = over((k) => k !== edge && samples[k] === 4);
+    const within = over((k) => k === edge || samples[k] === 4);
     pixels++;
+    if (edge !== undefined) {
+      edges++;
+    } else {
+      interior++;
+    }
     for (let c = 0; c < 3; c++) {
-      const expected = encode(color[c]! + backdrop.color[c]! * through);
-      const e = Math.abs(exact.data[i * 4 + c]! - expected);
-      const m = Math.abs(moments.data[i * 4 + c]! - expected);
-      exactMax = Math.max(exactMax, e);
-      momentsMax = Math.max(momentsMax, m);
-      momentsSum += m / 3;
+      const expected = encode(share * within[c]! + (1 - share) * without[c]!);
+      exactMax = Math.max(
+        exactMax,
+        Math.abs(exact.data[i * 4 + c]! - expected),
+      );
+      if (edge === undefined) {
+        const m = Math.abs(moments.data[i * 4 + c]! - expected);
+        momentsMax = Math.max(momentsMax, m);
+        momentsSum += m / 3;
+      }
     }
   }
   return {
     pixels,
+    edges,
     exactMax,
-    momentsMean: pixels ? momentsSum / pixels : 0,
+    momentsMean: interior ? momentsSum / interior : 0,
     momentsMax,
   };
 }
@@ -512,6 +546,12 @@ async function render(
 
 let lastImages: RowImages[] = [];
 
+/** `?scene=crossing,thin`: those scenes alone. */
+function chosenScenes(): Scene[] {
+  const only = new URLSearchParams(location.search).get("scene")?.split(",");
+  return only ? SCENES.filter((s) => only.includes(s.name)) : SCENES;
+}
+
 async function runTranslucency(): Promise<Row[]> {
   const status = root.querySelector(".status")!;
   const engine = await Engine.create();
@@ -523,10 +563,7 @@ async function runTranslucency(): Promise<Row[]> {
   vec3.copy(engine.sunDirection, sun);
   const rows: Row[] = [];
   lastImages = [];
-  // `?scene=crossing,thin`: those scenes alone.
-  const only = new URLSearchParams(location.search).get("scene")?.split(",");
-  const scenes = only ? SCENES.filter((s) => only.includes(s.name)) : SCENES;
-  for (const scene of scenes) {
+  for (const scene of chosenScenes()) {
     status.textContent = `${scene.name}…`;
     const exact = await render(engine, target, scene, "exact");
     const moments = await render(engine, target, scene, "moments");
@@ -600,6 +637,7 @@ function renderTable(rows: Row[]): void {
       "FLIP p95",
       "Order: mean",
       "Order: max",
+      "Truth: edge pixels",
       "Truth: exact max",
       "Truth: moments mean",
       "Truth: moments max",
@@ -614,11 +652,12 @@ function renderTable(rows: Row[]): void {
       f(r.orderMax),
       ...(r.truth
         ? [
+            String(r.truth.edges),
             r.truth.exactMax.toFixed(1),
             r.truth.momentsMean.toFixed(2),
             r.truth.momentsMax.toFixed(1),
           ]
-        : ["–", "–", "–"]),
+        : ["–", "–", "–", "–"]),
       r.pass ? "yes" : "NO",
     ]),
   );
@@ -669,7 +708,7 @@ async function runTranslucencyCost(): Promise<CostRow[]> {
     });
   const rows: CostRow[] = [];
   const f = (v: number) => v.toFixed(2);
-  for (const scene of SCENES) {
+  for (const scene of chosenScenes()) {
     status.textContent = `Cost: ${scene.name}…`;
     const opaque: Scene = {
       ...scene,

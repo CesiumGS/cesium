@@ -24,6 +24,11 @@ struct TranslucentParams {
 [[vk::binding(4, 0)]] Texture2D<float4> accumulatedUnlit;
 
 static const uint LIST_HEADER = 4u;
+// A node's `next` word: the next node plus one, below its samples' bits
+// (translucent.wgsl `appendNode`). The scene's targets are 4× (SCENE_TARGETS).
+static const uint LIST_SAMPLE_SHIFT = 28u;
+static const uint LIST_NEXT = (1u << LIST_SAMPLE_SHIFT) - 1u;
+static const uint SAMPLES = 4u;
 // Layers per pixel sorted; past these, the nearest are kept.
 static const uint MAX_LAYERS = 32u;
 
@@ -70,7 +75,7 @@ void sortLists(uint3 id : SV_DispatchThreadID, uint lane : SV_GroupIndex) {
   while (next != 0u) {
     uint node = translucency.nodesBase + (next - 1u) * 4u;
     float depth = asfloat(lists[node + 2u]);
-    next = lists[node + 3u];
+    next = lists[node + 3u] & LIST_NEXT;
     // Reverse-Z: nearer is greater. Full, a layer farther than every kept
     // one is dropped; nearer, it takes the farthest's place.
     uint i = count;
@@ -90,25 +95,42 @@ void sortLists(uint3 id : SV_DispatchThreadID, uint lane : SV_GroupIndex) {
     sortDepths[slot(i, lane)] = depth;
     sortNodes[slot(i, lane)] = node;
   }
-  float3 lit = float3(0.0);
-  float3 unlit = float3(0.0);
-  float through = 1.0;
-  for (uint k = 0u; k < count && through > 1e-3; k++) {
+  // Each sample blended on its own (a node over the samples it covers),
+  // then the four averaged: glass's edges antialias. The loops over the
+  // samples unrolled, so their sums stay in registers.
+  float3 lit[SAMPLES];
+  float3 unlit[SAMPLES];
+  float4 through = float4(1.0);
+  [ForceUnroll]
+  for (uint s = 0u; s < SAMPLES; s++) {
+    lit[s] = float3(0.0);
+    unlit[s] = float3(0.0);
+  }
+  for (uint k = 0u; k < count && any(through > 1e-3); k++) {
     uint node = sortNodes[slot(k, lane)];
     float2 rg = unpackHalf2x16ToFloat(lists[node]);
     float2 ba = unpackHalf2x16ToFloat(lists[node + 1u]);
+    uint covers = lists[node + 3u] >> LIST_SAMPLE_SHIFT;
     float alpha = abs(ba.y);
-    float3 light = float3(rg, ba.x) * (through * alpha);
-    if (ba.y < 0.0) {
-      unlit += light;
-    } else {
-      lit += light;
+    float3 color = float3(rg, ba.x) * alpha;
+    [ForceUnroll]
+    for (uint s = 0u; s < SAMPLES; s++) {
+      if ((covers & (1u << s)) != 0u) {
+        if (ba.y < 0.0) {
+          unlit[s] += color * through[s];
+        } else {
+          lit[s] += color * through[s];
+        }
+        through[s] *= 1.0 - alpha;
+      }
     }
-    through *= 1.0 - alpha;
   }
   // Every pixel written: no list, no light and nothing hidden (alpha 0).
-  sortedLit.Store(id.xy, float4(lit, 1.0 - through));
-  sortedUnlit.Store(id.xy, float4(unlit, 1.0 - through));
+  float hidden = 1.0 - dot(through, float4(1.0 / float(SAMPLES)));
+  float3 litSum = (lit[0] + lit[1] + lit[2] + lit[3]) / float(SAMPLES);
+  float3 unlitSum = (unlit[0] + unlit[1] + unlit[2] + unlit[3]) / float(SAMPLES);
+  sortedLit.Store(id.xy, float4(litSum, hidden));
+  sortedUnlit.Store(id.xy, float4(unlitSum, hidden));
 }
 
 // The exact way's second step: what `sortLists` blended, over the opaque

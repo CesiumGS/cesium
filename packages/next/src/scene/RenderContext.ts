@@ -1,3 +1,4 @@
+import { storageWritesRunPerSample } from "../gpu/sampleRateProbe.ts";
 import { EngineErrors } from "../gpu/EngineErrors.ts";
 import type { Capabilities } from "../gpu/GpuDevice.ts";
 import { MipGenerator } from "../gpu/MipGenerator.ts";
@@ -254,6 +255,12 @@ export interface Pipelines extends SurfacePipelines {
    */
   momentFormats: readonly [GPUTextureFormat, GPUTextureFormat];
   momentBias: number;
+  /**
+   * "exact": a fragment shader's storage writes run once a covered
+   * sample here (gpu/sampleRateProbe.ts), so the lists' pass runs per
+   * sample explicitly (translucent.wgsl `fsListSamples`).
+   */
+  listsPerSample: boolean;
 }
 
 export interface Defaults {
@@ -502,6 +509,7 @@ async function createPipelines(
   overrides: ShaderOverrides,
 ): Promise<Pipelines> {
   const { VERTEX, FRAGMENT, COMPUTE } = GPUShaderStage;
+  const perSample = storageWritesRunPerSample(device);
   const viewLayout = device.createBindGroupLayout({
     label: "view",
     entries: [
@@ -977,8 +985,8 @@ async function createPipelines(
       fragment: { module: shaders, entryPoint, targets },
       primitive: { topology: "triangle-list", cullMode, frontFace: "ccw" },
     });
-  // The lists' pass writes no color; its one target is single-sampled
-  // (translucent.wgsl: a fragment's storage writes may run once per sample).
+  // The lists' pass writes no color; its one target is the scene's
+  // multisampled one (its fragments' coverage antialiases glass's edges).
   const listTargets: GPUColorTargetState[] = [
     { format: "rgba16float", writeMask: 0 },
   ];
@@ -1160,24 +1168,24 @@ async function createPipelines(
         depthPipeline(caster, name("depth.masked"), "back", true, o),
       depthMaskedDoubleSided: () =>
         depthPipeline(caster, name("depth.maskedDoubleSided"), "none", true, o),
-      translucentList: () =>
+      translucentList: async () =>
         translucentPipeline(
           translucent(),
           name("translucent.list"),
           "back",
-          "fsList",
+          (await perSample) ? "fsListSamples" : "fsList",
           listTargets,
-          1,
+          SCENE_TARGETS.sampleCount,
           t,
         ),
-      translucentListDoubleSided: () =>
+      translucentListDoubleSided: async () =>
         translucentPipeline(
           translucent(),
           name("translucent.list.doubleSided"),
           "none",
-          "fsList",
+          (await perSample) ? "fsListSamples" : "fsList",
           listTargets,
-          1,
+          SCENE_TARGETS.sampleCount,
           t,
         ),
       translucentMoments: () =>
@@ -1550,5 +1558,6 @@ async function createPipelines(
     // 400,000 random stacks of one to four layers). In 16-bit (without
     // their quantization), more.
     momentBias: caps.float32Blendable ? 5e-6 : 6e-4,
+    listsPerSample: await perSample,
   };
 }
