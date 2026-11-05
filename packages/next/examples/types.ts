@@ -37,6 +37,12 @@ export interface ExampleInfo {
   labels: string[];
   /** The globe it is built on. */
   globe: GlobeKind;
+  /**
+   * Where its panel goes: over the view's top right ("overlay", the
+   * default: a few controls) or in a column beside the view ("side": an
+   * editor or other tools that want the room).
+   */
+  layout?: "overlay" | "side";
   load: () => Promise<ExampleModule>;
   /** Its module's source, as shown beside it. */
   source: () => Promise<string>;

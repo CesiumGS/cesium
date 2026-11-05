@@ -24,6 +24,7 @@ import {
   Ellipsoid,
   Engine,
   GlobeController,
+  InspectController,
   eastNorthUpToFixedFrame,
   fromDegrees,
   icrfToFixed,
@@ -65,6 +66,13 @@ import {
 export type GlobeKind = "ellipsoid" | "terrain" | false;
 
 export interface ViewerOptions {
+  /**
+   * Start with presentation suspended (`suspendPresentation`): nothing is
+   * presented until `resumePresentation()`, so an application that loads
+   * and frames content first never shows the whole-Earth start. Default
+   * false.
+   */
+  suspendPresentation?: boolean;
   /**
    * Options for the viewer's engine (`Engine.create`): its device's limits
    * tier (`limits: "minimum"` shows what the smallest device would), power
@@ -199,6 +207,8 @@ export class Viewer {
   /** The main view (the left half in split view). */
   readonly view: View;
   readonly controller: GlobeController;
+  /** Orbit controls around the focus, when on (`setControls("orbit")`). */
+  private orbit_?: InspectController;
   /** Policy for the globe and tilesets added later. */
   policy: "budgeted" | "stepwise";
   /** Builds the globe; content added before it is ready still loads. */
@@ -373,6 +383,9 @@ export class Viewer {
       );
     }
     this.ready = this.buildGlobe(options.imagery ?? true);
+    if (options.suspendPresentation) {
+      this.resumeStart = this.suspendPresentation();
+    }
     engine.start();
     const tick = () => {
       if (this.destroyed) {
@@ -689,6 +702,7 @@ export class Viewer {
     this.view.camera.near = Math.min(0.1, Math.max(0.001, radius * 0.002));
     vec3.copy(this.focusCenter, center);
     this.controller.focus(center, heading, pitch, range);
+    this.orbit_?.focus(center, heading, pitch, range);
     if (this.second && this.secondController) {
       this.second.camera.near = this.view.camera.near;
       this.secondController.focus(
@@ -948,8 +962,109 @@ export class Viewer {
     });
   }
 
+  /**
+   * The camera's controls: "globe" (the default: spin the Earth, zoom to
+   * the surface, kept above the ground) or "orbit" around the focus, for
+   * looking at a model (drag orbits, right- or shift-drag pans, wheel
+   * zooms; `InspectController`), the globe controls paused meanwhile.
+   * `zoomTo` frames in either.
+   */
+  setControls(mode: "globe" | "orbit"): void {
+    if (mode === "orbit" && !this.orbit_) {
+      const orbit = new InspectController(this.view, this.canvas);
+      orbit.ignore = this.controller.ignore;
+      const camera = this.view.camera;
+      const range = Math.max(
+        vec3.distance(camera.position, this.focusCenter),
+        0.01,
+      );
+      orbit.focus(this.focusCenter, this.controller.heading, -0.4, range);
+      this.orbit_ = orbit;
+      this.controller.enabled = false;
+    } else if (mode === "globe" && this.orbit_) {
+      this.orbit_.dispose();
+      this.orbit_ = undefined;
+      this.controller.enabled = true;
+    }
+  }
+
+  /**
+   * Suspends presentation while a scene is set up in steps (load, place,
+   * frame) that shouldn't be seen: the view isn't drawn, so the canvas
+   * keeps its last frame (or shows the container's background before the
+   * first), until every suspension is resumed. While suspended the
+   * container has `data-cesium-presentation-suspended`, for a loading
+   * screen in CSS, and `onPresentationChange` is called. The pattern of
+   * Android's `postponeEnterTransition` and Unity's
+   * `allowSceneActivation`: the application decides when its scene is
+   * ready to be seen.
+   *
+   * Returns `resume` (calling it twice does nothing), which is also
+   * disposable, so `using _ = viewer.suspendPresentation();` resumes when
+   * the block ends, setup errors included.
+   */
+  suspendPresentation(): (() => void) & Disposable {
+    let resumed = false;
+    if (this.suspensions++ === 0) {
+      this.view.enabled = false;
+      this.container.dataset.cesiumPresentationSuspended = "";
+      this.onPresentationChange?.(true);
+    }
+    const resume = () => {
+      if (resumed) {
+        return;
+      }
+      resumed = true;
+      if (--this.suspensions === 0) {
+        this.view.enabled = true;
+        delete this.container.dataset.cesiumPresentationSuspended;
+        this.engine.requestRender();
+        this.onPresentationChange?.(false);
+      }
+    };
+    return Object.assign(resume, { [Symbol.dispose]: resume });
+  }
+
+  /**
+   * Suspends presentation until `work` settles (resolved or rejected) and
+   * returns it: `await viewer.suspendPresentationUntil(loadScene())`.
+   */
+  async suspendPresentationUntil<T>(work: Promise<T>): Promise<T> {
+    const resume = this.suspendPresentation();
+    try {
+      return await work;
+    } finally {
+      resume();
+    }
+  }
+
+  /** Whether presentation is suspended (`suspendPresentation`). */
+  get presentationSuspended(): boolean {
+    return this.suspensions > 0;
+  }
+
+  /**
+   * Ends the suspension `suspendPresentation: true` started with (once;
+   * other suspensions still hold presentation back).
+   */
+  resumePresentation(): void {
+    this.resumeStart?.();
+    this.resumeStart = undefined;
+  }
+
+  /** Called when presentation is suspended (true) or resumes (false). */
+  onPresentationChange?: (suspended: boolean) => void;
+  private suspensions = 0;
+  private resumeStart?: () => void;
+
+  /** The current controls (`setControls`). */
+  get controls(): "globe" | "orbit" {
+    return this.orbit_ ? "orbit" : "globe";
+  }
+
   destroy(): void {
     this.destroyed = true;
+    this.orbit_?.dispose();
     cancelAnimationFrame(this.frameRequest);
     this.credits_?.dispose();
     this.inspector?.dispose();

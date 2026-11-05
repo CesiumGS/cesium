@@ -5056,11 +5056,62 @@ them on content as you type.
   fetched by `npm run setup` into `~/.cesium-bench/slang-wasm`. The dev
   server serves it at `/slang-wasm/` without `SLANG_WASM_DIR`. Without it
   the example says how to get it.
+- _The lookdev stage (r51)._ The example takes the gallery's side layout
+  (`layout: "side"`: the view and the panel side by side, not an overlay)
+  and starts with the globe off.
+  - _Camera._ Orbit controls (`viewer.setControls("orbit")`: an
+    `InspectController` around the model, the globe controller disabled)
+    and a Focus button that frames the model.
+  - _Stage._ Globe (off, ellipsoid, terrain); background colors; a
+    procedural environment light (studio, sunset, overcast, dark) or the
+    atmosphere; the sun (key, soft, off, time of day); a turntable.
+  - _Models._ Procedural shapes, the repository's samples, a few Khronos
+    samples by URL, any CORS-enabled glTF URL, and a local `.glb`.
+  - _Presets._ 24, in groups (light and view, patterns, noise, materials,
+    vertices), sharing noise and hue helpers.
+  - Settings and the source persist in `localStorage`.
+- _The editor (r51)._ CodeMirror 6, as Shadertoy uses (version 5 there).
+  - _Highlighting._ The C-like stream mode, extended with Slang's keywords,
+    the HLSL-style types and the contract's types.
+  - _The Slang language server._ The WebAssembly build's `LanguageServer`
+    runs in its own worker: diagnostics as you type, completion,
+    signature help, hover and go to definition (Cmd/Ctrl-click, F12).
+    Documents live in the build's file system too (`/user.slang`), and
+    edits arrive as `didChangeTextDocument`. This is how Slang's own
+    playground drives it: without the file there are no diagnostics or
+    completions.
+  - _Hover._ As in VS Code: the signature, highlighted, and its doc
+    comment. The server's "Defined in user.slang(4)" is replaced by go to
+    definition. Symbols from the contract say so, with a link into the
+    Contract reference.
+  - _The Contract reference._ The `cesium` module as the user's shader
+    imports it, read-only and highlighted. This is Shadertoy's "Shader
+    Inputs" panel, for a module. Go to definition opens it at the line.
+  - Compile errors from `slangc` show as diagnostics too, where the server
+    found none.
+- _No globe flash._ `Viewer.suspendPresentation()` keeps the canvas from
+  presenting while a caller sets a scene up.
+  - It is ref-counted and returns a disposable resume function.
+    `ViewerOptions.suspendPresentation` suspends from creation;
+    `resumePresentation()` ends that suspension and
+    `suspendPresentationUntil(promise)` ties one to a promise.
+  - The container carries `data-cesium-presentation-suspended`, so an
+    application can draw its own loading screen.
+  - The practice is the same as Android's `postponeEnterTransition` and
+    Unity's `allowSceneActivation`: the caller says when the first frame
+    is ready, and the engine holds that frame until then.
+  - The gallery creates its viewer suspended and resumes after each
+    example's setup. Its spinner is centered on the view.
 - _Later._
   - Declared uniforms as sliders.
   - Sharing a shader by URL (the source compressed in the hash).
   - Tilesets with metadata (`fsInput.metadata`).
   - The same editor for vector styles (§13.9).
+  - Exact highlighting from the server's semantic tokens, instead of the
+    stream mode.
+  - Readiness signals: resume presentation automatically once the content
+    in view settles (tiles loaded, shaders compiled), so callers needn't
+    say when.
 
 **Pages without a build step (r39).** `npm run build:lib` writes
 `dist-lib/`: one ES module (`cesium-next.mjs`, WGSL inlined), the content

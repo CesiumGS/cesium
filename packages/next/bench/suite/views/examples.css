@@ -42,6 +42,7 @@
   overflow: hidden;
   background: #000;
 }
+.examples-view-area,
 .examples-view {
   position: absolute;
   inset: 0;
@@ -185,7 +186,95 @@
   max-height: 70vh;
 }
 
-/* An example with an editor (the Slang playground) gets a wider panel. */
-.examples-panel:has(textarea) {
-  width: min(520px, calc(100% - 2 * var(--stratakit-space-300)));
+/*
+ * Side layout (an example with an editor, the Slang playground): the view
+ * and a full-height column for the panel, the panel's body filling it.
+ */
+.examples-stage.side {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(380px, 44%);
+  background: var(--stratakit-color-bg-page-base);
+}
+.examples-stage.side .examples-view-area {
+  position: relative;
+  inset: auto;
+  min-height: 0;
+  background: #000;
+}
+.examples-stage.side .examples-panel {
+  position: relative;
+  top: auto;
+  right: auto;
+  width: auto;
+  max-height: none;
+  height: 100%;
+  border-radius: 0;
+  box-shadow: none;
+  border-left: 1px solid var(--stratakit-color-border-neutral-muted, #333);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.examples-stage.side .examples-panel-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+/* The Slang playground's panel (examples/slang-playground). */
+.examples-stage.side .examples-panel-body:has(.slang-editor) {
+  overflow: hidden;
+}
+.slang-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-150, 6px);
+}
+.slang-row {
+  display: flex;
+  gap: var(--stratakit-space-150, 6px);
+}
+.slang-row input[type="url"] {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 6px;
+  border-radius: var(--stratakit-radius-sm, 4px);
+  border: 1px solid var(--stratakit-color-border-neutral-base, #555);
+  background: var(--stratakit-color-bg-page-depth, #111);
+  color: inherit;
+  font: inherit;
+}
+.slang-stage summary,
+.examples-panel details > summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.slang-stage[open] > .slang-toolbar {
+  margin-top: var(--stratakit-space-150, 6px);
+}
+.slang-editor {
+  flex: 1;
+  min-height: 260px;
+  border-radius: var(--stratakit-radius-sm, 4px);
+  overflow: hidden;
+  border: 1px solid var(--stratakit-color-border-neutral-base, #555);
+}
+.slang-status {
+  min-height: 1.4em;
+}
+.slang-contract {
+  height: 280px;
+  margin-top: 4px;
+  border-radius: var(--stratakit-radius-sm, 4px);
+  overflow: hidden;
+  border: 1px solid var(--stratakit-color-border-neutral-base, #555);
+}
+.slang-wgsl {
+  max-height: 200px;
+  overflow: auto;
+  font-size: 11px;
+  margin: 0;
+}
+.slang-help {
+  color: var(--stratakit-color-text-neutral-secondary);
 }

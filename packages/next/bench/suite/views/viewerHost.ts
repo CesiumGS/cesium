@@ -277,7 +277,7 @@ export class NextViewerHost implements ViewerHost {
     host.settings = settings;
     // Content loads next: no frames of the whole Earth (the Viewer's start)
     // before the camera jumps to it; the view shows once it's framed.
-    viewer.view.enabled = false;
+    host.resume = viewer.suspendPresentation();
     viewer.ready.catch((error) =>
       host.warnings.add(`globe: ${message(error)}`),
     );
@@ -408,11 +408,11 @@ export class NextViewerHost implements ViewerHost {
 
   /** Shows the view (held from the start until content is framed). */
   private show(): void {
-    if (!this.viewer.view.enabled) {
-      this.viewer.view.enabled = true;
-      this.viewer.engine.requestRender();
-    }
+    this.resume?.();
+    this.resume = undefined;
   }
+  /** Resumes the start's suspended presentation, once content is framed. */
+  private resume?: () => void;
 
   frame(at?: readonly number[]): void {
     if (at && at.length >= 2) {

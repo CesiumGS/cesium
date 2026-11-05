@@ -138,6 +138,9 @@ export function ExamplePage() {
     const token = ionToken();
     Viewer.create(host.current, {
       engine: { limits: limitsTier() },
+      // Suspended until the first example has set its scene up: no frames
+      // of the whole-Earth start (Viewer `suspendPresentation`).
+      suspendPresentation: true,
       globe: info.globe,
       maxInstances: MAX_INSTANCES,
       // Frame rate, timings, memory; top left (examples' panels are top right).
@@ -153,6 +156,8 @@ export function ExamplePage() {
         } else {
           made = v;
           setViewer(v);
+          // For the console, as the Viewer page's `dynoViewer`.
+          Object.assign(globalThis, { dynoExamplesViewer: v });
         }
       },
       (e) => !cancelled && setError(message(e)),
@@ -176,6 +181,9 @@ export function ExamplePage() {
     setError(undefined);
     setRunning(true);
     const box = panel.current;
+    // Nothing new shows while the example sets its scene up (its globe,
+    // content, framing): the last frame stays, the loading overlay over it.
+    const resume = viewer.suspendPresentation();
     void (async () => {
       try {
         if (globe.current !== info.globe) {
@@ -202,6 +210,8 @@ export function ExamplePage() {
           setError(message(e));
         }
       } finally {
+        resume();
+        viewer.resumePresentation();
         if (!signal.aborted) {
           setRunning(false);
         }
@@ -209,6 +219,7 @@ export function ExamplePage() {
     })();
     return () => {
       controller.abort();
+      resume();
       dispose?.();
       box.replaceChildren();
     };
@@ -272,8 +283,18 @@ export function ExamplePage() {
           {error}
         </Alert>
       )}
-      <div className="examples-stage">
-        <div ref={host} className="examples-view" />
+      <div className={`examples-stage${info.layout === "side" ? " side" : ""}`}>
+        {/* The view and what goes over it: the loading overlay centers on
+            the canvas, not the stage (which the side layout's panel shares). */}
+        <div className="examples-view-area">
+          <div ref={host} className="examples-view" />
+          {running && !error && (
+            <div className="examples-loading" role="status">
+              <CircularProgress size={20} />
+              <Typography variant="body-sm">Starting…</Typography>
+            </div>
+          )}
+        </div>
         <div className="examples-panel">
           <button
             type="button"
@@ -293,12 +314,6 @@ export function ExamplePage() {
             hidden={collapsed}
           />
         </div>
-        {running && !error && (
-          <div className="examples-loading" role="status">
-            <CircularProgress size={20} />
-            <Typography variant="body-sm">Starting…</Typography>
-          </div>
-        )}
       </div>
       {showSource && (
         <Section title="Source" description={`examples/${info.id}/main.ts`}>

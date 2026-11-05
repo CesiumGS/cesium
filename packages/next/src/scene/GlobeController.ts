@@ -34,6 +34,11 @@ export class GlobeController {
   /** Ignore input at these target pixels, e.g. where another view sits on top. */
   ignore?: (x: number, y: number) => boolean;
   /**
+   * Off: no input and no keeping above the ground, while another
+   * controller drives the camera (Viewer `setControls("orbit")`).
+   */
+  enabled = true;
+  /**
    * Meters the camera stays above the surface (1.x minimumZoomDistance: 1):
    * the terrain from `surfaceHeight`, else the ellipsoid.
    */
@@ -559,7 +564,7 @@ export class GlobeController {
    * it was put (unless something moved it since).
    */
   update(): void {
-    if (this.mode !== "none" || this.animating) {
+    if (!this.enabled || this.mode !== "none" || this.animating) {
       return;
     }
     const camera = this.view.camera;
@@ -757,7 +762,7 @@ export class GlobeController {
   }
 
   private accepts(x: number, y: number): boolean {
-    return this.view.contains(x, y) && !this.ignore?.(x, y);
+    return this.enabled && this.view.contains(x, y) && !this.ignore?.(x, y);
   }
 }
 

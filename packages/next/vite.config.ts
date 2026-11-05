@@ -338,6 +338,17 @@ export default defineConfig({
       "@mui/material",
       "@stratakit/mui",
       "@stratakit/structures",
+      // The Slang playground's editor (examples/slang-playground).
+      "codemirror",
+      "@codemirror/state",
+      "@codemirror/view",
+      "@codemirror/language",
+      "@codemirror/legacy-modes/mode/clike",
+      "@codemirror/lint",
+      "@codemirror/autocomplete",
+      "@codemirror/commands",
+      "@codemirror/theme-one-dark",
+      "@lezer/highlight",
     ],
   },
   plugins: [
