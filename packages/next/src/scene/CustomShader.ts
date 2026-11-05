@@ -147,7 +147,10 @@ const PAD: Record<string, string> = {
 export const NAMED_VARYINGS = "// @named";
 /** The first location of the named values' varyings. */
 const FIRST_NAMED_LOCATION = 10;
-/** Locations left after VsOut's and the fragment stage's front_facing. */
+/**
+ * Locations left after VsOut's 9 (opaque.wgsl) and the fragment built-ins
+ * a pass takes, at most 3 (translucent.wgsl `fsListSamples`): 16 in all.
+ */
 export const MAX_NAMED = 4;
 
 /**
@@ -206,10 +209,10 @@ export function namedCode(named: NamedDeclarations): {
         ? [
             // A property in a property texture is read here, per fragment;
             // else the interpolated attribute's (opaque.wgsl).
-            "  let r = records[in.draw];",
+            "  let r = records[in.ids.x];",
             "  let directory = r.attributes;",
             // The fragment's feature, local to the draw (feature tables).
-            "  let feature = select(in.feature - r.featureId, 0xffffffffu, in.feature == 0u);",
+            "  let feature = select(in.ids.y - r.featureId, 0xffffffffu, in.ids.y == 0u);",
             `  return ${struct}(${own
               .map((f) => {
                 const varying = `in.named${fields.indexOf(f)}`;
