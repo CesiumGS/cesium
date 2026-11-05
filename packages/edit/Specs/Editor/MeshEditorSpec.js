@@ -1,4 +1,10 @@
-import { Cartesian3, Color, Matrix4, RuntimeError } from "@cesium/core";
+import {
+  Cartesian2,
+  Cartesian3,
+  Color,
+  Matrix4,
+  RuntimeError,
+} from "@cesium/core";
 import {
   GeometryAttributeDescriptor,
   GeometryReader,
@@ -108,10 +114,20 @@ describe(
       );
     }
 
-    // The instance counts of a mesh's commands: of points, edges and faces, in
+    // The instance counts of a mesh's commands: of faces, edges and points, in
     // that order, for those that are drawn.
     function renderInstanceCounts(mesh) {
       return renderCommands(mesh).map((command) => command.instanceCount);
+    }
+
+    // The instance counts of the commands the mesh's overlay adds to a pick
+    // pass, in the same order as renderInstanceCounts.
+    function pickInstanceCounts(mesh) {
+      scene.renderForSpecs();
+      scene.pick(new Cartesian2(0.0, 0.0));
+      return scene.frameState.commandList
+        .filter((command) => command.owner === mesh._renderer)
+        .map((command) => command.instanceCount);
     }
 
     function getWindowPosition(position) {
@@ -312,7 +328,7 @@ describe(
         editor.setMeshActive(mesh);
         const listener = jasmine.createSpy("modeChanged").and.callFake(() => {
           expect(editor.mode).toBe(EditMode.EDGE);
-          expect(renderInstanceCounts(mesh)).toEqual([5, 2]);
+          expect(renderInstanceCounts(mesh)).toEqual([2, 5]);
         });
         editor.modeChanged.addEventListener(listener);
 
@@ -338,10 +354,31 @@ describe(
         editor.setMeshActive(mesh);
 
         editor.mode = EditMode.VERTEX;
-        expect(renderInstanceCounts(mesh)).toEqual([4, 5, 2]);
+        expect(renderInstanceCounts(mesh)).toEqual([2, 5, 4]);
 
         editor.mode = EditMode.EDGE;
-        expect(renderInstanceCounts(mesh)).toEqual([5, 2]);
+        expect(renderInstanceCounts(mesh)).toEqual([2, 5]);
+      });
+
+      it("picks only faces and the components the mode selects", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const mesh = editor.addMesh(createSource(square));
+        const inactive = editor.addMesh(createSource(square));
+        editor.setMeshActive(mesh);
+
+        expect(pickInstanceCounts(mesh)).toEqual([2]);
+
+        editor.mode = EditMode.FACE;
+        expect(renderInstanceCounts(mesh)).toEqual([2, 5]);
+        expect(pickInstanceCounts(mesh)).toEqual([2]);
+
+        editor.mode = EditMode.EDGE;
+        expect(pickInstanceCounts(mesh)).toEqual([2, 5]);
+
+        editor.mode = EditMode.VERTEX;
+        expect(renderInstanceCounts(mesh)).toEqual([2, 5, 4]);
+        expect(pickInstanceCounts(mesh)).toEqual([2, 4]);
+        expect(pickInstanceCounts(inactive)).toEqual([2]);
       });
 
       it("draws only faces in EditMode.NONE", async function () {
@@ -359,7 +396,7 @@ describe(
 
         editor.setMeshActive(mesh);
 
-        expect(renderInstanceCounts(mesh)).toEqual([5, 2]);
+        expect(renderInstanceCounts(mesh)).toEqual([2, 5]);
       });
 
       it("doesn't affect inactive meshes", async function () {
@@ -370,7 +407,7 @@ describe(
 
         editor.mode = EditMode.VERTEX;
 
-        expect(renderInstanceCounts(active)).toEqual([4, 5, 2]);
+        expect(renderInstanceCounts(active)).toEqual([2, 5, 4]);
         expect(renderInstanceCounts(inactive)).toEqual([2]);
       });
 
@@ -404,7 +441,7 @@ describe(
 
         editor.setMeshActive(mesh);
 
-        expect(renderInstanceCounts(mesh)).toEqual([4, 5, 2]);
+        expect(renderInstanceCounts(mesh)).toEqual([2, 5, 4]);
       });
 
       it("draws the overlay at the source's world transform", async function () {
