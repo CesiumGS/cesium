@@ -15,7 +15,10 @@ export {
   type UniformDeclaration,
   type UniformType,
   type ValueUniform,
+  type SlangCache,
+  type CompiledSlangEntry,
 } from "./scene/CustomShader.ts";
+export { memorySlangCache } from "./scene/slangCache.ts";
 export {
   PointSource,
   type PointProperty,

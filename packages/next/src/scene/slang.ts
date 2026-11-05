@@ -10,6 +10,12 @@ import {
   type NamedType,
 } from "./slangStages.ts";
 import { slangBridge, type NamedFields } from "./contract.ts";
+import {
+  defaultSlangCache,
+  slangCacheKey,
+  type SlangCache,
+} from "./slangCache.ts";
+import { SLANG_VERSION } from "./slangVersion.ts";
 import type { UniformDeclaration } from "./uniforms.ts";
 import {
   bindDeclaredUniforms,
@@ -78,7 +84,10 @@ export interface CompiledSlang {
 
 /**
  * Slang stages (`import cesium;`) as custom shader WGSL, against the
- * shader's named attributes and metadata (`CustomShaderOptions`).
+ * shader's named attributes and metadata (`CustomShaderOptions`). Cached
+ * (`cache`, IndexedDB by default; `false` for none): a shader compiled
+ * before, with the same declarations, Slang release and compiler, comes
+ * from the cache and the compiler isn't loaded.
  */
 export async function compileSlang(
   source: string,
@@ -89,6 +98,7 @@ export async function compileSlang(
     uniforms?: Record<string, UniformDeclaration>;
     instance?: Record<string, InstanceType>;
   } = {},
+  cache: SlangCache | false | undefined = defaultSlangCache(),
 ): Promise<CompiledSlang> {
   const stages = slangStages(source);
   if (!stages.vertex && !stages.fragment) {
@@ -111,9 +121,27 @@ export async function compileSlang(
   };
   const cesium = (uniforms: Record<string, UniformDeclaration>) =>
     cesiumModule(cesiumSlang, { ...fields, uniforms });
+  const given: Record<string, UniformDeclaration> = { ...named.uniforms };
+  const bridge = slangBridge(stages, fields);
+  // Everything the compile reads: the release and the compiler, the
+  // `cesium` module for these declarations (the given uniforms by type:
+  // their values aren't compiled), the shader, the bridge.
+  const key =
+    cache &&
+    (await slangCacheKey([SLANG_VERSION, url, cesium(given), source, bridge]));
+  const hit =
+    key && cache ? await cache.get(key).catch(() => undefined) : undefined;
+  if (hit) {
+    return {
+      wgsl: hit.wgsl,
+      controls: hit.controls,
+      uniforms: { ...given, ...hit.declared },
+    };
+  }
   let user = source;
   let controls: ShaderControl[] = [];
-  let uniforms: Record<string, UniformDeclaration> = { ...named.uniforms };
+  let declaredByShader: Record<string, UniformDeclaration> = {};
+  let uniforms: Record<string, UniformDeclaration> = given;
   // Uniforms the shader declares itself: found by reflection (a pass over
   // the module alone), then bound to the shader's buffer.
   if (/\buniform\b/.test(withoutComments(source))) {
@@ -128,6 +156,7 @@ export async function compileSlang(
       new Set(["uniforms", ...Object.keys(uniforms)]),
     );
     controls = declared.controls;
+    declaredByShader = declared.uniforms;
     uniforms = { ...uniforms, ...declared.uniforms };
     user = bindDeclaredUniforms(source, declared);
   }
@@ -135,8 +164,14 @@ export async function compileSlang(
     url,
     cesium: cesium(uniforms),
     user,
-    stub: slangBridge(stages, fields),
+    stub: bridge,
   });
+  if (key && cache) {
+    // Not kept (quota, a private window) only costs a compile next time.
+    await cache
+      .put(key, { wgsl, controls, declared: declaredByShader })
+      .catch(() => undefined);
+  }
   // Slang's output as it is: CustomShader finds the bridge in it.
   return { wgsl, controls, uniforms };
 }

@@ -20,9 +20,10 @@ import {
 import { homedir } from "node:os";
 import { join } from "node:path";
 import process from "node:process";
+import { SLANG_VERSION } from "../src/scene/slangVersion.ts";
 
-/** The Slang release slangc and the WASM build are pinned to. */
-export const SLANG_VERSION = "2026.21";
+/** The Slang release slangc and the WASM build are pinned to (one place). */
+export { SLANG_VERSION };
 
 const store = (kind) =>
   join(homedir(), ".cesium-bench", `slang-${kind}`, SLANG_VERSION);

@@ -26,6 +26,8 @@ import {
 
 export type { InstanceType, NamedType } from "./slangStages.ts";
 export type { ShaderControl } from "./slangControls.ts";
+export type { CompiledSlangEntry, SlangCache } from "./slangCache.ts";
+import type { SlangCache } from "./slangCache.ts";
 import type { ShaderControl } from "./slangControls.ts";
 export type {
   TextureSource,
@@ -124,6 +126,12 @@ export interface SlangShaderOptions extends Omit<
    * Default "/slang-wasm/slang-wasm.js".
    */
   slangUrl?: string;
+  /**
+   * Where compiled shaders are kept: by default IndexedDB (the same
+   * shader, declarations and Slang release don't load the compiler
+   * again); `false` for none, or any `SlangCache`.
+   */
+  cache?: SlangCache | false;
 }
 
 export const DEFAULT_VERTEX_MAIN =
@@ -557,6 +565,7 @@ export class CustomShader {
       source,
       options.slangUrl,
       options,
+      ...(options.cache !== undefined ? [options.cache] : []),
     );
     return new CustomShader({
       wgsl,

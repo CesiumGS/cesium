@@ -676,6 +676,21 @@ translucency 8/8, models, tileset and tracks pass.
   - _Still open:_ a `SlangLinker` (one compile with `surface.slang`) stays
     an option behind `Linker`, for when a compile per shader of the whole
     surface is affordable (with the IndexedDB cache).
+- **Done (r58): browser-compiled Slang cached in IndexedDB**
+  (`scene/slangCache.ts`, database `cesium-slang`). The key is a SHA-256
+  of everything the compile reads: the pinned Slang release
+  (`scene/slangVersion.ts`, also slangTools.mjs's), the compiler's URL,
+  the `cesium` module for the shader's declarations (given uniforms by
+  type only), the shader and its bridge. A hit returns the WGSL and the
+  shader's own uniforms without starting the worker, so the WebAssembly
+  build isn't fetched: on the custom shader page's second visit no Slang
+  worker started, 51/51. At most 128 entries, least recently used first
+  out. `fromSlang({ cache })` takes `false` or any `SlangCache`
+  (`memorySlangCache`). Where IndexedDB or digests are missing (private
+  windows, insecure contexts) or an operation fails, shaders compile as
+  without it. A compiler served at the same URL but changed isn't seen;
+  the release in the key is the engine's, not the served build's (that
+  needs the compiler loaded to ask).
 - **Later (with the 2.0 package's tooling): ahead-of-time Slang for
   apps.** `scripts/slangShader.mjs` is the package's own script. Apps
   that don't want the WASM compiler need it published: a CLI in the
