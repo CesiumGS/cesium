@@ -496,7 +496,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     el(
       "p",
       {},
-      "Each way alone at this view's size, against the scene without its glass: the time a frame takes, each frame waited on. Moments cost the same however the layers lie; the lists grow with the layers a pixel sees.",
+      "Each way alone at this view's size, against the scene without its glass: the time a frame takes, each frame waited on, the fastest of five rounds taken in turn (other work on the GPU slows a round, not the answer). Moments cost the same however the layers lie; the lists grow with the layers a pixel sees.",
     ),
   );
 
@@ -504,7 +504,11 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
    * Each way's frame time against the scene without its glass, the view
    * alone (the split undone for it), frames rendered back to back and
    * waited on (`onSubmittedWorkDone`, not timers or timestamps: a render
-   * pass's timestamps aren't its own on every GPU).
+   * pass's timestamps aren't its own on every GPU). The three take turns
+   * over several rounds and each keeps its fastest: anything else on the
+   * GPU (another tab, the first frames' warming up) only slows a round,
+   * and measured once each in a row, a slow first one made moments look
+   * cheaper than no glass at all.
    */
   async function measureCost() {
     const queue = engine.gpu.device.queue;
@@ -515,41 +519,55 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
         await queue.onSubmittedWorkDone();
       }
     };
-    const time = async () => {
-      await frames(15);
-      const start = performance.now();
-      await frames(60);
-      return (performance.now() - start) / 60;
-    };
     const visible = (on: boolean) => {
       for (const g of glass) {
         world.setVisible(g.draw, on);
       }
     };
-    costOut.replaceChildren(el("dt", {}, "Measuring…"));
+    type Way = "none" | Translucency;
+    const ways: Way[] = ["none", "moments", "exact"];
+    const best: Record<Way, number> = {
+      none: Infinity,
+      moments: Infinity,
+      exact: Infinity,
+    };
+    const ROUNDS = 5;
     settings.compare = "moments";
     layout();
-    visible(false);
-    const base = await time();
-    visible(true);
-    const ms: Record<Translucency, number> = { moments: 0, exact: 0 };
-    for (const way of ["moments", "exact"] as const) {
-      if (signal.aborted) {
-        return;
+    try {
+      for (let round = 0; round < ROUNDS; round++) {
+        for (const way of ways) {
+          if (signal.aborted) {
+            return;
+          }
+          costOut.replaceChildren(
+            el("dt", {}, `Measuring… ${round + 1} of ${ROUNDS}`),
+          );
+          visible(way !== "none");
+          view.translucency = way === "none" ? "moments" : way;
+          await frames(8);
+          const start = performance.now();
+          await frames(30);
+          best[way] = Math.min(best[way], (performance.now() - start) / 30);
+        }
       }
-      view.translucency = way;
-      ms[way] = (await time()) - base;
+    } finally {
+      visible(true);
+      settings.compare = was;
+      layout();
     }
-    settings.compare = was;
-    layout();
     const { width, height } = viewer.target;
+    const added = (way: Translucency) => {
+      const d = best[way] - best.none;
+      return `${d < 0 ? "−" : "+"}${Math.abs(d).toFixed(2)} ms`;
+    };
     costOut.replaceChildren(
       el("dt", {}, "Without glass"),
-      el("dd", {}, `${base.toFixed(2)} ms a frame (${width} × ${height})`),
+      el("dd", {}, `${best.none.toFixed(2)} ms a frame (${width} × ${height})`),
       el("dt", {}, "Moments"),
-      el("dd", {}, `+${ms.moments.toFixed(2)} ms`),
+      el("dd", {}, added("moments")),
       el("dt", {}, "Exact"),
-      el("dd", {}, `+${ms.exact.toFixed(2)} ms`),
+      el("dd", {}, added("exact")),
     );
   }
 
