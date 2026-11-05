@@ -2,14 +2,20 @@
 
 Usage: uv run --with pyerfa --with numpy python scripts/frameFixtures.py <section> [args]
 
-Sections: dtdb, earth (later tasks add ephemeris, moon).
+Sections: dtdb, earth, ephemeris <store> (needs jplephem), moon <store> <frame kernel>
+(needs spiceypy and jplephem). The last two read the NAIF kernels `npm run setup`
+downloaded to <store>; only their small JSON output is committed.
 """
 
 import json
+import struct
 import sys
 from pathlib import Path
 
-import erfa
+try:
+    import erfa
+except ImportError:  # the ephemeris and moon sections do not need pyerfa
+    erfa = None
 import numpy as np
 
 OUT = Path(__file__).resolve().parent.parent / "test" / "fixtures" / "frames"
@@ -113,7 +119,84 @@ def earth():
     write("earth", rows)
 
 
-SECTIONS = {"dtdb": dtdb, "earth": earth}
+def pack_segment(store, pack, name):
+    """A segment's manifest entry from a pack file (CPK1, u32 length, JSON)."""
+    raw = (Path(store) / pack).read_bytes()
+    length = struct.unpack_from("<I", raw, 4)[0]
+    manifest = json.loads(raw[8 : 8 + length])
+    return next(s for s in manifest["segments"] if s["name"] == name)
+
+
+def instants(store):
+    """40 TDB instants (s past J2000) over 2000-2050: 37 evenly spaced, 2049-12-31
+    00:00, 2050-12-31 00:00 (near the pack's end) and an exact record boundary,
+    init + k * intervalLength of the moon segment, written as the TypeScript
+    computes it."""
+    seg = pack_segment(sys.argv[2], "planets-de440-2000-2050.pack", "moon")
+    day = 86400.0
+    j2000 = 2451545.0
+    # JD 2469806.5 is 2049-12-31 00:00; 2470170.5 is 2050-12-31 00:00.
+    late = [(2469806.5 - j2000) * day, (2470170.5 - j2000) * day]
+    boundary = seg["init"] + (seg["count"] // 2) * seg["intervalLength"]
+    even = list(np.linspace(0.5 * 365.25 * day, 49.5 * 365.25 * day, 37))
+    return sorted([float(t) for t in even] + late + [float(boundary)]), float(boundary)
+
+
+def ephemeris(store):
+    """Sun, EMB, Moon-wrt-EMB and Earth-wrt-EMB, km and km/s, from jplephem on de440s.bsp."""
+    from jplephem.spk import SPK
+
+    kernel = SPK.open(str(Path(store) / "de440s.bsp"))
+    times, boundary = instants(store)
+    rows = []
+
+    def state(a, b, tdb):
+        # Two-part date keeps the full float64 resolution of tdb seconds.
+        pos, vel = kernel[a, b].compute_and_differentiate(2451545.0, tdb / 86400.0)
+        return [float(v) for v in pos] + [float(v) / 86400.0 for v in vel]
+
+    for tdb in times:
+        rows.append(
+            {
+                "tdb": tdb,
+                "boundary": tdb == boundary,
+                "sun": state(0, 10, tdb),
+                "emb": state(0, 3, tdb),
+                "moonWrtEmb": state(3, 301, tdb),
+                "earthWrtEmb": state(3, 399, tdb),
+            }
+        )
+    write("ephemeris", rows)
+
+
+def moon(store, frame_kernel):
+    """Moon orientation from SPICE: PCK Euler angles and pxform matrices (row-major)."""
+    import spiceypy as sp
+    from jplephem.pck import PCK
+
+    store = Path(store)
+    for kernel in ("de440s.bsp", "moon_pa_de440_200625.bpc"):
+        sp.furnsh(str(store / kernel))
+    sp.furnsh(str(frame_kernel))
+    pck = PCK.open(str(store / "moon_pa_de440_200625.bpc"))
+    segment = next(s for s in pck.segments if s.body == 31008)
+    times, _ = instants(store)
+    rows = []
+    for tdb in times:
+        angles = segment.compute(2451545.0, tdb / 86400.0)
+        rows.append(
+            {
+                "tdb": tdb,
+                "euler": [float(v) for v in np.asarray(angles).reshape(-1)[:3]],
+                "pa": [float(v) for v in sp.pxform("J2000", "MOON_PA", tdb).reshape(9)],
+                "me": [float(v) for v in sp.pxform("J2000", "MOON_ME", tdb).reshape(9)],
+                "paToMe": [float(v) for v in sp.pxform("MOON_PA", "MOON_ME", tdb).reshape(9)],
+            }
+        )
+    write("moon", rows)
+
+
+SECTIONS = {"dtdb": dtdb, "earth": earth, "ephemeris": ephemeris, "moon": moon}
 
 if __name__ == "__main__":
     if len(sys.argv) < 2 or sys.argv[1] not in SECTIONS:
