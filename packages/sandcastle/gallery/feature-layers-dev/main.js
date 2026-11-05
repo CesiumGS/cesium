@@ -145,6 +145,7 @@ async function loadGeoJson() {
       geoJsonDirectory + file,
       { name: name },
     );
+    // @ts-expect-error Private stand-in until a public API can draw feature layers.
     const primitive = Cesium.GeoJsonPrimitive.fromFeatureLayer(layer);
     viewer.scene.primitives.add(primitive);
     geoJsonPrimitives.push(primitive);
