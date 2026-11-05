@@ -689,6 +689,17 @@ async function createPipelines(
       storage(2, false, COMPUTE), // the table
     ],
   });
+  // The moments' targets: 32-bit floats where they blend, else 16-bit (the
+  // zeroth in four channels, a format storage textures may have).
+  const momentFormats = caps.float32Blendable
+    ? (["r32float", "rgba32float"] as const)
+    : (["rgba16float", "rgba16float"] as const);
+  // Group 3 adds one sampled texture to the opaque layout's, the opaque
+  // depth: the moments are read-only storage textures, which count against
+  // their own per-stage limit (4, unused by fragments otherwise), so a
+  // custom shader has the same room here as in its opaque layout but one
+  // (§13.15). Their format is part of their WGSL type, so their
+  // declarations follow `momentFormats` (`momentBindings`).
   const translucentLayout = device.createBindGroupLayout({
     label: "translucent",
     entries: [
@@ -699,18 +710,18 @@ async function createPipelines(
         visibility: FRAGMENT,
         texture: { sampleType: "depth", multisampled: true },
       },
-      {
-        binding: 3,
+      ...momentFormats.map((format, k) => ({
+        binding: 3 + k,
         visibility: FRAGMENT,
-        texture: { sampleType: "unfilterable-float" },
-      },
-      {
-        binding: 4,
-        visibility: FRAGMENT,
-        texture: { sampleType: "unfilterable-float" },
-      },
+        storageTexture: { access: "read-only" as const, format },
+      })),
     ],
   });
+  // translucent.wgsl's bindings 3 and 4, a source of their own after it.
+  const momentBindings = [
+    `@group(3) @binding(3) var momentsZero: texture_storage_2d<${momentFormats[0]}, read>;`,
+    `@group(3) @binding(4) var momentsHigher: texture_storage_2d<${momentFormats[1]}, read>;`,
+  ].join("\n");
   // Shared by the present pass's two pipelines (to the target, or to the
   // image FXAA reads).
   const presentLayout = device.createPipelineLayout({
@@ -941,6 +952,7 @@ async function createPipelines(
     commonWgsl,
     opaqueWgsl,
     translucentWgsl,
+    momentBindings,
     defaultStages,
   );
   const translucentPipelineLayout = device.createPipelineLayout({
@@ -955,9 +967,6 @@ async function createPipelines(
     color: { srcFactor: "one", dstFactor: "one" },
     alpha: { srcFactor: "one", dstFactor: "one" },
   };
-  const momentFormats = caps.float32Blendable
-    ? (["r32float", "rgba32float"] as const)
-    : (["r16float", "rgba16float"] as const);
   const translucentPipeline = (
     shaders: GPUShaderModule,
     label: string,
@@ -1288,6 +1297,7 @@ async function createPipelines(
           commonWgsl,
           opaqueSource,
           translucentWgsl,
+          momentBindings,
           code,
         );
         return translucent;

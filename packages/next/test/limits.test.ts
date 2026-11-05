@@ -111,10 +111,42 @@ describe("layout budget", () => {
       origin: new Float64Array(3),
     });
     expect(source.capacity).toBe(16);
+    // Custom shaders' layouts (made with their pipelines' builder): one
+    // reading metadata per fragment (the property textures) and one with
+    // texture uniforms, each with its translucent layout.
+    const { CustomShader } = await import("../src/scene/CustomShader.ts");
+    const fs =
+      "fn fragmentMain(fsInput: FragmentInput, material: ptr<function, MaterialOutput>) {";
+    const shaders = [
+      new CustomShader({
+        label: "metadata",
+        metadata: { temperature: "f32" },
+        fragment: `${fs}
+  (*material).baseColor = vec3f(fsInput.metadata.temperature);
+}`,
+      }),
+      new CustomShader({
+        label: "textures",
+        uniforms: {
+          first: { type: "texture2d", value: "first.png" },
+          second: { type: "texture2d", value: "second.png" },
+        },
+        fragment: `${fs}
+  (*material).baseColor = textureSample(first, firstSampler, fsInput.texCoord0).rgb
+    * textureSample(second, secondSampler, fsInput.texCoord0).rgb;
+}`,
+      }),
+    ];
+    for (const shader of shaders) {
+      await engine["ctx"].pipelines.surface(shader);
+    }
   });
 
   it("records the engine's layouts", () => {
     expect(layouts.length).toBeGreaterThan(20);
+    for (const label of ["metadata", "textures"]) {
+      expect(layouts.map((l) => l.label)).toContain(`${label} translucent`);
+    }
   });
 
   it("fits every layout in the base tier", () => {

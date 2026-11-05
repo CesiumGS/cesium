@@ -56,9 +56,11 @@ struct TranslucentParams {
 // plus one (low 28 bits) with the samples the node covers (top four).
 @group(3) @binding(1) var<storage, read_write> lists: array<atomic<u32>>;
 @group(3) @binding(2) var opaqueDepth: texture_depth_multisampled_2d;
-// The moments pass's sums, read by the color pass.
-@group(3) @binding(3) var momentsZero: texture_2d<f32>;
-@group(3) @binding(4) var momentsHigher: texture_2d<f32>;
+// The moments pass's sums, read by the color pass: `momentsZero` (binding
+// 3) and `momentsHigher` (4), read-only storage textures so they don't
+// count against the stage's sampled textures (plan §13.15). Their format
+// is part of their type and depends on the device, so RenderContext
+// declares them (`momentBindings`).
 
 const LIST_HEADER = 4u;
 // A node's `next` word: the next node plus one, below its samples' bits.
@@ -184,7 +186,7 @@ fn momentDepth(relPosition: vec3f) -> f32 {
 // A blended surface's alpha (`shadeSurface`'s, without its light), with the
 // opaque pass's placeholder clip.
 fn blendedAlpha(in: VsOut) -> f32 {
-  let r = records[in.draw];
+  let r = records[in.ids.x];
   let alpha = materialAlpha(in);
   if ((r.placeholderMask & view.viewBit) != 0u &&
       !insideClipBoxes(r.clipBlock, r.clipCount, in.relPosition)) {
@@ -284,8 +286,8 @@ fn fsMomentColor(in: VsOut, @builtin(front_facing) frontFacing: bool) -> Accumul
     discard;
   }
   let p = vec2u(in.position.xy);
-  let b0 = textureLoad(momentsZero, p, 0).r;
-  let sums = textureLoad(momentsHigher, p, 0);
+  let b0 = textureLoad(momentsZero, p).r;
+  let sums = textureLoad(momentsHigher, p);
   let w = transmittanceBefore(b0, sums, momentDepth(in.relPosition)) * alpha;
   // Bright layers summed stay below fp16's largest value.
   let weighted = min(surface.color * w, vec3f(16384.0));

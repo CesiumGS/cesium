@@ -2307,7 +2307,7 @@ export class Engine {
             label: "translucent.placeholder",
             size: [1, 1],
             format,
-            usage: GPUTextureUsage.TEXTURE_BINDING,
+            usage: GPUTextureUsage.STORAGE_BINDING,
           })
           .createView();
       this.translucentDummies = {
@@ -3262,17 +3262,23 @@ export class Engine {
     // lists ("exact"), or their moments and then their weighted light
     // ("moments"); then composited over the opaque pass's resolved targets
     // (composite.wgsl), before anything reads them.
+    // Read by the color pass as storage (translucent.wgsl), by the
+    // composite as textures.
+    const moments =
+      attachment |
+      GPUTextureUsage.TEXTURE_BINDING |
+      GPUTextureUsage.STORAGE_BINDING;
     const momentsZero = graph.createTexture("moments.zero", {
       width,
       height,
       format: pipelines.momentFormats[0],
-      usage: attachment | GPUTextureUsage.TEXTURE_BINDING,
+      usage: moments,
     });
     const momentsHigher = graph.createTexture("moments.higher", {
       width,
       height,
       format: pipelines.momentFormats[1],
-      usage: attachment | GPUTextureUsage.TEXTURE_BINDING,
+      usage: moments,
     });
     // The moments' weighted light, or what "exact" blended (`sortLists`).
     const blended =

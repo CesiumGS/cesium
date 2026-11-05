@@ -750,6 +750,9 @@ const CASES: Case[] = [
   {
     name: "property texture: VEC2 by hand (vs metadata)",
     same: true,
+    // Offset and scale by hand round differently: one pixel in 256,000
+    // was a level apart in blue.
+    close: true,
     model: VECTOR_TEXTURE,
     frames: 20,
     against: VECTOR_METADATA,

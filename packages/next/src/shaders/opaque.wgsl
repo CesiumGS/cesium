@@ -346,17 +346,19 @@ struct VsOut {
   @location(0) normal: vec3f,
   @location(1) uv: vec2f,
   @location(2) color: vec4f,
-  @location(3) @interpolate(flat) draw: u32,
+  // The draw (x), its global feature ID (y, 0 = none) and the instance
+  // among the draw's (z, custom shaders' `instance` values), in one
+  // location: a fragment stage's inputs are at most 16 with its built-ins
+  // (front_facing, sample_mask and sample_index each count: translucent.wgsl
+  // `fsListSamples`), and custom shaders' named values take 4.
+  @location(3) @interpolate(flat) ids: vec3u,
   @location(4) relPosition: vec3f, // camera-relative world position
   @location(5) tangent: vec4f,     // xyz world tangent, w handedness; w = 0: none
-  @location(6) @interpolate(flat) feature: u32, // global feature ID, 0 = none
   // Aerial perspective marched per vertex (`aerialMarch`), pre-exposed
   // in-scatter and transmittance; unused where the view reads the volume.
   @location(7) airInscatter: vec3f,
   @location(8) airTransmittance: vec3f,
   @location(9) positionMC: vec3f,  // the mesh's own (model) coordinates
-  // The instance among the draw's (custom shaders' `instance` values).
-  @location(14) @interpolate(flat) instanceIndex: u32,
   // A custom shader's named attributes and metadata, from location 10
   // (CustomShader.ts namedCode):
   // @named
@@ -676,7 +678,7 @@ fn vertexOut(vertexIndex: u32, item: u32, withAir: bool) -> VsOut {
   }
   // The row of the draw's feature table this vertex reads: an instance's
   // feature (cull.slang makes it global), else the vertex's; a draw without
-  // per-vertex IDs is feature 0 (as `out.feature` below).
+  // per-vertex IDs is feature 0 (as `out.ids.y` below).
   var tableFeature = select(localFeature, 0u, r.featureIdOffset == NO_STREAM);
   if (p.feature != 0u) {
     tableFeature = p.feature - r.featureId;
@@ -699,7 +701,7 @@ fn vertexOut(vertexIndex: u32, item: u32, withAir: bool) -> VsOut {
     vertexMetadata(r.attributes, vertexIndex, tableFeature),
     instanceValues(draw, instance),
   );
-  out.instanceIndex = instance;
+  out.ids.z = instance;
   passNamed(vsInput.attributes, vsInput.metadata, &out);
   var vsOutput = VertexOutput(vsInput.positionMC, vsInput.normalMC);
   vertexMain(vsInput, &vsOutput);
@@ -759,18 +761,18 @@ fn vertexOut(vertexIndex: u32, item: u32, withAir: bool) -> VsOut {
   if (billboard) {
     out.normal = -normalize(world.xyz); // toward the camera
   }
-  out.draw = draw;
+  out.ids.x = draw;
   // Per-vertex feature IDs (CAD elements, buildings) are local to the draw;
   // its first global ID offsets them. Flat interpolation takes the provoking
   // vertex: feature IDs are constant across a triangle.
   // An instance with its own feature ID is one feature.
-  out.feature = r.featureId;
+  out.ids.y = r.featureId;
   if (points) {
-    out.feature = r.featureId + instance;
+    out.ids.y = r.featureId + instance;
   } else if (p.feature != 0u) {
-    out.feature = p.feature;
+    out.ids.y = p.feature;
   } else if (r.featureIdOffset != NO_STREAM) {
-    out.feature = select(r.featureId + localFeature, 0u, localFeature == 0xffffffffu);
+    out.ids.y = select(r.featureId + localFeature, 0u, localFeature == 0xffffffffu);
   }
   return out;
 }
@@ -789,7 +791,7 @@ fn shadowFs(in: VsOut) {
 // shadowing everything near the camera until they had all loaded.
 @fragment
 fn shadowPlaceholderFs(in: VsOut) {
-  let r = records[in.draw];
+  let r = records[in.ids.x];
   if ((r.placeholderMask & view.viewBit) != 0u &&
       !insideClipBoxes(r.clipBlock, r.clipCount, in.relPosition)) {
     discard;
@@ -827,7 +829,7 @@ override cutOutInDepth: bool = false;
 // placeholders' clip.
 @fragment
 fn depthCoverageFs(in: VsOut) -> @location(0) vec4f {
-  let r = records[in.draw];
+  let r = records[in.ids.x];
   let material = materials[r.materialIndex];
   let alpha = materialAlpha(in);
   let ramp = max(fwidth(alpha), 1e-4);
@@ -845,7 +847,7 @@ fn depthCoverageFs(in: VsOut) -> @location(0) vec4f {
 // (`fragmentMain`'s material alpha; the engine's leaves it). Called in
 // uniform control flow: a `fragmentMain` may sample textures.
 fn materialAlpha(in: VsOut) -> f32 {
-  let r = records[in.draw];
+  let r = records[in.ids.x];
   let material = materials[r.materialIndex];
   let sampled = materialTexture(material, TEXTURE_BASE_COLOR, in.uv);
   var color = material.baseColor * r.color * in.color;
@@ -870,7 +872,7 @@ fn materialAlpha(in: VsOut) -> f32 {
 // The opaque pass's discards: alpha cutoff, blended surfaces' translucent
 // parts, mixed-LOD placeholders.
 fn cutOut(in: VsOut) {
-  let r = records[in.draw];
+  let r = records[in.ids.x];
   let material = materials[r.materialIndex];
   let alpha = materialAlpha(in);
   if ((material.flags & 12u) != 0u) {
@@ -1150,11 +1152,11 @@ struct Surface {
 fn fs(in: VsOut, @builtin(front_facing) frontFacing: bool) -> FsOut {
   let surface = shadeSurface(in, frontFacing, false);
   if (!cutOutInDepth &&
-      (materials[records[in.draw].materialIndex].flags & 8u) != 0u && surface.alpha < OPAQUE_ALPHA) {
+      (materials[records[in.ids.x].materialIndex].flags & 8u) != 0u && surface.alpha < OPAQUE_ALPHA) {
     discard;
   }
   var out: FsOut;
-  out.featureId = vec2u(in.feature & 0xffffu, in.feature >> 16u);
+  out.featureId = vec2u(in.ids.y & 0xffffu, in.ids.y >> 16u);
   if (surface.unlit) {
     // Unlit color is display-referred (photographs: globe imagery,
     // photogrammetry such as Google's tiles): it goes to the display target,
@@ -1194,7 +1196,7 @@ fn fsPoints(in: VsOut, @builtin(front_facing) frontFacing: bool) -> FsPointsOut 
   let covered = (1u << samples) - 1u;
   var out: FsPointsOut;
   out.mask = ((covered << turn) | (covered >> (4u - turn))) & 15u;
-  out.featureId = vec2u(in.feature & 0xffffu, in.feature >> 16u);
+  out.featureId = vec2u(in.ids.y & 0xffffu, in.ids.y >> 16u);
   if (surface.unlit) {
     out.color = vec4f(0.0);
     out.display = vec4f(surface.color, 1.0);
@@ -1209,7 +1211,7 @@ fn fsPoints(in: VsOut, @builtin(front_facing) frontFacing: bool) -> FsPointsOut 
 // screen's occlusion is that of the opaque surfaces behind them.
 // A fragment as custom shaders' `fragmentMain` sees it.
 fn fragmentInputOf(in: VsOut, geometric: vec3f) -> FragmentInput {
-  let r = records[in.draw];
+  let r = records[in.ids.x];
   cesiumAnchor = in.relPosition;
   return FragmentInput(
     in.positionMC,
@@ -1218,13 +1220,13 @@ fn fragmentInputOf(in: VsOut, geometric: vec3f) -> FragmentInput {
     geometric,
     in.uv,
     in.color * r.color,
-    in.feature,
+    in.ids.y,
     in.position.xy,
     view.time.x,
     fragmentAttributes(in),
     fragmentMetadata(in),
-    in.instanceIndex,
-    instanceValues(in.draw, in.instanceIndex),
+    in.ids.z,
+    instanceValues(in.ids.x, in.ids.z),
   );
 }
 
@@ -1232,7 +1234,7 @@ fn fragmentInputOf(in: VsOut, geometric: vec3f) -> FragmentInput {
 var<private> surfaceLight = true;
 
 fn shadeSurface(in: VsOut, frontFacing: bool, translucent: bool) -> Surface {
-  let r = records[in.draw];
+  let r = records[in.ids.x];
   let material = materials[r.materialIndex];
   let flags = material.flags;
 

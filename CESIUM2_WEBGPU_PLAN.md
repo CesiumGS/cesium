@@ -6007,6 +6007,25 @@ would resample them or need a virtual-texture page cache.
   so it renders garbage. A second hand-kept copy of a shader drifts; see the
   decision to make Slang the one source of engine shaders, and its
   migration (§3.4, "Slang-first, for real").
+- _Found: custom shaders' translucent layouts over 16 (r50 on)._ The
+  custom-shader page failed 22 of 51 cases from this increment on: the
+  built-in translucent layout was exactly 16, and a custom shader's
+  property textures (2) or texture uniforms add to it, 17–18. The
+  `layout budget` test never made a custom shader's layouts. Now the
+  moments are read-only storage textures in group 3 (their own limit, 4,
+  unused by fragments otherwise), so translucency adds one sampled
+  texture to the opaque layout's (the opaque depth): built-in 14, a
+  custom shader has the opaque layout's room but one. The format is in
+  the WGSL type, so RenderContext declares them (`momentBindings`); the
+  16-bit zeroth moment is `rgba16float` (`r16float` can't be storage).
+  The test now makes a metadata shader's and a two-texture shader's
+  layouts. Behind it, the antialiased lists (31716f59e7) take `sample_mask` and
+  `sample_index`, which count as inter-stage inputs: with a shader's
+  named values `fsListSamples` read 17. `VsOut`'s draw, feature and
+  instance are one flat `vec3u` (`ids`), so 9 locations, 4 named and 3
+  built-ins fit. And the VEC2 offset/scale by hand case is `close` like
+  the other offset/scale cases (one pixel a level apart). 51 of 51;
+  translucency 8 of 8, its FLIP unchanged.
 
 ## 14. Follow-ups
 
