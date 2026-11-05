@@ -10,13 +10,14 @@
 //    the WebAssembly build for runtime Slang (CustomShader.fromSlang, Dyno's
 //    Slang playground).
 // Nothing here is committed: both live outside version control.
-// Usage: npm run setup --workspace @cesium/next [-- --skip-build]
+// Usage: npm run setup --workspace @cesium/next [-- --skip-build] [--frames-span 2000-2050]
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { ensureRelease, releasesDirectory } from "../bench/suite/release.mjs";
+import { ensureFrameData, parseSpan } from "./frameData.mjs";
 import { ensureSlangc, ensureSlangWasm } from "./slangTools.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -64,3 +65,10 @@ for (const version of releases) {
 // The Slang toolchain: slangc (build time) and the WebAssembly build (runtime).
 console.log(`slangc: ${await ensureSlangc()}`);
 console.log(`slang-wasm: ${await ensureSlangWasm()}`);
+
+// The frames data: ephemeris excerpts, leap seconds, Earth orientation.
+const spanFlag = process.argv.indexOf("--frames-span");
+const framesSpan = parseSpan(
+  spanFlag >= 0 ? (process.argv[spanFlag + 1] ?? "") : "2000-2050",
+);
+await ensureFrameData({ span: framesSpan });

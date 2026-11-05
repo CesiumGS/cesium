@@ -32,17 +32,38 @@ export class EarthOrientationParameters {
   /** Last tabulated instant, UTC ms. */
   readonly last: number;
 
+  // Plain fields, not constructor parameter properties: scripts/frameData.mjs
+  // imports this file under Node's type stripping, which rejects those.
+  private readonly mjd: Float64Array;
+  private readonly x: Float64Array; // arcsec
+  private readonly y: Float64Array; // arcsec
+  private readonly dx: Float64Array; // arcsec
+  private readonly dy: Float64Array; // arcsec
+  private readonly ut: Float64Array; // UT1-UTC, s
+  private readonly ut1Tai: Float64Array; // UT1-UTC - DAT, s
+  private readonly dat: Float64Array; // TAI-UTC, s
+  private readonly predictedRow: Uint8Array;
+
   private constructor(
-    private readonly mjd: Float64Array,
-    private readonly x: Float64Array, // arcsec
-    private readonly y: Float64Array, // arcsec
-    private readonly dx: Float64Array, // arcsec
-    private readonly dy: Float64Array, // arcsec
-    private readonly ut: Float64Array, // UT1-UTC, s
-    private readonly ut1Tai: Float64Array, // UT1-UTC - DAT, s
-    private readonly dat: Float64Array, // TAI-UTC, s
-    private readonly predictedRow: Uint8Array,
+    mjd: Float64Array,
+    x: Float64Array,
+    y: Float64Array,
+    dx: Float64Array,
+    dy: Float64Array,
+    ut: Float64Array,
+    ut1Tai: Float64Array,
+    dat: Float64Array,
+    predictedRow: Uint8Array,
   ) {
+    this.mjd = mjd;
+    this.x = x;
+    this.y = y;
+    this.dx = dx;
+    this.dy = dy;
+    this.ut = ut;
+    this.ut1Tai = ut1Tai;
+    this.dat = dat;
+    this.predictedRow = predictedRow;
     this.first = (mjd[0]! - MJD_UNIX_EPOCH) * MS_PER_DAY;
     this.last = (mjd[mjd.length - 1]! - MJD_UNIX_EPOCH) * MS_PER_DAY;
   }
