@@ -22,6 +22,7 @@ import Mesh from "./Mesh.js";
 import MeshEditorModule from "./MeshEditorModule.js";
 
 /** @import { FrameState, GeometryReadSession, GeometrySource, Scene } from "@cesium/engine"; */
+/** @import { ComponentMask } from "@cesium/mesh-editor"; */
 
 // The attribute read from each source.
 const POSITION_ATTRIBUTE = new GeometryAttributeDescriptor({
@@ -34,6 +35,11 @@ const READ_OPTIONS = { attributes: [POSITION_ATTRIBUTE], primitives: true };
 // The components inactive meshes draw, so they stay visible. Wasm's policy
 // covers only active meshes.
 const INACTIVE_COMPONENTS = 1 << ComponentType.Face;
+
+// Faces should always be rendered in the pick pass, regardless of edit mode, so that
+// points and edges that are not visible (because they're behind a face) can't be picked.
+// Also, _something_ needs to be pickable in EditMode.NONE, in order to select an object to be active.
+const ALWAYS_PICKABLE_COMPONENTS = 1 << ComponentType.Face;
 
 /**
  * <div class="notice">
@@ -145,10 +151,14 @@ class MeshEditor {
     this.#wasmEditor.setMode(value);
     this.#mode = value;
 
-    const { renderableComponents } = this.#wasmEditor;
+    const { renderableComponents, selectableComponents } = this.#wasmEditor;
     for (const mesh of this.#meshes) {
       if (this.#wasmEditor.isMeshActive(mesh._key)) {
-        mesh._renderer.setShownComponents(renderableComponents);
+        MeshEditor.#setComponentMasks(
+          mesh,
+          renderableComponents,
+          selectableComponents,
+        );
       }
     }
 
@@ -179,7 +189,7 @@ class MeshEditor {
     const key = this.#wasmEditor.addMesh(this.#createWasmMesh(source));
 
     const mesh = new Mesh({ source, key, module: this.#module });
-    mesh._renderer.setShownComponents(INACTIVE_COMPONENTS);
+    MeshEditor.#setComponentMasks(mesh, INACTIVE_COMPONENTS, 0);
     this.#meshes.add(mesh);
 
     return mesh;
@@ -223,7 +233,12 @@ class MeshEditor {
     this.#checkMesh(mesh);
 
     this.#wasmEditor.setMeshActive(mesh._key);
-    mesh._renderer.setShownComponents(this.#wasmEditor.renderableComponents);
+    const { renderableComponents, selectableComponents } = this.#wasmEditor;
+    MeshEditor.#setComponentMasks(
+      mesh,
+      renderableComponents,
+      selectableComponents,
+    );
   }
 
   /**
@@ -238,7 +253,7 @@ class MeshEditor {
     this.#checkMesh(mesh);
 
     this.#wasmEditor.setMeshInactive(mesh._key);
-    mesh._renderer.setShownComponents(INACTIVE_COMPONENTS);
+    MeshEditor.#setComponentMasks(mesh, INACTIVE_COMPONENTS, 0);
   }
 
   /**
@@ -251,6 +266,24 @@ class MeshEditor {
     this.#checkMesh(mesh);
 
     return this.#wasmEditor.isMeshActive(mesh._key);
+  }
+
+  /**
+   * Sets which of a mesh's components to draw and pick. Components that are
+   * drawn but can't be selected, like edges in Face mode, aren't pickable, so
+   * they don't interfere with picking the selectable components (like vertices) around them.
+   *
+   * @param {Mesh} mesh The mesh.
+   * @param {ComponentMask} shownComponents The components to draw.
+   * @param {ComponentMask} selectableComponents The components that can be selected.
+   * @ignore
+   */
+  static #setComponentMasks(mesh, shownComponents, selectableComponents) {
+    const renderer = mesh._renderer;
+    renderer.setShownComponents(shownComponents);
+    renderer.setPickableComponents(
+      selectableComponents | ALWAYS_PICKABLE_COMPONENTS,
+    );
   }
 
   /**
