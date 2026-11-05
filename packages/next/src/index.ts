@@ -232,4 +232,8 @@ export { EarthOrientationParameters, type EopSample } from "./time/eop.ts";
 export { celestialToTerrestrial } from "./time/earthOrientation.ts";
 export { tdbMinusTt } from "./time/erfa/dtdb.ts";
 export { Ephemeris } from "./ephemeris/Ephemeris.ts";
-export { loadFrameData, type FrameData } from "./ephemeris/loadFrameData.ts";
+export {
+  loadFrameData,
+  type FrameData,
+  type FrameDataWarning,
+} from "./ephemeris/loadFrameData.ts";

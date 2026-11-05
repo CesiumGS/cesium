@@ -2,6 +2,17 @@ import { EarthOrientationParameters } from "../time/eop.ts";
 import { LeapSeconds } from "../time/leapSeconds.ts";
 import { Ephemeris } from "./Ephemeris.ts";
 
+/** A staleness notice from `loadFrameData`, by kind, with a message for people. */
+export interface FrameDataWarning {
+  /**
+   * `leapSecondsExpired`: the leap-second table is past its expiry, so a newly
+   * announced leap second would be missed. `eopEnded`: the EOP table ends
+   * before now, so later samples are degraded.
+   */
+  kind: "leapSecondsExpired" | "eopEnded";
+  message: string;
+}
+
 /** Everything the frames layer needs, loaded from the store `npm run setup` fills. */
 export interface FrameData {
   /**
@@ -16,7 +27,7 @@ export interface FrameData {
    * Staleness notices: the leap-second table is past its expiry, or the EOP
    * table ends before now so its samples are degraded. Empty when current.
    */
-  warnings: string[];
+  warnings: FrameDataWarning[];
 }
 
 interface ManifestEntry {
@@ -136,19 +147,21 @@ export async function loadFrameData(
   const ephemeris = Ephemeris.fromPacks(planets!, moon!);
 
   const now = Date.now();
-  const warnings: string[] = [];
+  const warnings: FrameDataWarning[] = [];
   if (leapSeconds.isExpired(now)) {
-    warnings.push(
-      `frames data: the leap-second table expired on ${new Date(leapSeconds.expires).toISOString().slice(0, 10)}; UTC conversions after a newly announced leap second would be off by a second. Re-run \`npm run setup\` to refresh it.`,
-    );
+    warnings.push({
+      kind: "leapSecondsExpired",
+      message: `frames data: the leap-second table expired on ${new Date(leapSeconds.expires).toISOString().slice(0, 10)}; UTC conversions after a newly announced leap second would be off by a second. Re-run \`npm run setup\` to refresh it.`,
+    });
   }
   if (earthOrientation.last < now) {
-    warnings.push(
-      `frames data: the Earth orientation table ends on ${new Date(earthOrientation.last).toISOString().slice(0, 10)}, before now; later instants use degraded samples. Re-run \`npm run setup\` to refresh it.`,
-    );
+    warnings.push({
+      kind: "eopEnded",
+      message: `frames data: the Earth orientation table ends on ${new Date(earthOrientation.last).toISOString().slice(0, 10)}, before now; later instants use degraded samples. Re-run \`npm run setup\` to refresh it.`,
+    });
   }
   for (const warning of warnings) {
-    console.warn(warning);
+    console.warn(warning.message);
   }
   return { leapSeconds, eop: earthOrientation, ephemeris, warnings };
 }

@@ -166,6 +166,21 @@ describe("Instant", () => {
     expect(worstTdb).toBeLessThan(5e-7);
   });
 
+  it("fromTdb round-trips 40 TDBs exactly or within 1 ulp", () => {
+    const ulp = (x: number) => 2 ** (Math.floor(Math.log2(Math.abs(x))) - 52);
+    let exact = 0;
+    for (let i = 0; i < 40; i++) {
+      // 1999 to 2051 in uneven steps, plus fractional seconds.
+      const et = -3.2e7 + i * 4.1e7 + i * i * 1234.5678 + 0.123456789;
+      const back = Instant.fromTdb(et).tdb();
+      expect(Math.abs(back - et)).toBeLessThanOrEqual(ulp(et));
+      if (back === et) {
+        exact++;
+      }
+    }
+    expect(exact).toBeGreaterThan(20);
+  });
+
   it("derives TAI and a two-part Julian date from TT", () => {
     const t = Instant.fromTt(123456.789);
     expect(t.tai()).toBe(t.tt - 32.184);

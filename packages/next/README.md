@@ -33,7 +33,9 @@ also fetches the data the frames layer needs, into `~/.cesium-bench/frames`
 
 - NAIF's `de440s.bsp` (planets) and `moon_pa_de440_200625.bpc` (lunar
   orientation), each checked against a SHA-256 pinned in the script;
-- IERS `Leap_Second.dat` (leap seconds), from `hpiers.obspm.fr`;
+- IERS `Leap_Second.dat` (leap seconds), from `hpiers.obspm.fr` (the runtime
+  also bundles NAIF's `naif0012.tls` table, `LeapSeconds.builtIn()`, and uses
+  the download only when it expires later);
 - `EOP-All.csv` (Earth orientation), from CelesTrak.
 
 NAIF's generic kernels are public, but what the runtime loads are packs,

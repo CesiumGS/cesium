@@ -58,6 +58,9 @@ export const MOON_PA_TO_ME: readonly number[] = (() => {
 
 /** An ISO time to the second for a TDB time, treating TT as UTC + 69.184 s (messages only). */
 function iso(tdb: number): string {
+  if (!Number.isFinite(tdb)) {
+    return String(tdb);
+  }
   const ms = 946_728_000_000 + (Instant.fromTt(tdb).tt - 69.184) * 1000;
   return `${new Date(ms).toISOString().slice(0, 19)}Z`;
 }
@@ -104,6 +107,17 @@ export class Ephemeris {
   /** From the planets pack (sun, emb, moon) and the lunar orientation pack (moonPa). */
   static fromPacks(planets: ArrayBuffer, moon: ArrayBuffer): Ephemeris {
     const find = (pack: ReturnType<typeof readPack>, name: string): Located => {
+      // Setup names a segment split in the source `name`, `name#2`, ...;
+      // reading across pieces is not implemented, so refuse rather than
+      // silently use the first piece's shorter span.
+      const pieces = pack.manifest.segments
+        .map((s) => s.name)
+        .filter((n) => n === name || n.startsWith(`${name}#`));
+      if (pieces.length > 1) {
+        throw new Error(
+          `ephemeris: the pack splits "${name}" into pieces (${pieces.join(", ")}); multi-piece segments are not supported yet`,
+        );
+      }
       const segment = pack.manifest.segments.find((s) => s.name === name);
       if (!segment) {
         throw new Error(`ephemeris: the pack has no "${name}" segment`);
@@ -124,6 +138,12 @@ export class Ephemeris {
       find(planetPack, "moon"),
       find(moonPack, "moonPa"),
     );
+  }
+
+  /** Whether the instant lies inside `span`, so the other methods will not throw for it. */
+  contains(instant: Instant): boolean {
+    const tdb = instant.tdb();
+    return tdb >= this.span[0] && tdb <= this.span[1];
   }
 
   /** The Sun's center. */
@@ -280,6 +300,7 @@ export class Ephemeris {
   /** The instant's TDB seconds, or an error when it lies outside the span. */
   private checked(instant: Instant): number {
     const tdb = instant.tdb();
+    // As contains(), without evaluating TDB - TT a second time.
     if (!(tdb >= this.span[0] && tdb <= this.span[1])) {
       throw new Error(
         `ephemeris: ${iso(tdb)} is outside the loaded span ${iso(this.span[0])}–${iso(this.span[1])} (npm run setup -- --frames-span)`,

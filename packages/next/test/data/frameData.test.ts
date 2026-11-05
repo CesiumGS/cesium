@@ -13,7 +13,7 @@ interface Entry {
   role: string;
   sha256: string;
   sourceUrl: string;
-  derivedFrom?: string;
+  sourceSha256?: string;
   credit?: string;
 }
 
@@ -60,7 +60,8 @@ describe("frames data store", () => {
     "the %s pack reads and covers 2000-2050",
     (role) => {
       const { manifest: pack, data } = readPack(bytes(entry(role).file));
-      expect(pack.sourceSha256).toBe(entry(role).derivedFrom);
+      expect(pack.sourceSha256).toBe(entry(role).sourceSha256);
+      expect(entry(role)).not.toHaveProperty("derivedFrom");
       expect(pack.segments.length).toBeGreaterThan(0);
       expect(data.length).toBeGreaterThan(0);
       const from = Date.parse(pack.span[0]);
