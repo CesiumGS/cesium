@@ -14,14 +14,14 @@ import cullWgsl from "../shaders/generated/cull.wgsl?raw";
 import pointCullWgsl from "../shaders/generated/pointCull.wgsl?raw";
 import splatWgsl from "../shaders/splat.wgsl?raw";
 import scatterWgsl from "../shaders/generated/scatter.wgsl?raw";
-import raycastWgsl from "../shaders/raycast.wgsl?raw";
+import raycastWgsl from "../shaders/generated/raycast.wgsl?raw";
 import opaqueWgsl from "../shaders/opaque.wgsl?raw";
 import presentWgsl from "../shaders/present.wgsl?raw";
 import overlayWgsl from "../shaders/overlay.wgsl?raw";
 import pickWgsl from "../shaders/generated/pick.wgsl?raw";
 import meterWgsl from "../shaders/meter.wgsl?raw";
 import adaptWgsl from "../shaders/adapt.wgsl?raw";
-import lightsWgsl from "../shaders/lights.wgsl?raw";
+import lightsWgsl from "../shaders/generated/lights.wgsl?raw";
 import depthRangeWgsl from "../shaders/generated/depthRange.wgsl?raw";
 import translucentWgsl from "../shaders/translucent.wgsl?raw";
 import compositeWgsl from "../shaders/composite.wgsl?raw";
@@ -227,7 +227,7 @@ export interface Pipelines extends SurfacePipelines {
   /** Scatter upload of table entries (`scatter.slang`). */
   scatter: GPUComputePipeline;
   scatterLayout: GPUBindGroupLayout;
-  /** Rays against draw geometry (`World.castRays`, `raycast.wgsl`). */
+  /** Rays against draw geometry (`World.castRays`, `raycast.slang`). */
   raycast: GPUComputePipeline;
   /** Average log luminance for automatic exposure (`meter.wgsl`). */
   meter: GPUComputePipeline;
@@ -1455,7 +1455,7 @@ async function createPipelines(
       label: "raycast",
       layout: "auto",
       compute: {
-        module: module("raycast", commonWgsl, raycastWgsl),
+        module: module("raycast", raycastWgsl),
         entryPoint: "main",
       },
     }),
@@ -1478,7 +1478,7 @@ async function createPipelines(
       label: "lights.assign",
       layout: "auto",
       compute: {
-        module: module("lights", commonWgsl, lightsWgsl),
+        module: module("lights", lightsWgsl),
         entryPoint: "assign",
       },
     }),

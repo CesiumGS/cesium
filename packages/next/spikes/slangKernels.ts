@@ -9,9 +9,13 @@ import {
 import commonReference from "./slang/reference/common.wgsl?raw";
 import cullReference from "./slang/reference/cull.wgsl?raw";
 import depthRangeReference from "./slang/reference/depthRange.wgsl?raw";
+import lightsReference from "./slang/reference/lights.wgsl?raw";
+import raycastReference from "./slang/reference/raycast.wgsl?raw";
 import scatterReference from "./slang/reference/scatter.wgsl?raw";
 import cullSlang from "../src/shaders/generated/cull.wgsl?raw";
 import depthRangeSlang from "../src/shaders/generated/depthRange.wgsl?raw";
+import lightsSlang from "../src/shaders/generated/lights.wgsl?raw";
+import raycastSlang from "../src/shaders/generated/raycast.wgsl?raw";
 import scatterSlang from "../src/shaders/generated/scatter.wgsl?raw";
 
 /**
@@ -27,6 +31,12 @@ interface Output {
   buffer: GPUBuffer;
   /** Its contents before the dispatch (default zeros). */
   initial?: Uint32Array;
+  /**
+   * For float results (non-negative, so their bits order as u32s): how
+   * many units in the last place may differ. Two compilers may order a
+   * dot product's sum differently; that is rounding, not a wrong port.
+   */
+  ulps?: number;
 }
 interface Case {
   name: string;
@@ -237,6 +247,136 @@ function cullTables(device: GPUDevice, instanced: boolean) {
   };
 }
 
+/**
+ * A view's light table (common LightTable): 512 lights in front of the
+ * camera within reach of some froxels, a 16 × 9 × 32 grid.
+ */
+function lightTable(device: GPUDevice) {
+  const dims = [16, 9, 32];
+  const count = 512;
+  const maxLights = 1024;
+  const clusterWords = dims[0]! * dims[1]! * dims[2]! * (1 + 16);
+  const bytes = 80 + maxLights * 64 + clusterWords * 4;
+  const data = new Float32Array(bytes / 4);
+  data.set([dims[0]!, dims[1]!, dims[2]!, count], 0);
+  // near 0.5 m, slices per unit of ln(z / near), tan(half fov) x and y.
+  data.set([0.5, 32 / Math.log(2000 / 0.5), 1.0, 0.5625], 4);
+  data.set([0, 0, 1, 2000], 8); // forward (and the grid's far end)
+  data.set([1, 0, 0, 0], 12); // right
+  data.set([0, 1, 0, 0], 16); // up
+  let seed = 5;
+  const random = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (let l = 0; l < count; l++) {
+    const o = 20 + l * 16;
+    const z = 1 + random() * 400;
+    data.set(
+      [(random() - 0.5) * z, (random() - 0.5) * z * 0.6, z, 5 + random() * 60],
+      o,
+    );
+    data.set([random() * 1000, random() * 1000, random() * 1000, 0], o + 4);
+  }
+  const table = buffer(device, data, GPUBufferUsage.STORAGE);
+  return {
+    groups: [[{ binding: 0, resource: { buffer: table } }]],
+    dispatch: [dims[0]!, dims[1]!] as [number, number],
+    outputs: [{ buffer: table, initial: new Uint32Array(data.buffer) }],
+  };
+}
+
+/**
+ * Rays at a mesh (World.castRays's inputs): a 1,024-triangle sheet,
+ * jittered, placed at the Earth's radius by its transform, and 256 rays
+ * down at it, each in 16 jobs of 64 triangles.
+ */
+function raycastInputs(device: GPUDevice) {
+  let seed = 3;
+  const random = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const side = 16;
+  // A continuous, jittered height field: triangles share their corners,
+  // so a ray at an edge hits the same height whichever side it takes.
+  const heights = Array.from(
+    { length: (side + 1) ** 2 },
+    () => (random() - 0.5) * 0.5,
+  );
+  const vertices = new Float32Array(side * side * 2 * 9);
+  let v = 0;
+  for (let y = 0; y < side; y++) {
+    for (let x = 0; x < side; x++) {
+      const corners = [
+        [x, y],
+        [x + 1, y],
+        [x, y + 1],
+        [x + 1, y],
+        [x + 1, y + 1],
+        [x, y + 1],
+      ];
+      for (const [cx, cy] of corners) {
+        vertices.set(
+          [cx! - side / 2, cy! - side / 2, heights[cy! * (side + 1) + cx!]!],
+          v,
+        );
+        v += 3;
+      }
+    }
+  }
+  const triangles = side * side * 2;
+  const indices = Uint32Array.from({ length: triangles * 3 }, (_, i) => i);
+  const record = new ArrayBuffer(DrawRecordLayout.size);
+  new Uint32Array(record)[DrawRecordLayout.indexCount / 4] = triangles * 3;
+  const transform = new Float32Array(TransformLayout.size / 4);
+  transform[TransformLayout.originHi / 4] = 6378137;
+  for (let c = 0; c < 3; c++) {
+    transform[TransformLayout.linear / 4 + c * 4 + c] = 1;
+  }
+  transform[TransformLayout.linear / 4 + 1] = 0.2; // a tilt
+  const rayCount = 256;
+  const rays = new Float32Array(rayCount * 12);
+  for (let r = 0; r < rayCount; r++) {
+    rays.set(
+      [6378137 + (random() - 0.5) * 14, (random() - 0.5) * 14, 10, 100],
+      r * 12,
+    );
+    rays.set([0, 0, 0, 0], r * 12 + 4);
+    rays.set([0, 0, -1, 0], r * 12 + 8);
+  }
+  const perRay = triangles / 64;
+  const jobs = new Uint32Array(rayCount * perRay * 4);
+  for (let r = 0; r < rayCount; r++) {
+    for (let k = 0; k < perRay; k++) {
+      jobs.set([r, 0, k * 64, 0xffffffff], (r * perRay + k) * 4);
+    }
+  }
+  const S = GPUBufferUsage.STORAGE;
+  const hits = buffer(device, rayCount * 4, S);
+  const entry = (binding: number, b: GPUBuffer) => ({
+    binding,
+    resource: { buffer: b },
+  });
+  return {
+    groups: [
+      [
+        entry(0, buffer(device, rays, S)),
+        entry(1, buffer(device, jobs, S)),
+        entry(2, buffer(device, new Uint8Array(record), S)),
+        entry(3, buffer(device, transform, S)),
+        entry(4, buffer(device, InstanceLayout.size, S)),
+        entry(5, buffer(device, vertices, S)),
+        entry(6, buffer(device, indices, S)),
+        entry(7, hits),
+      ],
+    ],
+    dispatch: [rayCount * perRay] as [number],
+    // The nearest hit's distance bits per ray, from "none" (+max).
+    outputs: [
+      {
+        buffer: hits,
+        initial: new Uint32Array(rayCount).fill(0x7f7fffff),
+        ulps: 4,
+      },
+    ],
+  };
+}
+
 const CASES: Case[] = [
   {
     name: "depthRange",
@@ -332,6 +472,19 @@ const CASES: Case[] = [
         outputs: [{ buffer: dst }],
       };
     },
+  },
+  {
+    name: "lights",
+    reference: `${commonReference}\n${lightsReference}`,
+    slang: lightsSlang,
+    entry: "assign",
+    setup: lightTable,
+  },
+  {
+    name: "raycast",
+    reference: `${commonReference}\n${raycastReference}`,
+    slang: raycastSlang,
+    setup: raycastInputs,
   },
   {
     name: "cullRecords",
@@ -566,12 +719,25 @@ async function runKernels(): Promise<Row[]> {
       resources.outputs,
     );
     let differ = 0;
+    let beyond = 0;
+    let worst = 0;
     a.forEach((words, k) => {
+      const ulps = resources.outputs[k]!.ulps ?? 0;
       for (let i = 0; i < words.length; i++) {
-        differ += words[i] === b[k]![i] ? 0 : 1;
+        if (words[i] !== b[k]![i]) {
+          const d = Math.abs(words[i]! - b[k]![i]!);
+          differ += 1;
+          beyond += d > ulps ? 1 : 0;
+          worst = Math.max(worst, d);
+        }
       }
     });
-    const same = differ === 0 ? "identical" : `${differ} words differ`;
+    const same =
+      differ === 0
+        ? "identical"
+        : beyond === 0
+          ? `${differ} words within ${worst} ulp`
+          : `${beyond} words differ (up to ${worst})`;
     // Warm both, then measure.
     await time(device, pipelines, groups, resources.dispatch, 10);
     const [wgsl, slang] = await time(
@@ -588,7 +754,7 @@ async function runKernels(): Promise<Row[]> {
       slang,
       ratio,
       same,
-      gate: differ > 0 ? "✗ differs" : ratio <= 1.05 ? "✓" : "✗ slower",
+      gate: beyond > 0 ? "✗ differs" : ratio <= 1.05 ? "✓" : "✗ slower",
     });
     render(rows);
   }
