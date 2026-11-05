@@ -550,7 +550,15 @@ done:
   chain (Slang emits nested branches: 4 of the 11 points).
 - **Large struct loads are split per field at each use** (deferred buffer
   loads): raycast was 30% slower until it read its draw record's fields
-  once.
+  once. **Stores too (r60):** a struct read, changed and written back
+  (`Instance inst = rows[i]; inst.flags |= 1u; rows[i] = inst;`) becomes a
+  load and a store per field, each with its own bounds clamp, where the
+  WGSL's copy was one wide access: the model pool's `hideRest` (one flag
+  bit) and `claimSlots` (three rows and a flag) ran 4 to 11% slower until
+  they wrote only their fields (`rows[i].flags |= 1u`), now within 4%.
+  Seen once their timings resolved: at 64 dispatches a pass these
+  few-µs kernels were a timer step or two (Chrome's 65.5 µs), and read
+  as even.
 - **Matrices:** a `float3x3(...)` or `float4x4(...)` literal takes rows,
   WGSL's `mat3x3f(...)` columns; one read from a buffer is the same
   matrix in both (Slang stores it column-major for WGSL). Ports keep the
@@ -569,8 +577,8 @@ done:
   work loses the device on the heaviest case (ao.gtao, which also
   happened at the commit where the whole gate had passed).
 
-Still WGSL: `common.wgsl` (step 7: test/layouts.test.ts reads it) and
-`surfaceVertex.wgsl`, by design (Slang emits no `@invariant`).
+Still WGSL: only `surfaceVertex.wgsl`, by design (Slang emits no
+`@invariant`).
 
 _Step 6 results (r59): the atmosphere in Slang._ `air.slang` (a module:
 the medium, the geometry, the tables' mappings and reads, the march),
@@ -605,6 +613,23 @@ passes and imagery's first view matches the previous run to the digit.
 - **A varying `nointerpolation` struct passed whole** to a helper is
   copied with its `@interpolate(flat)` onto a struct WGSL forbids it on;
   fragment entries read such inputs by field (sky.slang `starFragment`).
+
+_Step 7 results (r60): the spike retired._ Its port is the engine's
+source: the spike's opaque shader, its `IMaterial` extension point bound
+at link time and its cull kernel went (`spikes/slang.html`, its Slang
+and build script, its lab and bench entries), and so did `common.wgsl`
+(no WGSL kernel declares the shared structs any more; the layouts test
+keeps the reflection's own checks). Materials in Slang reach the engine
+through the custom shader contract instead (step 5): `ToonMaterial`, the
+spike's user material (posterized base color, a rougher finish), is
+`parity/slang/toon.slang`, a fragment stage, and the custom shader page
+checks it links: compiled at build time and at runtime, it draws what its
+WGSL twin draws, and differs from the default (54 of 54). Kept: the
+probes (`spikes/slang/probes/`, re-run per Slang release, step 1) and the
+gate with its references (`spikes/slang/reference/`): **the migration
+still counts as done only after the gate and the probes run on Windows
+(D3D12; an NVIDIA and an AMD or Intel GPU), and the loop guard (above) is
+checked on Tint's other writers there.**
 
 _Step 5 design (decided): the surface shaders as a precompiled unit,
 linked by name._ The custom-shader contract (`VertexInput`,

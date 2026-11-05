@@ -77,7 +77,6 @@ const suites = {
     `/parity/models.html?bench${process.env.MODELS_ONLY ? `&only=${process.env.MODELS_ONLY}` : ""}`,
     "runModels",
   ],
-  slang: ["/spikes/slang.html?bench", "runSlang"],
   "slang-probes": ["/spikes/slang-probes.html?bench", "runSlangProbes"],
   "slang-kernels": ["/spikes/slang-kernels.html?bench", "runSlangKernels"],
   baseline: ["/bench/baseline.html?bench", "runBaseline"],

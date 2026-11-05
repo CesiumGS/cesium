@@ -104,7 +104,7 @@ async function validate(
     : scoped?.message;
 }
 
-/** The engine's WGSL hi/lo difference (common.wgsl), as the reference. */
+/** The hand-written WGSL hi/lo difference the engine had (common.wgsl, before Slang), as the reference. */
 const REFERENCE = `
 fn hiLoDifference(aHi: vec3f, aLo: vec3f, bHi: vec3f, bLo: vec3f) -> vec3f {
   return vec3f(vec3i(aHi) - vec3i(bHi)) + (aLo - bLo);

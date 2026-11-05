@@ -151,17 +151,6 @@ fn cutPool()
     return;
 }
 
-struct Instance_0
-{
-     row0_0 : vec4<f32>,
-     row1_0 : vec4<f32>,
-     row2_0 : vec4<f32>,
-     record_0 : u32,
-     feature_0 : u32,
-     flags_0 : u32,
-     tint_0 : u32,
-};
-
 @compute
 @workgroup_size(64, 1, 1)
 fn claimSlots(@builtin(global_invocation_id) gid_2 : vec3<u32>)
@@ -216,25 +205,10 @@ fn claimSlots(@builtin(global_invocation_id) gid_2 : vec3<u32>)
         }
         var m_0 : mat4x4<f32> = (((mat4x4<f32>(parts_1[k_1].local_0.data_0[i32(0)][i32(0)], parts_1[k_1].local_0.data_0[i32(1)][i32(0)], parts_1[k_1].local_0.data_0[i32(2)][i32(0)], parts_1[k_1].local_0.data_0[i32(3)][i32(0)], parts_1[k_1].local_0.data_0[i32(0)][i32(1)], parts_1[k_1].local_0.data_0[i32(1)][i32(1)], parts_1[k_1].local_0.data_0[i32(2)][i32(1)], parts_1[k_1].local_0.data_0[i32(3)][i32(1)], parts_1[k_1].local_0.data_0[i32(0)][i32(2)], parts_1[k_1].local_0.data_0[i32(1)][i32(2)], parts_1[k_1].local_0.data_0[i32(2)][i32(2)], parts_1[k_1].local_0.data_0[i32(3)][i32(2)], parts_1[k_1].local_0.data_0[i32(0)][i32(3)], parts_1[k_1].local_0.data_0[i32(1)][i32(3)], parts_1[k_1].local_0.data_0[i32(2)][i32(3)], parts_1[k_1].local_0.data_0[i32(3)][i32(3)])) * ((((_S15) * (mat4x4<f32>(parts_1[k_1].inverse_0.data_0[i32(0)][i32(0)], parts_1[k_1].inverse_0.data_0[i32(1)][i32(0)], parts_1[k_1].inverse_0.data_0[i32(2)][i32(0)], parts_1[k_1].inverse_0.data_0[i32(3)][i32(0)], parts_1[k_1].inverse_0.data_0[i32(0)][i32(1)], parts_1[k_1].inverse_0.data_0[i32(1)][i32(1)], parts_1[k_1].inverse_0.data_0[i32(2)][i32(1)], parts_1[k_1].inverse_0.data_0[i32(3)][i32(1)], parts_1[k_1].inverse_0.data_0[i32(0)][i32(2)], parts_1[k_1].inverse_0.data_0[i32(1)][i32(2)], parts_1[k_1].inverse_0.data_0[i32(2)][i32(2)], parts_1[k_1].inverse_0.data_0[i32(3)][i32(2)], parts_1[k_1].inverse_0.data_0[i32(0)][i32(3)], parts_1[k_1].inverse_0.data_0[i32(1)][i32(3)], parts_1[k_1].inverse_0.data_0[i32(2)][i32(3)], parts_1[k_1].inverse_0.data_0[i32(3)][i32(3)])))))));
         var row_0 : u32 = parts_1[k_1].first_0 + slot_0;
-        var inst_0 : Instance_0;
-        inst_0.row0_0 = instanceRows_0[row_0].row0_0;
-        inst_0.row1_0 = instanceRows_0[row_0].row1_0;
-        inst_0.row2_0 = instanceRows_0[row_0].row2_0;
-        inst_0.record_0 = instanceRows_0[row_0].record_0;
-        inst_0.feature_0 = instanceRows_0[row_0].feature_0;
-        inst_0.flags_0 = instanceRows_0[row_0].flags_0;
-        inst_0.tint_0 = instanceRows_0[row_0].tint_0;
-        inst_0.row0_0 = m_0[i32(0)];
-        inst_0.row1_0 = m_0[i32(1)];
-        inst_0.row2_0 = m_0[i32(2)];
-        inst_0.flags_0 = ((inst_0.flags_0) & (u32(4294967294)));
-        instanceRows_0[row_0].row0_0 = inst_0.row0_0;
-        instanceRows_0[row_0].row1_0 = inst_0.row1_0;
-        instanceRows_0[row_0].row2_0 = inst_0.row2_0;
-        instanceRows_0[row_0].record_0 = inst_0.record_0;
-        instanceRows_0[row_0].feature_0 = inst_0.feature_0;
-        instanceRows_0[row_0].flags_0 = inst_0.flags_0;
-        instanceRows_0[row_0].tint_0 = inst_0.tint_0;
+        instanceRows_0[row_0].row0_0 = m_0[i32(0)];
+        instanceRows_0[row_0].row1_0 = m_0[i32(1)];
+        instanceRows_0[row_0].row2_0 = m_0[i32(2)];
+        instanceRows_0[row_0].flags_0 = ((instanceRows_0[row_0].flags_0) & (u32(4294967294)));
         k_1 = k_1 + u32(1);
     }
     return;
@@ -256,23 +230,7 @@ fn hideRest(@builtin(global_invocation_id) gid_3 : vec3<u32>)
         return;
     }
     var _S17 : u32 = j_0 / pool_0.slots_0;
-    var row_1 : u32 = parts_1[_S17].first_0 + slot_1;
-    var inst_1 : Instance_0;
-    inst_1.row0_0 = instanceRows_0[row_1].row0_0;
-    inst_1.row1_0 = instanceRows_0[row_1].row1_0;
-    inst_1.row2_0 = instanceRows_0[row_1].row2_0;
-    inst_1.record_0 = instanceRows_0[row_1].record_0;
-    inst_1.feature_0 = instanceRows_0[row_1].feature_0;
-    inst_1.flags_0 = instanceRows_0[row_1].flags_0;
-    inst_1.tint_0 = instanceRows_0[row_1].tint_0;
-    inst_1.flags_0 = ((inst_1.flags_0) | (u32(1)));
-    instanceRows_0[row_1].row0_0 = inst_1.row0_0;
-    instanceRows_0[row_1].row1_0 = inst_1.row1_0;
-    instanceRows_0[row_1].row2_0 = inst_1.row2_0;
-    instanceRows_0[row_1].record_0 = inst_1.record_0;
-    instanceRows_0[row_1].feature_0 = inst_1.feature_0;
-    instanceRows_0[row_1].flags_0 = inst_1.flags_0;
-    instanceRows_0[row_1].tint_0 = inst_1.tint_0;
+    instanceRows_0[parts_1[_S17].first_0 + slot_1].flags_0 = ((instanceRows_0[parts_1[_S17].first_0 + slot_1].flags_0) | (u32(1)));
     return;
 }
 

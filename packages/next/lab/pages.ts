@@ -249,16 +249,6 @@ export const HARNESSES: HarnessInfo[] = [
     load: () => import("../spikes/worker-main.ts").then((m) => m.harness),
   },
   {
-    id: "slang",
-    group: "spikes",
-    title: "Slang shaders",
-    description:
-      "Slang ports of the opaque shader and prep kernel, compiled to WGSL at build time (and at runtime when the WASM build is served).",
-    page: "/spikes/slang.html",
-    entry: "runSlang",
-    load: () => import("../spikes/slang.ts").then((m) => m.harness),
-  },
-  {
     id: "slang-probes",
     group: "spikes",
     title: "Slang feature probes",

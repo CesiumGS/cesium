@@ -39,7 +39,7 @@ export interface LightHandle {
 /** The froxel grid: tiles across, tiles down, slices in depth. */
 export const CLUSTERS = [32, 18, 32] as const;
 /**
- * Lights a froxel holds: its brightest there (common.wgsl
+ * Lights a froxel holds: its brightest there (common.slang
  * `CLUSTER_LIGHTS`); the fainter rest are dropped.
  */
 export const CLUSTER_LIGHTS = 16;

@@ -1,7 +1,7 @@
 // The hi/lo position as a type: private parts, one operation. A float64
 // position split into float32 pairs (`hi` whole meters), whose difference
 // subtracts the highs as integers, which relaxed math can't reassociate
-// (common.wgsl `hiLoDifference`, CESIUM2_WEBGPU_PLAN.md §3.3).
+// (the hand-written WGSL's `hiLoDifference`, CESIUM2_WEBGPU_PLAN.md §3.3).
 struct SplitPosition {
   private float3 hi;
   private float3 lo;

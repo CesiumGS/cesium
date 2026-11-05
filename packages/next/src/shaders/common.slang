@@ -2,9 +2,7 @@
 // their layouts (CESIUM2_WEBGPU_PLAN.md §3.4, "Slang-first, for real",
 // step 3). Kernels written in Slang `import common;`. The TypeScript
 // offsets are generated from this module's reflection (scripts/
-// slangBuild.mjs, `layouts.slang` → src/render/generated/layouts.ts), and
-// until the last WGSL kernel is ported, test/layouts.test.ts checks that
-// common.wgsl lays the same structs out the same way.
+// slangBuild.mjs, `layouts.slang` → src/render/generated/layouts.ts).
 module common;
 
 public struct View {

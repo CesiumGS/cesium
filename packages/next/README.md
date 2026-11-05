@@ -18,7 +18,8 @@ It also fetches the Slang toolchain, pinned to one release in
 `scripts/slangTools.mjs` and checked against the release's SHA-256:
 
 - the native `slangc` for this platform, into `~/.cesium-bench/slang-native`,
-  for build-time Slang (`spikes/slang/build.mjs`, `npm run slang`);
+  for build-time Slang (`npm run shaders`, the engine's; `npm run slang`, a
+  custom shader's stages);
 - the WebAssembly build, into `~/.cesium-bench/slang-wasm`, which the dev
   server serves at `/slang-wasm/` for runtime Slang (`CustomShader.fromSlang`,
   Dyno's Slang playground).
@@ -81,16 +82,22 @@ Pages on the dev server:
   `packages/next/.env.local` (gitignored) and open with `?asset=<id>`
   (`&pick=<property>`, `&zoom=<k>`), or run
   `ION_ASSET=<id> npm run bench -- tileset`
-- `/spikes/slang.html` — Slang ports of the shaders (surface materials bound
-  at link time), compared with the hand-written WGSL incl. the performance gate
+- `/spikes/slang-kernels.html` — each Slang port against the hand-written
+  WGSL it replaced (`spikes/slang/reference/`), timed and its outputs
+  compared: the Slang migration's performance gate
+- `/spikes/slang-probes.html` — each Slang feature the shaders need,
+  compiled by `slangc` and validated in WebGPU (re-run per Slang release)
 
-The Slang spike uses checked-in WGSL from `spikes/slang/generated/`. To
-regenerate it, run `node spikes/slang/build.mjs` (with the `slangc` that
-`npm run setup` fetched, or `SLANGC=/path/to/slangc`). Runtime compilation
-uses the WebAssembly build the dev server serves once setup has fetched it.
+The engine's shaders are Slang (`src/**/*.slang`), compiled to checked-in
+WGSL and reflection in `src/shaders/generated/` by `npm run shaders` (with
+the `slangc` that `npm run setup` fetched, or `SLANGC=/path/to/slangc`);
+`npm run shaders:check` fails if any is out of date. Runtime compilation
+(custom shaders' Slang stages) uses the WebAssembly build the dev server
+serves once setup has fetched it. `node scripts/dumpMsl.mjs module.wgsl
+entry…` prints the Metal source Chrome compiles from a module.
 
 `npm run bench` runs every page above in headless Edge via Playwright with
 WebGPU developer features (unquantized GPU timestamps) on the high-performance
 GPU. Pass suite names to run a subset (`precision indirect parity models
-slang baseline alloc tileset`); set `BENCH_CHANNEL` to use another installed browser and
+slang-kernels baseline alloc tileset`); set `BENCH_CHANNEL` to use another installed browser and
 `BENCH_HEADED=1` to watch.

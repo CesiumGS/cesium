@@ -22,12 +22,14 @@ import heightBandsSlang from "./slang/heightBands.slang?raw";
 import shearSlang from "./slang/shear.slang?raw";
 import uniformsSlang from "./slang/uniforms.slang?raw";
 import instancesSlang from "./slang/instances.slang?raw";
+import toonSlang from "./slang/toon.slang?raw";
 // Built from them with scripts/slangShader.mjs.
 import twistHeightWgsl from "./slang/twistHeight.wgsl?raw";
 import heightBandsWgsl from "./slang/heightBands.wgsl?raw";
 import shearWgsl from "./slang/shear.wgsl?raw";
 import uniformsWgsl from "./slang/uniforms.wgsl?raw";
 import instancesWgsl from "./slang/instances.wgsl?raw";
+import toonWgsl from "./slang/toon.wgsl?raw";
 
 const TEMPLATE = `
 <h1>Custom shaders</h1>
@@ -497,6 +499,18 @@ const TWIST_HEIGHT = new CustomShader({
 
 const SLANG_WASM = "/slang-wasm/slang-wasm.js";
 
+/**
+ * ToonMaterial (the Slang spike's user material, plan §3.4 step 7) in
+ * WGSL: what toon.slang must draw, at build time and at runtime.
+ */
+const TOON = new CustomShader({
+  label: "toon (WGSL)",
+  fragment: `fn fragmentMain(fsInput: FragmentInput, material: ptr<function, MaterialOutput>) {
+  (*material).baseColor = floor((*material).baseColor * 4.0 + 0.5) / 4.0;
+  (*material).roughness = max((*material).roughness, 0.6);
+}`,
+});
+
 const CASES: Case[] = [
   {
     name: "identity (both stages)",
@@ -553,6 +567,27 @@ const CASES: Case[] = [
     shader: () =>
       CustomShader.fromSlang(twistHeightSlang, {
         label: "twist + height (slang-wasm)",
+        slangUrl: SLANG_WASM,
+      }),
+  },
+  {
+    name: "ToonMaterial (WGSL)",
+    same: false,
+    shader: TOON,
+  },
+  {
+    name: "ToonMaterial: Slang, build time (vs WGSL)",
+    same: true,
+    against: TOON,
+    shader: new CustomShader({ label: "toon (slangc)", wgsl: toonWgsl }),
+  },
+  {
+    name: "ToonMaterial: Slang, runtime (vs WGSL)",
+    same: true,
+    against: TOON,
+    shader: () =>
+      CustomShader.fromSlang(toonSlang, {
+        label: "toon (slang-wasm)",
         slangUrl: SLANG_WASM,
       }),
   },

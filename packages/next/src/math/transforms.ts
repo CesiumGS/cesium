@@ -42,8 +42,8 @@ export function eastNorthUpToFixedFrame(
 
 /**
  * The high part of a float64 split into a float32 pair: a whole number of
- * meters, so the GPU subtracts two highs as integers (`hiLoDifference` in
- * common.wgsl). A float32 at or above 2^23 is already an integer; below
+ * meters, so the GPU subtracts two highs as integers (common.slang
+ * `SplitPosition.difference`). A float32 at or above 2^23 is already an integer; below
  * 2^24 the nearest integer is exact in float32. Valid to ±2^31 m (the
  * Moon's distance is 2^28.5).
  *
@@ -62,7 +62,7 @@ export function splitHigh(value: number): number {
  * Splits each float64 component into a float32 pair: `hi` a whole number
  * of meters (`splitHigh`), `lo = fround(v - hi)`. The GPU recovers small
  * camera-relative offsets as `(hiA - hiB as integers) + (loA - loB)`
- * (common.wgsl `hiLoDifference`) without ever forming the large value in
+ * (common.slang `SplitPosition.difference`) without ever forming the large value in
  * float32.
  */
 export function splitVec3(

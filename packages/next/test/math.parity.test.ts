@@ -152,7 +152,7 @@ describe("hi/lo split", () => {
       splitVec3(a, hiA, 0, loA, 0);
       splitVec3(b, hiB, 0, loB, 0);
       for (let i = 0; i < 3; i++) {
-        // Emulate the GPU (common.wgsl `hiLoDifference`): highs are whole
+        // Emulate the GPU (common.slang `SplitPosition.difference`): highs are whole
         // meters subtracted as integers, every float operation rounds.
         const f = Math.fround;
         expect(Number.isInteger(hiA[i]!)).toBe(true);

@@ -1514,6 +1514,9 @@ const VECTOR_CASES: Case[] = [
     slang: `${modelPoolSlang}\n${POOL_STYLE}`,
     entry: "claimSlots",
     layout: POOL_LAYOUT,
+    // A few µs: drawn more times a timed pass, past the timer's 65.5 µs
+    // steps (`REPEAT`).
+    repeat: 16 * REPEAT,
     setup(device) {
       // Which point gets which slot depends on the threads' order: one
       // slot a point, so the rows are compared as a set (sorted), and
@@ -1538,6 +1541,9 @@ const VECTOR_CASES: Case[] = [
     slang: `${modelPoolSlang}\n${POOL_STYLE}`,
     entry: "hideRest",
     layout: POOL_LAYOUT,
+    // A few µs: drawn more times a timed pass, past the timer's 65.5 µs
+    // steps (`REPEAT`).
+    repeat: 16 * REPEAT,
     setup(device) {
       const { group, counterBuffer, counters, instances } = poolInputs(
         device,

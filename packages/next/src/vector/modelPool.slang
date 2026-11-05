@@ -181,13 +181,12 @@ void claimSlots(uint3 gid : SV_DispatchThreadID) {
     Part part = parts[k];
     float4x4 m = mul(mul(part.inverse, placement), part.local);
     uint row = part.first + slot;
-    Instance inst = instanceRows[row];
+    // Only the fields it changes (see `hideRest`).
     // As layout.ts writeInstance: three rows of the affine part.
-    inst.row0 = m[0];
-    inst.row1 = m[1];
-    inst.row2 = m[2];
-    inst.flags = inst.flags & ~1u;
-    instanceRows[row] = inst;
+    instanceRows[row].row0 = m[0];
+    instanceRows[row].row1 = m[1];
+    instanceRows[row].row2 = m[2];
+    instanceRows[row].flags &= ~1u;
   }
 }
 
@@ -203,7 +202,7 @@ void hideRest(uint3 gid : SV_DispatchThreadID) {
     return;
   }
   uint row = parts[j / pool.slots].first + slot;
-  Instance inst = instanceRows[row];
-  inst.flags = inst.flags | 1u;
-  instanceRows[row] = inst;
+  // The one field: Slang copies a struct field by field (a load and a
+  // store each, seven for an `Instance`), slower than the WGSL's copy.
+  instanceRows[row].flags |= 1u;
 }
