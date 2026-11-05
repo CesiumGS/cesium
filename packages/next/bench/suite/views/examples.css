@@ -1,9 +1,10 @@
 /* Examples (views/Examples.tsx): the list, and an example's view with its panel. */
 
 /*
- * The gallery: a tile per example, its picture (captured from its last
- * run here, examples' thumbnails.ts) over its title, description and
- * labels; the whole tile is the link.
+ * The gallery: a StrataKit card per example (views/Examples.tsx), its
+ * picture (captured from its last run here, thumbnails.ts) over its title,
+ * description and labels. The card's surface, hover and focus are
+ * StrataKit's own, as the Lab's cards.
  */
 .examples-gallery {
   list-style: none;
@@ -11,59 +12,35 @@
   padding: 0;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: var(--stratakit-space-400, 16px);
+  gap: var(--stratakit-space-400);
 }
 .examples-gallery > li {
   display: flex;
 }
-.examples-tile {
+.examples-card {
   flex: 1;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border-radius: 10px;
-  border: 1px solid var(--stratakit-color-border-neutral-muted, #333);
-  background: var(--stratakit-color-bg-surface-primary, #1b1d21);
-  color: inherit;
-  text-decoration: none;
-  transition:
-    transform 120ms ease,
-    border-color 120ms ease,
-    box-shadow 120ms ease;
 }
-.examples-tile:hover,
-.examples-tile:focus-visible {
-  transform: translateY(-2px);
-  border-color: var(--stratakit-color-border-neutral-base, #555);
-  box-shadow: 0 8px 24px #0006;
-}
-.examples-tile:focus-visible {
-  outline: 2px solid var(--stratakit-color-border-accent-strong, #3b82f6);
-  outline-offset: 2px;
-}
-.examples-tile-picture {
-  display: block;
+.examples-card-media {
   aspect-ratio: 16 / 9;
   overflow: hidden;
-  background: #000;
 }
-.examples-tile-thumb {
+.examples-card-thumb {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 300ms ease;
 }
-.examples-tile:hover .examples-tile-thumb {
-  transform: scale(1.03);
-}
-.examples-tile-thumb.placeholder {
+.examples-card-thumb.placeholder {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: var(--stratakit-space-100);
 }
+/* On the placeholder's own dark gradient, in either color scheme. */
 .placeholder-initials {
   font-size: 2rem;
   font-weight: 600;
@@ -74,22 +51,18 @@
   font-size: 0.75rem;
   color: #ffffff88;
 }
-.examples-tile-body {
+.examples-card-content {
   display: flex;
   flex-direction: column;
-  gap: var(--stratakit-space-150, 6px);
-  padding: var(--stratakit-space-300, 12px) var(--stratakit-space-400, 16px)
-    var(--stratakit-space-400, 16px);
+  align-items: flex-start;
+  gap: var(--stratakit-space-200);
 }
-.examples-tile-body h3,
-.examples-tile-body p {
-  margin: 0;
-}
-.examples-tile-body p {
+.examples-card-content > p {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   overflow: hidden;
+  margin: 0;
 }
 .examples-labels {
   display: flex;
