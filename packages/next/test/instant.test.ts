@@ -50,6 +50,7 @@ describe("LeapSeconds", () => {
     expect(leap.taiMinusUtcAtTai(b + 36_000 - 1)).toBe(36);
     // 23:59:60.5 is TAI 36.5 s past the boundary: still the old offset.
     expect(leap.taiMinusUtcAtTai(b + 36_500)).toBe(36);
+    expect(leap.taiMinusUtcAtTai(b + 36_999)).toBe(36);
     expect(leap.taiMinusUtcAtTai(b + 37_000)).toBe(37);
     expect(leap.taiMinusUtcAtTai(Date.UTC(1972, 0, 1) + 10_000)).toBe(10);
   });
@@ -87,6 +88,43 @@ describe("Instant", () => {
     ]) {
       expect(Instant.fromUtc(ms, leap).toUtc(leap)).toBe(ms);
     }
+  });
+
+  it("round-trips UTC exactly at leap-second thresholds", () => {
+    for (const ms of [
+      Date.UTC(2016, 11, 31, 23, 59, 59, 500),
+      Date.UTC(2017, 0, 1),
+      Date.UTC(2015, 5, 30, 23, 59, 59, 999),
+      Date.UTC(2015, 6, 1),
+      Date.UTC(2016, 11, 31, 23, 59, 59, 999),
+    ]) {
+      expect(Instant.fromUtc(ms, leap).toUtc(leap)).toBe(ms);
+    }
+  });
+
+  it("toUtc holds at 23:59:59.999 inside the inserted second", () => {
+    // TT of 2017-01-01T00:00:00 UTC; the inserted second is the 1 s before it.
+    const newYear = Instant.fromUtc(Date.UTC(2017, 0, 1), leap).tt;
+    const last = Date.UTC(2017, 0, 1) - 1;
+    for (const back of [1, 0.5, 0.001]) {
+      expect(Instant.fromTt(newYear - back).toUtc(leap)).toBe(last);
+    }
+  });
+
+  it("toUtc is monotonic across the 2016 leap second", () => {
+    // A 6 s sweep of TT in 0.1 ms steps, from 23:59:57 to 00:00:02 UTC.
+    const newYear = Instant.fromUtc(Date.UTC(2017, 0, 1), leap).tt;
+    let previous = -Infinity;
+    let decreases = 0;
+    for (let k = -40_000; k <= 20_000; k++) {
+      const utc = Instant.fromTt(newYear + k * 1e-4).toUtc(leap);
+      if (utc < previous) {
+        decreases++;
+      }
+      previous = utc;
+    }
+    expect(decreases).toBe(0);
+    expect(previous).toBe(Date.UTC(2017, 0, 1, 0, 0, 2));
   });
 
   it("derives TAI and a two-part Julian date from TT", () => {
