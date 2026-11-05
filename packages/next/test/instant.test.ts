@@ -63,6 +63,32 @@ describe("LeapSeconds", () => {
     expect(leap.taiMinusUtc(Date.UTC(1972, 0, 1))).toBe(10);
   });
 
+  describe("builtIn (NAIF naif0012.tls)", () => {
+    const built = LeapSeconds.builtIn();
+
+    it("gives 37 s now and expires on 2027-06-28 (IERS Bulletin C)", () => {
+      expect(built.taiMinusUtc(Date.UTC(2026, 10, 5))).toBe(37);
+      expect(built.expires).toBe(Date.UTC(2027, 5, 28));
+      expect(built.isExpired(Date.UTC(2026, 10, 5))).toBe(false);
+      expect(LeapSeconds.builtIn()).toBe(built);
+    });
+
+    it("steps on the same dates as the IERS excerpt, 1972-2017", () => {
+      const rows = LEAP_DAT.split("\n").filter((l) => /^\s*\d/.test(l));
+      expect(rows).toHaveLength(28);
+      for (const row of rows) {
+        const mjd = Number(row.trim().split(/\s+/)[0]);
+        const start = (mjd - 40587) * 86_400_000;
+        for (const t of [start - 1, start, start + 43_200_000]) {
+          expect(built.taiMinusUtc(t)).toBe(leap.taiMinusUtc(t));
+          expect(built.taiMinusUtcAtTai(t + 37_000)).toBe(
+            leap.taiMinusUtcAtTai(t + 37_000),
+          );
+        }
+      }
+    });
+  });
+
   it("reports expiry from the file header", () => {
     expect(leap.expires).toBe(Date.UTC(2027, 5, 28));
     expect(leap.isExpired(Date.UTC(2027, 5, 29))).toBe(true);

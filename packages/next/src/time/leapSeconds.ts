@@ -1,4 +1,14 @@
+import { LEAP_TABLE } from "./leapTable.ts";
+
 const DAY_MS = 86_400_000;
+/**
+ * The built-in table's expiry. An LSK carries none, so this is the expiry
+ * IERS Bulletin C gave when naif0012.tls was last checked against it:
+ * 28 June 2027, from Bulletin C 72 (July 2026), as the store's
+ * Leap_Second.dat states. Move it with each new Bulletin C that announces no
+ * leap second; replace leapTable.ts when one is announced.
+ */
+const BUILT_IN_EXPIRES = Date.UTC(2027, 5, 28);
 /** The modified Julian date of 1970-01-01 (the Unix epoch). */
 const MJD_OF_UNIX_EPOCH = 40_587;
 
@@ -18,11 +28,11 @@ const MONTHS = [
 ];
 
 /**
- * The leap-second table: TAI-UTC as a step function of UTC. Built from the
- * IERS `Leap_Second.dat` (Bulletin C) because the table is only valid until
- * the file's expiry date, after which a new leap second may have been
- * announced; `expires` lets callers notice that instead of silently drifting
- * by a second.
+ * The leap-second table: TAI-UTC as a step function of UTC. `builtIn()` is
+ * NAIF's naif0012.tls, bundled; `fromIers` reads the IERS `Leap_Second.dat`
+ * (Bulletin C). A table is only valid until its expiry date, after which a
+ * new leap second may have been announced; `expires` lets callers notice
+ * that instead of silently drifting by a second.
  */
 export class LeapSeconds {
   /** UTC ms at which the table stops being authoritative. */
@@ -38,6 +48,22 @@ export class LeapSeconds {
     this.#starts = starts;
     this.#offsets = offsets;
     this.expires = expires;
+  }
+
+  static #builtIn: LeapSeconds | undefined;
+
+  /**
+   * The table bundled from NAIF's naif0012.tls (src/time/leapTable.ts), so
+   * UTC conversion needs no download. Its expiry is IERS Bulletin C's, kept
+   * by hand; a store's newer `Leap_Second.dat` supersedes it.
+   */
+  static builtIn(): LeapSeconds {
+    LeapSeconds.#builtIn ??= new LeapSeconds(
+      Float64Array.from(LEAP_TABLE, (r) => r[0]),
+      Float64Array.from(LEAP_TABLE, (r) => r[1]),
+      BUILT_IN_EXPIRES,
+    );
+    return LeapSeconds.#builtIn;
   }
 
   /**
