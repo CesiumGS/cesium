@@ -1,3 +1,4 @@
+import { trackTextures } from "./textureTracking.ts";
 import { Emitter } from "../core/Emitter.ts";
 import { checkLayouts, requiredLimitsFor, type LimitsTier } from "./limits.ts";
 
@@ -117,9 +118,13 @@ export class GpuDevice {
   }
 
   private watch(device: GPUDevice): void {
+    trackTextures(device);
     device.addEventListener("uncapturederror", (event) => {
       const error = (event as GPUUncapturedErrorEvent).error;
-      console.error(`[cesium/next] WebGPU error: ${error.message}`);
+      // Listened to (the engine's EngineErrors): logged there, once each.
+      if (!this.events.has("error")) {
+        console.error(`[cesium/next] WebGPU error: ${error.message}`);
+      }
       this.events.emit("error", error);
     });
     void device.lost.then(async (info) => {

@@ -5130,28 +5130,86 @@ them on content as you type.
     destroyed the imagery array while the world's bind group still named
     it, so every submit failed. It now unbinds the array (the placeholder
     again) first (test/slicePool.test.ts).
-- _Open: three design problems these bugs show._
-  - **Asset ownership is implicit.** `addModel` consumes part of a
-    caller-owned object (it closes the images) behind a reference-counted
-    cache keyed by identity. Options:
-    - explicit resource handles: `uploadModel(asset)` returns a
-      `ModelResource` that the caller places and releases, and the asset is
-      consumed at upload;
-    - or an option that keeps the CPU data (Unity's Read/Write).
-  - **No fault isolation.** One invalid resource or pipeline fails the
-    whole frame, which goes black, with only a console message. The engine
-    should catch this before submit and skip the bad draw, and report
-    engine errors through an event or the inspector.
-  - **Resetting between gallery items (and Sandcastle).** The gallery
-    keeps one viewer, and each example restores by hand what it changed:
-    controls, sun, credits, sky, background, render mode, globe. That's
-    easy to miss, and the globe swap is what exposed the bug above.
-    - The fix is isolation by construction: one shared `Engine` (device,
-      pipelines, workers: the expensive part), with a fresh `World` and
-      `Viewer` per example. That needs `Viewer.create({ engine })` and a
-      complete `destroy()`.
-    - 1.x Sandcastle gets the same isolation by recreating the Viewer in a
-      fresh iframe on every run.
+- _Three design problems these bugs showed, addressed (r53)._
+  - **Asset ownership: explicit handles.**
+    - `engine.loadModel(world, url)` and `engine.uploadModel(world, asset)`
+      return a `ModelResource` the caller owns. `model.place(options)` is
+      the only way to place, returning a `ModelPlacement` (was
+      `ModelInstance`).
+    - A model is freed once its handle is released and no placements
+      remain, so removing placements never frees a model still held. A
+      one-off is `using model = …; model.place(…)`, and the placement keeps
+      it until removed.
+    - Source data (decoded images) is released at upload unless
+      `releaseSourceData: false` (Filament's `releaseSourceData()`, Unity's
+      `markNoLongerReadable`). Uploading a released asset again throws,
+      saying why. The handle keeps only what placing needs (node matrices,
+      lights, feature tables), not the geometry. Bevy's `Handle<T>` and
+      Filament's `FilamentAsset` are the precedents.
+    - Placements are bound to their model's world, so a mismatched world
+      can't be expressed:
+      - `setTransform`, `setVisible`, `setInstance` (GPU instances; was
+        `engine.setModelInstance`);
+      - `setShader`, a live swap through `World.setDrawShader` (the draws
+        move between batches, nothing is placed again; the playground's
+        edits use it);
+      - `remove()`, idempotent; use after removal throws.
+        Both models and placements are `Disposable`.
+    - Each option lives with what it describes. `colorTransfer` and `axes`
+      moved to the model. Placements take `modelMatrix | at` and
+      `parent | heightReference` as discriminated unions. `collision` and
+      `underlay` are engine-internal.
+    - One source of truth per fact: `bounds()` follows the live transform
+      (the `center` and `radius` fields are gone), `bytes` is the model's,
+      and `draws` and `lights` are read-only.
+    - Leaks are visible. A `FinalizationRegistry` warns when a handle is
+      garbage-collected unreleased (unless its world was destroyed), and
+      the inspector's memory section lists models, held handles and leaks.
+    - Tiles upload, place and release, keeping the source data until the
+      placement succeeds so a capacity failure still retries. Vector layers
+      share one upload per model across their pools.
+  - **Fault isolation: errors reported, damage contained.**
+    - `engine.errors` and `engine.onError` replace console-only errors.
+      Kinds are shader, pipeline, resource, frame and device, each distinct
+      message kept once with a count. The inspector's Problems section
+      shows them.
+    - A custom shader or pipeline that fails already drew with the
+      engine's: it's reported now.
+    - The engine's device records each texture it destroys and each view's
+      texture (`gpu/textureTracking.ts`, instance properties on its own
+      objects, nothing global). A texture set binding a destroyed texture
+      has its batches skipped, and an imagery array destroyed while bound
+      is unbound. Either way the bad resource costs its draws, not the
+      frame.
+    - Each frame's submit runs in an error scope. A rejected frame is
+      reported (`stats.rejectedFrames`) and every world binds again from
+      its state (`World.rebind`).
+    - The tracking caught a real ordering slip at once: growing the imagery
+      array destroyed the old texture before binding the new one. Fixed,
+      with a test.
+  - **Gallery isolation: a viewer per example on one engine.**
+    - The gallery keeps one `Engine` (device, pipelines, workers). Each
+      example gets a fresh `Viewer` on it, `Viewer.create({ engine })`,
+      destroyed when the example is left: its world goes with everything in
+      it (`Engine.removeWorld` now removes the world's tilesets and views
+      too).
+    - A borrowed engine is never destroyed by the viewer, and a new viewer
+      resets the engine-wide settings it relies on (the sky; the sun and
+      render mode it sets anyway). `Engine.start` is idempotent.
+      `ExampleContext.scope` (a `DisposableStack`) is disposed after the
+      example's undo.
+    - The playground's restore code is gone.
+    - Sandcastle can work the same way: one engine per page, a viewer per
+      run.
+- _Playground details (r53)._
+  - **New:** starts a minimal shader, the model's own material, with the
+    contract's inputs described. It is one undoable edit.
+  - **Stage detection** (`slangStages`) now looks for definitions outside
+    comments. A template comment naming `vertexMain` had made the compile
+    wrapper call a stage that didn't exist.
+  - **Layout:** the side layout is two rounded cards with a gap (no border
+    line between the view and the panel), and the Preset and Model rows
+    share one label and control grid.
 - _Later._
   - Declared uniforms as sliders.
   - Sharing a shader by URL (the source compressed in the hash).
@@ -5421,6 +5479,39 @@ Bodies and engineering frames are one concept: a tree of frames (ICRF to a
 body's fixed frame to a model's engineering frame), rigid transforms in
 float64 along it, with the nonlinear ones (map projections) at the edges,
 resolved when tiles are made or when a point is measured.
+
+**Typed frames in the API (noted r53, with the model ownership API).** Today
+every matrix and position is a bare `Float64Array`. Precision is safe:
+float64 throughout, hi/lo and camera-relative on the GPU (§13.15). What the
+type doesn't say is which frame a value is in, and the frame tree above
+will multiply the frames in play:
+
+- ICRF;
+- each body's fixed frame (Earth-centered ECEF, the Moon's mean-Earth or
+  principal-axis frame);
+- east-north-up tangent frames at a place;
+- a parent transform's local frame (a tileset root, a node);
+- an iModel's local engineering coordinates, placed by its `ecefLocation`
+  or reprojected from its CRS;
+- a placement's own frame, where GPU instance matrices live.
+
+Passing an ECEF position where a parent-relative one is expected, or an
+iModel-local point as if it were Earth-centered, type-checks today and is
+off by thousands of kilometers. A frame tree is the fix: every frame a node
+(`Frame`, with its parent and float64 transform), and values carry their
+frame in the type, so converting is an explicit walk up and down the tree
+(`frame.toFixed(p)`, `a.transformTo(b)`), never an implicit reuse.
+
+- **What changes in the API.** Positions and matrices could be branded by
+  frame (`Fixed<Vec3>`, `Local<Mat4, F>`) or wrapped
+  (`{ frame, matrix }`). Placements would take a frame-tagged matrix
+  (`PlacementOptions.modelMatrix` today: Earth-fixed or relative to
+  `parent`, said only in the doc comment), and picks would return points
+  in each frame asked for (ECEF and the design's coordinates, as above).
+- **When.** Once a second body or engineering frames land: one frame
+  (Earth-fixed) plus parent-relative transforms hasn't caused a bug yet,
+  while the tree is what would make Moon content and iModel-local
+  measurement safe to write.
 
 **Design rule (r41): every option and API that involves the globe, the
 sky, light, heights or coordinates names its body, Earth by default.** A

@@ -1,3 +1,8 @@
+import {
+  onTextureDestroyed,
+  textureOf,
+  isDestroyed,
+} from "../gpu/textureTracking.ts";
 import { RangeAllocator } from "../gpu/RangeAllocator.ts";
 import { CapacityError } from "./CapacityError.ts";
 import { Slabs, type Slab } from "./Slabs.ts";
@@ -767,6 +772,15 @@ export class World {
   private imageryView: GPUTextureView;
   /** Bound while no imagery array is (no globe imagery in this world). */
   private readonly imageryPlaceholder: GPUTextureView;
+  /** Each texture set's (tracked) textures, for `textureDestroyed`. */
+  private readonly textureSetTextures: Array<GPUTexture[] | undefined> = [];
+  private readonly setsOfTexture = new WeakMap<GPUTexture, Set<number>>();
+  /**
+   * Texture sets binding a destroyed texture: their batches are skipped
+   * (a bind group naming a destroyed texture fails the whole submit).
+   */
+  private readonly brokenTextureSets = new Set<number>();
+  private readonly stopTracking: () => void;
   private readonly imagerySampler: GPUSampler;
 
   constructor(
@@ -934,6 +948,50 @@ export class World {
 
     this.addMaterial({}); // material 0: white, lit, untextured
     this.createTextureSet({}); // texture set 0: defaults
+    this.stopTracking = onTextureDestroyed((t) => this.textureDestroyed(t));
+  }
+
+  /**
+   * A texture the engine made was destroyed: texture sets still binding it
+   * are skipped from now on, and an imagery array bound still is unbound,
+   * each reported (`Engine.errors`), so one bad resource costs its draws,
+   * not the frame.
+   */
+  private textureDestroyed(texture: GPUTexture): void {
+    const sets = this.setsOfTexture.get(texture);
+    let broke = false;
+    for (const set of sets ?? []) {
+      if (this.textureSets[set] && !this.brokenTextureSets.has(set)) {
+        this.brokenTextureSets.add(set);
+        broke = true;
+        this.ctx.errors.report(
+          "resource",
+          `texture "${texture.label}" was destroyed while a texture set still binds it: that set's draws are skipped until it is removed`,
+        );
+      }
+    }
+    if (broke) {
+      this.bundle = undefined;
+      this.translucentDraws = undefined;
+      this.changedViews = ALL_VIEWS;
+      this.version++;
+    }
+    if (textureOf(this.imageryView) === texture) {
+      this.ctx.errors.report(
+        "resource",
+        `the imagery array "${texture.label}" was destroyed while bound: the world binds none`,
+      );
+      this.setImageryArray(undefined);
+    }
+  }
+
+  /**
+   * Binds everything again from the world's current state (groups and
+   * bundles): after a frame the GPU rejected, in case a group named
+   * something since replaced.
+   */
+  rebind(): void {
+    this.tablesReplaced();
   }
 
   /** Number of record slots in use, including hidden and freed-but-trailing slots. */
@@ -1631,6 +1689,11 @@ export class World {
     if (index > 0 && this.textureSets[index]) {
       this.textureSets[index] = undefined;
       this.textureSetEntries[index] = undefined;
+      for (const texture of this.textureSetTextures[index] ?? []) {
+        this.setsOfTexture.get(texture)?.delete(index);
+      }
+      this.textureSetTextures[index] = undefined;
+      this.brokenTextureSets.delete(index);
       this.freeTextureSets.push(index);
       for (const key of this.shaderGroups.keys()) {
         if (key.startsWith(`${index}|`)) {
@@ -1692,15 +1755,42 @@ export class World {
       layout: this.ctx.pipelines.textureSetLayout,
       entries: entries.filter((e) => e.binding < PROPERTY_TEXTURE_BINDING),
     });
-    const index = this.freeTextureSets.pop();
+    let index = this.freeTextureSets.pop();
     if (index !== undefined) {
       this.textureSets[index] = group;
       this.textureSetEntries[index] = entries;
-      return index;
+    } else {
+      this.textureSets.push(group);
+      this.textureSetEntries.push(entries);
+      index = this.textureSets.length - 1;
     }
-    this.textureSets.push(group);
-    this.textureSetEntries.push(entries);
-    return this.textureSets.length - 1;
+    this.trackTextureSet(index, entries);
+    return index;
+  }
+
+  /** Records a texture set's textures, for `textureDestroyed`. */
+  private trackTextureSet(index: number, entries: GPUBindGroupEntry[]): void {
+    const textures: GPUTexture[] = [];
+    for (const entry of entries) {
+      const texture = textureOf(entry.resource as GPUTextureView);
+      if (texture && !textures.includes(texture)) {
+        textures.push(texture);
+        let sets = this.setsOfTexture.get(texture);
+        if (!sets) {
+          sets = new Set();
+          this.setsOfTexture.set(texture, sets);
+        }
+        sets.add(index);
+        if (isDestroyed(texture)) {
+          this.brokenTextureSets.add(index);
+          this.ctx.errors.report(
+            "resource",
+            `texture "${texture.label}" was bound after it was destroyed: that set's draws are skipped`,
+          );
+        }
+      }
+    }
+    this.textureSetTextures[index] = textures;
   }
 
   addDraw(options: DrawOptions): DrawHandle {
@@ -3500,6 +3590,7 @@ export class World {
     for (const batch of order) {
       if (
         batch.items === 0 ||
+        this.brokenTextureSets.has(batch.textureSet) ||
         ((shadow || prepass || depth) && batch.mesh.topology === "line-list") ||
         // Point sets and instances shade outside the opaque pass's depth
         // prepass; point sets aren't ground either (their strips are the
@@ -3712,7 +3803,11 @@ export class World {
     let bound: GPUBindGroup | undefined;
     let slab = -1;
     for (const batch of this.batchList) {
-      if (batch.items === 0 || !this.translucent(batch)) {
+      if (
+        batch.items === 0 ||
+        !this.translucent(batch) ||
+        this.brokenTextureSets.has(batch.textureSet)
+      ) {
         continue;
       }
       if (batch.mesh.slab !== slab) {
@@ -4040,6 +4135,7 @@ export class World {
 
   destroy(): void {
     this.destroyed_ = true;
+    this.stopTracking();
     for (const chunk of this.uploadChunks) {
       chunk.buffer.destroy();
     }

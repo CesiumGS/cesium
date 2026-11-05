@@ -1,3 +1,4 @@
+import type { EngineError } from "../gpu/EngineErrors.ts";
 import { TerrainSource, type TerrainLoader } from "../globe/TerrainSource.ts";
 import type { TerrainTileInfo } from "../globe/quantizedMesh.ts";
 import { RequestScheduler } from "../streaming/RequestScheduler.ts";
@@ -131,6 +132,8 @@ export interface FrameStats {
   batches: number;
   /** Frames rendered since start (on demand: only frames something changed). */
   framesRendered: number;
+  /** Frames the GPU rejected (validation): each drew nothing. */
+  rejectedFrames: number;
   /** The last tick rendered nothing (on demand, nothing changed). */
   idle: boolean;
   /** Environments rebuilt from an atmosphere since start (`ViewLighting`). */
@@ -248,6 +251,7 @@ export class Engine {
     draws: 0,
     batches: 0,
     framesRendered: 0,
+    rejectedFrames: 0,
     idle: false,
     environmentBuilds: 0,
   };
@@ -448,6 +452,10 @@ export class Engine {
     this.gpu = gpu;
     this.ctx = ctx;
     this.sky = sky;
+    // Uncaptured device errors join the engine's (logged once each there).
+    gpu.events.on("error", (error) =>
+      ctx.errors.report("device", error.message),
+    );
     this.maxViews = maxViews;
     const device = ctx.device;
     this.pool = new TexturePool(device);
@@ -854,6 +862,21 @@ export class Engine {
 
   get capabilities() {
     return this.gpu.caps;
+  }
+
+  /**
+   * What went wrong, each distinct error once with a count: shaders and
+   * pipelines that failed (their draws use the engine's), textures
+   * destroyed while bound (their draws skipped), frames the GPU rejected
+   * (the worlds bound again), uncaptured device errors.
+   */
+  get errors(): readonly EngineError[] {
+    return this.ctx.errors.all;
+  }
+
+  /** Hears every error the engine reports; returns the unsubscribe. */
+  onError(listener: (error: EngineError) => void): () => void {
+    return this.ctx.errors.on(listener);
   }
 
   /**
@@ -1265,7 +1288,17 @@ export class Engine {
   }
 
   /** Removes a world from the engine and frees its GPU resources. */
+  /**
+   * Removes a world with everything in it: its tilesets and the views
+   * that draw it go too, then its GPU resources.
+   */
   removeWorld(world: World): void {
+    for (const tileset of this.tilesets.filter((t) => t.world === world)) {
+      this.removeTileset(tileset);
+    }
+    for (const view of this.views.filter((v) => v.world === world)) {
+      this.removeView(view);
+    }
     const index = this.worlds.indexOf(world);
     if (index >= 0) {
       this.worlds.splice(index, 1);
@@ -1534,11 +1567,27 @@ export class Engine {
 
   /** Runs the frame loop with requestAnimationFrame until `stop()`. */
   start(): void {
+    // Once: several viewers may share the engine, each starting it.
+    if (this.running) {
+      return;
+    }
+    this.running = true;
     const tick = () => {
       this.tick();
       this.frameHandle = requestAnimationFrame(tick);
     };
     this.frameHandle = requestAnimationFrame(tick);
+  }
+
+  private frameRejected(error: GPUError): void {
+    this.stats.rejectedFrames++;
+    this.ctx.errors.report(
+      "frame",
+      `the GPU rejected a frame, which drew nothing: ${error.message}`,
+    );
+    for (const world of this.worlds) {
+      world.rebind();
+    }
   }
 
   private tick(): void {
@@ -1716,8 +1765,10 @@ export class Engine {
   }
 
   stop(): void {
+    this.running = false;
     cancelAnimationFrame(this.frameHandle);
   }
+  private running = false;
 
   /** Renders every enabled view now, whatever the render mode. */
   renderFrame(): void {
@@ -1914,7 +1965,15 @@ export class Engine {
     }
     this.timer.endFrame(encoder);
     this.commandBuffers[0] = encoder.finish();
+    // A rejected submit draws nothing: report it and bind the worlds again
+    // from their state, rather than repeat a black frame unexplained.
+    device.pushErrorScope("validation");
     device.queue.submit(this.commandBuffers);
+    void device.popErrorScope().then((error) => {
+      if (error) {
+        this.frameRejected(error);
+      }
+    });
     this.timer.afterSubmit();
     this.pool.endFrame();
     if (this.picks.length > 0) {

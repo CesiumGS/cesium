@@ -17,6 +17,11 @@ export class Emitter<Events extends object> {
     return () => set.delete(listener as Listener<never>);
   }
 
+  /** Whether anything listens to `name`. */
+  has<K extends keyof Events>(name: K): boolean {
+    return (this.listeners.get(name)?.size ?? 0) > 0;
+  }
+
   emit<K extends keyof Events>(name: K, payload: Events[K]): void {
     const set = this.listeners.get(name);
     if (!set) {

@@ -22,6 +22,7 @@ import {
   Clock,
   EYE,
   Ellipsoid,
+  DEFAULT_SKY,
   Engine,
   GlobeController,
   InspectController,
@@ -74,11 +75,11 @@ export interface ViewerOptions {
    */
   suspendPresentation?: boolean;
   /**
-   * Options for the viewer's engine (`Engine.create`): its device's limits
-   * tier (`limits: "minimum"` shows what the smallest device would), power
-   * preference and so on.
+   * The engine: options for one of the viewer's own (destroyed with it),
+   * or an engine to share (several viewers on one device, pipelines and
+   * workers; destroying the viewer removes only its world and views).
    */
-  engine?: EngineOptions;
+  engine?: EngineOptions | Engine;
   /**
    * The globe: the WGS84 ellipsoid (default), Cesium World Terrain (ion
    * asset 1), or none.
@@ -259,9 +260,15 @@ export class Viewer {
     engine: Engine,
     options: ViewerOptions,
     early: EarlyEndpoints = {},
+    private readonly ownsEngine = true,
   ) {
     this.early = early;
     this.engine = engine;
+    if (!ownsEngine) {
+      // A shared engine's own settings as a new viewer expects them, not
+      // as the last viewer left them (the sun and render mode follow).
+      engine.environment.setSky(DEFAULT_SKY);
+    }
     this.policy = options.policy ?? "budgeted";
     this.globeKind = options.globe ?? "ellipsoid";
     this.accessToken = options.accessToken;
@@ -432,11 +439,14 @@ export class Viewer {
     // Settled here so a failure surfaces where it is used, not unhandled.
     early.imagery?.catch(() => {});
     early.terrain?.catch(() => {});
+    const shared =
+      options.engine instanceof Engine ? options.engine : undefined;
     return new Viewer(
       container,
-      await Engine.create(options.engine),
+      shared ?? (await Engine.create(options.engine as EngineOptions)),
       options,
       early,
+      !shared,
     );
   }
 
@@ -1098,7 +1108,13 @@ export class Viewer {
     this.time_?.dispose();
     this.secondController?.dispose();
     this.controller.dispose();
-    this.engine.destroy();
+    if (this.ownsEngine) {
+      this.engine.destroy();
+    } else {
+      // Its world with everything in it (tilesets, the views drawing it).
+      this.engine.removeWorld(this.world);
+      this.target.destroy();
+    }
     this.canvas.remove();
   }
 

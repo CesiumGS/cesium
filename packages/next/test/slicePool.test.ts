@@ -37,3 +37,23 @@ describe("SlicePool", () => {
     expect(log).not.toContain("destroy");
   });
 });
+
+describe("SlicePool growth", () => {
+  beforeAll(() => installGpuGlobals());
+
+  it("binds the grown array before destroying the old one", () => {
+    const log: string[] = [];
+    const world = {
+      setImageryArray: (view: unknown) => {
+        log.push(view === undefined ? "unbind" : "bind");
+      },
+    } as unknown as World;
+    const device = fakeDevice({});
+    const pool = SlicePool.acquire(device, world, 256, 1);
+    const first = pool.texture;
+    first.destroy = () => void log.push("destroy old");
+    log.length = 0;
+    SlicePool.acquire(device, world, 256, 8); // grows
+    expect(log).toEqual(["bind", "destroy old"]);
+  });
+});

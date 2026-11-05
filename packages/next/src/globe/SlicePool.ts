@@ -138,14 +138,16 @@ export class SlicePool {
       }
       this.device.queue.submit([encoder.finish()]);
     }
-    old.destroy();
     for (let i = target - 1; i >= oldCapacity; i--) {
       this.free.push(i);
     }
     this.capacity = target;
+    // The new array bound before the old is destroyed: never a bind group
+    // naming a destroyed texture, even between two calls.
     this.world.setImageryArray(
       this.texture.createView({ dimension: "2d-array" }),
     );
+    old.destroy();
   }
 
   private create(layers: number): GPUTexture {

@@ -132,12 +132,22 @@ export interface SlangStages {
   fragment: boolean;
 }
 
-/** Which stages a Slang source defines. */
+/**
+ * Which stages a Slang source defines: a `void vertexMain(` or
+ * `void fragmentMain(` outside comments (a comment naming a stage, as a
+ * template's, defines nothing).
+ */
 export function slangStages(source: string): SlangStages {
+  const code = withoutComments(source);
   return {
-    vertex: /\bvertexMain\s*\(/.test(source),
-    fragment: /\bfragmentMain\s*\(/.test(source),
+    vertex: /\bvoid\s+vertexMain\s*\(/.test(code),
+    fragment: /\bvoid\s+fragmentMain\s*\(/.test(code),
   };
+}
+
+/** C-style source without its `//` and `/* *\/` comments. */
+export function withoutComments(source: string): string {
+  return source.replace(/\/\*[\s\S]*?\*\/|\/\/[^\n]*/g, " ");
 }
 
 /**

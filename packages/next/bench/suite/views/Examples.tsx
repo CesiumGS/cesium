@@ -17,20 +17,22 @@ import { Icon } from "@stratakit/mui";
 import { getRouteApi, Link as RouterLink } from "@tanstack/react-router";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { EXAMPLES } from "../../../examples/index.ts";
-import { Viewer, type GlobeKind } from "../../../widgets/index.ts";
+import { Engine } from "../../../src/index.ts";
+import { Viewer } from "../../../widgets/index.ts";
 import { ionToken } from "../ionToken.ts";
 import { limitsTier } from "../limitsTier.ts";
 import { Empty, Page, Section } from "./common.tsx";
 
 /**
  * Examples (plan §13.12): what 2.0 is for, one feature or use case each,
- * with its source. The example page keeps one viewer while examples come
- * and go in it (examples/types.ts has the contract).
+ * with its source. The example page keeps one engine while examples come
+ * and go, each in a viewer of its own on it (examples/types.ts has the
+ * contract).
  */
 
 const exampleRoute = getRouteApi("/examples/$id");
 
-/** Instance rows for the gallery's viewer: 100,000 tracks of a few parts. */
+/** Instance rows for each example's viewer: 100,000 tracks of a few parts. */
 const MAX_INSTANCES = 1 << 20;
 
 export function Examples() {
@@ -101,8 +103,7 @@ export function ExamplePage() {
   const info = EXAMPLES.find((x) => x.id === id);
   const host = useRef<HTMLDivElement>(null);
   const panel = useRef<HTMLDivElement>(null);
-  const globe = useRef<GlobeKind>(undefined as never);
-  const [viewer, setViewer] = useState<Viewer>();
+  const [engine, setEngine] = useState<Engine>();
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string>();
   const [showSource, setShowSource] = useState(false);
@@ -127,37 +128,23 @@ export function ExamplePage() {
     });
   const exists = !!info;
 
-  // One viewer while the page is open, on the first example's globe.
+  // One engine while the page is open (the device, pipelines and
+  // workers, the costly part); each example gets a viewer of its own on
+  // it, destroyed when the example is left, so nothing one example changed
+  // reaches the next (Sandcastle gets the same from a fresh iframe).
   useEffect(() => {
-    if (!exists || !host.current) {
+    if (!exists) {
       return;
     }
     let cancelled = false;
-    let made: Viewer | undefined;
-    globe.current = info.globe;
-    const token = ionToken();
-    Viewer.create(host.current, {
-      engine: { limits: limitsTier() },
-      // Suspended until the first example has set its scene up: no frames
-      // of the whole-Earth start (Viewer `suspendPresentation`).
-      suspendPresentation: true,
-      globe: info.globe,
-      maxInstances: MAX_INSTANCES,
-      // Frame rate, timings, memory; top left (examples' panels are top right).
-      inspector: {
-        storageKey: "dyno.examples.inspector",
-        placement: "top-left",
-      },
-      ...(token ? { accessToken: token } : {}),
-    }).then(
-      (v) => {
+    let made: Engine | undefined;
+    Engine.create({ limits: limitsTier() }).then(
+      (e) => {
         if (cancelled) {
-          v.destroy();
+          e.destroy();
         } else {
-          made = v;
-          setViewer(v);
-          // For the console, as the Viewer page's `dynoViewer`.
-          Object.assign(globalThis, { dynoExamplesViewer: v });
+          made = e;
+          setEngine(e);
         }
       },
       (e) => !cancelled && setError(message(e)),
@@ -165,43 +152,60 @@ export function ExamplePage() {
     return () => {
       cancelled = true;
       made?.destroy();
-      setViewer(undefined);
+      setEngine(undefined);
     };
-    // The viewer outlives example switches.
   }, [exists]);
 
-  // The example: run in the viewer, undone when left. A layout effect, so
-  // the switch (the last example undone, the canvas hidden) happens before
-  // the browser paints the new route, not a frame or two after it.
+  // The example: a viewer of its own, run in it, and everything undone
+  // when left (its undo, its scope, then the viewer with its world). A
+  // layout effect, so the last example's canvas is gone before the browser
+  // paints the new route; the new canvas shows once its first frame is
+  // drawn (created with `suspendPresentation`).
   useLayoutEffect(() => {
-    if (!viewer || !info || !panel.current) {
+    if (!engine || !info || !panel.current || !host.current) {
       return;
     }
     const controller = new AbortController();
     const { signal } = controller;
+    const scope = new DisposableStack();
+    let viewer: Viewer | undefined;
     let dispose: (() => void) | undefined;
     setError(undefined);
     setRunning(true);
     const box = panel.current;
-    // Nothing shows while the example sets its scene up (its globe,
-    // content, framing), and not the last example's frame either: the
-    // canvas is hidden, the loading overlay on the stage's background.
-    const resume = viewer.suspendPresentation({ hide: true });
+    const stage = host.current;
+    const token = ionToken();
     void (async () => {
       try {
-        if (globe.current !== info.globe) {
-          globe.current = info.globe;
-          await viewer.setGlobe(info.globe);
+        const v = await Viewer.create(stage, {
+          engine,
+          suspendPresentation: true,
+          globe: info.globe,
+          maxInstances: MAX_INSTANCES,
+          // Frame rate, timings, memory; top left (panels are top right).
+          inspector: {
+            storageKey: "dyno.examples.inspector",
+            placement: "top-left",
+          },
+          ...(token ? { accessToken: token } : {}),
+        });
+        if (signal.aborted) {
+          v.destroy();
+          return;
         }
+        viewer = v;
+        // For the console, as the Viewer page's `dynoViewer`.
+        Object.assign(globalThis, { dynoExamplesViewer: v });
         const module = await info.load();
         if (signal.aborted) {
           return;
         }
         const undo = await module.run({
-          viewer,
+          viewer: v,
           panel: box,
-          accessToken: ionToken(),
+          accessToken: token,
           signal,
+          scope,
         });
         if (signal.aborted) {
           undo();
@@ -213,8 +217,7 @@ export function ExamplePage() {
           setError(message(e));
         }
       } finally {
-        resume();
-        viewer.resumePresentation();
+        viewer?.resumePresentation();
         if (!signal.aborted) {
           setRunning(false);
         }
@@ -222,11 +225,12 @@ export function ExamplePage() {
     })();
     return () => {
       controller.abort();
-      resume();
       dispose?.();
+      scope.dispose();
       box.replaceChildren();
+      viewer?.destroy();
     };
-  }, [viewer, info]);
+  }, [engine, info]);
 
   useEffect(() => {
     if (!showSource || !info) {

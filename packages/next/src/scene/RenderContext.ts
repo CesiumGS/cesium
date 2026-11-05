@@ -1,3 +1,4 @@
+import { EngineErrors } from "../gpu/EngineErrors.ts";
 import type { Capabilities } from "../gpu/GpuDevice.ts";
 import { MipGenerator } from "../gpu/MipGenerator.ts";
 import { Environment } from "../gpu/Environment.ts";
@@ -259,6 +260,8 @@ export interface Defaults {
 /** Device-level state shared by the engine, worlds and views. */
 export interface RenderContext {
   device: GPUDevice;
+  /** The engine's errors (`Engine.errors`), with what it did about each. */
+  errors: EngineErrors;
   caps: Capabilities;
   targets: typeof SCENE_TARGETS;
   pipelines: Pipelines;
@@ -424,12 +427,14 @@ export async function createRenderContext(
     [1, 1],
   );
   const whiteView = white.createView();
+  const errors = new EngineErrors();
   return {
     device,
+    errors,
     caps,
     targets: SCENE_TARGETS,
     pipelines,
-    shaders: new ShaderCache((shader) => pipelines.surface(shader)),
+    shaders: new ShaderCache((shader) => pipelines.surface(shader), errors),
     shaderBindings: new ShaderBindings(device, { whiteView }, mips),
     defaults: {
       whiteView,

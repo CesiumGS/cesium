@@ -102,8 +102,14 @@ export function engineSnapshot(
     },
   };
   const warnings = [...new Set(tilesets.flatMap((t) => [...t.warnings]))];
-  if (warnings.length > 0) {
-    out.problems = { errors: [], warnings };
+  // The engine's errors (`Engine.errors`), newest first, with their counts.
+  const errors = [...engine.errors]
+    .reverse()
+    .map(
+      (e) => `${e.kind}: ${e.message}${e.count > 1 ? ` (×${e.count})` : ""}`,
+    );
+  if (warnings.length > 0 || errors.length > 0) {
+    out.problems = { errors, warnings };
   }
 
   if (tilesets.length > 0) {

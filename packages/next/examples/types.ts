@@ -3,14 +3,24 @@ import type { GlobeKind, Viewer } from "../widgets/index.ts";
 /**
  * Examples (plan §13.12): what users and stakeholders see, one per
  * feature or use case. Each is a module under `examples/<slug>/` whose
- * `run` builds its scene in the gallery's viewer and returns what undoes
- * it; the gallery (Dyno's Examples) keeps one viewer while examples come
- * and go, and shows each one's source. The shape stays small so an
+ * `run` builds its scene in a viewer of its own and returns what undoes
+ * it; the gallery (Dyno's Examples) keeps one engine while examples come
+ * and go, each in a fresh viewer on it, and shows each one's source. The shape stays small so an
  * example can move to Sandcastle or a page of its own.
  */
 export interface ExampleContext {
-  /** The gallery's viewer, its globe set as the example asks (`globe`). */
+  /**
+   * A viewer of the example's own (on the gallery's shared engine), its
+   * globe as the example asks (`globe`): destroyed when the example is
+   * left, with everything in its world, so an example needn't restore
+   * what it changed in it.
+   */
   viewer: Viewer;
+  /**
+   * Disposed when the example is left, after its undo: `scope.use(...)`
+   * anything disposable it makes (model handles, placements).
+   */
+  scope: DisposableStack;
   /** A panel over the view for the example's controls and readouts. */
   panel: HTMLElement;
   /** ion access token the gallery resolved, if any. */

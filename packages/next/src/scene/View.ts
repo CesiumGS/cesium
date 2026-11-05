@@ -56,6 +56,14 @@ export class CanvasTarget implements RenderTarget {
   /** Fixed pixel ratio, or undefined to follow devicePixelRatio. */
   fixedPixelRatio: number | undefined;
 
+  /** Releases the canvas's context (its textures) from the device. */
+  destroy(): void {
+    this.context?.unconfigure();
+    this.context = undefined;
+    this.configuredFor = undefined;
+    this.texture = undefined;
+  }
+
   /** Drawing-buffer pixels per CSS pixel (1 for an `OffscreenCanvas`). */
   get pixelRatio(): number {
     return "clientWidth" in this.canvas

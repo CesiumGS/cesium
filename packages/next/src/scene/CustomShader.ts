@@ -1,6 +1,7 @@
 import { attributeHash, metadataKey } from "../render/layout.ts";
 import {
   SLANG_STUB_ENTRY,
+  withoutComments,
   type InstanceType,
   type NamedDeclarations,
   type NamedType,
@@ -394,8 +395,10 @@ export class CustomShader {
   constructor(options: CustomShaderOptions) {
     if (options.wgsl !== undefined) {
       const wgsl = options.wgsl;
+      // Outside comments: a comment naming a stage defines nothing.
+      const code = withoutComments(wgsl);
       const defines = (stage: string) =>
-        new RegExp(`\\bfn\\s+${stage}\\s*\\(`).test(wgsl);
+        new RegExp(`\\bfn\\s+${stage}\\s*\\(`).test(code);
       this.code = [
         wgsl,
         defines("vertexMain") ? "" : DEFAULT_VERTEX_MAIN,

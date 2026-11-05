@@ -1,4 +1,5 @@
 import type { CustomShader } from "./CustomShader.ts";
+import type { EngineErrors } from "../gpu/EngineErrors.ts";
 import {
   SURFACE_KEYS,
   type SurfaceKey,
@@ -33,6 +34,7 @@ export class ShaderCache {
 
   constructor(
     private readonly build: (shader: CustomShader) => Promise<Factory>,
+    private readonly errors?: EngineErrors,
   ) {}
 
   /**
@@ -80,12 +82,22 @@ export class ShaderCache {
         entry.waiting.clear();
       },
       (error: unknown) => {
-        console.error(
-          `[cesium/next] ${error instanceof Error ? error.message : String(error)}`,
+        // This pass keeps drawing the batch with the engine's pipeline.
+        this.report(
+          "pipeline",
+          `${error instanceof Error ? error.message : String(error)} (its draws use the engine's shader in this pass)`,
         );
       },
     );
     return making;
+  }
+
+  private report(kind: "shader" | "pipeline", message: string): void {
+    if (this.errors) {
+      this.errors.report(kind, message);
+    } else {
+      console.error(`[cesium/next] ${message}`);
+    }
   }
 
   private entry(shader: CustomShader): Entry {
@@ -117,8 +129,9 @@ export class ShaderCache {
       (error: unknown) => {
         created.failed = true;
         created.waiting.clear();
-        console.error(
-          `[cesium/next] ${error instanceof Error ? error.message : String(error)}`,
+        this.report(
+          "shader",
+          `${error instanceof Error ? error.message : String(error)} (its draws use the engine's shader)`,
         );
       },
     );

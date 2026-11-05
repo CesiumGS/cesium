@@ -188,18 +188,25 @@
 
 /*
  * Side layout (an example with an editor, the Slang playground): the view
- * and a full-height column for the panel, the panel's body filling it.
+ * and a full-height column for the panel, the panel's body filling it. Two
+ * cards with the same corners and a gap between, not one card split by a
+ * border line.
  */
 .examples-stage.side {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(380px, 44%);
-  background: var(--stratakit-color-bg-page-base);
+  gap: var(--stratakit-space-200, 8px);
+  background: transparent;
+  border-radius: 0;
+  overflow: visible;
 }
 .examples-stage.side .examples-view-area {
   position: relative;
   inset: auto;
   min-height: 0;
   background: #000;
+  border-radius: 8px;
+  overflow: hidden;
 }
 .examples-stage.side .examples-panel {
   position: relative;
@@ -208,9 +215,8 @@
   width: auto;
   max-height: none;
   height: 100%;
-  border-radius: 0;
+  border-radius: 8px;
   box-shadow: none;
-  border-left: 1px solid var(--stratakit-color-border-neutral-muted, #333);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -233,6 +239,25 @@
 .slang-row {
   display: flex;
   gap: var(--stratakit-space-150, 6px);
+}
+/* A label and its controls, the controls filling one column for every row. */
+.slang-field {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  align-items: center;
+  gap: var(--stratakit-space-200);
+}
+.slang-field > .slang-row > select {
+  flex: 1;
+  min-width: 0;
+}
+.slang-row > button {
+  flex: none;
+  white-space: nowrap;
+}
+/* The model URL: the input takes the room the buttons leave. */
+.slang-url input[type="url"] {
+  min-width: 8em;
 }
 .slang-row input[type="url"] {
   flex: 1;

@@ -455,3 +455,20 @@ public void fragmentMain(FragmentInput fsInput, inout MaterialOutput material) {
 
 /** The preset shown first. */
 export const FIRST_PRESET = "Rim glow";
+
+/**
+ * A new shader ("New"): the model's own material, unchanged, with the
+ * contract's inputs a stage starts from at hand.
+ */
+export const NEW_SHADER = `import cesium;
+
+// A new shader: the model draws with its own material until you change it.
+// fragmentMain sets the material (MaterialOutput: baseColor, alpha,
+// metallic, roughness, normal, occlusion, emissive, unlit) from what the
+// surface point knows (FragmentInput: positionEC, normal, uv, time, ...).
+// Add vertexMain(VertexInput, inout VertexOutput) to move vertices.
+// Ctrl-Space completes; hover for docs; Cmd/Ctrl-click goes to definitions.
+public void fragmentMain(FragmentInput fsInput, inout MaterialOutput material)
+{
+}
+`;

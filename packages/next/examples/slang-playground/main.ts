@@ -1,7 +1,6 @@
 import {
   CustomShader,
   DAYLIGHT_SUN_ILLUMINANCE,
-  DEFAULT_SKY,
   Ellipsoid,
   eastNorthUpToFixedFrame,
   fromDegrees,
@@ -15,7 +14,7 @@ import {
 import type { ExampleContext } from "../types.ts";
 import { createContractView, createSlangEditor } from "./editor.ts";
 import { CONTRACT, SlangLanguageServer } from "./languageServer.ts";
-import { FIRST_PRESET, PRESETS } from "./presets.ts";
+import { FIRST_PRESET, NEW_SHADER, PRESETS } from "./presets.ts";
 import { plane, sphere } from "./shapes.ts";
 
 /**
@@ -194,16 +193,8 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
   const { engine, world, view } = viewer;
   const ellipsoid = Ellipsoid.WGS84;
 
-  // What this example changes, restored when it's left.
-  const restore = {
-    renderMode: engine.renderMode,
-    background: view.background,
-    clearColor: view.clearColor,
-    lighting: { ...view.lighting },
-    controls: viewer.controls,
-    sunFromClock: viewer.sunFromClock,
-    creditsShown: viewer.creditsShown,
-  };
+  // The viewer is this example's own (destroyed when it's left), so what
+  // it changes here needs no restoring.
   // Lookdev, not the globe: no timeline (the key light is set by
   // direction) and no credits (the stage shows no attributed data).
   viewer.creditsShown = false;
@@ -612,6 +603,33 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
       void compile();
     }
   });
+  // Shown while the editor holds a new shader (no preset).
+  presetSelect.prepend(el("option", { value: "", hidden: true }, "New shader"));
+  presetSelect.value = firstPreset;
+  // "New": a blank stage (the model's own material), the preset cleared.
+  const newButton = el(
+    "button",
+    {
+      type: "button",
+      title: "Start a new shader: the model's own material, unchanged",
+      onclick: () => {
+        const text = editor.text();
+        const edited =
+          text !== NEW_SHADER && !PRESETS.some((p) => p.code === text);
+        write("preset", "");
+        presetSelect.value = "";
+        // One edit in the editor's history: undo brings the old text back.
+        editor.setText(NEW_SHADER);
+        void compile().then(() => {
+          if (edited) {
+            status.compile.textContent +=
+              " · Cmd/Ctrl-Z brings back your edits";
+          }
+        });
+      },
+    },
+    "New",
+  );
   const modelSelect = select(
     MODELS.map(([g, items]): [string, string[]] => [g, items.map(([n]) => n)]),
     modelName,
@@ -667,11 +685,34 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     el(
       "div",
       { className: "slang-toolbar" },
-      el("label", {}, "Preset", presetSelect),
-      el("label", {}, "Model", modelSelect),
       el(
         "div",
-        { className: "slang-row" },
+        { className: "slang-field" },
+        "Preset",
+        el("span", { className: "slang-row" }, presetSelect, newButton),
+      ),
+      el(
+        "div",
+        { className: "slang-field" },
+        "Model",
+        el(
+          "span",
+          { className: "slang-row" },
+          modelSelect,
+          el(
+            "button",
+            {
+              type: "button",
+              onclick: focus,
+              title: "Frame the model, orbiting around it",
+            },
+            "Focus",
+          ),
+        ),
+      ),
+      el(
+        "div",
+        { className: "slang-row slang-url" },
         urlInput,
         el(
           "button",
@@ -690,15 +731,6 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
           "button",
           { type: "button", onclick: () => fileInput.click() },
           "Open .glb…",
-        ),
-        el(
-          "button",
-          {
-            type: "button",
-            onclick: focus,
-            title: "Frame the model, orbiting around it",
-          },
-          "Focus",
         ),
       ),
       fileInput,
@@ -807,14 +839,6 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     if (customUrl?.startsWith("blob:")) {
       URL.revokeObjectURL(customUrl);
     }
-    engine.renderMode = restore.renderMode;
-    view.background = restore.background;
-    view.clearColor = restore.clearColor;
-    Object.assign(view.lighting, restore.lighting);
-    engine.environment.setSky(DEFAULT_SKY);
-    viewer.setControls(restore.controls);
-    viewer.sunFromClock = restore.sunFromClock;
-    viewer.creditsShown = restore.creditsShown;
     panel.replaceChildren();
     clearTimeout(viewErrorTimer);
     viewError.remove();

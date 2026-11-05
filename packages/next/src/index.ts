@@ -178,6 +178,11 @@ export {
   type ModelUsage,
   type PlacementOptions,
 } from "./scene/gltfModel.ts";
+export {
+  EngineErrors,
+  type EngineError,
+  type EngineErrorKind,
+} from "./gpu/EngineErrors.ts";
 export { MaterialFlags } from "./render/layout.ts";
 export {
   DAYLIGHT_SUN_ILLUMINANCE,
