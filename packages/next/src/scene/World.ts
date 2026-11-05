@@ -34,6 +34,7 @@ import {
   CLIP_BOX_FLOATS,
   CLIP_COUNT_WORD,
   MATERIAL_WORDS,
+  NO_TEXTURE,
   PLACEHOLDER_MASK_WORD,
   MaterialFlags,
   RecordFlags,
@@ -1564,6 +1565,7 @@ export class World {
       normalScale: options.normalScale ?? 1,
       occlusionStrength: options.occlusionStrength ?? 1,
       flags: options.flags ?? 0,
+      ...(options.textures ? { textures: options.textures } : {}),
     });
     // The record's words are the key (NaN payloads and -0 included, so
     // equal keys are bit-identical records).
@@ -1631,6 +1633,26 @@ export class World {
         }
       }
     }
+  }
+
+  /**
+   * A material's texture references for `options` (its texture set's
+   * textures), by slot (`MaterialTextureSlot`), for `addMaterial`'s
+   * `textures`. The bindless seam (CESIUM2_WEBGPU_PLAN.md §7.1, §13.15):
+   * with texture sets a reference is the slot itself (the batch binds the
+   * set), `NO_TEXTURE` where the slot is empty; a resource-table backend
+   * returns each texture's index in the world's table instead, and
+   * `createTextureSet` the one group that binds the table. Nothing that
+   * calls these, and no shader but opaque.wgsl `materialTexture`, changes.
+   */
+  textureRefs(options: TextureSetOptions): number[] {
+    return [
+      options.baseColor,
+      options.metallicRoughness,
+      options.normal,
+      options.occlusion,
+      options.emissive,
+    ].map((binding, slot) => (binding ? slot : NO_TEXTURE));
   }
 
   /** Binds up to five material textures; missing ones get 1×1 defaults. */

@@ -548,7 +548,32 @@ export function packTint(rgba: ArrayLike<number>, offset = 0): number {
   return packed >>> 0;
 }
 
+/**
+ * A material's texture slots (opaque.wgsl `materialTexture`'s `slot`), the
+ * order of a texture set's bindings.
+ */
+export const MaterialTextureSlot = {
+  baseColor: 0,
+  metallicRoughness: 1,
+  normal: 2,
+  occlusion: 3,
+  emissive: 4,
+} as const;
+export const MATERIAL_TEXTURE_SLOTS = 5;
+/** A texture reference for an empty slot. */
+export const NO_TEXTURE = 0xffff;
+
 export interface MaterialData {
+  /**
+   * The material's texture references by slot (`MaterialTextureSlot`),
+   * `NO_TEXTURE` where it has none; packed two per word in the record's
+   * last three words. The bindless seam (CESIUM2_WEBGPU_PLAN.md §7.1,
+   * §13.15): today a reference is the slot in the batch's texture set
+   * (`World.textureRefs`), with resource tables it becomes the texture's
+   * index in the table; the record's layout and every shader that reads
+   * material textures (through `materialTexture`) stay as they are.
+   */
+  textures?: readonly number[];
   /** Linear RGBA. */
   baseColor: readonly [number, number, number, number];
   emissive: readonly [number, number, number];
@@ -575,4 +600,8 @@ export function writeMaterial(
   f32[o + 10] = m.normalScale;
   f32[o + 11] = m.occlusionStrength;
   u32[o + 12] = m.flags;
+  const ref = (slot: number) => (m.textures?.[slot] ?? NO_TEXTURE) & 0xffff;
+  u32[o + 13] = (ref(0) | (ref(1) << 16)) >>> 0;
+  u32[o + 14] = (ref(2) | (ref(3) << 16)) >>> 0;
+  u32[o + 15] = (ref(4) | (NO_TEXTURE << 16)) >>> 0;
 }

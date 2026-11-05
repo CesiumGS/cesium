@@ -306,6 +306,35 @@ const CLIP_BOXES: u32 = 8u;
 @group(2) @binding(7) var normalSampler: sampler;
 @group(2) @binding(8) var occlusionSampler: sampler;
 @group(2) @binding(9) var emissiveSampler: sampler;
+
+// --- material textures: the bindless seam (plan §7.1, §13.15) -----------
+//
+// Every material texture read goes through `materialTexture` (and its
+// presence through `materialHasTexture`, common.wgsl); test/bindless.test.ts
+// keeps the group-2 textures out of any other code. Today's backend is a
+// texture set per batch: `slot` picks the binding (a constant at every call
+// site, so sampling stays in uniform control flow) and the material's
+// reference only says whether the slot is filled. With resource tables
+// this function becomes
+//   textureSample(materialTextures[ref], materialSamplers[ref], uv)
+// with `ref = materialTextureRef(m, slot)`, World.textureRefs returns table
+// indices, and group 2 is one group for the whole world: callers, the
+// record and custom shaders don't change.
+const TEXTURE_BASE_COLOR: u32 = 0u;
+const TEXTURE_METALLIC_ROUGHNESS: u32 = 1u;
+const TEXTURE_NORMAL: u32 = 2u;
+const TEXTURE_OCCLUSION: u32 = 3u;
+const TEXTURE_EMISSIVE: u32 = 4u;
+
+fn materialTexture(m: Material, slot: u32, uv: vec2f) -> vec4f {
+  switch slot {
+    case 0u: { return textureSample(baseColorTexture, baseColorSampler, uv); }
+    case 1u: { return textureSample(metallicRoughnessTexture, metallicRoughnessSampler, uv); }
+    case 2u: { return textureSample(normalTexture, normalSampler, uv); }
+    case 3u: { return textureSample(occlusionTexture, occlusionSampler, uv); }
+    default: { return textureSample(emissiveTexture, emissiveSampler, uv); }
+  }
+}
 // EXT_structural_metadata property textures (layout.ts PROPERTY_TEXTURES).
 @group(2) @binding(20) var propertyTexture0: texture_2d<f32>;
 @group(2) @binding(21) var propertyTexture1: texture_2d<f32>;
@@ -818,9 +847,9 @@ fn depthCoverageFs(in: VsOut) -> @location(0) vec4f {
 fn materialAlpha(in: VsOut) -> f32 {
   let r = records[in.draw];
   let material = materials[r.materialIndex];
-  let sampled = textureSample(baseColorTexture, baseColorSampler, in.uv);
+  let sampled = materialTexture(material, TEXTURE_BASE_COLOR, in.uv);
   var color = material.baseColor * r.color * in.color;
-  if ((material.flags & 16u) != 0u) {
+  if (materialHasTexture(material, TEXTURE_BASE_COLOR)) {
     color *= sampled;
   }
   let geometric = normalize(in.normal);
@@ -1205,12 +1234,13 @@ fn shadeSurface(in: VsOut, frontFacing: bool, translucent: bool) -> Surface {
   let flags = material.flags;
 
   // Everything that needs uniform control flow first: texture samples and
-  // derivatives. Missing textures are 1×1 white defaults gated by the flags.
-  var baseColorSample = textureSample(baseColorTexture, baseColorSampler, in.uv);
-  var emissiveSample = textureSample(emissiveTexture, emissiveSampler, in.uv).rgb;
-  let metallicRoughnessSample = textureSample(metallicRoughnessTexture, metallicRoughnessSampler, in.uv);
-  let normalSample = textureSample(normalTexture, normalSampler, in.uv).xyz;
-  let occlusionSample = textureSample(occlusionTexture, occlusionSampler, in.uv).r;
+  // derivatives. Missing textures are 1×1 white defaults, gated by the
+  // material's texture references (`materialHasTexture`).
+  var baseColorSample = materialTexture(material, TEXTURE_BASE_COLOR, in.uv);
+  var emissiveSample = materialTexture(material, TEXTURE_EMISSIVE, in.uv).rgb;
+  let metallicRoughnessSample = materialTexture(material, TEXTURE_METALLIC_ROUGHNESS, in.uv);
+  let normalSample = materialTexture(material, TEXTURE_NORMAL, in.uv).xyz;
+  let occlusionSample = materialTexture(material, TEXTURE_OCCLUSION, in.uv).r;
   let imageryPacked = r.imagerySlice;
   let imagerySample = textureSample(
     imagery,
@@ -1237,7 +1267,7 @@ fn shadeSurface(in: VsOut, frontFacing: bool, translucent: bool) -> Surface {
   }
 
   var baseColor = material.baseColor * r.color * in.color;
-  if ((flags & 16u) != 0u) {
+  if (materialHasTexture(material, TEXTURE_BASE_COLOR)) {
     baseColor *= baseColorSample;
   }
   if (imageryPacked != 0u) {
@@ -1251,13 +1281,13 @@ fn shadeSurface(in: VsOut, frontFacing: bool, translucent: bool) -> Surface {
     discard;
   }
   var emissive = material.emissive;
-  if ((flags & 256u) != 0u) {
+  if (materialHasTexture(material, TEXTURE_EMISSIVE)) {
     emissive *= emissiveSample;
   }
 
   var metallic = material.metallic;
   var roughness = material.roughness;
-  if ((flags & 32u) != 0u) {
+  if (materialHasTexture(material, TEXTURE_METALLIC_ROUGHNESS)) {
     roughness *= metallicRoughnessSample.g;
     metallic *= metallicRoughnessSample.b;
   }
@@ -1269,7 +1299,7 @@ fn shadeSurface(in: VsOut, frontFacing: bool, translucent: bool) -> Surface {
   if (!frontFacing) {
     n = -n;
   }
-  if ((flags & 64u) != 0u) {
+  if (materialHasTexture(material, TEXTURE_NORMAL)) {
     var t: vec3f;
     var b: vec3f;
     if (in.tangent.w != 0.0) {
@@ -1289,7 +1319,7 @@ fn shadeSurface(in: VsOut, frontFacing: bool, translucent: bool) -> Surface {
     n = normalize(t * tsNormal.x + b * tsNormal.y + n * tsNormal.z);
   }
   var occlusion = 1.0;
-  if ((flags & 128u) != 0u) {
+  if (materialHasTexture(material, TEXTURE_OCCLUSION)) {
     occlusion = 1.0 + material.occlusionStrength * (occlusionSample - 1.0);
   }
   // 1.x clamps n·l to at least 0.001, which lets a little sun light reach

@@ -3231,6 +3231,11 @@ thing to cull there.
   - Untextured CAD uses the material table.
   - Imagery uses a texture array.
 - **What we do now**: every texture access goes through a `TextureHandle` and a single shader interface boundary. A resource-table backend can then drop in when `sampling-resource-table` ships, with no caller changes.
+- **The material seam, built (r50, §13.15)**: setting the stage for bindless.
+  - Material records carry their texture references (six 16-bit refs in the record's last three words, `MaterialData.textures`).
+  - `World.textureRefs` makes them: today a reference is the slot in the batch's texture set.
+  - Shaders read material textures only through opaque.wgsl `materialTexture(material, slot, uv)` and `materialHasTexture` (common.wgsl). `test/bindless.test.ts` fails on any other read of the group-2 material textures.
+  - For bindless, three things change: `materialTexture` (to `textureSample(table[ref], …)`), `World.textureRefs` (to return table indices) and group 2 (one group for the world). Callers, the record's layout, material sharing and custom shaders don't.
 - **Reassess at 2.0 GA.** If bindless is broadly available by then, the visibility buffer becomes a 2.x option.
 
 ### 7.2 Platform and WebGPU risks
@@ -5377,7 +5382,9 @@ already are one).
 
 **Progress (r50).** Increments 1 to 4 are built and checked on an
 M-series Mac (2.0 now starts there; it didn't), and so is 5 (slabs).
-Increment 6 (material arrays) is next.
+Increment 6 became the bindless seam (below): arrays by size class don't merge
+draws here (a batch is one mesh already), and fitting textures to classes
+would resample them or need a virtual-texture page cache.
 
 - _1._ Point cull's narrow group 1 (`cull.pointWorld`: 8 storage, was
   13); shared, reference-counted materials with one glTF default per
@@ -5432,6 +5439,21 @@ Increment 6 (material arrays) is next.
   against what the pool may grow to, the GPU tables as grown. GPU: the
   limits tier, per-stage binding counts and capacities. The Viewer's
   settings choose the limits tier (the page reloads on it).
+- _6, the bindless seam._ Texture references in material records,
+  `World.textureRefs`, the one shader accessor and its guard test (§7.1).
+  The Slang port mirrors it (`materialTextureRef`, `materialHasTexture`,
+  its own `materialTexture`), and its default material tests presence by
+  reference instead of by flag bit. Texture arrays stay deferred until a
+  measured need (a translucent custom shader past 16 textures) or until
+  bindless ships.
+- _Found: the Slang spike's port is stale._ Since r48 the engine took
+  point sets' and the depth prepass's stages (`vsPoints`, `vsDepth`) from
+  a whole-shader override, which the M0-era port doesn't have; those now
+  come from the built-in module (`caster`), and the page runs again. Its
+  image check reads mean ΔE 35.7 (every pixel past 2.3): the port's View
+  and shading predate the atmosphere, exposure and view-struct changes,
+  so it renders black. A second hand-kept copy of a shader drifts; see the
+  open decision on writing internal shaders in Slang (§3.4).
 
 ## 14. Follow-ups
 

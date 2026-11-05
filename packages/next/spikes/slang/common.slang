@@ -93,10 +93,25 @@ public struct Material {
   public float normalScale;
   public float occlusionStrength;
   public uint flags;
-  public uint pad0;
-  public uint pad1;
-  public uint pad2;
+  // Texture references by slot, two 16-bit ones a word (common.wgsl).
+  public uint textures01;
+  public uint textures23;
+  public uint textures4;
 };
+
+public static const uint NO_TEXTURE = 0xffffu;
+
+// A material's texture reference for `slot` (0 base color, 1 metallic-
+// roughness, 2 normal, 3 occlusion, 4 emissive), NO_TEXTURE for none: the
+// bindless seam (src/shaders/opaque.wgsl `materialTexture`).
+public uint materialTextureRef(Material m, uint slot) {
+  uint word = slot < 2u ? m.textures01 : (slot < 4u ? m.textures23 : m.textures4);
+  return (word >> ((slot & 1u) * 16u)) & 0xffffu;
+}
+
+public bool materialHasTexture(Material m, uint slot) {
+  return materialTextureRef(m, slot) != NO_TEXTURE;
+}
 
 public static const uint NO_STREAM = 0xffffffffu;
 

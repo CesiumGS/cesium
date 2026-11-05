@@ -16,23 +16,23 @@ public struct DefaultMaterial : IMaterial {
     }
     Surface s;
     s.baseColor = m.baseColor * i.drawColor * i.vertexColor;
-    if ((flags & 16u) != 0u) {
+    if (materialHasTexture(m, 0u)) {
       s.baseColor *= baseColorSample;
     }
     s.emissive = m.emissive;
-    if ((flags & 256u) != 0u) {
+    if (materialHasTexture(m, 4u)) {
       s.emissive *= emissiveSample;
     }
     s.metallic = m.metallic;
     s.roughness = m.roughness;
-    if ((flags & 32u) != 0u) {
+    if (materialHasTexture(m, 1u)) {
       s.roughness *= i.metallicRoughnessSample.g;
       s.metallic *= i.metallicRoughnessSample.b;
     }
     s.metallic = clamp(s.metallic, 0.0, 1.0);
     s.roughness = clamp(s.roughness, 0.0, 1.0);
     s.normal = i.normal;
-    if ((flags & 64u) != 0u) {
+    if (materialHasTexture(m, 2u)) {
       float3 t;
       float3 b;
       if (i.tangent.w != 0.0) {
@@ -51,7 +51,7 @@ public struct DefaultMaterial : IMaterial {
       s.normal = normalize(t * ts.x + b * ts.y + i.normal * ts.z);
     }
     s.occlusion = 1.0;
-    if ((flags & 128u) != 0u) {
+    if (materialHasTexture(m, 3u)) {
       s.occlusion = 1.0 + m.occlusionStrength * (i.occlusionSample - 1.0);
     }
     s.unlit = (flags & 1u) != 0u;

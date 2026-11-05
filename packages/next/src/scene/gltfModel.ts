@@ -266,7 +266,11 @@ function uploadAssetInto(
     emissive: textures.binding(m.emissiveTexture, !gamma22),
   }));
   const materials = asset.materials.map((m, i) => ({
-    index: addMaterial(materialData(m, gamma22)),
+    // Its textures by reference (World.textureRefs, the bindless seam).
+    index: addMaterial({
+      ...materialData(m, gamma22),
+      textures: world.textureRefs(setOptions[i]!),
+    }),
     textureSet: createTextureSet(setOptions[i]!),
     doubleSided: m.doubleSided,
   }));

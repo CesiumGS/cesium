@@ -47,6 +47,19 @@ bool insideClipBoxes(uint block, uint count, float3 p) {
 [[vk::binding(8, 2)]] SamplerState occlusionSampler;
 [[vk::binding(9, 2)]] SamplerState emissiveSampler;
 
+// Material textures through one accessor (the bindless seam): today the
+// batch's texture set by slot; with resource tables, a table indexed by
+// the material's reference (materialTextureRef).
+float4 materialTexture(Material m, uint slot, float2 uv) {
+  switch (slot) {
+    case 0u: return baseColorTexture.Sample(baseColorSampler, uv);
+    case 1u: return metallicRoughnessTexture.Sample(metallicRoughnessSampler, uv);
+    case 2u: return normalTexture.Sample(normalSampler, uv);
+    case 3u: return occlusionTexture.Sample(occlusionSampler, uv);
+    default: return emissiveTexture.Sample(emissiveSampler, uv);
+  }
+}
+
 struct VsIn {
   [[vk::location(0)]] uint item : DRAW_INDEX;
 };
@@ -174,12 +187,13 @@ FsOut fs(VsOut input, bool frontFacing : SV_IsFrontFace) {
   si.vertexColor = input.color;
   si.drawColor = r.color;
   si.tangent = input.tangent;
-  // Samples and derivatives first, in uniform control flow.
-  si.baseColorSample = baseColorTexture.Sample(baseColorSampler, input.uv);
-  si.emissiveSample = emissiveTexture.Sample(emissiveSampler, input.uv).rgb;
-  si.metallicRoughnessSample = metallicRoughnessTexture.Sample(metallicRoughnessSampler, input.uv);
-  si.normalSample = normalTexture.Sample(normalSampler, input.uv).xyz;
-  si.occlusionSample = occlusionTexture.Sample(occlusionSampler, input.uv).r;
+  // Samples and derivatives first, in uniform control flow, through the
+  // one accessor (the bindless seam, src/shaders/opaque.wgsl).
+  si.baseColorSample = materialTexture(si.material, 0u, input.uv);
+  si.emissiveSample = materialTexture(si.material, 4u, input.uv).rgb;
+  si.metallicRoughnessSample = materialTexture(si.material, 1u, input.uv);
+  si.normalSample = materialTexture(si.material, 2u, input.uv).xyz;
+  si.occlusionSample = materialTexture(si.material, 3u, input.uv).r;
   si.dPdx = ddx(input.relPosition);
   si.dPdy = ddy(input.relPosition);
   si.dUVdx = ddx(input.uv);

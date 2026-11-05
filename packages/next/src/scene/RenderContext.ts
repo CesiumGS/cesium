@@ -1081,9 +1081,12 @@ async function createPipelines(
         opaquePipeline(opaque, name("opaque.doubleSided"), "none", tri, o),
       opaqueLines: () =>
         opaquePipeline(opaque, name("opaque.lines"), "none", "line-list", o),
+      // Point sets draw with `caster`'s stages: the built-in ones under a
+      // whole-shader override (ShaderOverrides keep `vs`/`fs` only, so the
+      // Slang port has no `vsPoints`), the same module otherwise.
       opaquePoints: () =>
         opaquePipeline(
-          opaque,
+          caster,
           name("opaque.points"),
           "none",
           tri,
@@ -1140,13 +1143,15 @@ async function createPipelines(
       prepass: () => prepassPipeline(caster, name("prepass"), "back", o),
       prepassDoubleSided: () =>
         prepassPipeline(caster, name("prepass.doubleSided"), "none", o),
-      depth: () => depthPipeline(opaque, name("depth"), "back", false, o),
+      // The depth prepass's stages are the casters' (`caster`: built-in
+      // under a whole-shader override, which has `vs`/`fs` only).
+      depth: () => depthPipeline(caster, name("depth"), "back", false, o),
       depthDoubleSided: () =>
-        depthPipeline(opaque, name("depth.doubleSided"), "none", false, o),
+        depthPipeline(caster, name("depth.doubleSided"), "none", false, o),
       depthMasked: () =>
-        depthPipeline(opaque, name("depth.masked"), "back", true, o),
+        depthPipeline(caster, name("depth.masked"), "back", true, o),
       depthMaskedDoubleSided: () =>
-        depthPipeline(opaque, name("depth.maskedDoubleSided"), "none", true, o),
+        depthPipeline(caster, name("depth.maskedDoubleSided"), "none", true, o),
       translucentList: () =>
         translucentPipeline(
           translucent(),

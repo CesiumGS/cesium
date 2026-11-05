@@ -112,10 +112,25 @@ struct Material {
   normalScale: f32,
   occlusionStrength: f32,
   flags: u32,              // MaterialFlags in layout.ts
-  _pad0: u32,
-  _pad1: u32,
-  _pad2: u32,
+  // Texture references by slot, two 16-bit ones a word (layout.ts
+  // `MaterialData.textures`): read through `materialTextureRef`.
+  textures01: u32,
+  textures23: u32,
+  textures4: u32,
 };
+
+const NO_TEXTURE: u32 = 0xffffu;
+
+// A material's texture reference for `slot` (0 base color, 1 metallic-
+// roughness, 2 normal, 3 occlusion, 4 emissive), NO_TEXTURE for none.
+fn materialTextureRef(m: Material, slot: u32) -> u32 {
+  let word = select(select(m.textures4, m.textures23, slot < 4u), m.textures01, slot < 2u);
+  return (word >> ((slot & 1u) * 16u)) & 0xffffu;
+}
+
+fn materialHasTexture(m: Material, slot: u32) -> bool {
+  return materialTextureRef(m, slot) != NO_TEXTURE;
+}
 
 const NO_STREAM: u32 = 0xffffffffu;
 
