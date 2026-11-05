@@ -1,5 +1,51 @@
 # Change Log
 
+## 1.148 - 2026-12-01
+
+### @cesium/engine
+
+#### Additions :tada:
+
+- Added experimental `Cesium3DTileset` option `vectorGeoJson`, which loads `MAXAR_content_geojson` tile content as vector primitives with filled polygons, instead of as a model. [#14007](https://github.com/CesiumGS/cesium/pull/14007)
+- Added support for Custom Shaders in Gaussian Splat tilesets. [#13418](https://github.com/CesiumGS/cesium/pull/13418)
+- Added experimental `KTX2Transcoder.basisTranscoderOptions` so applications can supply a compatible Basis Universal wrapper and matching Wasm binary. Cesium keeps its KTX2 worker and bundled assets by default. [#13617](https://github.com/CesiumGS/cesium/issues/13617)
+- Moved meshopt and SPZ decoding into workers and added worker-side WebAssembly loading. WebAssembly binaries are requested inside the worker that compiles them, rather than being fetched on the main thread and posted to the worker. This keeps WebAssembly off the document when using separately served, same-origin workers. The combined `Build/Cesium/Cesium.js` distribution embeds workers in `blob:` URLs, so its document still needs the applicable worker and WebAssembly CSP permissions. [#13617](https://github.com/CesiumGS/cesium/issues/13617)
+- Added a [Content Security Policy Guide](Documentation/ContentSecurityPolicyGuide/README.md) covering the directives CesiumJS requires and how to scope WebAssembly permissions to Web Worker responses. [#13617](https://github.com/CesiumGS/cesium/issues/13617)
+- Added experimental `SpzDecoder.workerModuleUrl` to configure a custom SPZ decoder worker before the first SPZ decode. To isolate a strict Content Security Policy, serve the configured worker as a separate, same-origin module. Cesium's bundled `Workers/decodeSpz.js` decoder is unchanged and still requires `'unsafe-eval'` in its worker policy until `@spz-loader/core` removes its dynamic evaluation. [#13617](https://github.com/CesiumGS/cesium/issues/13617)
+- Added `TrustedServers.pack` and `TrustedServers.unpack` to copy the page's trusted server registry into workers before initialization and each task. [#13669](https://github.com/CesiumGS/cesium/pull/13669)
+
+#### Fixes :wrench:
+
+- Fixed the `Resource` fetch fallback to honor `TrustedServers`, matching the XHR transport. [#13669](https://github.com/CesiumGS/cesium/pull/13669)
+- Fixed picking for clamped vector tilesets and `GeoJsonPrimitive` polylines and polygons. [#13917](https://github.com/CesiumGS/cesium/pull/13917)
+- Fixed the globe failing to render when clamped vector data is combined with many imagery layers. [#13922](https://github.com/CesiumGS/cesium/pull/13922)
+
+## 1.147 - 2026-11-02
+
+### @cesium/core
+
+#### Fixes :wrench:
+
+- Fixed undeclared dependencies `earcut`, `mersenne-twister`, and `urijs`. [#13955](https://github.com/CesiumGS/cesium/issues/13955)
+
+### @cesium/engine
+
+#### Additions :tada:
+
+- Added support for glTF models with the [KHR_materials_emissive_strength extension](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_emissive_strength). [#13961](https://github.com/CesiumGS/cesium/pull/13961)
+- Added experimental `IonAssetElementService` for querying, filtering, aggregating, and navigating element metadata for Cesium ion assets backed by BIM/CAD databases, along with the extensible `ElementService` base class. [#13995](https://github.com/CesiumGS/cesium/pull/13995)
+
+#### Fixes :wrench:
+
+- Fixed `czm_passOverlay` and `czm_passCesium3DTileEdgesDirect` GLSL constants not matching `czm_pass` during their respective passes. Removed the unused `czm_passClassification` constant. [#13657](https://github.com/CesiumGS/cesium/issues/13657)
+- Fixed dynamic environment lighting on models and tilesets near or below the ellipsoid surface. [#13988](https://github.com/CesiumGS/cesium/pull/13988)
+- Fixed `pointCloudShading.backFaceCulling` not hiding back-facing points on some platforms. [#13989](https://github.com/CesiumGS/cesium/pull/13989)
+- Fixed `Cesium3DTileset` repeatedly loading and unloading the same tiles when they don't fit within `cacheBytes` plus `maximumCacheOverflowBytes`. [#13999](https://github.com/CesiumGS/cesium/pull/13999)
+
+### Announcements :loudspeaker:
+
+- The private glTF processing utilities previously located in `@cesium/engine/Source/Scene/GltfPipeline/` have moved to a new internal package, `@cesium/gltf`, which is now a dependency of `@cesium/engine`. These utilities were not, and are not part of the public API. Nonetheless, code that previously imported these files directly from `@cesium/engine` will need to be updated. [#13896](https://github.com/CesiumGS/cesium/pull/13896)
+
 ## 1.146 - 2026-10-01
 
 ### Major Announcements :loudspeaker:
@@ -30,15 +76,9 @@ import { Cartesian3, Color } from "@cesium/core";
 - Added `vectorBlendOption` to `Cesium3DTileset`, for selecting opaque or translucent modes. `blendOption` can now also be changed after construction on `BufferPointCollection`, `BufferPolylineCollection`, and `BufferPolygonCollection`. [#13764](https://github.com/CesiumGS/cesium/issues/13764)
 - Added `.pickObject` getter/setter to BufferPrimitive. [#13811](https://github.com/CesiumGS/cesium/pull/13811)
 - Added batch `.setPositions` method to BufferPrimitiveCollection, improving performance when animating vertex positions on a range of many point, line, or polygon primitives. [#13590](https://github.com/CesiumGS/cesium/issues/13590)
-- Added experimental `KTX2Transcoder.basisTranscoderOptions` so applications can supply a compatible Basis Universal wrapper and matching Wasm binary. Cesium keeps its KTX2 worker and bundled assets by default. [#13617](https://github.com/CesiumGS/cesium/issues/13617)
-- Moved meshopt and SPZ decoding into workers and added worker-side WebAssembly loading. WebAssembly binaries are requested inside the worker that compiles them, rather than being fetched on the main thread and posted to the worker. This keeps WebAssembly off the document when using separately served, same-origin workers. The combined `Build/Cesium/Cesium.js` distribution embeds workers in `blob:` URLs, so its document still needs the applicable worker and WebAssembly CSP permissions. [#13617](https://github.com/CesiumGS/cesium/issues/13617)
-- Added a [Content Security Policy Guide](Documentation/ContentSecurityPolicyGuide/README.md) covering the directives CesiumJS requires and how to scope WebAssembly permissions to Web Worker responses. [#13617](https://github.com/CesiumGS/cesium/issues/13617)
-- Added experimental `SpzDecoder.workerModuleUrl` to configure a custom SPZ decoder worker before the first SPZ decode. To isolate a strict Content Security Policy, serve the configured worker as a separate, same-origin module. Cesium's bundled `Workers/decodeSpz.js` decoder is unchanged and still requires `'unsafe-eval'` in its worker policy until `@spz-loader/core` removes its dynamic evaluation. [#13617](https://github.com/CesiumGS/cesium/issues/13617)
-- Added `TrustedServers.pack` and `TrustedServers.unpack` to copy the page's trusted server registry into workers before initialization and each task. [#13669](https://github.com/CesiumGS/cesium/pull/13669)
 
 #### Fixes :wrench:
 
-- Fixed the `Resource` fetch fallback to honor `TrustedServers`, matching the XHR transport. [#13669](https://github.com/CesiumGS/cesium/pull/13669)
 - Reduced load time and memory usage for implicitly-tiled tilesets. [#13808](https://github.com/CesiumGS/cesium/pull/13808)
 - Reduced load time, memory usage, and rendering overhead for models and 3D Tiles using `EXT_mesh_primitive_edge_visibility` in `EdgeDisplayMode.SURFACES_ONLY` by deferring edge geometry construction until edges are displayed or needed for snapping.
 - Fixed a GPU memory leak where the edge vertex array created for `EXT_mesh_primitive_edge_visibility` rendering was never destroyed when draw commands were rebuilt or the model was destroyed. [#13721](https://github.com/CesiumGS/cesium/pull/13721)

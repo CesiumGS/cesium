@@ -105,6 +105,26 @@ const Cesium3DTileContentType = {
    */
   IMPLICIT_SUBTREE_JSON: "subtreeJson",
   /**
+   * For implicit tiling. Subtrees can also be represented as glTF JSON files
+   * with the <code>3DTILES_subtree</code> extension.
+   *
+   * @type {string}
+   * @constant
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   */
+  IMPLICIT_SUBTREE_GLTF: "subtreeGltf",
+  /**
+   * For implicit tiling. Subtrees can also be represented as binary glTF files
+   * with the <code>3DTILES_subtree</code> extension.
+   *
+   * @type {string}
+   * @constant
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   */
+  IMPLICIT_SUBTREE_GLB: "subtreeGlb",
+  /**
    * Contents can reference another tileset.json to use
    * as an external tileset. This is a JSON-based format.
    *
@@ -170,6 +190,25 @@ Cesium3DTileContentType.isBinaryFormat = function (contentType) {
     case Cesium3DTileContentType.IMPLICIT_SUBTREE:
     case Cesium3DTileContentType.VOXEL_BINARY:
     case Cesium3DTileContentType.GLTF_BINARY:
+    case Cesium3DTileContentType.IMPLICIT_SUBTREE_GLB:
+      return true;
+    default:
+      return false;
+  }
+};
+
+/**
+ * Check if a content is one of the subtree formats used by implicit tiling.
+ * @param {Cesium3DTileContentType} contentType The content type of the content payload.
+ * @return {boolean} <code>true</code> if the content type is a subtree format, <code>false</code> otherwise.
+ * @private
+ */
+Cesium3DTileContentType.isSubtree = function (contentType) {
+  switch (contentType) {
+    case Cesium3DTileContentType.IMPLICIT_SUBTREE:
+    case Cesium3DTileContentType.IMPLICIT_SUBTREE_JSON:
+    case Cesium3DTileContentType.IMPLICIT_SUBTREE_GLTF:
+    case Cesium3DTileContentType.IMPLICIT_SUBTREE_GLB:
       return true;
     default:
       return false;

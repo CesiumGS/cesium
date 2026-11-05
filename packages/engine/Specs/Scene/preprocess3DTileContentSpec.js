@@ -3,6 +3,7 @@ import {
   Cesium3DTileContentType,
   preprocess3DTileContent,
 } from "../../index.js";
+import ImplicitTilingTester from "../../../../Specs/ImplicitTilingTester.js";
 
 describe("Scene/preprocess3DTileContent", function () {
   function makeBinaryFile(magic) {
@@ -72,6 +73,61 @@ describe("Scene/preprocess3DTileContent", function () {
     expect(results).toEqual({
       contentType: Cesium3DTileContentType.GLTF,
       jsonPayload: glTF,
+    });
+  });
+
+  it("detects glTF JSON subtrees", function () {
+    const glTF = {
+      asset: {
+        version: "2.1",
+      },
+      extensions: {
+        "3DTILES_subtree": {
+          tileAvailability: { constant: 1 },
+          childSubtreeAvailability: { constant: 0 },
+        },
+      },
+    };
+    const payload = makeJsonFile(glTF);
+    const results = preprocess3DTileContent(payload.buffer);
+    expect(results).toEqual({
+      contentType: Cesium3DTileContentType.IMPLICIT_SUBTREE_GLTF,
+      jsonPayload: glTF,
+    });
+  });
+
+  it("detects glb subtrees", function () {
+    const glTF = {
+      asset: {
+        version: "2.1",
+      },
+      extensions: {
+        "3DTILES_subtree": {
+          tileAvailability: { constant: 1 },
+          childSubtreeAvailability: { constant: 0 },
+        },
+      },
+    };
+    const glb = ImplicitTilingTester.makeGlb(glTF, new Uint8Array(8));
+    const results = preprocess3DTileContent(glb.buffer);
+    expect(results).toEqual({
+      contentType: Cesium3DTileContentType.IMPLICIT_SUBTREE_GLB,
+      binaryPayload: glb,
+    });
+  });
+
+  it("labels a glb with a JSON chunk and no subtree extension as glb", function () {
+    const glTF = {
+      asset: {
+        version: "2.0",
+      },
+      meshes: [],
+    };
+    const glb = ImplicitTilingTester.makeGlb(glTF);
+    const results = preprocess3DTileContent(glb.buffer);
+    expect(results).toEqual({
+      contentType: Cesium3DTileContentType.GLTF_BINARY,
+      binaryPayload: glb,
     });
   });
 

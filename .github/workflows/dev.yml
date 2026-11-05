@@ -17,6 +17,7 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: '22'
+          package-manager-cache: false
       - name: npm install
         run: npm install
       - name: lint *.js
@@ -63,6 +64,7 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: '22'
+          package-manager-cache: false
       - name: npm install
         run: npm install
       - name: build
@@ -80,6 +82,7 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: '22'
+          package-manager-cache: false
       - name: npm install
         run: npm install
       - name: release build
@@ -109,6 +112,7 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.version }}
+          package-manager-cache: false
       - name: npm install
         run: npm install
       - name: release build

@@ -15,6 +15,7 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: '22'
+          package-manager-cache: false
       - name: install npm packages
         working-directory: ./.github/actions/check-for-CLA
         run: npm install

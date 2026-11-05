@@ -110,6 +110,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [Henrik Edstrom](https://github.com/henrikedstrom)
   - [Ben Polinsky](https://github.com/ben-polinsky)
   - [Xuan Huang](https://github.com/xuanhuang1)
+  - [Denis Biguenet](https://github.com/dbiguenet)
+  - [Cyril Novel](https://github.com/cnovel)
 - [Flightradar24 AB](https://www.flightradar24.com)
   - [Aleksei Kalmykov](https://github.com/kalmykov)
 - [BIT Systems](http://www.caci.com/bit-systems)

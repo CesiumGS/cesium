@@ -10,6 +10,7 @@ import {
   Rectangle,
   defined,
 } from "@cesium/core";
+import { parseGlb } from "@cesium/gltf";
 import {
   Axis,
   Cesium3DTilesTerrainData,
@@ -19,7 +20,6 @@ import {
   TerrainData,
   TerrainMesh,
   TerrainProvider,
-  parseGlb,
 } from "../../index.js";
 
 /**

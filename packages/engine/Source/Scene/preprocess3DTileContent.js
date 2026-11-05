@@ -5,6 +5,7 @@ import {
   getMagic,
 } from "@cesium/core";
 import Cesium3DTileContentType from "./Cesium3DTileContentType.js";
+import hasExtension from "./hasExtension.js";
 
 /**
  * Results of the preprocess3DTileContent() function. This includes the
@@ -36,6 +37,13 @@ function preprocess3DTileContent(arrayBuffer) {
     contentType = "glb";
   }
 
+  if (
+    contentType === Cesium3DTileContentType.GLTF_BINARY &&
+    hasExtension(getGlbJson(uint8Array), "3DTILES_subtree")
+  ) {
+    contentType = Cesium3DTileContentType.IMPLICIT_SUBTREE_GLB;
+  }
+
   if (Cesium3DTileContentType.isBinaryFormat(contentType)) {
     return {
       // For binary files, the enum value is the magic number
@@ -56,6 +64,13 @@ function preprocess3DTileContent(arrayBuffer) {
   if (defined(json.asset)) {
     // Most likely a glTF. Tileset JSON also has an "asset" property
     // so this check needs to happen second
+    if (hasExtension(json, "3DTILES_subtree")) {
+      return {
+        contentType: Cesium3DTileContentType.IMPLICIT_SUBTREE_GLTF,
+        jsonPayload: json,
+      };
+    }
+
     return {
       contentType: Cesium3DTileContentType.GLTF,
       jsonPayload: json,
@@ -89,11 +104,41 @@ function preprocess3DTileContent(arrayBuffer) {
   throw new RuntimeError("Invalid tile content.");
 }
 
-function getJsonContent(uint8Array) {
+const glbJsonChunkType = 0x4e4f534a;
+
+/**
+ * Read the JSON chunk of a glb, which is always the first chunk.
+ *
+ * @param {Uint8Array} glb The glb data
+ * @returns {object|undefined} The parsed JSON chunk, or <code>undefined</code> if the glb does not start with a JSON chunk.
+ * @private
+ */
+function getGlbJson(glb) {
+  const glbHeaderByteLength = 12;
+  const chunkHeaderByteLength = 8;
+  const jsonByteOffset = glbHeaderByteLength + chunkHeaderByteLength;
+  if (glb.byteLength < jsonByteOffset) {
+    return undefined;
+  }
+
+  const dataView = new DataView(glb.buffer, glb.byteOffset, glb.byteLength);
+  const jsonByteLength = dataView.getUint32(glbHeaderByteLength, true);
+  const chunkType = dataView.getUint32(glbHeaderByteLength + 4, true);
+  if (
+    chunkType !== glbJsonChunkType ||
+    jsonByteOffset + jsonByteLength > glb.byteLength
+  ) {
+    return undefined;
+  }
+
+  return getJsonContent(glb, jsonByteOffset, jsonByteLength);
+}
+
+function getJsonContent(uint8Array, byteOffset, byteLength) {
   let json;
 
   try {
-    json = getJsonFromTypedArray(uint8Array);
+    json = getJsonFromTypedArray(uint8Array, byteOffset, byteLength);
   } catch (error) {
     throw new RuntimeError("Invalid tile content.");
   }

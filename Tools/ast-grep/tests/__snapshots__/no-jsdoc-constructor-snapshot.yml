@@ -6,7 +6,12 @@ snapshots:
      * @alias MyClass
      */
     class MyClass {}
-  : labels:
+  : fixed: |
+      /**
+       * Class description.
+       */
+      class MyClass {}
+    labels:
     - source: |-
         /**
          * Class description.
@@ -25,7 +30,12 @@ snapshots:
      * @constructor
      */
     class MyClass {}
-  : labels:
+  : fixed: |
+      /**
+       * Class description.
+       */
+      class MyClass {}
+    labels:
     - source: |-
         /**
          * Class description.
