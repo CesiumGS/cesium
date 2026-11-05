@@ -6122,6 +6122,58 @@ Moon's tilesets), and 3D Tiles 2.0's georeferencing when it settles (its
 draft extensions place content by a CRS and a position on an ellipsoid; the
 names and shape were still under discussion when checked, r41).
 
+_Frames 1 results (r61): time and ephemerides._ The first of five plans
+for the frames design
+(`docs/superpowers/specs/2026-11-05-frames-bodies-measurement-design.md`;
+plan `docs/superpowers/plans/2026-11-05-frames-1-time-ephemerides.md`)
+landed in `src/time/` and `src/ephemeris/`. The engine's rendering is
+unchanged: it still uses `icrfToFixed` and `moonAxes`, and plan 2 switches
+it over. What landed, with the worst agreement the tests measured:
+
+- **`Instant`** (TT seconds past J2000, float64) with IERS leap seconds. TT
+  advances 2 s across the 2016/2017 leap. TAI−UTC inside the inserted
+  second is looked up by TAI (`taiMinusUtcAtTai`), so ms rounding can't
+  pick the wrong row.
+- **TDB−TT** from ERFA `dtdb`: within 1 ns of pyerfa.
+- **EOP** from CelesTrak's `EOP-All.csv` (IERS data): 4-point Lagrange,
+  stepping through UT1−TAI across a DAT change. Outside the table it holds
+  the last row or returns zeros, flagged `degraded`.
+- **GCRS→ITRS** (IAU 2006/2000A, CIO-based, ported from ERFA, BSD-3):
+  - against pyerfa: `xy06` 3e-18 rad, `s06` 1e-22 rad, `era00` 6e-14 rad,
+    and the full matrix 7.4e-12 (limit 1e-11), over 34 instants that
+    include four across the 2016/2017 leap;
+  - 0.0023° from the old `icrfToFixed`.
+- **SPICE DAF reader** (SPK and binary PCK, type 2) and **Chebyshev packs**:
+  excerpts that record their NAIF source, its SHA-256 and the span.
+- **`Ephemeris`** from DE440 (`de440s.bsp`) and the lunar PCK
+  (`moon_pa_de440_200625.bpc`, MOON_PA = 31008):
+  - Sun, EMB, Earth and Moon within 1.5e-5 m of jplephem;
+  - Moon Euler angles identical to SPICE;
+  - J2000→MOON_PA and →MOON_ME within 2.6e-13 of SPICE `pxform`;
+  - PA→ME (`moon_de440_250416.tf`) within 5e-20.
+
+  The plan's Earth formula was the old geocentric-Moon form. With SPK's
+  301/3 (Moon wrt EMB) it is `emb − moonWrtEmb/EMRAT`; the plan's form was
+  about 57 m off. A test against DE440's own 3→399 segment now pins it.
+  Summing Chebyshev terms smallest first was needed for ψ (about 1e4 rad).
+
+- **Setup and the store.** `npm run setup` downloads the four sources to
+  `~/.cesium-bench/frames` (`FRAMES_DATA_DIR`); nothing downloaded is
+  committed. It checks the NAIF files against pinned SHA-256s, validates
+  refreshed tables before replacing a good copy, and writes 2000–2050 packs
+  (`--frames-span`, inclusive). The dev server serves the store at
+  `/frames-data/`, and `npm run test:data` runs the tests against it.
+- **`loadFrameData()`** verifies each file's SHA-256 and returns `warnings`
+  for an expired leap table or EOP data that ends before now. In the
+  browser it resolves, with the geocentric Moon at 386,775 km on
+  2026-11-05.
+
+The precision floor is `Instant`'s single float64: 2.4e-7 s near 2050. That
+is about 1.7e-11 rad of Earth rotation (0.1 mm at the surface), about 7 mm
+in SSB-relative positions (the Earth's 30 km/s), and about 0.2 mm Earth to
+Moon: all far inside the meter goal. A two-part `Instant` is the fix if a
+later plan needs more.
+
 ### 13.15 GPU resource limits and capacities (r50, design)
 
 **What broke.** The first run on a Mac (Apple M-series, Chrome) failed at
