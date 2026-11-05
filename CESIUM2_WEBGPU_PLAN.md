@@ -394,9 +394,10 @@ _Migration, in steps that each leave the engine working:_
    Metal (a conditional write into a local array, loop shapes it won't
    unroll) may not be what costs it on D3D12, or the reverse.
 5. **The surface shaders.** opaque and translucent on `IMaterial`,
-   `IMaterialTextures` and `SplitPosition`, with the custom-shader ABI
-   exported from the generated module. Checked by image regression in Dyno
-   (§16.10), the parity pages and the custom-shader parity page.
+   `IMaterialTextures` and `SplitPosition`, linked to run-time code
+   through a declared boundary (_Step 5 design_ below). Checked by image
+   regression in Dyno (§16.10), the parity pages and the custom-shader
+   parity page.
 6. **Sky and atmosphere** (`sky.wgsl`, `atmosphere.wgsl`,
    `reference.wgsl`), checked by their reference comparisons (§4.2).
    IBL's kernels and its Monte Carlo reference moved into step 4.
@@ -545,6 +546,49 @@ done:
 
 Still WGSL: `common.wgsl`, `opaque.wgsl` and `translucent.wgsl` (step 5),
 `sky.wgsl`, `atmosphere.wgsl` and `reference.wgsl` (step 6).
+
+_Step 5 design (decided): the surface shaders as a precompiled unit,
+linked by name._ The custom-shader contract (`VertexInput`,
+`FragmentInput`, …) can't be exported from the generated module as first
+planned: its structs hold types each shader defines (`Attributes`,
+`Metadata`, `InstanceValues`), which a module compiled ahead of time can't
+name. So the engine's surface module is treated as an object file and
+run-time code as a second unit, joined as a linker would, never by
+rewriting the compiler's output:
+
+- **The boundary is declared once, in Slang:** small fixed structs for
+  the engine's side (a vertex, a fragment, their IDs), exported under their
+  names (`__extern_cpp`); the functions the engine calls by name
+  (`__target_intrinsic`: a vertex stage and a fragment stage the run-time
+  unit defines); the helpers it exports (`readNamed`,
+  `readFragmentProperty`, `readInstance`) and accessors for what styles
+  read of the view (the camera, the view-projection, the anchor), not the
+  `View` buffer's fields.
+- **The build generates both sides from it:** the engine's WGSL (as for
+  the kernels), a TypeScript description of the boundary from its
+  reflection (fields, types, signatures; as `layouts.ts` is), and the
+  Slang authors' contract (`cesium.slang`). `CustomShader.ts`, the 3D
+  Tiles and vector styles and `slangStages.ts` generate the contract
+  structs and the glue that builds them from the engine's, against the
+  description. Golden tests check that the three agree.
+- **Linking is joining plus a check:** before compiling, the host checks
+  the run-time unit defines each function the engine calls, once, with
+  the boundary's signature, and reports it in the author's terms.
+- **Values passed from vertex to fragment** are packed into `vec4` slots
+  (two floats and a `vec2` share one) and the generated module with that
+  many slots is chosen: no `// @named` splice. Whether that is a module per
+  count (0 to 4) or two (none and four) is measured first: unused slots
+  may cost tile memory per vertex on Apple's GPUs.
+- **Front ends:** styles keep their TypeScript expression compilers
+  (WGSL, no Slang); WGSL custom shaders link as they are; Slang custom
+  shaders are compiled offline (`scripts/slangShader.mjs`, the
+  recommended path) or in the browser (`CustomShader.fromSlang`, the WASM
+  compiler loaded lazily in a worker), now cached in IndexedDB by source
+  and Slang version, so the compiler loads only when a visitor meets a
+  shader not yet compiled. The engine itself never loads it.
+- Switches inside the surface shaders stay `override` constants where
+  they can (settled at pipeline creation, not compiled again); variants
+  only where a struct or binding changes.
 
 _Explore when the surface shaders move (step 5): runtime Slang for the
 user contract._ Today 3D Tiles styles, the vector styling language and
