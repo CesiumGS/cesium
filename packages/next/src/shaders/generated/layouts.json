@@ -1,0 +1,3340 @@
+{
+    "version": "1.1",
+    "parameters": [
+        {
+            "name": "view",
+            "binding": {"kind": "descriptorTableSlot", "index": 0},
+            "type": {
+                "kind": "constantBuffer",
+                "elementType": {
+                    "kind": "struct",
+                    "name": "View",
+                    "fields": [
+                        {
+                            "name": "viewProj",
+                            "type": {
+                                "kind": "matrix",
+                                "rowCount": 4,
+                                "columnCount": 4,
+                                "elementType": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32"
+                                },
+                                "sizes": [
+                                    {"kind": "uniform", "value": 64, "alignment": 16}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 0, "size": 64, "elementStride": 0}
+                        },
+                        {
+                            "name": "viewRotation",
+                            "type": {
+                                "kind": "matrix",
+                                "rowCount": 4,
+                                "columnCount": 4,
+                                "elementType": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32"
+                                },
+                                "sizes": [
+                                    {"kind": "uniform", "value": 64, "alignment": 16}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 64, "size": 64, "elementStride": 0}
+                        },
+                        {
+                            "name": "cameraHi",
+                            "type": {
+                                "kind": "vector",
+                                "elementCount": 3,
+                                "elementType": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32"
+                                },
+                                "sizes": [
+                                    {"kind": "uniform", "value": 12, "alignment": 16}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 128, "size": 12, "elementStride": 4}
+                        },
+                        {
+                            "name": "near",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "float32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 140, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "cameraLo",
+                            "type": {
+                                "kind": "vector",
+                                "elementCount": 3,
+                                "elementType": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32"
+                                },
+                                "sizes": [
+                                    {"kind": "uniform", "value": 12, "alignment": 16}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 144, "size": 12, "elementStride": 4}
+                        },
+                        {
+                            "name": "aspect",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "float32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 156, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "planes",
+                            "type": {
+                                "kind": "array",
+                                "elementCount": 5,
+                                "elementType": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "uniformStride": 16,
+                                "sizes": [
+                                    {"kind": "uniform", "value": 80, "alignment": 16}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 160, "size": 80, "elementStride": 16}
+                        },
+                        {
+                            "name": "sunDirection",
+                            "type": {
+                                "kind": "vector",
+                                "elementCount": 4,
+                                "elementType": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32"
+                                },
+                                "sizes": [
+                                    {"kind": "uniform", "value": 16, "alignment": 16}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 240, "size": 16, "elementStride": 4}
+                        },
+                        {
+                            "name": "viewport",
+                            "type": {
+                                "kind": "vector",
+                                "elementCount": 4,
+                                "elementType": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32"
+                                },
+                                "sizes": [
+                                    {"kind": "uniform", "value": 16, "alignment": 16}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 256, "size": 16, "elementStride": 4}
+                        },
+                        {
+                            "name": "iblFrame",
+                            "type": {
+                                "kind": "array",
+                                "elementCount": 3,
+                                "elementType": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "uniformStride": 16,
+                                "sizes": [
+                                    {"kind": "uniform", "value": 48, "alignment": 16}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 272, "size": 48, "elementStride": 16}
+                        },
+                        {
+                            "name": "sunIlluminance",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "float32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 320, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "diffuseIbl",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "float32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 324, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "specularIbl",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "float32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 328, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "specularMaxLod",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "float32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 332, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "viewBit",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 336, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "exposure",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "float32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 340, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "aerialStart",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "float32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 344, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "aerialEnd",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "float32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 348, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "sunLight",
+                            "type": {
+                                "kind": "vector",
+                                "elementCount": 4,
+                                "elementType": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32"
+                                },
+                                "sizes": [
+                                    {"kind": "uniform", "value": 16, "alignment": 16}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 352, "size": 16, "elementStride": 4}
+                        },
+                        {
+                            "name": "bodyRadii",
+                            "type": {
+                                "kind": "vector",
+                                "elementCount": 4,
+                                "elementType": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32"
+                                },
+                                "sizes": [
+                                    {"kind": "uniform", "value": 16, "alignment": 16}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 368, "size": 16, "elementStride": 4}
+                        },
+                        {
+                            "name": "moonLight",
+                            "type": {
+                                "kind": "vector",
+                                "elementCount": 4,
+                                "elementType": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32"
+                                },
+                                "sizes": [
+                                    {"kind": "uniform", "value": 16, "alignment": 16}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 384, "size": 16, "elementStride": 4}
+                        },
+                        {
+                            "name": "time",
+                            "type": {
+                                "kind": "vector",
+                                "elementCount": 4,
+                                "elementType": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32"
+                                },
+                                "sizes": [
+                                    {"kind": "uniform", "value": 16, "alignment": 16}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 400, "size": 16, "elementStride": 4}
+                        }
+                    ],
+                    "sizes": [
+                        {"kind": "uniform", "value": 416, "alignment": 16}
+                    ]
+                },
+                "containerVarLayout": {
+                    "binding": {"kind": "descriptorTableSlot", "index": 0}
+                },
+                "elementVarLayout": {
+                    "type": {
+                        "kind": "struct",
+                        "name": "View",
+                        "fields": [
+                            {
+                                "name": "viewProj",
+                                "type": {
+                                    "kind": "matrix",
+                                    "rowCount": 4,
+                                    "columnCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 64, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 0, "size": 64, "elementStride": 0}
+                            },
+                            {
+                                "name": "viewRotation",
+                                "type": {
+                                    "kind": "matrix",
+                                    "rowCount": 4,
+                                    "columnCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 64, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 64, "size": 64, "elementStride": 0}
+                            },
+                            {
+                                "name": "cameraHi",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 3,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 12, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 128, "size": 12, "elementStride": 4}
+                            },
+                            {
+                                "name": "near",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 140, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "cameraLo",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 3,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 12, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 144, "size": 12, "elementStride": 4}
+                            },
+                            {
+                                "name": "aspect",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 156, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "planes",
+                                "type": {
+                                    "kind": "array",
+                                    "elementCount": 5,
+                                    "elementType": {
+                                        "kind": "vector",
+                                        "elementCount": 4,
+                                        "elementType": {
+                                            "kind": "scalar",
+                                            "scalarType": "float32"
+                                        },
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 16, "alignment": 16}
+                                        ]
+                                    },
+                                    "uniformStride": 16,
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 80, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 160, "size": 80, "elementStride": 16}
+                            },
+                            {
+                                "name": "sunDirection",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 240, "size": 16, "elementStride": 4}
+                            },
+                            {
+                                "name": "viewport",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 256, "size": 16, "elementStride": 4}
+                            },
+                            {
+                                "name": "iblFrame",
+                                "type": {
+                                    "kind": "array",
+                                    "elementCount": 3,
+                                    "elementType": {
+                                        "kind": "vector",
+                                        "elementCount": 4,
+                                        "elementType": {
+                                            "kind": "scalar",
+                                            "scalarType": "float32"
+                                        },
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 16, "alignment": 16}
+                                        ]
+                                    },
+                                    "uniformStride": 16,
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 48, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 272, "size": 48, "elementStride": 16}
+                            },
+                            {
+                                "name": "sunIlluminance",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 320, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "diffuseIbl",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 324, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "specularIbl",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 328, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "specularMaxLod",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 332, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "viewBit",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 336, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "exposure",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 340, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "aerialStart",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 344, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "aerialEnd",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 348, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "sunLight",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 352, "size": 16, "elementStride": 4}
+                            },
+                            {
+                                "name": "bodyRadii",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 368, "size": 16, "elementStride": 4}
+                            },
+                            {
+                                "name": "moonLight",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 384, "size": 16, "elementStride": 4}
+                            },
+                            {
+                                "name": "time",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 400, "size": 16, "elementStride": 4}
+                            }
+                        ],
+                        "sizes": [
+                            {"kind": "uniform", "value": 416, "alignment": 16}
+                        ]
+                    },
+                    "binding": {"kind": "uniform", "offset": 0, "size": 416, "elementStride": 0}
+                },
+                "sizes": [
+                    {"kind": "descriptorTableSlot", "value": 1}
+                ]
+            }
+        },
+        {
+            "name": "records",
+            "binding": {"kind": "descriptorTableSlot", "index": 1},
+            "type": {
+                "kind": "resource",
+                "baseShape": "structuredBuffer",
+                "resultType": {
+                    "kind": "struct",
+                    "name": "DrawRecord",
+                    "fields": [
+                        {
+                            "name": "center",
+                            "type": {
+                                "kind": "vector",
+                                "elementCount": 3,
+                                "elementType": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32"
+                                },
+                                "sizes": [
+                                    {"kind": "uniform", "value": 12, "alignment": 16}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 0, "size": 12, "elementStride": 4}
+                        },
+                        {
+                            "name": "radius",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "float32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 12, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "color",
+                            "type": {
+                                "kind": "vector",
+                                "elementCount": 4,
+                                "elementType": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32"
+                                },
+                                "sizes": [
+                                    {"kind": "uniform", "value": 16, "alignment": 16}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 16, "size": 16, "elementStride": 4}
+                        },
+                        {
+                            "name": "transform",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 32, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "flags",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 36, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "materialIndex",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 40, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "indexCount",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 44, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "firstIndex",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 48, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "featureId",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 52, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "batch",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 56, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "positionOffset",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 60, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "normalOffset",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 64, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "uvOffset",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 68, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "colorOffset",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 72, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "tangentOffset",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 76, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "textureSet",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 80, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "imagerySlice",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 84, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "featureIdOffset",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 88, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "viewMask",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 92, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "clipBlock",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 96, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "placeholderMask",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 100, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "clipCount",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 104, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "instanceFirst",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 108, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "instanceCount",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 112, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "instanceStreams",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 116, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "instanceStride",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 120, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "lightsSlice",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 124, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "attributes",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 128, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "instanceDirectory",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 132, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "billboardSize",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "float32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 136, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "billboardDepthTest",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "float32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 140, "size": 4, "elementStride": 0}
+                        }
+                    ],
+                    "sizes": [
+                        {"kind": "uniform", "value": 144, "alignment": 16}
+                    ]
+                },
+                "sizes": [
+                    {"kind": "descriptorTableSlot", "value": 1}
+                ]
+            }
+        },
+        {
+            "name": "transforms",
+            "binding": {"kind": "descriptorTableSlot", "index": 2},
+            "type": {
+                "kind": "resource",
+                "baseShape": "structuredBuffer",
+                "resultType": {
+                    "kind": "struct",
+                    "name": "Transform",
+                    "fields": [
+                        {
+                            "name": "originHi",
+                            "type": {
+                                "kind": "vector",
+                                "elementCount": 3,
+                                "elementType": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32"
+                                },
+                                "sizes": [
+                                    {"kind": "uniform", "value": 12, "alignment": 16}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 0, "size": 12, "elementStride": 4}
+                        },
+                        {
+                            "name": "scale",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "float32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 12, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "originLo",
+                            "type": {
+                                "kind": "vector",
+                                "elementCount": 3,
+                                "elementType": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32"
+                                },
+                                "sizes": [
+                                    {"kind": "uniform", "value": 12, "alignment": 16}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 16, "size": 12, "elementStride": 4}
+                        },
+                        {
+                            "name": "flags",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 28, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "linear",
+                            "type": {
+                                "kind": "matrix",
+                                "rowCount": 3,
+                                "columnCount": 3,
+                                "elementType": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32"
+                                },
+                                "sizes": [
+                                    {"kind": "uniform", "value": 48, "alignment": 16}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 32, "size": 48, "elementStride": 0}
+                        }
+                    ],
+                    "sizes": [
+                        {"kind": "uniform", "value": 80, "alignment": 16}
+                    ]
+                },
+                "sizes": [
+                    {"kind": "descriptorTableSlot", "value": 1}
+                ]
+            }
+        },
+        {
+            "name": "instances",
+            "binding": {"kind": "descriptorTableSlot", "index": 3},
+            "type": {
+                "kind": "resource",
+                "baseShape": "structuredBuffer",
+                "resultType": {
+                    "kind": "struct",
+                    "name": "Instance",
+                    "fields": [
+                        {
+                            "name": "row0",
+                            "type": {
+                                "kind": "vector",
+                                "elementCount": 4,
+                                "elementType": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32"
+                                },
+                                "sizes": [
+                                    {"kind": "uniform", "value": 16, "alignment": 16}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 0, "size": 16, "elementStride": 4}
+                        },
+                        {
+                            "name": "row1",
+                            "type": {
+                                "kind": "vector",
+                                "elementCount": 4,
+                                "elementType": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32"
+                                },
+                                "sizes": [
+                                    {"kind": "uniform", "value": 16, "alignment": 16}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 16, "size": 16, "elementStride": 4}
+                        },
+                        {
+                            "name": "row2",
+                            "type": {
+                                "kind": "vector",
+                                "elementCount": 4,
+                                "elementType": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32"
+                                },
+                                "sizes": [
+                                    {"kind": "uniform", "value": 16, "alignment": 16}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 32, "size": 16, "elementStride": 4}
+                        },
+                        {
+                            "name": "record",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 48, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "feature",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 52, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "flags",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 56, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "tint",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 60, "size": 4, "elementStride": 0}
+                        }
+                    ],
+                    "sizes": [
+                        {"kind": "uniform", "value": 64, "alignment": 16}
+                    ]
+                },
+                "sizes": [
+                    {"kind": "descriptorTableSlot", "value": 1}
+                ]
+            }
+        },
+        {
+            "name": "items",
+            "binding": {"kind": "descriptorTableSlot", "index": 4},
+            "type": {
+                "kind": "resource",
+                "baseShape": "structuredBuffer",
+                "resultType": {
+                    "kind": "struct",
+                    "name": "DrawItem",
+                    "fields": [
+                        {
+                            "name": "relModel",
+                            "type": {
+                                "kind": "matrix",
+                                "rowCount": 4,
+                                "columnCount": 4,
+                                "elementType": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32"
+                                },
+                                "sizes": [
+                                    {"kind": "uniform", "value": 64, "alignment": 16}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 0, "size": 64, "elementStride": 0}
+                        },
+                        {
+                            "name": "record",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 64, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "feature",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 68, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "instance",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 72, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "tint",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 76, "size": 4, "elementStride": 0}
+                        }
+                    ],
+                    "sizes": [
+                        {"kind": "uniform", "value": 80, "alignment": 16}
+                    ]
+                },
+                "sizes": [
+                    {"kind": "descriptorTableSlot", "value": 1}
+                ]
+            }
+        },
+        {
+            "name": "materials",
+            "binding": {"kind": "descriptorTableSlot", "index": 5},
+            "type": {
+                "kind": "resource",
+                "baseShape": "structuredBuffer",
+                "resultType": {
+                    "kind": "struct",
+                    "name": "Material",
+                    "fields": [
+                        {
+                            "name": "baseColor",
+                            "type": {
+                                "kind": "vector",
+                                "elementCount": 4,
+                                "elementType": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32"
+                                },
+                                "sizes": [
+                                    {"kind": "uniform", "value": 16, "alignment": 16}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 0, "size": 16, "elementStride": 4}
+                        },
+                        {
+                            "name": "emissive",
+                            "type": {
+                                "kind": "vector",
+                                "elementCount": 3,
+                                "elementType": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32"
+                                },
+                                "sizes": [
+                                    {"kind": "uniform", "value": 12, "alignment": 16}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 16, "size": 12, "elementStride": 4}
+                        },
+                        {
+                            "name": "metallic",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "float32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 28, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "roughness",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "float32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 32, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "alphaCutoff",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "float32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 36, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "normalScale",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "float32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 40, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "occlusionStrength",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "float32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 44, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "flags",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 48, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "textures01",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 52, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "textures23",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 56, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "textures4",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 60, "size": 4, "elementStride": 0}
+                        }
+                    ],
+                    "sizes": [
+                        {"kind": "uniform", "value": 64, "alignment": 16}
+                    ]
+                },
+                "sizes": [
+                    {"kind": "descriptorTableSlot", "value": 1}
+                ]
+            }
+        },
+        {
+            "name": "lightHeaders",
+            "binding": {"kind": "descriptorTableSlot", "index": 6},
+            "type": {
+                "kind": "resource",
+                "baseShape": "structuredBuffer",
+                "resultType": {
+                    "kind": "struct",
+                    "name": "LightHeader",
+                    "fields": [
+                        {
+                            "name": "grid",
+                            "type": {
+                                "kind": "vector",
+                                "elementCount": 4,
+                                "elementType": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32"
+                                },
+                                "sizes": [
+                                    {"kind": "uniform", "value": 16, "alignment": 16}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 0, "size": 16, "elementStride": 4}
+                        },
+                        {
+                            "name": "depth",
+                            "type": {
+                                "kind": "vector",
+                                "elementCount": 4,
+                                "elementType": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32"
+                                },
+                                "sizes": [
+                                    {"kind": "uniform", "value": 16, "alignment": 16}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 16, "size": 16, "elementStride": 4}
+                        },
+                        {
+                            "name": "forward",
+                            "type": {
+                                "kind": "vector",
+                                "elementCount": 4,
+                                "elementType": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32"
+                                },
+                                "sizes": [
+                                    {"kind": "uniform", "value": 16, "alignment": 16}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 32, "size": 16, "elementStride": 4}
+                        },
+                        {
+                            "name": "right",
+                            "type": {
+                                "kind": "vector",
+                                "elementCount": 4,
+                                "elementType": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32"
+                                },
+                                "sizes": [
+                                    {"kind": "uniform", "value": 16, "alignment": 16}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 48, "size": 16, "elementStride": 4}
+                        },
+                        {
+                            "name": "up",
+                            "type": {
+                                "kind": "vector",
+                                "elementCount": 4,
+                                "elementType": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32"
+                                },
+                                "sizes": [
+                                    {"kind": "uniform", "value": 16, "alignment": 16}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 64, "size": 16, "elementStride": 4}
+                        }
+                    ],
+                    "sizes": [
+                        {"kind": "uniform", "value": 80, "alignment": 16}
+                    ]
+                },
+                "sizes": [
+                    {"kind": "descriptorTableSlot", "value": 1}
+                ]
+            }
+        },
+        {
+            "name": "lights",
+            "binding": {"kind": "descriptorTableSlot", "index": 7},
+            "type": {
+                "kind": "resource",
+                "baseShape": "structuredBuffer",
+                "resultType": {
+                    "kind": "struct",
+                    "name": "Light",
+                    "fields": [
+                        {
+                            "name": "position",
+                            "type": {
+                                "kind": "vector",
+                                "elementCount": 4,
+                                "elementType": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32"
+                                },
+                                "sizes": [
+                                    {"kind": "uniform", "value": 16, "alignment": 16}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 0, "size": 16, "elementStride": 4}
+                        },
+                        {
+                            "name": "color",
+                            "type": {
+                                "kind": "vector",
+                                "elementCount": 4,
+                                "elementType": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32"
+                                },
+                                "sizes": [
+                                    {"kind": "uniform", "value": 16, "alignment": 16}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 16, "size": 16, "elementStride": 4}
+                        },
+                        {
+                            "name": "direction",
+                            "type": {
+                                "kind": "vector",
+                                "elementCount": 4,
+                                "elementType": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32"
+                                },
+                                "sizes": [
+                                    {"kind": "uniform", "value": 16, "alignment": 16}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 32, "size": 16, "elementStride": 4}
+                        },
+                        {
+                            "name": "cone",
+                            "type": {
+                                "kind": "vector",
+                                "elementCount": 4,
+                                "elementType": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32"
+                                },
+                                "sizes": [
+                                    {"kind": "uniform", "value": 16, "alignment": 16}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 48, "size": 16, "elementStride": 4}
+                        }
+                    ],
+                    "sizes": [
+                        {"kind": "uniform", "value": 64, "alignment": 16}
+                    ]
+                },
+                "sizes": [
+                    {"kind": "descriptorTableSlot", "value": 1}
+                ]
+            }
+        },
+        {
+            "name": "out",
+            "binding": {"kind": "descriptorTableSlot", "index": 8},
+            "type": {
+                "kind": "resource",
+                "baseShape": "structuredBuffer",
+                "access": "readWrite",
+                "resultType": {
+                    "kind": "scalar",
+                    "scalarType": "uint32",
+                    "sizes": [
+                        {"kind": "uniform", "value": 4, "alignment": 4}
+                    ]
+                },
+                "sizes": [
+                    {"kind": "descriptorTableSlot", "value": 1}
+                ]
+            }
+        }
+    ],
+    "globalScope": {
+        "kind": "none",
+        "parameters": [
+            {
+                "name": "view",
+                "binding": {"kind": "descriptorTableSlot", "index": 0},
+                "type": {
+                    "kind": "constantBuffer",
+                    "elementType": {
+                        "kind": "struct",
+                        "name": "View",
+                        "fields": [
+                            {
+                                "name": "viewProj",
+                                "type": {
+                                    "kind": "matrix",
+                                    "rowCount": 4,
+                                    "columnCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 64, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 0, "size": 64, "elementStride": 0}
+                            },
+                            {
+                                "name": "viewRotation",
+                                "type": {
+                                    "kind": "matrix",
+                                    "rowCount": 4,
+                                    "columnCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 64, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 64, "size": 64, "elementStride": 0}
+                            },
+                            {
+                                "name": "cameraHi",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 3,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 12, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 128, "size": 12, "elementStride": 4}
+                            },
+                            {
+                                "name": "near",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 140, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "cameraLo",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 3,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 12, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 144, "size": 12, "elementStride": 4}
+                            },
+                            {
+                                "name": "aspect",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 156, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "planes",
+                                "type": {
+                                    "kind": "array",
+                                    "elementCount": 5,
+                                    "elementType": {
+                                        "kind": "vector",
+                                        "elementCount": 4,
+                                        "elementType": {
+                                            "kind": "scalar",
+                                            "scalarType": "float32"
+                                        },
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 16, "alignment": 16}
+                                        ]
+                                    },
+                                    "uniformStride": 16,
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 80, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 160, "size": 80, "elementStride": 16}
+                            },
+                            {
+                                "name": "sunDirection",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 240, "size": 16, "elementStride": 4}
+                            },
+                            {
+                                "name": "viewport",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 256, "size": 16, "elementStride": 4}
+                            },
+                            {
+                                "name": "iblFrame",
+                                "type": {
+                                    "kind": "array",
+                                    "elementCount": 3,
+                                    "elementType": {
+                                        "kind": "vector",
+                                        "elementCount": 4,
+                                        "elementType": {
+                                            "kind": "scalar",
+                                            "scalarType": "float32"
+                                        },
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 16, "alignment": 16}
+                                        ]
+                                    },
+                                    "uniformStride": 16,
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 48, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 272, "size": 48, "elementStride": 16}
+                            },
+                            {
+                                "name": "sunIlluminance",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 320, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "diffuseIbl",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 324, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "specularIbl",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 328, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "specularMaxLod",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 332, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "viewBit",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 336, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "exposure",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 340, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "aerialStart",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 344, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "aerialEnd",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 348, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "sunLight",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 352, "size": 16, "elementStride": 4}
+                            },
+                            {
+                                "name": "bodyRadii",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 368, "size": 16, "elementStride": 4}
+                            },
+                            {
+                                "name": "moonLight",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 384, "size": 16, "elementStride": 4}
+                            },
+                            {
+                                "name": "time",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 400, "size": 16, "elementStride": 4}
+                            }
+                        ],
+                        "sizes": [
+                            {"kind": "uniform", "value": 416, "alignment": 16}
+                        ]
+                    },
+                    "containerVarLayout": {
+                        "binding": {"kind": "descriptorTableSlot", "index": 0}
+                    },
+                    "elementVarLayout": {
+                        "type": {
+                            "kind": "struct",
+                            "name": "View",
+                            "fields": [
+                                {
+                                    "name": "viewProj",
+                                    "type": {
+                                        "kind": "matrix",
+                                        "rowCount": 4,
+                                        "columnCount": 4,
+                                        "elementType": {
+                                            "kind": "scalar",
+                                            "scalarType": "float32"
+                                        },
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 64, "alignment": 16}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 0, "size": 64, "elementStride": 0}
+                                },
+                                {
+                                    "name": "viewRotation",
+                                    "type": {
+                                        "kind": "matrix",
+                                        "rowCount": 4,
+                                        "columnCount": 4,
+                                        "elementType": {
+                                            "kind": "scalar",
+                                            "scalarType": "float32"
+                                        },
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 64, "alignment": 16}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 64, "size": 64, "elementStride": 0}
+                                },
+                                {
+                                    "name": "cameraHi",
+                                    "type": {
+                                        "kind": "vector",
+                                        "elementCount": 3,
+                                        "elementType": {
+                                            "kind": "scalar",
+                                            "scalarType": "float32"
+                                        },
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 12, "alignment": 16}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 128, "size": 12, "elementStride": 4}
+                                },
+                                {
+                                    "name": "near",
+                                    "type": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32",
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 4, "alignment": 4}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 140, "size": 4, "elementStride": 0}
+                                },
+                                {
+                                    "name": "cameraLo",
+                                    "type": {
+                                        "kind": "vector",
+                                        "elementCount": 3,
+                                        "elementType": {
+                                            "kind": "scalar",
+                                            "scalarType": "float32"
+                                        },
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 12, "alignment": 16}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 144, "size": 12, "elementStride": 4}
+                                },
+                                {
+                                    "name": "aspect",
+                                    "type": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32",
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 4, "alignment": 4}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 156, "size": 4, "elementStride": 0}
+                                },
+                                {
+                                    "name": "planes",
+                                    "type": {
+                                        "kind": "array",
+                                        "elementCount": 5,
+                                        "elementType": {
+                                            "kind": "vector",
+                                            "elementCount": 4,
+                                            "elementType": {
+                                                "kind": "scalar",
+                                                "scalarType": "float32"
+                                            },
+                                            "sizes": [
+                                                {"kind": "uniform", "value": 16, "alignment": 16}
+                                            ]
+                                        },
+                                        "uniformStride": 16,
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 80, "alignment": 16}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 160, "size": 80, "elementStride": 16}
+                                },
+                                {
+                                    "name": "sunDirection",
+                                    "type": {
+                                        "kind": "vector",
+                                        "elementCount": 4,
+                                        "elementType": {
+                                            "kind": "scalar",
+                                            "scalarType": "float32"
+                                        },
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 16, "alignment": 16}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 240, "size": 16, "elementStride": 4}
+                                },
+                                {
+                                    "name": "viewport",
+                                    "type": {
+                                        "kind": "vector",
+                                        "elementCount": 4,
+                                        "elementType": {
+                                            "kind": "scalar",
+                                            "scalarType": "float32"
+                                        },
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 16, "alignment": 16}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 256, "size": 16, "elementStride": 4}
+                                },
+                                {
+                                    "name": "iblFrame",
+                                    "type": {
+                                        "kind": "array",
+                                        "elementCount": 3,
+                                        "elementType": {
+                                            "kind": "vector",
+                                            "elementCount": 4,
+                                            "elementType": {
+                                                "kind": "scalar",
+                                                "scalarType": "float32"
+                                            },
+                                            "sizes": [
+                                                {"kind": "uniform", "value": 16, "alignment": 16}
+                                            ]
+                                        },
+                                        "uniformStride": 16,
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 48, "alignment": 16}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 272, "size": 48, "elementStride": 16}
+                                },
+                                {
+                                    "name": "sunIlluminance",
+                                    "type": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32",
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 4, "alignment": 4}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 320, "size": 4, "elementStride": 0}
+                                },
+                                {
+                                    "name": "diffuseIbl",
+                                    "type": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32",
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 4, "alignment": 4}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 324, "size": 4, "elementStride": 0}
+                                },
+                                {
+                                    "name": "specularIbl",
+                                    "type": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32",
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 4, "alignment": 4}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 328, "size": 4, "elementStride": 0}
+                                },
+                                {
+                                    "name": "specularMaxLod",
+                                    "type": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32",
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 4, "alignment": 4}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 332, "size": 4, "elementStride": 0}
+                                },
+                                {
+                                    "name": "viewBit",
+                                    "type": {
+                                        "kind": "scalar",
+                                        "scalarType": "uint32",
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 4, "alignment": 4}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 336, "size": 4, "elementStride": 0}
+                                },
+                                {
+                                    "name": "exposure",
+                                    "type": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32",
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 4, "alignment": 4}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 340, "size": 4, "elementStride": 0}
+                                },
+                                {
+                                    "name": "aerialStart",
+                                    "type": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32",
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 4, "alignment": 4}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 344, "size": 4, "elementStride": 0}
+                                },
+                                {
+                                    "name": "aerialEnd",
+                                    "type": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32",
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 4, "alignment": 4}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 348, "size": 4, "elementStride": 0}
+                                },
+                                {
+                                    "name": "sunLight",
+                                    "type": {
+                                        "kind": "vector",
+                                        "elementCount": 4,
+                                        "elementType": {
+                                            "kind": "scalar",
+                                            "scalarType": "float32"
+                                        },
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 16, "alignment": 16}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 352, "size": 16, "elementStride": 4}
+                                },
+                                {
+                                    "name": "bodyRadii",
+                                    "type": {
+                                        "kind": "vector",
+                                        "elementCount": 4,
+                                        "elementType": {
+                                            "kind": "scalar",
+                                            "scalarType": "float32"
+                                        },
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 16, "alignment": 16}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 368, "size": 16, "elementStride": 4}
+                                },
+                                {
+                                    "name": "moonLight",
+                                    "type": {
+                                        "kind": "vector",
+                                        "elementCount": 4,
+                                        "elementType": {
+                                            "kind": "scalar",
+                                            "scalarType": "float32"
+                                        },
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 16, "alignment": 16}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 384, "size": 16, "elementStride": 4}
+                                },
+                                {
+                                    "name": "time",
+                                    "type": {
+                                        "kind": "vector",
+                                        "elementCount": 4,
+                                        "elementType": {
+                                            "kind": "scalar",
+                                            "scalarType": "float32"
+                                        },
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 16, "alignment": 16}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 400, "size": 16, "elementStride": 4}
+                                }
+                            ],
+                            "sizes": [
+                                {"kind": "uniform", "value": 416, "alignment": 16}
+                            ]
+                        },
+                        "binding": {"kind": "uniform", "offset": 0, "size": 416, "elementStride": 0}
+                    },
+                    "sizes": [
+                        {"kind": "descriptorTableSlot", "value": 1}
+                    ]
+                }
+            },
+            {
+                "name": "records",
+                "binding": {"kind": "descriptorTableSlot", "index": 1},
+                "type": {
+                    "kind": "resource",
+                    "baseShape": "structuredBuffer",
+                    "resultType": {
+                        "kind": "struct",
+                        "name": "DrawRecord",
+                        "fields": [
+                            {
+                                "name": "center",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 3,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 12, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 0, "size": 12, "elementStride": 4}
+                            },
+                            {
+                                "name": "radius",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 12, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "color",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 16, "size": 16, "elementStride": 4}
+                            },
+                            {
+                                "name": "transform",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 32, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "flags",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 36, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "materialIndex",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 40, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "indexCount",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 44, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "firstIndex",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 48, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "featureId",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 52, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "batch",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 56, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "positionOffset",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 60, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "normalOffset",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 64, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "uvOffset",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 68, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "colorOffset",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 72, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "tangentOffset",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 76, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "textureSet",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 80, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "imagerySlice",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 84, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "featureIdOffset",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 88, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "viewMask",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 92, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "clipBlock",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 96, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "placeholderMask",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 100, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "clipCount",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 104, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "instanceFirst",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 108, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "instanceCount",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 112, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "instanceStreams",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 116, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "instanceStride",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 120, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "lightsSlice",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 124, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "attributes",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 128, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "instanceDirectory",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 132, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "billboardSize",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 136, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "billboardDepthTest",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 140, "size": 4, "elementStride": 0}
+                            }
+                        ],
+                        "sizes": [
+                            {"kind": "uniform", "value": 144, "alignment": 16}
+                        ]
+                    },
+                    "sizes": [
+                        {"kind": "descriptorTableSlot", "value": 1}
+                    ]
+                }
+            },
+            {
+                "name": "transforms",
+                "binding": {"kind": "descriptorTableSlot", "index": 2},
+                "type": {
+                    "kind": "resource",
+                    "baseShape": "structuredBuffer",
+                    "resultType": {
+                        "kind": "struct",
+                        "name": "Transform",
+                        "fields": [
+                            {
+                                "name": "originHi",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 3,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 12, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 0, "size": 12, "elementStride": 4}
+                            },
+                            {
+                                "name": "scale",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 12, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "originLo",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 3,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 12, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 16, "size": 12, "elementStride": 4}
+                            },
+                            {
+                                "name": "flags",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 28, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "linear",
+                                "type": {
+                                    "kind": "matrix",
+                                    "rowCount": 3,
+                                    "columnCount": 3,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 48, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 32, "size": 48, "elementStride": 0}
+                            }
+                        ],
+                        "sizes": [
+                            {"kind": "uniform", "value": 80, "alignment": 16}
+                        ]
+                    },
+                    "sizes": [
+                        {"kind": "descriptorTableSlot", "value": 1}
+                    ]
+                }
+            },
+            {
+                "name": "instances",
+                "binding": {"kind": "descriptorTableSlot", "index": 3},
+                "type": {
+                    "kind": "resource",
+                    "baseShape": "structuredBuffer",
+                    "resultType": {
+                        "kind": "struct",
+                        "name": "Instance",
+                        "fields": [
+                            {
+                                "name": "row0",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 0, "size": 16, "elementStride": 4}
+                            },
+                            {
+                                "name": "row1",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 16, "size": 16, "elementStride": 4}
+                            },
+                            {
+                                "name": "row2",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 32, "size": 16, "elementStride": 4}
+                            },
+                            {
+                                "name": "record",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 48, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "feature",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 52, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "flags",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 56, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "tint",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 60, "size": 4, "elementStride": 0}
+                            }
+                        ],
+                        "sizes": [
+                            {"kind": "uniform", "value": 64, "alignment": 16}
+                        ]
+                    },
+                    "sizes": [
+                        {"kind": "descriptorTableSlot", "value": 1}
+                    ]
+                }
+            },
+            {
+                "name": "items",
+                "binding": {"kind": "descriptorTableSlot", "index": 4},
+                "type": {
+                    "kind": "resource",
+                    "baseShape": "structuredBuffer",
+                    "resultType": {
+                        "kind": "struct",
+                        "name": "DrawItem",
+                        "fields": [
+                            {
+                                "name": "relModel",
+                                "type": {
+                                    "kind": "matrix",
+                                    "rowCount": 4,
+                                    "columnCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 64, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 0, "size": 64, "elementStride": 0}
+                            },
+                            {
+                                "name": "record",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 64, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "feature",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 68, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "instance",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 72, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "tint",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 76, "size": 4, "elementStride": 0}
+                            }
+                        ],
+                        "sizes": [
+                            {"kind": "uniform", "value": 80, "alignment": 16}
+                        ]
+                    },
+                    "sizes": [
+                        {"kind": "descriptorTableSlot", "value": 1}
+                    ]
+                }
+            },
+            {
+                "name": "materials",
+                "binding": {"kind": "descriptorTableSlot", "index": 5},
+                "type": {
+                    "kind": "resource",
+                    "baseShape": "structuredBuffer",
+                    "resultType": {
+                        "kind": "struct",
+                        "name": "Material",
+                        "fields": [
+                            {
+                                "name": "baseColor",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 0, "size": 16, "elementStride": 4}
+                            },
+                            {
+                                "name": "emissive",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 3,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 12, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 16, "size": 12, "elementStride": 4}
+                            },
+                            {
+                                "name": "metallic",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 28, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "roughness",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 32, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "alphaCutoff",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 36, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "normalScale",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 40, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "occlusionStrength",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 44, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "flags",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 48, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "textures01",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 52, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "textures23",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 56, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "textures4",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 60, "size": 4, "elementStride": 0}
+                            }
+                        ],
+                        "sizes": [
+                            {"kind": "uniform", "value": 64, "alignment": 16}
+                        ]
+                    },
+                    "sizes": [
+                        {"kind": "descriptorTableSlot", "value": 1}
+                    ]
+                }
+            },
+            {
+                "name": "lightHeaders",
+                "binding": {"kind": "descriptorTableSlot", "index": 6},
+                "type": {
+                    "kind": "resource",
+                    "baseShape": "structuredBuffer",
+                    "resultType": {
+                        "kind": "struct",
+                        "name": "LightHeader",
+                        "fields": [
+                            {
+                                "name": "grid",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 0, "size": 16, "elementStride": 4}
+                            },
+                            {
+                                "name": "depth",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 16, "size": 16, "elementStride": 4}
+                            },
+                            {
+                                "name": "forward",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 32, "size": 16, "elementStride": 4}
+                            },
+                            {
+                                "name": "right",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 48, "size": 16, "elementStride": 4}
+                            },
+                            {
+                                "name": "up",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 64, "size": 16, "elementStride": 4}
+                            }
+                        ],
+                        "sizes": [
+                            {"kind": "uniform", "value": 80, "alignment": 16}
+                        ]
+                    },
+                    "sizes": [
+                        {"kind": "descriptorTableSlot", "value": 1}
+                    ]
+                }
+            },
+            {
+                "name": "lights",
+                "binding": {"kind": "descriptorTableSlot", "index": 7},
+                "type": {
+                    "kind": "resource",
+                    "baseShape": "structuredBuffer",
+                    "resultType": {
+                        "kind": "struct",
+                        "name": "Light",
+                        "fields": [
+                            {
+                                "name": "position",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 0, "size": 16, "elementStride": 4}
+                            },
+                            {
+                                "name": "color",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 16, "size": 16, "elementStride": 4}
+                            },
+                            {
+                                "name": "direction",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 32, "size": 16, "elementStride": 4}
+                            },
+                            {
+                                "name": "cone",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 48, "size": 16, "elementStride": 4}
+                            }
+                        ],
+                        "sizes": [
+                            {"kind": "uniform", "value": 64, "alignment": 16}
+                        ]
+                    },
+                    "sizes": [
+                        {"kind": "descriptorTableSlot", "value": 1}
+                    ]
+                }
+            },
+            {
+                "name": "out",
+                "binding": {"kind": "descriptorTableSlot", "index": 8},
+                "type": {
+                    "kind": "resource",
+                    "baseShape": "structuredBuffer",
+                    "access": "readWrite",
+                    "resultType": {
+                        "kind": "scalar",
+                        "scalarType": "uint32",
+                        "sizes": [
+                            {"kind": "uniform", "value": 4, "alignment": 4}
+                        ]
+                    },
+                    "sizes": [
+                        {"kind": "descriptorTableSlot", "value": 1}
+                    ]
+                }
+            }
+        ]
+    },
+    "entryPoints": [
+        {
+            "name": "layouts",
+            "stage": "compute",
+            "scope": {
+                "kind": "none",
+                "parameters": [
+
+                ]
+            },
+            "threadGroupSize": [1, 1, 1],
+            "bindings": [
+                {
+                    "name": "view",
+                    "binding": {"kind": "descriptorTableSlot", "index": 0}
+                },
+                {
+                    "name": "records",
+                    "binding": {"kind": "descriptorTableSlot", "index": 1}
+                },
+                {
+                    "name": "transforms",
+                    "binding": {"kind": "descriptorTableSlot", "index": 2}
+                },
+                {
+                    "name": "instances",
+                    "binding": {"kind": "descriptorTableSlot", "index": 3}
+                },
+                {
+                    "name": "items",
+                    "binding": {"kind": "descriptorTableSlot", "index": 4}
+                },
+                {
+                    "name": "materials",
+                    "binding": {"kind": "descriptorTableSlot", "index": 5}
+                },
+                {
+                    "name": "lightHeaders",
+                    "binding": {"kind": "descriptorTableSlot", "index": 6}
+                },
+                {
+                    "name": "lights",
+                    "binding": {"kind": "descriptorTableSlot", "index": 7}
+                },
+                {
+                    "name": "out",
+                    "binding": {"kind": "descriptorTableSlot", "index": 8}
+                }
+            ]
+        }
+    ],
+    "bindlessSpaceIndex": 1
+}

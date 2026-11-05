@@ -2,16 +2,40 @@ import type { Mat4 } from "../math/mat4.ts";
 import type { Vec3 } from "../math/vec3.ts";
 import { SOLAR_ILLUMINANCE, type Body } from "../scene/Body.ts";
 import { splitHigh, splitVec3 } from "../math/transforms.ts";
+import {
+  DrawItemLayout,
+  DrawRecordLayout,
+  InstanceLayout,
+  MaterialLayout,
+  TransformLayout,
+  ViewLayout,
+} from "./generated/layouts.ts";
 
 /**
- * Byte layouts shared between TypeScript and WGSL. Keep in sync with
- * `shaders/common.wgsl`.
+ * Byte layouts shared between TypeScript and the shaders. The structs are
+ * defined once, in shaders/common.slang; their offsets come from its
+ * reflection (render/generated/layouts.ts, `npm run shaders`), so the
+ * writers below address fields by name, never by hand-kept numbers.
  */
 
-/** `struct View` — 416 bytes, padded to a 256-aligned stride per view. */
-export const VIEW_SIZE = 416;
+/** A layout's word offsets (its byte offsets / 4), `size` in words too. */
+function words<L extends Record<string, number>>(
+  layout: L,
+): { readonly [K in keyof L]: number } {
+  return Object.fromEntries(
+    Object.entries(layout).map(([k, v]) => [k, v / 4]),
+  ) as { readonly [K in keyof L]: number };
+}
+const V = words(ViewLayout);
+const R = words(DrawRecordLayout);
+const T = words(TransformLayout);
+const I = words(InstanceLayout);
+const M = words(MaterialLayout);
+
+/** `struct View`, padded to a 256-aligned stride per view. */
+export const VIEW_SIZE = ViewLayout.size;
 /** Word offset of `View.viewBit` (u32): this view's bit in record view masks. */
-export const VIEW_BIT_WORD = 84;
+export const VIEW_BIT_WORD = V.viewBit;
 export const VIEW_STRIDE = 512;
 
 export interface ViewBlock {
@@ -104,93 +128,93 @@ export function writeViewBlock(
   block: ViewBlock,
 ): void {
   const o = offsetFloats;
-  out.set(block.viewProj, o);
-  out.set(block.viewRotation, o + 16);
-  splitVec3(block.cameraPosition, out, o + 32, out, o + 36);
-  out[o + 35] = block.near;
-  out[o + 39] = block.aspect;
-  out.set(block.planes, o + 40);
-  out[o + 60] = block.sunDirection[0]!;
-  out[o + 61] = block.sunDirection[1]!;
-  out[o + 62] = block.sunDirection[2]!;
-  out[o + 63] = block.moonAir;
-  out[o + 64] = block.width;
-  out[o + 65] = block.height;
-  out[o + 66] = 1 / block.width;
-  out[o + 67] = 1 / block.height;
+  out.set(block.viewProj, o + V.viewProj);
+  out.set(block.viewRotation, o + V.viewRotation);
+  splitVec3(block.cameraPosition, out, o + V.cameraHi, out, o + V.cameraLo);
+  out[o + V.near] = block.near;
+  out[o + V.aspect] = block.aspect;
+  out.set(block.planes, o + V.planes);
+  out[o + V.sunDirection] = block.sunDirection[0]!;
+  out[o + V.sunDirection + 1] = block.sunDirection[1]!;
+  out[o + V.sunDirection + 2] = block.sunDirection[2]!;
+  out[o + V.sunDirection + 3] = block.moonAir;
+  out[o + V.viewport] = block.width;
+  out[o + V.viewport + 1] = block.height;
+  out[o + V.viewport + 2] = 1 / block.width;
+  out[o + V.viewport + 3] = 1 / block.height;
   block.iblFrame.forEach((axis, i) => {
-    out[o + 68 + i * 4] = axis[0]!;
-    out[o + 69 + i * 4] = axis[1]!;
-    out[o + 70 + i * 4] = axis[2]!;
-    out[o + 71 + i * 4] = 0;
+    out[o + V.iblFrame + i * 4] = axis[0]!;
+    out[o + V.iblFrame + i * 4 + 1] = axis[1]!;
+    out[o + V.iblFrame + i * 4 + 2] = axis[2]!;
+    out[o + V.iblFrame + i * 4 + 3] = 0;
   });
-  out[o + 71] = block.cityLights ? 1 : 0;
-  out[o + 75] = block.aerial?.screen ?? 0;
+  out[o + V.iblFrame + 3] = block.cityLights ? 1 : 0;
+  out[o + V.iblFrame + 7] = block.aerial?.screen ?? 0;
   const sun = block.lighting.sunIlluminance;
   const atmosphere = block.body.atmosphere;
   // From the atmosphere: the table's light, scaled by 1; a body without
   // one gets the sun's whole light.
-  out[o + 80] =
+  out[o + V.sunIlluminance] =
     sun === "atmosphere" ? (atmosphere ? 1 : SOLAR_ILLUMINANCE) : sun;
-  out[o + 81] = block.lighting.diffuseIbl;
-  out[o + 82] = block.lighting.specularIbl;
-  out[o + 83] = block.specularMaxLod;
-  out[o + 85] = block.exposure;
-  out[o + 86] = block.aerial?.start ?? 0;
-  out[o + 87] = block.aerial?.end ?? 0;
-  out[o + 88] = (atmosphere?.bottomRadius ?? 0) / 1000;
-  out[o + 89] = (atmosphere?.topRadius ?? 0) / 1000;
-  out[o + 90] = sun === "atmosphere" && atmosphere ? 1 : 0;
-  out[o + 91] = block.aerial ? 1 : 0;
+  out[o + V.diffuseIbl] = block.lighting.diffuseIbl;
+  out[o + V.specularIbl] = block.lighting.specularIbl;
+  out[o + V.specularMaxLod] = block.specularMaxLod;
+  out[o + V.exposure] = block.exposure;
+  out[o + V.aerialStart] = block.aerial?.start ?? 0;
+  out[o + V.aerialEnd] = block.aerial?.end ?? 0;
+  out[o + V.sunLight] = (atmosphere?.bottomRadius ?? 0) / 1000;
+  out[o + V.sunLight + 1] = (atmosphere?.topRadius ?? 0) / 1000;
+  out[o + V.sunLight + 2] = sun === "atmosphere" && atmosphere ? 1 : 0;
+  out[o + V.sunLight + 3] = block.aerial ? 1 : 0;
   const radii = block.body.ellipsoid.radii;
-  out[o + 92] = radii[0]!;
-  out[o + 93] = radii[1]!;
-  out[o + 94] = radii[2]!;
-  out[o + 95] = block.aerial?.march ?? 0;
+  out[o + V.bodyRadii] = radii[0]!;
+  out[o + V.bodyRadii + 1] = radii[1]!;
+  out[o + V.bodyRadii + 2] = radii[2]!;
+  out[o + V.bodyRadii + 3] = block.aerial?.march ?? 0;
   const moon = block.moon;
-  out[o + 96] = moon?.direction[0] ?? 0;
-  out[o + 97] = moon?.direction[1] ?? 0;
-  out[o + 98] = moon?.direction[2] ?? 0;
-  out[o + 99] = moon?.share ?? 0;
-  out[o + 100] = block.time;
-  out[o + 101] = 0;
-  out[o + 102] = 0;
-  out[o + 103] = 0;
+  out[o + V.moonLight] = moon?.direction[0] ?? 0;
+  out[o + V.moonLight + 1] = moon?.direction[1] ?? 0;
+  out[o + V.moonLight + 2] = moon?.direction[2] ?? 0;
+  out[o + V.moonLight + 3] = moon?.share ?? 0;
+  out[o + V.time] = block.time;
+  out[o + V.time + 1] = 0;
+  out[o + V.time + 2] = 0;
+  out[o + V.time + 3] = 0;
 }
 
 /** `struct DrawRecord` — 144 bytes (132 used, padded to WGSL's 16-byte alignment). */
-export const RECORD_SIZE = 144;
-export const RECORD_WORDS = RECORD_SIZE / 4;
+export const RECORD_SIZE = DrawRecordLayout.size;
+export const RECORD_WORDS = R.size;
 /** Word offsets of `DrawRecord` fields written after creation. */
 /** A draw record's bounding radius (f32) and batch index (u32). */
-export const RADIUS_WORD = 3;
-export const BATCH_WORD = 14;
-export const TRANSFORM_WORD = 8;
-export const FLAGS_WORD = 9;
+export const RADIUS_WORD = R.radius;
+export const BATCH_WORD = R.batch;
+export const TRANSFORM_WORD = R.transform;
+export const FLAGS_WORD = R.flags;
 /**
  * Word offset of `DrawRecord.imagerySlice`: a globe tile's slice of its
  * world's imagery array (`packImagery`); 0 = none.
  */
-export const IMAGERY_SLICE_WORD = 21;
+export const IMAGERY_SLICE_WORD = R.imagerySlice;
 /**
  * Word offset of `DrawRecord.lightsSlice`: a globe tile's slice of its
  * world's night-lights array (`packImagery`); 0 = none.
  */
-export const LIGHTS_SLICE_WORD = 31;
+export const LIGHTS_SLICE_WORD = R.lightsSlice;
 /** Word offset of `DrawRecord.viewMask`. */
-export const VIEW_MASK_WORD = 23;
+export const VIEW_MASK_WORD = R.viewMask;
 /**
  * Word offsets of a mixed-LOD placeholder's clip block, view mask and box
  * count: in those views the record draws only inside its clip boxes.
  */
-export const CLIP_BLOCK_WORD = 24;
-export const PLACEHOLDER_MASK_WORD = 25;
-export const CLIP_COUNT_WORD = 26;
+export const CLIP_BLOCK_WORD = R.clipBlock;
+export const PLACEHOLDER_MASK_WORD = R.placeholderMask;
+export const CLIP_COUNT_WORD = R.clipCount;
 /** Word offsets of a record's range in the instance table (count 0: none). */
-export const INSTANCE_FIRST_WORD = 27;
-export const INSTANCE_COUNT_WORD = 28;
+export const INSTANCE_FIRST_WORD = R.instanceFirst;
+export const INSTANCE_COUNT_WORD = R.instanceCount;
 /** Word offset of a record's instance streams' stride (words). */
-export const INSTANCE_STRIDE_WORD = 30;
+export const INSTANCE_STRIDE_WORD = R.instanceStride;
 /** Clip boxes per block; each box is 5 vec4s (center hi, lo, 3 rows). */
 export const CLIP_BOXES = 8;
 export const CLIP_BOX_FLOATS = 20;
@@ -200,14 +224,14 @@ export const CLIP_BOX_FLOATS = 20;
  * (origin as hi/lo, rotation-scale in float32, its largest axis scale and
  * the hidden flag of it and its ancestors).
  */
-export const TRANSFORM_SIZE = 80;
-export const TRANSFORM_WORDS = TRANSFORM_SIZE / 4;
+export const TRANSFORM_SIZE = TransformLayout.size;
+export const TRANSFORM_WORDS = T.size;
 /**
  * `struct Instance` — 64 bytes: an affine relative to its record's
  * transform, the record, a local feature ID, flags and a tint.
  */
-export const INSTANCE_SIZE = 64;
-export const INSTANCE_WORDS = INSTANCE_SIZE / 4;
+export const INSTANCE_SIZE = InstanceLayout.size;
+export const INSTANCE_WORDS = I.size;
 /** `Instance.record` of a free instance slot. */
 export const NO_RECORD = 0xffffffff;
 /** `Instance.feature` of an instance without its own feature ID. */
@@ -234,12 +258,12 @@ export const ALL_VIEWS = 0xffffffff;
  * item (a record without instances, or one instance): its camera-relative
  * matrix, record, feature, instance index and tint.
  */
-export const DRAW_ITEM_SIZE = 80;
+export const DRAW_ITEM_SIZE = DrawItemLayout.size;
 /** `drawIndexedIndirect` args: indexCount, instanceCount, firstIndex, baseVertex, firstInstance. */
 export const INDIRECT_SIZE = 20;
 /** `struct Material` — 64 bytes. */
-export const MATERIAL_SIZE = 64;
-export const MATERIAL_WORDS = MATERIAL_SIZE / 4;
+export const MATERIAL_SIZE = MaterialLayout.size;
+export const MATERIAL_WORDS = M.size;
 /** Stream offset meaning "attribute absent". */
 export const NO_STREAM = 0xffffffff;
 
@@ -406,42 +430,42 @@ export function writeDrawRecord(
   r: DrawRecordData,
 ): void {
   const o = index * RECORD_WORDS;
-  f32[o] = r.center[0]!;
-  f32[o + 1] = r.center[1]!;
-  f32[o + 2] = r.center[2]!;
-  f32[o + RADIUS_WORD] = r.radius;
-  f32[o + 4] = r.color[0];
-  f32[o + 5] = r.color[1];
-  f32[o + 6] = r.color[2];
-  f32[o + 7] = r.color[3];
-  u32[o + 8] = r.transform;
-  u32[o + 9] = r.flags;
-  u32[o + 10] = r.materialIndex;
-  u32[o + 11] = r.indexCount;
-  u32[o + 12] = r.firstIndex;
-  u32[o + 13] = r.featureId;
-  u32[o + BATCH_WORD] = r.batch;
-  u32[o + 15] = r.streams.position;
-  u32[o + 16] = r.streams.normal;
-  u32[o + 17] = r.streams.uv;
-  u32[o + 18] = r.streams.color;
-  u32[o + 19] = r.streams.tangent;
-  u32[o + 20] = r.textureSet;
-  u32[o + 21] = 0; // imagery slice (packImagery)
-  u32[o + 22] = r.streams.featureId;
-  u32[o + 23] = r.viewMask ?? ALL_VIEWS;
-  u32[o + 24] = 0;
-  u32[o + 25] = 0;
-  u32[o + 26] = 0;
-  u32[o + 27] = r.instanceFirst ?? 0;
-  u32[o + 28] = r.instanceCount ?? 0;
-  u32[o + 29] = r.instanceStreams ?? NO_STREAM;
-  u32[o + 30] = r.instanceStride ?? 0;
-  u32[o + 31] = 0; // night lights slice (packImagery)
-  u32[o + 32] = r.streams.attributes;
-  u32[o + 33] = r.instanceDirectory ?? NO_STREAM;
-  f32[o + 34] = r.billboardSize ?? 0;
-  f32[o + 35] = r.billboardDepthTest ?? 0;
+  f32[o + R.center] = r.center[0]!;
+  f32[o + R.center + 1] = r.center[1]!;
+  f32[o + R.center + 2] = r.center[2]!;
+  f32[o + R.radius] = r.radius;
+  f32[o + R.color] = r.color[0];
+  f32[o + R.color + 1] = r.color[1];
+  f32[o + R.color + 2] = r.color[2];
+  f32[o + R.color + 3] = r.color[3];
+  u32[o + R.transform] = r.transform;
+  u32[o + R.flags] = r.flags;
+  u32[o + R.materialIndex] = r.materialIndex;
+  u32[o + R.indexCount] = r.indexCount;
+  u32[o + R.firstIndex] = r.firstIndex;
+  u32[o + R.featureId] = r.featureId;
+  u32[o + R.batch] = r.batch;
+  u32[o + R.positionOffset] = r.streams.position;
+  u32[o + R.normalOffset] = r.streams.normal;
+  u32[o + R.uvOffset] = r.streams.uv;
+  u32[o + R.colorOffset] = r.streams.color;
+  u32[o + R.tangentOffset] = r.streams.tangent;
+  u32[o + R.textureSet] = r.textureSet;
+  u32[o + R.imagerySlice] = 0; // packImagery
+  u32[o + R.featureIdOffset] = r.streams.featureId;
+  u32[o + R.viewMask] = r.viewMask ?? ALL_VIEWS;
+  u32[o + R.clipBlock] = 0;
+  u32[o + R.placeholderMask] = 0;
+  u32[o + R.clipCount] = 0;
+  u32[o + R.instanceFirst] = r.instanceFirst ?? 0;
+  u32[o + R.instanceCount] = r.instanceCount ?? 0;
+  u32[o + R.instanceStreams] = r.instanceStreams ?? NO_STREAM;
+  u32[o + R.instanceStride] = r.instanceStride ?? 0;
+  u32[o + R.lightsSlice] = 0; // night lights (packImagery)
+  u32[o + R.attributes] = r.streams.attributes;
+  u32[o + R.instanceDirectory] = r.instanceDirectory ?? NO_STREAM;
+  f32[o + R.billboardSize] = r.billboardSize ?? 0;
+  f32[o + R.billboardDepthTest] = r.billboardDepthTest ?? 0;
 }
 
 /**
@@ -460,20 +484,21 @@ export function writeTransform(
   for (let i = 0; i < 3; i++) {
     const value = m[12 + i]!;
     const h = splitHigh(value);
-    f32[o + i] = h;
-    f32[o + 4 + i] = Math.fround(value - h);
+    f32[o + T.originHi + i] = h;
+    f32[o + T.originLo + i] = Math.fround(value - h);
   }
-  f32[o + 3] = Math.max(
+  f32[o + T.scale] = Math.max(
     Math.hypot(m[0]!, m[1]!, m[2]!),
     Math.hypot(m[4]!, m[5]!, m[6]!),
     Math.hypot(m[8]!, m[9]!, m[10]!),
   );
-  u32[o + 7] = hidden ? 1 : 0;
+  u32[o + T.flags] = hidden ? 1 : 0;
+  // The 3×3 by column, each padded to 16 bytes.
   for (let c = 0; c < 3; c++) {
-    f32[o + 8 + c * 4] = m[c * 4]!;
-    f32[o + 9 + c * 4] = m[c * 4 + 1]!;
-    f32[o + 10 + c * 4] = m[c * 4 + 2]!;
-    f32[o + 11 + c * 4] = 0;
+    f32[o + T.linear + c * 4] = m[c * 4]!;
+    f32[o + T.linear + c * 4 + 1] = m[c * 4 + 1]!;
+    f32[o + T.linear + c * 4 + 2] = m[c * 4 + 2]!;
+    f32[o + T.linear + c * 4 + 3] = 0;
   }
 }
 
@@ -530,16 +555,18 @@ export function writeInstance(
 ): void {
   const o = index * INSTANCE_WORDS;
   for (let r = 0; r < 3; r++) {
-    f32[o + r * 4] = m[mOffset + r]!;
-    f32[o + r * 4 + 1] = m[mOffset + 4 + r]!;
-    f32[o + r * 4 + 2] = m[mOffset + 8 + r]!;
-    f32[o + r * 4 + 3] = m[mOffset + 12 + r]!;
+    const row = o + INSTANCE_ROWS[r]!;
+    f32[row] = m[mOffset + r]!;
+    f32[row + 1] = m[mOffset + 4 + r]!;
+    f32[row + 2] = m[mOffset + 8 + r]!;
+    f32[row + 3] = m[mOffset + 12 + r]!;
   }
-  u32[o + 12] = record >>> 0;
-  u32[o + 13] = feature >>> 0;
-  u32[o + 14] = flags >>> 0;
-  u32[o + 15] = tint >>> 0;
+  u32[o + I.record] = record >>> 0;
+  u32[o + I.feature] = feature >>> 0;
+  u32[o + I.flags] = flags >>> 0;
+  u32[o + I.tint] = tint >>> 0;
 }
+const INSTANCE_ROWS = [I.row0, I.row1, I.row2];
 
 /** Packs a linear RGBA tint (0-1) as RGBA8 (`unpack4x8unorm` in WGSL). */
 export function packTint(rgba: ArrayLike<number>, offset = 0): number {
@@ -595,16 +622,16 @@ export function writeMaterial(
   m: MaterialData,
 ): void {
   const o = index * MATERIAL_WORDS;
-  f32.set(m.baseColor, o);
-  f32.set(m.emissive, o + 4);
-  f32[o + 7] = m.metallic;
-  f32[o + 8] = m.roughness;
-  f32[o + 9] = m.alphaCutoff;
-  f32[o + 10] = m.normalScale;
-  f32[o + 11] = m.occlusionStrength;
-  u32[o + 12] = m.flags;
+  f32.set(m.baseColor, o + M.baseColor);
+  f32.set(m.emissive, o + M.emissive);
+  f32[o + M.metallic] = m.metallic;
+  f32[o + M.roughness] = m.roughness;
+  f32[o + M.alphaCutoff] = m.alphaCutoff;
+  f32[o + M.normalScale] = m.normalScale;
+  f32[o + M.occlusionStrength] = m.occlusionStrength;
+  u32[o + M.flags] = m.flags;
   const ref = (slot: number) => (m.textures?.[slot] ?? NO_TEXTURE) & 0xffff;
-  u32[o + 13] = (ref(0) | (ref(1) << 16)) >>> 0;
-  u32[o + 14] = (ref(2) | (ref(3) << 16)) >>> 0;
-  u32[o + 15] = (ref(4) | (NO_TEXTURE << 16)) >>> 0;
+  u32[o + M.textures01] = (ref(0) | (ref(1) << 16)) >>> 0;
+  u32[o + M.textures23] = (ref(2) | (ref(3) << 16)) >>> 0;
+  u32[o + M.textures4] = (ref(4) | (NO_TEXTURE << 16)) >>> 0;
 }

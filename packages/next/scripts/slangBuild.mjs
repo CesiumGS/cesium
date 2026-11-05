@@ -33,6 +33,8 @@ import { SLANG_VERSION, slangcPath } from "./slangTools.mjs";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const SOURCES = join(root, "src");
 export const GENERATED = join(root, "src", "shaders", "generated");
+/** The TypeScript layouts, from `layouts.slang`'s reflection. */
+export const LAYOUTS_TS = join(root, "src", "render", "generated", "layouts.ts");
 /** Where `import name;` looks: the shaders' folder, then the source tree. */
 const INCLUDES = [join(root, "src", "shaders"), SOURCES];
 
@@ -139,7 +141,42 @@ export function compile(slangc, source, outDir = GENERATED) {
   }
 }
 
-function main() {
+/**
+ * The TypeScript layouts from `layouts.slang`'s reflection: for each shared
+ * struct, in the buffer the engine binds it in, its size, alignment and
+ * each field's byte offset. Formatted by Prettier, so the checked-in file
+ * is stable under the repository's formatting.
+ */
+export async function layoutsTs(reflectionJson) {
+  const reflection = JSON.parse(reflectionJson);
+  const blocks = [];
+  for (const parameter of reflection.parameters) {
+    const type = parameter.type;
+    const struct = type.resultType ?? type.elementType;
+    if (struct?.kind !== "struct") {
+      continue;
+    }
+    const size = struct.sizes?.find((x) => x.kind === "uniform");
+    const fields = struct.fields.map(
+      (f) => `  ${f.name}: ${f.binding.offset},`,
+    );
+    blocks.push(
+      `/** \`${struct.name}\` as \`${parameter.name}\` holds it: byte offsets. */\n` +
+        `export const ${struct.name}Layout = {\n  size: ${size.value},\n  align: ${size.alignment},\n${fields.join("\n")}\n} as const;`,
+    );
+  }
+  const text = `// Generated from src/shaders/layouts.slang's reflection by
+// scripts/slangBuild.mjs (slangc ${SLANG_VERSION}). Do not edit: change
+// src/shaders/common.slang and regenerate. render/layout.ts reads these.
+
+${blocks.join("\n\n")}
+`;
+  const prettier = await import("prettier");
+  const options = (await prettier.resolveConfig(LAYOUTS_TS)) ?? {};
+  return prettier.format(text, { ...options, filepath: LAYOUTS_TS });
+}
+
+async function main() {
   const args = process.argv.slice(2);
   const check = args.includes("--check");
   const named = args.filter((a) => !a.startsWith("--")).map((a) => resolve(a));
@@ -157,6 +194,14 @@ function main() {
     for (const source of sources) {
       compile(slangc, source);
       console.log(`${relative(root, source)} → src/shaders/generated/${basename(source, ".slang")}.wgsl`);
+      if (basename(source) === "layouts.slang") {
+        mkdirSync(dirname(LAYOUTS_TS), { recursive: true });
+        writeFileSync(
+          LAYOUTS_TS,
+          await layoutsTs(readFileSync(join(GENERATED, "layouts.json"), "utf8")),
+        );
+        console.log("  → src/render/generated/layouts.ts");
+      }
     }
     return;
   }
@@ -174,6 +219,13 @@ function main() {
           : undefined;
         if (fresh !== kept) {
           stale.push(file);
+        }
+      }
+      if (basename(source) === "layouts.slang") {
+        const fresh = await layoutsTs(readFileSync(join(temp, "layouts.json"), "utf8"));
+        const kept = existsSync(LAYOUTS_TS) ? readFileSync(LAYOUTS_TS, "utf8") : undefined;
+        if (fresh !== kept) {
+          stale.push("src/render/generated/layouts.ts");
         }
       }
     }
@@ -202,5 +254,5 @@ function main() {
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  main();
+  await main();
 }

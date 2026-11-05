@@ -1,4 +1,7 @@
-// Shared structs. Keep in sync with src/render/layout.ts.
+// Shared structs, for the kernels still written in WGSL. Their source is
+// shaders/common.slang (the TypeScript offsets come from its reflection);
+// test/layouts.test.ts fails if these lay any struct out differently.
+// This file goes when the last WGSL kernel is ported (plan §3.4).
 
 struct View {
   viewProj: mat4x4f,      // rotation-only view × reverse-Z projection

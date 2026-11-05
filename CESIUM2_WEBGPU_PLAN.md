@@ -460,6 +460,27 @@ _Step 2 started (r53)._
 - Scatter and pick are the first two kernels ported. They are identical in
   use, verified by the tests and by pick positions in the browser.
 
+_Step 3 (r53): shared layouts._
+
+- `shaders/common.slang` is the source of `View`, `DrawRecord`,
+  `Transform`, `Instance`, `DrawItem`, `Material`, `LightHeader` and
+  `Light`, their constants, the material texture references and
+  `SplitPosition`.
+- `layouts.slang` binds each struct the way the engine does, and the build
+  generates `render/generated/layouts.ts` from its reflection: each
+  struct's size, alignment and field offsets, formatted by Prettier so
+  `--check` stays stable.
+- `render/layout.ts` derives every size and word constant from it, and its
+  writers address fields by name (`o + R.featureId`, not `o + 13`). The
+  offsets match the hand-kept ones exactly.
+- Until the last WGSL kernel is ported, `common.wgsl` stays for them, and
+  `test/layouts.test.ts` computes its layouts with WGSL's rules and fails
+  if any field or size differs from the Slang's. It was checked by swapping
+  two fields, which it caught.
+- The common structs are deliberately not `__extern_cpp`: several share
+  field names (`flags` in four), which is the case Slang issue #14028
+  warns about. Only the custom-shader contract's structs get it (step 5).
+
 _Explore when the surface shaders move (step 5): runtime Slang for the
 user contract._ Today 3D Tiles styles, the vector styling language and
 `CustomShader` generate WGSL strings against the WGSL ABI
