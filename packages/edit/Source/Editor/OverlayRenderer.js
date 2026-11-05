@@ -16,6 +16,7 @@ import {
   Buffer,
   BufferUsage,
   DataTexture,
+  DepthFunction,
   DrawCommand,
   Pass,
   RenderState,
@@ -78,9 +79,12 @@ import TopologyOverlayHooksVS from "../Shaders/TopologyOverlayHooksVS.js";
  * @property {number} verticesPerInstance The vertices in each instance.
  * @property {ShaderSources} shaderSources The component type's overlay shaders.
  * @property {Object<string, function(): *>} styleUniforms The component type's style uniforms.
+ * @property {object} renderStateOptions The options of the component type's render state.
+ * @property {RenderState} renderState The component type's render state, from the render state cache.
  * @property {"edges" | "triangles" | undefined} topologyViewName The overlay view with the component type's edges or triangles. Undefined for points.
  * @property {"verts" | "edges" | "faces"} selectionViewName The component type's view in the overlay views' selection.
  * @property {boolean} shown Whether to draw the component type.
+ * @property {boolean} pickable Whether to draw the component type in the pick pass, if shown.
  * @property {BufferTexture | undefined} topologyTexture The edges or triangles. Undefined for points.
  * @property {BufferTexture | undefined} selectionTexture The component type's selection.
  * @property {PickId[]} pickIds One pick ID per component.
@@ -91,8 +95,8 @@ import TopologyOverlayHooksVS from "../Shaders/TopologyOverlayHooksVS.js";
  * @ignore
  */
 
-const POINT_SIZE = 8.0;
-const EDGE_WIDTH = 2.5;
+const POINT_SIZE = 6.0;
+const EDGE_WIDTH = 2.0;
 // Points and edges are drawn larger in the pick pass, so they're easier to click.
 const PICK_SIZE = 20.0;
 
@@ -120,10 +124,20 @@ const PICK_COLOR_FORMAT = {
   pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
 };
 
-const RENDER_STATE = {
+const FACE_RENDER_STATE = {
   blending: BlendingState.ALPHA_BLEND,
   depthTest: { enabled: true },
   depthMask: true,
+};
+
+// Points and edges fade out at their borders (antialiasing), which can draw over faces. So they don't write depth.
+// The pick pass still writes depth.
+//
+// LEQUAL setting gets used for picking as well, which helps ensure the selected component is drawn on top.
+const POINT_EDGE_RENDER_STATE = {
+  blending: BlendingState.ALPHA_BLEND,
+  depthTest: { enabled: true, func: DepthFunction.LESS_OR_EQUAL },
+  depthMask: false,
 };
 
 /**
@@ -152,8 +166,8 @@ class OverlayRenderer {
   #faceOverlay;
 
   /**
-   * In draw order, so where depths are equal, points win over edges and edges
-   * over faces.
+   * In draw order: faces, then edges, then points, so the faded borders of
+   * edges and points blend over what's beneath them.
    *
    * @type {ComponentOverlay[]}
    */
@@ -167,14 +181,19 @@ class OverlayRenderer {
    */
   #commands = [];
 
+  /**
+   * The commands to add to each pick pass: those of #commands whose component
+   * types are pickable.
+   *
+   * @type {DrawCommand[]}
+   */
+  #pickCommands = [];
+
   /** @type {Matrix4} */
   #modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
 
   /** @type {VertexArray | undefined} */
   #vertexArray;
-
-  /** @type {RenderState} */
-  #renderState;
 
   #isPickPass = false;
 
@@ -194,7 +213,6 @@ class OverlayRenderer {
 
     this.#module = options.module;
     this.#mesh = options.mesh;
-    this.#renderState = RenderState.fromCache(RENDER_STATE);
 
     const { shaders } = this.#module;
     const { depthBias, point, edge, face } = shaders.uniforms;
@@ -210,6 +228,7 @@ class OverlayRenderer {
         [point.color]: () => POINT_COLOR,
         [point.selectedColor]: () => POINT_SELECTED_COLOR,
       },
+      renderStateOptions: POINT_EDGE_RENDER_STATE,
       topologyViewName: undefined,
       selectionViewName: "verts",
     });
@@ -225,6 +244,7 @@ class OverlayRenderer {
         [edge.color]: () => EDGE_COLOR,
         [edge.selectedColor]: () => EDGE_SELECTED_COLOR,
       },
+      renderStateOptions: POINT_EDGE_RENDER_STATE,
       topologyViewName: "edges",
       selectionViewName: "edges",
     });
@@ -240,15 +260,16 @@ class OverlayRenderer {
         [face.selectedColor]: () => FACE_SELECTED_COLOR,
         [face.isPickPass]: () => this.#isPickPass,
       },
+      renderStateOptions: FACE_RENDER_STATE,
       // Faces draw one instance per triangle, but select by face.
       topologyViewName: "triangles",
       selectionViewName: "faces",
     });
 
     this.#componentOverlays = [
-      this.#pointOverlay,
-      this.#edgeOverlay,
       this.#faceOverlay,
+      this.#edgeOverlay,
+      this.#pointOverlay,
     ];
 
     /**
@@ -288,6 +309,22 @@ class OverlayRenderer {
   }
 
   /**
+   * Sets which component types to draw in the pick pass, of those shown. All
+   * are pickable by default. A component type that isn't pickable can't be
+   * picked, and doesn't hide what's behind it from picking.
+   *
+   * @param {ComponentMask} components The component types to pick.
+   */
+  setPickableComponents(components) {
+    for (const componentOverlay of this.#componentOverlays) {
+      const componentBit = 1 << componentOverlay.componentType;
+      componentOverlay.pickable = (components & componentBit) !== 0;
+    }
+
+    this.#updateCommands();
+  }
+
+  /**
    * Uploads the changed overlay views, if any, then adds the overlay's draw
    * commands to the frame. Draws nothing until overlay views are first passed,
    * or while show is false.
@@ -312,7 +349,8 @@ class OverlayRenderer {
     this.#isPickPass = frameState.passes.pick;
     this.#pixelRatio = frameState.pixelRatio;
 
-    for (const command of this.#commands) {
+    const commands = this.#isPickPass ? this.#pickCommands : this.#commands;
+    for (const command of commands) {
       frameState.commandList.push(command);
     }
   }
@@ -378,19 +416,24 @@ class OverlayRenderer {
   }
 
   /**
-   * Collects the commands of the shown component types that have instances to draw.
+   * Collects the commands of the shown component types that have instances to
+   * draw, and of those, the pickable ones.
    *
    * @ignore
    */
   #updateCommands() {
     this.#commands = [];
-    for (const { shown, command } of this.#componentOverlays) {
+    this.#pickCommands = [];
+    for (const { shown, pickable, command } of this.#componentOverlays) {
       // An instance count of zero would draw the command once, not instanced.
       if (!shown || !defined(command) || command.instanceCount === 0) {
         continue;
       }
 
       this.#commands.push(command);
+      if (pickable) {
+        this.#pickCommands.push(command);
+      }
     }
   }
 
@@ -422,7 +465,9 @@ class OverlayRenderer {
     }
 
     this.#vertexArray?.destroy();
-    RenderState.removeFromCache(RENDER_STATE);
+    for (const { renderStateOptions } of this.#componentOverlays) {
+      RenderState.removeFromCache(renderStateOptions);
+    }
 
     return destroyObject(this);
   }
@@ -434,6 +479,7 @@ class OverlayRenderer {
    * @param {number} options.verticesPerInstance The vertices in each instance.
    * @param {ShaderSources} options.shaderSources The component type's overlay shaders.
    * @param {Object<string, function(): *>} options.styleUniforms The component type's style uniforms.
+   * @param {object} options.renderStateOptions The options of the component type's render state.
    * @param {"edges" | "triangles" | undefined} options.topologyViewName The overlay view with the component type's edges or triangles. Undefined for points.
    * @param {"verts" | "edges" | "faces"} options.selectionViewName The component type's view in the overlay views' selection.
    * @returns {ComponentOverlay}
@@ -442,7 +488,9 @@ class OverlayRenderer {
   #createComponentOverlay(options) {
     return {
       ...options,
+      renderState: RenderState.fromCache(options.renderStateOptions),
       shown: true,
+      pickable: true,
       topologyTexture: undefined,
       selectionTexture: undefined,
       pickIds: [],
@@ -649,7 +697,7 @@ class OverlayRenderer {
     return new DrawCommand({
       vertexArray: this.#vertexArray,
       shaderProgram: componentOverlay.shaderProgram,
-      renderState: this.#renderState,
+      renderState: componentOverlay.renderState,
       uniformMap: this.#createUniformMap(componentOverlay),
       primitiveType: componentOverlay.primitiveType,
       count: componentOverlay.verticesPerInstance,
