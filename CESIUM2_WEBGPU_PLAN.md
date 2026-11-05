@@ -397,8 +397,9 @@ _Migration, in steps that each leave the engine working:_
    `IMaterialTextures` and `SplitPosition`, with the custom-shader ABI
    exported from the generated module. Checked by image regression in Dyno
    (§16.10), the parity pages and the custom-shader parity page.
-6. **Sky, atmosphere and IBL** (`sky.wgsl`, `atmosphere.wgsl`, the
-   references), checked by their reference comparisons (§4.2).
+6. **Sky and atmosphere** (`sky.wgsl`, `atmosphere.wgsl`,
+   `reference.wgsl`), checked by their reference comparisons (§4.2).
+   IBL's kernels and its Monte Carlo reference moved into step 4.
 7. **Retire the spike.** Its port is the engine's source by then, and the
    page becomes a check that `ToonMaterial` links against it.
 
@@ -487,6 +488,63 @@ _Step 3 (r53): shared layouts._
 - The common structs are deliberately not `__extern_cpp`: several share
   field names (`flags` in four), which is the case Slang issue #14028
   warns about. Only the custom-shader contract's structs get it (step 5).
+
+_Step 4 results (Slang 2026.21, Apple M-series GPU on Metal): every
+kernel ported._ 35 cases on the gate (`/#/lab/slang-kernels`), each the
+port against the WGSL it replaced (kept in `spikes/slang/reference/`),
+dispatched alternately on the same synthetic inputs, timed by GPU
+timestamps (Chrome rounds them to 65.5 µs, so each case repeats its
+dispatch, 64 times by default), and compared element by element.
+
+| Kernel                                                                  | Slang / WGSL | Outputs                                                          |
+| ----------------------------------------------------------------------- | ------------ | ---------------------------------------------------------------- |
+| scatter, depthRange, lights, overlay, splat, imagery ×3, cull ×2, fxaa  | 0.99–1.03    | identical                                                        |
+| raycast                                                                 | 1.00         | 28 within 1 ulp (dot products' order)                            |
+| present: neutral, AgX with the eye, ACES                                | 1.00–1.02    | identical but AgX (1,353 within 1 ulp)                           |
+| adapt.reduce: a workgroup a cell, bins summed in shared memory          | 0.72         | identical                                                        |
+| adapt.blur: separable, in shared memory                                 | 0.33         | 136 within 1 f16 ulp                                             |
+| meter: the bins' walk as a parallel prefix sum                          | 0.81         | 1 within 1 ulp                                                   |
+| ao.gtao; ao.denoise from a shared tile                                  | 1.00; 0.97   | within the gate; 40 within 1 ulp                                 |
+| composite: exact (sorted in a compute pass, per sample), moments        | 0.10; 0.93   | 7 within 1 ulp; identical                                        |
+| ibl: sky, downsample, prefilter, shFinal, brdf                          | 1.00         | identical                                                        |
+| ibl.shFace, its nine sums unrolled                                      | 0.89         | within 1e-6 (sums that cancel: many ulps near zero)              |
+| ibl.irradianceCube, the source staged a face at a time in shared memory | 0.43         | identical (the same sums in the same order)                      |
+| ibl reference (Monte Carlo)                                             | 0.99         | within 0.05 of sums up to 84, 1e-6 on average: see below         |
+| points: applySamples, placePoints                                       | 1.00–1.01    | identical                                                        |
+| modelPool: bin, claim, hide (with a style appended)                     | 0.98–1.00    | identical (claimed rows compared as a set: slots follow threads) |
+
+What Slang's WGSL does that cost time, found by the gate, and what was
+done:
+
+- **Every loop is `loop { if (c) {} else { break; } … }`.** On Metal that
+  shape with a small private array indexed by data (a histogram, a
+  per-thread list) kept the array out of registers: the straight adapt
+  port was 2.5× and the fragment-shader sort tens of milliseconds.
+  Shared memory replaced them (above); `[ForceUnroll]` for loops over a
+  constant count keeps their indices constant.
+- **Large struct loads are split per field at each use** (deferred buffer
+  loads): raycast was 30% slower until it read its draw record's fields
+  once.
+- **Matrices:** a `float3x3(...)` or `float4x4(...)` literal takes rows,
+  WGSL's `mat3x3f(...)` columns; one read from a buffer is the same
+  matrix in both (Slang stores it column-major for WGSL). Ports keep the
+  literals verbatim and multiply as `mul(v, m)`, or transpose a column
+  literal where it meets a buffer's matrix (the model pool). Grouping a
+  product the WGSL's way keeps the rounding.
+- **Tolerances** where a port can't be bit-identical: ulps for sums
+  ordered or fused differently; an absolute bound for sums that cancel
+  (SH coefficients near zero are many ulps from their twins while both
+  are 1e-7 from the truth) and for the Monte Carlo reference, whose
+  near-mirror sphere (roughness 0.05) turns a direction a rounding apart
+  into a different point on the GGX peak (119 pixels by up to 0.02 of
+  values to 84, 8e-4 relative).
+- The gate itself: it flags outputs that are all zero (a case whose
+  inputs never made its kernel write), and a GPU shared with other heavy
+  work loses the device on the heaviest case (ao.gtao, which also
+  happened at the commit where the whole gate had passed).
+
+Still WGSL: `common.wgsl`, `opaque.wgsl` and `translucent.wgsl` (step 5),
+`sky.wgsl`, `atmosphere.wgsl` and `reference.wgsl` (step 6).
 
 _Explore when the surface shaders move (step 5): runtime Slang for the
 user contract._ Today 3D Tiles styles, the vector styling language and
