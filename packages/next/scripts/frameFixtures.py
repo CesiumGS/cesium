@@ -2,10 +2,10 @@
 
 Usage: uv run --with pyerfa --with numpy python scripts/frameFixtures.py <section> [args]
 
-Sections: dtdb, earth, earthLeap <store>, ephemeris <store> (needs jplephem), moon
-<store> <frame kernel> (needs spiceypy and jplephem). earthLeap reads the store's
-EOP-All.csv; the last two read the NAIF kernels `npm run setup` downloaded to
-<store>. Only their small JSON output is committed.
+Sections: dtdb, earth, earthLeap <store>, utc <store> (needs jplephem), ephemeris
+<store> (needs jplephem), moon <store> <frame kernel> (needs spiceypy and jplephem).
+earthLeap reads the store's EOP-All.csv; the others read the NAIF kernels
+`npm run setup` downloaded to <store>. Only their small JSON output is committed.
 """
 
 import json
@@ -176,6 +176,59 @@ def earth_leap(store):
     write("earthLeap", {"csv": "\n".join([lines[0]] + wanted) + "\n", "rows": rows})
 
 
+def utc(store):
+    """UTC -> TT -> TDB by pyerfa (dtf2d, utctai, taitt, dtdb) at 10 UTC instants,
+    both sides of the 2016 leap second and 2049-12-31T23:59:59.999, with
+    jplephem's Sun, Earth and geocentric Moon (km) at that TDB from de440s.bsp.
+
+    `tt` and `tdb` are seconds past J2000; TDB - TT is the geocentric series
+    (dtdb with zero site terms), as Instant.tdb() uses.
+    """
+    import calendar
+
+    from jplephem.spk import SPK
+
+    kernel = SPK.open(str(Path(store) / "de440s.bsp"))
+    j2000 = 2451545.0
+    rows = []
+    for y, mo, d, h, mi, sec, ms in [
+        (2000, 1, 1, 12, 0, 0, 0),
+        (2006, 3, 15, 6, 30, 0, 250),
+        (2012, 6, 30, 23, 59, 59, 0),
+        (2016, 12, 31, 23, 59, 59, 0),
+        (2016, 12, 31, 23, 59, 59, 999),
+        (2017, 1, 1, 0, 0, 0, 0),
+        (2017, 1, 1, 0, 0, 0, 1),
+        (2026, 4, 6, 22, 44, 0, 0),
+        (2038, 1, 19, 3, 14, 7, 0),
+        (2049, 12, 31, 23, 59, 59, 999),
+    ]:
+        utc1, utc2 = erfa.dtf2d("UTC", y, mo, d, h, mi, sec + ms / 1000.0)
+        tai1, tai2 = erfa.utctai(utc1, utc2)
+        tt1, tt2 = erfa.taitt(tai1, tai2)
+        dtdb = float(erfa.dtdb(tt1, tt2, 0.0, 0.0, 0.0, 0.0))
+        # Days past J2000 from the two parts, the large one exact.
+        tt = ((tt1 - j2000) + tt2) * 86400.0
+        tdb = tt + dtdb
+
+        def pos(a, b):
+            return np.asarray(kernel[a, b].compute(j2000, tdb / 86400.0))
+
+        emb, moon, earth = pos(0, 3), pos(3, 301), pos(3, 399)
+        rows.append(
+            {
+                "label": f"{y:04d}-{mo:02d}-{d:02d}T{h:02d}:{mi:02d}:{sec:02d}.{ms:03d}Z",
+                "utcMs": calendar.timegm((y, mo, d, h, mi, sec)) * 1000 + ms,
+                "tt": float(tt),
+                "tdb": float(tdb),
+                "sun": [float(v) for v in pos(0, 10)],
+                "earth": [float(v) for v in emb + earth],
+                "moonFromEarth": [float(v) for v in moon - earth],
+            }
+        )
+    write("utc", rows)
+
+
 def pack_segment(store, pack, name):
     """A segment's manifest entry from a pack file (CPK1, u32 length, JSON)."""
     raw = (Path(store) / pack).read_bytes()
@@ -257,6 +310,7 @@ SECTIONS = {
     "dtdb": dtdb,
     "earth": earth,
     "earthLeap": earth_leap,
+    "utc": utc,
     "ephemeris": ephemeris,
     "moon": moon,
 }

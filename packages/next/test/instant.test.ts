@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { Instant } from "../src/time/Instant.ts";
 import { LeapSeconds } from "../src/time/leapSeconds.ts";
+import utcRows from "./fixtures/frames/utc.json";
 
 // An excerpt of IERS Leap_Second.dat (Bulletin C): 1972 (10 s) to 2017 (37 s).
 const LEAP_DAT = `#  Value of TAI-UTC in second valid beginning at the date given
@@ -125,6 +126,18 @@ describe("Instant", () => {
     }
     expect(decreases).toBe(0);
     expect(previous).toBe(Date.UTC(2017, 0, 1, 0, 0, 2));
+  });
+
+  it("matches pyerfa's UTC -> TT -> TDB to 5e-7 s, across the 2016 leap", () => {
+    let worstTt = 0;
+    let worstTdb = 0;
+    for (const r of utcRows) {
+      const t = Instant.fromUtc(r.utcMs, leap);
+      worstTt = Math.max(worstTt, Math.abs(t.tt - r.tt));
+      worstTdb = Math.max(worstTdb, Math.abs(t.tdb() - r.tdb));
+    }
+    expect(worstTt).toBeLessThan(5e-7);
+    expect(worstTdb).toBeLessThan(5e-7);
   });
 
   it("derives TAI and a two-part Julian date from TT", () => {
