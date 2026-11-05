@@ -1,3 +1,4 @@
+import { tdbMinusTt } from "./erfa/dtdb.ts";
 import type { LeapSeconds } from "./leapSeconds.ts";
 
 /** Unix ms of 2000-01-01T12:00:00, J2000 read as if TT were UTC-labelled. */
@@ -51,5 +52,13 @@ export class Instant {
   /** Two-part Julian date (TT) for ERFA-style calls: `[2451545.0, days]`. */
   jdTt(): [number, number] {
     return [JD_J2000, this.tt / 86_400];
+  }
+
+  /**
+   * TDB seconds past J2000, which is SPICE's ephemeris time (ET). TDB - TT
+   * is the geocentric ERFA series, about 1.7 ms at most.
+   */
+  tdb(): number {
+    return this.tt + tdbMinusTt(...this.jdTt());
   }
 }
