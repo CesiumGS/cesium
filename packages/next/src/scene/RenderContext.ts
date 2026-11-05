@@ -8,7 +8,7 @@ import {
   VIEW_SIZE,
 } from "../render/layout.ts";
 import commonWgsl from "../shaders/common.wgsl?raw";
-import aoWgsl from "../shaders/ao.wgsl?raw";
+import aoWgsl from "../shaders/generated/ao.wgsl?raw";
 import { SHADOW_CASCADES, SHADOW_SIZE, SHADOWS_SIZE } from "./shadows.ts";
 import cullWgsl from "../shaders/generated/cull.wgsl?raw";
 import pointCullWgsl from "../shaders/generated/pointCull.wgsl?raw";
@@ -19,7 +19,7 @@ import opaqueWgsl from "../shaders/opaque.wgsl?raw";
 import presentWgsl from "../shaders/present.wgsl?raw";
 import overlayWgsl from "../shaders/generated/overlay.wgsl?raw";
 import pickWgsl from "../shaders/generated/pick.wgsl?raw";
-import meterWgsl from "../shaders/meter.wgsl?raw";
+import meterWgsl from "../shaders/generated/meter.wgsl?raw";
 import adaptWgsl from "../shaders/generated/adapt.wgsl?raw";
 import lightsWgsl from "../shaders/generated/lights.wgsl?raw";
 import depthRangeWgsl from "../shaders/generated/depthRange.wgsl?raw";

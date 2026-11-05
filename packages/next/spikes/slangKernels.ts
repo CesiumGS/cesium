@@ -15,6 +15,8 @@ import overlayReference from "./slang/reference/overlay.wgsl?raw";
 import splatReference from "./slang/reference/splat.wgsl?raw";
 import imageryReference from "./slang/reference/imagery.wgsl?raw";
 import adaptReference from "./slang/reference/adapt.wgsl?raw";
+import meterReference from "./slang/reference/meter.wgsl?raw";
+import aoReference from "./slang/reference/ao.wgsl?raw";
 import scatterReference from "./slang/reference/scatter.wgsl?raw";
 import cullSlang from "../src/shaders/generated/cull.wgsl?raw";
 import depthRangeSlang from "../src/shaders/generated/depthRange.wgsl?raw";
@@ -24,6 +26,8 @@ import overlaySlang from "../src/shaders/generated/overlay.wgsl?raw";
 import splatSlang from "../src/shaders/generated/splat.wgsl?raw";
 import imagerySlang from "../src/shaders/generated/imagery.wgsl?raw";
 import adaptSlang from "../src/shaders/generated/adapt.wgsl?raw";
+import meterSlang from "../src/shaders/generated/meter.wgsl?raw";
+import aoSlang from "../src/shaders/generated/ao.wgsl?raw";
 import scatterSlang from "../src/shaders/generated/scatter.wgsl?raw";
 
 /**
@@ -579,6 +583,85 @@ function adaptReduceInputs(device: GPUDevice): Resources {
   };
 }
 
+/**
+ * A view's depth (reverse-Z, as the prepass writes it): a rolling surface
+ * about 10 m away with steps in it (edges for the AO's depth weights), and
+ * sky (0) across the top. Rendered: a depth texture can't be written.
+ */
+function sceneDepth(device: GPUDevice): GPUTexture {
+  const depth = texture(device, {
+    size: [W, H],
+    format: "depth32float",
+    usage: T.RENDER_ATTACHMENT,
+  });
+  const module = device.createShaderModule({
+    code: `
+@vertex fn vs(@builtin(vertex_index) v: u32) -> @builtin(position) vec4f {
+  let uv = vec2f(f32((v << 1u) & 2u), f32(v & 2u));
+  return vec4f(uv * 2.0 - 1.0, 0.0, 1.0);
+}
+@fragment fn fs(@builtin(position) p: vec4f) -> @builtin(frag_depth) f32 {
+  if (p.y < ${H * 0.15}) { discard; }
+  let distance = 10.0 + 3.0 * sin(p.x / 37.0) * cos(p.y / 23.0) + floor(p.x / 160.0) * 0.4;
+  return 0.1 / distance;
+}`,
+  });
+  const pipeline = device.createRenderPipeline({
+    layout: "auto",
+    vertex: { module, entryPoint: "vs" },
+    fragment: { module, entryPoint: "fs", targets: [] },
+    depthStencil: {
+      format: "depth32float",
+      depthWriteEnabled: true,
+      depthCompare: "always",
+    },
+  });
+  const encoder = device.createCommandEncoder();
+  const pass = encoder.beginRenderPass({
+    colorAttachments: [],
+    depthStencilAttachment: {
+      view: depth.createView(),
+      depthLoadOp: "clear",
+      depthStoreOp: "store",
+      depthClearValue: 0,
+    },
+  });
+  pass.setPipeline(pipeline);
+  pass.draw(3);
+  pass.end();
+  device.queue.submit([encoder.finish()]);
+  return depth;
+}
+
+/** AoParams for the gate's view: 60° vertical, near 0.1 m, radius 1 m. */
+function aoParams(device: GPUDevice): GPUBuffer {
+  const tanY = Math.tan(Math.PI / 6);
+  return buffer(
+    device,
+    new Float32Array([
+      1,
+      0,
+      0,
+      tanY * (W / H),
+      0,
+      1,
+      0,
+      tanY,
+      0,
+      0,
+      -1,
+      0.1,
+      W,
+      H,
+      1,
+      64,
+    ]),
+    GPUBufferUsage.UNIFORM,
+  );
+}
+
+const HALF = [Math.ceil(W / 2), Math.ceil(H / 2)] as const;
+
 const CASES: Case[] = [
   {
     name: "depthRange",
@@ -866,6 +949,124 @@ const CASES: Case[] = [
         ],
         dispatch: [Math.ceil(GRID[0] / 8), Math.ceil(GRID[1] / 8), GRID[2]],
         outputs: [{ texture: blurred, texelBytes: 8, element: "f16", ulps: 2 }],
+      };
+    },
+  },
+  {
+    name: "meter",
+    reference: meterReference,
+    slang: meterSlang,
+    setup(device) {
+      // A tenth of the pixels without scene light (alpha 0).
+      const random = randoms(13);
+      const image = texture(
+        device,
+        { size: [W, H], format: "rgba16float" },
+        (i) =>
+          i % 4 === 3
+            ? toHalf(random() < 0.1 ? 0 : 1)
+            : toHalf(10 ** (random() * 8 - 4)),
+        8,
+      );
+      const result = buffer(device, 16, GPUBufferUsage.STORAGE);
+      return {
+        groups: [
+          [
+            { binding: 0, resource: image.createView() },
+            {
+              binding: 1,
+              resource: {
+                buffer: buffer(
+                  device,
+                  new Uint32Array([
+                    new Uint32Array(new Float32Array([1]).buffer)[0]!,
+                    W,
+                    H,
+                    0,
+                  ]),
+                  GPUBufferUsage.UNIFORM,
+                ),
+              },
+            },
+            { binding: 2, resource: { buffer: result } },
+          ],
+        ],
+        dispatch: [1],
+        outputs: [{ buffer: result, element: "f32", ulps: 4 }],
+      };
+    },
+  },
+  {
+    name: "ao.gtao",
+    reference: aoReference,
+    slang: aoSlang,
+    entry: "gtao",
+    setup(device) {
+      const normals = texture(
+        device,
+        { size: [W, H], format: "rgba16float" },
+        (i) => {
+          const t = i >> 2;
+          const x = t % W;
+          const y = Math.floor(t / W);
+          const n = [0.3 * Math.sin(x / 37), 0.3 * Math.cos(y / 23), 1, 0];
+          const l = Math.hypot(n[0]!, n[1]!, n[2]!);
+          return toHalf(n[i & 3]! / l);
+        },
+        8,
+      );
+      const raw = texture(device, {
+        size: [...HALF],
+        format: "r32float",
+        usage: T.STORAGE_BINDING,
+      });
+      return {
+        groups: [
+          [
+            { binding: 0, resource: { buffer: aoParams(device) } },
+            { binding: 1, resource: sceneDepth(device).createView() },
+            { binding: 2, resource: normals.createView() },
+            { binding: 3, resource: raw.createView() },
+          ],
+        ],
+        dispatch: [Math.ceil(HALF[0] / 8), Math.ceil(HALF[1] / 8)],
+        outputs: [{ texture: raw, element: "f32", ulps: 8 }],
+      };
+    },
+  },
+  {
+    name: "ao.denoise",
+    reference: aoReference,
+    slang: aoSlang,
+    entry: "denoise",
+    setup(device) {
+      const random = randoms(17);
+      const raw = texture(
+        device,
+        { size: [...HALF], format: "r32float" },
+        () => 0,
+      );
+      const values = new Float32Array(HALF[0] * HALF[1]).map(() => random());
+      device.queue.writeTexture(
+        { texture: raw },
+        values,
+        { bytesPerRow: HALF[0] * 4 },
+        [...HALF],
+      );
+      const words = Math.ceil(W / 4);
+      const packed = buffer(device, words * H * 4, GPUBufferUsage.STORAGE);
+      return {
+        groups: [
+          [
+            { binding: 0, resource: { buffer: aoParams(device) } },
+            { binding: 1, resource: sceneDepth(device).createView() },
+            { binding: 4, resource: raw.createView() },
+            { binding: 5, resource: { buffer: packed } },
+          ],
+        ],
+        dispatch: [Math.ceil(words / 8), Math.ceil(H / 8)],
+        // Four 8-bit values a word: compared as bytes.
+        outputs: [{ buffer: packed, element: "unorm8", ulps: 1 }],
       };
     },
   },
