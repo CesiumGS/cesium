@@ -233,10 +233,14 @@ view's instant, in float64, and renders camera-relative, as it does today
 within one body. Moving a view from the Earth to the Moon changes a root
 transform, not the scene; two views of one world can be on different bodies.
 
-- **The view's body** (`View.body`) chooses the sky, atmosphere and
-  controllers. The Earth's atmosphere draws only for views where the Earth
-  is relevant **(builder's call: the Earth's sky and aerial perspective when
-  the camera is inside or near the Earth's atmosphere; black sky elsewhere)**.
+- **Bodies are the existing `Body` class** (`src/scene/Body.ts`: a name, an
+  ellipsoid, an optional atmosphere), extended with its fixed frame. The
+  Moon is a `Body` with no atmosphere. A body's atmosphere belongs to that
+  body and draws wherever the body is seen (the Earth's limb glows seen from
+  the Moon). The view's body (`View.body`) decides only the sky around the
+  camera and the controllers: a view on the Moon has a black sky because
+  the Moon has no atmosphere. In free flight, the view's body follows the
+  nearest body **(builder's call)**.
 - **The Moon in the sky:** today's sky draws a textured Moon disk. When the
   Moon tileset is in the world, the disk is off and the tileset draws at
   every distance (its root tile far away) **(builder's call)**.
@@ -362,13 +366,14 @@ labelled, never substituted.
 
 ### 7.4 PROJ
 
-PROJ compiled to WebAssembly (proj.js, MIT: ~1.3 MB brotli without TIFF,
-plus `proj.db` ~1.3 MB brotli, trimmable), loaded lazily the first time an
-engineering frame needs an exact transform. Grids (geoids, datum shifts)
+PROJ itself, compiled to WebAssembly (the `proj.js` npm package, MIT:
+~1.3 MB brotli without TIFF, plus `proj.db` ~1.3 MB brotli, trimmable),
+loaded lazily the first time an engineering frame needs an exact transform. Grids (geoids, datum shifts)
 are fetched per file as needed and self-hosted if cdn.proj.org lacks CORS.
-The EPSG terms of use ship with `proj.db`. proj4js isn't enough (no
-vertical datums or geoids) **(builder's call: proj.js; proj-wasm is the
-alternative if its worker model suits better)**.
+The EPSG terms of use ship with `proj.db`. proj4js, a separate JavaScript
+reimplementation, isn't enough (no vertical datums or geoids) **(builder's
+call: the `proj.js` WebAssembly build; `proj-wasm`, another WebAssembly
+build of PROJ, is the alternative if its worker model suits better)**.
 
 ### 7.5 Any body
 
