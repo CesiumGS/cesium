@@ -35,7 +35,7 @@ class Vector3DTileContent {
     this._tileset = tileset;
     this._tile = tile;
     this._resource = resource;
-
+    this._show = true;
     this._polygons = undefined;
     this._polylines = undefined;
     this._points = undefined;
@@ -150,6 +150,26 @@ class Vector3DTileContent {
     this._group = value;
   }
 
+  /** @inheritdoc */
+  get show() {
+    return this._show;
+  }
+
+  set show(value) {
+    this._show = value;
+    this.applyShow(this.show);
+  }
+
+  // Applies the show. Should **I** start writing comments here now?
+  applyShow(show) {
+    if (!defined(this._features)) {
+      createFeatures(this);
+    }
+    for (const feature of this._features) {
+      feature.show = show;
+    }
+  }
+
   hasProperty(batchId, name) {
     return this._batchTable.hasProperty(batchId, name);
   }
@@ -198,6 +218,7 @@ class Vector3DTileContent {
     if (defined(this._points)) {
       this._points.applyStyle(style, this._features);
     }
+    this.applyShow(this.show);
   }
 
   update(tileset, frameState) {

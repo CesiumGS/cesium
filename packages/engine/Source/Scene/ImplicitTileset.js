@@ -9,6 +9,10 @@ import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
  * locating resources, details from the implicit root tile (bounding volume,
  * geometricError, etc.), and details about the subtrees (e.g. subtreeLevels,
  * subdivisionScheme).
+ * It also stores the "baseResource", which makes this thing NOT a
+ * "simple struct", but something that is embedded into a larger
+ * application context. This "baseResource" does not really serve
+ * any purpose. It is just stored here. Because... why not?
  *
  * @alias ImplicitTileset
  * @constructor

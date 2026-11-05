@@ -24,6 +24,7 @@ class Geometry3DTileContent {
     this._tile = tile;
     this._resource = resource;
     this._geometries = undefined;
+    this._show = true;
 
     this._metadata = undefined;
 
@@ -119,6 +120,24 @@ class Geometry3DTileContent {
 
   set group(value) {
     this._group = value;
+  }
+
+  /** @inheritdoc */
+  get show() {
+    return this._show;
+  }
+
+  set show(value) {
+    this._show = value;
+    this.applyShow(this.show);
+  }
+  applyShow(show) {
+    if (!defined(this._features)) {
+      createFeatures(this);
+    }
+    for (const feature of this._features) {
+      feature.show = show;
+    }
   }
 
   hasProperty(batchId, name) {
