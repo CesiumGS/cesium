@@ -672,8 +672,12 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
   // cesium module's attributes) as controls: set on the shader as they
   // change, no recompile. Values are kept by name across compiles (and
   // visits) until the shader changes that uniform's type or default.
+  // Floating over the view's bottom left, collapsible (kept per visit):
+  // tuned while watching the model, not read beside the code.
   const params = el("div", { className: "slang-params" });
   params.hidden = true;
+  viewer.container.append(params);
+  let paramsOpen = read("paramsOpen") !== "0";
   type Kept = { type: string; default: string; value: number | number[] };
   const kept = new Map<string, Kept>(
     Object.entries(
@@ -734,27 +738,44 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
         controlFor(c, value),
       );
     });
+    const body = el("div", { className: "slang-params-body" }, ...rows);
+    body.hidden = !paramsOpen;
+    const toggle = el(
+      "button",
+      {
+        type: "button",
+        className: "slang-params-toggle",
+        ariaExpanded: String(paramsOpen),
+        onclick: () => {
+          paramsOpen = !paramsOpen;
+          write("paramsOpen", paramsOpen ? "1" : "0");
+          body.hidden = !paramsOpen;
+          reset.hidden = !paramsOpen;
+          toggle.ariaExpanded = String(paramsOpen);
+        },
+      },
+      el("span", { className: "slang-params-chevron", ariaHidden: "true" }),
+      `Parameters (${controls.length})`,
+    );
+    const reset = el(
+      "button",
+      {
+        type: "button",
+        className: "slang-params-reset",
+        title: "Every parameter back to the shader's default",
+        onclick: () => {
+          for (const c of controls) {
+            setValue(c.name, c.value);
+          }
+          renderControls(controls);
+        },
+      },
+      "Reset",
+    );
+    reset.hidden = !paramsOpen;
     params.replaceChildren(
-      el(
-        "div",
-        { className: "slang-params-header" },
-        el("span", {}, "Parameters"),
-        el(
-          "button",
-          {
-            type: "button",
-            title: "Every parameter back to the shader's default",
-            onclick: () => {
-              for (const c of controls) {
-                setValue(c.name, c.value);
-              }
-              renderControls(controls);
-            },
-          },
-          "Reset",
-        ),
-      ),
-      ...rows,
+      el("div", { className: "slang-params-header" }, toggle, reset),
+      body,
     );
   };
   const controlFor = (c: ShaderControl, value: number | number[]) => {
@@ -894,7 +915,6 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
         el("label", {}, "Turntable", turntable),
       ),
     ),
-    params,
     editorHost,
     errorBox,
     el("p", { className: "slang-status" }, status.compile),
@@ -990,6 +1010,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     panel.replaceChildren();
     clearTimeout(viewErrorTimer);
     viewError.remove();
+    params.remove();
   };
 }
 

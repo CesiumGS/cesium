@@ -456,17 +456,25 @@
 .slang-stage[open] > .slang-toolbar {
   margin-top: var(--stratakit-space-150, 6px);
 }
-/* The shader's declared uniforms as controls (Slider, Color, Toggle). */
+/*
+ * The shader's declared uniforms as controls (Slider, Color, Toggle): a
+ * collapsible panel floating over the view's bottom left.
+ */
 .slang-params {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  z-index: 4;
+  width: min(320px, calc(100% - 24px));
   display: flex;
   flex-direction: column;
-  gap: var(--stratakit-space-100);
-  padding: var(--stratakit-space-150, 6px) var(--stratakit-space-200);
-  border-radius: var(--stratakit-radius-sm, 4px);
-  border: 1px solid var(--stratakit-color-border-neutral-muted, #333);
-  max-height: 30vh;
-  overflow: auto;
-  flex: none;
+  border-radius: 8px;
+  border: 1px solid #ffffff1f;
+  background: #16181cdd;
+  backdrop-filter: blur(6px);
+  color: #e8eaee;
+  font-size: 0.8125rem;
+  box-shadow: 0 6px 20px #0008;
 }
 .slang-params[hidden] {
   display: none;
@@ -475,10 +483,52 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-weight: 600;
+  gap: var(--stratakit-space-100);
+  padding: 4px 6px 4px 4px;
 }
-.slang-params-header button {
-  padding: 0 var(--stratakit-space-150, 6px);
+.slang-params-toggle,
+.slang-params-reset {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  padding: 4px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.slang-params-reset {
+  font-weight: 400;
+  color: #ffffffaa;
+}
+.slang-params-toggle:hover,
+.slang-params-reset:hover {
+  background: #ffffff14;
+}
+.slang-params-chevron {
+  width: 6px;
+  height: 6px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform 120ms ease;
+}
+.slang-params-toggle[aria-expanded="true"] .slang-params-chevron {
+  transform: rotate(45deg) translateY(-2px);
+}
+.slang-params-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 2px 10px 10px;
+  max-height: 40vh;
+  overflow: auto;
+}
+.slang-params-body[hidden] {
+  display: none;
 }
 .slang-param {
   grid-template-columns: minmax(70px, 30%) minmax(0, 1fr);
@@ -504,8 +554,8 @@
   width: 0;
   font: inherit;
   color: inherit;
-  background: var(--stratakit-color-bg-page-depth, #111);
-  border: 1px solid var(--stratakit-color-border-neutral-base, #555);
+  background: #0c0d10;
+  border: 1px solid #ffffff2a;
   border-radius: var(--stratakit-radius-sm, 4px);
   padding: 2px 4px;
 }
@@ -513,7 +563,7 @@
   width: 48px;
   height: 22px;
   padding: 0;
-  border: 1px solid var(--stratakit-color-border-neutral-base, #555);
+  border: 1px solid #ffffff2a;
   border-radius: var(--stratakit-radius-sm, 4px);
   background: none;
 }

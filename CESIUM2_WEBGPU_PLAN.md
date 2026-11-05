@@ -5235,8 +5235,10 @@ max)`, `Color(r, g, b)` (linear RGB), `Toggle(on)` and `Label("…")`. A
   - **`CustomShader.controls`** describes each one: name, label, kind
     (slider, color, toggle, number), type, default and range. A host sets
     them with `setUniform`, no recompile.
-  - **The playground's Parameters panel** builds sliders, color pickers,
-    toggles and number fields from them. Values are kept by name across
+  - **The playground's Parameters panel** floats over the view's bottom
+    left, collapsible (the state kept), so values are tuned while watching
+    the model. It builds sliders, color pickers, toggles and number fields
+    from them. Values are kept by name across
     compiles and visits until the shader changes that uniform's type or
     default, and Reset restores the defaults. Rim glow, Toon steps and
     Hologram use controls.
