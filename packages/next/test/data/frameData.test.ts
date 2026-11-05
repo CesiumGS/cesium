@@ -18,9 +18,17 @@ interface Entry {
 }
 
 const dir = framesDataDirectory();
-const manifest = JSON.parse(
-  readFileSync(join(dir, "manifest.json"), "utf8"),
-) as { files: Entry[] };
+const readManifest = (): { files: Entry[] } => {
+  try {
+    return JSON.parse(readFileSync(join(dir, "manifest.json"), "utf8"));
+  } catch (error) {
+    throw new Error(
+      `No frames data in ${dir}: run \`npm run setup\` (or set FRAMES_DATA_DIR to where it wrote the store)`,
+      { cause: error },
+    );
+  }
+};
+const manifest = readManifest();
 const entry = (role: string): Entry => {
   const found = manifest.files.find((f) => f.role === role);
   if (!found) {

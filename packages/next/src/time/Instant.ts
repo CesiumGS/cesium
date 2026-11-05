@@ -14,7 +14,13 @@ const JD_J2000 = 2_451_545.0;
  * leap seconds; `Instant` is the uniform value those models take.
  */
 export class Instant {
-  private constructor(readonly tt: number) {}
+  readonly tt: number;
+
+  // A plain field, not a parameter property: scripts/frameData.mjs imports
+  // this file under Node's type stripping, which rejects those.
+  private constructor(tt: number) {
+    this.tt = tt;
+  }
 
   /**
    * From UTC milliseconds since 1970. The integer ms subtraction comes

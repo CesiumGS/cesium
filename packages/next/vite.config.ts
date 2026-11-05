@@ -11,7 +11,7 @@ import {
 import { homedir } from "node:os";
 import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
-import { defineConfig, type Plugin } from "vitest/config";
+import { configDefaults, defineConfig, type Plugin } from "vitest/config";
 import { basisTranscoderEsm } from "./basisTranscoderEsm.ts";
 import { slangShaders } from "./scripts/vitePluginSlang.ts";
 import { framesDataDirectory } from "./scripts/frameData.mjs";
@@ -329,6 +329,8 @@ const framesData = existsSync(join(framesDataDirectory(), "manifest.json"))
   ? framesDataDirectory()
   : undefined;
 
+const framesDataTests = !["", "0"].includes(process.env.FRAMES_DATA ?? "");
+
 export default defineConfig({
   server: { host: "127.0.0.1", port: 5190, strictPort: true },
   // Every bare import, bundled at startup: a dependency discovered later
@@ -423,9 +425,9 @@ export default defineConfig({
   },
   test: {
     include: ["test/**/*.test.ts"],
-    exclude: process.env.FRAMES_DATA
-      ? ["node_modules/**"]
-      : ["node_modules/**", "test/data/**"],
+    exclude: framesDataTests
+      ? configDefaults.exclude
+      : [...configDefaults.exclude, "test/data/**"],
     environment: "node",
   },
 });

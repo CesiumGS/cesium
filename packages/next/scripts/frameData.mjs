@@ -25,6 +25,7 @@ import process from "node:process";
 import { readDaf } from "../src/ephemeris/spk.ts";
 import { writePack } from "../src/ephemeris/pack.ts";
 import { EarthOrientationParameters } from "../src/time/eop.ts";
+import { Instant } from "../src/time/Instant.ts";
 import { LeapSeconds } from "../src/time/leapSeconds.ts";
 
 const NAIF = "https://naif.jpl.nasa.gov/pub/naif/generic_kernels";
@@ -106,45 +107,60 @@ async function ensureNaif(dir, { file, url }, log) {
   return bytes;
 }
 
-/** A table refreshed when older than 7 days; a failed refresh keeps the copy. */
-async function ensureFresh(dir, { file, url }, log) {
+/**
+ * A table refreshed when older than 7 days. `validate(text)` throws on a bad
+ * file; a download that fails or doesn't validate is a failed refresh, which
+ * keeps a valid stored copy (and never overwrites it), else throws naming the
+ * URL. A stored copy that doesn't validate is not kept.
+ */
+export async function ensureFresh(dir, { file, url }, log, validate) {
   const path = join(dir, file);
-  const stored = existsSync(path);
-  if (stored && Date.now() - statSync(path).mtimeMs < REFRESH_MS) {
+  let kept;
+  if (existsSync(path)) {
+    const bytes = readFileSync(path);
+    try {
+      validate(bytes.toString("utf8"));
+      kept = bytes;
+    } catch (error) {
+      log(`  ${file}: stored copy is invalid (${error.message})`);
+    }
+  }
+  if (kept && Date.now() - statSync(path).mtimeMs < REFRESH_MS) {
     log(`  ${file}: fresh`);
-    return readFileSync(path);
+    return kept;
   }
   try {
     log(`  ${file}: downloading ${url}`);
     const bytes = await download(url);
+    validate(Buffer.from(bytes).toString("utf8"));
     store(path, bytes);
     return Buffer.from(bytes);
   } catch (error) {
-    if (!stored) {
+    if (!kept) {
       throw new Error(
-        `${file}: cannot download ${url} and no stored copy: ${error.message}`,
+        `${file}: cannot download a valid copy from ${url} and no stored copy: ${error.message}`,
         { cause: error },
       );
     }
     console.warn(
       `  ${file}: refresh from ${url} failed (${error.message}); keeping the stored copy`,
     );
-    return readFileSync(path);
+    return kept;
   }
 }
 
 const toArrayBuffer = (b) =>
   b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength);
 
-/** TDB seconds past J2000 of a UTC calendar date (a minute of slack is fine). */
-const tdbSeconds = (year) =>
-  (Date.UTC(year, 0, 1) - Date.UTC(2000, 0, 1, 12)) / 1000;
+/** TDB seconds past J2000 of January 1st, 00:00 UTC of `year`. */
+const tdbSeconds = (year, leap) =>
+  Instant.fromUtc(Date.UTC(year, 0, 1), leap).tdb();
 
 /** The pack of `wanted` segments of one kernel, every split piece overlapping the span. */
-function buildPack(source, bytes, wanted, frame, kind, span) {
+function buildPack(source, bytes, wanted, frame, kind, span, leap) {
   const [y0, y1] = span;
-  const start = tdbSeconds(y0);
-  const end = tdbSeconds(y1 + 1);
+  const start = tdbSeconds(y0, leap);
+  const end = tdbSeconds(y1 + 1, leap);
   const { segments } = readDaf(toArrayBuffer(bytes));
   const inputs = [];
   const found = [];
@@ -192,8 +208,12 @@ export async function ensureFrameData({ span }, log = console.log) {
 
   const planetsBytes = await ensureNaif(dir, SOURCES.planets, log);
   const moonBytes = await ensureNaif(dir, SOURCES.moon, log);
-  const leapBytes = await ensureFresh(dir, SOURCES.leapSeconds, log);
-  const eopBytes = await ensureFresh(dir, SOURCES.eop, log);
+  const leapBytes = await ensureFresh(dir, SOURCES.leapSeconds, log, (text) =>
+    LeapSeconds.fromIers(text),
+  );
+  const eopBytes = await ensureFresh(dir, SOURCES.eop, log, (text) =>
+    EarthOrientationParameters.fromCelestrakCsv(text),
+  );
 
   // Parse what was downloaded, so a bad file fails here, not in the browser.
   const leap = LeapSeconds.fromIers(leapBytes.toString("utf8"));
@@ -220,6 +240,7 @@ export async function ensureFrameData({ span }, log = console.log) {
     "ICRF",
     "position",
     span,
+    leap,
   );
   const moon = buildPack(
     SOURCES.moon,
@@ -229,6 +250,7 @@ export async function ensureFrameData({ span }, log = console.log) {
     "MOON_PA",
     "euler",
     span,
+    leap,
   );
   log(`  planets segments: ${planets.found.join(", ")}`);
   log(`  moon segments: ${moon.found.join(", ")}`);
