@@ -5,8 +5,10 @@
 //    from npm into the store outside the repo (~/.cesium-bench/cesium, or
 //    BENCH_CESIUM_DIR; bench/suite/release.mjs), which Dyno's 1.x engines
 //    load. The dev server also fetches a missing release on first use;
-//  - the Slang WebAssembly build (scripts/slangWasm.mjs), for runtime Slang:
-//    CustomShader.fromSlang and Dyno's Slang playground.
+//  - the Slang toolchain, pinned (scripts/slangTools.mjs): the native slangc
+//    for build-time Slang (the spike's ports, scripts/slangShader.mjs) and
+//    the WebAssembly build for runtime Slang (CustomShader.fromSlang, Dyno's
+//    Slang playground).
 // Nothing here is committed: both live outside version control.
 // Usage: npm run setup --workspace @cesium/next [-- --skip-build]
 import { execFileSync } from "node:child_process";
@@ -15,7 +17,7 @@ import { dirname, join } from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { ensureRelease, releasesDirectory } from "../bench/suite/release.mjs";
-import { ensureSlangWasm } from "./slangWasm.mjs";
+import { ensureSlangc, ensureSlangWasm } from "./slangTools.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = join(here, "..", "..", "..");
@@ -59,6 +61,6 @@ for (const version of releases) {
   console.log(`  cesium@${release.version}: ready (${release.integrity})`);
 }
 
-// The Slang WebAssembly build, for runtime Slang (the playground example).
-const wasm = await ensureSlangWasm();
-console.log(`slang-wasm: ${wasm}`);
+// The Slang toolchain: slangc (build time) and the WebAssembly build (runtime).
+console.log(`slangc: ${await ensureSlangc()}`);
+console.log(`slang-wasm: ${await ensureSlangWasm()}`);

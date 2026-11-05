@@ -14,10 +14,17 @@ npm run setup --workspace @cesium/next      # the 1.x build, the CesiumJS releas
 CesiumJS releases from npm into `~/.cesium-bench/cesium` (or
 `BENCH_CESIUM_DIR`), checked against the registry's integrity hash. The dev
 server also fetches a missing release the first time a page asks for it.
-It also fetches the Slang WebAssembly build (pinned in
-`scripts/slangWasm.mjs`, checked against the release's SHA-256) into
-`~/.cesium-bench/slang-wasm`, which the dev server serves at `/slang-wasm/`
-for runtime Slang (`CustomShader.fromSlang`, Dyno's Slang playground).
+It also fetches the Slang toolchain, pinned to one release in
+`scripts/slangTools.mjs` and checked against the release's SHA-256:
+
+- the native `slangc` for this platform, into `~/.cesium-bench/slang-native`,
+  for build-time Slang (`spikes/slang/build.mjs`, `npm run slang`);
+- the WebAssembly build, into `~/.cesium-bench/slang-wasm`, which the dev
+  server serves at `/slang-wasm/` for runtime Slang (`CustomShader.fromSlang`,
+  Dyno's Slang playground).
+
+`node scripts/slangTools.mjs` fetches just these. `SLANGC` and
+`SLANG_WASM_DIR` still point elsewhere if set.
 
 ```sh
 npm run build                               # at the repo root: 1.x build used by the parity harness
@@ -78,11 +85,9 @@ Pages on the dev server:
   at link time), compared with the hand-written WGSL incl. the performance gate
 
 The Slang spike uses checked-in WGSL from `spikes/slang/generated/`. To
-regenerate it, download the official Slang release
-(<https://github.com/shader-slang/slang/releases>) and run
-`SLANGC=/path/to/slangc node spikes/slang/build.mjs`. To also test runtime
-compilation, start the dev server with `SLANG_WASM_DIR` pointing at the
-extracted `slang-*-wasm.zip`.
+regenerate it, run `node spikes/slang/build.mjs` (with the `slangc` that
+`npm run setup` fetched, or `SLANGC=/path/to/slangc`). Runtime compilation
+uses the WebAssembly build the dev server serves once setup has fetched it.
 
 `npm run bench` runs every page above in headless Edge via Playwright with
 WebGPU developer features (unquantized GPU timestamps) on the high-performance

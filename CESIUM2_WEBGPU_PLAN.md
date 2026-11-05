@@ -5052,7 +5052,7 @@ them on content as you type.
     (`World.setDrawShader`, moving draws between batches) is the next step
     if tilesets need it.
 - _Setup._ The WASM build (10 MB, pinned with slangc in
-  `scripts/slangWasm.mjs` and checked against the release's SHA-256) is
+  `scripts/slangTools.mjs` and checked against the release's SHA-256) is
   fetched by `npm run setup` into `~/.cesium-bench/slang-wasm`. The dev
   server serves it at `/slang-wasm/` without `SLANG_WASM_DIR`. Without it
   the example says how to get it.

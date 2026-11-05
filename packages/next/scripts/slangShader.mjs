@@ -1,7 +1,7 @@
 // Compiles Slang custom shader stages (`import cesium;`) to custom shader
 // WGSL at build time, the recommended path (plan §3.4):
 //
-//   SLANGC=/path/to/slangc node scripts/slangShader.mjs stages.slang [-o stages.wgsl]
+//   node scripts/slangShader.mjs stages.slang [-o stages.wgsl]  (slangc from `npm run setup`, or SLANGC)
 //     [--attributes name:type,...] [--metadata name:type,...]
 //     [--uniforms name:type,...] [--instance name:type,...]
 //
@@ -26,10 +26,14 @@ import {
   slangStages,
   slangStub,
 } from "../src/scene/slangStages.ts";
+import { slangcPath } from "./slangTools.mjs";
 
-const slangc = process.env.SLANGC;
+// SLANGC, else the pinned one `npm run setup` fetched (scripts/slangTools.mjs).
+const slangc = slangcPath();
 if (!slangc) {
-  throw new Error("Set SLANGC to the slangc executable.");
+  throw new Error(
+    "No slangc: run `npm run setup --workspace @cesium/next` (or set SLANGC).",
+  );
 }
 const args = process.argv.slice(2);
 const valued = new Set([
@@ -39,7 +43,9 @@ const valued = new Set([
   "--uniforms",
   "--instance",
 ]);
-const input = args.find((a, i) => !a.startsWith("-") && !valued.has(args[i - 1]));
+const input = args.find(
+  (a, i) => !a.startsWith("-") && !valued.has(args[i - 1]),
+);
 const declared = (flag) => {
   const at = args.indexOf(flag);
   return at < 0
@@ -47,7 +53,9 @@ const declared = (flag) => {
     : Object.fromEntries(args[at + 1].split(",").map((d) => d.split(":")));
 };
 if (!input) {
-  throw new Error("Usage: node scripts/slangShader.mjs stages.slang [-o out.wgsl]");
+  throw new Error(
+    "Usage: node scripts/slangShader.mjs stages.slang [-o out.wgsl]",
+  );
 }
 const o = args.indexOf("-o");
 const output =
@@ -64,14 +72,20 @@ const temp = mkdtempSync(join(tmpdir(), "slang-stages-"));
 try {
   writeFileSync(
     join(temp, "cesium.slang"),
-    cesiumModule(readFileSync(join(here, "../src/shaders/cesium.slang"), "utf8"), {
-      attributes: declared("--attributes"),
-      metadata: declared("--metadata"),
-      instance: declared("--instance"),
-      uniforms: Object.fromEntries(
-        Object.entries(declared("--uniforms")).map(([n, type]) => [n, { type }]),
-      ),
-    }),
+    cesiumModule(
+      readFileSync(join(here, "../src/shaders/cesium.slang"), "utf8"),
+      {
+        attributes: declared("--attributes"),
+        metadata: declared("--metadata"),
+        instance: declared("--instance"),
+        uniforms: Object.fromEntries(
+          Object.entries(declared("--uniforms")).map(([n, type]) => [
+            n,
+            { type },
+          ]),
+        ),
+      },
+    ),
   );
   writeFileSync(join(temp, "user.slang"), source);
   writeFileSync(join(temp, "stages.slang"), slangStub(stages));

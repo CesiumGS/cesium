@@ -29,10 +29,12 @@ const PRESETS: Record<string, string> = {
 
 // A glow where the surface turns away from the camera, pulsing in time.
 public void fragmentMain(FragmentInput fsInput, inout MaterialOutput material) {
+  // Emission is display-relative: 1 is white whatever the exposure.
   float3 toCamera = normalize(-fsInput.positionEC);
   float rim = 1.0 - saturate(dot(toCamera, normalize(fsInput.normal)));
-  float pulse = 0.5 + 0.5 * sin(fsInput.time * 3.0);
-  material.emissive += float3(0.2, 0.6, 1.0) * pow(rim, 3.0) * (0.5 + pulse) * 4.0;
+  float pulse = 0.6 + 0.4 * sin(fsInput.time * 3.0);
+  material.baseColor *= 0.5;
+  material.emissive += float3(0.2, 0.6, 1.0) * pow(rim, 1.5) * pulse * 1.5;
 }
 `,
   "Height bands": `import cesium;
