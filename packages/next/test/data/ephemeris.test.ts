@@ -8,10 +8,12 @@ import {
   MOON_PA_TO_ME,
 } from "../../src/ephemeris/Ephemeris.ts";
 import { Instant } from "../../src/time/Instant.ts";
+import { LeapSeconds } from "../../src/time/leapSeconds.ts";
 import { moonAxes } from "../../src/time/moon.ts";
 import { framesDataDirectory } from "../../scripts/frameData.mjs";
 import ephemerisRows from "../fixtures/frames/ephemeris.json";
 import moonRows from "../fixtures/frames/moon.json";
+import utcRows from "../fixtures/frames/utc.json";
 
 type State = number[];
 const rows = ephemerisRows as {
@@ -170,6 +172,28 @@ describe("Ephemeris positions (jplephem on de440s.bsp)", () => {
     }
     expect(EMRAT).toBeCloseTo(81.30056822, 7);
     expect(worst).toBeLessThan(1e-3);
+  });
+});
+
+describe("UTC to ephemeris, end to end", () => {
+  it("Instant.fromUtc then the ephemeris matches jplephem at pyerfa's TDB to 1 cm", () => {
+    // Built from UTC like a Clock would, not from TDB: this checks fromUtc
+    // and tdb() together with the packs. The Earth's 30 km/s around the SSB
+    // turns a 3e-7 s TDB error into 1 cm.
+    const leap = LeapSeconds.fromIers(
+      readFileSync(join(dir, "Leap_Second.dat"), "utf8"),
+    );
+    let worst = 0;
+    for (const r of utcRows) {
+      const t = Instant.fromUtc(r.utcMs, leap);
+      worst = Math.max(
+        worst,
+        posDiff(eph.sun(t), meters(r.sun)),
+        posDiff(eph.earth(t), meters(r.earth)),
+        posDiff(eph.moonFromEarth(t), meters(r.moonFromEarth)),
+      );
+    }
+    expect(worst).toBeLessThan(1e-2);
   });
 });
 
