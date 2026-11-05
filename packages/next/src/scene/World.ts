@@ -1,5 +1,6 @@
 import { RangeAllocator } from "../gpu/RangeAllocator.ts";
 import { CapacityError } from "./CapacityError.ts";
+import { Slabs, type Slab } from "./Slabs.ts";
 import {
   INDIRECT_SIZE,
   INSTANCE_WORDS,
@@ -68,8 +69,18 @@ export interface WorldOptions {
   maxDraws?: number;
   /** Distinct materials, after sharing (default 65,536). */
   maxMaterials?: number;
+  /**
+   * Geometry budgets across the world's slabs (default 1 GiB of vertex
+   * data, 512 MiB of indices). Slabs start small, grow and multiply up to
+   * these; none holds more than one storage binding.
+   */
   vertexBytes?: number;
   indexBytes?: number;
+  /**
+   * The most one slab's vertex or index buffer holds (default 256 MiB,
+   * and never past the device's largest storage binding).
+   */
+  slabBytes?: number;
   /** Mixed-LOD clip blocks (placeholder tiles drawn at once; default 16,384). */
   maxClipBlocks?: number;
   /** Transform table entries (default: `maxDraws`). */
@@ -105,20 +116,43 @@ export interface Usage {
   capacity: number;
 }
 
+/**
+ * A world's pools against their ceilings (CESIUM2_WEBGPU_PLAN.md §13.15):
+ * tables count rows, the arenas bytes against the world's budgets.
+ */
 export interface WorldMemory {
   vertexBytes: Usage;
   indexBytes: Usage;
   draws: Usage;
   transforms: Usage;
   instances: Usage;
+  /** Distinct materials (shared by content), against the ceiling. */
   materials: Usage;
+  clipBlocks: Usage;
+  pointSets: Usage;
   batches: number;
-  /** Fixed-size GPU tables: records, transforms, instances, materials, lists, args. */
+  /** The GPU tables' buffers (records, transforms, instances, materials, lists, args), as grown. */
   tableBytes: number;
+  /** The geometry slabs: their buffers' sizes and what's in use. */
+  slabs: Array<{
+    id: number;
+    vertexBytes: number;
+    vertexUsed: number;
+    indexBytes: number;
+    indexUsed: number;
+  }>;
+  /** The largest slab buffer allowed (one storage binding at most). */
+  slabBytes: number;
 }
 
 export interface MeshHandle {
   readonly id: number;
+  /**
+   * The slab holding its geometry (scene/Slabs.ts): its streams' and
+   * indices' offsets are the slab's, and so are its draws' instance
+   * streams, feature table columns and point lists.
+   */
+  readonly slab: number;
   readonly firstIndex: number;
   readonly indexCount: number;
   readonly vertexCount: number;
@@ -529,8 +563,8 @@ export class World {
   readonly maxInstances: number;
   readonly maxMaterials: number;
   private _submission: SubmissionMode = "indirect";
-  private readonly vertexAllocator: RangeAllocator;
-  private readonly indexAllocator: RangeAllocator;
+  /** Geometry, in slabs of one storage binding each (scene/Slabs.ts). */
+  readonly slabs: Slabs;
   // Per-slot CPU tables (records, transforms, instances, materials) start
   // small and grow as slots are used; the GPU tables are full size (a
   // 65536-draw world's CPU tables held 37 MB on NYC, r39).
@@ -541,9 +575,9 @@ export class World {
   private drawGeneration: Uint32Array;
   /** Transform a draw owns (placed by origin and model), or -1. */
   private drawOwnedTransform: Int32Array;
-  /** Per-instance stream ranges in the vertex arena, by draw slot. */
+  /** Per-instance stream ranges in their mesh's slab, by draw slot. */
   private readonly instanceStreamRanges: Array<
-    [offset: number, size: number, dataBytes: number] | undefined
+    [offset: number, size: number, dataBytes: number, slab: number] | undefined
   > = [];
 
   // The transform table: float64 local and world matrices on the CPU,
@@ -620,10 +654,11 @@ export class World {
   /** Emptied batches, reused (index kept) so live records stay valid. */
   private readonly freeBatches: Batch[] = [];
   private readonly drawBatches: Array<Batch | undefined> = [];
-  /** Arena ranges per mesh id, as [byte offset, byte size]. */
+  /** Slab ranges per mesh id, as [byte offset, byte size]. */
   private readonly meshRanges = new Map<
     number,
     {
+      slab: number;
       vertex: Array<[number, number]>;
       index: [number, number];
       /** Its feature table's columns (`tableColumns`), shared. */
@@ -635,9 +670,12 @@ export class World {
    * components with `TABLE_PROPERTY`), shared by the meshes using them.
    */
   private readonly tableColumns = new Map<
-    FeatureTable,
+    string,
     { entries: number[][]; ranges: Array<[number, number]>; meshes: number }
   >();
+  /** An id per feature table object, for `tableColumns`' slab keys. */
+  private readonly tableIds = new WeakMap<FeatureTable, number>();
+  private nextTableId = 1;
   private readonly names: Array<string | undefined> = [];
   private readonly featureTables: Array<FeatureTable | undefined> = [];
   /**
@@ -669,8 +707,6 @@ export class World {
   private readonly cullParamsData = new Uint32Array(4);
   private readonly cullPassDesc: GPUComputePassDescriptor = { label: "cull" };
 
-  readonly vertexBuffer: GPUBuffer;
-  readonly indexBuffer: GPUBuffer;
   /** Replaced as the tables grow (`tableGeneration`). */
   recordBuffer: GPUBuffer;
   transformBuffer: GPUBuffer;
@@ -724,7 +760,6 @@ export class World {
   private readonly cullParams: GPUBuffer;
   private cullBindGroup!: GPUBindGroup;
   private pointCullBindGroup!: GPUBindGroup;
-  private drawBindGroup!: GPUBindGroup;
   /** Globe imagery array (a 1×1 placeholder until imagery is attached). */
   private imageryView: GPUTextureView;
   private readonly imagerySampler: GPUSampler;
@@ -766,10 +801,17 @@ export class World {
     );
     const instanceRows = Math.max(1, Math.min(this.maxInstances, 16384));
     const items = this.drawRows + instanceRows;
-    const vertexBytes = options.vertexBytes ?? 64 * 1024 * 1024;
-    const indexBytes = options.indexBytes ?? 32 * 1024 * 1024;
-    this.vertexAllocator = new RangeAllocator(vertexBytes, 4);
-    this.indexAllocator = new RangeAllocator(indexBytes, 4);
+    // A slab is one storage binding at most, and 256 MiB (growing to it).
+    this.slabs = new Slabs(
+      device,
+      {
+        vertexBudget: options.vertexBytes ?? 1 << 30,
+        indexBudget: options.indexBytes ?? 1 << 29,
+        slabCap: Math.min(binding, options.slabBytes ?? 256 << 20),
+      },
+      () => this.flushUploads(),
+      (slab) => this.slabReplaced(slab),
+    );
 
     this.records = new MirroredTable(
       ctx,
@@ -816,19 +858,6 @@ export class World {
     const buffer = (label: string, size: number, usage: GPUBufferUsageFlags) =>
       device.createBuffer({ label: `world.${label}`, size, usage });
     const storage = GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST;
-    // COPY_SRC: harnesses read back what kernels write there (point
-    // sets' anchors).
-    this.vertexBuffer = buffer(
-      "vertices",
-      vertexBytes,
-      storage | GPUBufferUsage.COPY_SRC,
-    );
-    // STORAGE: ray casts read triangles (`castRays`).
-    this.indexBuffer = buffer(
-      "indices",
-      indexBytes,
-      GPUBufferUsage.INDEX | GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
-    );
     this.recordBuffer = this.records.buffer;
     this.transformBuffer = this.transforms.buffer;
     this.instanceBuffer = this.instances.buffer;
@@ -911,12 +940,12 @@ export class World {
   get memory(): WorldMemory {
     return {
       vertexBytes: {
-        used: this.vertexAllocator.used,
-        capacity: this.vertexAllocator.capacity,
+        used: this.slabs.vertexUsed,
+        capacity: this.slabs.options.vertexBudget,
       },
       indexBytes: {
-        used: this.indexAllocator.used,
-        capacity: this.indexAllocator.capacity,
+        used: this.slabs.indexUsed,
+        capacity: this.slabs.options.indexBudget,
       },
       draws: {
         used: this.drawCount - this.freeSlots.length,
@@ -931,10 +960,25 @@ export class World {
         capacity: this.maxInstances,
       },
       materials: {
-        used: this.materialCount - this.freeMaterials.length,
+        used: this.materialByKey.size,
         capacity: this.maxMaterials,
       },
+      clipBlocks: {
+        used: this.clipBlockCount - this.freeClipBlocks.length,
+        capacity: this.maxClipBlocks,
+      },
+      pointSets: { used: this.pointDraws.size, capacity: this.maxPointSets },
       batches: this.batches.size,
+      slabs: this.slabs.slabs
+        .filter((x) => x !== undefined)
+        .map((x) => ({
+          id: x.id,
+          vertexBytes: x.vertexBuffer.size,
+          vertexUsed: x.vertex.used,
+          indexBytes: x.indexBuffer.size,
+          indexUsed: x.index.used,
+        })),
+      slabBytes: this.slabs.options.slabCap,
       tableBytes:
         this.recordBuffer.size +
         this.transformBuffer.size +
@@ -964,12 +1008,8 @@ export class World {
       ],
       ["instance table", this.instanceAllocator.used, this.maxInstances],
       ["material table", this.materialByKey.size, this.maxMaterials],
-      [
-        "vertex arena",
-        this.vertexAllocator.used,
-        this.vertexAllocator.capacity,
-      ],
-      ["index arena", this.indexAllocator.used, this.indexAllocator.capacity],
+      ["vertex arena", this.slabs.vertexUsed, this.slabs.options.vertexBudget],
+      ["index arena", this.slabs.indexUsed, this.slabs.options.indexBudget],
       [
         "clip blocks",
         this.clipBlockCount - this.freeClipBlocks.length,
@@ -1087,19 +1127,53 @@ export class World {
   addMesh(mesh: MeshData): MeshHandle {
     const vertexCount = mesh.positions.length / 3;
     const vertexRanges: Array<[number, number]> = [];
+    // One slab holds all of it (and its draws' instance streams later):
+    // room for the streams, the directory and table columns together.
+    const named0 =
+      Object.keys(mesh.attributes ?? {}).length +
+      Object.keys(mesh.metadata ?? {}).length;
+    const streamBytes =
+      [
+        mesh.positions,
+        mesh.normals,
+        mesh.uvs,
+        mesh.colors,
+        mesh.tangents,
+        mesh.featureIds,
+        ...Object.values(mesh.attributes ?? {}).map((a) => a.data),
+        ...Object.values(mesh.metadata ?? {}).map((a) => a.data),
+      ].reduce((n, d) => n + (d ? align4(d.byteLength) : 0), 0) +
+      (mesh.propertyTextures?.length ?? 0) * TEXTURE_PROPERTY_WORDS * 4 +
+      4 *
+        (1 +
+          (named0 +
+            (mesh.propertyTextures?.length ?? 0) +
+            (mesh.featureTable
+              ? tableColumnData(mesh.featureTable).length
+              : 0)) *
+            3) +
+      (mesh.featureTable ? this.tableBytes(mesh.featureTable) : 0);
+    const slab = this.slabs.pick(streamBytes, mesh.indices.byteLength);
+    if (!slab) {
+      throw new CapacityError("vertex arena");
+    }
+    const releaseRanges = () => {
+      for (const [o, size] of vertexRanges) {
+        slab.vertex.release(o, size);
+      }
+      this.slabs.tidy(slab);
+    };
     const upload = (data: Float32Array | Uint32Array | undefined): number => {
       if (!data) {
         return NO_STREAM;
       }
-      const offset = this.vertexAllocator.allocate(data.byteLength);
+      const offset = this.slabs.allocateVertex(slab, data.byteLength);
       if (offset === undefined) {
-        for (const [o, size] of vertexRanges) {
-          this.vertexAllocator.release(o, size);
-        }
+        releaseRanges();
         throw new CapacityError("vertex arena");
       }
       vertexRanges.push([offset, data.byteLength]);
-      this.queueUpload(this.vertexBuffer, offset, data);
+      this.queueUpload(slab.vertexBuffer, offset, data);
       return offset / 4;
     };
     const streams: MeshStreams = {
@@ -1119,7 +1193,13 @@ export class World {
       ),
     ];
     const textured = mesh.propertyTextures ?? [];
-    const table = mesh.featureTable && this.uploadTable(mesh.featureTable);
+    let table: { entries: number[][] } | undefined;
+    try {
+      table = mesh.featureTable && this.uploadTable(mesh.featureTable, slab);
+    } catch (error) {
+      releaseRanges();
+      throw error;
+    }
     const tableEntries = table?.entries ?? [];
     const entries = named.length + textured.length + tableEntries.length;
     if (entries > 0) {
@@ -1159,23 +1239,26 @@ export class World {
       });
       streams.attributes = upload(directory);
     }
-    const indexOffset = this.indexAllocator.allocate(mesh.indices.byteLength);
+    const indexOffset = this.slabs.allocateIndex(slab, mesh.indices.byteLength);
     if (indexOffset === undefined) {
-      for (const [o, size] of vertexRanges) {
-        this.vertexAllocator.release(o, size);
+      releaseRanges();
+      if (mesh.featureTable) {
+        this.releaseTable(mesh.featureTable, slab);
       }
       throw new CapacityError("index arena");
     }
-    this.queueUpload(this.indexBuffer, indexOffset, mesh.indices);
+    this.queueUpload(slab.indexBuffer, indexOffset, mesh.indices);
     const { center, radius } = boundingSphere(mesh.positions);
     const id = this.nextMeshId++;
     this.meshRanges.set(id, {
+      slab: slab.id,
       vertex: vertexRanges,
       index: [indexOffset, mesh.indices.byteLength],
       ...(table ? { table: mesh.featureTable } : {}),
     });
     return {
       id,
+      slab: slab.id,
       firstIndex: indexOffset / 4,
       indexCount: mesh.indices.length,
       vertexCount,
@@ -1234,25 +1317,29 @@ export class World {
     const anchorBytes = Math.max(16, capacity * 16);
     const streamBytes = capacity * stride * 4;
     const bytes = anchorBytes + streamBytes + directory.byteLength;
-    const offset = this.vertexAllocator.allocate(bytes);
-    if (offset === undefined) {
+    // Its draws' point lists go in the same slab (a word a point each).
+    const slab = this.slabs.pick(bytes + Math.max(4, capacity * 4), 0);
+    const offset = slab && this.slabs.allocateVertex(slab, bytes);
+    if (!slab || offset === undefined) {
       throw new CapacityError("vertex arena");
     }
     if (directory.byteLength) {
       this.queueUpload(
-        this.vertexBuffer,
+        slab.vertexBuffer,
         offset + anchorBytes + streamBytes,
         directory,
       );
     }
     const id = this.nextMeshId++;
     this.meshRanges.set(id, {
+      slab: slab.id,
       vertex: [[offset, bytes]],
       index: [0, 0],
     });
     const anchors = offset / 4;
     return {
       id,
+      slab: slab.id,
       firstIndex: 0,
       indexCount: capacity * 6,
       vertexCount: capacity,
@@ -1298,7 +1385,11 @@ export class World {
         `setPointProperties: ${data.length / Math.max(1, stride)} points from ${first} don't fit`,
       );
     }
-    this.queueUpload(this.vertexBuffer, (streams + first * stride) * 4, data);
+    this.queueUpload(
+      this.slabs.get(mesh.slab).vertexBuffer,
+      (streams + first * stride) * 4,
+      data,
+    );
     this.version++;
     this.changedViews = ALL_VIEWS;
   }
@@ -1316,23 +1407,52 @@ export class World {
     // must not land on their next owner's.
     this.flushUploads();
     this.meshRanges.delete(mesh.id);
+    const slab = this.slabs.get(ranges.slab);
     let bytes = 0;
+    if (ranges.table) {
+      bytes += this.releaseTable(ranges.table, slab);
+    }
     for (const [offset, size] of ranges.vertex) {
-      this.vertexAllocator.release(offset, size);
+      slab.vertex.release(offset, size);
       bytes += size;
     }
     if (ranges.index[1] > 0) {
-      this.indexAllocator.release(ranges.index[0], ranges.index[1]);
+      slab.index.release(ranges.index[0], ranges.index[1]);
     }
-    const table = ranges.table && this.tableColumns.get(ranges.table);
-    if (table && --table.meshes === 0) {
-      this.tableColumns.delete(ranges.table!);
-      for (const [offset, size] of table.ranges) {
-        this.vertexAllocator.release(offset, size);
-        bytes += size;
-      }
-    }
+    // An emptied slab past the first closes.
+    this.slabs.tidy(slab);
     return bytes + ranges.index[1];
+  }
+
+  /** A mesh's reference to its table's columns in `slab` released. */
+  private releaseTable(table: FeatureTable, slab: Slab): number {
+    const key = this.tableKey(table, slab);
+    const uploaded = this.tableColumns.get(key);
+    if (!uploaded || --uploaded.meshes > 0) {
+      return 0;
+    }
+    this.tableColumns.delete(key);
+    let bytes = 0;
+    for (const [offset, size] of uploaded.ranges) {
+      slab.vertex.release(offset, size);
+      bytes += size;
+    }
+    return bytes;
+  }
+
+  /** `tableColumns`' key: the table object's id and the slab. */
+  private tableKey(table: FeatureTable, slab: Slab): string {
+    let id = this.tableIds.get(table);
+    if (id === undefined) {
+      id = this.nextTableId++;
+      this.tableIds.set(table, id);
+    }
+    return `${id}|${slab.id}`;
+  }
+
+  /** The bytes a feature table's uploaded columns take (`uploadTable`). */
+  private tableBytes(table: FeatureTable): number {
+    return tableColumnData(table).reduce((n, c) => n + c.data.byteLength, 0);
   }
 
   /**
@@ -1341,49 +1461,29 @@ export class World {
    * (shorter rows padded with zero), as float32 rows by local feature ID;
    * missing values (null) read 0. String columns aren't uploaded.
    */
-  private uploadTable(table: FeatureTable): {
+  private uploadTable(
+    table: FeatureTable,
+    slab: Slab,
+  ): {
     entries: number[][];
   } {
-    let uploaded = this.tableColumns.get(table);
+    // Once per table object and slab: a table used from two slabs is
+    // copied into each (rare: a table belongs to one tile's content).
+    const key = this.tableKey(table, slab);
+    let uploaded = this.tableColumns.get(key);
     if (!uploaded) {
       const entries: number[][] = [];
       const ranges: Array<[number, number]> = [];
-      for (const [name, values] of Object.entries(table.columns)) {
-        let components = 0;
-        let numeric = true;
-        for (const v of values) {
-          if (typeof v === "number" || typeof v === "boolean") {
-            components = Math.max(components, 1);
-          } else if (
-            Array.isArray(v) &&
-            v.every((x) => typeof x === "number")
-          ) {
-            components = Math.max(components, v.length);
-          } else if (v !== null) {
-            numeric = false;
-            break;
-          }
-        }
-        if (!numeric || components === 0 || components > 4) {
-          continue;
-        }
-        const data = new Float32Array(Math.max(1, table.count) * components);
-        values.forEach((v, row) => {
-          if (Array.isArray(v)) {
-            data.set(v as number[], row * components);
-          } else if (v !== null) {
-            data[row * components] = Number(v);
-          }
-        });
-        const offset = this.vertexAllocator.allocate(data.byteLength);
+      for (const { name, data, components } of tableColumnData(table)) {
+        const offset = this.slabs.allocateVertex(slab, data.byteLength);
         if (offset === undefined) {
           for (const [o, size] of ranges) {
-            this.vertexAllocator.release(o, size);
+            slab.vertex.release(o, size);
           }
           throw new CapacityError("vertex arena");
         }
         ranges.push([offset, data.byteLength]);
-        this.queueUpload(this.vertexBuffer, offset, data);
+        this.queueUpload(slab.vertexBuffer, offset, data);
         entries.push([
           attributeHash(metadataKey(name)),
           offset / 4,
@@ -1391,7 +1491,7 @@ export class World {
         ]);
       }
       uploaded = { entries, ranges, meshes: 0 };
-      this.tableColumns.set(table, uploaded);
+      this.tableColumns.set(key, uploaded);
     }
     uploaded.meshes++;
     return uploaded;
@@ -1399,7 +1499,7 @@ export class World {
 
   /** Bytes in use in the vertex and index arenas. */
   get arenaBytes(): number {
-    return this.vertexAllocator.used + this.indexAllocator.used;
+    return this.slabs.vertexUsed + this.slabs.indexUsed;
   }
 
   /** CPU room for draw slots below `count`. */
@@ -1612,10 +1712,11 @@ export class World {
       }
       pointCounter = this.freePointCounters.pop();
       const bytes = Math.max(4, pointSet.capacity * 4);
+      // In the mesh's slab: the point cull reads anchors and list together.
       pointList =
         pointCounter === undefined
           ? undefined
-          : this.vertexAllocator.allocate(bytes);
+          : this.slabs.allocateVertex(this.slabs.get(options.mesh.slab), bytes);
       if (pointList === undefined) {
         if (pointCounter !== undefined) {
           this.freePointCounters.push(pointCounter);
@@ -1628,10 +1729,9 @@ export class World {
     // Nothing taken may outlive a failure below (transactional, §13.15).
     const releasePoints = () => {
       if (pointList !== undefined) {
-        this.vertexAllocator.release(
-          pointList,
-          Math.max(4, pointSet!.capacity * 4),
-        );
+        this.slabs
+          .get(options.mesh.slab)
+          .vertex.release(pointList, Math.max(4, pointSet!.capacity * 4));
         this.freePointCounters.push(pointCounter!);
       }
     };
@@ -1738,7 +1838,10 @@ export class World {
           directory[3 + i * 3] = components;
         });
       }
-      const offset = this.vertexAllocator.allocate(
+      // In the mesh's slab: the vertex shader reads both from its arena.
+      const slab = this.slabs.get(mesh.slab);
+      const offset = this.slabs.allocateVertex(
+        slab,
         data.byteLength + directory.byteLength,
       );
       if (offset === undefined) {
@@ -1748,10 +1851,10 @@ export class World {
         releasePoints();
         throw new CapacityError("vertex arena");
       }
-      this.queueUpload(this.vertexBuffer, offset, data);
+      this.queueUpload(slab.vertexBuffer, offset, data);
       if (fields.length) {
         this.queueUpload(
-          this.vertexBuffer,
+          slab.vertexBuffer,
           offset + data.byteLength,
           directory,
         );
@@ -1761,6 +1864,7 @@ export class World {
         offset,
         data.byteLength + directory.byteLength,
         data.byteLength,
+        slab.id,
       ];
       instanceStreams = offset / 4;
       instanceStride = instances.streams.stride;
@@ -1943,7 +2047,7 @@ export class World {
       layout: this.ctx.pipelines.pointCullLayout,
       entries: [
         draw.params,
-        this.vertexBuffer,
+        this.slabs.get(draw.mesh.slab).vertexBuffer,
         this.pointCounts,
         this.splats.depth,
         this.splats.color,
@@ -2050,10 +2154,12 @@ export class World {
     const pointDraw = this.pointDraws.get(handle.index);
     if (pointDraw) {
       this.flushUploads();
-      this.vertexAllocator.release(
-        pointDraw.list,
-        Math.max(4, pointDraw.mesh.points.capacity * 4),
-      );
+      this.slabs
+        .get(pointDraw.mesh.slab)
+        .vertex.release(
+          pointDraw.list,
+          Math.max(4, pointDraw.mesh.points.capacity * 4),
+        );
       pointDraw.params.destroy();
       this.freePointCounters.push(pointDraw.counter);
       this.pointDraws.delete(handle.index);
@@ -2061,7 +2167,7 @@ export class World {
     const streams = this.instanceStreamRanges[handle.index];
     if (streams) {
       this.flushUploads(); // before its range can be reused
-      this.vertexAllocator.release(streams[0], streams[1]);
+      this.slabs.get(streams[3]).vertex.release(streams[0], streams[1]);
       this.instanceStreamRanges[handle.index] = undefined;
     }
     this.releaseOwnedTransform(handle.index);
@@ -2171,7 +2277,11 @@ export class World {
         `setInstanceStreams: ${data.length / stride} instances from ${firstInstance} don't fit`,
       );
     }
-    this.queueUpload(this.vertexBuffer, range[0] + at, data);
+    this.queueUpload(
+      this.slabs.get(range[3]).vertexBuffer,
+      range[0] + at,
+      data,
+    );
     this.version++;
     this.changedViews |=
       this.recordsU32[handle.index * RECORD_WORDS + VIEW_MASK_WORD]!;
@@ -2627,8 +2737,9 @@ export class World {
     }
     this.flushUploads();
     this.resolveTransforms();
-    const jobs = this.rayJobs(rays, options);
-    if (jobs.length === 0) {
+    // Jobs by slab: each slab's triangles are bound with its own group.
+    const bySlab = this.rayJobs(rays, options);
+    if (bySlab.size === 0) {
       return out;
     }
     const device = this.ctx.device;
@@ -2661,7 +2772,6 @@ export class World {
     };
     const STORAGE = GPUBufferUsage.STORAGE;
     const rayBuffer = buffer("rays", rayData, STORAGE);
-    const jobBuffer = buffer("jobs", jobs, STORAGE);
     const hitBuffer = buffer(
       "hits",
       new Uint32Array(rays.length).fill(NO_HIT),
@@ -2673,29 +2783,36 @@ export class World {
       usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
     });
     const pipeline = this.ctx.pipelines.raycast;
-    const group = device.createBindGroup({
-      label: "world.raycast",
-      layout: pipeline.getBindGroupLayout(0),
-      entries: [
-        rayBuffer,
-        jobBuffer,
-        this.recordBuffer,
-        this.transformBuffer,
-        this.instanceBuffer,
-        this.vertexBuffer,
-        this.indexBuffer,
-        hitBuffer,
-      ].map((b, binding) => ({ binding, resource: { buffer: b } })),
-    });
+    const jobBuffers: GPUBuffer[] = [];
     const encoder = device.createCommandEncoder({ label: "world.raycast" });
     const pass = encoder.beginComputePass({ label: "raycast" });
     // The tables as the CPU has them (draws added since the last frame).
     this.uploadTables(pass);
     pass.setPipeline(pipeline);
-    pass.setBindGroup(0, group);
-    const count = jobs.length / 4;
-    const x = Math.min(count, 65535);
-    pass.dispatchWorkgroups(x, Math.ceil(count / x));
+    // Every slab's jobs into the same hits (an atomic min per ray).
+    for (const [id, jobs] of bySlab) {
+      const slab = this.slabs.get(id);
+      const jobBuffer = buffer("jobs", jobs, STORAGE);
+      jobBuffers.push(jobBuffer);
+      const group = device.createBindGroup({
+        label: `world.raycast.slab${id}`,
+        layout: pipeline.getBindGroupLayout(0),
+        entries: [
+          rayBuffer,
+          jobBuffer,
+          this.recordBuffer,
+          this.transformBuffer,
+          this.instanceBuffer,
+          slab.vertexBuffer,
+          slab.indexBuffer,
+          hitBuffer,
+        ].map((b, binding) => ({ binding, resource: { buffer: b } })),
+      });
+      pass.setBindGroup(0, group);
+      const count = jobs.length / 4;
+      const x = Math.min(count, 65535);
+      pass.dispatchWorkgroups(x, Math.ceil(count / x));
+    }
     pass.end();
     encoder.copyBufferToBuffer(hitBuffer, 0, readback, 0, rays.length * 4);
     device.queue.submit([encoder.finish()]);
@@ -2708,7 +2825,7 @@ export class World {
       }
       readback.unmap();
     } finally {
-      for (const b of [rayBuffer, jobBuffer, hitBuffer, readback]) {
+      for (const b of [rayBuffer, ...jobBuffers, hitBuffer, readback]) {
         b.destroy();
       }
     }
@@ -2723,8 +2840,9 @@ export class World {
   private rayJobs(
     rays: readonly CastRay[],
     options: CastOptions,
-  ): Uint32Array<ArrayBuffer> {
-    const jobs: number[] = [];
+  ): Map<number, Uint32Array<ArrayBuffer>> {
+    const bySlab = new Map<number, number[]>();
+    let jobs: number[] = [];
     const u = this.recordsU32;
     const f = this.recordsF32;
     const mask = options.viewMask ?? ALL_VIEWS;
@@ -2767,6 +2885,12 @@ export class World {
       }
       const o = i * RECORD_WORDS;
       const flags = u[o + FLAGS_WORD]!;
+      let slabJobs = bySlab.get(batch.mesh.slab);
+      if (!slabJobs) {
+        slabJobs = [];
+        bySlab.set(batch.mesh.slab, slabJobs);
+      }
+      jobs = slabJobs;
       if (
         flags & RecordFlags.hidden ||
         (options.collisionOnly && !(flags & RecordFlags.collision)) ||
@@ -2824,7 +2948,13 @@ export class World {
         test(i, j, radius * scale * instanceScale);
       }
     }
-    return Uint32Array.from(jobs);
+    const out = new Map<number, Uint32Array<ArrayBuffer>>();
+    for (const [slab, list] of bySlab) {
+      if (list.length > 0) {
+        out.set(slab, Uint32Array.from(list));
+      }
+    }
+    return out;
   }
 
   /** Changes a draw's tint (linear RGBA, multiplied with its material). */
@@ -3183,8 +3313,7 @@ export class World {
       0,
       shadow ? this.ctx.shadowViewBindGroup : currentViewBindGroup,
     );
-    encoder.setBindGroup(1, this.drawBindGroup);
-    encoder.setIndexBuffer(this.indexBuffer, "uint32");
+    // Group 1 and the index buffer are the batch's slab's (set below).
     // Casters: depth, the fragment stage clipping placeholders, and where
     // a material cuts out (alpha mask) its cutoff too.
     // Blended surfaces draw their opaque parts here, cut out where they're
@@ -3240,12 +3369,14 @@ export class World {
       (a, b) =>
         rank(a) - rank(b) ||
         (a.shader?.id ?? 0) - (b.shader?.id ?? 0) ||
-        a.textureSet - b.textureSet,
+        a.textureSet - b.textureSet ||
+        a.mesh.slab - b.mesh.slab,
     );
     const direct = this._submission === "direct";
     const list = direct ? this.directListBuffer : this.itemListBuffer;
     let pipeline: GPURenderPipeline | undefined;
     let group: GPUBindGroup | undefined;
+    let slab = -1;
     for (const batch of order) {
       if (
         batch.items === 0 ||
@@ -3259,6 +3390,10 @@ export class World {
         ((shadow || prepass) && batch.billboard)
       ) {
         continue;
+      }
+      if (batch.mesh.slab !== slab) {
+        slab = batch.mesh.slab;
+        this.bindSlab(encoder, slab);
       }
       const key = keyOf(batch);
       const wanted = this.pipeline(batch, key);
@@ -3450,16 +3585,19 @@ export class World {
     group: GPUBindGroup,
   ): void {
     pass.setBindGroup(0, this.ctx.currentViewBindGroup);
-    pass.setBindGroup(1, this.drawBindGroup);
     pass.setBindGroup(3, group);
-    pass.setIndexBuffer(this.indexBuffer, "uint32");
     const direct = this._submission === "direct";
     const list = direct ? this.directListBuffer : this.itemListBuffer;
     let current: GPURenderPipeline | undefined;
     let bound: GPUBindGroup | undefined;
+    let slab = -1;
     for (const batch of this.batchList) {
       if (batch.items === 0 || !this.translucent(batch)) {
         continue;
+      }
+      if (batch.mesh.slab !== slab) {
+        slab = batch.mesh.slab;
+        this.bindSlab(pass, slab);
       }
       const key = keyOf(batch.doubleSided);
       const wanted = this.pipeline(batch, key);
@@ -3697,16 +3835,25 @@ export class World {
     this.instanceGeneration++;
   }
 
+  /** Every slab's draw group (the world's tables, the slab's arena). */
   private createDrawBindGroup(): void {
+    for (const slab of this.slabs.slabs) {
+      if (slab) {
+        this.createSlabDrawGroup(slab);
+      }
+    }
+  }
+
+  private createSlabDrawGroup(slab: Slab): void {
     const buffers = [
       this.recordBuffer,
       this.itemBuffer,
-      this.vertexBuffer,
+      slab.vertexBuffer,
       this.materialBuffer,
       this.clipBuffer,
     ];
-    this.drawBindGroup = this.ctx.device.createBindGroup({
-      label: "world.draw",
+    slab.drawGroup = this.ctx.device.createBindGroup({
+      label: `world.draw.slab${slab.id}`,
       layout: this.ctx.pipelines.drawWorldLayout,
       entries: [
         ...buffers.map((b, binding) => ({ binding, resource: { buffer: b } })),
@@ -3714,6 +3861,47 @@ export class World {
         { binding: 6, resource: this.imagerySampler },
       ],
     });
+  }
+
+  /** Binds a slab's group 1 and index buffer for its batches' draws. */
+  private bindSlab(
+    pass: GPURenderPassEncoder | GPURenderBundleEncoder,
+    id: number,
+  ): void {
+    const slab = this.slabs.get(id);
+    pass.setBindGroup(1, slab.drawGroup!);
+    pass.setIndexBuffer(slab.indexBuffer, "uint32");
+  }
+
+  /**
+   * A slab grew, opened or closed (scene/Slabs.ts): its group is rebuilt,
+   * point draws in it rebind their arena, bundles are recorded again, and
+   * outside binders (point sources, model pools) see `tableGeneration`.
+   */
+  private slabReplaced(slab: Slab): void {
+    if (this.slabs.slabs[slab.id] === slab) {
+      // The world's own tables exist once the constructor has made them.
+      if (this.recordBuffer) {
+        this.createSlabDrawGroup(slab);
+      }
+    } else {
+      slab.drawGroup = undefined;
+    }
+    for (const draw of this.pointDraws.values()) {
+      if (draw.mesh.slab === slab.id) {
+        draw.group = this.pointGroup(draw);
+      }
+    }
+    this.bundle = undefined;
+    this.translucentDraws = undefined;
+    this.changedViews = ALL_VIEWS;
+    this.version++;
+    this.instanceGeneration++;
+  }
+
+  /** The vertex arena buffer holding `mesh` (its slab's, scene/Slabs.ts). */
+  vertexBufferOf(mesh: MeshHandle): GPUBuffer {
+    return this.slabs.get(mesh.slab).vertexBuffer;
   }
 
   private markDirty(index: number): void {
@@ -3738,9 +3926,8 @@ export class World {
     this.records.destroy();
     this.transforms.destroy();
     this.instances.destroy();
+    this.slabs.destroy();
     for (const buffer of [
-      this.vertexBuffer,
-      this.indexBuffer,
       this.itemBuffer,
       this.materialBuffer,
       this.clipBuffer,
@@ -3871,4 +4058,59 @@ function boundingSphere(positions: Float32Array): {
     r2 = Math.max(r2, dx * dx + dy * dy + dz * dz);
   }
   return { center, radius: Math.sqrt(r2) };
+}
+
+/** A feature table's numeric columns as the arena holds them. */
+interface TableColumn {
+  name: string;
+  data: Float32Array;
+  components: number;
+}
+
+const tableColumnCache = new WeakMap<FeatureTable, TableColumn[]>();
+
+/**
+ * A feature table's columns as uploaded (`World.uploadTable`): numbers,
+ * booleans (0 or 1) and numeric arrays of up to 4 (shorter rows padded
+ * with zero), as float32 rows by local feature ID; missing values (null)
+ * read 0. String columns aren't uploaded. Computed once per table.
+ */
+function tableColumnData(table: FeatureTable): TableColumn[] {
+  let columns = tableColumnCache.get(table);
+  if (columns) {
+    return columns;
+  }
+  columns = [];
+  for (const [name, values] of Object.entries(table.columns)) {
+    let components = 0;
+    let numeric = true;
+    for (const v of values) {
+      if (typeof v === "number" || typeof v === "boolean") {
+        components = Math.max(components, 1);
+      } else if (Array.isArray(v) && v.every((x) => typeof x === "number")) {
+        components = Math.max(components, v.length);
+      } else if (v !== null) {
+        numeric = false;
+        break;
+      }
+    }
+    if (!numeric || components === 0 || components > 4) {
+      continue;
+    }
+    const data = new Float32Array(Math.max(1, table.count) * components);
+    values.forEach((v, row) => {
+      if (Array.isArray(v)) {
+        data.set(v as number[], row * components);
+      } else if (v !== null) {
+        data[row * components] = Number(v);
+      }
+    });
+    columns.push({ name, data, components });
+  }
+  tableColumnCache.set(table, columns);
+  return columns;
+}
+
+function align4(bytes: number): number {
+  return Math.ceil(bytes / 4) * 4;
 }

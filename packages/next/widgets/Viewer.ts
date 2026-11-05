@@ -264,17 +264,18 @@ export class Viewer {
     canvas.style.display = "block";
     container.append(canvas);
     this.target = new CanvasTarget(canvas);
-    // One world: content and the globe come and go in it. Arenas sized
-    // once, within the device's storage-binding limit.
-    const limit = engine.gpu.device.limits.maxStorageBufferBindingSize;
+    // One world: content and the globe come and go in it. Its geometry
+    // grows in slabs of one storage binding each, up to the budgets below.
     this.world = engine.createWorld({
       maxDraws: 1 << 16,
       maxMaterials: 1 << 13,
       ...(options.maxInstances !== undefined
         ? { maxInstances: options.maxInstances }
         : {}),
-      vertexBytes: Math.min(768 << 20, Math.floor(limit / 4) * 4),
-      indexBytes: Math.min(384 << 20, Math.floor(limit / 4) * 4),
+      // Budgets across slabs, each slab within one storage binding
+      // (scene/Slabs.ts): no longer capped by the binding itself.
+      vertexBytes: 768 << 20,
+      indexBytes: 384 << 20,
     });
     this.shadows = options.shadows ?? true;
     this.ambientOcclusion = options.ambientOcclusion ?? true;

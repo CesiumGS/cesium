@@ -40,6 +40,24 @@ export class SlicePool {
     return pool;
   }
 
+  /**
+   * A world's slices in use, the array's layers, and the most it may grow
+   * to (the inspector's memory section), or undefined without imagery.
+   */
+  static usage(
+    world: World,
+  ): { used: number; capacity: number; ceiling: number } | undefined {
+    const pool = SlicePool.pools.get(world);
+    if (!pool || pool.destroyed) {
+      return undefined;
+    }
+    return {
+      used: pool.capacity - pool.free.length,
+      capacity: pool.capacity,
+      ceiling: pool.ceiling,
+    };
+  }
+
   texture: GPUTexture;
   /** Layers in the array. */
   capacity = 0;

@@ -558,7 +558,6 @@ export class NextAdapter implements Adapter {
       limits: limitsTier(),
     }));
     engine.environment.setSky(UNITLESS_SKY);
-    const limit = engine.gpu.device.limits.maxStorageBufferBindingSize;
     const world = engine.createWorld({
       maxDraws: 1 << 16,
       maxMaterials: 1 << 13,
@@ -570,8 +569,10 @@ export class NextAdapter implements Adapter {
       )
         ? 1 << 20
         : 1 << 14,
-      vertexBytes: Math.min(768 << 20, Math.floor(limit / 4) * 4),
-      indexBytes: Math.min(384 << 20, Math.floor(limit / 4) * 4),
+      // Budgets across slabs, each slab within one storage binding
+      // (scene/Slabs.ts): no longer capped by the binding itself.
+      vertexBytes: 768 << 20,
+      indexBytes: 384 << 20,
     });
     // 2.0 renders with 4× MSAA and HDR always, and has no fog or FXAA:
     // effectiveRender() reports it, and the report flags differences.

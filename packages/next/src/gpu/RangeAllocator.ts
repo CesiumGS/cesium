@@ -9,10 +9,42 @@ export class RangeAllocator {
   private _used = 0;
 
   constructor(
-    readonly capacity: number,
+    public capacity: number,
     private readonly alignment = 4,
   ) {
     this.free = [[0, capacity]];
+  }
+
+  /**
+   * Extends the space to `capacity` (its buffer grew, scene/Slabs.ts): the
+   * new tail is free, joined to a free range ending at the old end.
+   */
+  grow(capacity: number): void {
+    if (capacity <= this.capacity) {
+      return;
+    }
+    const last = this.free.at(-1);
+    if (last && last[0] + last[1] === this.capacity) {
+      last[1] += capacity - this.capacity;
+    } else {
+      this.free.push([this.capacity, capacity - this.capacity]);
+    }
+    this.capacity = capacity;
+  }
+
+  /** The free range ending at the space's end (0 when the end is used). */
+  get tailFree(): number {
+    const last = this.free.at(-1);
+    return last && last[0] + last[1] === this.capacity ? last[1] : 0;
+  }
+
+  /** The largest range `allocate` could return now. */
+  get largestFree(): number {
+    let largest = 0;
+    for (const range of this.free) {
+      largest = Math.max(largest, range[1]);
+    }
+    return largest;
   }
 
   get used(): number {

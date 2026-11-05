@@ -29,3 +29,18 @@ const fromPage = (() => {
 export function limitsTier(): LimitsTier {
   return fromPage;
 }
+
+/**
+ * Reloads Dyno on `tier` (kept for the tab's session): the device is
+ * created again with those limits, every engine on the page with it.
+ */
+export function reloadWithLimits(tier: string): void {
+  try {
+    sessionStorage.setItem("dyno.limits", tier);
+  } catch {
+    // Without storage the page's parameter alone carries it.
+  }
+  const url = new URL(location.href);
+  url.searchParams.set("limits", tier);
+  location.assign(url.toString());
+}

@@ -190,7 +190,11 @@ ${options.code}`,
       layout: this.groupLayout,
       entries: [
         { binding: 0, resource: { buffer: this.params } },
-        { binding: 1, resource: { buffer: this.world.vertexBuffer } },
+        // The points' slab: anchors and properties are read from it.
+        {
+          binding: 1,
+          resource: { buffer: this.world.vertexBufferOf(this.source.mesh) },
+        },
         { binding: 2, resource: { buffer: this.partBuffer } },
         { binding: 3, resource: { buffer: this.world.instanceBuffer } },
         { binding: 4, resource: { buffer: this.counters } },
@@ -217,7 +221,7 @@ ${options.code}`,
 
   private encode(pass: GPUComputePassEncoder): void {
     if (this.world.instanceGeneration !== this.instanceGeneration) {
-      // The instance table grew: its buffer is new.
+      // A table or slab grew: its buffer is new.
       this.instanceGeneration = this.world.instanceGeneration;
       this.group = this.createGroup();
     }

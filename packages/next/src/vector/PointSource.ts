@@ -104,7 +104,9 @@ export class PointSource {
   private readonly updateData = new ArrayBuffer(32);
   private incoming?: GPUBuffer;
   private incomingGroup?: GPUBindGroup;
-  private readonly group: GPUBindGroup;
+  /** Rebuilt when the world's tables or slabs are replaced (`groupFor`). */
+  private group: GPUBindGroup;
+  private groupGeneration: number;
   private readonly noHeights: GPUTexture | undefined;
   private readonly kernels: {
     place: GPUComputePipeline;
@@ -253,20 +255,40 @@ export class PointSource {
       pipelines.set(device, kernels);
     }
     this.kernels = kernels;
-    this.group = device.createBindGroup({
+    this.groupGeneration = world.tableGeneration;
+    this.group = this.createGroup();
+    this.removeHook = world.addFrameCompute((pass) => this.place(pass));
+  }
+
+  /**
+   * The kernels' group: its points' slab (the anchors it writes) is bound
+   * by buffer, so a grown slab (World.tableGeneration) means a new group.
+   */
+  private createGroup(): GPUBindGroup {
+    return this.engine.gpu.device.createBindGroup({
       label: "points",
-      layout: kernels.place.getBindGroupLayout(0),
+      layout: this.kernels.place.getBindGroupLayout(0),
       entries: [
         { binding: 0, resource: { buffer: this.params } },
         { binding: 1, resource: { buffer: this.stateBuffer } },
-        { binding: 2, resource: { buffer: world.vertexBuffer } },
+        {
+          binding: 2,
+          resource: { buffer: this.world.vertexBufferOf(this.mesh) },
+        },
         {
           binding: 3,
           resource: (this.heights?.texture ?? this.noHeights!).createView(),
         },
       ],
     });
-    this.removeHook = world.addFrameCompute((pass) => this.place(pass));
+  }
+
+  private currentGroup(): GPUBindGroup {
+    if (this.world.tableGeneration !== this.groupGeneration) {
+      this.groupGeneration = this.world.tableGeneration;
+      this.group = this.createGroup();
+    }
+    return this.group;
   }
 
   /** Points shown: the first `count` (the rest are hidden). */
@@ -299,7 +321,7 @@ export class PointSource {
     u32[12] = threads;
     this.engine.gpu.device.queue.writeBuffer(this.params, 0, this.paramsData);
     pass.setPipeline(this.kernels.place);
-    pass.setBindGroup(0, this.group);
+    pass.setBindGroup(0, this.currentGroup());
     pass.dispatchWorkgroups(x, y);
   }
 
@@ -357,7 +379,7 @@ export class PointSource {
     const encoder = device.createCommandEncoder({ label: "points.update" });
     const pass = encoder.beginComputePass({ label: "points.apply" });
     pass.setPipeline(this.kernels.apply);
-    pass.setBindGroup(0, this.group);
+    pass.setBindGroup(0, this.currentGroup());
     pass.setBindGroup(1, this.incomingGroup!);
     pass.dispatchWorkgroups(x, y);
     pass.end();

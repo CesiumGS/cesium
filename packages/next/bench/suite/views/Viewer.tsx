@@ -44,6 +44,7 @@ import { AEROSOLS, ionDefaults, type AerosolType } from "../../../src/index.ts";
 import { attachInspector } from "../../../widgets/index.ts";
 import { Choice, Page, toast, useRuns, useStored } from "./common.tsx";
 import { useAvailableReleases } from "../releases.ts";
+import { limitsTier, reloadWithLimits } from "../limitsTier.ts";
 import {
   DEFAULT_ION_TOKEN,
   envToken,
@@ -531,6 +532,21 @@ export function Viewer() {
                 checked={lighting.fxaa}
                 onChange={(v) => light("fxaa", v)}
               />
+              {engine === "2.0" && (
+                <Choice
+                  label="Device limits"
+                  value={limitsTier()}
+                  minWidth={0}
+                  options={[
+                    ["base", "Base: spec binding counts (default)"],
+                    ["minimum", "Minimum: smallest device's"],
+                    ["adapter", "Adapter: all raised (experiments)"],
+                  ]}
+                  // A device's limits are fixed at creation: the page
+                  // reloads with the engine on the chosen tier (plan §13.15).
+                  onChange={(v) => reloadWithLimits(v)}
+                />
+              )}
               <NotHere
                 reasons={[
                   unsupported.encoding,

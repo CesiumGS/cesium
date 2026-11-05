@@ -3,13 +3,14 @@
  * timing, the tilesets' streaming and content pipeline, and the world's GPU
  * pools.
  */
-import type {
-  ContentSummary,
-  Engine,
-  RequestPurpose,
-  Tileset3D,
-  View,
-  World,
+import {
+  SlicePool,
+  type ContentSummary,
+  type Engine,
+  type RequestPurpose,
+  type Tileset3D,
+  type View,
+  type World,
 } from "../src/index.ts";
 import type {
   ContentMix,
@@ -229,30 +230,91 @@ export function engineSnapshot(
   if (world) {
     const m = world.memory;
     const mb = (bytes: number) => `${(bytes / 1048576).toFixed(1)} MB`;
+    const pressure = world.pressure();
+    const slabs = m.slabs;
+    const allocated = (key: "vertexBytes" | "indexBytes") =>
+      slabs.reduce((n, x) => n + x[key], 0);
+    const arena = (
+      label: string,
+      usage: { used: number; capacity: number },
+      key: "vertexBytes" | "indexBytes",
+    ): MemoryRow => ({
+      label,
+      unit: "bytes",
+      ...usage,
+      text: `${mb(usage.used)} of ${mb(usage.capacity)} · ${slabs.length} slab${slabs.length === 1 ? "" : "s"}`,
+      detail: `${mb(allocated(key))} allocated in ${slabs.length} slab${slabs.length === 1 ? "" : "s"} of up to ${mb(m.slabBytes)} each; the budget is across slabs.`,
+    });
+    const slices = SlicePool.usage(world);
     const rows: MemoryRow[] = [
-      { label: "Vertex arena", unit: "bytes", ...m.vertexBytes },
-      { label: "Index arena", unit: "bytes", ...m.indexBytes },
+      // What streaming answers: past 90% it evicts as over its byte budget.
+      {
+        label: "Fullest pool",
+        unit: "count",
+        used: Math.round(pressure.fraction * 1000),
+        capacity: 1000,
+        text: `${pressure.pool} ${(pressure.fraction * 100).toFixed(1)}%`,
+        detail:
+          "The pool nearest its ceiling. Past 90% streaming evicts as if over its byte budget.",
+      },
+      arena("Vertex arena", m.vertexBytes, "vertexBytes"),
+      arena("Index arena", m.indexBytes, "indexBytes"),
       { label: "Draw records", unit: "count", ...m.draws },
-      { label: "Materials", unit: "count", ...m.materials },
+      { label: "Transforms", unit: "count", ...m.transforms },
+      { label: "Instances", unit: "count", ...m.instances },
+      {
+        label: "Materials",
+        unit: "count",
+        ...m.materials,
+        detail: "Distinct materials: equal ones are shared by content.",
+      },
+      { label: "Clip blocks", unit: "count", ...m.clipBlocks },
+      { label: "Point sets", unit: "count", ...m.pointSets },
+      ...(slices
+        ? [
+            {
+              label: "Imagery slices",
+              unit: "count" as const,
+              used: slices.used,
+              capacity: slices.capacity,
+              text: `${slices.used} of ${slices.capacity}`,
+              detail: `Globe imagery and night lights share one array; it grows to ${slices.ceiling} layers.`,
+            },
+          ]
+        : []),
       {
         label: "Render targets",
         unit: "bytes",
         used: targets.residentBytes,
         capacity: targets.workingSetBytes + targets.idleBudget,
-        text: `${mb(targets.residentBytes)} resident · idle cap ${mb(targets.idleBudget)}`,
+        text: `${mb(targets.residentBytes)} · idle cap ${mb(targets.idleBudget)}`,
+        detail:
+          "Resident render targets; unused ones are kept up to the idle cap for reuse.",
       },
       {
-        label: "Fixed GPU tables",
+        label: "GPU tables",
         unit: "bytes",
         used: m.tableBytes,
-        text: `${mb(m.tableBytes)} (records, lists, indirect args)`,
+        text: mb(m.tableBytes),
+        detail:
+          "Records, transforms, instances, materials, item lists and indirect arguments, as grown.",
       },
     ];
     out.memory = rows;
   }
   const info = engine.gpu.adapter.info;
+  const limits = engine.gpu.device.limits;
   out.gpu = {
     adapter: `${info.vendor} ${info.architecture}`.trim(),
+    limits: {
+      tier: engine.gpu.limitsTier,
+      storageBuffersPerStage: limits.maxStorageBuffersPerShaderStage,
+      sampledTexturesPerStage: limits.maxSampledTexturesPerShaderStage,
+      bindGroups: limits.maxBindGroups,
+      storageBindingBytes: limits.maxStorageBufferBindingSize,
+      bufferBytes: limits.maxBufferSize,
+      textureArrayLayers: limits.maxTextureArrayLayers,
+    },
     views: s.views,
     batches: s.batches,
     renderTargetBytes: targets.residentBytes,

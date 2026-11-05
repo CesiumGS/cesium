@@ -5376,8 +5376,8 @@ already are one).
 6. Material texture arrays behind texture references.
 
 **Progress (r50).** Increments 1 to 4 are built and checked on an
-M-series Mac (2.0 now starts there; it didn't). Increments 5 (slabs) and 6
-(material arrays) are next.
+M-series Mac (2.0 now starts there; it didn't), and so is 5 (slabs).
+Increment 6 (material arrays) is next.
 
 - _1._ Point cull's narrow group 1 (`cull.pointWorld`: 8 storage, was
   13); shared, reference-counted materials with one glTF default per
@@ -5406,6 +5406,32 @@ M-series Mac (2.0 now starts there; it didn't). Increments 5 (slabs) and 6
   `World.pressure()`, and streaming evicts above 90%. 3,000 draws added
   to a live Viewer grew the tables twice and drew correctly.
   `test/world.test.ts` covers sharing, ceilings and growth.
+- _5._ `scene/Slabs.ts`: a world's geometry in slabs of a vertex and an
+  index buffer each, at most `min(maxStorageBufferBindingSize, 256 MiB)`
+  (`WorldOptions.slabBytes`), starting at 16 + 8 MiB and doubling by copy
+  (queued uploads flushed first); a new slab only when none can grow to
+  fit, within the world's budgets (`vertexBytes`, `indexBytes`: now
+  budgets across slabs, 1 GiB and 512 MiB by default, no longer capped by
+  one binding; the Viewer's and the suite's 768 and 384 MiB). Everything
+  a draw reads by arena offset is in its mesh's slab (`MeshHandle.slab`):
+  streams, the directory, its instances' streams, point anchors and
+  lists, and feature table columns (copied per slab, keyed by table and
+  slab). Each slab has its draw group; bundles and the translucent pass
+  bind a batch's slab (group 1 and index buffer, batches sorted by slab
+  last); ray casts dispatch per slab into one hit buffer; point sources
+  and model pools bind their points' slab (`World.vertexBufferOf`) and
+  rebind on `tableGeneration`. An emptied slab past the first closes.
+  The allocator stays first-fit for now (with growth and a free tail);
+  size classes wait for a measurement of streaming churn (§13.6).
+  Checked: OSM Buildings over terrain under `?limits=minimum` (128 MiB
+  bindings), the first slab growing 16 → 32 MiB; tests for slabs that
+  grow, multiply and close, and for the budget's `CapacityError`.
+- _Inspector._ Memory: the fullest pool (what streaming answers, against
+  its 90%), each arena's slabs and allocated bytes against its budget,
+  every table against its ceiling, distinct materials, imagery slices
+  against what the pool may grow to, the GPU tables as grown. GPU: the
+  limits tier, per-stage binding counts and capacities. The Viewer's
+  settings choose the limits tier (the page reloads on it).
 
 ## 14. Follow-ups
 

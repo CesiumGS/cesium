@@ -20,6 +20,8 @@ export interface MemoryRow {
   unit: "bytes" | "count";
   /** Replaces "used of capacity" (e.g. "41 MB resident · idle cap 64 MB"). */
   text?: string;
+  /** More about the row, shown on hover (keeps the row one line). */
+  detail?: string;
 }
 
 /** What resident content holds. */
@@ -115,6 +117,19 @@ export interface InspectorSnapshot {
   memory?: MemoryRow[];
   gpu?: {
     adapter?: string;
+    /**
+     * The device's limits tier ("base", "minimum", "adapter") and the
+     * limits it was created with that shape the engine (plan §13.15).
+     */
+    limits?: {
+      tier: string;
+      storageBuffersPerStage: number;
+      sampledTexturesPerStage: number;
+      bindGroups: number;
+      storageBindingBytes: number;
+      bufferBytes: number;
+      textureArrayLayers: number;
+    };
     canvas?: [number, number];
     views?: number;
     batches?: number;

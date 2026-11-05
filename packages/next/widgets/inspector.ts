@@ -166,17 +166,27 @@ export function attachInspector(
   };
   /** Each GPU pass's time, in the frame's order (`FrameSnapshot.gpuPasses`). */
   const passHistory = new Map<string, number[]>();
+  /**
+   * The rows' order, stable: a pass missing from a frame (it didn't run,
+   * or took too little to list) keeps its row instead of dropping to the
+   * end; a new pass goes after the one it followed.
+   */
+  const passOrder: string[] = [];
   const pushPasses = (
     passes: Array<[string, number]> | undefined,
     drawing: boolean,
   ) => {
     const now = new Map(passes ?? []);
     // Passes seen before, then new ones, as the frame orders them.
-    for (const [pass] of passes ?? []) {
+    (passes ?? []).forEach(([pass], i) => {
       if (!passHistory.has(pass)) {
         passHistory.set(pass, []);
       }
-    }
+      if (!passOrder.includes(pass)) {
+        const before = i > 0 ? passOrder.indexOf(passes![i - 1]![0]) : -1;
+        passOrder.splice(before + 1, 0, pass);
+      }
+    });
     for (const [pass, series] of passHistory) {
       series.push(drawing ? (now.get(pass) ?? 0) : 0);
       if (series.length > HISTORY) {
@@ -185,6 +195,10 @@ export function attachInspector(
       // A pass that stopped running for the whole window: dropped.
       if (series.length === HISTORY && series.every((v) => v === 0)) {
         passHistory.delete(pass);
+        const at = passOrder.indexOf(pass);
+        if (at >= 0) {
+          passOrder.splice(at, 1);
+        }
       }
     }
   };
@@ -281,7 +295,7 @@ export function attachInspector(
       set(
         "passes",
         passHistory.size
-          ? passesHtml(passHistory, last.frame?.gpuPasses ?? [], hover)
+          ? passesHtml(passHistory, passOrder, hover)
           : undefined,
       );
     }
@@ -689,7 +703,8 @@ function memoryHtml(rows: MemoryRow[]): string {
           ? `${value(r.used)} of ${value(r.capacity)}`
           : value(r.used));
       const fraction = r.capacity ? r.used / r.capacity : undefined;
-      return `<div class="ci-meter"><div class="ci-meter-head"><span>${escape(r.label)}</span><span class="ci-num">${escape(text)}</span></div>${
+      const title = r.detail ? ` title="${escape(r.detail)}"` : "";
+      return `<div class="ci-meter"${title}><div class="ci-meter-head"><span>${escape(r.label)}</span><span class="ci-num">${escape(text)}</span></div>${
         fraction !== undefined ? meter(fraction) + nearLimit(fraction) : ""
       }</div>`;
     })
@@ -697,9 +712,18 @@ function memoryHtml(rows: MemoryRow[]): string {
 }
 
 function gpuHtml(g: NonNullable<InspectorSnapshot["gpu"]>): string {
+  const l = g.limits;
   return kv(
     [
       ["Adapter", g.adapter ? escape(g.adapter) : ""],
+      // Binding counts the engine fits (the tier), then capacities it grows
+      // into (plan §13.15), a short row each.
+      ["Limits tier", l ? escape(l.tier) : ""],
+      ["Storage / stage", l ? `${l.storageBuffersPerStage}` : ""],
+      ["Textures / stage", l ? `${l.sampledTexturesPerStage}` : ""],
+      ["Bind groups", l ? `${l.bindGroups}` : ""],
+      ["Largest binding", l ? mb(l.storageBindingBytes) : ""],
+      ["Array layers", l ? `${l.textureArrayLayers}` : ""],
       ["Canvas", g.canvas ? `${g.canvas[0]} × ${g.canvas[1]}` : ""],
       [
         "Views",
@@ -776,15 +800,15 @@ function historyHtml(
 }
 
 /**
- * Each GPU pass's time over the last 30 s, one row a pass, in the latest
- * frame's order (passes that stopped running last).
+ * Each GPU pass's time over the last 30 s, one row a pass, in a stable run
+ * order (`passOrder`: rows don't move when a frame skips a pass).
  */
 function passesHtml(
   passes: Map<string, number[]>,
-  order: Array<[string, number]>,
+  order: readonly string[],
   hover: number | undefined,
 ): string {
-  const rank = new Map(order.map(([pass], k) => [pass, k]));
+  const rank = new Map(order.map((pass, k) => [pass, k]));
   const at = (pass: string) => rank.get(pass) ?? order.length;
   return sparklines(
     [...passes]

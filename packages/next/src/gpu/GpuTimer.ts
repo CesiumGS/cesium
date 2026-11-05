@@ -19,7 +19,9 @@ export class GpuTimer {
   /**
    * Smoothed GPU time per pass label (`passWrites`), ms; passes sharing a
    * label (the shadow cascades) add up. For benchmarks: where the time goes.
-   * In the order the last measured frame ran them, then labels it didn't.
+   * In the order frames run them, kept stable: a pass a frame skips (the
+   * cull on a frame that draws nothing new) keeps its place instead of
+   * dropping to the end, and a new pass goes after the one it followed.
    */
   get passes(): Record<string, number> {
     const labels = [...this.labelIndex.keys()];
@@ -32,7 +34,7 @@ export class GpuTimer {
     });
     return out;
   }
-  /** Label indices in the order the last measured frame's passes ran. */
+  /** Label indices in run order, stable across frames (`mergeOrder`). */
   private order: number[] = [];
   private readonly querySet?: GPUQuerySet;
   private readonly resolveBuffer?: GPUBuffer;
@@ -200,7 +202,7 @@ export class GpuTimer {
     }
     buffer.unmap();
     this.idle.push(buffer);
-    this.order = order;
+    this.order = mergeOrder(this.order, order);
     this.milliseconds = smooth(this.milliseconds, total / 1e6);
     for (let i = 0; i < this.labelIndex.size; i++) {
       this.labelMs[i] = smooth(this.labelMs[i]!, this.labelSum[i]! / 1e6);
@@ -232,4 +234,25 @@ function timestamp(words: Uint32Array, i: number): number {
 
 function smooth(previous: number, sample: number): number {
   return Number.isNaN(previous) ? sample : previous * 0.9 + sample * 0.1;
+}
+
+/**
+ * `known` with the labels of `frame` (one frame's run order) it lacks, each
+ * inserted after the label it followed in that frame (or first): labels
+ * already known keep their places, so the order never jumps when a frame
+ * skips or reorders a pass.
+ */
+export function mergeOrder(
+  known: number[],
+  frame: readonly number[],
+): number[] {
+  const out = [...known];
+  frame.forEach((label, i) => {
+    if (out.includes(label)) {
+      return;
+    }
+    const before = i > 0 ? out.indexOf(frame[i - 1]!) : -1;
+    out.splice(before + 1, 0, label);
+  });
+  return out;
 }

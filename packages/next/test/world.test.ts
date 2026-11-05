@@ -45,6 +45,51 @@ describe("world pools", () => {
     expect(world.pressure()).toEqual({ fraction: 1, pool: "draw table" });
   });
 
+  it("keeps geometry in slabs that grow, multiply and close", () => {
+    // 4 KB slabs at most: a box (about 1 KB of streams) or two fit each.
+    const world = engine.createWorld({
+      vertexBytes: 64 << 10,
+      indexBytes: 64 << 10,
+      slabBytes: 4096,
+    });
+    const slabs = world.slabs;
+    const meshes = Array.from({ length: 12 }, () => world.addMesh(createBox()));
+    const ids = new Set(meshes.map((m) => m.slab));
+    expect(ids.size).toBeGreaterThan(1);
+    // Draws of meshes in different slabs (each batch binds its own).
+    for (const mesh of meshes) {
+      world.addDraw({ mesh });
+    }
+    expect(world.memory.vertexBytes.used).toBeGreaterThan(0);
+    // A slab past the first closes when its last mesh goes.
+    const last = Math.max(...ids);
+    for (const mesh of meshes.filter((m) => m.slab === last)) {
+      // Draws must go first; these were the only users.
+      world.removeMesh(mesh);
+    }
+    expect(slabs.slabs[last]).toBeUndefined();
+  });
+
+  it("throws CapacityError past the geometry budget, taking nothing", () => {
+    const world = engine.createWorld({
+      vertexBytes: 8192,
+      indexBytes: 8192,
+      slabBytes: 4096,
+    });
+    const before = world.memory.vertexBytes.used;
+    let added = 0;
+    expect(() => {
+      for (;;) {
+        world.addMesh(createBox());
+        added++;
+      }
+    }).toThrow(CapacityError);
+    expect(added).toBeGreaterThan(0);
+    expect(world.memory.vertexBytes.used).toBeGreaterThan(before);
+    // The failed mesh left no ranges behind: freeing the others empties it.
+    expect(world.pressure().pool).toMatch(/arena/);
+  });
+
   it("grows its GPU tables past their first rows", () => {
     const world = engine.createWorld();
     const mesh = world.addMesh(createBox());

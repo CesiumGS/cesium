@@ -182,7 +182,7 @@ async function anchors(
   });
   const encoder = device.createCommandEncoder();
   encoder.copyBufferToBuffer(
-    world.vertexBuffer,
+    world.vertexBufferOf(source.mesh),
     source.mesh.points.anchors * 4,
     read,
     0,
