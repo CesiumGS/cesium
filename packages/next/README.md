@@ -6,7 +6,7 @@ Clean-slate, WebGPU-only engine prototype. See `CESIUM2_WEBGPU_PLAN.md` at the r
 
 ```sh
 npm install                                 # at the repo root
-npm run setup --workspace @cesium/next      # the 1.x build, and the CesiumJS releases Dyno and the benchmarks run
+npm run setup --workspace @cesium/next      # the 1.x build, the CesiumJS releases Dyno and the benchmarks run, the Slang WASM build
 ```
 
 `setup` builds this repository's 1.x (`npm run build` at the root) if
@@ -14,6 +14,10 @@ npm run setup --workspace @cesium/next      # the 1.x build, and the CesiumJS re
 CesiumJS releases from npm into `~/.cesium-bench/cesium` (or
 `BENCH_CESIUM_DIR`), checked against the registry's integrity hash. The dev
 server also fetches a missing release the first time a page asks for it.
+It also fetches the Slang WebAssembly build (pinned in
+`scripts/slangWasm.mjs`, checked against the release's SHA-256) into
+`~/.cesium-bench/slang-wasm`, which the dev server serves at `/slang-wasm/`
+for runtime Slang (`CustomShader.fromSlang`, Dyno's Slang playground).
 
 ```sh
 npm run build                               # at the repo root: 1.x build used by the parity harness

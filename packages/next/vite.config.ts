@@ -13,6 +13,7 @@ import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig, type Plugin } from "vitest/config";
 import { basisTranscoderEsm } from "./basisTranscoderEsm.ts";
+import { slangWasmDirectory } from "./scripts/slangWasm.mjs";
 
 // CesiumJS 1.x core math, used only as a test oracle for parity checks.
 const oracle = fileURLToPath(new URL("../core/Source", import.meta.url));
@@ -311,7 +312,13 @@ const RECENT_RELEASES = 6;
 const cesiumReleases =
   process.env.BENCH_CESIUM_DIR ?? join(homedir(), ".cesium-bench", "cesium");
 
-const slangWasm = process.env.SLANG_WASM_DIR;
+// The Slang WebAssembly build (runtime Slang): SLANG_WASM_DIR, or the store
+// `npm run setup` fills (scripts/slangWasm.mjs).
+const slangWasm =
+  process.env.SLANG_WASM_DIR ??
+  (existsSync(join(slangWasmDirectory(), "slang-wasm.js"))
+    ? slangWasmDirectory()
+    : undefined);
 // Sample models and tilesets checked into the 1.x repo, for parity tests.
 const specsData = fileURLToPath(new URL("../../Specs/Data", import.meta.url));
 

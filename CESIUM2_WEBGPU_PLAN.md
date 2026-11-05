@@ -395,6 +395,31 @@ _Migration, in steps that each leave the engine working:_
 7. **Retire the spike.** Its port is the engine's source by then, and the
    page becomes a check that `ToonMaterial` links against it.
 
+_Explore when the surface shaders move (step 5): runtime Slang for the
+user contract._ Today 3D Tiles styles, the vector styling language and
+`CustomShader` generate WGSL strings against the WGSL ABI
+(`FeatureStyle.ts`, `VectorStyle.ts`, `CustomShader.ts`). The
+alternative is to generate Slang: styles become implementations of a
+style interface, custom shaders link as modules, and the WASM `slangc`
+compiles them in a worker (as `CustomShader.fromSlang` and the Slang
+playground already do, §13.12). Compare the two on:
+
+- **Latency:** compile time per style edit, cold (loading the 10 MB
+  build) and warm. The playground shows it on every edit.
+- **Payload:** the WASM build, when it is loaded, and whether it can be
+  lazy only for pages that compile.
+- **Errors:** messages and line mapping for a style author against what
+  WGSL generation reports.
+- **Capability and safety:** generics, interfaces and type checking of
+  user code against the engine's types, versus string templates.
+- **Speed:** GPU time of the generated code for the same style.
+- **Reach:** pages without the WASM build (the library standalone, CSP
+  without `'wasm-unsafe-eval'` in workers).
+
+The answer may differ by user: styles and the vector language could
+compile to Slang offline in their tooling, while `CustomShader` keeps a
+WGSL path for pages that must not load the compiler.
+
 _Open:_ how stable exported names are across Slang releases (the user ABI
 depends on them); whether generated code passes Tint's uniformity
 analysis at the surface shaders' size; the WASM compiler's size, for
@@ -5001,6 +5026,41 @@ shape Sandcastle can host (editable source, sharing, gallery metadata).
 Built in Dyno (r47, Real-time tracks increment 4) with the real-time
 tracks example; not yet: search and labels as filters, editing the
 source.
+
+**The Slang playground (r50).** A second example: a live shader editor
+beside a viewer. Edit Slang custom shader stages (`import cesium;`,
+`vertexMain` and `fragmentMain` against the user contract, §3.4) and see
+them on content as you type.
+
+- _Why now._ It is the first user-facing use of runtime Slang
+  (`CustomShader.fromSlang`: the WebAssembly build in a worker). It is
+  where the Slang-first migration's open questions show (§3.4): the WASM
+  build's size and compile latency are measured on every edit, in the
+  page.
+- _How it works._
+  - An editor with presets (bands by height, a pulse in time, toon steps,
+    normals, a vertex twist).
+  - It compiles after a short pause in typing and keeps the last shader
+    that compiled. A compile error shows with its line and leaves the
+    content drawing the last good shader.
+  - The status line shows the compile time and the WGSL's size; the
+    generated WGSL can be shown.
+  - Targets are the repository's sample glTF models, placed on the
+    terrain, with tilesets later.
+  - A new shader re-places the model with it: the asset's upload is
+    cached per world, so that costs only draws. A live swap
+    (`World.setDrawShader`, moving draws between batches) is the next step
+    if tilesets need it.
+- _Setup._ The WASM build (10 MB, pinned with slangc in
+  `scripts/slangWasm.mjs` and checked against the release's SHA-256) is
+  fetched by `npm run setup` into `~/.cesium-bench/slang-wasm`. The dev
+  server serves it at `/slang-wasm/` without `SLANG_WASM_DIR`. Without it
+  the example says how to get it.
+- _Later._
+  - Declared uniforms as sliders.
+  - Sharing a shader by URL (the source compressed in the hash).
+  - Tilesets with metadata (`fsInput.metadata`).
+  - The same editor for vector styles (§13.9).
 
 **Pages without a build step (r39).** `npm run build:lib` writes
 `dist-lib/`: one ES module (`cesium-next.mjs`, WGSL inlined), the content

@@ -4,7 +4,9 @@
 //  - the CesiumJS releases the benchmark catalog runs by default, fetched
 //    from npm into the store outside the repo (~/.cesium-bench/cesium, or
 //    BENCH_CESIUM_DIR; bench/suite/release.mjs), which Dyno's 1.x engines
-//    load. The dev server also fetches a missing release on first use.
+//    load. The dev server also fetches a missing release on first use;
+//  - the Slang WebAssembly build (scripts/slangWasm.mjs), for runtime Slang:
+//    CustomShader.fromSlang and Dyno's Slang playground.
 // Nothing here is committed: both live outside version control.
 // Usage: npm run setup --workspace @cesium/next [-- --skip-build]
 import { execFileSync } from "node:child_process";
@@ -13,6 +15,7 @@ import { dirname, join } from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { ensureRelease, releasesDirectory } from "../bench/suite/release.mjs";
+import { ensureSlangWasm } from "./slangWasm.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = join(here, "..", "..", "..");
@@ -55,3 +58,7 @@ for (const version of releases) {
   const release = ensureRelease(version);
   console.log(`  cesium@${release.version}: ready (${release.integrity})`);
 }
+
+// The Slang WebAssembly build, for runtime Slang (the playground example).
+const wasm = await ensureSlangWasm();
+console.log(`slang-wasm: ${wasm}`);

@@ -15,4 +15,15 @@ export const EXAMPLES: ExampleInfo[] = [
     source: () =>
       import("./realtime-tracks/main.ts?raw").then((m) => m.default),
   },
+  {
+    id: "slang-playground",
+    title: "Slang playground",
+    description:
+      "Write custom shader stages in Slang and see them on a model as you type: compiled in the page by the Slang WebAssembly build.",
+    labels: ["Custom shading", "Slang"],
+    globe: "ellipsoid",
+    load: () => import("./slang-playground/main.ts"),
+    source: () =>
+      import("./slang-playground/main.ts?raw").then((m) => m.default),
+  },
 ];
