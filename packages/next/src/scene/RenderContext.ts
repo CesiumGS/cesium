@@ -977,8 +977,8 @@ async function createPipelines(
       fragment: { module: shaders, entryPoint, targets },
       primitive: { topology: "triangle-list", cullMode, frontFace: "ccw" },
     });
-  // The lists' pass writes no color; its one target is the scene's
-  // multisampled one (its fragments' coverage antialiases glass's edges).
+  // The lists' pass writes no color; its one target is single-sampled
+  // (translucent.wgsl: a fragment's storage writes may run once per sample).
   const listTargets: GPUColorTargetState[] = [
     { format: "rgba16float", writeMask: 0 },
   ];
@@ -1167,7 +1167,7 @@ async function createPipelines(
           "back",
           "fsList",
           listTargets,
-          SCENE_TARGETS.sampleCount,
+          1,
           t,
         ),
       translucentListDoubleSided: () =>
@@ -1177,7 +1177,7 @@ async function createPipelines(
           "none",
           "fsList",
           listTargets,
-          SCENE_TARGETS.sampleCount,
+          1,
           t,
         ),
       translucentMoments: () =>

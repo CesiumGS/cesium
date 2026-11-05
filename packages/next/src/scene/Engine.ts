@@ -3307,13 +3307,7 @@ export class Engine {
       "translucent",
       {
         reads: [depth],
-        writes: [
-          momentsZero,
-          momentsHigher,
-          accumulatedLit,
-          accumulatedUnlit,
-          color,
-        ],
+        writes: [momentsZero, momentsHigher, accumulatedLit, accumulatedUnlit],
         sideEffect: true,
       },
       (enc, get) => {
@@ -3325,7 +3319,8 @@ export class Engine {
         if (view.translucency === "exact") {
           const lists = this.lists!;
           enc.clearBuffer(lists, 0, (LIST_HEADER + width * height) * 4);
-          listTarget.view = get(color);
+          // Single-sampled, writing nothing: `sortLists` fills it after.
+          listTarget.view = get(accumulatedLit);
           listPass.timestampWrites = this.timer.passWrites("translucent-lists");
           const pass = enc.beginRenderPass(listPass);
           world.encodeTranslucent(

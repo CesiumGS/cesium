@@ -33,7 +33,7 @@ export const HARNESSES: HarnessInfo[] = [
     group: "parity",
     title: "Translucency",
     description:
-      "Blended surfaces in controlled scenes with moment-based OIT against the exact per-pixel lists, and the lists' order independence.",
+      "Blended surfaces in controlled scenes with moment-based OIT against the exact per-pixel lists, both against a computed ground truth for unlit layers, and the lists' order independence.",
     page: "/parity/translucency.html",
     entry: "runTranslucency",
     load: () => import("../parity/translucency.ts").then((m) => m.harness),

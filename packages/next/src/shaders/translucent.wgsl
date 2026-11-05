@@ -14,14 +14,17 @@
 //   Bounded memory, two passes over the translucent geometry.
 //
 // Their parts at least `OPAQUE_ALPHA` opaque draw in the opaque pass
-// instead (opaque.wgsl `depthCoverageFs`). The lists' pass runs
-// multisampled (its fragments know the samples they cover: glass's edges
-// antialias), the moments' single-sampled (their targets multisampled
-// would take four times the memory). Neither has a depth attachment: a
-// fragment's share of the pixel is the share of the opaque pass's samples
-// it covers and is in front of, read from that pass's depth (a storage
-// write disables early depth tests, so occluded fragments are tested
-// here, not by the hardware).
+// instead (opaque.wgsl `depthCoverageFs`). Both run single-sampled, with
+// no depth attachment: a fragment's share of the pixel is the share of the
+// opaque pass's samples it is in front of, read from that pass's depth (a
+// storage write disables early depth tests, so occluded fragments are
+// tested here, not by the hardware). Edges against opaque surfaces
+// antialias; glass's own silhouette doesn't. The lists' pass was
+// multisampled once, its fragments' coverage antialiasing those edges, but
+// a fragment shader's storage writes may run once per sample: on Apple's
+// GPUs (Metal) at 4× they ran four times a pixel, each run seeing the
+// whole coverage mask, and every layer went into its list four times
+// (plan §3.5). At one sample, once per sample is once per pixel.
 //
 // Appended to common.wgsl and opaque.wgsl.
 
@@ -68,13 +71,12 @@ const SAMPLE_OFFSETS = array<vec2f, 4>(
   vec2f(0.125, 0.375),
 );
 
-// The share of the pixel's samples a fragment covers (`mask`: in the
-// multisampled lists' pass, the rasterizer's coverage) and is in front of
+// The share of the opaque pass's samples a fragment is in front of
 // (reverse-Z: nearer is greater), its depth taken at each sample from its
 // slope (`depthSlope`), as the hardware tests it: at the pixel's center
 // alone, glass meeting its frame, the depths nearly equal, came out in
 // front of some samples and behind others at random, speckling the seam.
-fn uncovered(position: vec4f, slope: vec2f, mask: u32) -> f32 {
+fn uncovered(position: vec4f, slope: vec2f) -> f32 {
   let p = vec2u(position.xy);
   let samples = textureNumSamples(opaqueDepth);
   var n = 0u;
@@ -83,7 +85,7 @@ fn uncovered(position: vec4f, slope: vec2f, mask: u32) -> f32 {
     if (samples == 4u) {
       z += dot(slope, SAMPLE_OFFSETS[i]);
     }
-    if ((mask & (1u << i)) != 0u && z >= textureLoad(opaqueDepth, p, i)) {
+    if (z >= textureLoad(opaqueDepth, p, i)) {
       n++;
     }
   }
@@ -96,17 +98,13 @@ fn depthSlope(position: vec4f) -> vec2f {
 }
 
 @fragment
-fn fsList(
-  in: VsOut,
-  @builtin(front_facing) frontFacing: bool,
-  @builtin(sample_mask) mask: u32,
-) {
+fn fsList(in: VsOut, @builtin(front_facing) frontFacing: bool) {
   let slope = depthSlope(in.position);
   let surface = shadeSurface(in, frontFacing, true);
   if (surface.alpha >= TRANSLUCENT_ALPHA) {
     return; // drawn opaque (opaque.wgsl `cutOut`)
   }
-  let alpha = clamp(surface.alpha, 0.0, 1.0) * uncovered(in.position, slope, mask);
+  let alpha = clamp(surface.alpha, 0.0, 1.0) * uncovered(in.position, slope);
   if (alpha <= 0.0) {
     return;
   }
@@ -152,7 +150,7 @@ struct MomentsOut {
 fn fsMoments(in: VsOut) -> MomentsOut {
   let slope = depthSlope(in.position);
   let blended = blendedAlpha(in);
-  let alpha = blended * uncovered(in.position, slope, 0xffffffffu);
+  let alpha = blended * uncovered(in.position, slope);
   if (alpha <= 0.0 || blended >= TRANSLUCENT_ALPHA) {
     discard;
   }
@@ -229,7 +227,7 @@ struct AccumulatedOut {
 fn fsMomentColor(in: VsOut, @builtin(front_facing) frontFacing: bool) -> AccumulatedOut {
   let slope = depthSlope(in.position);
   let surface = shadeSurface(in, frontFacing, true);
-  let alpha = clamp(surface.alpha, 0.0, 1.0) * uncovered(in.position, slope, 0xffffffffu);
+  let alpha = clamp(surface.alpha, 0.0, 1.0) * uncovered(in.position, slope);
   if (alpha <= 0.0 || surface.alpha >= TRANSLUCENT_ALPHA) {
     discard;
   }

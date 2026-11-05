@@ -2536,10 +2536,12 @@ targets one of two ways (`View.translucency`, a switch in the viewer):
   dividing, the overestimation's weight used), and the bias 5·10⁻⁶, not
   5·10⁻⁷ (no failure in 400,000 random stacks of one to four layers).
 - "exact": every fragment into a list per pixel (fragment-stage atomics),
-  sorted and blended front to back in the composite, the nearest 32 kept.
-  Multisampled: fragments know their sample coverage, so glass's edges
-  antialias. The lists grow to a quarter more than a frame needed (its
-  count read back). The reference "moments" is tested against.
+  sorted and blended front to back (since the Slang step 4 work, a compute
+  pass, `sortLists`, then the composite), the nearest 32 kept.
+  Single-sampled, as the moments are (it was multisampled, for glass's
+  own edges; see the correction below). The lists grow to a quarter more
+  than a frame needed (its count read back). The reference "moments" is
+  tested against.
 
 Neither has a depth attachment: a storage write disables early depth
 tests, so translucent fragments test the opaque depth themselves, per
@@ -2570,6 +2572,37 @@ near-opaque layers tie). Cost on the station design model's glass canopy
 filling a 1489 × 1416 view (4× MSAA, RTX 3000 Ada laptop, rendering
 continuously): the frame 15.2 ms without the translucent passes, 15.9 ms
 with moments, 17.3 ms with exact lists.
+
+Correction (Slang step 4, Apple M-series, Metal): on this GPU the
+reference was wrong, not the moments. A 4× multisampled fragment shader's
+storage writes run once per sample: each of the four runs sees the
+pixel's center and its whole coverage mask, so the lists' pass put every
+layer into its list four times, and "exact" blended each layer as
+1 − (1 − α)⁴. Glass came out dark and saturated, and the moments, right,
+looked gray beside it (mean FLIP 0.03 to 0.12, p95 to 0.69, since r45 at
+least). A bare kernel shows it: a fullscreen triangle whose fragment
+shader adds one to an atomic counts 4.00 a pixel at 4× and 1.00 at 1×,
+whatever else it reads or writes; the shading itself takes no longer.
+The RTX record above did not see it. The lists' pass now runs
+single-sampled like the moments' (at one sample, once per sample is once
+per pixel): edges against opaque surfaces still antialias (the four
+opaque samples are tested), glass's own silhouette no longer does. On
+this Mac moments are then within mean FLIP 0.018 and p95 0.11 of exact
+(near-opaque the worst; crossing 0.001, the glass box 0.0004).
+
+The page now has a ground truth: two unlit scenes (three layers over a
+backdrop, eight crossing), each pixel's sorted "over" computed on the CPU
+from each layer's coverage (rendered alone). Exact matches it within
+0.6 of an 8-bit step (before the fix: 63.5); moments are 0.3 to 0.4 steps
+off on average, 5 at worst. Every row passes or fails against limits
+(FLIP mean 0.02, p95 0.15; order 0.001; exact 2 steps, moments 4 on
+average), so `bench/run.mjs translucency` catches it. Cost (the page's
+`runTranslucencyCost`, 1920 × 1080, each frame waited on; the passes'
+timestamps are not usable on Apple's GPUs, a render pass's taking in the
+ones before it): over the eight scenes, exact adds 1.5 to 7.8 ms to a
+frame, moments 0.3 to 6.2, exact about 2 ms more on average, with ±2 ms
+between runs. Moments stay the default; the Windows runs (§3.4 step 4)
+measure both again.
 
 **FXAA** (r45, `View.fxaa`, off by default): FXAA 3.11's quality version
 (Lottes) after tonemapping, on top of 4× MSAA: the present pass tonemaps
@@ -3456,6 +3489,7 @@ thing to cull there.
 | Slang WGSL backend gaps                                                         | Hand-written WGSL kernels allowed; WGSL-level ABI; WESL fallback                     |
 | Browser coverage                                                                | Chromium first; parity suite on Safari and Firefox where available                   |
 | Compatibility mode not supported                                                | Stated non-goal                                                                      |
+| Fragment storage writes run once per sample under MSAA (Apple, Metal)           | Side-effecting fragment passes single-sampled; ground truth in parity/translucency   |
 
 ### 7.3 Project risks
 
