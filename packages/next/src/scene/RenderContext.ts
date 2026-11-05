@@ -22,7 +22,7 @@ import pickWgsl from "../shaders/generated/pick.wgsl?raw";
 import meterWgsl from "../shaders/meter.wgsl?raw";
 import adaptWgsl from "../shaders/adapt.wgsl?raw";
 import lightsWgsl from "../shaders/lights.wgsl?raw";
-import depthRangeWgsl from "../shaders/depthRange.wgsl?raw";
+import depthRangeWgsl from "../shaders/generated/depthRange.wgsl?raw";
 import translucentWgsl from "../shaders/translucent.wgsl?raw";
 import compositeWgsl from "../shaders/composite.wgsl?raw";
 import fxaaWgsl from "../shaders/fxaa.wgsl?raw";
@@ -236,7 +236,7 @@ export interface Pipelines extends SurfacePipelines {
   adaptBlur: GPUComputePipeline;
   /** Point and spot lights into the view's froxels (`lights.wgsl`). */
   lightsAssign: GPUComputePipeline;
-  /** The nearest and farthest surface a view shows (`depthRange.wgsl`). */
+  /** The nearest and farthest surface a view shows (`depthRange.slang`). */
   depthRange: GPUComputePipeline;
   /** The translucent passes' group 3 (`SurfacePipelines.translucent*`). */
   translucentLayout: GPUBindGroupLayout;

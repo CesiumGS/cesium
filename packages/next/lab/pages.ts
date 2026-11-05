@@ -268,6 +268,16 @@ export const HARNESSES: HarnessInfo[] = [
     entry: "runSlangProbes",
     load: () => import("../spikes/slangProbes.ts").then((m) => m.harness),
   },
+  {
+    id: "slang-kernels",
+    group: "microbenchmarks",
+    title: "Slang kernels against the WGSL",
+    description:
+      "Each kernel ported to Slang against the hand-written WGSL it replaced, alternately on the same inputs, timed by GPU timestamps: the migration's 5% gate.",
+    page: "/spikes/slang-kernels.html",
+    entry: "runSlangKernels",
+    load: () => import("../spikes/slangKernels.ts").then((m) => m.harness),
+  },
 ];
 
 export const HARNESS_GROUPS: Array<[HarnessInfo["group"], string, string]> = [

@@ -362,7 +362,7 @@ export class Engine {
     readback: GPUBuffer;
     scratch: GPUBuffer[];
   }> = [];
-  /** Depth ranges reduced this frame (`depthRange.wgsl`), mapped after submit. */
+  /** Depth ranges reduced this frame (`depthRange.slang`), mapped after submit. */
   private readonly depthRanges: Array<{
     frame: ViewFrame;
     readback: GPUBuffer;
