@@ -128,8 +128,68 @@ describe("Chebyshev packs", () => {
     );
 
     expect(() => readPack(good.slice(0, good.length - 8).buffer)).toThrow(
-      "pack: truncated",
+      /pack: bad segment "moon": .*past the end of the pack/,
     );
     expect(() => readPack(good.slice(0, 20).buffer)).toThrow("pack: truncated");
+  });
+
+  describe("validates each segment's layout", () => {
+    /** The pack `good` with its manifest JSON edited, records unchanged. */
+    const edited = (
+      edit: (m: Record<string, unknown>) => void,
+    ): ArrayBuffer => {
+      const good = writePack(manifest, [input(-90, 110)]);
+      const length = new DataView(good.buffer).getUint32(4, true);
+      const m = JSON.parse(
+        new TextDecoder().decode(good.subarray(8, 8 + length)),
+      ) as Record<string, unknown>;
+      edit(m);
+      const records = good.subarray(Math.ceil((8 + length) / 8) * 8);
+      const json = new TextEncoder().encode(JSON.stringify(m));
+      const start = Math.ceil((8 + json.length) / 8) * 8;
+      const out = new Uint8Array(start + records.length);
+      out.set(good.subarray(0, 4));
+      new DataView(out.buffer).setUint32(4, json.length, true);
+      out.set(json, 8);
+      out.set(records, start);
+      return out.buffer;
+    };
+    const segmentEdit =
+      (field: string, value: unknown) => (m: Record<string, unknown>) => {
+        (m.segments as Record<string, unknown>[])[0]![field] = value;
+      };
+
+    it("accepts the unedited pack", () => {
+      expect(readPack(edited(() => {})).manifest.segments).toHaveLength(1);
+    });
+
+    it.each([
+      ["offset", -1, /offset/],
+      ["offset", 1.5, /offset/],
+      ["count", -1, /count/],
+      ["recordSize", 0, /recordSize/],
+      ["recordSize", 12, /recordSize/],
+      ["recordSize", 11.5, /recordSize/],
+      ["intervalLength", 0, /intervalLength/],
+      ["intervalLength", -100, /intervalLength/],
+      ["start", 1000, /start/],
+      ["offset", 1, /past the end of the pack/],
+      ["count", 1000, /past the end of the pack/],
+    ])("rejects %s = %s", (field, value, why) => {
+      expect(() => readPack(edited(segmentEdit(field, value)))).toThrow(
+        /^pack: bad segment "moon": /,
+      );
+      expect(() => readPack(edited(segmentEdit(field, value)))).toThrow(why);
+    });
+
+    it("rejects a manifest whose segments is not an array", () => {
+      expect(() =>
+        readPack(
+          edited((m) => {
+            m.segments = { moon: 1 };
+          }),
+        ),
+      ).toThrow('pack: bad manifest: "segments" is not an array');
+    });
   });
 });

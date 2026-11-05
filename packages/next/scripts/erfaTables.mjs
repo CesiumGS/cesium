@@ -71,16 +71,22 @@ for (const [cFile, tsFile, what] of FILES) {
     const start = i;
     while (depth > 0) {
       const ch = src[i++];
-      if (ch === "{") {depth++;}
-      else if (ch === "}") {depth--;}
+      if (ch === "{") {
+        depth++;
+      } else if (ch === "}") {
+        depth--;
+      }
     }
     const nums = src.slice(start, i - 1).match(NUMBER);
-    if (!nums) {throw new Error(`${cFile}: empty table ${name}`);}
-    if (!(name in DOCS))
-      {throw new Error(`${cFile}: undocumented table ${name}`);}
+    if (!nums) {
+      throw new Error(`${cFile}: empty table ${name}`);
+    }
+    if (!(name in DOCS)) {
+      throw new Error(`${cFile}: undocumented table ${name}`);
+    }
     out += `/** ${DOCS[name]} */\nexport const ${name}: readonly number[] = [\n${nums.join(",\n")},\n];\n\n`;
     counts.push(`${tsFile} ${name}: ${nums.length} numbers`);
   }
-  writeFileSync(join(outDir, tsFile), `${out.trimEnd()  }\n`);
+  writeFileSync(join(outDir, tsFile), `${out.trimEnd()}\n`);
 }
 console.log(counts.join("\n"));

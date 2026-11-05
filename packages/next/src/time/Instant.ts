@@ -39,6 +39,36 @@ export class Instant {
   }
 
   /**
+   * From TDB seconds past J2000 (SPICE's ET), inverting `tdb()`: Newton
+   * steps on TT (TDB - TT is below 2 ms and its rate below 1e-9, so three
+   * converge), then a search of the float64 neighbours of TT for the one
+   * whose `tdb()` is nearest `et`. The result's `tdb()` is `et` exactly or
+   * within an ulp: TT and TDB share a binade nearly everywhere, but not every
+   * TDB is reachable from some TT.
+   */
+  static fromTdb(et: number): Instant {
+    let tt = et;
+    for (let i = 0; i < 3; i++) {
+      tt += et - new Instant(tt).tdb();
+    }
+    if (!Number.isFinite(tt)) {
+      return new Instant(tt);
+    }
+    const ulp = 2 ** (Math.floor(Math.log2(Math.abs(tt) || 1)) - 52);
+    let best = tt;
+    let bestError = Math.abs(new Instant(tt).tdb() - et);
+    for (let k = -4; k <= 4 && bestError > 0; k++) {
+      const candidate = tt + k * ulp;
+      const error = Math.abs(new Instant(candidate).tdb() - et);
+      if (error < bestError) {
+        best = candidate;
+        bestError = error;
+      }
+    }
+    return new Instant(best);
+  }
+
+  /**
    * To UTC milliseconds since 1970, rounded to the millisecond. TAI-UTC is
    * read at the TAI instant itself (`taiMinusUtcAtTai`), so the result is
    * exact and never decreases. TAI is rounded to the millisecond first: TAI-UTC

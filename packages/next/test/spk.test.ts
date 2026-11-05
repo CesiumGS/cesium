@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { chebyshev } from "../src/ephemeris/chebyshev.ts";
+import { parseDaf } from "../src/ephemeris/daf.ts";
 import { readDaf } from "../src/ephemeris/spk.ts";
 import { writeSpk, type SpkWriterSegment } from "./spkWriter.ts";
 
@@ -139,6 +140,57 @@ describe("readDaf", () => {
     });
     expect(() => readDaf(buf)).toThrow('DAF: unrecognized file id "NAIF/DAF"');
   });
+});
+
+describe("DAF hardening", () => {
+  const file = (): ArrayBuffer =>
+    writeSpk({ kind: "SPK", segments: [segment()] });
+  const withInt = (offset: number, value: number): ArrayBuffer => {
+    const buf = file();
+    new DataView(buf).setInt32(offset, value, true);
+    return buf;
+  };
+
+  it("rejects ND = NI = 0, and terminates", () => {
+    const buf = file();
+    const view = new DataView(buf);
+    view.setInt32(8, 0, true);
+    view.setInt32(12, 0, true);
+    expect(() => parseDaf(buf)).toThrow(
+      /DAF: bad summary format \(ND=0, NI=0\)/,
+    );
+  });
+
+  it.each([
+    ["ND", -1, 8],
+    ["ND", 125, 8],
+    ["NI", 1, 12],
+    ["NI", 251, 12],
+  ])("rejects %s = %i", (_name, value, offset) => {
+    expect(() => parseDaf(withInt(offset, value))).toThrow(
+      /DAF: bad summary format/,
+    );
+  });
+
+  it.each([2.5, -2, NaN])(
+    "rejects a summary record whose NEXT is %s",
+    (next) => {
+      const buf = file();
+      new DataView(buf).setFloat64(1024, next, true); // record 2's NEXT
+      expect(() => parseDaf(buf)).toThrow("DAF: corrupt summary record chain");
+    },
+  );
+
+  it.each([0, -100])(
+    "rejects a type-2 segment with intervalLength %i",
+    (len) => {
+      const buf = writeSpk({
+        kind: "SPK",
+        segments: [segment({ intervalLength: len })],
+      });
+      expect(() => readDaf(buf)).toThrow(/SPK: type-2 segment intervalLength/);
+    },
+  );
 });
 
 describe("chebyshev", () => {

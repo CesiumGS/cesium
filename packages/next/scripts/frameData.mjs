@@ -266,14 +266,14 @@ export async function ensureFrameData({ span }, log = console.log) {
       role: "planets",
       sha256: sha256(planets.pack),
       sourceUrl: SOURCES.planets.url,
-      derivedFrom: NAIF_SHA256[SOURCES.planets.file],
+      sourceSha256: NAIF_SHA256[SOURCES.planets.file],
     },
     {
       file: moonFile,
       role: "moon",
       sha256: sha256(moon.pack),
       sourceUrl: SOURCES.moon.url,
-      derivedFrom: NAIF_SHA256[SOURCES.moon.file],
+      sourceSha256: NAIF_SHA256[SOURCES.moon.file],
     },
     {
       file: SOURCES.leapSeconds.file,

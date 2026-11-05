@@ -114,6 +114,41 @@ export function writePack(
   return out;
 }
 
+const isCount = (v: unknown): v is number =>
+  typeof v === "number" && Number.isInteger(v) && v >= 0;
+
+/** Throws `pack: bad segment "<name>": <why>` unless `s` lies inside `available` doubles. */
+function checkSegment(s: PackSegment, available: number): void {
+  const bad = (why: string): never => {
+    throw new Error(`pack: bad segment "${String(s?.name)}": ${why}`);
+  };
+  if (typeof s !== "object" || s === null) {
+    bad("not an object");
+  }
+  if (!isCount(s.offset)) {
+    bad(`offset ${s.offset} is not a non-negative integer`);
+  }
+  if (!isCount(s.count)) {
+    bad(`count ${s.count} is not a non-negative integer`);
+  }
+  if (
+    !isCount(s.recordSize) ||
+    s.recordSize < 5 ||
+    (s.recordSize - 2) % 3 !== 0
+  ) {
+    bad(`recordSize ${s.recordSize} is not 2 + 3 * (coefficients per axis)`);
+  }
+  if (!(s.intervalLength > 0) || !Number.isFinite(s.intervalLength)) {
+    bad(`intervalLength ${s.intervalLength} is not positive`);
+  }
+  if (!(s.start <= s.end)) {
+    bad(`start ${s.start} is after end ${s.end}`);
+  }
+  if (s.offset + s.count * s.recordSize > available) {
+    bad("its records run past the end of the pack (truncated?)");
+  }
+}
+
 /**
  * Read a pack. `data` is a `Float64Array` view onto `bytes`, not a copy, and
  * segment `offset`s index into it. The records start at an 8-byte boundary
@@ -143,11 +178,16 @@ export function readPack(bytes: ArrayBuffer): {
   if (manifest.format !== FORMAT) {
     throw new Error(`pack: unsupported format "${String(manifest.format)}"`);
   }
+  if (!Array.isArray(manifest.segments)) {
+    throw new Error('pack: bad manifest: "segments" is not an array');
+  }
   const dataStart = Math.ceil((HEADER + length) / 8) * 8;
-  const doubles = manifest.segments.reduce(
-    (n, s) => Math.max(n, s.offset + s.count * s.recordSize),
-    0,
-  );
+  const available = Math.floor(Math.max(0, raw.length - dataStart) / 8);
+  let doubles = 0;
+  for (const s of manifest.segments) {
+    checkSegment(s, available);
+    doubles = Math.max(doubles, s.offset + s.count * s.recordSize);
+  }
   if (dataStart + doubles * 8 > raw.length) {
     throw new Error("pack: truncated");
   }

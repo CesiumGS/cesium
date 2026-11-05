@@ -1,66 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { loadFrameData } from "../src/ephemeris/loadFrameData.ts";
-import { writePack } from "../src/ephemeris/pack.ts";
-import { readDaf } from "../src/ephemeris/spk.ts";
 import { LeapSeconds } from "../src/time/leapSeconds.ts";
-import { writeSpk } from "./spkWriter.ts";
+import { COUNT, INIT, LEN, pack } from "./syntheticPacks.ts";
 
-const INIT = -200;
-const LEN = 100;
-const COUNT = 4;
-const RSIZE = 2 + 3 * 3;
 const MJD_UNIX_EPOCH = 40587;
-
-function records(): Float64Array {
-  const out = new Float64Array(COUNT * RSIZE);
-  for (let i = 0; i < COUNT; i++) {
-    out[i * RSIZE] = INIT + (i + 0.5) * LEN;
-    out[i * RSIZE + 1] = LEN / 2;
-    for (let k = 0; k < 9; k++) {
-      out[i * RSIZE + 2 + k] = (i + 1) * 10 + k;
-    }
-  }
-  return out;
-}
-
-// Synthetic packs with the segments Ephemeris.fromPacks looks up by name.
-function pack(
-  kind: "SPK" | "PCK",
-  names: string[],
-  frame: "ICRF" | "MOON_PA",
-  packKind: "position" | "euler",
-): Uint8Array {
-  const spk = writeSpk({
-    kind,
-    segments: names.map((_, i) => ({
-      target: 10 + i,
-      center: 0,
-      frame: 1,
-      init: INIT,
-      intervalLength: LEN,
-      recordSize: RSIZE,
-      records: records(),
-    })),
-  });
-  const daf = readDaf(spk);
-  return writePack(
-    {
-      format: "cesium-chebyshev-pack/1",
-      source: "synthetic.bsp",
-      sourceSha256: "0".repeat(64),
-      span: ["1999-12-31T00:00:00Z", "2000-01-02T00:00:00Z"],
-      derivedFrom: "Derived from synthetic.bsp (test data)",
-    },
-    names.map((name, i) => ({
-      segment: daf.segments[i]!,
-      name,
-      frame,
-      kind: packKind,
-      start: INIT,
-      end: INIT + COUNT * LEN,
-    })),
-  );
-}
 
 const planets = pack("SPK", ["sun", "emb", "moon"], "ICRF", "position");
 const moonPa = pack("PCK", ["moonPa"], "MOON_PA", "euler");
@@ -270,9 +213,11 @@ describe("loadFrameData", () => {
     serve(s);
     const data = await loadFrameData();
     expect(data.warnings).toHaveLength(1);
-    expect(data.warnings[0]).toContain(
+    expect(data.warnings[0]!.kind).toBe("leapSecondsExpired");
+    expect(data.warnings[0]!.message).toContain(
       "leap-second table expired on 2027-06-28",
     );
+    expect(console.warn).toHaveBeenCalledWith(data.warnings[0]!.message);
     expect(console.warn).toHaveBeenCalledTimes(1);
   });
 
@@ -281,7 +226,8 @@ describe("loadFrameData", () => {
     serve(s);
     const data = await loadFrameData();
     expect(data.warnings).toHaveLength(1);
-    expect(data.warnings[0]).toContain(
+    expect(data.warnings[0]!.kind).toBe("eopEnded");
+    expect(data.warnings[0]!.message).toContain(
       "Earth orientation table ends on 2017-01-03",
     );
     expect(console.warn).toHaveBeenCalledTimes(1);

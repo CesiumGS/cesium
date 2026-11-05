@@ -46,29 +46,11 @@ const eph = Ephemeris.fromPacks(
 );
 
 /**
- * An Instant whose TDB is `tdb`. TDB - TT is below 2 ms, so iterate to find TT,
- * then step TT by whole float64 spacings until `tdb()` lands on the fixture's
- * value: at 1e9 s the spacing is 2.4e-7 s, which the Moon's Euler angle
- * (2.7e-6 rad/s) turns into 6e-13 rad, most of the 1e-12 budget.
+ * An Instant whose TDB is the fixture's: at 1e9 s the TT spacing is 2.4e-7 s,
+ * which the Moon's Euler angle (2.7e-6 rad/s) turns into 6e-13 rad, most of
+ * the 1e-12 budget, so fromTdb lands on the nearest TT, not just near it.
  */
-const atTdb = (tdb: number): Instant => {
-  let tt = tdb;
-  for (let i = 0; i < 3; i++) {
-    tt += tdb - Instant.fromTt(tt).tdb();
-  }
-  const ulp = 2 ** (Math.floor(Math.log2(Math.abs(tt) || 1)) - 52);
-  let best = tt;
-  for (let k = -4; k <= 4; k++) {
-    const candidate = tt + k * ulp;
-    if (
-      Math.abs(Instant.fromTt(candidate).tdb() - tdb) <
-      Math.abs(Instant.fromTt(best).tdb() - tdb)
-    ) {
-      best = candidate;
-    }
-  }
-  return Instant.fromTt(best);
-};
+const atTdb = (tdb: number): Instant => Instant.fromTdb(tdb);
 
 // km to m; the fixture's kilometers are jplephem's.
 const meters = (v: State): number[] => v.map((x) => x * 1000);
@@ -136,7 +118,11 @@ describe("Ephemeris positions (jplephem on de440s.bsp)", () => {
   });
 
   it("matches at 2049-12-31 and exactly on a record boundary", () => {
-    const late = rows.find((r) => r.tdb > 1.5e9 && r.tdb < 1.58e9)!;
+    // 2049-12-31T00:00 TDB is 1577793600 s past J2000.
+    const late = rows.reduce((a, b) =>
+      Math.abs(b.tdb - 1577793600) < Math.abs(a.tdb - 1577793600) ? b : a,
+    );
+    expect(late.tdb).toBe(1577793600);
     expect(posDiff(eph.sun(atTdb(late.tdb)), meters(late.sun))).toBeLessThan(
       1e-3,
     );

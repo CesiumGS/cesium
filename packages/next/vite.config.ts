@@ -9,7 +9,13 @@ import {
   writeFileSync,
 } from "node:fs";
 import { homedir } from "node:os";
-import { extname, join, normalize } from "node:path";
+import {
+  extname,
+  join,
+  normalize,
+  resolve as resolvePath,
+  sep,
+} from "node:path";
 import { fileURLToPath } from "node:url";
 import { configDefaults, defineConfig, type Plugin } from "vitest/config";
 import { basisTranscoderEsm } from "./basisTranscoderEsm.ts";
@@ -43,7 +49,9 @@ const contentTypes: Record<string, string> = {
  * (set SLANG_WASM_DIR) for the Slang spike.
  */
 function serveDirectory(prefix: string, root: string): Plugin {
-  const base = normalize(root);
+  // Absolute, without a trailing separator, so `base + sep` is the prefix of
+  // everything inside it and of nothing beside it (`/a/frames-old`).
+  const base = resolvePath(root);
   return {
     name: `serve-directory${prefix}`,
     configureServer(server) {
@@ -52,7 +60,7 @@ function serveDirectory(prefix: string, root: string): Plugin {
           join(base, decodeURIComponent((req.url ?? "/").split("?")[0]!)),
         );
         if (
-          !path.startsWith(base) ||
+          !(path === base || path.startsWith(base + sep)) ||
           !existsSync(path) ||
           statSync(path).isDirectory()
         ) {

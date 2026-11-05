@@ -69,6 +69,11 @@ export function readDaf(buffer: ArrayBuffer): {
     const intervalLength = trailer[1]!;
     const recordSize = trailer[2]!;
     const count = trailer[3]!;
+    if (!(intervalLength > 0) || !Number.isFinite(intervalLength)) {
+      throw new Error(
+        `SPK: type-2 segment intervalLength must be positive (got ${intervalLength})`,
+      );
+    }
     if (
       !Number.isInteger(recordSize) ||
       !Number.isInteger(count) ||

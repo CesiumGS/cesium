@@ -14,7 +14,8 @@ export function ensureFrameData(
     role: string;
     sha256: string;
     sourceUrl: string;
-    derivedFrom?: string;
+    /** Packs: the SHA-256 of the NAIF kernel the pack is excerpted from. */
+    sourceSha256?: string;
     credit?: string;
   }[];
 }>;

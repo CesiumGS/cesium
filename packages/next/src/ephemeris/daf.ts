@@ -55,6 +55,18 @@ export function parseDaf(buffer: ArrayBuffer): DafFile {
   const ni = view.getInt32(12, true);
   const forward = view.getInt32(76, true);
   const summarySize = nd + Math.ceil(ni / 2); // doubles
+  // NAIF's bounds (DAF Required Reading): ND <= 124, 2 <= NI <= 250, and a
+  // summary fits a record. Checked before the walk, which divides by the size.
+  if (
+    nd < 0 ||
+    nd > 124 ||
+    ni < 2 ||
+    ni > 250 ||
+    summarySize < 1 ||
+    summarySize > RECORD_DOUBLES - 3
+  ) {
+    throw new Error(`DAF: bad summary format (ND=${nd}, NI=${ni})`);
+  }
   const perRecord = Math.floor((RECORD_DOUBLES - 3) / summarySize);
 
   const summaries: DafSummary[] = [];
@@ -70,6 +82,9 @@ export function parseDaf(buffer: ArrayBuffer): DafFile {
     }
     visited.add(record);
     const next = view.getFloat64(base, true);
+    if (!Number.isInteger(next) || next < 0) {
+      throw new Error("DAF: corrupt summary record chain");
+    }
     const count = view.getFloat64(base + 16, true);
     if (!Number.isInteger(count) || count < 0 || count > perRecord) {
       throw new Error("DAF: corrupt summary record");
