@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 720" width="1120" height="720" font-family="Inter, system-ui, sans-serif">
+  <title>Frames explorer: tour stop 3 at 1 device pixel (target mock)</title>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#05070c"/><stop offset="1" stop-color="#2a4f7c"/></linearGradient>
+    <linearGradient id="valley" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9aa27a"/><stop offset="0.5" stop-color="#c6b789"/><stop offset="1" stop-color="#d6c79c"/></linearGradient>
+    <pattern id="fields" width="46" height="30" patternUnits="userSpaceOnUse" patternTransform="skewX(-12)"><rect width="46" height="30" fill="none"/><rect x="2" y="2" width="20" height="12" fill="#a9b07c" opacity="0.5"/><rect x="25" y="16" width="18" height="11" fill="#b9a374" opacity="0.5"/></pattern>
+    <clipPath id="view"><rect width="728" height="680" rx="8"/></clipPath>
+  </defs>
+  <rect width="1120" height="720" fill="#f4f5f7"/>
+  <g transform="translate(20 20)" clip-path="url(#view)">
+    <rect width="728" height="680" fill="url(#sky)"/>
+    <path d="M0 188 Q 364 170 728 188 V 680 H 0 Z" fill="url(#valley)"/>
+    <path d="M0 188 Q 364 170 728 188 V 680 H 0 Z" fill="url(#fields)"/>
+    <path d="M60 220 C 200 260 260 380 230 680" fill="none" stroke="#6c8fb0" stroke-width="5" opacity="0.6"/>
+    <!-- The dimmed ground: exposure compensation −0.6 (≈ 0.66×) on the lit globe only -->
+    <rect width="728" height="680" fill="#000" opacity="0.34"/>
+    <!-- Overlays: unlit, 1 device pixel -->
+    <path d="" fill="none" stroke="#f07ec2" stroke-opacity="0.6" stroke-width="1"/>
+    <path d="M-160.0 680.0 L-151.1 668.3M-143.8 658.6 L-134.8 646.9M-127.5 637.3 L-118.6 625.5M-111.3 615.9 L-102.4 604.2M-95.1 594.5 L-86.2 582.8M-78.9 573.2 L-69.9 561.4M-62.6 551.8 L-53.7 540.1M-46.4 530.5 L-37.5 518.7M-30.2 509.1 L-21.3 497.3M-14.0 487.7 L-5.0 476.0M2.3 466.4 L11.2 454.6M18.5 445.0 L27.4 433.3M34.7 423.6 L43.7 411.9M51.0 402.3 L59.9 390.5M67.2 380.9 L76.1 369.2M83.4 359.5 L92.3 347.8M99.6 338.2 L108.6 326.4M115.9 316.8 L124.8 305.1M132.1 295.5 L141.0 283.7M148.3 274.1 L157.2 262.3M164.5 252.7 L173.5 241.0M180.8 231.4 L189.7 219.6M-55.2 680.0 L-48.1 668.3M-42.2 658.6 L-35.1 646.9M-29.2 637.3 L-22.1 625.5M-16.3 615.9 L-9.1 604.2M-3.3 594.5 L3.9 582.8M9.7 573.2 L16.8 561.4M22.7 551.8 L29.8 540.1M35.7 530.5 L42.8 518.7M48.7 509.1 L55.8 497.3M61.6 487.7 L68.8 476.0M74.6 466.4 L81.8 454.6M87.6 445.0 L94.7 433.3M100.6 423.6 L107.7 411.9M113.6 402.3 L120.7 390.5M126.5 380.9 L133.7 369.2M139.5 359.5 L146.7 347.8M152.5 338.2 L159.6 326.4M165.5 316.8 L172.6 305.1M178.5 295.5 L185.6 283.7M191.5 274.1 L198.6 262.3M204.4 252.7 L211.6 241.0M217.4 231.4 L224.6 219.6M49.6 680.0 L55.0 668.3M59.3 658.6 L64.7 646.9M69.1 637.3 L74.4 625.5M78.8 615.9 L84.2 604.2M88.5 594.5 L93.9 582.8M98.3 573.2 L103.6 561.4M108.0 551.8 L113.4 540.1M117.8 530.5 L123.1 518.7M127.5 509.1 L132.8 497.3M137.2 487.7 L142.6 476.0M147.0 466.4 L152.3 454.6M156.7 445.0 L162.1 433.3M166.4 423.6 L171.8 411.9M176.2 402.3 L181.5 390.5M185.9 380.9 L191.3 369.2M195.6 359.5 L201.0 347.8M205.4 338.2 L210.7 326.4M215.1 316.8 L220.5 305.1M224.9 295.5 L230.2 283.7M234.6 274.1 L239.9 262.3M244.3 252.7 L249.7 241.0M254.1 231.4 L259.4 219.6M154.4 680.0 L158.0 668.3M160.9 658.6 L164.5 646.9M167.4 637.3 L171.0 625.5M173.9 615.9 L177.4 604.2M180.4 594.5 L183.9 582.8M186.9 573.2 L190.4 561.4M193.3 551.8 L196.9 540.1M199.8 530.5 L203.4 518.7M206.3 509.1 L209.9 497.3M212.8 487.7 L216.4 476.0M219.3 466.4 L222.9 454.6M225.8 445.0 L229.4 433.3M232.3 423.6 L235.9 411.9M238.8 402.3 L242.4 390.5M245.3 380.9 L248.8 369.2M251.8 359.5 L255.3 347.8M258.3 338.2 L261.8 326.4M264.7 316.8 L268.3 305.1M271.2 295.5 L274.8 283.7M277.7 274.1 L281.3 262.3M284.2 252.7 L287.8 241.0M290.7 231.4 L294.3 219.6M259.2 680.0 L261.0 668.3M262.4 658.6 L264.2 646.9M265.7 637.3 L267.5 625.5M268.9 615.9 L270.7 604.2M272.2 594.5 L274.0 582.8M275.4 573.2 L277.2 561.4M278.7 551.8 L280.5 540.1M281.9 530.5 L283.7 518.7M285.2 509.1 L286.9 497.3M288.4 487.7 L290.2 476.0M291.7 466.4 L293.4 454.6M294.9 445.0 L296.7 433.3M298.1 423.6 L299.9 411.9M301.4 402.3 L303.2 390.5M304.6 380.9 L306.4 369.2M307.9 359.5 L309.7 347.8M311.1 338.2 L312.9 326.4M314.4 316.8 L316.2 305.1M317.6 295.5 L319.4 283.7M320.9 274.1 L322.6 262.3M324.1 252.7 L325.9 241.0M327.4 231.4 L329.1 219.6M364.0 680.0 L364.0 668.3M364.0 658.6 L364.0 646.9M364.0 637.3 L364.0 625.5M364.0 615.9 L364.0 604.2M364.0 594.5 L364.0 582.8M364.0 573.2 L364.0 561.4M364.0 551.8 L364.0 540.1M364.0 530.5 L364.0 518.7M364.0 509.1 L364.0 497.3M364.0 487.7 L364.0 476.0M364.0 466.4 L364.0 454.6M364.0 445.0 L364.0 433.3M364.0 423.6 L364.0 411.9M364.0 402.3 L364.0 390.5M364.0 380.9 L364.0 369.2M364.0 359.5 L364.0 347.8M364.0 338.2 L364.0 326.4M364.0 316.8 L364.0 305.1M364.0 295.5 L364.0 283.7M364.0 274.1 L364.0 262.3M364.0 252.7 L364.0 241.0M364.0 231.4 L364.0 219.6M468.8 680.0 L467.0 668.3M465.6 658.6 L463.8 646.9M462.3 637.3 L460.5 625.5M459.1 615.9 L457.3 604.2M455.8 594.5 L454.0 582.8M452.6 573.2 L450.8 561.4M449.3 551.8 L447.5 540.1M446.1 530.5 L444.3 518.7M442.8 509.1 L441.1 497.3M439.6 487.7 L437.8 476.0M436.3 466.4 L434.6 454.6M433.1 445.0 L431.3 433.3M429.9 423.6 L428.1 411.9M426.6 402.3 L424.8 390.5M423.4 380.9 L421.6 369.2M420.1 359.5 L418.3 347.8M416.9 338.2 L415.1 326.4M413.6 316.8 L411.8 305.1M410.4 295.5 L408.6 283.7M407.1 274.1 L405.4 262.3M403.9 252.7 L402.1 241.0M400.6 231.4 L398.9 219.6M573.6 680.0 L570.0 668.3M567.1 658.6 L563.5 646.9M560.6 637.3 L557.0 625.5M554.1 615.9 L550.6 604.2M547.6 594.5 L544.1 582.8M541.1 573.2 L537.6 561.4M534.7 551.8 L531.1 540.1M528.2 530.5 L524.6 518.7M521.7 509.1 L518.1 497.3M515.2 487.7 L511.6 476.0M508.7 466.4 L505.1 454.6M502.2 445.0 L498.6 433.3M495.7 423.6 L492.1 411.9M489.2 402.3 L485.6 390.5M482.7 380.9 L479.2 369.2M476.2 359.5 L472.7 347.8M469.7 338.2 L466.2 326.4M463.3 316.8 L459.7 305.1M456.8 295.5 L453.2 283.7M450.3 274.1 L446.7 262.3M443.8 252.7 L440.2 241.0M437.3 231.4 L433.7 219.6M678.4 680.0 L673.0 668.3M668.7 658.6 L663.3 646.9M658.9 637.3 L653.6 625.5M649.2 615.9 L643.8 604.2M639.5 594.5 L634.1 582.8M629.7 573.2 L624.4 561.4M620.0 551.8 L614.6 540.1M610.2 530.5 L604.9 518.7M600.5 509.1 L595.2 497.3M590.8 487.7 L585.4 476.0M581.0 466.4 L575.7 454.6M571.3 445.0 L565.9 433.3M561.6 423.6 L556.2 411.9M551.8 402.3 L546.5 390.5M542.1 380.9 L536.7 369.2M532.4 359.5 L527.0 347.8M522.6 338.2 L517.3 326.4M512.9 316.8 L507.5 305.1M503.1 295.5 L497.8 283.7M493.4 274.1 L488.1 262.3M483.7 252.7 L478.3 241.0M473.9 231.4 L468.6 219.6M783.2 680.0 L776.1 668.3M770.2 658.6 L763.1 646.9M757.2 637.3 L750.1 625.5M744.3 615.9 L737.1 604.2M731.3 594.5 L724.1 582.8M718.3 573.2 L711.2 561.4M705.3 551.8 L698.2 540.1M692.3 530.5 L685.2 518.7M679.3 509.1 L672.2 497.3M666.4 487.7 L659.2 476.0M653.4 466.4 L646.2 454.6M640.4 445.0 L633.3 433.3M627.4 423.6 L620.3 411.9M614.4 402.3 L607.3 390.5M601.5 380.9 L594.3 369.2M588.5 359.5 L581.3 347.8M575.5 338.2 L568.4 326.4M562.5 316.8 L555.4 305.1M549.5 295.5 L542.4 283.7M536.5 274.1 L529.4 262.3M523.6 252.7 L516.4 241.0M510.6 231.4 L503.4 219.6M888.0 680.0 L879.1 668.3M871.8 658.6 L862.8 646.9M855.5 637.3 L846.6 625.5M839.3 615.9 L830.4 604.2M823.1 594.5 L814.2 582.8M806.9 573.2 L797.9 561.4M790.6 551.8 L781.7 540.1M774.4 530.5 L765.5 518.7M758.2 509.1 L749.3 497.3M742.0 487.7 L733.0 476.0M725.7 466.4 L716.8 454.6M709.5 445.0 L700.6 433.3M693.3 423.6 L684.3 411.9M677.0 402.3 L668.1 390.5M660.8 380.9 L651.9 369.2M644.6 359.5 L635.7 347.8M628.4 338.2 L619.4 326.4M612.1 316.8 L603.2 305.1M595.9 295.5 L587.0 283.7M579.7 274.1 L570.8 262.3M563.5 252.7 L554.5 241.0M547.2 231.4 L538.3 219.6" fill="none" stroke="#3bcddc" stroke-opacity="0.6" stroke-width="1"/>
+    <path d="M214.0 210 L-160.0 680M244.0 210 L-55.2 680M274.0 210 L49.6 680M304.0 210 L154.4 680M334.0 210 L259.2 680M364.0 210 L364.0 680M394.0 210 L468.8 680M424.0 210 L573.6 680M454.0 210 L678.4 680M484.0 210 L783.2 680M514.0 210 L888.0 680M214.0 210.0 L514.0 210.0M195.1 233.7 L532.9 233.7M172.1 262.6 L555.9 262.6M145.0 296.7 L583.0 296.7M113.8 336.0 L614.2 336.0M78.4 380.4 L649.6 380.4M39.0 430.0 L689.0 430.0M-4.6 484.7 L732.6 484.7M-52.3 544.6 L780.3 544.6M-104.1 609.7 L832.1 609.7M-160.0 680.0 L888.0 680.0" fill="none" stroke="#f07ec2" stroke-width="1"/>
+    <g font-size="12" font-weight="600" stroke="#000" stroke-width="3" stroke-opacity="0.8" paint-order="stroke">
+      <text x="372" y="398.52125" fill="#fff">central meridian 120.5°W</text>
+      <text x="197.4763616" y="246.4454" fill="#fff">convergence −0° 39′ (×20 for the mock)</text>
+      <text x="495.824384" y="220.5744" fill="#f07ec2">grid north</text>
+      <text x="495.824384" y="234.5744" fill="#3bcddc">true north</text>
+    </g>
+    <!-- Dyno's chrome and the HUD -->
+    <rect x="8" y="8" width="330" height="28" rx="6" fill="#0d0d0d" opacity="0.84"/>
+    <text x="18" y="27" font-size="12" fill="#c3c2b7"><tspan font-weight="700" fill="#fff">2.0</tspan>  CPU 0.7 ms · GPU 5.1 ms · 48 tiles · settled</text>
+    <g transform="translate(376 12)">
+      <rect width="340" height="112" rx="8" fill="#26282c" opacity="0.95"/>
+      <text x="14" y="22" font-size="11" fill="#c3cad6">Stop 3 of 6</text>
+      <text x="14" y="44" font-size="14" font-weight="600" fill="#fff">The California design grid</text>
+      <text x="14" y="64" font-size="12" fill="#e6e8ec">Grid north and true north part ways away from</text>
+      <text x="14" y="80" font-size="12" fill="#e6e8ec">the central meridian: the convergence angle.</text>
+      <rect x="226" y="88" width="48" height="20" rx="4" fill="none" stroke="#7d828c"/><text x="235" y="102" font-size="11" fill="#fff">Back</text>
+      <rect x="280" y="88" width="48" height="20" rx="4" fill="#0f7b6c"/><text x="290" y="102" font-size="11" fill="#fff">Next</text>
+    </g>
+    <g transform="translate(476 506)">
+      <rect width="240" height="64" rx="8" fill="#26282c" opacity="0.95"/>
+      <text x="12" y="20" font-size="12" font-weight="600" fill="#fff">On the globe</text>
+      <line x1="12" y1="40" x2="30" y2="40" stroke="#f07ec2" stroke-width="1.5"/><text x="38" y="44" font-size="11" font-weight="500" fill="#fff">Design grid</text><text x="112" y="44" font-size="11" fill="#c3cad6">±2.0 m (1σ): the WGS…</text>
+    </g>
+    <rect x="160" y="588" width="420" height="44" rx="6" fill="#26282c"/>
+    <text x="206" y="608" font-size="12" fill="#fff">‹  Mon, Apr 6  ›      4:00 PM UTC−7   ⚙</text>
+    <rect x="172" y="616" width="396" height="8" rx="3" fill="#3d7fd0"/>
+    <rect x="8" y="636" width="300" height="36" rx="6" fill="#0d0d0d" opacity="0.84"/>
+    <text x="18" y="659" font-size="11" fill="#c3c2b7">CESIUM ion   Upgrade for commercial use.   Data attribution</text>
+  </g>
+  <g font-size="13" fill="#1f2328">
+    <text x="772" y="44" font-size="16" font-weight="700">Stop 3 at 1 device pixel</text>
+    <g transform="translate(772 70)" fill="#4a4f57">
+      <text font-weight="600" fill="#1f2328">The target for 6b (ruling F30)</text>
+      <text y="18">Every line is WebGPU line-list: 1 device pixel,</text>
+      <text y="34">no halo, no glow. Hierarchy is color strength.</text>
+      <text y="64" font-weight="600" fill="#1f2328">Camera</text>
+      <text y="82">Over the grid's centre, 180 km range, 55° tilt,</text>
+      <text y="98">heading 0°: the grid fills about 70% of the view.</text>
+      <text y="128" font-weight="600" fill="#1f2328">The darker ground</text>
+      <text y="146">viewer.view.exposure = { eye: true,</text>
+      <text y="162">compensation: −0.6 }, eased in over the flight:</text>
+      <text y="178">the lit globe dims to ≈ 0.66×; the unlit lines,</text>
+      <text y="194">added after exposure, stay at full strength.</text>
+      <text y="210">Restored when the stop ends.</text>
+      <text y="240" font-weight="600" fill="#1f2328">Lines</text>
+      <text y="258">Major (10 km): engineering rose, alpha 1. Minor</text>
+      <text y="274">(2 km) at alpha 0.6, only under 60 km range.</text>
+      <text y="290">True north: Earth-fixed cyan, alpha 0.6, dashed as</text>
+      <text y="306">world-space segments (line-list can't dash).</text>
+      <text y="336" font-weight="600" fill="#1f2328">Labels</text>
+      <text y="354">HTML in the HUD host: body-sm 12 px, 600, white</text>
+      <text y="370">or the family tone, with a 1.5 px dark text halo.</text>
+      <text y="400" font-weight="600" fill="#1f2328">The convergence</text>
+      <text y="418">Real: −0° 39′ at the grid's west edge, about</text>
+      <text y="434">1 px over the view's height at this range. The</text>
+      <text y="450">mock leans it ×20 to show the idea; the caption</text>
+      <text y="466">and label carry the number. 6b may add a ×10</text>
+      <text y="482">exaggeration control, labelled, as R4 does for</text>
+      <text y="498">the frame bias, if the real lean doesn't read.</text>
+    </g>
+  </g>
+</svg>

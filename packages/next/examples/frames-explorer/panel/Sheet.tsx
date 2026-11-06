@@ -53,6 +53,22 @@ export function Split({
     return () => observer.disconnect();
   }, []);
   const full = sheet !== undefined && (userFull ?? short);
+  // Back to the split: bring the selected row into view (it couldn't scroll
+  // while the list was hidden).
+  useEffect(() => {
+    if (full) {
+      return;
+    }
+    // After the card's collapse has laid out (it opened while hidden).
+    const timer = setTimeout(
+      () =>
+        box.current
+          ?.querySelector('.fx-split-list .fx-row-button[aria-pressed="true"]')
+          ?.scrollIntoView({ block: "center" }),
+      250,
+    );
+    return () => clearTimeout(timer);
+  }, [full]);
   return (
     <div
       ref={box}

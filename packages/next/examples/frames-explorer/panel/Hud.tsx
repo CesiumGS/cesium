@@ -184,10 +184,12 @@ export function TourCaption({
       }}
     >
       <div className="fx-tour-head">
+        {/* Colors by token class, never MUI's color prop: the HUD is dark
+            in either scheme and MUI's palette follows the page (N2). */}
         <Typography
           variant="caption-lg"
-          color="textSecondary"
           render={<span />}
+          className="fx-hud-muted"
         >
           Stop {stop + 1} of {tour.length}
         </Typography>
@@ -207,7 +209,7 @@ export function TourCaption({
       >
         {s.title}
       </Typography>
-      <Typography variant="body-sm" render={<p />} aria-live="polite">
+      <Typography variant="body-sm" render={<p />}>
         {s.caption}
       </Typography>
       <div className="fx-tour-buttons">

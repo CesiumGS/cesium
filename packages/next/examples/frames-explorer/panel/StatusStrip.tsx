@@ -172,7 +172,7 @@ export function StatusStrip({
                 size="small"
                 variant="text"
                 color="error"
-                className="fx-count-fail"
+                className="fx-count-fail fx-link-button"
                 startIcon={<Icon href={svgStatusError} />}
                 onClick={() => onShowFailure(failures[0]!.id)}
               >
@@ -215,6 +215,7 @@ export function StatusStrip({
             Fetching {ITEM_DETAIL[s.item]}: {fetched(s)}
           </Typography>
           <LinearProgress
+            className="fx-progress-info"
             aria-label={`Fetching ${ITEM_LABEL[s.item]}`}
             {...(s.total !== undefined
               ? {
@@ -238,6 +239,7 @@ export function StatusStrip({
               size="small"
               variant="outlined"
               color="secondary"
+              className="fx-nowrap"
               onClick={() => actions.retryItem(s.item)}
             >
               Retry {ITEM_LABEL[s.item]}

@@ -29,9 +29,8 @@
     <circle cx="372" cy="372" r="252" fill="url(#atmo)"/>
     <circle cx="372" cy="372" r="232" fill="url(#day)"/>
     <g clip-path="url(#globe)" fill="#5c8f4e" opacity="0.9">
-      <!-- North America, stylized -->
-      <path d="M250 190 C300 160 380 170 430 200 C470 225 455 260 420 280 C400 300 380 330 350 360 C335 380 320 400 300 405 C285 380 270 350 250 330 C225 300 215 250 250 190 z"/>
-      <path d="M300 405 C320 430 330 470 345 520 C330 520 310 480 300 405 z"/>
+      <!-- North America, stylized, as seen from 135°W 25°N -->
+      <path d="M228 172 C262 146 318 134 378 132 C430 132 470 146 498 176 C512 196 520 222 540 252 C556 280 566 318 560 338 C548 340 540 326 528 318 C510 312 494 318 478 330 C462 344 452 360 470 392 C484 414 488 432 474 440 C458 420 440 396 424 376 C406 356 392 342 380 330 C366 318 352 296 344 282 C334 262 318 244 304 230 C288 214 266 204 244 200 C232 196 222 186 228 172 z"/>
     </g>
     <circle cx="372" cy="372" r="232" fill="url(#night)" clip-path="url(#globe)"/>
     <!-- Geocentric triads: x-ray inside the globe (dashed, 40%), full outside -->
@@ -54,12 +53,12 @@
     </g>
     <!-- The Sacramento site's ENU triad on the surface, 6% of the camera's distance -->
     <g stroke-width="2" fill="none">
-      <line x1="300" y1="285" x2="336" y2="292" stroke="#fc5855" marker-end="url(#ax)"/>
-      <line x1="300" y1="285" x2="306" y2="252" stroke="#5ad664" marker-end="url(#ax)"/>
-      <line x1="300" y1="285" x2="284" y2="262" stroke="#5d97f7" marker-end="url(#ax)"/>
+      <line x1="348" y1="272" x2="384" y2="279" stroke="#fc5855" marker-end="url(#ax)"/>
+      <line x1="348" y1="272" x2="354" y2="239" stroke="#5ad664" marker-end="url(#ax)"/>
+      <line x1="348" y1="272" x2="332" y2="249" stroke="#5d97f7" marker-end="url(#ax)"/>
     </g>
-    <circle cx="300" cy="285" r="3.5" fill="#3bcddc" stroke="#000" stroke-width="1"/>
-    <text x="312" y="312" font-size="12" font-weight="600" fill="#3bcddc" stroke="#000" stroke-width="3" stroke-opacity="0.8" paint-order="stroke">Sacramento ENU</text>
+    <circle cx="348" cy="272" r="3.5" fill="#3bcddc" stroke="#000" stroke-width="1"/>
+    <text x="360" y="298" font-size="12" font-weight="600" fill="#3bcddc" stroke="#000" stroke-width="3" stroke-opacity="0.8" paint-order="stroke">Sacramento ENU</text>
     <!-- Dyno's chrome, untouched -->
     <rect x="8" y="8" width="330" height="28" rx="6" fill="#0d0d0d" opacity="0.84"/>
     <text x="18" y="27" font-size="12" fill="#c3c2b7"><tspan font-weight="700" fill="#fff">2.0</tspan>  CPU 0.7 ms · GPU 4.8 ms · 5 tiles · settled</text>
@@ -119,7 +118,7 @@
     <circle cx="560" cy="58" r="10" fill="#1f6feb"/><text x="556" y="62">1</text>
     <circle cx="86" cy="220" r="10" fill="#1f6feb"/><text x="82" y="224">2</text>
     <circle cx="470" cy="122" r="10" fill="#1f6feb"/><text x="466" y="126">3</text>
-    <circle cx="268" cy="272" r="10" fill="#1f6feb"/><text x="264" y="276">4</text>
+    <circle cx="318" cy="262" r="10" fill="#1f6feb"/><text x="314" y="266">4</text>
     <circle cx="466" cy="478" r="10" fill="#1f6feb"/><text x="462" y="482">5</text>
     <circle cx="352" cy="42" r="10" fill="#1f6feb"/><text x="348" y="46">6</text>
   </g>

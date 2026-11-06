@@ -307,7 +307,7 @@ export const STUB_TREE: TreeNode = node(
             detail: "IAU 2006/2000A + EOP",
             accuracy: {
               radians: EOP_RAD,
-              note: "measured Earth orientation (UT1 35 µs, polar motion 0.1 mas). An angular bound: the root sum square of the UT1 rotation (σ_t · ω) and the polar-motion tilt, in radians; accuracyOf gives meters for a point",
+              note: "measured Earth orientation (UT1 35 µs, polar motion 0.1 mas). An angular bound: the Earth's spin (UT1) and the tilt of its axis (polar motion) combined, in radians; a point's error in metres is this times its distance from the geocentre",
             },
           },
           [

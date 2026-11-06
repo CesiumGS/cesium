@@ -191,7 +191,12 @@ export function Verify({
           )}
         </div>
         <div className="fx-verify-links">
-          <Button size="small" variant="text" onClick={showTryYourOwn}>
+          <Button
+            size="small"
+            variant="text"
+            className="fx-link-button"
+            onClick={showTryYourOwn}
+          >
             Try your own CRS
           </Button>
         </div>
