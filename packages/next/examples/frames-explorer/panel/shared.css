@@ -1,0 +1,180 @@
+/* Utilities shared by the panel's parts: sections, kinds, links, glossary words, row selectors. Imported in order by panel.css. */
+/* ------------------------------------------------------------- shared */
+
+.fx-muted {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.fx-strong {
+  font-weight: 600;
+}
+.fx-num {
+  font-variant-numeric: tabular-nums;
+}
+.fx-unbounded {
+  color: var(--stratakit-color-text-attention-base);
+}
+.fx-problem {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.fx-hint {
+  padding: var(--stratakit-space-200) 0;
+}
+.fx-code {
+  font-family: var(--stratakit-font-family-mono);
+  font-size: var(--stratakit-font-size-mono-sm);
+  line-height: var(--stratakit-line-height-mono-sm);
+  overflow-wrap: anywhere;
+}
+.fx-code-block {
+  display: block;
+  padding: var(--stratakit-space-150) var(--stratakit-space-200);
+  border-radius: var(--stratakit-radius-sm);
+  background: var(--stratakit-color-bg-mono-muted);
+  white-space: pre-wrap;
+}
+.fx-visually-hidden {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+/* An edge's kind: plain secondary text, not a pill (M12). */
+.fx-edge-kind {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.fx-accuracy-note {
+  white-space: normal;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+/* Fetching is blue in R14's vocabulary, not the accent (StrataKit's
+   LinearProgress takes no color="info"). */
+.fx-progress-info {
+  background: var(--stratakit-color-bg-info-muted);
+}
+.fx-progress-info .MuiLinearProgress-bar {
+  background: var(--stratakit-color-icon-info-base);
+}
+.fx-nowrap {
+  white-space: nowrap;
+}
+/* Text buttons that read as links (N-minor): underlined on hover and focus. */
+/* A link-like action that reads as one at rest (minor 10). */
+.fx-panel .fx-link-accent {
+  color: var(--stratakit-color-text-accent-strong);
+}
+.fx-panel .fx-link-button:hover,
+.fx-panel .fx-link-button:focus-visible {
+  text-decoration: underline;
+}
+.fx-hud .fx-hud-muted {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.fx-fail-text {
+  color: var(--stratakit-color-text-critical-base);
+}
+.fx-badge-content .MuiCircularProgress-root {
+  color: currentColor;
+}
+.fx-badge-content {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+  white-space: nowrap;
+}
+.fx-swatch {
+  flex: none;
+  display: inline-block;
+  inline-size: 10px;
+  block-size: 10px;
+  border-radius: var(--stratakit-radius-round);
+  background: var(--fx-family);
+}
+.fx-swatch-noedge,
+.fx-family-noedge {
+  --fx-family: var(--stratakit-color-icon-neutral-secondary);
+}
+.fx-swatch-unknown {
+  background: repeating-linear-gradient(
+    135deg,
+    var(--stratakit-color-text-attention-base) 0 2px,
+    transparent 2px 4px
+  );
+  box-shadow: inset 0 0 0 1px var(--stratakit-color-text-attention-base);
+}
+.fx-swatch-line {
+  inline-size: 14px;
+  block-size: 3px;
+  border-radius: 2px;
+  margin-block-start: 0.5em;
+}
+/* A glossary word: its definition is a click (or Enter) away. */
+.fx-panel .fx-term {
+  all: unset;
+  cursor: help;
+  text-decoration: underline dotted;
+  text-decoration-color: var(--stratakit-color-text-neutral-tertiary);
+  text-underline-offset: 3px;
+}
+.fx-panel .fx-term:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+.fx-term-popover {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-100);
+  max-inline-size: 300px;
+  padding: var(--stratakit-space-200);
+}
+.fx-term-popover > p:first-child {
+  font-weight: 600;
+}
+.fx-accuracy {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.fx-dl {
+  margin: 0;
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--stratakit-space-100) var(--stratakit-space-300);
+}
+.fx-dl dt {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.fx-dl dd {
+  margin: 0;
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+.fx-empty {
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-200);
+  padding: var(--stratakit-space-600) var(--stratakit-space-300);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+/* A whole-row selector: the text is the button. */
+.fx-panel .fx-row-button {
+  all: unset;
+  cursor: pointer;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  color: var(--stratakit-color-text-neutral-primary);
+}
+.fx-panel .fx-row-button:hover {
+  text-decoration: underline;
+}
+.fx-panel .fx-row-button:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: 2px;
+  border-radius: 2px;
+}

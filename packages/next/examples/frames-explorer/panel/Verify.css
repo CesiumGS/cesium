@@ -1,0 +1,276 @@
+/* Verification's questions and results (Verify.tsx, QuestionCard.tsx, ToleranceBar.tsx). Imported in order by panel.css. */
+/* ---------------------------------------------------------- verify */
+
+.fx-verify-list-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-300);
+  padding-block: var(--stratakit-space-200);
+}
+.fx-verify-tools {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-200);
+}
+.fx-lenses {
+  flex-wrap: wrap;
+}
+.fx-run {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--stratakit-space-300);
+  font-variant-numeric: tabular-nums;
+}
+.fx-verify-links {
+  display: flex;
+  margin-block: calc(-1 * var(--stratakit-space-100));
+}
+.fx-empty-filter {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--stratakit-space-200);
+}
+.fx-filter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--stratakit-space-200);
+  padding: var(--stratakit-space-100) var(--stratakit-space-200);
+  border-radius: var(--stratakit-radius-sm);
+  background: var(--stratakit-color-bg-page-depth);
+}
+.fx-cards {
+  display: flex;
+  flex-direction: column;
+}
+.fx-card {
+  background: transparent;
+}
+/* Question and answer on the left, the verdict in a column on the right. */
+.fx-card-head {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--stratakit-space-50) var(--stratakit-space-300);
+  align-items: start;
+  min-inline-size: 0;
+}
+.fx-card-status {
+  grid-row: 1 / span 2;
+  grid-column: 2;
+  padding-block-start: 1px;
+}
+.fx-card-answer {
+  grid-column: 1;
+}
+.fx-card-question {
+  font-size: var(--stratakit-font-size-body-md);
+  line-height: var(--stratakit-line-height-body-md);
+  font-weight: 500;
+}
+.fx-card-answer {
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+.fx-card-status-text {
+  font-weight: 400;
+}
+.fx-card-answer-fail {
+  color: var(--stratakit-color-text-critical-base);
+}
+/* A passing verdict: plain text and a small icon, no badge (I10). */
+.fx-verdict-pass {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.fx-verdict-pass svg {
+  color: var(--stratakit-color-icon-positive-base);
+}
+/* The body starts under the question, not a marker's width in. */
+.fx-card-body {
+  padding-inline: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-300);
+}
+.fx-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--stratakit-space-200);
+  flex-wrap: wrap;
+}
+.fx-card-buttons {
+  display: inline-flex;
+  gap: var(--stratakit-space-200);
+}
+/* Fixed columns so the check's title takes what's left and never pushes the
+   verdict out of the column. */
+.fx-results {
+  table-layout: fixed;
+  inline-size: 100%;
+}
+.fx-col-value {
+  inline-size: 8rem;
+}
+.fx-col-effect {
+  inline-size: 5.5rem;
+}
+.fx-col-accuracy {
+  inline-size: 8rem;
+}
+.fx-col-status {
+  inline-size: 6rem;
+}
+/* Accuracy notes wrap inside their column; nothing spills into Status. */
+.fx-results .fx-acc .fx-accuracy {
+  display: inline;
+  white-space: normal;
+}
+/* Long numbers ("1.1 × 10⁻¹² design units") wrap in their own column. */
+.fx-results .fx-tol-text {
+  white-space: normal;
+}
+.fx-results td {
+  min-inline-size: 0;
+  overflow-wrap: break-word;
+}
+.fx-results th,
+.fx-results td {
+  padding: var(--stratakit-space-150) var(--stratakit-space-200);
+  vertical-align: top;
+}
+.fx-results th:first-child,
+.fx-results td:first-child {
+  padding-inline-start: 0;
+}
+.fx-results th:last-child,
+.fx-results td:last-child {
+  padding-inline-end: 0;
+}
+.fx-results th {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+/* The selected row: a neutral surface and an accent bar, not a green wash (I10). */
+.fx-results .fx-result.Mui-selected,
+.fx-results .fx-result.Mui-selected:hover {
+  background: var(--stratakit-color-bg-glow-on-surface-neutral-pressed);
+}
+.fx-results .fx-result.Mui-selected > td:first-child {
+  box-shadow: inset 2px 0 0 var(--stratakit-color-border-accent-strong);
+  padding-inline-start: var(--stratakit-space-200);
+}
+.fx-fail-row .fx-row-button {
+  color: var(--stratakit-color-text-critical-base);
+}
+.fx-fp {
+  display: inline-block;
+  margin-block-start: var(--stratakit-space-50);
+  color: var(--stratakit-color-text-positive-base);
+  font-size: var(--stratakit-font-size-caption-lg);
+}
+.fx-fp-diff {
+  color: var(--stratakit-color-text-critical-base);
+  font-weight: 600;
+}
+.fx-user-row {
+  background: var(--stratakit-color-bg-info-transparent);
+}
+.fx-nobar {
+  white-space: nowrap;
+}
+
+/* Value against tolerance: a bar, a tick, and the numbers. */
+.fx-tol {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.fx-tol-bar {
+  position: relative;
+  display: block;
+  inline-size: 100%;
+  block-size: 6px;
+  box-sizing: border-box;
+  border-radius: 3px;
+  /* A 1 px border-neutral-base outline: 3.4:1 on the page, so the track's
+     end and the tolerance's place show (I11). */
+  border: 1px solid var(--stratakit-color-border-neutral-base);
+  background: transparent;
+}
+.fx-tol-fill {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  min-inline-size: 2px;
+  border-radius: 3px;
+  background: var(--stratakit-color-icon-positive-base);
+}
+.fx-over .fx-tol-fill {
+  background: var(--stratakit-color-icon-critical-base);
+}
+.fx-tol-tick {
+  position: absolute;
+  inset-block: -3px;
+  inline-size: 2px;
+  margin-inline-start: -1px;
+  background: var(--stratakit-color-text-neutral-primary);
+}
+.fx-tol-text {
+  font-size: var(--stratakit-font-size-caption-lg);
+  white-space: nowrap;
+}
+.fx-tol-large {
+  min-inline-size: 0;
+  inline-size: 100%;
+}
+.fx-tol-large .fx-tol-bar {
+  block-size: 10px;
+  border-radius: 5px;
+}
+.fx-tol-scale {
+  position: relative;
+  display: block;
+  block-size: 1.8em;
+  color: var(--stratakit-color-text-neutral-tertiary);
+  font-size: var(--stratakit-font-size-caption-md);
+}
+.fx-tol-decade {
+  position: absolute;
+  inset-block-start: 0;
+  border-inline-start: 1px solid var(--stratakit-color-border-neutral-base);
+  block-size: 4px;
+  white-space: nowrap;
+}
+.fx-tol-decade:first-child {
+  border-inline-start-color: transparent;
+}
+/* The labels sit under their tick; the first one starts at it. */
+.fx-tol-decade:not(:empty) {
+  block-size: auto;
+  padding-block-start: 4px;
+  transform: translateX(-50%);
+}
+.fx-tol-decade:first-child:not(:empty) {
+  transform: none;
+}
+.fx-tol-decade:last-child:not(:empty) {
+  transform: translateX(-100%);
+}
+.fx-tol-decade-tol {
+  border-inline-start-color: var(--stratakit-color-text-neutral-primary);
+}
+.fx-tol-large .fx-tol-text {
+  font-size: var(--stratakit-font-size-body-sm);
+}

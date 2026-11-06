@@ -1,0 +1,69 @@
+/* The knobs, the checked-setup marker and the time (Knobs.tsx). Imported in order by panel.css. */
+/* The knobs, the checked-setup marker and the time. */
+.fx-knobs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-400);
+}
+.fx-checked-marker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--stratakit-space-150) var(--stratakit-space-200);
+  padding: var(--stratakit-space-200) var(--stratakit-space-300);
+  border-radius: var(--stratakit-radius-md);
+  background: var(--stratakit-color-bg-page-depth);
+}
+.fx-checked-marker > :nth-child(2) {
+  flex: 1 1 12em;
+}
+.fx-checked-marker .MuiSvgIcon-root,
+.fx-checked-marker > svg {
+  color: var(--stratakit-color-icon-positive-base);
+}
+.fx-off-checked {
+  box-shadow: inset 2px 0 0 var(--stratakit-color-border-attention-base);
+}
+.fx-marker-dot {
+  flex: none;
+  inline-size: 8px;
+  block-size: 8px;
+  border-radius: var(--stratakit-radius-round);
+  background: var(--stratakit-color-text-attention-base);
+}
+.fx-knob {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-100);
+}
+.fx-knob-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--stratakit-space-200);
+}
+.fx-knob-label {
+  font-weight: 600;
+}
+.fx-knob-value {
+  font-size: var(--stratakit-font-size-body-md);
+}
+.fx-knob .MuiSlider-root {
+  margin-inline: var(--stratakit-space-200);
+  inline-size: calc(100% - 2 * var(--stratakit-space-200));
+}
+.fx-knob .MuiSlider-markLabel {
+  font-size: var(--stratakit-font-size-caption-md);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.fx-knob-choice {
+  flex-wrap: wrap;
+}
+.fx-time-row {
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-300);
+}
+.fx-time-row > .MuiButton-root {
+  flex: none;
+}

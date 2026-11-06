@@ -1,0 +1,79 @@
+/* The narrow panel (380 px, container queries), for every part. Imported in order by panel.css. */
+/* ----------------------------------------------------- narrow panel */
+
+/*
+ * Result rows below 480 px of panel (C4): each row two lines, the name and
+ * verdict over the bar, effect and accuracy; the header row hidden (the
+ * table's roles are explicit, so it stays a table to assistive tech).
+ */
+@container fx-panel (max-width: 480px) {
+  .fx-results,
+  .fx-results tbody {
+    display: block;
+  }
+  .fx-results colgroup,
+  .fx-results thead {
+    display: none;
+  }
+  .fx-results .fx-result {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "check status"
+      "value value"
+      "effect acc";
+    column-gap: var(--stratakit-space-300);
+    padding-block: var(--stratakit-space-150);
+    border-block-end: 1px solid var(--stratakit-color-border-neutral-muted);
+  }
+  .fx-results .fx-result > td {
+    display: block;
+    padding: 0;
+    border: 0;
+    font-size: var(--stratakit-font-size-body-sm);
+    line-height: var(--stratakit-line-height-body-sm);
+  }
+  .fx-results .fx-check {
+    grid-area: check;
+  }
+  .fx-results .fx-status {
+    grid-area: status;
+  }
+  .fx-results .fx-value {
+    grid-area: value;
+    padding-block: var(--stratakit-space-100);
+  }
+  .fx-results .fx-effect {
+    grid-area: effect;
+  }
+  .fx-results .fx-acc {
+    grid-area: acc;
+    justify-self: end;
+  }
+  .fx-results:not(.fx-has-effects) .fx-acc {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+  .fx-results .fx-effect::before,
+  .fx-results .fx-acc::before {
+    content: attr(data-label) " ";
+    color: var(--stratakit-color-text-neutral-secondary);
+  }
+  .fx-results .fx-result.Mui-selected > td:first-child {
+    box-shadow: none;
+    padding-inline-start: 0;
+  }
+  .fx-results .fx-result.Mui-selected {
+    box-shadow: inset 2px 0 0 var(--stratakit-color-border-accent-strong);
+    padding-inline-start: var(--stratakit-space-200);
+  }
+}
+
+@container fx-panel (max-width: 420px) {
+  .fx-run,
+  .fx-clock,
+  .fx-tree-tools {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

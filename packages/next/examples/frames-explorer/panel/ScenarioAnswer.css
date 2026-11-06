@@ -1,0 +1,66 @@
+/* The scenario's answer and its published counterpart (ScenarioAnswer.tsx). Imported in order by panel.css. */
+/* The answer: its figure, its sentence, its accuracy. */
+.fx-answer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-150);
+}
+.fx-answer-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-100);
+  transition: opacity 200ms var(--fx-ease);
+}
+.fx-answer-figure {
+  font-size: var(--stratakit-font-size-headline-sm);
+  line-height: var(--stratakit-line-height-headline-sm);
+  font-weight: 600;
+}
+.fx-answer-aside {
+  font-size: var(--stratakit-font-size-body-md);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+/* The headline's published counterpart, and ours against it. */
+.fx-answer-published {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--stratakit-space-150) var(--stratakit-space-200);
+  border-radius: var(--stratakit-radius-sm);
+  background: var(--stratakit-color-bg-page-depth);
+}
+.fx-answer-comparison {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.fx-published-checked .fx-answer-comparison {
+  color: var(--stratakit-color-text-neutral-primary);
+}
+.fx-answer-text {
+  font-size: var(--stratakit-font-size-body-md);
+  line-height: var(--stratakit-line-height-body-md);
+  text-wrap: pretty;
+}
+.fx-answer-acc {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.fx-answer-acc.fx-unbounded {
+  color: var(--stratakit-color-text-attention-base);
+}
+.fx-answer-acc-label {
+  font-weight: 600;
+  color: var(--stratakit-color-text-neutral-primary);
+}
+.fx-answer-wait {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-150);
+  color: var(--stratakit-color-text-info-base);
+}
+.fx-answer-note {
+  padding-inline-start: var(--stratakit-space-200);
+  border-inline-start: 2px solid var(--stratakit-color-border-attention-base);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.fx-stale {
+  opacity: 0.5;
+}

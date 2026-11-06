@@ -1,0 +1,36 @@
+/*
+ * The frames explorer's panel and HUD (examples/frames-explorer/DESIGN.md).
+ * StrataKit tokens only, with one exception: the frame-family palette and the
+ * axis colors, the 3D viewport's HUD colors (bench/suite/DESIGN.md), each
+ * with a tone for light surfaces and one for dark, checked to 4.5:1 on
+ * StrataKit's page and elevation surfaces in both schemes.
+ */
+
+.fx-panel,
+.fx-hud,
+.fx-tree-dialog {
+  --fx-celestial: light-dark(#6e44bc, #b298f9);
+  --fx-earth: light-dark(#02717a, #3bcddc);
+  --fx-moon: light-dark(#525f6f, #bfc8d4);
+  --fx-engineering: light-dark(#ae2881, #f07ec2);
+  --fx-trajectory: light-dark(#ae5517, #fc9252);
+  --fx-axis-x: light-dark(#cc272e, #fc5855);
+  --fx-axis-y: light-dark(#1b7e2a, #5ad664);
+  --fx-axis-z: light-dark(#0559d2, #5d97f7);
+  --fx-ease: cubic-bezier(0.2, 0, 0, 1);
+}
+.fx-family-celestial {
+  --fx-family: var(--fx-celestial);
+}
+.fx-family-earth {
+  --fx-family: var(--fx-earth);
+}
+.fx-family-moon {
+  --fx-family: var(--fx-moon);
+}
+.fx-family-engineering {
+  --fx-family: var(--fx-engineering);
+}
+.fx-family-trajectory {
+  --fx-family: var(--fx-trajectory);
+}

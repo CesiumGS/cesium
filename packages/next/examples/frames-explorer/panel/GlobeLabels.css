@@ -1,0 +1,99 @@
+/* Labels on the globe (globe.ts), in the HUD. Imported in order by panel.css. */
+/* ------------------------------------------------------- globe labels */
+
+/*
+ * HTML labels over the view (DESIGN.md "Labels"): body-sm 600 in the
+ * family's on-dark tone (white for an overlay's), with a dark text halo,
+ * placed by globe.ts. They never take the pointer.
+ */
+.fx-globe-labels {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.fx-globe-label {
+  position: absolute;
+  left: 0;
+  top: 0;
+  font: 600 var(--stratakit-font-size-body-sm, 12px) / 1.2
+    var(--stratakit-font-family-sans, system-ui, sans-serif);
+  color: #ffffff;
+  white-space: nowrap;
+  paint-order: stroke;
+  -webkit-text-stroke: 3px rgb(0 0 0 / 0.75);
+  will-change: transform;
+}
+.fx-globe-label[data-family="celestial"] {
+  color: #b298f9;
+}
+.fx-globe-label[data-family="earth"] {
+  color: #3bcddc;
+}
+.fx-globe-label[data-family="moon"] {
+  color: #bfc8d4;
+}
+.fx-globe-label[data-family="engineering"] {
+  color: #f07ec2;
+}
+.fx-globe-label[data-family="trajectory"] {
+  color: #fc9252;
+}
+.fx-globe-label-dim {
+  opacity: 0;
+}
+/* A callout: the text 48 px right of its point, a 1 px leader between
+   (DESIGN.md "Labels"; S-C1's sag, S-I8's lunar clock, Orion now). */
+.fx-globe-label-callout::before {
+  content: "";
+  position: absolute;
+  right: calc(100% + 2px);
+  top: 50%;
+  width: 46px;
+  border-top: 1px solid currentColor;
+}
+/*
+ * A position marker (Orion now, fix 1): a 10 px dot with a dark halo on the
+ * point itself, the text beside it; off the view, an arrow at the edge
+ * pointing toward it instead of the dot.
+ */
+.fx-globe-label-marker::before {
+  content: "";
+  position: absolute;
+  left: calc(var(--fx-ax, -12px) - 5px);
+  top: calc(var(--fx-ay, 8px) - 5px);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow:
+    0 0 0 2px rgb(0 0 0 / 0.75),
+    0 0 0 6px color-mix(in srgb, currentColor 30%, transparent);
+}
+.fx-globe-label-offscreen::before {
+  width: 0;
+  height: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  border-block: 6px solid transparent;
+  border-inline-start: 10px solid currentColor;
+  transform: rotate(var(--fx-arrow, 0rad));
+  filter: drop-shadow(0 0 1px rgb(0 0 0 / 0.9));
+}
+/* The selected frame's label in white (DESIGN.md "A selection on the globe"). */
+.fx-globe-label.fx-globe-label-selected {
+  color: #ffffff;
+}
+/* Origins under 24 px apart on screen: the lower-priority label fades out. */
+.fx-globe-label {
+  transition: opacity 160ms ease-out;
+}
+.fx-globe-label.fx-globe-label-near {
+  opacity: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fx-globe-label {
+    transition: none;
+  }
+}

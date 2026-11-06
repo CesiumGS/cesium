@@ -3,7 +3,7 @@
 // in the panel), and the scenario's answer at the top right. Both are rendered from the panel's React tree into the
 // viewer's container (main.ts makes the host), clear of Dyno's inspector
 // (top left) and credits (bottom left). The HUD is dark in either scheme, as
-// the viewer's own widgets are (I16): panel.css points its StrataKit tokens
+// the viewer's own widgets are (I16): Hud.css points its StrataKit tokens
 // at the viewer's HUD theme.
 import {
   Button,

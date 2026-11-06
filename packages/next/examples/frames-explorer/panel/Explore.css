@@ -1,0 +1,359 @@
+/* Explore (Explore.tsx, FrameTree.tsx, BudgetBar.tsx): the tree rows, the walk, the budget bar, the overlays and the clock. Imported in order by panel.css. */
+/* ---------------------------------------------------------- explore */
+
+.fx-family-key {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--stratakit-space-50) var(--stratakit-space-300);
+}
+.fx-family-key li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.fx-tree {
+  margin-inline: calc(-1 * var(--stratakit-space-100));
+}
+.fx-edge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-150);
+  flex-wrap: wrap;
+}
+/* The selected frame's path to the root: a quiet band, the selected row's own look kept. */
+.fx-tree-tools {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--stratakit-space-200);
+}
+/*
+ * The highlighted path (I8): a 3 px bar in each row's family color at the
+ * tree's inline start, growing root first with the walk's stagger, and a
+ * ring on the swatch. Not the hover color.
+ */
+.fx-tree-item {
+  position: relative;
+}
+.fx-tree-item.fx-on-path::before {
+  content: "";
+  position: absolute;
+  inset-block: 2px;
+  inset-inline-start: 0;
+  inline-size: 3px;
+  border-radius: 2px;
+  background: var(--fx-family);
+  transform-origin: top;
+  animation: fx-grow-down 280ms var(--fx-ease) both;
+  animation-delay: calc(var(--i, 0) * 90ms);
+}
+.fx-tree-item .fx-swatch {
+  background: var(--fx-family);
+}
+.fx-tree-item.fx-on-path .fx-swatch {
+  box-shadow:
+    0 0 0 2px var(--stratakit-color-bg-page-base),
+    0 0 0 3px var(--fx-family);
+}
+
+.fx-walk {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-300);
+}
+.fx-walk-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--stratakit-space-200);
+}
+.fx-walk-edges {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+/* Each edge a stop on a line from the root: the dot in its family's color. */
+.fx-walk-edge {
+  position: relative;
+  display: grid;
+  grid-template-columns: 14px minmax(0, 1fr);
+  gap: var(--stratakit-space-200);
+  padding-block-end: var(--stratakit-space-300);
+  animation: fx-in 320ms var(--fx-ease) both;
+  animation-delay: calc(var(--i, 0) * 90ms);
+}
+.fx-walk-edge::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: 6px;
+  inset-block: 14px 0;
+  inline-size: 2px;
+  background: var(--stratakit-color-border-neutral-muted);
+}
+.fx-walk-edge:last-child::before {
+  display: none;
+}
+.fx-walk-dot {
+  inline-size: 10px;
+  block-size: 10px;
+  margin: 4px 2px 0;
+  border-radius: var(--stratakit-radius-round);
+  background: var(--fx-family);
+}
+.fx-walk-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-50);
+  min-inline-size: 0;
+}
+.fx-walk-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--stratakit-space-100) var(--stratakit-space-200);
+}
+.fx-walk-acc {
+  margin-inline-start: auto;
+}
+.fx-walk-node {
+  position: relative;
+  display: grid;
+  grid-template-columns: 14px minmax(0, 1fr);
+  gap: var(--stratakit-space-200);
+  padding-block-end: var(--stratakit-space-300);
+  animation: fx-in 320ms var(--fx-ease) both;
+  animation-delay: calc(var(--i, 0) * 90ms);
+}
+.fx-walk-node::before {
+  content: "";
+  inline-size: 10px;
+  block-size: 10px;
+  margin: 4px 2px 0;
+  box-sizing: border-box;
+  border: 2px solid var(--stratakit-color-text-neutral-primary);
+  border-radius: var(--stratakit-radius-sm);
+}
+.fx-walk-node::after {
+  content: "";
+  position: absolute;
+  inset-inline-start: 6px;
+  inset-block: 14px 0;
+  inline-size: 2px;
+  background: var(--stratakit-color-border-neutral-muted);
+}
+.fx-walk-node-label {
+  grid-column: 2;
+  font-weight: 600;
+}
+.fx-walk-adds {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-50);
+  margin-block-start: var(--stratakit-space-50);
+  padding-inline-start: var(--stratakit-space-200);
+  border-inline-start: 2px solid var(--stratakit-color-border-neutral-muted);
+}
+.fx-walk-note {
+  padding: var(--stratakit-space-150) var(--stratakit-space-200);
+  border-radius: var(--stratakit-radius-sm);
+  background: var(--stratakit-color-bg-page-depth);
+}
+.fx-walk-ref {
+  min-inline-size: 7.5rem;
+}
+.fx-walk-total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--stratakit-space-200);
+}
+/* A not-bounded total's reason, on its own line under the headline (S-I9). */
+.fx-walk-why {
+  margin: 0 0 var(--stratakit-space-200);
+  overflow-wrap: anywhere;
+}
+
+.fx-budget {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-200);
+}
+.fx-budget-total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--stratakit-space-200);
+}
+.fx-budget-value {
+  font-size: var(--stratakit-font-size-headline-sm);
+  line-height: var(--stratakit-line-height-headline-sm);
+  font-weight: 600;
+}
+.fx-budget-bar {
+  display: flex;
+  gap: 2px;
+  block-size: 10px;
+  border-radius: var(--stratakit-radius-sm);
+  overflow: hidden;
+  background: var(--stratakit-color-bg-neutral-base);
+}
+.fx-budget-seg {
+  flex-basis: 0;
+  min-inline-size: 3px;
+  background: var(--fx-family);
+  transform-origin: left center;
+  animation: fx-grow 520ms var(--fx-ease) both;
+  animation-delay: calc(240ms + var(--i, 0) * 90ms);
+}
+.fx-budget-unknown {
+  flex: 0 0 18px;
+  background: repeating-linear-gradient(
+    135deg,
+    var(--stratakit-color-text-attention-base) 0 3px,
+    transparent 3px 6px
+  );
+}
+.fx-terms {
+  inline-size: 100%;
+  border-collapse: collapse;
+  font-size: var(--stratakit-font-size-body-sm);
+}
+.fx-terms th,
+.fx-terms td {
+  text-align: start;
+  vertical-align: top;
+  padding: var(--stratakit-space-100) 0;
+  border-block-start: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.fx-terms thead th {
+  border-block-start: 0;
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-weight: 400;
+}
+.fx-terms td.fx-num,
+.fx-terms th.fx-num {
+  text-align: end;
+  padding-inline-start: var(--stratakit-space-300);
+  white-space: nowrap;
+}
+.fx-terms tbody th {
+  font-weight: 500;
+}
+.fx-terms tbody th {
+  display: flex;
+  gap: var(--stratakit-space-200);
+}
+.fx-terms tbody th .fx-swatch {
+  margin-block-start: 0.3em;
+}
+.fx-term-note {
+  display: block;
+  font-weight: 400;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+
+.fx-overlays {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.fx-overlay {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-50);
+  padding-block: var(--stratakit-space-150);
+  border-block-start: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.fx-overlay:first-child {
+  border-block-start: 0;
+}
+.fx-overlay-head {
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-200);
+}
+.fx-overlay-label {
+  font-size: var(--stratakit-font-size-body-md);
+  line-height: var(--stratakit-line-height-body-md);
+}
+.fx-overlay-wait {
+  margin-inline-start: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+  color: var(--stratakit-color-text-info-base);
+  white-space: nowrap;
+}
+/* Under the label, past the switch. */
+.fx-overlay-acc,
+.fx-overlay-options,
+.fx-overlay-detail,
+.fx-overlay-drawing {
+  padding-inline-start: 44px;
+}
+.fx-overlay-detail > summary {
+  cursor: pointer;
+  color: var(--stratakit-color-text-accent-strong);
+  width: fit-content;
+}
+.fx-overlay-detail > summary:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: 2px;
+}
+.fx-overlay-detail > p {
+  margin-block: var(--stratakit-space-100) 0;
+}
+.fx-overlay-drawing {
+  margin: 0;
+}
+/* A switch's label wraps at a 380 px panel rather than clipping (minor 4). */
+.fx-overlay-options .fx-option-label {
+  white-space: normal;
+}
+.fx-overlay-acc {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.fx-overlay-acc.fx-unbounded {
+  color: var(--stratakit-color-text-attention-base);
+}
+.fx-overlay-options {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--stratakit-space-200) var(--stratakit-space-300);
+  padding-block: var(--stratakit-space-150);
+}
+.fx-overlay-options > .MuiSlider-root {
+  flex: 1;
+  min-inline-size: 140px;
+}
+.fx-overlay-grid > * {
+  flex: 1 1 200px;
+}
+.fx-option-label {
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.fx-clock {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--stratakit-space-300);
+  flex-wrap: wrap;
+}
+.fx-clock-time {
+  font-size: var(--stratakit-font-size-body-lg);
+  line-height: var(--stratakit-line-height-body-lg);
+  font-weight: 600;
+}

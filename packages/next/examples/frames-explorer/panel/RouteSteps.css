@@ -1,0 +1,89 @@
+/* The route under the tree (RouteSteps.tsx). Imported in order by panel.css. */
+/* The route, spelled out under the tree: one numbered step per edge. */
+.fx-route {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.fx-route li {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) auto;
+  gap: var(--stratakit-space-200);
+  align-items: baseline;
+  padding-block: var(--stratakit-space-100);
+  border-block-end: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.fx-route-n {
+  inline-size: 18px;
+  block-size: 18px;
+  border-radius: var(--stratakit-radius-round);
+  display: inline-grid;
+  place-items: center;
+  font-size: var(--stratakit-font-size-caption-md);
+  font-weight: 600;
+  color: var(--stratakit-color-bg-page-base);
+  background: var(--stratakit-color-border-accent-strong);
+}
+.fx-route-start .fx-route-n {
+  background: var(--fx-trajectory);
+}
+.fx-route-text {
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+}
+.fx-route-title {
+  font-weight: 600;
+}
+.fx-route-does {
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-size: var(--stratakit-font-size-caption-lg);
+  line-height: var(--stratakit-line-height-caption-lg);
+}
+.fx-route-acc {
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-size: var(--stratakit-font-size-caption-lg);
+  white-space: nowrap;
+}
+.fx-scenario-question {
+  font-weight: 600;
+  text-wrap: balance;
+  min-inline-size: 0;
+}
+.fx-tree-section {
+  gap: var(--stratakit-space-200);
+}
+.fx-diagram-key {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--stratakit-space-50) var(--stratakit-space-400);
+  font-size: var(--stratakit-font-size-caption-lg);
+  line-height: var(--stratakit-line-height-caption-lg);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.fx-diagram-key li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+}
+.fx-key-glyph {
+  inline-size: 8px;
+  block-size: 8px;
+  border-radius: var(--stratakit-radius-round);
+  background: var(--stratakit-color-text-neutral-secondary);
+}
+.fx-key-added {
+  border-radius: 1px;
+  transform: rotate(45deg) scale(0.9);
+}
+.fx-key-line {
+  inline-size: 16px;
+  block-size: 2px;
+  border-radius: 1px;
+  background: var(--stratakit-color-text-neutral-primary);
+}
