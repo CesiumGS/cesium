@@ -260,10 +260,12 @@ would describe something nobody can see. So the design grid's true-north
 lines are drawn with their convergence **×20** by default, as R4 draws the
 frame bias: each line is leaned from the grid line through the same E by 20
 times its true offset (display only; the geometry builder's
-`exaggeration`). It is never silent: the globe labels the line "true north,
-convergence ×20", the legend's and the overlay's accuracy line says "true
-north with its convergence drawn ×20", and the caption keeps the real angle
-(−0° 39′). The design grid's options hold a **Show true scale** switch that
+`exaggeration`). It is never silent, and it always names what is multiplied:
+the angle. The globe labels the line "true north, angle ×20", the legend's and
+the overlay's accuracy line says "true north with its convergence angle drawn
+20 times larger", and the caption keeps the real angle (−0° 39′) (owner's
+note, 2026-11-06: "×20" alone read as a distance). Stops 3 and 4 set the
+clock to 13:00 PDT on the flyby day, so California is in daylight. The design grid's options hold a **Show true scale** switch that
 redraws the lines at ×1 (the label then reads "true north"). The grid lines
 themselves are never exaggerated.
 

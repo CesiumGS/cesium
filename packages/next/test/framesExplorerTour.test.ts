@@ -294,3 +294,30 @@ describe("what Run this group runs", () => {
     );
   });
 });
+
+describe("tour stops 3 and 4: California in daylight", () => {
+  // Local mean solar time at Sacramento (121.5° W): UTC hours − 121.5/15.
+  const solarHour = (iso: string) => {
+    const d = new Date(iso);
+    const h = d.getUTCHours() + d.getUTCMinutes() / 60 - 121.5 / 15;
+    return (h + 24) % 24;
+  };
+
+  for (const id of ["design-grid", "rigid-exact"]) {
+    it(`${id} sets the clock to around local noon`, () => {
+      const time = stop(id).time;
+      expect(time).toBeDefined();
+      const h = solarHour(time!);
+      expect(h).toBeGreaterThan(10);
+      expect(h).toBeLessThan(14);
+    });
+  }
+
+  it("says what the ×20 multiplies: the convergence angle", () => {
+    expect(stop("design-grid").caption).toMatch(/angle .*20 times/);
+  });
+
+  it("says what the ×50 multiplies: the separation", () => {
+    expect(stop("rigid-exact").caption).toMatch(/separation .*50 times/);
+  });
+});
