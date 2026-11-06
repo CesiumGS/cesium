@@ -78,6 +78,20 @@ describe("fresnel", () => {
     }
   });
 
+  it("keeps the phase πt²/2 exact at large t (reduced mod 4)", () => {
+    // References from A&S 7.3.27/28 with t² reduced mod 4 exactly (Python
+    // Fraction). Plain π·t·t/2 in float64 is off by ~4e-13 here.
+    const large: [number, number, number][] = [
+      [10000.37, 0.5000067921155849, 0.4999689033116106],
+      [12345.678, 0.500023334695318, 0.5000109663298015],
+    ];
+    for (const [t, c, s] of large) {
+      const [C, S] = fresnel(t);
+      expect(Math.abs(C - c)).toBeLessThan(5e-15);
+      expect(Math.abs(S - s)).toBeLessThan(5e-15);
+    }
+  });
+
   it("is odd in t", () => {
     for (const t of [1e-9, 0.3, 1.2, 1.5, 1.7, 3, 10, 123.4]) {
       const [C, S] = fresnel(t);
@@ -310,6 +324,108 @@ describe("a line, a spiral ∞ → 800, an arc of 800, a spiral 800 → ∞, a l
   });
 });
 
+describe("spirals that are hard to evaluate or to project onto", () => {
+  it("evaluates partial spirals of nearly equal radii within 1e-9", () => {
+    // The Fresnel-difference form loses ~√(πL/|Δκ|)·1e-16 plus the phase
+    // κ0²/2c·1e-16·L; these fall back to quadrature of the heading.
+    for (const endRadius of [800.001, 800.00001, 800.0000001]) {
+      const k0 = 1 / 800;
+      const c = (1 / endRadius - k0) / 200;
+      const alignment = new Alignment({
+        name: "near-arc",
+        start: [0, 0],
+        startAzimuth: Math.PI / 2,
+        startStation: 0,
+        horizontal: [
+          { kind: "spiral", length: 200, startRadius: 800, endRadius },
+        ],
+      });
+      for (const s of [50, 133.3, 200]) {
+        const [x, y] = quadrature((u) => k0 * u + (c * u * u) / 2, s);
+        const p = alignment.pointAt(s);
+        expect(Math.abs(p[0]! - x)).toBeLessThan(1e-9);
+        expect(Math.abs(p[1]! - y)).toBeLessThan(1e-9);
+        const r = alignment.stationOffset(alignment.pointAt(s, 9));
+        expect(Math.abs(r.station - s)).toBeLessThan(1e-9);
+        expect(Math.abs(r.offset - 9)).toBeLessThan(1e-9);
+      }
+    }
+  });
+
+  const tight = (startRadius: number, endRadius: number, length: number) =>
+    new Alignment({
+      name: "tight",
+      start: [0, 0],
+      startAzimuth: 0,
+      startStation: 0,
+      horizontal: [{ kind: "spiral", length, startRadius, endRadius }],
+    });
+
+  it("finds the interior foot on a spiral turning more than 1.5 rad", () => {
+    // f(s) = (P − X)·T is sinusoidal in heading here, so seeds at the chord
+    // projection and the ends all miss the nearest foot.
+    const alignment = tight(300, 60, 400);
+    for (const o of [240, 300]) {
+      const r = alignment.stationOffset(alignment.pointAt(280, o));
+      expect(Math.abs(r.station - 280)).toBeLessThan(1e-9);
+      expect(Math.abs(r.offset - o)).toBeLessThan(1e-9);
+    }
+  });
+
+  for (const [startRadius, endRadius, length] of [
+    [300, 60, 400],
+    [Infinity, 100, 600],
+  ] as const) {
+    it(`agrees with a 1e5-sample nearest search near a ${startRadius} → ${endRadius} spiral (L ${length})`, () => {
+      const alignment = tight(startRadius, endRadius, length);
+      const N = 100_000;
+      const spacing = length / N;
+      const xs = new Float64Array(N + 1);
+      const ys = new Float64Array(N + 1);
+      for (let i = 0; i <= N; i++) {
+        const p = alignment.pointAt(i * spacing);
+        xs[i] = p[0]!;
+        ys[i] = p[1]!;
+      }
+      const random = mulberry32(length);
+      let checked = 0;
+      for (let k = 0; k < 500; k++) {
+        const base = alignment.pointAt(random() * length);
+        const point = [
+          base[0]! + (random() * 2 - 1) * 500,
+          base[1]! + (random() * 2 - 1) * 500,
+        ];
+        let best = 0;
+        let dmin = Infinity;
+        for (let i = 0; i <= N; i++) {
+          const d = Math.hypot(point[0]! - xs[i]!, point[1]! - ys[i]!);
+          if (d < dmin) {
+            dmin = d;
+            best = i;
+          }
+        }
+        if (best < 2 || best > N - 2) {
+          continue; // nearest at an end: possibly outside the alignment
+        }
+        checked++;
+        const r = alignment.stationOffset(point);
+        // The result reproduces the point and is the nearest foot.
+        const q = alignment.pointAt(r.station, r.offset);
+        expect(Math.hypot(q[0]! - point[0]!, q[1]! - point[1]!)).toBeLessThan(
+          1e-9,
+        );
+        expect(Math.abs(r.offset)).toBeLessThanOrEqual(dmin + 1e-9);
+        expect(Math.abs(r.offset)).toBeGreaterThan(dmin - 1e-4);
+        if (Math.abs(r.station - best * spacing) > 2 * spacing) {
+          // Only a tie between two separate feet may pick a different one.
+          expect(Math.abs(dmin - Math.abs(r.offset))).toBeLessThan(1e-4);
+        }
+      }
+      expect(checked).toBeGreaterThan(250);
+    });
+  }
+});
+
 describe("the vertical profile", () => {
   // Grade +2% for 100, a sag-to-crest parabola +2% → −3% over 200, then −3%.
   const g1 = 0.02;
@@ -455,6 +571,26 @@ describe("ends and the centerline", () => {
           expect(Math.abs(r.offset - o)).toBeLessThan(1e-9);
         }
       }
+    }
+  });
+
+  it("throws for a point 2e-9 or 5e-9 beyond either end at (6e6, 2e6)", () => {
+    // A rounded pointAt output is at most ε(|E| + |N|)/2 ≈ 8.9e-10 off here.
+    const far = new Alignment({
+      ...spiralDefinition(1),
+      start: [6_000_000, 2_000_000],
+    });
+    const end = far.pointAt(3000);
+    const az = far.azimuthAt(3000);
+    const start = far.pointAt(2000);
+    for (const d of [2e-9, 5e-9]) {
+      const beyond = [end[0]! + d * Math.sin(az), end[1]! + d * Math.cos(az)];
+      expect(() => far.stationOffset(beyond)).toThrow(/outside the alignment/);
+      const before = [
+        start[0]! - d * Math.sin(AZ0),
+        start[1]! - d * Math.cos(AZ0),
+      ];
+      expect(() => far.stationOffset(before)).toThrow(/outside the alignment/);
     }
   });
 
