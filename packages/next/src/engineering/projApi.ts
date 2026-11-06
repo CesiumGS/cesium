@@ -93,6 +93,13 @@ export interface ProjApi {
   proj_coordoperation_get_grid_used(operation: PJ, index: number): PjGridUsed;
   /** Metres; negative when PROJ reports none. */
   proj_coordoperation_get_accuracy(operation: PJ): number;
+  /**
+   * [west, south, east, north] in degrees (-1000 for an unknown bound) and
+   * the area's name; null when the object has no area of use.
+   */
+  proj_get_area_of_use(
+    object: PJ,
+  ): readonly [number, number, number, number, string] | null;
   /** Null when the object has no PROJ string (or could not be created). */
   proj_as_proj_string(
     object: PJ,

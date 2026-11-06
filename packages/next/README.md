@@ -250,10 +250,10 @@ site transform, in the CRS's own units. PROJ does the projection and datum
 work. The engine's `Ellipsoid` does geodetic to body-fixed, and body-fixed
 coordinates are in meters, as everywhere else. `src/index.ts` exports all of
 it: the frame, placement, alignment and measure types, and `loadProj`,
-`gridFactors`, `resolveOperation`, `crsUnits`, `crsDefinition` and
-`MOON_GEOGRAPHIC_CRS` with their types (`CrsRef`, `CrsUnits`,
-`RecordedOperation`, `GridFactors`, `ProjApi`, `LoadProjOptions` and
-`ResolveOptions`).
+`gridFactors`, `resolveOperation`, `listOperations`, `crsUnits`,
+`crsDefinition` and `MOON_GEOGRAPHIC_CRS` with their types (`CrsRef`,
+`CrsUnits`, `RecordedOperation`, `OperationCandidate`, `GridFactors`,
+`ProjApi`, `LoadProjOptions` and `ResolveOptions`).
 
 ```ts
 import {
@@ -312,6 +312,10 @@ gridFactors(site, p.design).combinedFactor; // grid = ground x this
   transformation parameters the CRS carries itself. The operation's inverse is
   refined against its forward, so `fromBodyFixed` reverses `toBodyFixed` to
   1e-6 m (about three times the PROJ calls), and throws if it cannot.
+  `listOperations(proj, source, target)` lists the candidates PROJ offered,
+  as plain data: each one's name, PROJ string, accuracy, area of use, the
+  grids it reads and which of them are missing, and whether it is a ballpark.
+  `resolveOperation` records the first one that qualifies.
 - **Units** come from the CRS, never from an assumption. `frame.units` holds
   the horizontal unit's name and meters per unit (a US survey foot is
   1200/3937 m, about 0.3048006096 m; an international foot is 0.3048 m), and

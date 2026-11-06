@@ -6,7 +6,7 @@
 // may pick one whose grid is absent, then return the input unchanged; this
 // module walks the operation list itself and takes only an operation whose
 // grids are all available.
-import type { PJ, ProjApi } from "./projApi.ts";
+import type { PJ, PjObjList, ProjApi } from "./projApi.ts";
 
 /**
  * A reference to a coordinate reference system, with the shapes of the 3D Tiles
@@ -260,6 +260,38 @@ function refinedInverse(
 }
 
 /**
+ * PROJ's candidate operations from one CRS definition to another: the list
+ * `resolveOperation` walks and `listOperations` reports, from the same
+ * factory context. For a pair PROJ cannot relate (a Moon CRS and the
+ * Earth's) the binding throws "Error getting list"; that comes back as a
+ * null list with the error. The CRSs themselves must exist (else it throws).
+ */
+function candidateList(
+  proj: ProjApi,
+  source: string,
+  target: string,
+): { candidates: PjObjList | null; listError?: unknown } {
+  const from = create(proj, source, "the source CRS");
+  const to = create(proj, target, "the target CRS");
+  try {
+    return {
+      candidates: proj.proj_create_operations(
+        from,
+        to,
+        proj.proj_create_operation_factory_context(""),
+      ),
+    };
+  } catch (error) {
+    return { candidates: null, listError: error };
+  }
+}
+
+/** PROJ names a ballpark transformation (datum differences ignored) "Ballpark ...". */
+function isBallpark(proj: ProjApi, candidate: PJ): boolean {
+  return /ballpark/i.test(proj.proj_get_name(candidate) ?? "");
+}
+
+/**
  * Resolves the operation from `source` to `target` (a PROJ code such as
  * "EPSG:4979", or WKT2) once, as plan 4a R2 requires.
  *
@@ -300,23 +332,12 @@ export function resolveOperation(
     }
   }
 
-  const from = create(proj, crsDefinition(source), "the source CRS");
-  const to = create(proj, target, "the target CRS");
   const where = `from ${crsDefinition(source)} to ${target}`;
-  // For a pair PROJ cannot relate (a Moon CRS and the Earth's) the binding
-  // throws "Error getting list"; an empty or null list is the same answer.
-  let candidates;
-  let listError: unknown;
-  try {
-    candidates = proj.proj_create_operations(
-      from,
-      to,
-      proj.proj_create_operation_factory_context(""),
-    );
-  } catch (error) {
-    candidates = null;
-    listError = error;
-  }
+  const { candidates, listError } = candidateList(
+    proj,
+    crsDefinition(source),
+    target,
+  );
   if (!candidates || candidates.length() === 0) {
     throw new Error(
       `PROJ offers no usable operation ${where}`,
@@ -348,7 +369,7 @@ export function resolveOperation(
     if (!available || !proj.proj_coordoperation_is_instantiable(candidate)) {
       continue;
     }
-    const ballpark = /ballpark/i.test(proj.proj_get_name(candidate) ?? "");
+    const ballpark = isBallpark(proj, candidate);
     if (ballpark && !allowBallpark) {
       skippedBallpark = true;
       continue;
@@ -389,6 +410,118 @@ export function resolveOperation(
       ? `PROJ offers only a ballpark operation ${where}; pass allowBallpark: true to accept it${lacking}`
       : `PROJ offers no usable operation ${where}${lacking}`,
   );
+}
+
+/** One of PROJ's candidate operations between two CRSs, as plain data. */
+export interface OperationCandidate {
+  /** PROJ's name for it, such as "NAD83(2011) to WGS 84 (1)" (with its steps). */
+  readonly name: string;
+  /**
+   * Its PROJ string, normalized for visualization as `resolveOperation`
+   * records it; "" when PROJ cannot express it as one.
+   */
+  readonly pipeline: string;
+  /** PROJ's stated accuracy in metres; absent when it states none (ballparks state none). */
+  readonly accuracy?: number;
+  /** Where it applies, degrees (west may exceed east across 180°); absent when PROJ has none. */
+  readonly areaOfUse?: {
+    readonly west: number;
+    readonly south: number;
+    readonly east: number;
+    readonly north: number;
+  };
+  /** Every grid file it reads. */
+  readonly gridsNeeded: readonly string[];
+  /** The grids in `gridsNeeded` that are not installed. */
+  readonly missingGrids: readonly string[];
+  /** Whether PROJ can instantiate it (PROJ's own check, grids aside). */
+  readonly instantiable: boolean;
+  /** A ballpark transformation: datum differences ignored, accuracy unknown. */
+  readonly ballpark: boolean;
+}
+
+/**
+ * Every candidate operation PROJ offers from `source` to `target`, in PROJ's
+ * order (by accuracy and area of use): the list `resolveOperation` walks, from
+ * the same factory context. `resolveOperation` records the first candidate
+ * that is instantiable, has no missing grids and a PROJ string, and is not a
+ * ballpark (unless `allowBallpark`).
+ *
+ * Plain data, safe to post to a worker. An empty list when PROJ relates no
+ * operation between the two (a Moon CRS and the Earth's); throws when PROJ
+ * cannot create either CRS.
+ */
+export function listOperations(
+  proj: ProjApi,
+  source: CrsRef,
+  target: CrsRef,
+): readonly OperationCandidate[] {
+  const { candidates } = candidateList(
+    proj,
+    crsDefinition(source),
+    crsDefinition(target),
+  );
+  if (!candidates) {
+    return [];
+  }
+  const out: OperationCandidate[] = [];
+  const count = candidates.length();
+  for (let i = 0; i < count; i++) {
+    const candidate = candidates.get(i);
+    const gridsNeeded: string[] = [];
+    const missingGrids: string[] = [];
+    for (
+      let g = 0;
+      g < proj.proj_coordoperation_get_grid_used_count(candidate);
+      g++
+    ) {
+      const grid = proj.proj_coordoperation_get_grid_used(candidate, g);
+      gridsNeeded.push(grid.short_name);
+      if (!grid.available) {
+        missingGrids.push(grid.short_name);
+      }
+    }
+    const ballpark = isBallpark(proj, candidate);
+    const accuracy = proj.proj_coordoperation_get_accuracy(candidate);
+    const area = areaOfUse(proj, candidate);
+    out.push({
+      name: proj.proj_get_name(candidate) ?? `candidate ${i}`,
+      pipeline:
+        proj.proj_as_proj_string(
+          proj.proj_normalize_for_visualization(candidate),
+          proj.PJ_PROJ_5,
+        ) ?? "",
+      ...(!ballpark && accuracy >= 0 && { accuracy }),
+      ...(area && { areaOfUse: area }),
+      gridsNeeded,
+      missingGrids,
+      instantiable: proj.proj_coordoperation_is_instantiable(candidate),
+      ballpark,
+    });
+  }
+  return out;
+}
+
+// PROJ reports an unknown bound as -1000 (and the binding may throw or return
+// null when there is no area at all).
+function areaOfUse(
+  proj: ProjApi,
+  candidate: PJ,
+): OperationCandidate["areaOfUse"] | undefined {
+  let area;
+  try {
+    area = proj.proj_get_area_of_use(candidate);
+  } catch {
+    return undefined;
+  }
+  if (!area) {
+    return undefined;
+  }
+  const [west, south, east, north] = area;
+  const known = [west, south, east, north].every(
+    (v) => Number.isFinite(v) && v > -1000,
+  );
+  return known ? { west, south, east, north } : undefined;
 }
 
 /**
