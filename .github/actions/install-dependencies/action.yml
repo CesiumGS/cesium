@@ -1,0 +1,24 @@
+name: install dependencies
+description: installs Node.js and npm 12, then runs npm install
+inputs:
+  node-version:
+    description: Node.js version to install
+    default: "22"
+  working-directory:
+    description: directory to run npm install in
+    default: "."
+runs:
+  using: "composite"
+  steps:
+    - name: install node ${{ inputs.node-version }}
+      uses: actions/setup-node@v7
+      with:
+        node-version: ${{ inputs.node-version }}
+        package-manager-cache: false
+    - name: install npm 12
+      run: npm install -g npm@12
+      shell: bash
+    - name: npm install
+      working-directory: ${{ inputs.working-directory }}
+      run: npm install
+      shell: bash
