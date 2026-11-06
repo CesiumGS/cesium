@@ -1,7 +1,8 @@
-import { parseDaf } from "./daf.ts";
+import { parseDaf, type DafFile } from "./daf.ts";
 
 /** One type-2 (Chebyshev, position only) segment of an SPK or binary PCK. */
 export interface Type2Segment {
+  type: 2;
   /** SPK: target body NAIF id. PCK: the body-frame class id (e.g. 31008 for MOON_PA). */
   target: number;
   /** SPK: center body NAIF id. PCK segments have no center; this is 0. */
@@ -28,6 +29,42 @@ export interface Type2Segment {
 }
 
 /**
+ * A discrete-state SPK segment (types 8, 9, 12, 13): states at epochs, with
+ * the interpolation SPICE uses for that type. Copied out of the file buffer.
+ */
+export interface StateSegment {
+  type: 8 | 9 | 12 | 13;
+  target: number;
+  center: number;
+  frame: number;
+  name: string;
+  /** First covered instant, TDB seconds past J2000. */
+  start: number;
+  /** Last covered instant, TDB seconds past J2000. */
+  end: number;
+  /** TDB seconds past J2000. Types 8 and 12 are expanded from their start and step. */
+  epochs: Float64Array;
+  /** Six values per epoch (x, y, z, vx, vy, vz), in km and km/s as stored. */
+  states: Float64Array;
+  /** Degree + 1 for types 8 and 9; the stored value + 1 for types 12 and 13. */
+  windowSize: number;
+  method: "lagrange" | "hermite";
+}
+
+const STATE_TYPES = new Set([8, 9, 12, 13]);
+
+/** Read every segment of a little-endian SPK: type 2 and the discrete-state types 8, 9, 12 and 13. */
+export function readSpk(buffer: ArrayBuffer): {
+  segments: (Type2Segment | StateSegment)[];
+} {
+  const { kind, segments } = readSegments(buffer, true);
+  if (kind !== "SPK") {
+    throw new Error("SPK: not an SPK file");
+  }
+  return { segments };
+}
+
+/**
  * Read every segment of a little-endian SPK or binary PCK. Only type-2
  * segments are supported; any other type throws.
  */
@@ -35,6 +72,16 @@ export function readDaf(buffer: ArrayBuffer): {
   kind: "SPK" | "PCK";
   segments: Type2Segment[];
 } {
+  return readSegments(buffer, false) as {
+    kind: "SPK" | "PCK";
+    segments: Type2Segment[];
+  };
+}
+
+function readSegments(
+  buffer: ArrayBuffer,
+  states: boolean,
+): { kind: "SPK" | "PCK"; segments: (Type2Segment | StateSegment)[] } {
   const daf = parseDaf(buffer);
   const kind = daf.id === "DAF/SPK" ? "SPK" : "PCK";
   const spk = kind === "SPK";
@@ -46,7 +93,7 @@ export function readDaf(buffer: ArrayBuffer): {
     );
   }
 
-  const segments = daf.summaries.map((summary): Type2Segment => {
+  const segments = daf.summaries.map((summary): Type2Segment | StateSegment => {
     const [start, end] = summary.doubles as [number, number];
     const i = summary.ints;
     const target = i[0]!;
@@ -55,9 +102,23 @@ export function readDaf(buffer: ArrayBuffer): {
     const type = spk ? i[3]! : i[2]!;
     const initial = spk ? i[4]! : i[3]!;
     const final = spk ? i[5]! : i[4]!;
+    if (states && spk && STATE_TYPES.has(type)) {
+      return readStateSegment(daf, summary.name, {
+        type: type as StateSegment["type"],
+        target,
+        center,
+        frame,
+        start,
+        end,
+        initial,
+        final,
+      });
+    }
     if (type !== 2) {
       throw new Error(
-        `SPK: segment type ${type} is not supported (type 2 only)`,
+        states
+          ? `SPK: segment type ${type} is not supported (types 2, 8, 9, 12, 13 only)`
+          : `SPK: segment type ${type} is not supported (type 2 only)`,
       );
     }
     const length = final - initial + 1;
@@ -87,6 +148,7 @@ export function readDaf(buffer: ArrayBuffer): {
       );
     }
     return {
+      type: 2,
       target,
       center,
       frame,
@@ -100,4 +162,81 @@ export function readDaf(buffer: ArrayBuffer): {
     };
   });
   return { kind, segments };
+}
+
+function readStateSegment(
+  daf: DafFile,
+  name: string,
+  s: {
+    type: StateSegment["type"];
+    target: number;
+    center: number;
+    frame: number;
+    start: number;
+    end: number;
+    initial: number;
+    final: number;
+  },
+): StateSegment {
+  const { type, initial, final } = s;
+  const equal = type === 8 || type === 12;
+  const trailerSize = equal ? 4 : 2;
+  const length = final - initial + 1;
+  const bad = (): Error =>
+    new Error(
+      `SPK: type-${type} segment trailer is inconsistent with its address range`,
+    );
+  if (length < trailerSize) {
+    throw bad();
+  }
+  const trailer = daf.doublesAt(final - trailerSize + 1, trailerSize);
+  const n = trailer[trailerSize - 1]!;
+  const stored = trailer[trailerSize - 2]!;
+  if (
+    !Number.isInteger(n) ||
+    n < 1 ||
+    !Number.isInteger(stored) ||
+    stored < 0
+  ) {
+    throw bad();
+  }
+  // States, then (types 9, 13) the epochs and a directory of every 100th, then the trailer.
+  const expected = equal ? 6 * n + 4 : 7 * n + Math.floor((n - 1) / 100) + 2;
+  if (length !== expected) {
+    throw bad();
+  }
+  const windowSize = stored + 1;
+  if (windowSize > n) {
+    throw new Error(
+      `SPK: type-${type} segment window of ${windowSize} states exceeds its ${n} states`,
+    );
+  }
+  const epochs = new Float64Array(n);
+  if (equal) {
+    const first = trailer[0]!;
+    const step = trailer[1]!;
+    if (!(step > 0) || !Number.isFinite(step) || !Number.isFinite(first)) {
+      throw new Error(
+        `SPK: type-${type} segment step must be positive (got ${step})`,
+      );
+    }
+    for (let k = 0; k < n; k++) {
+      epochs[k] = first + k * step;
+    }
+  } else {
+    epochs.set(daf.doublesAt(initial + 6 * n, n));
+  }
+  return {
+    type,
+    target: s.target,
+    center: s.center,
+    frame: s.frame,
+    name,
+    start: s.start,
+    end: s.end,
+    epochs,
+    states: new Float64Array(daf.doublesAt(initial, 6 * n)),
+    windowSize,
+    method: type === 8 || type === 9 ? "lagrange" : "hermite",
+  };
 }
