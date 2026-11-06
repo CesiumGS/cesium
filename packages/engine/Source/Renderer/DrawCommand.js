@@ -617,10 +617,14 @@ class DrawCommand {
   }
 
   /**
-   * @param {DrawCommand} command
-   * @param {DrawCommand} result
-   * @returns {DrawCommand}
-   * @private
+   * Copies a command's properties, sharing its objects such as its uniform
+   * map and render state. Set a property on the copy to replace it without
+   * changing the original.
+   *
+   * @param {DrawCommand} command The command to copy.
+   * @param {DrawCommand} [result] The object onto which to store the result.
+   * @returns {DrawCommand} The modified result parameter or a new DrawCommand instance if one was not provided.
+   * @internal
    */
   static shallowClone(command, result) {
     if (!defined(command)) {
