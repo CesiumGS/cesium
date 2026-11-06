@@ -79,7 +79,7 @@ describe("Artemis II SPK against SPICE (spkgeo)", () => {
       "epoch",
       "spread",
     ]);
-    expect(trajectory.reference).toBe(frames.gcrf);
+    expect(trajectory.reference).toBe(frames.earthIcrf);
   });
 
   it("matches at every row, positions to 1 mm and velocities to 1e-6 m/s", () => {

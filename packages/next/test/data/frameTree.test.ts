@@ -139,3 +139,35 @@ describe("the frame tree against plan 1's fixtures", () => {
     expect(worst).toBeLessThan(1e-3);
   });
 });
+
+describe("the relativistic Earth link on DE440", () => {
+  it("puts GCRF 8 to 12 m from EARTH_ICRF for a point 3.844e8 m from the geocenter", () => {
+    const t = Instant.fromUtc(Date.UTC(2026, 3, 6, 23, 0, 0), leap);
+    const v = ephemeris.earth(t).subarray(3, 6);
+    // Perpendicular to V, so only the scale term U/c² + L_C acts (about
+    // 2.47e-8 of the distance); the Lorentz term is zero.
+    const dir = [v[1]!, -v[0]!, 0];
+    const len = Math.hypot(dir[0]!, dir[1]!);
+    const p = dir.map((x) => (x / len) * 3.844e8);
+    expect(
+      Math.abs(p[0]! * v[0]! + p[1]! * v[1]! + p[2]! * v[2]!),
+    ).toBeLessThan(1e-3);
+    const frames = framesWith();
+    const m = frameTransform(frames.gcrf, frames.earthIcrf, t);
+    const image = [0, 1, 2].map(
+      (row) =>
+        m[row]! * p[0]! +
+        m[4 + row]! * p[1]! +
+        m[8 + row]! * p[2]! +
+        m[12 + row]!,
+    );
+    const difference = Math.hypot(
+      image[0]! - p[0]!,
+      image[1]! - p[1]!,
+      image[2]! - p[2]!,
+    );
+    console.log(`GCRF vs EARTH_ICRF at 3.844e8 m: ${difference.toFixed(4)} m`);
+    expect(difference).toBeGreaterThan(8);
+    expect(difference).toBeLessThan(12);
+  });
+});

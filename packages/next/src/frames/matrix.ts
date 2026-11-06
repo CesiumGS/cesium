@@ -2,6 +2,8 @@ import type { Mat4 } from "../math/mat4.ts";
 
 /**
  * The one bridge between plan 1's rotations and frame transforms (R7).
+ * Edges may now be affine, not only rigid, but only the GCRF edge is; it
+ * writes its own `Mat4` (nothing there is row-major).
  *
  * `parentToChild` is a row-major 3x3 with `child = R · parent`, as ERFA
  * writes rotations. `origin` is the child's origin in the parent, in

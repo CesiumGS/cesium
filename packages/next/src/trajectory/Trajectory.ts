@@ -88,7 +88,7 @@ function referenceFor(
       return axes === "EME2000"
         ? frames.eme2000
         : axes === "ICRF"
-          ? frames.gcrf
+          ? frames.earthIcrf
           : frames.itrf;
     case "MOON":
       if (axes === "ICRF") {
