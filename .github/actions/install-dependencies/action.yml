@@ -1,5 +1,5 @@
 name: install dependencies
-description: installs Node.js and npm 12, then runs npm install
+description: installs Node.js and npm 11, then runs npm install
 inputs:
   node-version:
     description: Node.js version to install
@@ -15,8 +15,8 @@ runs:
       with:
         node-version: ${{ inputs.node-version }}
         package-manager-cache: false
-    - name: install npm 12
-      run: npm install -g npm@12
+    - name: install npm 11
+      run: npm install -g npm@11
       shell: bash
     - name: npm install
       working-directory: ${{ inputs.working-directory }}
