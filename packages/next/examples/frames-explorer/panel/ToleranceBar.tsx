@@ -71,13 +71,22 @@ export function ToleranceBar({
       </span>
       {large && (
         <span className="fx-tol-scale" aria-hidden>
-          <span>10⁻⁶ of it</span>
-          <span
-            className="fx-tol-scale-tick"
-            style={{ insetInlineStart: `${100 * TICK}%` }}
-          >
-            tolerance
-          </span>
+          {/* Decade ticks on the log scale (M2): 10⁻⁶ … 1 … 10 × tolerance. */}
+          {Array.from({ length: BELOW + ABOVE + 1 }, (_, i) => (
+            <span
+              key={i}
+              className={`fx-tol-decade${i === BELOW ? " fx-tol-decade-tol" : ""}`}
+              style={{ insetInlineStart: `${(100 * i) / (BELOW + ABOVE)}%` }}
+            >
+              {i === 0
+                ? "10⁻⁶ × tolerance"
+                : i === BELOW
+                  ? "tolerance"
+                  : i === BELOW + ABOVE
+                    ? "10×"
+                    : ""}
+            </span>
+          ))}
         </span>
       )}
       <span className="fx-tol-text fx-num" aria-hidden>

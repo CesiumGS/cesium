@@ -5,9 +5,9 @@ import { svgCopy } from "@stratakit/icons/copy";
 import { svgDownload } from "@stratakit/icons/download";
 import { Icon } from "@stratakit/mui";
 import { Section } from "./Explore.tsx";
-import { quantity } from "./format.ts";
 import type { PanelActions, PanelModel } from "./model.ts";
 import { StatusBadge, resultStatus } from "./parts.tsx";
+import { rowName, whyFailed } from "./QuestionCard.tsx";
 
 export function Report({
   model,
@@ -78,7 +78,7 @@ export function Report({
             disabled={!ready}
             onClick={() => {
               actions.saveReport("markdown");
-              onCopied("Saved frames-explorer-report.md");
+              onCopied("Download started: frames-explorer-report.md");
             }}
           >
             Save Markdown
@@ -90,21 +90,26 @@ export function Report({
             disabled={!ready}
             onClick={() => {
               actions.saveReport("json");
-              onCopied("Saved frames-explorer-report.json");
+              onCopied("Download started: frames-explorer-report.json");
             }}
           >
             Save JSON
           </Button>
         </div>
         {!ready && (
-          <Typography variant="body-sm" color="textSecondary" render={<p />}>
-            The report is ready once a run ends. Run all from Verify.
-          </Typography>
+          <div className="fx-report-wait">
+            <Typography variant="body-sm" color="textSecondary" render={<p />}>
+              The report is ready once a run ends.
+            </Typography>
+            <Button size="small" variant="outlined" onClick={actions.runAll}>
+              Run all
+            </Button>
+          </div>
         )}
       </Section>
 
       {failures.length > 0 && (
-        <Section title="Failures first">
+        <Section title="Failures">
           <ul className="fx-report-list">
             {failures.map((r) => {
               const s = resultStatus(r);
@@ -116,12 +121,10 @@ export function Report({
                     className="fx-row-button"
                     onClick={() => onSelectResult(r.id)}
                   >
-                    {r.title}
+                    {rowName(r, model.extras[r.id])}
                   </button>
-                  <span className="fx-num fx-muted">
-                    {r.value !== undefined && r.tolerance !== undefined
-                      ? `${quantity(r.value, r.unit)} against ${quantity(r.tolerance, r.unit)}`
-                      : (r.fingerprintCheck?.difference ?? r.error ?? "")}
+                  <span className="fx-num fx-fail-text">
+                    {whyFailed(r, model.extras[r.id])}
                   </span>
                 </li>
               );

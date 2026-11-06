@@ -1,19 +1,19 @@
 // The inspector (R14 level 4, R16's computation trace): one result, glance to
-// proof. Measured against expected, the trace from input to output, the
-// accuracy terms, the source or hand formula, the fingerprint, and actions.
+// proof. Measured against expected, what it's compared against, the trace
+// from input to output, the accuracy, the source, the fingerprint, and
+// actions; Previous and Next step through its card (I4).
 import { Button, IconButton, Link, Typography } from "@mui/material";
-import { svgChevronDown } from "@stratakit/icons/chevron-down";
-import { svgChevronUp } from "@stratakit/icons/chevron-up";
-import { svgDismiss } from "@stratakit/icons/dismiss";
+import { svgChevronLeft } from "@stratakit/icons/chevron-left";
+import { svgChevronRight } from "@stratakit/icons/chevron-right";
 import { svgFitToView } from "@stratakit/icons/fit-to-view";
 import { svgHierarchyTree } from "@stratakit/icons/hierarchy-tree";
 import { svgLink } from "@stratakit/icons/link";
 import { Icon } from "@stratakit/mui";
-import { type ReactNode, useId } from "react";
+import { type ReactNode, useId, useRef } from "react";
 import type { StressResult } from "../tests.ts";
 import { BudgetBar } from "./BudgetBar.tsx";
 import { quantity } from "./format.ts";
-import type { GroupInfo, ResultExtras } from "./model.ts";
+import type { Comparison, GroupInfo, ResultExtras } from "./model.ts";
 import {
   AccuracyText,
   CopyButton,
@@ -21,6 +21,8 @@ import {
   Term,
   resultStatus,
 } from "./parts.tsx";
+import { rowName } from "./QuestionCard.tsx";
+import { type SheetControls, SheetHead } from "./Sheet.tsx";
 import { ToleranceBar, ofTolerance } from "./ToleranceBar.tsx";
 
 /** An http(s) URL, or undefined: a citation's link is never another scheme. */
@@ -51,68 +53,112 @@ function Part({ title, children }: { title: ReactNode; children: ReactNode }) {
   );
 }
 
+const COMPARED_LABEL: Record<Comparison["kind"], string> = {
+  published: "Published value",
+  formula: "Hand formula",
+  roundTrip: "Round trip",
+  error: "Expected error",
+  independent: "Independent computation",
+};
+
 export function Inspector({
   result,
   group,
   extras,
-  expanded,
-  onExpand,
+  siblings,
+  controls,
+  onStep,
   onClose,
   onShow,
-  onHighlight,
+  onShowFrames,
   onCopyLink,
 }: {
   result: StressResult;
   group: GroupInfo | undefined;
   extras: ResultExtras | undefined;
-  expanded: boolean;
-  onExpand: (expanded: boolean) => void;
+  /** The results of its card, in order, for Previous and Next. */
+  siblings: readonly StressResult[];
+  controls: SheetControls;
+  onStep: (id: string) => void;
   onClose: () => void;
   onShow: () => void;
-  onHighlight: () => void;
+  onShowFrames: () => void;
   onCopyLink: () => void;
 }) {
   const s = resultStatus(result);
   const fp = result.fingerprint;
+  const at = siblings.findIndex((r) => r.id === result.id);
+  const prev = at > 0 ? siblings[at - 1] : undefined;
+  const next =
+    at >= 0 && at < siblings.length - 1 ? siblings[at + 1] : undefined;
+  const title = useRef<HTMLHeadingElement>(null);
+  const link = webLink(extras?.source?.url);
   return (
-    <aside className="fx-inspector" aria-label="Inspector">
-      <div className="fx-inspector-head">
-        <StatusBadge status={s.status} {...(s.word && { word: s.word })} />
+    <aside
+      className="fx-inspector"
+      aria-label="Inspector"
+      onKeyDown={(e) => {
+        // Arrows step through the card while focus is in the inspector
+        // (not in a field or a code block being selected).
+        if (e.target instanceof HTMLInputElement) {
+          return;
+        }
+        if (e.key === "ArrowLeft" && prev) {
+          onStep(prev.id);
+        } else if (e.key === "ArrowRight" && next) {
+          onStep(next.id);
+        }
+      }}
+    >
+      <SheetHead
+        controls={controls}
+        onClose={onClose}
+        closeLabel="Close the inspector"
+        focusRef={title}
+      >
+        <IconButton
+          size="small"
+          aria-label="Previous result"
+          title="Previous result"
+          disabled={!prev}
+          onClick={() => prev && onStep(prev.id)}
+        >
+          <Icon href={svgChevronLeft} />
+        </IconButton>
         <Typography
           variant="caption-lg"
           color="textSecondary"
           render={<span />}
-          className="fx-inspector-group"
+          className="fx-num"
         >
-          {group?.name ?? result.group}
+          {group?.name ?? result.group}, {at + 1} of {siblings.length}
         </Typography>
-        <span className="fx-inspector-tools">
-          <IconButton
-            size="small"
-            aria-label={expanded ? "Show the cards too" : "Fill the tab"}
-            title={expanded ? "Show the cards too" : "Fill the tab"}
-            onClick={() => onExpand(!expanded)}
-          >
-            <Icon href={expanded ? svgChevronDown : svgChevronUp} />
-          </IconButton>
-          <IconButton
-            size="small"
-            aria-label="Close the inspector"
-            title="Close"
-            onClick={onClose}
-          >
-            <Icon href={svgDismiss} />
-          </IconButton>
-        </span>
-      </div>
-      <div className="fx-inspector-body">
-        <Typography
-          variant="body-md"
-          render={<h3 />}
-          className="fx-inspector-title"
+        <IconButton
+          size="small"
+          aria-label="Next result"
+          title="Next result"
+          disabled={!next}
+          onClick={() => next && onStep(next.id)}
         >
-          {result.title}
-        </Typography>
+          <Icon href={svgChevronRight} />
+        </IconButton>
+        <StatusBadge status={s.status} {...(s.word && { word: s.word })} />
+      </SheetHead>
+      <div className="fx-sheet-body fx-inspector-body">
+        <div>
+          <Typography
+            variant="body-md"
+            render={<h3 ref={title} tabIndex={-1} />}
+            className="fx-inspector-title"
+          >
+            {rowName(result, extras)}
+          </Typography>
+          {extras?.label && (
+            <Typography variant="body-sm" color="textSecondary" render={<p />}>
+              {result.title}
+            </Typography>
+          )}
+        </div>
         <div className="fx-inspector-actions">
           <Button
             size="small"
@@ -126,9 +172,9 @@ export function Inspector({
             size="small"
             variant="outlined"
             startIcon={<Icon href={svgHierarchyTree} />}
-            onClick={onHighlight}
+            onClick={onShowFrames}
           >
-            Highlight frames
+            Show frames in the tree
           </Button>
           <Button
             size="small"
@@ -145,7 +191,11 @@ export function Inspector({
             <div className="fx-measured">
               <ToleranceBar result={result} large />
               <dl className="fx-dl">
-                <dt>Deviation</dt>
+                <dt>
+                  {result.unit === undefined
+                    ? "Relative difference"
+                    : "Deviation"}
+                </dt>
                 <dd className="fx-num">
                   {quantity(result.value, result.unit, 3)}
                   <span className="fx-muted">
@@ -188,6 +238,16 @@ export function Inspector({
                 : "Judged by the case itself; its detail says how."}
             </Typography>
           )}
+          {result.fingerprintCheck && !result.fingerprintCheck.match && (
+            <Typography
+              variant="body-sm"
+              render={<p />}
+              className="fx-fail-text"
+            >
+              Failed: browser ≠ Node.{" "}
+              {result.fingerprintCheck.difference ?? "The fingerprints differ."}
+            </Typography>
+          )}
           {result.detail && (
             <Typography
               variant="body-sm"
@@ -197,6 +257,58 @@ export function Inspector({
             >
               {result.detail}
             </Typography>
+          )}
+        </Part>
+
+        <Part title="Compared against">
+          {extras?.compared ? (
+            <Typography variant="body-sm" render={<p />}>
+              <span className="fx-strong">
+                {COMPARED_LABEL[extras.compared.kind]}:
+              </span>{" "}
+              {extras.compared.text}
+            </Typography>
+          ) : (
+            <Typography
+              variant="body-sm"
+              render={<p />}
+              className="fx-unbounded"
+            >
+              The case doesn&rsquo;t say what its expected value is.
+            </Typography>
+          )}
+          {extras?.source && (
+            <div className="fx-citation">
+              <Typography variant="body-sm" render={<p />}>
+                {extras.source.document}
+                {extras.source.publisher && `, ${extras.source.publisher}`}
+                {extras.source.locator && `; ${extras.source.locator}`}
+              </Typography>
+              <Typography
+                variant="caption-lg"
+                color="textSecondary"
+                render={<p />}
+              >
+                Retrieved {extras.source.retrieved}
+                {link && (
+                  <>
+                    {": "}
+                    <Link
+                      href={link.href}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                    >
+                      {link.host}
+                    </Link>
+                  </>
+                )}
+              </Typography>
+            </div>
+          )}
+          {extras?.formula && (
+            <p className="fx-formula">
+              <code className="fx-code">{extras.formula}</code>
+            </p>
           )}
         </Part>
 
@@ -229,63 +341,33 @@ export function Inspector({
             </ol>
           ) : (
             <Typography variant="body-sm" color="textSecondary" render={<p />}>
-              This check records no steps beyond its detail above.
+              No steps recorded for this check yet; its detail above gives its
+              numbers.
             </Typography>
           )}
         </Part>
 
         <Part title={<Term k="accuracy">Accuracy</Term>}>
           {result.accuracy ? (
-            <BudgetBar
-              accuracy={result.accuracy}
-              label="Accuracy of this result"
-            />
+            <>
+              {extras?.relative && (
+                <Typography variant="body-sm" render={<p />}>
+                  {extras.relative}
+                </Typography>
+              )}
+              <BudgetBar
+                accuracy={result.accuracy}
+                label="Accuracy of this result"
+              />
+            </>
           ) : (
             <Typography variant="body-sm" render={<p />}>
-              <AccuracyText accuracy={undefined} />. It checks arithmetic
-              against an expected value, so its tolerance, not an accuracy, is
-              what it&rsquo;s judged by.
+              <AccuracyText accuracy={undefined} note={extras?.accuracyNote} />.
+              This check states no position, so this note, with its tolerance,
+              is the accuracy that applies.
             </Typography>
           )}
         </Part>
-
-        {(extras?.source || extras?.formula) && (
-          <Part title="Source">
-            {extras.source && (
-              <div className="fx-citation">
-                <Typography variant="body-sm" render={<p />}>
-                  {extras.source.document}
-                  {extras.source.publisher && `, ${extras.source.publisher}`}
-                  {extras.source.locator && `; ${extras.source.locator}`}
-                </Typography>
-                <Typography
-                  variant="caption-lg"
-                  color="textSecondary"
-                  render={<p />}
-                >
-                  Retrieved {extras.source.retrieved}
-                  {webLink(extras.source.url) && (
-                    <>
-                      {": "}
-                      <Link
-                        href={webLink(extras.source.url)!.href}
-                        target="_blank"
-                        rel="noreferrer noopener"
-                      >
-                        {webLink(extras.source.url)!.host}
-                      </Link>
-                    </>
-                  )}
-                </Typography>
-              </div>
-            )}
-            {extras.formula && (
-              <p className="fx-formula">
-                <code className="fx-code">{extras.formula}</code>
-              </p>
-            )}
-          </Part>
-        )}
 
         {fp && (
           <Part title={<Term k="fingerprint" />}>

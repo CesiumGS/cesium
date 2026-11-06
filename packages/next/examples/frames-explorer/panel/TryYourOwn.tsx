@@ -17,12 +17,9 @@ import { useId, useState } from "react";
 import type { TokenSource, UserCrsView } from "./model.ts";
 import { Term } from "./parts.tsx";
 
-const TOKEN_TEXT: Record<Exclude<TokenSource, undefined>, string> = {
-  env: "Uses the gallery's ion token from .env.local.",
-  setting: "Uses the ion token pasted in Dyno's Viewer.",
-  evaluation:
-    "Uses Cesium's evaluation token, which reads only Cesium's own assets: set your own in .env.local, or paste one in Dyno's Viewer, to read yours.",
-};
+/** F28: where the token came from isn't known to the example, so the text is generic. */
+const TOKEN_TEXT =
+  "Uses the gallery's ion token. To read your own assets, set your token in Dyno's settings or .env.local.";
 
 /** An iModel id is a GUID; an ion asset id is a number. */
 const GUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -47,7 +44,7 @@ export function TryYourOwn({
   const isGuid = GUID.test(trimmed);
   const busy = state.state === "fetching" || state.state === "running";
   return (
-    <section className="fx-try" aria-labelledby={id}>
+    <section className="fx-try" aria-labelledby={id} id="fx-try-your-own">
       <Typography
         variant="body-md"
         render={<h4 id={id} />}
@@ -64,7 +61,11 @@ export function TryYourOwn({
         multiline
         minRows={3}
         maxRows={10}
+        size="small"
         label="WKT2 of the CRS"
+        helperText={
+          wkt.trim() === "" ? "Paste a WKT2 to run its checks." : undefined
+        }
         value={wkt}
         onChange={(e) => setWkt(e.target.value)}
         slotProps={{ htmlInput: { spellCheck: false, className: "fx-wkt" } }}
@@ -92,9 +93,10 @@ export function TryYourOwn({
         </Typography>
         {token === undefined ? (
           <Alert severity="info">
-            No ion token. Add <code className="fx-code">VITE_ION_TOKEN</code> to
-            packages/next/.env.local, or paste one in Dyno&rsquo;s Viewer (Open
-            content, Cesium ion), then reload. Pasting WKT2 works without one.
+            No ion token. Set one in Dyno&rsquo;s settings, or add{" "}
+            <code className="fx-code">VITE_ION_TOKEN</code> to
+            packages/next/.env.local, then reload. Pasting WKT2 works without
+            one.
           </Alert>
         ) : (
           <>
@@ -129,7 +131,7 @@ export function TryYourOwn({
               color="textSecondary"
               render={<p />}
             >
-              {TOKEN_TEXT[token]}
+              {TOKEN_TEXT}
             </Typography>
             {isGuid && (
               <Alert severity="info">

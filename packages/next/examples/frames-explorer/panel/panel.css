@@ -10,7 +10,7 @@
 .fx-hud {
   --fx-celestial: light-dark(#6e44bc, #b298f9);
   --fx-earth: light-dark(#02717a, #3bcddc);
-  --fx-moon: light-dark(#836412, #eec469);
+  --fx-moon: light-dark(#525f6f, #bfc8d4);
   --fx-engineering: light-dark(#ae2881, #f07ec2);
   --fx-trajectory: light-dark(#ae5517, #fc9252);
   --fx-axis-x: light-dark(#cc272e, #fc5855);
@@ -64,12 +64,87 @@
   flex: 1;
   min-height: 0;
   overflow: auto;
+  border-block-start: 1px solid var(--stratakit-color-border-neutral-muted);
   /* Room for focus rings inside the scroller. */
   padding: 2px;
   margin: -2px;
 }
 .fx-tab-panel[hidden] {
   display: none;
+}
+/* Tabs whose content is a list and a sheet (Explore, Verify). */
+.fx-tab-split {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.fx-tab-split[hidden] {
+  display: none;
+}
+.fx-split {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+/* The list scrolls under a rule, so content never meets the tab line (M18). */
+.fx-split-list {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  border-block-start: 1px solid transparent;
+}
+.fx-split-list[hidden] {
+  display: none;
+}
+.fx-sheet {
+  flex: 0 0 auto;
+  max-block-size: 45%;
+  display: flex;
+  flex-direction: column;
+  border-block-start: 1px solid var(--stratakit-color-border-neutral-base);
+  box-shadow: 0 -8px 16px -12px var(--stratakit-color-border-neutral-base);
+  animation: fx-sheet 240ms var(--fx-ease) both;
+}
+.fx-sheet-full .fx-sheet {
+  flex: 1;
+  max-block-size: none;
+  border-block-start: 0;
+  box-shadow: none;
+}
+/* Focus lands on these on open; they're targets, not controls, so no ring. */
+.fx-sheet-head:focus,
+.fx-sheet-head:focus-visible,
+.fx-inspector-title:focus,
+.fx-inspector-title:focus-visible,
+.fx-tour-title:focus,
+.fx-tour-title:focus-visible {
+  outline: none;
+}
+.fx-sheet-head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-200);
+  padding-block: var(--stratakit-space-150);
+  outline: none;
+}
+.fx-sheet-title {
+  flex: 1;
+  min-inline-size: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--stratakit-space-100) var(--stratakit-space-200);
+}
+.fx-sheet-tools {
+  display: inline-flex;
+}
+.fx-sheet-body {
+  flex: 1;
+  min-block-size: 0;
+  overflow: auto;
+  padding-block-end: var(--stratakit-space-300);
 }
 .fx-tab-body {
   display: flex;
@@ -127,6 +202,25 @@
   background: var(--stratakit-color-bg-mono-muted);
   white-space: pre-wrap;
 }
+.fx-visually-hidden {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+/* An edge's kind: plain secondary text, not a pill (M12). */
+.fx-edge-kind {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.fx-accuracy-note {
+  white-space: normal;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.fx-fail-text {
+  color: var(--stratakit-color-text-critical-base);
+}
 .fx-badge-content .MuiCircularProgress-root {
   color: currentColor;
 }
@@ -136,16 +230,6 @@
   gap: var(--stratakit-space-100);
   white-space: nowrap;
 }
-.fx-chip {
-  display: inline-block;
-  padding: 0 var(--stratakit-space-150);
-  border: 1px solid var(--stratakit-color-border-neutral-muted);
-  border-radius: var(--stratakit-radius-round);
-  color: var(--stratakit-color-text-neutral-secondary);
-  font-size: var(--stratakit-font-size-caption-md);
-  line-height: var(--stratakit-line-height-caption-lg);
-  white-space: nowrap;
-}
 .fx-swatch {
   flex: none;
   display: inline-block;
@@ -153,6 +237,10 @@
   block-size: 10px;
   border-radius: var(--stratakit-radius-round);
   background: var(--fx-family);
+}
+.fx-swatch-noedge,
+.fx-family-noedge {
+  --fx-family: var(--stratakit-color-icon-neutral-secondary);
 }
 .fx-swatch-unknown {
   background: repeating-linear-gradient(
@@ -291,8 +379,14 @@
   color: var(--stratakit-color-text-positive-base);
 }
 .fx-count-fail {
-  color: var(--stratakit-color-text-critical-base);
   font-weight: 600;
+}
+.fx-all-ready {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+  color: var(--stratakit-color-text-neutral-secondary);
 }
 .fx-count-wait {
   color: var(--stratakit-color-text-info-base);
@@ -368,8 +462,34 @@
   flex-wrap: wrap;
 }
 /* The selected frame's path to the root: a quiet band, the selected row's own look kept. */
-.fx-tree-item.fx-on-path {
-  background: var(--stratakit-color-bg-glow-on-surface-neutral-hover);
+.fx-tree-tools {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--stratakit-space-200);
+}
+/*
+ * The highlighted path (I8): a 3 px bar in each row's family color at the
+ * tree's inline start, growing root first with the walk's stagger, and a
+ * ring on the swatch. Not the hover color.
+ */
+.fx-tree-item {
+  position: relative;
+}
+.fx-tree-item.fx-on-path::before {
+  content: "";
+  position: absolute;
+  inset-block: 2px;
+  inset-inline-start: 0;
+  inline-size: 3px;
+  border-radius: 2px;
+  background: var(--fx-family);
+  transform-origin: top;
+  animation: fx-grow-down 280ms var(--fx-ease) both;
+  animation-delay: calc(var(--i, 0) * 90ms);
+}
+.fx-tree-item .fx-swatch {
+  background: var(--fx-family);
 }
 .fx-tree-item.fx-on-path .fx-swatch {
   box-shadow:
@@ -381,9 +501,6 @@
   display: flex;
   flex-direction: column;
   gap: var(--stratakit-space-300);
-  padding: var(--stratakit-space-300);
-  border-radius: var(--stratakit-radius-md);
-  background: var(--stratakit-color-bg-page-depth);
 }
 .fx-walk-head {
   display: flex;
@@ -440,6 +557,58 @@
 }
 .fx-walk-acc {
   margin-inline-start: auto;
+}
+.fx-walk-node {
+  position: relative;
+  display: grid;
+  grid-template-columns: 14px minmax(0, 1fr);
+  gap: var(--stratakit-space-200);
+  padding-block-end: var(--stratakit-space-300);
+  animation: fx-in 320ms var(--fx-ease) both;
+  animation-delay: calc(var(--i, 0) * 90ms);
+}
+.fx-walk-node::before {
+  content: "";
+  inline-size: 10px;
+  block-size: 10px;
+  margin: 4px 2px 0;
+  box-sizing: border-box;
+  border: 2px solid var(--stratakit-color-text-neutral-primary);
+  border-radius: var(--stratakit-radius-sm);
+}
+.fx-walk-node::after {
+  content: "";
+  position: absolute;
+  inset-inline-start: 6px;
+  inset-block: 14px 0;
+  inline-size: 2px;
+  background: var(--stratakit-color-border-neutral-muted);
+}
+.fx-walk-node-label {
+  grid-column: 2;
+  font-weight: 600;
+}
+.fx-walk-adds {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-50);
+  margin-block-start: var(--stratakit-space-50);
+  padding-inline-start: var(--stratakit-space-200);
+  border-inline-start: 2px solid var(--stratakit-color-border-neutral-muted);
+}
+.fx-walk-note {
+  padding: var(--stratakit-space-150) var(--stratakit-space-200);
+  border-radius: var(--stratakit-radius-sm);
+  background: var(--stratakit-color-bg-page-depth);
+}
+.fx-walk-ref {
+  min-inline-size: 7.5rem;
+}
+.fx-walk-total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--stratakit-space-200);
 }
 
 .fx-budget {
@@ -602,33 +771,11 @@
 
 /* ---------------------------------------------------------- verify */
 
-/* The list scrolls above; the inspector, when open, takes the bottom. */
-.fx-tab-verify {
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-.fx-tab-verify[hidden] {
-  display: none;
-}
-.fx-verify {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--stratakit-space-200);
-}
-.fx-verify-list {
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
+.fx-verify-list-body {
   display: flex;
   flex-direction: column;
   gap: var(--stratakit-space-300);
-  padding-block-start: var(--stratakit-space-200);
-}
-.fx-inspector-full .fx-verify-list {
-  display: none;
+  padding-block: var(--stratakit-space-200);
 }
 .fx-verify-tools {
   display: flex;
@@ -644,6 +791,16 @@
   justify-content: space-between;
   gap: var(--stratakit-space-300);
   font-variant-numeric: tabular-nums;
+}
+.fx-verify-links {
+  display: flex;
+  margin-block: calc(-1 * var(--stratakit-space-100));
+}
+.fx-empty-filter {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--stratakit-space-200);
 }
 .fx-filter {
   display: flex;
@@ -690,6 +847,22 @@
 }
 .fx-card-status-text {
   font-weight: 400;
+}
+.fx-card-answer-fail {
+  color: var(--stratakit-color-text-critical-base);
+}
+/* A passing verdict: plain text and a small icon, no badge (I10). */
+.fx-verdict-pass {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.fx-verdict-pass svg {
+  color: var(--stratakit-color-icon-positive-base);
 }
 /* The body starts under the question, not a marker's width in. */
 .fx-card-body {
@@ -746,6 +919,18 @@
   text-overflow: ellipsis;
   color: var(--stratakit-color-text-neutral-secondary);
 }
+/* The selected row: a neutral surface and an accent bar, not a green wash (I10). */
+.fx-results .fx-result.Mui-selected,
+.fx-results .fx-result.Mui-selected:hover {
+  background: var(--stratakit-color-bg-glow-on-surface-neutral-pressed);
+}
+.fx-results .fx-result.Mui-selected > td:first-child {
+  box-shadow: inset 2px 0 0 var(--stratakit-color-border-accent-strong);
+  padding-inline-start: var(--stratakit-space-200);
+}
+.fx-fail-row .fx-row-button {
+  color: var(--stratakit-color-text-critical-base);
+}
 .fx-fp {
   display: inline-block;
   margin-block-start: var(--stratakit-space-50);
@@ -774,8 +959,12 @@
   display: block;
   inline-size: 100%;
   block-size: 6px;
+  box-sizing: border-box;
   border-radius: 3px;
-  background: var(--stratakit-color-bg-neutral-base);
+  /* A 1 px border-neutral-base outline: 3.4:1 on the page, so the track's
+     end and the tolerance's place show (I11). */
+  border: 1px solid var(--stratakit-color-border-neutral-base);
+  background: transparent;
 }
 .fx-tol-fill {
   position: absolute;
@@ -810,54 +999,50 @@
 .fx-tol-scale {
   position: relative;
   display: block;
-  block-size: 1.4em;
+  block-size: 1.8em;
   color: var(--stratakit-color-text-neutral-tertiary);
   font-size: var(--stratakit-font-size-caption-md);
 }
-.fx-tol-scale-tick {
+.fx-tol-decade {
   position: absolute;
   inset-block-start: 0;
+  border-inline-start: 1px solid var(--stratakit-color-border-neutral-base);
+  block-size: 4px;
+  white-space: nowrap;
+}
+.fx-tol-decade:first-child {
+  border-inline-start-color: transparent;
+}
+/* The labels sit under their tick; the first one starts at it. */
+.fx-tol-decade:not(:empty) {
+  block-size: auto;
+  padding-block-start: 4px;
   transform: translateX(-50%);
+}
+.fx-tol-decade:first-child:not(:empty) {
+  transform: none;
+}
+.fx-tol-decade:last-child:not(:empty) {
+  transform: translateX(-100%);
+}
+.fx-tol-decade-tol {
+  border-inline-start-color: var(--stratakit-color-text-neutral-primary);
 }
 .fx-tol-large .fx-tol-text {
   font-size: var(--stratakit-font-size-body-sm);
 }
 
-/* The inspector: a sheet under the list, or the whole tab when filled. */
+/* The inspector: the sheet's content (Sheet.tsx lays it out). */
 .fx-inspector {
-  flex: 0 0 auto;
-  max-block-size: 58%;
-  display: flex;
-  flex-direction: column;
-  border-block-start: 1px solid var(--stratakit-color-border-neutral-base);
-  box-shadow: 0 -8px 16px -12px var(--stratakit-color-border-neutral-base);
-  animation: fx-sheet 240ms var(--fx-ease) both;
-}
-.fx-inspector-full .fx-inspector {
-  flex: 1;
-  max-block-size: none;
-  border-block-start: 0;
-  box-shadow: none;
-}
-.fx-inspector-head {
-  flex: none;
-  display: flex;
-  align-items: center;
-  gap: var(--stratakit-space-200);
-  padding-block: var(--stratakit-space-150);
-}
-.fx-inspector-tools {
-  margin-inline-start: auto;
-  display: inline-flex;
-}
-.fx-inspector-body {
   flex: 1;
   min-block-size: 0;
-  overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
+.fx-inspector-body {
   display: flex;
   flex-direction: column;
   gap: var(--stratakit-space-500);
-  padding-block-end: var(--stratakit-space-300);
 }
 .fx-inspector-title {
   font-weight: 600;
@@ -958,6 +1143,10 @@
   gap: var(--stratakit-space-50);
 }
 .fx-formula .fx-code {
+  display: block;
+  padding: var(--stratakit-space-150) var(--stratakit-space-200);
+  border-radius: var(--stratakit-radius-sm);
+  background: var(--stratakit-color-bg-mono-muted);
   font-size: var(--stratakit-font-size-mono-sm);
 }
 .fx-fp-line {
@@ -1057,6 +1246,38 @@
  * left), and above the viewer's time controls (bottom centre).
  */
 .fx-hud-host {
+  color-scheme: dark;
+  --stratakit-color-bg-elevation-base: var(
+    --cesium-ui-surface,
+    oklch(26.92% 0.008 268.32)
+  );
+  --stratakit-color-bg-page-base: oklch(24.37% 0.006 268.32);
+  --stratakit-color-text-neutral-primary: var(
+    --cesium-ui-text,
+    oklch(99.06% 0.002 247.84)
+  );
+  --stratakit-color-text-neutral-secondary: var(
+    --cesium-ui-text-muted,
+    oklch(79.56% 0.008 241.69)
+  );
+  --stratakit-color-text-neutral-tertiary: oklch(69.04% 0.014 255.53);
+  --stratakit-color-text-attention-base: oklch(69.31% 0.129 79.75);
+  --stratakit-color-icon-neutral-base: var(
+    --cesium-ui-icon,
+    oklch(85.95% 0.006 255.48)
+  );
+  --stratakit-color-icon-neutral-secondary: oklch(75.82% 0.01 252.83);
+  --stratakit-color-icon-neutral-primary: oklch(99.06% 0.002 247.84);
+  --stratakit-color-border-neutral-base: oklch(55.22% 0.018 253.99);
+  --stratakit-color-border-neutral-muted: oklch(41.45% 0.013 256.75);
+  --stratakit-color-bg-glow-on-surface-neutral-hover: var(
+    --cesium-ui-hover,
+    oklch(100% 0 0 / 0.04)
+  );
+  --stratakit-color-bg-glow-on-surface-neutral-pressed: var(
+    --cesium-ui-pressed,
+    oklch(100% 0 0 / 0.08)
+  );
   position: absolute;
   inset: 0;
   pointer-events: none;
@@ -1089,7 +1310,7 @@
 .fx-legend {
   inset-inline-end: var(--stratakit-space-300);
   inset-block-end: var(--fx-hud-bottom, 64px);
-  inline-size: min(300px, calc(100% - 2 * var(--stratakit-space-300)));
+  inline-size: min(240px, calc(100% - 2 * var(--stratakit-space-300)));
   max-block-size: calc(100% - var(--fx-hud-bottom, 64px) - 60px);
   overflow: auto;
 }
@@ -1116,6 +1337,45 @@
   display: flex;
   flex-direction: column;
   min-inline-size: 0;
+}
+/* Compact (I17): one line each, ellipsized; the full line on hover and focus. */
+.fx-legend:not(.fx-legend-open) .fx-legend-list {
+  gap: var(--stratakit-space-100);
+}
+.fx-legend:not(.fx-legend-open) .fx-legend-text {
+  flex-direction: row;
+  gap: var(--stratakit-space-150);
+}
+.fx-legend:not(.fx-legend-open) .fx-legend-name {
+  flex: none;
+  white-space: nowrap;
+}
+.fx-legend:not(.fx-legend-open) .fx-legend-acc {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fx-legend:not(.fx-legend-open) li:hover .fx-legend-acc,
+.fx-legend:not(.fx-legend-open) li:focus-visible .fx-legend-acc {
+  white-space: normal;
+}
+.fx-legend li:focus-visible {
+  outline: 2px solid var(--cesium-ui-focus, #8cc4ff);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+/* A line's style as drawn on the globe (M8). */
+.fx-line-key {
+  flex: none;
+  inline-size: 16px;
+  margin-block-start: 0.55em;
+  border-block-start: 2px solid var(--fx-family);
+}
+.fx-line-dashed {
+  border-block-start-style: dashed;
+}
+.fx-line-dotted {
+  border-block-start-style: dotted;
 }
 .fx-legend-name {
   font-weight: 500;
@@ -1175,6 +1435,14 @@
   inline-size: min(340px, calc(100% - 2 * var(--stratakit-space-300)));
   animation: fx-in 320ms var(--fx-ease) both;
 }
+/* A narrow view: at the bottom, above the time controls, clear of Dyno's inspector (I18). */
+.fx-tour-narrow {
+  inset-block-start: auto;
+  inset-block-end: var(--fx-hud-bottom, 64px);
+  inset-inline: var(--stratakit-space-200);
+  inline-size: auto;
+}
+
 .fx-tour-head {
   display: flex;
   align-items: center;
@@ -1206,6 +1474,11 @@
     transform: scaleX(0);
   }
 }
+@keyframes fx-grow-down {
+  from {
+    transform: scaleY(0);
+  }
+}
 @keyframes fx-sheet {
   from {
     opacity: 0;
@@ -1214,8 +1487,10 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .fx-walk-edge,
+  .fx-walk-node,
   .fx-budget-seg,
-  .fx-inspector,
+  .fx-sheet,
+  .fx-tree-item.fx-on-path::before,
   .fx-tour {
     animation: none;
   }
@@ -1223,10 +1498,79 @@
 
 /* ----------------------------------------------------- narrow panel */
 
+/*
+ * Result rows below 480 px of panel (C4): each row two lines, the name and
+ * verdict over the bar, effect and accuracy; the header row hidden (the
+ * table's roles are explicit, so it stays a table to assistive tech).
+ */
+@container fx-panel (max-width: 480px) {
+  .fx-results,
+  .fx-results tbody {
+    display: block;
+  }
+  .fx-results colgroup,
+  .fx-results thead {
+    display: none;
+  }
+  .fx-results .fx-result {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "check status"
+      "value value"
+      "effect acc";
+    column-gap: var(--stratakit-space-300);
+    padding-block: var(--stratakit-space-150);
+    border-block-end: 1px solid var(--stratakit-color-border-neutral-muted);
+  }
+  .fx-results .fx-result > td {
+    display: block;
+    padding: 0;
+    border: 0;
+    font-size: var(--stratakit-font-size-body-sm);
+    line-height: var(--stratakit-line-height-body-sm);
+  }
+  .fx-results .fx-check {
+    grid-area: check;
+  }
+  .fx-results .fx-status {
+    grid-area: status;
+  }
+  .fx-results .fx-value {
+    grid-area: value;
+    padding-block: var(--stratakit-space-100);
+  }
+  .fx-results .fx-effect {
+    grid-area: effect;
+  }
+  .fx-results .fx-acc {
+    grid-area: acc;
+    justify-self: end;
+  }
+  .fx-results:not(.fx-has-effects) .fx-acc {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+  .fx-results .fx-effect::before,
+  .fx-results .fx-acc::before {
+    content: attr(data-label) " ";
+    color: var(--stratakit-color-text-neutral-secondary);
+  }
+  .fx-results .fx-result.Mui-selected > td:first-child {
+    box-shadow: none;
+    padding-inline-start: 0;
+  }
+  .fx-results .fx-result.Mui-selected {
+    box-shadow: inset 2px 0 0 var(--stratakit-color-border-accent-strong);
+    padding-inline-start: var(--stratakit-space-200);
+  }
+}
+
 @container fx-panel (max-width: 420px) {
   .fx-tour-prompt,
   .fx-run,
-  .fx-clock {
+  .fx-clock,
+  .fx-tree-tools {
     flex-direction: column;
     align-items: flex-start;
   }

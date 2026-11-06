@@ -122,13 +122,32 @@ export function quantity(
     return seconds(value, digits);
   }
   if (unit === undefined || unit === "") {
-    return sig(value, digits);
+    return dimensionless(value, digits);
   }
   // Angle marks sit on the number.
   if (unit === "″" || unit === "°" || unit === "′") {
     return `${sig(value, digits)}${unit}`;
   }
   return `${sig(value, digits)} ${unit}`;
+}
+
+/**
+ * A dimensionless value with a unit all the same (I12): a percent from 10⁻⁴
+ * up ("2.0%"), parts per million from 10⁻⁷ ("4.7 ppm"), else a power of ten
+ * marked as a ratio ("4.7 × 10⁻⁹ ratio").
+ */
+export function dimensionless(x: number, digits = 2): string {
+  const a = Math.abs(x);
+  if (a === 0) {
+    return "0";
+  }
+  if (a >= 1e-4) {
+    return `${sig(x * 100, digits)}%`;
+  }
+  if (a >= 1e-7) {
+    return `${sig(x * 1e6, digits)} ppm`;
+  }
+  return `${sig(x, digits)} ratio`;
 }
 
 /** An angle in radians, with its length at a distance if one is given. */

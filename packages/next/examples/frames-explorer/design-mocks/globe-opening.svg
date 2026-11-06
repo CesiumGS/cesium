@@ -1,0 +1,126 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 720" width="1120" height="720" font-family="Inter, system-ui, sans-serif">
+  <title>Frames explorer: the opening shot (design mock)</title>
+  <defs>
+    <radialGradient id="day" cx="62%" cy="38%" r="75%">
+      <stop offset="0" stop-color="#4f93d8"/>
+      <stop offset="0.55" stop-color="#2f6fb8"/>
+      <stop offset="1" stop-color="#1d4f8f"/>
+    </radialGradient>
+    <linearGradient id="night" x1="0" x2="1" y1="0" y2="0">
+      <stop offset="0" stop-color="#050b16" stop-opacity="0.85"/>
+      <stop offset="0.22" stop-color="#050b16" stop-opacity="0.72"/>
+      <stop offset="0.42" stop-color="#050b16" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="atmo" cx="50%" cy="50%" r="50%">
+      <stop offset="0.9" stop-color="#7fb4ff" stop-opacity="0"/>
+      <stop offset="0.97" stop-color="#7fb4ff" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#7fb4ff" stop-opacity="0"/>
+    </radialGradient>
+    <clipPath id="globe"><circle cx="372" cy="372" r="232"/></clipPath>
+    <marker id="ax" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="context-stroke"/></marker>
+      </defs>
+  <rect width="1120" height="720" fill="#f4f5f7"/>
+  <!-- The view (Dyno's side layout, 728 x 680) -->
+  <g transform="translate(20 20)">
+    <rect width="728" height="680" rx="8" fill="#03050a"/>
+    <g fill="#fff" opacity="0.55">
+      <circle cx="80" cy="110" r="0.9"/><circle cx="640" cy="90" r="1.1"/><circle cx="700" cy="300" r="0.8"/><circle cx="40" cy="420" r="1"/><circle cx="610" cy="600" r="0.9"/><circle cx="150" cy="60" r="0.7"/><circle cx="520" cy="40" r="0.8"/>
+    </g>
+    <circle cx="372" cy="372" r="252" fill="url(#atmo)"/>
+    <circle cx="372" cy="372" r="232" fill="url(#day)"/>
+    <g clip-path="url(#globe)" fill="#5c8f4e" opacity="0.9">
+      <!-- North America, stylized -->
+      <path d="M250 190 C300 160 380 170 430 200 C470 225 455 260 420 280 C400 300 380 330 350 360 C335 380 320 400 300 405 C285 380 270 350 250 330 C225 300 215 250 250 190 z"/>
+      <path d="M300 405 C320 430 330 470 345 520 C330 520 310 480 300 405 z"/>
+    </g>
+    <circle cx="372" cy="372" r="232" fill="url(#night)" clip-path="url(#globe)"/>
+    <!-- Geocentric triads: x-ray inside the globe (dashed, 40%), full outside -->
+    <g stroke-width="2" fill="none">
+      <line x1="372" y1="372" x2="372" y2="140" stroke="#5d97f7" stroke-dasharray="4 4" opacity="0.4"/>
+      <line x1="372" y1="140" x2="372" y2="70" stroke="#5d97f7" marker-end="url(#ax)"/>
+      <line x1="372" y1="372" x2="602" y2="342" stroke="#fc5855" stroke-dasharray="4 4" opacity="0.4"/>
+      <line x1="602" y1="342" x2="680" y2="332" stroke="#fc5855" marker-end="url(#ax)"/>
+      <line x1="372" y1="372" x2="190" y2="500" stroke="#5ad664" stroke-dasharray="4 4" opacity="0.4"/>
+      <line x1="190" y1="500" x2="140" y2="535" stroke="#5ad664" marker-end="url(#ax)"/>
+      <!-- GCRF, turned by Earth orientation: thinner, its own labels -->
+      <line x1="372" y1="140" x2="392" y2="66" stroke="#5d97f7" stroke-width="1.5" opacity="0.85" marker-end="url(#ax)"/>
+    </g>
+    <circle cx="372" cy="372" r="4" fill="#3bcddc" stroke="#000" stroke-width="1"/>
+    <g font-size="12" font-weight="600" stroke="#000" stroke-width="3" stroke-opacity="0.8" paint-order="stroke">
+      <text x="380" y="62" fill="#3bcddc">ITRF</text>
+      <text x="400" y="80" fill="#b298f9">GCRF</text>
+      <text x="686" y="336" fill="#fc5855" font-size="11" font-weight="500">x</text>
+      <text x="126" y="550" fill="#5ad664" font-size="11" font-weight="500">y</text>
+    </g>
+    <!-- The Sacramento site's ENU triad on the surface, 6% of the camera's distance -->
+    <g stroke-width="2" fill="none">
+      <line x1="300" y1="285" x2="336" y2="292" stroke="#fc5855" marker-end="url(#ax)"/>
+      <line x1="300" y1="285" x2="306" y2="252" stroke="#5ad664" marker-end="url(#ax)"/>
+      <line x1="300" y1="285" x2="284" y2="262" stroke="#5d97f7" marker-end="url(#ax)"/>
+    </g>
+    <circle cx="300" cy="285" r="3.5" fill="#3bcddc" stroke="#000" stroke-width="1"/>
+    <text x="312" y="312" font-size="12" font-weight="600" fill="#3bcddc" stroke="#000" stroke-width="3" stroke-opacity="0.8" paint-order="stroke">Sacramento ENU</text>
+    <!-- Dyno's chrome, untouched -->
+    <rect x="8" y="8" width="330" height="28" rx="6" fill="#0d0d0d" opacity="0.84"/>
+    <text x="18" y="27" font-size="12" fill="#c3c2b7"><tspan font-weight="700" fill="#fff">2.0</tspan>  CPU 0.7 ms · GPU 4.8 ms · 5 tiles · settled</text>
+    <rect x="8" y="636" width="300" height="36" rx="6" fill="#0d0d0d" opacity="0.84"/>
+    <text x="18" y="659" font-size="11" fill="#c3c2b7">CESIUM ion   Upgrade for commercial use.   Data attribution</text>
+    <rect x="160" y="566" width="420" height="52" rx="6" fill="#26282c"/>
+    <text x="210" y="588" font-size="12" fill="#fff">‹  Mon, Apr 6  ›      4:00 PM UTC−7   ⚙</text>
+    <rect x="172" y="598" width="396" height="12" rx="3" fill="#3d7fd0"/>
+    <!-- The legend: compact, drawn overlays only, 240 px, above the time controls -->
+    <g transform="translate(476 470)">
+      <rect width="240" height="84" rx="8" fill="#26282c" opacity="0.94"/>
+      <text x="12" y="20" font-size="12" font-weight="600" fill="#fff">On the globe</text>
+      <text x="222" y="20" font-size="11" fill="#c3cad6">˄</text>
+      <rect x="12" y="34" width="5" height="5" fill="#fc5855"/><rect x="19" y="34" width="5" height="5" fill="#5ad664"/><rect x="26" y="34" width="5" height="5" fill="#5d97f7"/>
+      <text x="38" y="40" font-size="11" font-weight="500" fill="#fff">Triads</text>
+      <text x="84" y="40" font-size="11" fill="#c3cad6">axes ±2.6 × 10⁻⁹ rad (EOP)…</text>
+      <line x1="12" y1="58" x2="30" y2="58" stroke="#3bcddc" stroke-width="2"/>
+      <text x="38" y="62" font-size="11" font-weight="500" fill="#fff">Sites</text>
+      <text x="84" y="62" font-size="11" fill="#e2b259">placement not stated</text>
+    </g>
+  </g>
+  <!-- Annotations -->
+  <g font-size="13" fill="#1f2328">
+    <text x="772" y="44" font-size="16" font-weight="700">The opening shot</text>
+    <g transform="translate(772 70)">
+      <text font-weight="600">1  Camera</text>
+      <text y="18" fill="#4a4f57">Above 135°W 25°N, 3.0 Earth radii from the</text>
+      <text y="34" fill="#4a4f57">geocentre, north up: the Earth fills about 70%</text>
+      <text y="50" fill="#4a4f57">of the view's height. No flight at load.</text>
+      <text y="80" font-weight="600">2  Clock and light</text>
+      <text y="98" fill="#4a4f57">The clock opens at the Artemis II flyby,</text>
+      <text y="114" fill="#4a4f57">2026-04-06 23:00 UTC: the sun is over 165°W,</text>
+      <text y="130" fill="#4a4f57">so the framed side is in daylight. The night</text>
+      <text y="146" fill="#4a4f57">side keeps 15% fill so coastlines still read.</text>
+      <text y="176" font-weight="600">3  Geocentric triads (ITRF, GCRF)</text>
+      <text y="194" fill="#4a4f57">1.5 Earth radii long so they leave the globe;</text>
+      <text y="210" fill="#4a4f57">inside it they draw through as 40% dashes</text>
+      <text y="226" fill="#4a4f57">(x-ray), outside at full strength.</text>
+      <text y="256" font-weight="600">4  A site triad and its label</text>
+      <text y="274" fill="#4a4f57">ENU at Sacramento, 6% of the camera's</text>
+      <text y="290" fill="#4a4f57">distance (R4). Label: body-sm 12 px, 600, the</text>
+      <text y="306" fill="#4a4f57">family's on-dark tone, 1.5 px dark halo,</text>
+      <text y="322" fill="#4a4f57">offset 12 px right and down of the origin.</text>
+      <text y="352" font-weight="600">5  Legend</text>
+      <text y="370" fill="#4a4f57">Compact: one line per overlay that is drawn,</text>
+      <text y="386" fill="#4a4f57">240 px wide, above the time controls. It</text>
+      <text y="402" fill="#4a4f57">appears with the first drawn overlay.</text>
+      <text y="432" font-weight="600">6  Dyno's chrome is untouched</text>
+      <text y="450" fill="#4a4f57">Inspector top left, credits bottom left,</text>
+      <text y="466" fill="#4a4f57">the viewer's time controls bottom centre.</text>
+      <text y="500" font-weight="600">Overlays are unlit</text>
+      <text y="518" fill="#4a4f57">Lines and triads are emissive: their color</text>
+      <text y="534" fill="#4a4f57">is the same on the day and night sides.</text>
+    </g>
+  </g>
+  <g font-size="12" font-weight="700" fill="#fff">
+    <circle cx="560" cy="58" r="10" fill="#1f6feb"/><text x="556" y="62">1</text>
+    <circle cx="86" cy="220" r="10" fill="#1f6feb"/><text x="82" y="224">2</text>
+    <circle cx="470" cy="122" r="10" fill="#1f6feb"/><text x="466" y="126">3</text>
+    <circle cx="268" cy="272" r="10" fill="#1f6feb"/><text x="264" y="276">4</text>
+    <circle cx="466" cy="478" r="10" fill="#1f6feb"/><text x="462" y="482">5</text>
+    <circle cx="352" cy="42" r="10" fill="#1f6feb"/><text x="348" y="46">6</text>
+  </g>
+</svg>

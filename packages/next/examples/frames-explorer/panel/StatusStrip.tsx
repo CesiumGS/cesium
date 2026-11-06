@@ -3,6 +3,7 @@
 // to do when data is missing.
 import {
   Alert,
+  Button,
   CircularProgress,
   IconButton,
   LinearProgress,
@@ -10,12 +11,13 @@ import {
 } from "@mui/material";
 import { svgInfo } from "@stratakit/icons/info";
 import { svgStatusError } from "@stratakit/icons/status-error";
+import { svgStatusPending } from "@stratakit/icons/status-pending";
 import { svgStatusSuccess } from "@stratakit/icons/status-success";
 import { Icon } from "@stratakit/mui";
 import { unstable_Popover as Popover } from "@stratakit/structures";
 import type { DataItem } from "../protocol.ts";
 import { duration, megabytes } from "./format.ts";
-import type { ItemStatus, PanelModel } from "./model.ts";
+import type { ItemStatus, PanelActions, PanelModel } from "./model.ts";
 import { ITEM_DETAIL, ITEM_LABEL, StatusBadge } from "./parts.tsx";
 
 function fetched(s: ItemStatus): string {
@@ -88,34 +90,75 @@ function ItemDetails({ items }: { items: readonly ItemStatus[] }) {
   );
 }
 
-export function StatusStrip({ model }: { model: PanelModel }) {
+/**
+ * What the strip announces (I19): changes of state, not every result.
+ * Start, each quarter of the run, and the end.
+ */
+function announcement(model: PanelModel, passed: number, failed: number) {
+  const { run } = model;
+  if (run.state === "running") {
+    const quarter = run.total > 0 ? Math.floor((4 * run.done) / run.total) : 0;
+    return quarter === 0 ? "Run started" : `Run ${25 * quarter}% done`;
+  }
+  if (run.state === "done") {
+    return `Run done: ${passed} passed, ${failed} failed`;
+  }
+  if (run.state === "cancelled") {
+    return "Run stopped";
+  }
+  return "";
+}
+
+export function StatusStrip({
+  model,
+  actions,
+  onShowFailure,
+}: {
+  model: PanelModel;
+  actions: PanelActions;
+  /** Opens Verify on the first failure (I1). */
+  onShowFailure: (id: string) => void;
+}) {
   const { items, run } = model;
   const fetching = items.filter((s) => s.state === "fetching");
   const missing = items.filter((s) => s.state === "missing");
   const failed = items.filter((s) => s.state === "error");
+  const allReady = items.every((s) => s.state === "ready");
   const judged = model.results.filter((r) => !r.displayOnly && !r.userInput);
-  const passed = judged.filter((r) => r.pass).length;
-  const failedCount = judged.filter(
+  const skipped = judged.filter((r) => r.missing && r.missing.length > 0);
+  const failures = judged.filter(
     (r) => !r.pass && (r.missing === undefined || r.missing.length === 0),
-  ).length;
+  );
+  const passed = judged.filter((r) => r.pass).length;
   const waitingGroups = new Set(Object.keys(model.waiting));
+  const details = (
+    <Popover content={<ItemDetails items={items} />}>
+      <IconButton size="small" aria-label="Data details">
+        <Icon href={svgInfo} />
+      </IconButton>
+    </Popover>
+  );
   return (
     <section className="fx-strip" aria-label="Data and results">
       <div className="fx-strip-row">
-        <ul className="fx-strip-items" aria-label="Data">
-          {items.map((s) => (
-            <li key={s.item}>
-              <ItemPill s={s} />
-            </li>
-          ))}
-        </ul>
-        <Popover content={<ItemDetails items={items} />}>
-          <IconButton size="small" aria-label="Data details">
-            <Icon href={svgInfo} />
-          </IconButton>
-        </Popover>
+        {allReady ? (
+          // Calm when nothing needs attention (I10): one quiet line.
+          <p className="fx-all-ready">
+            <Icon href={svgStatusSuccess} aria-hidden />
+            All data ready
+          </p>
+        ) : (
+          <ul className="fx-strip-items" aria-label="Data">
+            {items.map((s) => (
+              <li key={s.item}>
+                <ItemPill s={s} />
+              </li>
+            ))}
+          </ul>
+        )}
+        {details}
       </div>
-      <p className="fx-strip-counts" aria-live="polite">
+      <p className="fx-strip-counts">
         {run.state === "idle" && judged.length === 0 ? (
           <span className="fx-muted">No checks run yet</span>
         ) : (
@@ -124,12 +167,28 @@ export function StatusStrip({ model }: { model: PanelModel }) {
               <Icon href={svgStatusSuccess} aria-hidden />
               {passed} passed
             </span>
-            <span
-              className={`fx-count${failedCount > 0 ? " fx-count-fail" : ""}`}
-            >
-              <Icon href={svgStatusError} aria-hidden />
-              {failedCount} failed
-            </span>
+            {failures.length > 0 ? (
+              <Button
+                size="small"
+                variant="text"
+                color="error"
+                className="fx-count-fail"
+                startIcon={<Icon href={svgStatusError} />}
+                onClick={() => onShowFailure(failures[0]!.id)}
+              >
+                {failures.length} failed
+              </Button>
+            ) : (
+              <span className="fx-count">
+                <Icon href={svgStatusError} aria-hidden />0 failed
+              </span>
+            )}
+            {skipped.length > 0 && (
+              <span className="fx-count">
+                <Icon href={svgStatusPending} aria-hidden />
+                {skipped.length} skipped (missing data)
+              </span>
+            )}
             {waitingGroups.size > 0 && (
               <span className="fx-count fx-count-wait">
                 <CircularProgress size={10} aria-hidden />
@@ -137,7 +196,7 @@ export function StatusStrip({ model }: { model: PanelModel }) {
               </span>
             )}
             {run.state === "running" && (
-              <span className="fx-muted">
+              <span className="fx-muted fx-num">
                 running, {run.done} of {run.total}
               </span>
             )}
@@ -146,6 +205,9 @@ export function StatusStrip({ model }: { model: PanelModel }) {
             )}
           </>
         )}
+      </p>
+      <p className="fx-visually-hidden" aria-live="polite">
+        {announcement(model, passed, failures.length)}
       </p>
       {fetching.map((s) => (
         <div key={s.item} className="fx-fetch">
@@ -167,7 +229,21 @@ export function StatusStrip({ model }: { model: PanelModel }) {
         <MissingAlert missing={missing.map((s) => s.item)} />
       )}
       {failed.map((s) => (
-        <Alert key={s.item} severity="error" className="fx-strip-alert">
+        <Alert
+          key={s.item}
+          severity="error"
+          className="fx-strip-alert"
+          action={
+            <Button
+              size="small"
+              variant="outlined"
+              color="secondary"
+              onClick={() => actions.retryItem(s.item)}
+            >
+              Retry {ITEM_LABEL[s.item]}
+            </Button>
+          }
+        >
           {ITEM_LABEL[s.item]} failed to load. {s.detail}
         </Alert>
       ))}

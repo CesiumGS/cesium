@@ -84,6 +84,11 @@ export const GLOSSARY = {
     definition:
       "What a computation can claim about where something really is: the root sum square of its error terms, one standard deviation. Different from the tolerance, which checks the arithmetic.",
   },
+  byDefinition: {
+    term: "Exact by definition",
+    definition:
+      "A convention, not a measurement: adopted constants (the IAU 2006 frame bias) or defined offsets (TT − TAI = 32.184 s). There is no error to state, so it adds nothing to an accuracy.",
+  },
   notBounded: {
     term: "Not bounded",
     definition:

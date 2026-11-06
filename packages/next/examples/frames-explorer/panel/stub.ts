@@ -3,20 +3,33 @@
 // and states before 6b wires the worker, the overlays and the selection.
 // `stubModel(scenario)` gives the page in one of the states the design
 // covers; the example's `stub` param picks it.
-import type { AccuracyStatement } from "../../../src/measure/accuracy.ts";
+import type {
+  AccuracyStatement,
+  AccuracyTerm,
+} from "../../../src/measure/accuracy.ts";
 import type { DataItem, RunSummary } from "../protocol.ts";
 import references from "../references.json";
 import type { StressResult } from "../tests.ts";
 import type { TreeNode } from "../tree.ts";
-import type {
-  ComposedAccuracy,
-  GroupInfo,
-  ItemStatus,
-  OverlayView,
-  PanelModel,
-  ResultExtras,
-  TourStop,
+import { length } from "./format.ts";
+import {
+  type ComposedAccuracy,
+  type Comparison,
+  type ComposedView,
+  REFERENCES,
+  type GroupInfo,
+  type ItemStatus,
+  type OverlayView,
+  type PanelModel,
+  type Reference,
+  type ResultExtras,
+  type TourStop,
 } from "./model.ts";
+import {
+  GROUP_ACCURACY_NOTE,
+  GROUP_COMPARED,
+  STUB_LABELS,
+} from "./stubLabels.ts";
 import { STUB_RESULTS } from "./stubResults.ts";
 
 export type Scenario = "ready" | "fetching" | "missing" | "failure" | "start";
@@ -255,8 +268,8 @@ export const STUB_TREE: TreeNode = node(
             kind: "constant",
             detail: "frame bias (IAU 2006)",
             accuracy: {
-              radians: 1e-15,
-              note: "frame bias model accuracy (stated)",
+              byDefinition: true,
+              note: "exact by definition: the IAU 2006 frame bias is a set of adopted constants",
             },
           },
           [
@@ -306,7 +319,7 @@ export const STUB_TREE: TreeNode = node(
                   "PROJ operation: +proj=pipeline +step +proj=unitconvert +xy_in=us-ft +xy_out=m +step +inv +proj=lcc +lat_0=36.5 +lon_0=-120.5 +lat_1=38.4333333333333 +lat_2=37.0666666666667 +x_0=2000000.0001016 +y_0=500000.0001016 +ellps=GRS80 +step +proj=vgridshift +grids=us_noaa_g2018u0.tif +multiplier=1 +step +proj=cart +ellps=GRS80; grids: us_noaa_g2018u0.tif; accuracy ±2.015 m",
                 accuracy: {
                   meters: 2.015,
-                  note: "PROJ's stated accuracy for the recorded operation (grids: us_noaa_g2018u0.tif)",
+                  note: "PROJ's stated accuracy for the recorded operation: horizontal by the WGS 84 ensemble, 2 m; heights to NAVD88 by GEOID18 (us_noaa_g2018u0.tif)",
                 },
               },
               [],
@@ -378,132 +391,277 @@ export const STUB_TREE: TreeNode = node(
 
 // --------------------------------------------- composed accuracies (R8, accuracyOf)
 
-const MOON_DISTANCE_M = 3.844e8;
-const statement = (terms: AccuracyStatement["terms"]): AccuracyStatement => ({
-  meters: terms.some((t) => t.meters === undefined)
-    ? undefined
-    : Math.hypot(...terms.map((t) => t.meters!)),
-  terms,
-  warnings: [],
-});
-const eopAt = (meters: number, where: string) => ({
-  source: "earthOrientation" as const,
-  meters,
-  note: `measured Earth orientation (UT1 35 µs, polar motion 0.1 mas), at ${where}`,
-});
-const moonTerms: AccuracyStatement["terms"] = [
-  {
-    source: "ephemeris",
-    meters: 0.01,
-    note: "DE440 Earth-Moon fit to lunar laser ranging (Park et al. 2021)",
-  },
-  eopAt(EOP_RAD * MOON_DISTANCE_M, "the Moon's distance, 384,400 km"),
-  {
-    source: "relativity",
-    meters: 0.03,
-    note: "selenocentric relativistic terms, stated and not applied",
-  },
-];
+/*
+ * The stub's stand-in for accuracyOf (6b calls the library): a point at a
+ * frame's origin against a reference frame, walking the path the statement
+ * uses (the reference up to the common ancestor, then down to the frame),
+ * with each term tied to the edges it comes from (C2). The rules:
+ *
+ * - A rotation on the reference's side turns the whole vector to the point:
+ *   its error is σθ × the point's distance from the rotation's centre
+ *   (Earth orientation at the Moon: about 1 m).
+ * - A rotation on the frame's side, with no translation after it, turns
+ *   about the frame's own origin, so it moves that origin not at all; a
+ *   point away from the origin would need it.
+ * - DE440 origins on both sides of the ancestor enter once, as the vector
+ *   between them; the Earth's on both sides cancels.
+ * - The Moon's relativistic terms sit on no edge.
+ */
 
-/** A point at each frame's origin against ITRF at the clock's time. */
-export const STUB_COMPOSED: ComposedAccuracy = {
-  ITRF: statement([
-    {
-      source: "earthOrientation",
-      meters: 0,
-      note: "the origin is ITRF's own: nothing between them",
-    },
-  ]),
-  GCRF: statement([
-    {
-      source: "earthOrientation",
-      meters: 0,
-      note: "GCRF and ITRF share the geocentre; Earth orientation turns no point at the origin",
-    },
-  ]),
-  EARTH_ICRF: statement([
-    {
-      source: "ephemeris",
-      meters: 0.01,
-      note: "DE440: the Earth's barycentric position against the geocentre (Park et al. 2021)",
-    },
-  ]),
-  EME2000: statement([
-    {
-      source: "ephemeris",
-      meters: 0.01,
-      note: "DE440: the Earth's barycentric position (Park et al. 2021)",
-    },
-  ]),
-  ICRF: statement([
-    {
-      source: "ephemeris",
-      meters: 0.01,
-      note: "DE440: the solar-system barycentre against the geocentre (Park et al. 2021)",
-    },
-    eopAt(EOP_RAD * 1.496e11, "1 au"),
-  ]),
-  HCRS: statement([
-    {
-      source: "ephemeris",
-      meters: undefined,
-      note: "DE440 gives no stated absolute accuracy for the Sun's position",
-    },
-    eopAt(EOP_RAD * 1.496e11, "1 au"),
-  ]),
-  MOON_ICRF: statement(moonTerms),
-  MOON_ME: statement(moonTerms),
-  MOON_PA: statement(moonTerms),
-  "Lunar south-pole site": statement([
-    ...moonTerms,
-    {
-      source: "ephemeris",
-      meters: undefined,
-      note: "MOON_ME's orientation: the library gives no lunar orientation accuracy, so a point 1,737 km from the Moon's centre is not bounded",
-    },
-  ]),
-  orion: statement([
-    {
-      source: "ephemeris",
-      meters: 0.01,
-      note: "DE440 Earth-Moon fit to lunar laser ranging (Park et al. 2021)",
-    },
-    {
-      source: "trajectory",
-      meters: 0.278,
-      note: 'Trajectory "orion": position sigma at the instant',
-    },
-    {
-      source: "coordinateScale",
-      meters: 10.33,
-      note: 'Trajectory "orion": the scale of its coordinates (TDB or TT) is not stated, taken as TDB-compatible: 2.5e-8 of the geocentric distance',
-    },
-  ]),
-  "engineering:California zone 3 site": statement([
-    eopAt(0.0133, "the site, 6,371 km from the geocentre"),
-    {
-      source: "projection",
-      meters: 2.015,
-      note: 'engineering frame "California zone 3 site": PROJ operation (us_noaa_g2018u0.tif), stated as the WGS 84 ensemble\'s 2 m',
-    },
-  ]),
-  "engineering:ED50 / UTM zone 31N": statement([
-    eopAt(0.0096, "the site"),
-    {
-      source: "projection",
-      meters: undefined,
-      note: 'engineering frame "ED50 / UTM zone 31N": PROJ operation (no grids); its accuracy is not known',
-    },
-  ]),
-  "Sacramento ENU": statement([
-    eopAt(0.0166, "the site"),
-    {
-      source: "projection",
-      meters: undefined,
-      note: "a local frame: placed at a position it was given, with no stated accuracy",
-    },
-  ]),
+/** A body's distance from the geocentre, m, for the rotation terms. */
+const DISTANCE_M: Record<string, number> = {
+  ICRF: 1.496e11,
+  HCRS: 1.496e11,
+  MOON_ICRF: 3.844e8,
+  MOON_ME: 3.844e8,
+  MOON_PA: 3.844e8,
+  "Lunar south-pole site": 3.844e8,
+  orion: 3.8e8,
+  "engineering:California zone 3 site": 6.371e6,
+  "engineering:ED50 / UTM zone 31N": 6.371e6,
+  "Sacramento ENU": 6.371e6,
 };
+const MOON_SUBTREE = new Set([
+  "MOON_ICRF",
+  "MOON_ME",
+  "MOON_PA",
+  "Lunar south-pole site",
+]);
+const ROTATIONS = new Set(["ITRF", "EME2000", "MOON_ME", "MOON_PA"]);
+/** Edges whose origin is the Earth's in DE440. */
+const EARTH_ORIGIN = new Set(["GCRF", "EARTH_ICRF"]);
+
+function parents(tree: TreeNode): Map<string, TreeNode> {
+  const out = new Map<string, TreeNode>();
+  const walk = (n: TreeNode) => {
+    for (const c of n.children) {
+      out.set(c.id, n);
+      walk(c);
+    }
+  };
+  walk(tree);
+  return out;
+}
+const PARENT = parents(STUB_TREE);
+const byId = (() => {
+  const out = new Map<string, TreeNode>();
+  const walk = (n: TreeNode) => {
+    out.set(n.id, n);
+    n.children.forEach(walk);
+  };
+  walk(STUB_TREE);
+  return out;
+})();
+const chain = (id: string): string[] => {
+  const out = [id];
+  for (let p = PARENT.get(id); p; p = PARENT.get(p.id)) {
+    out.push(p.id);
+  }
+  return out;
+};
+
+const term = (
+  source: AccuracyTerm["source"],
+  meters: number | undefined,
+  note: string,
+  edges: string[],
+) => ({ t: { source, meters, note }, edges });
+
+/** The stub's composed statement for `target` against `reference`. */
+function composedFor(reference: Reference, target: string): ComposedView {
+  const up = chain(reference);
+  const down = chain(target);
+  const ancestor = up.find((id) => down.includes(id))!;
+  // Edges are named by their child: the reference's side, then the target's.
+  const upEdges = up.slice(0, up.indexOf(ancestor));
+  const downEdges = down.slice(0, down.indexOf(ancestor)).reverse();
+  const terms: { t: AccuracyTerm; edges: string[] }[] = [];
+  const zeroAtOrigin: { edge: string; why: string }[] = [];
+  const distance = DISTANCE_M[target] ?? 0;
+  const label = (id: string) => byId.get(id)?.label ?? id;
+
+  // Rotations on the reference's side turn the vector to the point.
+  for (const e of upEdges) {
+    if (e === "ITRF") {
+      if (distance === 0) {
+        zeroAtOrigin.push({
+          edge: e,
+          why: "Earth orientation turns about the geocentre, which is this origin",
+        });
+      } else {
+        terms.push(
+          term(
+            "earthOrientation",
+            EOP_RAD * distance,
+            `measured Earth orientation (UT1 35 µs, polar motion 0.1 mas) × the point's ${length(distance, 3)} from the geocentre`,
+            [e],
+          ),
+        );
+      }
+    }
+  }
+  // DE440 origins: once, as the vector between the two sides.
+  const de440 = [...upEdges, ...downEdges].filter(
+    (e) => byId.get(e)?.edge.kind === "translation" || e === "GCRF",
+  );
+  const earth = de440.filter((e) => EARTH_ORIGIN.has(e));
+  const others = de440.filter((e) => !EARTH_ORIGIN.has(e));
+  if (earth.length === 2) {
+    zeroAtOrigin.push({
+      edge: earth[1]!,
+      why: `${earth.map(label).join(" and ")} are the same DE440 Earth position, so it cancels`,
+    });
+  }
+  for (const e of others) {
+    if (e === "HCRS") {
+      terms.push(
+        term(
+          "ephemeris",
+          undefined,
+          "DE440 states no absolute accuracy for the Sun's position",
+          [e],
+        ),
+      );
+    } else {
+      const pair = earth.length === 1 ? [earth[0]!, e] : [e];
+      terms.push(
+        term(
+          "ephemeris",
+          0.01,
+          pair.length === 2
+            ? "DE440's Earth–Moon vector (lunar laser ranging fit), which both origins come from"
+            : "DE440 position (stated model accuracy)",
+          pair,
+        ),
+      );
+    }
+  }
+  if (earth.length === 1 && others.length === 0) {
+    terms.push(
+      term(
+        "ephemeris",
+        0.01,
+        "DE440's Earth position (stated model accuracy)",
+        [earth[0]!],
+      ),
+    );
+  }
+  // The target's side: rotations about the origin, then its own edge.
+  downEdges.forEach((e, i) => {
+    const after = downEdges.slice(i + 1);
+    const translationAfter = after.some(
+      (a) => !ROTATIONS.has(a) && byId.get(a)?.edge.kind !== "translation",
+    );
+    if (e === "ITRF" && distance === 0) {
+      zeroAtOrigin.push({
+        edge: e,
+        why: "Earth orientation turns about the geocentre, which is this origin",
+      });
+    } else if (e === "ITRF") {
+      terms.push(
+        term(
+          "earthOrientation",
+          EOP_RAD * distance,
+          `measured Earth orientation × the point's ${length(distance, 3)} from the geocentre`,
+          [e],
+        ),
+      );
+    } else if (e === "EME2000") {
+      zeroAtOrigin.push({
+        edge: e,
+        why: "the frame bias is exact by definition (IAU 2006 adopted constants)",
+      });
+    } else if (e === "MOON_ME" || e === "MOON_PA") {
+      if (translationAfter) {
+        terms.push(
+          term(
+            "ephemeris",
+            undefined,
+            `${label(e)}'s orientation has no stated accuracy, and the point is 1,737 km from the Moon's centre`,
+            [e],
+          ),
+        );
+      } else {
+        zeroAtOrigin.push({
+          edge: e,
+          why: "a rotation about the Moon's centre, which is this origin",
+        });
+      }
+    } else if (e === "orion") {
+      terms.push(
+        term("trajectory", 0.278, "the OEM's covariance at the instant", [e]),
+        term(
+          "coordinateScale",
+          10.33,
+          "the OEM doesn't state its time scale (TDB or TT); taken as TDB: 2.5 × 10⁻⁸ of the geocentric distance",
+          [e],
+        ),
+      );
+    } else if (e.startsWith("engineering:")) {
+      const a = byId.get(e)!.edge.accuracy;
+      terms.push(
+        term(
+          "projection",
+          a.meters,
+          a.meters !== undefined
+            ? "PROJ's stated accuracy for the recorded operation: horizontal by the WGS 84 ensemble, 2 m; heights to NAVD88 by GEOID18"
+            : "PROJ states no accuracy for the recorded operation",
+          [e],
+        ),
+      );
+    } else if (e === "Sacramento ENU" || e === "Lunar south-pole site") {
+      terms.push(
+        term(
+          "projection",
+          undefined,
+          "a local frame placed at a position it was given, with no stated accuracy",
+          [e],
+        ),
+      );
+    }
+  });
+  if (MOON_SUBTREE.has(target) && !up.some((id) => MOON_SUBTREE.has(id))) {
+    terms.push(
+      term(
+        "relativity",
+        0.03,
+        "the Moon's relativistic terms (its clock), stated and not applied",
+        [],
+      ),
+    );
+  }
+  const ts = terms.map((x) => x.t);
+  const statement: AccuracyStatement = {
+    meters: ts.some((t) => t.meters === undefined)
+      ? undefined
+      : Math.hypot(...ts.map((t) => t.meters!)),
+    terms: ts,
+    warnings:
+      target === "orion"
+        ? ["the OEM's time scale is assumed (TDB), not stated"]
+        : [],
+  };
+  const lunarRotation = zeroAtOrigin.some(
+    (z) => z.edge === "MOON_ME" || z.edge === "MOON_PA",
+  );
+  return {
+    statement,
+    termEdges: terms.map((x) => x.edges),
+    zeroAtOrigin,
+    ...(lunarRotation && {
+      note: "A point away from the Moon's centre isn't bounded: MOON_ME's orientation has no stated accuracy (see the lunar south-pole site).",
+    }),
+  };
+}
+
+export const STUB_COMPOSED: ComposedAccuracy = Object.fromEntries(
+  REFERENCES.map((ref) => [
+    ref,
+    Object.fromEntries(
+      [...byId.keys()].map((id) => [id, composedFor(ref, id)]),
+    ),
+  ]),
+) as ComposedAccuracy;
 
 // ------------------------------------------------- inspector extras (R16)
 
@@ -519,7 +677,7 @@ export const STUB_EXTRAS: Readonly<Record<string, ResultExtras>> = {
       {
         kind: "input",
         label: "Design line, California zone 3 (EPSG:6420, US survey feet)",
-        value: "10000 ftUS",
+        value: "10,000 ftUS",
       },
       {
         kind: "step",
@@ -561,6 +719,7 @@ export const STUB_EXTRAS: Readonly<Record<string, ResultExtras>> = {
       "true ≈ design × S × (1200/3937) ÷ k̄, where k̄ is the mean combined factor (grid scale × R/(R + h)) along the line",
   },
   "reference-values.ngs-gu2195.grid": {
+    accuracyNote: "published value ± half its last digit (0.5 mm)",
     source: {
       document: entries["ngs-GU2195"]!.source.document!,
       publisher: entries["ngs-GU2195"]!.source.publisher,
@@ -630,6 +789,35 @@ export const STUB_EXTRAS: Readonly<Record<string, ResultExtras>> = {
 /** Tokyo / Japan Plane Rectangular CS IX as a bound CRS (references.json, an input). */
 export const EXAMPLE_WKT2 = entries["input-wkt2-tokyo-jprcs-ix"]!.wkt2!;
 
+/** Every shown result's extras: its label, F27's note, what it's compared against, then the specific ones above. */
+function stubExtras(
+  rs: readonly StressResult[],
+): Readonly<Record<string, ResultExtras>> {
+  const out: Record<string, ResultExtras> = {};
+  for (const r of rs) {
+    const own = STUB_EXTRAS[r.id];
+    const compared: Comparison | undefined =
+      r.expectedError !== undefined
+        ? { kind: "error", text: `An error matching /${r.expectedError}/.` }
+        : GROUP_COMPARED[r.group];
+    out[r.id] = {
+      ...(STUB_LABELS[r.id] && { label: STUB_LABELS[r.id] }),
+      ...(r.accuracy === undefined &&
+        GROUP_ACCURACY_NOTE[r.group] && {
+          accuracyNote: GROUP_ACCURACY_NOTE[r.group],
+        }),
+      ...(compared && { compared }),
+      ...(r.group === "measurement" &&
+        r.accuracy !== undefined && {
+          relative:
+            "The site's absolute placement is ±2.8 m (1σ); this check measures a distance, which that placement doesn't affect.",
+        }),
+      ...own,
+    };
+  }
+  return out;
+}
+
 // ------------------------------------------------------------------- tour
 
 export const STUB_TOUR: readonly TourStop[] = [
@@ -644,7 +832,7 @@ export const STUB_TOUR: readonly TourStop[] = [
     id: "gcrf-itrf-day",
     title: "GCRF to ITRF over a day",
     caption:
-      "Run the clock: ITRF's triad sweeps a full turn against GCRF's in one sidereal day.",
+      "Run the clock: the globe is drawn Earth-fixed, so GCRF's triad turns once against ITRF's in a sidereal day.",
     overlays: ["triads"],
   },
   {
@@ -724,7 +912,7 @@ function items(scenario: Scenario): ItemStatus[] {
           item: "geoid",
           state: "error",
           detail:
-            "us_noaa_g2018u0.tif: the response ended at 7.9 of 16.7 MB (network error). Turn GEOID18 overlays or tests on again to retry.",
+            "The response for us_noaa_g2018u0.tif ended at 7.9 of 16.7 MB: a network error.",
         },
         { item: "orion", state: "ready", bytes: 6.26 * MB, ms: 540 },
       ];
@@ -751,32 +939,34 @@ function overlays(scenario: Scenario): OverlayView[] {
     {
       id: "triads",
       label: "Triads",
+      short: "Triads",
       on: true,
       state: "drawn",
       accuracy:
-        "ITRF: Earth orientation 2.6 × 10⁻⁹ rad (measured); GCRF: DE440 ±1.0 cm",
+        "axes: GCRF against ITRF ±2.6 × 10⁻⁹ rad (Earth orientation, measured)",
     },
     {
       id: "designGrid",
       label: "California design grid, with true north",
+      short: "Design grid",
       on: scenario !== "start",
       state: scenario === "start" ? "off" : projState,
       waitingFor: "proj",
-      accuracy:
-        "PROJ operation ±2.0 m (NAD83(2011) to WGS 84); round trip ≤ 3.4 nm",
+      accuracy: "±2.0 m (1σ): the WGS 84 ensemble; round trip ≤ 3.4 nm",
       ...(scenario === "missing" && { problem: missing }),
     },
     {
       id: "siteGrid",
       label: "Site grid (θ = 12.5°, s = 1.0000375)",
+      short: "Site grid",
       on: false,
       state: "off",
-      accuracy:
-        "the design grid's operation, ±2.0 m; site formula exact to 1 nm",
+      accuracy: "±2.0 m (1σ), the design grid's; site formula exact to 1 nm",
     },
     {
       id: "rigidVsExact",
       label: "Rigid and exact 20 km line",
+      short: "Rigid vs exact",
       on: scenario === "ready" || scenario === "failure",
       state: scenario === "ready" || scenario === "failure" ? "drawn" : "off",
       accuracy: "sag 31.2 m at 20 km (geometry, exact)",
@@ -784,6 +974,7 @@ function overlays(scenario: Scenario): OverlayView[] {
     {
       id: "roundTrip",
       label: "Round-trip markers from the last run",
+      short: "Round trips",
       on: false,
       state: "off",
       accuracy: "worst round trip 3.4 nm against 0.10 mm",
@@ -791,6 +982,7 @@ function overlays(scenario: Scenario): OverlayView[] {
     {
       id: "orion",
       label: "Orion's path",
+      short: "Orion",
       on: scenario === "fetching" || scenario === "ready",
       state:
         scenario === "fetching"
@@ -799,13 +991,13 @@ function overlays(scenario: Scenario): OverlayView[] {
             ? "drawn"
             : "off",
       waitingFor: "orion",
-      accuracy:
-        "not bounded: the OEM doesn't state its time scale (TDB or TT), taken as TDB: 10 m at the Moon",
-      unbounded: true,
+      accuracy: "±10 m (1σ), mostly the unstated time scale, taken as TDB",
+      caution: true,
     },
     {
       id: "distortion",
       label: "Distortion",
+      short: "Distortion",
       on: false,
       state: "off",
       accuracy:
@@ -814,9 +1006,11 @@ function overlays(scenario: Scenario): OverlayView[] {
     {
       id: "bias",
       label: "Frame bias exaggeration",
+      short: "Frame bias",
       on: false,
       state: "off",
-      accuracy: "frame bias 23 mas, IAU 2006, model accuracy 10⁻¹⁵ rad",
+      accuracy:
+        "the frame bias, 23 mas: exact by definition (IAU 2006 adopted constants)",
     },
   ];
 }
@@ -908,7 +1102,7 @@ export function stubModel(scenario: Scenario): PanelModel {
     triadScale: "triads drawn at 6% of the camera's distance, 2 m to 2,000 km",
     groups: STUB_GROUPS,
     results: rs,
-    extras: STUB_EXTRAS,
+    extras: stubExtras(rs),
     waiting,
     run: running
       ? { state: "running", done: rs.length, total: STUB_RESULTS.length }
@@ -933,16 +1127,21 @@ export function stubModel(scenario: Scenario): PanelModel {
     exampleWkt2: EXAMPLE_WKT2,
     tour: STUB_TOUR,
     environment: [
-      ["Run", "2026-11-06T09:14:03Z, 4.2 s (stub)"],
+      ["Run", "2026-11-06 09:14:03 UTC, 4.2 s"],
       ["Package", "@cesium/next 2.0.0-poc.0"],
       ["PROJ", "9.7.1, WebAssembly; proj.db sha256 b192cb2fd7eb…"],
-      ["GEOID18", "us_noaa_g2018u0.tif, sha256 fa9a407ac7ee…"],
+      [
+        "GEOID18",
+        scenario === "failure"
+          ? "not loaded: the fetch failed"
+          : "us_noaa_g2018u0.tif, sha256 fa9a407ac7ee…",
+      ],
       [
         "Frame data",
         "DE440 2000–2050 (planets ae871820c05f…, Moon e5bcd7c4ec5e…), EOP-All.csv d35352cb8269…, Leap_Second.dat 6cb6f5d4b819…",
       ],
       ["Artemis II OEM", "EM2_FODNAVBET_revF_PUBLIC.oem, sha256 d8ed8a5a16d4…"],
-      ["Browser", "the user agent, in the report"],
+      ["Browser", "Chrome 142 on macOS (from the user agent)"],
     ],
   };
 }

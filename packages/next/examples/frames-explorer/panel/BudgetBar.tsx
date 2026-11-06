@@ -12,18 +12,21 @@ import type { Family } from "./families.ts";
 import { length } from "./format.ts";
 import { AccuracyText } from "./parts.tsx";
 
-/** The family a term's error comes from (its segment's color). */
-const TERM_FAMILY: Record<AccuracyTerm["source"], Family> = {
+/**
+ * The family a term's error comes from (its segment's color); a term on no
+ * edge (the Moon's relativity) takes the neutral "no edge" tone (I9).
+ */
+const TERM_FAMILY: Record<AccuracyTerm["source"], Family | "noedge"> = {
   ephemeris: "celestial",
   earthOrientation: "earth",
-  relativity: "moon",
+  relativity: "noedge",
   projection: "engineering",
   trajectory: "trajectory",
   coordinateScale: "trajectory",
   lightTime: "celestial",
 };
 
-const TERM_LABEL: Record<AccuracyTerm["source"], string> = {
+export const TERM_LABEL: Record<AccuracyTerm["source"], string> = {
   ephemeris: "Ephemeris",
   earthOrientation: "Earth orientation",
   relativity: "Relativity",
@@ -43,21 +46,34 @@ const percent = (share: number) =>
 export function BudgetBar({
   accuracy,
   label,
+  from,
 }: {
   accuracy: AccuracyStatement;
   /** What the statement is of, as the bar's accessible name. */
   label: string;
+  /** For each term, the edges it comes from, as the walk names them (C2). */
+  from?: readonly string[];
 }) {
   const known = accuracy.terms.filter(
     (t): t is AccuracyTerm & { meters: number } => t.meters !== undefined,
   );
   const variance = known.reduce((s, t) => s + t.meters * t.meters, 0);
   const unknown = accuracy.terms.filter((t) => t.meters === undefined);
+  if (accuracy.terms.length === 0) {
+    return (
+      <div className="fx-budget-total">
+        <Typography variant="body-sm" color="textSecondary" render={<span />}>
+          Composed accuracy (1σ)
+        </Typography>
+        <span className="fx-budget-value">exact at the origin</span>
+      </div>
+    );
+  }
   return (
     <figure className="fx-budget">
       <div className="fx-budget-total">
         <Typography variant="body-sm" color="textSecondary" render={<span />}>
-          Composed accuracy
+          Composed accuracy (1σ)
         </Typography>
         <span className="fx-budget-value">
           <AccuracyText accuracy={accuracy} compact />
@@ -105,6 +121,9 @@ export function BudgetBar({
                   />
                   <span>
                     {TERM_LABEL[t.source]}
+                    {from?.[i] !== undefined && (
+                      <span className="fx-muted">, from {from[i]}</span>
+                    )}
                     <span className="fx-term-note">{t.note}</span>
                   </span>
                 </th>
@@ -127,8 +146,8 @@ export function BudgetBar({
           </tbody>
         </table>
         <Typography variant="caption-md" color="textSecondary" render={<p />}>
-          Widths are each term&rsquo;s share of the variance, σᵢ²/σ², which sums
-          to the total: σ = √(Σσᵢ²).
+          Widths are each term&rsquo;s share of the variance (σᵢ²/σ²); the total
+          is σ = √Σσᵢ².
         </Typography>
       </figcaption>
     </figure>

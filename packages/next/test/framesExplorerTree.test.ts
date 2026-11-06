@@ -319,7 +319,9 @@ describe("edge accuracy (R8)", () => {
         }
         // Undefined means unknown, and the note says why.
         if (accuracy.meters === undefined && accuracy.radians === undefined) {
-          expect(accuracy.note, n.id).toMatch(/not|unknown|ballpark|defines/i);
+          expect(accuracy.note, n.id).toMatch(
+            /not|unknown|ballpark|defines|by definition/i,
+          );
         }
       });
       expect(count).toBe(9 + 3 + 1 + 1);
@@ -334,7 +336,11 @@ describe("edge accuracy (R8)", () => {
     expect(find(tree, "HCRS")!.edge.accuracy.meters).toBeUndefined();
     expect(find(tree, "HCRS")!.edge.accuracy.note).toMatch(/no stated/);
     expect(find(tree, "GCRF")!.edge.accuracy.meters).toBe(0.01);
-    expect(find(tree, "EME2000")!.edge.accuracy.radians).toBe(1e-15);
+    // The frame bias is adopted constants: exact by definition, no number.
+    const bias = find(tree, "EME2000")!.edge.accuracy;
+    expect(bias.byDefinition).toBe(true);
+    expect(bias.radians).toBeUndefined();
+    expect(bias.note).toMatch(/exact by definition/);
   });
 
   it("does not claim an accuracy for the ICRF root", () => {

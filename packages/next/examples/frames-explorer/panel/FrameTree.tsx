@@ -1,5 +1,5 @@
 // The frame tree (R14 structure; R8 accuracy in every row; R16 walk the tree).
-import { Typography } from "@mui/material";
+import { Button, Typography } from "@mui/material";
 import { svgFitToView } from "@stratakit/icons/fit-to-view";
 import { Tree } from "@stratakit/structures";
 import { useMemo, useState } from "react";
@@ -16,13 +16,20 @@ interface Row {
   hasChildren: boolean;
 }
 
-/** An edge's accuracy for its row: a number, or why there isn't one. */
+/**
+ * An edge's own accuracy for its row (C3: the edge's figure; composed
+ * figures are the walk's): a number, "exact by definition" for a
+ * convention, or why there isn't one.
+ */
 export function edgeAccuracyText(
   kind: TreeNode["edge"]["kind"],
   a: EdgeAccuracy,
 ): { text: string; unknown: boolean } {
   if (kind === "root") {
     return { text: "defines the frame", unknown: false };
+  }
+  if (a.byDefinition) {
+    return { text: "exact by definition", unknown: false };
   }
   const parts: string[] = [];
   if (a.meters !== undefined) {
@@ -40,13 +47,25 @@ export function edgeAccuracyText(
   };
 }
 
+/** Nodes at this level and deeper start collapsed (I7). */
+const COLLAPSED_FROM = 3;
+
+/** Every node at `COLLAPSED_FROM` or deeper with children: the tree's first state. */
+function deepParents(tree: TreeNode): Set<string> {
+  const out = new Set<string>();
+  const walk = (n: TreeNode, level: number) => {
+    if (level >= COLLAPSED_FROM && n.children.length > 0) {
+      out.add(n.id);
+    }
+    n.children.forEach((c) => walk(c, level + 1));
+  };
+  walk(tree, 1);
+  return out;
+}
+
 /** The tree as Tree.Root wants it: a flat list, children after their parent. */
-function flatten(
-  root: TreeNode,
-  collapsed: ReadonlySet<string>,
-): { rows: Row[]; families: Map<string, Family> } {
+function flatten(root: TreeNode, collapsed: ReadonlySet<string>): Row[] {
   const rows: Row[] = [];
-  const families = new Map<string, Family>();
   const walk = (
     node: TreeNode,
     level: number,
@@ -56,7 +75,6 @@ function flatten(
     shown: boolean,
   ) => {
     const family = familyOf(node, parent);
-    families.set(node.id, family);
     if (shown) {
       rows.push({
         node,
@@ -79,7 +97,7 @@ function flatten(
     );
   };
   walk(root, 1, 1, 1, undefined, true);
-  return { rows, families };
+  return rows;
 }
 
 export function FrameTree({
@@ -92,71 +110,108 @@ export function FrameTree({
   tree: TreeNode;
   /** The selected node's id. */
   selected: string | undefined;
-  /** Every node on the selected node's path to the root. */
-  onPath: ReadonlySet<string>;
+  /**
+   * The highlighted path, root first, each node with its place on it (for
+   * the connector's stagger): the selected frame's, or a selected result's
+   * frames' (R14).
+   */
+  onPath: ReadonlyMap<string, number>;
   onSelect: (id: string | undefined) => void;
   onShow: (id: string) => void;
 }) {
-  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(
-    () => new Set(),
+  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(() =>
+    deepParents(tree),
   );
-  const { rows } = useMemo(() => flatten(tree, collapsed), [tree, collapsed]);
+  // The path is always shown: its collapsed ancestors open (not stored, so
+  // collapsing again works once the path moves).
+  const shown = useMemo(() => {
+    const next = new Set(collapsed);
+    for (const id of onPath.keys()) {
+      next.delete(id);
+    }
+    return next;
+  }, [collapsed, onPath]);
+  const rows = useMemo(() => flatten(tree, shown), [tree, shown]);
+  const anyCollapsed = shown.size > 0;
   return (
-    <Tree.Root className="fx-tree" aria-label="Frame tree">
-      {rows.map(({ node, family, level, posinset, setsize, hasChildren }) => {
-        const acc = edgeAccuracyText(node.edge.kind, node.edge.accuracy);
-        const isSelected = node.id === selected;
-        const path = !isSelected && onPath.has(node.id);
-        return (
-          <Tree.Item
-            key={node.id}
-            aria-level={level}
-            aria-posinset={posinset}
-            aria-setsize={setsize}
-            className={`fx-tree-item${path ? " fx-on-path" : ""}`}
-            selected={isSelected}
-            onSelectedChange={(v) => onSelect(v ? node.id : undefined)}
-            {...(hasChildren && {
-              expanded: !collapsed.has(node.id),
-              onExpandedChange: (open: boolean) =>
-                setCollapsed((was) => {
-                  const next = new Set(was);
-                  if (open) {
-                    next.delete(node.id);
-                  } else {
-                    next.add(node.id);
-                  }
-                  return next;
-                }),
-            })}
-            unstable_decorations={
-              <span
-                className={`fx-swatch fx-family-${family}`}
-                role="img"
-                aria-label={FAMILY_INFO[family].label}
-              />
-            }
-            label={node.label}
-            description={
-              <span className="fx-edge">
-                <span className="fx-chip">{EDGE_LABEL[node.edge.kind]}</span>
-                <span className={`fx-num${acc.unknown ? " fx-unbounded" : ""}`}>
-                  {acc.text}
+    <>
+      <div className="fx-tree-tools">
+        <Typography variant="caption-lg" color="textSecondary" render={<p />}>
+          Each row is a frame and its edge to the parent: the edge&rsquo;s kind
+          and its own accuracy. Select one to walk it.
+        </Typography>
+        <Button
+          size="small"
+          variant="text"
+          onClick={() =>
+            setCollapsed(anyCollapsed ? new Set() : deepParents(tree))
+          }
+        >
+          {anyCollapsed ? "Expand all" : "Collapse"}
+        </Button>
+      </div>
+      <Tree.Root className="fx-tree" aria-label="Frame tree">
+        {rows.map(({ node, family, level, posinset, setsize, hasChildren }) => {
+          const acc = edgeAccuracyText(node.edge.kind, node.edge.accuracy);
+          const step = onPath.get(node.id);
+          return (
+            <Tree.Item
+              key={node.id}
+              aria-level={level}
+              aria-posinset={posinset}
+              aria-setsize={setsize}
+              className={`fx-tree-item fx-family-${family}${step !== undefined ? " fx-on-path" : ""}`}
+              style={
+                step !== undefined ? { ["--i" as string]: step } : undefined
+              }
+              selected={node.id === selected}
+              onSelectedChange={(v) => onSelect(v ? node.id : undefined)}
+              {...(hasChildren && {
+                expanded: !shown.has(node.id),
+                onExpandedChange: (open: boolean) =>
+                  setCollapsed((was) => {
+                    const next = new Set(was);
+                    if (open) {
+                      next.delete(node.id);
+                    } else {
+                      next.add(node.id);
+                    }
+                    return next;
+                  }),
+              })}
+              unstable_decorations={
+                <span
+                  className="fx-swatch"
+                  role="img"
+                  aria-label={FAMILY_INFO[family].label}
+                />
+              }
+              label={node.label}
+              description={
+                <span className="fx-edge">
+                  <span className="fx-edge-kind">
+                    {EDGE_LABEL[node.edge.kind]}
+                  </span>
+                  <span
+                    className={`fx-num${acc.unknown ? " fx-unbounded" : ""}`}
+                  >
+                    {acc.text}
+                  </span>
                 </span>
-              </span>
-            }
-            inlineActions={[
-              <Tree.ItemAction
-                key="show"
-                label={`Show ${node.label} on the globe`}
-                icon={svgFitToView}
-                onClick={() => onShow(node.id)}
-              />,
-            ]}
-          />
-        );
-      })}
-    </Tree.Root>
+              }
+              inlineActions={[
+                <Tree.ItemAction
+                  key="show"
+                  label={`Show ${node.label} on the globe`}
+                  icon={svgFitToView}
+                  onClick={() => onShow(node.id)}
+                />,
+              ]}
+            />
+          );
+        })}
+      </Tree.Root>
+    </>
   );
 }
 

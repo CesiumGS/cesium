@@ -13,27 +13,67 @@ import {
 } from "@mui/material";
 import { svgFitToView } from "@stratakit/icons/fit-to-view";
 import { svgPlay } from "@stratakit/icons/play";
+import { svgStatusSuccess } from "@stratakit/icons/status-success";
 import { Icon } from "@stratakit/mui";
 import { type ReactNode, useEffect, useRef } from "react";
 import type { DataItem } from "../protocol.ts";
 import type { StressResult } from "../tests.ts";
 import { quantity } from "./format.ts";
-import type { GroupInfo } from "./model.ts";
+import type { GroupInfo, ResultExtras } from "./model.ts";
 import {
   AccuracyText,
   ITEM_LABEL,
   StatusBadge,
   resultStatus,
 } from "./parts.tsx";
-import { ToleranceBar } from "./ToleranceBar.tsx";
+import { ToleranceBar, ofTolerance } from "./ToleranceBar.tsx";
 
-/** The card's answer: the first effect, else the worst value against its tolerance. */
+/** A result's row name: its short label (I14), else its title. */
+export const rowName = (r: StressResult, extras?: ResultExtras) =>
+  extras?.label ?? r.title;
+
+/** A judged result that failed (not skipped, not shown-only, not the user's). */
+export const isFailure = (r: StressResult) =>
+  !r.pass &&
+  !r.displayOnly &&
+  !r.userInput &&
+  (r.missing === undefined || r.missing.length === 0);
+
+/** Why a result failed, in a few words (I1): the fingerprint, the error, or how far over. */
+export function whyFailed(r: StressResult, extras?: ResultExtras): string {
+  const name = rowName(r, extras);
+  if (r.fingerprintCheck && !r.fingerprintCheck.match) {
+    return `Browser ≠ Node, ${name}: ${r.fingerprintCheck.difference ?? "the fingerprints differ"}`;
+  }
+  if (r.expectedError !== undefined) {
+    return r.error === undefined
+      ? `${name}: expected an error, and nothing was thrown`
+      : `${name}: threw a different error, "${r.error}"`;
+  }
+  if (r.value !== undefined && r.tolerance !== undefined) {
+    return `${name}: ${quantity(r.value, r.unit)}, ${ofTolerance(r.value, r.tolerance)}`;
+  }
+  return r.error !== undefined ? `${name}: ${r.error}` : `${name} failed`;
+}
+
+/**
+ * The card's answer (its headline): a failure first (I1), else the first
+ * effect, else the worst value against its tolerance.
+ */
 export function cardAnswer(
   results: readonly StressResult[],
-): string | undefined {
+  extras: Readonly<Record<string, ResultExtras>>,
+): { text: string; failed: boolean } | undefined {
+  const failure = results.find(isFailure);
+  if (failure) {
+    return { text: whyFailed(failure, extras[failure.id]), failed: true };
+  }
   const effect = results.find((r) => r.effect !== undefined)?.effect;
   if (effect !== undefined) {
-    return `${quantity(effect.value, effect.unit, 3)}: ${effect.label}`;
+    return {
+      text: `${quantity(effect.value, effect.unit, 3)}: ${effect.label}`,
+      failed: false,
+    };
   }
   let worst: StressResult | undefined;
   let ratio = -1;
@@ -47,18 +87,31 @@ export function cardAnswer(
     }
   }
   if (worst !== undefined) {
-    return ratio === 0
-      ? `Every value exact, against a tolerance of ${quantity(worst.tolerance!, worst.unit)}`
-      : `Worst ${quantity(worst.value!, worst.unit)} against a tolerance of ${quantity(worst.tolerance!, worst.unit)}`;
+    return {
+      text:
+        ratio === 0
+          ? `Every value exact, against a tolerance of ${quantity(worst.tolerance!, worst.unit)}`
+          : `Worst ${quantity(worst.value!, worst.unit)} against a tolerance of ${quantity(worst.tolerance!, worst.unit)}`,
+      failed: false,
+    };
   }
   const throws = results.filter((r) => r.expectedError !== undefined);
-  if (throws.length > 0) {
-    return `${throws.length} expected ${throws.length === 1 ? "error" : "errors"}, each matched by its message`;
+  if (throws.length === 1) {
+    return { text: "The expected error, with its message", failed: false };
+  }
+  if (throws.length > 1) {
+    return {
+      text: `${throws.length} expected errors, each with its message`,
+      failed: false,
+    };
   }
   return undefined;
 }
 
-/** The card's status: waiting, missing, not run, or its pass count. */
+/**
+ * The card's verdict. Passing is plain text with a small icon (I10: badges
+ * are kept for what needs attention); fail, waiting and missing are badges.
+ */
 function CardStatus({
   results,
   waitingFor,
@@ -88,21 +141,28 @@ function CardStatus({
   return failed > 0 ? (
     <StatusBadge status="fail" word={`${failed} of ${judged.length} fail`} />
   ) : (
-    <StatusBadge
-      status="pass"
-      word={`${judged.length} of ${judged.length} pass`}
-      quiet
-    />
+    <span className="fx-verdict-pass">
+      <Icon href={svgStatusSuccess} aria-hidden />
+      {judged.length} of {judged.length}
+      <span className="fx-visually-hidden"> pass</span>
+    </span>
   );
 }
 
+/**
+ * The rows: a table at full width; below 480 px of panel (C4) each row
+ * stacks into two lines, the name and verdict over the bar, effect and
+ * accuracy (CSS only; explicit roles keep the table's semantics).
+ */
 function ResultRows({
   results,
+  extras,
   selected,
   onSelect,
   waitingFor,
 }: {
   results: readonly StressResult[];
+  extras: Readonly<Record<string, ResultExtras>>;
   selected: string | undefined;
   onSelect: (id: string) => void;
   waitingFor: DataItem | undefined;
@@ -117,7 +177,11 @@ function ResultRows({
     }
   }, [selected]);
   return (
-    <Table size="small" className="fx-results">
+    <Table
+      size="small"
+      className={`fx-results${effects ? " fx-has-effects" : ""}`}
+      role="table"
+    >
       <colgroup>
         <col />
         <col className="fx-col-value" />
@@ -125,34 +189,37 @@ function ResultRows({
         <col className="fx-col-accuracy" />
         <col className="fx-col-status" />
       </colgroup>
-      <TableHead>
-        <TableRow>
-          <TableCell>Check</TableCell>
-          <TableCell>Value / tolerance</TableCell>
-          {effects && <TableCell>Effect</TableCell>}
-          <TableCell>Accuracy</TableCell>
-          <TableCell>Status</TableCell>
+      <TableHead role="rowgroup">
+        <TableRow role="row">
+          <TableCell role="columnheader">Check</TableCell>
+          <TableCell role="columnheader">Value / tolerance</TableCell>
+          {effects && <TableCell role="columnheader">Effect</TableCell>}
+          <TableCell role="columnheader">Accuracy</TableCell>
+          <TableCell role="columnheader">Status</TableCell>
         </TableRow>
       </TableHead>
-      <TableBody>
+      <TableBody role="rowgroup">
         {results.map((r) => {
           const s = resultStatus(r, waitingFor);
+          const x = extras[r.id];
           return (
             <TableRow
               key={r.id}
+              role="row"
               ref={r.id === selected ? selectedRow : undefined}
               selected={r.id === selected}
               hover
-              className={r.userInput ? "fx-user-row" : undefined}
+              className={`fx-result${r.userInput ? " fx-user-row" : ""}${isFailure(r) ? " fx-fail-row" : ""}`}
             >
-              <TableCell className="fx-check">
+              <TableCell role="cell" className="fx-check">
                 <button
                   type="button"
                   className="fx-row-button"
                   aria-pressed={r.id === selected}
+                  title={r.title}
                   onClick={() => onSelect(r.id)}
                 >
-                  {r.title}
+                  {rowName(r, x)}
                 </button>
                 {r.fingerprintCheck && (
                   <span
@@ -164,21 +231,37 @@ function ResultRows({
                   </span>
                 )}
               </TableCell>
-              <TableCell>
+              <TableCell role="cell" className="fx-value">
                 <ToleranceBar result={r} />
               </TableCell>
               {effects && (
-                <TableCell className="fx-num">
-                  {r.effect ? quantity(r.effect.value, r.effect.unit, 3) : ""}
+                <TableCell
+                  role="cell"
+                  className="fx-num fx-effect"
+                  data-label="Effect"
+                >
+                  {r.effect ? (
+                    quantity(r.effect.value, r.effect.unit, 3)
+                  ) : (
+                    <span aria-label="no effect size" className="fx-muted">
+                      —
+                    </span>
+                  )}
                 </TableCell>
               )}
-              <TableCell>
-                <AccuracyText accuracy={r.accuracy} compact />
+              <TableCell role="cell" className="fx-acc" data-label="Accuracy">
+                <AccuracyText
+                  accuracy={r.accuracy}
+                  note={x?.accuracyNote}
+                  placement={x?.relative !== undefined}
+                  compact
+                />
               </TableCell>
-              <TableCell>
+              <TableCell role="cell" className="fx-status">
                 <StatusBadge
                   status={s.status}
                   {...(s.word && { word: s.word })}
+                  quiet={s.status === "pass"}
                 />
               </TableCell>
             </TableRow>
@@ -192,6 +275,7 @@ function ResultRows({
 export function QuestionCard({
   group,
   results,
+  extras,
   open,
   setOpen,
   selected,
@@ -203,6 +287,7 @@ export function QuestionCard({
 }: {
   group: GroupInfo;
   results: readonly StressResult[];
+  extras: Readonly<Record<string, ResultExtras>>;
   open: boolean;
   setOpen: (open: boolean) => void;
   selected: string | undefined;
@@ -218,14 +303,21 @@ export function QuestionCard({
   const answer =
     missing !== undefined &&
     results.every((r) => r.missing && r.missing.length > 0)
-      ? `Needs ${ITEM_LABEL[missing]}, which isn't in the frames store.`
-      : cardAnswer(results.filter((r) => !r.userInput));
+      ? {
+          text: `Needs ${ITEM_LABEL[missing]}, which isn't in the frames store.`,
+          failed: false,
+        }
+      : cardAnswer(
+          results.filter((r) => !r.userInput),
+          extras,
+        );
   return (
     <Accordion
       expanded={open}
       onChange={(_, v) => setOpen(v)}
       disableGutters
       className="fx-card"
+      id={`fx-card-${group.id}`}
       slotProps={{ heading: { render: <h3 /> } }}
     >
       <AccordionSummary className="fx-card-summary">
@@ -234,10 +326,12 @@ export function QuestionCard({
           <span className="fx-card-status">
             <CardStatus results={results} waitingFor={waitingFor} />
           </span>
-          <span className="fx-card-answer">
+          <span
+            className={`fx-card-answer${answer?.failed ? " fx-card-answer-fail" : ""}`}
+          >
             {waitingFor
               ? `Runs once ${ITEM_LABEL[waitingFor]} is in.`
-              : (answer ?? group.name)}
+              : (answer?.text ?? group.name)}
           </span>
         </span>
       </AccordionSummary>
@@ -279,6 +373,7 @@ export function QuestionCard({
         {!open ? null : results.length > 0 ? (
           <ResultRows
             results={results}
+            extras={extras}
             selected={selected}
             onSelect={onSelect}
             waitingFor={waitingFor}

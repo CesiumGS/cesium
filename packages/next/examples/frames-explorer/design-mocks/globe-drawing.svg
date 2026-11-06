@@ -1,0 +1,143 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 760" width="1120" height="760" font-family="Inter, system-ui, sans-serif">
+  <title>Frames explorer: how overlays are drawn (design mock)</title>
+  <defs>
+    <marker id="ax" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="context-stroke"/></marker>
+    <pattern id="imagery" width="40" height="40" patternUnits="userSpaceOnUse">
+      <rect width="40" height="40" fill="#c9b893"/><path d="M0 30 Q10 22 20 28 T40 26 V40 H0z" fill="#b8a57c"/><circle cx="30" cy="10" r="6" fill="#d9cfb2"/>
+    </pattern>
+  </defs>
+  <rect width="1120" height="760" fill="#f4f5f7"/>
+  <g font-size="13" fill="#1f2328">
+    <text x="24" y="36" font-size="16" font-weight="700">How overlays are drawn on the globe</text>
+
+    <!-- A. Triad anatomy -->
+    <g transform="translate(24 60)">
+      <rect width="340" height="300" rx="8" fill="#03050a"/>
+      <text x="12" y="22" font-size="12" font-weight="600" fill="#fff">A. A triad</text>
+      <g transform="translate(120 190)" stroke-width="2" fill="none">
+        <line x1="0" y1="0" x2="120" y2="20" stroke="#fc5855" marker-end="url(#ax)"/>
+        <line x1="0" y1="0" x2="20" y2="-110" stroke="#5ad664" marker-end="url(#ax)"/>
+        <line x1="0" y1="0" x2="-60" y2="-55" stroke="#5d97f7" marker-end="url(#ax)"/>
+        <circle r="4" fill="#bfc8d4" stroke="#000" stroke-width="1"/>
+      </g>
+      <g font-size="11" font-weight="500" stroke="#000" stroke-width="3" stroke-opacity="0.8" paint-order="stroke">
+        <text x="246" y="216" fill="#fc5855">x</text><text x="144" y="74" fill="#5ad664">y</text><text x="50" y="132" fill="#5d97f7">z</text>
+        <text x="132" y="212" font-size="12" font-weight="600" fill="#bfc8d4">MOON_PA</text>
+      </g>
+      <g font-size="11" fill="#c3cad6">
+        <text x="12" y="250">Shaft 2 px; head a 10 px cone at the tip.</text>
+        <text x="12" y="266">Length 6% of the camera's distance, 2 m–2,000 km (R4);</text>
+        <text x="12" y="282">origin dot 8 px in the family tone, 1 px dark ring.</text>
+      </g>
+    </g>
+    <g transform="translate(380 60)" font-size="12" fill="#4a4f57">
+      <text font-weight="600" fill="#1f2328">Triads</text>
+      <text y="18">Axes red, green, blue for x, y, z, always.</text>
+      <text y="34">Axis letters at the tips: caption 11 px, 500.</text>
+      <text y="50">The frame's name: body-sm 12 px, 600, in its</text>
+      <text y="66">family's on-dark tone, 12 px right and down of</text>
+      <text y="82">the origin, with a 1.5 px dark halo.</text>
+      <text y="104">Geocentric frames (ITRF, GCRF, EME2000) draw at</text>
+      <text y="120">1.5 Earth radii, through the globe as 40% dashes.</text>
+      <text y="142">Other triads are depth-tested against the globe</text>
+      <text y="158">and terrain: a site's triad hides behind a hill.</text>
+      <text y="180">The frame bias (R4): EME2000's triad against</text>
+      <text y="196">GCRF's, exaggerated ×10⁰ to ×10⁷, the factor in its</text>
+      <text y="212">label: "EME2000 (bias ×10⁶)".</text>
+    </g>
+
+    <!-- B. Lines -->
+    <g transform="translate(24 380)">
+      <rect width="340" height="170" rx="8" fill="url(#imagery)"/>
+      <rect x="170" width="170" height="170" rx="0" fill="#0b1626"/>
+      <text x="12" y="22" font-size="12" font-weight="600" fill="#1f2328">B. Lines over bright and dark ground</text>
+      <g fill="none">
+        <path d="M16 60 H154" stroke="#000" stroke-opacity="0.55" stroke-width="4"/><path d="M16 60 H154" stroke="#f07ec2" stroke-width="2"/>
+        <path d="M186 60 H324" stroke="#000" stroke-opacity="0.55" stroke-width="4"/><path d="M186 60 H324" stroke="#f07ec2" stroke-width="2"/>
+        <path d="M16 96 H154" stroke="#000" stroke-opacity="0.45" stroke-width="3"/><path d="M16 96 H154" stroke="#3bcddc" stroke-width="1" stroke-opacity="0.8"/>
+        <path d="M186 96 H324" stroke="#000" stroke-opacity="0.45" stroke-width="3"/><path d="M186 96 H324" stroke="#3bcddc" stroke-width="1" stroke-opacity="0.8"/>
+        <path d="M16 136 H154" stroke="#f07ec2" stroke-opacity="0.3" stroke-width="9"/><path d="M16 136 H154" stroke="#000" stroke-opacity="0.55" stroke-width="5"/><path d="M16 136 H154" stroke="#f07ec2" stroke-width="3"/>
+        <path d="M186 136 H324" stroke="#f07ec2" stroke-opacity="0.3" stroke-width="9"/><path d="M186 136 H324" stroke="#000" stroke-opacity="0.55" stroke-width="5"/><path d="M186 136 H324" stroke="#f07ec2" stroke-width="3"/>
+      </g>
+      <g font-size="11" font-weight="600" fill="#1f2328"><text x="16" y="50">primary 2 px + 1 px halo</text><text x="16" y="86">secondary 1 px, 80%</text><text x="16" y="126">selected 3 px + glow</text></g>
+    </g>
+    <g transform="translate(380 380)" font-size="12" fill="#4a4f57">
+      <text font-weight="600" fill="#1f2328">Line weights</text>
+      <text y="18">Primary (a grid's major lines, Orion's path, the exact</text>
+      <text y="34">line, the rigid line dashed 6 4): 2 px. Secondary (minor</text>
+      <text y="50">grid lines, true-north lines, Tissot outlines): 1 px, 80%.</text>
+      <text y="66">Selected (the selected result's overlay, the selected</text>
+      <text y="82">frame's triad): 3 px with a 9 px glow at 30%.</text>
+      <text y="104">Every line has a 1 px dark halo (black, 55%), so it</text>
+      <text y="120">reads over bright imagery; lines are unlit and</text>
+      <text y="136">depth-tested against the globe, never always-on-top</text>
+      <text y="152">except the geocentric triads above.</text>
+      <text y="174" fill="#b3261e">Engine: line-list draws 1 device px today. 2 and 3 px</text>
+      <text y="190" fill="#b3261e">and halos need a screen-space wide-line material (6b).</text>
+    </g>
+
+    <!-- C. Selection -->
+    <g transform="translate(760 60)">
+      <rect width="336" height="300" rx="8" fill="#03050a"/>
+      <text x="12" y="22" font-size="12" font-weight="600" fill="#fff">C. A selection on the globe</text>
+      <g fill="none" stroke-width="2">
+        <g opacity="0.35"><line x1="60" y1="230" x2="100" y2="236" stroke="#fc5855"/><line x1="60" y1="230" x2="64" y2="196" stroke="#5ad664"/><line x1="60" y1="230" x2="42" y2="210" stroke="#5d97f7"/></g>
+        <g><line x1="170" y1="200" x2="230" y2="208" stroke="#fc5855" marker-end="url(#ax)"/><line x1="170" y1="200" x2="176" y2="140" stroke="#5ad664" marker-end="url(#ax)"/><line x1="170" y1="200" x2="140" y2="172" stroke="#5d97f7" marker-end="url(#ax)"/></g>
+        <circle cx="270" cy="110" r="18" stroke="#bfc8d4" stroke-opacity="0.3" stroke-width="9"/>
+        <g stroke-width="3"><line x1="270" y1="110" x2="320" y2="116" stroke="#fc5855" marker-end="url(#ax)"/><line x1="270" y1="110" x2="275" y2="58" stroke="#5ad664" marker-end="url(#ax)"/><line x1="270" y1="110" x2="244" y2="86" stroke="#5d97f7" marker-end="url(#ax)"/></g>
+        <path d="M60 230 C110 215 140 205 170 200 C210 170 240 140 270 110" stroke="#bfc8d4" stroke-width="2" stroke-dasharray="1 5" stroke-linecap="round"/>
+      </g>
+      <circle cx="60" cy="230" r="4" fill="#3bcddc" opacity="0.35"/><circle cx="170" cy="200" r="4" fill="#b298f9" stroke="#000"/><circle cx="270" cy="110" r="5" fill="#bfc8d4" stroke="#000"/>
+      <g font-size="12" font-weight="600" stroke="#000" stroke-width="3" stroke-opacity="0.8" paint-order="stroke">
+        <text x="182" y="222" fill="#b298f9">MOON_ICRF</text><text x="236" y="140" fill="#bfc8d4">MOON_PA</text>
+      </g>
+      <g font-size="11" fill="#c3cad6"><text x="12" y="262">Selected: 3 px with a glow. On its path: full.</text><text x="12" y="278">Other frames: 35%, labels hidden. A dotted path</text><text x="12" y="294">links the walk's origins, root first.</text></g>
+    </g>
+    <g transform="translate(760 380)" font-size="12" fill="#4a4f57">
+      <text font-weight="600" fill="#1f2328">Selection (R14: the globe never shows one the panel doesn't)</text>
+      <text y="18">A frame: its triad 3 px with a glow; the triads on its</text>
+      <text y="34">walk's path full strength, joined origin to origin by a</text>
+      <text y="50">dotted 2 px line that draws root first with the walk's</text>
+      <text y="66">90 ms stagger (cut under reduced motion); every other</text>
+      <text y="82">triad at 35% with its label hidden. No camera move.</text>
+      <text y="104">A result: its group's overlay turns on; its lines 3 px</text>
+      <text y="120">with a glow, every other overlay at 50%; the camera</text>
+      <text y="136">flies to the result's site; its frames' triads show as</text>
+      <text y="152">on a path.</text>
+      <text y="174">Labels never overlap: by priority (selected, on the</text>
+      <text y="190">path, sites, the rest), a label that would collide is</text>
+      <text y="206">hidden; labels fade out below 24 px between origins.</text>
+    </g>
+
+    <!-- D. Legend and HUD placement -->
+    <g transform="translate(24 572)">
+      <text font-size="12" font-weight="600">D. The legend, compact and unfolded</text>
+      <g transform="translate(0 14)">
+        <rect width="240" height="84" rx="8" fill="#26282c"/>
+        <text x="12" y="20" font-size="12" font-weight="600" fill="#fff">On the globe</text>
+        <line x1="12" y1="38" x2="30" y2="38" stroke="#f07ec2" stroke-width="2"/><text x="38" y="42" font-size="11" font-weight="500" fill="#fff">Design grid</text><text x="112" y="42" font-size="11" fill="#c3cad6">±2.0 m (1σ): the WGS…</text>
+        <line x1="12" y1="58" x2="30" y2="58" stroke="#f07ec2" stroke-width="2" stroke-dasharray="4 3"/><text x="38" y="62" font-size="11" font-weight="500" fill="#fff">Rigid vs exact</text><text x="122" y="62" font-size="11" fill="#c3cad6">sag 31.2 m at 20 km…</text>
+      </g>
+      <g transform="translate(264 14)">
+        <rect width="240" height="150" rx="8" fill="#26282c"/>
+        <text x="12" y="20" font-size="12" font-weight="600" fill="#fff">On the globe</text>
+        <line x1="12" y1="38" x2="30" y2="38" stroke="#f07ec2" stroke-width="2"/><text x="38" y="42" font-size="11" font-weight="500" fill="#fff">California design grid, with true north</text>
+        <text x="38" y="58" font-size="11" fill="#c3cad6">±2.0 m (1σ): the WGS 84 ensemble;</text><text x="38" y="72" font-size="11" fill="#c3cad6">round trip ≤ 3.4 nm</text>
+        <line x1="12" y1="90" x2="30" y2="90" stroke="#f07ec2" stroke-width="2" stroke-dasharray="4 3"/><text x="38" y="94" font-size="11" font-weight="500" fill="#fff">Rigid and exact 20 km line</text>
+        <text x="38" y="110" font-size="11" fill="#c3cad6">sag 31.2 m at 20 km (geometry, exact)</text>
+        <line x1="12" y1="124" x2="228" y2="124" stroke="#3e4250"/><text x="12" y="140" font-size="10" fill="#c3cad6">Triads at 6% of the camera's distance.</text>
+      </g>
+    </g>
+    <g transform="translate(560 586)" font-size="12" fill="#4a4f57">
+      <text font-weight="600" fill="#1f2328">Legend</text>
+      <text y="18">Lists only overlays that are drawn (not ones waiting</text>
+      <text y="34">for data: those show in the panel). Appears when the</text>
+      <text y="50">first overlay draws; gone when none is. Compact by</text>
+      <text y="66">default, 240 px: one line each, the accuracy ellipsized,</text>
+      <text y="82">in full on hover and focus; unfolded, full lines and the</text>
+      <text y="98">triad note. Line keys match the globe: solid, dashed</text>
+      <text y="114">(rigid), dotted (site grid, round trips). Always dark,</text>
+      <text y="130">like the viewer's own widgets, in either scheme.</text>
+    </g>
+  </g>
+</svg>
