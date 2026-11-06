@@ -73,6 +73,11 @@ export default defineConfig(({ command }) => {
       src: join(__dirname, `../widgets/Build/Unminified/index.js`),
       dest: "packages",
     },
+    { src: join(__dirname, `../edit/index.d.ts`), dest: "packages" },
+    {
+      src: join(__dirname, `../edit/Build/Unminified/index.js`),
+      dest: "packages",
+    },
   ];
 
   try {
@@ -109,6 +114,10 @@ export default defineConfig(({ command }) => {
       "@cesium/widgets": {
         path: "/packages/widgets/Build/Unminified/index.js",
         typesPath: "/packages/widgets/index.d.ts",
+      },
+      "@cesium/edit": {
+        path: "/packages/edit/Build/Unminified/index.js",
+        typesPath: "/packages/edit/index.d.ts",
       },
     },
     // IN DEV THIS DOES NOT COPY FILES it simply sets up in-memory server routes
