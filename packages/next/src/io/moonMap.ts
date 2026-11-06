@@ -16,35 +16,18 @@
  *   (82.9° at its corners).
  *
  * The band's tiles are laid side by side, a level of the tree at once; the
- * caps' are resampled into the map's polar rows through their frame.
+ * caps' are resampled into the map's polar rows through their frame. This
+ * module is the reading and composing alone, with its I/O behind
+ * `MoonMapSource`: it runs in the Moon map's worker (moonMapWorker.ts,
+ * started by `loadIonMoonMap` in moonMapLoad.ts) and in Node's tests.
  */
 
 import { unwrapB3dm } from "./features.ts";
 import { splitGlb } from "./glb.ts";
-import {
-  type IonAttribution,
-  type IonOptions,
-  resolveIonAsset,
-  resolveUri,
-} from "./ion.ts";
+import { resolveUri } from "./ion.ts";
 
 /** Cesium Moon Terrain's ion asset. */
 export const CESIUM_MOON_TERRAIN = 2684829;
-
-export interface MoonMap {
-  /**
-   * Equirectangular, longitude 0 (the near side's center) in the middle,
-   * north up, sRGB (`Engine.setMoonMap`).
-   */
-  image: ImageBitmap;
-  /** What the map must credit on screen. */
-  attributions: IonAttribution[];
-  /**
-   * What went wrong without failing the load: a polar cap that did not
-   * load, the band's last row stretched over it instead.
-   */
-  warnings: string[];
-}
 
 /** RGBA8 pixels, rows top down, not premultiplied. */
 export interface Raster {
@@ -73,7 +56,10 @@ export interface MoonCap {
   patches: MoonPatch[];
 }
 
-/** Where the map's tiles come from (`loadIonMoonMap`: ion, with its token). */
+/**
+ * Where the map's tiles come from (`loadIonMoonMap`'s worker: ion, with its
+ * token).
+ */
 export interface MoonMapSource {
   /** A resource of the asset; rejects on an error response. */
   fetch(url: string): Promise<{
@@ -97,50 +83,18 @@ const CAP_LEVELS_BELOW_BAND = 3;
 const DEEPEST_CAP_LEVEL = 6;
 
 /**
+ * The widest map read: WebGPU's default `maxTextureDimension2D` (the band's
+ * level 4; level 2 is 2048).
+ */
+const MAX_MAP_WIDTH = 8192;
+
+/**
  * Where the band hands over to a cap, degrees of latitude: the cap's
  * imagery fades in from 84° (where the two overlap: the caps' square
  * corners) and is all there is past 85°, where the band has none.
  */
 const SEAM_START = 84;
 const SEAM_END = 85;
-
-/**
- * Reads the map from the band's `level` (2: 8 × 4 tiles of 256², a map of
- * 2048 × 1024; each level doubles it), and the polar caps at the matching
- * resolution. Rejects without access to the asset; a cap that does not
- * load leaves the band's last row stretched over it, and a warning.
- */
-export async function loadIonMoonMap(
-  options: IonOptions & { level?: number } = {},
-): Promise<MoonMap> {
-  const asset = await resolveIonAsset(CESIUM_MOON_TERRAIN, options);
-  const { map, warnings } = await readMoonMap(
-    asset.url,
-    {
-      fetch: async (url) => {
-        const response = await fetch(url, { headers: asset.headers });
-        if (!response.ok) {
-          throw new Error(`Moon map: ${url} (${response.status})`);
-        }
-        return response;
-      },
-      decode: decodeImage,
-    },
-    options.level ?? 2,
-  );
-  return {
-    image: await createImageBitmap(
-      new ImageData(
-        map.data as Uint8ClampedArray<ArrayBuffer>,
-        map.width,
-        map.height,
-      ),
-      { colorSpaceConversion: "none" },
-    ),
-    attributions: asset.attributions,
-    warnings,
-  };
-}
 
 /**
  * The map from the asset's root tileset at `url`: its band at `level`, and
@@ -201,6 +155,18 @@ export async function readMoonMap(
   const first = patches[0]!;
   const width =
     Math.round(360 / Math.abs(first.east - first.west)) * first.image.width;
+  // A bad tile (its fitted edges too close, or not numbers) would ask for
+  // a map past what a texture can hold.
+  if (
+    !Number.isInteger(width) ||
+    width < 2 ||
+    width % 2 !== 0 ||
+    width > MAX_MAP_WIDTH
+  ) {
+    throw new Error(
+      `Moon map: the band's tiles make a map ${width} texels wide (at most ${MAX_MAP_WIDTH}, even)`,
+    );
+  }
   const map = placePatches(width, width / 2, patches);
   return {
     map: composeMoonMap(
@@ -250,7 +216,11 @@ async function readTileset(
   return { tileset, patches };
 }
 
-async function decodeImage(
+/**
+ * A tile's image decoded to RGBA8 (`createImageBitmap` and an
+ * OffscreenCanvas: a page or a worker).
+ */
+export async function decodeImage(
   bytes: Uint8Array,
   mimeType: string,
 ): Promise<Raster> {
@@ -664,24 +634,37 @@ function copyIfNotOpaque(
   }
 }
 
-/** The patch that has the point (within a pixel of its edges), if any. */
+/**
+ * The patch that has the point, if any; else the nearest within a pixel of
+ * its edges (fitted edges leave sub-pixel gaps between tiles). A point
+ * near a tile's edge inside the cap is its own tile's, not its
+ * neighbour's clamped edge.
+ */
 function patchAt(
   patches: MoonPatch[],
   latitude: number,
   longitude: number,
   pixel: number,
 ): MoonPatch | undefined {
+  let nearest: MoonPatch | undefined;
+  let nearestDistance = pixel;
   for (const p of patches) {
-    if (
-      longitude >= Math.min(p.west, p.east) - pixel &&
-      longitude <= Math.max(p.west, p.east) + pixel &&
-      latitude >= Math.min(p.north, p.south) - pixel &&
-      latitude <= Math.max(p.north, p.south) + pixel
-    ) {
+    // How far outside the patch the point is, each way (0 inside).
+    const outside = Math.max(
+      Math.min(p.west, p.east) - longitude,
+      longitude - Math.max(p.west, p.east),
+      Math.min(p.north, p.south) - latitude,
+      latitude - Math.max(p.north, p.south),
+    );
+    if (outside <= 0) {
       return p;
     }
+    if (outside <= nearestDistance) {
+      nearest = p;
+      nearestDistance = outside;
+    }
   }
-  return undefined;
+  return nearest;
 }
 
 function smoothstep(edge0: number, edge1: number, x: number): number {
@@ -706,19 +689,39 @@ function readTile(bytes: Uint8Array): Omit<MoonPatch, "image"> & {
     throw new Error("Moon map: a tile without a binary chunk");
   }
   const primitive = json.meshes[0].primitives[0];
+  // Floats, read from the BIN chunk alone (not the buffer it lies in).
+  const data = new DataView(bin.buffer, bin.byteOffset, bin.byteLength);
   const read = (index: number, size: number): Float32Array => {
     const accessor = json.accessors[index];
-    const view = json.bufferViews[accessor.bufferView];
-    const stride = (view.byteStride ?? size * 4) / 4;
-    const data = new Float32Array(
-      bin.buffer,
-      bin.byteOffset + (view.byteOffset ?? 0) + (accessor.byteOffset ?? 0),
-      (accessor.count - 1) * stride + size,
-    );
-    const out = new Float32Array(accessor.count * size);
-    for (let i = 0; i < accessor.count; i++) {
+    if (accessor.componentType !== FLOAT) {
+      throw new Error(
+        `Moon map: a tile's accessor ${index} has componentType ${accessor.componentType}, not float (${FLOAT})`,
+      );
+    }
+    const view = binView(json, accessor.bufferView, bin.byteLength);
+    const stride = view.byteStride ?? size * 4;
+    const count: number = accessor.count;
+    const start = accessor.byteOffset ?? 0;
+    if (
+      !Number.isInteger(count) ||
+      count < 1 ||
+      !Number.isInteger(start) ||
+      start < 0 ||
+      !Number.isInteger(stride) ||
+      stride < size * 4 ||
+      start + (count - 1) * stride + size * 4 > view.byteLength
+    ) {
+      throw new Error(
+        `Moon map: a tile's accessor ${index} reaches past its view`,
+      );
+    }
+    const out = new Float32Array(count * size);
+    for (let i = 0; i < count; i++) {
       for (let c = 0; c < size; c++) {
-        out[i * size + c] = data[i * stride + c]!;
+        out[i * size + c] = data.getFloat32(
+          view.byteOffset + start + i * stride + c * 4,
+          true,
+        );
       }
     }
     return out;
@@ -767,18 +770,41 @@ function readTile(bytes: Uint8Array): Omit<MoonPatch, "image"> & {
   const u = fitLine(longitudes, us);
   const v = fitLine(latitudes, vs);
   const image = json.images[0];
-  const view = json.bufferViews[image.bufferView];
+  const view = binView(json, image.bufferView, bin.byteLength);
   return {
-    image: bin.slice(
-      view.byteOffset ?? 0,
-      (view.byteOffset ?? 0) + view.byteLength,
-    ),
+    image: bin.slice(view.byteOffset, view.byteOffset + view.byteLength),
     mimeType: image.mimeType,
     west: -u.offset / u.slope,
     east: (1 - u.offset) / u.slope,
     north: -v.offset / v.slope,
     south: (1 - v.offset) / v.slope,
   };
+}
+
+/** glTF's FLOAT component type. */
+const FLOAT = 5126;
+
+/** A buffer view, checked to lie inside the BIN chunk (`binLength` bytes). */
+function binView(
+  json: Json,
+  index: number,
+  binLength: number,
+): { byteOffset: number; byteLength: number; byteStride?: number } {
+  const view = json.bufferViews?.[index];
+  const byteOffset = view?.byteOffset ?? 0;
+  const byteLength = view?.byteLength;
+  if (
+    !Number.isInteger(byteOffset) ||
+    !Number.isInteger(byteLength) ||
+    byteOffset < 0 ||
+    byteLength < 0 ||
+    byteOffset + byteLength > binLength
+  ) {
+    throw new Error(
+      `Moon map: a tile's buffer view ${index} lies outside its BIN chunk`,
+    );
+  }
+  return { byteOffset, byteLength, byteStride: view.byteStride };
 }
 
 function parentOf(nodes: Json[], child: number): number {

@@ -405,10 +405,14 @@ export class Viewer {
         })
         .catch(() => {});
       void loadIonMoonMap(this.tokenOptions())
-        .then(({ image, attributions }) => {
+        .then(({ image, attributions, warnings }) => {
           if (this.destroyed) {
             image.close();
             return;
+          }
+          // A polar cap that did not load (its rows stretched instead).
+          for (const warning of warnings) {
+            console.warn(`Viewer: ${warning}`);
           }
           this.moonMapSharp = true;
           this.engine.setMoonMap(image);
