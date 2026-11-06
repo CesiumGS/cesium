@@ -1,3 +1,4 @@
+import type { AnyRouter } from "@tanstack/react-router";
 import type { Dispose, ExampleRun } from "../../../examples/types.ts";
 
 /**
@@ -93,4 +94,30 @@ export function createParamsStore(
 /** What `run` returned, as `{ dispose, panel? }`. */
 export function normalizeRun(returned: Dispose | ExampleRun): ExampleRun {
   return typeof returned === "function" ? { dispose: returned } : returned;
+}
+
+/**
+ * `context.link`: an absolute URL that opens example `id` with exactly
+ * `params` (undefined and empty ones dropped), built by the router, so it
+ * follows Dyno's history (the hash) and search format, and resolved
+ * against `base`, the page's address.
+ */
+export function exampleLink(
+  router: AnyRouter,
+  id: string,
+  params: Readonly<Record<string, string | undefined>>,
+  base: string,
+): string {
+  const search: Record<string, string> = {};
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && value !== "") {
+      search[key] = value;
+    }
+  }
+  const { href } = router.buildLocation({
+    to: "/examples/$id",
+    params: { id },
+    search,
+  });
+  return new URL(router.history.createHref(href), base).href;
 }

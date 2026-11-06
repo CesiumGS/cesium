@@ -9,6 +9,7 @@ import {
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { routeTree } from "./routes.tsx";
+import { parseSearch, stringifySearch } from "./search.ts";
 import { ThemeRoot } from "./theme.tsx";
 
 /**
@@ -16,22 +17,8 @@ import { ThemeRoot } from "./theme.tsx";
  * so the dev server and a static build serve one page, under StrataKit's
  * Root (theme.tsx).
  *
- * Search params as plain strings (the default parses JSON, which turns
- * "2.0" into 2); each route's validateSearch types them.
+ * Search params as plain strings (search.ts).
  */
-function parseSearch(query: string): Record<string, unknown> {
-  return Object.fromEntries(new URLSearchParams(query));
-}
-function stringifySearch(search: Record<string, unknown>): string {
-  const params = new URLSearchParams();
-  for (const [key, value] of Object.entries(search)) {
-    if (value !== undefined && value !== null) {
-      params.set(key, String(value));
-    }
-  }
-  const query = params.toString();
-  return query ? `?${query}` : "";
-}
 
 // A query before the hash (/?x=1#/viewer?asset=2) is not Dyno's: hash
 // history appends it to the hash's own, so the last search param took it

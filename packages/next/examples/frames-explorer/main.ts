@@ -1686,20 +1686,12 @@ export function run(context: ExampleContext): ExampleRun {
       a.click();
       setTimeout(() => URL.revokeObjectURL(a.href), 0);
     },
-    linkTo: (target) => {
-      const p =
+    linkTo: (target) =>
+      context.link(
         target.kind === "tour"
           ? { tour: target.stop }
-          : formatParams({ selection: target, lens: view.get().lens });
-      const search = new URLSearchParams(
-        Object.entries(p).filter(
-          (e): e is [string, string] => e[1] !== undefined,
-        ),
-      ).toString();
-      // Read only: the page's address, to build a link to copy (Dyno owns the URL).
-      const base = location.href.split("#")[0]!;
-      return `${base}#/examples/frames-explorer${search ? `?${search}` : ""}`;
-    },
+          : formatParams({ selection: target, lens: view.get().lens }),
+      ),
   };
 
   // ---------------------------------------------------- try your own (R18)
