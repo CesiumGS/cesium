@@ -6564,6 +6564,25 @@ because none of them changes a result.
   (`proj_destroy`). One frame is cheap, but the stress tests make many. Release
   them when a frame is dropped.
 
+_Carried forward from the stress-test example's industry review (owner,
+2026-11-06)._ These library gaps came up while planning the frames example's
+stress tests. The example can't test them until the library has them.
+
+- **Plan 5 or a frames add-on: TEME and SGP4.** Satellite operators publish
+  orbits as two-line element sets. These are propagated with SGP4 in the
+  TEME frame. Neither is in the frame tree. Add TEME under GCRF, with its
+  equation-of-the-equinoxes rotation, and add an SGP4 trajectory source.
+- **Later: rail alignments.** Rail chainage crosses station equations
+  ("station back = station ahead"), and rail uses non-clothoid transitions:
+  Bloss, cubic parabola and sine half-wave. `Alignment` has neither.
+- **Plan 4b: tidal and chart datums.** Hydrography and coastal work use
+  lowest astronomical tide and mean lower low water (as in NOAA's VDatum).
+  They belong with 4b's height systems.
+- **Later: grid references and accuracy reporting.** MGRS and the US
+  National Grid aren't in PROJ, and defense and emergency response use both.
+  Accuracy statements also need a CE90/LE90 form: 90% horizontal and
+  vertical error.
+
 _Watch: lunar reference systems (checked 2026-11-06)._ No lunar 3D CRS or
 height system is standardized yet.
 
