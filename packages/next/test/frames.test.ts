@@ -100,6 +100,19 @@ describe("frameTransform", () => {
     expect(Array.from(again)).toEqual(Array.from(a));
   });
 
+  it("does not serve a half-written cache entry after a compute throws", () => {
+    const failing = new Frame("failing", root, (instant, out) => {
+      out.set(translation(instant.tt, 0, 0));
+      if (instant.tt === t2.tt) {
+        out[12] = -1; // part of the matrix is written, then the compute fails
+        throw new Error("no data");
+      }
+    });
+    const first = failing.toParent(t1);
+    expect(() => failing.toParent(t2)).toThrow("no data");
+    expect(Array.from(failing.toParent(t1))).toEqual(Array.from(first));
+  });
+
   it("throws across trees", () => {
     const r2 = Frame.root("R2");
     expect(() => frameTransform(arm, r2, t1)).toThrow(/no common ancestor/);
