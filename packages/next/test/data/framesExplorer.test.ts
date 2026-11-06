@@ -11,7 +11,6 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { framesDataDirectory } from "../../scripts/frameData.mjs";
 import {
-  HELD_CASES,
   STRESS_CASES,
   orionFromOem,
   ORION_OEM,
@@ -193,31 +192,6 @@ describe("the frames explorer's stress tests, headless", () => {
       fingerprinted.map((r) => r.id).sort(),
     );
   });
-});
-
-describe("the held cases (findings awaiting a ruling)", () => {
-  it(
-    "still fail against their published values, so a fix shows",
-    { timeout: 60_000 },
-    async () => {
-      const held = await runStress(context, { cases: HELD_CASES });
-      for (const r of held) {
-        print(`held ${r.pass ? "PASS" : "fail"} ${describeResult(r)}`);
-      }
-      expect(held.length).toBeGreaterThan(0);
-      // Each held case has at least one failing result; when none fails, the
-      // finding is fixed and the case belongs back in STRESS_CASES.
-      for (const c of HELD_CASES) {
-        const own = held.filter(
-          (r) => r.id === c.id || r.id.startsWith(`${c.id}.`),
-        );
-        expect(
-          own.some((r) => !r.pass),
-          c.id,
-        ).toBe(true);
-      }
-    },
-  );
 });
 
 describe("references.json (R10, Review Focus 6)", () => {

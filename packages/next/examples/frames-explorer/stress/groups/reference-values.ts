@@ -23,7 +23,13 @@ import {
   sexagesimal,
 } from "../references.ts";
 import { type ResultBase, type StressCase, fmt } from "../runner.ts";
-import { epsg, fingerprintOf, proj, stressCase } from "../shared.ts";
+import {
+  epsg,
+  fingerprintOf,
+  operationFingerprint,
+  proj,
+  stressCase,
+} from "../shared.ts";
 
 /** NAVD88 height (m): the compound CRS's vertical part, through GEOID18. */
 const NAVD88_METRES = 5703;
@@ -67,7 +73,10 @@ function ngsCase(mark: (typeof NGS_MARKS)[number]): StressCase {
       const grs80 = ellipsoidOf("epsg-ellipsoid-grs80");
       const r = radii(grs80.a, grs80.e2, lat.value);
       // The position's own rounding (half of 0.00001″ in each angle) moves the
-      // grid point by up to k (M δφ + N cos φ δλ).
+      // grid point by up to k (M δφ + N cos φ δλ). It belongs in the
+      // tolerance (ruling F14): the datasheet prints its position rounded, and
+      // its northing and easting were computed from the unrounded one, so the
+      // printed inputs alone can miss the printed outputs by this much.
       const inputRounding =
         factors.pointScale *
         (r.M * lat.half * DEGREE +
@@ -151,7 +160,7 @@ function ngsCase(mark: (typeof NGS_MARKS)[number]): StressCase {
   );
 }
 
-interface IogpExample {
+interface WorkedExampleEntry {
   readonly crs: string;
   readonly forward: {
     readonly latitude: string;
@@ -168,51 +177,83 @@ interface IogpExample {
   };
 }
 
-/** The projection methods the catalog uses, with the EPSG codes of the examples' CRSs and their geographic CRSs (EPSG registry names). */
-const IOGP_EXAMPLES: readonly {
+/**
+ * Worked examples of the projection methods the catalog uses, with the EPSG
+ * codes of the examples' CRSs and their geographic CRSs (EPSG registry
+ * names). Transverse Mercator's forward authority is the Ordnance Survey's
+ * example (ruling F11): IOGP's uses the JHS formulas, 7.7 mm from the
+ * library's Krüger series (PROJ's Poder–Engsager), so it is shown as an
+ * effect, the method difference, with no pass or fail.
+ */
+const WORKED_EXAMPLES: readonly {
+  /** The case id's stem, and references.json's entry ("iogp-<id>" or "os-<id>"). */
   readonly id: string;
+  readonly reference: string;
+  readonly authority: string;
   readonly method: string;
   readonly crs: number;
   readonly geographic: string;
+  /** Shown, not judged, in this direction. */
+  readonly displayOnly?: "forward";
 }[] = [
   {
-    id: "lambert-conic-conformal-2sp",
+    id: "iogp-lambert-conic-conformal-2sp",
+    reference: "iogp-lambert-conic-conformal-2sp",
+    authority: "IOGP 373-7-2's",
     method: "Lambert Conic Conformal (2SP)",
     crs: 32040,
     geographic: "EPSG:4267",
   },
   {
-    id: "transverse-mercator",
+    id: "iogp-transverse-mercator",
+    reference: "iogp-transverse-mercator",
+    authority: "IOGP 373-7-2's",
     method: "Transverse Mercator",
     crs: 27700,
     geographic: "EPSG:4277",
+    displayOnly: "forward",
   },
   {
-    id: "polar-stereographic-b",
+    id: "iogp-polar-stereographic-b",
+    reference: "iogp-polar-stereographic-b",
+    authority: "IOGP 373-7-2's",
     method: "Polar Stereographic (variant B)",
     crs: 3032,
     geographic: "EPSG:4326",
   },
   {
-    id: "pseudo-mercator",
+    id: "iogp-pseudo-mercator",
+    reference: "iogp-pseudo-mercator",
+    authority: "IOGP 373-7-2's",
     method: "Popular Visualisation Pseudo-Mercator",
     crs: 3857,
     geographic: "EPSG:4326",
   },
+  {
+    id: "os-national-grid",
+    reference: "os-national-grid-example",
+    authority:
+      "The Ordnance Survey's (A Guide to Coordinate Systems in Great Britain, Annexe C)",
+    method: "Transverse Mercator",
+    crs: 27700,
+    geographic: "EPSG:4277",
+  },
 ];
 
-function iogpCase(
-  example: (typeof IOGP_EXAMPLES)[number],
+function workedExampleCase(
+  example: (typeof WORKED_EXAMPLES)[number],
   direction: "forward" | "reverse",
 ): StressCase {
-  const x = cited<IogpExample>(`iogp-${example.id}`);
-  const id = `reference-values.iogp-${example.id}-${direction}`;
+  const x = cited<WorkedExampleEntry>(example.reference);
+  const id = `reference-values.${example.id}-${direction}`;
   const f = x.forward;
   const rv = x.reverse;
-  const title =
-    direction === "forward"
-      ? `IOGP 373-7-2's ${example.method} example (${x.crs}, EPSG:${example.crs}), forward: ${f.latitude}, ${f.longitude} gives E ${f.easting}, N ${f.northing} ${f.unit}, within half a unit of the last digit`
-      : `IOGP 373-7-2's ${example.method} example (${x.crs}, EPSG:${example.crs}), reverse: E ${rv.easting}, N ${rv.northing} gives ${rv.latitude}, ${rv.longitude}, within half a unit of the last digit`;
+  const shown = example.displayOnly === direction;
+  const title = shown
+    ? `${example.authority} ${example.method} example (${x.crs}, EPSG:${example.crs}), forward, shown: its E ${f.easting}, N ${f.northing} (JHS formulas) against the library's (Krüger series, Poder–Engsager), the method difference, with no pass or fail`
+    : direction === "forward"
+      ? `${example.authority} ${example.method} example (${x.crs}, EPSG:${example.crs}), forward: ${f.latitude}, ${f.longitude} gives E ${f.easting}, N ${f.northing} ${f.unit}, within half a unit of the last digit`
+      : `${example.authority} ${example.method} example (${x.crs}, EPSG:${example.crs}), reverse: E ${rv.easting}, N ${rv.northing} gives ${rv.latitude}, ${rv.longitude}, within half a unit of the last digit`;
   return stressCase(
     id,
     "reference-values",
@@ -236,19 +277,42 @@ function iogpCase(
           sexagesimal(f.latitude).value,
           0,
         ]);
+        const value = Math.max(
+          Math.abs(en[0]! - easting.value),
+          Math.abs(en[1]! - northing.value),
+        );
+        const detail = `computed E ${en[0]!.toFixed(4)}, N ${en[1]!.toFixed(4)}; pipeline ${op.pipeline}`;
+        const fingerprint = operationFingerprint(ctx, op, [en]);
+        if (shown) {
+          return [
+            {
+              ...base,
+              pass: conversionOnly,
+              detail: `${detail}; the Ordnance Survey's example is the authority for this method`,
+              effect: {
+                value:
+                  Math.hypot(en[0]! - easting.value, en[1]! - northing.value) *
+                  units.metersPerUnit *
+                  1000,
+                unit: "mm",
+                label:
+                  "IOGP's Transverse Mercator example (JHS formulas) against the library (Krüger series, Poder–Engsager)",
+              },
+              fingerprint,
+            },
+          ];
+        }
         return [
           {
             ...base,
             pass: conversionOnly,
-            value: Math.max(
-              Math.abs(en[0]! - easting.value),
-              Math.abs(en[1]! - northing.value),
-            ),
+            value,
             tolerance:
               Math.max(easting.half, northing.half) +
               INVERSE_RESIDUAL / units.metersPerUnit,
             unit: units.horizontalUnitName,
-            detail: `computed E ${en[0]!.toFixed(4)}, N ${en[1]!.toFixed(4)}; pipeline ${op.pipeline}`,
+            detail,
+            fingerprint,
           },
         ];
       }
@@ -271,6 +335,10 @@ function iogpCase(
           tolerance: Math.max(lat.half, lon.half) * 3600 + ANGLE_PATH,
           unit: "″",
           detail: `computed ${fmt(back[1]!, 12)}°, ${fmt(back[0]!, 12)}°; pipeline ${op.pipeline}`,
+          // Geographic results as metres on the Earth's ellipsoid.
+          fingerprint: operationFingerprint(ctx, op, [
+            onEarth(back[0]!, back[1]!),
+          ]),
         },
       ];
     },
@@ -437,23 +505,7 @@ const clothoidReferenceCase = stressCase(
 
 export const referenceValuesCases: readonly StressCase[] = [
   ...NGS_MARKS.map(ngsCase),
-  ...IOGP_EXAMPLES.filter((e) => e.id !== "transverse-mercator").map((e) =>
-    iogpCase(e, "forward"),
-  ),
-  ...IOGP_EXAMPLES.map((e) => iogpCase(e, "reverse")),
+  ...WORKED_EXAMPLES.map((e) => workedExampleCase(e, "forward")),
+  ...WORKED_EXAMPLES.map((e) => workedExampleCase(e, "reverse")),
   clothoidReferenceCase,
-];
-/**
- * Held out of the catalog: fails against a published value (task 1b report).
- * reference-values.iogp-transverse-mercator-forward: IOGP prints
- * E 577274.99, N 69740.50; the library gives 577274.9838, 69740.4923, 7.7 mm
- * off (half a unit is 5 mm). An independent Krüger series to n^6 agrees with
- * the library, and reproduces the Ordnance Survey's own example; the source's
- * JHS figures appear rounded.
- */
-export const referenceValuesHeld: readonly StressCase[] = [
-  iogpCase(
-    IOGP_EXAMPLES.find((e) => e.id === "transverse-mercator")!,
-    "forward",
-  ),
 ];

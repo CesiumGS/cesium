@@ -2,7 +2,10 @@
 import { EngineeringFrame } from "../../../../src/engineering/EngineeringFrame.ts";
 import { resolveOperation } from "../../../../src/engineering/crs.ts";
 import { framePoint } from "../../../../src/frames/local.ts";
-import { fromDegrees } from "../../../../src/math/ellipsoid.ts";
+import {
+  fromDegrees,
+  type Cartographic,
+} from "../../../../src/math/ellipsoid.ts";
 import { measure } from "../../../../src/measure/measure.ts";
 import { EARTH } from "../../../../src/scene/Body.ts";
 import {
@@ -19,15 +22,36 @@ import {
 import { type StressCase, type StressResult, fmt } from "../runner.ts";
 import {
   DESIGN_ROUND_TRIP,
-  EFFECT,
   MEASURED_AT,
   SAME_DISTANCE,
   epsg,
+  fingerprintOf,
+  operationFingerprint,
   proj,
   stressCase,
   utc,
   worstRoundTrip,
 } from "../shared.ts";
+
+/** The EPSG:4326 check's tolerance (the plan's): 1 mm of the datasheet's UTM. */
+const UTM_FROM_4326 = 1e-3; // m
+/**
+ * EPSG:31467's 1 km design steps against 1000/(N cos φ) and 1000/M on WGS 84:
+ * the grid is on Bessel 1841, whose radii differ from WGS 84's by about
+ * 1.2e-4, and its scale is 1 on the central meridian. 1e-3 allows that and
+ * still tells the axes apart: swapped, a step would be 100% off.
+ */
+const GAUSS_KRUGER_STEP = 1e-3;
+/** DHDN's datum shift to WGS 84 (100 to 200 m) as a longitude, degrees: the origin's distance from 9°. */
+const DATUM_SHIFT_DEGREES = 0.01;
+/** How far an east step may move north, as a fraction of a north step (convergence is 0 on the central meridian). */
+const CROSS_STEP = 0.01;
+/**
+ * The zone-60 line's E steps (0.01° apart on the equator, 3° from the central
+ * meridian) differ by the scale's change along them, about 6e-5; a wrap at
+ * 180° would change a step by the zone's width, a factor of hundreds.
+ */
+const ANTIMERIDIAN_STEPS = 1e-3;
 
 const axesCase = stressCase(
   "axes-and-the-antimeridian.axes",
@@ -55,16 +79,24 @@ const axesCase = stressCase(
       },
       proj(ctx),
     );
-    const p0 = gk.toGeodetic([3_500_000, 5_540_000, 0]);
-    const pe = gk.toGeodetic([3_501_000, 5_540_000, 0]);
-    const pn = gk.toGeodetic([3_500_000, 5_541_000, 0]);
+    const steps = [
+      [3_500_000, 5_540_000, 0],
+      [3_501_000, 5_540_000, 0],
+      [3_500_000, 5_541_000, 0],
+    ];
+    const [p0, pe, pn] = steps.map((d) => gk.toGeodetic(d)) as [
+      Cartographic,
+      Cartographic,
+      Cartographic,
+    ];
     const wgs84 = ellipsoidOf("epsg-ellipsoid-wgs84");
     const r = radii(wgs84.a, wgs84.e2, p0.latitude / DEGREE);
     const handLon = 1000 / (r.N * Math.cos(p0.latitude));
     const handLat = 1000 / r.M;
     const eastError = Math.abs((pe.longitude - p0.longitude) / handLon - 1);
     const northError = Math.abs((pn.latitude - p0.latitude) / handLat - 1);
-    const onMeridian = Math.abs(p0.longitude / DEGREE - 9) < 0.01;
+    const onMeridian =
+      Math.abs(p0.longitude / DEGREE - 9) < DATUM_SHIFT_DEGREES;
     return [
       {
         ...base,
@@ -72,19 +104,22 @@ const axesCase = stressCase(
         title: `GU2195's ${mark.latitude} ${mark.longitude} as EPSG:4326, longitude first, to NAD83(2011) / UTM zone 10N: within 1 mm of its published N ${mark.utm.north}, E ${mark.utm.east}`,
         pass: true,
         value: Math.hypot(utm[0]! - east, utm[1]! - north),
-        tolerance: 1e-3,
+        tolerance: UTM_FROM_4326,
         unit: "m",
         detail: `computed E ${utm[0]!.toFixed(4)}, N ${utm[1]!.toFixed(4)}; pipeline ${op.pipeline}`,
+        fingerprint: operationFingerprint(ctx, op, [utm]),
       },
       {
         ...base,
         id: `${base.id}.northing-first`,
         title:
-          "EPSG:31467 (northing first in EPSG): design (3 500 000, 5 540 000) lies on the 9° meridian, and 1 km steps in design E and N move east and north by the hand-computed angles, within 2%",
+          "EPSG:31467 (northing first in EPSG): design (3 500 000, 5 540 000) lies on the 9° meridian, and 1 km steps in design E and N move east and north by the hand-computed angles, within 1e-3",
         pass:
-          onMeridian && Math.abs(pe.latitude - p0.latitude) < 0.01 * handLat,
+          onMeridian &&
+          Math.abs(pe.latitude - p0.latitude) < CROSS_STEP * handLat,
         value: Math.max(eastError, northError),
-        tolerance: EFFECT,
+        tolerance: GAUSS_KRUGER_STEP,
+        fingerprint: fingerprintOf(ctx, gk, steps),
         detail: `origin ${fmt(p0.longitude / DEGREE, 9)}°E ${fmt(p0.latitude / DEGREE, 9)}°N; east step ${fmt((pe.longitude - p0.longitude) / DEGREE, 7)}° (hand ${fmt(handLon / DEGREE, 7)}°), north step ${fmt((pn.latitude - p0.latitude) / DEGREE, 7)}° (hand ${fmt(handLat / DEGREE, 7)}°)`,
       },
     ];
@@ -119,6 +154,7 @@ const antimeridianCase = stressCase(
         tolerance: DESIGN_ROUND_TRIP,
         unit: "m",
         detail: designs.map((d) => `E ${d[0]!.toFixed(3)}`).join(", "),
+        fingerprint: fingerprintOf(ctx, frame, designs),
       });
       if (zone === 60) {
         // Longitudes 179.97° to −179.97° (180.03°) in 0.01° steps, across 180°.
@@ -138,7 +174,7 @@ const antimeridianCase = stressCase(
             "A design line across 180° in UTM zone 60N (179.97° to −179.97° at the equator): E increases in equal steps, with no jump",
           pass: deltas.every((d) => d > 0),
           value: spread,
-          tolerance: 0.01,
+          tolerance: ANTIMERIDIAN_STEPS,
           detail: `E steps ${deltas.map((d) => d.toFixed(3)).join(", ")} m`,
         });
       }

@@ -378,6 +378,134 @@
       "coordinates": [
         -1995284.6217023332, -4938737.460620518, 3497146.0608041673
       ]
+    },
+    "reference-values.iogp-lambert-conic-conformal-2sp-forward": {
+      "pipeline": "+proj=pipeline +step +proj=unitconvert +xy_in=us-ft +xy_out=m +step +inv +proj=lcc +lat_0=27.8333333333333 +lon_0=-99 +lat_1=28.3833333333333 +lat_2=30.2833333333333 +x_0=609601.219202438 +y_0=0 +ellps=clrk66 +step +proj=unitconvert +xy_in=rad +xy_out=deg",
+      "grids": [],
+      "coordinates": [2963503.912819201, 254759.80064647275, 0]
+    },
+    "reference-values.iogp-transverse-mercator-forward": {
+      "pipeline": "+proj=pipeline +step +inv +proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +step +proj=unitconvert +xy_in=rad +xy_out=deg",
+      "grids": [],
+      "coordinates": [577274.9838134756, 69740.49226662391, 0]
+    },
+    "reference-values.iogp-polar-stereographic-b-forward": {
+      "pipeline": "+proj=pipeline +step +inv +proj=stere +lat_0=-90 +lat_ts=-71 +lon_0=70 +x_0=6000000 +y_0=6000000 +ellps=WGS84 +step +proj=unitconvert +xy_in=rad +xy_out=deg",
+      "grids": [],
+      "coordinates": [7255380.793258386, 7053389.560610153, 0]
+    },
+    "reference-values.iogp-pseudo-mercator-forward": {
+      "pipeline": "+proj=pipeline +step +inv +proj=webmerc +lat_0=0 +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +step +proj=unitconvert +xy_in=rad +xy_out=deg",
+      "grids": [],
+      "coordinates": [-11169055.576258447, 2800000.003136159, 0]
+    },
+    "reference-values.os-national-grid-forward": {
+      "pipeline": "+proj=pipeline +step +inv +proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +step +proj=unitconvert +xy_in=rad +xy_out=deg",
+      "grids": [],
+      "coordinates": [651409.9029099699, 313177.27031960187, 0]
+    },
+    "reference-values.iogp-lambert-conic-conformal-2sp-reverse": {
+      "pipeline": "+proj=pipeline +step +proj=unitconvert +xy_in=us-ft +xy_out=m +step +inv +proj=lcc +lat_0=27.8333333333333 +lon_0=-99 +lat_1=28.3833333333333 +lat_2=30.2833333333333 +x_0=609601.219202438 +y_0=0 +ellps=clrk66 +step +proj=unitconvert +xy_in=rad +xy_out=deg",
+      "grids": [],
+      "coordinates": [
+        -586351.6326391806, -5578763.122991204, 3025316.8173389737
+      ]
+    },
+    "reference-values.iogp-transverse-mercator-reverse": {
+      "pipeline": "+proj=pipeline +step +inv +proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +step +proj=unitconvert +xy_in=rad +xy_out=deg",
+      "grids": [],
+      "coordinates": [4064948.803020537, 35474.27722452188, 4898352.566762441]
+    },
+    "reference-values.iogp-polar-stereographic-b-reverse": {
+      "pipeline": "+proj=pipeline +step +inv +proj=stere +lat_0=-90 +lat_ts=-71 +lon_0=70 +x_0=6000000 +y_0=6000000 +ellps=WGS84 +step +proj=unitconvert +xy_in=rad +xy_out=deg",
+      "grids": [],
+      "coordinates": [
+        -827981.4733488691, 1434105.9828541821, -6138765.683113617
+      ]
+    },
+    "reference-values.iogp-pseudo-mercator-reverse": {
+      "pipeline": "+proj=pipeline +step +inv +proj=webmerc +lat_0=0 +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +step +proj=unitconvert +xy_in=rad +xy_out=deg",
+      "grids": [],
+      "coordinates": [
+        -1041964.2036274928, -5714658.0693688085, 2625106.138630437
+      ]
+    },
+    "reference-values.os-national-grid-reverse": {
+      "pipeline": "+proj=pipeline +step +inv +proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +step +proj=unitconvert +xy_in=rad +xy_out=deg",
+      "grids": [],
+      "coordinates": [3875301.709422858, 116229.50686916475, 5047519.562813433]
+    },
+    "distortion.low-distortion.test-points": {
+      "pipeline": "+proj=pipeline +step +inv +proj=lcc +lat_1=45.5 +lat_0=45.5 +lon_0=-122.75 +k_0=1.000002 +x_0=100000 +y_0=50000 +ellps=GRS80 +step +proj=unitconvert +xy_in=rad +z_in=m +xy_out=deg +z_out=m",
+      "grids": [],
+      "coordinates": [
+        -2445969.868385261, -3769989.487868069, 4510865.504325641,
+        -2426275.6504708524, -3765221.1015770645, 4525363.031173212,
+        -2437343.0189726786, -3754540.104137066, 4528269.461130391
+      ]
+    },
+    "distortion.low-distortion.portland": {
+      "pipeline": "+proj=pipeline +step +inv +proj=lcc +lat_1=45.5 +lat_0=45.5 +lon_0=-122.75 +k_0=1.000002 +x_0=100000 +y_0=50000 +ellps=GRS80 +step +proj=unitconvert +xy_in=rad +z_in=m +xy_out=deg +z_out=m",
+      "grids": [],
+      "coordinates": [-2445974.75218936, -3769997.015307533, 4510874.571753689]
+    },
+    "distortion.low-distortion.state-plane": {
+      "pipeline": "+proj=pipeline +step +inv +proj=lcc +lat_0=43.6666666666667 +lon_0=-120.5 +lat_1=46 +lat_2=44.3333333333333 +x_0=2500000 +y_0=0 +ellps=GRS80 +step +proj=unitconvert +xy_in=rad +z_in=m +xy_out=deg +z_out=m",
+      "grids": [],
+      "coordinates": [
+        -2445974.7521893606, -3769997.0153075336, 4510874.571753688
+      ]
+    },
+    "coordinate-epoch.nad83-itrf2014.epoch-2010": {
+      "pipeline": "+proj=pipeline +step +proj=unitconvert +xy_in=deg +z_in=m +xy_out=rad +z_out=m +step +proj=cart +ellps=GRS80 +step +inv +proj=helmert +x=1.0053 +y=-1.90921 +z=-0.54157 +rx=0.02678138 +ry=-0.00042027 +rz=0.01093206 +s=0.00036891 +dx=0.00079 +dy=-0.0006 +dz=-0.00144 +drx=6.667e-05 +dry=-0.00075744 +drz=-5.133e-05 +ds=-7.201e-05 +t_epoch=2010 +convention=coordinate_frame +step +inv +proj=cart +ellps=GRS80 +step +proj=unitconvert +xy_in=rad +z_in=m +xy_out=deg +z_out=m",
+      "grids": [],
+      "coordinates": [-2669624.0165800042, -4345819.472245232, 3817029.88737936]
+    },
+    "coordinate-epoch.nad83-itrf2014.epoch-2026": {
+      "pipeline": "+proj=pipeline +step +proj=unitconvert +xy_in=deg +z_in=m +xy_out=rad +z_out=m +step +proj=cart +ellps=GRS80 +step +inv +proj=helmert +x=1.0053 +y=-1.90921 +z=-0.54157 +rx=0.02678138 +ry=-0.00042027 +rz=0.01093206 +s=0.00036891 +dx=0.00079 +dy=-0.0006 +dz=-0.00144 +drx=6.667e-05 +dry=-0.00075744 +drz=-5.133e-05 +ds=-7.201e-05 +t_epoch=2010 +convention=coordinate_frame +step +inv +proj=cart +ellps=GRS80 +step +proj=unitconvert +xy_in=rad +z_in=m +xy_out=deg +z_out=m",
+      "grids": [],
+      "coordinates": [
+        -2669624.273868214, -4345819.476762902, 3817029.7354891906
+      ]
+    },
+    "coordinate-epoch.nad83-itrf2014.no-epoch": {
+      "pipeline": "+proj=pipeline +step +proj=unitconvert +xy_in=deg +z_in=m +xy_out=rad +z_out=m +step +proj=cart +ellps=GRS80 +step +inv +proj=helmert +x=1.0053 +y=-1.90921 +z=-0.54157 +rx=0.02678138 +ry=-0.00042027 +rz=0.01093206 +s=0.00036891 +dx=0.00079 +dy=-0.0006 +dz=-0.00144 +drx=6.667e-05 +dry=-0.00075744 +drz=-5.133e-05 +ds=-7.201e-05 +t_epoch=2010 +convention=coordinate_frame +step +inv +proj=cart +ellps=GRS80 +step +proj=unitconvert +xy_in=rad +z_in=m +xy_out=deg +z_out=m",
+      "grids": [],
+      "coordinates": [-2669624.0165800042, -4345819.472245232, 3817029.88737936]
+    },
+    "axes-and-the-antimeridian.axes.epsg-4326": {
+      "pipeline": "+proj=pipeline +step +proj=unitconvert +xy_in=deg +xy_out=rad +step +proj=utm +zone=10 +ellps=GRS80",
+      "grids": [],
+      "coordinates": [627934.6499283955, 4095364.616971877, 0]
+    },
+    "axes-and-the-antimeridian.axes.northing-first": {
+      "pipeline": "+proj=pipeline +step +inv +proj=tmerc +lat_0=0 +lon_0=9 +k=1 +x_0=3500000 +y_0=0 +ellps=bessel +step +proj=push +v_3 +step +proj=cart +ellps=bessel +step +proj=helmert +x=598.1 +y=73.7 +z=418.2 +rx=0.202 +ry=0.045 +rz=-2.455 +s=6.7 +convention=position_vector +step +inv +proj=cart +ellps=WGS84 +step +proj=pop +v_3 +step +proj=unitconvert +xy_in=rad +z_in=m +xy_out=deg +z_out=m",
+      "grids": [],
+      "coordinates": [
+        4057609.139443144, 642586.6949808575, 4862527.344943873,
+        4057452.6692779413, 643574.376639122, 4862527.288498062,
+        4056852.5164776132, 642466.8662555149, 4863170.120725841
+      ]
+    },
+    "axes-and-the-antimeridian.antimeridian.zone-1": {
+      "pipeline": "+proj=pipeline +step +inv +proj=utm +zone=1 +ellps=WGS84 +step +proj=unitconvert +xy_in=rad +z_in=m +xy_out=deg +z_out=m",
+      "grids": [],
+      "coordinates": [
+        -6378136.999028551, -111.31949078952906, 0, -4517590.878160863,
+        -78.84683509132593, 4487348.408865919, -6378136.999028551,
+        111.31949078669659, 0, -4517590.878160863, 78.84683508931971,
+        4487348.408865919
+      ]
+    },
+    "axes-and-the-antimeridian.antimeridian.zone-60": {
+      "pipeline": "+proj=pipeline +step +inv +proj=utm +zone=60 +ellps=WGS84 +step +proj=unitconvert +xy_in=rad +z_in=m +xy_out=deg +z_out=m",
+      "grids": [],
+      "coordinates": [
+        -6378136.999028551, -111.31949078669659, 0, -4517590.878160863,
+        -78.84683508931971, 4487348.408865919, -6378136.999028551,
+        111.31949078952906, 0, -4517590.878160863, 78.84683509132593,
+        4487348.408865919
+      ]
     }
   }
 }

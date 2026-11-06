@@ -685,6 +685,53 @@
         "xyz": ["−0.0335", "−0.0041", "0.0392"],
         "unit": "m/yr"
       }
+    },
+    "os-national-grid-example": {
+      "source": {
+        "document": "A Guide to Coordinate Systems in Great Britain",
+        "edition": "V3.6 © OS 2020",
+        "publisher": "Ordnance Survey",
+        "url": "https://www.ordnancesurvey.co.uk/documents/resources/guide-coordinate-systems-great-britain.pdf",
+        "retrieved": "2026-11-06",
+        "section": "Annexe C.1, Converting latitude and longitude to eastings and northings, worked example (p. 50); Annexe C.2, Converting eastings and northings to latitude and longitude, worked example (p. 51)"
+      },
+      "crs": "OSGB36 / National Grid (Airy 1830 ellipsoid)",
+      "note": "Here’s a worked example using the Airy 1830 ellipsoid and National Grid. Intermediate values are shown here to 10 decimal places. Compute all values using double-precision arithmetic.",
+      "forward": {
+        "latitude": "52 39 27.2531 N",
+        "longitude": "001 43 04.5177 E",
+        "easting": "651409.903",
+        "northing": "313177.270",
+        "unit": "m"
+      },
+      "reverse": {
+        "easting": "651409.903",
+        "northing": "313177.270",
+        "latitude": "52 39 27.2531 N",
+        "longitude": "001 43 04.5177 E"
+      }
+    },
+    "os-helmert-example": {
+      "source": {
+        "document": "A Guide to Coordinate Systems in Great Britain",
+        "edition": "V3.6 © OS 2020",
+        "publisher": "Ordnance Survey",
+        "url": "https://www.ordnancesurvey.co.uk/documents/resources/guide-coordinate-systems-great-britain.pdf",
+        "retrieved": "2026-11-06",
+        "section": "Annexe D, Helmert transformation worked example: ETRS89/WGS84 to OSGB36, formula (3) of section 6.2, parameters of section 6.6 (pp. 51-52)"
+      },
+      "parameters": {
+        "tX": "- 446.448 m",
+        "tY": "+ 125.157 m",
+        "tZ": "- 542.060 m",
+        "s": "+ 20.4894 ppm",
+        "rX": "- 0.1502 sec",
+        "rY": "- 0.2470 sec",
+        "rZ": "- 0.8421 sec"
+      },
+      "sourceXYZ": ["3790644.900", "-110149.210", "5111482.970"],
+      "targetXYZ": ["3790269.549", "-110038.064", "5111050.261"],
+      "rotationMatrix": "[[1.0000204894, 4.08261601 E − 06, −1.19748979 E − 06], [−4.08261601 E − 06, 1.0000204894, 7.28190149 E − 07], [1.19748979 E − 06, −7.28190149 E − 07, 1.0000204894]] (D2): the position vector convention"
     }
   }
 }

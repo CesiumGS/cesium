@@ -24,7 +24,7 @@ import {
   type StressResult,
   fmt,
 } from "../runner.ts";
-import { EFFECT, epsg, proj, stressCase } from "../shared.ts";
+import { EFFECT, epsg, fingerprintOf, proj, stressCase } from "../shared.ts";
 
 const webMercatorFrame = (ctx: StressContext) =>
   EngineeringFrame.create(
@@ -219,6 +219,7 @@ const lowDistortionCase = stressCase(
     let worst = 0;
     let half = 0;
     const lines: string[] = [];
+    const designs: Float64Array[] = [];
     for (const p of hb.portlandTestPoints.points) {
       const design = ldp.fromBodyFixed(
         onEarth(
@@ -226,6 +227,7 @@ const lowDistortionCase = stressCase(
           sexagesimal(p.latitude).value,
         ),
       );
+      designs.push(design);
       const n = printed(p.northing);
       const e = printed(p.easting);
       half = Math.max(half, n.half, e.half);
@@ -248,6 +250,7 @@ const lowDistortionCase = stressCase(
       tolerance: half + INVERSE_RESIDUAL,
       unit: "m",
       detail: lines.join("; "),
+      fingerprint: fingerprintOf(ctx, ldp, designs),
     });
 
     // Portland1, at the zone's design height h0 = (k0 − 1) RG (handbook step 3).
@@ -261,10 +264,10 @@ const lowDistortionCase = stressCase(
     const target = printed(
       /±(\d+) ppm/.exec(hb.designTarget.text)?.[1] ?? "NaN",
     ).value;
-    const distortionOf = (frame: EngineeringFrame) => {
-      const flat = frame.fromBodyFixed(onEarth(lon, lat, h0));
-      return (gridFactors(frame, flat).combinedFactor - 1) * 1e6;
-    };
+    const flatOf = (frame: EngineeringFrame) =>
+      frame.fromBodyFixed(onEarth(lon, lat, h0));
+    const distortionOf = (frame: EngineeringFrame) =>
+      (gridFactors(frame, flatOf(frame)).combinedFactor - 1) * 1e6;
     const ldpPpm = distortionOf(ldp);
     const spcPpm = distortionOf(spc);
     // By hand (handbook step 4): δ = k RG / (RG + h) − 1, with k from Snyder.
@@ -309,6 +312,7 @@ const lowDistortionCase = stressCase(
         unit: "ppm",
         label: "grid against ground in the OCRS Portland zone",
       },
+      fingerprint: fingerprintOf(ctx, ldp, [flatOf(ldp)]),
     });
     results.push({
       ...base,
@@ -323,6 +327,7 @@ const lowDistortionCase = stressCase(
         unit: "ppm",
         label: "grid against ground on Oregon North state plane",
       },
+      fingerprint: fingerprintOf(ctx, spc, [flatOf(spc)]),
     });
     return results;
   },
