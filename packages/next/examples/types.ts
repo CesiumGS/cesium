@@ -31,6 +31,9 @@ export interface ExampleContext {
   /**
    * The example's URL parameters when it started (a deep link's), as
    * free-form text. Each example's own: switching examples clears them.
+   * Values written by `setParams` round-trip exactly. The router coerces
+   * hand-typed ones as JSON: `?n=1.50` reads as "1.5", `1e3` as "1000", and
+   * `true`, `false`, `null` and objects are dropped.
    */
   params: Readonly<Record<string, string>>;
   /**
