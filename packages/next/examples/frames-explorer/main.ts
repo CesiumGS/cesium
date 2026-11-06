@@ -13,11 +13,12 @@
 // stops on `context.signal`, and everything drawn goes through `scope`.
 import { createElement } from "react";
 import type { Frames } from "../../src/frames/frames.ts";
-import { earthOrientationSigma } from "../../src/measure/accuracy.ts";
 import { Instant } from "../../src/time/Instant.ts";
 import type { ExampleContext, ExampleRun } from "../types.ts";
-import { RESULT_LABELS, comparedFor, groupRunIds } from "./content.ts";
+import { groupRunIds } from "./content.ts";
 import { createScenarioHost } from "./scenarioHost.ts";
+import { clockView, createPanelModel } from "./panelModel.ts";
+import { scenarioView } from "./scenarioModel.ts";
 import { createCallouts } from "./callouts.ts";
 import { createStage } from "./scenarios/stage.ts";
 import { createCameraRig } from "./cameraRig.ts";
@@ -37,25 +38,16 @@ import { createCatalogRuns } from "./catalogRuns.ts";
 import { createFrameData } from "./frameData.ts";
 import { createPageReport } from "./pageReport.ts";
 import { createUserCrs } from "./userCrs.ts";
-import { CONVERGENCE_FACTOR, DISTORTION } from "./overlayConfig.ts";
-import { FLYBY, createModelSource, deg, isFrame, meters } from "./page.ts";
-import { routeSteps } from "./panel/routeSteps.ts";
-import { proofRows, type ProofRow } from "./scenarios/proof.ts";
-import { READY, SCENES } from "./scenarios/scenes.ts";
-import { checkedState, type ScenarioId } from "./scenarios/spec.ts";
+import { DISTORTION } from "./overlayConfig.ts";
+import { FLYBY, createModelSource, deg, isFrame } from "./page.ts";
+import { READY } from "./scenarios/scenes.ts";
+import { type ScenarioId } from "./scenarios/spec.ts";
 import { SCENARIOS } from "./scenarios/specs.ts";
 import { Globe, familyRgba } from "./globe.ts";
 import { LoadingModel } from "./loading.ts";
-import type {
-  ClockView,
-  OverlayId,
-  PanelActions,
-  PanelModel,
-  ResultExtras,
-  ScenarioPanelView,
-} from "./panel/model.ts";
+import type { OverlayId, PanelActions } from "./panel/model.ts";
 import { Panel } from "./panel/Panel.tsx";
-import { createClient, type ClientWorker, type DataItem } from "./protocol.ts";
+import { createClient, type ClientWorker } from "./protocol.ts";
 import {
   ViewStore,
   formatParams,
@@ -64,10 +56,8 @@ import {
   type Known,
   type Tab,
 } from "./selection.ts";
-import { GROUP_INFO, groupInfo, type Lens } from "./stress/groupInfo.ts";
-import type { StressResult } from "./tests.ts";
-import { branchPath, pathToRoot } from "./tree.ts";
-import references from "./references.json";
+import { groupInfo, type Lens } from "./stress/groupInfo.ts";
+import { pathToRoot } from "./tree.ts";
 import { RunQueue } from "./runQueue.ts";
 import { GapInset } from "./gapInset.ts";
 import { frameTarget } from "./orbit.ts";
@@ -173,7 +163,7 @@ export function run(context: ExampleContext): ExampleRun {
 
   // -------------------------------------------------------- the model
   const modelSource = createModelSource({
-    build: () => buildModel(),
+    build: () => panelModel.build(),
     disposed: () => disposed,
   });
   const { source, invalidate } = modelSource;
@@ -184,113 +174,6 @@ export function run(context: ExampleContext): ExampleRun {
     frames
       ? Instant.fromUtc(viewer.clock.time, frames.data.leapSeconds)
       : undefined;
-
-  function clockView(): ClockView {
-    const utc = new Date(viewer.clock.time)
-      .toISOString()
-      .replace(/\.\d+Z$/, "Z");
-    const instant = instantNow();
-    if (!frames || !instant) {
-      return { utc, eop: { kind: "measured" } };
-    }
-    const sigma = earthOrientationSigma(frames, instant);
-    return {
-      utc,
-      eop: sigma.degraded
-        ? { kind: "outside", span: sigma.span }
-        : sigma.predicted
-          ? { kind: "predicted", ageDays: sigma.ageDays }
-          : { kind: "measured" },
-    };
-  }
-
-  function extrasOf(r: StressResult): ResultExtras {
-    const g = groupInfo(r.group);
-    const label = RESULT_LABELS[r.id];
-    return {
-      ...(label !== undefined && { label }),
-      ...(r.accuracyNote !== undefined && { accuracyNote: r.accuracyNote }),
-      compared:
-        r.expectedError !== undefined
-          ? { kind: "error", text: `An error matching /${r.expectedError}/.` }
-          : comparedFor(
-              r.id,
-              g?.compared ?? {
-                kind: "independent",
-                text: "The case's own check.",
-              },
-            ),
-      ...(r.trace !== undefined && { trace: r.trace }),
-      ...(r.source !== undefined && { source: r.source }),
-      ...(r.group === "measurement" &&
-        r.accuracy?.meters !== undefined && {
-          relative: `The site's absolute placement is ±${meters(r.accuracy.meters)} (1σ); this check measures a distance, which that placement doesn't affect.`,
-        }),
-    };
-  }
-
-  /** Groups waiting for an item (R9): a need still loading, or not yet tried while a run goes on. */
-  function waiting(): Record<string, DataItem> {
-    const out: Record<string, DataItem> = {};
-    for (const g of GROUP_INFO) {
-      for (const need of g.needs) {
-        const s = loading.get(need).state;
-        const pending =
-          s === "fetching" ||
-          (catalogRuns.runView().state === "running" && s === "idle");
-        const has = catalogRuns.results().some((r) => r.group === g.id);
-        if (pending && !has) {
-          out[g.id] = need;
-          break;
-        }
-      }
-    }
-    return out;
-  }
-
-  function buildModel(): PanelModel {
-    const tree = treeState.tree();
-    const treeNote = treeState.note();
-    const all = [...catalogRuns.results(), ...user.results()];
-    const extras: Record<string, ResultExtras> = {};
-    for (const r of all) {
-      extras[r.id] = extrasOf(r);
-    }
-    return {
-      items: loading.items,
-      ...(tree ? { tree } : {}),
-      ...(treeNote !== undefined && { treeNote }),
-      composed: treeState.composed(),
-      clock: clockView(),
-      overlays: overlays.views(),
-      orionFrame: orion.frame(),
-      ...overlays.settings(),
-      convergenceFactor: CONVERGENCE_FACTOR,
-      triadScale:
-        "triads drawn at 6% of the camera's distance, 2 m to 2,000 km; ITRF and GCRF at 1.5 Earth radii",
-      groups: GROUP_INFO,
-      results: all,
-      extras,
-      waiting: waiting(),
-      run: catalogRuns.runView(),
-      ...(catalogRuns.runView().state === "running"
-        ? { runBusy: "A run is going on; this group can run when it ends." }
-        : user.view().state === "running"
-          ? {
-              runBusy:
-                "Your CRS's checks are running; this group can run when they end.",
-            }
-          : {}),
-      token: token !== undefined ? "available" : undefined,
-      userCrs: user.view(),
-      exampleWkt2: (
-        references.entries as unknown as Record<string, { wkt2?: string }>
-      )["input-wkt2-tokyo-jprcs-ix"]!.wkt2!,
-      ...scenarioView(),
-      environment: pageReport.lines(),
-      ...(notice !== undefined && { notice }),
-    };
-  }
 
   // ------------------------------------------------------------ the tree
   const treeState = createTreeState({
@@ -732,201 +615,6 @@ export function run(context: ExampleContext): ExampleRun {
     id !== undefined && READY.includes(id) ? id : READY[0]!;
 
   /** The scenario's part of the panel model. */
-  function scenarioView(): { scenario: ScenarioPanelView } {
-    const st = host.state();
-    const spec = st.spec;
-    const catalog = new Map(catalogRuns.results().map((r) => [r.id, r]));
-    const tree = treeState.tree();
-    const e = st.evaluation;
-    // Only the time moved while the clock plays: one steady state that
-    // follows it, rather than rows flipping to loading every evaluation.
-    const following =
-      st.stale &&
-      viewer.clock.mode === "playing" &&
-      st.staleBy.every((c) => c === "time");
-    const freshness: ScenarioPanelView["freshness"] = !st.stale
-      ? "current"
-      : following
-        ? "following"
-        : "updating";
-    let proof: ProofRow[];
-    if (e && st.evaluatedAt) {
-      // The rows of the setup it was made at; `freshness` says whether
-      // that is the current one (the panel withholds stale verdicts).
-      const at = checkedState(
-        spec,
-        st.evaluatedAt.knobs,
-        st.evaluatedAt.epochUtcMs,
-      ).atChecked;
-      proof = proofRows(spec, at, catalog, e);
-    } else if (st.atChecked) {
-      proof = proofRows(spec, true, catalog, {
-        scenario: spec.id,
-        added: [],
-        answer: { label: "", headline: "", accuracy: { note: "" } },
-        overlays: [],
-        live: [],
-      });
-    } else {
-      // Re-running: nothing is claimed until the live checks are in (R9).
-      proof = spec.proof.map((id) => ({
-        kind: "pending" as const,
-        id,
-        title: catalog.get(id)?.title ?? id,
-      }));
-    }
-    const liveExtras: Record<string, ResultExtras> = {};
-    for (const r of e?.live ?? []) {
-      // A live re-run is compared with itself by another route, not with
-      // its catalog group's reference: the group's words don't apply.
-      const rest = extrasOf(r);
-      delete rest.compared;
-      liveExtras[r.id] = rest;
-    }
-    let path: ScenarioPanelView["path"];
-    if (tree && e?.answer.path) {
-      try {
-        const b = branchPath(tree, e.answer.path.from, e.answer.path.to);
-        path = {
-          up: b.up.map((n) => n.id),
-          ancestor: b.ancestor.id,
-          down: b.down.map((n) => n.id),
-        };
-      } catch {
-        // A node the tree hasn't yet (its evaluation is still on its way).
-      }
-    }
-    const instant = instantNow();
-    return {
-      scenario: {
-        id: spec.id,
-        title: spec.title,
-        question: spec.question,
-        strip: READY.map((id) => {
-          const s = SCENARIOS.find((x) => x.id === id)!;
-          return { id, title: s.title, question: s.question };
-        }),
-        knobs: spec.knobs,
-        values: st.knobs,
-        checked: spec.checked.knobs,
-        epochUtc: new Date(st.epochUtcMs).toISOString(),
-        checkedEpochUtc: new Date(
-          Date.parse(spec.checked.epochUtc),
-        ).toISOString(),
-        atChecked: st.atChecked,
-        changed: st.changed,
-        status: st.status,
-        freshness,
-        ...(st.queued !== undefined && { queued: st.queued }),
-        ...(st.problem !== undefined && {
-          problem: { ...st.problem, message: scrub(st.problem.message) },
-        }),
-        ...(e && { answer: e.answer }),
-        ...(() => {
-          const pub = e?.answer.published;
-          if (!pub) {
-            return {};
-          }
-          const base = {
-            printed: pub.printed,
-            document: pub.document,
-            ...(pub.url !== undefined && { url: pub.url }),
-            tolerance: pub.tolerance,
-            unit: pub.unit,
-          };
-          const r = catalog.get(pub.proofId);
-          if (!st.atChecked) {
-            const ref = proof.find(
-              (row) => row.kind === "reference-only" && row.id === pub.proofId,
-            );
-            return {
-              published: {
-                ...base,
-                state: "off" as const,
-                ...(freshness === "current" &&
-                  ref?.kind === "reference-only" &&
-                  ref.delta && { delta: ref.delta }),
-              },
-            };
-          }
-          if (!r || freshness !== "current") {
-            return { published: { ...base, state: "loading" as const } };
-          }
-          return {
-            published: {
-              ...base,
-              state: "checked" as const,
-              ...(r.effect && { ours: r.effect.value }),
-              ...(r.value !== undefined && {
-                difference: {
-                  value: r.value,
-                  ...(r.unit !== undefined && { unit: r.unit }),
-                },
-              }),
-              pass: r.pass,
-            },
-          };
-        })(),
-        ...(path && { path }),
-        proof,
-        liveExtras,
-        ...(stage.scene()?.note !== undefined && {
-          note: stage.scene()!.note!,
-        }),
-        focus: SCENES[spec.id]?.focus ?? [],
-        ...(() => {
-          const c = SCENES[spec.id]?.treeControl;
-          const knob = c && spec.knobs.find((k) => k.id === c.knob);
-          return knob?.options
-            ? {
-                treeControl: {
-                  knob: knob.id,
-                  verb: c!.verb,
-                  options: knob.options,
-                },
-              }
-            : {};
-        })(),
-        ...(SCENES[spec.id]?.diagramNote !== undefined && {
-          diagramNote: SCENES[spec.id]!.diagramNote!,
-        }),
-        ...(e?.data && {
-          data: {
-            label: e.data.label,
-            frame: e.data.frame,
-            source: e.data.source,
-          },
-        }),
-        ...(() => {
-          // The route spelled out: from the data (or the answer's start)
-          // through each lit edge to the drawn-in frame (or its end).
-          const sc = SCENES[spec.id];
-          const p = e?.answer.path;
-          if (!tree || !path || !p) {
-            return {};
-          }
-          const start = e.data
-            ? {
-                title: `${e.data.label}, as delivered`,
-                does: `position and velocity, expressed in ${e.data.frame} (${e.data.source})`,
-                accuracy: e.data.accuracy,
-              }
-            : (sc?.routeEnds?.start ?? { title: p.from, does: "" });
-          const end = e.data
-            ? {
-                title: `Drawn in ${p.to}`,
-                does: sc?.drawnView?.[p.to] ?? "",
-              }
-            : (sc?.routeEnds?.end ?? { title: p.to, does: "" });
-          return { route: routeSteps(tree, path, start, end) };
-        })(),
-        playing: viewer.clock.mode === "playing",
-        rate: viewer.clock.rate,
-        ...(instant && frames && { eop: clockView().eop }),
-      },
-    };
-  }
-
   // ------------------------------------------------------------------ runs
   /** Every run, catalog or "Try your own", one at a time (final review, Important 1). */
   const runs = new RunQueue();
@@ -960,6 +648,36 @@ export function run(context: ExampleContext): ExampleRun {
     token,
   });
   scope.defer(() => pageReport.dispose());
+
+  // ------------------------------------------------------- the panel model
+  const panelModel = createPanelModel({
+    core: { viewer, loading, frames: () => frames, instantNow },
+    token,
+    tree: treeState,
+    overlays,
+    orionFrame: () => orion.frame(),
+    catalog: catalogRuns,
+    user,
+    scenario: () => {
+      const instant = instantNow();
+      return scenarioView({
+        st: host.state(),
+        results: catalogRuns.results(),
+        tree: treeState.tree(),
+        playing: viewer.clock.mode === "playing",
+        rate: viewer.clock.rate,
+        ...(instant &&
+          frames && { eop: clockView(viewer.clock.time, frames, instant).eop }),
+        ...(stage.scene()?.note !== undefined && {
+          sceneNote: stage.scene()!.note!,
+        }),
+        scrub,
+      });
+    },
+    environment: () => pageReport.lines(),
+    notice: () => notice,
+  });
+  scope.defer(() => panelModel.dispose());
 
   // ------------------------------------------------------------- actions
   const actions: PanelActions = {
