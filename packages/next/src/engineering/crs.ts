@@ -39,13 +39,14 @@ export function crsDefinition(ref: CrsRef): string {
 }
 
 /**
- * The PROJ code of the Moon's geographic CRS (plan 4a R4): IAU 2015 "Moon
- * (2015) - Sphere / Ocentric", longitude and latitude on a sphere of radius
- * 1737.4 km. It is the only Moon geographic CRS in proj.db 9.7.1, which has no
- * geographic 3D one for the Moon (checked with `geodetic_crs.type`), so heights
- * pass through an operation to it unchanged. The name keeps the plan's term.
+ * The PROJ code of the Moon's geographic CRS (plan 4a R4): IAU_2015:30100,
+ * "Moon (2015) - Sphere / Ocentric", longitude and latitude on the IAU sphere
+ * of radius 1,737,400 m. It is a geographic 2D CRS: proj.db 9.7.1 has no Moon
+ * geographic 3D CRS (checked with `geodetic_crs.type`). An operation to it
+ * passes heights through unchanged, as height above that sphere, which is the
+ * USGS lunar data standard's convention.
  */
-export const moonGeographic3d = "IAU_2015:30100";
+export const MOON_GEOGRAPHIC_CRS = "IAU_2015:30100";
 
 /** Units of a CRS's axes, read from PROJ (never assumed; plan 4a R5). */
 export interface CrsUnits {

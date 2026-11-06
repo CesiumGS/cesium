@@ -9,7 +9,7 @@ import { framesDataDirectory } from "../../scripts/frameData.mjs";
 import {
   crsDefinition,
   crsUnits,
-  moonGeographic3d,
+  MOON_GEOGRAPHIC_CRS,
   resolveOperation,
   type CrsRef,
 } from "../../src/engineering/crs.ts";
@@ -89,8 +89,8 @@ describe("CRS references", () => {
 
   it("records the Moon's geographic CRS code found in proj.db (R4)", async () => {
     const P = await loadProj({ base });
-    expect(moonGeographic3d).toBe("IAU_2015:30100");
-    expect(P.proj_get_name(P.proj_create(moonGeographic3d))).toBe(
+    expect(MOON_GEOGRAPHIC_CRS).toBe("IAU_2015:30100");
+    expect(P.proj_get_name(P.proj_create(MOON_GEOGRAPHIC_CRS))).toBe(
       "Moon (2015) - Sphere / Ocentric",
     );
   });
@@ -291,7 +291,7 @@ describe("operations that cannot be done", () => {
   it("throws for CRSs PROJ cannot relate, as a plain Error", async () => {
     const P = await loadProj({ base });
     expect(() =>
-      resolveOperation(P, ref(moonGeographic3d), "EPSG:4979"),
+      resolveOperation(P, ref(MOON_GEOGRAPHIC_CRS), "EPSG:4979"),
     ).toThrow(
       /PROJ offers no usable operation from IAU_2015:30100 to EPSG:4979/,
     );
