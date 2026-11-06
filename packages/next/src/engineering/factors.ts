@@ -78,6 +78,12 @@ function projectionOf(frame: EngineeringFrame): Projection {
  * The scale and convergence of the frame's projection at a design point, and
  * the elevation factor for its ellipsoidal height. A site scale factor does not
  * enter: the site transform's `scale` is reported separately by callers.
+ *
+ * The height h of the elevation factor is the ellipsoidal height on the
+ * target datum (WGS84 through EPSG:4979), as `frame.toGeodetic` gives it. For
+ * NAD83 it differs from the height on the CRS's own datum by about 1-2 m,
+ * which moves the elevation factor by about 1e-7: negligible for CAD practice.
+ * Throws a RangeError where PROJ has no valid scale (a singular point).
  */
 export function gridFactors(
   frame: EngineeringFrame,
@@ -109,6 +115,16 @@ export function gridFactors(
   // that). The parallel scale is the steadier across PROJ versions: it matches
   // pyproj's (PROJ 9.8.1) to 1e-13 where the meridional one differs by 1e-11.
   const pointScale = factors.parallel_scale;
+  // PROJ returns zeros (or non-finite values) at a singular point, such as a
+  // pole of a Mercator-type projection, instead of failing.
+  if (
+    !(Number.isFinite(pointScale) && pointScale > 0) ||
+    !Number.isFinite(factors.meridian_convergence)
+  ) {
+    throw new RangeError(
+      `gridFactors: PROJ has no scale factor at (${projected[0]}, ${projected[1]}) (scale ${pointScale}, convergence ${factors.meridian_convergence}): a singular point of the projection`,
+    );
+  }
   return {
     pointScale,
     elevationFactor,

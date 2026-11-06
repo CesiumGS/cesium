@@ -53,6 +53,8 @@ function meanRadius(a: number, invFlattening: number, latitude: number) {
   return (a * Math.sqrt(1 - e2)) / (1 - e2 * Math.sin(latitude) ** 2);
 }
 const WGS84 = { a: 6378137, invF: 298.257223563 };
+const GRS80 = { a: 6378137, invF: 298.257222101 };
+const US_FOOT = 0.3048006096012192;
 
 describe("grid factors against pyproj Proj.get_factors", () => {
   for (const testCase of fixture.cases) {
@@ -110,15 +112,55 @@ describe("grid factors against pyproj Proj.get_factors", () => {
     const row = utm.rows[0]!;
     const at0 = gridFactors(frame, [row.xyz[0]!, row.xyz[1]!, 0]);
     expect(Math.abs(at0.elevationFactor - 1)).toBeLessThan(1e-12);
-    const at1000 = gridFactors(frame, [row.xyz[0]!, row.xyz[1]!, 1000]);
-    const R = meanRadius(WGS84.a, WGS84.invF, row.factors.latitude);
-    expect(Math.abs(at1000.elevationFactor - R / (R + 1000))).toBeLessThan(
+    // At a mid-latitude point (N = 4,000,000 m, near 36 degrees) where sin
+    // phi is not 0: a latitude or radians/degrees error in R shows.
+    const design = [500000, 4_000_000, 1000];
+    const result = gridFactors(frame, design);
+    const phi = frame.toGeodetic(design).latitude;
+    expect(phi).toBeGreaterThan(0.6);
+    const R = meanRadius(WGS84.a, WGS84.invF, phi);
+    expect(Math.abs(result.elevationFactor - R / (R + 1000))).toBeLessThan(
       1e-12,
     );
-    expect(at1000.combinedFactor).toBeCloseTo(
-      at1000.pointScale * at1000.elevationFactor,
+    // Had R used degrees, the factor would differ far beyond the tolerance.
+    const wrong = meanRadius(WGS84.a, WGS84.invF, (phi * 180) / Math.PI);
+    expect(Math.abs(R / (R + 1000) - wrong / (wrong + 1000))).toBeGreaterThan(
+      1e-9,
+    );
+    expect(result.combinedFactor).toBeCloseTo(
+      result.pointScale * result.elevationFactor,
       14,
     );
+  });
+
+  it("the elevation factor on the ftUS frame takes the height from design feet", async () => {
+    const ca = fixture.cases[0]!;
+    const frame = EngineeringFrame.create(
+      { name: "CA3", body: EARTH, crs: crsRef(ca.source) },
+      await loadProj({ base }),
+    );
+    const row = ca.rows[7]!; // 50 km north-east of the origin, about 37.5 degrees
+    const design = [row.xyz[0]!, row.xyz[1]!, 3280.84];
+    const geodetic = frame.toGeodetic(design);
+    const R = meanRadius(
+      GRS80.a,
+      GRS80.invF,
+      row.factors.latitude * (Math.PI / 180),
+    );
+    const result = gridFactors(frame, design);
+    // h is metres above the ellipsoid: design feet converted by PROJ, plus
+    // the geoid separation (about -33 m here).
+    expect(
+      Math.abs(result.elevationFactor - R / (R + geodetic.height)),
+    ).toBeLessThan(1e-12);
+    const low = gridFactors(frame, [design[0]!, design[1]!, 0]);
+    const h0 = frame.toGeodetic([design[0]!, design[1]!, 0]).height;
+    expect(geodetic.height - h0).toBeCloseTo(3280.84 * US_FOOT, 6);
+    expect(Math.abs(low.elevationFactor - R / (R + h0))).toBeLessThan(1e-12);
+    const wrong = meanRadius(GRS80.a, GRS80.invF, row.factors.latitude);
+    expect(
+      Math.abs(R / (R + geodetic.height) - wrong / (wrong + geodetic.height)),
+    ).toBeGreaterThan(1e-9);
   });
 
   it("the scale 100 km off the central meridian differs by more than 1e-4", async () => {
