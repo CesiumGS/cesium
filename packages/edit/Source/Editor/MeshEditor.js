@@ -154,7 +154,7 @@ class MeshEditor {
     const { renderableComponents, selectableComponents } = this.#wasmEditor;
     for (const mesh of this.#meshes) {
       if (this.#wasmEditor.isMeshActive(mesh._key)) {
-        MeshEditor.#setComponentMasks(
+        this.#setComponentMasks(
           mesh,
           renderableComponents,
           selectableComponents,
@@ -189,7 +189,7 @@ class MeshEditor {
     const key = this.#wasmEditor.addMesh(this.#createWasmMesh(source));
 
     const mesh = new Mesh({ source, key, module: this.#module });
-    MeshEditor.#setComponentMasks(mesh, INACTIVE_COMPONENTS, 0);
+    this.#setComponentMasks(mesh, INACTIVE_COMPONENTS, 0);
     this.#meshes.add(mesh);
 
     return mesh;
@@ -234,11 +234,7 @@ class MeshEditor {
 
     this.#wasmEditor.setMeshActive(mesh._key);
     const { renderableComponents, selectableComponents } = this.#wasmEditor;
-    MeshEditor.#setComponentMasks(
-      mesh,
-      renderableComponents,
-      selectableComponents,
-    );
+    this.#setComponentMasks(mesh, renderableComponents, selectableComponents);
   }
 
   /**
@@ -253,7 +249,7 @@ class MeshEditor {
     this.#checkMesh(mesh);
 
     this.#wasmEditor.setMeshInactive(mesh._key);
-    MeshEditor.#setComponentMasks(mesh, INACTIVE_COMPONENTS, 0);
+    this.#setComponentMasks(mesh, INACTIVE_COMPONENTS, 0);
   }
 
   /**
@@ -278,7 +274,7 @@ class MeshEditor {
    * @param {ComponentMask} selectableComponents The components that can be selected.
    * @ignore
    */
-  static #setComponentMasks(mesh, shownComponents, selectableComponents) {
+  #setComponentMasks(mesh, shownComponents, selectableComponents) {
     const renderer = mesh._renderer;
     renderer.setShownComponents(shownComponents);
     renderer.setPickableComponents(
