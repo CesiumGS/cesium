@@ -112,7 +112,7 @@ const black = [0, 0, 0, 255];
 const faceColor = [214, 214, 214, 255];
 const selectedPointColor = [255, 122, 0, 255];
 const selectedEdgeColor = [0, 199, 255, 255];
-const selectedFaceColor = [255, 43, 155, 255];
+const selectedFaceColor = [230, 201, 150, 255];
 
 // The square as one quad face, made of two triangles.
 const quad = {
