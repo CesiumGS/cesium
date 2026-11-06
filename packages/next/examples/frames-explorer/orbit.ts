@@ -221,6 +221,25 @@ export function rangeLimits(
   }
 }
 
+/**
+ * The wheel's limits while the camera is at `range` from the pivot: the
+ * destination's `limits`, widened to take `range` (fix round 2). A flight
+ * interrupted far out (about 200,000 km on the way to stop 6, whose orbit
+ * zooms to 25,000 km) lands where it is, and its first wheel tick moves one
+ * notch instead of jumping to the limit; set again after each of the user's
+ * changes, the limits narrow back to the destination's as the user zooms
+ * in, and never let the camera out past where it landed.
+ */
+export function limitsAround(
+  limits: { minRange: number; maxRange: number },
+  range: number,
+): { minRange: number; maxRange: number } {
+  return {
+    minRange: Math.min(limits.minRange, range),
+    maxRange: Math.max(limits.maxRange, range),
+  };
+}
+
 /** What an orbit is set to: `setControls("orbit", …)`'s options. */
 export interface RigOrbit {
   target: number[];
