@@ -12,11 +12,11 @@ The same suite runs headless as a regression data test.
 
 **Architecture:**
 
-- **Files.** The example is a module under `packages/next/examples/frames-explorer/`. `tests.ts` is a pure stress-test catalog, shared by the page and a Vitest data test. `tree.ts` is the tree model. `overlays.ts` builds pure geometry. `main.ts` holds the page and its DOM panel.
+- **Files.** The example is a module under `packages/next/examples/frames-explorer/`. `tests.ts` is a pure stress-test catalog, shared by the page and a Vitest data test. `tree.ts` is the tree model. `overlays.ts` builds pure geometry. `worker.ts` and `protocol.ts` run the suite and the PROJ-dependent geometry off the main thread (R13). `main.ts`, `selection.ts` and `report.ts` hold the page, its linked selection and its report export (R14, R15).
 - **Drawing.** Overlays are unlit `line-list` meshes in the engine's world, which is Earth-fixed: each frame is drawn at its ITRF placement at the clock's time. Labels are HTML.
 - **Data.** Frame data, PROJ and the Artemis trajectory load from the setup store lazily, and only when a feature needs them.
 
-**Tech Stack:** TypeScript, the engine's `Viewer`, `World.addMesh` (`topology: "line-list"`) and `World.addDraw`, plain DOM for the panel (as the gallery's other examples do), and Vitest. No new dependencies.
+**Tech Stack:** TypeScript, the engine's `Viewer`, `World.addMesh` (`topology: "line-list"`) and `World.addDraw`, plain DOM for the panel (as the gallery's other examples do), a module Web Worker, and Vitest. No new dependencies.
 
 **Spec:**
 
@@ -76,6 +76,89 @@ Plan 4b later adds three things here:
   - the transformed coordinates of the case's points.
 
   `examples/frames-explorer/fingerprints.json` holds the expected fingerprints, written by the Node data test when `FRAMES_EXPLORER_UPDATE=1` is set. The data test and the page both compare against it. The pipeline and grids must match exactly, and the coordinates within 1e-9 m. The page shows "browser = Node" or the difference. A mismatch is a failure, which also catches PROJ or grid drift after a version change.
+- **R13. Run the suite and PROJ in a Web Worker (owner's choice, 2026-11-06).** A 10 s run on the main thread would freeze R9's spinners and the globe. So:
+  - **One worker per page run:** `new Worker(new URL("./worker.ts", import.meta.url), { type: "module" })`.
+  - **PROJ and the Orion trajectory live only in the worker:** one PROJ instance and one copy of `proj.db` in memory. The worker runs `runStress` and builds the PROJ-dependent geometry: `designGrid`, `trueNorthLines`, `rigidVsExact`, `distortion` and `trajectoryPath`. It returns geometry as transferred `ArrayBuffer`s, not copies.
+  - **Frame data loads on both sides.** The main thread needs it to draw triads that follow the clock every frame. The data is a few MB, and the browser's HTTP cache serves the second fetch.
+  - **Only plain data crosses** (structured clone): results, accuracy statements as plain objects, instants as TDB seconds, and errors as `{ name, message }`. Expected-throw matching (R7) happens inside the worker, before anything is serialized.
+  - **Stopping is guaranteed.** `context.signal` posts `cancel` and then calls `worker.terminate()`, so no work survives leaving the example (Review Focus 9).
+  - **The costs, accepted:**
+    - frame data is held twice;
+    - the message layer isn't covered by the Node data test, so it gets its own tests (Task 4);
+    - module workers and the worker's runtime `import()` of `proj_capi.mjs` must work in the production build, not only the dev server. Task 5 checks the built gallery, which also covers §13.14's carried-forward note that `loadProj` was only checked in dev;
+    - errors and logs inside the worker show in the worker's console context.
+- **R14. The page's information architecture (owner's addition, 2026-11-06).**
+  - **Three views, one selection.** The tree (structure), the globe (space) and the tests (evidence) share one selection state in `selection.ts`: `type Selection = { kind: "frame"; id: string } | { kind: "result"; id: string } | { kind: "none" }`.
+    - Selecting a result flies the camera to its site, turns on its overlay and highlights its frames' path in the tree.
+    - Selecting a frame highlights its path and filters Verify to the groups that use it.
+    - The globe never shows a selection the panel doesn't.
+  - **Four levels, glance to proof:**
+    1. **A status strip**, always visible at the panel's top: R9's data items as pills (ready; fetching with MB; missing), plus passed / failed / waiting counts.
+    2. **Question cards:** one per group, titled with the plain-language question it answers. The card's headline is the answer (usually the effect size, R11), with its pass count.
+    3. **Result rows** inside a card: the value-to-tolerance bar, the accuracy total, an effect-size column and a fingerprint badge.
+    4. **The inspector**, for one selected item:
+       - measured against expected;
+       - the accuracy terms;
+       - the source citation or the hand formula written out;
+       - the fingerprint, with any difference;
+       - actions: "Show on globe", "Highlight frames", "Copy link".
+  - **Tabs:**
+    - **Explore:** the tree, overlays and clock.
+    - **Verify:** lens chips, question cards, results and the inspector.
+    - **Report** (R15).
+  - **Lenses:** chips for All, Civil, BIM, GIS, Space, Timing, Offshore and AV filter the question cards to one audience. Each group carries its lens tags (Task 1).
+  - **The globe legend:** a box in a corner of the globe lists every active overlay with its accuracy (R8). Accuracy is never shown only in the panel.
+  - **One status vocabulary:**
+
+    | State | Look |
+    | --- | --- |
+    | Pass | Green, check icon |
+    | Fail | Red, x icon |
+    | Fetching or waiting | Blue, spinner, naming the item |
+    | Missing data | Gray, setup hint |
+    | Not bounded | Amber, naming the unknown term |
+
+    Never color alone: there's always an icon and text. Numbers carry units, with consistent significant figures. Keyboard navigation covers the tabs, cards, rows and inspector actions.
+- **R15. Deep links and a report.**
+  - **Deep links.** Use the gallery's own route format; find how `examples/index.ts` and the gallery shell parse the hash. The selection and lens round-trip through the URL, for example `#/examples/frames-explorer?select=result:space.lunar-time&lens=space`. Opening that link runs what's needed, selects the result and flies to it. If the gallery's router can't carry a query, encode the selection as an extra path segment.
+  - **The report.** The Report tab copies the run to the clipboard and saves it as Markdown and JSON. It contains:
+    - every result with its value, tolerance, accuracy, effect and fingerprint, failures first;
+    - the environment: PROJ version, `proj.db` and grid SHA-256 values, the frame-data manifest's versions, the package version, the user agent, and the run's timestamp and duration.
+
+    It's the artifact an engineer files as QA evidence. Saving is a `Blob` download that the user starts.
+- **R16. Design quality for two audiences (owner's requirement, 2026-11-06).** The page is a visual demo and a confidence tool, and it has to be good at both. The rough mockup shown during planning is superseded. R14 fixes the structure, not the look.
+  - **The audiences:**
+    - **Graphics engineers exploring the proof of concept.** They need a striking, fluid demo: the globe is the hero, overlays are beautiful and legible, and camera flights and path highlights move with purpose.
+    - **Subject-matter experts** (geodesists, surveyors, GIS and space people). They need confidence: every question they'd ask has visible evidence, the system is transparent about what it computed and how, and accuracies are honest.
+  - **Principles:**
+    - **The globe is the hero:** at least two-thirds of the width on desktop, with a collapsible panel.
+    - **Progressive disclosure:** a calm first view, with detail one click away. Never a wall of rows.
+    - **Hierarchy from type and spacing,** not boxes and borders. Use a deliberate type scale and the gallery's CSS variables, in light and dark.
+    - **Color with meaning:**
+      - status colors (R14's vocabulary) are used only for status;
+      - frame families get one categorical palette, used identically in the tree, the triads, the labels and the legend: Earth frames, Moon frames, inertial frames, engineering frames and trajectories;
+      - axis colors stay red/green/blue.
+    - **Purposeful motion:** eased camera flights, and the selected path animating along the tree's edges. Respect `prefers-reduced-motion`.
+    - **Designed states:** empty, loading, error and missing-data states are designed, not defaulted.
+    - **Accessible:** WCAG 2.2 AA contrast, full keyboard use and visible focus.
+    - **No undefined jargon:** a glossary popover on every term (ITRF, GCRF, convergence, combined factor, epoch, ballpark).
+  - **Transparency features:**
+    - **Walk the tree:** selecting a frame animates the chain from the root to that frame. Each edge shows:
+      - its transform kind;
+      - its math in one line (for example, IERS 2010 eq. 11.19);
+      - its source data with dates (DE440; Bulletin A, measured or predicted, with its age);
+      - its accuracy.
+
+      Beside it, a budget bar accumulates the composed accuracy term by term, so the expert sees where the error comes from.
+    - **A computation trace per result:** the inspector shows input → each step → output, against the expected value, with intermediate values and copy buttons. The steps include the PROJ pipeline string, the site transform and each frame edge.
+    - **Honest limits:** "not bounded", ballpark, predicted Earth orientation and missing grids are stated plainly, never hidden behind a pass.
+  - **A guided tour for demos.** About six stops, each with a short caption, a camera move and the relevant overlays. It's skippable, and each stop is deep-linkable (R15). The stops:
+    1. Earth's frames;
+    2. GCRF to ITRF over a day;
+    3. the California design grid with true north;
+    4. rigid against exact, and the 31 m sag;
+    5. Orion's figure-eight in GCRF against the far-side swing in MOON_ME;
+    6. the Moon's south-pole site and lunar time.
 
 ## Global Constraints
 
@@ -107,7 +190,7 @@ Plan 4b later adds three things here:
   - Run `snyk_code_scan` on new code.
   - Before deleting the SDD workspace, copy real deferred work to §13.14's "Carried forward" list, without nits.
   - Commands run in `packages/next`.
-- **Performance.** Don't benchmark on this page, which loads the GPU heavily. A full test run should finish in under 10 s on this machine; print the time in the data test.
+- **Performance.** Don't benchmark on this page, which loads the GPU heavily. A full test run should finish in under 10 s on this machine; print the time in the data test. During a run in the page, the main thread never blocks for more than 100 ms (R13).
 
 ## Review Focus
 
@@ -116,17 +199,19 @@ Plan 4b later adds three things here:
    - So does a round trip compared against itself.
 
    Every case asserts the error's message pattern or compares against an independent value. A deliberately broken case (a tolerance set to 0 in a unit test of the runner) fails. Test: Task 1.
-2. **The page and the data test disagree.** Both run the same `tests.ts` cases on the same data, so a case that passes headless but fails in the browser shows as a failure in the page, never hidden. Tests: Task 1 and Task 4's browser check.
+2. **The page and the data test disagree.** Both run the same `tests.ts` cases on the same data, so a case that passes headless but fails in the browser shows as a failure in the page, never hidden. Tests: Task 1 and Task 5's browser check.
 3. **Overlays drawn in the wrong place:**
    - a triad drawn with axes transposed;
    - a grid drawn from the wrong CRS;
    - the rigid line and the exact line swapped.
 
    The geometry builders are unit-tested against independent values. Test: Task 3.
-4. **Missing data.** No `/frames-data/`, no PROJ, or no Artemis file. The page shows what's missing and still runs everything else, and nothing throws uncaught. Test: Task 4's browser check, with the dev server started against an empty store.
-5. **Accuracy or loading state hidden or wrong (R8, R9).** A tree edge, overlay or result shown without its accuracy, or an undefined accuracy shown as a number or a blank. A fetch with no indicator, or an indicator stuck after an error or abort. Tests: Task 2 (every node has an accuracy field, with no NaN), Task 4 (unit tests of the loading-state model, and the browser check with network throttling).
+4. **Missing data.** No `/frames-data/`, no PROJ, or no Artemis file. The page shows what's missing and still runs everything else, and nothing throws uncaught. Test: Task 5's browser check, with the dev server started against an empty store.
+5. **Accuracy or loading state hidden or wrong (R8, R9).** A tree edge, overlay or result shown without its accuracy, or an undefined accuracy shown as a number or a blank. A fetch with no indicator, or an indicator stuck after an error or abort. Tests: Task 2 (every node has an accuracy field, with no NaN), Task 5 (unit tests of the loading-state model, and the browser check with network throttling).
 6. **A reference value that isn't independent (R10).** A fixture copied from PROJ's own output, or an effect size checked against the library's own number, makes the comparison circular. Tests: Task 1's data test asserts every `references.json` entry has a `source` with a retrieval date, and that no source names PROJ, pyproj or this library. Each effect-size case's hand formula is written out in the case, not called from `src/`.
-7. **Leaving the example mid-load or mid-run.** The gallery switches away while PROJ or the OEM is loading, or while the tests run. Nothing leaks into the next example's viewer, and no work continues after `signal` aborts. Test: Task 4.
+7. **The worker and the direct run disagree (R13).** A result changed by serialization, such as a lost accuracy term, an error renamed, or a NaN turned to null. Test: Task 4 runs a stub catalog through the protocol and directly, and asserts deep equality.
+8. **The selection out of sync (R14).** The globe flown to one result while the inspector shows another, or a stale selection after a re-run or a lens change. Tests: Task 5's `selection.ts` unit tests, and the browser check.
+9. **Leaving the example mid-load or mid-run.** The gallery switches away while PROJ or the OEM is loading, or while the tests run. Nothing leaks into the next example's viewer, and no work continues after `signal` aborts. Test: Task 5.
 
 ---
 
@@ -167,6 +252,27 @@ Plan 4b later adds three things here:
     - `needs: readonly ("proj" | "geoid" | "orion")[]`;
     - `run(ctx: StressContext): Promise<StressResult[]>`.
   - **`STRESS_CASES: readonly StressCase[]`.**
+  - **`type Lens = "civil" | "bim" | "gis" | "space" | "timing" | "offshore" | "av"`.**
+  - **`STRESS_GROUPS: readonly StressGroup[]`** (R14):
+    - `interface StressGroup`:
+      - `id: string`;
+      - `question: string`, the card title in plain language;
+      - `lenses: readonly Lens[]`;
+      - `headline(results: readonly StressResult[]): string | undefined`, the answer line;
+      - `focus?: { frames: readonly string[]; overlay?: string; site?: string }`, for "Show on globe".
+    - **A virtual group, "Reproducibility"** ("Does the same file land the same in browser and Node?"), collects every fingerprinted result.
+    - **Lens tags:**
+
+      | Lens | Groups |
+      | --- | --- |
+      | Civil | Site grids, Units, Measurement, Reference values, Vertical profile, Distortion, Rigid placement budget, Below the ellipsoid, Heights and WGS84 |
+      | BIM | Site grids, IFC map conversion, Rigid placement budget, Recorded operations, Units, Reproducibility |
+      | GIS | Projections, Distortion, Axes and the antimeridian, Operation candidates, Coordinate epoch, Heights and WGS84 |
+      | Space | Frame tree, Time, Trajectory, Space, Lunar time |
+      | Timing | Time, Time scales, Lunar time |
+      | Offshore | Operation candidates, Recorded operations, Projections, Reproducibility |
+      | AV | Plate motion, Coordinate epoch, Heights and WGS84 |
+
   - **`runStress(ctx: StressContext, options?: { signal?: AbortSignal; onResult?: (r: StressResult) => void; ids?: readonly string[] }): Promise<StressResult[]>`.**
 - **The catalog's groups:**
   - **"Projections."** Design round trips of point sets on EPSG:32610 through 32619, 32632, 32733, 6420+6360 (with GEOID18), 2223, 3413, 3031 and IAU_2015:30135. Each set has the origin, a 50 km line, a point 100 km off the central meridian and a point at the zone's edge. Tolerance 1e-4 m.
@@ -272,8 +378,9 @@ Plan 4b later adds three things here:
 - [ ] **Step 1: Write the runner's failing unit tests** (`test/framesExplorerRunner.test.ts`, with synthetic frames and stub cases):
   - A case returning a value within its tolerance passes, and one beyond it fails.
   - An expected-throw case passes only when its message matches. It fails on a different message and fails when nothing throws (Review Focus 1).
-  - `runStress` honors `signal`: when aborted midway, it stops before the next case and resolves with what it has (Review Focus 7).
+  - `runStress` honors `signal`: when aborted midway, it stops before the next case and resolves with what it has (Review Focus 9).
   - `onResult` is called once per result.
+  - Every case's `group` exists in `STRESS_GROUPS`, every group has at least one lens and a question ending in "?", and every lens has at least three groups.
   - A result with `effect` displays its size apart from pass or fail. A fingerprint mismatch, whether a different pipeline, a different grid SHA or coordinates beyond 1e-9 m, fails the case, and a match passes (R11, R12).
   - Cases whose `needs` can't be met give a skipped result with `pass: false` and a `detail` saying what's missing. They don't throw (Review Focus 4).
 - [ ] **Step 2: Write the data test** (`test/data/framesExplorer.test.ts`). Build the context from the store, as plan 4a's data tests do, run `runStress` over all `STRESS_CASES`, and assert every result passes. Print the failures, if any, and the run time. Also:
@@ -377,19 +484,72 @@ Plan 4b later adds three things here:
 - [ ] **Step 4: Run** the test and `npm test`, and confirm they pass.
 - [ ] **Step 5: Commit** with "examples: frames explorer overlay geometry".
 
-### Task 4: The example page
+### Task 4: The compute worker
+
+**Files:**
+
+- Create:
+  - `packages/next/examples/frames-explorer/protocol.ts`
+  - `packages/next/examples/frames-explorer/worker.ts`
+- Test: `packages/next/test/framesExplorerProtocol.test.ts`
+
+**Interfaces:**
+
+- **Consumes:** Task 1's `runStress`, `STRESS_CASES` and `StressResult`. Task 3's builders. `loadProj` and `loadFrameData` with `onProgress` (R9).
+- **Produces** (`protocol.ts`):
+  - **`type DataItem = "frames" | "proj" | "geoid" | "orion"`.**
+  - **`type Request`:** each request has `id: number`, and is one of:
+    - `{ type: "load"; item: DataItem }`;
+    - `{ type: "run"; ids?: readonly string[] }`;
+    - `{ type: "cancel" }`;
+    - `{ type: "overlay"; kind: "designGrid" | "trueNorthLines" | "rigidVsExact" | "distortion" | "trajectoryPath"; params: unknown }`.
+  - **`type Reply`:**
+    - `{ type: "progress"; item; received; total? }`;
+    - `{ type: "state"; item; state: "idle" | "fetching" | "ready" | "missing" | "error"; detail? }`;
+    - `{ type: "result"; id; result: StressResult }`;
+    - `{ type: "done"; id; summary: { passed; failed; skipped; ms } }`;
+    - `{ type: "overlay"; id; geometry }`, whose buffers are transferred;
+    - `{ type: "error"; id; name; message }`.
+  - **`createHost(port: { postMessage(m: Reply, transfer?: Transferable[]): void; onmessage: ((e: { data: Request }) => void) | null }, makeContext: () => Promise<StressContext>)`.** A pure dispatcher. `worker.ts` is only `createHost(self, …)`.
+  - **`createClient(worker: { postMessage(m: Request): void; onmessage; terminate(): void }, signal: AbortSignal)`.** It returns:
+    - `run(ids?, onResult?)`;
+    - `load(item)`;
+    - `overlay(kind, params)`;
+    - `onProgress(cb)`.
+
+    Each returns a promise. Aborting `signal` posts `cancel`, then terminates the worker, and rejects pending promises with an `AbortError`.
+
+- [ ] **Step 1: Write the failing tests,** using Node's `MessageChannel` as the port pair, a stub catalog and synthetic frames:
+  - `run` streams one `result` per case, then `done`. The results deep-equal `runStress` called directly on the same catalog (Review Focus 7). Include a result with an undefined accuracy total, a NaN value and an expected-throw case.
+  - `cancel` mid-run stops before the next case, and `done` reports the partial counts.
+  - A case that throws arrives as a failed result carrying its message.
+  - An `overlay` reply transfers its buffers: the sender's `byteLength` is 0 after posting.
+  - Progress for an item arrives in order and ends in `ready`, `missing` or `error`, never stuck at `fetching` (Review Focus 5).
+  - Aborting the client's signal rejects pending promises and calls `terminate` once.
+- [ ] **Step 2: Run** `npx vitest run test/framesExplorerProtocol.test.ts` and confirm it fails.
+- [ ] **Step 3: Implement** `protocol.ts` and `worker.ts`. The host yields between cases, so a `cancel` is seen promptly.
+- [ ] **Step 4: Run** the test and `npm test`, and confirm they pass.
+- [ ] **Step 5: Commit** with "examples: frames explorer compute worker and its protocol".
+
+### Task 5: The example page
 
 **Files:**
 
 - Create:
   - `packages/next/examples/frames-explorer/main.ts`
   - `packages/next/examples/frames-explorer/panel.ts` (if `main.ts` would pass about 400 lines)
+  - `packages/next/examples/frames-explorer/selection.ts` (R14, R15: the selection state, and its URL format and parse)
+  - `packages/next/examples/frames-explorer/report.ts` (R15: `buildReport(results, env): { markdown: string; json: unknown }`)
+- Test:
+  - `packages/next/test/framesExplorerSelection.test.ts`: the URL round trip for every `Selection` kind and lens; an unknown id parses to `none` without throwing; a re-run keeps a still-valid selection and clears a vanished one (Review Focus 8).
+  - `packages/next/test/framesExplorerReport.test.ts`: the report holds every result id, failures first, units on every value, fingerprints, and every environment field; the JSON parses back to the same results.
 - Modify: `packages/next/examples/index.ts` (register it, R1)
 
 **Interfaces:**
 
-- **Consumes:** Tasks 1–3, `ExampleContext`, `loadFrameData`, `createFrames`, `loadProj`, `EngineeringFrame`, `Trajectory.fromOem`, `parseOem`, `viewer.clock`, and the viewer's camera flights (`viewer.zoomTo` or the controller's fly-to; use what the Viewer exposes).
-- **The page.** The panel's sections, top to bottom:
+- **Consumes:** Tasks 1–4, `ExampleContext`, `loadFrameData`, `createFrames`, `loadProj`, `EngineeringFrame`, `Trajectory.fromOem`, `parseOem`, `viewer.clock`, and the viewer's camera flights (`viewer.zoomTo` or the controller's fly-to; use what the Viewer exposes).
+- **Layout (R14).** The status strip is always on top. Below it are three tabs: Explore (sections 2–4 below), Verify (section 5, as question cards with the inspector) and Report (R15). Section 1's states feed the strip. All runs, PROJ work and PROJ geometry go through Task 4's client (R13).
+- **The page.** The panel's content:
   1. **Status.** Each data item's state: not loaded, fetching (with progress), ready or missing (with the setup hint) (R5, R9).
   2. **Tree.**
      - A collapsible list of `buildTree`'s nodes. Each row shows its label and an edge-kind chip, and the detail on hover or expand.
@@ -406,8 +566,19 @@ Plan 4b later adds three things here:
   4. **Clock.** The viewer's time controls. A preset button jumps to the Artemis II flyby (2026-04-06T23:00 UTC). Triads and Orion's path follow the clock.
   5. **Stress tests.** Effect sizes (R11) show in their own column, and fingerprint cases show "browser = Node" or the difference (R12). The rigid-placement budget shows as a small table. "Run all", or run per group. Results stream into a table: group, title, value against tolerance as a log-scale bar with numbers and unit, pass or fail, and the accuracy statement's total in the row with terms on expand (R8). A summary line gives passed / failed / skipped and the run time.
 - **Accuracy and loading UI (R8, R9).** A small `loading.ts` holds the data-item states and their transitions (idle → fetching → ready | missing | error, with abort back to idle), unit-tested in `test/framesExplorerLoading.test.ts`. The panel renders from that model, so an indicator can't stick.
-- **Startup.** On start, load frame data and draw the tree, plus the ITRF and ENU triads at a California site. Load PROJ when an engineering overlay or test first needs it (R6). Route every async step through `context.signal` and every drawn item through `context.scope` (Review Focus 7).
+- **Startup.** On start, start the worker, load frame data and draw the tree, plus the ITRF and ENU triads at a California site. If the URL carries a selection (R15), apply it once its data is ready. Load PROJ in the worker when an engineering overlay or test first needs it (R6). Route every async step through `context.signal` and every drawn item through `context.scope` (Review Focus 9).
 
+- [ ] **Step 0: Design pass (R16), before wiring the page.**
+  - Load the `frontend-design:frontend-design` skill.
+  - Write `examples/frames-explorer/DESIGN.md`:
+    - the layout at desktop and narrow widths;
+    - the type scale, color tokens (status and frame-family palettes, mapped to the gallery's CSS variables) and spacing;
+    - each component and its states: question card, result row, inspector, trace, tree row, budget bar, legend, status pill, tour caption;
+    - motion;
+    - the glossary.
+  - Build a static prototype with the real panel code and stub data, then take screenshots in light and dark, at desktop and narrow widths.
+  - The controller dispatches a UX review on the most capable model. It checks against Nielsen's heuristics, WCAG 2.2 AA and R16's two audiences. Fix its findings.
+  - Send the screenshots to the owner. This doesn't block: the owner may redirect, and the design iterates once built.
 - [ ] **Step 1: Write** `main.ts` (and `panel.ts`), and register the example in `examples/index.ts`. The description: "The frame tree and engineering frames, drawn on the globe and stress-tested in the page: every edge labelled, every result checked against its tolerance."
 - [ ] **Step 2: Check it in the browser.**
   - Start the dev server (`preview_start` "dyno") and open `/#/examples/frames-explorer`.
@@ -424,14 +595,29 @@ Plan 4b later adds three things here:
   - **Distortion:** on Web Mercator, the Tissot ellipses grow toward the poles, about 2× at 60°. On UTM, they stay circles that grow away from the central meridian. On the low-distortion zone, the contours show the site inside its target band.
   - **Reference values and fingerprints:** every reference case shows its source on expand. Every fingerprint case reads "browser = Node".
   - **Tests:** "Run all" ends with 0 failed. The count equals the data test's, and the round-trip markers appear (Review Focus 2).
+  - **Responsiveness (R13):** during "Run all", the spinners keep animating and the globe keeps rendering. Log the longest gap between `requestAnimationFrame` callbacks during the run; it must be under 100 ms.
+  - **Linked selection (R14):**
+    - Selecting the rigid-placement result flies to its site, turns on its overlay and highlights its frames in the tree.
+    - Selecting MOON_PA in the tree filters Verify to the groups that use it.
+    - Changing the lens never leaves the inspector showing a hidden result.
+  - **Deep link (R15):** copy a result's link, reload the page with it, and confirm the same result is selected and flown to.
+  - **Report (R15):** copy the report and check that its counts and environment match the page. Save it, and check that the JSON parses.
+  - **Production build:** build the gallery and serve the built output (the repo's preview script, or `vite preview`). Repeat the PROJ load, "Run all" and one overlay there, to prove the module worker and the worker's `proj_capi.mjs` import work outside the dev server (R13).
   - **Missing data:** restart the dev server with `FRAMES_DATA_DIR` pointing at an empty scratch directory. The page shows the missing-data status, the tree still renders from what's available or explains why not, and the console has no uncaught errors (Review Focus 4). Then restart it normally.
-  - **Switching away:** go to another example during "Run all" and during PROJ's first load. The console has no errors, and no overlay or work carries into the next example (Review Focus 7).
+  - **Switching away:** go to another example during "Run all" and during PROJ's first load. The console has no errors, and no overlay or work carries into the next example (Review Focus 9).
+  - **Design (R16):**
+    - The guided tour runs end to end, and each stop's deep link opens that stop.
+    - Walking the tree to MOON_PA animates the path, and its budget bar's terms sum to the stated total.
+    - A result's trace shows every step from input to output.
+    - With reduced motion set, flights cut instead of animate.
+    - Spot-check the contrast of status pills and legend text in light and dark with computed colors (AA).
+    - The whole page works from the keyboard.
   - Take screenshots of the tree with Moon triads, the design grid, the rigid and exact lines, and Orion's figure-eight. Describe them in the report.
   - Stop the server.
 - [ ] **Step 3: Run** `npm test`, `npm run test:data`, `npx tsc --noEmit -p .`, `npx eslint` on the changed files, and prettier, and confirm they pass.
 - [ ] **Step 4: Commit** with "examples: Frames and projections, the frame tree drawn and stress-tested".
 
-### Task 5: Docs and the plan note
+### Task 6: Docs and the plan note
 
 **Files:**
 
@@ -442,6 +628,7 @@ Plan 4b later adds three things here:
   - Record the data test's case count and run time.
   - List the reference sources used (R10) and any that couldn't be fetched.
   - Record the rigid-placement budget table and the effect sizes.
+  - Record the production-build check (R13). If it passed, remove §13.14's carried-forward item that `loadProj` was checked only in the dev server.
   - List the screenshots' findings.
   - Add the deferred items from this plan's ledger, without nits.
 - [ ] **Step 2: README.** Add one line in the frames section pointing at the example.
