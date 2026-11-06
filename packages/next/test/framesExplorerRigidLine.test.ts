@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import { NARROW_VIEW } from "../examples/frames-explorer/content.ts";
 import {
   INSET,
+  gapParts,
   insetBox,
   insetCamera,
   insetViewport,
@@ -19,8 +20,15 @@ import {
 } from "../examples/frames-explorer/rigidLine.ts";
 import { Ellipsoid, fromDegrees } from "../src/math/ellipsoid.ts";
 
-// The figures the worker gives for the page's line (test/data checks them).
-const figures = { sagEnd: 12_526.95, gapAtMark: 31.3528 };
+// The figures the worker gives for the page's line (test/data checks them):
+// the gap at the mark is mostly the drop, and 1.48 m of it along the line,
+// where rigid placement ignores the grid's scale factor.
+const figures = {
+  sagEnd: 12_526.95,
+  gapAtMark: 31.3528,
+  markDrop: 31.3177,
+  markAlong: -1.4819,
+};
 
 describe("the long line", () => {
   it("is 400 km from the catalog's California site origin, east along grid east", () => {
@@ -77,6 +85,22 @@ describe("what the copy says, at true scale", () => {
   it("captions the inset with the 20 km figure, at true scale", () => {
     expect(copy.inset.caption).toBe("At 20 km: 31.4 m apart (true scale)");
     expect(copy.inset.leader).toBe("31.4 m");
+  });
+
+  it("names the gap's two parts in the inset: the drop and the grid scale's part along the line", () => {
+    expect(copy.inset.parts).toEqual({
+      drop: "31.3 m drop",
+      along: "1.5 m along (grid scale)",
+    });
+    expect(copy.inset.description).toBe(
+      "31.4 m apart: 31.3 m drop, 1.5 m along the line (grid scale)",
+    );
+  });
+
+  it("leaves the parts out until the worker has given them", () => {
+    const bare = rigidCopy({ sagEnd: figures.sagEnd, gapAtMark: 31.3528 });
+    expect(bare.inset.parts).toBeUndefined();
+    expect(bare.inset.description).toBe("31.4 m apart");
   });
 });
 
@@ -164,6 +188,52 @@ describe("the inset's placement", () => {
     expect(tiny.view.width).toBeLessThanOrEqual(INSET.narrowShare * 300);
   });
 
+  // The tour caption (top right, 340 px wide) on a view 560 to about 700 px
+  // wide: the inset narrows to stay clear of it, and keeps its place when
+  // the two don't meet.
+  const caption = (width: number, height: number) => ({
+    x: width - INSET.gutter - 340,
+    y: INSET.gutter,
+    width: 340,
+    height,
+  });
+  const meets = (
+    a: { x: number; y: number; width: number; height: number },
+    b: { x: number; y: number; width: number; height: number },
+  ) =>
+    a.x < b.x + b.width &&
+    b.x < a.x + a.width &&
+    a.y < b.y + b.height &&
+    b.y < a.y + a.height;
+
+  for (const width of [560, 600, 680]) {
+    it(`stays clear of the tour caption on a ${width} px view`, () => {
+      // A short view, so the caption reaches down to the inset's height.
+      const view = { width, height: 520 };
+      const avoid = caption(width, 300);
+      const b = insetBox(view, 96, avoid);
+      expect(meets(b.frame, avoid)).toBe(false);
+      expect(b.frame.x).toBe(INSET.gutter);
+      expect(b.frame.x + b.frame.width).toBeLessThanOrEqual(
+        avoid.x - INSET.gutter,
+      );
+      // Still the same picture: its aspect kept, its bottom above the time controls.
+      expect(b.view.width / b.view.height).toBeCloseTo(
+        INSET.width / INSET.height,
+        1,
+      );
+      expect(b.view.y + b.view.height).toBe(520 - 96);
+      expect(b.view.width).toBeGreaterThanOrEqual(INSET.minWidth);
+    });
+  }
+
+  it("keeps its full size when the caption is clear of it", () => {
+    const tall = { width: 600, height: 900 };
+    expect(insetBox(tall, 96, caption(600, 300))).toEqual(insetBox(tall, 96));
+    const wide = { width: 728, height: 520 };
+    expect(insetBox(wide, 96, caption(728, 300))).toEqual(insetBox(wide, 96));
+  });
+
   it("is the view's fraction for the engine's viewport", () => {
     const b = insetBox(desktop, 96);
     expect(insetViewport(b.view, desktop)).toEqual({
@@ -220,6 +290,18 @@ describe("the inset's camera", () => {
     );
     expect(range).toBeGreaterThan(50);
     expect(range).toBeLessThan(200);
+  });
+
+  it("splits the gap into its drop (along the vertical) and its part along the line, as the inset sees them", () => {
+    const leaned = exact.map((v, i) => v + 31.3 * up[i]! - 1.5 * east[i]!);
+    const p = gapParts(exact, leaned, east);
+    expect(p.drop).toBeCloseTo(31.3, 9);
+    expect(p.along).toBeCloseTo(-1.5, 9);
+    expect(Math.abs(p.across)).toBeLessThan(1e-9);
+    expect(p.apart).toBeCloseTo(Math.hypot(31.3, 1.5), 9);
+    // The line's direction needn't be level: the part along it is.
+    const tilted = east.map((v, i) => v + 0.2 * up[i]!);
+    expect(gapParts(exact, leaned, tilted).along).toBeCloseTo(-1.5, 9);
   });
 
   it("projects nothing behind the camera", () => {

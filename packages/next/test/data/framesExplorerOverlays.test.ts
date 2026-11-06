@@ -13,9 +13,15 @@ import {
   triad,
   trueNorthLines,
 } from "../../examples/frames-explorer/overlays.ts";
-import { RIGID_LINE } from "../../examples/frames-explorer/rigidLine.ts";
+import { defaultCreateFrame } from "../../examples/frames-explorer/host.ts";
+import { gapParts } from "../../examples/frames-explorer/inset.ts";
+import {
+  RIGID_FRAME,
+  RIGID_LINE,
+  rigidCopy,
+} from "../../examples/frames-explorer/rigidLine.ts";
 import { radii } from "../../examples/frames-explorer/stress/references.ts";
-import type { CrsRef } from "../../src/engineering/crs.ts";
+import { listOperations, type CrsRef } from "../../src/engineering/crs.ts";
 import {
   EngineeringFrame,
   RigidPlacement,
@@ -239,11 +245,59 @@ describe("stop 4's long line (rigidLine.ts): 400 km east in California zone 3", 
   const point = (a: Float64Array, i: number) =>
     Array.from(a.subarray(3 * i, 3 * i + 3));
 
-  it("stays inside the CRS's area of use (EPSG:6420 reaches 117.83 W)", () => {
-    const f = california();
-    const end = f.toGeodetic([RIGID_LINE.to[0], RIGID_LINE.to[1], 0]);
-    expect((end.longitude * 180) / Math.PI).toBeLessThan(-117.83);
+  it("places the line with the transform the page uses: not a ballpark, every point inside its area of use and the CRS's", () => {
+    // The frame the worker builds from the page's parameters (host.ts).
+    const f = defaultCreateFrame(RIGID_FRAME, proj);
+    expect(f.definition.crs).toEqual(epsg(6420));
     expect(f.operation.ballpark).toBe(false);
+    expect(f.operation.accuracy).toBe(2);
+    // The recorded operation among PROJ's candidates, with its area of use.
+    const candidate = listOperations(proj, f.definition.crs, epsg(4979)).find(
+      (c) => c.pipeline === f.operation.pipeline,
+    );
+    expect(candidate?.ballpark).toBe(false);
+    const operationArea = candidate!.areaOfUse!;
+    const [west, south, east, north] = proj.proj_get_area_of_use(
+      proj.proj_create("EPSG:6420"),
+    )!;
+    // California zone 3: 36.73 N to 38.71 N, 123.02 W to 117.83 W.
+    expect([west, south, east, north]).toEqual([
+      -123.02, 36.73, -117.83, 38.71,
+    ]);
+    const inside = (
+      lon: number,
+      lat: number,
+      a: { west: number; south: number; east: number; north: number },
+    ) =>
+      lat >= a.south &&
+      lat <= a.north &&
+      (a.west <= a.east
+        ? lon >= a.west && lon <= a.east
+        : lon >= a.west || lon <= a.east);
+    const { exact } = rigidVsExact(
+      f,
+      RIGID_LINE.from,
+      RIGID_LINE.to,
+      RIGID_LINE.samples,
+    );
+    let lowest = 90;
+    let highest = -90;
+    for (let i = 0; i < exact.length / 3; i++) {
+      const g = f.body.ellipsoid.cartesianToCartographic(
+        exact.subarray(3 * i, 3 * i + 3),
+        { longitude: 0, latitude: 0, height: 0 },
+      )!;
+      const lon = (g.longitude * 180) / Math.PI;
+      const lat = (g.latitude * 180) / Math.PI;
+      lowest = Math.min(lowest, lat);
+      highest = Math.max(highest, lat);
+      expect(inside(lon, lat, { west, south, east, north })).toBe(true);
+      expect(inside(lon, lat, operationArea)).toBe(true);
+    }
+    // The line runs east along grid east: its latitude stays near 37.7 N,
+    // clear of the zone's edges.
+    expect(lowest).toBeGreaterThan(south + 0.5);
+    expect(highest).toBeLessThan(north - 0.5);
   });
 
   it("draws the rigid polyline straight: every point on the chord to 1e-6 m", () => {
@@ -268,7 +322,7 @@ describe("stop 4's long line (rigidLine.ts): 400 km east in California zone 3", 
     }
   });
 
-  it("the exact line sags from it by d²/2R at 400 km (R the Gaussian radius), within the catalog's 10%", () => {
+  it("the exact line sags from it by d²/2R at 400 km (R the Gaussian radius), within 1%", () => {
     const f = california();
     const { sagAtEnd } = line();
     const start = f.toGeodetic([RIGID_LINE.from[0], RIGID_LINE.from[1], 0]);
@@ -281,7 +335,8 @@ describe("stop 4's long line (rigidLine.ts): 400 km east in California zone 3", 
     const d = RIGID_LINE.lengthM;
     const formula = (d * d) / (2 * R);
     expect(formula).toBeGreaterThan(12_000);
-    expect(Math.abs(sagAtEnd / formula - 1)).toBeLessThanOrEqual(0.1);
+    // They agree to about 0.3%: the formula is the sphere's.
+    expect(Math.abs(sagAtEnd / formula - 1)).toBeLessThanOrEqual(0.01);
   });
 
   it("the exact line is sampled every kilometre: each chord within 2 cm of the ellipsoid", () => {
@@ -326,6 +381,46 @@ describe("stop 4's long line (rigidLine.ts): 400 km east in California zone 3", 
     // 10%; the inset's figure is 31.4 m within the same 10%, and reads so.
     expect(Math.abs(m.separation / 31.4 - 1)).toBeLessThanOrEqual(0.1);
     expect(m.separation.toFixed(1)).toBe("31.4");
+  });
+
+  it("splits the 20 km gap into its drop and a part along the line from the grid's scale factor", () => {
+    const f = california();
+    const { rigid, marks } = line();
+    const m = marks[0]!;
+    const n = rigid.length / 3;
+    const along = sub(point(rigid, n - 1), point(rigid, 0));
+    const parts = gapParts(m.exact, m.rigid, along, f.body.ellipsoid);
+    expect(parts.apart).toBeCloseTo(m.separation, 9);
+    expect(Math.abs(parts.across)).toBeLessThan(0.01);
+    expect(parts.drop.toFixed(1)).toBe("31.3");
+    expect(parts.along.toFixed(1)).toBe("-1.5");
+    // The part along: the exact line covers 20 km of grid as 20 km / k of
+    // ground (k under 1 between the standard parallels), the rigid line 20
+    // km; with the normal's turn over 20 km (31 m × 20/6371 rad) and the
+    // arc against its chord, about 0.1 m, on top.
+    let ground = 0;
+    const steps = 20;
+    for (let i = 0; i < steps; i++) {
+      const k = gridFactors(f, [
+        RIGID_LINE.from[0] + (RIGID_LINE.markDesign * (i + 0.5)) / steps,
+        RIGID_LINE.from[1],
+        0,
+      ]).pointScale;
+      ground += RIGID_LINE.markM / steps / k;
+    }
+    const scale = ground - RIGID_LINE.markM;
+    expect(scale).toBeGreaterThan(1.2);
+    expect(Math.abs(-parts.along - scale)).toBeLessThan(0.15);
+    // The page's words for them.
+    const copy = rigidCopy({
+      sagEnd: line().sagAtEnd,
+      gapAtMark: m.separation,
+      markDrop: parts.drop,
+      markAlong: parts.along,
+    });
+    expect(copy.inset.description).toBe(
+      "31.4 m apart: 31.3 m drop, 1.5 m along the line (grid scale)",
+    );
   });
 
   it("puts a gap tick every 50 km, from the exact line up to the rigid one", () => {

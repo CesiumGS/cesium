@@ -24,6 +24,10 @@ export interface GapInsetSpec {
   along: ArrayLike<number>;
   caption: string;
   leader: string;
+  /** The gap's two parts in words (`rigidCopy`): by the leader, and at its top. */
+  parts?: { drop: string; along: string };
+  /** The whole gap in words, for the inset's accessible name. */
+  description?: string;
 }
 
 export class GapInset {
@@ -36,10 +40,15 @@ export class GapInset {
     line: HTMLElement;
     rigid: HTMLElement;
     exact: HTMLElement;
+    drop: HTMLElement;
+    along: HTMLElement;
   };
   private readonly resize = new ResizeObserver(() => this.layout());
   /** The HUD's `--fx-hud-bottom` (the time controls' room) changes as the view does. */
   private readonly hudStyle = new MutationObserver(() => this.layout());
+  /** The tour caption comes and goes in the HUD: the inset steps clear of it. */
+  private readonly hudChildren = new MutationObserver(() => this.layout());
+  private observedCaption: Element | undefined;
 
   /**
    * `exclude` is told the inset view's bit while it shows (0 after), to keep
@@ -65,6 +74,14 @@ export class GapInset {
       exact: el("fx-inset-label fx-inset-label-muted", this.frame),
       line: el("fx-inset-leader", this.frame),
       leader: el("fx-inset-label", this.frame),
+      drop: el(
+        "fx-inset-label fx-inset-label-muted fx-inset-label-end",
+        this.frame,
+      ),
+      along: el(
+        "fx-inset-label fx-inset-label-muted fx-inset-label-along",
+        this.frame,
+      ),
     };
     this.labels.rigid.textContent = "rigid";
     this.labels.exact.textContent = "exact";
@@ -79,30 +96,40 @@ export class GapInset {
     this.spec = spec;
     if (this.view === undefined) {
       const main = this.viewer.view;
-      const view = this.viewer.engine.addView({
+      // Held from the moment it is added: a throw while it is set up takes
+      // it out again (`hide`), so the shared engine never keeps it.
+      this.view = this.viewer.engine.addView({
         target: this.viewer.target,
         world: this.viewer.world,
         viewport: { x: 0, y: 0, width: 0, height: 0 },
       });
-      Object.assign(view.lighting, main.lighting);
-      view.cityLights = main.cityLights;
-      view.outputEncoding = main.outputEncoding;
-      view.camera.fov = main.camera.fov;
-      view.camera.near = 0.1;
-      this.view = view;
-      this.exclude(this.viewer.engine.viewBit(view));
-      this.hud.append(this.frame);
-      this.resize.observe(this.viewer.container);
-      this.hudStyle.observe(this.hud, {
-        attributes: true,
-        attributeFilter: ["style"],
-      });
+      try {
+        const view = this.view;
+        Object.assign(view.lighting, main.lighting);
+        view.cityLights = main.cityLights;
+        view.outputEncoding = main.outputEncoding;
+        view.camera.fov = main.camera.fov;
+        view.camera.near = 0.1;
+        this.exclude(this.viewer.engine.viewBit(view));
+        this.hud.append(this.frame);
+        this.resize.observe(this.viewer.container);
+        this.hudStyle.observe(this.hud, {
+          attributes: true,
+          attributeFilter: ["style"],
+        });
+        this.hudChildren.observe(this.hud, { childList: true });
+      } catch (error) {
+        this.hide();
+        throw error;
+      }
     }
     this.caption.textContent = spec.caption;
     this.labels.leader.textContent = spec.leader;
+    this.labels.drop.textContent = spec.parts?.drop ?? "";
+    this.labels.along.textContent = spec.parts?.along ?? "";
     this.frame.setAttribute(
       "aria-label",
-      `Inset: ${spec.caption}. The dashed rigid line above, the solid exact line below.`,
+      `Inset: ${spec.caption}${spec.description ? `; ${spec.description}` : ""}. The dashed rigid line above, the solid exact line below.`,
     );
     this.layout();
   }
@@ -117,6 +144,8 @@ export class GapInset {
     this.view = undefined;
     this.resize.disconnect();
     this.hudStyle.disconnect();
+    this.hudChildren.disconnect();
+    this.observedCaption = undefined;
     this.frame.remove();
     // Its bit is freed with it: the triads draw everywhere again first.
     this.exclude(0);
@@ -144,7 +173,25 @@ export class GapInset {
     }
     const hudBottom =
       parseFloat(this.hud.style.getPropertyValue("--fx-hud-bottom")) || 64;
-    const box = insetBox(size, hudBottom);
+    // The tour caption, top right on a wide view: between about 560 and
+    // 620 px it can reach over the inset's corner.
+    const tour = this.hud.querySelector(".fx-tour");
+    if (tour && tour !== this.observedCaption) {
+      this.observedCaption = tour;
+      this.resize.observe(tour);
+    }
+    let avoid: Box | undefined;
+    if (tour) {
+      const t = tour.getBoundingClientRect();
+      const c = container.getBoundingClientRect();
+      avoid = {
+        x: t.left - c.left,
+        y: t.top - c.top,
+        width: t.width,
+        height: t.height,
+      };
+    }
+    const box = insetBox(size, hudBottom, avoid);
     place(this.frame, box.frame);
     view.viewport = insetViewport(box.view, size);
     view.exposure = this.viewer.view.exposure;
@@ -190,6 +237,16 @@ export class GapInset {
     this.labels.line.style.width = "22px";
     set(this.labels.rigid, r && { x: 0, y: r.y }, 6, -9);
     set(this.labels.exact, e && { x: 0, y: e.y }, 6, 9);
+    // The gap's parts: the drop left of the leader, halfway up; the part
+    // along the line at the leader's top, by the rigid line, where the
+    // leader leans off the vertical.
+    set(this.labels.drop, spec.parts && m, -8);
+    const along = this.labels.along;
+    along.hidden = !spec.parts || r === undefined;
+    if (r) {
+      along.style.right = "6px";
+      along.style.top = `${(r.y - 9).toFixed(1)}px`;
+    }
     this.viewer.engine.requestRender();
   }
 }

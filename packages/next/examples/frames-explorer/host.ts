@@ -127,7 +127,7 @@ export interface HostOptions {
   ) => EngineeringFrame;
 }
 
-function defaultCreateFrame(
+export function defaultCreateFrame(
   params: FrameParams,
   proj: ProjApi,
 ): EngineeringFrame {
