@@ -32,12 +32,24 @@ interface ApiKeyDialogProps {
   open: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  onBeforeRemoveOpenAIKey: () => void;
 }
 
-export function ApiKeyDialog({ open, onClose, onSuccess }: ApiKeyDialogProps) {
+export function ApiKeyDialog({
+  open,
+  onClose,
+  onSuccess,
+  onBeforeRemoveOpenAIKey,
+}: ApiKeyDialogProps) {
   return (
     <SandcastleDialog open={open} onClose={onClose} title="API Configuration">
-      {open && <ApiKeyDialogBody onClose={onClose} onSuccess={onSuccess} />}
+      {open && (
+        <ApiKeyDialogBody
+          onClose={onClose}
+          onSuccess={onSuccess}
+          onBeforeRemoveOpenAIKey={onBeforeRemoveOpenAIKey}
+        />
+      )}
     </SandcastleDialog>
   );
 }
@@ -45,6 +57,7 @@ export function ApiKeyDialog({ open, onClose, onSuccess }: ApiKeyDialogProps) {
 function ApiKeyDialogBody({
   onClose,
   onSuccess,
+  onBeforeRemoveOpenAIKey,
 }: Omit<ApiKeyDialogProps, "open">) {
   const { refreshModels } = useModel();
   const hasVertexCredentials = ApiKeyManager.hasVertexServiceAccount();
@@ -53,6 +66,9 @@ function ApiKeyDialogBody({
   useEffect(() => {
     trackEvent("Copilot API Key Dialog Opened");
   }, []);
+
+  const [openaiKey, setOpenaiKey] = useState("");
+  const [openaiError, setOpenaiError] = useState<string | null>(null);
 
   const [anthropicKey, setAnthropicKey] = useState("");
   const [anthropicError, setAnthropicError] = useState<string | null>(null);
@@ -81,10 +97,28 @@ function ApiKeyDialogBody({
 
   // Only the coarse failure reason is recorded, never any entered value
   const trackValidationFailure = (
-    provider: "anthropic" | "gemini" | "vertex",
+    provider: "anthropic" | "gemini" | "vertex" | "openai",
     reason: "empty" | "invalid_format" | "invalid_region" | "storage_error",
   ) => {
     trackEvent("Copilot API Key Validation Failed", { provider, reason });
+  };
+
+  const handleOpenAISave = () => {
+    if (!ApiKeyManager.validateOpenAIApiKeyFormat(openaiKey)) {
+      trackValidationFailure("openai", "invalid_format");
+      setOpenaiError("Please enter an OpenAI API key without spaces.");
+      return;
+    }
+    try {
+      ApiKeyManager.saveOpenAIApiKey(openaiKey);
+      trackEvent("Copilot API Key Saved", { provider: "openai" });
+      refreshModels();
+      onSuccess();
+      onClose();
+    } catch {
+      trackValidationFailure("openai", "storage_error");
+      setOpenaiError("Unable to save your OpenAI API key in session storage.");
+    }
   };
 
   const handleAnthropicSave = () => {
@@ -188,6 +222,7 @@ function ApiKeyDialogBody({
       <Tabs.Provider defaultSelectedId="anthropic">
         <Tabs.TabList>
           <Tabs.Tab id="anthropic">Anthropic</Tabs.Tab>
+          <Tabs.Tab id="openai">OpenAI</Tabs.Tab>
           <Tabs.Tab id="gemini">Gemini</Tabs.Tab>
           <Tabs.Tab id="vertex">Vertex AI</Tabs.Tab>
         </Tabs.TabList>
@@ -233,6 +268,70 @@ function ApiKeyDialogBody({
               saveDisabled={!anthropicKey.trim()}
               onClose={onClose}
             />
+          </div>
+        </Tabs.TabPanel>
+
+        <Tabs.TabPanel tabId="openai">
+          <div className="api-dialog-panel">
+            <Field.Root>
+              <Field.Label>OpenAI API Key</Field.Label>
+              <Field.Control
+                render={
+                  <TextBox.Input
+                    type="password"
+                    value={openaiKey}
+                    onChange={(e) => {
+                      setOpenaiKey(e.target.value);
+                      setOpenaiError(null);
+                    }}
+                    placeholder={
+                      ApiKeyManager.hasOpenAIApiKey()
+                        ? "Key saved • enter new key to replace"
+                        : "Enter your OpenAI API key"
+                    }
+                    autoComplete="off"
+                    spellCheck={false}
+                  />
+                }
+              />
+              <Field.Description>
+                Use GPT-6 Luna, GPT-6.1 Sol, and GPT-6 Astra. Get your key at{" "}
+                <Anchor
+                  href="https://platform.openai.com/api-keys"
+                  target="_blank"
+                >
+                  platform.openai.com/api-keys
+                </Anchor>
+                .
+              </Field.Description>
+              {openaiError && (
+                <Field.ErrorMessage>{openaiError}</Field.ErrorMessage>
+              )}
+            </Field.Root>
+            <KeyActions
+              onSave={handleOpenAISave}
+              saveDisabled={!openaiKey.trim()}
+              onClose={onClose}
+            />
+            {ApiKeyManager.hasOpenAIApiKey() && (
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  onBeforeRemoveOpenAIKey();
+                  if (!ApiKeyManager.clearOpenAIApiKey()) {
+                    setOpenaiError(
+                      "Unable to remove your OpenAI API key from session storage.",
+                    );
+                    return;
+                  }
+                  refreshModels();
+                  onSuccess();
+                  onClose();
+                }}
+              >
+                Remove OpenAI key
+              </Button>
+            )}
           </div>
         </Tabs.TabPanel>
 
