@@ -177,6 +177,13 @@ Versions: `@stratakit/mui` 1.2.0, `@stratakit/foundations` 1.0.4,
 45. **Tree items have no trailing value.** `Tree.Item` has a label, a
     description and actions, but no slot for a right-aligned value (a
     size, an accuracy), which ends up in the description line.
+46. **The accent is close to positive.** StrataKit's default accent (teal,
+    oklch hue 170) sits about 30° from the positive green (hue 140), so a
+    page of passing results, a primary button, a selected toggle and a
+    selected table row all read as one green: selection and success blur.
+    A selected-row treatment that isn't a tinted wash (a neutral surface
+    and an accent bar) had to be built by hand; an accent further from
+    the status hues, or a documented neutral selection style, would help.
 
 ## What worked well
 

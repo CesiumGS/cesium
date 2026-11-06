@@ -172,24 +172,30 @@ export function unknownTerms(a: AccuracyStatement): string[] {
 }
 
 /**
- * An accuracy total as R8 states it: "±2.8 m (1σ)", or "Not bounded" with
- * the unknown term named, never a blank; "No position" for a check that
- * makes no claim about where something is.
+ * An accuracy as R8 states it, one way everywhere (C3): a position
+ * statement's total, "±2.8 m (1σ)" (`relative` adds "placement" in rows,
+ * where the check itself is relative); "Not bounded" naming the unknown term;
+ * else the case's accuracy note (F27: "exact arithmetic", "published value
+ * ± half its last digit"); never a blank. With neither, "accuracy not
+ * stated", in the warning color.
  */
 export function AccuracyText({
   accuracy,
+  note,
   compact = false,
+  placement = false,
 }: {
   accuracy: AccuracyStatement | undefined;
+  note?: string | undefined;
   compact?: boolean;
+  /** The figure is an absolute placement beside a relative check. */
+  placement?: boolean;
 }) {
   if (accuracy === undefined) {
-    return (
-      <span className="fx-accuracy fx-muted">
-        {compact
-          ? "no position"
-          : "No position claimed: this check compares numbers"}
-      </span>
+    return note !== undefined ? (
+      <span className="fx-accuracy fx-accuracy-note">{note}</span>
+    ) : (
+      <span className="fx-accuracy fx-unbounded">accuracy not stated</span>
     );
   }
   if (accuracy.meters === undefined) {
@@ -204,9 +210,11 @@ export function AccuracyText({
       </span>
     );
   }
+  const caution = accuracy.warnings.length > 0;
   return (
-    <span className="fx-accuracy">
+    <span className={`fx-accuracy${caution ? " fx-unbounded" : ""}`}>
       ±{length(accuracy.meters)}
+      {placement && <span className="fx-muted"> placement</span>}
       {!compact && <span className="fx-muted"> (1σ)</span>}
     </span>
   );

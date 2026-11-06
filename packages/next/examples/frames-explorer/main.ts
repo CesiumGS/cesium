@@ -58,8 +58,11 @@ export function run(context: ExampleContext): ExampleRun {
       "",
       `${model.results.length} results from the stub; part 6b writes the real report.`,
     ].join("\n");
+  // The panel and the canvas show one instant (I13; 6b follows the clock).
+  viewer.clock.time = Date.parse(model.clock.utc);
   const actions: PanelActions = {
     runAll: noop,
+    retryItem: noop,
     runGroup: noop,
     cancel: noop,
     setOverlay: noop,

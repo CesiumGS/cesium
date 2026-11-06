@@ -5,11 +5,11 @@ import "./panel.css";
 // (R17), from a model (model.ts) the page or the stub fills.
 import { Snackbar } from "@mui/material";
 import { Tabs } from "@stratakit/structures";
-import { useId, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { StressResult } from "../tests.ts";
 import { Explore } from "./Explore.tsx";
-import { GlobeLegend, TourCaption, useClearOfTimeControls } from "./Hud.tsx";
+import { GlobeLegend, NARROW_VIEW, TourCaption, useHudLayout } from "./Hud.tsx";
 import type {
   LensChoice,
   PanelActions,
@@ -17,6 +17,7 @@ import type {
   Selection,
   Tab,
 } from "./model.ts";
+import { rowName } from "./QuestionCard.tsx";
 import { Report } from "./Report.tsx";
 import { StatusStrip } from "./StatusStrip.tsx";
 import { Verify } from "./Verify.tsx";
@@ -54,29 +55,42 @@ export function Panel({ model, actions, hud, initial = {} }: PanelProps) {
   );
   const [tour, setTour] = useState<number | undefined>(initial.tour);
   const [toast, setToast] = useState<string>();
-  useClearOfTimeControls(hud);
+  const tourButton = useRef<HTMLButtonElement>(null);
+  const viewWidth = useHudLayout(hud);
+  const narrow = viewWidth < NARROW_VIEW;
 
+  // Selecting a frame highlights and filters; it doesn't fly (I6: flying is
+  // the row's action and "Show on globe").
   const selectFrame = (id: string | undefined) => {
     setSelection(id ? { kind: "frame", id } : { kind: "none" });
     setFrameFilter(id);
-    if (id) {
-      actions.showOnGlobe({ frame: id });
-    }
   };
+  // Selecting a result flies to it (R14).
   const selectResult = (id: string | undefined) => {
     setSelection(id ? { kind: "result", id } : { kind: "none" });
     if (id) {
       actions.showOnGlobe({ result: id });
     }
   };
-  const highlightFrames = (r: StressResult) => {
-    const frame = model.groups
-      .find((g) => g.id === r.group)
-      ?.focus?.frames.at(-1);
-    if (frame) {
-      setSelection({ kind: "frame", id: frame });
-      setTab("explore");
-    }
+  const selected =
+    selection.kind === "result"
+      ? model.results.find((r) => r.id === selection.id)
+      : undefined;
+  // While a result is selected the tree shows its frames' paths (I5).
+  const resultFrames = selected && {
+    label: rowName(selected, model.extras[selected.id]),
+    frames:
+      model.groups.find((g) => g.id === selected.group)?.focus?.frames ?? [],
+  };
+  const showFrames = (r: StressResult) => {
+    setSelection({ kind: "result", id: r.id });
+    setTab("explore");
+  };
+  const showFailure = (id: string) => {
+    setLens("all");
+    setFrameFilter(undefined);
+    setTab("verify");
+    selectResult(id);
   };
   const copyLink = (
     s: Selection | { kind: "tour"; stop: string },
@@ -86,10 +100,19 @@ export function Panel({ model, actions, hud, initial = {} }: PanelProps) {
       ?.writeText(actions.linkTo(s))
       .then(() => setToast(message));
   };
+  const endTour = () => {
+    setTour(undefined);
+    // Back to where the tour started from (I18).
+    requestAnimationFrame(() => tourButton.current?.focus());
+  };
 
   return (
     <div className="fx-panel">
-      <StatusStrip model={model} />
+      <StatusStrip
+        model={model}
+        actions={actions}
+        onShowFailure={showFailure}
+      />
       <Tabs.Provider
         selectedId={tabId(tab)}
         setSelectedId={(id) => {
@@ -108,7 +131,7 @@ export function Panel({ model, actions, hud, initial = {} }: PanelProps) {
         </Tabs.TabList>
         <Tabs.TabPanel
           tabId={tabId("explore")}
-          className="fx-tab-panel"
+          className="fx-tab-panel fx-tab-split"
           unmountOnHide
         >
           <Explore
@@ -118,12 +141,15 @@ export function Panel({ model, actions, hud, initial = {} }: PanelProps) {
               selection.kind === "frame" ? selection.id : undefined
             }
             onSelectFrame={selectFrame}
+            resultFrames={resultFrames}
+            onBackToResult={() => setTab("verify")}
             onStartTour={() => setTour(0)}
+            tourButton={tourButton}
           />
         </Tabs.TabPanel>
         <Tabs.TabPanel
           tabId={tabId("verify")}
-          className="fx-tab-panel fx-tab-verify"
+          className="fx-tab-panel fx-tab-split"
           unmountOnHide
         >
           <Verify
@@ -135,7 +161,7 @@ export function Panel({ model, actions, hud, initial = {} }: PanelProps) {
             clearFrameFilter={() => setFrameFilter(undefined)}
             selected={selection.kind === "result" ? selection.id : undefined}
             onSelect={selectResult}
-            onHighlightFrames={highlightFrames}
+            onShowFrames={showFrames}
             onCopyLink={(id) => copyLink({ kind: "result", id }, "Link copied")}
           />
         </Tabs.TabPanel>
@@ -163,13 +189,16 @@ export function Panel({ model, actions, hud, initial = {} }: PanelProps) {
       />
       {createPortal(
         <>
-          <GlobeLegend model={model} host={hud} />
+          {/* On a narrow view the tour's caption takes the bottom; the
+              legend comes back when the tour ends. */}
+          {!(narrow && tour !== undefined) && <GlobeLegend model={model} />}
           {tour !== undefined && model.tour[tour] && (
             <TourCaption
               tour={model.tour}
               stop={tour}
+              narrow={narrow}
               onStop={setTour}
-              onEnd={() => setTour(undefined)}
+              onEnd={endTour}
               onCopyLink={(stop) =>
                 copyLink(
                   { kind: "tour", stop: stop.id },

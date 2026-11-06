@@ -1,0 +1,142 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 940" width="1200" height="940" font-family="Inter, system-ui, sans-serif">
+  <title>Frames explorer: the tour, stop by stop (design mock)</title>
+  <defs>
+    <marker id="ax" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="context-stroke"/></marker>
+    <radialGradient id="earth" cx="62%" cy="38%" r="75%"><stop offset="0" stop-color="#4f93d8"/><stop offset="1" stop-color="#1d4f8f"/></radialGradient>
+    <radialGradient id="moon" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#d9dbe0"/><stop offset="1" stop-color="#7d828c"/></radialGradient>
+    <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7c8f5c"/><stop offset="1" stop-color="#a59a6d"/></linearGradient>
+    <g id="caption">
+      <rect width="150" height="54" rx="6" fill="#26282c" opacity="0.95"/>
+    </g>
+  </defs>
+  <rect width="1200" height="940" fill="#f4f5f7"/>
+  <text x="24" y="36" font-size="16" font-weight="700" fill="#1f2328">The tour: six stops, each a camera, its overlays and a caption</text>
+  <text x="24" y="56" font-size="12" fill="#4a4f57">Each cell is the 728 × 680 view at a third of its size. The caption sits top right (bottom on views under 560 px). Flights ease in and out; reduced motion cuts.</text>
+
+  <!-- Stop 1 -->
+  <g transform="translate(24 76)">
+    <rect width="372" height="300" rx="8" fill="#03050a"/>
+    <circle cx="170" cy="168" r="98" fill="url(#earth)"/>
+    <g stroke-width="2" fill="none">
+      <line x1="170" y1="168" x2="170" y2="40" stroke="#5d97f7" stroke-dasharray="3 3" opacity="0.5"/><line x1="170" y1="70" x2="170" y2="40" stroke="#5d97f7" marker-end="url(#ax)"/>
+      <line x1="170" y1="168" x2="300" y2="150" stroke="#fc5855" marker-end="url(#ax)"/>
+      <line x1="170" y1="168" x2="80" y2="230" stroke="#5ad664" marker-end="url(#ax)"/>
+      <line x1="170" y1="168" x2="182" y2="40" stroke="#5d97f7" stroke-width="1.5" opacity="0.8" marker-end="url(#ax)"/>
+    </g>
+    <g font-size="10" font-weight="600" stroke="#000" stroke-width="3" paint-order="stroke"><text x="176" y="36" fill="#3bcddc">ITRF</text><text x="190" y="52" fill="#b298f9">GCRF</text></g>
+    <use href="#caption" x="214" y="12"/><text x="222" y="28" font-size="9" fill="#c3cad6">Stop 1 of 6</text><text x="222" y="42" font-size="11" font-weight="600" fill="#fff">Earth's frames</text><text x="222" y="56" font-size="8" fill="#c3cad6">ITRF turns with the Earth…</text>
+  </g>
+  <g transform="translate(24 384)" font-size="11" fill="#4a4f57">
+    <text font-weight="600" fill="#1f2328" font-size="12">1  Earth's frames</text>
+    <text y="16">Camera: the opening shot (135°W 25°N, 3.0 R, north up).</text>
+    <text y="30">On: triads (ITRF, GCRF, EME2000 at 1.5 R; Sacramento ENU).</text>
+    <text y="44">Clock: the flyby, 2026-04-06 23:00 UTC, paused.</text>
+  </g>
+
+  <!-- Stop 2 -->
+  <g transform="translate(414 76)">
+    <rect width="372" height="300" rx="8" fill="#03050a"/>
+    <circle cx="170" cy="168" r="98" fill="url(#earth)"/>
+    <path d="M170 168 m0 -110 a110 110 0 1 1 -1 0" fill="none" stroke="#b298f9" stroke-width="1" stroke-dasharray="2 4" opacity="0.8"/>
+    <g stroke-width="2" fill="none">
+      <line x1="170" y1="168" x2="170" y2="40" stroke="#5d97f7" opacity="0.9" marker-end="url(#ax)"/>
+      <line x1="170" y1="168" x2="285" y2="110" stroke="#fc5855" opacity="0.9" marker-end="url(#ax)"/>
+      <line x1="170" y1="168" x2="270" y2="190" stroke="#fc5855" stroke-width="1.5" opacity="0.5" marker-end="url(#ax)"/>
+    </g>
+    <g font-size="10" font-weight="600" stroke="#000" stroke-width="3" paint-order="stroke"><text x="288" y="106" fill="#b298f9">GCRF x</text><text x="274" y="202" fill="#3bcddc">ITRF x</text></g>
+    <use href="#caption" x="214" y="12"/><text x="222" y="28" font-size="9" fill="#c3cad6">Stop 2 of 6</text><text x="222" y="42" font-size="11" font-weight="600" fill="#fff">GCRF to ITRF over a day</text><text x="222" y="56" font-size="8" fill="#c3cad6">GCRF's triad turns once…</text>
+  </g>
+  <g transform="translate(414 384)" font-size="11" fill="#4a4f57">
+    <text font-weight="600" fill="#1f2328" font-size="12">2  GCRF to ITRF over a day</text>
+    <text y="16">Camera: the same, no move. On: ITRF and GCRF triads only.</text>
+    <text y="30">Clock: plays at 3,600× for one sidereal day (23 h 56 m in 24 s);</text>
+    <text y="44">GCRF's x axis sweeps a dotted arc (the globe is Earth-fixed).</text>
+  </g>
+
+  <!-- Stop 3 -->
+  <g transform="translate(804 76)">
+    <rect width="372" height="300" rx="8" fill="#03050a"/>
+    <path d="M0 70 H372 V300 H0z" fill="url(#ground)"/>
+    <g fill="none" stroke="#f07ec2">
+      <g stroke-width="2">
+        <path d="M40 300 L120 80"/><path d="M130 300 L170 80"/><path d="M220 300 L220 80"/><path d="M310 300 L270 80"/>
+        <path d="M60 250 H360"/><path d="M85 180 H340"/><path d="M105 120 H320"/>
+      </g>
+    </g>
+    <g fill="none" stroke="#3bcddc" stroke-width="1" stroke-dasharray="5 3">
+      <path d="M40 300 L112 80"/><path d="M130 300 L165 80"/><path d="M220 300 L220 80"/><path d="M310 300 L276 80"/>
+    </g>
+    <g font-size="10" font-weight="600" stroke="#000" stroke-width="3" paint-order="stroke">
+      <text x="278" y="96" fill="#f07ec2">grid north</text><text x="278" y="110" fill="#3bcddc">true north</text><text x="44" y="96" fill="#fff">convergence −0° 39′ at the grid's west edge</text>
+      <text x="200" y="292" fill="#fff">central meridian 120.5°W</text>
+    </g>
+    <use href="#caption" x="214" y="12"/><text x="222" y="28" font-size="9" fill="#c3cad6">Stop 3 of 6</text><text x="222" y="42" font-size="11" font-weight="600" fill="#fff">The design grid</text><text x="222" y="56" font-size="8" fill="#c3cad6">Grid north and true north…</text>
+  </g>
+  <g transform="translate(804 384)" font-size="11" fill="#4a4f57">
+    <text font-weight="600" fill="#1f2328" font-size="12">3  The California design grid</text>
+    <text y="16">Camera: over the grid's centre, 180 km range, 55° tilt, heading</text>
+    <text y="30">0°, so the grid fills about 70% of the view. On: design grid</text>
+    <text y="44">(10 km major 2 px, 2 km minor 1 px), true-north lines 1 px dashed.</text>
+  </g>
+
+  <!-- Stop 4 -->
+  <g transform="translate(24 462)">
+    <rect width="372" height="300" rx="8" fill="#03050a"/>
+    <path d="M0 140 Q186 120 372 140 V300 H0z" fill="url(#ground)"/>
+    <g fill="none" stroke-width="2">
+      <path d="M30 280 L330 150" stroke="#f07ec2"/>
+      <path d="M30 280 L330 112" stroke="#f07ec2" stroke-dasharray="6 4"/>
+      <path d="M330 150 L330 112" stroke="#fff" stroke-width="1"/>
+    </g>
+    <g font-size="10" font-weight="600" stroke="#000" stroke-width="3" paint-order="stroke">
+      <text x="200" y="164" fill="#f07ec2">exact (follows the ellipsoid)</text><text x="150" y="146" fill="#f07ec2">rigid (a flat site)</text>
+      <text x="246" y="132" fill="#fff" font-size="12">sag 31.2 m at 20 km</text>
+    </g>
+    <use href="#caption" x="214" y="12"/><text x="222" y="28" font-size="9" fill="#c3cad6">Stop 4 of 6</text><text x="222" y="42" font-size="11" font-weight="600" fill="#fff">Rigid against exact</text><text x="222" y="56" font-size="8" fill="#c3cad6">A 20 km line placed rigidly…</text>
+  </g>
+  <g transform="translate(24 770)" font-size="11" fill="#4a4f57">
+    <text font-weight="600" fill="#1f2328" font-size="12">4  Rigid against exact, and the 31 m sag</text>
+    <text y="16">Camera: 2 km beyond the line's far end, 8 km range, 15° above the</text>
+    <text y="30">horizon, looking back along it. On: rigid and exact line; the sag</text>
+    <text y="44">labelled at the far end with a 1 px white leader.</text>
+  </g>
+
+  <!-- Stop 5 -->
+  <g transform="translate(414 462)">
+    <rect width="372" height="300" rx="8" fill="#03050a"/>
+    <circle cx="90" cy="170" r="16" fill="url(#earth)"/>
+    <circle cx="300" cy="160" r="6" fill="url(#moon)"/>
+    <path d="M100 160 C160 100 260 100 300 140 C330 170 320 200 290 196 C250 190 210 220 160 214 C120 210 100 190 100 176" fill="none" stroke="#fc9252" stroke-width="2"/>
+    <path d="M290 196 C330 196 352 160 330 128" fill="none" stroke="#fc9252" stroke-width="1" stroke-dasharray="3 3" opacity="0.8"/>
+    <g font-size="10" font-weight="600" stroke="#000" stroke-width="3" paint-order="stroke"><text x="72" y="204" fill="#3bcddc">Earth</text><text x="306" y="176" fill="#bfc8d4">Moon</text><text x="150" y="96" fill="#fc9252">Orion (GCRF)</text></g>
+    <use href="#caption" x="214" y="12"/><text x="222" y="28" font-size="9" fill="#c3cad6">Stop 5 of 6</text><text x="222" y="42" font-size="11" font-weight="600" fill="#fff">Orion's figure-eight</text><text x="222" y="56" font-size="8" fill="#c3cad6">In GCRF a figure-eight…</text>
+    <rect x="12" y="232" width="126" height="56" rx="6" fill="#26282c"/><text x="20" y="248" font-size="9" fill="#c3cad6">Drawn in</text><text x="20" y="266" font-size="10" fill="#fff" font-weight="600">GCRF  ·  ITRF  ·  MOON_ME</text><text x="20" y="282" font-size="8" fill="#c3cad6">panel toggle; the path redraws</text>
+  </g>
+  <g transform="translate(414 770)" font-size="11" fill="#4a4f57">
+    <text font-weight="600" fill="#1f2328" font-size="12">5  Orion in GCRF, then MOON_ME</text>
+    <text y="16">Camera: above the Earth–Moon plane, framing both, 1.1 million km</text>
+    <text y="30">range, a 3.0 s flight from stop 4. On: Orion's path in GCRF, then</text>
+    <text y="44">after 4 s in MOON_ME (the far-side swing), the caption saying so.</text>
+  </g>
+
+  <!-- Stop 6 -->
+  <g transform="translate(804 462)">
+    <rect width="372" height="300" rx="8" fill="#03050a"/>
+    <path d="M0 200 Q100 170 200 190 T372 180 V300 H0z" fill="#8f939b"/>
+    <path d="M0 230 Q120 214 250 236 T372 228 V300 H0z" fill="#6f737b"/>
+    <g stroke-width="2" fill="none">
+      <line x1="186" y1="200" x2="246" y2="208" stroke="#fc5855" marker-end="url(#ax)"/>
+      <line x1="186" y1="200" x2="190" y2="140" stroke="#5d97f7" marker-end="url(#ax)"/>
+      <line x1="186" y1="200" x2="160" y2="178" stroke="#5ad664" marker-end="url(#ax)"/>
+    </g>
+    <circle cx="186" cy="200" r="4" fill="#bfc8d4" stroke="#000"/>
+    <g font-size="10" font-weight="600" stroke="#000" stroke-width="3" paint-order="stroke"><text x="198" y="224" fill="#bfc8d4">Lunar south-pole site</text></g>
+    <use href="#caption" x="214" y="12"/><text x="222" y="28" font-size="9" fill="#c3cad6">Stop 6 of 6</text><text x="222" y="42" font-size="11" font-weight="600" fill="#fff">The Moon's south pole</text><text x="222" y="56" font-size="8" fill="#c3cad6">A clock here gains 56 µs/day</text>
+  </g>
+  <g transform="translate(804 770)" font-size="11" fill="#4a4f57">
+    <text font-weight="600" fill="#1f2328" font-size="12">6  The Moon's south pole and lunar time</text>
+    <text y="16">Camera: 100 m from the site's triad, 20° above the horizon,</text>
+    <text y="30">sun low behind; a 3.5 s flight. On: the site triad (MOON_ME);</text>
+    <text y="44">it holds still as the camera orbits (far-from-origin precision).</text>
+  </g>
+</svg>

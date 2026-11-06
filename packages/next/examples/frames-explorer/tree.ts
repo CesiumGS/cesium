@@ -34,6 +34,12 @@ export type EdgeKind =
 export interface EdgeAccuracy {
   meters?: number;
   radians?: number;
+  /**
+   * The edge is a convention, exact by definition (the IAU 2006 frame bias's
+   * adopted constants): no error to state, and none to compose (6a fix round,
+   * C3). `meters` and `radians` are then undefined.
+   */
+  byDefinition?: true;
   note: string;
 }
 
@@ -51,8 +57,6 @@ export interface TreeNode {
 
 /** DE440's stated accuracy for the positions it gives, m (R8). */
 const EPHEMERIS_M = 0.01;
-/** The IAU 2006 frame bias's model accuracy, rad (R8). */
-const FRAME_BIAS_RAD = 1e-15;
 const ephemerisAccuracy = (): EdgeAccuracy => ({
   meters: EPHEMERIS_M,
   note: "DE440 Earth-Moon fit to lunar laser ranging (stated model accuracy)",
@@ -162,8 +166,8 @@ const BUILT_IN: Record<
     kind: "constant",
     detail: "frame bias (IAU 2006)",
     accuracy: {
-      radians: FRAME_BIAS_RAD,
-      note: "frame bias model accuracy (stated)",
+      byDefinition: true,
+      note: "exact by definition: the IAU 2006 frame bias is a set of adopted constants",
     },
   }),
   ITRF: (frames, instant) => ({

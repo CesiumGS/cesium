@@ -1,36 +1,47 @@
 // The globe's HUD (R14, R17): the legend at the bottom right, listing every
-// active overlay with its accuracy (R8: accuracy is never shown only in the
-// panel), and the tour's caption at the top right. Both are rendered from
-// the panel's React tree into the viewer's container (main.ts makes the
-// host), clear of Dyno's inspector (top left) and credits (bottom left). The
-// HUD exception (DESIGN.md) covers only the family and axis colors; surfaces
-// and type are StrataKit's tokens.
+// overlay that is drawn with its accuracy (R8: accuracy is never shown only
+// in the panel), and the tour's caption at the top right (at the bottom on a
+// narrow view). Both are rendered from the panel's React tree into the
+// viewer's container (main.ts makes the host), clear of Dyno's inspector
+// (top left) and credits (bottom left). The HUD is dark in either scheme, as
+// the viewer's own widgets are (I16): panel.css points its StrataKit tokens
+// at the viewer's HUD theme.
 import { Button, IconButton, Typography } from "@mui/material";
 import { svgChevronDown } from "@stratakit/icons/chevron-down";
 import { svgChevronUp } from "@stratakit/icons/chevron-up";
 import { svgDismiss } from "@stratakit/icons/dismiss";
 import { svgLink } from "@stratakit/icons/link";
 import { Icon } from "@stratakit/mui";
-import { useLayoutEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { Family } from "./families.ts";
 import type { OverlayView, PanelModel, TourStop } from "./model.ts";
 
-const OVERLAY_FAMILY: Partial<Record<OverlayView["id"], Family>> = {
-  designGrid: "engineering",
-  siteGrid: "engineering",
-  rigidVsExact: "engineering",
-  roundTrip: "engineering",
-  distortion: "engineering",
-  orion: "trajectory",
-  bias: "celestial",
+/** Each overlay's family (color) and line style on the globe and in the legend (M8). */
+const OVERLAY_LOOK: Partial<
+  Record<
+    OverlayView["id"],
+    { family: Family; line: "solid" | "dashed" | "dotted" }
+  >
+> = {
+  designGrid: { family: "engineering", line: "solid" },
+  siteGrid: { family: "engineering", line: "dotted" },
+  rigidVsExact: { family: "engineering", line: "dashed" },
+  roundTrip: { family: "engineering", line: "dotted" },
+  distortion: { family: "engineering", line: "solid" },
+  orion: { family: "trajectory", line: "solid" },
+  bias: { family: "celestial", line: "solid" },
 };
+
+/** Below this view width the HUD goes compact: legend folded, the caption at the bottom (I18). */
+export const NARROW_VIEW = 560;
 
 /**
  * Keeps the HUD clear of the viewer's time controls (bottom centre, one or
  * two rows as the view's width allows): `--fx-hud-bottom` on the host is the
- * room they take, so the legend sits above them.
+ * room they take, so the legend sits above them. Returns the view's width.
  */
-export function useClearOfTimeControls(host: HTMLElement) {
+export function useHudLayout(host: HTMLElement): number {
+  const [width, setWidth] = useState(() => host.clientWidth);
   useLayoutEffect(() => {
     const view = host.parentElement;
     if (!view) {
@@ -44,6 +55,7 @@ export function useClearOfTimeControls(host: HTMLElement) {
         "--fx-hud-bottom",
         `${top === undefined ? 12 : Math.max(12, bottom - top + 12)}px`,
       );
+      setWidth(view.clientWidth);
     };
     measure();
     const observer = new ResizeObserver(measure);
@@ -54,23 +66,25 @@ export function useClearOfTimeControls(host: HTMLElement) {
     }
     return () => observer.disconnect();
   }, [host]);
+  return width;
 }
 
-export function GlobeLegend({
-  model,
-  host,
-}: {
-  model: PanelModel;
-  host: HTMLElement;
-}) {
-  // Folded on a narrow view, where it would cover the globe.
-  const [open, setOpen] = useState(() => host.clientWidth >= 560);
-  const active = model.overlays.filter((o) => o.on && o.state !== "missing");
-  if (active.length === 0) {
+/**
+ * The legend (I17): compact by default, one line per drawn overlay (its
+ * swatch, name and accuracy, ellipsized, the full line on hover and focus);
+ * unfolded, the full lines and the triads' note.
+ */
+export function GlobeLegend({ model }: { model: PanelModel }) {
+  const [open, setOpen] = useState(false);
+  const drawn = model.overlays.filter((o) => o.on && o.state === "drawn");
+  if (drawn.length === 0) {
     return null;
   }
   return (
-    <section className="fx-hud fx-legend" aria-label="Legend">
+    <section
+      className={`fx-hud fx-legend${open ? " fx-legend-open" : ""}`}
+      aria-label="Legend"
+    >
       <div className="fx-legend-head">
         <Typography variant="subtitle-sm" render={<h2 />} className="fx-strong">
           On the globe
@@ -84,69 +98,91 @@ export function GlobeLegend({
           <Icon href={open ? svgChevronDown : svgChevronUp} />
         </IconButton>
       </div>
-      {open && (
-        <>
-          <ul className="fx-legend-list">
-            {active.map((o) => (
-              <li key={o.id}>
-                {o.id === "triads" ? (
-                  <span className="fx-axes" aria-hidden>
-                    <span className="fx-axis-x" />
-                    <span className="fx-axis-y" />
-                    <span className="fx-axis-z" />
-                  </span>
-                ) : (
-                  <span
-                    className={`fx-swatch fx-swatch-line fx-family-${OVERLAY_FAMILY[o.id] ?? "earth"}`}
-                    aria-hidden
-                  />
-                )}
-                <span className="fx-legend-text">
-                  <span className="fx-legend-name">
-                    {o.label}
-                    {o.state === "waiting" && (
-                      <span className="fx-muted"> (fetching)</span>
-                    )}
-                  </span>
-                  <span
-                    className={`fx-legend-acc${o.unbounded ? " fx-unbounded" : ""}`}
-                  >
-                    {o.accuracy}
-                  </span>
+      <ul className="fx-legend-list">
+        {drawn.map((o) => {
+          const look = OVERLAY_LOOK[o.id];
+          return (
+            <li
+              key={o.id}
+              tabIndex={open ? undefined : 0}
+              title={`${o.label}: ${o.accuracy}`}
+            >
+              {o.id === "triads" ? (
+                <span className="fx-axes" aria-hidden>
+                  <span className="fx-axis-x" />
+                  <span className="fx-axis-y" />
+                  <span className="fx-axis-z" />
                 </span>
-              </li>
-            ))}
-          </ul>
-          {active.some((o) => o.id === "triads") && (
-            <p className="fx-legend-note">
-              Axes x <span className="fx-axis-word fx-axis-word-x">red</span>, y{" "}
-              <span className="fx-axis-word fx-axis-word-y">green</span>, z{" "}
-              <span className="fx-axis-word fx-axis-word-z">blue</span>;{" "}
-              {model.triadScale}.
-            </p>
-          )}
-        </>
+              ) : (
+                <span
+                  className={`fx-line-key fx-line-${look?.line ?? "solid"} fx-family-${look?.family ?? "earth"}`}
+                  aria-hidden
+                />
+              )}
+              <span className="fx-legend-text">
+                <span className="fx-legend-name">
+                  {open ? o.label : (o.short ?? o.label)}
+                </span>
+                <span
+                  className={`fx-legend-acc${o.unbounded || o.caution ? " fx-unbounded" : ""}`}
+                >
+                  {o.accuracy}
+                </span>
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+      {open && drawn.some((o) => o.id === "triads") && (
+        <p className="fx-legend-note">
+          Axes x <span className="fx-axis-word fx-axis-word-x">red</span>, y{" "}
+          <span className="fx-axis-word fx-axis-word-y">green</span>, z{" "}
+          <span className="fx-axis-word fx-axis-word-z">blue</span>;{" "}
+          {model.triadScale}.
+        </p>
       )}
     </section>
   );
 }
 
+/**
+ * The tour's caption (I18): focus moves to its heading at each stop; Escape
+ * ends the tour (focus back to "Take the tour"); the arrow keys step.
+ */
 export function TourCaption({
   tour,
   stop,
+  narrow,
   onStop,
   onEnd,
   onCopyLink,
 }: {
   tour: readonly TourStop[];
   stop: number;
+  narrow: boolean;
   onStop: (index: number) => void;
   onEnd: () => void;
   onCopyLink: (stop: TourStop) => void;
 }) {
   const s = tour[stop]!;
+  const heading = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    heading.current?.focus({ preventScroll: true, focusVisible: false });
+  }, [stop]);
   return (
-    <section className="fx-hud fx-tour" aria-label="Tour" aria-live="polite">
+    <section
+      className={`fx-hud fx-tour${narrow ? " fx-tour-narrow" : ""}`}
+      aria-label="Tour"
+      onKeyDown={(e) => {
+        if (e.key === "Escape") {
+          onEnd();
+        } else if (e.key === "ArrowRight" && stop < tour.length - 1) {
+          onStop(stop + 1);
+        } else if (e.key === "ArrowLeft" && stop > 0) {
+          onStop(stop - 1);
+        }
+      }}
+    >
       <div className="fx-tour-head">
         <Typography
           variant="caption-lg"
@@ -158,16 +194,20 @@ export function TourCaption({
         <IconButton
           size="small"
           aria-label="End the tour"
-          title="End the tour"
+          title="End the tour (Escape)"
           onClick={onEnd}
         >
           <Icon href={svgDismiss} />
         </IconButton>
       </div>
-      <Typography variant="subtitle-md" render={<h2 />} className="fx-strong">
+      <Typography
+        variant="subtitle-md"
+        render={<h2 ref={heading} tabIndex={-1} />}
+        className="fx-strong fx-tour-title"
+      >
         {s.title}
       </Typography>
-      <Typography variant="body-sm" render={<p />}>
+      <Typography variant="body-sm" render={<p />} aria-live="polite">
         {s.caption}
       </Typography>
       <div className="fx-tour-buttons">

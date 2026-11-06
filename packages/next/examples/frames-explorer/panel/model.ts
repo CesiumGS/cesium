@@ -57,8 +57,30 @@ export interface Citation {
   retrieved: string;
 }
 
-/** What the inspector shows beyond the result itself (6b derives these from the run). */
+/** What a result's expected value is (R10, R16): the inspector's "Compared against". */
+export type Comparison =
+  | { kind: "published"; text: string }
+  | { kind: "formula"; text: string }
+  | { kind: "roundTrip"; text: string }
+  | { kind: "error"; text: string }
+  | { kind: "independent"; text: string };
+
+/**
+ * What the panel shows beyond the result itself. 6b fills these from the
+ * catalog (ruling F27, F28: `accuracyNote`, `trace`, `source` and a short
+ * `label` on each case); the stub writes them out.
+ */
 export interface ResultExtras {
+  /** A noun phrase of 60 characters or fewer, for rows (the title stays in the inspector). */
+  label?: string;
+  /**
+   * F27: the accuracy that applies when the result has no position
+   * statement: "exact arithmetic", "published value ± half the last digit".
+   */
+  accuracyNote?: string;
+  /** For a relative check beside an absolute placement: why that placement doesn't affect it. */
+  relative?: string;
+  compared?: Comparison;
   trace?: readonly TraceStep[];
   source?: Citation;
   /** A hand formula, written out (R10's last resort, R11's effect check). */
@@ -79,14 +101,18 @@ export type OverlayId =
 export interface OverlayView {
   id: OverlayId;
   label: string;
+  /** The legend's short name ("Design grid"). */
+  short?: string;
   on: boolean;
   /** Waiting for data, drawn, or why it can't be. */
   state: "off" | "waiting" | "drawn" | "missing" | "error";
   waitingFor?: DataItem;
   /** The legend's accuracy line: always present, "not bounded" with its reason when undefined. */
   accuracy: string;
-  /** The accuracy is not bounded (shown in the warning color). */
+  /** The accuracy is not bounded: a term has no size (warning color, "Not bounded"). */
   unbounded?: boolean;
+  /** Bounded, but resting on an assumption (warning color, with the number). */
+  caution?: boolean;
   /** Why it can't be drawn (missing, error). */
   problem?: string;
 }
@@ -98,6 +124,8 @@ export type DistortionCrs = "6420" | "32610" | "3857" | "ldp";
 export interface ClockView {
   /** ISO 8601 UTC, to the second. */
   utc: string;
+  /** The same instant as the viewer's time controls show it (the place's local time). */
+  local?: string;
   /** Earth orientation at the instant: measured, predicted with its age, or outside the table. */
   eop:
     | { kind: "measured" }
@@ -113,8 +141,29 @@ export interface RunView {
   summary?: RunSummary;
 }
 
-/** The selected frame's composed accuracy to ITRF (R8), by node id. */
-export type ComposedAccuracy = Readonly<Record<string, AccuracyStatement>>;
+/** The frames a composed accuracy can be stated against (the walk's "against"). */
+export type Reference = "ITRF" | "GCRF" | "ICRF";
+export const REFERENCES: readonly Reference[] = ["ITRF", "GCRF", "ICRF"];
+
+/**
+ * A frame's composed accuracy (R8) as the walk shows it: `accuracyOf`'s
+ * statement for a point at the frame's origin against `reference` at the
+ * clock's instant, with each term tied to the edges it comes from (C2).
+ */
+export interface ComposedView {
+  statement: AccuracyStatement;
+  /** For each of `statement.terms`, the edges (child node ids) it comes from; empty for a term on no edge. */
+  termEdges: readonly (readonly string[])[];
+  /** Path edges that contribute nothing at the origin, and why (a rotation about the origin). */
+  zeroAtOrigin: readonly { edge: string; why: string }[];
+  /** One sentence under the total: the counterpoint, or a limit. */
+  note?: string;
+}
+
+/** Composed accuracies, by reference and node id. */
+export type ComposedAccuracy = Readonly<
+  Record<Reference, Readonly<Record<string, ComposedView>>>
+>;
 
 /** Where the gallery's ion token came from (never the token itself, R18). */
 export type TokenSource = "env" | "setting" | "evaluation" | undefined;
@@ -176,6 +225,8 @@ export interface PanelModel {
 /** What the panel can ask of the page. */
 export interface PanelActions {
   runAll(): void;
+  /** Loads a failed item again (the error alert's Retry). */
+  retryItem(item: DataItem): void;
   runGroup(group: string): void;
   cancel(): void;
   setOverlay(id: OverlayId, on: boolean): void;

@@ -17,20 +17,30 @@ import {
 import { svgFitToView } from "@stratakit/icons/fit-to-view";
 import { svgPathAnimationSingle } from "@stratakit/icons/path-animation-single";
 import { Icon } from "@stratakit/mui";
-import { type ReactNode, useId } from "react";
+import {
+  type ReactNode,
+  type RefObject,
+  useId,
+  useMemo,
+  useState,
+} from "react";
 import type { TreeNode } from "../tree.ts";
-import { BudgetBar } from "./BudgetBar.tsx";
-import { EDGE_LABEL, FAMILY_INFO, familyOf } from "./families.ts";
+import { BudgetBar, TERM_LABEL } from "./BudgetBar.tsx";
+import { EDGE_LABEL, familyMap } from "./families.ts";
 import { FamilyKey, FrameTree, edgeAccuracyText } from "./FrameTree.tsx";
-import { sig } from "./format.ts";
-import type {
-  DistortionCrs,
-  OrionFrame,
-  OverlayView,
-  PanelActions,
-  PanelModel,
+import { length, sig } from "./format.ts";
+import {
+  type ComposedView,
+  type DistortionCrs,
+  type OrionFrame,
+  type OverlayView,
+  type PanelActions,
+  type PanelModel,
+  REFERENCES,
+  type Reference,
 } from "./model.ts";
-import { ITEM_LABEL, Term } from "./parts.tsx";
+import { SheetHead, Split } from "./Sheet.tsx";
+import { AccuracyText, ITEM_LABEL, Term } from "./parts.tsx";
 
 /** A tab's section: an h2 in StrataKit's subtitle style, and its content. */
 export function Section({
@@ -77,95 +87,298 @@ export function pathFromRoot(tree: TreeNode, id: string): TreeNode[] {
   return walk(tree) ?? [];
 }
 
-/** R16's walk: every edge from the root to the frame, then its composed accuracy. */
-function Walk({
+/**
+ * The path a composed statement uses (C2): from `from` up to the common
+ * ancestor, then down to `to`. `up` and `down` hold the nodes whose edges
+ * are walked (each edge named by its child), `up` from `from`, `down` to
+ * `to`.
+ */
+export function pathBetween(
+  tree: TreeNode,
+  from: string,
+  to: string,
+): { up: TreeNode[]; ancestor: TreeNode; down: TreeNode[] } | undefined {
+  const a = pathFromRoot(tree, from);
+  const b = pathFromRoot(tree, to);
+  if (a.length === 0 || b.length === 0) {
+    return undefined;
+  }
+  let i = 0;
+  while (i < a.length && i < b.length && a[i]!.id === b[i]!.id) {
+    i++;
+  }
+  return {
+    up: a.slice(i).reverse(),
+    ancestor: a[i - 1]!,
+    down: b.slice(i),
+  };
+}
+
+/** Every node on the path, with its place along it (for the tree's connector). */
+export function pathSteps(
+  tree: TreeNode,
+  from: string,
+  to: string,
+): Map<string, number> {
+  const p = pathBetween(tree, from, to);
+  const out = new Map<string, number>();
+  if (!p) {
+    return out;
+  }
+  [...p.up, p.ancestor, ...p.down].forEach((n, i) => out.set(n.id, i));
+  return out;
+}
+
+const REFERENCE_LABEL: Record<Reference, string> = {
+  ITRF: "ITRF (Earth-fixed)",
+  GCRF: "GCRF (geocentric, inertial)",
+  ICRF: "ICRF (barycentric)",
+};
+
+/**
+ * R16's walk, as the statement composes it (C2): the reference up to the
+ * common ancestor and down to the frame, each edge with its math, data and
+ * own accuracy, and what it adds to the total at the frame's origin: a
+ * term, or nothing and why.
+ */
+export function Walk({
   model,
-  path,
+  tree,
+  target,
+  reference,
+  setReference,
   actions,
 }: {
   model: PanelModel;
-  path: TreeNode[];
+  tree: TreeNode;
+  target: string;
+  reference: Reference;
+  setReference: (r: Reference) => void;
   actions: PanelActions;
 }) {
-  const target = path.at(-1)!;
-  const composed = model.composed[target.id];
-  let family = familyOf(path[0]!);
-  return (
-    <div className="fx-walk" key={target.id}>
-      <div className="fx-walk-head">
-        <Typography variant="body-md" render={<h3 />} className="fx-strong">
-          {path[0]!.label} to {target.label}
-        </Typography>
-        <Button
-          variant="outlined"
-          size="small"
-          startIcon={<Icon href={svgFitToView} />}
-          onClick={() => actions.showOnGlobe({ frame: target.id })}
-        >
-          Show on globe
-        </Button>
-      </div>
-      <ol className="fx-walk-edges">
-        {path.slice(1).map((node, i) => {
-          family = familyOf(node, family);
-          const acc = edgeAccuracyText(node.edge.kind, node.edge.accuracy);
-          return (
-            <li
-              key={node.id}
-              className="fx-walk-edge"
-              style={{ ["--i" as string]: i }}
+  const path = pathBetween(tree, reference, target);
+  const view: ComposedView | undefined = model.composed[reference]?.[target];
+  if (!path) {
+    return null;
+  }
+  const targetNode = path.down.at(-1) ?? path.up[0] ?? path.ancestor;
+  const families = familyMap(tree);
+  const labelOf = new Map<string, string>();
+  for (const n of [...path.up, path.ancestor, ...path.down]) {
+    labelOf.set(n.id, n.label);
+  }
+  // Each edge's terms, by index into the statement.
+  const termsOn = new Map<string, number[]>();
+  view?.termEdges.forEach((edges, i) =>
+    edges.forEach((e) => termsOn.set(e, [...(termsOn.get(e) ?? []), i])),
+  );
+  const zero = new Map(view?.zeroAtOrigin.map((z) => [z.edge, z.why]) ?? []);
+  let step = 0;
+  const edgeRow = (
+    child: TreeNode,
+    from: string,
+    to: string,
+    inverse: boolean,
+  ) => {
+    const acc = edgeAccuracyText(child.edge.kind, child.edge.accuracy);
+    const terms = termsOn.get(child.id) ?? [];
+    const i = step++;
+    return (
+      <li
+        key={child.id}
+        className="fx-walk-edge"
+        style={{ ["--i" as string]: i }}
+      >
+        <span
+          className={`fx-walk-dot fx-family-${families.get(child.id) ?? "earth"}`}
+          aria-hidden
+        />
+        <div className="fx-walk-text">
+          <div className="fx-walk-line">
+            <span className="fx-strong">
+              {from} → {to}
+            </span>
+            <span className="fx-edge-kind">
+              {EDGE_LABEL[child.edge.kind]}
+              {inverse ? ", inverse" : ""}
+            </span>
+            <span
+              className={`fx-num fx-walk-acc${acc.unknown ? " fx-unbounded" : ""}`}
             >
-              <span className={`fx-walk-dot fx-family-${family}`} aria-hidden />
-              <div className="fx-walk-text">
-                <div className="fx-walk-line">
-                  <span className="fx-strong">
-                    {path[i]!.label} → {node.label}
-                  </span>
-                  <span className="fx-chip">{EDGE_LABEL[node.edge.kind]}</span>
-                  <span
-                    className={`fx-num fx-walk-acc${acc.unknown ? " fx-unbounded" : ""}`}
-                  >
-                    {acc.text}
-                  </span>
-                </div>
-                <Typography
-                  variant="body-sm"
-                  color="textSecondary"
-                  render={<p />}
-                >
-                  {node.edge.detail}
-                </Typography>
-                <Typography
-                  variant="caption-lg"
-                  color="textSecondary"
-                  render={<p />}
-                >
-                  {node.edge.accuracy.note}
-                </Typography>
-              </div>
-            </li>
-          );
+              {acc.text}
+            </span>
+          </div>
+          <Typography variant="body-sm" color="textSecondary" render={<p />}>
+            {child.edge.detail}
+          </Typography>
+          <Typography variant="caption-lg" color="textSecondary" render={<p />}>
+            {child.edge.accuracy.note}
+          </Typography>
+          {view && (
+            <p className="fx-walk-adds">
+              {terms.length > 0
+                ? terms.map((t) => {
+                    const term = view.statement.terms[t]!;
+                    const shared = view.termEdges[t]!.filter(
+                      (e) => e !== child.id,
+                    );
+                    return (
+                      <span key={t} className="fx-walk-term">
+                        Adds {TERM_LABEL[term.source].toLowerCase()},{" "}
+                        <span
+                          className={`fx-num${term.meters === undefined ? " fx-unbounded" : ""}`}
+                        >
+                          {term.meters === undefined
+                            ? "not bounded"
+                            : length(term.meters)}
+                        </span>
+                        {shared.length > 0 &&
+                          ` (one term with ${shared.map((e) => labelOf.get(e) ?? e).join(", ")})`}
+                        {term.meters !== undefined &&
+                        term.meters > 0 &&
+                        view.statement.meters
+                          ? `: ${budgetShare(term.meters, view.statement)} of the total`
+                          : ""}
+                      </span>
+                    );
+                  })
+                : zero.has(child.id)
+                  ? `Adds nothing at the origin: ${zero.get(child.id)}.`
+                  : child.edge.accuracy.byDefinition
+                    ? "Adds nothing: exact by definition."
+                    : "Adds nothing at the origin."}
+            </p>
+          )}
+        </div>
+      </li>
+    );
+  };
+  return (
+    <div className="fx-walk" key={`${reference}:${target}`}>
+      {view && (
+        <p className="fx-walk-total">
+          <Typography variant="body-sm" color="textSecondary" render={<span />}>
+            Composed at {targetNode.label}&rsquo;s origin
+          </Typography>
+          <span className="fx-budget-value">
+            {view.statement.terms.length === 0 ? (
+              "exact at the origin"
+            ) : (
+              <AccuracyText accuracy={view.statement} compact />
+            )}
+          </span>
+        </p>
+      )}
+      <ol
+        className="fx-walk-edges"
+        aria-label={`Edges from ${reference} to ${targetNode.label}`}
+      >
+        <li className="fx-walk-node" style={{ ["--i" as string]: step++ }}>
+          <span className="fx-walk-node-label">
+            {reference}
+            <span className="fx-muted">, the reference</span>
+          </span>
+        </li>
+        {path.up.map((n) => {
+          const parent = pathFromRoot(tree, n.id).at(-2);
+          return edgeRow(n, n.label, parent?.label ?? "", true);
         })}
+        {path.up.length > 0 && path.down.length > 0 && (
+          <li className="fx-walk-node" style={{ ["--i" as string]: step++ }}>
+            <span className="fx-walk-node-label">
+              {path.ancestor.label}
+              <span className="fx-muted">, the common ancestor</span>
+            </span>
+          </li>
+        )}
+        {path.down.map((n, i) =>
+          edgeRow(
+            n,
+            (i === 0 ? path.ancestor : path.down[i - 1]!).label,
+            n.label,
+            false,
+          ),
+        )}
       </ol>
-      {composed ? (
+      {view ? (
         <>
           <Typography variant="body-sm" color="textSecondary" render={<p />}>
-            A point at {target.label}&rsquo;s origin, against <Term k="itrf" />{" "}
-            at {utc(model.clock.utc)}.
+            A point at {targetNode.label}&rsquo;s origin, against{" "}
+            {reference === "ITRF" ? (
+              <Term k="itrf" />
+            ) : reference === "GCRF" ? (
+              <Term k="gcrf" />
+            ) : (
+              <Term k="icrf" />
+            )}{" "}
+            at the clock&rsquo;s instant, {utc(model.clock.utc)}.
           </Typography>
           <BudgetBar
-            accuracy={composed}
-            label={`Accuracy of ${target.label} against ITRF`}
+            accuracy={view.statement}
+            label={`Accuracy of ${targetNode.label} against ${reference}`}
+            from={view.termEdges.map((edges) =>
+              edges.length === 0
+                ? "no edge"
+                : edges.map((e) => labelOf.get(e) ?? e).join(", "),
+            )}
           />
+          {view.note && (
+            <Typography
+              variant="body-sm"
+              render={<p />}
+              className="fx-walk-note"
+            >
+              {view.note}
+            </Typography>
+          )}
         </>
       ) : (
         <Typography variant="body-sm" color="textSecondary" render={<p />}>
-          No composed accuracy for this frame yet.
+          No composed accuracy against {reference} for {targetNode.label}: it
+          needs frame data. Choose another reference, or wait for frame data.
         </Typography>
       )}
     </div>
   );
 }
+
+/** The walk's "against": the frame the composed statement is stated in (C2). */
+function ReferenceSelect({
+  reference,
+  setReference,
+}: {
+  reference: Reference;
+  setReference: (r: Reference) => void;
+}) {
+  const id = useId();
+  return (
+    <FormControl size="small" className="fx-walk-ref">
+      <InputLabel id={`${id}-ref`}>Against</InputLabel>
+      <Select
+        labelId={`${id}-ref`}
+        label="Against"
+        value={reference}
+        renderValue={(r) => String(r)}
+        onChange={(e) => setReference(e.target.value as Reference)}
+      >
+        {REFERENCES.map((r) => (
+          <MenuItem key={r} value={r}>
+            {REFERENCE_LABEL[r]}
+          </MenuItem>
+        ))}
+      </Select>
+    </FormControl>
+  );
+}
+
+const budgetShare = (m: number, a: { meters: number | undefined }) => {
+  const share = (m * m) / (a.meters! * a.meters!);
+  return share >= 0.995
+    ? "≈ 100%"
+    : share < 0.001
+      ? "< 0.1%"
+      : `${(100 * share).toPrecision(2)}%`;
+};
 
 function OverlayRow({
   overlay,
@@ -203,7 +416,7 @@ function OverlayRow({
       <Typography
         variant="caption-lg"
         render={<p id={`${id}-d`} />}
-        className={`fx-overlay-acc${overlay.unbounded ? " fx-unbounded" : ""}${problem ? " fx-problem" : ""}`}
+        className={`fx-overlay-acc${overlay.unbounded || overlay.caution ? " fx-unbounded" : ""}${problem ? " fx-problem" : ""}`}
       >
         {problem ? overlay.problem : overlay.accuracy}
       </Typography>
@@ -320,25 +533,51 @@ export function Explore({
   actions,
   selectedFrame,
   onSelectFrame,
+  resultFrames,
+  onBackToResult,
   onStartTour,
+  tourButton,
 }: {
   model: PanelModel;
   actions: PanelActions;
   selectedFrame: string | undefined;
   onSelectFrame: (id: string | undefined) => void;
+  /** While a result is selected: its label and the frames it uses (R14, I5). */
+  resultFrames?: { label: string; frames: readonly string[] } | undefined;
+  onBackToResult: () => void;
   onStartTour: () => void;
+  tourButton: RefObject<HTMLButtonElement | null>;
 }) {
-  const path =
-    model.tree && selectedFrame ? pathFromRoot(model.tree, selectedFrame) : [];
-  const onPath = new Set(path.map((n) => n.id));
+  const [reference, setReference] = useState<Reference>("ITRF");
+  const tree = model.tree;
+  const onPath = useMemo(() => {
+    if (!tree) {
+      return new Map<string, number>();
+    }
+    if (selectedFrame) {
+      return pathSteps(tree, reference, selectedFrame);
+    }
+    const out = new Map<string, number>();
+    for (const f of resultFrames?.frames ?? []) {
+      for (const [id, i] of pathSteps(tree, "ITRF", f)) {
+        out.set(id, Math.min(i, out.get(id) ?? i));
+      }
+    }
+    return out;
+  }, [tree, selectedFrame, reference, resultFrames]);
   const eop = model.clock.eop;
-  return (
+  const selectedNode =
+    tree && selectedFrame
+      ? pathFromRoot(tree, selectedFrame).at(-1)
+      : undefined;
+  const list = (
     <div className="fx-tab-body">
       <div className="fx-tour-prompt">
         <Typography variant="body-sm" color="textSecondary" render={<p />}>
           New to frames? Six stops, about two minutes.
         </Typography>
         <Button
+          ref={tourButton}
           variant="outlined"
           size="small"
           startIcon={<Icon href={svgPathAnimationSingle} />}
@@ -347,40 +586,6 @@ export function Explore({
           Take the tour
         </Button>
       </div>
-
-      <Section title="Frames" aside={<FamilyKey />}>
-        {model.tree ? (
-          <>
-            <FrameTree
-              tree={model.tree}
-              selected={selectedFrame}
-              onPath={onPath}
-              onSelect={onSelectFrame}
-              onShow={(id) => actions.showOnGlobe({ frame: id })}
-            />
-            {path.length > 1 ? (
-              <Walk model={model} path={path} actions={actions} />
-            ) : (
-              <Typography
-                variant="body-sm"
-                color="textSecondary"
-                render={<p />}
-                className="fx-hint"
-              >
-                Select a frame to walk its edges from the root, with each
-                edge&rsquo;s math, data and accuracy.
-              </Typography>
-            )}
-          </>
-        ) : (
-          <div className="fx-empty" role="status">
-            <CircularProgress size={16} aria-hidden />
-            <Typography variant="body-sm" render={<p />}>
-              {model.treeNote}
-            </Typography>
-          </div>
-        )}
-      </Section>
 
       <Section title="On the globe">
         <ul className="fx-overlays">
@@ -394,14 +599,54 @@ export function Explore({
           ))}
         </ul>
         <Typography variant="caption-lg" color="textSecondary" render={<p />}>
-          Accuracies repeat in the globe&rsquo;s legend; {model.triadScale}.
+          Each line is the overlay&rsquo;s composed accuracy, as the
+          globe&rsquo;s legend states it; {model.triadScale}.
         </Typography>
+      </Section>
+
+      <Section title="Frames" aside={<FamilyKey />}>
+        {resultFrames && !selectedFrame && (
+          <p className="fx-filter">
+            <Typography variant="body-sm" render={<span />}>
+              Frames used by{" "}
+              <span className="fx-strong">{resultFrames.label}</span>
+            </Typography>
+            <Button size="small" variant="text" onClick={onBackToResult}>
+              Back to the result
+            </Button>
+          </p>
+        )}
+        {tree ? (
+          <FrameTree
+            tree={tree}
+            selected={selectedFrame}
+            onPath={onPath}
+            onSelect={onSelectFrame}
+            onShow={(id) => actions.showOnGlobe({ frame: id })}
+          />
+        ) : (
+          <div className="fx-empty" role="status">
+            <CircularProgress size={16} aria-hidden />
+            <Typography variant="body-sm" render={<p />}>
+              {model.treeNote}
+            </Typography>
+          </div>
+        )}
       </Section>
 
       <Section title="Clock">
         <div className="fx-clock">
           <div>
             <p className="fx-clock-time fx-num">{utc(model.clock.utc)}</p>
+            <Typography
+              variant="caption-lg"
+              color="textSecondary"
+              render={<p />}
+            >
+              {model.clock.local
+                ? `${model.clock.local} on the time controls over the globe, which show the place's local time`
+                : "The same instant as the time controls over the globe, which show the place's local time"}
+            </Typography>
             <Typography
               variant="caption-lg"
               render={<p />}
@@ -421,10 +666,61 @@ export function Explore({
         </div>
         <Typography variant="caption-lg" color="textSecondary" render={<p />}>
           Set the time with the controls over the globe; triads and
-          Orion&rsquo;s path follow it. {FAMILY_INFO.trajectory.label} data
-          covers 2026-04-02 to 04-10.
+          Orion&rsquo;s path follow it. Orion&rsquo;s data covers 2026-04-02 to
+          04-10.
         </Typography>
       </Section>
     </div>
+  );
+  return (
+    <Split
+      list={list}
+      sheetKey={selectedFrame}
+      sheet={
+        tree && selectedNode
+          ? (controls) => (
+              <>
+                <SheetHead
+                  controls={controls}
+                  onClose={() => onSelectFrame(undefined)}
+                  closeLabel="Close the walk"
+                >
+                  <ReferenceSelect
+                    reference={reference}
+                    setReference={setReference}
+                  />
+                  <Typography
+                    variant="body-md"
+                    render={<h3 />}
+                    className="fx-strong"
+                  >
+                    to {selectedNode.label}
+                  </Typography>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<Icon href={svgFitToView} />}
+                    onClick={() =>
+                      actions.showOnGlobe({ frame: selectedNode.id })
+                    }
+                  >
+                    Show on globe
+                  </Button>
+                </SheetHead>
+                <div className="fx-sheet-body">
+                  <Walk
+                    model={model}
+                    tree={tree}
+                    target={selectedNode.id}
+                    reference={reference}
+                    setReference={setReference}
+                    actions={actions}
+                  />
+                </div>
+              </>
+            )
+          : undefined
+      }
+    />
   );
 }

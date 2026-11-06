@@ -37,8 +37,8 @@ export const FAMILY_INFO: Record<
   moon: {
     label: "Moon-fixed",
     holds: "frames that turn with the Moon: MOON_ME, MOON_PA and lunar sites",
-    onDark: "#eec469",
-    onLight: "#836412",
+    onDark: "#bfc8d4",
+    onLight: "#525f6f",
   },
   engineering: {
     label: "Engineering",
@@ -97,3 +97,15 @@ export const EDGE_LABEL: Record<EdgeKind, string> = {
   trajectory: "trajectory",
   "proj-operation": "PROJ operation",
 };
+
+/** Every node's family, by id. */
+export function familyMap(tree: TreeNode): Map<string, Family> {
+  const out = new Map<string, Family>();
+  const walk = (n: TreeNode, parent: Family | undefined) => {
+    const f = familyOf(n, parent);
+    out.set(n.id, f);
+    n.children.forEach((c) => walk(c, f));
+  };
+  walk(tree, undefined);
+  return out;
+}
