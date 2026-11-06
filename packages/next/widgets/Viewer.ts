@@ -28,12 +28,10 @@ import {
   InspectController,
   eastNorthUpToFixedFrame,
   fromDegrees,
-  createSkyState,
   loadFrameData,
   loadIonMoonMap,
   mat4,
   resolveIonAsset,
-  skyState,
   vec3,
   type EngineOptions,
   type FrameData,
@@ -50,6 +48,7 @@ import {
   type ViewLink,
   type World,
 } from "../src/index.ts";
+import { FrameSky } from "../src/frames/frameSky.ts";
 import { attachCredits, type CreditsHandle } from "./credits.ts";
 import { inspectEngine } from "./engine.ts";
 import {
@@ -156,11 +155,10 @@ export interface ViewerOptions {
   maxInstances?: number;
 }
 
-/** 1.x's moon map (equirectangular, the near side in the middle). */
-const scratchSky = createSkyState();
 /** The Moon map's attributions' owner (`addAttributions`). */
 const MOON_CREDIT = {};
 
+/** 1.x's moon map (equirectangular, the near side in the middle). */
 const MOON_MAP = new URL(
   "../../engine/Source/Assets/Textures/moonSmall.jpg",
   import.meta.url,
@@ -248,8 +246,13 @@ export class Viewer {
   /** The scene's time: the sun follows it unless placed by `setSun`. */
   readonly clock: Clock;
   private sunFromClock_ = true;
-  /** The loaded frames data (`ViewerOptions.frameData`), once it arrives. */
-  private frameData_: FrameData | undefined;
+  /**
+   * The sky from the loaded frames data (`ViewerOptions.frameData`, once it
+   * arrives, or `setFrameData`).
+   */
+  private readonly frameSky = new FrameSky();
+  /** Counts `setFrameData` calls, so a load still in flight does not undo one. */
+  private frameDataSets = 0;
   /**
    * Always a promise: it resolves to the data, or to `undefined`, silently
    * when no `ViewerOptions.frameData` was given and after one `console.warn`
@@ -366,13 +369,14 @@ export class Viewer {
       this.frameData = Promise.resolve(undefined);
     } else if (typeof frameData !== "string") {
       // Already loaded: apply it now, so the first frame draws the real sky.
-      this.frameData_ = frameData;
+      this.frameSky.setData(frameData);
       this.frameData = Promise.resolve(frameData);
     } else {
+      const sets = this.frameDataSets;
       this.frameData = loadFrameData(frameData).then(
         (data) => {
-          if (!this.destroyed) {
-            this.frameData_ = data;
+          if (!this.destroyed && sets === this.frameDataSets) {
+            this.frameSky.setData(data);
             this.applyClockSky();
             this.engine.requestRender();
           }
@@ -815,7 +819,7 @@ export class Viewer {
    * Moon's place and, while the sun follows the clock, the sun.
    */
   private applyClockSky(): void {
-    const sky = skyState(this.clock.time, this.frameData_, scratchSky);
+    const sky = this.frameSky.at(this.clock.time);
     this.engine.icrfToFixed.set(sky.icrfToFixed);
     if (this.sunFromClock_) {
       this.engine.sunDirection.set(sky.sunDirection);
@@ -823,6 +827,22 @@ export class Viewer {
     if (this.moon) {
       (this.engine.moonPosition ??= new Float64Array(3)).set(sky.moonPosition);
       (this.engine.moonAxes ??= new Float64Array(6)).set(sky.moonAxes);
+    }
+  }
+
+  /**
+   * Give the sky frames data after creation, as `ViewerOptions.frameData`
+   * does at creation: the Moon and the Sun are placed with DE440 from the
+   * next frame. `undefined` returns to the analytic models. A load started by
+   * a `ViewerOptions.frameData` URL that has not finished is dropped in favor
+   * of this call; `frameData` (the promise) still reports the creation option.
+   */
+  setFrameData(data: FrameData | undefined): void {
+    this.frameDataSets++;
+    this.frameSky.setData(data);
+    if (!this.destroyed) {
+      this.applyClockSky();
+      this.engine.requestRender();
     }
   }
 
