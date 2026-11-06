@@ -107,6 +107,8 @@ export interface RigidVsExactParams {
   readonly from: readonly [number, number];
   readonly to: readonly [number, number];
   readonly samples: number;
+  /** The rigid line drawn at exact + k (rigid − exact) (display only, S-C1; default 1). */
+  readonly exaggeration?: number;
 }
 
 /** `distortion`: Tissot ellipses and combined-factor contours over `extent`. */

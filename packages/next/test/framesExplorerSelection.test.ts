@@ -86,7 +86,7 @@ describe("URL params (R15)", () => {
     expect(parseSelection(undefined, known)).toEqual({ kind: "none" });
     expect(
       parseParams({ lens: "astrology", tour: "nowhere", select: "x" }, known),
-    ).toEqual({ selection: { kind: "none" }, lens: "all" });
+    ).toEqual({ selection: { kind: "none" }, lens: "all", against: "ITRF" });
   });
 
   it("keeps a well-formed id when nothing is known yet (a deep link before the run)", () => {
@@ -333,5 +333,39 @@ describe("a deep link into a group that hasn't run (partial runs, R15)", () => {
     expect(groupOfResult("space.lunar-time")).toBe("space");
     expect(groupOfResult("measurement.grid-to-ground")).toBe("measurement");
     expect(groupOfResult("nowhere.at-all")).toBeUndefined();
+  });
+});
+
+describe("the walk's reference in the shared view (S-I5, R15)", () => {
+  it("round-trips against= and leaves the default (ITRF) out", () => {
+    for (const against of ["ITRF", "GCRF", "ICRF"] as const) {
+      const p = formatParams({
+        selection: { kind: "frame", id: "MOON_PA" },
+        lens: "all",
+        against,
+      });
+      expect(p.against).toBe(against === "ITRF" ? undefined : against);
+      const clean = Object.fromEntries(
+        Object.entries(p).filter(
+          (e): e is [string, string] => e[1] !== undefined,
+        ),
+      );
+      expect(parseParams(clean).against).toBe(against);
+    }
+    expect(parseParams({ against: "WGS84" }).against).toBe("ITRF");
+  });
+
+  it("is kept by the store, and notifies when it changes", () => {
+    const store = new ViewStore();
+    const listener = vi.fn();
+    store.subscribe(listener);
+    expect(store.get().against).toBe("ITRF");
+    store.setAgainst("ICRF");
+    expect(store.get().against).toBe("ICRF");
+    expect(listener).toHaveBeenCalledTimes(1);
+    store.setAgainst("ICRF");
+    expect(listener).toHaveBeenCalledTimes(1);
+    store.apply(parseParams({ against: "GCRF" }));
+    expect(store.get().against).toBe("GCRF");
   });
 });

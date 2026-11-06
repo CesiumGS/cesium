@@ -204,6 +204,28 @@ describe("rigidVsExact", () => {
     }
   });
 
+  it("draws the separation exaggerated when asked (display only, S-C1), keeping the true sag", () => {
+    const f = site();
+    const samples = 10;
+    const plain = rigidVsExact(f, [0, 0], [20_000, 0], samples);
+    const k = 50;
+    const big = rigidVsExact(f, [0, 0], [20_000, 0], samples, {
+      exaggeration: k,
+    });
+    expect(big.exact).toEqual(plain.exact);
+    expect(big.sagAtEnd).toBe(plain.sagAtEnd);
+    for (let i = 0; i <= samples; i++) {
+      for (let c = 0; c < 3; c++) {
+        const e = plain.exact[3 * i + c]!;
+        const want = e + k * (plain.rigid[3 * i + c]! - e);
+        expect(Math.abs(big.rigid[3 * i + c]! - want)).toBeLessThan(1e-6);
+      }
+    }
+    expect(() =>
+      rigidVsExact(f, [0, 0], [1, 0], 2, { exaggeration: 0 }),
+    ).toThrow(/exaggeration/);
+  });
+
   it("rejects a sample count that is not a whole number of segments", () => {
     expect(() => rigidVsExact(site(), [0, 0], [1, 0], 0)).toThrow(/samples/);
     expect(() => rigidVsExact(site(), [0, 0], [1, 0], 2.5)).toThrow(/samples/);

@@ -23,6 +23,10 @@ export const LENS_CHOICES: readonly LensChoice[] = ["all", ...LENSES];
 
 export type Tab = "explore" | "verify" | "report";
 
+/** The walk's reference: what a frame's composed accuracy is stated against (S-I5). */
+export type Against = "ITRF" | "GCRF" | "ICRF";
+export const AGAINST: readonly Against[] = ["ITRF", "GCRF", "ICRF"];
+
 /** What the page knows exists, to check selections against. */
 export interface Known {
   /** The frame tree's node ids. */
@@ -48,6 +52,8 @@ export interface Known {
 export interface ViewParams {
   selection: Selection;
   lens: LensChoice;
+  /** The walk's reference (`against=`; ITRF, the default, is left out). */
+  against: Against;
   /** A tour stop's id. */
   tour?: string;
   /** R18: prefills "Try your own"; never fetches by itself. */
@@ -85,6 +91,7 @@ export function parseParams(
   known: Known = {},
 ): ViewParams {
   const lens = LENS_CHOICES.find((l) => l === params.lens) ?? "all";
+  const against = AGAINST.find((a) => a === params.against) ?? "ITRF";
   const tour = params.tour;
   const tourOk =
     tour !== undefined &&
@@ -94,6 +101,7 @@ export function parseParams(
   return {
     selection: parseSelection(params.select, known),
     lens,
+    against,
     ...(tourOk && { tour }),
     ...(imodel !== undefined && IMODEL.test(imodel) && { imodel }),
   };
@@ -104,6 +112,7 @@ export function formatParams(view: {
   selection: Selection;
   lens: LensChoice;
   tour?: string;
+  against?: Against;
 }): Record<string, string | undefined> {
   return {
     select:
@@ -112,6 +121,10 @@ export function formatParams(view: {
         : `${view.selection.kind}:${view.selection.id}`,
     lens: view.lens === "all" ? undefined : view.lens,
     tour: view.tour,
+    against:
+      view.against === undefined || view.against === "ITRF"
+        ? undefined
+        : view.against,
   };
 }
 
@@ -160,12 +173,14 @@ const same = (a: Selection, b: Selection): boolean =>
 export interface View {
   selection: Selection;
   lens: LensChoice;
+  /** The walk's reference, shared by the panel's walk and the globe's path. */
+  against: Against;
   /** The tour stop shown, by id; undefined when the tour isn't on. */
   tour?: string;
 }
 
 export class ViewStore {
-  private view: View = { selection: NONE, lens: "all" };
+  private view: View = { selection: NONE, lens: "all", against: "ITRF" };
   private known: Known = {};
   private readonly listeners = new Set<() => void>();
 
@@ -178,6 +193,7 @@ export class ViewStore {
     if (
       same(prev.selection, v.selection) &&
       prev.lens === v.lens &&
+      prev.against === v.against &&
       prev.tour === v.tour
     ) {
       return;
@@ -199,10 +215,15 @@ export class ViewStore {
     this.set({ ...this.view, lens });
   }
 
+  setAgainst(against: Against): void {
+    this.set({ ...this.view, against });
+  }
+
   setTour(tour: string | undefined): void {
     const rest: View = {
       selection: this.view.selection,
       lens: this.view.lens,
+      against: this.view.against,
     };
     this.set(tour === undefined ? rest : { ...rest, tour });
   }
@@ -212,6 +233,7 @@ export class ViewStore {
     this.set({
       selection: params.selection,
       lens: params.lens,
+      against: params.against,
       ...(params.tour !== undefined && { tour: params.tour }),
     });
   }

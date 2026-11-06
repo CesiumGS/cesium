@@ -6,10 +6,21 @@ import type { AccuracyTerm } from "../../src/measure/accuracy.ts";
 import type { Sampling } from "./overlays.ts";
 import { length, seconds } from "./panel/format.ts";
 import type { ComposedView, OrionFrame } from "./panel/model.ts";
+import type { TrajectoryInfo } from "./protocol.ts";
+import type { TreeNode } from "./tree.ts";
 
-/** A term's source as the legend says it. */
+/** A term's source as the legend's detail says it. */
 const TERM_NAME: Record<string, string> = {
   coordinateScale: "the unstated time scale (TDB or TT; taken as TDB)",
+  trajectory: "the OEM's covariance",
+  ephemeris: "DE440",
+  earthOrientation: "Earth orientation",
+  projection: "the PROJ operation",
+};
+
+/** A term as the one-line qualifier (S-I7). */
+const TERM_SHORT: Record<string, string> = {
+  coordinateScale: "taken as TDB",
   trajectory: "the OEM's covariance",
   ephemeris: "DE440",
   earthOrientation: "Earth orientation",
@@ -20,31 +31,66 @@ const TERM_NAME: Record<string, string> = {
 const plainNote = (t: AccuracyTerm): string =>
   t.note.replace(/^End [ab]: /, "").replace(/^Trajectory "[^"]*": /, "");
 
+/** "2026-04-06T23:00:00.000Z" as "2026-04-06 23:00 UTC". */
+const whenOf = (utc: string): string =>
+  utc.replace("T", " ").replace(/:\d\d(\.\d+)?Z$/, " UTC");
+
 /**
- * Orion's legend line (R8) from the worker's statement against ITRF at the
- * clock's instant (`TrajectoryInfo.composed.ITRF`): the total, when, its
- * largest term, the frame it's drawn in and how it was sampled. Not bounded
- * names the term with no size. `caution` marks a total resting on an
- * assumption (the OEM doesn't state its time scale).
+ * Orion's legend line (R8, S-I7) from the worker's statement against ITRF
+ * at the clock's instant (`TrajectoryInfo.composed.ITRF`): `accuracy` is one
+ * line, the total, its 1σ and one qualifier (its largest term); `detail`
+ * says when, against what, why and the frame drawn in; `drawing` is how the
+ * path was sampled. Not bounded names the term with no size; `error` (the
+ * last request failed) says so rather than waiting. `caution` marks a total
+ * resting on an assumption (the OEM doesn't state its time scale).
  */
 export function orionLegend(
   view: ComposedView | undefined,
-  options: { drawIn: OrionFrame; utc: string; sampling?: Sampling },
-): { accuracy: string; caution: boolean; unbounded: boolean } {
-  const drawn = `drawn in ${options.drawIn}${samplingText(options.sampling)}`;
+  options: {
+    drawIn: OrionFrame;
+    utc: string;
+    sampling?: Sampling;
+    error?: string;
+  },
+): {
+  accuracy: string;
+  detail: string;
+  drawing?: string;
+  caution: boolean;
+  unbounded: boolean;
+} {
+  const drawn = `Drawn in ${options.drawIn}.`;
+  const when = whenOf(options.utc);
+  const drawing = samplingText(options.sampling);
+  const extra = drawing !== undefined ? { drawing } : {};
+  if (options.error !== undefined) {
+    return {
+      accuracy: "not bounded: Orion's statement didn't come",
+      detail: `Orion's statement at ${when} failed: ${options.error}. It is asked for again when the clock moves. ${drawn}`,
+      ...extra,
+      caution: false,
+      unbounded: true,
+    };
+  }
   if (view === undefined) {
     return {
-      accuracy: `waiting for Orion's statement from the worker; ${drawn}`,
+      accuracy: "waiting for Orion's statement from the worker",
+      detail: drawn,
+      ...extra,
       caution: false,
       unbounded: false,
     };
   }
   const { statement } = view;
-  const when = options.utc.replace("T", " ").replace(/:\d\d(\.\d+)?Z$/, " UTC");
   if (statement.meters === undefined) {
     const open = statement.terms.find((t) => t.meters === undefined);
+    const why = open
+      ? plainNote(open)
+      : (statement.warnings[0] ?? "a term has no size");
     return {
-      accuracy: `not bounded: ${open ? plainNote(open) : (statement.warnings[0] ?? "a term has no size")}; ${drawn}`,
+      accuracy: `not bounded: ${why}`,
+      detail: `At ${when}, against the Earth's centre: not bounded, ${why}. ${drawn}`,
+      ...extra,
       caution: false,
       unbounded: true,
     };
@@ -56,20 +102,23 @@ export function orionLegend(
         : a,
     undefined,
   );
-  const mostly =
-    largest !== undefined && largest.meters! > 0
-      ? `, mostly ${TERM_NAME[largest.source] ?? largest.source}`
-      : "";
+  const lead =
+    largest !== undefined && largest.meters! > 0 ? largest : undefined;
+  const total = `±${length(statement.meters, 2)} (1σ)`;
   return {
-    accuracy: `±${length(statement.meters, 2)} (1σ) at ${when} against the Earth's centre${mostly}; ${drawn}`,
+    accuracy: lead
+      ? `${total}, ${TERM_SHORT[lead.source] ?? lead.source}`
+      : total,
+    detail: `At ${when}, against the Earth's centre${lead ? `: mostly ${TERM_NAME[lead.source] ?? lead.source}` : ""}. ${drawn}`,
+    ...extra,
     caution: statement.terms.some((t) => t.source === "coordinateScale"),
     unbounded: false,
   };
 }
 
-function samplingText(sampling: Sampling | undefined): string {
+function samplingText(sampling: Sampling | undefined): string | undefined {
   if (sampling === undefined) {
-    return "";
+    return undefined;
   }
   const capped =
     sampling.capped === "time"
@@ -77,7 +126,38 @@ function samplingText(sampling: Sampling | undefined): string {
       : sampling.capped === "samples"
         ? " (capped by its sample budget: coarser in places)"
         : "";
-  return `, ${sampling.samples.toLocaleString("en-US")} samples, finest ${seconds(sampling.finest)}${capped}`;
+  return `${sampling.samples.toLocaleString("en-US")} samples, finest ${seconds(sampling.finest)}${capped}`;
+}
+
+/**
+ * Orion's node in the tree and the frame it hangs under: the worker's, or,
+ * when the last request failed, a node that says so (its accuracy not
+ * stated, with the error), under the reference it had (EME2000, the OEM's,
+ * before any came). Undefined before anything came.
+ */
+export function orionNode(
+  info: TrajectoryInfo | undefined,
+  error: string | undefined,
+  utc: string,
+): { node: TreeNode; parent: string } | undefined {
+  if (error === undefined) {
+    return info && { node: info.node, parent: info.parent };
+  }
+  return {
+    parent: info?.parent ?? "EME2000",
+    node: {
+      id: info?.node.id ?? "orion",
+      label: info?.node.label ?? "Orion",
+      edge: {
+        kind: "trajectory",
+        detail: info?.node.edge.detail ?? "trajectory (the Artemis II OEM)",
+        accuracy: {
+          note: `not stated: Orion's statement at ${whenOf(utc)} failed: ${error}`,
+        },
+      },
+      children: [],
+    },
+  };
 }
 
 /**

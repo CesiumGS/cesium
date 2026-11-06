@@ -73,7 +73,7 @@ const gridToGroundCase = stressCase(
             kind: "input",
             label:
               "Design line, California zone 3 (EPSG:6420+6360, US survey feet)",
-            value: `${length} ftUS east along the site grid, from (2000, 1000, 25)`,
+            value: `${length.toLocaleString("en-US")} ftUS east along the site grid, from (2000, 1000, 25)`,
           },
           {
             kind: "step",

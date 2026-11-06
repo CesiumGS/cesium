@@ -6,9 +6,11 @@ import { describe, expect, it, vi } from "vitest";
 import {
   latestOnly,
   orionLegend,
+  orionNode,
   planeFraming,
 } from "../examples/frames-explorer/orion.ts";
 import type { ComposedView } from "../examples/frames-explorer/panel/model.ts";
+import type { TrajectoryInfo } from "../examples/frames-explorer/protocol.ts";
 
 /** Orion's statement against ITRF near the flyby, as the worker gives it. */
 const near: ComposedView = {
@@ -35,15 +37,17 @@ const near: ComposedView = {
 };
 
 describe("orionLegend (R8: computed, not fixed text)", () => {
-  it("states the total at the instant, its largest term and the frame drawn in", () => {
+  it("states the total and its one qualifier in one line, the rest as detail", () => {
     const l = orionLegend(near, {
       drawIn: "GCRF",
       utc: "2026-04-06T23:00:00Z",
     });
-    expect(l.accuracy).toMatch(/^±10 m \(1σ\)/);
-    expect(l.accuracy).toContain("2026-04-06 23:00 UTC");
-    expect(l.accuracy).toMatch(/mostly the unstated time scale/);
-    expect(l.accuracy).toMatch(/drawn in GCRF/);
+    // S-I7: one line, the figure, its 1σ and one qualifier.
+    expect(l.accuracy).toBe("±10 m (1σ), taken as TDB");
+    expect(l.detail).toContain("2026-04-06 23:00 UTC");
+    expect(l.detail).toMatch(/against the Earth's centre/);
+    expect(l.detail).toMatch(/mostly the unstated time scale/);
+    expect(l.detail).toMatch(/Drawn in GCRF/);
     // It rests on an assumption (TDB taken for an unstated scale).
     expect(l.caution).toBe(true);
     expect(l.unbounded).toBe(false);
@@ -65,25 +69,25 @@ describe("orionLegend (R8: computed, not fixed text)", () => {
       drawIn: "ITRF",
       utc: "2026-04-03T00:00:00Z",
     });
-    expect(l.accuracy).toMatch(/^±330 mm \(1σ\)/);
-    expect(l.accuracy).toMatch(/mostly the OEM's covariance/);
-    expect(l.accuracy).toMatch(/drawn in ITRF/);
+    expect(l.accuracy).toBe("±330 mm (1σ), the OEM's covariance");
+    expect(l.detail).toMatch(/mostly the OEM's covariance/);
+    expect(l.detail).toMatch(/Drawn in ITRF/);
   });
 
-  it("says how it was sampled, and when a budget capped it", () => {
+  it("gives the drawing's sampling a line of its own, saying when a budget capped it", () => {
     const l = orionLegend(near, {
       drawIn: "MOON_ME",
       utc: "2026-04-06T23:00:00Z",
       sampling: { samples: 730, finest: 23.75 },
     });
-    expect(l.accuracy).toMatch(/730 samples, finest 24 s/);
-    expect(l.accuracy).not.toMatch(/capped/);
+    expect(l.accuracy).not.toMatch(/samples/);
+    expect(l.drawing).toBe("730 samples, finest 24 s");
     const capped = orionLegend(near, {
       drawIn: "MOON_ME",
       utc: "2026-04-06T23:00:00Z",
       sampling: { samples: 8000, finest: 5, capped: "time" },
     });
-    expect(capped.accuracy).toMatch(/capped by its time budget/);
+    expect(capped.drawing).toMatch(/capped by its time budget/);
   });
 
   it("reads not bounded, naming the term, when the total is undefined", () => {
@@ -117,6 +121,65 @@ describe("orionLegend (R8: computed, not fixed text)", () => {
     });
     expect(l.accuracy).toMatch(/waiting/);
     expect(l.unbounded).toBe(false);
+  });
+
+  it("says the statement failed, and why, instead of waiting forever", () => {
+    for (const view of [undefined, near]) {
+      const l = orionLegend(view, {
+        drawIn: "GCRF",
+        utc: "2026-05-01T00:00:00Z",
+        error: "the instant is outside Orion's data (2026-04-02 to 2026-04-11)",
+      });
+      expect(l.unbounded).toBe(true);
+      expect(l.accuracy).toMatch(/^not bounded: Orion's statement/);
+      expect(l.detail).toMatch(/2026-05-01 00:00 UTC/);
+      expect(l.detail).toMatch(/outside Orion's data/);
+    }
+  });
+});
+
+describe("orionNode (Orion in the tree)", () => {
+  const info: TrajectoryInfo = {
+    node: {
+      id: "orion",
+      label: "Orion",
+      edge: {
+        kind: "trajectory",
+        detail: "trajectory (OEM)",
+        accuracy: { meters: 0.278, note: "position sigma" },
+      },
+      children: [],
+    },
+    parent: "EME2000",
+    composed: { ITRF: near, GCRF: near, ICRF: near },
+    itrf: [1, 2, 3],
+    at: 0,
+  };
+
+  it("is the worker's node under its reference", () => {
+    expect(orionNode(info, undefined, "2026-04-06T23:00:00Z")).toEqual({
+      node: info.node,
+      parent: "EME2000",
+    });
+  });
+
+  it("shows a failed statement on the node, with or without an earlier one", () => {
+    for (const before of [info, undefined]) {
+      const n = orionNode(before, "boom", "2026-05-01T00:00:00Z")!;
+      expect(n.parent).toBe("EME2000");
+      expect(n.node.id).toBe("orion");
+      expect(n.node.edge.kind).toBe("trajectory");
+      expect(n.node.edge.accuracy.meters).toBeUndefined();
+      expect(n.node.edge.accuracy.note).toMatch(
+        /not stated: .*2026-05-01 00:00 UTC.*boom/,
+      );
+    }
+  });
+
+  it("is absent before anything came", () => {
+    expect(orionNode(undefined, undefined, "2026-04-06T23:00:00Z")).toBe(
+      undefined,
+    );
   });
 });
 
