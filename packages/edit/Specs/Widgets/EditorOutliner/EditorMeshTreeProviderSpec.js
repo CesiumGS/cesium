@@ -47,8 +47,8 @@ describe("Widgets/EditorOutliner/EditorMeshTreeProvider", function () {
 
   describe("getChildren", function () {
     it("returns the editor's meshes as the root items", function () {
-      const first = {};
-      const second = {};
+      const first = { name: "first" };
+      const second = { name: "second" };
       editor.addMesh(first);
       editor.addMesh(second);
       provider = new EditorMeshTreeProvider(editor);
@@ -58,7 +58,7 @@ describe("Widgets/EditorOutliner/EditorMeshTreeProvider", function () {
 
     it("includes meshes added later", function () {
       provider = new EditorMeshTreeProvider(editor);
-      const mesh = {};
+      const mesh = { name: "mesh" };
 
       editor.addMesh(mesh);
 
@@ -66,8 +66,8 @@ describe("Widgets/EditorOutliner/EditorMeshTreeProvider", function () {
     });
 
     it("excludes removed meshes", function () {
-      const first = {};
-      const second = {};
+      const first = { name: "first" };
+      const second = { name: "second" };
       editor.addMesh(first);
       editor.addMesh(second);
       provider = new EditorMeshTreeProvider(editor);
@@ -78,7 +78,7 @@ describe("Widgets/EditorOutliner/EditorMeshTreeProvider", function () {
     });
 
     it("returns no children for a mesh", function () {
-      const mesh = {};
+      const mesh = { name: "mesh" };
       editor.addMesh(mesh);
       provider = new EditorMeshTreeProvider(editor);
 
@@ -88,11 +88,11 @@ describe("Widgets/EditorOutliner/EditorMeshTreeProvider", function () {
 
   describe("getLabel", function () {
     it("numbers meshes in the order they were added", function () {
-      const first = {};
-      const second = {};
+      const first = { name: "first" };
+      const second = { name: "second" };
       editor = createEditor([first, second]);
       provider = new EditorMeshTreeProvider(editor);
-      const third = {};
+      const third = { name: "third" };
       editor.addMesh(third);
 
       expect(provider.getLabel(first)).toBe("Mesh 1");
@@ -101,13 +101,13 @@ describe("Widgets/EditorOutliner/EditorMeshTreeProvider", function () {
     });
 
     it("keeps each mesh's number when others are removed", function () {
-      const first = {};
-      const second = {};
+      const first = { name: "first" };
+      const second = { name: "second" };
       editor = createEditor([first, second]);
       provider = new EditorMeshTreeProvider(editor);
 
       editor.removeMesh(first);
-      const third = {};
+      const third = { name: "third" };
       editor.addMesh(third);
 
       expect(provider.getLabel(second)).toBe("Mesh 2");
@@ -117,7 +117,7 @@ describe("Widgets/EditorOutliner/EditorMeshTreeProvider", function () {
 
   describe("getMesh", function () {
     it("returns the mesh itself", function () {
-      const mesh = {};
+      const mesh = { name: "mesh" };
       editor.addMesh(mesh);
       provider = new EditorMeshTreeProvider(editor);
 
@@ -137,7 +137,7 @@ describe("Widgets/EditorOutliner/EditorMeshTreeProvider", function () {
     });
 
     it("is raised with undefined when a mesh is removed", function () {
-      const mesh = {};
+      const mesh = { name: "mesh" };
       editor.addMesh(mesh);
       provider = new EditorMeshTreeProvider(editor);
       const listener = jasmine.createSpy("changed");
@@ -150,7 +150,7 @@ describe("Widgets/EditorOutliner/EditorMeshTreeProvider", function () {
 
     it("is raised after the meshes are up to date", function () {
       provider = new EditorMeshTreeProvider(editor);
-      const mesh = {};
+      const mesh = { name: "mesh" };
       const listener = jasmine.createSpy("changed").and.callFake(() => {
         expect(provider.getChildren()).toEqual([mesh]);
         expect(provider.getLabel(mesh)).toBe("Mesh 1");
