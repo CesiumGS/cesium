@@ -754,6 +754,144 @@ describe(
 
         expect(renderInstanceCounts(mesh)).toEqual([2]);
       });
+
+      describe("meshActiveChanged", function () {
+        async function createEditorWithListener() {
+          const editor = await MeshEditor.addToScene(scene);
+          const mesh = editor.addMesh(createGeometrySource(square));
+          scene.renderForSpecs();
+          const listener = jasmine.createSpy("meshActiveChanged");
+          editor.meshActiveChanged.addEventListener(listener);
+          return { editor, mesh, listener };
+        }
+
+        it("is raised on the next frame when a mesh becomes active", async function () {
+          const { editor, mesh, listener } = await createEditorWithListener();
+
+          editor.setMeshActive(mesh);
+          expect(listener).not.toHaveBeenCalled();
+          scene.renderForSpecs();
+
+          expect(listener).toHaveBeenCalledOnceWith(mesh, true);
+        });
+
+        it("is raised on the next frame when a mesh becomes inactive", async function () {
+          const { editor, mesh, listener } = await createEditorWithListener();
+          editor.setMeshActive(mesh);
+          scene.renderForSpecs();
+          listener.calls.reset();
+
+          editor.setMeshInactive(mesh);
+          expect(listener).not.toHaveBeenCalled();
+          scene.renderForSpecs();
+
+          expect(listener).toHaveBeenCalledOnceWith(mesh, false);
+        });
+
+        it("is raised once per change", async function () {
+          const { editor, mesh, listener } = await createEditorWithListener();
+
+          editor.setMeshActive(mesh);
+          editor.setMeshActive(mesh);
+          scene.renderForSpecs();
+          scene.renderForSpecs();
+
+          expect(listener).toHaveBeenCalledOnceWith(mesh, true);
+        });
+
+        it("is not raised for a mesh set to the state it's already in", async function () {
+          const { editor, mesh, listener } = await createEditorWithListener();
+
+          editor.setMeshInactive(mesh);
+          scene.renderForSpecs();
+
+          expect(listener).not.toHaveBeenCalled();
+        });
+
+        it("is not raised for a change undone before the next frame", async function () {
+          const { editor, mesh, listener } = await createEditorWithListener();
+
+          editor.setMeshActive(mesh);
+          editor.setMeshInactive(mesh);
+          scene.renderForSpecs();
+
+          expect(listener).not.toHaveBeenCalled();
+        });
+
+        it("is not raised for a removed mesh", async function () {
+          const { editor, mesh, listener } = await createEditorWithListener();
+          editor.setMeshActive(mesh);
+          scene.renderForSpecs();
+          listener.calls.reset();
+
+          editor.removeMesh(mesh);
+          scene.renderForSpecs();
+
+          expect(listener).not.toHaveBeenCalled();
+        });
+
+        it("is raised after every changed mesh is synced", async function () {
+          const { editor, mesh, listener } = await createEditorWithListener();
+          const other = editor.addMesh(createGeometrySource(square));
+          editor.setMeshActive(mesh);
+          editor.setMeshActive(other);
+          const setShownComponents = spyOn(
+            other._renderer,
+            "setShownComponents",
+          ).and.callThrough();
+          listener.and.callFake(() => {
+            expect(setShownComponents).toHaveBeenCalled();
+          });
+
+          scene.renderForSpecs();
+
+          expect(listener.calls.allArgs()).toEqual([
+            [mesh, true],
+            [other, true],
+          ]);
+        });
+
+        it("keeps a listener's changes to meshes in the same frame", async function () {
+          const { editor, mesh, listener } = await createEditorWithListener();
+          const other = editor.addMesh(createGeometrySource(square));
+          listener.and.callFake((changedMesh) => {
+            if (changedMesh === mesh) {
+              editor.setMeshInactive(other);
+            }
+          });
+
+          editor.setMeshActive(mesh);
+          editor.setMeshActive(other);
+          scene.renderForSpecs();
+
+          expect(editor.isMeshActive(other)).toBe(false);
+          expect(listener.calls.allArgs()).toEqual([
+            [mesh, true],
+            [other, true],
+          ]);
+
+          listener.calls.reset();
+          scene.renderForSpecs();
+
+          expect(listener).toHaveBeenCalledOnceWith(other, false);
+        });
+
+        it("is not raised for a mesh a listener removed", async function () {
+          const { editor, mesh, listener } = await createEditorWithListener();
+          const other = editor.addMesh(createGeometrySource(square));
+          listener.and.callFake((changedMesh) => {
+            if (changedMesh === mesh) {
+              editor.removeMesh(other);
+            }
+          });
+
+          editor.setMeshActive(mesh);
+          editor.setMeshActive(other);
+          scene.renderForSpecs();
+
+          expect(listener).toHaveBeenCalledOnceWith(mesh, true);
+        });
+      });
     });
 
     describe("activeTool", function () {
@@ -1129,6 +1267,35 @@ describe(
         click(emptyWindowPosition);
 
         expect(renderOutlineFlags(mesh)).toEqual([false]);
+      });
+
+      it("raises meshActiveChanged for meshes the select tool deactivates", async function () {
+        const { editor, mesh } = await createEditorWithSquare(EditMode.NONE);
+        editor.activeTool = SelectTool.addTo(editor);
+        const listener = jasmine.createSpy("meshActiveChanged");
+        editor.meshActiveChanged.addEventListener(listener);
+
+        click(emptyWindowPosition);
+        expect(listener).not.toHaveBeenCalled();
+        scene.renderForSpecs();
+
+        expect(listener).toHaveBeenCalledOnceWith(mesh, false);
+      });
+
+      it("raises meshActiveChanged for a mesh the select tool activates", async function () {
+        const { editor, mesh } = await createEditorWithSquare(EditMode.NONE);
+        editor.activeTool = SelectTool.addTo(editor);
+        editor.setMeshInactive(mesh);
+        scene.renderForSpecs();
+        const listener = jasmine.createSpy("meshActiveChanged");
+        editor.meshActiveChanged.addEventListener(listener);
+
+        click(getWindowPosition(facePosition));
+        scene.renderForSpecs();
+
+        if (!window.webglStub) {
+          expect(listener).toHaveBeenCalledOnceWith(mesh, true);
+        }
       });
     });
 
