@@ -6394,6 +6394,29 @@ out, because none of them changes a result.
       later (owner's suggestion), can then serve the grids, with CORS and
       possibly cropped tiles, with no engine change. The dev-server cache is
       only the local-development default.
+- **After 4b (owner's request, 2026-11-06): a gallery example for frames
+  and projections.** It shows off the tree-based transforms and the PROJ
+  work, and stress-tests them.
+  - **The tree, visualized live at the clock's time.** It covers:
+    - ICRF, HCRS and EARTH_ICRF;
+    - GCRF (with eq. 11.19) and ITRF;
+    - EME2000;
+    - MOON_ICRF, MOON_ME and MOON_PA;
+    - local ENU and world-transform frames;
+    - trajectories;
+    - engineering frames.
+  - **Each edge labelled with its kind:** Newtonian translation, rotation,
+    the IERS affine edge, or a recorded PROJ operation with its pipeline,
+    grids and accuracy.
+  - **Stress tests run on the page:**
+    - round trips across many CRSs: UTM zones, State Plane in US and
+      international feet, polar stereographic, lunar grids, and site
+      transforms with rotation and scale;
+    - points far from a projection's origin and at zone edges;
+    - instants across a leap second, past the EOP table and in trajectory
+      gaps;
+    - each result shown with its accuracy statement, and pass/fail against
+      the stated tolerance.
 - **Plan 4 or later:** `src/frames/frames.ts` imports its constants from
   `src/measure/constants.ts`, so the frames layer depends on measurement.
   Move the shared constants to a neutral module.
