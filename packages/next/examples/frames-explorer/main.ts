@@ -20,7 +20,6 @@ import { fromDegrees } from "../../src/math/ellipsoid.ts";
 import { earthOrientationSigma } from "../../src/measure/accuracy.ts";
 import { Instant } from "../../src/time/Instant.ts";
 import type { ExampleContext, ExampleRun } from "../types.ts";
-import { composedAccuracy, type PlacedNode } from "./composed.ts";
 import { distortionAccuracy, operationText } from "./legend.ts";
 import {
   NARROW_VIEW,
@@ -29,6 +28,9 @@ import {
   groupRunIds,
 } from "./content.ts";
 import { createScenarioHost } from "./scenarioHost.ts";
+import { createTreeState, findNode } from "./treeState.ts";
+import { createTriadLayer, type LabelBoard } from "./triadLayer.ts";
+import { createWalkPath } from "./walkPath.ts";
 import { createCatalogRuns } from "./catalogRuns.ts";
 import { createFrameData } from "./frameData.ts";
 import { createPageReport } from "./pageReport.ts";
@@ -87,7 +89,6 @@ import {
   hexRgba,
   type Framing,
   type LabelSpec,
-  type TriadSpec,
 } from "./globe.ts";
 import { LoadingModel } from "./loading.ts";
 import {
@@ -104,18 +105,15 @@ import {
   pathPoint,
   planeFraming,
 } from "./orion.ts";
-import { familyMap } from "./panel/families.ts";
 import { radians, sig } from "./panel/format.ts";
 import type {
   ClockView,
-  ComposedAccuracy,
   DistortionCrs,
   OrionFrame,
   OverlayId,
   OverlayPart,
   OverlayView,
   PanelActions,
-  Reference,
   PanelModel,
   ResultExtras,
   ScenarioPanelView,
@@ -126,7 +124,6 @@ import {
   type ClientWorker,
   type DataItem,
   type FrameParams,
-  type OverlayGeometry,
   type TrajectoryInfo,
 } from "./protocol.ts";
 import {
@@ -139,13 +136,7 @@ import {
 } from "./selection.ts";
 import { GROUP_INFO, groupInfo, type Lens } from "./stress/groupInfo.ts";
 import type { StressResult } from "./tests.ts";
-import {
-  branchPath,
-  buildScenarioTree,
-  buildTree,
-  pathToRoot,
-  type TreeNode,
-} from "./tree.ts";
+import { branchPath, pathToRoot } from "./tree.ts";
 import references from "./references.json";
 import { RunQueue } from "./runQueue.ts";
 import { RIGID_FRAME, RIGID_LINE, rigidCopy } from "./rigidLine.ts";
@@ -191,12 +182,6 @@ const ORION_ADAPTIVE = {
   maxSamples: 8000,
   budgetMs: 2000,
 } as const;
-
-/** An origin farther than this from the geocentre is off the scene (the barycentre, the Sun), m. */
-const FAR_ORIGIN = 1e10;
-/** The walk's stub toward an off-scene origin, m (past the Moon). */
-const WALK_STUB = 5e8;
-const AU = 1.495978707e11;
 
 /** The fingerprinted results' ids (R12), which the Reproducibility card runs. */
 const FINGERPRINTED = Object.keys(
@@ -260,8 +245,8 @@ export function run(context: ExampleContext): ExampleRun {
     signal,
     ready: () => {
       frames = frameData.frames();
-      rebuildTree();
-      refreshTriads();
+      treeState.rebuild();
+      triads.refresh();
       startFrameLoop();
       // The scenario a deep link names (R15), at its knobs and time, or the
       // strip's first at its checked setup; then the link's selection (a
@@ -275,7 +260,9 @@ export function run(context: ExampleContext): ExampleRun {
       onView();
     },
     failed: (message) => {
-      treeNote = `The frame tree can't draw: frame data didn't load (${message}). Everything else that needs no frame data still works.`;
+      treeState.fail(
+        `The frame tree can't draw: frame data didn't load (${message}). Everything else that needs no frame data still works.`,
+      );
       invalidate();
     },
   });
@@ -283,14 +270,8 @@ export function run(context: ExampleContext): ExampleRun {
 
   // ------------------------------------------------------------ page state
   let frames: Frames | undefined;
-  let tree: TreeNode | undefined;
-  let treeNote: string | undefined =
-    "The frame tree draws once frame data is in.";
-  let composed: ComposedAccuracy = { ITRF: {}, GCRF: {}, ICRF: {} };
   /** The scene's own frames on the main thread (the lunar site), for its triads and camera. */
   let local: Frame[] = [];
-  /** The engineering frame the worker placed (known from its operation), for the tree. */
-  let engineering: { node: TreeNode; placed: PlacedNode } | undefined;
   /** The deep-linked result being loaded (`loadLinkedResult`). */
   let linking: string | undefined;
   /** A message for the panel's snackbar (a deep link that didn't resolve). */
@@ -339,8 +320,8 @@ export function run(context: ExampleContext): ExampleRun {
       },
     ]),
   );
-  /** Overlay labels on the globe (the sag, the convergence, contour values). */
-  const overlayLabels = new Map<OverlayId | "callouts" | "walk", LabelSpec[]>();
+  /** Every part's labels on the globe, shown with the triads' (triadLayer.ts). */
+  const labels: LabelBoard = new Map();
   let disposed = false;
   scope.defer(() => {
     disposed = true;
@@ -384,6 +365,7 @@ export function run(context: ExampleContext): ExampleRun {
     OverlayView,
     "accuracy" | "detail" | "unbounded"
   > {
+    const tree = treeState.tree();
     const itrf = tree && findNode(tree, "ITRF");
     const a = itrf?.edge.accuracy;
     if (a?.radians !== undefined) {
@@ -509,6 +491,8 @@ export function run(context: ExampleContext): ExampleRun {
   }
 
   function buildModel(): PanelModel {
+    const tree = treeState.tree();
+    const treeNote = treeState.note();
     const all = [...catalogRuns.results(), ...user.results()];
     const extras: Record<string, ResultExtras> = {};
     for (const r of all) {
@@ -518,7 +502,7 @@ export function run(context: ExampleContext): ExampleRun {
       items: loading.items,
       ...(tree ? { tree } : {}),
       ...(treeNote !== undefined && { treeNote }),
-      composed,
+      composed: treeState.composed(),
       clock: clockView(),
       overlays: overlayViews(),
       orionFrame,
@@ -554,71 +538,14 @@ export function run(context: ExampleContext): ExampleRun {
   }
 
   // ------------------------------------------------------------ the tree
-  function findNode(root: TreeNode, id: string): TreeNode | undefined {
-    if (root.id === id) {
-      return root;
-    }
-    for (const c of root.children) {
-      const f = findNode(c, id);
-      if (f) {
-        return f;
-      }
-    }
-    return undefined;
-  }
-
-  /** The tree and the walk's statements at the clock's instant. */
-  function rebuildTree(): void {
-    const instant = instantNow();
-    if (!frames || !instant) {
-      return;
-    }
-    // The scenario's tree: the built-in frames and what its evaluation
-    // added (buildScenarioTree), the main thread's own frames attached to
-    // their nodes so the walk can state them.
-    const e = evaluationNow();
-    const t = buildScenarioTree(buildTree(frames, {}, instant), e?.added ?? []);
-    const attach = (n: TreeNode) => {
-      const f = local.find((l) => l.name === n.id);
-      if (f) {
-        n.frame = f;
-      }
-      n.children.forEach(attach);
-    };
-    attach(t);
-    // Orion's statements from the worker's reply, while they're current.
-    const orion =
-      orionInfoError === undefined &&
-      orionInfo !== undefined &&
-      findNode(t, orionInfo.info.node.id)
-        ? orionInfo.info
-        : undefined;
-    tree = t;
-    treeNote = undefined;
-    const own = composedAccuracy(t, frames, instant);
-    composed = orion
-      ? (Object.fromEntries(
-          (Object.keys(own) as Reference[]).map((r) => [
-            r,
-            { ...own[r], [orion.node.id]: orion.composed[r] },
-          ]),
-        ) as ComposedAccuracy)
-      : own;
-    updateKnown();
-    invalidate();
-  }
-
-  function treeIds(): Set<string> {
-    const out = new Set<string>();
-    const walk = (n: TreeNode) => {
-      out.add(n.id);
-      n.children.forEach(walk);
-    };
-    if (tree) {
-      walk(tree);
-    }
-    return out;
-  }
+  const treeState = createTreeState({
+    core: { frames: () => frames, instantNow, invalidate },
+    local: () => local,
+    evaluation: () => evaluationNow(),
+    orion: () => (orionInfoError === undefined ? orionInfo?.info : undefined),
+    updateKnown: () => updateKnown(),
+  });
+  scope.defer(() => treeState.dispose());
 
   function updateKnown(): void {
     const repro = groupInfo("reproducibility")!.lenses;
@@ -636,136 +563,24 @@ export function run(context: ExampleContext): ExampleRun {
     const known: Known = {
       // Only once the scenario's frames are in: a link to a frame it adds
       // (the lunar site) waits for its evaluation rather than being cleared.
-      ...(tree && evaluationNow() && { frames: treeIds() }),
+      ...(treeState.tree() && evaluationNow() && { frames: treeState.ids() }),
       ...(catalogRuns.lastRun() !== undefined && { results: lensesOf, ran }),
     };
     view.setKnown(known);
   }
 
   // --------------------------------------------------------------- triads
-  const familyOf = (id: string) => (tree && familyMap(tree).get(id)) ?? "earth";
-
-  function triadSpecs(): TriadSpec[] {
-    if (!frames || !overlays.get("triads")!.on) {
-      return [];
-    }
-    const byName = new Map<string, Frame>();
-    for (const f of [
-      frames.icrf,
-      frames.hcrs,
-      frames.gcrf,
-      frames.earthIcrf,
-      frames.eme2000,
-      frames.moonIcrf,
-      frames.itrf,
-      frames.moonMe,
-      frames.moonPa,
-      ...local,
-    ]) {
-      byName.set(f.name, f);
-    }
-    const ids = new Set(scene?.triads(sceneKnobs) ?? ["ITRF", "GCRF"]);
-    const s = view.get().selection;
-    if (isFrame(s) && tree) {
-      for (const n of pathToRoot(tree, s.id)) {
-        ids.add(n.id);
-      }
-    }
-    for (const id of emphasisFrames()) {
-      ids.add(id);
-    }
-    const out: TriadSpec[] = [];
-    for (const id of ids) {
-      const frame = byName.get(id);
-      if (frame === undefined || id === "ICRF" || id === "HCRS") {
-        // The barycentre's and the Sun's origins are far off the scene.
-        continue;
-      }
-      const geocentric = id === "ITRF" || id === "GCRF" || id === "EME2000";
-      const length = 1.5 * EARTH_RADIUS;
-      out.push({
-        id,
-        label: id,
-        frame,
-        family: familyOf(id),
-        // Geocentric: from the surface out, no cube inside the Earth (S-I2);
-        // GCRF at the secondary strength beside ITRF's (S-I1).
-        ...(geocentric && {
-          length,
-          surface: [
-            WGS84.radii[0]! / length,
-            WGS84.radii[1]! / length,
-            WGS84.radii[2]! / length,
-          ] as const,
-        }),
-        // GCRF beside ITRF: secondary strength and box heads (S-I1).
-        ...(id === "GCRF" && { strength: SECONDARY, head: "box" as const }),
-        // Stand-on-moon's subject at 15% of the camera's distance (S-I8).
-        ...(id === LUNAR_SITE &&
-          scene?.id === "stand-on-moon" && { scale: 0.15 }),
-      });
-    }
-    return out;
-  }
-
-  function refreshTriads(): void {
-    const specs = triadSpecs();
-    globe.setTriads(specs);
-    // Earth-turns is about the two geocentric triads: their axis names
-    // stay pinned, exempt from the declutter (S-I1).
-    const pinned = scene?.pinnedAxes === true;
-    const labels: LabelSpec[] = specs.flatMap((t): LabelSpec[] => {
-      if (t.length === undefined || !frames) {
-        return [
-          {
-            id: t.id,
-            text: t.label,
-            family: t.family,
-            priority: t.id === selectedFrame() ? 3 : 1,
-            at: () => globe.triadOrigin(t.id),
-          },
-        ];
-      }
-      // A geocentric triad names each axis at its tip ("x ITRF", "y GCRF"),
-      // GCRF's to the left of the point and ITRF's to the right; the two z
-      // axes, nearly one line, carry both names stacked on the left (S-I1).
-      const length = t.length;
-      return (["x", "y", "z"] as const).map((name, axis) => ({
-        id: `${t.id}:${name}`,
-        text: `${name} ${t.label}`,
-        family: t.family,
-        priority: t.id === selectedFrame() ? 3 : 2,
-        ...((t.id === "GCRF" || name === "z") && { side: "left" as const }),
-        ...(t.id !== "GCRF" && name === "z" && { dy: 18 }),
-        ...(pinned && { pinned: true }),
-        at: () => globe.triadOrigin(t.id) && axisTip(t.frame, length, axis),
-      }));
-    });
-    globe.setLabels([...labels, ...[...overlayLabels.values()].flat()]);
-  }
-
-  function axisTip(
-    frame: Frame,
-    length: number,
-    axis = 0,
-  ): Float64Array | undefined {
-    const instant = instantNow();
-    if (!frames || !instant) {
-      return undefined;
-    }
-    const m = frameTransform(frame, frames.itrf, instant);
-    const c = 4 * axis;
-    return Float64Array.from([
-      m[12]! + m[c]! * length,
-      m[13]! + m[c + 1]! * length,
-      m[14]! + m[c + 2]! * length,
-    ]);
-  }
-
-  const selectedFrame = () => {
-    const s = view.get().selection;
-    return isFrame(s) ? s.id : undefined;
-  };
+  const triads = createTriadLayer({
+    core: { frames: () => frames, instantNow, globe, view },
+    labels,
+    tree: () => treeState.tree(),
+    local: () => local,
+    on: () => overlays.get("triads")!.on,
+    scene: () => scene,
+    sceneKnobs: () => sceneKnobs,
+    emphasis: () => emphasisFrames(),
+  });
+  scope.defer(() => triads.dispose());
 
   // ------------------------------------------------------------- overlays
   const frameParams = (
@@ -815,8 +630,8 @@ export function run(context: ExampleContext): ExampleRun {
       } else {
         delete s.parts;
       }
-      overlayLabels.set(id, built.labels ?? []);
-      refreshTriads();
+      labels.set(id, built.labels ?? []);
+      triads.refresh();
       refreshInset();
     } catch (error) {
       if (isAbort(error) || token !== s.token || disposed) {
@@ -851,43 +666,6 @@ export function run(context: ExampleContext): ExampleRun {
     ]);
   };
 
-  function noteEngineering(
-    g: OverlayGeometry,
-    center: ArrayLike<number>,
-  ): void {
-    if (engineering || !g.operation) {
-      return;
-    }
-    const op = g.operation;
-    const known = !op.ballpark && op.accuracy !== undefined;
-    engineering = {
-      node: {
-        id: "engineering:California zone 3",
-        label: "California zone 3",
-        edge: {
-          kind: "proj-operation",
-          detail: op.pipeline,
-          accuracy: known
-            ? {
-                meters: op.accuracy!,
-                note: "PROJ's stated accuracy for the recorded operation",
-              }
-            : { note: "PROJ states no accuracy for the recorded operation" },
-        },
-        children: [],
-      },
-      placed: {
-        itrf: center,
-        projection: {
-          source: "projection",
-          meters: known ? op.accuracy : undefined,
-          note: `engineering frame "California zone 3": PROJ operation (${op.grids.join(", ") || "no grids"})`,
-        },
-      },
-    };
-    rebuildTree();
-  }
-
   function drawOverlay(id: OverlayId): void {
     const s = overlays.get(id)!;
     if (!s.on) {
@@ -907,9 +685,9 @@ export function run(context: ExampleContext): ExampleRun {
         refreshInset();
       }
       globe.removeOverlay(id);
-      overlayLabels.delete(id);
+      labels.delete(id);
       s.state = "off";
-      refreshTriads();
+      triads.refresh();
       invalidate();
       return;
     }
@@ -917,7 +695,7 @@ export function run(context: ExampleContext): ExampleRun {
     switch (id) {
       case "triads":
         s.state = "drawn";
-        refreshTriads();
+        triads.refresh();
         invalidate();
         return;
       case "designGrid":
@@ -965,7 +743,7 @@ export function run(context: ExampleContext): ExampleRun {
           ]);
           const op = operationText(grid.operation);
           const center = pointOf(grid.layers[0]!.chunks) ?? new Float64Array(3);
-          noteEngineering(grid, center);
+          treeState.noteEngineering(grid, center);
           const west = pointOf(north.layers[0]!.chunks, true);
           return {
             layers: [
@@ -1286,7 +1064,7 @@ export function run(context: ExampleContext): ExampleRun {
         s.state = "drawn";
         delete s.accuracy;
         const tip = Float64Array.from(g.positions.subarray(3, 6));
-        overlayLabels.set(id, [
+        labels.set(id, [
           {
             id: "label:bias",
             text: `EME2000 (bias ×${sig(biasFactor, 1)})`,
@@ -1295,7 +1073,7 @@ export function run(context: ExampleContext): ExampleRun {
             priority: 2,
           },
         ]);
-        refreshTriads();
+        triads.refresh();
         invalidate();
         return;
       }
@@ -1334,172 +1112,28 @@ export function run(context: ExampleContext): ExampleRun {
   }
 
   // --------------------------------------------------------- the walk's path
-  /**
-   * The selected frame's path on the globe (DESIGN.md "A selection"): the
-   * walk's origins, from ITRF through the common ancestor to the frame,
-   * joined by a dotted 1 px line, revealed one
-   * edge at a time with the walk's 90 ms stagger (at once under reduced
-   * motion), and redrawn as the clock moves the origins.
-   */
-  let walk: { id: string; shown: number; timer: number } | undefined;
-  /**
-   * The walk's origins on the globe, from the reference (the shared
-   * "Against", S-I5) through the common ancestor to the frame, coincident
-   * ones merged. An origin far off the scene (the barycentre, the Sun) is
-   * drawn as a stub toward it from the first near origin, with a label
-   * naming it and its distance.
-   */
-  function walkOrigins(id: string): {
-    points: Float64Array[];
-    far?: { at: Float64Array; text: string };
-  } {
-    const instant = instantNow();
-    if (!tree || !frames || !instant) {
-      return { points: [] };
-    }
-    let path: TreeNode[];
-    try {
-      const up = pathToRoot(tree, view.get().against);
-      const down = pathToRoot(tree, id);
-      const common = up.findIndex((n) => down.some((d) => d.id === n.id));
-      const at = down.findIndex((d) => d.id === up[common]!.id);
-      path = [...up.slice(0, common + 1), ...down.slice(0, at).reverse()];
-    } catch {
-      return { points: [] };
-    }
-    const out: Float64Array[] = [];
-    let far: { id: string; p: ArrayLike<number> } | undefined;
-    for (const n of path) {
-      let o: ArrayLike<number> | undefined;
-      if (n.frame) {
-        try {
-          const m = frameTransform(n.frame, frames.itrf, instant);
-          o = [m[12]!, m[13]!, m[14]!];
-        } catch {
-          continue;
-        }
-      } else if (n.id === orionInfo?.info.node.id) {
-        o = orionInfo.info.itrf;
-      } else if (n.id === engineering?.node.id) {
-        o = engineering.placed.itrf;
-      }
-      if (o === undefined) {
-        continue;
-      }
-      if (Math.hypot(o[0]!, o[1]!, o[2]!) > FAR_ORIGIN) {
-        // The barycentre or the Sun: off the scene; pointed at, not drawn to.
-        far ??= { id: n.id, p: o };
-        continue;
-      }
-      const prev = out.at(-1);
-      if (
-        prev === undefined ||
-        Math.hypot(o[0]! - prev[0]!, o[1]! - prev[1]!, o[2]! - prev[2]!) > 1
-      ) {
-        out.push(Float64Array.from(o));
-      }
-    }
-    const first = out[0];
-    if (!far || !first) {
-      return { points: out };
-    }
-    const d = [0, 1, 2].map((i) => far!.p[i]! - first[i]!);
-    const len = Math.hypot(d[0]!, d[1]!, d[2]!);
-    const stub = Float64Array.from(
-      [0, 1, 2].map((i) => first[i]! + (d[i]! / len) * WALK_STUB),
-    );
-    return {
-      points: [stub, ...out],
-      far: {
-        at: stub,
-        text: `→ ${far.id} origin, ${sig(len / AU, 2)} au`,
-      },
-    };
-  }
-  function drawWalk(): void {
-    if (!walk) {
-      globe.removeOverlay("walk");
-      overlayLabels.delete("walk");
-      refreshTriads();
-      return;
-    }
-    const { points: origins, far } = walkOrigins(walk.id);
-    overlayLabels.set(
-      "walk",
-      far
-        ? [{ id: "label:walk-far", text: far.text, at: far.at, priority: 2 }]
-        : [],
-    );
-    const points: number[] = [];
-    const colors: number[] = [];
-    const color = familyRgba(familyOf(walk.id));
-    for (let k = 0; k + 1 < origins.length && k < walk.shown; k++) {
-      const a = origins[k]!;
-      const b = origins[k + 1]!;
-      // 40 dots per edge: world-space segments, a dot and a gap each.
-      const dots = 40;
-      for (let d = 0; d < dots; d++) {
-        const f0 = d / dots;
-        const f1 = (d + 0.5) / dots;
-        for (const f of [f0, f1]) {
-          points.push(
-            a[0]! + (b[0]! - a[0]!) * f,
-            a[1]! + (b[1]! - a[1]!) * f,
-            a[2]! + (b[2]! - a[2]!) * f,
-          );
-          colors.push(...color);
-        }
-      }
-    }
-    refreshTriads();
-    if (points.length === 0) {
-      globe.removeOverlay("walk");
-      return;
-    }
-    globe.setOverlay("walk", [
-      {
-        // Dots up to 1e7 m long (an Earth–Moon edge): its own path's chunks.
-        chunks: overlayMesh(
-          {
-            positions: Float64Array.from(points),
-            colors: Uint8Array.from(colors),
-          },
-          { extent: 1e7 },
-        ),
-      },
-    ]);
-  }
-  function startWalk(id: string | undefined): void {
-    if (walk) {
-      clearTimeout(walk.timer);
-    }
-    walk = undefined;
-    if (id === undefined) {
-      drawWalk();
-      return;
-    }
-    const edges = Math.max(0, walkOrigins(id).points.length - 1);
-    const reduced =
-      typeof matchMedia === "function" &&
-      matchMedia("(prefers-reduced-motion: reduce)").matches;
-    walk = { id, shown: reduced ? edges : 1, timer: 0 };
-    const step = () => {
-      if (!walk || walk.id !== id || disposed) {
-        return;
-      }
-      drawWalk();
-      if (walk.shown < edges) {
-        walk.shown++;
-        walk.timer = window.setTimeout(step, 90);
-      }
-    };
-    step();
-  }
-  scope.defer(() => {
-    if (walk) {
-      clearTimeout(walk.timer);
-    }
+  const walkPath = createWalkPath({
+    core: {
+      frames: () => frames,
+      instantNow,
+      globe,
+      view,
+      disposed: () => disposed,
+    },
+    labels,
+    tree: () => treeState.tree(),
+    familyOf: (id) => triads.familyOf(id),
+    refreshTriads: () => triads.refresh(),
+    placedOrigin: (id) => {
+      const engineering = treeState.engineering();
+      return id === orionInfo?.info.node.id
+        ? orionInfo.info.itrf
+        : id === engineering?.node.id
+          ? engineering.placed.itrf
+          : undefined;
+    },
   });
+  scope.defer(() => walkPath.dispose());
 
   // ---------------------------------------------------------------- Orion
   const leapOf = () => frames!.data.leapSeconds;
@@ -1619,7 +1253,7 @@ export function run(context: ExampleContext): ExampleRun {
       }
       orionInfo = { info, utc: arg.utc };
       orionInfoError = undefined;
-      rebuildTree();
+      treeState.rebuild();
       refreshCallouts();
     },
     (error, arg) => {
@@ -1629,7 +1263,7 @@ export function run(context: ExampleContext): ExampleRun {
         return;
       }
       orionInfoError = { message: scrub(messageOf(error)), utc: arg.utc };
-      rebuildTree();
+      treeState.rebuild();
       refreshCallouts();
     },
   );
@@ -2268,6 +1902,7 @@ export function run(context: ExampleContext): ExampleRun {
   function emphasisFrames(): Set<string> {
     const s = view.get().selection;
     const out = new Set<string>();
+    const tree = treeState.tree();
     if (isFrame(s) && tree) {
       try {
         for (const n of pathToRoot(tree, s.id)) {
@@ -2300,7 +1935,7 @@ export function run(context: ExampleContext): ExampleRun {
       applySelection();
     } else if (v.against !== lastAgainst && isFrame(v.selection)) {
       // The walk's reference changed: its path on the globe follows (S-I5).
-      startWalk(v.selection.id);
+      walkPath.start(v.selection.id);
     }
     lastAgainst = v.against;
     invalidate();
@@ -2308,8 +1943,8 @@ export function run(context: ExampleContext): ExampleRun {
 
   function applySelection(): void {
     const s = view.get().selection;
-    refreshTriads();
-    startWalk(isFrame(s) ? s.id : undefined);
+    triads.refresh();
+    walkPath.start(isFrame(s) ? s.id : undefined);
     refreshCallouts();
     if (s.kind === "none") {
       globe.emphasize(undefined);
@@ -2513,8 +2148,8 @@ export function run(context: ExampleContext): ExampleRun {
         });
       }
     }
-    overlayLabels.set("callouts", out);
-    refreshTriads();
+    labels.set("callouts", out);
+    triads.refresh();
   }
   // Earth-turns' exposure depends on the view's width (F43): follow it.
   const exposureObserver = new ResizeObserver(() => {
@@ -2558,8 +2193,8 @@ export function run(context: ExampleContext): ExampleRun {
         drawOverlay("orion");
       }
     }
-    rebuildTree();
-    refreshTriads();
+    treeState.rebuild();
+    triads.refresh();
     refreshCallouts();
   }
 
@@ -2624,8 +2259,8 @@ export function run(context: ExampleContext): ExampleRun {
     scene = undefined;
     local = [];
     globe.dimGround(false);
-    rebuildTree();
-    refreshTriads();
+    treeState.rebuild();
+    triads.refresh();
     refreshCallouts();
   }
 
@@ -2676,7 +2311,7 @@ export function run(context: ExampleContext): ExampleRun {
       if (state.evaluation !== shownEvaluation) {
         // New frames attach in the tree; the callouts take the answer.
         shownEvaluation = state.evaluation;
-        rebuildTree();
+        treeState.rebuild();
         refreshCallouts();
       }
       if (state.generation !== paramsGeneration) {
@@ -2705,6 +2340,7 @@ export function run(context: ExampleContext): ExampleRun {
     const st = host.state();
     const spec = st.spec;
     const catalog = new Map(catalogRuns.results().map((r) => [r.id, r]));
+    const tree = treeState.tree();
     const e = st.evaluation;
     // Only the time moved while the clock plays: one steady state that
     // follows it, rather than rows flipping to loading every evaluation.
@@ -3057,7 +2693,7 @@ export function run(context: ExampleContext): ExampleRun {
           // The tree's Earth-orientation sigma and the walk's statements (R8).
           lastTree = now;
           lastTreeReal = real;
-          rebuildTree();
+          treeState.rebuild();
         }
         // Orion's path moves with its drawing frame every frame; its
         // statement (the tree and the legend) is asked for again after a
@@ -3072,10 +2708,14 @@ export function run(context: ExampleContext): ExampleRun {
           // Follows the camera through the stop's flight.
           lightFromCamera();
         }
-        if (walk && Math.abs(now - walkAt) > 1000 && real - walkReal > 250) {
+        if (
+          walkPath.active() &&
+          Math.abs(now - walkAt) > 1000 &&
+          real - walkReal > 250
+        ) {
           walkAt = now;
           walkReal = real;
-          drawWalk();
+          walkPath.draw();
         }
         // Scrubbed or played: "Orion now" and the tree's statements are asked
         // for again within a moment (one in flight, the latest waiting), so
@@ -3126,7 +2766,9 @@ export function run(context: ExampleContext): ExampleRun {
       const now = host.params();
       const id = readyScenario(parseParams(p).scenario);
       const known: Known =
-        id === now.scenario && tree ? { frames: treeIds() } : {};
+        id === now.scenario && treeState.tree()
+          ? { frames: treeState.ids() }
+          : {};
       const parsed = parseParams(p, known);
       view.apply(parsed);
       const sameKnobs = (
