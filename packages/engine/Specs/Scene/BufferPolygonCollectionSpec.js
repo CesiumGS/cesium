@@ -73,9 +73,10 @@ describe("Scene/BufferPolygonCollection", () => {
     collection.add({ positions: positions2 }, polygon);
     collection.add({ positions: positions3 }, polygon);
 
-    expect(collection._dirtyFlags).toBe(BufferPolygonCollection.DirtyFlags.ALL);
+    const tracker = collection._addChangeTracker();
+    expect(tracker.flags).toBe(BufferPolygonCollection.DirtyFlags.ALL);
 
-    collection._makeClean();
+    collection._makeClean(tracker);
 
     // prettier-ignore
     collection.setPositions(new Float64Array([
@@ -92,9 +93,9 @@ describe("Scene/BufferPolygonCollection", () => {
     collection.get(2, polygon);
     expect(polygon.getPositions()[11]).toEqual(67890);
 
-    expect(collection._dirtyFlags).toBe(
-      BufferPolygonCollection.DirtyFlags.GEOMETRY,
-    );
+    expect(tracker.flags).toBe(BufferPolygonCollection.DirtyFlags.GEOMETRY);
+    expect(tracker.offset).toBe(1);
+    expect(tracker.count).toBe(2);
   });
 
   it("outerPositions", () => {
