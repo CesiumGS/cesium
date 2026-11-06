@@ -307,6 +307,27 @@ function wkt1Towgs84(node: WktNode): Towgs84 {
  * scale is read by `scaleDifference`. Throws for a method that is not a
  * Helmert.
  */
+/** The bound transformation is another method, not a Helmert. */
+export class NotHelmertError extends Error {
+  override name = "NotHelmertError";
+}
+
+/**
+ * Why the hand-coded Helmert comparison is skipped, from `towgs84Of`'s
+ * error: another method, named; or the Helmert's own fault (a refused
+ * scale, a malformed WKT1 TOWGS84), in its words.
+ */
+export function helmertSkipWhy(
+  error: unknown,
+  methodName: string | undefined,
+): string {
+  if (error instanceof NotHelmertError) {
+    return `the bound transformation isn't a Helmert (${methodName ?? "unnamed"}), so there's no hand comparison`;
+  }
+  const message = error instanceof Error ? error.message : String(error);
+  return `the bound transformation's Helmert couldn't be read (${message}), so there's no hand comparison`;
+}
+
 export function towgs84Of(root: WktNode): Towgs84 | undefined {
   const bound = find(root, "BOUNDCRS");
   const abridged =
@@ -325,7 +346,7 @@ export function towgs84Of(root: WktNode): Towgs84 | undefined {
     [...POSITION_VECTOR, ...COORDINATE_FRAME].includes(methodCode);
   const byName = /position vector|coordinate frame|geocentric translation/i;
   if (!known && !byName.test(methodName)) {
-    throw new Error(
+    throw new NotHelmertError(
       `the bound CRS's transformation "${methodName}" is not a Helmert (EPSG 9603, 9606 or 9607)`,
     );
   }

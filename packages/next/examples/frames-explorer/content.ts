@@ -179,6 +179,18 @@ export function comparedFor(id: string, group: Comparison): Comparison {
   return group;
 }
 
+/**
+ * What a card's "Run this group" asks the worker for: its group, or for the
+ * virtual Reproducibility card, which collects other groups' fingerprinted
+ * results, those results' ids (the runner runs the cases that make them).
+ */
+export function groupRunIds(
+  group: string,
+  fingerprinted: readonly string[],
+): string[] {
+  return group === "reproducibility" ? [...fingerprinted] : [group];
+}
+
 /** A tour stop (R16): its caption, the overlays it turns on and where the camera goes. */
 export interface TourStopSpec {
   id: string;

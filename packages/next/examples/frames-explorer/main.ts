@@ -27,6 +27,7 @@ import {
   TOUR,
   comparedFor,
   defaultTriads,
+  groupRunIds,
   stopExposure,
   type TourStopSpec,
 } from "./content.ts";
@@ -77,7 +78,12 @@ import {
   type RunSummary,
   type TrajectoryInfo,
 } from "./protocol.ts";
-import { buildReport, type ReportEnvironment } from "./report.ts";
+import {
+  buildReport,
+  fileSha,
+  type EnvironmentFile,
+  type ReportEnvironment,
+} from "./report.ts";
 import {
   ViewStore,
   formatParams,
@@ -90,6 +96,9 @@ import { GROUP_INFO, groupInfo, type Lens } from "./stress/groupInfo.ts";
 import type { StressResult } from "./tests.ts";
 import { buildTree, pathToRoot, type TreeNode } from "./tree.ts";
 import references from "./references.json";
+import { PACKAGE } from "./version.ts";
+import { RunQueue } from "./runQueue.ts";
+import fingerprintFile from "./fingerprints.json";
 
 const DATA = "/frames-data/";
 const deg = Math.PI / 180;
@@ -261,6 +270,11 @@ const AU = 1.495978707e11;
 /** Meters as the panel writes them (SI prefixes, powers of ten written out). */
 const meters = (x: number): string => length(x, 3);
 
+/** The fingerprinted results' ids (R12), which the Reproducibility card runs. */
+const FINGERPRINTED = Object.keys(
+  (fingerprintFile as { fingerprints: Record<string, unknown> }).fingerprints,
+);
+
 const messageOf = (e: unknown): string =>
   e instanceof Error ? e.message : String(e);
 const isAbort = (e: unknown): boolean =>
@@ -334,7 +348,8 @@ export function run(context: ExampleContext): ExampleRun {
   let userResults: StressResult[] = [];
   let runView: RunView = { state: "idle", done: 0, total: 0 };
   /** The run going on, settled either way (runs go one at a time). */
-  let running: Promise<void> = Promise.resolve();
+  /** Every run, catalog or "Try your own", one at a time (final review, Important 1). */
+  const runs = new RunQueue();
   /** The deep-linked result being loaded (`loadLinkedResult`). */
   let linking: string | undefined;
   /** A message for the panel's snackbar (a deep link that didn't resolve). */
@@ -612,7 +627,7 @@ export function run(context: ExampleContext): ExampleRun {
       ["PROJ", env.proj ?? "not loaded"],
       ...env.files.map((f): EnvironmentLine => [
         f.label,
-        `${f.file}${f.sha256 ? `, sha256 ${f.sha256.slice(0, 12)}…` : f.note ? ` (${f.note})` : ""}`,
+        `${f.file}${f.sha256 ? `, ${fileSha(f, 12)}` : f.note ? ` (${f.note})` : ""}`,
       ]),
       ...(env.frameDataSpan
         ? [["Frame data span", env.frameDataSpan] as EnvironmentLine]
@@ -649,6 +664,14 @@ export function run(context: ExampleContext): ExampleRun {
       extras,
       waiting: waiting(),
       run: runView,
+      ...(runView.state === "running"
+        ? { runBusy: "A run is going on; this group can run when it ends." }
+        : userCrs.state === "running"
+          ? {
+              runBusy:
+                "Your CRS's checks are running; this group can run when they end.",
+            }
+          : {}),
       token: token !== undefined ? "available" : undefined,
       userCrs,
       exampleWkt2: (
@@ -2151,27 +2174,24 @@ export function run(context: ExampleContext): ExampleRun {
   async function runCatalog(
     ids?: readonly string[],
   ): Promise<string | undefined> {
-    if (runView.state === "running") {
-      // One run at a time: wait for the one going on, then run.
-      await running;
-      if (disposed) {
-        return "the example was left";
-      }
-    }
-    const done = runCatalogNow(ids);
-    running = done.then(
-      () => undefined,
-      () => undefined,
+    // Queued behind any run going on; the same ids asked again while waiting
+    // or running share that run (a double-click on "Run this group").
+    return runs.run(
+      () =>
+        disposed ? Promise.resolve("the example was left") : runCatalogNow(ids),
+      ids === undefined ? "all" : `ids:${[...ids].sort().join(",")}`,
     );
-    return done;
   }
 
   async function runCatalogNow(
     ids?: readonly string[],
   ): Promise<string | undefined> {
     const groups = ids && new Set(ids);
-    results = groups ? results.filter((r) => !groups.has(r.group)) : [];
-    const before = results.length;
+    // The results this run replaces: its groups', and those it names by id.
+    results = groups
+      ? results.filter((r) => !groups.has(r.group) && !groups.has(r.id))
+      : [];
+    let before = results.length;
     runView = {
       state: "running",
       done: 0,
@@ -2189,6 +2209,13 @@ export function run(context: ExampleContext): ExampleRun {
     invalidate();
     try {
       const summary = await client.run(ids, (r) => {
+        // A case named by one of its results' ids re-runs them all: replace
+        // its siblings rather than list them twice.
+        const at = results.findIndex((x) => x.id === r.id);
+        if (at >= 0 && at < before) {
+          results.splice(at, 1);
+          before--;
+        }
         results.push(r);
         runView = {
           ...runView,
@@ -2268,12 +2295,18 @@ export function run(context: ExampleContext): ExampleRun {
     const geoidLoaded = loading.get("geoid").state === "ready";
     const projSource = file("proj/proj_capi.wasm")?.sourceUrl ?? "";
     const version = /\/v(\d+\.\d+\.\d+)\//.exec(projSource)?.[1];
-    const entry = (label: string, name: string, loaded: boolean) => {
+    /** `verified`: the browser checked the bytes (frame data, the OEM), not PROJ's loader. */
+    const entry = (
+      label: string,
+      name: string,
+      loaded: boolean,
+      verified = false,
+    ): EnvironmentFile => {
       const f = file(name);
       return {
         label,
         file: name,
-        ...(loaded && f && { sha256: f.sha256 }),
+        ...(loaded && f && { sha256: f.sha256, verified }),
         ...(!loaded && {
           note:
             loading.get(
@@ -2294,7 +2327,7 @@ export function run(context: ExampleContext): ExampleRun {
     return {
       startedAt: lastRun?.startedAt ?? new Date(0).toISOString(),
       durationMs: lastRun?.summary.ms ?? 0,
-      packageVersion: "@cesium/next 2.0.0-poc.0",
+      packageVersion: PACKAGE,
       userAgent: navigator.userAgent,
       ...(projLoaded && {
         proj: `proj.js ${version ? `v${version}` : ""} (PROJ as WebAssembly, from the frames store)`.replace(
@@ -2314,11 +2347,12 @@ export function run(context: ExampleContext): ExampleRun {
               f.role === "eop" ||
               f.role === "leapSeconds",
           )
-          .map((f) => entry("Frame data", f.file, framesReady)),
+          .map((f) => entry("Frame data", f.file, framesReady, true)),
         entry(
           "Artemis II OEM",
           "EM2_FODNAVBET_revF_PUBLIC.oem",
           loading.get("orion").state === "ready",
+          true,
         ),
       ],
       ...(manifest?.span && {
@@ -2336,7 +2370,7 @@ export function run(context: ExampleContext): ExampleRun {
   // ------------------------------------------------------------- actions
   const actions: PanelActions = {
     runAll: () => void runCatalog(),
-    runGroup: (group) => void runCatalog([group]),
+    runGroup: (group) => void runCatalog(groupRunIds(group, FINGERPRINTED)),
     cancel: () => client.cancel(),
     retryItem: (item) => {
       if (item === "frames") {
@@ -2461,8 +2495,17 @@ export function run(context: ExampleContext): ExampleRun {
     invalidate();
   }
 
-  async function runUser(wkt2: string): Promise<void> {
+  /** "Try your own" waits for any run going on, as the catalog's runs do. */
+  function runUser(wkt2: string): Promise<void> {
     userCrs = { ...userCrs, state: "running" };
+    invalidate();
+    return runs.run(() => runUserNow(wkt2));
+  }
+
+  async function runUserNow(wkt2: string): Promise<void> {
+    if (disposed) {
+      return;
+    }
     userResults = [];
     invalidate();
     try {

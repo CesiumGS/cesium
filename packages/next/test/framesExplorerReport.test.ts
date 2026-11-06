@@ -5,6 +5,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildReport,
+  fileSha,
   reportCounts,
   type ReportEnvironment,
 } from "../examples/frames-explorer/report.ts";
@@ -212,6 +213,55 @@ describe("buildReport (R15)", () => {
       },
     ];
     expect(reportCounts(odd)).toMatchObject({ passed: 0, skipped: 1 });
+  });
+
+  it("labels a SHA-256 the browser didn't check as the manifest's (proj.db, the wasm)", () => {
+    const withUnchecked: ReportEnvironment = {
+      ...env,
+      files: [
+        {
+          label: "proj.db",
+          file: "proj/proj.db",
+          sha256: "b192cb2fd7eb",
+          verified: false,
+        },
+        {
+          label: "Frame data",
+          file: "planets.pack",
+          sha256: "ae8718",
+          verified: true,
+        },
+      ],
+    };
+    const md = buildReport(results, withUnchecked).markdown;
+    expect(md).toContain(
+      "- proj.db: proj/proj.db, manifest SHA-256 b192cb2fd7eb (not verified in the browser)",
+    );
+    expect(md).toContain("- Frame data: planets.pack, sha256 ae8718");
+    expect(JSON.stringify(buildReport(results, withUnchecked).json)).toContain(
+      '"verified":false',
+    );
+  });
+
+  it("gives the panel's short form the same label", () => {
+    expect(
+      fileSha(
+        {
+          label: "proj.db",
+          file: "proj/proj.db",
+          sha256: "b192cb2fd7eb0123",
+          verified: false,
+        },
+        12,
+      ),
+    ).toBe("manifest SHA-256 b192cb2fd7eb… (not verified in the browser)");
+    expect(
+      fileSha(
+        { label: "x", file: "x", sha256: "ae871820c05f99", verified: true },
+        12,
+      ),
+    ).toBe("sha256 ae871820c05f…");
+    expect(fileSha({ label: "x", file: "x" }, 12)).toBeUndefined();
   });
 
   it("parses back to the same results", () => {

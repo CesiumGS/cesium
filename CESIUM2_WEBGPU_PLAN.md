@@ -6810,9 +6810,11 @@ asset 2: no access token`, on every example.
   9841). The derivative path handles it, and `checkSphere` throws if a radius
   differs, but `proj.db` has no such CRS, so nothing tests it. Add one when
   4b's CRS coverage includes it.
-- **Plan 4b: `frameCache` is unbounded** in the worker. It caches loaded
-  frame data for the life of the worker, which 4b's large grids (EGM2008 is
-  80.6 MB) make a real cost. Bound it.
+- **Plan 4b: `frameCache` is unbounded** in the worker. It caches the
+  `EngineeringFrame`s the overlays build, keyed by their frame parameters
+  (CRS and site), for the life of the worker. Each holds its PROJ CRS and
+  operation, so 4b's comparisons across many CRSs grow it without bound.
+  Bound it.
 
 _Carried forward from the stress-test example's industry review (owner,
 2026-11-06)._ These library gaps came up while planning the frames example's

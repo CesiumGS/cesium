@@ -256,6 +256,7 @@ export function Verify({
             onSelect={(id) => onSelect(id === result?.id ? undefined : id)}
             waitingFor={model.waiting[g.id]}
             onRun={() => actions.runGroup(g.id)}
+            busy={model.runBusy}
             {...(g.focus && {
               onShow: () => actions.showOnGlobe({ result: g.id }),
             })}

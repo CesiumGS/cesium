@@ -49,7 +49,9 @@ export function takeCitations(): string[] {
 /**
  * Runs `fn`, collecting the ids `cited` is called with until it settles.
  * The runner runs cases one at a time; two runs interleaved in one context
- * would each collect the other's citations too (the page runs one at a time).
+ * would each collect the other's citations too. The page queues its runs
+ * (runQueue.ts), and "Try your own" collects its own (boundCrsChecks), so
+ * nothing it cites outside a catalog run is left in `pending`.
  */
 export async function collectCitations<T>(
   fn: () => Promise<T>,
