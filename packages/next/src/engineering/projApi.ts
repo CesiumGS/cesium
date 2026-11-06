@@ -43,6 +43,15 @@ export interface PjFactors {
   readonly meridian_parallel_angle: number;
   /** Radians. */
   readonly meridian_convergence: number;
+  /**
+   * The partial derivatives of the projected x and y with respect to
+   * longitude and latitude (radians), for coordinates divided by the
+   * projection's semi-major axis (so Web Mercator's dx_dlam is 1).
+   */
+  readonly dx_dlam: number;
+  readonly dx_dphi: number;
+  readonly dy_dlam: number;
+  readonly dy_dphi: number;
 }
 
 /** proj_ellipsoid_get_parameters' result. */
