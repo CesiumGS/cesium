@@ -72,6 +72,10 @@ interface TriadShape {
   start?: readonly [number, number, number];
   /** The origin cube (left out when the origin is inside the Earth). */
   cube: boolean;
+  /** Each axis's head: a cone (default), or a box, so GCRF reads apart from ITRF (S-I1). */
+  head?: "cone" | "box";
+  /** Only this axis (0 x, 1 y, 2 z), and no cube: one draw per axis. */
+  only?: number;
 }
 
 function triadMesh(
@@ -123,6 +127,9 @@ function triadMesh(
   };
   const axes = [AXIS_COLORS.x, AXIS_COLORS.y, AXIS_COLORS.z];
   for (let axis = 0; axis < 3; axis++) {
+    if (shape.only !== undefined && axis !== shape.only) {
+      continue;
+    }
     const c = color(hexRgba(axes[axis]!));
     const u = (axis + 1) % 3;
     const w = (axis + 2) % 3;
@@ -133,6 +140,17 @@ function triadMesh(
     lo[u] = lo[w] = -shaftW / 2;
     hi[u] = hi[w] = shaftW / 2;
     box(lo, hi, c);
+    if (shape.head === "box") {
+      // A box head, three shafts wide, from the head's base to the tip.
+      const blo = [0, 0, 0];
+      const bhi = [0, 0, 0];
+      blo[axis] = 1 - head;
+      bhi[axis] = 1;
+      blo[u] = blo[w] = -1.5 * shaftW;
+      bhi[u] = bhi[w] = 1.5 * shaftW;
+      box(blo, bhi, c);
+      continue;
+    }
     // The cone: a ring of SIDES at the head's base, the tip at 1.
     const tip = [0, 0, 0];
     tip[axis] = 1;
@@ -160,7 +178,7 @@ function triadMesh(
       indices.push(t, a, b, base, b, a);
     }
   }
-  if (shape.cube) {
+  if (shape.cube && shape.only === undefined) {
     const o = 2 * shaftW;
     box([-o, -o, -o], [o, o, o], color(familyRgba(family)));
   }
@@ -192,6 +210,8 @@ export interface TriadSpec {
   surface?: readonly [number, number, number];
   /** Its tint: 1, or `SECONDARY` (GCRF beside ITRF, S-I1). */
   strength?: number;
+  /** Its axes' heads: cones (default) or boxes (GCRF, S-I1). */
+  head?: "cone" | "box";
   /** Without `length`: its length as a share of the camera's distance (default 0.06; the subject of a stop, more). */
   scale?: number;
 }
@@ -200,9 +220,14 @@ interface Triad {
   spec: TriadSpec;
   /** Drawn at the lighter tint: the selected frame's. */
   light: boolean;
-  mesh: MeshHandle;
+  /**
+   * Its draws on its transform: one for the whole triad, or, for a
+   * geocentric one, one per axis (`axis`), so an axis whose tip is behind
+   * the Earth is hidden: the engine can't draw it dashed through the Earth
+   * (S-I2), and drawn solid it would read as on the near side.
+   */
+  parts: { mesh: MeshHandle; draw: DrawHandle; axis?: number }[];
   transform: TransformHandle;
-  draw: DrawHandle;
   origin: Float64Array;
   /** The triad is drawn (its frame resolves at the instant). */
   shown: boolean;
@@ -240,6 +265,12 @@ export interface LabelSpec {
   priority: number;
   /** A callout: a 1 px leader from the point to the text (DESIGN.md "Labels"). */
   leader?: boolean;
+  /** Placed to the left of its point instead of the right. */
+  side?: "left";
+  /** Moved down this many pixels from where it would sit (two labels on one point). */
+  dy?: number;
+  /** Exempt from the declutter (still hidden behind the Earth or off the scene): a tour stop's subject. */
+  pinned?: boolean;
 }
 
 /** A camera framing: look at `center` from `range` meters, heading and pitch in its east-north-up frame. */
@@ -314,24 +345,13 @@ export class Globe {
         // Its proportions change with its scale: a new mesh.
         this.removeTriad(spec.id);
       }
-      const mesh = world.addMesh(
-        triadMesh(spec.family, false, this.shapeOf(spec)),
-      );
       const transform = world.addTransform(identity());
-      const draw = world.addDraw({
-        mesh,
-        transform,
-        unlit: true,
-        radius: 1,
-        name: `frames explorer triad ${spec.label}`,
-      });
       world.setTransformVisible(transform, false);
       this.triads.set(spec.id, {
         spec,
         light: false,
-        mesh,
+        parts: this.triadParts(spec, false, transform),
         transform,
-        draw,
         origin: new Float64Array(3),
         shown: false,
       });
@@ -345,10 +365,39 @@ export class Globe {
       return;
     }
     const { world } = this.viewer;
-    world.removeDraw(t.draw);
+    for (const part of t.parts) {
+      world.removeDraw(part.draw);
+      world.removeMesh(part.mesh);
+    }
     world.removeTransform(t.transform);
-    world.removeMesh(t.mesh);
     this.triads.delete(id);
+  }
+
+  /** A triad's draws on `transform`: one, or one per axis for a geocentric triad. */
+  private triadParts(
+    spec: TriadSpec,
+    light: boolean,
+    transform: TransformHandle,
+  ): Triad["parts"] {
+    const { world } = this.viewer;
+    const shape = this.shapeOf(spec);
+    const axes = spec.surface !== undefined ? [0, 1, 2] : [undefined];
+    return axes.map((axis) => {
+      const mesh = world.addMesh(
+        triadMesh(spec.family, light, {
+          ...shape,
+          ...(axis !== undefined && { only: axis }),
+        }),
+      );
+      const draw = world.addDraw({
+        mesh,
+        transform,
+        unlit: true,
+        radius: 1,
+        name: `frames explorer triad ${spec.label}`,
+      });
+      return { mesh, draw, ...(axis !== undefined && { axis }) };
+    });
   }
 
   /**
@@ -363,6 +412,7 @@ export class Globe {
         shaft: SHAFT,
         cube: spec.surface === undefined,
         ...(spec.surface && { start: spec.surface }),
+        ...(spec.head && { head: spec.head }),
       };
     }
     const cam = this.viewer.view.camera;
@@ -427,6 +477,13 @@ export class Globe {
         }
       }
       world.setTransform(t.transform, m);
+      for (const part of t.parts) {
+        if (part.axis !== undefined) {
+          const c = 4 * part.axis;
+          const tip = [m[12]! + m[c]!, m[13]! + m[c + 1]!, m[14]! + m[c + 2]!];
+          world.setVisible(part.draw, !behindEarth(eye, tip));
+        }
+      }
       if (!t.shown) {
         world.setTransformVisible(t.transform, true);
         t.shown = true;
@@ -585,24 +642,19 @@ export class Globe {
       const light = e?.selected === id;
       if (t.light !== light) {
         // The selected frame's triad takes its lighter mesh.
-        world.removeDraw(t.draw);
-        world.removeMesh(t.mesh);
-        t.mesh = world.addMesh(
-          triadMesh(t.spec.family, light, this.shapeOf(t.spec)),
-        );
-        t.draw = world.addDraw({
-          mesh: t.mesh,
-          transform: t.transform,
-          unlit: true,
-          radius: 1,
-          name: `frames explorer triad ${t.spec.label}`,
-        });
+        for (const part of t.parts) {
+          world.removeDraw(part.draw);
+          world.removeMesh(part.mesh);
+        }
+        t.parts = this.triadParts(t.spec, light, t.transform);
         t.light = light;
       }
       const k =
         (t.spec.strength ?? 1) *
         (e === undefined || e.frames.has(id) ? 1 : DIM);
-      world.setColor(t.draw, [k, k, k, 1]);
+      for (const part of t.parts) {
+        world.setColor(part.draw, [k, k, k, 1]);
+      }
     }
     for (const [id, o] of this.overlays) {
       // An overlay's parts ("designGrid:minor") go with it.
@@ -622,11 +674,13 @@ export class Globe {
       }
     }
     for (const [id, l] of this.labels) {
+      // A triad's own label, or one of its axis names ("ITRF:x").
+      const triad = id.split(":")[0]!;
       const hidden =
         e !== undefined &&
         l.spec.family !== undefined &&
-        this.triads.has(id) &&
-        !e.frames.has(id);
+        this.triads.has(triad) &&
+        !e.frames.has(triad);
       l.el.classList.toggle("fx-globe-label-dim", hidden);
       l.el.classList.toggle("fx-globe-label-selected", e?.selected === id);
     }
@@ -703,6 +757,12 @@ export class Globe {
         } else {
           x = ((dot(d, cam.right) / (z * t * aspect) + 1) / 2) * w;
           y = ((1 - dot(d, cam.up) / (z * t)) / 2) * h;
+          if (spec.pinned) {
+            // A pinned label whose point is just past the view's edge (a
+            // geocentric axis tip) stays at the edge (S-I1).
+            x = Math.min(Math.max(x, 0), w);
+            y = Math.min(Math.max(y, 0), h);
+          }
           visible = x >= 0 && x <= w && y >= 0 && y <= h;
         }
       }
@@ -710,6 +770,7 @@ export class Globe {
       // (a transition, not a cut) rather than crowding the higher one.
       const near =
         visible &&
+        !spec.pinned &&
         anchors.some((a) => Math.hypot(a.x - x, a.y - y) < LABEL_NEAR_PX);
       el.classList.toggle("fx-globe-label-near", near);
       if (visible && !near) {
@@ -718,21 +779,29 @@ export class Globe {
         // A callout sits 48 px right of its point, its leader between;
         // every label is kept inside the view (S-I3).
         const box = {
-          x: Math.min(Math.max(2, x + (spec.leader ? 48 : 12)), w - bw - 2),
+          x: Math.min(
+            Math.max(
+              2,
+              spec.side === "left" ? x - 12 - bw : x + (spec.leader ? 48 : 12),
+            ),
+            w - bw - 2,
+          ),
           y: Math.min(
-            Math.max(2, spec.leader ? y - bh / 2 : y + 4),
+            Math.max(2, (spec.leader ? y - bh / 2 : y + 4) + (spec.dy ?? 0)),
             h - bh - 2,
           ),
           w: bw,
           h: bh,
         };
-        visible = !placed.some(
-          (b) =>
-            box.x < b.x + b.w &&
-            b.x < box.x + box.w &&
-            box.y < b.y + b.h &&
-            b.y < box.y + box.h,
-        );
+        visible =
+          spec.pinned === true ||
+          !placed.some(
+            (b) =>
+              box.x < b.x + b.w &&
+              b.x < box.x + box.w &&
+              box.y < b.y + b.h &&
+              b.y < box.y + box.h,
+          );
         if (visible) {
           placed.push(box);
           anchors.push({ x, y });
@@ -907,12 +976,13 @@ const normalize = (v: ArrayLike<number>): Float64Array => {
 export function behindEarth(
   eye: ArrayLike<number>,
   p: ArrayLike<number>,
+  radius = EARTH_RADIUS,
 ): boolean {
   const d = [p[0]! - eye[0]!, p[1]! - eye[1]!, p[2]! - eye[2]!];
   const len = Math.hypot(d[0]!, d[1]!, d[2]!);
   const u = d.map((v) => v / len);
   const b = dot(eye, u);
-  const c = dot(eye, eye) - EARTH_RADIUS * EARTH_RADIUS;
+  const c = dot(eye, eye) - radius * radius;
   const disc = b * b - c;
   if (disc <= 0) {
     return false;

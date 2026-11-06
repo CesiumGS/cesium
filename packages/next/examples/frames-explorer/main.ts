@@ -25,7 +25,6 @@ import { RESULT_LABELS, TOUR, type TourStopSpec } from "./content.ts";
 import {
   Globe,
   SECONDARY,
-  behindEarth,
   familyRgba,
   hexRgba,
   type Framing,
@@ -801,7 +800,8 @@ export function run(context: ExampleContext): ExampleRun {
             WGS84.radii[2]! / length,
           ] as const,
         }),
-        ...(id === "GCRF" && { strength: SECONDARY }),
+        // GCRF beside ITRF: secondary strength and box heads (S-I1).
+        ...(id === "GCRF" && { strength: SECONDARY, head: "box" as const }),
         // Stop 6's subject at 15% of the camera's distance (S-I8).
         ...(id === "Lunar south-pole site" &&
           tourStop === "lunar-time" && { scale: 0.15 }),
@@ -813,37 +813,36 @@ export function run(context: ExampleContext): ExampleRun {
   function refreshTriads(): void {
     const specs = triadSpecs();
     globe.setTriads(specs);
-    const labels: LabelSpec[] = specs.map((t) => ({
-      id: t.id,
-      text: t.label,
-      family: t.family,
-      // The selected frame first, then the geocentric frames over sites (S-I1).
-      priority: t.id === selectedFrame() ? 3 : t.length !== undefined ? 2 : 1,
-      at: () => {
-        const o = globe.triadOrigin(t.id);
-        if (o === undefined) {
-          return undefined;
-        }
-        // Geocentric triads are labelled on an axis, off the globe: x's,
-        // or the first in front of the Earth (S-I1: ITRF's x often points
-        // away, which hid its label).
-        if (t.length === undefined || !frames) {
-          return o;
-        }
-        const eye = viewer.view.camera.position;
-        let first: Float64Array | undefined;
-        for (const axis of [0, 1, 2]) {
-          // Just outside the surface (0.78 of the shaft, 1.17 R), so a tip
-          // past the view's edge doesn't take the label with it.
-          const tip = axisTip(t.frame, 0.78 * t.length, axis);
-          first ??= tip;
-          if (tip && !behindEarth(eye, tip)) {
-            return tip;
-          }
-        }
-        return first;
-      },
-    }));
+    // Stops 1 and 2 are about the two geocentric triads: their axis names
+    // stay pinned, exempt from the declutter (S-I1).
+    const pinned = tourStop === "earth-frames" || tourStop === "gcrf-itrf-day";
+    const labels: LabelSpec[] = specs.flatMap((t): LabelSpec[] => {
+      if (t.length === undefined || !frames) {
+        return [
+          {
+            id: t.id,
+            text: t.label,
+            family: t.family,
+            priority: t.id === selectedFrame() ? 3 : 1,
+            at: () => globe.triadOrigin(t.id),
+          },
+        ];
+      }
+      // A geocentric triad names each axis at its tip ("x ITRF", "y GCRF"),
+      // GCRF's to the left of the point and ITRF's to the right; the two z
+      // axes, nearly one line, carry both names stacked on the left (S-I1).
+      const length = t.length;
+      return (["x", "y", "z"] as const).map((name, axis) => ({
+        id: `${t.id}:${name}`,
+        text: `${name} ${t.label}`,
+        family: t.family,
+        priority: t.id === selectedFrame() ? 3 : 2,
+        ...((t.id === "GCRF" || name === "z") && { side: "left" as const }),
+        ...(t.id !== "GCRF" && name === "z" && { dy: 18 }),
+        ...(pinned && { pinned: true }),
+        at: () => globe.triadOrigin(t.id) && axisTip(t.frame, length, axis),
+      }));
+    });
     globe.setLabels([...labels, ...[...overlayLabels.values()].flat()]);
   }
 
@@ -1707,6 +1706,11 @@ export function run(context: ExampleContext): ExampleRun {
     switch (camera) {
       case "opening":
         return OPENING;
+      case "earthFrames":
+        // Stops 1 and 2 (S-I1): from over the North Atlantic, high, where
+        // both triads show axes in front of the Earth (ITRF's x at 0°
+        // longitude and its z; GCRF's wherever the clock turns them).
+        return framingAt(-30, 42, 4 * EARTH_RADIUS);
       case "stay":
         return undefined;
       case "designGrid":
@@ -2608,6 +2612,10 @@ export function run(context: ExampleContext): ExampleRun {
         // minute of clock time, at most once a second (R8).
         placeOrion();
         updateMinorGrid();
+        if (headlight) {
+          // Follows the camera through the stop's flight.
+          lightFromCamera();
+        }
         if (walk && Math.abs(now - walkAt) > 1000 && real - walkReal > 250) {
           walkAt = now;
           walkReal = real;

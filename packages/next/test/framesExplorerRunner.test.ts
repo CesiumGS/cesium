@@ -22,6 +22,7 @@ import {
 } from "../examples/frames-explorer/tests.ts";
 import { createFrames } from "../src/frames/frames.ts";
 import type { ProjApi } from "../src/engineering/proj.ts";
+import { plainAccuracy } from "../examples/frames-explorer/stress/runner.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
 
 const frames = createFrames(syntheticFrameData());
@@ -754,5 +755,21 @@ describe("what the inspector needs, filled by the catalog (F27, F28)", () => {
       (c) => c.id === "reference-values.ngs-gu2195",
     );
     expect(ngs?.cites?.[0]).toBe("ngs-GU2195");
+  });
+});
+
+describe("plainAccuracy", () => {
+  it("keeps the warning codes in step with the warnings (S-I4)", () => {
+    const a = {
+      meters: 1,
+      terms: [{ source: "ephemeris" as const, meters: 1, note: "DE440" }],
+      warnings: ["a carries its own instant … no signal"],
+      warningCodes: ["own-instant-no-signal" as const],
+    };
+    const p = plainAccuracy(a);
+    expect(p).toEqual(a);
+    expect(p.warningCodes).not.toBe(a.warningCodes);
+    const uncoded = plainAccuracy({ meters: 1, terms: [], warnings: [] });
+    expect(uncoded).not.toHaveProperty("warningCodes");
   });
 });

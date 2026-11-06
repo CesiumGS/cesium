@@ -238,7 +238,7 @@ km; a lunar site at 100 m. Under reduced motion, flights cut.
 
 | Stop                         | Camera                                                                                                                                                    | On                                                                                                                                                                                        | Caption                                                                                                                                                                      |
 | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1 Earth's frames             | the opening shot                                                                                                                                          | triads (ITRF, GCRF, EME2000, Sacramento ENU)                                                                                                                                              | ITRF turns with the Earth; GCRF doesn't. Each triad is a frame's axes at the clock's time.                                                                                   |
+| 1 Earth's frames             | over the North Atlantic, 30°W 42°N, 4 Earth radii, lit from the camera (6c-1 fix round 2)                                                                 | triads (ITRF with cones, GCRF with square heads, each axis named, pinned)                                                                                                                 | ITRF turns with the Earth; GCRF doesn't. Each triad is a frame's axes at the clock's time                                                                                    |
 | 2 GCRF to ITRF over a day    | no move; the globe lit from the camera while the stop shows (6c-1 fix round)                                                                              | ITRF and GCRF triads                                                                                                                                                                      | the globe is drawn Earth-fixed, so GCRF's triad turns once against ITRF's in a sidereal day (the clock plays at 3,600×: 24 s), lit from the camera so the turn stays visible |
 | 3 The California design grid | over the grid's centre, 180 km range, 55° tilt, heading 0°                                                                                                | design grid (10 km lines; 2 km lines only under 60 km range), true-north lines; imagery dimmed (exposure −0.6); target: `globe-stop3-target`                                              | grid north and true north part ways away from the central meridian: the convergence angle                                                                                    |
 | 4 Rigid against exact        | from the side: south of the line, looking north, 10° down, 22 km, the whole line across the view (6c-1 fix round: looking back along it foreshortened it) | rigid (dashed) and exact (solid) 20 km line, the separation drawn ×50 with a "Show true scale" switch, a white leader between the far ends labelled with the true sag; imagery not dimmed | a 20 km design line placed rigidly parts from the exact one by about 31 m at its far end (drawn ×50 so it shows)                                                             |
@@ -1001,6 +1001,27 @@ Every term below has a popover wherever it appears (`panel/glossary.ts`,
   shows as "not bounded" in the legend and on the tree's node, with the
   error, and is asked again when the clock moves. A callout marks Orion at
   the clock's instant ("Orion now, ±10 m").
+
+### 6c-1 fix round 2
+
+- **Stops 1 and 2 show their subject (S-I1).** Each geocentric axis is
+  named at its tip ("x ITRF", "y GCRF"): GCRF's names to the left of the
+  point and ITRF's to the right, the two z names stacked on the left. During
+  stops 1 and 2 they are pinned: exempt from the declutter, and a tip just
+  past the view's edge keeps its name at the edge. GCRF's axes end in square
+  heads, ITRF's in cones, so the two differ without the labels. Stop 1 looks
+  from over the North Atlantic (30°W 42°N, 4 Earth radii), where axes of
+  both triads stand in front of the Earth; stops 1 and 2 are lit from the
+  camera.
+- **Geocentric axes behind the Earth.** Each geocentric axis is its own
+  draw, hidden while its tip is behind the Earth: the engine draws them
+  through the globe otherwise (there is no depth-test switch to dash them),
+  which read as a shaft on the near side.
+- **A not-bounded walk total (S-I9)** says only "Not bounded" in the
+  headline, with its reason on its own line below at body size.
+- **Warning codes everywhere a statement is rebuilt:** an engineering
+  frame's composed statement and the catalog's `plainAccuracy` keep
+  `warningCodes`.
 
 ### Carried forward (engine work)
 

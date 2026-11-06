@@ -147,6 +147,7 @@ export function composedView(
           : Math.hypot(s.meters, extra.projection.meters),
       terms,
       warnings: s.warnings,
+      ...(s.warningCodes && { warningCodes: s.warningCodes }),
     };
   } else {
     return undefined;

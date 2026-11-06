@@ -21,7 +21,6 @@ export interface AccuracyTerm {
   note: string;
 }
 
-/** What a measurement claims to know, term by term. */
 /**
  * What a statement's warning is about, for a reader that filters them:
  * `own-instant-no-signal` and `coincident` concern only the signal (light
@@ -35,6 +34,7 @@ export type WarningCode =
   | "alignment-unused"
   | "leap-seconds-expired";
 
+/** What a measurement claims to know, term by term. */
 export interface AccuracyStatement {
   /** The root sum square of the terms; `undefined` if any term is (R7). */
   meters: number | undefined;

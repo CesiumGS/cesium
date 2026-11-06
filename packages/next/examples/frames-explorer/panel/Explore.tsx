@@ -36,7 +36,7 @@ import {
   type Reference,
 } from "./model.ts";
 import { SheetHead, Split } from "./Sheet.tsx";
-import { AccuracyText, ITEM_LABEL, Term } from "./parts.tsx";
+import { AccuracyText, ITEM_LABEL, Term, unknownTerms } from "./parts.tsx";
 
 /** A tab's section: an h2 in StrataKit's subtitle style, and its content. */
 export function Section({
@@ -267,10 +267,22 @@ export function Walk({
             view.statement.meters !== undefined ? (
               "exact at the origin"
             ) : (
-              <AccuracyText accuracy={view.statement} />
+              // The headline says only "Not bounded"; why goes on its own
+              // line below, at body size (S-I9).
+              <AccuracyText accuracy={view.statement} compact />
             )}
           </span>
         </p>
+      )}
+      {view && view.statement.meters === undefined && (
+        <Typography
+          variant="body-sm"
+          color="textSecondary"
+          render={<p />}
+          className="fx-walk-why"
+        >
+          Not bounded: {unknownTerms(view.statement)[0] ?? "a term has no size"}
+        </Typography>
       )}
       <ol
         className="fx-walk-edges"
