@@ -700,7 +700,7 @@ path bar, the walk's dots, the budget bar's segments (each term colored by
 where its error comes from; a term on no edge, the Moon's relativity, in
 neutral gray), the legend, and the drawn triads' origins, labels and
 lines. Each family has a tone for light surfaces and one for dark surfaces
-and the globe (`panel/families.ts`, `panel/panel.css`); the 3D geometry
+and the globe (`panel/families.ts`, `panel/tokens.css`); the 3D geometry
 and the HUD always take the on-dark tone.
 
 Contrast against StrataKit's surfaces (WCAG relative luminance, computed
@@ -1089,6 +1089,52 @@ asset's metadata nor its tileset names the CRS it came from. Paste its
 WKT2 above to check it." With the evaluation token, `GET /v1/assets/{id}`
 reads only Cesium's own assets, which the area says before the user
 tries. An iModel GUID is answered without a request.
+
+## Files (Task 4b, 2026-11-06)
+
+`main.ts` keeps `run`. It builds the page's parts and wires them, in the
+order they set up their listeners and teardown (the scope undoes them in
+reverse). Each part exports a `create…(deps)` that returns its API and a
+`dispose`. A part reads another's state only through the functions it is
+given; shared state is passed as an explicit object (`PageCore`, the label
+board, an overlay's `OverlayState`).
+
+| File                 | What it does                                                                                                                |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `main.ts`            | `run`: the HUD host, the globe, the worker client, the scenario host, the clock's opening; builds and wires the parts below |
+| `page.ts`            | `PageCore` (what every part is given), the panel model's source (`invalidate`), shared constants and helpers                |
+| `frameData.ts`       | The frame data and the frames store's manifest, loaded on the main thread                                                   |
+| `treeState.ts`       | The frame tree at the clock's instant, its composed accuracy, the engineering node                                          |
+| `triadLayer.ts`      | The triads and the label board every part's labels go through                                                               |
+| `walkPath.ts`        | The selected frame's dotted walk on the globe                                                                               |
+| `overlayConfig.ts`   | The overlays' names, needs, the California grid and site, default lines (pure)                                              |
+| `overlayControl.ts`  | The overlays' state, worker requests, the 2 km lines, the inset, the legend's view                                          |
+| `rigidOverlay.ts`    | Stop 4's lines: layers and labels from the worker's geometry                                                                |
+| `orionLayer.ts`      | Orion's path, placed with its frame as the clock runs, and its statements                                                   |
+| `cameraViews.ts`     | Where each scenario, frame and stop frames the globe, and the orbit it lands in                                             |
+| `cameraRig.ts`       | Flights, globe and orbit controls, the hand-over, the widened limits, the pivot marker                                      |
+| `scenarios/stage.ts` | Each scenario's scene: enter, knobs, leave (clock, light, exposure, its frames)                                             |
+| `callouts.ts`        | The lunar clock's callout, Orion's marker and path label                                                                    |
+| `catalogRuns.ts`     | The stress catalog's runs and results                                                                                       |
+| `userCrs.ts`         | "Try your own": the ion asset and the bound-CRS checks                                                                      |
+| `pageReport.ts`      | The report's environment and the Report tab's lines                                                                         |
+| `panelModel.ts`      | The panel's model, built from every part                                                                                    |
+| `scenarioModel.ts`   | The scenario's part of the model (pure: freshness, published value, proof, route)                                           |
+| `globeSelection.ts`  | The selection on the globe (R14), Frame content (F), the links' known ids                                                   |
+| `deepLinks.ts`       | Back, forward and edited links (R15)                                                                                        |
+| `frameLoop.ts`       | The per-frame work                                                                                                          |
+| `panelActions.ts`    | What the panel asks of the page                                                                                             |
+
+The stylesheet is `panel/panel.css`, an index that imports one file per
+part in cascade order: `tokens.css` (the family palette and axis colors),
+`PanelFrame.css`, `shared.css`, then each component's (`StatusStrip.css`,
+`Explore.css`, `Verify.css`, `Inspector.css`, `TryYourOwn.css`,
+`Report.css`, `Hud.css`, `Scenarios.css`, `RouteSteps.css`,
+`TreeDiagram.css`, `ScenarioAnswer.css`, `Knobs.css`, `Proof.css`,
+`VerificationHead.css`), then `motion.css`, `narrow.css` and
+`GlobeLabels.css`. Keep the order: rules of equal specificity resolve by
+it. A new scenario's styles go in its component's file, or a new file
+imported where its rules belong in the cascade.
 
 ## Glossary
 
