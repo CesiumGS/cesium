@@ -247,6 +247,16 @@ export {
   L_C,
   EARTH_ROTATION_RATE,
 } from "./measure/constants.ts";
+export {
+  measure,
+  measureSpan,
+  type Measurement,
+  type MeasureOptions,
+} from "./measure/measure.ts";
+export type { Leg } from "./measure/doppler.ts";
+export type { AccuracyStatement, AccuracyTerm } from "./measure/accuracy.ts";
+export { surfaceDistance } from "./measure/surface.ts";
+export type { ShapiroBody } from "./measure/lightTime.ts";
 export { EARTH, MOON, type Body } from "./scene/Body.ts";
 export { frameBias } from "./time/erfa/bias.ts";
 export { createFrames, type Frames } from "./frames/frames.ts";
