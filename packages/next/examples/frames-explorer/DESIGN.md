@@ -239,7 +239,7 @@ km; a lunar site at 100 m. Under reduced motion, flights cut.
 | Stop                         | Camera                                                                                                                                                    | On                                                                                                                                                                                        | Caption                                                                                                              |
 | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
 | 1 Earth's frames             | over the North Atlantic, 30°W 42°N, 4 Earth radii, lit from the camera (6c-1 fix round 2)                                                                 | triads (ITRF with cones, GCRF with square heads, each axis named, pinned)                                                                                                                 | ITRF turns with the Earth; GCRF doesn't. Each triad is a frame's axes at the clock's time                            |
-| 2 GCRF to ITRF over a day    | straight down the north pole, 5.5 Earth radii, lit from the camera (6c-1 fix round 3)                                                                     | ITRF and GCRF triads, each axis named, pinned                                                                                                                                             | GCRF's x and y turn once round against ITRF's, like clock hands, in a sidereal day (the clock plays at 3,600×: 24 s) |
+| 2 GCRF to ITRF over a day    | straight down the north pole, 5.5 Earth radii, lit from the camera (6c-1 fix round 3); imagery dimmed (exposure −0.6, 6c-2)                               | ITRF and GCRF triads only (the site triads hidden: Sacramento's crossed GCRF's x), each axis named, pinned                                                                                | GCRF's x and y turn once round against ITRF's, like clock hands, in a sidereal day (the clock plays at 3,600×: 24 s) |
 | 3 The California design grid | over the grid's centre, 180 km range, 55° tilt, heading 0°                                                                                                | design grid (10 km lines; 2 km lines only under 60 km range), true-north lines; imagery dimmed (exposure −0.6); target: `globe-stop3-target`                                              | grid north and true north part ways away from the central meridian: the convergence angle                            |
 | 4 Rigid against exact        | from the side: south of the line, looking north, 10° down, 22 km, the whole line across the view (6c-1 fix round: looking back along it foreshortened it) | rigid (dashed) and exact (solid) 20 km line, the separation drawn ×50 with a "Show true scale" switch, a white leader between the far ends labelled with the true sag; imagery not dimmed | a 20 km design line placed rigidly parts from the exact one by about 31 m at its far end (drawn ×50 so it shows)     |
 | 5 Orion's figure-eight       | down the Moon's orbit normal at the flyby, the Earth–Moon line across the view, the Earth, the Moon and the path framed (6c-1); 3.0 s flight              | Orion in GCRF, then after 4 s in MOON_ME                                                                                                                                                  | in GCRF a figure-eight round the Moon; in MOON_ME the far-side swing                                                 |
@@ -247,7 +247,10 @@ km; a lunar site at 100 m. Under reduced motion, flights cut.
 
 The caption sits top right (bottom, above the time controls, on views
 under 560 px), takes focus at each stop, and steps with the arrow keys;
-Escape ends the tour (I18). Each stop's link opens it (R15).
+Escape ends the tour (I18). Each stop's link opens it (R15). On a narrow
+view it starts folded to one row: the stop's number and title (ellipsized,
+in full on hover), Back and Next, a chevron that unfolds the caption and
+the stop's link, and the close button (F42). The choice holds across stops.
 
 ### The convergence exaggeration (stop 3, ruling F32)
 
@@ -1041,6 +1044,38 @@ Every term below has a popover wherever it appears (`panel/glossary.ts`,
   visitor sees). Stop 1 flies from it to the North Atlantic, where axes of
   both geocentric triads stand in front of the Earth; that flight is the
   stop's first move, and stop 2 then turns to the pole.
+
+### 6c-2
+
+- **The narrow caption folds (F42).** Under a 560 px view the caption
+  starts as one row (see "The tour"). Checked in motion at the 380 px
+  panel (900 × 1000), stop 2 across a simulated day at 3,600× (56
+  samples): every axis name shown, none overlapping, none under the
+  caption; before, ITRF's x name was under it in every sample.
+- **Stop 2 dims the imagery and draws the geocentric pair alone.** Lit from
+  the camera, the polar globe washed out behind the axes; exposure −0.6
+  (the engineering stops' dimming) during the stop. At desktop width the
+  eye's auto-exposure still brightens the small globe on black (mean globe
+  pixel 190 → 173 of 255 at −0.6; −1.5 gives 141); a stronger setting is
+  open. The Sacramento triad, which crossed GCRF's turning x axis, is
+  hidden during the stop (`TourStopSpec.geocentricOnly`).
+- **The distortion overlay states its placement.** Its line was "contours
+  from PROJ's scale factors" alone; it now leads with the recorded
+  operation ("placed ±2.00 m (1σ), the recorded operation; contours from
+  PROJ's scale factors"), as the grids' lines do (R8).
+- **The HUD's focus ring is the dark theme's in either scheme.** StrataKit
+  resolves its ring where the page's theme is set, so in light mode the
+  HUD's buttons had the light ring (oklch 47%), about 2.4:1 on the dark
+  HUD; the HUD restates it with the dark ring (11.6:1).
+- **Every result's "Compared against" is its own.** The Measurement card's
+  clothoid and design-against-ITRF checks, Orion's two non-error results
+  and the Bound CRSs card's checks other than the hand Helmert showed the
+  group's text; they now say what each compares (`content.ts`
+  `comparedFor`).
+- **Every group that places something names its frames** (`focus.frames`),
+  so selecting any such result highlights its frames in the tree and
+  selecting a frame filters Verify to the groups that use it (R14). The
+  vertical-profile and time-scale groups place nothing.
 
 ### Carried forward (engine work)
 

@@ -5,6 +5,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildReport,
+  reportCounts,
   type ReportEnvironment,
 } from "../examples/frames-explorer/report.ts";
 import type { StressResult } from "../examples/frames-explorer/tests.ts";
@@ -167,6 +168,37 @@ describe("buildReport (R15)", () => {
   it("gives the counts, with the user's input apart", () => {
     expect(report.markdown).toMatch(/2 passed, 1 failed, 1 skipped/);
     expect(report.markdown).toMatch(/1 of your input/);
+  });
+
+  it("keeps the user's shown-only results out of the shown count (R18)", () => {
+    const withShown: StressResult[] = [
+      ...results,
+      {
+        id: "bound-crss.ed50.accuracy",
+        group: "bound-crss",
+        title: "ED50: stated accuracy",
+        pass: true,
+        displayOnly: true,
+      },
+      {
+        id: "bound-crss.user.mine.accuracy",
+        group: "bound-crss",
+        title: "Mine: stated accuracy",
+        pass: true,
+        displayOnly: true,
+        userInput: true,
+      },
+    ];
+    const counts = reportCounts(withShown);
+    expect(counts).toEqual({
+      passed: 2,
+      failed: 1,
+      skipped: 1,
+      shown: 1,
+      yourInput: 2,
+    });
+    const md = buildReport(withShown, env).markdown;
+    expect(md).toMatch(/; 1 shown, not judged; 2 of your input/);
   });
 
   it("parses back to the same results", () => {
