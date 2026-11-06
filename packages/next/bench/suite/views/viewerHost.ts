@@ -257,6 +257,8 @@ export class NextViewerHost implements ViewerHost {
   private focus?: ZoomTarget;
   private load_?: { startedAt: number; model?: ModelLoad };
   private readonly warnings = new Set<string>();
+  /** Set when the frames data did not load; `load` clears `warnings`, this stays. */
+  private frameDataWarning?: string;
 
   static async create(
     element: HTMLElement,
@@ -267,6 +269,8 @@ export class NextViewerHost implements ViewerHost {
       globe: settings.terrain ? "terrain" : "ellipsoid",
       policy: settings.policy,
       renderMode: settings.continuous ? "continuous" : "onDemand",
+      // DE440 for the sky; the Viewer's default is the analytic one.
+      frameData: "/frames-data/",
       // A public asset: with CesiumJS's evaluation token where the
       // account's doesn't reach it, as other public assets load here.
       cityLights: IonTmsImagery.fromIon(3812).catch(() =>
@@ -278,6 +282,13 @@ export class NextViewerHost implements ViewerHost {
     // Content loads next: no frames of the whole Earth (the Viewer's start)
     // before the camera jumps to it; the view shows once it's framed.
     host.resume = viewer.suspendPresentation();
+    void viewer.frameData.then((data) => {
+      if (!data) {
+        host.frameDataWarning =
+          "frames data: not loaded, the sky is analytic (run `npm run setup`)";
+        host.warnings.add(host.frameDataWarning);
+      }
+    });
     viewer.ready.catch((error) =>
       host.warnings.add(`globe: ${message(error)}`),
     );
@@ -291,6 +302,9 @@ export class NextViewerHost implements ViewerHost {
     const { engine, world } = viewer;
     const warnings = this.warnings;
     warnings.clear();
+    if (this.frameDataWarning) {
+      warnings.add(this.frameDataWarning);
+    }
     const info: NonNullable<NextViewerHost["load_"]> = {
       startedAt: performance.now(),
     };

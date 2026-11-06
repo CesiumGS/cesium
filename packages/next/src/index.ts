@@ -242,6 +242,7 @@ export { toParentMatrix } from "./frames/matrix.ts";
 export { EARTH, MOON, type Body } from "./scene/Body.ts";
 export { frameBias } from "./time/erfa/bias.ts";
 export { createFrames, type Frames } from "./frames/frames.ts";
+export { createSkyState, skyState, type SkyState } from "./frames/sky.ts";
 export {
   framePoint,
   convertPoint,
