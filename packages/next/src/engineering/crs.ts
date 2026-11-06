@@ -85,11 +85,54 @@ export interface RecordedOperation {
   inverse(xyz: ArrayLike<number>, out?: Float64Array): Float64Array;
 }
 
+/**
+ * Where the coordinates are, in degrees of longitude and latitude: west may
+ * exceed east for a box across 180°.
+ */
+export interface AreaOfInterest {
+  readonly west: number;
+  readonly south: number;
+  readonly east: number;
+  readonly north: number;
+}
+
 export interface ResolveOptions {
   /** A PROJ pipeline to use as is, skipping the candidate search. */
   readonly pipeline?: string;
   /** Accept a ballpark operation when no accurate one has its grids. */
   readonly allowBallpark?: boolean;
+  /**
+   * Where the coordinates are. PROJ then lists the operations whose area of
+   * use contains this box. Without it PROJ keeps only operations whose area
+   * contains the whole source CRS's area, which drops every transformation
+   * that covers only part of a large datum (ED50 to WGS 84 at a North Sea
+   * point leaves only a ballpark).
+   */
+  readonly areaOfInterest?: AreaOfInterest;
+}
+
+/** Options for `listOperations`. */
+export interface ListOperationsOptions {
+  /** Where the coordinates are, as for `resolveOperation`. */
+  readonly areaOfInterest?: AreaOfInterest;
+}
+
+function checkedArea(area: AreaOfInterest): AreaOfInterest {
+  const { west, south, east, north } = area;
+  const finite = [west, south, east, north].every(Number.isFinite);
+  if (
+    !finite ||
+    south < -90 ||
+    north > 90 ||
+    south > north ||
+    Math.abs(west) > 180 ||
+    Math.abs(east) > 180
+  ) {
+    throw new RangeError(
+      `areaOfInterest must be finite degrees with -90 <= south <= north <= 90 and |west|, |east| <= 180; got west ${west}, south ${south}, east ${east}, north ${north}`,
+    );
+  }
+  return area;
 }
 
 // proj_create does not throw for a definition it cannot build (a missing grid,
@@ -265,21 +308,32 @@ function refinedInverse(
  * factory context. For a pair PROJ cannot relate (a Moon CRS and the
  * Earth's) the binding throws "Error getting list"; that comes back as a
  * null list with the error. The CRSs themselves must exist (else it throws).
+ * With an area of interest the list holds the operations whose area of use
+ * contains it.
  */
 function candidateList(
   proj: ProjApi,
   source: string,
   target: string,
+  areaOfInterest?: AreaOfInterest,
 ): { candidates: PjObjList | null; listError?: unknown } {
+  const area =
+    areaOfInterest === undefined ? undefined : checkedArea(areaOfInterest);
   const from = create(proj, source, "the source CRS");
   const to = create(proj, target, "the target CRS");
+  const context = proj.proj_create_operation_factory_context("");
+  if (area !== undefined) {
+    proj.proj_operation_factory_context_set_area_of_interest(
+      context,
+      area.west,
+      area.south,
+      area.east,
+      area.north,
+    );
+  }
   try {
     return {
-      candidates: proj.proj_create_operations(
-        from,
-        to,
-        proj.proj_create_operation_factory_context(""),
-      ),
+      candidates: proj.proj_create_operations(from, to, context),
     };
   } catch (error) {
     return { candidates: null, listError: error };
@@ -298,7 +352,8 @@ function isBallpark(proj: ProjApi, candidate: PJ): boolean {
  *  - With `options.pipeline` the string is used as is; its accuracy is unknown
  *    (undefined) and it is not marked ballpark. It throws if a grid it names is
  *    missing.
- *  - Otherwise PROJ's candidate list for the pair is walked in PROJ's order
+ *  - Otherwise PROJ's candidate list for the pair (within
+ *    `options.areaOfInterest`, when given) is walked in PROJ's order
  *    (by accuracy and area of use) and the first instantiable operation whose
  *    grids all report available is taken, in its normalized-for-visualization
  *    form. A ballpark operation (PROJ names it "Ballpark ...") is taken only
@@ -311,7 +366,7 @@ export function resolveOperation(
   target: string,
   options: ResolveOptions = {},
 ): RecordedOperation {
-  const { pipeline, allowBallpark = false } = options;
+  const { pipeline, allowBallpark = false, areaOfInterest } = options;
   // A time-dependent operation (a dynamic datum's Helmert with rates) is
   // evaluated at the source's coordinate epoch (decimal year); with none,
   // at PROJ's "no epoch" (infinity), where the rates do not apply.
@@ -337,6 +392,7 @@ export function resolveOperation(
     proj,
     crsDefinition(source),
     target,
+    areaOfInterest,
   );
   if (!candidates || candidates.length() === 0) {
     throw new Error(
@@ -447,19 +503,24 @@ export interface OperationCandidate {
  * that is instantiable, has no missing grids and a PROJ string, and is not a
  * ballpark (unless `allowBallpark`).
  *
+ * With `options.areaOfInterest` the list holds the operations whose area of
+ * use contains that box, as `resolveOperation` walks it with the same option.
+ *
  * Plain data, safe to post to a worker. An empty list when PROJ relates no
  * operation between the two (a Moon CRS and the Earth's); throws when PROJ
- * cannot create either CRS.
+ * cannot create either CRS, and a RangeError for an invalid area.
  */
 export function listOperations(
   proj: ProjApi,
   source: CrsRef,
   target: CrsRef,
+  options: ListOperationsOptions = {},
 ): readonly OperationCandidate[] {
   const { candidates, listError } = candidateList(
     proj,
     crsDefinition(source),
     crsDefinition(target),
+    options.areaOfInterest,
   );
   if (listError !== undefined) {
     // The binding's answer for a pair PROJ cannot relate; anything else is a

@@ -10,8 +10,12 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { framesDataDirectory } from "../../scripts/frameData.mjs";
+import references from "../../examples/frames-explorer/references.json";
 import {
   STRESS_CASES,
+  STRESS_GROUPS,
+  boundCrsChecks,
+  groupResults,
   orionFromOem,
   ORION_OEM,
   runStress,
@@ -191,6 +195,64 @@ describe("the frames explorer's stress tests, headless", () => {
     expect(Object.keys(recorded).sort()).toEqual(
       fingerprinted.map((r) => r.id).sort(),
     );
+  });
+});
+
+describe('boundCrsChecks, R18\'s "Try your own"', () => {
+  const wkt = (key: string) =>
+    (references.entries as unknown as Record<string, { wkt2: string }>)[
+      `input-wkt2-${key}`
+    ]!.wkt2;
+
+  it("runs the bound-CRS checks on pasted WKT, marked as the user's input, unfingerprinted and uncounted", async () => {
+    const user = await boundCrsChecks(
+      context,
+      wkt("ed50-utm31n"),
+      "My ED50 model",
+    );
+    const ids = user.map((r) => r.id);
+    expect(ids).toContain("bound-crss.user.my-ed50-model.helmert");
+    for (const r of user) {
+      expect(r.userInput, r.id).toBe(true);
+      expect(r.fingerprint, r.id).toBeUndefined();
+      expect(r.group).toBe("bound-crss");
+      expect(structuredClone(r)).toEqual(r);
+    }
+    // The judged checks pass for the catalog's own input; the registry
+    // effect is shown, not judged, with no EPSG record to check it by.
+    const judged = user.filter((r) => r.displayOnly !== true);
+    expect(judged.map((r) => r.id).sort()).toEqual(
+      [
+        "bound-crss.user.my-ed50-model.helmert",
+        "bound-crss.user.my-ed50-model.recorded-operation",
+        "bound-crss.user.my-ed50-model.round-trip",
+        "bound-crss.user.my-ed50-model.source-crs",
+      ].sort(),
+    );
+    for (const r of judged) {
+      expect(r.pass, r.id).toBe(true);
+      expect(Math.abs(r.value!)).toBeLessThanOrEqual(r.tolerance!);
+    }
+    // The card's count leaves the user's input out.
+    const card = STRESS_GROUPS.find((g) => g.id === "bound-crss")!;
+    const headline = card.headline(user);
+    expect(headline).toMatch(/^0 of 0 pass/);
+    expect(groupResults(card, user)).toHaveLength(user.length);
+  });
+
+  it("says why it skips the Helmert when the WKT carries no TOWGS84", async () => {
+    const user = await boundCrsChecks(context, wkt("wgs84-utm31n"), "UTM");
+    const helmert = user.find((r) => r.id.endsWith(".helmert"))!;
+    expect(helmert.displayOnly).toBe(true);
+    expect(helmert.detail).toMatch(/no TOWGS84/);
+  });
+
+  it("gives one failed result, not a throw, for text that is not a CRS", async () => {
+    const user = await boundCrsChecks(context, "PROJCRS[oops", "Broken");
+    expect(user).toHaveLength(1);
+    expect(user[0]!.pass).toBe(false);
+    expect(user[0]!.userInput).toBe(true);
+    expect(user[0]!.error).toMatch(/WKT/);
   });
 });
 

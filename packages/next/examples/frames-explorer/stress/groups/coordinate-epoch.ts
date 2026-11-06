@@ -1,5 +1,6 @@
 // Coordinate epoch: NAD83(2011) against ITRF2014, and the hand-coded Helmert.
 import { resolveOperation } from "../../../../src/engineering/crs.ts";
+import { type EpsgParameter, epsgTimeDependentHelmert } from "../datum.ts";
 import {
   type HelmertParameters,
   geodeticToGeocentric,
@@ -26,48 +27,6 @@ import {
   stressCase,
   sub3,
 } from "../shared.ts";
-
-type EpsgParameter = readonly [string, string, string];
-
-/** A Helmert transformation's parameters and rates from an EPSG record, in SI units. */
-function epsgHelmert(parameters: readonly EpsgParameter[]) {
-  const value = (name: string) => {
-    const p = parameters.find((q) => q[0] === name);
-    if (p === undefined) {
-      throw new Error(`the EPSG record has no "${name}"`);
-    }
-    const unit: Record<string, number> = {
-      metre: 1,
-      "metres per year": 1,
-      "milliarc-second": MILLIARCSECOND,
-      "milliarc-seconds per year": MILLIARCSECOND,
-      "parts per billion": 1e-9,
-      "parts per billion per year": 1e-9,
-      year: 1,
-    };
-    const factor = unit[p[2]];
-    if (factor === undefined) {
-      throw new Error(`unknown EPSG unit "${p[2]}"`);
-    }
-    return printed(p[1]).value * factor;
-  };
-  const set = (prefix: string): HelmertParameters => ({
-    tx: value(`${prefix}X-axis translation`),
-    ty: value(`${prefix}Y-axis translation`),
-    tz: value(`${prefix}Z-axis translation`),
-    rx: value(`${prefix}X-axis rotation`),
-    ry: value(`${prefix}Y-axis rotation`),
-    rz: value(`${prefix}Z-axis rotation`),
-    ds: value(
-      prefix === "" ? "Scale difference" : "Rate of change of scale difference",
-    ),
-  });
-  return {
-    parameters: set(""),
-    rates: set("Rate of change of "),
-    referenceEpoch: value("Parameter reference epoch"),
-  };
-}
 
 /** IOGP's printed Helmert parameters ("+4.5 m", "–0.4254 msec", "+0.00971 ppm", "+1.42 mm/yr") in SI units. */
 function iogpParameters(p: Record<string, string>): HelmertParameters {
@@ -192,7 +151,7 @@ const coordinateEpochCase = stressCase(
 
     // 3. The library against EPSG 8970, reversed (NAD83(2011) to ITRF2014).
     const record = cited<{ parameters: readonly EpsgParameter[] }>("epsg-8970");
-    const h8970 = epsgHelmert(record.parameters);
+    const h8970 = epsgTimeDependentHelmert(record.parameters);
     const grs80 = ellipsoidOf("epsg-ellipsoid-grs80");
     const mark = cited<NgsMark>("ngs-GU2195");
     const lat = sexagesimal(mark.latitude).value;

@@ -101,6 +101,17 @@ export interface ProjApi {
   proj_create_operation_factory_context(
     authority: string,
   ): PjOperationFactoryContext;
+  /**
+   * Restricts the candidates to operations whose area of use contains this
+   * box (degrees; west may exceed east across 180°).
+   */
+  proj_operation_factory_context_set_area_of_interest(
+    context: PjOperationFactoryContext,
+    west: number,
+    south: number,
+    east: number,
+    north: number,
+  ): void;
   proj_create_operations(
     source: PJ,
     target: PJ,

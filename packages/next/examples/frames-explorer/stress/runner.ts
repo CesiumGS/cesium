@@ -71,6 +71,12 @@ export interface StressResult {
    */
   displayOnly?: boolean;
   fingerprint?: Fingerprint;
+  /**
+   * A result of the user's own input (R18's "Try your own", through
+   * boundCrsChecks): shown in its card and the report, but left out of the
+   * pass counts, the data test and the fingerprints.
+   */
+  userInput?: boolean;
   /** Set when the run compared `fingerprint` against a recorded one (R12). */
   fingerprintCheck?: { match: boolean; difference?: string };
   /** For a skipped case: the data that couldn't be had. */

@@ -12,8 +12,11 @@ function standardHeadline(results: readonly StressResult[]) {
   if (results.length === 0) {
     return undefined;
   }
-  // Display-only results (effects with no verdict) are not counted.
-  const judged = results.filter((r) => r.displayOnly !== true);
+  // Display-only results (effects with no verdict) and the user's own
+  // input (R18) are not counted.
+  const judged = results.filter(
+    (r) => r.displayOnly !== true && r.userInput !== true,
+  );
   const passed = judged.filter((r) => r.pass).length;
   const count = `${passed} of ${judged.length} pass`;
   const effect = results.find((r) => r.effect !== undefined)?.effect;
@@ -78,8 +81,8 @@ const ALL_FRAMES = [
 ];
 
 /**
- * Every question card, in the order the Verify tab lists them. The groups
- * marked "1b" and "1c" get their cases from later tasks.
+ * Every question card, in the order the Verify tab lists them; every group
+ * but the virtual Reproducibility has cases.
  */
 export const STRESS_GROUPS: readonly StressGroup[] = [
   group(

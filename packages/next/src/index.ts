@@ -178,8 +178,10 @@ export {
   listOperations,
   MOON_GEOGRAPHIC_CRS,
   resolveOperation,
+  type AreaOfInterest,
   type CrsRef,
   type CrsUnits,
+  type ListOperationsOptions,
   type OperationCandidate,
   type RecordedOperation,
   type ResolveOptions,
@@ -293,7 +295,7 @@ export {
   type Measurement,
   type MeasureOptions,
 } from "./measure/measure.ts";
-export type { Leg } from "./measure/doppler.ts";
+export { properTimeRate, type Leg } from "./measure/doppler.ts";
 export type { AccuracyStatement, AccuracyTerm } from "./measure/accuracy.ts";
 export { surfaceDistance, type SurfaceDistance } from "./measure/surface.ts";
 export type { ShapiroBody } from "./measure/lightTime.ts";
