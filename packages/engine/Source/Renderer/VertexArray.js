@@ -185,7 +185,7 @@ function bind(gl, attributes, indexBuffer) {
  * @param {object} options Object with the following properties:
  * @param {Context} options.context The context in which the VertexArray gets created.
  * @param {object[]} options.attributes An array of attributes.
- * @param {IndexBuffer} [options.indexBuffer] An optional index buffer.
+ * @param {Buffer} [options.indexBuffer] An optional index buffer.
  *
  * @returns {VertexArray} The vertex array, ready for use with drawing.
  *
@@ -288,7 +288,8 @@ function bind(gl, attributes, indexBuffer) {
  * @see Buffer#createIndexBuffer
  * @see Context#draw
  *
- * @private
+ * @constructor
+ * @internal
  */
 function VertexArray(options) {
   options = options ?? Frozen.EMPTY_OBJECT;
@@ -920,6 +921,12 @@ VertexArray.prototype.isDestroyed = function () {
   return false;
 };
 
+/**
+ * Destroys the vertex array object, and its vertex and index buffers whose
+ * vertexArrayDestroyable flag is true.
+ *
+ * @returns {void}
+ */
 VertexArray.prototype.destroy = function () {
   const attributes = this._attributes;
   for (let i = 0; i < attributes.length; ++i) {

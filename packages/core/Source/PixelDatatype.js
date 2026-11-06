@@ -102,7 +102,7 @@ PixelDatatype.validate = function (pixelDatatype) {
  * @param {PixelDatatype} pixelDatatype The pixel datatype.
  * @returns {function} The constructor for the appropriate TypedArray class.
  *
- * @private
+ * @internal
  */
 PixelDatatype.getTypedArrayConstructor = function (pixelDatatype) {
   const sizeInBytes = PixelDatatype.sizeInBytes(pixelDatatype);
