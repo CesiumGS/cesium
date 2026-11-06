@@ -556,6 +556,88 @@ describe("Trajectory", () => {
     });
   });
 
+  it("honors the OEM's useable range, each side on its own", () => {
+    const epochs = range(0, 600, 60);
+    const base = {
+      interpolation: HERMITE7,
+      epochs: Array.from(epochs, isoTdb),
+      states: Array.from(epochs, () => [1, 2, 3, 0, 0, 0]),
+    };
+    const both = Trajectory.fromOem(
+      parseOem(
+        oemText({
+          ...base,
+          interpolation: `${HERMITE7};USEABLE_START_TIME = ${isoTdb(120)};USEABLE_STOP_TIME = ${isoTdb(480)}`,
+        }),
+        leap,
+      ),
+      frames,
+      OPTIONS,
+    );
+    expect(both.spans).toEqual([[120, 480]]);
+    expect(both.state(at(300))[0]).toBeCloseTo(1000, 9);
+    expect(both.contains(at(60))).toBe(false);
+    expect(() => both.state(at(60))).toThrow(/outside its data/);
+    expect(() => both.state(at(540))).toThrow(/outside its data/);
+    const startOnly = Trajectory.fromOem(
+      parseOem(
+        oemText({
+          ...base,
+          interpolation: `${HERMITE7};USEABLE_START_TIME = ${isoTdb(120)}`,
+        }),
+        leap,
+      ),
+      frames,
+      OPTIONS,
+    );
+    expect(startOnly.spans).toEqual([[120, 600]]);
+    // A state inside the range near its edge still uses states outside it.
+    expect(both.state(at(120))[0]).toBeCloseTo(1000, 9);
+  });
+
+  it("clamps an SPK summary to the stored epochs (R3)", () => {
+    const buffer = constantSpk(100, 300, 50, 1);
+    // Record 2 is the summary record: 3 control doubles, then start and end.
+    const view = new Float64Array(buffer, 1024, 128);
+    expect(view[3]).toBe(100);
+    view[3] = 0;
+    view[4] = 1000;
+    const traj = Trajectory.fromSpk([buffer], 1000, frames, {
+      ...OPTIONS,
+      j2000: "icrf",
+    });
+    expect(traj.spans).toEqual([[100, 300]]);
+    expect(() => traj.state(at(50))).toThrow(/outside its data/);
+    expect(() => traj.state(at(500))).toThrow(/outside its data/);
+    expect(traj.state(at(150))[0]).toBeCloseTo(1000, 9);
+  });
+
+  it("rejects a half-specified OEM interpolation (R5)", () => {
+    const epochs = range(0, 240, 60);
+    const base = {
+      epochs: Array.from(epochs, isoTdb),
+      states: Array.from(epochs, () => [1, 2, 3, 0, 0, 0]),
+    };
+    const option = {
+      ...OPTIONS,
+      interpolation: { method: "lagrange", degree: 3 },
+    } as const;
+    const onlyMethod = parseOem(
+      oemText({ ...base, interpolation: "INTERPOLATION = HERMITE" }),
+      leap,
+    );
+    expect(() => Trajectory.fromOem(onlyMethod, frames, option)).toThrow(
+      /ORION.*INTERPOLATION but no INTERPOLATION_DEGREE/,
+    );
+    const onlyDegree = parseOem(
+      oemText({ ...base, interpolation: "INTERPOLATION_DEGREE = 7" }),
+      leap,
+    );
+    expect(() => Trajectory.fromOem(onlyDegree, frames, option)).toThrow(
+      /ORION.*INTERPOLATION_DEGREE but no INTERPOLATION$/,
+    );
+  });
+
   it("stores the accuracy as given", () => {
     for (const accuracy of ["precise", "approximate"] as const) {
       const traj = Trajectory.fromOem(cubicOem(), frames, {
