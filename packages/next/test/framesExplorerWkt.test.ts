@@ -11,8 +11,10 @@ import {
 import {
   axisMetres,
   bboxCentre,
+  NotHelmertError,
   ellipsoidOfNode,
   epsgId,
+  helmertSkipWhy,
   parseWkt,
   projectionOrigin,
   sourceCrsNode,
@@ -209,5 +211,56 @@ describe("siteFromIfcMapConversion", () => {
         xAxisOrdinate: 0,
       }),
     ).toThrow(RangeError);
+  });
+});
+
+describe("why the hand Helmert is skipped (R18: the real reason, not 'unnamed')", () => {
+  const caught = (f: () => unknown): unknown => {
+    try {
+      f();
+    } catch (error) {
+      return error;
+    }
+    throw new Error("expected a throw");
+  };
+
+  it("names a bound transformation that isn't a Helmert by its method", () => {
+    const root = parseWkt(
+      `BOUNDCRS[SOURCECRS[GEOGCRS["x"]],TARGETCRS[GEOGCRS["y"]],ABRIDGEDTRANSFORMATION["t",METHOD["NTv2",ID["EPSG",9615]]]]`,
+    );
+    const error = caught(() => towgs84Of(root));
+    expect(error).toBeInstanceOf(NotHelmertError);
+    expect(helmertSkipWhy(error, "NTv2")).toBe(
+      "the bound transformation isn't a Helmert (NTv2), so there's no hand comparison",
+    );
+  });
+
+  it("gives a refused scale's own error, not 'isn't a Helmert'", () => {
+    const error = caught(() =>
+      towgs84Of(scaled('PARAMETER["Scale difference",3,SCALEUNIT["unity",1]]')),
+    );
+    expect(error).not.toBeInstanceOf(NotHelmertError);
+    const why = helmertSkipWhy(
+      error,
+      "Position Vector transformation (geog2D domain)",
+    );
+    expect(why).toMatch(/scale difference 3/);
+    expect(why).not.toMatch(/isn't a Helmert|unnamed/);
+  });
+
+  it("gives a malformed WKT1 TOWGS84's own error", () => {
+    const root = parseWkt(
+      WKT1_ED50.replace(
+        "TOWGS84[-87,-98,-121,0,0,0,0]",
+        "TOWGS84[-87,-98,-121,0]",
+      ),
+    );
+    const why = helmertSkipWhy(
+      caught(() => towgs84Of(root)),
+      undefined,
+    );
+    expect(why).toBe(
+      "the bound transformation's Helmert couldn't be read (WKT1 TOWGS84 needs 3 or 7 numbers, got 4), so there's no hand comparison",
+    );
   });
 });

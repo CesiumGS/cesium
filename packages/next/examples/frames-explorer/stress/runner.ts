@@ -731,7 +731,11 @@ export interface RunOptions {
   readonly signal?: AbortSignal;
   /** Called once per result, as it is judged. */
   readonly onResult?: (result: StressResult) => void;
-  /** Only the cases with these ids, or in the groups with these ids (a card's "Run this group"). */
+  /**
+   * Only the cases with these ids, in the groups with these ids (a card's
+   * "Run this group"), or making the results with these ids (the
+   * Reproducibility card's).
+   */
   readonly ids?: readonly string[];
   /** The cases to run (runStress's default: the catalog, `STRESS_CASES`). */
   readonly cases?: readonly StressCase[];
@@ -750,6 +754,19 @@ export interface RunOptions {
  * (pass false, `missing`, and a `detail` saying what to do); a case that
  * throws gives a failed result with the error. It never rejects for a case.
  */
+/** Whether `ids` asks for case `c`: by its id, its group, or a result it makes (`<case id>.<part>`). */
+function asked(ids: ReadonlySet<string>, c: StressCase): boolean {
+  if (ids.has(c.id) || ids.has(c.group)) {
+    return true;
+  }
+  for (const id of ids) {
+    if (id.startsWith(`${c.id}.`)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export async function runCases(
   ctx: DataContext,
   cases: readonly StressCase[],
@@ -763,7 +780,7 @@ export async function runCases(
     if (signal?.aborted) {
       break;
     }
-    if (wanted !== undefined && !wanted.has(c.id) && !wanted.has(c.group)) {
+    if (wanted !== undefined && !asked(wanted, c)) {
       continue;
     }
     const met = await needs.meet(c.needs, c.optionalNeeds);

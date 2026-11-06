@@ -31,6 +31,7 @@ import {
   FACTOR_PATH,
   INVERSE_RESIDUAL,
   citation,
+  collectCitations,
   cited,
 } from "../references.ts";
 import {
@@ -67,6 +68,7 @@ import {
   parseWkt,
   projectionOrigin,
   sourceCrsNode,
+  helmertSkipWhy,
   towgs84Of,
 } from "../wkt.ts";
 
@@ -287,10 +289,12 @@ async function boundChecks(
   // 2. The recorded operation is the bound Helmert.
   let towgs84;
   let notHelmert: string | undefined;
+  let notHelmertError: unknown;
   try {
     towgs84 = towgs84Of(root);
   } catch (error) {
     notHelmert = messageOf(error);
+    notHelmertError = error;
   }
   const op = frame.operation;
   const registryCrs: CrsRef | undefined =
@@ -388,7 +392,7 @@ async function boundChecks(
   ) {
     const why =
       notHelmert !== undefined
-        ? `the bound transformation isn't a Helmert (${boundMethodName(root) ?? "unnamed"}), so there's no hand comparison`
+        ? helmertSkipWhy(notHelmertError, boundMethodName(root))
         : towgs84 === undefined
           ? "the WKT carries no TOWGS84 parameters, so there is no bound Helmert to compare with"
           : sourceEllipsoid === undefined
@@ -595,10 +599,15 @@ export async function boundCrsChecks(
 ): Promise<StressResult[]> {
   const idBase = `${GROUP}.user.${slug(label)}`;
   try {
-    const results = await boundChecks(ctx, wkt2, label, {
-      idBase,
-      userInput: true,
-    });
+    // Its own run for the citations it reads (the WGS 84 ellipsoid's
+    // record): outside a catalog run they'd otherwise pile up in
+    // references.ts's list for case-making, once per "Try your own" run.
+    const { value: results } = await collectCitations(() =>
+      boundChecks(ctx, wkt2, label, {
+        idBase,
+        userInput: true,
+      }),
+    );
     // Judged as the runner judges the catalog: a pass the checks don't bear
     // out is never shown (R18).
     return results.map((r) =>

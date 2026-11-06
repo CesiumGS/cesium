@@ -336,6 +336,26 @@ describe("needs that can't be met (Review Focus 4)", () => {
   });
 });
 
+describe("which cases a run asks for", () => {
+  it("runs the case that makes a result named by its id (the Reproducibility card's fingerprinted results)", async () => {
+    const a = stub([{}, {}]);
+    const b = stub([{}]);
+    const c = stub([{}]);
+    const results = await run([a, b, c], { ids: [`${b.id}.0`, a.id] });
+    expect(results.map((r) => r.id)).toEqual([
+      `${a.id}.0`,
+      `${a.id}.1`,
+      `${b.id}.0`,
+    ]);
+  });
+
+  it("doesn't take a case whose id only begins like another's", async () => {
+    const a = stub([{}], { id: "x.ab" });
+    const results = await run([a], { ids: ["x.a.0"] });
+    expect(results).toEqual([]);
+  });
+});
+
 describe("frame data as a need (R5, F44)", () => {
   const noFrames = (extra: Partial<DataContext> = {}): DataContext => ({
     loadFrames: () =>

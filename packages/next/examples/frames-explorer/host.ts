@@ -169,15 +169,14 @@ function yieldToEvents(): Promise<void> {
   });
 }
 
-/** The catalog with a yield after each case, so a `cancel` lands before the next. */
-const yielding = (cases: readonly StressCase[]): StressCase[] =>
+/**
+ * The catalog with a yield after each case, so a `cancel` lands before the
+ * next. Every field of the case is kept (spread), so one added later can't
+ * be dropped here (as `optionalNeeds` once was); only `run` is wrapped.
+ */
+export const yielding = (cases: readonly StressCase[]): StressCase[] =>
   cases.map((c) => ({
-    id: c.id,
-    group: c.group,
-    title: c.title,
-    needs: c.needs,
-    ...(c.optionalNeeds !== undefined && { optionalNeeds: c.optionalNeeds }),
-    ...(c.cites !== undefined && { cites: c.cites }),
+    ...c,
     async run(ctx) {
       try {
         return await c.run(ctx);

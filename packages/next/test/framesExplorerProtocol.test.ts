@@ -15,6 +15,7 @@ import {
   type HostOptions,
   type HostPort,
   type MakeContext,
+  yielding,
 } from "../examples/frames-explorer/host.ts";
 import {
   createClient,
@@ -374,6 +375,30 @@ describe("run", () => {
     expect(byId.get("stub.pass")!.pass).toBe(true);
     expect(summary).toMatchObject({ skipped: 2, cancelled: false });
     expect(loadFrames).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("the host's yielding wrapper", () => {
+  it("keeps every field of a case, including ones added later, and still runs it", async () => {
+    const run = vi.fn(async () => [{ ...base("stub.extra"), pass: true }]);
+    const original = {
+      ...stub("stub.extra", run, { optionalNeeds: ["frames"], cites: ["x"] }),
+      somethingNew: 42,
+    } as StressCase & { somethingNew: number };
+    const [wrapped] = yielding([original]) as (StressCase & {
+      somethingNew?: number;
+    })[];
+    expect(wrapped).toMatchObject({
+      id: "stub.extra",
+      group: "projections",
+      needs: [],
+      optionalNeeds: ["frames"],
+      cites: ["x"],
+      somethingNew: 42,
+    });
+    expect(wrapped!.run).not.toBe(original.run);
+    expect(await wrapped!.run(context())).toHaveLength(1);
+    expect(run).toHaveBeenCalledOnce();
   });
 });
 

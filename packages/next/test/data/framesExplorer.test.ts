@@ -11,6 +11,7 @@ import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import { framesDataDirectory } from "../../scripts/frameData.mjs";
 import { comparedFor } from "../../examples/frames-explorer/content.ts";
+import { takeCitations } from "../../examples/frames-explorer/stress/references.ts";
 import references from "../../examples/frames-explorer/references.json";
 import {
   STRESS_CASES,
@@ -415,6 +416,14 @@ describe('boundCrsChecks, R18\'s "Try your own"', () => {
     const headline = card.headline(user);
     expect(headline).toMatch(/^0 of 0 pass/);
     expect(groupResults(card, user)).toHaveLength(user.length);
+  });
+
+  it("leaves no citation behind outside a run, however often it runs (the module's pending list stays empty)", async () => {
+    takeCitations();
+    for (let i = 0; i < 3; i++) {
+      await boundCrsChecks(context, wkt("tokyo-jprcs-ix"), `Run ${i}`);
+    }
+    expect(takeCitations()).toEqual([]);
   });
 
   it("says why it skips the Helmert when the WKT carries no TOWGS84", async () => {

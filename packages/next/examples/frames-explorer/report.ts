@@ -20,15 +20,46 @@ export interface ReportEnvironment {
   /** PROJ as the frames store holds it; undefined when it didn't load. */
   proj?: string;
   /** Each file the results rest on, with its pinned SHA-256 (undefined: not loaded). */
-  files: readonly {
-    label: string;
-    file: string;
-    sha256?: string;
-    note?: string;
-  }[];
+  files: readonly EnvironmentFile[];
   /** The frame data's span, from the store's manifest. */
   frameDataSpan?: string;
   summary?: RunSummary;
+}
+
+/** A file the results rest on (R15). */
+export interface EnvironmentFile {
+  label: string;
+  file: string;
+  /** The manifest's pinned SHA-256; undefined when the file didn't load. */
+  sha256?: string;
+  /**
+   * Whether the browser checked the served bytes against `sha256` (the frame
+   * data and the OEM are; PROJ's own loader doesn't check proj.db, the wasm
+   * or the grids). Unset or false: the value is the manifest's.
+   */
+  verified?: boolean;
+  note?: string;
+}
+
+/**
+ * A file's SHA-256 as the report states it: "sha256 …" when the browser
+ * checked the bytes, else labelled as the manifest's. `digits` shortens it
+ * (the panel). Undefined when the file didn't load.
+ */
+export function fileSha(
+  f: EnvironmentFile,
+  digits?: number,
+): string | undefined {
+  if (f.sha256 === undefined) {
+    return undefined;
+  }
+  const value =
+    digits !== undefined && f.sha256.length > digits
+      ? `${f.sha256.slice(0, digits)}…`
+      : f.sha256;
+  return f.verified === true
+    ? `sha256 ${value}`
+    : `manifest SHA-256 ${value} (not verified in the browser)`;
 }
 
 export interface Report {
@@ -276,7 +307,7 @@ export function buildReport(
       : []),
     ...env.files.map(
       (f) =>
-        `- ${f.label}: ${f.file}, ${f.sha256 !== undefined ? `sha256 ${f.sha256}` : "not loaded"}${f.note !== undefined ? ` (${f.note})` : ""}`,
+        `- ${f.label}: ${f.file}, ${fileSha(f) ?? "not loaded"}${f.note !== undefined ? ` (${f.note})` : ""}`,
     ),
     "",
     "The ion token is never part of this report.",

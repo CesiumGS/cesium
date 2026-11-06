@@ -192,6 +192,11 @@ export interface PanelModel {
   /** Groups waiting for an item, by group id (R9: "waiting for …"). */
   waiting: Readonly<Record<string, DataItem>>;
   run: RunView;
+  /**
+   * Why a card's "Run this group" waits (a run is going on): one run at a
+   * time (final review, Important 1). Undefined when it can run.
+   */
+  runBusy?: string;
   token: TokenSource;
   userCrs: UserCrsView;
   /** A bound CRS to try ("Use an example"): references.json's Tokyo input. */

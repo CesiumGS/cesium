@@ -15,7 +15,7 @@ import { svgFitToView } from "@stratakit/icons/fit-to-view";
 import { svgPlay } from "@stratakit/icons/play";
 import { svgStatusSuccess } from "@stratakit/icons/status-success";
 import { Icon } from "@stratakit/mui";
-import { type ReactNode, useEffect, useRef } from "react";
+import { type ReactNode, useEffect, useId, useRef } from "react";
 import type { DataItem } from "../protocol.ts";
 import type { StressResult } from "../tests.ts";
 import { quantity } from "./format.ts";
@@ -282,6 +282,7 @@ export function QuestionCard({
   onSelect,
   waitingFor,
   onRun,
+  busy,
   onShow,
   children,
 }: {
@@ -294,10 +295,13 @@ export function QuestionCard({
   onSelect: (id: string) => void;
   waitingFor: DataItem | undefined;
   onRun: () => void;
+  /** Why "Run this group" waits: a run is going on (one at a time). */
+  busy?: string | undefined;
   onShow?: () => void;
   /** Extra content above the rows ("Try your own"). */
   children?: ReactNode;
 }) {
+  const busyId = useId();
   const missing = results.find((r) => r.missing && r.missing.length > 0)
     ?.missing?.[0];
   const answer =
@@ -361,11 +365,21 @@ export function QuestionCard({
               variant="outlined"
               startIcon={<Icon href={svgPlay} />}
               onClick={onRun}
-              disabled={waitingFor !== undefined}
+              disabled={waitingFor !== undefined || busy !== undefined}
+              {...(busy !== undefined && { "aria-describedby": busyId })}
             >
               Run this group
             </Button>
           </span>
+          {busy !== undefined && (
+            <Typography
+              variant="caption-lg"
+              color="textSecondary"
+              render={<span id={busyId} />}
+            >
+              {busy}
+            </Typography>
+          )}
         </div>
         {children}
         {/* Rows only while open: a result can sit in two cards (its own and

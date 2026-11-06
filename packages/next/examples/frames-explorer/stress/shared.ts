@@ -72,7 +72,8 @@ export const TT_STEP = 1e-6;
 /**
  * Lengths from the same place in two frames that differ only in the axes'
  * foot: the ratio is the foot definitions' (the scale factor is the same at
- * both lines, which are 6.6 mm apart at their far ends).
+ * both lines, which are about 2.0 mm apart at their far ends: 2 ppm of the
+ * 3280.84 ft, about 1 km, line).
  */
 export const UNIT_RATIO = 1e-9;
 

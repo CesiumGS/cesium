@@ -7,8 +7,9 @@ import {
   SITE_TRIADS,
   TOUR,
   comparedFor,
-  stopExposure,
   defaultTriads,
+  groupRunIds,
+  stopExposure,
 } from "../examples/frames-explorer/content.ts";
 import {
   GROUP_INFO,
@@ -273,5 +274,23 @@ describe("a selected result's frames (R14)", () => {
       "time-scales",
       "vertical-profile",
     ]);
+  });
+});
+
+describe("what Run this group runs", () => {
+  const fingerprinted = [
+    "projections.epsg-32610",
+    "bound-crss.ed50-utm31n.frame",
+    "reference-values.gu2195.ne",
+  ];
+
+  it("runs a real group by its id", () => {
+    expect(groupRunIds("time", fingerprinted)).toEqual(["time"]);
+  });
+
+  it("runs the fingerprinted results' cases for the Reproducibility card, which collects from other groups", () => {
+    expect(groupRunIds("reproducibility", fingerprinted)).toEqual(
+      fingerprinted,
+    );
   });
 });
