@@ -255,11 +255,8 @@ export {
   moonAxes,
   moonPosition,
 } from "./time/moon.ts";
-export {
-  CESIUM_MOON_TERRAIN,
-  loadIonMoonMap,
-  type MoonMap,
-} from "./io/moonMap.ts";
+export { CESIUM_MOON_TERRAIN } from "./io/moonMap.ts";
+export { loadIonMoonMap, type MoonMap } from "./io/moonMapLoad.ts";
 export {
   greenwichSiderealTime,
   julianDate,

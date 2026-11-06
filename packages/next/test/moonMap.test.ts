@@ -141,24 +141,121 @@ describe("Moon map polar caps", () => {
     expect(seamError((v) => 0.5 * v + 20)).toBeLessThanOrEqual(4);
   });
 
-  it("keeps the stretched row over a cap that does not load, with a warning", async () => {
-    const files = stubAsset();
-    const source: MoonMapSource = {
-      fetch: async (url) => {
-        const body = files.get(url);
-        if (!body) {
-          throw new Error(`Moon map: ${url} (404)`);
+  it("orients both caps: east from west, the ±180° seam, latitude", () => {
+    // Each cap's pixels coloured by where they are on the Moon: green by a
+    // quarter of longitude (front −45°–45°, east, back across ±180°, west),
+    // red by latitude, blue by pole. A cap frame mirrored, turned or
+    // flipped puts the wrong quarter (or latitude) in the map's texels.
+    const width = 720;
+    const map = composeMoonMap(
+      band(width, () => 0),
+      [
+        orientationCap("north", NORTH_TRANSFORM),
+        orientationCap("south", SOUTH_TRANSFORM),
+      ],
+    );
+    const height = width / 2;
+    let checked = 0;
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const [latitude, longitude] = texelAngles(map, x, y);
+        if (Math.abs(latitude) < 86 || Math.abs(latitude) > 88.5) {
+          continue;
         }
-        return {
-          json: async () => JSON.parse(new TextDecoder().decode(body)),
-          arrayBuffer: async () => body.slice().buffer,
-        };
-      },
-      decode: async (bytes) => images.get(new TextDecoder().decode(bytes))!,
-    };
+        const [r, g, b, a] = texel(map, x, y);
+        expect(a).toBe(255);
+        expect(Math.abs(b! - (latitude > 0 ? 200 : 100))).toBeLessThanOrEqual(
+          2,
+        );
+        expect(Math.abs(r! - latitudeShade(latitude))).toBeLessThanOrEqual(6);
+        // Clear of the quarters' edges (the filter's reach there).
+        const toEdge = Math.min(
+          ...[-135, -45, 45, 135].map((edge) => Math.abs(longitude - edge)),
+        );
+        if (toEdge >= 6) {
+          expect(Math.abs(g! - quarterShade(longitude))).toBeLessThanOrEqual(2);
+          checked++;
+        }
+      }
+    }
+    // Both caps, all four quarters, negative longitudes among them.
+    expect(checked).toBeGreaterThan(4 * 720 * 0.8);
+    // The seam: the map's first and last columns are the back quarter's,
+    // and agree with each other, row by row.
+    for (let y = 0; y < height; y++) {
+      const [latitude] = texelAngles(map, 0, y);
+      if (Math.abs(latitude) < 86 || Math.abs(latitude) > 88.5) {
+        continue;
+      }
+      const first = texel(map, 0, y);
+      const last = texel(map, width - 1, y);
+      expect(first[1]).toBe(quarterShade(180));
+      expect(last[1]).toBe(quarterShade(180));
+      expect(Math.abs(first[0]! - last[0]!)).toBeLessThanOrEqual(2);
+    }
+  });
+
+  it("takes a point at a tile edge inside the cap from the tile that holds it", () => {
+    // Two tiles meeting at the cap frame's longitude 0, in 1° pixels: a
+    // point just inside the second is within a pixel of the first's edge,
+    // and must still come from the second.
+    const r = capRotation(SOUTH_TRANSFORM);
+    const tileOf = (west: number, east: number, shade: number) => ({
+      west,
+      east,
+      north: 6,
+      south: -6,
+      image: raster(6, 12, (x, y) => {
+        const [latitude] = capToMoon(
+          "south",
+          6 - (y + 0.5),
+          west + ((x + 0.5) / 6) * (east - west),
+        );
+        return Math.abs(latitude) < 85.5 ? [0, 0, 0, 0] : [0, shade, 0, 255];
+      }),
+    });
+    const width = 720;
+    const map = composeMoonMap(
+      band(width, () => 0),
+      [
+        {
+          pole: "south",
+          rotation: r,
+          patches: [tileOf(-6, 0, 50), tileOf(0, 6, 200)],
+        },
+      ],
+    );
+    let checked = 0;
+    for (let y = 0; y < width / 2; y++) {
+      for (let x = 0; x < width; x++) {
+        const [latitude, longitude] = texelAngles(map, x, y);
+        if (latitude > -87) {
+          continue;
+        }
+        // The texel's center in the cap frame (rᵀ · d).
+        const [dx, dy, dz] = direction(latitude, longitude);
+        const capLongitude =
+          Math.atan2(
+            r[3]! * dx + r[4]! * dy + r[5]! * dz,
+            r[0]! * dx + r[1]! * dy + r[2]! * dz,
+          ) / DEG;
+        const g = texel(map, x, y)[1]!;
+        if (capLongitude > 0.25 && capLongitude < 0.75) {
+          expect(g).toBe(200);
+          checked++;
+        } else if (capLongitude < -0.25 && capLongitude > -0.75) {
+          expect(g).toBe(50);
+          checked++;
+        }
+      }
+    }
+    expect(checked).toBeGreaterThan(20);
+  });
+
+  it("keeps the stretched row over a cap that does not load, with a warning", async () => {
     const { map, warnings } = await readMoonMap(
       "https://moon.test/tileset.json",
-      source,
+      stubSource(stubAsset()),
       0,
     );
     expect(map.width).toBe(128);
@@ -180,7 +277,137 @@ describe("Moon map polar caps", () => {
       expect(r).toBe(0);
     }
   });
+
+  it.each([
+    ["an accessor past its view", { count: 2000 }, /its view/],
+    ["a view past its BIN chunk", { viewLength: 4096 }, /BIN chunk/],
+    ["an accessor that isn't float", { componentType: 5123 }, /componentType/],
+  ])(
+    "warns of a cap tile with %s, rather than reading past it",
+    async (_, options, message) => {
+      const files = stubAsset();
+      files.set(
+        "https://moon.test/north/3/0/0.b3dm",
+        tile(
+          -6,
+          6,
+          6,
+          -6,
+          (lat, lon) => direction(lat, lon),
+          "north-cap",
+          // Bytes after the GLB, in its b3dm: what a read past the BIN
+          // chunk would find.
+          { ...options, trailing: 32768 },
+        ),
+      );
+      const { warnings } = await readMoonMap(
+        "https://moon.test/tileset.json",
+        stubSource(files),
+        0,
+      );
+      const north = warnings.filter((w) => /north polar cap/.test(w));
+      expect(north).toHaveLength(1);
+      expect(north[0]).toMatch(message);
+    },
+  );
+
+  it("rejects a band whose tiles would make too wide a map", async () => {
+    // A tile whose fitted edges are 0.001° apart: 360,000 tiles across.
+    const files = stubAsset();
+    files.set(
+      "https://moon.test/band/0/0/0.b3dm",
+      tile(0, 0.001, 90, -90, (lat, lon) => direction(lat, lon), "band-west"),
+    );
+    await expect(
+      readMoonMap("https://moon.test/tileset.json", stubSource(files), 0),
+    ).rejects.toThrow(/at most 8192/);
+  });
 });
+
+/** Latitude, as the orientation test's red: 40 a degree from 85°. */
+function latitudeShade(latitude: number): number {
+  return Math.round((Math.abs(latitude) - 85) * 40);
+}
+
+/** Longitude's quarter, as the orientation test's green. */
+function quarterShade(longitude: number): number {
+  const quarter = Math.floor(((((longitude + 45) % 360) + 360) % 360) / 90);
+  return 40 + 60 * quarter;
+}
+
+/**
+ * A cap frame's latitude and longitude on the Moon, degrees, written out
+ * rather than read from the transform: the south's +x is the Moon's −z
+ * (x′ = −z, z′ = x), the north's its +z (x′ = z, z′ = −x).
+ */
+function capToMoon(
+  pole: "north" | "south",
+  latitude: number,
+  longitude: number,
+): [number, number] {
+  const [lx, ly, lz] = direction(latitude, longitude);
+  const [x, y, z] = pole === "south" ? [lz, ly, -lx] : [-lz, ly, lx];
+  return [
+    Math.asin(Math.max(-1, Math.min(1, z))) / DEG,
+    Math.atan2(y, x) / DEG,
+  ];
+}
+
+/**
+ * A cap for the orientation test: four tiles of ±6° in its frame, in
+ * 0.05° pixels, each coloured by where it is on the Moon (transparent short
+ * of 85.5°, so the band's tones play no part).
+ */
+function orientationCap(pole: "north" | "south", transform: number[]): MoonCap {
+  const size = 120;
+  return {
+    pole,
+    rotation: capRotation(transform),
+    patches: [
+      [-6, 0, 6, 0],
+      [0, 6, 6, 0],
+      [-6, 0, 0, -6],
+      [0, 6, 0, -6],
+    ].map(([west, east, northEdge, southEdge]) => ({
+      west: west!,
+      east: east!,
+      north: northEdge!,
+      south: southEdge!,
+      image: raster(size, size, (x, y) => {
+        const [latitude, longitude] = capToMoon(
+          pole,
+          northEdge! - ((y + 0.5) / size) * 6,
+          west! + ((x + 0.5) / size) * 6,
+        );
+        return Math.abs(latitude) < 85.5
+          ? [0, 0, 0, 0]
+          : [
+              latitudeShade(latitude),
+              quarterShade(longitude),
+              pole === "north" ? 200 : 100,
+              255,
+            ];
+      }),
+    })),
+  };
+}
+
+/** The stub asset as a `MoonMapSource`: a missing file is a 404. */
+function stubSource(files: Map<string, Uint8Array>): MoonMapSource {
+  return {
+    fetch: async (url) => {
+      const body = files.get(url);
+      if (!body) {
+        throw new Error(`Moon map: ${url} (404)`);
+      }
+      return {
+        json: async () => JSON.parse(new TextDecoder().decode(body)),
+        arrayBuffer: async () => body.slice().buffer,
+      };
+    },
+    decode: async (bytes) => images.get(new TextDecoder().decode(bytes))!,
+  };
+}
 
 /**
  * The worst difference, rows 80°S to the pole, between a composed map and
@@ -350,6 +577,16 @@ function tile(
   southEdge: number,
   position: (latitude: number, longitude: number) => readonly number[],
   image: string,
+  options: {
+    /** The position accessor's count, if not the grid's. */
+    count?: number;
+    /** The position view's byte length, if not its data's. */
+    viewLength?: number;
+    /** The position accessor's component type (5126, float). */
+    componentType?: number;
+    /** Bytes after the GLB, inside the b3dm. */
+    trailing?: number;
+  } = {},
 ): Uint8Array {
   const n = 5;
   const positions: number[] = [];
@@ -378,11 +615,20 @@ function tile(
     nodes: [{ mesh: 0 }],
     meshes: [{ primitives: [{ attributes: { POSITION: 0, TEXCOORD_0: 1 } }] }],
     accessors: [
-      { bufferView: 0, componentType: 5126, count: n * n, type: "VEC3" },
+      {
+        bufferView: 0,
+        componentType: options.componentType ?? 5126,
+        count: options.count ?? n * n,
+        type: "VEC3",
+      },
       { bufferView: 1, componentType: 5126, count: n * n, type: "VEC2" },
     ],
     bufferViews: [
-      { buffer: 0, byteOffset: 0, byteLength: positions.length * 4 },
+      {
+        buffer: 0,
+        byteOffset: 0,
+        byteLength: options.viewLength ?? positions.length * 4,
+      },
       {
         buffer: 0,
         byteOffset: positions.length * 4,
@@ -401,7 +647,7 @@ function tile(
   const jsonChunk = new Uint8Array(pad4(jsonBytes.length)).fill(0x20);
   jsonChunk.set(jsonBytes);
   const glbLength = 12 + 8 + jsonChunk.length + 8 + bin.length;
-  const out = new Uint8Array(28 + glbLength);
+  const out = new Uint8Array(28 + glbLength + (options.trailing ?? 0));
   const view = new DataView(out.buffer);
   out.set(new TextEncoder().encode("b3dm"), 0);
   view.setUint32(4, 1, true);

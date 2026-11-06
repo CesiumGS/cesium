@@ -17,7 +17,11 @@ export function splitGlb(bytes: Uint8Array): { json: Json; bin?: Uint8Array } {
     while (offset + 8 <= end) {
       const length = view.getUint32(offset, true);
       const type = view.getUint32(offset + 4, true);
-      const chunk = bytes.subarray(offset + 8, offset + 8 + length);
+      // A chunk ends with the GLB, whatever its length says.
+      const chunk = bytes.subarray(
+        offset + 8,
+        Math.min(end, offset + 8 + length),
+      );
       if (type === 0x4e4f534a) {
         json = JSON.parse(new TextDecoder().decode(chunk));
       } else if (type === 0x004e4942) {
