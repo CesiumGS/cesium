@@ -790,6 +790,30 @@ describe(
         expect(setShownComponents).toHaveBeenCalledOnceWith(faceMask);
         expect(setPickableComponents).toHaveBeenCalledOnceWith(faceMask);
       });
+
+      it("outlines a mesh the select tool activates in EditMode.NONE on the next frame", async function () {
+        const { editor, mesh } = await createEditorWithSquare(EditMode.NONE);
+        editor.activeTool = SelectTool.addTo(editor);
+        editor.setMeshInactive(mesh);
+        expect(renderOutlineFlags(mesh)).toEqual([false]);
+
+        click(getWindowPosition(facePosition));
+
+        if (!window.webglStub) {
+          // Faces, then the outline's edges and points.
+          expect(renderOutlineFlags(mesh)).toEqual([false, true, true]);
+        }
+      });
+
+      it("removes the outline of meshes the select tool deactivates in EditMode.NONE on the next frame", async function () {
+        const { editor, mesh } = await createEditorWithSquare(EditMode.NONE);
+        editor.activeTool = SelectTool.addTo(editor);
+        expect(renderOutlineFlags(mesh)).toEqual([false, true, true]);
+
+        click(emptyWindowPosition);
+
+        expect(renderOutlineFlags(mesh)).toEqual([false]);
+      });
     });
 
     describe("mode", function () {
