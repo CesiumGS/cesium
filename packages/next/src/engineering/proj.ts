@@ -77,6 +77,10 @@ async function loadNode(base: string): Promise<Loaded> {
   process.env.PROJ_DATA = directory;
   const require = createRequire(import.meta.url);
   const api = require(`${directory}${separator}proj_capi.node`) as ProjApi;
+  // The binding reads PROJ_DATA when its context is first used, not when it
+  // loads, so use it now: a later load of another base then cannot change
+  // where this one looks.
+  api.proj_create("EPSG:4326");
   return { api: Promise.resolve(api), grids: new Set() };
 }
 
