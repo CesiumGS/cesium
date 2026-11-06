@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Rebuild the frames-explorer example around ten scenarios. Each builds its own frame tree, answers one question on the globe, has a few knobs, and carries proof that follows them. The tree is a large live diagram beside the globe, and verification becomes secondary.
+**Goal:** Rebuild the frames-explorer example around eleven scenarios. Each builds its own frame tree, answers one question on the globe, has a few knobs, and carries proof that follows them. The tree is a large live diagram beside the globe, and verification becomes secondary.
 
 **Architecture:**
 
@@ -64,7 +64,7 @@
 
 - Create:
   - `examples/frames-explorer/scenarios/spec.ts`: types and the checked-setup logic.
-  - `examples/frames-explorer/scenarios/specs.ts`: all ten scenarios' metadata.
+  - `examples/frames-explorer/scenarios/specs.ts`: all the scenarios' metadata (ten from Task 1; Task 7b adds the robot arm).
 - Modify: `examples/frames-explorer/selection.ts`, to add the scenario, knob and time params and the `node:`/`edge:` selections.
 - Test: `test/framesExplorerScenarioSpec.test.ts` and `test/framesExplorerSelection.test.ts`.
 
@@ -337,6 +337,60 @@ These four scenarios are buildable on today's library.
 - [ ] **Step 5: Check in the browser** on 5190, with terrain: the drone footprint follows the tilt knob; the ship's buoy sight line turns blocked and clear across the knobs, with its accuracy stating the terrain's. Take screenshots.
 - [ ] **Step 6: Commit** with "examples: frames explorer scenarios: a drone over the site and a ship entering San Francisco Bay".
 
+### Task 7b: A robot arm at a spaceport (added by the owner, 2026-11-06)
+
+**Files:**
+
+- Create: `examples/frames-explorer/scenarios/robotArm.ts`, and `examples/frames-explorer/scenarios/jointChain.ts` for a kinematic chain of joint frames.
+- Modify:
+  - `scenarios/spec.ts`: add `"robot-arm"` to `ScenarioId`;
+  - `scenarios/specs.ts`: the spec, placed before "everything";
+  - `scenarios/index.ts`;
+  - `references.json`, for the mark.
+- Test: `test/framesExplorerJointChain.test.ts`, plus data tests.
+
+**Interfaces:**
+
+- **Produces** (`jointChain.ts`): `jointChain(parent: Frame, joints: readonly { name: string; axis: "x" | "y" | "z"; offset: readonly [number, number, number]; angle: () => number }[]): Frame[]`. Each joint frame rotates about its own axis by `angle()`, after a fixed link offset in its parent. The function returns the frames in order, with the tool last. It uses the library's public `Frame` constructor, and every edge is exact by definition.
+- **App-defined frames (owner, 2026-11-06: "those robotics frames are supplied by the app, not by cesiumjs, to show user frames as a feature").**
+  - `jointChain.ts` is the example app's code, not the library's. It lives under `examples/` and uses only the public API: `new Frame(name, parent, toParent, { cache: false })`. Joint angles are state beyond the instant, so they take `cache: false` (Frame.ts:27-31).
+  - The diagram marks these frames as defined by the app, distinct from the library's built-in frames. Reuse or rename the "added by this scenario" treatment so it reads "defined by your app".
+  - The answer area offers a short "How these frames are defined" disclosure. It shows the 5–10 lines of app code that create one joint frame, taken from the source and rendered as text.
+  - **Library gaps:** record any in the report and in CESIUM2_WEBGPU_PLAN.md §13.14 "Carried forward". Implement one only if it is small and the scenario can't be honest without it, and ledger the ruling. Candidates:
+    - a stated accuracy on an app-defined edge (today accuracy lives in the example's tree.ts, not on `Frame`);
+    - a revision or change signal, so a state-dependent frame can stay cached and the renderer knows to redraw;
+    - velocities (plan 3).
+- **robot-arm:**
+  - **The tree:** pad ENU (`eastNorthUpFrame` at the pad) → arm base (a fixed placement, with a stated, labelled survey accuracy) → base yaw → shoulder → elbow → wrist → tool. Link lengths are synthetic, sized like a launch-pad service arm, and labelled synthetic.
+  - **The place:** Kennedy Space Center LC-39A, unless a better-documented pad is found. Cite the pad's coordinates.
+  - **The mark (data):** a nearby NGS mark or CORS station whose published coordinates give both NAD83(2011) and ITRF. Pin it as a data card in its NAD83(2011) CRS, reached through PROJ. Cite its datasheet, with its PID and date.
+    - If no such station exists within a few kilometres, use the nearest published one, and say so in the answer's paragraph.
+    - Ledger the choice.
+  - **The answer:** "the tool is X m from the mark (its name)", as a straight-line distance, with the composed accuracy: joints exact, base survey ±, mark datasheet ±, and the PROJ operation's ±. The route steps run from the tool down the chain to the pad ENU, through ITRF, and out to NAD83(2011).
+  - **Knobs:** base yaw, shoulder, elbow, wrist, each a range with limits.
+  - **On the globe:** the arm drawn as link segments with a small triad at each joint, the tool marked, and a leader line from the tool to the mark labelled with the distance. Use a terrain or ellipsoid rig close to the pad.
+  - **Proof:**
+    - at the checked angles, forward kinematics against a hand closed-form solution (R11);
+    - a round trip through the chain, tool → ITRF → tool;
+    - the mark's PROJ conversion, NAD83(2011) → ITRF, against its published ITRF coordinates (R10), as a new catalog check;
+    - off the checked setup, the live re-runs.
+
+- [ ] **Step 1: Write the failing tests:**
+  - App frames: after a knob changes a joint angle at the same instant, the tool's ITRF position changes (no stale cache).
+  - `jointChain`: with all angles 0 the tool sits at the sum of the offsets; a 90° base yaw turns the tool's position about the pad's up axis; each joint frame's rotation stays orthonormal within 1e-12.
+  - Forward kinematics at three angle sets against a hand closed-form planar solution.
+  - The tool-to-mark distance equals the norm of their ITRF difference.
+  - The catalog check: the mark's NAD83(2011) → ITRF conversion against its published ITRF values, within the datasheet's stated accuracy.
+- [ ] **Step 2: Run** and confirm they fail.
+- [ ] **Step 3: Implement,** following the owner-approved tree, data and route design (data card, "Drawing in", the animated route and route steps), and the question-and-headline rule (`ScenarioAnswer.label` is required).
+- [ ] **Step 4: Run** the tests, `npm test` and `npm run test:data`. The fingerprints change only by the new check's addition; record it.
+- [ ] **Step 5: Check in the browser:**
+  - the joints move with the knobs;
+  - the leader line and the distance follow;
+  - the route lights from the tool to the mark;
+  - take screenshots in light and dark and at 380 px.
+- [ ] **Step 6: Commit** with "examples: frames explorer scenario: a robot arm at a spaceport".
+
 ### Task 8: Everything at once
 
 **Files:**
@@ -347,9 +401,9 @@ These four scenarios are buildable on today's library.
 
 **Interfaces:**
 
-- **Consumes:** the dish, ship, Orion and lunar-site frames from Tasks 4, 6 and 7, built together in one tree.
+- **Consumes:** the dish, ship, Orion, lunar-site and robot-arm tool frames from Tasks 4, 6, 7 and 7b, built together in one tree.
 - **Produces:**
-  - knobs: object A, object B (a choice of the four), and time;
+  - knobs: object A, object B (a choice of the five), and time;
   - the answer: distance, light time and line of sight between A and B, through the existing `lightTime` and `lineOfSight`, plus Task 5 when both are on the Earth;
   - the diagram lights `branchPath(A, B)`.
 
@@ -367,7 +421,7 @@ These four scenarios are buildable on today's library.
 
 **Files:** fixes wherever the review finds them, and `DESIGN.md`.
 
-- [ ] **Step 1: Take screenshots** of all ten scenarios, light and dark, at desktop and 380 px, plus the proof both on and off the checked setup and the Verification entry. Use Playwright with headless Google Chrome, into `design-screenshots/` as `scenario-*.png`.
+- [ ] **Step 1: Take screenshots** of all eleven scenarios, light and dark, at desktop and 380 px, plus the proof both on and off the checked setup and the Verification entry. Use Playwright with headless Google Chrome, into `design-screenshots/` as `scenario-*.png`.
 - [ ] **Step 2: Run the UX review.** The controller dispatches it on the most capable model, against the spec's goals and anti-goals, Nielsen's heuristics, WCAG 2.2 AA and the two audiences. Fix every Critical and Important finding, and re-check.
 - [ ] **Step 3: Run the browser checks** on 5190:
   - **Review Focus 1–5,** by hand:
@@ -387,7 +441,7 @@ These four scenarios are buildable on today's library.
 **Files:** `CESIUM2_WEBGPU_PLAN.md` §13.14, `packages/next/README.md`.
 
 - [ ] **Step 1: Write a "Frames explorer scenarios" results note:**
-  - the ten scenarios and their trees;
+  - the eleven scenarios and their trees;
   - the proof model;
   - terrain line of sight;
   - the data sources (and whether the AIS extract or the synthetic track was used);

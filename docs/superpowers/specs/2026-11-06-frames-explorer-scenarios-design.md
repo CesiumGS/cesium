@@ -44,7 +44,7 @@ This design rethinks the example's information architecture around **scenarios**
 
 ## The scenarios
 
-Ten scenarios, each with its tree (added frames in **bold**), its headline question, and its knobs. Structurally different trees are the point.
+Eleven scenarios, each with its tree (added frames in **bold**), its headline question, and its knobs. Structurally different trees are the point.
 
 1. **The Earth turns.**
    - Tree: ITRF ↔ GCRF, purely rotational.
@@ -85,8 +85,15 @@ Ten scenarios, each with its tree (added frames in **bold**), its headline quest
    - Knobs: time along the track; the sensor's height; the height datum (ellipsoid or NAVD88).
    - Mean lower low water (the chart datum) is plan 4b, and the scenario says so plainly.
    - Data: a small extract of one vessel's public-domain AIS track from NOAA (marinecadastre.gov), fetched by setup like the other data and cited. If that proves impractical, a clearly labelled synthetic track. This is the designer's call; the owner asked "if we have the data".
-10. **Everything at once** (the capstone; branches).
-    - Tree: a dish on the Earth, the ship at sea, Orion in transit and a site on the Moon, all live in one tree.
+10. **A robot arm at a spaceport** (robotics; added by the owner, 2026-11-06).
+    - Tree: **pad ENU** → **arm base** → **shoulder** → **upper arm** → **forearm** → **wrist** → **tool** under ITRF. This is a kinematic chain of synthetic joint frames, each a rotation about one axis plus a fixed link offset, hanging off the geospatial world. A survey mark is pinned as data in its own geodetic CRS (NAD83(2011)), reached through PROJ.
+    - Question: how far is the arm's tool from the survey mark?
+    - Knobs: three or four joint angles (base yaw, shoulder, elbow, wrist).
+    - Shows how a robotics simulation's frame chain (as in ROS tf) becomes part of the geospatial world. The route from the tool down the chain to the pad, through ITRF and out to the mark's CRS lights up.
+    - Place: a launch pad, Kennedy Space Center LC-39A by default (the builder's call). The arm, its link lengths and its base placement are synthetic and labelled so. The mark is real: a nearby NGS mark or CORS station whose published coordinates give both NAD83(2011) and ITRF, cited. That makes the PROJ step checkable against a published value.
+    - Accuracy: the joints are exact by definition (synthetic). The base placement carries a stated, labelled survey accuracy, and the mark carries its datasheet's accuracy.
+11. **Everything at once** (the capstone; branches).
+    - Tree: a dish on the Earth, the ship at sea, Orion in transit, a site on the Moon and the arm's tool, all live in one tree.
     - Question: pick any two, and get their distance, light time and line of sight, with the path through the tree lit.
     - This proves that objects down different branches just work.
 
