@@ -6827,6 +6827,40 @@ asset 2: no access token`, on every example.
   `test/data/sky.test.ts:86` (about 1.2 s). One `test:data` run failed this
   way during the example's final fix wave. Give each an explicit timeout.
 
+_Plan 5 design input: camera rigs attached to frames (owner, 2026-11-06)._
+Today every camera controller quietly assumes the Earth. `GlobeController`
+works in Earth-fixed coordinates, constrains the camera to the ellipsoid, and
+needs a pick under the cursor, so in space the only way to start a rotation is
+to grab the Earth. `InspectController` takes "up" from the ellipsoid's
+east-north-up at its target. The frames example's custom orbit "up" axis
+(2026-11-06) is a stepping stone, not the design. Plan 5 designs this properly,
+with a brainstorm first:
+
+- **The camera rig belongs to a frame.** Its pose lives in a frame of the tree
+  (ITRF, GCRF, MOON_ME, an engineering frame, a trajectory), resolved to world
+  coordinates every frame at the clock's time. That choice decides what holds
+  still: on MOON_ME the Moon stays put as time runs; on GCRF the Earth turns
+  underneath; on a trajectory the camera rides along.
+- **Inputs are expressed in the rig's frame.** The pivot is a point in it (a
+  body centre, a site, a selected frame's origin). "Up" is one of its axes (a
+  pole, an orbit normal, an engineering frame's up). Heading is measured from
+  a reference axis in it (north, grid north, x).
+- **Constraints come from the frame's body, if it has one.** "Stay above the
+  surface" uses that body's ellipsoid or terrain, so the Moon's on the Moon.
+  Free frames (GCRF, a trajectory) have only a range limit.
+- **Controllers are policies over the rig.** The globe controls are a rig on
+  ITRF with Earth's ellipsoid and grab-the-surface input. Orbit is a pivot
+  plus an up axis. Free-fly can join them.
+- **Flights between rigs need a defined hand-off,** for example the Earth to
+  a lunar site: interpolate in a common frame, then re-attach.
+
+Camera rigs and render frames are one question from two sides: plan 5 is also
+where the world stops being drawn Earth-fixed (R6 of plans 2 and 3), so
+design them together. Open choices for the brainstorm: what holds still by
+default, how flights cross frames, how input maps onto a rolled frame, and
+how picking reports positions in the rig's frame (frame-tagged picking, plan
+3 R8).
+
 _Carried forward from the stress-test example's industry review (owner,
 2026-11-06)._ These library gaps came up while planning the frames example's
 stress tests. The example can't test them until the library has them.
