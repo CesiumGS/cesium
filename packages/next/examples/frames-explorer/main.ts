@@ -38,7 +38,9 @@ import {
   triad,
   type Extent,
   type OverlayChunk,
+  type Sampling,
 } from "./overlays.ts";
+import { latestOnly, orionLegend, planeFraming } from "./orion.ts";
 import { familyMap } from "./panel/families.ts";
 import { length, radians, sig } from "./panel/format.ts";
 import type {
@@ -50,6 +52,7 @@ import type {
   OverlayId,
   OverlayView,
   PanelActions,
+  Reference,
   PanelModel,
   ResultExtras,
   RunView,
@@ -64,6 +67,7 @@ import {
   type FrameParams,
   type OverlayGeometry,
   type RunSummary,
+  type TrajectoryInfo,
 } from "./protocol.ts";
 import { buildReport, type ReportEnvironment } from "./report.ts";
 import {
@@ -88,6 +92,21 @@ const EARTH_RADIUS = 6_371_000;
 const FLYBY = Date.parse("2026-04-06T23:00:00Z");
 /** The OEM's span, generously: samples it doesn't cover are skipped. */
 const ORION_SPAN = ["2026-04-02T02:00:00", "2026-04-11T00:00:00"] as const;
+
+/**
+ * Orion's drawing (6c): a coarse step of an hour, refined where the path
+ * bends until no segment departs from it by more than 0.05% of its distance
+ * from the drawing frame's origin (500 m at 1,000 km), with no interval
+ * under 5 s, within 8,000 samples and 2 s of worker time.
+ */
+const ORION_STEP = 3600;
+const ORION_ADAPTIVE = {
+  tolerance: 5e-4,
+  minStep: 5,
+  floor: 100,
+  maxSamples: 8000,
+  budgetMs: 2000,
+} as const;
 
 /** US survey feet per metre: EPSG:6420 is in ftUS. */
 const FT = 3937 / 1200;
@@ -197,6 +216,25 @@ interface OverlayState {
   token: number;
 }
 
+const IDENTITY = Float64Array.from([
+  1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,
+]);
+
+/** a × b, column-major 4×4 (float64). */
+function compose(a: ArrayLike<number>, b: ArrayLike<number>): Float64Array {
+  const out = new Float64Array(16);
+  for (let c = 0; c < 4; c++) {
+    for (let r = 0; r < 4; r++) {
+      let sum = 0;
+      for (let k = 0; k < 4; k++) {
+        sum += a[k * 4 + r]! * b[c * 4 + k]!;
+      }
+      out[c * 4 + r] = sum;
+    }
+  }
+  return out;
+}
+
 /** Meters as the panel writes them (SI prefixes, powers of ten written out). */
 const meters = (x: number): string => length(x, 3);
 
@@ -284,6 +322,18 @@ export function run(context: ExampleContext): ExampleRun {
       ? { state: "idle", id: initial.imodel }
       : { state: "idle" };
   let orionFrame: OrionFrame = "GCRF";
+  /** Orion's node and statements from the worker (one reply), and the clock time they're for. */
+  let orionInfo: { info: TrajectoryInfo; utc: number } | undefined;
+  /** Orion's drawn path: the frame it's in, the instant it was placed at (TDB) and the inverse of that placement. */
+  let orionBuilt:
+    | {
+        frame: OrionFrame;
+        at: number;
+        inverse: Float64Array;
+        sampling?: Sampling;
+        chunks: readonly OverlayChunk[];
+      }
+    | undefined;
   let distortionCrs: DistortionCrs = "6420";
   let distortionHeight = 0;
   let biasFactor = 1e6;
@@ -372,6 +422,26 @@ export function run(context: ExampleContext): ExampleRun {
     };
   }
 
+  /** Orion's legend line (R8): computed from the worker's statement at the clock's instant. */
+  function orionAccuracy(): Pick<
+    OverlayView,
+    "accuracy" | "caution" | "unbounded"
+  > {
+    if (orionInfo === undefined && loading.get("orion").state !== "ready") {
+      return { accuracy: defaultAccuracy("orion") };
+    }
+    const l = orionLegend(orionInfo?.info.composed.ITRF, {
+      drawIn: orionBuilt?.frame ?? orionFrame,
+      utc: new Date(orionInfo?.utc ?? viewer.clock.time).toISOString(),
+      ...(orionBuilt?.sampling && { sampling: orionBuilt.sampling }),
+    });
+    return {
+      accuracy: l.accuracy,
+      ...(l.caution && { caution: true }),
+      ...(l.unbounded && { unbounded: true }),
+    };
+  }
+
   function overlayViews(): OverlayView[] {
     return OVERLAYS.map((id) => {
       const s = overlays.get(id)!;
@@ -391,6 +461,9 @@ export function run(context: ExampleContext): ExampleRun {
       };
       if (id === "triads") {
         Object.assign(base, triadsAccuracy());
+      }
+      if (id === "orion") {
+        Object.assign(base, orionAccuracy());
       }
       // An item the store doesn't have disables its toggles (R5).
       const item = need && loading.get(need);
@@ -412,7 +485,7 @@ export function run(context: ExampleContext): ExampleRun {
       case "roundTrip":
         return "run the tests to place the markers";
       case "orion":
-        return "±10 m (1σ), mostly the unstated time scale, taken as TDB";
+        return "Orion's statement at the clock's instant, once its OEM loads";
       case "distortion":
         return "Tissot ellipses in true-north axes (convergence not applied); contours from PROJ's factors";
       case "bias":
@@ -545,12 +618,26 @@ export function run(context: ExampleContext): ExampleRun {
     if (engineering) {
       findNode(t, "ITRF")?.children.push(engineering.node);
     }
+    // Orion, from the worker's reply: under its reference, with the
+    // statements that came with it (the main thread has no trajectory).
+    const orion = orionInfo?.info;
+    if (orion) {
+      findNode(t, orion.parent)?.children.push({ ...orion.node, children: [] });
+    }
     tree = t;
     treeNote = undefined;
     const placed = new Map<string, PlacedNode>(
       engineering ? [[engineering.node.id, engineering.placed]] : [],
     );
-    composed = composedAccuracy(t, frames, instant, placed);
+    const own = composedAccuracy(t, frames, instant, placed);
+    composed = orion
+      ? (Object.fromEntries(
+          (Object.keys(own) as Reference[]).map((r) => [
+            r,
+            { ...own[r], [orion.node.id]: orion.composed[r] },
+          ]),
+        ) as ComposedAccuracy)
+      : own;
     updateKnown();
     invalidate();
   }
@@ -821,6 +908,14 @@ export function run(context: ExampleContext): ExampleRun {
     const s = overlays.get(id)!;
     if (!s.on) {
       s.token++;
+      if (id === "orion") {
+        orionBuild.drop();
+        orionBuilt = undefined;
+      }
+      if (id === "designGrid") {
+        globe.removeOverlay(`${id}:minor`);
+        minorGrid = undefined;
+      }
       globe.removeOverlay(id);
       overlayLabels.delete(id);
       s.state = "off";
@@ -838,6 +933,31 @@ export function run(context: ExampleContext): ExampleRun {
       case "designGrid":
         void request(id, async () => {
           const frame = frameParams(CALIFORNIA, "California zone 3");
+          // The 2 km lines, shown only under 60 km range (DESIGN.md "The
+          // tour", stop 3), built after the major ones and drawn apart.
+          const minorToken = s.token;
+          void client
+            .overlay("designGrid", {
+              frame,
+              extent: GRID_EXTENT,
+              step: GRID_STEP / 5,
+              segment: 2000 * FT,
+              skipEvery: 5,
+            })
+            .then((minor) => {
+              if (minorToken !== s.token || !s.on || disposed) {
+                return;
+              }
+              const chunks = minor.layers[0]!.chunks;
+              globe.setOverlay(`${id}:minor`, [
+                { chunks, color: engineeringColor, strength: SECONDARY },
+              ]);
+              minorGrid = chunks.map((c) => c.origin);
+              updateMinorGrid();
+            })
+            .catch(() => {
+              // The major lines say what failed; the minor ones just don't show.
+            });
           const [grid, north] = await Promise.all([
             client.overlay("designGrid", {
               frame,
@@ -985,32 +1105,26 @@ export function run(context: ExampleContext): ExampleRun {
         invalidate();
         return;
       }
-      case "orion":
-        void request(id, async () => {
-          const instant = instantNow();
-          if (!frames || !instant) {
-            throw new Error("frame data isn't in yet");
-          }
-          const leap = frames.data.leapSeconds;
-          const g = await client.overlay("trajectoryPath", {
-            drawIn: DRAW_IN[orionFrame],
-            t0: Instant.fromIso(ORION_SPAN[0], "UTC", leap).tdb(),
-            t1: Instant.fromIso(ORION_SPAN[1], "UTC", leap).tdb(),
-            // ITRF needs Earth orientation at every sample (about 12 ms
-            // each in the worker): a coarser step keeps it to seconds.
-            step: orionFrame === "ITRF" ? 1200 : 300,
-            at: instant.tdb(),
-          });
-          orionAt = viewer.clock.time;
-          return {
-            layers: [
-              { chunks: g.layers[0]!.chunks, color: familyRgba("trajectory") },
-            ],
-            accuracy: `±10 m (1σ), mostly the unstated time scale, taken as TDB; drawn in ${orionFrame}`,
-            caution: true,
-          };
-        });
+      case "orion": {
+        const instant = instantNow();
+        if (!frames || !instant) {
+          s.state = "error";
+          s.problem = "It didn't draw: frame data isn't in yet";
+          invalidate();
+          return;
+        }
+        // A new frame shows waiting; the same one keeps its path until the
+        // new build replaces it. Whatever is in flight for another frame is
+        // dropped, never queued.
+        if (orionBuilt?.frame !== orionFrame) {
+          s.state = "waiting";
+          delete s.problem;
+        }
+        orionBuild.drop();
+        orionBuild.request({ frame: orionFrame, at: instant.tdb() });
+        invalidate();
         return;
+      }
       case "distortion":
         void request(id, async () => {
           const d = DISTORTION[distortionCrs];
@@ -1080,8 +1194,275 @@ export function run(context: ExampleContext): ExampleRun {
       }
     }
   }
-  let orionAt = 0;
   let biasAt = 0;
+
+  /** The design grid's 2 km lines' chunk origins, once drawn. */
+  let minorGrid: readonly ArrayLike<number>[] | undefined;
+  const MINOR_GRID_RANGE = 60_000;
+  /** The 2 km lines show only while the camera is within 60 km of them. */
+  function updateMinorGrid(): void {
+    if (minorGrid === undefined) {
+      return;
+    }
+    const eye = viewer.view.camera.position;
+    let near = Infinity;
+    for (const o of minorGrid) {
+      near = Math.min(
+        near,
+        Math.hypot(o[0]! - eye[0]!, o[1]! - eye[1]!, o[2]! - eye[2]!),
+      );
+    }
+    // Within 60 km above the ground, and over the grid: a chunk spans up
+    // to 100 km, so its origin can be that far from its nearest line.
+    const height =
+      WGS84.cartesianToCartographic(eye, {
+        longitude: 0,
+        latitude: 0,
+        height: 0,
+      })?.height ?? Infinity;
+    globe.setOverlayVisible(
+      "designGrid:minor",
+      height < MINOR_GRID_RANGE && near < MINOR_GRID_RANGE + 1e5,
+    );
+  }
+
+  // --------------------------------------------------------- the walk's path
+  /**
+   * The selected frame's path on the globe (DESIGN.md "A selection"): its
+   * triads' origins joined root first by a dotted 1 px line, revealed one
+   * edge at a time with the walk's 90 ms stagger (at once under reduced
+   * motion), and redrawn as the clock moves the origins.
+   */
+  let walk: { id: string; shown: number; timer: number } | undefined;
+  function walkOrigins(id: string): Float64Array[] {
+    const instant = instantNow();
+    if (!tree || !frames || !instant) {
+      return [];
+    }
+    let path: TreeNode[];
+    try {
+      path = pathToRoot(tree, id).reverse();
+    } catch {
+      return [];
+    }
+    const out: Float64Array[] = [];
+    for (const n of path) {
+      let o: ArrayLike<number> | undefined;
+      if (n.id === "ICRF" || n.id === "HCRS") {
+        continue; // the barycentre's and the Sun's origins are off the scene
+      }
+      if (n.frame) {
+        try {
+          const m = frameTransform(n.frame, frames.itrf, instant);
+          o = [m[12]!, m[13]!, m[14]!];
+        } catch {
+          continue;
+        }
+      } else if (n.id === orionInfo?.info.node.id) {
+        o = orionInfo.info.itrf;
+      } else if (n.id === engineering?.node.id) {
+        o = engineering.placed.itrf;
+      }
+      const prev = out.at(-1);
+      if (
+        o !== undefined &&
+        (prev === undefined ||
+          Math.hypot(o[0]! - prev[0]!, o[1]! - prev[1]!, o[2]! - prev[2]!) > 1)
+      ) {
+        out.push(Float64Array.from(o));
+      }
+    }
+    return out;
+  }
+  function drawWalk(): void {
+    if (!walk) {
+      globe.removeOverlay("walk");
+      return;
+    }
+    const origins = walkOrigins(walk.id);
+    const points: number[] = [];
+    const colors: number[] = [];
+    const color = familyRgba(familyOf(walk.id));
+    for (let k = 0; k + 1 < origins.length && k < walk.shown; k++) {
+      const a = origins[k]!;
+      const b = origins[k + 1]!;
+      // 40 dots per edge: world-space segments, a dot and a gap each.
+      const dots = 40;
+      for (let d = 0; d < dots; d++) {
+        const f0 = d / dots;
+        const f1 = (d + 0.5) / dots;
+        for (const f of [f0, f1]) {
+          points.push(
+            a[0]! + (b[0]! - a[0]!) * f,
+            a[1]! + (b[1]! - a[1]!) * f,
+            a[2]! + (b[2]! - a[2]!) * f,
+          );
+          colors.push(...color);
+        }
+      }
+    }
+    if (points.length === 0) {
+      globe.removeOverlay("walk");
+      return;
+    }
+    globe.setOverlay("walk", [
+      {
+        chunks: overlayMesh({
+          positions: Float64Array.from(points),
+          colors: Uint8Array.from(colors),
+        }),
+      },
+    ]);
+  }
+  function startWalk(id: string | undefined): void {
+    if (walk) {
+      clearTimeout(walk.timer);
+    }
+    walk = undefined;
+    if (id === undefined) {
+      drawWalk();
+      return;
+    }
+    const edges = Math.max(0, walkOrigins(id).length - 1);
+    const reduced =
+      typeof matchMedia === "function" &&
+      matchMedia("(prefers-reduced-motion: reduce)").matches;
+    walk = { id, shown: reduced ? edges : 1, timer: 0 };
+    const step = () => {
+      if (!walk || walk.id !== id || disposed) {
+        return;
+      }
+      drawWalk();
+      if (walk.shown < edges) {
+        walk.shown++;
+        walk.timer = window.setTimeout(step, 90);
+      }
+    };
+    step();
+  }
+  scope.defer(() => {
+    if (walk) {
+      clearTimeout(walk.timer);
+    }
+  });
+
+  // ---------------------------------------------------------------- Orion
+  const leapOf = () => frames!.data.leapSeconds;
+  /** Builds Orion's path in the worker: one build in flight, the latest waiting (orion.ts). */
+  const orionBuild = latestOnly(
+    (arg: { frame: OrionFrame; at: number }) =>
+      client.overlay("trajectoryPath", {
+        drawIn: DRAW_IN[arg.frame],
+        t0: Instant.fromIso(ORION_SPAN[0], "UTC", leapOf()).tdb(),
+        t1: Instant.fromIso(ORION_SPAN[1], "UTC", leapOf()).tdb(),
+        step: ORION_STEP,
+        at: arg.at,
+        adaptive: ORION_ADAPTIVE,
+      }),
+    (g, arg) => {
+      const s = overlays.get("orion")!;
+      if (!s.on || disposed || arg.frame !== orionFrame || !frames) {
+        return;
+      }
+      const frame = frames[DRAW_IN[arg.frame]];
+      const chunks = g.layers[0]!.chunks;
+      globe.setOverlay("orion", [{ chunks, color: familyRgba("trajectory") }], {
+        placement: IDENTITY,
+      });
+      orionBuilt = {
+        frame: arg.frame,
+        at: arg.at,
+        inverse: frameTransform(frames.itrf, frame, Instant.fromTdb(arg.at)),
+        chunks,
+        ...(g.sampling && { sampling: g.sampling }),
+      };
+      orionPlacedAt = NaN;
+      placeOrion();
+      s.state = "drawn";
+      delete s.problem;
+      refreshTriads();
+      invalidate();
+    },
+    (error, arg) => {
+      const s = overlays.get("orion")!;
+      if (isAbort(error) || disposed || !s.on || arg.frame !== orionFrame) {
+        return;
+      }
+      const missing = loading.get("orion").state === "missing";
+      s.state = missing ? "missing" : "error";
+      s.problem = missing
+        ? `${ITEM_NAME.orion} isn't in the frames store: run npm run setup in packages/next, then reload.`
+        : `It didn't draw: ${scrub(messageOf(error))}`;
+      invalidate();
+    },
+  );
+
+  /**
+   * Orion's path follows the clock without a rebuild: drawn in GCRF or
+   * MOON_ME at one instant, it is moved each frame by the drawing frame's
+   * placement now times its inverse then (exact: both are rigid). In ITRF
+   * the path doesn't depend on the clock at all.
+   */
+  let orionPlacedAt = NaN;
+  function placeOrion(): void {
+    const instant = instantNow();
+    if (!orionBuilt || !frames || !instant || orionBuilt.frame === "ITRF") {
+      return;
+    }
+    const tdb = instant.tdb();
+    if (tdb === orionPlacedAt) {
+      return;
+    }
+    let now: Float64Array;
+    try {
+      now = frameTransform(
+        frames[DRAW_IN[orionBuilt.frame]],
+        frames.itrf,
+        instant,
+      );
+    } catch {
+      // Outside the frame data's span: left where it was last placed.
+      return;
+    }
+    globe.placeOverlay("orion", compose(now, orionBuilt.inverse));
+    orionPlacedAt = tdb;
+  }
+
+  /** Orion's node and statements at the clock's instant: one in flight, the latest waiting. */
+  const orionInfoRequest = latestOnly(
+    (arg: { at: number; utc: number }) => client.trajectoryInfo(arg.at),
+    (info, arg) => {
+      if (disposed) {
+        return;
+      }
+      orionInfo = { info, utc: arg.utc };
+      rebuildTree();
+    },
+    () => {
+      // The legend says it's waiting; the next clock change asks again.
+    },
+  );
+  let orionInfoAsked: { clock: number; real: number } | undefined;
+  function askOrionInfo(): void {
+    const instant = instantNow();
+    if (!instant || loading.get("orion").state !== "ready") {
+      return;
+    }
+    orionInfoAsked = { clock: viewer.clock.time, real: performance.now() };
+    orionInfoRequest.request({ at: instant.tdb(), utc: viewer.clock.time });
+  }
+  // When Orion's OEM is in (its overlay or its tests loaded it), the tree
+  // and the legend get Orion.
+  scope.defer(
+    loading.subscribe(() => {
+      if (
+        orionInfoAsked === undefined &&
+        loading.get("orion").state === "ready"
+      ) {
+        askOrionInfo();
+      }
+    }),
+  );
 
   function setOverlay(id: OverlayId, on: boolean): void {
     const s = overlays.get(id)!;
@@ -1143,38 +1524,80 @@ export function run(context: ExampleContext): ExampleRun {
       case "portland":
         return framingAt(-122.75, 45.5, 90_000, 0, -50 * deg);
       case "earthMoon": {
-        // Down on the Earth–Moon plane (its normal from the Moon's motion
-        // over an hour), both framed.
+        // Down on the orbit plane (tour stop 5): along the normal of the
+        // Moon's orbit at the flyby, where Orion's free return lies, with
+        // the Earth–Moon line across the screen, framing the Earth, the
+        // Moon and Orion's path as drawn.
         const moon = moonCenter();
         const instant = instantNow();
         if (!moon || !frames || !instant) {
           return undefined;
         }
-        // In GCRF, where the Moon's motion is its orbit's, then turned to ITRF.
+        const leap = frames.data.leapSeconds;
+        // In GCRF the Moon's motion is its orbit's; then turned to ITRF.
         const at = (ms: number) =>
           frameTransform(
             frames!.moonIcrf,
             frames!.gcrf,
-            Instant.fromUtc(viewer.clock.time + ms, frames!.data.leapSeconds),
+            Instant.fromUtc(FLYBY + ms, leap),
           );
-        const a = at(0);
-        const b = at(3_600_000);
+        const a = at(-1_800_000);
+        const b = at(1_800_000);
         const g = cross([a[12]!, a[13]!, a[14]!], [b[12]!, b[13]!, b[14]!]);
         const m = frameTransform(frames.gcrf, frames.itrf, instant);
-        const n = [0, 1, 2].map(
+        const normal = [0, 1, 2].map(
           (i) => m[i]! * g[0]! + m[4 + i]! * g[1]! + m[8 + i]! * g[2]!,
         );
-        const len = Math.hypot(n[0]!, n[1]!, n[2]!);
-        const r = Math.hypot(moon[0]!, moon[1]!, moon[2]!);
+        // The Earth and the Moon with room around them, and Orion's path.
+        const points: number[][] = [];
+        for (const [c, radius] of [
+          [[0, 0, 0], 2.5e7],
+          [Array.from(moon), 2.5e7],
+        ] as const) {
+          for (const d of [-1, 1]) {
+            for (let k = 0; k < 3; k++) {
+              const p = [...c];
+              p[k] = p[k]! + d * radius;
+              points.push(p);
+            }
+          }
+        }
+        if (orionBuilt) {
+          const place =
+            orionBuilt.frame === "ITRF"
+              ? IDENTITY
+              : compose(
+                  frameTransform(
+                    frames[DRAW_IN[orionBuilt.frame]],
+                    frames.itrf,
+                    instant,
+                  ),
+                  orionBuilt.inverse,
+                );
+          for (const c of orionBuilt.chunks) {
+            const o = c.origin;
+            points.push(
+              [0, 1, 2].map(
+                (i) =>
+                  place[i]! * o[0]! +
+                  place[4 + i]! * o[1]! +
+                  place[8 + i]! * o[2]! +
+                  place[12 + i]!,
+              ),
+            );
+          }
+        }
+        const canvas = viewer.canvas;
+        const f = planeFraming(points, normal, moon, {
+          fov: viewer.view.camera.fov,
+          aspect: canvas.clientWidth / Math.max(1, canvas.clientHeight),
+        });
         return {
-          center: moon.map((v) => v * 0.55),
-          range: 7.5e8,
+          center: f.center,
+          range: f.range,
           heading: 0,
           pitch: -Math.PI / 2,
-          from: {
-            direction: n.map((v) => v / len),
-            up: moon.map((v) => v / r),
-          },
+          from: f.from,
         };
       }
       case "moon": {
@@ -1216,6 +1639,9 @@ export function run(context: ExampleContext): ExampleRun {
     }
     if (id.startsWith("MOON")) {
       return framing("moon");
+    }
+    if (id === orionInfo?.info.node.id) {
+      return framing("earthMoon");
     }
     return OPENING;
   }
@@ -1325,6 +1751,7 @@ export function run(context: ExampleContext): ExampleRun {
   function applySelection(): void {
     const s = view.get().selection;
     refreshTriads();
+    startWalk(s.kind === "frame" ? s.id : undefined);
     if (s.kind === "none") {
       globe.emphasize(undefined);
       if (tourStop === undefined) {
@@ -1334,7 +1761,7 @@ export function run(context: ExampleContext): ExampleRun {
     }
     if (s.kind === "frame") {
       // Selecting a frame highlights; flying is "Show on globe" (I6).
-      globe.emphasize({ frames: emphasisFrames() });
+      globe.emphasize({ frames: emphasisFrames(), selected: s.id });
       return;
     }
     // A result not in hand (a deep link, back or forward): run its group
@@ -1861,6 +2288,8 @@ export function run(context: ExampleContext): ExampleRun {
     // (R13). Once a second at most.
     let lastTreeReal = performance.now();
     let lastBiasReal = performance.now();
+    let walkAt = viewer.clock.time;
+    let walkReal = performance.now();
     const tick = () => {
       if (disposed) {
         return;
@@ -1876,13 +2305,22 @@ export function run(context: ExampleContext): ExampleRun {
           lastTreeReal = real;
           rebuildTree();
         }
+        // Orion's path moves with its drawing frame every frame; its
+        // statement (the tree and the legend) is asked for again after a
+        // minute of clock time, at most once a second (R8).
+        placeOrion();
+        updateMinorGrid();
+        if (walk && Math.abs(now - walkAt) > 1000 && real - walkReal > 250) {
+          walkAt = now;
+          walkReal = real;
+          drawWalk();
+        }
         if (
-          overlays.get("orion")!.on &&
-          overlays.get("orion")!.state === "drawn" &&
-          Math.abs(now - orionAt) > 1_800_000
+          orionInfoAsked !== undefined &&
+          Math.abs(now - orionInfoAsked.clock) > 60_000 &&
+          real - orionInfoAsked.real > 1000
         ) {
-          orionAt = now;
-          drawOverlay("orion");
+          askOrionInfo();
         }
         if (
           overlays.get("bias")!.on &&

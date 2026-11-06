@@ -236,14 +236,14 @@ km; a lunar site at 100 m. Under reduced motion, flights cut.
 
 ### The tour
 
-| Stop                         | Camera                                                                           | On                                                                                                                                           | Caption                                                                                                                       |
-| ---------------------------- | -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| 1 Earth's frames             | the opening shot                                                                 | triads (ITRF, GCRF, EME2000, Sacramento ENU)                                                                                                 | ITRF turns with the Earth; GCRF doesn't. Each triad is a frame's axes at the clock's time.                                    |
-| 2 GCRF to ITRF over a day    | no move                                                                          | ITRF and GCRF triads                                                                                                                         | the globe is drawn Earth-fixed, so GCRF's triad turns once against ITRF's in a sidereal day (the clock plays at 3,600×: 24 s) |
-| 3 The California design grid | over the grid's centre, 180 km range, 55° tilt, heading 0°                       | design grid (10 km lines; 2 km lines only under 60 km range), true-north lines; imagery dimmed (exposure −0.6); target: `globe-stop3-target` | grid north and true north part ways away from the central meridian: the convergence angle                                     |
-| 4 Rigid against exact        | 2 km beyond the line's far end, 8 km range, 15° above the horizon, looking back  | rigid and exact 20 km line, the sag labelled; imagery dimmed                                                                                 | a 20 km design line placed rigidly sags 31 m below the exact one at its far end                                               |
-| 5 Orion's figure-eight       | above the Earth–Moon plane, both framed, 1.1 million km; 3.0 s flight            | Orion in GCRF, then after 4 s in MOON_ME                                                                                                     | in GCRF a figure-eight round the Moon; in MOON_ME the far-side swing                                                          |
-| 6 The Moon's south pole      | 100 m from the site's triad, 20° above the horizon, sun low behind; 3.5 s flight | the site's triad (MOON_ME)                                                                                                                   | a clock here gains about 56 µs a day; the triad holds still as the camera orbits                                              |
+| Stop                         | Camera                                                                                                                                       | On                                                                                                                                           | Caption                                                                                                                       |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| 1 Earth's frames             | the opening shot                                                                                                                             | triads (ITRF, GCRF, EME2000, Sacramento ENU)                                                                                                 | ITRF turns with the Earth; GCRF doesn't. Each triad is a frame's axes at the clock's time.                                    |
+| 2 GCRF to ITRF over a day    | no move                                                                                                                                      | ITRF and GCRF triads                                                                                                                         | the globe is drawn Earth-fixed, so GCRF's triad turns once against ITRF's in a sidereal day (the clock plays at 3,600×: 24 s) |
+| 3 The California design grid | over the grid's centre, 180 km range, 55° tilt, heading 0°                                                                                   | design grid (10 km lines; 2 km lines only under 60 km range), true-north lines; imagery dimmed (exposure −0.6); target: `globe-stop3-target` | grid north and true north part ways away from the central meridian: the convergence angle                                     |
+| 4 Rigid against exact        | 2 km beyond the line's far end, 8 km range, 15° above the horizon, looking back                                                              | rigid and exact 20 km line, the sag labelled; imagery dimmed                                                                                 | a 20 km design line placed rigidly sags 31 m below the exact one at its far end                                               |
+| 5 Orion's figure-eight       | down the Moon's orbit normal at the flyby, the Earth–Moon line across the view, the Earth, the Moon and the path framed (6c-1); 3.0 s flight | Orion in GCRF, then after 4 s in MOON_ME                                                                                                     | in GCRF a figure-eight round the Moon; in MOON_ME the far-side swing                                                          |
+| 6 The Moon's south pole      | 100 m from the site's triad, 20° above the horizon, sun low behind; 3.5 s flight                                                             | the site's triad (MOON_ME)                                                                                                                   | a clock here gains about 56 µs a day; the triad holds still as the camera orbits                                              |
 
 The caption sits top right (bottom, above the time controls, on views
 under 560 px), takes focus at each stop, and steps with the arrow keys;
@@ -894,9 +894,76 @@ Every term below has a popover wherever it appears (`panel/glossary.ts`,
   for triangles only), so "alpha 0.35" is a 0.35 tint (darker, on a dark
   ground) and "alpha 0.6" a 0.6 tint. The selected overlay keeps full
   strength; the lighter tint (50% white) for it is not built.
-- **Not built yet** (6c or later): the geocentric triads' x-ray dashes
-  inside the globe, the 2 km minor grid lines under 60 km range, the walk's
-  animated dotted path between triad origins on the globe, the label fade
-  under 24 px (labels only hide on collision), and Orion and engineering
-  nodes for the frames the worker alone holds (the tree gains one
-  engineering node once the design grid's operation is known).
+- **Not built in 6b** (built in 6c-1 unless noted below): the geocentric
+  triads' x-ray dashes inside the globe, the 2 km minor grid lines under
+  60 km range, the walk's animated dotted path between triad origins on the
+  globe, the label fade under 24 px, and Orion and engineering nodes for the
+  frames the worker alone holds.
+
+## Built in 6c-1
+
+- **Orion in the tree and the legend.** When Orion's OEM is in (its overlay
+  or its tests loaded it), one worker reply (`trajectoryInfo`) carries
+  Orion's node (the trajectory edge, its position sigma at the clock's
+  instant) and its walk statements against ITRF, GCRF and ICRF. The tree
+  shows Orion under EME2000, its reference; the walk and the budget bar use
+  the worker's statements. The legend line is computed from the statement
+  against ITRF (`orion.ts`, `orionLegend`): the total at its instant, its
+  largest term, the frame drawn in and how the path was sampled, for
+  example "±10 m (1σ) at 2026-04-06 23:00 UTC against the Earth's centre,
+  mostly the unstated time scale (TDB or TT; taken as TDB); drawn in GCRF,
+  878 samples, finest 14 s". It is asked for again after a minute of clock
+  time, at most once a second of real time, one request in flight.
+- **Orion's path, adaptive.** Sampled every hour, then the interval whose
+  midpoint departs most from its chord is halved, again and again, until
+  each departs by at most 0.05% of its distance from the drawing frame's
+  origin (500 m at 1,000 km, 100 m at the least), no interval under 5 s,
+  within 8,000 samples and **2 s of worker time** (measured: GCRF 878
+  samples in about 0.1–0.5 s, ITRF about 2,100 in 0.35 s, MOON_ME about 580
+  in 0.07 s). A capped path says so in the legend. Chunks may span 1e7 m
+  (half-metre float32 steps against the path's ±10 m), so the ITRF path,
+  which winds about 2e10 m, is about 1,600 draws, not hundreds of
+  thousands (that was the 6b ITRF stall, on the main thread).
+- **Orion keeps up with the clock.** A path drawn in GCRF or MOON_ME hangs
+  under one transform that each frame sets to the drawing frame's placement
+  now times its inverse at the build's instant (exact: both rigid), so it
+  follows any clock rate without a rebuild; in ITRF it doesn't depend on
+  the clock at all. Rebuilds (a frame switch) keep one request in flight
+  and only the latest waiting: stale ones are dropped, never queued
+  (`latestOnly`).
+- **Tour stop 5's camera** looks along the normal of the Moon's orbit at
+  the flyby (the plane Orion's free return lies in), with the Earth–Moon
+  line across the screen, and a range that frames the Earth, the Moon and
+  the drawn path with a 20% margin for the view's aspect (`planeFraming`).
+- **The selected overlay at the lighter tint.** A per-channel draw tint
+  above 1 turns a layer's family tone into its 50% mix with white (lines
+  are one color per layer, and unlit color clamps at white); secondary
+  layers keep their 0.6 strength under it. The selected frame's triad
+  takes a lighter mesh (each axis color mixed 50% with white), and its
+  label turns white.
+- **Label fade.** A label whose origin is under 24 px from a
+  higher-priority label's on screen fades out (160 ms; a cut under reduced
+  motion) instead of being hidden by its box.
+- **The 2 km minor grid lines** are their own worker build (`designGrid`'s
+  `skipEvery`, so they never overlap the 10 km lines), at the secondary
+  strength, shown only while the camera is under 60 km above the ground
+  over the grid.
+- **The walk's path on the globe.** Selecting a frame joins its path's
+  origins (root first; the barycentre and the Sun left out, coincident
+  origins merged) with a dotted 1 px line in the frame's family tone,
+  revealed one edge per 90 ms (at once under reduced motion), redrawn as
+  the clock moves them.
+- **Copy link** builds its URL through `context.link` (examples/types.ts),
+  Dyno's router; the example no longer reads `location.href`.
+- **Partial runs and deep links.** A link to a result whose group hasn't
+  run (after another group's own run) starts that group's run instead of
+  clearing the selection.
+
+### Carried forward (engine work)
+
+- **X-ray dashes for the geocentric triads inside the globe.** Line-list
+  and mesh draws are always depth-tested (`DrawOptions` has no depth-test
+  switch; only billboards have `depthTestDistance`), so the part of the
+  ITRF, GCRF and EME2000 triads inside the Earth can't draw through it.
+  Needs a draw flag for depth-test off (or a second pass with an inverted
+  depth test) in the renderer.
