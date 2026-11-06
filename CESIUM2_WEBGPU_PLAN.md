@@ -6335,8 +6335,36 @@ Controller rulings made while building it:
 - `signal: false` also omits line of sight.
 - DSN Now is a 30% sanity check (above).
 - `geographiclib-geodesic` was checked with Snyk's package health (Healthy,
-  0 vulnerabilities, no dependencies). The whole-project SCA scan needs the
-  folder trusted in Snyk, which awaits the owner's go-ahead.
+  0 vulnerabilities, no dependencies). Once the owner trusted the repo in
+  Snyk, the SCA scan of packages/next's production dependencies found 0
+  issues (2026-11-05).
+
+_Carried forward from frames plans 2 and 3._ These are deferred items that
+are real work. The test-strength and wording nits the reviews raised are left
+out, because none of them changes a result.
+
+- **Plan 5:** a SPICE `gfoclt` fixture for the Moon's occultation of Orion
+  from DSS-43. Today's check is against the published minute (±120 s), from
+  one complex. The fixture would make it a sub-second validation.
+- **Plan 5:** cache `skyState`'s IAU 2006/2000A series (X, Y, s) over
+  minutes. It costs about 0.1–0.4 ms per clock change and runs every frame
+  while the clock plays. This is already in plan 3's roadmap.
+- **Plan 5:** bundle size. `widgets/Viewer.ts` imports `skyState` and
+  `loadFrameData` statically, so every Viewer bundle carries the ERFA tables
+  (about 100 KB) and the pack readers, even with `frameData` off. Load that
+  path with a dynamic `import()`.
+- **Plan 5:** surface `FrameData.warnings` in the Viewer and the bench
+  Explorer. These are an expired leap-second table, and an EOP table that
+  ends before now. Today they're only on the returned object.
+- **Plan 5:** a unit test for the Viewer's `frameData` option. It would cover
+  a URL or an object, data arriving late, and a load that fails with one
+  warning.
+- **Plan 4 or later:** `measure` solves the downlink light time twice, once
+  inside `downlink` and again for line of sight. Return the solution from
+  the leg internally.
+- **Plan 4 or later:** `src/frames/frames.ts` imports its constants from
+  `src/measure/constants.ts`, so the frames layer depends on measurement.
+  Move the shared constants to a neutral module.
 
 ### 13.15 GPU resource limits and capacities (r50, design)
 
