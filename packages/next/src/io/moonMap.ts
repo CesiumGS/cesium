@@ -692,7 +692,10 @@ function readTile(bytes: Uint8Array): Omit<MoonPatch, "image"> & {
   // Floats, read from the BIN chunk alone (not the buffer it lies in).
   const data = new DataView(bin.buffer, bin.byteOffset, bin.byteLength);
   const read = (index: number, size: number): Float32Array => {
-    const accessor = json.accessors[index];
+    const accessor = json.accessors?.[index];
+    if (!accessor) {
+      throw new Error(`Moon map: a tile has no accessor ${index}`);
+    }
     if (accessor.componentType !== FLOAT) {
       throw new Error(
         `Moon map: a tile's accessor ${index} has componentType ${accessor.componentType}, not float (${FLOAT})`,

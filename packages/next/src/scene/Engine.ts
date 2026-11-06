@@ -756,10 +756,12 @@ export class Engine {
    * The Moon's albedo map: equirectangular, longitude 0 (the near side's
    * center) in the middle, north up, sRGB (1.x's `moonSmall.jpg`); only
    * its pattern counts (the disk's brightness follows the Moon's albedo and
-   * phase). Null: a uniform disk.
+   * phase). Null: a uniform disk. `mean`, its mean albedo if known
+   * (`MoonMap.mean`), spares reading it back on the page. The image can be
+   * closed once this returns.
    */
-  setMoonMap(image: ImageBitmap | null): void {
-    this.sky.setMoonMap(image);
+  setMoonMap(image: ImageBitmap | null, mean?: number): void {
+    this.sky.setMoonMap(image, mean);
     this.requestRender();
   }
 

@@ -275,6 +275,8 @@ export class Viewer {
   private readonly shadows: boolean;
   private readonly ambientOcclusion: boolean;
   private destroyed = false;
+  /** Aborted on `destroy`: stops the Moon map's loads (and its worker). */
+  private readonly moonMapLoad = new AbortController();
   private readonly accessToken: string | undefined;
 
   /** Default globe endpoints, resolved while the device was created. */
@@ -392,7 +394,8 @@ export class Viewer {
     }
     this.applyClockSky();
     if (this.moon) {
-      void fetch(MOON_MAP)
+      const signal = this.moonMapLoad.signal;
+      void fetch(MOON_MAP, { signal })
         .then(async (response) =>
           createImageBitmap(await response.blob(), {
             colorSpaceConversion: "none",
@@ -402,10 +405,12 @@ export class Viewer {
           if (!this.destroyed && !this.moonMapSharp) {
             this.engine.setMoonMap(image);
           }
+          // Uploaded, or not wanted (destroyed, or the sharp map won).
+          image.close();
         })
         .catch(() => {});
-      void loadIonMoonMap(this.tokenOptions())
-        .then(({ image, attributions, warnings }) => {
+      void loadIonMoonMap({ ...this.tokenOptions(), signal })
+        .then(({ image, attributions, warnings, mean }) => {
           if (this.destroyed) {
             image.close();
             return;
@@ -415,11 +420,25 @@ export class Viewer {
             console.warn(`Viewer: ${warning}`);
           }
           this.moonMapSharp = true;
-          this.engine.setMoonMap(image);
+          this.engine.setMoonMap(image, mean);
+          image.close();
           this.addAttributions(MOON_CREDIT, attributions);
         })
-        // Without the asset (not in the token's account): 1.x's map.
-        .catch(() => {});
+        .catch((error: unknown) => {
+          const message =
+            error instanceof Error ? error.message : String(error);
+          // Destroyed, or no token (expected): 1.x's map, quietly.
+          if (
+            this.destroyed ||
+            (error instanceof DOMException && error.name === "AbortError") ||
+            /no access token/.test(message)
+          ) {
+            return;
+          }
+          console.warn(
+            `Viewer: the Moon map did not load, 1.x's map stays (${message})`,
+          );
+        });
     }
     if (options.stars !== false) {
       this.engine.setStarMap(STAR_MAP);
@@ -1205,6 +1224,7 @@ export class Viewer {
 
   destroy(): void {
     this.destroyed = true;
+    this.moonMapLoad.abort();
     this.orbit_?.dispose();
     cancelAnimationFrame(this.frameRequest);
     this.credits_?.dispose();
