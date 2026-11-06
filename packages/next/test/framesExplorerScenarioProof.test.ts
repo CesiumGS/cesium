@@ -102,15 +102,34 @@ describe("proofRows at the checked setup", () => {
     });
   });
 
-  it("leaves out a proof id the catalog hasn't given yet, and never a display-only result", () => {
+  it("gives a proof id the catalog hasn't given yet as pending, never a pass (R9)", () => {
     const catalog = new Map(CATALOG);
     catalog.delete("ref.b");
+    const rows = proofRows(SPEC, true, catalog, evaluation());
+    expect(rows).toEqual([
+      { kind: "checked", result: CATALOG.get("ref.a") },
+      { kind: "pending", id: "ref.b", title: "ref.b" },
+      { kind: "checked", result: CATALOG.get("self.round-trip") },
+    ]);
+    expect("pass" in rows[1]!).toBe(false);
+    expect("result" in rows[1]!).toBe(false);
+    // Before the catalog has run, every proof id is pending.
+    expect(kinds(proofRows(SPEC, true, new Map(), evaluation()))).toEqual(
+      SPEC.proof.map(() => "pending"),
+    );
+  });
+
+  it("never gives a display-only result as proof", () => {
+    const catalog = new Map(CATALOG);
     catalog.set(
       "self.round-trip",
       result("self.round-trip", undefined, { displayOnly: true }),
     );
     const rows = proofRows(SPEC, true, catalog, evaluation());
-    expect(rows).toEqual([{ kind: "checked", result: CATALOG.get("ref.a") }]);
+    expect(rows).toEqual([
+      { kind: "checked", result: CATALOG.get("ref.a") },
+      { kind: "checked", result: CATALOG.get("ref.b") },
+    ]);
   });
 });
 

@@ -28,7 +28,9 @@ import {
 } from "../examples/frames-explorer/protocol.ts";
 import {
   registerScenario,
+  unregisterScenarioForTests,
   type ScenarioEvaluation,
+  type ScenarioEvaluator,
 } from "../examples/frames-explorer/scenarios/evaluate.ts";
 import type { ScenarioId } from "../examples/frames-explorer/scenarios/spec.ts";
 import type { AddedFrameSpec } from "../examples/frames-explorer/tree.ts";
@@ -148,7 +150,14 @@ afterEach(() => {
     port.close();
   }
   vi.unstubAllGlobals();
+  unregisterScenarioForTests("earth-turns");
 });
+
+/** Registers `evaluator` for `id` in place of any evaluator it has. */
+function stubScenario(id: ScenarioId, evaluator: ScenarioEvaluator): void {
+  unregisterScenarioForTests(id);
+  registerScenario(id, evaluator);
+}
 
 interface Sent {
   message: Reply;
@@ -618,7 +627,7 @@ describe("scenario", () => {
       expect(ctx.frames).toBe(frames);
       return evaluation([live], geometry);
     });
-    registerScenario("earth-turns", evaluator);
+    stubScenario("earth-turns", evaluator);
     const { client, sent } = connect(async () => context());
     const got = await client.scenario(
       "earth-turns",
@@ -651,6 +660,55 @@ describe("scenario", () => {
     });
   });
 
+  it("refuses a second evaluator for one scenario", () => {
+    stubScenario("earth-turns", async () => evaluation());
+    expect(() =>
+      registerScenario("earth-turns", async () => evaluation()),
+    ).toThrow(/"earth-turns".*already/);
+  });
+
+  it("strips a live check's source: a published reference doesn't apply at the user's setting", async () => {
+    stubScenario("earth-turns", async () =>
+      evaluation([
+        {
+          ...base("live.round-trip"),
+          pass: true,
+          value: 0,
+          tolerance: 1,
+          unit: "m",
+          source: {
+            reference: "iers-conventions-2010",
+            document: "IERS Conventions (2010)",
+            retrieved: "2026-01-01",
+          },
+        },
+      ]),
+    );
+    const { client } = connect(async () => context());
+    const got = await client.scenario("earth-turns", { rate: 3600 }, 0);
+    expect(got.live).toHaveLength(1);
+    expect(got.live[0]!.pass).toBe(true);
+    expect("source" in got.live[0]!).toBe(false);
+  });
+
+  it("refuses a live check under one of the scenario's proof ids, naming it", async () => {
+    // earth-turns's proof: its catalog check against the published reference.
+    stubScenario("earth-turns", async () =>
+      evaluation([
+        {
+          ...base("frame-tree.compositions.itrf-gcrf"),
+          pass: true,
+        },
+      ]),
+    );
+    const { client } = connect(async () => context());
+    await expect(
+      client.scenario("earth-turns", { rate: 3600 }, 0),
+    ).rejects.toThrow(
+      /earth-turns.*"frame-tree\.compositions\.itrf-gcrf".*proof/,
+    );
+  });
+
   it("waits for a run in progress: a scenario queued behind a run doesn't start until it ends", async () => {
     let release = () => {};
     const gate = new Promise<void>((resolve) => {
@@ -668,7 +726,7 @@ describe("scenario", () => {
       postedBefore = sent.map((s) => s.message.type);
       return evaluation();
     });
-    registerScenario("earth-turns", evaluator);
+    stubScenario("earth-turns", evaluator);
     const { client, sent } = connect(async () => context(), { cases });
     const run = client.run();
     const scenario = client.scenario("earth-turns", { rate: 3600 }, 0);
@@ -688,7 +746,7 @@ describe("scenario", () => {
       release = resolve;
     });
     const later = vi.fn(async () => [{ ...base("later"), pass: true }]);
-    registerScenario("earth-turns", async () => {
+    stubScenario("earth-turns", async () => {
       await gate;
       return evaluation();
     });
@@ -706,8 +764,27 @@ describe("scenario", () => {
     expect(later).not.toHaveBeenCalled();
   });
 
+  it("ends a run cancelled while its data context is made with done, cancelled, not an error", async () => {
+    let fail = () => {};
+    const made = new Promise<never>((_, reject) => {
+      fail = () => reject(new MissingDataError("no store"));
+    });
+    const { client } = connect(() => made, { cases: CATALOG });
+    const run = client.run();
+    await sleep(10);
+    client.cancel();
+    await sleep(10);
+    fail();
+    await expect(run).resolves.toMatchObject({
+      passed: 0,
+      failed: 0,
+      skipped: 0,
+      cancelled: true,
+    });
+  });
+
   it("rejects naming the scenario when its evaluator throws, and the host keeps serving", async () => {
-    registerScenario("earth-turns", () =>
+    stubScenario("earth-turns", () =>
       Promise.reject(new TypeError("boom: it broke")),
     );
     const { client } = connect(async () => context());
@@ -717,7 +794,7 @@ describe("scenario", () => {
       name: "TypeError",
       message: expect.stringMatching(/earth-turns.*boom: it broke/),
     });
-    registerScenario("earth-turns", async () => evaluation());
+    stubScenario("earth-turns", async () => evaluation());
     await expect(
       client.scenario("earth-turns", { rate: 3600 }, 0),
     ).resolves.toMatchObject({ scenario: "earth-turns" });
@@ -735,7 +812,7 @@ describe("scenario", () => {
       name: "RangeError",
       message: expect.stringMatching(/"ship".*no evaluator/),
     });
-    registerScenario("earth-turns", async () => evaluation());
+    stubScenario("earth-turns", async () => evaluation());
     await expect(
       client.scenario("earth-turns", { rate: 3600 }, NaN),
     ).rejects.toMatchObject({
@@ -745,7 +822,7 @@ describe("scenario", () => {
   });
 
   it("rejects an evaluation for another scenario", async () => {
-    registerScenario("earth-turns", async () => ({
+    stubScenario("earth-turns", async () => ({
       ...evaluation(),
       scenario: "bim-site",
     }));
@@ -756,7 +833,7 @@ describe("scenario", () => {
   });
 
   it("rejects naming what is missing when the scenario's data can't be had", async () => {
-    registerScenario("earth-turns", async () => evaluation());
+    stubScenario("earth-turns", async () => evaluation());
     const { client } = connect(async () => ({
       loadFrames: () =>
         Promise.reject(new MissingDataError("no frame data here")),
