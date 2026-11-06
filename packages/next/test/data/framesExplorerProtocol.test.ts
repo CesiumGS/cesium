@@ -10,6 +10,7 @@ import { afterAll, describe, expect, it } from "vitest";
 import { framesDataDirectory } from "../../scripts/frameData.mjs";
 import references from "../../examples/frames-explorer/references.json";
 import {
+  TRAJECTORY_CHUNK_EXTENT,
   createHost,
   type HostPort,
   type MakeContext,
@@ -27,9 +28,13 @@ import {
   polyline,
   rigidVsExact,
   RIGID_VS_EXACT_COLORS,
+  adaptivePath,
   trajectoryPath,
   trueNorthLines,
 } from "../../examples/frames-explorer/overlays.ts";
+import { composedView } from "../../examples/frames-explorer/composed.ts";
+import { buildTree } from "../../examples/frames-explorer/tree.ts";
+import { frameTransform } from "../../src/frames/Frame.ts";
 import {
   STRESS_CASES,
   boundCrsChecks,
@@ -293,5 +298,67 @@ describe("overlays built in the worker", () => {
     );
     expect(want.positions.length).toBeGreaterThan(100);
     expect(chunksOf(path)).toStrictEqual({ path: overlayMesh(want) });
+  });
+
+  it("trajectoryPath with an adaptive step draws Orion as adaptivePath does, with its sampling", async () => {
+    const client = connect();
+    const [t0, t1] = [orion.spans[0]![0], orion.spans.at(-1)![1]];
+    const at = (t0 + t1) / 2;
+    const adaptive = { tolerance: 2e-3, minStep: 10, maxSamples: 3000 };
+    const path = await client.overlay("trajectoryPath", {
+      drawIn: "gcrf",
+      t0,
+      t1,
+      step: 3600,
+      at,
+      adaptive,
+    });
+    const want = adaptivePath(
+      orion,
+      frames.gcrf,
+      frames,
+      Instant.fromTdb(t0),
+      Instant.fromTdb(t1),
+      { step: 3600, ...adaptive },
+      Instant.fromTdb(at),
+    );
+    expect(chunksOf(path)).toStrictEqual({
+      path: overlayMesh(want, { extent: TRAJECTORY_CHUNK_EXTENT }),
+    });
+    expect(path.sampling).toEqual(want.sampling);
+    expect(path.sampling!.samples).toBeLessThanOrEqual(3000);
+  });
+
+  it("trajectoryInfo gives Orion's tree node and its statements in one reply", async () => {
+    const client = connect();
+    const at = Instant.fromUtc(
+      Date.parse("2026-04-06T23:00:00Z"),
+      frames.data.leapSeconds,
+    );
+    const info = await client.trajectoryInfo(at.tdb());
+    expect(info.at).toBe(at.tdb());
+    expect(info.parent).toBe(orion.reference.name);
+    expect(info.node).toMatchObject({
+      id: orion.name,
+      label: "Orion",
+      edge: { kind: "trajectory" },
+      children: [],
+    });
+    expect(info.node.edge.accuracy.meters).toBe(orion.positionSigma(at));
+    // Plain data: no class instances cross.
+    expect(info.node).not.toHaveProperty("frame");
+    expect(info.node).not.toHaveProperty("trajectory");
+    const tree = buildTree(frames, { trajectories: [orion] }, at);
+    for (const reference of ["ITRF", "GCRF", "ICRF"] as const) {
+      expect(info.composed[reference]).toStrictEqual(
+        composedView(tree, frames, at, reference, orion.name),
+      );
+    }
+    // Near the Moon, the unstated time scale dominates: about 10 m.
+    const m = info.composed.ITRF.statement.meters!;
+    expect(m).toBeGreaterThan(5);
+    expect(m).toBeLessThan(20);
+    const p = frameTransform(orion.frame, frames.itrf, at);
+    expect(info.itrf).toEqual([p[12], p[13], p[14]]);
   });
 });

@@ -29,6 +29,7 @@ import { Instant } from "../../src/time/Instant.ts";
 import type { Trajectory } from "../../src/trajectory/Trajectory.ts";
 import {
   RIGID_VS_EXACT_COLORS,
+  adaptivePath,
   designGrid,
   distortion,
   overlayMesh,
@@ -38,7 +39,15 @@ import {
   trueNorthLines,
   type Geometry,
 } from "./overlays.ts";
+import { composedView } from "./composed.ts";
+import {
+  REFERENCES,
+  type ComposedView,
+  type Reference,
+} from "./panel/model.ts";
 import { GEOID, messageOf } from "./stress/runner.ts";
+import { buildTree, type TreeNode } from "./tree.ts";
+import { frameTransform } from "../../src/frames/Frame.ts";
 import {
   ORION_OEM,
   STRESS_CASES,
@@ -64,6 +73,7 @@ import {
   type Request,
   type RunSummary,
   type StateReply,
+  type TrajectoryInfo,
 } from "./protocol.ts";
 
 /**
@@ -207,10 +217,22 @@ function transfers(geometry: OverlayGeometry): ArrayBuffer[] {
   return [...out];
 }
 
-const layer = (name: string, geometry: Geometry): OverlayLayer => ({
+const layer = (
+  name: string,
+  geometry: Geometry,
+  extent?: number,
+): OverlayLayer => ({
   name,
-  chunks: overlayMesh(geometry),
+  chunks: overlayMesh(geometry, extent !== undefined ? { extent } : {}),
 });
+
+/**
+ * Orion's path in chunks of up to 1e7 m (`overlayMesh`): half-metre float32
+ * steps against the path's own ±10 m, and a few thousand draws for the whole
+ * mission even in ITRF (whose path winds about 2e10 m), not hundreds of
+ * thousands. Only the adaptive path takes it; the uniform one keeps the default.
+ */
+export const TRAJECTORY_CHUNK_EXTENT = 1e7;
 
 /**
  * The worker's side: answers `Request`s on `port`.
@@ -505,7 +527,16 @@ export function createHost(
         return {
           kind: request.kind,
           layers: [
-            layer("grid", designGrid(frame, p.extent, p.step, p.segment)),
+            layer(
+              "grid",
+              designGrid(
+                frame,
+                p.extent,
+                p.step,
+                p.segment,
+                p.skipEvery !== undefined ? { skipEvery: p.skipEvery } : {},
+              ),
+            ),
           ],
           operation: operationOf(frame),
         };
@@ -575,6 +606,26 @@ export function createHost(
         }
         const orion = await loadItem(loaded.raw, "orion");
         const { frames } = loaded.raw;
+        const style = p.color !== undefined ? { color: p.color } : {};
+        if (p.adaptive !== undefined) {
+          const { sampling, positions, colors } = adaptivePath(
+            orion,
+            frames[p.drawIn],
+            frames,
+            Instant.fromTdb(p.t0),
+            Instant.fromTdb(p.t1),
+            { ...p.adaptive, step: p.step },
+            Instant.fromTdb(p.at),
+            style,
+          );
+          return {
+            kind: request.kind,
+            layers: [
+              layer("path", { positions, colors }, TRAJECTORY_CHUNK_EXTENT),
+            ],
+            sampling,
+          };
+        }
         const path = trajectoryPath(
           orion,
           frames[p.drawIn],
@@ -583,7 +634,7 @@ export function createHost(
           Instant.fromTdb(p.t1),
           p.step,
           Instant.fromTdb(p.at),
-          p.color !== undefined ? { color: p.color } : {},
+          style,
         );
         return { kind: request.kind, layers: [layer("path", path)] };
       }
@@ -604,6 +655,51 @@ export function createHost(
       post({
         type: "error",
         id: request.id,
+        name: errorName(error),
+        message: messageOf(error),
+      });
+    }
+  }
+
+  /** Orion's node and statements at `at` (TDB seconds), one reply (`TrajectoryInfo`). */
+  async function trajectoryInfo(id: number, at: number): Promise<void> {
+    try {
+      const loaded = await context();
+      const orion = await loadItem(loaded.raw, "orion");
+      const { frames } = loaded.raw;
+      const instant = Instant.fromTdb(at);
+      const tree = buildTree(frames, { trajectories: [orion] }, instant);
+      const find = (n: TreeNode): TreeNode | undefined =>
+        n.id === orion.name ? n : n.children.map(find).find((x) => x);
+      const node = find(tree)!;
+      const composed = {} as Record<Reference, ComposedView>;
+      for (const reference of REFERENCES) {
+        const v = composedView(tree, frames, instant, reference, orion.name);
+        if (v === undefined) {
+          throw new Error(`Orion has no statement against ${reference}`);
+        }
+        composed[reference] = v;
+      }
+      const m = frameTransform(orion.frame, frames.itrf, instant);
+      const info: TrajectoryInfo = {
+        node: {
+          id: node.id,
+          // The OEM's object, as the page names it (the trajectory's own
+          // name, "orion", stays its id).
+          label: "Orion",
+          edge: node.edge,
+          children: [],
+        },
+        parent: orion.reference.name,
+        composed,
+        itrf: [m[12]!, m[13]!, m[14]!],
+        at,
+      };
+      post({ type: "trajectoryInfo", id, info });
+    } catch (error) {
+      post({
+        type: "error",
+        id,
         name: errorName(error),
         message: messageOf(error),
       });
@@ -662,6 +758,9 @@ export function createHost(
       }
       case "overlay":
         void overlay(request);
+        return;
+      case "trajectoryInfo":
+        void trajectoryInfo(request.id, request.at);
         return;
       default:
         post({
