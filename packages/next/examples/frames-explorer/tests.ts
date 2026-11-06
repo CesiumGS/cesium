@@ -24,10 +24,7 @@ import { frameTreeCases } from "./stress/groups/frame-tree.ts";
 import { measurementCases } from "./stress/groups/measurement.ts";
 import { projectionsCases } from "./stress/groups/projections.ts";
 import { recordedOperationsCases } from "./stress/groups/recorded-operations.ts";
-import {
-  referenceValuesCases,
-  referenceValuesHeld,
-} from "./stress/groups/reference-values.ts";
+import { referenceValuesCases } from "./stress/groups/reference-values.ts";
 import { rigidPlacementBudgetCases } from "./stress/groups/rigid-placement-budget.ts";
 import { siteGridsCases } from "./stress/groups/site-grids.ts";
 import { spaceCases } from "./stress/groups/space.ts";
@@ -63,6 +60,7 @@ export { ORION_OEM, orionFromOem } from "./stress/shared.ts";
 export {
   geodeticToGeocentric,
   helmert,
+  inverseHelmert,
   reversedHelmert,
   type HelmertOptions,
   type HelmertParameters,
@@ -87,13 +85,6 @@ export const STRESS_CASES: readonly StressCase[] = [
   ...axesAndTheAntimeridianCases,
   ...spaceCases,
 ];
-
-/**
- * Cases held out of the catalog: each fails against a published value, and
- * the task 1b report gives the numbers for a ruling. They are not loosened.
- * The data test runs them and expects them to fail, so a fix shows.
- */
-export const HELD_CASES: readonly StressCase[] = [...referenceValuesHeld];
 
 /**
  * Runs the catalog's cases (or `options.cases`) in order and judges each

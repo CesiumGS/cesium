@@ -17,7 +17,15 @@ import {
   sexagesimal,
 } from "../references.ts";
 import { type StressCase, type StressResult, fmt } from "../runner.ts";
-import { EFFECT, distance, norm, proj, stressCase, sub3 } from "../shared.ts";
+import {
+  EFFECT,
+  distance,
+  norm,
+  operationFingerprint,
+  proj,
+  stressCase,
+  sub3,
+} from "../shared.ts";
 
 type EpsgParameter = readonly [string, string, string];
 
@@ -217,9 +225,9 @@ const coordinateEpochCase = stressCase(
     const noEpoch = library();
     const hand2010 = hand(2010);
     const hand2026 = hand(2026);
-    for (const [epoch, lib, byHand] of [
-      [2010, at2010.xyz, hand2010],
-      [2026, at2026.xyz, hand2026],
+    for (const [epoch, { xyz: lib, op }, byHand] of [
+      [2010, at2010, hand2010],
+      [2026, at2026, hand2026],
     ] as const) {
       results.push({
         ...base,
@@ -229,7 +237,9 @@ const coordinateEpochCase = stressCase(
         value: distance(lib, byHand),
         tolerance: EPOCH_TOLERANCE,
         unit: "m",
-        detail: `library ${lib.map((v) => v.toFixed(4)).join(", ")}; hand ${byHand.map((v) => v.toFixed(4)).join(", ")}; operation accuracy ${at2026.op.accuracy ?? "not stated"} m`,
+        detail: `library ${lib.map((v) => v.toFixed(4)).join(", ")}; hand ${byHand.map((v) => v.toFixed(4)).join(", ")}; operation accuracy ${op.accuracy ?? "not stated"} m`,
+        // The pipeline is the same at both epochs; the coordinates differ.
+        fingerprint: operationFingerprint(ctx, op, [lib]),
       });
     }
     const libraryMove = sub3(at2026.xyz, at2010.xyz);
@@ -268,6 +278,7 @@ const coordinateEpochCase = stressCase(
         unit: "cm",
         label: "the error of giving no coordinate epoch, for a 2026 position",
       },
+      fingerprint: operationFingerprint(ctx, noEpoch.op, [noEpoch.xyz]),
     });
     return results;
   },

@@ -1,7 +1,10 @@
 // Helpers the stress-test groups share: tolerances, fingerprints (R12),
 // vector arithmetic and the context's data.
 import { EngineeringFrame } from "../../../src/engineering/EngineeringFrame.ts";
-import type { CrsRef } from "../../../src/engineering/crs.ts";
+import type {
+  CrsRef,
+  RecordedOperation,
+} from "../../../src/engineering/crs.ts";
 import type { ProjApi } from "../../../src/engineering/proj.ts";
 import type { Frames } from "../../../src/frames/frames.ts";
 import { Instant } from "../../../src/time/Instant.ts";
@@ -98,6 +101,26 @@ export function fingerprintOf(
       sha256: gridSha256(ctx.manifest, name),
     })),
     coordinates: designs.flatMap((d) => Array.from(frame.toBodyFixed(d))),
+  };
+}
+
+/**
+ * A fingerprint (R12) for a recorded operation used without an engineering
+ * frame: its pipeline and grids, and the case's results in metres (projected
+ * coordinates, or geocentric ones for geographic results).
+ */
+export function operationFingerprint(
+  ctx: StressContext,
+  operation: RecordedOperation,
+  coordinates: readonly ArrayLike<number>[],
+): Fingerprint {
+  return {
+    pipeline: operation.pipeline,
+    grids: operation.grids.map((name) => ({
+      name,
+      sha256: gridSha256(ctx.manifest, name),
+    })),
+    coordinates: coordinates.flatMap((c) => Array.from(c)),
   };
 }
 

@@ -51,6 +51,33 @@ export interface HelmertOptions {
   readonly epoch?: number;
 }
 
+/** The parameters moved to the coordinate epoch: p' = p + ṗ (t − t0), or p itself without rates. */
+function atEpoch(
+  p: HelmertParameters,
+  options: HelmertOptions,
+): HelmertParameters {
+  if (options.rates === undefined) {
+    return p;
+  }
+  const { referenceEpoch, epoch } = options;
+  if (referenceEpoch === undefined || epoch === undefined) {
+    throw new Error(
+      "helmert: a time-dependent transformation needs its reference epoch and the coordinate epoch",
+    );
+  }
+  const dt = epoch - referenceEpoch;
+  const r = options.rates;
+  return {
+    tx: p.tx + r.tx * dt,
+    ty: p.ty + r.ty * dt,
+    tz: p.tz + r.tz * dt,
+    rx: p.rx + r.rx * dt,
+    ry: p.ry + r.ry * dt,
+    rz: p.rz + r.rz * dt,
+    ds: p.ds + r.ds * dt,
+  };
+}
+
 /**
  * The 7-parameter Helmert transformation of geocentric coordinates (metres),
  * written from the EPSG method definitions in IOGP 373-7-2 §4.2.3 and §4.2.5,
@@ -69,26 +96,7 @@ export function helmert(
   p: HelmertParameters,
   options: HelmertOptions,
 ): [number, number, number] {
-  let q = p;
-  if (options.rates !== undefined) {
-    const { referenceEpoch, epoch } = options;
-    if (referenceEpoch === undefined || epoch === undefined) {
-      throw new Error(
-        "helmert: a time-dependent transformation needs its reference epoch and the coordinate epoch",
-      );
-    }
-    const dt = epoch - referenceEpoch;
-    const r = options.rates;
-    q = {
-      tx: p.tx + r.tx * dt,
-      ty: p.ty + r.ty * dt,
-      tz: p.tz + r.tz * dt,
-      rx: p.rx + r.rx * dt,
-      ry: p.ry + r.ry * dt,
-      rz: p.rz + r.rz * dt,
-      ds: p.ds + r.ds * dt,
-    };
-  }
+  const q = atEpoch(p, options);
   const s = options.convention === "position-vector" ? 1 : -1;
   const rx = s * q.rx;
   const ry = s * q.ry;
@@ -104,7 +112,15 @@ export function helmert(
   ];
 }
 
-/** EPSG's reversal (IOGP 373-7-2 §4.2.5): every parameter's sign reversed, the reference epoch kept. */
+/**
+ * EPSG's reversal (IOGP 373-7-2 §4.2.3, §4.2.5): every parameter's sign
+ * reversed, the reference epoch kept. It is an approximation, as the EPSG
+ * Dataset documents the methods as reversible "for practical purposes": the
+ * forward formula with these parameters misses the exact inverse by about
+ * |dS·T| + |r × T| (second-order terms in the parameters), about 1.5 cm for
+ * OSGB36's 20 ppm scale and 700 m shift, and below 1e-6 m for NAD83(2011)
+ * and ITRF2014. Use `inverseHelmert` for the exact inverse.
+ */
 export function reversedHelmert(p: HelmertParameters): HelmertParameters {
   return {
     tx: -p.tx,
@@ -115,4 +131,46 @@ export function reversedHelmert(p: HelmertParameters): HelmertParameters {
     rz: -p.rz,
     ds: -p.ds,
   };
+}
+
+/**
+ * The exact inverse of `helmert` with the same parameters and options:
+ * XS solves M' · R' · XS = XT − T' (IOGP 373-7-2 §4.2.3, "the exact reverse
+ * of which is VS = [1/(1 + dS)] · R⁻¹ · (VT − T)"), with R' the same
+ * small-angle matrix, inverted by its adjugate rather than transposed.
+ */
+export function inverseHelmert(
+  xyz: ArrayLike<number>,
+  p: HelmertParameters,
+  options: HelmertOptions,
+): [number, number, number] {
+  const q = atEpoch(p, options);
+  const s = options.convention === "position-vector" ? 1 : -1;
+  const rx = s * q.rx;
+  const ry = s * q.ry;
+  const rz = s * q.rz;
+  const m = 1 + q.ds;
+  const v = [(xyz[0]! - q.tx) / m, (xyz[1]! - q.ty) / m, (xyz[2]! - q.tz) / m];
+  // R = I + K = [[1, −c, b], [c, 1, −a], [−b, a, 1]] (a, b, c = rx, ry, rz)
+  // has det(R) = 1 + a² + b² + c² and R⁻¹ = adj(R) / det(R), written as
+  // I + E so that the large coordinates are only added to a small correction:
+  //   E = [[−(b² + c²), c + ab, ac − b],
+  //        [ab − c, −(a² + c²), a + bc],
+  //        [ac + b, bc − a, −(a² + b²)]] / det(R).
+  const a = rx;
+  const b = ry;
+  const c = rz;
+  const det = 1 + a * a + b * b + c * c;
+  const e = [
+    [-(b * b + c * c), c + a * b, a * c - b],
+    [a * b - c, -(a * a + c * c), a + b * c],
+    [a * c + b, b * c - a, -(a * a + b * b)],
+  ];
+  const out = [0, 0, 0] as [number, number, number];
+  for (let i = 0; i < 3; i++) {
+    const row = e[i]!;
+    out[i] =
+      v[i]! + (row[0]! * v[0]! + row[1]! * v[1]! + row[2]! * v[2]!) / det;
+  }
+  return out;
 }
