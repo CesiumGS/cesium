@@ -1,12 +1,18 @@
 import { frameTransform, type Frame } from "../frames/Frame.ts";
 import type { Frames } from "../frames/frames.ts";
-import { convertPoint, type FramePoint } from "../frames/local.ts";
+import { convertPoint, framePoint, type FramePoint } from "../frames/local.ts";
 import { rotationPart } from "../frames/matrix.ts";
+import {
+  type DesignPoint,
+  type EngineeringFrame,
+} from "../engineering/EngineeringFrame.ts";
+import { gridFactors } from "../engineering/factors.ts";
 import { cartographic } from "../math/ellipsoid.ts";
 import { mat4 } from "../math/mat4.ts";
 import { vec3 } from "../math/vec3.ts";
 import type { Body } from "../scene/Body.ts";
 import { Instant } from "../time/Instant.ts";
+import type { StationOffset } from "../engineering/alignment.ts";
 import { accuracyOf, type AccuracyStatement } from "./accuracy.ts";
 import { downlink, uplink, type Leg } from "./doppler.ts";
 import { lineOfSight } from "./lineOfSight.ts";
@@ -25,6 +31,49 @@ export interface MeasureOptions {
   readonly signal?: boolean;
   /** Bodies that may block the line of sight; default the Earth and the Moon. */
   readonly bodies?: readonly Body[];
+  /**
+   * The name of one of the engineering frame's alignments, for the result's
+   * `alignment` stations and offsets. Used only when both points are design
+   * points in the same frame; throws when the frame has no such alignment.
+   */
+  readonly alignment?: string;
+}
+
+/** A point for `measure`: in a frame, or in an engineering frame's design coordinates. */
+export type MeasurePoint = FramePoint | DesignPoint;
+
+/** What both ends being design points in one engineering frame adds (R7, R9). */
+export interface DesignMeasurement {
+  /** The design CRS's horizontal unit name and metres per unit (from PROJ). */
+  readonly unitName: string;
+  readonly metersPerUnit: number;
+  /**
+   * The distance between the design coordinates, in design (horizontal)
+   * units: what a CAD tool reports. The 3D distance takes the design height
+   * difference in its own unit (the vertical unit, else the horizontal) and
+   * converts it to horizontal units by metersPerHeightUnit / metersPerUnit.
+   */
+  readonly distance: number;
+  /** The distance of design E, N alone, in design units. */
+  readonly horizontalDistance: number;
+  /** b - a in design coordinates (E, N in the horizontal unit, U in the height unit). */
+  readonly delta: Float64Array;
+  /** Grid factors (k x R/(R+h)) at each end and their mean for the line (R7). */
+  readonly combinedFactor: { a: number; b: number; mean: number };
+  /** The projected CRS's grid convergence at each end, radians (the site rotation is not included). */
+  readonly convergence: { a: number; b: number };
+  /**
+   * The frame's site scale s (1 without a site): the ground (true) distance
+   * is about distance x siteScale x metersPerUnit / combinedFactor.mean.
+   */
+  readonly siteScale: number;
+}
+
+/** Stations and offsets of the two design points on a named alignment. */
+export interface AlignmentMeasurement {
+  readonly name: string;
+  readonly a: StationOffset;
+  readonly b: StationOffset;
 }
 
 /** The result of `measure`: what lies between two points at one instant. */
@@ -55,6 +104,10 @@ export interface Measurement {
   readonly signal?: { readonly downlink: Leg; readonly uplink: Leg };
   /** Whether the downlink's path is clear of the bodies, and what blocks it; present with `signal`. */
   readonly lineOfSight?: { readonly clear: boolean; readonly blockedBy?: Body };
+  /** Present when both points are design points in the same engineering frame. */
+  readonly design?: DesignMeasurement;
+  /** Present with `design` when `options.alignment` names one of the frame's alignments. */
+  readonly alignment?: AlignmentMeasurement;
   /** What the inputs support claiming about this measurement. */
   readonly accuracy: AccuracyStatement;
 }
@@ -65,21 +118,87 @@ const scratch = mat4();
 /** The most samples `measureSpan` will run. */
 const MAX_SAMPLES = 1_000_000;
 
+const isDesign = (p: MeasurePoint): p is DesignPoint => "engineeringFrame" in p;
+
+/** A design point as a point in its body's body-fixed frame. */
+function resolvePoint(p: MeasurePoint, frames: Frames): FramePoint {
+  return isDesign(p)
+    ? framePoint(
+        frames.bodyFixed(p.engineeringFrame.body),
+        p.engineeringFrame.toBodyFixed(p.design),
+      )
+    : p;
+}
+
+/** The design result and alignment for two design points in one frame. */
+function designResult(
+  a: DesignPoint,
+  b: DesignPoint,
+  options: MeasureOptions,
+): { design: DesignMeasurement; alignment?: AlignmentMeasurement } {
+  const frame: EngineeringFrame = a.engineeringFrame;
+  const { units } = frame;
+  const delta = Float64Array.from([
+    b.design[0]! - a.design[0]!,
+    b.design[1]! - a.design[1]!,
+    b.design[2]! - a.design[2]!,
+  ]);
+  const horizontalDistance = Math.hypot(delta[0]!, delta[1]!);
+  const vertical =
+    (delta[2]! * frame.metersPerHeightUnit) / units.metersPerUnit;
+  const fa = gridFactors(frame, a.design);
+  const fb = gridFactors(frame, b.design);
+  const design: DesignMeasurement = {
+    unitName: units.horizontalUnitName,
+    metersPerUnit: units.metersPerUnit,
+    distance: Math.hypot(horizontalDistance, vertical),
+    horizontalDistance,
+    delta,
+    combinedFactor: {
+      a: fa.combinedFactor,
+      b: fb.combinedFactor,
+      mean: (fa.combinedFactor + fb.combinedFactor) / 2,
+    },
+    convergence: { a: fa.convergence, b: fb.convergence },
+    siteScale: frame.definition.site?.scale ?? 1,
+  };
+  if (options.alignment === undefined) {
+    return { design };
+  }
+  const alignment = frame.alignments.find((x) => x.name === options.alignment);
+  if (alignment === undefined) {
+    throw new Error(
+      `measure: engineering frame "${frame.definition.name}" has no alignment named "${options.alignment}"`,
+    );
+  }
+  return {
+    design,
+    alignment: {
+      name: alignment.name,
+      a: alignment.stationOffset(a.design),
+      b: alignment.stationOffset(b.design),
+    },
+  };
+}
+
 /** Throws a clear error for a non-finite instant, coordinate or frequency. */
 function checkInputs(
   who: string,
-  a: FramePoint,
-  b: FramePoint,
+  a: MeasurePoint,
+  b: MeasurePoint,
   options: MeasureOptions,
 ): void {
   for (const [name, point] of [
     ["a", a],
     ["b", b],
   ] as const) {
+    const [field, values] = isDesign(point)
+      ? (["design", point.design] as const)
+      : (["position", point.position] as const);
     for (let i = 0; i < 3; i++) {
-      if (!Number.isFinite(point.position[i])) {
+      if (!Number.isFinite(values[i])) {
         throw new Error(
-          `${who}: point ${name} has a non-finite coordinate (position[${i}] is ${point.position[i]})`,
+          `${who}: point ${name} has a non-finite coordinate (${field}[${i}] is ${values[i]})`,
         );
       }
     }
@@ -112,14 +231,16 @@ function checkTdb(who: string, name: string, instant: Instant): number {
  * wherever a frame transform or a trajectory does, and never extrapolates.
  */
 export function measure(
-  a: FramePoint,
-  b: FramePoint,
+  pointA: MeasurePoint,
+  pointB: MeasurePoint,
   instant: Instant,
   frames: Frames,
   options: MeasureOptions = {},
 ): Measurement {
   checkTdb("measure", "instant", instant);
-  checkInputs("measure", a, b, options);
+  checkInputs("measure", pointA, pointB, options);
+  const a = resolvePoint(pointA, frames);
+  const b = resolvePoint(pointB, frames);
   const deltaFrame = options.deltaFrame ?? a.frame;
   const pa = convertPoint(a, a.frame, instant).position;
   const pb = convertPoint(b, a.frame, instant).position;
@@ -202,8 +323,23 @@ export function measure(
     );
   }
 
+  const designs =
+    isDesign(pointA) &&
+    isDesign(pointB) &&
+    pointA.engineeringFrame === pointB.engineeringFrame
+      ? designResult(pointA, pointB, options)
+      : undefined;
+  if (options.alignment !== undefined && !designs) {
+    warnings.push(
+      `alignment "${options.alignment}" was not used: it needs two design points in the same engineering frame`,
+    );
+  }
   const accuracy = accuracyOf(a, b, instant, frames, {
     signal: signal !== undefined,
+    design: {
+      ...(isDesign(pointA) && { a: pointA.engineeringFrame }),
+      ...(isDesign(pointB) && { b: pointB.engineeringFrame }),
+    },
   });
   accuracy.warnings.push(...warnings);
   return {
@@ -214,6 +350,8 @@ export function measure(
     ...(overBody && { overBody }),
     ...(signal && { signal }),
     ...(sight && { lineOfSight: sight }),
+    ...(designs && { design: designs.design }),
+    ...(designs?.alignment && { alignment: designs.alignment }),
     accuracy,
   };
 }
@@ -226,8 +364,8 @@ export function measure(
  * frequency, and for more than 1,000,000 samples.
  */
 export function measureSpan(
-  a: FramePoint,
-  b: FramePoint,
+  a: MeasurePoint,
+  b: MeasurePoint,
   start: Instant,
   stop: Instant,
   step: number,

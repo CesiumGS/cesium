@@ -269,6 +269,9 @@ export {
 export {
   measure,
   measureSpan,
+  type AlignmentMeasurement,
+  type DesignMeasurement,
+  type MeasurePoint,
   type Measurement,
   type MeasureOptions,
 } from "./measure/measure.ts";

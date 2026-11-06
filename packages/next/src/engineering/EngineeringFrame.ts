@@ -26,6 +26,7 @@ import {
   type RecordedOperation,
 } from "./crs.ts";
 import type { ProjApi } from "./projApi.ts";
+import { Alignment, type AlignmentDefinition } from "./alignment.ts";
 
 /**
  * A site (ground) coordinate system on the projected CRS, R6:
@@ -50,6 +51,8 @@ export interface EngineeringFrameDefinition {
   readonly body: Body;
   readonly crs: CrsRef;
   readonly site?: SiteTransform;
+  /** Alignments in this frame's design (site-grid) coordinates, by unique name. */
+  readonly alignments?: readonly AlignmentDefinition[];
   /** A PROJ pipeline to use as is (R2) instead of PROJ's candidate search. */
   readonly pipeline?: string;
   /** Accept a ballpark operation; its accuracy is then undefined. */
@@ -92,6 +95,8 @@ export class EngineeringFrame {
   readonly body: Body;
   /** The PROJ the frame's operation was resolved with. */
   readonly proj: ProjApi;
+  /** The frame's alignments, built from `definition.alignments`. */
+  readonly alignments: readonly Alignment[];
   /** Metres per design height unit: the vertical unit, else the horizontal. */
   readonly metersPerHeightUnit: number;
   // Metres per design height unit the operation leaves unconverted; 1 where
@@ -107,6 +112,18 @@ export class EngineeringFrame {
   ) {
     this.proj = proj;
     this.definition = definition;
+    this.alignments = (definition.alignments ?? []).map(
+      (a) => new Alignment(a),
+    );
+    const names = new Set<string>();
+    for (const { name } of this.alignments) {
+      if (names.has(name)) {
+        throw new Error(
+          `EngineeringFrame "${definition.name}": two alignments are named "${name}"`,
+        );
+      }
+      names.add(name);
+    }
     this.units = units;
     this.operation = operation;
     this.body = definition.body;
