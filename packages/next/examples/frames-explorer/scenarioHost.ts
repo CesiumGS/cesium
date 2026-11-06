@@ -1,0 +1,365 @@
+// The scenario lifecycle on the main thread (spec "How the page works"):
+// which scenario shows, at which knobs and time, its evaluation from the
+// worker, and the overlays it owns on the globe. main.ts gives it the worker,
+// the globe and the clock through `ScenarioHostDeps`; everything here is
+// plain logic, unit-tested (test/framesExplorerScenarioHost.test.ts).
+//
+// Switching mid-evaluation (Review Focus 3): the worker can't cancel a
+// scenario it has started, and one may wait behind "Run all" (about 3.5 s).
+// So one request is in flight at most, with only the latest waiting (the
+// ones in between are never sent), and every request takes a generation
+// number: a reply, or an error, of an older generation is dropped, so a late
+// reply for the previous scenario never draws, answers or proves in the new
+// one. On a switch, every overlay the old scenario drew is removed, and the
+// old scenario's scene left, before the new one enters or draws.
+import type { OverlayGeometry } from "./protocol.ts";
+import type { ScenarioEvaluation } from "./scenarios/evaluate.ts";
+import {
+  checkedState,
+  clampKnobs,
+  type KnobState,
+  type KnobValue,
+  type ScenarioId,
+  type ScenarioSpec,
+} from "./scenarios/spec.ts";
+import { SCENARIOS } from "./scenarios/specs.ts";
+
+/** What the page gives the host. */
+export interface ScenarioHostDeps {
+  /** The worker's evaluation of `id` at `knobs` and `epochUtcMs` (UTC ms). */
+  evaluate(
+    id: ScenarioId,
+    knobs: KnobState,
+    epochUtcMs: number,
+  ): Promise<ScenarioEvaluation>;
+  /** Draws one of the evaluation's overlays on the globe, under `id`. */
+  drawOverlay(id: string, geometry: OverlayGeometry): void;
+  removeOverlay(id: string): void;
+  /** Sets the scene up on the globe: its camera, triads and clock (scenes.ts). */
+  enter(spec: ScenarioSpec, knobs: KnobState): void;
+  /** The knobs moved: the scene follows at once (the drawn-in frame, the site's latitude). */
+  update(spec: ScenarioSpec, knobs: KnobState): void;
+  /** Undoes `enter`: the scene's own drawings, lights and clock rate. */
+  leave(spec: ScenarioSpec): void;
+  /** Sets the clock (UTC ms), paused. */
+  setClock(epochUtcMs: number): void;
+  /** The clock's time, UTC ms. */
+  clock(): number;
+  /** The state changed (the panel, the params). */
+  changed(state: ScenarioHostState): void;
+  /** Why a request would wait in the worker (a catalog run going on), if it would. */
+  busy?(): string | undefined;
+  /** A timer (tests give their own); returns its cancel. */
+  schedule?(fn: () => void, ms: number): () => void;
+}
+
+export interface ScenarioHostState {
+  spec: ScenarioSpec;
+  knobs: KnobState;
+  /** The scenario's time, UTC ms. */
+  epochUtcMs: number;
+  /** At the checked setup, and what moved off it (knob ids, then "time"). */
+  atChecked: boolean;
+  changed: readonly string[];
+  /** Loading until this generation's evaluation is in (R9), then ready or error. */
+  status: "loading" | "ready" | "error";
+  /** While loading: why the request waits in the worker (behind a run). */
+  queued?: string;
+  /** The latest evaluation of this scenario (not of the knobs while loading). */
+  evaluation?: ScenarioEvaluation;
+  problem?: { message: string; missing: boolean };
+  /** Bumped by every request; replies of an older one are dropped. */
+  generation: number;
+}
+
+export interface ScenarioHost {
+  /** Shows `id` at `knobs` (clamped; the checked ones by default) and `epochUtcMs` (the checked epoch by default). */
+  show(id: ScenarioId, knobs?: KnobState, epochUtcMs?: number): Promise<void>;
+  /** Moves one knob (clamped to its spec); re-evaluates once a burst of changes ends. */
+  setKnob(id: string, value: KnobValue): void;
+  /** The checked knobs and epoch, evaluated at once. */
+  backToChecked(): void;
+  /** The clock moved (the user, or it plays): the time follows, re-evaluated at most once per wait. */
+  clockChanged(): void;
+  state(): ScenarioHostState;
+  /** The scenario's part of the deep link, for `formatParams`. */
+  params(): { scenario: ScenarioId; knobs: KnobState; time: number };
+  dispose(): void;
+}
+
+/** A knob's burst ends after this long without a change, ms. */
+export const KNOB_WAIT = 160;
+/** While the clock plays, the answer follows it at most this often, ms. */
+export const CLOCK_WAIT = 700;
+
+const DEFAULT_SPEC = SCENARIOS[0]!;
+
+/** An overlay's globe id: the scenario's, so two scenarios' never mix. */
+const overlayId = (scenario: ScenarioId, id: string) =>
+  `scenario:${scenario}:${id}`;
+
+const messageOf = (e: unknown): string =>
+  e instanceof Error ? e.message : String(e);
+
+/** A worker error that is data the store doesn't have (R5): shown with the setup hint. */
+const isMissing = (e: unknown): boolean =>
+  (e instanceof Error && e.name === "MissingDataError") ||
+  /npm run setup|isn't in the frames store/.test(messageOf(e));
+
+export function createScenarioHost(deps: ScenarioHostDeps): ScenarioHost {
+  const schedule =
+    deps.schedule ??
+    ((fn: () => void, ms: number) => {
+      const t = setTimeout(fn, ms);
+      return () => clearTimeout(t);
+    });
+  let spec: ScenarioSpec = DEFAULT_SPEC;
+  let knobs: KnobState = spec.checked.knobs;
+  let epochUtcMs = Date.parse(spec.checked.epochUtc);
+  let entered = false;
+  let status: ScenarioHostState["status"] = "loading";
+  let queued: string | undefined;
+  let evaluation: ScenarioEvaluation | undefined;
+  let problem: ScenarioHostState["problem"];
+  let generation = 0;
+  let disposed = false;
+  /** The overlays drawn for the current scenario, by globe id. */
+  let owned = new Set<string>();
+  /** The request in the worker, and the latest one waiting behind it. */
+  let inFlight = false;
+  let waiting: { send: () => void; drop: () => void } | undefined;
+  /**
+   * Set while the host itself sets up a scene and its clock: a clock change
+   * then (the scene's rate, the old scene's time) is the host's, not the
+   * user's, and mustn't move the new scenario's time.
+   */
+  let quiet = false;
+  const quietly = (fn: () => void) => {
+    quiet = true;
+    try {
+      fn();
+    } finally {
+      quiet = false;
+    }
+  };
+  /** The pending re-evaluation (a knob's burst, the clock), and its kind. */
+  let timer: { cancel: () => void; kind: "knob" | "clock" } | undefined;
+
+  const state = (): ScenarioHostState => {
+    const c = checkedState(spec, knobs, epochUtcMs);
+    return {
+      spec,
+      knobs,
+      epochUtcMs,
+      atChecked: c.atChecked,
+      changed: c.changed,
+      status,
+      ...(queued !== undefined && { queued }),
+      ...(evaluation !== undefined && { evaluation }),
+      ...(problem !== undefined && { problem }),
+      generation,
+    };
+  };
+  const notify = () => {
+    if (!disposed) {
+      deps.changed(state());
+    }
+  };
+
+  const cancelTimer = () => {
+    timer?.cancel();
+    timer = undefined;
+  };
+
+  function removeOwned(): void {
+    for (const id of owned) {
+      deps.removeOverlay(id);
+    }
+    owned = new Set();
+  }
+
+  function apply(gen: number, e: ScenarioEvaluation): void {
+    if (disposed || gen !== generation || e.scenario !== spec.id) {
+      return;
+    }
+    const next = new Set(e.overlays.map((o) => overlayId(spec.id, o.id)));
+    for (const id of owned) {
+      if (!next.has(id)) {
+        deps.removeOverlay(id);
+      }
+    }
+    for (const o of e.overlays) {
+      deps.drawOverlay(overlayId(spec.id, o.id), o.geometry);
+    }
+    owned = next;
+    evaluation = e;
+    status = "ready";
+    queued = undefined;
+    problem = undefined;
+    notify();
+  }
+
+  function fail(gen: number, error: unknown): void {
+    if (disposed || gen !== generation) {
+      return;
+    }
+    status = "error";
+    queued = undefined;
+    problem = { message: messageOf(error), missing: isMissing(error) };
+    notify();
+  }
+
+  /** Asks for the current scenario at the current knobs and time: a new generation. */
+  function request(): Promise<void> {
+    cancelTimer();
+    const gen = ++generation;
+    const ask = { id: spec.id, knobs, epochUtcMs };
+    status = "loading";
+    problem = undefined;
+    queued = deps.busy?.();
+    notify();
+    return new Promise<void>((resolve) => {
+      const send = () => {
+        inFlight = true;
+        deps
+          .evaluate(ask.id, ask.knobs, ask.epochUtcMs)
+          .then(
+            (e) => apply(gen, e),
+            (error: unknown) => fail(gen, error),
+          )
+          .finally(() => {
+            inFlight = false;
+            resolve();
+            const next = waiting;
+            waiting = undefined;
+            if (next && !disposed) {
+              next.send();
+            } else {
+              next?.drop();
+            }
+          });
+      };
+      if (inFlight) {
+        // Only the latest waits: the one it replaces is never sent.
+        waiting?.drop();
+        waiting = { send, drop: resolve };
+      } else {
+        send();
+      }
+    });
+  }
+
+  function show(
+    id: ScenarioId,
+    nextKnobs?: KnobState,
+    nextEpoch?: number,
+  ): Promise<void> {
+    const next = SCENARIOS.find((s) => s.id === id) ?? DEFAULT_SPEC;
+    const switching = !entered || next.id !== spec.id;
+    if (switching) {
+      // The old scenario's overlays go, and its scene is left, before the
+      // new one enters or draws (Review Focus 3).
+      removeOwned();
+      if (entered) {
+        deps.leave(spec);
+      }
+      evaluation = undefined;
+    }
+    spec = next;
+    knobs = clampKnobs(spec, nextKnobs ?? spec.checked.knobs);
+    epochUtcMs =
+      nextEpoch !== undefined && Number.isFinite(nextEpoch)
+        ? nextEpoch
+        : Date.parse(spec.checked.epochUtc);
+    quietly(() => {
+      deps.setClock(epochUtcMs);
+      if (switching) {
+        entered = true;
+        deps.enter(spec, knobs);
+      } else {
+        deps.update(spec, knobs);
+      }
+    });
+    return request();
+  }
+
+  function setKnob(id: string, value: KnobValue): void {
+    if (disposed || !spec.knobs.some((k) => k.id === id)) {
+      return;
+    }
+    const next = clampKnobs(spec, { ...knobs, [id]: value });
+    if (next[id] === knobs[id]) {
+      return;
+    }
+    knobs = next;
+    quietly(() => deps.update(spec, knobs));
+    // The marker moves at once; the evaluation when the burst ends.
+    cancelTimer();
+    timer = {
+      kind: "knob",
+      cancel: schedule(() => {
+        timer = undefined;
+        void request();
+      }, KNOB_WAIT),
+    };
+    notify();
+  }
+
+  function backToChecked(): void {
+    if (disposed) {
+      return;
+    }
+    cancelTimer();
+    knobs = spec.checked.knobs;
+    epochUtcMs = Date.parse(spec.checked.epochUtc);
+    quietly(() => {
+      deps.setClock(epochUtcMs);
+      deps.update(spec, knobs);
+    });
+    void request();
+  }
+
+  function clockChanged(): void {
+    // Whole milliseconds: the clock's own time is fractional while it plays,
+    // and the link carries an integer (selection.ts).
+    const now = Math.round(deps.clock());
+    if (disposed || quiet || !entered || now === epochUtcMs) {
+      return;
+    }
+    epochUtcMs = now;
+    // At most once per wait while it plays: a timer already set stands
+    // (unlike a knob's, it isn't pushed back), so the answer keeps up.
+    if (timer === undefined) {
+      timer = {
+        kind: "clock",
+        cancel: schedule(() => {
+          timer = undefined;
+          void request();
+        }, CLOCK_WAIT),
+      };
+    }
+    notify();
+  }
+
+  return {
+    show,
+    setKnob,
+    backToChecked,
+    clockChanged,
+    state,
+    params: () => ({ scenario: spec.id, knobs, time: epochUtcMs }),
+    dispose: () => {
+      if (disposed) {
+        return;
+      }
+      cancelTimer();
+      removeOwned();
+      if (entered) {
+        deps.leave(spec);
+      }
+      disposed = true;
+      waiting?.drop();
+      waiting = undefined;
+    },
+  };
+}

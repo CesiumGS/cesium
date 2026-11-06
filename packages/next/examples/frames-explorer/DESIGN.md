@@ -32,7 +32,7 @@ It is where the demo and the proof meet.
 ## Principles
 
 1. **The globe is the hero; the panel answers.** Nothing on the canvas
-   but what the user turned on, its legend and, on the tour, a caption.
+   but what the scenario draws, its legend and the scenario's answer.
    How it all looks is in "On the globe".
 2. **Glance, then proof.** Four levels (R14): the status strip, question
    cards, result rows, the inspector; in Explore, the tree and the walk.
@@ -326,23 +326,78 @@ do.
   limits), are plan 5's (CESIUM2_WEBGPU_PLAN.md §13.14); this is the example's
   use of the orbit controls plan 4 gave.
 
-### The tour
+### Scenarios (spec 2026-11-06; replaced the tour)
 
-| Stop                         | Camera                                                                                                                                                                                                                     | On                                                                                                                                                                                                                                    | Caption                                                                                                                                                                                  |
-| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1 Earth's frames             | over the North Atlantic, 30°W 42°N, 4 Earth radii, lit from the camera (6c-1 fix round 2)                                                                                                                                  | triads (ITRF with cones, GCRF with square heads, each axis named, pinned)                                                                                                                                                             | ITRF turns with the Earth; GCRF doesn't. Each triad is a frame's axes at the clock's time                                                                                                |
-| 2 GCRF to ITRF over a day    | straight down the north pole, 5.5 Earth radii, lit from the camera (6c-1 fix round 3); imagery dimmed (exposure −1.5, −0.6 under 560 px; F43)                                                                              | ITRF and GCRF triads only (the site triads hidden: Sacramento's crossed GCRF's x), each axis named, pinned                                                                                                                            | GCRF's x and y turn once round against ITRF's, like clock hands, in a sidereal day (the clock plays at 3,600×: 24 s)                                                                     |
-| 3 The California design grid | over the grid's centre, 180 km range, 55° tilt, heading 0°                                                                                                                                                                 | design grid (10 km lines; 2 km lines only under 60 km range), true-north lines; imagery dimmed (exposure −0.6); target: `globe-stop3-target`                                                                                          | grid north and true north part ways away from the central meridian: the convergence angle                                                                                                |
-| 4 Rigid against exact        | from the side: south of the 400 km line, looking north, 5° down, 400 km range (÷ the aspect on a portrait view), centred 53% along it, the whole line across the view                                                      | rigid (dashed, white, straight) and exact (solid, on the ellipsoid) 400 km line at true scale, gap ticks every 50 km, a white leader at the far end with the true sag, the gap inset at 20 km; site triads hidden; imagery not dimmed | the dashed line is straight, the solid one follows the Earth; they part as distance squared, about 12.5 km at 400 km; the inset shows 31.4 m at 20 km, all at true scale                 |
-| 5 Orion's figure-eight       | down the Moon's orbit normal at the flyby, the Earth–Moon line across the view, the Earth, the Moon and the path framed (6c-1); 3.0 s flight; then an orbit about the framing's centre (see "Camera controls in space")    | Orion in GCRF, then after 4 s in MOON_ME                                                                                                                                                                                              | in GCRF a figure-eight round the Moon; in MOON_ME the far-side swing                                                                                                                     |
-| 6 The Moon's south pole      | straight down the site's vertical from about 3,000 km (the lunar disk at 72% of the view's smaller half-angle, limb and all; `lunarSiteRange`), the site's north up the screen; 3.5 s flight; then an orbit about the site | the site's triad (MOON_ME) at 15% of the camera's distance, and a callout "lunar clock +56.02 µs/day against Earth's (Ashby & Patla 2024)"                                                                                            | a clock near the south pole, at 89.5° S, gains about 56 µs a day; the triad holds still as the camera orbits; the imagery is a distant backdrop until plan 5 draws the Moon as a tileset |
+The page opens on **scenarios**: each a real problem solved by the frame
+tree it builds (docs/superpowers/specs/2026-11-06-frames-explorer-scenarios-design.md).
+The tour's stops 2, 5 and 6 live on as earth-turns, one-path and
+stand-on-moon (`scenarios/scenes.ts`); stops 3 and 4 return with the BIM
+site. Each scene names its camera and the rig it lands in:
 
-The caption sits top right (bottom, above the time controls, on views
-under 560 px), takes focus at each stop, and steps with the arrow keys;
-Escape ends the tour (I18). Each stop's link opens it (R15). On a narrow
-view it starts folded to one row: the stop's number and title (ellipsized,
-in full on hover), Back and Next, a chevron that unfolds the caption and
-the stop's link, and the close button (F42). The choice holds across stops.
+| Scenario      | Camera and rig                                                             | On the globe                                                                              | Clock                            |
+| ------------- | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | -------------------------------- |
+| one-path      | down the Moon's orbit normal (stop 5's), 3.0 s; `earthMoon`                | Orion drawn in the knob's frame; ITRF and GCRF triads, and MOON_ME's when it is the frame | paused at the flyby              |
+| earth-turns   | straight down the north pole (stop 2's); `geocentric`; lit from the camera | ITRF and GCRF only, axes named and pinned; exposure −1.5, −0.6 under 560 px (F43)         | the rate knob; paused until Play |
+| stand-on-moon | straight down the site's vertical (stop 6's), 3.5 s; `lunarSite`           | the site's triad at 15% of the camera's distance, and the lunar clock's gain as a callout | paused at 2026-01-01             |
+
+**The panel, top to bottom, one scroll** (`panel/Scenarios.tsx`): the
+strip; the question as the tab's heading (`headline-sm`); the frame tree;
+the answer; the knobs; the proof. Nothing opens in a sheet.
+
+- **The strip**: one bordered entry per scenario (title, and its question
+  in a quieter, clamped line); the one showing has the selected row's 2 px
+  accent bar. Only scenarios with a scene and an evaluator are listed
+  (`READY`); a link to another falls back to the first.
+- **The frame tree** is the panel's one bold thing (the owner's choice of a
+  top-down branching diagram over ruling S6's outline): pills sized to their
+  labels, a constant 14 px between neighbours (`layoutTree` with
+  `nodeWidths`), elbows between rows. A built-in frame is a family-edged pill
+  with a dot; a frame the scenario added is a diamond on a pill tinted and
+  edged in its family. Docked, it draws the scenario's frames, the base
+  frames its answer names (`SceneSpec.focus`, the answer's path) and the
+  selection, with their ancestors; each unused subtree folds into a dashed
+  "+N" chip that unfolds on a click (`focusTree`). Too wide for the column,
+  it pans (a soft edge says so) and scrolls the lit path and the selection
+  into view; labels never shrink. **Expand** (a labelled button on the
+  section's heading) opens the whole tree in a dialog over the globe, which
+  Escape or its Close button dismisses, focus going back to Expand.
+- **The answer's path** (`branchPath`) lights edge by edge, 90 ms apart,
+  from its start up to the common ancestor and down; its ends carry "from",
+  "meet" and "to" tags, and its edges say their kind and accuracy inline (up
+  to the next pill's line). Any other edge says them on hover or focus.
+- **Rebuilding**: on a switch, shared pills glide to their new places
+  (460 ms) and added ones grow out of their parent (`@starting-style`).
+  Reduced motion cuts straight to the new shape and lights the path at once.
+- **Selecting** a pill opens its detail in place under the diagram: its
+  family, its edge from its parent (kind, accuracy, detail, note), "Show on
+  globe", and the walk against a reference. An elbow selects its edge. One
+  labelled Close.
+- **The answer**: its figure (`headline-sm`, tabular), its sentence, its
+  accuracy ("±17 mm (1σ): measured Earth orientation …", or the reason it
+  isn't bounded, in the warning colour), and the scenario's limit under a
+  warning rule. While new knobs are evaluated the last answer stays, dimmed,
+  with "Updating for your setting…" (R9); behind a catalog run it says so.
+  The same answer is the **globe's callout**, top right at 48 px (level
+  with Frame content, clear of Dyno's inspector strip, the credits and the
+  legend); under 560 px it folds to its figure with a chevron (F42).
+- **Knobs**: the marker first, "At the checked setup. The published
+  references apply here." or "Off the checked setup: “Site latitude” and the
+  time differ from it.", with **Back to the checked setup**; then each knob
+  (a range's checked value marked on its track; a rate over three decades on
+  a log track; a choice as a segmented control naming its full label below);
+  then the time, with Play or Pause.
+- **Proof** (the owner, 2026-11-06: no sheet): each row one full-width
+  button, 44 px or taller, with a chevron and `aria-expanded`, that unfolds in
+  place into its difference against its tolerance, what it is compared
+  against, its reference and source, and its accuracy. Its status is in
+  words beside its colour: Checked against a reference (or Checked by the
+  catalog, for a round trip that cites nothing), Live re-run, Reference
+  applies at the checked setup (with how far your setting moves the answer),
+  or Loading. A catalog row offers one labelled "Open in Verification".
+
+**Verification** is the second tab: the catalog's Checks, its Overlays and
+the Report, one segmented control apart. Its inspector's sheet keeps one
+labelled Close and no separate fill toggle.
 
 ### The convergence exaggeration (stop 3, ruling F32)
 
@@ -442,10 +497,10 @@ is top left and the credits bottom left; the viewer's time controls are
 bottom centre. The example adds:
 
 - **The panel**, in Dyno's Controls body: the status strip, then the
-  Explore / Verify / Report tabs directly under the Controls header. No
+  Scenarios / Verification tabs directly under the Controls header. No
   second title or description.
-- **The HUD**: the legend bottom right, above the time controls; the tour
-  caption top right; while the rigid and exact lines are drawn, their gap
+- **The HUD**: the legend bottom right, above the time controls; the
+  scenario's answer top right; while the rigid and exact lines are drawn, their gap
   inset bottom left, above the time controls (top right, under Dyno's
   inspector, on a narrow view; see "The rigid line at true scale"); Frame
   content top left under Dyno's inspector, and the orbit's pivot marker while

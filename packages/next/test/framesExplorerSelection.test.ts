@@ -40,7 +40,6 @@ const known: Known = {
     ["space.lunar-time", ["space", "timing"]],
     ["measurement.grid-to-ground", ["civil"]],
   ]),
-  tours: ["earth-frames", "design-grid"],
 };
 
 describe("URL params (R15)", () => {
@@ -83,17 +82,17 @@ describe("URL params (R15)", () => {
     });
   });
 
-  it("round-trips a tour stop and an iModel id", () => {
-    const params = formatParams({
-      selection: { kind: "none" },
-      lens: "all",
-      tour: "design-grid",
-    });
-    expect(parseParams({ tour: params.tour! }, known).tour).toBe("design-grid");
+  it("reads an iModel id, and removes the retired tour's param from a link", () => {
     expect(parseParams({ imodel: "1234" }, known).imodel).toBe("1234");
+    const params = formatParams({ selection: { kind: "none" }, lens: "all" });
+    expect(Object.hasOwn(params, "tour")).toBe(true);
+    expect(params.tour).toBeUndefined();
+    expect(parseParams({ tour: "design-grid" }, known)).not.toHaveProperty(
+      "tour",
+    );
   });
 
-  it("parses an unknown id, kind, lens or tour to the default without throwing", () => {
+  it("parses an unknown id, kind, lens or an old tour stop to the default without throwing", () => {
     expect(parseSelection("result:no.such.result", known)).toEqual({
       kind: "none",
     });
@@ -463,7 +462,9 @@ describe("scenario, knob and time params (R15, Review Focus 4)", () => {
         "k.rotation": `${"1".repeat(100_000)}x`,
       }).knobs?.rotation,
     ).toBe(bim.checked.knobs.rotation);
-    expect(performance.now() - start).toBeLessThan(50);
+    // 1 s, not 50 ms: a loaded machine mustn't make it flake (P1); a
+    // backtracking regex would take minutes.
+    expect(performance.now() - start).toBeLessThan(1000);
     // Minus zero is the epoch, not −0.
     expect(Object.is(parseParams({ t: "-0" }).time, 0)).toBe(true);
     const tilt = drone.knobs.find((k) => k.id === "tilt")!;

@@ -1,6 +1,6 @@
 // The camera's controls in space (owner, 2026-11-06: "i get stuck out in
 // space, seem to only be able to start a rotation by clicking on the
-// earth"). A view framed on the Moon or Orion, and stop 2's polar view,
+// earth"). A view framed on the Moon or Orion, and earth-turns's polar view,
 // orbit their subject with the viewer's orbit controls
 // (`setControls("orbit", …)`), in a frame of the subject's own: a rig, its
 // focus, its up and its heading 0. The Earth's views keep the globe
@@ -13,7 +13,7 @@ import {
   orbitPose,
   type OrbitFrame,
 } from "../../src/scene/InspectController.ts";
-import type { TourStopSpec } from "./content.ts";
+import { LUNAR_SITE } from "./scenarios/scenes.ts";
 import type { Framing } from "./globe.ts";
 import { projectInto } from "./inset.ts";
 
@@ -37,13 +37,13 @@ export interface Rig {
 /**
  * The orbits the example uses:
  * - `geocentric`: the Earth's centre, up its axis, heading 0 toward 0°
- *   longitude (stop 2, the polar view whose clock plays at 3,600×);
+ *   longitude (earth-turns, the polar view whose clock plays at 3,600×);
  * - `earthMoon`: between the Earth and the Moon, up the normal of the Moon's
- *   orbit at the flyby, heading 0 toward the Moon (stop 5; Orion);
+ *   orbit at the flyby, heading 0 toward the Moon (one-path; Orion);
  * - `moon`: the Moon's centre, up its pole, heading 0 toward the Earth's
  *   side (MOON_ME's x; the Moon's frames);
  * - `lunarSite`: the south-pole site, up its vertical, heading 0 its north
- *   (stop 6; the site).
+ *   (stand-on-moon; the site).
  */
 export type RigKind = "geocentric" | "earthMoon" | "moon" | "lunarSite";
 
@@ -62,24 +62,6 @@ export const SITE_RIG: Rig = {
 };
 
 /**
- * A tour stop's orbit, or undefined for the globe controls: stops 1, 3 and
- * 4 and the opening (the controller's ruling, fix round 1: stop 1 frames the
- * Earth, and the ground should be a zoom away).
- */
-export function stopRig(camera: TourStopSpec["camera"]): RigKind | undefined {
-  switch (camera) {
-    case "northPole":
-      return "geocentric";
-    case "earthMoon":
-      return "earthMoon";
-    case "lunarSite":
-      return "lunarSite";
-    default:
-      return undefined;
-  }
-}
-
-/**
  * A selected frame's orbit (when "Show on globe" or Frame content frames
  * it), on its origin: the Moon's frames, the lunar site and Orion. The
  * Earth's frames (ITRF, GCRF, EME2000, EARTH_ICRF, the sites) and ICRF and
@@ -89,7 +71,7 @@ export function frameRig(id: string, orionId?: string): RigKind | undefined {
   if (id.startsWith("MOON_")) {
     return "moon";
   }
-  if (id === "Lunar south-pole site") {
+  if (id === LUNAR_SITE) {
     return "lunarSite";
   }
   if (orionId !== undefined && id === orionId) {
@@ -367,29 +349,33 @@ export function lunarSiteRange(
   return MOON_RADIUS / Math.sin(fill * half) - MOON_RADIUS;
 }
 
-/** What Frame content re-flies: the tour stop, else the selection, else the opening view. */
+/** What Frame content re-flies: the selection, else the scenario's view, else the opening view. */
 export type FrameTarget =
-  | { kind: "tour"; id: string }
+  | { kind: "scenario"; id: string }
   | { kind: "frame"; id: string }
   | { kind: "result"; id: string }
   | { kind: "opening" };
 
+/**
+ * Frame content's target: a selected frame (a tree node, or an edge by its
+ * child node) or result first, as what the user picked last; otherwise the
+ * scenario's own view.
+ */
 export function frameTarget(
-  tourStop: string | undefined,
+  scenario: string | undefined,
   selection:
     | { kind: "none" }
     | { kind: "frame" | "node" | "edge"; id: string }
     | { kind: "result"; id: string },
 ): FrameTarget {
-  if (tourStop !== undefined) {
-    return { kind: "tour", id: tourStop };
-  }
-  // A tree diagram's node is a frame; an edge is named by its child node.
   if (selection.kind === "node" || selection.kind === "edge") {
     return { kind: "frame", id: selection.id };
   }
   if (selection.kind !== "none") {
     return { kind: selection.kind, id: selection.id };
+  }
+  if (scenario !== undefined) {
+    return { kind: "scenario", id: scenario };
   }
   return { kind: "opening" };
 }

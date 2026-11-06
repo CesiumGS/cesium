@@ -2,8 +2,10 @@
 // pure positions for a tree diagram, over hand-made trees.
 import { describe, expect, it } from "vitest";
 import {
+  focusTree,
   layoutOutline,
   layoutTree,
+  type TreeLayoutOptions,
 } from "../examples/frames-explorer/panel/treeLayout.ts";
 import type { TreeNode } from "../examples/frames-explorer/tree.ts";
 
@@ -34,7 +36,7 @@ function lopsided(n: number): TreeNode {
   return root;
 }
 
-function check(root: TreeNode, opts = options) {
+function check(root: TreeNode, opts: TreeLayoutOptions = options) {
   const layout = layoutTree(root, opts);
   const byId = new Map(layout.nodes.map((n) => [n.id, n]));
   return { layout, byId };
@@ -197,5 +199,137 @@ describe("layoutOutline", () => {
     for (const n of out.nodes) {
       expect(n.x).toBeLessThan(out.width);
     }
+  });
+});
+
+describe("layoutTree with pills sized to their labels (the owner's branching diagram)", () => {
+  const gap = 12;
+  const widths = (root: TreeNode, w: (id: string) => number) => {
+    const out = new Map<string, number>();
+    const walk = (n: TreeNode) => {
+      out.set(n.id, w(n.id));
+      n.children.forEach(walk);
+    };
+    walk(root);
+    return out;
+  };
+
+  it("keeps a constant gap between neighbouring pills at every depth, never overlapping", () => {
+    const root = lopsided(16);
+    const nodeWidths = widths(root, (id) => 40 + ((id.length * 37) % 90));
+    const { layout } = check(root, {
+      width: 300,
+      rowHeight: 60,
+      nodeWidth: 0,
+      nodeWidths,
+      gap,
+    });
+    const rows = new Map<number, { x: number; w: number }[]>();
+    for (const n of layout.nodes) {
+      rows.set(n.depth, [
+        ...(rows.get(n.depth) ?? []),
+        { x: n.x, w: nodeWidths.get(n.id)! },
+      ]);
+    }
+    for (const row of rows.values()) {
+      row.sort((a, b) => a.x - b.x);
+      for (let i = 1; i < row.length; i++) {
+        const space =
+          row[i]!.x - row[i]!.w / 2 - (row[i - 1]!.x + row[i - 1]!.w / 2);
+        expect(space).toBeGreaterThanOrEqual(gap - 1e-9);
+      }
+    }
+    // Every pill inside the width it says it needs.
+    for (const n of layout.nodes) {
+      const w = nodeWidths.get(n.id)!;
+      expect(n.x - w / 2).toBeGreaterThanOrEqual(-1e-9);
+      expect(n.x + w / 2).toBeLessThanOrEqual(
+        Math.max(layout.neededWidth, 300) + 1e-9,
+      );
+    }
+  });
+
+  it("packs leaves at their own widths plus the gap: three pills of 40, 80 and 120 need 276 px", () => {
+    const root = node("r", node("a"), node("b"), node("c"));
+    const nodeWidths = new Map([
+      ["r", 30],
+      ["a", 40],
+      ["b", 80],
+      ["c", 120],
+    ]);
+    const { layout, byId } = check(root, {
+      width: 200,
+      rowHeight: 60,
+      nodeWidth: 0,
+      nodeWidths,
+      gap,
+    });
+    expect(layout.neededWidth).toBe(40 + 80 + 120 + 3 * gap);
+    expect(layout.fits).toBe(false);
+    expect(byId.get("b")!.x - byId.get("a")!.x).toBe(20 + gap + 40);
+  });
+
+  it("gives a parent wider than its children's span room of its own", () => {
+    const root = node("r", node("wide", node("x")), node("y"));
+    const nodeWidths = new Map([
+      ["r", 20],
+      ["wide", 200],
+      ["x", 20],
+      ["y", 20],
+    ]);
+    const { byId, layout } = check(root, {
+      width: 1000,
+      rowHeight: 60,
+      nodeWidth: 0,
+      nodeWidths,
+      gap,
+    });
+    const wide = byId.get("wide")!;
+    const y = byId.get("y")!;
+    expect(y.x - 10 - (wide.x + 100)).toBeGreaterThanOrEqual(gap - 1e-9);
+    expect(layout.neededWidth).toBe(200 + gap + 20 + gap);
+  });
+});
+
+describe("focusTree: the frames a scenario uses, the rest folded into chips", () => {
+  const tree = node(
+    "ICRF",
+    node("HCRS"),
+    node("EARTH_ICRF", node("GCRF", node("ITRF"), node("EME2000"))),
+    node("MOON_ICRF", node("MOON_ME", node("MOON_PA"))),
+  );
+
+  it("keeps what it is asked to keep and every ancestor, folding each unused subtree into a +N chip on its parent", () => {
+    const f = focusTree(tree, new Set(["ITRF"]), new Set());
+    const ids: string[] = [];
+    const walk = (n: TreeNode) => {
+      ids.push(n.id);
+      n.children.forEach(walk);
+    };
+    walk(f.tree);
+    expect(ids).toEqual(["ICRF", "EARTH_ICRF", "GCRF", "ITRF"]);
+    expect(Object.fromEntries(f.folded)).toEqual({ ICRF: 4, GCRF: 1 });
+  });
+
+  it("unfolds a parent's chip when it is expanded", () => {
+    const f = focusTree(tree, new Set(["ITRF"]), new Set(["ICRF"]));
+    expect(f.tree.children.map((c) => c.id)).toEqual([
+      "HCRS",
+      "EARTH_ICRF",
+      "MOON_ICRF",
+    ]);
+    expect(f.folded.get("ICRF")).toBeUndefined();
+    // MOON_ICRF's own subtree is shown whole once its parent is unfolded.
+    expect(f.tree.children[2]!.children[0]!.id).toBe("MOON_ME");
+    expect(f.folded.get("GCRF")).toBe(1);
+  });
+
+  it("leaves the tree as it is when everything is kept, and doesn't change its input", () => {
+    const all = new Set(["HCRS", "ITRF", "EME2000", "MOON_PA"]);
+    const f = focusTree(tree, all, new Set());
+    expect(f.folded.size).toBe(0);
+    expect(f.tree).toEqual(tree);
+    expect(focusTree(tree, new Set(), new Set()).tree.children).toEqual([]);
+    expect(tree.children).toHaveLength(3);
   });
 });

@@ -1,5 +1,7 @@
-// The Explore tab (R14): the frame tree with the selected frame's walk to the
-// root (R16), the overlays with their accuracy lines (R8), and the clock.
+// Explore's parts (R14), reused by the scenarios' tab and Verification: the
+// walk (R16, C2), the walk's reference, sections, and the catalog's overlay
+// rows with their accuracy lines (R8). (The Explore tab itself gave way to
+// the scenarios, Scenarios.tsx.)
 import {
   Button,
   CircularProgress,
@@ -15,15 +17,12 @@ import {
   ToggleButtonGroup,
   Typography,
 } from "@mui/material";
-import { svgFitToView } from "@stratakit/icons/fit-to-view";
-import { svgPathAnimationSingle } from "@stratakit/icons/path-animation-single";
-import { Icon } from "@stratakit/mui";
-import { type ReactNode, type RefObject, useId, useMemo } from "react";
+import { type ReactNode, useId } from "react";
 import type { TreeNode } from "../tree.ts";
 import type { AccuracyTerm } from "../../../src/measure/accuracy.ts";
 import { BudgetBar } from "./BudgetBar.tsx";
 import { EDGE_LABEL, familyMap } from "./families.ts";
-import { FamilyKey, FrameTree, edgeAccuracyText } from "./FrameTree.tsx";
+import { edgeAccuracyText } from "./FrameTree.tsx";
 import { length, sig } from "./format.ts";
 import {
   type ComposedView,
@@ -35,7 +34,6 @@ import {
   REFERENCES,
   type Reference,
 } from "./model.ts";
-import { SheetHead, Split } from "./Sheet.tsx";
 import { AccuracyText, ITEM_LABEL, Term, unknownTerms } from "./parts.tsx";
 
 /** A tab's section: an h2 in StrataKit's subtitle style, and its content. */
@@ -373,7 +371,7 @@ const ADDS: Record<AccuracyTerm["source"], string> = {
 };
 
 /** The walk's "against": the frame the composed statement is stated in (C2). */
-function ReferenceSelect({
+export function ReferenceSelect({
   reference,
   setReference,
 }: {
@@ -410,7 +408,7 @@ const budgetShare = (m: number, a: { meters: number | undefined }) => {
       : `${(100 * share).toPrecision(2)}%`;
 };
 
-function OverlayRow({
+export function OverlayRow({
   overlay,
   model,
   actions,
@@ -603,205 +601,4 @@ function OverlayOptions({
     default:
       return null;
   }
-}
-
-export function Explore({
-  model,
-  actions,
-  selectedFrame,
-  onSelectFrame,
-  resultFrames,
-  onBackToResult,
-  onStartTour,
-  tourButton,
-  reference,
-  setReference,
-}: {
-  model: PanelModel;
-  actions: PanelActions;
-  selectedFrame: string | undefined;
-  onSelectFrame: (id: string | undefined) => void;
-  /** While a result is selected: its label and the frames it uses (R14, I5). */
-  resultFrames?: { label: string; frames: readonly string[] } | undefined;
-  onBackToResult: () => void;
-  onStartTour: () => void;
-  tourButton: RefObject<HTMLButtonElement | null>;
-  /** The walk's reference, shared with the globe and the URL (S-I5). */
-  reference: Reference;
-  setReference: (r: Reference) => void;
-}) {
-  const tree = model.tree;
-  const onPath = useMemo(() => {
-    if (!tree) {
-      return new Map<string, number>();
-    }
-    if (selectedFrame) {
-      return pathSteps(tree, reference, selectedFrame);
-    }
-    const out = new Map<string, number>();
-    for (const f of resultFrames?.frames ?? []) {
-      for (const [id, i] of pathSteps(tree, "ITRF", f)) {
-        out.set(id, Math.min(i, out.get(id) ?? i));
-      }
-    }
-    return out;
-  }, [tree, selectedFrame, reference, resultFrames]);
-  const eop = model.clock.eop;
-  const selectedNode =
-    tree && selectedFrame
-      ? pathFromRoot(tree, selectedFrame).at(-1)
-      : undefined;
-  const list = (
-    <div className="fx-tab-body">
-      <div className="fx-tour-prompt">
-        <Typography variant="body-sm" color="textSecondary" render={<p />}>
-          New to frames? Six stops, about two minutes.
-        </Typography>
-        <Button
-          ref={tourButton}
-          variant="outlined"
-          size="small"
-          startIcon={<Icon href={svgPathAnimationSingle} />}
-          onClick={onStartTour}
-        >
-          Take the tour
-        </Button>
-      </div>
-
-      <Section title="On the globe">
-        <ul className="fx-overlays">
-          {model.overlays.map((o) => (
-            <OverlayRow
-              key={o.id}
-              overlay={o}
-              model={model}
-              actions={actions}
-            />
-          ))}
-        </ul>
-        <Typography variant="caption-lg" color="textSecondary" render={<p />}>
-          Each line is the overlay&rsquo;s composed accuracy, as the
-          globe&rsquo;s legend states it; {model.triadScale}.
-        </Typography>
-      </Section>
-
-      <Section title="Frames" aside={<FamilyKey />}>
-        {resultFrames && !selectedFrame && (
-          <p className="fx-filter">
-            <Typography variant="body-sm" render={<span />}>
-              Frames used by{" "}
-              <span className="fx-strong">{resultFrames.label}</span>
-            </Typography>
-            <Button size="small" variant="text" onClick={onBackToResult}>
-              Back to the result
-            </Button>
-          </p>
-        )}
-        {tree ? (
-          <FrameTree
-            tree={tree}
-            selected={selectedFrame}
-            onPath={onPath}
-            onSelect={onSelectFrame}
-            onShow={(id) => actions.showOnGlobe({ frame: id })}
-          />
-        ) : (
-          <div className="fx-empty" role="status">
-            <CircularProgress size={16} aria-hidden />
-            <Typography variant="body-sm" render={<p />}>
-              {model.treeNote}
-            </Typography>
-          </div>
-        )}
-      </Section>
-
-      <Section title="Clock">
-        <div className="fx-clock">
-          <div>
-            <p className="fx-clock-time fx-num">{utc(model.clock.utc)}</p>
-            <Typography
-              variant="caption-lg"
-              color="textSecondary"
-              render={<p />}
-            >
-              {model.clock.local
-                ? `${model.clock.local} on the time controls over the globe, which show the place's local time`
-                : "The same instant as the time controls over the globe, which show the place's local time"}
-            </Typography>
-            <Typography
-              variant="caption-lg"
-              render={<p />}
-              className={eop.kind === "measured" ? "fx-muted" : "fx-unbounded"}
-            >
-              <Term k="eop">Earth orientation</Term>{" "}
-              {eop.kind === "measured"
-                ? "measured (IERS)"
-                : eop.kind === "predicted"
-                  ? `predicted, ${eop.ageDays.toFixed(1)} days past the last measured row (IERS Bulletin A)`
-                  : `outside the table (${eop.span})`}
-            </Typography>
-          </div>
-          <Button variant="outlined" size="small" onClick={actions.jumpToFlyby}>
-            Jump to the Artemis II flyby
-          </Button>
-        </div>
-        <Typography variant="caption-lg" color="textSecondary" render={<p />}>
-          Set the time with the controls over the globe; triads and
-          Orion&rsquo;s path follow it. Orion&rsquo;s data covers 2026-04-02 to
-          04-10.
-        </Typography>
-      </Section>
-    </div>
-  );
-  return (
-    <Split
-      list={list}
-      sheetKey={selectedFrame}
-      sheet={
-        tree && selectedNode
-          ? (controls) => (
-              <>
-                <SheetHead
-                  controls={controls}
-                  onClose={() => onSelectFrame(undefined)}
-                  closeLabel="Close the walk"
-                >
-                  <ReferenceSelect
-                    reference={reference}
-                    setReference={setReference}
-                  />
-                  <Typography
-                    variant="body-md"
-                    render={<h3 />}
-                    className="fx-strong"
-                  >
-                    to {selectedNode.label}
-                  </Typography>
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    startIcon={<Icon href={svgFitToView} />}
-                    onClick={() =>
-                      actions.showOnGlobe({ frame: selectedNode.id })
-                    }
-                  >
-                    Show on globe
-                  </Button>
-                </SheetHead>
-                <div className="fx-sheet-body">
-                  <Walk
-                    model={model}
-                    tree={tree}
-                    target={selectedNode.id}
-                    reference={reference}
-                    setReference={setReference}
-                    actions={actions}
-                  />
-                </div>
-              </>
-            )
-          : undefined
-      }
-    />
-  );
 }

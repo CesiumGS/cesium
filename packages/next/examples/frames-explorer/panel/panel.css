@@ -117,8 +117,8 @@
 .fx-sheet-head:focus-visible,
 .fx-inspector-title:focus,
 .fx-inspector-title:focus-visible,
-.fx-tour-title:focus,
-.fx-tour-title:focus-visible {
+.fx-detail-title:focus,
+.fx-detail-title:focus-visible {
   outline: none;
 }
 .fx-sheet-head {
@@ -455,12 +455,6 @@
 
 /* ---------------------------------------------------------- explore */
 
-.fx-tour-prompt {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--stratakit-space-300);
-}
 .fx-family-key {
   list-style: none;
   margin: 0;
@@ -1309,6 +1303,7 @@
  */
 .fx-hud-host {
   color-scheme: dark;
+  --stratakit-color-bg-page-depth: oklch(21.2% 0.006 268.32);
   --stratakit-color-bg-elevation-base: var(
     --cesium-ui-surface,
     oklch(26.92% 0.008 268.32)
@@ -1450,13 +1445,91 @@
 }
 /*
  * Frame content (re-center): top left under Dyno's inspector (8 px down,
- * about 29 px tall), clear of the credits, the caption, the legend and the
- * stop-4 inset in every layout.
+ * about 29 px tall), clear of the credits, the answer, the legend and the
+ * rigid line's inset in every layout.
  */
 .fx-frame {
   inset-inline-start: var(--stratakit-space-200);
   inset-block-start: 48px;
   padding: var(--stratakit-space-50);
+}
+/*
+ * The scenario's answer on the globe: top right, clear of Dyno's inspector
+ * (top left), the credits (bottom left) and the legend (bottom right).
+ */
+.fx-callout {
+  inset-inline-end: var(--stratakit-space-300);
+  /* Level with Frame content, under Dyno's inspector strip. */
+  inset-block-start: 48px;
+  inline-size: min(320px, calc(100% - 2 * var(--stratakit-space-300) - 48px));
+  gap: var(--stratakit-space-100);
+  animation: fx-in 320ms var(--fx-ease) both;
+}
+.fx-callout-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--stratakit-space-200);
+  margin-block: calc(-1 * var(--stratakit-space-50));
+}
+.fx-callout-question {
+  font-size: var(--stratakit-font-size-caption-lg);
+  line-height: var(--stratakit-line-height-caption-lg);
+  font-weight: 600;
+}
+.fx-callout-figure {
+  font-size: var(--stratakit-font-size-headline-sm);
+  line-height: var(--stratakit-line-height-headline-sm);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.fx-callout-acc {
+  font-size: var(--stratakit-font-size-caption-lg);
+  line-height: var(--stratakit-line-height-caption-lg);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.fx-callout-acc.fx-unbounded {
+  color: var(--stratakit-color-text-attention-base);
+}
+.fx-callout-note {
+  font-size: var(--stratakit-font-size-caption-lg);
+  line-height: var(--stratakit-line-height-caption-lg);
+  padding-inline-start: var(--stratakit-space-150);
+  border-inline-start: 2px solid var(--stratakit-color-text-attention-base);
+}
+.fx-callout-folded {
+  padding-block: var(--stratakit-space-150);
+}
+/*
+ * The whole tree over the globe (the diagram's Expand): a dialog in the
+ * HUD, which Escape and its Close button dismiss.
+ */
+.fx-tree-dialog-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  pointer-events: auto;
+  background: oklch(0% 0 0 / 0.45);
+}
+.fx-tree-dialog {
+  inset: var(--stratakit-space-400);
+  /* Opaque: the tree reads against nothing of the globe behind it. */
+  background: var(--stratakit-color-bg-page-base);
+  backdrop-filter: none;
+  overflow: auto;
+  gap: var(--stratakit-space-300);
+  animation: fx-in 240ms var(--fx-ease) both;
+}
+.fx-tree-dialog-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--stratakit-space-300);
+}
+.fx-tree-dialog-title {
+  font-size: var(--stratakit-font-size-body-md);
+  line-height: var(--stratakit-line-height-body-md);
+  font-weight: 600;
 }
 /*
  * The orbit's pivot while it is dragged: a white ring with crosshair ticks
@@ -1638,75 +1711,590 @@
 .fx-axis-word-z {
   color: var(--fx-axis-z);
 }
-.fx-tour {
-  inset-inline-end: var(--stratakit-space-300);
-  inset-block-start: var(--stratakit-space-300);
-  inline-size: min(340px, calc(100% - 2 * var(--stratakit-space-300)));
-  animation: fx-in 320ms var(--fx-ease) both;
-}
-/* A narrow view: at the bottom, above the time controls, clear of Dyno's inspector (I18). */
-.fx-tour-narrow {
-  inset-block-start: auto;
-  inset-block-end: var(--fx-hud-bottom, 64px);
-  inset-inline: var(--stratakit-space-200);
-  inline-size: auto;
-}
+/* -------------------------------------------------------- scenarios */
 
-.fx-tour-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-block: calc(-1 * var(--stratakit-space-100));
+/*
+ * The scenarios' tab (DESIGN.md "Scenarios"): the strip, the question, the
+ * frame tree as the panel's one bold thing, then the answer, the knobs and
+ * the proof, each a heading and its content, no cards.
+ */
+.fx-scenarios {
+  gap: var(--stratakit-space-500);
 }
-.fx-tour-head-actions {
+.fx-strip ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(108px, 1fr));
+  gap: var(--stratakit-space-100);
+}
+.fx-strip-item {
+  all: unset;
+  box-sizing: border-box;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  inline-size: 100%;
+  block-size: 100%;
+  min-block-size: 56px;
+  padding: var(--stratakit-space-200) var(--stratakit-space-200)
+    var(--stratakit-space-200) var(--stratakit-space-300);
+  border-radius: var(--stratakit-radius-md);
+  border: 1px solid var(--stratakit-color-border-neutral-muted);
+  cursor: pointer;
+  transition: background-color 160ms var(--fx-ease);
+}
+.fx-strip-item:hover {
+  background: var(--stratakit-color-bg-glow-on-surface-neutral-hover);
+}
+.fx-strip-item:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: 1px;
+}
+.fx-strip-item[aria-current="true"] {
+  cursor: default;
+  background: var(--stratakit-color-bg-page-depth);
+  border-color: var(--stratakit-color-border-neutral-base);
+}
+/* The one showing: StrataKit's 2 px accent bar, as a selected row has. */
+.fx-strip-item[aria-current="true"]::before {
+  content: "";
+  position: absolute;
+  inset-block: var(--stratakit-space-200);
+  inset-inline-start: -1px;
+  inline-size: 2px;
+  border-radius: 1px;
+  background: var(--stratakit-color-border-accent-strong);
+}
+.fx-strip-title {
+  font-weight: 600;
+  color: var(--stratakit-color-text-neutral-primary);
+}
+.fx-strip-question {
+  font-size: var(--stratakit-font-size-caption-lg);
+  line-height: var(--stratakit-line-height-caption-lg);
+  color: var(--stratakit-color-text-neutral-secondary);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.fx-scenario-question {
+  font-weight: 600;
+  text-wrap: balance;
+}
+.fx-tree-section {
+  gap: var(--stratakit-space-200);
+}
+.fx-diagram-key {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--stratakit-space-50) var(--stratakit-space-400);
+  font-size: var(--stratakit-font-size-caption-lg);
+  line-height: var(--stratakit-line-height-caption-lg);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.fx-diagram-key li {
   display: inline-flex;
   align-items: center;
   gap: var(--stratakit-space-100);
-  flex: none;
 }
-.fx-tour-body {
+.fx-key-glyph {
+  inline-size: 8px;
+  block-size: 8px;
+  border-radius: var(--stratakit-radius-round);
+  background: var(--stratakit-color-text-neutral-secondary);
+}
+.fx-key-added {
+  border-radius: 1px;
+  transform: rotate(45deg) scale(0.9);
+}
+.fx-key-line {
+  inline-size: 16px;
+  block-size: 2px;
+  border-radius: 1px;
+  background: var(--stratakit-color-text-neutral-primary);
+}
+
+/* The diagram: pills over an SVG of elbows; it pans when it's too wide. */
+.fx-diagram {
+  position: relative;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border-radius: var(--stratakit-radius-md);
+  background: var(--stratakit-color-bg-page-depth);
+  border: 1px solid var(--stratakit-color-border-neutral-muted);
+  overscroll-behavior-x: contain;
+}
+.fx-diagram-pans {
+  /* A soft edge says there's more to pan to. */
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 14px,
+    #000 calc(100% - 14px),
+    transparent 100%
+  );
+}
+.fx-diagram-canvas {
+  position: relative;
+}
+.fx-diagram-edges {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+}
+.fx-diagram-edge {
+  fill: none;
+  stroke: var(--stratakit-color-border-neutral-base);
+  stroke-width: 1.25;
+  stroke-linejoin: round;
+  transition:
+    d 460ms var(--fx-ease),
+    stroke 240ms var(--fx-ease) calc(var(--i, 0) * 90ms),
+    stroke-width 240ms var(--fx-ease) calc(var(--i, 0) * 90ms);
+}
+@starting-style {
+  .fx-diagram-edge {
+    d: var(--fx-from-d);
+  }
+}
+.fx-diagram-edge.fx-lit {
+  stroke: var(--fx-family);
+  stroke-width: 2.5;
+}
+.fx-diagram-edge.fx-selected {
+  stroke: var(--stratakit-color-border-accent-strong);
+  stroke-width: 2.5;
+}
+.fx-chip-edge {
+  stroke-dasharray: 3 3;
+}
+.fx-diagram-hit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 12;
+  pointer-events: stroke;
+  cursor: pointer;
+  transition: d 460ms var(--fx-ease);
+}
+.fx-node {
+  all: unset;
+  box-sizing: border-box;
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  block-size: 28px;
+  padding-inline: 10px 12px;
+  border-radius: var(--stratakit-radius-round);
+  border: 1px solid
+    color-mix(
+      in oklab,
+      var(--fx-family) 40%,
+      var(--stratakit-color-border-neutral-muted)
+    );
+  background: var(--stratakit-color-bg-page-base);
+  color: var(--stratakit-color-text-neutral-primary);
+  font-size: var(--stratakit-font-size-body-sm);
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    transform 460ms var(--fx-ease),
+    opacity 300ms var(--fx-ease),
+    box-shadow 240ms var(--fx-ease) calc(var(--i, 0) * 90ms),
+    border-color 240ms var(--fx-ease) calc(var(--i, 0) * 90ms);
+}
+/* An added frame grows out of its parent (`--fx-from`, the parent's place). */
+@starting-style {
+  .fx-node {
+    opacity: 0;
+    transform: var(--fx-from);
+  }
+}
+.fx-node:hover {
+  background: color-mix(
+    in oklab,
+    var(--fx-family, var(--stratakit-color-text-neutral-secondary)) 10%,
+    var(--stratakit-color-bg-page-base)
+  );
+}
+.fx-node:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: 2px;
+}
+.fx-node[aria-pressed="true"] {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: 2px;
+}
+.fx-node-glyph {
+  flex: none;
+  inline-size: 8px;
+  block-size: 8px;
+  border-radius: var(--stratakit-radius-round);
+  background: var(--fx-family);
+}
+.fx-node-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* A frame the scenario added: a diamond, a family edge and a tint of it. */
+.fx-node.fx-added {
+  border: 1.5px solid var(--fx-family);
+  background: color-mix(
+    in oklab,
+    var(--fx-family) 16%,
+    var(--stratakit-color-bg-page-base)
+  );
+}
+.fx-node.fx-added .fx-node-glyph {
+  border-radius: 1px;
+  transform: rotate(45deg) scale(0.95);
+}
+.fx-node.fx-on-path {
+  border-color: var(--fx-family);
+  box-shadow: 0 0 0 1.5px var(--fx-family);
+}
+.fx-node-end {
+  position: absolute;
+  inset-block-start: -9px;
+  inset-inline-end: -4px;
+  padding: 0 5px;
+  border-radius: var(--stratakit-radius-round);
+  background: var(--fx-family);
+  color: var(--stratakit-color-bg-page-base);
+  font-size: 10px;
+  line-height: 15px;
+  font-weight: 600;
+}
+.fx-end-meet {
+  background: var(--stratakit-color-text-neutral-primary);
+}
+.fx-chip {
+  --fx-family: var(--stratakit-color-text-neutral-secondary);
+  justify-content: center;
+  padding-inline: 8px;
+  border: 1px dashed var(--stratakit-color-border-neutral-base);
+  background: transparent;
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-weight: 600;
+}
+.fx-edge-tag {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  max-inline-size: 170px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 4px;
+  border-radius: var(--stratakit-radius-sm);
+  background: var(--stratakit-color-bg-page-depth);
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-size: var(--stratakit-font-size-caption-md);
+  line-height: 16px;
+  pointer-events: none;
+  transition: opacity 240ms var(--fx-ease) calc(var(--i, 0) * 90ms + 120ms);
+}
+@starting-style {
+  .fx-edge-tag {
+    opacity: 0;
+  }
+}
+.fx-edge-tip {
+  position: absolute;
+  z-index: 2;
+  inline-size: 220px;
+  padding: var(--stratakit-space-100) var(--stratakit-space-200);
+  border-radius: var(--stratakit-radius-sm);
+  background: var(--stratakit-color-bg-elevation-base);
+  box-shadow: var(--stratakit-shadow-surface-md);
+  color: var(--stratakit-color-text-neutral-primary);
+  pointer-events: none;
+}
+
+/* The selected frame or edge, in place under the diagram (no sheet). */
+.fx-detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-200);
+  padding: var(--stratakit-space-300);
+  border-radius: var(--stratakit-radius-md);
+  border: 1px solid var(--stratakit-color-border-neutral-muted);
+  animation: fx-in 240ms var(--fx-ease) both;
+}
+.fx-detail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--stratakit-space-200);
+}
+.fx-detail-title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-150);
+  font-size: var(--stratakit-font-size-body-md);
+  line-height: var(--stratakit-line-height-body-md);
+  font-weight: 600;
+}
+.fx-detail-edge {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-50);
+}
+.fx-detail-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--stratakit-space-200);
+}
+
+/* The answer: its figure, its sentence, its accuracy. */
+.fx-answer {
   display: flex;
   flex-direction: column;
   gap: var(--stratakit-space-150);
 }
-.fx-tour-body[hidden] {
-  display: none;
-}
-/* Folded (F42): one row on a narrow view, so the subject's lower half shows. */
-.fx-tour-folded {
-  padding-block: var(--stratakit-space-150);
-}
-.fx-tour-folded .fx-tour-head {
-  gap: var(--stratakit-space-200);
-  margin-block: 0;
-}
-.fx-tour-folded .fx-tour-count {
-  flex: none;
-}
-.fx-tour-folded .fx-tour-title {
-  flex: 1;
-  min-inline-size: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-/* The caption's "Show true scale" switch, at the stops that exaggerate. */
-.fx-tour-scale {
-  margin-inline: 0;
-}
-.fx-tour-scale .fx-option-label {
-  white-space: normal;
-}
-.fx-tour-buttons {
+.fx-answer-main {
   display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-100);
+  transition: opacity 200ms var(--fx-ease);
+}
+.fx-answer-figure {
+  font-size: var(--stratakit-font-size-headline-sm);
+  line-height: var(--stratakit-line-height-headline-sm);
+  font-weight: 600;
+}
+.fx-answer-text {
+  font-size: var(--stratakit-font-size-body-md);
+  line-height: var(--stratakit-line-height-body-md);
+  text-wrap: pretty;
+}
+.fx-answer-acc {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.fx-answer-acc.fx-unbounded {
+  color: var(--stratakit-color-text-attention-base);
+}
+.fx-answer-acc-label {
+  font-weight: 600;
+  color: var(--stratakit-color-text-neutral-primary);
+}
+.fx-answer-wait {
+  display: inline-flex;
   align-items: center;
+  gap: var(--stratakit-space-150);
+  color: var(--stratakit-color-text-info-base);
+}
+.fx-answer-note {
+  padding-inline-start: var(--stratakit-space-200);
+  border-inline-start: 2px solid var(--stratakit-color-border-attention-base);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.fx-stale {
+  opacity: 0.5;
+}
+
+/* The knobs, the checked-setup marker and the time. */
+.fx-knobs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-400);
+}
+.fx-checked-marker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--stratakit-space-150) var(--stratakit-space-200);
+  padding: var(--stratakit-space-200) var(--stratakit-space-300);
+  border-radius: var(--stratakit-radius-md);
+  background: var(--stratakit-color-bg-page-depth);
+}
+.fx-checked-marker > :nth-child(2) {
+  flex: 1 1 12em;
+}
+.fx-checked-marker .MuiSvgIcon-root,
+.fx-checked-marker > svg {
+  color: var(--stratakit-color-icon-positive-base);
+}
+.fx-off-checked {
+  box-shadow: inset 2px 0 0 var(--stratakit-color-border-attention-base);
+}
+.fx-marker-dot {
+  flex: none;
+  inline-size: 8px;
+  block-size: 8px;
+  border-radius: var(--stratakit-radius-round);
+  background: var(--stratakit-color-text-attention-base);
+}
+.fx-knob {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-100);
+}
+.fx-knob-head {
+  display: flex;
+  align-items: baseline;
   justify-content: space-between;
   gap: var(--stratakit-space-200);
-  margin-block-start: var(--stratakit-space-100);
 }
-.fx-tour-steps {
-  display: inline-flex;
+.fx-knob-label {
+  font-weight: 600;
+}
+.fx-knob-value {
+  font-size: var(--stratakit-font-size-body-md);
+}
+.fx-knob .MuiSlider-root {
+  margin-inline: var(--stratakit-space-200);
+  inline-size: calc(100% - 2 * var(--stratakit-space-200));
+}
+.fx-knob .MuiSlider-markLabel {
+  font-size: var(--stratakit-font-size-caption-md);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.fx-knob-choice {
+  flex-wrap: wrap;
+}
+.fx-time-row {
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-300);
+}
+.fx-time-row > .MuiButton-root {
+  flex: none;
+}
+
+/* The proof: one disclosure per row, the whole row its button. */
+.fx-proof {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.fx-proof-row {
+  border-block-end: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.fx-proof-row:first-child {
+  border-block-start: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.fx-proof-head {
+  all: unset;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: 16px 16px minmax(0, 1fr);
+  align-items: start;
   gap: var(--stratakit-space-200);
+  inline-size: 100%;
+  min-block-size: 44px;
+  padding: var(--stratakit-space-200) var(--stratakit-space-100);
+  cursor: pointer;
+  border-radius: var(--stratakit-radius-sm);
+}
+.fx-proof-head:hover {
+  background: var(--stratakit-color-bg-glow-on-surface-neutral-hover);
+}
+.fx-proof-head:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: -2px;
+}
+.fx-proof-chevron,
+.fx-proof-icon {
+  margin-block-start: 1px;
+}
+.fx-proof-chevron {
+  color: var(--stratakit-color-icon-neutral-secondary);
+  transition: transform 160ms var(--fx-ease);
+}
+.fx-proof-chevron.fx-open {
+  transform: rotate(90deg);
+}
+.fx-tone-pass .fx-proof-icon {
+  color: var(--stratakit-color-icon-positive-base);
+}
+.fx-tone-fail .fx-proof-icon {
+  color: var(--stratakit-color-icon-critical-base);
+}
+.fx-tone-reference .fx-proof-icon,
+.fx-tone-loading .fx-proof-icon {
+  color: var(--stratakit-color-icon-info-base);
+}
+.fx-proof-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-inline-size: 0;
+}
+.fx-proof-name {
+  font-weight: 600;
+  color: var(--stratakit-color-text-neutral-primary);
+}
+.fx-proof-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--stratakit-space-200);
+  font-size: var(--stratakit-font-size-caption-lg);
+  line-height: var(--stratakit-line-height-caption-lg);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.fx-tone-pass .fx-proof-status-word {
+  color: var(--stratakit-color-text-positive-base);
+}
+.fx-tone-fail .fx-proof-status-word {
+  color: var(--stratakit-color-text-critical-base);
+}
+.fx-tone-reference .fx-proof-status-word,
+.fx-tone-loading .fx-proof-status-word {
+  color: var(--stratakit-color-text-info-base);
+}
+.fx-proof-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-200);
+  padding: 0 var(--stratakit-space-100) var(--stratakit-space-300)
+    calc(32px + 2 * var(--stratakit-space-200) + var(--stratakit-space-100));
+}
+.fx-proof-body[hidden] {
+  display: none;
+}
+.fx-proof-title {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.fx-proof-details {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-150);
+}
+.fx-proof-detail dt {
+  font-size: var(--stratakit-font-size-caption-lg);
+  font-weight: 600;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.fx-proof-detail dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.fx-proof-open {
+  align-self: flex-start;
+  min-block-size: 32px;
+  font-weight: 600;
+}
+
+/* Verification: the secondary entry, its parts one segmented control away. */
+.fx-verification-head {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-200);
+  padding-block: var(--stratakit-space-200);
 }
 
 /* ---------------------------------------------------------- motion */
@@ -1739,8 +2327,15 @@
   .fx-budget-seg,
   .fx-sheet,
   .fx-tree-item.fx-on-path::before,
-  .fx-tour {
+  .fx-callout {
     animation: none;
+  }
+  /* The tree cuts straight to its new shape and lights its path at once. */
+  .fx-node,
+  .fx-diagram-edge,
+  .fx-edge-tag,
+  .fx-proof-chevron {
+    transition: none;
   }
   .fx-pivot,
   .fx-pivot-on {
@@ -1819,7 +2414,6 @@
 }
 
 @container fx-panel (max-width: 420px) {
-  .fx-tour-prompt,
   .fx-run,
   .fx-clock,
   .fx-tree-tools {

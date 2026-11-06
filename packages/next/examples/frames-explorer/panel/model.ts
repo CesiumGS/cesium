@@ -2,7 +2,6 @@
 // from the worker, the frame tree and the run. Only
 // types from the rest of the example: the main thread never bundles the
 // stress catalog, PROJ or the overlay builders (protocol.ts's rule).
-import type { TrueScaleKind } from "./tourScale.ts";
 import type { AccuracyStatement } from "../../../src/measure/accuracy.ts";
 import type { DataItem, RunSummary } from "../protocol.ts";
 import type {
@@ -11,6 +10,14 @@ import type {
   GroupInfo,
   TraceStep,
 } from "../stress/groupInfo.ts";
+import type { ScenarioAnswer } from "../scenarios/evaluate.ts";
+import type { ProofRow } from "../scenarios/proof.ts";
+import type {
+  KnobSpec,
+  KnobState,
+  KnobValue,
+  ScenarioId,
+} from "../scenarios/spec.ts";
 import type { Selection } from "../selection.ts";
 import type { StressResult } from "../tests.ts";
 import type { TreeNode } from "../tree.ts";
@@ -169,14 +176,47 @@ export interface UserCrsView {
   crsName?: string;
 }
 
-/** A tour stop (R16): caption, camera and overlays. */
-export interface TourStop {
-  id: string;
+/**
+ * The scenario on the page (spec "How the page works"): the strip, its
+ * question and answer, its knobs against the checked setup, its tree's lit
+ * path and its proof (scenarios/proof.ts).
+ */
+export interface ScenarioPanelView {
+  id: ScenarioId;
   title: string;
-  caption: string;
-  overlays: readonly OverlayId[];
-  /** The caption's "Show true scale" switch, where the stop exaggerates. */
-  trueScaleSwitch?: TrueScaleKind;
+  question: string;
+  /** The strip, in its order: the scenarios the page shows. */
+  strip: readonly { id: ScenarioId; title: string; question: string }[];
+  knobs: readonly KnobSpec[];
+  values: KnobState;
+  /** The checked setup's knobs and epoch (ISO 8601 UTC). */
+  checked: KnobState;
+  checkedEpochUtc: string;
+  /** The scenario's time, ISO 8601 UTC. */
+  epochUtc: string;
+  atChecked: boolean;
+  /** What moved off the checked setup: knob ids, then "time". */
+  changed: readonly string[];
+  /** Loading until this setup's evaluation is in (R9). */
+  status: "loading" | "ready" | "error";
+  /** While loading: why it waits (a catalog run going on). */
+  queued?: string;
+  problem?: { message: string; missing: boolean };
+  /** The latest answer (the last setup's while loading). */
+  answer?: ScenarioAnswer;
+  /** The answer's path through the tree: up from its start to the common ancestor, then down. */
+  path?: { up: readonly string[]; ancestor: string; down: readonly string[] };
+  proof: readonly ProofRow[];
+  /** The inline details' extras for the live rows (the catalog's are in `extras`). */
+  liveExtras: Readonly<Record<string, ResultExtras>>;
+  /** A limit the scenario says plainly (the backdrop Moon). */
+  note?: string;
+  /** The base frames its answer and proof name, kept in the docked diagram's view. */
+  focus: readonly string[];
+  playing: boolean;
+  rate: number;
+  /** Earth orientation at the scenario's time. */
+  eop?: ClockView["eop"];
 }
 
 /** One line of the report's environment (R15). */
@@ -220,7 +260,8 @@ export interface PanelModel {
   userCrs: UserCrsView;
   /** A bound CRS to try ("Use an example"): references.json's Tokyo input. */
   exampleWkt2: string;
-  tour: readonly TourStop[];
+  /** The scenario shown, once the page has set one up. */
+  scenario?: ScenarioPanelView;
   environment: readonly EnvironmentLine[];
   /** A message for the snackbar (a deep link that didn't resolve), new each time its id changes. */
   notice?: { id: number; text: string };
@@ -241,16 +282,23 @@ export interface PanelActions {
   /** F32: true-north lines at true scale, or with the convergence exaggerated. */
   setTrueScale(on: boolean): void;
   jumpToFlyby(): void;
-  /** Flies to a frame, a result's site, or a tour stop. */
+  /** Flies to a frame or a result's site. */
   showOnGlobe(target: { frame: string } | { result: string }): void;
-  /** Frame content (F): re-flies the tour stop, else the selection, else the opening view. */
+  /** Frame content (F): re-flies the selection, else the scenario's view, else the opening view. */
   frameContent(): void;
   fetchAsset(id: string): void;
   runUserCrs(wkt2: string): void;
   copyReport(): Promise<void>;
   saveReport(format: "markdown" | "json"): void;
-  /** A deep link (R15) to a selection or a tour stop, for "Copy link". */
-  linkTo(target: Selection | { kind: "tour"; stop: string }): string;
+  /** A deep link (R15) to a selection in the scenario at its knobs and time, for "Copy link". */
+  linkTo(target: Selection): string;
+  /** Shows a scenario at its checked setup. */
+  selectScenario(id: ScenarioId): void;
+  setKnob(id: string, value: KnobValue): void;
+  /** Back to the checked setup: its knobs and epoch. */
+  backToChecked(): void;
+  /** Plays or pauses the clock. */
+  setPlaying(on: boolean): void;
 }
 
 export type { LensChoice, Selection, Tab } from "../selection.ts";

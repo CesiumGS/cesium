@@ -1,5 +1,8 @@
 // The frames explorer (plan Task 6): the frame tree and engineering frames,
-// drawn on the globe and stress-tested in the page.
+// drawn on the globe and stress-tested in the page. Its first view is the
+// scenarios (spec 2026-11-06): each a problem solved by the tree it builds;
+// scenarioHost.ts runs their lifecycle, and this file gives it the worker,
+// the globe and the clock (each scenario's scene: scenarios/scenes.ts).
 //
 // `run` returns its panel at once (R17) and loads afterwards: frame data on
 // the main thread (the triads follow the clock every frame), and everything
@@ -14,23 +17,30 @@ import type { SiteTransform } from "../../src/engineering/EngineeringFrame.ts";
 import { loadFrameData } from "../../src/ephemeris/loadFrameData.ts";
 import { frameTransform, type Frame } from "../../src/frames/Frame.ts";
 import { createFrames, type Frames } from "../../src/frames/frames.ts";
-import { eastNorthUpFrame } from "../../src/frames/local.ts";
 import { Ellipsoid, fromDegrees } from "../../src/math/ellipsoid.ts";
 import { earthOrientationSigma } from "../../src/measure/accuracy.ts";
-import { MOON } from "../../src/scene/Body.ts";
 import { Instant } from "../../src/time/Instant.ts";
 import type { ExampleContext, ExampleRun } from "../types.ts";
 import { composedAccuracy, type PlacedNode } from "./composed.ts";
 import { distortionAccuracy, operationText } from "./legend.ts";
 import {
+  NARROW_VIEW,
   RESULT_LABELS,
-  TOUR,
   comparedFor,
-  defaultTriads,
   groupRunIds,
-  stopExposure,
-  type TourStopSpec,
 } from "./content.ts";
+import { createScenarioHost } from "./scenarioHost.ts";
+import { proofRows, type ProofRow } from "./scenarios/proof.ts";
+import {
+  LUNAR_SITE,
+  READY,
+  SCENES,
+  lunarSiteFrame,
+  sceneExposure,
+  type SceneSpec,
+} from "./scenarios/scenes.ts";
+import type { KnobState, ScenarioId } from "./scenarios/spec.ts";
+import { SCENARIOS } from "./scenarios/specs.ts";
 import {
   Globe,
   SECONDARY,
@@ -49,7 +59,7 @@ import {
   type OverlayChunk,
   type Sampling,
 } from "./overlays.ts";
-import { latestOnly, orionLegend, orionNode, planeFraming } from "./orion.ts";
+import { latestOnly, orionLegend, planeFraming } from "./orion.ts";
 import { familyMap } from "./panel/families.ts";
 import { length, radians, sig } from "./panel/format.ts";
 import type {
@@ -66,6 +76,8 @@ import type {
   PanelModel,
   ResultExtras,
   RunView,
+  ScenarioPanelView,
+  Selection,
   UserCrsView,
 } from "./panel/model.ts";
 import { Panel, type ModelSource } from "./panel/Panel.tsx";
@@ -95,7 +107,13 @@ import {
 } from "./selection.ts";
 import { GROUP_INFO, groupInfo, type Lens } from "./stress/groupInfo.ts";
 import type { StressResult } from "./tests.ts";
-import { buildTree, pathToRoot, type TreeNode } from "./tree.ts";
+import {
+  branchPath,
+  buildScenarioTree,
+  buildTree,
+  pathToRoot,
+  type TreeNode,
+} from "./tree.ts";
 import references from "./references.json";
 import { PACKAGE } from "./version.ts";
 import { RunQueue } from "./runQueue.ts";
@@ -112,7 +130,6 @@ import {
   placeRig,
   rangeLimits,
   rigFraming,
-  stopRig,
   viewHeading,
   CameraFlow,
   landedLimits,
@@ -167,19 +184,11 @@ const SITE: SiteTransform = {
 /** F32: the true-north lines' convergence, drawn this many times while not at true scale. */
 const CONVERGENCE_FACTOR = 20;
 
-/** Ashby and Patla (2024)'s published lunar clock rate, as references.json quotes it. */
-const LUNAR_RATE = (
-  references.entries as unknown as Record<string, { rate?: string }>
-)["ashby-patla-2024"]!.rate!.replace("μs", "µs");
-
 /**
  * Stop 4's camera: centred this share of the way along the line and this
  * many degrees south of it, at this range (m) and pitch (degrees).
  */
 const RIGID_FRAMING = { along: 0.53, south: 0, range: 400_000, pitch: -5 };
-
-const SACRAMENTO = fromDegrees(-121.4944, 38.5816, 0);
-const LUNAR_SITE = fromDegrees(0, -89.5, 0);
 
 const ITEM_NAME: Record<DataItem, string> = {
   frames: "frame data",
@@ -305,6 +314,12 @@ const FINGERPRINTED = Object.keys(
   (fingerprintFile as { fingerprints: Record<string, unknown> }).fingerprints,
 );
 
+/** A selection of a frame: a frame, a tree diagram's node, or an edge (by its child node). */
+const isFrame = (
+  s: Selection,
+): s is Extract<Selection, { kind: "frame" | "node" | "edge" }> =>
+  s.kind === "frame" || s.kind === "node" || s.kind === "edge";
+
 const messageOf = (e: unknown): string =>
   e instanceof Error ? e.message : String(e);
 const isAbort = (e: unknown): boolean =>
@@ -337,7 +352,7 @@ export function run(context: ExampleContext): ExampleRun {
   // stopped client sends no final state (Task 4's deferred note).
   scope.defer(() => loading.reset());
   const view = new ViewStore();
-  const initial = parseParams(params, { tours: TOUR.map((s) => s.id) });
+  const initial = parseParams(params);
   view.apply(initial);
 
   // ----------------------------------------------------------- the worker
@@ -377,6 +392,7 @@ export function run(context: ExampleContext): ExampleRun {
   let treeNote: string | undefined =
     "The frame tree draws once frame data is in.";
   let composed: ComposedAccuracy = { ITRF: {}, GCRF: {}, ICRF: {} };
+  /** The scene's own frames on the main thread (the lunar site), for its triads and camera. */
   let local: Frame[] = [];
   /** The engineering frame the worker placed (known from its operation), for the tree. */
   let engineering: { node: TreeNode; placed: PlacedNode } | undefined;
@@ -724,7 +740,7 @@ export function run(context: ExampleContext): ExampleRun {
       exampleWkt2: (
         references.entries as unknown as Record<string, { wkt2?: string }>
       )["input-wkt2-tokyo-jprcs-ix"]!.wkt2!,
-      tour: TOUR,
+      ...scenarioView(),
       environment: environmentLines(),
       ...(notice !== undefined && { notice }),
     };
@@ -750,31 +766,29 @@ export function run(context: ExampleContext): ExampleRun {
     if (!frames || !instant) {
       return;
     }
-    const t = buildTree(frames, { local }, instant);
-    if (engineering) {
-      findNode(t, "ITRF")?.children.push(engineering.node);
-    }
-    // Orion, from the worker's reply: under its reference, with the
-    // statements that came with it (the main thread has no trajectory).
-    const placedOrion = orionNode(
-      orionInfo?.info,
-      orionInfoError?.message,
-      new Date(orionInfoError?.utc ?? viewer.clock.time).toISOString(),
-    );
-    if (placedOrion) {
-      findNode(t, placedOrion.parent)?.children.push({
-        ...placedOrion.node,
-        children: [],
-      });
-    }
-    // Its statements only while they're current (not after a failure).
-    const orion = orionInfoError === undefined ? orionInfo?.info : undefined;
+    // The scenario's tree: the built-in frames and what its evaluation
+    // added (buildScenarioTree), the main thread's own frames attached to
+    // their nodes so the walk can state them.
+    const e = evaluationNow();
+    const t = buildScenarioTree(buildTree(frames, {}, instant), e?.added ?? []);
+    const attach = (n: TreeNode) => {
+      const f = local.find((l) => l.name === n.id);
+      if (f) {
+        n.frame = f;
+      }
+      n.children.forEach(attach);
+    };
+    attach(t);
+    // Orion's statements from the worker's reply, while they're current.
+    const orion =
+      orionInfoError === undefined &&
+      orionInfo !== undefined &&
+      findNode(t, orionInfo.info.node.id)
+        ? orionInfo.info
+        : undefined;
     tree = t;
     treeNote = undefined;
-    const placed = new Map<string, PlacedNode>(
-      engineering ? [[engineering.node.id, engineering.placed]] : [],
-    );
-    const own = composedAccuracy(t, frames, instant, placed);
+    const own = composedAccuracy(t, frames, instant);
     composed = orion
       ? (Object.fromEntries(
           (Object.keys(own) as Reference[]).map((r) => [
@@ -813,9 +827,10 @@ export function run(context: ExampleContext): ExampleRun {
     // after a group's own run) is kept until its group runs (R15).
     const ran = new Set(results.map((r) => r.group));
     const known: Known = {
-      ...(tree && { frames: treeIds() }),
+      // Only once the scenario's frames are in: a link to a frame it adds
+      // (the lunar site) waits for its evaluation rather than being cleared.
+      ...(tree && evaluationNow() && { frames: treeIds() }),
       ...(lastRun !== undefined && { results: lensesOf, ran }),
-      tours: TOUR.map((s) => s.id),
     };
     view.setKnown(known);
   }
@@ -842,9 +857,9 @@ export function run(context: ExampleContext): ExampleRun {
     ]) {
       byName.set(f.name, f);
     }
-    const ids = new Set(defaultTriads(TOUR.find((t) => t.id === tourStop)));
+    const ids = new Set(scene?.triads(sceneKnobs) ?? ["ITRF", "GCRF"]);
     const s = view.get().selection;
-    if (s.kind === "frame" && tree) {
+    if (isFrame(s) && tree) {
       for (const n of pathToRoot(tree, s.id)) {
         ids.add(n.id);
       }
@@ -878,9 +893,9 @@ export function run(context: ExampleContext): ExampleRun {
         }),
         // GCRF beside ITRF: secondary strength and box heads (S-I1).
         ...(id === "GCRF" && { strength: SECONDARY, head: "box" as const }),
-        // Stop 6's subject at 15% of the camera's distance (S-I8).
-        ...(id === "Lunar south-pole site" &&
-          tourStop === "lunar-time" && { scale: 0.15 }),
+        // Stand-on-moon's subject at 15% of the camera's distance (S-I8).
+        ...(id === LUNAR_SITE &&
+          scene?.id === "stand-on-moon" && { scale: 0.15 }),
       });
     }
     return out;
@@ -889,9 +904,9 @@ export function run(context: ExampleContext): ExampleRun {
   function refreshTriads(): void {
     const specs = triadSpecs();
     globe.setTriads(specs);
-    // Stops 1 and 2 are about the two geocentric triads: their axis names
+    // Earth-turns is about the two geocentric triads: their axis names
     // stay pinned, exempt from the declutter (S-I1).
-    const pinned = tourStop === "earth-frames" || tourStop === "gcrf-itrf-day";
+    const pinned = scene?.pinnedAxes === true;
     const labels: LabelSpec[] = specs.flatMap((t): LabelSpec[] => {
       if (t.length === undefined || !frames) {
         return [
@@ -942,7 +957,7 @@ export function run(context: ExampleContext): ExampleRun {
 
   const selectedFrame = () => {
     const s = view.get().selection;
-    return s.kind === "frame" ? s.id : undefined;
+    return isFrame(s) ? s.id : undefined;
   };
 
   // ------------------------------------------------------------- overlays
@@ -1843,7 +1858,16 @@ export function run(context: ExampleContext): ExampleRun {
   }
 
   function framing(
-    camera: TourStopSpec["camera"] | "moon" | "site" | "portland",
+    camera:
+      | "opening"
+      | "northPole"
+      | "designGrid"
+      | "rigidVsExact"
+      | "earthMoon"
+      | "lunarSite"
+      | "moon"
+      | "site"
+      | "portland",
   ): Framing | undefined {
     switch (camera) {
       case "opening":
@@ -1853,13 +1877,6 @@ export function run(context: ExampleContext): ExampleRun {
         // stay clear of the disc as GCRF's turn against ITRF's, and their
         // z axes point at the camera.
         return framingAt(0, 90, 5.5 * EARTH_RADIUS, 0, -Math.PI / 2 + 1e-3);
-      case "earthFrames":
-        // Stops 1 and 2 (S-I1): from over the North Atlantic, high, where
-        // both triads show axes in front of the Earth (ITRF's x at 0°
-        // longitude and its z; GCRF's wherever the clock turns them).
-        return framingAt(-30, 42, 4 * EARTH_RADIUS);
-      case "stay":
-        return undefined;
       case "designGrid":
         return framingAt(-120.5, 37.85, 180_000, 0, -35 * deg);
       case "rigidVsExact": {
@@ -1952,7 +1969,7 @@ export function run(context: ExampleContext): ExampleRun {
    * so the triad sits on the imagery's pole region from here alone.
    */
   function lunarSiteView(): CameraView | undefined {
-    const site = local.find((f) => f.name === "Lunar south-pole site");
+    const site = local.find((f) => f.name === LUNAR_SITE);
     const rig = site && placed(SITE_RIG, site);
     if (!site || !rig) {
       return undefined;
@@ -2090,22 +2107,16 @@ export function run(context: ExampleContext): ExampleRun {
     return { framing: OPENING };
   }
 
-  /** A tour stop's view: its framing and, off the surface, its orbit. */
-  function stopView(camera: TourStopSpec["camera"]): CameraView | undefined {
-    switch (stopRig(camera)) {
+  /** A scenario's view: its framing and the orbit it names (scenes.ts). */
+  function sceneView(sc: SceneSpec): CameraView | undefined {
+    switch (sc.camera) {
       case "earthMoon":
         return earthMoonView();
       case "lunarSite":
         return lunarSiteView();
-      case "moon":
-        return moonView();
-      case "geocentric": {
-        const f = framing(camera);
+      case "northPole": {
+        const f = framing("northPole");
         return f && geocentricView(f);
-      }
-      default: {
-        const f = framing(camera);
-        return f && { framing: f };
       }
     }
   }
@@ -2290,14 +2301,11 @@ export function run(context: ExampleContext): ExampleRun {
     }
   }
 
-  /** Frame content (F): the tour stop, else the selected frame or result, else the opening view. */
+  /** Frame content (F): the selected frame or result, else the scenario's view, else the opening view. */
   function frameContent(): void {
-    const t = frameTarget(tourStop, view.get().selection);
-    if (t.kind === "tour") {
-      const stop = TOUR.find((s) => s.id === t.id);
-      if (stop) {
-        flyToStop(stop);
-      }
+    const t = frameTarget(scene?.id, view.get().selection);
+    if (t.kind === "scenario") {
+      flyToScene();
       return;
     }
     const v =
@@ -2339,7 +2347,7 @@ export function run(context: ExampleContext): ExampleRun {
 
   function lunarSiteOrigin(): Float64Array | undefined {
     const instant = instantNow();
-    const site = local.find((f) => f.name === "Lunar south-pole site");
+    const site = local.find((f) => f.name === LUNAR_SITE);
     if (!frames || !instant || !site) {
       return undefined;
     }
@@ -2424,7 +2432,7 @@ export function run(context: ExampleContext): ExampleRun {
   function emphasisFrames(): Set<string> {
     const s = view.get().selection;
     const out = new Set<string>();
-    if (s.kind === "frame" && tree) {
+    if (isFrame(s) && tree) {
       try {
         for (const n of pathToRoot(tree, s.id)) {
           out.add(n.id);
@@ -2445,32 +2453,29 @@ export function run(context: ExampleContext): ExampleRun {
   let lastAgainst = view.get().against;
   function onView(): void {
     const v = view.get();
-    context.setParams(formatParams(v));
+    context.setParams(formatParams({ ...v, ...host.params() }));
     if (v.selection !== lastSelection) {
       lastSelection = v.selection;
       applySelection();
-    } else if (v.against !== lastAgainst && v.selection.kind === "frame") {
+    } else if (v.against !== lastAgainst && isFrame(v.selection)) {
       // The walk's reference changed: its path on the globe follows (S-I5).
       startWalk(v.selection.id);
     }
     lastAgainst = v.against;
-    applyTour(v.tour);
     invalidate();
   }
 
   function applySelection(): void {
     const s = view.get().selection;
     refreshTriads();
-    startWalk(s.kind === "frame" ? s.id : undefined);
+    startWalk(isFrame(s) ? s.id : undefined);
     refreshCallouts();
     if (s.kind === "none") {
       globe.emphasize(undefined);
-      if (tourStop === undefined) {
-        globe.dimGround(false);
-      }
+      globe.dimGround(exposure());
       return;
     }
-    if (s.kind === "frame") {
+    if (isFrame(s)) {
       // Selecting a frame highlights; flying is "Show on globe" (I6).
       globe.emphasize({ frames: emphasisFrames(), selected: s.id });
       return;
@@ -2525,33 +2530,38 @@ export function run(context: ExampleContext): ExampleRun {
     }
   }
 
-  // ----------------------------------------------------------------- tour
-  let tourStop: string | undefined;
+  // ------------------------------------------------------------ scenarios
+  /** The scene on the globe (scenes.ts), and the knobs it shows. */
+  let scene: SceneSpec | undefined;
+  let sceneKnobs: KnobState = {};
+  /** The clock's rate and mode before the scene set them, restored when it's left. */
+  let sceneClock: { rate: number; mode: typeof viewer.clock.mode } | undefined;
+  /** A flight to the site's new latitude, after the knob's burst. */
+  let siteFlight = 0;
+  scope.defer(() => clearTimeout(siteFlight));
+
+  /** The imagery's exposure: the scene's, or dimmed under an engineering result. */
+  const exposure = (): number =>
+    sceneExposure(scene, viewer.container.clientWidth, NARROW_VIEW);
 
   /**
-   * The gap inset shows while the rigid and exact lines are drawn, outside
-   * the tour or at its stop 4; any other stop, the overlay off, or leaving
-   * the example removes it.
+   * The gap inset shows while the rigid and exact lines are drawn (from a
+   * result in Verification); the overlay off, or leaving the example,
+   * removes it.
    */
   function refreshInset(): void {
     const s = overlays.get("rigidVsExact")!;
     const built = rigidBuilt;
-    if (
-      !disposed &&
-      s.on &&
-      s.state === "drawn" &&
-      built?.mark !== undefined &&
-      (tourStop === undefined || tourStop === "rigid-exact")
-    ) {
+    if (!disposed && s.on && s.state === "drawn" && built?.mark !== undefined) {
       gapInset.show({ ...built.mark, ...built.inset });
     } else {
       gapInset.hide();
     }
   }
   /**
-   * Stop 2 (S-I6): at 3,600× the framed side passes into night, so the
-   * globe is lit from the camera instead, set after the viewer's own sun
-   * on every clock change (this listener comes after the viewer's).
+   * Earth-turns (S-I6): played at 3,600× the framed side passes into night,
+   * so the globe is lit from the camera instead, set after the viewer's own
+   * sun on every clock change (this listener comes after the viewer's).
    */
   let headlight = false;
   function lightFromCamera(): void {
@@ -2576,22 +2586,26 @@ export function run(context: ExampleContext): ExampleRun {
   });
 
   /**
-   * On-canvas callouts (S-I8, minor 9): the lunar clock's rate at the
-   * south-pole site during stop 6 or while the site is selected, and Orion
-   * at the clock's instant while its path is drawn.
+   * On-canvas callouts (S-I8, minor 9): the lunar clock's gain at the site
+   * while stand-on-moon shows or the site is selected, and Orion at the
+   * clock's instant while its path is drawn.
    */
   function refreshCallouts(): void {
     const out: LabelSpec[] = [];
     const s = view.get().selection;
+    const e = evaluationNow();
+    const gain = e?.scenario === "stand-on-moon" ? e.answer.value : undefined;
     if (
-      tourStop === "lunar-time" ||
-      (s.kind === "frame" && s.id === "Lunar south-pole site")
+      local.some((f) => f.name === LUNAR_SITE) &&
+      (scene?.id === "stand-on-moon" || (isFrame(s) && s.id === LUNAR_SITE))
     ) {
       out.push({
         id: "callout:lunar-time",
-        text: `lunar clock +${LUNAR_RATE} against Earth's (Ashby & Patla 2024)`,
-        at: () =>
-          globe.triadOrigin("Lunar south-pole site") ?? lunarSiteOrigin(),
+        text:
+          gain !== undefined
+            ? `lunar clock ${gain >= 0 ? "+" : "−"}${Math.abs(gain).toFixed(2)} µs/day against Earth's`
+            : "lunar clock: computing its rate",
+        at: () => globe.triadOrigin(LUNAR_SITE) ?? lunarSiteOrigin(),
         priority: 4,
         leader: true,
       });
@@ -2611,73 +2625,260 @@ export function run(context: ExampleContext): ExampleRun {
     overlayLabels.set("callouts", out);
     refreshTriads();
   }
-  // Stop 2's exposure depends on the view's width (F43): follow it.
+  // Earth-turns' exposure depends on the view's width (F43): follow it.
   const exposureObserver = new ResizeObserver(() => {
-    const stop = TOUR.find((t) => t.id === tourStop);
-    if (stop?.dim !== undefined && stop.dim !== true) {
-      globe.dimGround(stopExposure(stop, viewer.container.clientWidth));
+    if (scene?.dim !== undefined) {
+      globe.dimGround(exposure());
     }
   });
   exposureObserver.observe(viewer.container);
   scope.defer(() => exposureObserver.disconnect());
-  let tourClock: { rate: number; mode: typeof viewer.clock.mode } | undefined;
-  function applyTour(id: string | undefined): void {
-    if (id === tourStop || !frames) {
+
+  /** The scene's camera, flown to (one-path in 3.0 s, stand-on-moon in 3.5 s). */
+  function flyToScene(): void {
+    const v = scene && sceneView(scene);
+    if (v) {
+      show(v, scene!.flight);
+    }
+  }
+
+  /** The knobs on the globe: the clock's rate, the lunar site, Orion's frame. */
+  function applySceneKnobs(): void {
+    if (!scene || !frames) {
       return;
     }
-    tourStop = id;
-    refreshInset();
-    if (tourClock) {
-      viewer.clock.rate = tourClock.rate;
-      viewer.clock.mode = tourClock.mode;
-      tourClock = undefined;
+    if (scene.clockRate) {
+      viewer.clock.rate = scene.clockRate(sceneKnobs);
+    }
+    const latitude = scene.lunarSite?.(sceneKnobs);
+    local =
+      latitude !== undefined ? [lunarSiteFrame(frames.moonMe, latitude)] : [];
+    const drawIn = scene.orion?.(sceneKnobs);
+    if (drawIn !== undefined) {
+      const o = overlays.get("orion")!;
+      if (!o.on || drawIn !== orionFrame) {
+        orionFrame = drawIn;
+        o.on = true;
+        drawOverlay("orion");
+      }
+    }
+    rebuildTree();
+    refreshTriads();
+    refreshCallouts();
+  }
+
+  function enterScene(id: ScenarioId, knobs: KnobState): void {
+    scene = SCENES[id];
+    sceneKnobs = knobs;
+    // The overlays no scenario owns (turned on from Verification's results)
+    // go with the scene they were drawn over.
+    for (const o of OVERLAYS) {
+      if (o !== "triads" && overlays.get(o)!.on) {
+        setOverlay(o, false);
+      }
+    }
+    sceneClock = { rate: viewer.clock.rate, mode: viewer.clock.mode };
+    if (scene?.light === "camera") {
+      headlight = true;
+      lightFromCamera();
+    }
+    applySceneKnobs();
+    globe.dimGround(exposure());
+    flyToScene();
+    // Its proof at the checked setup: the catalog's checks, run if they
+    // aren't in hand (queued after the scenario's own evaluation).
+    queueMicrotask(() => ensureProof(id));
+  }
+
+  function updateScene(knobs: KnobState): void {
+    const moved = scene?.lunarSite?.(knobs) !== scene?.lunarSite?.(sceneKnobs);
+    sceneKnobs = knobs;
+    applySceneKnobs();
+    if (moved) {
+      // The camera follows the site once the slider rests.
+      clearTimeout(siteFlight);
+      siteFlight = window.setTimeout(() => {
+        if (!disposed && scene?.lunarSite) {
+          flyToScene();
+        }
+      }, 400);
+    }
+  }
+
+  function leaveScene(): void {
+    if (scene?.orion) {
+      setOverlay("orion", false);
     }
     if (headlight) {
       headlight = false;
       viewer.sunFromClock = true;
     }
-    const stop = TOUR.find((s) => s.id === id);
+    if (sceneClock) {
+      viewer.clock.rate = sceneClock.rate;
+      sceneClock = undefined;
+    }
+    clearTimeout(siteFlight);
+    scene = undefined;
+    local = [];
+    globe.dimGround(false);
+    rebuildTree();
+    refreshTriads();
     refreshCallouts();
-    if (!stop) {
-      globe.dimGround(false);
-      return;
-    }
-    if (stop.light === "camera") {
-      headlight = true;
-      lightFromCamera();
-    }
-    for (const o of stop.overlays) {
-      setOverlay(o, true);
-    }
-    if (stop.orionFrame && stop.orionFrame !== orionFrame) {
-      orionFrame = stop.orionFrame;
-      drawOverlay("orion");
-    }
-    if (stop.time !== undefined) {
-      viewer.clock.time = Date.parse(stop.time);
-    }
-    if (stop.rate !== undefined) {
-      tourClock = { rate: viewer.clock.rate, mode: viewer.clock.mode };
-      viewer.clock.rate = stop.rate;
-      viewer.clock.mode = "playing";
-    }
-    globe.dimGround(stopExposure(stop, viewer.container.clientWidth));
-    flyToStop(stop);
   }
 
-  /** A stop's camera, flown to (stop 5 in 3.0 s, stop 6 in 3.5 s). */
-  function flyToStop(stop: TourStopSpec): void {
-    const v = stopView(stop.camera);
-    if (v) {
-      show(
-        v,
-        stop.camera === "lunarSite"
-          ? 3.5
-          : stop.camera === "earthMoon"
-            ? 3
-            : undefined,
-      );
+  /** The catalog's proof checks for scenario `id`, run if the page doesn't have them. */
+  function ensureProof(id: ScenarioId): void {
+    const spec = SCENARIOS.find((s) => s.id === id);
+    const missing = (spec?.proof ?? []).filter(
+      (p) => !results.some((r) => r.id === p),
+    );
+    if (!disposed && missing.length > 0) {
+      void runCatalog(missing);
     }
+  }
+
+  /** The current scenario's evaluation, if the host has one. */
+  const evaluationNow = () => host.state().evaluation;
+
+  let paramsGeneration = -1;
+  let shownEvaluation: unknown;
+  const host = createScenarioHost({
+    evaluate: (id, knobs, ms) => {
+      if (!frames) {
+        return Promise.reject(new Error("frame data isn't in yet"));
+      }
+      return client.scenario(
+        id,
+        knobs,
+        Instant.fromUtc(ms, frames.data.leapSeconds).tdb(),
+      );
+    },
+    drawOverlay: (id, g) =>
+      globe.setOverlay(id, [
+        {
+          chunks: g.layers.flatMap((l) => l.chunks),
+          color: familyRgba("engineering"),
+        },
+      ]),
+    removeOverlay: (id) => globe.removeOverlay(id),
+    enter: (spec, knobs) => enterScene(spec.id, knobs),
+    update: (_spec, knobs) => updateScene(knobs),
+    leave: () => leaveScene(),
+    setClock: (ms) => {
+      viewer.clock.time = ms;
+      viewer.clock.mode = "paused";
+    },
+    clock: () => viewer.clock.time,
+    changed: (state) => {
+      if (state.evaluation !== shownEvaluation) {
+        // New frames attach in the tree; the callouts take the answer.
+        shownEvaluation = state.evaluation;
+        rebuildTree();
+        refreshCallouts();
+      }
+      if (state.generation !== paramsGeneration) {
+        // The link follows each asked-for setup, not every clock frame.
+        paramsGeneration = state.generation;
+        context.setParams(formatParams({ ...view.get(), ...host.params() }));
+      }
+      invalidate();
+    },
+    busy: () =>
+      runView.state === "running"
+        ? "Waiting for the catalog run to end"
+        : userCrs.state === "running"
+          ? "Waiting for your CRS's checks to end"
+          : undefined,
+  });
+  scope.defer(() => host.dispose());
+  scope.defer(viewer.clock.events.on("change", () => host.clockChanged()));
+
+  /** The scenario a link names, or the strip's first when it isn't on the page yet. */
+  const readyScenario = (id: ScenarioId | undefined): ScenarioId =>
+    id !== undefined && READY.includes(id) ? id : READY[0]!;
+
+  /** The scenario's part of the panel model. */
+  function scenarioView(): { scenario: ScenarioPanelView } {
+    const st = host.state();
+    const spec = st.spec;
+    const catalog = new Map(results.map((r) => [r.id, r]));
+    const e = st.evaluation;
+    const current = st.status !== "loading";
+    let proof: ProofRow[];
+    if (e && current) {
+      proof = proofRows(spec, st.atChecked, catalog, e);
+    } else if (st.atChecked) {
+      proof = proofRows(spec, true, catalog, {
+        scenario: spec.id,
+        added: [],
+        answer: { headline: "", accuracy: { note: "" } },
+        overlays: [],
+        live: [],
+      });
+    } else {
+      // Re-running: nothing is claimed until the live checks are in (R9).
+      proof = spec.proof.map((id) => ({
+        kind: "pending" as const,
+        id,
+        title: catalog.get(id)?.title ?? id,
+      }));
+    }
+    const liveExtras: Record<string, ResultExtras> = {};
+    for (const r of e?.live ?? []) {
+      // A live re-run is compared with itself by another route, not with
+      // its catalog group's reference: the group's words don't apply.
+      const rest = extrasOf(r);
+      delete rest.compared;
+      liveExtras[r.id] = rest;
+    }
+    let path: ScenarioPanelView["path"];
+    if (tree && e?.answer.path) {
+      try {
+        const b = branchPath(tree, e.answer.path.from, e.answer.path.to);
+        path = {
+          up: b.up.map((n) => n.id),
+          ancestor: b.ancestor.id,
+          down: b.down.map((n) => n.id),
+        };
+      } catch {
+        // A node the tree hasn't yet (its evaluation is still on its way).
+      }
+    }
+    const instant = instantNow();
+    return {
+      scenario: {
+        id: spec.id,
+        title: spec.title,
+        question: spec.question,
+        strip: READY.map((id) => {
+          const s = SCENARIOS.find((x) => x.id === id)!;
+          return { id, title: s.title, question: s.question };
+        }),
+        knobs: spec.knobs,
+        values: st.knobs,
+        checked: spec.checked.knobs,
+        epochUtc: new Date(st.epochUtcMs).toISOString(),
+        checkedEpochUtc: new Date(
+          Date.parse(spec.checked.epochUtc),
+        ).toISOString(),
+        atChecked: st.atChecked,
+        changed: st.changed,
+        status: st.status,
+        ...(st.queued !== undefined && { queued: st.queued }),
+        ...(st.problem !== undefined && {
+          problem: { ...st.problem, message: scrub(st.problem.message) },
+        }),
+        ...(e && { answer: e.answer }),
+        ...(path && { path }),
+        proof,
+        liveExtras,
+        ...(scene?.note !== undefined && { note: scene.note }),
+        focus: SCENES[spec.id]?.focus ?? [],
+        playing: viewer.clock.mode === "playing",
+        rate: viewer.clock.rate,
+        ...(instant && frames && { eop: clockView().eop }),
+      },
+    };
   }
 
   // ------------------------------------------------------------------ runs
@@ -2953,10 +3154,22 @@ export function run(context: ExampleContext): ExampleRun {
     },
     linkTo: (target) =>
       context.link(
-        target.kind === "tour"
-          ? { tour: target.stop }
-          : formatParams({ selection: target, lens: view.get().lens }),
+        formatParams({
+          selection: target,
+          lens: view.get().lens,
+          ...host.params(),
+        }),
       ),
+    selectScenario: (id) => {
+      view.select({ kind: "none" });
+      void host.show(readyScenario(id));
+    },
+    setKnob: (id, value) => host.setKnob(id, value),
+    backToChecked: () => host.backToChecked(),
+    setPlaying: (on) => {
+      viewer.clock.mode = on ? "playing" : "paused";
+      invalidate();
+    },
   };
 
   // ---------------------------------------------------- try your own (R18)
@@ -3114,25 +3327,17 @@ export function run(context: ExampleContext): ExampleRun {
       invalidate();
       return;
     }
-    local = [
-      eastNorthUpFrame(
-        "Sacramento ENU",
-        frames.itrf,
-        WGS84,
-        WGS84.cartographicToCartesian(SACRAMENTO, new Float64Array(3)),
-      ),
-      eastNorthUpFrame(
-        "Lunar south-pole site",
-        frames.moonMe,
-        MOON.ellipsoid,
-        MOON.ellipsoid.cartographicToCartesian(LUNAR_SITE, new Float64Array(3)),
-      ),
-    ];
     rebuildTree();
     refreshTriads();
     startFrameLoop();
-    // A deep link (R15): its selection and tour stop, now that there is
-    // data (a result runs its group first, then is selected and flown to).
+    // The scenario a deep link names (R15), at its knobs and time, or the
+    // strip's first at its checked setup; then the link's selection (a
+    // result runs its group first, then is selected and flown to).
+    void host.show(
+      readyScenario(initial.scenario),
+      initial.knobs,
+      initial.time,
+    );
     lastSelection = { kind: "none" };
     onView();
   }
@@ -3217,11 +3422,20 @@ export function run(context: ExampleContext): ExampleRun {
   scope.defer(view.subscribe(onView));
   scope.defer(
     context.watchParams((p) => {
-      const known: Known = {
-        ...(tree && { frames: treeIds() }),
-        tours: TOUR.map((s) => s.id),
-      };
-      view.apply(parseParams(p, known));
+      const known: Known = { ...(tree && { frames: treeIds() }) };
+      const parsed = parseParams(p, known);
+      view.apply(parsed);
+      // Back, forward or an edited link: the scenario, knobs and time it names.
+      const now = host.params();
+      const id = readyScenario(parsed.scenario);
+      if (
+        frames &&
+        (id !== now.scenario ||
+          parsed.time !== now.time ||
+          JSON.stringify(parsed.knobs) !== JSON.stringify(now.knobs))
+      ) {
+        void host.show(id, parsed.knobs, parsed.time);
+      }
     }),
   );
   void loadFrames();
