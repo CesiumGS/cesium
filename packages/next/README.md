@@ -412,6 +412,10 @@ Nothing loads PROJ until a frame is created. The only npm dependency is
 sit beside it: setup fetches GEOID18, and `loadProj` takes the names of any
 others in the browser.
 
+**Frames explorer example.** `examples/frames-explorer/` (in the gallery) shows
+the frame tree live, draws the frames and projections on the globe, and runs
+77 reference-checked stress cases (`npm run test:data` runs the same catalog).
+
 **Credits.** The EPSG Dataset in `proj.db` is credited to IOGP, under its
 terms of use (https://epsg.org/terms-of-use.html). PROJ and proj.js are MIT.
 GEOID18 is a NOAA/NGS product, public domain, served from cdn.proj.org.
