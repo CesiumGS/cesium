@@ -33,7 +33,10 @@
 //   √π of the normalization ∫cos(πu²/2)). A partial spiral (κ0 ≠ 0) is the
 //   same full clothoid entered at the arc length where κ = κ0. The Fresnel
 //   difference cancels as the spiral nears a constant curvature: its error
-//   is about ε·(√(π/|c|) + L·κ0²/(2|c|)) (6e-9 at R 800 → 800.001 over 200).
+//   is about ε·(√(π/|c|) + L·κ0²/(2|c|) + |κ0/c|/2), the terms being the
+//   rounding of C and S (scaled by √(π/|c|)), of the phase κ0²/(2c) (times
+//   the length), and of the Fresnel argument τ(0) + s/√(π/|c|) (times
+//   √(π/|c|), i.e. ε·|κ0/c|/2 in position); 6e-9 at R 800 → 800.001 over 200.
 //   When that estimate exceeds 1e-11 the element is instead evaluated by
 //   composite 10-point Gauss–Legendre quadrature of exp(iΔφ), with panels
 //   of at most 0.5 rad of heading (truncation below 1e-20), so every spiral
@@ -331,15 +334,24 @@ export class Alignment {
       Math.max(1e-12 * Math.max(1, distance), slack);
     let best: { station: number; distance: number; offset: number } | undefined;
     for (const element of this.elements) {
-      const window = element.eps + slack;
-      for (const s of feet(element, px, py, window)) {
+      for (const s of feet(element, px, py)) {
+        const [x, y] = this.position(element, s);
+        const azimuth = element.azimuth - turn(element, s);
+        const sin = Math.sin(azimuth);
+        const cos = Math.cos(azimuth);
+        const dx = px - x;
+        const dy = py - y;
+        // The slack is a bound on position; a position error δ moves the
+        // foot's arc length by δ/|f'(s)|, f'(s) = −1 + κ(s)·(P − X)·N_left,
+        // which grows as R/(R − |o|) for a point offset toward the centre of
+        // curvature. Scaling the window by it accepts exactly the points
+        // within the slack of the element's ends in position.
+        const kappa = element.k0 + element.c * s;
+        const slope = Math.abs(-1 + kappa * (dy * sin - dx * cos));
+        const window = element.eps + slack / Math.max(slope, 1e-6);
         if (!(s >= -window && s <= element.length + window)) {
           continue;
         }
-        const [x, y] = this.position(element, s);
-        const azimuth = element.azimuth - turn(element, s);
-        const dx = px - x;
-        const dy = py - y;
         const distance = Math.hypot(dx, dy);
         const station = element.station + s;
         const tie = tieOf(distance);
@@ -351,7 +363,7 @@ export class Alignment {
           best = {
             station,
             distance,
-            offset: dx * Math.cos(azimuth) - dy * Math.sin(azimuth),
+            offset: dx * cos - dy * sin,
           };
         }
       }
@@ -478,7 +490,10 @@ function place(
     rotIm = Math.sin(phase);
     // Error estimate of the Fresnel-difference form (see the file comment).
     quadrature =
-      8 * Number.EPSILON * (scale + length * Math.abs(phase)) > 1e-11;
+      8 *
+        Number.EPSILON *
+        (scale + length * Math.abs(phase) + Math.abs(a / c)) >
+      1e-11;
   }
   return {
     kind,
@@ -535,12 +550,7 @@ function local(element: Placed, s: number): [number, number] {
 }
 
 /** Arc lengths along an element of the perpendicular feet from (px, py). */
-function feet(
-  element: Placed,
-  px: number,
-  py: number,
-  window: number,
-): number[] {
+function feet(element: Placed, px: number, py: number): number[] {
   const { tx, ty } = element;
   const dx = px - element.x;
   const dy = py - element.y;
@@ -562,11 +572,10 @@ function feet(
       const ry = -sg * tx;
       // Counterclockwise angle from the start radial to the point; s = θ/κ.
       const theta = Math.atan2(rx * vy - ry * vx, rx * vx + ry * vy);
-      let s = theta / k;
-      if (s < -window) {
-        s += (2 * Math.PI) / Math.abs(k);
-      }
-      return [s];
+      // θ is in (−π, π]; a foot just before the start and the same angle a
+      // turn later are both candidates (the caller keeps those in range).
+      const s = theta / k;
+      return s < 0 ? [s, s + (2 * Math.PI) / Math.abs(k)] : [s];
     }
     default:
       return spiralFeet(element, px, py);
@@ -616,11 +625,23 @@ function integrateHeading(element: Placed, s: number): [number, number] {
  * Newton safeguarded with bisection inside its bracket. A foot just past
  * either end (within the join window) has no sign change inside, so Newton
  * also runs from each end. Converged to 1e-12 in arc length (or a few ulps
- * of the element's length if that is coarser).
+ * of the element's length if that is coarser), or to the rounding of f over
+ * |f'| where that is coarser (a point near the centre of curvature).
  */
 function spiralFeet(element: Placed, px: number, py: number): number[] {
   const L = element.length;
   const tolerance = Math.max(1e-12, 8 * Number.EPSILON * L);
+  // f's rounding (P, X and their difference, relative to the start): near
+  // the centre of curvature |f'| is small, so the arc length is only
+  // determined to noise/|f'| and Newton's steps settle there, not at 1e-12.
+  const noise =
+    4 *
+    Number.EPSILON *
+    (Math.abs(px) +
+      Math.abs(py) +
+      Math.abs(element.x) +
+      Math.abs(element.y) +
+      L);
   const g = (s: number): [number, number] => {
     const [lx, ly] = local(element, s);
     const dx = px - (element.x + (lx * element.tx - ly * element.ty));
@@ -639,28 +660,80 @@ function spiralFeet(element: Placed, px: number, py: number): number[] {
   };
   const samples = Math.max(1, Math.ceil((element.maxCurvature * L) / 0.25));
   let a = 0;
-  let fa = g(0)[0];
+  let [fa, da] = g(0);
   if (fa === 0) {
     add(0);
   }
   for (let i = 1; i <= samples; i++) {
     const b = (L * i) / samples;
-    const fb = g(b)[0];
+    const [fb, db] = g(b);
     if (fb === 0) {
       add(b);
-    } else if (fa !== 0 && fa < 0 !== fb < 0) {
-      add(bracketed(g, a, fa, b, tolerance));
+    }
+    if (da < 0 !== db < 0) {
+      // f has an extremum inside. Near the evolute two feet (a nearest and a
+      // farthest) can share one interval with f(a), f(b) of one sign: split
+      // at the extremum and bracket each side.
+      const m = extremum(g, a, da, b, tolerance);
+      const fm = g(m)[0];
+      if (fm === 0) {
+        add(m);
+      } else {
+        if (fa !== 0 && fa < 0 !== fm < 0) {
+          add(bracketed(g, a, fa, m, tolerance, noise));
+        }
+        if (fb !== 0 && fm < 0 !== fb < 0) {
+          add(bracketed(g, m, fm, b, tolerance, noise));
+        }
+      }
+    } else if (fa !== 0 && fb !== 0 && fa < 0 !== fb < 0) {
+      add(bracketed(g, a, fa, b, tolerance, noise));
     }
     a = b;
     fa = fb;
+    da = db;
   }
   for (const start of [0, L]) {
-    const s = newton(g, start, L, tolerance);
+    const s = newton(g, start, L, tolerance, noise);
     if (s !== undefined) {
       add(s);
     }
   }
   return found;
+}
+
+/**
+ * The extremum of f in [a, b] by bisection on f', where f'(a) = da and f'(b)
+ * differ in sign. Near the evolute f'' ≈ c·(P − X)·N_left keeps one sign,
+ * so there is one extremum in a sample interval.
+ */
+function extremum(
+  g: (s: number) => [number, number],
+  a: number,
+  da: number,
+  b: number,
+  tolerance: number,
+): number {
+  let lo = a;
+  let hi = b;
+  let dlo = da;
+  while (hi - lo > tolerance) {
+    const m = (lo + hi) / 2;
+    if (!(m > lo && m < hi)) {
+      break; // the interval is down to adjacent doubles
+    }
+    const dm = g(m)[1];
+    if (dm === 0) {
+      return m;
+    }
+    if (dm < 0 === dlo < 0) {
+      lo = m;
+      dlo = dm;
+    } else {
+      hi = m;
+    }
+  }
+  return (lo + hi) / 2;
 }
 
 /** A root of g in [a, b], where g(a) = fa and g(b) differ in sign. */
@@ -670,6 +743,7 @@ function bracketed(
   fa: number,
   b: number,
   tolerance: number,
+  noise: number,
 ): number {
   let lo = a;
   let hi = b;
@@ -677,8 +751,10 @@ function bracketed(
   let s = (a + b) / 2;
   for (let iteration = 0; iteration < 200; iteration++) {
     const [f, derivative] = g(s);
-    if (f === 0) {
-      return s;
+    if (Math.abs(f) <= noise) {
+      // f is at its rounding: the root is within noise/|f'| of s.
+      const last = s - f / derivative;
+      return last > Math.min(lo, hi) && last < Math.max(lo, hi) ? last : s;
     }
     if (f < 0 === flo < 0) {
       lo = s;
@@ -706,20 +782,21 @@ function newton(
   start: number,
   L: number,
   tolerance: number,
+  noise: number,
 ): number | undefined {
   let s = start;
   for (let iteration = 0; iteration < 60; iteration++) {
     const [f, derivative] = g(s);
     if (Math.abs(derivative) < 1e-12) {
-      return undefined;
+      return Math.abs(f) <= noise ? s : undefined;
     }
     const step = f / derivative;
     s -= step;
     if (!(Math.abs(s - L / 2) < 1.5 * L)) {
       return undefined;
     }
-    if (Math.abs(step) <= tolerance) {
-      return s;
+    if (Math.abs(step) <= tolerance || Math.abs(f) <= noise) {
+      return s; // converged, or f is at its rounding (root to noise/|f'|)
     }
   }
   return undefined;

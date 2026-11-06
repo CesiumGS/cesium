@@ -59,6 +59,72 @@ function quadrature(
   return [re, im];
 }
 
+/**
+ * The nearest point of an alignment by brute force: 4,000 samples, each
+ * local minimum refined by ternary search on the distance.
+ */
+function nearestByBruteForce(
+  alignment: Alignment,
+  point: ArrayLike<number>,
+): { station: number; distance: number } {
+  const N = 4000;
+  const s0 = alignment.startStation;
+  const L = alignment.length;
+  const at = (i: number) => s0 + Math.min(L, (i * L) / N);
+  const distance = (station: number) => {
+    const q = alignment.pointAt(Math.min(s0 + L, Math.max(s0, station)));
+    return Math.hypot(point[0]! - q[0]!, point[1]! - q[1]!);
+  };
+  const d = new Float64Array(N + 1);
+  for (let i = 0; i <= N; i++) {
+    d[i] = distance(at(i));
+  }
+  let best = { station: s0, distance: Infinity };
+  for (let i = 0; i <= N; i++) {
+    if ((i > 0 && d[i]! > d[i - 1]!) || (i < N && d[i]! > d[i + 1]!)) {
+      continue;
+    }
+    let a = at(Math.max(0, i - 1));
+    let b = at(Math.min(N, i + 1));
+    for (let k = 0; k < 100; k++) {
+      const m1 = a + (b - a) / 3;
+      const m2 = b - (b - a) / 3;
+      if (distance(m1) < distance(m2)) {
+        b = m2;
+      } else {
+        a = m1;
+      }
+    }
+    const station = (a + b) / 2;
+    const dist = distance(station);
+    if (dist < best.distance) {
+      best = { station, distance: dist };
+    }
+  }
+  return best;
+}
+
+/**
+ * The centre of curvature at a station, moved `dn` back toward the curve
+ * (negative: past the centre) and `dt` along the tangent.
+ */
+function nearCenter(
+  alignment: Alignment,
+  station: number,
+  radius: number,
+  dn: number,
+  dt = 0,
+): [number, number] {
+  const p = alignment.pointAt(station);
+  const az = alignment.azimuthAt(station);
+  // Left normal (−cos α, sin α), tangent (sin α, cos α); centre = X + R·N_left.
+  const r = radius - dn;
+  return [
+    p[0]! - r * Math.cos(az) + dt * Math.sin(az),
+    p[1]! + r * Math.sin(az) + dt * Math.cos(az),
+  ];
+}
+
 const START: [number, number] = [1000, 2000];
 const AZ0 = 0.3;
 
@@ -424,6 +490,89 @@ describe("spirals that are hard to evaluate or to project onto", () => {
       expect(checked).toBeGreaterThan(250);
     });
   }
+
+  describe("near the evolute (two feet in one sample interval)", () => {
+    const expectNearest = (alignment: Alignment, point: [number, number]) => {
+      const truth = nearestByBruteForce(alignment, point);
+      const atEnd =
+        truth.station < alignment.startStation + 1e-6 ||
+        truth.station > alignment.endStation - 1e-6;
+      let r;
+      try {
+        r = alignment.stationOffset(point);
+      } catch (error) {
+        // Only a point whose nearest point is an end may be outside.
+        expect(atEnd).toBe(true);
+        expect(String(error)).toMatch(/outside the alignment/);
+        return;
+      }
+      // No farther foot than the brute-force nearest (an upper bound on the
+      // true distance). Near the evolute the distance is very flat in
+      // station, so a station off by more than 1e-3 must still be as near.
+      expect(Math.abs(r.offset)).toBeLessThanOrEqual(truth.distance + 1e-9);
+      if (Math.abs(r.station - truth.station) >= 1e-3) {
+        expect(truth.distance - Math.abs(r.offset)).toBeLessThan(1e-9);
+      }
+      const q = alignment.pointAt(r.station, r.offset);
+      expect(Math.hypot(q[0]! - point[0], q[1]! - point[1])).toBeLessThan(1e-9);
+    };
+    const radiusAt = (r1: number, r2: number, L: number, s: number) =>
+      1 / (1 / r1 + ((1 / r2 - 1 / r1) * s) / L);
+
+    it("300 → 60: 0.1 past the centre of curvature at the end", () => {
+      const alignment = tight(300, 60, 400);
+      expectNearest(alignment, nearCenter(alignment, 400, 60, -0.1));
+    });
+
+    it("60 → 300: 0.3 either side of the centre of curvature at s = 7", () => {
+      const alignment = tight(60, 300, 400);
+      const R = radiusAt(60, 300, 400, 7);
+      for (const dn of [0.3, -0.3]) {
+        expectNearest(alignment, nearCenter(alignment, 7, R, dn));
+      }
+    });
+
+    it("300 → 60 then a line: a grid around the evolute near the join", () => {
+      const alignment = new Alignment({
+        name: "spiral-line",
+        start: [0, 0],
+        startAzimuth: 0,
+        startStation: 0,
+        horizontal: [
+          { kind: "spiral", length: 400, startRadius: 300, endRadius: 60 },
+          { kind: "line", length: 100 },
+        ],
+      });
+      for (const s of [400, 397, 392]) {
+        const R = radiusAt(300, 60, 400, s);
+        for (const dn of [-2, -1, -0.3, 0, 0.1, 0.3, 1, 2]) {
+          for (const dt of [-2, -0.5, 0, 0.5, 2]) {
+            expectNearest(alignment, nearCenter(alignment, s, R, dn, dt));
+          }
+        }
+      }
+    });
+
+    it("300 → 60: a grid within ±2 of the evolute near the end", () => {
+      const alignment = tight(300, 60, 400);
+      let checked = 0;
+      for (const s of [400, 398, 395, 390, 385, 380]) {
+        const R = radiusAt(300, 60, 400, s);
+        for (const dn of [-2, -1.5, -1, -0.5, -0.2, 0, 0.2, 0.5, 1, 1.5, 2]) {
+          for (const dt of [-2, -1, 0, 1, 2]) {
+            const point = nearCenter(alignment, s, R, dn, dt);
+            const truth = nearestByBruteForce(alignment, point);
+            if (truth.station < 1e-6 || truth.station > 400 - 1e-6) {
+              continue; // nearest at an end
+            }
+            checked++;
+            expectNearest(alignment, point);
+          }
+        }
+      }
+      expect(checked).toBeGreaterThan(150);
+    });
+  });
 });
 
 describe("the vertical profile", () => {
@@ -591,6 +740,50 @@ describe("ends and the centerline", () => {
         start[1]! - d * Math.cos(AZ0),
       ];
       expect(() => far.stationOffset(before)).toThrow(/outside the alignment/);
+    }
+  });
+
+  it("never rejects a pointAt output near the centre at a curved end (6e6, 2e6)", () => {
+    // The foot's station moves by the point's rounding × R/(R − |o|), so the
+    // window in station must scale with it; the position test stays tight.
+    for (const horizontal of [
+      [
+        { kind: "line", length: 50 },
+        { kind: "arc", length: 100, radius: 100 },
+      ],
+      [
+        { kind: "line", length: 50 },
+        { kind: "spiral", length: 100, startRadius: Infinity, endRadius: 100 },
+      ],
+    ] as HorizontalElement[][]) {
+      for (let k = 0; k < 150; k++) {
+        const far = new Alignment({
+          name: "centre",
+          start: [6_000_000, 2_000_000],
+          startAzimuth: 0.3 + k * 0.0093,
+          startStation: 1000,
+          horizontal,
+        });
+        for (const o of [-66, -80, -85, -90]) {
+          const p = far.pointAt(far.endStation, o);
+          const r = far.stationOffset(p);
+          expect(Math.abs(r.station - far.endStation)).toBeLessThan(1e-8);
+          const q = far.pointAt(r.station, r.offset);
+          expect(Math.hypot(q[0]! - p[0]!, q[1]! - p[1]!)).toBeLessThan(2e-9);
+        }
+        // 5e-9 beyond the end along its tangent still throws, near the centre too.
+        const az = far.azimuthAt(far.endStation);
+        for (const o of [0, -90]) {
+          const p = far.pointAt(far.endStation, o);
+          const beyond = [
+            p[0]! + 5e-9 * Math.sin(az),
+            p[1]! + 5e-9 * Math.cos(az),
+          ];
+          expect(() => far.stationOffset(beyond)).toThrow(
+            /outside the alignment/,
+          );
+        }
+      }
     }
   });
 
