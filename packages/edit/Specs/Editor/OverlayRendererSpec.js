@@ -241,6 +241,7 @@ class OverlayTestPrimitive {
     }
 
     this.renderer.update(frameState, overlayViews);
+    this.renderer.pushOutlineCommands(frameState);
   }
 
   isDestroyed() {
@@ -313,14 +314,15 @@ describe(
       return SceneTransforms.worldToWindowCoordinates(scene, positionWC);
     }
 
-    // Renders a frame and reads the pixel under a position in the overlay's local space.
-    function renderPixel(overlay, position) {
+    // Renders a frame and reads the pixel under a position in the overlay's
+    // local space, or offset right of it by a number of pixels.
+    function renderPixel(overlay, position, offsetX = 0) {
       scene.renderForSpecs();
       const windowPosition = getWindowPosition(overlay, position);
 
       // Window coordinates start at the top, and pixels at the bottom.
       return scene.context.readPixels({
-        x: Math.floor(windowPosition.x),
+        x: Math.floor(windowPosition.x + offsetX),
         y: scene.drawingBufferHeight - 1 - Math.floor(windowPosition.y),
         width: 1,
         height: 1,
@@ -337,8 +339,8 @@ describe(
       );
     }
 
-    function expectPixel(overlay, position, color) {
-      const pixel = renderPixel(overlay, position);
+    function expectPixel(overlay, position, color, offsetX = 0) {
+      const pixel = renderPixel(overlay, position, offsetX);
 
       // The WebGL stub doesn't draw, so like the renderer matchers, skip the check.
       if (!window.webglStub) {
@@ -563,6 +565,106 @@ describe(
         expectPixel(overlay, [0.0, 1.0, 0.0], black);
         expectPixel(overlay, [0.5, -0.5, 0.0], selectedFaceColor);
         expectPixel(overlay, [-0.5, 0.5, 0.0], faceColor);
+      });
+    });
+
+    describe("outline", function () {
+      const outlineColor = [255, 0, 0, 255];
+
+      function addOutlinedSquare() {
+        const overlay = addSquare();
+        overlay.renderer.outlined = true;
+        overlay.renderer.outlineColor = Color.RED;
+        // Wide enough that the antialiased borders don't reach the sampled pixel.
+        overlay.renderer.outlineWidth = 4.0;
+        return overlay;
+      }
+
+      function getStencilTests(commands) {
+        return commands.map(
+          (command) => command.renderState.stencilTest.enabled,
+        );
+      }
+
+      it("adds no outline commands unless outlined is set", function () {
+        const overlay = addSquare();
+
+        expect(getStencilTests(renderCommands(overlay))).toEqual([
+          false,
+          false,
+          false,
+        ]);
+
+        overlay.renderer.outlined = true;
+        const commands = renderCommands(overlay);
+
+        // The stencil face command replaces the face command, and the outline
+        // edges and points come last.
+        expect(getStencilTests(commands)).toEqual([
+          true,
+          false,
+          false,
+          true,
+          true,
+        ]);
+        expect(getInstanceCounts(commands)).toEqual([2, 5, 4, 5, 4]);
+      });
+
+      it("adds no outline commands in the pick pass", function () {
+        const overlay = addOutlinedSquare();
+        const commands = renderCommands(overlay).slice(0, 3);
+
+        scene.pick(getWindowPosition(overlay, [0.5, -0.5, 0.0]));
+        const pickCommands = scene.frameState.commandList.filter(
+          (command) => command.owner === overlay.renderer,
+        );
+
+        expect(pickCommands).toEqual(commands);
+      });
+
+      it("adds no outline commands when show is false", function () {
+        const overlay = addOutlinedSquare();
+        overlay.renderer.show = false;
+
+        expect(renderCommands(overlay)).toEqual([]);
+      });
+
+      it("adds no outline commands when faces aren't shown", function () {
+        const overlay = addOutlinedSquare();
+        overlay.renderer.setShownComponents(
+          (1 << ComponentType.Vertex) | (1 << ComponentType.Edge),
+        );
+
+        expect(getStencilTests(renderCommands(overlay))).toEqual([
+          false,
+          false,
+        ]);
+      });
+
+      it("draws the outline color just outside the silhouette and the face color inside", function () {
+        const overlay = addOutlinedSquare();
+        const rightEdge = [1.0, 0.0, 0.0];
+
+        expectPixel(overlay, rightEdge, outlineColor, 2);
+        expectPixel(overlay, rightEdge, background, 8);
+        expectPixel(overlay, [0.5, -0.5, 0.0], faceColor);
+      });
+
+      it("hides the outline behind an occluder", function () {
+        // A larger square, nearer the camera, drawn first.
+        const occluder = new OverlayTestPrimitive(shaders);
+        occluder.setOverlay(square);
+        occluder.renderer.setShownComponents(1 << ComponentType.Face);
+        Matrix4.multiply(
+          Matrix4.fromTranslation(new Cartesian3(0.0, 0.0, 1.0)),
+          Matrix4.fromUniformScale(2.0),
+          occluder.renderer.modelMatrix,
+        );
+        scene.primitives.add(occluder);
+
+        const overlay = addOutlinedSquare();
+
+        expectPixel(overlay, [1.0, 0.0, 0.0], faceColor, 2);
       });
     });
 
