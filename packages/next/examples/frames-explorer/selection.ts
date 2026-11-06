@@ -1,18 +1,34 @@
 // The one selection the tree, the globe and the tests share (R14), the lens
-// and the tour stop, and their URL form (R15): `select=result:<id>`,
-// `select=frame:<id>`, `lens=<lens>`, `tour=<stop>` and `imodel=<id>` in the
-// example's params (Dyno's URL; the example never touches `location`).
+// and the tour stop, the scenario with its knobs and time, and their URL
+// form (R15): `select=result:<id>`, `select=frame:<id>`, `select=node:<id>`,
+// `select=edge:<id>`, `lens=<lens>`, `tour=<stop>`, `scenario=<id>`,
+// `k.<knob>=<value>`, `t=<UTC ms>` and `imodel=<id>` in the example's params
+// (Dyno's URL; the example never touches `location`).
 //
 // A selection is only ever something that exists and that the lens shows:
 // `reconcile` clears one that vanished in a re-run or that a lens change hid
 // (Review Focus 8), so the inspector and the globe never show a stale or a
 // hidden one. Ids from a URL are checked before they are kept: a malformed or
-// unknown id parses to none, never throws.
+// unknown id parses to none, never throws. A scenario, knob or time from a
+// URL that isn't valid falls back to the checked setup's (Review Focus 4).
+import {
+  clampKnobs,
+  type KnobState,
+  type ScenarioId,
+  type ScenarioSpec,
+} from "./scenarios/spec.ts";
+import { SCENARIOS } from "./scenarios/specs.ts";
 import { GROUP_INFO, LENSES, type Lens } from "./stress/groupInfo.ts";
 
-/** The selection the three views share (R14). */
+/**
+ * The selection the three views share (R14). The tree diagram selects a
+ * node, or an edge, named by its child node's id; node ids are the tree's
+ * frame ids.
+ */
 export type Selection =
   | { kind: "frame"; id: string }
+  | { kind: "node"; id: string }
+  | { kind: "edge"; id: string }
   | { kind: "result"; id: string }
   | { kind: "none" };
 
@@ -29,7 +45,7 @@ export const AGAINST: readonly Against[] = ["ITRF", "GCRF", "ICRF"];
 
 /** What the page knows exists, to check selections against. */
 export interface Known {
-  /** The frame tree's node ids. */
+  /** The frame tree's node ids (for frame, node and edge selections). */
   frames?: ReadonlySet<string>;
   /**
    * Each result's lenses (its group's, and Reproducibility's when it is
@@ -58,6 +74,12 @@ export interface ViewParams {
   tour?: string;
   /** R18: prefills "Try your own"; never fetches by itself. */
   imodel?: string;
+  /** The scenario (`scenario=`; the strip's first is left out). parseParams always sets it. */
+  scenario?: ScenarioId;
+  /** Its knobs (`k.<id>=`; checked values are left out). parseParams always sets them. */
+  knobs?: KnobState;
+  /** The time, UTC ms (`t=`; the checked epoch is left out). parseParams always sets it. */
+  time?: number;
 }
 
 const NONE: Selection = { kind: "none" };
@@ -69,20 +91,92 @@ const ID = /^[A-Za-z0-9][A-Za-z0-9_.:() -]{0,199}$/;
 const IMODEL =
   /^(?:\d{1,12}|[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$/;
 
-/** `result:<id>` or `frame:<id>`; anything else, or an id `known` doesn't have, is none. */
+/** A time in UTC ms: an integer a `Date` can hold. */
+const TIME = /^-?\d{1,16}$/;
+
+/** The latest a `Date` can hold, ms either side of 1970. */
+const MAX_DATE_MS = 8.64e15;
+
+/** The first scenario on the strip: the page's opening view. */
+const DEFAULT_SCENARIO = SCENARIOS[0]!;
+
+const KNOB_PARAM = "k.";
+
+/** `result:<id>`, `frame:<id>`, `node:<id>` or `edge:<id>`; anything else, or an id `known` doesn't have, is none. */
 export function parseSelection(
   text: string | undefined,
   known: Known = {},
 ): Selection {
-  const m = /^(result|frame):(.+)$/s.exec(text ?? "");
+  const m = /^(result|frame|node|edge):(.+)$/s.exec(text ?? "");
   if (!m || !ID.test(m[2]!)) {
     return NONE;
   }
   const selection: Selection = {
-    kind: m[1] as "result" | "frame",
+    kind: m[1] as "result" | "frame" | "node" | "edge",
     id: m[2]!,
   };
   return reconcile(selection, "all", known);
+}
+
+/**
+ * The scenario, its knobs and its time from the URL: an unknown scenario is
+ * the strip's first, and each knob or time that is missing or invalid takes
+ * the checked setup's value (a range knob out of range is clamped). Never
+ * throws.
+ */
+function parseScenario(params: Readonly<Record<string, string>>): {
+  scenario: ScenarioId;
+  knobs: KnobState;
+  time: number;
+} {
+  const spec =
+    SCENARIOS.find((s) => s.id === params.scenario) ?? DEFAULT_SCENARIO;
+  const raw: Record<string, string | undefined> = {};
+  for (const knob of spec.knobs) {
+    const key = `${KNOB_PARAM}${knob.id}`;
+    raw[knob.id] = Object.hasOwn(params, key) ? params[key] : undefined;
+  }
+  const t = params.t;
+  const ms = t !== undefined && TIME.test(t) ? Number(t) : Number.NaN;
+  return {
+    scenario: spec.id,
+    knobs: clampKnobs(spec, raw),
+    time: Math.abs(ms) <= MAX_DATE_MS ? ms : Date.parse(spec.checked.epochUtc),
+  };
+}
+
+/** Every scenario's knob params, so switching scenarios removes the last one's. */
+const KNOB_KEYS = [
+  ...new Set(SCENARIOS.flatMap((s) => s.knobs.map((k) => k.id))),
+].map((id) => `${KNOB_PARAM}${id}`);
+
+/**
+ * The scenario's params: `scenario`, then each knob off its checked value
+ * and the time off the checked epoch; every other knob param undefined, to
+ * remove it.
+ */
+function formatScenario(
+  spec: ScenarioSpec,
+  knobs: KnobState | undefined,
+  time: number | undefined,
+): Record<string, string | undefined> {
+  const out: Record<string, string | undefined> = {
+    scenario: spec === DEFAULT_SCENARIO ? undefined : spec.id,
+  };
+  for (const key of KNOB_KEYS) {
+    out[key] = undefined;
+  }
+  for (const knob of spec.knobs) {
+    const value = knobs?.[knob.id];
+    if (value !== undefined && value !== spec.checked.knobs[knob.id]) {
+      out[`${KNOB_PARAM}${knob.id}`] = String(value);
+    }
+  }
+  out.t =
+    time === undefined || time === Date.parse(spec.checked.epochUtc)
+      ? undefined
+      : String(time);
+  return out;
 }
 
 /** The example's params as a view. Unknown or malformed values are left at their defaults. */
@@ -104,17 +198,26 @@ export function parseParams(
     against,
     ...(tourOk && { tour }),
     ...(imodel !== undefined && IMODEL.test(imodel) && { imodel }),
+    ...parseScenario(params),
   };
 }
 
-/** The view as params, for `setParams` (defaults as undefined, which removes them). */
+/**
+ * The view as params, for `setParams` (defaults as undefined, which removes
+ * them). A view without a scenario leaves the scenario's params as they are.
+ */
 export function formatParams(view: {
   selection: Selection;
   lens: LensChoice;
   tour?: string;
   against?: Against;
+  scenario?: ScenarioId;
+  knobs?: KnobState;
+  time?: number;
 }): Record<string, string | undefined> {
+  const spec = SCENARIOS.find((s) => s.id === view.scenario);
   return {
+    ...(spec !== undefined && formatScenario(spec, view.knobs, view.time)),
     select:
       view.selection.kind === "none"
         ? undefined
@@ -130,11 +233,11 @@ export function formatParams(view: {
 
 /**
  * `selection` if it still exists and the lens shows it, else none: a frame
- * must be in the tree, a result in the last run and in one of the lens's
- * groups. A result of a group that hasn't run yet (`known.ran`) stands, for
- * its group's run to confirm (a deep link after a partial run). A frame
- * selection isn't filtered by the lens. Returns the same object when it
- * stands.
+ * (or a node, or an edge's child node) must be in the tree, a result in
+ * the last run and in one of the lens's groups. A result of a group that
+ * hasn't run yet (`known.ran`) stands, for its group's run to confirm (a
+ * deep link after a partial run). A frame, node or edge selection isn't
+ * filtered by the lens. Returns the same object when it stands.
  */
 export function reconcile(
   selection: Selection,
@@ -145,6 +248,8 @@ export function reconcile(
     case "none":
       return selection;
     case "frame":
+    case "node":
+    case "edge":
       return known.frames === undefined || known.frames.has(selection.id)
         ? selection
         : NONE;

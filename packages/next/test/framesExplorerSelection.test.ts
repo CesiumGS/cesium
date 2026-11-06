@@ -14,6 +14,25 @@ import {
   type Known,
   type Selection,
 } from "../examples/frames-explorer/selection.ts";
+import type { ScenarioSpec } from "../examples/frames-explorer/scenarios/spec.ts";
+import { SCENARIOS } from "../examples/frames-explorer/scenarios/specs.ts";
+
+/** A scenario at its checked setup, as parseParams gives it. */
+const checkedSetup = (s: ScenarioSpec) => ({
+  scenario: s.id,
+  knobs: s.checked.knobs,
+  time: Date.parse(s.checked.epochUtc),
+});
+
+/** formatParams' output as the URL holds it: undefined ones removed. */
+const present = (
+  params: Record<string, string | undefined>,
+): Record<string, string> =>
+  Object.fromEntries(
+    Object.entries(params).filter(
+      (e): e is [string, string] => e[1] !== undefined,
+    ),
+  );
 
 const known: Known = {
   frames: new Set(["MOON_PA", "ITRF", "engineering:California zone 3"]),
@@ -86,7 +105,12 @@ describe("URL params (R15)", () => {
     expect(parseSelection(undefined, known)).toEqual({ kind: "none" });
     expect(
       parseParams({ lens: "astrology", tour: "nowhere", select: "x" }, known),
-    ).toEqual({ selection: { kind: "none" }, lens: "all", against: "ITRF" });
+    ).toEqual({
+      selection: { kind: "none" },
+      lens: "all",
+      against: "ITRF",
+      ...checkedSetup(SCENARIOS[0]!),
+    });
   });
 
   it("keeps a well-formed id when nothing is known yet (a deep link before the run)", () => {
@@ -367,5 +391,139 @@ describe("the walk's reference in the shared view (S-I5, R15)", () => {
     expect(listener).toHaveBeenCalledTimes(1);
     store.apply(parseParams({ against: "GCRF" }));
     expect(store.get().against).toBe("GCRF");
+  });
+});
+
+describe("node and edge selections (the tree diagram)", () => {
+  it("round-trip as select=node:<id> and select=edge:<id>, an edge named by its child", () => {
+    for (const selection of [
+      { kind: "node", id: "MOON_PA" },
+      { kind: "edge", id: "engineering:California zone 3" },
+    ] as const) {
+      const params = formatParams({ selection, lens: "all" });
+      expect(params.select).toBe(`${selection.kind}:${selection.id}`);
+      expect(parseParams(present(params), known).selection).toEqual(selection);
+    }
+  });
+
+  it("parse to none when the tree hasn't that node, or the id isn't one", () => {
+    expect(parseSelection("node:NOT_A_FRAME", known)).toEqual({ kind: "none" });
+    expect(parseSelection("edge:GONE", known)).toEqual({ kind: "none" });
+    expect(parseSelection("edge:<script>", known)).toEqual({ kind: "none" });
+    // Before the tree is drawn, a well-formed id stands, for the tree to confirm.
+    expect(parseSelection("edge:ITRF")).toEqual({ kind: "edge", id: "ITRF" });
+  });
+
+  it("are cleared when the node leaves the tree, and not filtered by the lens", () => {
+    const s: Selection = { kind: "node", id: "MOON_PA" };
+    expect(reconcile(s, "civil", known)).toBe(s);
+    expect(
+      reconcile({ kind: "edge", id: "MOON_PA" }, "all", {
+        frames: new Set(["ITRF"]),
+      }),
+    ).toEqual({ kind: "none" });
+  });
+});
+
+describe("scenario, knob and time params (R15, Review Focus 4)", () => {
+  const first = SCENARIOS[0]!;
+  const dish = SCENARIOS.find((s) => s.id === "dish-tracks")!;
+  const bim = SCENARIOS.find((s) => s.id === "bim-site")!;
+  const drone = SCENARIOS.find((s) => s.id === "drone")!;
+
+  it("opens on the first scenario at its checked setup when the URL names none", () => {
+    expect(parseParams({})).toMatchObject(checkedSetup(first));
+  });
+
+  it("falls back to the default scenario's checked setup for a hostile link, without throwing", () => {
+    const hostile = {
+      scenario: "nope",
+      "k.station": "Mars",
+      "k.tilt": "1e9",
+      t: "abc",
+    };
+    expect(() => parseParams(hostile, known)).not.toThrow();
+    expect(parseParams(hostile, known)).toMatchObject(checkedSetup(first));
+  });
+
+  it("falls back per value: an unknown choice and a malformed time to the checked setup, a range clamped", () => {
+    expect(
+      parseParams({ scenario: "dish-tracks", "k.station": "Mars", t: "abc" }),
+    ).toMatchObject(checkedSetup(dish));
+    for (const t of ["", "1.5e", "Infinity", "NaN", "0x10", "1e400", "9e15"]) {
+      expect(parseParams({ scenario: "dish-tracks", t }).time, t).toBe(
+        Date.parse(dish.checked.epochUtc),
+      );
+    }
+    const tilt = drone.knobs.find((k) => k.id === "tilt")!;
+    expect(
+      parseParams({ scenario: "drone", "k.tilt": "1e9" }).knobs?.tilt,
+    ).toBe(tilt.max);
+    // A prototype key, or another scenario's knob, is no knob of this one.
+    expect(
+      parseParams({ scenario: "__proto__", "k.__proto__": "x" }),
+    ).toMatchObject(checkedSetup(first));
+    expect(
+      parseParams({ scenario: "dish-tracks", "k.tilt": "10" }).knobs,
+    ).toEqual(dish.checked.knobs);
+  });
+
+  it("round-trips a scenario off its checked setup", () => {
+    const view = {
+      selection: { kind: "node", id: "ITRF" } as const,
+      lens: "all" as const,
+      scenario: bim.id,
+      knobs: { crs: "utm-10n", rotation: -30.5, scale: 0.99996 },
+      time: Date.parse("2026-05-01T08:30:00.250Z"),
+    };
+    const params = formatParams(view);
+    expect(present(params)).toEqual({
+      select: "node:ITRF",
+      scenario: "bim-site",
+      "k.crs": "utm-10n",
+      "k.rotation": "-30.5",
+      "k.scale": "0.99996",
+      t: String(view.time),
+    });
+    expect(parseParams(present(params), known)).toMatchObject(view);
+  });
+
+  it("formatParams(parseParams(x)) gives back valid params, with checked values left out", () => {
+    const valid: Record<string, string>[] = [
+      {},
+      { scenario: "dish-tracks" },
+      { scenario: "dish-tracks", "k.station": "DSS-14" },
+      { scenario: "drone", "k.tilt": "30", t: "1775480153020" },
+      { scenario: "stand-on-moon", "k.latitude": "-45.5", select: "edge:ITRF" },
+      { "k.frame": "GCRF" },
+    ];
+    for (const x of valid) {
+      expect(
+        present(formatParams(parseParams(x, known))),
+        JSON.stringify(x),
+      ).toEqual(x);
+    }
+  });
+
+  it("removes the knobs of the scenario switched from, and leaves scenario params alone without a scenario", () => {
+    const params = formatParams({
+      selection: { kind: "none" },
+      lens: "all",
+      scenario: dish.id,
+      knobs: dish.checked.knobs,
+      time: Date.parse(dish.checked.epochUtc),
+    });
+    expect(present(params)).toEqual({ scenario: "dish-tracks" });
+    for (const s of SCENARIOS) {
+      for (const k of s.knobs) {
+        expect(Object.hasOwn(params, `k.${k.id}`), k.id).toBe(true);
+      }
+    }
+    expect(params).toHaveProperty("t", undefined);
+    // A view without a scenario (the page before scenarios) writes none of them.
+    const plain = formatParams({ selection: { kind: "none" }, lens: "all" });
+    expect(Object.keys(plain).some((key) => key.startsWith("k."))).toBe(false);
+    expect(Object.hasOwn(plain, "scenario")).toBe(false);
+    expect(Object.hasOwn(plain, "t")).toBe(false);
   });
 });

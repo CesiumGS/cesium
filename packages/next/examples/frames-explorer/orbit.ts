@@ -378,11 +378,15 @@ export function frameTarget(
   tourStop: string | undefined,
   selection:
     | { kind: "none" }
-    | { kind: "frame"; id: string }
+    | { kind: "frame" | "node" | "edge"; id: string }
     | { kind: "result"; id: string },
 ): FrameTarget {
   if (tourStop !== undefined) {
     return { kind: "tour", id: tourStop };
+  }
+  // A tree diagram's node is a frame; an edge is named by its child node.
+  if (selection.kind === "node" || selection.kind === "edge") {
+    return { kind: "frame", id: selection.id };
   }
   if (selection.kind !== "none") {
     return { kind: selection.kind, id: selection.id };

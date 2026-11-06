@@ -27,6 +27,7 @@ import {
   type StressContext,
   type StressResult,
 } from "../../examples/frames-explorer/tests.ts";
+import { SCENARIOS } from "../../examples/frames-explorer/scenarios/specs.ts";
 import { loadProj, type ProjApi } from "../../src/engineering/proj.ts";
 import { Ephemeris } from "../../src/ephemeris/Ephemeris.ts";
 import type { FrameData } from "../../src/ephemeris/loadFrameData.ts";
@@ -250,6 +251,15 @@ describe("the frames explorer's stress tests, headless", () => {
         results.some((r) => r.id === c.id || r.id.startsWith(`${c.id}.`)),
         c.id,
       ).toBe(true);
+    }
+  });
+
+  it("has every scenario's proof among its results, each passing (ruling S1: non-empty lists)", () => {
+    const byId = new Map(results.map((r) => [r.id, r]));
+    const proof = SCENARIOS.flatMap((s) => s.proof);
+    expect(proof.length).toBeGreaterThan(0);
+    for (const id of proof) {
+      expect(byId.get(id)?.pass, id).toBe(true);
     }
   });
 

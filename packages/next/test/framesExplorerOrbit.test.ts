@@ -346,6 +346,15 @@ describe("Frame content", () => {
     });
   });
 
+  it("frames a tree diagram's node, and an edge's child node, as that frame", () => {
+    for (const kind of ["node", "edge"] as const) {
+      expect(frameTarget(undefined, { kind, id: "MOON_ME" })).toEqual({
+        kind: "frame",
+        id: "MOON_ME",
+      });
+    }
+  });
+
   it("else the opening view", () => {
     expect(frameTarget(undefined, none)).toEqual({ kind: "opening" });
   });
