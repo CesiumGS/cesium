@@ -50,6 +50,15 @@ Plan 4b later adds two things here:
   - GEOID18 loads only when a geoid test or overlay runs.
   - The Artemis OEM (6 MB) loads only when Orion's path is turned on or its tests run.
 - **R7. Tests that expect a throw pass only on the right throw.** A case expecting an error passes only if it throws with the expected message pattern. Examples are the leap second, the end of the EOP table, a trajectory gap and a missing grid. Any other outcome fails, including a silent success.
+- **R8. Accuracy is always on screen (owner's addition, 2026-11-06).** Nothing shows a position, distance, transform or overlay without its accuracy beside it.
+  - **Tree edges:** each edge shows its accuracy in its row, not only on expand. Built-in edges carry their stated model accuracy, from the plans' validations and section 4's budget: for example the GCRF→ITRF edge's Earth-orientation sigma at the clock's instant (measured or Bulletin A predicted, with prediction age), DE440's 0.01 m for the ephemeris edges, and 1e-15 for the frame bias. PROJ edges show the operation's accuracy, or "unknown"/"ballpark" in a warning color.
+  - **Selecting a node:** shows the composed accuracy to the root: an `accuracyOf`-style statement for a point at that frame's origin against ITRF at the clock's time, with its terms.
+  - **Every overlay:** has a legend line with its accuracy. Examples: "design grid: PROJ operation ±2.0 m (NAD83(2011)→WGS84); round trip ≤ 3e-9 m", and "rigid vs exact: sag 31.2 m at 20 km (geometry, exact)".
+  - **Every stress-test row:** shows the measured value against its tolerance as a bar (log scale), plus the accuracy statement's total in the row itself, with terms on expand. An undefined total shows "not bounded" and names the unknown term, never a blank.
+- **R9. Loading is always visible (owner's addition, 2026-11-06).** Lazy data shows that it's fetching:
+  - **The Status section** lists each data item: frame data, PROJ (WebAssembly and `proj.db`), GEOID18 and the Artemis OEM. Each is in one of the states "not loaded", "fetching" (with bytes received of the total and a progress bar from the response's `Content-Length`), "ready" (size and load time) or "missing" (the setup hint).
+  - **Where a feature waits for data** (an overlay toggle, a test group, Orion's path), the control shows an inline spinner and "fetching PROJ…" (or which item) until it's ready. Its test rows show "waiting for …" rather than nothing.
+  - **Fetches report progress** through a small wrapper around `fetch` that streams the body and reports bytes. `loadProj` and `loadFrameData` may need an optional `onProgress(item, received, total)` callback; add it as an optional parameter, without changing existing callers.
 
 ## Global Constraints
 
@@ -95,7 +104,8 @@ Plan 4b later adds two things here:
 
    The geometry builders are unit-tested against independent values. Test: Task 3.
 4. **Missing data.** No `/frames-data/`, no PROJ, or no Artemis file. The page shows what's missing and still runs everything else, and nothing throws uncaught. Test: Task 4's browser check, with the dev server started against an empty store.
-5. **Leaving the example mid-load or mid-run.** The gallery switches away while PROJ or the OEM is loading, or while the tests run. Nothing leaks into the next example's viewer, and no work continues after `signal` aborts. Test: Task 4.
+5. **Accuracy or loading state hidden or wrong (R8, R9).** A tree edge, overlay or result shown without its accuracy, or an undefined accuracy shown as a number or a blank. A fetch with no indicator, or an indicator stuck after an error or abort. Tests: Task 2 (every node has an accuracy field, with no NaN), Task 4 (unit tests of the loading-state model, and the browser check with network throttling).
+6. **Leaving the example mid-load or mid-run.** The gallery switches away while PROJ or the OEM is loading, or while the tests run. Nothing leaks into the next example's viewer, and no work continues after `signal` aborts. Test: Task 4.
 
 ---
 
@@ -188,7 +198,7 @@ Plan 4b later adds two things here:
     - `frame?: Frame`;
     - `engineering?: EngineeringFrame`;
     - `trajectory?: Trajectory`;
-    - `edge: { kind: EdgeKind; detail: string }`;
+    - `edge: { kind: EdgeKind; detail: string; accuracy: { meters?: number; radians?: number; note: string } }`. The accuracy is the edge's stated model accuracy (R8), and it is `undefined` with a note when unknown, never 0.
     - `children: TreeNode[]`.
 
     `detail` names the source of the edge. Examples: "ephemeris: earth (DE440)", "IAU 2006/2000A + EOP", "frame bias (IAU 2006)", or for a PROJ operation its pipeline, grids and accuracy.
@@ -259,7 +269,7 @@ Plan 4b later adds two things here:
 
 - **Consumes:** Tasks 1–3, `ExampleContext`, `loadFrameData`, `createFrames`, `loadProj`, `EngineeringFrame`, `Trajectory.fromOem`, `parseOem`, `viewer.clock`, and the viewer's camera flights (`viewer.zoomTo` or the controller's fly-to; use what the Viewer exposes).
 - **The page.** The panel's sections, top to bottom:
-  1. **Status.** What has loaded (frame data, PROJ, GEOID18, Orion) and what's missing, with the setup hint (R5).
+  1. **Status.** Each data item's state: not loaded, fetching (with progress), ready or missing (with the setup hint) (R5, R9).
   2. **Tree.**
      - A collapsible list of `buildTree`'s nodes. Each row shows its label and an edge-kind chip, and the detail on hover or expand.
      - Selecting a node highlights its `pathToRoot` in the list, draws triads for every frame on that path, and flies the camera to the selected frame's origin, at a distance suited to it (a site: kilometers; the Moon: 20,000 km).
@@ -272,7 +282,8 @@ Plan 4b later adds two things here:
      - Orion's path, drawn in GCRF, ITRF or MOON_ME;
      - the bias-exaggeration slider (R4).
   4. **Clock.** The viewer's time controls. A preset button jumps to the Artemis II flyby (2026-04-06T23:00 UTC). Triads and Orion's path follow the clock.
-  5. **Stress tests.** "Run all", or run per group. Results stream into a table: group, title, value with tolerance and unit, pass or fail, and the accuracy statement's total and terms on expand. A summary line gives passed / failed / skipped and the run time.
+  5. **Stress tests.** "Run all", or run per group. Results stream into a table: group, title, value against tolerance as a log-scale bar with numbers and unit, pass or fail, and the accuracy statement's total in the row with terms on expand (R8). A summary line gives passed / failed / skipped and the run time.
+- **Accuracy and loading UI (R8, R9).** A small `loading.ts` holds the data-item states and their transitions (idle → fetching → ready | missing | error, with abort back to idle), unit-tested in `test/framesExplorerLoading.test.ts`. The panel renders from that model, so an indicator can't stick.
 - **Startup.** On start, load frame data and draw the tree, plus the ITRF and ENU triads at a California site. Load PROJ when an engineering overlay or test first needs it (R6). Route every async step through `context.signal` and every drawn item through `context.scope` (Review Focus 5).
 
 - [ ] **Step 1: Write** `main.ts` (and `panel.ts`), and register the example in `examples/index.ts`. The description: "The frame tree and engineering frames, drawn on the globe and stress-tested in the page: every edge labelled, every result checked against its tolerance."
@@ -285,6 +296,8 @@ Plan 4b later adds two things here:
     - Turning on the design grid shows grid lines and true-north lines diverging away from the central meridian.
     - The rigid and exact lines separate visibly toward the far end, labelled about 31 m at 20 km (the spec's figure, section 4).
     - Orion's path in GCRF shows the figure-eight, and in MOON_ME the far-side swing.
+  - **Accuracy (R8):** every tree row, the selected node's composed statement, every overlay legend and every test row shows an accuracy. Undefined ones read "not bounded" with their reason.
+  - **Loading (R9):** with Chromium's network throttling at "Slow 4G" in the page's dev tools (or the preview's equivalent), turning on the design grid shows PROJ's fetch progressing in Status and an inline spinner on the toggle until the grid draws. Turning on Orion's path does the same for the OEM.
   - **Tests:** "Run all" ends with 0 failed. The count equals the data test's, and the round-trip markers appear (Review Focus 2).
   - **Missing data:** restart the dev server with `FRAMES_DATA_DIR` pointing at an empty scratch directory. The page shows the missing-data status, the tree still renders from what's available or explains why not, and the console has no uncaught errors (Review Focus 4). Then restart it normally.
   - **Switching away:** go to another example during "Run all" and during PROJ's first load. The console has no errors, and no overlay or work carries into the next example (Review Focus 5).
