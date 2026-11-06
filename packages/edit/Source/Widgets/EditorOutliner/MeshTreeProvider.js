@@ -22,6 +22,7 @@ import { DeveloperError } from "@cesium/core";
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  *
  * @see EditorMeshTreeProvider
+ * @see ModelMeshTreeProvider
  */
 class MeshTreeProvider {
   constructor() {
