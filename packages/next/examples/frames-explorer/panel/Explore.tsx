@@ -575,7 +575,7 @@ function OverlayOptions({
                 Show true scale
                 {model.trueScale
                   ? ""
-                  : ` (convergence drawn ×${model.convergenceFactor})`}
+                  : ` (angle drawn ${model.convergenceFactor}× larger)`}
               </span>
             }
           />
@@ -597,7 +597,9 @@ function OverlayOptions({
             label={
               <span className="fx-option-label">
                 Show true scale
-                {model.sagTrueScale ? "" : ` (sag drawn ×${model.sagFactor})`}
+                {model.sagTrueScale
+                  ? ""
+                  : ` (separation drawn ${model.sagFactor}× larger)`}
               </span>
             }
           />

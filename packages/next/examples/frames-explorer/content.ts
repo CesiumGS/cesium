@@ -214,6 +214,11 @@ export interface TourStopSpec {
   dim?: true | { readonly wide: number; readonly narrow: number };
   /** The clock: plays at this rate while the stop shows. */
   rate?: number;
+  /**
+   * The clock: set to this UTC instant (ISO 8601) when the stop opens, so a
+   * site is in daylight. Stops without it keep the clock where it is.
+   */
+  time?: string;
   /** Light the globe from the camera instead of the clock's sun (stop 2, S-I6). */
   light?: "camera";
   /** Orion's draw-in frame at this stop. */
@@ -227,6 +232,9 @@ export interface TourStopSpec {
 
 /** Below this view width the HUD goes compact and the caption folds (I18, F42). */
 export const NARROW_VIEW = 560;
+
+/** 13:00 PDT on the flyby day: local midday for the California stops. */
+const CALIFORNIA_MIDDAY = "2026-04-06T20:00:00Z";
 
 /** The engineering stops' dimming (DESIGN.md "Lines"). */
 const DIM = -0.6;
@@ -291,18 +299,21 @@ export const TOUR: readonly TourStopSpec[] = [
     id: "design-grid",
     title: "The California design grid",
     caption:
-      "Grid north and true north part ways away from the central meridian: the convergence angle, −0° 39′ at the grid's west edge, drawn ×20 so it shows.",
+      "Grid north and true north part ways away from the central meridian: the convergence angle is −0° 39′ at the grid's west edge. True north is drawn with that angle 20 times larger so the lean shows; Show true scale draws it as it is.",
     overlays: ["designGrid"],
     camera: "designGrid",
     dim: true,
+    // 13:00 Pacific daylight time, local midday in California.
+    time: CALIFORNIA_MIDDAY,
   },
   {
     id: "rigid-exact",
     title: "Rigid against exact",
     caption:
-      "A 20 km design line placed rigidly at its start parts from the exact one by about 31 m at its far end: drawn ×50 here so the gap shows, the leader labelled with the true figure.",
+      "A 20 km design line placed rigidly at its start parts from the exact one by about 31 m at its far end. Their separation is drawn 50 times larger so the gap shows; the leader gives the true figure.",
     overlays: ["rigidVsExact"],
     camera: "rigidVsExact",
+    time: CALIFORNIA_MIDDAY,
   },
   {
     id: "orion",

@@ -557,11 +557,11 @@ export function run(context: ExampleContext): ExampleRun {
   function defaultDetail(id: OverlayId): string | undefined {
     switch (id) {
       case "designGrid":
-        return `The 10 km grid lines placed through the recorded PROJ operation to WGS 84; true north ${trueScale ? "at true scale" : `with its convergence drawn ×${CONVERGENCE_FACTOR}`}. The 2 km lines appear below 60 km.`;
+        return `The 10 km grid lines placed through the recorded PROJ operation to WGS 84; true north ${trueScale ? "at true scale" : `with its convergence angle drawn ${CONVERGENCE_FACTOR} times larger`}. The 2 km lines appear below 60 km.`;
       case "siteGrid":
         return "The site grid through the same operation; the site formula (rotation and scale) is exact to 1 nm.";
       case "rigidVsExact":
-        return `A 20 km design line placed rigidly (dashed) against the exact one (solid); ${sagTrueScale ? "drawn at true scale" : `their separation drawn ×${SAG_FACTOR}`}, the leader labelled with the true sag.`;
+        return `A 20 km design line placed rigidly (dashed) against the exact one (solid); ${sagTrueScale ? "drawn at true scale" : `their separation drawn ${SAG_FACTOR} times larger`}, the leader labelled with the true sag.`;
       case "distortion":
         return "Tissot ellipses in true-north axes (convergence not applied); combined-factor contours from PROJ's factors, in ppm.";
       case "bias":
@@ -1098,7 +1098,7 @@ export function run(context: ExampleContext): ExampleRun {
               },
             ],
             accuracy: op.text,
-            detail: `${op.sentence} True north ${trueScale ? "at true scale" : `with its convergence drawn ×${CONVERGENCE_FACTOR}`}. The 2 km lines appear below 60 km.`,
+            detail: `${op.sentence} True north ${trueScale ? "at true scale" : `with its convergence angle drawn ${CONVERGENCE_FACTOR} times larger`}. The 2 km lines appear below 60 km.`,
             caution: op.caution,
             labels: west
               ? [
@@ -1106,7 +1106,7 @@ export function run(context: ExampleContext): ExampleRun {
                     id: "label:true-north",
                     text: trueScale
                       ? "true north"
-                      : `true north, convergence ×${CONVERGENCE_FACTOR}`,
+                      : `true north, angle ×${CONVERGENCE_FACTOR}`,
                     at: west,
                     priority: 2,
                   },
@@ -1171,7 +1171,7 @@ export function run(context: ExampleContext): ExampleRun {
                 })
               : [];
           const mid = a && b ? a.map((v, i) => (v + b[i]!) / 2) : undefined;
-          const drawn = k === 1 ? "" : ` (drawn ×${k})`;
+          const drawn = k === 1 ? "" : ` (gap drawn ×${k})`;
           return {
             layers: [
               { chunks: exact, color: engineeringColor },
@@ -1179,7 +1179,7 @@ export function run(context: ExampleContext): ExampleRun {
               { chunks: leader },
             ],
             accuracy: `sag ${sag.toFixed(1)} m at 20 km, exact geometry`,
-            detail: `A 20 km design line placed rigidly at its start (dashed) against the exact one (solid): ${sag.toFixed(1)} m apart at the far end, by geometry, exact. ${k === 1 ? "Drawn at true scale." : `Their separation is drawn ×${k} so it shows; the leader carries the true figure.`}`,
+            detail: `A 20 km design line placed rigidly at its start (dashed) against the exact one (solid): ${sag.toFixed(1)} m apart at the far end, by geometry, exact. ${k === 1 ? "Drawn at true scale." : `Their separation is drawn ${k} times larger so it shows; the leader carries the true figure.`}`,
             labels: mid
               ? [
                   {
@@ -2148,6 +2148,9 @@ export function run(context: ExampleContext): ExampleRun {
     if (stop.orionFrame && stop.orionFrame !== orionFrame) {
       orionFrame = stop.orionFrame;
       drawOverlay("orion");
+    }
+    if (stop.time !== undefined) {
+      viewer.clock.time = Date.parse(stop.time);
     }
     if (stop.rate !== undefined) {
       tourClock = { rate: viewer.clock.rate, mode: viewer.clock.mode };
