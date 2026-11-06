@@ -186,32 +186,131 @@ describe("measure in design terms", () => {
     expect(terms[1]!.note).toContain("End b");
   });
 
-  it("leaves meters undefined for a ballpark operation with no grid", async () => {
+  it("leaves meters undefined when the operation's accuracy is unknown (a pinned pipeline)", async () => {
     const P = await loadProj({ base });
+    const known = await frame();
+    expect(known.operation.accuracy).toBeDefined();
     const f = EngineeringFrame.create(
       {
-        name: "ballpark",
+        name: "pinned",
         body: EARTH,
-        crs: { format: "wkid", authority: "EPSG", wkid: 6420 },
-        allowBallpark: true,
+        crs: { format: "wkid", authority: "EPSG", wkid: 6420, vcsWkid: 6360 },
+        pipeline: known.operation.pipeline,
       },
       P,
     );
+    expect(f.operation.accuracy).toBeUndefined();
+    expect(f.operation.ballpark).toBe(false);
     const m = measure(
       designPoint(f, [6_561_666, 1_640_416, 0]),
       designPoint(f, [6_561_866, 1_640_416, 0]),
       instant,
       frames,
     );
-    if (f.operation.ballpark || f.operation.accuracy === undefined) {
-      expect(m.accuracy.meters).toBeUndefined();
-    }
     const terms = m.accuracy.terms.filter((t) => t.source === "projection");
     expect(terms).toHaveLength(2);
-    expect(f.operation.accuracy === undefined).toBe(
-      terms[0]!.meters === undefined,
+    for (const t of terms) {
+      expect(t.meters).toBeUndefined();
+      expect(t.note).toMatch(/accuracy is not known/);
+      expect(t.note).not.toMatch(/ballpark/);
+    }
+    expect(m.accuracy.meters).toBeUndefined();
+  });
+
+  it("marks a real ballpark operation: undefined meters and a ballpark note", async () => {
+    const P = await loadProj({ base });
+    const crs = {
+      format: "wkid",
+      authority: "EPSG",
+      wkid: 32611,
+      vcsWkid: 6360,
+    } as const;
+    // PROJ offers only a ballpark operation for this pair (no vertical datum
+    // operation is known for UTM 11N heights in ftUS here).
+    expect(() =>
+      EngineeringFrame.create({ name: "x", body: EARTH, crs }, P),
+    ).toThrow(/only a ballpark/);
+    const f = EngineeringFrame.create(
+      { name: "ballpark", body: EARTH, crs, allowBallpark: true },
+      P,
     );
-    expect(m.design!.siteScale).toBe(1);
+    expect(f.operation.ballpark).toBe(true);
+    const m = measure(
+      designPoint(f, [500_000, 4_000_000, 0]),
+      designPoint(f, [500_300, 4_000_400, 0]),
+      instant,
+      frames,
+    );
+    const terms = m.accuracy.terms.filter((t) => t.source === "projection");
+    expect(terms).toHaveLength(2);
+    for (const t of terms) {
+      expect(t.meters).toBeUndefined();
+      expect(t.note).toMatch(/ballpark/);
+    }
+    expect(m.accuracy.meters).toBeUndefined();
+  });
+
+  it("matches measuring the same body-fixed points directly", async () => {
+    const f = await frame();
+    const da = [2000, 1000, 25];
+    const db = [9000, 3000, 40];
+    const m = measure(designPoint(f, da), designPoint(f, db), instant, frames);
+    const r = measure(
+      framePoint(frames.itrf, f.toBodyFixed(da)),
+      framePoint(frames.itrf, f.toBodyFixed(db)),
+      instant,
+      frames,
+    );
+    expect(Math.abs(m.distance - r.distance)).toBeLessThan(1e-9);
+    expect(m.deltaFrame).toBe(r.deltaFrame);
+    for (let i = 0; i < 3; i++) {
+      expect(Math.abs(m.delta[i]! - r.delta[i]!)).toBeLessThan(1e-9);
+    }
+    expect(
+      Math.abs(m.signal!.downlink.range - r.signal!.downlink.range),
+    ).toBeLessThan(1e-9);
+    expect(
+      Math.abs(m.signal!.uplink.range - r.signal!.uplink.range),
+    ).toBeLessThan(1e-9);
+    expect(m.lineOfSight).toEqual(r.lineOfSight);
+    expect(Math.abs(m.overBody!.distance - r.overBody!.distance)).toBeLessThan(
+      1e-9,
+    );
+    const bodyTerms = (x: typeof m) =>
+      x.accuracy.terms.filter((t) => t.source !== "projection");
+    expect(bodyTerms(m)).toEqual(bodyTerms(r));
+  });
+
+  it("converts a differing vertical unit in the 3D distance (metre horizontal, ftUS vertical)", async () => {
+    const P = await loadProj({ base });
+    const f = EngineeringFrame.create(
+      {
+        name: "UTM11 + NAVD88 ftUS",
+        body: EARTH,
+        crs: { format: "wkid", authority: "EPSG", wkid: 32611, vcsWkid: 6360 },
+        allowBallpark: true,
+      },
+      P,
+    );
+    expect(f.units.metersPerUnit).toBe(1);
+    expect(f.metersPerHeightUnit).toBeCloseTo(US_FOOT, 15);
+    const m = measure(
+      designPoint(f, [500_000, 4_000_000, 0]),
+      designPoint(f, [500_300, 4_000_400, 1000]),
+      instant,
+      frames,
+    );
+    const d = m.design!;
+    const vertical = (1000 * f.metersPerHeightUnit) / f.units.metersPerUnit;
+    expect(d.horizontalDistance).toBeCloseTo(500, 9);
+    expect(Math.abs(d.distance - Math.hypot(300, 400, vertical))).toBeLessThan(
+      1e-9,
+    );
+    // The naive value (feet taken as metres) is far off.
+    expect(Math.abs(d.distance - Math.hypot(300, 400, 1000))).toBeGreaterThan(
+      100,
+    );
+    expect(Array.from(d.delta)).toEqual([300, 400, 1000]);
   });
 
   it("measures a design point to a plain ITRF point without a design result", async () => {
