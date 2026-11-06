@@ -50,6 +50,8 @@ export const MOON_GEOGRAPHIC_CRS = "IAU_2015:30100";
 
 /** Units of a CRS's axes, read from PROJ (never assumed; plan 4a R5). */
 export interface CrsUnits {
+  /** Whether the horizontal CRS is projected (linear axes), not geographic. */
+  readonly projected: boolean;
   /** The first axis's unit (a projected CRS's easting). */
   readonly horizontalUnitName: string;
   /** Metres per horizontal unit (radians per unit for a geographic CRS). */
@@ -320,6 +322,7 @@ export function crsUnits(proj: ProjApi, ref: CrsRef): CrsUnits {
     vertical = axis(crs, 2);
   }
   return {
+    projected: proj.proj_get_type(horizontalCrs) === proj.PJ_TYPE_PROJECTED_CRS,
     horizontalUnitName: horizontal.unit_name,
     metersPerUnit: horizontal.unit_conv_factor,
     ...(vertical && {

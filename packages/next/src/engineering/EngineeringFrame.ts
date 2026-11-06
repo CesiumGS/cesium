@@ -19,6 +19,7 @@ import type { Mat4 } from "../math/mat4.ts";
 import {
   MOON_GEOGRAPHIC_CRS,
   crsUnits,
+  crsDefinition,
   resolveOperation,
   type CrsRef,
   type CrsUnits,
@@ -89,6 +90,8 @@ export class EngineeringFrame {
   readonly units: CrsUnits;
   readonly operation: RecordedOperation;
   readonly body: Body;
+  /** Metres per design height unit: the vertical unit, else the horizontal. */
+  readonly metersPerHeightUnit: number;
   // Metres per design height unit the operation leaves unconverted; 1 where
   // PROJ already returns metres.
   private readonly heightScale: number;
@@ -104,6 +107,8 @@ export class EngineeringFrame {
     this.operation = operation;
     this.body = definition.body;
     this.heightScale = heightScale;
+    this.metersPerHeightUnit =
+      units.metersPerVerticalUnit ?? units.metersPerUnit;
   }
 
   /**
@@ -117,12 +122,27 @@ export class EngineeringFrame {
   ): EngineeringFrame {
     const target = geographicTarget(definition.body);
     const { site } = definition;
-    if (
-      site !== undefined &&
-      !(site.scale > 0 && Number.isFinite(site.scale))
-    ) {
-      throw new RangeError(
-        `EngineeringFrame: site scale must be positive, got ${site.scale}`,
+    if (site !== undefined) {
+      if (!(site.scale > 0 && Number.isFinite(site.scale))) {
+        throw new RangeError(
+          `EngineeringFrame: site scale must be positive, got ${site.scale}`,
+        );
+      }
+      if (!Number.isFinite(site.rotation)) {
+        throw new RangeError(
+          `EngineeringFrame: site rotation must be finite, got ${site.rotation}`,
+        );
+      }
+      if (site.origin.length !== 3 || !site.origin.every(Number.isFinite)) {
+        throw new RangeError(
+          `EngineeringFrame: site origin must be three finite numbers, got [${site.origin.join(", ")}]`,
+        );
+      }
+    }
+    const units = crsUnits(proj, definition.crs);
+    if (!units.projected) {
+      throw new Error(
+        `EngineeringFrame: an engineering frame needs a projected CRS; ${crsDefinition(definition.crs).slice(0, 80)} is geographic or not projected`,
       );
     }
     const operation = resolveOperation(proj, definition.crs, target, {
@@ -133,7 +153,6 @@ export class EngineeringFrame {
         allowBallpark: definition.allowBallpark,
       }),
     });
-    const units = crsUnits(proj, definition.crs);
     // PROJ converts a vertical axis's unit on the way to EPSG:4979. Where it
     // does not (the Moon's target passes heights through; a CRS with no
     // vertical axis has nothing to convert), the design height is in the
@@ -269,7 +288,9 @@ export function designPoint(
  *    design axes, so a site transform's rotation is included), projected onto
  *    the tangent plane and normalized. It comes from the operation itself, not
  *    from a convergence formula. East is north x up.
- *  - Scale is `units.metersPerUnit`, not the point scale factor.
+ *  - Scale is `units.metersPerUnit` horizontally and the frame's
+ *    `metersPerHeightUnit` along up (the vertical unit, else the horizontal
+ *    one), not the point scale factor.
  */
 export class RigidPlacement {
   readonly frame: EngineeringFrame;
@@ -281,11 +302,13 @@ export class RigidPlacement {
   private readonly north: Float64Array;
   private readonly up: Float64Array;
   private readonly scale: number;
+  private readonly heightUnit: number;
 
   private constructor(frame: EngineeringFrame, anchorDesign: Float64Array) {
     this.frame = frame;
     this.anchor = anchorDesign;
     this.scale = frame.units.metersPerUnit;
+    this.heightUnit = frame.metersPerHeightUnit;
     const origin = frame.toBodyFixed(anchorDesign);
     const up = v3.vec3();
     if (frame.body.ellipsoid.geodeticSurfaceNormal(origin, up) === undefined) {
@@ -309,20 +332,19 @@ export class RigidPlacement {
     this.up = up;
 
     const k = this.scale;
+    const kz = this.heightUnit;
     const t = v3.vec3();
     for (let i = 0; i < 3; i++) {
       t[i] =
         origin[i]! -
-        k *
-          (east[i]! * anchorDesign[0]! +
-            north[i]! * anchorDesign[1]! +
-            up[i]! * anchorDesign[2]!);
+        (k * (east[i]! * anchorDesign[0]! + north[i]! * anchorDesign[1]!) +
+          kz * up[i]! * anchorDesign[2]!);
     }
     this.matrix = m4.fromBasis(
       m4.mat4(),
       v3.scale(v3.vec3(), east, k),
       v3.scale(v3.vec3(), north, k),
-      v3.scale(v3.vec3(), up, k),
+      v3.scale(v3.vec3(), up, kz),
       t,
     );
   }
@@ -349,7 +371,7 @@ export class RigidPlacement {
   ): Float64Array {
     const dx = (design[0]! - this.anchor[0]!) * this.scale;
     const dy = (design[1]! - this.anchor[1]!) * this.scale;
-    const dz = ((design[2] ?? 0) - this.anchor[2]!) * this.scale;
+    const dz = ((design[2] ?? 0) - this.anchor[2]!) * this.heightUnit;
     for (let i = 0; i < 3; i++) {
       out[i] =
         this.origin[i]! +
@@ -373,7 +395,7 @@ export class RigidPlacement {
       px * this.up[0]! + py * this.up[1]! + pz * this.up[2]!,
     ];
     for (let i = 0; i < 3; i++) {
-      out[i] = this.anchor[i]! + d[i]! / this.scale;
+      out[i] = this.anchor[i]! + d[i]! / (i < 2 ? this.scale : this.heightUnit);
     }
     return out;
   }

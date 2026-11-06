@@ -7,25 +7,27 @@ import {
   RigidPlacement,
   designPoint,
   type EngineeringFrameDefinition,
+  type SiteTransform,
 } from "../src/engineering/EngineeringFrame.ts";
 import type { ProjApi } from "../src/engineering/projApi.ts";
 import { EARTH } from "../src/scene/Body.ts";
 import { Ellipsoid } from "../src/math/ellipsoid.ts";
 
-const stub = (metersPerUnit = 1): ProjApi =>
+const stub = (metersPerUnit = 1, vertical?: number): ProjApi =>
   ({
     proj_create: () => ({}),
     proj_get_name: () => "stub",
     proj_as_proj_string: () => "+proj=noop",
-    proj_get_type: () => 0,
+    proj_get_type: () => 2,
+    PJ_TYPE_PROJECTED_CRS: 2,
     PJ_TYPE_COMPOUND_CRS: 1,
     PJ_FWD: 1,
     PJ_INV: -1,
     proj_crs_get_coordinate_system: () => ({}),
-    proj_cs_get_axis_count: () => 2,
-    proj_cs_get_axis_info: () => ({
+    proj_cs_get_axis_count: () => (vertical === undefined ? 2 : 3),
+    proj_cs_get_axis_info: (_: unknown, index: number) => ({
       unit_name: "stub unit",
-      unit_conv_factor: metersPerUnit,
+      unit_conv_factor: index === 2 ? vertical : metersPerUnit,
     }),
     proj_coord: (x: number, y: number, z: number, t: number) => ({
       v: [x, y, z, t],
@@ -91,6 +93,30 @@ describe("EngineeringFrame site transform (R6)", () => {
     const frame = EngineeringFrame.create(definition(), stub());
     expect(Array.from(frame.projected([1, 2, 3]))).toEqual([1, 2, 3]);
     expect(Array.from(frame.fromProjected([1, 2, 3]))).toEqual([1, 2, 3]);
+  });
+
+  it("rejects a non-finite site rotation or origin, naming the field", () => {
+    const make = (site: SiteTransform) => () =>
+      EngineeringFrame.create(definition({ site }), stub());
+    expect(make({ origin: [0, 0, 0], rotation: Number.NaN, scale: 1 })).toThrow(
+      /rotation/,
+    );
+    expect(make({ origin: [0, Infinity, 0], rotation: 0, scale: 1 })).toThrow(
+      /origin/,
+    );
+    expect(make({ origin: [0, 0, Number.NaN], rotation: 0, scale: 1 })).toThrow(
+      /origin/,
+    );
+  });
+
+  it("rejects a CRS that is not projected", () => {
+    const geographic = {
+      ...stub(),
+      proj_get_type: () => 12,
+    } as unknown as ProjApi;
+    expect(() => EngineeringFrame.create(definition(), geographic)).toThrow(
+      /needs a projected CRS/,
+    );
   });
 
   it("rejects a site scale that is not positive", () => {
@@ -171,5 +197,37 @@ describe("RigidPlacement over the stub", () => {
     for (let i = 0; i < 3; i++) {
       expect(Math.abs(viaMatrix[i]! - direct[i]!)).toBeLessThan(1e-6);
     }
+  });
+
+  it("scales up by the vertical unit, not the horizontal one", () => {
+    // Metre horizontal, 0.3048 m vertical.
+    const frame = EngineeringFrame.create(definition(), stub(1, 0.3048));
+    expect(frame.metersPerHeightUnit).toBe(0.3048);
+    const anchor = [-75, 40, 10];
+    const placement = RigidPlacement.at(frame, anchor);
+    const o = placement.toBodyFixed(anchor);
+    const above = placement.toBodyFixed([
+      anchor[0]!,
+      anchor[1]!,
+      anchor[2]! + 1,
+    ]);
+    const up = EARTH.ellipsoid.geodeticSurfaceNormal(o, new Float64Array(3))!;
+    const d = [above[0]! - o[0]!, above[1]! - o[1]!, above[2]! - o[2]!];
+    expect(Math.hypot(d[0]!, d[1]!, d[2]!)).toBeCloseTo(0.3048, 9);
+    expect(d[0]! * up[0]! + d[1]! * up[1]! + d[2]! * up[2]!).toBeCloseTo(
+      0.3048,
+      9,
+    );
+    // East stays at the horizontal unit.
+    const east = placement.toBodyFixed([
+      anchor[0]! + 1,
+      anchor[1]!,
+      anchor[2]!,
+    ]);
+    expect(
+      Math.hypot(east[0]! - o[0]!, east[1]! - o[1]!, east[2]! - o[2]!),
+    ).toBeCloseTo(1, 9);
+    const back = placement.fromBodyFixed(above);
+    expect(back[2]).toBeCloseTo(anchor[2]! + 1, 6);
   });
 });
