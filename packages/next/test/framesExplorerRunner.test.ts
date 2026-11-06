@@ -338,6 +338,24 @@ describe("effect sizes and fingerprints (R11, R12)", () => {
     expect(shown).not.toMatch(/pass|fail/i);
   });
 
+  it("shows a display-only result, neither passing nor failing it, and leaves it out of the counts", async () => {
+    const effect = { value: 9.9, unit: "mm", label: "Method difference" };
+    const results = await run([
+      stub([
+        { displayOnly: true, pass: false, effect },
+        { displayOnly: true, effect, value: 1, tolerance: 0.5 },
+        { pass: false, value: 2, tolerance: 1 },
+      ]),
+    ]);
+    // Not judged: pass true whatever the case said; a tolerance on it is an error.
+    expect(results.map((r) => r.pass)).toEqual([true, false, false]);
+    expect(results[1]!.detail).toMatch(/display-only/);
+    const projections = STRESS_GROUPS.find((g) => g.id === "projections")!;
+    expect(projections.headline([results[0]!, results[2]!])).toMatch(
+      /^0 of 1 pass/,
+    );
+  });
+
   const fingerprint: Fingerprint = {
     pipeline: "+proj=pipeline +step +inv +proj=utm +zone=10",
     grids: [{ name: "g.tif", sha256: "aa" }],

@@ -63,6 +63,13 @@ export interface StressResult {
   detail?: string;
   /** A size to show apart from pass or fail (R11). */
   effect?: { value: number; unit: string; label: string };
+  /**
+   * Shown, not judged: an effect with no verdict (R11), such as a method
+   * difference or an uncertainty. The runner gives it pass true whatever the
+   * case said, and the cards' pass counts leave it out. It may carry no
+   * tolerance and no expected error.
+   */
+  displayOnly?: boolean;
   fingerprint?: Fingerprint;
   /** Set when the run compared `fingerprint` against a recorded one (R12). */
   fingerprintCheck?: { match: boolean; difference?: string };
@@ -230,7 +237,16 @@ function judge(
   recorded: Readonly<Record<string, Fingerprint>> | undefined,
 ): StressResult {
   const reasons: string[] = [];
-  let pass = result.pass === true;
+  let pass = result.displayOnly === true || result.pass === true;
+  if (
+    result.displayOnly === true &&
+    (result.tolerance !== undefined || result.expectedError !== undefined)
+  ) {
+    pass = false;
+    reasons.push(
+      "a display-only result carries a tolerance or an expected error",
+    );
+  }
   if (result.expectedError !== undefined) {
     if (result.error === undefined) {
       pass = false;

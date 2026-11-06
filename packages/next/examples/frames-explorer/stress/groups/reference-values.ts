@@ -287,8 +287,9 @@ function workedExampleCase(
           return [
             {
               ...base,
-              pass: conversionOnly,
-              detail: `${detail}; the Ordnance Survey's example is the authority for this method`,
+              pass: true,
+              displayOnly: true,
+              detail: `${detail}; ${conversionOnly ? "the conversion alone" : "not the conversion alone"}; the Ordnance Survey's example is the authority for this method`,
               effect: {
                 value:
                   Math.hypot(en[0]! - easting.value, en[1]! - northing.value) *

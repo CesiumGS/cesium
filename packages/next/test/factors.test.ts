@@ -12,7 +12,13 @@ function stubFrame(factors: Record<string, number>): EngineeringFrame {
     PJ_TYPE_COMPOUND_CRS: 1,
     proj_create: () => object,
     proj_get_type: () => 0,
-    proj_as_proj_string: () => "+proj=merc +ellps=GRS80",
+    proj_crs_get_coordoperation: () => object,
+    proj_normalize_for_visualization: () => object,
+    proj_coordoperation_get_method_info: () => ({
+      method_name: "Mercator (variant A)",
+      method_auth_name: "EPSG",
+      method_code: "9804",
+    }),
     proj_crs_get_geodetic_crs: () => object,
     proj_get_ellipsoid: () => object,
     proj_ellipsoid_get_parameters: () => ({

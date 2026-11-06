@@ -7,7 +7,7 @@ import { framesDataDirectory } from "../../scripts/frameData.mjs";
 import type { CrsRef } from "../../src/engineering/crs.ts";
 import { EngineeringFrame } from "../../src/engineering/EngineeringFrame.ts";
 import { gridFactors } from "../../src/engineering/factors.ts";
-import { loadProj } from "../../src/engineering/proj.ts";
+import { loadProj, type ProjApi } from "../../src/engineering/proj.ts";
 import { EARTH, MOON } from "../../src/scene/Body.ts";
 
 const base = `${join(framesDataDirectory(), "proj")}/`;
@@ -207,46 +207,209 @@ describe("grid factors against pyproj Proj.get_factors", () => {
 // so the scales must be taken against the WGS 84 ellipsoid (IOGP 373-7-2
 // section 3.2.1.2: h = a / (rho cos phi), k = a / (nu cos phi)).
 describe("grid factors against the CRS's own ellipsoid", () => {
-  it("EPSG:3857: h and k are the ellipsoid's, not the sphere's 1/cos phi", async () => {
+  it.each(["EPSG:3857", "ESRI:102100"])(
+    "%s: h and k are the ellipsoid's, not the sphere's 1/cos phi",
+    async (code) => {
+      const P = await loadProj({ base });
+      const frame = EngineeringFrame.create(
+        { name: "Web Mercator", body: EARTH, crs: crsRef(code) },
+        P,
+      );
+      const f = 1 / WGS84.invF;
+      const e2 = f * (2 - f);
+      for (const latitude of [0, 45, 60, 70]) {
+        const phi = (latitude * Math.PI) / 180;
+        const fixed = EARTH.ellipsoid.cartographicToCartesian(
+          { longitude: 0.3, latitude: phi, height: 0 },
+          new Float64Array(3),
+        );
+        const result = gridFactors(frame, frame.fromBodyFixed(fixed));
+        const w = 1 - e2 * Math.sin(phi) ** 2;
+        const k = Math.sqrt(w) / Math.cos(phi);
+        const h = (w * Math.sqrt(w)) / ((1 - e2) * Math.cos(phi));
+        const omega = 2 * Math.asin(Math.abs(h - k) / (h + k));
+        // PROJ's numerical longitude derivative (measured 1e-12 at 0°).
+        expect(
+          Math.abs(result.pointScale - k),
+          `k at ${latitude}`,
+        ).toBeLessThan(1e-11);
+        // The latitude derivative is PROJ's numerical one: at 60° its
+        // dy/dphi is 2.000000000224 for 2 (measured 2.2e-10 in h).
+        expect(
+          Math.abs(result.meridionalScale - h),
+          `h at ${latitude}`,
+        ).toBeLessThan(1e-9);
+        expect(Math.abs(result.angularDistortion - omega)).toBeLessThan(1e-9);
+        expect(
+          Math.abs(result.meridianParallelAngle - Math.PI / 2),
+        ).toBeLessThan(1e-9);
+        expect(Math.abs(result.convergence)).toBeLessThan(1e-12);
+        // The sphere's scale, which this guards against, is far away above 0°.
+        if (latitude > 0) {
+          expect(
+            Math.abs(result.pointScale - 1 / Math.cos(phi)),
+          ).toBeGreaterThan(1e-3);
+        }
+      }
+    },
+  );
+
+  // PROJ's own factors, from the CRS's PROJ string, at a design point's
+  // longitude and latitude on the CRS's own datum.
+  const projOwn = (P: ProjApi, code: string, design: ArrayLike<number>) => {
+    const string = P.proj_as_proj_string(P.proj_create(code), P.PJ_PROJ_5)!;
+    const projection = P.proj_create(
+      string.replace(/\s\+type=crs/, "").replace(/\s\+no_defs/, ""),
+    );
+    const lp = P.proj_trans(
+      projection,
+      P.PJ_INV,
+      P.proj_coord(design[0]!, design[1]!, 0, 0),
+    ).v;
+    return P.proj_factors(projection, P.proj_coord(lp[0]!, lp[1]!, 0, 0));
+  };
+
+  it("EPSG:26711 (NAD27, Clarke 1866): PROJ's own scale, to 1e-12", async () => {
     const P = await loadProj({ base });
     const frame = EngineeringFrame.create(
-      { name: "Web Mercator", body: EARTH, crs: crsRef("EPSG:3857") },
+      {
+        name: "NAD27 / UTM 11N",
+        body: EARTH,
+        crs: crsRef("EPSG:26711"),
+        allowBallpark: true,
+      },
       P,
     );
-    const f = 1 / WGS84.invF;
-    const e2 = f * (2 - f);
-    for (const latitude of [0, 45, 60, 70]) {
-      const phi = (latitude * Math.PI) / 180;
-      const fixed = EARTH.ellipsoid.cartographicToCartesian(
-        { longitude: 0.3, latitude: phi, height: 0 },
-        new Float64Array(3),
+    for (const design of [
+      [500000, 4_000_000, 0],
+      [650000, 3_800_000, 0],
+    ]) {
+      const own = projOwn(P, "EPSG:26711", design);
+      const result = gridFactors(frame, design);
+      expect(Math.abs(result.pointScale - own.parallel_scale)).toBeLessThan(
+        1e-12,
       );
-      const result = gridFactors(frame, frame.fromBodyFixed(fixed));
-      const w = 1 - e2 * Math.sin(phi) ** 2;
-      const k = Math.sqrt(w) / Math.cos(phi);
-      const h = (w * Math.sqrt(w)) / ((1 - e2) * Math.cos(phi));
-      const omega = 2 * Math.asin(Math.abs(h - k) / (h + k));
-      // PROJ's numerical longitude derivative (measured 1e-12 at 0°).
-      expect(Math.abs(result.pointScale - k), `k at ${latitude}`).toBeLessThan(
-        1e-11,
-      );
-      // The latitude derivative is PROJ's numerical one: at 60° its
-      // dy/dphi is 2.000000000224 for 2 (measured 2.2e-10 in h).
       expect(
-        Math.abs(result.meridionalScale - h),
-        `h at ${latitude}`,
-      ).toBeLessThan(1e-9);
-      expect(Math.abs(result.angularDistortion - omega)).toBeLessThan(1e-9);
-      expect(Math.abs(result.meridianParallelAngle - Math.PI / 2)).toBeLessThan(
-        1e-9,
-      );
-      expect(Math.abs(result.convergence)).toBeLessThan(1e-12);
-      // The sphere's scale, which this guards against, is far away above 0°.
-      if (latitude > 0) {
-        expect(Math.abs(result.pointScale - 1 / Math.cos(phi))).toBeGreaterThan(
-          1e-3,
-        );
-      }
+        Math.abs(result.meridionalScale - own.meridional_scale),
+      ).toBeLessThan(1e-12);
     }
+  });
+
+  it.each(["EPSG:32661", "EPSG:5041", "EPSG:3413"])(
+    "%s at the north pole: PROJ's own scale (the projection's k there)",
+    async (code) => {
+      const P = await loadProj({ base });
+      const frame = EngineeringFrame.create(
+        { name: code, body: EARTH, crs: crsRef(code) },
+        P,
+      );
+      const pole = frame.fromBodyFixed(
+        EARTH.ellipsoid.cartographicToCartesian(
+          { longitude: 0, latitude: Math.PI / 2, height: 0 },
+          new Float64Array(3),
+        ),
+      );
+      const own = projOwn(P, code, pole);
+      const result = gridFactors(frame, pole);
+      expect(Math.abs(result.pointScale - own.parallel_scale)).toBeLessThan(
+        1e-12,
+      );
+      // UPS's k0 = 0.994; 3413's standard parallel at 70°N gives 0.970.
+      expect(result.pointScale).toBeGreaterThan(0.96);
+      expect(result.pointScale).toBeLessThan(1);
+    },
+  );
+
+  it("a WGS 84 UTM zone keeps PROJ's own values, unchanged", async () => {
+    const P = await loadProj({ base });
+    const frame = EngineeringFrame.create(
+      { name: "UTM 11N", body: EARTH, crs: crsRef("EPSG:32611") },
+      P,
+    );
+    for (const design of [
+      [500000, 4_000_000, 0],
+      [600000, 4_500_000, 0],
+    ]) {
+      const own = projOwn(P, "EPSG:32611", design);
+      const result = gridFactors(frame, design);
+      expect(result.pointScale).toBe(own.parallel_scale);
+      expect(result.meridionalScale).toBe(own.meridional_scale);
+      expect(result.arealScale).toBe(own.areal_scale);
+      expect(result.convergence).toBe(own.meridian_convergence);
+    }
+  });
+
+  // The EASE-Grid CRSs on WGS 84 apply EPSG's spherical formulas on the
+  // authalic sphere (IOGP 373-7-2 3.2.6.1 and 3.3.2.1) to WGS 84 latitudes:
+  // R_A = a sqrt((1 - (1 - e2)/(2e) ln((1 - e)/(1 + e))) / 2).
+  const fW = 1 / WGS84.invF;
+  const e2W = fW * (2 - fW);
+  const eW = Math.sqrt(e2W);
+  const RA =
+    WGS84.a *
+    Math.sqrt(
+      (1 - ((1 - e2W) / (2 * eW)) * Math.log((1 - eW) / (1 + eW))) * 0.5,
+    );
+  const nu = (phi: number) => WGS84.a / Math.sqrt(1 - e2W * Math.sin(phi) ** 2);
+  const rho = (phi: number) =>
+    (WGS84.a * (1 - e2W)) / (1 - e2W * Math.sin(phi) ** 2) ** 1.5;
+
+  it.each([
+    {
+      code: "EPSG:3975",
+      // Lambert Cylindrical Equal Area (Spherical), standard parallel 30°:
+      // E = R λ cos φ1, N = R sin φ / cos φ1.
+      k: (phi: number) =>
+        (RA * Math.cos(Math.PI / 6)) / (nu(phi) * Math.cos(phi)),
+      h: (phi: number) =>
+        (RA * Math.cos(phi)) / (Math.cos(Math.PI / 6) * rho(phi)),
+    },
+    {
+      code: "EPSG:3973",
+      // Lambert Azimuthal Equal Area (Spherical), north polar: the radius on
+      // the map is 2R sin(π/4 − φ/2).
+      k: (phi: number) =>
+        (2 * RA * Math.sin(Math.PI / 4 - phi / 2)) / (nu(phi) * Math.cos(phi)),
+      h: (phi: number) => (RA * Math.cos(Math.PI / 4 - phi / 2)) / rho(phi),
+    },
+  ])(
+    "$code: h and k against the WGS 84 ellipsoid on the authalic sphere's formulas",
+    async ({ code, k, h }) => {
+      const P = await loadProj({ base });
+      const frame = EngineeringFrame.create(
+        { name: code, body: EARTH, crs: crsRef(code) },
+        P,
+      );
+      for (const latitude of [10, 45, 70]) {
+        const phi = (latitude * Math.PI) / 180;
+        const design = frame.fromBodyFixed(
+          EARTH.ellipsoid.cartographicToCartesian(
+            { longitude: 0.4, latitude: phi, height: 0 },
+            new Float64Array(3),
+          ),
+        );
+        const result = gridFactors(frame, design);
+        // PROJ's longitude derivative is numerical too: exact for the
+        // cylinder's E = R λ cos φ1, 3.2e-11 measured for the azimuthal.
+        expect(
+          Math.abs(result.pointScale - k(phi)),
+          `k at ${latitude}`,
+        ).toBeLessThan(1e-10);
+        // PROJ's numerical latitude derivative, as for 3857.
+        expect(
+          Math.abs(result.meridionalScale - h(phi)),
+          `h at ${latitude}`,
+        ).toBeLessThan(1e-9);
+      }
+    },
+  );
+
+  it("the spherical-formula path refuses a pole, where the derivatives are 0/0", async () => {
+    const P = await loadProj({ base });
+    const frame = EngineeringFrame.create(
+      { name: "EASE-Grid North", body: EARTH, crs: crsRef("EPSG:3973") },
+      P,
+    );
+    expect(() => gridFactors(frame, [0, 0, 0])).toThrow(/pole/);
   });
 });

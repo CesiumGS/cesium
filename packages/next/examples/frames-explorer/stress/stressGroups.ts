@@ -12,8 +12,10 @@ function standardHeadline(results: readonly StressResult[]) {
   if (results.length === 0) {
     return undefined;
   }
-  const passed = results.filter((r) => r.pass).length;
-  const count = `${passed} of ${results.length} pass`;
+  // Display-only results (effects with no verdict) are not counted.
+  const judged = results.filter((r) => r.displayOnly !== true);
+  const passed = judged.filter((r) => r.pass).length;
+  const count = `${passed} of ${judged.length} pass`;
   const effect = results.find((r) => r.effect !== undefined)?.effect;
   if (effect !== undefined) {
     return `${count}; ${formatEffect(effect)}`;
