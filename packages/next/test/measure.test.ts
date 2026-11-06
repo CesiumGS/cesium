@@ -207,6 +207,33 @@ describe("measure", () => {
     );
   });
 
+  it("codes each warning, in step with the text, so a reader can tell signal-only ones apart", () => {
+    const moving = framePoint(frames.itrf, [6378137, 6000, 8000], instant);
+    const m = measure(station, moving, instant, frames);
+    expect(m.accuracy.warningCodes).toHaveLength(m.accuracy.warnings.length);
+    const i = m.accuracy.warningCodes!.indexOf("own-instant-no-signal");
+    expect(i).toBeGreaterThanOrEqual(0);
+    expect(m.accuracy.warnings[i]).toMatch(/b carries its own instant/);
+    const same = measure(station, station, instant, frames);
+    expect(same.accuracy.warningCodes).toContain("coincident");
+    const center = measure(
+      framePoint(frames.itrf, [0, 0, 0]),
+      station,
+      instant,
+      frames,
+    );
+    expect(center.accuracy.warningCodes).toContain("no-footprint");
+    const plain = measure(
+      station,
+      framePoint(frames.itrf, [6378137, 6000, 8000]),
+      instant,
+      frames,
+    );
+    expect(plain.accuracy.warningCodes ?? []).toHaveLength(
+      plain.accuracy.warnings.length,
+    );
+  });
+
   it("honours signal: false", () => {
     const m = measure(
       station,

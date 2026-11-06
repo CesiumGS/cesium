@@ -22,11 +22,29 @@ export interface AccuracyTerm {
 }
 
 /** What a measurement claims to know, term by term. */
+/**
+ * What a statement's warning is about, for a reader that filters them:
+ * `own-instant-no-signal` and `coincident` concern only the signal (light
+ * time, line of sight), `no-footprint` only `overBody`, `alignment-unused`
+ * only the design result; `leap-seconds-expired` may affect the instant.
+ */
+export type WarningCode =
+  | "own-instant-no-signal"
+  | "coincident"
+  | "no-footprint"
+  | "alignment-unused"
+  | "leap-seconds-expired";
+
 export interface AccuracyStatement {
   /** The root sum square of the terms; `undefined` if any term is (R7). */
   meters: number | undefined;
   terms: AccuracyTerm[];
   warnings: string[];
+  /**
+   * Each warning's code, in step with `warnings` (same order and length)
+   * when set. Optional: a statement built elsewhere may leave it out.
+   */
+  warningCodes?: WarningCode[];
 }
 
 const ARCSEC_TO_RAD = Math.PI / (180 * 3600);
@@ -199,6 +217,7 @@ export function accuracyOf(
 ): AccuracyStatement {
   const terms: AccuracyTerm[] = [];
   const warnings: string[] = [];
+  const warningCodes: WarningCode[] = [];
 
   if (commonAncestor(a.frame, b.frame) === frames.icrf) {
     // 0.01 m is DE440's Earth-Moon fit, so it is claimed only when both ends
@@ -282,6 +301,7 @@ export function accuracyOf(
     warnings.push(
       "The leap-second table has expired: if this instant was given in UTC, a leap second may have been missed",
     );
+    warningCodes.push("leap-seconds-expired");
   }
 
   const known = terms.every((t) => t.meters !== undefined);
@@ -289,5 +309,6 @@ export function accuracyOf(
     meters: known ? rss(...terms.map((t) => t.meters!)) : undefined,
     terms,
     warnings,
+    warningCodes,
   };
 }
