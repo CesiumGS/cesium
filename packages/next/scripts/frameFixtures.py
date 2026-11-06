@@ -2,7 +2,7 @@
 
 Usage: uv run --with pyerfa --with numpy python scripts/frameFixtures.py <section> [args]
 
-Sections: dtdb, earth, earthLeap <store>, utc <store> (needs jplephem), ephemeris
+Sections: dtdb, bias, earth, earthLeap <store>, utc <store> (needs jplephem), ephemeris
 <store> (needs jplephem), moon <store> <frame kernel> (needs spiceypy and jplephem).
 earthLeap reads the store's EOP-All.csv; the others read the NAIF kernels
 `npm run setup` downloaded to <store>. Only their small JSON output is committed.
@@ -26,6 +26,9 @@ def write(name, rows):
     OUT.mkdir(parents=True, exist_ok=True)
     # Python's json writes float repr, which round-trips float64.
     (OUT / f"{name}.json").write_text(json.dumps(rows, indent=1) + "\n")
+    if isinstance(rows, dict) and "rows" not in rows:
+        print(f"wrote {name}.json")
+        return
     count = len(rows["rows"]) if isinstance(rows, dict) else len(rows)
     print(f"wrote {name}.json ({count} rows)")
 
@@ -41,6 +44,20 @@ def dtdb():
         jd2 = float(jd - jd1)
         rows.append({"jd1": jd1, "jd2": jd2, "dtdb": float(erfa.dtdb(jd1, jd2, 0.0, 0.0, 0.0, 0.0))})
     write("dtdb", rows)
+
+
+def bias():
+    """The frame bias: bp06's rb (row-major, eme2000 = rb * icrs) at J2000, and
+    bi00's offsets (dpsibi, depsbi, dra, radians)."""
+    rb = erfa.bp06(2451545.0, 0.0)[0]
+    dpsibi, depsbi, dra = erfa.bi00()
+    write(
+        "bias",
+        {
+            "rb": [float(v) for v in np.asarray(rb).reshape(9)],
+            "bi00": {"dpsibi": float(dpsibi), "depsbi": float(depsbi), "dra": float(dra)},
+        },
+    )
 
 
 def earth_row(utc1, utc2, utc_ms, tt, dut1, xp, yp, dx, dy):
@@ -308,6 +325,7 @@ def moon(store, frame_kernel):
 
 SECTIONS = {
     "dtdb": dtdb,
+    "bias": bias,
     "earth": earth,
     "earthLeap": earth_leap,
     "utc": utc,

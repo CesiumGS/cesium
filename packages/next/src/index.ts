@@ -239,6 +239,9 @@ export {
 } from "./ephemeris/loadFrameData.ts";
 export { Frame, frameTransform } from "./frames/Frame.ts";
 export { toParentMatrix } from "./frames/matrix.ts";
+export { EARTH, MOON, type Body } from "./scene/Body.ts";
+export { frameBias } from "./time/erfa/bias.ts";
+export { createFrames, type Frames } from "./frames/frames.ts";
 export {
   framePoint,
   convertPoint,
