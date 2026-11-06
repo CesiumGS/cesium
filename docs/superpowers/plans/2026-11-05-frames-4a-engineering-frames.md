@@ -31,7 +31,7 @@ Plans 1–3 supply the frame tree, `Body` (EARTH, MOON), `Ellipsoid`, `measure` 
 
 **Roadmap:**
 
-- **4b:** the 3D Tiles georeferencing reader, rigid and reprojected placement of tilesets, picking design coordinates, snapping (client-side and exact), and the corridor generator and example.
+- **4b:** the 3D Tiles georeferencing reader, rigid and reprojected placement of tilesets, picking design coordinates, snapping (client-side and exact), and the corridor generator and example. It also covers global geoid and height-system coverage, lazily loaded: country and region geoids from PROJ-data's catalog, with opt-in EGM96 and EGM2008 fallbacks (the owner's requirement; see CESIUM2_WEBGPU_PLAN.md §13.14, Carried forward).
 - **5:** multiple bodies and the Artemis example.
 
 ## Rulings this plan makes

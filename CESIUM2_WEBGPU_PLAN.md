@@ -6362,6 +6362,33 @@ out, because none of them changes a result.
 - **Plan 4 or later:** `measure` solves the downlink light time twice, once
   inside `downlink` and again for line of sight. Return the solution from
   the leg internally.
+- **Plan 4b (owner's requirement, 2026-11-06): global geoid and
+  height-system coverage, lazily loaded.** The portfolio needs the country
+  and region geoids and height systems, with EGM96 and EGM2008 as fallbacks,
+  not only GEOID18. Facts checked 2026-11-06:
+  - **PROJ-data's catalog** (`cdn.proj.org/files.geojson`) lists 458 grids
+    from 32 countries, 0.91 GB in all. Each entry has a `sha256sum`, so
+    setup and the server verify against the catalog instead of hand pins.
+  - **EGM96** (`us_nga_egm96_15.tif`) is 2.7 MB.
+  - **EGM2008** at 2.5′ (`us_nga_egm08_25.tif`) is 80.6 MB. The 1′ grid is
+    not on the CDN.
+  - **The CDN sends no CORS headers,** so grids are self-hosted: served by
+    the dev server, or by the user's own mirror using the same layout.
+  - **To design in 4b:**
+    - Pin the catalog itself, by hash and version, as the trust root.
+    - The dev server fetches a grid on first request into the store,
+      verifies it against the catalog, and serves it. Setup can prefetch
+      sets.
+    - At run time, an operation's candidate grids are known before loading
+      (PROJ names them even when unavailable). Fetch the first candidate's
+      grids, load them, then resolve. This is an async step before
+      `resolveOperation`, and plan 4a's R2 still holds: no silent fallback.
+    - EGM96 and EGM2008 fallbacks are opt-in per frame and named. A
+      fallback adds an accuracy term for the offset between the global
+      model and the local datum.
+    - Browser memory for large grids: PROJ loads whole files into the
+      WebAssembly FS (80 MB for EGM2008). Consider cropped regional tiles
+      made by setup.
 - **Plan 4 or later:** `src/frames/frames.ts` imports its constants from
   `src/measure/constants.ts`, so the frames layer depends on measurement.
   Move the shared constants to a neutral module.
