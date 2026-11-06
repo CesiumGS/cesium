@@ -2,9 +2,9 @@
 // GCRF, ITRF or MOON_ME. The same path looks utterly different because the
 // frame you look from moves: the answer is Orion's speed in the drawn frame
 // at the scenario's time, beside its speed in the other two (Earth-fixed,
-// the Earth's turn alone makes it tens of km/s). The tree adds Orion under
-// its OEM's reference, and the answer runs from Orion through the tree to
-// the drawn frame. The path itself is drawn on the main thread (main.ts,
+// the Earth's turn alone makes it tens of km/s). Orion is data, not a frame:
+// pinned beside its OEM's reference (EME2000), and the answer's path is its
+// route through the tree to the drawn frame (the owner's tree design). The path itself is drawn on the main thread (main.ts,
 // `trajectoryPath`), which follows the clock without a rebuild.
 //
 // Off the checked setup it re-runs live what the catalog's
@@ -29,7 +29,7 @@ import {
   orion,
   translationOf,
 } from "../stress/shared.ts";
-import { buildTree, type TreeNode } from "../tree.ts";
+import { branchPath, buildTree, type TreeNode } from "../tree.ts";
 import { registerScenario, type ScenarioEvaluator } from "./evaluate.ts";
 import type { KnobState } from "./spec.ts";
 import { SCENARIOS } from "./specs.ts";
@@ -77,6 +77,54 @@ function orionNode(
   const find = (n: TreeNode): TreeNode | undefined =>
     n.id === o.name ? n : n.children.map(find).find((x) => x);
   return find(tree)!;
+}
+
+/**
+ * Why there's no answer now, in words: the OEM covers a span (with short
+ * gaps between its segments), and the clock is outside it.
+ */
+function noPosition(ctx: StressContext, o: Trajectory): string {
+  const leap = ctx.frames.data.leapSeconds;
+  const day = (tdb: number) =>
+    new Date(Instant.fromTdb(tdb).toUtc(leap)).toISOString().slice(0, 10);
+  return `No Orion data at this time: its OEM covers ${day(o.spans[0]![0])} to ${day(o.spans.at(-1)![1])}, with short gaps between segments. Move the clock into that span to see the answer.`;
+}
+
+/** The headline's words after the speed: what it's relative to (fix 1). */
+const RELATIVE: Record<DrawnFrame, string> = {
+  GCRF: "relative to the Earth's centre, not turning (GCRF)",
+  ITRF: "relative to the turning Earth (ITRF)",
+  MOON_ME: "relative to the Moon (MOON_ME)",
+};
+
+/** What the drawn frame does to the path, in a sentence (owner, fix 1). */
+const WHY: Record<DrawnFrame, string> = {
+  GCRF: "GCRF doesn't turn, so the path is the free-return figure-eight round the Moon.",
+  ITRF: "The Earth's turn is the last step, which is why the path loops round and round: the Earth turns under it once a day.",
+  MOON_ME:
+    "MOON_ME turns with the Moon, so the path swings round the Moon's far side and back.",
+};
+
+/**
+ * The route Orion's data takes through the tree to the drawn frame, in
+ * words: "Orion's data (EME2000) runs through EARTH_ICRF, ICRF and GCRF to
+ * ITRF." The tree's shape never changes; the route does.
+ */
+function routeText(
+  ctx: StressContext,
+  o: Trajectory,
+  name: DrawnFrame,
+): string {
+  const tree = buildTree(ctx.frames);
+  const p = branchPath(tree, o.reference.name, name);
+  const via = [...p.up, p.ancestor, ...p.down.slice(0, -1)]
+    .map((n) => n.id)
+    .filter((id) => id !== name && id !== o.reference.name);
+  const list =
+    via.length <= 1
+      ? (via[0] ?? "")
+      : `${via.slice(0, -1).join(", ")} and ${via.at(-1)}`;
+  return `Orion's data (${o.reference.name}) runs${list ? ` through ${list}` : ""} to ${name}.`;
 }
 
 const km = (m: number) => `${Math.round(m / 1000).toLocaleString("en-US")} km`;
@@ -157,15 +205,17 @@ export const evaluateOnePath: ScenarioEvaluator = async (
   const name = String(knobs.frame) as DrawnFrame;
   const instant = Instant.fromTdb(epochTdb);
   const node = orionNode(ctx, o, instant);
-  const added = [
-    {
-      id: node.id,
-      label: "Orion",
-      parentId: o.reference.name,
-      edge: node.edge,
-    },
-  ];
-  const path = { from: node.id, to: name };
+  // Orion is data, not a frame (the owner's tree design, fix 1): pinned
+  // beside the frame its numbers are in, its route through the tree to the
+  // drawn frame lit. The tree's shape never changes.
+  const added: [] = [];
+  const data = {
+    label: "Orion's data",
+    frame: o.reference.name,
+    source: "OEM",
+    accuracy: node.edge.accuracy,
+  };
+  const path = { from: o.reference.name, to: name };
   const checkedTdb = Instant.fromUtc(
     Date.parse(SPEC.checked.epochUtc),
     ctx.frames.data.leapSeconds,
@@ -175,13 +225,15 @@ export const evaluateOnePath: ScenarioEvaluator = async (
   try {
     o.state(instant);
     here = orionIn(o, frameOf(ctx, name), epochTdb);
-  } catch (error) {
+  } catch {
     // Outside the OEM's spans (or in a gap): the answer says so, unbounded.
     return {
       scenario: "one-path",
       added,
+      data,
       answer: {
-        headline: `Orion has no position at this time: ${error instanceof Error ? error.message : String(error)}`,
+        label: "",
+        headline: noPosition(ctx, o),
         accuracy: { note: "not bounded: outside Orion's data" },
         path,
       },
@@ -193,9 +245,6 @@ export const evaluateOnePath: ScenarioEvaluator = async (
   const others = (["GCRF", "ITRF", "MOON_ME"] as const).filter(
     (f) => f !== name,
   );
-  const otherText = others
-    .map((f) => `${kms(orionIn(o, frameOf(ctx, f), epochTdb).speed)} in ${f}`)
-    .join(" and ");
   const statement = measure(
     framePoint(frameOf(ctx, name), [0, 0, 0]),
     framePoint(o.frame, [0, 0, 0]),
@@ -206,8 +255,15 @@ export const evaluateOnePath: ScenarioEvaluator = async (
   return {
     scenario: "one-path",
     added,
+    data,
     answer: {
-      headline: `In ${name}, Orion is ${km(norm(here.position))} from ${ORIGIN_NAME[name]}, moving at ${kms(here.speed)}; the same instant reads ${otherText}`,
+      label: RELATIVE[name],
+      aside: others
+        .map(
+          (f) => `${kms(orionIn(o, frameOf(ctx, f), epochTdb).speed)} in ${f}`,
+        )
+        .join(" · "),
+      headline: `The same Orion, the same instant: its speed depends on the frame you measure it in, because the frames move differently. ${WHY[name]} ${routeText(ctx, o, name)} Here Orion is ${km(norm(here.position))} from ${ORIGIN_NAME[name]}.`,
       value: here.speed / 1000,
       unit: "km/s",
       accuracy: {

@@ -17,49 +17,12 @@ import { svgUndo } from "@stratakit/icons/undo";
 import { Icon } from "@stratakit/mui";
 import { useId } from "react";
 import type { KnobSpec, KnobValue } from "../scenarios/spec.ts";
+import { knobText, movedText, utcText } from "./knobText.ts";
 import type { ScenarioPanelView } from "./model.ts";
-
-/** "3,600×", "−45.5°", "25 m". */
-export function knobText(knob: KnobSpec, value: KnobValue): string {
-  if (knob.kind === "choice") {
-    return knob.options?.find((o) => o.value === value)?.label ?? String(value);
-  }
-  const n = Number(value);
-  const digits = (knob.step ?? 1) < 1 ? 1 : 0;
-  const text = n
-    .toLocaleString("en-US", {
-      minimumFractionDigits: digits,
-      maximumFractionDigits: digits,
-    })
-    .replace("-", "−");
-  return knob.unit === "×" || knob.unit === "°"
-    ? `${text}${knob.unit}`
-    : knob.unit
-      ? `${text} ${knob.unit}`
-      : text;
-}
 
 /** A range spanning three decades or more moves on a log scale (the clock's rate). */
 const logScale = (k: KnobSpec) =>
   (k.min ?? 0) > 0 && (k.max ?? 0) / (k.min ?? 1) >= 1000;
-
-/** "“Site latitude” and the time": what moved, in words. */
-export function movedText(
-  changed: readonly string[],
-  knobs: readonly KnobSpec[],
-): string {
-  const names = changed.map((c) =>
-    c === "time"
-      ? "the time"
-      : `“${knobs.find((k) => k.id === c)?.label ?? c}”`,
-  );
-  return names.length <= 1
-    ? (names[0] ?? "")
-    : `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`;
-}
-
-const utcText = (iso: string) =>
-  iso.replace("T", " ").replace(/(\.\d+)?Z$/, " UTC");
 
 function RangeKnob({
   knob,
@@ -94,7 +57,8 @@ function RangeKnob({
         max={to(knob.max ?? 1)}
         step={log ? 0.01 : (knob.step ?? 1)}
         value={to(value)}
-        marks={[{ value: to(checked), label: "checked" }]}
+        // The checked value's tick; the marker above says it in words.
+        marks={[{ value: to(checked) }]}
         aria-labelledby={id}
         getAriaValueText={(t) => knobText(knob, from(t))}
         onChange={(_, t) => onChange(from(t as number))}
@@ -116,8 +80,6 @@ function ChoiceKnob({
 }) {
   const id = useId();
   const options = knob.options ?? [];
-  // A short value names its option on the button; the full label says what it is.
-  const short = (v: string) => v;
   return (
     <div className="fx-knob">
       <span id={id} className="fx-knob-label">
@@ -138,7 +100,7 @@ function ChoiceKnob({
             title={o.label}
             render={<Button variant="outlined" />}
           >
-            {short(o.value)}
+            {o.value}
             {o.value === checked && (
               <span className="fx-visually-hidden"> (checked setup)</span>
             )}
@@ -152,7 +114,7 @@ function ChoiceKnob({
         className="fx-knob-help"
       >
         {options.find((o) => o.value === value)?.label}
-        {value === checked ? "" : `; checked in ${short(checked)}`}
+        {value === checked ? "" : `; checked in ${checked}`}
       </Typography>
     </div>
   );
@@ -191,9 +153,7 @@ export function Knobs({
             <span className="fx-marker-dot" aria-hidden />
             <span>
               <span className="fx-strong">Off the checked setup:</span>{" "}
-              {movedText(s.changed, s.knobs)}{" "}
-              {s.changed.length === 1 ? "differs" : "differ"} from it. The proof
-              re-runs here.
+              {movedText(s)}. The proof re-runs here.
             </span>
           </>
         )}

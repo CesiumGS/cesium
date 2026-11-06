@@ -105,6 +105,33 @@ export function lunarClockGain(
   return (sum / samples) * DAY * 1e6;
 }
 
+/**
+ * Ashby & Patla's published rate, as references.json gives it: the value
+ * the catalog's lunar-time.moon-vs-earth.synodic compares with, within 2%.
+ */
+function publishedRate(): NonNullable<
+  import("./evaluate.ts").ScenarioAnswer["published"]
+> {
+  const entry = (
+    references.entries as unknown as Record<
+      string,
+      { rate: string; source: { document: string; doi?: string } }
+    >
+  )["ashby-patla-2024"]!;
+  const printed = entry.rate.replace("μs", "µs");
+  return {
+    value: Number.parseFloat(printed),
+    unit: "µs/day",
+    printed,
+    document: entry.source.document,
+    ...(entry.source.doi !== undefined && {
+      url: `https://doi.org/${entry.source.doi}`,
+    }),
+    proofId: "lunar-time.moon-vs-earth.synodic",
+    tolerance: "within 2%",
+  };
+}
+
 /** The checked setup's gain, computed once per worker (it is the same every time). */
 let checkedGain: { key: string; value: number } | undefined;
 
@@ -221,7 +248,9 @@ export const evaluateStandOnMoon: ScenarioEvaluator = async (
       },
     ],
     answer: {
-      headline: `A clock at ${latitudeText(latitude)} on the Moon runs ${gain.toFixed(2)} µs a day fast against one on the Earth, averaged over a synodic month`,
+      label: "fast, against a clock on the Earth",
+      published: publishedRate(),
+      headline: `A clock at ${latitudeText(latitude)} on the Moon gains ${gain.toFixed(2)} µs a day on one on the Earth's surface, averaged over a synodic month: the Moon's weaker gravity speeds it up more than its motion slows it.`,
       value: gain,
       unit: "µs/day",
       accuracy: {

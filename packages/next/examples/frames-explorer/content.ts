@@ -19,7 +19,8 @@ export const RESULT_LABELS: Readonly<Record<string, string>> = {
     "Site grid 0°, scale 0.99996",
   "recorded-operations.geoid": "6420+6360 records GEOID18 once",
   "recorded-operations.missing-grid": "Missing Canadian geoid grid throws",
-  "frame-tree.compositions.itrf-gcrf": "ITRF and GCRF, every route",
+  "frame-tree.compositions.itrf-gcrf":
+    "ITRF ↔ GCRF, checked by every route through the tree (including frames this scenario doesn't draw)",
   "frame-tree.compositions.itrf-earth-icrf": "ITRF and EARTH_ICRF, every route",
   "frame-tree.compositions.itrf-eme2000": "ITRF and EME2000, every route",
   "frame-tree.compositions.itrf-hcrs": "ITRF and HCRS, every route",
@@ -90,7 +91,7 @@ export const RESULT_LABELS: Readonly<Record<string, string>> = {
   "lunar-time.moon-vs-earth.sidereal": "Lunar clock gain, sidereal month",
   "space.effects.moon-me-pa": "MOON_ME against MOON_PA at the south pole",
   "frame-tree.compositions.itrf-gcrf.live":
-    "ITRF and GCRF, every route, at your time",
+    "ITRF ↔ GCRF at your time, checked by every route through the tree (including frames this scenario doesn't draw)",
   "trajectory.moon-me.distance.live": "Orion by two routes, in your frame",
   "trajectory.moon-me.round-trip.live": "Orion through your frame and back",
   "stand-on-moon.site-triad": "The site's axes, at your latitude",

@@ -602,6 +602,7 @@ describe("scenario", () => {
       } satisfies AddedFrameSpec,
     ],
     answer: {
+      label: "an hour",
       headline: "The ground turns 15.04° an hour against the stars",
       value: 15.04,
       unit: "°/h",

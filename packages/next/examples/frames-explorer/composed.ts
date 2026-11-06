@@ -82,7 +82,8 @@ const EPHEMERIS_EDGES: ReadonlySet<TreeNode["edge"]["kind"]> = new Set([
 /** Why an edge on the path adds nothing to the separation of the two origins. */
 function whyNothing(node: TreeNode): string {
   if (node.edge.accuracy.byDefinition) {
-    return "exact by definition (IAU 2006 adopted constants)";
+    // Its own words: the IAU 2006 frame bias, or DE440's PA constants.
+    return node.edge.accuracy.note.split(". ")[0]!;
   }
   switch (node.edge.kind) {
     case "rotation":

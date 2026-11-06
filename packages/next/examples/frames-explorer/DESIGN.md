@@ -395,6 +395,41 @@ the answer; the knobs; the proof. Nothing opens in a sheet.
   applies at the checked setup (with how far your setting moves the answer),
   or Loading. A catalog row offers one labelled "Open in Verification".
 
+**Fix round 1 (the owner's reports, 2026-11-06)** changed these, and
+binds over the bullets above where they differ:
+
+- **The picker** is StrataKit's select, "Scenario", full width and sticky
+  with the question as the lead line and a "Checked setup" / "Off checked ·
+  Back" chip; its list gives each title with its question under it.
+- **The tree holds only frames.** Data (Orion's) is a dashed card pinned
+  below the frame its numbers are in ("Orion's data, in EME2000 (OEM)"). The
+  frame you draw in takes StrataKit's accent with a "Drawing in" tag, and
+  one-path's GCRF, ITRF and MOON_ME are the control (dashed until chosen).
+  The route `branchPath(data's frame, drawn-in frame)` lights in the accent
+  and a dot travels it (static at the end under reduced motion). The docked
+  tree is at most 280 px tall and pans; it has no edge labels: the route is
+  spelled out under it, a numbered step per edge with what it does and its
+  accuracy. Tips (fixed to the viewport) and the Expand dialog carry the
+  full labels. Moon frames never enter earth-turns: a result's frames
+  belong to Verification.
+- **Earth-turns** adds Sacramento's east-north-up frame under ITRF; its
+  triad rides the turning Earth while GCRF's holds still.
+- **The headline answers the question on its own**: "1.40 km/s relative to
+  the Moon (MOON_ME)", "357.70° east of GCRF's x axis", "55.99 µs/day fast,
+  against a clock on the Earth", the same on the globe's callout. Where it
+  has a published counterpart (stand-on-moon), the value and its citation
+  sit under it, with ours, the difference and the verdict at the checked
+  setup, or the delta and no verdict off it.
+- **Stale is said**: while the shown evaluation is another setup's, the
+  answer dims and the proof reads "Updating" with no verdict; while the
+  clock plays they read "Following the clock" in one steady state.
+- **Orion's marker** is a dot with a halo on the path at the clock's time,
+  "Orion, HH:MM UTC" beside it, an arrow at the view's edge when it is off
+  screen; the globe's callout names the drawn-in frame and carries the same
+  GCRF / ITRF / MOON_ME choice.
+- **More below**: a fade and a "Knobs and proof ↓" pill at the scroller's
+  foot until the end is reached.
+
 **Verification** is the second tab: the catalog's Checks, its Overlays and
 the Report, one segmented control apart. Its inspector's sheet keeps one
 labelled Close and no separate fill toggle.

@@ -284,3 +284,39 @@ export function planeFraming(
   const range = 1.2 * Math.max((x1 - x0) / 2 / tanX, (y1 - y0) / 2 / tanY, 1);
   return { center, range, from: { direction: n, up } };
 }
+
+/** a × b, column-major 4×4 (float64): Orion's path's placement now (placeOrion). */
+export function compose(
+  a: ArrayLike<number>,
+  b: ArrayLike<number>,
+): Float64Array {
+  const out = new Float64Array(16);
+  for (let c = 0; c < 4; c++) {
+    for (let r = 0; r < 4; r++) {
+      let sum = 0;
+      for (let k = 0; k < 4; k++) {
+        sum += a[k * 4 + r]! * b[c * 4 + k]!;
+      }
+      out[c * 4 + r] = sum;
+    }
+  }
+  return out;
+}
+
+/**
+ * A point of the drawn path where `placement` puts it: Orion's path drawn
+ * in a frame at one instant, placed now by that frame now times its
+ * inverse then (`compose`). At the clock's time Orion's own place is on it
+ * (test/data/framesExplorerScenarios.test.ts).
+ */
+export function pathPoint(
+  placement: ArrayLike<number>,
+  p: ArrayLike<number>,
+): Float64Array {
+  const m = placement;
+  return Float64Array.of(
+    m[0]! * p[0]! + m[4]! * p[1]! + m[8]! * p[2]! + m[12]!,
+    m[1]! * p[0]! + m[5]! * p[1]! + m[9]! * p[2]! + m[13]!,
+    m[2]! * p[0]! + m[6]! * p[1]! + m[10]! * p[2]! + m[14]!,
+  );
+}

@@ -30,16 +30,22 @@ import {
   groupRunIds,
 } from "./content.ts";
 import { createScenarioHost } from "./scenarioHost.ts";
+import { routeSteps } from "./panel/routeSteps.ts";
 import { proofRows, type ProofRow } from "./scenarios/proof.ts";
 import {
   LUNAR_SITE,
   READY,
   SCENES,
+  earthSiteFrame,
   lunarSiteFrame,
   sceneExposure,
   type SceneSpec,
 } from "./scenarios/scenes.ts";
-import type { KnobState, ScenarioId } from "./scenarios/spec.ts";
+import {
+  checkedState,
+  type KnobState,
+  type ScenarioId,
+} from "./scenarios/spec.ts";
 import { SCENARIOS } from "./scenarios/specs.ts";
 import {
   Globe,
@@ -59,7 +65,13 @@ import {
   type OverlayChunk,
   type Sampling,
 } from "./overlays.ts";
-import { latestOnly, orionLegend, planeFraming } from "./orion.ts";
+import {
+  compose,
+  latestOnly,
+  orionLegend,
+  pathPoint,
+  planeFraming,
+} from "./orion.ts";
 import { familyMap } from "./panel/families.ts";
 import { length, radians, sig } from "./panel/format.ts";
 import type {
@@ -148,6 +160,8 @@ const EARTH_RADIUS = 6_371_000;
 
 /** The Artemis II flyby (R4's clock preset), and the instant the page opens at. */
 const FLYBY = Date.parse("2026-04-06T23:00:00Z");
+/** "Orion now" shows only for a statement within this much clock time of the clock, ms. */
+const ORION_NOW_SLACK_MS = 120_000;
 /** The OEM's span, generously: samples it doesn't cover are skipped. */
 const ORION_SPAN = ["2026-04-02T02:00:00", "2026-04-11T00:00:00"] as const;
 
@@ -284,21 +298,6 @@ interface OverlayState {
 const IDENTITY = Float64Array.from([
   1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,
 ]);
-
-/** a × b, column-major 4×4 (float64). */
-function compose(a: ArrayLike<number>, b: ArrayLike<number>): Float64Array {
-  const out = new Float64Array(16);
-  for (let c = 0; c < 4; c++) {
-    for (let r = 0; r < 4; r++) {
-      let sum = 0;
-      for (let k = 0; k < 4; k++) {
-        sum += a[k * 4 + r]! * b[c * 4 + k]!;
-      }
-      out[c * 4 + r] = sum;
-    }
-  }
-  return out;
-}
 
 /** An origin farther than this from the geocentre is off the scene (the barycentre, the Sun), m. */
 const FAR_ORIGIN = 1e10;
@@ -1729,6 +1728,12 @@ export function run(context: ExampleContext): ExampleRun {
       delete s.problem;
       refreshCallouts();
       invalidate();
+      if (reframeOrion) {
+        // A new frame reads as a change: the camera frames the new path
+        // (the ITRF spiral is far larger than the figure-eight).
+        reframeOrion = false;
+        flyToScene();
+      }
     },
     (error, arg) => {
       const s = overlays.get("orion")!;
@@ -1773,6 +1778,27 @@ export function run(context: ExampleContext): ExampleRun {
     }
     globe.placeOverlay("orion", compose(now, orionBuilt.inverse));
     orionPlacedAt = tdb;
+  }
+
+  /** A point of Orion's drawn path (Earth-fixed when drawn), where it is placed now. */
+  function orionPathPoint(p: ArrayLike<number>): Float64Array | undefined {
+    const instant = instantNow();
+    if (!orionBuilt || !frames || !instant) {
+      return undefined;
+    }
+    if (orionBuilt.frame === "ITRF") {
+      return Float64Array.from([p[0]!, p[1]!, p[2]!]);
+    }
+    try {
+      const now = frameTransform(
+        frames[DRAW_IN[orionBuilt.frame]],
+        frames.itrf,
+        instant,
+      );
+      return pathPoint(compose(now, orionBuilt.inverse), p);
+    } catch {
+      return undefined;
+    }
   }
 
   /** Orion's node and statements at the clock's instant: one in flight, the latest waiting. */
@@ -2440,7 +2466,10 @@ export function run(context: ExampleContext): ExampleRun {
       } catch {
         // Not in the tree: reconcile clears it.
       }
-    } else if (s.kind === "result") {
+    } else if (s.kind === "result" && scene === undefined) {
+      // A result's group's frames, but not over a scenario's scene: a
+      // catalog check through every frame (frame-tree.compositions) would
+      // draw the Moon's triads in "The Earth turns" (fix 1, item 5).
       const r = results.find((x) => x.id === s.id);
       for (const f of (r && groupInfo(r.group)?.focus?.frames) ?? []) {
         out.add(f);
@@ -2536,6 +2565,8 @@ export function run(context: ExampleContext): ExampleRun {
   let sceneKnobs: KnobState = {};
   /** The clock's rate and mode before the scene set them, restored when it's left. */
   let sceneClock: { rate: number; mode: typeof viewer.clock.mode } | undefined;
+  /** Orion's frame changed: frame the new path once it is drawn. */
+  let reframeOrion = false;
   /** A flight to the site's new latitude, after the knob's burst. */
   let siteFlight = 0;
   scope.defer(() => clearTimeout(siteFlight));
@@ -2590,11 +2621,22 @@ export function run(context: ExampleContext): ExampleRun {
    * while stand-on-moon shows or the site is selected, and Orion at the
    * clock's instant while its path is drawn.
    */
+  /** Orion's statement is for about the clock's time (not one it was scrubbed from). */
+  const orionNowCurrent = (): boolean =>
+    orionInfo !== undefined &&
+    Math.abs(orionInfo.utc - viewer.clock.time) <= ORION_NOW_SLACK_MS;
+  let orionNowShown = false;
+
   function refreshCallouts(): void {
+    orionNowShown = orionNowCurrent();
     const out: LabelSpec[] = [];
     const s = view.get().selection;
     const e = evaluationNow();
-    const gain = e?.scenario === "stand-on-moon" ? e.answer.value : undefined;
+    // Not a stale setup's gain (fix 1, item 1): "computing" until it's in.
+    const gain =
+      e?.scenario === "stand-on-moon" && !host.state().stale
+        ? e.answer.value
+        : undefined;
     if (
       local.some((f) => f.name === LUNAR_SITE) &&
       (scene?.id === "stand-on-moon" || (isFrame(s) && s.id === LUNAR_SITE))
@@ -2611,16 +2653,44 @@ export function run(context: ExampleContext): ExampleRun {
       });
     }
     const o = overlays.get("orion")!;
-    if (o.on && o.state === "drawn" && orionInfo && !orionInfoError) {
-      const m = orionInfo.info.composed.ITRF.statement.meters;
+    // Only while it is Orion's position now: a statement for another time
+    // (the clock was just scrubbed) would hang the marker off the path.
+    if (
+      o.on &&
+      o.state === "drawn" &&
+      orionInfo &&
+      orionNowCurrent() &&
+      !orionInfoError
+    ) {
+      // One clear indicator (fix 1): a dot on the path at Orion's place at
+      // the clock's time, its time beside it; the accuracy is the answer's,
+      // on the callout. Orion's place in ITRF is on the drawn path in every
+      // frame: the path is placed by its frame now (placeOrion), so its
+      // sample at this time lands here (test/data/framesExplorerScenarios).
+      const hhmm = new Date(orionInfo.utc).toISOString().slice(11, 16);
       out.push({
-        id: "callout:orion-now",
-        text: `Orion now${m !== undefined ? `, ±${length(m, 2)}` : ""}`,
+        id: "marker:orion-now",
+        text: `Orion, ${hhmm} UTC`,
         at: orionInfo.info.itrf,
         family: "trajectory",
-        priority: 3,
-        leader: true,
+        priority: 5,
+        marker: true,
+        pinned: true,
       });
+    }
+    // The path says which frame it is drawn in, where it is drawn.
+    if (o.on && o.state === "drawn" && orionBuilt) {
+      const built = orionBuilt;
+      const middle = built.chunks[Math.floor(built.chunks.length / 3)];
+      if (middle) {
+        out.push({
+          id: "label:orion-path",
+          text: `Orion's path, drawn in ${built.frame}`,
+          at: () => orionPathPoint(middle.origin),
+          family: "trajectory",
+          priority: 2,
+        });
+      }
     }
     overlayLabels.set("callouts", out);
     refreshTriads();
@@ -2651,8 +2721,13 @@ export function run(context: ExampleContext): ExampleRun {
       viewer.clock.rate = scene.clockRate(sceneKnobs);
     }
     const latitude = scene.lunarSite?.(sceneKnobs);
-    local =
-      latitude !== undefined ? [lunarSiteFrame(frames.moonMe, latitude)] : [];
+    const itrf = frames.itrf;
+    local = [
+      ...(latitude !== undefined
+        ? [lunarSiteFrame(frames.moonMe, latitude)]
+        : []),
+      ...(scene.earthSites ?? []).map((s) => earthSiteFrame(itrf, s)),
+    ];
     const drawIn = scene.orion?.(sceneKnobs);
     if (drawIn !== undefined) {
       const o = overlays.get("orion")!;
@@ -2692,6 +2767,9 @@ export function run(context: ExampleContext): ExampleRun {
 
   function updateScene(knobs: KnobState): void {
     const moved = scene?.lunarSite?.(knobs) !== scene?.lunarSite?.(sceneKnobs);
+    if (scene?.orion && scene.orion(knobs) !== scene.orion(sceneKnobs)) {
+      reframeOrion = true;
+    }
     sceneKnobs = knobs;
     applySceneKnobs();
     if (moved) {
@@ -2714,7 +2792,9 @@ export function run(context: ExampleContext): ExampleRun {
       viewer.sunFromClock = true;
     }
     if (sceneClock) {
+      // The rate and the mode the scene found (fix 1, item 10).
       viewer.clock.rate = sceneClock.rate;
+      viewer.clock.mode = sceneClock.mode;
       sceneClock = undefined;
     }
     clearTimeout(siteFlight);
@@ -2803,15 +2883,32 @@ export function run(context: ExampleContext): ExampleRun {
     const spec = st.spec;
     const catalog = new Map(results.map((r) => [r.id, r]));
     const e = st.evaluation;
-    const current = st.status !== "loading";
+    // Only the time moved while the clock plays: one steady state that
+    // follows it, rather than rows flipping to loading every evaluation.
+    const following =
+      st.stale &&
+      viewer.clock.mode === "playing" &&
+      st.staleBy.every((c) => c === "time");
+    const freshness: ScenarioPanelView["freshness"] = !st.stale
+      ? "current"
+      : following
+        ? "following"
+        : "updating";
     let proof: ProofRow[];
-    if (e && current) {
-      proof = proofRows(spec, st.atChecked, catalog, e);
+    if (e && st.evaluatedAt) {
+      // The rows of the setup it was made at; `freshness` says whether
+      // that is the current one (the panel withholds stale verdicts).
+      const at = checkedState(
+        spec,
+        st.evaluatedAt.knobs,
+        st.evaluatedAt.epochUtcMs,
+      ).atChecked;
+      proof = proofRows(spec, at, catalog, e);
     } else if (st.atChecked) {
       proof = proofRows(spec, true, catalog, {
         scenario: spec.id,
         added: [],
-        answer: { headline: "", accuracy: { note: "" } },
+        answer: { label: "", headline: "", accuracy: { note: "" } },
         overlays: [],
         live: [],
       });
@@ -2864,16 +2961,108 @@ export function run(context: ExampleContext): ExampleRun {
         atChecked: st.atChecked,
         changed: st.changed,
         status: st.status,
+        freshness,
         ...(st.queued !== undefined && { queued: st.queued }),
         ...(st.problem !== undefined && {
           problem: { ...st.problem, message: scrub(st.problem.message) },
         }),
         ...(e && { answer: e.answer }),
+        ...(() => {
+          const pub = e?.answer.published;
+          if (!pub) {
+            return {};
+          }
+          const base = {
+            printed: pub.printed,
+            document: pub.document,
+            ...(pub.url !== undefined && { url: pub.url }),
+            tolerance: pub.tolerance,
+            unit: pub.unit,
+          };
+          const r = catalog.get(pub.proofId);
+          if (!st.atChecked) {
+            const ref = proof.find(
+              (row) => row.kind === "reference-only" && row.id === pub.proofId,
+            );
+            return {
+              published: {
+                ...base,
+                state: "off" as const,
+                ...(freshness === "current" &&
+                  ref?.kind === "reference-only" &&
+                  ref.delta && { delta: ref.delta }),
+              },
+            };
+          }
+          if (!r || freshness !== "current") {
+            return { published: { ...base, state: "loading" as const } };
+          }
+          return {
+            published: {
+              ...base,
+              state: "checked" as const,
+              ...(r.effect && { ours: r.effect.value }),
+              ...(r.value !== undefined && {
+                difference: {
+                  value: r.value,
+                  ...(r.unit !== undefined && { unit: r.unit }),
+                },
+              }),
+              pass: r.pass,
+            },
+          };
+        })(),
         ...(path && { path }),
         proof,
         liveExtras,
         ...(scene?.note !== undefined && { note: scene.note }),
         focus: SCENES[spec.id]?.focus ?? [],
+        ...(() => {
+          const c = SCENES[spec.id]?.treeControl;
+          const knob = c && spec.knobs.find((k) => k.id === c.knob);
+          return knob?.options
+            ? {
+                treeControl: {
+                  knob: knob.id,
+                  verb: c!.verb,
+                  options: knob.options,
+                },
+              }
+            : {};
+        })(),
+        ...(SCENES[spec.id]?.diagramNote !== undefined && {
+          diagramNote: SCENES[spec.id]!.diagramNote!,
+        }),
+        ...(e?.data && {
+          data: {
+            label: e.data.label,
+            frame: e.data.frame,
+            source: e.data.source,
+          },
+        }),
+        ...(() => {
+          // The route spelled out: from the data (or the answer's start)
+          // through each lit edge to the drawn-in frame (or its end).
+          const sc = SCENES[spec.id];
+          const p = e?.answer.path;
+          if (!tree || !path || !p) {
+            return {};
+          }
+          const start = e.data
+            ? {
+                title: `${e.data.label}, as delivered`,
+                does: `position and velocity, expressed in ${e.data.frame} (${e.data.source})`,
+                accuracy: e.data.accuracy,
+              }
+            : (sc?.routeEnds?.start ?? { title: p.from, does: "" });
+          const end = e.data
+            ? {
+                title: `Drawn in ${p.to}`,
+                does: sc?.drawnView?.[p.to] ?? "",
+              }
+            : (sc?.routeEnds?.end ?? { title: p.to, does: "" });
+          return { route: routeSteps(tree, path, start, end) };
+        })(),
         playing: viewer.clock.mode === "playing",
         rate: viewer.clock.rate,
         ...(instant && frames && { eop: clockView().eop }),
@@ -3372,6 +3561,9 @@ export function run(context: ExampleContext): ExampleRun {
         // statement (the tree and the legend) is asked for again after a
         // minute of clock time, at most once a second (R8).
         placeOrion();
+        if (orionNowCurrent() !== orionNowShown) {
+          refreshCallouts();
+        }
         updateMinorGrid();
         followOrbit();
         if (headlight) {
@@ -3383,10 +3575,14 @@ export function run(context: ExampleContext): ExampleRun {
           walkReal = real;
           drawWalk();
         }
+        // Scrubbed or played: "Orion now" and the tree's statements are asked
+        // for again within a moment (one in flight, the latest waiting), so
+        // the marker keeps to the path (fix 1: it lagged a second and a
+        // minute of clock time behind, off the path).
         if (
           orionInfoAsked !== undefined &&
-          Math.abs(now - orionInfoAsked.clock) > 60_000 &&
-          real - orionInfoAsked.real > 1000
+          Math.abs(now - orionInfoAsked.clock) > 1000 &&
+          real - orionInfoAsked.real > 150
         ) {
           askOrionInfo();
         }
@@ -3422,19 +3618,27 @@ export function run(context: ExampleContext): ExampleRun {
   scope.defer(view.subscribe(onView));
   scope.defer(
     context.watchParams((p) => {
-      const known: Known = { ...(tree && { frames: treeIds() }) };
+      // Back, forward or an edited link: the scenario, knobs and time it
+      // names. A selection is checked against this scenario's tree only:
+      // another scenario's frames aren't drawn yet (fix 1, item 9).
+      const now = host.params();
+      const id = readyScenario(parseParams(p).scenario);
+      const known: Known =
+        id === now.scenario && tree ? { frames: treeIds() } : {};
       const parsed = parseParams(p, known);
       view.apply(parsed);
-      // Back, forward or an edited link: the scenario, knobs and time it names.
-      const now = host.params();
-      const id = readyScenario(parsed.scenario);
-      if (
-        frames &&
-        (id !== now.scenario ||
-          parsed.time !== now.time ||
-          JSON.stringify(parsed.knobs) !== JSON.stringify(now.knobs))
-      ) {
-        void host.show(id, parsed.knobs, parsed.time);
+      const sameKnobs = (
+        READY.includes(id) ? SCENARIOS.find((x) => x.id === id)!.knobs : []
+      ).every((k) => parsed.knobs?.[k.id] === now.knobs[k.id]);
+      // A link without a time leaves the clock where it is (it may be
+      // playing); one with a time sets it.
+      const timeMoved = p.t !== undefined && parsed.time !== now.time;
+      if (frames && (id !== now.scenario || !sameKnobs || timeMoved)) {
+        void host.show(
+          id,
+          parsed.knobs,
+          id !== now.scenario || p.t !== undefined ? parsed.time : now.time,
+        );
       }
     }),
   );

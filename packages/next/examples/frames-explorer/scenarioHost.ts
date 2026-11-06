@@ -65,8 +65,18 @@ export interface ScenarioHostState {
   status: "loading" | "ready" | "error";
   /** While loading: why the request waits in the worker (behind a run). */
   queued?: string;
-  /** The latest evaluation of this scenario (not of the knobs while loading). */
+  /** The latest evaluation of this scenario, made at `evaluatedAt`. */
   evaluation?: ScenarioEvaluation;
+  /** The setup `evaluation` was made at (its knobs and time). */
+  evaluatedAt?: { knobs: KnobState; epochUtcMs: number };
+  /**
+   * The evaluation is of another setup than the current one (a knob moved,
+   * or the clock): its answer and proof are the last setup's, not this
+   * one's (Review Focus 1, R9). Its verdicts mustn't read as current.
+   */
+  stale: boolean;
+  /** What differs between the evaluated setup and the current one: knob ids, then "time". */
+  staleBy: readonly string[];
   problem?: { message: string; missing: boolean };
   /** Bumped by every request; replies of an older one are dropped. */
   generation: number;
@@ -120,6 +130,7 @@ export function createScenarioHost(deps: ScenarioHostDeps): ScenarioHost {
   let status: ScenarioHostState["status"] = "loading";
   let queued: string | undefined;
   let evaluation: ScenarioEvaluation | undefined;
+  let evaluatedAt: ScenarioHostState["evaluatedAt"];
   let problem: ScenarioHostState["problem"];
   let generation = 0;
   let disposed = false;
@@ -147,6 +158,22 @@ export function createScenarioHost(deps: ScenarioHostDeps): ScenarioHost {
 
   const state = (): ScenarioHostState => {
     const c = checkedState(spec, knobs, epochUtcMs);
+    // The evaluated setup against the current one, as checkedState compares
+    // a setup with the checked one.
+    const staleBy =
+      evaluation && evaluatedAt
+        ? checkedState(
+            {
+              ...spec,
+              checked: {
+                knobs: evaluatedAt.knobs,
+                epochUtc: new Date(evaluatedAt.epochUtcMs).toISOString(),
+              },
+            },
+            knobs,
+            epochUtcMs,
+          ).changed
+        : [];
     return {
       spec,
       knobs,
@@ -156,6 +183,9 @@ export function createScenarioHost(deps: ScenarioHostDeps): ScenarioHost {
       status,
       ...(queued !== undefined && { queued }),
       ...(evaluation !== undefined && { evaluation }),
+      ...(evaluatedAt !== undefined && { evaluatedAt }),
+      stale: staleBy.length > 0,
+      staleBy,
       ...(problem !== undefined && { problem }),
       generation,
     };
@@ -178,7 +208,11 @@ export function createScenarioHost(deps: ScenarioHostDeps): ScenarioHost {
     owned = new Set();
   }
 
-  function apply(gen: number, e: ScenarioEvaluation): void {
+  function apply(
+    gen: number,
+    e: ScenarioEvaluation,
+    at: NonNullable<ScenarioHostState["evaluatedAt"]>,
+  ): void {
     if (disposed || gen !== generation || e.scenario !== spec.id) {
       return;
     }
@@ -193,6 +227,7 @@ export function createScenarioHost(deps: ScenarioHostDeps): ScenarioHost {
     }
     owned = next;
     evaluation = e;
+    evaluatedAt = at;
     status = "ready";
     queued = undefined;
     problem = undefined;
@@ -224,7 +259,8 @@ export function createScenarioHost(deps: ScenarioHostDeps): ScenarioHost {
         deps
           .evaluate(ask.id, ask.knobs, ask.epochUtcMs)
           .then(
-            (e) => apply(gen, e),
+            (e) =>
+              apply(gen, e, { knobs: ask.knobs, epochUtcMs: ask.epochUtcMs }),
             (error: unknown) => fail(gen, error),
           )
           .finally(() => {
@@ -261,9 +297,10 @@ export function createScenarioHost(deps: ScenarioHostDeps): ScenarioHost {
       // new one enters or draws (Review Focus 3).
       removeOwned();
       if (entered) {
-        deps.leave(spec);
+        quietly(() => deps.leave(spec));
       }
       evaluation = undefined;
+      evaluatedAt = undefined;
     }
     spec = next;
     knobs = clampKnobs(spec, nextKnobs ?? spec.checked.knobs);
@@ -354,10 +391,12 @@ export function createScenarioHost(deps: ScenarioHostDeps): ScenarioHost {
       }
       cancelTimer();
       removeOwned();
-      if (entered) {
-        deps.leave(spec);
-      }
+      // Disposed first, and quietly: the scene's leave restores the clock,
+      // and its change event mustn't start a request (fix 1, item 10).
       disposed = true;
+      if (entered) {
+        quietly(() => deps.leave(spec));
+      }
       waiting?.drop();
       waiting = undefined;
     },

@@ -1478,10 +1478,15 @@
   font-weight: 600;
 }
 .fx-callout-figure {
+  text-wrap: balance;
   font-size: var(--stratakit-font-size-headline-sm);
   line-height: var(--stratakit-line-height-headline-sm);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+}
+.fx-callout-aside {
+  font-size: var(--stratakit-font-size-caption-lg);
+  color: var(--stratakit-color-text-neutral-secondary);
 }
 .fx-callout-acc {
   font-size: var(--stratakit-font-size-caption-lg);
@@ -1496,6 +1501,35 @@
   line-height: var(--stratakit-line-height-caption-lg);
   padding-inline-start: var(--stratakit-space-150);
   border-inline-start: 2px solid var(--stratakit-color-text-attention-base);
+}
+/* The callout keeps to a glance: the sentence in two lines, the rest in the panel. */
+.fx-callout .fx-callout-answer,
+.fx-callout .fx-callout-acc {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.fx-callout-frame {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-100);
+}
+/* The HUD is dark in either scheme: its toggles take the HUD's ink. */
+.fx-callout .MuiToggleButton-root {
+  color: var(--stratakit-color-text-neutral-secondary);
+  border-color: var(--stratakit-color-border-neutral-base);
+}
+.fx-callout .MuiToggleButton-root.Mui-selected {
+  color: var(--stratakit-color-text-neutral-primary);
+  background: color-mix(in oklab, var(--fx-trajectory) 28%, transparent);
+  border-color: var(--fx-trajectory);
+}
+.fx-callout-drawn {
+  font-size: var(--stratakit-font-size-caption-lg);
+  line-height: var(--stratakit-line-height-caption-lg);
+  font-weight: 600;
+  color: var(--fx-trajectory);
 }
 .fx-callout-folded {
   padding-block: var(--stratakit-space-150);
@@ -1512,7 +1546,10 @@
   background: oklch(0% 0 0 / 0.45);
 }
 .fx-tree-dialog {
-  inset: var(--stratakit-space-400);
+  /* As tall as the tree, no taller than the view (fix 1, item 11). */
+  inset-inline: var(--stratakit-space-400);
+  inset-block-start: var(--stratakit-space-400);
+  max-block-size: calc(100% - 2 * var(--stratakit-space-400));
   /* Opaque: the tree reads against nothing of the globe behind it. */
   background: var(--stratakit-color-bg-page-base);
   backdrop-filter: none;
@@ -1721,69 +1758,154 @@
 .fx-scenarios {
   gap: var(--stratakit-space-500);
 }
-.fx-strip ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(108px, 1fr));
-  gap: var(--stratakit-space-100);
-}
-.fx-strip-item {
-  all: unset;
-  box-sizing: border-box;
-  position: relative;
+/*
+ * The strip and the question, sticky at the top of the tab's scroller: the
+ * strip is StrataKit's own tabs (its indicator and selected colour), the
+ * question the scenario's lead line, beside a chip for the checked setup.
+ */
+.fx-scenario-top {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 2;
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  inline-size: 100%;
-  block-size: 100%;
-  min-block-size: 56px;
-  padding: var(--stratakit-space-200) var(--stratakit-space-200)
-    var(--stratakit-space-200) var(--stratakit-space-300);
-  border-radius: var(--stratakit-radius-md);
-  border: 1px solid var(--stratakit-color-border-neutral-muted);
+  gap: var(--stratakit-space-150);
+  /* Room above the field for its floated "Scenario" label, solid behind it. */
+  margin-block-start: calc(-1 * var(--stratakit-space-200) - 2px);
+  padding-block: calc(var(--stratakit-space-300) + 4px)
+    var(--stratakit-space-200);
+  background: var(--stratakit-color-bg-page-base);
+  box-shadow: 0 -2px 0 var(--stratakit-color-bg-page-base);
+  border-block-end: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+/* The scenario picker's list: wide enough for each title and its question. */
+.fx-scenario-menu {
+  max-inline-size: min(480px, calc(100vw - 32px));
+  max-block-size: min(70vh, 560px);
+}
+.fx-scenario-menu .MuiListItemText-secondary {
+  white-space: normal;
+}
+.fx-scenario-lead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--stratakit-space-200);
+}
+.fx-checked-chip {
+  all: unset;
+  box-sizing: border-box;
+  flex: none;
+  min-block-size: 24px;
+  padding: 2px var(--stratakit-space-200);
+  border-radius: var(--stratakit-radius-round);
+  border: 1px solid var(--stratakit-color-border-positive-muted);
+  color: var(--stratakit-color-text-positive-base);
+  font-size: var(--stratakit-font-size-caption-lg);
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 160ms var(--fx-ease);
 }
-.fx-strip-item:hover {
-  background: var(--stratakit-color-bg-glow-on-surface-neutral-hover);
+.fx-off-checked-chip {
+  border-color: var(--stratakit-color-border-attention-base);
+  color: var(--stratakit-color-text-attention-base);
 }
-.fx-strip-item:focus-visible {
+.fx-checked-chip:focus-visible {
   outline: 2px solid var(--stratakit-color-border-accent-strong);
   outline-offset: 1px;
 }
-.fx-strip-item[aria-current="true"] {
-  cursor: default;
-  background: var(--stratakit-color-bg-page-depth);
-  border-color: var(--stratakit-color-border-neutral-base);
+/* A section scrolled to sits below the sticky picker and question. */
+.fx-scenario-body > .fx-section {
+  scroll-margin-block-start: 112px;
 }
-/* The one showing: StrataKit's 2 px accent bar, as a selected row has. */
-.fx-strip-item[aria-current="true"]::before {
-  content: "";
-  position: absolute;
-  inset-block: var(--stratakit-space-200);
-  inset-inline-start: -1px;
-  inline-size: 2px;
-  border-radius: 1px;
+.fx-scenario-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-500);
+}
+/* More below: a fade at the scroller's foot and a pill that goes there. */
+.fx-more-below {
+  position: sticky;
+  inset-block-end: 0;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  margin-block-start: -64px;
+  padding-block: 32px var(--stratakit-space-200);
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    var(--stratakit-color-bg-page-base) 70%
+  );
+}
+.fx-more-button {
+  pointer-events: auto;
+  background: var(--stratakit-color-bg-page-base);
+}
+.fx-key-card {
+  inline-size: 14px;
+  block-size: 9px;
+  border-radius: 2px;
+  border: 1.5px dashed var(--fx-trajectory);
+}
+.fx-key-drawing {
+  inline-size: 14px;
+  block-size: 9px;
+  border-radius: var(--stratakit-radius-round);
+  border: 1.5px solid var(--stratakit-color-border-accent-strong);
+}
+/* The route, spelled out under the tree: one numbered step per edge. */
+.fx-route {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.fx-route li {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) auto;
+  gap: var(--stratakit-space-200);
+  align-items: baseline;
+  padding-block: var(--stratakit-space-100);
+  border-block-end: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.fx-route-n {
+  inline-size: 18px;
+  block-size: 18px;
+  border-radius: var(--stratakit-radius-round);
+  display: inline-grid;
+  place-items: center;
+  font-size: var(--stratakit-font-size-caption-md);
+  font-weight: 600;
+  color: var(--stratakit-color-bg-page-base);
   background: var(--stratakit-color-border-accent-strong);
 }
-.fx-strip-title {
-  font-weight: 600;
-  color: var(--stratakit-color-text-neutral-primary);
+.fx-route-start .fx-route-n {
+  background: var(--fx-trajectory);
 }
-.fx-strip-question {
+.fx-route-text {
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+}
+.fx-route-title {
+  font-weight: 600;
+}
+.fx-route-does {
+  color: var(--stratakit-color-text-neutral-secondary);
   font-size: var(--stratakit-font-size-caption-lg);
   line-height: var(--stratakit-line-height-caption-lg);
+}
+.fx-route-acc {
   color: var(--stratakit-color-text-neutral-secondary);
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  font-size: var(--stratakit-font-size-caption-lg);
+  white-space: nowrap;
 }
 .fx-scenario-question {
   font-weight: 600;
   text-wrap: balance;
+  min-inline-size: 0;
 }
 .fx-tree-section {
   gap: var(--stratakit-space-200);
@@ -1821,15 +1943,22 @@
   background: var(--stratakit-color-text-neutral-primary);
 }
 
-/* The diagram: pills over an SVG of elbows; it pans when it's too wide. */
+/*
+ * The diagram: pills over an SVG of elbows. Docked it is at most 280 px tall
+ * (the answer and the knobs stay near) and pans inside; in the Expand
+ * dialog it takes the room it needs.
+ */
 .fx-diagram {
   position: relative;
-  overflow-x: auto;
-  overflow-y: hidden;
+  overflow: auto;
+  max-block-size: 280px;
   border-radius: var(--stratakit-radius-md);
   background: var(--stratakit-color-bg-page-depth);
   border: 1px solid var(--stratakit-color-border-neutral-muted);
-  overscroll-behavior-x: contain;
+  overscroll-behavior: contain;
+}
+.fx-diagram-full {
+  max-block-size: none;
 }
 .fx-diagram-pans {
   /* A soft edge says there's more to pan to. */
@@ -1865,8 +1994,8 @@
   }
 }
 .fx-diagram-edge.fx-lit {
-  stroke: var(--fx-family);
-  stroke-width: 2.5;
+  stroke: var(--stratakit-color-border-accent-strong);
+  stroke-width: 3;
 }
 .fx-diagram-edge.fx-selected {
   stroke: var(--stratakit-color-border-accent-strong);
@@ -1875,13 +2004,22 @@
 .fx-chip-edge {
   stroke-dasharray: 3 3;
 }
+/* An edge's hit area: 12 px wide, focusable, its own focus ring. */
 .fx-diagram-hit {
   fill: none;
   stroke: transparent;
   stroke-width: 12;
   pointer-events: stroke;
   cursor: pointer;
+  outline: none;
   transition: d 460ms var(--fx-ease);
+}
+.fx-diagram-hit:focus-visible {
+  stroke: color-mix(
+    in oklab,
+    var(--stratakit-color-border-accent-strong) 45%,
+    transparent
+  );
 }
 .fx-node {
   all: unset;
@@ -1892,7 +2030,7 @@
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  block-size: 28px;
+  block-size: 32px;
   padding-inline: 10px 12px;
   border-radius: var(--stratakit-radius-round);
   border: 1px solid
@@ -1910,6 +2048,7 @@
   transition:
     transform 460ms var(--fx-ease),
     opacity 300ms var(--fx-ease),
+    background-color 160ms var(--fx-ease),
     box-shadow 240ms var(--fx-ease) calc(var(--i, 0) * 90ms),
     border-color 240ms var(--fx-ease) calc(var(--i, 0) * 90ms);
 }
@@ -1927,10 +2066,7 @@
     var(--stratakit-color-bg-page-base)
   );
 }
-.fx-node:focus-visible {
-  outline: 2px solid var(--stratakit-color-border-accent-strong);
-  outline-offset: 2px;
-}
+.fx-node:focus-visible,
 .fx-node[aria-pressed="true"] {
   outline: 2px solid var(--stratakit-color-border-accent-strong);
   outline-offset: 2px;
@@ -1960,13 +2096,14 @@
   transform: rotate(45deg) scale(0.95);
 }
 .fx-node.fx-on-path {
-  border-color: var(--fx-family);
-  box-shadow: 0 0 0 1.5px var(--fx-family);
+  border-color: var(--stratakit-color-border-accent-strong);
 }
-.fx-node-end {
-  position: absolute;
-  inset-block-start: -9px;
-  inset-inline-end: -4px;
+/*
+ * A pill's tag sits inside it ("from", "meet", "to"), so nothing in the
+ * edge-label lane above can cover it (fix round 1).
+ */
+.fx-node-tag {
+  flex: none;
   padding: 0 5px;
   border-radius: var(--stratakit-radius-round);
   background: var(--fx-family);
@@ -1975,8 +2112,77 @@
   line-height: 15px;
   font-weight: 600;
 }
-.fx-end-meet {
+.fx-tag-meet {
   background: var(--stratakit-color-text-neutral-primary);
+}
+/*
+ * The tree as a control (one-path): the frames you can draw in, dashed; the
+ * one in use takes StrataKit's accent (teal), with its "Drawing in" tag.
+ */
+.fx-node.fx-target {
+  border-style: dashed;
+  border-color: var(--fx-family);
+}
+.fx-node.fx-target.fx-drawing {
+  border: 1.5px solid var(--stratakit-color-border-accent-strong);
+  background: color-mix(
+    in oklab,
+    var(--stratakit-color-border-accent-strong) 18%,
+    var(--stratakit-color-bg-page-base)
+  );
+}
+.fx-node.fx-drawing .fx-node-tag {
+  background: var(--stratakit-color-border-accent-strong);
+  color: var(--stratakit-color-bg-page-base);
+}
+/* Data, pinned below the frame its numbers are in: not a frame. */
+.fx-data-card {
+  box-sizing: border-box;
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  block-size: 40px;
+  padding-inline: 12px;
+  margin-block-start: -4px;
+  border-radius: var(--stratakit-radius-md);
+  border: 1.5px dashed var(--fx-trajectory);
+  background: color-mix(
+    in oklab,
+    var(--fx-trajectory) 10%,
+    var(--stratakit-color-bg-page-base)
+  );
+  white-space: nowrap;
+  transition:
+    transform 460ms var(--fx-ease),
+    opacity 300ms var(--fx-ease);
+}
+@starting-style {
+  .fx-data-card {
+    opacity: 0;
+    transform: var(--fx-from);
+  }
+}
+.fx-data-name {
+  font-size: var(--stratakit-font-size-body-sm);
+  font-weight: 600;
+  color: var(--fx-trajectory);
+}
+.fx-data-line {
+  font-size: var(--stratakit-font-size-caption-md);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.fx-diagram-edge.fx-data-tether {
+  stroke: var(--fx-trajectory);
+  stroke-dasharray: 3 3;
+}
+/* The route's travelling dot (static at the destination under reduced motion). */
+.fx-route-dot {
+  fill: var(--stratakit-color-border-accent-strong);
+  stroke: var(--stratakit-color-bg-page-base);
+  stroke-width: 2;
 }
 .fx-chip {
   --fx-family: var(--stratakit-color-text-neutral-secondary);
@@ -1991,9 +2197,6 @@
   position: absolute;
   inset-block-start: 0;
   inset-inline-start: 0;
-  max-inline-size: 170px;
-  overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
   padding: 0 4px;
   border-radius: var(--stratakit-radius-sm);
@@ -2009,15 +2212,18 @@
     opacity: 0;
   }
 }
+/* The tip: fixed to the viewport, so the diagram's box never clips it. */
 .fx-edge-tip {
-  position: absolute;
-  z-index: 2;
-  inline-size: 220px;
+  position: fixed;
+  z-index: 1400;
+  max-inline-size: 240px;
   padding: var(--stratakit-space-100) var(--stratakit-space-200);
   border-radius: var(--stratakit-radius-sm);
   background: var(--stratakit-color-bg-elevation-base);
   box-shadow: var(--stratakit-shadow-surface-md);
   color: var(--stratakit-color-text-neutral-primary);
+  font-size: var(--stratakit-font-size-caption-lg);
+  line-height: var(--stratakit-line-height-caption-lg);
   pointer-events: none;
 }
 
@@ -2073,6 +2279,25 @@
   font-size: var(--stratakit-font-size-headline-sm);
   line-height: var(--stratakit-line-height-headline-sm);
   font-weight: 600;
+}
+.fx-answer-aside {
+  font-size: var(--stratakit-font-size-body-md);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+/* The headline's published counterpart, and ours against it. */
+.fx-answer-published {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--stratakit-space-150) var(--stratakit-space-200);
+  border-radius: var(--stratakit-radius-sm);
+  background: var(--stratakit-color-bg-page-depth);
+}
+.fx-answer-comparison {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.fx-published-checked .fx-answer-comparison {
+  color: var(--stratakit-color-text-neutral-primary);
 }
 .fx-answer-text {
   font-size: var(--stratakit-font-size-body-md);
@@ -2332,10 +2557,17 @@
   }
   /* The tree cuts straight to its new shape and lights its path at once. */
   .fx-node,
+  .fx-node-tag,
   .fx-diagram-edge,
+  .fx-diagram-hit,
   .fx-edge-tag,
-  .fx-proof-chevron {
+  .fx-proof-chevron,
+  .fx-answer-main {
     transition: none;
+  }
+  .fx-detail,
+  .fx-tree-dialog {
+    animation: none;
   }
   .fx-pivot,
   .fx-pivot-on {
@@ -2474,6 +2706,35 @@
   top: 50%;
   width: 46px;
   border-top: 1px solid currentColor;
+}
+/*
+ * A position marker (Orion now, fix 1): a 10 px dot with a dark halo on the
+ * point itself, the text beside it; off the view, an arrow at the edge
+ * pointing toward it instead of the dot.
+ */
+.fx-globe-label-marker::before {
+  content: "";
+  position: absolute;
+  left: calc(var(--fx-ax, -12px) - 5px);
+  top: calc(var(--fx-ay, 8px) - 5px);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow:
+    0 0 0 2px rgb(0 0 0 / 0.75),
+    0 0 0 6px color-mix(in srgb, currentColor 30%, transparent);
+}
+.fx-globe-label-offscreen::before {
+  width: 0;
+  height: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  border-block: 6px solid transparent;
+  border-inline-start: 10px solid currentColor;
+  transform: rotate(var(--fx-arrow, 0rad));
+  filter: drop-shadow(0 0 1px rgb(0 0 0 / 0.9));
 }
 /* The selected frame's label in white (DESIGN.md "A selection on the globe"). */
 .fx-globe-label.fx-globe-label-selected {

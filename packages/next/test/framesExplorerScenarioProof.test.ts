@@ -75,6 +75,7 @@ const evaluation = (
   scenario: "earth-turns",
   added: [],
   answer: {
+    label: "an hour",
     headline: "The ground turns 15.04° an hour against the stars",
     value: 15.5,
     unit: "°",
@@ -184,7 +185,11 @@ describe("proofRows off the checked setup (Review Focus 1)", () => {
       false,
       CATALOG,
       evaluation({
-        answer: { headline: "no value", accuracy: { note: "none" } },
+        answer: {
+          label: "x",
+          headline: "no value",
+          accuracy: { note: "none" },
+        },
       }),
     );
     const nan = proofRows(

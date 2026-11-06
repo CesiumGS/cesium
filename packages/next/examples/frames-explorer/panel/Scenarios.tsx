@@ -23,36 +23,16 @@ import type {
   ScenarioPanelView,
   Selection,
 } from "./model.ts";
+import { keepSet } from "./diagramFocus.ts";
+import { RouteSteps } from "./RouteSteps.tsx";
 import { Proof } from "./Proof.tsx";
 import { ScenarioAnswer } from "./ScenarioAnswer.tsx";
 import { ScenarioStrip } from "./ScenarioStrip.tsx";
-import { type DiagramSelection, TreeDiagram } from "./TreeDiagram.tsx";
-
-/** The frames the docked diagram draws: what the scenario added, its answer's path and the selection (with their ancestors, `focusTree`). */
-function keepSet(
-  tree: TreeNode,
-  s: ScenarioPanelView,
-  selected: string | undefined,
-  extra: readonly string[],
-): Set<string> {
-  const keep = new Set<string>([...extra, ...s.focus]);
-  const walk = (n: TreeNode) => {
-    if (n.added) {
-      keep.add(n.id);
-    }
-    n.children.forEach(walk);
-  };
-  walk(tree);
-  if (s.path) {
-    [...s.path.up, s.path.ancestor, ...s.path.down].forEach((id) =>
-      keep.add(id),
-    );
-  }
-  if (selected !== undefined) {
-    keep.add(selected);
-  }
-  return keep;
-}
+import {
+  type DiagramSelection,
+  type DiagramTargets,
+  TreeDiagram,
+} from "./TreeDiagram.tsx";
 
 function SectionHead({
   id,
@@ -195,10 +175,12 @@ function ExpandedTree({
   selected,
   onSelect,
   onClose,
+  targets,
 }: {
   hud: HTMLElement;
   tree: TreeNode;
   scenario: ScenarioPanelView;
+  targets: DiagramTargets | undefined;
   selected: DiagramSelection | undefined;
   onSelect: (s: DiagramSelection | undefined) => void;
   onClose: () => void;
@@ -207,12 +189,36 @@ function ExpandedTree({
   const close = useRef<HTMLButtonElement>(null);
   const latest = useRef(onClose);
   latest.current = onClose;
+  const dialog = useRef<HTMLDivElement>(null);
   useEffect(() => {
     close.current?.focus();
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         e.preventDefault();
         latest.current();
+        return;
+      }
+      // Focus stays in the dialog (it is modal): Tab wraps at its ends.
+      const el = dialog.current;
+      if (e.key !== "Tab" || !el) {
+        return;
+      }
+      const stops = [
+        ...el.querySelectorAll<HTMLElement>(
+          'button, [tabindex]:not([tabindex="-1"])',
+        ),
+      ];
+      const first = stops[0];
+      const last = stops.at(-1);
+      if (!el.contains(document.activeElement)) {
+        e.preventDefault();
+        first?.focus();
+      } else if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last?.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first?.focus();
       }
     };
     window.addEventListener("keydown", onKey);
@@ -221,6 +227,7 @@ function ExpandedTree({
   return createPortal(
     <div className="fx-tree-dialog-scrim" onClick={onClose}>
       <div
+        ref={dialog}
         className="fx-hud fx-tree-dialog"
         role="dialog"
         aria-modal="true"
@@ -246,11 +253,52 @@ function ExpandedTree({
           selected={selected}
           onSelect={onSelect}
           label={`The whole frame tree of ${scenario.title}`}
+          targets={targets}
+          data={scenario.data}
+          fullLabels
         />
       </div>
     </div>,
     hud,
   );
+}
+
+/** "Knobs and proof ↓": shows while there's more below in the tab's scroller (owner, fix 1). */
+function useMoreBelow(
+  anchor: React.RefObject<HTMLElement | null>,
+  knobs: React.RefObject<HTMLElement | null>,
+): { more: boolean; knobsBelow: boolean; scroller: HTMLElement | null } {
+  const [more, setMore] = useState(false);
+  const [knobsBelow, setKnobsBelow] = useState(true);
+  const [scroller, setScroller] = useState<HTMLElement | null>(null);
+  useEffect(() => {
+    const el = anchor.current?.closest<HTMLElement>(".fx-tab-panel") ?? null;
+    setScroller(el);
+    if (!el) {
+      return;
+    }
+    const measure = () => {
+      setMore(el.scrollHeight - el.scrollTop - el.clientHeight > 24);
+      const k = knobs.current;
+      setKnobsBelow(
+        k !== null &&
+          k.getBoundingClientRect().top >
+            el.getBoundingClientRect().bottom - 40,
+      );
+    };
+    measure();
+    el.addEventListener("scroll", measure, { passive: true });
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    if (el.firstElementChild) {
+      observer.observe(el.firstElementChild);
+    }
+    return () => {
+      el.removeEventListener("scroll", measure);
+      observer.disconnect();
+    };
+  }, [anchor, knobs]);
+  return { more, knobsBelow, scroller };
 }
 
 export function Scenarios({
@@ -261,7 +309,6 @@ export function Scenarios({
   setSelection,
   reference,
   setReference,
-  resultFrames,
   hud,
   onOpenResult,
 }: {
@@ -272,8 +319,6 @@ export function Scenarios({
   setSelection: (s: Selection) => void;
   reference: Reference;
   setReference: (r: Reference) => void;
-  /** While a result is selected (from Verification): the frames it uses. */
-  resultFrames: readonly string[];
   hud: HTMLElement;
   onOpenResult: (id: string) => void;
 }) {
@@ -286,6 +331,9 @@ export function Scenarios({
   const tree = model.tree;
   const [expandedView, setExpandedView] = useState(false);
   const expandButton = useRef<HTMLButtonElement>(null);
+  const top = useRef<HTMLDivElement>(null);
+  const knobsSection = useRef<HTMLElement>(null);
+  const { more, knobsBelow, scroller } = useMoreBelow(top, knobsSection);
   const closeExpanded = () => {
     setExpandedView(false);
     // Focus back to what opened it (I18's rule for the HUD).
@@ -301,127 +349,236 @@ export function Scenarios({
         : undefined;
   const select = (s: DiagramSelection | undefined) =>
     setSelection(s ?? { kind: "none" });
+  const selectedId = diagramSelection?.id;
   const keep = useMemo(
-    () => tree && keepSet(tree, scenario, diagramSelection?.id, resultFrames),
-    [tree, scenario, diagramSelection?.id, resultFrames],
+    () =>
+      tree &&
+      keepSet(
+        tree,
+        scenario,
+        selectedId === undefined ? undefined : { kind: "node", id: selectedId },
+      ),
+    [tree, scenario, selectedId],
+  );
+  const control = scenario.treeControl;
+  const current = control ? String(scenario.values[control.knob]) : undefined;
+  const targets: DiagramTargets | undefined = useMemo(
+    () =>
+      control && current !== undefined
+        ? {
+            ids: new Set(control.options.map((o) => o.value)),
+            current,
+            label: (id: string) => `${control.verb} ${id}`,
+            onPick: (id: string) => actions.setKnob(control.knob, id),
+          }
+        : undefined,
+    [control, current, actions],
   );
   const extras: Record<string, ResultExtras> = {
     ...model.extras,
     ...scenario.liveExtras,
   };
+  const toKnobs = () =>
+    knobsSection.current?.scrollIntoView({
+      block: "start",
+      behavior:
+        typeof matchMedia === "function" &&
+        matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? "auto"
+          : "smooth",
+    });
   return (
     <div className="fx-tab-body fx-scenarios">
-      <ScenarioStrip scenario={scenario} onSelect={actions.selectScenario} />
-      <header className="fx-scenario-head">
-        <Typography
-          variant="headline-sm"
-          render={<h2 />}
-          className="fx-scenario-question"
-        >
-          {scenario.question}
-        </Typography>
-      </header>
-
-      <section
-        className="fx-section fx-tree-section"
-        aria-labelledby={ids.tree}
-      >
-        <SectionHead
-          id={ids.tree}
-          title="The frame tree it builds"
-          aside={
-            tree && (
-              <Button
-                ref={expandButton}
-                size="small"
-                variant="outlined"
-                startIcon={<Icon href={svgWindowExpand} />}
-                onClick={() => setExpandedView(true)}
-              >
-                Expand
-              </Button>
-            )
-          }
-        />
-        <ul className="fx-diagram-key" aria-label="Key">
-          <li>
-            <span className="fx-key-glyph fx-key-built" aria-hidden />
-            built in
-          </li>
-          <li>
-            <span className="fx-key-glyph fx-key-added" aria-hidden />
-            added by this scenario
-          </li>
-          {scenario.path && (
-            <li>
-              <span className="fx-key-line" aria-hidden />
-              the answer&rsquo;s path
-            </li>
-          )}
-        </ul>
-        {tree && keep ? (
-          <TreeDiagram
-            tree={tree}
-            path={scenario.path}
-            keep={keep}
-            selected={diagramSelection}
-            onSelect={select}
-            label={`The frame tree of ${scenario.title}`}
-          />
-        ) : (
+      {/* The strip and the question stay in view as the tab scrolls. */}
+      <div className="fx-scenario-top" ref={top}>
+        <ScenarioStrip scenario={scenario} onSelect={actions.selectScenario} />
+        <div className="fx-scenario-lead">
           <Typography
-            variant="body-sm"
-            color="textSecondary"
-            render={<p />}
-            role="status"
+            variant="body-md"
+            render={<h2 />}
+            className="fx-scenario-question"
           >
-            {model.treeNote}
+            {scenario.question}
           </Typography>
-        )}
-        {tree && diagramSelection && (
-          <Detail
-            model={model}
-            tree={tree}
-            selection={diagramSelection}
-            reference={reference}
-            setReference={setReference}
-            actions={actions}
-            onSelect={select}
+          <button
+            type="button"
+            className={`fx-checked-chip${scenario.atChecked ? "" : " fx-off-checked-chip"}`}
+            onClick={scenario.atChecked ? toKnobs : actions.backToChecked}
+            title={
+              scenario.atChecked
+                ? "The published references apply here"
+                : "Back to the checked setup"
+            }
+          >
+            {scenario.atChecked ? "Checked setup" : "Off checked · Back"}
+          </button>
+        </div>
+      </div>
+
+      <div className="fx-scenario-body">
+        <section
+          className="fx-section fx-tree-section"
+          aria-labelledby={ids.tree}
+        >
+          <SectionHead
+            id={ids.tree}
+            title="The frame tree"
+            aside={
+              tree && (
+                <Button
+                  ref={expandButton}
+                  size="small"
+                  variant="outlined"
+                  startIcon={<Icon href={svgWindowExpand} />}
+                  onClick={() => setExpandedView(true)}
+                >
+                  Expand
+                </Button>
+              )
+            }
           />
-        )}
-      </section>
+          <ul className="fx-diagram-key" aria-label="Key">
+            <li>
+              <span className="fx-key-glyph fx-key-built" aria-hidden />
+              frame (no data in it)
+            </li>
+            <li>
+              <span className="fx-key-glyph fx-key-added" aria-hidden />
+              added by this scenario
+            </li>
+            {scenario.data && (
+              <li>
+                <span className="fx-key-card" aria-hidden />
+                data, pinned to its frame
+              </li>
+            )}
+            {control && (
+              <li>
+                <span className="fx-key-drawing" aria-hidden />
+                the frame you draw in (click a dashed one)
+              </li>
+            )}
+            {scenario.path && (
+              <li>
+                <span className="fx-key-line" aria-hidden />
+                {scenario.data ? "the data's route" : "the answer's route"}
+              </li>
+            )}
+          </ul>
+          {scenario.diagramNote && (
+            <Typography
+              variant="caption-lg"
+              color="textSecondary"
+              render={<p />}
+            >
+              {scenario.diagramNote}
+            </Typography>
+          )}
+          {tree && keep ? (
+            <TreeDiagram
+              tree={tree}
+              path={scenario.path}
+              keep={keep}
+              selected={diagramSelection}
+              onSelect={select}
+              label={`The frame tree of ${scenario.title}`}
+              resetKey={scenario.id}
+              targets={targets}
+              data={scenario.data}
+            />
+          ) : (
+            <Typography
+              variant="body-sm"
+              color="textSecondary"
+              render={<p />}
+              role="status"
+            >
+              {model.treeNote}
+            </Typography>
+          )}
+          {scenario.route && <RouteSteps steps={scenario.route} />}
+          {tree && diagramSelection && (
+            <Detail
+              model={model}
+              tree={tree}
+              selection={diagramSelection}
+              reference={reference}
+              setReference={setReference}
+              actions={actions}
+              onSelect={select}
+            />
+          )}
+        </section>
 
-      <section className="fx-section" aria-labelledby={ids.answer}>
-        <SectionHead id={ids.answer} title="The answer" />
-        <ScenarioAnswer scenario={scenario} />
-      </section>
+        <section className="fx-section" aria-labelledby={ids.answer}>
+          <SectionHead id={ids.answer} title="The answer" />
+          <ScenarioAnswer scenario={scenario} />
+        </section>
 
-      <section className="fx-section" aria-labelledby={ids.knobs}>
-        <SectionHead id={ids.knobs} title="Knobs" />
-        <Knobs
-          scenario={scenario}
-          onKnob={actions.setKnob}
-          onBack={actions.backToChecked}
-          onPlay={actions.setPlaying}
-        />
-      </section>
+        <section
+          className="fx-section"
+          aria-labelledby={ids.knobs}
+          ref={knobsSection}
+        >
+          <SectionHead id={ids.knobs} title="Knobs" />
+          <Knobs
+            scenario={scenario}
+            onKnob={actions.setKnob}
+            onBack={actions.backToChecked}
+            onPlay={actions.setPlaying}
+          />
+        </section>
 
-      <section className="fx-section" aria-labelledby={ids.proof}>
-        <SectionHead id={ids.proof} title="Proof" />
-        <Proof
-          rows={scenario.proof}
-          extras={extras}
-          atChecked={scenario.atChecked}
-          onOpenResult={onOpenResult}
-          onBack={actions.backToChecked}
-        />
-      </section>
+        <section className="fx-section" aria-labelledby={ids.proof}>
+          <SectionHead id={ids.proof} title="Proof" />
+          <Proof
+            rows={scenario.proof}
+            extras={extras}
+            atChecked={scenario.atChecked}
+            freshness={scenario.freshness}
+            published={
+              scenario.answer?.published && {
+                proofId: scenario.answer.published.proofId,
+                printed: scenario.answer.published.printed,
+                unit: scenario.answer.published.unit,
+              }
+            }
+            onOpenResult={onOpenResult}
+            onBack={actions.backToChecked}
+          />
+        </section>
+      </div>
+
+      {more && (
+        <div className="fx-more-below">
+          <Button
+            size="small"
+            variant="outlined"
+            className="fx-more-button"
+            onClick={() =>
+              knobsBelow
+                ? toKnobs()
+                : scroller?.scrollTo({
+                    top: scroller.scrollHeight,
+                    behavior:
+                      typeof matchMedia === "function" &&
+                      matchMedia("(prefers-reduced-motion: reduce)").matches
+                        ? "auto"
+                        : "smooth",
+                  })
+            }
+          >
+            {knobsBelow ? "Knobs and proof ↓" : "Proof ↓"}
+          </Button>
+        </div>
+      )}
 
       {expandedView && tree && (
         <ExpandedTree
           hud={hud}
           tree={tree}
           scenario={scenario}
+          targets={targets}
           selected={diagramSelection}
           onSelect={select}
           onClose={closeExpanded}

@@ -271,6 +271,11 @@ export interface LabelSpec {
   dy?: number;
   /** Exempt from the declutter (still hidden behind the Earth or off the scene): a tour stop's subject. */
   pinned?: boolean;
+  /**
+   * A position marker (Orion now): a dot with a halo at the point, the text
+   * beside it; off the view, kept at its edge with an arrow toward it.
+   */
+  marker?: boolean;
 }
 
 /** A camera framing: look at `center` from `range` meters, heading and pitch in its east-north-up frame. */
@@ -734,6 +739,7 @@ export class Globe {
       l.el.textContent = spec.text;
       l.el.dataset.family = spec.family ?? "";
       l.el.classList.toggle("fx-globe-label-callout", spec.leader === true);
+      l.el.classList.toggle("fx-globe-label-marker", spec.marker === true);
     }
     this.retint();
     this.placeLabels();
@@ -788,6 +794,18 @@ export class Globe {
             y = Math.min(Math.max(y, 0), h);
           }
           visible = x >= 0 && x <= w && y >= 0 && y <= h;
+          if (spec.marker) {
+            // Off the view: at its edge, with an arrow toward it.
+            const off = !visible;
+            el.classList.toggle("fx-globe-label-offscreen", off);
+            if (off) {
+              const angle = Math.atan2(y - h / 2, x - w / 2);
+              el.style.setProperty("--fx-arrow", `${angle}rad`);
+              x = Math.min(Math.max(x, 18), w - 18);
+              y = Math.min(Math.max(y, 18), h - 18);
+              visible = true;
+            }
+          }
         }
       }
       // Two origins under 24 px apart: the lower-priority label fades out
@@ -806,12 +824,19 @@ export class Globe {
           x: Math.min(
             Math.max(
               2,
-              spec.side === "left" ? x - 12 - bw : x + (spec.leader ? 48 : 12),
+              spec.side === "left" ||
+                (spec.marker === true && x + 12 + bw > w - 2)
+                ? x - 12 - bw
+                : x + (spec.leader ? 48 : 12),
             ),
             w - bw - 2,
           ),
           y: Math.min(
-            Math.max(2, (spec.leader ? y - bh / 2 : y + 4) + (spec.dy ?? 0)),
+            Math.max(
+              2,
+              (spec.leader || spec.marker ? y - bh / 2 : y + 4) +
+                (spec.dy ?? 0),
+            ),
             h - bh - 2,
           ),
           w: bw,
@@ -839,6 +864,11 @@ export class Globe {
           placed.push(box);
           anchors.push({ x, y });
           el.style.transform = `translate(${box.x.toFixed(1)}px, ${box.y.toFixed(1)}px)`;
+          if (spec.marker) {
+            // The dot sits on the point itself, whatever the text's box.
+            el.style.setProperty("--fx-ax", `${(x - box.x).toFixed(1)}px`);
+            el.style.setProperty("--fx-ay", `${(y - box.y).toFixed(1)}px`);
+          }
         }
       } else if (near) {
         // Kept in place, faded: it fades back in where it was.
