@@ -1,4 +1,4 @@
-// What the panel renders (DESIGN.md): plain data the page (main.ts) fills
+// What the panel renders (DESIGN.md): plain data the page (panelModel.ts) fills
 // from the worker, the frame tree and the run. Only
 // types from the rest of the example: the main thread never bundles the
 // stress catalog, PROJ or the overlay builders (protocol.ts's rule).

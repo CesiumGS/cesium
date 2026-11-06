@@ -83,7 +83,7 @@ export interface GroupInfo {
   readonly compared: Comparison;
 }
 
-/** The page's California grid node (main.ts places it) and ITRF it hangs under. */
+/** The page's California grid node (treeState.ts places it) and ITRF it hangs under. */
 const CALIFORNIA_SITE = ["ITRF", "engineering:California zone 3"] as const;
 
 const ALL_FRAMES = [

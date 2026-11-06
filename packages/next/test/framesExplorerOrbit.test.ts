@@ -603,7 +603,7 @@ describe("landing far outside the destination's range (fix rounds 2 and 3)", () 
 
   it("drives the orbit's wheel one notch at a time, and back out to where it landed", () => {
     // The real controller and wheel events, its limits set after each
-    // change as main.ts's narrowLimits sets them.
+    // change as cameraRig.ts's narrowLimits sets them.
     const camera = new Camera();
     const view = {
       camera,

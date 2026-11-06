@@ -304,7 +304,7 @@ describe("one-path's frame choice (fix 1: the owner's reports)", () => {
 
     it(`puts Orion's marker on the drawn path in ${frame}: its place now equals the path's sample at that time, placed now`, () => {
       // The path is drawn in `frame` at one instant (`drawnAt`) and placed
-      // now by the frame now times its inverse then (main.ts placeOrion).
+      // now by the frame now times its inverse then (orionLayer.ts `place`).
       const f =
         frame === "GCRF"
           ? frames.gcrf

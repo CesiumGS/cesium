@@ -1,6 +1,6 @@
 // The picture-in-picture view of the rigid line's gap at 20 km (stop 4,
 // owner's rework, 2026-11-06): where it sits over the globe's view and how
-// its camera frames the gap. Plain functions; main.ts adds the engine view
+// its camera frames the gap. Plain functions; gapInset.ts adds the engine view
 // (`engine.addView`) and its frame in the HUD.
 import { Ellipsoid } from "../../src/math/ellipsoid.ts";
 import type { Viewport } from "../../src/scene/View.ts";
