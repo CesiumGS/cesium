@@ -43,6 +43,7 @@
     "@tanstack/react-router": "1.170.45",
     "codemirror": "6.0.2",
     "draco3d": "1.5.7",
+    "geographiclib-geodesic": "2.2.0",
     "ktx-parse": "^2.0.0",
     "meshoptimizer": "^1.2.0",
     "react": "19.3.1",

@@ -4,7 +4,7 @@ Usage: uv run --with pyerfa --with numpy python scripts/frameFixtures.py <sectio
 
 Sections: dtdb, bias, earth, earthLeap <store>, utc <store> (needs jplephem), ephemeris
 <store> (needs jplephem), moon <store> <frame kernel> (needs spiceypy and jplephem),
-trajectories <store> <frame kernel> (needs spiceypy).
+trajectories <store> <frame kernel> (needs spiceypy), geodesic (needs geographiclib only).
 earthLeap reads the store's EOP-All.csv; the others read the NAIF kernels
 `npm run setup` downloaded to <store>. Only their small JSON output is committed.
 """
@@ -421,6 +421,85 @@ def trajectories(store, frame_kernel):
     write("trajectories", {"orion": orion, "moonMe": moon_me, "stations": stations})
 
 
+def geodesic():
+    """Geodesic inverse problems from Python's geographiclib (Karney): 40 pairs on WGS84
+    (30 seeded random, 4 nearly antipodal at 0.1 and 0.001 degrees, 2 coincident, pole
+    to pole, 3 equatorial) and 5 on the Moon's 1,737,400 m sphere. Each point is geodetic
+    (degrees, meters) and also body-fixed Cartesian meters; azimuths are Karney's
+    azi1 and azi2, in degrees clockwise from north."""
+    from geographiclib.geodesic import Geodesic
+
+    wgs84 = (6378137.0, 6378137.0, 6356752.3142451793)
+    moon = (1737400.0,) * 3
+
+    def cartesian(radii, lon, lat, h):
+        a, c = radii[0], radii[2]
+        e2 = 1.0 - (c * c) / (a * a)
+        if abs(lat) == 90.0:  # exactly on the axis, so x = y = 0 and longitude is 0
+            return [0.0, 0.0, (a * (1.0 - e2) + h) * (1.0 if lat > 0 else -1.0)]
+        phi, lam = np.radians(lat), np.radians(lon)
+        n = a / np.sqrt(1.0 - e2 * np.sin(phi) ** 2)
+        return [
+            float((n + h) * np.cos(phi) * np.cos(lam)),
+            float((n + h) * np.cos(phi) * np.sin(lam)),
+            float((n * (1.0 - e2) + h) * np.sin(phi)),
+        ]
+
+    def row(radii, geod, kind, p, q):
+        r = geod.Inverse(p[1], p[0], q[1], q[0])
+        return {
+            "kind": kind,
+            "a": {"lonDeg": p[0], "latDeg": p[1], "height": p[2], "cartesian": cartesian(radii, *p)},
+            "b": {"lonDeg": q[0], "latDeg": q[1], "height": q[2], "cartesian": cartesian(radii, *q)},
+            "distance": float(r["s12"]),
+            "azimuth1Deg": float(r["azi1"]),
+            "azimuth2Deg": float(r["azi2"]),
+        }
+
+    rng = np.random.default_rng(20261105)
+
+    def random_point():
+        return [
+            float(rng.uniform(-180, 180)),
+            float(np.degrees(np.arcsin(rng.uniform(-1, 1)))),
+            float(rng.choice([0.0, rng.uniform(-500, 20000)])),
+        ]
+
+    rows = []
+    for _ in range(30):
+        rows.append(row(wgs84, Geodesic.WGS84, "random", random_point(), random_point()))
+    for offset in (0.1, 0.001):
+        for lon, lat in ((20.0, 35.0), (-100.0, -10.0)):
+            # the antipode of (lon, lat) is (lon + 180, -lat); move off it by `offset` degrees
+            anti_lon = lon + 180.0 - 360.0 if lon > 0 else lon + 180.0
+            rows.append(
+                row(
+                    wgs84,
+                    Geodesic.WGS84,
+                    f"antipodal{offset}",
+                    [lon, lat, 0.0],
+                    [anti_lon + offset, -lat + offset, 0.0],
+                )
+            )
+    rows.append(row(wgs84, Geodesic.WGS84, "coincident", [12.5, -40.0, 100.0], [12.5, -40.0, 100.0]))
+    rows.append(row(wgs84, Geodesic.WGS84, "coincident", [-77.0, 38.9, 0.0], [-77.0, 38.9, 0.0]))
+    rows.append(row(wgs84, Geodesic.WGS84, "poleToPole", [0.0, 90.0, 0.0], [0.0, -90.0, 0.0]))
+    rows.append(row(wgs84, Geodesic.WGS84, "equatorial", [0.0, 0.0, 0.0], [90.0, 0.0, 0.0]))
+    rows.append(row(wgs84, Geodesic.WGS84, "equatorial", [-170.0, 0.0, 0.0], [170.0, 0.0, 0.0]))
+    rows.append(row(wgs84, Geodesic.WGS84, "equatorial", [30.0, 0.0, 250.0], [31.0, 0.0, 0.0]))
+    assert len(rows) == 40, len(rows)
+
+    sphere = Geodesic(moon[0], 0.0)
+    lunar = [
+        row(moon, sphere, "moon", [0.0, 0.0, 0.0], [90.0, 0.0, 0.0]),
+        row(moon, sphere, "moon", [-20.0, 30.0, 0.0], [135.0, -45.0, 0.0]),
+        row(moon, sphere, "moon", [10.0, -80.0, 2000.0], [-170.0, 79.0, 0.0]),
+        row(moon, sphere, "moon", [0.0, 89.0, 0.0], [180.0, 89.0, 0.0]),
+        row(moon, sphere, "moon", [45.0, 10.0, 500.0], [46.0, 10.5, 1500.0]),
+    ]
+    write("geodesic", {"wgs84": rows, "moon": lunar, "moonRadius": moon[0]})
+
+
 SECTIONS = {
     "dtdb": dtdb,
     "bias": bias,
@@ -430,6 +509,7 @@ SECTIONS = {
     "ephemeris": ephemeris,
     "moon": moon,
     "trajectories": trajectories,
+    "geodesic": geodesic,
 }
 
 if __name__ == "__main__":
