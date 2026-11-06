@@ -29,10 +29,11 @@ The same suite runs headless as a regression data test.
 - Plans 1–3: `loadFrameData`, `createFrames`, `Trajectory`, `measure`, accuracy statements.
 - Plan 4a: `loadProj`, `resolveOperation`, `EngineeringFrame`, `RigidPlacement`, `gridFactors`, `Alignment`, design measurement.
 
-Plan 4b later adds two things here:
+Plan 4b later adds three things here:
 
 - tilesets placed rigidly versus reprojected;
-- the global-geoid stress tests.
+- the global-geoid stress tests;
+- the EGM96 (mean sea level) height beside the ellipsoid and NAVD88 heights in the "Heights and WGS84" group.
 
 ## Rulings this plan makes
 
@@ -140,6 +141,7 @@ Plan 4b later adds two things here:
   - `packages/next/examples/frames-explorer/references.json` (R10)
   - `packages/next/examples/frames-explorer/references/` (any mpmath scripts, cited from `references.json`)
   - `packages/next/examples/frames-explorer/fingerprints.json` (R12)
+- Modify: `packages/next/src/engineering/crs.ts`, adding the export `listOperations`, with its test in `packages/next/test/data/crs.test.ts` (the "Operation candidates" group).
 
 **Interfaces:**
 
@@ -235,6 +237,37 @@ Plan 4b later adds two things here:
       - the GCRF scaling at the Moon's distance, against r·(GM☉/(c²·r☉) + L_C);
       - MOON_ME against MOON_PA at a lunar south-pole site, against the published DE440 rotation angles, composed by hand in the case;
       - the Earth-orientation uncertainty at the clock's instant, converted to meters at Earth's surface and to arcseconds toward Orion. This last one is display only, with no pass or fail.
+- **Industry groups (owner's additions, 2026-11-06):**
+  - **"Operation candidates"** (offshore energy, where the EPSG registry began):
+    - **The point:** ED50 to WGS84 at a North Sea point, 56° N 3° E.
+    - **The new export:** `listOperations(proj: ProjApi, source: CrsRef, target: CrsRef): readonly { name: string; pipeline: string; accuracy?: number; areaOfUse?: { west: number; south: number; east: number; north: number }; gridsNeeded: readonly string[]; ballpark: boolean }[]` in `src/engineering/crs.ts`. It's additive and reads the same `proj_create_operations` list that `resolveOperation` already walks.
+    - **Checks:**
+      - The candidates include at least two non-ballpark operations, and the one `resolveOperation` recorded is the one its documented rule picks from that list.
+      - Two of the candidates' accuracies and areas of use match their EPSG registry entries, copied from epsg.org into `references.json` (R10).
+    - **The effect size:** the largest distance between the candidates' results, in meters.
+  - **"IFC map conversion"** (BIM and digital twins):
+    - **The source:** a published IFC 4.3 `IfcMapConversion`, from buildingSMART's documentation or its georeferencing user guide. It gives Eastings, Northings, OrthogonalHeight, XAxisAbscissa, XAxisOrdinate and Scale.
+    - **The mapping to an engineering frame's site transform:** θ from the x-axis direction, s = Scale, and the offsets. A pure helper, `siteFromIfcMapConversion`, in `tests.ts`. Take the rotation's sign from the published example's own numbers, not from an assumption.
+    - **The check:** the example's model point maps to its published easting, northing and height at their printed precision, and round-trips.
+  - **"Plate motion"** (autonomous vehicles, precision agriculture, HD maps):
+    - **GDA94 to GDA2020:** check the ICSM GDA2020 Technical Manual's worked example of the 7-parameter transformation, hand-coded in the case, with its values in `references.json`. Show its size (about 1.8 m) as an effect size.
+    - **Through the library:** run the same point through `resolveOperation`. If the library picks the conformal grid, which isn't in the store, the case expects the throw naming that grid (R7).
+    - **Drift:** Australia's drift in ITRF2014, in cm per year, from the published plate-motion model's Euler-pole rates, as an effect size. "How fast does a map go stale?"
+  - **"Below the ellipsoid"** (mining and tunnelling):
+    - **Elevation factors:** at h = −500 m and −2000 m, against R/(R+h) with R the Gaussian mean radius, to 1e-12. They're greater than 1.
+    - **A tunnel:** two portals 5 km apart at h = +300 m, with the tunnel at h = −200 m. Check the ground distance at tunnel level against the grid distance, through the combined factor, against the hand formula, to 1e-9 relative.
+    - **A guard:** a station at negative ellipsoid height doesn't block its own line of sight. This is plan 3's fixed bug, guarded here.
+  - **"Heights and WGS84"** (aviation and drones):
+    - **NAD83(2011) against ITRF2014** at epoch 2026.0 at the California datasheet point: about 1–2 m. Effect size, checked against the "Coordinate epoch" group's hand-coded Helmert.
+    - **"WGS84":** given as EPSG:4326, a datum ensemble, its operation accuracy shows at least 2 m, and the row says why.
+    - **Three heights at the California datasheet point:** the ellipsoid height, and the NAVD88 height through GEOID18, against the datasheet. Plan 4b adds EGM96.
+  - **"Time scales"** (timing and telecom):
+    - **The offsets:** GPS time = TAI − 19 s and TT = TAI + 32.184 s exactly, from `Instant.tai()`.
+    - **Across 2016-12-31T23:59:60 UTC:** GPS − UTC steps from 17 s to 18 s, and GPS time stays continuous.
+  - **"Lunar time"** (space policy):
+    - **The clocks:** a clock on the lunar surface at the south-pole site, against a clock at h = 0 at the California site.
+    - **The method:** `properTimeRate` sampled hourly over one sidereal month (27.32 days), averaged, and given in µs/day.
+    - **The check:** within 2% of Ashby & Patla (2024, *The Astronomical Journal*), about 56.02 µs/day, cited in `references.json`. The 2% covers the point-mass potential (frames 3, R4). Shown as an effect size.
 
 - [ ] **Step 1: Write the runner's failing unit tests** (`test/framesExplorerRunner.test.ts`, with synthetic frames and stub cases):
   - A case returning a value within its tolerance passes, and one beyond it fails.
@@ -381,6 +414,7 @@ Plan 4b later adds two things here:
   - **Tree:**
     - It shows ICRF at the root with every built-in frame.
     - Selecting MOON_PA highlights its path and flies to the Moon, with its triads drawn.
+    - **Far-from-origin precision:** this answers the engine user's question "why does my model shake far from the origin?". Fly to the lunar south-pole site's triad, 384,000 km from the Earth-fixed origin, at a camera distance of about 100 m, and orbit it slowly. The triad doesn't jitter. Take two screenshots from the same camera pose and confirm the triad hasn't moved. Describe both in the report.
   - **Overlays:**
     - Turning on the design grid shows grid lines and true-north lines diverging away from the central meridian.
     - The rigid and exact lines separate visibly toward the far end, labelled about 31 m at 20 km (the spec's figure, section 4).
