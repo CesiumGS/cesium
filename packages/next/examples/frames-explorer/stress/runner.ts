@@ -22,8 +22,28 @@ export {
   type TraceStep,
 } from "./groupInfo.ts";
 
-/** Data a case may need beyond the frame tree. */
-export type Need = "proj" | "geoid" | "orion";
+/**
+ * Data a case may need: the frame tree (frame data), PROJ, GEOID18 or the
+ * Artemis II trajectory (which is placed in the frame tree, so it brings the
+ * frame data with it).
+ */
+export type Need = "frames" | "proj" | "geoid" | "orion";
+
+/**
+ * A case read data it needs only optionally (`optionalNeeds`), and the data
+ * didn't load: the case reports that part as missing instead of failing.
+ */
+export class NeedMissingError extends Error {
+  override name = "NeedMissingError";
+  readonly need: Need;
+  constructor(need: Need, reason: string) {
+    super(`${need}: ${reason}`);
+    this.need = need;
+  }
+}
+
+export const isNeedMissing = (error: unknown): error is NeedMissingError =>
+  error instanceof NeedMissingError;
 
 /** The frames store's manifest.json, of which fingerprints read the grids' SHA-256 (ruling F4). */
 export interface StoreManifest {
@@ -102,8 +122,15 @@ export interface StressResult {
   source?: Citation;
 }
 
-export interface StressContext {
-  readonly frames: Frames;
+/**
+ * What the runner is given (R5, R6, F44): each item already in hand, or a
+ * loader the runner calls once, when the first case that needs it runs. A
+ * missing item skips only the cases that need it.
+ */
+export interface DataContext {
+  /** The frame tree, when the caller already has it; otherwise `loadFrames` is called once, when a case needs it. */
+  readonly frames?: Frames;
+  loadFrames?(): Promise<Frames>;
   /** PROJ, when the caller already has it; otherwise `loadProj` is called once, when a case needs it. */
   proj?: ProjApi;
   /** Orion's trajectory, when already loaded; otherwise `loadOrion` is called once, when a case needs it. */
@@ -118,6 +145,18 @@ export interface StressContext {
   loadGeoid?(): Promise<void>;
   /** The frames store's manifest, for the fingerprints' grid SHA-256 values. */
   readonly manifest?: StoreManifest;
+  /** Fetches the manifest, called once when a case with a need runs. */
+  loadManifest?(): Promise<StoreManifest>;
+}
+
+/**
+ * What a case gets. `frames` is there only for a case that declares the
+ * "frames" need (or an Orion need); reading it otherwise throws, so an
+ * undeclared use fails loudly, even where the data is loaded. Under an
+ * optional need it throws `NeedMissingError` when the data didn't load.
+ */
+export interface StressContext extends DataContext {
+  readonly frames: Frames;
 }
 
 export interface StressCase {
@@ -125,6 +164,12 @@ export interface StressCase {
   readonly group: string;
   readonly title: string;
   readonly needs: readonly Need[];
+  /**
+   * Needs the case uses where it can and reports as missing where it can't
+   * (a bound CRS's accuracy row needs the frame data; its other checks
+   * don't). The case runs either way.
+   */
+  readonly optionalNeeds?: readonly Need[];
   /**
    * The references.json entries the case cited while it was made
    * (`stressCase` claims them); the runner adds the ones it cites while it
@@ -504,14 +549,38 @@ const settle = <T>(promise: Promise<T>): Promise<Loaded<T>> =>
   );
 
 /** Loads each need at most once per run. */
-class Needs {
+export class Needs {
+  private frames?: Promise<Loaded<Frames>>;
+  private manifest?: Promise<Loaded<StoreManifest | undefined>>;
   private proj?: Promise<Loaded<ProjApi>>;
   private geoid?: Promise<Loaded<true>>;
   private orion?: Promise<Loaded<Trajectory>>;
-  private readonly ctx: StressContext;
+  private readonly ctx: DataContext;
 
-  constructor(ctx: StressContext) {
+  constructor(ctx: DataContext) {
     this.ctx = ctx;
+  }
+
+  loadFrames(): Promise<Loaded<Frames>> {
+    const { ctx } = this;
+    this.frames ??= settle(
+      ctx.frames !== undefined
+        ? Promise.resolve(ctx.frames)
+        : ctx.loadFrames !== undefined
+          ? ctx.loadFrames()
+          : Promise.reject(new Error("no frame data was given")),
+    );
+    return this.frames;
+  }
+
+  loadManifest(): Promise<Loaded<StoreManifest | undefined>> {
+    const { ctx } = this;
+    this.manifest ??= settle(
+      ctx.manifest !== undefined
+        ? Promise.resolve(ctx.manifest)
+        : (ctx.loadManifest?.() ?? Promise.resolve(undefined)),
+    );
+    return this.manifest;
   }
 
   loadProj(): Promise<Loaded<ProjApi>> {
@@ -547,14 +616,37 @@ class Needs {
     return this.orion;
   }
 
-  /** The context for a case, or what is missing and why. */
+  /**
+   * The context for a case, or what is missing and why. `optional` needs are
+   * loaded where they can be; the case reads them or gets `NeedMissingError`.
+   */
   async meet(
     needs: readonly Need[],
+    optional: readonly Need[] = [],
   ): Promise<{ ctx: StressContext } | { missing: Need[]; reasons: string[] }> {
     const missing: Need[] = [];
     const reasons: string[] = [];
     let proj: ProjApi | undefined;
     let orion: Trajectory | undefined;
+    // Orion's trajectory is placed in the frame tree: it needs the frames.
+    const needsFrames = needs.includes("frames") || needs.includes("orion");
+    const readsFrames = needsFrames || optional.includes("frames");
+    let frames: Frames | undefined;
+    let framesError = "";
+    if (readsFrames) {
+      const loaded = await this.loadFrames();
+      if ("error" in loaded) {
+        framesError = loaded.error;
+        if (needsFrames) {
+          missing.push("frames");
+          reasons.push(
+            `Needs the frame data, which did not load (${loaded.error}). Run \`npm run setup\` and restart the dev server.`,
+          );
+        }
+      } else {
+        frames = loaded.value;
+      }
+    }
     if (needs.includes("proj") || needs.includes("geoid")) {
       const loaded = await this.loadProj();
       if ("error" in loaded) {
@@ -581,30 +673,55 @@ class Needs {
       }
     }
     if (needs.includes("orion")) {
-      const loaded = await this.loadOrion();
-      if ("error" in loaded) {
+      if (frames === undefined) {
+        // Not fetched: it couldn't be placed without the frame data.
         missing.push("orion");
-        reasons.push(
-          `Needs the Artemis II trajectory (${ORION_OEM}), which did not load (${loaded.error}). Run \`npm run setup\`.`,
-        );
       } else {
-        orion = loaded.value;
+        const loaded = await this.loadOrion();
+        if ("error" in loaded) {
+          missing.push("orion");
+          reasons.push(
+            `Needs the Artemis II trajectory (${ORION_OEM}), which did not load (${loaded.error}). Run \`npm run setup\`.`,
+          );
+        } else {
+          orion = loaded.value;
+        }
       }
     }
     if (missing.length > 0) {
       return { missing, reasons };
     }
     const { ctx } = this;
+    const manifest =
+      needs.length > 0 || optional.length > 0
+        ? await this.loadManifest()
+        : undefined;
+    const ctxFor: DataContext = {
+      proj: proj ?? ctx.proj,
+      orion: orion ?? ctx.orion,
+      loadProj: () => ctx.loadProj(),
+      loadOrion: () => ctx.loadOrion(),
+      ...(ctx.loadGeoid && { loadGeoid: () => ctx.loadGeoid!() }),
+      ...(manifest !== undefined &&
+        "value" in manifest &&
+        manifest.value !== undefined && { manifest: manifest.value }),
+    };
+    // The frames, only for a case that said it reads them (F44).
     return {
-      ctx: {
-        frames: ctx.frames,
-        proj: proj ?? ctx.proj,
-        orion: orion ?? ctx.orion,
-        loadProj: () => ctx.loadProj(),
-        loadOrion: () => ctx.loadOrion(),
-        ...(ctx.loadGeoid && { loadGeoid: () => ctx.loadGeoid!() }),
-        ...(ctx.manifest && { manifest: ctx.manifest }),
-      },
+      ctx: Object.defineProperty(ctxFor, "frames", {
+        enumerable: false,
+        get(): Frames {
+          if (!readsFrames) {
+            throw new Error(
+              'this case reads the frame tree without declaring the "frames" need',
+            );
+          }
+          if (frames === undefined) {
+            throw new NeedMissingError("frames", framesError);
+          }
+          return frames;
+        },
+      }) as StressContext,
     };
   }
 }
@@ -634,7 +751,7 @@ export interface RunOptions {
  * throws gives a failed result with the error. It never rejects for a case.
  */
 export async function runCases(
-  ctx: StressContext,
+  ctx: DataContext,
   cases: readonly StressCase[],
   options: RunOptions = {},
 ): Promise<StressResult[]> {
@@ -649,7 +766,7 @@ export async function runCases(
     if (wanted !== undefined && !wanted.has(c.id) && !wanted.has(c.group)) {
       continue;
     }
-    const met = await needs.meet(c.needs);
+    const met = await needs.meet(c.needs, c.optionalNeeds);
     if (signal?.aborted) {
       break;
     }

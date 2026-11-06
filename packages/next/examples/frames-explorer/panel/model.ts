@@ -107,6 +107,8 @@ export interface RunView {
   done: number;
   total: number;
   summary?: RunSummary;
+  /** Why a run stopped short (F44): the worker's error, not the user's Stop. */
+  reason?: string;
 }
 
 /** The frames a composed accuracy can be stated against (the walk's "against"). */

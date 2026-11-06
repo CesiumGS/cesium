@@ -12,8 +12,9 @@ import { svgPlay } from "@stratakit/icons/play";
 import { Icon } from "@stratakit/mui";
 import { useEffect, useState } from "react";
 import type { StressResult } from "../tests.ts";
-import { duration } from "./format.ts";
 import { Inspector } from "./Inspector.tsx";
+import { ITEM_LABEL } from "./parts.tsx";
+import { runLine } from "./runText.ts";
 import type {
   GroupInfo,
   LensChoice,
@@ -172,11 +173,7 @@ export function Verify({
         <div className="fx-run">
           {/* No live region here: the strip announces the run (I19). */}
           <Typography variant="body-sm" color="textSecondary" render={<p />}>
-            {run.state === "running"
-              ? `${run.done} of ${run.total} checks run`
-              : run.state === "done" && run.summary
-                ? `${run.summary.passed} passed, ${run.summary.failed} failed, ${run.summary.skipped} skipped, ${run.summary.shown} shown, not judged; ${duration(run.summary.ms)}`
-                : "Not run yet"}
+            {runLine(run, model.results, ITEM_LABEL)}
           </Typography>
           {run.state === "running" ? (
             <Button size="small" variant="outlined" onClick={actions.cancel}>

@@ -9,7 +9,7 @@ const leapSecondCase = stressCase(
   "time.leap-second",
   "time",
   "Instant.fromIso across the leap second 2016-12-31T23:59:60: monotonic in 0.5 s steps, with TT advancing 2 s over the one UTC second",
-  [],
+  ["frames"],
   async (ctx, base) => {
     const labels = [
       "2016-12-31T23:59:59.0",
@@ -63,7 +63,7 @@ const eopEndCase = stressCase(
   "time.eop-end",
   "time",
   "An Earth-fixed measurement 60 days past the EOP table's predictions throws, giving the table's dates",
-  [],
+  ["frames"],
   async (ctx, base) => {
     const { eop, leapSeconds } = ctx.frames.data;
     const instant = Instant.fromUtc(eop.last + 60 * 86_400_000, leapSeconds);
@@ -86,7 +86,7 @@ const leapExpiryCase = stressCase(
   "time.leap-expiry",
   "time",
   "A measurement 30 days past the leap-second table's expiry carries the warning that a leap second may have been missed",
-  [],
+  ["frames"],
   async (ctx, base) => {
     const { leapSeconds } = ctx.frames.data;
     const instant = Instant.fromUtc(

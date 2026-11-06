@@ -26,6 +26,7 @@ import {
 } from "../examples/frames-explorer/protocol.ts";
 import {
   boundCrsChecks,
+  type DataContext,
   expectThrow,
   runStress,
   type Fingerprint,
@@ -68,7 +69,7 @@ const base = (id: string) => ({
 /** A case with no needs that returns `run()`'s results. */
 const stub = (
   id: string,
-  run: () => Promise<StressResult[]>,
+  run: (ctx?: StressContext) => Promise<StressResult[]>,
   extra: Partial<StressCase> = {},
 ): StressCase => ({ ...base(id), needs: [], run, ...extra });
 
@@ -125,6 +126,9 @@ const CATALOG: readonly StressCase[] = [
   stub("stub.throws", () => Promise.reject(new TypeError("boom: it broke"))),
   stub("stub.proj", async () => [{ ...base("stub.proj"), pass: true }], {
     needs: ["proj"],
+  }),
+  stub("stub.frames", async () => [{ ...base("stub.frames"), pass: true }], {
+    needs: ["frames"],
   }),
 ];
 
@@ -234,9 +238,10 @@ describe("run", () => {
     const display = byId.get("stub.display")!;
     expect(display).toMatchObject({ displayOnly: true, pass: true });
     expect(byId.get("stub.proj")!.missing).toEqual(["proj"]);
+    expect(byId.get("stub.frames")!.pass).toBe(true);
 
     expect(summary).toMatchObject({
-      passed: 2,
+      passed: 3,
       failed: 2,
       skipped: 1,
       shown: 1,
@@ -311,7 +316,26 @@ describe("run", () => {
     expect(summary).toMatchObject({ passed: 1, cancelled: true });
   });
 
-  it("rejects the run with the error when the frame data can't load", async () => {
+  it("keeps a case's optional needs through the host: the frames reach a case that reads them where it can (F44)", async () => {
+    const reads = stub(
+      "stub.optional",
+      async (ctx?: StressContext) => [
+        {
+          ...base("stub.optional"),
+          pass: ctx!.frames === frames,
+        },
+      ],
+      { optionalNeeds: ["frames"] },
+    );
+    const { client } = connect(async () => context(), { cases: [reads] });
+    const streamed: StressResult[] = [];
+    await client.run(undefined, (r) => streamed.push(r));
+    expect(streamed).toHaveLength(1);
+    expect(streamed[0]!.error).toBeUndefined();
+    expect(streamed[0]!.pass).toBe(true);
+  });
+
+  it("rejects the run with the error when the data context can't be made", async () => {
     const { client } = connect(() =>
       Promise.reject(new MissingDataError("no store; run `npm run setup`")),
     );
@@ -319,6 +343,37 @@ describe("run", () => {
       name: "MissingDataError",
       message: "no store; run `npm run setup`",
     });
+  });
+
+  it("runs the checks that need no frame data without it, and skips the rest as missing (R5, F44)", async () => {
+    const loadFrames = vi.fn(() =>
+      Promise.reject(
+        new MissingDataError("no frame data; run `npm run setup`"),
+      ),
+    );
+    const { client } = connect(
+      async () => ({
+        loadFrames,
+        loadProj: () =>
+          Promise.reject(new MissingDataError("PROJ is not here")),
+        loadOrion: () => Promise.reject(new Error("never asked")),
+      }),
+      { cases: CATALOG },
+    );
+    const streamed: StressResult[] = [];
+    const summary = await client.run(undefined, (r) => streamed.push(r));
+    const byId = new Map(streamed.map((r) => [r.id, r]));
+    expect(byId.get("stub.frames")!.missing).toEqual(["frames"]);
+    expect(byId.get("stub.frames")!.detail).toMatch(
+      /frame data.*npm run setup/,
+    );
+    // The frame-free cases ran: an expected throw passes, a display-only
+    // effect is shown.
+    expect(byId.get("stub.leap")!.pass).toBe(true);
+    expect(byId.get("stub.display")!.displayOnly).toBe(true);
+    expect(byId.get("stub.pass")!.pass).toBe(true);
+    expect(summary).toMatchObject({ skipped: 2, cancelled: false });
+    expect(loadFrames).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -479,11 +534,17 @@ describe("loading state (R9, Review Focus 5)", () => {
 
   it("reports progress in order and ends in ready, missing or error, never fetching", async () => {
     const makeContext: MakeContext = async (report) => {
-      report("frames", 0, 100);
-      await sleep(1);
-      report("frames", 60, 100);
-      report("frames", 100, 100);
-      return context({
+      // The frames as a loader, not in hand.
+      const rest: DataContext = { ...context(), frames: undefined };
+      return {
+        ...rest,
+        loadFrames: async () => {
+          report("frames", 0, 100);
+          await sleep(1);
+          report("frames", 60, 100);
+          report("frames", 100, 100);
+          return frames;
+        },
         loadProj: async () => {
           report("proj", 0, undefined);
           report("proj", 10, undefined);
@@ -495,14 +556,14 @@ describe("loading state (R9, Review Focus 5)", () => {
           report("orion", 0, 6e6);
           throw new TypeError("Failed to fetch");
         },
-      });
+      };
     };
     const { client } = connect(makeContext);
     const events: Event[] = [];
     client.onProgress((e) => events.push(e));
 
-    const frames = await client.load("frames");
-    expect(frames).toMatchObject({
+    const framesState = await client.load("frames");
+    expect(framesState).toMatchObject({
       item: "frames",
       state: "ready",
       bytes: 100,
@@ -538,13 +599,19 @@ describe("loading state (R9, Review Focus 5)", () => {
   });
 
   it("loads once: a second load of a ready item reports ready without fetching", async () => {
-    const makeContext = vi.fn(async () => context());
+    const loadFrames = vi.fn(async () => frames);
+    const makeContext = vi.fn(async () => {
+      // The frames as a loader, not in hand.
+      const rest: DataContext = { ...context(), frames: undefined };
+      return { ...rest, loadFrames };
+    });
     const { client } = connect(makeContext);
     const events: Event[] = [];
     client.onProgress((e) => events.push(e));
     await client.load("frames");
     await client.load("frames");
     expect(makeContext).toHaveBeenCalledOnce();
+    expect(loadFrames).toHaveBeenCalledOnce();
     expect(trace(events, "frames")).toEqual([
       "state:fetching",
       "state:ready",
@@ -569,13 +636,19 @@ describe("loading state (R9, Review Focus 5)", () => {
     expect((await client.load("proj")).state).toBe("ready");
   });
 
-  it("an item whose frame data is missing is missing too, saying why", async () => {
-    const { client } = connect(() =>
-      Promise.reject(new MissingDataError("no store; run `npm run setup`")),
-    );
-    const proj = await client.load("proj");
-    expect(proj.state).toBe("missing");
-    expect(proj.detail).toMatch(/frame data.*npm run setup/);
+  it("Orion, placed in the frame tree, is missing with the frame data, saying why; PROJ loads without it (F44)", async () => {
+    const loadOrion = vi.fn(async () => ({}) as never);
+    const { client } = connect(async () => ({
+      loadFrames: () =>
+        Promise.reject(new MissingDataError("no store; run `npm run setup`")),
+      loadProj: async () => ({}) as ProjApi,
+      loadOrion,
+    }));
+    const orion = await client.load("orion");
+    expect(orion.state).toBe("missing");
+    expect(orion.detail).toMatch(/frame data.*npm run setup/);
+    expect(loadOrion).not.toHaveBeenCalled();
+    expect((await client.load("proj")).state).toBe("ready");
   });
 
   it("geoid loads PROJ first, and is ready when PROJ needs no fetch for it", async () => {

@@ -3,6 +3,7 @@
 // above. The numbers are always beside it; the bar never stands alone.
 import type { StressResult } from "../tests.ts";
 import { quantity } from "./format.ts";
+import { valueNote } from "./runText.ts";
 
 /** Decades shown below the tolerance, and above it. */
 const BELOW = 6;
@@ -43,15 +44,7 @@ export function ToleranceBar({
 }) {
   const { value, tolerance, unit } = result;
   if (value === undefined || tolerance === undefined) {
-    return (
-      <span className="fx-muted fx-nobar">
-        {result.expectedError !== undefined
-          ? result.pass
-            ? "threw as expected"
-            : "didn't throw as expected"
-          : "judged by the case"}
-      </span>
-    );
+    return <span className="fx-muted fx-nobar">{valueNote(result)}</span>;
   }
   const at = barPosition(value, tolerance);
   const over = Math.abs(value) > tolerance;

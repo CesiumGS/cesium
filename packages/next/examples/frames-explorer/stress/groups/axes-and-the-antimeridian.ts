@@ -130,7 +130,7 @@ const antimeridianCase = stressCase(
   "axes-and-the-antimeridian.antimeridian",
   "axes-and-the-antimeridian",
   "UTM zones 1 and 60 at ±179.999°: points round-trip within 1e-4 m, a design line across 180° in zone 60 has continuous E, and two equator points either side of 180° are 2a sin(∆λ/2) apart within 1e-9 m",
-  ["proj"],
+  ["frames", "proj"],
   async (ctx, base) => {
     const results: StressResult[] = [];
     for (const zone of [1, 60]) {

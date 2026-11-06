@@ -64,7 +64,11 @@ function redact<T>(value: T, secrets: readonly string[]): T {
   return walk(value) as T;
 }
 
-/** The run's counts (R15, R18): the user's input counted apart, in none of the others. */
+/**
+ * The run's counts (R15, R18), as the worker and the page count them: missing
+ * data first (skipped), then shown-only, then pass or fail; the user's input
+ * counted apart, in none of the others.
+ */
 export function reportCounts(results: readonly StressResult[]): {
   passed: number;
   failed: number;
@@ -72,15 +76,21 @@ export function reportCounts(results: readonly StressResult[]): {
   shown: number;
   yourInput: number;
 } {
-  const catalog = results.filter((r) => r.userInput !== true);
-  const judged = catalog.filter((r) => r.displayOnly !== true);
-  return {
-    passed: judged.filter((r) => r.pass).length,
-    failed: judged.filter(isFailure).length,
-    skipped: judged.filter(isSkipped).length,
-    shown: catalog.filter((r) => r.displayOnly === true).length,
-    yourInput: results.length - catalog.length,
-  };
+  const counts = { passed: 0, failed: 0, skipped: 0, shown: 0, yourInput: 0 };
+  for (const r of results) {
+    if (r.userInput === true) {
+      counts.yourInput++;
+    } else if (isSkipped(r)) {
+      counts.skipped++;
+    } else if (r.displayOnly === true) {
+      counts.shown++;
+    } else if (r.pass) {
+      counts.passed++;
+    } else {
+      counts.failed++;
+    }
+  }
+  return counts;
 }
 
 /** A judged result that failed (not skipped, not shown-only, not the user's). */

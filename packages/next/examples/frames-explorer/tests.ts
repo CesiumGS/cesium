@@ -42,9 +42,9 @@ import { unitsCases } from "./stress/groups/units.ts";
 import { verticalProfileCases } from "./stress/groups/vertical-profile.ts";
 import {
   runCases,
+  type DataContext,
   type RunOptions,
   type StressCase,
-  type StressContext,
   type StressResult,
 } from "./stress/runner.ts";
 
@@ -54,9 +54,12 @@ export {
   defaultTrace,
   expectThrow,
   formatEffect,
+  isNeedMissing,
+  NeedMissingError,
   withDefaults,
   type Citation,
   type Comparison,
+  type DataContext,
   type Fingerprint,
   type Lens,
   type Need,
@@ -127,7 +130,7 @@ export const STRESS_CASES: readonly StressCase[] = [
  * never rejects for a case.
  */
 export function runStress(
-  ctx: StressContext,
+  ctx: DataContext,
   options: RunOptions = {},
 ): Promise<StressResult[]> {
   return runCases(ctx, options.cases ?? STRESS_CASES, options);

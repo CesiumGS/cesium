@@ -8,8 +8,9 @@
 // against it, and a mismatch fails its case.
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { framesDataDirectory } from "../../scripts/frameData.mjs";
+import { comparedFor } from "../../examples/frames-explorer/content.ts";
 import references from "../../examples/frames-explorer/references.json";
 import {
   STRESS_CASES,
@@ -314,6 +315,39 @@ describe("the frames explorer's stress tests, headless", () => {
     expect(checked).toBe(Object.keys(SOURCES).length);
   });
 
+  it("says what each result with its own comparison is compared against, as its case does (R10, R16)", () => {
+    const group = { kind: "formula" as const, text: "the group's" };
+    // Each override's text and the case's own title share what is compared.
+    const BY_CHECK: Record<string, RegExp> = {
+      "measurement.clothoid": /station and offset/,
+      "measurement.design-vs-itrf": /design point fixed in ITRF/,
+      "trajectory.moon-me.distance": /distance from the Moon's centre/,
+      "trajectory.moon-me.round-trip": /MOON_ME/,
+      frame: /engineering frame/,
+      "source-crs": /axis unit/,
+      "recorded-operation": /TOWGS84|registry prints/,
+      helmert: /coded by hand from the EPSG record|EPSG record/,
+      "round-trip": /body-fixed/,
+      registry: /registry operation/,
+      accuracy: /the measurement states/,
+    };
+    let checked = 0;
+    for (const r of results) {
+      const c = comparedFor(r.id, group);
+      if (c === group || r.group === "reproducibility") {
+        continue;
+      }
+      const key =
+        BY_CHECK[r.id] ?? BY_CHECK[r.id.slice(r.id.lastIndexOf(".") + 1)];
+      expect(key, `${r.id}: no phrase to check it by`).toBeDefined();
+      expect(r.title, r.id).toMatch(key!);
+      expect(c.text, r.id).toMatch(key!);
+      checked++;
+    }
+    // The measurement and Orion results, and every bound CRS's checks.
+    expect(checked).toBeGreaterThanOrEqual(4 + 4 * 5);
+  });
+
   it("traces every result from its input to its output (F28, R16)", () => {
     for (const r of results) {
       expect(r.trace?.[0]?.kind, r.id).toBe("input");
@@ -471,6 +505,59 @@ describe('boundCrsChecks, R18\'s "Try your own"', () => {
       expect(recorded.pass, recorded.detail).toBe(true);
     }
   });
+});
+
+describe("without the frame data (R5, F44)", () => {
+  it(
+    "runs every case that needs no frame data, and skips only the ones that do",
+    { timeout: 120_000 },
+    async () => {
+      const recorded = (
+        JSON.parse(readFileSync(fingerprintsFile, "utf8")) as FingerprintFile
+      ).fingerprints;
+      const loadOrion = vi.fn(() =>
+        Promise.reject(new Error("Orion is placed in the frames")),
+      );
+      const all = await runStress(
+        {
+          loadFrames: () => Promise.reject(new Error("no frame data here")),
+          loadProj: () => loadProj({ base }),
+          loadOrion,
+          manifest: context.manifest,
+        },
+        { fingerprints: recorded },
+      );
+      const caseOf = (id: string) =>
+        STRESS_CASES.filter(
+          (c) => id === c.id || id.startsWith(`${c.id}.`),
+        ).sort((a, b) => b.id.length - a.id.length)[0]!;
+      let ran = 0;
+      for (const r of all) {
+        const c = caseOf(r.id);
+        const needsFrames =
+          c.needs.includes("frames") || c.needs.includes("orion");
+        if (needsFrames) {
+          expect(r.missing, r.id).toContain("frames");
+          expect(r.detail, r.id).toMatch(/frame data/);
+        } else if (r.missing !== undefined) {
+          // Only an optional use of the frames may go missing.
+          expect(c.optionalNeeds, r.id).toContain("frames");
+          expect(r.missing, r.id).toEqual(["frames"]);
+        } else {
+          // Expected throws (R7) carry their error and pass.
+          if (r.expectedError === undefined) {
+            expect(r.error, r.id).toBeUndefined();
+          }
+          expect(r.pass, describeResult(r)).toBe(true);
+          ran++;
+        }
+      }
+      expect(loadOrion).not.toHaveBeenCalled();
+      // The PROJ-only groups, units, site grids, vertical profiles and the rest.
+      expect(ran).toBeGreaterThan(150);
+      print(`without frame data: ${ran} of ${all.length} results ran`);
+    },
+  );
 });
 
 describe("every verdict is judged", () => {

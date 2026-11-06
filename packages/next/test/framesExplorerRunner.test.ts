@@ -22,7 +22,12 @@ import {
 } from "../examples/frames-explorer/tests.ts";
 import { createFrames } from "../src/frames/frames.ts";
 import type { ProjApi } from "../src/engineering/proj.ts";
-import { plainAccuracy } from "../examples/frames-explorer/stress/runner.ts";
+import {
+  isNeedMissing,
+  plainAccuracy,
+  type DataContext,
+} from "../examples/frames-explorer/stress/runner.ts";
+import { MissingDataError } from "../examples/frames-explorer/host.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
 
 const frames = createFrames(syntheticFrameData());
@@ -328,6 +333,138 @@ describe("needs that can't be met (Review Focus 4)", () => {
       context({ loadProj: () => Promise.resolve(proj) }),
     );
     expect(seen).toBe(proj);
+  });
+});
+
+describe("frame data as a need (R5, F44)", () => {
+  const noFrames = (extra: Partial<DataContext> = {}): DataContext => ({
+    loadFrames: () =>
+      Promise.reject(new MissingDataError("the frame data is not here")),
+    loadProj: () => Promise.reject(new Error("PROJ is not in this test")),
+    loadOrion: () => Promise.reject(new Error("the OEM is not in this test")),
+    ...extra,
+  });
+
+  it("runs a case that needs no frame data when frame data is missing", async () => {
+    const results = await runStress(noFrames(), { cases: [stub([{}])] });
+    expect(results).toHaveLength(1);
+    expect(results[0]!.pass).toBe(true);
+    expect(results[0]!.missing).toBeUndefined();
+  });
+
+  it("skips a case that needs frame data, saying what's missing and why", async () => {
+    const body = vi.fn(() => Promise.resolve([] as StressResult[]));
+    const [r] = await runStress(noFrames(), {
+      cases: [stub(body, { needs: ["frames"] })],
+    });
+    expect(body).not.toHaveBeenCalled();
+    expect(r!.pass).toBe(false);
+    expect(r!.missing).toEqual(["frames"]);
+    expect(r!.detail).toMatch(/frame data/);
+    expect(r!.detail).toMatch(/the frame data is not here/);
+    expect(r!.detail).toMatch(/npm run setup/);
+  });
+
+  it("skips Orion's cases with the frame data too: the trajectory is placed in the frames", async () => {
+    const loadOrion = vi.fn(() => Promise.reject(new Error("never asked")));
+    const [r] = await runStress(noFrames({ loadOrion }), {
+      cases: [stub([{}], { needs: ["orion"] })],
+    });
+    expect(r!.missing).toEqual(["frames", "orion"]);
+    expect(loadOrion).not.toHaveBeenCalled();
+  });
+
+  it("loads the frame data once, lazily, and gives it to the cases that need it", async () => {
+    const loadFrames = vi.fn(() => Promise.resolve(frames));
+    let seen: unknown;
+    const results = await runStress(noFrames({ loadFrames }), {
+      cases: [
+        stub([{}]),
+        stub(
+          (ctx?: StressContext) => {
+            seen = ctx?.frames;
+            return Promise.resolve([]);
+          },
+          { needs: ["frames"] },
+        ),
+        stub([{}], { needs: ["frames"] }),
+      ],
+    });
+    expect(loadFrames).toHaveBeenCalledTimes(1);
+    expect(seen).toBe(frames);
+    expect(results.every((r) => r.missing === undefined)).toBe(true);
+  });
+
+  it("fails a case that reads the frames without declaring the need, even when they're loaded", async () => {
+    const [r] = await runStress(context(), {
+      cases: [
+        stub((ctx?: StressContext) => {
+          void ctx!.frames;
+          return Promise.resolve([]);
+        }),
+      ],
+    });
+    expect(r!.pass).toBe(false);
+    expect(r!.error).toMatch(/"frames" need/);
+  });
+
+  it("gives an optional need when it loads, and says so when it doesn't", async () => {
+    const read = (ctx?: StressContext) => {
+      try {
+        return Promise.resolve([
+          {
+            id: "x",
+            group: "projections",
+            title: "x",
+            pass: true,
+            detail: String(ctx!.frames === frames),
+          },
+        ] as StressResult[]);
+      } catch (error) {
+        return Promise.resolve([
+          {
+            id: "x",
+            group: "projections",
+            title: "x",
+            pass: false,
+            missing: ["frames"],
+            detail: String(isNeedMissing(error)),
+          },
+        ] as StressResult[]);
+      }
+    };
+    const [with_] = await runStress(context(), {
+      cases: [stub(read, { optionalNeeds: ["frames"] })],
+    });
+    expect(with_!.detail).toBe("true");
+    const [without] = await runStress(noFrames(), {
+      cases: [stub(read, { optionalNeeds: ["frames"] })],
+    });
+    expect(without!.missing).toEqual(["frames"]);
+    expect(without!.detail).toBe("true");
+  });
+
+  it("gives the store's manifest to a case once it has loaded", async () => {
+    const manifest = { files: [{ file: "proj/x.tif", sha256: "ab" }] };
+    let seen: unknown;
+    await runStress(
+      noFrames({
+        loadProj: () => Promise.resolve({} as ProjApi),
+        loadManifest: () => Promise.resolve(manifest),
+      }),
+      {
+        cases: [
+          stub(
+            (ctx?: StressContext) => {
+              seen = ctx?.manifest;
+              return Promise.resolve([]);
+            },
+            { needs: ["proj"] },
+          ),
+        ],
+      },
+    );
+    expect(seen).toBe(manifest);
   });
 });
 

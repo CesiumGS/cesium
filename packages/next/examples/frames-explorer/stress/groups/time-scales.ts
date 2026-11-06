@@ -22,7 +22,7 @@ const offsetsCase = stressCase(
   "time-scales.offsets",
   "time-scales",
   "The fixed offsets from Instant.tai(): TT − TAI = 32.184 s exactly (IERS Conventions), and TAI − UTC = 19 s at GPS time's zero point 1980-01-06 (IS-GPS-200N with IERS's leap-second table), so GPS time = TAI − 19 s",
-  [],
+  ["frames"],
   async (ctx, base) => {
     const tt = printed(cited<{ ttMinusTai: string }>("iers-tt-tai").ttMinusTai);
     const instants = [
@@ -71,7 +71,7 @@ const leapCase = stressCase(
   "time-scales.gps-utc-leap",
   "time-scales",
   "Across 2016-12-31T23:59:60 UTC (IERS Bulletin C 52): GPS − UTC steps from 17 s to 18 s, and GPS time (TAI − 19 s) stays continuous, advancing 2 s over the one labelled UTC second",
-  [],
+  ["frames"],
   async (ctx, base) => {
     const bulletin = cited<{ before: string; after: string }>(
       "iers-bulletin-c-52",

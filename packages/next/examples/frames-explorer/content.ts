@@ -148,6 +148,19 @@ const BOUND_CRS_COMPARED: Readonly<Record<string, Comparison>> = {
   },
 };
 
+/** A plain EPSG code's checks in the Bound CRSs card: against its EPSG record. */
+const EPSG_RECORD_COMPARED: Readonly<Record<string, Comparison>> = {
+  "recorded-operation": {
+    kind: "published",
+    text: "The EPSG record's Helmert parameters, as the registry prints them, against the operation PROJ records.",
+  },
+  helmert: {
+    kind: "formula",
+    text: "The EPSG record's Helmert coded by hand (IOGP 373-7-2).",
+  },
+  "round-trip": BOUND_CRS_COMPARED["round-trip"]!,
+};
+
 /** The inspector's "Compared against" for result `id`: its own, else its group's. */
 export function comparedFor(id: string, group: Comparison): Comparison {
   const own = RESULT_COMPARED[id];
@@ -156,6 +169,11 @@ export function comparedFor(id: string, group: Comparison): Comparison {
   }
   if (id.startsWith("bound-crss.")) {
     const check = id.slice(id.lastIndexOf(".") + 1);
+    // A plain EPSG code (`bound-crss.epsg-<code>.<check>`) is checked against
+    // its EPSG record, not a WKT's TOWGS84.
+    if (/^bound-crss\.epsg-\d+\./.test(id)) {
+      return EPSG_RECORD_COMPARED[check] ?? group;
+    }
     return BOUND_CRS_COMPARED[check] ?? group;
   }
   return group;
@@ -177,8 +195,11 @@ export interface TourStopSpec {
     | "rigidVsExact"
     | "earthMoon"
     | "lunarSite";
-  /** Dim the imagery under an engineering subject (exposure compensation −0.6). */
-  dim?: boolean;
+  /**
+   * Dim the imagery: exposure compensation −0.6 (`true`, under an engineering
+   * subject), or per width, as stop 2 needs (F43; see `stopExposure`).
+   */
+  dim?: true | { readonly wide: number; readonly narrow: number };
   /** The clock: plays at this rate while the stop shows. */
   rate?: number;
   /** Light the globe from the camera instead of the clock's sun (stop 2, S-I6). */
@@ -190,6 +211,27 @@ export interface TourStopSpec {
    * one at the top of the view from the pole, crosses GCRF's turning x axis.
    */
   geocentricOnly?: boolean;
+}
+
+/** Below this view width the HUD goes compact and the caption folds (I18, F42). */
+export const NARROW_VIEW = 560;
+
+/** The engineering stops' dimming (DESIGN.md "Lines"). */
+const DIM = -0.6;
+
+/** The exposure compensation (stops) while `stop` shows in a view `viewWidth` px wide. */
+export function stopExposure(
+  stop: TourStopSpec | undefined,
+  viewWidth: number,
+): number {
+  const dim = stop?.dim;
+  if (dim === undefined) {
+    return 0;
+  }
+  if (dim === true) {
+    return DIM;
+  }
+  return viewWidth < NARROW_VIEW ? dim.narrow : dim.wide;
 }
 
 /** The sites whose triads are drawn by default, beside ITRF's and GCRF's. */
@@ -228,8 +270,9 @@ export const TOUR: readonly TourStopSpec[] = [
     rate: 3600,
     light: "camera",
     // Lit from the camera, the polar globe washes out behind the axes (UX
-    // re-check 3): dimmed as under the engineering stops.
-    dim: true,
+    // re-check 3). At desktop width the eye's auto-exposure brightens the
+    // small globe on black, so it takes −1.5 there (F43).
+    dim: { wide: -1.5, narrow: -0.6 },
     geocentricOnly: true,
   },
   {

@@ -12,8 +12,16 @@ import { svgChevronUp } from "@stratakit/icons/chevron-up";
 import { svgDismiss } from "@stratakit/icons/dismiss";
 import { svgLink } from "@stratakit/icons/link";
 import { Icon } from "@stratakit/mui";
-import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
 import type { Family } from "./families.ts";
+import { captionFold, focusAfter, foldReducer } from "./fold.ts";
 import type { OverlayView, PanelModel, TourStop } from "./model.ts";
 
 /** Each overlay's family (color) and line style on the globe and in the legend (M8). */
@@ -33,7 +41,7 @@ const OVERLAY_LOOK: Partial<
 };
 
 /** Below this view width the HUD goes compact: legend folded, the caption at the bottom (I18). */
-export const NARROW_VIEW = 560;
+export { NARROW_VIEW } from "../content.ts";
 
 /**
  * Keeps the HUD clear of the viewer's time controls (bottom centre, one or
@@ -170,12 +178,28 @@ export function TourCaption({
 }) {
   const s = tour[stop]!;
   const heading = useRef<HTMLHeadingElement>(null);
-  const [unfolded, setUnfolded] = useState(false);
-  const folded = narrow && !unfolded;
+  const toggleButton = useRef<HTMLButtonElement>(null);
+  const [foldState, dispatch] = useReducer(foldReducer, undefined, () =>
+    foldReducer(undefined, { type: "init" }),
+  );
+  const view = captionFold(narrow, foldState.unfolded);
+  const folded = view.folded;
   const bodyId = useId();
   useEffect(() => {
-    heading.current?.focus({ preventScroll: true, focusVisible: false });
+    dispatch({ type: "stop" });
+    if (focusAfter({ type: "stop" }) === "heading") {
+      heading.current?.focus({ preventScroll: true, focusVisible: false });
+    }
   }, [stop]);
+  // The heading moves between the row and the caption as it folds: focus
+  // stays on the toggle (F42).
+  const toggled = useRef(false);
+  useEffect(() => {
+    if (toggled.current && focusAfter({ type: "toggle" }) === "toggle") {
+      toggleButton.current?.focus();
+    }
+    toggled.current = false;
+  }, [foldState]);
   const steps = (
     <span className="fx-tour-steps">
       <Button
@@ -207,16 +231,20 @@ export function TourCaption({
       )}
     </span>
   );
-  const fold = narrow && (
+  const fold = view.toggle && (
     <IconButton
+      ref={toggleButton}
       size="small"
-      aria-expanded={unfolded}
+      aria-expanded={view.toggle.expanded}
       aria-controls={bodyId}
-      aria-label={unfolded ? "Fold the caption" : "Unfold the caption"}
-      title={unfolded ? "Fold the caption" : "Unfold the caption"}
-      onClick={() => setUnfolded((v) => !v)}
+      aria-label={view.toggle.label}
+      title={view.toggle.label}
+      onClick={() => {
+        toggled.current = true;
+        dispatch({ type: "toggle" });
+      }}
     >
-      <Icon href={unfolded ? svgChevronDown : svgChevronUp} />
+      <Icon href={view.toggle.expanded ? svgChevronDown : svgChevronUp} />
     </IconButton>
   );
   const end = (
@@ -253,7 +281,7 @@ export function TourCaption({
         >
           Stop {stop + 1} of {tour.length}
         </Typography>
-        {folded && (
+        {view.titleInRow && (
           <Typography
             variant="body-sm"
             render={<h2 ref={heading} tabIndex={-1} title={s.title} />}
@@ -268,7 +296,7 @@ export function TourCaption({
           {end}
         </span>
       </div>
-      {!folded && (
+      {!view.titleInRow && (
         <Typography
           variant="subtitle-md"
           render={<h2 ref={heading} tabIndex={-1} />}
@@ -277,7 +305,7 @@ export function TourCaption({
           {s.title}
         </Typography>
       )}
-      <div id={bodyId} className="fx-tour-body" hidden={folded}>
+      <div id={bodyId} className="fx-tour-body" hidden={view.bodyHidden}>
         <Typography variant="body-sm" render={<p />}>
           {s.caption}
         </Typography>

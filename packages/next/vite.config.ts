@@ -72,6 +72,9 @@ function serveDirectory(prefix: string, root: string): Plugin {
           "Content-Type",
           contentTypes[extname(path)] ?? "application/octet-stream",
         );
+        // The size, so a page can show a fetch's progress against its total
+        // (the frames explorer's R9 bars), as a static host would.
+        res.setHeader("Content-Length", statSync(path).size);
         createReadStream(path).pipe(res);
       });
     },
