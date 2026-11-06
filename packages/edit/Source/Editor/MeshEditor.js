@@ -88,6 +88,9 @@ class MeshEditor {
   /** @type {Set<Mesh>} */
   #meshes = new Set();
 
+  /** @type {Map<GeometrySource, Mesh>} */
+  #meshesBySource = new Map();
+
   /** @type {MeshEditorStyle} */
   #style = new MeshEditorStyle();
 
@@ -112,6 +115,23 @@ class MeshEditor {
      * @type {Event<function(EditMode, EditMode): void>}
      */
     this.modeChanged = new Event();
+
+    /**
+     * Raised after {@link MeshEditor#addMesh} adds a mesh. The new mesh is
+     * passed to listeners.
+     *
+     * @type {Event<function(Mesh): void>}
+     */
+    this.meshAdded = new Event();
+
+    /**
+     * Raised when {@link MeshEditor#removeMesh} removes a mesh. The mesh is
+     * passed to listeners. It's no longer in the editor, but isn't destroyed
+     * until the listeners return. Not raised when the editor is destroyed.
+     *
+     * @type {Event<function(Mesh): void>}
+     */
+    this.meshRemoved = new Event();
   }
 
   /**
@@ -140,6 +160,17 @@ class MeshEditor {
    */
   get style() {
     return this.#style;
+  }
+
+  /**
+   * The editor's meshes, in the order they were added. A new array each time,
+   * so changing it doesn't change the editor.
+   *
+   * @type {Mesh[]}
+   * @readonly
+   */
+  get meshes() {
+    return Array.from(this.#meshes);
   }
 
   /**
@@ -195,10 +226,8 @@ class MeshEditor {
   addMesh(source) {
     //>>includeStart('debug', pragmas.debug);
     Check.typeOf.object("source", source);
-    for (const mesh of this.#meshes) {
-      if (mesh.source === source) {
-        throw new DeveloperError("The source was already added.");
-      }
+    if (this.#meshesBySource.has(source)) {
+      throw new DeveloperError("The source was already added.");
     }
     //>>includeEnd('debug');
 
@@ -212,6 +241,9 @@ class MeshEditor {
     });
     this.#setComponentMasks(mesh, INACTIVE_COMPONENTS, 0);
     this.#meshes.add(mesh);
+    this.#meshesBySource.set(source, mesh);
+
+    this.meshAdded.raiseEvent(mesh);
 
     return mesh;
   }
@@ -227,8 +259,11 @@ class MeshEditor {
     if (!this.#meshes.delete(mesh)) {
       return false;
     }
+    this.#meshesBySource.delete(mesh.source);
 
     this.#wasmEditor.removeMesh(mesh._key)?.free();
+    // Before destroying the mesh, so listeners can still read it.
+    this.meshRemoved.raiseEvent(mesh);
     mesh._destroy();
 
     return true;
@@ -240,6 +275,14 @@ class MeshEditor {
    */
   hasMesh(mesh) {
     return this.#meshes.has(mesh);
+  }
+
+  /**
+   * @param {GeometrySource} source The geometry source to look for.
+   * @returns {Mesh|undefined} The mesh that edits the source, or <code>undefined</code> if the source isn't in the editor.
+   */
+  getMesh(source) {
+    return this.#meshesBySource.get(source);
   }
 
   /**
