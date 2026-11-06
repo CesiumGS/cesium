@@ -6853,6 +6853,16 @@ with a brainstorm first:
   plus an up axis. Free-fly can join them.
 - **Flights between rigs need a defined hand-off,** for example the Earth to
   a lunar site: interpolate in a common frame, then re-attach.
+- **The sky follows what the rig is attached to (owner, 2026-11-06).** Today
+  the Earth's sunrise and sunset sky colours still show while the camera
+  orbits in space, as in the frames example's orbit scenes. The sky and
+  atmosphere should come from the rig's body and the camera's place relative
+  to it:
+  - inside or near a body's atmosphere, that body's sky scattering;
+  - in orbit, black space, with the atmosphere drawn only as a shell on the
+    body's limb;
+  - on the Moon, no atmosphere at all.
+    Blend across the boundary as the camera climbs, so the change doesn't pop.
 
 **Design space and the global view, with a morph between them (owner,
 2026-11-06).** An engineering model, such as an iModel in its design CRS,
