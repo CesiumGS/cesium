@@ -22,7 +22,7 @@ import type { Frames } from "../../src/frames/frames.ts";
 import { rotationPart } from "../../src/frames/matrix.ts";
 import type { Ellipsoid } from "../../src/math/ellipsoid.ts";
 import type { MeshData } from "../../src/scene/meshes.ts";
-import type { World } from "../../src/scene/World.ts";
+import type { DrawHandle, MeshHandle, World } from "../../src/scene/World.ts";
 import { Instant } from "../../src/time/Instant.ts";
 import type { Trajectory } from "../../src/trajectory/Trajectory.ts";
 
@@ -532,6 +532,10 @@ const contourColor = (ppm: number): Rgba =>
       ? [255, 96, 64, 255]
       : [255, 255, 255, 255];
 
+/** The RangeErrors `gridFactors` throws where a projection has no scale. */
+const NO_SCALE =
+  /outside the projection's domain|is at a pole|singular point of the projection/;
+
 /** How many Tissot vertices an ellipse has. */
 const TISSOT_SEGMENTS = 32;
 
@@ -565,6 +569,8 @@ export function distortion(
   tissot: Geometry;
   contours: Geometry;
   labels: { positions: Float64Array; ppm: Float64Array };
+  /** Nodes with no scale (poles, outside the domain, singular), left out of all three. */
+  skipped: number;
 } {
   positive("distortion: step", step);
   positive("distortion: tissotRadius", options.tissotRadius);
@@ -574,6 +580,7 @@ export function distortion(
   const nx = xs.length;
   const ny = ys.length;
   const field = new Float64Array(nx * ny).fill(NaN);
+  let skipped = 0;
   const tissot = new Lines();
   const r = options.tissotRadius;
   for (let j = 0; j < ny; j++) {
@@ -583,7 +590,10 @@ export function distortion(
       try {
         factors = gridFactors(frame, design);
       } catch (error) {
-        if (error instanceof RangeError) {
+        // Only PROJ having no scale here (a pole, outside the projection's
+        // domain, a singular point) skips the node; anything else is a bug.
+        if (error instanceof RangeError && NO_SCALE.test(error.message)) {
+          skipped++;
           continue;
         }
         throw error;
@@ -662,6 +672,7 @@ export function distortion(
     }
   }
   return {
+    skipped,
     tissot: tissot.geometry(),
     contours: contours.geometry(),
     labels: {
@@ -676,20 +687,30 @@ const srgbToLinear = (byte: number): number => {
   return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
 };
 
+/** The largest extent, meters per axis, of one chunk of an overlay's mesh. */
+export const CHUNK_EXTENT = 1e5;
+
+/** One uploaded mesh of an overlay, and the float64 origin of its draw. */
+export interface OverlayChunk {
+  mesh: MeshData;
+  origin: Float64Array;
+}
+
 /**
- * The mesh `addOverlay` uploads, and the float64 origin of its draw. The mesh
- * is float32, which near the Earth (6.4e6 m) has half-meter steps and at the
- * Moon (3.8e8 m) tens of meters, so the large part cannot ride in the
- * vertices: they hold the offset from the geometry's bounding-box center, and
- * the draw's float64 `origin` holds the center. `World` carries each draw's
- * transform as a hi/lo split and subtracts the camera in float64, so the
- * drawn position is exact to the vertices' own float32 step (kilometers of
- * extent give millimeters) and does not move as the camera does. `undefined`
- * for empty geometry.
+ * The meshes `addOverlay` uploads, each with the float64 origin of its draw.
+ * A mesh is float32, which near the Earth (6.4e6 m) has half-meter steps and
+ * at the Moon (3.8e8 m) tens of meters, so the large part cannot ride in the
+ * vertices. And one origin is not enough for a long geometry: a 4e8 m path
+ * has local offsets of 2e8 m, again 16 m steps. So the segments are split
+ * into runs (in order) whose bounding box is at most `CHUNK_EXTENT` on every
+ * axis, each with its own mesh holding offsets from its box's center and its
+ * own origin. A segment longer than that is cut into equal pieces first
+ * (its colors interpolated). `World` carries each draw's transform as a hi/lo
+ * split and subtracts the camera in float64, so a chunk draws exact to its
+ * vertices' float32 step (a few millimeters) and does not move with the
+ * camera. Empty for empty geometry.
  */
-export function overlayMesh(
-  geometry: Geometry,
-): { mesh: MeshData; origin: Float64Array } | undefined {
+export function overlayMesh(geometry: Geometry): OverlayChunk[] {
   const { positions, colors } = geometry;
   if (positions.length % 3 !== 0) {
     throw new RangeError(
@@ -702,32 +723,84 @@ export function overlayMesh(
       `overlayMesh: ${vertices} vertices need ${4 * vertices} bytes of colors, got ${colors.length}`,
     );
   }
-  if (vertices === 0) {
-    return undefined;
-  }
   if (vertices % 2 !== 0) {
     throw new RangeError(
       `overlayMesh: a line list is vertex pairs, got ${vertices} vertices`,
     );
   }
-  const lo = [Infinity, Infinity, Infinity];
-  const hi = [-Infinity, -Infinity, -Infinity];
-  for (let i = 0; i < positions.length; i++) {
-    const c = i % 3;
-    lo[c] = Math.min(lo[c]!, positions[i]!);
-    hi[c] = Math.max(hi[c]!, positions[i]!);
+  const chunks: OverlayChunk[] = [];
+  let points: number[] = [];
+  let bytes: number[] = [];
+  let lo = [Infinity, Infinity, Infinity];
+  let hi = [-Infinity, -Infinity, -Infinity];
+  const flush = () => {
+    if (points.length > 0) {
+      chunks.push(buildChunk(points, bytes, lo, hi));
+    }
+    points = [];
+    bytes = [];
+    lo = [Infinity, Infinity, Infinity];
+    hi = [-Infinity, -Infinity, -Infinity];
+  };
+  for (let v = 0; v < vertices; v += 2) {
+    const a = positions.subarray(3 * v, 3 * v + 3);
+    const b = positions.subarray(3 * v + 3, 3 * v + 6);
+    const span = Math.max(
+      Math.abs(b[0]! - a[0]!),
+      Math.abs(b[1]! - a[1]!),
+      Math.abs(b[2]! - a[2]!),
+    );
+    const n = Math.max(1, Math.ceil(span / CHUNK_EXTENT));
+    const at = (k: number, c: number) =>
+      k === 0 ? a[c]! : k === n ? b[c]! : a[c]! + ((b[c]! - a[c]!) * k) / n;
+    const byteAt = (k: number, c: number) =>
+      Math.round(
+        colors[4 * v + c]! +
+          ((colors[4 * v + 4 + c]! - colors[4 * v + c]!) * k) / n,
+      );
+    for (let k = 0; k < n; k++) {
+      const piece = [0, 1].flatMap((end) =>
+        [0, 1, 2].map((c) => at(k + end, c)),
+      );
+      const nlo = lo.map((x, c) => Math.min(x, piece[c]!, piece[3 + c]!));
+      const nhi = hi.map((x, c) => Math.max(x, piece[c]!, piece[3 + c]!));
+      if (points.length > 0 && nhi.some((x, c) => x - nlo[c]! > CHUNK_EXTENT)) {
+        flush();
+        lo = [0, 1, 2].map((c) => Math.min(piece[c]!, piece[3 + c]!));
+        hi = [0, 1, 2].map((c) => Math.max(piece[c]!, piece[3 + c]!));
+      } else {
+        lo = nlo;
+        hi = nhi;
+      }
+      points.push(...piece);
+      for (const end of [k, k + 1]) {
+        for (let c = 0; c < 4; c++) {
+          bytes.push(byteAt(end, c));
+        }
+      }
+    }
   }
+  flush();
+  return chunks;
+}
+
+function buildChunk(
+  points: number[],
+  bytes: number[],
+  lo: number[],
+  hi: number[],
+): OverlayChunk {
   const origin = new Float64Array(3).map((_, c) => (lo[c]! + hi[c]!) / 2);
-  const local = new Float32Array(positions.length);
-  for (let i = 0; i < positions.length; i++) {
-    local[i] = positions[i]! - origin[i % 3]!;
+  const local = new Float32Array(points.length);
+  for (let i = 0; i < points.length; i++) {
+    local[i] = points[i]! - origin[i % 3]!;
   }
-  const linear = new Float32Array(colors.length);
-  for (let i = 0; i < colors.length; i++) {
-    linear[i] = i % 4 === 3 ? colors[i]! / 255 : srgbToLinear(colors[i]!);
+  const linear = new Float32Array(bytes.length);
+  for (let i = 0; i < bytes.length; i++) {
+    linear[i] = i % 4 === 3 ? bytes[i]! / 255 : srgbToLinear(bytes[i]!);
   }
-  const indices = new Uint32Array(vertices);
-  for (let i = 0; i < vertices; i++) {
+  const indices = new Uint32Array(points.length / 3);
+  for (let i = 0; i < indices.length; i++) {
     indices[i] = i;
   }
   return {
@@ -737,40 +810,47 @@ export function overlayMesh(
 }
 
 /**
- * Draws geometry as an unlit line-list mesh in `world` (R3), Earth-fixed.
- * Returns a remover (idempotent) and registers it in `scope`. Geometry
- * with no vertices draws nothing.
+ * Draws geometry as unlit line-list meshes in `world` (R3), Earth-fixed, one
+ * per chunk (see `overlayMesh`). Returns a remover (idempotent) that removes
+ * every chunk, and registers it in `scope`. Geometry with no vertices draws
+ * nothing.
  */
 export function addOverlay(
   world: World,
   geometry: Geometry,
   scope: DisposableStack,
 ): () => void {
-  const built = overlayMesh(geometry);
-  if (built === undefined) {
-    return () => {};
-  }
-  const mesh = world.addMesh(built.mesh);
-  let draw;
-  try {
-    draw = world.addDraw({
-      mesh,
-      origin: built.origin,
-      unlit: true,
-      name: "frames explorer overlay",
-    });
-  } catch (error) {
-    world.removeMesh(mesh);
-    throw error;
-  }
+  const added: { mesh: MeshHandle; draw: DrawHandle }[] = [];
   let removed = false;
   const remove = () => {
     if (!removed) {
       removed = true;
-      world.removeDraw(draw);
-      world.removeMesh(mesh);
+      for (const { mesh, draw } of added.splice(0)) {
+        world.removeDraw(draw);
+        world.removeMesh(mesh);
+      }
     }
   };
+  try {
+    for (const chunk of overlayMesh(geometry)) {
+      const mesh = world.addMesh(chunk.mesh);
+      try {
+        const draw = world.addDraw({
+          mesh,
+          origin: chunk.origin,
+          unlit: true,
+          name: "frames explorer overlay",
+        });
+        added.push({ mesh, draw });
+      } catch (error) {
+        world.removeMesh(mesh);
+        throw error;
+      }
+    }
+  } catch (error) {
+    remove();
+    throw error;
+  }
   scope.defer(remove);
   return remove;
 }

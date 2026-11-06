@@ -650,7 +650,7 @@ describe("overlayMesh (what the adapter hands to World.addMesh)", () => {
   ] as const) {
     it(`keeps the large part in a float64 origin at ${name}, so float32 vertices do not jitter`, () => {
       const g = line([...center]);
-      const { mesh, origin } = overlayMesh(g)!;
+      const { mesh, origin } = overlayMesh(g)[0]!;
       expect(mesh.topology).toBe("line-list");
       expect(mesh.positions).toBeInstanceOf(Float32Array);
       expect(Array.from(mesh.indices)).toEqual([0, 1]);
@@ -684,7 +684,7 @@ describe("overlayMesh (what the adapter hands to World.addMesh)", () => {
   }
 
   it("converts sRGB bytes to the mesh's linear float colors", () => {
-    const { mesh } = overlayMesh(line([6.378e6, 0, 0]))!;
+    const { mesh } = overlayMesh(line([6.378e6, 0, 0]))[0]!;
     const c = mesh.colors!;
     expect(c).toBeInstanceOf(Float32Array);
     expect(Array.from(c.subarray(0, 4))).toEqual([1, 0, 0, 1]);
@@ -699,7 +699,98 @@ describe("overlayMesh (what the adapter hands to World.addMesh)", () => {
         positions: new Float64Array(0),
         colors: new Uint8Array(0),
       }),
-    ).toBeUndefined();
+    ).toEqual([]);
+  });
+
+  describe("chunks long geometry so float32 offsets stay small", () => {
+    // A polyline from near the Earth out past the Moon, 4e8 m long.
+    const build = (stepM: number) => {
+      const n = Math.round(4e8 / stepM);
+      const points: number[] = [];
+      const colors: number[] = [];
+      const at = (i: number) => [
+        6.4e6 + i * stepM,
+        1234.567 + 3e5 * Math.sin(i / 700),
+        -89.1 + 2e5 * Math.cos(i / 900),
+      ];
+      for (let i = 0; i < n; i++) {
+        points.push(...at(i), ...at(i + 1));
+        colors.push(10, 20, 30, 255, 10, 20, 30, 255);
+      }
+      return {
+        n,
+        at,
+        g: {
+          positions: Float64Array.from(points),
+          colors: Uint8Array.from(colors),
+        },
+      };
+    };
+    const reassemble = (chunks: ReturnType<typeof overlayMesh>) =>
+      chunks.flatMap(({ mesh, origin }) =>
+        Array.from(mesh.positions).map((x, i) => origin[i % 3]! + x),
+      );
+
+    it("every chunk's local offsets are within 1e5 m, and the chunks reassemble the input to 1e-2 m", () => {
+      const { g } = build(5e4);
+      const chunks = overlayMesh(g);
+      expect(chunks.length).toBeGreaterThan(3000);
+      for (const { mesh } of chunks) {
+        expect(mesh.topology).toBe("line-list");
+        for (const x of mesh.positions) {
+          expect(Math.abs(x)).toBeLessThanOrEqual(1e5);
+        }
+      }
+      const back = reassemble(chunks);
+      expect(back).toHaveLength(g.positions.length);
+      let worst = 0;
+      for (let i = 0; i < back.length; i++) {
+        worst = Math.max(worst, Math.abs(back[i]! - g.positions[i]!));
+      }
+      expect(worst).toBeLessThanOrEqual(1e-2);
+    });
+
+    it("cuts a segment longer than a chunk, keeping its endpoints and total length", () => {
+      const { g, n } = build(2e6);
+      const chunks = overlayMesh(g);
+      for (const { mesh } of chunks) {
+        for (const x of mesh.positions) {
+          expect(Math.abs(x)).toBeLessThanOrEqual(1e5);
+        }
+      }
+      const back = reassemble(chunks);
+      expect(back.length).toBeGreaterThan(g.positions.length);
+      for (let c = 0; c < 3; c++) {
+        expect(Math.abs(back[c]! - g.positions[c]!)).toBeLessThan(1e-2);
+        expect(
+          Math.abs(
+            back[back.length - 3 + c]! -
+              g.positions[g.positions.length - 3 + c]!,
+          ),
+        ).toBeLessThan(1e-2);
+      }
+      const length = (p: ArrayLike<number>) => {
+        let total = 0;
+        for (let i = 0; i + 5 < p.length; i += 6) {
+          total += Math.hypot(
+            p[i + 3]! - p[i]!,
+            p[i + 4]! - p[i + 1]!,
+            p[i + 5]! - p[i + 2]!,
+          );
+        }
+        return total;
+      };
+      expect(Math.abs(length(back) - length(g.positions))).toBeLessThan(1);
+      expect(n).toBe(200);
+    });
+
+    it("the colors follow the chunks", () => {
+      const chunks = overlayMesh(build(2e6).g);
+      for (const { mesh } of chunks) {
+        expect(mesh.colors!.length).toBe((mesh.positions.length / 3) * 4);
+        expect(mesh.colors![3]).toBe(1);
+      }
+    });
   });
 
   it("rejects colors that do not match the vertices", () => {
