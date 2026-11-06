@@ -5,8 +5,8 @@
 //
 //  - `createHost`: a dispatcher over a message port that loads data lazily
 //    (R6) and reports it (R9), runs the catalog and R18's user CRS checks
-//    streaming one `result` per result, and builds overlays whose buffers it
-//    transfers.
+//    streaming one `result` per result, builds overlays whose buffers it
+//    transfers, and evaluates scenarios through their registry.
 //  - `browserContext`: the worker's data, the frames store at `/frames-data/`
 //    and PROJ at `/frames-data/proj/`, fetched with progress.
 //
@@ -47,7 +47,23 @@ import {
   type ComposedView,
   type Reference,
 } from "./panel/model.ts";
-import { GEOID, Needs, messageOf } from "./stress/runner.ts";
+import { RunQueue } from "./runQueue.ts";
+import {
+  scenarioEvaluator,
+  type ScenarioEvaluation,
+} from "./scenarios/evaluate.ts";
+// Every scenario module, each registering its evaluator as it is imported.
+import "./scenarios/index.ts";
+import { clampKnobs } from "./scenarios/spec.ts";
+import { SCENARIOS } from "./scenarios/specs.ts";
+import {
+  GEOID,
+  Needs,
+  judgeResult,
+  messageOf,
+  withDefaults,
+  type Need,
+} from "./stress/runner.ts";
 import { buildTree, type TreeNode } from "./tree.ts";
 import { frameTransform } from "../../src/frames/Frame.ts";
 import {
@@ -200,26 +216,35 @@ function count(summary: RunSummary, result: StressResult): void {
   }
 }
 
-/** Every buffer of an overlay's typed arrays, once each. */
-function transfers(geometry: OverlayGeometry): ArrayBuffer[] {
+/** Every buffer of the overlays' typed arrays, once each. */
+function transfers(...geometries: OverlayGeometry[]): ArrayBuffer[] {
   const out = new Set<ArrayBuffer>();
   const add = (array: ArrayBufferView | undefined) => {
     if (array !== undefined) {
       out.add(array.buffer as ArrayBuffer);
     }
   };
-  for (const layer of geometry.layers) {
-    for (const { mesh, origin } of layer.chunks) {
-      add(mesh.positions);
-      add(mesh.colors);
-      add(mesh.indices);
-      add(origin);
+  for (const geometry of geometries) {
+    for (const layer of geometry.layers) {
+      for (const { mesh, origin } of layer.chunks) {
+        add(mesh.positions);
+        add(mesh.colors);
+        add(mesh.indices);
+        add(origin);
+      }
     }
+    add(geometry.labels?.positions);
+    add(geometry.labels?.values);
   }
-  add(geometry.labels?.positions);
-  add(geometry.labels?.values);
   return [...out];
 }
+
+/** The needs of a scenario's spec that the worker meets (terrain is the page's). */
+const WORKER_NEEDS: ReadonlySet<string> = new Set<Need>([
+  "proj",
+  "geoid",
+  "orion",
+]);
 
 const layer = (
   name: string,
@@ -249,7 +274,16 @@ export const TRAJECTORY_CHUNK_EXTENT = 1e7;
  *    case, so a `cancel` stops the run before its next case.
  *  - `userCrs`: `boundCrsChecks` on the WKT2 (R18), streamed the same way.
  *  - `overlay`: the geometry, with its buffers transferred.
- *  - A request that fails is answered with `error`.
+ *  - `scenario`: the registered evaluator (`registerScenario`) at the
+ *    request's knobs, clamped to the scenario's spec, with the frame data
+ *    and what the spec needs; its live checks judged as the runner judges,
+ *    and its overlays' buffers transferred.
+ *  - A request that fails is answered with `error`; a scenario's names it.
+ *
+ * `run`, `userCrs` and `scenario` wait in one queue, so none overlaps
+ * another: a scenario's live checks never mix with a run's results or
+ * citations (references.ts collects them for one run at a time). A `cancel`
+ * stops every run asked for before it, waiting or going on.
  *
  * Every item reports `fetching`, its `progress`, then `ready`, `missing` or
  * `error`: never left at `fetching` (Review Focus 5). A failed item isn't
@@ -489,20 +523,33 @@ export function createHost(
     answer("ready", readyInfo.get(item) ?? {});
   }
 
+  /** The runs asked for and not yet ended, waiting in the queue or going on. */
   const runs = new Set<AbortController>();
+  const queue = new RunQueue();
+
+  type StreamBody = (
+    ctx: Loaded,
+    signal: AbortSignal,
+    onResult: (r: StressResult) => void,
+  ) => Promise<unknown>;
+
+  /**
+   * Queues `body` as a run: from now on a `cancel` stops it, so one stopped
+   * while it waits runs nothing and sends its `done`, cancelled.
+   */
+  function queueStream(id: number, body: StreamBody): void {
+    const controller = new AbortController();
+    runs.add(controller);
+    void queue.run(() => stream(id, controller, body));
+  }
 
   /** Runs `body`, streaming its results and then `done`, or `error`. */
   async function stream(
     id: number,
-    body: (
-      ctx: Loaded,
-      signal: AbortSignal,
-      onResult: (r: StressResult) => void,
-    ) => Promise<unknown>,
+    controller: AbortController,
+    body: StreamBody,
   ): Promise<void> {
     const start = performance.now();
-    const controller = new AbortController();
-    runs.add(controller);
     const summary: RunSummary = {
       passed: 0,
       failed: 0,
@@ -513,10 +560,12 @@ export function createHost(
     };
     try {
       const loaded = await context();
-      await body(loaded, controller.signal, (result) => {
-        count(summary, result);
-        post({ type: "result", id, result });
-      });
+      if (!controller.signal.aborted) {
+        await body(loaded, controller.signal, (result) => {
+          count(summary, result);
+          post({ type: "result", id, result });
+        });
+      }
       summary.ms = performance.now() - start;
       summary.cancelled = controller.signal.aborted;
       post({ type: "done", id, summary });
@@ -770,6 +819,70 @@ export function createHost(
     }
   }
 
+  /**
+   * Scenario `request.scenario` evaluated in the worker (`ScenarioEvaluation`):
+   * an error names the scenario.
+   */
+  async function scenario(
+    request: Request & { type: "scenario" },
+  ): Promise<void> {
+    const { id, scenario: name } = request;
+    try {
+      const spec = SCENARIOS.find((s) => s.id === name);
+      if (spec === undefined) {
+        throw new RangeError(
+          `not a scenario (${SCENARIOS.map((s) => s.id).join(", ")})`,
+        );
+      }
+      const evaluator = scenarioEvaluator(spec.id);
+      if (evaluator === undefined) {
+        throw new RangeError("no evaluator is registered in the worker");
+      }
+      if (!Number.isFinite(request.epochTdb)) {
+        throw new RangeError(
+          `the epoch ${String(request.epochTdb)} is not a finite TDB time`,
+        );
+      }
+      const loaded = await context();
+      const met = await new Needs(loaded.ctx).meet([
+        "frames",
+        ...(spec.needs.filter((n) => WORKER_NEEDS.has(n)) as Need[]),
+      ]);
+      if ("missing" in met) {
+        throw new MissingDataError(met.reasons.join(" "));
+      }
+      const knobs = clampKnobs(
+        spec,
+        typeof request.knobs === "object" && request.knobs !== null
+          ? request.knobs
+          : {},
+      );
+      const evaluated = await evaluator(met.ctx, knobs, request.epochTdb);
+      if (evaluated.scenario !== spec.id) {
+        throw new Error(
+          `its evaluator answered for "${String(evaluated.scenario)}"`,
+        );
+      }
+      // Judged here, as the runner judges the catalog's: a live row is never
+      // the evaluator's word alone.
+      const evaluation: ScenarioEvaluation = {
+        ...evaluated,
+        live: evaluated.live.map((r) => withDefaults(judgeResult(r))),
+      };
+      post(
+        { type: "scenario", id, evaluation },
+        transfers(...evaluation.overlays.map((o) => o.geometry)),
+      );
+    } catch (error) {
+      post({
+        type: "error",
+        id,
+        name: errorName(error),
+        message: `scenario "${String(name)}": ${messageOf(error)}`,
+      });
+    }
+  }
+
   port.onmessage = (event) => {
     const request = event.data;
     switch (request.type) {
@@ -792,7 +905,7 @@ export function createHost(
         return;
       case "run": {
         const { ids } = request;
-        void stream(request.id, ({ ctx }, signal, onResult) =>
+        queueStream(request.id, ({ ctx }, signal, onResult) =>
           runStress(ctx, {
             cases,
             signal,
@@ -805,7 +918,7 @@ export function createHost(
       }
       case "userCrs": {
         const { wkt2, label } = request;
-        void stream(request.id, async ({ raw, ctx }, signal, onResult) => {
+        queueStream(request.id, async ({ raw, ctx }, signal, onResult) => {
           if (VERTICAL_WKT.test(wkt2)) {
             // A compound CRS reads GEOID18; without it the checks say what
             // failed, and the item's state says why.
@@ -831,6 +944,9 @@ export function createHost(
         return;
       case "trajectoryInfo":
         void trajectoryInfo(request.id, request.at);
+        return;
+      case "scenario":
+        void queue.run(() => scenario(request));
         return;
       default:
         post({

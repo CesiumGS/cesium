@@ -20,6 +20,8 @@ import type {
   Sampling,
 } from "./overlays.ts";
 import type { ComposedView, Reference } from "./panel/model.ts";
+import type { ScenarioEvaluation } from "./scenarios/evaluate.ts";
+import type { KnobState, ScenarioId } from "./scenarios/spec.ts";
 import type { StressResult } from "./tests.ts";
 import type { TreeNode } from "./tree.ts";
 
@@ -172,13 +174,24 @@ export type OverlayRequest = {
 export type Request = { id: number } & (
   | { type: "load"; item: DataItem }
   | { type: "run"; ids?: readonly string[] }
-  /** Stops every run in progress before its next case; each still sends its `done`. */
+  /** Stops every run asked for before it, waiting or in progress, before its next case; each still sends its `done`. */
   | { type: "cancel" }
   | OverlayRequest
   /** R18: `boundCrsChecks` on the user's WKT2, streamed like `run`. */
   | { type: "userCrs"; wkt2: string; label: string }
   /** Orion's tree node and statements at `at` (TDB seconds); loads the OEM if needed. */
   | { type: "trajectoryInfo"; at: number }
+  /**
+   * Evaluates a scenario at `knobs` and `epochTdb` (TDB seconds past J2000).
+   * It waits for a run (or "Try your own", or another scenario) in
+   * progress, so it never overlaps a catalog run.
+   */
+  | {
+      type: "scenario";
+      scenario: ScenarioId;
+      knobs: KnobState;
+      epochTdb: number;
+    }
 );
 
 export interface ProgressReply {
@@ -268,6 +281,8 @@ export type Reply =
   | { type: "done"; id: number; summary: RunSummary }
   | { type: "overlay"; id: number; geometry: OverlayGeometry }
   | { type: "trajectoryInfo"; id: number; info: TrajectoryInfo }
+  /** Its overlays' buffers are transferred. */
+  | { type: "scenario"; id: number; evaluation: ScenarioEvaluation }
   | { type: "error"; id: number; name: string; message: string };
 
 /** A worker as the client uses it (a `Worker` is one). */
@@ -302,7 +317,17 @@ export interface Client {
   ): Promise<OverlayGeometry>;
   /** Orion's node and statements at `at`, TDB seconds (`TrajectoryInfo`). */
   trajectoryInfo(at: number): Promise<TrajectoryInfo>;
-  /** Stops runs in progress before their next case; their promises resolve with partial counts. */
+  /**
+   * Scenario `id` evaluated at `knobs` (the worker clamps them to its spec)
+   * and `epochTdb`, TDB seconds past J2000. Rejects, naming the scenario,
+   * when it has no evaluator, its data can't be had, or it throws.
+   */
+  scenario(
+    id: ScenarioId,
+    knobs: KnobState,
+    epochTdb: number,
+  ): Promise<ScenarioEvaluation>;
+  /** Stops runs asked for so far (waiting or in progress) before their next case; their promises resolve with partial counts. A scenario isn't stopped. */
   cancel(): void;
   /** Every item's progress and state, as they arrive. Returns an unsubscribe. */
   onProgress(callback: (reply: ProgressReply | StateReply) => void): () => void;
@@ -380,6 +405,9 @@ export function createClient(
         return;
       case "trajectoryInfo":
         settle(reply.id, reply.info);
+        return;
+      case "scenario":
+        settle(reply.id, reply.evaluation);
         return;
       case "error": {
         const request = pending.get(reply.id);
@@ -501,6 +529,8 @@ export function createClient(
     overlay: (kind, params) =>
       request({ type: "overlay", kind, params } as WithoutId<OverlayRequest>),
     trajectoryInfo: (at) => request({ type: "trajectoryInfo", at }),
+    scenario: (scenario, knobs, epochTdb) =>
+      request({ type: "scenario", scenario, knobs, epochTdb }),
     cancel: () => {
       if (!stopped && broken === undefined) {
         worker.postMessage({ type: "cancel", id: nextId++ });
