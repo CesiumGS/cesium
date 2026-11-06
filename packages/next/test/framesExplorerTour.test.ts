@@ -29,6 +29,12 @@ const stop = (id: string) => {
   return s;
 };
 
+describe("tour stop 4: rigid against exact", () => {
+  it("hides the site triads: Sacramento's stands over the line's start, seen from the south", () => {
+    expect(defaultTriads(stop("rigid-exact"))).toEqual(["ITRF", "GCRF"]);
+  });
+});
+
 describe("tour stop 2: GCRF to ITRF over a day", () => {
   it("dims the imagery by −1.5 at desktop widths, where the eye brightens the small globe (F43)", () => {
     expect(stopExposure(stop("gcrf-itrf-day"), 728)).toBe(-1.5);
@@ -68,9 +74,9 @@ describe("the default triads", () => {
     expect(defaultTriads(undefined)).toEqual(["ITRF", "GCRF", ...SITE_TRIADS]);
   });
 
-  it("keep the sites at every stop but stop 2", () => {
+  it("keep the sites at every stop but stops 2 and 4", () => {
     for (const s of TOUR) {
-      if (s.id === "gcrf-itrf-day") {
+      if (s.id === "gcrf-itrf-day" || s.id === "rigid-exact") {
         continue;
       }
       expect(defaultTriads(s)).toEqual(["ITRF", "GCRF", ...SITE_TRIADS]);
@@ -317,7 +323,15 @@ describe("tour stops 3 and 4: California in daylight", () => {
     expect(stop("design-grid").caption).toMatch(/angle .*20 times/);
   });
 
-  it("says what the ×50 multiplies: the separation", () => {
-    expect(stop("rigid-exact").caption).toMatch(/separation .*50 times/);
+  it("stop 4 says what's what, at true scale: straight dashed, solid on the Earth, distance squared, the inset", () => {
+    const c = stop("rigid-exact").caption;
+    expect(c).toMatch(/dashed line is straight/);
+    expect(c).toMatch(/solid line follows the Earth/);
+    expect(c).toMatch(/distance squared/);
+    expect(c).toMatch(/12\.5 km at 400 km/);
+    expect(c).toMatch(/inset/);
+    expect(c).toMatch(/31\.4 m at 20 km/);
+    expect(c).toMatch(/true scale/);
+    expect(c).not.toMatch(/50 times|×50/);
   });
 });

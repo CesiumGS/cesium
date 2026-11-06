@@ -71,7 +71,7 @@ export const MARKER_COLORS = {
 const GRID_COLOR: Rgba = [255, 196, 64, 255];
 const TRUE_NORTH_COLOR: Rgba = [64, 200, 255, 255];
 const EXACT_COLOR: Rgba = [64, 220, 120, 255];
-const RIGID_COLOR: Rgba = [255, 90, 90, 255];
+const RIGID_COLOR: Rgba = [255, 255, 255, 255];
 const TRAJECTORY_COLOR: Rgba = [200, 140, 255, 255];
 const TISSOT_COLOR: Rgba = [255, 120, 200, 255];
 
@@ -348,55 +348,128 @@ export function rigidSeparation(
   return Math.hypot(a[0]! - b[0]!, a[1]! - b[1]!, a[2]! - b[2]!);
 }
 
+/** A point on `rigidVsExact`'s line: both placements there and the gap between them. */
+export interface RigidMark {
+  /** Design units from `from` along the line. */
+  distance: number;
+  exact: Float64Array;
+  rigid: Float64Array;
+  /** Meters, `rigidSeparation` at the point. */
+  separation: number;
+}
+
 /**
  * The design line from `from` to `to` (E, N, height 0), `samples` segments
  * long, through the frame's exact `toBodyFixed` and through the rigid
  * placement anchored at `from` (`RigidPlacement.at`), as polylines of
  * `samples + 1` points (x, y, z each, meters), and the distance between them at
- * `to`, `sagAtEnd` (meters). They coincide at `from` by construction. With
- * `exaggeration` k (display only, like `trueNorthLines`' convergence), each
- * rigid point is drawn at exact + k (rigid − exact); `sagAtEnd` stays true.
+ * `to`, `sagAtEnd` (meters). They coincide at `from` by construction. Both are
+ * true scale: the rigid line is straight in 3D, on the tangent plane at
+ * `from`, and the exact one follows the ellipsoid (stop 4, owner's rework).
+ *
+ * `ticks` n adds the gap at every n-th of the line (not the ends) as segment
+ * pairs, exact point then rigid point; `marks` gives both placements and the
+ * gap at each of those design distances from `from`.
  */
 export function rigidVsExact(
   frame: EngineeringFrame,
   from: readonly [number, number],
   to: readonly [number, number],
   samples: number,
-  options: { exaggeration?: number } = {},
-): { exact: Float64Array; rigid: Float64Array; sagAtEnd: number } {
+  options: { ticks?: number; marks?: readonly number[] } = {},
+): {
+  exact: Float64Array;
+  rigid: Float64Array;
+  sagAtEnd: number;
+  ticks: Float64Array;
+  marks: RigidMark[];
+} {
   if (!(Number.isInteger(samples) && samples >= 1)) {
     throw new RangeError(
       `rigidVsExact: samples must be a whole number of segments, 1 or more, got ${samples}`,
     );
   }
-  const k = options.exaggeration ?? 1;
-  if (!(Number.isFinite(k) && k > 0)) {
+  const tickCount = options.ticks ?? 1;
+  if (!(Number.isInteger(tickCount) && tickCount >= 1)) {
     throw new RangeError(
-      `rigidVsExact: exaggeration must be a positive number, got ${k}`,
+      `rigidVsExact: ticks must be a whole number of intervals, 1 or more, got ${tickCount}`,
     );
   }
   const placement = RigidPlacement.at(frame, [from[0], from[1], 0]);
+  const at = (t: number) => [
+    from[0] + (to[0] - from[0]) * t,
+    from[1] + (to[1] - from[1]) * t,
+    0,
+  ];
   const exact = new Float64Array(3 * (samples + 1));
   const rigid = new Float64Array(3 * (samples + 1));
   for (let i = 0; i <= samples; i++) {
-    const design = [
-      from[0] + ((to[0] - from[0]) * i) / samples,
-      from[1] + ((to[1] - from[1]) * i) / samples,
-      0,
-    ];
-    const e = frame.toBodyFixed(design);
-    const r = placement.toBodyFixed(design);
-    exact.set(e, 3 * i);
-    rigid.set(
-      k === 1 ? r : [0, 1, 2].map((c) => e[c]! + k * (r[c]! - e[c]!)),
-      3 * i,
-    );
+    const design = at(i / samples);
+    exact.set(frame.toBodyFixed(design), 3 * i);
+    rigid.set(placement.toBodyFixed(design), 3 * i);
   }
+  const ticks = new Float64Array(6 * (tickCount - 1));
+  for (let k = 1; k < tickCount; k++) {
+    const design = at(k / tickCount);
+    ticks.set(frame.toBodyFixed(design), 6 * (k - 1));
+    ticks.set(placement.toBodyFixed(design), 6 * (k - 1) + 3);
+  }
+  const span = Math.hypot(to[0] - from[0], to[1] - from[1]);
+  const marks = (options.marks ?? []).map((distance): RigidMark => {
+    if (!(Number.isFinite(distance) && span > 0)) {
+      throw new RangeError(
+        `rigidVsExact: a mark must be a finite distance along a line of some length, got ${distance}`,
+      );
+    }
+    const design = at(distance / span);
+    return {
+      distance,
+      exact: frame.toBodyFixed(design),
+      rigid: placement.toBodyFixed(design),
+      separation: rigidSeparation(placement, frame, design),
+    };
+  });
   return {
     exact,
     rigid,
     sagAtEnd: rigidSeparation(placement, frame, [to[0], to[1], 0]),
+    ticks,
+    marks,
   };
+}
+
+/**
+ * A straight line from `a` to `b` cut into `pieces` equal pieces, every other
+ * one kept from the first: a dashed line as world-space segments (F30). Pieces
+ * of a straight 3D line, so the rigid line stays straight however it's cut.
+ */
+export function dashedLine(
+  a: ArrayLike<number>,
+  b: ArrayLike<number>,
+  pieces: number,
+  color: Rgba,
+): Geometry {
+  if (!(Number.isInteger(pieces) && pieces >= 1)) {
+    throw new RangeError(
+      `dashedLine: pieces must be a whole number, 1 or more, got ${pieces}`,
+    );
+  }
+  const out = new Lines();
+  const point = (t: number) =>
+    [0, 1, 2].map((c) => a[c]! + (b[c]! - a[c]!) * t);
+  for (let i = 0; i < pieces; i += 2) {
+    out.segment(point(i / pieces), point((i + 1) / pieces), color);
+  }
+  return out.geometry();
+}
+
+/** Vertex pairs (x, y, z each) as they are, as segments in one color. */
+export function segments(pairs: Float64Array, color: Rgba): Geometry {
+  const out = new Lines();
+  for (let i = 0; i + 5 < pairs.length; i += 6) {
+    out.segment(pairs.subarray(i, i + 3), pairs.subarray(i + 3, i + 6), color);
+  }
+  return out.geometry();
 }
 
 /** A polyline of points (x, y, z each) as segment pairs in one color. */
@@ -412,7 +485,7 @@ export function polyline(points: Float64Array, color: Rgba): Geometry {
   return out.geometry();
 }
 
-/** The colors the page draws `rigidVsExact`'s two polylines in. */
+/** The colors the worker builds `rigidVsExact`'s lines in (the page tints them: exact engineering, rigid and ticks white). */
 export const RIGID_VS_EXACT_COLORS = { exact: EXACT_COLOR, rigid: RIGID_COLOR };
 
 /**

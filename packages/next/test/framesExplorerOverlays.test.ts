@@ -8,10 +8,12 @@ import {
   AXIS_COLORS,
   MARKER_COLORS,
   contourSegments,
+  dashedLine,
   designGrid,
   overlayMesh,
   polyline,
   roundTripMarkers,
+  segments,
   adaptivePath,
   trajectoryPath,
   triad,
@@ -894,6 +896,58 @@ describe("polyline", () => {
       0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 0,
     ]);
     expect(Array.from(g.colors.subarray(0, 4))).toEqual([1, 2, 3, 255]);
+    expect(g.colors.length).toBe(16);
+  });
+});
+
+describe("dashedLine (the rigid line's dashes, as geometry: F30)", () => {
+  it("cuts a straight line into pieces and keeps every other one, from the first", () => {
+    const g = dashedLine([0, 0, 0], [10, 0, 0], 5, [255, 255, 255, 255]);
+    // Pieces 0, 2 and 4 of five 2-unit pieces.
+    expect(Array.from(g.positions)).toEqual([
+      0, 0, 0, 2, 0, 0, 4, 0, 0, 6, 0, 0, 8, 0, 0, 10, 0, 0,
+    ]);
+    expect(g.colors.length).toBe(4 * 6);
+  });
+
+  it("keeps every dash on the line between its ends (straight in 3D)", () => {
+    const a = [6_000_000, 2_000_000, 3_000_000];
+    const b = [6_100_000, 2_300_000, 2_900_000];
+    const g = dashedLine(a, b, 49, [1, 2, 3, 255]);
+    const ab = b.map((v, i) => v - a[i]!);
+    const len = Math.hypot(...ab);
+    for (let v = 0; v < g.positions.length / 3; v++) {
+      const ap = [0, 1, 2].map((c) => g.positions[3 * v + c]! - a[c]!);
+      // The distance from the line: |ap × ab| / |ab|.
+      const off =
+        Math.hypot(
+          ap[1]! * ab[2]! - ap[2]! * ab[1]!,
+          ap[2]! * ab[0]! - ap[0]! * ab[2]!,
+          ap[0]! * ab[1]! - ap[1]! * ab[0]!,
+        ) / len;
+      expect(off).toBeLessThan(1e-6);
+    }
+  });
+
+  it("rejects a piece count that isn't a whole number, 1 or more", () => {
+    expect(() => dashedLine([0, 0, 0], [1, 0, 0], 0, [0, 0, 0, 255])).toThrow(
+      /pieces/,
+    );
+    expect(() => dashedLine([0, 0, 0], [1, 0, 0], 1.5, [0, 0, 0, 255])).toThrow(
+      /pieces/,
+    );
+  });
+});
+
+describe("segments", () => {
+  it("draws vertex pairs as they are, in one color", () => {
+    const g = segments(
+      Float64Array.from([0, 0, 0, 0, 0, 5, 1, 0, 0, 1, 0, 7]),
+      [9, 9, 9, 255],
+    );
+    expect(Array.from(g.positions)).toEqual([
+      0, 0, 0, 0, 0, 5, 1, 0, 0, 1, 0, 7,
+    ]);
     expect(g.colors.length).toBe(16);
   });
 });

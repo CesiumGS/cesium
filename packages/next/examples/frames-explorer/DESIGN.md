@@ -155,20 +155,21 @@ The viewer lights the globe from the clock's sun. For legibility:
 halo, no glow. Hierarchy comes from color strength and alpha, and from a
 darker ground under the overlay that is the subject.
 
-| Line                                                           | At 1 px (what 6b builds)                                      | Style                                                                       | When the engine gains wide lines |
-| -------------------------------------------------------------- | ------------------------------------------------------------- | --------------------------------------------------------------------------- | -------------------------------- |
-| Primary: a grid's major lines, the exact line, Orion's path    | full on-dark family tone, alpha 1                             | solid                                                                       | 2 px                             |
-| The rigid line (against the exact one)                         | full tone, alpha 1                                            | dashed: 400 m on, 250 m off, as world-space segments                        | 2 px                             |
-| Secondary: minor grid lines, true-north lines, Tissot outlines | the family tone at alpha 0.6                                  | true north dashed (world-space segments), site grid dotted (short segments) | 1 px                             |
-| Selected (the selected result's overlay)                       | a lighter tint: the family tone mixed 50% with white, alpha 1 | as its kind                                                                 | 3 px                             |
-| Everything else while something is selected                    | alpha 0.35                                                    | as its kind                                                                 | the same                         |
+| Line                                                           | At 1 px (what 6b builds)                                      | Style                                                                                                                    | When the engine gains wide lines |
+| -------------------------------------------------------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | -------------------------------- |
+| Primary: a grid's major lines, the exact line, Orion's path    | full on-dark family tone, alpha 1                             | solid                                                                                                                    | 2 px                             |
+| The rigid line (against the exact one, stop 4)                 | white, alpha 1                                                | dashed: the 400 km chord in 49 pieces of 8.2 km, every other drawn from the first, so both ends are drawn (`dashedLine`) | 2 px                             |
+| The rigid line's gap ticks (every 50 km, exact up to rigid)    | white at alpha 0.6                                            | solid                                                                                                                    | 1 px                             |
+| Secondary: minor grid lines, true-north lines, Tissot outlines | the family tone at alpha 0.6                                  | true north dashed (world-space segments), site grid dotted (short segments)                                              | 1 px                             |
+| Selected (the selected result's overlay)                       | a lighter tint: the family tone mixed 50% with white, alpha 1 | as its kind                                                                                                              | 3 px                             |
+| Everything else while something is selected                    | alpha 0.35                                                    | as its kind                                                                                                              | the same                         |
 
 - **Dashes are geometry.** `line-list` can't dash in screen space, so a
   dashed line is emitted as separate segments in world space (fixed metres
   per dash, chosen per overlay so a dash spans about 10 to 20 px at the
   tour's framing).
 - **No halos: a darker ground instead.** While an engineering overlay is
-  the subject (tour stops 3 and 4, a selected engineering result), the
+  the subject (tour stop 3, a selected engineering result; stop 4 keeps the imagery, its inset needs the sky and ground), the
   imagery is dimmed so 1 px lines read over bright terrain. The globe has
   no imagery brightness or saturation control (checked: `GlobeImagery`,
   `ImageryProvider`), but the view's exposure is one: overlays are unlit,
@@ -199,6 +200,15 @@ fade out when origins are under 24 px apart on screen. Overlay labels (the
 sag, the convergence, contour values) use the same style, white, with a
 1 px leader where they point at something.
 
+Stop 4's lines are each labelled (owner's rework, 2026-11-06): "Rigid:
+straight, tangent at the start" above the rigid line near its start (white),
+"Exact: follows the ellipsoid" under the exact line at 60% of its length (the
+engineering tone), and the true sag ("12.5 km apart at 400 km") above and left
+of the far-end leader, a row above the rigid line's label so the two sit side
+by side on the narrow view. The globe's labels follow the main camera only;
+the gap inset's labels ("rigid", "exact", and "31.4 m" on its leader) are HTML
+in the inset's frame, projected with the inset's own camera (`projectInto`).
+
 ### A selection on the globe (R14)
 
 The globe never shows a selection the panel doesn't.
@@ -223,7 +233,11 @@ panel); it appears when the first overlay draws and is gone when none is.
 Compact by default: one line each (line key, short name, accuracy
 ellipsized, in full on hover and focus); unfolded, the full names and
 lines and the triads' note. Line keys match the globe: solid, dashed for
-the rigid line, dotted for the site grid and round trips (M8). While the
+the rigid line, dotted for the site grid and round trips (M8). An overlay
+whose lines are keyed apart has one entry per line (`OverlayView.parts`,
+`legendRows`): the rigid and exact lines are two, "Rigid" (white, dashed:
+"straight; 12.5 km above the exact at 400 km") and "Exact" (engineering,
+solid: "follows the Earth; 31.4 m below the rigid at 20 km"). While the
 tour shows on a narrow view the caption takes the bottom and the legend
 steps aside until the tour ends.
 
@@ -236,14 +250,14 @@ km; a lunar site at 100 m. Under reduced motion, flights cut.
 
 ### The tour
 
-| Stop                         | Camera                                                                                                                                                    | On                                                                                                                                                                                        | Caption                                                                                                              |
-| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| 1 Earth's frames             | over the North Atlantic, 30°W 42°N, 4 Earth radii, lit from the camera (6c-1 fix round 2)                                                                 | triads (ITRF with cones, GCRF with square heads, each axis named, pinned)                                                                                                                 | ITRF turns with the Earth; GCRF doesn't. Each triad is a frame's axes at the clock's time                            |
-| 2 GCRF to ITRF over a day    | straight down the north pole, 5.5 Earth radii, lit from the camera (6c-1 fix round 3); imagery dimmed (exposure −1.5, −0.6 under 560 px; F43)             | ITRF and GCRF triads only (the site triads hidden: Sacramento's crossed GCRF's x), each axis named, pinned                                                                                | GCRF's x and y turn once round against ITRF's, like clock hands, in a sidereal day (the clock plays at 3,600×: 24 s) |
-| 3 The California design grid | over the grid's centre, 180 km range, 55° tilt, heading 0°                                                                                                | design grid (10 km lines; 2 km lines only under 60 km range), true-north lines; imagery dimmed (exposure −0.6); target: `globe-stop3-target`                                              | grid north and true north part ways away from the central meridian: the convergence angle                            |
-| 4 Rigid against exact        | from the side: south of the line, looking north, 10° down, 22 km, the whole line across the view (6c-1 fix round: looking back along it foreshortened it) | rigid (dashed) and exact (solid) 20 km line, the separation drawn ×50 with a "Show true scale" switch, a white leader between the far ends labelled with the true sag; imagery not dimmed | a 20 km design line placed rigidly parts from the exact one by about 31 m at its far end (drawn ×50 so it shows)     |
-| 5 Orion's figure-eight       | down the Moon's orbit normal at the flyby, the Earth–Moon line across the view, the Earth, the Moon and the path framed (6c-1); 3.0 s flight              | Orion in GCRF, then after 4 s in MOON_ME                                                                                                                                                  | in GCRF a figure-eight round the Moon; in MOON_ME the far-side swing                                                 |
-| 6 The Moon's south pole      | 100 m from the site's triad, 20° above the horizon, sun low behind; 3.5 s flight                                                                          | the site's triad (MOON_ME) at 15% of the camera's distance, and a callout "lunar clock +56.02 µs/day against Earth's (Ashby & Patla 2024)"                                                | a clock here gains about 56 µs a day; the triad holds still as the camera orbits                                     |
+| Stop                         | Camera                                                                                                                                                                | On                                                                                                                                                                                                                                    | Caption                                                                                                                                                                  |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1 Earth's frames             | over the North Atlantic, 30°W 42°N, 4 Earth radii, lit from the camera (6c-1 fix round 2)                                                                             | triads (ITRF with cones, GCRF with square heads, each axis named, pinned)                                                                                                                                                             | ITRF turns with the Earth; GCRF doesn't. Each triad is a frame's axes at the clock's time                                                                                |
+| 2 GCRF to ITRF over a day    | straight down the north pole, 5.5 Earth radii, lit from the camera (6c-1 fix round 3); imagery dimmed (exposure −1.5, −0.6 under 560 px; F43)                         | ITRF and GCRF triads only (the site triads hidden: Sacramento's crossed GCRF's x), each axis named, pinned                                                                                                                            | GCRF's x and y turn once round against ITRF's, like clock hands, in a sidereal day (the clock plays at 3,600×: 24 s)                                                     |
+| 3 The California design grid | over the grid's centre, 180 km range, 55° tilt, heading 0°                                                                                                            | design grid (10 km lines; 2 km lines only under 60 km range), true-north lines; imagery dimmed (exposure −0.6); target: `globe-stop3-target`                                                                                          | grid north and true north part ways away from the central meridian: the convergence angle                                                                                |
+| 4 Rigid against exact        | from the side: south of the 400 km line, looking north, 5° down, 400 km range (÷ the aspect on a portrait view), centred 53% along it, the whole line across the view | rigid (dashed, white, straight) and exact (solid, on the ellipsoid) 400 km line at true scale, gap ticks every 50 km, a white leader at the far end with the true sag, the gap inset at 20 km; site triads hidden; imagery not dimmed | the dashed line is straight, the solid one follows the Earth; they part as distance squared, about 12.5 km at 400 km; the inset shows 31.4 m at 20 km, all at true scale |
+| 5 Orion's figure-eight       | down the Moon's orbit normal at the flyby, the Earth–Moon line across the view, the Earth, the Moon and the path framed (6c-1); 3.0 s flight                          | Orion in GCRF, then after 4 s in MOON_ME                                                                                                                                                                                              | in GCRF a figure-eight round the Moon; in MOON_ME the far-side swing                                                                                                     |
+| 6 The Moon's south pole      | 100 m from the site's triad, 20° above the horizon, sun low behind; 3.5 s flight                                                                                      | the site's triad (MOON_ME) at 15% of the camera's distance, and a callout "lunar clock +56.02 µs/day against Earth's (Ashby & Patla 2024)"                                                                                            | a clock here gains about 56 µs a day; the triad holds still as the camera orbits                                                                                         |
 
 The caption sits top right (bottom, above the time controls, on views
 under 560 px), takes focus at each stop, and steps with the arrow keys;
@@ -269,6 +283,57 @@ clock to 13:00 PDT on the flyby day, so California is in daylight. The design gr
 redraws the lines at ×1 (the label then reads "true north"). The grid lines
 themselves are never exaggerated.
 
+### The rigid line at true scale (stop 4, owner's rework 2026-11-06)
+
+The ×50 separation (S-C1) bent the straight tangent into an upward curve
+(the exaggerated gap grows as distance squared), and one legend entry covered
+both lines, so the owner read the dashed line as a picture of the gap. This
+replaces F32-style exaggeration for stop 4: nothing is multiplied, and the
+"Show true scale" switch is gone from the overlay's options and the stop's
+caption (stop 3's ×20 convergence and its switch stay).
+
+- **A longer line.** 400 km east along grid east from the catalog's
+  California site origin (6,000,000, 2,100,000 ftUS, near 122.44° W
+  37.75° N) in EPSG:6420 (`rigidLine.ts`). The gap there is 12.53 km
+  (d²/2R with the Gaussian radius: 12.55 km), about 13 px from the stop's
+  camera, so the straight line reads against the curved one; the 50 km
+  ticks show it growing. The far end is at 117.90° W, inside the CRS's area
+  of use (to 117.83° W); 500 km would end in Nevada. PROJ's operation is the
+  same conversion plus the 2 m NAD83(2011) to WGS 84 step anywhere in the
+  zone, and `RigidPlacement` is an affine map, valid at any distance (the
+  rigid polyline is straight to 1e-6 m: `test/data`).
+- **Sampling.** The exact line every kilometre (400 segments; each chord
+  within 2 cm of the ellipsoid, so the inset's close view sees it on the
+  ground); the rigid one as 49 dashes of its chord.
+- **The camera.** South of the line looking north, 5° down, 400 km range
+  (divided by the aspect on a portrait view, where the field of view is the
+  height's), centred 53% along: the whole line across the view, between the
+  caption (top right), the legend (bottom right) and the inset (bottom left),
+  under the limb. The Sacramento triad stood over the line's start, so the
+  stop draws only the geocentric triads, as stop 2 does.
+- **The gap inset.** A picture-in-picture view of the gap at 20 km, at true
+  scale: 31.4 m, the catalog's rigid placement figure (`rigidVsExact`'s
+  mark; within its 10%). A second engine view on the viewer's target and
+  world (`engine.addView`, `gapInset.ts`), its camera level and side-on,
+  about 100 m south of the mark, the gap 45% of the picture's height
+  (`insetCamera`). A 1 px white leader joins the lines at the mark, labelled
+  "31.4 m"; "rigid" and "exact" name the lines at the picture's left. A 1 px
+  white border (with a dark outer ring) and a caption strip, "At 20 km:
+  31.4 m apart (true scale)". The triads are kept out of its view (a view
+  mask): sized for the main camera, they are kilometres long there.
+- **Where it sits.** Wide views: bottom left, 240 × 140 px plus its 24 px
+  caption, above the time controls (`--fx-hud-bottom`) and the credits under
+  them; clear of Dyno's inspector (top left), the tour caption (top right)
+  and the legend (bottom right), which keep their places, and of the line
+  across the middle. Narrow views (under 560 px): at the top right under
+  Dyno's inspector, which spans nearly the whole width there, at most
+  212 px wide (its caption's width) and 56% of the view; the caption is at
+  the bottom then and the legend steps aside during the tour.
+- **When it shows.** While the rigid and exact lines are drawn, outside the
+  tour or at stop 4. Another stop, the overlay off, or leaving the example
+  removes the view (its frame, observers and view-mask bit with it); the
+  example's scope disposes it before the globe and the viewer.
+
 ## Layout
 
 ### Where it sits (R17)
@@ -283,7 +348,9 @@ bottom centre. The example adds:
   Explore / Verify / Report tabs directly under the Controls header. No
   second title or description.
 - **The HUD**: the legend bottom right, above the time controls; the tour
-  caption top right.
+  caption top right; while the rigid and exact lines are drawn, their gap
+  inset bottom left, above the time controls (top right, under Dyno's
+  inspector, on a narrow view; see "The rigid line at true scale").
 
 ### Desktop
 
@@ -581,8 +648,8 @@ nothing moves reads "exact at the origin".
 
 First in Explore (I7). A `Switch` per overlay, its label, and under it,
 always, its **composed accuracy line**, the same text as the legend's
-(C3): "±2.0 m (1σ): the WGS 84 ensemble; round trip ≤ 3.4 nm", "sag 31.2
-m at 20 km (geometry, exact)", "the frame bias, 23 mas: exact by
+(C3): "±2.0 m (1σ): the WGS 84 ensemble; round trip ≤ 3.4 nm", "parts as
+distance squared: 31.4 m at 20 km, 12.5 km at 400 km (true scale)", "the frame bias, 23 mas: exact by
 definition (IAU 2006 adopted constants)". An overlay's own controls appear
 only once it is on: Orion's draw-in frame (an exclusive
 `ToggleButtonGroup`: GCRF, ITRF, MOON_ME), distortion's CRS (`Select` with
@@ -979,10 +1046,11 @@ Every term below has a popover wherever it appears (`panel/glossary.ts`,
   than 20 times the camera's height, is hidden; every label is kept inside
   the view. Callouts (the sag, the lunar clock, "Orion now") sit 48 px right
   of their point with a 1 px leader.
-- **Stop 4 (S-C1).** As in the tour table: the separation drawn ×50 by
-  default (`rigidVsExact`'s `exaggeration`, display only, like F32's
-  convergence), labelled on the globe and in the legend, with a "Show true
-  scale" switch in the overlay's options; the leader carries the true sag.
+- **Stop 4 (S-C1).** The separation drawn ×50 by default (`rigidVsExact`'s
+  `exaggeration`, display only, like F32's convergence), with a "Show true
+  scale" switch; the leader carried the true sag. Replaced by the true-scale
+  400 km line and its gap inset (owner's rework, 2026-11-06: see "The rigid
+  line at true scale").
 - **Stop 2 (S-I6).** The globe is lit from the camera (the sun direction set
   after the viewer's own on each clock change), so the framed side never
   turns to night; the caption says so.

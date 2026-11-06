@@ -29,6 +29,8 @@ import { Instant } from "../../src/time/Instant.ts";
 import type { Trajectory } from "../../src/trajectory/Trajectory.ts";
 import {
   RIGID_VS_EXACT_COLORS,
+  dashedLine,
+  segments,
   adaptivePath,
   designGrid,
   distortion,
@@ -608,20 +610,34 @@ export function createHost(
       case "rigidVsExact": {
         const p = request.params;
         const frame = await frameFor(loaded, p.frame);
-        const r = rigidVsExact(
-          frame,
-          p.from,
-          p.to,
-          p.samples,
-          p.exaggeration !== undefined ? { exaggeration: p.exaggeration } : {},
-        );
+        const r = rigidVsExact(frame, p.from, p.to, p.samples, {
+          ...(p.ticks !== undefined && { ticks: p.ticks }),
+          ...(p.marks !== undefined && { marks: p.marks }),
+        });
         return {
           kind: request.kind,
           layers: [
             layer("exact", polyline(r.exact, RIGID_VS_EXACT_COLORS.exact)),
-            layer("rigid", polyline(r.rigid, RIGID_VS_EXACT_COLORS.rigid)),
+            // Straight in 3D, so its dashes are pieces of the chord between
+            // its ends (F30: dashes are geometry).
+            layer(
+              "rigid",
+              dashedLine(
+                r.rigid.subarray(0, 3),
+                r.rigid.subarray(r.rigid.length - 3),
+                p.dashes ?? p.samples,
+                RIGID_VS_EXACT_COLORS.rigid,
+              ),
+            ),
+            layer("ticks", segments(r.ticks, RIGID_VS_EXACT_COLORS.rigid)),
           ],
           sagAtEnd: r.sagAtEnd,
+          marks: r.marks.map((m) => ({
+            distance: m.distance,
+            exact: Array.from(m.exact),
+            rigid: Array.from(m.rigid),
+            separation: m.separation,
+          })),
           operation: operationOf(frame),
         };
       }

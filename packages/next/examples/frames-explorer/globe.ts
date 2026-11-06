@@ -302,6 +302,8 @@ export class Globe {
   /** The ground's exposure compensation now (stops; 0 undimmed). */
   private dimmed = 0;
   private dimTimer = 0;
+  /** The views the triads draw in (`World.setViewMask`): all but the gap inset's. */
+  private triadMask = 0xffffffff;
 
   constructor(
     private readonly viewer: Viewer,
@@ -374,6 +376,24 @@ export class Globe {
     this.triads.delete(id);
   }
 
+  /**
+   * Keeps the triads out of the views in `bits` (the gap inset: a triad
+   * sized for the main camera is kilometres long there); 0 draws them in
+   * every view again.
+   */
+  hideTriadsFrom(bits: number): void {
+    const mask = (0xffffffff & ~bits) >>> 0;
+    if (mask === this.triadMask) {
+      return;
+    }
+    this.triadMask = mask;
+    for (const t of this.triads.values()) {
+      for (const part of t.parts) {
+        this.viewer.world.setViewMask(part.draw, mask);
+      }
+    }
+  }
+
   /** A triad's draws on `transform`: one, or one per axis for a geocentric triad. */
   private triadParts(
     spec: TriadSpec,
@@ -396,6 +416,7 @@ export class Globe {
         unlit: true,
         radius: 1,
         name: `frames explorer triad ${spec.label}`,
+        viewMask: this.triadMask,
       });
       return { mesh, draw, ...(axis !== undefined && { axis }) };
     });

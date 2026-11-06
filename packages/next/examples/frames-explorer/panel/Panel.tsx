@@ -237,11 +237,7 @@ export function Panel({ source, view, actions, hud, initialTab }: PanelProps) {
                 )
               }
               scaleSwitch={tourScaleSwitch(model.tour[tour]!, model)}
-              onScaleSwitch={(kind, on) =>
-                kind === "convergence"
-                  ? actions.setTrueScale(on)
-                  : actions.setSagTrueScale(on)
-              }
+              onScaleSwitch={(_, on) => actions.setTrueScale(on)}
             />
           )}
         </>,
