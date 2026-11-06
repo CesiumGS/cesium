@@ -296,7 +296,12 @@ export {
   type MeasureOptions,
 } from "./measure/measure.ts";
 export { properTimeRate, type Leg } from "./measure/doppler.ts";
-export type { AccuracyStatement, AccuracyTerm } from "./measure/accuracy.ts";
+export {
+  earthOrientationSigma,
+  type AccuracyStatement,
+  type AccuracyTerm,
+  type EarthOrientationSigma,
+} from "./measure/accuracy.ts";
 export { surfaceDistance, type SurfaceDistance } from "./measure/surface.ts";
 export type { ShapiroBody } from "./measure/lightTime.ts";
 export { EARTH, MOON, type Body } from "./scene/Body.ts";

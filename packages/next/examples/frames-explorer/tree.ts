@@ -3,12 +3,13 @@
 // except the optional `frame`, `engineering` and `trajectory` references to
 // the library objects a node stands for (a worker that builds part of the tree
 // leaves them out, and a structured clone carries no class instances).
-import { Frame } from "../../src/frames/Frame.ts";
+import type { Frame } from "../../src/frames/Frame.ts";
 import type { Frames } from "../../src/frames/frames.ts";
 import type { EngineeringFrame } from "../../src/engineering/EngineeringFrame.ts";
+import { earthOrientationSigma } from "../../src/measure/accuracy.ts";
 import { EARTH_ROTATION_RATE } from "../../src/measure/constants.ts";
 import { Instant } from "../../src/time/Instant.ts";
-import { Trajectory } from "../../src/trajectory/Trajectory.ts";
+import type { Trajectory } from "../../src/trajectory/Trajectory.ts";
 
 /** How a frame is joined to its parent. */
 export type EdgeKind =
@@ -52,17 +53,9 @@ export interface TreeNode {
 const EPHEMERIS_M = 0.01;
 /** The IAU 2006 frame bias's model accuracy, rad (R8). */
 const FRAME_BIAS_RAD = 1e-15;
-// Earth orientation, as src/measure/accuracy.ts states it (spec section 4):
-// measured UT1 - UTC 35 us and polar motion 0.1 mas; a predicted sample grows
-// with its age in days past the last observed row by IERS Bulletin A.
-const UT1_MEASURED_S = 35e-6;
-const POLAR_MEASURED_ARCSEC = 1e-4;
-const ARCSEC_TO_RAD = Math.PI / (180 * 3600);
-const MS_PER_DAY = 86_400_000;
-
 const ephemerisAccuracy = (): EdgeAccuracy => ({
   meters: EPHEMERIS_M,
-  note: "DE440 position accuracy (stated model accuracy)",
+  note: "DE440 Earth-Moon fit to lunar laser ranging (stated model accuracy)",
 });
 
 /**
@@ -111,29 +104,23 @@ function earthOrientationAccuracy(
       "not stated without an instant: Earth orientation depends on time (pass one to buildTree)",
     );
   }
-  const { eop, leapSeconds } = frames.data;
-  const sample = eop.atInstant(instant, leapSeconds);
-  if (sample.degraded) {
-    const iso = (ms: number): string => new Date(ms).toISOString();
+  const sigma = earthOrientationSigma(frames, instant);
+  if (sigma.degraded) {
     return unknown(
-      `not known: the instant is outside the EOP table (${iso(eop.first)} to ${iso(eop.last)})`,
+      `not known: the instant is outside the EOP table (${sigma.span})`,
     );
   }
-  let sigmaT = UT1_MEASURED_S;
-  let sigmaP = POLAR_MEASURED_ARCSEC * ARCSEC_TO_RAD;
-  let note = "measured Earth orientation (UT1 35 µs, polar motion 0.1 mas)";
-  if (sample.predicted) {
-    const days = Math.max(
-      0,
-      (instant.toUtc(leapSeconds) - eop.lastObserved) / MS_PER_DAY,
-    );
-    sigmaT = Math.max(sigmaT, 0.00025 * days ** 0.75);
-    sigmaP = Math.max(sigmaP, 0.00068 * days ** 0.8 * ARCSEC_TO_RAD);
-    note = `predicted Earth orientation, ${days.toFixed(1)} days past the last observed row (IERS Bulletin A)`;
-  }
+  const note = sigma.predicted
+    ? `predicted Earth orientation, ${sigma.ageDays.toFixed(1)} days past the last observed row (IERS Bulletin A)`
+    : "measured Earth orientation (UT1 35 µs, polar motion 0.1 mas)";
   return accuracy(
-    { radians: Math.hypot(sigmaT * EARTH_ROTATION_RATE, sigmaP) },
-    note,
+    {
+      radians: Math.hypot(
+        sigma.ut1Seconds * EARTH_ROTATION_RATE,
+        sigma.polarRadians,
+      ),
+    },
+    `${note}. An angular bound: the root sum square of the UT1 rotation (σ_t · ω) and the polar-motion tilt, in radians; accuracyOf gives meters for a point`,
     "not known: Earth orientation is not finite",
   );
 }
@@ -151,7 +138,9 @@ const BUILT_IN: Record<
   HCRS: () => ({
     kind: "translation",
     detail: "ephemeris: sun (DE440)",
-    accuracy: ephemerisAccuracy(),
+    accuracy: unknown(
+      "not stated: heliocentric geometry has no stated absolute accuracy (DE440's 0.01 m is its Earth-Moon fit)",
+    ),
   }),
   EARTH_ICRF: () => ({
     kind: "translation",
