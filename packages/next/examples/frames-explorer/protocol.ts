@@ -12,8 +12,16 @@
 // arrays. The ion token never crosses: R18's request carries only the WKT2.
 import type { SiteTransform } from "../../src/engineering/EngineeringFrame.ts";
 import type { CrsRef } from "../../src/engineering/crs.ts";
-import type { Extent, OverlayChunk, Rgba } from "./overlays.ts";
+import type {
+  AdaptiveOptions,
+  Extent,
+  OverlayChunk,
+  Rgba,
+  Sampling,
+} from "./overlays.ts";
+import type { ComposedView, Reference } from "./panel/model.ts";
 import type { StressResult } from "./tests.ts";
+import type { TreeNode } from "./tree.ts";
 
 /** The data the worker loads, each shown in the Status section (R9). */
 export type DataItem = "frames" | "proj" | "geoid" | "orion";
@@ -84,6 +92,8 @@ export interface DesignGridParams {
   readonly extent: Extent;
   readonly step: number;
   readonly segment: number;
+  /** `designGrid` only: leave out every k-th line from the corner (the minor lines, `designGrid`'s option). */
+  readonly skipEvery?: number;
 }
 
 /** `trueNorthLines`: as the grid, with the convergence drawn `exaggeration` times (display only, F32; default 1). */
@@ -112,6 +122,8 @@ export interface DistortionParams {
 /**
  * `trajectoryPath`: Orion's path from `t0` to `t1` every `step` seconds, in
  * `drawIn`, placed in ITRF at `at`. Instants are TDB seconds past J2000.
+ * With `adaptive`, `step` is the coarse step and `adaptivePath` refines it
+ * (finer where the path bends, within its budgets).
  */
 export interface TrajectoryPathParams {
   readonly drawIn: FrameName;
@@ -120,6 +132,22 @@ export interface TrajectoryPathParams {
   readonly step: number;
   readonly at: number;
   readonly color?: Rgba;
+  readonly adaptive?: Readonly<Omit<AdaptiveOptions, "step" | "now">>;
+}
+
+/**
+ * Orion as the tree and the legend need it at `at` (TDB seconds), from one
+ * reply so the two never disagree: its node (plain data, no class
+ * references), the frame it hangs under, the walk's statements against each
+ * reference (`composedView`), and its origin in ITRF, meters.
+ */
+export interface TrajectoryInfo {
+  node: TreeNode;
+  /** The node's parent in the tree: the trajectory's reference frame's name. */
+  parent: string;
+  composed: Record<Reference, ComposedView>;
+  itrf: [number, number, number];
+  at: number;
 }
 
 export interface OverlayParams {
@@ -143,6 +171,8 @@ export type Request = { id: number } & (
   | OverlayRequest
   /** R18: `boundCrsChecks` on the user's WKT2, streamed like `run`. */
   | { type: "userCrs"; wkt2: string; label: string }
+  /** Orion's tree node and statements at `at` (TDB seconds); loads the OEM if needed. */
+  | { type: "trajectoryInfo"; at: number }
 );
 
 export interface ProgressReply {
@@ -203,6 +233,8 @@ export interface OverlayGeometry {
   sagAtEnd?: number;
   /** distortion: the nodes with no scale, left out. */
   skipped?: number;
+  /** trajectoryPath with `adaptive`: how it was sampled. */
+  sampling?: Sampling;
   /** The frame's recorded PROJ operation, for the legend's accuracy (R8). */
   operation?: {
     pipeline: string;
@@ -222,6 +254,7 @@ export type Reply =
   | { type: "result"; id: number; result: StressResult }
   | { type: "done"; id: number; summary: RunSummary }
   | { type: "overlay"; id: number; geometry: OverlayGeometry }
+  | { type: "trajectoryInfo"; id: number; info: TrajectoryInfo }
   | { type: "error"; id: number; name: string; message: string };
 
 /** A worker as the client uses it (a `Worker` is one). */
@@ -254,6 +287,8 @@ export interface Client {
     kind: K,
     params: OverlayParams[K],
   ): Promise<OverlayGeometry>;
+  /** Orion's node and statements at `at`, TDB seconds (`TrajectoryInfo`). */
+  trajectoryInfo(at: number): Promise<TrajectoryInfo>;
   /** Stops runs in progress before their next case; their promises resolve with partial counts. */
   cancel(): void;
   /** Every item's progress and state, as they arrive. Returns an unsubscribe. */
@@ -329,6 +364,9 @@ export function createClient(
         return;
       case "overlay":
         settle(reply.id, reply.geometry);
+        return;
+      case "trajectoryInfo":
+        settle(reply.id, reply.info);
         return;
       case "error": {
         const request = pending.get(reply.id);
@@ -449,6 +487,7 @@ export function createClient(
     load: (item) => request({ type: "load", item }),
     overlay: (kind, params) =>
       request({ type: "overlay", kind, params } as WithoutId<OverlayRequest>),
+    trajectoryInfo: (at) => request({ type: "trajectoryInfo", at }),
     cancel: () => {
       if (!stopped && broken === undefined) {
         worker.postMessage({ type: "cancel", id: nextId++ });

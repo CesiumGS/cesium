@@ -216,16 +216,26 @@ function exaggerate(Q: ArrayLike<number>, factor: number): Float64Array {
  *
  * Order: the E lines first (ascending E), each as segment pairs along
  * ascending N, then the N lines (ascending N) along ascending E. A line with
- * no length is not drawn.
+ * no length is not drawn. With `skipEvery` (an integer k ≥ 2), every k-th
+ * line counted from the extent's corner (the 0th, kth, ...) is left out: the
+ * minor lines of a grid whose major lines are drawn apart.
  */
 export function designGrid(
   frame: DesignFrameLike,
   extent: Extent,
   step: number,
   segment: number,
+  options: { skipEvery?: number } = {},
 ): Geometry {
   positive("designGrid: step", step);
   positive("designGrid: segment", segment);
+  const skip = options.skipEvery;
+  if (skip !== undefined && !(Number.isInteger(skip) && skip >= 2)) {
+    throw new RangeError(
+      `designGrid: skipEvery must be an integer of at least 2, got ${skip}`,
+    );
+  }
+  const kept = (_: number, i: number) => skip === undefined || i % skip !== 0;
   const out = new Lines();
   const { min, max } = extent;
   const along = (
@@ -247,10 +257,10 @@ export function designGrid(
       previous = here;
     }
   };
-  for (const e of gridValues(min[0], max[0], step)) {
+  for (const e of gridValues(min[0], max[0], step).filter(kept)) {
     along((n) => [e, n], min[1], max[1]);
   }
-  for (const n of gridValues(min[1], max[1], step)) {
+  for (const n of gridValues(min[1], max[1], step).filter(kept)) {
     along((e) => [e, n], min[0], max[0]);
   }
   return out.geometry();
@@ -480,6 +490,274 @@ export function trajectoryPath(
     previous = here;
   }
   return out.geometry();
+}
+
+/** How `adaptivePath` refines: a coarse step, then splits where the chord leaves the curve. */
+export interface AdaptiveOptions {
+  /** The coarse step, seconds: every span is sampled at least this often. */
+  step: number;
+  /**
+   * The largest departure a segment may have from the curve, as a fraction of
+   * its distance from `drawIn`'s origin (1e-3: 1 km at 1,000 km).
+   */
+  tolerance: number;
+  /** No interval is split below this, seconds. */
+  minStep: number;
+  /** At most this many samples (frame evaluations), the coarse ones included. */
+  maxSamples: number;
+  /** A departure below this many meters is never split (default 1 m). */
+  floor?: number;
+  /** Stop refining once this many milliseconds have passed (the worker's budget). */
+  budgetMs?: number;
+  /** The clock for `budgetMs`, milliseconds (default `performance.now`). */
+  now?: () => number;
+}
+
+/** What `adaptivePath` did: how many samples, its finest segment and whether a budget stopped it. */
+export interface Sampling {
+  samples: number;
+  /** The shortest segment's span, seconds. */
+  finest: number;
+  /** Set when a budget ran out before every segment met the tolerance. */
+  capped?: "samples" | "time";
+}
+
+/**
+ * `trajectoryPath` with an adaptive step: each span of the trajectory's data
+ * (its `spans`, else the instants `contains` accepts) is sampled every
+ * `options.step` seconds, then the interval whose midpoint departs most from
+ * its chord, against `options.tolerance` times its distance from `drawIn`'s
+ * origin, is halved, and again, until every interval meets the tolerance, an
+ * interval would be shorter than `minStep`, or a budget (`maxSamples`,
+ * `budgetMs`) runs out. The coarse samples always come first, so a capped
+ * path is still whole, only coarser. Every sample is drawn: an interval's
+ * midpoint splits its chord in two. No segment crosses a gap in the data.
+ *
+ * Returns the geometry, each vertex's instant (TDB seconds, `times`) and
+ * `sampling`.
+ */
+export function adaptivePath(
+  trajectory: Pick<Trajectory, "frame" | "contains"> &
+    Partial<Pick<Trajectory, "spans">>,
+  drawIn: Frame,
+  frames: Pick<Frames, "itrf">,
+  t0: Instant,
+  t1: Instant,
+  options: AdaptiveOptions,
+  at: Instant,
+  style: { color?: Rgba } = {},
+): Geometry & { times: Float64Array; sampling: Sampling } {
+  positive("adaptivePath: step", options.step);
+  positive("adaptivePath: minStep", options.minStep);
+  if (!(Number.isFinite(options.tolerance) && options.tolerance > 0)) {
+    throw new RangeError(
+      `adaptivePath: tolerance must be a positive fraction, got ${options.tolerance}`,
+    );
+  }
+  const color = style.color ?? TRAJECTORY_COLOR;
+  const floor = options.floor ?? 1;
+  const now = options.now ?? (() => performance.now());
+  const started = options.budgetMs !== undefined ? now() : 0;
+  const placement = frameTransform(drawIn, frames.itrf, at);
+  const m = new Float64Array(16);
+  let samples = 0;
+  let capped: Sampling["capped"];
+  /** The trajectory's origin in `drawIn` at `t` (TDB seconds). */
+  const sample = (t: number): number[] => {
+    samples++;
+    frameTransform(trajectory.frame, drawIn, Instant.fromTdb(t), m);
+    return [m[12]!, m[13]!, m[14]!];
+  };
+  const contained = (t: number) => trajectory.contains(Instant.fromTdb(t));
+  /** Whether another sample fits the budgets; notes which one ran out. */
+  const affordable = (count: number): boolean => {
+    if (samples + count > options.maxSamples) {
+      capped ??= "samples";
+      return false;
+    }
+    if (options.budgetMs !== undefined && now() - started > options.budgetMs) {
+      capped ??= "time";
+      return false;
+    }
+    return true;
+  };
+
+  interface Interval {
+    ta: number;
+    tb: number;
+    pa: number[];
+    pb: number[];
+    /** The midpoint, when sampled. */
+    pm?: number[];
+    /** The midpoint's departure from the chord, against the tolerance there (1 = at the limit). */
+    ratio: number;
+  }
+  /** `iv` with its midpoint sampled and judged, or undefined when the midpoint is in a gap. */
+  const judge = (iv: Interval): Interval | undefined => {
+    const tm = (iv.ta + iv.tb) / 2;
+    if (!contained(tm)) {
+      return undefined;
+    }
+    const pm = sample(tm);
+    const d = Math.hypot(
+      pm[0]! - (iv.pa[0]! + iv.pb[0]!) / 2,
+      pm[1]! - (iv.pa[1]! + iv.pb[1]!) / 2,
+      pm[2]! - (iv.pa[2]! + iv.pb[2]!) / 2,
+    );
+    const limit = Math.max(
+      floor,
+      options.tolerance * Math.hypot(pm[0]!, pm[1]!, pm[2]!),
+    );
+    return { ...iv, pm, ratio: d / limit };
+  };
+
+  // The coarse pass: every span's knots, then each interval's midpoint.
+  const start = t0.tdb();
+  const end = t1.tdb();
+  const spans: (readonly [number, number])[] = trajectory.spans
+    ? trajectory.spans
+        .map(([a, b]) => [Math.max(a, start), Math.min(b, end)] as const)
+        .filter(([a, b]) => b >= a)
+    : [[start, end]];
+  const coarse: Interval[] = [];
+  for (const [a, b] of spans) {
+    const count = Math.floor((b - a) / options.step + 1e-9);
+    const knots = Array.from(
+      { length: count + 1 },
+      (_, i) => a + i * options.step,
+    );
+    if (b - knots.at(-1)! > 1e-9 * options.step) {
+      knots.push(b);
+    }
+    let previous: { t: number; p: number[] } | undefined;
+    for (const t of knots) {
+      if (!contained(t)) {
+        previous = undefined;
+        continue;
+      }
+      const p = sample(t);
+      if (previous) {
+        coarse.push({ ta: previous.t, tb: t, pa: previous.p, pb: p, ratio: 0 });
+      }
+      previous = { t, p };
+    }
+  }
+  // A max-heap of intervals by ratio; intervals that can't split go to `done`.
+  const heap: Interval[] = [];
+  const done: Interval[] = [];
+  const push = (iv: Interval) => {
+    heap.push(iv);
+    for (let i = heap.length - 1; i > 0;) {
+      const parent = (i - 1) >> 1;
+      if (heap[parent]!.ratio >= heap[i]!.ratio) {
+        break;
+      }
+      [heap[parent], heap[i]] = [heap[i]!, heap[parent]!];
+      i = parent;
+    }
+  };
+  const pop = (): Interval => {
+    const top = heap[0]!;
+    const last = heap.pop()!;
+    if (heap.length > 0) {
+      heap[0] = last;
+      for (let i = 0; ;) {
+        const l = 2 * i + 1;
+        const r = l + 1;
+        let big = i;
+        if (l < heap.length && heap[l]!.ratio > heap[big]!.ratio) {
+          big = l;
+        }
+        if (r < heap.length && heap[r]!.ratio > heap[big]!.ratio) {
+          big = r;
+        }
+        if (big === i) {
+          break;
+        }
+        [heap[big], heap[i]] = [heap[i]!, heap[big]!];
+        i = big;
+      }
+    }
+    return top;
+  };
+  /** Files a judged interval: refinable ones in the heap, the rest as done. */
+  const file = (iv: Interval) => {
+    if (iv.ratio > 1 && (iv.tb - iv.ta) / 2 >= 2 * options.minStep) {
+      push(iv);
+    } else {
+      done.push(iv);
+    }
+  };
+  for (const iv of coarse) {
+    if (!affordable(1)) {
+      done.push(iv);
+      continue;
+    }
+    const judged = judge(iv);
+    if (judged) {
+      file(judged);
+    }
+  }
+  // Refinement: halve the worst interval while the budgets allow.
+  while (heap.length > 0 && affordable(2)) {
+    const iv = pop();
+    const tm = (iv.ta + iv.tb) / 2;
+    for (const half of [
+      { ta: iv.ta, tb: tm, pa: iv.pa, pb: iv.pm!, ratio: 0 },
+      { ta: tm, tb: iv.tb, pa: iv.pm!, pb: iv.pb, ratio: 0 },
+    ]) {
+      const judged = judge(half);
+      if (judged) {
+        file(judged);
+      }
+    }
+  }
+  if (heap.length > 0) {
+    capped ??= "samples";
+  }
+  done.push(...heap);
+  done.sort((x, y) => x.ta - y.ta);
+
+  const out = new Lines();
+  const times: number[] = [];
+  const place = (p: number[]) => [
+    placement[0]! * p[0]! +
+      placement[4]! * p[1]! +
+      placement[8]! * p[2]! +
+      placement[12]!,
+    placement[1]! * p[0]! +
+      placement[5]! * p[1]! +
+      placement[9]! * p[2]! +
+      placement[13]!,
+    placement[2]! * p[0]! +
+      placement[6]! * p[1]! +
+      placement[10]! * p[2]! +
+      placement[14]!,
+  ];
+  let finest = Infinity;
+  const segment = (ta: number, tb: number, pa: number[], pb: number[]) => {
+    out.segment(place(pa), place(pb), color);
+    times.push(ta, tb);
+    finest = Math.min(finest, tb - ta);
+  };
+  for (const iv of done) {
+    if (iv.pm) {
+      const tm = (iv.ta + iv.tb) / 2;
+      segment(iv.ta, tm, iv.pa, iv.pm);
+      segment(tm, iv.tb, iv.pm, iv.pb);
+    } else {
+      segment(iv.ta, iv.tb, iv.pa, iv.pb);
+    }
+  }
+  return {
+    ...out.geometry(),
+    times: Float64Array.from(times),
+    sampling: {
+      samples,
+      finest: Number.isFinite(finest) ? finest : 0,
+      ...(capped !== undefined && { capped }),
+    },
+  };
 }
 
 /**
@@ -725,7 +1003,8 @@ export interface OverlayChunk {
  * at the Moon (3.8e8 m) tens of meters, so the large part cannot ride in the
  * vertices. And one origin is not enough for a long geometry: a 4e8 m path
  * has local offsets of 2e8 m, again 16 m steps. So the segments are split
- * into runs (in order) whose bounding box is at most `CHUNK_EXTENT` on every
+ * into runs (in order) whose bounding box is at most `extent` (by default
+ * `CHUNK_EXTENT`) on every
  * axis, each with its own mesh holding offsets from its box's center and its
  * own origin. A segment longer than that is cut into equal pieces first
  * (its colors interpolated). `World` carries each draw's transform as a hi/lo
@@ -733,8 +1012,24 @@ export interface OverlayChunk {
  * vertices' float32 step (a few millimeters) and does not move with the
  * camera. Empty for empty geometry.
  */
-export function overlayMesh(geometry: Geometry): OverlayChunk[] {
+export function overlayMesh(
+  geometry: Geometry,
+  options: {
+    /**
+     * The largest chunk, meters per axis (default `CHUNK_EXTENT`). A long
+     * path far from the Earth, whose own accuracy is meters (Orion's), can
+     * take 1e7 m: half-metre float32 steps, and a hundredth of the draws.
+     */
+    extent?: number;
+  } = {},
+): OverlayChunk[] {
   const { positions, colors } = geometry;
+  const extent = options.extent ?? CHUNK_EXTENT;
+  if (!(Number.isFinite(extent) && extent > 0)) {
+    throw new RangeError(
+      `overlayMesh: extent must be a positive number of meters, got ${extent}`,
+    );
+  }
   if (positions.length % 3 !== 0) {
     throw new RangeError(
       `overlayMesh: positions hold ${positions.length} numbers, not a whole number of vertices`,
@@ -773,7 +1068,7 @@ export function overlayMesh(geometry: Geometry): OverlayChunk[] {
       Math.abs(b[1]! - a[1]!),
       Math.abs(b[2]! - a[2]!),
     );
-    const n = Math.max(1, Math.ceil(span / CHUNK_EXTENT));
+    const n = Math.max(1, Math.ceil(span / extent));
     const at = (k: number, c: number) =>
       k === 0 ? a[c]! : k === n ? b[c]! : a[c]! + ((b[c]! - a[c]!) * k) / n;
     const byteAt = (k: number, c: number) =>
@@ -787,7 +1082,7 @@ export function overlayMesh(geometry: Geometry): OverlayChunk[] {
       );
       const nlo = lo.map((x, c) => Math.min(x, piece[c]!, piece[3 + c]!));
       const nhi = hi.map((x, c) => Math.max(x, piece[c]!, piece[3 + c]!));
-      if (points.length > 0 && nhi.some((x, c) => x - nlo[c]! > CHUNK_EXTENT)) {
+      if (points.length > 0 && nhi.some((x, c) => x - nlo[c]! > extent)) {
         flush();
         lo = [0, 1, 2].map((c) => Math.min(piece[c]!, piece[3 + c]!));
         hi = [0, 1, 2].map((c) => Math.max(piece[c]!, piece[3 + c]!));

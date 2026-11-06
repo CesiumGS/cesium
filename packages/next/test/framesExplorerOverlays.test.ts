@@ -12,6 +12,7 @@ import {
   overlayMesh,
   polyline,
   roundTripMarkers,
+  adaptivePath,
   trajectoryPath,
   triad,
   trueNorthLines,
@@ -258,6 +259,34 @@ describe("designGrid", () => {
         expect(Math.abs(got[c]! - want[c]!)).toBeLessThan(1e-9);
       }
     });
+  });
+
+  it("leaves out every skipEvery-th line from the extent's corner (the minor lines without the major)", () => {
+    // Lines every 50: E 100, 150, ..., 400 (7), N 200, 250, 300 (3). Every
+    // second one from the corner (100, 200) is a major line: left out.
+    const g = designGrid(stub, extent, 50, 25, { skipEvery: 2 });
+    const expected: [number, number][] = [];
+    for (const e of [150, 250, 350]) {
+      for (let s = 0; s < 4; s++) {
+        expected.push([e, 200 + 25 * s], [e, 200 + 25 * (s + 1)]);
+      }
+    }
+    for (const n of [250]) {
+      for (let s = 0; s < 12; s++) {
+        expected.push([100 + 25 * s, n], [100 + 25 * (s + 1), n]);
+      }
+    }
+    expect(g.positions.length / 3).toBe(expected.length);
+    expected.forEach(([e, n], i) => {
+      const want = stub.toBodyFixed([e, n, 0]);
+      const got = vertex(g, i);
+      for (let c = 0; c < 3; c++) {
+        expect(Math.abs(got[c]! - want[c]!)).toBeLessThan(1e-9);
+      }
+    });
+    expect(() => designGrid(stub, extent, 50, 25, { skipEvery: 0.5 })).toThrow(
+      /skipEvery/,
+    );
   });
 
   it("rounds a segment that does not divide the extent up, ending exactly on the extent", () => {
@@ -659,6 +688,202 @@ describe("trajectoryPath", () => {
   });
 });
 
+describe("adaptivePath (Orion's drawing: finer near perigee, within a budget)", () => {
+  // A Kepler ellipse in an inertial root I (ITRF = I): a = 1e8 m, e = 0.9,
+  // period 1e5 s, perigee at t = 0. Its speed at perigee is about 19 times
+  // its speed at apogee, so a uniform step that suits apogee facets perigee.
+  const I = Frame.root("I");
+  const A = 1e8;
+  const E = 0.9;
+  const PERIOD = 1e5;
+  const B = A * Math.sqrt(1 - E * E);
+  const kepler = (t: number): number[] => {
+    const M = ((2 * Math.PI) / PERIOD) * t;
+    let ecc = M;
+    for (let k = 0; k < 60; k++) {
+      ecc -= (ecc - E * Math.sin(ecc) - M) / (1 - E * Math.cos(ecc));
+    }
+    return [A * (Math.cos(ecc) - E), B * Math.sin(ecc), 0];
+  };
+  const GAP = [20_000, 21_000];
+  const inGap = (t: number) => t > GAP[0]! && t < GAP[1]!;
+  let evaluations = 0;
+  const orbitFrame = new Frame(
+    "K",
+    I,
+    (instant, out) => {
+      const t = instant.tdb();
+      if (inGap(t)) {
+        throw new Error("the trajectory's state was read inside its gap");
+      }
+      evaluations++;
+      const p = kepler(t);
+      out.fill(0);
+      out[0] = out[5] = out[10] = out[15] = 1;
+      out[12] = p[0]!;
+      out[13] = p[1]!;
+      out[14] = p[2]!;
+    },
+    { cache: false },
+  );
+  // Its data spans, in TDB seconds, as a Trajectory's `spans`.
+  const trajectory = {
+    frame: orbitFrame,
+    contains: (instant: Instant) => !inGap(instant.tdb()),
+    spans: [
+      [-PERIOD, GAP[0]!],
+      [GAP[1]!, PERIOD],
+    ],
+  } as Pick<Trajectory, "frame" | "contains" | "spans"> as Trajectory;
+  const itrf = Frame.constant(
+    "ITRF",
+    I,
+    [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+  );
+  const fakeFrames = { itrf } as Pick<typeof frames, "itrf"> as typeof frames;
+  // Half an orbit either side of perigee (t = -5e4 .. 5e4 s).
+  const t0 = Instant.fromTdb(-PERIOD / 2);
+  const t1 = Instant.fromTdb(PERIOD / 2);
+  const at = Instant.fromTdb(0);
+  const TOLERANCE = 1e-3;
+  const options = {
+    step: 2000,
+    tolerance: TOLERANCE,
+    minStep: 1,
+    maxSamples: 100_000,
+  };
+  const dist = (a: number[], b: number[]) =>
+    Math.hypot(a[0]! - b[0]!, a[1]! - b[1]!, a[2]! - b[2]!);
+  /** Each segment's worst departure from the curve, against the tolerance at its midpoint (1 = at the limit). */
+  const departures = (g: { positions: Float64Array }, times: Float64Array) => {
+    const out: { ratio: number; dt: number; r: number }[] = [];
+    for (let v = 0; v < times.length; v += 2) {
+      const ta = times[v]!;
+      const tb = times[v + 1]!;
+      const pa = vertex(g, v);
+      const pb = vertex(g, v + 1);
+      let worst = 0;
+      for (const f of [0.25, 0.5, 0.75]) {
+        const t = ta + f * (tb - ta);
+        const chord = pa.map((x, c) => x + f * (pb[c]! - x));
+        worst = Math.max(worst, dist(chord, kepler(t)));
+      }
+      const r = Math.hypot(...kepler((ta + tb) / 2));
+      out.push({ ratio: worst / (TOLERANCE * r), dt: tb - ta, r });
+    }
+    return out;
+  };
+
+  it("puts every vertex on the path, at its own time", () => {
+    const g = adaptivePath(trajectory, I, fakeFrames, t0, t1, options, at);
+    expect(g.times.length).toBe(g.positions.length / 3);
+    expect(g.colors.length / 4).toBe(g.positions.length / 3);
+    for (let v = 0; v < g.times.length; v++) {
+      expect(dist(vertex(g, v), kepler(g.times[v]!))).toBeLessThan(1e-6);
+    }
+  });
+
+  it("keeps every segment within the tolerance of the curve, where a uniform step doesn't", () => {
+    const g = adaptivePath(trajectory, I, fakeFrames, t0, t1, options, at);
+    const d = departures(g, g.times);
+    expect(Math.max(...d.map((x) => x.ratio))).toBeLessThanOrEqual(1);
+    expect(g.sampling.capped).toBeUndefined();
+    // The same coarse step, uniform: faceted near perigee.
+    const uniform = trajectoryPath(trajectory, I, fakeFrames, t0, t1, 2000, at);
+    const times = Float64Array.from(
+      { length: uniform.positions.length / 3 },
+      (_, v) => -PERIOD / 2 + 2000 * (Math.floor(v / 2) + (v % 2)),
+    );
+    expect(
+      Math.max(...departures(uniform, times).map((x) => x.ratio)),
+    ).toBeGreaterThan(10);
+  });
+
+  it("steps finer near perigee than near apogee", () => {
+    const g = adaptivePath(trajectory, I, fakeFrames, t0, t1, options, at);
+    const d = departures(g, g.times);
+    const near = d.filter((x) => x.r < 2 * A * (1 - E));
+    const far = d.filter((x) => x.r > 0.9 * A * (1 + E));
+    expect(near.length).toBeGreaterThan(0);
+    expect(far.length).toBeGreaterThan(0);
+    const longest = (xs: typeof d) => Math.max(...xs.map((x) => x.dt));
+    expect(longest(near) * 10).toBeLessThan(longest(far));
+    expect(g.sampling.finest).toBe(Math.min(...d.map((x) => x.dt)));
+  });
+
+  it("stops at its sample budget, and says so", () => {
+    evaluations = 0;
+    const g = adaptivePath(
+      trajectory,
+      I,
+      fakeFrames,
+      t0,
+      t1,
+      { ...options, maxSamples: 120 },
+      at,
+    );
+    expect(evaluations).toBeLessThanOrEqual(120);
+    expect(g.sampling.samples).toBeLessThanOrEqual(120);
+    expect(g.sampling.capped).toBe("samples");
+    // Still the whole path: the coarse samples come first.
+    expect(Math.min(...g.times)).toBe(-PERIOD / 2);
+    expect(Math.max(...g.times)).toBe(PERIOD / 2);
+  });
+
+  it("stops at its time budget, and says so", () => {
+    let clock = 0;
+    const g = adaptivePath(
+      trajectory,
+      I,
+      fakeFrames,
+      t0,
+      t1,
+      // Each look at the clock is 1 ms later: the budget runs out at once.
+      { ...options, budgetMs: 5, now: () => clock++ },
+      at,
+    );
+    expect(g.sampling.capped).toBe("time");
+    expect(Math.min(...g.times)).toBe(-PERIOD / 2);
+    expect(Math.max(...g.times)).toBe(PERIOD / 2);
+  });
+
+  it("never draws across a gap, nor reads inside one", () => {
+    const g = adaptivePath(trajectory, I, fakeFrames, t0, t1, options, at);
+    for (let v = 0; v < g.times.length; v += 2) {
+      const a = g.times[v]!;
+      const b = g.times[v + 1]!;
+      expect(inGap(a) || inGap(b) || (a <= GAP[0]! && b >= GAP[1]!)).toBe(
+        false,
+      );
+    }
+  });
+
+  it("rejects a tolerance or step that is not positive", () => {
+    expect(() =>
+      adaptivePath(
+        trajectory,
+        I,
+        fakeFrames,
+        t0,
+        t1,
+        { ...options, tolerance: 0 },
+        at,
+      ),
+    ).toThrow(/tolerance/);
+    expect(() =>
+      adaptivePath(
+        trajectory,
+        I,
+        fakeFrames,
+        t0,
+        t1,
+        { ...options, step: -1 },
+        at,
+      ),
+    ).toThrow(/step/);
+  });
+});
+
 describe("polyline", () => {
   it("turns n points into n - 1 segment pairs in one color", () => {
     const g = polyline(
@@ -825,6 +1050,28 @@ describe("overlayMesh (what the adapter hands to World.addMesh)", () => {
       };
       expect(Math.abs(length(back) - length(g.positions))).toBeLessThan(1);
       expect(n).toBe(200);
+    });
+
+    it("takes a larger extent for a path whose own accuracy is coarser (Orion: 1e7 m chunks)", () => {
+      const { g } = build(5e4);
+      const chunks = overlayMesh(g, { extent: 1e7 });
+      // 4e8 m of path in chunks of at most 1e7 m: about 40, not 4,000.
+      expect(chunks.length).toBeLessThan(60);
+      expect(chunks.length).toBeGreaterThanOrEqual(40);
+      for (const { mesh } of chunks) {
+        for (const x of mesh.positions) {
+          expect(Math.abs(x)).toBeLessThanOrEqual(5e6);
+        }
+      }
+      // float32 offsets of up to 5e6 m: half-metre steps, well within the
+      // path's own ±10 m.
+      const back = reassemble(chunks);
+      let worst = 0;
+      for (let i = 0; i < back.length; i++) {
+        worst = Math.max(worst, Math.abs(back[i]! - g.positions[i]!));
+      }
+      expect(worst).toBeLessThanOrEqual(0.5);
+      expect(() => overlayMesh(g, { extent: 0 })).toThrow(/extent/);
     });
 
     it("the colors follow the chunks", () => {
