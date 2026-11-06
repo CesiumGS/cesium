@@ -103,6 +103,13 @@ class OrthographicOffCenterFrustum {
     return this._orthographicMatrix;
   }
 
+  static #computeCullingVolumeScratch = {
+    getPlanesRight: new Cartesian3(),
+    getPlanesNearCenter: new Cartesian3(),
+    getPlanesPoint: new Cartesian3(),
+    negateScratch: new Cartesian3(),
+  };
+
   /**
    * Creates a culling volume for this frustum.
    *
@@ -128,6 +135,13 @@ class OrthographicOffCenterFrustum {
       throw new DeveloperError("up is required.");
     }
     //>>includeEnd('debug');
+
+    const {
+      getPlanesRight,
+      getPlanesNearCenter,
+      getPlanesPoint,
+      negateScratch,
+    } = OrthographicOffCenterFrustum.#computeCullingVolumeScratch;
 
     const planes = this._cullingVolume.planes;
     const t = this.top;
@@ -452,10 +466,5 @@ function update(frustum) {
     );
   }
 }
-
-const getPlanesRight = new Cartesian3();
-const getPlanesNearCenter = new Cartesian3();
-const getPlanesPoint = new Cartesian3();
-const negateScratch = new Cartesian3();
 
 export default OrthographicOffCenterFrustum;
