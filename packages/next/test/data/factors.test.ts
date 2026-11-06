@@ -404,6 +404,46 @@ describe("grid factors against the CRS's own ellipsoid", () => {
     },
   );
 
+  // Equidistant Cylindrical (Spherical) on WGS 84: E = a (λ − λ0) cos φ1 and
+  // N = a φ on WGS 84 latitudes (PROJ's eqc forces the sphere of radius a),
+  // so k = a cos φ1 / (ν cos φ) and h = a / ρ: at φ1 = 0 these are
+  // sqrt(w) / cos φ and w^1.5 / (1 − e²).
+  it.each([
+    { code: "EPSG:32662", phi1: 0 },
+    { code: "ESRI:54002", phi1: 60 },
+    { code: "ESRI:102421", phi1: 22.94791772 },
+  ])(
+    "$code (Equidistant Cylindrical (Spherical), φ1 $phi1°): h and k against the WGS 84 ellipsoid",
+    async ({ code, phi1 }) => {
+      const P = await loadProj({ base });
+      const frame = EngineeringFrame.create(
+        { name: code, body: EARTH, crs: crsRef(code) },
+        P,
+      );
+      const cos1 = Math.cos((phi1 * Math.PI) / 180);
+      for (const latitude of [10, 45, 60]) {
+        const phi = (latitude * Math.PI) / 180;
+        const design = frame.fromBodyFixed(
+          EARTH.ellipsoid.cartographicToCartesian(
+            { longitude: 0.2, latitude: phi, height: 0 },
+            new Float64Array(3),
+          ),
+        );
+        const result = gridFactors(frame, design);
+        const k = (WGS84.a * cos1) / (nu(phi) * Math.cos(phi));
+        const h = WGS84.a / rho(phi);
+        expect(
+          Math.abs(result.pointScale - k),
+          `k at ${latitude}`,
+        ).toBeLessThan(1e-10);
+        expect(
+          Math.abs(result.meridionalScale - h),
+          `h at ${latitude}`,
+        ).toBeLessThan(1e-10);
+      }
+    },
+  );
+
   it("the spherical-formula path refuses a pole, where the derivatives are 0/0", async () => {
     const P = await loadProj({ base });
     const frame = EngineeringFrame.create(

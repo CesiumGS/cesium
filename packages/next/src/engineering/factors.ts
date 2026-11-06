@@ -56,25 +56,34 @@ interface Projection {
 }
 
 /**
- * EPSG's spherical-formula methods whose sphere is not the datum's ellipsoid,
- * by their EPSG codes, and the sphere's radius from the datum's a and e2:
+ * EPSG's spherical-formula methods (every "(Spherical)" method in proj.db,
+ * and Pseudo-Mercator) by their EPSG codes, with the radius of the sphere
+ * PROJ projects them on when the datum is an ellipsoid:
  *  - Popular Visualisation Pseudo-Mercator (1024): the datum's semi-major
  *    axis (IOGP 373-7-2 section 3.2.1.2);
  *  - Lambert Azimuthal Equal Area (Spherical) (1027; 9821, its deprecated
  *    twin) and Lambert Cylindrical Equal Area (Spherical) (9834): the
  *    authalic sphere's radius, R_A = a sqrt((1 - (1 - e2)/(2e) ln((1 - e)/
- *    (1 + e))) / 2) (sections 3.3.2.1, 3.2.6.1 and the implementation notes).
- * PROJ writes these as spheres (3857 as +a=b=6378137, EASE-Grid with +R_A),
- * so its own scales are the sphere's. The other "(Spherical)" methods in
- * proj.db, Mercator (Spherical) (1026, 9841) and Equidistant Cylindrical
- * (Spherical) (1029, 9823), are defined on the conformal sphere, but PROJ
- * writes them on the datum's own ellipsoid (ESRI:54002 is +proj=eqc
- * +datum=WGS84), where its own scales are already the ellipsoid's.
+ *    (1 + e))) / 2) (sections 3.3.2.1, 3.2.6.1 and the implementation notes);
+ *  - Equidistant Cylindrical (Spherical) (1029; 9823) and Mercator
+ *    (Spherical) (1026; 9841): the datum's semi-major axis. IOGP suggests the
+ *    conformal sphere at the origin, but PROJ's eqc and spherical merc force
+ *    a sphere of radius a (EPSG:32662 and ESRI:54002's +proj=eqc
+ *    +datum=WGS84 still have the sphere's 1/cos phi as their parallel scale).
+ *    proj.db has no Mercator (Spherical) CRS on an ellipsoid today; the same
+ *    check guards it.
+ * PROJ's own scales for all of these are the sphere's, so h and k come from
+ * the derivatives. checkSphere confirms each radius against PROJ's own
+ * coordinates, so a radius PROJ does not use throws rather than misleads.
  */
 const SPHERICAL_METHODS: Readonly<
   Record<string, (a: number, e2: number) => number>
 > = {
   "1024": (a) => a,
+  "1026": (a) => a,
+  "9841": (a) => a,
+  "1029": (a) => a,
+  "9823": (a) => a,
   "1027": authalicRadius,
   "9821": authalicRadius,
   "9834": authalicRadius,
