@@ -2,6 +2,7 @@ import type { Ephemeris } from "../ephemeris/Ephemeris.ts";
 import { frameTransform } from "../frames/Frame.ts";
 import type { Frames } from "../frames/frames.ts";
 import type { FramePoint } from "../frames/local.ts";
+import { rotationPart } from "../frames/matrix.ts";
 import { Ellipsoid } from "../math/ellipsoid.ts";
 import { Instant } from "../time/Instant.ts";
 import { C, GM_EARTH, GM_MOON, GM_SUN } from "./constants.ts";
@@ -54,8 +55,7 @@ const EPHEMERIS: Readonly<
 };
 
 const body = new Float64Array(6);
-const linear = new Float64Array(9);
-const cofactor = new Float64Array(9);
+const rotation = new Float64Array(9);
 const matrix = new Float64Array(16);
 
 const distance = (a: ArrayLike<number>, b: ArrayLike<number>): number =>
@@ -177,40 +177,6 @@ export function solveLightTime(
 }
 
 /**
- * Writes the rotation part of the column-major `m`'s linear part to
- * `linear`, row-major: its polar factor, by Newton's iteration
- * R ← ½(R + R⁻ᵀ). Eq. 11.19's edge scales and shears by up to 2.5e-8,
- * which is no rotation; two steps take that to float64 rounding, and a
- * third is spare.
- */
-function rotationPart(m: Float64Array): Float64Array {
-  for (let i = 0; i < 3; i++) {
-    for (let j = 0; j < 3; j++) {
-      linear[3 * i + j] = m[4 * j + i]!;
-    }
-  }
-  const l = linear;
-  for (let k = 0; k < 3; k++) {
-    cofactor[0] = l[4]! * l[8]! - l[5]! * l[7]!;
-    cofactor[1] = l[5]! * l[6]! - l[3]! * l[8]!;
-    cofactor[2] = l[3]! * l[7]! - l[4]! * l[6]!;
-    cofactor[3] = l[2]! * l[7]! - l[1]! * l[8]!;
-    cofactor[4] = l[0]! * l[8]! - l[2]! * l[6]!;
-    cofactor[5] = l[1]! * l[6]! - l[0]! * l[7]!;
-    cofactor[6] = l[1]! * l[5]! - l[2]! * l[4]!;
-    cofactor[7] = l[2]! * l[3]! - l[0]! * l[5]!;
-    cofactor[8] = l[0]! * l[4]! - l[1]! * l[3]!;
-    const det =
-      l[0]! * cofactor[0]! + l[1]! * cofactor[1]! + l[2]! * cofactor[2]!;
-    // R⁻ᵀ is the cofactor matrix over the determinant.
-    for (let n = 0; n < 9; n++) {
-      l[n] = 0.5 * (l[n]! + cofactor[n]! / det);
-    }
-  }
-  return linear;
-}
-
-/**
  * The apparent direction of the signal's other end, seen from one end: a
  * unit vector in `point.frame`'s axes at that end's time. `point` is that
  * end (the solution's receiver or transmitter), which gives its velocity.
@@ -224,8 +190,8 @@ function rotationPart(m: Float64Array): Float64Array {
  * receiving, by −φ when transmitting (frames 3, R6).
  *
  * The ICRF direction is turned into `point.frame`'s axes by the rotation
- * part of the frame transform from ICRF at that end's time, without
- * eq. 11.19's scale and shear: a direction is not a position.
+ * part (`rotationPart`) of the frame transform from ICRF at that end's
+ * time, without eq. 11.19's scale and shear: a direction is not a position.
  */
 export function apparentDirection(
   solution: LightTimeSolution,
@@ -278,6 +244,7 @@ export function apparentDirection(
 
   const r = rotationPart(
     frameTransform(frames.icrf, point.frame, instant, matrix),
+    rotation,
   );
   const out = new Float64Array(3);
   out[0] = r[0]! * x + r[1]! * y + r[2]! * z;

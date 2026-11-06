@@ -6,7 +6,7 @@ import {
   framePoint,
   worldTransformFrame,
 } from "../src/frames/local.ts";
-import { toParentMatrix } from "../src/frames/matrix.ts";
+import { rotationPart, toParentMatrix } from "../src/frames/matrix.ts";
 import { Instant } from "../src/time/Instant.ts";
 import { Ellipsoid, fromDegrees } from "../src/math/ellipsoid.ts";
 import { identity, invertAffine, multiply } from "../src/math/mat4.ts";
@@ -60,6 +60,67 @@ describe("toParentMatrix", () => {
     );
     const p = [m[0]! * 1 + m[12]!, m[1]! * 1 + m[13]!, m[2]! * 1 + m[14]!];
     expect(p).toEqual([10, 21, 30]);
+  });
+});
+
+describe("rotationPart", () => {
+  // A rotation about (1, 2, 2)/3 by 0.7 rad, row-major, by Rodrigues.
+  const rotation = (() => {
+    const [x, y, z] = [1 / 3, 2 / 3, 2 / 3];
+    const c = Math.cos(0.7);
+    const s = Math.sin(0.7);
+    const t = 1 - c;
+    return [
+      t * x * x + c,
+      t * x * y - s * z,
+      t * x * z + s * y,
+      t * x * y + s * z,
+      t * y * y + c,
+      t * y * z - s * x,
+      t * x * z - s * y,
+      t * y * z + s * x,
+      t * z * z + c,
+    ];
+  })();
+  /** A column-major Mat4 whose linear part is the row-major `l`. */
+  const mat4Of = (l: readonly number[]): Float64Array => {
+    const m = identity(new Float64Array(16));
+    for (let row = 0; row < 3; row++) {
+      for (let col = 0; col < 3; col++) {
+        m[4 * col + row] = l[3 * row + col]!;
+      }
+    }
+    m[12] = 7e10;
+    return m;
+  };
+  const maxDiff = (a: ArrayLike<number>, b: ArrayLike<number>): number =>
+    Math.max(...Array.from({ length: 9 }, (_, i) => Math.abs(a[i]! - b[i]!)));
+
+  it("recovers the rotation from eq. 11.19's scale and shear", () => {
+    // R · (k I - ½ V Vᵀ / c²) with k = 1 - 2.5e-8 and |V|/c = 1e-4.
+    const k = 1 - 2.5e-8;
+    const b = [6e-5, -7e-5, 2e-5];
+    const a = Array.from({ length: 9 }, (_, n) => {
+      const i = Math.floor(n / 3);
+      const j = n % 3;
+      return (i === j ? k : 0) - 0.5 * b[i]! * b[j]!;
+    });
+    const l = Array.from({ length: 9 }, (_, n) => {
+      const i = Math.floor(n / 3);
+      const j = n % 3;
+      return [0, 1, 2].reduce(
+        (sum, m) => sum + rotation[3 * i + m]! * a[3 * m + j]!,
+        0,
+      );
+    });
+    expect(maxDiff(l, rotation)).toBeGreaterThan(2e-8);
+    expect(maxDiff(rotationPart(mat4Of(l)), rotation)).toBeLessThan(1e-15);
+  });
+
+  it("leaves a pure rotation unchanged", () => {
+    const out = new Float64Array(9);
+    expect(rotationPart(mat4Of(rotation), out)).toBe(out);
+    expect(maxDiff(out, rotation)).toBeLessThan(1e-15);
   });
 });
 

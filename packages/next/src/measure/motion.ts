@@ -8,6 +8,8 @@ const H = 0.5;
 const matrix = new Float64Array(16);
 const ahead = new Float64Array(3);
 const behind = new Float64Array(3);
+const here = new Float64Array(3);
+const far = new Float64Array(3);
 
 function fixedOnly(point: FramePoint, instant: Instant, caller: string): void {
   if (point.instant && point.instant.tt !== instant.tt) {
@@ -40,7 +42,13 @@ export function positionIn(
   return out;
 }
 
-/** Writes `positionIn` to `out`, returning what it threw, if anything. */
+/**
+ * Writes `positionIn` to `out` and returns `undefined`, or returns what it
+ * threw when that is a data-edge miss (an Error beyond the data, ephemeris
+ * or EOP table). A TypeError or ReferenceError is a programming error, not
+ * an edge, so it propagates rather than becoming a quiet one-sided
+ * difference.
+ */
 function tryPosition(
   point: FramePoint,
   frame: Frame,
@@ -51,7 +59,34 @@ function tryPosition(
     positionIn(point, frame, instant, out);
     return undefined;
   } catch (error) {
+    if (error instanceof TypeError || error instanceof ReferenceError) {
+      throw error;
+    }
     return { error };
+  }
+}
+
+/**
+ * Writes the derivative at `t0` of the quadratic through (t0, f0),
+ * (t1, f1), (t2, f2) to `out`: the three-point one-sided stencil
+ * (−3 f(t) + 4 f(t ± h) − f(t ± 2h)) / (±2h), in Lagrange form so the
+ * instants' actual TDB spacing is used. Exact for constant acceleration,
+ * where the two-point form misses by a·h/2.
+ */
+function oneSided(
+  t0: number,
+  t1: number,
+  t2: number,
+  f0: Float64Array,
+  f1: Float64Array,
+  f2: Float64Array,
+  out: Float64Array,
+): void {
+  const w0 = (2 * t0 - t1 - t2) / ((t0 - t1) * (t0 - t2));
+  const w1 = (t0 - t2) / ((t1 - t0) * (t1 - t2));
+  const w2 = (t0 - t1) / ((t2 - t0) * (t2 - t1));
+  for (let k = 0; k < 3; k++) {
+    out[k] = w0 * f0[k]! + w1 * f1[k]! + w2 * f2[k]!;
   }
 }
 
@@ -60,9 +95,14 @@ function tryPosition(
  * its own frame: the central difference of `positionIn` over h = 0.5 s
  * (frames 3, R3), divided by the two instants' actual TDB difference (TDB
  * seconds at today's epochs are 1.2e-7 s apart, so `instant ± h` may not
- * land exactly). Where one side throws, as within h of a trajectory's data
- * edge, it takes the one-sided difference between the other side and the
- * instant itself; where both throw, it rethrows the error from t + h.
+ * land exactly).
+ *
+ * Where one side misses, as within h of a trajectory's data edge, it takes
+ * the three-point one-sided stencil on the other side, through t, t ± h and
+ * t ± 2h, second order like the central difference. Only if t ± 2h misses
+ * too does it fall back to the two-point difference with the instant
+ * itself. Where both sides miss, it rethrows the error from t + h. A
+ * TypeError or ReferenceError always propagates.
  */
 export function velocityIn(
   point: FramePoint,
@@ -72,23 +112,33 @@ export function velocityIn(
 ): Float64Array {
   fixedOnly(point, instant, "velocityIn");
   const t = instant.tdb();
-  let later = Instant.fromTdb(t + H);
-  let earlier = Instant.fromTdb(t - H);
-  const laterFailed = tryPosition(point, frame, later, ahead);
-  const earlierFailed = tryPosition(point, frame, earlier, behind);
-  if (laterFailed && earlierFailed) {
-    throw laterFailed.error;
+  const later = Instant.fromTdb(t + H);
+  const earlier = Instant.fromTdb(t - H);
+  const laterMissed = tryPosition(point, frame, later, ahead);
+  const earlierMissed = tryPosition(point, frame, earlier, behind);
+  if (laterMissed && earlierMissed) {
+    throw laterMissed.error;
   }
-  if (laterFailed) {
-    later = instant;
-    positionIn(point, frame, instant, ahead);
-  } else if (earlierFailed) {
-    earlier = instant;
-    positionIn(point, frame, instant, behind);
+  if (!laterMissed && !earlierMissed) {
+    const dt = later.tdb() - earlier.tdb();
+    for (let k = 0; k < 3; k++) {
+      out[k] = (ahead[k]! - behind[k]!) / dt;
+    }
+    return out;
   }
-  const dt = later.tdb() - earlier.tdb();
-  out[0] = (ahead[0]! - behind[0]!) / dt;
-  out[1] = (ahead[1]! - behind[1]!) / dt;
-  out[2] = (ahead[2]! - behind[2]!) / dt;
+  // One side missed: the other side's near point is in `near`.
+  const sign = laterMissed ? -1 : 1;
+  const nearInstant = laterMissed ? earlier : later;
+  const near = laterMissed ? behind : ahead;
+  positionIn(point, frame, instant, here);
+  const farInstant = Instant.fromTdb(t + sign * 2 * H);
+  if (!tryPosition(point, frame, farInstant, far)) {
+    oneSided(t, nearInstant.tdb(), farInstant.tdb(), here, near, far, out);
+    return out;
+  }
+  const dt = nearInstant.tdb() - t;
+  for (let k = 0; k < 3; k++) {
+    out[k] = (near[k]! - here[k]!) / dt;
+  }
   return out;
 }
