@@ -88,7 +88,7 @@ async function pruneScriptsForZip(packageJsonPath) {
  * @param {(file: Vinyl) => void} callback The function to call on each file. It may modify the file.
  * @returns {Transform} A stream that passes each file through after calling the callback.
  */
-function forEachFile(callback) {
+function gulpTap(callback) {
   return new Transform({
     objectMode: true,
     //eslint-disable-next-line no-unused-vars
@@ -106,7 +106,7 @@ function forEachFile(callback) {
  * @param {string} zipPath The path of the ZIP file to write.
  * @returns {Writable} The stream to pipe files into.
  */
-function createZipWriter(zipPath) {
+function gulpZip(zipPath) {
   const zipFile = new ZipFile();
   const output = zipFile.outputStream.pipe(createWriteStream(zipPath));
 
@@ -167,7 +167,7 @@ export const makeZip = gulp.series(
     const src = gulp
       .src("index.release.html")
       .pipe(
-        forEachFile((file) => {
+        gulpTap((file) => {
           if (file.stem === "index.release") {
             file.stem = "index";
           }
@@ -179,7 +179,7 @@ export const makeZip = gulp.series(
       .pipe(widgetsPackageJsonSrc)
       .pipe(packageJsonSrc)
       .pipe(
-        forEachFile((file) => {
+        gulpTap((file) => {
           if (file.stem === "package.noprepare") {
             file.stem = "package";
           }
@@ -262,7 +262,7 @@ export const makeZip = gulp.series(
           },
         ),
       )
-      .pipe(createZipWriter(`Cesium-${version}.zip`));
+      .pipe(gulpZip(`Cesium-${version}.zip`));
 
     await finished(src);
 
