@@ -12,18 +12,14 @@
 // share (R14), kept in step with the example's params (R15). Every async step
 // stops on `context.signal`, and everything drawn goes through `scope`.
 import { createElement } from "react";
-import { type Frame } from "../../src/frames/Frame.ts";
 import type { Frames } from "../../src/frames/frames.ts";
 import { earthOrientationSigma } from "../../src/measure/accuracy.ts";
 import { Instant } from "../../src/time/Instant.ts";
 import type { ExampleContext, ExampleRun } from "../types.ts";
-import {
-  NARROW_VIEW,
-  RESULT_LABELS,
-  comparedFor,
-  groupRunIds,
-} from "./content.ts";
+import { RESULT_LABELS, comparedFor, groupRunIds } from "./content.ts";
 import { createScenarioHost } from "./scenarioHost.ts";
+import { createCallouts } from "./callouts.ts";
+import { createStage } from "./scenarios/stage.ts";
 import { createCameraRig } from "./cameraRig.ts";
 import {
   OPENING,
@@ -41,26 +37,14 @@ import { createCatalogRuns } from "./catalogRuns.ts";
 import { createFrameData } from "./frameData.ts";
 import { createPageReport } from "./pageReport.ts";
 import { createUserCrs } from "./userCrs.ts";
-import { CONVERGENCE_FACTOR, DISTORTION, OVERLAYS } from "./overlayConfig.ts";
+import { CONVERGENCE_FACTOR, DISTORTION } from "./overlayConfig.ts";
 import { FLYBY, createModelSource, deg, isFrame, meters } from "./page.ts";
 import { routeSteps } from "./panel/routeSteps.ts";
 import { proofRows, type ProofRow } from "./scenarios/proof.ts";
-import {
-  LUNAR_SITE,
-  READY,
-  SCENES,
-  earthSiteFrame,
-  lunarSiteFrame,
-  sceneExposure,
-  type SceneSpec,
-} from "./scenarios/scenes.ts";
-import {
-  checkedState,
-  type KnobState,
-  type ScenarioId,
-} from "./scenarios/spec.ts";
+import { READY, SCENES } from "./scenarios/scenes.ts";
+import { checkedState, type ScenarioId } from "./scenarios/spec.ts";
 import { SCENARIOS } from "./scenarios/specs.ts";
-import { Globe, familyRgba, type LabelSpec } from "./globe.ts";
+import { Globe, familyRgba } from "./globe.ts";
 import { LoadingModel } from "./loading.ts";
 import type {
   ClockView,
@@ -176,8 +160,6 @@ export function run(context: ExampleContext): ExampleRun {
 
   // ------------------------------------------------------------ page state
   let frames: Frames | undefined;
-  /** The scene's own frames on the main thread (the lunar site), for its triads and camera. */
-  let local: Frame[] = [];
   /** The deep-linked result being loaded (`loadLinkedResult`). */
   let linking: string | undefined;
   /** A message for the panel's snackbar (a deep link that didn't resolve). */
@@ -313,7 +295,7 @@ export function run(context: ExampleContext): ExampleRun {
   // ------------------------------------------------------------ the tree
   const treeState = createTreeState({
     core: { frames: () => frames, instantNow, invalidate },
-    local: () => local,
+    local: () => stage.local(),
     evaluation: () => evaluationNow(),
     orion: () => (orion.error() === undefined ? orion.info()?.info : undefined),
     updateKnown: () => updateKnown(),
@@ -347,10 +329,10 @@ export function run(context: ExampleContext): ExampleRun {
     core: { frames: () => frames, instantNow, globe, view },
     labels,
     tree: () => treeState.tree(),
-    local: () => local,
+    local: () => stage.local(),
     on: () => overlays.state("triads").on,
-    scene: () => scene,
-    sceneKnobs: () => sceneKnobs,
+    scene: () => stage.scene(),
+    sceneKnobs: () => stage.knobs(),
     emphasis: () => emphasisFrames(),
   });
   scope.defer(() => triads.dispose());
@@ -379,7 +361,7 @@ export function run(context: ExampleContext): ExampleRun {
     },
     noteEngineering: (g, center) => treeState.noteEngineering(g, center),
     refreshTriads: () => triads.refresh(),
-    refreshCallouts: () => refreshCallouts(),
+    refreshCallouts: () => callouts.refresh(),
   });
   scope.defer(() => overlays.dispose());
 
@@ -422,23 +404,16 @@ export function run(context: ExampleContext): ExampleRun {
       scrub,
     },
     state: overlays.state("orion"),
-    refreshCallouts: () => refreshCallouts(),
+    refreshCallouts: () => callouts.refresh(),
     rebuildTree: () => treeState.rebuild(),
-    drawn: () => {
-      if (reframeOrion) {
-        // A new frame reads as a change: the camera frames the new path
-        // (the ITRF spiral is far larger than the figure-eight).
-        reframeOrion = false;
-        flyToScene();
-      }
-    },
+    drawn: () => stage.orionDrawn(),
   });
   scope.defer(() => orion.dispose());
 
   // --------------------------------------------------------------- camera
   const cameraViews = createCameraViews({
     core: { viewer, frames: () => frames, instantNow },
-    local: () => local,
+    local: () => stage.local(),
     orionBuilt: () => orion.built(),
     orionNodeId: () => orion.info()?.info.node.id,
     rigidBuilt: () => overlays.rigidBuilt(),
@@ -447,9 +422,9 @@ export function run(context: ExampleContext): ExampleRun {
 
   /** Frame content (F): the selected frame or result, else the scenario's view, else the opening view. */
   function frameContent(): void {
-    const t = frameTarget(scene?.id, view.get().selection);
+    const t = frameTarget(stage.scene()?.id, view.get().selection);
     if (t.kind === "scenario") {
-      flyToScene();
+      stage.flyToScene();
       return;
     }
     const v =
@@ -563,7 +538,7 @@ export function run(context: ExampleContext): ExampleRun {
       } catch {
         // Not in the tree: reconcile clears it.
       }
-    } else if (s.kind === "result" && scene === undefined) {
+    } else if (s.kind === "result" && stage.scene() === undefined) {
       // A result's group's frames, but not over a scenario's scene: a
       // catalog check through every frame (frame-tree.compositions) would
       // draw the Moon's triads in "The Earth turns" (fix 1, item 5).
@@ -597,10 +572,10 @@ export function run(context: ExampleContext): ExampleRun {
     const s = view.get().selection;
     triads.refresh();
     walkPath.start(isFrame(s) ? s.id : undefined);
-    refreshCallouts();
+    callouts.refresh();
     if (s.kind === "none") {
       globe.emphasize(undefined);
-      globe.dimGround(exposure());
+      globe.dimGround(stage.exposure());
       return;
     }
     if (isFrame(s)) {
@@ -667,252 +642,34 @@ export function run(context: ExampleContext): ExampleRun {
   }
 
   // ------------------------------------------------------------ scenarios
-  /** The scene on the globe (scenes.ts), and the knobs it shows. */
-  let scene: SceneSpec | undefined;
-  let sceneKnobs: KnobState = {};
-  /** The clock's rate and mode before the scene set them, restored when it's left. */
-  let sceneClock: { rate: number; mode: typeof viewer.clock.mode } | undefined;
-  /** Orion's frame changed: frame the new path once it is drawn. */
-  let reframeOrion = false;
-  /** A flight to the site's new latitude, after the knob's burst. */
-  let siteFlight = 0;
-  scope.defer(() => clearTimeout(siteFlight));
-
-  /** The imagery's exposure: the scene's, or dimmed under an engineering result. */
-  const exposure = (): number =>
-    sceneExposure(scene, viewer.container.clientWidth, NARROW_VIEW);
-
-  /**
-   * Earth-turns (S-I6): played at 3,600× the framed side passes into night,
-   * so the globe is lit from the camera instead, set after the viewer's own
-   * sun on every clock change (this listener comes after the viewer's).
-   */
-  let headlight = false;
-  function lightFromCamera(): void {
-    const p = viewer.view.camera.position;
-    const l = Math.hypot(p[0]!, p[1]!, p[2]!);
-    if (l > 0) {
-      viewer.engine.sunDirection.set([p[0]! / l, p[1]! / l, p[2]! / l]);
-      viewer.engine.requestRender();
-    }
-  }
-  scope.defer(
-    viewer.clock.events.on("change", () => {
-      if (headlight) {
-        lightFromCamera();
-      }
-    }),
-  );
-  scope.defer(() => {
-    if (headlight) {
-      viewer.sunFromClock = true;
-    }
+  const stage = createStage({
+    core: { viewer, globe, frames: () => frames, disposed: () => disposed },
+    overlays,
+    orion,
+    sceneView: (sc) => cameraViews.sceneView(sc),
+    show: (v, seconds) => cameraRig.show(v, seconds),
+    catalog: {
+      results: () => catalogRuns.results(),
+      run: (ids) => catalogRuns.run(ids),
+    },
+    rebuildTree: () => treeState.rebuild(),
+    refreshTriads: () => triads.refresh(),
+    refreshCallouts: () => callouts.refresh(),
   });
-
-  /**
-   * On-canvas callouts (S-I8, minor 9): the lunar clock's gain at the site
-   * while stand-on-moon shows or the site is selected, and Orion at the
-   * clock's instant while its path is drawn.
-   */
-  /** Orion's statement is for about the clock's time (not one it was scrubbed from). */
-  const orionNowCurrent = (): boolean => orion.nowCurrent();
-  let orionNowShown = false;
-
-  function refreshCallouts(): void {
-    orionNowShown = orionNowCurrent();
-    const orionInfo = orion.info();
-    const orionInfoError = orion.error();
-    const orionBuilt = orion.built();
-    const out: LabelSpec[] = [];
-    const s = view.get().selection;
-    const e = evaluationNow();
-    // Not a stale setup's gain (fix 1, item 1): "computing" until it's in.
-    const gain =
-      e?.scenario === "stand-on-moon" && !host.state().stale
-        ? e.answer.value
-        : undefined;
-    if (
-      local.some((f) => f.name === LUNAR_SITE) &&
-      (scene?.id === "stand-on-moon" || (isFrame(s) && s.id === LUNAR_SITE))
-    ) {
-      out.push({
-        id: "callout:lunar-time",
-        text:
-          gain !== undefined
-            ? // Short, so it stays inside the view (fix 2).
-              `lunar clock ${gain >= 0 ? "+" : "−"}${Math.abs(gain).toFixed(2)} µs/day`
-            : "lunar clock: computing its rate",
-        at: () =>
-          globe.triadOrigin(LUNAR_SITE) ?? cameraViews.lunarSiteOrigin(),
-        priority: 4,
-        leader: true,
-      });
-    }
-    const o = overlays.state("orion");
-    // Only while it is Orion's position now: a statement for another time
-    // (the clock was just scrubbed) would hang the marker off the path.
-    if (
-      o.on &&
-      o.state === "drawn" &&
-      orionInfo &&
-      orionNowCurrent() &&
-      !orionInfoError
-    ) {
-      // One clear indicator (fix 1): a dot on the path at Orion's place at
-      // the clock's time, its time beside it; the accuracy is the answer's,
-      // on the callout. Orion's place in ITRF is on the drawn path in every
-      // frame: the path is placed by its frame now (placeOrion), so its
-      // sample at this time lands here (test/data/framesExplorerScenarios).
-      const hhmm = new Date(orionInfo.utc).toISOString().slice(11, 16);
-      out.push({
-        id: "marker:orion-now",
-        text: `Orion, ${hhmm} UTC`,
-        at: orionInfo.info.itrf,
-        family: "trajectory",
-        priority: 5,
-        marker: true,
-        pinned: true,
-      });
-    }
-    // The path says which frame it is drawn in, where it is drawn.
-    if (o.on && o.state === "drawn" && orionBuilt) {
-      const built = orionBuilt;
-      const middle = built.chunks[Math.floor(built.chunks.length / 3)];
-      if (middle) {
-        out.push({
-          id: "label:orion-path",
-          text: `Orion's path, drawn in ${built.frame}`,
-          at: () => orion.pathPoint(middle.origin),
-          family: "trajectory",
-          priority: 2,
-        });
-      }
-    }
-    labels.set("callouts", out);
-    triads.refresh();
-  }
-  // Earth-turns' exposure depends on the view's width (F43): follow it.
-  const exposureObserver = new ResizeObserver(() => {
-    if (scene?.dim !== undefined) {
-      globe.dimGround(exposure());
-    }
+  scope.defer(() => stage.dispose());
+  const callouts = createCallouts({
+    core: { globe, view },
+    labels,
+    scene: () => stage.scene(),
+    local: () => stage.local(),
+    evaluation: () => evaluationNow(),
+    stale: () => host.state().stale,
+    orion,
+    orionOverlay: overlays.state("orion"),
+    lunarSiteOrigin: () => cameraViews.lunarSiteOrigin(),
+    refreshTriads: () => triads.refresh(),
   });
-  exposureObserver.observe(viewer.container);
-  scope.defer(() => exposureObserver.disconnect());
-
-  /** The scene's camera, flown to (one-path in 3.0 s, stand-on-moon in 3.5 s). */
-  function flyToScene(): void {
-    const v = scene && cameraViews.sceneView(scene);
-    if (v) {
-      cameraRig.show(v, scene!.flight);
-    }
-  }
-
-  /** The knobs on the globe: the clock's rate, the lunar site, Orion's frame. */
-  function applySceneKnobs(): void {
-    if (!scene || !frames) {
-      return;
-    }
-    if (scene.clockRate) {
-      viewer.clock.rate = scene.clockRate(sceneKnobs);
-    }
-    const latitude = scene.lunarSite?.(sceneKnobs);
-    const itrf = frames.itrf;
-    local = [
-      ...(latitude !== undefined
-        ? [lunarSiteFrame(frames.moonMe, latitude)]
-        : []),
-      ...(scene.earthSites ?? []).map((s) => earthSiteFrame(itrf, s)),
-    ];
-    const drawIn = scene.orion?.(sceneKnobs);
-    if (drawIn !== undefined) {
-      const o = overlays.state("orion");
-      if (!o.on || drawIn !== orion.frame()) {
-        orion.setFrame(drawIn);
-        overlays.drawOn("orion");
-      }
-    }
-    treeState.rebuild();
-    triads.refresh();
-    refreshCallouts();
-  }
-
-  function enterScene(id: ScenarioId, knobs: KnobState): void {
-    scene = SCENES[id];
-    sceneKnobs = knobs;
-    // The overlays no scenario owns (turned on from Verification's results)
-    // go with the scene they were drawn over.
-    for (const o of OVERLAYS) {
-      if (o !== "triads" && overlays.state(o).on) {
-        overlays.set(o, false);
-      }
-    }
-    sceneClock = { rate: viewer.clock.rate, mode: viewer.clock.mode };
-    if (scene?.light === "camera") {
-      headlight = true;
-      lightFromCamera();
-    }
-    applySceneKnobs();
-    globe.dimGround(exposure());
-    flyToScene();
-    // Its proof at the checked setup: the catalog's checks, run if they
-    // aren't in hand (queued after the scenario's own evaluation).
-    queueMicrotask(() => ensureProof(id));
-  }
-
-  function updateScene(knobs: KnobState): void {
-    const moved = scene?.lunarSite?.(knobs) !== scene?.lunarSite?.(sceneKnobs);
-    if (scene?.orion && scene.orion(knobs) !== scene.orion(sceneKnobs)) {
-      reframeOrion = true;
-    }
-    sceneKnobs = knobs;
-    applySceneKnobs();
-    if (moved) {
-      // The camera follows the site once the slider rests.
-      clearTimeout(siteFlight);
-      siteFlight = window.setTimeout(() => {
-        if (!disposed && scene?.lunarSite) {
-          flyToScene();
-        }
-      }, 400);
-    }
-  }
-
-  function leaveScene(): void {
-    if (scene?.orion) {
-      overlays.set("orion", false);
-    }
-    if (headlight) {
-      headlight = false;
-      viewer.sunFromClock = true;
-    }
-    if (sceneClock) {
-      // The rate and the mode the scene found (fix 1, item 10).
-      viewer.clock.rate = sceneClock.rate;
-      viewer.clock.mode = sceneClock.mode;
-      sceneClock = undefined;
-    }
-    clearTimeout(siteFlight);
-    // A switch mid-draw mustn't fly to the old scene's path (fix 2).
-    reframeOrion = false;
-    scene = undefined;
-    local = [];
-    globe.dimGround(false);
-    treeState.rebuild();
-    triads.refresh();
-    refreshCallouts();
-  }
-
-  /** The catalog's proof checks for scenario `id`, run if the page doesn't have them. */
-  function ensureProof(id: ScenarioId): void {
-    const spec = SCENARIOS.find((s) => s.id === id);
-    const missing = (spec?.proof ?? []).filter(
-      (p) => !catalogRuns.results().some((r) => r.id === p),
-    );
-    if (!disposed && missing.length > 0) {
-      void catalogRuns.run(missing);
-    }
-  }
+  scope.defer(() => callouts.dispose());
 
   /** The current scenario's evaluation, if the host has one. */
   const evaluationNow = () => host.state().evaluation;
@@ -938,9 +695,9 @@ export function run(context: ExampleContext): ExampleRun {
         },
       ]),
     removeOverlay: (id) => globe.removeOverlay(id),
-    enter: (spec, knobs) => enterScene(spec.id, knobs),
-    update: (_spec, knobs) => updateScene(knobs),
-    leave: () => leaveScene(),
+    enter: (spec, knobs) => stage.enter(spec.id, knobs),
+    update: (_spec, knobs) => stage.update(knobs),
+    leave: () => stage.leave(),
     setClock: (ms) => {
       viewer.clock.time = ms;
       viewer.clock.mode = "paused";
@@ -951,7 +708,7 @@ export function run(context: ExampleContext): ExampleRun {
         // New frames attach in the tree; the callouts take the answer.
         shownEvaluation = state.evaluation;
         treeState.rebuild();
-        refreshCallouts();
+        callouts.refresh();
       }
       if (state.generation !== paramsGeneration) {
         // The link follows each asked-for setup, not every clock frame.
@@ -1113,7 +870,9 @@ export function run(context: ExampleContext): ExampleRun {
         ...(path && { path }),
         proof,
         liveExtras,
-        ...(scene?.note !== undefined && { note: scene.note }),
+        ...(stage.scene()?.note !== undefined && {
+          note: stage.scene()!.note!,
+        }),
         focus: SCENES[spec.id]?.focus ?? [],
         ...(() => {
           const c = SCENES[spec.id]?.treeControl;
@@ -1317,15 +1076,13 @@ export function run(context: ExampleContext): ExampleRun {
         // statement (the tree and the legend) is asked for again after a
         // minute of clock time, at most once a second (R8).
         orion.place();
-        if (orionNowCurrent() !== orionNowShown) {
-          refreshCallouts();
+        if (callouts.orionNowChanged()) {
+          callouts.refresh();
         }
         overlays.updateMinorGrid();
         cameraRig.follow();
-        if (headlight) {
-          // Follows the camera through the stop's flight.
-          lightFromCamera();
-        }
+        // The headlight follows the camera through the stop's flight.
+        stage.tick();
         if (
           walkPath.active() &&
           Math.abs(now - walkAt) > 1000 &&

@@ -1,0 +1,251 @@
+// Each scenario's scene on the globe (scenes.ts says what it is): entering
+// it sets the clock's rate, the light, the exposure and its own frames (the
+// lunar site, Sacramento), turns on what it draws (Orion's path) and flies
+// to its view; its knobs move them; leaving undoes all of it. The scenario
+// host (scenarioHost.ts) calls these as it switches.
+import type { Frame } from "../../../src/frames/Frame.ts";
+import type { CameraView } from "../cameraViews.ts";
+import { NARROW_VIEW } from "../content.ts";
+import { OVERLAYS, type OverlayState } from "../overlayConfig.ts";
+import type { PageCore } from "../page.ts";
+import type { OrionFrame, OverlayId } from "../panel/model.ts";
+import type { StressResult } from "../tests.ts";
+import {
+  SCENES,
+  earthSiteFrame,
+  lunarSiteFrame,
+  sceneExposure,
+  type SceneSpec,
+} from "./scenes.ts";
+import type { KnobState, ScenarioId } from "./spec.ts";
+import { SCENARIOS } from "./specs.ts";
+
+export interface Stage {
+  /** The scene on the globe, and the knobs it shows. */
+  scene(): SceneSpec | undefined;
+  knobs(): KnobState;
+  /** The scene's own frames on the main thread (the lunar site, Sacramento), for its triads and camera. */
+  local(): readonly Frame[];
+  enter(id: ScenarioId, knobs: KnobState): void;
+  update(knobs: KnobState): void;
+  leave(): void;
+  /** The imagery's exposure: the scene's, or dimmed under an engineering result. */
+  exposure(): number;
+  /** The scene's camera, flown to (one-path in 3.0 s, stand-on-moon in 3.5 s). */
+  flyToScene(): void;
+  /** Orion's path was drawn: a new frame (a knob) is framed once. */
+  orionDrawn(): void;
+  /** Every frame: the headlight follows the camera through a flight. */
+  tick(): void;
+  dispose(): void;
+}
+
+export function createStage(deps: {
+  core: Pick<PageCore, "viewer" | "globe" | "frames" | "disposed">;
+  overlays: {
+    state(id: OverlayId): OverlayState;
+    set(id: OverlayId, on: boolean): void;
+    drawOn(id: OverlayId): void;
+  };
+  orion: { frame(): OrionFrame; setFrame(frame: OrionFrame): void };
+  sceneView(sc: SceneSpec): CameraView | undefined;
+  show(v: CameraView, seconds?: number): void;
+  catalog: {
+    results(): readonly StressResult[];
+    run(ids: readonly string[]): Promise<string | undefined>;
+  };
+  rebuildTree(): void;
+  refreshTriads(): void;
+  refreshCallouts(): void;
+}): Stage {
+  const { viewer, globe, frames: framesNow, disposed } = deps.core;
+  const { overlays, orion } = deps;
+  let scene: SceneSpec | undefined;
+  let sceneKnobs: KnobState = {};
+  let local: Frame[] = [];
+  /** The clock's rate and mode before the scene set them, restored when it's left. */
+  let sceneClock: { rate: number; mode: typeof viewer.clock.mode } | undefined;
+  /** Orion's frame changed: frame the new path once it is drawn. */
+  let reframeOrion = false;
+  /** A flight to the site's new latitude, after the knob's burst. */
+  let siteFlight = 0;
+
+  const exposure = (): number =>
+    sceneExposure(scene, viewer.container.clientWidth, NARROW_VIEW);
+
+  /**
+   * Earth-turns (S-I6): played at 3,600× the framed side passes into night,
+   * so the globe is lit from the camera instead, set after the viewer's own
+   * sun on every clock change (this listener comes after the viewer's).
+   */
+  let headlight = false;
+  function lightFromCamera(): void {
+    const p = viewer.view.camera.position;
+    const l = Math.hypot(p[0]!, p[1]!, p[2]!);
+    if (l > 0) {
+      viewer.engine.sunDirection.set([p[0]! / l, p[1]! / l, p[2]! / l]);
+      viewer.engine.requestRender();
+    }
+  }
+  const offClock = viewer.clock.events.on("change", () => {
+    if (headlight) {
+      lightFromCamera();
+    }
+  });
+
+  // Earth-turns' exposure depends on the view's width (F43): follow it.
+  const exposureObserver = new ResizeObserver(() => {
+    if (scene?.dim !== undefined) {
+      globe.dimGround(exposure());
+    }
+  });
+  exposureObserver.observe(viewer.container);
+
+  function flyToScene(): void {
+    const v = scene && deps.sceneView(scene);
+    if (v) {
+      deps.show(v, scene!.flight);
+    }
+  }
+
+  /** The knobs on the globe: the clock's rate, the lunar site, Orion's frame. */
+  function applySceneKnobs(): void {
+    const frames = framesNow();
+    if (!scene || !frames) {
+      return;
+    }
+    if (scene.clockRate) {
+      viewer.clock.rate = scene.clockRate(sceneKnobs);
+    }
+    const latitude = scene.lunarSite?.(sceneKnobs);
+    const itrf = frames.itrf;
+    local = [
+      ...(latitude !== undefined
+        ? [lunarSiteFrame(frames.moonMe, latitude)]
+        : []),
+      ...(scene.earthSites ?? []).map((s) => earthSiteFrame(itrf, s)),
+    ];
+    const drawIn = scene.orion?.(sceneKnobs);
+    if (drawIn !== undefined) {
+      const o = overlays.state("orion");
+      if (!o.on || drawIn !== orion.frame()) {
+        orion.setFrame(drawIn);
+        overlays.drawOn("orion");
+      }
+    }
+    deps.rebuildTree();
+    deps.refreshTriads();
+    deps.refreshCallouts();
+  }
+
+  function enter(id: ScenarioId, knobs: KnobState): void {
+    scene = SCENES[id];
+    sceneKnobs = knobs;
+    // The overlays no scenario owns (turned on from Verification's results)
+    // go with the scene they were drawn over.
+    for (const o of OVERLAYS) {
+      if (o !== "triads" && overlays.state(o).on) {
+        overlays.set(o, false);
+      }
+    }
+    sceneClock = { rate: viewer.clock.rate, mode: viewer.clock.mode };
+    if (scene?.light === "camera") {
+      headlight = true;
+      lightFromCamera();
+    }
+    applySceneKnobs();
+    globe.dimGround(exposure());
+    flyToScene();
+    // Its proof at the checked setup: the catalog's checks, run if they
+    // aren't in hand (queued after the scenario's own evaluation).
+    queueMicrotask(() => ensureProof(id));
+  }
+
+  function update(knobs: KnobState): void {
+    const moved = scene?.lunarSite?.(knobs) !== scene?.lunarSite?.(sceneKnobs);
+    if (scene?.orion && scene.orion(knobs) !== scene.orion(sceneKnobs)) {
+      reframeOrion = true;
+    }
+    sceneKnobs = knobs;
+    applySceneKnobs();
+    if (moved) {
+      // The camera follows the site once the slider rests.
+      clearTimeout(siteFlight);
+      siteFlight = window.setTimeout(() => {
+        if (!disposed() && scene?.lunarSite) {
+          flyToScene();
+        }
+      }, 400);
+    }
+  }
+
+  function leave(): void {
+    if (scene?.orion) {
+      overlays.set("orion", false);
+    }
+    if (headlight) {
+      headlight = false;
+      viewer.sunFromClock = true;
+    }
+    if (sceneClock) {
+      // The rate and the mode the scene found (fix 1, item 10).
+      viewer.clock.rate = sceneClock.rate;
+      viewer.clock.mode = sceneClock.mode;
+      sceneClock = undefined;
+    }
+    clearTimeout(siteFlight);
+    // A switch mid-draw mustn't fly to the old scene's path (fix 2).
+    reframeOrion = false;
+    scene = undefined;
+    local = [];
+    globe.dimGround(false);
+    deps.rebuildTree();
+    deps.refreshTriads();
+    deps.refreshCallouts();
+  }
+
+  /** The catalog's proof checks for scenario `id`, run if the page doesn't have them. */
+  function ensureProof(id: ScenarioId): void {
+    const spec = SCENARIOS.find((s) => s.id === id);
+    const missing = (spec?.proof ?? []).filter(
+      (p) => !deps.catalog.results().some((r) => r.id === p),
+    );
+    if (!disposed() && missing.length > 0) {
+      void deps.catalog.run(missing);
+    }
+  }
+
+  return {
+    scene: () => scene,
+    knobs: () => sceneKnobs,
+    local: () => local,
+    enter,
+    update,
+    leave,
+    exposure,
+    flyToScene,
+    orionDrawn: () => {
+      if (reframeOrion) {
+        // A new frame reads as a change: the camera frames the new path
+        // (the ITRF spiral is far larger than the figure-eight).
+        reframeOrion = false;
+        flyToScene();
+      }
+    },
+    tick: () => {
+      if (headlight) {
+        // Follows the camera through the stop's flight.
+        lightFromCamera();
+      }
+    },
+    dispose: () => {
+      // In the reverse of the order they were set up.
+      exposureObserver.disconnect();
+      if (headlight) {
+        viewer.sunFromClock = true;
+      }
+      offClock();
+      clearTimeout(siteFlight);
+    },
+  };
+}
