@@ -4,7 +4,7 @@ import { convertPoint, framePoint } from "../../../../src/frames/local.ts";
 import { measure } from "../../../../src/measure/measure.ts";
 import { Instant } from "../../../../src/time/Instant.ts";
 import signalFixture from "../../../../test/fixtures/frames/signal.json";
-import { ARCSECOND, DEGREE, cited, printed } from "../references.ts";
+import { ARCSECOND, citation, cited, DEGREE, printed } from "../references.ts";
 import {
   type StressCase,
   type StressResult,
@@ -139,6 +139,7 @@ const signalCase = stressCase(
       {
         ...base,
         id: `${base.id}.light-time`,
+        source: citation("dsn-dss43"),
         title:
           "DSS-43 receiving from Orion: the light time against plan 3's SPICE fixture (spkpos CN, no Shapiro delay), c·∆lt within plan 3's 0.5 m",
         pass: enough,
@@ -150,6 +151,7 @@ const signalCase = stressCase(
       {
         ...base,
         id: `${base.id}.doppler`,
+        source: citation("dsn-dss43"),
         title:
           "DSS-43 receiving from Orion: the Doppler ratio against 1 − n·(vO − vS)/c with SPICE's direction and the OEM's velocity, within plan 3's 3e-8",
         pass: enough,
@@ -214,6 +216,7 @@ const lineOfSightCase = stressCase(
       results.push({
         ...base,
         id: `${base.id}.${expectBlocked ? "behind-moon" : "clear"}`,
+        source: citation("naif-moon-radius"),
         title: `DSS-43 to Orion at ${iso} UTC: ${expectBlocked ? "hidden by the Moon" : "clear"}, by the library and by hand geometry`,
         pass: clear === !blocked && blocked === expectBlocked,
         detail: `library: ${clear ? "clear" : `blocked by ${m.lineOfSight?.blockedBy?.name ?? "?"}`}; hand: Orion ${fmt(angle / DEGREE, 6)}° from the Moon's centre, limb ${fmt(limb / DEGREE, 6)}°, Orion ${fmt(norm(craft) / 1000, 7)} km away and the Moon ${fmt(norm(moon) / 1000, 7)} km`,
@@ -257,6 +260,7 @@ const spaceEffectsCase = stressCase(
     results.push({
       ...base,
       id: `${base.id}.frame-bias`,
+      source: citation("iers-frame-bias"),
       title:
         "The EME2000 frame bias at the Moon's distance: a point on EARTH_ICRF's x axis moves r·sqrt(ξ0² + dα0²) (IERS Conventions 2010), within 2%",
       pass: true,
@@ -292,6 +296,7 @@ const spaceEffectsCase = stressCase(
     results.push({
       ...base,
       id: `${base.id}.gcrf-scale`,
+      source: citation("iers-numerical-standards"),
       title:
         "The GCRF (TT-compatible) against EARTH_ICRF (TDB-compatible) at the Moon's distance: r·(GM☉/(c² r☉) + LC), eq. 11.19, within 2%",
       pass: true,
@@ -326,6 +331,7 @@ const spaceEffectsCase = stressCase(
     results.push({
       ...base,
       id: `${base.id}.moon-me-pa`,
+      source: citation("naif-moon-me-de440"),
       title:
         "MOON_ME against MOON_PA at the lunar south pole: R·sqrt(θx² + θy²) from the DE440 frame kernel's angles, within 2%",
       pass: true,
@@ -356,6 +362,7 @@ const spaceEffectsCase = stressCase(
     results.push({
       ...base,
       id: `${base.id}.earth-orientation`,
+      source: citation("dsn-dss43"),
       title:
         "Earth orientation's uncertainty at the flyby, at DSS-43 on the Earth's surface (display only)",
       pass: true,
@@ -374,6 +381,7 @@ const spaceEffectsCase = stressCase(
     results.push({
       ...base,
       id: `${base.id}.earth-orientation-angle`,
+      source: citation("dsn-dss43"),
       title:
         "Earth orientation's uncertainty at the flyby as an angle toward Orion (display only)",
       pass: true,

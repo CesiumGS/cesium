@@ -8,6 +8,7 @@ import {
   composedView,
 } from "../examples/frames-explorer/composed.ts";
 import { buildTree } from "../examples/frames-explorer/tree.ts";
+import { Frame } from "../src/frames/Frame.ts";
 import { createFrames } from "../src/frames/frames.ts";
 import { framePoint } from "../src/frames/local.ts";
 import { measure } from "../src/measure/measure.ts";
@@ -69,5 +70,20 @@ describe("composedAccuracy", () => {
         expect(all[ref][id], `${id} against ${ref}`).toBeDefined();
       }
     }
+  });
+});
+
+describe("a statement that can't be composed (R8, F35)", () => {
+  // A frame whose placement throws, as one outside its data would.
+  const broken = new Frame("BROKEN", frames.icrf, () => {
+    throw new Error("boom: no data here");
+  });
+  const withBroken = buildTree(frames, { local: [broken] }, instant);
+
+  it("reads not bounded with the error, never exact", () => {
+    const v = composedView(withBroken, frames, instant, "ITRF", "BROKEN")!;
+    expect(v.statement.meters).toBeUndefined();
+    expect(v.statement.warnings.join(" ")).toMatch(/boom: no data here/);
+    expect(v.note).toMatch(/boom: no data here/);
   });
 });

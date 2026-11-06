@@ -78,6 +78,14 @@ export function Panel({ source, view, actions, hud, initialTab }: PanelProps) {
   const setTour = (i: number | undefined) =>
     view.setTour(i === undefined ? undefined : model.tour[i]?.id);
   const [toast, setToast] = useState<string>();
+  // The page's notices (a deep link that didn't resolve) show as toasts.
+  const noticeId = model.notice?.id;
+  const noticeText = model.notice?.text;
+  useEffect(() => {
+    if (noticeText !== undefined) {
+      setToast(noticeText);
+    }
+  }, [noticeId, noticeText]);
   const tourButton = useRef<HTMLButtonElement>(null);
   const viewWidth = useHudLayout(hud);
   const narrow = viewWidth < NARROW_VIEW;

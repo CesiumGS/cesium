@@ -6,13 +6,14 @@ import { surfaceDistance } from "../../../../src/measure/surface.ts";
 import { EARTH } from "../../../../src/scene/Body.ts";
 import {
   ANGLE_PATH,
+  citation,
+  cited,
   DEGREE,
+  ellipsoidOf,
   FACTOR_PATH,
   HAND_FORMULA,
   INVERSE_RESIDUAL,
   NUMERICAL_LATITUDE_DERIVATIVE,
-  cited,
-  ellipsoidOf,
   onEarth,
   printed,
   radii,
@@ -52,6 +53,7 @@ const webMercatorScaleCase = stressCase(
       results.push({
         ...base,
         id: `${base.id}.k-${latitude}`,
+        source: citation("epsg-ellipsoid-wgs84"),
         title: `EPSG:3857's parallel scale at ${latitude}° against sqrt(1 − e² sin² φ) / cos φ (WGS 84), within 1e-9`,
         pass: true,
         value: Math.abs(k - hand),
@@ -77,6 +79,7 @@ const webMercatorScaleCase = stressCase(
       {
         ...base,
         id: `${base.id}.k-iogp`,
+        source: citation("iogp-pseudo-mercator"),
         title: `EPSG:3857's parallel scale at ${x.forward.latitude} against IOGP 373-7-2's printed k = ${x.distortion.k}, within half a unit of its last digit`,
         pass: true,
         value: Math.abs(atIogp.pointScale - kPrinted.value),
@@ -86,6 +89,7 @@ const webMercatorScaleCase = stressCase(
       {
         ...base,
         id: `${base.id}.h-iogp`,
+        source: citation("iogp-pseudo-mercator"),
         title: `EPSG:3857's meridional scale at ${x.forward.latitude} against IOGP 373-7-2's printed h = ${x.distortion.h}, within half a unit of its last digit`,
         pass: true,
         value: Math.abs(atIogp.meridionalScale - hPrinted.value),
@@ -95,6 +99,7 @@ const webMercatorScaleCase = stressCase(
       {
         ...base,
         id: `${base.id}.omega-iogp`,
+        source: citation("iogp-pseudo-mercator"),
         title: `EPSG:3857's maximum angular distortion at ${x.forward.latitude} against IOGP 373-7-2's printed ω = ${x.distortion.omega}, within half a unit of its last digit`,
         pass: true,
         value:
@@ -243,6 +248,7 @@ const lowDistortionCase = stressCase(
     results.push({
       ...base,
       id: `${base.id}.test-points`,
+      source: citation("ocrs-handbook"),
       title:
         "The OCRS handbook's Portland zone test points (Appendix A): northings and easting to five decimal places",
       pass: true,
@@ -302,6 +308,7 @@ const lowDistortionCase = stressCase(
     results.push({
       ...base,
       id: `${base.id}.portland`,
+      source: citation("ocrs-handbook"),
       title: `OCRS Portland zone at ${point.name}, at the design height h0 = (k0 − 1)·RG: distortion within the handbook's ±${target} ppm target, matching δ = k·RG/(RG + h) − 1 by hand within 2%`,
       pass: Math.abs(ldpPpm) <= target,
       value: Math.abs(ldpPpm / handLdp - 1),
@@ -317,6 +324,7 @@ const lowDistortionCase = stressCase(
     results.push({
       ...base,
       id: `${base.id}.state-plane`,
+      source: citation("epsg-oregon-north"),
       title: `Oregon North state plane (EPSG:6558) at the same point and height: its distortion, larger than the low-distortion zone's, matches δ by hand within 2%`,
       pass: Math.abs(ldpPpm) < Math.abs(spcPpm),
       value: Math.abs(spcPpm / handSpc - 1),

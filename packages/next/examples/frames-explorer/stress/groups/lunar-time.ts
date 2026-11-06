@@ -4,11 +4,12 @@ import { type Frame, frameTransform } from "../../../../src/frames/Frame.ts";
 import { properTimeRate } from "../../../../src/measure/doppler.ts";
 import { Instant } from "../../../../src/time/Instant.ts";
 import {
-  type NgsMark,
+  citation,
   cited,
   onEarth,
   printed,
   sexagesimal,
+  type NgsMark,
 } from "../references.ts";
 import { type StressCase, fmt } from "../runner.ts";
 import { EFFECT, apply, stressCase, utc } from "../shared.ts";
@@ -87,6 +88,7 @@ const lunarTimeCase = stressCase(
       {
         ...base,
         id: `${base.id}.synodic`,
+        source: citation("ashby-patla-2024"),
         title: `Averaged over a synodic month (${SYNODIC_MONTH} days from ${START} UTC, ${synodic} hourly samples): the lunar clock gains on the Earth clock, against Ashby & Patla's ${published.rate}, within 2%`,
         pass: rate > 0,
         value: Math.abs(rate / expected - 1),
@@ -102,6 +104,7 @@ const lunarTimeCase = stressCase(
       {
         ...base,
         id: `${base.id}.sidereal`,
+        source: citation("ashby-patla-2024"),
         title: `The same average over a sidereal month (${SIDEREAL_MONTH} days, ${sidereal} samples), shown, not judged: the Sun's tide and the Earth–Moon system's orbital motion vary with the synodic month, so a sidereal window leaves part of a cycle in the mean`,
         pass: true,
         displayOnly: true,

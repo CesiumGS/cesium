@@ -263,7 +263,8 @@ export function Walk({
             Composed at {targetNode.label}&rsquo;s origin
           </Typography>
           <span className="fx-budget-value">
-            {view.statement.terms.length === 0 ? (
+            {view.statement.terms.length === 0 &&
+            view.statement.meters !== undefined ? (
               "exact at the origin"
             ) : (
               <AccuracyText accuracy={view.statement} />

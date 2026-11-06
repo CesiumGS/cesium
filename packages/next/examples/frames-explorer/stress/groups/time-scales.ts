@@ -1,6 +1,6 @@
 // Time scales: GPS, TAI, TT and UTC (timing and telecom).
 import { Instant } from "../../../../src/time/Instant.ts";
-import { cited, printed } from "../references.ts";
+import { citation, cited, printed } from "../references.ts";
 import { type StressCase, fmt } from "../runner.ts";
 import { TT_STEP, stressCase, utc } from "../shared.ts";
 
@@ -43,6 +43,7 @@ const offsetsCase = stressCase(
       {
         ...base,
         id: `${base.id}.tt-tai`,
+        source: citation("iers-tt-tai"),
         title:
           "TT − TAI from Instant.tai() at four instants from 1980 to 2026, including inside the 2016 leap second, against 32.184 s, within a few float64 ulps of TT",
         pass: true,
@@ -53,6 +54,7 @@ const offsetsCase = stressCase(
       {
         ...base,
         id: `${base.id}.gps-zero`,
+        source: citation("iers-leap-second-1980"),
         title:
           "TAI − UTC at GPS time's zero point (1980-01-06T00:00:00 UTC) from Instant.tai(), against the 19 s that makes GPS time = TAI − 19 s",
         pass: true,
@@ -98,6 +100,7 @@ const leapCase = stressCase(
       {
         ...base,
         id: `${base.id}.step`,
+        source: citation("iers-bulletin-c-52"),
         title: `GPS − UTC is ${expected(bulletin.before)} s at ${before} and ${expected(bulletin.after)} s at ${after} (Bulletin C 52's UTC − TAI of ${bulletin.before} and ${bulletin.after} s, less 19 s)`,
         pass: true,
         value: Math.max(
@@ -112,6 +115,7 @@ const leapCase = stressCase(
       {
         ...base,
         id: `${base.id}.continuous`,
+        source: citation("iers-bulletin-c-52"),
         title:
           "GPS time through the leap second in 0.5 s UTC labels advances in 0.5 s steps, 2 s over the one labelled second from 23:59:59 to 00:00:00",
         pass: Math.abs(g[4]! - g[0]! - 2) <= TT_STEP,

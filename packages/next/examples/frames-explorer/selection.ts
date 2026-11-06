@@ -8,7 +8,7 @@
 // (Review Focus 8), so the inspector and the globe never show a stale or a
 // hidden one. Ids from a URL are checked before they are kept: a malformed or
 // unknown id parses to none, never throws.
-import { LENSES, type Lens } from "./stress/groupInfo.ts";
+import { GROUP_INFO, LENSES, type Lens } from "./stress/groupInfo.ts";
 
 /** The selection the three views share (R14). */
 export type Selection =
@@ -215,4 +215,54 @@ export class ViewStore {
       this.listeners.delete(listener);
     };
   };
+}
+
+/**
+ * A deep-linked result the page doesn't have yet (R15): runs its group (the
+ * id's first part), retrying once, and says whether to show it. If it still
+ * isn't there, the selection is cleared and `notice` says why: a failing
+ * worker never leaves the page retrying. "stale" when the selection changed
+ * meanwhile (it is then left alone).
+ */
+export async function loadLinkedResult(
+  store: ViewStore,
+  id: string,
+  deps: {
+    /** The page now holds this result. */
+    has(id: string): boolean;
+    /** Runs one group's cases. */
+    run(group: string): Promise<void>;
+    notice(message: string): void;
+  },
+): Promise<"shown" | "cleared" | "stale"> {
+  const selection = store.get().selection;
+  const group = GROUP_INFO.find(
+    (g) => g.virtual !== true && id.startsWith(`${g.id}.`),
+  )?.id;
+  let why = `no group of the catalog has ${id}`;
+  if (group !== undefined) {
+    why = `its group's run didn't give it`;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        await deps.run(group);
+        why = `the ${group} run didn't give it`;
+      } catch (error) {
+        why = `the ${group} run failed: ${error instanceof Error ? error.message : String(error)}`;
+      }
+      const now = store.get().selection;
+      if (now !== selection && now.kind !== "none") {
+        return "stale";
+      }
+      if (deps.has(id)) {
+        return "shown";
+      }
+      if (now.kind === "none") {
+        // The run's results cleared it (reconcile): it isn't coming.
+        break;
+      }
+    }
+  }
+  store.select(NONE);
+  deps.notice(`The linked result ${id} isn't in this run: ${why}.`);
+  return "cleared";
 }

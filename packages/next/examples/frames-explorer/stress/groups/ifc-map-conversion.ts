@@ -5,7 +5,14 @@ import {
   type SiteTransform,
 } from "../../../../src/engineering/EngineeringFrame.ts";
 import { EARTH } from "../../../../src/scene/Body.ts";
-import { DEGREE, cited, ellipsoidOf, printed, radii } from "../references.ts";
+import {
+  DEGREE,
+  citation,
+  cited,
+  ellipsoidOf,
+  printed,
+  radii,
+} from "../references.ts";
 import { type StressCase, type StressResult, fmt } from "../runner.ts";
 import {
   DESIGN_ROUND_TRIP,
@@ -146,6 +153,7 @@ const ifcCase = stressCase(
     results.push({
       ...base,
       id: `${base.id}.origin`,
+      source: citation("ifc43-geographic-referencing-utm"),
       title:
         "The model origin through the map conversion and EPSG:25832 against the example's IfcSite RefLatitude and RefLongitude (49°05′43.983700″ N, 8°26′01.247300″ E), within half a unit of the printed Eastings and Northings and of the site's angles",
       pass: true,
@@ -158,6 +166,7 @@ const ifcCase = stressCase(
     results.push({
       ...base,
       id: `${base.id}.elevation`,
+      source: citation("ifc43-geographic-referencing-utm"),
       title:
         "The model origin's height (OrthogonalHeight 113.7 on a CRS with no vertical axis, passed through) against the IfcSite's RefElevation 113.7, within half its last digit",
       pass: true,
@@ -182,6 +191,7 @@ const ifcCase = stressCase(
     results.push({
       ...base,
       id: `${base.id}.x-axis`,
+      source: citation("ifc43-geographic-referencing-utm"),
       title:
         "The model's x axis (a point 1 km along it) in grid coordinates against the published direction (XAxisAbscissa 0.270600445976, XAxisOrdinate 0.962691746426): the angle between them, within 1e-12 rad (the opposite rotation would be 148.6° off)",
       pass: Math.abs(Math.hypot(along[0]!, along[1]!) - site.scale) < 1e-9,
@@ -193,6 +203,7 @@ const ifcCase = stressCase(
     results.push({
       ...base,
       id: `${base.id}.round-trip`,
+      source: citation("ifc43-geographic-referencing-utm"),
       title:
         "The example's model points (the origin and its tessellation's vertices) round-trip from design to body-fixed and back within 1e-4 m",
       pass: true,
@@ -221,6 +232,7 @@ const ifcCase = stressCase(
     results.push({
       ...base,
       id: `${base.id}.gauss-kruger`,
+      source: citation("ifc43-geographic-referencing-gk"),
       title:
         "The E.7.1 example's model origin (the same site on EPSG:31467, DHDN) against the IfcSite's latitude and longitude, within half a unit of its printed Eastings and Northings plus the DHDN operation's stated accuracy",
       pass: accuracy !== undefined,

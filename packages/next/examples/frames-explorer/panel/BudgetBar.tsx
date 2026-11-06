@@ -59,7 +59,7 @@ export function BudgetBar({
   );
   const variance = known.reduce((s, t) => s + t.meters * t.meters, 0);
   const unknown = accuracy.terms.filter((t) => t.meters === undefined);
-  if (accuracy.terms.length === 0) {
+  if (accuracy.terms.length === 0 && accuracy.meters !== undefined) {
     return (
       <div className="fx-budget-total">
         <Typography variant="body-sm" color="textSecondary" render={<span />}>

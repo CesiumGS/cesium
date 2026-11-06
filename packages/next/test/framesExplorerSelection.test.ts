@@ -6,6 +6,7 @@ import {
   LENS_CHOICES,
   ViewStore,
   formatParams,
+  loadLinkedResult,
   parseParams,
   parseSelection,
   reconcile,
@@ -170,5 +171,104 @@ describe("the view store", () => {
       kind: "result",
       id: "space.lunar-time",
     });
+  });
+});
+
+describe("a deep-linked result that isn't loaded (R15, Review Focus 8)", () => {
+  const linked = () => {
+    const store = new ViewStore();
+    store.select({ kind: "result", id: "space.lunar-time" });
+    return store;
+  };
+
+  it("runs its group, then says it's there to show", async () => {
+    const store = linked();
+    let loaded = false;
+    const run = vi.fn(async () => {
+      loaded = true;
+    });
+    const notice = vi.fn();
+    const outcome = await loadLinkedResult(store, "space.lunar-time", {
+      has: () => loaded,
+      run,
+      notice,
+    });
+    expect(outcome).toBe("shown");
+    expect(run).toHaveBeenCalledWith("space");
+    expect(notice).not.toHaveBeenCalled();
+  });
+
+  it("retries a failing run once, then clears the selection and says why, without hanging", async () => {
+    const store = linked();
+    const run = vi.fn(() => Promise.reject(new Error("the worker failed")));
+    const notice = vi.fn();
+    const outcome = await loadLinkedResult(store, "space.lunar-time", {
+      has: () => false,
+      run,
+      notice,
+    });
+    expect(outcome).toBe("cleared");
+    expect(run).toHaveBeenCalledTimes(2);
+    expect(store.get().selection).toEqual({ kind: "none" });
+    expect(notice).toHaveBeenCalledTimes(1);
+    expect(notice.mock.calls[0]![0]).toMatch(
+      /space\.lunar-time.*the worker failed/,
+    );
+  });
+
+  it("clears a result its group's run doesn't give", async () => {
+    const store = linked();
+    const notice = vi.fn();
+    const outcome = await loadLinkedResult(store, "space.lunar-time", {
+      has: () => false,
+      run: async () => {},
+      notice,
+    });
+    expect(outcome).toBe("cleared");
+    expect(store.get().selection).toEqual({ kind: "none" });
+    expect(notice.mock.calls[0]![0]).toMatch(/isn't in/);
+  });
+
+  it("clears an id that names no group, without running anything", async () => {
+    const store = new ViewStore();
+    store.select({ kind: "result", id: "nowhere.at-all" });
+    const run = vi.fn(async () => {});
+    const outcome = await loadLinkedResult(store, "nowhere.at-all", {
+      has: () => false,
+      run,
+      notice: () => {},
+    });
+    expect(outcome).toBe("cleared");
+    expect(run).not.toHaveBeenCalled();
+  });
+
+  it("leaves a selection the user changed meanwhile alone", async () => {
+    const store = linked();
+    const outcome = await loadLinkedResult(store, "space.lunar-time", {
+      has: () => false,
+      run: async () => {
+        store.select({ kind: "frame", id: "ITRF" });
+      },
+      notice: () => {},
+    });
+    expect(outcome).toBe("stale");
+    expect(store.get().selection).toEqual({ kind: "frame", id: "ITRF" });
+  });
+});
+
+describe("a deep-linked result the run's results clear", () => {
+  it("still says why", async () => {
+    const store = new ViewStore();
+    store.select({ kind: "result", id: "space.lunar-time" });
+    const notice = vi.fn();
+    const outcome = await loadLinkedResult(store, "space.lunar-time", {
+      has: () => false,
+      run: async () => {
+        store.setKnown({ results: new Map() });
+      },
+      notice,
+    });
+    expect(outcome).toBe("cleared");
+    expect(notice).toHaveBeenCalledTimes(1);
   });
 });

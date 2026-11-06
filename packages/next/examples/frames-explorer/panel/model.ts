@@ -185,6 +185,8 @@ export interface PanelModel {
   exampleWkt2: string;
   tour: readonly TourStop[];
   environment: readonly EnvironmentLine[];
+  /** A message for the snackbar (a deep link that didn't resolve), new each time its id changes. */
+  notice?: { id: number; text: string };
 }
 
 /** What the panel can ask of the page. */

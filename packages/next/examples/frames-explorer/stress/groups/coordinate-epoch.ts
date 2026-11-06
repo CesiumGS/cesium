@@ -9,13 +9,14 @@ import {
 } from "../geodesy.ts";
 import {
   ARCSECOND,
-  MILLIARCSECOND,
-  type NgsMark,
-  type Printed,
+  citation,
   cited,
   ellipsoidOf,
+  MILLIARCSECOND,
   printed,
   sexagesimal,
+  type NgsMark,
+  type Printed,
 } from "../references.ts";
 import { type StressCase, type StressResult, fmt } from "../runner.ts";
 import {
@@ -90,6 +91,7 @@ const coordinateEpochCase = stressCase(
     results.push({
       ...base,
       id: `${base.id}.helmert-iogp-position-vector`,
+      source: citation("iogp-helmert-position-vector"),
       title:
         "The hand-coded Helmert reproduces IOGP 373-7-2's position vector example (WGS 72 to WGS 84) within half a unit of its last digit plus its inputs' own rounding",
       pass: true,
@@ -137,6 +139,7 @@ const coordinateEpochCase = stressCase(
     results.push({
       ...base,
       id: `${base.id}.helmert-iogp-time-dependent`,
+      source: citation("iogp-helmert-time-dependent"),
       title:
         "The hand-coded Helmert reproduces IOGP 373-7-2's time-dependent coordinate frame example (ITRF2008 to GDA94 at 2013.90) forward and reversed, within half a unit of its last digit plus its inputs' own rounding",
       pass: true,
@@ -191,6 +194,7 @@ const coordinateEpochCase = stressCase(
       results.push({
         ...base,
         id: `${base.id}.epoch-${epoch}`,
+        source: citation("epsg-8970"),
         title: `GU2195 in ITRF2014 at epoch ${epoch}.0: the library's NAD83(2011) to ITRF2014 against the hand-coded EPSG 8970 (reversed), within 1 mm`,
         pass: true,
         value: distance(lib, byHand),
@@ -206,6 +210,7 @@ const coordinateEpochCase = stressCase(
     results.push({
       ...base,
       id: `${base.id}.difference`,
+      source: citation("epsg-8970"),
       title:
         "GU2195's ITRF2014 position from 2010.0 to 2026.0: the library's difference against the hand Helmert's, within 1 mm",
       pass: true,
@@ -226,6 +231,7 @@ const coordinateEpochCase = stressCase(
     results.push({
       ...base,
       id: `${base.id}.no-epoch`,
+      source: citation("epsg-8970"),
       title:
         "The same point with no coordinate epoch (the rates do not apply) against epoch 2026.0: the error of leaving the epoch out matches the hand Helmert's 16-year move within 2%",
       pass: distance(noEpoch.xyz, at2010.xyz) < EPOCH_TOLERANCE,
