@@ -3,7 +3,7 @@
 // bounded" with its reason when it has no size), and how far a setting moves
 // it from the checked setup's. Pure, unit-tested.
 import type { ScenarioAnswer } from "../scenarios/evaluate.ts";
-import { length } from "./format.ts";
+import { length, quantity } from "./format.ts";
 
 /** Digits after the point that suit a unit's figures. */
 const DIGITS: Readonly<Record<string, number>> = {
@@ -43,4 +43,74 @@ export function formatDelta(value: number, unit: string): string {
   }
   const sign = value > 0 ? "+" : "−";
   return `${sign}${formatAnswer(Math.abs(value), unit)}`;
+}
+
+/**
+ * The headline both the panel and the globe's callout show: the figure and
+ * the few words that make it answer the question on its own ("1.40 km/s
+ * relative to the Moon (MOON_ME)"); undefined without a figure.
+ */
+export function answerTitle(answer: ScenarioAnswer): string | undefined {
+  if (answer.value === undefined || answer.unit === undefined) {
+    return undefined;
+  }
+  const figure = formatAnswer(answer.value, answer.unit);
+  return answer.label ? `${figure} ${answer.label}` : figure;
+}
+
+/** The headline's published counterpart, as the panel shows it (the owner, fix 1). */
+export interface PublishedView {
+  printed: string;
+  document: string;
+  url?: string;
+  tolerance: string;
+  unit: string;
+  /** "checked": the catalog's comparison is in; "off": off the checked setup; "loading": not yet. */
+  state: "checked" | "off" | "loading";
+  /** At the checked setup: ours, the difference, and the verdict. */
+  ours?: number;
+  difference?: { value: number; unit?: string };
+  pass?: boolean;
+  /** Off it: how far the setting moves the answer (the proof's delta). */
+  delta?: { value: number; unit: string };
+}
+
+/**
+ * The comparison under the headline, in words: what was published and by
+ * whom, then ours against it with the difference and the verdict at the
+ * checked setup; off it, that the published value applies there and how far
+ * the setting moves the answer, with no verdict; loading, no verdict.
+ */
+export function publishedText(p: PublishedView): {
+  published: string;
+  comparison: string;
+} {
+  const published = `Published: ${p.printed}`;
+  switch (p.state) {
+    case "checked":
+      return {
+        published,
+        comparison: [
+          p.ours !== undefined ? `ours ${formatAnswer(p.ours, p.unit)}` : "",
+          p.difference
+            ? `difference ${quantity(p.difference.value, p.difference.unit)}`
+            : "",
+          p.tolerance,
+          p.pass ? "passes" : "fails",
+        ]
+          .filter((t) => t !== "")
+          .join(" · "),
+      };
+    case "off":
+      return {
+        published,
+        comparison: `The published value applies at the checked setup${
+          p.delta
+            ? `; your setting moves the answer by ${formatDelta(p.delta.value, p.delta.unit)}`
+            : ""
+        }. No verdict here.`,
+      };
+    case "loading":
+      return { published, comparison: "Checking ours against it…" };
+  }
 }

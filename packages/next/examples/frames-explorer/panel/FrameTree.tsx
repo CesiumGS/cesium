@@ -3,9 +3,14 @@ import { Button, Typography } from "@mui/material";
 import { svgFitToView } from "@stratakit/icons/fit-to-view";
 import { Tree } from "@stratakit/structures";
 import { useMemo, useState } from "react";
-import type { EdgeAccuracy, TreeNode } from "../tree.ts";
-import { EDGE_LABEL, FAMILY_INFO, type Family, familyOf } from "./families.ts";
-import { length, radians } from "./format.ts";
+import type { TreeNode } from "../tree.ts";
+import {
+  EDGE_LABEL,
+  FAMILY_INFO,
+  type Family,
+  edgeAccuracyText,
+  familyOf,
+} from "./families.ts";
 
 interface Row {
   node: TreeNode;
@@ -16,36 +21,7 @@ interface Row {
   hasChildren: boolean;
 }
 
-/**
- * An edge's own accuracy for its row (C3: the edge's figure; composed
- * figures are the walk's): a number, "exact by definition" for a
- * convention, or why there isn't one.
- */
-export function edgeAccuracyText(
-  kind: TreeNode["edge"]["kind"],
-  a: EdgeAccuracy,
-): { text: string; unknown: boolean } {
-  if (kind === "root") {
-    return { text: "defines the frame", unknown: false };
-  }
-  if (a.byDefinition) {
-    return { text: "exact by definition", unknown: false };
-  }
-  const parts: string[] = [];
-  if (a.meters !== undefined) {
-    parts.push(`±${length(a.meters)}`);
-  }
-  if (a.radians !== undefined) {
-    parts.push(`±${radians(a.radians)}`);
-  }
-  if (parts.length > 0) {
-    return { text: parts.join(", "), unknown: false };
-  }
-  return {
-    text: a.note.startsWith("ballpark") ? "ballpark" : "not stated",
-    unknown: true,
-  };
-}
+export { edgeAccuracyText };
 
 /** Nodes at this level and deeper start collapsed (I7). */
 const COLLAPSED_FROM = 3;

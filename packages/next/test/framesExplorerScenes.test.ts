@@ -8,6 +8,7 @@ import { NARROW_VIEW } from "../examples/frames-explorer/content.ts";
 import {
   LUNAR_SITE,
   READY,
+  SACRAMENTO,
   SCENES,
   latitudeText,
   lunarSitePosition,
@@ -28,8 +29,14 @@ describe("the strip's scenarios", () => {
 
 describe("earth-turns: the tour's stop 2, GCRF against ITRF over a day", () => {
   const s = scene("earth-turns");
-  it("draws only the geocentric triads: a site triad would cross GCRF's turning x", () => {
-    expect(s.triads({ rate: 3600 })).toEqual(["ITRF", "GCRF"]);
+  it("draws the geocentric pair and Sacramento's site, riding the turning Earth (owner, fix 1)", () => {
+    expect(s.triads({ rate: 3600 })).toEqual([
+      "ITRF",
+      "GCRF",
+      "Sacramento ENU",
+    ]);
+    expect(s.earthSites).toEqual([SACRAMENTO]);
+    expect(s.focus).toContain("Sacramento ENU");
   });
 
   it("dims the imagery by −1.5 at desktop widths and −0.6 on narrow views (F43)", () => {

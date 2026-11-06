@@ -29,6 +29,7 @@ import {
   translationOf,
 } from "../stress/shared.ts";
 import { registerScenario, type ScenarioEvaluator } from "./evaluate.ts";
+import { SACRAMENTO } from "./scenes.ts";
 import type { KnobState } from "./spec.ts";
 import { SCENARIOS } from "./specs.ts";
 
@@ -132,7 +133,7 @@ function compositions(ctx: StressContext, instant: Instant): StressResult {
     id: `${PROOF}.live`,
     group: "frame-tree",
     title:
-      "ITRF and GCRF at the scenario's time: round trips, and compositions through the six other frames, agree within 1 mm per 1e9 m and 1e-12 in rotation",
+      "ITRF ↔ GCRF at the scenario's time, checked by every route through the tree (including frames this scenario doesn't draw: the six others, the Moon's among them): round trips and compositions agree within 1 mm per 1e9 m and 1e-12 in rotation",
     pass: worstRotation <= ROTATION,
     value: worst,
     tolerance: worstTolerance,
@@ -187,9 +188,25 @@ export const evaluateEarthTurns: ScenarioEvaluator = async (
   const onScreen = SIDEREAL_DAY / rate;
   return {
     scenario: "earth-turns",
-    added: [],
+    // Sacramento's site under ITRF, as the old tour had it: it rides the
+    // turning Earth while GCRF's axes hold still against the stars.
+    added: [
+      {
+        id: SACRAMENTO.name,
+        label: SACRAMENTO.name,
+        parentId: "ITRF",
+        edge: {
+          kind: "constant",
+          detail: `local frame: east-north-up at ${SACRAMENTO.latitude}° N, ${-SACRAMENTO.longitude}° W on WGS 84, a fixed placement in ITRF`,
+          accuracy: {
+            note: "not known: set by the position it was built at (exact as built; its place on the ground has no survey behind it)",
+          },
+        },
+      },
+    ],
     answer: {
-      headline: `Greenwich faces ${angle.toFixed(2)}° east of GCRF's x: the ground turns once against the stars every ${duration(SIDEREAL_DAY)}, ${rate === 1 ? "in real time" : `${duration(onScreen)} at ${rate.toLocaleString("en-US")}×`}`,
+      label: "east of GCRF's x axis",
+      headline: `The ground turns once against the stars every ${duration(SIDEREAL_DAY)}: ${rate === 1 ? "in real time" : `${duration(onScreen)} on screen at ${rate.toLocaleString("en-US")}×`}. Greenwich is ITRF's x axis; Sacramento's local frame rides along with the ground while GCRF's axes hold still against the stars.`,
       value: angle,
       unit: "°",
       accuracy: orientation(ctx, instant),

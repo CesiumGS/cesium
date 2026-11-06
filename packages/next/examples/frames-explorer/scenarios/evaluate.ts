@@ -15,7 +15,35 @@ import type { KnobState, ScenarioId } from "./spec.ts";
 
 /** The scenario's answer to its question, at the knobs it was evaluated at. */
 export interface ScenarioAnswer {
+  /**
+   * The headline's few words after its figure, so "<value> <unit> <label>"
+   * answers the question on its own: "relative to the Moon (MOON_ME)",
+   * "east of GCRF's x axis" (fix 1). The panel and the callout show it alike.
+   */
+  label: string;
+  /** A second line always shown under the headline ("0.42 km/s in GCRF · 27.2 km/s in ITRF"). */
+  aside?: string;
+  /** The paragraph that explains it. */
   headline: string;
+  /**
+   * The headline's published counterpart, where it has one (the owner,
+   * fix 1): the value as printed and its citation, read from
+   * references.json; the catalog check `proofId` compares the two at the
+   * checked setup, within `tolerance`.
+   */
+  published?: {
+    value: number;
+    unit: string;
+    /** As the source prints it: "56.02 µs/day". */
+    printed: string;
+    /** The citation's own text (references.json `source.document`). */
+    document: string;
+    /** A web link to it, if references.json gives one (a DOI's, first). */
+    url?: string;
+    proofId: string;
+    /** The catalog's tolerance, in words: "within 2%". */
+    tolerance: string;
+  };
   value?: number;
   unit?: string;
   /** Always stated (R8): metres where it is bounded, and in words either way. */
@@ -39,6 +67,20 @@ export interface ScenarioEvaluation {
   scenario: ScenarioId;
   /** The frames the scenario adds to the base tree (`buildScenarioTree`). */
   added: readonly AddedFrameSpec[];
+  /**
+   * Data the scenario draws, pinned beside the frame its numbers are
+   * expressed in (the owner's tree design, fix 1): not a frame of the
+   * tree. Its route to the drawn-in frame is the answer's path.
+   */
+  data?: {
+    label: string;
+    /** The frame its numbers are in: a node of the tree. */
+    frame: string;
+    /** Where it comes from ("OEM"). */
+    source: string;
+    /** Its own accuracy, as a tree edge states one (R8). */
+    accuracy: AddedFrameSpec["edge"]["accuracy"];
+  };
   answer: ScenarioAnswer;
   overlays: readonly { id: string; geometry: OverlayGeometry }[];
   sightLines?: readonly SightLine[];

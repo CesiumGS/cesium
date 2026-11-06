@@ -44,7 +44,9 @@ export const SCENARIOS: readonly ScenarioSpec[] = [
   {
     id: "one-path",
     title: "One path, three frames",
-    question: "Why does the same trajectory look so different?",
+    // The headline answers it directly: the speed in the drawn-in frame
+    // (fix 1: the owner, "the questions and answers don't line up").
+    question: "How fast is Orion going?",
     knobs: [
       {
         id: "frame",
@@ -66,7 +68,7 @@ export const SCENARIOS: readonly ScenarioSpec[] = [
   {
     id: "earth-turns",
     title: "The Earth turns",
-    question: "How does the ground move against the stars?",
+    question: "Where is Greenwich pointing, against the stars?",
     knobs: [
       {
         id: "rate",

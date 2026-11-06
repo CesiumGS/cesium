@@ -112,15 +112,6 @@ export function Panel({ source, view, actions, hud, initialTab }: PanelProps) {
   const selectResult = (id: string | undefined) => {
     setSelection(id ? { kind: "result", id } : { kind: "none" });
   };
-  const selected =
-    selection.kind === "result"
-      ? model.results.find((r) => r.id === selection.id)
-      : undefined;
-  // While a result is selected the tree keeps its frames in view (I5).
-  const resultFrames =
-    (selected &&
-      model.groups.find((g) => g.id === selected.group)?.focus?.frames) ??
-    [];
   const showFrames = (r: StressResult) => {
     setSelection({ kind: "result", id: r.id });
     setEntry("scenarios");
@@ -171,7 +162,6 @@ export function Panel({ source, view, actions, hud, initialTab }: PanelProps) {
               setSelection={setSelection}
               reference={shared.against}
               setReference={(r) => view.setAgainst(r)}
-              resultFrames={resultFrames}
               hud={hud}
               onOpenResult={openInVerification}
             />
@@ -279,7 +269,13 @@ export function Panel({ source, view, actions, hud, initialTab }: PanelProps) {
         <>
           <FrameButton onFrame={actions.frameContent} />
           <GlobeLegend model={model} />
-          {scenario && <ScenarioCallout scenario={scenario} narrow={narrow} />}
+          {scenario && (
+            <ScenarioCallout
+              scenario={scenario}
+              narrow={narrow}
+              onKnob={actions.setKnob}
+            />
+          )}
         </>,
         hud,
       )}

@@ -131,6 +131,24 @@ describe("buildTree: the built-in frames", () => {
     expect(find(tree, "EARTH_ICRF")!.edge.kind).toBe("translation");
   });
 
+  it("states lunar orientation as the published sources do: MOON_ME not stated, MOON_PA exact by definition (fix 1, item 8)", () => {
+    const tree = buildTree(frames, {}, Instant.fromTdb(0));
+    const me = find(tree, "MOON_ME")!.edge.accuracy;
+    expect(me.meters).toBeUndefined();
+    expect(me.radians).toBeUndefined();
+    expect(me.byDefinition).toBeUndefined();
+    expect(me.note).toMatch(
+      /^not stated: .*no published orientation uncertainty/,
+    );
+    // The LLR residual is context, never the edge's accuracy.
+    expect(me.note).toMatch(/1\.3 cm rms .*not an orientation accuracy/);
+    const pa = find(tree, "MOON_PA")!.edge.accuracy;
+    expect(pa.byDefinition).toBe(true);
+    expect(pa.meters).toBeUndefined();
+    expect(pa.note).toMatch(/^exact by definition for DE440/);
+    expect(pa.note).toMatch(/Park et al\. 2021 §2\.4 eq\. 19/);
+  });
+
   it("puts EME2000 under EARTH_ICRF, ITRF under GCRF and MOON_PA under MOON_ME", () => {
     expect(parentOf(tree, "EME2000")).toBe("EARTH_ICRF");
     expect(find(tree, "EME2000")!.edge.kind).toBe("constant");

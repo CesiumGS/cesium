@@ -5,7 +5,13 @@
 // (top left) and credits (bottom left). The HUD is dark in either scheme, as
 // the viewer's own widgets are (I16): panel.css points its StrataKit tokens
 // at the viewer's HUD theme.
-import { IconButton, Typography } from "@mui/material";
+import {
+  Button,
+  IconButton,
+  ToggleButton,
+  ToggleButtonGroup,
+  Typography,
+} from "@mui/material";
 import { svgChevronDown } from "@stratakit/icons/chevron-down";
 import { svgChevronUp } from "@stratakit/icons/chevron-up";
 import { svgReCenter } from "@stratakit/icons/re-center";
@@ -20,7 +26,7 @@ import {
 import { isFrameKey } from "../orbit.ts";
 import { captionFold, foldReducer } from "./fold.ts";
 import { legendRows } from "./legendRows.ts";
-import { accuracyLine, formatAnswer } from "./answerText.ts";
+import { accuracyLine, answerTitle } from "./answerText.ts";
 import type { PanelModel, ScenarioPanelView } from "./model.ts";
 
 /** Below this view width the HUD goes compact: legend folded, the caption at the bottom (I18). */
@@ -144,18 +150,23 @@ export function GlobeLegend({ model }: { model: PanelModel }) {
 export function ScenarioCallout({
   scenario,
   narrow,
+  onKnob,
 }: {
   scenario: ScenarioPanelView;
   narrow: boolean;
+  onKnob: (id: string, value: string) => void;
 }) {
+  const control = scenario.treeControl;
+  const drawnIn = control ? String(scenario.values[control.knob]) : undefined;
+  const drawnLabel = control?.options.find((o) => o.value === drawnIn)?.label;
   const [state, dispatch] = useReducer(foldReducer, { unfolded: false });
   const fold = captionFold(narrow, state.unfolded);
   const a = scenario.answer;
-  const loading = scenario.status === "loading";
-  const figure =
-    a?.value !== undefined && a.unit !== undefined
-      ? `${formatAnswer(a.value, a.unit)}`
-      : undefined;
+  const loading =
+    scenario.freshness === "updating" ||
+    (!scenario.answer && scenario.status === "loading");
+  // The same headline as the panel's (answerTitle): a figure and its words.
+  const figure = a ? answerTitle(a) : undefined;
   return (
     <section
       className={`fx-hud fx-callout${fold.folded ? " fx-callout-folded" : ""}`}
@@ -185,6 +196,33 @@ export function ScenarioCallout({
           </IconButton>
         )}
       </div>
+      {control && drawnIn !== undefined && (
+        // The frame the path is drawn in, said and chosen where the eye is
+        // (owner, fix 1): the same choice as the tree and the knob.
+        <div className="fx-callout-frame">
+          <p className="fx-callout-drawn">
+            Orion&rsquo;s path, drawn in {drawnLabel ?? drawnIn}
+          </p>
+          <ToggleButtonGroup
+            exclusive
+            size="small"
+            value={drawnIn}
+            aria-label={control.verb}
+            onChange={(_, v: string | null) => v && onKnob(control.knob, v)}
+          >
+            {control.options.map((o) => (
+              <ToggleButton
+                key={o.value}
+                value={o.value}
+                title={`${control.verb} ${o.label}`}
+                render={<Button variant="outlined" />}
+              >
+                {o.value}
+              </ToggleButton>
+            ))}
+          </ToggleButtonGroup>
+        </div>
+      )}
       {scenario.status === "error" && scenario.problem ? (
         <p className="fx-callout-problem">
           {scenario.problem.missing
@@ -193,14 +231,24 @@ export function ScenarioCallout({
         </p>
       ) : a ? (
         <>
+          {figure === undefined && fold.folded && (
+            // No figure (no Orion data now): the sentence says why, even folded.
+            <p className="fx-callout-answer">{a.headline}</p>
+          )}
           {figure !== undefined && (
             <p className={`fx-callout-figure${loading ? " fx-stale" : ""}`}>
               {figure}
             </p>
           )}
+          {a.aside && !fold.bodyHidden && (
+            <p className="fx-callout-aside fx-num">{a.aside}</p>
+          )}
           {!fold.bodyHidden && (
             <>
-              <p className={`fx-callout-answer${loading ? " fx-stale" : ""}`}>
+              <p
+                className={`fx-callout-answer${loading ? " fx-stale" : ""}`}
+                title={a.headline}
+              >
                 {a.headline}
               </p>
               <p

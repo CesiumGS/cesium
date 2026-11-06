@@ -37,7 +37,12 @@ const evaluation = (
 ): ScenarioEvaluation => ({
   scenario: id,
   added: [],
-  answer: { headline: `${id} answered`, value, accuracy: { note: "test" } },
+  answer: {
+    label: "x",
+    headline: `${id} answered`,
+    value,
+    accuracy: { note: "test" },
+  },
   overlays: overlays.map((o) => ({ id: o, geometry: geometry() })),
   live: [],
 });
@@ -417,5 +422,92 @@ describe("the host's own clock changes", () => {
     expect(h.last().epochUtcMs).toBe(checkedMs("earth-turns"));
     expect(h.last().atChecked).toBe(true);
     expect(h.timers.filter((t) => t.live)).toHaveLength(0);
+  });
+});
+
+describe("a stale evaluation (fix 1, item 1: Review Focus 1, R9)", () => {
+  it("is marked stale from the moment a knob moves until its own setup's reply is in", async () => {
+    const h = harness();
+    void h.host.show("stand-on-moon");
+    h.pending[0]!.resolve(evaluation("stand-on-moon"));
+    await h.settle();
+    expect(h.last().stale).toBe(false);
+    expect(h.last().evaluatedAt).toEqual({
+      knobs: { latitude: -90 },
+      epochUtcMs: checkedMs("stand-on-moon"),
+    });
+    h.host.setKnob("latitude", -45);
+    // Before the burst ends: the shown evaluation is the last setup's.
+    expect(h.last().stale).toBe(true);
+    expect(h.last().staleBy).toEqual(["latitude"]);
+    expect(h.last().evaluation).toBeDefined();
+    h.flush();
+    expect(h.last().stale).toBe(true);
+    h.pending[1]!.resolve(evaluation("stand-on-moon", [], 2));
+    await h.settle();
+    expect(h.last().stale).toBe(false);
+    expect(h.last().evaluatedAt?.knobs).toEqual({ latitude: -45 });
+  });
+
+  it("is stale by the time alone while the clock moves", async () => {
+    const h = harness();
+    void h.host.show("earth-turns");
+    h.pending[0]!.resolve(evaluation("earth-turns"));
+    await h.settle();
+    h.setClockByUser(checkedMs("earth-turns") + 60_000);
+    h.host.clockChanged();
+    expect(h.last().stale).toBe(true);
+    expect(h.last().staleBy).toEqual(["time"]);
+  });
+
+  it("is not stale when the knobs come back to the evaluated setup", async () => {
+    const h = harness();
+    void h.host.show("stand-on-moon");
+    h.pending[0]!.resolve(evaluation("stand-on-moon"));
+    await h.settle();
+    h.host.setKnob("latitude", -45);
+    h.host.setKnob("latitude", -90);
+    expect(h.last().stale).toBe(false);
+  });
+});
+
+describe("scrubbing the clock (fix 1: the owner's one-path report)", () => {
+  it("evaluates the scrub's last time once it rests, and marks every answer from before then stale", async () => {
+    const h = harness();
+    void h.host.show("one-path", { frame: "ITRF" });
+    h.pending[0]!.resolve(evaluation("one-path"));
+    await h.settle();
+    const t0 = checkedMs("one-path");
+    // A drag: many clock changes, a timer firing mid-drag, more changes.
+    for (let i = 1; i <= 5; i++) {
+      h.setClockByUser(t0 + i * 600_000);
+      h.host.clockChanged();
+    }
+    h.flush();
+    expect(h.pending).toHaveLength(2);
+    expect(h.pending[1]!.epochUtcMs).toBe(t0 + 5 * 600_000);
+    for (let i = 6; i <= 9; i++) {
+      h.setClockByUser(t0 + i * 600_000);
+      h.host.clockChanged();
+    }
+    expect(h.last().stale).toBe(true);
+    expect(h.last().staleBy).toEqual(["time"]);
+    // The mid-drag reply comes back. It is the latest asked for, so it
+    // shows, but as the time it was made at: stale, never current (before
+    // this round it read as the current answer and proof: the bug).
+    h.pending[1]!.resolve(evaluation("one-path", ["mid"], 5));
+    await h.settle();
+    expect(h.last().evaluation?.answer.value).toBe(5);
+    expect(h.last().evaluatedAt?.epochUtcMs).toBe(t0 + 5 * 600_000);
+    expect(h.last().stale).toBe(true);
+    // The drag rests: the last time is asked for, and its reply is current.
+    h.flush();
+    expect(h.pending.at(-1)!.epochUtcMs).toBe(t0 + 9 * 600_000);
+    expect(h.pending.at(-1)!.knobs).toEqual({ frame: "ITRF" });
+    h.pending.at(-1)!.resolve(evaluation("one-path", ["end"], 9));
+    await h.settle();
+    expect(h.last().stale).toBe(false);
+    expect(h.last().evaluation?.answer.value).toBe(9);
+    expect(h.host.params().time).toBe(t0 + 9 * 600_000);
   });
 });

@@ -18,6 +18,9 @@ import {
   createClient,
   type ClientWorker,
 } from "../../examples/frames-explorer/protocol.ts";
+import { publishedText } from "../../examples/frames-explorer/panel/answerText.ts";
+import { routeSteps } from "../../examples/frames-explorer/panel/routeSteps.ts";
+import references from "../../examples/frames-explorer/references.json";
 import { proofRows } from "../../examples/frames-explorer/scenarios/proof.ts";
 import type {
   KnobState,
@@ -37,7 +40,9 @@ import {
   type StressContext,
   type StressResult,
 } from "../../examples/frames-explorer/tests.ts";
+import { compose, pathPoint } from "../../examples/frames-explorer/orion.ts";
 import { loadProj } from "../../src/engineering/proj.ts";
+import { frameTransform } from "../../src/frames/Frame.ts";
 import { Ephemeris } from "../../src/ephemeris/Ephemeris.ts";
 import type { FrameData } from "../../src/ephemeris/loadFrameData.ts";
 import { createFrames } from "../../src/frames/frames.ts";
@@ -112,6 +117,7 @@ function connect() {
 }
 
 const client = connect();
+const print = (line: string) => process.stdout.write(`${line}\n`);
 const spec = (id: ScenarioId) => SCENARIOS.find((s) => s.id === id)!;
 const tdbOf = (utcMs: number) =>
   Instant.fromUtc(utcMs, frames.data.leapSeconds).tdb();
@@ -149,6 +155,11 @@ describe("the ported scenarios through the worker's host", () => {
         );
         expect(e.scenario).toBe(id);
         expect(e.answer.headline.length).toBeGreaterThan(20);
+        // The headline answers the question on its own: a figure, its unit
+        // and a few words (fix 1).
+        expect(e.answer.unit?.length, id).toBeGreaterThan(0);
+        expect(e.answer.label.length, id).toBeGreaterThan(0);
+        expect(e.answer.label.length, id).toBeLessThanOrEqual(60);
         expect(e.answer.accuracy.note.length).toBeGreaterThan(0);
         expect(Number.isFinite(e.answer.value)).toBe(true);
         expect(e.answer.value).toBeCloseTo(e.checkedAnswerValue!, 9);
@@ -234,7 +245,9 @@ describe("the ported scenarios through the worker's host", () => {
     expect(moon.answer.unit).toBe("km/s");
     expect(itrf.answer.value!).toBeGreaterThan(10);
     expect(moon.answer.value!).toBeLessThan(5);
-    expect(moon.added.map((a) => a.parentId)).toEqual([orion.reference.name]);
+    // Orion is data pinned to its OEM's frame, not a frame of the tree.
+    expect(moon.added).toEqual([]);
+    expect(moon.data?.frame).toBe(orion.reference.name);
   }, 60_000);
 
   it("earth-turns' accuracy grows with the prediction's age", async () => {
@@ -247,5 +260,176 @@ describe("the ported scenarios through the worker's host", () => {
       measured.answer.accuracy.meters!,
     );
     expect(predicted.answer.accuracy.note).toMatch(/predicted/);
+  }, 60_000);
+});
+
+describe("one-path's frame choice (fix 1: the owner's reports)", () => {
+  const at = checkedTdb("one-path");
+  const tree = (e: { added: Parameters<typeof buildScenarioTree>[1] }) =>
+    buildScenarioTree(buildTree(frames), e.added);
+
+  for (const frame of ["GCRF", "ITRF", "MOON_ME"] as const) {
+    it(`lights branchPath(data's frame, ${frame}), and spells the same route out step by step; the tree doesn't change`, async () => {
+      const e = await client.scenario("one-path", { frame }, at);
+      const dataFrame = orion.reference.name;
+      expect(e.data).toMatchObject({ frame: dataFrame, source: "OEM" });
+      expect(e.answer.path).toEqual({ from: dataFrame, to: frame });
+      const t = tree(e);
+      const p = branchPath(t, dataFrame, frame);
+      expect(p.up[0]!.id).toBe(dataFrame);
+      expect(p.down.at(-1)?.id ?? p.ancestor.id).toBe(frame);
+      // The steps: the data, each lit edge in the route's order, the end.
+      const ids = {
+        up: p.up.map((n) => n.id),
+        ancestor: p.ancestor.id,
+        down: p.down.map((n) => n.id),
+      };
+      const steps = routeSteps(
+        t,
+        ids,
+        { title: "start", does: "" },
+        { title: "end", does: "" },
+      );
+      expect(steps.filter((x) => x.kind === "edge").map((x) => x.edge)).toEqual(
+        [...ids.up, ...ids.down],
+      );
+      // The answer says the route in words, through each frame on it.
+      for (const n of [...p.up.slice(1), p.ancestor, ...p.down]) {
+        expect(e.answer.headline, n.id).toContain(n.id);
+      }
+      print(
+        `one-path ${frame}: Orion's data in ${[...p.up, p.ancestor, ...p.down].map((n) => n.id).join(" → ")}`,
+      );
+    }, 60_000);
+
+    it(`puts Orion's marker on the drawn path in ${frame}: its place now equals the path's sample at that time, placed now`, () => {
+      // The path is drawn in `frame` at one instant (`drawnAt`) and placed
+      // now by the frame now times its inverse then (main.ts placeOrion).
+      const f =
+        frame === "GCRF"
+          ? frames.gcrf
+          : frame === "ITRF"
+            ? frames.itrf
+            : frames.moonMe;
+      const drawnAt = Instant.fromTdb(at);
+      for (const hours of [0, 3, 30]) {
+        const now = Instant.fromTdb(at + hours * 3600);
+        // The path's sample at `now`, as drawn (Earth-fixed at drawnAt)...
+        const inFrame = frameTransform(orion.frame, f, now).subarray(12, 15);
+        const drawn = pathPoint(
+          frameTransform(f, frames.itrf, drawnAt),
+          inFrame,
+        );
+        // ...placed now:
+        const placement = compose(
+          frameTransform(f, frames.itrf, now),
+          frameTransform(frames.itrf, f, drawnAt),
+        );
+        const onPath = pathPoint(placement, drawn);
+        // The marker: Orion's own place in ITRF now (trajectoryInfo's itrf).
+        const marker = frameTransform(orion.frame, frames.itrf, now).subarray(
+          12,
+          15,
+        );
+        const gap = Math.hypot(
+          onPath[0]! - marker[0]!,
+          onPath[1]! - marker[1]!,
+          onPath[2]! - marker[2]!,
+        );
+        // Within 1 mm: far inside Orion's stated ±10 m.
+        expect(gap, `${frame} +${hours} h`).toBeLessThan(1e-3);
+      }
+    });
+  }
+
+  it("says there's no Orion data outside the OEM, without a figure", async () => {
+    const e = await client.scenario(
+      "one-path",
+      { frame: "ITRF" },
+      at + 10 * 86_400,
+    );
+    expect(e.answer.headline).toMatch(/^No Orion data at this time/);
+    expect(e.answer.value).toBeUndefined();
+  }, 60_000);
+});
+
+describe("earth-turns adds Sacramento's site under ITRF (owner, fix 1)", () => {
+  it("adds it, marked, under ITRF, with its edge's words; the answer's path stays ITRF to GCRF", async () => {
+    const e = await client.scenario(
+      "earth-turns",
+      spec("earth-turns").checked.knobs,
+      checkedTdb("earth-turns"),
+    );
+    expect(e.added.map((a) => [a.id, a.parentId])).toEqual([
+      ["Sacramento ENU", "ITRF"],
+    ]);
+    expect(e.added[0]!.edge.accuracy.note).toMatch(/^not known/);
+    expect(e.answer.path).toEqual({ from: "ITRF", to: "GCRF" });
+  }, 60_000);
+});
+
+describe("the published counterpart under stand-on-moon's headline (the owner, fix 1)", () => {
+  const entry = (
+    references.entries as unknown as Record<
+      string,
+      { rate: string; source: { document: string } }
+    >
+  )["ashby-patla-2024"]!;
+
+  it("at the checked setup: the reference's value and its citation, ours against it, the verdict", async () => {
+    const s = spec("stand-on-moon");
+    const e = await client.scenario(s.id, s.checked.knobs, checkedTdb(s.id));
+    const pub = e.answer.published!;
+    expect(pub.printed).toBe(entry.rate.replace("μs", "µs"));
+    expect(pub.document).toBe(entry.source.document);
+    expect(pub.url).toMatch(/^https:\/\/doi\.org\//);
+    const r = catalog.get(pub.proofId)!;
+    const t = publishedText({
+      printed: pub.printed,
+      document: pub.document,
+      tolerance: pub.tolerance,
+      unit: pub.unit,
+      state: "checked",
+      ours: r.effect!.value,
+      difference: { value: r.value! },
+      pass: r.pass,
+    });
+    expect(t.published).toContain("56.02 µs/day");
+    expect(t.comparison).toMatch(
+      /^ours 55\.\d\d µs\/day · difference .* · within 2% · passes$/,
+    );
+  }, 60_000);
+
+  it("off it: the reference's value and the delta, and no verdict", async () => {
+    const s = spec("stand-on-moon");
+    const e = await client.scenario(s.id, { latitude: -45 }, checkedTdb(s.id));
+    const rows = proofRows(s, false, catalog, e);
+    const ref = rows.find(
+      (row) =>
+        row.kind === "reference-only" && row.id === e.answer.published!.proofId,
+    );
+    expect(ref?.kind === "reference-only" && ref.delta).toBeTruthy();
+    const t = publishedText({
+      printed: e.answer.published!.printed,
+      document: e.answer.published!.document,
+      tolerance: e.answer.published!.tolerance,
+      unit: e.answer.published!.unit,
+      state: "off",
+      delta: ref?.kind === "reference-only" ? ref.delta! : undefined,
+    });
+    expect(t.published).toContain("56.02 µs/day");
+    expect(t.comparison).toMatch(/your setting moves the answer by [+−]/);
+    expect(t.comparison).not.toMatch(/passes|fails/);
+  }, 60_000);
+
+  it("only stand-on-moon's headline has a published counterpart among the ported three", async () => {
+    for (const id of ["one-path", "earth-turns"] as const) {
+      const e = await client.scenario(
+        id,
+        spec(id).checked.knobs,
+        checkedTdb(id),
+      );
+      expect(e.answer.published, id).toBeUndefined();
+    }
   }, 60_000);
 });

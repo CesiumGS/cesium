@@ -10,7 +10,7 @@
 // here, and the page never bundles the catalog (protocol.ts's rule).
 import type { Frame } from "../../../src/frames/Frame.ts";
 import { eastNorthUpFrame } from "../../../src/frames/local.ts";
-import { fromDegrees } from "../../../src/math/ellipsoid.ts";
+import { Ellipsoid, fromDegrees } from "../../../src/math/ellipsoid.ts";
 import { MOON } from "../../../src/scene/Body.ts";
 import type { RigKind } from "../orbit.ts";
 import type { KnobState, ScenarioId } from "./spec.ts";
@@ -43,6 +43,29 @@ export function latitudeText(latitude: number): string {
     return "the equator";
   }
   return `${Math.abs(latitude)}° ${latitude < 0 ? "S" : "N"}`;
+}
+
+/** Sacramento's east-north-up frame (the old tour's site), riding the turning Earth in earth-turns. */
+export const SACRAMENTO = {
+  name: "Sacramento ENU",
+  longitude: -121.4944,
+  latitude: 38.5816,
+} as const;
+
+/** An east-north-up site on the Earth (WGS 84, at h = 0), under ITRF. */
+export function earthSiteFrame(
+  itrf: Frame,
+  site: { name: string; longitude: number; latitude: number },
+): Frame {
+  return eastNorthUpFrame(
+    site.name,
+    itrf,
+    Ellipsoid.WGS84,
+    Ellipsoid.WGS84.cartographicToCartesian(
+      fromDegrees(site.longitude, site.latitude, 0),
+      new Float64Array(3),
+    ),
+  );
 }
 
 /** Orion's draw-in frame (one-path's knob). */
@@ -78,8 +101,25 @@ export interface SceneSpec {
   orion?(knobs: KnobState): DrawnFrame;
   /** The lunar site at this latitude. */
   lunarSite?(knobs: KnobState): number;
+  /** Sites on the Earth the scene adds (their frames under ITRF). */
+  earthSites?: readonly { name: string; longitude: number; latitude: number }[];
   /** A limit the scenario says plainly, under its answer and on the globe. */
   note?: string;
+  /**
+   * The knob the tree itself drives: its options are nodes you click to
+   * choose (one-path: "Draw Orion's path in" this frame), and the globe
+   * shows the same choice beside the answer.
+   */
+  treeControl?: { knob: string; verb: string };
+  /** A short line under the diagram's key. */
+  diagramNote?: string;
+  /** The route's last step, by the drawn-in frame: what you see. */
+  drawnView?: Readonly<Record<string, string>>;
+  /** The route's first and last steps, for a scenario with no data (its answer relates two frames). */
+  routeEnds?: {
+    start: { title: string; does: string };
+    end: { title: string; does: string };
+  };
 }
 
 export const SCENES: Readonly<Partial<Record<ScenarioId, SceneSpec>>> = {
@@ -97,14 +137,35 @@ export const SCENES: Readonly<Partial<Record<ScenarioId, SceneSpec>>> = {
       ...(k.frame === "MOON_ME" ? ["MOON_ME"] : []),
     ],
     orion: (k) => (k.frame as DrawnFrame | undefined) ?? "MOON_ME",
+    treeControl: { knob: "frame", verb: "Draw Orion's path in" },
+    diagramNote:
+      "Orion's data stays where it is defined. Changing the frame changes the route, not the tree.",
+    drawnView: {
+      GCRF: "a smooth loop out to the Moon and back: the Earth's spin isn't in it",
+      ITRF: "the path loops round and round because the Earth turns under it",
+      MOON_ME:
+        "the path as seen standing on the Moon: it swings round the far side",
+    },
   },
   "earth-turns": {
     id: "earth-turns",
     camera: "northPole",
     rig: "geocentric",
-    focus: ["ITRF", "GCRF"],
-    // Only the geocentric pair: a site's triad crosses GCRF's turning x.
-    triads: () => ["ITRF", "GCRF"],
+    focus: ["ITRF", "GCRF", SACRAMENTO.name],
+    // The geocentric pair, and Sacramento's site riding the turning Earth
+    // while GCRF's axes hold still against the stars (owner, fix 1).
+    triads: () => ["ITRF", "GCRF", SACRAMENTO.name],
+    routeEnds: {
+      start: {
+        title: "ITRF, the ground",
+        does: "the Earth-fixed frame: Greenwich and Sacramento turn with it",
+      },
+      end: {
+        title: "GCRF, the stars",
+        does: "the frame that doesn't turn: the stars hold still in it",
+      },
+    },
+    earthSites: [SACRAMENTO],
     pinnedAxes: true,
     light: "camera",
     // Lit from the camera, the polar globe washes out behind the axes; at
@@ -119,6 +180,16 @@ export const SCENES: Readonly<Partial<Record<ScenarioId, SceneSpec>>> = {
     flight: 3.5,
     focus: ["MOON_ME", "ITRF"],
     triads: () => [LUNAR_SITE],
+    routeEnds: {
+      start: {
+        title: "The lunar site's clock",
+        does: "a clock at rest on the Moon's surface",
+      },
+      end: {
+        title: "ITRF, a clock on the Earth",
+        does: "the clock it is compared with, at rest on the Earth's surface",
+      },
+    },
     lunarSite: (k) => Number(k.latitude),
     note: "The Moon's imagery is the sky's distant backdrop until plan 5 draws the Moon as a tileset in MOON_ME, so it lines up with the site only from straight above, as here.",
   },

@@ -9,6 +9,7 @@
 // it than fits opens in Verification by one labelled link.
 import { CircularProgress, Link, Typography } from "@mui/material";
 import { svgChevronRight } from "@stratakit/icons/chevron-right";
+import { svgClock } from "@stratakit/icons/clock";
 import { svgInfo } from "@stratakit/icons/info";
 import { svgStatusError } from "@stratakit/icons/status-error";
 import { svgStatusSuccess } from "@stratakit/icons/status-success";
@@ -32,6 +33,8 @@ function StatusIcon({ tone }: { tone: ProofRowText["tone"] }) {
       return <Icon href={svgInfo} className="fx-proof-icon" />;
     case "loading":
       return <CircularProgress size={14} className="fx-proof-icon" />;
+    case "stale":
+      return <Icon href={svgClock} className="fx-proof-icon" />;
   }
 }
 
@@ -150,10 +153,15 @@ export function Proof({
   rows,
   extras,
   atChecked,
+  freshness,
+  published,
   onOpenResult,
   onBack,
 }: {
   rows: readonly ProofRow[];
+  freshness: "current" | "updating" | "following";
+  /** The headline's published counterpart: its row says ours against it. */
+  published?: { proofId: string; printed: string; unit: string } | undefined;
   extras: Readonly<Record<string, ResultExtras>>;
   atChecked: boolean;
   onOpenResult: (id: string) => void;
@@ -183,7 +191,7 @@ export function Proof({
   return (
     <ul className="fx-proof">
       {rows.map((row) => {
-        const t = proofRowText(row, extras);
+        const t = proofRowText(row, extras, freshness, published);
         const expanded = open.has(t.key);
         const region = `${uid}-${t.key}`;
         return (
@@ -219,11 +227,16 @@ export function Proof({
                     extras={extras[t.result.id]}
                     live={row.kind === "live"}
                     onOpen={
-                      row.kind === "checked"
+                      row.kind === "checked" && freshness === "current"
                         ? () => onOpenResult(t.result!.id)
                         : undefined
                     }
                   />
+                ) : t.tone === "stale" ? (
+                  <Typography variant="body-sm" render={<p />}>
+                    Re-running at your setting: its verdict shows here when
+                    it&rsquo;s in, and nothing is claimed until then.
+                  </Typography>
                 ) : row.kind === "reference-only" ? (
                   <>
                     <Typography variant="body-sm" render={<p />}>

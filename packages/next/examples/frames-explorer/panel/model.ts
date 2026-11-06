@@ -12,6 +12,8 @@ import type {
 } from "../stress/groupInfo.ts";
 import type { ScenarioAnswer } from "../scenarios/evaluate.ts";
 import type { ProofRow } from "../scenarios/proof.ts";
+import type { PublishedView } from "./answerText.ts";
+import type { RouteStep } from "./routeSteps.ts";
 import type {
   KnobSpec,
   KnobState,
@@ -202,15 +204,37 @@ export interface ScenarioPanelView {
   /** While loading: why it waits (a catalog run going on). */
   queued?: string;
   problem?: { message: string; missing: boolean };
-  /** The latest answer (the last setup's while loading). */
+  /** The latest answer (the last setup's while it is stale). */
   answer?: ScenarioAnswer;
+  /** The headline's published counterpart, and how ours compares (answerText.ts). */
+  published?: PublishedView;
+  /**
+   * How the shown evaluation stands against the current setup: its own
+   * ("current"), the last setup's while the new one is worked out
+   * ("updating": dimmed, no verdicts), or the clock's a moment ago while it
+   * plays ("following": one steady state, updated in place).
+   */
+  freshness: "current" | "updating" | "following";
   /** The answer's path through the tree: up from its start to the common ancestor, then down. */
   path?: { up: readonly string[]; ancestor: string; down: readonly string[] };
+  /** The rows of the shown evaluation's setup; read with `freshness`. */
   proof: readonly ProofRow[];
   /** The inline details' extras for the live rows (the catalog's are in `extras`). */
   liveExtras: Readonly<Record<string, ResultExtras>>;
   /** A limit the scenario says plainly (the backdrop Moon). */
   note?: string;
+  /** The knob the tree drives (one-path's frame): its nodes are the choices. */
+  treeControl?: {
+    knob: string;
+    verb: string;
+    options: readonly { value: string; label: string }[];
+  };
+  /** A short line under the diagram's key. */
+  diagramNote?: string;
+  /** Data pinned beside the frame its numbers are in (not a frame of the tree). */
+  data?: { label: string; frame: string; source: string };
+  /** The answer's route through the tree, spelled out (routeSteps.ts). */
+  route?: readonly RouteStep[];
   /** The base frames its answer and proof name, kept in the docked diagram's view. */
   focus: readonly string[];
   playing: boolean;

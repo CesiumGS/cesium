@@ -4,13 +4,49 @@
 // answer is on its way the last one stays, dimmed, with "Updating" (R9); a
 // first answer shows its loading; a failure says what failed. The limit the
 // scenario says plainly (the backdrop Moon) sits under it.
-import { CircularProgress, Typography } from "@mui/material";
-import { accuracyLine, formatAnswer } from "./answerText.ts";
+import { CircularProgress, Link, Typography } from "@mui/material";
+import {
+  accuracyLine,
+  answerTitle,
+  publishedText,
+  type PublishedView,
+} from "./answerText.ts";
+import { webLink } from "./Inspector.tsx";
+
+/**
+ * The published counterpart, under the headline (the owner, fix 1): the
+ * value and its citation (a link where references.json gives one; its text
+ * rendered as text), then ours against it at the checked setup, or that it
+ * applies there when off it. No verdict but at the checked setup.
+ */
+function Published({ p }: { p: PublishedView }) {
+  const t = publishedText(p);
+  const link = webLink(p.url);
+  return (
+    <div className={`fx-answer-published fx-published-${p.state}`}>
+      <p>
+        <span className="fx-strong">{t.published}</span>
+        {" — "}
+        {link ? (
+          <Link href={link.href} target="_blank" rel="noreferrer noopener">
+            {p.document}
+          </Link>
+        ) : (
+          p.document
+        )}
+      </p>
+      <p className="fx-answer-comparison fx-num">{t.comparison}</p>
+    </div>
+  );
+}
 import type { ScenarioPanelView } from "./model.ts";
 
 export function ScenarioAnswer({ scenario }: { scenario: ScenarioPanelView }) {
   const a = scenario.answer;
-  const loading = scenario.status === "loading";
+  // The last setup's answer, dimmed, while the new one is worked out; while
+  // the clock plays it follows in place, not dimmed.
+  const loading = scenario.freshness === "updating";
+  const following = scenario.freshness === "following";
   if (scenario.status === "error" && scenario.problem) {
     return (
       <div className="fx-answer fx-answer-problem" role="alert">
@@ -40,11 +76,11 @@ export function ScenarioAnswer({ scenario }: { scenario: ScenarioPanelView }) {
   return (
     <div className="fx-answer" aria-busy={loading}>
       <div className={`fx-answer-main${loading ? " fx-stale" : ""}`}>
-        {a.value !== undefined && a.unit !== undefined && (
-          <p className="fx-answer-figure fx-num">
-            {formatAnswer(a.value, a.unit)}
-          </p>
+        {answerTitle(a) !== undefined && (
+          <p className="fx-answer-figure fx-num">{answerTitle(a)}</p>
         )}
+        {a.aside && <p className="fx-answer-aside fx-num">{a.aside}</p>}
+        {scenario.published && <Published p={scenario.published} />}
         <p className="fx-answer-text">{a.headline}</p>
       </div>
       <p
@@ -56,6 +92,11 @@ export function ScenarioAnswer({ scenario }: { scenario: ScenarioPanelView }) {
         <p className="fx-answer-wait" role="status">
           <CircularProgress size={12} aria-hidden />
           {scenario.queued ?? "Updating for your setting…"}
+        </p>
+      )}
+      {following && (
+        <p className="fx-answer-follow">
+          Following the clock: the answer at a moment ago, updated as it plays.
         </p>
       )}
       {scenario.note && <p className="fx-answer-note">{scenario.note}</p>}
