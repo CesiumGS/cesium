@@ -4,8 +4,10 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
 import {
+  GROUP_INFO,
   LENSES,
   STRESS_CASES,
+  cited,
   STRESS_GROUPS,
   compareFingerprint,
   expectThrow,
@@ -574,5 +576,99 @@ describe("the catalog uses only the package's public API (F7)", () => {
     expect(tests).not.toMatch(
       /import\s+(?!type\b)\w+\s*,?\s*(\{|from)\s*[^;]*"(\.\.\/)+src/,
     );
+  });
+});
+
+describe("what the inspector needs, filled by the catalog (F27, F28)", () => {
+  it("gives a result with no position accuracy its group's accuracy note", async () => {
+    const [r] = await run([stub([{}])]);
+    expect(r!.accuracy).toBeUndefined();
+    expect(r!.accuracyNote).toBe(
+      GROUP_INFO.find((g) => g.id === "projections")!.accuracyNote,
+    );
+  });
+
+  it("keeps a case's own accuracy note, and adds none beside a position accuracy", async () => {
+    const [own, positioned] = await run([
+      stub([
+        { accuracyNote: "hand formula, 2%" },
+        { accuracy: { meters: 0.01, terms: [], warnings: [] } },
+      ]),
+    ]);
+    expect(own!.accuracyNote).toBe("hand formula, 2%");
+    expect(positioned!.accuracyNote).toBeUndefined();
+  });
+
+  it("gives every group an accuracy note and what it is compared against", () => {
+    for (const g of GROUP_INFO) {
+      expect(g.accuracyNote.length, g.id).toBeGreaterThan(0);
+      expect(g.compared.text.length, g.id).toBeGreaterThan(0);
+    }
+    expect(GROUP_INFO.map((g) => g.id)).toEqual(STRESS_GROUPS.map((g) => g.id));
+  });
+
+  it("builds a trace from input to output when the case wrote none", async () => {
+    const [r] = await run([
+      stub([{ value: 3e-9, tolerance: 1e-4, unit: "m", detail: "computed" }]),
+    ]);
+    const kinds = r!.trace!.map((s) => s.kind);
+    expect(kinds[0]).toBe("input");
+    expect(kinds).toContain("output");
+    expect(kinds.at(-1)).toBe("expected");
+    expect(r!.trace!.find((s) => s.kind === "output")!.value).toBe("3e-9 m");
+  });
+
+  it("keeps a case's own trace", async () => {
+    const trace = [{ kind: "input" as const, label: "x", value: "1" }];
+    const [r] = await run([stub([{ trace }])]);
+    expect(r!.trace).toEqual(trace);
+  });
+
+  it("cites the references.json entry a case reads while it runs as its results' source", async () => {
+    const c = stub(async () => {
+      cited("ngs-GU2195");
+      return [
+        { id: "stub.cites", group: "reference-values", title: "t", pass: true },
+      ];
+    });
+    const [r] = await run([c]);
+    expect(r!.source).toMatchObject({
+      reference: "ngs-GU2195",
+      locator: expect.stringContaining("PID GU2195"),
+      retrieved: "2026-11-06",
+    });
+    expect(r!.source!.document).toMatch(/NGS Data Sheet/);
+  });
+
+  it("cites the entries read while a case is made, and marks an input entry as one (F6)", async () => {
+    const c = { ...stub([{}]), cites: ["input-wkt2-tokyo-jprcs-ix"] };
+    const [r] = await run([c]);
+    expect(r!.source).toMatchObject({
+      reference: "input-wkt2-tokyo-jprcs-ix",
+      input: true,
+    });
+  });
+
+  it("gives no source to a case that cites nothing", async () => {
+    const [r] = await run([stub([{}])]);
+    expect(r!.source).toBeUndefined();
+  });
+
+  it("attributes each case's citations to its own results, one case at a time", async () => {
+    const a = stub(async () => {
+      cited("iers-tt-tai");
+      return [{ id: "stub.a", group: "time-scales", title: "a", pass: true }];
+    });
+    const b = stub([{}]);
+    const [ra, rb] = await run([a, b]);
+    expect(ra!.source!.reference).toBe("iers-tt-tai");
+    expect(rb!.source).toBeUndefined();
+  });
+
+  it("claims the citations made before each catalog case for it", () => {
+    const ngs = STRESS_CASES.find(
+      (c) => c.id === "reference-values.ngs-gu2195",
+    );
+    expect(ngs?.cites?.[0]).toBe("ngs-GU2195");
   });
 });

@@ -51,8 +51,12 @@ import {
 export {
   LENSES,
   compareFingerprint,
+  defaultTrace,
   expectThrow,
   formatEffect,
+  withDefaults,
+  type Citation,
+  type Comparison,
   type Fingerprint,
   type Lens,
   type Need,
@@ -62,7 +66,10 @@ export {
   type StressContext,
   type StressGroup,
   type StressResult,
+  type TraceStep,
 } from "./stress/runner.ts";
+export { GROUP_INFO, groupInfo, type GroupInfo } from "./stress/groupInfo.ts";
+export { citation, cited, collectCitations } from "./stress/references.ts";
 export { STRESS_GROUPS, groupResults } from "./stress/stressGroups.ts";
 export { ORION_OEM, orionFromOem } from "./stress/shared.ts";
 export {

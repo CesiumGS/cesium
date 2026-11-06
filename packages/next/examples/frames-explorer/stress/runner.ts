@@ -5,24 +5,25 @@ import type { ProjApi } from "../../../src/engineering/proj.ts";
 import type { Frames } from "../../../src/frames/frames.ts";
 import type { AccuracyStatement } from "../../../src/measure/accuracy.ts";
 import { Trajectory } from "../../../src/trajectory/Trajectory.ts";
+import {
+  type Citation,
+  type GroupInfo,
+  type TraceStep,
+  groupInfo,
+} from "./groupInfo.ts";
+import { citation, collectCitations } from "./references.ts";
 import { ORION_OEM } from "./shared.ts";
+
+export {
+  LENSES,
+  type Citation,
+  type Comparison,
+  type Lens,
+  type TraceStep,
+} from "./groupInfo.ts";
 
 /** Data a case may need beyond the frame tree. */
 export type Need = "proj" | "geoid" | "orion";
-
-/** The audiences the Verify tab filters by (R14). */
-export type Lens =
-  "civil" | "bim" | "gis" | "space" | "timing" | "offshore" | "av";
-
-export const LENSES: readonly Lens[] = [
-  "civil",
-  "bim",
-  "gis",
-  "space",
-  "timing",
-  "offshore",
-  "av",
-];
 
 /** The frames store's manifest.json, of which fingerprints read the grids' SHA-256 (ruling F4). */
 export interface StoreManifest {
@@ -83,6 +84,22 @@ export interface StressResult {
   missing?: readonly Need[];
   /** The instant the result is for, TDB seconds past J2000. */
   instant?: number;
+  /**
+   * F27: the accuracy that applies when the result states no position
+   * accuracy ("exact arithmetic: a round trip", "published value ± half its
+   * last digit"): the case's own, else its group's (`withDefaults`).
+   */
+  accuracyNote?: string;
+  /**
+   * F28: the computation from input to output (R16): the case's own, else
+   * one built from the result's fields (`withDefaults`).
+   */
+  trace?: TraceStep[];
+  /**
+   * F28: where the value it is compared with (or its input, F6) comes from:
+   * the references.json entry the case cites (R10).
+   */
+  source?: Citation;
 }
 
 export interface StressContext {
@@ -108,25 +125,19 @@ export interface StressCase {
   readonly group: string;
   readonly title: string;
   readonly needs: readonly Need[];
+  /**
+   * The references.json entries the case cited while it was made
+   * (`stressCase` claims them); the runner adds the ones it cites while it
+   * runs, and the first becomes its results' `source`.
+   */
+  readonly cites?: readonly string[];
   run(ctx: StressContext): Promise<StressResult[]>;
 }
 
-/** A question card (R14). */
-export interface StressGroup {
-  readonly id: string;
-  /** The group's short name, as the plan and the lens table call it. */
-  readonly name: string;
-  /** The card's title: the question the group answers, in plain language. */
-  readonly question: string;
-  readonly lenses: readonly Lens[];
+/** A question card (R14): the group's plain data (groupInfo.ts) and its headline. */
+export interface StressGroup extends GroupInfo {
   /** The answer line for the card, from the group's results. */
   headline(results: readonly StressResult[]): string | undefined;
-  /** What "Show on globe" turns to. */
-  readonly focus?: {
-    readonly frames: readonly string[];
-    readonly overlay?: string;
-    readonly site?: string;
-  };
   /** A virtual group's membership (Reproducibility); others hold their own cases' results. */
   readonly collects?: (result: StressResult) => boolean;
 }
@@ -325,6 +336,103 @@ export function judgeResult(
   };
 }
 
+/** A number as copied: full precision, with its unit. */
+const exact = (value: number, unit: string | undefined): string =>
+  unit === undefined || unit === "" ? String(value) : `${value} ${unit}`;
+
+/**
+ * The trace a result shows when its case wrote none (F28, R16): what was
+ * checked, the recorded operation and its grids, what the case computed,
+ * then what came out against what was expected. Built from the result's own
+ * fields only, so it never states more than the result does.
+ */
+export function defaultTrace(result: StressResult): TraceStep[] {
+  const steps: TraceStep[] = [
+    { kind: "input", label: "What is checked", value: result.title },
+  ];
+  const f = result.fingerprint;
+  if (f !== undefined) {
+    steps.push({
+      kind: "step",
+      label: "PROJ operation, as recorded",
+      value: f.pipeline,
+      code: true,
+    });
+    if (f.grids.length > 0) {
+      steps.push({
+        kind: "step",
+        label: "Grids",
+        value: f.grids.map((g) => `${g.name} sha256 ${g.sha256}`).join("\n"),
+        code: true,
+      });
+    }
+  }
+  if (result.detail !== undefined && result.detail !== "") {
+    steps.push({ kind: "step", label: "Computed", value: result.detail });
+  }
+  if (result.expectedError !== undefined) {
+    steps.push({
+      kind: "output",
+      label: "Thrown",
+      value: result.error ?? "nothing was thrown",
+    });
+    steps.push({
+      kind: "expected",
+      label: "Expected error",
+      value: `/${result.expectedError}/`,
+      code: true,
+    });
+    return steps;
+  }
+  if (result.error !== undefined) {
+    steps.push({ kind: "output", label: "Threw", value: result.error });
+  }
+  if (result.effect !== undefined) {
+    steps.push({
+      kind: "output",
+      label: result.effect.label,
+      value: exact(result.effect.value, result.effect.unit),
+    });
+  }
+  if (result.value !== undefined) {
+    steps.push({
+      kind: "output",
+      label: "Deviation from the expected value",
+      value: exact(result.value, result.unit),
+    });
+  }
+  if (result.tolerance !== undefined) {
+    steps.push({
+      kind: "expected",
+      label: "Tolerance",
+      value: `|deviation| ≤ ${exact(result.tolerance, result.unit)}`,
+    });
+  }
+  return steps;
+}
+
+/**
+ * Fills what the inspector needs and the case left out (rulings F27, F28):
+ * the group's accuracy note when the result states no position accuracy,
+ * the first of `cites` as its source, and a trace from its fields.
+ */
+export function withDefaults(
+  result: StressResult,
+  cites: readonly string[] = [],
+): StressResult {
+  const note =
+    result.accuracy === undefined && result.accuracyNote === undefined
+      ? groupInfo(result.group)?.accuracyNote
+      : undefined;
+  return {
+    ...result,
+    ...(note !== undefined && { accuracyNote: note }),
+    ...(result.source === undefined &&
+      cites.length > 0 && { source: citation(cites[0]!) }),
+    ...(result.trace === undefined && { trace: defaultTrace(result) }),
+  };
+}
+
 export const GEOID = "us_noaa_g2018u0.tif";
 
 /** NAD83(2011) / California zone 3 (ftUS) + NAVD88 height (ftUS). */
@@ -494,6 +602,7 @@ export async function runCases(
       break;
     }
     let produced: StressResult[];
+    let cites: readonly string[] = c.cites ?? [];
     if ("missing" in met) {
       produced = [
         {
@@ -507,7 +616,9 @@ export async function runCases(
       ];
     } else {
       try {
-        produced = await c.run(met.ctx);
+        const ran = await collectCitations(() => c.run(met.ctx));
+        produced = ran.value;
+        cites = [...new Set([...cites, ...ran.ids])];
       } catch (error) {
         produced = [
           {
@@ -521,7 +632,7 @@ export async function runCases(
       }
     }
     for (const raw of produced) {
-      const judged = judgeResult(raw, fingerprints);
+      const judged = withDefaults(judgeResult(raw, fingerprints), cites);
       results.push(judged);
       onResult?.(judged);
     }

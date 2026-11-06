@@ -10,6 +10,7 @@ import type { Frames } from "../../../src/frames/frames.ts";
 import { Instant } from "../../../src/time/Instant.ts";
 import { Trajectory } from "../../../src/trajectory/Trajectory.ts";
 import { parseOem } from "../../../src/trajectory/oem.ts";
+import { takeCitations } from "./references.ts";
 import type {
   Fingerprint,
   Need,
@@ -224,19 +225,27 @@ export function rotationDifference(
 export const utc = (ctx: StressContext, iso: string): Instant =>
   Instant.fromIso(iso, "UTC", ctx.frames.data.leapSeconds);
 
+/**
+ * A case. It claims the references.json entries cited since the last case
+ * was made (`takeCitations`): the ones its maker read for it.
+ */
 export const stressCase = (
   id: string,
   groupId: string,
   title: string,
   needs: readonly Need[],
   run: (ctx: StressContext, base: ResultBase) => Promise<StressResult[]>,
-): StressCase => ({
-  id,
-  group: groupId,
-  title,
-  needs,
-  run: (ctx) => run(ctx, { id, group: groupId, title }),
-});
+): StressCase => {
+  const cites = takeCitations();
+  return {
+    id,
+    group: groupId,
+    title,
+    needs,
+    ...(cites.length > 0 && { cites }),
+    run: (ctx) => run(ctx, { id, group: groupId, title }),
+  };
+};
 
 export const epsg = (wkid: number, vcsWkid?: number): CrsRef =>
   vcsWkid === undefined

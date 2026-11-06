@@ -256,7 +256,7 @@ describe("run", () => {
     const { client } = connect(async () => context(), { cases: CATALOG });
     const results: StressResult[] = [];
     const summary = await client.run(["stub.throws"], (r) => results.push(r));
-    expect(results).toEqual([
+    expect(results).toMatchObject([
       { ...base("stub.throws"), pass: false, error: "boom: it broke" },
     ]);
     expect(summary).toMatchObject({ passed: 0, failed: 1, skipped: 0 });

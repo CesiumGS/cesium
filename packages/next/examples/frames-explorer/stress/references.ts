@@ -3,6 +3,7 @@
 import { fromDegrees } from "../../../src/math/ellipsoid.ts";
 import { EARTH } from "../../../src/scene/Body.ts";
 import references from "../references.json";
+import type { Citation } from "./groupInfo.ts";
 
 interface Cited {
   readonly source: { readonly retrieved: string } & Record<string, unknown>;
@@ -12,13 +13,101 @@ const REFERENCE_ENTRIES = (
   references as unknown as { readonly entries: Record<string, unknown> }
 ).entries;
 
-/** A references.json entry, which must exist. */
+/** Citations made outside a run (while the catalog's cases are made), in order. */
+let pending: string[] = [];
+/** The runs collecting citations (`collectCitations`), innermost last. */
+const collecting: Set<string>[] = [];
+
+/**
+ * A references.json entry, which must exist. Each call is recorded: while a
+ * case is made, for `stressCase` to claim (`takeCitations`); while it runs,
+ * for the runner (`collectCitations`). Either way its id becomes the case's
+ * results' `source` (ruling F28).
+ */
 export function cited<T>(id: string): T & Cited {
   const entry = REFERENCE_ENTRIES[id];
   if (entry === undefined) {
     throw new Error(`references.json has no entry "${id}"`);
   }
+  if (collecting.length === 0) {
+    pending.push(id);
+  } else {
+    for (const ids of collecting) {
+      ids.add(id);
+    }
+  }
   return entry as T & Cited;
+}
+
+/** The ids `cited` was called with outside a run since the last call, in order, once each. */
+export function takeCitations(): string[] {
+  const out = [...new Set(pending)];
+  pending = [];
+  return out;
+}
+
+/**
+ * Runs `fn`, collecting the ids `cited` is called with until it settles.
+ * The runner runs cases one at a time; two runs interleaved in one context
+ * would each collect the other's citations too (the page runs one at a time).
+ */
+export async function collectCitations<T>(
+  fn: () => Promise<T>,
+): Promise<{ value: T; ids: string[] }> {
+  const ids = new Set<string>();
+  collecting.push(ids);
+  try {
+    const value = await fn();
+    return { value, ids: [...ids] };
+  } finally {
+    collecting.splice(collecting.indexOf(ids), 1);
+  }
+}
+
+/** The fields of a source that say where in the document the value is. */
+const LOCATORS = [
+  "pid",
+  "record",
+  "table",
+  "tables",
+  "section",
+  "pages",
+] as const;
+
+/** A references.json entry as the inspector cites it (R10, F28). */
+export function citation(id: string): Citation {
+  const entry = REFERENCE_ENTRIES[id] as
+    { kind?: string; source: Record<string, unknown> } | undefined;
+  if (entry === undefined) {
+    throw new Error(`references.json has no entry "${id}"`);
+  }
+  const s = entry.source;
+  const text = (key: string): string | undefined =>
+    typeof s[key] === "string" ? s[key] : undefined;
+  const locator = LOCATORS.map((key) => {
+    const value = text(key);
+    return value === undefined
+      ? undefined
+      : key === "pid"
+        ? `PID ${value}`
+        : key === "pages"
+          ? `pages ${value}`
+          : value;
+  })
+    .filter((v): v is string => v !== undefined)
+    .join(", ");
+  const document = [text("document"), text("edition") ?? text("revision")]
+    .filter((v): v is string => v !== undefined)
+    .join(", ");
+  return {
+    reference: id,
+    document,
+    ...(text("publisher") !== undefined && { publisher: text("publisher")! }),
+    ...(locator !== "" && { locator }),
+    ...(text("url") !== undefined && { url: text("url")! }),
+    retrieved: text("retrieved") ?? "",
+    ...(entry.kind === "input" && { input: true }),
+  };
 }
 
 /** A value as its source printed it, and half a unit in its last printed digit (R10's tolerance). */

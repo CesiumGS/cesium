@@ -15,6 +15,7 @@ import {
   STRESS_CASES,
   STRESS_GROUPS,
   boundCrsChecks,
+  collectCitations,
   groupResults,
   orionFromOem,
   ORION_OEM,
@@ -114,6 +115,16 @@ const describeResult = (r: StressResult): string =>
 
 describe("the frames explorer's stress tests, headless", () => {
   let results: StressResult[] = [];
+  /** The references.json entries each case cited while it ran, collected here independently of the runner. */
+  const ranCites = new Map<string, string[]>();
+  const watched = STRESS_CASES.map((c) => ({
+    ...c,
+    run: async (ctx: StressContext) => {
+      const { value, ids } = await collectCitations(() => c.run(ctx));
+      ranCites.set(c.id, ids);
+      return value;
+    },
+  }));
 
   it("pass, every one", { timeout: 120_000 }, async () => {
     const recorded = UPDATE
@@ -122,6 +133,7 @@ describe("the frames explorer's stress tests, headless", () => {
           .fingerprints;
     const start = performance.now();
     results = await runStress(context, {
+      cases: watched,
       ...(recorded && { fingerprints: recorded }),
     });
     const seconds = (performance.now() - start) / 1000;
@@ -177,6 +189,49 @@ describe("the frames explorer's stress tests, headless", () => {
     for (const r of results) {
       expect(plainPath(r, r.id)).toBeUndefined();
       expect(structuredClone(r)).toEqual(r);
+    }
+  });
+
+  it("states an accuracy for every result: a position statement or an accuracy note, never a blank (F27, R8)", () => {
+    for (const r of results) {
+      const note = r.accuracyNote?.trim() ?? "";
+      expect(r.accuracy !== undefined || note !== "", r.id).toBe(true);
+    }
+  });
+
+  it("cites its source on every result of a case that reads references.json (F28, R10)", () => {
+    const entries = references.entries as unknown as Record<string, unknown>;
+    let cited = 0;
+    for (const c of STRESS_CASES) {
+      const cites = new Set([
+        ...(c.cites ?? []),
+        ...(ranCites.get(c.id) ?? []),
+      ]);
+      const own = results.filter(
+        (r) => r.id === c.id || r.id.startsWith(`${c.id}.`),
+      );
+      for (const r of own) {
+        if (cites.size === 0) {
+          expect(r.source, r.id).toBeUndefined();
+          continue;
+        }
+        cited++;
+        expect(r.source, r.id).toBeDefined();
+        expect(cites.has(r.source!.reference), r.id).toBe(true);
+        expect(entries[r.source!.reference], r.id).toBeDefined();
+        expect(r.source!.document, r.id).not.toBe("");
+        expect(r.source!.retrieved, r.id).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      }
+    }
+    expect(cited).toBeGreaterThan(50);
+  });
+
+  it("traces every result from its input to its output (F28, R16)", () => {
+    for (const r of results) {
+      expect(r.trace?.[0]?.kind, r.id).toBe("input");
+      for (const step of r.trace!) {
+        expect(step.value, `${r.id}: ${step.label}`).not.toBe("");
+      }
     }
   });
 

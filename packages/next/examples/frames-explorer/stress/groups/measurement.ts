@@ -68,6 +68,48 @@ const gridToGroundCase = stressCase(
         tolerance: GRID_TO_GROUND,
         unit: "m",
         detail: `design ${d.distance} ${d.unitName}; true ${m.distance} m; predicted ${predicted} m; combined factor ${d.combinedFactor.mean}`,
+        trace: [
+          {
+            kind: "input",
+            label:
+              "Design line, California zone 3 (EPSG:6420+6360, US survey feet)",
+            value: `${length} ftUS east along the site grid, from (2000, 1000, 25)`,
+          },
+          {
+            kind: "step",
+            label: "× site scale",
+            value: String(MEASUREMENT_SITE.scale),
+            note: "the site grid's scale factor",
+          },
+          {
+            kind: "step",
+            label: "× metres per US survey foot",
+            value: `${US_SURVEY_FOOT} m`,
+            note: "1200/3937, by definition",
+          },
+          {
+            kind: "step",
+            label: "÷ mean combined factor along the line",
+            value: String(d.combinedFactor.mean),
+            note: "grid scale × elevation factor, from the library",
+          },
+          {
+            kind: "step",
+            label: "PROJ operation, design to ITRF",
+            value: frame.operation.pipeline,
+            code: true,
+          },
+          {
+            kind: "output",
+            label: "Predicted ground distance",
+            value: `${predicted} m`,
+          },
+          {
+            kind: "expected",
+            label: "True distance (both ends in ITRF, on the ellipsoid)",
+            value: `${m.distance} m`,
+          },
+        ],
         accuracy: plainAccuracy(m.accuracy),
         instant: instant.tdb(),
       },
