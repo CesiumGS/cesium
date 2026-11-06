@@ -1,7 +1,10 @@
 // The frames explorer's tree layout (examples/frames-explorer/panel/treeLayout.ts):
 // pure positions for a tree diagram, over hand-made trees.
 import { describe, expect, it } from "vitest";
-import { layoutTree } from "../examples/frames-explorer/panel/treeLayout.ts";
+import {
+  layoutOutline,
+  layoutTree,
+} from "../examples/frames-explorer/panel/treeLayout.ts";
 import type { TreeNode } from "../examples/frames-explorer/tree.ts";
 
 const edge: TreeNode["edge"] = {
@@ -40,7 +43,12 @@ function check(root: TreeNode, opts = options) {
 describe("layoutTree", () => {
   it("places a single node centred in the width", () => {
     const { layout } = check(node("only"));
-    expect(layout.nodes).toEqual([{ id: "only", x: 600, y: 30, depth: 0 }]);
+    expect(layout.nodes).toHaveLength(1);
+    expect(layout.nodes[0]!.id).toBe("only");
+    expect(layout.nodes[0]!.x).toBeCloseTo(600, 6);
+    expect(layout.nodes[0]!.y).toBeCloseTo(30, 6);
+    expect(layout.nodes[0]!.depth).toBe(0);
+    expect(layout.fits).toBe(true);
     expect(layout.edges).toEqual([]);
     expect(layout.height).toBe(60);
   });
@@ -95,16 +103,28 @@ describe("layoutTree", () => {
     }
   });
 
-  it("squeezes a tree wider than the width to fit rather than overflow", () => {
-    const wide = node(
-      "r",
-      ...Array.from({ length: 12 }, (_, i) => node(`k${i}`)),
-    );
-    const { layout } = check(wide, { ...options, width: 800 });
+  it("reports a tree wider than the width as not fitting, with the width it needs and no overlaps", () => {
+    const { layout } = check(lopsided(20), { ...options, width: 800 });
+    expect(layout.fits).toBe(false);
+    expect(layout.neededWidth).toBeGreaterThanOrEqual(1000);
+    const rows = new Map<number, number[]>();
     for (const n of layout.nodes) {
-      expect(n.x).toBeGreaterThanOrEqual(0);
-      expect(n.x).toBeLessThanOrEqual(800);
+      expect(n.x - 50).toBeGreaterThanOrEqual(-1e-9);
+      expect(n.x + 50).toBeLessThanOrEqual(layout.neededWidth + 1e-9);
+      rows.set(n.depth, [...(rows.get(n.depth) ?? []), n.x]);
     }
+    for (const xs of rows.values()) {
+      xs.sort((p, q) => p - q);
+      for (let i = 1; i < xs.length; i++) {
+        expect(xs[i]! - xs[i - 1]!).toBeGreaterThanOrEqual(100 - 1e-9);
+      }
+    }
+  });
+
+  it("reports fits and the needed width when the tree fits", () => {
+    const { layout } = check(lopsided(20));
+    expect(layout.fits).toBe(true);
+    expect(layout.neededWidth).toBeLessThanOrEqual(1200);
   });
 
   it("lists every node once, parents before children", () => {
@@ -114,6 +134,68 @@ describe("layoutTree", () => {
     expect(index.size).toBe(20);
     for (const e of layout.edges) {
       expect(index.get(e.from)!).toBeLessThan(index.get(e.to)!);
+    }
+  });
+});
+
+describe("layoutOutline", () => {
+  const outlineOptions = { rowHeight: 24, indent: 16 };
+
+  it("gives one row per node in depth-first order, indented by depth", () => {
+    const root = node("a", node("b", node("d")), node("c"));
+    const out = layoutOutline(root, outlineOptions);
+    expect(out.nodes.map((n) => n.id)).toEqual(["a", "b", "d", "c"]);
+    out.nodes.forEach((n, i) => {
+      expect(n.y).toBeCloseTo(i * 24 + 12, 6);
+      expect(n.x).toBeCloseTo(n.depth * 16, 6);
+    });
+    expect(out.height).toBe(4 * 24);
+    expect(out.edges).toEqual([
+      { from: "a", to: "b" },
+      { from: "b", to: "d" },
+      { from: "a", to: "c" },
+    ]);
+  });
+
+  it("puts every child one indent right of its parent and below it", () => {
+    const root = lopsided(20);
+    const out = layoutOutline(root, outlineOptions);
+    const byId = new Map(out.nodes.map((n) => [n.id, n]));
+    expect(out.edges).toHaveLength(19);
+    for (const e of out.edges) {
+      const parent = byId.get(e.from)!;
+      const child = byId.get(e.to)!;
+      expect(child.x - parent.x).toBeCloseTo(16, 6);
+      expect(child.y).toBeGreaterThan(parent.y);
+    }
+    const ys = out.nodes.map((n) => n.y);
+    expect([...ys].sort((p, q) => p - q)).toEqual(ys);
+    expect(new Set(ys).size).toBe(20);
+  });
+
+  it("orders children as layoutTree does", () => {
+    const root = lopsided(20);
+    const tree = layoutTree(root, options);
+    const out = layoutOutline(root, outlineOptions);
+    const kids = (edges: readonly { from: string; to: string }[]) =>
+      edges.map((e) => `${e.from}>${e.to}`).sort();
+    expect(kids(out.edges)).toEqual(kids(tree.edges));
+    const treeX = new Map(tree.nodes.map((n) => [n.id, n.x]));
+    const siblings = new Map<string, string[]>();
+    for (const e of out.edges) {
+      siblings.set(e.from, [...(siblings.get(e.from) ?? []), e.to]);
+    }
+    for (const list of siblings.values()) {
+      const xs = list.map((id) => treeX.get(id)!);
+      expect([...xs].sort((p, q) => p - q)).toEqual(xs);
+    }
+  });
+
+  it("fits a 20-node tree in a 320 px column", () => {
+    const out = layoutOutline(lopsided(20), outlineOptions);
+    expect(out.width).toBeLessThanOrEqual(320);
+    for (const n of out.nodes) {
+      expect(n.x).toBeLessThan(out.width);
     }
   });
 });

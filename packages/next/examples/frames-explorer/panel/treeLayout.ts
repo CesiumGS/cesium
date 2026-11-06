@@ -18,12 +18,16 @@ export interface TreeLayout {
   nodes: readonly { id: string; x: number; y: number; depth: number }[];
   edges: readonly { from: string; to: string }[];
   height: number;
+  /** The width the tree needs so no two nodes at one depth are closer than `nodeWidth`. */
+  neededWidth: number;
+  /** `neededWidth <= width`. When false the tree is laid out at `neededWidth`, wider than asked. */
+  fits: boolean;
 }
 
 /**
- * The layout of `root`. The tree is centred in `width`. One too wide for it is
- * squeezed to fit, which brings nodes closer than `nodeWidth`; the caller
- * should size `width` to avoid that.
+ * The layout of `root`. A tree that fits is centred in `width`. One that
+ * doesn't is laid out at its `neededWidth` (never squeezed, so spacing holds)
+ * with `fits` false, for the caller to scroll or switch to `layoutOutline`.
  */
 export function layoutTree(
   root: TreeNode,
@@ -60,11 +64,58 @@ export function layoutTree(
   };
   place(root, 0);
 
-  const span = leaves * nodeWidth;
-  const scale = span > width ? width / span : 1;
-  const offset = (width - span * scale) / 2;
+  const neededWidth = leaves * nodeWidth;
+  const offset = Math.max(0, (width - neededWidth) / 2);
   for (const n of nodes) {
-    n.x = offset + n.x * nodeWidth * scale;
+    n.x = offset + n.x * nodeWidth;
   }
-  return { nodes, edges, height: (maxDepth + 1) * rowHeight };
+  return {
+    nodes,
+    edges,
+    height: (maxDepth + 1) * rowHeight,
+    neededWidth,
+    fits: neededWidth <= width,
+  };
+}
+
+/**
+ * An indented outline of `root` for a narrow column: one row per node in
+ * depth-first order (children in `layoutTree`'s order), `x` = depth * indent
+ * and `y` the row's middle. `width` is the room the indentation takes,
+ * `(deepest depth + 1) * indent`; the caller adds the label's width. Edges
+ * are the same parent-to-child pairs, for elbow connectors.
+ */
+export function layoutOutline(
+  root: TreeNode,
+  options: { rowHeight: number; indent: number },
+): {
+  nodes: readonly { id: string; x: number; y: number; depth: number }[];
+  edges: readonly { from: string; to: string }[];
+  height: number;
+  width: number;
+} {
+  const { rowHeight, indent } = options;
+  const nodes: { id: string; x: number; y: number; depth: number }[] = [];
+  const edges: { from: string; to: string }[] = [];
+  let maxDepth = 0;
+  const visit = (node: TreeNode, depth: number): void => {
+    maxDepth = Math.max(maxDepth, depth);
+    nodes.push({
+      id: node.id,
+      x: depth * indent,
+      y: nodes.length * rowHeight + rowHeight / 2,
+      depth,
+    });
+    for (const child of node.children) {
+      edges.push({ from: node.id, to: child.id });
+      visit(child, depth + 1);
+    }
+  };
+  visit(root, 0);
+  return {
+    nodes,
+    edges,
+    height: nodes.length * rowHeight,
+    width: (maxDepth + 1) * indent,
+  };
 }

@@ -499,6 +499,16 @@ describe("buildScenarioTree", () => {
     ).toThrow(/"X"/);
   });
 
+  it("throws, naming the id, for frames that never reach the root", () => {
+    const base = buildTree(frames);
+    expect(() =>
+      buildScenarioTree(base, [spec("A", "B"), spec("B", "A")]),
+    ).toThrow(/"A" is not connected/);
+    expect(() => buildScenarioTree(base, [spec("S", "S")])).toThrow(
+      /"S" is not connected/,
+    );
+  });
+
   it("throws, naming the id, on a missing parent", () => {
     expect(() =>
       buildScenarioTree(buildTree(frames), [spec("Lost", "NOWHERE")]),
