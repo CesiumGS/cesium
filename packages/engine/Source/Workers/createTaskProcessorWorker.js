@@ -1,4 +1,5 @@
 import { formatError } from "@cesium/core";
+import TrustedServers from "../Core/TrustedServers.js";
 
 /**
  * Creates an adapter function to allow a calculation function to operate as a Web Worker,
@@ -35,6 +36,7 @@ function createTaskProcessorWorker(workerFunction) {
     };
 
     self.CESIUM_BASE_URL = data.baseUrl;
+    TrustedServers.unpack(data.trustedServers ?? []);
 
     try {
       const result = await workerFunction(data.parameters, transferableObjects);
