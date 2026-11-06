@@ -20,7 +20,6 @@ import {
   type ReactNode,
   type RefObject,
   useEffect,
-  useLayoutEffect,
   useRef,
   useState,
 } from "react";
@@ -271,9 +270,11 @@ export function ExamplePage() {
           />
         </div>
       </div>
-      {/* Order matters: on leaving, React tears siblings down in order, so
-          the panel is removed before the runner's cleanup disposes the
-          example (and, on switching, the panel is no longer rendered). */}
+      {/* Order matters: React runs a removed subtree's cleanups, layout and
+          passive, in tree order, and the runner disposes in a passive
+          cleanup. So the panel (removed on leaving, and not rendered once
+          the run changes) is gone, its own cleanups run, before `dispose`.
+          Keep the panel before the runner. */}
       <ExamplePanel
         shown={reactPanel}
         info={info}
@@ -360,10 +361,13 @@ function ExampleRunner({
 
   // The example: a viewer of its own, run in it, and everything undone
   // when left (its undo, its scope, then the viewer with its world). A
-  // layout effect, so the last example's canvas is gone before the browser
-  // paints the new route; the new canvas shows once its first frame is
-  // drawn (created with `suspendPresentation`).
-  useLayoutEffect(() => {
+  // passive effect on purpose: React runs the passive cleanups of a removed
+  // React panel (a `useEffect` unsubscribing from the viewer) in tree order
+  // before this one, so they precede `dispose`; a layout cleanup here would
+  // run before them. (`flushSync` can't unmount the panel from a cleanup:
+  // React ignores it mid-commit.) The new canvas shows once its first frame
+  // is drawn (created with `suspendPresentation`).
+  useEffect(() => {
     if (!engine || !box.current || !host.current) {
       return;
     }

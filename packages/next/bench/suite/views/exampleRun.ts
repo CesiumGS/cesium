@@ -9,9 +9,10 @@ import type { Dispose, ExampleRun } from "../../../examples/types.ts";
 export type Params = Readonly<Record<string, string>>;
 
 /**
- * Search params as string params: the router parses `?n=12` as a number, so
- * numbers come back as text; objects, booleans and empty values are not an
- * example's.
+ * Search params as string params: the router parses values as JSON, so
+ * `?n=1.50` is the number 1.5 and comes back as "1.5" (`1e3` as "1000");
+ * objects, booleans, null and empty values are not an example's. Strings
+ * written by `setParams` round-trip (the router quotes numeric-looking ones).
  */
 export function searchToParams(search: Readonly<Record<string, unknown>>) {
   const params: Record<string, string> = {};
