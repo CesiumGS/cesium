@@ -3,7 +3,7 @@ import { Frame } from "../frames/Frame.ts";
 import type { Frames } from "../frames/frames.ts";
 import { toParentMatrix } from "../frames/matrix.ts";
 import { Instant } from "../time/Instant.ts";
-import { LeapSeconds } from "../time/leapSeconds.ts";
+import type { LeapSeconds } from "../time/leapSeconds.ts";
 import {
   interpolateState,
   windowStart,
@@ -38,8 +38,10 @@ const CENTER_IDS: Readonly<Record<number, Center>> = {
   0: "SSB",
 };
 
-const iso = (tdb: number): string =>
-  new Date(Instant.fromTdb(tdb).toUtc(LeapSeconds.builtIn())).toISOString();
+const iso = (tdb: number, leap: LeapSeconds): string =>
+  Number.isFinite(tdb)
+    ? new Date(Instant.fromTdb(tdb).toUtc(leap)).toISOString()
+    : String(tdb);
 
 function oemCenter(name: string): Center | undefined {
   switch (name.trim().toUpperCase()) {
@@ -218,11 +220,20 @@ export class Trajectory<N extends string = string> {
     name: N,
     accuracy: TrajectoryAccuracy,
     reference: Frame,
-    pieces: readonly Piece[],
+    allPieces: readonly Piece[],
+    private readonly leap: LeapSeconds,
   ) {
     this.name = name;
     this.accuracy = accuracy;
     this.reference = reference;
+    // A piece whose clamped range is empty (a useable range or summary wholly
+    // outside the epochs) covers nothing: it must not appear in `spans`.
+    const pieces = allPieces.filter((p) => p.start <= p.end);
+    if (pieces.length === 0) {
+      throw new Error(
+        `Trajectory "${name}": none of its data covers any time (every useable range lies outside the stored epochs)`,
+      );
+    }
     this.pieces = pieces;
     this.spans = mergeSpans(pieces);
     this.frame = new Frame(name, reference, (instant, out) => {
@@ -247,9 +258,11 @@ export class Trajectory<N extends string = string> {
     const t = instant.tdb();
     const piece = this.find(t);
     if (!piece) {
-      const covered = this.spans.map(([a, b]) => `${iso(a)} to ${iso(b)}`);
+      const covered = this.spans.map(
+        ([a, b]) => `${iso(a, this.leap)} to ${iso(b, this.leap)}`,
+      );
       throw new Error(
-        `Trajectory "${this.name}": ${iso(t)} is outside its data (covered: ${covered.join("; ")})`,
+        `Trajectory "${this.name}": ${iso(t, this.leap)} is outside its data (covered: ${covered.join("; ")})`,
       );
     }
     const first = windowStart(piece.epochs, t, piece.windowSize);
@@ -323,7 +336,13 @@ export class Trajectory<N extends string = string> {
       );
     }
     const pieces = segments.map((s) => oemPiece(s, options.interpolation));
-    return new Trajectory(options.name, options.accuracy, reference, pieces);
+    return new Trajectory(
+      options.name,
+      options.accuracy,
+      reference,
+      pieces,
+      frames.data.leapSeconds,
+    );
   }
 
   /**
@@ -386,6 +405,7 @@ export class Trajectory<N extends string = string> {
       options.accuracy,
       reference,
       segments.map(spkPiece),
+      frames.data.leapSeconds,
     );
   }
 }

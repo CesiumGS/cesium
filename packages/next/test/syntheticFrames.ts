@@ -28,7 +28,11 @@ export const SAMPLE: EopSample = {
 export function syntheticFrameData(sample: EopSample = SAMPLE): FrameData {
   return {
     leapSeconds: LeapSeconds.builtIn(),
-    eop: { atInstant: () => sample } as unknown as EarthOrientationParameters,
+    eop: {
+      atInstant: () => sample,
+      first: Date.UTC(2000, 0, 1),
+      last: Date.UTC(2030, 0, 1),
+    } as unknown as EarthOrientationParameters,
     ephemeris: Ephemeris.fromPacks(
       buffer(pack("SPK", ["sun", "emb", "moon"], "ICRF", "position")),
       buffer(pack("PCK", ["moonPa"], "MOON_PA", "euler")),

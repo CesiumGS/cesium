@@ -7,6 +7,17 @@ const J2000_UNIX_MS = 946_728_000_000;
 const TT_MINUS_TAI = 32.184;
 const JD_J2000 = 2_451_545.0;
 const DAY_MS = 86_400_000;
+
+/**
+ * `Date.UTC` for the proleptic Gregorian calendar with the year taken as
+ * given: `Date.UTC` itself maps years 0 to 99 onto 1900 to 1999. The day may
+ * overflow the month, as in `Date.UTC`.
+ */
+function utcMs(year: number, month: number, day: number): number {
+  const d = new Date(0);
+  d.setUTCFullYear(year, month, day);
+  return d.getTime();
+}
 const ISO_PATTERN =
   /^(\d{4})-(?:(\d{2})-(\d{2})|(\d{3}))T(\d{2}):(\d{2}):(\d{2})(?:\.(\d+))?Z?$/;
 
@@ -103,23 +114,23 @@ export class Instant {
       if (month < 0 || month > 11) {
         throw new Error(`Invalid month in ISO time "${text}"`);
       }
-      const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+      const daysInMonth = new Date(utcMs(year, month + 1, 0)).getUTCDate();
       if (day < 1 || day > daysInMonth) {
         throw new Error(`Invalid date in ISO time "${text}"`);
       }
     } else {
       const doy = Number(m[4]);
-      const daysInYear = new Date(Date.UTC(year + 1, 0, 1)).getTime();
-      const yearStart = Date.UTC(year, 0, 1);
+      const daysInYear = utcMs(year + 1, 0, 1);
+      const yearStart = utcMs(year, 0, 1);
       if (doy < 1 || doy > (daysInYear - yearStart) / DAY_MS) {
         throw new Error(`Invalid day of year in ISO time "${text}"`);
       }
-      day = doy; // Date.UTC rolls the day of month over into later months.
+      day = doy; // utcMs rolls the day of month over into later months.
     }
     if (hour > 23 || minute > 59 || second > 60) {
       throw new Error(`Invalid time of day in ISO time "${text}"`);
     }
-    const dayMs = Date.UTC(year, month, day);
+    const dayMs = utcMs(year, month, day);
     const wholeMs =
       dayMs + ((hour * 60 + minute) * 60 + Math.min(second, 59)) * 1000;
     if (scale === "UTC") {

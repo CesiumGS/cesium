@@ -245,9 +245,9 @@ export class Viewer {
   /** The loaded frames data (`ViewerOptions.frameData`), once it arrives. */
   private frameData_: FrameData | undefined;
   /**
-   * `ViewerOptions.frameData` as it resolves: the data, or `undefined` (after
-   * one `console.warn`) when none was asked for or loading failed, in which
-   * case the sky stays analytic.
+   * Always a promise: it resolves to the data, or to `undefined`, silently
+   * when no `ViewerOptions.frameData` was given and after one `console.warn`
+   * when loading failed. In both cases the sky stays analytic.
    */
   readonly frameData: Promise<FrameData | undefined>;
   /** The Moon is drawn (`ViewerOptions.moon`). */
@@ -358,12 +358,12 @@ export class Viewer {
     const frameData = options.frameData;
     if (frameData === undefined) {
       this.frameData = Promise.resolve(undefined);
+    } else if (typeof frameData !== "string") {
+      // Already loaded: apply it now, so the first frame draws the real sky.
+      this.frameData_ = frameData;
+      this.frameData = Promise.resolve(frameData);
     } else {
-      this.frameData = (
-        typeof frameData === "string"
-          ? loadFrameData(frameData)
-          : Promise.resolve(frameData)
-      ).then(
+      this.frameData = loadFrameData(frameData).then(
         (data) => {
           if (!this.destroyed) {
             this.frameData_ = data;

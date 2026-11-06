@@ -1,0 +1,2 @@
+# Written by scripts/frameFixtures.py; a reformat would be undone on regeneration.
+test/fixtures/frames/*.json
