@@ -9,6 +9,9 @@
 .fx-globe-labels {
   position: absolute;
   inset: 0;
+  /* Under every panel over the view, the viewer's widgets (z-index 1 and 2)
+     and the HUD's (3) alike (Task 4c item 3). */
+  z-index: 0;
   overflow: hidden;
   pointer-events: none;
 }

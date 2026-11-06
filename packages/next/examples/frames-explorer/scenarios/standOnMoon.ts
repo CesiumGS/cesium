@@ -25,13 +25,18 @@ import {
   type StressResult,
 } from "../stress/runner.ts";
 import {
+  EFFECT,
   apply,
   compositionTolerance,
   distance,
   norm,
   translationOf,
 } from "../stress/shared.ts";
-import { registerScenario, type ScenarioEvaluator } from "./evaluate.ts";
+import {
+  registerScenario,
+  type ScenarioAnswer,
+  type ScenarioEvaluator,
+} from "./evaluate.ts";
 import {
   LUNAR_SITE,
   latitudeText,
@@ -47,6 +52,41 @@ const SPEC = SCENARIOS.find((s) => s.id === "stand-on-moon")!;
 const STEP = 3600;
 const SYNODIC_MONTH = 29.530589;
 const DAY = 86_400;
+/** The hourly samples in the month (709). */
+export const LUNAR_SAMPLES = Math.round((SYNODIC_MONTH * DAY) / STEP);
+
+/**
+ * How the answer is worked out, in plain words (the owner, Task 4c item 1:
+ * "not everyone will be familiar with relativity"). Each step says what
+ * `lunarClockGain` below does, as the catalog's lunar-time.moon-vs-earth
+ * does it; test/framesExplorerLunarMethod.test.ts holds the two together.
+ */
+export const LUNAR_CLOCK_METHOD: NonNullable<ScenarioAnswer["method"]> = [
+  {
+    title: "Two clocks",
+    text: "One at rest on the Moon's surface at the lunar site; the other at sea level on the Earth (height 0 on the ellipsoid), at the California datasheet point (NGS GU2195).",
+  },
+  {
+    title: "Where each clock is, and how fast it moves",
+    text: `Each clock's position is taken through the frame tree into ICRF every hour of a lunar month (${SYNODIC_MONTH.toFixed(2)} days, ${LUNAR_SAMPLES} times): the lunar site through MOON_ME → MOON_ICRF → ICRF, the Earth clock through ITRF → GCRF → ICRF. Its velocity is a central difference: its position half a second later, less half a second earlier.`,
+  },
+  {
+    title: "How fast each clock ticks",
+    text: "properTimeRate gives each clock's rate against the solar system's time scale (TDB). A clock deeper in gravity runs slower (the Sun's, the Earth's and the Moon's, taken as point masses), and a faster-moving clock runs slower.",
+  },
+  {
+    title: "The answer",
+    text: "The difference between the two rates, averaged over the month, in µs a day.",
+  },
+  {
+    title: "Why the Moon's clock is fast",
+    text: "It sits much higher in the Earth's gravity well than a clock on the ground, and that outweighs its orbital speed.",
+  },
+  {
+    title: `What the ${EFFECT * 100}% covers`,
+    text: `The point-mass approximation. Ashby & Patla's full model (a clock on the selenoid against one on the geoid) gives ${publishedRate().printed}; with the bodies taken as point masses, this method is held to within ${EFFECT * 100}% of it, the catalog check's tolerance.`,
+  },
+];
 
 /** The Earth clock: h = 0 at the NGS datasheet point GU2195, as the catalog's case has it. */
 function earthClock(): Float64Array {
@@ -91,7 +131,7 @@ export function lunarClockGain(
       velocity[i] = b[i]! - a[i]!;
     }
   };
-  const samples = Math.round((SYNODIC_MONTH * DAY) / STEP);
+  const samples = LUNAR_SAMPLES;
   let sum = 0;
   for (let i = 0; i < samples; i++) {
     const tdb = t0 + i * STEP;
@@ -257,6 +297,7 @@ export const evaluateStandOnMoon: ScenarioEvaluator = async (
         note: "within 2% of the method: point-mass potentials of the Sun, the Earth and the Moon (the catalog's tolerance against Ashby & Patla 2024)",
       },
       path: { from: LUNAR_SITE, to: "ITRF" },
+      method: LUNAR_CLOCK_METHOD,
     },
     overlays: [],
     live: [triadCheck(site, latitude, instant), roundTrip(ctx, site, instant)],

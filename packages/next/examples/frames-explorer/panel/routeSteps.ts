@@ -15,6 +15,8 @@ export interface RouteStep {
   accuracy?: { text: string; unknown: boolean };
   /** An edge step: its edge, named by its child node (the diagram's edge id). */
   edge?: string;
+  /** A route in two legs (`legs`): the end whose path to the ancestor it is on. */
+  leg?: "start" | "end";
 }
 
 /** What each built-in edge does physically, by its child frame. */
@@ -57,6 +59,10 @@ function locate(
  * route's order (up from the start to the common ancestor, then down), then
  * `end`. An edge walked up is "<child> to <parent>", down "<parent> to
  * <child>". An added frame's edge says its own detail.
+ *
+ * With `legs`, the route is two legs that meet at the ancestor: `start` and
+ * its edges up, then `end` and its edges up (the down edges reversed), each
+ * step marked with its leg.
  */
 export function routeSteps(
   tree: TreeNode,
@@ -67,6 +73,7 @@ export function routeSteps(
   },
   start: { title: string; does: string; accuracy?: EdgeAccuracy },
   end: { title: string; does: string },
+  legs?: { start: string; end: string },
 ): RouteStep[] {
   const edge = (childId: string, up: boolean): RouteStep | undefined => {
     const found = locate(tree, childId);
@@ -99,6 +106,21 @@ export function routeSteps(
     if (s) {
       steps.push(s);
     }
+  }
+  if (legs) {
+    const ends: RouteStep[] = [
+      { kind: "end", title: end.title, does: end.does },
+    ];
+    for (const id of [...path.down].reverse()) {
+      const s = edge(id, true);
+      if (s) {
+        ends.push(s);
+      }
+    }
+    return [
+      ...steps.map((s) => ({ ...s, leg: "start" as const })),
+      ...ends.map((s) => ({ ...s, leg: "end" as const })),
+    ];
   }
   for (const id of path.down) {
     const s = edge(id, false);

@@ -120,6 +120,12 @@ export interface SceneSpec {
     start: { title: string; does: string };
     end: { title: string; does: string };
   };
+  /**
+   * The route as two legs that meet at the common ancestor, each end walked
+   * up to it, with each leg's heading: the answer takes both ends there and
+   * compares them (stand-on-moon's two clocks in ICRF, Task 4c item 1).
+   */
+  routeLegs?: { start: string; end: string };
 }
 
 export const SCENES: Readonly<Partial<Record<ScenarioId, SceneSpec>>> = {
@@ -189,6 +195,11 @@ export const SCENES: Readonly<Partial<Record<ScenarioId, SceneSpec>>> = {
         title: "ITRF, a clock on the Earth",
         does: "the clock it is compared with, at rest on the Earth's surface",
       },
+    },
+    // Both clocks are taken into ICRF and their rates compared there.
+    routeLegs: {
+      start: "The lunar clock's path to ICRF",
+      end: "The Earth clock's path to ICRF",
     },
     lunarSite: (k) => Number(k.latitude),
     note: "The Moon's imagery is the sky's distant backdrop until plan 5 draws the Moon as a tileset in MOON_ME, so it lines up with the site only from straight above, as here.",

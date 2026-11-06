@@ -237,7 +237,16 @@ export function scenarioView(input: ScenarioViewInput): ScenarioPanelView {
             does: sc?.drawnView?.[p.to] ?? "",
           }
         : (sc?.routeEnds?.end ?? { title: p.to, does: "" });
-      return { route: routeSteps(tree, path, start, end) };
+      return {
+        route: routeSteps(
+          tree,
+          path,
+          start,
+          end,
+          e.data ? undefined : sc?.routeLegs,
+        ),
+        ...(!e.data && sc?.routeLegs && { routeLegs: sc.routeLegs }),
+      };
     })(),
     playing,
     rate: input.rate,

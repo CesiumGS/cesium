@@ -426,7 +426,12 @@ binds over the bullets above where they differ:
 - **Orion's marker** is a dot with a halo on the path at the clock's time,
   "Orion, HH:MM UTC" beside it, an arrow at the view's edge when it is off
   screen; the globe's callout names the drawn-in frame and carries the same
-  GCRF / ITRF / MOON_ME choice.
+  GCRF / ITRF / MOON_ME choice. While the clock plays, the statement is a
+  moment behind it (its re-ask and reply take up to 1.5 s of real time at
+  the clock's rate): the dot shows that statement's place, carried with the
+  drawing frame so it stays on the path, and its time (Task 4c). Its text
+  moves clear of the HUD's panels; every globe label sits under them, the
+  time controls and their popover.
 - **More below**: a fade and a "Knobs and proof ↓" pill at the scroller's
   foot until the end is reached.
 
@@ -1115,6 +1120,7 @@ board, an overlay's `OverlayState`).
 | `cameraRig.ts`       | Flights, globe and orbit controls, the hand-over, the widened limits, the pivot marker                                      |
 | `scenarios/stage.ts` | Each scenario's scene: enter, knobs, leave (clock, light, exposure, its frames)                                             |
 | `callouts.ts`        | The lunar clock's callout, Orion's marker and path label                                                                    |
+| `labelPanels.ts`     | The panels over the view the globe's labels keep clear of (pure placement, Task 4c)                                         |
 | `catalogRuns.ts`     | The stress catalog's runs and results                                                                                       |
 | `userCrs.ts`         | "Try your own": the ion asset and the bound-CRS checks                                                                      |
 | `pageReport.ts`      | The report's environment and the Report tab's lines                                                                         |

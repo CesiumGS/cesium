@@ -234,7 +234,10 @@ export const evaluateOnePath: ScenarioEvaluator = async (
       answer: {
         label: "",
         headline: noPosition(ctx, o),
-        accuracy: { note: "not bounded: outside Orion's data" },
+        accuracy: {
+          note: "not bounded: outside Orion's data",
+          unbounded: true,
+        },
         path,
       },
       overlays: [],
@@ -272,6 +275,7 @@ export const evaluateOnePath: ScenarioEvaluator = async (
           statement.meters !== undefined
             ? `Orion's position through the tree to ${name}, 1σ: the OEM's covariance, its unstated time scale (taken as TDB) and DE440`
             : `not bounded: ${statement.terms.find((t) => t.meters === undefined)?.note ?? "a term has no size"}`,
+        ...(statement.meters === undefined && { unbounded: true }),
       },
       path,
     },

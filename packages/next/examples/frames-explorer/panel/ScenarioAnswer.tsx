@@ -3,7 +3,9 @@
 // "not bounded" with its reason when it has no size. While the knobs' new
 // answer is on its way the last one stays, dimmed, with "Updating" (R9); a
 // first answer shows its loading; a failure says what failed. The limit the
-// scenario says plainly (the backdrop Moon) sits under it.
+// scenario says plainly (the backdrop Moon) sits under it. Where the answer
+// says how it is worked out (stand-on-moon's clock rates, Task 4c item 1),
+// its steps follow, open, under "How this is worked out".
 import { CircularProgress, Link, Typography } from "@mui/material";
 import {
   accuracyLine,
@@ -97,6 +99,18 @@ export function ScenarioAnswer({ scenario }: { scenario: ScenarioPanelView }) {
         <p className="fx-answer-follow">
           Following the clock: the answer at a moment ago, updated as it plays.
         </p>
+      )}
+      {a.method && a.method.length > 0 && (
+        <details className="fx-answer-method" open>
+          <summary>How this is worked out</summary>
+          <ol>
+            {a.method.map((s) => (
+              <li key={s.title}>
+                <span className="fx-strong">{s.title}.</span> {s.text}
+              </li>
+            ))}
+          </ol>
+        </details>
       )}
       {scenario.note && <p className="fx-answer-note">{scenario.note}</p>}
     </div>

@@ -29,6 +29,27 @@
 .fx-route-start .fx-route-n {
   background: var(--fx-trajectory);
 }
+/* A route in two legs (stand-on-moon's clocks, each up to ICRF): each under
+   its heading, the key's route line beside it. */
+.fx-route-legs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-200);
+}
+.fx-route-leg-head {
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+  margin: 0;
+  font-size: var(--stratakit-font-size-caption-lg);
+  line-height: var(--stratakit-line-height-caption-lg);
+  font-weight: 600;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+/* Each leg starts at its clock: both starts are the scenario's own. */
+.fx-route-lit .fx-route-end .fx-route-n {
+  background: var(--fx-trajectory);
+}
 .fx-route-text {
   display: flex;
   flex-direction: column;

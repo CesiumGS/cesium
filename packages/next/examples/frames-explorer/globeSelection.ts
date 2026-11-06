@@ -320,7 +320,11 @@ export function createGlobeSelection(deps: {
       onView();
     },
     selectQuietly: (id) => {
-      quietResult = id;
+      // Already the selection, selecting it again changes nothing and
+      // `applySelection` never runs to clear the flag: none is left behind
+      // for a later, ordinary choice of it (Task 4c item 4).
+      const s = view.get().selection;
+      quietResult = s.kind === "result" && s.id === id ? undefined : id;
     },
     resultView: (id) => resultFraming(id).view,
     frameContent,

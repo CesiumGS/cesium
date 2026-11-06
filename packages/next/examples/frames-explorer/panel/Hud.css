@@ -3,7 +3,10 @@
 
 /*
  * Over the canvas, clear of Dyno's inspector (top left) and credits (bottom
- * left), and above the viewer's time controls (bottom centre).
+ * left). The host makes no stacking context of its own (Task 4c item 3):
+ * its panels sit above the viewer's time controls (z-index 2), while the
+ * globe's labels sit under them, their popovers, the credits and the
+ * inspector (GlobeLabels.css), as under the HUD's own panels.
  */
 .fx-hud-host {
   color-scheme: dark;
@@ -45,10 +48,19 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  z-index: 3;
+}
+/*
+ * The viewer's own popovers, while open, sit above the HUD's panels (and
+ * the time controls): the expanded inspector and the credits' attribution
+ * (Task 4c item 3).
+ */
+:has(> .fx-hud-host) > .cesium-inspector.expanded,
+:has(> .fx-hud-host) > .cesium-credits:has(> .cc-panel:not([hidden])) {
+  z-index: 4;
 }
 .fx-hud {
   position: absolute;
+  z-index: 3;
   pointer-events: auto;
   box-sizing: border-box;
   display: flex;
@@ -90,6 +102,7 @@
  */
 .fx-inset {
   position: absolute;
+  z-index: 3;
   box-sizing: border-box;
   pointer-events: none;
   border: 1px solid oklch(100% 0 0 / 0.7);

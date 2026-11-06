@@ -46,10 +46,20 @@ export interface ScenarioAnswer {
   };
   value?: number;
   unit?: string;
-  /** Always stated (R8): metres where it is bounded, and in words either way. */
-  accuracy: { meters?: number; note: string };
+  /**
+   * Always stated (R8): metres where it is bounded, and in words either way.
+   * `unbounded` when it has no size (not bounded, not stated or not known):
+   * the panel says so in its warning colour, from this flag, never from the
+   * note's words (Task 4c item 4).
+   */
+  accuracy: { meters?: number; note: string; unbounded?: boolean };
   /** The tree path the answer runs along: node ids for `branchPath`. */
   path?: { from: string; to: string };
+  /**
+   * How the answer is worked out, in plain words: a few short steps, each a
+   * title and its sentence or two (Task 4c item 1).
+   */
+  method?: readonly { title: string; text: string }[];
 }
 
 /**

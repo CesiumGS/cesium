@@ -33,6 +33,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import type { TreeNode } from "../tree.ts";
+import { designRoot } from "./designRoot.ts";
 import { unfoldedFor } from "./diagramFocus.ts";
 import { EDGE_LABEL, FAMILY_INFO, familyMap, type Family } from "./families.ts";
 import { edgeAccuracyText } from "./FrameTree.tsx";
@@ -735,7 +736,9 @@ export function TreeDiagram({
           >
             {tipText.text}
           </span>,
-          document.body,
+          // Inside StrataKit's root, as the Expand dialog is: its tokens and
+          // colour scheme reach the tip (Task 4c item 4).
+          designRoot(tip?.el, document.body),
         )}
     </div>
   );

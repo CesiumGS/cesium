@@ -104,14 +104,17 @@ describe("an answer's text", () => {
       accuracyLine({
         label: "",
         headline: "",
-        accuracy: { note: "not bounded: outside Orion's data" },
+        accuracy: {
+          note: "not bounded: outside Orion's data",
+          unbounded: true,
+        },
       }),
     ).toBe("Not bounded: outside Orion's data");
     expect(
       accuracyLine({
         label: "",
         headline: "",
-        accuracy: { note: "the OEM's gap" },
+        accuracy: { note: "the OEM's gap", unbounded: true },
       }),
     ).toBe("Not bounded: the OEM's gap");
   });
@@ -258,16 +261,40 @@ describe("the published comparison under the headline (the owner, fix 1)", () =>
   });
 });
 
-describe("the accuracy's warning colour (fix 2)", () => {
-  const a = (note: string, meters?: number) => ({
+describe("the accuracy's warning colour (fix 2; Task 4c item 4: a flag, not the note's words)", () => {
+  const a = (note: string, meters?: number, unbounded?: boolean) => ({
     label: "",
     headline: "",
-    accuracy: { note, ...(meters !== undefined && { meters }) },
+    accuracy: {
+      note,
+      ...(meters !== undefined && { meters }),
+      ...(unbounded !== undefined && { unbounded }),
+    },
   });
-  it("warns for not bounded, not stated or not known, never for a bounded figure", () => {
-    expect(accuracyWarns(a("not bounded: outside Orion's data"))).toBe(true);
-    expect(accuracyWarns(a("not stated: no published uncertainty"))).toBe(true);
+  it("warns for an accuracy flagged unbounded (not bounded, not stated or not known), never for a bounded figure", () => {
+    expect(
+      accuracyWarns(a("not bounded: outside Orion's data", undefined, true)),
+    ).toBe(true);
+    expect(
+      accuracyWarns(a("not stated: no published uncertainty", undefined, true)),
+    ).toBe(true);
     expect(accuracyWarns(a("within 2% of the method"))).toBe(false);
     expect(accuracyWarns(a("measured Earth orientation", 0.017))).toBe(false);
+  });
+  it("reads the flag, not the note: a note's first words change neither way", () => {
+    // A bounded note that happens to start with the words.
+    expect(accuracyWarns(a("not known to better than 2%: the method"))).toBe(
+      false,
+    );
+    // An unbounded one whose note says why without them.
+    expect(accuracyWarns(a("outside Orion's data", undefined, true))).toBe(
+      true,
+    );
+    expect(accuracyLine(a("outside Orion's data", undefined, true))).toBe(
+      "Not bounded: outside Orion's data",
+    );
+    expect(accuracyLine(a("within 2% of the method"))).toBe(
+      "Within 2% of the method",
+    );
   });
 });

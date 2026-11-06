@@ -23,6 +23,13 @@ import type { TrajectoryInfo } from "./protocol.ts";
 
 /** "Orion now" shows only for a statement within this much clock time of the clock, ms. */
 const ORION_NOW_SLACK_MS = 120_000;
+/**
+ * While the clock plays, a statement is "now" for this much real time of
+ * clock, ms: the re-ask's 150 ms and a reply's round trip, with room for a
+ * worker busy with a scenario's evaluation. At 1 h/s the clock passes the
+ * fixed two minutes in 33 ms, before any reply is in (Task 4c item 2).
+ */
+const ORION_NOW_PLAYING_MS = 1500;
 /** The OEM's span, generously: samples it doesn't cover are skipped. */
 const ORION_SPAN = ["2026-04-02T02:00:00", "2026-04-11T00:00:00"] as const;
 
@@ -67,6 +74,11 @@ export interface OrionLayer {
   place(): void;
   /** A point of the drawn path (Earth-fixed when drawn), where it is placed now. */
   pathPoint(p: ArrayLike<number>): Float64Array | undefined;
+  /**
+   * Orion's place at the statement's time, carried with the path's drawing
+   * frame to the clock's instant: on the drawn path as the path moves.
+   */
+  markerPoint(): Float64Array | undefined;
   /** The statement is for about the clock's time (not one it was scrubbed from). */
   nowCurrent(): boolean;
   /** Asks for the statement again if the clock moved since the last ask. */
@@ -221,6 +233,52 @@ export function createOrionLayer(deps: {
     }
   }
 
+  /**
+   * Orion's place in the drawing frame at its statement's time, kept for
+   * the statement and the frame it was taken in. The path's sample at that
+   * time is the same point, so carried with the frame to now it stays on the
+   * path while the clock runs ahead of the statement (Task 4c item 2: an
+   * ITRF point from a minute ago is off a path that turned since).
+   */
+  let markerIn:
+    { info: TrajectoryInfo; frame: OrionFrame; at: Float64Array } | undefined;
+  function markerPoint(): Float64Array | undefined {
+    const frames = framesNow();
+    const instant = instantNow();
+    if (!orionInfo || !frames || !instant) {
+      return undefined;
+    }
+    const { info } = orionInfo;
+    const itrf = Float64Array.from(info.itrf);
+    const frame = orionBuilt?.frame ?? "ITRF";
+    if (frame === "ITRF") {
+      return itrf;
+    }
+    try {
+      if (markerIn?.info !== info || markerIn.frame !== frame) {
+        markerIn = {
+          info,
+          frame,
+          at: pathPoint(
+            frameTransform(
+              frames.itrf,
+              frames[DRAW_IN[frame]],
+              Instant.fromTdb(info.at),
+            ),
+            itrf,
+          ),
+        };
+      }
+      return pathPoint(
+        frameTransform(frames[DRAW_IN[frame]], frames.itrf, instant),
+        markerIn.at,
+      );
+    } catch {
+      // Outside the frame data's span: where the statement put it.
+      return itrf;
+    }
+  }
+
   /** Orion's node and statements at the clock's instant: one in flight, the latest waiting. */
   const orionInfoRequest = latestOnly(
     (arg: { at: number; utc: number }) => client.trajectoryInfo(arg.at),
@@ -321,9 +379,24 @@ export function createOrionLayer(deps: {
     },
     place,
     pathPoint: orionPathPoint,
-    nowCurrent: () =>
-      orionInfo !== undefined &&
-      Math.abs(orionInfo.utc - viewer.clock.time) <= ORION_NOW_SLACK_MS,
+    markerPoint,
+    nowCurrent: () => {
+      if (orionInfo === undefined) {
+        return false;
+      }
+      // Playing, the statement is always a moment behind the clock: as much
+      // clock time as the re-ask and its reply take at the clock's rate.
+      // Paused, a scrub's old statement hides until the new one is in.
+      const { clock } = viewer;
+      const slack =
+        clock.mode === "playing"
+          ? Math.max(
+              ORION_NOW_SLACK_MS,
+              Math.abs(clock.rate) * ORION_NOW_PLAYING_MS,
+            )
+          : ORION_NOW_SLACK_MS;
+      return Math.abs(orionInfo.utc - clock.time) <= slack;
+    },
     askIfMoved: (now, real) => {
       // Scrubbed or played: "Orion now" and the tree's statements are asked
       // for again within a moment (one in flight, the latest waiting), so

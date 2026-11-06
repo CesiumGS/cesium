@@ -235,6 +235,8 @@ export interface ScenarioPanelView {
   data?: { label: string; frame: string; source: string };
   /** The answer's route through the tree, spelled out (routeSteps.ts). */
   route?: readonly RouteStep[];
+  /** The route's two legs' headings, when it meets at the ancestor (stand-on-moon's clocks). */
+  routeLegs?: { start: string; end: string };
   /** The base frames its answer and proof name, kept in the docked diagram's view. */
   focus: readonly string[];
   playing: boolean;

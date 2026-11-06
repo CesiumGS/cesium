@@ -28,7 +28,7 @@ export function createCallouts(deps: {
   stale(): boolean;
   orion: Pick<
     OrionLayer,
-    "info" | "error" | "built" | "nowCurrent" | "pathPoint"
+    "info" | "error" | "built" | "nowCurrent" | "pathPoint" | "markerPoint"
   >;
   /** Orion's overlay state. */
   orionOverlay: OverlayState;
@@ -80,16 +80,18 @@ export function createCallouts(deps: {
       !orionInfoError
     ) {
       // One clear indicator (fix 1): a dot on the path at Orion's place at
-      // the clock's time, its time beside it; the accuracy is the answer's,
-      // on the callout. Orion's place in ITRF is on the drawn path in every
-      // frame: the path is placed by its frame now (orionLayer.ts `place`),
-      // so its sample at this time lands here
-      // (test/data/framesExplorerScenarios).
+      // the statement's time, that time beside it; the accuracy is the
+      // answer's, on the callout. Orion's place is on the drawn path in
+      // every frame: the path is placed by its frame now (orionLayer.ts
+      // `place`), and the marker is carried with that frame too
+      // (`markerPoint`), so it stays on the path while the clock plays
+      // ahead of the statement (Task 4c item 2;
+      // test/data/framesExplorerScenarios, test/framesExplorerOrionMarker).
       const hhmm = new Date(orionInfo.utc).toISOString().slice(11, 16);
       out.push({
         id: "marker:orion-now",
         text: `Orion, ${hhmm} UTC`,
-        at: orionInfo.info.itrf,
+        at: () => orion.markerPoint(),
         family: "trajectory",
         priority: 5,
         marker: true,

@@ -25,27 +25,29 @@ export function formatAnswer(value: number, unit: string): string {
 }
 
 /**
- * The accuracy needs the warning colour: it isn't bounded or isn't stated.
- * A bounded relative figure ("within 2% of the method") isn't a warning
- * (fix 2).
+ * The accuracy needs the warning colour: the evaluator flagged it as having
+ * no size (not bounded, not stated or not known). A bounded relative figure
+ * ("within 2% of the method") isn't a warning (fix 2). The flag, not the
+ * note's words, decides (Task 4c item 4).
  */
 export function accuracyWarns(answer: ScenarioAnswer): boolean {
   return (
-    answer.accuracy.meters === undefined &&
-    /^(not bounded|not stated|not known)/i.test(answer.accuracy.note)
+    answer.accuracy.meters === undefined && answer.accuracy.unbounded === true
   );
 }
 
-/** "±1.1 m (1σ): measured Earth orientation …", or "Not bounded: …". */
+/** "±1.1 m (1σ): measured Earth orientation …", "Within 2% …", or "Not bounded: …". */
 export function accuracyLine(answer: ScenarioAnswer): string {
-  const { meters, note } = answer.accuracy;
+  const { meters, note, unbounded } = answer.accuracy;
   if (meters !== undefined) {
     return `±${length(meters)} (1σ): ${note}`;
   }
-  const why = note.replace(/^not bounded:\s*/i, "");
-  return /^(not bounded|within|not stated)/i.test(note)
-    ? note.charAt(0).toUpperCase() + note.slice(1)
-    : `Not bounded: ${why}`;
+  const sentence = note.charAt(0).toUpperCase() + note.slice(1);
+  // An unbounded accuracy says so first, unless its note already does.
+  return unbounded === true &&
+    !/^(not bounded|not stated|not known)/i.test(note)
+    ? `Not bounded: ${note}`
+    : sentence;
 }
 
 /** "+2.31°", "−0.04 km/s", "no change". */

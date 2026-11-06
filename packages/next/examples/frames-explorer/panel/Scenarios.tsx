@@ -23,6 +23,7 @@ import type {
   ScenarioPanelView,
   Selection,
 } from "./model.ts";
+import { designRoot } from "./designRoot.ts";
 import { keepSet } from "./diagramFocus.ts";
 import { RouteSteps } from "./RouteSteps.tsx";
 import { Proof } from "./Proof.tsx";
@@ -261,7 +262,7 @@ function ExpandedTree({
     </div>,
     // At page level, as wide as the window allows (fix 2): inside the
     // design system's root, so its tokens and scheme apply.
-    hud.closest<HTMLElement>(".🥝Root") ?? document.body,
+    designRoot(hud, document.body),
   );
 }
 
@@ -504,7 +505,9 @@ export function Scenarios({
                   {model.treeNote}
                 </Typography>
               )}
-              {scenario.route && <RouteSteps steps={scenario.route} />}
+              {scenario.route && (
+                <RouteSteps steps={scenario.route} legs={scenario.routeLegs} />
+              )}
               {tree && diagramSelection && (
                 <Detail
                   model={model}

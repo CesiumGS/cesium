@@ -465,6 +465,8 @@ export function run(context: ExampleContext): ExampleRun {
     ready: () => frames() !== undefined,
   });
   scope.defer(() => deepLinks.dispose());
+  // Keep this after every `create…`: its `ready` callback uses `frameLoop`,
+  // `host` and `selection`, and called earlier it throws a temporal-dead-zone error.
   void frameData.load();
 
   const tab = initialTab(params, initial);

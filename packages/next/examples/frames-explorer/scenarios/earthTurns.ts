@@ -28,7 +28,11 @@ import {
   rotationDifference,
   translationOf,
 } from "../stress/shared.ts";
-import { registerScenario, type ScenarioEvaluator } from "./evaluate.ts";
+import {
+  registerScenario,
+  type ScenarioAnswer,
+  type ScenarioEvaluator,
+} from "./evaluate.ts";
 import { SACRAMENTO } from "./scenes.ts";
 import type { KnobState } from "./spec.ts";
 import { SCENARIOS } from "./specs.ts";
@@ -148,11 +152,12 @@ function compositions(ctx: StressContext, instant: Instant): StressResult {
 function orientation(
   ctx: StressContext,
   instant: Instant,
-): { meters?: number; note: string } {
+): ScenarioAnswer["accuracy"] {
   const sigma = earthOrientationSigma(ctx.frames, instant);
   if (sigma.degraded) {
     return {
       note: `not bounded: the time is outside the Earth-orientation table (${sigma.span})`,
+      unbounded: true,
     };
   }
   const radians = Math.hypot(

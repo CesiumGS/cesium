@@ -13,6 +13,7 @@ import type {
 } from "../../src/scene/World.ts";
 import type { Instant } from "../../src/time/Instant.ts";
 import type { Viewer } from "../../widgets/index.ts";
+import { clearOfPanels, overlaps, panelBoxes } from "./labelPanels.ts";
 import type { OverlayChunk, Rgba } from "./overlays.ts";
 import { AXIS_COLORS, FAMILY_INFO, type Family } from "./panel/families.ts";
 
@@ -759,6 +760,10 @@ export class Globe {
     const placed: { x: number; y: number; w: number; h: number }[] = [];
     /** The screen points of the labels shown, to fade one whose point is within 24 px of another's. */
     const anchors: { x: number; y: number }[] = [];
+    // The panels over the view (the HUD's, the time controls and their
+    // popover, the credits, the inspector): no label's text sits under one
+    // (Task 4c items 3 and 4, labelPanels.ts).
+    const panels = panelBoxes(this.viewer.container, this.labelHost);
     const order = [...this.labels.values()].sort(
       (a, b) => b.spec.priority - a.spec.priority,
     );
@@ -820,7 +825,7 @@ export class Globe {
         const bh = el.offsetHeight || 16;
         // A callout sits 48 px right of its point, its leader between;
         // every label is kept inside the view (S-I3).
-        const box = {
+        let box = {
           x: Math.min(
             Math.max(
               2,
@@ -851,14 +856,17 @@ export class Globe {
               b.y < box.y + box.h,
           );
         if (spec.pinned) {
-          // A pinned label never hides: it steps down past the labels it
-          // would cover (two axis tips passing each other, S-I10).
+          // A pinned label never hides: its text moves clear of the panels
+          // (the callout over Orion's marker at 1280×700), then steps down
+          // past the labels it would cover (two axis tips passing each
+          // other, S-I10).
+          box = clearOfPanels(box, { x, y }, panels, { w, h });
           for (let step = 0; step < 4 && hits(); step++) {
             box.y = Math.min(box.y + bh + 2, h - bh - 2);
           }
           visible = true;
         } else {
-          visible = !hits();
+          visible = !hits() && !panels.some((p) => overlaps(box, p));
         }
         if (visible) {
           placed.push(box);

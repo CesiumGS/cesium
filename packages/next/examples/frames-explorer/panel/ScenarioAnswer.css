@@ -56,6 +56,29 @@
   gap: var(--stratakit-space-150);
   color: var(--stratakit-color-text-info-base);
 }
+/* How the answer is worked out: a disclosure, open, its steps numbered. */
+.fx-answer-method > summary {
+  cursor: pointer;
+  width: fit-content;
+  font-weight: 600;
+  color: var(--stratakit-color-text-accent-strong);
+}
+.fx-answer-method > summary:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: 2px;
+}
+.fx-answer-method > ol {
+  margin: var(--stratakit-space-150) 0 0;
+  padding-inline-start: var(--stratakit-space-500);
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-100);
+  color: var(--stratakit-color-text-neutral-secondary);
+  text-wrap: pretty;
+}
+.fx-answer-method .fx-strong {
+  color: var(--stratakit-color-text-neutral-primary);
+}
 .fx-answer-note {
   padding-inline-start: var(--stratakit-space-200);
   border-inline-start: 2px solid var(--stratakit-color-border-attention-base);
