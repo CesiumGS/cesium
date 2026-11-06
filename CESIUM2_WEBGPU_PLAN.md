@@ -6578,6 +6578,9 @@ because none of them changes a result.
 - **Plan 4b: the native loader.** In `loadNode` (`src/engineering/proj.ts`),
   the native `.node` is not re-hashed at load, and `PROJ_DATA` is set
   process-wide.
+- **Plan 4b: PROJ's log noise.** Listing candidates whose grids are missing
+  makes PROJ write to stderr (and the browser console). Lower PROJ's log level
+  while listing, and report missing grids through the error instead.
 - **Plan 5:** `measureSpan` runs `gridFactors` twice per sample, a `proj_factors`
   call at each end. Cache the factors by design point, or compute them once for
   a span's fixed ends.
