@@ -43,4 +43,16 @@ export const EXAMPLES: ExampleInfo[] = [
     source: () =>
       import("./slang-playground/main.ts?raw").then((m) => m.default),
   },
+  {
+    id: "frames-explorer",
+    title: "Frames and projections",
+    description:
+      "The frame tree and engineering frames, drawn on the globe and stress-tested in the page: every edge labelled, every result checked against its tolerance.",
+    labels: ["Frames", "Projections", "Measurement"],
+    globe: "ellipsoid",
+    layout: "side",
+    load: () => import("./frames-explorer/main.ts"),
+    source: () =>
+      import("./frames-explorer/main.ts?raw").then((m) => m.default),
+  },
 ];

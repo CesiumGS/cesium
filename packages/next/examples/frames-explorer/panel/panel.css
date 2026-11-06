@@ -1,0 +1,1233 @@
+/*
+ * The frames explorer's panel and HUD (examples/frames-explorer/DESIGN.md).
+ * StrataKit tokens only, with one exception: the frame-family palette and the
+ * axis colors, the 3D viewport's HUD colors (bench/suite/DESIGN.md), each
+ * with a tone for light surfaces and one for dark, checked to 4.5:1 on
+ * StrataKit's page and elevation surfaces in both schemes.
+ */
+
+.fx-panel,
+.fx-hud {
+  --fx-celestial: light-dark(#6e44bc, #b298f9);
+  --fx-earth: light-dark(#02717a, #3bcddc);
+  --fx-moon: light-dark(#836412, #eec469);
+  --fx-engineering: light-dark(#ae2881, #f07ec2);
+  --fx-trajectory: light-dark(#ae5517, #fc9252);
+  --fx-axis-x: light-dark(#cc272e, #fc5855);
+  --fx-axis-y: light-dark(#1b7e2a, #5ad664);
+  --fx-axis-z: light-dark(#0559d2, #5d97f7);
+  --fx-ease: cubic-bezier(0.2, 0, 0, 1);
+}
+.fx-family-celestial {
+  --fx-family: var(--fx-celestial);
+}
+.fx-family-earth {
+  --fx-family: var(--fx-earth);
+}
+.fx-family-moon {
+  --fx-family: var(--fx-moon);
+}
+.fx-family-engineering {
+  --fx-family: var(--fx-engineering);
+}
+.fx-family-trajectory {
+  --fx-family: var(--fx-trajectory);
+}
+
+/* ------------------------------------------------------------ frame */
+
+/* Fills Dyno's Controls body; each tab scrolls on its own under the strip. */
+.fx-panel {
+  container: fx-panel / inline-size;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-200);
+  font-size: var(--stratakit-font-size-body-sm);
+  line-height: var(--stratakit-line-height-body-sm);
+}
+.fx-panel p {
+  margin: 0;
+  color: inherit;
+}
+.fx-panel h2,
+.fx-panel h3,
+.fx-panel h4 {
+  margin: 0;
+  color: inherit;
+}
+.fx-tabs {
+  flex: none;
+}
+.fx-tab-panel {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  /* Room for focus rings inside the scroller. */
+  padding: 2px;
+  margin: -2px;
+}
+.fx-tab-panel[hidden] {
+  display: none;
+}
+.fx-tab-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-600);
+  padding-block: var(--stratakit-space-200) var(--stratakit-space-400);
+}
+
+.fx-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-200);
+}
+.fx-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--stratakit-space-300);
+  flex-wrap: wrap;
+}
+.fx-section-head > h2 {
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------------- shared */
+
+.fx-muted {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.fx-strong {
+  font-weight: 600;
+}
+.fx-num {
+  font-variant-numeric: tabular-nums;
+}
+.fx-unbounded {
+  color: var(--stratakit-color-text-attention-base);
+}
+.fx-problem {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.fx-hint {
+  padding: var(--stratakit-space-200) 0;
+}
+.fx-code {
+  font-family: var(--stratakit-font-family-mono);
+  font-size: var(--stratakit-font-size-mono-sm);
+  line-height: var(--stratakit-line-height-mono-sm);
+  overflow-wrap: anywhere;
+}
+.fx-code-block {
+  display: block;
+  padding: var(--stratakit-space-150) var(--stratakit-space-200);
+  border-radius: var(--stratakit-radius-sm);
+  background: var(--stratakit-color-bg-mono-muted);
+  white-space: pre-wrap;
+}
+.fx-badge-content .MuiCircularProgress-root {
+  color: currentColor;
+}
+.fx-badge-content {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+  white-space: nowrap;
+}
+.fx-chip {
+  display: inline-block;
+  padding: 0 var(--stratakit-space-150);
+  border: 1px solid var(--stratakit-color-border-neutral-muted);
+  border-radius: var(--stratakit-radius-round);
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-size: var(--stratakit-font-size-caption-md);
+  line-height: var(--stratakit-line-height-caption-lg);
+  white-space: nowrap;
+}
+.fx-swatch {
+  flex: none;
+  display: inline-block;
+  inline-size: 10px;
+  block-size: 10px;
+  border-radius: var(--stratakit-radius-round);
+  background: var(--fx-family);
+}
+.fx-swatch-unknown {
+  background: repeating-linear-gradient(
+    135deg,
+    var(--stratakit-color-text-attention-base) 0 2px,
+    transparent 2px 4px
+  );
+  box-shadow: inset 0 0 0 1px var(--stratakit-color-text-attention-base);
+}
+.fx-swatch-line {
+  inline-size: 14px;
+  block-size: 3px;
+  border-radius: 2px;
+  margin-block-start: 0.5em;
+}
+/* A glossary word: its definition is a click (or Enter) away. */
+.fx-panel .fx-term {
+  all: unset;
+  cursor: help;
+  text-decoration: underline dotted;
+  text-decoration-color: var(--stratakit-color-text-neutral-tertiary);
+  text-underline-offset: 3px;
+}
+.fx-panel .fx-term:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+.fx-term-popover {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-100);
+  max-inline-size: 300px;
+  padding: var(--stratakit-space-200);
+}
+.fx-term-popover > p:first-child {
+  font-weight: 600;
+}
+.fx-accuracy {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.fx-dl {
+  margin: 0;
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--stratakit-space-100) var(--stratakit-space-300);
+}
+.fx-dl dt {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.fx-dl dd {
+  margin: 0;
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+.fx-empty {
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-200);
+  padding: var(--stratakit-space-600) var(--stratakit-space-300);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+/* A whole-row selector: the text is the button. */
+.fx-panel .fx-row-button {
+  all: unset;
+  cursor: pointer;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  color: var(--stratakit-color-text-neutral-primary);
+}
+.fx-panel .fx-row-button:hover {
+  text-decoration: underline;
+}
+.fx-panel .fx-row-button:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* ------------------------------------------------------- status strip */
+
+.fx-strip {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-150);
+  padding-block-end: var(--stratakit-space-200);
+  border-block-end: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.fx-strip-row {
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+}
+.fx-strip-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--stratakit-space-100);
+  flex: 1;
+  min-inline-size: 0;
+}
+.fx-pill-idle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+  padding: 0 var(--stratakit-space-150);
+  border: 1px dashed var(--stratakit-color-border-neutral-muted);
+  border-radius: var(--stratakit-radius-sm);
+  font-size: var(--stratakit-font-size-caption-lg);
+  line-height: 18px;
+  white-space: nowrap;
+}
+.fx-strip-counts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--stratakit-space-100) var(--stratakit-space-300);
+  font-variant-numeric: tabular-nums;
+}
+.fx-count {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.fx-count-pass {
+  color: var(--stratakit-color-text-positive-base);
+}
+.fx-count-fail {
+  color: var(--stratakit-color-text-critical-base);
+  font-weight: 600;
+}
+.fx-count-wait {
+  color: var(--stratakit-color-text-info-base);
+}
+.fx-fetch {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-50);
+  font-variant-numeric: tabular-nums;
+}
+.fx-strip-alert {
+  font-size: var(--stratakit-font-size-body-sm);
+}
+.fx-item-details {
+  border-collapse: collapse;
+  margin: var(--stratakit-space-200);
+  font-size: var(--stratakit-font-size-body-sm);
+}
+.fx-item-details caption {
+  text-align: start;
+  font-weight: 600;
+  padding-block-end: var(--stratakit-space-150);
+}
+.fx-item-details th,
+.fx-item-details td {
+  text-align: start;
+  padding: var(--stratakit-space-100) var(--stratakit-space-200);
+  border-block-start: 1px solid var(--stratakit-color-border-neutral-muted);
+  vertical-align: top;
+}
+.fx-item-details thead th {
+  border-block-start: 0;
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-weight: 400;
+}
+.fx-item-details tbody th {
+  font-weight: 500;
+}
+.fx-item-details tbody th > .fx-muted {
+  display: block;
+  font-weight: 400;
+}
+
+/* ---------------------------------------------------------- explore */
+
+.fx-tour-prompt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--stratakit-space-300);
+}
+.fx-family-key {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--stratakit-space-50) var(--stratakit-space-300);
+}
+.fx-family-key li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.fx-tree {
+  margin-inline: calc(-1 * var(--stratakit-space-100));
+}
+.fx-edge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-150);
+  flex-wrap: wrap;
+}
+/* The selected frame's path to the root: a quiet band, the selected row's own look kept. */
+.fx-tree-item.fx-on-path {
+  background: var(--stratakit-color-bg-glow-on-surface-neutral-hover);
+}
+.fx-tree-item.fx-on-path .fx-swatch {
+  box-shadow:
+    0 0 0 2px var(--stratakit-color-bg-page-base),
+    0 0 0 3px var(--fx-family);
+}
+
+.fx-walk {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-300);
+  padding: var(--stratakit-space-300);
+  border-radius: var(--stratakit-radius-md);
+  background: var(--stratakit-color-bg-page-depth);
+}
+.fx-walk-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--stratakit-space-200);
+}
+.fx-walk-edges {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+/* Each edge a stop on a line from the root: the dot in its family's color. */
+.fx-walk-edge {
+  position: relative;
+  display: grid;
+  grid-template-columns: 14px minmax(0, 1fr);
+  gap: var(--stratakit-space-200);
+  padding-block-end: var(--stratakit-space-300);
+  animation: fx-in 320ms var(--fx-ease) both;
+  animation-delay: calc(var(--i, 0) * 90ms);
+}
+.fx-walk-edge::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: 6px;
+  inset-block: 14px 0;
+  inline-size: 2px;
+  background: var(--stratakit-color-border-neutral-muted);
+}
+.fx-walk-edge:last-child::before {
+  display: none;
+}
+.fx-walk-dot {
+  inline-size: 10px;
+  block-size: 10px;
+  margin: 4px 2px 0;
+  border-radius: var(--stratakit-radius-round);
+  background: var(--fx-family);
+}
+.fx-walk-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-50);
+  min-inline-size: 0;
+}
+.fx-walk-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--stratakit-space-100) var(--stratakit-space-200);
+}
+.fx-walk-acc {
+  margin-inline-start: auto;
+}
+
+.fx-budget {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-200);
+}
+.fx-budget-total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--stratakit-space-200);
+}
+.fx-budget-value {
+  font-size: var(--stratakit-font-size-headline-sm);
+  line-height: var(--stratakit-line-height-headline-sm);
+  font-weight: 600;
+}
+.fx-budget-bar {
+  display: flex;
+  gap: 2px;
+  block-size: 10px;
+  border-radius: var(--stratakit-radius-sm);
+  overflow: hidden;
+  background: var(--stratakit-color-bg-neutral-base);
+}
+.fx-budget-seg {
+  flex-basis: 0;
+  min-inline-size: 3px;
+  background: var(--fx-family);
+  transform-origin: left center;
+  animation: fx-grow 520ms var(--fx-ease) both;
+  animation-delay: calc(240ms + var(--i, 0) * 90ms);
+}
+.fx-budget-unknown {
+  flex: 0 0 18px;
+  background: repeating-linear-gradient(
+    135deg,
+    var(--stratakit-color-text-attention-base) 0 3px,
+    transparent 3px 6px
+  );
+}
+.fx-terms {
+  inline-size: 100%;
+  border-collapse: collapse;
+  font-size: var(--stratakit-font-size-body-sm);
+}
+.fx-terms th,
+.fx-terms td {
+  text-align: start;
+  vertical-align: top;
+  padding: var(--stratakit-space-100) 0;
+  border-block-start: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.fx-terms thead th {
+  border-block-start: 0;
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-weight: 400;
+}
+.fx-terms td.fx-num,
+.fx-terms th.fx-num {
+  text-align: end;
+  padding-inline-start: var(--stratakit-space-300);
+  white-space: nowrap;
+}
+.fx-terms tbody th {
+  font-weight: 500;
+}
+.fx-terms tbody th {
+  display: flex;
+  gap: var(--stratakit-space-200);
+}
+.fx-terms tbody th .fx-swatch {
+  margin-block-start: 0.3em;
+}
+.fx-term-note {
+  display: block;
+  font-weight: 400;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+
+.fx-overlays {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.fx-overlay {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-50);
+  padding-block: var(--stratakit-space-150);
+  border-block-start: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.fx-overlay:first-child {
+  border-block-start: 0;
+}
+.fx-overlay-head {
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-200);
+}
+.fx-overlay-label {
+  font-size: var(--stratakit-font-size-body-md);
+  line-height: var(--stratakit-line-height-body-md);
+}
+.fx-overlay-wait {
+  margin-inline-start: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+  color: var(--stratakit-color-text-info-base);
+  white-space: nowrap;
+}
+/* Under the label, past the switch. */
+.fx-overlay-acc,
+.fx-overlay-options {
+  padding-inline-start: 44px;
+}
+.fx-overlay-acc {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.fx-overlay-acc.fx-unbounded {
+  color: var(--stratakit-color-text-attention-base);
+}
+.fx-overlay-options {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--stratakit-space-200) var(--stratakit-space-300);
+  padding-block: var(--stratakit-space-150);
+}
+.fx-overlay-options > .MuiSlider-root {
+  flex: 1;
+  min-inline-size: 140px;
+}
+.fx-overlay-grid > * {
+  flex: 1 1 200px;
+}
+.fx-option-label {
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.fx-clock {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--stratakit-space-300);
+  flex-wrap: wrap;
+}
+.fx-clock-time {
+  font-size: var(--stratakit-font-size-body-lg);
+  line-height: var(--stratakit-line-height-body-lg);
+  font-weight: 600;
+}
+
+/* ---------------------------------------------------------- verify */
+
+/* The list scrolls above; the inspector, when open, takes the bottom. */
+.fx-tab-verify {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.fx-tab-verify[hidden] {
+  display: none;
+}
+.fx-verify {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-200);
+}
+.fx-verify-list {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-300);
+  padding-block-start: var(--stratakit-space-200);
+}
+.fx-inspector-full .fx-verify-list {
+  display: none;
+}
+.fx-verify-tools {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-200);
+}
+.fx-lenses {
+  flex-wrap: wrap;
+}
+.fx-run {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--stratakit-space-300);
+  font-variant-numeric: tabular-nums;
+}
+.fx-filter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--stratakit-space-200);
+  padding: var(--stratakit-space-100) var(--stratakit-space-200);
+  border-radius: var(--stratakit-radius-sm);
+  background: var(--stratakit-color-bg-page-depth);
+}
+.fx-cards {
+  display: flex;
+  flex-direction: column;
+}
+.fx-card {
+  background: transparent;
+}
+/* Question and answer on the left, the verdict in a column on the right. */
+.fx-card-head {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--stratakit-space-50) var(--stratakit-space-300);
+  align-items: start;
+  min-inline-size: 0;
+}
+.fx-card-status {
+  grid-row: 1 / span 2;
+  grid-column: 2;
+  padding-block-start: 1px;
+}
+.fx-card-answer {
+  grid-column: 1;
+}
+.fx-card-question {
+  font-size: var(--stratakit-font-size-body-md);
+  line-height: var(--stratakit-line-height-body-md);
+  font-weight: 500;
+}
+.fx-card-answer {
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+.fx-card-status-text {
+  font-weight: 400;
+}
+/* The body starts under the question, not a marker's width in. */
+.fx-card-body {
+  padding-inline: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-300);
+}
+.fx-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--stratakit-space-200);
+  flex-wrap: wrap;
+}
+.fx-card-buttons {
+  display: inline-flex;
+  gap: var(--stratakit-space-200);
+}
+/* Fixed columns so the check's title takes what's left and never pushes the
+   verdict out of the column. */
+.fx-results {
+  table-layout: fixed;
+  inline-size: 100%;
+}
+.fx-col-value {
+  inline-size: 8.5rem;
+}
+.fx-col-effect {
+  inline-size: 5.5rem;
+}
+.fx-col-accuracy {
+  inline-size: 6rem;
+}
+.fx-col-status {
+  inline-size: 6.5rem;
+}
+.fx-results th,
+.fx-results td {
+  padding: var(--stratakit-space-150) var(--stratakit-space-200);
+  vertical-align: top;
+}
+.fx-results th:first-child,
+.fx-results td:first-child {
+  padding-inline-start: 0;
+}
+.fx-results th:last-child,
+.fx-results td:last-child {
+  padding-inline-end: 0;
+}
+.fx-results th {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.fx-fp {
+  display: inline-block;
+  margin-block-start: var(--stratakit-space-50);
+  color: var(--stratakit-color-text-positive-base);
+  font-size: var(--stratakit-font-size-caption-lg);
+}
+.fx-fp-diff {
+  color: var(--stratakit-color-text-critical-base);
+  font-weight: 600;
+}
+.fx-user-row {
+  background: var(--stratakit-color-bg-info-transparent);
+}
+.fx-nobar {
+  white-space: nowrap;
+}
+
+/* Value against tolerance: a bar, a tick, and the numbers. */
+.fx-tol {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.fx-tol-bar {
+  position: relative;
+  display: block;
+  inline-size: 100%;
+  block-size: 6px;
+  border-radius: 3px;
+  background: var(--stratakit-color-bg-neutral-base);
+}
+.fx-tol-fill {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  min-inline-size: 2px;
+  border-radius: 3px;
+  background: var(--stratakit-color-icon-positive-base);
+}
+.fx-over .fx-tol-fill {
+  background: var(--stratakit-color-icon-critical-base);
+}
+.fx-tol-tick {
+  position: absolute;
+  inset-block: -3px;
+  inline-size: 2px;
+  margin-inline-start: -1px;
+  background: var(--stratakit-color-text-neutral-primary);
+}
+.fx-tol-text {
+  font-size: var(--stratakit-font-size-caption-lg);
+  white-space: nowrap;
+}
+.fx-tol-large {
+  min-inline-size: 0;
+  inline-size: 100%;
+}
+.fx-tol-large .fx-tol-bar {
+  block-size: 10px;
+  border-radius: 5px;
+}
+.fx-tol-scale {
+  position: relative;
+  display: block;
+  block-size: 1.4em;
+  color: var(--stratakit-color-text-neutral-tertiary);
+  font-size: var(--stratakit-font-size-caption-md);
+}
+.fx-tol-scale-tick {
+  position: absolute;
+  inset-block-start: 0;
+  transform: translateX(-50%);
+}
+.fx-tol-large .fx-tol-text {
+  font-size: var(--stratakit-font-size-body-sm);
+}
+
+/* The inspector: a sheet under the list, or the whole tab when filled. */
+.fx-inspector {
+  flex: 0 0 auto;
+  max-block-size: 58%;
+  display: flex;
+  flex-direction: column;
+  border-block-start: 1px solid var(--stratakit-color-border-neutral-base);
+  box-shadow: 0 -8px 16px -12px var(--stratakit-color-border-neutral-base);
+  animation: fx-sheet 240ms var(--fx-ease) both;
+}
+.fx-inspector-full .fx-inspector {
+  flex: 1;
+  max-block-size: none;
+  border-block-start: 0;
+  box-shadow: none;
+}
+.fx-inspector-head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-200);
+  padding-block: var(--stratakit-space-150);
+}
+.fx-inspector-tools {
+  margin-inline-start: auto;
+  display: inline-flex;
+}
+.fx-inspector-body {
+  flex: 1;
+  min-block-size: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-500);
+  padding-block-end: var(--stratakit-space-300);
+}
+.fx-inspector-title {
+  font-weight: 600;
+}
+.fx-inspector-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--stratakit-space-200);
+  margin-block-start: calc(-1 * var(--stratakit-space-300));
+}
+.fx-part {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-200);
+}
+.fx-part-title {
+  font-weight: 600;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.fx-measured {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-300);
+}
+.fx-detail {
+  overflow-wrap: anywhere;
+}
+/* The trace is a sequence: numbered, input to output. */
+.fx-trace {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: fx-step;
+  display: flex;
+  flex-direction: column;
+}
+.fx-trace-step {
+  counter-increment: fx-step;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-50);
+  padding: var(--stratakit-space-150) 0 var(--stratakit-space-150) 28px;
+  border-block-start: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.fx-trace-step::before {
+  content: counter(fx-step);
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block-start: var(--stratakit-space-150);
+  inline-size: 18px;
+  block-size: 18px;
+  border-radius: var(--stratakit-radius-round);
+  display: grid;
+  place-items: center;
+  font-size: var(--stratakit-font-size-caption-md);
+  font-variant-numeric: tabular-nums;
+  color: var(--stratakit-color-text-neutral-secondary);
+  border: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.fx-trace-output::before {
+  color: var(--stratakit-color-text-neutral-primary);
+  border-color: var(--stratakit-color-text-neutral-primary);
+}
+/* The expected value isn't a step: it sits against the output. */
+.fx-trace-expected {
+  counter-increment: none;
+  border-block-start-style: dashed;
+}
+.fx-trace-expected::before {
+  content: "=";
+  border-style: dashed;
+}
+.fx-trace-label {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.fx-trace-output .fx-trace-label,
+.fx-trace-expected .fx-trace-label {
+  color: var(--stratakit-color-text-neutral-primary);
+  font-weight: 500;
+}
+.fx-trace-value {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--stratakit-space-100);
+}
+.fx-trace-value > :first-child {
+  flex: 1;
+  min-inline-size: 0;
+}
+.fx-trace-value .fx-num {
+  font-size: var(--stratakit-font-size-body-md);
+  padding-block-start: 4px;
+}
+.fx-citation {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-50);
+}
+.fx-formula .fx-code {
+  font-size: var(--stratakit-font-size-mono-sm);
+}
+.fx-fp-line {
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-200);
+  flex-wrap: wrap;
+}
+.fx-fp-pipeline {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--stratakit-space-100);
+}
+.fx-fp-pipeline > code {
+  flex: 1;
+  min-inline-size: 0;
+}
+.fx-grid {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+  flex-wrap: wrap;
+}
+
+/* "Try your own" (R18): a well inside the Bound CRSs card. */
+.fx-try {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-200);
+  padding: var(--stratakit-space-300);
+  border-radius: var(--stratakit-radius-md);
+  background: var(--stratakit-color-bg-page-depth);
+}
+.fx-wkt {
+  font-family: var(--stratakit-font-family-mono);
+  font-size: var(--stratakit-font-size-mono-sm);
+}
+.fx-try-buttons,
+.fx-try-row {
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-200);
+  flex-wrap: wrap;
+}
+.fx-try-ion {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-200);
+  margin-block-start: var(--stratakit-space-200);
+  padding-block-start: var(--stratakit-space-300);
+  border-block-start: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+
+/* ---------------------------------------------------------- report */
+
+.fx-report-counts {
+  margin-block: var(--stratakit-space-200);
+}
+.fx-report-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--stratakit-space-200);
+}
+.fx-report-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-200);
+}
+.fx-report-list li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--stratakit-space-50) var(--stratakit-space-200);
+  align-items: start;
+}
+.fx-report-list li > :last-child {
+  grid-column: 2;
+}
+.fx-env {
+  grid-template-columns: 1fr;
+  gap: 0;
+}
+.fx-env-row {
+  display: grid;
+  grid-template-columns: 9em minmax(0, 1fr);
+  gap: var(--stratakit-space-300);
+  padding-block: var(--stratakit-space-100);
+  border-block-start: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+
+/* ------------------------------------------------------------- HUD */
+
+/*
+ * Over the canvas, clear of Dyno's inspector (top left) and credits (bottom
+ * left), and above the viewer's time controls (bottom centre).
+ */
+.fx-hud-host {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+.fx-hud {
+  position: absolute;
+  pointer-events: auto;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-150);
+  padding: var(--stratakit-space-200) var(--stratakit-space-300);
+  border-radius: var(--stratakit-radius-md);
+  background: color-mix(
+    in oklab,
+    var(--stratakit-color-bg-elevation-base) 92%,
+    transparent
+  );
+  color: var(--stratakit-color-text-neutral-primary);
+  box-shadow: var(--stratakit-shadow-surface-md);
+  backdrop-filter: blur(6px);
+  font-size: var(--stratakit-font-size-body-sm);
+  line-height: var(--stratakit-line-height-body-sm);
+}
+.fx-hud p,
+.fx-hud h2 {
+  margin: 0;
+}
+.fx-legend {
+  inset-inline-end: var(--stratakit-space-300);
+  inset-block-end: var(--fx-hud-bottom, 64px);
+  inline-size: min(300px, calc(100% - 2 * var(--stratakit-space-300)));
+  max-block-size: calc(100% - var(--fx-hud-bottom, 64px) - 60px);
+  overflow: auto;
+}
+.fx-legend-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-block: calc(-1 * var(--stratakit-space-100));
+}
+.fx-legend-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-200);
+}
+.fx-legend-list li {
+  display: flex;
+  gap: var(--stratakit-space-200);
+  align-items: flex-start;
+}
+.fx-legend-text {
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+}
+.fx-legend-name {
+  font-weight: 500;
+}
+.fx-legend-acc {
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-size: var(--stratakit-font-size-caption-lg);
+  line-height: var(--stratakit-line-height-caption-lg);
+  font-variant-numeric: tabular-nums;
+}
+.fx-legend-acc.fx-unbounded {
+  color: var(--stratakit-color-text-attention-base);
+}
+.fx-legend-note {
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-size: var(--stratakit-font-size-caption-lg);
+  line-height: var(--stratakit-line-height-caption-lg);
+  padding-block-start: var(--stratakit-space-150);
+  border-block-start: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.fx-axes {
+  flex: none;
+  display: inline-grid;
+  grid-auto-flow: column;
+  gap: 2px;
+  margin-block-start: 0.45em;
+}
+.fx-axes > span {
+  inline-size: 6px;
+  block-size: 6px;
+  border-radius: 1px;
+}
+.fx-axis-x {
+  background: var(--fx-axis-x);
+}
+.fx-axis-y {
+  background: var(--fx-axis-y);
+}
+.fx-axis-z {
+  background: var(--fx-axis-z);
+}
+.fx-axis-word {
+  font-weight: 600;
+}
+.fx-axis-word-x {
+  color: var(--fx-axis-x);
+}
+.fx-axis-word-y {
+  color: var(--fx-axis-y);
+}
+.fx-axis-word-z {
+  color: var(--fx-axis-z);
+}
+.fx-tour {
+  inset-inline-end: var(--stratakit-space-300);
+  inset-block-start: var(--stratakit-space-300);
+  inline-size: min(340px, calc(100% - 2 * var(--stratakit-space-300)));
+  animation: fx-in 320ms var(--fx-ease) both;
+}
+.fx-tour-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-block: calc(-1 * var(--stratakit-space-100));
+}
+.fx-tour-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--stratakit-space-200);
+  margin-block-start: var(--stratakit-space-100);
+}
+.fx-tour-steps {
+  display: inline-flex;
+  gap: var(--stratakit-space-200);
+}
+
+/* ---------------------------------------------------------- motion */
+
+@keyframes fx-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+@keyframes fx-grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+@keyframes fx-sheet {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fx-walk-edge,
+  .fx-budget-seg,
+  .fx-inspector,
+  .fx-tour {
+    animation: none;
+  }
+}
+
+/* ----------------------------------------------------- narrow panel */
+
+@container fx-panel (max-width: 420px) {
+  .fx-tour-prompt,
+  .fx-run,
+  .fx-clock {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

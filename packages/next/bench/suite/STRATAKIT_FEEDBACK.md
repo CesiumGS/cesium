@@ -151,6 +151,32 @@ Versions: `@stratakit/mui` 1.2.0, `@stratakit/foundations` 1.0.4,
 40. **Popups in full screen.** Tooltips portal to the document body, so
     they vanish when an element (a canvas card) goes full screen; the
     portal container should follow `document.fullscreenElement`.
+41. **Deprecations hide in JSDoc.** `AccordionItem`, `Banner` and `Table`
+    in `@stratakit/structures` 0.6.2 are deprecated (for MUI's `Accordion`
+    and `Alert`, and `@stratakit/bricks`'s `Table`, itself legacy), but only
+    their JSDoc says so; the package index and docs' component list show
+    them as current, so a plan written from the docs named all three (the
+    frames explorer). A deprecation list on the docs' structures page, or
+    `unstable_`-style renames, would catch it at planning time.
+42. **Every host element rule beats StrataKit.** StrataKit's styles are in
+    a cascade layer, so any unlayered rule in the host app restyles its
+    components: Dyno's example panel styles plain `button`, `label`, `p`
+    and `h3` for DOM-built panels, and they turned StrataKit's `Tabs`,
+    `IconButton` and tree toggles into bordered boxes until scoped away
+    (`:where(.examples-panel:not(.react))`). Item 5 is one case of this;
+    the docs could say it outright, with the `:where()` scoping pattern.
+43. **No spinner color for status.** `CircularProgress` rejects
+    `color="inherit"`, so a spinner inside an info `Badge` (a "fetching"
+    pill) takes the theme's primary color, invisible on the badge; it
+    needed a `currentColor` rule. A `Badge` with a built-in busy state, or
+    `inherit` allowed, would fit the common "loading" status.
+44. **No categorical palette.** Apps that color data by category (here,
+    frame families on a globe and in a tree) have no StrataKit palette
+    with validated contrast on its surfaces in both schemes, so they
+    hard-code one with `light-dark()` and check it themselves.
+45. **Tree items have no trailing value.** `Tree.Item` has a label, a
+    description and actions, but no slot for a right-aligned value (a
+    size, an accuracy), which ends up in the description line.
 
 ## What worked well
 

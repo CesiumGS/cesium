@@ -250,7 +250,9 @@ export function ExamplePage() {
             </div>
           )}
         </div>
-        <div className="examples-panel">
+        {/* `.react`: the example's own StrataKit panel, which the plain
+            element rules for DOM panels must not restyle (examples.css). */}
+        <div className={`examples-panel${reactPanel ? " react" : ""}`}>
           <button
             type="button"
             className="examples-panel-header"

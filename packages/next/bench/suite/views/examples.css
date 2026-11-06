@@ -211,7 +211,8 @@
   color: #fff;
 }
 
-/* The example's controls and readouts (plain elements, styled here). */
+/* The example's controls and readouts (plain elements, styled here; a React
+   panel, `.react`, is StrataKit's and gets none of the element rules). */
 .examples-panel {
   position: absolute;
   top: var(--stratakit-space-300);
@@ -265,14 +266,14 @@
 .examples-panel-header[aria-expanded="true"] .examples-panel-chevron {
   transform: rotate(-135deg) translateY(-1px);
 }
-.examples-panel label {
+:where(.examples-panel:not(.react)) label {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--stratakit-space-200);
 }
-.examples-panel select,
-.examples-panel button {
+:where(.examples-panel:not(.react)) select,
+:where(.examples-panel:not(.react)) button {
   font: inherit;
   color: inherit;
   background: var(--stratakit-color-bg-page-depth);
@@ -280,49 +281,49 @@
   border-radius: var(--stratakit-radius-sm);
   padding: var(--stratakit-space-100) var(--stratakit-space-200);
 }
-.examples-panel button {
+:where(.examples-panel:not(.react)) button {
   cursor: pointer;
 }
-.examples-panel .buttons {
+:where(.examples-panel:not(.react)) .buttons {
   display: flex;
   gap: var(--stratakit-space-200);
 }
-.examples-panel dl {
+:where(.examples-panel:not(.react)) dl {
   margin: 0;
   display: grid;
   grid-template-columns: auto 1fr;
   gap: var(--stratakit-space-100) var(--stratakit-space-200);
 }
-.examples-panel dt {
+:where(.examples-panel:not(.react)) dt {
   color: var(--stratakit-color-text-neutral-secondary);
 }
-.examples-panel dd {
+:where(.examples-panel:not(.react)) dd {
   margin: 0;
   font-variant-numeric: tabular-nums;
 }
-.examples-panel p {
+:where(.examples-panel:not(.react)) p {
   margin: 0;
   color: var(--stratakit-color-text-neutral-secondary);
 }
-.examples-panel h3 {
+:where(.examples-panel:not(.react)) h3 {
   margin: var(--stratakit-space-100) 0 0;
   font-size: var(--stratakit-font-size-caption-lg);
   font-weight: 600;
   color: var(--stratakit-color-text-neutral-secondary);
 }
-.examples-panel h3:first-child {
+:where(.examples-panel:not(.react)) h3:first-child {
   margin-top: 0;
 }
-.examples-panel .slider {
+:where(.examples-panel:not(.react)) .slider {
   display: grid;
   grid-template-columns: auto 1fr 3.5em;
   gap: var(--stratakit-space-200);
 }
-.examples-panel input[type="range"] {
+:where(.examples-panel:not(.react)) input[type="range"] {
   min-width: 0;
   width: 100%;
 }
-.examples-panel output {
+:where(.examples-panel:not(.react)) output {
   font-variant-numeric: tabular-nums;
   text-align: right;
 }
@@ -422,7 +423,7 @@
   font: inherit;
 }
 .slang-stage summary,
-.examples-panel details > summary {
+:where(.examples-panel:not(.react)) details > summary {
   cursor: pointer;
   font-weight: 600;
 }

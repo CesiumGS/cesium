@@ -1,0 +1,194 @@
+// The status strip (R9, R14): always at the panel's top, every data item as
+// a pill, the run's counts, a progress bar for each fetch, and the one thing
+// to do when data is missing.
+import {
+  Alert,
+  CircularProgress,
+  IconButton,
+  LinearProgress,
+  Typography,
+} from "@mui/material";
+import { svgInfo } from "@stratakit/icons/info";
+import { svgStatusError } from "@stratakit/icons/status-error";
+import { svgStatusSuccess } from "@stratakit/icons/status-success";
+import { Icon } from "@stratakit/mui";
+import { unstable_Popover as Popover } from "@stratakit/structures";
+import type { DataItem } from "../protocol.ts";
+import { duration, megabytes } from "./format.ts";
+import type { ItemStatus, PanelModel } from "./model.ts";
+import { ITEM_DETAIL, ITEM_LABEL, StatusBadge } from "./parts.tsx";
+
+function fetched(s: ItemStatus): string {
+  const so = megabytes(s.received ?? 0);
+  return s.total === undefined ? `${so}` : `${so} of ${megabytes(s.total)}`;
+}
+
+/** One item's pill: the state as a word, with its size while fetching. */
+function ItemPill({ s }: { s: ItemStatus }) {
+  const name = ITEM_LABEL[s.item];
+  switch (s.state) {
+    case "idle":
+      return (
+        <span className="fx-pill fx-pill-idle">
+          {name} <span className="fx-muted">not loaded</span>
+        </span>
+      );
+    case "fetching":
+      return <StatusBadge status="waiting" word={`${name} ${fetched(s)}`} />;
+    case "ready":
+      return <StatusBadge status="pass" word={`${name} ready`} quiet />;
+    case "missing":
+      return <StatusBadge status="missing" word={`${name} missing`} />;
+    case "error":
+      return <StatusBadge status="fail" word={`${name} failed`} />;
+  }
+}
+
+/** Each item's state, size, time and what it is (the pills' detail, by keyboard too). */
+function ItemDetails({ items }: { items: readonly ItemStatus[] }) {
+  return (
+    <table className="fx-item-details">
+      <caption>Data the page loads</caption>
+      <thead>
+        <tr>
+          <th scope="col">Item</th>
+          <th scope="col">State</th>
+          <th scope="col">Size</th>
+          <th scope="col">Time</th>
+        </tr>
+      </thead>
+      <tbody>
+        {items.map((s) => (
+          <tr key={s.item}>
+            <th scope="row">
+              {ITEM_LABEL[s.item]}
+              <span className="fx-muted">{ITEM_DETAIL[s.item]}</span>
+            </th>
+            <td>
+              {s.state === "idle"
+                ? "not loaded (loads when first needed)"
+                : s.state === "fetching"
+                  ? "fetching"
+                  : s.state}
+            </td>
+            <td className="fx-num">
+              {s.state === "fetching"
+                ? fetched(s)
+                : s.bytes !== undefined
+                  ? megabytes(s.bytes)
+                  : "—"}
+            </td>
+            <td className="fx-num">
+              {s.ms !== undefined ? duration(s.ms) : "—"}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+export function StatusStrip({ model }: { model: PanelModel }) {
+  const { items, run } = model;
+  const fetching = items.filter((s) => s.state === "fetching");
+  const missing = items.filter((s) => s.state === "missing");
+  const failed = items.filter((s) => s.state === "error");
+  const judged = model.results.filter((r) => !r.displayOnly && !r.userInput);
+  const passed = judged.filter((r) => r.pass).length;
+  const failedCount = judged.filter(
+    (r) => !r.pass && (r.missing === undefined || r.missing.length === 0),
+  ).length;
+  const waitingGroups = new Set(Object.keys(model.waiting));
+  return (
+    <section className="fx-strip" aria-label="Data and results">
+      <div className="fx-strip-row">
+        <ul className="fx-strip-items" aria-label="Data">
+          {items.map((s) => (
+            <li key={s.item}>
+              <ItemPill s={s} />
+            </li>
+          ))}
+        </ul>
+        <Popover content={<ItemDetails items={items} />}>
+          <IconButton size="small" aria-label="Data details">
+            <Icon href={svgInfo} />
+          </IconButton>
+        </Popover>
+      </div>
+      <p className="fx-strip-counts" aria-live="polite">
+        {run.state === "idle" && judged.length === 0 ? (
+          <span className="fx-muted">No checks run yet</span>
+        ) : (
+          <>
+            <span className="fx-count fx-count-pass">
+              <Icon href={svgStatusSuccess} aria-hidden />
+              {passed} passed
+            </span>
+            <span
+              className={`fx-count${failedCount > 0 ? " fx-count-fail" : ""}`}
+            >
+              <Icon href={svgStatusError} aria-hidden />
+              {failedCount} failed
+            </span>
+            {waitingGroups.size > 0 && (
+              <span className="fx-count fx-count-wait">
+                <CircularProgress size={10} aria-hidden />
+                {waitingGroups.size} groups waiting
+              </span>
+            )}
+            {run.state === "running" && (
+              <span className="fx-muted">
+                running, {run.done} of {run.total}
+              </span>
+            )}
+            {run.state === "done" && run.summary && (
+              <span className="fx-muted">in {duration(run.summary.ms)}</span>
+            )}
+          </>
+        )}
+      </p>
+      {fetching.map((s) => (
+        <div key={s.item} className="fx-fetch">
+          <Typography variant="caption-lg" render={<span />}>
+            Fetching {ITEM_DETAIL[s.item]}: {fetched(s)}
+          </Typography>
+          <LinearProgress
+            aria-label={`Fetching ${ITEM_LABEL[s.item]}`}
+            {...(s.total !== undefined
+              ? {
+                  variant: "determinate",
+                  value: (100 * (s.received ?? 0)) / s.total,
+                }
+              : { variant: "indeterminate" })}
+          />
+        </div>
+      ))}
+      {missing.length > 0 && (
+        <MissingAlert missing={missing.map((s) => s.item)} />
+      )}
+      {failed.map((s) => (
+        <Alert key={s.item} severity="error" className="fx-strip-alert">
+          {ITEM_LABEL[s.item]} failed to load. {s.detail}
+        </Alert>
+      ))}
+    </section>
+  );
+}
+
+const list = (words: string[]) =>
+  words.length <= 1
+    ? (words[0] ?? "")
+    : `${words.slice(0, -1).join(", ")} and ${words.at(-1)}`;
+
+/** R5: what's missing, the one thing to do, and that the rest still works. */
+function MissingAlert({ missing }: { missing: DataItem[] }) {
+  const names = list(missing.map((m) => ITEM_LABEL[m]));
+  return (
+    <Alert severity="info" className="fx-strip-alert">
+      {names} {missing.length === 1 ? "isn't" : "aren't"} in the frames store.
+      Run <code className="fx-code">npm run setup</code> in packages/next, then
+      reload. Everything that doesn't need{" "}
+      {missing.length === 1 ? "it" : "them"} still works.
+    </Alert>
+  );
+}
