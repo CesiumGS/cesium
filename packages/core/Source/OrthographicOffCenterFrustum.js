@@ -410,7 +410,10 @@ class OrthographicOffCenterFrustum {
   }
 }
 
-/** @param {OrthographicOffCenterFrustum} frustum */
+/**
+ * @param {OrthographicOffCenterFrustum} frustum
+ * @ignore
+ */
 function update(frustum) {
   //>>includeStart('debug', pragmas.debug);
   if (
