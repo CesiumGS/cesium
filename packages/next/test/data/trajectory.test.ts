@@ -205,9 +205,11 @@ describe("OEM covariance", () => {
     const first = Instant.fromIso("2026-04-02T01:58:21.397", "UTC", leap);
     const sigma = traj.positionSigma(first)!;
     console.log(`Artemis positionSigma at first covariance: ${sigma} m`);
-    expect(
-      Math.abs(sigma - Math.sqrt(2505.73549 + 16.2246271 + 13.268218)),
-    ).toBeLessThan(0.1);
-    expect(Math.abs(sigma - 50.4)).toBeLessThan(0.1);
+    const own = Math.sqrt(2505.73549 + 16.2246271 + 13.268218);
+    expect(own).toBeCloseTo(50.35, 2);
+    // positionSigma takes the larger of this epoch's sigma (50.35 m) and the
+    // next epoch's (F6, conservative between epochs): 51.07 m.
+    expect(sigma).toBeGreaterThan(50.35);
+    expect(Math.abs(sigma - 51.07)).toBeLessThan(0.01);
   });
 });

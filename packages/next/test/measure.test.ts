@@ -6,6 +6,7 @@ import {
   framePoint,
   type FramePoint,
 } from "../src/frames/local.ts";
+import { Frame } from "../src/frames/Frame.ts";
 import { Ellipsoid } from "../src/math/ellipsoid.ts";
 import { C } from "../src/measure/constants.ts";
 import { measure, measureSpan } from "../src/measure/measure.ts";
@@ -132,13 +133,62 @@ describe("measure", () => {
   it("gives coincident points distance 0, no signal and no NaN", () => {
     for (const b of [station, framePoint(frames.itrf, [6378137, 0.0002, 0])]) {
       const m = measure(station, b, instant, frames);
-      expect(m.distance).toBeLessThan(1e-3);
+      expect(m.distance).toBe(0);
+      expect(Array.from(m.delta)).toEqual([0, 0, 0]);
       expect(m.signal).toBeUndefined();
       expect(m.lineOfSight).toBeUndefined();
       expect(m.accuracy.warnings.join(" ")).toMatch(/coincide/);
       expect(numbers(m).some(Number.isNaN)).toBe(false);
     }
     expect(measure(station, station, instant, frames).distance).toBe(0);
+  });
+
+  it("leaves overBody out with a warning for a point at a body's center", () => {
+    const center = framePoint(frames.itrf, [0, 0, 0]);
+    for (const [a, b] of [
+      [center, station],
+      [station, center],
+    ]) {
+      for (const signal of [true, false]) {
+        const m = measure(a!, b!, instant, frames, { signal });
+        expect(Math.abs(m.distance - 6378137)).toBeLessThan(1e-6);
+        expect(m.overBody).toBeUndefined();
+        expect(m.accuracy.warnings.join(" ")).toMatch(/center/);
+        expect(m.accuracy.terms.length).toBeGreaterThan(0);
+        expect(m.signal !== undefined).toBe(signal);
+      }
+    }
+    const m = measure(center, station, instant, frames);
+    expect(m.signal!.downlink.range).toBeGreaterThan(0);
+    expect(m.accuracy.meters).toBeDefined();
+    // The Moon's center in MOON_ME, measured to a point on the Moon.
+    const moonCenter = framePoint(frames.moonMe, [0, 0, 0]);
+    const surface = framePoint(frames.moonMe, [1737400, 0, 0]);
+    const lunar = measure(moonCenter, surface, instant, frames, {
+      signal: false,
+    });
+    expect(lunar.overBody).toBeUndefined();
+    expect(lunar.distance).toBeCloseTo(1737400, 6);
+  });
+
+  it("throws a clear error for non-finite input", () => {
+    const b = framePoint(frames.itrf, [6378137, 6000, 8000]);
+    const nan = framePoint(frames.itrf, [6378137, Number.NaN, 0]);
+    expect(() => measure(station, nan, instant, frames)).toThrow(
+      /non-finite coordinate/,
+    );
+    expect(() => measure(nan, b, instant, frames)).toThrow(
+      /non-finite coordinate/,
+    );
+    expect(() =>
+      measure(station, b, instant, frames, { frequency: Number.NaN }),
+    ).toThrow(/frequency/);
+    expect(() =>
+      measure(station, b, Instant.fromTdb(Number.NaN), frames),
+    ).toThrow(/finite instant/);
+    expect(
+      measure(station, b, instant, frames, { frequency: 8.4e9 }).distance,
+    ).toBeGreaterThan(0);
   });
 
   it("gives a point with its own instant geometry only (R9)", () => {
@@ -229,6 +279,54 @@ describe("measureSpan", () => {
     );
     expect(sample!.measurement).toBeUndefined();
     expect(sample!.error).toMatch(/outside its data/);
+  });
+
+  it("rejects non-finite input and too many samples before running any", () => {
+    const t = Instant.fromTdb(0);
+    const nan = Instant.fromTdb(Number.NaN);
+    const inf = Instant.fromTdb(Infinity);
+    expect(() => measureSpan(station, b, t, nan, 1, frames)).toThrow(/stop/);
+    expect(() => measureSpan(station, b, t, inf, 1, frames)).toThrow(/stop/);
+    expect(() => measureSpan(station, b, nan, t, 1, frames)).toThrow(/start/);
+    expect(() => measureSpan(station, b, t, t, Number.NaN, frames)).toThrow(
+      /step/,
+    );
+    expect(() => measureSpan(station, b, t, t, Infinity, frames)).toThrow(
+      /step/,
+    );
+    const bad = framePoint(frames.itrf, [Number.NaN, 0, 0]);
+    expect(() => measureSpan(bad, b, t, t, 1, frames)).toThrow(/non-finite/);
+    expect(() =>
+      measureSpan(station, b, t, t, 1, frames, { frequency: Number.NaN }),
+    ).toThrow(/frequency/);
+    // 1e7 samples: it must throw at once, not run them.
+    const started = performance.now();
+    expect(() =>
+      measureSpan(station, b, t, Instant.fromTdb(1e7 - 1), 1, frames),
+    ).toThrow(/1,?000,?000|limit/);
+    expect(performance.now() - started).toBeLessThan(100);
+  });
+
+  it("propagates a TypeError raised inside a sample", () => {
+    const broken = new Frame("broken", frames.itrf, () => {
+      throw new TypeError("a programming error");
+    });
+    const t = Instant.fromTdb(0);
+    expect(() =>
+      measureSpan(station, framePoint(broken, [0, 0, 0]), t, t, 1, frames),
+    ).toThrow(TypeError);
+    const failing = new Frame("failing", frames.itrf, () => {
+      throw new Error("outside the data");
+    });
+    const [sample] = measureSpan(
+      station,
+      framePoint(failing, [0, 0, 0]),
+      t,
+      t,
+      1,
+      frames,
+    );
+    expect(sample!.error).toBe("outside the data");
   });
 
   it("rejects a non-positive step and a stop before the start", () => {

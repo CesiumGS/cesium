@@ -61,6 +61,9 @@ const matrix = new Float64Array(16);
 const distance = (a: ArrayLike<number>, b: ArrayLike<number>): number =>
   Math.hypot(a[0]! - b[0]!, a[1]! - b[1]!, a[2]! - b[2]!);
 
+/** The floor of the Shapiro log's denominator, m. */
+const SHAPIRO_FLOOR = 1e-3;
+
 /**
  * The Shapiro delay, seconds, of the path from `emitted` to `received`
  * (ICRF, m) past `bodies` placed at TDB `mid`: the sum term of IERS
@@ -81,7 +84,9 @@ function shapiroDelay(
     EPHEMERIS[b](ephemeris, mid, body);
     const re = Math.max(distance(emitted, body), RADIUS[b]);
     const rr = Math.max(distance(received, body), RADIUS[b]);
-    delay += SHAPIRO[b] * Math.log((re + rr + rho) / (re + rr - rho));
+    // Rounding near a body's center can leave re + rr − ρ at or below 0.
+    const denominator = Math.max(re + rr - rho, SHAPIRO_FLOOR);
+    delay += SHAPIRO[b] * Math.log((re + rr + rho) / denominator);
   }
   return delay;
 }

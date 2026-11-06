@@ -183,8 +183,9 @@ trajectory's data edge, and is good to a few mm/s (float64 TDB quantization).
 Light time that would need data outside a trajectory throws; nothing is
 extrapolated.
 
-Special cases: two points closer than 1 mm give distance 0 and no `signal`,
-with a warning. A `FramePoint` that carries its own instant gets geometry
+Special cases: two points closer than 1 mm give distance 0, a zero `delta` and
+no `signal`, with a warning. A point at a body's center has no geodetic
+footprint, so `overBody` is left out with a warning. A `FramePoint` that carries its own instant gets geometry
 only, with a warning, because it can't be placed at the emission and
 reception times. `signal: false` skips both legs and the line of sight.
 
@@ -203,7 +204,15 @@ of UT1 and 0.1 mas of polar motion where the EOP are measured; past
 `eop.lastObserved` they grow by IERS Bulletin A's prediction formulas
 (`0.00068 · d^0.80` arcsec, `0.00025 · d^0.75` s, d in days) and never fall
 below the measured values. Degraded EOP gives no number. `coordinateScale`
-is OEM data's unstated TT/TDB ambiguity, 2.5e-8 of the geocentric distance.
+is the unstated TT/TDB ambiguity of a trajectory whose `coordinateScale`
+option is `"unknown"` (the default; pass `"tdb"` when the scale is known), 2.5e-8
+of the geocentric distance. It applies to OEM and SPK data alike (NAIF's SPK
+of the Artemis OEM inherits the ambiguity), when the trajectory's reference is
+`earthIcrf` or a descendant (`eme2000` included). ITRF-referenced data
+(stations) is TT-compatible and gets none, and nor do `moonIcrf`, `hcrs` or
+`icrf` references. The `ephemeris` term, 0.01 m, is DE440's Earth-Moon fit and
+is claimed only when both ends are in the Earth or Moon frame subtrees; for
+heliocentric or barycentric geometry it is `undefined`.
 Example: DSS-26 ← Orion at 2026-04-06T15:08:26 UTC is 10.05 m, of which
 `coordinateScale` is 10.04 m, Orion's position sigma 0.49 m, Earth
 orientation 0.014 m, the ephemeris 0.01 m and light time 0.001 m.
@@ -211,8 +220,10 @@ orientation 0.014 m, the ephemeris 0.01 m and light time 0.001 m.
 **Artemis covariance units.** CCSDS says OEM covariance is in km and km².
 Orion's file writes m². Read as km², its velocity sigmas would be about
 12 m/s, which is implausible for a reconstructed trajectory. In m² they are
-0.012 m/s and the position sigma is 0.49 m at 2026-04-06T15:08:26 UTC (50.35 m
-at the start of the flight). So pass `covarianceUnits: "m"` to
+0.012 m/s and the position sigma is 0.49 m at 2026-04-06T15:08:26 UTC (51.07 m
+at the start of the flight, the larger of the first two covariance epochs'
+sigmas, 50.35 and 51.07 m: between epochs `positionSigma` takes the larger of
+the epoch before and the epoch after). So pass `covarianceUnits: "m"` to
 `Trajectory.fromOem` for it. The default stays `"km"`, as the standard says.
 
 The Viewer loads none of this by default. `new Viewer({ frameData:
