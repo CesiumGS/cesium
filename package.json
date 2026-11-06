@@ -161,7 +161,7 @@
     },
     "packageManager": {
       "name": "npm",
-      "version": "10.x || 11.x"
+      "version": "^12.0.0"
     }
   },
   "workspaces": [
