@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { Frame } from "../src/frames/Frame.ts";
 import { createFrames } from "../src/frames/frames.ts";
 import { framePoint } from "../src/frames/local.ts";
 import { accuracyOf } from "../src/measure/accuracy.ts";
@@ -271,5 +272,58 @@ describe("accuracyOf", () => {
     const w = accuracyOf(a, a, late, frames, { signal: false }).warnings;
     expect(w).toHaveLength(1);
     expect(w[0]).toContain("leap second");
+  });
+
+  it("never states a predicted sample better than a measured one", () => {
+    const base = framesWith(SAMPLE);
+    const m = framePoint(base.itrf, [6378137, 0, 0]);
+    const measured = eop(accuracyOf(m, m, instant, base, { signal: false }))[0]!
+      .meters!;
+    for (const age of [0, -1]) {
+      const frames = framesWith({ ...SAMPLE, predicted: true }, age);
+      const a = framePoint(frames.itrf, [6378137, 0, 0]);
+      const t = eop(accuracyOf(a, a, instant, frames, { signal: false }))[0]!;
+      expect(t.meters!).toBeGreaterThanOrEqual(measured);
+      expect(t.meters!).toBeGreaterThan(0);
+    }
+  });
+
+  it("leaves Earth orientation unknown outside the EOP table", () => {
+    const frames = framesWith({ ...SAMPLE, degraded: true });
+    const a = framePoint(frames.itrf, [6378137, 0, 0]);
+    const r = accuracyOf(a, a, instant, frames, { signal: false });
+    const terms = eop(r);
+    expect(terms).toHaveLength(2);
+    expect(terms.every((t) => t.meters === undefined)).toBe(true);
+    expect(terms[0]!.note).toContain("outside the EOP table");
+    expect(r.meters).toBeUndefined();
+  });
+
+  it("applies the trajectory terms to a point in a local frame under it", () => {
+    const frames = framesWith(SAMPLE);
+    const local = (traj: Trajectory) =>
+      new Frame("antenna", traj.frame, (_i, out) => {
+        out.set([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 2, 0, 0, 1]);
+      });
+    const bare = oemTrajectory(frames);
+    const p = framePoint(local(bare), [0, 0, 0]);
+    const q = framePoint(frames.itrf, [6378137, 0, 0]);
+    const r = accuracyOf(p, q, Instant.fromTdb(100), frames, { signal: false });
+    const term = r.terms.find((t) => t.source === "trajectory")!;
+    expect(term.meters).toBeUndefined();
+    expect(term.note).toContain('"Orion"');
+    expect(r.meters).toBeUndefined();
+    expect(r.terms.some((t) => t.source === "coordinateScale")).toBe(true);
+
+    const sigma = oemTrajectory(frames, 50);
+    const s = accuracyOf(
+      framePoint(local(sigma), [0, 0, 0]),
+      q,
+      Instant.fromTdb(100),
+      frames,
+      { signal: false },
+    );
+    expect(s.terms.find((t) => t.source === "trajectory")!.meters).toBe(50);
+    expect(s.meters!).toBeGreaterThan(50);
   });
 });
