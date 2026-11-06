@@ -209,6 +209,9 @@ function mergeSpans(pieces: readonly Piece[]): [number, number][] {
   return merged;
 }
 
+/** Each trajectory's frame, so a frame can be traced back to its trajectory. */
+const byFrame = new WeakMap<Frame, Trajectory>();
+
 /**
  * An object's path through space, from OEM or SPK data. `state` gives its
  * position and velocity in `reference`, in meters and m/s, only where the
@@ -268,6 +271,12 @@ export class Trajectory<N extends string = string> {
       this.state(instant, this.scratch);
       toParentMatrix(IDENTITY, this.scratch, out);
     });
+    byFrame.set(this.frame, this);
+  }
+
+  /** The trajectory whose `frame` is `frame`, or `undefined` for any other frame. */
+  static of(frame: Frame): Trajectory | undefined {
+    return byFrame.get(frame);
   }
 
   /** Whether the data covers `instant`. */
