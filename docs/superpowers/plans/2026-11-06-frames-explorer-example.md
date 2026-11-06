@@ -16,7 +16,7 @@ The same suite runs headless as a regression data test.
 - **Drawing.** Overlays are unlit `line-list` meshes in the engine's world, which is Earth-fixed: each frame is drawn at its ITRF placement at the clock's time. Labels are HTML.
 - **Data.** Frame data, PROJ and the Artemis trajectory load from the setup store lazily, and only when a feature needs them.
 
-**Tech Stack:** TypeScript, the engine's `Viewer`, `World.addMesh` (`topology: "line-list"`) and `World.addDraw`, plain DOM for the panel (as the gallery's other examples do), a module Web Worker, and Vitest. No new dependencies.
+**Tech Stack:** TypeScript, the engine's `Viewer`, `World.addMesh` (`topology: "line-list"`) and `World.addDraw`, StrataKit for the panel (`@stratakit/mui`, `@stratakit/structures`, `@stratakit/icons` and `@stratakit/foundations`, already dependencies of `packages/next`, rendered with React into `context.panel`), a module Web Worker, and Vitest. No new dependencies.
 
 **Spec:**
 
@@ -133,7 +133,7 @@ Plan 4b later adds three things here:
   - **Principles:**
     - **The globe is the hero:** at least two-thirds of the width on desktop, with a collapsible panel.
     - **Progressive disclosure:** a calm first view, with detail one click away. Never a wall of rows.
-    - **Hierarchy from type and spacing,** not boxes and borders. Use a deliberate type scale and the gallery's CSS variables, in light and dark.
+    - **Hierarchy from type and spacing,** not boxes and borders. Use StrataKit's semantic type scale and tokens (`--stratakit-font-size-*`, `--stratakit-space-*`, `--stratakit-color-*`), in light and dark.
     - **Color with meaning:**
       - status colors (R14's vocabulary) are used only for status;
       - frame families get one categorical palette, used identically in the tree, the triads, the labels and the legend: Earth frames, Moon frames, inertial frames, engineering frames and trajectories;
@@ -183,7 +183,28 @@ Plan 4b later adds three things here:
   | Browser against Node fingerprints (R12) | Pipeline and grids exact; coordinates 1e-9 m |
 
 - **Matrix conventions** are unchanged. `src/frames/matrix.ts` is the only layout bridge, and meshes take positions in the world's Earth-fixed meters.
-- **UI.** Use plain DOM in the panel, styled like the gallery's other examples: reuse `examples/translucency/main.ts`'s control patterns and the page's existing CSS variables. No new UI library.
+- **UI: StrataKit (owner's correction, 2026-11-06).** The panel is built with StrataKit, Bentley's design system, as Dyno and Sandcastle are. No other UI library.
+  - **Follow `packages/next/bench/suite/DESIGN.md`:** its copy rules and its "Components (StrataKit)" and "Live engines" sections bind. Read `bench/suite/STRATAKIT_FEEDBACK.md` for known gaps. Log new friction there.
+  - **Mounting:** the example renders a React root into `context.panel`, inside the same StrataKit theme provider Dyno uses (`bench/suite/theme.tsx`'s `ThemeRoot`, or the same `@stratakit/mui` provider with Dyno's current scheme), so it follows Dyno's light and dark. It unmounts through `context.scope`.
+  - **Components:**
+
+    | Need | Component |
+    | --- | --- |
+    | Frame tree | `Tree` / `TreeItem` from `@stratakit/structures` |
+    | Explore / Verify / Report | `Tabs` from `@stratakit/structures`, with ARIA ids and `aria-controls` wired by the app (feedback item 22) |
+    | Result rows | `Table` from `@stratakit/structures` |
+    | Glossary, edge detail | `Popover` from `@stratakit/structures` |
+    | Question cards | `AccordionItem` from `@stratakit/structures`; its header holds no actions (feedback item 7), so actions go in the body |
+    | Status pills | MUI `Badge` with `variant="inline"` and `success` / `warning` / `error` / `info` / `secondary`, always with a word |
+    | Lens filter | A non-exclusive MUI `ToggleButtonGroup` (Dyno's `Chips` pattern; StrataKit's `Chip` has no selected state) |
+    | Overlay on/off | `Switch` |
+    | Draw-in frame, CRS chooser | `Select` in a `FormControl` with a visible label, or an exclusive `ToggleButtonGroup` for two to four options |
+    | Missing data | MUI `Alert` inline, or `Banner` from `@stratakit/structures` |
+    | "Copied", "Saved" | `Snackbar` |
+    | Icons | `Icon` from `@stratakit/mui`, with `@stratakit/icons` only |
+
+  - **Styling:** props first, then classes using StrataKit tokens. Never `sx`, never hard-coded colors in the panel.
+  - **The canvas is the exception.** The globe legend, the labels, the tour captions, the axis colors and the frame-family palette are the 3D viewport's HUD, which DESIGN.md exempts. Even there, use StrataKit surface and text tokens for backgrounds and type.
 - **Repository practice:**
   - Commit locally and never push. End each message with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
   - `npx tsc --noEmit -p .`, `npx eslint` and prettier pass.
@@ -537,7 +558,7 @@ Plan 4b later adds three things here:
 
 - Create:
   - `packages/next/examples/frames-explorer/main.ts`
-  - `packages/next/examples/frames-explorer/panel.ts` (if `main.ts` would pass about 400 lines)
+  - `packages/next/examples/frames-explorer/panel.tsx` (the StrataKit React panel; split into components under `examples/frames-explorer/panel/` if it passes about 400 lines)
   - `packages/next/examples/frames-explorer/selection.ts` (R14, R15: the selection state, and its URL format and parse)
   - `packages/next/examples/frames-explorer/report.ts` (R15: `buildReport(results, env): { markdown: string; json: unknown }`)
 - Test:
@@ -569,17 +590,17 @@ Plan 4b later adds three things here:
 - **Startup.** On start, start the worker, load frame data and draw the tree, plus the ITRF and ENU triads at a California site. If the URL carries a selection (R15), apply it once its data is ready. Load PROJ in the worker when an engineering overlay or test first needs it (R6). Route every async step through `context.signal` and every drawn item through `context.scope` (Review Focus 9).
 
 - [ ] **Step 0: Design pass (R16), before wiring the page.**
-  - Load the `frontend-design:frontend-design` skill.
+  - Load the `frontend-design:frontend-design` skill, and read `bench/suite/DESIGN.md` and `STRATAKIT_FEEDBACK.md`. StrataKit and DESIGN.md set the visual language. The design pass applies them; it doesn't invent a new one.
   - Write `examples/frames-explorer/DESIGN.md`:
     - the layout at desktop and narrow widths;
-    - the type scale, color tokens (status and frame-family palettes, mapped to the gallery's CSS variables) and spacing;
+    - the type scale, color tokens (status via StrataKit's semantic colors; the frame-family HUD palette checked for contrast on StrataKit's canvas surfaces) and spacing;
     - each component and its states: question card, result row, inspector, trace, tree row, budget bar, legend, status pill, tour caption;
     - motion;
     - the glossary.
   - Build a static prototype with the real panel code and stub data, then take screenshots in light and dark, at desktop and narrow widths.
   - The controller dispatches a UX review on the most capable model. It checks against Nielsen's heuristics, WCAG 2.2 AA and R16's two audiences. Fix its findings.
   - Send the screenshots to the owner. This doesn't block: the owner may redirect, and the design iterates once built.
-- [ ] **Step 1: Write** `main.ts` (and `panel.ts`), and register the example in `examples/index.ts`. The description: "The frame tree and engineering frames, drawn on the globe and stress-tested in the page: every edge labelled, every result checked against its tolerance."
+- [ ] **Step 1: Write** `main.ts` (and `panel.tsx`), and register the example in `examples/index.ts`. The description: "The frame tree and engineering frames, drawn on the globe and stress-tested in the page: every edge labelled, every result checked against its tolerance."
 - [ ] **Step 2: Check it in the browser.**
   - Start the dev server (`preview_start` "dyno") and open `/#/examples/frames-explorer`.
   - **Tree:**
