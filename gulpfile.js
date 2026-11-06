@@ -5,19 +5,16 @@ import {
   existsSync,
   globSync,
 } from "fs";
-import { readFile, writeFile } from "fs/promises";
+import { readFile, rm, writeFile } from "fs/promises";
 import { join, basename, resolve, dirname } from "path";
 import { exec, execSync } from "child_process";
-import fetch from "node-fetch";
 import { createRequire } from "module";
 import { finished } from "stream/promises";
 
 import gulp from "gulp";
 import open from "open";
-import { rimraf } from "rimraf";
 import karma from "karma";
 import yargs from "yargs";
-import typeScript from "typescript";
 import { build as esbuild } from "esbuild";
 import { createInstrumenter } from "istanbul-lib-instrument";
 
@@ -254,27 +251,34 @@ export async function buildTs() {
     workspaces = getWorkspaces(true);
   }
 
+  // Earlier workspaces that aren't regenerated in this run are imported using their existing declarations.
+  const dependencyExports = {};
+  const requested = workspaces.map(normalizeWorkspaceArg);
+  const allWorkspaces = getWorkspaces(true);
+  const lastIndex = Math.max(
+    0,
+    ...requested.map((workspace) => allWorkspaces.indexOf(workspace)),
+  );
+  for (const dependency of allWorkspaces.slice(0, lastIndex)) {
+    if (!requested.includes(dependency)) {
+      dependencyExports[dependency] = readWorkspaceExports(dependency);
+    }
+  }
+
   // Generate types for passed packages in order.
-  const importModules = {};
   for (const workspace of workspaces) {
     const directory = normalizeWorkspaceArg(workspace);
-    const workspaceModules = await generateTypeScriptDefinitions(
+    const workspaceExports = await generateWorkspaceTypeScriptDefinitions(
       directory,
       `packages/${directory}/index.d.ts`,
       `packages/${directory}/tsd-conf.json`,
-      // The core package needs additional processing for its enum strings
-      // (WebGLConstants and its aliasing enums, e.g. ComponentDatatype, live there now).
-      // The engine package still needs its own Viewer circular-dependency workaround.
-      directory === "core"
-        ? processTypescriptSource
-        : directory === "engine"
-          ? processEngineSource
-          : undefined,
-      // Handle core's module naming exceptions (Math.js's barrel export)
-      directory === "core" ? processMathModule : undefined,
-      importModules,
+      // The engine package needs its own Viewer circular-dependency workaround.
+      directory === "engine" ? processEngineSource : undefined,
+      // Add Math, which parseWorkspaceExports misses in core.
+      directory === "core" ? addMathExport : undefined,
+      dependencyExports,
     );
-    importModules[directory] = workspaceModules;
+    dependencyExports[directory] = workspaceExports;
   }
 
   if (argv.workspace) {
@@ -282,7 +286,7 @@ export async function buildTs() {
   }
 
   // Generate types for CesiumJS.
-  await createTypeScriptDefinitions();
+  await generateCesiumTypeScriptDefinitions();
 }
 
 export async function tsc() {
@@ -327,9 +331,11 @@ const filesToClean = [
 ];
 
 export async function clean() {
-  await rimraf("Build");
+  await rm("Build", { recursive: true, force: true });
   const files = globSync(filesToClean);
-  return Promise.all(files.map((file) => rimraf(file)));
+  return Promise.all(
+    files.map((file) => rm(file, { recursive: true, force: true })),
+  );
 }
 
 async function clocSource() {
@@ -600,7 +606,7 @@ async function setStatus(state, targetUrl, description, context) {
   const response = await fetch(
     `https://api.github.com/repos/${process.env.GITHUB_REPO}/statuses/${process.env.GITHUB_SHA}`,
     {
-      method: "post",
+      method: "POST",
       body: JSON.stringify(body),
       headers: {
         "Content-Type": "application/json",
@@ -989,7 +995,7 @@ export async function test() {
  * @param {boolean} includeKnockout Whether to append the knockout type definition
  * @returns The modified source
  */
-function fixTypescriptDefinitionsSource(source, includeKnockout) {
+function fixTypeScriptDefinitionsSource(source, includeKnockout) {
   let fixedSource = source
     .replace(/^declare /gm, "export ")
     .replace(/module "Math"/gm, "namespace Math")
@@ -1001,6 +1007,8 @@ function fixTypescriptDefinitionsSource(source, includeKnockout) {
     )
     // Strip const enums which can cause errors - https://www.typescriptlang.org/docs/handbook/enums.html#const-enum-pitfalls
     .replace(/^(\s*)(export )?const enum (\S+) {(\s*)$/gm, "$1$2enum $3 {$4")
+    // Quote enum keys that start with a digit, which tsd-jsdoc writes unquoted
+    .replace(/^(\s+)(\d\w*) = /gm, '$1"$2" = ')
     // Replace JSDoc generation version of defined with an improved version using TS type predicates
     .replace(
       /\n?export function defined\(value: any\): boolean;/gm,
@@ -1034,23 +1042,23 @@ function fixTypescriptDefinitionsSource(source, includeKnockout) {
 }
 
 /**
- * Generates TypeScript definition file (.d.ts) for a package.
+ * Generates the TypeScript definitions file (.d.ts) for a workspace.
  *
- * @param {*} workspaceName
+ * @param {string} workspaceName The workspace directory name, e.g. "core".
  * @param {string} definitionsPath The path of the .d.ts file to generate.
- * @param {*} configurationPath
- * @param {*} processSourceFunc
- * @param {*} processModulesFunc
- * @param {*} importModules
- * @returns
+ * @param {string} configurationPath The path of the JSDoc configuration file that runs tsd-jsdoc for this workspace.
+ * @param {function(string): string} [processSourceFunc] Transforms the generated source before its exports are collected. Receives the source and returns the new source.
+ * @param {function(Set<string>): Set<string>} [processExportsFunc] Adjusts the collected export names, and returns the adjusted set.
+ * @param {Object<string, Set<string>>} [dependencyExports] The export names of earlier workspaces, keyed by workspace directory name, used to generate this workspace's imports from them.
+ * @returns {Promise<Set<string>>} The names this workspace exports.
  */
-function generateTypeScriptDefinitions(
+function generateWorkspaceTypeScriptDefinitions(
   workspaceName,
   definitionsPath,
   configurationPath,
   processSourceFunc,
-  processModulesFunc,
-  importModules,
+  processExportsFunc,
+  dependencyExports,
 ) {
   // Run JSDoc with tsd-jsdoc to generate an initial definition file.
   execSync(`npx jsdoc --configure ${configurationPath}`, {
@@ -1060,35 +1068,28 @@ function generateTypeScriptDefinitions(
   let source = readFileSync(definitionsPath).toString();
 
   if (processSourceFunc) {
-    source = processSourceFunc(definitionsPath, source);
+    source = processSourceFunc(source);
   }
 
-  // The next step is to find the list of Cesium modules exported by the Cesium API
-  // So that we can map these modules with a link back to their original source file.
+  // Collect the names this workspace exports, so that later workspaces can import them.
+  let workspaceExports = parseWorkspaceExports(source);
 
-  const regex =
-    /^declare (?:const )?(function|class|namespace|enum|interface|type) (.+)/gm;
-  let matches;
-  let publicModules = new Set();
-
-  while ((matches = regex.exec(source))) {
-    const moduleName = matches[2].match(/([^<\s|\(]+)/);
-    publicModules.add(moduleName[1]);
+  if (processExportsFunc) {
+    workspaceExports = processExportsFunc(workspaceExports);
   }
 
-  if (processModulesFunc) {
-    publicModules = processModulesFunc(publicModules);
-  }
+  source = fixTypeScriptDefinitionsSource(source, workspaceName === "widgets");
 
-  source = fixTypescriptDefinitionsSource(source, workspaceName === "widgets");
-
-  if (importModules) {
+  if (dependencyExports) {
     let imports = "";
-    Object.keys(importModules).forEach((workspace) => {
-      const workspaceModules = Array.from(importModules[workspace]).filter(
-        (importModule) => source.indexOf(importModule) !== -1,
+    Object.keys(dependencyExports).forEach((workspace) => {
+      const usedExports = Array.from(dependencyExports[workspace]).filter(
+        (exportName) => source.indexOf(exportName) !== -1,
       );
-      imports += `import { ${workspaceModules.join(
+      if (usedExports.length === 0) {
+        return;
+      }
+      imports += `import { ${usedExports.join(
         ",\n",
       )} } from "@${scope}/${workspace}";\n`;
     });
@@ -1110,82 +1111,53 @@ ${source}
     stdio: "inherit",
   });
 
-  return Promise.resolve(publicModules);
-}
-
-function processMathModule(modules) {
-  // Math shows up as "CesiumMath" (its declared name) because of its aliasing from
-  // Math.js and namespace collision with the native Math; add its real barrel export
-  // name ("Math") directly, since it fails the regex used to detect module names.
-  modules.add("Math");
-  return modules;
+  return Promise.resolve(workspaceExports);
 }
 
 /**
- * Process the given typescript source.
+ * Parses the names exported by a workspace's TypeScript definitions source.
  *
- * For details, see the inlined comments.
- *
- * @param {string} definitionsPath The path of the defintions file
- * @param {string} source The source
- * @returns The new source
+ * @param {string} source The definitions source.
+ * @returns {Set<string>} The exported names.
  */
-function processTypescriptSource(definitionsPath, source) {
-  // All enum assignments that alias to WebGLConstants, such as PixelDatatype.js
-  // end up as enum strings instead of actually mapping values to WebGLConstants.
-  // We fix this with a simple regex replace later on, but it means the
-  // WebGLConstants constants enum needs to be defined in the file before it can
-  // be used.
-
-  // Read in the source file
-  const node = typeScript.createSourceFile(
-    definitionsPath,
-    source,
-    typeScript.ScriptTarget.Latest,
-  );
-  // Find the WebGLConstants declaration
-  let firstNode;
-  node.forEachChild((child) => {
-    if (
-      typeScript.SyntaxKind[child.kind] === "EnumDeclaration" &&
-      child.name.escapedText === "WebGLConstants"
-    ) {
-      firstNode = child;
-    }
-  });
-
-  // Write back out (in memory) with WebGLConstants as the first module
-  const printer = typeScript.createPrinter({
-    removeComments: false,
-    newLine: typeScript.NewLineKind.LineFeed,
-  });
-  let newSource = "";
-  // Not every workspace's declarations include WebGLConstants,
-  // so only reorder if found.
-  if (firstNode) {
-    newSource += printer.printNode(
-      typeScript.EmitHint.Unspecified,
-      firstNode,
-      node,
-    );
-    newSource += "\n\n";
+function parseWorkspaceExports(source) {
+  const regex =
+    /^(?:declare|export) (?:const )?(function|class|namespace|enum|interface|type) (.+)/gm;
+  const exportNames = new Set();
+  let match;
+  while ((match = regex.exec(source))) {
+    const nameMatch = match[2].match(/([^<\s|\(]+)/);
+    exportNames.add(nameMatch[1]);
   }
-  node.forEachChild((child) => {
-    if (child === firstNode) {
-      return;
-    }
-    newSource += printer.printNode(
-      typeScript.EmitHint.Unspecified,
-      child,
-      node,
-    );
-    newSource += "\n\n";
-  });
-  return newSource;
+  return exportNames;
 }
 
-function processEngineSource(definitionsPath, source) {
-  let newSource = processTypescriptSource(definitionsPath, source);
+/**
+ * Reads the names exported by a workspace's previously generated definitions file.
+ *
+ * @param {string} workspaceName The workspace directory name, e.g. "core".
+ * @returns {Set<string>} The exported names.
+ */
+function readWorkspaceExports(workspaceName) {
+  const definitionsPath = `packages/${workspaceName}/index.d.ts`;
+  if (!existsSync(definitionsPath)) {
+    throw new Error(
+      `${definitionsPath} does not exist, but is needed to import @${scope}/${workspaceName} types. Generate it first with: npm run build-ts --workspace @${scope}/${workspaceName}`,
+    );
+  }
+  return parseWorkspaceExports(readFileSync(definitionsPath).toString());
+}
+
+function addMathExport(exportNames) {
+  // Math.js documents CesiumMath with @exports and @alias Math, so tsd-jsdoc emits it
+  // as `declare module "Math"`, which parseWorkspaceExports doesn't match. Add the
+  // name directly so later workspaces can import it.
+  exportNames.add("Math");
+  return exportNames;
+}
+
+function processEngineSource(source) {
+  let newSource = source;
   // Manually add a type definition from Viewer to avoid circular dependency
   // with the widgets package. This will no longer be needed past Cesium 1.100.
   newSource += `
@@ -1196,6 +1168,19 @@ function processEngineSource(definitionsPath, source) {
       scene: Scene;
   };
   `;
+
+  // The @borrows tags in Transforms.js can't resolve FixedFrameTransforms from another package.
+  // Declare Transforms as the combined type.
+  const transformsNamespace =
+    /(\/\*\*(?:[^*]|\*(?!\/))*\*\/\s*)?declare namespace Transforms \{/;
+  const transformsDoc = newSource.match(transformsNamespace)?.[1] ?? "";
+  newSource = newSource.replace(
+    transformsNamespace,
+    "declare namespace _CelestialFrameTransforms {",
+  );
+  newSource += `
+${transformsDoc}declare const Transforms: typeof FixedFrameTransforms & typeof _CelestialFrameTransforms;
+`;
 
   // Each name gets its own @deprecated tag; a plain re-export wouldn't show it in hover.
   // Renaming on export avoids conflicting with a plain import of the same name elsewhere in engine's declarations.
@@ -1219,7 +1204,7 @@ function processEngineSource(definitionsPath, source) {
   return newSource;
 }
 
-function createTypeScriptDefinitions() {
+function generateCesiumTypeScriptDefinitions() {
   // Run jsdoc with tsd-jsdoc to generate an initial Cesium.d.ts file.
   // @internal symbols must stay out of the combined "cesium" package's API.
   execSync("npx jsdoc --configure Tools/jsdoc/ts-conf.json", {
@@ -1228,9 +1213,8 @@ function createTypeScriptDefinitions() {
   });
 
   let source = readFileSync("Source/Cesium.d.ts").toString();
-  source = processTypescriptSource("Source/Cesium.d.ts", source);
 
-  source = fixTypescriptDefinitionsSource(source, true);
+  source = fixTypeScriptDefinitionsSource(source, true);
 
   // Wrap the source to actually be inside of a declared cesium module
   // and add any workaround and private utility types.

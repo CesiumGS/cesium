@@ -1,13 +1,11 @@
 // @ts-check
 
 import { readFile, writeFile } from "node:fs/promises";
-import { globSync } from "node:fs";
+import { globSync, mkdirSync, rmSync } from "node:fs";
 import { EOL } from "node:os";
 import path from "node:path";
 
 import esbuild from "esbuild";
-import { mkdirp } from "mkdirp";
-import { rimraf } from "rimraf";
 
 import {
   bundleWorkers,
@@ -145,7 +143,7 @@ export async function bundleCesiumJs(options) {
       iifeWorkers = /** @type {esbuild.BuildContext} */ (iifeWorkersResult);
     } else {
       handleBuildWarnings(/** @type {esbuild.BuildResult} */ (iifeResult));
-      rimraf.sync(inlineWorkerPath);
+      rmSync(inlineWorkerPath, { recursive: true, force: true });
     }
   }
 
@@ -408,11 +406,11 @@ export async function buildCesium(options) {
   const write = options.write ?? true;
 
   // Generate Build folder to place build artifacts.
-  mkdirp.sync("Build");
+  mkdirSync("Build", { recursive: true });
   const outputDirectory =
     options.outputDirectory ??
     path.join("Build", `Cesium${!minify ? "Unminified" : ""}`);
-  rimraf.sync(outputDirectory);
+  rmSync(outputDirectory, { recursive: true, force: true });
 
   await writeFile(
     "Build/package.json",

@@ -1556,6 +1556,24 @@ export class Clearcoat {
   }
 }
 
+export class EmissiveStrength {
+  /**
+   * @ignore
+   */
+  static DEFAULT_EMISSIVE_STRENGTH = 1.0;
+
+  constructor() {
+    /**
+     * The strength adjustment to be multiplied with the material's emissive value
+     *
+     * @type {number}
+     * @default 1.0
+     * @ignore
+     */
+    this.emissiveStrength = EmissiveStrength.DEFAULT_EMISSIVE_STRENGTH;
+  }
+}
+
 /**
  * Material properties for the BENTLEY_materials_line_style extension.
  *
@@ -1695,6 +1713,14 @@ export class Material {
      * @ignore
      */
     this.clearcoat = undefined;
+
+    /**
+     * Material properties for KHR_materials_emissive_strength
+     *
+     * @type {EmissiveStrength|undefined}
+     * @ignore
+     */
+    this.emissiveStrength = undefined;
 
     /**
      * The emissive texture reader.
@@ -1874,6 +1900,7 @@ ModelComponents.SpecularGlossiness = SpecularGlossiness;
 ModelComponents.Specular = Specular;
 ModelComponents.Anisotropy = Anisotropy;
 ModelComponents.Clearcoat = Clearcoat;
+ModelComponents.EmissiveStrength = EmissiveStrength;
 ModelComponents.PlanarFill = PlanarFill;
 ModelComponents.LineStyle = LineStyle;
 ModelComponents.Material = Material;

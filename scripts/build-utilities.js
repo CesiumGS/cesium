@@ -1,5 +1,5 @@
 import assert from "node:assert";
-import { existsSync, globSync, readFileSync, statSync } from "node:fs";
+import { existsSync, globSync, readFileSync, rmSync, statSync } from "node:fs";
 import { EOL } from "node:os";
 import path from "node:path";
 import { readFile, writeFile } from "node:fs/promises";
@@ -10,7 +10,6 @@ import { fileURLToPath } from "node:url";
 // @ts-expect-error Types unavailable.
 import glslStripComments from "glsl-strip-comments";
 import gulp from "gulp";
-import { rimraf } from "rimraf";
 
 // Determines the scope of the workspace packages. If the scope is set to cesium, the workspaces should be @cesium/engine.
 // This should match the scope of the dependencies of the root level package.json.
@@ -163,7 +162,7 @@ export default "${contents}";\n`;
 
   // delete any left over JS files from old shaders
   Object.keys(leftOverJsFiles).forEach(function (filepath) {
-    rimraf.sync(filepath);
+    rmSync(filepath, { recursive: true, force: true });
   });
 
   /**

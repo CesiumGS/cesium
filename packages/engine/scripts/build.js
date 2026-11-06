@@ -1,9 +1,7 @@
 // @ts-check
 
-import { globSync } from "node:fs";
+import { globSync, mkdirSync } from "node:fs";
 import path from "node:path";
-
-import { mkdirp } from "mkdirp";
 
 import {
   glslToJavaScript,
@@ -91,7 +89,7 @@ export const buildEngine = async (options) => {
   const write = options.write ?? true;
 
   // Create Build folder to place build artifacts.
-  mkdirp.sync("packages/engine/Build");
+  mkdirSync("packages/engine/Build", { recursive: true });
 
   // Convert GLSL files to JavaScript modules.
   await glslToJavaScript(

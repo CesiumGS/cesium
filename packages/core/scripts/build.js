@@ -1,9 +1,7 @@
 // @ts-check
 
-import { globSync } from "node:fs";
+import { globSync, mkdirSync } from "node:fs";
 import path from "node:path";
-
-import { mkdirp } from "mkdirp";
 
 import {
   createIndexJs,
@@ -38,7 +36,7 @@ export const buildCore = async (options) => {
   const write = options.write ?? true;
 
   // Create Build folder to place build artifacts.
-  mkdirp.sync("packages/core/Build");
+  mkdirSync("packages/core/Build", { recursive: true });
 
   // Create index.js
   await createIndexJs("core", sourceGlobs);
