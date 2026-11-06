@@ -577,9 +577,12 @@ export function run(context: ExampleContext): ExampleRun {
         r.fingerprint ? [...new Set([...own, ...repro])] : own,
       );
     }
+    // The groups that have run: a result of another group (a deep link
+    // after a group's own run) is kept until its group runs (R15).
+    const ran = new Set(results.map((r) => r.group));
     const known: Known = {
       ...(tree && { frames: treeIds() }),
-      ...(lastRun !== undefined && { results: lensesOf }),
+      ...(lastRun !== undefined && { results: lensesOf, ran }),
       tours: TOUR.map((s) => s.id),
     };
     view.setKnown(known);

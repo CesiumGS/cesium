@@ -33,6 +33,13 @@ export interface Known {
    * then kept as given, for the run to confirm.
    */
   results?: ReadonlyMap<string, readonly Lens[]>;
+  /**
+   * The groups whose results `results` holds, when only some have run (a
+   * group's own run, a deep link's). A result of a group not in it is kept
+   * as given, for its group's run to confirm, as before the first run.
+   * Undefined with `results`: every group ran.
+   */
+  ran?: ReadonlySet<string>;
   /** The tour's stop ids. */
   tours?: readonly string[];
 }
@@ -111,8 +118,10 @@ export function formatParams(view: {
 /**
  * `selection` if it still exists and the lens shows it, else none: a frame
  * must be in the tree, a result in the last run and in one of the lens's
- * groups. A frame selection isn't filtered by the lens. Returns the same
- * object when it stands.
+ * groups. A result of a group that hasn't run yet (`known.ran`) stands, for
+ * its group's run to confirm (a deep link after a partial run). A frame
+ * selection isn't filtered by the lens. Returns the same object when it
+ * stands.
  */
 export function reconcile(
   selection: Selection,
@@ -132,7 +141,12 @@ export function reconcile(
       }
       const lenses = known.results.get(selection.id);
       if (lenses === undefined) {
-        return NONE;
+        const group = groupOfResult(selection.id);
+        const pending =
+          known.ran !== undefined &&
+          group !== undefined &&
+          !known.ran.has(group);
+        return pending ? selection : NONE;
       }
       return lens === "all" || lenses.includes(lens) ? selection : NONE;
     }
@@ -217,6 +231,12 @@ export class ViewStore {
   };
 }
 
+/** The catalog group a result id belongs to (the id's first part), if any. */
+export function groupOfResult(id: string): string | undefined {
+  return GROUP_INFO.find((g) => g.virtual !== true && id.startsWith(`${g.id}.`))
+    ?.id;
+}
+
 /**
  * A deep-linked result the page doesn't have yet (R15): runs its group (the
  * id's first part), retrying once, and says whether to show it. If it still
@@ -236,9 +256,7 @@ export async function loadLinkedResult(
   },
 ): Promise<"shown" | "cleared" | "stale"> {
   const selection = store.get().selection;
-  const group = GROUP_INFO.find(
-    (g) => g.virtual !== true && id.startsWith(`${g.id}.`),
-  )?.id;
+  const group = groupOfResult(id);
   let why = `no group of the catalog has ${id}`;
   if (group !== undefined) {
     why = `its group's run didn't give it`;

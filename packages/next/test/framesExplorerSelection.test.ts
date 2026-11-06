@@ -6,6 +6,7 @@ import {
   LENS_CHOICES,
   ViewStore,
   formatParams,
+  groupOfResult,
   loadLinkedResult,
   parseParams,
   parseSelection,
@@ -270,5 +271,67 @@ describe("a deep-linked result the run's results clear", () => {
     });
     expect(outcome).toBe("cleared");
     expect(notice).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("a deep link into a group that hasn't run (partial runs, R15)", () => {
+  // Only Measurement has run: Space's results aren't known yet.
+  const partial: Known = {
+    ...known,
+    results: new Map([["measurement.grid-to-ground", ["civil"]]]),
+    ran: new Set(["measurement"]),
+  };
+
+  it("keeps a result whose group hasn't run, for its run to confirm", () => {
+    const s: Selection = { kind: "result", id: "space.lunar-time" };
+    expect(reconcile(s, "all", partial)).toBe(s);
+    expect(
+      parseParams({ select: "result:space.lunar-time" }, partial).selection,
+    ).toEqual(s);
+  });
+
+  it("still clears an unknown result of a group that ran", () => {
+    expect(
+      reconcile({ kind: "result", id: "measurement.nothing" }, "all", partial),
+    ).toEqual({ kind: "none" });
+  });
+
+  it("starts that group's run and shows the result, instead of clearing it", async () => {
+    const store = new ViewStore();
+    store.setKnown(partial);
+    store.apply(parseParams({ select: "result:space.lunar-time" }));
+    expect(store.get().selection).toEqual({
+      kind: "result",
+      id: "space.lunar-time",
+    });
+    let loaded = false;
+    const run = vi.fn(async (group: string) => {
+      loaded = true;
+      store.setKnown({
+        ...partial,
+        results: new Map([
+          ...partial.results!,
+          ["space.lunar-time", ["space", "timing"] as const],
+        ]),
+        ran: new Set([...partial.ran!, group]),
+      });
+    });
+    const outcome = await loadLinkedResult(store, "space.lunar-time", {
+      has: () => loaded,
+      run,
+      notice: () => {},
+    });
+    expect(run).toHaveBeenCalledWith("space");
+    expect(outcome).toBe("shown");
+    expect(store.get().selection).toEqual({
+      kind: "result",
+      id: "space.lunar-time",
+    });
+  });
+
+  it("knows a result's group from its id", () => {
+    expect(groupOfResult("space.lunar-time")).toBe("space");
+    expect(groupOfResult("measurement.grid-to-ground")).toBe("measurement");
+    expect(groupOfResult("nowhere.at-all")).toBeUndefined();
   });
 });
