@@ -115,7 +115,7 @@ const Cesium3DTileContentFactory = {
 
     // @deprecated CESIUM_mesh_vector to be removed after v1.142 release.
     if (
-      tileset.hasExtension("3DTILES_content_gltf_vector") ||
+      tileset.isVectorTileset() ||
       tileset.isGltfExtensionUsed("CESIUM_mesh_vector")
     ) {
       return VectorGltf3DTileContent.fromGltf(tileset, tile, resource, glb);
@@ -132,7 +132,7 @@ const Cesium3DTileContentFactory = {
 
     // @deprecated CESIUM_mesh_vector to be removed after v1.142 release.
     if (
-      tileset.hasExtension("3DTILES_content_gltf_vector") ||
+      tileset.isVectorTileset() ||
       tileset.isGltfExtensionUsed("CESIUM_mesh_vector")
     ) {
       return VectorGltf3DTileContent.fromGltf(tileset, tile, resource, json);
