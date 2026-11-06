@@ -265,3 +265,127 @@ describe("loadFrameData", () => {
     );
   });
 });
+
+/** A response whose body arrives in `chunk`-byte pieces, with or without a Content-Length. */
+function streamed(
+  bytes: ArrayBuffer,
+  {
+    chunk = 1000,
+    length = true,
+    failAfter,
+  }: {
+    chunk?: number;
+    length?: boolean;
+    failAfter?: number;
+  } = {},
+): Response {
+  const u8 = new Uint8Array(bytes);
+  let offset = 0;
+  const body = new ReadableStream<Uint8Array>({
+    pull(controller) {
+      if (failAfter !== undefined && offset >= failAfter) {
+        controller.error(new TypeError("network error"));
+        return;
+      }
+      if (offset >= u8.length) {
+        controller.close();
+        return;
+      }
+      controller.enqueue(u8.slice(offset, offset + chunk));
+      offset += chunk;
+    },
+  });
+  return new Response(body, {
+    headers: length ? { "Content-Length": String(u8.length) } : {},
+  });
+}
+
+function serveStreamed(
+  s: Store,
+  options: Parameters<typeof streamed>[1] = {},
+): void {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (input: string) => {
+      const name = input.slice("/frames-data/".length);
+      if (name === "manifest.json") {
+        return new Response(JSON.stringify(s.manifest));
+      }
+      return streamed(s.files[name]!, options);
+    }),
+  );
+}
+
+describe("loadFrameData's onProgress (R9)", () => {
+  type Call = [item: string, received: number, total: number | undefined];
+
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(NOW);
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+  });
+
+  const byItem = (calls: Call[]) => {
+    const out = new Map<string, Call[]>();
+    for (const c of calls) {
+      out.set(c[0], [...(out.get(c[0]) ?? []), c]);
+    }
+    return out;
+  };
+
+  it("reports each file's bytes in order against its Content-Length", async () => {
+    const s = await store(
+      leapText("28 June 2027"),
+      eopText(Math.floor(nowMjd), 400),
+    );
+    serveStreamed(s);
+    const calls: Call[] = [];
+    const data = await loadFrameData("/frames-data/", (...c) => calls.push(c));
+    expect(data.eop.last).toBeGreaterThan(NOW);
+    const files = byItem(calls);
+    expect([...files.keys()].sort()).toEqual(
+      ["EOP-All.csv", "Leap_Second.dat", "moon.pack", "planets.pack"].sort(),
+    );
+    for (const [file, list] of files) {
+      const size = s.files[file]!.byteLength;
+      expect(list[0]![1], file).toBe(0);
+      for (let i = 1; i < list.length; i++) {
+        expect(list[i]![1]).toBeGreaterThanOrEqual(list[i - 1]![1]);
+      }
+      expect(list.every((c) => c[2] === size)).toBe(true);
+      expect(list.at(-1)![1]).toBe(size);
+    }
+    // The EOP table is several chunks long, so it reports more than twice.
+    expect(files.get("EOP-All.csv")!.length).toBeGreaterThan(3);
+  });
+
+  it("reports no total when the response states no Content-Length", async () => {
+    const s = await store(
+      leapText("28 June 2027"),
+      eopText(Math.floor(nowMjd), 400),
+    );
+    serveStreamed(s, { length: false });
+    const calls: Call[] = [];
+    await loadFrameData("/frames-data/", (...c) => calls.push(c));
+    expect(calls.length).toBeGreaterThan(4);
+    expect(calls.every((c) => c[2] === undefined)).toBe(true);
+    const eop = byItem(calls).get("EOP-All.csv")!;
+    expect(eop.at(-1)![1]).toBe(s.files["EOP-All.csv"]!.byteLength);
+  });
+
+  it("rejects, never hangs, when a body fails part way", async () => {
+    const s = await store(
+      leapText("28 June 2027"),
+      eopText(Math.floor(nowMjd), 400),
+    );
+    serveStreamed(s, { failAfter: 2000 });
+    const calls: Call[] = [];
+    await expect(
+      loadFrameData("/frames-data/", (...c) => calls.push(c)),
+    ).rejects.toThrow(/network error/);
+    expect(calls.length).toBeGreaterThan(0);
+  });
+});

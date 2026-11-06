@@ -11,6 +11,7 @@
 //
 // Licenses: PROJ and proj.js are MIT; proj.db carries the EPSG Dataset (IOGP,
 // https://epsg.org/terms-of-use.html).
+import { readWithProgress, type LoadProgress } from "../io/readWithProgress.ts";
 import type { ProjApi } from "./projApi.ts";
 
 export type { ProjApi } from "./projApi.ts";
@@ -23,6 +24,13 @@ export interface LoadProjOptions {
   readonly base: string;
   /** Grid files to load beside `proj.db` (browser; Node finds them in `base`). */
   readonly grids?: readonly string[];
+  /**
+   * Called as the browser fetches each file this call loads, by its name
+   * (`proj_capi.wasm`, `proj.db`, a grid), with the bytes received and the
+   * response's `Content-Length` (R9). A call that shares an earlier call's
+   * load reports only the grids it adds. Node reads files and never calls it.
+   */
+  readonly onProgress?: LoadProgress;
 }
 
 interface WasmModule {
@@ -34,6 +42,11 @@ interface WasmModule {
     ): void;
   };
   emnapiInit(options: { context: unknown }): ProjApi;
+}
+
+/** Emscripten's module settings: the WebAssembly, when the caller fetched it. */
+interface ModuleArg {
+  wasmBinary?: Uint8Array;
 }
 
 interface Loaded {
@@ -49,14 +62,24 @@ const isNode = (): boolean =>
   typeof process !== "undefined" &&
   !!process.versions?.node;
 
-async function fetchBytes(url: string): Promise<Uint8Array> {
+async function fetchBytes(
+  base: string,
+  name: string,
+  onProgress: LoadProgress | undefined,
+): Promise<Uint8Array> {
+  const url = `${base}${name}`;
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(
       `PROJ: ${url} returned ${response.status}; run \`npm run setup\` and restart the dev server`,
     );
   }
-  return new Uint8Array(await response.arrayBuffer());
+  return new Uint8Array(
+    await readWithProgress(
+      response,
+      onProgress && ((received, total) => onProgress(name, received, total)),
+    ),
+  );
 }
 
 async function loadNode(base: string): Promise<Loaded> {
@@ -81,24 +104,32 @@ async function loadNode(base: string): Promise<Loaded> {
   return { api: Promise.resolve(api), grids: new Set() };
 }
 
-async function writeGrids(
-  module: WasmModule,
+/** Fetches the named files of `base` that `have` lacks, in parallel. */
+async function fetchFiles(
   base: string,
   names: readonly string[],
-  have: Set<string>,
-): Promise<void> {
+  have: ReadonlySet<string>,
+  onProgress: LoadProgress | undefined,
+): Promise<(readonly [string, Uint8Array])[]> {
   for (const name of names) {
     // A bare file name: it becomes a path in the module's in-memory file system.
     if (!/^[\w.-]+$/.test(name) || name.startsWith("..")) {
       throw new Error(`PROJ: "${name}" is not a plain grid file name`);
     }
   }
-  const missing = names.filter((name) => !have.has(name));
-  const files = await Promise.all(
+  const missing = [...new Set(names)].filter((name) => !have.has(name));
+  return Promise.all(
     missing.map(
-      async (name) => [name, await fetchBytes(`${base}${name}`)] as const,
+      async (name) => [name, await fetchBytes(base, name, onProgress)] as const,
     ),
   );
+}
+
+function writeFiles(
+  module: WasmModule,
+  files: readonly (readonly [string, Uint8Array])[],
+  have: Set<string>,
+): void {
   for (const [name, bytes] of files) {
     module.FS.writeFile(`/${name}`, bytes, { encoding: "binary" });
     have.add(name);
@@ -108,17 +139,24 @@ async function writeGrids(
 async function loadBrowser(
   base: string,
   grids: readonly string[],
+  onProgress: LoadProgress | undefined,
 ): Promise<Loaded> {
-  const glue = (await import(/* @vite-ignore */ `${base}proj_capi.mjs`)) as {
-    default(): Promise<WasmModule>;
-  };
-  const module = await glue.default();
+  const have = new Set<string>();
+  // The glue, its WebAssembly (fetched here, so its bytes can be reported),
+  // proj.db and the grids, all at once.
+  const [glue, wasmBinary, files] = await Promise.all([
+    import(/* @vite-ignore */ `${base}proj_capi.mjs`) as Promise<{
+      default(moduleArg?: ModuleArg): Promise<WasmModule>;
+    }>,
+    fetchBytes(base, "proj_capi.wasm", onProgress),
+    fetchFiles(base, ["proj.db", ...grids], have, onProgress),
+  ]);
+  const module = await glue.default({ wasmBinary });
   // Only the browser path needs it, so importing the package index does not
   // pull the runtime into every bundle.
   const emnapi = await import("@emnapi/runtime");
   const api = module.emnapiInit({ context: emnapi.getDefaultContext() });
-  const have = new Set<string>();
-  await writeGrids(module, base, ["proj.db", ...grids], have);
+  writeFiles(module, files, have);
   return { api: Promise.resolve(api), module, grids: have };
 }
 
@@ -127,12 +165,12 @@ async function loadBrowser(
  * result, and load any further `grids` it names in the browser).
  */
 export async function loadProj(options: LoadProjOptions): Promise<ProjApi> {
-  const { grids = [] } = options;
+  const { grids = [], onProgress } = options;
   // Every URL and the cache key are built from one form that ends in a slash.
   const base = /[\\/]$/.test(options.base) ? options.base : `${options.base}/`;
   let entry = loaded.get(base);
   if (!entry) {
-    entry = isNode() ? loadNode(base) : loadBrowser(base, grids);
+    entry = isNode() ? loadNode(base) : loadBrowser(base, grids, onProgress);
     loaded.set(base, entry);
     // A failed load is not remembered, so a retry after setup can work.
     entry.catch(() => {
@@ -143,7 +181,7 @@ export async function loadProj(options: LoadProjOptions): Promise<ProjApi> {
   }
   const { api, module, grids: have } = await entry;
   if (module) {
-    await writeGrids(module, base, grids, have);
+    writeFiles(module, await fetchFiles(base, grids, have, onProgress), have);
   }
   return api;
 }

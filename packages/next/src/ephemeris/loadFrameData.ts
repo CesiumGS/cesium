@@ -1,3 +1,4 @@
+import { readWithProgress, type LoadProgress } from "../io/readWithProgress.ts";
 import { EarthOrientationParameters } from "../time/eop.ts";
 import { LeapSeconds } from "../time/leapSeconds.ts";
 import { Ephemeris } from "./Ephemeris.ts";
@@ -95,6 +96,7 @@ async function loadManifest(base: string): Promise<Map<Role, ManifestEntry>> {
 async function loadFile(
   base: string,
   entry: ManifestEntry,
+  onProgress: LoadProgress | undefined,
 ): Promise<ArrayBuffer> {
   const url = `${base}${encodeURIComponent(entry.file)}`;
   const response = await fetchOk(url, entry.file);
@@ -103,7 +105,19 @@ async function loadFile(
       `frames data: ${entry.file} is listed in manifest.json but ${url} returned ${response.status}; re-run \`npm run setup\``,
     );
   }
-  const bytes = await response.arrayBuffer();
+  let bytes: ArrayBuffer;
+  try {
+    bytes = await readWithProgress(
+      response,
+      onProgress &&
+        ((received, total) => onProgress(entry.file, received, total)),
+    );
+  } catch (cause) {
+    throw new Error(
+      `frames data: reading ${entry.file} (${url}) failed: ${cause instanceof Error ? cause.message : String(cause)}`,
+      { cause },
+    );
+  }
   const digest = hex(await crypto.subtle.digest("SHA-256", bytes));
   if (digest !== entry.sha256) {
     throw new Error(
@@ -123,16 +137,20 @@ async function loadFile(
  * Data past its validity is not an error here (an instant outside the data is
  * handled where it is used), but `warnings` says so, and each warning is also
  * logged once.
+ *
+ * `onProgress`, when given, is called as each role file arrives, by its file
+ * name, with the bytes received and the response's `Content-Length` (R9).
  */
 export async function loadFrameData(
   baseUrl = "/frames-data/",
+  onProgress?: LoadProgress,
 ): Promise<FrameData> {
   const base = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
   const manifest = await loadManifest(base);
   const leapEntry = manifest.get("leapSeconds");
   const [planets, moon, eop, leap] = await Promise.all([
-    ...ROLES.map((role) => loadFile(base, manifest.get(role)!)),
-    leapEntry ? loadFile(base, leapEntry) : undefined,
+    ...ROLES.map((role) => loadFile(base, manifest.get(role)!, onProgress)),
+    leapEntry ? loadFile(base, leapEntry, onProgress) : undefined,
   ]);
   const decode = (bytes: ArrayBuffer | undefined): string =>
     new TextDecoder().decode(bytes);
