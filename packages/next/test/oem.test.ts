@@ -69,6 +69,9 @@ describe("Instant.fromIso", () => {
   it("rejects malformed text", () => {
     expect(() => Instant.fromIso("2026-04-02", "UTC", leap)).toThrow();
     expect(() => Instant.fromIso("2026-13-02T00:00:00", "UTC", leap)).toThrow();
+    expect(() => Instant.fromIso("2026-00-15T00:00:00", "UTC", leap)).toThrow(
+      /month/,
+    );
     expect(() => Instant.fromIso("2026-04-02T25:00:00", "UTC", leap)).toThrow();
   });
 });

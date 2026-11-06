@@ -100,8 +100,11 @@ export class Instant {
     if (m[4] === undefined) {
       month = Number(m[2]) - 1;
       day = Number(m[3]);
+      if (month < 0 || month > 11) {
+        throw new Error(`Invalid month in ISO time "${text}"`);
+      }
       const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
-      if (month > 11 || day < 1 || day > daysInMonth) {
+      if (day < 1 || day > daysInMonth) {
         throw new Error(`Invalid date in ISO time "${text}"`);
       }
     } else {
