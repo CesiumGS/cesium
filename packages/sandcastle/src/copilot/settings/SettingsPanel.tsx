@@ -8,9 +8,10 @@ import "./SettingsPanel.css";
 
 interface SettingsPanelProps {
   onClose: () => void;
+  onResetData: () => void;
 }
 
-export function SettingsPanel({ onClose }: SettingsPanelProps) {
+export function SettingsPanel({ onClose, onResetData }: SettingsPanelProps) {
   // The panel only mounts while shown, so this fires once per open
   useEffect(() => {
     trackEvent("Copilot Settings Opened");
@@ -29,7 +30,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
       </div>
       <div className="settings-panel-content">
         <FeatureSettings />
-        <AdvancedSettings />
+        <AdvancedSettings onResetData={onResetData} />
       </div>
     </div>
   );

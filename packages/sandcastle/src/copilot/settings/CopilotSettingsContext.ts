@@ -21,7 +21,9 @@ export const initialCopilotSettings: CopilotSettings = {
 export const CopilotSettingsContext = createContext<{
   settings: CopilotSettings;
   updateSettings: (newSettings: Partial<CopilotSettings>) => void;
+  resetSettings: () => void;
 }>({
   settings: initialCopilotSettings,
   updateSettings: () => {},
+  resetSettings: () => {},
 });
