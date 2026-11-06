@@ -1,74 +1,34 @@
-// What the panel renders (DESIGN.md): plain data, so the panel is the same
-// whether a stub (stub.ts, part 6a) or the page's wiring (6b) fills it. Only
+// What the panel renders (DESIGN.md): plain data the page (main.ts) fills
+// from the worker, the frame tree and the run. Only
 // types from the rest of the example: the main thread never bundles the
 // stress catalog, PROJ or the overlay builders (protocol.ts's rule).
 import type { AccuracyStatement } from "../../../src/measure/accuracy.ts";
-import type { DataItem, DataState, RunSummary } from "../protocol.ts";
-import type { Lens, StressResult } from "../tests.ts";
+import type { DataItem, RunSummary } from "../protocol.ts";
+import type {
+  Citation,
+  Comparison,
+  GroupInfo,
+  TraceStep,
+} from "../stress/groupInfo.ts";
+import type { Selection } from "../selection.ts";
+import type { StressResult } from "../tests.ts";
 import type { TreeNode } from "../tree.ts";
 
-/** One data item in the status strip (R9). */
-export interface ItemStatus {
-  item: DataItem;
-  state: DataState;
-  /** While fetching: bytes so far, and the total once every response stated it. */
-  received?: number;
-  total?: number;
-  /** When ready: bytes fetched and the load's time. */
-  bytes?: number;
-  ms?: number;
-  /** For missing and error: what failed, and for missing the setup hint. */
-  detail?: string;
-}
+/** One data item in the status strip (R9): loading.ts's model. */
+export type { ItemStatus } from "../loading.ts";
+import type { ItemStatus } from "../loading.ts";
 
-/** A question card's group, as plain data (the worker's `StressGroup` without its functions). */
-export interface GroupInfo {
-  id: string;
-  name: string;
-  question: string;
-  lenses: readonly Lens[];
-  /** The card's answer line, from the group's results. */
-  headline?: string;
-  /** What "Show on globe" turns to. */
-  focus?: { frames: readonly string[]; overlay?: string; site?: string };
-  /** A virtual group (Reproducibility): its results are other groups'. */
-  virtual?: boolean;
-}
-
-/** One step of a result's computation trace (R16): input, each step, output. */
-export interface TraceStep {
-  kind: "input" | "step" | "output" | "expected";
-  /** What the step is: "Design point", "PROJ operation", "ITRF → GCRF". */
-  label: string;
-  /** The value as computed, full precision, as copied. */
-  value: string;
-  /** The value is code (a pipeline, a WKT), shown in the mono face. */
-  code?: boolean;
-  note?: string;
-}
-
-/** Where a reference value comes from (R10). */
-export interface Citation {
-  document: string;
-  publisher?: string;
-  /** Table, page, PID or section. */
-  locator?: string;
-  url?: string;
-  retrieved: string;
-}
-
-/** What a result's expected value is (R10, R16): the inspector's "Compared against". */
-export type Comparison =
-  | { kind: "published"; text: string }
-  | { kind: "formula"; text: string }
-  | { kind: "roundTrip"; text: string }
-  | { kind: "error"; text: string }
-  | { kind: "independent"; text: string };
+export type {
+  Citation,
+  Comparison,
+  GroupInfo,
+  TraceStep,
+} from "../stress/groupInfo.ts";
 
 /**
- * What the panel shows beyond the result itself. 6b fills these from the
- * catalog (ruling F27, F28: `accuracyNote`, `trace`, `source` and a short
- * `label` on each case); the stub writes them out.
+ * What the panel shows beyond the result itself: the page fills these from
+ * the result's own fields (rulings F27, F28: `accuracyNote`, `trace`,
+ * `source`), its group (`compared`) and the short row labels (content.ts).
  */
 export interface ResultExtras {
   /** A noun phrase of 60 characters or fewer, for rows (the title stays in the inspector). */
@@ -165,9 +125,8 @@ export type ComposedAccuracy = Readonly<
   Record<Reference, Readonly<Record<string, ComposedView>>>
 >;
 
-/** Where the gallery's ion token came from (never the token itself, R18). */
-export type TokenSource = "env" | "setting" | "evaluation" | undefined;
-// "setting": pasted in Dyno's Viewer (bench/suite/ionToken.ts).
+/** Whether the gallery resolved an ion token (never the token itself, R18; F28: not where it came from). */
+export type TokenSource = "available" | undefined;
 
 /** The "Try your own" area's state (R18). */
 export interface UserCrsView {
@@ -206,6 +165,12 @@ export interface PanelModel {
   distortionHeight: number;
   /** R4's frame-bias exaggeration, 1 to 1e7. */
   biasFactor: number;
+  /**
+   * F32: the design grid's true-north lines at true scale; otherwise their
+   * convergence is drawn ×`convergenceFactor` (labelled on the globe).
+   */
+  trueScale: boolean;
+  convergenceFactor: number;
   /** The triads' scale, as the legend states it. */
   triadScale: string;
   groups: readonly GroupInfo[];
@@ -234,6 +199,8 @@ export interface PanelActions {
   setDistortionCrs(crs: DistortionCrs): void;
   setDistortionHeight(meters: number): void;
   setBiasFactor(factor: number): void;
+  /** F32: true-north lines at true scale, or with the convergence exaggerated. */
+  setTrueScale(on: boolean): void;
   jumpToFlyby(): void;
   /** Flies to a frame, a result's site, or a tour stop. */
   showOnGlobe(target: { frame: string } | { result: string }): void;
@@ -245,13 +212,4 @@ export interface PanelActions {
   linkTo(target: Selection | { kind: "tour"; stop: string }): string;
 }
 
-/** The selection the three views share (R14; 6b moves it to selection.ts). */
-export type Selection =
-  | { kind: "frame"; id: string }
-  | { kind: "result"; id: string }
-  | { kind: "none" };
-
-export type Tab = "explore" | "verify" | "report";
-
-/** The lens chips: "all" or one audience (R14). */
-export type LensChoice = "all" | Lens;
+export type { LensChoice, Selection, Tab } from "../selection.ts";

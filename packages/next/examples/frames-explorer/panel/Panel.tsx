@@ -5,7 +5,13 @@ import "./panel.css";
 // (R17), from a model (model.ts) the page or the stub fills.
 import { Snackbar } from "@mui/material";
 import { Tabs } from "@stratakit/structures";
-import { useId, useRef, useState } from "react";
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { createPortal } from "react-dom";
 import type { StressResult } from "../tests.ts";
 import { Explore } from "./Explore.tsx";
@@ -17,23 +23,27 @@ import type {
   Selection,
   Tab,
 } from "./model.ts";
+import type { ViewStore } from "../selection.ts";
 import { rowName } from "./QuestionCard.tsx";
 import { Report } from "./Report.tsx";
 import { StatusStrip } from "./StatusStrip.tsx";
 import { Verify } from "./Verify.tsx";
 
+/** The page's model, as `useSyncExternalStore` reads it. */
+export interface ModelSource {
+  subscribe(listener: () => void): () => void;
+  get(): PanelModel;
+}
+
 export interface PanelProps {
-  model: PanelModel;
+  /** The model the page (main.ts) keeps up to date. */
+  source: ModelSource;
+  /** The selection, lens and tour stop the tree, globe and tests share (R14). */
+  view: ViewStore;
   actions: PanelActions;
   /** Over the canvas: the legend and the tour caption go here. */
   hud: HTMLElement;
-  initial?: {
-    tab?: Tab;
-    selection?: Selection;
-    lens?: LensChoice;
-    /** A tour stop's index, to open the tour at. */
-    tour?: number;
-  };
+  initialTab?: Tab;
 }
 
 const TABS: readonly [Tab, string][] = [
@@ -42,18 +52,31 @@ const TABS: readonly [Tab, string][] = [
   ["report", "Report"],
 ];
 
-export function Panel({ model, actions, hud, initial = {} }: PanelProps) {
+export function Panel({ source, view, actions, hud, initialTab }: PanelProps) {
+  const model = useSyncExternalStore(source.subscribe, source.get);
+  const shared = useSyncExternalStore(view.subscribe, () => view.get());
   const uid = useId();
   const tabId = (t: Tab) => `${uid}-${t}`;
-  const [tab, setTab] = useState<Tab>(initial.tab ?? "explore");
-  const [selection, setSelection] = useState<Selection>(
-    initial.selection ?? { kind: "none" },
-  );
-  const [lens, setLens] = useState<LensChoice>(initial.lens ?? "all");
+  const [tab, setTab] = useState<Tab>(initialTab ?? "explore");
+  const selection = shared.selection;
+  const setSelection = (s: Selection) => view.select(s);
+  const lens = shared.lens;
+  const setLens = (l: LensChoice) => view.setLens(l);
   const [frameFilter, setFrameFilter] = useState<string | undefined>(
-    initial.selection?.kind === "frame" ? initial.selection.id : undefined,
+    selection.kind === "frame" ? selection.id : undefined,
   );
-  const [tour, setTour] = useState<number | undefined>(initial.tour);
+  // A frame selected from anywhere (a deep link, back and forward) filters
+  // Verify to the groups that use it, as a click in the tree does.
+  const selectedFrame = selection.kind === "frame" ? selection.id : undefined;
+  useEffect(() => {
+    if (selectedFrame !== undefined) {
+      setFrameFilter(selectedFrame);
+    }
+  }, [selectedFrame]);
+  const tourIndex = model.tour.findIndex((s) => s.id === shared.tour);
+  const tour = tourIndex >= 0 ? tourIndex : undefined;
+  const setTour = (i: number | undefined) =>
+    view.setTour(i === undefined ? undefined : model.tour[i]?.id);
   const [toast, setToast] = useState<string>();
   const tourButton = useRef<HTMLButtonElement>(null);
   const viewWidth = useHudLayout(hud);
@@ -65,12 +88,9 @@ export function Panel({ model, actions, hud, initial = {} }: PanelProps) {
     setSelection(id ? { kind: "frame", id } : { kind: "none" });
     setFrameFilter(id);
   };
-  // Selecting a result flies to it (R14).
+  // Selecting a result flies to it (R14): the page follows the view store.
   const selectResult = (id: string | undefined) => {
     setSelection(id ? { kind: "result", id } : { kind: "none" });
-    if (id) {
-      actions.showOnGlobe({ result: id });
-    }
   };
   const selected =
     selection.kind === "result"

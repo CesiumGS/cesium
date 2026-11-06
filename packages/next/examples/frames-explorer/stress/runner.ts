@@ -562,7 +562,7 @@ export interface RunOptions {
   readonly signal?: AbortSignal;
   /** Called once per result, as it is judged. */
   readonly onResult?: (result: StressResult) => void;
-  /** Only the cases with these ids. */
+  /** Only the cases with these ids, or in the groups with these ids (a card's "Run this group"). */
   readonly ids?: readonly string[];
   /** The cases to run (runStress's default: the catalog, `STRESS_CASES`). */
   readonly cases?: readonly StressCase[];
@@ -594,7 +594,7 @@ export async function runCases(
     if (signal?.aborted) {
       break;
     }
-    if (wanted !== undefined && !wanted.has(c.id)) {
+    if (wanted !== undefined && !wanted.has(c.id) && !wanted.has(c.group)) {
       continue;
     }
     const met = await needs.meet(c.needs);

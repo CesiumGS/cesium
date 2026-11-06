@@ -86,7 +86,10 @@ export interface DesignGridParams {
   readonly segment: number;
 }
 
-export type TrueNorthLinesParams = DesignGridParams;
+/** `trueNorthLines`: as the grid, with the convergence drawn `exaggeration` times (display only, F32; default 1). */
+export interface TrueNorthLinesParams extends DesignGridParams {
+  readonly exaggeration?: number;
+}
 
 /** `rigidVsExact`: the design line from `from` to `to`, in `samples` segments. */
 export interface RigidVsExactParams {
@@ -234,7 +237,7 @@ export interface ClientWorker {
 
 /** The page's side of the protocol. */
 export interface Client {
-  /** Runs the catalog, or the cases with `ids`, calling `onResult` per result. */
+  /** Runs the catalog, or the cases (or groups) with `ids`, calling `onResult` per result. */
   run(
     ids?: readonly string[],
     onResult?: (result: StressResult) => void,

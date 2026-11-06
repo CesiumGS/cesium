@@ -1,88 +1,1635 @@
 // The frames explorer (plan Task 6): the frame tree and engineering frames,
 // drawn on the globe and stress-tested in the page.
 //
-// Part 6a, the design pass: the panel's real StrataKit components on stub
-// data (panel/stub.ts), in the state the `stub` param picks ("ready",
-// "fetching", "missing", "failure", "start"). Part 6b replaces the stub with
-// the worker (protocol.ts), the overlays, the selection and the report.
+// `run` returns its panel at once (R17) and loads afterwards: frame data on
+// the main thread (the triads follow the clock every frame), and everything
+// else, the stress catalog, PROJ, GEOID18, Orion and the PROJ-dependent
+// overlay geometry, through the compute worker (R13, protocol.ts). One view
+// store (selection.ts) is the selection the tree, the globe and the tests
+// share (R14), kept in step with the example's params (R15). Every async step
+// stops on `context.signal`, and everything drawn goes through `scope`.
 import { createElement } from "react";
+import type { CrsRef } from "../../src/engineering/crs.ts";
+import type { SiteTransform } from "../../src/engineering/EngineeringFrame.ts";
+import { loadFrameData } from "../../src/ephemeris/loadFrameData.ts";
+import { frameTransform, type Frame } from "../../src/frames/Frame.ts";
+import { createFrames, type Frames } from "../../src/frames/frames.ts";
+import { eastNorthUpFrame } from "../../src/frames/local.ts";
+import { Ellipsoid, fromDegrees } from "../../src/math/ellipsoid.ts";
+import { earthOrientationSigma } from "../../src/measure/accuracy.ts";
+import { MOON } from "../../src/scene/Body.ts";
+import { Instant } from "../../src/time/Instant.ts";
 import type { ExampleContext, ExampleRun } from "../types.ts";
+import { composedAccuracy, type PlacedNode } from "./composed.ts";
+import { RESULT_LABELS, TOUR, type TourStopSpec } from "./content.ts";
+import {
+  Globe,
+  SECONDARY,
+  familyRgba,
+  hexRgba,
+  type Framing,
+  type LabelSpec,
+  type TriadSpec,
+} from "./globe.ts";
+import { LoadingModel } from "./loading.ts";
+import {
+  overlayMesh,
+  roundTripMarkers,
+  triad,
+  type Extent,
+  type OverlayChunk,
+} from "./overlays.ts";
+import { familyMap } from "./panel/families.ts";
+import { length, radians, sig } from "./panel/format.ts";
 import type {
-  LensChoice,
+  ClockView,
+  ComposedAccuracy,
+  DistortionCrs,
+  EnvironmentLine,
+  OrionFrame,
+  OverlayId,
+  OverlayView,
   PanelActions,
-  Selection,
-  Tab,
+  PanelModel,
+  ResultExtras,
+  RunView,
+  UserCrsView,
 } from "./panel/model.ts";
-import { Panel } from "./panel/Panel.tsx";
-import { SCENARIOS, type Scenario, stubModel } from "./panel/stub.ts";
+import { Panel, type ModelSource } from "./panel/Panel.tsx";
+import {
+  createClient,
+  type ClientWorker,
+  type DataItem,
+  type FrameName,
+  type FrameParams,
+  type OverlayGeometry,
+  type RunSummary,
+} from "./protocol.ts";
+import { buildReport, type ReportEnvironment } from "./report.ts";
+import {
+  ViewStore,
+  formatParams,
+  parseParams,
+  type Known,
+  type Tab,
+} from "./selection.ts";
+import { GROUP_INFO, groupInfo, type Lens } from "./stress/groupInfo.ts";
+import type { StressResult } from "./tests.ts";
+import { buildTree, pathToRoot, type TreeNode } from "./tree.ts";
+import references from "./references.json";
 
-const TABS: readonly Tab[] = ["explore", "verify", "report"];
-const LENSES: readonly LensChoice[] = [
-  "all",
-  "civil",
-  "bim",
-  "gis",
-  "space",
-  "timing",
-  "offshore",
-  "av",
-];
+const DATA = "/frames-data/";
+const deg = Math.PI / 180;
+const WGS84 = Ellipsoid.WGS84;
+const EARTH_RADIUS = 6_371_000;
 
-/** `select=result:<id>` or `frame:<id>` (R15); anything else is none. */
-function parseSelection(text: string | undefined): Selection {
-  const m = /^(result|frame):(.+)$/.exec(text ?? "");
-  return m ? { kind: m[1] as "result" | "frame", id: m[2]! } : { kind: "none" };
+/** The Artemis II flyby (R4's clock preset), and the instant the page opens at. */
+const FLYBY = Date.parse("2026-04-06T23:00:00Z");
+/** The OEM's span, generously: samples it doesn't cover are skipped. */
+const ORION_SPAN = ["2026-04-02T02:00:00", "2026-04-11T00:00:00"] as const;
+
+/** US survey feet per metre: EPSG:6420 is in ftUS. */
+const FT = 3937 / 1200;
+const CALIFORNIA: CrsRef = { format: "wkid", authority: "EPSG", wkid: 6420 };
+/** The design grid: ±90 km about the central meridian (120.5°W), 37.0° to 38.7°N, 10 km lines. */
+const GRID_EXTENT: Extent = {
+  min: [1_910_000 * FT, 560_000 * FT],
+  max: [2_090_000 * FT, 740_000 * FT],
+};
+const GRID_STEP = 10_000 * FT;
+/** The catalog's California site (stress/shared.ts SITE_ORIGIN), θ = 12.5°, s = 1.0000375. */
+const SITE: SiteTransform = {
+  origin: [6_000_000, 2_100_000, 0],
+  rotation: 12.5 * deg,
+  scale: 1.0000375,
+};
+/** F32: the true-north lines' convergence, drawn this many times while not at true scale. */
+const CONVERGENCE_FACTOR = 20;
+
+const SACRAMENTO = fromDegrees(-121.4944, 38.5816, 0);
+const LUNAR_SITE = fromDegrees(0, -89.5, 0);
+
+const ITEM_NAME: Record<DataItem, string> = {
+  frames: "frame data",
+  proj: "PROJ",
+  geoid: "GEOID18",
+  orion: "Orion's OEM",
+};
+
+const OVERLAY_LABEL: Record<OverlayId, [label: string, short: string]> = {
+  triads: ["Triads", "Triads"],
+  designGrid: ["California design grid, with true north", "Design grid"],
+  siteGrid: ["Site grid (θ = 12.5°, s = 1.0000375)", "Site grid"],
+  rigidVsExact: ["Rigid and exact 20 km line", "Rigid vs exact"],
+  roundTrip: ["Round-trip markers from the last run", "Round trips"],
+  orion: ["Orion's path", "Orion"],
+  distortion: ["Distortion", "Distortion"],
+  bias: ["Frame bias exaggeration", "Frame bias"],
+};
+const OVERLAYS = Object.keys(OVERLAY_LABEL) as OverlayId[];
+
+/** The data an overlay waits for (R9). */
+const OVERLAY_NEEDS: Partial<Record<OverlayId, DataItem>> = {
+  designGrid: "proj",
+  siteGrid: "proj",
+  rigidVsExact: "proj",
+  distortion: "proj",
+  orion: "orion",
+};
+
+const DRAW_IN: Record<OrionFrame, FrameName> = {
+  GCRF: "gcrf",
+  ITRF: "itrf",
+  MOON_ME: "moonMe",
+};
+
+const DISTORTION: Record<
+  DistortionCrs,
+  {
+    crs: CrsRef;
+    extent: Extent;
+    step: number;
+    radius: number;
+    height?: number;
+    look: [lon: number, lat: number, range: number];
+  }
+> = {
+  "6420": {
+    crs: CALIFORNIA,
+    extent: GRID_EXTENT,
+    step: 30_000 * FT,
+    radius: 4000,
+    look: [-120.5, 37.8, 400_000],
+  },
+  "32610": {
+    crs: { format: "wkid", authority: "EPSG", wkid: 32610 },
+    extent: { min: [200_000, 3_600_000], max: [800_000, 4_600_000] },
+    step: 100_000,
+    radius: 15_000,
+    look: [-123, 37, 1_600_000],
+  },
+  "3857": {
+    crs: { format: "wkid", authority: "EPSG", wkid: 3857 },
+    extent: { min: [-14_500_000, 0], max: [-12_500_000, 11_000_000] },
+    step: 1_000_000,
+    radius: 120_000,
+    look: [-125, 40, 12_000_000],
+  },
+  ldp: {
+    crs: { format: "wkid", authority: "EPSG", wkid: 6854 },
+    extent: { min: [70_000, 20_000], max: [130_000, 80_000] },
+    step: 5000,
+    radius: 1000,
+    height: 13,
+    look: [-122.75, 45.5, 90_000],
+  },
+};
+
+interface OverlayState {
+  on: boolean;
+  state: OverlayView["state"];
+  problem?: string;
+  accuracy?: string;
+  caution?: boolean;
+  unbounded?: boolean;
+  /** Bumped per request, so a late answer for an old one is dropped. */
+  token: number;
 }
 
-const pick = <T extends string>(
-  options: readonly T[],
-  value: string | undefined,
-): T | undefined => options.find((o) => o === value);
+/** Meters as the panel writes them (SI prefixes, powers of ten written out). */
+const meters = (x: number): string => length(x, 3);
+
+const messageOf = (e: unknown): string =>
+  e instanceof Error ? e.message : String(e);
+const isAbort = (e: unknown): boolean =>
+  e instanceof DOMException && e.name === "AbortError";
 
 export function run(context: ExampleContext): ExampleRun {
-  const { viewer, params, scope } = context;
-  const scenario: Scenario = pick(SCENARIOS, params.stub) ?? "ready";
-  const model = stubModel(scenario);
+  const { viewer, scope, signal, params } = context;
+  const token = context.accessToken;
+  /** The token never enters a message the page shows (R18). */
+  const scrub = (text: string): string =>
+    token !== undefined && token.length >= 8
+      ? text.split(token).join("[redacted]")
+      : text;
 
-  // The HUD host over the canvas: the legend and tour captions (R17).
+  // The HUD host over the canvas: the legend, tour captions and labels (R17).
   const hud = document.createElement("div");
   hud.className = "fx-hud-host";
   viewer.container.append(hud);
   scope.defer(() => hud.remove());
 
-  const tour = model.tour.findIndex((s) => s.id === params.tour);
-  const noop = () => {};
-  const stubReport = () =>
-    [
-      "# Frames explorer report (stub)",
-      "",
-      `${model.results.length} results from the stub; part 6b writes the real report.`,
-    ].join("\n");
-  // The panel and the canvas show one instant (I13; 6b follows the clock).
-  viewer.clock.time = Date.parse(model.clock.utc);
+  const globe = new Globe(viewer, scope, hud);
+  const loading = new LoadingModel();
+  // Items left fetching when the example is left go back to idle: the
+  // stopped client sends no final state (Task 4's deferred note).
+  scope.defer(() => loading.reset());
+  const view = new ViewStore();
+  const initial = parseParams(params, { tours: TOUR.map((s) => s.id) });
+  view.apply(initial);
+
+  // ----------------------------------------------------------- the worker
+  const worker = new Worker(new URL("./worker.ts", import.meta.url), {
+    type: "module",
+  });
+  const client = createClient(worker as unknown as ClientWorker, signal);
+  client.onProgress((reply) => {
+    // Frame data's indicator is the main thread's own load; the worker's
+    // second fetch (from the HTTP cache) shows only when it fails.
+    if (
+      reply.item === "frames" &&
+      !(
+        reply.type === "state" &&
+        (reply.state === "missing" || reply.state === "error")
+      )
+    ) {
+      return;
+    }
+    loading.reply(reply);
+  });
+
+  // ------------------------------------------------------------ page state
+  let frames: Frames | undefined;
+  let manifest:
+    | {
+        span?: readonly number[];
+        files: readonly {
+          file: string;
+          role?: string;
+          sha256: string;
+          sourceUrl?: string;
+        }[];
+      }
+    | undefined;
+  let tree: TreeNode | undefined;
+  let treeNote: string | undefined =
+    "The frame tree draws once frame data is in.";
+  let composed: ComposedAccuracy = { ITRF: {}, GCRF: {}, ICRF: {} };
+  let local: Frame[] = [];
+  /** The engineering frame the worker placed (known from its operation), for the tree. */
+  let engineering: { node: TreeNode; placed: PlacedNode } | undefined;
+  let results: StressResult[] = [];
+  let userResults: StressResult[] = [];
+  let runView: RunView = { state: "idle", done: 0, total: 0 };
+  let lastRun: { startedAt: string; summary: RunSummary } | undefined;
+  let userCrs: UserCrsView =
+    initial.imodel !== undefined
+      ? { state: "idle", id: initial.imodel }
+      : { state: "idle" };
+  let orionFrame: OrionFrame = "GCRF";
+  let distortionCrs: DistortionCrs = "6420";
+  let distortionHeight = 0;
+  let biasFactor = 1e6;
+  let trueScale = false;
+  const overlays = new Map<OverlayId, OverlayState>(
+    OVERLAYS.map((id) => [
+      id,
+      {
+        on: id === "triads",
+        state: id === "triads" ? "drawn" : "off",
+        token: 0,
+      },
+    ]),
+  );
+  /** Overlay labels on the globe (the sag, the convergence, contour values). */
+  const overlayLabels = new Map<OverlayId, LabelSpec[]>();
+  let disposed = false;
+  scope.defer(() => {
+    disposed = true;
+  });
+
+  // -------------------------------------------------------- the model
+  let model: PanelModel | undefined;
+  const listeners = new Set<() => void>();
+  let notifyQueued = 0;
+  /** The model is stale: rebuilt on the next read, listeners told once per frame (R13: a run streams 225 results). */
+  const invalidate = () => {
+    model = undefined;
+    if (notifyQueued === 0 && !disposed) {
+      notifyQueued = requestAnimationFrame(() => {
+        notifyQueued = 0;
+        for (const l of [...listeners]) {
+          l();
+        }
+      });
+    }
+  };
+  scope.defer(() => cancelAnimationFrame(notifyQueued));
+  loading.subscribe(invalidate);
+  const source: ModelSource = {
+    subscribe: (l) => {
+      listeners.add(l);
+      return () => listeners.delete(l);
+    },
+    get: () => (model ??= buildModel()),
+  };
+
+  const instantNow = (): Instant | undefined =>
+    frames
+      ? Instant.fromUtc(viewer.clock.time, frames.data.leapSeconds)
+      : undefined;
+
+  function clockView(): ClockView {
+    const utc = new Date(viewer.clock.time)
+      .toISOString()
+      .replace(/\.\d+Z$/, "Z");
+    const instant = instantNow();
+    if (!frames || !instant) {
+      return { utc, eop: { kind: "measured" } };
+    }
+    const sigma = earthOrientationSigma(frames, instant);
+    return {
+      utc,
+      eop: sigma.degraded
+        ? { kind: "outside", span: sigma.span }
+        : sigma.predicted
+          ? { kind: "predicted", ageDays: sigma.ageDays }
+          : { kind: "measured" },
+    };
+  }
+
+  /** The triads' line in the legend: GCRF against ITRF, the edge's own figure (R8). */
+  function triadsAccuracy(): Pick<OverlayView, "accuracy" | "unbounded"> {
+    const itrf = tree && findNode(tree, "ITRF");
+    const a = itrf?.edge.accuracy;
+    if (a?.radians !== undefined) {
+      return {
+        accuracy: `axes: GCRF against ITRF ±${radians(a.radians)} (${a.note})`,
+      };
+    }
+    return {
+      accuracy: a
+        ? `axes: GCRF against ITRF not bounded: ${a.note}`
+        : "waiting for frame data",
+      unbounded: a !== undefined,
+    };
+  }
+
+  function overlayViews(): OverlayView[] {
+    return OVERLAYS.map((id) => {
+      const s = overlays.get(id)!;
+      const [label, short] = OVERLAY_LABEL[id];
+      const need = OVERLAY_NEEDS[id];
+      const base: OverlayView = {
+        id,
+        label,
+        short,
+        on: s.on,
+        state: s.on ? s.state : "off",
+        accuracy: s.accuracy ?? defaultAccuracy(id),
+        ...(need !== undefined && { waitingFor: need }),
+        ...(s.problem !== undefined && { problem: s.problem }),
+        ...(s.caution && { caution: true }),
+        ...(s.unbounded && { unbounded: true }),
+      };
+      if (id === "triads") {
+        Object.assign(base, triadsAccuracy());
+      }
+      // An item the store doesn't have disables its toggles (R5).
+      const item = need && loading.get(need);
+      if (item?.state === "missing" && s.state !== "drawn") {
+        base.state = "missing";
+        base.problem = `${ITEM_NAME[need!]} isn't in the frames store: run npm run setup in packages/next, then reload.`;
+      }
+      return base;
+    });
+  }
+
+  function defaultAccuracy(id: OverlayId): string {
+    switch (id) {
+      case "designGrid":
+      case "siteGrid":
+        return "the recorded PROJ operation's accuracy, once PROJ is in";
+      case "rigidVsExact":
+        return "sag at 20 km: geometry, exact";
+      case "roundTrip":
+        return "run the tests to place the markers";
+      case "orion":
+        return "±10 m (1σ), mostly the unstated time scale, taken as TDB";
+      case "distortion":
+        return "Tissot ellipses in true-north axes (convergence not applied); contours from PROJ's factors";
+      case "bias":
+        return `the frame bias, 23 mas: exact by definition (IAU 2006 adopted constants); drawn ×${sig(biasFactor, 1)}`;
+      default:
+        return "";
+    }
+  }
+
+  function extrasOf(r: StressResult): ResultExtras {
+    const g = groupInfo(r.group);
+    const label = RESULT_LABELS[r.id];
+    return {
+      ...(label !== undefined && { label }),
+      ...(r.accuracyNote !== undefined && { accuracyNote: r.accuracyNote }),
+      compared:
+        r.expectedError !== undefined
+          ? { kind: "error", text: `An error matching /${r.expectedError}/.` }
+          : (g?.compared ?? {
+              kind: "independent",
+              text: "The case's own check.",
+            }),
+      ...(r.trace !== undefined && { trace: r.trace }),
+      ...(r.source !== undefined && { source: r.source }),
+      ...(r.group === "measurement" &&
+        r.accuracy?.meters !== undefined && {
+          relative: `The site's absolute placement is ±${meters(r.accuracy.meters)} (1σ); this check measures a distance, which that placement doesn't affect.`,
+        }),
+    };
+  }
+
+  /** Groups waiting for an item (R9): a need still loading, or not yet tried while a run goes on. */
+  function waiting(): Record<string, DataItem> {
+    const out: Record<string, DataItem> = {};
+    for (const g of GROUP_INFO) {
+      for (const need of g.needs) {
+        const s = loading.get(need).state;
+        const pending =
+          s === "fetching" || (runView.state === "running" && s === "idle");
+        const has = results.some((r) => r.group === g.id);
+        if (pending && !has) {
+          out[g.id] = need;
+          break;
+        }
+      }
+    }
+    return out;
+  }
+
+  function environmentLines(): EnvironmentLine[] {
+    const env = reportEnvironment();
+    return [
+      [
+        "Run",
+        lastRun
+          ? `${env.startedAt.replace("T", " ").replace(/\.\d+Z$/, " UTC")}, ${(env.durationMs / 1000).toFixed(1)} s`
+          : "not run yet",
+      ],
+      ["Package", env.packageVersion],
+      ["PROJ", env.proj ?? "not loaded"],
+      ...env.files.map((f): EnvironmentLine => [
+        f.label,
+        `${f.file}${f.sha256 ? `, sha256 ${f.sha256.slice(0, 12)}…` : f.note ? ` (${f.note})` : ""}`,
+      ]),
+      ...(env.frameDataSpan
+        ? [["Frame data span", env.frameDataSpan] as EnvironmentLine]
+        : []),
+      ["Browser", env.userAgent],
+    ];
+  }
+
+  function buildModel(): PanelModel {
+    const all = [...results, ...userResults];
+    const extras: Record<string, ResultExtras> = {};
+    for (const r of all) {
+      extras[r.id] = extrasOf(r);
+    }
+    return {
+      items: loading.items,
+      ...(tree ? { tree } : {}),
+      ...(treeNote !== undefined && { treeNote }),
+      composed,
+      clock: clockView(),
+      overlays: overlayViews(),
+      orionFrame,
+      distortionCrs,
+      distortionHeight,
+      biasFactor,
+      trueScale,
+      convergenceFactor: CONVERGENCE_FACTOR,
+      triadScale:
+        "triads drawn at 6% of the camera's distance, 2 m to 2,000 km; ITRF and GCRF at 1.5 Earth radii",
+      groups: GROUP_INFO,
+      results: all,
+      extras,
+      waiting: waiting(),
+      run: runView,
+      token: token !== undefined ? "available" : undefined,
+      userCrs,
+      exampleWkt2: (
+        references.entries as unknown as Record<string, { wkt2?: string }>
+      )["input-wkt2-tokyo-jprcs-ix"]!.wkt2!,
+      tour: TOUR,
+      environment: environmentLines(),
+    };
+  }
+
+  // ------------------------------------------------------------ the tree
+  function findNode(root: TreeNode, id: string): TreeNode | undefined {
+    if (root.id === id) {
+      return root;
+    }
+    for (const c of root.children) {
+      const f = findNode(c, id);
+      if (f) {
+        return f;
+      }
+    }
+    return undefined;
+  }
+
+  /** The tree and the walk's statements at the clock's instant. */
+  function rebuildTree(): void {
+    const instant = instantNow();
+    if (!frames || !instant) {
+      return;
+    }
+    const t = buildTree(frames, { local }, instant);
+    if (engineering) {
+      findNode(t, "ITRF")?.children.push(engineering.node);
+    }
+    tree = t;
+    treeNote = undefined;
+    const placed = new Map<string, PlacedNode>(
+      engineering ? [[engineering.node.id, engineering.placed]] : [],
+    );
+    composed = composedAccuracy(t, frames, instant, placed);
+    updateKnown();
+    invalidate();
+  }
+
+  function treeIds(): Set<string> {
+    const out = new Set<string>();
+    const walk = (n: TreeNode) => {
+      out.add(n.id);
+      n.children.forEach(walk);
+    };
+    if (tree) {
+      walk(tree);
+    }
+    return out;
+  }
+
+  function updateKnown(): void {
+    const repro = groupInfo("reproducibility")!.lenses;
+    const lensesOf = new Map<string, readonly Lens[]>();
+    for (const r of [...results, ...userResults]) {
+      const own = groupInfo(r.group)?.lenses ?? [];
+      lensesOf.set(
+        r.id,
+        r.fingerprint ? [...new Set([...own, ...repro])] : own,
+      );
+    }
+    const known: Known = {
+      ...(tree && { frames: treeIds() }),
+      ...(lastRun !== undefined && { results: lensesOf }),
+      tours: TOUR.map((s) => s.id),
+    };
+    view.setKnown(known);
+  }
+
+  // --------------------------------------------------------------- triads
+  const familyOf = (id: string) => (tree && familyMap(tree).get(id)) ?? "earth";
+
+  function triadSpecs(): TriadSpec[] {
+    if (!frames || !overlays.get("triads")!.on) {
+      return [];
+    }
+    const byName = new Map<string, Frame>();
+    for (const f of [
+      frames.icrf,
+      frames.hcrs,
+      frames.gcrf,
+      frames.earthIcrf,
+      frames.eme2000,
+      frames.moonIcrf,
+      frames.itrf,
+      frames.moonMe,
+      frames.moonPa,
+      ...local,
+    ]) {
+      byName.set(f.name, f);
+    }
+    const ids = new Set([
+      "ITRF",
+      "GCRF",
+      "Sacramento ENU",
+      "Lunar south-pole site",
+    ]);
+    const s = view.get().selection;
+    if (s.kind === "frame" && tree) {
+      for (const n of pathToRoot(tree, s.id)) {
+        ids.add(n.id);
+      }
+    }
+    for (const id of emphasisFrames()) {
+      ids.add(id);
+    }
+    const out: TriadSpec[] = [];
+    for (const id of ids) {
+      const frame = byName.get(id);
+      if (frame === undefined || id === "ICRF" || id === "HCRS") {
+        // The barycentre's and the Sun's origins are far off the scene.
+        continue;
+      }
+      const geocentric = id === "ITRF" || id === "GCRF" || id === "EME2000";
+      out.push({
+        id,
+        label: id,
+        frame,
+        family: familyOf(id),
+        ...(geocentric && { length: 1.5 * EARTH_RADIUS }),
+      });
+    }
+    return out;
+  }
+
+  function refreshTriads(): void {
+    const specs = triadSpecs();
+    globe.setTriads(specs);
+    const labels: LabelSpec[] = specs.map((t) => ({
+      id: t.id,
+      text: t.label,
+      family: t.family,
+      priority: t.id === selectedFrame() ? 3 : 1,
+      at: () => {
+        const o = globe.triadOrigin(t.id);
+        if (o === undefined) {
+          return undefined;
+        }
+        // Geocentric triads are labelled at their x axis's tip, off the globe.
+        return t.length !== undefined && frames
+          ? axisTip(t.frame, t.length)
+          : o;
+      },
+    }));
+    globe.setLabels([...labels, ...[...overlayLabels.values()].flat()]);
+  }
+
+  function axisTip(frame: Frame, length: number): Float64Array | undefined {
+    const instant = instantNow();
+    if (!frames || !instant) {
+      return undefined;
+    }
+    const m = frameTransform(frame, frames.itrf, instant);
+    return Float64Array.from([
+      m[12]! + m[0]! * length,
+      m[13]! + m[1]! * length,
+      m[14]! + m[2]! * length,
+    ]);
+  }
+
+  const selectedFrame = () => {
+    const s = view.get().selection;
+    return s.kind === "frame" ? s.id : undefined;
+  };
+
+  // ------------------------------------------------------------- overlays
+  const frameParams = (
+    crs: CrsRef,
+    name: string,
+    site?: SiteTransform,
+  ): FrameParams => ({
+    name,
+    body: "earth",
+    crs,
+    ...(site && { site }),
+  });
+
+  /** Asks the worker for an overlay, showing it waiting until it draws (R9). */
+  async function request(
+    id: OverlayId,
+    build: () => Promise<{
+      layers: Parameters<Globe["setOverlay"]>[1];
+      accuracy: string;
+      caution?: boolean;
+      labels?: LabelSpec[];
+    }>,
+  ): Promise<void> {
+    const s = overlays.get(id)!;
+    const token = ++s.token;
+    s.state = "waiting";
+    delete s.problem;
+    invalidate();
+    try {
+      const built = await build();
+      if (token !== s.token || !s.on || disposed) {
+        return;
+      }
+      globe.setOverlay(id, built.layers);
+      s.state = "drawn";
+      s.accuracy = built.accuracy;
+      s.caution = built.caution === true;
+      overlayLabels.set(id, built.labels ?? []);
+      refreshTriads();
+    } catch (error) {
+      if (isAbort(error) || token !== s.token || disposed) {
+        return;
+      }
+      const need = OVERLAY_NEEDS[id];
+      const item = need && loading.get(need);
+      s.state = item?.state === "missing" ? "missing" : "error";
+      s.problem =
+        item?.state === "missing"
+          ? `${ITEM_NAME[need!]} isn't in the frames store: run npm run setup in packages/next, then reload.`
+          : `It didn't draw: ${scrub(messageOf(error))}`;
+    }
+    invalidate();
+  }
+
+  const operationText = (
+    g: OverlayGeometry,
+  ): { text: string; caution: boolean } => {
+    const op = g.operation;
+    if (!op) {
+      return { text: "", caution: false };
+    }
+    if (op.ballpark || op.accuracy === undefined) {
+      return {
+        text: `not bounded: PROJ states no accuracy for the recorded operation${op.ballpark ? " (a ballpark operation)" : ""}`,
+        caution: true,
+      };
+    }
+    if (op.accuracy === 0) {
+      return {
+        text: "exact: the operation is a conversion, with no datum change",
+        caution: false,
+      };
+    }
+    return {
+      text: `±${meters(op.accuracy)} (1σ): the recorded operation to WGS 84`,
+      caution: false,
+    };
+  };
+
+  /** The first chunk's first vertex, Earth-fixed: where to hang a label. */
+  const pointOf = (
+    chunks: readonly OverlayChunk[],
+    last = false,
+  ): Float64Array | undefined => {
+    const c = last ? chunks.at(-1) : chunks[0];
+    if (!c) {
+      return undefined;
+    }
+    const p = c.mesh.positions;
+    const i = last ? p.length - 3 : 0;
+    return Float64Array.from([
+      c.origin[0]! + p[i]!,
+      c.origin[1]! + p[i + 1]!,
+      c.origin[2]! + p[i + 2]!,
+    ]);
+  };
+
+  function noteEngineering(
+    g: OverlayGeometry,
+    center: ArrayLike<number>,
+  ): void {
+    if (engineering || !g.operation) {
+      return;
+    }
+    const op = g.operation;
+    const known = !op.ballpark && op.accuracy !== undefined;
+    engineering = {
+      node: {
+        id: "engineering:California zone 3",
+        label: "California zone 3",
+        edge: {
+          kind: "proj-operation",
+          detail: op.pipeline,
+          accuracy: known
+            ? {
+                meters: op.accuracy!,
+                note: "PROJ's stated accuracy for the recorded operation",
+              }
+            : { note: "PROJ states no accuracy for the recorded operation" },
+        },
+        children: [],
+      },
+      placed: {
+        itrf: center,
+        projection: {
+          source: "projection",
+          meters: known ? op.accuracy : undefined,
+          note: `engineering frame "California zone 3": PROJ operation (${op.grids.join(", ") || "no grids"})`,
+        },
+      },
+    };
+    rebuildTree();
+  }
+
+  function drawOverlay(id: OverlayId): void {
+    const s = overlays.get(id)!;
+    if (!s.on) {
+      s.token++;
+      globe.removeOverlay(id);
+      overlayLabels.delete(id);
+      s.state = "off";
+      refreshTriads();
+      invalidate();
+      return;
+    }
+    const engineeringColor = familyRgba("engineering");
+    switch (id) {
+      case "triads":
+        s.state = "drawn";
+        refreshTriads();
+        invalidate();
+        return;
+      case "designGrid":
+        void request(id, async () => {
+          const frame = frameParams(CALIFORNIA, "California zone 3");
+          const [grid, north] = await Promise.all([
+            client.overlay("designGrid", {
+              frame,
+              extent: GRID_EXTENT,
+              step: GRID_STEP,
+              segment: 1000 * FT,
+            }),
+            client.overlay("trueNorthLines", {
+              frame,
+              extent: GRID_EXTENT,
+              step: GRID_STEP,
+              segment: 2000 * FT,
+              ...(!trueScale && { exaggeration: CONVERGENCE_FACTOR }),
+            }),
+          ]);
+          const op = operationText(grid);
+          const center = pointOf(grid.layers[0]!.chunks) ?? new Float64Array(3);
+          noteEngineering(grid, center);
+          const west = pointOf(north.layers[0]!.chunks, true);
+          return {
+            layers: [
+              { chunks: grid.layers[0]!.chunks, color: engineeringColor },
+              {
+                chunks: north.layers[0]!.chunks,
+                color: familyRgba("earth"),
+                strength: SECONDARY,
+                dashed: true,
+              },
+            ],
+            accuracy: `${op.text}; true north ${trueScale ? "at true scale" : `with its convergence drawn ×${CONVERGENCE_FACTOR}`}`,
+            caution: op.caution,
+            labels: west
+              ? [
+                  {
+                    id: "label:true-north",
+                    text: trueScale
+                      ? "true north"
+                      : `true north, convergence ×${CONVERGENCE_FACTOR}`,
+                    at: west,
+                    priority: 2,
+                  },
+                ]
+              : [],
+          };
+        });
+        return;
+      case "siteGrid":
+        void request(id, async () => {
+          const half = 10_000 * FT;
+          const g = await client.overlay("designGrid", {
+            frame: frameParams(CALIFORNIA, "California zone 3 site", SITE),
+            extent: { min: [-half, -half], max: [half, half] },
+            step: 2000 * FT,
+            segment: 100 * FT,
+          });
+          const op = operationText(g);
+          return {
+            layers: [
+              {
+                chunks: g.layers[0]!.chunks,
+                color: engineeringColor,
+                strength: SECONDARY,
+                dashed: true,
+              },
+            ],
+            accuracy: `${op.text}; the site formula exact to 1 nm`,
+            caution: op.caution,
+          };
+        });
+        return;
+      case "rigidVsExact":
+        void request(id, async () => {
+          const from: [number, number] = [SITE.origin[0], SITE.origin[1]];
+          const to: [number, number] = [from[0] + 20_000 * FT, from[1]];
+          const g = await client.overlay("rigidVsExact", {
+            frame: frameParams(CALIFORNIA, "California zone 3"),
+            from,
+            to,
+            samples: 100,
+          });
+          const exact = g.layers.find((l) => l.name === "exact")!.chunks;
+          const rigid = g.layers.find((l) => l.name === "rigid")!.chunks;
+          const sag = g.sagAtEnd ?? NaN;
+          const end = pointOf(exact, true);
+          return {
+            layers: [
+              { chunks: exact, color: engineeringColor },
+              { chunks: rigid, color: hexRgba("#ffffff"), dashed: true },
+            ],
+            accuracy: `sag ${sag.toFixed(1)} m at 20 km (geometry, exact); rigid dashed`,
+            labels: end
+              ? [
+                  {
+                    id: "label:sag",
+                    text: `sag ${sag.toFixed(1)} m at 20 km`,
+                    at: end,
+                    priority: 2,
+                  },
+                ]
+              : [],
+          };
+        });
+        return;
+      case "roundTrip": {
+        const marks = results
+          .filter(
+            (r) =>
+              r.fingerprint &&
+              r.value !== undefined &&
+              r.tolerance !== undefined &&
+              !r.userInput,
+          )
+          .flatMap((r) => {
+            const c = r.fingerprint!.coordinates;
+            const out = [];
+            for (let i = 0; i + 2 < c.length; i += 3) {
+              const p = [c[i]!, c[i + 1]!, c[i + 2]!];
+              // Only points on the Earth (a few cases fingerprint other bodies' coordinates).
+              const radius = Math.hypot(p[0]!, p[1]!, p[2]!);
+              if (radius > 6.3e6 && radius < 6.4e6) {
+                out.push({
+                  position: p,
+                  error: Math.abs(r.value!),
+                  tolerance: r.tolerance!,
+                });
+              }
+            }
+            return out;
+          });
+        if (marks.length === 0) {
+          s.state = "drawn";
+          s.accuracy = "no markers yet: run the tests to place them";
+          globe.removeOverlay(id);
+          invalidate();
+          return;
+        }
+        const worst = marks.reduce((a, m) =>
+          m.error / m.tolerance > a.error / a.tolerance ? m : a,
+        );
+        globe.setOverlay(id, [
+          { chunks: overlayMesh(roundTripMarkers(marks, 3000)) },
+        ]);
+        s.state = "drawn";
+        s.accuracy = `${marks.length} points; worst round trip ${meters(worst.error)} against ${meters(worst.tolerance)}`;
+        invalidate();
+        return;
+      }
+      case "orion":
+        void request(id, async () => {
+          const instant = instantNow();
+          if (!frames || !instant) {
+            throw new Error("frame data isn't in yet");
+          }
+          const leap = frames.data.leapSeconds;
+          const g = await client.overlay("trajectoryPath", {
+            drawIn: DRAW_IN[orionFrame],
+            t0: Instant.fromIso(ORION_SPAN[0], "UTC", leap).tdb(),
+            t1: Instant.fromIso(ORION_SPAN[1], "UTC", leap).tdb(),
+            // ITRF needs Earth orientation at every sample (about 12 ms
+            // each in the worker): a coarser step keeps it to seconds.
+            step: orionFrame === "ITRF" ? 1200 : 300,
+            at: instant.tdb(),
+          });
+          orionAt = viewer.clock.time;
+          return {
+            layers: [
+              { chunks: g.layers[0]!.chunks, color: familyRgba("trajectory") },
+            ],
+            accuracy: `±10 m (1σ), mostly the unstated time scale, taken as TDB; drawn in ${orionFrame}`,
+            caution: true,
+          };
+        });
+        return;
+      case "distortion":
+        void request(id, async () => {
+          const d = DISTORTION[distortionCrs];
+          const g = await client.overlay("distortion", {
+            frame: frameParams(
+              d.crs,
+              `distortion EPSG:${d.crs.format === "wkid" ? d.crs.wkid : ""}`,
+            ),
+            extent: d.extent,
+            step: d.step,
+            height: distortionHeight || (d.height ?? 0),
+            tissotRadius: d.radius,
+          });
+          const tissot = g.layers.find((l) => l.name === "tissot")!.chunks;
+          const contours = g.layers.find((l) => l.name === "contours")!.chunks;
+          const labels: LabelSpec[] = [];
+          if (g.labels) {
+            const n = g.labels.values.length;
+            for (let i = 0; i < Math.min(n, 12); i++) {
+              const k = Math.floor((i * n) / Math.min(n, 12));
+              const v = g.labels.values[k]!;
+              labels.push({
+                id: `label:ppm:${i}`,
+                text: `${v > 0 ? "+" : ""}${v} ppm`,
+                at: g.labels.positions.slice(3 * k, 3 * k + 3),
+                priority: 0,
+              });
+            }
+          }
+          const op = operationText(g);
+          return {
+            layers: [
+              { chunks: tissot, color: engineeringColor, strength: SECONDARY },
+              { chunks: contours, color: familyRgba("earth") },
+            ],
+            accuracy: `Tissot ellipses in true-north axes (convergence not applied); contours from PROJ's factors${g.skipped ? `; ${g.skipped} nodes with no scale left out` : ""}${op.text ? `; placement ${op.text}` : ""}`,
+            caution: op.caution,
+            labels,
+          };
+        });
+        return;
+      case "bias": {
+        const instant = instantNow();
+        if (!frames || !instant) {
+          return;
+        }
+        const g = triad(frames, frames.eme2000, instant, 1.5 * EARTH_RADIUS, {
+          biasExaggeration: biasFactor,
+        });
+        globe.setOverlay(id, [{ chunks: overlayMesh(g) }]);
+        biasAt = viewer.clock.time;
+        s.state = "drawn";
+        delete s.accuracy;
+        const tip = Float64Array.from(g.positions.subarray(3, 6));
+        overlayLabels.set(id, [
+          {
+            id: "label:bias",
+            text: `EME2000 (bias ×${sig(biasFactor, 1)})`,
+            at: tip,
+            family: "celestial",
+            priority: 2,
+          },
+        ]);
+        refreshTriads();
+        invalidate();
+        return;
+      }
+    }
+  }
+  let orionAt = 0;
+  let biasAt = 0;
+
+  function setOverlay(id: OverlayId, on: boolean): void {
+    const s = overlays.get(id)!;
+    if (s.on === on) {
+      return;
+    }
+    s.on = on;
+    drawOverlay(id);
+  }
+
+  // --------------------------------------------------------------- camera
+  const framingAt = (
+    lon: number,
+    lat: number,
+    range: number,
+    heading = 0,
+    pitch = -Math.PI / 2 + 1e-3,
+  ): Framing => ({
+    center: WGS84.cartographicToCartesian(
+      fromDegrees(lon, lat, 0),
+      new Float64Array(3),
+    ),
+    range,
+    heading: heading * deg,
+    pitch,
+  });
+  const OPENING = framingAt(-135, 25, 2 * EARTH_RADIUS);
+
+  const cross = (a: ArrayLike<number>, b: ArrayLike<number>): number[] => [
+    a[1]! * b[2]! - a[2]! * b[1]!,
+    a[2]! * b[0]! - a[0]! * b[2]!,
+    a[0]! * b[1]! - a[1]! * b[0]!,
+  ];
+
+  /** The Moon's centre in ITRF at the clock's instant. */
+  function moonCenter(): Float64Array | undefined {
+    const instant = instantNow();
+    if (!frames || !instant) {
+      return undefined;
+    }
+    const m = frameTransform(frames.moonIcrf, frames.itrf, instant);
+    return Float64Array.from([m[12]!, m[13]!, m[14]!]);
+  }
+
+  function framing(
+    camera: TourStopSpec["camera"] | "moon" | "site" | "portland",
+  ): Framing | undefined {
+    switch (camera) {
+      case "opening":
+        return OPENING;
+      case "stay":
+        return undefined;
+      case "designGrid":
+        return framingAt(-120.5, 37.85, 180_000, 0, -35 * deg);
+      case "rigidVsExact":
+        return framingAt(-122.2, 37.76, 8000, 270, -15 * deg);
+      case "site":
+        return framingAt(-122.43, 37.76, 8000, 0, -45 * deg);
+      case "portland":
+        return framingAt(-122.75, 45.5, 90_000, 0, -50 * deg);
+      case "earthMoon": {
+        // Down on the Earth–Moon plane (its normal from the Moon's motion
+        // over an hour), both framed.
+        const moon = moonCenter();
+        const instant = instantNow();
+        if (!moon || !frames || !instant) {
+          return undefined;
+        }
+        // In GCRF, where the Moon's motion is its orbit's, then turned to ITRF.
+        const at = (ms: number) =>
+          frameTransform(
+            frames!.moonIcrf,
+            frames!.gcrf,
+            Instant.fromUtc(viewer.clock.time + ms, frames!.data.leapSeconds),
+          );
+        const a = at(0);
+        const b = at(3_600_000);
+        const g = cross([a[12]!, a[13]!, a[14]!], [b[12]!, b[13]!, b[14]!]);
+        const m = frameTransform(frames.gcrf, frames.itrf, instant);
+        const n = [0, 1, 2].map(
+          (i) => m[i]! * g[0]! + m[4 + i]! * g[1]! + m[8 + i]! * g[2]!,
+        );
+        const len = Math.hypot(n[0]!, n[1]!, n[2]!);
+        const r = Math.hypot(moon[0]!, moon[1]!, moon[2]!);
+        return {
+          center: moon.map((v) => v * 0.55),
+          range: 7.5e8,
+          heading: 0,
+          pitch: -Math.PI / 2,
+          from: {
+            direction: n.map((v) => v / len),
+            up: moon.map((v) => v / r),
+          },
+        };
+      }
+      case "moon": {
+        const moon = moonCenter();
+        return moon
+          ? { center: moon, range: 2e7, heading: 0, pitch: -60 * deg }
+          : undefined;
+      }
+      case "lunarSite": {
+        const o =
+          globe.triadOrigin("Lunar south-pole site") ?? lunarSiteOrigin();
+        return o
+          ? { center: o, range: 100, heading: 0, pitch: -20 * deg }
+          : undefined;
+      }
+    }
+  }
+
+  function lunarSiteOrigin(): Float64Array | undefined {
+    const instant = instantNow();
+    const site = local.find((f) => f.name === "Lunar south-pole site");
+    if (!frames || !instant || !site) {
+      return undefined;
+    }
+    const m = frameTransform(site, frames.itrf, instant);
+    return Float64Array.from([m[12]!, m[13]!, m[14]!]);
+  }
+
+  /** Where "Show on globe" goes for a frame: Earth frames the opening shot, the Moon's at 20,000 km, sites close. */
+  function frameFraming(id: string): Framing | undefined {
+    if (id === "Lunar south-pole site") {
+      return framing("lunarSite");
+    }
+    if (id === "Sacramento ENU") {
+      return framingAt(-121.4944, 38.5816, 8000, 0, -45 * deg);
+    }
+    if (id.startsWith("engineering:")) {
+      return framing("designGrid");
+    }
+    if (id.startsWith("MOON")) {
+      return framing("moon");
+    }
+    return OPENING;
+  }
+
+  /** Where a result's group points: its overlay's framing, its site, or its frames. */
+  function resultFraming(id: string): {
+    framing?: Framing;
+    overlay?: OverlayId;
+    engineering: boolean;
+  } {
+    const r =
+      results.find((x) => x.id === id) ?? userResults.find((x) => x.id === id);
+    const g = r && groupInfo(r.group);
+    if (!g) {
+      return { engineering: false };
+    }
+    const overlay: OverlayId | undefined =
+      g.focus?.overlay === "designGrid"
+        ? "designGrid"
+        : g.focus?.overlay === "trajectoryPath"
+          ? "orion"
+          : g.id === "rigid-placement-budget"
+            ? "rigidVsExact"
+            : g.id === "distortion"
+              ? "distortion"
+              : undefined;
+    const engineering = g.needs.includes("proj");
+    if (g.id === "lunar-time") {
+      return { framing: framing("lunarSite"), engineering: false };
+    }
+    if (g.id === "space" || g.id === "trajectory") {
+      return {
+        framing: framing("earthMoon"),
+        overlay: "orion",
+        engineering: false,
+      };
+    }
+    if (overlay === "designGrid") {
+      return { framing: framing("designGrid"), overlay, engineering };
+    }
+    if (overlay === "rigidVsExact") {
+      return { framing: framing("rigidVsExact"), overlay, engineering };
+    }
+    if (overlay === "distortion") {
+      const d = DISTORTION[distortionCrs].look;
+      return {
+        framing: framingAt(d[0], d[1], d[2], 0, -60 * deg),
+        overlay,
+        engineering,
+      };
+    }
+    if (g.focus?.site === "california") {
+      return { framing: framing("site"), engineering };
+    }
+    if (engineering) {
+      // A check with no site of its own: show the fingerprint's first point.
+      const c = r?.fingerprint?.coordinates;
+      if (c && c.length >= 3 && Math.hypot(c[0]!, c[1]!, c[2]!) > 6.3e6) {
+        return {
+          framing: {
+            center: [c[0]!, c[1]!, c[2]!],
+            range: 30_000,
+            heading: 0,
+            pitch: -50 * deg,
+          },
+          engineering,
+        };
+      }
+    }
+    return { framing: OPENING, engineering: false };
+  }
+
+  // ------------------------------------------------- selection on the globe
+  /** The frames the selection highlights (R14): a frame's path, a result's group's frames. */
+  function emphasisFrames(): Set<string> {
+    const s = view.get().selection;
+    const out = new Set<string>();
+    if (s.kind === "frame" && tree) {
+      try {
+        for (const n of pathToRoot(tree, s.id)) {
+          out.add(n.id);
+        }
+      } catch {
+        // Not in the tree: reconcile clears it.
+      }
+    } else if (s.kind === "result") {
+      const r = results.find((x) => x.id === s.id);
+      for (const f of (r && groupInfo(r.group)?.focus?.frames) ?? []) {
+        out.add(f);
+      }
+    }
+    return out;
+  }
+
+  let lastSelection = view.get().selection;
+  function onView(): void {
+    const v = view.get();
+    context.setParams(formatParams(v));
+    if (v.selection !== lastSelection) {
+      lastSelection = v.selection;
+      applySelection();
+    }
+    applyTour(v.tour);
+    invalidate();
+  }
+
+  function applySelection(): void {
+    const s = view.get().selection;
+    refreshTriads();
+    if (s.kind === "none") {
+      globe.emphasize(undefined);
+      if (tourStop === undefined) {
+        globe.dimGround(false);
+      }
+      return;
+    }
+    if (s.kind === "frame") {
+      // Selecting a frame highlights; flying is "Show on globe" (I6).
+      globe.emphasize({ frames: emphasisFrames() });
+      return;
+    }
+    // A result not in hand (a deep link, back or forward): run its group,
+    // then show it (R15).
+    if (
+      !results.some((r) => r.id === s.id) &&
+      !userResults.some((r) => r.id === s.id)
+    ) {
+      const group = GROUP_INFO.find((g) => s.id.startsWith(`${g.id}.`))?.id;
+      if (group !== undefined && runView.state !== "running") {
+        void runCatalog([group]).then(() => {
+          if (!disposed && view.get().selection === s) {
+            applySelection();
+          }
+        });
+      }
+      return;
+    }
+    // A result: its overlay on, its frames highlighted, the camera at its site (R14).
+    const where = resultFraming(s.id);
+    if (where.overlay) {
+      setOverlay(where.overlay, true);
+    }
+    globe.emphasize({
+      ...(where.overlay && { overlay: where.overlay }),
+      frames: emphasisFrames(),
+    });
+    globe.dimGround(where.engineering);
+    if (where.framing) {
+      globe.flyTo(where.framing);
+    }
+  }
+
+  // ----------------------------------------------------------------- tour
+  let tourStop: string | undefined;
+  let tourClock: { rate: number; mode: typeof viewer.clock.mode } | undefined;
+  function applyTour(id: string | undefined): void {
+    if (id === tourStop || !frames) {
+      return;
+    }
+    tourStop = id;
+    if (tourClock) {
+      viewer.clock.rate = tourClock.rate;
+      viewer.clock.mode = tourClock.mode;
+      tourClock = undefined;
+    }
+    const stop = TOUR.find((s) => s.id === id);
+    if (!stop) {
+      globe.dimGround(false);
+      return;
+    }
+    for (const o of stop.overlays) {
+      setOverlay(o, true);
+    }
+    if (stop.orionFrame && stop.orionFrame !== orionFrame) {
+      orionFrame = stop.orionFrame;
+      drawOverlay("orion");
+    }
+    if (stop.rate !== undefined) {
+      tourClock = { rate: viewer.clock.rate, mode: viewer.clock.mode };
+      viewer.clock.rate = stop.rate;
+      viewer.clock.mode = "playing";
+    }
+    globe.dimGround(stop.dim === true);
+    const f = framing(stop.camera);
+    if (f) {
+      globe.flyTo(
+        f,
+        stop.camera === "lunarSite"
+          ? 3.5
+          : stop.camera === "earthMoon"
+            ? 3
+            : undefined,
+      );
+    }
+  }
+
+  // ------------------------------------------------------------------ runs
+  const startedAt = { iso: "", ms: 0 };
+  async function runCatalog(ids?: readonly string[]): Promise<void> {
+    if (runView.state === "running") {
+      return;
+    }
+    const groups = ids && new Set(ids);
+    results = groups ? results.filter((r) => !groups.has(r.group)) : [];
+    const before = results.length;
+    runView = {
+      state: "running",
+      done: 0,
+      total: groups
+        ? 0
+        : lastRun
+          ? lastRun.summary.passed +
+            lastRun.summary.failed +
+            lastRun.summary.skipped +
+            lastRun.summary.shown
+          : 225,
+    };
+    startedAt.iso = new Date().toISOString();
+    startedAt.ms = performance.now();
+    invalidate();
+    try {
+      const summary = await client.run(ids, (r) => {
+        results.push(r);
+        runView = {
+          ...runView,
+          done: results.length - before,
+          total: Math.max(runView.total, results.length - before),
+        };
+        invalidate();
+      });
+      if (disposed) {
+        return;
+      }
+      lastRun = { startedAt: startedAt.iso, summary };
+      runView = {
+        state: summary.cancelled ? "cancelled" : "done",
+        done: results.length - before,
+        total: results.length - before,
+        summary: wholeSummary(summary.ms),
+      };
+      updateKnown();
+      if (overlays.get("roundTrip")!.on) {
+        drawOverlay("roundTrip");
+      }
+    } catch (error) {
+      if (isAbort(error) || disposed) {
+        return;
+      }
+      runView = {
+        state: "cancelled",
+        done: results.length - before,
+        total: runView.total,
+      };
+      lastRun = {
+        startedAt: startedAt.iso,
+        summary: {
+          ...wholeSummary(performance.now() - startedAt.ms),
+          cancelled: true,
+        },
+      };
+    }
+    invalidate();
+  }
+
+  /** The counts over every result the page holds (a group's run joins the rest). */
+  function wholeSummary(ms: number): RunSummary {
+    const s: RunSummary = {
+      passed: 0,
+      failed: 0,
+      skipped: 0,
+      shown: 0,
+      ms,
+      cancelled: false,
+    };
+    for (const r of results) {
+      if (r.missing !== undefined) {
+        s.skipped++;
+      } else if (r.displayOnly) {
+        s.shown++;
+      } else if (r.pass) {
+        s.passed++;
+      } else {
+        s.failed++;
+      }
+    }
+    return s;
+  }
+
+  // -------------------------------------------------------------- the report
+  function reportEnvironment(): ReportEnvironment {
+    const file = (name: string) => manifest?.files.find((f) => f.file === name);
+    const projLoaded = loading.get("proj").state === "ready";
+    const geoidLoaded = loading.get("geoid").state === "ready";
+    const projSource = file("proj/proj_capi.wasm")?.sourceUrl ?? "";
+    const version = /\/v(\d+\.\d+\.\d+)\//.exec(projSource)?.[1];
+    const entry = (label: string, name: string, loaded: boolean) => {
+      const f = file(name);
+      return {
+        label,
+        file: name,
+        ...(loaded && f && { sha256: f.sha256 }),
+        ...(!loaded && {
+          note:
+            loading.get(
+              label === "GEOID18"
+                ? "geoid"
+                : label === "Artemis II OEM"
+                  ? "orion"
+                  : label.startsWith("proj")
+                    ? "proj"
+                    : "frames",
+            ).state === "error"
+              ? "not loaded: the fetch failed"
+              : "not loaded",
+        }),
+      };
+    };
+    const framesReady = loading.get("frames").state === "ready";
+    return {
+      startedAt: lastRun?.startedAt ?? new Date(0).toISOString(),
+      durationMs: lastRun?.summary.ms ?? 0,
+      packageVersion: "@cesium/next 2.0.0-poc.0",
+      userAgent: navigator.userAgent,
+      ...(projLoaded && {
+        proj: `proj.js ${version ? `v${version}` : ""} (PROJ as WebAssembly, from the frames store)`.replace(
+          "  ",
+          " ",
+        ),
+      }),
+      files: [
+        entry("proj.db", "proj/proj.db", projLoaded),
+        entry("proj_capi.wasm", "proj/proj_capi.wasm", projLoaded),
+        entry("GEOID18", "proj/us_noaa_g2018u0.tif", geoidLoaded),
+        ...(manifest?.files ?? [])
+          .filter(
+            (f) =>
+              f.role === "planets" ||
+              f.role === "moon" ||
+              f.role === "eop" ||
+              f.role === "leapSeconds",
+          )
+          .map((f) => entry("Frame data", f.file, framesReady)),
+        entry(
+          "Artemis II OEM",
+          "EM2_FODNAVBET_revF_PUBLIC.oem",
+          loading.get("orion").state === "ready",
+        ),
+      ],
+      ...(manifest?.span && {
+        frameDataSpan: `${manifest.span[0]}–${manifest.span[1]}`,
+      }),
+      ...(lastRun && { summary: lastRun.summary }),
+    };
+  }
+
+  const report = () =>
+    buildReport([...results, ...userResults], reportEnvironment(), {
+      secrets: [token],
+    });
+
+  // ------------------------------------------------------------- actions
   const actions: PanelActions = {
-    runAll: noop,
-    retryItem: noop,
-    runGroup: noop,
-    cancel: noop,
-    setOverlay: noop,
-    setOrionFrame: noop,
-    setDistortionCrs: noop,
-    setDistortionHeight: noop,
-    setBiasFactor: noop,
-    jumpToFlyby: noop,
-    showOnGlobe: noop,
-    fetchAsset: noop,
-    runUserCrs: noop,
-    copyReport: () =>
-      navigator.clipboard?.writeText(stubReport()) ?? Promise.resolve(),
+    runAll: () => void runCatalog(),
+    runGroup: (group) => void runCatalog([group]),
+    cancel: () => client.cancel(),
+    retryItem: (item) => {
+      if (item === "frames") {
+        void loadFrames();
+      } else {
+        void client.load(item).catch(() => {});
+      }
+    },
+    setOverlay,
+    setOrionFrame: (f) => {
+      orionFrame = f;
+      drawOverlay("orion");
+    },
+    setDistortionCrs: (crs) => {
+      distortionCrs = crs;
+      drawOverlay("distortion");
+      const d = DISTORTION[crs].look;
+      globe.flyTo(framingAt(d[0], d[1], d[2], 0, -60 * deg));
+    },
+    setDistortionHeight: (h) => {
+      if (Number.isFinite(h)) {
+        distortionHeight = h;
+        drawOverlay("distortion");
+      }
+    },
+    setBiasFactor: (k) => {
+      biasFactor =
+        Math.round(Math.log10(k)) === Math.log10(k)
+          ? k
+          : 10 ** Math.round(Math.log10(k));
+      drawOverlay("bias");
+    },
+    setTrueScale: (on) => {
+      trueScale = on;
+      drawOverlay("designGrid");
+    },
+    jumpToFlyby: () => {
+      viewer.clock.time = FLYBY;
+    },
+    showOnGlobe: (target) => {
+      const f =
+        "frame" in target
+          ? frameFraming(target.frame)
+          : resultFraming(target.result).framing;
+      if (f) {
+        globe.flyTo(f);
+      }
+    },
+    fetchAsset: (id) => void showAsset(id),
+    runUserCrs: (wkt2) => void runUser(wkt2),
+    copyReport: async () => {
+      await navigator.clipboard.writeText(report().markdown);
+    },
     saveReport: (format) => {
+      const r = report();
       const blob =
         format === "json"
-          ? new Blob([JSON.stringify({ results: model.results }, null, 2)], {
+          ? new Blob([JSON.stringify(r.json, null, 2)], {
               type: "application/json",
             })
-          : new Blob([stubReport()], { type: "text/markdown" });
+          : new Blob([r.markdown], { type: "text/markdown" });
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
       a.download = `frames-explorer-report.${format === "json" ? "json" : "md"}`;
@@ -90,30 +1637,258 @@ export function run(context: ExampleContext): ExampleRun {
       setTimeout(() => URL.revokeObjectURL(a.href), 0);
     },
     linkTo: (target) => {
-      // 6b: a link built from the example's params (selection.ts).
-      const search =
+      const p =
         target.kind === "tour"
-          ? `tour=${encodeURIComponent(target.stop)}`
-          : target.kind === "none"
-            ? ""
-            : `select=${target.kind}:${encodeURIComponent(target.id)}`;
-      const base = location.href.split("?")[0]!;
-      return search ? `${base}?${search}` : base;
+          ? { tour: target.stop }
+          : formatParams({ selection: target, lens: view.get().lens });
+      const search = new URLSearchParams(
+        Object.entries(p).filter(
+          (e): e is [string, string] => e[1] !== undefined,
+        ),
+      ).toString();
+      // Read only: the page's address, to build a link to copy (Dyno owns the URL).
+      const base = location.href.split("#")[0]!;
+      return `${base}#/examples/frames-explorer${search ? `?${search}` : ""}`;
     },
   };
 
+  // ---------------------------------------------------- try your own (R18)
+  let assetTileset: Awaited<ReturnType<typeof viewer.addTileset>> | undefined;
+  scope.defer(() => {
+    if (assetTileset) {
+      viewer.remove(assetTileset);
+    }
+  });
+  async function showAsset(id: string): Promise<void> {
+    if (token === undefined || !/^\d{1,12}$/.test(id)) {
+      return;
+    }
+    userCrs = { state: "fetching", id };
+    invalidate();
+    try {
+      if (assetTileset) {
+        viewer.remove(assetTileset);
+        assetTileset = undefined;
+      }
+      const tileset = await viewer.addTileset({
+        ion: Number(id),
+        accessToken: token,
+      });
+      if (disposed) {
+        return;
+      }
+      assetTileset = tileset;
+      viewer.zoomTo(tileset);
+      userCrs = {
+        state: "noCrs",
+        id,
+        message: `Asset ${id} is on the globe for context. ion has no CRS for it: its tileset is already placed in Earth-fixed coordinates, and neither ion's metadata nor the tileset names the CRS it came from.`,
+      };
+    } catch (error) {
+      if (disposed) {
+        return;
+      }
+      userCrs = {
+        state: "error",
+        id,
+        message: `Asset ${id} didn't load: ${scrub(messageOf(error))}`,
+      };
+    }
+    invalidate();
+  }
+
+  async function runUser(wkt2: string): Promise<void> {
+    userCrs = { ...userCrs, state: "running" };
+    userResults = [];
+    invalidate();
+    try {
+      const out: StressResult[] = [];
+      await client.userCrs(wkt2, "Your CRS", (r) => {
+        out.push(r);
+      });
+      if (disposed) {
+        return;
+      }
+      userResults = out;
+      const name = /^\s*\w+\s*\[\s*"([^"]{1,120})"/.exec(wkt2)?.[1];
+      userCrs = {
+        ...userCrs,
+        state: "done",
+        ...(name !== undefined && { crsName: name }),
+      };
+      updateKnown();
+    } catch (error) {
+      if (isAbort(error) || disposed) {
+        return;
+      }
+      userCrs = {
+        ...userCrs,
+        state: "error",
+        message: `The checks didn't run: ${scrub(messageOf(error))}`,
+      };
+    }
+    invalidate();
+  }
+
+  // ------------------------------------------------------------- startup
+  async function loadFrames(): Promise<void> {
+    loading.apply("frames", { type: "fetching" });
+    const start = performance.now();
+    const bytes = new Map<
+      string,
+      { received: number; total: number | undefined }
+    >();
+    try {
+      const manifestResponse = fetch(`${DATA}manifest.json`)
+        .then((r) => (r.ok ? r.json() : undefined))
+        .catch(() => undefined);
+      const data = await loadFrameData(DATA, (file, received, total) => {
+        bytes.set(file, { received, total });
+        let sum = 0;
+        let size = 0;
+        let known = true;
+        for (const b of bytes.values()) {
+          sum += b.received;
+          size += b.total ?? 0;
+          known &&= b.total !== undefined;
+        }
+        loading.apply("frames", {
+          type: "progress",
+          received: sum,
+          ...(known && { total: size }),
+        });
+      });
+      manifest = (await manifestResponse) as typeof manifest;
+      if (signal.aborted) {
+        return;
+      }
+      frames = createFrames(data);
+      const sum = [...bytes.values()].reduce((a, b) => a + b.received, 0);
+      loading.apply("frames", {
+        type: "ready",
+        bytes: sum,
+        ms: performance.now() - start,
+      });
+    } catch (error) {
+      if (signal.aborted) {
+        return;
+      }
+      const message = messageOf(error);
+      loading.apply("frames", {
+        type: /setup|404|not served|manifest/i.test(message)
+          ? "missing"
+          : "error",
+        detail: message,
+      });
+      treeNote = `The frame tree can't draw: frame data didn't load (${message}). Everything else that needs no frame data still works.`;
+      invalidate();
+      return;
+    }
+    local = [
+      eastNorthUpFrame(
+        "Sacramento ENU",
+        frames.itrf,
+        WGS84,
+        WGS84.cartographicToCartesian(SACRAMENTO, new Float64Array(3)),
+      ),
+      eastNorthUpFrame(
+        "Lunar south-pole site",
+        frames.moonMe,
+        MOON.ellipsoid,
+        MOON.ellipsoid.cartographicToCartesian(LUNAR_SITE, new Float64Array(3)),
+      ),
+    ];
+    rebuildTree();
+    refreshTriads();
+    startFrameLoop();
+    // A deep link (R15): its selection and tour stop, now that there is
+    // data (a result runs its group first, then is selected and flown to).
+    lastSelection = { kind: "none" };
+    onView();
+  }
+
+  /** Every frame: the triads at the clock's instant; now and then, what depends on it. */
+  function startFrameLoop(): void {
+    let raf = 0;
+    let lastTree = viewer.clock.time;
+    const tick = () => {
+      if (disposed) {
+        return;
+      }
+      const instant = instantNow();
+      if (frames && instant) {
+        globe.update(frames.itrf, instant);
+        const now = viewer.clock.time;
+        if (Math.abs(now - lastTree) > 60_000) {
+          // The tree's Earth-orientation sigma and the walk's statements (R8).
+          lastTree = now;
+          rebuildTree();
+        }
+        if (
+          overlays.get("orion")!.on &&
+          overlays.get("orion")!.state === "drawn" &&
+          Math.abs(now - orionAt) > 1_800_000
+        ) {
+          orionAt = now;
+          drawOverlay("orion");
+        }
+        if (overlays.get("bias")!.on && Math.abs(now - biasAt) > 60_000) {
+          drawOverlay("bias");
+        }
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    scope.defer(() => cancelAnimationFrame(raf));
+  }
+
+  // The clock opens at the flyby, paused (DESIGN.md "The opening shot");
+  // the panel and the time controls show the same instant (I13).
+  viewer.clock.time = FLYBY;
+  viewer.clock.mode = "paused";
+  scope.defer(viewer.clock.events.on("change", () => invalidate()));
+  viewer.controller.maximumHeight = 2e9;
+  viewer.view.camera.near = 0.1;
+  viewer.controller.focus(
+    Float64Array.from(OPENING.center),
+    OPENING.heading,
+    OPENING.pitch,
+    OPENING.range,
+  );
+
+  scope.defer(view.subscribe(onView));
+  scope.defer(
+    context.watchParams((p) => {
+      const known: Known = {
+        ...(tree && { frames: treeIds() }),
+        tours: TOUR.map((s) => s.id),
+      };
+      view.apply(parseParams(p, known));
+    }),
+  );
+  void loadFrames();
+
+  const initialTab: Tab | undefined =
+    params.tab === "verify" ||
+    params.tab === "report" ||
+    params.tab === "explore"
+      ? params.tab
+      : initial.selection.kind === "result"
+        ? "verify"
+        : undefined;
+
   return {
-    dispose: noop,
+    dispose: () => {
+      disposed = true;
+      globe.stopFlight();
+      loading.reset();
+    },
     panel: createElement(Panel, {
-      model,
+      source,
+      view,
       actions,
       hud,
-      initial: {
-        ...(pick(TABS, params.tab) && { tab: pick(TABS, params.tab)! }),
-        selection: parseSelection(params.select),
-        ...(pick(LENSES, params.lens) && { lens: pick(LENSES, params.lens)! }),
-        ...(tour >= 0 && { tour }),
-      },
+      ...(initialTab && { initialTab }),
     }),
   };
 }

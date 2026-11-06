@@ -69,6 +69,12 @@ export interface GroupInfo {
   /** A virtual group (Reproducibility): its results are other groups'. */
   readonly virtual?: boolean;
   /**
+   * The data its cases need beyond the frame tree, PROJ first (the union of
+   * its cases' needs; a test checks it), so the page can say what a card
+   * waits for (R9).
+   */
+  readonly needs: readonly ("proj" | "geoid" | "orion")[];
+  /**
    * F27: the accuracy that applies to a result of this group that states no
    * position accuracy, unless the case gives its own.
    */
@@ -101,6 +107,7 @@ const ROUND_TRIP =
 export const GROUP_INFO: readonly GroupInfo[] = [
   {
     id: "projections",
+    needs: ["proj", "geoid"],
     name: "Projections",
     question: "Do design coordinates survive the trip to the globe and back?",
     lenses: ["gis", "offshore"],
@@ -110,6 +117,7 @@ export const GROUP_INFO: readonly GroupInfo[] = [
   },
   {
     id: "units",
+    needs: ["proj"],
     name: "Units",
     question: "Does the library tell US survey feet from international feet?",
     lenses: ["civil", "bim"],
@@ -122,6 +130,7 @@ export const GROUP_INFO: readonly GroupInfo[] = [
   },
   {
     id: "site-grids",
+    needs: ["proj", "geoid"],
     name: "Site grids",
     question: "Do rotated and scaled site grids land where they should?",
     lenses: ["civil", "bim"],
@@ -134,6 +143,7 @@ export const GROUP_INFO: readonly GroupInfo[] = [
   },
   {
     id: "recorded-operations",
+    needs: ["proj", "geoid"],
     name: "Recorded operations",
     question: "Is the datum operation fixed, with its grids accounted for?",
     lenses: ["bim", "offshore"],
@@ -146,6 +156,7 @@ export const GROUP_INFO: readonly GroupInfo[] = [
   },
   {
     id: "frame-tree",
+    needs: [],
     name: "Frame tree",
     question:
       "Do the frames agree with each other however you go between them?",
@@ -159,6 +170,7 @@ export const GROUP_INFO: readonly GroupInfo[] = [
   },
   {
     id: "time",
+    needs: [],
     name: "Time",
     question:
       "Is time continuous through leap seconds, and honest at the tables' ends?",
@@ -172,6 +184,7 @@ export const GROUP_INFO: readonly GroupInfo[] = [
   },
   {
     id: "trajectory",
+    needs: ["orion"],
     name: "Trajectory",
     question: "Is Orion's path used only where there is data?",
     lenses: ["space"],
@@ -184,6 +197,7 @@ export const GROUP_INFO: readonly GroupInfo[] = [
   },
   {
     id: "measurement",
+    needs: ["proj", "geoid"],
     name: "Measurement",
     question: "Do design measurements agree with distances on the ground?",
     lenses: ["civil"],
@@ -197,6 +211,7 @@ export const GROUP_INFO: readonly GroupInfo[] = [
   // 1b: the new groups.
   {
     id: "reference-values",
+    needs: ["proj", "geoid"],
     name: "Reference values",
     question: "Do results match published survey and geodesy values?",
     lenses: ["civil"],
@@ -208,6 +223,7 @@ export const GROUP_INFO: readonly GroupInfo[] = [
   },
   {
     id: "vertical-profile",
+    needs: [],
     name: "Vertical profile",
     question: "Are vertical curves computed as the design manuals do?",
     lenses: ["civil"],
@@ -219,6 +235,7 @@ export const GROUP_INFO: readonly GroupInfo[] = [
   },
   {
     id: "distortion",
+    needs: ["proj"],
     name: "Distortion",
     question: "How much does a projection stretch distances?",
     lenses: ["civil", "gis"],
@@ -230,6 +247,7 @@ export const GROUP_INFO: readonly GroupInfo[] = [
   },
   {
     id: "rigid-placement-budget",
+    needs: ["proj"],
     name: "Rigid placement budget",
     question: "How big can a site be before rigid placement is off?",
     lenses: ["civil", "bim"],
@@ -241,6 +259,7 @@ export const GROUP_INFO: readonly GroupInfo[] = [
   },
   {
     id: "coordinate-epoch",
+    needs: ["proj"],
     name: "Coordinate epoch",
     question: "How far do coordinates move between epochs?",
     lenses: ["gis", "av"],
@@ -252,6 +271,7 @@ export const GROUP_INFO: readonly GroupInfo[] = [
   },
   {
     id: "axes-and-the-antimeridian",
+    needs: ["proj"],
     name: "Axes and the antimeridian",
     question: "Are axis order and the 180° meridian handled?",
     lenses: ["gis"],
@@ -263,6 +283,7 @@ export const GROUP_INFO: readonly GroupInfo[] = [
   },
   {
     id: "space",
+    needs: ["orion"],
     name: "Space",
     question: "Do light time, Doppler and line of sight match the references?",
     lenses: ["space"],
@@ -275,6 +296,7 @@ export const GROUP_INFO: readonly GroupInfo[] = [
   // 1c: the industry groups.
   {
     id: "operation-candidates",
+    needs: ["proj"],
     name: "Operation candidates",
     question:
       "Which datum operation was chosen, and what were the alternatives?",
@@ -287,6 +309,7 @@ export const GROUP_INFO: readonly GroupInfo[] = [
   },
   {
     id: "ifc-map-conversion",
+    needs: ["proj"],
     name: "IFC map conversion",
     question: "Does an IFC map conversion place the model correctly?",
     lenses: ["bim"],
@@ -298,6 +321,7 @@ export const GROUP_INFO: readonly GroupInfo[] = [
   },
   {
     id: "plate-motion",
+    needs: ["proj"],
     name: "Plate motion",
     question: "How fast does a map go stale as the plates move?",
     lenses: ["av"],
@@ -309,6 +333,7 @@ export const GROUP_INFO: readonly GroupInfo[] = [
   },
   {
     id: "below-the-ellipsoid",
+    needs: ["proj"],
     name: "Below the ellipsoid",
     question: "Do scale factors and sight lines work below the ellipsoid?",
     lenses: ["civil"],
@@ -320,6 +345,7 @@ export const GROUP_INFO: readonly GroupInfo[] = [
   },
   {
     id: "heights-and-wgs84",
+    needs: ["proj", "geoid"],
     name: "Heights and WGS84",
     question: "Which height, and which WGS84, is this?",
     lenses: ["civil", "gis", "av"],
@@ -331,6 +357,7 @@ export const GROUP_INFO: readonly GroupInfo[] = [
   },
   {
     id: "bound-crss",
+    needs: ["proj"],
     name: "Bound CRSs",
     question: "Are exported CRSs with TOWGS84 placed by their own parameters?",
     lenses: ["bim", "gis", "offshore"],
@@ -342,6 +369,7 @@ export const GROUP_INFO: readonly GroupInfo[] = [
   },
   {
     id: "time-scales",
+    needs: [],
     name: "Time scales",
     question: "Are the GPS, TAI, TT and UTC offsets exact?",
     lenses: ["timing"],
@@ -353,6 +381,7 @@ export const GROUP_INFO: readonly GroupInfo[] = [
   },
   {
     id: "lunar-time",
+    needs: [],
     name: "Lunar time",
     question: "How much faster does a clock on the Moon tick?",
     lenses: ["space", "timing"],
@@ -365,6 +394,7 @@ export const GROUP_INFO: readonly GroupInfo[] = [
   // Virtual: every fingerprinted result, whatever its own group.
   {
     id: "reproducibility",
+    needs: ["proj"],
     name: "Reproducibility",
     question: "Does the same file land the same in browser and Node?",
     lenses: ["bim", "offshore"],

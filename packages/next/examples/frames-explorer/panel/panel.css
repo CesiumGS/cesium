@@ -1607,3 +1607,47 @@
     align-items: flex-start;
   }
 }
+
+/* ------------------------------------------------------- globe labels */
+
+/*
+ * HTML labels over the view (DESIGN.md "Labels"): body-sm 600 in the
+ * family's on-dark tone (white for an overlay's), with a dark text halo,
+ * placed by globe.ts. They never take the pointer.
+ */
+.fx-globe-labels {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.fx-globe-label {
+  position: absolute;
+  left: 0;
+  top: 0;
+  font: 600 var(--stratakit-font-size-body-sm, 12px) / 1.2
+    var(--stratakit-font-family-sans, system-ui, sans-serif);
+  color: #ffffff;
+  white-space: nowrap;
+  paint-order: stroke;
+  -webkit-text-stroke: 3px rgb(0 0 0 / 0.75);
+  will-change: transform;
+}
+.fx-globe-label[data-family="celestial"] {
+  color: #b298f9;
+}
+.fx-globe-label[data-family="earth"] {
+  color: #3bcddc;
+}
+.fx-globe-label[data-family="moon"] {
+  color: #bfc8d4;
+}
+.fx-globe-label[data-family="engineering"] {
+  color: #f07ec2;
+}
+.fx-globe-label[data-family="trajectory"] {
+  color: #fc9252;
+}
+.fx-globe-label-dim {
+  opacity: 0;
+}

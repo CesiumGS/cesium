@@ -261,15 +261,25 @@ export function designGrid(
  * constant geodetic longitude from the latitude of (E, min N) to that of
  * (E, max N), at height 0 on the body's ellipsoid and sampled like the grid's
  * N lines. Against the grid's own lines it shows the convergence.
+ * `exaggeration` (display only, ruling F32) leans each line from the grid's
+ * line through the same E by that many times its true offset: 1, the
+ * default, is the true line.
  */
 export function trueNorthLines(
   frame: DesignFrameLike,
   extent: Extent,
   step: number,
   segment: number,
+  options: { exaggeration?: number } = {},
 ): Geometry {
   positive("trueNorthLines: step", step);
   positive("trueNorthLines: segment", segment);
+  const k = options.exaggeration ?? 1;
+  if (!(Number.isFinite(k) && k > 0)) {
+    throw new RangeError(
+      `trueNorthLines: exaggeration must be a positive factor, got ${k}`,
+    );
+  }
   const out = new Lines();
   const { min, max } = extent;
   if (!(max[1] > min[1])) {
@@ -291,6 +301,19 @@ export function trueNorthLines(
         },
         new Float64Array(3),
       );
+      if (k !== 1) {
+        // Display only (ruling F32): the line's lean away from grid north,
+        // `k` times: the grid line's point at the same fraction, plus k
+        // times the true-north line's offset from it.
+        const grid = frame.toBodyFixed([
+          e,
+          min[1] + ((max[1] - min[1]) * s) / n,
+          0,
+        ]);
+        for (let c = 0; c < 3; c++) {
+          here[c] = grid[c]! + k * (here[c]! - grid[c]!);
+        }
+      }
       if (previous) {
         out.segment(previous, here, TRUE_NORTH_COLOR);
       }

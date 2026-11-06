@@ -139,6 +139,9 @@ export function Verify({
           name: result.group,
           question: "",
           lenses: [],
+          accuracyNote: "",
+          needs: [],
+          compared: { kind: "independent", text: "" },
         },
         model.results,
       )
