@@ -235,5 +235,36 @@ describe("SPK discrete-state segments", () => {
       expect(patched).toBe(true);
       expect(() => readSpk(buf)).toThrow(/trailer/);
     });
+
+    it("rejects windows beyond SPICE's limits, naming the limit", () => {
+      const epochs = Float64Array.from({ length: 40 }, (_, i) => i * 10);
+      const big = (type: 9 | 13, degree: number): ArrayBuffer =>
+        writeSpk({
+          kind: "SPK",
+          segments: [{ ...segment(type, epochs), degree }],
+        });
+      expect(() => readSpk(big(9, 28))).toThrow(/limit of 28/);
+      expect(() => readSpk(big(13, 16))).toThrow(/limit of 16/);
+      expect(() => readSpk(big(9, 27))).not.toThrow();
+      expect(() => readSpk(big(13, 15))).not.toThrow();
+    });
+
+    it("rejects a segment whose final address runs past the file", () => {
+      const buf = writeSpk({ kind: "SPK", segments: [segment(9, EVEN)] });
+      // Final address is the 6th int of the first summary: record 2, after the 24-byte header and 2 doubles + 5 ints.
+      const view = new DataView(buf);
+      const at = 1024 + 24 + 16 + 5 * 4;
+      view.setInt32(at, view.getInt32(at, true) + 100000, true);
+      expect(() => readSpk(buf)).toThrow(/outside the file/);
+    });
+
+    it("rejects epochs that do not strictly increase", () => {
+      const dup = Float64Array.from(EVEN);
+      dup[5] = dup[4]!;
+      for (const type of [9, 13] as const) {
+        const buf = writeSpk({ kind: "SPK", segments: [segment(type, dup)] });
+        expect(() => readSpk(buf)).toThrow(/strictly increase/);
+      }
+    });
   });
 });

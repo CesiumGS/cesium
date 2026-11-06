@@ -83,7 +83,15 @@ function readSegments(
   states: boolean,
 ): { kind: "SPK" | "PCK"; segments: (Type2Segment | StateSegment)[] } {
   const daf = parseDaf(buffer);
-  const kind = daf.id === "DAF/SPK" ? "SPK" : "PCK";
+  // The old "NAIF/DAF" id carries no kind: ND=2, NI=6 is an SPK, ND=2, NI=5 a PCK.
+  const kind =
+    daf.id === "NAIF/DAF"
+      ? daf.ni === 6
+        ? "SPK"
+        : "PCK"
+      : daf.id === "DAF/SPK"
+        ? "SPK"
+        : "PCK";
   const spk = kind === "SPK";
   // SPK: target, center, frame, type, initial, final. PCK: target, frame, type, initial, final.
   const expectedNi = spk ? 6 : 5;
@@ -179,6 +187,11 @@ function readStateSegment(
   },
 ): StateSegment {
   const { type, initial, final } = s;
+  if (initial < 1 || final < initial) {
+    throw new Error(`SPK: type-${type} segment has a bad address range`);
+  }
+  // Fails if the segment runs past the file, before anything is sized by n.
+  daf.doublesAt(initial, final - initial + 1);
   const equal = type === 8 || type === 12;
   const trailerSize = equal ? 4 : 2;
   const length = final - initial + 1;
@@ -206,6 +219,13 @@ function readStateSegment(
     throw bad();
   }
   const windowSize = stored + 1;
+  // SPICE's limits: Lagrange degree 27 (window 28), Hermite window 16.
+  const maxWindow = type === 8 || type === 9 ? 28 : 16;
+  if (windowSize > maxWindow) {
+    throw new Error(
+      `SPK: type-${type} segment window of ${windowSize} states exceeds the limit of ${maxWindow}`,
+    );
+  }
   if (windowSize > n) {
     throw new Error(
       `SPK: type-${type} segment window of ${windowSize} states exceeds its ${n} states`,
@@ -225,6 +245,13 @@ function readStateSegment(
     }
   } else {
     epochs.set(daf.doublesAt(initial + 6 * n, n));
+    for (let k = 1; k < n; k++) {
+      if (!(epochs[k]! > epochs[k - 1]!)) {
+        throw new Error(
+          `SPK: type-${type} segment epochs must strictly increase (epoch ${k})`,
+        );
+      }
+    }
   }
   return {
     type,
