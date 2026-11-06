@@ -12,7 +12,7 @@ import {
   VertexAttributeSemantic,
 } from "@cesium/engine";
 import { ComponentType } from "@cesium/mesh-editor";
-import { EditMode, Mesh, MeshEditor } from "../../index.js";
+import { EditMode, Mesh, MeshEditor, MeshEditorStyle } from "../../index.js";
 import createCanvas from "../../../../Specs/createCanvas.js";
 import createScene from "../../../../Specs/createScene.js";
 
@@ -135,6 +135,25 @@ describe(
         scene,
         Cartesian3.fromArray(position),
       );
+    }
+
+    // Renders a frame and checks the pixel under a world position, or offset
+    // right of it by a number of pixels.
+    function expectPixel(position, color, offsetX = 0) {
+      scene.renderForSpecs();
+      const { x, y } = getWindowPosition(position);
+      const pixel = scene.context.readPixels({
+        x: Math.floor(x + offsetX),
+        // Window coordinates start at the top, and pixels at the bottom.
+        y: scene.drawingBufferHeight - 1 - Math.floor(y),
+        width: 1,
+        height: 1,
+      });
+
+      // The WebGL stub doesn't draw, so like the renderer matchers, skip the check.
+      if (!window.webglStub) {
+        expect(pixel).toEqualEpsilon(color, 3);
+      }
     }
 
     // Inside the square's bottom-right triangle.
@@ -538,6 +557,24 @@ describe(
         }
         expect(near.show).toBe(true);
         expect(far.show).toBe(true);
+      });
+    });
+
+    describe("style", function () {
+      it("is a default style", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+
+        expect(editor.style).toEqual(new MeshEditorStyle());
+      });
+
+      it("draws the meshes with its changes on the next frame", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        editor.addMesh(createSource(square));
+        scene.renderForSpecs();
+
+        editor.style.faceColor = Color.BLUE;
+
+        expectPixel(facePosition, [0, 0, 255, 255]);
       });
     });
 
