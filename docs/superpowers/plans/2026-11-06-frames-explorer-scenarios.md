@@ -259,6 +259,31 @@ Iteration slowed because `main.ts` (about 3,700 lines, almost all of it one `run
 - [ ] **Step 4:** run `npm test`, `npm run test:data`, tsc, eslint and prettier. Check every scenario in the browser on 5190: switching, knobs, scrubbing, Expand, Verification, Back and Forward, Frame content.
 - [ ] **Step 5:** update DESIGN.md's file map.
 
+### Task 4c: Owner fixes after Task 4 (2026-11-06), on the split code
+
+Small and targeted. Run it after Task 4b, so it lands in the new modules.
+
+1. **Say how the lunar clock rate is computed** (stand-on-moon). The owner: "not clear how we're measuring the relativistic time difference … not everyone will be familiar with relativity". Add a short plain-language "How this is worked out" section to the answer. Cover these points, and keep the wording faithful to stress/groups/lunar-time.ts:
+   - **Which clocks:** one at the lunar site, and one at sea level at the California datasheet point.
+   - **Each clock's position and velocity:** taken through the frame tree into ICRF every hour of a lunar month. The lunar site comes through MOON_ME → MOON_ICRF → ICRF, the Earth clock through ITRF → GCRF → ICRF, and each velocity comes from a central difference.
+   - **Each clock's rate:** `properTimeRate`. A clock deeper in gravity (the Sun's, the Earth's and the Moon's, as point masses) runs slower, and a faster-moving clock runs slower.
+   - **The answer:** the difference between the two rates, averaged over the month, in µs a day.
+   - **Why the Moon's clock is fast:** it sits higher in the Earth's gravity well, and that outweighs its orbital speed.
+   - **What the 2% covers:** the point-mass approximation, against Ashby & Patla's full model.
+   Light the route steps for both clocks' paths to ICRF. Test that the section's text names the method and its tolerance.
+2. **Orion's dot disappears when the clock plays** (one-path). Find the cause, which may sit in the stale or "Following the clock" path or in the marker's 150 ms re-ask. Fix it, and add a host test where the clock plays and the marker stays drawn at each tick.
+3. **The "Orion's path" label is drawn over the time-settings panel** opened from the timeline. Overlay labels on the globe must sit under the HUD's popovers and panels (z-order), or be clipped to the free part of the view. Check the other HUD popovers too.
+4. **Parked from Task 4's review (P5):**
+   - `accuracyWarns` matches the note text: use a structured flag on the accuracy;
+   - the tree's edge tips portal outside `.🥝Root`: check that the StrataKit tokens resolve there;
+   - at 1280×700 the callout partly covers "Orion, 23:00 UTC";
+   - the `quietResult` flag can linger when the result is already selected.
+
+The owner confirmed that "Open in Verification" leaves the camera where it is, so no change there.
+
+- [ ] Tests first for items 1, 2 and 4, then the fixes. Check items 2 and 3 in the browser, and take screenshots.
+- [ ] Commit with "examples: frames explorer: how the lunar clock rate is worked out, Orion's dot while playing, labels under the HUD".
+
 ### Task 5: Terrain line of sight (library)
 
 **Files:**
