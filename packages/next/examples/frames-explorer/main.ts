@@ -14,9 +14,8 @@
 import { createElement } from "react";
 import type { CrsRef } from "../../src/engineering/crs.ts";
 import type { SiteTransform } from "../../src/engineering/EngineeringFrame.ts";
-import { loadFrameData } from "../../src/ephemeris/loadFrameData.ts";
 import { frameTransform, type Frame } from "../../src/frames/Frame.ts";
-import { createFrames, type Frames } from "../../src/frames/frames.ts";
+import type { Frames } from "../../src/frames/frames.ts";
 import { fromDegrees } from "../../src/math/ellipsoid.ts";
 import { earthOrientationSigma } from "../../src/measure/accuracy.ts";
 import { Instant } from "../../src/time/Instant.ts";
@@ -30,6 +29,10 @@ import {
   groupRunIds,
 } from "./content.ts";
 import { createScenarioHost } from "./scenarioHost.ts";
+import { createCatalogRuns } from "./catalogRuns.ts";
+import { createFrameData } from "./frameData.ts";
+import { createPageReport } from "./pageReport.ts";
+import { createUserCrs } from "./userCrs.ts";
 import {
   CALIFORNIA,
   CONVERGENCE_FACTOR,
@@ -107,7 +110,6 @@ import type {
   ClockView,
   ComposedAccuracy,
   DistortionCrs,
-  EnvironmentLine,
   OrionFrame,
   OverlayId,
   OverlayPart,
@@ -116,9 +118,7 @@ import type {
   Reference,
   PanelModel,
   ResultExtras,
-  RunView,
   ScenarioPanelView,
-  UserCrsView,
 } from "./panel/model.ts";
 import { Panel } from "./panel/Panel.tsx";
 import {
@@ -127,15 +127,8 @@ import {
   type DataItem,
   type FrameParams,
   type OverlayGeometry,
-  type RunSummary,
   type TrajectoryInfo,
 } from "./protocol.ts";
-import {
-  buildReport,
-  fileSha,
-  type EnvironmentFile,
-  type ReportEnvironment,
-} from "./report.ts";
 import {
   ViewStore,
   formatParams,
@@ -154,7 +147,6 @@ import {
   type TreeNode,
 } from "./tree.ts";
 import references from "./references.json";
-import { PACKAGE } from "./version.ts";
 import { RunQueue } from "./runQueue.ts";
 import { RIGID_FRAME, RIGID_LINE, rigidCopy } from "./rigidLine.ts";
 import { GapInset, type GapInsetSpec } from "./gapInset.ts";
@@ -179,8 +171,6 @@ import {
 import { PivotMarker } from "./pivot.ts";
 import { gapParts } from "./inset.ts";
 import fingerprintFile from "./fingerprints.json";
-
-const DATA = "/frames-data/";
 
 /** "Orion now" shows only for a statement within this much clock time of the clock, ms. */
 const ORION_NOW_SLACK_MS = 120_000;
@@ -263,19 +253,36 @@ export function run(context: ExampleContext): ExampleRun {
     loading.reply(reply);
   });
 
+  // ------------------------------------------------------------ frame data
+  const frameData = createFrameData({
+    viewer,
+    loading,
+    signal,
+    ready: () => {
+      frames = frameData.frames();
+      rebuildTree();
+      refreshTriads();
+      startFrameLoop();
+      // The scenario a deep link names (R15), at its knobs and time, or the
+      // strip's first at its checked setup; then the link's selection (a
+      // result runs its group first, then is selected and flown to).
+      void host.show(
+        readyScenario(initial.scenario),
+        initial.knobs,
+        initial.time,
+      );
+      lastSelection = { kind: "none" };
+      onView();
+    },
+    failed: (message) => {
+      treeNote = `The frame tree can't draw: frame data didn't load (${message}). Everything else that needs no frame data still works.`;
+      invalidate();
+    },
+  });
+  scope.defer(() => frameData.dispose());
+
   // ------------------------------------------------------------ page state
   let frames: Frames | undefined;
-  let manifest:
-    | {
-        span?: readonly number[];
-        files: readonly {
-          file: string;
-          role?: string;
-          sha256: string;
-          sourceUrl?: string;
-        }[];
-      }
-    | undefined;
   let tree: TreeNode | undefined;
   let treeNote: string | undefined =
     "The frame tree draws once frame data is in.";
@@ -284,21 +291,10 @@ export function run(context: ExampleContext): ExampleRun {
   let local: Frame[] = [];
   /** The engineering frame the worker placed (known from its operation), for the tree. */
   let engineering: { node: TreeNode; placed: PlacedNode } | undefined;
-  let results: StressResult[] = [];
-  let userResults: StressResult[] = [];
-  let runView: RunView = { state: "idle", done: 0, total: 0 };
-  /** The run going on, settled either way (runs go one at a time). */
-  /** Every run, catalog or "Try your own", one at a time (final review, Important 1). */
-  const runs = new RunQueue();
   /** The deep-linked result being loaded (`loadLinkedResult`). */
   let linking: string | undefined;
   /** A message for the panel's snackbar (a deep link that didn't resolve). */
   let notice: { id: number; text: string } | undefined;
-  let lastRun: { startedAt: string; summary: RunSummary } | undefined;
-  let userCrs: UserCrsView =
-    initial.imodel !== undefined
-      ? { state: "idle", id: initial.imodel }
-      : { state: "idle" };
   let orionFrame: OrionFrame = "GCRF";
   /** Orion's node and statements from the worker (one reply), and the clock time they're for. */
   let orionInfo: { info: TrajectoryInfo; utc: number } | undefined;
@@ -500,8 +496,9 @@ export function run(context: ExampleContext): ExampleRun {
       for (const need of g.needs) {
         const s = loading.get(need).state;
         const pending =
-          s === "fetching" || (runView.state === "running" && s === "idle");
-        const has = results.some((r) => r.group === g.id);
+          s === "fetching" ||
+          (catalogRuns.runView().state === "running" && s === "idle");
+        const has = catalogRuns.results().some((r) => r.group === g.id);
         if (pending && !has) {
           out[g.id] = need;
           break;
@@ -511,30 +508,8 @@ export function run(context: ExampleContext): ExampleRun {
     return out;
   }
 
-  function environmentLines(): EnvironmentLine[] {
-    const env = reportEnvironment();
-    return [
-      [
-        "Run",
-        lastRun
-          ? `${env.startedAt.replace("T", " ").replace(/\.\d+Z$/, " UTC")}, ${(env.durationMs / 1000).toFixed(1)} s`
-          : "not run yet",
-      ],
-      ["Package", env.packageVersion],
-      ["PROJ", env.proj ?? "not loaded"],
-      ...env.files.map((f): EnvironmentLine => [
-        f.label,
-        `${f.file}${f.sha256 ? `, ${fileSha(f, 12)}` : f.note ? ` (${f.note})` : ""}`,
-      ]),
-      ...(env.frameDataSpan
-        ? [["Frame data span", env.frameDataSpan] as EnvironmentLine]
-        : []),
-      ["Browser", env.userAgent],
-    ];
-  }
-
   function buildModel(): PanelModel {
-    const all = [...results, ...userResults];
+    const all = [...catalogRuns.results(), ...user.results()];
     const extras: Record<string, ResultExtras> = {};
     for (const r of all) {
       extras[r.id] = extrasOf(r);
@@ -558,22 +533,22 @@ export function run(context: ExampleContext): ExampleRun {
       results: all,
       extras,
       waiting: waiting(),
-      run: runView,
-      ...(runView.state === "running"
+      run: catalogRuns.runView(),
+      ...(catalogRuns.runView().state === "running"
         ? { runBusy: "A run is going on; this group can run when it ends." }
-        : userCrs.state === "running"
+        : user.view().state === "running"
           ? {
               runBusy:
                 "Your CRS's checks are running; this group can run when they end.",
             }
           : {}),
       token: token !== undefined ? "available" : undefined,
-      userCrs,
+      userCrs: user.view(),
       exampleWkt2: (
         references.entries as unknown as Record<string, { wkt2?: string }>
       )["input-wkt2-tokyo-jprcs-ix"]!.wkt2!,
       ...scenarioView(),
-      environment: environmentLines(),
+      environment: pageReport.lines(),
       ...(notice !== undefined && { notice }),
     };
   }
@@ -648,7 +623,7 @@ export function run(context: ExampleContext): ExampleRun {
   function updateKnown(): void {
     const repro = groupInfo("reproducibility")!.lenses;
     const lensesOf = new Map<string, readonly Lens[]>();
-    for (const r of [...results, ...userResults]) {
+    for (const r of [...catalogRuns.results(), ...user.results()]) {
       const own = groupInfo(r.group)?.lenses ?? [];
       lensesOf.set(
         r.id,
@@ -657,12 +632,12 @@ export function run(context: ExampleContext): ExampleRun {
     }
     // The groups that have run: a result of another group (a deep link
     // after a group's own run) is kept until its group runs (R15).
-    const ran = new Set(results.map((r) => r.group));
+    const ran = new Set(catalogRuns.results().map((r) => r.group));
     const known: Known = {
       // Only once the scenario's frames are in: a link to a frame it adds
       // (the lunar site) waits for its evaluation rather than being cleared.
       ...(tree && evaluationNow() && { frames: treeIds() }),
-      ...(lastRun !== undefined && { results: lensesOf, ran }),
+      ...(catalogRuns.lastRun() !== undefined && { results: lensesOf, ran }),
     };
     view.setKnown(known);
   }
@@ -1192,7 +1167,8 @@ export function run(context: ExampleContext): ExampleRun {
         });
         return;
       case "roundTrip": {
-        const marks = results
+        const marks = catalogRuns
+          .results()
           .filter(
             (r) =>
               r.fingerprint &&
@@ -2225,7 +2201,8 @@ export function run(context: ExampleContext): ExampleRun {
     engineering: boolean;
   } {
     const r =
-      results.find((x) => x.id === id) ?? userResults.find((x) => x.id === id);
+      catalogRuns.results().find((x) => x.id === id) ??
+      user.results().find((x) => x.id === id);
     const g = r && groupInfo(r.group);
     if (!g) {
       return { engineering: false };
@@ -2303,7 +2280,7 @@ export function run(context: ExampleContext): ExampleRun {
       // A result's group's frames, but not over a scenario's scene: a
       // catalog check through every frame (frame-tree.compositions) would
       // draw the Moon's triads in "The Earth turns" (fix 1, item 5).
-      const r = results.find((x) => x.id === s.id);
+      const r = catalogRuns.results().find((x) => x.id === s.id);
       for (const f of (r && groupInfo(r.group)?.focus?.frames) ?? []) {
         out.add(f);
       }
@@ -2347,14 +2324,15 @@ export function run(context: ExampleContext): ExampleRun {
     // A result not in hand (a deep link, back or forward): run its group
     // (retrying once), then show it, or clear it and say why (R15).
     const has = (id: string) =>
-      results.some((r) => r.id === id) || userResults.some((r) => r.id === id);
+      catalogRuns.results().some((r) => r.id === id) ||
+      user.results().some((r) => r.id === id);
     if (!has(s.id)) {
       if (linking !== s.id) {
         linking = s.id;
         void loadLinkedResult(view, s.id, {
           has,
           run: async (group) => {
-            const outcome = await runCatalog([group]);
+            const outcome = await catalogRuns.run([group]);
             if (outcome !== undefined) {
               throw new Error(outcome);
             }
@@ -2655,10 +2633,10 @@ export function run(context: ExampleContext): ExampleRun {
   function ensureProof(id: ScenarioId): void {
     const spec = SCENARIOS.find((s) => s.id === id);
     const missing = (spec?.proof ?? []).filter(
-      (p) => !results.some((r) => r.id === p),
+      (p) => !catalogRuns.results().some((r) => r.id === p),
     );
     if (!disposed && missing.length > 0) {
-      void runCatalog(missing);
+      void catalogRuns.run(missing);
     }
   }
 
@@ -2709,9 +2687,9 @@ export function run(context: ExampleContext): ExampleRun {
       invalidate();
     },
     busy: () =>
-      runView.state === "running"
+      catalogRuns.runView().state === "running"
         ? "Waiting for the catalog run to end"
-        : userCrs.state === "running"
+        : user.view().state === "running"
           ? "Waiting for your CRS's checks to end"
           : undefined,
   });
@@ -2726,7 +2704,7 @@ export function run(context: ExampleContext): ExampleRun {
   function scenarioView(): { scenario: ScenarioPanelView } {
     const st = host.state();
     const spec = st.spec;
-    const catalog = new Map(results.map((r) => [r.id, r]));
+    const catalog = new Map(catalogRuns.results().map((r) => [r.id, r]));
     const e = st.evaluation;
     // Only the time moved while the clock plays: one steady state that
     // follows it, rather than rows flipping to loading every evaluation.
@@ -2916,212 +2894,54 @@ export function run(context: ExampleContext): ExampleRun {
   }
 
   // ------------------------------------------------------------------ runs
-  const startedAt = { iso: "", ms: 0 };
-  /** Runs the catalog (or groups of it). Resolves with why it failed, or undefined. */
-  async function runCatalog(
-    ids?: readonly string[],
-  ): Promise<string | undefined> {
-    // Queued behind any run going on; the same ids asked again while waiting
-    // or running share that run (a double-click on "Run this group").
-    return runs.run(
-      () =>
-        disposed ? Promise.resolve("the example was left") : runCatalogNow(ids),
-      ids === undefined ? "all" : `ids:${[...ids].sort().join(",")}`,
-    );
-  }
-
-  async function runCatalogNow(
-    ids?: readonly string[],
-  ): Promise<string | undefined> {
-    const groups = ids && new Set(ids);
-    // The results this run replaces: its groups', and those it names by id.
-    results = groups
-      ? results.filter((r) => !groups.has(r.group) && !groups.has(r.id))
-      : [];
-    let before = results.length;
-    runView = {
-      state: "running",
-      done: 0,
-      total: groups
-        ? 0
-        : lastRun
-          ? lastRun.summary.passed +
-            lastRun.summary.failed +
-            lastRun.summary.skipped +
-            lastRun.summary.shown
-          : 225,
-    };
-    startedAt.iso = new Date().toISOString();
-    startedAt.ms = performance.now();
-    invalidate();
-    try {
-      const summary = await client.run(ids, (r) => {
-        // A case named by one of its results' ids re-runs them all: replace
-        // its siblings rather than list them twice.
-        const at = results.findIndex((x) => x.id === r.id);
-        if (at >= 0 && at < before) {
-          results.splice(at, 1);
-          before--;
-        }
-        results.push(r);
-        runView = {
-          ...runView,
-          done: results.length - before,
-          total: Math.max(runView.total, results.length - before),
-        };
-        invalidate();
-      });
-      if (disposed) {
-        return "the example was left";
-      }
-      lastRun = { startedAt: startedAt.iso, summary };
-      runView = {
-        state: summary.cancelled ? "cancelled" : "done",
-        done: results.length - before,
-        total: results.length - before,
-        summary: wholeSummary(summary.ms),
-      };
-      updateKnown();
+  /** Every run, catalog or "Try your own", one at a time (final review, Important 1). */
+  const runs = new RunQueue();
+  const catalogRuns = createCatalogRuns({
+    core: { client, invalidate, disposed: () => disposed, scrub },
+    runs,
+    updateKnown: () => updateKnown(),
+    ran: () => {
       if (overlays.get("roundTrip")!.on) {
         drawOverlay("roundTrip");
       }
-    } catch (error) {
-      if (isAbort(error) || disposed) {
-        return "the example was left";
-      }
-      runView = {
-        state: "cancelled",
-        done: results.length - before,
-        total: runView.total,
-        reason: scrub(messageOf(error)),
-      };
-      lastRun = {
-        startedAt: startedAt.iso,
-        summary: {
-          ...wholeSummary(performance.now() - startedAt.ms),
-          cancelled: true,
-        },
-      };
-      invalidate();
-      // Every count and the "known" results reflect what did come back.
-      updateKnown();
-      return scrub(messageOf(error));
-    }
-    invalidate();
-    return undefined;
-  }
-
-  /** The counts over every result the page holds (a group's run joins the rest). */
-  function wholeSummary(ms: number): RunSummary {
-    const s: RunSummary = {
-      passed: 0,
-      failed: 0,
-      skipped: 0,
-      shown: 0,
-      ms,
-      cancelled: false,
-    };
-    for (const r of results) {
-      if (r.missing !== undefined) {
-        s.skipped++;
-      } else if (r.displayOnly) {
-        s.shown++;
-      } else if (r.pass) {
-        s.passed++;
-      } else {
-        s.failed++;
-      }
-    }
-    return s;
-  }
-
-  // -------------------------------------------------------------- the report
-  function reportEnvironment(): ReportEnvironment {
-    const file = (name: string) => manifest?.files.find((f) => f.file === name);
-    const projLoaded = loading.get("proj").state === "ready";
-    const geoidLoaded = loading.get("geoid").state === "ready";
-    const projSource = file("proj/proj_capi.wasm")?.sourceUrl ?? "";
-    const version = /\/v(\d+\.\d+\.\d+)\//.exec(projSource)?.[1];
-    /** `verified`: the browser checked the bytes (frame data, the OEM), not PROJ's loader. */
-    const entry = (
-      label: string,
-      name: string,
-      loaded: boolean,
-      verified = false,
-    ): EnvironmentFile => {
-      const f = file(name);
-      return {
-        label,
-        file: name,
-        ...(loaded && f && { sha256: f.sha256, verified }),
-        ...(!loaded && {
-          note:
-            loading.get(
-              label === "GEOID18"
-                ? "geoid"
-                : label === "Artemis II OEM"
-                  ? "orion"
-                  : label.startsWith("proj")
-                    ? "proj"
-                    : "frames",
-            ).state === "error"
-              ? "not loaded: the fetch failed"
-              : "not loaded",
-        }),
-      };
-    };
-    const framesReady = loading.get("frames").state === "ready";
-    return {
-      startedAt: lastRun?.startedAt ?? new Date(0).toISOString(),
-      durationMs: lastRun?.summary.ms ?? 0,
-      packageVersion: PACKAGE,
-      userAgent: navigator.userAgent,
-      ...(projLoaded && {
-        proj: `proj.js ${version ? `v${version}` : ""} (PROJ as WebAssembly, from the frames store)`.replace(
-          "  ",
-          " ",
-        ),
-      }),
-      files: [
-        entry("proj.db", "proj/proj.db", projLoaded),
-        entry("proj_capi.wasm", "proj/proj_capi.wasm", projLoaded),
-        entry("GEOID18", "proj/us_noaa_g2018u0.tif", geoidLoaded),
-        ...(manifest?.files ?? [])
-          .filter(
-            (f) =>
-              f.role === "planets" ||
-              f.role === "moon" ||
-              f.role === "eop" ||
-              f.role === "leapSeconds",
-          )
-          .map((f) => entry("Frame data", f.file, framesReady, true)),
-        entry(
-          "Artemis II OEM",
-          "EM2_FODNAVBET_revF_PUBLIC.oem",
-          loading.get("orion").state === "ready",
-          true,
-        ),
-      ],
-      ...(manifest?.span && {
-        frameDataSpan: `${manifest.span[0]}–${manifest.span[1]}`,
-      }),
-      ...(lastRun && { summary: lastRun.summary }),
-    };
-  }
-
-  const report = () =>
-    buildReport([...results, ...userResults], reportEnvironment(), {
-      secrets: [token],
-    });
+    },
+  });
+  scope.defer(() => catalogRuns.dispose());
+  const user = createUserCrs({
+    core: { viewer, client, invalidate, disposed: () => disposed, scrub },
+    runs,
+    token,
+    imodel: initial.imodel,
+    camera: {
+      ask: () => flow.ask(),
+      frameIfStill: (asked, zoom) => {
+        if (flow.arrival(asked, globe.flying)) {
+          flow.fly(undefined);
+          leaveOrbit();
+          zoom();
+        }
+      },
+    },
+    updateKnown: () => updateKnown(),
+  });
+  const pageReport = createPageReport({
+    loading,
+    manifest: () => frameData.manifest(),
+    lastRun: () => catalogRuns.lastRun(),
+    results: () => [...catalogRuns.results(), ...user.results()],
+    token,
+  });
+  scope.defer(() => pageReport.dispose());
 
   // ------------------------------------------------------------- actions
   const actions: PanelActions = {
-    runAll: () => void runCatalog(),
-    runGroup: (group) => void runCatalog(groupRunIds(group, FINGERPRINTED)),
+    runAll: () => void catalogRuns.run(),
+    runGroup: (group) =>
+      void catalogRuns.run(groupRunIds(group, FINGERPRINTED)),
     cancel: () => client.cancel(),
     retryItem: (item) => {
       if (item === "frames") {
-        void loadFrames();
+        void frameData.load();
       } else {
         void client.load(item).catch(() => {});
       }
@@ -3167,13 +2987,13 @@ export function run(context: ExampleContext): ExampleRun {
       }
     },
     frameContent,
-    fetchAsset: (id) => void showAsset(id),
-    runUserCrs: (wkt2) => void runUser(wkt2),
+    fetchAsset: (id) => void user.showAsset(id),
+    runUserCrs: (wkt2) => void user.run(wkt2),
     copyReport: async () => {
-      await navigator.clipboard.writeText(report().markdown);
+      await navigator.clipboard.writeText(pageReport.report().markdown);
     },
     saveReport: (format) => {
-      const r = report();
+      const r = pageReport.report();
       const blob =
         format === "json"
           ? new Blob([JSON.stringify(r.json, null, 2)], {
@@ -3209,176 +3029,10 @@ export function run(context: ExampleContext): ExampleRun {
     },
   };
 
-  // ---------------------------------------------------- try your own (R18)
-  let assetTileset: Awaited<ReturnType<typeof viewer.addTileset>> | undefined;
-  scope.defer(() => {
-    if (assetTileset) {
-      viewer.remove(assetTileset);
-    }
-  });
-  async function showAsset(id: string): Promise<void> {
-    if (token === undefined || !/^\d{1,12}$/.test(id)) {
-      return;
-    }
-    // Framed on arrival only if nothing has moved the camera meanwhile.
-    const asked = flow.ask();
-    userCrs = { state: "fetching", id };
-    invalidate();
-    try {
-      if (assetTileset) {
-        viewer.remove(assetTileset);
-        assetTileset = undefined;
-      }
-      const tileset = await viewer.addTileset({
-        ion: Number(id),
-        accessToken: token,
-      });
-      if (disposed) {
-        return;
-      }
-      assetTileset = tileset;
-      // On the Earth's surface: the globe controls, unless a flight or a
-      // view picked since owns the camera and its controls.
-      if (flow.arrival(asked, globe.flying)) {
-        flow.fly(undefined);
-        leaveOrbit();
-        viewer.zoomTo(tileset);
-      }
-      userCrs = {
-        state: "noCrs",
-        id,
-        message: `Asset ${id} is on the globe for context. ion has no CRS for it: its tileset is already placed in Earth-fixed coordinates, and neither ion's metadata nor the tileset names the CRS it came from.`,
-      };
-    } catch (error) {
-      if (disposed) {
-        return;
-      }
-      userCrs = {
-        state: "error",
-        id,
-        message: `Asset ${id} didn't load: ${scrub(messageOf(error))}`,
-      };
-    }
-    invalidate();
-  }
-
-  /** "Try your own" waits for any run going on, as the catalog's runs do. */
-  function runUser(wkt2: string): Promise<void> {
-    userCrs = { ...userCrs, state: "running" };
-    invalidate();
-    return runs.run(() => runUserNow(wkt2));
-  }
-
-  async function runUserNow(wkt2: string): Promise<void> {
-    if (disposed) {
-      return;
-    }
-    userResults = [];
-    invalidate();
-    try {
-      const out: StressResult[] = [];
-      await client.userCrs(wkt2, "Your CRS", (r) => {
-        out.push(r);
-      });
-      if (disposed) {
-        return;
-      }
-      userResults = out;
-      const name = /^\s*\w+\s*\[\s*"([^"]{1,120})"/.exec(wkt2)?.[1];
-      userCrs = {
-        ...userCrs,
-        state: "done",
-        ...(name !== undefined && { crsName: name }),
-      };
-      updateKnown();
-    } catch (error) {
-      if (isAbort(error) || disposed) {
-        return;
-      }
-      userCrs = {
-        ...userCrs,
-        state: "error",
-        message: `The checks didn't run: ${scrub(messageOf(error))}`,
-      };
-    }
-    invalidate();
-  }
+  // "Try your own"'s asset goes with the example.
+  scope.defer(() => user.dispose());
 
   // ------------------------------------------------------------- startup
-  async function loadFrames(): Promise<void> {
-    loading.apply("frames", { type: "fetching" });
-    const start = performance.now();
-    const bytes = new Map<
-      string,
-      { received: number; total: number | undefined }
-    >();
-    try {
-      const manifestResponse = fetch(`${DATA}manifest.json`, { signal })
-        .then((r) => (r.ok ? r.json() : undefined))
-        .catch(() => undefined);
-      const data = await loadFrameData(DATA, (file, received, total) => {
-        bytes.set(file, { received, total });
-        let sum = 0;
-        let size = 0;
-        let known = true;
-        for (const b of bytes.values()) {
-          sum += b.received;
-          size += b.total ?? 0;
-          known &&= b.total !== undefined;
-        }
-        loading.apply("frames", {
-          type: "progress",
-          received: sum,
-          ...(known && { total: size }),
-        });
-      });
-      manifest = (await manifestResponse) as typeof manifest;
-      if (signal.aborted) {
-        return;
-      }
-      frames = createFrames(data);
-      // The sky's Moon and Sun from the same DE440 the frames use: the
-      // analytic Moon is about 400 km off, which put the imagery's pole
-      // 400 km from the lunar site's triad (lunar-pole-investigation.md).
-      // Not undone on leave: the sky's data is the Viewer's, and the Viewer
-      // goes with the example.
-      viewer.setFrameData(data);
-      const sum = [...bytes.values()].reduce((a, b) => a + b.received, 0);
-      loading.apply("frames", {
-        type: "ready",
-        bytes: sum,
-        ms: performance.now() - start,
-      });
-    } catch (error) {
-      if (signal.aborted) {
-        return;
-      }
-      const message = messageOf(error);
-      loading.apply("frames", {
-        type: /setup|404|not served|manifest/i.test(message)
-          ? "missing"
-          : "error",
-        detail: message,
-      });
-      treeNote = `The frame tree can't draw: frame data didn't load (${message}). Everything else that needs no frame data still works.`;
-      invalidate();
-      return;
-    }
-    rebuildTree();
-    refreshTriads();
-    startFrameLoop();
-    // The scenario a deep link names (R15), at its knobs and time, or the
-    // strip's first at its checked setup; then the link's selection (a
-    // result runs its group first, then is selected and flown to).
-    void host.show(
-      readyScenario(initial.scenario),
-      initial.knobs,
-      initial.time,
-    );
-    lastSelection = { kind: "none" };
-    onView();
-  }
-
   /** Every frame: the triads at the clock's instant; now and then, what depends on it. */
   function startFrameLoop(): void {
     let raf = 0;
@@ -3490,7 +3144,7 @@ export function run(context: ExampleContext): ExampleRun {
       }
     }),
   );
-  void loadFrames();
+  void frameData.load();
 
   const initialTab: Tab | undefined =
     params.tab === "verify" ||
