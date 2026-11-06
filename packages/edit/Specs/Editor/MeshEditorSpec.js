@@ -9,6 +9,7 @@ import {
   GeometryAttributeDescriptor,
   GeometryReader,
   SceneTransforms,
+  StencilFunction,
   VertexAttributeSemantic,
 } from "@cesium/engine";
 import { ComponentType } from "@cesium/mesh-editor";
@@ -154,6 +155,19 @@ describe(
       if (!window.webglStub) {
         expect(pixel).toEqualEpsilon(color, 3);
       }
+    }
+
+    // Whether each of the mesh's commands draws part of its outline.
+    function renderOutlineFlags(mesh) {
+      return renderCommands(mesh).map(isOutlineCommand);
+    }
+
+    function isOutlineCommand(command) {
+      const { stencilTest } = command.renderState;
+      return (
+        stencilTest.enabled &&
+        stencilTest.frontFunction === StencilFunction.NOT_EQUAL
+      );
     }
 
     // Inside the square's bottom-right triangle.
@@ -400,12 +414,13 @@ describe(
         expect(pickInstanceCounts(inactive)).toEqual([2]);
       });
 
-      it("draws only faces in EditMode.NONE", async function () {
+      it("draws faces and their outline in EditMode.NONE", async function () {
         const editor = await MeshEditor.addToScene(scene);
         const mesh = editor.addMesh(createSource(square));
         editor.setMeshActive(mesh);
 
-        expect(renderInstanceCounts(mesh)).toEqual([2]);
+        // Faces, then the outline's edges and points.
+        expect(renderInstanceCounts(mesh)).toEqual([2, 5, 4]);
       });
 
       it("applies the mode to meshes activated later", async function () {
@@ -575,6 +590,71 @@ describe(
         editor.style.faceColor = Color.BLUE;
 
         expectPixel(facePosition, [0, 0, 255, 255]);
+      });
+    });
+
+    describe("outline", function () {
+      it("outlines only active meshes in EditMode.NONE", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const active = editor.addMesh(createSource(square));
+        const inactive = editor.addMesh(createSource(square));
+        editor.setMeshActive(active);
+
+        // Faces, then the outline's edges and points.
+        expect(renderOutlineFlags(active)).toEqual([false, true, true]);
+        expect(renderOutlineFlags(inactive)).toEqual([false]);
+      });
+
+      it("outlines active meshes only while in EditMode.NONE", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const mesh = editor.addMesh(createSource(square));
+        editor.setMeshActive(mesh);
+
+        editor.mode = EditMode.EDGE;
+        expect(renderOutlineFlags(mesh)).toEqual([false, false]);
+
+        editor.mode = EditMode.NONE;
+        expect(renderOutlineFlags(mesh)).toEqual([false, true, true]);
+      });
+
+      it("removes the outline when a mesh is deactivated", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const mesh = editor.addMesh(createSource(square));
+        editor.setMeshActive(mesh);
+
+        editor.setMeshInactive(mesh);
+
+        expect(renderOutlineFlags(mesh)).toEqual([false]);
+      });
+
+      it("adds outlines after every mesh's other commands", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const first = editor.addMesh(createSource(square));
+        const second = editor.addMesh(createSource(square));
+        editor.setMeshActive(first);
+        editor.setMeshActive(second);
+        const renderers = [first._renderer, second._renderer];
+
+        scene.renderForSpecs();
+        const flags = scene.frameState.commandList
+          .filter((command) => renderers.includes(command.owner))
+          .map(isOutlineCommand);
+
+        // Each mesh's faces, then each mesh's outline edges and points.
+        expect(flags).toEqual([false, false, true, true, true, true]);
+      });
+
+      it("draws outlines in the style's color and width", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const mesh = editor.addMesh(createSource(square));
+        editor.setMeshActive(mesh);
+
+        editor.style.outlineColor = Color.RED;
+        // Wide enough that the antialiased borders don't reach the sampled pixel.
+        editor.style.outlineWidth = 4.0;
+
+        // Just right of the square's right edge.
+        expectPixel([1.0, 0.0, 0.0], [255, 0, 0, 255], 2);
       });
     });
 

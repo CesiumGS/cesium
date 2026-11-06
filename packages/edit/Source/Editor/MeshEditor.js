@@ -51,8 +51,8 @@ const ALWAYS_PICKABLE_COMPONENTS = 1 << ComponentType.Face;
  * Edits geometry in a scene. Each added {@link GeometrySource} is replaced by
  * an editable {@link Mesh}. Active meshes are drawn as vertices, edges and
  * faces according to the editor's {@link EditMode}, and are the ones it edits.
- * Inactive meshes are drawn as faces. {@link MeshEditor#style} sets how meshes
- * are drawn.
+ * In {@link EditMode.NONE}, they're drawn as outlined faces. Inactive meshes
+ * are drawn as faces. {@link MeshEditor#style} sets how meshes are drawn.
  *
  * The editor is a primitive in the scene's primitive collection. Remove it
  * with <code>scene.primitives.remove(editor)</code>, which destroys it.
@@ -174,6 +174,7 @@ class MeshEditor {
           renderableComponents,
           selectableComponents,
         );
+        mesh._renderer.outlined = value === EditMode.NONE;
       }
     }
 
@@ -242,8 +243,8 @@ class MeshEditor {
   }
 
   /**
-   * Makes a mesh active, so the editor's mode applies to it. Cancels the
-   * active tool's current interaction.
+   * Makes a mesh active, so the editor's mode applies to it. Outlines it in
+   * {@link EditMode.NONE}. Cancels the active tool's current interaction.
    *
    * @param {Mesh} mesh The mesh to edit.
    *
@@ -255,6 +256,7 @@ class MeshEditor {
     this.#wasmEditor.setMeshActive(mesh._key);
     const { renderableComponents, selectableComponents } = this.#wasmEditor;
     this.#setComponentMasks(mesh, renderableComponents, selectableComponents);
+    mesh._renderer.outlined = this.#mode === EditMode.NONE;
   }
 
   /**
@@ -270,6 +272,7 @@ class MeshEditor {
 
     this.#wasmEditor.setMeshInactive(mesh._key);
     this.#setComponentMasks(mesh, INACTIVE_COMPONENTS, 0);
+    mesh._renderer.outlined = false;
   }
 
   /**
@@ -385,7 +388,7 @@ class MeshEditor {
   /**
    * Called when rendering the scene. On render passes, runs the wasm update.
    * Then updates each mesh's renderer, passing overlay views for meshes whose
-   * overlays changed.
+   * overlays changed, and adds the outlines.
    * <p>
    * Do not call this function directly.
    * </p>
@@ -408,6 +411,10 @@ class MeshEditor {
         : undefined;
 
       mesh._update(frameState, overlayViews);
+    }
+
+    for (const mesh of this.#meshes) {
+      mesh._renderer.pushOutlineCommands(frameState);
     }
   }
 
