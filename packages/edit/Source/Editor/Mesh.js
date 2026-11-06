@@ -5,6 +5,7 @@ import OverlayRenderer from "./OverlayRenderer.js";
 
 /** @import { FrameState, GeometrySource } from "@cesium/engine"; */
 /** @import { OverlayViews } from "@cesium/mesh-editor"; */
+/** @import MeshEditorStyle from "./MeshEditorStyle.js"; */
 
 /**
  * <div class="notice">
@@ -30,6 +31,7 @@ class Mesh {
    * @param {GeometrySource} options.source The geometry being edited.
    * @param {bigint} options.key The mesh's key in its editor's wasm.
    * @param {*} options.module The loaded wasm module.
+   * @param {MeshEditorStyle} options.style The editor's style, shared by its meshes.
    */
   constructor(options) {
     /**
@@ -65,6 +67,7 @@ class Mesh {
     this._renderer = new OverlayRenderer({
       module: options.module,
       mesh: this,
+      style: options.style,
     });
 
     // TODO: consider an interface that guarantees the source can be shown/hidden.

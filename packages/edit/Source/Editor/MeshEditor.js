@@ -20,6 +20,7 @@ import {
 import EditMode from "./EditMode.js";
 import Mesh from "./Mesh.js";
 import MeshEditorModule from "./MeshEditorModule.js";
+import MeshEditorStyle from "./MeshEditorStyle.js";
 
 /** @import { FrameState, GeometryReadSession, GeometrySource, Scene } from "@cesium/engine"; */
 /** @import { ComponentMask } from "@cesium/mesh-editor"; */
@@ -50,7 +51,8 @@ const ALWAYS_PICKABLE_COMPONENTS = 1 << ComponentType.Face;
  * Edits geometry in a scene. Each added {@link GeometrySource} is replaced by
  * an editable {@link Mesh}. Active meshes are drawn as vertices, edges and
  * faces according to the editor's {@link EditMode}, and are the ones it edits.
- * Inactive meshes are drawn as faces.
+ * Inactive meshes are drawn as faces. {@link MeshEditor#style} sets how meshes
+ * are drawn.
  *
  * The editor is a primitive in the scene's primitive collection. Remove it
  * with <code>scene.primitives.remove(editor)</code>, which destroys it.
@@ -85,6 +87,9 @@ class MeshEditor {
 
   /** @type {Set<Mesh>} */
   #meshes = new Set();
+
+  /** @type {MeshEditorStyle} */
+  #style = new MeshEditorStyle();
 
   /**
    * @param {object} options
@@ -125,6 +130,16 @@ class MeshEditor {
 
     const module = await MeshEditorModule.load();
     return scene.primitives.add(new MeshEditor({ module }));
+  }
+
+  /**
+   * How the editor's meshes are drawn. Changes apply on the next frame.
+   *
+   * @type {MeshEditorStyle}
+   * @readonly
+   */
+  get style() {
+    return this.#style;
   }
 
   /**
@@ -188,7 +203,12 @@ class MeshEditor {
 
     const key = this.#wasmEditor.addMesh(this.#createWasmMesh(source));
 
-    const mesh = new Mesh({ source, key, module: this.#module });
+    const mesh = new Mesh({
+      source,
+      key,
+      module: this.#module,
+      style: this.#style,
+    });
     this.#setComponentMasks(mesh, INACTIVE_COMPONENTS, 0);
     this.#meshes.add(mesh);
 
