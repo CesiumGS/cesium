@@ -1,7 +1,7 @@
 // CRS references and recorded PROJ operations (plan 4a task 2), against the
 // frames data store and pyproj's fixture (test/fixtures/frames/proj.json,
 // scripts/frameFixtures.py). `npm run test:data` runs it.
-import { copyFileSync, mkdtempSync, rmSync } from "node:fs";
+import { copyFileSync, mkdtempSync, rmSync, symlinkSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
@@ -81,7 +81,7 @@ describe("CRS references", () => {
         wkid: 4326,
         epoch: 2020,
       }),
-    ).toBe("EPSG:4326@2020");
+    ).toBe("EPSG:4326");
     expect(crsDefinition({ format: "wkt2", wkt2: "GEOGCRS[...]" })).toBe(
       "GEOGCRS[...]",
     );
@@ -202,6 +202,33 @@ describe("the geoid (Review Focus 1)", () => {
     });
   });
 
+  it("keeps each base's search path when two load back to back", async () => {
+    // Regression for loadNode: the binding read PROJ_DATA at first use, so a
+    // base loaded after another and used later searched the last one's
+    // directory. Two fresh bases are loaded before either is used: one with
+    // the geoid (a symlink to the store's), one without, loaded second.
+    const withGrid = mkdtempSync(join(tmpdir(), "proj-grid-"));
+    const without = mkdtempSync(join(tmpdir(), "proj-nogrid-"));
+    try {
+      for (const dir of [withGrid, without]) {
+        for (const name of ["proj_capi.node", "proj.db"]) {
+          copyFileSync(join(base, name), join(dir, name));
+        }
+      }
+      symlinkSync(join(base, GEOID), join(withGrid, GEOID));
+      const first = await loadProj({ base: withGrid });
+      const second = await loadProj({ base: without });
+      const op = resolveOperation(first, ref("EPSG:6420+6360"), "EPSG:4979");
+      expect(op.grids).toContain(GEOID);
+      expect(() =>
+        resolveOperation(second, ref("EPSG:6420+6360"), "EPSG:4979"),
+      ).toThrow(/us_noaa_g2018u0/);
+    } finally {
+      rmSync(withGrid, { recursive: true, force: true });
+      rmSync(without, { recursive: true, force: true });
+    }
+  });
+
   it("uses a pinned pipeline as given", async () => {
     const P = await loadProj({ base });
     const pipeline =
@@ -239,5 +266,92 @@ describe("units come from the CRS (R5, Review Focus 2)", () => {
     const P = await loadProj({ base });
     const wkt2 = P.proj_as_wkt(P.proj_create("EPSG:2223"), P.PJ_WKT2_2019);
     expect(crsUnits(P, { format: "wkt2", wkt2 }).metersPerUnit).toBe(0.3048);
+  });
+});
+
+describe("operations that cannot be done", () => {
+  it("throws outside the geoid's coverage or for non-finite input", async () => {
+    const P = await loadProj({ base });
+    const op = resolveOperation(P, ref("EPSG:6420+6360"), "EPSG:4979");
+    expect(() => op.forward([0, 0, 0])).toThrow(RangeError);
+    expect(() => op.forward([Number.NaN, 1, 1])).toThrow();
+  });
+
+  it("throws for a code PROJ does not have", async () => {
+    const P = await loadProj({ base });
+    expect(() =>
+      resolveOperation(
+        P,
+        { format: "wkid", authority: "EPSG", wkid: 999999 },
+        "EPSG:4979",
+      ),
+    ).toThrow(/could not create/);
+  });
+
+  it("throws for CRSs PROJ cannot relate, as a plain Error", async () => {
+    const P = await loadProj({ base });
+    expect(() =>
+      resolveOperation(P, ref(moonGeographic3d), "EPSG:4979"),
+    ).toThrow(
+      /PROJ offers no usable operation from IAU_2015:30100 to EPSG:4979/,
+    );
+  });
+
+  it("throws when PROJ lists no operations (stub)", () => {
+    const stub = {
+      proj_create: () => ({}),
+      proj_get_name: () => "x",
+      proj_as_proj_string: () => "x",
+      PJ_PROJ_5: 1,
+      proj_create_operation_factory_context: () => ({}),
+      proj_create_operations: () => ({ length: () => 0, get: () => ({}) }),
+    } as unknown as ProjApi;
+    expect(() => resolveOperation(stub, ref("EPSG:2227"), "EPSG:4979")).toThrow(
+      /PROJ offers no usable operation from EPSG:2227 to EPSG:4979/,
+    );
+    const nullList = {
+      ...stub,
+      proj_create_operations: () => null,
+    } as unknown as ProjApi;
+    expect(() =>
+      resolveOperation(nullList, ref("EPSG:2227"), "EPSG:4979"),
+    ).toThrow(/PROJ offers no usable operation/);
+  });
+});
+
+describe("coordinate epoch (a dynamic datum's time-dependent operation)", () => {
+  // ITRF2014 to NAD83(2011): a Helmert with rates, no grids.
+  const itrf = { format: "wkid", authority: "EPSG", wkid: 7789 } as const;
+  const point = [-2700000, -4290000, 3860000];
+
+  it("evaluates at the source's epoch; none gives a stable result", async () => {
+    const P = await loadProj({ base });
+    const at = (epoch?: number) =>
+      resolveOperation(
+        P,
+        epoch === undefined ? itrf : { ...itrf, epoch },
+        "EPSG:6318",
+      ).forward(point);
+    const metersBetween = (a: Float64Array, b: Float64Array) =>
+      Math.hypot(
+        (a[0]! - b[0]!) * 111_320 * Math.cos((a[1]! * Math.PI) / 180),
+        (a[1]! - b[1]!) * 111_320,
+        a[2]! - b[2]!,
+      );
+    const early = at(2010);
+    const late = at(2030);
+    expect(metersBetween(early, late)).toBeGreaterThan(0.01);
+    // Without an epoch the rates do not apply, and the result repeats.
+    expect(Array.from(at())).toEqual(Array.from(at()));
+    expect(Array.from(at())).toEqual(Array.from(early));
+  });
+
+  it("round trips at the same epoch", async () => {
+    const P = await loadProj({ base });
+    const op = resolveOperation(P, { ...itrf, epoch: 2030 }, "EPSG:6318");
+    const back = op.inverse(op.forward(point));
+    for (let i = 0; i < 3; i++) {
+      expect(Math.abs(back[i]! - point[i]!)).toBeLessThan(1e-6);
+    }
   });
 });

@@ -25,14 +25,17 @@ export type CrsRef =
     }
   | { readonly format: "wkt2"; readonly wkt2: string };
 
-/** The string PROJ accepts for a reference: "EPSG:2227", "EPSG:6420+6360", or WKT2. */
+/**
+ * The string PROJ accepts for a reference: "EPSG:2227", "EPSG:6420+6360", or
+ * WKT2. The epoch is not part of it (proj_create rejects "CRS@epoch"); an
+ * operation applies it as the coordinate time (see resolveOperation).
+ */
 export function crsDefinition(ref: CrsRef): string {
   if (ref.format === "wkt2") {
     return ref.wkt2;
   }
   const code = `${ref.authority}:${ref.wkid}`;
-  const compound = ref.vcsWkid === undefined ? code : `${code}+${ref.vcsWkid}`;
-  return ref.epoch === undefined ? compound : `${compound}@${ref.epoch}`;
+  return ref.vcsWkid === undefined ? code : `${code}+${ref.vcsWkid}`;
 }
 
 /**
@@ -135,13 +138,14 @@ function transformer(
   proj: ProjApi,
   operation: PJ,
   direction: typeof proj.PJ_FWD,
+  epoch: number,
 ): RecordedOperation["forward"] {
   return (xyz, out = new Float64Array(3)) => {
-    // An infinite time is PROJ's "no epoch".
+    // The source's coordinate epoch, or infinity: PROJ's "no epoch".
     const result = proj.proj_trans(
       operation,
       direction,
-      proj.proj_coord(xyz[0]!, xyz[1]!, xyz[2] ?? 0, Infinity),
+      proj.proj_coord(xyz[0]!, xyz[1]!, xyz[2] ?? 0, epoch),
     ).v;
     for (let i = 0; i < 3; i++) {
       const value = result[i]!;
@@ -162,6 +166,7 @@ function record(
   accuracy: number | undefined,
   grids: readonly string[],
   ballpark: boolean,
+  epoch: number,
 ): RecordedOperation {
   const operation = fixed(proj, pipeline);
   return {
@@ -169,8 +174,8 @@ function record(
     accuracy,
     grids,
     ballpark,
-    forward: transformer(proj, operation, proj.PJ_FWD),
-    inverse: transformer(proj, operation, proj.PJ_INV),
+    forward: transformer(proj, operation, proj.PJ_FWD, epoch),
+    inverse: transformer(proj, operation, proj.PJ_INV, epoch),
   };
 }
 
@@ -195,10 +200,17 @@ export function resolveOperation(
   options: ResolveOptions = {},
 ): RecordedOperation {
   const { pipeline, allowBallpark = false } = options;
+  // A time-dependent operation (a dynamic datum's Helmert with rates) is
+  // evaluated at the source's coordinate epoch (decimal year); with none,
+  // at PROJ's "no epoch" (infinity), where the rates do not apply.
+  const epoch =
+    source.format === "wkid" && source.epoch !== undefined
+      ? source.epoch
+      : Infinity;
   if (pipeline !== undefined) {
     const grids = gridsOf(pipeline);
     try {
-      return record(proj, pipeline, undefined, grids, false);
+      return record(proj, pipeline, undefined, grids, false, epoch);
     } catch (error) {
       const needs = grids.length > 0 ? `; it needs ${named(grids)}` : "";
       throw new Error(
@@ -210,11 +222,22 @@ export function resolveOperation(
 
   const from = create(proj, crsDefinition(source), "the source CRS");
   const to = create(proj, target, "the target CRS");
-  const candidates = proj.proj_create_operations(
-    from,
-    to,
-    proj.proj_create_operation_factory_context(""),
-  );
+  const where = `from ${crsDefinition(source)} to ${target}`;
+  // For a pair PROJ cannot relate (a Moon CRS and the Earth's) the binding
+  // throws "Error getting list"; an empty or null list is the same answer.
+  let candidates;
+  try {
+    candidates = proj.proj_create_operations(
+      from,
+      to,
+      proj.proj_create_operation_factory_context(""),
+    );
+  } catch {
+    candidates = null;
+  }
+  if (!candidates || candidates.length() === 0) {
+    throw new Error(`PROJ offers no usable operation ${where}`);
+  }
 
   const missing = new Set<string>();
   let skippedBallpark = false;
@@ -257,10 +280,10 @@ export function resolveOperation(
       ballpark || accuracy < 0 ? undefined : accuracy,
       grids,
       ballpark,
+      epoch,
     );
   }
 
-  const where = `from ${crsDefinition(source)} to ${target}`;
   if (missing.size > 0) {
     const hint = skippedBallpark
       ? "; pass allowBallpark: true to accept a ballpark transformation"
