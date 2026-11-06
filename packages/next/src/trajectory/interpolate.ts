@@ -5,6 +5,13 @@
  * the input's units.
  */
 
+/** The largest Hermite window, in states (degree 31). */
+const MAX_HERMITE_WINDOW = 16;
+// Hermite scratch, so `interpolate` allocates nothing per call: doubled nodes.
+const hermiteNodes = new Float64Array(2 * MAX_HERMITE_WINDOW);
+const hermiteColumn = new Float64Array(2 * MAX_HERMITE_WINDOW);
+const hermiteNewton = new Float64Array(2 * MAX_HERMITE_WINDOW);
+
 export type InterpolationMethod = "lagrange" | "hermite";
 
 /**
@@ -96,13 +103,18 @@ export function interpolateState(
   }
 
   // Hermite: Newton divided differences on doubled nodes.
+  if (size > MAX_HERMITE_WINDOW) {
+    throw new Error(
+      `interpolate: a Hermite window of ${size} states exceeds the limit of ${MAX_HERMITE_WINDOW}`,
+    );
+  }
   const n = 2 * size;
-  const nodes = new Float64Array(n);
+  const nodes = hermiteNodes;
   for (let i = 0; i < size; i++) {
     nodes[2 * i] = nodes[2 * i + 1] = epochs[first + i]! - origin;
   }
-  const column = new Float64Array(n);
-  const newton = new Float64Array(n);
+  const column = hermiteColumn;
+  const newton = hermiteNewton;
   for (let axis = 0; axis < 3; axis++) {
     for (let i = 0; i < size; i++) {
       column[2 * i] = column[2 * i + 1] = states[(first + i) * 6 + axis]!;

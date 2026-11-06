@@ -253,6 +253,11 @@ function readStateSegment(
       }
     }
   }
+  if (!Number.isFinite(s.start) || !Number.isFinite(s.end)) {
+    throw new Error(
+      `SPK: segment "${name}" (target ${s.target}) has a non-finite summary time (start ${s.start}, end ${s.end})`,
+    );
+  }
   return {
     type,
     target: s.target,

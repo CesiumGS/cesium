@@ -6,7 +6,7 @@ import { createFrames } from "../src/frames/frames.ts";
 import { frameBias } from "../src/time/erfa/bias.ts";
 import { Instant } from "../src/time/Instant.ts";
 import bias from "./fixtures/frames/bias.json";
-import { syntheticFrameData } from "./syntheticFrames.ts";
+import { SAMPLE, syntheticFrameData } from "./syntheticFrames.ts";
 
 const data = syntheticFrameData();
 const frames = createFrames(data);
@@ -117,5 +117,32 @@ describe("the frame tree", () => {
     expect(() => frameTransform(frames.itrf, frames.icrf, outside)).toThrow(
       /outside the loaded span/,
     );
+  });
+});
+
+describe("the ITRF edge past the EOP table's predictions", () => {
+  const degraded = createFrames(
+    syntheticFrameData({ ...SAMPLE, predicted: true, degraded: true }),
+  );
+  const predicted = createFrames(
+    syntheticFrameData({ ...SAMPLE, predicted: true, degraded: false }),
+  );
+
+  it("throws, naming the table's span and how to refresh it", () => {
+    expect(() => frameTransform(degraded.itrf, degraded.gcrf, t)).toThrow(
+      /EOP table covers 2000-01-01T00:00:00\.000Z to 2030-01-01T00:00:00\.000Z.*newer EOP data/,
+    );
+  });
+
+  it("leaves the rest of the GCRF subtree alone", () => {
+    expect(() =>
+      frameTransform(degraded.eme2000, degraded.gcrf, t),
+    ).not.toThrow();
+  });
+
+  it("allows predicted samples that are not degraded", () => {
+    expect(() =>
+      frameTransform(predicted.itrf, predicted.gcrf, t),
+    ).not.toThrow();
   });
 });

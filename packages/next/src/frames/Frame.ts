@@ -80,8 +80,9 @@ export class Frame<N extends string = string> {
   }
 }
 
-// Scratch for frameTransform, one set per reentrancy level: a frame's
-// `toParent` may itself call `frameTransform` (a trajectory frame does).
+// Scratch for frameTransform, one set per reentrancy level: a guard for a
+// frame whose compute calls `frameTransform` itself (none of the built-in
+// frames does), so the inner call cannot overwrite the outer one's matrices.
 interface Scratch {
   up: Mat4;
   down: Mat4;

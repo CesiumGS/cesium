@@ -17,6 +17,20 @@ describe("Instant.fromIso", () => {
     expect(a.tt).toBe(b.tt);
   });
 
+  it("takes years 0 to 99 as written, not as 1900 to 1999", () => {
+    const tt = (iso: string) => Instant.fromIso(iso, "TT", leap).tt;
+    const y50 = tt("0050-01-01T12:00:00");
+    expect(y50).toBeLessThan(tt("0100-01-01T00:00:00"));
+    expect(y50).not.toBe(tt("1950-01-01T12:00:00"));
+    // 0050 is not a leap year, 0052 is (Gregorian): 365 + 366 days.
+    expect(tt("0052-01-01T12:00:00") - y50).toBe(2 * 365 * 86400);
+    expect(tt("0053-01-01T12:00:00") - tt("0052-01-01T12:00:00")).toBe(
+      366 * 86400,
+    );
+    expect(() => tt("0050-366T00:00:00")).toThrow(/Invalid day of year/);
+    expect(() => tt("0050-02-29T00:00:00")).toThrow(/Invalid date/);
+  });
+
   it("reads the day-of-year form", () => {
     const a = Instant.fromIso("2026-092T01:58:21.397", "UTC", leap);
     const b = Instant.fromIso("2026-04-02T01:58:21.397", "UTC", leap);

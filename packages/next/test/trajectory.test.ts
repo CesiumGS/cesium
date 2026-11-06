@@ -595,6 +595,64 @@ describe("Trajectory", () => {
     expect(both.state(at(120))[0]).toBeCloseTo(1000, 9);
   });
 
+  it("leaves a piece whose useable range lies outside its epochs out of spans", () => {
+    const block = (from: number, to: number, extra = ""): OemOptions => {
+      const epochs = range(from, to, 60);
+      return {
+        interpolation: `${HERMITE7}${extra}`,
+        epochs: Array.from(epochs, isoTdb),
+        states: Array.from(epochs, () => [1, 2, 3, 0, 0, 0]),
+      };
+    };
+    const traj = Trajectory.fromOem(
+      parseOem(
+        oemText(
+          block(0, 600),
+          block(
+            1000,
+            1600,
+            `;USEABLE_START_TIME = ${isoTdb(5000)};USEABLE_STOP_TIME = ${isoTdb(6000)}`,
+          ),
+        ),
+        leap,
+      ),
+      frames,
+      OPTIONS,
+    );
+    expect(traj.spans).toEqual([[0, 600]]);
+    expect(() => traj.state(at(1300))).toThrow(
+      /outside its data \(covered: [^;]*\)$/,
+    );
+    expect(() =>
+      Trajectory.fromOem(
+        parseOem(
+          oemText(
+            block(
+              0,
+              600,
+              `;USEABLE_START_TIME = ${isoTdb(5000)};USEABLE_STOP_TIME = ${isoTdb(6000)}`,
+            ),
+          ),
+          leap,
+        ),
+        frames,
+        OPTIONS,
+      ),
+    ).toThrow(/Trajectory "Orion": none of its data covers any time/);
+  });
+
+  it("rejects a non-finite SPK summary time with a descriptive error", () => {
+    const buffer = constantSpk(100, 300, 50, 1);
+    new Float64Array(buffer, 1024, 128)[3] = NaN;
+    expect(() =>
+      Trajectory.fromSpk([buffer], 1000, frames, {
+        name: "x",
+        accuracy: "precise",
+        j2000: "icrf",
+      }),
+    ).toThrow(/non-finite summary time/);
+  });
+
   it("clamps an SPK summary to the stored epochs (R3)", () => {
     const buffer = constantSpk(100, 300, 50, 1);
     // Record 2 is the summary record: 3 control doubles, then start and end.

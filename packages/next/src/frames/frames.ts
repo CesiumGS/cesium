@@ -9,8 +9,9 @@ import { toParentMatrix } from "./matrix.ts";
 /**
  * The built-in frame tree, from `createFrames`. Positions only (R11), and
  * Newtonian: the GCRF origin is the Earth's barycentric position with no
- * TT/TDB scaling or Lorentz term (R2). Every frame's `toParent` throws for
- * an instant outside the data's span (R3).
+ * TT/TDB scaling or Lorentz term (R2). Frame transforms throw outside the
+ * ephemeris span (R3); the ITRF edge also throws past the EOP table's
+ * predictions, where UT1 would otherwise drift silently.
  */
 export interface Frames {
   /** The International Celestial Reference Frame, the root. */
@@ -68,17 +69,22 @@ export function createFrames(data: FrameData): Frames {
     gcrf,
     toParentMatrix(frameBias(), undefined, new Float64Array(16)),
   );
-  const itrf = new Frame("ITRF", gcrf, (instant, out) =>
-    toParentMatrix(
-      celestialToTerrestrial(
-        instant,
-        eop.atInstant(instant, leapSeconds),
-        rotation,
-      ),
+  const itrf = new Frame("ITRF", gcrf, (instant, out) => {
+    const sample = eop.atInstant(instant, leapSeconds);
+    if (sample.degraded) {
+      // UT1 - UTC drifts about a millisecond a day once the table's
+      // predictions end: hundreds of meters at the equator within a year.
+      const iso = (ms: number) => new Date(ms).toISOString();
+      throw new Error(
+        `ITRF: the EOP table covers ${iso(eop.first)} to ${iso(eop.last)} and its predictions end there; measurements past it need newer EOP data (npm run setup refreshes it)`,
+      );
+    }
+    return toParentMatrix(
+      celestialToTerrestrial(instant, sample, rotation),
       undefined,
       out,
-    ),
-  );
+    );
+  });
   const moonMe = new Frame("MOON_ME", moonIcrf, (instant, out) =>
     toParentMatrix(ephemeris.moonMeanEarth(instant, rotation), undefined, out),
   );

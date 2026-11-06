@@ -61,16 +61,16 @@ data loaded, `createFrames(data)` builds the frame tree. Every frame is a
 instant. Positions only: velocities do not transform yet. Edges are
 Newtonian (no TT/TDB scaling, no Lorentz term) until plan 3.
 
-| Frame      | Parent     | What it is                                                                         |
-| ---------- | ---------- | ---------------------------------------------------------------------------------- |
-| `icrf`     | none       | The root: the solar system barycenter, ICRF axes                                   |
-| `hcrs`     | `icrf`     | The Sun's center, ICRF axes                                                        |
-| `gcrf`     | `icrf`     | The Earth's center, ICRF axes                                                      |
-| `eme2000`  | `gcrf`     | The Earth's center, J2000 mean equator and equinox (GCRF turned by the frame bias) |
-| `itrf`     | `gcrf`     | Earth-fixed (IAU 2006/2000A and the EOP)                                           |
-| `moonIcrf` | `icrf`     | The Moon's center, ICRF axes                                                       |
-| `moonMe`   | `moonIcrf` | Moon-fixed, mean Earth / polar axes                                                |
-| `moonPa`   | `moonMe`   | Moon-fixed, principal axes                                                         |
+| Frame      | Name        | Parent     | What it is                                                                         |
+| ---------- | ----------- | ---------- | ---------------------------------------------------------------------------------- |
+| `icrf`     | `ICRF`      | none       | The root: the solar system barycenter, ICRF axes                                   |
+| `hcrs`     | `HCRS`      | `icrf`     | The Sun's center, ICRF axes                                                        |
+| `gcrf`     | `GCRF`      | `icrf`     | The Earth's center, ICRF axes                                                      |
+| `eme2000`  | `EME2000`   | `gcrf`     | The Earth's center, J2000 mean equator and equinox (GCRF turned by the frame bias) |
+| `itrf`     | `ITRF`      | `gcrf`     | Earth-fixed (IAU 2006/2000A and the EOP)                                           |
+| `moonIcrf` | `MOON_ICRF` | `icrf`     | The Moon's center, ICRF axes                                                       |
+| `moonMe`   | `MOON_ME`   | `moonIcrf` | Moon-fixed, mean Earth / polar axes                                                |
+| `moonPa`   | `MOON_PA`   | `moonMe`   | Moon-fixed, principal axes                                                         |
 
 `frames.bodyFixed(EARTH)` is `itrf` and `bodyFixed(MOON)` is `moonMe`; any
 other body throws. `frameTransform(from, to, instant, out?)` writes the
@@ -85,7 +85,10 @@ for a point that has an instant when you ask for a different one.
 `worldTransformFrame` exposes a world transform as an ITRF child. Content is
 still Earth-fixed; rendering across bodies comes in plan 5.
 
-Frame transforms throw outside the data's span. The sky does not:
+Frame transforms throw outside the ephemeris span, and the ITRF edge also
+throws past the EOP table's predictions (the error gives the covered dates;
+`npm run setup` refreshes the table), since UT1 would otherwise drift by about
+a millisecond a day with nothing to show for it. The sky does not:
 `skyState(ms, data, out)` takes the sun, Moon and stars from DE440 inside the
 span and from the analytic models outside it, and `source` says which.
 
@@ -118,8 +121,10 @@ guesses: the Artemis OEM has none, so pass `interpolation: { method:
 The Viewer loads none of this by default. `new Viewer({ frameData:
 "/frames-data/" })` (or a `FrameData` already loaded) draws the sun, stars and
 Moon from DE440 and the IAU 2006/2000A Earth rotation inside the data's span;
-`viewer.frameData` is a promise for the data, or `undefined` if loading failed
-(the sky then stays analytic). Without the option, Earth-only rendering is
+`viewer.frameData` is always a promise: it resolves to the data, or to
+`undefined`, silently when the option was not given and after one
+`console.warn` when loading failed (the sky then stays analytic). A
+`FrameData` object that is already loaded applies at construction. Without the option, Earth-only rendering is
 unchanged. The bench Explorer opts in.
 
 ```sh

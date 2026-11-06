@@ -118,6 +118,32 @@ describe("frameTransform", () => {
     expect(() => frameTransform(arm, r2, t1)).toThrow(/no common ancestor/);
     expect(() => frameTransform(r2, arm, t1)).toThrow(/no common ancestor/);
   });
+
+  it("composes through a frame whose toParent itself calls frameTransform", () => {
+    // The per-level scratch guards exactly this: the inner calls must not
+    // clobber the outer call's matrices.
+    const inner = (instant: Instant, out: Float64Array): Float64Array =>
+      multiply(
+        out,
+        frameTransform(arm, other, instant),
+        frameTransform(other, spin, instant),
+      );
+    const reentrant = new Frame("reentrant", root, (instant, out) => {
+      inner(instant, out);
+    });
+    const leaf = Frame.constant("leaf", reentrant, translation(1, 2, 3));
+    const up = multiply(
+      new Float64Array(16),
+      inner(t1, new Float64Array(16)),
+      translation(1, 2, 3),
+    );
+    const hand = multiply(
+      new Float64Array(16),
+      frameTransform(root, other, t1),
+      up,
+    );
+    expectClose(frameTransform(leaf, other, t1), hand);
+  });
 });
 
 describe("convertPoint", () => {
