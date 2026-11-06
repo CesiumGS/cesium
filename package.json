@@ -163,7 +163,7 @@
     },
     "packageManager": {
       "name": "npm",
-      "version": "10.x || 11.x"
+      "version": ">=11.16.0"
     }
   },
   "workspaces": [
@@ -186,5 +186,11 @@
         "react-dom": "^19.0.0"
       }
     }
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true,
+    "onnxruntime-node@1.30.0": true,
+    "protobufjs@7.6.6": true,
+    "@ast-grep/cli@0.51.1": true
   }
 }
