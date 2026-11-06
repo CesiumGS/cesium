@@ -1,0 +1,4 @@
+{
+  "$comment": "Published reference values for the frames explorer's stress tests (plan R10), copied verbatim from their sources. Each entry's source names the document, its edition or revision, the table, page or URL, and the retrieval date (YYYY-MM-DD). Never generated with PROJ, pyproj or this library; entries of kind \"input\" are inputs, not expected values (ruling F6).",
+  "entries": {}
+}

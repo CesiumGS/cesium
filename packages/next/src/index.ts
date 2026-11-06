@@ -175,10 +175,12 @@ export {
 export {
   crsDefinition,
   crsUnits,
+  listOperations,
   MOON_GEOGRAPHIC_CRS,
   resolveOperation,
   type CrsRef,
   type CrsUnits,
+  type OperationCandidate,
   type RecordedOperation,
   type ResolveOptions,
 } from "./engineering/crs.ts";

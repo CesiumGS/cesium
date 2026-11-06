@@ -9,6 +9,7 @@ import { framesDataDirectory } from "../../scripts/frameData.mjs";
 import {
   crsDefinition,
   crsUnits,
+  listOperations,
   MOON_GEOGRAPHIC_CRS,
   resolveOperation,
   type CrsRef,
@@ -353,5 +354,75 @@ describe("coordinate epoch (a dynamic datum's time-dependent operation)", () => 
     for (let i = 0; i < 3; i++) {
       expect(Math.abs(back[i]! - point[i]!)).toBeLessThan(1e-6);
     }
+  });
+});
+
+describe("Operation candidates (listOperations)", () => {
+  const geographic3d = ref("EPSG:4979");
+
+  it("lists PROJ's candidates, and resolveOperation records the first its rule accepts", async () => {
+    const P = await loadProj({ base });
+    const candidates = listOperations(P, ref("EPSG:6420+6360"), geographic3d);
+    expect(candidates.length).toBeGreaterThan(1);
+    // The documented rule: the first instantiable, non-ballpark candidate
+    // with all its grids and a PROJ string.
+    const picked = candidates.find(
+      (c) =>
+        c.instantiable &&
+        !c.ballpark &&
+        c.missingGrids.length === 0 &&
+        c.pipeline !== "",
+    )!;
+    const recorded = resolveOperation(P, ref("EPSG:6420+6360"), "EPSG:4979");
+    expect(picked.pipeline).toBe(recorded.pipeline);
+    expect(picked.accuracy).toBe(recorded.accuracy);
+    expect(picked.gridsNeeded).toEqual(recorded.grids);
+    expect(picked.gridsNeeded).toContain(GEOID);
+    expect(picked.name).toMatch(/California zone 3/);
+    // Its area of use is a degree box around California.
+    const area = picked.areaOfUse!;
+    expect(area.west).toBeLessThan(-120.5);
+    expect(area.east).toBeGreaterThan(-120.5);
+    expect(area.south).toBeLessThan(37);
+    expect(area.north).toBeGreaterThan(37);
+    // Candidates that read a grid the store lacks name it.
+    const lacking = candidates.filter((c) => c.missingGrids.length > 0);
+    expect(lacking.length).toBeGreaterThan(0);
+    for (const c of lacking) {
+      for (const grid of c.missingGrids) {
+        expect(c.gridsNeeded).toContain(grid);
+      }
+    }
+  });
+
+  it("marks a ballpark candidate, with no accuracy", async () => {
+    const P = await loadProj({ base });
+    const candidates = listOperations(P, ref("EPSG:4230"), geographic3d);
+    const ballpark = candidates.filter((c) => c.ballpark);
+    expect(ballpark.length).toBeGreaterThan(0);
+    for (const c of ballpark) {
+      expect(c.name).toMatch(/ballpark/i);
+      expect(c.accuracy).toBeUndefined();
+    }
+  });
+
+  it("lists nothing for CRSs PROJ cannot relate, and throws for an unknown code", async () => {
+    const P = await loadProj({ base });
+    expect(listOperations(P, ref(MOON_GEOGRAPHIC_CRS), geographic3d)).toEqual(
+      [],
+    );
+    expect(() =>
+      listOperations(
+        P,
+        { format: "wkid", authority: "EPSG", wkid: 999999 },
+        geographic3d,
+      ),
+    ).toThrow(/could not create/);
+  });
+
+  it("gives plain data (structured-clone safe)", async () => {
+    const P = await loadProj({ base });
+    const candidates = listOperations(P, ref("EPSG:6420+6360"), geographic3d);
+    expect(structuredClone(candidates)).toEqual(candidates);
   });
 });
