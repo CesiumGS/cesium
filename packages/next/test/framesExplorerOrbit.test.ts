@@ -1,0 +1,382 @@
+// The frames explorer's camera controls in space (examples/frames-explorer/
+// orbit.ts): which views orbit and which keep the globe controls, each
+// orbit's focus, up, heading reference and range limits, how an orbit
+// follows a subject the clock moves, and what "Frame content" frames.
+import { describe, expect, it } from "vitest";
+import {
+  AXES_RIG,
+  EARTH_RADIUS,
+  MOON_RADIUS,
+  SITE_RIG,
+  earthMoonRig,
+  followRig,
+  frameRig,
+  frameTarget,
+  isFrameKey,
+  lunarSiteRange,
+  pivotPlacement,
+  placeRig,
+  rangeLimits,
+  rigFraming,
+  stopRig,
+  viewHeading,
+  type Rig,
+} from "../examples/frames-explorer/orbit.ts";
+import { TOUR } from "../examples/frames-explorer/content.ts";
+import { Camera } from "../src/scene/Camera.ts";
+import { orbitBasis, orbitPose } from "../src/scene/InspectController.ts";
+
+const sub = (a: ArrayLike<number>, b: ArrayLike<number>) =>
+  [0, 1, 2].map((i) => a[i]! - b[i]!);
+const dot = (a: ArrayLike<number>, b: ArrayLike<number>) =>
+  a[0]! * b[0]! + a[1]! * b[1]! + a[2]! * b[2]!;
+const norm = (a: ArrayLike<number>) => Math.sqrt(dot(a, a));
+const close = (a: ArrayLike<number>, b: ArrayLike<number>, tol: number) =>
+  expect(norm(sub(a, b))).toBeLessThan(tol);
+
+/** A 4×4 column-major rigid transform: a turn of `angle` about z, then `t`. */
+function turnZ(angle: number, t: number[]): Float64Array {
+  const c = Math.cos(angle);
+  const s = Math.sin(angle);
+  return Float64Array.from([c, s, 0, 0, -s, c, 0, 0, 0, 0, 1, 0, ...t, 1]);
+}
+
+describe("which views orbit (the owner: stuck out in space)", () => {
+  it("orbits at the stops framed off the Earth's surface, and keeps the globe controls at the surface stops", () => {
+    const rigs = Object.fromEntries(TOUR.map((s) => [s.id, stopRig(s.camera)]));
+    expect(rigs).toEqual({
+      "earth-frames": "geocentric",
+      "gcrf-itrf-day": "geocentric",
+      "design-grid": undefined,
+      "rigid-exact": undefined,
+      orion: "earthMoon",
+      "lunar-time": "lunarSite",
+    });
+    expect(stopRig("opening")).toBeUndefined();
+  });
+
+  it("orbits a selected frame whose origin is off the surface, on its own origin", () => {
+    for (const id of ["ITRF", "GCRF", "EME2000", "EARTH_ICRF"]) {
+      expect(frameRig(id)).toBe("geocentric");
+    }
+    for (const id of ["MOON_ICRF", "MOON_ME", "MOON_PA"]) {
+      expect(frameRig(id)).toBe("moon");
+    }
+    expect(frameRig("Lunar south-pole site")).toBe("lunarSite");
+    expect(frameRig("orion-1", "orion-1")).toBe("earthMoon");
+  });
+
+  it("keeps the globe controls for Earth-surface frames and the opening view", () => {
+    // ICRF and HCRS show the opening shot: their origins (the barycentre,
+    // the Sun) aren't on the scene.
+    for (const id of [
+      "Sacramento ENU",
+      "engineering:California zone 3",
+      "ICRF",
+      "HCRS",
+    ]) {
+      expect(frameRig(id)).toBeUndefined();
+    }
+  });
+});
+
+describe("each orbit's focus and axes", () => {
+  it("orbits a body's origin with its z up and its x at heading 0", () => {
+    expect(AXES_RIG).toEqual({
+      target: [0, 0, 0],
+      up: [0, 0, 1],
+      headingRef: [1, 0, 0],
+    });
+  });
+
+  it("orbits a site's origin with its up up and its north at heading 0", () => {
+    expect(SITE_RIG).toEqual({
+      target: [0, 0, 0],
+      up: [0, 0, 1],
+      headingRef: [0, 1, 0],
+    });
+  });
+
+  it("places a rig with its frame's transform: the origin moved, the axes turned", () => {
+    const m = turnZ(Math.PI / 2, [3.8e8, 1e7, -2e7]);
+    const placed = placeRig(SITE_RIG, m);
+    close(placed.target, [3.8e8, 1e7, -2e7], 1e-6);
+    close(placed.up, [0, 0, 1], 1e-12);
+    // y turned a quarter about z is -x.
+    close(placed.headingRef, [-1, 0, 0], 1e-12);
+  });
+
+  it("puts stop 5's orbit up the Moon's orbit normal, heading 0 toward the Moon", () => {
+    const moon = [3.8e8, 0, 0];
+    const normal = [0, 0, 2];
+    const center = [1.9e8, 1e6, 0];
+    const rig = earthMoonRig(center, moon, normal);
+    expect(rig.target).toEqual(center);
+    close(rig.up, [0, 0, 1], 1e-12);
+    close(rig.headingRef, [1, 0, 0], 1e-12);
+    // Heading 0 looks toward the Moon: the camera sits Earthward of the
+    // focus and looks along +x.
+    const cam = new Camera();
+    const b = orbitBasis(rig);
+    cam.lookAtInFrame(Float64Array.from(center), 0, 0, 1e8, b.north, b.up);
+    close(cam.direction, [1, 0, 0], 1e-12);
+  });
+});
+
+describe("range limits: zoom can't throw you into deep space or through a body", () => {
+  const d = 3.84e8;
+
+  it("keeps the geocentric orbit outside the Earth and within the Moon's distance", () => {
+    const r = rangeLimits("geocentric", d);
+    expect(r.minRange).toBeGreaterThan(1.2 * EARTH_RADIUS);
+    expect(r.maxRange).toBeLessThanOrEqual(d);
+    expect(r.maxRange).toBeGreaterThan(20 * EARTH_RADIUS);
+  });
+
+  it("keeps the Earth–Moon orbit framing both bodies, and short of the Earth", () => {
+    const r = rangeLimits("earthMoon", d);
+    // The focus is between the two, about d/2 from each.
+    expect(r.minRange).toBeLessThan(0.5 * d - 2 * EARTH_RADIUS);
+    expect(r.minRange).toBeGreaterThan(0.1 * d);
+    expect(r.maxRange).toBeGreaterThan(2 * d);
+    expect(r.maxRange).toBeLessThanOrEqual(5 * d);
+  });
+
+  it("keeps the Moon orbit outside the Moon and nearer it than the Earth", () => {
+    const r = rangeLimits("moon", d);
+    expect(r.minRange).toBeGreaterThan(1.2 * MOON_RADIUS);
+    expect(r.maxRange).toBeLessThan(0.5 * d);
+  });
+
+  it("lets the lunar site come close, and not much farther than the Moon's size", () => {
+    const r = rangeLimits("lunarSite", d);
+    expect(r.minRange).toBeGreaterThanOrEqual(1_000);
+    expect(r.minRange).toBeLessThanOrEqual(20_000);
+    expect(r.maxRange).toBeGreaterThan(10 * MOON_RADIUS);
+    expect(r.maxRange).toBeLessThan(0.1 * d);
+  });
+});
+
+describe("following the clock", () => {
+  // A subject that moved: turned a quarter about z and carried 1e6 m.
+  const from: Rig = {
+    target: [3.8e8, 0, 0],
+    up: [0, 0, 1],
+    headingRef: [1, 0, 0],
+  };
+  const m = turnZ(Math.PI / 2, [0, 1e6, 0]);
+  const to = placeRig(from, m);
+  const move = (p: number[]) =>
+    [0, 1, 2].map(
+      (i) => m[i]! * p[0]! + m[4 + i]! * p[1]! + m[8 + i]! * p[2]! + m[12 + i]!,
+    );
+
+  it("keeps the camera's heading, pitch and range about the subject", () => {
+    const cam = new Camera();
+    const b = orbitBasis(from);
+    cam.lookAtInFrame(
+      Float64Array.from(from.target),
+      0.7,
+      -0.3,
+      5e6,
+      b.north,
+      b.up,
+    );
+    const f = followRig(cam.position, from.target, from, to, 0.7)!;
+    expect(f.heading).toBeCloseTo(0.7, 12);
+    expect(f.pitch).toBeCloseTo(-0.3, 12);
+    expect(f.range).toBeCloseTo(5e6, 3);
+    close(f.target, to.target, 1e-6);
+    expect(f.frame).toEqual({ up: to.up, headingRef: to.headingRef });
+    // The camera ends where the rigid motion carries it.
+    const after = new Camera();
+    const nb = orbitBasis(f.frame);
+    after.lookAtInFrame(
+      Float64Array.from(f.target),
+      f.heading,
+      f.pitch,
+      f.range,
+      nb.north,
+      nb.up,
+    );
+    close(after.position, move(Array.from(cam.position)), 1e-3);
+  });
+
+  it("carries a panned pivot with the subject", () => {
+    const cam = new Camera();
+    const pivot = [3.8e8 + 2e5, 3e5, 0];
+    const b = orbitBasis(from);
+    cam.lookAtInFrame(Float64Array.from(pivot), 0, -0.5, 1e6, b.north, b.up);
+    const f = followRig(cam.position, pivot, from, to, 0)!;
+    close(f.target, move(pivot), 1e-3);
+    expect(f.range).toBeCloseTo(1e6, 3);
+  });
+
+  it("keeps the heading it had when the camera is straight above the pivot", () => {
+    const cam = { position: [3.8e8, 0, 7e6] };
+    const f = followRig(cam.position, from.target, from, from, 1.25)!;
+    expect(f.heading).toBe(1.25);
+    expect(f.pitch).toBeCloseTo(-(Math.PI / 2 - 1e-3), 12);
+  });
+
+  it("gives up on a camera at the pivot", () => {
+    expect(followRig(from.target, from.target, from, to, 0)).toBeUndefined();
+  });
+});
+
+describe("framing in a rig", () => {
+  const rig: Rig = {
+    target: [1e7, 2e7, -3e7],
+    up: [0, 0.6, 0.8],
+    headingRef: [1, 0, 0],
+  };
+
+  it("looks at the focus from heading, pitch and range in the rig, as the orbit reads them back", () => {
+    const f = rigFraming(rig, 0.4, -0.6, 2.5e6);
+    expect(f.center).toEqual(rig.target);
+    expect(f.range).toBe(2.5e6);
+    const camera = sub(
+      f.center,
+      f.from!.direction.map((v) => -v * f.range),
+    );
+    const pose = orbitPose(camera, rig.target, orbitBasis(rig), 0)!;
+    expect(pose.heading).toBeCloseTo(0.4, 9);
+    expect(pose.pitch).toBeCloseTo(-0.6, 9);
+    expect(pose.range).toBeCloseTo(2.5e6, 3);
+    close(f.from!.up, [0, 0.6, 0.8], 1e-12);
+  });
+});
+
+describe("handing a flight over to its orbit", () => {
+  const rig: Rig = { target: [0, 0, 0], up: [0, 0, 1], headingRef: [1, 0, 0] };
+
+  it("keeps the screen's up when the camera looks straight down the rig's up (stop 5's view)", () => {
+    // Straight down, the screen's up along y, the rig's west (east is
+    // north × up = -y): heading -π/2, so the orbit doesn't turn the view a
+    // quarter at the hand-over.
+    const camera = {
+      position: [0, 0, 1e8],
+      direction: [0, 0, -1],
+      up: [0, 1, 0],
+    };
+    expect(viewHeading(camera, rig)).toBeCloseTo(-Math.PI / 2, 12);
+    const cam = new Camera();
+    const b = orbitBasis(rig);
+    cam.lookAtInFrame(
+      Float64Array.from(rig.target),
+      viewHeading(camera, rig),
+      -(Math.PI / 2 - 1e-3),
+      1e8,
+      b.north,
+      b.up,
+    );
+    expect(dot(cam.up, [0, 1, 0])).toBeGreaterThan(1 - 1e-6);
+  });
+
+  it("is the orbit's own heading for a camera off the vertical", () => {
+    const cam = new Camera();
+    const b = orbitBasis(rig);
+    cam.lookAtInFrame(
+      Float64Array.from(rig.target),
+      -2.1,
+      -0.4,
+      5e6,
+      b.north,
+      b.up,
+    );
+    expect(viewHeading(cam, rig)).toBeCloseTo(-2.1, 9);
+  });
+});
+
+describe("stop 6 from straight above the site", () => {
+  const fov = Math.PI / 3;
+
+  it("frames the whole lunar disk with its limb inside the view, on a wide and a narrow view", () => {
+    for (const aspect of [728 / 680, 1440 / 900, 388 / 700]) {
+      const range = lunarSiteRange(fov, aspect);
+      const radius = Math.asin(MOON_RADIUS / (MOON_RADIUS + range));
+      const half = Math.min(
+        aspect >= 1 ? fov / 2 : Math.atan(Math.tan(fov / 2) * aspect),
+        aspect >= 1 ? Math.atan(Math.tan(fov / 2) / aspect) : fov / 2,
+      );
+      expect(radius).toBeLessThan(0.85 * half);
+      expect(radius).toBeGreaterThan(0.6 * half);
+    }
+  });
+
+  it("is a backdrop distance: thousands of kilometres, not the 100 m that put the triad 400 km off", () => {
+    expect(lunarSiteRange(fov, 1)).toBeGreaterThan(1.5e6);
+  });
+});
+
+describe("Frame content", () => {
+  const none = { kind: "none" } as const;
+
+  it("re-flies the tour stop first", () => {
+    expect(frameTarget("orion", { kind: "frame", id: "MOON_ME" })).toEqual({
+      kind: "tour",
+      id: "orion",
+    });
+  });
+
+  it("then the selected frame or result", () => {
+    expect(frameTarget(undefined, { kind: "frame", id: "MOON_ME" })).toEqual({
+      kind: "frame",
+      id: "MOON_ME",
+    });
+    expect(frameTarget(undefined, { kind: "result", id: "r.1" })).toEqual({
+      kind: "result",
+      id: "r.1",
+    });
+  });
+
+  it("else the opening view", () => {
+    expect(frameTarget(undefined, none)).toEqual({ kind: "opening" });
+  });
+
+  it("answers the F key, without modifiers, outside text fields", () => {
+    const outside = { closest: () => null };
+    const field = { closest: () => ({}) };
+    const key = (k: string, extra: object = {}) => ({
+      key: k,
+      metaKey: false,
+      ctrlKey: false,
+      altKey: false,
+      target: outside,
+      ...extra,
+    });
+    expect(isFrameKey(key("f"))).toBe(true);
+    expect(isFrameKey(key("F"))).toBe(true);
+    expect(isFrameKey(key("g"))).toBe(false);
+    expect(isFrameKey(key("f", { metaKey: true }))).toBe(false);
+    expect(isFrameKey(key("f", { ctrlKey: true }))).toBe(false);
+    expect(isFrameKey(key("f", { altKey: true }))).toBe(false);
+    expect(isFrameKey(key("f", { target: field }))).toBe(false);
+    expect(isFrameKey(key("f", { target: null }))).toBe(true);
+  });
+});
+
+describe("the pivot marker", () => {
+  const camera = {
+    position: Float64Array.from([0, 0, 0]),
+    direction: Float64Array.from([1, 0, 0]),
+    up: Float64Array.from([0, 0, 1]),
+    right: Float64Array.from([0, -1, 0]),
+    fov: Math.PI / 3,
+  };
+
+  it("sits at the pivot's place in the view, in CSS px", () => {
+    expect(pivotPlacement([10, 0, 0], camera, 800, 600)).toEqual({
+      x: 400,
+      y: 300,
+    });
+    const p = pivotPlacement([10, -1, 1], camera, 800, 600)!;
+    expect(p.x).toBeGreaterThan(400);
+    expect(p.y).toBeLessThan(300);
+  });
+
+  it("hides behind the camera and outside the view", () => {
+    expect(pivotPlacement([-10, 0, 0], camera, 800, 600)).toBeUndefined();
+    expect(pivotPlacement([1, 50, 0], camera, 800, 600)).toBeUndefined();
+  });
+});

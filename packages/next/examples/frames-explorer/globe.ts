@@ -299,6 +299,8 @@ export class Globe {
   private readonly labelHost: HTMLElement;
   private emphasis: Emphasis | undefined;
   private flight = 0;
+  /** The flight under way's token (`flight`), until it arrives. */
+  private flying_: number | undefined;
   /** The ground's exposure compensation now (stops; 0 undimmed). */
   private dimmed = 0;
   private dimTimer = 0;
@@ -851,10 +853,12 @@ export class Globe {
   /**
    * Flies to `to`, eased (cubic in and out), 1.2 s plus 0.35 s per decade of
    * distance ratio, 1.2 to 3.5 s (DESIGN.md "Flights"); under reduced
-   * motion, a cut. A new flight, or the user taking the camera, ends it.
+   * motion, a cut. A new flight, or the user taking the camera, ends it;
+   * `done` is called when it arrives, not when it is ended early.
    */
-  flyTo(to: Framing, seconds?: number): void {
+  flyTo(to: Framing, seconds?: number, done?: () => void): void {
     const token = ++this.flight;
+    this.flying_ = token;
     const { view, controller } = this.viewer;
     const cam = view.camera;
     const center = Float64Array.from(to.center);
@@ -878,6 +882,8 @@ export class Globe {
         cam.version++;
       }
       this.viewer.engine.requestRender();
+      this.flying_ = undefined;
+      done?.();
     };
     const reduced =
       typeof matchMedia === "function" &&
@@ -955,6 +961,11 @@ export class Globe {
   /** Stops a flight in progress. */
   stopFlight(): void {
     this.flight++;
+  }
+
+  /** Whether a flight is under way. */
+  get flying(): boolean {
+    return this.flying_ === this.flight;
   }
 
   /**

@@ -1432,10 +1432,92 @@
   font-weight: 500;
   color: var(--stratakit-color-text-neutral-secondary);
 }
+/* The gap's drop, left of the leader: its right end at the point given. */
+.fx-inset-label-end {
+  transform: translate(-100%, -50%);
+}
+/* The part along the line, at the leader's top by the frame's right edge;
+   clear of "rigid" on the narrowest inset (the full text is the caption's). */
+.fx-inset-label-along {
+  max-inline-size: calc(100% - 52px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .fx-inset-leader {
   position: absolute;
   block-size: 1px;
   background: oklch(100% 0 0);
+}
+/*
+ * Frame content (re-center): top left under Dyno's inspector (8 px down,
+ * about 29 px tall), clear of the credits, the caption, the legend and the
+ * stop-4 inset in every layout.
+ */
+.fx-frame {
+  inset-inline-start: var(--stratakit-space-200);
+  inset-block-start: 48px;
+  padding: var(--stratakit-space-50);
+}
+/*
+ * The orbit's pivot while it is dragged: a white ring with crosshair ticks
+ * and a dark outline (it sits over the sky and the ground alike), fading
+ * out once the drag ends. Placed by pivot.ts; never takes the pointer.
+ */
+.fx-pivot {
+  position: absolute;
+  left: 0;
+  top: 0;
+  box-sizing: border-box;
+  inline-size: 20px;
+  block-size: 20px;
+  margin: -10px 0 0 -10px;
+  border: 1.5px solid oklch(100% 0 0);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 1px oklch(0% 0 0 / 0.6),
+    inset 0 0 0 1px oklch(0% 0 0 / 0.6);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 500ms cubic-bezier(0.2, 0, 0, 1) 400ms;
+}
+.fx-pivot::before,
+.fx-pivot::after {
+  content: "";
+  position: absolute;
+  background: oklch(100% 0 0);
+  box-shadow: 0 0 0 1px oklch(0% 0 0 / 0.5);
+}
+/* A dot at the pivot itself. */
+.fx-pivot::before {
+  inset: 50% auto auto 50%;
+  inline-size: 3px;
+  block-size: 3px;
+  margin: -1.5px 0 0 -1.5px;
+  border-radius: 50%;
+}
+/* Ticks out of the ring, left and right, top and bottom (one element: a
+   cross clipped to its arms). */
+.fx-pivot::after {
+  inset: -7px;
+  background:
+    linear-gradient(oklch(100% 0 0), oklch(100% 0 0)) center top / 1.5px 6px
+      no-repeat,
+    linear-gradient(oklch(100% 0 0), oklch(100% 0 0)) center bottom / 1.5px 6px
+      no-repeat,
+    linear-gradient(oklch(100% 0 0), oklch(100% 0 0)) left center / 6px 1.5px
+      no-repeat,
+    linear-gradient(oklch(100% 0 0), oklch(100% 0 0)) right center / 6px 1.5px
+      no-repeat;
+  box-shadow: none;
+  filter: drop-shadow(0 0 1px oklch(0% 0 0 / 0.8));
+}
+.fx-pivot-on {
+  opacity: 1;
+  transition: opacity 120ms cubic-bezier(0.2, 0, 0, 1);
+}
+.fx-pivot-gone {
+  opacity: 0;
+  transition: none;
 }
 .fx-legend-head {
   display: flex;
@@ -1659,6 +1741,10 @@
   .fx-tree-item.fx-on-path::before,
   .fx-tour {
     animation: none;
+  }
+  .fx-pivot,
+  .fx-pivot-on {
+    transition: none;
   }
 }
 

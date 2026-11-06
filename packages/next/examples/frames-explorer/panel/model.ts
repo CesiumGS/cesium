@@ -243,6 +243,8 @@ export interface PanelActions {
   jumpToFlyby(): void;
   /** Flies to a frame, a result's site, or a tour stop. */
   showOnGlobe(target: { frame: string } | { result: string }): void;
+  /** Frame content (F): re-flies the tour stop, else the selection, else the opening view. */
+  frameContent(): void;
   fetchAsset(id: string): void;
   runUserCrs(wkt2: string): void;
   copyReport(): Promise<void>;

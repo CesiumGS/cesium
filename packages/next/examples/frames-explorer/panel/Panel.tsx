@@ -15,7 +15,13 @@ import {
 import { createPortal } from "react-dom";
 import type { StressResult } from "../tests.ts";
 import { Explore } from "./Explore.tsx";
-import { GlobeLegend, NARROW_VIEW, TourCaption, useHudLayout } from "./Hud.tsx";
+import {
+  FrameButton,
+  GlobeLegend,
+  NARROW_VIEW,
+  TourCaption,
+  useHudLayout,
+} from "./Hud.tsx";
 import { tourScaleSwitch } from "./tourScale.ts";
 import type {
   LensChoice,
@@ -222,6 +228,7 @@ export function Panel({ source, view, actions, hud, initialTab }: PanelProps) {
         <>
           {/* On a narrow view the tour's caption takes the bottom; the
               legend comes back when the tour ends. */}
+          <FrameButton onFrame={actions.frameContent} />
           {!(narrow && tour !== undefined) && <GlobeLegend model={model} />}
           {tour !== undefined && model.tour[tour] && (
             <TourCaption
