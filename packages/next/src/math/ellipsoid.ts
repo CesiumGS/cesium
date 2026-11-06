@@ -42,6 +42,9 @@ export class Ellipsoid {
     6356752.3142451793,
   );
 
+  /** The Moon as a sphere of 1,737,400 m, as Cesium Moon's `Ellipsoid.MOON`. */
+  static readonly MOON = new Ellipsoid(1737400.0, 1737400.0, 1737400.0);
+
   readonly radii: Vec3;
   readonly radiiSquared: Vec3;
   readonly oneOverRadii: Vec3;
