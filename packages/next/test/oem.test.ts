@@ -181,6 +181,50 @@ describe("parseOem", () => {
     ).toThrow(/21/);
   });
 
+  it("rejects a negative position variance, naming the line", () => {
+    // c11 is the first number of a block, c22 the third and c33 the sixth.
+    const cases: [string, string, string][] = [
+      ["c11", "1.0\n0.1 2.0", "-1.0\n0.1 2.0"],
+      ["c22", "0.1 2.0\n", "0.1 -2.0\n"],
+      ["c33", "0.2 0.3 3.0\n", "0.2 0.3 -3.0\n"],
+    ];
+    for (const [axis, from, to] of cases) {
+      const text = oem((s) => s.replace(from, to));
+      const bad = text.split("\n").findIndex((l) => /(^| )-\d/.test(l)) + 1;
+      expect(() => parseOem(text, leap)).toThrow(
+        new RegExp(`line ${bad}: negative position variance ${axis}`),
+      );
+    }
+    // Off-diagonal covariances may be negative.
+    expect(() =>
+      parseOem(
+        oem((s) => s.replace("0.1 2.0\n", "-0.1 2.0\n")),
+        leap,
+      ),
+    ).not.toThrow();
+  });
+
+  it("rejects covariance epochs that do not strictly increase across blocks", () => {
+    const block = (epoch: string): string =>
+      `COVARIANCE_START\nEPOCH = ${epoch}\n${COV_ROWS}\nCOVARIANCE_STOP\n\n`;
+    const withBlock = (epoch: string): string =>
+      oem((s) =>
+        s.replace(
+          "META_START\nOBJECT_NAME = ORION\nOBJECT_ID = 2026-001A\nCENTER_NAME = EARTH\nREF_FRAME = EME2000\nTIME_SYSTEM = TT",
+          `${block(epoch)}$&`,
+        ),
+      );
+    // The first block ends at 00:00:30.
+    expect(() => parseOem(withBlock("2026-04-02T00:00:30.000"), leap)).toThrow(
+      /covariance epochs must strictly increase/,
+    );
+    expect(() => parseOem(withBlock("2026-04-02T00:00:10.000"), leap)).toThrow(
+      /covariance epochs must strictly increase/,
+    );
+    const ok = parseOem(withBlock("2026-04-02T00:00:50.000"), leap);
+    expect(ok.segments[0]!.covariances!.epochs).toHaveLength(3);
+  });
+
   it("reads the version and segments", () => {
     expect(parsed.version).toBe("2.0");
     expect(parsed.segments).toHaveLength(2);

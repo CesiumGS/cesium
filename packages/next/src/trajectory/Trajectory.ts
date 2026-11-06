@@ -212,6 +212,9 @@ function mergeSpans(pieces: readonly Piece[]): [number, number][] {
 /** Each trajectory's frame, so a frame can be traced back to its trajectory. */
 const byFrame = new WeakMap<Frame, Trajectory>();
 
+/** What is known of the time scale of a trajectory's coordinates. */
+export type CoordinateScale = "tdb" | "unknown";
+
 /**
  * An object's path through space, from OEM or SPK data. `state` gives its
  * position and velocity in `reference`, in meters and m/s, only where the
@@ -233,6 +236,12 @@ export class Trajectory<N extends string = string> {
   private readonly scratch = new Float64Array(6);
   /** Where the data came from. */
   readonly source: "oem" | "spk";
+  /**
+   * Whether the data's coordinates are known to be TDB-compatible ("tdb") or
+   * their scale is not stated ("unknown", the default). OEM files don't say
+   * which, and an SPK converted from one inherits that.
+   */
+  readonly coordinateScale: CoordinateScale;
   private readonly sigma: number | undefined;
 
   private constructor(
@@ -243,7 +252,14 @@ export class Trajectory<N extends string = string> {
     private readonly leap: LeapSeconds,
     source: "oem" | "spk",
     positionSigma: number | undefined,
+    coordinateScale: CoordinateScale,
   ) {
+    if (coordinateScale !== "tdb" && coordinateScale !== "unknown") {
+      throw new Error(
+        `Trajectory "${name}": coordinateScale must be "tdb" or "unknown", got ${String(coordinateScale)}`,
+      );
+    }
+    this.coordinateScale = coordinateScale;
     if (
       positionSigma !== undefined &&
       !(Number.isFinite(positionSigma) && positionSigma >= 0)
@@ -315,9 +331,10 @@ export class Trajectory<N extends string = string> {
   }
 
   /**
-   * The 1σ RSS position uncertainty in meters at `instant`: from the latest
-   * covariance epoch at or before it in the segment `state` would use,
-   * `sqrt(c11 + c22 + c33)`; failing that, the `positionSigma` option; failing
+   * The 1σ RSS position uncertainty in meters at `instant`: from the
+   * covariance epochs in the segment `state` would use, `sqrt(c11 + c22 +
+   * c33)`, the larger of the latest epoch at or before the instant and the
+   * next one (conservative between epochs); failing that, the `positionSigma` option; failing
    * both, or outside the data, `undefined`. This is an accuracy query, so it
    * never throws.
    */
@@ -343,11 +360,13 @@ export class Trajectory<N extends string = string> {
         }
       }
       if (at >= 0) {
-        // The lower triangle, row by row: c11, c21 c22, c31 c32 c33.
+        // The lower triangle, row by row: c11, c21 c22, c31 c32 c33. Between
+        // two epochs the larger of the two sigmas is the conservative one.
         const v = cov.values;
-        const k = at * 21;
-        const variance = v[k]! + v[k + 2]! + v[k + 5]!;
-        return Math.sqrt(variance * piece.varianceToM2!);
+        const variance = (e: number): number =>
+          v[e * 21]! + v[e * 21 + 2]! + v[e * 21 + 5]!;
+        const next = at + 1 < cov.epochs.length ? variance(at + 1) : 0;
+        return Math.sqrt(Math.max(variance(at), next) * piece.varianceToM2!);
       }
     }
     return this.sigma;
@@ -379,6 +398,12 @@ export class Trajectory<N extends string = string> {
       interpolation?: { method: InterpolationMethod; degree: number };
       /** 1σ RSS position, m, where a segment has no covariance. */
       positionSigma?: number;
+      /**
+       * Whether the coordinates are known to be TDB-compatible; default
+       * "unknown", which adds the coordinate-scale term to an accuracy
+       * statement for data referenced to the Earth-centred inertial frames.
+       */
+      coordinateScale?: CoordinateScale;
       /**
        * The unit of the OEM's covariance values (R7). CCSDS says km, km² for
        * position variances, and that is the default. NASA's Artemis II BET
@@ -430,6 +455,7 @@ export class Trajectory<N extends string = string> {
       frames.data.leapSeconds,
       "oem",
       options.positionSigma,
+      options.coordinateScale ?? "unknown",
     );
   }
 
@@ -449,6 +475,12 @@ export class Trajectory<N extends string = string> {
       j2000: "icrf" | "eme2000";
       /** 1σ RSS position, m. */
       positionSigma?: number;
+      /**
+       * Whether the coordinates are known to be TDB-compatible; default
+       * "unknown", which adds the coordinate-scale term to an accuracy
+       * statement for data referenced to the Earth-centred inertial frames.
+       */
+      coordinateScale?: CoordinateScale;
     },
   ): Trajectory<N> {
     const segments: StateSegment[] = [];
@@ -498,6 +530,7 @@ export class Trajectory<N extends string = string> {
       frames.data.leapSeconds,
       "spk",
       options.positionSigma,
+      options.coordinateScale ?? "unknown",
     );
   }
 }

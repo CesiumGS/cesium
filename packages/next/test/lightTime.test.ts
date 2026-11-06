@@ -153,6 +153,36 @@ describe("solveLightTime", () => {
     expect(Math.abs(delay - closed)).toBeLessThan(1e-9);
   });
 
+  it("keeps the Shapiro delay finite for a path through a body's center", () => {
+    // re + rr - rho is 0 here, up to rounding: the log needs a floor.
+    const state =
+      (...values: number[]) =>
+      (_i: Instant, out = new Float64Array(6)) => {
+        out.set(values);
+        return out;
+      };
+    const sunAtRest = createFrames({
+      ...syntheticFrameData(),
+      ephemeris: {
+        sun: state(0, 0, 0, 0, 0, 0),
+        earth: state(1e13, 0, 0, 0, 0, 0),
+        moon: state(1e13, 1e9, 0, 0, 0, 0),
+      } as unknown as Ephemeris,
+    });
+    for (const x of [1e10, 3e10 / 7, 1.2345678901234e10]) {
+      const transmitter = framePoint(sunAtRest.icrf, [-x, 0, 0]);
+      const receiver = framePoint(sunAtRest.icrf, [x, 0, 0]);
+      const delay =
+        solveLightTime(receiver, transmitter, at(0), "reception", sunAtRest, [
+          "sun",
+        ]).lightTime -
+        solveLightTime(receiver, transmitter, at(0), "reception", sunAtRest, [])
+          .lightTime;
+      expect(Number.isFinite(delay)).toBe(true);
+      expect(delay).toBeGreaterThan(0);
+    }
+  });
+
   it("throws when the emission falls before a trajectory's data", () => {
     const probe = constantVelocity(-100, 100, [1000, 0, 0], [1, 0, 0]);
     const transmitter = framePoint(probe.frame, [0, 0, 0]);

@@ -776,6 +776,18 @@ describe("Trajectory accuracy inputs", () => {
     expect(traj.positionSigma(at(600))).toBeCloseTo(2, 9);
   });
 
+  it("returns the larger sigma between two epochs of a growing covariance", () => {
+    const growing: [string, number, number, number][] = [
+      [isoTdb(120), 1, 1, 2], // 2
+      [isoTdb(360), 4, 9, 36], // 7
+    ];
+    const traj = build(growing, { covarianceUnits: "m" });
+    expect(traj.positionSigma(at(240))).toBeCloseTo(7, 9);
+    expect(traj.positionSigma(at(120))).toBeCloseTo(7, 9);
+    expect(traj.positionSigma(at(360))).toBeCloseTo(7, 9);
+    expect(traj.positionSigma(at(600))).toBeCloseTo(7, 9);
+  });
+
   it("falls back to the option before the first epoch, else undefined", () => {
     expect(build(COVS, { covarianceUnits: "m" }).positionSigma(at(60))).toBe(
       undefined,

@@ -255,7 +255,7 @@ export {
 } from "./measure/measure.ts";
 export type { Leg } from "./measure/doppler.ts";
 export type { AccuracyStatement, AccuracyTerm } from "./measure/accuracy.ts";
-export { surfaceDistance } from "./measure/surface.ts";
+export { surfaceDistance, type SurfaceDistance } from "./measure/surface.ts";
 export type { ShapiroBody } from "./measure/lightTime.ts";
 export { EARTH, MOON, type Body } from "./scene/Body.ts";
 export { frameBias } from "./time/erfa/bias.ts";

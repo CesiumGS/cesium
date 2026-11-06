@@ -177,8 +177,11 @@ export function parseOem(
         if (key === "EPOCH") {
           closeEpoch(n);
           const t = iso(n, value, target.scale).tdb();
-          if (covEpochs.length > 0 && t <= covEpochs[covEpochs.length - 1]!) {
-            fail(n, "covariance epochs must increase");
+          // Strictly increasing across the segment's blocks, not only within one.
+          const before =
+            covEpochs.at(-1) ?? target.seg.covariances?.epochs.at(-1);
+          if (before !== undefined && t <= before) {
+            fail(n, "covariance epochs must strictly increase");
           }
           covEpochs.push(t);
           covPending = 21;
@@ -204,6 +207,13 @@ export function parseOem(
         }
         if (covPending === 0) {
           fail(n, "covariance has more than 21 numbers for an epoch");
+        }
+        // The lower triangle: the position variances c11, c22, c33 are the
+        // 1st, 3rd and 6th of an epoch's 21 numbers.
+        const index = 21 - covPending;
+        if (v < 0 && (index === 0 || index === 2 || index === 5)) {
+          const axis = index === 0 ? "c11" : index === 2 ? "c22" : "c33";
+          fail(n, `negative position variance ${axis} (${v})`);
         }
         covValues.push(v);
         covPending--;

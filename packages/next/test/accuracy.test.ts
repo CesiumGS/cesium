@@ -39,8 +39,12 @@ function spkTrajectory(
     name: string;
     accuracy: "precise" | "approximate";
     positionSigma?: number;
+    coordinateScale?: "tdb" | "unknown";
+    /** SPK frame id: 1 is J2000 (so earthIcrf), 13000 is ITRF. */
+    frame?: number;
   },
 ) {
+  const { frame = 1, ...rest } = options;
   const epochs = range(11, 60);
   const states = new Float64Array(epochs.length * 6);
   for (let i = 0; i < epochs.length; i++) {
@@ -52,7 +56,7 @@ function spkTrajectory(
       {
         target: 1000,
         center: 399,
-        frame: 1,
+        frame,
         type: 13,
         epochs,
         states,
@@ -61,7 +65,7 @@ function spkTrajectory(
     ],
   });
   return Trajectory.fromSpk([file], 1000, frames, {
-    ...options,
+    ...rest,
     j2000: "icrf",
   });
 }
@@ -222,20 +226,53 @@ describe("accuracyOf", () => {
     const scale = r.terms.filter((t) => t.source === "coordinateScale");
     expect(scale).toHaveLength(1);
     expect(scale[0]!.meters).toBeCloseTo(10, 6);
-    // An SPK end has none.
+  });
+
+  const scaleTerms = (r: ReturnType<typeof accuracyOf>) =>
+    r.terms.filter((t) => t.source === "coordinateScale");
+  const at = (traj: Trajectory) => framePoint(traj.frame, [0, 0, 0]);
+  const run = (
+    frames: ReturnType<typeof createFrames>,
+    a: ReturnType<typeof at>,
+    b: ReturnType<typeof at>,
+  ) => accuracyOf(a, b, Instant.fromTdb(100), frames, { signal: false });
+
+  it("adds a coordinate scale term for an SPK end under earthIcrf by default", () => {
+    // The SPK is NAIF's conversion of an OEM, so it inherits the ambiguity.
+    const frames = framesWith(SAMPLE);
     const spk = spkTrajectory(frames, {
       name: "S",
       accuracy: "precise",
       positionSigma: 1,
     });
-    const q = accuracyOf(
-      framePoint(spk.frame, [0, 0, 0]),
-      framePoint(spk.frame, [0, 0, 0]),
-      Instant.fromTdb(100),
-      frames,
-      { signal: false },
-    );
-    expect(q.terms.some((t) => t.source === "coordinateScale")).toBe(false);
+    expect(spk.coordinateScale).toBe("unknown");
+    const scale = scaleTerms(run(frames, at(spk), at(spk)));
+    expect(scale).toHaveLength(2);
+    expect(scale[0]!.meters).toBeCloseTo(2.5e-8 * 1e6, 9);
+  });
+
+  it("leaves the term out when the trajectory says its scale is TDB", () => {
+    const frames = framesWith(SAMPLE);
+    const spk = spkTrajectory(frames, {
+      name: "S",
+      accuracy: "precise",
+      positionSigma: 1,
+      coordinateScale: "tdb",
+    });
+    expect(spk.coordinateScale).toBe("tdb");
+    expect(scaleTerms(run(frames, at(spk), at(spk)))).toHaveLength(0);
+  });
+
+  it("gives an ITRF station SPK no coordinate scale term", () => {
+    const frames = framesWith(SAMPLE);
+    const dss = spkTrajectory(frames, {
+      name: "DSS",
+      accuracy: "precise",
+      positionSigma: 0.01,
+      frame: 13000,
+    });
+    expect(dss.reference).toBe(frames.itrf);
+    expect(scaleTerms(run(frames, at(dss), at(dss)))).toHaveLength(0);
   });
 
   it("adds the ephemeris term only when the ends meet at ICRF", () => {
@@ -253,6 +290,36 @@ describe("accuracyOf", () => {
     expect(rel).toHaveLength(1);
     expect(rel[0]!.meters).toBe(0.03);
     expect(r.meters).toBeDefined();
+  });
+
+  it("states the ephemeris unknown for heliocentric geometry", () => {
+    const frames = framesWith(SAMPLE);
+    const a = framePoint(frames.itrf, [6378137, 0, 0]);
+    const sun = framePoint(frames.hcrs, [1e9, 0, 0]);
+    for (const [x, y] of [
+      [sun, a],
+      [a, sun],
+      [framePoint(frames.icrf, [0, 0, 0]), a],
+    ] as const) {
+      const r = accuracyOf(x, y, instant, frames, { signal: false });
+      const term = r.terms.find((t) => t.source === "ephemeris")!;
+      expect(term.meters).toBeUndefined();
+      expect(term.note).toBe(
+        "heliocentric or barycentric geometry: DE440's absolute accuracy is not stated here",
+      );
+      expect(r.meters).toBeUndefined();
+    }
+    // Earth-Moon geometry, through gcrf, earthIcrf, eme2000 and moonIcrf, keeps 0.01 m.
+    for (const f of [frames.gcrf, frames.earthIcrf, frames.eme2000]) {
+      const r = accuracyOf(
+        framePoint(f, [1e8, 0, 0]),
+        framePoint(frames.moonIcrf, [0, 0, 0]),
+        instant,
+        frames,
+        { signal: false },
+      );
+      expect(r.terms.find((t) => t.source === "ephemeris")!.meters).toBe(0.01);
+    }
   });
 
   it("adds a light-time term when signalling", () => {

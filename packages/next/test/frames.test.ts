@@ -117,6 +117,60 @@ describe("rotationPart", () => {
     expect(maxDiff(rotationPart(mat4Of(l)), rotation)).toBeLessThan(1e-15);
   });
 
+  const times = (a: readonly number[], b: readonly number[]): number[] =>
+    Array.from({ length: 9 }, (_, n) => {
+      const i = Math.floor(n / 3);
+      const j = n % 3;
+      return [0, 1, 2].reduce(
+        (sum, m) => sum + a[3 * i + m]! * b[3 * m + j]!,
+        0,
+      );
+    });
+  const diag = (x: number, y: number, z: number): number[] => [
+    x,
+    0,
+    0,
+    0,
+    y,
+    0,
+    0,
+    0,
+    z,
+  ];
+
+  it("recovers the rotation from a uniform scale of 2", () => {
+    const l = rotation.map((v) => 2 * v);
+    expect(maxDiff(rotationPart(mat4Of(l)), rotation)).toBeLessThan(1e-15);
+  });
+
+  it("gives the polar factor of a non-uniform scale composed with a rotation", () => {
+    const scale = diag(2, 1, 0.5);
+    // R · S has the polar factor R, since S is symmetric positive definite.
+    const rs = rotationPart(mat4Of(times(rotation, scale)));
+    expect(maxDiff(rs, rotation)).toBeLessThan(1e-15);
+    // S · R has a different factor: still a rotation, with Qᵀ(S · R) symmetric.
+    const sr = times(scale, rotation);
+    const q = rotationPart(mat4Of(sr));
+    const qtq = times(
+      [q[0]!, q[3]!, q[6]!, q[1]!, q[4]!, q[7]!, q[2]!, q[5]!, q[8]!],
+      Array.from(q),
+    );
+    expect(maxDiff(qtq, diag(1, 1, 1))).toBeLessThan(1e-15);
+    // Polar: Qᵀ A is symmetric.
+    const p = times(
+      [q[0]!, q[3]!, q[6]!, q[1]!, q[4]!, q[7]!, q[2]!, q[5]!, q[8]!],
+      sr,
+    );
+    expect(Math.abs(p[1]! - p[3]!)).toBeLessThan(1e-14);
+    expect(Math.abs(p[2]! - p[6]!)).toBeLessThan(1e-14);
+    expect(Math.abs(p[5]! - p[7]!)).toBeLessThan(1e-14);
+  });
+
+  it("throws for a reflecting or singular linear part", () => {
+    expect(() => rotationPart(mat4Of(diag(1, 1, -1)))).toThrow(/determinant/);
+    expect(() => rotationPart(mat4Of(diag(1, 1, 0)))).toThrow(/determinant/);
+  });
+
   it("leaves a pure rotation unchanged", () => {
     const out = new Float64Array(9);
     expect(rotationPart(mat4Of(rotation), out)).toBe(out);

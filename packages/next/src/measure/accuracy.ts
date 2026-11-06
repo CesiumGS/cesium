@@ -35,7 +35,7 @@ const EPHEMERIS_M = 0.01;
 const UT1_MEASURED_S = 35e-6;
 /** Measured polar motion, arcsec: 0.1 mas, a conservative call. */
 const POLAR_MEASURED_ARCSEC = 1e-4;
-/** OEM data's TDB-versus-TT ambiguity, as a fraction of the geocentric distance (R7). */
+/** A trajectory's TDB-versus-TT ambiguity (its `coordinateScale` is "unknown"), as a fraction of the geocentric distance (R7). */
 const COORDINATE_SCALE = 2.5e-8;
 /** The selenocentric relativistic terms left unapplied at the lunar surface, m (R2). */
 const RELATIVITY_MOON_M = 0.03;
@@ -136,11 +136,26 @@ export function accuracyOf(
   const warnings: string[] = [];
 
   if (commonAncestor(a.frame, b.frame) === frames.icrf) {
-    terms.push({
-      source: "ephemeris",
-      meters: EPHEMERIS_M,
-      note: "DE440 Earth-Moon fit to lunar laser ranging (Park et al. 2021)",
-    });
+    // 0.01 m is DE440's Earth-Moon fit, so it is claimed only when both ends
+    // are in the Earth or Moon subtrees; anything else (a Sun- or
+    // barycentre-centred point) has no stated absolute accuracy here.
+    const inEarthMoon = (f: Frame): boolean =>
+      isUnder(f, frames.gcrf) ||
+      isUnder(f, frames.earthIcrf) ||
+      isUnder(f, frames.moonIcrf);
+    if (inEarthMoon(a.frame) && inEarthMoon(b.frame)) {
+      terms.push({
+        source: "ephemeris",
+        meters: EPHEMERIS_M,
+        note: "DE440 Earth-Moon fit to lunar laser ranging (Park et al. 2021)",
+      });
+    } else {
+      terms.push({
+        source: "ephemeris",
+        meters: undefined,
+        note: "heliocentric or barycentric geometry: DE440's absolute accuracy is not stated here",
+      });
+    }
   }
 
   const ends: [string, FramePoint][] = [
@@ -164,12 +179,15 @@ export function accuracyOf(
             ? `End ${end}: Trajectory "${trajectory.name}": no position sigma (no covariance, no positionSigma option)${trajectory.accuracy === "approximate" ? "; its accuracy is approximate" : ""}`
             : `End ${end}: Trajectory "${trajectory.name}": position sigma${trajectory.accuracy === "approximate" ? " (approximate trajectory)" : ""}`,
       });
-      if (trajectory.source === "oem") {
+      if (
+        trajectory.coordinateScale === "unknown" &&
+        isUnder(trajectory.reference, frames.earthIcrf)
+      ) {
         const r = convertPoint(point, frames.earthIcrf, instant).position;
         terms.push({
           source: "coordinateScale",
           meters: COORDINATE_SCALE * Math.hypot(r[0]!, r[1]!, r[2]!),
-          note: `End ${end}: Trajectory "${trajectory.name}": OEM coordinates are taken as TDB-compatible, 2.5e-8 of the geocentric distance`,
+          note: `End ${end}: Trajectory "${trajectory.name}": the scale of its coordinates (TDB or TT) is not stated, taken as TDB-compatible: 2.5e-8 of the geocentric distance`,
         });
       }
     }
