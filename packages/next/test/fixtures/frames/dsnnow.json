@@ -1,0 +1,188 @@
+{
+  "credit": "NASA/JPL-Caltech DSN Now, via the Internet Archive",
+  "source": "https://eyes.nasa.gov/dsn/data/dsn.xml",
+  "units": {
+    "uplegRange": "km",
+    "downlegRange": "km",
+    "rtlt": "s",
+    "timeUTC": "ms"
+  },
+  "rows": [
+    {
+      "snapshot": "20260403050749",
+      "timeUTC": 1775192864000,
+      "dish": "DSS24",
+      "uplegRange": 80100,
+      "downlegRange": 80100,
+      "rtlt": 0.53
+    },
+    {
+      "snapshot": "20260403050749",
+      "timeUTC": 1775192864000,
+      "dish": "DSS26",
+      "uplegRange": 80100,
+      "downlegRange": 80100,
+      "rtlt": 0.53
+    },
+    {
+      "snapshot": "20260403050749",
+      "timeUTC": 1775192864000,
+      "dish": "DSS56",
+      "uplegRange": 80100,
+      "downlegRange": 80100,
+      "rtlt": 0.53
+    },
+    {
+      "snapshot": "20260403050749",
+      "timeUTC": 1775192864000,
+      "dish": "DSS54",
+      "uplegRange": 80100,
+      "downlegRange": 80100,
+      "rtlt": 0.53
+    },
+    {
+      "snapshot": "20260405124853",
+      "timeUTC": 1775393327000,
+      "dish": "DSS26",
+      "uplegRange": 341000,
+      "downlegRange": 341000,
+      "rtlt": 2.27
+    },
+    {
+      "snapshot": "20260405124853",
+      "timeUTC": 1775393327000,
+      "dish": "DSS24",
+      "uplegRange": 341000,
+      "downlegRange": 341000,
+      "rtlt": 2.27
+    },
+    {
+      "snapshot": "20260406150830",
+      "timeUTC": 1775488106000,
+      "dish": "DSS26",
+      "uplegRange": 397000,
+      "downlegRange": 397000,
+      "rtlt": 2.65
+    },
+    {
+      "snapshot": "20260406150830",
+      "timeUTC": 1775488106000,
+      "dish": "DSS24",
+      "uplegRange": 397000,
+      "downlegRange": 397000,
+      "rtlt": 2.65
+    },
+    {
+      "snapshot": "20260406150830",
+      "timeUTC": 1775488106000,
+      "dish": "DSS34",
+      "uplegRange": 397000,
+      "downlegRange": 397000,
+      "rtlt": 2.65
+    },
+    {
+      "snapshot": "20260406150830",
+      "timeUTC": 1775488106000,
+      "dish": "DSS43",
+      "uplegRange": 397000,
+      "downlegRange": 397000,
+      "rtlt": 2.65
+    },
+    {
+      "snapshot": "20260406151609",
+      "timeUTC": 1775488567000,
+      "dish": "DSS34",
+      "uplegRange": 397000,
+      "downlegRange": 397000,
+      "rtlt": 2.65
+    },
+    {
+      "snapshot": "20260406151609",
+      "timeUTC": 1775488567000,
+      "dish": "DSS43",
+      "uplegRange": 397000,
+      "downlegRange": 397000,
+      "rtlt": 2.65
+    },
+    {
+      "snapshot": "20260407035623",
+      "timeUTC": 1775534178000,
+      "dish": "DSS56",
+      "uplegRange": 405000,
+      "downlegRange": 405000,
+      "rtlt": 2.7
+    },
+    {
+      "snapshot": "20260407035623",
+      "timeUTC": 1775534178000,
+      "dish": "DSS54",
+      "uplegRange": 405000,
+      "downlegRange": 405000,
+      "rtlt": 2.7
+    },
+    {
+      "snapshot": "20260408130537",
+      "timeUTC": 1775653533000,
+      "dish": "DSS26",
+      "uplegRange": 333000,
+      "downlegRange": 333000,
+      "rtlt": 2.22
+    },
+    {
+      "snapshot": "20260408130537",
+      "timeUTC": 1775653533000,
+      "dish": "DSS24",
+      "uplegRange": 333000,
+      "downlegRange": 333000,
+      "rtlt": 2.22
+    },
+    {
+      "snapshot": "20260408130537",
+      "timeUTC": 1775653533000,
+      "dish": "DSS43",
+      "uplegRange": 333000,
+      "downlegRange": 333000,
+      "rtlt": 2.22
+    },
+    {
+      "snapshot": "20260408130537",
+      "timeUTC": 1775653533000,
+      "dish": "DSS34",
+      "uplegRange": 333000,
+      "downlegRange": 333000,
+      "rtlt": 2.22
+    },
+    {
+      "snapshot": "20260409093133",
+      "timeUTC": 1775727089000,
+      "dish": "DSS24",
+      "uplegRange": 267000,
+      "downlegRange": 267000,
+      "rtlt": 1.78
+    },
+    {
+      "snapshot": "20260409093133",
+      "timeUTC": 1775727089000,
+      "dish": "DSS26",
+      "uplegRange": 267000,
+      "downlegRange": 267000,
+      "rtlt": 1.78
+    },
+    {
+      "snapshot": "20260410223806",
+      "timeUTC": 1775860681000,
+      "dish": "DSS43",
+      "uplegRange": 22300,
+      "downlegRange": 22300,
+      "rtlt": 0.15
+    },
+    {
+      "snapshot": "20260410223806",
+      "timeUTC": 1775860681000,
+      "dish": "DSS34",
+      "uplegRange": 22300,
+      "downlegRange": 22300,
+      "rtlt": 0.15
+    }
+  ]
+}
