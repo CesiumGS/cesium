@@ -44,7 +44,7 @@ export interface ModelSource {
 }
 
 export interface PanelProps {
-  /** The model the page (main.ts) keeps up to date. */
+  /** The model the page keeps up to date (panelModel.ts). */
   source: ModelSource;
   /** The selection and lens the tree, globe and tests share (R14). */
   view: ViewStore;

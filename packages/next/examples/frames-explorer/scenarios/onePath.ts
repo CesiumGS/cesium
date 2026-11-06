@@ -4,7 +4,7 @@
 // at the scenario's time, beside its speed in the other two (Earth-fixed,
 // the Earth's turn alone makes it tens of km/s). Orion is data, not a frame:
 // pinned beside its OEM's reference (EME2000), and the answer's path is its
-// route through the tree to the drawn frame (the owner's tree design). The path itself is drawn on the main thread (main.ts,
+// route through the tree to the drawn frame (the owner's tree design). The path itself is drawn on the main thread (orionLayer.ts,
 // `trajectoryPath`), which follows the clock without a rebuild.
 //
 // Off the checked setup it re-runs live what the catalog's

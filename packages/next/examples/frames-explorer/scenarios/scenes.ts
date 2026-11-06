@@ -1,7 +1,7 @@
 // Each scenario on the globe (main thread): its camera and the orbit rig it
 // hands over to, the triads it draws, how it lights and exposes the globe,
 // what drives the clock, and the limit it says plainly. Plain data with a
-// few pure functions, so the page (main.ts) applies it and the tests read
+// few pure functions, so the page (stage.ts) applies it and the tests read
 // it (test/framesExplorerScenes.test.ts). The tour's stops 1, 2, 5 and 6
 // live on here: earth-turns is stop 2's polar view (stop 1's triads), one-path
 // is stop 5's plane, stand-on-moon is stop 6's site.
@@ -71,7 +71,7 @@ export function earthSiteFrame(
 /** Orion's draw-in frame (one-path's knob). */
 export type DrawnFrame = "GCRF" | "ITRF" | "MOON_ME";
 
-/** A named framing; main.ts places each at the clock's instant. */
+/** A named framing; cameraViews.ts places each at the clock's instant. */
 export type SceneCamera = "northPole" | "earthMoon" | "lunarSite";
 
 export interface SceneSpec {

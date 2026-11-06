@@ -4,7 +4,7 @@
 // orbit their subject with the viewer's orbit controls
 // (`setControls("orbit", …)`), in a frame of the subject's own: a rig, its
 // focus, its up and its heading 0. The Earth's views keep the globe
-// controls, so the ground is a zoom away. Plain functions; main.ts applies them, follows
+// controls, so the ground is a zoom away. Plain functions; cameraRig.ts applies them, follows
 // the clock and draws the pivot marker (pivot.ts). The larger design, camera
 // rigs attached to frames, is plan 5's (CESIUM2_WEBGPU_PLAN.md §13.14).
 import { Camera } from "../../src/scene/Camera.ts";

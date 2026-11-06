@@ -34,7 +34,7 @@ const frames = createFrames({
   warnings: [],
 });
 const FLYBY = Date.parse("2026-04-06T23:00:00Z");
-/** The Moon from the Earth's centre in GCRF, `ms` from the flyby (as main.ts reads it). */
+/** The Moon from the Earth's centre in GCRF, `ms` from the flyby (as cameraViews.ts reads it). */
 const moonAt = (ms: number) => {
   const m = frameTransform(
     frames.moonIcrf,

@@ -12,11 +12,13 @@ describe("the report's package", () => {
     expect(PACKAGE).toBe(`${pkg.name} ${pkg.version}`);
   });
 
-  it("isn't typed into main.ts", () => {
-    const main = readFileSync(
-      new URL("../examples/frames-explorer/main.ts", import.meta.url),
-      "utf8",
-    );
-    expect(main).not.toMatch(/@cesium\/next \d/);
+  it("isn't typed into main.ts or the report's environment", () => {
+    for (const file of ["main.ts", "pageReport.ts"]) {
+      const source = readFileSync(
+        new URL(`../examples/frames-explorer/${file}`, import.meta.url),
+        "utf8",
+      );
+      expect(source).not.toMatch(/@cesium\/next \d/);
+    }
   });
 });
