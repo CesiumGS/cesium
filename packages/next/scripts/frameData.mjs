@@ -6,6 +6,11 @@
 // `loadFrameData`. `npm run setup` calls it (`--frames-span y0-y1`, default
 // 2000-2050); `node scripts/frameData.mjs [y0-y1]` does it alone.
 //
+// It also stores PROJ (proj.js v0.9.2's release builds, PROJ 9.7.1) under
+// `proj/`: the WebAssembly glue and module, the host's native binding,
+// `proj.db` and the GEOID18 grid, each tarball and the grid checked against a
+// pinned SHA-256 (manifest role `proj`).
+//
 // Nothing here is committed. Licenses: the NAIF kernels are checked against
 // the SHA-256 pinned below; each pack's manifest names its source file, that
 // hash and the span, and says the pack is derived from it (packs are never
@@ -22,6 +27,7 @@ import {
 import { homedir } from "node:os";
 import { join } from "node:path";
 import process from "node:process";
+import { gunzipSync } from "node:zlib";
 import { readDaf } from "../src/ephemeris/spk.ts";
 import { writePack } from "../src/ephemeris/pack.ts";
 import { EarthOrientationParameters } from "../src/time/eop.ts";
@@ -48,6 +54,35 @@ export const NAIF_SHA256 = {
   "earthstns_itrf93_260814.bsp":
     "007eb0aad5dd022c6d61bdbfb2395680bd1eb31c49a8637d0b0a1cfbea737c6b",
 };
+
+const PROJ_RELEASE =
+  "https://github.com/mmomtchev/proj.js/releases/download/v0.9.2";
+const PROJ_CDN = "https://cdn.proj.org";
+
+/**
+ * The SHA-256 of each PROJ download, recorded 2026-11-05: proj.js v0.9.2's
+ * release tarballs (PROJ 9.7.1 built to WebAssembly and native), keyed by
+ * tarball name, and the GEOID18 grid (NOAA/NGS, 16,742,155 bytes). Setup
+ * downloads the WebAssembly tarball and the host's native one only; the other
+ * native hashes are pinned so any machine verifies what it fetches.
+ */
+export const PROJ_SHA256 = {
+  "emscripten-wasm32.tar.gz":
+    "ccd990a625607dc24225170632bd96dc67977ba48b14180435b69bf9d173ac88",
+  "darwin-arm64.tar.gz":
+    "0352f888a1923bbd2c3b616a7a7d0c07ab49552fe166a8b60b189173c791c9cb",
+  "darwin-x64.tar.gz":
+    "53edb3458b955ddea531dc9fb5fdf3f37d6dc9dae1800f1fd75145ebafd95145",
+  "linux-x64.tar.gz":
+    "6585d6909b248b0036a582a0ed715e8fc88b864398d7e742dcc1c85d14f3a373",
+  "win32-x64.tar.gz":
+    "90f6e199aa306bfb7f4e6960efd886e340b343c3199ec348c053e93c3b17b90b",
+  "us_noaa_g2018u0.tif":
+    "fa9a407ac7ee3f5a3694008e4bcd09ce9cc250452f0c3b11700a4960340abce2",
+};
+
+const PROJ_CREDIT =
+  "PROJ (MIT) via proj.js (MIT, mmomtchev); proj.db carries the EPSG Dataset, IOGP, https://epsg.org/terms-of-use.html";
 
 const SOURCES = {
   planets: {
@@ -134,6 +169,175 @@ async function ensureNaif(dir, { file, url }, log) {
   checkPinned(file, bytes);
   store(path, bytes);
   return bytes;
+}
+
+/**
+ * The wanted files of a gzipped ustar archive, by entry path → bytes. A minimal
+ * reader (512-byte headers, the ustar "prefix" field, pax/GNU extension
+ * entries skipped): regular files only, and an entry whose name is absolute or
+ * has a ".." segment is refused. Throws if a wanted path is missing.
+ */
+export function extractTar(gz, wanted) {
+  const tar = gunzipSync(gz);
+  const found = new Map();
+  const text = (at, length) => {
+    const field = tar.subarray(at, at + length);
+    const end = field.indexOf(0);
+    return Buffer.from(end < 0 ? field : field.subarray(0, end)).toString(
+      "utf8",
+    );
+  };
+  for (let at = 0; at + 512 <= tar.length;) {
+    if (tar.subarray(at, at + 512).every((b) => b === 0)) {
+      break;
+    }
+    const prefix = text(at + 345, 155);
+    const name = (prefix ? `${prefix}/` : "") + text(at, 100);
+    const size = parseInt(text(at + 124, 12).trim() || "0", 8);
+    const type = String.fromCharCode(tar[at + 156] || 0x30);
+    if (!Number.isFinite(size)) {
+      throw new Error(`tar: bad size in the header of ${name}`);
+    }
+    if (
+      name.startsWith("/") ||
+      /^[A-Za-z]:/.test(name) ||
+      name.split(/[\\/]/).includes("..")
+    ) {
+      throw new Error(`tar: refusing entry "${name}"`);
+    }
+    const start = at + 512;
+    if (start + size > tar.length) {
+      throw new Error(`tar: ${name} runs past the end of the archive`);
+    }
+    if ((type === "0" || type === "\0") && wanted.includes(name)) {
+      found.set(name, Uint8Array.from(tar.subarray(start, start + size)));
+    }
+    at = start + Math.ceil(size / 512) * 512;
+  }
+  for (const name of wanted) {
+    if (!found.has(name)) {
+      throw new Error(`tar: no ${name} in the archive`);
+    }
+  }
+  return found;
+}
+
+/** A pinned download of the PROJ set, checked against PROJ_SHA256. */
+async function downloadPinned(url, name, log) {
+  log(`  ${name}: downloading ${url}`);
+  const bytes = await download(url);
+  const actual = sha256(bytes);
+  if (actual !== PROJ_SHA256[name]) {
+    throw new Error(
+      `${name}: SHA-256 mismatch (expected ${PROJ_SHA256[name]}, got ${actual})`,
+    );
+  }
+  return bytes;
+}
+
+/**
+ * PROJ into `<store>/proj/`: from the WebAssembly tarball, `proj_capi.mjs` and
+ * `proj_capi.wasm` (the browser) and `proj.db`; from the host's native tarball,
+ * `proj_capi.node` (Node); and the GEOID18 grid. A tarball is downloaded only
+ * when a file it provides is missing or doesn't match the manifest's hash.
+ * Returns the manifest entries (role `proj`). An unsupported host gets no
+ * native build (a warning; the browser build still works).
+ */
+async function ensureProj(dir, previous, log) {
+  const proj = join(dir, "proj");
+  mkdirSync(proj, { recursive: true });
+  const known = new Map(
+    previous.filter((e) => e.role === "proj").map((e) => [e.file, e.sha256]),
+  );
+  const intact = (names) =>
+    names.every((name) => {
+      const path = join(proj, name);
+      return (
+        existsSync(path) &&
+        known.get(`proj/${name}`) === sha256(readFileSync(path))
+      );
+    });
+  const entries = [];
+  const record = (name, bytes, tarball, sourceSha256) => {
+    entries.push({
+      file: `proj/${name}`,
+      role: "proj",
+      sha256: sha256(bytes),
+      sourceUrl: tarball,
+      sourceSha256,
+      credit: PROJ_CREDIT,
+    });
+  };
+
+  const archives = [
+    {
+      tarball: "emscripten-wasm32.tar.gz",
+      files: {
+        "lib/binding/emscripten-wasm32/proj_capi.mjs": "proj_capi.mjs",
+        "lib/binding/emscripten-wasm32/proj_capi.wasm": "proj_capi.wasm",
+        "lib/binding/proj/proj.db": "proj.db",
+      },
+    },
+  ];
+  const platform = `${process.platform}-${process.arch}`;
+  const native = `${platform}.tar.gz`;
+  if (native in PROJ_SHA256) {
+    archives.push({
+      tarball: native,
+      files: {
+        [`lib/binding/${platform}/proj_capi.node`]: "proj_capi.node",
+      },
+    });
+  } else {
+    console.warn(
+      `  proj: no native proj.js build for ${platform}; Node cannot load PROJ here (the browser build is fine)`,
+    );
+  }
+  for (const { tarball, files } of archives) {
+    const url = `${PROJ_RELEASE}/${tarball}`;
+    const names = Object.values(files);
+    if (intact(names)) {
+      log(`  proj/${names.join(", ")}: present, verified`);
+      for (const name of names) {
+        record(name, readFileSync(join(proj, name)), url, PROJ_SHA256[tarball]);
+      }
+      continue;
+    }
+    const extracted = extractTar(
+      await downloadPinned(url, tarball, log),
+      Object.keys(files),
+    );
+    for (const [entry, name] of Object.entries(files)) {
+      const bytes = extracted.get(entry);
+      store(join(proj, name), bytes);
+      record(name, bytes, url, PROJ_SHA256[tarball]);
+    }
+  }
+
+  const grid = "us_noaa_g2018u0.tif";
+  const gridPath = join(proj, grid);
+  const gridUrl = `${PROJ_CDN}/${grid}`;
+  let gridBytes;
+  if (existsSync(gridPath)) {
+    gridBytes = readFileSync(gridPath);
+    if (sha256(gridBytes) !== PROJ_SHA256[grid]) {
+      throw new Error(
+        `${grid}: SHA-256 mismatch with the pin (delete ${gridPath} and re-run setup)`,
+      );
+    }
+    log(`  proj/${grid}: present, verified`);
+  } else {
+    gridBytes = await downloadPinned(gridUrl, grid, log);
+    store(gridPath, gridBytes);
+  }
+  entries.push({
+    file: `proj/${grid}`,
+    role: "proj",
+    sha256: sha256(gridBytes),
+    sourceUrl: gridUrl,
+    credit: "NOAA/NGS GEOID18 (public domain), via cdn.proj.org",
+  });
+  return entries;
 }
 
 /**
@@ -254,6 +458,15 @@ export async function ensureFrameData({ span }, log = console.log) {
       credit: source.credit,
     });
   }
+  let previousFiles = [];
+  try {
+    previousFiles = JSON.parse(
+      readFileSync(join(dir, "manifest.json"), "utf8"),
+    ).files;
+  } catch {
+    // No manifest yet (or an unreadable one): everything is fetched again.
+  }
+  const projEntries = await ensureProj(dir, previousFiles, log);
   const leapBytes = await ensureFresh(dir, SOURCES.leapSeconds, log, (text) =>
     LeapSeconds.fromIers(text),
   );
@@ -336,6 +549,7 @@ export async function ensureFrameData({ span }, log = console.log) {
       credit: "IERS, via CelesTrak",
     },
     ...trajectories,
+    ...projEntries,
   ];
   writeFileSync(
     join(dir, "manifest.json"),

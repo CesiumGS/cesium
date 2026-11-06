@@ -35,6 +35,7 @@ const cesium1x =
 const contentTypes: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
   ".js": "text/javascript",
+  ".mjs": "text/javascript",
   ".json": "application/json",
   ".css": "text/css",
   ".png": "image/png",
