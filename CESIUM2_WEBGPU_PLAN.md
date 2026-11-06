@@ -6389,6 +6389,11 @@ out, because none of them changes a result.
     - Browser memory for large grids: PROJ loads whole files into the
       WebAssembly FS (80 MB for EGM2008). Consider cropped regional tiles
       made by setup.
+    - Keep the grid source a configurable base URL, with cdn.proj.org's
+      file layout and catalog format. A hosted service, such as Cesium ion
+      later (owner's suggestion), can then serve the grids, with CORS and
+      possibly cropped tiles, with no engine change. The dev-server cache is
+      only the local-development default.
 - **Plan 4 or later:** `src/frames/frames.ts` imports its constants from
   `src/measure/constants.ts`, so the frames layer depends on measurement.
   Move the shared constants to a neutral module.
