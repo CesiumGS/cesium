@@ -820,6 +820,18 @@ export function addOverlay(
   geometry: Geometry,
   scope: DisposableStack,
 ): () => void {
+  return addOverlayChunks(world, overlayMesh(geometry), scope);
+}
+
+/**
+ * `addOverlay` for chunks `overlayMesh` already made, such as the ones the
+ * compute worker sends (R13).
+ */
+export function addOverlayChunks(
+  world: World,
+  chunks: readonly OverlayChunk[],
+  scope: DisposableStack,
+): () => void {
   const added: { mesh: MeshHandle; draw: DrawHandle }[] = [];
   let removed = false;
   const remove = () => {
@@ -832,7 +844,7 @@ export function addOverlay(
     }
   };
   try {
-    for (const chunk of overlayMesh(geometry)) {
+    for (const chunk of chunks) {
       const mesh = world.addMesh(chunk.mesh);
       try {
         const draw = world.addDraw({

@@ -276,7 +276,7 @@ export {
   type FrameData,
   type FrameDataWarning,
 } from "./ephemeris/loadFrameData.ts";
-export { type LoadProgress } from "./io/readWithProgress.ts";
+export { readWithProgress, type LoadProgress } from "./io/readWithProgress.ts";
 export { Frame, frameTransform } from "./frames/Frame.ts";
 export { rotationPart, toParentMatrix } from "./frames/matrix.ts";
 export {
