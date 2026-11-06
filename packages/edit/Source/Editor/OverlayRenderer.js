@@ -28,6 +28,7 @@ import {
   VertexArray,
 } from "@cesium/engine";
 import { ComponentType } from "@cesium/mesh-editor";
+import MeshEditorStyle from "./MeshEditorStyle.js";
 import TopologyOverlayHooksFS from "../Shaders/TopologyOverlayHooksFS.js";
 import TopologyOverlayHooksVS from "../Shaders/TopologyOverlayHooksVS.js";
 
@@ -99,19 +100,8 @@ import TopologyOverlayHooksVS from "../Shaders/TopologyOverlayHooksVS.js";
  * @ignore
  */
 
-const POINT_SIZE = 6.0;
-const EDGE_WIDTH = 2.0;
 // Points and edges are drawn larger in the pick pass, so they're easier to click.
 const PICK_SIZE = 20.0;
-
-const POINT_COLOR = Color.BLACK;
-const POINT_SELECTED_COLOR = new Color(1.0, 0.48, 0.0, 1.0);
-const EDGE_COLOR = Color.BLACK;
-const EDGE_SELECTED_COLOR = new Color(0.0, 0.78, 1.0, 1.0);
-const FACE_COLOR = new Color(0.8, 0.8, 0.8, 1.0);
-const FACE_SELECTED_COLOR = new Color(1.0, 0.16, 0.58, 1.0);
-const OUTLINE_COLOR = new Color(1.0, 0.63, 0.16, 1.0);
-const OUTLINE_WIDTH = 2.0;
 
 // Points draw over edges, and edges over faces.
 const POINT_DEPTH_BIAS = 0.002;
@@ -270,6 +260,7 @@ class OverlayRenderer {
    * @param {object} options
    * @param {MeshEditorModule} options.module The loaded module, for its shaders and memory.
    * @param {object} options.mesh The mesh whose overlay this draws. Pick objects return it as their primitive.
+   * @param {MeshEditorStyle} [options.style] Style object for the overlay overlay.
    */
   constructor(options) {
     //>>includeStart('debug', pragmas.debug);
@@ -280,14 +271,15 @@ class OverlayRenderer {
 
     this.#module = options.module;
     this.#mesh = options.mesh;
+    const style = options.style ?? new MeshEditorStyle();
 
     const { shaders } = this.#module;
     const { depthBias, point, edge, face } = shaders.uniforms;
 
     // Outline edges and points are centered on the silhouette, and the mesh
     // covers about half of each, so they're twice the outline's width.
-    const getOutlineSize = () => this.#getPixelSize(2.0 * this.outlineWidth);
-    const getOutlineColor = () => this.outlineColor;
+    const getOutlineSize = () => this.#getPixelSize(2.0 * style.outlineWidth);
+    const getOutlineColor = () => style.outlineColor;
 
     this.#pointOverlay = this.#createComponentOverlay({
       componentType: ComponentType.Vertex,
@@ -296,9 +288,9 @@ class OverlayRenderer {
       shaderSources: shaders.point,
       styleUniforms: {
         [depthBias]: () => POINT_DEPTH_BIAS,
-        [point.size]: () => this.#getPixelSize(POINT_SIZE),
-        [point.color]: () => POINT_COLOR,
-        [point.selectedColor]: () => POINT_SELECTED_COLOR,
+        [point.size]: () => this.#getPixelSize(style.pointSize),
+        [point.color]: () => style.pointColor,
+        [point.selectedColor]: () => style.selectedPointColor,
       },
       // Round points fill the notches between edges at the outline's corners.
       outlineUniforms: {
@@ -318,9 +310,9 @@ class OverlayRenderer {
       shaderSources: shaders.edge,
       styleUniforms: {
         [depthBias]: () => EDGE_DEPTH_BIAS,
-        [edge.width]: () => this.#getPixelSize(EDGE_WIDTH),
-        [edge.color]: () => EDGE_COLOR,
-        [edge.selectedColor]: () => EDGE_SELECTED_COLOR,
+        [edge.width]: () => this.#getPixelSize(style.edgeWidth),
+        [edge.color]: () => style.edgeColor,
+        [edge.selectedColor]: () => style.selectedEdgeColor,
       },
       outlineUniforms: {
         [edge.width]: getOutlineSize,
@@ -339,8 +331,8 @@ class OverlayRenderer {
       shaderSources: shaders.face,
       styleUniforms: {
         [depthBias]: () => FACE_DEPTH_BIAS,
-        [face.color]: () => FACE_COLOR,
-        [face.selectedColor]: () => FACE_SELECTED_COLOR,
+        [face.color]: () => style.faceColor,
+        [face.selectedColor]: () => style.selectedFaceColor,
         [face.isPickPass]: () => this.#isPickPass,
       },
       outlineUniforms: undefined,
@@ -373,21 +365,6 @@ class OverlayRenderer {
      * @default false
      */
     this.outlined = false;
-
-    /**
-     * The outline's color.
-     *
-     * @type {Color}
-     */
-    this.outlineColor = Color.clone(OUTLINE_COLOR);
-
-    /**
-     * The outline's width outside the mesh's silhouette, in CSS pixels.
-     *
-     * @type {number}
-     * @default 2.0
-     */
-    this.outlineWidth = OUTLINE_WIDTH;
   }
 
   /**
