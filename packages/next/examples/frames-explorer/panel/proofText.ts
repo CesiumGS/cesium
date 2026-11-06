@@ -72,7 +72,13 @@ export function proofRowText(
     tone: "stale",
     summary:
       following && result
-        ? valueLine(result)
+        ? // The value only: "within" would read as a verdict for an
+          // earlier time (fix 2).
+          result.effect
+          ? quantity(result.effect.value, result.effect.unit)
+          : result.value !== undefined
+            ? quantity(result.value, result.unit)
+            : "following the clock"
         : row.kind === "reference-only"
           ? "its reference applies at the checked setup"
           : "re-running at your setting",

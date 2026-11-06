@@ -68,6 +68,26 @@ describe("composedView", () => {
     }
   });
 
+  it('says why MOON_PA and MOON_ME add nothing in whole words, never a note cut at "et al." (fix 2)', () => {
+    const v = composedView(tree, frames, instant, "ITRF", "MOON_PA")!;
+    const why = new Map(v.zeroAtOrigin.map((z) => [z.edge, z.why]));
+    expect(why.get("MOON_PA")).toBe(
+      "exact by definition for DE440 (its adopted constants)",
+    );
+    expect(why.get("MOON_ME")).toMatch(/^a rotation turns the frame's axes/);
+    for (const w of why.values()) {
+      expect(w).not.toMatch(/ et$|\(Park et$/);
+    }
+    const me = tree.children
+      .flatMap(function all(n): (typeof tree)[] {
+        return [n, ...n.children.flatMap(all)];
+      })
+      .find((n) => n.id === "MOON_ME")!;
+    expect(me.edge.accuracy.short).toBe(
+      "not stated: no published orientation uncertainty",
+    );
+  });
+
   it("is exact for a frame against itself", () => {
     const v = composedView(tree, frames, instant, "ITRF", "ITRF")!;
     expect(v.statement.meters).toBe(0);

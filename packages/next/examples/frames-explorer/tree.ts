@@ -41,6 +41,11 @@ export interface EdgeAccuracy {
    */
   byDefinition?: true;
   note: string;
+  /**
+   * The note's short form, where prose would be cut badly (fix 2): the
+   * walk's "adds nothing" line uses it rather than splitting the note.
+   */
+  short?: string;
 }
 
 export interface TreeNode {
@@ -170,6 +175,7 @@ const BUILT_IN: Record<
     accuracy: {
       byDefinition: true,
       note: "exact by definition: the IAU 2006 frame bias is a set of adopted constants",
+      short: "exact by definition (IAU 2006 adopted constants)",
     },
   }),
   ITRF: (frames, instant) => ({
@@ -184,15 +190,19 @@ const BUILT_IN: Record<
   MOON_ME: () => ({
     kind: "rotation",
     detail: "lunar PCK libration (DE440)",
-    accuracy: unknown(
-      "not stated: DE440's integrated libration angles have no published orientation uncertainty. Its recent lunar laser ranging range residuals are about 1.3 cm rms (Park et al. 2021, AJ 161:105, §5.1), a fit to ranges, not an orientation accuracy; its mean-Earth frame differs from DE421's by up to 0.53 m over 2000–2040 (NAIF moon_de440_250416.tf)",
-    ),
+    accuracy: {
+      short: "not stated: no published orientation uncertainty",
+      ...unknown(
+        "not stated: DE440's integrated libration angles have no published orientation uncertainty. Its recent lunar laser ranging range residuals are about 1.3 cm rms (Park et al. 2021, AJ 161:105, §5.1), a fit to ranges, not an orientation accuracy; its mean-Earth frame differs from DE421's by up to 0.53 m over 2000–2040 (NAIF moon_de440_250416.tf)",
+      ),
+    },
   }),
   MOON_PA: () => ({
     kind: "constant",
     detail: "principal axes from mean Earth / polar axes (fixed rotation)",
     accuracy: {
       byDefinition: true,
+      short: "exact by definition for DE440 (its adopted constants)",
       note: "exact by definition for DE440: adopted constants (Park et al. 2021 §2.4 eq. 19). Its realisation of the mean-Earth frame differs from DE421's by up to 0.53 m (2000–2040) (NAIF moon_de440_250416.tf); the longitude angle is gravity-field limited to about 1″ (about 8 m) (DE421 IOM 335-JW,DB,WF-20080314-001, p. 10)",
     },
   }),

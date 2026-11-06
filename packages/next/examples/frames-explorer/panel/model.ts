@@ -323,6 +323,8 @@ export interface PanelActions {
   backToChecked(): void;
   /** Plays or pauses the clock. */
   setPlaying(on: boolean): void;
+  /** The next selection of result `id` shows it without moving the camera or the overlays. */
+  selectQuietly(id: string): void;
 }
 
 export type { LensChoice, Selection, Tab } from "../selection.ts";

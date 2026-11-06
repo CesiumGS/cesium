@@ -116,14 +116,23 @@ export function Panel({ source, view, actions, hud, initialTab }: PanelProps) {
     setSelection({ kind: "result", id: r.id });
     setEntry("scenarios");
   };
-  const openInVerification = (id: string) => {
+  const showFailure = (id: string) => {
     setLens("all");
     setFrameFilter(undefined);
     setPart("checks");
     setEntry("verification");
     selectResult(id);
   };
-  const showFailure = openInVerification;
+  // From a scenario's proof row: the result selected without flying the
+  // camera, so the scenario's view stays; F frames it on request (fix 2).
+  const openInVerification = (id: string) => {
+    actions.selectQuietly(id);
+    setLens("all");
+    setFrameFilter(undefined);
+    setPart("checks");
+    setEntry("verification");
+    selectResult(id);
+  };
   const copyLink = (s: Selection, message: string) => {
     void navigator.clipboard
       ?.writeText(actions.linkTo(s))
@@ -150,7 +159,7 @@ export function Panel({ source, view, actions, hud, initialTab }: PanelProps) {
         </Tabs.TabList>
         <Tabs.TabPanel
           tabId={tabId("scenarios")}
-          className="fx-tab-panel"
+          className="fx-tab-panel fx-tab-split"
           unmountOnHide
         >
           {scenario ? (

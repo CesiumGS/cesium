@@ -24,6 +24,18 @@ export function formatAnswer(value: number, unit: string): string {
   return unit === "°" ? `${text}°` : `${text} ${unit}`;
 }
 
+/**
+ * The accuracy needs the warning colour: it isn't bounded or isn't stated.
+ * A bounded relative figure ("within 2% of the method") isn't a warning
+ * (fix 2).
+ */
+export function accuracyWarns(answer: ScenarioAnswer): boolean {
+  return (
+    answer.accuracy.meters === undefined &&
+    /^(not bounded|not stated|not known)/i.test(answer.accuracy.note)
+  );
+}
+
 /** "±1.1 m (1σ): measured Earth orientation …", or "Not bounded: …". */
 export function accuracyLine(answer: ScenarioAnswer): string {
   const { meters, note } = answer.accuracy;

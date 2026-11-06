@@ -26,7 +26,7 @@ import {
 import { isFrameKey } from "../orbit.ts";
 import { captionFold, foldReducer } from "./fold.ts";
 import { legendRows } from "./legendRows.ts";
-import { accuracyLine, answerTitle } from "./answerText.ts";
+import { accuracyLine, accuracyWarns, answerTitle } from "./answerText.ts";
 import type { PanelModel, ScenarioPanelView } from "./model.ts";
 
 /** Below this view width the HUD goes compact: legend folded, the caption at the bottom (I18). */
@@ -245,14 +245,15 @@ export function ScenarioCallout({
           )}
           {!fold.bodyHidden && (
             <>
+              {figure === undefined && (
+                // No figure (no data now): the sentence says why.
+                <p className="fx-callout-answer">{a.headline}</p>
+              )}
+              {/* A glance: the paragraph is the panel's (fix 2: the callout
+                  grew over the legend on a shorter view). */}
               <p
-                className={`fx-callout-answer${loading ? " fx-stale" : ""}`}
-                title={a.headline}
-              >
-                {a.headline}
-              </p>
-              <p
-                className={`fx-callout-acc${a.accuracy.meters === undefined ? " fx-unbounded" : ""}`}
+                className={`fx-callout-acc${accuracyWarns(a) ? " fx-unbounded" : ""}`}
+                title={accuracyLine(a)}
               >
                 {accuracyLine(a)}
               </p>

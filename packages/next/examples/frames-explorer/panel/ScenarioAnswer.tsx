@@ -7,6 +7,7 @@
 import { CircularProgress, Link, Typography } from "@mui/material";
 import {
   accuracyLine,
+  accuracyWarns,
   answerTitle,
   publishedText,
   type PublishedView,
@@ -83,9 +84,7 @@ export function ScenarioAnswer({ scenario }: { scenario: ScenarioPanelView }) {
         {scenario.published && <Published p={scenario.published} />}
         <p className="fx-answer-text">{a.headline}</p>
       </div>
-      <p
-        className={`fx-answer-acc${a.accuracy.meters === undefined ? " fx-unbounded" : ""}`}
-      >
+      <p className={`fx-answer-acc${accuracyWarns(a) ? " fx-unbounded" : ""}`}>
         <span className="fx-answer-acc-label">Accuracy</span> {accuracyLine(a)}
       </p>
       {loading && (
