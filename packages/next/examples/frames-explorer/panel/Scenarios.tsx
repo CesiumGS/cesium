@@ -167,7 +167,7 @@ function Detail({
   );
 }
 
-/** The whole tree, uncollapsed, in a dialog over the globe (Escape or Close dismiss it). */
+/** The whole tree, uncollapsed, in a dialog over the page (Escape or Close dismiss it). */
 function ExpandedTree({
   hud,
   tree,
@@ -228,7 +228,7 @@ function ExpandedTree({
     <div className="fx-tree-dialog-scrim" onClick={onClose}>
       <div
         ref={dialog}
-        className="fx-hud fx-tree-dialog"
+        className="fx-tree-dialog"
         role="dialog"
         aria-modal="true"
         aria-labelledby={id}
@@ -239,7 +239,7 @@ function ExpandedTree({
             <h2 id={id} className="fx-tree-dialog-title">
               The whole frame tree
             </h2>
-            <p className="fx-hud-muted">
+            <p className="fx-muted">
               {scenario.title}: every frame, built in and added
             </p>
           </div>
@@ -259,7 +259,9 @@ function ExpandedTree({
         />
       </div>
     </div>,
-    hud,
+    // At page level, as wide as the window allows (fix 2): inside the
+    // design system's root, so its tokens and scheme apply.
+    hud.closest<HTMLElement>(".🥝Root") ?? document.body,
   );
 }
 
@@ -272,7 +274,8 @@ function useMoreBelow(
   const [knobsBelow, setKnobsBelow] = useState(true);
   const [scroller, setScroller] = useState<HTMLElement | null>(null);
   useEffect(() => {
-    const el = anchor.current?.closest<HTMLElement>(".fx-tab-panel") ?? null;
+    const el =
+      anchor.current?.closest<HTMLElement>(".fx-scenarios-scroll") ?? null;
     setScroller(el);
     if (!el) {
       return;
@@ -388,167 +391,174 @@ export function Scenarios({
           : "smooth",
     });
   return (
-    <div className="fx-tab-body fx-scenarios">
-      {/* The strip and the question stay in view as the tab scrolls. */}
-      <div className="fx-scenario-top" ref={top}>
-        <ScenarioStrip scenario={scenario} onSelect={actions.selectScenario} />
-        <div className="fx-scenario-lead">
-          <Typography
-            variant="body-md"
-            render={<h2 />}
-            className="fx-scenario-question"
-          >
-            {scenario.question}
-          </Typography>
-          <button
-            type="button"
-            className={`fx-checked-chip${scenario.atChecked ? "" : " fx-off-checked-chip"}`}
-            onClick={scenario.atChecked ? toKnobs : actions.backToChecked}
-            title={
-              scenario.atChecked
-                ? "The published references apply here"
-                : "Back to the checked setup"
-            }
-          >
-            {scenario.atChecked ? "Checked setup" : "Off checked · Back"}
-          </button>
+    <div className="fx-scenarios-frame">
+      <div className="fx-scenarios-scroll">
+        <div className="fx-tab-body fx-scenarios">
+          {/* The strip and the question stay in view as the tab scrolls. */}
+          <div className="fx-scenario-top" ref={top}>
+            <ScenarioStrip
+              scenario={scenario}
+              onSelect={actions.selectScenario}
+            />
+            <div className="fx-scenario-lead">
+              <Typography
+                variant="body-md"
+                render={<h2 />}
+                className="fx-scenario-question"
+              >
+                {scenario.question}
+              </Typography>
+              <button
+                type="button"
+                className={`fx-checked-chip${scenario.atChecked ? "" : " fx-off-checked-chip"}`}
+                onClick={scenario.atChecked ? toKnobs : actions.backToChecked}
+                title={
+                  scenario.atChecked
+                    ? "The published references apply here"
+                    : "Back to the checked setup"
+                }
+              >
+                {scenario.atChecked ? "Checked setup" : "Off checked · Back"}
+              </button>
+            </div>
+          </div>
+
+          <div className="fx-scenario-body">
+            <section
+              className="fx-section fx-tree-section"
+              aria-labelledby={ids.tree}
+            >
+              <SectionHead
+                id={ids.tree}
+                title="The frame tree"
+                aside={
+                  tree && (
+                    <Button
+                      ref={expandButton}
+                      size="small"
+                      variant="outlined"
+                      startIcon={<Icon href={svgWindowExpand} />}
+                      onClick={() => setExpandedView(true)}
+                    >
+                      Expand
+                    </Button>
+                  )
+                }
+              />
+              <ul className="fx-diagram-key" aria-label="Key">
+                <li>
+                  <span className="fx-key-glyph fx-key-built" aria-hidden />
+                  frame (no data in it)
+                </li>
+                <li>
+                  <span className="fx-key-glyph fx-key-added" aria-hidden />
+                  added by this scenario
+                </li>
+                {scenario.data && (
+                  <li>
+                    <span className="fx-key-card" aria-hidden />
+                    data, pinned to its frame
+                  </li>
+                )}
+                {control && (
+                  <li>
+                    <span className="fx-key-drawing" aria-hidden />
+                    the frame you draw in (click a dashed one)
+                  </li>
+                )}
+                {scenario.path && (
+                  <li>
+                    <span className="fx-key-line" aria-hidden />
+                    {scenario.data ? "the data's route" : "the answer's route"}
+                  </li>
+                )}
+              </ul>
+              {scenario.diagramNote && (
+                <Typography
+                  variant="caption-lg"
+                  color="textSecondary"
+                  render={<p />}
+                >
+                  {scenario.diagramNote}
+                </Typography>
+              )}
+              {tree && keep ? (
+                <TreeDiagram
+                  tree={tree}
+                  path={scenario.path}
+                  keep={keep}
+                  selected={diagramSelection}
+                  onSelect={select}
+                  label={`The frame tree of ${scenario.title}`}
+                  resetKey={scenario.id}
+                  targets={targets}
+                  data={scenario.data}
+                />
+              ) : (
+                <Typography
+                  variant="body-sm"
+                  color="textSecondary"
+                  render={<p />}
+                  role="status"
+                >
+                  {model.treeNote}
+                </Typography>
+              )}
+              {scenario.route && <RouteSteps steps={scenario.route} />}
+              {tree && diagramSelection && (
+                <Detail
+                  model={model}
+                  tree={tree}
+                  selection={diagramSelection}
+                  reference={reference}
+                  setReference={setReference}
+                  actions={actions}
+                  onSelect={select}
+                />
+              )}
+            </section>
+
+            <section className="fx-section" aria-labelledby={ids.answer}>
+              <SectionHead id={ids.answer} title="The answer" />
+              <ScenarioAnswer scenario={scenario} />
+            </section>
+
+            <section
+              className="fx-section"
+              aria-labelledby={ids.knobs}
+              ref={knobsSection}
+            >
+              <SectionHead id={ids.knobs} title="Knobs" />
+              <Knobs
+                scenario={scenario}
+                onKnob={actions.setKnob}
+                onBack={actions.backToChecked}
+                onPlay={actions.setPlaying}
+              />
+            </section>
+
+            <section className="fx-section" aria-labelledby={ids.proof}>
+              <SectionHead id={ids.proof} title="Proof" />
+              <Proof
+                rows={scenario.proof}
+                extras={extras}
+                atChecked={scenario.atChecked}
+                freshness={scenario.freshness}
+                published={
+                  scenario.answer?.published && {
+                    proofId: scenario.answer.published.proofId,
+                    printed: scenario.answer.published.printed,
+                    unit: scenario.answer.published.unit,
+                  }
+                }
+                onOpenResult={onOpenResult}
+                onBack={actions.backToChecked}
+              />
+            </section>
+          </div>
         </div>
       </div>
-
-      <div className="fx-scenario-body">
-        <section
-          className="fx-section fx-tree-section"
-          aria-labelledby={ids.tree}
-        >
-          <SectionHead
-            id={ids.tree}
-            title="The frame tree"
-            aside={
-              tree && (
-                <Button
-                  ref={expandButton}
-                  size="small"
-                  variant="outlined"
-                  startIcon={<Icon href={svgWindowExpand} />}
-                  onClick={() => setExpandedView(true)}
-                >
-                  Expand
-                </Button>
-              )
-            }
-          />
-          <ul className="fx-diagram-key" aria-label="Key">
-            <li>
-              <span className="fx-key-glyph fx-key-built" aria-hidden />
-              frame (no data in it)
-            </li>
-            <li>
-              <span className="fx-key-glyph fx-key-added" aria-hidden />
-              added by this scenario
-            </li>
-            {scenario.data && (
-              <li>
-                <span className="fx-key-card" aria-hidden />
-                data, pinned to its frame
-              </li>
-            )}
-            {control && (
-              <li>
-                <span className="fx-key-drawing" aria-hidden />
-                the frame you draw in (click a dashed one)
-              </li>
-            )}
-            {scenario.path && (
-              <li>
-                <span className="fx-key-line" aria-hidden />
-                {scenario.data ? "the data's route" : "the answer's route"}
-              </li>
-            )}
-          </ul>
-          {scenario.diagramNote && (
-            <Typography
-              variant="caption-lg"
-              color="textSecondary"
-              render={<p />}
-            >
-              {scenario.diagramNote}
-            </Typography>
-          )}
-          {tree && keep ? (
-            <TreeDiagram
-              tree={tree}
-              path={scenario.path}
-              keep={keep}
-              selected={diagramSelection}
-              onSelect={select}
-              label={`The frame tree of ${scenario.title}`}
-              resetKey={scenario.id}
-              targets={targets}
-              data={scenario.data}
-            />
-          ) : (
-            <Typography
-              variant="body-sm"
-              color="textSecondary"
-              render={<p />}
-              role="status"
-            >
-              {model.treeNote}
-            </Typography>
-          )}
-          {scenario.route && <RouteSteps steps={scenario.route} />}
-          {tree && diagramSelection && (
-            <Detail
-              model={model}
-              tree={tree}
-              selection={diagramSelection}
-              reference={reference}
-              setReference={setReference}
-              actions={actions}
-              onSelect={select}
-            />
-          )}
-        </section>
-
-        <section className="fx-section" aria-labelledby={ids.answer}>
-          <SectionHead id={ids.answer} title="The answer" />
-          <ScenarioAnswer scenario={scenario} />
-        </section>
-
-        <section
-          className="fx-section"
-          aria-labelledby={ids.knobs}
-          ref={knobsSection}
-        >
-          <SectionHead id={ids.knobs} title="Knobs" />
-          <Knobs
-            scenario={scenario}
-            onKnob={actions.setKnob}
-            onBack={actions.backToChecked}
-            onPlay={actions.setPlaying}
-          />
-        </section>
-
-        <section className="fx-section" aria-labelledby={ids.proof}>
-          <SectionHead id={ids.proof} title="Proof" />
-          <Proof
-            rows={scenario.proof}
-            extras={extras}
-            atChecked={scenario.atChecked}
-            freshness={scenario.freshness}
-            published={
-              scenario.answer?.published && {
-                proofId: scenario.answer.published.proofId,
-                printed: scenario.answer.published.printed,
-                unit: scenario.answer.published.unit,
-              }
-            }
-            onOpenResult={onOpenResult}
-            onBack={actions.backToChecked}
-          />
-        </section>
-      </div>
-
+      {/* Its own strip under the scroller, never over the content (fix 2). */}
       {more && (
         <div className="fx-more-below">
           <Button

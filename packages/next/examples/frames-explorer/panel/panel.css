@@ -7,7 +7,8 @@
  */
 
 .fx-panel,
-.fx-hud {
+.fx-hud,
+.fx-tree-dialog {
   --fx-celestial: light-dark(#6e44bc, #b298f9);
   --fx-earth: light-dark(#02717a, #3bcddc);
   --fx-moon: light-dark(#525f6f, #bfc8d4);
@@ -1506,7 +1507,7 @@
 .fx-callout .fx-callout-answer,
 .fx-callout .fx-callout-acc {
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -1539,23 +1540,34 @@
  * HUD, which Escape and its Close button dismiss.
  */
 .fx-tree-dialog-scrim {
-  position: absolute;
+  position: fixed;
   inset: 0;
-  z-index: 10;
-  pointer-events: auto;
-  background: oklch(0% 0 0 / 0.45);
+  z-index: 1300;
+  display: grid;
+  place-items: center;
+  padding: var(--stratakit-space-500);
+  background: oklch(0% 0 0 / 0.5);
 }
 .fx-tree-dialog {
-  /* As tall as the tree, no taller than the view (fix 1, item 11). */
-  inset-inline: var(--stratakit-space-400);
-  inset-block-start: var(--stratakit-space-400);
-  max-block-size: calc(100% - 2 * var(--stratakit-space-400));
-  /* Opaque: the tree reads against nothing of the globe behind it. */
-  background: var(--stratakit-color-bg-page-base);
-  backdrop-filter: none;
-  overflow: auto;
+  /* As wide as the window allows and as tall as the tree (fix 2). */
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
   gap: var(--stratakit-space-300);
+  inline-size: fit-content;
+  min-inline-size: min(480px, 100%);
+  max-inline-size: 100%;
+  max-block-size: 100%;
+  overflow: auto;
+  padding: var(--stratakit-space-400);
+  border-radius: var(--stratakit-radius-md);
+  background: var(--stratakit-color-bg-elevation-base);
+  color: var(--stratakit-color-text-neutral-primary);
+  box-shadow: var(--stratakit-shadow-surface-md);
   animation: fx-in 240ms var(--fx-ease) both;
+}
+.fx-tree-dialog .fx-diagram {
+  overflow-x: auto;
 }
 .fx-tree-dialog-head {
   display: flex;
@@ -1759,9 +1771,9 @@
   gap: var(--stratakit-space-500);
 }
 /*
- * The strip and the question, sticky at the top of the tab's scroller: the
- * strip is StrataKit's own tabs (its indicator and selected colour), the
- * question the scenario's lead line, beside a chip for the checked setup.
+ * The picker and the question, sticky at the top of the tab's scroller: the
+ * picker is StrataKit's select, the question the scenario's lead line,
+ * beside a chip for the checked setup.
  */
 .fx-scenario-top {
   position: sticky;
@@ -1779,6 +1791,16 @@
   border-block-end: 1px solid var(--stratakit-color-border-neutral-muted);
 }
 /* The scenario picker's list: wide enough for each title and its question. */
+.fx-scenario-menu .MuiMenuItem-root {
+  align-items: flex-start;
+}
+.fx-scenario-menu .MuiListItemText-primary {
+  font-weight: 600;
+  color: var(--stratakit-color-text-neutral-primary);
+}
+.fx-scenario-menu .MuiListItemText-secondary {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
 .fx-scenario-menu {
   max-inline-size: min(480px, calc(100vw - 32px));
   max-block-size: min(70vh, 560px);
@@ -1822,21 +1844,33 @@
   flex-direction: column;
   gap: var(--stratakit-space-500);
 }
-/* More below: a fade at the scroller's foot and a pill that goes there. */
+/*
+ * The scenarios' own scroller, and under it (not over it) a strip with the
+ * "Knobs and proof" button while there's more below (fix 2: the pill
+ * covered content).
+ */
+.fx-scenarios-frame {
+  flex: 1;
+  min-block-size: 0;
+  display: flex;
+  flex-direction: column;
+}
+.fx-scenarios-scroll {
+  flex: 1;
+  min-block-size: 0;
+  overflow: auto;
+  /* Room for focus rings inside the scroller. */
+  padding: 2px;
+  margin: -2px;
+}
 .fx-more-below {
-  position: sticky;
-  inset-block-end: 0;
-  z-index: 2;
+  flex: none;
   display: flex;
   justify-content: center;
-  margin-block-start: -64px;
-  padding-block: 32px var(--stratakit-space-200);
-  pointer-events: none;
-  background: linear-gradient(
-    to bottom,
-    transparent,
-    var(--stratakit-color-bg-page-base) 70%
-  );
+  padding-block: var(--stratakit-space-150);
+  border-block-start: 1px solid var(--stratakit-color-border-neutral-muted);
+  box-shadow: 0 -10px 12px -10px var(--stratakit-color-border-neutral-base);
+  background: var(--stratakit-color-bg-page-base);
 }
 .fx-more-button {
   pointer-events: auto;
@@ -1944,21 +1978,18 @@
 }
 
 /*
- * The diagram: pills over an SVG of elbows. Docked it is at most 280 px tall
- * (the answer and the knobs stay near) and pans inside; in the Expand
- * dialog it takes the room it needs.
+ * The diagram: pills over an SVG of elbows. As tall as the scenario's
+ * focused tree (data cards included), never a scroll box of its own
+ * vertically: the wheel scrolls the tab (fix 2). Too wide, it pans
+ * sideways.
  */
 .fx-diagram {
   position: relative;
-  overflow: auto;
-  max-block-size: 280px;
+  overflow-x: auto;
+  overflow-y: hidden;
   border-radius: var(--stratakit-radius-md);
   background: var(--stratakit-color-bg-page-depth);
   border: 1px solid var(--stratakit-color-border-neutral-muted);
-  overscroll-behavior: contain;
-}
-.fx-diagram-full {
-  max-block-size: none;
 }
 .fx-diagram-pans {
   /* A soft edge says there's more to pan to. */

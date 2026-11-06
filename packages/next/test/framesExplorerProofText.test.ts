@@ -4,6 +4,7 @@
 import { describe, expect, it } from "vitest";
 import {
   accuracyLine,
+  accuracyWarns,
   answerTitle,
   publishedText,
   formatAnswer,
@@ -151,7 +152,8 @@ describe("a stale evaluation's rows (fix 1, item 1)", () => {
     const t = proofRowText({ kind: "live", result: result() }, {}, "following");
     expect(t.status).toBe("Following the clock");
     expect(t.verdict).toBeUndefined();
-    expect(t.summary).toMatch(/within/);
+    // The value only: "within" would read as a verdict (fix 2).
+    expect(t.summary).not.toMatch(/within|beyond/);
   });
 
   it("keeps a pending row loading whatever the freshness", () => {
@@ -253,5 +255,19 @@ describe("the published comparison under the headline (the owner, fix 1)", () =>
   it("loading: no verdict", () => {
     const t = publishedText({ ...base, state: "loading" });
     expect(t.comparison).not.toMatch(/passes|fails/);
+  });
+});
+
+describe("the accuracy's warning colour (fix 2)", () => {
+  const a = (note: string, meters?: number) => ({
+    label: "",
+    headline: "",
+    accuracy: { note, ...(meters !== undefined && { meters }) },
+  });
+  it("warns for not bounded, not stated or not known, never for a bounded figure", () => {
+    expect(accuracyWarns(a("not bounded: outside Orion's data"))).toBe(true);
+    expect(accuracyWarns(a("not stated: no published uncertainty"))).toBe(true);
+    expect(accuracyWarns(a("within 2% of the method"))).toBe(false);
+    expect(accuracyWarns(a("measured Earth orientation", 0.017))).toBe(false);
   });
 });

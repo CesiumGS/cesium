@@ -2478,6 +2478,8 @@ export function run(context: ExampleContext): ExampleRun {
     return out;
   }
 
+  /** A result to select without flying (Open in Verification from a proof row). */
+  let quietResult: string | undefined;
   let lastSelection = view.get().selection;
   let lastAgainst = view.get().against;
   function onView(): void {
@@ -2542,6 +2544,13 @@ export function run(context: ExampleContext): ExampleRun {
             linking = undefined;
           });
       }
+      return;
+    }
+    // Asked for from a scenario's proof: shown in Verification, the
+    // scenario's camera and overlays left as they are (fix 2).
+    if (quietResult === s.id) {
+      quietResult = undefined;
+      globe.emphasize({ frames: emphasisFrames() });
       return;
     }
     // A result: its overlay on, its frames highlighted, the camera at its site (R14).
@@ -2645,7 +2654,8 @@ export function run(context: ExampleContext): ExampleRun {
         id: "callout:lunar-time",
         text:
           gain !== undefined
-            ? `lunar clock ${gain >= 0 ? "+" : "−"}${Math.abs(gain).toFixed(2)} µs/day against Earth's`
+            ? // Short, so it stays inside the view (fix 2).
+              `lunar clock ${gain >= 0 ? "+" : "−"}${Math.abs(gain).toFixed(2)} µs/day`
             : "lunar clock: computing its rate",
         at: () => globe.triadOrigin(LUNAR_SITE) ?? lunarSiteOrigin(),
         priority: 4,
@@ -2798,6 +2808,8 @@ export function run(context: ExampleContext): ExampleRun {
       sceneClock = undefined;
     }
     clearTimeout(siteFlight);
+    // A switch mid-draw mustn't fly to the old scene's path (fix 2).
+    reframeOrion = false;
     scene = undefined;
     local = [];
     globe.dimGround(false);
@@ -3355,6 +3367,9 @@ export function run(context: ExampleContext): ExampleRun {
     },
     setKnob: (id, value) => host.setKnob(id, value),
     backToChecked: () => host.backToChecked(),
+    selectQuietly: (id) => {
+      quietResult = id;
+    },
     setPlaying: (on) => {
       viewer.clock.mode = on ? "playing" : "paused";
       invalidate();
