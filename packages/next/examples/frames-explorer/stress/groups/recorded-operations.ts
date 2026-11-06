@@ -25,7 +25,7 @@ const geoidGridCase = stressCase(
   "recorded-operations.geoid",
   "recorded-operations",
   "EPSG:6420+6360 records its operation once, with the GEOID18 grid us_noaa_g2018u0.tif in its pipeline",
-  ["proj", "geoid"],
+  ["frames", "proj", "geoid"],
   async (ctx, base) => {
     const frame = EngineeringFrame.create(
       { name: "California zone 3", body: EARTH, crs: CALIFORNIA },

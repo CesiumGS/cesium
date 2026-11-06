@@ -39,6 +39,7 @@ import {
   type StressContext,
   type StressResult,
   fmt,
+  isNeedMissing,
   judgeResult,
   withDefaults,
   messageOf,
@@ -509,8 +510,31 @@ async function boundChecks(
     });
   }
 
-  // 6. The accuracy: a TOWGS84 states none, so it is not bounded (R8).
-  {
+  // 6. The accuracy: a TOWGS84 states none, so it is not bounded (R8). The
+  // measurement reads the frame data (the "frames" need, optional here: the
+  // checks above don't need it, F44).
+  let framesWhy: string | undefined;
+  try {
+    void ctx.frames;
+  } catch (error) {
+    if (!isNeedMissing(error)) {
+      throw error;
+    }
+    framesWhy = error.message;
+  }
+  if (framesWhy !== undefined) {
+    results.push({
+      ...base(
+        "accuracy",
+        "the frame's accuracy as the measurement states it (shown, not judged)",
+      ),
+      pass: false,
+      displayOnly: true,
+      missing: ["frames"],
+      detail: `Needs the frame data, which did not load (${framesWhy}). Run \`npm run setup\`.`,
+      userInput: options.userInput,
+    });
+  } else {
     const m = measure(
       designPoint(frame, design),
       designPoint(frame, [design[0] + 100, design[1], 0]),
@@ -605,8 +629,8 @@ const boundCase = (
   label: string,
   at: readonly [number, number] | undefined,
   registry?: BoundCheckOptions["registry"],
-): StressCase =>
-  stressCase(
+): StressCase => ({
+  ...stressCase(
     `bound-crss.${key}`,
     GROUP,
     `${label} as a WKT2 BOUNDCRS (input exported from a +towgs84 definition): units and factors from the source CRS, the bound Helmert recorded and matching a hand-coded Helmert within 1 mm, round trips within 1e-6 m at three heights, and the shift against PROJ's registry operation`,
@@ -621,7 +645,10 @@ const boundCase = (
         ...(registry && { registry }),
       });
     },
-  );
+  ),
+  // Only the accuracy row reads the frame data (F44).
+  optionalNeeds: ["frames"],
+});
 
 /**
  * A plain EPSG code whose operation is a geocentric Helmert (plan 4a's last

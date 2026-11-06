@@ -13,6 +13,7 @@
 // https://epsg.org/terms-of-use.html).
 import { readWithProgress, type LoadProgress } from "../io/readWithProgress.ts";
 import type { ProjApi } from "./projApi.ts";
+import { isNode, loadNodeProj } from "./projNode.ts";
 
 export type { ProjApi } from "./projApi.ts";
 
@@ -61,11 +62,6 @@ interface Loaded {
 
 const loaded = new Map<string, Promise<Loaded>>();
 
-const isNode = (): boolean =>
-  typeof window === "undefined" &&
-  typeof process !== "undefined" &&
-  !!process.versions?.node;
-
 async function fetchBuffer(
   base: string,
   name: string,
@@ -85,25 +81,7 @@ async function fetchBuffer(
 }
 
 async function loadNode(base: string): Promise<Loaded> {
-  // Variable specifiers keep bundlers from resolving the Node modules.
-  const moduleName = "node:module";
-  const urlName = "node:url";
-  const { createRequire } = (await import(
-    /* @vite-ignore */ moduleName
-  )) as typeof import("node:module");
-  const { fileURLToPath } = (await import(
-    /* @vite-ignore */ urlName
-  )) as typeof import("node:url");
-  const directory = base.startsWith("file:") ? fileURLToPath(base) : base;
-  // Read when the binding initializes, so it comes before the require.
-  process.env.PROJ_DATA = directory;
-  const require = createRequire(import.meta.url);
-  const api = require(`${directory}proj_capi.node`) as ProjApi;
-  // The binding reads PROJ_DATA when its context is first used, not when it
-  // loads, so use it now: a later load of another base then cannot change
-  // where this one looks.
-  api.proj_create("EPSG:4326");
-  return { api: Promise.resolve(api), grids: new Set() };
+  return { api: Promise.resolve(await loadNodeProj(base)), grids: new Set() };
 }
 
 /** Fetches the named files of `base` that `have` lacks, in parallel. */

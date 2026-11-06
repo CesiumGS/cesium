@@ -151,7 +151,7 @@ const sightLineCase = stressCase(
   "below-the-ellipsoid.sight-line",
   "below-the-ellipsoid",
   "A station at h = −200 m and −2000 m sighting a point 20,000 km straight up: the line of sight is clear (the station does not block itself, plan 3's fixed bug), and the same station sighting a point on the far side of the Earth is blocked, by hand geometry",
-  [],
+  ["frames"],
   async (ctx, base) => {
     const t = utc(ctx, MEASURED_AT);
     const f = ctx.frames;

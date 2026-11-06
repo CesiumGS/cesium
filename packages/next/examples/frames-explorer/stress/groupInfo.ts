@@ -73,7 +73,7 @@ export interface GroupInfo {
    * its cases' needs; a test checks it), so the page can say what a card
    * waits for (R9).
    */
-  readonly needs: readonly ("proj" | "geoid" | "orion")[];
+  readonly needs: readonly ("frames" | "proj" | "geoid" | "orion")[];
   /**
    * F27: the accuracy that applies to a result of this group that states no
    * position accuracy, unless the case gives its own.
@@ -83,7 +83,8 @@ export interface GroupInfo {
   readonly compared: Comparison;
 }
 
-const EARTH_FRAMES = ["ICRF", "GCRF", "ITRF"];
+/** The page's California grid node (main.ts places it) and ITRF it hangs under. */
+const CALIFORNIA_SITE = ["ITRF", "engineering:California zone 3"] as const;
 
 const ALL_FRAMES = [
   "ICRF",
@@ -111,7 +112,7 @@ export const GROUP_INFO: readonly GroupInfo[] = [
     name: "Projections",
     question: "Do design coordinates survive the trip to the globe and back?",
     lenses: ["gis", "offshore"],
-    focus: { frames: ["ITRF"], overlay: "designGrid" },
+    focus: { frames: ["ITRF", "MOON_ME"], overlay: "designGrid" },
     accuracyNote: "exact arithmetic: a round trip",
     compared: { kind: "roundTrip", text: ROUND_TRIP },
   },
@@ -121,7 +122,7 @@ export const GROUP_INFO: readonly GroupInfo[] = [
     name: "Units",
     question: "Does the library tell US survey feet from international feet?",
     lenses: ["civil", "bim"],
-    focus: { frames: ["ITRF"], site: "california" },
+    focus: { frames: [...CALIFORNIA_SITE], site: "california" },
     accuracyNote: "exact arithmetic: unit definitions",
     compared: {
       kind: "formula",
@@ -134,7 +135,11 @@ export const GROUP_INFO: readonly GroupInfo[] = [
     name: "Site grids",
     question: "Do rotated and scaled site grids land where they should?",
     lenses: ["civil", "bim"],
-    focus: { frames: ["ITRF"], overlay: "designGrid", site: "california" },
+    focus: {
+      frames: [...CALIFORNIA_SITE],
+      overlay: "designGrid",
+      site: "california",
+    },
     accuracyNote: "exact arithmetic: the site formula",
     compared: {
       kind: "formula",
@@ -143,11 +148,11 @@ export const GROUP_INFO: readonly GroupInfo[] = [
   },
   {
     id: "recorded-operations",
-    needs: ["proj", "geoid"],
+    needs: ["frames", "proj", "geoid"],
     name: "Recorded operations",
     question: "Is the datum operation fixed, with its grids accounted for?",
     lenses: ["bim", "offshore"],
-    focus: { frames: ["ITRF"], site: "california" },
+    focus: { frames: [...CALIFORNIA_SITE], site: "california" },
     accuracyNote: "the recorded operation itself (pipeline and grids)",
     compared: {
       kind: "independent",
@@ -156,7 +161,7 @@ export const GROUP_INFO: readonly GroupInfo[] = [
   },
   {
     id: "frame-tree",
-    needs: [],
+    needs: ["frames"],
     name: "Frame tree",
     question:
       "Do the frames agree with each other however you go between them?",
@@ -170,12 +175,12 @@ export const GROUP_INFO: readonly GroupInfo[] = [
   },
   {
     id: "time",
-    needs: [],
+    needs: ["frames"],
     name: "Time",
     question:
       "Is time continuous through leap seconds, and honest at the tables' ends?",
     lenses: ["space", "timing"],
-    focus: { frames: EARTH_FRAMES },
+    focus: { frames: ["GCRF", "ITRF"] },
     accuracyNote: "exact arithmetic: time scales",
     compared: {
       kind: "formula",
@@ -188,7 +193,10 @@ export const GROUP_INFO: readonly GroupInfo[] = [
     name: "Trajectory",
     question: "Is Orion's path used only where there is data?",
     lenses: ["space"],
-    focus: { frames: ["EME2000", "MOON_ME"], overlay: "trajectoryPath" },
+    focus: {
+      frames: ["EME2000", "MOON_ICRF", "MOON_ME"],
+      overlay: "trajectoryPath",
+    },
     accuracyNote: "the OEM's own coverage and covariance",
     compared: {
       kind: "error",
@@ -197,11 +205,15 @@ export const GROUP_INFO: readonly GroupInfo[] = [
   },
   {
     id: "measurement",
-    needs: ["proj", "geoid"],
+    needs: ["frames", "proj", "geoid"],
     name: "Measurement",
     question: "Do design measurements agree with distances on the ground?",
     lenses: ["civil"],
-    focus: { frames: ["ITRF"], overlay: "designGrid", site: "california" },
+    focus: {
+      frames: [...CALIFORNIA_SITE],
+      overlay: "designGrid",
+      site: "california",
+    },
     accuracyNote: "exact arithmetic: the design geometry",
     compared: {
       kind: "formula",
@@ -266,7 +278,6 @@ export const GROUP_INFO: readonly GroupInfo[] = [
     name: "Coordinate epoch",
     question: "How far do coordinates move between epochs?",
     lenses: ["gis", "av"],
-    focus: { frames: ["ITRF"] },
     accuracyNote: "published example ± its rounding",
     compared: {
       kind: "published",
@@ -275,7 +286,7 @@ export const GROUP_INFO: readonly GroupInfo[] = [
   },
   {
     id: "axes-and-the-antimeridian",
-    needs: ["proj"],
+    needs: ["frames", "proj"],
     name: "Axes and the antimeridian",
     question: "Are axis order and the 180° meridian handled?",
     lenses: ["gis"],
@@ -292,7 +303,19 @@ export const GROUP_INFO: readonly GroupInfo[] = [
     name: "Space",
     question: "Do light time, Doppler and line of sight match the references?",
     lenses: ["space"],
-    focus: { frames: ["ITRF", "EME2000", "MOON_ME"] },
+    focus: {
+      frames: [
+        "ICRF",
+        "HCRS",
+        "GCRF",
+        "ITRF",
+        "EARTH_ICRF",
+        "EME2000",
+        "MOON_ICRF",
+        "MOON_ME",
+        "MOON_PA",
+      ],
+    },
     accuracyNote: "SPICE fixture, plan 3's tolerances",
     compared: {
       kind: "independent",
@@ -307,7 +330,6 @@ export const GROUP_INFO: readonly GroupInfo[] = [
     question:
       "Which datum operation was chosen, and what were the alternatives?",
     lenses: ["gis", "offshore"],
-    focus: { frames: ["ITRF"] },
     accuracyNote: "the EPSG registry's stated accuracies",
     compared: {
       kind: "published",
@@ -333,7 +355,6 @@ export const GROUP_INFO: readonly GroupInfo[] = [
     name: "Plate motion",
     question: "How fast does a map go stale as the plates move?",
     lenses: ["av"],
-    focus: { frames: ["ITRF"] },
     accuracyNote: "published manual values ± their rounding",
     compared: {
       kind: "published",
@@ -342,7 +363,7 @@ export const GROUP_INFO: readonly GroupInfo[] = [
   },
   {
     id: "below-the-ellipsoid",
-    needs: ["proj"],
+    needs: ["frames", "proj"],
     name: "Below the ellipsoid",
     question: "Do scale factors and sight lines work below the ellipsoid?",
     lenses: ["civil"],
@@ -359,7 +380,7 @@ export const GROUP_INFO: readonly GroupInfo[] = [
     name: "Heights and WGS84",
     question: "Which height, and which WGS84, is this?",
     lenses: ["civil", "gis", "av"],
-    focus: { frames: ["ITRF"] },
+    focus: { frames: [...CALIFORNIA_SITE] },
     accuracyNote: "datasheet values ± half their last digit",
     compared: {
       kind: "published",
@@ -381,7 +402,7 @@ export const GROUP_INFO: readonly GroupInfo[] = [
   },
   {
     id: "time-scales",
-    needs: [],
+    needs: ["frames"],
     name: "Time scales",
     question: "Are the GPS, TAI, TT and UTC offsets exact?",
     lenses: ["timing"],
@@ -393,11 +414,11 @@ export const GROUP_INFO: readonly GroupInfo[] = [
   },
   {
     id: "lunar-time",
-    needs: [],
+    needs: ["frames"],
     name: "Lunar time",
     question: "How much faster does a clock on the Moon tick?",
     lenses: ["space", "timing"],
-    focus: { frames: ["Lunar south-pole site"] },
+    focus: { frames: ["ICRF", "ITRF", "MOON_ME"] },
     accuracyNote: "Ashby & Patla (2024), within 2%",
     compared: {
       kind: "published",

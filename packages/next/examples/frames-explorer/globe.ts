@@ -299,7 +299,8 @@ export class Globe {
   private readonly labelHost: HTMLElement;
   private emphasis: Emphasis | undefined;
   private flight = 0;
-  private dimmed = false;
+  /** The ground's exposure compensation now (stops; 0 undimmed). */
+  private dimmed = 0;
   private dimTimer = 0;
 
   constructor(
@@ -936,15 +937,16 @@ export class Globe {
   }
 
   /**
-   * The darker ground (DESIGN.md "Lines"): exposure compensation −0.6 dims
-   * the lit globe while the unlit lines stay at full strength; eased over
-   * 0.6 s, restored the same way.
+   * The darker ground (DESIGN.md "Lines"): exposure compensation −0.6 (`true`,
+   * or the stops given) dims the lit globe while the unlit lines stay at full
+   * strength; eased over 0.6 s, restored the same way.
    */
-  dimGround(on: boolean): void {
-    if (on === this.dimmed) {
+  dimGround(on: boolean | number): void {
+    const target = typeof on === "number" ? on : on ? -0.6 : 0;
+    if (target === this.dimmed) {
       return;
     }
-    this.dimmed = on;
+    this.dimmed = target;
     cancelAnimationFrame(this.dimTimer);
     const { view } = this.viewer;
     const exposure = view.exposure;
@@ -952,7 +954,7 @@ export class Globe {
       return;
     }
     const from = exposure.compensation ?? 0;
-    const to = on ? -0.6 : 0;
+    const to = target;
     const start = performance.now();
     const step = (now: number) => {
       const u = Math.min(1, (now - start) / 600);

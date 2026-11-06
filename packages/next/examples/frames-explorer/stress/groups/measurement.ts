@@ -34,7 +34,7 @@ const gridToGroundCase = stressCase(
   "measurement.grid-to-ground",
   "measurement",
   "A 10,000 ftUS design line on California zone 3 (site scale 1.0000375): design distance × site scale × metres per foot ÷ mean combined factor is the true distance, within 0.01 m",
-  ["proj", "geoid"],
+  ["frames", "proj", "geoid"],
   async (ctx, base) => {
     const frame = EngineeringFrame.create(
       {
@@ -171,7 +171,7 @@ const designVsItrfCase = stressCase(
   "measurement.design-vs-itrf",
   "measurement",
   "A design point measured to another point gives the same distance as the design point fixed in ITRF, within 1e-9 m",
-  ["proj", "geoid"],
+  ["frames", "proj", "geoid"],
   async (ctx, base) => {
     const frame = EngineeringFrame.create(
       {

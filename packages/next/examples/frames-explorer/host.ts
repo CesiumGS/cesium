@@ -45,7 +45,7 @@ import {
   type ComposedView,
   type Reference,
 } from "./panel/model.ts";
-import { GEOID, messageOf } from "./stress/runner.ts";
+import { GEOID, Needs, messageOf } from "./stress/runner.ts";
 import { buildTree, type TreeNode } from "./tree.ts";
 import { frameTransform } from "../../src/frames/Frame.ts";
 import {
@@ -56,8 +56,8 @@ import {
   runStress,
   type Fingerprint,
   type StoreManifest,
+  type DataContext,
   type StressCase,
-  type StressContext,
   type StressResult,
 } from "./tests.ts";
 import {
@@ -105,11 +105,13 @@ export type ProgressReport = (
 ) => void;
 
 /**
- * Makes the worker's stress context: loads the frame data, and gives loaders
- * for PROJ, GEOID18 and Orion that report their bytes through `report`. A
- * loader throws `MissingDataError` for data the store doesn't have.
+ * Makes the worker's data context: loaders for the frame data, PROJ, GEOID18
+ * and Orion (or the data itself, already in hand) that report their bytes
+ * through `report`. Nothing is fetched until a loader is called, so a check
+ * that needs no frame data runs without it (R5, F44). A loader throws
+ * `MissingDataError` for data the store doesn't have.
  */
-export type MakeContext = (report: ProgressReport) => Promise<StressContext>;
+export type MakeContext = (report: ProgressReport) => Promise<DataContext>;
 
 export interface HostOptions {
   /** The catalog (default `STRESS_CASES`). */
@@ -174,6 +176,7 @@ const yielding = (cases: readonly StressCase[]): StressCase[] =>
     group: c.group,
     title: c.title,
     needs: c.needs,
+    ...(c.optionalNeeds !== undefined && { optionalNeeds: c.optionalNeeds }),
     ...(c.cites !== undefined && { cites: c.cites }),
     async run(ctx) {
       try {
@@ -331,37 +334,60 @@ export function createHost(
   }
 
   interface Loaded {
-    readonly raw: StressContext;
+    readonly raw: DataContext;
     /** The context the runner gets: its loaders report their state. */
-    readonly ctx: StressContext;
+    readonly ctx: DataContext;
   }
 
   function loadItem(
-    raw: StressContext,
+    raw: DataContext,
+    item: "frames",
+    id?: number,
+  ): Promise<Frames>;
+  function loadItem(
+    raw: DataContext,
     item: "proj",
     id?: number,
   ): Promise<ProjApi>;
   function loadItem(
-    raw: StressContext,
+    raw: DataContext,
     item: "orion",
     id?: number,
   ): Promise<Trajectory>;
   function loadItem(
-    raw: StressContext,
+    raw: DataContext,
     item: "geoid",
     id?: number,
   ): Promise<void>;
-  /** An item of `raw` through `track`; GEOID18 loads PROJ first. */
+  /**
+   * An item of `raw` through `track`; GEOID18 loads PROJ first, and Orion
+   * the frame data (the trajectory is placed in the frame tree).
+   */
   async function loadItem(
-    raw: StressContext,
-    item: "proj" | "orion" | "geoid",
+    raw: DataContext,
+    item: "frames" | "proj" | "orion" | "geoid",
     id?: number,
   ): Promise<unknown> {
     switch (item) {
+      case "frames":
+        return (
+          raw.frames ??
+          track(
+            "frames",
+            () =>
+              raw.loadFrames?.() ??
+              Promise.reject(new MissingDataError("no frame data was given")),
+            id,
+          )
+        );
       case "proj":
         return raw.proj ?? track("proj", () => raw.loadProj(), id);
       case "orion":
-        return raw.orion ?? track("orion", () => raw.loadOrion(), id);
+        if (raw.orion !== undefined) {
+          return raw.orion;
+        }
+        await loadItem(raw, "frames");
+        return track("orion", () => raw.loadOrion(), id);
       case "geoid": {
         await loadItem(raw, "proj");
         // Without a loader PROJ finds the grid itself (Node): nothing to fetch.
@@ -373,26 +399,39 @@ export function createHost(
     }
   }
 
-  function context(id?: number): Promise<Loaded> {
-    return track(
-      "frames",
-      async () => {
-        const raw = await makeContext(report);
-        const ctx: StressContext = {
-          frames: raw.frames,
+  /**
+   * The data context, made once (a failed make is tried again next time).
+   * Making it fetches nothing: each item loads when first asked for.
+   */
+  let made: Promise<Loaded> | undefined;
+  function context(): Promise<Loaded> {
+    if (made === undefined) {
+      const attempt = makeContext(report).then((raw): Loaded => ({
+        raw,
+        ctx: {
+          ...(raw.frames !== undefined && { frames: raw.frames }),
           ...(raw.proj !== undefined && { proj: raw.proj }),
           ...(raw.orion !== undefined && { orion: raw.orion }),
           ...(raw.manifest !== undefined && { manifest: raw.manifest }),
+          ...(raw.loadManifest !== undefined && {
+            loadManifest: () => raw.loadManifest!(),
+          }),
+          loadFrames: () => loadItem(raw, "frames"),
           loadProj: () => loadItem(raw, "proj"),
           loadOrion: () => loadItem(raw, "orion"),
           ...(raw.loadGeoid !== undefined && {
             loadGeoid: () => loadItem(raw, "geoid"),
           }),
-        };
-        return { raw, ctx };
-      },
-      id,
-    );
+        },
+      }));
+      made = attempt;
+      attempt.catch(() => {
+        if (made === attempt) {
+          made = undefined;
+        }
+      });
+    }
+    return made;
   }
 
   async function load(item: DataItem, id: number): Promise<void> {
@@ -403,13 +442,10 @@ export function createHost(
     };
     let loaded: Loaded;
     try {
-      loaded = await context(item === "frames" ? id : undefined);
+      loaded = await context();
     } catch (error) {
       answer(isMissing(error) ? "missing" : "error", {
-        detail:
-          item === "frames"
-            ? messageOf(error)
-            : `needs the frame data, which did not load: ${messageOf(error)}`,
+        detail: messageOf(error),
       });
       return;
     }
@@ -421,11 +457,18 @@ export function createHost(
     try {
       switch (item) {
         case "frames":
+          await loadItem(raw, "frames", id);
           break;
         case "proj":
           await loadItem(raw, "proj", id);
           break;
         case "orion":
+          try {
+            await loadItem(raw, "frames");
+          } catch (error) {
+            failed(error, "needs the frame data, which did not load: ");
+            return;
+          }
           await loadItem(raw, "orion", id);
           break;
         case "geoid":
@@ -611,7 +654,7 @@ export function createHost(
           );
         }
         const orion = await loadItem(loaded.raw, "orion");
-        const { frames } = loaded.raw;
+        const frames = await loadItem(loaded.raw, "frames");
         const style = p.color !== undefined ? { color: p.color } : {};
         if (p.adaptive !== undefined) {
           const { sampling, positions, colors } = adaptivePath(
@@ -672,7 +715,7 @@ export function createHost(
     try {
       const loaded = await context();
       const orion = await loadItem(loaded.raw, "orion");
-      const { frames } = loaded.raw;
+      const frames = await loadItem(loaded.raw, "frames");
       const instant = Instant.fromTdb(at);
       const tree = buildTree(frames, { trajectories: [orion] }, instant);
       const find = (n: TreeNode): TreeNode | undefined =>
@@ -753,7 +796,13 @@ export function createHost(
             // failed, and the item's state says why.
             await loadItem(raw, "geoid").catch(() => {});
           }
-          for (const result of await boundCrsChecks(ctx, wkt2, label)) {
+          // The frame data where it loads (only the accuracy row reads it,
+          // F44); boundCrsChecks loads PROJ itself, and says if it can't.
+          const met = await new Needs(ctx).meet([], ["frames"]);
+          if ("missing" in met) {
+            throw new MissingDataError(met.reasons.join(" "));
+          }
+          for (const result of await boundCrsChecks(met.ctx, wkt2, label)) {
             if (signal.aborted) {
               break;
             }
@@ -848,28 +897,53 @@ async function fetchChecked(
 const FRAME_ROLES: ReadonlySet<string> = new Set(FRAME_DATA_ROLES);
 
 /**
- * The worker's data from the frames store served at `base` (R6, R9): the frame
- * data at once; PROJ (its WebAssembly and `proj.db`) from `base`'s `proj/`
- * when a case or overlay needs it; GEOID18 only for one that needs it; the
- * Artemis II OEM only for Orion. Each reports its bytes, summed over its
- * files, with a total once every file has stated its size. Data that
- * manifest.json doesn't list, or a store that isn't served, is a
+ * The worker's data from the frames store served at `base` (R6, R9): each
+ * item when it's first asked for (F44: a check that needs no frame data
+ * doesn't wait for it, or fail without it). The frame data when a case,
+ * overlay or Orion needs it; PROJ (its WebAssembly and `proj.db`) from
+ * `base`'s `proj/` when a case or overlay needs it; GEOID18 only for one
+ * that needs it; the Artemis II OEM only for Orion. Each reports its bytes,
+ * summed over its files, with a total once every file has stated its size.
+ * Data that manifest.json doesn't list, or a store that isn't served, is a
  * `MissingDataError` with the setup hint.
  */
 export function browserContext(base = "/frames-data/"): MakeContext {
   const root = base.endsWith("/") ? base : `${base}/`;
   return async (report) => {
-    const manifest = await fetchManifest(root);
-    const listed = new Map(manifest.files.map((f) => [f.file, f]));
-    const roles = (manifest.files as readonly { file: string; role?: string }[])
-      .filter((f) => f.role !== undefined && FRAME_ROLES.has(f.role))
-      .map((f) => f.file);
-    const expected: Record<DataItem, readonly string[]> = {
-      frames: roles,
-      proj: ["proj_capi.wasm", "proj.db"],
-      geoid: [GEOID],
-      orion: [ORION_OEM],
+    /** Loads once; a failure is tried again on the next call. */
+    const once = <T>(load: () => Promise<T>): (() => Promise<T>) => {
+      let p: Promise<T> | undefined;
+      return () => {
+        if (p === undefined) {
+          const attempt = load();
+          p = attempt;
+          attempt.catch(() => {
+            if (p === attempt) {
+              p = undefined;
+            }
+          });
+        }
+        return p;
+      };
     };
+    const store = once(async () => {
+      const manifest = await fetchManifest(root);
+      return {
+        manifest,
+        listed: new Map(manifest.files.map((f) => [f.file, f])),
+        roles: (manifest.files as readonly { file: string; role?: string }[])
+          .filter((f) => f.role !== undefined && FRAME_ROLES.has(f.role))
+          .map((f) => f.file),
+      };
+    });
+    let roles: readonly string[] = [];
+    const expected = (item: DataItem): readonly string[] =>
+      ({
+        frames: roles,
+        proj: ["proj_capi.wasm", "proj.db"],
+        geoid: [GEOID],
+        orion: [ORION_OEM],
+      })[item];
     const received = new Map<
       DataItem,
       Map<string, { received: number; total: number | undefined }>
@@ -885,7 +959,7 @@ export function browserContext(base = "/frames-data/"): MakeContext {
       files.set(file, { received: bytes, total });
       let sum = 0;
       let size = 0;
-      let known = expected[item].every((f) => files.has(f));
+      let known = expected(item).every((f) => files.has(f));
       for (const f of files.values()) {
         sum += f.received;
         size += f.total ?? 0;
@@ -893,7 +967,8 @@ export function browserContext(base = "/frames-data/"): MakeContext {
       }
       report(item, sum, known ? size : undefined);
     };
-    const need = (what: string, files: readonly string[]) => {
+    const need = async (what: string, files: readonly string[]) => {
+      const { listed } = await store();
       for (const file of files) {
         if (!listed.has(file)) {
           throw new MissingDataError(
@@ -901,20 +976,23 @@ export function browserContext(base = "/frames-data/"): MakeContext {
           );
         }
       }
+      return listed;
     };
-
-    const data = await loadFrameData(root, (file, bytes, total) =>
-      progress("frames", file, bytes, total),
-    );
-    const frames: Frames = createFrames(data);
+    const loadFrames = once(async () => {
+      roles = (await store()).roles;
+      const data = await loadFrameData(root, (file, bytes, total) =>
+        progress("frames", file, bytes, total),
+      );
+      return createFrames(data);
+    });
     const projBase = `${root}proj/`;
     const onProj: LoadProgress = (file, bytes, total) =>
       progress(file === GEOID ? "geoid" : "proj", file, bytes, total);
     return {
-      frames,
-      manifest,
+      loadFrames,
+      loadManifest: async () => (await store()).manifest,
       loadProj: async () => {
-        need("PROJ", [
+        await need("PROJ", [
           "proj/proj_capi.mjs",
           "proj/proj_capi.wasm",
           "proj/proj.db",
@@ -922,11 +1000,12 @@ export function browserContext(base = "/frames-data/"): MakeContext {
         return loadProj({ base: projBase, onProgress: onProj });
       },
       loadGeoid: async () => {
-        need("GEOID18", [`proj/${GEOID}`]);
+        await need("GEOID18", [`proj/${GEOID}`]);
         await loadProj({ base: projBase, grids: [GEOID], onProgress: onProj });
       },
       loadOrion: async () => {
-        need("The Artemis II trajectory", [ORION_OEM]);
+        const listed = await need("The Artemis II trajectory", [ORION_OEM]);
+        const frames = await loadFrames();
         const bytes = await fetchChecked(
           root,
           listed.get(ORION_OEM)!,

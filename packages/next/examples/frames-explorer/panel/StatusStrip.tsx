@@ -19,6 +19,7 @@ import type { DataItem } from "../protocol.ts";
 import { duration, megabytes } from "./format.ts";
 import type { ItemStatus, PanelActions, PanelModel } from "./model.ts";
 import { ITEM_DETAIL, ITEM_LABEL, StatusBadge } from "./parts.tsx";
+import { reportCounts } from "../report.ts";
 
 function fetched(s: ItemStatus): string {
   const so = megabytes(s.received ?? 0);
@@ -104,7 +105,9 @@ function announcement(model: PanelModel, passed: number, failed: number) {
     return `Run done: ${passed} passed, ${failed} failed`;
   }
   if (run.state === "cancelled") {
-    return "Run stopped";
+    return run.reason !== undefined
+      ? `Run stopped: ${run.reason}`
+      : "Run stopped";
   }
   return "";
 }
@@ -125,11 +128,11 @@ export function StatusStrip({
   const failed = items.filter((s) => s.state === "error");
   const allReady = items.every((s) => s.state === "ready");
   const judged = model.results.filter((r) => !r.displayOnly && !r.userInput);
-  const skipped = judged.filter((r) => r.missing && r.missing.length > 0);
   const failures = judged.filter(
     (r) => !r.pass && (r.missing === undefined || r.missing.length === 0),
   );
-  const passed = judged.filter((r) => r.pass).length;
+  const counts = reportCounts(model.results);
+  const passed = counts.passed;
   const waitingGroups = new Set(Object.keys(model.waiting));
   const details = (
     <Popover content={<ItemDetails items={items} />}>
@@ -183,10 +186,10 @@ export function StatusStrip({
                 <Icon href={svgStatusError} aria-hidden />0 failed
               </span>
             )}
-            {skipped.length > 0 && (
+            {counts.skipped > 0 && (
               <span className="fx-count">
                 <Icon href={svgStatusPending} aria-hidden />
-                {skipped.length} skipped (missing data)
+                {counts.skipped} skipped (missing data)
               </span>
             )}
             {waitingGroups.size > 0 && (
@@ -202,6 +205,9 @@ export function StatusStrip({
             )}
             {run.state === "done" && run.summary && (
               <span className="fx-muted">in {duration(run.summary.ms)}</span>
+            )}
+            {run.state === "cancelled" && run.reason !== undefined && (
+              <span className="fx-muted">stopped: {run.reason}</span>
             )}
           </>
         )}

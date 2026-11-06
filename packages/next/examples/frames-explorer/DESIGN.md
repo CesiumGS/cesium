@@ -239,7 +239,7 @@ km; a lunar site at 100 m. Under reduced motion, flights cut.
 | Stop                         | Camera                                                                                                                                                    | On                                                                                                                                                                                        | Caption                                                                                                              |
 | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
 | 1 Earth's frames             | over the North Atlantic, 30°W 42°N, 4 Earth radii, lit from the camera (6c-1 fix round 2)                                                                 | triads (ITRF with cones, GCRF with square heads, each axis named, pinned)                                                                                                                 | ITRF turns with the Earth; GCRF doesn't. Each triad is a frame's axes at the clock's time                            |
-| 2 GCRF to ITRF over a day    | straight down the north pole, 5.5 Earth radii, lit from the camera (6c-1 fix round 3); imagery dimmed (exposure −0.6, 6c-2)                               | ITRF and GCRF triads only (the site triads hidden: Sacramento's crossed GCRF's x), each axis named, pinned                                                                                | GCRF's x and y turn once round against ITRF's, like clock hands, in a sidereal day (the clock plays at 3,600×: 24 s) |
+| 2 GCRF to ITRF over a day    | straight down the north pole, 5.5 Earth radii, lit from the camera (6c-1 fix round 3); imagery dimmed (exposure −1.5, −0.6 under 560 px; F43)             | ITRF and GCRF triads only (the site triads hidden: Sacramento's crossed GCRF's x), each axis named, pinned                                                                                | GCRF's x and y turn once round against ITRF's, like clock hands, in a sidereal day (the clock plays at 3,600×: 24 s) |
 | 3 The California design grid | over the grid's centre, 180 km range, 55° tilt, heading 0°                                                                                                | design grid (10 km lines; 2 km lines only under 60 km range), true-north lines; imagery dimmed (exposure −0.6); target: `globe-stop3-target`                                              | grid north and true north part ways away from the central meridian: the convergence angle                            |
 | 4 Rigid against exact        | from the side: south of the line, looking north, 10° down, 22 km, the whole line across the view (6c-1 fix round: looking back along it foreshortened it) | rigid (dashed) and exact (solid) 20 km line, the separation drawn ×50 with a "Show true scale" switch, a white leader between the far ends labelled with the true sag; imagery not dimmed | a 20 km design line placed rigidly parts from the exact one by about 31 m at its far end (drawn ×50 so it shows)     |
 | 5 Orion's figure-eight       | down the Moon's orbit normal at the flyby, the Earth–Moon line across the view, the Earth, the Moon and the path framed (6c-1); 3.0 s flight              | Orion in GCRF, then after 4 s in MOON_ME                                                                                                                                                  | in GCRF a figure-eight round the Moon; in MOON_ME the far-side swing                                                 |
@@ -1053,16 +1053,18 @@ Every term below has a popover wherever it appears (`panel/glossary.ts`,
   samples): every axis name shown, none overlapping, none under the
   caption; before, ITRF's x name was under it in every sample.
 - **Stop 2 dims the imagery and draws the geocentric pair alone.** Lit from
-  the camera, the polar globe washed out behind the axes; exposure −0.6
-  (the engineering stops' dimming) during the stop. At desktop width the
-  eye's auto-exposure still brightens the small globe on black (mean globe
-  pixel 190 → 173 of 255 at −0.6; −1.5 gives 141); a stronger setting is
-  open. The Sacramento triad, which crossed GCRF's turning x axis, is
-  hidden during the stop (`TourStopSpec.geocentricOnly`).
+  the camera, the polar globe washed out behind the axes. At desktop width
+  the eye's auto-exposure brightens the small globe on black, so the stop
+  takes exposure −1.5 there and −0.6 under 560 px, where the globe fills the
+  view (F43; `stopExposure`, followed as the view resizes). The Sacramento
+  triad, which crossed GCRF's turning x axis, is hidden during the stop
+  (`TourStopSpec.geocentricOnly`).
 - **The distortion overlay states its placement.** Its line was "contours
   from PROJ's scale factors" alone; it now leads with the recorded
-  operation ("placed ±2.00 m (1σ), the recorded operation; contours from
-  PROJ's scale factors"), as the grids' lines do (R8).
+  operation of the CRS it's drawn in: "placed ±2.00 m (1σ), the recorded
+  operation" on California zone 3 (NAD83(2011)), "placed exact, a
+  conversion" on Web Mercator and UTM 10N (WGS 84), then "contours from
+  PROJ's scale factors" (R8; `legend.ts`).
 - **The HUD's focus ring is the dark theme's in either scheme.** StrataKit
   resolves its ring where the page's theme is set, so in light mode the
   HUD's buttons had the light ring (oklch 47%), about 2.4:1 on the dark
@@ -1076,6 +1078,22 @@ Every term below has a popover wherever it appears (`panel/glossary.ts`,
   so selecting any such result highlights its frames in the tree and
   selecting a frame filters Verify to the groups that use it (R14). The
   vertical-profile and time-scale groups place nothing.
+
+### 6c-2 fix round 1
+
+- **Missing frame data (R5, F44).** The worker loads the frame data only
+  when a check, overlay or Orion needs it, and a check names the "frames"
+  need when it reads the tree; one that needs it is skipped as missing, the
+  rest run. With an empty store the vertical profiles, the clothoid and the
+  hand Helmerts still run (9 passed, 73 skipped). The Verify line names
+  what a partial run skipped for ("73 skipped (PROJ, GEOID18, Frame data
+  and Orion OEM missing)") and a stopped run says why ("Stopped after 19 of
+  225 checks: …").
+- **A row with no bar** says "shown, not judged" for a shown-only result
+  (the bound CRS's accuracy) and "skipped: missing data" for a skipped one.
+- **The caption's fold** is plain functions (`panel/fold.ts`): what shows,
+  the toggle's `aria-expanded` and label, and focus (the stop's heading at
+  each stop; the toggle keeps it as the caption folds).
 
 ### Carried forward (engine work)
 

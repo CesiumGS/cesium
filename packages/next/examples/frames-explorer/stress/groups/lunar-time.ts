@@ -32,7 +32,7 @@ const lunarTimeCase = stressCase(
   "lunar-time.moon-vs-earth",
   "lunar-time",
   "A clock on the lunar surface at the south pole against one at h = 0 at the California datasheet point: properTimeRate sampled hourly and averaged over a lunar month, in µs/day, against Ashby & Patla (2024)'s 56.02 µs/day within 2% (which covers the point-mass potentials)",
-  [],
+  ["frames"],
   async (ctx, base) => {
     const f = ctx.frames;
     const published = cited<{ rate: string }>("ashby-patla-2024");

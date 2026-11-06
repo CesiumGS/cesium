@@ -201,6 +201,19 @@ describe("buildReport (R15)", () => {
     expect(md).toMatch(/; 1 shown, not judged; 2 of your input/);
   });
 
+  it("counts a result skipped for missing data once, as skipped, whatever its pass flag", () => {
+    const odd: StressResult[] = [
+      {
+        id: "x.skipped-but-pass",
+        group: "time",
+        title: "x",
+        pass: true,
+        missing: ["frames"],
+      },
+    ];
+    expect(reportCounts(odd)).toMatchObject({ passed: 0, skipped: 1 });
+  });
+
   it("parses back to the same results", () => {
     const parsed = JSON.parse(JSON.stringify(report.json)) as {
       results: StressResult[];

@@ -21,12 +21,13 @@ import { MOON } from "../../src/scene/Body.ts";
 import { Instant } from "../../src/time/Instant.ts";
 import type { ExampleContext, ExampleRun } from "../types.ts";
 import { composedAccuracy, type PlacedNode } from "./composed.ts";
-import { distortionAccuracy } from "./legend.ts";
+import { distortionAccuracy, operationText } from "./legend.ts";
 import {
   RESULT_LABELS,
   TOUR,
   comparedFor,
   defaultTriads,
+  stopExposure,
   type TourStopSpec,
 } from "./content.ts";
 import {
@@ -933,37 +934,6 @@ export function run(context: ExampleContext): ExampleRun {
     invalidate();
   }
 
-  /** The recorded operation's accuracy: one line, and its sentence for the detail. */
-  const operationText = (
-    g: OverlayGeometry,
-  ): { text: string; sentence: string; caution: boolean } => {
-    const op = g.operation;
-    const grids =
-      op && op.grids.length > 0 ? ` (grids: ${op.grids.join(", ")})` : "";
-    if (!op) {
-      return { text: "", sentence: "", caution: false };
-    }
-    if (op.ballpark || op.accuracy === undefined) {
-      return {
-        text: "not bounded: PROJ states no accuracy",
-        sentence: `PROJ states no accuracy for the recorded operation${op.ballpark ? ", a ballpark operation" : ""}${grids}.`,
-        caution: true,
-      };
-    }
-    if (op.accuracy === 0) {
-      return {
-        text: "exact, a conversion",
-        sentence: "The operation is a conversion, with no datum change.",
-        caution: false,
-      };
-    }
-    return {
-      text: `±${meters(op.accuracy)} (1σ), the recorded operation`,
-      sentence: `±${meters(op.accuracy)} (1σ): PROJ's stated accuracy for the recorded operation to WGS 84${grids}.`,
-      caution: false,
-    };
-  };
-
   /** The first chunk's first vertex, Earth-fixed: where to hang a label. */
   const pointOf = (
     chunks: readonly OverlayChunk[],
@@ -1090,7 +1060,7 @@ export function run(context: ExampleContext): ExampleRun {
               ...(!trueScale && { exaggeration: CONVERGENCE_FACTOR }),
             }),
           ]);
-          const op = operationText(grid);
+          const op = operationText(grid.operation);
           const center = pointOf(grid.layers[0]!.chunks) ?? new Float64Array(3);
           noteEngineering(grid, center);
           const west = pointOf(north.layers[0]!.chunks, true);
@@ -1131,7 +1101,7 @@ export function run(context: ExampleContext): ExampleRun {
             step: 2000 * FT,
             segment: 100 * FT,
           });
-          const op = operationText(g);
+          const op = operationText(g.operation);
           return {
             layers: [
               {
@@ -1294,13 +1264,13 @@ export function run(context: ExampleContext): ExampleRun {
               });
             }
           }
-          const op = operationText(g);
+          const op = operationText(g.operation);
           return {
             layers: [
               { chunks: tissot, color: engineeringColor, strength: SECONDARY },
               { chunks: contours, color: familyRgba("earth") },
             ],
-            accuracy: distortionAccuracy(op.text),
+            accuracy: distortionAccuracy(op),
             detail: `Tissot ellipses in true-north axes (convergence not applied); combined-factor contours from PROJ's factors, in ppm${g.skipped ? `; ${g.skipped} nodes with no scale left out` : ""}. ${op.sentence}`,
             caution: op.caution,
             labels,
@@ -2115,6 +2085,15 @@ export function run(context: ExampleContext): ExampleRun {
     overlayLabels.set("callouts", out);
     refreshTriads();
   }
+  // Stop 2's exposure depends on the view's width (F43): follow it.
+  const exposureObserver = new ResizeObserver(() => {
+    const stop = TOUR.find((t) => t.id === tourStop);
+    if (stop?.dim !== undefined && stop.dim !== true) {
+      globe.dimGround(stopExposure(stop, viewer.container.clientWidth));
+    }
+  });
+  exposureObserver.observe(viewer.container);
+  scope.defer(() => exposureObserver.disconnect());
   let tourClock: { rate: number; mode: typeof viewer.clock.mode } | undefined;
   function applyTour(id: string | undefined): void {
     if (id === tourStop || !frames) {
@@ -2152,7 +2131,7 @@ export function run(context: ExampleContext): ExampleRun {
       viewer.clock.rate = stop.rate;
       viewer.clock.mode = "playing";
     }
-    globe.dimGround(stop.dim === true);
+    globe.dimGround(stopExposure(stop, viewer.container.clientWidth));
     const f = framing(stop.camera);
     if (f) {
       globe.flyTo(
@@ -2240,6 +2219,7 @@ export function run(context: ExampleContext): ExampleRun {
         state: "cancelled",
         done: results.length - before,
         total: runView.total,
+        reason: scrub(messageOf(error)),
       };
       lastRun = {
         startedAt: startedAt.iso,

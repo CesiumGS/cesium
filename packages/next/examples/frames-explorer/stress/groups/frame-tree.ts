@@ -26,7 +26,7 @@ const frameTreeCase = stressCase(
   "frame-tree.compositions",
   "frame-tree",
   "Seeded points through A → B → A, and A → C → B against A → B, over every pair of ITRF, GCRF, EARTH_ICRF, EME2000, HCRS, MOON_ICRF, MOON_ME and MOON_PA at five instants in 2026: within 1 mm per 1e9 m and 1e-12 in rotation",
-  [],
+  ["frames"],
   async (ctx, base) => {
     const f = ctx.frames;
     const tree: Frame[] = [
