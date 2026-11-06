@@ -6815,6 +6815,17 @@ asset 2: no access token`, on every example.
   (CRS and site), for the life of the worker. Each holds its PROJ CRS and
   operation, so 4b's comparisons across many CRSs grow it without bound.
   Bound it.
+- **Plan 4b: verify PROJ's served bytes in the browser.** `loadProj`'s
+  browser path doesn't check the SHA-256 of `proj.db` or the WebAssembly it
+  fetches. The example's report labels them "manifest SHA-256 (not verified
+  in the browser)". Hash the bytes after the fetch, and refuse a mismatch, as
+  setup already does in Node.
+- **Plan 5: explicit timeouts for slow data tests.** These pre-plan tests run
+  on vitest's 5 s default and can time out under heavy machine load:
+  `test/data/trajectory.test.ts:147` (about 2.6 s),
+  `test/data/trajectory.test.ts:197` (about 2.0 s) and
+  `test/data/sky.test.ts:86` (about 1.2 s). One `test:data` run failed this
+  way during the example's final fix wave. Give each an explicit timeout.
 
 _Carried forward from the stress-test example's industry review (owner,
 2026-11-06)._ These library gaps came up while planning the frames example's
