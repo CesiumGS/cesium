@@ -3,6 +3,7 @@ import type { Frames } from "../frames/frames.ts";
 import { convertPoint, type FramePoint } from "../frames/local.ts";
 import type { Instant } from "../time/Instant.ts";
 import { Trajectory } from "../trajectory/Trajectory.ts";
+import type { EngineeringFrame } from "../engineering/EngineeringFrame.ts";
 import { EARTH_ROTATION_RATE } from "./constants.ts";
 
 /** One contribution to a measurement's uncertainty. */
@@ -13,7 +14,8 @@ export interface AccuracyTerm {
     | "trajectory"
     | "coordinateScale"
     | "relativity"
-    | "lightTime";
+    | "lightTime"
+    | "projection";
   /** 1σ in meters, or `undefined` when its size is not known. */
   meters: number | undefined;
   note: string;
@@ -121,6 +123,23 @@ function earthOrientationTerm(
 }
 
 /**
+ * The projection term for a design end (R9): PROJ's stated accuracy for the
+ * frame's recorded operation. A ballpark operation, or one PROJ gives no
+ * accuracy for, is not known (`meters` undefined), never small.
+ */
+function projectionTerm(end: string, frame: EngineeringFrame): AccuracyTerm {
+  const { operation } = frame;
+  const grids =
+    operation.grids.length > 0 ? operation.grids.join(", ") : "no grids";
+  const known = !operation.ballpark && operation.accuracy !== undefined;
+  return {
+    source: "projection",
+    meters: known ? operation.accuracy : undefined,
+    note: `End ${end}: engineering frame "${frame.definition.name}": PROJ operation (${grids})${operation.ballpark ? ", a ballpark operation" : ""}${known ? "" : "; its accuracy is not known"}`,
+  };
+}
+
+/**
  * What a distance or direction between `a` and `b` at `instant` can claim,
  * from the inputs alone (R7): a term whose size is not known makes `meters`
  * undefined, never small. `signal` adds the light-time solver's own term.
@@ -130,7 +149,11 @@ export function accuracyOf(
   b: FramePoint,
   instant: Instant,
   frames: Frames,
-  options: { signal: boolean },
+  options: {
+    signal: boolean;
+    /** The engineering frame of an end given as a design point (R9). */
+    design?: { a?: EngineeringFrame; b?: EngineeringFrame };
+  },
 ): AccuracyStatement {
   const terms: AccuracyTerm[] = [];
   const warnings: string[] = [];
@@ -167,6 +190,10 @@ export function accuracyOf(
       terms.push(
         earthOrientationTerm(end as "a" | "b", point, instant, frames),
       );
+    }
+    const engineering = options.design?.[end as "a" | "b"];
+    if (engineering) {
+      terms.push(projectionTerm(end, engineering));
     }
     const trajectory = trajectoryOf(point.frame);
     if (trajectory) {

@@ -1,0 +1,242 @@
+// Measuring in design terms against real PROJ and the frames data store (plan
+// 4a task 6). `npm run test:data` runs it.
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { describe, expect, it } from "vitest";
+import { framesDataDirectory } from "../../scripts/frameData.mjs";
+import {
+  Alignment,
+  type AlignmentDefinition,
+} from "../../src/engineering/alignment.ts";
+import {
+  EngineeringFrame,
+  designPoint,
+  type SiteTransform,
+} from "../../src/engineering/EngineeringFrame.ts";
+import { loadProj } from "../../src/engineering/proj.ts";
+import { Ephemeris } from "../../src/ephemeris/Ephemeris.ts";
+import type { FrameData } from "../../src/ephemeris/loadFrameData.ts";
+import { createFrames } from "../../src/frames/frames.ts";
+import { framePoint } from "../../src/frames/local.ts";
+import { measure, measureSpan } from "../../src/measure/measure.ts";
+import { EARTH } from "../../src/scene/Body.ts";
+import { EarthOrientationParameters } from "../../src/time/eop.ts";
+import { Instant } from "../../src/time/Instant.ts";
+import { LeapSeconds } from "../../src/time/leapSeconds.ts";
+
+const dir = framesDataDirectory();
+const base = `${join(dir, "proj")}/`;
+const bytes = (file: string): ArrayBuffer => {
+  const b = readFileSync(join(dir, file));
+  return b.buffer.slice(
+    b.byteOffset,
+    b.byteOffset + b.byteLength,
+  ) as ArrayBuffer;
+};
+const leap = LeapSeconds.builtIn();
+const frames = createFrames({
+  leapSeconds: leap,
+  eop: EarthOrientationParameters.fromCelestrakCsv(
+    readFileSync(join(dir, "EOP-All.csv"), "utf8"),
+  ),
+  ephemeris: Ephemeris.fromPacks(
+    bytes("planets-de440-2000-2050.pack"),
+    bytes("moon-pa-de440-2000-2050.pack"),
+  ),
+  warnings: [],
+} satisfies FrameData);
+const instant = Instant.fromUtc(Date.UTC(2026, 2, 1), leap);
+
+const US_FOOT = 0.3048006096012192;
+const site: SiteTransform = {
+  origin: [6_000_000, 2_100_000, 0],
+  rotation: (12.5 * Math.PI) / 180,
+  scale: 1.0000375,
+};
+// A tangent, a left arc and a tangent, with a grade, in site-grid coordinates.
+const road: AlignmentDefinition = {
+  name: "Road",
+  start: [1000, 1000],
+  startAzimuth: Math.PI / 2,
+  startStation: 100,
+  horizontal: [
+    { kind: "line", length: 8000 },
+    { kind: "arc", length: 3000, radius: 8000 },
+    { kind: "line", length: 20000 },
+  ],
+  vertical: {
+    startStation: 100,
+    startElevation: 20,
+    segments: [{ kind: "grade", length: 31000, grade: 0.01 }],
+  },
+};
+
+async function frame(extra: { allowBallpark?: boolean } = {}) {
+  return EngineeringFrame.create(
+    {
+      name: "CA3",
+      body: EARTH,
+      crs: { format: "wkid", authority: "EPSG", wkid: 6420, vcsWkid: 6360 },
+      site,
+      alignments: [road],
+      ...extra,
+    },
+    await loadProj({ base }),
+  );
+}
+
+describe("measure in design terms", () => {
+  it("gives CAD distances that relate to the true distance by the combined factor and site scale", async () => {
+    const f = await frame();
+    const a = designPoint(f, [2000, 1000, 25]);
+    const b = designPoint(f, [12_000, 1000, 25]);
+    const m = measure(a, b, instant, frames);
+    const d = m.design!;
+    expect(d.unitName).toMatch(/foot/i);
+    expect(d.metersPerUnit).toBeCloseTo(US_FOOT, 15);
+    expect(Math.abs(d.distance - 10_000)).toBeLessThan(1e-9);
+    expect(Math.abs(d.horizontalDistance - 10_000)).toBeLessThan(1e-9);
+    expect(Array.from(d.delta)).toEqual([10_000, 0, 0]);
+    expect(d.siteScale).toBe(1.0000375);
+    expect(d.combinedFactor.mean).toBeCloseTo(
+      (d.combinedFactor.a + d.combinedFactor.b) / 2,
+      15,
+    );
+    expect(d.combinedFactor.a).toBeGreaterThan(0.999);
+    expect(d.combinedFactor.a).toBeLessThan(1.001);
+    // The site's rotation is 12.5 degrees; convergence is the CRS's, finite.
+    expect(Number.isFinite(d.convergence.a)).toBe(true);
+    const predicted =
+      (d.distance * d.siteScale * d.metersPerUnit) / d.combinedFactor.mean;
+    const error = Math.abs(m.distance - predicted);
+    console.log(
+      `design ${d.distance} ftUS, true ${m.distance} m, predicted ${predicted} m, error ${error.toExponential(2)} m`,
+    );
+    expect(error).toBeLessThan(0.01);
+    // The existing results still work for design points.
+    expect(m.overBody).toBeDefined();
+  });
+
+  it("converts the vertical difference in horizontal units for the 3D distance", async () => {
+    const f = await frame();
+    const m = measure(
+      designPoint(f, [2000, 1000, 0]),
+      designPoint(f, [2000 + 300, 1000 + 400, 1200]),
+      instant,
+      frames,
+    );
+    expect(m.design!.horizontalDistance).toBeCloseTo(500, 9);
+    // ftUS everywhere, so U needs no conversion: 3D = sqrt(500^2 + 1200^2).
+    expect(m.design!.distance).toBeCloseTo(1300, 9);
+  });
+
+  it("gives alignment stations and offsets as the Alignment does", async () => {
+    const f = await frame();
+    const a = designPoint(f, [2000, 1030, 25]);
+    const b = designPoint(f, [11_000, 1000 - 60, 25]);
+    const m = measure(a, b, instant, frames, { alignment: "Road" });
+    const alignment = new Alignment(road);
+    const ea = alignment.stationOffset([2000, 1030]);
+    const eb = alignment.stationOffset([11_000, 940]);
+    expect(m.alignment!.name).toBe("Road");
+    expect(m.alignment!.a.station).toBe(ea.station);
+    expect(m.alignment!.a.offset).toBe(ea.offset);
+    expect(m.alignment!.a.elevation).toBe(ea.elevation);
+    expect(m.alignment!.b).toEqual(eb);
+    expect(m.alignment!.a.station).toBeCloseTo(1100, 6);
+    // Left of an east-bound line is north: negative offset to the right.
+    expect(m.alignment!.a.offset).toBeCloseTo(-30, 6);
+    expect(m.alignment!.a.elevation).toBeCloseTo(30, 6);
+    expect(measure(a, b, instant, frames).alignment).toBeUndefined();
+  });
+
+  it("throws for an unknown alignment name, naming it, and beyond the alignment's ends", async () => {
+    const f = await frame();
+    const a = designPoint(f, [2000, 1000, 0]);
+    const b = designPoint(f, [3000, 1000, 0]);
+    expect(() => measure(a, b, instant, frames, { alignment: "Nope" })).toThrow(
+      /Nope/,
+    );
+    const before = designPoint(f, [500, 1000, 0]);
+    expect(() =>
+      measure(before, b, instant, frames, { alignment: "Road" }),
+    ).toThrow(/outside the alignment/);
+    const span = measureSpan(before, b, instant, instant, 1, frames, {
+      alignment: "Road",
+    });
+    expect(span[0]!.error).toMatch(/outside the alignment/);
+  });
+
+  it("adds a projection accuracy term per design end", async () => {
+    const f = await frame();
+    const m = measure(
+      designPoint(f, [2000, 1000, 0]),
+      designPoint(f, [3000, 1000, 0]),
+      instant,
+      frames,
+    );
+    const terms = m.accuracy.terms.filter((t) => t.source === "projection");
+    expect(terms).toHaveLength(2);
+    for (const t of terms) {
+      expect(t.meters).toBe(f.operation.accuracy);
+      expect(t.note).toContain("CA3");
+      expect(t.note).toContain("us_noaa_g2018u0.tif");
+    }
+    expect(terms[0]!.note).toContain("End a");
+    expect(terms[1]!.note).toContain("End b");
+  });
+
+  it("leaves meters undefined for a ballpark operation with no grid", async () => {
+    const P = await loadProj({ base });
+    const f = EngineeringFrame.create(
+      {
+        name: "ballpark",
+        body: EARTH,
+        crs: { format: "wkid", authority: "EPSG", wkid: 6420 },
+        allowBallpark: true,
+      },
+      P,
+    );
+    const m = measure(
+      designPoint(f, [6_561_666, 1_640_416, 0]),
+      designPoint(f, [6_561_866, 1_640_416, 0]),
+      instant,
+      frames,
+    );
+    if (f.operation.ballpark || f.operation.accuracy === undefined) {
+      expect(m.accuracy.meters).toBeUndefined();
+    }
+    const terms = m.accuracy.terms.filter((t) => t.source === "projection");
+    expect(terms).toHaveLength(2);
+    expect(f.operation.accuracy === undefined).toBe(
+      terms[0]!.meters === undefined,
+    );
+    expect(m.design!.siteScale).toBe(1);
+  });
+
+  it("measures a design point to a plain ITRF point without a design result", async () => {
+    const f = await frame();
+    const a = designPoint(f, [2000, 1000, 0]);
+    const p = framePoint(frames.itrf, f.toBodyFixed([3000, 1000, 0]));
+    const m = measure(a, p, instant, frames);
+    expect(m.design).toBeUndefined();
+    expect(m.alignment).toBeUndefined();
+    expect(m.distance).toBeGreaterThan(0);
+    // Only the design end carries a projection term.
+    expect(
+      m.accuracy.terms.filter((t) => t.source === "projection"),
+    ).toHaveLength(1);
+  });
+
+  it("rejects a non-finite design coordinate", async () => {
+    const f = await frame();
+    expect(() =>
+      measure(
+        designPoint(f, [NaN, 0, 0]),
+        designPoint(f, [0, 0, 0]),
+        instant,
+        frames,
+      ),
+    ).toThrow(/non-finite/);
+  });
+});
