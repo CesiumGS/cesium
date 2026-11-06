@@ -5,6 +5,18 @@
 // main thread; the geometry is `rigidVsExact` (overlays.ts) in the worker.
 import { length } from "./panel/format.ts";
 import type { OverlayPart } from "./panel/model.ts";
+import type { FrameParams } from "./protocol.ts";
+
+/**
+ * The design frame the line is drawn in: California zone 3 (EPSG:6420,
+ * NAD83(2011), US survey feet), placed on WGS 84 by PROJ's recorded
+ * operation, which the worker resolves from these parameters.
+ */
+export const RIGID_FRAME: FrameParams = {
+  name: "California zone 3",
+  body: "earth",
+  crs: { format: "wkid", authority: "EPSG", wkid: 6420 },
+};
 
 /** US survey feet per metre: EPSG:6420 is in ftUS. */
 const FT = 3937 / 1200;
@@ -40,10 +52,17 @@ export const RIGID_LINE = {
   markM: 20_000,
 } as const;
 
-/** The two figures the worker computes: the gap at the far end and at the mark, meters. */
+/**
+ * The figures the worker computes, meters: the gap at the far end and at
+ * the mark, and the mark's gap split as the inset sees it (`gapParts`): the
+ * drop along the vertical and the part along the line (negative: the rigid
+ * point falls short of the exact one).
+ */
 export interface RigidFigures {
   sagEnd: number;
   gapAtMark: number;
+  markDrop?: number;
+  markAlong?: number;
 }
 
 const km = (meters: number) => `${Math.round(meters / 1000)} km`;
@@ -52,6 +71,13 @@ const km = (meters: number) => `${Math.round(meters / 1000)} km`;
 export function rigidCopy(f: RigidFigures) {
   const end = length(f.sagEnd, 3);
   const mark = length(f.gapAtMark, 3);
+  // The parts to the decimetre, as the whole is.
+  const drop =
+    f.markDrop !== undefined ? `${length(f.markDrop, 3)} drop` : undefined;
+  const along =
+    f.markAlong !== undefined
+      ? `${length(Math.abs(f.markAlong), 2)} along`
+      : undefined;
   const L = km(RIGID_LINE.lengthM);
   const M = km(RIGID_LINE.markM);
   const parts: OverlayPart[] = [
@@ -88,6 +114,13 @@ export function rigidCopy(f: RigidFigures) {
     inset: {
       caption: `At ${M}: ${mark} apart (true scale)`,
       leader: mark,
+      /** The gap's two parts: by the leader, and at its top. */
+      ...(drop && along && { parts: { drop, along: `${along} (grid scale)` } }),
+      /** The inset's accessible description. */
+      description:
+        drop && along
+          ? `${mark} apart: ${drop}, ${along} the line (grid scale)`
+          : `${mark} apart`,
     },
   };
 }

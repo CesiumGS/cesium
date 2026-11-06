@@ -24,6 +24,8 @@ export const INSET = {
    */
   narrowTop: 48,
   fill: 0.45,
+  /** On a wide view, the narrowest it goes to stay clear of the tour caption. */
+  minWidth: 140,
 } as const;
 
 /** A rectangle in CSS px from the view's top left. */
@@ -34,10 +36,17 @@ export interface Box {
   height: number;
 }
 
+const meets = (a: Box, b: Box): boolean =>
+  a.x < b.x + b.width &&
+  b.x < a.x + a.width &&
+  a.y < b.y + b.height &&
+  b.y < a.y + a.height;
+
 /**
  * Where the inset goes in a view `view` px big whose time controls take
  * `hudBottom` px at the bottom: `frame` is the bordered box with its caption,
- * `view` the picture (the engine view's viewport).
+ * `view` the picture (the engine view's viewport). `avoid` is the tour
+ * caption's box, when it shows.
  *
  * Wide views: bottom left, above the time controls and the credits under
  * them, the legend's width; clear of Dyno's inspector (top left), the tour
@@ -50,6 +59,7 @@ export interface Box {
 export function insetBox(
   view: { width: number; height: number },
   hudBottom: number,
+  avoid?: Box,
 ): { frame: Box; view: Box } {
   if (view.width < NARROW_VIEW) {
     const width = Math.min(
@@ -68,13 +78,28 @@ export function insetBox(
       view: { x, y: INSET.narrowTop + INSET.caption, width, height },
     };
   }
-  const x = INSET.gutter;
-  const y = view.height - hudBottom - INSET.height;
-  const frameHeight = INSET.height + INSET.caption;
-  return {
-    frame: { x, y: y - INSET.caption, width: INSET.width, height: frameHeight },
-    view: { x, y, width: INSET.width, height: INSET.height },
+  const wide = (width: number) => {
+    const height = Math.round((width * INSET.height) / INSET.width);
+    const x = INSET.gutter;
+    const y = view.height - hudBottom - height;
+    return {
+      frame: { x, y: y - INSET.caption, width, height: height + INSET.caption },
+      view: { x, y, width, height },
+    };
   };
+  const full = wide(INSET.width);
+  if (avoid === undefined || !meets(full.frame, avoid)) {
+    return full;
+  }
+  // Between about 560 and 620 px the 340 px caption reaches over the
+  // inset's corner on a short view: the inset narrows, at its place, to end
+  // a gutter short of the caption.
+  return wide(
+    Math.max(
+      INSET.minWidth,
+      Math.min(INSET.width, Math.floor(avoid.x - 2 * INSET.gutter)),
+    ),
+  );
 }
 
 /** A box as the engine's viewport: fractions of the view. */
@@ -161,12 +186,53 @@ export function insetCamera(
 }
 
 /**
+ * The gap between the exact and rigid placements at the mark, split as the
+ * inset sees it (`insetCamera`'s axes): `drop`, the rigid point's height
+ * over the exact one along the ellipsoid's normal there (the curvature);
+ * `along`, its offset along the line levelled there (the grid's scale
+ * factor, which rigid placement ignores: why the leader leans); `across`,
+ * the rest, square to both. Meters; `apart` is the whole gap.
+ */
+export function gapParts(
+  exact: ArrayLike<number>,
+  rigid: ArrayLike<number>,
+  along: ArrayLike<number>,
+  ellipsoid: Ellipsoid = Ellipsoid.WGS84,
+): { apart: number; drop: number; along: number; across: number } {
+  const up = ellipsoid.geodeticSurfaceNormal(
+    Float64Array.from(exact),
+    new Float64Array(3),
+  );
+  if (up === undefined) {
+    throw new RangeError("gapParts: the mark is at the body's centre");
+  }
+  const right = unit(
+    sub(
+      along,
+      up.map((u) => u * dot(along, up)),
+    ),
+  );
+  const d = sub(rigid, exact);
+  return {
+    apart: Math.hypot(d[0]!, d[1]!, d[2]!),
+    drop: dot(d, up),
+    along: dot(d, right),
+    across: dot(d, cross(up, right)),
+  };
+}
+
+/**
  * Where `p` shows in a picture taken from `pose`: fractions of its width and
  * height from the top left, or undefined behind the camera.
  */
 export function projectInto(
   p: ArrayLike<number>,
-  pose: Pose,
+  pose: {
+    readonly position: ArrayLike<number>;
+    readonly direction: ArrayLike<number>;
+    readonly up: ArrayLike<number>;
+    readonly right: ArrayLike<number>;
+  },
   aspect: number,
   fov: number,
 ): { x: number; y: number } | undefined {
