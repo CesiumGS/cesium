@@ -36,6 +36,29 @@ const DIM = 0.35;
 /** The tint of a secondary line (minor grid lines, true north, Tissot outlines). */
 export const SECONDARY = 0.6;
 
+/** `rgba` mixed half with white (DESIGN.md: the selected overlay's lighter tint). */
+const lighter = (rgba: Rgba): Rgba => [
+  Math.round((rgba[0] + 255) / 2),
+  Math.round((rgba[1] + 255) / 2),
+  Math.round((rgba[2] + 255) / 2),
+  rgba[3],
+];
+
+/**
+ * The per-channel tint that turns a draw of `rgba` into its lighter mix:
+ * lines are one color per layer, so a tint above 1 in a channel lightens it
+ * (unlit color is display-referred and clamps at white).
+ */
+const lighterTint = (rgba: Rgba): [number, number, number] => {
+  const l = lighter(rgba);
+  return [0, 1, 2].map((i) =>
+    Math.min(8, linear(l[i]!) / Math.max(linear(rgba[i]!), 1e-3)),
+  ) as [number, number, number];
+};
+
+/** Labels whose origins are closer than this on screen fade out (DESIGN.md "Labels"). */
+const LABEL_NEAR_PX = 24;
+
 // ------------------------------------------------------------------ triads
 
 /** Shaft width as a share of the triad's length (about 2 px at the usual framing). */
@@ -48,16 +71,15 @@ const SIDES = 8;
  * blue), and a small cube at the origin in the family's tone. Unit length
  * along each local axis; its transform scales and places it.
  */
-function triadMesh(family: Family): MeshData {
+function triadMesh(family: Family, light = false): MeshData {
   const positions: number[] = [];
   const colors: number[] = [];
   const indices: number[] = [];
-  const color = (rgba: Rgba) => [
-    linear(rgba[0]),
-    linear(rgba[1]),
-    linear(rgba[2]),
-    1,
-  ];
+  // The selected triad's shafts at the lighter tint (DESIGN.md "A selection").
+  const color = (srgb: Rgba) => {
+    const rgba = light ? lighter(srgb) : srgb;
+    return [linear(rgba[0]), linear(rgba[1]), linear(rgba[2]), 1];
+  };
   const vertex = (p: readonly number[], c: readonly number[]) => {
     positions.push(p[0]!, p[1]!, p[2]!);
     colors.push(...c);
@@ -154,6 +176,8 @@ export interface TriadSpec {
 
 interface Triad {
   spec: TriadSpec;
+  /** Drawn at the lighter tint: the selected frame's. */
+  light: boolean;
   mesh: MeshHandle;
   transform: TransformHandle;
   draw: DrawHandle;
@@ -165,7 +189,22 @@ interface Triad {
 /** A drawn overlay: its draws (one per chunk) and their base tints. */
 interface Overlay {
   remove(): void;
-  draws: { draw: DrawHandle; tint: number }[];
+  /** Each chunk's draw, its layer's strength and, when it was recolored, its layer's color. */
+  draws: { draw: DrawHandle; tint: number; color?: Rgba }[];
+  /** The transform every chunk hangs under, when drawn with a `placement`. */
+  placement?: TransformHandle;
+  visible: boolean;
+}
+
+/**
+ * What a selection emphasizes (R14): the selected overlay (lighter, the
+ * rest dimmed), the frames on the selected path (full, the rest dimmed) and
+ * the selected frame itself (lighter, its label white).
+ */
+export interface Emphasis {
+  overlay?: string;
+  frames: ReadonlySet<string>;
+  selected?: string;
 }
 
 /** A label over the view at a point on the globe (HTML, DESIGN.md "Labels"). */
@@ -203,8 +242,7 @@ export class Globe {
     { spec: LabelSpec; el: HTMLElement }
   >();
   private readonly labelHost: HTMLElement;
-  private emphasis:
-    { overlay?: string; frames: ReadonlySet<string> } | undefined;
+  private emphasis: Emphasis | undefined;
   private flight = 0;
   private dimmed = false;
   private dimTimer = 0;
@@ -260,6 +298,7 @@ export class Globe {
       world.setTransformVisible(transform, false);
       this.triads.set(spec.id, {
         spec,
+        light: false,
         mesh,
         transform,
         draw,
@@ -357,17 +396,34 @@ export class Globe {
       strength?: number;
       dashed?: boolean;
     }[],
+    options: {
+      /**
+       * Hang every chunk under one placement (a float64 column-major
+       * matrix), which `placeOverlay` moves later without a rebuild: Orion's
+       * path drawn in GCRF or MOON_ME follows the clock that way. Each chunk
+       * keeps its own float64 origin under it.
+       */
+      placement?: ArrayLike<number>;
+    } = {},
   ): void {
     this.removeOverlay(id);
     const { world } = this.viewer;
     const draws: Overlay["draws"] = [];
     const meshes: MeshHandle[] = [];
+    const placement =
+      options.placement !== undefined
+        ? world.addTransform(options.placement)
+        : undefined;
     const remove = () => {
       for (const { draw } of draws.splice(0)) {
         world.removeDraw(draw);
       }
       for (const mesh of meshes.splice(0)) {
         world.removeMesh(mesh);
+      }
+      // The placement's subtree goes with it: every chunk's transform.
+      if (placement !== undefined) {
+        world.removeTransform(placement);
       }
     };
     try {
@@ -379,21 +435,53 @@ export class Globe {
             layer.color !== undefined ? recolor(dashed, layer.color) : dashed;
           const mesh = world.addMesh(chunk.mesh);
           meshes.push(mesh);
-          const draw = world.addDraw({
-            mesh,
-            origin: chunk.origin,
-            unlit: true,
-            name: `frames explorer ${id}`,
+          let draw: DrawHandle;
+          if (placement !== undefined) {
+            const at = identity();
+            at[12] = chunk.origin[0]!;
+            at[13] = chunk.origin[1]!;
+            at[14] = chunk.origin[2]!;
+            const transform = world.addTransform(at, placement);
+            draw = world.addDraw({
+              mesh,
+              transform,
+              unlit: true,
+              name: `frames explorer ${id}`,
+            });
+          } else {
+            draw = world.addDraw({
+              mesh,
+              origin: chunk.origin,
+              unlit: true,
+              name: `frames explorer ${id}`,
+            });
+          }
+          draws.push({
+            draw,
+            tint,
+            ...(layer.color !== undefined && { color: layer.color }),
           });
-          draws.push({ draw, tint });
         }
       }
     } catch (error) {
       remove();
       throw error;
     }
-    this.overlays.set(id, { remove, draws });
+    this.overlays.set(id, {
+      remove,
+      draws,
+      visible: true,
+      ...(placement !== undefined && { placement }),
+    });
     this.retint();
+  }
+
+  /** Moves an overlay drawn with a `placement` (a float64 column-major matrix). */
+  placeOverlay(id: string, matrix: ArrayLike<number>): void {
+    const placement = this.overlays.get(id)?.placement;
+    if (placement !== undefined) {
+      this.viewer.world.setTransform(placement, matrix);
+    }
   }
 
   hasOverlay(id: string): boolean {
@@ -414,28 +502,63 @@ export class Globe {
    * R14 on the globe: the selected overlay at full strength and the frames
    * on the selected path, everything else dimmed. `undefined` clears it.
    */
-  emphasize(
-    emphasis: { overlay?: string; frames: ReadonlySet<string> } | undefined,
-  ): void {
+  emphasize(emphasis: Emphasis | undefined): void {
     this.emphasis = emphasis;
     this.retint();
+  }
+
+  /** Shows or hides an overlay's draws, keeping them (the design grid's 2 km lines by range). */
+  setOverlayVisible(id: string, visible: boolean): void {
+    const o = this.overlays.get(id);
+    if (o === undefined || o.visible === visible) {
+      return;
+    }
+    o.visible = visible;
+    for (const { draw } of o.draws) {
+      this.viewer.world.setVisible(draw, visible);
+    }
   }
 
   private retint(): void {
     const { world } = this.viewer;
     const e = this.emphasis;
     for (const [id, t] of this.triads) {
+      const light = e?.selected === id;
+      if (t.light !== light) {
+        // The selected frame's triad takes its lighter mesh.
+        world.removeDraw(t.draw);
+        world.removeMesh(t.mesh);
+        t.mesh = world.addMesh(triadMesh(t.spec.family, light));
+        t.draw = world.addDraw({
+          mesh: t.mesh,
+          transform: t.transform,
+          unlit: true,
+          radius: 1,
+          name: `frames explorer triad ${t.spec.label}`,
+        });
+        t.light = light;
+      }
       const k = e === undefined || e.frames.has(id) ? 1 : DIM;
       world.setColor(t.draw, [k, k, k, 1]);
     }
     for (const [id, o] of this.overlays) {
+      // An overlay's parts ("designGrid:minor") go with it.
+      const selected =
+        e?.overlay !== undefined &&
+        (e.overlay === id || id.startsWith(`${e.overlay}:`));
       const k =
-        e === undefined || e.overlay === undefined || e.overlay === id
-          ? 1
-          : DIM;
-      for (const { draw, tint } of o.draws) {
+        e === undefined || e.overlay === undefined || selected ? 1 : DIM;
+      for (const { draw, tint, color } of o.draws) {
         const v = tint * k;
-        world.setColor(draw, [v, v, v, 1]);
+        const c: [number, number, number] =
+          selected && color !== undefined
+            ? (lighterTint(color).map((x) => x * tint) as [
+                number,
+                number,
+                number,
+              ])
+            : [v, v, v];
+        world.setColor(draw, [...c, 1]);
       }
     }
     for (const [id, l] of this.labels) {
@@ -445,6 +568,7 @@ export class Globe {
         this.triads.has(id) &&
         !e.frames.has(id);
       l.el.classList.toggle("fx-globe-label-dim", hidden);
+      l.el.classList.toggle("fx-globe-label-selected", e?.selected === id);
     }
   }
 
@@ -488,6 +612,8 @@ export class Globe {
     const aspect = w / h;
     const t = Math.tan(cam.fovy(aspect) / 2);
     const placed: { x: number; y: number; w: number; h: number }[] = [];
+    /** The screen points of the labels shown, to fade one whose point is within 24 px of another's. */
+    const anchors: { x: number; y: number }[] = [];
     const order = [...this.labels.values()].sort(
       (a, b) => b.spec.priority - a.spec.priority,
     );
@@ -511,7 +637,13 @@ export class Globe {
           visible = x >= 0 && x <= w && y >= 0 && y <= h;
         }
       }
-      if (visible) {
+      // Two origins under 24 px apart: the lower-priority label fades out
+      // (a transition, not a cut) rather than crowding the higher one.
+      const near =
+        visible &&
+        anchors.some((a) => Math.hypot(a.x - x, a.y - y) < LABEL_NEAR_PX);
+      el.classList.toggle("fx-globe-label-near", near);
+      if (visible && !near) {
         const box = {
           x: x + 12,
           y: y + 4,
@@ -527,8 +659,12 @@ export class Globe {
         );
         if (visible) {
           placed.push(box);
+          anchors.push({ x, y });
           el.style.transform = `translate(${box.x.toFixed(1)}px, ${box.y.toFixed(1)}px)`;
         }
+      } else if (near) {
+        // Kept in place, faded: it fades back in where it was.
+        el.style.transform = `translate(${(x + 12).toFixed(1)}px, ${(y + 4).toFixed(1)}px)`;
       }
       el.hidden = !visible;
     }

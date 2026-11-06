@@ -1651,3 +1651,19 @@
 .fx-globe-label-dim {
   opacity: 0;
 }
+/* The selected frame's label in white (DESIGN.md "A selection on the globe"). */
+.fx-globe-label.fx-globe-label-selected {
+  color: #ffffff;
+}
+/* Origins under 24 px apart on screen: the lower-priority label fades out. */
+.fx-globe-label {
+  transition: opacity 160ms ease-out;
+}
+.fx-globe-label.fx-globe-label-near {
+  opacity: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fx-globe-label {
+    transition: none;
+  }
+}
