@@ -589,6 +589,144 @@ describe("Widgets/EditorOutliner/EditorOutlinerViewModel", function () {
       ).not.toThrow();
       expect(activeLabels()).toEqual([]);
     });
+
+    describe("activate", function () {
+      it("selects and focuses a row that can be selected", function () {
+        viewModel = new EditorOutlinerViewModel(editor, provider);
+        viewModel.select(findRow("i0"));
+
+        viewModel.activate(findRow("i1"), { toggle: true });
+
+        expect(activeMeshes()).toEqual([m0, m1]);
+        expect(viewModel.focusedRow).toBe(findRow("i1"));
+      });
+
+      it("expands or collapses and focuses a row that can't be selected", function () {
+        editor.setMeshActive(m0);
+        viewModel = new EditorOutlinerViewModel(editor, provider);
+
+        viewModel.activate(findRow("group"));
+
+        expect(rowLabels()).toEqual(["i0", "group", "i3"]);
+        expect(viewModel.focusedRow).toBe(findRow("group"));
+        expect(activeMeshes()).toEqual([m0]);
+      });
+    });
+  });
+
+  describe("keyboard focus", function () {
+    function focusedLabel() {
+      return viewModel.focusedRow?.label;
+    }
+
+    beforeEach(function () {
+      // a
+      //   b
+      //     c
+      // d
+      viewModel = new EditorOutlinerViewModel(editor, provider);
+    });
+
+    it("starts with no row focused", function () {
+      expect(viewModel.focusedRow).toBeUndefined();
+    });
+
+    it("focusNext and focusPrevious focus the first row if none is focused", function () {
+      viewModel.focusNext();
+      expect(focusedLabel()).toBe("a");
+
+      viewModel.focusedRow = undefined;
+      viewModel.focusPrevious();
+      expect(focusedLabel()).toBe("a");
+    });
+
+    it("focusNext and focusPrevious move between rows and stop at the ends", function () {
+      viewModel.focusFirst();
+
+      viewModel.focusNext();
+      expect(focusedLabel()).toBe("b");
+      viewModel.focusNext();
+      viewModel.focusNext();
+      expect(focusedLabel()).toBe("d");
+
+      viewModel.focusPrevious();
+      expect(focusedLabel()).toBe("b");
+      viewModel.focusPrevious();
+      viewModel.focusPrevious();
+      expect(focusedLabel()).toBe("a");
+    });
+
+    it("focusFirst and focusLast focus the first and last rows", function () {
+      viewModel.focusLast();
+      expect(focusedLabel()).toBe("d");
+
+      viewModel.focusFirst();
+      expect(focusedLabel()).toBe("a");
+    });
+
+    it("expandOrFocusChild expands a collapsed row, then focuses its first child", function () {
+      viewModel.focusedRow = findRow("b");
+
+      viewModel.expandOrFocusChild();
+      expect(rowLabels()).toEqual(["a", "  b", "    c", "d"]);
+      expect(focusedLabel()).toBe("b");
+
+      viewModel.expandOrFocusChild();
+      expect(focusedLabel()).toBe("c");
+    });
+
+    it("expandOrFocusChild does nothing for a row without children", function () {
+      viewModel.focusedRow = findRow("d");
+
+      viewModel.expandOrFocusChild();
+
+      expect(focusedLabel()).toBe("d");
+      expect(rowLabels()).toEqual(["a", "  b", "d"]);
+    });
+
+    it("collapseOrFocusParent collapses an expanded row, then focuses its parent", function () {
+      viewModel.toggleExpanded(findRow("b"));
+      viewModel.focusedRow = findRow("b");
+
+      viewModel.collapseOrFocusParent();
+      expect(rowLabels()).toEqual(["a", "  b", "d"]);
+      expect(focusedLabel()).toBe("b");
+
+      viewModel.collapseOrFocusParent();
+      expect(focusedLabel()).toBe("a");
+    });
+
+    it("collapseOrFocusParent keeps the focus on a root row without children", function () {
+      viewModel.focusedRow = findRow("d");
+
+      viewModel.collapseOrFocusParent();
+
+      expect(focusedLabel()).toBe("d");
+    });
+
+    it("navigation does nothing for keys that need a focused row", function () {
+      viewModel.expandOrFocusChild();
+      viewModel.collapseOrFocusParent();
+
+      expect(viewModel.focusedRow).toBeUndefined();
+      expect(rowLabels()).toEqual(["a", "  b", "d"]);
+    });
+
+    it("clears the focus when the focused row is hidden", function () {
+      viewModel.focusedRow = findRow("b");
+
+      viewModel.toggleExpanded(findRow("a"));
+
+      expect(viewModel.focusedRow).toBeUndefined();
+    });
+
+    it("keeps the focus when the focused row stays visible", function () {
+      viewModel.focusedRow = findRow("d");
+
+      viewModel.toggleExpanded(findRow("a"));
+
+      expect(focusedLabel()).toBe("d");
+    });
   });
 
   describe("destroy", function () {

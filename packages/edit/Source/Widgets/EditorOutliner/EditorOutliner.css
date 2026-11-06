@@ -16,6 +16,16 @@
   user-select: none;
 }
 
+/* The focused row shows where keyboard focus is instead. */
+.cesium-editor-outliner:focus {
+  outline: none;
+}
+
+.cesium-editor-outliner:focus-visible .cesium-editor-outliner-row-focused {
+  outline: 1px solid #aef;
+  outline-offset: -1px;
+}
+
 .cesium-editor-outliner-row {
   display: flex;
   align-items: center;
