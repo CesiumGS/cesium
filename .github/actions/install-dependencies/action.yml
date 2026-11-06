@@ -3,7 +3,7 @@ description: installs Node.js and npm 12, then runs npm install
 inputs:
   node-version:
     description: Node.js version to install
-    default: "22"
+    default: "24"
   working-directory:
     description: directory to run npm install in
     default: "."

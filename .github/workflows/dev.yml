@@ -63,7 +63,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        version: [22, 24]
+        version: [22, 24, 26]
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/install-dependencies
