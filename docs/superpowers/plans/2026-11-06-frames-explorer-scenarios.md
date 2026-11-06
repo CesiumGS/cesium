@@ -205,7 +205,7 @@ This task replaces the tour and the Explore tab's layout. It ports three scenari
   - Each switch takes a generation number. Replies from an older generation are dropped, and the old scenario's overlays are removed before the new ones draw (Review Focus 3).
 - **Layout (spec "How the page works"):**
   - the scenario strip at the panel's top;
-  - the tree diagram (Task 2's layout, with family colours, added frames distinct, and each edge's kind and accuracy; Review Focus 5's path lit edge by edge on answer, honouring reduced motion);
+  - the tree diagram (Task 2's layout, with family colours, added frames distinct, and each edge's kind and accuracy; Review Focus 5's path lit edge by edge on answer, honouring reduced motion). On a scenario switch, the tree visibly rebuilds: shared nodes move to their new places and added frames attach in place, which is the spec's "same system, different shape" moment. Reduced motion cuts straight to the new shape;
   - the headline answer, with its accuracy;
   - the knobs, with the checked-setup marker and "Back to the checked setup";
   - the proof (Task 3's rows, which open into the existing inspector).
