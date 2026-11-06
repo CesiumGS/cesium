@@ -141,11 +141,12 @@ describe("Moon map polar caps", () => {
     expect(seamError((v) => 0.5 * v + 20)).toBeLessThanOrEqual(4);
   });
 
-  it("orients both caps: east from west, the ±180° seam, latitude", () => {
-    // Each cap's pixels coloured by where they are on the Moon: green by a
-    // quarter of longitude (front −45°–45°, east, back across ±180°, west),
-    // red by latitude, blue by pole. A cap frame mirrored, turned or
-    // flipped puts the wrong quarter (or latitude) in the map's texels.
+  it("orients both caps to within a degree: longitude, the ±180° seam, latitude", () => {
+    // Each cap's pixels coloured by where they are on the Moon: longitude λ
+    // as green 128 + 100 cos λ and blue 128 + 100 sin λ, and the pole and
+    // latitude as red (above 128 north, below it south). A cap frame
+    // mirrored, turned or flipped puts the wrong longitude (or latitude)
+    // in the map's texels.
     const width = 720;
     const map = composeMoonMap(
       band(width, () => 0),
@@ -155,43 +156,45 @@ describe("Moon map polar caps", () => {
       ],
     );
     const height = width / 2;
+    const polar = (latitude: number) =>
+      Math.abs(latitude) >= 86 && Math.abs(latitude) <= 88.5;
     let checked = 0;
+    let worst = 0;
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
         const [latitude, longitude] = texelAngles(map, x, y);
-        if (Math.abs(latitude) < 86 || Math.abs(latitude) > 88.5) {
+        if (!polar(latitude)) {
           continue;
         }
         const [r, g, b, a] = texel(map, x, y);
         expect(a).toBe(255);
-        expect(Math.abs(b! - (latitude > 0 ? 200 : 100))).toBeLessThanOrEqual(
-          2,
+        // Latitude: 25 a degree, so 3 is 0.12°.
+        expect(Math.abs(r! - poleShade(latitude))).toBeLessThanOrEqual(3);
+        worst = Math.max(
+          worst,
+          Math.abs(remainder(shadeLongitude(g!, b!) - longitude)),
         );
-        expect(Math.abs(r! - latitudeShade(latitude))).toBeLessThanOrEqual(6);
-        // Clear of the quarters' edges (the filter's reach there).
-        const toEdge = Math.min(
-          ...[-135, -45, 45, 135].map((edge) => Math.abs(longitude - edge)),
-        );
-        if (toEdge >= 6) {
-          expect(Math.abs(g! - quarterShade(longitude))).toBeLessThanOrEqual(2);
-          checked++;
-        }
+        checked++;
       }
     }
-    // Both caps, all four quarters, negative longitudes among them.
-    expect(checked).toBeGreaterThan(4 * 720 * 0.8);
-    // The seam: the map's first and last columns are the back quarter's,
-    // and agree with each other, row by row.
+    // Both caps, every longitude (negative ones among them).
+    expect(checked).toBe(2 * 5 * width);
+    expect(worst).toBeLessThanOrEqual(1);
+    // The seam: the map's first and last columns, at −179.75° and
+    // 179.75°, half a degree apart across ±180°, row by row.
     for (let y = 0; y < height; y++) {
       const [latitude] = texelAngles(map, 0, y);
-      if (Math.abs(latitude) < 86 || Math.abs(latitude) > 88.5) {
+      if (!polar(latitude)) {
         continue;
       }
       const first = texel(map, 0, y);
       const last = texel(map, width - 1, y);
-      expect(first[1]).toBe(quarterShade(180));
-      expect(last[1]).toBe(quarterShade(180));
-      expect(Math.abs(first[0]! - last[0]!)).toBeLessThanOrEqual(2);
+      const across = remainder(
+        shadeLongitude(first[1]!, first[2]!) -
+          shadeLongitude(last[1]!, last[2]!),
+      );
+      expect(Math.abs(across - 0.5)).toBeLessThanOrEqual(1);
+      expect(Math.abs(first[0]! - last[0]!)).toBeLessThanOrEqual(1);
     }
   });
 
@@ -280,8 +283,19 @@ describe("Moon map polar caps", () => {
 
   it.each([
     ["an accessor past its view", { count: 2000 }, /its view/],
-    ["a view past its BIN chunk", { viewLength: 4096 }, /BIN chunk/],
+    ["an accessor one past its view", { count: 26 }, /its view/],
+    ["a view past its BIN chunk", { viewLength: () => 4096 }, /BIN chunk/],
+    [
+      "a view one past its BIN chunk",
+      { viewLength: (bin: number) => bin + 1 },
+      /BIN chunk/,
+    ],
     ["an accessor that isn't float", { componentType: 5123 }, /componentType/],
+    [
+      "no accessor for its texture coordinates",
+      { uvAccessor: 5 },
+      /no accessor 5/,
+    ],
   ])(
     "warns of a cap tile with %s, rather than reading past it",
     async (_, options, message) => {
@@ -311,6 +325,32 @@ describe("Moon map polar caps", () => {
     },
   );
 
+  it.each([
+    ["an accessor that ends its view", { count: 25 }],
+    ["a view that ends its BIN chunk", { viewLength: (bin: number) => bin }],
+  ])("reads a cap tile with %s", async (_, options) => {
+    const files = stubAsset();
+    files.set(
+      "https://moon.test/north/3/0/0.b3dm",
+      tile(
+        -6,
+        6,
+        6,
+        -6,
+        (lat, lon) => direction(lat, lon),
+        "north-cap",
+        options,
+      ),
+    );
+    const { map, warnings } = await readMoonMap(
+      "https://moon.test/tileset.json",
+      stubSource(files),
+      0,
+    );
+    expect(warnings.filter((w) => /north polar cap/.test(w))).toEqual([]);
+    expect(texel(map, 0, 0)[2]).toBe(200);
+  });
+
   it("rejects a band whose tiles would make too wide a map", async () => {
     // A tile whose fitted edges are 0.001° apart: 360,000 tiles across.
     const files = stubAsset();
@@ -324,15 +364,27 @@ describe("Moon map polar caps", () => {
   });
 });
 
-/** Latitude, as the orientation test's red: 40 a degree from 85°. */
-function latitudeShade(latitude: number): number {
-  return Math.round((Math.abs(latitude) - 85) * 40);
+/** The pole and latitude, as the orientation test's red: 25 a degree. */
+function poleShade(latitude: number): number {
+  return Math.round(128 + Math.sign(latitude) * (Math.abs(latitude) - 85) * 25);
 }
 
-/** Longitude's quarter, as the orientation test's green. */
-function quarterShade(longitude: number): number {
-  const quarter = Math.floor(((((longitude + 45) % 360) + 360) % 360) / 90);
-  return 40 + 60 * quarter;
+/** Longitude, as the orientation test's green and blue. */
+function longitudeShade(longitude: number): [number, number] {
+  return [
+    Math.round(128 + 100 * Math.cos(longitude * DEG)),
+    Math.round(128 + 100 * Math.sin(longitude * DEG)),
+  ];
+}
+
+/** The longitude a texel's green and blue say, degrees. */
+function shadeLongitude(g: number, b: number): number {
+  return Math.atan2(b - 128, g - 128) / DEG;
+}
+
+/** An angle's difference in degrees, within ±180. */
+function remainder(degrees: number): number {
+  return degrees - 360 * Math.round(degrees / 360);
 }
 
 /**
@@ -381,12 +433,7 @@ function orientationCap(pole: "north" | "south", transform: number[]): MoonCap {
         );
         return Math.abs(latitude) < 85.5
           ? [0, 0, 0, 0]
-          : [
-              latitudeShade(latitude),
-              quarterShade(longitude),
-              pole === "north" ? 200 : 100,
-              255,
-            ];
+          : [poleShade(latitude), ...longitudeShade(longitude), 255];
       }),
     })),
   };
@@ -580,8 +627,10 @@ function tile(
   options: {
     /** The position accessor's count, if not the grid's. */
     count?: number;
-    /** The position view's byte length, if not its data's. */
-    viewLength?: number;
+    /** The position view's byte length from the BIN chunk's, if not its data's. */
+    viewLength?: (binLength: number) => number;
+    /** The texture coordinates' accessor, if not 1. */
+    uvAccessor?: number;
     /** The position accessor's component type (5126, float). */
     componentType?: number;
     /** Bytes after the GLB, inside the b3dm. */
@@ -613,7 +662,13 @@ function tile(
   const gltf = {
     asset: { version: "2.0" },
     nodes: [{ mesh: 0 }],
-    meshes: [{ primitives: [{ attributes: { POSITION: 0, TEXCOORD_0: 1 } }] }],
+    meshes: [
+      {
+        primitives: [
+          { attributes: { POSITION: 0, TEXCOORD_0: options.uvAccessor ?? 1 } },
+        ],
+      },
+    ],
     accessors: [
       {
         bufferView: 0,
@@ -627,7 +682,7 @@ function tile(
       {
         buffer: 0,
         byteOffset: 0,
-        byteLength: options.viewLength ?? positions.length * 4,
+        byteLength: options.viewLength?.(bin.length) ?? positions.length * 4,
       },
       {
         buffer: 0,

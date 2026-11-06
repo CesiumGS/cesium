@@ -1,6 +1,7 @@
 import skyWgsl from "../shaders/generated/sky.wgsl?raw";
 import type { RealtimeAtmosphere } from "./RealtimeAtmosphere.ts";
 import type { AerosolType } from "./model.ts";
+import { meanAlbedo } from "./albedo.ts";
 import type { Ellipsoid, Cartographic } from "../math/ellipsoid.ts";
 import * as v3 from "../math/vec3.ts";
 import { MipGenerator } from "../gpu/MipGenerator.ts";
@@ -532,9 +533,11 @@ export class Sky {
    * Sets the Moon's albedo map: equirectangular, longitude 0 (the near
    * side's center) in the middle, north up, sRGB; its mean sets the scale
    * (the disk's total follows the Moon's albedo, `MOON_ALBEDO`). Null: a
-   * uniform disk.
+   * uniform disk. `mean`, the map's mean albedo if known (`meanAlbedo` in
+   * albedo.ts, as `loadIonMoonMap`'s worker gives it), spares reading the
+   * map back here (about 100 ms on the page for a 2048 × 1024 map).
    */
-  setMoonMap(image: ImageBitmap | null): void {
+  setMoonMap(image: ImageBitmap | null, mean?: number): void {
     const old = this.moonMap;
     if (!image) {
       this.moonMap = this.createMoonMap(1, 1);
@@ -554,7 +557,7 @@ export class Sky {
         [width, height],
       );
       (this.mips ??= new MipGenerator(this.device)).generate(this.moonMap);
-      this.moonMean = meanAlbedo(image);
+      this.moonMean = mean ?? readMeanAlbedo(image);
     }
     old.destroy();
   }
@@ -1391,11 +1394,8 @@ const scratchCartographic: Cartographic = {
 };
 const scratchNormal = v3.vec3();
 
-/**
- * An albedo map's mean (linear luminance of its sRGB texels), weighted by
- * latitude's cosine (equirectangular rows shrink toward the poles).
- */
-function meanAlbedo(image: ImageBitmap): number {
+/** An albedo map's mean (`meanAlbedo`), read back from the image. */
+function readMeanAlbedo(image: ImageBitmap): number {
   const { width, height } = image;
   const canvas = new OffscreenCanvas(width, height);
   const context = canvas.getContext("2d");
@@ -1403,26 +1403,11 @@ function meanAlbedo(image: ImageBitmap): number {
     return 1;
   }
   context.drawImage(image, 0, 0);
-  const data = context.getImageData(0, 0, width, height).data;
-  const linear = (c: number) => {
-    const x = c / 255;
-    return x <= 0.04045 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4;
-  };
-  let sum = 0;
-  let weights = 0;
-  for (let y = 0; y < height; y++) {
-    const w = Math.cos(((y + 0.5) / height - 0.5) * Math.PI);
-    for (let x = 0; x < width; x++) {
-      const i = (y * width + x) * 4;
-      sum +=
-        w *
-        (0.2126 * linear(data[i]!) +
-          0.7152 * linear(data[i + 1]!) +
-          0.0722 * linear(data[i + 2]!));
-      weights += w;
-    }
-  }
-  return sum > 0 ? sum / weights : 1;
+  return meanAlbedo(
+    context.getImageData(0, 0, width, height).data,
+    width,
+    height,
+  );
 }
 
 const halfScratch = new DataView(new ArrayBuffer(4));

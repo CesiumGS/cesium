@@ -6,10 +6,12 @@
  * hundred milliseconds of decoding, resampling and matching, at level 3
  * over a second). One request, `{ url, headers, level }`, the asset's root
  * tileset and the headers its requests carry; replied `{ ok: true, image,
- * warnings }`, the finished map as a transferred ImageBitmap, or
+ * warnings, mean }`, the finished map as a transferred ImageBitmap and its
+ * mean albedo (albedo.ts, so the page needn't read the map back), or
  * `{ ok: false, error }`.
  */
 
+import { meanAlbedo } from "../atmosphere/albedo.ts";
 import { decodeImage, readMoonMap } from "./moonMap.ts";
 
 export interface MoonMapRequest {
@@ -19,7 +21,7 @@ export interface MoonMapRequest {
 }
 
 export type MoonMapReply =
-  | { ok: true; image: ImageBitmap; warnings: string[] }
+  | { ok: true; image: ImageBitmap; warnings: string[]; mean: number }
   | { ok: false; error: string };
 
 self.onmessage = async (event: MessageEvent<MoonMapRequest>) => {
@@ -48,7 +50,12 @@ self.onmessage = async (event: MessageEvent<MoonMapRequest>) => {
       ),
       { colorSpaceConversion: "none" },
     );
-    reply = { ok: true, image, warnings };
+    reply = {
+      ok: true,
+      image,
+      warnings,
+      mean: meanAlbedo(map.data, map.width, map.height),
+    };
   } catch (error) {
     reply = {
       ok: false,

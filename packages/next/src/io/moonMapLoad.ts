@@ -22,7 +22,20 @@ export interface MoonMap {
    * load, the band's last row stretched over it instead.
    */
   warnings: string[];
+  /**
+   * The map's mean albedo (`meanAlbedo` in atmosphere/albedo.ts), for
+   * `Engine.setMoonMap(image, mean)`: worked out in the worker, so the page
+   * needn't read the map back.
+   */
+  mean: number;
 }
+
+/**
+ * How long the worker may take before it is stopped and the load rejects:
+ * generous (a warm load at level 2 is under half a second, level 3 about
+ * 1.5 s), only so a fetch that hangs can't keep the worker alive.
+ */
+export const MOON_MAP_TIMEOUT_MS = 120_000;
 
 /**
  * Reads the map from the band's `level` (2: 8 × 4 tiles of 256², a map of
@@ -33,33 +46,59 @@ export interface MoonMap {
  *
  * The endpoint resolves here; the tiles are fetched, decoded and composed
  * in a worker of their own (moonMapWorker.ts), which hands back the
- * finished map and stops: the page only uploads it.
+ * finished map and its mean, and stops: the page only uploads it.
+ * Aborting `signal` stops the worker and rejects with an AbortError; so
+ * does `timeoutMs` (`MOON_MAP_TIMEOUT_MS`) passing, with an Error.
  */
 export async function loadIonMoonMap(
-  options: IonOptions & { level?: number } = {},
+  options: IonOptions & {
+    level?: number;
+    signal?: AbortSignal;
+    timeoutMs?: number;
+  } = {},
 ): Promise<MoonMap> {
   const asset = await resolveIonAsset(CESIUM_MOON_TERRAIN, options);
-  const { image, warnings } = await composeInWorker({
-    url: asset.url,
-    headers: asset.headers,
-    level: options.level ?? 2,
-  });
-  return { image, attributions: asset.attributions, warnings };
+  const { image, warnings, mean } = await composeInWorker(
+    {
+      url: asset.url,
+      headers: asset.headers,
+      level: options.level ?? 2,
+    },
+    options,
+  );
+  return { image, attributions: asset.attributions, warnings, mean };
 }
 
 let script: string | undefined;
 
-function composeInWorker(
+/**
+ * @internal The worker's part of `loadIonMoonMap`: starts it, sends the
+ * request, and stops it on its reply, an error, `signal` or the timeout.
+ */
+export function composeInWorker(
   request: MoonMapRequest,
-): Promise<{ image: ImageBitmap; warnings: string[] }> {
+  {
+    signal,
+    timeoutMs = MOON_MAP_TIMEOUT_MS,
+  }: { signal?: AbortSignal; timeoutMs?: number } = {},
+): Promise<{ image: ImageBitmap; warnings: string[]; mean: number }> {
+  if (signal?.aborted) {
+    return Promise.reject(aborted());
+  }
   script ??= workerStart(new URL(moonMapWorkerUrl, import.meta.url));
   const worker = new Worker(script, { type: "module" });
-  return new Promise<{ image: ImageBitmap; warnings: string[] }>(
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let onAbort: (() => void) | undefined;
+  return new Promise<{ image: ImageBitmap; warnings: string[]; mean: number }>(
     (resolve, reject) => {
       worker.onmessage = (event: MessageEvent<MoonMapReply>) => {
         const reply = event.data;
         if (reply.ok) {
-          resolve({ image: reply.image, warnings: reply.warnings });
+          resolve({
+            image: reply.image,
+            warnings: reply.warnings,
+            mean: reply.mean,
+          });
         } else {
           reject(new Error(reply.error));
         }
@@ -75,9 +114,24 @@ function composeInWorker(
       worker.onmessageerror = () => {
         reject(new Error("Moon map: the worker's reply could not be read"));
       };
+      onAbort = () => reject(aborted());
+      signal?.addEventListener("abort", onAbort, { once: true });
+      timer = setTimeout(
+        () =>
+          reject(new Error(`Moon map: timed out after ${timeoutMs / 1000} s`)),
+        timeoutMs,
+      );
       worker.postMessage(request);
     },
   ).finally(() => {
+    clearTimeout(timer);
+    if (onAbort) {
+      signal?.removeEventListener("abort", onAbort);
+    }
     worker.terminate();
   });
+}
+
+function aborted(): DOMException {
+  return new DOMException("Moon map: aborted", "AbortError");
 }
