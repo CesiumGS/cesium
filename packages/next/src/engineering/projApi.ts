@@ -54,6 +54,15 @@ export interface PjFactors {
   readonly dy_dphi: number;
 }
 
+/** proj_coordoperation_get_method_info's result. */
+export interface PjMethodInfo {
+  readonly method_name: string;
+  /** "EPSG" for EPSG's methods. */
+  readonly method_auth_name: string;
+  /** The method's code in its authority, as a string ("1024"). */
+  readonly method_code: string;
+}
+
 /** proj_ellipsoid_get_parameters' result. */
 export interface PjEllipsoidParameters {
   readonly semi_major_metre: number;
@@ -127,6 +136,10 @@ export interface ProjApi {
   /** A bound CRS's base (source) CRS, the one that has the coordinate system. */
   proj_get_source_crs(object: PJ): PJ;
   proj_crs_get_geodetic_crs(crs: PJ): PJ;
+  /** A projected (derived) CRS's conversion. */
+  proj_crs_get_coordoperation(crs: PJ): PJ;
+  /** The method of a coordinate operation, such as a projected CRS's conversion. */
+  proj_coordoperation_get_method_info(operation: PJ): PjMethodInfo;
   proj_get_ellipsoid(object: PJ): PJ;
   proj_ellipsoid_get_parameters(ellipsoid: PJ): PjEllipsoidParameters;
   proj_get_type(object: PJ): PjType;

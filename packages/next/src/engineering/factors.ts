@@ -1,18 +1,17 @@
 // Scale factor, elevation factor and grid convergence of an engineering frame
 // (plan 4a R7).
 //
-// PROJ's `proj_factors` gives the projection's scales, derivatives and
-// meridian convergence at a longitude and latitude on the CRS's own datum;
-// the scales are taken against the CRS's own ellipsoid even where PROJ
-// projects on another (EPSG:3857's sphere; see gridFactors). The
-// projection is built from the projected CRS's PROJ string (its conversion and
-// ellipsoid, with the unit of the axes), and the position is the inverse
-// projection of the point's projected coordinates, so k and the convergence
-// belong to exactly the grid point the engineer gave. They are not evaluated at
-// `frame.toGeodetic`'s position: that is on the target's datum (WGS84 for
-// EPSG:4979) after the datum operation, a metre or two away, which would change
-// k by about 1e-10 (and the results would not match pyproj's Proj.get_factors
-// at 1e-12).
+// PROJ's `proj_factors`, on the projected CRS itself, gives the projection's
+// scales, derivatives and meridian convergence at a longitude and latitude on
+// the CRS's own datum. The scales are taken against the CRS's own ellipsoid
+// even for EPSG's spherical-formula methods, which PROJ projects on a sphere
+// (see SPHERICAL_METHODS); the method comes from PROJ's API, not from a PROJ
+// string. The position is the inverse of the CRS's conversion at the point's
+// projected coordinates, so k and the convergence belong to exactly the grid
+// point the engineer gave. They are not evaluated at `frame.toGeodetic`'s
+// position: that is on the target's datum (WGS84 for EPSG:4979) after the
+// datum operation, a metre or two away, which would change k by about 1e-10
+// (and the results would not match pyproj's Proj.get_factors at 1e-12).
 import { crsDefinition, unbound } from "./crs.ts";
 import type { EngineeringFrame } from "./EngineeringFrame.ts";
 import type { PJ, ProjApi } from "./projApi.ts";
@@ -41,27 +40,60 @@ export interface GridFactors {
 }
 
 interface Projection {
-  readonly projection: PJ;
+  /** The horizontal projected CRS, for proj_factors. */
+  readonly crs: PJ;
+  /** Its conversion, (lon, lat) degrees to (E, N) in the CRS's units. */
+  readonly conversion: PJ;
   /** The CRS's ellipsoid: semi-major axis (m) and eccentricity squared. */
   readonly a: number;
   readonly e2: number;
-  /** The semi-major axis (m) of the ellipsoid PROJ projects with, which its derivatives are divided by. */
-  readonly projectionA: number;
-  /** Whether PROJ projects on the CRS's own ellipsoid, so that its own scales are the CRS's. */
-  readonly sameEllipsoid: boolean;
+  /**
+   * Set when the CRS's conversion is one of EPSG's spherical-formula methods
+   * applied to an ellipsoidal datum, which PROJ projects on a sphere: the
+   * sphere's radius a_p (m), which PROJ's derivatives are divided by.
+   */
+  readonly sphere?: { readonly radius: number; readonly method: string };
 }
 
-/** The ellipsoid a PROJ string projects with: its ellipsoid parameters, as a geographic CRS (PROJ's default is GRS80). */
-const ELLIPSOID_TOKEN = /\+(?:ellps|a|b|R|rf|f|es|e)=\S+/g;
+/**
+ * EPSG's spherical-formula methods whose sphere is not the datum's ellipsoid,
+ * by their EPSG codes, and the sphere's radius from the datum's a and e2:
+ *  - Popular Visualisation Pseudo-Mercator (1024): the datum's semi-major
+ *    axis (IOGP 373-7-2 section 3.2.1.2);
+ *  - Lambert Azimuthal Equal Area (Spherical) (1027; 9821, its deprecated
+ *    twin) and Lambert Cylindrical Equal Area (Spherical) (9834): the
+ *    authalic sphere's radius, R_A = a sqrt((1 - (1 - e2)/(2e) ln((1 - e)/
+ *    (1 + e))) / 2) (sections 3.3.2.1, 3.2.6.1 and the implementation notes).
+ * PROJ writes these as spheres (3857 as +a=b=6378137, EASE-Grid with +R_A),
+ * so its own scales are the sphere's. The other "(Spherical)" methods in
+ * proj.db, Mercator (Spherical) (1026, 9841) and Equidistant Cylindrical
+ * (Spherical) (1029, 9823), are defined on the conformal sphere, but PROJ
+ * writes them on the datum's own ellipsoid (ESRI:54002 is +proj=eqc
+ * +datum=WGS84), where its own scales are already the ellipsoid's.
+ */
+const SPHERICAL_METHODS: Readonly<
+  Record<string, (a: number, e2: number) => number>
+> = {
+  "1024": (a) => a,
+  "1027": authalicRadius,
+  "9821": authalicRadius,
+  "9834": authalicRadius,
+};
 
-function parameters(P: ProjApi, ellipsoid: PJ) {
-  const e = P.proj_ellipsoid_get_parameters(ellipsoid);
-  const f =
-    e.semi_major_metre === e.semi_minor_metre
-      ? 0
-      : (e.semi_major_metre - e.semi_minor_metre) / e.semi_major_metre;
-  return { a: e.semi_major_metre, e2: f * (2 - f) };
+function authalicRadius(a: number, e2: number): number {
+  const e = Math.sqrt(e2);
+  return (
+    a *
+    Math.sqrt((1 - ((1 - e2) / (2 * e)) * Math.log((1 - e) / (1 + e))) * 0.5)
+  );
 }
+
+const RADIANS_PER_DEGREE = Math.PI / 180;
+
+/** Within this of a pole (radians), the spherical-formula path's derivatives are 0/0. */
+const POLE = 1e-9;
+/** How closely a_p must match the scale of PROJ's own coordinates (a central difference). */
+const SPHERE_CHECK = 1e-6;
 
 const projections = new WeakMap<EngineeringFrame, Projection>();
 
@@ -78,37 +110,39 @@ function projectionOf(frame: EngineeringFrame): Projection {
     P.proj_get_type(crs) === P.PJ_TYPE_COMPOUND_CRS
       ? unbound(P, P.proj_crs_get_sub_crs(crs, 0))
       : crs;
-  const string = P.proj_as_proj_string(horizontal, P.PJ_PROJ_5);
-  if (string === null) {
-    throw new Error(
-      "gridFactors: PROJ has no projection string for this CRS (a CRS given as WKT2 that PROJ cannot express as a PROJ string is not supported)",
-    );
-  }
-  // "+type=crs" makes PROJ build a CRS object, not the projection itself.
-  const projection = P.proj_create(
-    string.replace(/\s\+type=crs/, "").replace(/\s\+no_defs/, ""),
+  // The CRS's conversion, normalized for visualization: (lon, lat) in degrees
+  // to (E, N) in the CRS's units, inverted to find a grid point's longitude
+  // and latitude on the CRS's own datum. proj_factors takes the projected CRS
+  // itself (PROJ applies its conversion), with radians.
+  const conversion = P.proj_normalize_for_visualization(
+    P.proj_crs_get_coordoperation(horizontal),
   );
-  const own = parameters(
-    P,
+  const ellipsoid = P.proj_ellipsoid_get_parameters(
     P.proj_get_ellipsoid(P.proj_crs_get_geodetic_crs(horizontal)),
   );
-  const tokens = string.match(ELLIPSOID_TOKEN) ?? ["+ellps=GRS80"];
-  const projected = parameters(
-    P,
-    P.proj_get_ellipsoid(
-      P.proj_crs_get_geodetic_crs(
-        P.proj_create(`+proj=longlat ${tokens.join(" ")} +type=crs`),
-      ),
-    ),
+  const a = ellipsoid.semi_major_metre;
+  const f =
+    a === ellipsoid.semi_minor_metre ? 0 : (a - ellipsoid.semi_minor_metre) / a;
+  const e2 = f * (2 - f);
+  // The conversion's method, from PROJ's API (never from its PROJ string).
+  const method = P.proj_coordoperation_get_method_info(
+    P.proj_crs_get_coordoperation(horizontal),
   );
-  const result = {
-    projection,
-    a: own.a,
-    e2: own.e2,
-    projectionA: projected.a,
-    sameEllipsoid:
-      Math.abs(projected.a - own.a) <= 1e-6 &&
-      Math.abs(projected.e2 - own.e2) <= 1e-15,
+  const radiusOf =
+    method.method_auth_name === "EPSG" && e2 > 0
+      ? SPHERICAL_METHODS[method.method_code]
+      : undefined;
+  const result: Projection = {
+    crs: horizontal,
+    conversion,
+    a,
+    e2,
+    ...(radiusOf && {
+      sphere: {
+        radius: radiusOf(a, e2),
+        method: `${method.method_name} (EPSG ${method.method_code})`,
+      },
+    }),
   };
   projections.set(frame, result);
   return result;
@@ -130,57 +164,77 @@ export function gridFactors(
   design: ArrayLike<number>,
 ): GridFactors {
   const P = frame.proj;
-  const { projection, a, e2, projectionA, sameEllipsoid } = projectionOf(frame);
+  const { crs, conversion, a, e2, sphere } = projectionOf(frame);
   const projected = frame.projected(design);
   // Longitude and latitude, radians, on the CRS's own datum.
   const lp = P.proj_trans(
-    projection,
+    conversion,
     P.PJ_INV,
     P.proj_coord(projected[0]!, projected[1]!, 0, 0),
   ).v;
-  const lambda = lp[0]!;
-  const phi = lp[1]!;
+  const lambda = lp[0]! * RADIANS_PER_DEGREE;
+  const phi = lp[1]! * RADIANS_PER_DEGREE;
   if (!Number.isFinite(lambda) || !Number.isFinite(phi)) {
     throw new RangeError(
       `gridFactors: (${projected[0]}, ${projected[1]}) is outside the projection's domain`,
     );
   }
-  const factors = P.proj_factors(projection, P.proj_coord(lambda, phi, 0, 0));
+  const factors = P.proj_factors(crs, P.proj_coord(lambda, phi, 0, 0));
   const w = 1 - e2 * Math.sin(phi) ** 2;
   // sqrt(M N) = a sqrt(1 - e2) / (1 - e2 sin^2 phi).
   const R = (a * Math.sqrt(1 - e2)) / w;
   const height = frame.toGeodetic(design).height;
   const elevationFactor = R / (R + height);
-  // The scales against the CRS's own ellipsoid. PROJ takes its scales against
-  // the ellipsoid it projects with, which is not always the CRS's: it writes
-  // EPSG:3857 as a spherical +proj=merc on a = b = 6378137, whose parallel
-  // scale is 1/cos phi, while the CRS's latitudes are WGS 84's and its true
-  // scale is a / (nu cos phi) (IOGP 373-7-2 section 3.2.1.2). So the images of
-  // the east and north unit vectors come from PROJ's derivatives, which are
-  // of coordinates divided by the projection's semi-major axis a_p, against
-  // the CRS ellipsoid's radii of curvature nu = a / sqrt(w) and
+  // The images K and H of the east and north unit vectors: their directions
+  // from PROJ's derivatives, d(x, y)/d lambda and d(x, y)/d phi.
+  //
+  // PROJ's own scales are kept for every CRS but one kind: EPSG's
+  // spherical-formula methods on an ellipsoidal datum (SPHERICAL_METHODS),
+  // which PROJ projects on a sphere, so that its scales are the sphere's
+  // (3857's parallel scale would be 1/cos phi, not the true a / (nu cos phi)
+  // of IOGP 373-7-2 section 3.2.1.2). There the derivatives, which are of
+  // coordinates divided by the sphere's radius a_p, are taken against the
+  // CRS ellipsoid's radii of curvature nu = a / sqrt(w) and
   // rho = a (1 - e2) / w^(3/2):
   //   K = d(x, y)/d lambda * a_p / (nu cos phi),
   //   H = d(x, y)/d phi * a_p / rho,
-  // with k = |K| and h = |H|. On the CRS's own ellipsoid this is PROJ's own
-  // formula (they agree to ~1e-16), and PROJ's values are kept there: they are
-  // analytic where PROJ has them, at a pole too, and match pyproj's.
-  const ratio = projectionA / a;
-  const kx = (factors.dx_dlam * ratio * Math.sqrt(w)) / Math.cos(phi);
-  const ky = (factors.dy_dlam * ratio * Math.sqrt(w)) / Math.cos(phi);
-  const hx = (factors.dx_dphi * ratio * w * Math.sqrt(w)) / (1 - e2);
-  const hy = (factors.dy_dphi * ratio * w * Math.sqrt(w)) / (1 - e2);
+  // and k = |K|, h = |H|. Elsewhere K and H are scaled to PROJ's own k and h
+  // (analytic where PROJ has them, at a pole too, and matching pyproj's).
+  let kx: number;
+  let ky: number;
+  let hx: number;
+  let hy: number;
+  if (sphere !== undefined) {
+    if (Math.abs(Math.abs(phi) - Math.PI / 2) < POLE) {
+      throw new RangeError(
+        `gridFactors: (${projected[0]}, ${projected[1]}) is at a pole, where ${sphere.method}'s scales against the ellipsoid are not defined by its derivatives`,
+      );
+    }
+    checkSphere(frame, conversion, lambda, phi, factors, sphere);
+    const k = (sphere.radius * Math.sqrt(w)) / (a * Math.cos(phi));
+    const h = (sphere.radius * w * Math.sqrt(w)) / (a * (1 - e2));
+    kx = factors.dx_dlam * k;
+    ky = factors.dy_dlam * k;
+    hx = factors.dx_dphi * h;
+    hy = factors.dy_dphi * h;
+  } else {
+    const lengthL = Math.hypot(factors.dx_dlam, factors.dy_dlam);
+    const lengthP = Math.hypot(factors.dx_dphi, factors.dy_dphi);
+    kx = (factors.dx_dlam / lengthL) * factors.parallel_scale;
+    ky = (factors.dy_dlam / lengthL) * factors.parallel_scale;
+    hx = (factors.dx_dphi / lengthP) * factors.meridional_scale;
+    hy = (factors.dy_dphi / lengthP) * factors.meridional_scale;
+  }
   // PROJ differentiates numerically, so a conformal projection's meridional and
   // parallel scales differ by ~1e-11 (neither is the exact k to better than
   // that). The parallel scale is the steadier across PROJ versions: it matches
   // pyproj's (PROJ 9.8.1) to 1e-13 where the meridional one differs by 1e-11.
-  const pointScale = sameEllipsoid
-    ? factors.parallel_scale
-    : Math.hypot(kx, ky);
-  const meridionalScale = sameEllipsoid
-    ? factors.meridional_scale
-    : Math.hypot(hx, hy);
-  const arealScale = sameEllipsoid ? factors.areal_scale : kx * hy - ky * hx;
+  const pointScale =
+    sphere === undefined ? factors.parallel_scale : Math.hypot(kx, ky);
+  const meridionalScale =
+    sphere === undefined ? factors.meridional_scale : Math.hypot(hx, hy);
+  const arealScale =
+    sphere === undefined ? factors.areal_scale : kx * hy - ky * hx;
   // Tissot's indicatrix from J = [K H]: theta' is the angle from K to H, and
   // J's singular values are a' = Q + R and b' = |Q - R| with
   // Q = |(kx + hy, ky - hx)| / 2 and R = |(kx - hy, ky + hx)| / 2, so
@@ -224,4 +278,39 @@ export function gridFactors(
     combinedFactor: pointScale * elevationFactor,
     convergence: factors.meridian_convergence,
   };
+}
+
+/**
+ * Checks the sphere's radius a_p against the scale of PROJ's own
+ * coordinates: |d(E, N)/d lambda| by a central difference of the projection
+ * must be a_p times PROJ's normalized derivative. (PROJ computes R_A by a
+ * series, about 1e-10 from the closed form, well inside this check.)
+ */
+function checkSphere(
+  frame: EngineeringFrame,
+  conversion: PJ,
+  lambda: number,
+  phi: number,
+  factors: { readonly dx_dlam: number; readonly dy_dlam: number },
+  sphere: NonNullable<Projection["sphere"]>,
+): void {
+  const P = frame.proj;
+  const step = 1e-6;
+  const at = (l: number) =>
+    P.proj_trans(
+      conversion,
+      P.PJ_FWD,
+      P.proj_coord(l / RADIANS_PER_DEGREE, phi / RADIANS_PER_DEGREE, 0, 0),
+    ).v;
+  const east = at(lambda + step);
+  const west = at(lambda - step);
+  const measured =
+    (Math.hypot(east[0]! - west[0]!, east[1]! - west[1]!) / (2 * step)) *
+    frame.units.metersPerUnit;
+  const expected = Math.hypot(factors.dx_dlam, factors.dy_dlam) * sphere.radius;
+  if (!(Math.abs(measured / expected - 1) <= SPHERE_CHECK)) {
+    throw new Error(
+      `gridFactors: ${sphere.method}: PROJ's coordinates have a sphere radius of ${measured / Math.hypot(factors.dx_dlam, factors.dy_dlam)} m, not the method's ${sphere.radius} m`,
+    );
+  }
 }

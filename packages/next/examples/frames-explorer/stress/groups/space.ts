@@ -358,7 +358,8 @@ const spaceEffectsCase = stressCase(
       id: `${base.id}.earth-orientation`,
       title:
         "Earth orientation's uncertainty at the flyby, at DSS-43 on the Earth's surface (display only)",
-      pass: meters !== undefined,
+      pass: true,
+      displayOnly: true,
       detail:
         eop === undefined
           ? "no Earth-orientation term"
@@ -375,7 +376,8 @@ const spaceEffectsCase = stressCase(
       id: `${base.id}.earth-orientation-angle`,
       title:
         "Earth orientation's uncertainty at the flyby as an angle toward Orion (display only)",
-      pass: meters !== undefined,
+      pass: true,
+      displayOnly: true,
       detail: `${fmt(meters === undefined ? NaN : meters / norm(station) / ARCSECOND, 4)}″: the same uncertainty over DSS-43's ${fmt(norm(station) / 1000, 6)} km from the Earth's centre`,
       effect: {
         value: meters === undefined ? NaN : meters / norm(station) / ARCSECOND,
