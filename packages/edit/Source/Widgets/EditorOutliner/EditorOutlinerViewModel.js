@@ -21,6 +21,17 @@ import { createCommand, knockout } from "@cesium/widgets";
  * @property {boolean} expandable Whether the item has children.
  * @property {boolean} expanded Whether the item's children are shown, if it has any.
  * @property {Mesh|undefined} mesh The mesh that selecting the row item selects, if any.
+ * @property {boolean} selectable Whether the row can be selected, which it can if it has a mesh.
+ * @property {boolean} active Whether the row's mesh is active.
+ */
+
+/**
+ * How {@link EditorOutlinerViewModel#select} changes the active meshes.
+ *
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ * @typedef {object} EditorOutlinerSelectOptions
+ * @property {boolean} [toggle=false] Whether to keep the other active meshes, like Ctrl- or Cmd-clicking. Without <code>range</code>, toggles the row's mesh.
+ * @property {boolean} [range=false] Whether to activate the meshes of the rows from the last row selected without <code>range</code> to this one, like Shift-clicking.
  */
 
 /**
@@ -38,6 +49,10 @@ import { createCommand, knockout } from "@cesium/widgets";
  * collapsed items left out. Root items start expanded, and other items start
  * collapsed. Items keep whether they're expanded when the tree changes, as
  * long as they stay in it.
+ * <p>
+ * Selecting a row makes its mesh active in the editor. A row shows whether
+ * its mesh is active, however that changed.
+ * </p>
  *
  * @alias EditorOutlinerViewModel
  * @constructor
@@ -71,8 +86,26 @@ class EditorOutlinerViewModel {
    */
   #nodes = new Map();
 
+  /**
+   * Whether each mesh shown in a row is active. Rows read these, so every row
+   * showing a mesh updates when it changes.
+   *
+   * @type {WeakMap<Mesh, ReturnType<typeof knockout.observable>>}
+   */
+  #meshActiveStates = new WeakMap();
+
+  /**
+   * The last row selected without <code>range</code>, where ranges start.
+   *
+   * @type {EditorOutlinerRow|undefined}
+   */
+  #anchor;
+
   /** @type {Command} */
   #toggleExpanded;
+
+  /** @type {Command} */
+  #select;
 
   /**
    * @param {MeshEditor} editor The editor whose meshes are listed.
@@ -107,8 +140,22 @@ class EditorOutlinerViewModel {
       },
     );
 
+    this.#select = createCommand(
+      /**
+       * @param {EditorOutlinerRow} row
+       * @param {EditorOutlinerSelectOptions} [options]
+       */
+      (row, options) => {
+        this.#selectRow(row, options);
+      },
+    );
+
     this.#eventHelper.add(provider.changed, (item) => {
       this.#onTreeChanged(item);
+    });
+
+    this.#eventHelper.add(editor.meshActiveChanged, (mesh, active) => {
+      this.#meshActiveStates.get(mesh)?.(active);
     });
 
     this.#onTreeChanged(undefined);
@@ -142,6 +189,20 @@ class EditorOutlinerViewModel {
    */
   get toggleExpanded() {
     return this.#toggleExpanded;
+  }
+
+  /**
+   * Selects a row, making its mesh active in the editor. Takes the
+   * {@link EditorOutlinerRow} and, optionally,
+   * {@link EditorOutlinerSelectOptions}. Without options, the row's mesh
+   * becomes the only active mesh. Does nothing for a row that can't be
+   * selected.
+   *
+   * @type {Command}
+   * @readonly
+   */
+  get select() {
+    return this.#select;
   }
 
   /**
@@ -179,17 +240,14 @@ class EditorOutlinerViewModel {
    * @ignore
    */
   #onTreeChanged(item) {
-    if (!defined(item)) {
+    if (defined(item)) {
+      // Skips items not read yet, which are read when they're first shown.
+      this.#reload(item);
+    } else {
       this.#roots = this.#provider.getChildren();
-
       for (const root of this.#roots) {
         this.#reload(root);
       }
-    } else if (this.#nodes.has(item)) {
-      this.#reload(item);
-    } else {
-      // Not read yet, so it'll be read when it's first shown.
-      return;
     }
 
     this.#forgetRemovedItems();
@@ -225,22 +283,39 @@ class EditorOutlinerViewModel {
   #getNode(item) {
     let node = this.#nodes.get(item);
     if (!defined(node)) {
-      /** @type {EditorOutlinerRow} */
-      const row = {
-        item,
-        label: "",
-        depth: 0,
-        expandable: false,
-        // Root items start expanded.
-        expanded: this.#roots.includes(item),
-        mesh: undefined,
-      };
-      knockout.track(row, ["label", "depth", "expandable", "expanded", "mesh"]);
-      node = { row, children: [] };
+      node = { row: this.#createRow(item), children: [] };
       this.#nodes.set(item, node);
       this.#read(item, node);
     }
     return node;
+  }
+
+  /**
+   * @param {*} item The item.
+   * @returns {EditorOutlinerRow} A new row for the item, with the default state.
+   * @ignore
+   */
+  #createRow(item) {
+    /** @type {EditorOutlinerRow} */
+    const row = {
+      item,
+      label: "",
+      depth: 0,
+      expandable: false,
+      // Root items start expanded.
+      expanded: this.#roots.includes(item),
+      mesh: undefined,
+      selectable: false,
+      active: false,
+    };
+    knockout.track(row, ["label", "depth", "expandable", "expanded", "mesh"]);
+    knockout.defineProperty(row, "selectable", () => defined(row.mesh));
+    knockout.defineProperty(
+      row,
+      "active",
+      () => defined(row.mesh) && this.#getActiveState(row.mesh)(),
+    );
+    return row;
   }
 
   /**
@@ -257,6 +332,142 @@ class EditorOutlinerViewModel {
     row.label = provider.getLabel(item);
     row.mesh = provider.getMesh(item);
     row.expandable = node.children.length > 0;
+  }
+
+  /**
+   * Gets whether a mesh is active, reading it from the editor the first time.
+   *
+   * @param {Mesh} mesh The mesh.
+   * @returns {ReturnType<typeof knockout.observable>} The observable state.
+   * @ignore
+   */
+  #getActiveState(mesh) {
+    let state = this.#meshActiveStates.get(mesh);
+    if (!defined(state)) {
+      const editor = this.#editor;
+      state = knockout.observable(
+        editor.hasMesh(mesh) && editor.isMeshActive(mesh),
+      );
+      this.#meshActiveStates.set(mesh, state);
+    }
+    return state;
+  }
+
+  /**
+   * Selects a row's mesh, or the meshes of a range of rows. Does nothing for
+   * a row that can't be selected.
+   *
+   * @param {EditorOutlinerRow} row The row.
+   * @param {EditorOutlinerSelectOptions} [options] How to change the active meshes.
+   * @ignore
+   */
+  #selectRow(row, options) {
+    if (!this.#canSelect(row)) {
+      return;
+    }
+
+    const toggle = options?.toggle ?? false;
+    const rangeStart = options?.range ? this.#getVisibleAnchor() : undefined;
+    if (defined(rangeStart)) {
+      this.#selectRange(rangeStart, row, toggle);
+      return;
+    }
+
+    this.#anchor = row;
+    const mesh = /** @type {Mesh} */ (row.mesh);
+    if (toggle) {
+      this.#setMeshActive(mesh, !this.#editor.isMeshActive(mesh));
+    } else {
+      this.#setActiveMeshes([mesh]);
+    }
+  }
+
+  /**
+   * Activates the meshes of the rows from one row to another.
+   *
+   * @param {EditorOutlinerRow} start The row the range starts at.
+   * @param {EditorOutlinerRow} end The row the range ends at.
+   * @param {boolean} keepActive Whether to keep the other active meshes.
+   * @ignore
+   */
+  #selectRange(start, end, keepActive) {
+    const meshes = this.#getSelectableMeshesBetween(start, end);
+    if (!keepActive) {
+      this.#setActiveMeshes(meshes);
+      return;
+    }
+
+    for (const mesh of meshes) {
+      this.#setMeshActive(mesh, true);
+    }
+  }
+
+  /**
+   * @param {EditorOutlinerRow} start A visible row.
+   * @param {EditorOutlinerRow} end Another visible row.
+   * @returns {Mesh[]} The meshes of the rows from one to the other that can be selected.
+   * @ignore
+   */
+  #getSelectableMeshesBetween(start, end) {
+    const startIndex = this.rows.indexOf(start);
+    const endIndex = this.rows.indexOf(end);
+    return this.rows
+      .slice(Math.min(startIndex, endIndex), Math.max(startIndex, endIndex) + 1)
+      .filter((row) => this.#canSelect(row))
+      .map((row) => /** @type {Mesh} */ (row.mesh));
+  }
+
+  /**
+   * @returns {EditorOutlinerRow|undefined} The row ranges start at, if it's visible.
+   * @ignore
+   */
+  #getVisibleAnchor() {
+    const anchor = this.#anchor;
+    return defined(anchor) && this.rows.includes(anchor) ? anchor : undefined;
+  }
+
+  /**
+   * @param {EditorOutlinerRow} row The row.
+   * @returns {boolean} Whether the row has a mesh that's in the editor.
+   * @ignore
+   */
+  #canSelect(row) {
+    return row.selectable && this.#editor.hasMesh(row.mesh);
+  }
+
+  /**
+   * Makes the given meshes the only active meshes in the editor.
+   *
+   * @param {Mesh[]} meshes The meshes.
+   * @ignore
+   */
+  #setActiveMeshes(meshes) {
+    const active = new Set(meshes);
+    for (const mesh of this.#editor.meshes) {
+      this.#setMeshActive(mesh, active.has(mesh));
+    }
+  }
+
+  /**
+   * Makes a mesh active or inactive in the editor, and updates its rows.
+   *
+   * @param {Mesh} mesh The mesh.
+   * @param {boolean} active Whether the mesh should be active.
+   * @ignore
+   */
+  #setMeshActive(mesh, active) {
+    const editor = this.#editor;
+    if (editor.isMeshActive(mesh) === active) {
+      return;
+    }
+
+    if (active) {
+      editor.setMeshActive(mesh);
+    } else {
+      editor.setMeshInactive(mesh);
+    }
+    // meshActiveChanged isn't raised until the next frame, so update now.
+    this.#meshActiveStates.get(mesh)?.(active);
   }
 
   /**
@@ -315,7 +526,7 @@ class EditorOutlinerViewModel {
   }
 
   /**
-   * Stops listening to the provider. Doesn't destroy the provider.
+   * Stops listening to the provider and editor. Doesn't destroy the provider.
    */
   destroy() {
     this.#eventHelper.removeAll();
