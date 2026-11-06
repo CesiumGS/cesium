@@ -17,6 +17,7 @@ import { svgChevronDown } from "@stratakit/icons/chevron-down";
 import { svgChevronUp } from "@stratakit/icons/chevron-up";
 import { svgDismiss } from "@stratakit/icons/dismiss";
 import { svgLink } from "@stratakit/icons/link";
+import { svgReCenter } from "@stratakit/icons/re-center";
 import { Icon } from "@stratakit/mui";
 import {
   useEffect,
@@ -26,6 +27,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { isFrameKey } from "../orbit.ts";
 import { captionFold, focusAfter, foldReducer } from "./fold.ts";
 import { legendRows } from "./legendRows.ts";
 import type { PanelModel, TourStop } from "./model.ts";
@@ -328,5 +330,50 @@ export function TourCaption({
         </div>
       </div>
     </section>
+  );
+}
+
+/**
+ * Frame content (owner: stuck out in space): re-flies the current framing,
+ * the tour stop, else the selected frame or result, else the opening view.
+ * The StrataKit re-center icon, as Dyno's Viewer page uses; the F key does
+ * the same anywhere on the page but in a text field. Top left under Dyno's
+ * inspector, clear of the credits (bottom left), the caption (top right, or
+ * the bottom on a narrow view), the legend (bottom right) and the stop-4
+ * inset (bottom left, or top right on a narrow view).
+ */
+export function FrameButton({ onFrame }: { onFrame: () => void }) {
+  const latest = useRef(onFrame);
+  latest.current = onFrame;
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (
+        isFrameKey({
+          key: e.key,
+          metaKey: e.metaKey,
+          ctrlKey: e.ctrlKey,
+          altKey: e.altKey,
+          target: e.target instanceof Element ? e.target : null,
+        })
+      ) {
+        e.preventDefault();
+        latest.current();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+  return (
+    <div className="fx-hud fx-frame">
+      <IconButton
+        size="small"
+        aria-label="Frame content"
+        aria-keyshortcuts="F"
+        title="Frame content (F)"
+        onClick={onFrame}
+      >
+        <Icon href={svgReCenter} />
+      </IconButton>
+    </div>
   );
 }

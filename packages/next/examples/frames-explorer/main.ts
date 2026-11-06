@@ -99,8 +99,26 @@ import { buildTree, pathToRoot, type TreeNode } from "./tree.ts";
 import references from "./references.json";
 import { PACKAGE } from "./version.ts";
 import { RunQueue } from "./runQueue.ts";
-import { RIGID_LINE, rigidCopy } from "./rigidLine.ts";
-import { GapInset } from "./gapInset.ts";
+import { RIGID_FRAME, RIGID_LINE, rigidCopy } from "./rigidLine.ts";
+import { GapInset, type GapInsetSpec } from "./gapInset.ts";
+import {
+  AXES_RIG,
+  SITE_RIG,
+  earthMoonRig,
+  followRig,
+  frameRig,
+  frameTarget,
+  lunarSiteRange,
+  placeRig,
+  rangeLimits,
+  rigFraming,
+  stopRig,
+  viewHeading,
+  type Rig,
+  type RigKind,
+} from "./orbit.ts";
+import { PivotMarker } from "./pivot.ts";
+import { gapParts } from "./inset.ts";
 import fingerprintFile from "./fingerprints.json";
 
 const DATA = "/frames-data/";
@@ -402,7 +420,10 @@ export function run(context: ExampleContext): ExampleRun {
         start: Float64Array;
         end: Float64Array;
         mark?: { exact: number[]; rigid: number[]; along: number[] };
-        inset: { caption: string; leader: string };
+        inset: Pick<
+          GapInsetSpec,
+          "caption" | "leader" | "parts" | "description"
+        >;
       }
     | undefined;
   const overlays = new Map<OverlayId, OverlayState>(
@@ -1181,7 +1202,7 @@ export function run(context: ExampleContext): ExampleRun {
           // ellipsoid, a gap tick every 50 km, a leader at the far end with
           // the true sag, and the 20 km mark for the inset.
           const g = await client.overlay("rigidVsExact", {
-            frame: frameParams(CALIFORNIA, "California zone 3"),
+            frame: RIGID_FRAME,
             from: RIGID_LINE.from,
             to: RIGID_LINE.to,
             samples: RIGID_LINE.samples,
@@ -1194,10 +1215,6 @@ export function run(context: ExampleContext): ExampleRun {
           const exact = layer("exact");
           const sag = g.sagAtEnd ?? NaN;
           const mark = g.marks?.[0];
-          const copy = rigidCopy({
-            sagEnd: sag,
-            gapAtMark: mark?.separation ?? NaN,
-          });
           const start = pointOf(exact);
           const a = pointOf(exact, true);
           const rigidLine = layer("rigid");
@@ -1205,6 +1222,16 @@ export function run(context: ExampleContext): ExampleRun {
           const b = pointOf(rigidLine, true);
           const along =
             r0 && b ? [0, 1, 2].map((i) => b[i]! - r0[i]!) : undefined;
+          // The gap at the mark in its two parts, as the inset sees it: the
+          // drop and the grid scale's part along the line (why its leader
+          // leans).
+          const parts =
+            mark && along ? gapParts(mark.exact, mark.rigid, along) : undefined;
+          const copy = rigidCopy({
+            sagEnd: sag,
+            gapAtMark: mark?.separation ?? NaN,
+            ...(parts && { markDrop: parts.drop, markAlong: parts.along }),
+          });
           rigidBuilt =
             start && a
               ? {
@@ -1872,98 +1899,364 @@ export function run(context: ExampleContext): ExampleRun {
         return framingAt(-122.43, 37.76, 8000, 0, -45 * deg);
       case "portland":
         return framingAt(-122.75, 45.5, 90_000, 0, -50 * deg);
-      case "earthMoon": {
-        // Down on the orbit plane (tour stop 5): along the normal of the
-        // Moon's orbit at the flyby, where Orion's free return lies, with
-        // the Earth–Moon line across the screen, framing the Earth, the
-        // Moon and Orion's path as drawn.
-        const moon = moonCenter();
-        const instant = instantNow();
-        if (!moon || !frames || !instant) {
-          return undefined;
+      case "earthMoon":
+        return earthMoonView()?.framing;
+      case "moon":
+        return moonView()?.framing;
+      case "lunarSite":
+        return lunarSiteView()?.framing;
+    }
+  }
+
+  // ------------------------------------------------- orbits off the surface
+  /**
+   * A framing and, for a view off the Earth's surface, the orbit it hands
+   * over to when the flight ends (orbit.ts): its rig in `frame`'s own
+   * coordinates, placed Earth-fixed at the clock's instant.
+   */
+  interface CameraView {
+    framing: Framing;
+    rig?: { kind: RigKind; local: Rig; frame: Frame };
+  }
+
+  const placed = (local: Rig, frame: Frame): Rig | undefined => {
+    const instant = instantNow();
+    return frames && instant
+      ? placeRig(local, frameTransform(frame, frames.itrf, instant))
+      : undefined;
+  };
+
+  /** Stop 1, stop 2 and the geocentric frames: the Earth's centre, up its axis. */
+  function geocentricView(f: Framing): CameraView {
+    return {
+      framing: f,
+      ...(frames && {
+        rig: { kind: "geocentric", local: AXES_RIG, frame: frames.itrf },
+      }),
+    };
+  }
+
+  /** The Moon's frames: its centre at 20,000 km, from the Earth's side, a little above its equator. */
+  function moonView(): CameraView | undefined {
+    const rig = frames && placed(AXES_RIG, frames.moonMe);
+    return (
+      frames &&
+      rig && {
+        framing: rigFraming(rig, Math.PI, -20 * deg, 2e7),
+        rig: { kind: "moon", local: AXES_RIG, frame: frames.moonMe },
+      }
+    );
+  }
+
+  /**
+   * Stop 6 and the site: straight down its vertical from a few thousand
+   * kilometres, the whole lunar disk in view. The disk is the sky's
+   * backdrop, right only along that vertical (lunar-pole-investigation.md),
+   * so the triad sits on the imagery's pole region from here alone.
+   */
+  function lunarSiteView(): CameraView | undefined {
+    const site = local.find((f) => f.name === "Lunar south-pole site");
+    const rig = site && placed(SITE_RIG, site);
+    if (!site || !rig) {
+      return undefined;
+    }
+    const { clientWidth: w, clientHeight: h } = viewer.container;
+    const range = lunarSiteRange(
+      viewer.view.camera.fov,
+      w > 0 && h > 0 ? w / h : 1,
+    );
+    return {
+      framing: rigFraming(rig, 0, -Math.PI / 2 + 1e-3, range),
+      rig: { kind: "lunarSite", local: SITE_RIG, frame: site },
+    };
+  }
+
+  /**
+   * Down on the orbit plane (tour stop 5): along the normal of the Moon's
+   * orbit at the flyby, where Orion's free return lies, with the Earth–Moon
+   * line across the screen, framing the Earth, the Moon and Orion's path as
+   * drawn. Its orbit turns about the framing's centre, between the Earth and
+   * the Moon, up that normal and heading 0 toward the Moon at the flyby:
+   * fixed in GCRF (DE440 through the frames), as Orion's path is.
+   */
+  function earthMoonView(): CameraView | undefined {
+    const moon = moonCenter();
+    const instant = instantNow();
+    if (!moon || !frames || !instant) {
+      return undefined;
+    }
+    const leap = frames.data.leapSeconds;
+    // In GCRF the Moon's motion is its orbit's; then turned to ITRF.
+    const at = (ms: number) =>
+      frameTransform(
+        frames!.moonIcrf,
+        frames!.gcrf,
+        Instant.fromUtc(FLYBY + ms, leap),
+      );
+    const a = at(-1_800_000);
+    const b = at(1_800_000);
+    const g = cross([a[12]!, a[13]!, a[14]!], [b[12]!, b[13]!, b[14]!]);
+    const m = frameTransform(frames.gcrf, frames.itrf, instant);
+    const toItrf = (v: ArrayLike<number>) =>
+      [0, 1, 2].map(
+        (i) => m[i]! * v[0]! + m[4 + i]! * v[1]! + m[8 + i]! * v[2]!,
+      );
+    const normal = toItrf(g);
+    // The Earth and the Moon with room around them, and Orion's path.
+    const points: number[][] = [];
+    for (const [c, radius] of [
+      [[0, 0, 0], 2.5e7],
+      [Array.from(moon), 2.5e7],
+    ] as const) {
+      for (const d of [-1, 1]) {
+        for (let k = 0; k < 3; k++) {
+          const p = [...c];
+          p[k] = p[k]! + d * radius;
+          points.push(p);
         }
-        const leap = frames.data.leapSeconds;
-        // In GCRF the Moon's motion is its orbit's; then turned to ITRF.
-        const at = (ms: number) =>
-          frameTransform(
-            frames!.moonIcrf,
-            frames!.gcrf,
-            Instant.fromUtc(FLYBY + ms, leap),
-          );
-        const a = at(-1_800_000);
-        const b = at(1_800_000);
-        const g = cross([a[12]!, a[13]!, a[14]!], [b[12]!, b[13]!, b[14]!]);
-        const m = frameTransform(frames.gcrf, frames.itrf, instant);
-        const normal = [0, 1, 2].map(
-          (i) => m[i]! * g[0]! + m[4 + i]! * g[1]! + m[8 + i]! * g[2]!,
-        );
-        // The Earth and the Moon with room around them, and Orion's path.
-        const points: number[][] = [];
-        for (const [c, radius] of [
-          [[0, 0, 0], 2.5e7],
-          [Array.from(moon), 2.5e7],
-        ] as const) {
-          for (const d of [-1, 1]) {
-            for (let k = 0; k < 3; k++) {
-              const p = [...c];
-              p[k] = p[k]! + d * radius;
-              points.push(p);
-            }
-          }
-        }
-        if (orionBuilt) {
-          const place =
-            orionBuilt.frame === "ITRF"
-              ? IDENTITY
-              : compose(
-                  frameTransform(
-                    frames[DRAW_IN[orionBuilt.frame]],
-                    frames.itrf,
-                    instant,
-                  ),
-                  orionBuilt.inverse,
-                );
-          for (const c of orionBuilt.chunks) {
-            const o = c.origin;
-            points.push(
-              [0, 1, 2].map(
-                (i) =>
-                  place[i]! * o[0]! +
-                  place[4 + i]! * o[1]! +
-                  place[8 + i]! * o[2]! +
-                  place[12 + i]!,
+      }
+    }
+    if (orionBuilt) {
+      const place =
+        orionBuilt.frame === "ITRF"
+          ? IDENTITY
+          : compose(
+              frameTransform(
+                frames[DRAW_IN[orionBuilt.frame]],
+                frames.itrf,
+                instant,
               ),
+              orionBuilt.inverse,
             );
-          }
-        }
-        const canvas = viewer.canvas;
-        const f = planeFraming(points, normal, moon, {
-          fov: viewer.view.camera.fov,
-          aspect: canvas.clientWidth / Math.max(1, canvas.clientHeight),
-        });
-        return {
-          center: f.center,
-          range: f.range,
-          heading: 0,
-          pitch: -Math.PI / 2,
-          from: f.from,
-        };
+      for (const c of orionBuilt.chunks) {
+        const o = c.origin;
+        points.push(
+          [0, 1, 2].map(
+            (i) =>
+              place[i]! * o[0]! +
+              place[4 + i]! * o[1]! +
+              place[8 + i]! * o[2]! +
+              place[12 + i]!,
+          ),
+        );
       }
-      case "moon": {
-        const moon = moonCenter();
-        return moon
-          ? { center: moon, range: 2e7, heading: 0, pitch: -60 * deg }
-          : undefined;
+    }
+    const canvas = viewer.canvas;
+    const f = planeFraming(points, normal, moon, {
+      fov: viewer.view.camera.fov,
+      aspect: canvas.clientWidth / Math.max(1, canvas.clientHeight),
+    });
+    // The focus back in GCRF (the transform is a rotation: GCRF and ITRF
+    // share the Earth's centre), with the Moon at the flyby.
+    const center = [0, 1, 2].map(
+      (i) =>
+        m[4 * i]! * f.center[0]! +
+        m[4 * i + 1]! * f.center[1]! +
+        m[4 * i + 2]! * f.center[2]!,
+    );
+    const flyby = at(0);
+    return {
+      framing: {
+        center: f.center,
+        range: f.range,
+        heading: 0,
+        pitch: -Math.PI / 2,
+        from: f.from,
+      },
+      rig: {
+        kind: "earthMoon",
+        local: earthMoonRig(center, [flyby[12]!, flyby[13]!, flyby[14]!], g),
+        frame: frames.gcrf,
+      },
+    };
+  }
+
+  /** What "Show on globe" and Frame content frame for a frame: Earth frames the opening shot, the Moon's at 20,000 km, sites close. */
+  function frameView(id: string): CameraView | undefined {
+    switch (frameRig(id, orionInfo?.info.node.id)) {
+      case "geocentric":
+        return geocentricView(OPENING);
+      case "moon":
+        return moonView();
+      case "lunarSite":
+        return lunarSiteView();
+      case "earthMoon":
+        return earthMoonView();
+    }
+    if (id === "Sacramento ENU") {
+      return { framing: framingAt(-121.4944, 38.5816, 8000, 0, -45 * deg) };
+    }
+    if (id.startsWith("engineering:")) {
+      const f = framing("designGrid");
+      return f && { framing: f };
+    }
+    return { framing: OPENING };
+  }
+
+  /** A tour stop's view: its framing and, off the surface, its orbit. */
+  function stopView(camera: TourStopSpec["camera"]): CameraView | undefined {
+    switch (stopRig(camera)) {
+      case "earthMoon":
+        return earthMoonView();
+      case "lunarSite":
+        return lunarSiteView();
+      case "moon":
+        return moonView();
+      case "geocentric": {
+        const f = framing(camera);
+        return f && geocentricView(f);
       }
-      case "lunarSite": {
-        const o =
-          globe.triadOrigin("Lunar south-pole site") ?? lunarSiteOrigin();
-        return o
-          ? { center: o, range: 100, heading: 0, pitch: -20 * deg }
-          : undefined;
+      default: {
+        const f = framing(camera);
+        return f && { framing: f };
       }
     }
   }
+
+  /**
+   * The orbit in effect off the surface, followed as the clock moves its
+   * subject: its rig, where it was last placed and the heading it had (kept
+   * when the camera is straight above the pivot).
+   */
+  let orbit:
+    | {
+        kind: RigKind;
+        local: Rig;
+        frame: Frame;
+        placed: Rig;
+        heading: number;
+        at: number;
+      }
+    | undefined;
+  /** Set while the example itself sets the orbit: any other change is the user's. */
+  let orbitInternal = false;
+  const setOrbit = (options: Parameters<typeof viewer.setControls>[1]) => {
+    orbitInternal = true;
+    try {
+      viewer.setControls("orbit", options);
+    } finally {
+      orbitInternal = false;
+    }
+  };
+
+  /** The globe controls again, for a view on the Earth's surface. */
+  function leaveOrbit(): void {
+    orbit = undefined;
+    orbitInternal = true;
+    try {
+      viewer.setControls("globe");
+    } finally {
+      orbitInternal = false;
+    }
+  }
+
+  /**
+   * Flies to `v`. A surface view takes the globe controls at once (so a
+   * grab ends the flight); a view off the surface hands over to its orbit
+   * when the flight ends, the camera read where the flight left it.
+   */
+  function show(v: CameraView, seconds?: number): void {
+    orbit = undefined;
+    const rig = v.rig;
+    if (!rig) {
+      leaveOrbit();
+      globe.flyTo(v.framing, seconds);
+      return;
+    }
+    globe.flyTo(v.framing, seconds, () => startOrbit(rig));
+  }
+
+  function startOrbit(rig: NonNullable<CameraView["rig"]>): void {
+    const at = placed(rig.local, rig.frame);
+    if (disposed || !at) {
+      return;
+    }
+    const moon = moonCenter();
+    // Pitch and range are read from where the flight left the camera; the
+    // heading too, from the view, so the hand-over doesn't turn it.
+    const heading = viewHeading(viewer.view.camera, at);
+    setOrbit({
+      target: at.target,
+      frame: { up: at.up, headingRef: at.headingRef },
+      heading,
+      ...rangeLimits(
+        rig.kind,
+        moon ? Math.hypot(moon[0]!, moon[1]!, moon[2]!) : 3.844e8,
+      ),
+    });
+    orbit = { ...rig, placed: at, heading, at: viewer.clock.time };
+  }
+
+  /**
+   * The Moon and the site move in the Earth-fixed world as the clock runs
+   * (and stop 5's plane turns with GCRF): once a frame at most, and never
+   * during a drag or a flight, the orbit is carried with its subject.
+   */
+  function followOrbit(): void {
+    if (
+      !orbit ||
+      viewer.controls !== "orbit" ||
+      viewer.orbitDragging ||
+      globe.flying ||
+      viewer.clock.time === orbit.at
+    ) {
+      return;
+    }
+    const to = placed(orbit.local, orbit.frame);
+    const pivot = viewer.orbitPivot;
+    if (!to || !pivot) {
+      return;
+    }
+    orbit.at = viewer.clock.time;
+    const next = followRig(
+      viewer.view.camera.position,
+      pivot,
+      orbit.placed,
+      to,
+      orbit.heading,
+    );
+    if (next) {
+      setOrbit(next);
+      orbit.placed = to;
+      orbit.heading = next.heading;
+    }
+  }
+
+  /** Frame content (F): the tour stop, else the selected frame or result, else the opening view. */
+  function frameContent(): void {
+    const t = frameTarget(tourStop, view.get().selection);
+    if (t.kind === "tour") {
+      const stop = TOUR.find((s) => s.id === t.id);
+      if (stop) {
+        flyToStop(stop);
+      }
+      return;
+    }
+    const v =
+      t.kind === "frame"
+        ? frameView(t.id)
+        : t.kind === "result"
+          ? resultFraming(t.id).view
+          : { framing: OPENING };
+    if (v) {
+      show(v);
+    }
+  }
+
+  // The pivot marker while the orbit is dragged (HUD); a drag or wheel of
+  // the orbit ends a flight, as a grab of the globe does.
+  const pivotMarker = new PivotMarker(viewer, hud);
+  viewer.onOrbitChange = () => {
+    pivotMarker.update();
+    if (!orbitInternal && globe.flying) {
+      globe.stopFlight();
+    }
+  };
+  scope.defer(() => {
+    viewer.onOrbitChange = undefined;
+    pivotMarker.dispose();
+    leaveOrbit();
+  });
 
   function lunarSiteOrigin(): Float64Array | undefined {
     const instant = instantNow();
@@ -1975,29 +2268,13 @@ export function run(context: ExampleContext): ExampleRun {
     return Float64Array.from([m[12]!, m[13]!, m[14]!]);
   }
 
-  /** Where "Show on globe" goes for a frame: Earth frames the opening shot, the Moon's at 20,000 km, sites close. */
-  function frameFraming(id: string): Framing | undefined {
-    if (id === "Lunar south-pole site") {
-      return framing("lunarSite");
-    }
-    if (id === "Sacramento ENU") {
-      return framingAt(-121.4944, 38.5816, 8000, 0, -45 * deg);
-    }
-    if (id.startsWith("engineering:")) {
-      return framing("designGrid");
-    }
-    if (id.startsWith("MOON")) {
-      return framing("moon");
-    }
-    if (id === orionInfo?.info.node.id) {
-      return framing("earthMoon");
-    }
-    return OPENING;
-  }
-
   /** Where a result's group points: its overlay's framing, its site, or its frames. */
+  /** A view on the Earth's surface: the globe controls. */
+  const surface = (f: Framing | undefined): CameraView | undefined =>
+    f && { framing: f };
+
   function resultFraming(id: string): {
-    framing?: Framing;
+    view?: CameraView | undefined;
     overlay?: OverlayId;
     engineering: boolean;
   } {
@@ -2019,48 +2296,48 @@ export function run(context: ExampleContext): ExampleRun {
               : undefined;
     const engineering = g.needs.includes("proj");
     if (g.id === "lunar-time") {
-      return { framing: framing("lunarSite"), engineering: false };
+      return { view: lunarSiteView(), engineering: false };
     }
     if (g.id === "space" || g.id === "trajectory") {
       return {
-        framing: framing("earthMoon"),
+        view: earthMoonView(),
         overlay: "orion",
         engineering: false,
       };
     }
     if (overlay === "designGrid") {
-      return { framing: framing("designGrid"), overlay, engineering };
+      return { view: surface(framing("designGrid")), overlay, engineering };
     }
     if (overlay === "rigidVsExact") {
-      return { framing: framing("rigidVsExact"), overlay, engineering };
+      return { view: surface(framing("rigidVsExact")), overlay, engineering };
     }
     if (overlay === "distortion") {
       const d = DISTORTION[distortionCrs].look;
       return {
-        framing: framingAt(d[0], d[1], d[2], 0, -60 * deg),
+        view: surface(framingAt(d[0], d[1], d[2], 0, -60 * deg)),
         overlay,
         engineering,
       };
     }
     if (g.focus?.site === "california") {
-      return { framing: framing("site"), engineering };
+      return { view: surface(framing("site")), engineering };
     }
     if (engineering) {
       // A check with no site of its own: show the fingerprint's first point.
       const c = r?.fingerprint?.coordinates;
       if (c && c.length >= 3 && Math.hypot(c[0]!, c[1]!, c[2]!) > 6.3e6) {
         return {
-          framing: {
+          view: surface({
             center: [c[0]!, c[1]!, c[2]!],
             range: 30_000,
             heading: 0,
             pitch: -50 * deg,
-          },
+          }),
           engineering,
         };
       }
     }
-    return { framing: OPENING, engineering: false };
+    return { view: surface(OPENING), engineering: false };
   }
 
   // ------------------------------------------------- selection on the globe
@@ -2164,8 +2441,8 @@ export function run(context: ExampleContext): ExampleRun {
       frames: emphasisFrames(),
     });
     globe.dimGround(where.engineering);
-    if (where.framing) {
-      globe.flyTo(where.framing);
+    if (where.view) {
+      show(where.view);
     }
   }
 
@@ -2306,10 +2583,15 @@ export function run(context: ExampleContext): ExampleRun {
       viewer.clock.mode = "playing";
     }
     globe.dimGround(stopExposure(stop, viewer.container.clientWidth));
-    const f = framing(stop.camera);
-    if (f) {
-      globe.flyTo(
-        f,
+    flyToStop(stop);
+  }
+
+  /** A stop's camera, flown to (stop 5 in 3.0 s, stop 6 in 3.5 s). */
+  function flyToStop(stop: TourStopSpec): void {
+    const v = stopView(stop.camera);
+    if (v) {
+      show(
+        v,
         stop.camera === "lunarSite"
           ? 3.5
           : stop.camera === "earthMoon"
@@ -2539,7 +2821,7 @@ export function run(context: ExampleContext): ExampleRun {
       distortionCrs = crs;
       drawOverlay("distortion");
       const d = DISTORTION[crs].look;
-      globe.flyTo(framingAt(d[0], d[1], d[2], 0, -60 * deg));
+      show({ framing: framingAt(d[0], d[1], d[2], 0, -60 * deg) });
     },
     setDistortionHeight: (h) => {
       if (Number.isFinite(h)) {
@@ -2562,14 +2844,15 @@ export function run(context: ExampleContext): ExampleRun {
       viewer.clock.time = FLYBY;
     },
     showOnGlobe: (target) => {
-      const f =
+      const v =
         "frame" in target
-          ? frameFraming(target.frame)
-          : resultFraming(target.result).framing;
-      if (f) {
-        globe.flyTo(f);
+          ? frameView(target.frame)
+          : resultFraming(target.result).view;
+      if (v) {
+        show(v);
       }
     },
+    frameContent,
     fetchAsset: (id) => void showAsset(id),
     runUserCrs: (wkt2) => void runUser(wkt2),
     copyReport: async () => {
@@ -2623,6 +2906,8 @@ export function run(context: ExampleContext): ExampleRun {
         return;
       }
       assetTileset = tileset;
+      // On the Earth's surface: the globe controls.
+      leaveOrbit();
       viewer.zoomTo(tileset);
       userCrs = {
         state: "noCrs",
@@ -2717,6 +3002,12 @@ export function run(context: ExampleContext): ExampleRun {
         return;
       }
       frames = createFrames(data);
+      // The sky's Moon and Sun from the same DE440 the frames use: the
+      // analytic Moon is about 400 km off, which put the imagery's pole
+      // 400 km from the lunar site's triad (lunar-pole-investigation.md).
+      // Not undone on leave: the sky's data is the Viewer's, and the Viewer
+      // goes with the example.
+      viewer.setFrameData(data);
       const sum = [...bytes.values()].reduce((a, b) => a + b.received, 0);
       loading.apply("frames", {
         type: "ready",
@@ -2792,6 +3083,7 @@ export function run(context: ExampleContext): ExampleRun {
         // minute of clock time, at most once a second (R8).
         placeOrion();
         updateMinorGrid();
+        followOrbit();
         if (headlight) {
           // Follows the camera through the stop's flight.
           lightFromCamera();

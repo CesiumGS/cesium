@@ -334,4 +334,28 @@ describe("tour stops 3 and 4: California in daylight", () => {
     expect(c).toMatch(/true scale/);
     expect(c).not.toMatch(/50 times|×50/);
   });
+
+  it("stop 4 says why the inset's leader leans: the drop, and the grid scale's part along the line", () => {
+    const c = stop("rigid-exact").caption;
+    // The figures test/data computes (gapParts on the drawn line).
+    expect(c).toMatch(/31\.3 m of drop/);
+    expect(c).toMatch(/1\.5 m along the line/);
+    expect(c).toMatch(/scale factor/);
+    expect(c).toMatch(/leans/);
+  });
+});
+
+describe("tour stop 6: the lunar south pole", () => {
+  const c = stop("lunar-time").caption;
+
+  it("says where the site is: near the pole, at 89.5° S", () => {
+    expect(c).toMatch(/near the south pole, at 89\.5° S/);
+    expect(c).not.toMatch(/clock at the lunar south pole/);
+  });
+
+  it("says the imagery is a distant backdrop until plan 5 draws the Moon as a tileset", () => {
+    expect(c).toMatch(
+      /distant backdrop until plan 5 draws the Moon as a tileset/,
+    );
+  });
 });

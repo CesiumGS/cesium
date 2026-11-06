@@ -246,18 +246,75 @@ steps aside until the tour ends.
 Ease in and out (cubic), duration 1.2 s plus 0.35 s per decade of distance
 ratio, 1.2 to 3.5 s; target framing by kind: a site at 8 km range and 45°
 tilt; a grid or line so it fills about 70% of the view; the Moon at 20,000
-km; a lunar site at 100 m. Under reduced motion, flights cut.
+km from its Earth side, 20° above its equator; the lunar site straight down
+its vertical, the whole disk in view (see "Camera controls in space"). A
+flight off the Earth's surface hands over to its orbit when it arrives. Under
+reduced motion, flights cut.
+
+### Camera controls in space (owner, 2026-11-06)
+
+The owner got "stuck out in space": the globe controls only start a turn
+from a press on the Earth, and nothing showed where the centre of rotation
+was. A view framed off the Earth's surface now **orbits its subject** with
+the viewer's orbit controls (`viewer.setControls("orbit", …)`): a drag
+anywhere turns about the subject, the wheel zooms within limits, and a
+right- or shift-drag pans. Surface views (stops 3 and 4, the opening shot,
+Earth-surface selections, a fetched asset) keep the globe controls
+(`setControls("globe")`). Each orbit is a **rig**: its focus, its up (heading
+turns about it, pitch is measured from the plane square to it) and its
+heading 0, held in a frame of the subject's own (`orbit.ts`, unit-tested):
+
+| View                                                    | Focus                                                 | Up                                                    | Heading 0                    | Wheel range                                            |
+| ------------------------------------------------------- | ----------------------------------------------------- | ----------------------------------------------------- | ---------------------------- | ------------------------------------------------------ |
+| Stops 1 and 2; ITRF, GCRF, EME2000, EARTH_ICRF selected | the Earth's centre                                    | the Earth's axis (ITRF z)                             | 0° longitude (ITRF x)        | 1.3 to 40 Earth radii                                  |
+| Stop 5; Orion selected                                  | between the Earth and the Moon (the framing's centre) | the Moon's orbit normal at the flyby (DE440, ±30 min) | the Moon at the flyby        | 0.15 to 4 Earth–Moon distances                         |
+| MOON_ICRF, MOON_ME, MOON_PA selected                    | the Moon's centre                                     | its pole (MOON_ME z)                                  | the Earth's side (MOON_ME x) | 1.3 Moon radii to a quarter of the Earth–Moon distance |
+| Stop 6; the lunar site selected                         | the site                                              | its vertical (the site's up in MOON_ME)               | its north                    | 5 km to 25,000 km                                      |
+
+Stop 1 isn't named in the owner's list; it frames the geocentric triads
+from four Earth radii, as stop 2 does, so it orbits the Earth's centre too.
+ICRF and HCRS show the opening shot (their origins, the barycentre and the
+Sun, aren't on the scene) and keep the globe controls.
+
+- **Following the clock.** The rigs are fixed in ITRF, GCRF (stop 5, as
+  Orion's path is), MOON_ME or the site's frame, so the Moon's and the site's
+  rigs move in the Earth-fixed world as time runs. Once a frame at most, when
+  the clock has moved, and never during a drag or a flight, the orbit is
+  carried rigidly with its subject (`followRig`): the camera keeps its
+  heading, pitch and range, and a panned pivot moves with the subject.
+- **The hand-over.** A flight ends where its framing put the camera; the
+  orbit then reads pitch and range from there and the heading from the view
+  (`viewHeading`: looking straight down the rig's up, as at stop 5, the
+  heading is the screen's up, so the view doesn't turn a quarter). A drag or
+  wheel of the orbit ends a flight, as a grab of the globe does; an ended
+  flight leaves the controls as they were (Frame content flies again).
+- **The pivot marker.** While the orbit is dragged, a 20 px white ring with
+  a centre dot and crosshair ticks, outlined dark so it reads on sky and
+  ground alike, sits at `viewer.orbitPivot` (`pivot.ts`; HUD, never taking
+  the pointer); it fades over 0.5 s after the drag ends (a cut under reduced
+  motion).
+- **Frame content.** A HUD button with StrataKit's re-center icon (as Dyno's
+  Viewer page uses), and the F key anywhere on the page but in a text field:
+  it re-flies the current framing, the tour stop, else the selected frame or
+  result, else the opening view (`frameTarget`). It sits top left, 48 px
+  down, under Dyno's inspector: clear of the credits (bottom left), the tour
+  caption (top right, or the bottom on a narrow view), the legend (bottom
+  right) and the stop-4 inset (bottom left, or top right on a narrow view).
+- **Not this example's to solve.** Camera rigs attached to frames, as a
+  general engine feature (a camera that rides any frame, with its own up and
+  limits), are plan 5's (CESIUM2_WEBGPU_PLAN.md §13.14); this is the example's
+  use of the orbit controls plan 4 gave.
 
 ### The tour
 
-| Stop                         | Camera                                                                                                                                                                | On                                                                                                                                                                                                                                    | Caption                                                                                                                                                                  |
-| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 1 Earth's frames             | over the North Atlantic, 30°W 42°N, 4 Earth radii, lit from the camera (6c-1 fix round 2)                                                                             | triads (ITRF with cones, GCRF with square heads, each axis named, pinned)                                                                                                                                                             | ITRF turns with the Earth; GCRF doesn't. Each triad is a frame's axes at the clock's time                                                                                |
-| 2 GCRF to ITRF over a day    | straight down the north pole, 5.5 Earth radii, lit from the camera (6c-1 fix round 3); imagery dimmed (exposure −1.5, −0.6 under 560 px; F43)                         | ITRF and GCRF triads only (the site triads hidden: Sacramento's crossed GCRF's x), each axis named, pinned                                                                                                                            | GCRF's x and y turn once round against ITRF's, like clock hands, in a sidereal day (the clock plays at 3,600×: 24 s)                                                     |
-| 3 The California design grid | over the grid's centre, 180 km range, 55° tilt, heading 0°                                                                                                            | design grid (10 km lines; 2 km lines only under 60 km range), true-north lines; imagery dimmed (exposure −0.6); target: `globe-stop3-target`                                                                                          | grid north and true north part ways away from the central meridian: the convergence angle                                                                                |
-| 4 Rigid against exact        | from the side: south of the 400 km line, looking north, 5° down, 400 km range (÷ the aspect on a portrait view), centred 53% along it, the whole line across the view | rigid (dashed, white, straight) and exact (solid, on the ellipsoid) 400 km line at true scale, gap ticks every 50 km, a white leader at the far end with the true sag, the gap inset at 20 km; site triads hidden; imagery not dimmed | the dashed line is straight, the solid one follows the Earth; they part as distance squared, about 12.5 km at 400 km; the inset shows 31.4 m at 20 km, all at true scale |
-| 5 Orion's figure-eight       | down the Moon's orbit normal at the flyby, the Earth–Moon line across the view, the Earth, the Moon and the path framed (6c-1); 3.0 s flight                          | Orion in GCRF, then after 4 s in MOON_ME                                                                                                                                                                                              | in GCRF a figure-eight round the Moon; in MOON_ME the far-side swing                                                                                                     |
-| 6 The Moon's south pole      | 100 m from the site's triad, 20° above the horizon, sun low behind; 3.5 s flight                                                                                      | the site's triad (MOON_ME) at 15% of the camera's distance, and a callout "lunar clock +56.02 µs/day against Earth's (Ashby & Patla 2024)"                                                                                            | a clock here gains about 56 µs a day; the triad holds still as the camera orbits                                                                                         |
+| Stop                         | Camera                                                                                                                                                                                                                     | On                                                                                                                                                                                                                                    | Caption                                                                                                                                                                                  |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1 Earth's frames             | over the North Atlantic, 30°W 42°N, 4 Earth radii, lit from the camera (6c-1 fix round 2)                                                                                                                                  | triads (ITRF with cones, GCRF with square heads, each axis named, pinned)                                                                                                                                                             | ITRF turns with the Earth; GCRF doesn't. Each triad is a frame's axes at the clock's time                                                                                                |
+| 2 GCRF to ITRF over a day    | straight down the north pole, 5.5 Earth radii, lit from the camera (6c-1 fix round 3); imagery dimmed (exposure −1.5, −0.6 under 560 px; F43)                                                                              | ITRF and GCRF triads only (the site triads hidden: Sacramento's crossed GCRF's x), each axis named, pinned                                                                                                                            | GCRF's x and y turn once round against ITRF's, like clock hands, in a sidereal day (the clock plays at 3,600×: 24 s)                                                                     |
+| 3 The California design grid | over the grid's centre, 180 km range, 55° tilt, heading 0°                                                                                                                                                                 | design grid (10 km lines; 2 km lines only under 60 km range), true-north lines; imagery dimmed (exposure −0.6); target: `globe-stop3-target`                                                                                          | grid north and true north part ways away from the central meridian: the convergence angle                                                                                                |
+| 4 Rigid against exact        | from the side: south of the 400 km line, looking north, 5° down, 400 km range (÷ the aspect on a portrait view), centred 53% along it, the whole line across the view                                                      | rigid (dashed, white, straight) and exact (solid, on the ellipsoid) 400 km line at true scale, gap ticks every 50 km, a white leader at the far end with the true sag, the gap inset at 20 km; site triads hidden; imagery not dimmed | the dashed line is straight, the solid one follows the Earth; they part as distance squared, about 12.5 km at 400 km; the inset shows 31.4 m at 20 km, all at true scale                 |
+| 5 Orion's figure-eight       | down the Moon's orbit normal at the flyby, the Earth–Moon line across the view, the Earth, the Moon and the path framed (6c-1); 3.0 s flight; then an orbit about the framing's centre (see "Camera controls in space")    | Orion in GCRF, then after 4 s in MOON_ME                                                                                                                                                                                              | in GCRF a figure-eight round the Moon; in MOON_ME the far-side swing                                                                                                                     |
+| 6 The Moon's south pole      | straight down the site's vertical from about 3,000 km (the lunar disk at 72% of the view's smaller half-angle, limb and all; `lunarSiteRange`), the site's north up the screen; 3.5 s flight; then an orbit about the site | the site's triad (MOON_ME) at 15% of the camera's distance, and a callout "lunar clock +56.02 µs/day against Earth's (Ashby & Patla 2024)"                                                                                            | a clock near the south pole, at 89.5° S, gains about 56 µs a day; the triad holds still as the camera orbits; the imagery is a distant backdrop until plan 5 draws the Moon as a tileset |
 
 The caption sits top right (bottom, above the time controls, on views
 under 560 px), takes focus at each stop, and steps with the arrow keys;
@@ -321,6 +378,17 @@ caption (stop 3's ×20 convergence and its switch stay).
   white border (with a dark outer ring) and a caption strip, "At 20 km:
   31.4 m apart (true scale)". The triads are kept out of its view (a view
   mask): sized for the main camera, they are kilometres long there.
+- **The gap's two parts** (owner: why does the leader lean?). The 31.4 m is
+  mostly the curvature's drop, and partly along the line: rigid placement
+  lays 20 km of grid as 20 km, the exact one as 20 km over the grid scale
+  factor (about 0.99993 between the zone's standard parallels), so the rigid
+  point falls 1.5 m short. Both are computed from the two placements, split
+  along the inset's own axes (`gapParts`: the ellipsoid's normal at the mark,
+  the line levelled there), not estimated: "31.3 m drop" left of the leader,
+  "1.5 m along (grid scale)" at its top by the rigid line, and the stop's
+  caption says why the leader leans. `test/data` checks the part along the
+  line against the integrated grid scale (1.4 m, plus about 0.1 m from the
+  normal's turn over 20 km and the arc against its chord).
 - **Where it sits.** Wide views: bottom left, 240 × 140 px plus its 24 px
   caption, above the time controls (`--fx-hud-bottom`) and the credits under
   them; clear of Dyno's inspector (top left), the tour caption (top right)
@@ -328,7 +396,11 @@ caption (stop 3's ×20 convergence and its switch stay).
   across the middle. Narrow views (under 560 px): at the top right under
   Dyno's inspector, which spans nearly the whole width there, at most
   212 px wide (its caption's width) and 56% of the view; the caption is at
-  the bottom then and the legend steps aside during the tour.
+  the bottom then and the legend steps aside during the tour. Between about
+  560 and 620 px wide, on a short view, the 340 px tour caption reaches over
+  the inset's corner: the inset reads the caption's box and narrows in place
+  (to 140 px at least) to end a gutter short of it (checked at 600 and 680
+  px).
 - **When it shows.** While the rigid and exact lines are drawn, outside the
   tour or at stop 4. Another stop, the overlay off, or leaving the example
   removes the view (its frame, observers and view-mask bit with it); the
@@ -350,7 +422,9 @@ bottom centre. The example adds:
 - **The HUD**: the legend bottom right, above the time controls; the tour
   caption top right; while the rigid and exact lines are drawn, their gap
   inset bottom left, above the time controls (top right, under Dyno's
-  inspector, on a narrow view; see "The rigid line at true scale").
+  inspector, on a narrow view; see "The rigid line at true scale"); Frame
+  content top left under Dyno's inspector, and the orbit's pivot marker while
+  it is dragged (see "Camera controls in space").
 
 ### Desktop
 
@@ -1165,6 +1239,28 @@ Every term below has a popover wherever it appears (`panel/glossary.ts`,
   the toggle's `aria-expanded` and label, and focus (the stop's heading at
   each stop; the toggle keeps it as the caption folds).
 
+### Camera and lunar fixes (owner, 2026-11-06)
+
+- **Orbit controls off the surface**, the pivot marker and Frame content:
+  see "Camera controls in space".
+- **The sky's Moon is DE440's.** The examples host builds its Viewer without
+  frame data, so the sky placed the Moon with the analytic model (Simon
+  1994), about 400 km from DE440's: the imagery's pole sat about 404 km from
+  the site's triad (lunar-pole-investigation.md). Once its frame data loads,
+  the example hands it to the sky (`viewer.setFrameData`). It isn't undone on
+  leave: the sky's data is the Viewer's, the Viewer is destroyed with the
+  example, and the next Viewer sets the shared engine's Moon from its own.
+- **Stop 6 tells the truth about the backdrop.** The site is deliberately at
+  89.5° S, 0° E, height 0 in MOON_ME (15.2 km from the pole; east-north-up
+  is defined there), and the caption says "near the south pole, at
+  89.5° S". The Moon drawn is the sky's disk, a backdrop with no parallax,
+  right only along the line from its centre: from 100 m it put a piece of
+  surface hundreds of kilometres off behind the triad. The stop now looks
+  straight down the site's vertical from about 3,000 km, the disk's limb in
+  view, where the backdrop behind the triad is 15.8 km from the drawn pole
+  (checked in the page; it was about 404 km), and the caption adds that the
+  imagery is a distant backdrop until plan 5 draws the Moon as a tileset.
+
 ### Carried forward (engine work)
 
 - **X-ray dashes for the geocentric triads inside the globe.** (Meanwhile
@@ -1174,7 +1270,7 @@ Every term below has a popover wherever it appears (`panel/glossary.ts`,
   ITRF, GCRF and EME2000 triads inside the Earth can't draw through it.
   Needs a draw flag for depth-test off (or a second pass with an inverted
   depth test) in the renderer.
-- **Ray artifacts in the lunar terrain's shadows** at stop 6 (streaks from
-  the shadowed crater rims, upper left of the view): the engine's shadows
-  on the Moon's terrain, not the example's geometry; to be filed as an
-  engine issue.
+- **The lunar caps' streaks** at stop 6, once read as ray artifacts in
+  shadows: the sky's Moon map stretched its 85° S row over the cap
+  (lunar-pole-investigation.md). The map's cap tilesets are engine work in
+  progress (src/io/moonMap.ts).

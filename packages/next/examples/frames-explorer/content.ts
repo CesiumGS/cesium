@@ -318,7 +318,7 @@ export const TOUR: readonly TourStopSpec[] = [
     id: "rigid-exact",
     title: "Rigid against exact",
     caption:
-      "The dashed line is straight: a 400 km design line placed rigidly at its start, on the tangent plane there. The solid line follows the Earth: the same line placed exactly, on the ellipsoid. They part as distance squared, about 12.5 km at 400 km. The inset shows the gap where a site feels it, 31.4 m at 20 km. All at true scale.",
+      "The dashed line is straight: a 400 km design line placed rigidly at its start, on the tangent plane there. The solid line follows the Earth: the same line placed exactly, on the ellipsoid. They part as distance squared, about 12.5 km at 400 km. The inset shows the gap where a site feels it, 31.4 m at 20 km: 31.3 m of drop, and 1.5 m along the line from the grid's scale factor, which rigid placement ignores, so its leader leans. All at true scale.",
     overlays: ["rigidVsExact"],
     camera: "rigidVsExact",
     time: CALIFORNIA_MIDDAY,
@@ -338,7 +338,7 @@ export const TOUR: readonly TourStopSpec[] = [
     id: "lunar-time",
     title: "The Moon's south pole and lunar time",
     caption:
-      "A clock at the lunar south pole gains about 56 µs a day on one on Earth. The triad holds still as you orbit it, 384,000 km from the Earth-fixed origin.",
+      "A clock near the south pole, at 89.5° S, gains about 56 µs a day on one on Earth. The triad holds still as you orbit it, 384,000 km from the Earth-fixed origin. The Moon's imagery is a distant backdrop until plan 5 draws the Moon as a tileset, so it lines up with the triad only from straight above, as here.",
     overlays: ["triads"],
     camera: "lunarSite",
   },
