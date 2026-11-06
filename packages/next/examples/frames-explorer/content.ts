@@ -2,6 +2,7 @@
 // the guided tour's stops (R16, DESIGN.md "The tour"). Plain data, imported by
 // the main thread.
 import type { OverlayId } from "./panel/model.ts";
+import type { TrueScaleKind } from "./panel/tourScale.ts";
 import type { Comparison } from "./stress/groupInfo.ts";
 
 /** Short row labels (60 characters or fewer), by result id; rows fall back to the title. */
@@ -215,6 +216,11 @@ export interface TourStopSpec {
   /** The clock: plays at this rate while the stop shows. */
   rate?: number;
   /**
+   * The caption's "Show true scale" switch, at a stop that exaggerates: the
+   * convergence angle or the rigid line's separation.
+   */
+  trueScaleSwitch?: TrueScaleKind;
+  /**
    * The clock: set to this UTC instant (ISO 8601) when the stop opens, so a
    * site is in daylight. Stops without it keep the clock where it is.
    */
@@ -305,6 +311,7 @@ export const TOUR: readonly TourStopSpec[] = [
     dim: true,
     // 13:00 Pacific daylight time, local midday in California.
     time: CALIFORNIA_MIDDAY,
+    trueScaleSwitch: "convergence",
   },
   {
     id: "rigid-exact",
@@ -314,6 +321,7 @@ export const TOUR: readonly TourStopSpec[] = [
     overlays: ["rigidVsExact"],
     camera: "rigidVsExact",
     time: CALIFORNIA_MIDDAY,
+    trueScaleSwitch: "sag",
   },
   {
     id: "orion",

@@ -16,6 +16,7 @@ import { createPortal } from "react-dom";
 import type { StressResult } from "../tests.ts";
 import { Explore } from "./Explore.tsx";
 import { GlobeLegend, NARROW_VIEW, TourCaption, useHudLayout } from "./Hud.tsx";
+import { tourScaleSwitch } from "./tourScale.ts";
 import type {
   LensChoice,
   PanelActions,
@@ -234,6 +235,12 @@ export function Panel({ source, view, actions, hud, initialTab }: PanelProps) {
                   { kind: "tour", stop: stop.id },
                   "Link to this stop copied",
                 )
+              }
+              scaleSwitch={tourScaleSwitch(model.tour[tour]!, model)}
+              onScaleSwitch={(kind, on) =>
+                kind === "convergence"
+                  ? actions.setTrueScale(on)
+                  : actions.setSagTrueScale(on)
               }
             />
           )}
