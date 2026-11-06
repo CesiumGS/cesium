@@ -46,14 +46,27 @@ const bytes = (file: string): ArrayBuffer => {
 const text = (file: string): string => readFileSync(join(dir, file), "utf8");
 
 describe("frames data store", () => {
-  it("lists the four sources and both packs", () => {
+  it("lists the four sources, both packs and the four trajectory files", () => {
     expect(manifest.files.map((f) => f.role).sort()).toEqual([
       "eop",
       "leapSeconds",
       "moon",
       "planets",
+      "trajectory",
+      "trajectory",
+      "trajectory",
+      "trajectory",
     ]);
     expect(entry("eop").credit).toBe("IERS, via CelesTrak");
+    const credits = manifest.files
+      .filter((f) => f.role === "trajectory")
+      .map((f) => `${f.file}: ${f.credit}`);
+    expect(credits).toEqual([
+      "EM2_FODNAVBET_revF_PUBLIC.oem: NASA JSC FOD Navigation, via NAIF",
+      "art002_rec_260402_260410_jsc_bet_revf.bsp: NASA JSC FOD Navigation, via NAIF",
+      "art002_rec_260402_260410_jsc_bet_revf_gapfill.bsp: NASA JSC FOD Navigation, via NAIF",
+      "earthstns_itrf93_260814.bsp: NAIF/JPL",
+    ]);
   });
 
   it.each(["planets", "moon"])(

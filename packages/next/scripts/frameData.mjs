@@ -29,6 +29,7 @@ import { Instant } from "../src/time/Instant.ts";
 import { LeapSeconds } from "../src/time/leapSeconds.ts";
 
 const NAIF = "https://naif.jpl.nasa.gov/pub/naif/generic_kernels";
+const ARTEMIS = "https://naif.jpl.nasa.gov/pub/naif/ARTEMIS/kernels/spk";
 const DAY_MS = 86_400_000;
 const REFRESH_MS = 7 * DAY_MS;
 
@@ -38,6 +39,14 @@ export const NAIF_SHA256 = {
     "c1c7feeab882263fc493a9d5a5b2ddd71b54826cdf65d8d17a76126b260a49f2",
   "moon_pa_de440_200625.bpc":
     "60cd55aa401ea2ea97360636f567554bfe4e37bb829f901b4460a455dfaf783f",
+  "EM2_FODNAVBET_revF_PUBLIC.oem":
+    "d8ed8a5a16d40d69da32a54d83a19970e47f4e8bd6e547210b01b1c78e002ff3",
+  "art002_rec_260402_260410_jsc_bet_revf.bsp":
+    "b8b3ebc4d703c3a73c9651b9da36114c3ef0b2c75f92873dd4970f32367aa7be",
+  "art002_rec_260402_260410_jsc_bet_revf_gapfill.bsp":
+    "ac9e3f21302a6a510757fff41a9f8a55df907b75fb2142b8fdfc44a599ddc9b9",
+  "earthstns_itrf93_260814.bsp":
+    "007eb0aad5dd022c6d61bdbfb2395680bd1eb31c49a8637d0b0a1cfbea737c6b",
 };
 
 const SOURCES = {
@@ -48,6 +57,26 @@ const SOURCES = {
   moon: {
     file: "moon_pa_de440_200625.bpc",
     url: `${NAIF}/pck/moon_pa_de440_200625.bpc`,
+  },
+  artemisOem: {
+    file: "EM2_FODNAVBET_revF_PUBLIC.oem",
+    url: `${ARTEMIS}/EM2_FODNAVBET_revF_PUBLIC.oem`,
+    credit: "NASA JSC FOD Navigation, via NAIF",
+  },
+  artemisSpk: {
+    file: "art002_rec_260402_260410_jsc_bet_revf.bsp",
+    url: `${ARTEMIS}/art002_rec_260402_260410_jsc_bet_revf.bsp`,
+    credit: "NASA JSC FOD Navigation, via NAIF",
+  },
+  artemisGapfill: {
+    file: "art002_rec_260402_260410_jsc_bet_revf_gapfill.bsp",
+    url: `${ARTEMIS}/art002_rec_260402_260410_jsc_bet_revf_gapfill.bsp`,
+    credit: "NASA JSC FOD Navigation, via NAIF",
+  },
+  stations: {
+    file: "earthstns_itrf93_260814.bsp",
+    url: `${NAIF}/spk/stations/earthstns_itrf93_260814.bsp`,
+    credit: "NAIF/JPL",
   },
   leapSeconds: {
     file: "Leap_Second.dat",
@@ -208,6 +237,23 @@ export async function ensureFrameData({ span }, log = console.log) {
 
   const planetsBytes = await ensureNaif(dir, SOURCES.planets, log);
   const moonBytes = await ensureNaif(dir, SOURCES.moon, log);
+  // Trajectories are optional to loadFrameData, but setup always stores them (R8).
+  const trajectories = [];
+  for (const source of [
+    SOURCES.artemisOem,
+    SOURCES.artemisSpk,
+    SOURCES.artemisGapfill,
+    SOURCES.stations,
+  ]) {
+    const bytes = await ensureNaif(dir, source, log);
+    trajectories.push({
+      file: source.file,
+      role: "trajectory",
+      sha256: sha256(bytes),
+      sourceUrl: source.url,
+      credit: source.credit,
+    });
+  }
   const leapBytes = await ensureFresh(dir, SOURCES.leapSeconds, log, (text) =>
     LeapSeconds.fromIers(text),
   );
@@ -289,6 +335,7 @@ export async function ensureFrameData({ span }, log = console.log) {
       sourceUrl: SOURCES.eop.url,
       credit: "IERS, via CelesTrak",
     },
+    ...trajectories,
   ];
   writeFileSync(
     join(dir, "manifest.json"),
