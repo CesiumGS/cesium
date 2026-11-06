@@ -1,7 +1,7 @@
 // The frames explorer's stress-test runner (examples/frames-explorer/tests.ts),
 // with synthetic frames and stub cases. The real catalog runs against the
 // frames data store in test/data/framesExplorer.test.ts.
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
 import {
   LENSES,
@@ -460,13 +460,23 @@ describe("the catalog's groups and lenses (R14)", () => {
 });
 
 describe("the catalog uses only the package's public API (F7)", () => {
-  // tests.ts imports library names from their modules, because the index
+  // The catalog imports library names from their modules, because the index
   // can't load under vitest; each name must also be exported by the index.
   const read = (path: string) =>
     readFileSync(new URL(path, import.meta.url), "utf8");
 
   it("imports from src/ only names src/index.ts exports", () => {
-    const tests = read("../examples/frames-explorer/tests.ts");
+    // Every module of the catalog: tests.ts and stress/ (its runner, helpers
+    // and groups).
+    const root = new URL("../examples/frames-explorer/", import.meta.url);
+    const files = readdirSync(root, { recursive: true, encoding: "utf8" })
+      .filter((f) => f.endsWith(".ts"))
+      .sort();
+    expect(files).toContain("tests.ts");
+    expect(files.some((f) => f.startsWith("stress"))).toBe(true);
+    const tests = files
+      .map((f) => readFileSync(new URL(f, root), "utf8"))
+      .join("\n");
     const index = read("../src/index.ts");
     const exported = new Set<string>();
     for (const m of index.matchAll(/export\s+(?:type\s+)?\{([^}]*)\}/g)) {
@@ -491,7 +501,7 @@ describe("the catalog uses only the package's public API (F7)", () => {
     ];
     for (const m of statements) {
       const from = m[2]!;
-      if (!from.startsWith("../../src/")) {
+      if (!/^(\.\.\/)+src\//.test(from)) {
         continue;
       }
       for (const part of m[1]!.split(",")) {
@@ -512,11 +522,9 @@ describe("the catalog uses only the package's public API (F7)", () => {
       );
     }
     // Every library import goes through a named import that the check sees.
+    expect(tests).not.toMatch(/import\s+\*\s+as\s+\w+\s+from\s+"(\.\.\/)+src/);
     expect(tests).not.toMatch(
-      /import\s+\*\s+as\s+\w+\s+from\s+"\.\.\/\.\.\/src/,
-    );
-    expect(tests).not.toMatch(
-      /import\s+(?!type\b)\w+\s*,?\s*(\{|from)\s*[^;]*"\.\.\/\.\.\/src/,
+      /import\s+(?!type\b)\w+\s*,?\s*(\{|from)\s*[^;]*"(\.\.\/)+src/,
     );
   });
 });
