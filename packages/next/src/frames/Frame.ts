@@ -1,0 +1,163 @@
+import {
+  identity,
+  invertAffine,
+  multiply,
+  copy,
+  type Mat4,
+} from "../math/mat4.ts";
+import type { Instant } from "../time/Instant.ts";
+
+/**
+ * A reference frame: a named coordinate system placed in a parent frame by
+ * a transform that may depend on time. Frames form trees; positions in
+ * different frames of one tree convert through `frameTransform`.
+ *
+ * `toParent` maps child coordinates to parent coordinates
+ * (`p_parent = M · p_child`, column-major float64, meters). Positions only:
+ * velocities need the rotation's rate (plan 3).
+ */
+export class Frame<N extends string = string> {
+  readonly name: N;
+  readonly parent: Frame | undefined;
+  private readonly compute: (instant: Instant, out: Mat4) => void;
+  private readonly cached: boolean;
+  private readonly entry = new Float64Array(16);
+  private entryTt = NaN;
+
+  /**
+   * A child of `parent`. `toParent` writes the child-to-parent matrix for
+   * an instant. With `cache` (the default) the frame keeps one entry,
+   * keyed by `instant.tt`; pass `cache: false` when the matrix depends on
+   * state besides the instant.
+   */
+  constructor(
+    name: N,
+    parent: Frame,
+    toParent: (instant: Instant, out: Mat4) => void,
+    options?: { cache?: boolean },
+  ) {
+    this.name = name;
+    this.parent = parent;
+    this.compute = toParent;
+    this.cached = options?.cache ?? true;
+  }
+
+  /** A frame with no parent. Its `toParent` is the identity. */
+  static root<N extends string>(name: N): Frame<N> {
+    // The one construction without a parent; `toParent` never calls compute.
+    return new Frame(name, undefined as unknown as Frame, () => {});
+  }
+
+  /** A child whose placement in `parent` never changes. */
+  static constant<N extends string>(
+    name: N,
+    parent: Frame,
+    toParent: ArrayLike<number>,
+  ): Frame<N> {
+    const fixed = Float64Array.from(toParent);
+    return new Frame(name, parent, (_instant, out) => copy(out, fixed), {
+      cache: false,
+    });
+  }
+
+  /** The child-to-parent matrix at `instant`; the identity for a root. */
+  toParent(instant: Instant, out: Mat4 = new Float64Array(16)): Mat4 {
+    if (!this.parent) {
+      return identity(out);
+    }
+    if (!this.cached) {
+      this.compute(instant, out);
+      return out;
+    }
+    if (this.entryTt !== instant.tt) {
+      this.compute(instant, this.entry);
+      this.entryTt = instant.tt;
+    }
+    return copy(out, this.entry);
+  }
+}
+
+// Scratch for frameTransform, one set per reentrancy level: a frame's
+// `toParent` may itself call `frameTransform` (a trajectory frame does).
+interface Scratch {
+  up: Mat4;
+  down: Mat4;
+  step: Mat4;
+  inverse: Mat4;
+}
+const scratchLevels: Scratch[] = [];
+let level = 0;
+
+function scratchFor(depth: number): Scratch {
+  return (scratchLevels[depth] ??= {
+    up: new Float64Array(16),
+    down: new Float64Array(16),
+    step: new Float64Array(16),
+    inverse: new Float64Array(16),
+  });
+}
+
+function depthOf(frame: Frame): number {
+  let depth = 0;
+  for (let f = frame.parent; f; f = f.parent) {
+    depth++;
+  }
+  return depth;
+}
+
+/** Writes the matrix taking `frame` coordinates to those of `ancestor`. */
+function toAncestor(
+  frame: Frame,
+  ancestor: Frame,
+  instant: Instant,
+  acc: Mat4,
+  step: Mat4,
+): void {
+  identity(acc);
+  for (let f = frame; f !== ancestor; f = f.parent!) {
+    f.toParent(instant, step);
+    multiply(acc, step, acc);
+  }
+}
+
+/**
+ * The matrix `M` with `p_to = M · p_from`, composed through the lowest
+ * common ancestor of the two frames. Throws across trees.
+ */
+export function frameTransform(
+  from: Frame,
+  to: Frame,
+  instant: Instant,
+  out: Mat4 = new Float64Array(16),
+): Mat4 {
+  let a = from;
+  let b = to;
+  let da = depthOf(a);
+  let db = depthOf(b);
+  while (da > db) {
+    a = a.parent!;
+    da--;
+  }
+  while (db > da) {
+    b = b.parent!;
+    db--;
+  }
+  while (a !== b) {
+    if (!a.parent || !b.parent) {
+      throw new Error(
+        `frameTransform: no common ancestor of "${from.name}" and "${to.name}"`,
+      );
+    }
+    a = a.parent;
+    b = b.parent;
+  }
+  const s = scratchFor(level++);
+  try {
+    toAncestor(from, a, instant, s.up, s.step);
+    toAncestor(to, a, instant, s.down, s.step);
+    invertAffine(s.inverse, s.down);
+    return multiply(out, s.inverse, s.up);
+  } finally {
+    level--;
+  }
+}

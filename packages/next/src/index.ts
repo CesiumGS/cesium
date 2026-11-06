@@ -237,3 +237,12 @@ export {
   type FrameData,
   type FrameDataWarning,
 } from "./ephemeris/loadFrameData.ts";
+export { Frame, frameTransform } from "./frames/Frame.ts";
+export { toParentMatrix } from "./frames/matrix.ts";
+export {
+  framePoint,
+  convertPoint,
+  eastNorthUpFrame,
+  worldTransformFrame,
+  type FramePoint,
+} from "./frames/local.ts";
