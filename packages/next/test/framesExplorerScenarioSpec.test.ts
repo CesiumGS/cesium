@@ -225,6 +225,15 @@ describe("clampKnobs (Review Focus 4)", () => {
         String(bad),
       ).toEqual(s.checked.knobs);
     }
+    // Too long to be a knob's number: no regex runs on it (ReDoS).
+    for (const long of [`${"1".repeat(100_000)}x`, "1".repeat(33)]) {
+      const start = performance.now();
+      expect(clampKnobs(s, { rotation: long }).rotation).toBe(12.5);
+      expect(performance.now() - start).toBeLessThan(50);
+    }
+    expect(clampKnobs(s, { rotation: `-${"0".repeat(28)}1.5` }).rotation).toBe(
+      -1.5,
+    );
     // A choice is matched exactly, not coerced.
     expect(clampKnobs(s, { crs: "CA-ZONE-3" }).crs).toBe("ca-zone-3");
   });

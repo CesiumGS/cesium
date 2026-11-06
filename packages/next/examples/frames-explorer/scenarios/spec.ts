@@ -72,15 +72,23 @@ export function checkedState(
   return { atChecked: changed.length === 0, changed };
 }
 
-/** A decimal number's text, as a URL carries it (no hex, no words, no blanks). */
-const NUMBER = /^[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?$/;
+/**
+ * A decimal number's text, as a URL carries it (no hex, no words, no
+ * blanks). Linear: each digit run can match only one way (ReDoS).
+ */
+const NUMBER = /^[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?$/;
+
+/** The longest number text read; longer is no knob value, and isn't tested. */
+const NUMBER_LENGTH = 32;
 
 /** `value` as a finite number, if it is one or a number's text. */
 function finiteNumber(value: unknown): number | undefined {
   const n =
     typeof value === "number"
       ? value
-      : typeof value === "string" && NUMBER.test(value)
+      : typeof value === "string" &&
+          value.length <= NUMBER_LENGTH &&
+          NUMBER.test(value)
         ? Number(value)
         : Number.NaN;
   return Number.isFinite(n) ? n : undefined;

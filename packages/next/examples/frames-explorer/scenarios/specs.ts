@@ -115,18 +115,15 @@ export const SCENARIOS: readonly ScenarioSpec[] = [
         unit: "°",
       },
     ],
-    // lunar-time.moon-vs-earth.*: a clock at the lunar south pole, averaged
-    // over a month from 2026-01-01T00:00 UTC, against Ashby & Patla. The
+    // lunar-time.moon-vs-earth.synodic: a clock at the lunar south pole,
+    // averaged over a synodic month from 2026-01-01T00:00 UTC, against Ashby
+    // & Patla (its sidereal twin is display-only, so it isn't proof). The
     // MOON_ME-to-MOON_PA offset (space.effects.moon-me-pa) is also at the
     // south pole; it is a constant rotation, so it holds at any epoch.
     checked: { epochUtc: "2026-01-01T00:00:00Z", knobs: { latitude: -90 } },
     needs: [],
     globe: "ellipsoid",
-    proof: [
-      "lunar-time.moon-vs-earth.synodic",
-      "lunar-time.moon-vs-earth.sidereal",
-      "space.effects.moon-me-pa",
-    ],
+    proof: ["lunar-time.moon-vs-earth.synodic", "space.effects.moon-me-pa"],
   },
   {
     id: "dish-tracks",
@@ -190,8 +187,8 @@ export const SCENARIOS: readonly ScenarioSpec[] = [
     // 12.5° and scaled 1.0000375, at its measurement epoch:
     // measurement.grid-to-ground and measurement.design-vs-itrf, the site
     // grid's round trip at that rotation and scale, and the CRS's own round
-    // trip. GU2195's convergence is California zone 3's true north, which
-    // the site's grid shows.
+    // trip. (NGS GU2195's convergence is checked about 115 km away, so it
+    // isn't the site's true north and isn't proof here.)
     checked: {
       epochUtc: MEASURED_AT,
       knobs: { crs: "ca-zone-3", rotation: 12.5, scale: 1.0000375 },
@@ -204,7 +201,6 @@ export const SCENARIOS: readonly ScenarioSpec[] = [
       "measurement.design-vs-itrf",
       "site-grids.round-trip.rotation-12.5.scale-1.0000375",
       "projections.epsg-6420-6360",
-      "reference-values.ngs-gu2195.convergence",
     ],
   },
   {
