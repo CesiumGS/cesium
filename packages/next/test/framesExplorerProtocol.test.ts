@@ -20,11 +20,18 @@ import {
 import {
   createClient,
   type ClientWorker,
+  type OverlayGeometry,
   type ProgressReply,
   type Reply,
   type Request,
   type StateReply,
 } from "../examples/frames-explorer/protocol.ts";
+import {
+  registerScenario,
+  type ScenarioEvaluation,
+} from "../examples/frames-explorer/scenarios/evaluate.ts";
+import type { ScenarioId } from "../examples/frames-explorer/scenarios/spec.ts";
+import type { AddedFrameSpec } from "../examples/frames-explorer/tree.ts";
 import {
   boundCrsChecks,
   type DataContext,
@@ -540,6 +547,227 @@ describe("overlay", () => {
     });
     await expect(client.overlay("designGrid", params)).resolves.toMatchObject({
       kind: "designGrid",
+    });
+  });
+});
+
+describe("scenario", () => {
+  const params = {
+    extent: {
+      min: [0, 0] as [number, number],
+      max: [300_000, 200_000] as [number, number],
+    },
+    step: 50_000,
+    segment: 10_000,
+  };
+  /** A grid overlay as an evaluator builds it: several chunks, fresh buffers. */
+  const grid = (): OverlayGeometry => ({
+    kind: "designGrid",
+    layers: [
+      {
+        name: "grid",
+        chunks: overlayMesh(
+          designGrid(stubFrame, params.extent, params.step, params.segment),
+        ),
+      },
+    ],
+    ms: 0,
+  });
+  const evaluation = (
+    live: StressResult[] = [],
+    geometry = grid(),
+  ): ScenarioEvaluation => ({
+    scenario: "earth-turns",
+    added: [
+      {
+        id: "here",
+        label: "Here",
+        parentId: "ITRF",
+        edge: {
+          kind: "constant",
+          detail: "a site on the ground",
+          accuracy: { meters: 0.01, note: "surveyed" },
+        },
+      } satisfies AddedFrameSpec,
+    ],
+    answer: {
+      headline: "The ground turns 15.04° an hour against the stars",
+      value: 15.04,
+      unit: "°/h",
+      accuracy: { note: "IERS rotation" },
+      path: { from: "here", to: "GCRF" },
+    },
+    overlays: [{ id: "grid", geometry }],
+    sightLines: [{ id: "up", from: [0, 0, 0], to: [0, 0, 1], label: "Up" }],
+    live,
+    checkedAnswerValue: 15.04,
+  });
+
+  it("returns a registered evaluator's evaluation, its overlay buffers transferred and its live checks judged", async () => {
+    const geometry = grid();
+    // A live check whose evaluator called it a pass, beyond its tolerance:
+    // the host judges it as the runner would.
+    const live: StressResult = {
+      ...base("live.round-trip"),
+      pass: true,
+      value: 2,
+      tolerance: 1,
+      unit: "m",
+    };
+    const evaluator = vi.fn(async (ctx: StressContext) => {
+      expect(ctx.frames).toBe(frames);
+      return evaluation([live], geometry);
+    });
+    registerScenario("earth-turns", evaluator);
+    const { client, sent } = connect(async () => context());
+    const got = await client.scenario(
+      "earth-turns",
+      // Out of range: the worker clamps it, as a deep link's would be.
+      { rate: 1e9, stray: "dropped" },
+      1234.5,
+    );
+    expect(evaluator).toHaveBeenCalledOnce();
+    expect(evaluator.mock.calls[0]!.slice(1)).toEqual([
+      { rate: 86_400 },
+      1234.5,
+    ]);
+
+    const reply = sent.find((s) => s.message.type === "scenario")!;
+    const chunks = got.overlays[0]!.geometry.layers[0]!.chunks;
+    expect(chunks.length).toBeGreaterThan(1);
+    const transfer = reply.transfer ?? [];
+    expect(transfer).toHaveLength(4 * chunks.length);
+    for (const buffer of transfer) {
+      expect((buffer as ArrayBuffer).byteLength).toBe(0);
+    }
+    // The sender's arrays are detached; what arrived is the evaluation.
+    expect(geometry.layers[0]!.chunks[0]!.mesh.positions.byteLength).toBe(0);
+    expect({ ...got, live: [] }).toStrictEqual(evaluation([], grid()));
+    expect(got.live).toHaveLength(1);
+    expect(got.live[0]).toMatchObject({
+      id: "live.round-trip",
+      pass: false,
+      detail: expect.stringMatching(/beyond its tolerance/),
+    });
+  });
+
+  it("waits for a run in progress: a scenario queued behind a run doesn't start until it ends", async () => {
+    let release = () => {};
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const cases = [
+      stub("slow", async () => {
+        await gate;
+        return [{ ...base("slow"), pass: true }];
+      }),
+    ];
+    /** What the host had posted when the evaluator started. */
+    let postedBefore: string[] | undefined;
+    const evaluator = vi.fn(async () => {
+      postedBefore = sent.map((s) => s.message.type);
+      return evaluation();
+    });
+    registerScenario("earth-turns", evaluator);
+    const { client, sent } = connect(async () => context(), { cases });
+    const run = client.run();
+    const scenario = client.scenario("earth-turns", { rate: 3600 }, 0);
+    await sleep(30);
+    expect(evaluator).not.toHaveBeenCalled();
+    release();
+    await Promise.all([run, scenario]);
+    expect(evaluator).toHaveBeenCalledOnce();
+    // The run had ended, its done sent, before the evaluator began.
+    expect(postedBefore).toContain("done");
+    expect(sent.map((s) => s.message.type).slice(-1)).toEqual(["scenario"]);
+  });
+
+  it("stops a run that waits in the queue on cancel: it sends its done, cancelled, and runs nothing", async () => {
+    let release = () => {};
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const later = vi.fn(async () => [{ ...base("later"), pass: true }]);
+    registerScenario("earth-turns", async () => {
+      await gate;
+      return evaluation();
+    });
+    const { client } = connect(async () => context(), {
+      cases: [stub("later", later)],
+    });
+    const scenario = client.scenario("earth-turns", { rate: 3600 }, 0);
+    const run = client.run();
+    await sleep(10);
+    client.cancel();
+    await sleep(10);
+    release();
+    await scenario;
+    expect(await run).toMatchObject({ passed: 0, cancelled: true });
+    expect(later).not.toHaveBeenCalled();
+  });
+
+  it("rejects naming the scenario when its evaluator throws, and the host keeps serving", async () => {
+    registerScenario("earth-turns", () =>
+      Promise.reject(new TypeError("boom: it broke")),
+    );
+    const { client } = connect(async () => context());
+    await expect(
+      client.scenario("earth-turns", { rate: 3600 }, 0),
+    ).rejects.toMatchObject({
+      name: "TypeError",
+      message: expect.stringMatching(/earth-turns.*boom: it broke/),
+    });
+    registerScenario("earth-turns", async () => evaluation());
+    await expect(
+      client.scenario("earth-turns", { rate: 3600 }, 0),
+    ).resolves.toMatchObject({ scenario: "earth-turns" });
+  });
+
+  it("rejects naming the scenario when none is registered, or the request is malformed", async () => {
+    const { client } = connect(async () => context());
+    await expect(
+      client.scenario("nowhere" as ScenarioId, {}, 0),
+    ).rejects.toMatchObject({
+      name: "RangeError",
+      message: expect.stringMatching(/"nowhere"/),
+    });
+    await expect(client.scenario("ship", {}, 0)).rejects.toMatchObject({
+      name: "RangeError",
+      message: expect.stringMatching(/"ship".*no evaluator/),
+    });
+    registerScenario("earth-turns", async () => evaluation());
+    await expect(
+      client.scenario("earth-turns", { rate: 3600 }, NaN),
+    ).rejects.toMatchObject({
+      name: "RangeError",
+      message: expect.stringMatching(/earth-turns.*epoch/),
+    });
+  });
+
+  it("rejects an evaluation for another scenario", async () => {
+    registerScenario("earth-turns", async () => ({
+      ...evaluation(),
+      scenario: "bim-site",
+    }));
+    const { client } = connect(async () => context());
+    await expect(
+      client.scenario("earth-turns", { rate: 3600 }, 0),
+    ).rejects.toThrow(/earth-turns.*bim-site/);
+  });
+
+  it("rejects naming what is missing when the scenario's data can't be had", async () => {
+    registerScenario("earth-turns", async () => evaluation());
+    const { client } = connect(async () => ({
+      loadFrames: () =>
+        Promise.reject(new MissingDataError("no frame data here")),
+      loadProj: () => Promise.reject(new MissingDataError("no PROJ")),
+      loadOrion: () => Promise.reject(new MissingDataError("no Orion")),
+    }));
+    await expect(
+      client.scenario("earth-turns", { rate: 3600 }, 0),
+    ).rejects.toMatchObject({
+      name: "MissingDataError",
+      message: expect.stringMatching(/earth-turns.*frame data/),
     });
   });
 });
