@@ -403,33 +403,33 @@ describe("effect sizes and fingerprints (R11, R12)", () => {
     ).toMatch(/coordinate/);
   });
 
-  // F34, F34a: 4 ULP of the point's magnitude (its largest |coordinate|).
+  // F34a, F36: 16 ULP of the point's magnitude (its largest |coordinate|).
   const point = (x: number, y: number, z: number): Fingerprint => ({
     ...fingerprint,
     coordinates: [x, y, z],
   });
 
-  it("passes coordinates 3 ULP apart at 6.4e6 m, and fails them 5 ULP apart", () => {
+  it("passes coordinates 15 ULP apart at 6.4e6 m, and fails them 17 ULP apart", () => {
     const m = 6.4e6;
     const u = ulp(m);
     expect(u).toBeCloseTo(9.3e-10, 11);
     const at = point(m, 1000, 2000);
     expect(
-      compareFingerprint(at, point(m + 3 * u, 1000, 2000)),
+      compareFingerprint(at, point(m + 15 * u, 1000, 2000)),
     ).toBeUndefined();
-    expect(compareFingerprint(at, point(m + 5 * u, 1000, 2000))).toMatch(
-      /coordinates differ .* 4 ULP/,
+    expect(compareFingerprint(at, point(m + 17 * u, 1000, 2000))).toMatch(
+      /coordinates differ .* 16 ULP/,
     );
   });
 
   it("holds a near-zero component to the point's ULP, not its own", () => {
     const m = 6.4e6;
     const u = ulp(m);
-    // 3 ULP of 6.4e6 m on a component near 0 m: far beyond that component's
+    // 15 ULP of 6.4e6 m on a component near 0 m: far beyond that component's
     // own ULP (about 1e-26 m), within the point's.
     const at = point(m, 1e-10, 0);
-    expect(compareFingerprint(at, point(m, 1e-10 + 3 * u, 0))).toBeUndefined();
-    expect(compareFingerprint(at, point(m, 1e-10 + 5 * u, 0))).toMatch(
+    expect(compareFingerprint(at, point(m, 1e-10 + 15 * u, 0))).toBeUndefined();
+    expect(compareFingerprint(at, point(m, 1e-10 + 17 * u, 0))).toMatch(
       /coordinate/,
     );
   });

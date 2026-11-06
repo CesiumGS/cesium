@@ -216,8 +216,14 @@ export async function expectThrow(
   }
 }
 
-/** How many units in the last place two coordinates may differ by (ruling F34). */
-const COORDINATE_ULPS = 4;
+/**
+ * How many units in the last place two coordinates may differ by (rulings
+ * F34, F36): 16 ULP of the point's magnitude, about 1.5e-8 m at the Earth's
+ * radius. The worst browser-against-Node difference seen was 3.75 ULP, so 16
+ * leaves room for another browser or PROJ build; real pipeline or grid drift
+ * shows at millimetres and more, far above it.
+ */
+const COORDINATE_ULPS = 16;
 
 /** One unit in the last place of |x| as a double (0 for 0). */
 function ulp(x: number): number {
@@ -230,7 +236,7 @@ function ulp(x: number): number {
 /**
  * The difference between a recorded fingerprint and this run's, or undefined
  * when they agree (R12): the pipeline and grids exactly, and each coordinate
- * within 4 ULP of its point's magnitude (rulings F34, F34a). The magnitude is
+ * within 16 ULP of its point's magnitude (rulings F34a, F36). The magnitude is
  * the largest |coordinate| of the point's expected or actual triple, so a
  * component near 0 is held to the point's precision, not to a sub-picometre
  * one of its own. WebAssembly PROJ (musl libm) and native PROJ differ in the
