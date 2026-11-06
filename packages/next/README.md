@@ -41,6 +41,15 @@ also fetches the data the frames layer needs, into `~/.cesium-bench/frames`
   12 MB) and NAIF's DSN station SPK, each checked against a pinned SHA-256
   and stored as they are (manifest role `trajectory`, optional at load).
 
+- PROJ 9.7.1 under `proj/` (manifest role `proj`), from proj.js v0.9.2's
+  GitHub release: the WebAssembly build (`proj_capi.mjs`, `proj_capi.wasm`,
+  `proj.db`) and the host's native `proj_capi.node`, each tarball checked
+  against a pinned SHA-256, plus the GEOID18 grid `us_noaa_g2018u0.tif`
+  (NOAA/NGS, public domain, from cdn.proj.org). PROJ and proj.js are MIT;
+  `proj.db` carries the EPSG Dataset, credited to IOGP
+  (https://epsg.org/terms-of-use.html). `loadProj` (`src/engineering/proj.ts`)
+  loads it lazily.
+
 NAIF's generic kernels are public, but what the runtime loads are packs,
 derived excerpts of them (each pack's manifest names its source file, that
 file's SHA-256 and the span). The packs are written on your machine and never
