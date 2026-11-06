@@ -10,6 +10,7 @@ const ahead = new Float64Array(3);
 const behind = new Float64Array(3);
 const here = new Float64Array(3);
 const far = new Float64Array(3);
+const MAX_DIMENSION = 3;
 
 function fixedOnly(point: FramePoint, instant: Instant, caller: string): void {
   if (point.instant && point.instant.tt !== instant.tt) {
@@ -43,30 +44,6 @@ export function positionIn(
 }
 
 /**
- * Writes `positionIn` to `out` and returns `undefined`, or returns what it
- * threw when that is a data-edge miss (an Error beyond the data, ephemeris
- * or EOP table). A TypeError or ReferenceError is a programming error, not
- * an edge, so it propagates rather than becoming a quiet one-sided
- * difference.
- */
-function tryPosition(
-  point: FramePoint,
-  frame: Frame,
-  instant: Instant,
-  out: Float64Array,
-): { error: unknown } | undefined {
-  try {
-    positionIn(point, frame, instant, out);
-    return undefined;
-  } catch (error) {
-    if (error instanceof TypeError || error instanceof ReferenceError) {
-      throw error;
-    }
-    return { error };
-  }
-}
-
-/**
  * Writes the derivative at `t0` of the quadratic through (t0, f0),
  * (t1, f1), (t2, f2) to `out`: the three-point one-sided stencil
  * (−3 f(t) + 4 f(t ± h) − f(t ± 2h)) / (±2h), in Lagrange form so the
@@ -80,19 +57,46 @@ function oneSided(
   f0: Float64Array,
   f1: Float64Array,
   f2: Float64Array,
+  dimension: number,
   out: Float64Array,
 ): void {
   const w0 = (2 * t0 - t1 - t2) / ((t0 - t1) * (t0 - t2));
   const w1 = (t0 - t2) / ((t1 - t0) * (t1 - t2));
   const w2 = (t0 - t1) / ((t2 - t0) * (t2 - t1));
-  for (let k = 0; k < 3; k++) {
+  for (let k = 0; k < dimension; k++) {
     out[k] = w0 * f0[k]! + w1 * f1[k]! + w2 * f2[k]!;
   }
 }
 
 /**
- * The velocity (m/s) relative to `frame` at `instant` of `point`, fixed in
- * its own frame: the central difference of `positionIn` over h = 0.5 s
+ * Writes `sample(instant, out)` to `out` and returns `undefined`, or returns
+ * what it threw when that is a data-edge miss (an Error beyond the data,
+ * ephemeris or EOP table). A TypeError or ReferenceError is a programming
+ * error, not an edge, so it propagates rather than becoming a quiet
+ * one-sided difference.
+ */
+function trySample(
+  sample: Sampler,
+  instant: Instant,
+  out: Float64Array,
+): { error: unknown } | undefined {
+  try {
+    sample(instant, out);
+    return undefined;
+  } catch (error) {
+    if (error instanceof TypeError || error instanceof ReferenceError) {
+      throw error;
+    }
+    return { error };
+  }
+}
+
+/** A function of time of up to three components, written to `out`; it throws beyond its data. */
+export type Sampler = (instant: Instant, out: Float64Array) => void;
+
+/**
+ * The time derivative at `instant` of the vector `sample` (up to three
+ * components) written to `out`: the central difference over h = 0.5 s
  * (frames 3, R3), divided by the two instants' actual TDB difference (TDB
  * seconds at today's epochs are 1.2e-7 s apart, so `instant ± h` may not
  * land exactly).
@@ -102,26 +106,29 @@ function oneSided(
  * t ± 2h, second order like the central difference. Only if t ± 2h misses
  * too does it fall back to the two-point difference with the instant
  * itself. Where both sides miss, it rethrows the error from t + h. A
- * TypeError or ReferenceError always propagates.
+ * TypeError or ReferenceError always propagates. `velocityIn` and range rate
+ * share this.
  */
-export function velocityIn(
-  point: FramePoint,
-  frame: Frame,
+export function derivative(
+  sample: Sampler,
   instant: Instant,
-  out: Float64Array = new Float64Array(3),
+  dimension: number,
+  out: Float64Array,
 ): Float64Array {
-  fixedOnly(point, instant, "velocityIn");
+  if (dimension > MAX_DIMENSION) {
+    throw new RangeError(`derivative: at most ${MAX_DIMENSION} components`);
+  }
   const t = instant.tdb();
   const later = Instant.fromTdb(t + H);
   const earlier = Instant.fromTdb(t - H);
-  const laterMissed = tryPosition(point, frame, later, ahead);
-  const earlierMissed = tryPosition(point, frame, earlier, behind);
+  const laterMissed = trySample(sample, later, ahead);
+  const earlierMissed = trySample(sample, earlier, behind);
   if (laterMissed && earlierMissed) {
     throw laterMissed.error;
   }
   if (!laterMissed && !earlierMissed) {
     const dt = later.tdb() - earlier.tdb();
-    for (let k = 0; k < 3; k++) {
+    for (let k = 0; k < dimension; k++) {
       out[k] = (ahead[k]! - behind[k]!) / dt;
     }
     return out;
@@ -130,15 +137,46 @@ export function velocityIn(
   const sign = laterMissed ? -1 : 1;
   const nearInstant = laterMissed ? earlier : later;
   const near = laterMissed ? behind : ahead;
-  positionIn(point, frame, instant, here);
+  sample(instant, here);
   const farInstant = Instant.fromTdb(t + sign * 2 * H);
-  if (!tryPosition(point, frame, farInstant, far)) {
-    oneSided(t, nearInstant.tdb(), farInstant.tdb(), here, near, far, out);
+  if (!trySample(sample, farInstant, far)) {
+    oneSided(
+      t,
+      nearInstant.tdb(),
+      farInstant.tdb(),
+      here,
+      near,
+      far,
+      dimension,
+      out,
+    );
     return out;
   }
   const dt = nearInstant.tdb() - t;
-  for (let k = 0; k < 3; k++) {
+  for (let k = 0; k < dimension; k++) {
     out[k] = (near[k]! - here[k]!) / dt;
   }
   return out;
+}
+
+/**
+ * The velocity (m/s) relative to `frame` at `instant` of `point`, fixed in
+ * its own frame: the `derivative` of `positionIn` (central over h = 0.5 s,
+ * one-sided within h of a trajectory's data edge; frames 3, R3).
+ */
+export function velocityIn(
+  point: FramePoint,
+  frame: Frame,
+  instant: Instant,
+  out: Float64Array = new Float64Array(3),
+): Float64Array {
+  fixedOnly(point, instant, "velocityIn");
+  return derivative(
+    (i, o) => {
+      positionIn(point, frame, i, o);
+    },
+    instant,
+    3,
+    out,
+  );
 }
