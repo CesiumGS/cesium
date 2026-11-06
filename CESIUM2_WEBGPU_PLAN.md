@@ -6394,9 +6394,14 @@ out, because none of them changes a result.
       later (owner's suggestion), can then serve the grids, with CORS and
       possibly cropped tiles, with no engine change. The dev-server cache is
       only the local-development default.
-- **After 4b (owner's request, 2026-11-06): a gallery example for frames
-  and projections.** It shows off the tree-based transforms and the PROJ
-  work, and stress-tests them.
+- **Done (r65, built before 4b): a gallery example for frames and
+  projections** (owner's request, 2026-11-06; results are in "Frames example
+  results" below). It shows off the tree-based transforms and the PROJ work,
+  and stress-tests them. **What 4b adds to it:** tileset placement modes
+  (rigid and exact placement of a tileset on a frame) and the global-geoid
+  cases (EGM96, EGM2008 and the country geoids, from the entry above). Both
+  need library work that the example could not use. The list below is the
+  original request, kept as the record of what was asked.
   - **The tree, visualized live at the clock's time.** It covers:
     - ICRF, HCRS and EARTH_ICRF;
     - GCRF (with eq. 11.19) and ITRF;
@@ -6584,15 +6589,230 @@ because none of them changes a result.
 - **Plan 5:** `measureSpan` runs `gridFactors` twice per sample, a `proj_factors`
   call at each end. Cache the factors by design point, or compute them once for
   a span's fixed ends.
-- **Frames example (the entry above): `loadProj` in a production build.** The
-  browser path now imports `@emnapi/runtime` dynamically and `proj_capi.mjs` by
-  a runtime URL (`@vite-ignore`). It was checked in the dev server only. The
-  example's production-build check covers it; also check `build:lib`'s output.
 - **Frames example: PROJ object lifetimes.** Neither build exposes
   `proj_destroy`, and the binding's glue uses a `FinalizationRegistry`. PROJ
-  objects are probably freed on garbage collection. Verify this under the
-  stress tests, which make many frames, rather than planning explicit destroy
-  calls.
+  objects are probably freed on garbage collection. The example's cases make
+  many frames, but it measured no heap, so this is still unverified. Check it
+  with a heap measurement over repeated "Run all" runs, rather than planning
+  explicit destroy calls.
+
+_Frames example results (r65): the frames-and-projections gallery example._
+The example from the entry above landed in
+`packages/next/examples/frames-explorer/` (plan
+`docs/superpowers/plans/2026-11-06-frames-explorer-example.md`), built before
+4b. It uses only the public API, except for the library fixes below. It has
+the frame tree live at the clock's time, stress tests that run in a worker,
+overlays on the globe, a six-stop tour, and a "try your own CRS" area (paste
+WKT2 for a bound-CRS check; an ion asset ID loads as a tileset for context,
+because ion exposes no CRS for an asset). Measured 2026-11-06:
+
+- **Catalog.** 77 cases and 225 results in 24 groups, 54 of them
+  fingerprinted (pipeline, grids and coordinates, recorded in
+  `fingerprints.json`). The data test (`npm run test:data`) runs all of them
+  in 3.8 s alone (up to 8 s on a loaded machine; the worker's run reads 5–7 s).
+  The page's "Run all" gives 212 passed, 0 failed and 13 shown (results with
+  no pass or fail, such as effect sizes), which is the data test's 225.
+  Without frame data, the checks that need none still run and the rest are
+  skipped as missing, with the reason shown.
+- **Browser against Node.** The browser (WebAssembly PROJ) and native PROJ
+  agree on pipelines and grids exactly. Their coordinates differ by up to
+  1.86e-9 m, the last bits of musl's libm against the host's. The check
+  allows 16 ULP of the point's magnitude (about 1.5e-8 m at Earth radius). The
+  worst case reads 3.75 ULP (IOGP's Transverse Mercator forward). The flat
+  1e-9 m the plan first set is about 1 ULP at 6.4e6 m, so it was impossible by
+  construction. Drift that matters shows up at a millimetre or more.
+- **Reference values (R10).** Every expected value is from a source that
+  does not use this library or PROJ, retrieved 2026-11-06:
+  - NGS Data Sheets for five marks (California 3, Florida East,
+    Pennsylvania South, Colorado Central, Arizona Central): SPC, UTM and
+    combined factors, with GEOID18 and NAVD 88 heights;
+  - IOGP 373-7-2 worked examples (Lambert conic 2SP, Transverse Mercator,
+    polar stereographic B, Pseudo-Mercator, the position-vector and
+    time-dependent Helmerts), the Ordnance Survey Transverse Mercator worked
+    example, and the Wyoming DOT clothoid table;
+  - EPSG registry records (transformations 1311, 1133, 1134, 1314, 15484,
+    1175 and 8970, ellipsoids, the WGS 84 ensemble), ODOT's OCRS handbook
+    (±10 ppm), Snyder (USGS PP 1395), IERS Conventions 2010, NAIF's lunar
+    frame kernels, DSN 810-005 (DSS 43), the GDA2020 Technical Manual,
+    Ashby & Patla (2024) for lunar time, and the IFC 4.3 Annex E examples;
+  - bound-CRS WKT2 inputs written by PROJ 9.7.1's `proj_as_wkt`, from
+    `+towgs84` definitions (GDAL and `projinfo` are not installed). These
+    are inputs, not expected values.
+
+  Not fetched or not usable: Mahun's spiral chapter (Cloudflare), the TDOT
+  spiral guide (approximate formulas and arithmetic errors in its example),
+  buildingSMART's geo-referencing user guide (behind a login), the GDA2020
+  manual v1.7 and v1.8 (icsm.gov.au timed out; the archived v1.2 was used),
+  and USNO's archived leap-second page (empty; IS-GPS-200N was used). No
+  case was dropped for a missing source. The IFC case checks the model
+  origin and x axis of Annex E.7.3 against the file's own `IfcSite` values
+  (0.96 mm), because no public example gives a non-origin model point; the
+  example's missing `Scale` for millimetre units is recorded as a finding.
+  IOGP's Transverse Mercator forward example differs from the library by
+  9.9 mm, while the Ordnance Survey worked example agrees. IOGP's uses the
+  JHS formulas, so the difference is the method. It is shown as an effect
+  size, and the Ordnance Survey example is the check.
+
+- **Rigid-placement budget** (ground-scaled site grid, measured east from its
+  origin; the limit for both checks is 10% of √(2Rε)):
+
+  | Site           | 1 mm     | 1 cm     | 10 cm     | Off √(2Rε) by |
+  | -------------- | -------- | -------- | --------- | ------------- |
+  | 0°, UTM 31N    | 112.94 m | 357.16 m | 1129.44 m | 0.17%         |
+  | 37°, UTM 10N   | 113.01 m | 357.38 m | 1130.12 m | 0.11%         |
+  | 60°, UTM 32N   | 113.09 m | 357.61 m | 1130.86 m | 0.04%         |
+  | 80°, EPSG:3413 | 112.91 m | 357.06 m | 1129.12 m | 0.19%         |
+
+  So a rigid placement stays within a centimetre of exact out to about 357 m
+  from its anchor. The tour's rigid-against-exact line sags 31.4 m at 20 km.
+
+- **Other effect sizes.** Giving no coordinate epoch moves a point by 29.88 cm
+  in 16 years (NAD83(2011) from ITRF2014, EPSG 8970). The US survey foot
+  against the international foot differs by 2.0 ppm. Lunar time runs 55.99
+  µs/day against the Earth's geoid, averaged over the synodic month (Ashby &
+  Patla: 56.02); the plan's sidereal month gave 57.53 µs/day, 2.7% off,
+  because two ~2 µs/day synodic terms do not average out over it, so the
+  synodic month is the right period. The tour's walk from MOON_PA to ITRF
+  composes to ±32 mm (ephemeris 10 mm, the Moon's relativity term 30 mm,
+  Earth orientation under 0.1%), where the design stub had ±1 m. The
+  library's accuracy statement governs.
+- **Library bugs the references caught, now fixed:**
+  - **`gridFactors` on spherical-method CRSs.** EPSG:3857 returned the
+    sphere's scale (1/cos φ), not the ellipsoid's, so Web Mercator combined
+    factors were wrong by 0.25% at 60°. The same fault was in EASE-Grid
+    (3975, 3973), EPSG:32662, ESRI:54002 and the ARC System zones (2.5e-3
+    in k at 60°). Detection now uses the conversion's method from PROJ's API
+    (Pseudo-Mercator and the authalic and equidistant-cylindrical
+    "(Spherical)" methods), not PROJ-string tokens, and factors come from
+    PROJ's derivatives against the CRS's true ellipsoid. Every other CRS keeps
+    PROJ's own factors. A related fault: the projection rebuilt from a +R_A
+    string inverted a point 0.066° off, so `gridFactors` now locates the
+    point with the CRS's own conversion inverse. The derivative path throws at a
+    pole, and NAD27, UPS and 3413 at the pole have tests. It costs about 18 µs per call.
+  - **Warning codes.** `AccuracyStatement.warningCodes` (optional, kept in
+    step with `warnings`) and the `WarningCode` export, so a caller can tell
+    a signal-only warning from one that bears on the position without
+    matching text. The walk's amber state depends on it.
+  - **`build:lib`'s types.** The Node-only PROJ loader moved to
+    `src/engineering/projNode.ts`, typed by the little of Node it uses, so
+    `tsc -p tsconfig.lib.json` passes with no new dependency. `npm run
+build:lib` exits 0, and `loadProj` from its output resolves in a browser
+    page in about 115 ms.
+  - **`onProgress` loaders.** `loadProj` and `loadFrameData` take an optional
+    `onProgress(item, received, total)`. The WebAssembly is passed to the
+    glue as one `ArrayBuffer` (the JS heap held three copies of it before).
+    `readWithProgress` is exported. The dev server's `/frames-data/` now
+    sends `Content-Length`, so dev progress bars are determinate.
+  - Smaller additions: `ResolveOptions` and `listOperations` take an optional
+    area of interest (PROJ's default spatial filter drops every partial-area
+    ED50 transformation, leaving the ballpark one); `listOperations` and
+    `areaOfUse` rethrow PROJ's errors with a `cause`, not `[]`;
+    `earthOrientationSigma`, `properTimeRate` and `rotationPart` are
+    exported.
+- **The gallery contract.** An example's `run` may now return
+  `{ dispose, panel }`: a React panel that Dyno renders (StrataKit
+  components, unstyled by Dyno's DOM-panel rules, which are now scoped with
+  `:where(.examples-panel:not(.react))`). The context gains `params`,
+  `setParams` and `watchParams` (deep links such as
+  `?select=frame:MOON_PA&lens=space&tour=...` go through them, not
+  `location.href`), and `link()` for "Copy link". The runner effect is
+  passive, so the panel's cleanups run before `dispose`. Leaving an example
+  whose `dispose` throws reports in its own dismissible notice.
+- **The owner's "no slab" bug** (Examples → realtime-tracks → back showed
+  "World: no slab 0"). The cause was the passive-effect runner above: React
+  runs a removed tree's passive cleanups parent first, so the page destroyed
+  the engine before the runner disposed the example. `share()` in
+  `bench/suite/views/exampleRun.ts` now refcounts the engine. It is destroyed
+  after the page's release and after every run's cleanup and async start, in
+  any order. Five unit tests, and the owner's path, two other examples, quick
+  switches and a mid-start leave were checked in the browser.
+- **Production-build check (R13).** `npm run build` served statically
+  (dist plus `/frames-data/` with `Content-Length`): PROJ loads, Run all gives
+  212 / 0 / 13, the design grid draws at ±2.00 m and Orion's path at ±10 m.
+  The module worker and its runtime `import()` of `proj_capi.mjs` work with
+  no `worker.format` change, so §13.14's "`loadProj` in a production build"
+  item is closed, and so is the `build:lib` check. The longest
+  requestAnimationFrame gap during Run all was 33 ms in the first build
+  and 50 ms in the repo's build (limit 100 ms); the dev server showed
+  100–150 ms, from StrictMode's double render and dev React. Production is
+  what users run, so the dev figure is informational.
+- **Screenshots and reviews.** Two UX reviews on the most capable model,
+  against the design stubs and then the real page (headless Chrome with
+  Metal; the bundled Chromium falls back to SwiftShader and draws no globe).
+  Findings, all fixed:
+  - the first pass found the globe undesigned, the tree walk not adding up to
+    the composed statement, accuracies stated inconsistently, and result rows
+    breaking at 380 px (4 Critical, 19 Important);
+  - the second found stop 4 not showing the rigid-placement sag (now a side
+    camera, with the sag drawn ×50 and labelled, plus a "Show true scale"
+    switch), the walk amber from a signal-only warning, geocentric triads
+    running through the Earth, stop 2 near-black at 3600× and then washed
+    out (exposure −1.5 at desktop widths, −0.6 narrow), and the narrow
+    caption covering downward tips (it folds under 560 px);
+  - the browser checks found the HUD's focus ring at 2.4:1 in light mode
+    (now 11.6:1) and wrong "Compared against" text on several results.
+  - 45 browser checks and 3 more pass: tree, tour, deep links, report, keyboard,
+    contrast (0 below AA), reduced motion, Slow 4G loading, switching away
+    mid-load, missing data, and a token search (the ion token appears
+    nowhere: report, console, URL, storage or DOM).
+- **Gates**: `npm test` 859 passing; `npm run test:data` 187 passing;
+  `snyk_code_scan` on the example and its tests, 0 issues. In `src/engineering`
+  and `vite.config.ts`, the Snyk findings are all at HEAD before this plan
+  (the accepted CWE-23 in `proj.ts`, and 5 in `vite.config.ts`, below).
+
+_Carried forward from the frames example._ These are deferred items that are
+real work. The wording and test-strength nits the reviews raised are left out,
+because none of them changes a result.
+
+- **Renderer / engine: a screen-space wide-line material.** The overlays use
+  1-pixel line lists, with hierarchy by colour strength and no halos. A
+  wide line with a halo would let them read at a distance.
+- **Renderer / engine: a no-depth-test draw flag.** The geocentric triads need
+  x-ray dashes where they pass behind the Earth. Today a whole axis is hidden
+  while its tip is behind the limb.
+- **Renderer / engine: a per-layer imagery brightness and saturation control.**
+  The example dims the lit globe under overlays with exposure compensation,
+  which has no desaturation.
+- **Renderer / engine: document draw tints above 1.** The overlays' lighter
+  tint relies on them. They render as expected in Chrome on Metal, and the
+  engine does not say they are allowed.
+- **Renderer / engine: ray artifacts in the lunar terrain's shadows** at tour
+  stop 6 (13.10's ray queries).
+- **Dyno: a resizable side column that stacks below about 900 px.** The panel
+  takes 579 px of 1440, and 380 px of 900.
+- **Dyno: a Viewer time-control option to show UTC.** The control's zone
+  follows the camera (UTC−9 to UTC+5 across the tour), and "UTC+5" at the Moon
+  means nothing. It matters most at stops 5 and 6.
+- **Dyno: the root error alert is misleading.** Any error reads "Dyno could
+  not read the results".
+- **Dyno: with no ion token, the default imagery throws** an uncaught `ion
+asset 2: no access token`, on every example.
+- **Dyno: `/favicon.ico` 404s** on every page.
+- **Dyno: a static host of the built gallery needs `/bench-results/index.json`,**
+  which only the dev server provides. Without it the gallery shows the
+  misleading alert above.
+- **Dyno: dev-server endpoint hardening (security).** Snyk on `vite.config.ts`
+  finds 5 issues, all from before this example (the Dyno image regression
+  and the M0 spikes): two High CWE-23 path traversals at the image-regression
+  `readFileSync` and `writeFileSync` endpoints, a CWE-770 on `serveDirectory`
+  and two CWE-209 error leaks. The example added one `Content-Length` line.
+- **Dyno: the example runner's loose ends.** A rollback of the search params
+  between two quick `setParams` calls (`searchKey` and `store.sync`) is
+  unverified. A run left mid-way still calls `dispose` after `viewer.destroy`
+  and `resumePresentation` (it predates the example).
+- **Plan 5: `loadFrameData` takes no `AbortSignal`.** The example terminates
+  its worker instead.
+- **Plan 5: a bogus huge `Content-Length` makes `readWithProgress` preallocate
+  and possibly throw.** Cap the preallocation, or grow the buffer.
+- **Plan 5: the stress context's `frames` getter is non-enumerable,** so
+  spreading the context loses it. Nothing spreads it today.
+- **Plan 4b: a test case for Mercator (Spherical)** (EPSG methods 1026 and
+  9841). The derivative path handles it, and `checkSphere` throws if a radius
+  differs, but `proj.db` has no such CRS, so nothing tests it. Add one when
+  4b's CRS coverage includes it.
+- **Plan 4b: `frameCache` is unbounded** in the worker. It caches loaded
+  frame data for the life of the worker, which 4b's large grids (EGM2008 is
+  80.6 MB) make a real cost. Bound it.
 
 _Carried forward from the stress-test example's industry review (owner,
 2026-11-06)._ These library gaps came up while planning the frames example's
