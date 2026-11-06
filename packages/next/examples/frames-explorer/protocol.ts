@@ -107,8 +107,12 @@ export interface RigidVsExactParams {
   readonly from: readonly [number, number];
   readonly to: readonly [number, number];
   readonly samples: number;
-  /** The rigid line drawn at exact + k (rigid − exact) (display only, S-C1; default 1). */
-  readonly exaggeration?: number;
+  /** The rigid line cut into this many pieces, every other one drawn (default `samples`). */
+  readonly dashes?: number;
+  /** A gap tick, exact up to rigid, at every n-th of the line (default none). */
+  readonly ticks?: number;
+  /** Design distances from `from` to give both placements and the gap at (`OverlayGeometry.marks`). */
+  readonly marks?: readonly number[];
 }
 
 /** `distortion`: Tissot ellipses and combined-factor contours over `extent`. */
@@ -225,14 +229,21 @@ export interface OverlayLayer {
 export interface OverlayGeometry {
   kind: OverlayKind;
   /**
-   * designGrid: `grid`; trueNorthLines: `trueNorth`; rigidVsExact: `exact`
-   * and `rigid`; distortion: `tissot` and `contours`; trajectoryPath: `path`.
+   * designGrid: `grid`; trueNorthLines: `trueNorth`; rigidVsExact: `exact`,
+   * `rigid` (dashed, as geometry) and `ticks`; distortion: `tissot` and `contours`; trajectoryPath: `path`.
    */
   layers: OverlayLayer[];
   /** distortion: label positions (x, y, z each, meters) and their values. */
   labels?: { positions: Float64Array; values: Float64Array; unit: string };
   /** rigidVsExact: the separation at the line's end, meters. */
   sagAtEnd?: number;
+  /** rigidVsExact: both placements (meters, Earth-fixed) and the gap at each asked mark. */
+  marks?: {
+    distance: number;
+    exact: number[];
+    rigid: number[];
+    separation: number;
+  }[];
   /** distortion: the nodes with no scale, left out. */
   skipped?: number;
   /** trajectoryPath with `adaptive`: how it was sampled. */

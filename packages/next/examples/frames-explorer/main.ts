@@ -59,6 +59,7 @@ import type {
   EnvironmentLine,
   OrionFrame,
   OverlayId,
+  OverlayPart,
   OverlayView,
   PanelActions,
   Reference,
@@ -98,6 +99,8 @@ import { buildTree, pathToRoot, type TreeNode } from "./tree.ts";
 import references from "./references.json";
 import { PACKAGE } from "./version.ts";
 import { RunQueue } from "./runQueue.ts";
+import { RIGID_LINE, rigidCopy } from "./rigidLine.ts";
+import { GapInset } from "./gapInset.ts";
 import fingerprintFile from "./fingerprints.json";
 
 const DATA = "/frames-data/";
@@ -142,13 +145,17 @@ const SITE: SiteTransform = {
 };
 /** F32: the true-north lines' convergence, drawn this many times while not at true scale. */
 const CONVERGENCE_FACTOR = 20;
-/** S-C1: the rigid line's separation from the exact one, drawn this many times while not at true scale. */
-const SAG_FACTOR = 50;
 
 /** Ashby and Patla (2024)'s published lunar clock rate, as references.json quotes it. */
 const LUNAR_RATE = (
   references.entries as unknown as Record<string, { rate?: string }>
 )["ashby-patla-2024"]!.rate!.replace("μs", "µs");
+
+/**
+ * Stop 4's camera: centred this share of the way along the line and this
+ * many degrees south of it, at this range (m) and pitch (degrees).
+ */
+const RIGID_FRAMING = { along: 0.53, south: 0, range: 400_000, pitch: -5 };
 
 const SACRAMENTO = fromDegrees(-121.4944, 38.5816, 0);
 const LUNAR_SITE = fromDegrees(0, -89.5, 0);
@@ -164,7 +171,7 @@ const OVERLAY_LABEL: Record<OverlayId, [label: string, short: string]> = {
   triads: ["Triads", "Triads"],
   designGrid: ["California design grid, with true north", "Design grid"],
   siteGrid: ["Site grid (θ = 12.5°, s = 1.0000375)", "Site grid"],
-  rigidVsExact: ["Rigid and exact 20 km line", "Rigid vs exact"],
+  rigidVsExact: ["Rigid and exact 400 km line", "Rigid vs exact"],
   roundTrip: ["Round-trip markers from the last run", "Round trips"],
   orion: ["Orion's path", "Orion"],
   distortion: ["Distortion", "Distortion"],
@@ -238,6 +245,8 @@ interface OverlayState {
   detail?: string;
   caution?: boolean;
   unbounded?: boolean;
+  /** Lines keyed apart in the legend (the rigid and the exact line). */
+  parts?: readonly OverlayPart[];
   /** Bumped per request, so a late answer for an old one is dropped. */
   token: number;
 }
@@ -296,6 +305,12 @@ export function run(context: ExampleContext): ExampleRun {
   scope.defer(() => hud.remove());
 
   const globe = new Globe(viewer, scope, hud);
+  // The rigid line's gap at 20 km, a second engine view (stop 4). Deferred
+  // after the globe, so it goes first: its view before the viewer's world.
+  const gapInset = new GapInset(viewer, hud, (bits) =>
+    globe.hideTriadsFrom(bits),
+  );
+  scope.defer(() => gapInset.dispose());
   const loading = new LoadingModel();
   // Items left fetching when the example is left go back to idle: the
   // stopped client sends no final state (Task 4's deferred note).
@@ -378,9 +393,18 @@ export function run(context: ExampleContext): ExampleRun {
   let distortionHeight = 0;
   let biasFactor = 1e6;
   let trueScale = false;
-  let sagTrueScale = false;
-  /** The rigid and exact lines' far ends as drawn, for stop 4's camera. */
-  let rigidEnds: { exact: Float64Array; rigid: Float64Array } | undefined;
+  /**
+   * The rigid and exact lines as drawn (stop 4): their ends, for the stop's
+   * camera, and both placements at the 20 km mark, for the inset.
+   */
+  let rigidBuilt:
+    | {
+        start: Float64Array;
+        end: Float64Array;
+        mark?: { exact: number[]; rigid: number[]; along: number[] };
+        inset: { caption: string; leader: string };
+      }
+    | undefined;
   const overlays = new Map<OverlayId, OverlayState>(
     OVERLAYS.map((id) => [
       id,
@@ -515,6 +539,7 @@ export function run(context: ExampleContext): ExampleRun {
         ...(s.problem !== undefined && { problem: s.problem }),
         ...(s.caution && { caution: true }),
         ...(s.unbounded && { unbounded: true }),
+        ...(s.on && s.state === "drawn" && s.parts && { parts: s.parts }),
       };
       if (id === "triads") {
         Object.assign(base, triadsAccuracy());
@@ -539,7 +564,7 @@ export function run(context: ExampleContext): ExampleRun {
       case "siteGrid":
         return "the recorded PROJ operation's accuracy, once PROJ loads";
       case "rigidVsExact":
-        return "the sag at 20 km, exact geometry";
+        return "how far the two lines part at 20 km and 400 km, once PROJ loads";
       case "roundTrip":
         return "run the tests to place the markers";
       case "orion":
@@ -561,7 +586,7 @@ export function run(context: ExampleContext): ExampleRun {
       case "siteGrid":
         return "The site grid through the same operation; the site formula (rotation and scale) is exact to 1 nm.";
       case "rigidVsExact":
-        return `A 20 km design line placed rigidly (dashed) against the exact one (solid); ${sagTrueScale ? "drawn at true scale" : `their separation drawn ${SAG_FACTOR} times larger`}, the leader labelled with the true sag.`;
+        return "A 400 km design line placed rigidly at its start (dashed: straight, on the tangent plane there) and exactly (solid: on the ellipsoid), drawn at true scale. They part as distance squared; an inset shows the gap at 20 km.";
       case "distortion":
         return "Tissot ellipses in true-north axes (convergence not applied); combined-factor contours from PROJ's factors, in ppm.";
       case "bias":
@@ -655,8 +680,6 @@ export function run(context: ExampleContext): ExampleRun {
       biasFactor,
       trueScale,
       convergenceFactor: CONVERGENCE_FACTOR,
-      sagTrueScale,
-      sagFactor: SAG_FACTOR,
       triadScale:
         "triads drawn at 6% of the camera's distance, 2 m to 2,000 km; ITRF and GCRF at 1.5 Earth radii",
       groups: GROUP_INFO,
@@ -919,6 +942,7 @@ export function run(context: ExampleContext): ExampleRun {
       detail?: string;
       caution?: boolean;
       labels?: LabelSpec[];
+      parts?: readonly OverlayPart[];
     }>,
   ): Promise<void> {
     const s = overlays.get(id)!;
@@ -940,8 +964,14 @@ export function run(context: ExampleContext): ExampleRun {
         delete s.detail;
       }
       s.caution = built.caution === true;
+      if (built.parts) {
+        s.parts = built.parts;
+      } else {
+        delete s.parts;
+      }
       overlayLabels.set(id, built.labels ?? []);
       refreshTriads();
+      refreshInset();
     } catch (error) {
       if (isAbort(error) || token !== s.token || disposed) {
         return;
@@ -1025,6 +1055,10 @@ export function run(context: ExampleContext): ExampleRun {
       if (id === "designGrid") {
         globe.removeOverlay(`${id}:minor`);
         minorGrid = undefined;
+      }
+      if (id === "rigidVsExact") {
+        rigidBuilt = undefined;
+        refreshInset();
       }
       globe.removeOverlay(id);
       overlayLabels.delete(id);
@@ -1142,55 +1176,141 @@ export function run(context: ExampleContext): ExampleRun {
         return;
       case "rigidVsExact":
         void request(id, async () => {
-          const from: [number, number] = [SITE.origin[0], SITE.origin[1]];
-          const to: [number, number] = [from[0] + 20_000 * FT, from[1]];
-          const k = sagTrueScale ? 1 : SAG_FACTOR;
+          // Stop 4 (owner's rework): a 400 km line at true scale, the rigid
+          // one straight and dashed (white), the exact one solid on the
+          // ellipsoid, a gap tick every 50 km, a leader at the far end with
+          // the true sag, and the 20 km mark for the inset.
           const g = await client.overlay("rigidVsExact", {
             frame: frameParams(CALIFORNIA, "California zone 3"),
-            from,
-            to,
-            samples: 100,
-            ...(k !== 1 && { exaggeration: k }),
+            from: RIGID_LINE.from,
+            to: RIGID_LINE.to,
+            samples: RIGID_LINE.samples,
+            dashes: RIGID_LINE.dashes,
+            ticks: RIGID_LINE.ticks,
+            marks: [RIGID_LINE.markDesign],
           });
-          const exact = g.layers.find((l) => l.name === "exact")!.chunks;
-          const rigid = g.layers.find((l) => l.name === "rigid")!.chunks;
+          const layer = (name: string) =>
+            g.layers.find((l) => l.name === name)?.chunks ?? [];
+          const exact = layer("exact");
           const sag = g.sagAtEnd ?? NaN;
+          const mark = g.marks?.[0];
+          const copy = rigidCopy({
+            sagEnd: sag,
+            gapAtMark: mark?.separation ?? NaN,
+          });
+          const start = pointOf(exact);
           const a = pointOf(exact, true);
-          const b = pointOf(rigid, true);
-          rigidEnds = a && b ? { exact: a, rigid: b } : undefined;
-          // S-C1: a 1 px white leader between the two far ends, labelled
-          // with the true sag; both lines at full strength, exact solid and
-          // rigid dashed.
-          const leader =
-            a && b
-              ? overlayMesh({
-                  positions: Float64Array.from([...a, ...b]),
-                  colors: Uint8Array.from([
-                    255, 255, 255, 255, 255, 255, 255, 255,
-                  ]),
-                })
-              : [];
+          const rigidLine = layer("rigid");
+          const r0 = pointOf(rigidLine);
+          const b = pointOf(rigidLine, true);
+          const along =
+            r0 && b ? [0, 1, 2].map((i) => b[i]! - r0[i]!) : undefined;
+          rigidBuilt =
+            start && a
+              ? {
+                  start,
+                  end: a,
+                  ...(mark &&
+                    along && {
+                      mark: { exact: mark.exact, rigid: mark.rigid, along },
+                    }),
+                  inset: copy.inset,
+                }
+              : undefined;
+          const white = (pairs: number[]) =>
+            overlayMesh({
+              positions: Float64Array.from(pairs),
+              colors: new Uint8Array((pairs.length / 3) * 4).fill(255),
+            });
+          // 1 px white leaders: at the far end (the true sag) and at the
+          // 20 km mark (the gap the inset shows).
+          const leaders = white([
+            ...(a && b ? [...a, ...b] : []),
+            ...(mark ? [...mark.exact, ...mark.rigid] : []),
+          ]);
           const mid = a && b ? a.map((v, i) => (v + b[i]!) / 2) : undefined;
-          const drawn = k === 1 ? "" : ` (gap drawn ×${k})`;
+          // The labels: the rigid line's near its start, above it (its
+          // chord is the line itself); the exact line's at 60%, under it,
+          // the chord's point dropped to the ellipsoid (on the line to
+          // metres); the sag above the far-end leader.
+          const along3 = (
+            p: ArrayLike<number> | undefined,
+            q: ArrayLike<number> | undefined,
+            t: number,
+          ) =>
+            p && q
+              ? Float64Array.from(
+                  [0, 1, 2].map((i) => p[i]! + (q[i]! - p[i]!) * t),
+                )
+              : undefined;
+          const rigidAt = along3(r0, b, 0.08);
+          const chord = along3(start, a, 0.6);
+          const onGround =
+            chord &&
+            WGS84.cartesianToCartographic(chord, {
+              longitude: 0,
+              latitude: 0,
+              height: 0,
+            });
+          const exactAt =
+            onGround &&
+            WGS84.cartographicToCartesian(
+              { ...onGround, height: 0 },
+              new Float64Array(3),
+            );
           return {
             layers: [
               { chunks: exact, color: engineeringColor },
-              { chunks: rigid, color: hexRgba("#ffffff"), dashed: true },
-              { chunks: leader },
+              { chunks: rigidLine, color: hexRgba("#ffffff") },
+              {
+                chunks: layer("ticks"),
+                color: hexRgba("#ffffff"),
+                strength: SECONDARY,
+              },
+              { chunks: leaders },
             ],
-            accuracy: `sag ${sag.toFixed(1)} m at 20 km, exact geometry`,
-            detail: `A 20 km design line placed rigidly at its start (dashed) against the exact one (solid): ${sag.toFixed(1)} m apart at the far end, by geometry, exact. ${k === 1 ? "Drawn at true scale." : `Their separation is drawn ${k} times larger so it shows; the leader carries the true figure.`}`,
-            labels: mid
-              ? [
-                  {
-                    id: "label:sag",
-                    text: `sag ${sag.toFixed(1)} m at 20 km${drawn}`,
-                    at: Float64Array.from(mid),
-                    priority: 2,
-                    leader: true,
-                  },
-                ]
-              : [],
+            accuracy: copy.accuracy,
+            detail: copy.detail,
+            parts: copy.parts,
+            labels: [
+              ...(rigidAt
+                ? [
+                    {
+                      id: "label:rigid",
+                      text: copy.labels.rigid,
+                      at: rigidAt,
+                      priority: 2,
+                      dy: -28,
+                    },
+                  ]
+                : []),
+              ...(exactAt
+                ? [
+                    {
+                      id: "label:exact",
+                      text: copy.labels.exact,
+                      at: exactAt,
+                      family: "engineering" as const,
+                      priority: 2,
+                    },
+                  ]
+                : []),
+              ...(mid
+                ? [
+                    {
+                      // Above and left of the far-end leader (the view's
+                      // right edge is close), a row above the rigid line's
+                      // label, so the two fit side by side on a narrow view.
+                      id: "label:sag",
+                      text: copy.labels.end,
+                      at: Float64Array.from(mid),
+                      priority: 3,
+                      side: "left" as const,
+                      dy: -44,
+                    },
+                  ]
+                : []),
+            ],
           };
         });
         return;
@@ -1719,28 +1839,34 @@ export function run(context: ExampleContext): ExampleRun {
       case "designGrid":
         return framingAt(-120.5, 37.85, 180_000, 0, -35 * deg);
       case "rigidVsExact": {
-        // S-C1: from the side (south of the line, looking north, 10° down),
-        // the whole 20 km line across the view, so the gap opening toward
-        // the far end reads at a glance. Looking back along the line (the
-        // first spec) foreshortened it to a short stroke.
-        const ends = rigidEnds;
-        if (ends) {
-          const c = WGS84.cartesianToCartographic(ends.exact, {
+        // Stop 4 (owner's rework): from the side, south of the 400 km line
+        // looking north, a little down, the whole line across the left of
+        // the view (the legend and the inset take the bottom right), so the
+        // straight tangent visibly leaves the curving ground.
+        const built = rigidBuilt;
+        const geo = (p: ArrayLike<number>) =>
+          WGS84.cartesianToCartographic(Float64Array.from(p), {
             longitude: 0,
             latitude: 0,
             height: 0,
           });
-          if (c) {
-            return framingAt(
-              c.longitude / deg - 0.11,
-              c.latitude / deg,
-              22_000,
-              0,
-              -10 * deg,
-            );
-          }
-        }
-        return framingAt(-122.31, 37.76, 22_000, 0, -10 * deg);
+        const a = built && geo(built.start);
+        const b = built && geo(built.end);
+        const lon0 = a ? a.longitude / deg : -122.443;
+        const lon1 = b ? b.longitude / deg : -117.904;
+        const lat = a && b ? (a.latitude + b.latitude) / 2 / deg : 37.745;
+        // The range fits the line across the view's width: on a portrait
+        // (narrow) view the camera's field of view is the height's, so it
+        // steps back by the aspect.
+        const { clientWidth: w, clientHeight: h } = viewer.container;
+        const aspect = w > 0 && h > 0 ? w / h : 1;
+        return framingAt(
+          lon0 + (lon1 - lon0) * RIGID_FRAMING.along,
+          lat - RIGID_FRAMING.south,
+          RIGID_FRAMING.range / Math.min(1, aspect),
+          0,
+          RIGID_FRAMING.pitch * deg,
+        );
       }
       case "site":
         return framingAt(-122.43, 37.76, 8000, 0, -45 * deg);
@@ -2045,6 +2171,27 @@ export function run(context: ExampleContext): ExampleRun {
 
   // ----------------------------------------------------------------- tour
   let tourStop: string | undefined;
+
+  /**
+   * The gap inset shows while the rigid and exact lines are drawn, outside
+   * the tour or at its stop 4; any other stop, the overlay off, or leaving
+   * the example removes it.
+   */
+  function refreshInset(): void {
+    const s = overlays.get("rigidVsExact")!;
+    const built = rigidBuilt;
+    if (
+      !disposed &&
+      s.on &&
+      s.state === "drawn" &&
+      built?.mark !== undefined &&
+      (tourStop === undefined || tourStop === "rigid-exact")
+    ) {
+      gapInset.show({ ...built.mark, ...built.inset });
+    } else {
+      gapInset.hide();
+    }
+  }
   /**
    * Stop 2 (S-I6): at 3,600× the framed side passes into night, so the
    * globe is lit from the camera instead, set after the viewer's own sun
@@ -2123,6 +2270,7 @@ export function run(context: ExampleContext): ExampleRun {
       return;
     }
     tourStop = id;
+    refreshInset();
     if (tourClock) {
       viewer.clock.rate = tourClock.rate;
       viewer.clock.mode = tourClock.mode;
@@ -2409,10 +2557,6 @@ export function run(context: ExampleContext): ExampleRun {
     setTrueScale: (on) => {
       trueScale = on;
       drawOverlay("designGrid");
-    },
-    setSagTrueScale: (on) => {
-      sagTrueScale = on;
-      drawOverlay("rigidVsExact");
     },
     jumpToFlyby: () => {
       viewer.clock.time = FLYBY;

@@ -217,7 +217,7 @@ export interface TourStopSpec {
   rate?: number;
   /**
    * The caption's "Show true scale" switch, at a stop that exaggerates: the
-   * convergence angle or the rigid line's separation.
+   * convergence angle (stop 3). Stop 4 draws at true scale.
    */
   trueScaleSwitch?: TrueScaleKind;
   /**
@@ -230,8 +230,9 @@ export interface TourStopSpec {
   /** Orion's draw-in frame at this stop. */
   orionFrame?: "GCRF" | "MOON_ME";
   /**
-   * Draw only the geocentric triads (stop 2): a site's triad, the Sacramento
-   * one at the top of the view from the pole, crosses GCRF's turning x axis.
+   * Draw only the geocentric triads: at stop 2 a site's triad, the
+   * Sacramento one at the top of the view from the pole, crosses GCRF's
+   * turning x axis; at stop 4 it stands over the line's start.
    */
   geocentricOnly?: boolean;
 }
@@ -317,11 +318,12 @@ export const TOUR: readonly TourStopSpec[] = [
     id: "rigid-exact",
     title: "Rigid against exact",
     caption:
-      "A 20 km design line placed rigidly at its start parts from the exact one by about 31 m at its far end. Their separation is drawn 50 times larger so the gap shows; the leader gives the true figure.",
+      "The dashed line is straight: a 400 km design line placed rigidly at its start, on the tangent plane there. The solid line follows the Earth: the same line placed exactly, on the ellipsoid. They part as distance squared, about 12.5 km at 400 km. The inset shows the gap where a site feels it, 31.4 m at 20 km. All at true scale.",
     overlays: ["rigidVsExact"],
     camera: "rigidVsExact",
     time: CALIFORNIA_MIDDAY,
-    trueScaleSwitch: "sag",
+    // The Sacramento triad stands over the line's start, seen from the south.
+    geocentricOnly: true,
   },
   {
     id: "orion",

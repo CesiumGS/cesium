@@ -84,6 +84,25 @@ export interface OverlayView {
   caution?: boolean;
   /** Why it can't be drawn (missing, error). */
   problem?: string;
+  /**
+   * Lines drawn and keyed apart, each its own legend entry (the rigid and
+   * the exact line, stop 4); without them the overlay is one entry.
+   */
+  parts?: readonly OverlayPart[];
+}
+
+/** One line of an overlay, as the legend keys it. */
+export interface OverlayPart {
+  /** Unique within the overlay ("rigid"). */
+  key: string;
+  /** The full name, as the globe labels the line. */
+  label: string;
+  /** The legend's compact name. */
+  short: string;
+  accuracy: string;
+  line: "solid" | "dashed" | "dotted";
+  /** The overlay's family color, or white (the rigid line). */
+  tone: "family" | "white";
 }
 
 export type OrionFrame = "GCRF" | "ITRF" | "MOON_ME";
@@ -184,9 +203,6 @@ export interface PanelModel {
    */
   trueScale: boolean;
   convergenceFactor: number;
-  /** S-C1: the rigid line at its true separation; otherwise drawn ×`sagFactor` from the exact one. */
-  sagTrueScale: boolean;
-  sagFactor: number;
   /** The triads' scale, as the legend states it. */
   triadScale: string;
   groups: readonly GroupInfo[];
@@ -224,8 +240,6 @@ export interface PanelActions {
   setBiasFactor(factor: number): void;
   /** F32: true-north lines at true scale, or with the convergence exaggerated. */
   setTrueScale(on: boolean): void;
-  /** S-C1: the rigid line at its true separation, or with the sag exaggerated. */
-  setSagTrueScale(on: boolean): void;
   jumpToFlyby(): void;
   /** Flies to a frame, a result's site, or a tour stop. */
   showOnGlobe(target: { frame: string } | { result: string }): void;

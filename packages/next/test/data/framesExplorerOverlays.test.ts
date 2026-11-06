@@ -13,6 +13,8 @@ import {
   triad,
   trueNorthLines,
 } from "../../examples/frames-explorer/overlays.ts";
+import { RIGID_LINE } from "../../examples/frames-explorer/rigidLine.ts";
+import { radii } from "../../examples/frames-explorer/stress/references.ts";
 import type { CrsRef } from "../../src/engineering/crs.ts";
 import {
   EngineeringFrame,
@@ -204,31 +206,153 @@ describe("rigidVsExact", () => {
     }
   });
 
-  it("draws the separation exaggerated when asked (display only, S-C1), keeping the true sag", () => {
+  it("has no exaggeration: the rigid line is drawn where RigidPlacement puts it (true scale)", () => {
     const f = site();
-    const samples = 10;
-    const plain = rigidVsExact(f, [0, 0], [20_000, 0], samples);
-    const k = 50;
-    const big = rigidVsExact(f, [0, 0], [20_000, 0], samples, {
-      exaggeration: k,
-    });
-    expect(big.exact).toEqual(plain.exact);
-    expect(big.sagAtEnd).toBe(plain.sagAtEnd);
-    for (let i = 0; i <= samples; i++) {
+    const r = rigidVsExact(f, [0, 0], [20_000, 0], 10);
+    const placement = RigidPlacement.at(f, [0, 0, 0]);
+    for (let i = 0; i <= 10; i++) {
+      const want = placement.toBodyFixed([2000 * i, 0, 0]);
       for (let c = 0; c < 3; c++) {
-        const e = plain.exact[3 * i + c]!;
-        const want = e + k * (plain.rigid[3 * i + c]! - e);
-        expect(Math.abs(big.rigid[3 * i + c]! - want)).toBeLessThan(1e-6);
+        expect(Math.abs(r.rigid[3 * i + c]! - want[c]!)).toBeLessThan(1e-9);
       }
     }
-    expect(() =>
-      rigidVsExact(f, [0, 0], [1, 0], 2, { exaggeration: 0 }),
-    ).toThrow(/exaggeration/);
   });
 
   it("rejects a sample count that is not a whole number of segments", () => {
     expect(() => rigidVsExact(site(), [0, 0], [1, 0], 0)).toThrow(/samples/);
     expect(() => rigidVsExact(site(), [0, 0], [1, 0], 2.5)).toThrow(/samples/);
+  });
+});
+
+describe("stop 4's long line (rigidLine.ts): 400 km east in California zone 3", () => {
+  // The design frame and start the page draws: EPSG:6420, from the catalog's
+  // California site origin, 400 km east along grid east.
+  const california = () => frameOf(6420);
+  const line = () =>
+    rigidVsExact(
+      california(),
+      RIGID_LINE.from,
+      RIGID_LINE.to,
+      RIGID_LINE.samples,
+      { ticks: RIGID_LINE.ticks, marks: [RIGID_LINE.markDesign] },
+    );
+  const point = (a: Float64Array, i: number) =>
+    Array.from(a.subarray(3 * i, 3 * i + 3));
+
+  it("stays inside the CRS's area of use (EPSG:6420 reaches 117.83 W)", () => {
+    const f = california();
+    const end = f.toGeodetic([RIGID_LINE.to[0], RIGID_LINE.to[1], 0]);
+    expect((end.longitude * 180) / Math.PI).toBeLessThan(-117.83);
+    expect(f.operation.ballpark).toBe(false);
+  });
+
+  it("draws the rigid polyline straight: every point on the chord to 1e-6 m", () => {
+    const { rigid } = line();
+    const n = rigid.length / 3;
+    expect(n).toBe(RIGID_LINE.samples + 1);
+    const a = point(rigid, 0);
+    const b = point(rigid, n - 1);
+    const ab = sub(b, a);
+    const length = norm(ab);
+    expect(length).toBeGreaterThan(399_000);
+    for (let i = 1; i < n - 1; i++) {
+      // The distance from the chord: |ap × ab| / |ab|.
+      const ap = sub(point(rigid, i), a);
+      const off =
+        norm([
+          ap[1]! * ab[2]! - ap[2]! * ab[1]!,
+          ap[2]! * ab[0]! - ap[0]! * ab[2]!,
+          ap[0]! * ab[1]! - ap[1]! * ab[0]!,
+        ]) / length;
+      expect(off).toBeLessThan(1e-6);
+    }
+  });
+
+  it("the exact line sags from it by d²/2R at 400 km (R the Gaussian radius), within the catalog's 10%", () => {
+    const f = california();
+    const { sagAtEnd } = line();
+    const start = f.toGeodetic([RIGID_LINE.from[0], RIGID_LINE.from[1], 0]);
+    const [a, , b] = EARTH.ellipsoid.radii;
+    const R = radii(
+      a!,
+      1 - (b! / a!) ** 2,
+      (start.latitude * 180) / Math.PI,
+    ).gaussian;
+    const d = RIGID_LINE.lengthM;
+    const formula = (d * d) / (2 * R);
+    expect(formula).toBeGreaterThan(12_000);
+    expect(Math.abs(sagAtEnd / formula - 1)).toBeLessThanOrEqual(0.1);
+  });
+
+  it("the exact line is sampled every kilometre: each chord within 2 cm of the ellipsoid", () => {
+    const { exact } = line();
+    const f = california();
+    for (const i of [0, 100, 399]) {
+      const a = point(exact, i);
+      const b = point(exact, i + 1);
+      expect(norm(sub(b, a))).toBeLessThan(1001);
+      const mid = a.map((v, c) => (v + b[c]!) / 2);
+      const h = f.body.ellipsoid.cartesianToCartographic(
+        Float64Array.from(mid),
+        {
+          longitude: 0,
+          latitude: 0,
+          height: 0,
+        },
+      )!.height;
+      expect(h).toBeLessThan(0);
+      expect(h).toBeGreaterThan(-0.02);
+    }
+  });
+
+  it("the 20 km mark is 31.4 m, the catalog's figure, and the gap at that design point", () => {
+    const f = california();
+    const { marks } = line();
+    expect(marks).toHaveLength(1);
+    const m = marks[0]!;
+    const design = [
+      RIGID_LINE.from[0] + RIGID_LINE.markDesign,
+      RIGID_LINE.from[1],
+      0,
+    ];
+    expect(m.separation).toBe(
+      rigidSeparation(RigidPlacement.at(f, [...RIGID_LINE.from, 0]), f, design),
+    );
+    expect(norm(sub(Array.from(m.rigid), Array.from(m.exact)))).toBeCloseTo(
+      m.separation,
+      9,
+    );
+    // The catalog's rigid placement budget holds the extent to √(2Rε) within
+    // 10%; the inset's figure is 31.4 m within the same 10%, and reads so.
+    expect(Math.abs(m.separation / 31.4 - 1)).toBeLessThanOrEqual(0.1);
+    expect(m.separation.toFixed(1)).toBe("31.4");
+  });
+
+  it("puts a gap tick every 50 km, from the exact line up to the rigid one", () => {
+    const f = california();
+    const { ticks } = line();
+    const placement = RigidPlacement.at(f, [...RIGID_LINE.from, 0]);
+    expect(ticks.length / 6).toBe(RIGID_LINE.ticks - 1);
+    let last = 0;
+    for (let k = 0; k < RIGID_LINE.ticks - 1; k++) {
+      const design = [
+        RIGID_LINE.from[0] +
+          ((RIGID_LINE.to[0] - RIGID_LINE.from[0]) * (k + 1)) /
+            RIGID_LINE.ticks,
+        RIGID_LINE.from[1],
+        0,
+      ];
+      const e = f.toBodyFixed(design);
+      const r = placement.toBodyFixed(design);
+      for (let c = 0; c < 3; c++) {
+        expect(Math.abs(ticks[6 * k + c]! - e[c]!)).toBeLessThan(1e-9);
+        expect(Math.abs(ticks[6 * k + 3 + c]! - r[c]!)).toBeLessThan(1e-9);
+      }
+      // The gap grows as distance squared: each tick longer than the last.
+      const gap = norm(sub(Array.from(r), Array.from(e)));
+      expect(gap).toBeGreaterThan(last);
+      last = gap;
+    }
   });
 });
 

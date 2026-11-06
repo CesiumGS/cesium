@@ -26,26 +26,10 @@ import {
   useRef,
   useState,
 } from "react";
-import type { Family } from "./families.ts";
 import { captionFold, focusAfter, foldReducer } from "./fold.ts";
-import type { OverlayView, PanelModel, TourStop } from "./model.ts";
+import { legendRows } from "./legendRows.ts";
+import type { PanelModel, TourStop } from "./model.ts";
 import type { TourScaleSwitch } from "./tourScale.ts";
-
-/** Each overlay's family (color) and line style on the globe and in the legend (M8). */
-const OVERLAY_LOOK: Partial<
-  Record<
-    OverlayView["id"],
-    { family: Family; line: "solid" | "dashed" | "dotted" }
-  >
-> = {
-  designGrid: { family: "engineering", line: "solid" },
-  siteGrid: { family: "engineering", line: "dotted" },
-  rigidVsExact: { family: "engineering", line: "dashed" },
-  roundTrip: { family: "engineering", line: "dotted" },
-  distortion: { family: "engineering", line: "solid" },
-  orion: { family: "trajectory", line: "solid" },
-  bias: { family: "celestial", line: "solid" },
-};
 
 /** Below this view width the HUD goes compact: legend folded, the caption at the bottom (I18). */
 export { NARROW_VIEW } from "../content.ts";
@@ -114,39 +98,36 @@ export function GlobeLegend({ model }: { model: PanelModel }) {
         </IconButton>
       </div>
       <ul className="fx-legend-list">
-        {drawn.map((o) => {
-          const look = OVERLAY_LOOK[o.id];
-          return (
-            <li
-              key={o.id}
-              tabIndex={open ? undefined : 0}
-              title={`${o.label}: ${o.accuracy}`}
-            >
-              {o.id === "triads" ? (
-                <span className="fx-axes" aria-hidden>
-                  <span className="fx-axis-x" />
-                  <span className="fx-axis-y" />
-                  <span className="fx-axis-z" />
-                </span>
-              ) : (
-                <span
-                  className={`fx-line-key fx-line-${look?.line ?? "solid"} fx-family-${look?.family ?? "earth"}`}
-                  aria-hidden
-                />
-              )}
-              <span className="fx-legend-text">
-                <span className="fx-legend-name">
-                  {open ? o.label : (o.short ?? o.label)}
-                </span>
-                <span
-                  className={`fx-legend-acc${o.unbounded || o.caution ? " fx-unbounded" : ""}`}
-                >
-                  {o.accuracy}
-                </span>
+        {legendRows(drawn).map((row) => (
+          <li
+            key={row.key}
+            tabIndex={open ? undefined : 0}
+            title={`${row.label}: ${row.accuracy}`}
+          >
+            {row.line === "axes" ? (
+              <span className="fx-axes" aria-hidden>
+                <span className="fx-axis-x" />
+                <span className="fx-axis-y" />
+                <span className="fx-axis-z" />
               </span>
-            </li>
-          );
-        })}
+            ) : (
+              <span
+                className={`fx-line-key fx-line-${row.line} ${row.tone === "white" ? "fx-line-white" : `fx-family-${row.family}`}`}
+                aria-hidden
+              />
+            )}
+            <span className="fx-legend-text">
+              <span className="fx-legend-name">
+                {open ? row.label : row.name}
+              </span>
+              <span
+                className={`fx-legend-acc${row.attention ? " fx-unbounded" : ""}`}
+              >
+                {row.accuracy}
+              </span>
+            </span>
+          </li>
+        ))}
       </ul>
       {open && drawn.some((o) => o.id === "triads") && (
         <p className="fx-legend-note">

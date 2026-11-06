@@ -581,30 +581,6 @@ function OverlayOptions({
           />
         </div>
       );
-    case "rigidVsExact":
-      // S-C1: the sag is 0.16% of the line, about 3 px at the tour's
-      // framing, so the separation is drawn ×50 by default, labelled.
-      return (
-        <div className="fx-overlay-options">
-          <FormControlLabel
-            control={
-              <Switch
-                size="small"
-                checked={model.sagTrueScale}
-                onChange={(_, on) => actions.setSagTrueScale(on)}
-              />
-            }
-            label={
-              <span className="fx-option-label">
-                Show true scale
-                {model.sagTrueScale
-                  ? ""
-                  : ` (separation drawn ${model.sagFactor}× larger)`}
-              </span>
-            }
-          />
-        </div>
-      );
     case "bias":
       return (
         <div className="fx-overlay-options">

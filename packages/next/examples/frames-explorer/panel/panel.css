@@ -1384,6 +1384,59 @@
   max-block-size: calc(100% - var(--fx-hud-bottom, 64px) - 60px);
   overflow: auto;
 }
+/*
+ * The picture-in-picture view of the rigid line's gap (stop 4): a thin
+ * border round the engine's inset view, a caption strip over it, and its
+ * labels, placed by main.ts from inset.ts. Not interactive.
+ */
+.fx-inset {
+  position: absolute;
+  box-sizing: border-box;
+  pointer-events: none;
+  border: 1px solid oklch(100% 0 0 / 0.7);
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px oklch(0% 0 0 / 0.5);
+  color: var(--stratakit-color-text-neutral-primary);
+  font-size: var(--stratakit-font-size-caption-lg);
+  line-height: var(--stratakit-line-height-caption-lg);
+  font-variant-numeric: tabular-nums;
+}
+.fx-inset-caption {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-start: 0;
+  box-sizing: border-box;
+  block-size: 24px;
+  padding-inline: var(--stratakit-space-200);
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-weight: 600;
+  background: color-mix(
+    in oklab,
+    var(--stratakit-color-bg-elevation-base) 92%,
+    transparent
+  );
+}
+.fx-inset-label {
+  position: absolute;
+  white-space: nowrap;
+  font-weight: 600;
+  paint-order: stroke;
+  -webkit-text-stroke: 3px oklch(0% 0 0 / 0.75);
+  transform: translateY(-50%);
+}
+.fx-inset-label-muted {
+  font-weight: 500;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.fx-inset-leader {
+  position: absolute;
+  block-size: 1px;
+  background: oklch(100% 0 0);
+}
 .fx-legend-head {
   display: flex;
   align-items: center;
@@ -1443,6 +1496,10 @@
 }
 .fx-line-dashed {
   border-block-start-style: dashed;
+}
+/* The rigid line is white on the globe (stop 4). */
+.fx-line-white {
+  --fx-family: oklch(100% 0 0);
 }
 .fx-line-dotted {
   border-block-start-style: dotted;

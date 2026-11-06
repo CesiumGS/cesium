@@ -26,8 +26,10 @@ import {
   distortion,
   overlayMesh,
   polyline,
+  dashedLine,
   rigidVsExact,
   RIGID_VS_EXACT_COLORS,
+  segments,
   adaptivePath,
   trajectoryPath,
   trueNorthLines,
@@ -248,14 +250,33 @@ describe("overlays built in the worker", () => {
       from,
       to,
       samples: 32,
+      dashes: 8,
+      ticks: 4,
+      marks: [20_000],
     });
-    const want = rigidVsExact(f, from, to, 32);
+    const want = rigidVsExact(f, from, to, 32, { ticks: 4, marks: [20_000] });
     expect(rigid.sagAtEnd).toBe(want.sagAtEnd);
     expect(rigid.sagAtEnd).toBeGreaterThan(1);
     expect(chunksOf(rigid)).toStrictEqual({
       exact: overlayMesh(polyline(want.exact, RIGID_VS_EXACT_COLORS.exact)),
-      rigid: overlayMesh(polyline(want.rigid, RIGID_VS_EXACT_COLORS.rigid)),
+      rigid: overlayMesh(
+        dashedLine(
+          want.rigid.subarray(0, 3),
+          want.rigid.subarray(want.rigid.length - 3),
+          8,
+          RIGID_VS_EXACT_COLORS.rigid,
+        ),
+      ),
+      ticks: overlayMesh(segments(want.ticks, RIGID_VS_EXACT_COLORS.rigid)),
     });
+    expect(rigid.marks).toStrictEqual(
+      want.marks.map((m) => ({
+        distance: m.distance,
+        exact: Array.from(m.exact),
+        rigid: Array.from(m.rigid),
+        separation: m.separation,
+      })),
+    );
     const options = { height: 0, tissotRadius: 2000 };
     const d = await client.overlay("distortion", {
       frame: california,
