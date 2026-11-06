@@ -174,3 +174,47 @@ export function inverseHelmert(
   }
   return out;
 }
+
+/**
+ * Geocentric to geographic coordinates (degrees, metres), the reverse of
+ * `geodeticToGeocentric`, written from IOGP 373-7-2 §4.1.1 (EPSG method
+ * 9602): Bowring's formula, φ = atan2(Z + ε b sin³ q, p − e² a cos³ q) with
+ * q = atan2(Z a, p b) and ε = e² / (1 − e²), then refined by the fixed point
+ * φ = atan2(Z + e² ν sin φ, p) until it stops moving (Bowring alone is good
+ * to about 1e-10 rad at the Earth's surface), and h = p / cos φ − ν.
+ */
+export function geocentricToGeodetic(
+  xyz: ArrayLike<number>,
+  a: number,
+  f: number,
+): [number, number, number] {
+  const x = xyz[0]!;
+  const y = xyz[1]!;
+  const z = xyz[2]!;
+  const e2 = f * (2 - f);
+  const b = a * (1 - f);
+  const eps = e2 / (1 - e2);
+  const p = Math.hypot(x, y);
+  const q = Math.atan2(z * a, p * b);
+  let phi = Math.atan2(
+    z + eps * b * Math.sin(q) ** 3,
+    p - e2 * a * Math.cos(q) ** 3,
+  );
+  for (let i = 0; i < 5; i++) {
+    const nu = a / Math.sqrt(1 - e2 * Math.sin(phi) ** 2);
+    const next = Math.atan2(z + e2 * nu * Math.sin(phi), p);
+    const moved = Math.abs(next - phi);
+    phi = next;
+    if (moved < 1e-15) {
+      break;
+    }
+  }
+  const nu = a / Math.sqrt(1 - e2 * Math.sin(phi) ** 2);
+  // Near the poles p / cos φ loses precision; |Z| / sin φ − (1 − e²) ν is
+  // the same height there.
+  const h =
+    Math.abs(phi) < Math.PI / 4
+      ? p / Math.cos(phi) - nu
+      : z / Math.sin(phi) - (1 - e2) * nu;
+  return [Math.atan2(y, x) / DEGREE, phi / DEGREE, h];
+}

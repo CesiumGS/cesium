@@ -315,7 +315,12 @@ gridFactors(site, p.design).combinedFactor; // grid = ground x this
   `listOperations(proj, source, target)` lists the candidates PROJ offered,
   as plain data: each one's name, PROJ string, accuracy, area of use, the
   grids it reads and which of them are missing, and whether it is a ballpark.
-  `resolveOperation` records the first one that qualifies.
+  `resolveOperation` records the first one that qualifies. Both take an
+  optional `areaOfInterest` (`{ west, south, east, north }` in degrees):
+  without one PROJ keeps only operations whose area covers the whole source
+  CRS, so for a large datum such as ED50 only the ballpark is left; with a
+  box around your coordinates the transformations that cover them are listed
+  and can be recorded.
 - **Units** come from the CRS, never from an assumption. `frame.units` holds
   the horizontal unit's name and meters per unit (a US survey foot is
   1200/3937 m, about 0.3048006096 m; an international foot is 0.3048 m), and

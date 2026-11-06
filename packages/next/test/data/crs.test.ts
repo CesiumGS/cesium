@@ -13,6 +13,7 @@ import {
   MOON_GEOGRAPHIC_CRS,
   resolveOperation,
   type CrsRef,
+  type OperationCandidate,
 } from "../../src/engineering/crs.ts";
 import { loadProj, type ProjApi } from "../../src/engineering/proj.ts";
 import fixture from "../fixtures/frames/proj.json";
@@ -506,5 +507,79 @@ describe("Operation candidates (listOperations)", () => {
     const P = await loadProj({ base });
     const candidates = listOperations(P, ref("EPSG:6420+6360"), geographic3d);
     expect(structuredClone(candidates)).toEqual(candidates);
+  });
+});
+
+describe("an area of interest (ruling F8)", () => {
+  const geographic3d = ref("EPSG:4979");
+  // A North Sea point, 56°N 3°E, and a box around it.
+  const northSea = { west: 2.9, south: 55.9, east: 3.1, north: 56.1 };
+  const ed50 = ref("EPSG:4230");
+  const accurate = (c: OperationCandidate) =>
+    c.instantiable && !c.ballpark && c.missingGrids.length === 0;
+
+  it("lists the ED50 transformations that cover the point, which PROJ's default drops", async () => {
+    const P = await loadProj({ base });
+    // Without one, every real ED50 to WGS 84 transformation covers only part
+    // of ED50's area, so PROJ keeps only the ballpark.
+    const all = listOperations(P, ed50, geographic3d);
+    expect(all.filter(accurate)).toEqual([]);
+    const near = listOperations(P, ed50, geographic3d, {
+      areaOfInterest: northSea,
+    });
+    const usable = near.filter(accurate);
+    expect(usable.length).toBeGreaterThanOrEqual(2);
+    for (const c of usable) {
+      expect(c.name).toMatch(/^ED50 to WGS 84 \(\d+\)$/);
+      const area = c.areaOfUse!;
+      expect(area.west).toBeLessThanOrEqual(northSea.west);
+      expect(area.east).toBeGreaterThanOrEqual(northSea.east);
+      expect(area.south).toBeLessThanOrEqual(northSea.south);
+      expect(area.north).toBeGreaterThanOrEqual(northSea.north);
+      expect(c.accuracy).toBeGreaterThan(0);
+    }
+  });
+
+  it("lets resolveOperation take the first of those candidates its rule accepts", async () => {
+    const P = await loadProj({ base });
+    expect(() => resolveOperation(P, ed50, "EPSG:4979")).toThrow(
+      /only a ballpark operation/,
+    );
+    const recorded = resolveOperation(P, ed50, "EPSG:4979", {
+      areaOfInterest: northSea,
+    });
+    const picked = listOperations(P, ed50, geographic3d, {
+      areaOfInterest: northSea,
+    }).find((c) => accurate(c) && c.pipeline !== "")!;
+    expect(recorded.pipeline).toBe(picked.pipeline);
+    expect(recorded.accuracy).toBe(picked.accuracy);
+    expect(recorded.ballpark).toBe(false);
+    expect(recorded.pipeline).toMatch(/\+proj=helmert/);
+  });
+
+  it("refuses an area that is not a box of degrees", async () => {
+    const P = await loadProj({ base });
+    for (const areaOfInterest of [
+      { west: 2.9, south: 56.1, east: 3.1, north: 55.9 },
+      { west: 2.9, south: -91, east: 3.1, north: 55.9 },
+      { west: Number.NaN, south: 55.9, east: 3.1, north: 56.1 },
+      { west: 2.9, south: 55.9, east: 181, north: 56.1 },
+    ]) {
+      expect(() =>
+        listOperations(P, ed50, geographic3d, { areaOfInterest }),
+      ).toThrow(RangeError);
+      expect(() =>
+        resolveOperation(P, ed50, "EPSG:4979", { areaOfInterest }),
+      ).toThrow(RangeError);
+    }
+  });
+
+  it("accepts a box across 180° (west greater than east)", async () => {
+    const P = await loadProj({ base });
+    // Fiji 1986 (EPSG:4720) spans the antimeridian.
+    const candidates = listOperations(P, ref("EPSG:4720"), geographic3d, {
+      areaOfInterest: { west: 179.5, south: -17.5, east: -179.5, north: -16.5 },
+    });
+    expect(candidates.length).toBeGreaterThan(0);
   });
 });

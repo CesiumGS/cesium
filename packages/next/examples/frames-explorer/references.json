@@ -732,6 +732,499 @@
       "sourceXYZ": ["3790644.900", "-110149.210", "5111482.970"],
       "targetXYZ": ["3790269.549", "-110038.064", "5111050.261"],
       "rotationMatrix": "[[1.0000204894, 4.08261601 E − 06, −1.19748979 E − 06], [−4.08261601 E − 06, 1.0000204894, 7.28190149 E − 07], [1.19748979 E − 06, −7.28190149 E − 07, 1.0000204894]] (D2): the position vector convention"
+    },
+    "epsg-1311": {
+      "source": {
+        "document": "EPSG Geodetic Parameter Dataset",
+        "record": "Transformation 1311, ED50 to WGS 84 (18)",
+        "revisionDate": "2021-03-18",
+        "informationSource": "The Hydrographic Journal; vol 52 page 50.",
+        "url": "https://apps.epsg.org/api/v1/Transformation/1311/",
+        "retrieved": "2026-11-06"
+      },
+      "name": "ED50 to WGS 84 (18)",
+      "accuracy": "1.0",
+      "accuracyUnit": "metre",
+      "method": "Position Vector transformation (geog2D domain)",
+      "methodCode": 9606,
+      "sourceCrs": "ED50 (EPSG 4230)",
+      "targetCrs": "WGS 84 (EPSG 4326)",
+      "parameters": [
+        ["X-axis translation", "-89.5", "metre"],
+        ["Y-axis translation", "-93.8", "metre"],
+        ["Z-axis translation", "-123.1", "metre"],
+        ["X-axis rotation", "0.0", "arc-second"],
+        ["Y-axis rotation", "0.0", "arc-second"],
+        ["Z-axis rotation", "-0.156", "arc-second"],
+        ["Scale difference", "1.2", "parts per million"]
+      ],
+      "extent": {
+        "code": 2342,
+        "name": "Europe - common offshore",
+        "source": "https://apps.epsg.org/api/v1/Extent/2342/ (revision 2024-06-26)",
+        "description": "Denmark - offshore North Sea; Ireland - offshore; Netherlands - offshore; United Kingdom - UKCS offshore.",
+        "westBoundLongitude": "-16.1",
+        "southBoundLatitude": "47.42",
+        "eastBoundLongitude": "10.86",
+        "northBoundLatitude": "63.89"
+      }
+    },
+    "epsg-1133": {
+      "source": {
+        "document": "EPSG Geodetic Parameter Dataset",
+        "record": "Transformation 1133, ED50 to WGS 84 (1)",
+        "revisionDate": "2020-03-14",
+        "informationSource": "U.S. Defense Mapping Agency TR8350.2 September 1987.",
+        "url": "https://apps.epsg.org/api/v1/Transformation/1133/",
+        "retrieved": "2026-11-06"
+      },
+      "name": "ED50 to WGS 84 (1)",
+      "accuracy": "10.0",
+      "accuracyUnit": "metre",
+      "method": "Geocentric translations (geog2D domain)",
+      "methodCode": 9603,
+      "sourceCrs": "ED50 (EPSG 4230)",
+      "targetCrs": "WGS 84 (EPSG 4326)",
+      "parameters": [
+        ["X-axis translation", "-87.0", "metre"],
+        ["Y-axis translation", "-98.0", "metre"],
+        ["Z-axis translation", "-121.0", "metre"]
+      ],
+      "extent": {
+        "code": 2420,
+        "name": "Europe - west (DMA ED50 mean)",
+        "source": "https://apps.epsg.org/api/v1/Extent/2420/ (revision 2024-06-26)",
+        "description": "Austria; Belgium; Denmark; Finland; Faroe islands; France; Germany (west); Gibraltar; Greece; Italy; Luxembourg; Netherlands; Norway; Portugal; Spain; Sweden; Switzerland.",
+        "westBoundLongitude": "-9.56",
+        "southBoundLatitude": "34.88",
+        "eastBoundLongitude": "31.59",
+        "northBoundLatitude": "71.24"
+      }
+    },
+    "epsg-1134": {
+      "source": {
+        "document": "EPSG Geodetic Parameter Dataset",
+        "record": "Transformation 1134, ED50 to WGS 84 (2)",
+        "revisionDate": "2020-03-14",
+        "informationSource": "U.S. Defense Mapping Agency TR8350.2 September 1987.",
+        "url": "https://apps.epsg.org/api/v1/Transformation/1134/",
+        "retrieved": "2026-11-06"
+      },
+      "name": "ED50 to WGS 84 (2)",
+      "accuracy": "6.0",
+      "accuracyUnit": "metre",
+      "method": "Geocentric translations (geog2D domain)",
+      "methodCode": 9603,
+      "sourceCrs": "ED50 (EPSG 4230)",
+      "targetCrs": "WGS 84 (EPSG 4326)",
+      "parameters": [
+        ["X-axis translation", "-87.0", "metre"],
+        ["Y-axis translation", "-96.0", "metre"],
+        ["Z-axis translation", "-120.0", "metre"]
+      ],
+      "extent": {
+        "code": 2421,
+        "name": "Europe - west central (by country)",
+        "source": "https://apps.epsg.org/api/v1/Extent/2421/ (revision 2024-06-26)",
+        "description": "Austria; Denmark; France; Germany (west); Netherlands; Switzerland.",
+        "westBoundLongitude": "-4.87",
+        "southBoundLatitude": "42.33",
+        "eastBoundLongitude": "17.17",
+        "northBoundLatitude": "57.8"
+      }
+    },
+    "epsg-1314": {
+      "source": {
+        "document": "EPSG Geodetic Parameter Dataset",
+        "record": "Transformation 1314, OSGB36 to WGS 84 (6)",
+        "revisionDate": "2021-03-18",
+        "informationSource": "UK Offshore Operators Association. Also at EuroGeographics at http://crs.bkg.bund.de/crs-eu",
+        "url": "https://apps.epsg.org/api/v1/Transformation/1314/",
+        "retrieved": "2026-11-06"
+      },
+      "name": "OSGB36 to WGS 84 (6)",
+      "accuracy": "2.0",
+      "accuracyUnit": "metre",
+      "method": "Position Vector transformation (geog2D domain)",
+      "methodCode": 9606,
+      "sourceCrs": "OSGB36 (EPSG 4277)",
+      "targetCrs": "WGS 84 (EPSG 4326)",
+      "parameters": [
+        ["X-axis translation", "446.448", "metre"],
+        ["Y-axis translation", "-125.157", "metre"],
+        ["Z-axis translation", "542.06", "metre"],
+        ["X-axis rotation", "0.15", "arc-second"],
+        ["Y-axis rotation", "0.247", "arc-second"],
+        ["Z-axis rotation", "0.842", "arc-second"],
+        ["Scale difference", "-20.489", "parts per million"]
+      ],
+      "extent": {
+        "code": 1264,
+        "name": "UK - Great Britain onshore and nearshore; Isle of Man"
+      }
+    },
+    "epsg-15484": {
+      "source": {
+        "document": "EPSG Geodetic Parameter Dataset",
+        "record": "Transformation 15484, Tokyo to WGS 84 (108)",
+        "revisionDate": "2021-09-23",
+        "informationSource": "OGP",
+        "url": "https://apps.epsg.org/api/v1/Transformation/15484/",
+        "retrieved": "2026-11-06"
+      },
+      "name": "Tokyo to WGS 84 (108)",
+      "accuracy": "9.0",
+      "accuracyUnit": "metre",
+      "method": "Geocentric translations (geog2D domain)",
+      "methodCode": 9603,
+      "sourceCrs": "Tokyo (EPSG 4301)",
+      "targetCrs": "WGS 84 (EPSG 4326)",
+      "parameters": [
+        ["X-axis translation", "-146.414", "metre"],
+        ["Y-axis translation", "507.337", "metre"],
+        ["Z-axis translation", "680.507", "metre"]
+      ],
+      "extent": {
+        "code": 3957,
+        "name": "Japan - onshore"
+      }
+    },
+    "epsg-1175": {
+      "source": {
+        "document": "EPSG Geodetic Parameter Dataset",
+        "record": "Transformation 1175, NAD27 to WGS 84 (6)",
+        "revisionDate": "2020-03-14",
+        "informationSource": "U.S. Defense Mapping Agency TR8350.2 September 1987.",
+        "url": "https://apps.epsg.org/api/v1/Transformation/1175/",
+        "retrieved": "2026-11-06"
+      },
+      "name": "NAD27 to WGS 84 (6)",
+      "accuracy": "7.0",
+      "accuracyUnit": "metre",
+      "method": "Geocentric translations (geog2D domain)",
+      "methodCode": 9603,
+      "sourceCrs": "NAD27 (EPSG 4267)",
+      "targetCrs": "WGS 84 (EPSG 4326)",
+      "parameters": [
+        ["X-axis translation", "-8.0", "metre"],
+        ["Y-axis translation", "159.0", "metre"],
+        ["Z-axis translation", "175.0", "metre"]
+      ],
+      "extent": {
+        "code": 2390,
+        "name": "USA - CONUS west of Mississippi River - onshore"
+      }
+    },
+    "epsg-ellipsoid-international-1924": {
+      "source": {
+        "document": "EPSG Geodetic Parameter Dataset",
+        "record": "Ellipsoid 7022, International 1924",
+        "revisionDate": "1995-06-02",
+        "url": "https://apps.epsg.org/api/v1/Ellipsoid/7022/",
+        "retrieved": "2026-11-06"
+      },
+      "semiMajorAxis": "6378388.0",
+      "inverseFlattening": "297.0"
+    },
+    "epsg-ellipsoid-clarke-1866": {
+      "source": {
+        "document": "EPSG Geodetic Parameter Dataset",
+        "record": "Ellipsoid 7008, Clarke 1866",
+        "revisionDate": "2013-01-17",
+        "url": "https://apps.epsg.org/api/v1/Ellipsoid/7008/",
+        "retrieved": "2026-11-06"
+      },
+      "semiMajorAxis": "6378206.4",
+      "semiMinorAxis": "6356583.8"
+    },
+    "epsg-ellipsoid-bessel-1841": {
+      "source": {
+        "document": "EPSG Geodetic Parameter Dataset",
+        "record": "Ellipsoid 7004, Bessel 1841",
+        "revisionDate": "1999-04-22",
+        "url": "https://apps.epsg.org/api/v1/Ellipsoid/7004/",
+        "retrieved": "2026-11-06"
+      },
+      "semiMajorAxis": "6377397.155",
+      "inverseFlattening": "299.1528128"
+    },
+    "epsg-ellipsoid-airy-1830": {
+      "source": {
+        "document": "EPSG Geodetic Parameter Dataset",
+        "record": "Ellipsoid 7001, Airy 1830",
+        "revisionDate": "2006-11-27",
+        "url": "https://apps.epsg.org/api/v1/Ellipsoid/7001/",
+        "retrieved": "2026-11-06"
+      },
+      "semiMajorAxis": "6377563.396",
+      "inverseFlattening": "299.3249646"
+    },
+    "epsg-wgs84-ensemble": {
+      "source": {
+        "document": "EPSG Geodetic Parameter Dataset",
+        "record": "Datum ensemble 6326, World Geodetic System 1984 ensemble",
+        "revisionDate": "2024-03-06",
+        "url": "https://apps.epsg.org/api/v1/DatumEnsemble/6326/",
+        "retrieved": "2026-11-06"
+      },
+      "name": "World Geodetic System 1984 ensemble",
+      "ensembleAccuracy": "2",
+      "ensembleAccuracyUnit": "metre",
+      "members": [
+        "World Geodetic System 1984 (Transit)",
+        "World Geodetic System 1984 (G730)",
+        "World Geodetic System 1984 (G873)",
+        "World Geodetic System 1984 (G1150)",
+        "World Geodetic System 1984 (G1674)",
+        "World Geodetic System 1984 (G1762)",
+        "World Geodetic System 1984 (G2139)",
+        "World Geodetic System 1984 (G2296)"
+      ],
+      "remark": "EPSG::6326 has been the then current realization. No distinction is made between the original and subsequent (G730, G873, G1150, G1674, G1762, G2139 and G2296) WGS 84 frames. Since 1997, WGS 84 has been maintained within 10cm of the then current ITRF."
+    },
+    "icsm-gda94-gda2020": {
+      "source": {
+        "document": "Geocentric Datum of Australia 2020 Technical Manual",
+        "edition": "Version 1.2, 24 August 2018",
+        "publisher": "Intergovernmental Committee on Surveying and Mapping (ICSM), Permanent Committee on Geodesy",
+        "url": "https://www.icsm.gov.au/sites/default/files/GDA2020TechnicalManualV1.1.1.pdf",
+        "retrievedFrom": "https://web.archive.org/web/20210308235349id_/https://www.icsm.gov.au/sites/default/files/GDA2020TechnicalManualV1.1.1.pdf (icsm.gov.au now redirects to anzlic.gov.au and the PDF was not reachable there)",
+        "retrieved": "2026-11-06",
+        "section": "3.1 GDA94 to GDA2020 transformation parameters, Equation (18) and Table 3.2 (p. 26); 3.1.1 Example: GDA94 to GDA2020 (7-parameter transformation) (pp. 26-27)"
+      },
+      "convention": "Equation (18): rotation matrix [[1, rz, −ry], [−rz, 1, rx], [ry, −rx, 1]], the Australian convention (rotation of the axes: coordinate frame)",
+      "parameters": {
+        "tx": "0.06155 m",
+        "ty": "-0.01087 m",
+        "tz": "-0.04019 m",
+        "sc": "-0.009994 ppm",
+        "rx": "-0.0394924 sec",
+        "ry": "-0.0327221 sec",
+        "rz": "-0.0328979 sec"
+      },
+      "station": "Alice Springs (ALIC)",
+      "gda94": {
+        "latitude": "-23° 40’ 12.446019”",
+        "longitude": "133° 53’ 07.847844”",
+        "ellipsoidalHeight": "603.3466",
+        "XYZ": ["-4052051.7643", "4212836.2017", "-2545106.0245"]
+      },
+      "gda2020": {
+        "XYZ": ["-4052052.7379", "4212835.9897", "-2545104.5898"],
+        "latitude": "-23° 40’ 12.39650”",
+        "longitude": "133° 53’ 07.87779”",
+        "ellipsoidalHeight": "603.2489"
+      },
+      "difference": {
+        "N": "1.5236",
+        "E": "0.8487",
+        "U": "-0.0977"
+      }
+    },
+    "icsm-itrf2014-gda2020": {
+      "source": {
+        "document": "Geocentric Datum of Australia 2020 Technical Manual",
+        "edition": "Version 1.2, 24 August 2018",
+        "publisher": "Intergovernmental Committee on Surveying and Mapping (ICSM), Permanent Committee on Geodesy",
+        "url": "https://www.icsm.gov.au/sites/default/files/GDA2020TechnicalManualV1.1.1.pdf",
+        "retrievedFrom": "https://web.archive.org/web/20210308235349id_/https://www.icsm.gov.au/sites/default/files/GDA2020TechnicalManualV1.1.1.pdf (icsm.gov.au now redirects to anzlic.gov.au and the PDF was not reachable there)",
+        "retrieved": "2026-11-06",
+        "section": "3.3 Plate motion model (ITRF2014 to GDA2020), Table 3.3 (p. 31); 3.3.1 Example: ITRF2014 to GDA2020 (3-parameter transformation) (p. 31)"
+      },
+      "description": "The station coordinates and velocities were used to compute a conventional Euler plate model. This 3-parameter model can be expressed as a 14-parameter transformation with only rates of change rotation components (Table 3.3).",
+      "convention": "Equation (17), the Australian convention (coordinate frame)",
+      "referenceEpoch": "2020.0",
+      "parameters": {
+        "tX": "0.00 m",
+        "tY": "0.00 m",
+        "tZ": "0.00 m",
+        "dS": "0.00 ppm",
+        "rX": "0.00 sec",
+        "rY": "0.00 sec",
+        "rZ": "0.00 sec"
+      },
+      "rates": {
+        "tX": "0.00 m/yr",
+        "tY": "0.00 m/yr",
+        "tZ": "0.00 m/yr",
+        "dS": "0.00 ppm/yr",
+        "rX": "0.00150379 sec/yr",
+        "rY": "0.00118346 sec/yr",
+        "rZ": "0.00120716 sec/yr"
+      },
+      "station": "Alice Springs (ALIC)",
+      "itrf2014Epoch": "2018.0",
+      "itrf2014XYZ": ["-4052052.6588", "4212835.9938", "-2545104.6946"],
+      "gda2020XYZ": ["-4052052.7373", "4212835.9835", "-2545104.5867"]
+    },
+    "ifc43-geographic-referencing-utm": {
+      "source": {
+        "document": "IFC 4.3.2.0 (IFC4X3_ADD2) documentation, Annex E: Examples",
+        "publisher": "buildingSMART International (CC BY-ND 4.0)",
+        "retrievedFrom": "https://github.com/buildingSMART/Standards-builds (the published HTML; ifc43-docs.standards.buildingsmart.org refused automated retrieval)",
+        "retrieved": "2026-11-06",
+        "section": "E.7.3 Geographic Referencing Utm (geographic-referencing-utm.ifc)",
+        "url": "https://ifc43-docs.standards.buildingsmart.org/IFC/RELEASE/IFC4x3/HTML/annex_e/placements-and-gis-referencing/geographic-referencing-utm.html"
+      },
+      "lines": [
+        "#1= IFCPROJECTEDCRS ('EPSG:25832','UTM in band 32','ETRS89',$,'UTM','UTM32',#3);",
+        "#2= IFCMAPCONVERSION (#100011,#1,458657.30,5438232.25,113.7,0.270600445976,0.962691746426,$);",
+        "#3= IFCSIUNIT (*,.LENGTHUNIT.,$,.METRE.);",
+        "#100020= IFCSITE ('1BPCQAtTW7GhKrUF$Sytrr',#100005,'Site',$,$,#100022,$,$,.ELEMENT.,(49,5,43,983700),(8,26,1,247300),113.7,$,$);",
+        "#100040= IFCAXIS2PLACEMENT3D (#100041,#100044,#100042);",
+        "#100041= IFCCARTESIANPOINT ((0.,0.,0.));",
+        "#100061= IFCSIUNIT (*,.LENGTHUNIT.,.MILLI.,.METRE.);"
+      ],
+      "targetCrs": "EPSG:25832",
+      "eastings": "458657.30",
+      "northings": "5438232.25",
+      "orthogonalHeight": "113.7",
+      "xAxisAbscissa": "0.270600445976",
+      "xAxisOrdinate": "0.962691746426",
+      "scale": "$",
+      "siteRefLatitude": ["49", "5", "43", "983700"],
+      "siteRefLongitude": ["8", "26", "1", "247300"],
+      "siteRefElevation": "113.7"
+    },
+    "ifc43-geographic-referencing-gk": {
+      "source": {
+        "document": "IFC 4.3.2.0 (IFC4X3_ADD2) documentation, Annex E: Examples",
+        "publisher": "buildingSMART International (CC BY-ND 4.0)",
+        "retrievedFrom": "https://github.com/buildingSMART/Standards-builds (the published HTML; ifc43-docs.standards.buildingsmart.org refused automated retrieval)",
+        "retrieved": "2026-11-06",
+        "section": "E.7.1 Geographic Referencing Gk (geographic-referencing-gk.ifc)",
+        "url": "https://ifc43-docs.standards.buildingsmart.org/IFC/RELEASE/IFC4x3/HTML/annex_e/placements-and-gis-referencing/geographic-referencing-gk.html"
+      },
+      "lines": [
+        "#1= IFCPROJECTEDCRS ('EPSG:31467','DHDN / 3-Degree Gauss-Krueger Zone 3','ETRS89',$,'Gaus-Krueger','3',#3);",
+        "#2= IFCMAPCONVERSION (#100011,#1,3458715.92,5439966.65,113.7,0.270600445976,0.962691746426,$);",
+        "#100020= IFCSITE ('1BPCQAtTW7GhKrUF$Sytrr',#100005,'Site',$,$,#100022,$,$,.ELEMENT.,(49,5,43,983700),(8,26,1,247300),113.7,$,$);"
+      ],
+      "targetCrs": "EPSG:31467",
+      "eastings": "3458715.92",
+      "northings": "5439966.65",
+      "orthogonalHeight": "113.7",
+      "xAxisAbscissa": "0.270600445976",
+      "xAxisOrdinate": "0.962691746426",
+      "scale": "$"
+    },
+    "ifc43-map-conversion": {
+      "source": {
+        "document": "IFC 4.3 documentation, IfcMapConversion (8.18.3.6), source text",
+        "publisher": "buildingSMART International (CC BY-ND 4.0)",
+        "url": "https://github.com/buildingSMART/IFC4.3.x-development/blob/master/docs/schemas/resource/IfcRepresentationResource/Entities/IfcMapConversion.md",
+        "retrieved": "2026-11-06"
+      },
+      "definition": "a scaling of the three axes (x,y,z), by the same IfcMapConversion.Scale, followed by an anti-clockwise rotation about the z-axis of θ, where θ = arctan(XAxisOrdinate / XAxisAbscissa), and then a translation in (x,y,z) of IfcMapConversion.Eastings, IfcMapConversion.Northings, IfcMapConversion.OrthogonalHeight",
+      "xAxisAbscissa": "Specifies the value along the easting axis of the end point of a vector indicating the position of the local x axis of the engineering coordinate reference system.",
+      "xAxisOrdinate": "Specifies the value along the northing axis of the end point of a vector indicating the position of the local x axis of the engineering coordinate reference system.",
+      "scale": "If omitted, the value of 1.0 is assumed."
+    },
+    "ashby-patla-2024": {
+      "source": {
+        "document": "Ashby, N. and Patla, B. R., A Relativistic Framework to Estimate Clock Rates on the Moon, The Astronomical Journal 168:112 (2024 August 12)",
+        "doi": "10.3847/1538-3881/ad643a",
+        "preprint": "arXiv:2402.11150, https://arxiv.org/abs/2402.11150",
+        "url": "https://api.crossref.org/works/10.3847/1538-3881/ad643a (the published abstract)",
+        "retrieved": "2026-11-06"
+      },
+      "abstract": "A clock near the Moon’s selenoid ticks faster than one near the Earth’s geoid, accumulating an extra 56.02 μs day−1 over the duration of a lunar orbit.",
+      "rate": "56.02 μs/day"
+    },
+    "iers-bulletin-c-52": {
+      "source": {
+        "document": "IERS Bulletin C 52 (Paris, 6 July 2016)",
+        "publisher": "Earth Orientation Center of the IERS, Observatoire de Paris",
+        "url": "https://hpiers.obspm.fr/iers/bul/bulc/bulletinc.52",
+        "retrieved": "2026-11-06"
+      },
+      "lines": [
+        "A positive leap second will be introduced at the end of December 2016.",
+        "2016 December 31, 23h 59m 60s",
+        "from 2015 July 1, 0h UTC, to 2017 January 1 0h UTC   : UTC-TAI = - 36s",
+        "from 2017 January 1, 0h UTC, until further notice    : UTC-TAI = - 37s"
+      ],
+      "before": "-36",
+      "after": "-37"
+    },
+    "iers-leap-second-1980": {
+      "source": {
+        "document": "IERS Leap_Second.dat, updated through IERS Bulletin 72 issued in July 2026",
+        "publisher": "Earth Orientation Center of the IERS, Observatoire de Paris",
+        "url": "https://hpiers.obspm.fr/iers/bul/bulc/Leap_Second.dat",
+        "retrieved": "2026-11-06"
+      },
+      "lines": [
+        "    44239.0    1  1 1980       19",
+        "    44786.0    1  7 1981       20"
+      ],
+      "taiMinusUtc": "19",
+      "from": "1980-01-01",
+      "until": "1981-07-01"
+    },
+    "is-gps-200n-gps-time": {
+      "source": {
+        "document": "IS-GPS-200N, Navstar GPS Space Segment/Navigation User Segment Interfaces",
+        "section": "3.3.4 GPS Time and SV Z-Count",
+        "publisher": "Space Systems Command",
+        "url": "https://www.gps.gov/sites/default/files/2025-07/IS-GPS-200N.pdf",
+        "retrieved": "2026-11-06"
+      },
+      "text": "GPS time is established by the Control Segment and is referenced to Coordinated Universal Time (UTC) as maintained by the U.S. Naval Observatory (UTC (USNO)) zero time-point defined as midnight on the night of January 5, 1980/morning of January 6, 1980. [...] GPS time may differ from UTC because GPS time shall be a continuous time scale, while UTC is corrected periodically with an integer number of leap seconds.",
+      "zeroTimePoint": "1980-01-06T00:00:00 UTC"
+    },
+    "iers-tt-tai": {
+      "source": {
+        "document": "IERS Conventions (2010), IERS Technical Note No. 36, Chapter 5: Transformation between the ITRS and the GCRS (10 August 2012)",
+        "section": "5.3.1 The IAU 2000/2006 space-time reference systems",
+        "url": "https://iers-conventions.obspm.fr/content/chapter5/icc5.pdf",
+        "retrieved": "2026-11-06"
+      },
+      "text": "Terrestrial Time (TT), which is the theoretical counterpart of the realized time scale TAI + 32.184 s.",
+      "ttMinusTai": "32.184"
+    },
+    "input-wkt2-ed50-utm31n": {
+      "kind": "input",
+      "source": {
+        "document": "WKT2 (ISO 19162:2019) exported by PROJ 9.7.1 proj_as_wkt(PJ_WKT2_2019) from the definition below, as GDAL's gdalsrsinfo -o wkt2 does (ruling F6: an input, not an expected value)",
+        "definition": "+proj=utm +zone=31 +ellps=intl +towgs84=-87,-98,-121,0,0,0,0 +units=m +no_defs +type=crs",
+        "parametersFrom": "epsg-1133",
+        "retrieved": "2026-11-06"
+      },
+      "description": "ED50 / UTM zone 31N with EPSG 1133's TOWGS84 (ED50 to WGS 84 (1), about 180 m)",
+      "wkt2": "BOUNDCRS[\n    SOURCECRS[\n        PROJCRS[\"unknown\",\n            BASEGEOGCRS[\"unknown\",\n                DATUM[\"Unknown based on International 1924 (Hayford 1909, 1910) ellipsoid using towgs84=-87,-98,-121,0,0,0,0\",\n                    ELLIPSOID[\"International 1924 (Hayford 1909, 1910)\",6378388,297,\n                        LENGTHUNIT[\"metre\",1,\n                            ID[\"EPSG\",9001]]]],\n                PRIMEM[\"Greenwich\",0,\n                    ANGLEUNIT[\"degree\",0.0174532925199433],\n                    ID[\"EPSG\",8901]]],\n            CONVERSION[\"UTM zone 31N\",\n                METHOD[\"Transverse Mercator\",\n                    ID[\"EPSG\",9807]],\n                PARAMETER[\"Latitude of natural origin\",0,\n                    ANGLEUNIT[\"degree\",0.0174532925199433],\n                    ID[\"EPSG\",8801]],\n                PARAMETER[\"Longitude of natural origin\",3,\n                    ANGLEUNIT[\"degree\",0.0174532925199433],\n                    ID[\"EPSG\",8802]],\n                PARAMETER[\"Scale factor at natural origin\",0.9996,\n                    SCALEUNIT[\"unity\",1],\n                    ID[\"EPSG\",8805]],\n                PARAMETER[\"False easting\",500000,\n                    LENGTHUNIT[\"metre\",1],\n                    ID[\"EPSG\",8806]],\n                PARAMETER[\"False northing\",0,\n                    LENGTHUNIT[\"metre\",1],\n                    ID[\"EPSG\",8807]],\n                ID[\"EPSG\",16031]],\n            CS[Cartesian,2],\n                AXIS[\"(E)\",east,\n                    ORDER[1],\n                    LENGTHUNIT[\"metre\",1,\n                        ID[\"EPSG\",9001]]],\n                AXIS[\"(N)\",north,\n                    ORDER[2],\n                    LENGTHUNIT[\"metre\",1,\n                        ID[\"EPSG\",9001]]]]],\n    TARGETCRS[\n        GEOGCRS[\"WGS 84\",\n            DATUM[\"World Geodetic System 1984\",\n                ELLIPSOID[\"WGS 84\",6378137,298.257223563,\n                    LENGTHUNIT[\"metre\",1]]],\n            PRIMEM[\"Greenwich\",0,\n                ANGLEUNIT[\"degree\",0.0174532925199433]],\n            CS[ellipsoidal,2],\n                AXIS[\"latitude\",north,\n                    ORDER[1],\n                    ANGLEUNIT[\"degree\",0.0174532925199433]],\n                AXIS[\"longitude\",east,\n                    ORDER[2],\n                    ANGLEUNIT[\"degree\",0.0174532925199433]],\n            ID[\"EPSG\",4326]]],\n    ABRIDGEDTRANSFORMATION[\"Transformation from unknown to WGS84\",\n        METHOD[\"Position Vector transformation (geog2D domain)\",\n            ID[\"EPSG\",9606]],\n        PARAMETER[\"X-axis translation\",-87,\n            ID[\"EPSG\",8605]],\n        PARAMETER[\"Y-axis translation\",-98,\n            ID[\"EPSG\",8606]],\n        PARAMETER[\"Z-axis translation\",-121,\n            ID[\"EPSG\",8607]],\n        PARAMETER[\"X-axis rotation\",0,\n            ID[\"EPSG\",8608]],\n        PARAMETER[\"Y-axis rotation\",0,\n            ID[\"EPSG\",8609]],\n        PARAMETER[\"Z-axis rotation\",0,\n            ID[\"EPSG\",8610]],\n        PARAMETER[\"Scale difference\",1,\n            ID[\"EPSG\",8611]]]]"
+    },
+    "input-wkt2-tokyo-jprcs-ix": {
+      "kind": "input",
+      "source": {
+        "document": "WKT2 (ISO 19162:2019) exported by PROJ 9.7.1 proj_as_wkt(PJ_WKT2_2019) from the definition below, as GDAL's gdalsrsinfo -o wkt2 does (ruling F6: an input, not an expected value)",
+        "definition": "+proj=tmerc +lat_0=36 +lon_0=139.833333333333 +k=0.9999 +x_0=0 +y_0=0 +ellps=bessel +towgs84=-146.414,507.337,680.507,0,0,0,0 +units=m +no_defs +type=crs",
+        "parametersFrom": "epsg-15484",
+        "retrieved": "2026-11-06"
+      },
+      "description": "Tokyo / Japan Plane Rectangular CS IX with EPSG 15484's TOWGS84 (Tokyo to WGS 84 (108), about 860 m)",
+      "wkt2": "BOUNDCRS[\n    SOURCECRS[\n        PROJCRS[\"unknown\",\n            BASEGEOGCRS[\"unknown\",\n                DATUM[\"Unknown based on Bessel 1841 ellipsoid using towgs84=-146.414,507.337,680.507,0,0,0,0\",\n                    ELLIPSOID[\"Bessel 1841\",6377397.155,299.1528128,\n                        LENGTHUNIT[\"metre\",1,\n                            ID[\"EPSG\",9001]]]],\n                PRIMEM[\"Greenwich\",0,\n                    ANGLEUNIT[\"degree\",0.0174532925199433],\n                    ID[\"EPSG\",8901]]],\n            CONVERSION[\"unknown\",\n                METHOD[\"Transverse Mercator\",\n                    ID[\"EPSG\",9807]],\n                PARAMETER[\"Latitude of natural origin\",36,\n                    ANGLEUNIT[\"degree\",0.0174532925199433],\n                    ID[\"EPSG\",8801]],\n                PARAMETER[\"Longitude of natural origin\",139.833333333333,\n                    ANGLEUNIT[\"degree\",0.0174532925199433],\n                    ID[\"EPSG\",8802]],\n                PARAMETER[\"Scale factor at natural origin\",0.9999,\n                    SCALEUNIT[\"unity\",1],\n                    ID[\"EPSG\",8805]],\n                PARAMETER[\"False easting\",0,\n                    LENGTHUNIT[\"metre\",1],\n                    ID[\"EPSG\",8806]],\n                PARAMETER[\"False northing\",0,\n                    LENGTHUNIT[\"metre\",1],\n                    ID[\"EPSG\",8807]]],\n            CS[Cartesian,2],\n                AXIS[\"(E)\",east,\n                    ORDER[1],\n                    LENGTHUNIT[\"metre\",1,\n                        ID[\"EPSG\",9001]]],\n                AXIS[\"(N)\",north,\n                    ORDER[2],\n                    LENGTHUNIT[\"metre\",1,\n                        ID[\"EPSG\",9001]]]]],\n    TARGETCRS[\n        GEOGCRS[\"WGS 84\",\n            DATUM[\"World Geodetic System 1984\",\n                ELLIPSOID[\"WGS 84\",6378137,298.257223563,\n                    LENGTHUNIT[\"metre\",1]]],\n            PRIMEM[\"Greenwich\",0,\n                ANGLEUNIT[\"degree\",0.0174532925199433]],\n            CS[ellipsoidal,2],\n                AXIS[\"latitude\",north,\n                    ORDER[1],\n                    ANGLEUNIT[\"degree\",0.0174532925199433]],\n                AXIS[\"longitude\",east,\n                    ORDER[2],\n                    ANGLEUNIT[\"degree\",0.0174532925199433]],\n            ID[\"EPSG\",4326]]],\n    ABRIDGEDTRANSFORMATION[\"Transformation from unknown to WGS84\",\n        METHOD[\"Position Vector transformation (geog2D domain)\",\n            ID[\"EPSG\",9606]],\n        PARAMETER[\"X-axis translation\",-146.414,\n            ID[\"EPSG\",8605]],\n        PARAMETER[\"Y-axis translation\",507.337,\n            ID[\"EPSG\",8606]],\n        PARAMETER[\"Z-axis translation\",680.507,\n            ID[\"EPSG\",8607]],\n        PARAMETER[\"X-axis rotation\",0,\n            ID[\"EPSG\",8608]],\n        PARAMETER[\"Y-axis rotation\",0,\n            ID[\"EPSG\",8609]],\n        PARAMETER[\"Z-axis rotation\",0,\n            ID[\"EPSG\",8610]],\n        PARAMETER[\"Scale difference\",1,\n            ID[\"EPSG\",8611]]]]"
+    },
+    "input-wkt2-osgb36-bng": {
+      "kind": "input",
+      "source": {
+        "document": "WKT2 (ISO 19162:2019) exported by PROJ 9.7.1 proj_as_wkt(PJ_WKT2_2019) from the definition below, as GDAL's gdalsrsinfo -o wkt2 does (ruling F6: an input, not an expected value)",
+        "definition": "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +towgs84=446.448,-125.157,542.06,0.15,0.247,0.842,-20.489 +units=m +no_defs +type=crs",
+        "parametersFrom": "epsg-1314",
+        "retrieved": "2026-11-06"
+      },
+      "description": "OSGB 1936 / British National Grid with EPSG 1314's 7-parameter TOWGS84 (OSGB36 to WGS 84 (6))",
+      "wkt2": "BOUNDCRS[\n    SOURCECRS[\n        PROJCRS[\"unknown\",\n            BASEGEOGCRS[\"unknown\",\n                DATUM[\"Unknown based on Airy 1830 ellipsoid using towgs84=446.448,-125.157,542.06,0.15,0.247,0.842,-20.489\",\n                    ELLIPSOID[\"Airy 1830\",6377563.396,299.3249646,\n                        LENGTHUNIT[\"metre\",1,\n                            ID[\"EPSG\",9001]]]],\n                PRIMEM[\"Greenwich\",0,\n                    ANGLEUNIT[\"degree\",0.0174532925199433],\n                    ID[\"EPSG\",8901]]],\n            CONVERSION[\"unknown\",\n                METHOD[\"Transverse Mercator\",\n                    ID[\"EPSG\",9807]],\n                PARAMETER[\"Latitude of natural origin\",49,\n                    ANGLEUNIT[\"degree\",0.0174532925199433],\n                    ID[\"EPSG\",8801]],\n                PARAMETER[\"Longitude of natural origin\",-2,\n                    ANGLEUNIT[\"degree\",0.0174532925199433],\n                    ID[\"EPSG\",8802]],\n                PARAMETER[\"Scale factor at natural origin\",0.9996012717,\n                    SCALEUNIT[\"unity\",1],\n                    ID[\"EPSG\",8805]],\n                PARAMETER[\"False easting\",400000,\n                    LENGTHUNIT[\"metre\",1],\n                    ID[\"EPSG\",8806]],\n                PARAMETER[\"False northing\",-100000,\n                    LENGTHUNIT[\"metre\",1],\n                    ID[\"EPSG\",8807]]],\n            CS[Cartesian,2],\n                AXIS[\"(E)\",east,\n                    ORDER[1],\n                    LENGTHUNIT[\"metre\",1,\n                        ID[\"EPSG\",9001]]],\n                AXIS[\"(N)\",north,\n                    ORDER[2],\n                    LENGTHUNIT[\"metre\",1,\n                        ID[\"EPSG\",9001]]]]],\n    TARGETCRS[\n        GEOGCRS[\"WGS 84\",\n            DATUM[\"World Geodetic System 1984\",\n                ELLIPSOID[\"WGS 84\",6378137,298.257223563,\n                    LENGTHUNIT[\"metre\",1]]],\n            PRIMEM[\"Greenwich\",0,\n                ANGLEUNIT[\"degree\",0.0174532925199433]],\n            CS[ellipsoidal,2],\n                AXIS[\"latitude\",north,\n                    ORDER[1],\n                    ANGLEUNIT[\"degree\",0.0174532925199433]],\n                AXIS[\"longitude\",east,\n                    ORDER[2],\n                    ANGLEUNIT[\"degree\",0.0174532925199433]],\n            ID[\"EPSG\",4326]]],\n    ABRIDGEDTRANSFORMATION[\"Transformation from unknown to WGS84\",\n        METHOD[\"Position Vector transformation (geog2D domain)\",\n            ID[\"EPSG\",9606]],\n        PARAMETER[\"X-axis translation\",446.448,\n            ID[\"EPSG\",8605]],\n        PARAMETER[\"Y-axis translation\",-125.157,\n            ID[\"EPSG\",8606]],\n        PARAMETER[\"Z-axis translation\",542.06,\n            ID[\"EPSG\",8607]],\n        PARAMETER[\"X-axis rotation\",0.15,\n            ID[\"EPSG\",8608]],\n        PARAMETER[\"Y-axis rotation\",0.247,\n            ID[\"EPSG\",8609]],\n        PARAMETER[\"Z-axis rotation\",0.842,\n            ID[\"EPSG\",8610]],\n        PARAMETER[\"Scale difference\",0.999979511,\n            ID[\"EPSG\",8611]]]]"
+    },
+    "input-wkt2-wgs84-utm31n": {
+      "kind": "input",
+      "source": {
+        "document": "WKT2 (ISO 19162:2019) exported by PROJ 9.7.1 proj_as_wkt(PJ_WKT2_2019) from the definition below, as GDAL's gdalsrsinfo -o wkt2 does (ruling F6: an input, not an expected value)",
+        "definition": "EPSG:32631",
+        "retrieved": "2026-11-06"
+      },
+      "description": "WGS 84 / UTM zone 31N (EPSG:32631): no TOWGS84, so the Helmert comparison is skipped",
+      "wkt2": "PROJCRS[\"WGS 84 / UTM zone 31N\",\n    BASEGEOGCRS[\"WGS 84\",\n        ENSEMBLE[\"World Geodetic System 1984 ensemble\",\n            MEMBER[\"World Geodetic System 1984 (Transit)\"],\n            MEMBER[\"World Geodetic System 1984 (G730)\"],\n            MEMBER[\"World Geodetic System 1984 (G873)\"],\n            MEMBER[\"World Geodetic System 1984 (G1150)\"],\n            MEMBER[\"World Geodetic System 1984 (G1674)\"],\n            MEMBER[\"World Geodetic System 1984 (G1762)\"],\n            MEMBER[\"World Geodetic System 1984 (G2139)\"],\n            MEMBER[\"World Geodetic System 1984 (G2296)\"],\n            ELLIPSOID[\"WGS 84\",6378137,298.257223563,\n                LENGTHUNIT[\"metre\",1]],\n            ENSEMBLEACCURACY[2.0]],\n        PRIMEM[\"Greenwich\",0,\n            ANGLEUNIT[\"degree\",0.0174532925199433]],\n        ID[\"EPSG\",4326]],\n    CONVERSION[\"UTM zone 31N\",\n        METHOD[\"Transverse Mercator\",\n            ID[\"EPSG\",9807]],\n        PARAMETER[\"Latitude of natural origin\",0,\n            ANGLEUNIT[\"degree\",0.0174532925199433],\n            ID[\"EPSG\",8801]],\n        PARAMETER[\"Longitude of natural origin\",3,\n            ANGLEUNIT[\"degree\",0.0174532925199433],\n            ID[\"EPSG\",8802]],\n        PARAMETER[\"Scale factor at natural origin\",0.9996,\n            SCALEUNIT[\"unity\",1],\n            ID[\"EPSG\",8805]],\n        PARAMETER[\"False easting\",500000,\n            LENGTHUNIT[\"metre\",1],\n            ID[\"EPSG\",8806]],\n        PARAMETER[\"False northing\",0,\n            LENGTHUNIT[\"metre\",1],\n            ID[\"EPSG\",8807]]],\n    CS[Cartesian,2],\n        AXIS[\"(E)\",east,\n            ORDER[1],\n            LENGTHUNIT[\"metre\",1]],\n        AXIS[\"(N)\",north,\n            ORDER[2],\n            LENGTHUNIT[\"metre\",1]],\n    USAGE[\n        SCOPE[\"Navigation and medium accuracy spatial referencing.\"],\n        AREA[\"Between 0°E and 6°E, northern hemisphere between equator and 84°N, onshore and offshore. Algeria. Andorra. Belgium. Benin. Burkina Faso. Denmark - North Sea. France. Germany - North Sea. Ghana. Luxembourg. Mali. Netherlands. Niger. Nigeria. Norway. Spain. Togo. United Kingdom (UK) - North Sea.\"],\n        BBOX[0,0,84,6]],\n    ID[\"EPSG\",32631]]"
     }
   }
 }

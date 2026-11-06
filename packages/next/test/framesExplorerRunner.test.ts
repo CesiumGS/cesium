@@ -434,6 +434,33 @@ describe("the catalog's groups and lenses (R14)", () => {
     expect(new Set(caseIds).size).toBe(caseIds.length);
   });
 
+  it("gives every group but the virtual one at least one case", () => {
+    for (const g of STRESS_GROUPS) {
+      if (g.collects !== undefined) {
+        continue;
+      }
+      expect(
+        STRESS_CASES.some((c) => c.group === g.id),
+        `${g.id} has a case`,
+      ).toBe(true);
+    }
+  });
+
+  it("leaves the user's own input (R18) out of a card's count", () => {
+    const card = STRESS_GROUPS.find((g) => g.id === "bound-crss")!;
+    const results: StressResult[] = [
+      { id: "a", group: "bound-crss", title: "A", pass: true },
+      {
+        id: "b",
+        group: "bound-crss",
+        title: "B",
+        pass: false,
+        userInput: true,
+      },
+    ];
+    expect(card.headline(results)).toMatch(/^1 of 1 pass/);
+  });
+
   it("gives every group a lens and a plain question ending in ?", () => {
     for (const g of STRESS_GROUPS) {
       expect(g.lenses.length, g.id).toBeGreaterThan(0);

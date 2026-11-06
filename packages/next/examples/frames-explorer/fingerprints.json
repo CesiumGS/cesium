@@ -506,6 +506,80 @@
         111.31949078952906, 0, -4517590.878160863, 78.84683509132593,
         4487348.408865919
       ]
+    },
+    "operation-candidates.ed50-north-sea.recorded": {
+      "pipeline": "+proj=pipeline +step +proj=unitconvert +xy_in=deg +xy_out=rad +step +proj=push +v_3 +step +proj=cart +ellps=intl +step +proj=helmert +x=-89.5 +y=-93.8 +z=-123.1 +rx=0 +ry=0 +rz=-0.156 +s=1.2 +convention=position_vector +step +inv +proj=cart +ellps=WGS84 +step +proj=pop +v_3 +step +proj=unitconvert +xy_in=rad +z_in=m +xy_out=deg +z_out=m",
+      "grids": [],
+      "coordinates": [3570010.5977921733, 187004.5110007386, 5264400.008199947]
+    },
+    "ifc-map-conversion.ifc43-utm.origin": {
+      "pipeline": "+proj=pipeline +step +inv +proj=utm +zone=32 +ellps=GRS80 +step +proj=unitconvert +xy_in=rad +z_in=m +xy_out=deg +z_out=m",
+      "grids": [],
+      "coordinates": [
+        4139234.0249408535, 613715.3130213002, 4797609.466876835,
+        4140937.3774163947, 614322.5928316381, 4798718.680906426,
+        4140176.9771704446, 614476.3198400609, 4799350.806528426,
+        4141416.806082321, 613684.1106244813, 4801035.135232382,
+        4142177.44423085, 613530.336048551, 4800402.811925623
+      ]
+    },
+    "ifc-map-conversion.ifc43-utm.gauss-kruger": {
+      "pipeline": "+proj=pipeline +step +inv +proj=tmerc +lat_0=0 +lon_0=9 +k=1 +x_0=3500000 +y_0=0 +ellps=bessel +step +proj=push +v_3 +step +proj=cart +ellps=bessel +step +proj=helmert +x=598.1 +y=73.7 +z=418.2 +rx=0.202 +ry=0.045 +rz=-2.455 +s=6.7 +convention=position_vector +step +inv +proj=cart +ellps=WGS84 +step +proj=pop +v_3 +step +proj=unitconvert +xy_in=rad +z_in=m +xy_out=deg +z_out=m",
+      "grids": [],
+      "coordinates": [4139235.06734793, 613715.3234504282, 4797608.572214335]
+    },
+    "plate-motion.gda94-gda2020.library": {
+      "pipeline": "+proj=pipeline +step +proj=unitconvert +xy_in=deg +z_in=m +xy_out=rad +z_out=m +step +proj=cart +ellps=GRS80 +step +proj=helmert +x=0.06155 +y=-0.01087 +z=-0.04019 +rx=-0.0394924 +ry=-0.0327221 +rz=-0.0328979 +s=-0.009994 +convention=coordinate_frame +step +inv +proj=cart +ellps=GRS80 +step +proj=unitconvert +xy_in=rad +z_in=m +xy_out=deg +z_out=m",
+      "grids": [],
+      "coordinates": [
+        -4052052.7379184873, 4212835.989773808, -2545104.5898395195
+      ]
+    },
+    "plate-motion.itrf2014-gda2020.library": {
+      "pipeline": "+proj=pipeline +step +proj=unitconvert +xy_in=deg +z_in=m +xy_out=rad +z_out=m +step +proj=cart +ellps=GRS80 +step +proj=helmert +x=0 +y=0 +z=0 +rx=0 +ry=0 +rz=0 +s=0 +dx=0 +dy=0 +dz=0 +drx=0.00150379 +dry=0.00118346 +drz=0.00120716 +ds=0 +t_epoch=2020 +convention=coordinate_frame +step +inv +proj=cart +ellps=GRS80 +step +proj=unitconvert +xy_in=rad +z_in=m +xy_out=deg +z_out=m",
+      "grids": [],
+      "coordinates": [-4052052.737316511, 4212835.983481489, -2545104.586674048]
+    },
+    "heights-and-wgs84.three-heights.navd88": {
+      "pipeline": "+proj=pipeline +step +proj=unitconvert +xy_in=us-ft +xy_out=m +step +inv +proj=lcc +lat_0=36.5 +lon_0=-120.5 +lat_1=38.4333333333333 +lat_2=37.0666666666667 +x_0=2000000.0001016 +y_0=500000.0001016 +ellps=GRS80 +step +proj=unitconvert +z_in=us-ft +z_out=m +step +proj=vgridshift +grids=us_noaa_g2018u0.tif +multiplier=1 +step +proj=unitconvert +xy_in=rad +xy_out=deg",
+      "grids": [
+        {
+          "name": "us_noaa_g2018u0.tif",
+          "sha256": "fa9a407ac7ee3f5a3694008e4bcd09ce9cc250452f0c3b11700a4960340abce2"
+        }
+      ],
+      "coordinates": [
+        -2669623.2348006126, -4345820.745939748, 3817029.9170203456
+      ]
+    },
+    "bound-crss.ed50-utm31n.helmert": {
+      "pipeline": "+proj=pipeline +step +inv +proj=utm +zone=31 +ellps=intl +step +proj=push +v_3 +step +proj=cart +ellps=intl +step +proj=helmert +x=-87 +y=-98 +z=-121 +rx=0 +ry=0 +rz=0 +s=0 +convention=position_vector +step +inv +proj=cart +ellps=WGS84 +step +proj=pop +v_3 +step +proj=unitconvert +xy_in=rad +xy_out=deg",
+      "grids": [],
+      "coordinates": [3570011.253348038, 187002.92181379886, 5264399.6226897035]
+    },
+    "bound-crss.tokyo-jprcs-ix.helmert": {
+      "pipeline": "+proj=pipeline +step +inv +proj=tmerc +lat_0=36 +lon_0=139.833333333333 +k=0.9999 +x_0=0 +y_0=0 +ellps=bessel +step +proj=push +v_3 +step +proj=cart +ellps=bessel +step +proj=helmert +x=-146.414 +y=507.337 +z=680.507 +rx=0 +ry=0 +rz=0 +s=0 +convention=position_vector +step +inv +proj=cart +ellps=WGS84 +step +proj=pop +v_3 +step +proj=unitconvert +xy_in=rad +xy_out=deg",
+      "grids": [],
+      "coordinates": [-3959320.917516438, 3350179.8766137254, 3699790.667914696]
+    },
+    "bound-crss.osgb36-bng.helmert": {
+      "pipeline": "+proj=pipeline +step +inv +proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +step +proj=push +v_3 +step +proj=cart +ellps=airy +step +proj=helmert +x=446.448 +y=-125.157 +z=542.06 +rx=0.15 +ry=0.247 +rz=0.842 +s=-20.4889999999569 +convention=position_vector +step +inv +proj=cart +ellps=WGS84 +step +proj=pop +v_3 +step +proj=unitconvert +xy_in=rad +xy_out=deg",
+      "grids": [],
+      "coordinates": [
+        3876351.0781023954, -101606.96968011574, 5047032.578449654
+      ]
+    },
+    "bound-crss.epsg-30169.helmert": {
+      "pipeline": "+proj=pipeline +step +inv +proj=tmerc +lat_0=36 +lon_0=139.833333333333 +k=0.9999 +x_0=0 +y_0=0 +ellps=bessel +step +proj=push +v_3 +step +proj=cart +ellps=bessel +step +proj=helmert +x=-146.414 +y=507.337 +z=680.507 +step +inv +proj=cart +ellps=WGS84 +step +proj=pop +v_3 +step +proj=unitconvert +xy_in=rad +z_in=m +xy_out=deg +z_out=m",
+      "grids": [],
+      "coordinates": [-3959320.917516438, 3350179.8766137254, 3699790.667914696]
+    },
+    "bound-crss.epsg-26741.helmert": {
+      "pipeline": "+proj=pipeline +step +proj=unitconvert +xy_in=us-ft +xy_out=m +step +inv +proj=lcc +lat_0=39.3333333333333 +lon_0=-122 +lat_1=41.6666666666667 +lat_2=40 +x_0=609601.219202438 +y_0=0 +ellps=clrk66 +step +proj=push +v_3 +step +proj=cart +ellps=clrk66 +step +proj=helmert +x=-8 +y=159 +z=175 +step +inv +proj=cart +ellps=WGS84 +step +proj=pop +v_3 +step +proj=unitconvert +xy_in=rad +z_in=m +xy_out=deg +z_out=m",
+      "grids": [],
+      "coordinates": [
+        -2598637.905608577, -4094626.512184665, 4128784.2158004437
+      ]
     }
   }
 }
