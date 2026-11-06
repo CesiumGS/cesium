@@ -74,6 +74,60 @@ function trajectoryOf(frame: Frame): Trajectory | undefined {
 
 const rss = (...v: number[]): number => Math.hypot(...v);
 
+/** The Earth-orientation sigma at an instant, or why it is not known. */
+export type EarthOrientationSigma =
+  | { degraded: true; span: string }
+  | {
+      degraded: false;
+      /** 1σ UT1 - UTC, s. */
+      ut1Seconds: number;
+      /** 1σ polar motion, rad. */
+      polarRadians: number;
+      predicted: boolean;
+      /** Days past the table's last observed row (0 when measured). */
+      ageDays: number;
+    };
+
+/**
+ * The Earth-orientation sigmas at `instant`: measured UT1 35 µs and polar
+ * motion 0.1 mas; a predicted sample grows with its age `d` in days past the
+ * last observed row by IERS Bulletin A (polar 0.00068 · d^0.80 arcsec, UT1
+ * 0.00025 · d^0.75 s), never below the measured values. `degraded` when the
+ * instant is outside the EOP table (`span` is the table's ISO UTC range).
+ */
+export function earthOrientationSigma(
+  frames: Frames,
+  instant: Instant,
+): EarthOrientationSigma {
+  const { eop, leapSeconds } = frames.data;
+  const sample = eop.atInstant(instant, leapSeconds);
+  if (sample.degraded) {
+    const iso = (ms: number): string => new Date(ms).toISOString();
+    return { degraded: true, span: `${iso(eop.first)} to ${iso(eop.last)}` };
+  }
+  let ut1Seconds = UT1_MEASURED_S;
+  let polarRadians = POLAR_MEASURED_ARCSEC * ARCSEC_TO_RAD;
+  let ageDays = 0;
+  if (sample.predicted) {
+    ageDays = Math.max(
+      0,
+      (instant.toUtc(leapSeconds) - eop.lastObserved) / MS_PER_DAY,
+    );
+    ut1Seconds = Math.max(ut1Seconds, 0.00025 * ageDays ** 0.75);
+    polarRadians = Math.max(
+      polarRadians,
+      0.00068 * ageDays ** 0.8 * ARCSEC_TO_RAD,
+    );
+  }
+  return {
+    degraded: false,
+    ut1Seconds,
+    polarRadians,
+    predicted: sample.predicted,
+    ageDays,
+  };
+}
+
 /**
  * The Earth-orientation term for an end under ITRF: UT1 error turns the
  * Earth by `σ_t · ω` radians about the spin axis (moving the point by
@@ -88,33 +142,21 @@ function earthOrientationTerm(
   instant: Instant,
   frames: Frames,
 ): AccuracyTerm {
-  const { eop, leapSeconds } = frames.data;
-  const sample = eop.atInstant(instant, leapSeconds);
-  if (sample.degraded) {
-    const iso = (ms: number): string => new Date(ms).toISOString();
+  const sigma = earthOrientationSigma(frames, instant);
+  if (sigma.degraded) {
     return {
       source: "earthOrientation",
       meters: undefined,
-      note: `End ${end}: the instant is outside the EOP table (${iso(eop.first)} to ${iso(eop.last)}), so Earth orientation is not known`,
+      note: `End ${end}: the instant is outside the EOP table (${sigma.span}), so Earth orientation is not known`,
     };
   }
   const p = convertPoint(point, frames.itrf, instant).position;
   const rho = Math.hypot(p[0]!, p[1]!);
   const norm = Math.hypot(p[0]!, p[1]!, p[2]!);
-  let sigmaT = UT1_MEASURED_S;
-  let sigmaP = POLAR_MEASURED_ARCSEC * ARCSEC_TO_RAD;
-  let note = `End ${end}: measured Earth orientation (UT1 35 µs, polar motion 0.1 mas)`;
-  if (sample.predicted) {
-    const days = Math.max(
-      0,
-      (instant.toUtc(leapSeconds) - eop.lastObserved) / MS_PER_DAY,
-    );
-    // A predicted sample is never better than a measured one: its window
-    // can reach back before the last observed row, where d is 0.
-    sigmaT = Math.max(sigmaT, 0.00025 * days ** 0.75);
-    sigmaP = Math.max(sigmaP, 0.00068 * days ** 0.8 * ARCSEC_TO_RAD);
-    note = `End ${end}: predicted Earth orientation, ${days.toFixed(1)} days past the last observed row (IERS Bulletin A)`;
-  }
+  const { ut1Seconds: sigmaT, polarRadians: sigmaP } = sigma;
+  const note = sigma.predicted
+    ? `End ${end}: predicted Earth orientation, ${sigma.ageDays.toFixed(1)} days past the last observed row (IERS Bulletin A)`
+    : `End ${end}: measured Earth orientation (UT1 35 µs, polar motion 0.1 mas)`;
   return {
     source: "earthOrientation",
     meters: rss(sigmaT * EARTH_ROTATION_RATE * rho, sigmaP * norm),

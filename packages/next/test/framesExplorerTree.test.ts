@@ -330,7 +330,9 @@ describe("edge accuracy (R8)", () => {
     const tree = buildTree(frames);
     expect(find(tree, "EARTH_ICRF")!.edge.accuracy.meters).toBe(0.01);
     expect(find(tree, "MOON_ICRF")!.edge.accuracy.meters).toBe(0.01);
-    expect(find(tree, "HCRS")!.edge.accuracy.meters).toBe(0.01);
+    // Heliocentric geometry has no stated absolute accuracy (accuracy.ts).
+    expect(find(tree, "HCRS")!.edge.accuracy.meters).toBeUndefined();
+    expect(find(tree, "HCRS")!.edge.accuracy.note).toMatch(/no stated/);
     expect(find(tree, "GCRF")!.edge.accuracy.meters).toBe(0.01);
     expect(find(tree, "EME2000")!.edge.accuracy.radians).toBe(1e-15);
   });
@@ -347,6 +349,7 @@ describe("edge accuracy (R8)", () => {
       const edge = find(buildTree(frames, {}, at), "ITRF")!.edge;
       expect(edge.accuracy.radians).toBeCloseTo(sigma, 15);
       expect(edge.accuracy.note).toMatch(/measured/);
+      expect(edge.accuracy.note).toMatch(/angular bound.*radians/);
     }
   });
 
