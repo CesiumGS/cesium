@@ -277,7 +277,7 @@ export {
   type FrameDataWarning,
 } from "./ephemeris/loadFrameData.ts";
 export { Frame, frameTransform } from "./frames/Frame.ts";
-export { toParentMatrix } from "./frames/matrix.ts";
+export { rotationPart, toParentMatrix } from "./frames/matrix.ts";
 export {
   C,
   GM_SUN,

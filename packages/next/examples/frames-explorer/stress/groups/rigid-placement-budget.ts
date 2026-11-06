@@ -1,5 +1,5 @@
 // Rigid placement budget (ruling F1: RigidPlacement against EngineeringFrame
-// directly; Task 3's rigidVsExact wraps the same math).
+// directly; Task 3's rigidVsExact shares `rigidSeparation`, the same math).
 import {
   EngineeringFrame,
   RigidPlacement,
@@ -8,7 +8,8 @@ import { gridFactors } from "../../../../src/engineering/factors.ts";
 import { EARTH } from "../../../../src/scene/Body.ts";
 import { ellipsoidOf, onEarth, radii } from "../references.ts";
 import { type StressCase, type StressResult, fmt } from "../runner.ts";
-import { distance, epsg, proj, stressCase } from "../shared.ts";
+import { epsg, proj, stressCase } from "../shared.ts";
+import { rigidSeparation } from "../../overlays.ts";
 
 const RIGID_SITES: readonly {
   readonly latitude: number;
@@ -65,7 +66,7 @@ const rigidBudgetCase = stressCase(
       // East from the origin: along the central meridian's normal for UTM,
       // along the parallel for the polar stereographic (constant scale).
       const separation = (x: number) =>
-        distance(rigid.toBodyFixed([x, 0, 0]), frame.toBodyFixed([x, 0, 0]));
+        rigidSeparation(rigid, frame, [x, 0, 0]);
       const R = radii(wgs84.a, wgs84.e2, site.latitude).gaussian;
       for (const target of RIGID_TARGETS) {
         let lo = 0;
