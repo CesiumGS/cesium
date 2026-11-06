@@ -45,6 +45,14 @@ export interface PjFactors {
   readonly meridian_convergence: number;
 }
 
+/** proj_ellipsoid_get_parameters' result. */
+export interface PjEllipsoidParameters {
+  readonly semi_major_metre: number;
+  readonly semi_minor_metre: number;
+  readonly is_semi_minor_computed: boolean;
+  readonly inv_flattening: number;
+}
+
 export interface PjAxisInfo {
   readonly name: string;
   readonly abbrev: string;
@@ -100,6 +108,9 @@ export interface ProjApi {
   proj_cs_get_axis_count(cs: PJ): number;
   proj_cs_get_axis_info(cs: PJ, index: number): PjAxisInfo;
   proj_crs_get_sub_crs(crs: PJ, index: number): PJ;
+  proj_crs_get_geodetic_crs(crs: PJ): PJ;
+  proj_get_ellipsoid(object: PJ): PJ;
+  proj_ellipsoid_get_parameters(ellipsoid: PJ): PjEllipsoidParameters;
   proj_get_type(object: PJ): PjType;
   /** Null for an object PROJ could not create (proj_create does not throw). */
   proj_get_name(object: PJ): string | null;
