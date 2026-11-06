@@ -172,6 +172,14 @@ Plan 4b later adds three things here:
   - **Startup is quick:** `run` returns its panel as soon as the worker has started, so Dyno's "Starting…" overlay clears. Data loading then shows in the status strip (R9).
   - **Canvas placement:** the globe legend goes bottom right and tour captions top right, clear of Dyno's inspector and credits.
   - **The panel's top level is the Explore / Verify / Report tabs,** directly under Dyno's Controls header. No second title or description.
+- **R18. Try your own iModel (owner's request, 2026-11-06).** The "Bound CRSs" card has a "Try your own" area where an SME pastes an iModel's ID (or the ion asset ID it was imported as) and fetches it through Cesium ion.
+  - **The token:** the fetch uses the token Dyno resolved, `context.accessToken`, which comes from `.env.local`, Dyno's token setting or the evaluation token. With no token, the area says how to set one. The token is never stored by the example, logged, put in a URL or params, or written into the report.
+  - **The CRS:** the example reads the CRS the iModel's content carries: a WKT2 (often a `BOUNDCRS`), for example from `EXT_geospatial_crs` or the iModel's geographic coordinate system metadata.
+    - Task 6 starts with a short research step: how ion exposes an iModel's CRS (the asset's endpoint and tileset JSON, or iTwin metadata that ion passes through). It records the answer in DESIGN.md.
+    - If ion doesn't expose a CRS for the asset, the area says so plainly, and offers a "Paste WKT2" box instead. The box is always available as a fallback.
+  - **The checks:** the pasted or fetched CRS runs the same checks as the catalog's bound-CRS cases, through `boundCrsChecks` (Task 1): units and factors from the source CRS, the recorded operation, the hand-coded Helmert when the WKT carries TOWGS84 parameters, round trips at three heights, and the effect size against PROJ's best registry operation.
+  - **Results are marked "your input".** They appear in the card and the inspector, with the CRS name and the iModel or asset ID. They're excluded from the pass counts, the data test and the fingerprints, and they're included in the report (without the token).
+  - **Deep links:** `imodel=<id>` in the example params (R15) prefills the field. It doesn't fetch until the user presses Fetch.
 
 ## Global Constraints
 
@@ -182,7 +190,7 @@ Plan 4b later adds three things here:
   - work stops on `context.signal`;
   - the panel is `context.panel`.
 
-  It reads only the frames store at `/frames-data/` and PROJ at `/frames-data/proj/`. No ion token is needed.
+  It reads only the frames store at `/frames-data/` and PROJ at `/frames-data/proj/`. No ion token is needed, except for R18's optional iModel fetch, which uses `context.accessToken` and never persists, logs or exposes it.
 - **Tolerances.** These are the plans' own, stated in `tests.ts` beside each case, never loosened for the page:
 
   | Case | Tolerance |
@@ -412,6 +420,7 @@ Plan 4b later adds three things here:
       - The engineering frame's units, type and grid factors come from the source CRS.
       - The recorded operation is the bound Helmert, not PROJ's registry choice.
       - The forward result matches a hand-coded position-vector Helmert (EPSG method 9606) within 1 mm. Share the hand-coded Helmert with the "Coordinate epoch" group.
+      - Export these checks as `boundCrsChecks(ctx: StressContext, wkt2: string, label: string): Promise<StressResult[]>`, used by the catalog's cases and by R18's "Try your own" with results marked `userInput: true`. Add `userInput?: boolean` to `StressResult`. When the WKT carries no TOWGS84 parameters, skip the Helmert comparison and say why.
       - The round trip holds within 1e-6 m at h = 0, 100 and 1000 m.
     - **The same check for plain EPSG codes** whose operation is a geocentric Helmert: EPSG:30169 (Tokyo) and EPSG:26741. Plan 4a's last review found these round trips off by up to 2.8 mm, from PROJ's push/pop of the height around a 2D Helmert. 4a fixes this by refining the inverse, and this group guards that fix.
     - **Effect sizes:**
@@ -552,7 +561,8 @@ Plan 4b later adds three things here:
     - `{ type: "load"; item: DataItem }`;
     - `{ type: "run"; ids?: readonly string[] }`;
     - `{ type: "cancel" }`;
-    - `{ type: "overlay"; kind: "designGrid" | "trueNorthLines" | "rigidVsExact" | "distortion" | "trajectoryPath"; params: unknown }`.
+    - `{ type: "overlay"; kind: "designGrid" | "trueNorthLines" | "rigidVsExact" | "distortion" | "trajectoryPath"; params: unknown }`;
+    - `{ type: "userCrs"; wkt2: string; label: string }`, which runs `boundCrsChecks` (R18) and streams its results like `run`. The token never crosses into the worker: Task 6 fetches the iModel's CRS on the main thread and sends only the WKT2.
   - **`type Reply`:**
     - `{ type: "progress"; item; received; total? }`;
     - `{ type: "state"; item; state: "idle" | "fetching" | "ready" | "missing" | "error"; detail? }`;
@@ -690,6 +700,11 @@ Plan 4b later adds three things here:
     - "Starting…" clears within about a second.
     - Switching to another example clears the example's params from the URL.
   - **Deep link (R15):** copy a result's link, reload the page with it, and confirm the same result is selected and flown to.
+  - **Try your own (R18):**
+    - With no token, the area explains how to set one.
+    - With the evaluation or `.env.local` token, an iModel or asset ID fetches and shows its CRS checks marked "your input", or says plainly that ion exposes no CRS and offers the paste box.
+    - Pasting the Tokyo bound-CRS WKT2 runs its checks.
+    - Search the report, the console, the URL and `localStorage` for the token: it appears nowhere.
   - **Report (R15):** copy the report and check that its counts and environment match the page. Save it, and check that the JSON parses.
   - **Production build:** build the gallery and serve the built output (the repo's preview script, or `vite preview`). Repeat the PROJ load, "Run all" and one overlay there, to prove the module worker and the worker's `proj_capi.mjs` import work outside the dev server (R13).
   - **Missing data:** restart the dev server with `FRAMES_DATA_DIR` pointing at an empty scratch directory. The page shows the missing-data status, the tree still renders from what's available or explains why not, and the console has no uncaught errors (Review Focus 4). Then restart it normally.
