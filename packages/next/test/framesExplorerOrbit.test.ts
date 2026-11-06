@@ -21,7 +21,7 @@ import {
   stopRig,
   viewHeading,
   CameraFlow,
-  limitsAround,
+  landedLimits,
   moonOrbitNormal,
   type Rig,
 } from "../examples/frames-explorer/orbit.ts";
@@ -566,52 +566,93 @@ describe("stop 5's orbit normal", () => {
   });
 });
 
-describe("landing far outside the destination's range (fix round 2)", () => {
-  // Flying to stop 6, interrupted by the wheel about 200,000 km out: the
+describe("landing far outside the destination's range (fix rounds 2 and 3)", () => {
+  // Flying to stop 6, interrupted by the wheel about 140,000 km out: the
   // site's orbit zooms 5 km to 25,000 km.
   const site = rangeLimits("lunarSite", 3.844e8);
-  const wheel = (
-    range: number,
-    limits: { minRange: number; maxRange: number },
-    sign: number,
-  ) =>
-    Math.min(Math.max(range * 1.15 ** sign, limits.minRange), limits.maxRange);
+  const landed = 1.4e8;
 
-  it("widens the limits to take the range the camera is at", () => {
-    expect(limitsAround(site, 2e8)).toEqual({
+  it("widens the limits to take the landing range, and holds them until the camera is inside the destination's", () => {
+    expect(landedLimits(site, landed, landed)).toEqual({
       minRange: site.minRange,
-      maxRange: 2e8,
+      maxRange: landed,
     });
-    expect(limitsAround(site, 2_000)).toEqual({
+    // Still outside after zooming in: the same widened limits, not the
+    // range now (no ratchet).
+    expect(landedLimits(site, landed, 9e7)).toEqual({
+      minRange: site.minRange,
+      maxRange: landed,
+    });
+    // Inside: the destination's own.
+    expect(landedLimits(site, landed, 1e6)).toEqual(site);
+    // Landing under the minimum widens the minimum the same way.
+    expect(landedLimits(site, 2_000, 2_500)).toEqual({
       minRange: 2_000,
       maxRange: site.maxRange,
     });
-    expect(limitsAround(site, 1e6)).toEqual(site);
+    expect(landedLimits(site, 2_000, 6_000)).toEqual(site);
   });
 
-  it("moves the first wheel tick by one notch, not to the limit", () => {
-    let range = 2e8;
-    let limits = limitsAround(site, range);
-    const first = wheel(range, limits, -1);
-    expect(range / first).toBeCloseTo(1.15, 12);
-    // Without widening, the same tick cut it about 8×.
-    expect(range / wheel(range, site, -1)).toBeGreaterThan(7.9);
-    // Zooming in, the limits narrow back to the destination's, and never
-    // let the camera out past where it landed.
-    range = first;
-    limits = limitsAround(site, range);
-    let widest = limits.maxRange;
+  it("drives the orbit's wheel one notch at a time, and back out to where it landed", () => {
+    // The real controller and wheel events, its limits set after each
+    // change as main.ts's narrowLimits sets them.
+    const camera = new Camera();
+    const view = {
+      camera,
+      target: { width: 100, height: 100 },
+      contains: () => true,
+      pixelRect: () => ({ x: 0, y: 0, width: 100, height: 100 }),
+    } as unknown as View;
+    const element = new EventTarget() as EventTarget & {
+      getBoundingClientRect(): object;
+    };
+    element.getBoundingClientRect = () => ({
+      left: 0,
+      top: 0,
+      width: 100,
+      height: 100,
+    });
+    const c = new InspectController(view, element as unknown as HTMLElement, {
+      frame: { up: [0, 0, 1], headingRef: [1, 0, 0] },
+    });
+    c.focus([3.8e8, 0, 0], 0, -0.5, landed);
+    const apply = () => {
+      const l = landedLimits(site, landed, c.range);
+      c.minRange = l.minRange;
+      c.maxRange = l.maxRange;
+    };
+    apply();
+    const wheel = (deltaY: number) => {
+      element.dispatchEvent(
+        Object.assign(new Event("wheel", { cancelable: true }), {
+          clientX: 50,
+          clientY: 50,
+          deltaY,
+        }),
+      );
+      apply();
+    };
+    wheel(-100);
+    // One notch, not the 5.6× cut to 25,000 km.
+    expect(landed / c.range).toBeCloseTo(1.15, 9);
+    wheel(-100);
+    wheel(-100);
+    expect(landed / c.range).toBeCloseTo(1.15 ** 3, 9);
+    wheel(100);
+    wheel(100);
+    wheel(100);
+    expect(c.range).toBeCloseTo(landed, 0);
+    // No farther out than the landing.
+    wheel(100);
+    expect(c.range).toBe(landed);
+    // Zoomed into the destination's limits, they hold from then on.
     for (let i = 0; i < 40; i++) {
-      range = wheel(range, limits, -1);
-      limits = limitsAround(site, range);
-      expect(limits.maxRange).toBeLessThanOrEqual(widest);
-      widest = limits.maxRange;
+      wheel(-100);
     }
-    expect(limits).toEqual(site);
+    expect([c.minRange, c.maxRange]).toEqual([site.minRange, site.maxRange]);
     for (let i = 0; i < 100; i++) {
-      range = wheel(range, limits, 1);
-      limits = limitsAround(site, range);
+      wheel(100);
     }
-    expect(range).toBe(site.maxRange);
+    expect(c.range).toBe(site.maxRange);
   });
 });

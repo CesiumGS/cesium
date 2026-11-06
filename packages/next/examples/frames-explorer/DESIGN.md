@@ -297,13 +297,18 @@ do.
   straight ahead at the destination's distance, up the camera's own up
   (taking it moves nothing); the user's first drag or wheel ends the flight
   and lands at once in the destination's orbit, with its following, and the
-  drag goes on about the subject. Landing outside the destination's range
-  (a wheel about 200,000 km out on the way to stop 6, whose orbit zooms to
-  25,000 km), the wheel's limits widen to take the camera's range and narrow
-  back as the user zooms in (`limitsAround`, fix round 2): the first tick
-  moves one notch, never out past where it landed. A fetched asset frames itself on arrival
+  drag goes on about the subject. A fetched asset frames itself on arrival
   only if no flight has started since it was asked for and none is under
   way.
+- **Landing outside the destination's range** (fix rounds 2 and 3). An
+  interrupted flight lands where the camera is, which can be far outside the
+  destination's wheel limits (a wheel about 140,000 km out on the way to
+  stop 6, whose orbit zooms 5 km to 25,000 km). The limits then widen once
+  to take the landing range, and hold until the camera is inside the
+  destination's own limits, which apply from then on (`landedLimits`): the
+  first wheel tick moves one notch, and the user can zoom back out to where
+  the flight landed, not past it. A drag interrupt lands with the same
+  widened limits, so its first wheel tick is a notch too.
 - **The pivot marker.** While the orbit is dragged, a 20 px white ring with
   a centre dot and crosshair ticks, outlined dark so it reads on sky and
   ground alike, sits at `viewer.orbitPivot` (`pivot.ts`; HUD, never taking
