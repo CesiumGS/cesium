@@ -135,6 +135,23 @@ describe("expected throws (R7)", () => {
     expect(results[2]!.detail).toMatch(/nothing was thrown/);
   });
 
+  it("returns a judged result itself, for callers outside the runner", async () => {
+    const right = await expectThrow(base, /outside-runner grid/, () => {
+      throw new Error("an outside-runner grid is missing");
+    });
+    const wrong = await expectThrow(base, /outside-runner grid/, () => {
+      throw new Error("something else");
+    });
+    const none = await expectThrow(base, /outside-runner grid/, () => 0);
+    expect([right.pass, wrong.pass, none.pass]).toEqual([true, false, false]);
+    expect(wrong.detail).toMatch(/different error/);
+    expect(none.detail).toMatch(/nothing was thrown/);
+    // The runner's verdict agrees, and states the reason once.
+    const [judged] = await run([stub(() => Promise.resolve([none]))]);
+    expect(judged!.pass).toBe(false);
+    expect(judged!.detail!.match(/nothing was thrown/g)).toHaveLength(1);
+  });
+
   it("is judged from the result's fields, not the case's own pass", async () => {
     const results = await run([
       stub([

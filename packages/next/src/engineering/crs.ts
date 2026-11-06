@@ -456,11 +456,22 @@ export function listOperations(
   source: CrsRef,
   target: CrsRef,
 ): readonly OperationCandidate[] {
-  const { candidates } = candidateList(
+  const { candidates, listError } = candidateList(
     proj,
     crsDefinition(source),
     crsDefinition(target),
   );
+  if (listError !== undefined) {
+    // The binding's answer for a pair PROJ cannot relate; anything else is a
+    // failure, not an empty list.
+    if (listError instanceof Error && listError.message === EMPTY_LIST) {
+      return [];
+    }
+    throw new Error(
+      `PROJ could not list the operations from ${crsDefinition(source)} to ${crsDefinition(target)}`,
+      { cause: listError },
+    );
+  }
   if (!candidates) {
     return [];
   }
@@ -502,8 +513,13 @@ export function listOperations(
   return out;
 }
 
-// PROJ reports an unknown bound as -1000 (and the binding may throw or return
-// null when there is no area at all).
+/** proj.js's message when proj_create_operations finds no operation (a null list). */
+const EMPTY_LIST = "Error getting list";
+/** proj.js's message when an object has no area of use (PROJ returns false). */
+const NO_AREA = "proj_get_area_of_use failed";
+
+// PROJ reports an unknown bound as -1000. An object with no area at all makes
+// the binding throw NO_AREA (or return null); any other error is rethrown.
 function areaOfUse(
   proj: ProjApi,
   candidate: PJ,
@@ -511,8 +527,13 @@ function areaOfUse(
   let area;
   try {
     area = proj.proj_get_area_of_use(candidate);
-  } catch {
-    return undefined;
+  } catch (error) {
+    if (error instanceof Error && error.message === NO_AREA) {
+      return undefined;
+    }
+    throw new Error("PROJ could not read an operation's area of use", {
+      cause: error,
+    });
   }
   if (!area) {
     return undefined;
