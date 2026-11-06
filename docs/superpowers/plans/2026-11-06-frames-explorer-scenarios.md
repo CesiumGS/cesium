@@ -228,6 +228,37 @@ This task replaces the tour and the Explore tab's layout. It ports three scenari
   - check light and dark, desktop and 380 px.
 - [ ] **Step 6: Commit** with "examples: frames explorer scenarios replace the tour: strip, tree diagram, answer, knobs, proof".
 
+### Task 4b: Split main.ts and panel.css (owner, 2026-11-06), no behaviour change
+
+Iteration slowed because `main.ts` (about 3,700 lines, almost all of it one `run` closure) and `panel/panel.css` (about 2,800 lines) make every task read and diff most of the example. Split them before Tasks 5–8 add six scenarios.
+
+**Files:**
+
+- Split `examples/frames-explorer/main.ts` into focused modules beside it. The builder chooses the boundaries; candidates include:
+  - the camera and rigs (orbit, globe controls, flights, pivot, Frame content and `F`);
+  - overlays and their ownership;
+  - scene enter and leave for each scenario (beside `scenarios/scenes.ts`);
+  - the HUD and callout wiring;
+  - the Verification wiring (catalog runs, the selection, the report);
+  - data loading and the worker client;
+  - deep links and history.
+  `main.ts` keeps `run`: it builds these modules, wires them together, and owns teardown.
+- Split `panel/panel.css` per component (`TreeDiagram.css`, `Proof.css` and so on), with shared tokens and utilities in one small file. Classes are namespaced by component.
+- Tests: none change behaviour. Move or extract pure helpers where a module boundary makes them testable.
+
+**Rules:**
+
+- **No behaviour change.** The same DOM, the same CSS cascade outcome, the same camera and overlay behaviour. Before and after, `npm test` and `npm run test:data` give the same counts and the same 225 results, with fingerprints.json unchanged.
+- **Small modules with explicit dependencies.** Each module exports a `create…(deps)` that returns its API and a `dispose`. No module reaches into another's state. Shared state passes as explicit objects, not module-level globals.
+- **The size target:** no example file over about 800 lines, except tests, and `main.ts` under about 600.
+- **Commits:** one module (or a few small ones) per commit, each green on tsc, `npm test` and lint, so a regression is bisectable.
+
+- [ ] **Step 1:** map `run`'s state and functions to modules. Write the map into the report before moving code.
+- [ ] **Step 2:** extract the modules one at a time, running `npx tsc --noEmit -p .` and `npm test` after each.
+- [ ] **Step 3:** split panel.css, checking light and dark, desktop and 380 px in the browser against the Task 4 `fix2-*` screenshots.
+- [ ] **Step 4:** run `npm test`, `npm run test:data`, tsc, eslint and prettier. Check every scenario in the browser on 5190: switching, knobs, scrubbing, Expand, Verification, Back and Forward, Frame content.
+- [ ] **Step 5:** update DESIGN.md's file map.
+
 ### Task 5: Terrain line of sight (library)
 
 **Files:**
