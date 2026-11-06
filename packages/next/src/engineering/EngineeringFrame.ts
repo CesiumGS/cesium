@@ -90,6 +90,8 @@ export class EngineeringFrame {
   readonly units: CrsUnits;
   readonly operation: RecordedOperation;
   readonly body: Body;
+  /** The PROJ the frame's operation was resolved with. */
+  readonly proj: ProjApi;
   /** Metres per design height unit: the vertical unit, else the horizontal. */
   readonly metersPerHeightUnit: number;
   // Metres per design height unit the operation leaves unconverted; 1 where
@@ -101,7 +103,9 @@ export class EngineeringFrame {
     units: CrsUnits,
     operation: RecordedOperation,
     heightScale: number,
+    proj: ProjApi,
   ) {
+    this.proj = proj;
     this.definition = definition;
     this.units = units;
     this.operation = operation;
@@ -162,7 +166,13 @@ export class EngineeringFrame {
     const heightScale = projConverts
       ? 1
       : (units.metersPerVerticalUnit ?? units.metersPerUnit);
-    return new EngineeringFrame(definition, units, operation, heightScale);
+    return new EngineeringFrame(
+      definition,
+      units,
+      operation,
+      heightScale,
+      proj,
+    );
   }
 
   /**

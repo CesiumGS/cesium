@@ -11,6 +11,7 @@ earthLeap reads the store's EOP-All.csv; the others read the NAIF kernels
 """
 
 import json
+import math
 import struct
 import sys
 from pathlib import Path
@@ -603,11 +604,30 @@ def proj(store):
         assert group.transformers, f"no available operation for {source}"
         transformer = group.transformers[0]
         rows = []
+        # The projected CRS (the horizontal part of a compound one), in its own units.
+        crs = pyproj.CRS.from_user_input(source)
+        projection = pyproj.Proj(crs.sub_crs_list[0] if crs.is_compound else crs)
         for (de, dn), z in zip(offsets, heights):
             xyz = (origin[0] + de / unit, origin[1] + dn / unit, z / unit if source == "EPSG:6420+6360" else z)
             forward = transformer.transform(*xyz)
             inverse = transformer.transform(*forward, direction="INVERSE")
-            rows.append({"xyz": list(xyz), "forward": list(forward), "inverse": list(inverse)})
+            row = {"xyz": list(xyz), "forward": list(forward), "inverse": list(inverse)}
+            # pyproj's Proj(crs).get_factors at the point's geodetic position on the
+            # CRS's own datum (the inverse projection of its easting and northing),
+            # as plan 4a R7 evaluates them. Convergence is in degrees there; the
+            # fixture holds radians, and the scales are as pyproj returns them.
+            factors = projection.get_factors(*projection(xyz[0], xyz[1], inverse=True))
+            assert abs(factors.meridional_scale - factors.parallel_scale) < 1e-9, (source, xyz, factors.meridional_scale, factors.parallel_scale)
+            lon, lat = projection(xyz[0], xyz[1], inverse=True)
+            row["factors"] = {
+                "longitude": lon,
+                "latitude": lat,
+                "meridionalScale": factors.meridional_scale,
+                "parallelScale": factors.parallel_scale,
+                "arealScale": factors.areal_scale,
+                "convergence": math.radians(factors.meridian_convergence),
+            }
+            rows.append(row)
         out["cases"].append({
             "name": name,
             "source": source,
