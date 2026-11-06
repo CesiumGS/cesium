@@ -338,8 +338,9 @@ describe("tour stops 3 and 4: California in daylight", () => {
   it("stop 4 says why the inset's leader leans: the drop, and the grid scale's part along the line", () => {
     const c = stop("rigid-exact").caption;
     // The figures test/data computes (gapParts on the drawn line).
-    expect(c).toMatch(/31\.3 m of drop/);
-    expect(c).toMatch(/1\.5 m along the line/);
+    expect(c).toMatch(
+      /31\.32 m down and 1\.48 m along the line, at right angles/,
+    );
     expect(c).toMatch(/scale factor/);
     expect(c).toMatch(/leans/);
   });

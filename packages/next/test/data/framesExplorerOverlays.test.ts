@@ -392,8 +392,13 @@ describe("stop 4's long line (rigidLine.ts): 400 km east in California zone 3", 
     const parts = gapParts(m.exact, m.rigid, along, f.body.ellipsoid);
     expect(parts.apart).toBeCloseTo(m.separation, 9);
     expect(Math.abs(parts.across)).toBeLessThan(0.01);
-    expect(parts.drop.toFixed(1)).toBe("31.3");
-    expect(parts.along.toFixed(1)).toBe("-1.5");
+    expect(parts.drop.toFixed(2)).toBe("31.32");
+    expect(parts.along.toFixed(2)).toBe("-1.48");
+    // In quadrature, not by addition.
+    expect(Math.hypot(parts.drop, parts.along, parts.across)).toBeCloseTo(
+      m.separation,
+      9,
+    );
     // The part along: the exact line covers 20 km of grid as 20 km / k of
     // ground (k under 1 between the standard parallels), the rigid line 20
     // km; with the normal's turn over 20 km (31 m × 20/6371 rad) and the
@@ -419,7 +424,7 @@ describe("stop 4's long line (rigidLine.ts): 400 km east in California zone 3", 
       markAlong: parts.along,
     });
     expect(copy.inset.description).toBe(
-      "31.4 m apart: 31.3 m drop, 1.5 m along the line (grid scale)",
+      "31.4 m apart: 31.32 m down and 1.48 m along the line, at right angles (grid scale)",
     );
   });
 

@@ -175,10 +175,16 @@ export class GapInset {
       parseFloat(this.hud.style.getPropertyValue("--fx-hud-bottom")) || 64;
     // The tour caption, top right on a wide view: between about 560 and
     // 620 px it can reach over the inset's corner.
-    const tour = this.hud.querySelector(".fx-tour");
-    if (tour && tour !== this.observedCaption) {
+    // Each stop mounts its own caption element: watch only the one shown.
+    const tour = this.hud.querySelector(".fx-tour") ?? undefined;
+    if (tour !== this.observedCaption) {
+      if (this.observedCaption) {
+        this.resize.unobserve(this.observedCaption);
+      }
+      if (tour) {
+        this.resize.observe(tour);
+      }
       this.observedCaption = tour;
-      this.resize.observe(tour);
     }
     let avoid: Box | undefined;
     if (tour) {

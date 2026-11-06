@@ -318,7 +318,7 @@ export const TOUR: readonly TourStopSpec[] = [
     id: "rigid-exact",
     title: "Rigid against exact",
     caption:
-      "The dashed line is straight: a 400 km design line placed rigidly at its start, on the tangent plane there. The solid line follows the Earth: the same line placed exactly, on the ellipsoid. They part as distance squared, about 12.5 km at 400 km. The inset shows the gap where a site feels it, 31.4 m at 20 km: 31.3 m of drop, and 1.5 m along the line from the grid's scale factor, which rigid placement ignores, so its leader leans. All at true scale.",
+      "The dashed line is straight: a 400 km design line placed rigidly at its start, on the tangent plane there. The solid line follows the Earth: the same line placed exactly, on the ellipsoid. They part as distance squared, about 12.5 km at 400 km. The inset shows the gap where a site feels it, 31.4 m at 20 km: 31.32 m down and 1.48 m along the line, at right angles; the part along the line is the grid's scale factor, which rigid placement ignores, so its leader leans. All at true scale.",
     overlays: ["rigidVsExact"],
     camera: "rigidVsExact",
     time: CALIFORNIA_MIDDAY,

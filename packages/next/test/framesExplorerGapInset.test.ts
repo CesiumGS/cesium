@@ -76,9 +76,22 @@ function element(): FakeElement {
   return e;
 }
 
+/** Every observer's observed elements, to check what each still watches. */
+const observers: FakeObserver[] = [];
 class FakeObserver {
-  observe() {}
-  disconnect() {}
+  readonly watched = new Set<unknown>();
+  constructor(readonly callback: () => void = () => {}) {
+    observers.push(this);
+  }
+  observe(target: unknown) {
+    this.watched.add(target);
+  }
+  unobserve(target: unknown) {
+    this.watched.delete(target);
+  }
+  disconnect() {
+    this.watched.clear();
+  }
 }
 
 beforeEach(() => {
@@ -201,5 +214,37 @@ describe("the gap inset's view", () => {
     const width = parseFloat(frame.style.width!);
     expect(left).toBe(INSET.gutter);
     expect(left + width).toBeLessThanOrEqual(600 - 12 - 340 - INSET.gutter);
+  });
+
+  it("watches only the caption that shows: a new one replaces the old, none when it goes", () => {
+    observers.length = 0;
+    const { viewer } = fakeViewer();
+    const hud = element();
+    const first = element();
+    first.className = "fx-hud fx-tour";
+    first.rect = { left: 400, top: 62, width: 340, height: 100 };
+    hud.append(first);
+    const inset = new GapInset(viewer as never, hud as never);
+    inset.show(spec);
+    const watching = (e: unknown) => observers.some((o) => o.watched.has(e));
+    expect(watching(first)).toBe(true);
+    // The tour steps: React mounts a new caption element.
+    first.remove();
+    const second = element();
+    second.className = "fx-hud fx-tour";
+    second.rect = { left: 400, top: 62, width: 340, height: 120 };
+    hud.append(second);
+    for (const o of observers) {
+      o.callback();
+    }
+    expect(watching(first)).toBe(false);
+    expect(watching(second)).toBe(true);
+    // The tour ends.
+    second.remove();
+    for (const o of observers) {
+      o.callback();
+    }
+    expect(watching(second)).toBe(false);
+    expect(watching(viewer.container)).toBe(true);
   });
 });

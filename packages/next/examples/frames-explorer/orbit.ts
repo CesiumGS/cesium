@@ -1,9 +1,10 @@
 // The camera's controls in space (owner, 2026-11-06: "i get stuck out in
 // space, seem to only be able to start a rotation by clicking on the
-// earth"). A view framed off the Earth's surface orbits its subject with the
-// viewer's orbit controls (`setControls("orbit", …)`), in a frame of the
-// subject's own: a rig, its focus, its up and its heading 0. Surface views
-// keep the globe controls. Plain functions; main.ts applies them, follows
+// earth"). A view framed on the Moon or Orion, and stop 2's polar view,
+// orbit their subject with the viewer's orbit controls
+// (`setControls("orbit", …)`), in a frame of the subject's own: a rig, its
+// focus, its up and its heading 0. The Earth's views keep the globe
+// controls, so the ground is a zoom away. Plain functions; main.ts applies them, follows
 // the clock and draws the pivot marker (pivot.ts). The larger design, camera
 // rigs attached to frames, is plan 5's (CESIUM2_WEBGPU_PLAN.md §13.14).
 import { Camera } from "../../src/scene/Camera.ts";
@@ -36,7 +37,7 @@ export interface Rig {
 /**
  * The orbits the example uses:
  * - `geocentric`: the Earth's centre, up its axis, heading 0 toward 0°
- *   longitude (stops 1 and 2; ITRF, GCRF, EME2000 and EARTH_ICRF);
+ *   longitude (stop 2, the polar view whose clock plays at 3,600×);
  * - `earthMoon`: between the Earth and the Moon, up the normal of the Moon's
  *   orbit at the flyby, heading 0 toward the Moon (stop 5; Orion);
  * - `moon`: the Moon's centre, up its pole, heading 0 toward the Earth's
@@ -60,10 +61,13 @@ export const SITE_RIG: Rig = {
   headingRef: [0, 1, 0],
 };
 
-/** A tour stop's orbit, or undefined for the globe controls (stops 3 and 4, the opening). */
+/**
+ * A tour stop's orbit, or undefined for the globe controls: stops 1, 3 and
+ * 4 and the opening (the controller's ruling, fix round 1: stop 1 frames the
+ * Earth, and the ground should be a zoom away).
+ */
 export function stopRig(camera: TourStopSpec["camera"]): RigKind | undefined {
   switch (camera) {
-    case "earthFrames":
     case "northPole":
       return "geocentric";
     case "earthMoon":
@@ -75,18 +79,13 @@ export function stopRig(camera: TourStopSpec["camera"]): RigKind | undefined {
   }
 }
 
-const GEOCENTRIC = new Set(["ITRF", "GCRF", "EME2000", "EARTH_ICRF"]);
-
 /**
  * A selected frame's orbit (when "Show on globe" or Frame content frames
- * it), on its origin: undefined for a frame on the Earth's surface, and for
- * ICRF and HCRS, which show the opening shot (their origins, the barycentre
- * and the Sun, aren't on the scene).
+ * it), on its origin: the Moon's frames, the lunar site and Orion. The
+ * Earth's frames (ITRF, GCRF, EME2000, EARTH_ICRF, the sites) and ICRF and
+ * HCRS, which show the opening shot, keep the globe controls.
  */
 export function frameRig(id: string, orionId?: string): RigKind | undefined {
-  if (GEOCENTRIC.has(id)) {
-    return "geocentric";
-  }
   if (id.startsWith("MOON_")) {
     return "moon";
   }
@@ -103,6 +102,70 @@ const unit = (v: ArrayLike<number>): number[] => {
   const l = Math.hypot(v[0]!, v[1]!, v[2]!);
   return [v[0]! / l, v[1]! / l, v[2]! / l];
 };
+
+/**
+ * The Moon's prograde orbit normal: `moonAt(ms)` is the Moon from the
+ * Earth's centre `ms` from the instant (stop 5: GCRF, DE440, at the
+ * flyby); the normal is r(−30 min) × r(+30 min), normalized, so the Moon
+ * goes counter-clockwise seen from it.
+ */
+export function moonOrbitNormal(
+  moonAt: (ms: number) => ArrayLike<number>,
+): number[] {
+  const a = moonAt(-1_800_000);
+  const b = moonAt(1_800_000);
+  return unit([
+    a[1]! * b[2]! - a[2]! * b[1]!,
+    a[2]! * b[0]! - a[0]! * b[2]!,
+    a[0]! * b[1]! - a[1]! * b[0]!,
+  ]);
+}
+
+/**
+ * Which controls a flight leaves the camera in, and when (fix round 1). A
+ * flight to a surface view takes the globe controls at its start, so a
+ * grab of the globe ends it there. A flight to an orbit view takes an
+ * interim orbit at its start (about the camera's own line of sight, its
+ * own up: nothing moves), so any drag or wheel of the user's ends the
+ * flight, and lands in the destination's orbit at once; otherwise it lands
+ * there when the flight arrives. Never both: an ended or arrived flight
+ * lands once. `R` is a destination's rig.
+ */
+export class CameraFlow<R> {
+  /** The orbit the flight under way lands in, until it lands. */
+  private pending: R | undefined;
+  /** Counts flights: a fetched asset frames itself only if none started since it was asked for. */
+  private flights = 0;
+
+  /** A flight starts: the controls to take now. */
+  fly(rig: R | undefined): "globe" | "interim" {
+    this.flights++;
+    this.pending = rig;
+    return rig === undefined ? "globe" : "interim";
+  }
+
+  /** The flight arrived: the orbit to land in, if any. */
+  arrive(): R | undefined {
+    const rig = this.pending;
+    this.pending = undefined;
+    return rig;
+  }
+
+  /** The user took the camera: the orbit to land in now, if a flight to one was under way. */
+  interrupt(): R | undefined {
+    return this.arrive();
+  }
+
+  /** An asset fetch starts: a token for `arrival`. */
+  ask(): number {
+    return this.flights;
+  }
+
+  /** Whether the asset asked for at `token` may frame itself: no flight under way, none since. */
+  arrival(token: number, flying: boolean): boolean {
+    return !flying && token === this.flights;
+  }
+}
 
 /** Stop 5's orbit: focus `center`, up the Moon's orbit `normal`, heading 0 along the Earth–Moon vector `moon`. */
 export function earthMoonRig(
@@ -142,8 +205,9 @@ export function rangeLimits(
 ): { minRange: number; maxRange: number } {
   switch (kind) {
     case "geocentric":
-      // About 1,900 km above the surface, out to 40 Earth radii.
-      return { minRange: 1.3 * EARTH_RADIUS, maxRange: 40 * EARTH_RADIUS };
+      // Stop 2: about 130 km above the equator (the ground a zoom away),
+      // out to 40 Earth radii.
+      return { minRange: 1.02 * EARTH_RADIUS, maxRange: 40 * EARTH_RADIUS };
     case "earthMoon":
       // The focus is between the two: short of either body, out to four
       // Earth–Moon distances.
