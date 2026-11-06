@@ -1,3 +1,5 @@
+// @ts-check
+
 import assert from "node:assert";
 import { existsSync, globSync, readFileSync, rmSync, statSync } from "node:fs";
 import { EOL } from "node:os";
@@ -246,7 +248,10 @@ export const defaultESBuildOptions = () => {
     color: true,
     legalComments: `inline`,
     logLimit: 0,
-    target: `es2020`,
+    logOverride: {
+      "empty-import-meta": "silent",
+    },
+    target: `es2022`,
   };
 };
 
@@ -465,13 +470,14 @@ export async function bundleWorkers(options) {
     },
   );
 
-  const thirdPartyWorkerConfig = defaultESBuildOptions();
-  thirdPartyWorkerConfig.bundle = false;
-  thirdPartyWorkerConfig.entryPoints = thirdPartyWorkers;
-  thirdPartyWorkerConfig.outdir = options.path;
-  thirdPartyWorkerConfig.minify = options.minify;
-  thirdPartyWorkerConfig.outbase = "packages/engine/Source";
-  await esbuild.build(thirdPartyWorkerConfig);
+  await esbuild.build({
+    ...defaultESBuildOptions(),
+    bundle: false,
+    entryPoints: thirdPartyWorkers,
+    outdir: options.path,
+    minify: options.minify,
+    outbase: "packages/engine/Source",
+  });
 
   // Bundle Cesium workers
   const workers = globSync("packages/engine/Source/Workers/*.js");
@@ -497,9 +503,6 @@ export async function bundleWorkers(options) {
     };
     workerConfig.minify = options.minify;
     workerConfig.write = false;
-    workerConfig.logOverride = {
-      "empty-import-meta": "silent",
-    };
     workerConfig.plugins = options.removePragmas
       ? [stripPragmaPlugin]
       : undefined;
@@ -592,11 +595,10 @@ export async function bundleSpecs(options) {
 
   /** @type {esbuild.BuildOptions} */
   const buildOptions = {
-    bundle: true,
+    ...defaultESBuildOptions(),
     format: "esm",
     outdir: options.outdir,
     sourcemap: true,
-    target: "es2020",
     write: write,
   };
 
