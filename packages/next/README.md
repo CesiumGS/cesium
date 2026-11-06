@@ -29,7 +29,7 @@ It also fetches the Slang toolchain, pinned to one release in
 
 **Frames data** (`src/time`, `src/ephemeris`; `loadFrameData()`). `setup`
 also fetches the data the frames layer needs, into `~/.cesium-bench/frames`
-(or `FRAMES_DATA_DIR`), from the four URLs in `scripts/frameData.mjs`:
+(or `FRAMES_DATA_DIR`), from the URLs in `scripts/frameData.mjs`:
 
 - NAIF's `de440s.bsp` (planets) and `moon_pa_de440_200625.bpc` (lunar
   orientation), each checked against a SHA-256 pinned in the script;
@@ -54,6 +54,73 @@ The dev server serves the store at `/frames-data/`, so restart it after a
 first setup. `npm run test:data --workspace @cesium/next` runs the tests that
 compare against the real store (they need setup to have run). Without a store,
 `loadFrameData` rejects with a message saying to run `npm run setup`.
+
+**Frames and trajectories** (`src/frames`, `src/trajectory`). With the frames
+data loaded, `createFrames(data)` builds the frame tree. Every frame is a
+`Frame` with a name, a parent and a float64 transform that depends on the
+instant. Positions only: velocities do not transform yet. Edges are
+Newtonian (no TT/TDB scaling, no Lorentz term) until plan 3.
+
+| Frame      | Parent     | What it is                                                                         |
+| ---------- | ---------- | ---------------------------------------------------------------------------------- |
+| `icrf`     | none       | The root: the solar system barycenter, ICRF axes                                   |
+| `hcrs`     | `icrf`     | The Sun's center, ICRF axes                                                        |
+| `gcrf`     | `icrf`     | The Earth's center, ICRF axes                                                      |
+| `eme2000`  | `gcrf`     | The Earth's center, J2000 mean equator and equinox (GCRF turned by the frame bias) |
+| `itrf`     | `gcrf`     | Earth-fixed (IAU 2006/2000A and the EOP)                                           |
+| `moonIcrf` | `icrf`     | The Moon's center, ICRF axes                                                       |
+| `moonMe`   | `moonIcrf` | Moon-fixed, mean Earth / polar axes                                                |
+| `moonPa`   | `moonMe`   | Moon-fixed, principal axes                                                         |
+
+`frames.bodyFixed(EARTH)` is `itrf` and `bodyFixed(MOON)` is `moonMe`; any
+other body throws. `frameTransform(from, to, instant, out?)` writes the
+column-major 4x4 with `p_to = M * p_from`, composed through the two frames'
+lowest common ancestor (frames of different trees throw). The matrices from
+`src/time` and `src/ephemeris` stay row-major 3x3, parent to child;
+`src/frames/matrix.ts` is the only place that converts. A `FramePoint` is a
+position in meters tagged with its frame (`framePoint(frame, position,
+instant?)`). `convertPoint(point, to, instant?)` re-expresses it, and throws
+for a point that has an instant when you ask for a different one.
+`eastNorthUpFrame` makes a tangent frame at a place on a body, and
+`worldTransformFrame` exposes a world transform as an ITRF child. Content is
+still Earth-fixed; rendering across bodies comes in plan 5.
+
+Frame transforms throw outside the data's span. The sky does not:
+`skyState(ms, data, out)` takes the sun, Moon and stars from DE440 inside the
+span and from the analytic models outside it, and `source` says which.
+
+A `Trajectory` is an object's path from an OEM or SPK file:
+
+```ts
+const orion = Trajectory.fromSpk([main, gapfill], -24, frames, {
+  name: "orion",
+  accuracy: "precise",
+  j2000: "eme2000", // required, see below
+});
+orion.state(instant); // [x, y, z, vx, vy, vz] in meters and m/s, in orion.reference
+convertPoint(framePoint(orion.frame, [0, 0, 0], instant), frames.moonMe);
+```
+
+`state` throws outside the data (and in the 10 to 38 s gaps between the
+Artemis OEM's segments) and names the covered spans; it never extrapolates.
+`orion.frame` is a child of `orion.reference` that sits on the object.
+
+**Warning: an SPK's J2000 label does not say which axes it holds.** NAIF made
+the Artemis II SPK from the OEM, which is in EME2000, and labeled it J2000.
+DE440's J2000 is ICRF. The two differ by the frame bias, about 45 m at the
+Moon's distance (28 m at the 2026-04-06 flyby, seen in MOON_ME). So
+`Trajectory.fromSpk` requires `j2000: "icrf" | "eme2000"`, and Artemis II is
+`"eme2000"`. Reading it as ICRF misplaces Orion by tens of meters.
+`Trajectory.fromOem` takes the interpolation from the OEM header and never
+guesses: the Artemis OEM has none, so pass `interpolation: { method:
+"hermite", degree: 11 }`, the setting NAIF's conversion used.
+
+The Viewer loads none of this by default. `new Viewer({ frameData:
+"/frames-data/" })` (or a `FrameData` already loaded) draws the sun, stars and
+Moon from DE440 and the IAU 2006/2000A Earth rotation inside the data's span;
+`viewer.frameData` is a promise for the data, or `undefined` if loading failed
+(the sky then stays analytic). Without the option, Earth-only rendering is
+unchanged. The bench Explorer opts in.
 
 ```sh
 npm run build                               # at the repo root: 1.x build used by the parity harness
