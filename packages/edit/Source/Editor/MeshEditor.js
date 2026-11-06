@@ -179,6 +179,21 @@ class MeshEditor {
     this.meshGroupChanged = new Event();
 
     /**
+     * Raised when a mesh becomes active or inactive, whether by
+     * {@link MeshEditor#setMeshActive}, {@link MeshEditor#setMeshInactive} or
+     * a tool. The mesh and whether it's now active are passed to listeners.
+     * <p>
+     * Raised while rendering the next frame, once for each change since the
+     * previous one. A mesh that's activated and then deactivated in between,
+     * or set to the state it's already in, doesn't raise it. Not raised for
+     * removed meshes; see {@link MeshEditor#meshRemoved}.
+     * </p>
+     *
+     * @type {Event<function(Mesh, boolean): void>}
+     */
+    this.meshActiveChanged = new Event();
+
+    /**
      * Raised when {@link MeshEditor#activeTool} changes. The new tool and the
      * previous tool are passed to listeners (either may be undefined).
      *
@@ -543,6 +558,8 @@ class MeshEditor {
   /**
    * Makes a mesh active, so the editor's mode applies to it. Outlines it in
    * {@link EditMode.NONE}. Cancels the active tool's current interaction.
+   * Raises {@link MeshEditor#meshActiveChanged} on the next frame, unless
+   * the mesh was already active.
    *
    * @param {Mesh} mesh The mesh to edit.
    *
@@ -560,6 +577,8 @@ class MeshEditor {
   /**
    * Makes a mesh inactive, so it's drawn as faces and not edited. Its
    * selection is kept. Cancels the active tool's current interaction.
+   * Raises {@link MeshEditor#meshActiveChanged} on the next frame, unless
+   * the mesh was already inactive.
    *
    * @param {Mesh} mesh The mesh to stop editing.
    *
@@ -587,8 +606,9 @@ class MeshEditor {
 
   /**
    * Brings meshes up to date with the active state changes wasm reports since
-   * the previous update, including those a tool made. Wasm has already
-   * applied them, so setMeshActive and setMeshInactive only update the JS side.
+   * the previous update, including those a tool made, then raises
+   * meshActiveChanged for each. Wasm has already applied them, so
+   * setMeshActive and setMeshInactive only update the JS side.
    *
    * @param {BigUint64Array} activatedMeshes The keys of the meshes that became active.
    * @param {BigUint64Array} deactivatedMeshes The keys of the meshes that became inactive, including removed ones.
@@ -601,11 +621,25 @@ class MeshEditor {
 
     const activatedKeys = new Set(activatedMeshes);
     const deactivatedKeys = new Set(deactivatedMeshes);
+    /** @type {Array<{mesh: Mesh, active: boolean}>} */
+    const changes = [];
+
     for (const mesh of this.#meshes) {
       if (activatedKeys.has(mesh._key)) {
         this.setMeshActive(mesh);
+        changes.push({ mesh, active: true });
       } else if (deactivatedKeys.has(mesh._key)) {
         this.setMeshInactive(mesh);
+        changes.push({ mesh, active: false });
+      }
+    }
+
+    // Raised after every mesh is synced, so a listener's changes aren't
+    // overwritten by the rest of the sync. Such changes are reported next frame.
+    for (const { mesh, active } of changes) {
+      // A listener may have removed the mesh.
+      if (this.#meshes.has(mesh)) {
+        this.meshActiveChanged.raiseEvent(mesh, active);
       }
     }
   }
