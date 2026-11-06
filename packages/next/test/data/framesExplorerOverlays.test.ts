@@ -362,7 +362,7 @@ describe("triad against the real frames, a physical check", () => {
     warnings: [],
   });
 
-  it("GCRF's z axis lands within 0.5 degrees of ITRF's z axis in 2026 (the pole has moved about 0.1 degrees since J2000)", () => {
+  it("GCRF's z axis lands within 0.5 degrees of ITRF's z axis in 2026 (the pole has moved about 0.15 degrees since J2000)", () => {
     const instant = Instant.fromUtc(Date.UTC(2026, 5, 1, 12), leapSeconds);
     const L = 1000;
     const g = triad(frames, frames.gcrf, instant, L);
@@ -381,16 +381,66 @@ describe("triad against the real frames, a physical check", () => {
   });
 });
 
-describe("distortion at a pole", () => {
-  it("counts the nodes PROJ has no scale at, instead of swallowing every RangeError", () => {
-    const f = frameOf(3413); // NSIDC polar stereographic: the pole is at (0, 0)
-    const d = distortion(
-      f,
-      { min: [-100_000, -100_000], max: [100_000, 100_000] },
-      100_000,
-      { height: 0, contoursPpm: [], tissotRadius: 1000 },
-    );
-    // 9 nodes, and every one not skipped has an ellipse of 64 vertices.
-    expect(d.tissot.positions.length / 3).toBe((9 - d.skipped) * 64);
+describe("distortion skips only nodes PROJ has no scale at", () => {
+  const options = { height: 0, contoursPpm: [], tissotRadius: 1000 };
+
+  it("EPSG:3857 nodes at the pole (gridFactors throws there) are counted, and only the other nodes get an ellipse", () => {
+    const f = frameOf(3857);
+    // Northings of 0, 5e8 and 1e9 m: the last two are the pole to float64.
+    const d = distortion(f, { min: [0, 0], max: [0, 1e9] }, 5e8, options);
+    expect(d.skipped).toBeGreaterThan(0);
+    expect(d.skipped).toBeLessThan(3);
+    expect(d.tissot.positions.length / 3).toBe((3 - d.skipped) * 64);
+    // The surviving node is the equator one, with a unit-sized ellipse.
+    const first = vertex(d.tissot, 0);
+    const centre = Array.from(f.toBodyFixed([0, 0, 0]));
+    expect(norm(sub(first, centre))).toBeCloseTo(1000, 3);
+  });
+
+  // A frame whose first step throws the given RangeError at one node.
+  const throwing = (message: string, northing: number) => {
+    const f = frameOf(32610);
+    return Object.create(f, {
+      projected: {
+        value: (design: ArrayLike<number>) => {
+          if (design[1] === northing) {
+            throw new RangeError(message);
+          }
+          return f.projected(design);
+        },
+      },
+    }) as EngineeringFrame;
+  };
+  const extent = { min: [500_000, 4_000_000], max: [500_000, 4_200_000] } as {
+    min: [number, number];
+    max: [number, number];
+  };
+
+  it("each of the three gridFactors messages skips its node", () => {
+    for (const message of [
+      "gridFactors: (1, 2) is outside the projection's domain",
+      "gridFactors: (1, 2) is at a pole, where X's scales are not defined",
+      "gridFactors: PROJ has no scale factor at (1, 2): a singular point of the projection",
+    ]) {
+      const d = distortion(
+        throwing(message, 4_100_000),
+        extent,
+        100_000,
+        options,
+      );
+      expect(d.skipped).toBe(1);
+      expect(d.tissot.positions.length / 3).toBe(2 * 64);
+    }
+  });
+
+  it("a RangeError with any other message is rethrown, not counted", () => {
+    expect(() =>
+      distortion(
+        throwing("something else went wrong", 4_100_000),
+        extent,
+        100_000,
+        options,
+      ),
+    ).toThrow(/something else went wrong/);
   });
 });
