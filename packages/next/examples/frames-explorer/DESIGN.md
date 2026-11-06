@@ -297,7 +297,11 @@ do.
   straight ahead at the destination's distance, up the camera's own up
   (taking it moves nothing); the user's first drag or wheel ends the flight
   and lands at once in the destination's orbit, with its following, and the
-  drag goes on about the subject. A fetched asset frames itself on arrival
+  drag goes on about the subject. Landing outside the destination's range
+  (a wheel about 200,000 km out on the way to stop 6, whose orbit zooms to
+  25,000 km), the wheel's limits widen to take the camera's range and narrow
+  back as the user zooms in (`limitsAround`, fix round 2): the first tick
+  moves one notch, never out past where it landed. A fetched asset frames itself on arrival
   only if no flight has started since it was asked for and none is under
   way.
 - **The pivot marker.** While the orbit is dragged, a 20 px white ring with

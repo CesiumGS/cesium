@@ -115,6 +115,7 @@ import {
   stopRig,
   viewHeading,
   CameraFlow,
+  limitsAround,
   moonOrbitNormal,
   type Rig,
   type RigKind,
@@ -2122,6 +2123,9 @@ export function run(context: ExampleContext): ExampleRun {
         placed: Rig;
         heading: number;
         at: number;
+        /** The destination's wheel limits, and the ones set now (`limitsAround`). */
+        limits: { minRange: number; maxRange: number };
+        applied: { minRange: number; maxRange: number };
       }
     | undefined;
   /** Set while the example itself sets the orbit: any other change is the user's. */
@@ -2200,18 +2204,50 @@ export function run(context: ExampleContext): ExampleRun {
     }
     const moon = moonCenter();
     // Pitch and range are read from where the flight left the camera; the
-    // heading too, from the view, so the hand-over doesn't turn it.
+    // heading too, from the view, so the hand-over doesn't turn it. A flight
+    // interrupted outside the destination's range widens its limits to
+    // take it (fix round 2).
     const heading = viewHeading(viewer.view.camera, at);
+    const limits = rangeLimits(
+      rig.kind,
+      moon ? Math.hypot(moon[0]!, moon[1]!, moon[2]!) : 3.844e8,
+    );
+    const applied = limitsAround(limits, cameraRange(at.target));
     setOrbit({
       target: at.target,
       frame: { up: at.up, headingRef: at.headingRef },
       heading,
-      ...rangeLimits(
-        rig.kind,
-        moon ? Math.hypot(moon[0]!, moon[1]!, moon[2]!) : 3.844e8,
-      ),
+      ...applied,
     });
-    orbit = { ...rig, placed: at, heading, at: viewer.clock.time };
+    orbit = {
+      ...rig,
+      placed: at,
+      heading,
+      at: viewer.clock.time,
+      limits,
+      applied,
+    };
+  }
+
+  const cameraRange = (pivot: ArrayLike<number>) =>
+    Math.hypot(
+      ...[0, 1, 2].map((i) => viewer.view.camera.position[i]! - pivot[i]!),
+    );
+
+  /** After the user's change: widened limits narrow back toward the destination's. */
+  function narrowLimits(): void {
+    const pivot = viewer.orbitPivot;
+    if (!orbit || !pivot) {
+      return;
+    }
+    const next = limitsAround(orbit.limits, cameraRange(pivot));
+    if (
+      next.minRange !== orbit.applied.minRange ||
+      next.maxRange !== orbit.applied.maxRange
+    ) {
+      orbit.applied = next;
+      setOrbit(next);
+    }
   }
 
   /**
@@ -2288,6 +2324,8 @@ export function run(context: ExampleContext): ExampleRun {
     const rig = flow.interrupt();
     if (rig) {
       startOrbit(rig);
+    } else {
+      narrowLimits();
     }
   };
   scope.defer(() => {

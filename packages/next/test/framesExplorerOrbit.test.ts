@@ -21,6 +21,7 @@ import {
   stopRig,
   viewHeading,
   CameraFlow,
+  limitsAround,
   moonOrbitNormal,
   type Rig,
 } from "../examples/frames-explorer/orbit.ts";
@@ -562,5 +563,55 @@ describe("stop 5's orbit normal", () => {
       [0, 0, -1],
       1e-12,
     );
+  });
+});
+
+describe("landing far outside the destination's range (fix round 2)", () => {
+  // Flying to stop 6, interrupted by the wheel about 200,000 km out: the
+  // site's orbit zooms 5 km to 25,000 km.
+  const site = rangeLimits("lunarSite", 3.844e8);
+  const wheel = (
+    range: number,
+    limits: { minRange: number; maxRange: number },
+    sign: number,
+  ) =>
+    Math.min(Math.max(range * 1.15 ** sign, limits.minRange), limits.maxRange);
+
+  it("widens the limits to take the range the camera is at", () => {
+    expect(limitsAround(site, 2e8)).toEqual({
+      minRange: site.minRange,
+      maxRange: 2e8,
+    });
+    expect(limitsAround(site, 2_000)).toEqual({
+      minRange: 2_000,
+      maxRange: site.maxRange,
+    });
+    expect(limitsAround(site, 1e6)).toEqual(site);
+  });
+
+  it("moves the first wheel tick by one notch, not to the limit", () => {
+    let range = 2e8;
+    let limits = limitsAround(site, range);
+    const first = wheel(range, limits, -1);
+    expect(range / first).toBeCloseTo(1.15, 12);
+    // Without widening, the same tick cut it about 8×.
+    expect(range / wheel(range, site, -1)).toBeGreaterThan(7.9);
+    // Zooming in, the limits narrow back to the destination's, and never
+    // let the camera out past where it landed.
+    range = first;
+    limits = limitsAround(site, range);
+    let widest = limits.maxRange;
+    for (let i = 0; i < 40; i++) {
+      range = wheel(range, limits, -1);
+      limits = limitsAround(site, range);
+      expect(limits.maxRange).toBeLessThanOrEqual(widest);
+      widest = limits.maxRange;
+    }
+    expect(limits).toEqual(site);
+    for (let i = 0; i < 100; i++) {
+      range = wheel(range, limits, 1);
+      limits = limitsAround(site, range);
+    }
+    expect(range).toBe(site.maxRange);
   });
 });
