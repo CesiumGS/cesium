@@ -787,6 +787,41 @@ describe("ends and the centerline", () => {
     }
   });
 
+  it("never rejects a pointAt output within 1e-7 of the centre of a final arc (R 100)", () => {
+    // The end window is a position test, (s - L - eps)*slope <= slack, with no
+    // division by the slope: near the centre of curvature it must not throw.
+    const horizontal: HorizontalElement[] = [
+      { kind: "line", length: 50 },
+      { kind: "arc", length: 100, radius: 100 },
+    ];
+    for (const start of [
+      [1000, 2000],
+      [6_000_000, 2_000_000],
+    ] as [number, number][]) {
+      for (let k = 0; k < 100; k++) {
+        const a = new Alignment({
+          name: "cap",
+          start,
+          startAzimuth: 0.3 + k * 0.0031,
+          startStation: 1000,
+          horizontal,
+        });
+        for (const d of [3e-5, 1e-5, 1e-6, 1e-7]) {
+          const p = a.pointAt(a.endStation, -(100 - d));
+          expect(() => a.stationOffset(p)).not.toThrow();
+        }
+        // A point genuinely 5e-9 beyond the end still throws.
+        const az = a.azimuthAt(a.endStation);
+        const end = a.pointAt(a.endStation);
+        const beyond = [
+          end[0]! + 5e-9 * Math.sin(az),
+          end[1]! + 5e-9 * Math.cos(az),
+        ];
+        expect(() => a.stationOffset(beyond)).toThrow(/outside the alignment/);
+      }
+    }
+  });
+
   it("rejects malformed elements", () => {
     const bad = (horizontal: HorizontalElement[]) => () =>
       new Alignment({ ...spiralDefinition(1), horizontal });

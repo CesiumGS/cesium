@@ -248,15 +248,21 @@ unchanged. The bench Explorer opts in.
 CRS on a body: a projected CRS such as a State Plane zone, with an optional
 site transform, in the CRS's own units. PROJ does the projection and datum
 work. The engine's `Ellipsoid` does geodetic to body-fixed, and body-fixed
-coordinates are in meters, as everywhere else. `loadProj`,
-`EngineeringFrame.create` and the other helpers below are imported from their
-modules (`src/engineering/proj.ts`, `crs.ts`, `factors.ts`). `src/index.ts`
-exports the frame, placement, alignment and measure types.
+coordinates are in meters, as everywhere else. `src/index.ts` exports all of
+it: the frame, placement, alignment and measure types, and `loadProj`,
+`gridFactors`, `resolveOperation`, `crsUnits`, `crsDefinition` and
+`MOON_GEOGRAPHIC_CRS` with their types (`CrsRef`, `CrsUnits`,
+`RecordedOperation`, `GridFactors`, `ProjApi`, `LoadProjOptions` and
+`ResolveOptions`).
 
 ```ts
-import { EARTH, EngineeringFrame, designPoint } from "./src/index.ts";
-import { loadProj } from "./src/engineering/proj.ts";
-import { gridFactors } from "./src/engineering/factors.ts";
+import {
+  EARTH,
+  EngineeringFrame,
+  designPoint,
+  gridFactors,
+  loadProj,
+} from "./src/index.ts";
 
 // Browser: base is where the dev server serves the store's `proj/`. Name the
 // grid files the frame will need. Node: base is the store's `proj/` path.
@@ -270,7 +276,11 @@ const site = EngineeringFrame.create(
     body: EARTH,
     // California zone 3 (US survey feet) with NAVD88 heights (US survey feet).
     crs: { format: "wkid", authority: "EPSG", wkid: 6420, vcsWkid: 6360 },
-    site: { origin: [2000000, 500000, 0], rotation: 0.2182, scale: 1.0000375 },
+    site: {
+      origin: [6_000_000, 2_100_000, 0],
+      rotation: 0.2182,
+      scale: 1.0000375,
+    },
   },
   proj,
 );
@@ -319,7 +329,8 @@ gridFactors(site, p.design).combinedFactor; // grid = ground x this
   meters by one rotation, a uniform scale and a translation, as an iModel's
   `ecefLocation` and `EXT_georeference` do. It is exact at its anchor and sags
   away from it as the body curves from the tangent plane: 7.80 m at 10 km
-  from the anchor. Use `frame.toBodyFixed` for anything long.
+  from the anchor. Its rigid scale ignores the site scale too (it is the
+  unit conversion only). Use `frame.toBodyFixed` for anything long.
 - **Grid factors.** `gridFactors(frame, design)` gives the projection's
   `pointScale` k, the `elevationFactor` R/(R + h), their product
   `combinedFactor` and the grid `convergence` (radians, from true north to

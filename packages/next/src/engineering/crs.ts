@@ -229,21 +229,28 @@ export function resolveOperation(
   // For a pair PROJ cannot relate (a Moon CRS and the Earth's) the binding
   // throws "Error getting list"; an empty or null list is the same answer.
   let candidates;
+  let listError: unknown;
   try {
     candidates = proj.proj_create_operations(
       from,
       to,
       proj.proj_create_operation_factory_context(""),
     );
-  } catch {
+  } catch (error) {
     candidates = null;
+    listError = error;
   }
   if (!candidates || candidates.length() === 0) {
-    throw new Error(`PROJ offers no usable operation ${where}`);
+    throw new Error(
+      `PROJ offers no usable operation ${where}`,
+      listError === undefined ? undefined : { cause: listError },
+    );
   }
 
   const missing = new Set<string>();
   let skippedBallpark = false;
+  // Candidates PROJ cannot express as a PROJ string, named in the final error.
+  const noString: string[] = [];
   const count = candidates.length();
   for (let i = 0; i < count; i++) {
     const candidate = candidates.get(i);
@@ -274,6 +281,7 @@ export function resolveOperation(
       proj.PJ_PROJ_5,
     );
     if (string === null) {
+      noString.push(proj.proj_get_name(candidate) ?? `candidate ${i}`);
       continue;
     }
     const accuracy = proj.proj_coordoperation_get_accuracy(candidate);
@@ -295,27 +303,45 @@ export function resolveOperation(
       `No PROJ operation ${where} has all its grids; missing: ${named([...missing])}${hint}`,
     );
   }
+  const lacking =
+    noString.length > 0
+      ? `; ${named(noString)} could not be expressed as a PROJ string`
+      : "";
   throw new Error(
     skippedBallpark
-      ? `PROJ offers only a ballpark operation ${where}; pass allowBallpark: true to accept it`
-      : `PROJ offers no usable operation ${where}`,
+      ? `PROJ offers only a ballpark operation ${where}; pass allowBallpark: true to accept it${lacking}`
+      : `PROJ offers no usable operation ${where}${lacking}`,
   );
+}
+
+/**
+ * The CRS a bound CRS (WKT2 BOUNDCRS, what GDAL and iModel export for a datum
+ * with TOWGS84) wraps: the one that has the type, coordinate system and
+ * projection. Any other CRS is returned as is. Operations are resolved from
+ * the bound CRS itself, which keeps its TOWGS84 transformation.
+ */
+export function unbound(proj: ProjApi, crs: PJ): PJ {
+  return proj.proj_get_type(crs) === proj.PJ_TYPE_BOUND_CRS
+    ? proj.proj_get_source_crs(crs)
+    : crs;
 }
 
 /** The horizontal (and, when there is one, vertical) units of a CRS, from PROJ. */
 export function crsUnits(proj: ProjApi, ref: CrsRef): CrsUnits {
-  const crs = create(proj, crsDefinition(ref), "the CRS");
+  const crs = unbound(proj, create(proj, crsDefinition(ref), "the CRS"));
   const axis = (part: PJ, index: number) =>
     proj.proj_cs_get_axis_info(
       proj.proj_crs_get_coordinate_system(part),
       index,
     );
   const compound = proj.proj_get_type(crs) === proj.PJ_TYPE_COMPOUND_CRS;
-  const horizontalCrs = compound ? proj.proj_crs_get_sub_crs(crs, 0) : crs;
+  const horizontalCrs = compound
+    ? unbound(proj, proj.proj_crs_get_sub_crs(crs, 0))
+    : crs;
   const horizontal = axis(horizontalCrs, 0);
   let vertical;
   if (compound) {
-    vertical = axis(proj.proj_crs_get_sub_crs(crs, 1), 0);
+    vertical = axis(unbound(proj, proj.proj_crs_get_sub_crs(crs, 1)), 0);
   } else if (
     proj.proj_cs_get_axis_count(proj.proj_crs_get_coordinate_system(crs)) >= 3
   ) {

@@ -11,7 +11,7 @@
 // EPSG:4979) after the datum operation, a metre or two away, which would change
 // k by about 1e-10 (and the results would not match pyproj's Proj.get_factors
 // at 1e-12).
-import { crsDefinition } from "./crs.ts";
+import { crsDefinition, unbound } from "./crs.ts";
 import type { EngineeringFrame } from "./EngineeringFrame.ts";
 import type { PJ, ProjApi } from "./projApi.ts";
 
@@ -41,11 +41,12 @@ function projectionOf(frame: EngineeringFrame): Projection {
     return cached;
   }
   const P: ProjApi = frame.proj;
-  const crs = P.proj_create(crsDefinition(frame.definition.crs));
-  // A compound CRS's horizontal part is its first component.
+  // A bound CRS's projection is its source CRS's; a compound CRS's horizontal
+  // part is its first component (itself possibly bound).
+  const crs = unbound(P, P.proj_create(crsDefinition(frame.definition.crs)));
   const horizontal =
     P.proj_get_type(crs) === P.PJ_TYPE_COMPOUND_CRS
-      ? P.proj_crs_get_sub_crs(crs, 0)
+      ? unbound(P, P.proj_crs_get_sub_crs(crs, 0))
       : crs;
   const string = P.proj_as_proj_string(horizontal, P.PJ_PROJ_5);
   if (string === null) {

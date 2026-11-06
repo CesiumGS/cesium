@@ -108,6 +108,8 @@ export interface ProjApi {
   proj_cs_get_axis_count(cs: PJ): number;
   proj_cs_get_axis_info(cs: PJ, index: number): PjAxisInfo;
   proj_crs_get_sub_crs(crs: PJ, index: number): PJ;
+  /** A bound CRS's base (source) CRS, the one that has the coordinate system. */
+  proj_get_source_crs(object: PJ): PJ;
   proj_crs_get_geodetic_crs(crs: PJ): PJ;
   proj_get_ellipsoid(object: PJ): PJ;
   proj_ellipsoid_get_parameters(ellipsoid: PJ): PjEllipsoidParameters;
@@ -125,5 +127,6 @@ export interface ProjApi {
   readonly PJ_PROJ_5: PjProjStringType;
   readonly PJ_TYPE_PROJECTED_CRS: PjType;
   readonly PJ_TYPE_COMPOUND_CRS: PjType;
+  readonly PJ_TYPE_BOUND_CRS: PjType;
   readonly PJ_WKT2_2019: PjWktType;
 }

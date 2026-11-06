@@ -11,7 +11,6 @@
 //
 // Licenses: PROJ and proj.js are MIT; proj.db carries the EPSG Dataset (IOGP,
 // https://epsg.org/terms-of-use.html).
-import * as emnapi from "@emnapi/runtime";
 import type { ProjApi } from "./projApi.ts";
 
 export type { ProjApi } from "./projApi.ts";
@@ -71,12 +70,10 @@ async function loadNode(base: string): Promise<Loaded> {
     /* @vite-ignore */ urlName
   )) as typeof import("node:url");
   const directory = base.startsWith("file:") ? fileURLToPath(base) : base;
-  const separator =
-    directory.endsWith("/") || directory.endsWith("\\") ? "" : "/";
   // Read when the binding initializes, so it comes before the require.
   process.env.PROJ_DATA = directory;
   const require = createRequire(import.meta.url);
-  const api = require(`${directory}${separator}proj_capi.node`) as ProjApi;
+  const api = require(`${directory}proj_capi.node`) as ProjApi;
   // The binding reads PROJ_DATA when its context is first used, not when it
   // loads, so use it now: a later load of another base then cannot change
   // where this one looks.
@@ -116,6 +113,9 @@ async function loadBrowser(
     default(): Promise<WasmModule>;
   };
   const module = await glue.default();
+  // Only the browser path needs it, so importing the package index does not
+  // pull the runtime into every bundle.
+  const emnapi = await import("@emnapi/runtime");
   const api = module.emnapiInit({ context: emnapi.getDefaultContext() });
   const have = new Set<string>();
   await writeGrids(module, base, ["proj.db", ...grids], have);
@@ -127,7 +127,9 @@ async function loadBrowser(
  * result, and load any further `grids` it names in the browser).
  */
 export async function loadProj(options: LoadProjOptions): Promise<ProjApi> {
-  const { base, grids = [] } = options;
+  const { grids = [] } = options;
+  // Every URL and the cache key are built from one form that ends in a slash.
+  const base = /[\\/]$/.test(options.base) ? options.base : `${options.base}/`;
   let entry = loaded.get(base);
   if (!entry) {
     entry = isNode() ? loadNode(base) : loadBrowser(base, grids);

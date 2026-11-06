@@ -317,7 +317,7 @@ export function designPoint(
  *    from a convergence formula. East is north x up.
  *  - Scale is `units.metersPerUnit` horizontally and the frame's
  *    `metersPerHeightUnit` along up (the vertical unit, else the horizontal
- *    one), not the point scale factor.
+ *    one), not the point scale factor, and not the site scale either.
  */
 export class RigidPlacement {
   readonly frame: EngineeringFrame;

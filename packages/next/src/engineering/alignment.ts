@@ -37,7 +37,9 @@
 //   rounding of C and S (scaled by √(π/|c|)), of the phase κ0²/(2c) (times
 //   the length), and of the Fresnel argument τ(0) + s/√(π/|c|) (times
 //   √(π/|c|), i.e. ε·|κ0/c|/2 in position); 6e-9 at R 800 → 800.001 over 200.
-//   When that estimate exceeds 1e-11 the element is instead evaluated by
+//   The code's trigger uses 8ε and the full |κ0/c| (not half) as a safety
+//   margin over that half-ulp estimate. When it exceeds 1e-11 the element is
+//   instead evaluated by
 //   composite 10-point Gauss–Legendre quadrature of exp(iΔφ), with panels
 //   of at most 0.5 rad of heading (truncation below 1e-20), so every spiral
 //   stays exact to float64.
@@ -344,12 +346,15 @@ export class Alignment {
         // The slack is a bound on position; a position error δ moves the
         // foot's arc length by δ/|f'(s)|, f'(s) = −1 + κ(s)·(P − X)·N_left,
         // which grows as R/(R − |o|) for a point offset toward the centre of
-        // curvature. Scaling the window by it accepts exactly the points
-        // within the slack of the element's ends in position.
+        // curvature. Testing (s − L − eps)·|f'| ≤ slack (and the same at the
+        // start) accepts exactly the points within the slack of the element's
+        // ends in position, with no division by a slope that may vanish.
         const kappa = element.k0 + element.c * s;
         const slope = Math.abs(-1 + kappa * (dy * sin - dx * cos));
-        const window = element.eps + slack / Math.max(slope, 1e-6);
-        if (!(s >= -window && s <= element.length + window)) {
+        if (!(
+          (s - element.length - element.eps) * slope <= slack &&
+          (-s - element.eps) * slope <= slack
+        )) {
           continue;
         }
         const distance = Math.hypot(dx, dy);
