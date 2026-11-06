@@ -1,4 +1,690 @@
 {
   "$comment": "Published reference values for the frames explorer's stress tests (plan R10), copied verbatim from their sources. Each entry's source names the document, its edition or revision, the table, page or URL, and the retrieval date (YYYY-MM-DD). Never generated with PROJ, pyproj or this library; entries of kind \"input\" are inputs, not expected values (ruling F6).",
-  "entries": {}
+  "entries": {
+    "ngs-GU2195": {
+      "source": {
+        "document": "NGS Data Sheet (datasheet95, version 8.12.5.20)",
+        "publisher": "National Geodetic Survey, NOAA",
+        "pid": "GU2195",
+        "url": "https://www.ngs.noaa.gov/cgi-bin/ds_mark.prl?PidBox=GU2195",
+        "retrievalLine": "1    National Geodetic Survey, Retrieval Date = NOVEMBER  6, 2026 02:32:37 EST",
+        "retrieved": "2026-11-06"
+      },
+      "designation": "C 1193",
+      "latitude": "36 59 44.62514(N)",
+      "longitude": "121 33 44.16406(W)",
+      "ellipsoidHeight": "25.410",
+      "epoch": "2010.00",
+      "orthometricHeight": "58.193",
+      "orthometricHeightMethod": "ADJUSTED",
+      "geoidHeight": "-32.745",
+      "spc": {
+        "zone": "CA 3",
+        "north": "555,553.819",
+        "east": "1,905,441.053",
+        "units": "MT",
+        "scaleFactor": "1.00001542",
+        "convergence": "-0 39 01.3",
+        "elevationFactor": "0.99999601",
+        "combinedFactor": "1.00001143"
+      },
+      "utm": {
+        "zone": "10",
+        "north": "4,095,364.617",
+        "east": "627,934.650",
+        "units": "MT",
+        "scaleFactor": "0.99980163",
+        "convergence": "+0 51 55.0",
+        "combinedFactor": "0.99979764"
+      },
+      "lines": [
+        "GU2195* NAD 83(2011) POSITION- 36 59 44.62514(N) 121 33 44.16406(W)   ADJUSTED",
+        "GU2195* NAD 83(2011) ELLIP HT-    25.410 (meters)        (06/27/12)   ADJUSTED",
+        "GU2195* NAD 83(2011) EPOCH   -  2010.00",
+        "GU2195* NAVD 88 ORTHO HEIGHT -    58.193 (meters)      190.92  (feet) ADJUSTED",
+        "GU2195  GEOID HEIGHT    -        -32.745 (meters)                     GEOID18",
+        "GU2195;SPC CA 3     -   555,553.819 1,905,441.053   MT  1.00001542   -0 39 01.3",
+        "GU2195;UTM  10      - 4,095,364.617   627,934.650   MT  0.99980163   +0 51 55.0",
+        "GU2195!SPC CA 3     -   0.99999601  x   1.00001542  =   1.00001143",
+        "GU2195!UTM  10      -   0.99999601  x   0.99980163  =   0.99979764"
+      ]
+    },
+    "ngs-AK7130": {
+      "source": {
+        "document": "NGS Data Sheet (datasheet95, version 8.12.5.20)",
+        "publisher": "National Geodetic Survey, NOAA",
+        "pid": "AK7130",
+        "url": "https://www.ngs.noaa.gov/cgi-bin/ds_mark.prl?PidBox=AK7130",
+        "retrievalLine": "1    National Geodetic Survey, Retrieval Date = NOVEMBER  6, 2026 02:34:06 EST",
+        "retrieved": "2026-11-06"
+      },
+      "designation": "GIS 0132 RH HAM JONES",
+      "latitude": "28 31 26.36862(N)",
+      "longitude": "081 21 06.62023(W)",
+      "ellipsoidHeight": "2.289",
+      "epoch": "2010.00",
+      "orthometricHeight": "30.061",
+      "orthometricHeightMethod": "ADJUSTED",
+      "geoidHeight": "-27.744",
+      "spc": {
+        "zone": "FL E",
+        "north": "464,326.710",
+        "east": "165,563.220",
+        "units": "MT",
+        "scaleFactor": "0.99995581",
+        "convergence": "-0 10 04.9",
+        "elevationFactor": "0.99999964",
+        "combinedFactor": "0.99995545"
+      },
+      "utm": {
+        "zone": "17",
+        "north": "3,155,300.265",
+        "east": "465,574.970",
+        "units": "MT",
+        "scaleFactor": "0.99961463",
+        "convergence": "-0 10 04.9",
+        "combinedFactor": "0.99961427"
+      },
+      "lines": [
+        "AK7130* NAD 83(2011) POSITION- 28 31 26.36862(N) 081 21 06.62023(W)   ADJUSTED",
+        "AK7130* NAD 83(2011) ELLIP HT-     2.289 (meters)        (06/27/12)   ADJUSTED",
+        "AK7130* NAD 83(2011) EPOCH   -  2010.00",
+        "AK7130* NAVD 88 ORTHO HEIGHT -    30.061 (meters)       98.63  (feet) ADJUSTED",
+        "AK7130  GEOID HEIGHT    -        -27.744 (meters)                     GEOID18",
+        "AK7130;SPC FL E     -   464,326.710   165,563.220   MT  0.99995581   -0 10 04.9",
+        "AK7130;UTM  17      - 3,155,300.265   465,574.970   MT  0.99961463   -0 10 04.9",
+        "AK7130!SPC FL E     -   0.99999964  x   0.99995581  =   0.99995545",
+        "AK7130!UTM  17      -   0.99999964  x   0.99961463  =   0.99961427"
+      ]
+    },
+    "ngs-AA5394": {
+      "source": {
+        "document": "NGS Data Sheet (datasheet95, version 8.12.5.20)",
+        "publisher": "National Geodetic Survey, NOAA",
+        "pid": "AA5394",
+        "url": "https://www.ngs.noaa.gov/cgi-bin/ds_mark.prl?PidBox=AA5394",
+        "retrievalLine": "1    National Geodetic Survey, Retrieval Date = NOVEMBER  6, 2026 02:34:12 EST",
+        "retrieved": "2026-11-06"
+      },
+      "designation": "CXY AP 1962 STA B",
+      "latitude": "40 12 55.21046(N)",
+      "longitude": "076 51 28.86875(W)",
+      "ellipsoidHeight": "67.824",
+      "epoch": "2010.00",
+      "orthometricHeight": "102.13",
+      "orthometricHeightMethod": "LEVELING",
+      "geoidHeight": "-34.289",
+      "spc": {
+        "zone": "PA S",
+        "north": "98,316.257",
+        "east": "675,926.158",
+        "units": "MT",
+        "scaleFactor": "0.99996789",
+        "convergence": "+0 34 43.4",
+        "elevationFactor": "0.99998936",
+        "combinedFactor": "0.99995725"
+      },
+      "utm": {
+        "zone": "18",
+        "north": "4,453,313.393",
+        "east": "341,894.698",
+        "units": "MT",
+        "scaleFactor": "0.99990772",
+        "convergence": "-1 11 59.6",
+        "combinedFactor": "0.99989708"
+      },
+      "lines": [
+        "AA5394* NAD 83(2011) POSITION- 40 12 55.21046(N) 076 51 28.86875(W)   ADJUSTED",
+        "AA5394* NAD 83(2011) ELLIP HT-    67.824 (meters)        (06/27/12)   ADJUSTED",
+        "AA5394* NAD 83(2011) EPOCH   -  2010.00",
+        "AA5394* NAVD 88 ORTHO HEIGHT -   102.13  (meters)      335.1   (feet) LEVELING",
+        "AA5394  GEOID HEIGHT    -        -34.289 (meters)                     GEOID18",
+        "AA5394;SPC PA S     -    98,316.257   675,926.158   MT  0.99996789   +0 34 43.4",
+        "AA5394;UTM  18      - 4,453,313.393   341,894.698   MT  0.99990772   -1 11 59.6",
+        "AA5394!SPC PA S     -   0.99998936  x   0.99996789  =   0.99995725",
+        "AA5394!UTM  18      -   0.99998936  x   0.99990772  =   0.99989708"
+      ]
+    },
+    "ngs-KK1284": {
+      "source": {
+        "document": "NGS Data Sheet (datasheet95, version 8.12.5.20)",
+        "publisher": "National Geodetic Survey, NOAA",
+        "pid": "KK1284",
+        "url": "https://www.ngs.noaa.gov/cgi-bin/ds_mark.prl?PidBox=KK1284",
+        "retrievalLine": "1    National Geodetic Survey, Retrieval Date = NOVEMBER  6, 2026 02:34:19 EST",
+        "retrieved": "2026-11-06"
+      },
+      "designation": "E 393",
+      "latitude": "39 43 06.11651(N)",
+      "longitude": "104 54 46.76971(W)",
+      "ellipsoidHeight": "1626.515",
+      "epoch": "2010.00",
+      "orthometricHeight": "1643.886",
+      "orthometricHeightMethod": "ADJUSTED",
+      "geoidHeight": "-17.379",
+      "spc": {
+        "zone": "CO C",
+        "north": "514,222.277",
+        "east": "964,733.411",
+        "units": "MT",
+        "scaleFactor": "0.99999390",
+        "convergence": "+0 22 12.8",
+        "elevationFactor": "0.99974489",
+        "combinedFactor": "0.99973879"
+      },
+      "utm": {
+        "zone": "13",
+        "north": "4,396,502.945",
+        "east": "507,457.435",
+        "units": "MT",
+        "scaleFactor": "0.99960068",
+        "convergence": "+0 03 20.2",
+        "combinedFactor": "0.99934567"
+      },
+      "lines": [
+        "KK1284* NAD 83(2011) POSITION- 39 43 06.11651(N) 104 54 46.76971(W)   ADJUSTED",
+        "KK1284* NAD 83(2011) ELLIP HT-  1626.515 (meters)        (06/27/12)   ADJUSTED",
+        "KK1284* NAD 83(2011) EPOCH   -  2010.00",
+        "KK1284* NAVD 88 ORTHO HEIGHT -  1643.886 (meters)     5393.32  (feet) ADJUSTED",
+        "KK1284  GEOID HEIGHT    -        -17.379 (meters)                     GEOID18",
+        "KK1284;SPC CO C     -   514,222.277   964,733.411   MT  0.99999390   +0 22 12.8",
+        "KK1284;UTM  13      - 4,396,502.945   507,457.435   MT  0.99960068   +0 03 20.2",
+        "KK1284!SPC CO C     -   0.99974489  x   0.99999390  =   0.99973879",
+        "KK1284!UTM  13      -   0.99974489  x   0.99960068  =   0.99934567"
+      ]
+    },
+    "ngs-AJ3674": {
+      "source": {
+        "document": "NGS Data Sheet (datasheet95, version 8.12.5.20)",
+        "publisher": "National Geodetic Survey, NOAA",
+        "pid": "AJ3674",
+        "url": "https://www.ngs.noaa.gov/cgi-bin/ds_mark.prl?PidBox=AJ3674",
+        "retrievalLine": "1    National Geodetic Survey, Retrieval Date = NOVEMBER  6, 2026 02:34:26 EST",
+        "retrieved": "2026-11-06"
+      },
+      "designation": "1CG1",
+      "latitude": "33 27 49.01942(N)",
+      "longitude": "111 59 56.59504(W)",
+      "ellipsoidHeight": "321.988",
+      "epoch": "2010.00",
+      "orthometricHeight": "351.76",
+      "orthometricHeightMethod": "GPS OBS",
+      "geoidHeight": "-29.784",
+      "spc": {
+        "zone": "AZ C",
+        "north": "273,168.490",
+        "east": "205,701.907",
+        "units": "MT",
+        "scaleFactor": "0.99990072",
+        "convergence": "-0 02 43.5",
+        "elevationFactor": "0.99994945",
+        "combinedFactor": "0.99985018"
+      },
+      "utm": {
+        "zone": "12",
+        "north": "3,703,131.766",
+        "east": "407,161.817",
+        "units": "MT",
+        "scaleFactor": "0.99970626",
+        "convergence": "-0 33 03.3",
+        "combinedFactor": "0.99965573"
+      },
+      "lines": [
+        "AJ3674* NAD 83(2011) POSITION- 33 27 49.01942(N) 111 59 56.59504(W)   ADJUSTED",
+        "AJ3674* NAD 83(2011) ELLIP HT-   321.988 (meters)        (06/27/12)   ADJUSTED",
+        "AJ3674* NAD 83(2011) EPOCH   -  2010.00",
+        "AJ3674* NAVD 88 ORTHO HEIGHT -   351.76  (meters)     1154.1   (feet) GPS OBS",
+        "AJ3674  GEOID HEIGHT    -        -29.784 (meters)                     GEOID18",
+        "AJ3674;SPC AZ C     -   273,168.490   205,701.907   MT  0.99990072   -0 02 43.5",
+        "AJ3674;UTM  12      - 3,703,131.766   407,161.817   MT  0.99970626   -0 33 03.3",
+        "AJ3674!SPC AZ C     -   0.99994945  x   0.99990072  =   0.99985018",
+        "AJ3674!UTM  12      -   0.99994945  x   0.99970626  =   0.99965573"
+      ]
+    },
+    "iogp-lambert-conic-conformal-2sp": {
+      "source": {
+        "document": "IOGP Publication 373-7-2, Geomatics Guidance Note number 7, part 2: Coordinate Conversions and Transformations including Formulas",
+        "revision": "Revised - September 2019",
+        "url": "https://www.iogp.org/wp-content/uploads/2019/09/373-07-02.pdf",
+        "section": "3.1.1.1 Lambert Conic Conformal (2SP), EPSG Dataset coordinate operation method code 9802: Example",
+        "pages": "19-20",
+        "retrieved": "2026-11-06"
+      },
+      "crs": "NAD27 / Texas South Central",
+      "forward": {
+        "latitude": "28°30'00.00\"N",
+        "longitude": "96°00'00.00\"W",
+        "easting": "2963503.91",
+        "northing": "254759.80",
+        "unit": "US survey feet"
+      },
+      "reverse": {
+        "easting": "2963503.91",
+        "northing": "254759.80",
+        "latitude": "28°30'00.000\"N",
+        "longitude": "96°00'00.000\"W"
+      }
+    },
+    "iogp-transverse-mercator": {
+      "source": {
+        "document": "IOGP Publication 373-7-2, Geomatics Guidance Note number 7, part 2: Coordinate Conversions and Transformations including Formulas",
+        "revision": "Revised - September 2019",
+        "url": "https://www.iogp.org/wp-content/uploads/2019/09/373-07-02.pdf",
+        "section": "3.2.3 Transverse Mercator, 3.2.3.1 General Case, EPSG Dataset coordinate operation method code 9807: Examples (JHS formulas)",
+        "pages": "54-55",
+        "retrieved": "2026-11-06"
+      },
+      "crs": "OSGB 1936 / British National Grid",
+      "forward": {
+        "latitude": "50°30'00.00\"N",
+        "longitude": "00°30'00.00\"E",
+        "easting": "577274.99",
+        "northing": "69740.50",
+        "unit": "metres"
+      },
+      "reverse": {
+        "easting": "577274.99",
+        "northing": "69740.50",
+        "latitude": "50°30'00.000\"N",
+        "longitude": "00°30'00.000\"E"
+      }
+    },
+    "iogp-polar-stereographic-b": {
+      "source": {
+        "document": "IOGP Publication 373-7-2, Geomatics Guidance Note number 7, part 2: Coordinate Conversions and Transformations including Formulas",
+        "revision": "Revised - September 2019",
+        "url": "https://www.iogp.org/wp-content/uploads/2019/09/373-07-02.pdf",
+        "section": "3.3.1.2 Polar Stereographic, Polar Stereographic (Variant B), EPSG Dataset coordinate operation method code 9829: Example",
+        "pages": "76-77",
+        "retrieved": "2026-11-06"
+      },
+      "crs": "WGS 84 / Australian Antarctic Polar Stereographic",
+      "forward": {
+        "latitude": "75°00'00.000\"S",
+        "longitude": "120°00'00.000\"E",
+        "easting": "7255380.79",
+        "northing": "7053389.56",
+        "unit": "m"
+      },
+      "reverse": {
+        "easting": "7255380.79",
+        "northing": "7053389.56",
+        "latitude": "75°00'00.000\"S",
+        "longitude": "120°00'00.000\"E"
+      }
+    },
+    "iogp-pseudo-mercator": {
+      "source": {
+        "document": "IOGP Publication 373-7-2, Geomatics Guidance Note number 7, part 2: Coordinate Conversions and Transformations including Formulas",
+        "revision": "Revised - September 2019",
+        "url": "https://www.iogp.org/wp-content/uploads/2019/09/373-07-02.pdf",
+        "section": "3.2.1.2 Popular Visualisation Pseudo-Mercator (\"Web Mercator\"), EPSG Dataset coordinate operation method code 1024: Example",
+        "pages": "45",
+        "retrieved": "2026-11-06"
+      },
+      "crs": "WGS 84 / Pseudo-Mercator (EPSG CRS code 3857)",
+      "forward": {
+        "latitude": "24°22'54.433\"N",
+        "longitude": "100°20'00.000\"W",
+        "easting": "–11 169 055.58",
+        "northing": "2 800 000.00",
+        "unit": "m"
+      },
+      "distortion": {
+        "h": "1.1034264",
+        "k": "1.0972914",
+        "omega": "0°19'10.01\""
+      },
+      "reverse": {
+        "easting": "–11 169 055.58",
+        "northing": "2 810 000.00",
+        "latitude": "24°27'48.889\"N",
+        "longitude": "100°20'00.000\"W"
+      },
+      "kFormula": "k = q90 = q270 = a / (ν cos ϕ), ν = a / (1 – e2 sin2ϕ)1/2"
+    },
+    "iogp-helmert-position-vector": {
+      "source": {
+        "document": "IOGP Publication 373-7-2, Geomatics Guidance Note number 7, part 2: Coordinate Conversions and Transformations including Formulas",
+        "revision": "Revised - September 2019",
+        "url": "https://www.iogp.org/wp-content/uploads/2019/09/373-07-02.pdf",
+        "section": "4.2.3 Helmert 7-parameter transformations, Position Vector transformation (geocentric domain), EPSG Dataset coordinate operation method code 1033: Example",
+        "pages": "108",
+        "retrieved": "2026-11-06"
+      },
+      "transformation": "WGS 72 to WGS 84 (EPSG Dataset transformation code 1238)",
+      "parameters": {
+        "tX": "0.000 m",
+        "tY": "0.000 m",
+        "tZ": "+4.5 m",
+        "rX": "0.000 sec",
+        "rY": "0.000 sec",
+        "rZ": "+0.554 sec",
+        "dS": "+0.219 ppm"
+      },
+      "sourceXYZ": ["3 657 660.66", "255 768.55", "5 201 382.11"],
+      "targetXYZ": ["3 657 660.78", "255 778.43", "5 201 387.75"],
+      "formula": "XT = M*[[1, –rZ, +rY], [+rZ, 1, –rX], [–rY, +rX, 1]]*XS + T, where M = 1 + dS"
+    },
+    "iogp-helmert-time-dependent": {
+      "source": {
+        "document": "IOGP Publication 373-7-2, Geomatics Guidance Note number 7, part 2: Coordinate Conversions and Transformations including Formulas",
+        "revision": "Revised - September 2019",
+        "url": "https://www.iogp.org/wp-content/uploads/2019/09/373-07-02.pdf",
+        "section": "4.2.5 Time-dependent Helmert 7-parameter transformations, Time-dependent Coordinate Frame rotation (geocentric domain), EPSG Dataset coordinate operation method code 1056: Example",
+        "pages": "111-112",
+        "retrieved": "2026-11-06"
+      },
+      "transformation": "Transformation (EPSG code 6276) from ITRF2008 to GDA94 at coordinate epoch 2013.90",
+      "parameters": {
+        "tX": "–84.68 mm",
+        "tY": "–19.42 mm",
+        "tZ": "+32.01 mm",
+        "rX": "–0.4254 msec",
+        "rY": "+2.2578 msec",
+        "rZ": "+2.4015 msec",
+        "dS": "+0.00971 ppm"
+      },
+      "rates": {
+        "tX": "+1.42 mm/yr",
+        "tY": "+1.34 mm/yr",
+        "tZ": "+0.90 mm/yr",
+        "rX": "+1.5461 msec/yr",
+        "rY": "+1.1820 msec/yr",
+        "rZ": "+1.1551 msec/yr",
+        "dS": "+0.000109 ppm/yr"
+      },
+      "referenceEpoch": "1994.00",
+      "epoch": "2013.90",
+      "sourceXYZ": ["–3789470.710", "4841770.404", "–1690893.952"],
+      "targetXYZ": ["–3789470.004", "4841770.686", "–1690895.108"],
+      "reverse": "For the reverse transformation the signs of all parameters need to be reversed except for that of the parameter reference epoch t0; applied to the GDA94 coordinates it results in the ITRF2008 coordinates above.",
+      "note": "The worked line for rZ' prints the rate as +1.5551; the parameter table gives +1.1551 msec/yr, which is the value that reproduces the printed rZ' = +25.3880 msec. The table's value is used."
+    },
+    "epsg-8970": {
+      "source": {
+        "document": "EPSG Geodetic Parameter Dataset",
+        "record": "Transformation 8970, ITRF2014 to NAD83(2011) (1)",
+        "version": "NGS-Usa CONUS-AK PRVI",
+        "revisionDate": "2023-07-17",
+        "informationSource": "National Geodetic Survey (NGS), https://geodesy.noaa.gov",
+        "url": "https://apps.epsg.org/api/v1/Transformation/8970/",
+        "retrieved": "2026-11-06"
+      },
+      "method": "Time-dependent Coordinate Frame rotation (geocen)",
+      "methodCode": 1056,
+      "sourceCrs": "ITRF2014 (EPSG 7789)",
+      "targetCrs": "NAD83(2011) (EPSG 6317)",
+      "parameters": [
+        ["X-axis translation", "1.0053", "metre"],
+        ["Y-axis translation", "-1.90921", "metre"],
+        ["Z-axis translation", "-0.54157", "metre"],
+        ["X-axis rotation", "26.78138", "milliarc-second"],
+        ["Y-axis rotation", "-0.42027", "milliarc-second"],
+        ["Z-axis rotation", "10.93206", "milliarc-second"],
+        ["Scale difference", "0.36891", "parts per billion"],
+        ["Rate of change of X-axis translation", "0.00079", "metres per year"],
+        ["Rate of change of Y-axis translation", "-0.0006", "metres per year"],
+        ["Rate of change of Z-axis translation", "-0.00144", "metres per year"],
+        [
+          "Rate of change of X-axis rotation",
+          "0.06667",
+          "milliarc-seconds per year"
+        ],
+        [
+          "Rate of change of Y-axis rotation",
+          "-0.75744",
+          "milliarc-seconds per year"
+        ],
+        [
+          "Rate of change of Z-axis rotation",
+          "-0.05133",
+          "milliarc-seconds per year"
+        ],
+        [
+          "Rate of change of scale difference",
+          "-0.07201",
+          "parts per billion per year"
+        ],
+        ["Parameter reference epoch", "2010.0", "year"]
+      ],
+      "remark": "Concatenation of joint US-Canada tfm NAD83(CORS96)>ITRF96 (CT code 6864) with IGS value for ITRF96>ITRF97 and IERS values for ITRF97>ITRF2014 CTs. Scale difference in ppb and rate in ppb/yr where 1/billion = 1E-9. See tfm 8265 for Canadian equivalent."
+    },
+    "epsg-ellipsoid-wgs84": {
+      "source": {
+        "document": "EPSG Geodetic Parameter Dataset",
+        "record": "Ellipsoid 7030, WGS 84",
+        "revisionDate": "2015-11-25",
+        "url": "https://apps.epsg.org/api/v1/Ellipsoid/7030/",
+        "retrieved": "2026-11-06"
+      },
+      "semiMajorAxis": "6378137.0",
+      "inverseFlattening": "298.257223563"
+    },
+    "epsg-ellipsoid-grs80": {
+      "source": {
+        "document": "EPSG Geodetic Parameter Dataset",
+        "record": "Ellipsoid 7019, GRS 1980",
+        "revisionDate": "2013-08-23",
+        "url": "https://apps.epsg.org/api/v1/Ellipsoid/7019/",
+        "retrieved": "2026-11-06"
+      },
+      "semiMajorAxis": "6378137.0",
+      "inverseFlattening": "298.257222101"
+    },
+    "epsg-oregon-north": {
+      "source": {
+        "document": "EPSG Geodetic Parameter Dataset",
+        "record": "Projected CRS 6558, NAD83(2011) / Oregon North; Conversion 13631, SPCS83 Oregon North zone (meter)",
+        "revisionDate": "2023-11-22",
+        "url": "https://apps.epsg.org/api/v1/Conversion/13631/",
+        "retrieved": "2026-11-06"
+      },
+      "method": "Lambert Conic Conformal (2SP)",
+      "parameters": [
+        ["Latitude of false origin", "43.4", "sexagesimal DMS"],
+        ["Longitude of false origin", "-120.3", "sexagesimal DMS"],
+        ["Latitude of 1st standard parallel", "46.0", "sexagesimal DMS"],
+        ["Latitude of 2nd standard parallel", "44.2", "sexagesimal DMS"],
+        ["Easting at false origin", "2500000.0", "metre"],
+        ["Northing at false origin", "0.0", "metre"]
+      ]
+    },
+    "wydot-spiral-example": {
+      "source": {
+        "document": "Wyoming Department of Transportation Survey Manual, Appendix D - Alignment and Superelevation",
+        "revision": "Revised July, 2024",
+        "section": "A.2.a General Spiral Equations, (1) Example Problem; Table D-1, Spiral table for LS = 150 ft; A.2.b Locating a point on a spiral curve (series for x, y; ST and LT)",
+        "pages": "D-9 to D-11",
+        "url": "https://www.dot.state.wy.us/files/live/sites/wydot/files/shared/Highway_Development/Surveys/Survey%20Manual/Appendix%20D%20-%20Alignment%20and%20Superelevation.pdf",
+        "retrieved": "2026-11-06"
+      },
+      "given": {
+        "piStation": "100+00",
+        "LS": "150 ft",
+        "delta": "35°",
+        "D": "10°"
+      },
+      "solution": {
+        "R": "5729.58 / 10 = 572.96 ft",
+        "deltaS": "10 * 150 / 200 = 7.5°",
+        "deltaC": "35° − 2 * 7.5° = 20°",
+        "LC": "100 * 20 / 10 = 200.00 ft",
+        "TS": "(572.96 + 1.64) tan 35/2 + 74.96 = 256.13 ft"
+      },
+      "tableRow": {
+        "D": "10° 00’ 00”",
+        "deltaS": "7° 30’ 00”",
+        "R": "572.96",
+        "X": "149.74",
+        "Y": "6.54",
+        "T": "1.64",
+        "Q": "74.96",
+        "LCS": "149.89",
+        "ST": "50.08",
+        "LT": "100.09"
+      },
+      "stations": {
+        "TS": "97 + 43.87",
+        "SC": "98 + 93.87",
+        "CS": "100 + 93.87",
+        "ST": "102 + 43.87"
+      },
+      "formulas": {
+        "ST": "ST = Y / sin ∆S",
+        "LT": "LT = X − ST cos ∆S",
+        "TS": "TS = (R + T) tan ∆/2 + Q"
+      },
+      "note": "The example's text says the table values are for a spiral central angle of 10° 00’ 00”; the values quoted are Table D-1's row for D = 10° 00’ 00” (∆S = 7° 30’ 00”). Its SC line also misprints the TS station as 9843.87; the result, 9893.87 (98 + 93.87), follows from TS = 97 + 43.87. R is the arc definition, 5729.58/D."
+    },
+    "ocrs-handbook": {
+      "source": {
+        "document": "Oregon Coordinate Reference System Handbook and User Guide",
+        "edition": "Version 3.01 | 2-28-17",
+        "publisher": "Oregon Department of Transportation, Geometronics Unit",
+        "url": "https://www.oregon.gov/odot/ETA/OCRS/OCRS-Handbook-User-Guide.pdf",
+        "retrieved": "2026-11-06"
+      },
+      "designTarget": {
+        "text": "All zones designed with an initial target distortion level of ±10 ppm = 1:100 000 Ratio = ±0.05'/mile.",
+        "page": "24"
+      },
+      "portlandZone": {
+        "page": "23",
+        "row": "28 Portland LCC 45°30'00\"N 122°45'00\"W 50 000 100 000 1.000 002",
+        "projection": "LCC (single parallel)",
+        "standardParallelAndGridOrigin": "45°30'00\"N",
+        "centralMeridian": "122°45'00\"W",
+        "falseNorthing": "50 000",
+        "falseEasting": "100 000",
+        "scale": "1.000 002",
+        "datum": "NAD 83 (GRS80)"
+      },
+      "design": {
+        "page": "15",
+        "step3": "Compute map projection axis scale factor “at ground”: k0 = 1 + h0/RG",
+        "RG": "RG = a sqrt(1 − e2) / (1 − e2 sin2 φ)",
+        "step4": "Distortion computed at a point (at ellipsoid height h) as δ = k (RG / (RG + h)) − 1"
+      },
+      "portlandTestPoints": {
+        "page": "A-62",
+        "text": "by entering the input lat/long values from the table below, your grid coordinates should match these results exactly to five decimal places.",
+        "points": [
+          {
+            "name": "Portland1",
+            "latitude": "45 18 00.17000",
+            "longitude": "122 58 31.85235",
+            "northing": "27802.06823",
+            "easting": "82311.82137"
+          },
+          {
+            "name": "Portland2",
+            "latitude": "45 29 08.88672",
+            "longitude": "122 47 50.56450",
+            "northing": "48423.08858",
+            "easting": "96296.00903"
+          },
+          {
+            "name": "Portland3",
+            "latitude": "45 31 23.21213",
+            "longitude": "122 59 25.84389",
+            "northing": "52597.11898",
+            "easting": "81209.71492"
+          }
+        ]
+      }
+    },
+    "snyder-lambert-conformal-conic": {
+      "source": {
+        "document": "Snyder, J. P., Map Projections - A Working Manual, U.S. Geological Survey Professional Paper 1395",
+        "edition": "1987",
+        "section": "15. Lambert Conformal Conic projection, formulas for the ellipsoid",
+        "pages": "107-108",
+        "url": "https://pubs.usgs.gov/pp/1395/report.pdf",
+        "retrieved": "2026-11-06"
+      },
+      "equations": {
+        "14-15": "m = cos φ / (1 − e² sin² φ)^½",
+        "15-9": "t = tan(π/4 − φ/2) / [(1 − e sin φ)/(1 + e sin φ)]^(e/2)",
+        "15-8": "n = (ln m1 − ln m2) / (ln t1 − ln t2)",
+        "15-6": "k = m1 t^n / (m t1^n)",
+        "single parallel": "If φ1 = φ2 ... n = sin φ1"
+      }
+    },
+    "iers-numerical-standards": {
+      "source": {
+        "document": "IERS Conventions (2010), IERS Technical Note No. 36, Chapter 1: General definitions and numerical standards (16 November 2017)",
+        "table": "Table 1.1: IERS numerical standards",
+        "url": "https://iers-conventions.obspm.fr/content/chapter1/icc1.pdf",
+        "retrieved": "2026-11-06"
+      },
+      "c": "299792458 m s−1",
+      "GMsun": "1.32712442099 × 10^20 m3 s−2",
+      "LC": "1.48082686741 × 10^−8"
+    },
+    "iers-frame-bias": {
+      "source": {
+        "document": "IERS Conventions (2010), IERS Technical Note No. 36, Chapter 5: Transformation between the ITRS and the GCRS (10 August 2012)",
+        "section": "5.5.4 eq. (5.21); 5.6.1 eq. (5.33)",
+        "url": "https://iers-conventions.obspm.fr/content/chapter5/icc5.pdf",
+        "retrieved": "2026-11-06"
+      },
+      "dalpha0": "−0.01460 ± 0.00050 arcsec",
+      "xi0": "−0.0166170 ± 0.0000100 arcsec",
+      "eta0": "−0.0068192 ± 0.0000100 arcsec"
+    },
+    "iers-eq-11.19": {
+      "source": {
+        "document": "IERS Conventions (2010), IERS Technical Note No. 36, Chapter 11: General relativistic models for space-time coordinates and equations of motion",
+        "section": "11.2, eq. (11.19)",
+        "url": "https://iers-conventions.obspm.fr/content/chapter11/tn36_c11.pdf",
+        "retrieved": "2026-11-06"
+      },
+      "equation": "r_TDB = r_TT (1 − U/c² − LC) − ½ (V · r_TT / c²) V, U the gravitational potential at the geocenter (excluding the Earth's mass), V the barycentric velocity of the Earth"
+    },
+    "naif-moon-me-de440": {
+      "source": {
+        "document": "NAIF generic kernel moon_de440_250416.tf (lunar frames for DE440)",
+        "section": "FRAME_MOON_ME_DE440_ME421 = 31009",
+        "url": "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/fk/satellites/moon_de440_250416.tf",
+        "retrieved": "2026-11-06"
+      },
+      "lines": [
+        "TKFRAME_31009_SPEC            = 'ANGLES'",
+        "TKFRAME_31009_RELATIVE        = 'MOON_PA_DE440'",
+        "TKFRAME_31009_ANGLES          = (   67.8526   78.6944   0.2785  )",
+        "TKFRAME_31009_AXES            = (   3,        2,        1       )",
+        "TKFRAME_31009_UNITS           = 'ARCSECONDS'"
+      ],
+      "angles": ["67.8526", "78.6944", "0.2785"],
+      "axes": [3, 2, 1],
+      "units": "ARCSECONDS"
+    },
+    "naif-moon-radius": {
+      "source": {
+        "document": "NAIF generic kernel pck00011.tpc (from the Report of the IAU Working Group on Cartographic Coordinates and Rotational Elements: 2015)",
+        "url": "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/pck/pck00011.tpc",
+        "retrieved": "2026-11-06"
+      },
+      "line": "BODY301_RADII     = ( 1737.4   1737.4   1737.4 )",
+      "radiusKm": "1737.4"
+    },
+    "dsn-dss43": {
+      "source": {
+        "document": "DSN Telecommunications Link Design Handbook, 810-005, Module 301: Coverage and Geometry",
+        "revision": "Rev. P (issue date May 22, 2026)",
+        "tables": "Table 2. Cartesian Coordinates for DSN Stations in ITRF93 Reference Frame, Epoch 2003.0 (p. 13); Table 3. Site Velocities for DSN Stations (p. 14)",
+        "url": "https://deepspace.jpl.nasa.gov/dsndocs/810-005/301/301P.pdf",
+        "retrieved": "2026-11-06"
+      },
+      "station": "DSS 43, 70-m",
+      "xyz": ["–4460894.917", "+2682361.507", "–3674748.152"],
+      "epoch": "2003.0",
+      "velocity": {
+        "complex": "Canberra (Stations 3x & 4x)",
+        "xyz": ["−0.0335", "−0.0041", "0.0392"],
+        "unit": "m/yr"
+      }
+    }
+  }
 }
