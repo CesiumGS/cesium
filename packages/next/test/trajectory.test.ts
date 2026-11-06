@@ -63,6 +63,25 @@ interface OemOptions {
   interpolation?: string;
   epochs: string[];
   states: number[][];
+  /** Covariance blocks appended after the data: [epoch, c11, c22, c33]. */
+  covariances?: [string, number, number, number][];
+}
+
+/** A CCSDS covariance block whose diagonal starts c11, c22, c33, 1, 1, 1. */
+function covarianceBlock(blocks: [string, number, number, number][]): string {
+  const rows = (a: number, b: number, c: number): string[] => [
+    `${a}`,
+    `0 ${b}`,
+    `0 0 ${c}`,
+    "0 0 0 1",
+    "0 0 0 0 1",
+    "0 0 0 0 0 1",
+  ];
+  return [
+    "COVARIANCE_START",
+    ...blocks.flatMap(([e, a, b, c]) => [`EPOCH = ${e}`, ...rows(a, b, c)]),
+    "COVARIANCE_STOP",
+  ].join("\n");
 }
 
 function oemBlock(o: OemOptions): string {
@@ -81,6 +100,9 @@ function oemBlock(o: OemOptions): string {
   }
   lines.push("META_STOP");
   o.epochs.forEach((e, i) => lines.push(`${e} ${o.states[i]!.join(" ")}`));
+  if (o.covariances) {
+    lines.push("", covarianceBlock(o.covariances));
+  }
   return lines.join("\n");
 }
 const oemText = (...blocks: OemOptions[]): string =>
@@ -705,5 +727,123 @@ describe("Trajectory", () => {
       expect(traj.accuracy).toBe(accuracy);
       expect(traj.name).toBe("Orion");
     }
+  });
+});
+
+describe("Trajectory accuracy inputs", () => {
+  const epochs = range(0, 600, 60);
+  const states = Array.from(epochs, (_, i) =>
+    Array.from(cubicStates(epochs).subarray(i * 6, i * 6 + 6)),
+  );
+  const build = (
+    covariances: [string, number, number, number][] | undefined,
+    options: Record<string, unknown> = {},
+  ): Trajectory<"Orion"> =>
+    Trajectory.fromOem(
+      parseOem(
+        oemText({
+          interpolation: HERMITE7,
+          epochs: Array.from(epochs, isoTdb),
+          states,
+          ...(covariances ? { covariances } : {}),
+        }),
+        leap,
+      ),
+      frames,
+      { ...OPTIONS, ...options },
+    );
+  const COVS: [string, number, number, number][] = [
+    [isoTdb(120), 4, 9, 36], // 7 -> sqrt(49) in km^2 terms: 4+9+36 = 49
+    [isoTdb(360), 1, 1, 2], // 4
+  ];
+
+  it("labels its source", () => {
+    expect(build(undefined).source).toBe("oem");
+    expect(
+      Trajectory.fromSpk([cubicSpk()], 1000, frames, {
+        name: "x",
+        accuracy: "precise",
+        j2000: "icrf",
+      }).source,
+    ).toBe("spk");
+  });
+
+  it("uses the latest covariance epoch at or before the instant", () => {
+    const traj = build(COVS, { covarianceUnits: "m" });
+    expect(traj.positionSigma(at(120))).toBeCloseTo(7, 9);
+    expect(traj.positionSigma(at(240))).toBeCloseTo(7, 9);
+    expect(traj.positionSigma(at(360))).toBeCloseTo(2, 9);
+    expect(traj.positionSigma(at(600))).toBeCloseTo(2, 9);
+  });
+
+  it("falls back to the option before the first epoch, else undefined", () => {
+    expect(build(COVS, { covarianceUnits: "m" }).positionSigma(at(60))).toBe(
+      undefined,
+    );
+    expect(
+      build(COVS, { covarianceUnits: "m", positionSigma: 123 }).positionSigma(
+        at(60),
+      ),
+    ).toBe(123);
+    expect(build(undefined, { positionSigma: 5 }).positionSigma(at(300))).toBe(
+      5,
+    );
+    expect(build(undefined).positionSigma(at(300))).toBeUndefined();
+  });
+
+  it("reads km^2 by default and m^2 on request, 1000 times apart", () => {
+    const km = build(COVS).positionSigma(at(240))!;
+    const m = build(COVS, { covarianceUnits: "m" }).positionSigma(at(240))!;
+    expect(km / m).toBeCloseTo(1000, 9);
+    expect(
+      build(COVS, { covarianceUnits: "km" }).positionSigma(at(240)),
+    ).toBeCloseTo(km, 9);
+  });
+
+  it("returns undefined, not a throw, outside the data", () => {
+    const traj = build(COVS, { positionSigma: 1 });
+    expect(traj.positionSigma(at(-10))).toBeUndefined();
+    expect(traj.positionSigma(at(601))).toBeUndefined();
+    expect(() => traj.state(at(601))).toThrow();
+  });
+
+  it("uses the covariance of the piece whose state wins (R4)", () => {
+    const seg = (
+      from: number,
+      to: number,
+      covariances?: [string, number, number, number][],
+    ): OemOptions => {
+      const e = range(from, to, 60);
+      return {
+        interpolation: HERMITE7,
+        epochs: Array.from(e, isoTdb),
+        states: Array.from(e, (_, i) =>
+          Array.from(cubicStates(e).subarray(i * 6, i * 6 + 6)),
+        ),
+        ...(covariances ? { covariances } : {}),
+      };
+    };
+    const traj = Trajectory.fromOem(
+      parseOem(
+        oemText(
+          seg(0, 600, [[isoTdb(0), 9, 0, 0]]),
+          seg(300, 900, [[isoTdb(300), 16, 0, 0]]),
+        ),
+        leap,
+      ),
+      frames,
+      { ...OPTIONS, covarianceUnits: "m" },
+    );
+    expect(traj.positionSigma(at(100))).toBeCloseTo(3, 9);
+    expect(traj.positionSigma(at(400))).toBeCloseTo(4, 9);
+  });
+
+  it("rejects a bad positionSigma option", () => {
+    expect(() => build(undefined, { positionSigma: -1 })).toThrow(
+      /positionSigma/,
+    );
+    expect(() => build(undefined, { positionSigma: NaN })).toThrow(
+      /positionSigma/,
+    );
   });
 });

@@ -18,6 +18,15 @@ export interface OemSegment {
   epochs: Float64Array;
   /** Position (m) and velocity (m/s), 6 per epoch. */
   states: Float64Array;
+  /**
+   * Covariances from COVARIANCE_START..STOP, if the segment has any.
+   * `epochs` are TDB seconds; `values` holds 21 numbers per epoch, the lower
+   * triangle of the 6x6 matrix row by row as written, in the file's units
+   * (CCSDS: km and km/s, so km² for position variances, but see
+   * `covarianceUnits` on `Trajectory.fromOem`). The reference frame is the
+   * segment's `refFrame`.
+   */
+  covariances?: { epochs: Float64Array; values: Float64Array };
 }
 
 type Scale = "UTC" | "TAI" | "TT" | "TDB";
@@ -47,8 +56,8 @@ interface Pending {
  * Parse a CCSDS Orbit Ephemeris Message in the KVN form (CCSDS 502.0-B-3,
  * versions 1.0 to 3.0). Positions and velocities are scaled from km and km/s
  * to m and m/s, and epochs are converted from the segment's time system to
- * TDB seconds. Comments, blank lines, accelerations and covariance blocks are
- * skipped. Errors name the 1-based line.
+ * TDB seconds. Comments, blank lines and accelerations are skipped. Covariance blocks are kept, as written, on the segment they follow.
+ * Errors name the 1-based line.
  *
  * The reader never guesses an interpolation: `interpolation` and
  * `interpolationDegree` are set only when the metadata gives them.
@@ -63,6 +72,13 @@ export function parseOem(
   let state: "header" | "meta" | "data" | "between" | "covariance" = "header";
   let seg: Pending | undefined;
   let metaLine = 0;
+  // The segment a covariance block belongs to (the one just finished), and
+  // the covariance being read.
+  let covTarget: { seg: OemSegment; scale: Scale } | undefined;
+  let covEpochs: number[] = [];
+  let covValues: number[] = [];
+  let covPending = 0; // numbers still owed to the epoch being read
+  let lastScale: Scale = "UTC";
 
   const fail = (n: number, message: string): never => {
     throw new Error(`OEM line ${n}: ${message}`);
@@ -118,7 +134,23 @@ export function parseOem(
       out.interpolationDegree = d;
     }
     segments.push(out);
+    lastScale = seg.scale;
     seg = undefined;
+  };
+  const closeEpoch = (n: number): void => {
+    if (covPending !== 0) {
+      fail(n, `covariance needs 21 numbers per epoch, ${covPending} missing`);
+    }
+  };
+  const addCovariance = (): void => {
+    const target = covTarget!.seg;
+    const old = target.covariances;
+    const epochs = old ? [...old.epochs, ...covEpochs] : covEpochs;
+    const values = old ? [...old.values, ...covValues] : covValues;
+    target.covariances = {
+      epochs: Float64Array.from(epochs),
+      values: Float64Array.from(values),
+    };
   };
 
   for (let i = 0; i < lines.length; i++) {
@@ -131,13 +163,63 @@ export function parseOem(
       fail(n, "the XML form of OEM is not supported");
     }
     if (state === "covariance") {
+      const target = covTarget!;
       if (line === "COVARIANCE_STOP") {
+        closeEpoch(n);
+        addCovariance();
         state = "between";
+        continue;
+      }
+      const eq = line.indexOf("=");
+      if (eq > 0) {
+        const key = line.slice(0, eq).trim();
+        const value = line.slice(eq + 1).trim();
+        if (key === "EPOCH") {
+          closeEpoch(n);
+          const t = iso(n, value, target.scale).tdb();
+          if (covEpochs.length > 0 && t <= covEpochs[covEpochs.length - 1]!) {
+            fail(n, "covariance epochs must increase");
+          }
+          covEpochs.push(t);
+          covPending = 21;
+        } else if (key === "COV_REF_FRAME") {
+          if (value.toUpperCase() !== target.seg.refFrame.toUpperCase()) {
+            fail(
+              n,
+              `COV_REF_FRAME ${value} differs from REF_FRAME ${target.seg.refFrame}, which is not supported yet`,
+            );
+          }
+        } else {
+          fail(n, `unexpected covariance line "${line}"`);
+        }
+        continue;
+      }
+      if (covEpochs.length === 0) {
+        fail(n, "covariance numbers before an EPOCH");
+      }
+      for (const field of line.split(/\s+/)) {
+        const v = Number(field);
+        if (!Number.isFinite(v)) {
+          fail(n, `bad number "${field}"`);
+        }
+        if (covPending === 0) {
+          fail(n, "covariance has more than 21 numbers for an epoch");
+        }
+        covValues.push(v);
+        covPending--;
       }
       continue;
     }
     if (line === "COVARIANCE_START") {
       finish(n);
+      const last = segments[segments.length - 1];
+      if (last === undefined) {
+        fail(n, "COVARIANCE_START before any segment");
+      }
+      covTarget = { seg: last!, scale: lastScale };
+      covEpochs = [];
+      covValues = [];
+      covPending = 0;
       state = "covariance";
       continue;
     }

@@ -25,7 +25,13 @@ interface Piece {
   states: Float64Array;
   method: InterpolationMethod;
   windowSize: number;
+  /** The segment's covariances, and what turns a variance into m². */
+  covariances?: { epochs: Float64Array; values: Float64Array };
+  varianceToM2?: number;
 }
+
+/** The unit of OEM covariance values: CCSDS's km, or m when the file says so. */
+export type CovarianceUnits = "km" | "m";
 
 type Center = "EARTH" | "MOON" | "SUN" | "SSB";
 type Axes = "EME2000" | "ICRF" | "ITRF";
@@ -108,6 +114,7 @@ function referenceFor(
 function oemPiece(
   seg: OemSegment,
   fallback: { method: InterpolationMethod; degree: number } | undefined,
+  units: CovarianceUnits,
 ): Piece {
   const named = `OEM segment of "${seg.objectName}" starting ${seg.start.tdb()} TDB s`;
   let method: InterpolationMethod;
@@ -164,6 +171,12 @@ function oemPiece(
     states: seg.states,
     method,
     windowSize,
+    ...(seg.covariances
+      ? {
+          covariances: seg.covariances,
+          varianceToM2: units === "km" ? 1e6 : 1,
+        }
+      : {}),
   };
 }
 
@@ -215,6 +228,9 @@ export class Trajectory<N extends string = string> {
   /** Pieces in precedence order: the last that covers an instant wins (R4). */
   private readonly pieces: readonly Piece[];
   private readonly scratch = new Float64Array(6);
+  /** Where the data came from. */
+  readonly source: "oem" | "spk";
+  private readonly sigma: number | undefined;
 
   private constructor(
     name: N,
@@ -222,7 +238,19 @@ export class Trajectory<N extends string = string> {
     reference: Frame,
     allPieces: readonly Piece[],
     private readonly leap: LeapSeconds,
+    source: "oem" | "spk",
+    positionSigma: number | undefined,
   ) {
+    if (
+      positionSigma !== undefined &&
+      !(Number.isFinite(positionSigma) && positionSigma >= 0)
+    ) {
+      throw new Error(
+        `Trajectory "${name}": positionSigma must be a finite number of meters, 0 or more, got ${positionSigma}`,
+      );
+    }
+    this.source = source;
+    this.sigma = positionSigma;
     this.name = name;
     this.accuracy = accuracy;
     this.reference = reference;
@@ -277,6 +305,45 @@ export class Trajectory<N extends string = string> {
     );
   }
 
+  /**
+   * The 1σ RSS position uncertainty in meters at `instant`: from the latest
+   * covariance epoch at or before it in the segment `state` would use,
+   * `sqrt(c11 + c22 + c33)`; failing that, the `positionSigma` option; failing
+   * both, or outside the data, `undefined`. This is an accuracy query, so it
+   * never throws.
+   */
+  positionSigma(instant: Instant): number | undefined {
+    const t = instant.tdb();
+    const piece = this.find(t);
+    if (!piece) {
+      return undefined;
+    }
+    const cov = piece.covariances;
+    if (cov) {
+      // Binary search: the last epoch <= t.
+      let lo = 0;
+      let hi = cov.epochs.length - 1;
+      let at = -1;
+      while (lo <= hi) {
+        const mid = (lo + hi) >> 1;
+        if (cov.epochs[mid]! <= t) {
+          at = mid;
+          lo = mid + 1;
+        } else {
+          hi = mid - 1;
+        }
+      }
+      if (at >= 0) {
+        // The lower triangle, row by row: c11, c21 c22, c31 c32 c33.
+        const v = cov.values;
+        const k = at * 21;
+        const variance = v[k]! + v[k + 2]! + v[k + 5]!;
+        return Math.sqrt(variance * piece.varianceToM2!);
+      }
+    }
+    return this.sigma;
+  }
+
   private find(t: number): Piece | undefined {
     for (let i = this.pieces.length - 1; i >= 0; i--) {
       const p = this.pieces[i]!;
@@ -301,6 +368,14 @@ export class Trajectory<N extends string = string> {
       accuracy: TrajectoryAccuracy;
       object?: string;
       interpolation?: { method: InterpolationMethod; degree: number };
+      /** 1σ RSS position, m, where a segment has no covariance. */
+      positionSigma?: number;
+      /**
+       * The unit of the OEM's covariance values (R7). CCSDS says km, km² for
+       * position variances, and that is the default. NASA's Artemis II BET
+       * file writes m²: pass "m" for it.
+       */
+      covarianceUnits?: CovarianceUnits;
     },
   ): Trajectory<N> {
     let segments = oem.segments;
@@ -335,13 +410,17 @@ export class Trajectory<N extends string = string> {
         "Trajectory: all OEM segments must map to one reference frame",
       );
     }
-    const pieces = segments.map((s) => oemPiece(s, options.interpolation));
+    const pieces = segments.map((s) =>
+      oemPiece(s, options.interpolation, options.covarianceUnits ?? "km"),
+    );
     return new Trajectory(
       options.name,
       options.accuracy,
       reference,
       pieces,
       frames.data.leapSeconds,
+      "oem",
+      options.positionSigma,
     );
   }
 
@@ -359,6 +438,8 @@ export class Trajectory<N extends string = string> {
       name: N;
       accuracy: TrajectoryAccuracy;
       j2000: "icrf" | "eme2000";
+      /** 1σ RSS position, m. */
+      positionSigma?: number;
     },
   ): Trajectory<N> {
     const segments: StateSegment[] = [];
@@ -406,6 +487,8 @@ export class Trajectory<N extends string = string> {
       reference,
       segments.map(spkPiece),
       frames.data.leapSeconds,
+      "spk",
+      options.positionSigma,
     );
   }
 }

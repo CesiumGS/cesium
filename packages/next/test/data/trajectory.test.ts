@@ -192,3 +192,22 @@ describe("OEM against SPK", () => {
     expect(bias).toBeLessThan(80);
   });
 });
+
+describe("OEM covariance", () => {
+  it("gives Artemis's first position sigma, read as m^2 (R7)", () => {
+    const oem = parseOem(readFileSync(join(dir, OEM), "utf8"), leap);
+    const traj = Trajectory.fromOem(oem, frames, {
+      ...options,
+      name: "orion",
+      covarianceUnits: "m",
+      interpolation: { method: "hermite", degree: 11 },
+    });
+    const first = Instant.fromIso("2026-04-02T01:58:21.397", "UTC", leap);
+    const sigma = traj.positionSigma(first)!;
+    console.log(`Artemis positionSigma at first covariance: ${sigma} m`);
+    expect(
+      Math.abs(sigma - Math.sqrt(2505.73549 + 16.2246271 + 13.268218)),
+    ).toBeLessThan(0.1);
+    expect(Math.abs(sigma - 50.4)).toBeLessThan(0.1);
+  });
+});

@@ -90,6 +90,13 @@ describe("Instant.fromIso", () => {
   });
 });
 
+const COV_ROWS = `1.0
+0.1 2.0
+0.2 0.3 3.0
+0.4 0.5 0.6 4.0
+0.7 0.8 0.9 1.1 5.0
+1.2 1.3 1.4 1.5 1.6 6.0`;
+const COV_ROWS_2 = COV_ROWS.replace(/^1\.0/, "10.0");
 const OEM = `CCSDS_OEM_VERS = 2.0
 COMMENT made by a test
 CREATION_DATE = 2026-04-01T00:00:00
@@ -118,8 +125,9 @@ COMMENT data
 COVARIANCE_START
 EPOCH = 2026-04-02T00:00:00.000
 COV_REF_FRAME = EME2000
-1.0
-0.0 1.0
+${COV_ROWS}
+EPOCH = 2026-04-02T00:00:30.000
+${COV_ROWS_2}
 COVARIANCE_STOP
 
 META_START
@@ -141,6 +149,37 @@ function oem(mutate: (s: string) => string): string {
 
 describe("parseOem", () => {
   const parsed = parseOem(OEM, leap);
+
+  it("reads a two-epoch covariance block into the segment", () => {
+    const cov = parsed.segments[0]!.covariances!;
+    expect(cov.epochs).toHaveLength(2);
+    expect(cov.epochs[1]! - cov.epochs[0]!).toBeCloseTo(30, 6);
+    expect(cov.values).toHaveLength(42);
+    expect(Array.from(cov.values.subarray(0, 6))).toEqual([
+      1.0, 0.1, 2.0, 0.2, 0.3, 3.0,
+    ]);
+    expect(cov.values[20]).toBe(6.0);
+    expect(cov.values[21]).toBe(10.0);
+    expect(parsed.segments[1]!.covariances).toBeUndefined();
+  });
+
+  it("rejects a COV_REF_FRAME other than the segment's REF_FRAME", () => {
+    expect(() =>
+      parseOem(
+        oem((s) => s.replace("COV_REF_FRAME = EME2000", "COV_REF_FRAME = RTN")),
+        leap,
+      ),
+    ).toThrow(/RTN.*not supported yet/);
+  });
+
+  it("rejects a covariance with the wrong number of values", () => {
+    expect(() =>
+      parseOem(
+        oem((s) => s.replace("1.2 1.3 1.4 1.5 1.6 6.0\n", "")),
+        leap,
+      ),
+    ).toThrow(/21/);
+  });
 
   it("reads the version and segments", () => {
     expect(parsed.version).toBe("2.0");

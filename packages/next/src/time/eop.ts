@@ -43,6 +43,11 @@ export class EarthOrientationParameters {
   readonly first: number;
   /** Last tabulated instant, UTC ms. */
   readonly last: number;
+  /**
+   * The last row that is a measurement (`DATA_TYPE` not `P`), UTC ms. Rows
+   * after it are predictions, whose error grows with their age from it.
+   */
+  readonly lastObserved: number;
 
   // Plain fields, not constructor parameter properties: scripts/frameData.mjs
   // imports this file under Node's type stripping, which rejects those.
@@ -78,6 +83,11 @@ export class EarthOrientationParameters {
     this.predictedRow = predictedRow;
     this.first = (mjd[0]! - MJD_UNIX_EPOCH) * MS_PER_DAY;
     this.last = (mjd[mjd.length - 1]! - MJD_UNIX_EPOCH) * MS_PER_DAY;
+    let observed = mjd.length - 1;
+    while (observed > 0 && predictedRow[observed]! === 1) {
+      observed--;
+    }
+    this.lastObserved = (mjd[observed]! - MJD_UNIX_EPOCH) * MS_PER_DAY;
   }
 
   /** Parse by header name, so column order does not matter. */

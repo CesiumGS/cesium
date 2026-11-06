@@ -49,6 +49,14 @@ describe("EarthOrientationParameters", () => {
     expect(eop.last).toBe(msOf(57756));
   });
 
+  it("reports lastObserved as the last row whose DATA_TYPE is not P", () => {
+    expect(eop.lastObserved).toBe(msOf(57754));
+    const allObserved = EarthOrientationParameters.fromCelestrakCsv(
+      `${[HEADER, ...ROWS.slice(0, 4)].join("\n")}\n`,
+    );
+    expect(allObserved.lastObserved).toBe(allObserved.last);
+  });
+
   it("returns a row exactly at its midnight, in radians and seconds", () => {
     const s = eop.at(msOf(57752));
     expect(s.ut1MinusUtc).toBe(-0.111);
