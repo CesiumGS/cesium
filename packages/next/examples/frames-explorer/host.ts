@@ -559,7 +559,19 @@ export function createHost(
       cancelled: false,
     };
     try {
-      const loaded = await context();
+      let loaded: Loaded;
+      try {
+        loaded = await context();
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          throw error;
+        }
+        // Cancelled while the context was made: the run ran nothing.
+        summary.ms = performance.now() - start;
+        summary.cancelled = true;
+        post({ type: "done", id, summary });
+        return;
+      }
       if (!controller.signal.aborted) {
         await body(loaded, controller.signal, (result) => {
           count(summary, result);
@@ -863,11 +875,24 @@ export function createHost(
           `its evaluator answered for "${String(evaluated.scenario)}"`,
         );
       }
+      // A live check under a proof id would stand in for the catalog's
+      // check against its published reference, at a setting where that
+      // reference doesn't apply (Review Focus 1).
+      const proof = new Set(spec.proof);
+      const clash = evaluated.live.find((r) => proof.has(r.id));
+      if (clash !== undefined) {
+        throw new Error(
+          `its live check "${clash.id}" has the id of one of its proof checks`,
+        );
+      }
       // Judged here, as the runner judges the catalog's: a live row is never
-      // the evaluator's word alone.
+      // the evaluator's word alone. Without its source: the published
+      // references apply at the checked setup, not at these knobs.
       const evaluation: ScenarioEvaluation = {
         ...evaluated,
-        live: evaluated.live.map((r) => withDefaults(judgeResult(r))),
+        live: evaluated.live.map(({ source: _, ...r }) =>
+          withDefaults(judgeResult(r)),
+        ),
       };
       post(
         { type: "scenario", id, evaluation },

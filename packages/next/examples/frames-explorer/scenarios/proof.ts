@@ -2,7 +2,8 @@
 // claims verification).
 //
 //  - At the checked setup: each of the spec's `proof` ids as `checked`, with
-//    the catalog's judged result, against its published reference (R10).
+//    the catalog's judged result, against its published reference (R10);
+//    one the catalog hasn't given yet as `pending` (R9: loading shows).
 //  - Off it: each id that compares with a published value becomes
 //    `reference-only` ("the reference applies at the checked setup"), with
 //    how far the setting moves the answer when the evaluation can say; it
@@ -14,7 +15,8 @@
 // A result is reference-backed when it carries a `source` (the
 // references.json entry it is compared with, F28). A proof id the catalog
 // hasn't given yet is taken as reference-backed: off the checked setup it
-// still reads "reference applies", never a pass.
+// still reads "reference applies", never a pass. The host strips `source`
+// from live results and refuses a live result under a proof id.
 //
 // Plain data in and out, for the main thread: types only from the catalog.
 import type { StressResult } from "../tests.ts";
@@ -23,6 +25,8 @@ import type { ScenarioSpec } from "./spec.ts";
 
 export type ProofRow =
   | { kind: "checked"; result: StressResult }
+  /** At the checked setup: a proof id the catalog hasn't given yet. No pass. */
+  | { kind: "pending"; id: string; title: string }
   | { kind: "live"; result: StressResult }
   | {
       kind: "reference-only";
@@ -69,8 +73,10 @@ export function proofRows(
   if (atChecked) {
     for (const id of spec.proof) {
       const result = catalog.get(id);
-      // Not run yet (the page shows the catalog's loading), or shown, not judged.
-      if (result !== undefined && result.displayOnly !== true) {
+      if (result === undefined) {
+        rows.push({ kind: "pending", id, title: id });
+      } else if (result.displayOnly !== true) {
+        // A display-only result is shown, not judged: never proof.
         rows.push({ kind: "checked", result });
       }
     }

@@ -44,6 +44,9 @@ export interface ScenarioEvaluation {
   sightLines?: readonly SightLine[];
   /**
    * The checks re-run at these knobs, judged (by the host, `judgeResult`).
+   * None may carry an id of the scenario's `proof` (the host refuses it),
+   * and the host strips any `source`: the published references apply at the
+   * checked setup, not here.
    * Off the checked setup they stand in for the catalog's own checks that
    * compare with no published value (round trips, hand formulas): those ran
    * at the checked setup only, so the proof doesn't show them there.
@@ -70,13 +73,17 @@ export type ScenarioEvaluator = (
 const evaluators = new Map<ScenarioId, ScenarioEvaluator>();
 
 /**
- * Registers the evaluator of scenario `id`. A second registration for the
- * same id replaces the first (a test stubs a scenario this way).
+ * Registers the evaluator of scenario `id`. Throws if `id` already has one:
+ * two modules evaluating one scenario is a mistake. (A test stubs one with
+ * `unregisterScenarioForTests` first.)
  */
 export function registerScenario(
   id: ScenarioId,
   evaluator: ScenarioEvaluator,
 ): void {
+  if (evaluators.has(id)) {
+    throw new Error(`scenario "${id}" already has an evaluator registered`);
+  }
   evaluators.set(id, evaluator);
 }
 
@@ -85,4 +92,9 @@ export function scenarioEvaluator(
   id: ScenarioId,
 ): ScenarioEvaluator | undefined {
   return evaluators.get(id);
+}
+
+/** For tests only: forgets the evaluator of `id`, so a test can stub it. */
+export function unregisterScenarioForTests(id: ScenarioId): void {
+  evaluators.delete(id);
 }
