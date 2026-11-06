@@ -551,15 +551,10 @@ const scratchCartesian4NewXAxis = new Cartesian4();
 const scratchCartesian4NewYAxis = new Cartesian4();
 const scratchCartesian4NewZAxis = new Cartesian4();
 
-function convertTransformFor2D(camera) {
-  const projection = camera._projection;
+function convertTransformFor2D(projection, transform, result) {
   const ellipsoid = projection.ellipsoid;
 
-  const origin = Matrix4.getColumn(
-    camera._transform,
-    3,
-    scratchCartesian4Origin,
-  );
+  const origin = Matrix4.getColumn(transform, 3, scratchCartesian4Origin);
   const cartographic = ellipsoid.cartesianToCartographic(
     origin,
     scratchCartographic,
@@ -581,7 +576,7 @@ function convertTransformFor2D(camera) {
   );
 
   const xAxis = Cartesian4.add(
-    Matrix4.getColumn(camera._transform, 0, scratchCartesian3),
+    Matrix4.getColumn(transform, 0, scratchCartesian3),
     origin,
     scratchCartesian3,
   );
@@ -602,7 +597,7 @@ function convertTransformFor2D(camera) {
     Cartesian3.cross(newZAxis, newXAxis, newYAxis);
   } else {
     const yAxis = Cartesian4.add(
-      Matrix4.getColumn(camera._transform, 1, scratchCartesian3),
+      Matrix4.getColumn(transform, 1, scratchCartesian3),
       origin,
       scratchCartesian3,
     );
@@ -628,30 +623,10 @@ function convertTransformFor2D(camera) {
   Cartesian3.cross(newZAxis, newXAxis, newYAxis);
   Cartesian3.normalize(newYAxis, newYAxis);
 
-  Matrix4.setColumn(
-    camera._actualTransform,
-    0,
-    newXAxis,
-    camera._actualTransform,
-  );
-  Matrix4.setColumn(
-    camera._actualTransform,
-    1,
-    newYAxis,
-    camera._actualTransform,
-  );
-  Matrix4.setColumn(
-    camera._actualTransform,
-    2,
-    newZAxis,
-    camera._actualTransform,
-  );
-  Matrix4.setColumn(
-    camera._actualTransform,
-    3,
-    newOrigin,
-    camera._actualTransform,
-  );
+  Matrix4.setColumn(result, 0, newXAxis, result);
+  Matrix4.setColumn(result, 1, newYAxis, result);
+  Matrix4.setColumn(result, 2, newZAxis, result);
+  Matrix4.setColumn(result, 3, newOrigin, result);
 }
 
 const scratchCartesian = new Cartesian3();
@@ -709,7 +684,11 @@ function updateMembers(camera) {
       } else if (camera._mode === SceneMode.COLUMBUS_VIEW) {
         convertTransformForColumbusView(camera);
       } else {
-        convertTransformFor2D(camera);
+        convertTransformFor2D(
+          camera._projection,
+          camera._transform,
+          camera._actualTransform,
+        );
       }
     } else {
       Matrix4.clone(camera._transform, camera._actualTransform);
@@ -848,6 +827,73 @@ function getRoll(direction, up, right) {
 
 const scratchHPRMatrix1 = new Matrix4();
 const scratchHPRMatrix2 = new Matrix4();
+
+const scratchHPRDirection = new Cartesian3();
+const scratchHPRUp = new Cartesian3();
+const scratchHPRRight = new Cartesian3();
+const scratchHPRCartesian = new Cartesian3();
+
+function updateCameraAngles(camera) {
+  // Preserve lazy updates, including normalization of caller-modified vectors,
+  // without changing the camera's reference frame to measure its orientation.
+  updateMembers(camera);
+  const projection = camera._projection;
+  const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
+    camera._positionWC,
+    projection.ellipsoid,
+    scratchHPRMatrix1,
+  );
+  let actualTransform = transform;
+  if (
+    camera._mode === SceneMode.COLUMBUS_VIEW ||
+    camera._mode === SceneMode.SCENE2D
+  ) {
+    actualTransform = scratchHPRMatrix2;
+    if (Matrix4.equals(transform, Matrix4.IDENTITY)) {
+      Matrix4.clone(Camera.TRANSFORM_2D, actualTransform);
+    } else if (camera._mode === SceneMode.COLUMBUS_VIEW) {
+      FixedFrameTransforms.basisTo2D(projection, transform, actualTransform);
+    } else {
+      convertTransformFor2D(projection, transform, actualTransform);
+    }
+  }
+  const inverse = Matrix4.inverseTransformation(
+    actualTransform,
+    scratchHPRMatrix1,
+  );
+  Matrix4.multiplyByPointAsVector(
+    inverse,
+    camera._directionWC,
+    scratchHPRDirection,
+  );
+  Matrix4.multiplyByPointAsVector(inverse, camera._upWC, scratchHPRUp);
+
+  // Match _setTransform followed by updateMembers, including its operation
+  // order. The transformed basis may need orthonormalization, for example
+  // when using a triaxial ellipsoid, even if the camera basis was initialized.
+  Cartesian3.cross(scratchHPRDirection, scratchHPRUp, scratchHPRRight);
+  Cartesian3.normalize(scratchHPRDirection, scratchHPRDirection);
+  Cartesian3.normalize(scratchHPRUp, scratchHPRUp);
+  Cartesian3.normalize(scratchHPRRight, scratchHPRRight);
+  const det = Cartesian3.dot(
+    scratchHPRDirection,
+    Cartesian3.cross(scratchHPRUp, scratchHPRRight, scratchHPRCartesian),
+  );
+  if (Math.abs(1.0 - det) > CesiumMath.EPSILON2) {
+    const invUpMag = 1.0 / Cartesian3.magnitudeSquared(scratchHPRUp);
+    const scalar = Cartesian3.dot(scratchHPRUp, scratchHPRDirection) * invUpMag;
+    const w0 = Cartesian3.multiplyByScalar(
+      scratchHPRDirection,
+      scalar,
+      scratchHPRCartesian,
+    );
+    Cartesian3.normalize(
+      Cartesian3.subtract(scratchHPRUp, w0, scratchHPRUp),
+      scratchHPRUp,
+    );
+    Cartesian3.cross(scratchHPRDirection, scratchHPRUp, scratchHPRRight);
+  }
+}
 
 Object.defineProperties(Camera.prototype, {
   /**
@@ -996,21 +1042,8 @@ Object.defineProperties(Camera.prototype, {
   heading: {
     get: function () {
       if (this._mode !== SceneMode.MORPHING) {
-        const ellipsoid = this._projection.ellipsoid;
-
-        const oldTransform = Matrix4.clone(this._transform, scratchHPRMatrix1);
-        const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
-          this.positionWC,
-          ellipsoid,
-          scratchHPRMatrix2,
-        );
-        this._setTransform(transform);
-
-        const heading = getHeading(this.direction, this.up);
-
-        this._setTransform(oldTransform);
-
-        return heading;
+        updateCameraAngles(this);
+        return getHeading(scratchHPRDirection, scratchHPRUp);
       }
 
       return undefined;
@@ -1027,21 +1060,8 @@ Object.defineProperties(Camera.prototype, {
   pitch: {
     get: function () {
       if (this._mode !== SceneMode.MORPHING) {
-        const ellipsoid = this._projection.ellipsoid;
-
-        const oldTransform = Matrix4.clone(this._transform, scratchHPRMatrix1);
-        const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
-          this.positionWC,
-          ellipsoid,
-          scratchHPRMatrix2,
-        );
-        this._setTransform(transform);
-
-        const pitch = getPitch(this.direction);
-
-        this._setTransform(oldTransform);
-
-        return pitch;
+        updateCameraAngles(this);
+        return getPitch(scratchHPRDirection);
       }
 
       return undefined;
@@ -1058,21 +1078,8 @@ Object.defineProperties(Camera.prototype, {
   roll: {
     get: function () {
       if (this._mode !== SceneMode.MORPHING) {
-        const ellipsoid = this._projection.ellipsoid;
-
-        const oldTransform = Matrix4.clone(this._transform, scratchHPRMatrix1);
-        const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
-          this.positionWC,
-          ellipsoid,
-          scratchHPRMatrix2,
-        );
-        this._setTransform(transform);
-
-        const roll = getRoll(this.direction, this.up, this.right);
-
-        this._setTransform(oldTransform);
-
-        return roll;
+        updateCameraAngles(this);
+        return getRoll(scratchHPRDirection, scratchHPRUp, scratchHPRRight);
       }
 
       return undefined;
