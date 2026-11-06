@@ -4,7 +4,8 @@ Usage: uv run --with pyerfa --with numpy python scripts/frameFixtures.py <sectio
 
 Sections: dtdb, bias, earth, earthLeap <store>, utc <store> (needs jplephem), ephemeris
 <store> (needs jplephem), moon <store> <frame kernel> (needs spiceypy and jplephem),
-trajectories <store> <frame kernel> (needs spiceypy), geodesic (needs geographiclib only).
+trajectories <store> <frame kernel> (needs spiceypy), geodesic (needs geographiclib only),
+signal <store> <frame kernel> <earth pck> (needs spiceypy).
 earthLeap reads the store's EOP-All.csv; the others read the NAIF kernels
 `npm run setup` downloaded to <store>. Only their small JSON output is committed.
 """
@@ -500,6 +501,64 @@ def geodesic():
     write("geodesic", {"wgs84": rows, "moon": lunar, "moonRadius": moon[0]})
 
 
+def signal(store, frame_kernel, earth_pck):
+    """Light times and apparent directions from SPICE's spkpos, km and s, J2000
+    (read as ICRF, plan 2 R1): Orion (-24) and the Moon (301) seen from the
+    Earth's center (399), and Orion from DSS-43 (399043), each for CN and XCN
+    (converged Newtonian light time, received and transmitted) and CN+S and
+    XCN+S (plus stellar aberration). The DSS-43 rows need ITRF93's orientation:
+    <earth pck> is NAIF's earth_latest_high_prec.bpc, downloaded by hand (it is
+    not in the store). Twelve instants, TDB seconds past J2000: seven within
+    5 s of a segment edge (the data's ends and interior joins) and five spread
+    across the Artemis span."""
+    import spiceypy as sp
+
+    store = Path(store)
+    for kernel in ("de440s.bsp", "moon_pa_de440_200625.bpc"):
+        sp.furnsh(str(store / kernel))
+    sp.furnsh(str(frame_kernel))
+    sp.furnsh(str(earth_pck))
+    # Furnish order is precedence: SPICE searches the last loaded file first.
+    for kernel in (ARTEMIS_MAIN, ARTEMIS_GAPFILL, STATIONS):
+        sp.furnsh(str(store / kernel))
+
+    segments = type13_segments(store / ARTEMIS_MAIN) + type13_segments(store / ARTEMIS_GAPFILL)
+    low = min(s[0] for s in segments)
+    high = max(s[1] for s in segments)
+    joins = sorted({s[0] for s in segments} | {s[1] for s in segments})[1:-1]
+    edges = [
+        (low + 4.0, "nearStart"),
+        (joins[0] + 3.0, "nearJoin"),
+        (joins[2] + 2.0, "nearJoin"),
+        (joins[5] - 3.0, "nearJoin"),
+        (joins[7] + 4.0, "nearJoin"),
+        (joins[9] - 2.0, "nearJoin"),
+        (high - 4.0, "nearEnd"),
+    ]
+    spread = [(float(et), "spread") for et in np.linspace(low, high, 7)[1:-1]]
+    times = sorted(edges + spread)
+    assert len(times) == 12, len(times)
+
+    def link(target, et, observer):
+        out = {}
+        for abcorr in ("CN", "XCN", "CN+S", "XCN+S"):
+            position, lt = sp.spkpos(str(target), et, "J2000", abcorr, str(observer))
+            out[abcorr] = {"position": [float(v) for v in position], "lt": float(lt)}
+        return out
+
+    rows = [
+        {
+            "tdb": float(et),
+            "kind": kind,
+            "orion": link(-24, et, 399),
+            "moon": link(301, et, 399),
+            "dss43": link(-24, et, 399043),
+        }
+        for et, kind in times
+    ]
+    write("signal", {"rows": rows})
+
+
 SECTIONS = {
     "dtdb": dtdb,
     "bias": bias,
@@ -510,6 +569,7 @@ SECTIONS = {
     "moon": moon,
     "trajectories": trajectories,
     "geodesic": geodesic,
+    "signal": signal,
 }
 
 if __name__ == "__main__":
