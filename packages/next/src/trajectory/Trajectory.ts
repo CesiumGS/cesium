@@ -110,18 +110,22 @@ function oemPiece(
   const named = `OEM segment of "${seg.objectName}" starting ${seg.start.tdb()} TDB s`;
   let method: InterpolationMethod;
   let degree: number;
-  if (
-    seg.interpolation !== undefined &&
-    seg.interpolationDegree !== undefined
-  ) {
-    const m = seg.interpolation.trim().toLowerCase();
+  const hasMethod = seg.interpolation !== undefined;
+  const hasDegree = seg.interpolationDegree !== undefined;
+  if (hasMethod !== hasDegree) {
+    throw new Error(
+      `Trajectory: ${named} gives ${hasMethod ? "INTERPOLATION but no INTERPOLATION_DEGREE" : "INTERPOLATION_DEGREE but no INTERPOLATION"}`,
+    );
+  }
+  if (hasMethod) {
+    const m = seg.interpolation!.trim().toLowerCase();
     if (m !== "lagrange" && m !== "hermite") {
       throw new Error(
         `Trajectory: ${named} has interpolation "${seg.interpolation}", which is not supported`,
       );
     }
     method = m;
-    degree = seg.interpolationDegree;
+    degree = seg.interpolationDegree!;
   } else if (fallback) {
     ({ method, degree } = fallback);
   } else {
@@ -150,8 +154,10 @@ function oemPiece(
     );
   }
   return {
-    start: seg.epochs[0]!,
-    end: seg.epochs[count - 1]!,
+    // Outside the useable range the data is not to be used (CCSDS 502.0-B-3),
+    // though the interpolation window may still reach those states.
+    start: Math.max(seg.epochs[0]!, seg.useableStart?.tdb() ?? -Infinity),
+    end: Math.min(seg.epochs[count - 1]!, seg.useableStop?.tdb() ?? Infinity),
     epochs: seg.epochs,
     states: seg.states,
     method,
@@ -161,8 +167,9 @@ function oemPiece(
 
 function spkPiece(seg: StateSegment): Piece {
   return {
-    start: seg.start,
-    end: seg.end,
+    // Never beyond the stored epochs, whatever the summary says (R3).
+    start: Math.max(seg.start, seg.epochs[0]!),
+    end: Math.min(seg.end, seg.epochs[seg.epochs.length - 1]!),
     epochs: seg.epochs,
     states: seg.states.map((v) => v * 1000),
     method: seg.method,
