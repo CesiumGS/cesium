@@ -1706,6 +1706,11 @@ export function run(context: ExampleContext): ExampleRun {
     switch (camera) {
       case "opening":
         return OPENING;
+      case "northPole":
+        // Stop 2 (S-I10): straight down the pole, so both triads' x and y
+        // stay clear of the disc as GCRF's turn against ITRF's, and their
+        // z axes point at the camera.
+        return framingAt(0, 90, 5.5 * EARTH_RADIUS, 0, -Math.PI / 2 + 1e-3);
       case "earthFrames":
         // Stops 1 and 2 (S-I1): from over the North Atlantic, high, where
         // both triads show axes in front of the Earth (ITRF's x at 0°

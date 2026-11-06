@@ -793,15 +793,24 @@ export class Globe {
           w: bw,
           h: bh,
         };
-        visible =
-          spec.pinned === true ||
-          !placed.some(
+        const hits = () =>
+          placed.some(
             (b) =>
               box.x < b.x + b.w &&
               b.x < box.x + box.w &&
               box.y < b.y + b.h &&
               b.y < box.y + box.h,
           );
+        if (spec.pinned) {
+          // A pinned label never hides: it steps down past the labels it
+          // would cover (two axis tips passing each other, S-I10).
+          for (let step = 0; step < 4 && hits(); step++) {
+            box.y = Math.min(box.y + bh + 2, h - bh - 2);
+          }
+          visible = true;
+        } else {
+          visible = !hits();
+        }
         if (visible) {
           placed.push(box);
           anchors.push({ x, y });
@@ -971,8 +980,7 @@ const normalize = (v: ArrayLike<number>): Float64Array => {
   return Float64Array.from([v[0]! / n, v[1]! / n, v[2]! / n]);
 };
 
-/** The Earth (a sphere of its polar radius) hides `p` from `eye`. */
-/** Whether the Earth (a sphere) hides `p` from `eye`. */
+/** Whether the Earth (a sphere, by default of its polar radius) hides `p` from `eye`. */
 export function behindEarth(
   eye: ArrayLike<number>,
   p: ArrayLike<number>,

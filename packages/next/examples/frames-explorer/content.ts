@@ -100,6 +100,7 @@ export interface TourStopSpec {
   camera:
     | "opening"
     | "earthFrames"
+    | "northPole"
     | "stay"
     | "designGrid"
     | "rigidVsExact"
@@ -129,9 +130,9 @@ export const TOUR: readonly TourStopSpec[] = [
     id: "gcrf-itrf-day",
     title: "GCRF to ITRF over a day",
     caption:
-      "The globe is drawn Earth-fixed, so GCRF's triad turns once against ITRF's in a sidereal day. The clock plays at 3,600×; the globe is lit from the camera so the turn stays visible through the night.",
+      "Seen from above the north pole: the globe is drawn Earth-fixed, so GCRF's x and y turn once round against ITRF's, like clock hands, in a sidereal day. The clock plays at 3,600×; the globe is lit from the camera so the turn stays visible through the night.",
     overlays: ["triads"],
-    camera: "stay",
+    camera: "northPole",
     rate: 3600,
     light: "camera",
   },
