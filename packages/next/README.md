@@ -244,6 +244,150 @@ Moon from DE440 and the IAU 2006/2000A Earth rotation inside the data's span;
 `FrameData` object that is already loaded applies at construction. Without the option, Earth-only rendering is
 unchanged. The bench Explorer opts in.
 
+**Engineering frames** (`src/engineering`). An `EngineeringFrame` is a design
+CRS on a body: a projected CRS such as a State Plane zone, with an optional
+site transform, in the CRS's own units. PROJ does the projection and datum
+work. The engine's `Ellipsoid` does geodetic to body-fixed, and body-fixed
+coordinates are in meters, as everywhere else. `loadProj`,
+`EngineeringFrame.create` and the other helpers below are imported from their
+modules (`src/engineering/proj.ts`, `crs.ts`, `factors.ts`). `src/index.ts`
+exports the frame, placement, alignment and measure types.
+
+```ts
+import { loadProj } from "./src/engineering/proj.ts";
+
+// Browser: base is where the dev server serves the store's `proj/`. Name the
+// grid files the frame will need. Node: base is the store's `proj/` path.
+const proj = await loadProj({
+  base: "/frames-data/proj/",
+  grids: ["us_noaa_g2018u0.tif"],
+});
+const site = EngineeringFrame.create(
+  {
+    name: "Site",
+    body: EARTH,
+    // California zone 3 (US survey feet) with NAVD88 heights (US survey feet).
+    crs: { format: "wkid", authority: "EPSG", wkid: 6420, vcsWkid: 6360 },
+    site: { origin: [2000000, 500000, 0], rotation: 0.2182, scale: 1.0000375 },
+  },
+  proj,
+);
+const p = designPoint(site, [1200, 800, 35]); // e, n, u in design units
+site.toBodyFixed(p.design); // ITRF meters
+site.fromBodyFixed(xyz); // back to design coordinates
+site.operation.accuracy; // 2.015 m: PROJ's stated accuracy, undefined if none
+```
+
+- **CRS references** (`CrsRef`) follow the 3D Tiles 2.0 draft's
+  `EXT_geospatial_crs`: `{ format: "wkid", authority, wkid, vcsWkid?, epoch? }`
+  or `{ format: "wkt2", wkt2 }`. The draft has no site transform, placement
+  mode or alignment. Those live on `EngineeringFrameDefinition` here.
+  `epoch` (a decimal year) is the coordinate time of a time-dependent
+  operation.
+- **Recorded operations.** PROJ picks its "best" operation by which grids are
+  installed, and can pick one whose grid is missing. A frame resolves its
+  operation once, at creation (`resolveOperation`). It takes the first
+  candidate whose grids are all loaded, or the `pipeline` you pin. It keeps
+  that operation's PROJ string (`frame.operation.pipeline`) and uses it in
+  both directions. If every candidate needs a grid that is not loaded,
+  `create` throws and names the file (NAVD88 heights without
+  `us_noaa_g2018u0.tif`, for example). It never falls back to a ballpark
+  transform unless you pass `allowBallpark: true`, and then the accuracy is
+  undefined.
+- **Units** come from the CRS, never from an assumption. `frame.units` holds
+  the horizontal unit's name and meters per unit (a US survey foot is
+  1200/3937 m, about 0.3048006096 m; an international foot is 0.3048 m), and
+  `frame.metersPerHeightUnit` the height unit's. A design height is in the
+  vertical unit, or in the horizontal unit when the CRS has no vertical axis.
+  A geographic CRS is refused: design work happens on a grid.
+- **Site transforms.** `site` takes local site-grid coordinates `(e, n, u)`
+  in design units to the projected CRS's coordinates in the same units:
+  `[E, N] = [E0, N0] + scale · R(rotation) · [e, n]` and `U = U0 + u`.
+  `rotation` is in radians, counterclockwise from the CRS's grid east.
+  `scale` is the site scale factor: an iModel GCS's Helmert scale, or a DOT
+  project's ground-to-grid factor. Height is not scaled, and the inverse is
+  exact. `origin` is in CRS units.
+- **The body.** PROJ stops at the body's geographic CRS: EPSG:4979 for the
+  Earth, and `MOON_GEOGRAPHIC_CRS` (IAU_2015:30100) for the Moon. PROJ's
+  database has no 3D lunar CRS, so that one is 2D. A lunar height passes
+  through unchanged, as height above the 1,737,400 m sphere. ITRF is treated
+  as WGS84.
+- **Rigid placement.** `RigidPlacement` maps design coordinates to body-fixed
+  meters by one rotation, a uniform scale and a translation, as an iModel's
+  `ecefLocation` and `EXT_georeference` do. It is exact at its anchor and sags
+  away from it as the body curves from the tangent plane: 7.80 m at 10 km
+  from the anchor. Use `frame.toBodyFixed` for anything long.
+- **Grid factors.** `gridFactors(frame, design)` gives the projection's
+  `pointScale` k, the `elevationFactor` R/(R + h), their product
+  `combinedFactor` and the grid `convergence` (radians, from true north to
+  grid north, positive east). They come from PROJ's `proj_factors`, evaluated
+  at the geodetic position of the design point's grid coordinates. R is the
+  ellipsoid's geometric-mean radius there and h is the ellipsoidal height in
+  meters. Grid distance = ground distance × combined factor, as CAD practice
+  has it. The site scale is separate and not in the factor.
+- **Alignments.** An `Alignment` is lines, circular arcs and clothoid spirals
+  in design (site-grid) coordinates, with an optional vertical profile of
+  grades and parabolas. Pass `alignments` on the definition and read them
+  from `frame.alignments`.
+  - `pointAt(station, offset?)` gives design E, N (and the elevation, with a
+    profile). `stationOffset(point)` gives `{ station, offset, elevation? }`.
+    `elevationAt` and `azimuthAt` read the profile and the heading.
+  - Azimuth is clockwise from grid north. A positive radius curves left. The
+    offset is positive to the right of the direction of travel.
+    `azimuthAt` is continuous from `startAzimuth` and is not reduced to
+    [0, 2π).
+  - Spirals use Fresnel integrals (`fresnel(t)`), exact to float64.
+  - A point whose perpendicular foot lies before the start or after the end
+    throws "outside the alignment". Nothing is extrapolated. A point
+    equidistant from two elements takes the lower station.
+
+**Design measurements.** `measure` and `measureSpan` also take a `DesignPoint`
+at both ends (a `MeasurePoint` is a `FramePoint` or a `DesignPoint`). Every
+result above still applies, because the design points are first placed in the
+body-fixed frame. When both ends are design points in one frame, the result
+adds `design`:
+
+| Field                       | Meaning                                                                                      |
+| --------------------------- | -------------------------------------------------------------------------------------------- |
+| `design.unitName`           | The horizontal unit's name, with `metersPerUnit` (from PROJ)                                 |
+| `design.distance`           | Distance between the design coordinates, in design units: what a CAD tool reports            |
+| `design.horizontalDistance` | The same for E, N alone, in design units                                                     |
+| `design.delta`              | b − a in design coordinates (E, N in the horizontal unit, U in the height unit)              |
+| `design.combinedFactor`     | `{ a, b, mean }`: the grid factors at each end and their mean for the line                   |
+| `design.convergence`        | `{ a, b }`: the CRS's grid convergence at each end, radians (the site rotation is not in it) |
+| `design.siteScale`          | The frame's site scale (1 without a site)                                                    |
+
+The ground (true) distance is about `design.distance × design.siteScale ×
+metersPerUnit / combinedFactor.mean`. For 10,000 ftUS in California zone 3
+with a site scale of 1.0000375, that predicts 3048.32435 m against a
+measured 3048.32434 m. `options.alignment` names one of the frame's alignments
+and adds `alignment`: `{ name, a, b }`, the station and offset of each end. A
+name the frame lacks throws, and an end outside the alignment makes the call
+throw (in `measureSpan`, that sample records the error).
+
+**The `projection` accuracy term.** Each design end adds a term with source
+`projection`. Its size, in meters, is PROJ's stated accuracy for the frame's
+recorded operation (2.015 m for NAD83(2011) + NAVD88 to WGS 84 with GEOID18).
+When PROJ states none (a pinned pipeline, or an operation with no accuracy),
+or the operation is a ballpark one, the term's `meters` is `undefined`, and
+so is the statement's `meters`. The term's `note` names the frame, the grids
+and the ballpark case.
+
+**Where PROJ comes from.** PROJ 9.7.1 is not an npm dependency: proj.js's npm
+package downloads its binaries on every install. `npm run setup` fetches
+proj.js v0.9.2's GitHub release, checks each tarball against a pinned SHA-256
+and keeps `proj_capi.mjs`, `proj_capi.wasm`, `proj_capi.node` and `proj.db`
+under `proj/` in the frames store (see above). The WebAssembly build serves
+the browser and the native build serves Node. Both expose the same PROJ C API.
+Nothing loads PROJ until a frame is created. The only npm dependency is
+`@emnapi/runtime` 1.8.1, which the WebAssembly build needs. The grids you need
+sit beside it: setup fetches GEOID18, and `loadProj` takes the names of any
+others in the browser.
+
+**Credits.** The EPSG Dataset in `proj.db` is credited to IOGP, under its
+terms of use (https://epsg.org/terms-of-use.html). PROJ and proj.js are MIT.
+GEOID18 is a NOAA/NGS product, public domain, served from cdn.proj.org.
+
 ```sh
 npm run build                               # at the repo root: 1.x build used by the parity harness
 npm run dev --workspace @cesium/next        # dev server at http://127.0.0.1:5190

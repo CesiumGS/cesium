@@ -6436,6 +6436,134 @@ out, because none of them changes a result.
   `src/measure/constants.ts`, so the frames layer depends on measurement.
   Move the shared constants to a neutral module.
 
+_Frames 4a results (r64): engineering frames._ The fourth of five plans
+(`docs/superpowers/plans/2026-11-05-frames-4a-engineering-frames.md`) landed
+in `src/engineering/` (`proj.ts`, `crs.ts`, `EngineeringFrame.ts`,
+`factors.ts`, `alignment.ts`, `fresnel.ts`) and `src/measure/` (design points
+and the `projection` accuracy term). Rendering is unchanged, and nothing
+loads PROJ until an engineering frame is created. Worst agreement the tests
+measured, 2026-11-05:
+
+- **PROJ against pyproj 3.8.0** (PROJ 9.8.1; the engine runs 9.7.1), four
+  cases of 12 points, forward and inverse: exactly 0 m, against a tolerance of
+  1e-6 m. The cases are California zone 3 in US survey feet with NAVD88,
+  Arizona Central in international feet, UTM 11N, and the Moon's south polar
+  stereographic. The recorded operation equals pyproj's choice in all four. The
+  browser (WebAssembly) build gives the Node result to 1 ulp in height
+  (1e-14 m).
+- **Round trips.** Design to body-fixed to design, over 21 points on a 50 km
+  line and 100 km from the central meridian, with a site transform (rotation
+  12.5°, scale 1.0000375): 3.1e-9 m, against a limit of 1e-4 m. The Moon:
+  1.4e-9 m. A rigid placement's inverse of its own forward: 2.3e-10 m. The
+  site transform's own round trip is exact to 1e-12.
+- **Factors against pyproj `get_factors`.** Scale: 5.4e-14 (California),
+  2.0e-13 (Arizona), 0 (UTM) and 6.0e-12 (Moon polar). Convergence: 2.3e-14 rad,
+  0, 0 and 1.9e-13 rad. The Earth's tolerance is 1e-12 and the Moon's 1e-10.
+  The scale is PROJ's parallel scale: its meridional and parallel scales differ
+  by up to 1.5e-11 for a conformal projection.
+- **Rigid-placement sag** at 10 km of grid east of the anchor: 7.80 m, in the
+  spec's 7.8 m ± 1.5 m.
+- **Units.** EPSG:6420 and a WKT2 copy of the same CRS with international-foot
+  axes, at the same numbers, differ by 2.0034e-6 in ratio (the unit ratio
+  is 2.000004e-6; the remainder is the scale factor's change over the 4 m
+  origin shift). PROJ's US survey foot is 0.30480060960121924 m, 1 ulp above
+  1200/3937.
+- **Alignment recovery.** `stationOffset(pointAt(s, o))` returns `(s, o)`
+  within 4.6e-13 design units at a start of (1000, 2000), over 20,000 random
+  points plus every join and end, left and right. At State Plane magnitudes
+  (start (6,000,000, 2,000,000)) it is 4.4e-10 for station and 4.8e-10 for
+  offset, which is the ulp of the coordinate itself (9.3e-10). A point on the
+  centerline has offset within 3.2e-13. Near the centre of curvature the
+  station is known only to about 3.5e-9 (offset -90, radius 100, at E =
+  6,000,000), the input's rounding times R/(R - |offset|). That is irreducible
+  and an independent exact foot agrees to 2.3e-13. Spirals within 1e-11 of
+  constant curvature use quadrature (6.3e-13 or better).
+- **Fresnel integrals** against SciPy 1.16.2 over 6,500 points: 9.9e-16
+  relative below t = 1.5, 1.9e-15 up to t = 6 and 5.8e-15 up to t = 100.
+  At large t the phase is reduced exactly, and the values match an exact
+  reference to 5.6e-17 where SciPy's own phase loss reaches 1.9e-12.
+- **Design measurement.** 10,000 ftUS of design distance in California zone 3
+  (site scale 1.0000375) is a true distance of 3048.324343749 m. The relation
+  `distance × siteScale × metersPerUnit / combinedFactor.mean` predicts it to
+  3.3e-6 m. A design measurement equals the same call on the body-fixed points
+  to 1e-9 m. The `projection` term for NAD83(2011) + NAVD88 to WGS 84 with
+  GEOID18 is 2.015 m (Arizona's operation without a grid, 4 m; the Moon's
+  south polar, undefined).
+- **Gates**: `npm test` 523 passing; `npm run test:data` 110 passing.
+
+Rulings:
+
+- **R1**: PROJ comes from proj.js v0.9.2's GitHub release, pinned in setup, not from npm (the npm package downloads its binaries on every install).
+- **R2**: a frame records its PROJ operation at creation, takes the first candidate whose grids are loaded, and throws naming a missing grid (never a silent ballpark).
+- **R3**: CRS references follow the 3D Tiles 2.0 draft's `EXT_geospatial_crs`; the site transform, placement and alignments live on the frame definition, and 4b proposes them as draft additions.
+- **R4**: PROJ stops at the body's geographic CRS and the engine's `Ellipsoid` does the rest. Amended: `proj.db` 9.7.1 has no Moon 3D CRS, so the Moon uses `IAU_2015:30100` (2D) and heights pass through as heights above the 1,737,400 m sphere.
+- **R5**: units come from the CRS, never assumed (US survey foot 1200/3937 m, international foot 0.3048 m).
+- **R6**: the site transform is `[E, N] = [E0, N0] + s·R(θ)·[e, n]`, `U = U0 + u`, with height unscaled and an exact inverse.
+- **R7**: scale and convergence come from `proj_factors`, and the combined factor is k × R/(R + h).
+- **R8**: alignment geometry is exact to float64 with Fresnel clothoids, a point past an end throws "outside the alignment", and a tie takes the lower station.
+- **R9**: design ends add a `projection` accuracy term from PROJ's operation accuracy, and undefined (never small) when PROJ states none or the operation is a ballpark one.
+
+Controller rulings made while building it:
+
+- A rigid placement takes its grid north from the operation itself (one design
+  unit along +N, projected on the tangent plane), so it needs no convergence
+  formula. Its scale is `metersPerUnit`, not the point scale factor.
+- The design result gains `siteScale`, so the ground distance is
+  `distance × siteScale × metersPerUnit / combinedFactor.mean`.
+- An engineering frame requires a projected CRS. A geographic design CRS
+  throws, naming the CRS.
+- `epoch` is the coordinate time of a time-dependent operation. `proj_create`
+  rejects `CRS@epoch`, so it is not part of the definition string.
+- A CRS or pinned pipeline that `proj_create` cannot build is detected by its
+  empty result (PROJ does not throw), and a ballpark operation by its name.
+- The native module read `PROJ_DATA` at first use, so a second base moved the
+  first one's grids. `loadNode` now forces initialization, with a regression
+  test.
+- `gridFactors` evaluates at the inverse projection of the point's grid
+  coordinates on the CRS's own datum, not at the WGS84 position (1-2 m away,
+  1e-10 in k).
+- Near the join and ends of an element the perpendicular-foot window scales with
+  float64 rounding of the coordinates and with 1/|f'| at the foot, so a point
+  at the end station is not rejected by its own rounding. A point past the end
+  still throws.
+- Snyk: a Medium CWE-23 at `proj.ts` `writeGrids` is accepted as a false
+  positive (the target is the WebAssembly module's in-memory file system and
+  grid names are validated as plain file names). `src/measure` has 0 issues.
+  `@emnapi/runtime` 1.8.1 is Healthy with 0 vulnerabilities.
+
+_Carried forward from frames plan 4a._ These are deferred items that are real
+work. The test-strength and wording nits the reviews raised are left out,
+because none of them changes a result.
+
+- **Plan 4b:** export `loadProj`, `gridFactors`, `resolveOperation`,
+  `crsUnits`, `crsDefinition`, `MOON_GEOGRAPHIC_CRS` and the types `CrsRef`,
+  `RecordedOperation`, `GridFactors` and `ProjApi` from `src/index.ts`.
+  Today they are imported from their modules, and the README says so. The 4b
+  reader needs them as public names.
+- **Plan 4b:** tests for design points on the Moon, across two frames and with
+  `signal: false`. Today's design-measurement tests cover the Earth, one frame
+  and the signal path.
+- **Plan 4b:** grid names in a pinned pipeline are read from `+grids=` only.
+  A pinned pipeline using `+nadgrids` or `+geoidgrids` reports an empty grid
+  list, so the missing-grid check and the accuracy note do not name its files.
+  Parse those keys as well, in the same step that fetches grids.
+- **Plan 4b:** after a PROJ upgrade, regenerate `test/fixtures/frames/proj.json`
+  with `scripts/frameFixtures.py`. The 1e-12 factor tolerance against pyproj
+  holds because both sides see bit-identical inputs, and sits at PROJ's
+  numerical-differentiation noise floor.
+- **Plan 5:** `measureSpan` runs `gridFactors` twice per sample, a `proj_factors`
+  call at each end. Cache the factors by design point, or compute them once for
+  a span's fixed ends.
+- **Plan 5:** `proj.ts` imports `@emnapi/runtime` statically, so every importer
+  of the module pays for it, and the browser load imports `proj_capi.mjs` by a
+  runtime URL (`@vite-ignore`). It was checked in the dev server only. Import
+  the runtime dynamically inside the browser path, and check `loadProj` in a
+  production build and in `build:lib`'s output.
+- **Frames example (the entry above):** the PROJ objects an `EngineeringFrame`,
+  `gridFactors` and `resolveOperation` create are never destroyed
+  (`proj_destroy`). One frame is cheap, but the stress tests make many. Release
+  them when a frame is dropped.
+
 _Watch: lunar reference systems (checked 2026-11-06)._ No lunar 3D CRS or
 height system is standardized yet.
 
