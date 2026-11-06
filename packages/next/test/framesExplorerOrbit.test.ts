@@ -20,11 +20,20 @@ import {
   rigFraming,
   stopRig,
   viewHeading,
+  CameraFlow,
+  moonOrbitNormal,
   type Rig,
 } from "../examples/frames-explorer/orbit.ts";
+import {
+  InspectController,
+  orbitBasis,
+  orbitPose,
+  type OrbitFrame,
+} from "../src/scene/InspectController.ts";
+import type { View } from "../src/scene/View.ts";
+import { orbitState, planOrbit } from "../widgets/orbitFocus.ts";
 import { TOUR } from "../examples/frames-explorer/content.ts";
 import { Camera } from "../src/scene/Camera.ts";
-import { orbitBasis, orbitPose } from "../src/scene/InspectController.ts";
 
 const sub = (a: ArrayLike<number>, b: ArrayLike<number>) =>
   [0, 1, 2].map((i) => a[i]! - b[i]!);
@@ -45,7 +54,9 @@ describe("which views orbit (the owner: stuck out in space)", () => {
   it("orbits at the stops framed off the Earth's surface, and keeps the globe controls at the surface stops", () => {
     const rigs = Object.fromEntries(TOUR.map((s) => [s.id, stopRig(s.camera)]));
     expect(rigs).toEqual({
-      "earth-frames": "geocentric",
+      // Stop 1 frames the Earth from four radii: the globe controls, so
+      // the ground is a zoom away (controller's ruling, fix round 1).
+      "earth-frames": undefined,
       "gcrf-itrf-day": "geocentric",
       "design-grid": undefined,
       "rigid-exact": undefined,
@@ -55,10 +66,7 @@ describe("which views orbit (the owner: stuck out in space)", () => {
     expect(stopRig("opening")).toBeUndefined();
   });
 
-  it("orbits a selected frame whose origin is off the surface, on its own origin", () => {
-    for (const id of ["ITRF", "GCRF", "EME2000", "EARTH_ICRF"]) {
-      expect(frameRig(id)).toBe("geocentric");
-    }
+  it("orbits a selected Moon or Orion frame, on its own origin", () => {
     for (const id of ["MOON_ICRF", "MOON_ME", "MOON_PA"]) {
       expect(frameRig(id)).toBe("moon");
     }
@@ -69,11 +77,17 @@ describe("which views orbit (the owner: stuck out in space)", () => {
   it("keeps the globe controls for Earth-surface frames and the opening view", () => {
     // ICRF and HCRS show the opening shot: their origins (the barycentre,
     // the Sun) aren't on the scene.
+    // The Earth's own frames show the opening shot too, with the ground a
+    // zoom away.
     for (const id of [
       "Sacramento ENU",
       "engineering:California zone 3",
       "ICRF",
       "HCRS",
+      "ITRF",
+      "GCRF",
+      "EME2000",
+      "EARTH_ICRF",
     ]) {
       expect(frameRig(id)).toBeUndefined();
     }
@@ -126,9 +140,10 @@ describe("each orbit's focus and axes", () => {
 describe("range limits: zoom can't throw you into deep space or through a body", () => {
   const d = 3.84e8;
 
-  it("keeps the geocentric orbit outside the Earth and within the Moon's distance", () => {
+  it("lets stop 2's geocentric orbit zoom close to the ground, never inside it, and stay within the Moon's distance", () => {
     const r = rangeLimits("geocentric", d);
-    expect(r.minRange).toBeGreaterThan(1.2 * EARTH_RADIUS);
+    expect(r.minRange).toBeGreaterThan(1.01 * EARTH_RADIUS);
+    expect(r.minRange).toBeLessThanOrEqual(1.03 * EARTH_RADIUS);
     expect(r.maxRange).toBeLessThanOrEqual(d);
     expect(r.maxRange).toBeGreaterThan(20 * EARTH_RADIUS);
   });
@@ -378,5 +393,174 @@ describe("the pivot marker", () => {
   it("hides behind the camera and outside the view", () => {
     expect(pivotPlacement([-10, 0, 0], camera, 800, 600)).toBeUndefined();
     expect(pivotPlacement([1, 50, 0], camera, 800, 600)).toBeUndefined();
+  });
+});
+
+describe("flights and the controls they land in (fix round 1)", () => {
+  const rig = { name: "moon" };
+  const site = { name: "site" };
+
+  it("flies to a surface view on the globe controls, and lands in nothing more", () => {
+    const flow = new CameraFlow<typeof rig>();
+    expect(flow.fly(undefined)).toBe("globe");
+    // A grab of the globe ends it: the globe controls are already the
+    // destination's.
+    expect(flow.interrupt()).toBeUndefined();
+    expect(flow.arrive()).toBeUndefined();
+  });
+
+  it("flies to an orbit view on an interim orbit (no jump), and lands in the destination's orbit when it arrives", () => {
+    const flow = new CameraFlow<typeof rig>();
+    expect(flow.fly(rig)).toBe("interim");
+    expect(flow.arrive()).toBe(rig);
+    // Landed once: a later input is the user's orbit, not a hand-over.
+    expect(flow.interrupt()).toBeUndefined();
+  });
+
+  it("lands in the destination's orbit the moment the user interrupts, from the surface or from another orbit", () => {
+    for (const from of [undefined, site]) {
+      const flow = new CameraFlow<typeof rig>();
+      if (from) {
+        flow.fly(from);
+        flow.arrive();
+      }
+      flow.fly(rig);
+      expect(flow.interrupt()).toBe(rig);
+      // The ended flight doesn't land again.
+      expect(flow.arrive()).toBeUndefined();
+      expect(flow.interrupt()).toBeUndefined();
+    }
+  });
+
+  it("lands in the latest flight's controls when a flight replaces another", () => {
+    const flow = new CameraFlow<typeof rig>();
+    flow.fly(site);
+    flow.fly(rig);
+    expect(flow.interrupt()).toBe(rig);
+    flow.fly(site);
+    expect(flow.fly(undefined)).toBe("globe");
+    expect(flow.interrupt()).toBeUndefined();
+  });
+
+  it("lets a fetched asset frame itself only if nothing moved the camera since it was asked for", () => {
+    const flow = new CameraFlow<typeof rig>();
+    const asked = flow.ask();
+    expect(flow.arrival(asked, false)).toBe(true);
+    // A flight under way, or one since (even if arrived), keeps the camera.
+    expect(flow.arrival(asked, true)).toBe(false);
+    const again = flow.ask();
+    flow.fly(rig);
+    flow.arrive();
+    expect(flow.arrival(again, false)).toBe(false);
+  });
+});
+
+describe("following the subject during a drag (fix round 1)", () => {
+  // An orbit controller as the Viewer drives it: setControls' options
+  // resolved by planOrbit, then the frame, limits and focus applied.
+  const SIZE = 100;
+  function setup() {
+    const camera = new Camera();
+    const view = {
+      camera,
+      target: { width: SIZE, height: SIZE },
+      contains: () => true,
+      pixelRect: () => ({ x: 0, y: 0, width: SIZE, height: SIZE }),
+    } as unknown as View;
+    const element = new EventTarget() as EventTarget & {
+      getBoundingClientRect(): object;
+    };
+    element.getBoundingClientRect = () => ({
+      left: 0,
+      top: 0,
+      width: SIZE,
+      height: SIZE,
+    });
+    const controller = new InspectController(
+      view,
+      element as unknown as HTMLElement,
+    );
+    const fire = (type: string, x = 0, y = 0) =>
+      element.dispatchEvent(
+        Object.assign(new Event(type), {
+          clientX: x,
+          clientY: y,
+          button: 0,
+          shiftKey: false,
+        }),
+      );
+    const set = (options: {
+      target: ArrayLike<number>;
+      frame: OrbitFrame;
+      heading?: number;
+      pitch?: number;
+      range?: number;
+    }) => {
+      const plan = planOrbit(orbitState(controller), options, {
+        focusCenter: options.target,
+        cameraPosition: camera.position,
+        globeHeading: 0,
+      });
+      controller.frame = plan.frame;
+      controller.focus(plan.target, plan.heading, plan.pitch, plan.range);
+    };
+    return { camera, controller, fire, set };
+  }
+
+  it("carries the pivot with the subject mid-drag, keeps the pose, and lets the drag go on from it", () => {
+    const { camera, controller, fire, set } = setup();
+    const from: Rig = {
+      target: [3.8e8, 0, 0],
+      up: [0, 0, 1],
+      headingRef: [1, 0, 0],
+    };
+    set({
+      target: from.target,
+      frame: from,
+      heading: 0.3,
+      pitch: -0.4,
+      range: 5e6,
+    });
+    fire("pointerdown", 50, 50);
+    fire("pointermove", 60, 50);
+    expect(controller.dragging).toBe(true);
+    const turned = controller.heading;
+    expect(turned).toBeCloseTo(0.3 + Math.PI / 10, 12);
+    // The subject moves 28 km and turns a little, mid-drag.
+    const to = placeRig(from, turnZ(1e-4, [0, 28_000, 0]));
+    const next = followRig(
+      camera.position,
+      controller.target,
+      from,
+      to,
+      turned,
+    )!;
+    set(next);
+    close(controller.target, to.target, 1e-3);
+    expect(controller.heading).toBeCloseTo(turned, 9);
+    expect(controller.pitch).toBeCloseTo(-0.4, 9);
+    expect(controller.range).toBeCloseTo(5e6, 3);
+    expect(controller.dragging).toBe(true);
+    // The drag goes on by its own increments, from where it was.
+    fire("pointermove", 70, 50);
+    expect(controller.heading).toBeCloseTo(turned + Math.PI / 10, 9);
+    fire("pointerup");
+  });
+});
+
+describe("stop 5's orbit normal", () => {
+  it("is the prograde normal: r before × r after, normalized", () => {
+    // A circular orbit counter-clockwise about +z: the normal is +z.
+    const at = (ms: number) => {
+      const a = (ms / 3.6e6) * 0.01;
+      return [3.8e8 * Math.cos(a), 3.8e8 * Math.sin(a), 0];
+    };
+    close(moonOrbitNormal(at), [0, 0, 1], 1e-12);
+    // Clockwise: -z.
+    close(
+      moonOrbitNormal((ms) => at(-ms)),
+      [0, 0, -1],
+      1e-12,
+    );
   });
 });

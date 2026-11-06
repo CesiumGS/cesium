@@ -87,14 +87,24 @@ describe("what the copy says, at true scale", () => {
     expect(copy.inset.leader).toBe("31.4 m");
   });
 
-  it("names the gap's two parts in the inset: the drop and the grid scale's part along the line", () => {
+  it("names the gap's two parts in the inset: down and along the line, at right angles", () => {
     expect(copy.inset.parts).toEqual({
-      drop: "31.3 m drop",
-      along: "1.5 m along (grid scale)",
+      drop: "31.32 m down",
+      along: "1.48 m along (grid scale)",
     });
     expect(copy.inset.description).toBe(
-      "31.4 m apart: 31.3 m drop, 1.5 m along the line (grid scale)",
+      "31.4 m apart: 31.32 m down and 1.48 m along the line, at right angles (grid scale)",
     );
+  });
+
+  it("shows the parts finely enough that, combined in quadrature, they give the whole as shown", () => {
+    const num = (t: string) => Number(/^([\d.]+) m/.exec(t)![1]);
+    const down = num(copy.inset.parts!.drop);
+    const along = num(copy.inset.parts!.along);
+    const whole = num(copy.inset.leader);
+    expect(Math.hypot(down, along).toFixed(1)).toBe(whole.toFixed(1));
+    // Not by addition.
+    expect((down + along).toFixed(1)).not.toBe(whole.toFixed(1));
   });
 
   it("leaves the parts out until the worker has given them", () => {

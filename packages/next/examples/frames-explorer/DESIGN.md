@@ -255,39 +255,51 @@ reduced motion, flights cut.
 
 The owner got "stuck out in space": the globe controls only start a turn
 from a press on the Earth, and nothing showed where the centre of rotation
-was. A view framed off the Earth's surface now **orbits its subject** with
+was. A view framed on the Moon or Orion now **orbits its subject** with
 the viewer's orbit controls (`viewer.setControls("orbit", …)`): a drag
 anywhere turns about the subject, the wheel zooms within limits, and a
-right- or shift-drag pans. Surface views (stops 3 and 4, the opening shot,
-Earth-surface selections, a fetched asset) keep the globe controls
-(`setControls("globe")`). Each orbit is a **rig**: its focus, its up (heading
+right- or shift-drag pans. So does stop 2, the polar view whose clock plays
+at 3,600×, about the Earth's axis. The Earth's views (stops 1, 3 and 4, the
+opening shot, the Earth's frames and sites, a fetched asset) keep the globe
+controls (`setControls("globe")`), so the ground is a zoom away (the
+controller's ruling, fix round 1). Each orbit is a **rig**: its focus, its up (heading
 turns about it, pitch is measured from the plane square to it) and its
 heading 0, held in a frame of the subject's own (`orbit.ts`, unit-tested):
 
-| View                                                    | Focus                                                 | Up                                                    | Heading 0                    | Wheel range                                            |
-| ------------------------------------------------------- | ----------------------------------------------------- | ----------------------------------------------------- | ---------------------------- | ------------------------------------------------------ |
-| Stops 1 and 2; ITRF, GCRF, EME2000, EARTH_ICRF selected | the Earth's centre                                    | the Earth's axis (ITRF z)                             | 0° longitude (ITRF x)        | 1.3 to 40 Earth radii                                  |
-| Stop 5; Orion selected                                  | between the Earth and the Moon (the framing's centre) | the Moon's orbit normal at the flyby (DE440, ±30 min) | the Moon at the flyby        | 0.15 to 4 Earth–Moon distances                         |
-| MOON_ICRF, MOON_ME, MOON_PA selected                    | the Moon's centre                                     | its pole (MOON_ME z)                                  | the Earth's side (MOON_ME x) | 1.3 Moon radii to a quarter of the Earth–Moon distance |
-| Stop 6; the lunar site selected                         | the site                                              | its vertical (the site's up in MOON_ME)               | its north                    | 5 km to 25,000 km                                      |
+| View                                 | Focus                                                 | Up                                                    | Heading 0                    | Wheel range                                            |
+| ------------------------------------ | ----------------------------------------------------- | ----------------------------------------------------- | ---------------------------- | ------------------------------------------------------ |
+| Stop 2                               | the Earth's centre                                    | the Earth's axis (ITRF z)                             | 0° longitude (ITRF x)        | 1.02 to 40 Earth radii (about 130 km above the ground) |
+| Stop 5; Orion selected               | between the Earth and the Moon (the framing's centre) | the Moon's orbit normal at the flyby (DE440, ±30 min) | the Moon at the flyby        | 0.15 to 4 Earth–Moon distances                         |
+| MOON_ICRF, MOON_ME, MOON_PA selected | the Moon's centre                                     | its pole (MOON_ME z)                                  | the Earth's side (MOON_ME x) | 1.3 Moon radii to a quarter of the Earth–Moon distance |
+| Stop 6; the lunar site selected      | the site                                              | its vertical (the site's up in MOON_ME)               | its north                    | 5 km to 25,000 km                                      |
 
-Stop 1 isn't named in the owner's list; it frames the geocentric triads
-from four Earth radii, as stop 2 does, so it orbits the Earth's centre too.
 ICRF and HCRS show the opening shot (their origins, the barycentre and the
-Sun, aren't on the scene) and keep the globe controls.
+Sun, aren't on the scene) and keep the globe controls, as the Earth's frames
+do.
 
 - **Following the clock.** The rigs are fixed in ITRF, GCRF (stop 5, as
   Orion's path is), MOON_ME or the site's frame, so the Moon's and the site's
-  rigs move in the Earth-fixed world as time runs. Once a frame at most, when
-  the clock has moved, and never during a drag or a flight, the orbit is
-  carried rigidly with its subject (`followRig`): the camera keeps its
-  heading, pitch and range, and a panned pivot moves with the subject.
+  rigs move in the Earth-fixed world as time runs (the Moon at about
+  28 km/s). Once a frame at most, when the clock has moved, never during a
+  flight but during a drag too, the orbit is carried rigidly with its
+  subject (`followRig`): the camera keeps its heading, pitch and range, and
+  a panned pivot moves with the subject. Those are the controller's own
+  values, read back from the camera it placed, so a drag goes on by its own
+  increments, unfought, and nothing snaps when it ends.
 - **The hand-over.** A flight ends where its framing put the camera; the
   orbit then reads pitch and range from there and the heading from the view
   (`viewHeading`: looking straight down the rig's up, as at stop 5, the
-  heading is the screen's up, so the view doesn't turn a quarter). A drag or
-  wheel of the orbit ends a flight, as a grab of the globe does; an ended
-  flight leaves the controls as they were (Frame content flies again).
+  heading is the screen's up, so the view doesn't turn a quarter).
+- **An interrupted flight lands in its destination's controls**
+  (`CameraFlow`, fix round 1). A flight to a surface view takes the globe
+  controls at its start, so a grab of the globe ends it there. A flight to
+  an orbit view takes an interim orbit at its start, about the point
+  straight ahead at the destination's distance, up the camera's own up
+  (taking it moves nothing); the user's first drag or wheel ends the flight
+  and lands at once in the destination's orbit, with its following, and the
+  drag goes on about the subject. A fetched asset frames itself on arrival
+  only if no flight has started since it was asked for and none is under
+  way.
 - **The pivot marker.** While the orbit is dragged, a 20 px white ring with
   a centre dot and crosshair ticks, outlined dark so it reads on sky and
   ground alike, sits at `viewer.orbitPivot` (`pivot.ts`; HUD, never taking
@@ -382,11 +394,15 @@ caption (stop 3's ×20 convergence and its switch stay).
   mostly the curvature's drop, and partly along the line: rigid placement
   lays 20 km of grid as 20 km, the exact one as 20 km over the grid scale
   factor (about 0.99993 between the zone's standard parallels), so the rigid
-  point falls 1.5 m short. Both are computed from the two placements, split
+  point falls 1.48 m short. Both are computed from the two placements, split
   along the inset's own axes (`gapParts`: the ellipsoid's normal at the mark,
-  the line levelled there), not estimated: "31.3 m drop" left of the leader,
-  "1.5 m along (grid scale)" at its top by the rigid line, and the stop's
-  caption says why the leader leans. `test/data` checks the part along the
+  the line levelled there), not estimated. They are at right angles, so they
+  combine in quadrature, √(31.32² + 1.48²) = 31.36, not by addition; shown
+  to the centimetre, a digit finer than the whole, they give the whole as
+  shown (to the decimetre, 31.3 and 1.5 would make 31.3): "31.32 m down"
+  left of the leader, "1.48 m along (grid scale)" at its top by the rigid
+  line, and the stop's caption says "31.32 m down and 1.48 m along the line,
+  at right angles" and why the leader leans. `test/data` checks the part along the
   line against the integrated grid scale (1.4 m, plus about 0.1 m from the
   normal's turn over 20 km and the arc against its chord).
 - **Where it sits.** Wide views: bottom left, 240 × 140 px plus its 24 px
@@ -400,7 +416,7 @@ caption (stop 3's ×20 convergence and its switch stay).
   560 and 620 px wide, on a short view, the 340 px tour caption reaches over
   the inset's corner: the inset reads the caption's box and narrows in place
   (to 140 px at least) to end a gutter short of it (checked at 600 and 680
-  px).
+  px). It watches only the caption element shown: each stop mounts its own.
 - **When it shows.** While the rigid and exact lines are drawn, outside the
   tour or at stop 4. Another stop, the overlay off, or leaving the example
   removes the view (its frame, observers and view-mask bit with it); the

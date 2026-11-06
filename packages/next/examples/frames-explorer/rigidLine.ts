@@ -71,13 +71,18 @@ const km = (meters: number) => `${Math.round(meters / 1000)} km`;
 export function rigidCopy(f: RigidFigures) {
   const end = length(f.sagEnd, 3);
   const mark = length(f.gapAtMark, 3);
-  // The parts to the decimetre, as the whole is.
-  const drop =
-    f.markDrop !== undefined ? `${length(f.markDrop, 3)} drop` : undefined;
+  // The parts to the centimetre, a digit finer than the whole: they combine
+  // at right angles (in quadrature), and so shown they give the whole as
+  // shown (31.32 and 1.48 make 31.36, shown 31.4; to the decimetre, 31.3
+  // and 1.5 would make 31.34, shown 31.3).
+  const cm = (meters: number) =>
+    length(
+      Math.abs(meters),
+      Math.max(1, Math.floor(Math.log10(Math.abs(meters))) + 3),
+    );
+  const drop = f.markDrop !== undefined ? `${cm(f.markDrop)} down` : undefined;
   const along =
-    f.markAlong !== undefined
-      ? `${length(Math.abs(f.markAlong), 2)} along`
-      : undefined;
+    f.markAlong !== undefined ? `${cm(f.markAlong)} along` : undefined;
   const L = km(RIGID_LINE.lengthM);
   const M = km(RIGID_LINE.markM);
   const parts: OverlayPart[] = [
@@ -119,7 +124,7 @@ export function rigidCopy(f: RigidFigures) {
       /** The inset's accessible description. */
       description:
         drop && along
-          ? `${mark} apart: ${drop}, ${along} the line (grid scale)`
+          ? `${mark} apart: ${drop} and ${along} the line, at right angles (grid scale)`
           : `${mark} apart`,
     },
   };

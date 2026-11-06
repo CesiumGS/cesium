@@ -114,6 +114,8 @@ import {
   rigFraming,
   stopRig,
   viewHeading,
+  CameraFlow,
+  moonOrbitNormal,
   type Rig,
   type RigKind,
 } from "./orbit.ts";
@@ -1829,12 +1831,6 @@ export function run(context: ExampleContext): ExampleRun {
   });
   const OPENING = framingAt(-135, 25, 2 * EARTH_RADIUS);
 
-  const cross = (a: ArrayLike<number>, b: ArrayLike<number>): number[] => [
-    a[1]! * b[2]! - a[2]! * b[1]!,
-    a[2]! * b[0]! - a[0]! * b[2]!,
-    a[0]! * b[1]! - a[1]! * b[0]!,
-  ];
-
   /** The Moon's centre in ITRF at the clock's instant. */
   function moonCenter(): Float64Array | undefined {
     const instant = instantNow();
@@ -1926,7 +1922,7 @@ export function run(context: ExampleContext): ExampleRun {
       : undefined;
   };
 
-  /** Stop 1, stop 2 and the geocentric frames: the Earth's centre, up its axis. */
+  /** Stop 2, the polar view: the Earth's centre, up its axis. */
   function geocentricView(f: Framing): CameraView {
     return {
       framing: f,
@@ -1993,9 +1989,11 @@ export function run(context: ExampleContext): ExampleRun {
         frames!.gcrf,
         Instant.fromUtc(FLYBY + ms, leap),
       );
-    const a = at(-1_800_000);
-    const b = at(1_800_000);
-    const g = cross([a[12]!, a[13]!, a[14]!], [b[12]!, b[13]!, b[14]!]);
+    // Up the prograde normal of the Moon's orbit at the flyby, in GCRF.
+    const g = moonOrbitNormal((ms) => {
+      const t = at(ms);
+      return [t[12]!, t[13]!, t[14]!];
+    });
     const m = frameTransform(frames.gcrf, frames.itrf, instant);
     const toItrf = (v: ArrayLike<number>) =>
       [0, 1, 2].map(
@@ -2074,8 +2072,6 @@ export function run(context: ExampleContext): ExampleRun {
   /** What "Show on globe" and Frame content frame for a frame: Earth frames the opening shot, the Moon's at 20,000 km, sites close. */
   function frameView(id: string): CameraView | undefined {
     switch (frameRig(id, orionInfo?.info.node.id)) {
-      case "geocentric":
-        return geocentricView(OPENING);
       case "moon":
         return moonView();
       case "lunarSite":
@@ -2130,6 +2126,8 @@ export function run(context: ExampleContext): ExampleRun {
     | undefined;
   /** Set while the example itself sets the orbit: any other change is the user's. */
   let orbitInternal = false;
+  /** Which controls each flight lands in, at its arrival or the user's first input (orbit.ts). */
+  const flow = new CameraFlow<NonNullable<CameraView["rig"]>>();
   const setOrbit = (options: Parameters<typeof viewer.setControls>[1]) => {
     orbitInternal = true;
     try {
@@ -2152,18 +2150,47 @@ export function run(context: ExampleContext): ExampleRun {
 
   /**
    * Flies to `v`. A surface view takes the globe controls at once (so a
-   * grab ends the flight); a view off the surface hands over to its orbit
-   * when the flight ends, the camera read where the flight left it.
+   * grab ends the flight there). A view off the surface takes an interim
+   * orbit about the camera's own line of sight, which moves nothing, so a
+   * drag or wheel ends the flight and lands in the destination's orbit at
+   * once (`onOrbitChange`); otherwise it lands there when the flight
+   * arrives, the camera read where the flight left it.
    */
   function show(v: CameraView, seconds?: number): void {
     orbit = undefined;
-    const rig = v.rig;
-    if (!rig) {
+    if (flow.fly(v.rig) === "globe") {
       leaveOrbit();
-      globe.flyTo(v.framing, seconds);
-      return;
+    } else {
+      interimOrbit(v.framing);
     }
-    globe.flyTo(v.framing, seconds, () => startOrbit(rig));
+    globe.flyTo(v.framing, seconds, () => {
+      const rig = flow.arrive();
+      if (rig) {
+        startOrbit(rig);
+      }
+    });
+  }
+
+  /**
+   * The orbit while flying to one: about the point straight ahead at the
+   * destination's distance, up the camera's own up, so taking it moves the
+   * camera not at all; any limits off.
+   */
+  function interimOrbit(to: Framing): void {
+    const cam = viewer.view.camera;
+    const d = Math.max(
+      1,
+      Math.hypot(...[0, 1, 2].map((i) => to.center[i]! - cam.position[i]!)),
+    );
+    setOrbit({
+      target: [0, 1, 2].map((i) => cam.position[i]! + cam.direction[i]! * d),
+      frame: { up: Array.from(cam.up), headingRef: Array.from(cam.direction) },
+      heading: 0,
+      pitch: 0,
+      range: d,
+      minRange: 0.01,
+      maxRange: Infinity,
+    });
   }
 
   function startOrbit(rig: NonNullable<CameraView["rig"]>): void {
@@ -2189,14 +2216,16 @@ export function run(context: ExampleContext): ExampleRun {
 
   /**
    * The Moon and the site move in the Earth-fixed world as the clock runs
-   * (and stop 5's plane turns with GCRF): once a frame at most, and never
-   * during a drag or a flight, the orbit is carried with its subject.
+   * (the Moon at about 28 km/s; stop 5's plane turns with GCRF): once a
+   * frame at most, never during a flight, the orbit is carried with its
+   * subject, during a drag too. Heading, pitch and range are the
+   * controller's own (`followRig` reads them back from the camera it
+   * placed), so the drag goes on by its own increments, unfought.
    */
   function followOrbit(): void {
     if (
       !orbit ||
       viewer.controls !== "orbit" ||
-      viewer.orbitDragging ||
       globe.flying ||
       viewer.clock.time === orbit.at
     ) {
@@ -2248,8 +2277,17 @@ export function run(context: ExampleContext): ExampleRun {
   const pivotMarker = new PivotMarker(viewer, hud);
   viewer.onOrbitChange = () => {
     pivotMarker.update();
-    if (!orbitInternal && globe.flying) {
+    if (orbitInternal) {
+      return;
+    }
+    // The user's drag or wheel during a flight ends it, in the
+    // destination's orbit (if it was flying to one).
+    if (globe.flying) {
       globe.stopFlight();
+    }
+    const rig = flow.interrupt();
+    if (rig) {
+      startOrbit(rig);
     }
   };
   scope.defer(() => {
@@ -2891,6 +2929,8 @@ export function run(context: ExampleContext): ExampleRun {
     if (token === undefined || !/^\d{1,12}$/.test(id)) {
       return;
     }
+    // Framed on arrival only if nothing has moved the camera meanwhile.
+    const asked = flow.ask();
     userCrs = { state: "fetching", id };
     invalidate();
     try {
@@ -2906,9 +2946,13 @@ export function run(context: ExampleContext): ExampleRun {
         return;
       }
       assetTileset = tileset;
-      // On the Earth's surface: the globe controls.
-      leaveOrbit();
-      viewer.zoomTo(tileset);
+      // On the Earth's surface: the globe controls, unless a flight or a
+      // view picked since owns the camera and its controls.
+      if (flow.arrival(asked, globe.flying)) {
+        flow.fly(undefined);
+        leaveOrbit();
+        viewer.zoomTo(tileset);
+      }
       userCrs = {
         state: "noCrs",
         id,
