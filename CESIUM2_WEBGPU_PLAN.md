@@ -6417,6 +6417,21 @@ out, because none of them changes a result.
       gaps;
     - each result shown with its accuracy statement, and pass/fail against
       the stated tolerance.
+  - **The viewer, not just a panel (owner's addition, 2026-11-06),** so the
+    transforms can be seen working:
+    - axis triads drawn for the selected frames at their true placement:
+      ITRF and ENU on the globe, a site grid's rotated axes, the Moon's ME
+      and PA axes, EME2000 against ICRF (the frame bias exaggerated on a
+      control);
+    - a design grid (a projected CRS's graticule and a site grid) draped
+      on the globe, so projection distortion and grid convergence are
+      visible;
+    - a rigid placement drawn next to the exact reprojection of the same
+      long line, showing the sag growing away from the anchor;
+    - round-trip test points drawn as markers, coloured by error against
+      tolerance;
+    - selecting a tree node moves the camera to that frame and highlights
+      its path to the root.
 - **Plan 4 or later:** `src/frames/frames.ts` imports its constants from
   `src/measure/constants.ts`, so the frames layer depends on measurement.
   Move the shared constants to a neutral module.
