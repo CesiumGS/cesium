@@ -85,7 +85,7 @@ Plan 4b later adds three things here:
   - **The costs, accepted:**
     - frame data is held twice;
     - the message layer isn't covered by the Node data test, so it gets its own tests (Task 4);
-    - module workers and the worker's runtime `import()` of `proj_capi.mjs` must work in the production build, not only the dev server. Task 5 checks the built gallery, which also covers §13.14's carried-forward note that `loadProj` was only checked in dev;
+    - module workers and the worker's runtime `import()` of `proj_capi.mjs` must work in the production build, not only the dev server. Task 6 checks the built gallery, which also covers §13.14's carried-forward note that `loadProj` was only checked in dev;
     - errors and logs inside the worker show in the worker's console context.
 - **R14. The page's information architecture (owner's addition, 2026-11-06).**
   - **Three views, one selection.** The tree (structure), the globe (space) and the tests (evidence) share one selection state in `selection.ts`: `type Selection = { kind: "frame"; id: string } | { kind: "result"; id: string } | { kind: "none" }`.
@@ -107,7 +107,7 @@ Plan 4b later adds three things here:
     - **Verify:** lens chips, question cards, results and the inspector.
     - **Report** (R15).
   - **Lenses:** chips for All, Civil, BIM, GIS, Space, Timing, Offshore and AV filter the question cards to one audience. Each group carries its lens tags (Task 1).
-  - **The globe legend:** a box in a corner of the globe lists every active overlay with its accuracy (R8). Accuracy is never shown only in the panel.
+  - **The globe legend:** a box at the globe's bottom right (R17) lists every active overlay with its accuracy (R8). Accuracy is never shown only in the panel.
   - **One status vocabulary:**
 
     | State | Look |
@@ -120,7 +120,7 @@ Plan 4b later adds three things here:
 
     Never color alone: there's always an icon and text. Numbers carry units, with consistent significant figures. Keyboard navigation covers the tabs, cards, rows and inspector actions.
 - **R15. Deep links and a report.**
-  - **Deep links.** Use the gallery's own route format; find how `examples/index.ts` and the gallery shell parse the hash. The selection and lens round-trip through the URL, for example `#/examples/frames-explorer?select=result:space.lunar-time&lens=space`. Opening that link runs what's needed, selects the result and flies to it. If the gallery's router can't carry a query, encode the selection as an extra path segment.
+  - **Deep links.** The selection, lens and tour stop round-trip through the example params (R17), for example `select=result:space.lunar-time&lens=space`, appearing in Dyno's URL as `#/examples/frames-explorer?select=…`. Opening that link runs what's needed, selects the result and flies to it.
   - **The report.** The Report tab copies the run to the clipboard and saves it as Markdown and JSON. It contains:
     - every result with its value, tolerance, accuracy, effect and fingerprint, failures first;
     - the environment: PROJ version, `proj.db` and grid SHA-256 values, the frame-data manifest's versions, the package version, the user agent, and the run's timestamp and duration.
@@ -131,7 +131,7 @@ Plan 4b later adds three things here:
     - **Graphics engineers exploring the proof of concept.** They need a striking, fluid demo: the globe is the hero, overlays are beautiful and legible, and camera flights and path highlights move with purpose.
     - **Subject-matter experts** (geodesists, surveyors, GIS and space people). They need confidence: every question they'd ask has visible evidence, the system is transparent about what it computed and how, and accuracies are honest.
   - **Principles:**
-    - **The globe is the hero:** at least two-thirds of the width on desktop, with a collapsible panel.
+    - **The globe is the hero** within Dyno's side layout. Dyno owns the column widths and collapse (R17). The design pass checks whether the side column is wide enough for the tree, the question cards and the inspector. If it isn't, propose a resizable column in Dyno as its own change, rather than working around it in the example.
     - **Progressive disclosure:** a calm first view, with detail one click away. Never a wall of rows.
     - **Hierarchy from type and spacing,** not boxes and borders. Use StrataKit's semantic type scale and tokens (`--stratakit-font-size-*`, `--stratakit-space-*`, `--stratakit-color-*`), in light and dark.
     - **Color with meaning:**
@@ -159,6 +159,19 @@ Plan 4b later adds three things here:
     4. rigid against exact, and the 31 m sag;
     5. Orion's figure-eight in GCRF against the far-side swing in MOON_ME;
     6. the Moon's south-pole site and lunar time.
+- **R17. Sit inside Dyno's gallery frame (owner's choice, 2026-11-06).** The example runs inside Dyno's StrataKit `Page` (`bench/suite/views/Examples.tsx`). Dyno already owns:
+  - the page chrome: title, back link, "Show source", the "Starting…" overlay and the error alert;
+  - the side layout's column widths and the panel's collapse;
+  - the theme;
+  - the URL;
+  - the inspector (top left) and credits (bottom left) on the canvas.
+
+  The example doesn't duplicate or fight any of these. Instead:
+  - **A React panel in the example contract.** `run` may return `{ dispose, panel }`, where `panel` is a React node. Dyno renders it in its own tree, inside the Controls body, so it inherits StrataKit's `Root`, the theme, portals and focus handling. Examples that return a plain `Dispose` and fill the `HTMLElement` panel keep working unchanged. This stays portable, since Sandcastle is React and StrataKit too (Task 5).
+  - **Example params for deep links.** `context.params` holds the example's URL parameters at start, `context.setParams` replaces them without adding history entries, and `context.watchParams` reports back and forward navigation. Dyno backs these with its router's typed search params. The example never touches `location.hash` (Task 5).
+  - **Startup is quick:** `run` returns its panel as soon as the worker has started, so Dyno's "Starting…" overlay clears. Data loading then shows in the status strip (R9).
+  - **Canvas placement:** the globe legend goes bottom right and tour captions top right, clear of Dyno's inspector and credits.
+  - **The panel's top level is the Explore / Verify / Report tabs,** directly under Dyno's Controls header. No second title or description.
 
 ## Global Constraints
 
@@ -185,7 +198,7 @@ Plan 4b later adds three things here:
 - **Matrix conventions** are unchanged. `src/frames/matrix.ts` is the only layout bridge, and meshes take positions in the world's Earth-fixed meters.
 - **UI: StrataKit (owner's correction, 2026-11-06).** The panel is built with StrataKit, Bentley's design system, as Dyno and Sandcastle are. No other UI library.
   - **Follow `packages/next/bench/suite/DESIGN.md`:** its copy rules and its "Components (StrataKit)" and "Live engines" sections bind. Read `bench/suite/STRATAKIT_FEEDBACK.md` for known gaps. Log new friction there.
-  - **Mounting:** the example renders a React root into `context.panel`, inside the same StrataKit theme provider Dyno uses (`bench/suite/theme.tsx`'s `ThemeRoot`, or the same `@stratakit/mui` provider with Dyno's current scheme), so it follows Dyno's light and dark. It unmounts through `context.scope`.
+  - **Mounting (R17):** the example returns its panel as a React node from `run`, and Dyno renders it inside its own tree, under StrataKit's `Root`. The example never creates a React root and never imports Dyno's `theme.tsx`.
   - **Components:**
 
     | Need | Component |
@@ -220,19 +233,19 @@ Plan 4b later adds three things here:
    - So does a round trip compared against itself.
 
    Every case asserts the error's message pattern or compares against an independent value. A deliberately broken case (a tolerance set to 0 in a unit test of the runner) fails. Test: Task 1.
-2. **The page and the data test disagree.** Both run the same `tests.ts` cases on the same data, so a case that passes headless but fails in the browser shows as a failure in the page, never hidden. Tests: Task 1 and Task 5's browser check.
+2. **The page and the data test disagree.** Both run the same `tests.ts` cases on the same data, so a case that passes headless but fails in the browser shows as a failure in the page, never hidden. Tests: Task 1 and Task 6's browser check.
 3. **Overlays drawn in the wrong place:**
    - a triad drawn with axes transposed;
    - a grid drawn from the wrong CRS;
    - the rigid line and the exact line swapped.
 
    The geometry builders are unit-tested against independent values. Test: Task 3.
-4. **Missing data.** No `/frames-data/`, no PROJ, or no Artemis file. The page shows what's missing and still runs everything else, and nothing throws uncaught. Test: Task 5's browser check, with the dev server started against an empty store.
-5. **Accuracy or loading state hidden or wrong (R8, R9).** A tree edge, overlay or result shown without its accuracy, or an undefined accuracy shown as a number or a blank. A fetch with no indicator, or an indicator stuck after an error or abort. Tests: Task 2 (every node has an accuracy field, with no NaN), Task 5 (unit tests of the loading-state model, and the browser check with network throttling).
+4. **Missing data.** No `/frames-data/`, no PROJ, or no Artemis file. The page shows what's missing and still runs everything else, and nothing throws uncaught. Test: Task 6's browser check, with the dev server started against an empty store.
+5. **Accuracy or loading state hidden or wrong (R8, R9).** A tree edge, overlay or result shown without its accuracy, or an undefined accuracy shown as a number or a blank. A fetch with no indicator, or an indicator stuck after an error or abort. Tests: Task 2 (every node has an accuracy field, with no NaN), Task 6 (unit tests of the loading-state model, and the browser check with network throttling).
 6. **A reference value that isn't independent (R10).** A fixture copied from PROJ's own output, or an effect size checked against the library's own number, makes the comparison circular. Tests: Task 1's data test asserts every `references.json` entry has a `source` with a retrieval date, and that no source names PROJ, pyproj or this library. Each effect-size case's hand formula is written out in the case, not called from `src/`.
 7. **The worker and the direct run disagree (R13).** A result changed by serialization, such as a lost accuracy term, an error renamed, or a NaN turned to null. Test: Task 4 runs a stub catalog through the protocol and directly, and asserts deep equality.
-8. **The selection out of sync (R14).** The globe flown to one result while the inspector shows another, or a stale selection after a re-run or a lens change. Tests: Task 5's `selection.ts` unit tests, and the browser check.
-9. **Leaving the example mid-load or mid-run.** The gallery switches away while PROJ or the OEM is loading, or while the tests run. Nothing leaks into the next example's viewer, and no work continues after `signal` aborts. Test: Task 5.
+8. **The selection out of sync (R14).** The globe flown to one result while the inspector shows another, or a stale selection after a re-run or a lens change. Tests: Task 6's `selection.ts` unit tests, and the browser check.
+9. **Leaving the example mid-load or mid-run.** The gallery switches away while PROJ or the OEM is loading, or while the tests run. Nothing leaks into the next example's viewer, and no work continues after `signal` aborts. Test: Task 6.
 
 ---
 
@@ -552,7 +565,40 @@ Plan 4b later adds three things here:
 - [ ] **Step 4: Run** the test and `npm test`, and confirm they pass.
 - [ ] **Step 5: Commit** with "examples: frames explorer compute worker and its protocol".
 
-### Task 5: The example page
+### Task 5: The gallery contract: React panels and example params
+
+**Files:**
+
+- Modify:
+  - `packages/next/examples/types.ts`
+  - `packages/next/bench/suite/views/Examples.tsx`
+  - `packages/next/bench/suite/routes.tsx` (the example route's search params)
+- Test: follow Dyno's existing view-test pattern, if there is one. If there isn't, use a small unit test of the params mapping, plus Task 6's browser check.
+
+**Interfaces:**
+
+- **Produces** (`examples/types.ts`):
+  - **`interface ExampleRun { dispose: Dispose; panel?: ReactNode }`**, with `ReactNode` imported type-only from `react`.
+  - **`ExampleModule.run(context)`** may return `Dispose | ExampleRun`, or a promise of either.
+  - **`ExampleContext` gains:**
+    - `params: Readonly<Record<string, string>>`;
+    - `setParams(next: Readonly<Record<string, string | undefined>>): void`, which replaces them without a history entry; `undefined` removes a key;
+    - `watchParams(cb: (params: Readonly<Record<string, string>>) => void): () => void`.
+- **Dyno's side** (`Examples.tsx`, `routes.tsx`):
+  - The example route accepts free-form string search params, scoped to the example. They're cleared when switching examples.
+  - When `run` returns a `panel`, Dyno renders it in place of the `HTMLElement` body, in its own React tree, and removes it on leave before `dispose` runs.
+  - Existing examples (plain `Dispose`) are unchanged.
+
+- [ ] **Step 1: Write the failing tests:**
+  - **The params mapping:** route search params become `context.params`; `setParams` produces replace navigation with the merged params, and `undefined` deletes a key; `watchParams` fires on back and forward.
+  - **The panel:** an example returning `{ dispose, panel }` has its panel rendered under the StrataKit `Root` and removed before `dispose` runs.
+  - **Unchanged examples:** an example returning a plain `Dispose` still gets the `HTMLElement` panel.
+- [ ] **Step 2: Run** the tests and confirm they fail.
+- [ ] **Step 3: Implement.** Keep `types.ts` free of Dyno imports, so an example can still move to Sandcastle or a page of its own (the contract's stated goal).
+- [ ] **Step 4: Run** the tests, `npm test`, and tsc. Open two existing examples (translucency and realtime-tracks) in the dev server and confirm they still run, with no console errors.
+- [ ] **Step 5: Commit** with "gallery: examples may return a React panel and use URL params".
+
+### Task 6: The example page
 
 **Files:**
 
@@ -568,7 +614,7 @@ Plan 4b later adds three things here:
 
 **Interfaces:**
 
-- **Consumes:** Tasks 1–4, `ExampleContext`, `loadFrameData`, `createFrames`, `loadProj`, `EngineeringFrame`, `Trajectory.fromOem`, `parseOem`, `viewer.clock`, and the viewer's camera flights (`viewer.zoomTo` or the controller's fly-to; use what the Viewer exposes).
+- **Consumes:** Tasks 1–5, `ExampleContext` with Task 5's `ExampleRun` and params, `loadFrameData`, `createFrames`, `loadProj`, `EngineeringFrame`, `Trajectory.fromOem`, `parseOem`, `viewer.clock`, and the viewer's camera flights (`viewer.zoomTo` or the controller's fly-to; use what the Viewer exposes).
 - **Layout (R14).** The status strip is always on top. Below it are three tabs: Explore (sections 2–4 below), Verify (section 5, as question cards with the inspector) and Report (R15). Section 1's states feed the strip. All runs, PROJ work and PROJ geometry go through Task 4's client (R13).
 - **The page.** The panel's content:
   1. **Status.** Each data item's state: not loaded, fetching (with progress), ready or missing (with the setup hint) (R5, R9).
@@ -587,7 +633,7 @@ Plan 4b later adds three things here:
   4. **Clock.** The viewer's time controls. A preset button jumps to the Artemis II flyby (2026-04-06T23:00 UTC). Triads and Orion's path follow the clock.
   5. **Stress tests.** Effect sizes (R11) show in their own column, and fingerprint cases show "browser = Node" or the difference (R12). The rigid-placement budget shows as a small table. "Run all", or run per group. Results stream into a table: group, title, value against tolerance as a log-scale bar with numbers and unit, pass or fail, and the accuracy statement's total in the row with terms on expand (R8). A summary line gives passed / failed / skipped and the run time.
 - **Accuracy and loading UI (R8, R9).** A small `loading.ts` holds the data-item states and their transitions (idle → fetching → ready | missing | error, with abort back to idle), unit-tested in `test/framesExplorerLoading.test.ts`. The panel renders from that model, so an indicator can't stick.
-- **Startup.** On start, start the worker, load frame data and draw the tree, plus the ITRF and ENU triads at a California site. If the URL carries a selection (R15), apply it once its data is ready. Load PROJ in the worker when an engineering overlay or test first needs it (R6). Route every async step through `context.signal` and every drawn item through `context.scope` (Review Focus 9).
+- **Startup (R17).** Start the worker and return `{ dispose, panel }` at once. Then load frame data and draw the tree, plus the ITRF and ENU triads at a California site. If `context.params` carries a selection, lens or tour stop (R15), apply it once its data is ready, and keep `setParams` in step with the selection. Load PROJ in the worker when an engineering overlay or test first needs it (R6). Route every async step through `context.signal` and every drawn item through `context.scope` (Review Focus 9).
 
 - [ ] **Step 0: Design pass (R16), before wiring the page.**
   - Load the `frontend-design:frontend-design` skill, and read `bench/suite/DESIGN.md` and `STRATAKIT_FEEDBACK.md`. StrataKit and DESIGN.md set the visual language. The design pass applies them; it doesn't invent a new one.
@@ -621,6 +667,12 @@ Plan 4b later adds three things here:
     - Selecting the rigid-placement result flies to its site, turns on its overlay and highlights its frames in the tree.
     - Selecting MOON_PA in the tree filters Verify to the groups that use it.
     - Changing the lens never leaves the inspector showing a hidden result.
+  - **Dyno integration (R17):**
+    - The panel follows Dyno's theme switch live.
+    - Popovers and the snackbar render correctly above the canvas.
+    - The legend and tour captions don't overlap the inspector or credits.
+    - "Starting…" clears within about a second.
+    - Switching to another example clears the example's params from the URL.
   - **Deep link (R15):** copy a result's link, reload the page with it, and confirm the same result is selected and flown to.
   - **Report (R15):** copy the report and check that its counts and environment match the page. Save it, and check that the JSON parses.
   - **Production build:** build the gallery and serve the built output (the repo's preview script, or `vite preview`). Repeat the PROJ load, "Run all" and one overlay there, to prove the module worker and the worker's `proj_capi.mjs` import work outside the dev server (R13).
@@ -638,7 +690,7 @@ Plan 4b later adds three things here:
 - [ ] **Step 3: Run** `npm test`, `npm run test:data`, `npx tsc --noEmit -p .`, `npx eslint` on the changed files, and prettier, and confirm they pass.
 - [ ] **Step 4: Commit** with "examples: Frames and projections, the frame tree drawn and stress-tested".
 
-### Task 6: Docs and the plan note
+### Task 7: Docs and the plan note
 
 **Files:**
 
