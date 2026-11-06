@@ -14,6 +14,9 @@ runs:
       uses: actions/setup-node@v7
       with:
         node-version: ${{ inputs.node-version }}
+        # By default, `actions/setup-node` enables caching if `devEngines.packageManager`
+        # is specified in `package.json`. Caching fails without `package-lock.json`,
+        # so disable the cache explicitly. See #14016.
         package-manager-cache: false
     - name: install npm 11
       run: npm install -g npm@11
