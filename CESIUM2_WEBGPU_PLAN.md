@@ -6933,6 +6933,32 @@ tree". Plan 5 should separate them:
   loads, so a globe-only app never waits for it. Orekit roots at GCRF to avoid
   that dependency; the stand-in removes the reason.
 
+**Accuracy along a route: declared per edge, composed by the library (owner,
+2026-11-06).** "Seems easy for a user to screw up." The rule: the app
+declares each edge's error in its own terms (an angle for an encoder or Earth
+orientation, metres for a link tolerance, a survey or an ephemeris, exact by
+definition, or not stated), and the library composes it for a point along the
+route. The frames example's Task 7b lands the first-order version: an optional
+`accuracy` on `Frame`, and `pointAccuracy`, which scales angular terms by
+their lever arms, adds metre terms, combines them root-sum-square, names the
+dominant term, and propagates "not stated" by name. Plan 5 designs the rest:
+
+- **Confidence is declared, and never mixed silently.** Each edge says whether
+  it gives 1σ, a 95% bound or a hard maximum. The composer converts where a
+  distribution is stated, and refuses to combine otherwise, saying why.
+- **Correlated terms.** An edge whose error is systematic, or two edges that
+  share one error source (the same encoder model, the same EOP table), add
+  linearly rather than root-sum-square. The declaration needs a way to say so.
+- **Per-direction error.** First-order radii are fine for small angles. Full
+  covariance through each edge's Jacobian gives an error ellipsoid at the
+  point, and shows that an encoder error is across-track, not along it.
+- **Time-varying accuracy.** Some edges, like predicted Earth orientation,
+  degrade with age. The query takes the instant, and the breakdown says when a
+  term is a prediction.
+- **Where it surfaces:** picking, measurement and the frames diagram all report
+  the composed accuracy with its breakdown, so "±1.8 mm, mostly the shoulder
+  encoder" is something any app gets, not something the example computes.
+
 Camera rigs and render frames are one question from two sides: plan 5 is also
 where the world stops being drawn Earth-fixed (R6 of plans 2 and 3), so
 design them together. Open choices for the brainstorm: what holds still by
