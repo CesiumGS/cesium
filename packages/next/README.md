@@ -36,13 +36,17 @@ also fetches the data the frames layer needs, into `~/.cesium-bench/frames`
 - IERS `Leap_Second.dat` (leap seconds), from `hpiers.obspm.fr` (the runtime
   also bundles NAIF's `naif0012.tls` table, `LeapSeconds.builtIn()`, and uses
   the download only when it expires later);
-- `EOP-All.csv` (Earth orientation), from CelesTrak.
+- `EOP-All.csv` (Earth orientation), from CelesTrak;
+- the Artemis II trajectory files (the OEM, its SPK and gap-fill SPK, about
+  12 MB) and NAIF's DSN station SPK, each checked against a pinned SHA-256
+  and stored as they are (manifest role `trajectory`, optional at load).
 
 NAIF's generic kernels are public, but what the runtime loads are packs,
 derived excerpts of them (each pack's manifest names its source file, that
 file's SHA-256 and the span). The packs are written on your machine and never
 redistributed by this repository. Credit: EOP data is "IERS, via CelesTrak";
-leap seconds are "IERS". `--frames-span y0-y1` sets the excerpted years, both
+leap seconds are "IERS"; the Artemis II files are "NASA JSC FOD Navigation,
+via NAIF" and the station SPK "NAIF/JPL". `--frames-span y0-y1` sets the excerpted years, both
 included (default `2000-2050`):
 `npm run setup --workspace @cesium/next -- --frames-span 2000-2050`.
 

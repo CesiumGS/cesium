@@ -3,7 +3,8 @@
 Usage: uv run --with pyerfa --with numpy python scripts/frameFixtures.py <section> [args]
 
 Sections: dtdb, bias, earth, earthLeap <store>, utc <store> (needs jplephem), ephemeris
-<store> (needs jplephem), moon <store> <frame kernel> (needs spiceypy and jplephem).
+<store> (needs jplephem), moon <store> <frame kernel> (needs spiceypy and jplephem),
+trajectories <store> <frame kernel> (needs spiceypy).
 earthLeap reads the store's EOP-All.csv; the others read the NAIF kernels
 `npm run setup` downloaded to <store>. Only their small JSON output is committed.
 """
@@ -323,6 +324,103 @@ def moon(store, frame_kernel):
     write("moon", rows)
 
 
+ARTEMIS_MAIN = "art002_rec_260402_260410_jsc_bet_revf.bsp"
+ARTEMIS_GAPFILL = "art002_rec_260402_260410_jsc_bet_revf_gapfill.bsp"
+STATIONS = "earthstns_itrf93_260814.bsp"
+
+
+def type13_segments(path):
+    """Each segment's (start, end, epochs) of the type 13 segments of an SPK
+    (DAF, little-endian): summary start and end, and the stored epochs, TDB s."""
+    raw = Path(path).read_bytes()
+    nd, ni = struct.unpack_from("<ii", raw, 8)
+    assert (nd, ni) == (2, 6)
+    record = struct.unpack_from("<i", raw, 76)[0]
+    out = []
+    while record:
+        base = (record - 1) * 1024
+        nxt, _, count = struct.unpack_from("<ddd", raw, base)
+        for i in range(int(count)):
+            at = base + 24 + i * 40
+            start, end = struct.unpack_from("<dd", raw, at)
+            _target, _center, _frame, dtype, first, last = struct.unpack_from("<6i", raw, at + 16)
+            if dtype != 13:
+                continue
+            # Type 13: states (6n), epochs (n), a directory, then window size and n.
+            n = int(struct.unpack_from("<d", raw, (last - 1) * 8)[0])
+            epochs = struct.unpack_from(f"<{n}d", raw, (first - 1 + 6 * n) * 8)
+            out.append((start, end, list(epochs)))
+        record = int(nxt)
+    return out
+
+
+def trajectories(store, frame_kernel):
+    """Orion (-24) wrt Earth from SPICE with the main then the gap-fill SPK
+    furnished (the later file wins, as in Trajectory.fromSpk), and two DSN
+    stations, in km and km/s. Every instant is TDB seconds past J2000.
+
+    Orion: the 12 distinct segment endpoints (the gap-fill segments share
+    the main ones), one stored epoch, then per segment one instant strictly
+    between the first two epochs and one 1 s before its end (the midpoint of
+    the last two epochs when they are closer than 2 s), so a window that is
+    off by one near an edge shows up, and the rest spread across the span."""
+    import spiceypy as sp
+
+    store = Path(store)
+    for kernel in ("de440s.bsp", "moon_pa_de440_200625.bpc"):
+        sp.furnsh(str(store / kernel))
+    sp.furnsh(str(frame_kernel))
+    # Furnish order is precedence: SPICE searches the last loaded file first.
+    for kernel in (ARTEMIS_MAIN, ARTEMIS_GAPFILL, STATIONS):
+        sp.furnsh(str(store / kernel))
+
+    segments = type13_segments(store / ARTEMIS_MAIN) + type13_segments(store / ARTEMIS_GAPFILL)
+    segments.sort(key=lambda s: s[0])
+    kinds = {}
+
+    def add(et, kind):
+        kinds.setdefault(float(et), kind)
+
+    for start, end, epochs in segments:
+        add(start, "endpoint")
+        add(end, "endpoint")
+    main = type13_segments(store / ARTEMIS_MAIN)
+    mid_epochs = main[2][2]
+    add(mid_epochs[len(mid_epochs) // 2], "epoch")
+    for start, end, epochs in segments:
+        add((epochs[0] + epochs[1]) / 2, "afterStart")
+        last = epochs[-1] - 1.0
+        if epochs[-1] - epochs[-2] < 2.0 or last <= epochs[-2]:
+            last = (epochs[-1] + epochs[-2]) / 2
+        add(last, "beforeEnd")
+    low = min(s[0] for s in segments)
+    high = max(s[1] for s in segments)
+    for et in np.linspace(low, high, 7)[1:-1]:
+        add(et, "spread")
+    times = sorted(kinds)
+    assert len(times) == 40, len(times)
+
+    def state(target, et, frame, center):
+        s, _ = sp.spkgeo(target, et, frame, center)
+        return [float(v) for v in s]
+
+    orion = [
+        {"tdb": et, "kind": kinds[et], "state": state(-24, et, "J2000", 399)} for et in times
+    ]
+    moon_me = [
+        {"tdb": et, "position": [float(v) for v in sp.spkpos("-24", et, "MOON_ME", "NONE", "301")[0]]}
+        for et in times[::4]
+    ][:10]
+    stations = {
+        str(target): [
+            {"tdb": et, "state": state(target, et, "ITRF93", 399)}
+            for et in (times[0], times[len(times) // 2], times[-1])
+        ]
+        for target in (399014, 399043)
+    }
+    write("trajectories", {"orion": orion, "moonMe": moon_me, "stations": stations})
+
+
 SECTIONS = {
     "dtdb": dtdb,
     "bias": bias,
@@ -331,6 +429,7 @@ SECTIONS = {
     "utc": utc,
     "ephemeris": ephemeris,
     "moon": moon,
+    "trajectories": trajectories,
 }
 
 if __name__ == "__main__":
