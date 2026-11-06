@@ -44,6 +44,12 @@ const SETUP_HINT =
 const ROLES = ["planets", "moon", "eop"] as const;
 type Role = (typeof ROLES)[number] | "leapSeconds";
 
+/**
+ * The manifest roles whose files `loadFrameData` fetches (and reports through
+ * `onProgress`): the required ones and the optional leap-second table.
+ */
+export const FRAME_DATA_ROLES: readonly Role[] = [...ROLES, "leapSeconds"];
+
 const hex = (bytes: ArrayBuffer): string =>
   Array.from(new Uint8Array(bytes), (b) =>
     b.toString(16).padStart(2, "0"),

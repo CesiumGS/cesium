@@ -44,9 +44,13 @@ interface WasmModule {
   emnapiInit(options: { context: unknown }): ProjApi;
 }
 
-/** Emscripten's module settings: the WebAssembly, when the caller fetched it. */
+/**
+ * Emscripten's module settings: the WebAssembly, when the caller fetched it.
+ * An ArrayBuffer, so the glue's `new Uint8Array(wasmBinary)` is a view of it,
+ * not another copy.
+ */
 interface ModuleArg {
-  wasmBinary?: Uint8Array;
+  wasmBinary?: ArrayBuffer;
 }
 
 interface Loaded {
@@ -62,11 +66,11 @@ const isNode = (): boolean =>
   typeof process !== "undefined" &&
   !!process.versions?.node;
 
-async function fetchBytes(
+async function fetchBuffer(
   base: string,
   name: string,
   onProgress: LoadProgress | undefined,
-): Promise<Uint8Array> {
+): Promise<ArrayBuffer> {
   const url = `${base}${name}`;
   const response = await fetch(url);
   if (!response.ok) {
@@ -74,11 +78,9 @@ async function fetchBytes(
       `PROJ: ${url} returned ${response.status}; run \`npm run setup\` and restart the dev server`,
     );
   }
-  return new Uint8Array(
-    await readWithProgress(
-      response,
-      onProgress && ((received, total) => onProgress(name, received, total)),
-    ),
+  return readWithProgress(
+    response,
+    onProgress && ((received, total) => onProgress(name, received, total)),
   );
 }
 
@@ -120,7 +122,11 @@ async function fetchFiles(
   const missing = [...new Set(names)].filter((name) => !have.has(name));
   return Promise.all(
     missing.map(
-      async (name) => [name, await fetchBytes(base, name, onProgress)] as const,
+      async (name) =>
+        [
+          name,
+          new Uint8Array(await fetchBuffer(base, name, onProgress)),
+        ] as const,
     ),
   );
 }
@@ -148,7 +154,7 @@ async function loadBrowser(
     import(/* @vite-ignore */ `${base}proj_capi.mjs`) as Promise<{
       default(moduleArg?: ModuleArg): Promise<WasmModule>;
     }>,
-    fetchBytes(base, "proj_capi.wasm", onProgress),
+    fetchBuffer(base, "proj_capi.wasm", onProgress),
     fetchFiles(base, ["proj.db", ...grids], have, onProgress),
   ]);
   const module = await glue.default({ wasmBinary });
