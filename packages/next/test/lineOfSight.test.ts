@@ -36,15 +36,22 @@ describe("segmentBlocked", () => {
     expect(segmentBlocked([r, 0, 0], [r - 1, 0, 0], [r, r, r], 1)).toBe(false);
   });
 
+  it("treats a start below the surface as on it", () => {
+    const a = Ellipsoid.WGS84.radii;
+    const r = [a[0]!, a[1]!, a[2]!];
+    const start = [a[0]! - 100, 0, 0];
+    expect(segmentBlocked(start, [a[0]! + 1e7, 0, 0], r, 1)).toBe(false);
+    expect(segmentBlocked(start, [-(a[0]! + 1e6), 1e6, 0], r, 1)).toBe(true);
+    expect(segmentBlocked(start, [-a[0]!, 0, 0], r, 1)).toBe(true);
+  });
+
   it("uses the ellipsoid's own radii", () => {
     const a = Ellipsoid.WGS84.radii[0]!;
     const c = Ellipsoid.WGS84.radii[2]!;
     const h = 5e3;
-    // A chord at height h above the equator (x = a - h) is blocked; at the
-    // same height above the pole (z = c - h) it is blocked too, but at
-    // x = a + h it passes above the equator and z = a + h is far above
-    // the pole. Distinguish them by the oblateness: z = a - h clears the
-    // pole by 21 km, x = a - h cuts the equator.
+    // Chords a distance h inside the equatorial radius a. In x (the equator)
+    // it cuts the body; in z it passes 16 km clear of the pole, because the
+    // polar radius is 21 km shorter than a.
     expect(segmentBlocked([a - h, -a, 0], [a - h, a, 0], [a, a, c], 1)).toBe(
       true,
     );
@@ -95,7 +102,7 @@ describe("lineOfSight", () => {
 
   it("is blocked by the Earth to a target below its horizon", () => {
     const result = lineOfSight(
-      solutionBetween(station, [a - 1e6, 1e6, 0]),
+      solutionBetween(station, [-(a + 1e6), 1e6, 0]),
       frames,
     );
     expect(result.clear).toBe(false);
@@ -103,7 +110,7 @@ describe("lineOfSight", () => {
   });
 
   it("reports the first blocking body in the order given", () => {
-    const solution = solutionBetween(station, [a - 1e6, 1e6, 0]);
+    const solution = solutionBetween(station, [-(a + 1e6), 1e6, 0]);
     expect(lineOfSight(solution, frames, [EARTH, MOON]).blockedBy).toBe(EARTH);
   });
 });
