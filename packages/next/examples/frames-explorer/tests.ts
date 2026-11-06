@@ -188,8 +188,9 @@ const DECLARED_PATTERNS = new Map<string, RegExp>();
 
 /**
  * Runs `fn` expecting it to throw an error whose message matches `pattern`
- * (R7). The runner judges the result: it passes only if something was thrown
- * and the message matches. The pattern is declared here, and the runner
+ * (R7). The result passes only if something was thrown and the message
+ * matches, both as returned (for callers outside the runner) and as the
+ * runner judges it again. The pattern is declared here, and the runner
  * matches with it (in the same module: the worker judges before results are
  * posted), so an `expectedError` that no expectThrow declared fails.
  */
@@ -206,13 +207,25 @@ export async function expectThrow(
   DECLARED_PATTERNS.set(pattern.source, pattern);
   try {
     await fn();
-    return { ...base, pass: true, expectedError: pattern.source };
-  } catch (error) {
     return {
       ...base,
-      pass: true,
+      pass: false,
       expectedError: pattern.source,
-      error: messageOf(error),
+      detail: `expected an error matching /${pattern.source}/, but nothing was thrown`,
+    };
+  } catch (error) {
+    // Judged here too, so a result used outside the runner is never a false
+    // pass; the runner judges it again from its fields.
+    const message = messageOf(error);
+    const matched = pattern.test(message);
+    return {
+      ...base,
+      pass: matched,
+      expectedError: pattern.source,
+      error: message,
+      ...(!matched && {
+        detail: `threw a different error than /${pattern.source}/ expects`,
+      }),
     };
   }
 }
@@ -307,9 +320,14 @@ function judge(
       reasons.push(`fingerprint: ${difference}`);
     }
   }
-  const detail = [result.detail, ...reasons]
-    .filter((s) => s !== undefined && s !== "")
-    .join("; ");
+  // expectThrow already gives its reason in the detail; say it once.
+  const detail = [
+    ...new Set(
+      [result.detail, ...reasons].filter(
+        (s): s is string => s !== undefined && s !== "",
+      ),
+    ),
+  ].join("; ");
   return {
     ...result,
     pass,
@@ -796,9 +814,19 @@ const DESIGN_ROUND_TRIP = 1e-4; // m (Global Constraints)
 const ALIGNMENT_RECOVERY = 1e-9; // design units
 const GRID_TO_GROUND = 0.01; // m
 const SAME_DISTANCE = 1e-9; // m
-/** Frame-tree compositions: 1 mm per 1e9 m of translation, and 1e-12 in rotation. */
+/**
+ * Frame-tree compositions: 1 mm per 1e9 m of translation, and 1e-12 in
+ * rotation. Read per sample as PER_METER x the largest single translation in
+ * the chains compared, plus ROTATION x the largest point they rotate (the
+ * rotation's lever arm), so neither term is counted twice.
+ */
 const PER_METER = 1e-3 / 1e9;
 const ROTATION = 1e-12;
+const compositionTolerance = (
+  translations: readonly number[],
+  points: readonly number[],
+): number =>
+  PER_METER * Math.max(...translations) + ROTATION * Math.max(...points);
 /** A few float64 ulps of TT near 5e8 s (1.2e-7 s each). */
 const TT_STEP = 1e-6;
 /**
@@ -1362,11 +1390,10 @@ const frameTreeCase = stressCase(
               const back = apply(m(b, a), there);
               consider(
                 distance(back, p),
-                PER_METER *
-                  (translationOf(m(a, b)) +
-                    norm(p) +
-                    translationOf(m(b, a)) +
-                    norm(there)),
+                compositionTolerance(
+                  [translationOf(m(a, b)), translationOf(m(b, a))],
+                  [norm(p), norm(there)],
+                ),
               );
               worstRotation = Math.max(
                 worstRotation,
@@ -1382,13 +1409,14 @@ const frameTreeCase = stressCase(
               const via = apply(m(c, j), step);
               consider(
                 distance(via, direct),
-                PER_METER *
-                  (translationOf(m(i, j)) +
-                    norm(p) +
-                    translationOf(m(i, c)) +
-                    norm(p) +
-                    translationOf(m(c, j)) +
-                    norm(step)),
+                compositionTolerance(
+                  [
+                    translationOf(m(i, j)),
+                    translationOf(m(i, c)),
+                    translationOf(m(c, j)),
+                  ],
+                  [norm(p), norm(step)],
+                ),
               );
               worstRotation = Math.max(
                 worstRotation,
@@ -1574,12 +1602,10 @@ const orionMoonCase = stressCase(
     ).subarray(12, 15);
     const fromCentre = distance(p.position, moonCentre);
     const kept = Math.abs(norm(inMe.position) - fromCentre);
-    const tolerance =
-      PER_METER *
-      (translationOf(toMe) +
-        norm(p.position) +
-        translationOf(fromMe) +
-        norm(inMe.position));
+    const tolerance = compositionTolerance(
+      [translationOf(toMe), translationOf(fromMe)],
+      [norm(p.position), norm(inMe.position)],
+    );
     const accuracy = plainAccuracy(
       measure(
         framePoint(f.moonMe, [0, 0, 0]),
@@ -1645,16 +1671,20 @@ const gridToGroundCase = stressCase(
       proj(ctx),
     );
     const instant = utc(ctx, MEASURED_AT);
+    const length = 10_000; // design ftUS, east along the site grid
     const m = measure(
       designPoint(frame, [2000, 1000, 25]),
-      designPoint(frame, [12_000, 1000, 25]),
+      designPoint(frame, [2000 + length, 1000, 25]),
       instant,
       ctx.frames,
       { signal: false },
     );
     const d = m.design!;
+    // From the known inputs, not the measurement's own design fields: the
+    // only library number in the prediction is the combined factor.
     const predicted =
-      (d.distance * d.siteScale * d.metersPerUnit) / d.combinedFactor.mean;
+      (length * MEASUREMENT_SITE.scale * US_SURVEY_FOOT) /
+      d.combinedFactor.mean;
     return [
       {
         ...base,

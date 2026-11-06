@@ -420,6 +420,88 @@ describe("Operation candidates (listOperations)", () => {
     ).toThrow(/could not create/);
   });
 
+  // A stub PROJ with one candidate, whose list and area calls can be made to fail.
+  const stubProj = (
+    operations: () => unknown,
+    area: () => unknown = () => [-1, -2, 3, 4, "Somewhere"],
+  ) =>
+    ({
+      proj_create: () => ({}),
+      proj_get_name: () => "Candidate",
+      proj_as_proj_string: () => "+proj=noop",
+      proj_normalize_for_visualization: (o: unknown) => o,
+      PJ_PROJ_5: 1,
+      proj_create_operation_factory_context: () => ({}),
+      proj_create_operations: operations,
+      proj_coordoperation_get_grid_used_count: () => 0,
+      proj_coordoperation_get_accuracy: () => 1,
+      proj_coordoperation_is_instantiable: () => true,
+      proj_get_area_of_use: area,
+    }) as unknown as ProjApi;
+  const oneCandidate = () => ({ length: () => 1, get: () => ({}) });
+
+  it("turns only the binding's empty-list answer into [], and rethrows a real failure", () => {
+    expect(
+      listOperations(
+        stubProj(() => {
+          throw new Error("Error getting list");
+        }),
+        ref("EPSG:2227"),
+        geographic3d,
+      ),
+    ).toEqual([]);
+    const failure = new Error("out of memory");
+    let thrown: unknown;
+    try {
+      listOperations(
+        stubProj(() => {
+          throw failure;
+        }),
+        ref("EPSG:2227"),
+        geographic3d,
+      );
+    } catch (error) {
+      thrown = error;
+    }
+    expect((thrown as Error).message).toMatch(
+      /could not list the operations from EPSG:2227 to EPSG:4979/,
+    );
+    expect((thrown as Error).cause).toBe(failure);
+  });
+
+  it("leaves out an area only when the binding says there is none", () => {
+    const [plain] = listOperations(
+      stubProj(oneCandidate),
+      ref("EPSG:2227"),
+      geographic3d,
+    );
+    expect(plain!.areaOfUse).toEqual({
+      west: -1,
+      south: -2,
+      east: 3,
+      north: 4,
+    });
+    const [none] = listOperations(
+      stubProj(oneCandidate, () => {
+        throw new Error("proj_get_area_of_use failed");
+      }),
+      ref("EPSG:2227"),
+      geographic3d,
+    );
+    expect(none!.areaOfUse).toBeUndefined();
+    expect(none!.accuracy).toBe(1);
+    const failure = new Error("corrupt proj.db");
+    expect(() =>
+      listOperations(
+        stubProj(oneCandidate, () => {
+          throw failure;
+        }),
+        ref("EPSG:2227"),
+        geographic3d,
+      ),
+    ).toThrow(/could not read an operation's area of use/);
+  });
+
   it("gives plain data (structured-clone safe)", async () => {
     const P = await loadProj({ base });
     const candidates = listOperations(P, ref("EPSG:6420+6360"), geographic3d);
