@@ -409,8 +409,8 @@ export function Inspector({
               </dd>
               <dt>Coordinates</dt>
               <dd className="fx-num">
-                {fp.coordinates.length / 3} points, compared to 4 ULP of each
-                point’s magnitude (about 4 nm at the Earth’s radius)
+                {fp.coordinates.length / 3} points, compared to 16 ULP of each
+                point’s magnitude (about 15 nm at the Earth’s radius)
               </dd>
             </dl>
           </Part>

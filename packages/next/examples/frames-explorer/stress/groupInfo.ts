@@ -400,7 +400,7 @@ export const GROUP_INFO: readonly GroupInfo[] = [
     lenses: ["bim", "offshore"],
     virtual: true,
     accuracyNote:
-      "pipeline and grids exact; coordinates within 4 ULP of the point (about 4 nm at the Earth's radius)",
+      "pipeline and grids exact; coordinates within 16 ULP of the point (about 15 nm at the Earth's radius)",
     compared: {
       kind: "independent",
       text: "The fingerprint the Node data test recorded (fingerprints.json).",
