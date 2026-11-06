@@ -12,7 +12,7 @@ import { svgChevronUp } from "@stratakit/icons/chevron-up";
 import { svgDismiss } from "@stratakit/icons/dismiss";
 import { svgLink } from "@stratakit/icons/link";
 import { Icon } from "@stratakit/mui";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import type { Family } from "./families.ts";
 import type { OverlayView, PanelModel, TourStop } from "./model.ts";
 
@@ -147,7 +147,11 @@ export function GlobeLegend({ model }: { model: PanelModel }) {
 
 /**
  * The tour's caption (I18): focus moves to its heading at each stop; Escape
- * ends the tour (focus back to "Take the tour"); the arrow keys step.
+ * ends the tour (focus back to "Take the tour"); the arrow keys step. On a
+ * narrow view it starts folded to one row (the stop, its title and the
+ * steps), so it doesn't cover the lower half of the subject (F42); the
+ * chevron unfolds the caption and the link, and the choice holds across
+ * stops.
  */
 export function TourCaption({
   tour,
@@ -166,12 +170,68 @@ export function TourCaption({
 }) {
   const s = tour[stop]!;
   const heading = useRef<HTMLHeadingElement>(null);
+  const [unfolded, setUnfolded] = useState(false);
+  const folded = narrow && !unfolded;
+  const bodyId = useId();
   useEffect(() => {
     heading.current?.focus({ preventScroll: true, focusVisible: false });
   }, [stop]);
+  const steps = (
+    <span className="fx-tour-steps">
+      <Button
+        size="small"
+        variant="outlined"
+        disabled={stop === 0}
+        onClick={() => onStop(stop - 1)}
+      >
+        Back
+      </Button>
+      {stop < tour.length - 1 ? (
+        <Button
+          size="small"
+          variant="contained"
+          color="primary"
+          onClick={() => onStop(stop + 1)}
+        >
+          Next
+        </Button>
+      ) : (
+        <Button
+          size="small"
+          variant="contained"
+          color="primary"
+          onClick={onEnd}
+        >
+          Finish
+        </Button>
+      )}
+    </span>
+  );
+  const fold = narrow && (
+    <IconButton
+      size="small"
+      aria-expanded={unfolded}
+      aria-controls={bodyId}
+      aria-label={unfolded ? "Fold the caption" : "Unfold the caption"}
+      title={unfolded ? "Fold the caption" : "Unfold the caption"}
+      onClick={() => setUnfolded((v) => !v)}
+    >
+      <Icon href={unfolded ? svgChevronDown : svgChevronUp} />
+    </IconButton>
+  );
+  const end = (
+    <IconButton
+      size="small"
+      aria-label="End the tour"
+      title="End the tour (Escape)"
+      onClick={onEnd}
+    >
+      <Icon href={svgDismiss} />
+    </IconButton>
+  );
   return (
     <section
-      className={`fx-hud fx-tour${narrow ? " fx-tour-narrow" : ""}`}
+      className={`fx-hud fx-tour${narrow ? " fx-tour-narrow" : ""}${folded ? " fx-tour-folded" : ""}`}
       aria-label="Tour"
       onKeyDown={(e) => {
         if (e.key === "Escape") {
@@ -189,67 +249,49 @@ export function TourCaption({
         <Typography
           variant="caption-lg"
           render={<span />}
-          className="fx-hud-muted"
+          className="fx-hud-muted fx-tour-count"
         >
           Stop {stop + 1} of {tour.length}
         </Typography>
-        <IconButton
-          size="small"
-          aria-label="End the tour"
-          title="End the tour (Escape)"
-          onClick={onEnd}
-        >
-          <Icon href={svgDismiss} />
-        </IconButton>
-      </div>
-      <Typography
-        variant="subtitle-md"
-        render={<h2 ref={heading} tabIndex={-1} />}
-        className="fx-strong fx-tour-title"
-      >
-        {s.title}
-      </Typography>
-      <Typography variant="body-sm" render={<p />}>
-        {s.caption}
-      </Typography>
-      <div className="fx-tour-buttons">
-        <IconButton
-          size="small"
-          aria-label="Copy a link to this stop"
-          title="Copy a link to this stop"
-          onClick={() => onCopyLink(s)}
-        >
-          <Icon href={svgLink} />
-        </IconButton>
-        <span className="fx-tour-steps">
-          <Button
-            size="small"
-            variant="outlined"
-            disabled={stop === 0}
-            onClick={() => onStop(stop - 1)}
+        {folded && (
+          <Typography
+            variant="body-sm"
+            render={<h2 ref={heading} tabIndex={-1} title={s.title} />}
+            className="fx-strong fx-tour-title"
           >
-            Back
-          </Button>
-          {stop < tour.length - 1 ? (
-            <Button
-              size="small"
-              variant="contained"
-              color="primary"
-              onClick={() => onStop(stop + 1)}
-            >
-              Next
-            </Button>
-          ) : (
-            <Button
-              size="small"
-              variant="contained"
-              color="primary"
-              onClick={onEnd}
-            >
-              Finish
-            </Button>
-          )}
+            {s.title}
+          </Typography>
+        )}
+        <span className="fx-tour-head-actions">
+          {folded && steps}
+          {fold}
+          {end}
         </span>
+      </div>
+      {!folded && (
+        <Typography
+          variant="subtitle-md"
+          render={<h2 ref={heading} tabIndex={-1} />}
+          className="fx-strong fx-tour-title"
+        >
+          {s.title}
+        </Typography>
+      )}
+      <div id={bodyId} className="fx-tour-body" hidden={folded}>
+        <Typography variant="body-sm" render={<p />}>
+          {s.caption}
+        </Typography>
+        <div className="fx-tour-buttons">
+          <IconButton
+            size="small"
+            aria-label="Copy a link to this stop"
+            title="Copy a link to this stop"
+            onClick={() => onCopyLink(s)}
+          >
+            <Icon href={svgLink} />
+          </IconButton>
+          {steps}
+        </div>
       </div>
     </section>
   );

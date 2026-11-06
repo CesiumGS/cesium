@@ -2,6 +2,7 @@
 // the guided tour's stops (R16, DESIGN.md "The tour"). Plain data, imported by
 // the main thread.
 import type { OverlayId } from "./panel/model.ts";
+import type { Comparison } from "./stress/groupInfo.ts";
 
 /** Short row labels (60 characters or fewer), by result id; rows fall back to the title. */
 export const RESULT_LABELS: Readonly<Record<string, string>> = {
@@ -90,6 +91,76 @@ export const RESULT_LABELS: Readonly<Record<string, string>> = {
   "lunar-time.moon-vs-earth.sidereal": "Lunar clock gain, sidereal month",
 };
 
+/**
+ * What a result is compared against, where it differs from its group's
+ * (groupInfo.ts `compared`): the Measurement card mixes a hand formula, a
+ * round trip and an independent route.
+ */
+const RESULT_COMPARED: Readonly<Record<string, Comparison>> = {
+  "measurement.clothoid": {
+    kind: "roundTrip",
+    text: "Each point's station and offset, given back by the alignment from the point it placed.",
+  },
+  "measurement.design-vs-itrf": {
+    kind: "independent",
+    text: "The same distance measured from the design point fixed in ITRF first.",
+  },
+
+  "trajectory.moon-me.distance": {
+    kind: "independent",
+    text: "Orion's distance from the Moon's centre before the conversion to MOON_ME: a rotation about the centre keeps it.",
+  },
+  "trajectory.moon-me.round-trip": {
+    kind: "roundTrip",
+    text: "Orion's position after the trip to MOON_ME and back.",
+  },
+};
+
+/**
+ * The Bound CRSs card's checks by their last id part (`bound-crss.<crs>.<check>`,
+ * the catalog's and "Try your own"'s alike). Only `helmert` is the group's
+ * hand-coded Helmert, so it isn't listed.
+ */
+const BOUND_CRS_COMPARED: Readonly<Record<string, Comparison>> = {
+  frame: {
+    kind: "independent",
+    text: "The CRS builds an engineering frame, or the error that it can't.",
+  },
+  "source-crs": {
+    kind: "independent",
+    text: "The source CRS's own axis unit, type and grid factors: its WKT, and a frame on the source CRS alone.",
+  },
+  "recorded-operation": {
+    kind: "independent",
+    text: "The WKT's own TOWGS84 numbers and convention, against the operation PROJ records.",
+  },
+  "round-trip": {
+    kind: "roundTrip",
+    text: "The design point after design → body-fixed → design, at three heights.",
+  },
+  registry: {
+    kind: "formula",
+    text: "The EPSG record's parameters by hand where there is one; otherwise PROJ's best registry operation, shown, not judged.",
+  },
+  accuracy: {
+    kind: "independent",
+    text: "Shown, not judged: the accuracy the measurement states for the frame.",
+  },
+};
+
+/** The inspector's "Compared against" for result `id`: its own, else its group's. */
+export function comparedFor(id: string, group: Comparison): Comparison {
+  const own = RESULT_COMPARED[id];
+  if (own) {
+    return own;
+  }
+  if (id.startsWith("bound-crss.")) {
+    const check = id.slice(id.lastIndexOf(".") + 1);
+    return BOUND_CRS_COMPARED[check] ?? group;
+  }
+  return group;
+}
+
 /** A tour stop (R16): its caption, the overlays it turns on and where the camera goes. */
 export interface TourStopSpec {
   id: string;
@@ -114,6 +185,27 @@ export interface TourStopSpec {
   light?: "camera";
   /** Orion's draw-in frame at this stop. */
   orionFrame?: "GCRF" | "MOON_ME";
+  /**
+   * Draw only the geocentric triads (stop 2): a site's triad, the Sacramento
+   * one at the top of the view from the pole, crosses GCRF's turning x axis.
+   */
+  geocentricOnly?: boolean;
+}
+
+/** The sites whose triads are drawn by default, beside ITRF's and GCRF's. */
+export const SITE_TRIADS = ["Sacramento ENU", "Lunar south-pole site"] as const;
+
+/**
+ * The triads drawn whatever is selected: ITRF and GCRF, and the sites unless
+ * the tour stop draws the geocentric pair alone. A selected frame's path and
+ * a result's frames are drawn on top of these.
+ */
+export function defaultTriads(stop: TourStopSpec | undefined): string[] {
+  return [
+    "ITRF",
+    "GCRF",
+    ...(stop?.geocentricOnly === true ? [] : SITE_TRIADS),
+  ];
 }
 
 export const TOUR: readonly TourStopSpec[] = [
@@ -135,6 +227,10 @@ export const TOUR: readonly TourStopSpec[] = [
     camera: "northPole",
     rate: 3600,
     light: "camera",
+    // Lit from the camera, the polar globe washes out behind the axes (UX
+    // re-check 3): dimmed as under the engineering stops.
+    dim: true,
+    geocentricOnly: true,
   },
   {
     id: "design-grid",

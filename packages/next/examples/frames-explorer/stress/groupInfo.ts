@@ -215,6 +215,7 @@ export const GROUP_INFO: readonly GroupInfo[] = [
     name: "Reference values",
     question: "Do results match published survey and geodesy values?",
     lenses: ["civil"],
+    focus: { frames: ["ITRF"] },
     accuracyNote: "published value ± half its last digit",
     compared: {
       kind: "published",
@@ -239,6 +240,7 @@ export const GROUP_INFO: readonly GroupInfo[] = [
     name: "Distortion",
     question: "How much does a projection stretch distances?",
     lenses: ["civil", "gis"],
+    focus: { frames: ["ITRF"] },
     accuracyNote: "hand formula, exact to 10⁻⁹",
     compared: {
       kind: "formula",
@@ -251,6 +253,7 @@ export const GROUP_INFO: readonly GroupInfo[] = [
     name: "Rigid placement budget",
     question: "How big can a site be before rigid placement is off?",
     lenses: ["civil", "bim"],
+    focus: { frames: ["ITRF"] },
     accuracyNote: "hand formula √(2Rε), within 10%",
     compared: {
       kind: "formula",
@@ -263,6 +266,7 @@ export const GROUP_INFO: readonly GroupInfo[] = [
     name: "Coordinate epoch",
     question: "How far do coordinates move between epochs?",
     lenses: ["gis", "av"],
+    focus: { frames: ["ITRF"] },
     accuracyNote: "published example ± its rounding",
     compared: {
       kind: "published",
@@ -275,6 +279,7 @@ export const GROUP_INFO: readonly GroupInfo[] = [
     name: "Axes and the antimeridian",
     question: "Are axis order and the 180° meridian handled?",
     lenses: ["gis"],
+    focus: { frames: ["ITRF"] },
     accuracyNote: "published value ± half its last digit",
     compared: {
       kind: "published",
@@ -287,6 +292,7 @@ export const GROUP_INFO: readonly GroupInfo[] = [
     name: "Space",
     question: "Do light time, Doppler and line of sight match the references?",
     lenses: ["space"],
+    focus: { frames: ["ITRF", "EME2000", "MOON_ME"] },
     accuracyNote: "SPICE fixture, plan 3's tolerances",
     compared: {
       kind: "independent",
@@ -301,6 +307,7 @@ export const GROUP_INFO: readonly GroupInfo[] = [
     question:
       "Which datum operation was chosen, and what were the alternatives?",
     lenses: ["gis", "offshore"],
+    focus: { frames: ["ITRF"] },
     accuracyNote: "the EPSG registry's stated accuracies",
     compared: {
       kind: "published",
@@ -313,6 +320,7 @@ export const GROUP_INFO: readonly GroupInfo[] = [
     name: "IFC map conversion",
     question: "Does an IFC map conversion place the model correctly?",
     lenses: ["bim"],
+    focus: { frames: ["ITRF"] },
     accuracyNote: "published IfcSite ± half its last digit",
     compared: {
       kind: "published",
@@ -325,6 +333,7 @@ export const GROUP_INFO: readonly GroupInfo[] = [
     name: "Plate motion",
     question: "How fast does a map go stale as the plates move?",
     lenses: ["av"],
+    focus: { frames: ["ITRF"] },
     accuracyNote: "published manual values ± their rounding",
     compared: {
       kind: "published",
@@ -337,6 +346,7 @@ export const GROUP_INFO: readonly GroupInfo[] = [
     name: "Below the ellipsoid",
     question: "Do scale factors and sight lines work below the ellipsoid?",
     lenses: ["civil"],
+    focus: { frames: ["ITRF"] },
     accuracyNote: "hand formula R/(R + h), exact to 10⁻¹²",
     compared: {
       kind: "formula",
@@ -349,6 +359,7 @@ export const GROUP_INFO: readonly GroupInfo[] = [
     name: "Heights and WGS84",
     question: "Which height, and which WGS84, is this?",
     lenses: ["civil", "gis", "av"],
+    focus: { frames: ["ITRF"] },
     accuracyNote: "datasheet values ± half their last digit",
     compared: {
       kind: "published",
@@ -361,6 +372,7 @@ export const GROUP_INFO: readonly GroupInfo[] = [
     name: "Bound CRSs",
     question: "Are exported CRSs with TOWGS84 placed by their own parameters?",
     lenses: ["bim", "gis", "offshore"],
+    focus: { frames: ["ITRF"] },
     accuracyNote: "the WKT's own parameters, by a hand Helmert",
     compared: {
       kind: "formula",
@@ -385,6 +397,7 @@ export const GROUP_INFO: readonly GroupInfo[] = [
     name: "Lunar time",
     question: "How much faster does a clock on the Moon tick?",
     lenses: ["space", "timing"],
+    focus: { frames: ["Lunar south-pole site"] },
     accuracyNote: "Ashby & Patla (2024), within 2%",
     compared: {
       kind: "published",

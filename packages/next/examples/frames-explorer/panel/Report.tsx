@@ -4,6 +4,7 @@ import { Button, Typography } from "@mui/material";
 import { svgCopy } from "@stratakit/icons/copy";
 import { svgDownload } from "@stratakit/icons/download";
 import { Icon } from "@stratakit/mui";
+import { isFailure, reportCounts } from "../report.ts";
 import { Section } from "./Explore.tsx";
 import type { PanelActions, PanelModel } from "./model.ts";
 import { StatusBadge, resultStatus } from "./parts.tsx";
@@ -21,12 +22,8 @@ export function Report({
   onSelectResult: (id: string) => void;
 }) {
   const results = model.results;
-  const judged = results.filter((r) => !r.displayOnly && !r.userInput);
-  const failures = judged.filter(
-    (r) => !r.pass && (r.missing === undefined || r.missing.length === 0),
-  );
-  const skipped = judged.filter((r) => r.missing && r.missing.length > 0);
-  const user = results.filter((r) => r.userInput);
+  const counts = reportCounts(results);
+  const failures = results.filter(isFailure);
   const fingerprinted = results.filter((r) => r.fingerprintCheck);
   const matched = fingerprinted.filter((r) => r.fingerprintCheck!.match);
   const ready = model.run.state === "done" || model.run.state === "cancelled";
@@ -41,21 +38,21 @@ export function Report({
         <dl className="fx-dl fx-report-counts">
           <dt>Results</dt>
           <dd className="fx-num">
-            {judged.length} judged:{" "}
-            {judged.length - failures.length - skipped.length} passed,{" "}
-            {failures.length} failed, {skipped.length} skipped
+            {counts.passed + counts.failed + counts.skipped} judged:{" "}
+            {counts.passed} passed, {counts.failed} failed, {counts.skipped}{" "}
+            skipped
           </dd>
           <dt>Shown, not judged</dt>
-          <dd className="fx-num">
-            {results.filter((r) => r.displayOnly).length}
-          </dd>
+          <dd className="fx-num">{counts.shown}</dd>
           <dt>Fingerprints</dt>
           <dd className="fx-num">
             {matched.length} of {fingerprinted.length} match Node&rsquo;s
           </dd>
           <dt>Your input</dt>
           <dd className="fx-num">
-            {user.length === 0 ? "none" : `${user.length}, listed apart`}
+            {counts.yourInput === 0
+              ? "none"
+              : `${counts.yourInput}, listed apart`}
           </dd>
         </dl>
         <div className="fx-report-buttons">
@@ -135,8 +132,9 @@ export function Report({
 
       <Section title="Environment">
         <dl className="fx-dl fx-env">
-          {model.environment.map(([label, value]) => (
-            <div key={label} className="fx-env-row">
+          {/* Labels repeat (each frame-data file is "Frame data"): key by place. */}
+          {model.environment.map(([label, value], i) => (
+            <div key={`${i}:${label}`} className="fx-env-row">
               <dt>{label}</dt>
               <dd>{value}</dd>
             </div>

@@ -64,6 +64,25 @@ function redact<T>(value: T, secrets: readonly string[]): T {
   return walk(value) as T;
 }
 
+/** The run's counts (R15, R18): the user's input counted apart, in none of the others. */
+export function reportCounts(results: readonly StressResult[]): {
+  passed: number;
+  failed: number;
+  skipped: number;
+  shown: number;
+  yourInput: number;
+} {
+  const catalog = results.filter((r) => r.userInput !== true);
+  const judged = catalog.filter((r) => r.displayOnly !== true);
+  return {
+    passed: judged.filter((r) => r.pass).length,
+    failed: judged.filter(isFailure).length,
+    skipped: judged.filter(isSkipped).length,
+    shown: catalog.filter((r) => r.displayOnly === true).length,
+    yourInput: results.length - catalog.length,
+  };
+}
+
 /** A judged result that failed (not skipped, not shown-only, not the user's). */
 export const isFailure = (r: StressResult): boolean =>
   !r.pass &&
@@ -153,14 +172,13 @@ export function buildReport(
   );
   const ordered = redact(reportOrder(results), secrets);
   const env = redact(environment, secrets);
-  const judged = ordered.filter(
-    (r) => r.displayOnly !== true && r.userInput !== true,
-  );
-  const passed = judged.filter((r) => r.pass).length;
-  const failed = judged.filter(isFailure).length;
-  const skipped = judged.filter(isSkipped).length;
-  const shown = ordered.filter((r) => r.displayOnly === true).length;
-  const yours = ordered.filter((r) => r.userInput === true).length;
+  const {
+    passed,
+    failed,
+    skipped,
+    shown,
+    yourInput: yours,
+  } = reportCounts(ordered);
   const fingerprinted = ordered.filter((r) => r.fingerprintCheck !== undefined);
   const matched = fingerprinted.filter((r) => r.fingerprintCheck!.match).length;
 

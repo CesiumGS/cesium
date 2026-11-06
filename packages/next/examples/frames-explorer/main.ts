@@ -21,7 +21,14 @@ import { MOON } from "../../src/scene/Body.ts";
 import { Instant } from "../../src/time/Instant.ts";
 import type { ExampleContext, ExampleRun } from "../types.ts";
 import { composedAccuracy, type PlacedNode } from "./composed.ts";
-import { RESULT_LABELS, TOUR, type TourStopSpec } from "./content.ts";
+import { distortionAccuracy } from "./legend.ts";
+import {
+  RESULT_LABELS,
+  TOUR,
+  comparedFor,
+  defaultTriads,
+  type TourStopSpec,
+} from "./content.ts";
 import {
   Globe,
   SECONDARY,
@@ -522,7 +529,7 @@ export function run(context: ExampleContext): ExampleRun {
       case "orion":
         return "Orion's 1σ at the clock's instant, once its OEM loads";
       case "distortion":
-        return "contours from PROJ's scale factors";
+        return "the recorded PROJ operation's accuracy and PROJ's scale factors, once PROJ loads";
       case "bias":
         return `exact by definition; drawn ×${sig(biasFactor, 1)}`;
       default:
@@ -557,10 +564,13 @@ export function run(context: ExampleContext): ExampleRun {
       compared:
         r.expectedError !== undefined
           ? { kind: "error", text: `An error matching /${r.expectedError}/.` }
-          : (g?.compared ?? {
-              kind: "independent",
-              text: "The case's own check.",
-            }),
+          : comparedFor(
+              r.id,
+              g?.compared ?? {
+                kind: "independent",
+                text: "The case's own check.",
+              },
+            ),
       ...(r.trace !== undefined && { trace: r.trace }),
       ...(r.source !== undefined && { source: r.source }),
       ...(r.group === "measurement" &&
@@ -761,12 +771,7 @@ export function run(context: ExampleContext): ExampleRun {
     ]) {
       byName.set(f.name, f);
     }
-    const ids = new Set([
-      "ITRF",
-      "GCRF",
-      "Sacramento ENU",
-      "Lunar south-pole site",
-    ]);
+    const ids = new Set(defaultTriads(TOUR.find((t) => t.id === tourStop)));
     const s = view.get().selection;
     if (s.kind === "frame" && tree) {
       for (const n of pathToRoot(tree, s.id)) {
@@ -1295,7 +1300,7 @@ export function run(context: ExampleContext): ExampleRun {
               { chunks: tissot, color: engineeringColor, strength: SECONDARY },
               { chunks: contours, color: familyRgba("earth") },
             ],
-            accuracy: `contours from PROJ's scale factors${op.caution ? `; placement ${op.text}` : ""}`,
+            accuracy: distortionAccuracy(op.text),
             detail: `Tissot ellipses in true-north axes (convergence not applied); combined-factor contours from PROJ's factors, in ppm${g.skipped ? `; ${g.skipped} nodes with no scale left out` : ""}. ${op.sentence}`,
             caution: op.caution,
             labels,

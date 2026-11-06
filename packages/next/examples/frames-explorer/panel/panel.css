@@ -1332,6 +1332,9 @@
   --stratakit-color-icon-neutral-primary: oklch(99.06% 0.002 247.84);
   --stratakit-color-border-neutral-base: oklch(55.22% 0.018 253.99);
   --stratakit-color-border-neutral-muted: oklch(41.45% 0.013 256.75);
+  /* The focus ring's color, the dark theme's: the page's light-theme ring
+     (oklch 47%) is about 2:1 on the dark HUD (focus-ring pass, 6c-2). */
+  --stratakit-color-border-accent-strong: oklch(87.59% 0.175 168.9);
   --stratakit-color-bg-glow-on-surface-neutral-hover: var(
     --cesium-ui-hover,
     oklch(100% 0 0 / 0.04)
@@ -1368,6 +1371,11 @@
 .fx-hud p,
 .fx-hud h2 {
   margin: 0;
+}
+/* StrataKit resolves its focus outline where the page's theme is set, so the
+   HUD restates it with the dark ring above (WCAG 2.4.13: 3:1 on the HUD). */
+.fx-hud :focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
 }
 .fx-legend {
   inset-inline-end: var(--stratakit-space-300);
@@ -1510,6 +1518,38 @@
   align-items: center;
   justify-content: space-between;
   margin-block: calc(-1 * var(--stratakit-space-100));
+}
+.fx-tour-head-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+  flex: none;
+}
+.fx-tour-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-150);
+}
+.fx-tour-body[hidden] {
+  display: none;
+}
+/* Folded (F42): one row on a narrow view, so the subject's lower half shows. */
+.fx-tour-folded {
+  padding-block: var(--stratakit-space-150);
+}
+.fx-tour-folded .fx-tour-head {
+  gap: var(--stratakit-space-200);
+  margin-block: 0;
+}
+.fx-tour-folded .fx-tour-count {
+  flex: none;
+}
+.fx-tour-folded .fx-tour-title {
+  flex: 1;
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .fx-tour-buttons {
   display: flex;
