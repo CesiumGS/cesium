@@ -218,6 +218,25 @@
   white-space: normal;
   color: var(--stratakit-color-text-neutral-secondary);
 }
+/* Fetching is blue in R14's vocabulary, not the accent (StrataKit's
+   LinearProgress takes no color="info"). */
+.fx-progress-info {
+  background: var(--stratakit-color-bg-info-muted);
+}
+.fx-progress-info .MuiLinearProgress-bar {
+  background: var(--stratakit-color-icon-info-base);
+}
+.fx-nowrap {
+  white-space: nowrap;
+}
+/* Text buttons that read as links (N-minor): underlined on hover and focus. */
+.fx-panel .fx-link-button:hover,
+.fx-panel .fx-link-button:focus-visible {
+  text-decoration: underline;
+}
+.fx-hud .fx-hud-muted {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
 .fx-fail-text {
   color: var(--stratakit-color-text-critical-base);
 }
@@ -889,16 +908,29 @@
   inline-size: 100%;
 }
 .fx-col-value {
-  inline-size: 8.5rem;
+  inline-size: 8rem;
 }
 .fx-col-effect {
   inline-size: 5.5rem;
 }
 .fx-col-accuracy {
-  inline-size: 6rem;
+  inline-size: 8rem;
 }
 .fx-col-status {
-  inline-size: 6.5rem;
+  inline-size: 6rem;
+}
+/* Accuracy notes wrap inside their column; nothing spills into Status. */
+.fx-results .fx-acc .fx-accuracy {
+  display: inline;
+  white-space: normal;
+}
+/* Long numbers ("1.1 × 10⁻¹² design units") wrap in their own column. */
+.fx-results .fx-tol-text {
+  white-space: normal;
+}
+.fx-results td {
+  min-inline-size: 0;
+  overflow-wrap: break-word;
 }
 .fx-results th,
 .fx-results td {

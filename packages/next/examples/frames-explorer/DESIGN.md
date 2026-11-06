@@ -97,9 +97,13 @@ view (open the SVGs; they're annotated):
 - [design-mocks/globe-opening.svg](design-mocks/globe-opening.svg): the
   opening shot, the chrome around it and the legend.
 - [design-mocks/globe-drawing.svg](design-mocks/globe-drawing.svg): triads,
-  line weights and halos, labels, selection, the legend.
+  line strengths at 1 px, the dimmed ground, labels, selection, the
+  legend.
 - [design-mocks/globe-tour.svg](design-mocks/globe-tour.svg): the six tour
   stops, each with its camera, overlays and caption.
+- [design-mocks/globe-stop3-target.svg](design-mocks/globe-stop3-target.svg):
+  stop 3 at full size, at 1 device pixel with the imagery dimmed: the
+  acceptance target for 6b's lines.
 
 ### The opening shot
 
@@ -126,8 +130,13 @@ The viewer lights the globe from the clock's sun. For legibility:
 
 ### Triads
 
-- **Axes** red, green, blue for x, y, z; a 2 px shaft and a 10 px cone at
-  the tip; axis letters at the tips (caption 11 px, 500).
+- **Axes** red, green, blue for x, y, z, drawn as **meshes, not lines**
+  (F30 leaves lines at 1 px; the triads are the most-seen element): each
+  shaft a box (`createBox`, src/scene/meshes.ts) stretched along its axis,
+  its width 1.5% of its length (about 2 px at the usual framing, since the
+  length follows the camera), and an 8-sided cone at the tip, 10% of the
+  length long and three shafts wide (a small hand-built `MeshData`); both
+  unlit. Axis letters at the tips (caption 11 px, 500).
 - **Length** 6% of the camera's distance to the origin, clamped to 2 m to
   2,000 km (R4), stated in the legend's unfolded note.
 - **Origin**: an 8 px dot in the family's on-dark tone with a 1 px dark
@@ -140,29 +149,51 @@ The viewer lights the globe from the clock's sun. For legibility:
   ×10⁰ to ×10⁷ by the slider, its label carrying the factor
   ("EME2000 (bias ×10⁶)").
 
-### Lines
+### Lines (1 device pixel, ruling F30)
 
-| Line                                                                 | Weight    | Style                                   |
-| -------------------------------------------------------------------- | --------- | --------------------------------------- |
-| Primary: a grid's major lines, the exact line, Orion's path          | 2 px      | solid                                   |
-| The rigid line (against the exact one)                               | 2 px      | dashed 6 4                              |
-| Secondary: minor grid lines, true-north lines, Tissot outlines       | 1 px, 80% | true north dashed 5 3; site grid dotted |
-| Selected (the selected result's overlay, the selected frame's triad) | 3 px      | plus a 9 px glow at 30%                 |
+6b draws overlays as WebGPU `line-list`: one device pixel, no width, no
+halo, no glow. Hierarchy comes from color strength and alpha, and from a
+darker ground under the overlay that is the subject.
 
-Every line has a 1 px dark halo (black, 55%) so it reads over bright
-imagery; lines are depth-tested, never always-on-top (the geocentric
-triads aside). **Engine note:** WebGPU's `line-list` draws 1 device pixel;
-2 and 3 px and halos need a screen-space wide-line material, which 6b adds
-or flags (a small engine change). Until it exists, hierarchy falls back to
-color strength: primary at full tone, secondary at 60%, selected with an
-additive second pass.
+| Line                                                           | At 1 px (what 6b builds)                                      | Style                                                                       | When the engine gains wide lines |
+| -------------------------------------------------------------- | ------------------------------------------------------------- | --------------------------------------------------------------------------- | -------------------------------- |
+| Primary: a grid's major lines, the exact line, Orion's path    | full on-dark family tone, alpha 1                             | solid                                                                       | 2 px                             |
+| The rigid line (against the exact one)                         | full tone, alpha 1                                            | dashed: 400 m on, 250 m off, as world-space segments                        | 2 px                             |
+| Secondary: minor grid lines, true-north lines, Tissot outlines | the family tone at alpha 0.6                                  | true north dashed (world-space segments), site grid dotted (short segments) | 1 px                             |
+| Selected (the selected result's overlay)                       | a lighter tint: the family tone mixed 50% with white, alpha 1 | as its kind                                                                 | 3 px                             |
+| Everything else while something is selected                    | alpha 0.35                                                    | as its kind                                                                 | the same                         |
+
+- **Dashes are geometry.** `line-list` can't dash in screen space, so a
+  dashed line is emitted as separate segments in world space (fixed metres
+  per dash, chosen per overlay so a dash spans about 10 to 20 px at the
+  tour's framing).
+- **No halos: a darker ground instead.** While an engineering overlay is
+  the subject (tour stops 3 and 4, a selected engineering result), the
+  imagery is dimmed so 1 px lines read over bright terrain. The globe has
+  no imagery brightness or saturation control (checked: `GlobeImagery`,
+  `ImageryProvider`), but the view's exposure is one: overlays are unlit,
+  and unlit content is display-referred, added after exposure (View.ts,
+  `HdrImage`), so lowering `viewer.view.exposure`'s `compensation` dims
+  the globe and leaves the lines at full strength. Use `{ eye: true,
+compensation: -0.6 }` (about 0.66× brightness) for those stops, eased
+  over the flight, and restore it after. Desaturation isn't available; the
+  eye exposure greys dim scenes a little on its own. A per-layer imagery
+  brightness and saturation control is carried forward as engine work.
+- **Selection by contrast, not width** (see "A selection on the globe").
+- Lines are depth-tested, never always-on-top (the geocentric triads
+  aside).
+
+The target for this is
+[design-mocks/globe-stop3-target.svg](design-mocks/globe-stop3-target.svg)
+(and its PNG): tour stop 3 at 1 px, the imagery dimmed.
 
 ### Labels
 
 HTML labels in the HUD host (as the translucency example's), placed by
 projecting each origin: body-sm 12 px, 600, in the family's on-dark tone,
-with a 1.5 px dark halo (`paint-order: stroke`), 12 px right of and below
-the origin. They never overlap: by priority (selected, on the selected
+with a 1.5 px dark text halo (CSS `paint-order: stroke`: labels are HTML,
+so they keep their halo where lines can't), 12 px right of and below the
+origin. They never overlap: by priority (selected, on the selected
 path, sites, the rest), a label that would collide is hidden, and labels
 fade out when origins are under 24 px apart on screen. Overlay labels (the
 sag, the convergence, contour values) use the same style, white, with a
@@ -172,13 +203,15 @@ sag, the convergence, contour values) use the same style, white, with a
 
 The globe never shows a selection the panel doesn't.
 
-- **A frame**: its triad 3 px with a glow; the triads on its walk's path at
-  full strength, their origins joined by a dotted 2 px line that draws root
-  first with the walk's 90 ms stagger; every other triad at 35%, labels
-  hidden. Selecting a frame doesn't move the camera (I6): flying is the
+- **A frame**: its triad's shafts at the lighter tint (the axis color mixed
+  50% with white) and its label in white; the triads on its walk's path at
+  full strength, their origins joined by a dotted 1 px line (world-space
+  segments) that draws root first with the walk's 90 ms stagger; every
+  other triad at alpha 0.35, labels hidden. Selecting a frame doesn't move the camera (I6): flying is the
   tree row's action and "Show on globe".
-- **A result**: its group's overlay turns on; its lines 3 px with a glow,
-  every other overlay at 50%; the camera flies to the result's site; its
+- **A result**: its group's overlay turns on; its lines at the lighter
+  tint, every other overlay and triad at alpha 0.35, and for an
+  engineering result the imagery dimmed as under "Lines"; the camera flies to the result's site; its
   frames' triads show as on a path, matching the tree's highlight.
 
 ### The legend
@@ -203,14 +236,14 @@ km; a lunar site at 100 m. Under reduced motion, flights cut.
 
 ### The tour
 
-| Stop                         | Camera                                                                           | On                                                      | Caption                                                                                                                       |
-| ---------------------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| 1 Earth's frames             | the opening shot                                                                 | triads (ITRF, GCRF, EME2000, Sacramento ENU)            | ITRF turns with the Earth; GCRF doesn't. Each triad is a frame's axes at the clock's time.                                    |
-| 2 GCRF to ITRF over a day    | no move                                                                          | ITRF and GCRF triads                                    | the globe is drawn Earth-fixed, so GCRF's triad turns once against ITRF's in a sidereal day (the clock plays at 3,600×: 24 s) |
-| 3 The California design grid | over the grid's centre, 180 km range, 55° tilt, heading 0°                       | design grid (10 km major, 2 km minor), true-north lines | grid north and true north part ways away from the central meridian: the convergence angle                                     |
-| 4 Rigid against exact        | 2 km beyond the line's far end, 8 km range, 15° above the horizon, looking back  | rigid and exact 20 km line, the sag labelled            | a 20 km design line placed rigidly sags 31 m below the exact one at its far end                                               |
-| 5 Orion's figure-eight       | above the Earth–Moon plane, both framed, 1.1 million km; 3.0 s flight            | Orion in GCRF, then after 4 s in MOON_ME                | in GCRF a figure-eight round the Moon; in MOON_ME the far-side swing                                                          |
-| 6 The Moon's south pole      | 100 m from the site's triad, 20° above the horizon, sun low behind; 3.5 s flight | the site's triad (MOON_ME)                              | a clock here gains about 56 µs a day; the triad holds still as the camera orbits                                              |
+| Stop                         | Camera                                                                           | On                                                                                                                                           | Caption                                                                                                                       |
+| ---------------------------- | -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| 1 Earth's frames             | the opening shot                                                                 | triads (ITRF, GCRF, EME2000, Sacramento ENU)                                                                                                 | ITRF turns with the Earth; GCRF doesn't. Each triad is a frame's axes at the clock's time.                                    |
+| 2 GCRF to ITRF over a day    | no move                                                                          | ITRF and GCRF triads                                                                                                                         | the globe is drawn Earth-fixed, so GCRF's triad turns once against ITRF's in a sidereal day (the clock plays at 3,600×: 24 s) |
+| 3 The California design grid | over the grid's centre, 180 km range, 55° tilt, heading 0°                       | design grid (10 km lines; 2 km lines only under 60 km range), true-north lines; imagery dimmed (exposure −0.6); target: `globe-stop3-target` | grid north and true north part ways away from the central meridian: the convergence angle                                     |
+| 4 Rigid against exact        | 2 km beyond the line's far end, 8 km range, 15° above the horizon, looking back  | rigid and exact 20 km line, the sag labelled; imagery dimmed                                                                                 | a 20 km design line placed rigidly sags 31 m below the exact one at its far end                                               |
+| 5 Orion's figure-eight       | above the Earth–Moon plane, both framed, 1.1 million km; 3.0 s flight            | Orion in GCRF, then after 4 s in MOON_ME                                                                                                     | in GCRF a figure-eight round the Moon; in MOON_ME the far-side swing                                                          |
+| 6 The Moon's south pole      | 100 m from the site's triad, 20° above the horizon, sun low behind; 3.5 s flight | the site's triad (MOON_ME)                                                                                                                   | a clock here gains about 56 µs a day; the triad holds still as the camera orbits                                              |
 
 The caption sits top right (bottom, above the time controls, on views
 under 560 px), takes focus at each stop, and steps with the arrow keys;
@@ -261,7 +294,7 @@ show, the sheet up to 45%.
 │ Clock                                         │
 ├───────────────────────────────────────────────┤ the walk, a sheet
 │ [Against ITRF ▾] to MOON_PA  [Show on globe] ⧉ ✕│
-│ Composed at MOON_PA's origin        ±1.0 m    │
+│ Composed at MOON_PA's origin   ±1.0 m (1σ)   │
 │ □ ITRF, the reference                         │
 │ ● ITRF → GCRF  rotation, inverse  ±2.6e-9 rad │
 │   Adds Earth orientation, 1.0 m: ≈ 100%       │ each edge's term
@@ -309,7 +342,8 @@ phone the page itself doesn't fit (`design-screenshots/*-narrow.png`,
   numbers, the effect and the accuracy (labelled); the header row hides;
   explicit `role` attributes keep it a table to assistive tech.
 - Toolbars and the tree's tools stack under 420 px; the sheet fills the
-  tab; the HUD goes compact under a 560 px view (legend folded, the tour
+  tab; the HUD goes compact under a 560 px view (the legend in its compact
+  one-line rows, the tour
   caption at the bottom).
 
 **The column is wide enough for the panel at desktop sizes**, but it takes
@@ -506,7 +540,7 @@ centre isn't bounded: MOON_ME's orientation has no stated accuracy (see
 the lunar south-pole site)."
 
 The composed total sits at the walk's top, "Composed at MOON_PA's origin
-±1.0 m", the walk's one big number; the budget bar and its terms follow.
+±1.0 m (1σ)", the walk's one big number; the budget bar and its terms follow.
 Selecting a frame doesn't fly the camera (I6).
 
 ### Accuracy budget bar
@@ -711,7 +745,9 @@ arrow keys, popovers); visible focus (StrataKit's, and
 `border-accent-strong` rings on the panel's own buttons); focus moves to a
 sheet's title when it opens and back to what opened it when it closes,
 and to the tour caption's heading at each stop; one polite live region,
-the strip's, announcing changes of state only (I19); stacked rows keep
+the strip's, announcing changes of state only (I19); every HUD text is
+checked at 4.5:1 or more in both schemes (its colors come from token
+classes, never MUI's `color` prop, whose palette follows the page: N2); stacked rows keep
 explicit table roles; the walk's bars and the tolerance bars are images
 with their numbers as accessible names; `Tabs` from
 `@stratakit/structures` wire `aria-controls` themselves (Ariakit), so
@@ -843,9 +879,10 @@ design.
   (ITRF, GCRF, ICRF). The stub's rule engine (`composedFor` in stub.ts)
   shows the intended result.
 - **The globe** (C1): everything in "On the globe", then a second UX
-  review on real screenshots. Wide lines and halos need a screen-space
-  line material (or the fallback named there); labels are HTML in the HUD
-  host with the declutter rule.
+  review on real screenshots. Lines are 1 px (F30): hierarchy by color
+  strength and alpha, dashes as world-space segments, the imagery dimmed
+  by exposure compensation under an engineering subject, triad shafts as
+  meshes; labels are HTML in the HUD host with the declutter rule.
 - **The clock binding** (I13): a test that the walk's instant equals the
   viewer's clock.
 - **Links** (F28): through `context.params`, `setParams` and

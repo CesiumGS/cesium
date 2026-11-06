@@ -25,7 +25,8 @@ import {
   useState,
 } from "react";
 import type { TreeNode } from "../tree.ts";
-import { BudgetBar, TERM_LABEL } from "./BudgetBar.tsx";
+import type { AccuracyTerm } from "../../../src/measure/accuracy.ts";
+import { BudgetBar } from "./BudgetBar.tsx";
 import { EDGE_LABEL, familyMap } from "./families.ts";
 import { FamilyKey, FrameTree, edgeAccuracyText } from "./FrameTree.tsx";
 import { length, sig } from "./format.ts";
@@ -224,7 +225,7 @@ export function Walk({
                     );
                     return (
                       <span key={t} className="fx-walk-term">
-                        Adds {TERM_LABEL[term.source].toLowerCase()},{" "}
+                        Adds {ADDS[term.source]},{" "}
                         <span
                           className={`fx-num${term.meters === undefined ? " fx-unbounded" : ""}`}
                         >
@@ -264,7 +265,7 @@ export function Walk({
             {view.statement.terms.length === 0 ? (
               "exact at the origin"
             ) : (
-              <AccuracyText accuracy={view.statement} compact />
+              <AccuracyText accuracy={view.statement} />
             )}
           </span>
         </p>
@@ -341,6 +342,17 @@ export function Walk({
     </div>
   );
 }
+
+/** A term as the walk's "Adds …" line names it, in plain words. */
+const ADDS: Record<AccuracyTerm["source"], string> = {
+  ephemeris: "the ephemeris",
+  earthOrientation: "Earth orientation",
+  relativity: "relativity",
+  projection: "the PROJ operation",
+  trajectory: "the trajectory",
+  coordinateScale: "the time scale",
+  lightTime: "light time",
+};
 
 /** The walk's "against": the frame the composed statement is stated in (C2). */
 function ReferenceSelect({
