@@ -12,6 +12,7 @@ import { Ellipsoid, cartographic } from "../src/math/ellipsoid.ts";
 import { eastNorthUpToFixedFrame } from "../src/math/transforms.ts";
 import * as v3 from "../src/math/vec3.ts";
 import * as m4 from "../src/math/mat4.ts";
+import { followZoom, orbitState, planOrbit } from "../widgets/orbitFocus.ts";
 
 const SIZE = 100;
 const maxPitch = Math.PI / 2 - 1e-3;
@@ -321,5 +322,253 @@ describe("InspectController focus and dispose", () => {
     expect(controller.range).toBe(10);
     expect(controller.dragging).toBe(false);
     expect(calls).toBe(0);
+  });
+});
+
+describe("syncFromCamera's pitch clamp", () => {
+  it("clamps a camera looking straight along -up, keeping heading and roll", () => {
+    const { camera, controller, drag } = setup({ frame: zUp });
+    controller.focus([0, 0, 0], 1, -0.3, 10);
+    // Placed by other code straight above, looking down -z.
+    v3.set(camera.position, 0, 0, 10);
+    v3.set(camera.direction, 0, 0, -1);
+    controller.syncFromCamera([0, 0, 0]);
+    expect(controller.pitch).toBe(-maxPitch);
+    expect(controller.heading).toBe(1);
+    expect(camera.right[2]).toBeCloseTo(0, 12);
+    // The roll is the heading's: a tiny drag doesn't snap it.
+    const right = v3.copy(v3.vec3(), camera.right);
+    drag(0.001, 0);
+    expect(v3.distance(camera.right, right)).toBeLessThan(1e-3);
+  });
+
+  it("clamps one looking straight along +up", () => {
+    const { camera, controller } = setup({ frame: zUp });
+    controller.focus([0, 0, 0], 0.5, 0.3, 10);
+    v3.set(camera.position, 0, 0, -10);
+    controller.syncFromCamera([0, 0, 0]);
+    expect(controller.pitch).toBe(maxPitch);
+    expect(controller.heading).toBe(0.5);
+  });
+});
+
+// An oblique frame: up (1, 2, 2)/3, headingRef (2, 1, -2)/3, east = north × up.
+const obliqueUp = [1 / 3, 2 / 3, 2 / 3];
+const obliqueNorth = [2 / 3, 1 / 3, -2 / 3];
+const oblique = { up: obliqueUp, headingRef: obliqueNorth };
+const obliqueEast = [
+  ...v3.cross(v3.vec3(), v3.vec3(...obliqueNorth), v3.vec3(...obliqueUp)),
+];
+
+describe("InspectController in an oblique frame", () => {
+  it("places the camera from the frame's own axes", () => {
+    const { camera, controller } = setup({ frame: oblique });
+    const t = [7, -3, 2];
+    const at = (n: number[], k: number) => t.map((x, i) => x + n[i]! * k);
+    controller.focus(t, 0, 0, 9);
+    expectVec(camera.position, at(obliqueNorth, -9));
+    expectVec(camera.direction, obliqueNorth);
+    expectVec(camera.up, obliqueUp);
+    controller.focus(t, Math.PI / 2, 0, 9);
+    expectVec(camera.position, at(obliqueEast, -9));
+    controller.focus(t, 0, -Math.PI / 6, 9);
+    // cos 30° behind along north, sin 30° above along up.
+    expectVec(
+      camera.position,
+      t.map(
+        (x, i) =>
+          x -
+          9 * Math.cos(Math.PI / 6) * obliqueNorth[i]! +
+          4.5 * obliqueUp[i]!,
+      ),
+    );
+    expect(v3.dot(camera.right, v3.vec3(...obliqueUp))).toBeCloseTo(0, 12);
+  });
+
+  it("round-trips through syncFromCamera", () => {
+    const { camera, controller } = setup({ frame: oblique });
+    controller.focus([7, -3, 2], 2.2, -0.6, 9);
+    controller.syncFromCamera();
+    expect(controller.heading).toBeCloseTo(2.2, 12);
+    expect(controller.pitch).toBeCloseTo(-0.6, 12);
+    expect(controller.range).toBeCloseTo(9, 12);
+    expectVec(controller.target, [7, -3, 2], 12);
+    expect(v3.dot(camera.right, v3.vec3(...obliqueUp))).toBeCloseTo(0, 12);
+  });
+});
+
+describe("InspectController at the Moon's distance", () => {
+  const target = [3.8e8, 2.1e7, -3.3e7];
+  const range = 4.2e6;
+
+  it("places the camera range from the target, facing it, unrolled", () => {
+    const { camera, controller } = setup({ frame: oblique });
+    controller.focus(target, 0.7, -0.35, range);
+    const t = v3.vec3(...target);
+    expect(v3.distance(camera.position, t) / range - 1).toBeCloseTo(0, 12);
+    const toTarget = v3.normalize(
+      v3.vec3(),
+      v3.sub(v3.vec3(), t, camera.position),
+    );
+    expect(v3.dot(toTarget, camera.direction)).toBeCloseTo(1, 12);
+    expect(v3.dot(camera.right, v3.vec3(...obliqueUp))).toBeCloseTo(0, 12);
+    // Pitch from the plane perpendicular to up.
+    const offset = v3.sub(v3.vec3(), camera.position, t);
+    expect(
+      Math.asin(v3.dot(offset, v3.vec3(...obliqueUp)) / range),
+    ).toBeCloseTo(0.35, 12);
+  });
+
+  it("stays put over many syncFromCamera round trips", () => {
+    const { camera, controller } = setup({ frame: oblique });
+    controller.focus(target, 0.7, -0.35, range);
+    const position = v3.copy(v3.vec3(), camera.position);
+    for (let i = 0; i < 200; i++) {
+      controller.syncFromCamera();
+    }
+    // Float64 resolution at 3.8e8 m is ~6e-8 m.
+    expect(v3.distance(camera.position, position)).toBeLessThan(1e-5);
+    expect(v3.distance(controller.target, v3.vec3(...target))).toBeLessThan(
+      1e-5,
+    );
+    expect(controller.heading).toBeCloseTo(0.7, 11);
+    expect(controller.pitch).toBeCloseTo(-0.35, 11);
+    expect(controller.range / range - 1).toBeCloseTo(0, 11);
+  });
+});
+
+describe("planOrbit (Viewer.setControls)", () => {
+  const ctx = {
+    focusCenter: [6378137, 0, 0],
+    cameraPosition: [6378137 + 300, 0, 400],
+    globeHeading: 0.25,
+  };
+
+  it("starts as setControls always has without options", () => {
+    const plan = planOrbit(undefined, {}, ctx);
+    expect([...plan.target]).toEqual(ctx.focusCenter);
+    expect(plan.heading).toBe(0.25);
+    expect(plan.pitch).toBe(-0.4);
+    expect(plan.range).toBe(500);
+    expect(plan.frame).toBeUndefined();
+    expect(plan.minRange).toBe(0.01);
+    expect(plan.maxRange).toBe(Infinity);
+  });
+
+  it("starts in a frame from where the camera is", () => {
+    const plan = planOrbit(
+      undefined,
+      { frame: zUp, target: [6378137, 0, 0] },
+      ctx,
+    );
+    // Offset (300, 0, 400): 36.87° above the xy plane, along +x = north.
+    expect(plan.range).toBeCloseTo(500, 9);
+    expect(plan.pitch).toBeCloseTo(-Math.asin(0.8), 12);
+    expect(plan.heading).toBeCloseTo(Math.PI, 12);
+  });
+
+  it("keeps the orbit's state for fields left out", () => {
+    const { controller } = setup({ frame: zUp, minRange: 2, maxRange: 50 });
+    controller.focus([1, 2, 3], 0.9, -0.2, 20);
+    const current = orbitState(controller);
+    for (const options of [{}, { minRange: 5 }]) {
+      const plan = planOrbit(current, options, ctx);
+      expect([...plan.target]).toEqual([1, 2, 3]);
+      expect(plan.heading).toBe(0.9);
+      expect(plan.pitch).toBe(-0.2);
+      expect(plan.range).toBe(20);
+      expectVec(plan.frame!.up, [0, 0, 1], 12);
+      expect(plan.maxRange).toBe(50);
+    }
+    expect(planOrbit(current, {}, ctx).minRange).toBe(2);
+    expect(planOrbit(current, { minRange: 5 }, ctx).minRange).toBe(5);
+    // Only what's given changes.
+    const moved = planOrbit(current, { target: [4, 5, 6], pitch: -1 }, ctx);
+    expect([...moved.target]).toEqual([4, 5, 6]);
+    expect([moved.heading, moved.pitch, moved.range]).toEqual([0.9, -1, 20]);
+  });
+
+  it("keeps an east-north-up orbit's state too", () => {
+    const { controller } = setup();
+    controller.focus([6378137, 0, 0], 1.1, -0.7, 80);
+    const plan = planOrbit(orbitState(controller), { maxRange: 900 }, ctx);
+    expect([plan.heading, plan.pitch, plan.range]).toEqual([1.1, -0.7, 80]);
+    expect(plan.frame).toBeUndefined();
+    expect(plan.maxRange).toBe(900);
+  });
+
+  it("re-reads heading, pitch and range from the camera for a new frame", () => {
+    const { camera, controller } = setup({ frame: zUp });
+    controller.focus([0, 0, 0], 0, 0, 10); // camera at (-10, 0, 0)
+    const plan = planOrbit(
+      orbitState(controller),
+      { frame: { up: [1, 0, 0], headingRef: [0, 1, 0] } },
+      { ...ctx, cameraPosition: camera.position },
+    );
+    expect(plan.range).toBeCloseTo(10, 12);
+    expect(plan.pitch).toBeCloseTo(Math.PI / 2 - 1e-3, 12); // below, clamped
+    // null clears the frame and re-reads in east-north-up.
+    const cleared = planOrbit(
+      orbitState(controller),
+      { frame: null },
+      {
+        ...ctx,
+        cameraPosition: camera.position,
+      },
+    );
+    expect(cleared.frame).toBeUndefined();
+    expect(cleared.range).toBeCloseTo(10, 12);
+  });
+
+  it("throws a RangeError on non-finite or bad values", () => {
+    const bad: object[] = [
+      { target: [0, Number.NaN, 0] },
+      { target: [0, 0] },
+      { heading: Infinity },
+      { pitch: Number.NaN },
+      { range: 0 },
+      { range: -3 },
+      { range: Infinity },
+      { minRange: Number.NaN },
+      { minRange: 10, maxRange: 5 },
+      { frame: { up: [0, 0, 1], headingRef: [0, 0, 1] } },
+    ];
+    for (const options of bad) {
+      expect(
+        () => planOrbit(undefined, options, ctx),
+        JSON.stringify(options),
+      ).toThrow(RangeError);
+    }
+    expect(() =>
+      planOrbit(undefined, {}, { ...ctx, focusCenter: [Number.NaN, 0, 0] }),
+    ).toThrow(RangeError);
+  });
+});
+
+describe("followZoom (zoomTo while orbiting)", () => {
+  it("keeps the frame and pivots on what was framed", () => {
+    const { camera, controller } = setup({ frame: zUp });
+    controller.focus([0, 0, 0], 0, 0, 10);
+    const center = v3.vec3(6378137, 1000, 2000);
+    followZoom(controller, center, 0.6, -0.5, 300);
+    const reference = new Camera().lookAt(center, 0.6, -0.5, 300);
+    expectVec(camera.position, [...reference.position], 6);
+    expectVec(camera.direction, [...reference.direction], 12);
+    expectVec(controller.target, [...center]);
+    expect(controller.range).toBeCloseTo(300, 9);
+    expectVec(controller.frame!.up, [0, 0, 1], 12);
+    expect(camera.right[2]).toBeCloseTo(0, 12);
+  });
+
+  it("focuses an east-north-up orbit exactly as before", () => {
+    const { camera, controller } = setup();
+    const center = v3.vec3(6378137, 1000, 2000);
+    followZoom(controller, center, 0.6, -0.5, 300);
+    const reference = new Camera().lookAt(center, 0.6, -0.5, 300);
+    expect([...camera.position]).toEqual([...reference.position]);
+    expect([...camera.up]).toEqual([...reference.up]);
+    expect([controller.heading, controller.pitch, controller.range]).toEqual([
+      0.6, -0.5, 300,
+    ]);
   });
 });

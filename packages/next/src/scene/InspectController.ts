@@ -25,7 +25,98 @@ export interface InspectControllerOptions {
   maxRange?: number;
 }
 
+/** Pitch stays this far inside ±π/2, where up and the view would align. */
 const maxPitch = Math.PI / 2 - 1e-3;
+
+/** An orbit's axes: unit east, north (heading 0) and up, east = north × up. */
+export interface OrbitBasis {
+  east: Vec3;
+  north: Vec3;
+  up: Vec3;
+}
+
+/**
+ * A frame's axes: `up` normalized, `headingRef` made perpendicular to it
+ * (Gram-Schmidt) and normalized. Throws a RangeError on a degenerate frame.
+ */
+export function orbitBasis(frame: OrbitFrame): OrbitBasis {
+  const up = v3.copy(v3.vec3(), frame.up);
+  const north = v3.copy(v3.vec3(), frame.headingRef);
+  if (
+    frame.up.length !== 3 ||
+    frame.headingRef.length !== 3 ||
+    ![...up, ...north].every(Number.isFinite) ||
+    v3.length(up) < 1e-12
+  ) {
+    throw new RangeError(
+      "InspectController: the frame's up is not a direction",
+    );
+  }
+  v3.normalize(up, up);
+  v3.scaleAndAdd(north, north, up, -v3.dot(north, up));
+  if (v3.length(north) < 1e-9) {
+    throw new RangeError(
+      "InspectController: the frame's headingRef is parallel to up",
+    );
+  }
+  v3.normalize(north, north);
+  return { east: v3.cross(v3.vec3(), north, up), north, up };
+}
+
+/** East-north-up at `target` on the ellipsoid, as an orbit's axes (scratch). */
+export function enuBasis(
+  target: ArrayLike<number>,
+  ellipsoid = Ellipsoid.WGS84,
+): OrbitBasis {
+  const enu = eastNorthUpToFixedFrame(
+    v3.copy(scratchT, target),
+    ellipsoid,
+    scratchEnu,
+  );
+  return {
+    east: v3.set(scratchE, enu[0]!, enu[1]!, enu[2]!),
+    north: v3.set(scratchN, enu[4]!, enu[5]!, enu[6]!),
+    up: v3.set(scratchU, enu[8]!, enu[9]!, enu[10]!),
+  };
+}
+
+/**
+ * The heading, pitch and range (`Camera.lookAt`'s convention, in `basis`)
+ * that put a camera at `position` orbiting `target`; undefined when it is
+ * on the target. Pitch is clamped to ±(π/2 − 1e-3), as a drag clamps it:
+ * at ±π/2 the roll would be arbitrary. Looking straight along ±up keeps
+ * `heading`.
+ */
+export function orbitPose(
+  position: ArrayLike<number>,
+  target: ArrayLike<number>,
+  basis: OrbitBasis,
+  heading: number,
+): { heading: number; pitch: number; range: number } | undefined {
+  const offset = v3.set(
+    scratchO,
+    position[0]! - target[0]!,
+    position[1]! - target[1]!,
+    position[2]! - target[2]!,
+  );
+  const range = v3.length(offset);
+  if (!(range > 1e-9)) {
+    return undefined;
+  }
+  const ox = v3.dot(offset, basis.east);
+  const oy = v3.dot(offset, basis.north);
+  const oz = v3.dot(offset, basis.up);
+  // `lookAt`'s offset inverted: o = r (-cos p cos h, cos p sin h, -sin p),
+  // h = heading - π/2.
+  const pitch = Math.min(
+    Math.max(Math.asin(Math.min(Math.max(-oz / range, -1), 1)), -maxPitch),
+    maxPitch,
+  );
+  if (Math.hypot(ox, oy) > 1e-12 * range) {
+    heading = Math.atan2(oy, -ox) + Math.PI / 2;
+  }
+  return { heading, pitch, range };
+}
 
 /**
  * Orbits the view's camera around a focus point, for inspecting models and
@@ -53,7 +144,7 @@ export class InspectController {
   ignore?: (x: number, y: number) => boolean;
   /** Called after the controller moves the camera, and when a drag starts or ends. */
   onChange?: () => void;
-  private frame_?: { up: Vec3; north: Vec3; east: Vec3 };
+  private frame_?: OrbitBasis;
   private mode: "none" | "rotate" | "pan" = "none";
   private lastX = 0;
   private lastY = 0;
@@ -100,27 +191,7 @@ export class InspectController {
    * at the next `focus` or input; throws on a degenerate frame.
    */
   set frame(frame: OrbitFrame | undefined) {
-    if (!frame) {
-      this.frame_ = undefined;
-      return;
-    }
-    const up = v3.copy(v3.vec3(), frame.up);
-    const north = v3.copy(v3.vec3(), frame.headingRef);
-    if (![...up, ...north].every(Number.isFinite) || v3.length(up) < 1e-12) {
-      throw new RangeError(
-        "InspectController: the frame's up is not a direction",
-      );
-    }
-    v3.normalize(up, up);
-    // Gram-Schmidt: the part of headingRef perpendicular to up.
-    v3.scaleAndAdd(north, north, up, -v3.dot(north, up));
-    if (v3.length(north) < 1e-9) {
-      throw new RangeError(
-        "InspectController: the frame's headingRef is parallel to up",
-      );
-    }
-    v3.normalize(north, north);
-    this.frame_ = { up, north, east: v3.cross(v3.vec3(), north, up) };
+    this.frame_ = frame && orbitBasis(frame);
   }
 
   /** Whether a drag (rotate or pan) is under way. */
@@ -164,23 +235,17 @@ export class InspectController {
         depth > 1e-9 ? depth : this.range,
       );
     }
-    const offset = v3.sub(scratchA, camera.position, this.target);
-    const range = v3.length(offset);
-    if (!(range > 1e-9)) {
-      // On the pivot: keep the heading, pitch and range there are.
-      this.apply();
-      return;
-    }
-    const [east, north, up] = this.basis();
-    const ox = v3.dot(offset, east);
-    const oy = v3.dot(offset, north);
-    const oz = v3.dot(offset, up);
-    // `lookAt`'s offset inverted: o = r (-cos p cos h, cos p sin h, -sin p),
-    // h = heading - π/2.
-    this.range = range;
-    this.pitch = Math.asin(Math.min(Math.max(-oz / range, -1), 1));
-    if (Math.hypot(ox, oy) > 1e-12 * range) {
-      this.heading = Math.atan2(oy, -ox) + Math.PI / 2;
+    const pose = orbitPose(
+      camera.position,
+      this.target,
+      this.basis(),
+      this.heading,
+    );
+    if (pose) {
+      // On the pivot there is no pose to read: keep the one there is.
+      this.heading = pose.heading;
+      this.pitch = pose.pitch;
+      this.range = pose.range;
     }
     this.apply();
   }
@@ -215,21 +280,8 @@ export class InspectController {
   }
 
   /** East, north and up: the frame's, or the ellipsoid's at the target. */
-  private basis(): [Vec3, Vec3, Vec3] {
-    const f = this.frame_;
-    if (f) {
-      return [f.east, f.north, f.up];
-    }
-    const enu = eastNorthUpToFixedFrame(
-      this.target,
-      this.ellipsoid,
-      scratchEnu,
-    );
-    return [
-      v3.set(scratchE, enu[0]!, enu[1]!, enu[2]!),
-      v3.set(scratchN, enu[4]!, enu[5]!, enu[6]!),
-      v3.set(scratchU, enu[8]!, enu[9]!, enu[10]!),
-    ];
+  private basis(): OrbitBasis {
+    return this.frame_ ?? enuBasis(this.target, this.ellipsoid);
   }
 
   /** In a frame, re-reads a camera someone else moved (see the class doc). */
@@ -288,7 +340,7 @@ export class InspectController {
     } else {
       // Pan in the plane perpendicular to up (the target's local
       // east-north plane without a frame), rotated by the heading.
-      const [eastAxis, northAxis] = this.basis();
+      const { east: eastAxis, north: northAxis } = this.basis();
       const scale = (this.range * 1.2) / height;
       const c = Math.cos(this.heading);
       const s = Math.sin(this.heading);
@@ -321,6 +373,8 @@ export class InspectController {
 
 const scratchEnu = m4.mat4();
 const scratchA = v3.vec3();
+const scratchO = v3.vec3();
+const scratchT = v3.vec3();
 const scratchE = v3.vec3();
 const scratchN = v3.vec3();
 const scratchU = v3.vec3();
