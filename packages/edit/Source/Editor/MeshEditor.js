@@ -5,6 +5,7 @@ import {
   DeveloperError,
   Event,
   RuntimeError,
+  defined,
   destroyObject,
 } from "@cesium/core";
 import {
@@ -20,10 +21,12 @@ import {
 import EditMode from "./EditMode.js";
 import Mesh from "./Mesh.js";
 import MeshEditorModule from "./MeshEditorModule.js";
+import MeshEditorInputHandler from "./MeshEditorInputHandler.js";
 import MeshEditorStyle from "./MeshEditorStyle.js";
 
 /** @import { FrameState, GeometryReadSession, GeometrySource, Scene } from "@cesium/engine"; */
 /** @import { ComponentMask } from "@cesium/mesh-editor"; */
+/** @import MeshEditorTool from "./MeshEditorTool.js"; */
 
 // The attribute read from each source.
 const POSITION_ATTRIBUTE = new GeometryAttributeDescriptor({
@@ -67,6 +70,7 @@ const ALWAYS_PICKABLE_COMPONENTS = 1 << ComponentType.Face;
  * const mesh = editor.addMesh(model.nodes[0].primitives[0]);
  * editor.setMeshActive(mesh);
  * editor.mode = Cesium.EditMode.VERTEX;
+ * editor.activeTool = Cesium.SelectTool.addTo(editor);
  */
 class MeshEditor {
   /** @type {MeshEditorModule} */
@@ -94,14 +98,22 @@ class MeshEditor {
   /** @type {MeshEditorStyle} */
   #style = new MeshEditorStyle();
 
+  /** @type {Set<MeshEditorTool>} */
+  #tools = new Set();
+
+  /** @type {MeshEditorInputHandler} */
+  #inputHandler;
+
   /**
    * @param {object} options
    * @param {*} options.module The loaded wasm module.
+   * @param {Scene} options.scene The scene whose canvas receives pointer input.
    */
   constructor(options) {
     //>>includeStart('debug', pragmas.debug);
     Check.typeOf.object("options", options);
     Check.defined("options.module", options.module);
+    Check.typeOf.object("options.scene", options.scene);
     //>>includeEnd('debug');
 
     this.#module = options.module;
@@ -132,6 +144,35 @@ class MeshEditor {
      * @type {Event<function(Mesh): void>}
      */
     this.meshRemoved = new Event();
+
+    /**
+     * Raised when a mesh becomes active or inactive, whether by
+     * {@link MeshEditor#setMeshActive}, {@link MeshEditor#setMeshInactive} or
+     * a tool. The mesh and whether it's now active are passed to listeners.
+     * <p>
+     * Raised while rendering the next frame, once for each change since the
+     * previous one. A mesh that's activated and then deactivated in between,
+     * or set to the state it's already in, doesn't raise it. Not raised for
+     * removed meshes; see {@link MeshEditor#meshRemoved}.
+     * </p>
+     *
+     * @type {Event<function(Mesh, boolean): void>}
+     */
+    this.meshActiveChanged = new Event();
+
+    /**
+     * Raised when {@link MeshEditor#activeTool} changes. The new tool and the
+     * previous tool are passed to listeners (either may be undefined).
+     *
+     * @type {Event<function((MeshEditorTool | undefined), (MeshEditorTool | undefined)): void>}
+     */
+    this.activeToolChanged = new Event();
+
+    this.#inputHandler = new MeshEditorInputHandler({
+      scene: options.scene,
+      wasmEditor: this.#wasmEditor,
+      meshes: this.#meshes,
+    });
   }
 
   /**
@@ -149,7 +190,7 @@ class MeshEditor {
     //>>includeEnd('debug');
 
     const module = await MeshEditorModule.load();
-    return scene.primitives.add(new MeshEditor({ module }));
+    return scene.primitives.add(new MeshEditor({ module, scene }));
   }
 
   /**
@@ -174,6 +215,72 @@ class MeshEditor {
   }
 
   /**
+   * The tool that receives pointer input, or <code>undefined</code> for none.
+   *
+   * @type {MeshEditorTool | undefined}
+   * @default undefined
+   *
+   * @exception {DeveloperError} The tool isn't in this editor.
+   * @exception {DeveloperError} The tool doesn't support the current mode.
+   */
+  get activeTool() {
+    const id = this.#wasmEditor.activeTool;
+    for (const tool of this.#tools) {
+      if (tool._id === id) {
+        return tool;
+      }
+    }
+    return undefined;
+  }
+
+  set activeTool(value) {
+    const previousTool = this.activeTool;
+    if (!defined(value)) {
+      this.#wasmEditor.clearActiveTool();
+      if (defined(previousTool)) {
+        this.activeToolChanged.raiseEvent(undefined, previousTool);
+      }
+      return;
+    }
+
+    //>>includeStart('debug', pragmas.debug);
+    if (!this.#tools.has(value)) {
+      throw new DeveloperError("The tool isn't in this editor.");
+    }
+    //>>includeEnd('debug');
+
+    try {
+      this.#wasmEditor.setActiveTool(value._id);
+    } catch (error) {
+      throw new DeveloperError(`The tool can't be activated: ${error.message}`);
+    }
+
+    if (value !== previousTool) {
+      this.activeToolChanged.raiseEvent(value, previousTool);
+    }
+  }
+
+  /**
+   * Adds a new wasm tool to the editor and creates its handle. Called by each
+   * tool type's <code>addTo</code>.
+   *
+   * @template {MeshEditorTool} T
+   * @param {function(new:T, object)} ToolType The handle's type.
+   * @param {function(WasmMeshEditor): number} addToWasm Adds the wasm tool and returns its ID.
+   * @returns {T} The new tool.
+   * @ignore
+   */
+  _addTool(ToolType, addToWasm) {
+    const wasmEditor = this.#wasmEditor;
+    const id = addToWasm(wasmEditor);
+
+    const tool = new ToolType({ wasmEditor, id });
+    this.#tools.add(tool);
+
+    return tool;
+  }
+
+  /**
    * Which components of the active meshes are edited. Changing the mode may
    * deactivate the active tool.
    *
@@ -194,6 +301,7 @@ class MeshEditor {
     }
 
     const previousMode = this.#mode;
+    const previousTool = this.activeTool;
     this.#wasmEditor.setMode(value);
     this.#mode = value;
 
@@ -209,6 +317,10 @@ class MeshEditor {
       }
     }
 
+    const activeTool = this.activeTool;
+    if (activeTool !== previousTool) {
+      this.activeToolChanged.raiseEvent(activeTool, previousTool);
+    }
     this.modeChanged.raiseEvent(value, previousMode);
   }
 
@@ -288,6 +400,8 @@ class MeshEditor {
   /**
    * Makes a mesh active, so the editor's mode applies to it. Outlines it in
    * {@link EditMode.NONE}. Cancels the active tool's current interaction.
+   * Raises {@link MeshEditor#meshActiveChanged} on the next frame, unless
+   * the mesh was already active.
    *
    * @param {Mesh} mesh The mesh to edit.
    *
@@ -305,6 +419,8 @@ class MeshEditor {
   /**
    * Makes a mesh inactive, so it's drawn as faces and not edited. Its
    * selection is kept. Cancels the active tool's current interaction.
+   * Raises {@link MeshEditor#meshActiveChanged} on the next frame, unless
+   * the mesh was already inactive.
    *
    * @param {Mesh} mesh The mesh to stop editing.
    *
@@ -328,6 +444,46 @@ class MeshEditor {
     this.#checkMesh(mesh);
 
     return this.#wasmEditor.isMeshActive(mesh._key);
+  }
+
+  /**
+   * Brings meshes up to date with the active state changes wasm reports since
+   * the previous update, including those a tool made, then raises
+   * meshActiveChanged for each. Wasm has already applied them, so
+   * setMeshActive and setMeshInactive only update the JS side.
+   *
+   * @param {BigUint64Array} activatedMeshes The keys of the meshes that became active.
+   * @param {BigUint64Array} deactivatedMeshes The keys of the meshes that became inactive, including removed ones.
+   * @ignore
+   */
+  #syncActiveMeshes(activatedMeshes, deactivatedMeshes) {
+    if (activatedMeshes.length === 0 && deactivatedMeshes.length === 0) {
+      return;
+    }
+
+    const activatedKeys = new Set(activatedMeshes);
+    const deactivatedKeys = new Set(deactivatedMeshes);
+    /** @type {Array<[Mesh, boolean]>} */
+    const changes = [];
+
+    for (const mesh of this.#meshes) {
+      if (activatedKeys.has(mesh._key)) {
+        this.setMeshActive(mesh);
+        changes.push([mesh, true]);
+      } else if (deactivatedKeys.has(mesh._key)) {
+        this.setMeshInactive(mesh);
+        changes.push([mesh, false]);
+      }
+    }
+
+    // Raised after every mesh is synced, so a listener's changes aren't
+    // overwritten by the rest of the sync. Such changes are reported next frame.
+    for (const [mesh, active] of changes) {
+      // A listener may have removed the mesh.
+      if (this.#meshes.has(mesh)) {
+        this.meshActiveChanged.raiseEvent(mesh, active);
+      }
+    }
   }
 
   /**
@@ -429,7 +585,8 @@ class MeshEditor {
   }
 
   /**
-   * Called when rendering the scene. On render passes, runs the wasm update.
+   * Called when rendering the scene. On render passes, runs the wasm update
+   * and syncs the meshes that became active or inactive.
    * Then updates each mesh's renderer, passing overlay views for meshes whose
    * overlays changed, and adds the outlines.
    * <p>
@@ -444,7 +601,10 @@ class MeshEditor {
     if (frameState.passes.render) {
       // TODO: pass in real timestep. Currently unused by wasm update, but may be needed in the future.
       this.#wasmEditor.update(0.0, this.#updateResult);
-      changedKeys = new Set(this.#updateResult.changedOverlays);
+      const { changedOverlays, activatedMeshes, deactivatedMeshes } =
+        this.#updateResult;
+      changedKeys = new Set(changedOverlays);
+      this.#syncActiveMeshes(activatedMeshes, deactivatedMeshes);
     }
 
     for (const mesh of this.#meshes) {
@@ -477,6 +637,8 @@ class MeshEditor {
    * @returns {void}
    */
   destroy() {
+    this.#inputHandler.destroy();
+
     for (const mesh of this.#meshes) {
       mesh._destroy();
     }
