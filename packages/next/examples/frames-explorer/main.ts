@@ -25,6 +25,7 @@ import { RESULT_LABELS, TOUR, type TourStopSpec } from "./content.ts";
 import {
   Globe,
   SECONDARY,
+  behindEarth,
   familyRgba,
   hexRgba,
   type Framing,
@@ -40,7 +41,7 @@ import {
   type OverlayChunk,
   type Sampling,
 } from "./overlays.ts";
-import { latestOnly, orionLegend, planeFraming } from "./orion.ts";
+import { latestOnly, orionLegend, orionNode, planeFraming } from "./orion.ts";
 import { familyMap } from "./panel/families.ts";
 import { length, radians, sig } from "./panel/format.ts";
 import type {
@@ -125,6 +126,13 @@ const SITE: SiteTransform = {
 };
 /** F32: the true-north lines' convergence, drawn this many times while not at true scale. */
 const CONVERGENCE_FACTOR = 20;
+/** S-C1: the rigid line's separation from the exact one, drawn this many times while not at true scale. */
+const SAG_FACTOR = 50;
+
+/** Ashby and Patla (2024)'s published lunar clock rate, as references.json quotes it. */
+const LUNAR_RATE = (
+  references.entries as unknown as Record<string, { rate?: string }>
+)["ashby-patla-2024"]!.rate!.replace("μs", "µs");
 
 const SACRAMENTO = fromDegrees(-121.4944, 38.5816, 0);
 const LUNAR_SITE = fromDegrees(0, -89.5, 0);
@@ -210,6 +218,8 @@ interface OverlayState {
   state: OverlayView["state"];
   problem?: string;
   accuracy?: string;
+  /** What the figure means (S-I7); the default detail otherwise. */
+  detail?: string;
   caution?: boolean;
   unbounded?: boolean;
   /** Bumped per request, so a late answer for an old one is dropped. */
@@ -234,6 +244,12 @@ function compose(a: ArrayLike<number>, b: ArrayLike<number>): Float64Array {
   }
   return out;
 }
+
+/** An origin farther than this from the geocentre is off the scene (the barycentre, the Sun), m. */
+const FAR_ORIGIN = 1e10;
+/** The walk's stub toward an off-scene origin, m (past the Moon). */
+const WALK_STUB = 5e8;
+const AU = 1.495978707e11;
 
 /** Meters as the panel writes them (SI prefixes, powers of ten written out). */
 const meters = (x: number): string => length(x, 3);
@@ -324,6 +340,8 @@ export function run(context: ExampleContext): ExampleRun {
   let orionFrame: OrionFrame = "GCRF";
   /** Orion's node and statements from the worker (one reply), and the clock time they're for. */
   let orionInfo: { info: TrajectoryInfo; utc: number } | undefined;
+  /** The last statement request's failure, and the clock time it was for; cleared by the next success. */
+  let orionInfoError: { message: string; utc: number } | undefined;
   /** Orion's drawn path: the frame it's in, the instant it was placed at (TDB) and the inverse of that placement. */
   let orionBuilt:
     | {
@@ -338,6 +356,9 @@ export function run(context: ExampleContext): ExampleRun {
   let distortionHeight = 0;
   let biasFactor = 1e6;
   let trueScale = false;
+  let sagTrueScale = false;
+  /** The rigid and exact lines' far ends as drawn, for stop 4's camera. */
+  let rigidEnds: { exact: Float64Array; rigid: Float64Array } | undefined;
   const overlays = new Map<OverlayId, OverlayState>(
     OVERLAYS.map((id) => [
       id,
@@ -349,7 +370,7 @@ export function run(context: ExampleContext): ExampleRun {
     ]),
   );
   /** Overlay labels on the globe (the sag, the convergence, contour values). */
-  const overlayLabels = new Map<OverlayId, LabelSpec[]>();
+  const overlayLabels = new Map<OverlayId | "callouts" | "walk", LabelSpec[]>();
   let disposed = false;
   scope.defer(() => {
     disposed = true;
@@ -406,18 +427,24 @@ export function run(context: ExampleContext): ExampleRun {
   }
 
   /** The triads' line in the legend: GCRF against ITRF, the edge's own figure (R8). */
-  function triadsAccuracy(): Pick<OverlayView, "accuracy" | "unbounded"> {
+  function triadsAccuracy(): Pick<
+    OverlayView,
+    "accuracy" | "detail" | "unbounded"
+  > {
     const itrf = tree && findNode(tree, "ITRF");
     const a = itrf?.edge.accuracy;
     if (a?.radians !== undefined) {
+      // One line (S-I7): the figure and its one qualifier, "measured Earth
+      // orientation" or "predicted Earth orientation, N days".
+      const qualifier = a.note.split(/ \(|\. /)[0]!;
       return {
-        accuracy: `axes: GCRF against ITRF ±${radians(a.radians)} (${a.note})`,
+        accuracy: `±${radians(a.radians)} (1σ), ${qualifier}`,
+        detail: `The axes of GCRF against ITRF: ${a.note}.`,
       };
     }
     return {
-      accuracy: a
-        ? `axes: GCRF against ITRF not bounded: ${a.note}`
-        : "waiting for frame data",
+      accuracy: a ? `not bounded: ${a.note}` : "waiting for frame data",
+      ...(a && { detail: `The axes of GCRF against ITRF: ${a.note}.` }),
       unbounded: a !== undefined,
     };
   }
@@ -425,18 +452,23 @@ export function run(context: ExampleContext): ExampleRun {
   /** Orion's legend line (R8): computed from the worker's statement at the clock's instant. */
   function orionAccuracy(): Pick<
     OverlayView,
-    "accuracy" | "caution" | "unbounded"
+    "accuracy" | "detail" | "drawing" | "caution" | "unbounded"
   > {
     if (orionInfo === undefined && loading.get("orion").state !== "ready") {
       return { accuracy: defaultAccuracy("orion") };
     }
     const l = orionLegend(orionInfo?.info.composed.ITRF, {
       drawIn: orionBuilt?.frame ?? orionFrame,
-      utc: new Date(orionInfo?.utc ?? viewer.clock.time).toISOString(),
+      utc: new Date(
+        orionInfoError?.utc ?? orionInfo?.utc ?? viewer.clock.time,
+      ).toISOString(),
       ...(orionBuilt?.sampling && { sampling: orionBuilt.sampling }),
+      ...(orionInfoError && { error: orionInfoError.message }),
     });
     return {
       accuracy: l.accuracy,
+      detail: l.detail,
+      ...(l.drawing !== undefined && { drawing: l.drawing }),
       ...(l.caution && { caution: true }),
       ...(l.unbounded && { unbounded: true }),
     };
@@ -454,6 +486,9 @@ export function run(context: ExampleContext): ExampleRun {
         on: s.on,
         state: s.on ? s.state : "off",
         accuracy: s.accuracy ?? defaultAccuracy(id),
+        ...((s.detail ?? defaultDetail(id)) !== undefined && {
+          detail: s.detail ?? defaultDetail(id)!,
+        }),
         ...(need !== undefined && { waitingFor: need }),
         ...(s.problem !== undefined && { problem: s.problem }),
         ...(s.caution && { caution: true }),
@@ -475,23 +510,42 @@ export function run(context: ExampleContext): ExampleRun {
     });
   }
 
+  /** An overlay's one line before it draws (S-I7: the figure it will carry, briefly). */
   function defaultAccuracy(id: OverlayId): string {
     switch (id) {
       case "designGrid":
       case "siteGrid":
-        return "the recorded PROJ operation's accuracy, once PROJ is in";
+        return "the recorded PROJ operation's accuracy, once PROJ loads";
       case "rigidVsExact":
-        return "sag at 20 km: geometry, exact";
+        return "the sag at 20 km, exact geometry";
       case "roundTrip":
         return "run the tests to place the markers";
       case "orion":
-        return "Orion's statement at the clock's instant, once its OEM loads";
+        return "Orion's 1σ at the clock's instant, once its OEM loads";
       case "distortion":
-        return "Tissot ellipses in true-north axes (convergence not applied); contours from PROJ's factors";
+        return "contours from PROJ's scale factors";
       case "bias":
-        return `the frame bias, 23 mas: exact by definition (IAU 2006 adopted constants); drawn ×${sig(biasFactor, 1)}`;
+        return `exact by definition; drawn ×${sig(biasFactor, 1)}`;
       default:
         return "";
+    }
+  }
+
+  /** What an overlay's figure means, behind "About this figure" (S-I7). */
+  function defaultDetail(id: OverlayId): string | undefined {
+    switch (id) {
+      case "designGrid":
+        return `The 10 km grid lines placed through the recorded PROJ operation to WGS 84; true north ${trueScale ? "at true scale" : `with its convergence drawn ×${CONVERGENCE_FACTOR}`}. The 2 km lines appear below 60 km.`;
+      case "siteGrid":
+        return "The site grid through the same operation; the site formula (rotation and scale) is exact to 1 nm.";
+      case "rigidVsExact":
+        return `A 20 km design line placed rigidly (dashed) against the exact one (solid); ${sagTrueScale ? "drawn at true scale" : `their separation drawn ×${SAG_FACTOR}`}, the leader labelled with the true sag.`;
+      case "distortion":
+        return "Tissot ellipses in true-north axes (convergence not applied); combined-factor contours from PROJ's factors, in ppm.";
+      case "bias":
+        return "The frame bias, 23 mas between EME2000 and GCRF: exact by definition (IAU 2006 adopted constants), drawn exaggerated so it shows.";
+      default:
+        return undefined;
     }
   }
 
@@ -576,6 +630,8 @@ export function run(context: ExampleContext): ExampleRun {
       biasFactor,
       trueScale,
       convergenceFactor: CONVERGENCE_FACTOR,
+      sagTrueScale,
+      sagFactor: SAG_FACTOR,
       triadScale:
         "triads drawn at 6% of the camera's distance, 2 m to 2,000 km; ITRF and GCRF at 1.5 Earth radii",
       groups: GROUP_INFO,
@@ -620,10 +676,19 @@ export function run(context: ExampleContext): ExampleRun {
     }
     // Orion, from the worker's reply: under its reference, with the
     // statements that came with it (the main thread has no trajectory).
-    const orion = orionInfo?.info;
-    if (orion) {
-      findNode(t, orion.parent)?.children.push({ ...orion.node, children: [] });
+    const placedOrion = orionNode(
+      orionInfo?.info,
+      orionInfoError?.message,
+      new Date(orionInfoError?.utc ?? viewer.clock.time).toISOString(),
+    );
+    if (placedOrion) {
+      findNode(t, placedOrion.parent)?.children.push({
+        ...placedOrion.node,
+        children: [],
+      });
     }
+    // Its statements only while they're current (not after a failure).
+    const orion = orionInfoError === undefined ? orionInfo?.info : undefined;
     tree = t;
     treeNote = undefined;
     const placed = new Map<string, PlacedNode>(
@@ -720,12 +785,26 @@ export function run(context: ExampleContext): ExampleRun {
         continue;
       }
       const geocentric = id === "ITRF" || id === "GCRF" || id === "EME2000";
+      const length = 1.5 * EARTH_RADIUS;
       out.push({
         id,
         label: id,
         frame,
         family: familyOf(id),
-        ...(geocentric && { length: 1.5 * EARTH_RADIUS }),
+        // Geocentric: from the surface out, no cube inside the Earth (S-I2);
+        // GCRF at the secondary strength beside ITRF's (S-I1).
+        ...(geocentric && {
+          length,
+          surface: [
+            WGS84.radii[0]! / length,
+            WGS84.radii[1]! / length,
+            WGS84.radii[2]! / length,
+          ] as const,
+        }),
+        ...(id === "GCRF" && { strength: SECONDARY }),
+        // Stop 6's subject at 15% of the camera's distance (S-I8).
+        ...(id === "Lunar south-pole site" &&
+          tourStop === "lunar-time" && { scale: 0.15 }),
       });
     }
     return out;
@@ -738,31 +817,51 @@ export function run(context: ExampleContext): ExampleRun {
       id: t.id,
       text: t.label,
       family: t.family,
-      priority: t.id === selectedFrame() ? 3 : 1,
+      // The selected frame first, then the geocentric frames over sites (S-I1).
+      priority: t.id === selectedFrame() ? 3 : t.length !== undefined ? 2 : 1,
       at: () => {
         const o = globe.triadOrigin(t.id);
         if (o === undefined) {
           return undefined;
         }
-        // Geocentric triads are labelled at their x axis's tip, off the globe.
-        return t.length !== undefined && frames
-          ? axisTip(t.frame, t.length)
-          : o;
+        // Geocentric triads are labelled on an axis, off the globe: x's,
+        // or the first in front of the Earth (S-I1: ITRF's x often points
+        // away, which hid its label).
+        if (t.length === undefined || !frames) {
+          return o;
+        }
+        const eye = viewer.view.camera.position;
+        let first: Float64Array | undefined;
+        for (const axis of [0, 1, 2]) {
+          // Just outside the surface (0.78 of the shaft, 1.17 R), so a tip
+          // past the view's edge doesn't take the label with it.
+          const tip = axisTip(t.frame, 0.78 * t.length, axis);
+          first ??= tip;
+          if (tip && !behindEarth(eye, tip)) {
+            return tip;
+          }
+        }
+        return first;
       },
     }));
     globe.setLabels([...labels, ...[...overlayLabels.values()].flat()]);
   }
 
-  function axisTip(frame: Frame, length: number): Float64Array | undefined {
+  function axisTip(
+    frame: Frame,
+    length: number,
+    axis = 0,
+  ): Float64Array | undefined {
     const instant = instantNow();
     if (!frames || !instant) {
       return undefined;
     }
     const m = frameTransform(frame, frames.itrf, instant);
+    const c = 4 * axis;
     return Float64Array.from([
-      m[12]! + m[0]! * length,
-      m[13]! + m[1]! * length,
-      m[14]! + m[2]! * length,
+      m[12]! + m[c]! * length,
+      m[13]! + m[c + 1]! * length,
+      m[14]! + m[c + 2]! * length,
     ]);
   }
 
@@ -789,6 +888,7 @@ export function run(context: ExampleContext): ExampleRun {
     build: () => Promise<{
       layers: Parameters<Globe["setOverlay"]>[1];
       accuracy: string;
+      detail?: string;
       caution?: boolean;
       labels?: LabelSpec[];
     }>,
@@ -806,6 +906,11 @@ export function run(context: ExampleContext): ExampleRun {
       globe.setOverlay(id, built.layers);
       s.state = "drawn";
       s.accuracy = built.accuracy;
+      if (built.detail !== undefined) {
+        s.detail = built.detail;
+      } else {
+        delete s.detail;
+      }
       s.caution = built.caution === true;
       overlayLabels.set(id, built.labels ?? []);
       refreshTriads();
@@ -824,27 +929,33 @@ export function run(context: ExampleContext): ExampleRun {
     invalidate();
   }
 
+  /** The recorded operation's accuracy: one line, and its sentence for the detail. */
   const operationText = (
     g: OverlayGeometry,
-  ): { text: string; caution: boolean } => {
+  ): { text: string; sentence: string; caution: boolean } => {
     const op = g.operation;
+    const grids =
+      op && op.grids.length > 0 ? ` (grids: ${op.grids.join(", ")})` : "";
     if (!op) {
-      return { text: "", caution: false };
+      return { text: "", sentence: "", caution: false };
     }
     if (op.ballpark || op.accuracy === undefined) {
       return {
-        text: `not bounded: PROJ states no accuracy for the recorded operation${op.ballpark ? " (a ballpark operation)" : ""}`,
+        text: "not bounded: PROJ states no accuracy",
+        sentence: `PROJ states no accuracy for the recorded operation${op.ballpark ? ", a ballpark operation" : ""}${grids}.`,
         caution: true,
       };
     }
     if (op.accuracy === 0) {
       return {
-        text: "exact: the operation is a conversion, with no datum change",
+        text: "exact, a conversion",
+        sentence: "The operation is a conversion, with no datum change.",
         caution: false,
       };
     }
     return {
-      text: `±${meters(op.accuracy)} (1σ): the recorded operation to WGS 84`,
+      text: `±${meters(op.accuracy)} (1σ), the recorded operation`,
+      sentence: `±${meters(op.accuracy)} (1σ): PROJ's stated accuracy for the recorded operation to WGS 84${grids}.`,
       caution: false,
     };
   };
@@ -911,6 +1022,8 @@ export function run(context: ExampleContext): ExampleRun {
       if (id === "orion") {
         orionBuild.drop();
         orionBuilt = undefined;
+        s.state = "off";
+        refreshCallouts();
       }
       if (id === "designGrid") {
         globe.removeOverlay(`${id}:minor`);
@@ -987,7 +1100,8 @@ export function run(context: ExampleContext): ExampleRun {
                 dashed: true,
               },
             ],
-            accuracy: `${op.text}; true north ${trueScale ? "at true scale" : `with its convergence drawn ×${CONVERGENCE_FACTOR}`}`,
+            accuracy: op.text,
+            detail: `${op.sentence} True north ${trueScale ? "at true scale" : `with its convergence drawn ×${CONVERGENCE_FACTOR}`}. The 2 km lines appear below 60 km.`,
             caution: op.caution,
             labels: west
               ? [
@@ -1023,7 +1137,8 @@ export function run(context: ExampleContext): ExampleRun {
                 dashed: true,
               },
             ],
-            accuracy: `${op.text}; the site formula exact to 1 nm`,
+            accuracy: op.text,
+            detail: `${op.sentence} The site formula (rotation and scale) is exact to 1 nm.`,
             caution: op.caution,
           };
         });
@@ -1032,29 +1147,50 @@ export function run(context: ExampleContext): ExampleRun {
         void request(id, async () => {
           const from: [number, number] = [SITE.origin[0], SITE.origin[1]];
           const to: [number, number] = [from[0] + 20_000 * FT, from[1]];
+          const k = sagTrueScale ? 1 : SAG_FACTOR;
           const g = await client.overlay("rigidVsExact", {
             frame: frameParams(CALIFORNIA, "California zone 3"),
             from,
             to,
             samples: 100,
+            ...(k !== 1 && { exaggeration: k }),
           });
           const exact = g.layers.find((l) => l.name === "exact")!.chunks;
           const rigid = g.layers.find((l) => l.name === "rigid")!.chunks;
           const sag = g.sagAtEnd ?? NaN;
-          const end = pointOf(exact, true);
+          const a = pointOf(exact, true);
+          const b = pointOf(rigid, true);
+          rigidEnds = a && b ? { exact: a, rigid: b } : undefined;
+          // S-C1: a 1 px white leader between the two far ends, labelled
+          // with the true sag; both lines at full strength, exact solid and
+          // rigid dashed.
+          const leader =
+            a && b
+              ? overlayMesh({
+                  positions: Float64Array.from([...a, ...b]),
+                  colors: Uint8Array.from([
+                    255, 255, 255, 255, 255, 255, 255, 255,
+                  ]),
+                })
+              : [];
+          const mid = a && b ? a.map((v, i) => (v + b[i]!) / 2) : undefined;
+          const drawn = k === 1 ? "" : ` (drawn ×${k})`;
           return {
             layers: [
               { chunks: exact, color: engineeringColor },
               { chunks: rigid, color: hexRgba("#ffffff"), dashed: true },
+              { chunks: leader },
             ],
-            accuracy: `sag ${sag.toFixed(1)} m at 20 km (geometry, exact); rigid dashed`,
-            labels: end
+            accuracy: `sag ${sag.toFixed(1)} m at 20 km, exact geometry`,
+            detail: `A 20 km design line placed rigidly at its start (dashed) against the exact one (solid): ${sag.toFixed(1)} m apart at the far end, by geometry, exact. ${k === 1 ? "Drawn at true scale." : `Their separation is drawn ×${k} so it shows; the leader carries the true figure.`}`,
+            labels: mid
               ? [
                   {
                     id: "label:sag",
-                    text: `sag ${sag.toFixed(1)} m at 20 km`,
-                    at: end,
+                    text: `sag ${sag.toFixed(1)} m at 20 km${drawn}`,
+                    at: Float64Array.from(mid),
                     priority: 2,
+                    leader: true,
                   },
                 ]
               : [],
@@ -1160,7 +1296,8 @@ export function run(context: ExampleContext): ExampleRun {
               { chunks: tissot, color: engineeringColor, strength: SECONDARY },
               { chunks: contours, color: familyRgba("earth") },
             ],
-            accuracy: `Tissot ellipses in true-north axes (convergence not applied); contours from PROJ's factors${g.skipped ? `; ${g.skipped} nodes with no scale left out` : ""}${op.text ? `; placement ${op.text}` : ""}`,
+            accuracy: `contours from PROJ's scale factors${op.caution ? `; placement ${op.text}` : ""}`,
+            detail: `Tissot ellipses in true-north axes (convergence not applied); combined-factor contours from PROJ's factors, in ppm${g.skipped ? `; ${g.skipped} nodes with no scale left out` : ""}. ${op.sentence}`,
             caution: op.caution,
             labels,
           };
@@ -1235,29 +1372,35 @@ export function run(context: ExampleContext): ExampleRun {
    * motion), and redrawn as the clock moves the origins.
    */
   let walk: { id: string; shown: number; timer: number } | undefined;
-  function walkOrigins(id: string): Float64Array[] {
+  /**
+   * The walk's origins on the globe, from the reference (the shared
+   * "Against", S-I5) through the common ancestor to the frame, coincident
+   * ones merged. An origin far off the scene (the barycentre, the Sun) is
+   * drawn as a stub toward it from the first near origin, with a label
+   * naming it and its distance.
+   */
+  function walkOrigins(id: string): {
+    points: Float64Array[];
+    far?: { at: Float64Array; text: string };
+  } {
     const instant = instantNow();
     if (!tree || !frames || !instant) {
-      return [];
+      return { points: [] };
     }
-    // The walk's path: from the reference (ITRF, the walk's default) up to
-    // the common ancestor, then down to the frame.
     let path: TreeNode[];
     try {
-      const up = pathToRoot(tree, "ITRF");
+      const up = pathToRoot(tree, view.get().against);
       const down = pathToRoot(tree, id);
       const common = up.findIndex((n) => down.some((d) => d.id === n.id));
       const at = down.findIndex((d) => d.id === up[common]!.id);
       path = [...up.slice(0, common + 1), ...down.slice(0, at).reverse()];
     } catch {
-      return [];
+      return { points: [] };
     }
     const out: Float64Array[] = [];
+    let far: { id: string; p: ArrayLike<number> } | undefined;
     for (const n of path) {
       let o: ArrayLike<number> | undefined;
-      if (n.id === "ICRF" || n.id === "HCRS") {
-        continue; // the barycentre's and the Sun's origins are off the scene
-      }
       if (n.frame) {
         try {
           const m = frameTransform(n.frame, frames.itrf, instant);
@@ -1270,23 +1413,53 @@ export function run(context: ExampleContext): ExampleRun {
       } else if (n.id === engineering?.node.id) {
         o = engineering.placed.itrf;
       }
+      if (o === undefined) {
+        continue;
+      }
+      if (Math.hypot(o[0]!, o[1]!, o[2]!) > FAR_ORIGIN) {
+        // The barycentre or the Sun: off the scene; pointed at, not drawn to.
+        far ??= { id: n.id, p: o };
+        continue;
+      }
       const prev = out.at(-1);
       if (
-        o !== undefined &&
-        (prev === undefined ||
-          Math.hypot(o[0]! - prev[0]!, o[1]! - prev[1]!, o[2]! - prev[2]!) > 1)
+        prev === undefined ||
+        Math.hypot(o[0]! - prev[0]!, o[1]! - prev[1]!, o[2]! - prev[2]!) > 1
       ) {
         out.push(Float64Array.from(o));
       }
     }
-    return out;
+    const first = out[0];
+    if (!far || !first) {
+      return { points: out };
+    }
+    const d = [0, 1, 2].map((i) => far!.p[i]! - first[i]!);
+    const len = Math.hypot(d[0]!, d[1]!, d[2]!);
+    const stub = Float64Array.from(
+      [0, 1, 2].map((i) => first[i]! + (d[i]! / len) * WALK_STUB),
+    );
+    return {
+      points: [stub, ...out],
+      far: {
+        at: stub,
+        text: `→ ${far.id} origin, ${sig(len / AU, 2)} au`,
+      },
+    };
   }
   function drawWalk(): void {
     if (!walk) {
       globe.removeOverlay("walk");
+      overlayLabels.delete("walk");
+      refreshTriads();
       return;
     }
-    const origins = walkOrigins(walk.id);
+    const { points: origins, far } = walkOrigins(walk.id);
+    overlayLabels.set(
+      "walk",
+      far
+        ? [{ id: "label:walk-far", text: far.text, at: far.at, priority: 2 }]
+        : [],
+    );
     const points: number[] = [];
     const colors: number[] = [];
     const color = familyRgba(familyOf(walk.id));
@@ -1308,16 +1481,21 @@ export function run(context: ExampleContext): ExampleRun {
         }
       }
     }
+    refreshTriads();
     if (points.length === 0) {
       globe.removeOverlay("walk");
       return;
     }
     globe.setOverlay("walk", [
       {
-        chunks: overlayMesh({
-          positions: Float64Array.from(points),
-          colors: Uint8Array.from(colors),
-        }),
+        // Dots up to 1e7 m long (an Earth–Moon edge): its own path's chunks.
+        chunks: overlayMesh(
+          {
+            positions: Float64Array.from(points),
+            colors: Uint8Array.from(colors),
+          },
+          { extent: 1e7 },
+        ),
       },
     ]);
   }
@@ -1330,7 +1508,7 @@ export function run(context: ExampleContext): ExampleRun {
       drawWalk();
       return;
     }
-    const edges = Math.max(0, walkOrigins(id).length - 1);
+    const edges = Math.max(0, walkOrigins(id).points.length - 1);
     const reduced =
       typeof matchMedia === "function" &&
       matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -1387,7 +1565,7 @@ export function run(context: ExampleContext): ExampleRun {
       placeOrion();
       s.state = "drawn";
       delete s.problem;
-      refreshTriads();
+      refreshCallouts();
       invalidate();
     },
     (error, arg) => {
@@ -1443,10 +1621,19 @@ export function run(context: ExampleContext): ExampleRun {
         return;
       }
       orionInfo = { info, utc: arg.utc };
+      orionInfoError = undefined;
       rebuildTree();
+      refreshCallouts();
     },
-    () => {
-      // The legend says it's waiting; the next clock change asks again.
+    (error, arg) => {
+      // Shown in the legend and on the tree's node; the next clock change
+      // (a minute of clock time) asks again.
+      if (disposed || isAbort(error)) {
+        return;
+      }
+      orionInfoError = { message: scrub(messageOf(error)), utc: arg.utc };
+      rebuildTree();
+      refreshCallouts();
     },
   );
   let orionInfoAsked: { clock: number; real: number } | undefined;
@@ -1524,8 +1711,30 @@ export function run(context: ExampleContext): ExampleRun {
         return undefined;
       case "designGrid":
         return framingAt(-120.5, 37.85, 180_000, 0, -35 * deg);
-      case "rigidVsExact":
-        return framingAt(-122.2, 37.76, 8000, 270, -15 * deg);
+      case "rigidVsExact": {
+        // S-C1: from the side (south of the line, looking north, 10° down),
+        // the whole 20 km line across the view, so the gap opening toward
+        // the far end reads at a glance. Looking back along the line (the
+        // first spec) foreshortened it to a short stroke.
+        const ends = rigidEnds;
+        if (ends) {
+          const c = WGS84.cartesianToCartographic(ends.exact, {
+            longitude: 0,
+            latitude: 0,
+            height: 0,
+          });
+          if (c) {
+            return framingAt(
+              c.longitude / deg - 0.11,
+              c.latitude / deg,
+              22_000,
+              0,
+              -10 * deg,
+            );
+          }
+        }
+        return framingAt(-122.31, 37.76, 22_000, 0, -10 * deg);
+      }
       case "site":
         return framingAt(-122.43, 37.76, 8000, 0, -45 * deg);
       case "portland":
@@ -1744,13 +1953,18 @@ export function run(context: ExampleContext): ExampleRun {
   }
 
   let lastSelection = view.get().selection;
+  let lastAgainst = view.get().against;
   function onView(): void {
     const v = view.get();
     context.setParams(formatParams(v));
     if (v.selection !== lastSelection) {
       lastSelection = v.selection;
       applySelection();
+    } else if (v.against !== lastAgainst && v.selection.kind === "frame") {
+      // The walk's reference changed: its path on the globe follows (S-I5).
+      startWalk(v.selection.id);
     }
+    lastAgainst = v.against;
     applyTour(v.tour);
     invalidate();
   }
@@ -1759,6 +1973,7 @@ export function run(context: ExampleContext): ExampleRun {
     const s = view.get().selection;
     refreshTriads();
     startWalk(s.kind === "frame" ? s.id : undefined);
+    refreshCallouts();
     if (s.kind === "none") {
       globe.emphasize(undefined);
       if (tourStop === undefined) {
@@ -1823,6 +2038,69 @@ export function run(context: ExampleContext): ExampleRun {
 
   // ----------------------------------------------------------------- tour
   let tourStop: string | undefined;
+  /**
+   * Stop 2 (S-I6): at 3,600× the framed side passes into night, so the
+   * globe is lit from the camera instead, set after the viewer's own sun
+   * on every clock change (this listener comes after the viewer's).
+   */
+  let headlight = false;
+  function lightFromCamera(): void {
+    const p = viewer.view.camera.position;
+    const l = Math.hypot(p[0]!, p[1]!, p[2]!);
+    if (l > 0) {
+      viewer.engine.sunDirection.set([p[0]! / l, p[1]! / l, p[2]! / l]);
+      viewer.engine.requestRender();
+    }
+  }
+  scope.defer(
+    viewer.clock.events.on("change", () => {
+      if (headlight) {
+        lightFromCamera();
+      }
+    }),
+  );
+  scope.defer(() => {
+    if (headlight) {
+      viewer.sunFromClock = true;
+    }
+  });
+
+  /**
+   * On-canvas callouts (S-I8, minor 9): the lunar clock's rate at the
+   * south-pole site during stop 6 or while the site is selected, and Orion
+   * at the clock's instant while its path is drawn.
+   */
+  function refreshCallouts(): void {
+    const out: LabelSpec[] = [];
+    const s = view.get().selection;
+    if (
+      tourStop === "lunar-time" ||
+      (s.kind === "frame" && s.id === "Lunar south-pole site")
+    ) {
+      out.push({
+        id: "callout:lunar-time",
+        text: `lunar clock +${LUNAR_RATE} against Earth's (Ashby & Patla 2024)`,
+        at: () =>
+          globe.triadOrigin("Lunar south-pole site") ?? lunarSiteOrigin(),
+        priority: 4,
+        leader: true,
+      });
+    }
+    const o = overlays.get("orion")!;
+    if (o.on && o.state === "drawn" && orionInfo && !orionInfoError) {
+      const m = orionInfo.info.composed.ITRF.statement.meters;
+      out.push({
+        id: "callout:orion-now",
+        text: `Orion now${m !== undefined ? `, ±${length(m, 2)}` : ""}`,
+        at: orionInfo.info.itrf,
+        family: "trajectory",
+        priority: 3,
+        leader: true,
+      });
+    }
+    overlayLabels.set("callouts", out);
+    refreshTriads();
+  }
   let tourClock: { rate: number; mode: typeof viewer.clock.mode } | undefined;
   function applyTour(id: string | undefined): void {
     if (id === tourStop || !frames) {
@@ -1834,10 +2112,19 @@ export function run(context: ExampleContext): ExampleRun {
       viewer.clock.mode = tourClock.mode;
       tourClock = undefined;
     }
+    if (headlight) {
+      headlight = false;
+      viewer.sunFromClock = true;
+    }
     const stop = TOUR.find((s) => s.id === id);
+    refreshCallouts();
     if (!stop) {
       globe.dimGround(false);
       return;
+    }
+    if (stop.light === "camera") {
+      headlight = true;
+      lightFromCamera();
     }
     for (const o of stop.overlays) {
       setOverlay(o, true);
@@ -2091,6 +2378,10 @@ export function run(context: ExampleContext): ExampleRun {
     setTrueScale: (on) => {
       trueScale = on;
       drawOverlay("designGrid");
+    },
+    setSagTrueScale: (on) => {
+      sagTrueScale = on;
+      drawOverlay("rigidVsExact");
     },
     jumpToFlyby: () => {
       viewer.clock.time = FLYBY;

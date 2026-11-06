@@ -236,14 +236,14 @@ km; a lunar site at 100 m. Under reduced motion, flights cut.
 
 ### The tour
 
-| Stop                         | Camera                                                                                                                                       | On                                                                                                                                           | Caption                                                                                                                       |
-| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| 1 Earth's frames             | the opening shot                                                                                                                             | triads (ITRF, GCRF, EME2000, Sacramento ENU)                                                                                                 | ITRF turns with the Earth; GCRF doesn't. Each triad is a frame's axes at the clock's time.                                    |
-| 2 GCRF to ITRF over a day    | no move                                                                                                                                      | ITRF and GCRF triads                                                                                                                         | the globe is drawn Earth-fixed, so GCRF's triad turns once against ITRF's in a sidereal day (the clock plays at 3,600×: 24 s) |
-| 3 The California design grid | over the grid's centre, 180 km range, 55° tilt, heading 0°                                                                                   | design grid (10 km lines; 2 km lines only under 60 km range), true-north lines; imagery dimmed (exposure −0.6); target: `globe-stop3-target` | grid north and true north part ways away from the central meridian: the convergence angle                                     |
-| 4 Rigid against exact        | 2 km beyond the line's far end, 8 km range, 15° above the horizon, looking back                                                              | rigid and exact 20 km line, the sag labelled; imagery dimmed                                                                                 | a 20 km design line placed rigidly sags 31 m below the exact one at its far end                                               |
-| 5 Orion's figure-eight       | down the Moon's orbit normal at the flyby, the Earth–Moon line across the view, the Earth, the Moon and the path framed (6c-1); 3.0 s flight | Orion in GCRF, then after 4 s in MOON_ME                                                                                                     | in GCRF a figure-eight round the Moon; in MOON_ME the far-side swing                                                          |
-| 6 The Moon's south pole      | 100 m from the site's triad, 20° above the horizon, sun low behind; 3.5 s flight                                                             | the site's triad (MOON_ME)                                                                                                                   | a clock here gains about 56 µs a day; the triad holds still as the camera orbits                                              |
+| Stop                         | Camera                                                                                                                                                    | On                                                                                                                                                                                        | Caption                                                                                                                                                                      |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1 Earth's frames             | the opening shot                                                                                                                                          | triads (ITRF, GCRF, EME2000, Sacramento ENU)                                                                                                                                              | ITRF turns with the Earth; GCRF doesn't. Each triad is a frame's axes at the clock's time.                                                                                   |
+| 2 GCRF to ITRF over a day    | no move; the globe lit from the camera while the stop shows (6c-1 fix round)                                                                              | ITRF and GCRF triads                                                                                                                                                                      | the globe is drawn Earth-fixed, so GCRF's triad turns once against ITRF's in a sidereal day (the clock plays at 3,600×: 24 s), lit from the camera so the turn stays visible |
+| 3 The California design grid | over the grid's centre, 180 km range, 55° tilt, heading 0°                                                                                                | design grid (10 km lines; 2 km lines only under 60 km range), true-north lines; imagery dimmed (exposure −0.6); target: `globe-stop3-target`                                              | grid north and true north part ways away from the central meridian: the convergence angle                                                                                    |
+| 4 Rigid against exact        | from the side: south of the line, looking north, 10° down, 22 km, the whole line across the view (6c-1 fix round: looking back along it foreshortened it) | rigid (dashed) and exact (solid) 20 km line, the separation drawn ×50 with a "Show true scale" switch, a white leader between the far ends labelled with the true sag; imagery not dimmed | a 20 km design line placed rigidly parts from the exact one by about 31 m at its far end (drawn ×50 so it shows)                                                             |
+| 5 Orion's figure-eight       | down the Moon's orbit normal at the flyby, the Earth–Moon line across the view, the Earth, the Moon and the path framed (6c-1); 3.0 s flight              | Orion in GCRF, then after 4 s in MOON_ME                                                                                                                                                  | in GCRF a figure-eight round the Moon; in MOON_ME the far-side swing                                                                                                         |
+| 6 The Moon's south pole      | 100 m from the site's triad, 20° above the horizon, sun low behind; 3.5 s flight                                                                          | the site's triad (MOON_ME) at 15% of the camera's distance, and a callout "lunar clock +56.02 µs/day against Earth's (Ashby & Patla 2024)"                                                | a clock here gains about 56 µs a day; the triad holds still as the camera orbits                                                                                             |
 
 The caption sits top right (bottom, above the time controls, on views
 under 560 px), takes focus at each stop, and steps with the arrow keys;
@@ -959,11 +959,59 @@ Every term below has a popover wherever it appears (`panel/glossary.ts`,
   run (after another group's own run) starts that group's run instead of
   clearing the selection.
 
+### 6c-1 fix round 1 (second UX review)
+
+- **Triads (S-I1, S-I2, S-I8).** Geocentric shafts start at the Earth's
+  surface (equatorial radius for x and y, polar for z) with no origin cube,
+  so nothing draws over the globe from inside it; the x-ray dashes stay
+  carried forward. GCRF draws at the secondary strength beside ITRF's full
+  one. Geocentric labels outrank sites in the declutter and sit on an axis
+  just outside the surface: x's, or the first axis in front of the Earth.
+  A camera-scaled triad's shaft is at least 2.5 px wide on the view (its
+  share of the length from the view's size), with cones at least two
+  shafts long; stop 6's site triad is 15% of the camera's distance.
+- **Labels (S-I3).** A label whose point is behind the Earth, or farther
+  than 20 times the camera's height, is hidden; every label is kept inside
+  the view. Callouts (the sag, the lunar clock, "Orion now") sit 48 px right
+  of their point with a 1 px leader.
+- **Stop 4 (S-C1).** As in the tour table: the separation drawn ×50 by
+  default (`rigidVsExact`'s `exaggeration`, display only, like F32's
+  convergence), labelled on the globe and in the legend, with a "Show true
+  scale" switch in the overlay's options; the leader carries the true sag.
+- **Stop 2 (S-I6).** The globe is lit from the camera (the sun direction set
+  after the viewer's own on each clock change), so the framed side never
+  turns to night; the caption says so.
+- **The walk (S-I4, S-I5).** `measure` codes its warnings
+  (`AccuracyStatement.warningCodes`); the walk keeps only those about the
+  separation, so ±32 mm no longer turns amber over a note about the signal.
+  The attention color is kept for stated assumptions (Orion's time scale)
+  and separation warnings. "Against" is in the shared selection and the URL
+  (`against=`), and the globe's dotted path follows it; an off-scene origin
+  (the barycentre, the Sun) is a stub toward it labelled with its name and
+  distance ("→ ICRF origin, 1.0 au").
+- **Overlay rows (S-I7).** One line each: the figure, its 1σ and one
+  qualifier ("±2.6 × 10⁻⁹ rad (1σ), measured Earth orientation"; "±10 m
+  (1σ), taken as TDB"). What it means is behind "About this figure"; how
+  Orion was sampled is a muted line under "Drawn in". The legend shows the
+  one line.
+- **Colors within 0 to 1.** A colored overlay layer is white in its
+  vertices and takes its color from the draw's tint, so dimming and the
+  selected 50% white mix are tints within 0 to 1.
+- **Orion.** A failed statement request (the clock outside the OEM's data)
+  shows as "not bounded" in the legend and on the tree's node, with the
+  error, and is asked again when the clock moves. A callout marks Orion at
+  the clock's instant ("Orion now, ±10 m").
+
 ### Carried forward (engine work)
 
-- **X-ray dashes for the geocentric triads inside the globe.** Line-list
-  and mesh draws are always depth-tested (`DrawOptions` has no depth-test
+- **X-ray dashes for the geocentric triads inside the globe.** (Meanwhile
+  the shafts start at the surface.) Line-list and mesh draws are always
+  depth-tested (`DrawOptions` has no depth-test
   switch; only billboards have `depthTestDistance`), so the part of the
   ITRF, GCRF and EME2000 triads inside the Earth can't draw through it.
   Needs a draw flag for depth-test off (or a second pass with an inverted
   depth test) in the renderer.
+- **Ray artifacts in the lunar terrain's shadows** at stop 6 (streaks from
+  the shadowed crater rims, upper left of the view): the engine's shadows
+  on the Moon's terrain, not the example's geometry; to be filed as an
+  engine issue.

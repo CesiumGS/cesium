@@ -36,6 +36,8 @@ const DIM = 0.35;
 /** The tint of a secondary line (minor grid lines, true north, Tissot outlines). */
 export const SECONDARY = 0.6;
 
+const WHITE: Rgba = [255, 255, 255, 255];
+
 /** `rgba` mixed half with white (DESIGN.md: the selected overlay's lighter tint). */
 const lighter = (rgba: Rgba): Rgba => [
   Math.round((rgba[0] + 255) / 2),
@@ -44,17 +46,8 @@ const lighter = (rgba: Rgba): Rgba => [
   rgba[3],
 ];
 
-/**
- * The per-channel tint that turns a draw of `rgba` into its lighter mix:
- * lines are one color per layer, so a tint above 1 in a channel lightens it
- * (unlit color is display-referred and clamps at white).
- */
-const lighterTint = (rgba: Rgba): [number, number, number] => {
-  const l = lighter(rgba);
-  return [0, 1, 2].map((i) =>
-    Math.min(8, linear(l[i]!) / Math.max(linear(rgba[i]!), 1e-3)),
-  ) as [number, number, number];
-};
+/** A label's point farther than this many times the camera's height is off the scene (S-I3). */
+const LABEL_FAR = 20;
 
 /** Labels whose origins are closer than this on screen fade out (DESIGN.md "Labels"). */
 const LABEL_NEAR_PX = 24;
@@ -71,7 +64,23 @@ const SIDES = 8;
  * blue), and a small cube at the origin in the family's tone. Unit length
  * along each local axis; its transform scales and places it.
  */
-function triadMesh(family: Family, light = false): MeshData {
+/** A triad mesh's proportions (S-I2, S-I8). */
+interface TriadShape {
+  /** Shaft width as a share of the length. */
+  shaft: number;
+  /** Where each shaft starts, as a share of the length (geocentric: at the surface); default 0. */
+  start?: readonly [number, number, number];
+  /** The origin cube (left out when the origin is inside the Earth). */
+  cube: boolean;
+}
+
+function triadMesh(
+  family: Family,
+  light = false,
+  shape: TriadShape = { shaft: SHAFT, cube: true },
+): MeshData {
+  const shaftW = shape.shaft;
+  const head = Math.max(HEAD, 2 * shaftW);
   const positions: number[] = [];
   const colors: number[] = [];
   const indices: number[] = [];
@@ -119,10 +128,10 @@ function triadMesh(family: Family, light = false): MeshData {
     const w = (axis + 2) % 3;
     const lo = [0, 0, 0];
     const hi = [0, 0, 0];
-    lo[axis] = 0;
-    hi[axis] = 1 - HEAD;
-    lo[u] = lo[w] = -SHAFT / 2;
-    hi[u] = hi[w] = SHAFT / 2;
+    lo[axis] = shape.start?.[axis] ?? 0;
+    hi[axis] = 1 - head;
+    lo[u] = lo[w] = -shaftW / 2;
+    hi[u] = hi[w] = shaftW / 2;
     box(lo, hi, c);
     // The cone: a ring of SIDES at the head's base, the tip at 1.
     const tip = [0, 0, 0];
@@ -132,16 +141,16 @@ function triadMesh(family: Family, light = false): MeshData {
     for (let k = 0; k < SIDES; k++) {
       const a = (2 * Math.PI * k) / SIDES;
       const p = [0, 0, 0];
-      p[axis] = 1 - HEAD;
-      p[u] = 1.5 * SHAFT * Math.cos(a);
-      p[w] = 1.5 * SHAFT * Math.sin(a);
+      p[axis] = 1 - head;
+      p[u] = 1.5 * shaftW * Math.cos(a);
+      p[w] = 1.5 * shaftW * Math.sin(a);
       ring.push(vertex(p, c));
     }
     const base = vertex(
       [
-        axis === 0 ? 1 - HEAD : 0,
-        axis === 1 ? 1 - HEAD : 0,
-        axis === 2 ? 1 - HEAD : 0,
+        axis === 0 ? 1 - head : 0,
+        axis === 1 ? 1 - head : 0,
+        axis === 2 ? 1 - head : 0,
       ],
       c,
     );
@@ -151,8 +160,10 @@ function triadMesh(family: Family, light = false): MeshData {
       indices.push(t, a, b, base, b, a);
     }
   }
-  const o = 2 * SHAFT;
-  box([-o, -o, -o], [o, o, o], color(familyRgba(family)));
+  if (shape.cube) {
+    const o = 2 * shaftW;
+    box([-o, -o, -o], [o, o, o], color(familyRgba(family)));
+  }
   return {
     positions: Float32Array.from(positions),
     colors: Float32Array.from(colors),
@@ -172,6 +183,17 @@ export interface TriadSpec {
    * leave the globe); otherwise 6% of the camera's distance, 2 m to 2,000 km.
    */
   length?: number;
+  /**
+   * Geocentric: the shafts start at the Earth's surface (the axes' share
+   * of `length` there: equatorial for x and y, polar for z) and there is
+   * no origin cube, so nothing draws over the globe from inside it (S-I2:
+   * no depth-test switch in the engine for x-ray dashes).
+   */
+  surface?: readonly [number, number, number];
+  /** Its tint: 1, or `SECONDARY` (GCRF beside ITRF, S-I1). */
+  strength?: number;
+  /** Without `length`: its length as a share of the camera's distance (default 0.06; the subject of a stop, more). */
+  scale?: number;
 }
 
 interface Triad {
@@ -216,6 +238,8 @@ export interface LabelSpec {
   family?: Family;
   /** Higher draws first and wins a collision. */
   priority: number;
+  /** A callout: a 1 px leader from the point to the text (DESIGN.md "Labels"). */
+  leader?: boolean;
 }
 
 /** A camera framing: look at `center` from `range` meters, heading and pitch in its east-north-up frame. */
@@ -282,11 +306,17 @@ export class Globe {
     const { world } = this.viewer;
     for (const spec of specs) {
       const have = this.triads.get(spec.id);
-      if (have !== undefined) {
+      if (have !== undefined && have.spec.scale === spec.scale) {
         have.spec = spec;
         continue;
       }
-      const mesh = world.addMesh(triadMesh(spec.family));
+      if (have !== undefined) {
+        // Its proportions change with its scale: a new mesh.
+        this.removeTriad(spec.id);
+      }
+      const mesh = world.addMesh(
+        triadMesh(spec.family, false, this.shapeOf(spec)),
+      );
       const transform = world.addTransform(identity());
       const draw = world.addDraw({
         mesh,
@@ -319,6 +349,31 @@ export class Globe {
     world.removeTransform(t.transform);
     world.removeMesh(t.mesh);
     this.triads.delete(id);
+  }
+
+  /**
+   * A triad's proportions: a fixed-length (geocentric) triad keeps the 1.5%
+   * shaft and starts at the surface; a camera-scaled one (6% of the
+   * distance, about 40 px long) gets a shaft at least 2.5 px wide on this
+   * view, so a site's triad never reads as a hairline (S-I8).
+   */
+  private shapeOf(spec: TriadSpec): TriadShape {
+    if (spec.length !== undefined) {
+      return {
+        shaft: SHAFT,
+        cube: spec.surface === undefined,
+        ...(spec.surface && { start: spec.surface }),
+      };
+    }
+    const cam = this.viewer.view.camera;
+    const w = this.viewer.canvas.clientWidth || 800;
+    const h = this.viewer.canvas.clientHeight || 600;
+    const pxPerRadian = h / cam.fovy(w / h);
+    const lengthPx = (spec.scale ?? 0.06) * pxPerRadian;
+    return {
+      shaft: Math.min(0.08, Math.max(SHAFT, 2.5 / lengthPx)),
+      cube: true,
+    };
   }
 
   /** A triad's origin, Earth-fixed meters, once drawn. */
@@ -364,7 +419,8 @@ export class Globe {
         continue;
       }
       const length =
-        t.spec.length ?? Math.min(2e6, Math.max(2, 0.06 * distance));
+        t.spec.length ??
+        Math.min(2e6, Math.max(2, (t.spec.scale ?? 0.06) * distance));
       for (let i = 0; i < 12; i++) {
         if (i % 4 !== 3) {
           m[i] = m[i]! * length;
@@ -431,8 +487,11 @@ export class Globe {
         const tint = layer.strength ?? 1;
         for (const c of layer.chunks) {
           const dashed = layer.dashed ? dash(c) : c;
+          // A colored layer is white in its vertices and takes its color
+          // from the draw's tint, so dimming and the selected lighter mix
+          // are tints within 0 to 1 (no engine assumption).
           const chunk =
-            layer.color !== undefined ? recolor(dashed, layer.color) : dashed;
+            layer.color !== undefined ? recolor(dashed, WHITE) : dashed;
           const mesh = world.addMesh(chunk.mesh);
           meshes.push(mesh);
           let draw: DrawHandle;
@@ -528,7 +587,9 @@ export class Globe {
         // The selected frame's triad takes its lighter mesh.
         world.removeDraw(t.draw);
         world.removeMesh(t.mesh);
-        t.mesh = world.addMesh(triadMesh(t.spec.family, light));
+        t.mesh = world.addMesh(
+          triadMesh(t.spec.family, light, this.shapeOf(t.spec)),
+        );
         t.draw = world.addDraw({
           mesh: t.mesh,
           transform: t.transform,
@@ -538,7 +599,9 @@ export class Globe {
         });
         t.light = light;
       }
-      const k = e === undefined || e.frames.has(id) ? 1 : DIM;
+      const k =
+        (t.spec.strength ?? 1) *
+        (e === undefined || e.frames.has(id) ? 1 : DIM);
       world.setColor(t.draw, [k, k, k, 1]);
     }
     for (const [id, o] of this.overlays) {
@@ -549,16 +612,13 @@ export class Globe {
       const k =
         e === undefined || e.overlay === undefined || selected ? 1 : DIM;
       for (const { draw, tint, color } of o.draws) {
-        const v = tint * k;
-        const c: [number, number, number] =
-          selected && color !== undefined
-            ? (lighterTint(color).map((x) => x * tint) as [
-                number,
-                number,
-                number,
-              ])
-            : [v, v, v];
-        world.setColor(draw, [...c, 1]);
+        const base: readonly number[] =
+          color === undefined
+            ? [1, 1, 1]
+            : (selected ? lighter(color) : color)
+                .slice(0, 3)
+                .map((b) => linear(b));
+        world.setColor(draw, [...base.map((c) => c * tint * k), 1]);
       }
     }
     for (const [id, l] of this.labels) {
@@ -595,6 +655,7 @@ export class Globe {
       // Text only, never markup: labels can carry worker strings.
       l.el.textContent = spec.text;
       l.el.dataset.family = spec.family ?? "";
+      l.el.classList.toggle("fx-globe-label-callout", spec.leader === true);
     }
     this.retint();
     this.placeLabels();
@@ -629,7 +690,15 @@ export class Globe {
           p[2]! - cam.position[2]!,
         ];
         const z = dot(d, cam.direction);
-        if (z <= 0 || behindEarth(cam.position, p)) {
+        // Hidden behind the Earth, or far beyond what is framed (an origin
+        // 384,000 km off, seen past a globe 12,000 km away: S-I3).
+        const height = Math.max(
+          1000,
+          Math.hypot(cam.position[0]!, cam.position[1]!, cam.position[2]!) -
+            EARTH_RADIUS,
+        );
+        const far = Math.hypot(d[0]!, d[1]!, d[2]!) > LABEL_FAR * height;
+        if (z <= 0 || far || behindEarth(cam.position, p)) {
           visible = false;
         } else {
           x = ((dot(d, cam.right) / (z * t * aspect) + 1) / 2) * w;
@@ -644,11 +713,18 @@ export class Globe {
         anchors.some((a) => Math.hypot(a.x - x, a.y - y) < LABEL_NEAR_PX);
       el.classList.toggle("fx-globe-label-near", near);
       if (visible && !near) {
+        const bw = el.offsetWidth || 80;
+        const bh = el.offsetHeight || 16;
+        // A callout sits 48 px right of its point, its leader between;
+        // every label is kept inside the view (S-I3).
         const box = {
-          x: x + 12,
-          y: y + 4,
-          w: el.offsetWidth || 80,
-          h: el.offsetHeight || 16,
+          x: Math.min(Math.max(2, x + (spec.leader ? 48 : 12)), w - bw - 2),
+          y: Math.min(
+            Math.max(2, spec.leader ? y - bh / 2 : y + 4),
+            h - bh - 2,
+          ),
+          w: bw,
+          h: bh,
         };
         visible = !placed.some(
           (b) =>
@@ -827,7 +903,11 @@ const normalize = (v: ArrayLike<number>): Float64Array => {
 };
 
 /** The Earth (a sphere of its polar radius) hides `p` from `eye`. */
-function behindEarth(eye: ArrayLike<number>, p: ArrayLike<number>): boolean {
+/** Whether the Earth (a sphere) hides `p` from `eye`. */
+export function behindEarth(
+  eye: ArrayLike<number>,
+  p: ArrayLike<number>,
+): boolean {
   const d = [p[0]! - eye[0]!, p[1]! - eye[1]!, p[2]! - eye[2]!];
   const len = Math.hypot(d[0]!, d[1]!, d[2]!);
   const u = d.map((v) => v / len);

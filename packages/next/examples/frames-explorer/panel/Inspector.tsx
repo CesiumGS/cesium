@@ -312,6 +312,29 @@ export function Inspector({
           )}
         </Part>
 
+        {/* Accuracy before the trace: experts look for it first (minor 11). */}
+        <Part title={<Term k="accuracy">Accuracy</Term>}>
+          {result.accuracy ? (
+            <>
+              {extras?.relative && (
+                <Typography variant="body-sm" render={<p />}>
+                  {extras.relative}
+                </Typography>
+              )}
+              <BudgetBar
+                accuracy={result.accuracy}
+                label="Accuracy of this result"
+              />
+            </>
+          ) : (
+            <Typography variant="body-sm" render={<p />}>
+              <AccuracyText accuracy={undefined} note={extras?.accuracyNote} />.
+              This check states no position, so this note, with its tolerance,
+              is the accuracy that applies.
+            </Typography>
+          )}
+        </Part>
+
         <Part title="Computation trace">
           {extras?.trace ? (
             <ol className="fx-trace">
@@ -343,28 +366,6 @@ export function Inspector({
             <Typography variant="body-sm" color="textSecondary" render={<p />}>
               No steps recorded for this check yet; its detail above gives its
               numbers.
-            </Typography>
-          )}
-        </Part>
-
-        <Part title={<Term k="accuracy">Accuracy</Term>}>
-          {result.accuracy ? (
-            <>
-              {extras?.relative && (
-                <Typography variant="body-sm" render={<p />}>
-                  {extras.relative}
-                </Typography>
-              )}
-              <BudgetBar
-                accuracy={result.accuracy}
-                label="Accuracy of this result"
-              />
-            </>
-          ) : (
-            <Typography variant="body-sm" render={<p />}>
-              <AccuracyText accuracy={undefined} note={extras?.accuracyNote} />.
-              This check states no position, so this note, with its tolerance,
-              is the accuracy that applies.
             </Typography>
           )}
         </Part>

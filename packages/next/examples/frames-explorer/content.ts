@@ -108,6 +108,8 @@ export interface TourStopSpec {
   dim?: boolean;
   /** The clock: plays at this rate while the stop shows. */
   rate?: number;
+  /** Light the globe from the camera instead of the clock's sun (stop 2, S-I6). */
+  light?: "camera";
   /** Orion's draw-in frame at this stop. */
   orionFrame?: "GCRF" | "MOON_ME";
 }
@@ -125,10 +127,11 @@ export const TOUR: readonly TourStopSpec[] = [
     id: "gcrf-itrf-day",
     title: "GCRF to ITRF over a day",
     caption:
-      "The globe is drawn Earth-fixed, so GCRF's triad turns once against ITRF's in a sidereal day. The clock plays at 3,600×.",
+      "The globe is drawn Earth-fixed, so GCRF's triad turns once against ITRF's in a sidereal day. The clock plays at 3,600×; the globe is lit from the camera so the turn stays visible through the night.",
     overlays: ["triads"],
     camera: "stay",
     rate: 3600,
+    light: "camera",
   },
   {
     id: "design-grid",
@@ -143,10 +146,9 @@ export const TOUR: readonly TourStopSpec[] = [
     id: "rigid-exact",
     title: "Rigid against exact",
     caption:
-      "A 20 km design line placed rigidly sags about 31 m below the exact one at its far end.",
+      "A 20 km design line placed rigidly at its start parts from the exact one by about 31 m at its far end: drawn ×50 here so the gap shows, the leader labelled with the true figure.",
     overlays: ["rigidVsExact"],
     camera: "rigidVsExact",
-    dim: true,
   },
   {
     id: "orion",

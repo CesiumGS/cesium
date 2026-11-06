@@ -67,8 +67,16 @@ export interface OverlayView {
   /** Waiting for data, drawn, or why it can't be. */
   state: "off" | "waiting" | "drawn" | "missing" | "error";
   waitingFor?: DataItem;
-  /** The legend's accuracy line: always present, "not bounded" with its reason when undefined. */
+  /**
+   * The accuracy in one line (S-I7): the figure, its 1σ and one qualifier;
+   * always present, "not bounded" with its reason when undefined. The
+   * legend shows it too.
+   */
   accuracy: string;
+  /** What the figure means and where it comes from: behind "About this figure". */
+  detail?: string;
+  /** How it was drawn (Orion's sampling), a muted line under its options. */
+  drawing?: string;
   /** The accuracy is not bounded: a term has no size (warning color, "Not bounded"). */
   unbounded?: boolean;
   /** Bounded, but resting on an assumption (warning color, with the number). */
@@ -171,6 +179,9 @@ export interface PanelModel {
    */
   trueScale: boolean;
   convergenceFactor: number;
+  /** S-C1: the rigid line at its true separation; otherwise drawn ×`sagFactor` from the exact one. */
+  sagTrueScale: boolean;
+  sagFactor: number;
   /** The triads' scale, as the legend states it. */
   triadScale: string;
   groups: readonly GroupInfo[];
@@ -203,6 +214,8 @@ export interface PanelActions {
   setBiasFactor(factor: number): void;
   /** F32: true-north lines at true scale, or with the convergence exaggerated. */
   setTrueScale(on: boolean): void;
+  /** S-C1: the rigid line at its true separation, or with the sag exaggerated. */
+  setSagTrueScale(on: boolean): void;
   jumpToFlyby(): void;
   /** Flies to a frame, a result's site, or a tour stop. */
   showOnGlobe(target: { frame: string } | { result: string }): void;
