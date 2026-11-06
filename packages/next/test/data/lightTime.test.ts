@@ -9,6 +9,7 @@ import { createFrames } from "../../src/frames/frames.ts";
 import { framePoint, type FramePoint } from "../../src/frames/local.ts";
 import { rotationPart } from "../../src/frames/matrix.ts";
 import { C } from "../../src/measure/constants.ts";
+import { downlink } from "../../src/measure/doppler.ts";
 import {
   apparentDirection,
   solveLightTime,
@@ -227,5 +228,68 @@ describe("light time and apparent directions against SPICE (spkpos, shapiro: [])
     console.log(
       `Shapiro delay, Earth center → Orion: ${low * 1e9} to ${high * 1e9} ns`,
     );
+  });
+});
+
+describe("range rate and Doppler, DSS-43 ← Orion", () => {
+  it("has |ratio − (1 − rangeRate / c)| < 3e-8 on every row", () => {
+    let worst = 0;
+    for (const row of fixture.rows) {
+      const leg = downlink(dss43, orionPoint, Instant.fromTdb(row.tdb), frames);
+      expect(Number.isFinite(leg.rangeRate), `at ${row.tdb}`).toBe(true);
+      const miss = Math.abs(leg.dopplerRatio - (1 - leg.rangeRate / C));
+      worst = Math.max(worst, miss);
+      expect(miss, `at ${row.tdb}`).toBeLessThan(3e-8);
+    }
+    console.log(
+      `worst |ratio − (1 − rangeRate/c)| over ${fixture.rows.length} rows: ${worst}`,
+    );
+  });
+
+  it("gives a finite Doppler shift at 2026-04-06T23:30 UTC", () => {
+    const t = Instant.fromIso(
+      "2026-04-06T23:30:00",
+      "UTC",
+      LeapSeconds.builtIn(),
+    );
+    const leg = downlink(dss43, orionPoint, t, frames, {
+      frequency: 2216.5e6,
+    });
+    console.log(
+      `DSS-43 ← Orion 23:30 UTC: range ${leg.range / 1000} km, range rate ${leg.rangeRate} m/s, ratio − 1 ${leg.dopplerRatio - 1}, Doppler shift ${leg.dopplerShift} Hz at 2216.5 MHz`,
+    );
+    expect(Number.isFinite(leg.dopplerShift)).toBe(true);
+    expect(Number.isFinite(leg.rangeRate)).toBe(true);
+    expect(Math.abs(leg.rangeRate)).toBeLessThan(3e4);
+    // The shift is about −rangeRate/c · f, to the proper-time rates' 1e-9.
+    expect(
+      Math.abs(leg.dopplerShift! + (leg.rangeRate / C) * 2216.5e6),
+    ).toBeLessThan(10);
+  });
+
+  it("prints the range rate's quantization noise (h = 0.5 s against h = 1 s)", () => {
+    const t0 = Instant.fromIso(
+      "2026-04-06T23:30:00",
+      "UTC",
+      LeapSeconds.builtIn(),
+    ).tdb();
+    const range = (t: number): number =>
+      solveLightTime(dss43, orionPoint, Instant.fromTdb(t), "reception", frames)
+        .lightTime * C;
+    let worst = 0;
+    let sum = 0;
+    const n = 60;
+    for (let i = 0; i < n; i++) {
+      const t = t0 + i * 0.37;
+      const half = (range(t + 0.5) - range(t - 0.5)) / 1;
+      const one = (range(t + 1) - range(t - 1)) / 2;
+      const diff = half - one;
+      worst = Math.max(worst, Math.abs(diff));
+      sum += diff * diff;
+    }
+    console.log(
+      `range rate h = 0.5 s minus h = 1 s over ${n} times: rms ${Math.sqrt(sum / n)} m/s, max ${worst} m/s`,
+    );
+    expect(worst).toBeLessThan(0.05);
   });
 });
