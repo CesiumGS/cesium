@@ -307,6 +307,11 @@ gridFactors(site, p.design).combinedFactor; // grid = ground x this
   `us_noaa_g2018u0.tif`, for example). It never falls back to a ballpark
   transform unless you pass `allowBallpark: true`, and then the accuracy is
   undefined.
+  A frame on a bound CRS (a BOUNDCRS or TOWGS84) also reports accuracy as
+  undefined, so `meters` is undefined: PROJ states no accuracy for
+  transformation parameters the CRS carries itself. The operation's inverse is
+  refined against its forward, so `fromBodyFixed` reverses `toBodyFixed` to
+  1e-6 m (about three times the PROJ calls), and throws if it cannot.
 - **Units** come from the CRS, never from an assumption. `frame.units` holds
   the horizontal unit's name and meters per unit (a US survey foot is
   1200/3937 m, about 0.3048006096 m; an international foot is 0.3048 m), and

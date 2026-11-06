@@ -297,3 +297,45 @@ describe("RigidPlacement", () => {
     expect(Math.acos(Math.min(1, cos))).toBeLessThan(2e-4);
   });
 });
+
+describe("2D projected CRSs with a geocentric Helmert operation", () => {
+  const crss: [string, CrsRef, number[]][] = [
+    [
+      "EPSG:30169 (Tokyo)",
+      { format: "wkid", authority: "EPSG", wkid: 30169 },
+      [10_000, 20_000],
+    ],
+    [
+      "EPSG:26741",
+      { format: "wkid", authority: "EPSG", wkid: 26741 },
+      [1_800_000, 600_000],
+    ],
+  ];
+  for (const [label, crs, [e, n]] of crss) {
+    it(`${label} round trips within 1e-6 m at h = 0, 100, 1000`, async () => {
+      const P = await loadProj({ base });
+      const frame = EngineeringFrame.create({ name: "f", body: EARTH, crs }, P);
+      for (const h of [0, 100, 1000]) {
+        const d = [e!, n!, h];
+        const back = frame.fromBodyFixed(frame.toBodyFixed(d));
+        for (let i = 0; i < 3; i++) {
+          expect(Math.abs(back[i]! - d[i]!)).toBeLessThan(1e-6);
+        }
+      }
+    });
+  }
+
+  it("an already exact operation (EPSG:6420) keeps its forward result and round trip", async () => {
+    const frame = await californiaFrame();
+    const d = [6_000_000, 2_100_000, 100];
+    const y = frame.operation.forward(d);
+    // Recorded before the inverse was refined; the forward is not altered.
+    expect(y[0]).toBeCloseTo(-122.44272560090643, 12);
+    expect(y[1]).toBeCloseTo(37.746199234523772, 12);
+    expect(y[2]).toBeCloseTo(-2.1070102108611835, 9);
+    const x = frame.operation.inverse(y);
+    for (let i = 0; i < 3; i++) {
+      expect(Math.abs(x[i]! - d[i]!)).toBeLessThan(1e-6);
+    }
+  });
+});

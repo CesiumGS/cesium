@@ -92,3 +92,46 @@ describe("WKT2 BOUNDCRS reference", () => {
     expect(shift).toBeGreaterThan(5);
   });
 });
+
+// PROJ pushes the height around a geocentric Helmert in a 2D CRS: the forward
+// runs the geocentric step at the input height on the source ellipsoid, the
+// inverse at the same height on WGS84, though the height moved by dh. Left
+// alone the round trip is off by millimetres; the recorded inverse refines
+// itself against the forward.
+describe("realistic datum shifts round-trip exactly", () => {
+  const heights = [0, 100, 1000];
+  const cases: [string, string, number[]][] = [
+    [
+      "Tokyo TOWGS84",
+      "+proj=tmerc +lat_0=0 +lon_0=141 +k=0.9996 +x_0=500000 +y_0=0 +ellps=bessel +towgs84=-146.414,507.337,680.507,0,0,0,0 +units=m +no_defs +type=crs",
+      [500_000, 3_900_000],
+    ],
+    [
+      "ED50 / UTM 31N TOWGS84",
+      "+proj=utm +zone=31 +ellps=intl +towgs84=-87,-98,-121,0,0,0,0 +units=m +no_defs +type=crs",
+      [500_000, 4_650_000],
+    ],
+    [
+      "OSGB 1936 7-parameter",
+      "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +towgs84=446.448,-125.157,542.06,0.15,0.247,0.842,-20.489 +units=m +no_defs +type=crs",
+      [400_000, 300_000],
+    ],
+  ];
+  for (const [label, definition, [e, n]] of cases) {
+    it(`${label}: design to body-fixed and back within 1e-6 m at h = 0, 100, 1000`, async () => {
+      const P = await loadProj({ base });
+      const wkt2 = P.proj_as_wkt(P.proj_create(definition), P.PJ_WKT2_2019);
+      const frame = EngineeringFrame.create(
+        { name: "f", body: EARTH, crs: { format: "wkt2", wkt2 } },
+        P,
+      );
+      for (const h of heights) {
+        const d = [e!, n!, h];
+        const back = frame.fromBodyFixed(frame.toBodyFixed(d));
+        for (let i = 0; i < 3; i++) {
+          expect(Math.abs(back[i]! - d[i]!)).toBeLessThan(1e-6);
+        }
+      }
+    });
+  }
+});

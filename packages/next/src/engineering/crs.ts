@@ -68,7 +68,9 @@ export interface CrsUnits {
  * longitude before latitude (degrees), then height. Inputs and outputs use each
  * CRS's own units, so `forward` takes the source's (E, N, height) in its
  * units, such as US survey feet, and returns (lon, lat, height) in degrees and
- * metres; `inverse` takes that back to the source's units.
+ * metres; `inverse` takes that back to the source's units. `inverse` is the
+ * exact inverse of `forward` (refined against it, to 1e-6 m), at about three
+ * times the PROJ calls of one raw inverse.
  */
 export interface RecordedOperation {
   /** The PROJ pipeline string, identical for both directions. */
@@ -172,13 +174,88 @@ function record(
   epoch: number,
 ): RecordedOperation {
   const operation = fixed(proj, pipeline);
+  const forward = transformer(proj, operation, proj.PJ_FWD, epoch);
   return {
     pipeline,
     accuracy,
     grids,
     ballpark,
-    forward: transformer(proj, operation, proj.PJ_FWD, epoch),
-    inverse: transformer(proj, operation, proj.PJ_INV, epoch),
+    forward,
+    inverse: refinedInverse(
+      forward,
+      transformer(proj, operation, proj.PJ_INV, epoch),
+      pipeline,
+    ),
+  };
+}
+
+const MAX_REFINEMENTS = 3;
+// Stop when a correction is below this fraction of the coordinate's magnitude.
+const RELATIVE_STEP = 1e-12;
+// A forward residual above this (metres) after refining is an error.
+const MAX_RESIDUAL_METERS = 1e-6;
+const METERS_PER_DEGREE = 111_319.49079327357;
+
+/**
+ * Makes `inverse` the exact inverse of `forward`.
+ *
+ * PROJ pushes the height around a 2D CRS's geocentric Helmert: the forward runs
+ * the geocentric step at the input height on the source ellipsoid, the inverse
+ * at the same height on WGS84, though the true height moved by dh. Raw, the
+ * round trip is off by millimetres. So x0 = inverse(y), then
+ * x(k+1) = x(k) + (x0 - inverse(forward(x(k)))), until the correction is
+ * negligible (relative to the coordinate's magnitude) or MAX_REFINEMENTS steps.
+ * The forward result is never altered. If forward(x) still differs from y by
+ * more than 1e-6 m (longitude differences wrapped across 180 degrees), it
+ * throws, naming the pipeline and the residual: never silently wrong.
+ *
+ * Cost: an inverse makes about 3 times as many PROJ calls as the raw one (one
+ * inverse, then a forward and an inverse per step, one step when the operation
+ * is already exact) and one more forward for the residual check. For an exact
+ * operation the first correction is about 1e-15, so results are unchanged.
+ */
+function refinedInverse(
+  forward: RecordedOperation["forward"],
+  rawInverse: RecordedOperation["inverse"],
+  pipeline: string,
+): RecordedOperation["inverse"] {
+  return (xyz, out = new Float64Array(3)) => {
+    const target = Float64Array.from([xyz[0]!, xyz[1]!, xyz[2] ?? 0]);
+    const x0 = rawInverse(target);
+    const x = Float64Array.from(x0);
+    for (let step = 0; step < MAX_REFINEMENTS; step++) {
+      const back = rawInverse(forward(x));
+      let negligible = true;
+      for (let i = 0; i < 3; i++) {
+        const correction = x0[i]! - back[i]!;
+        x[i] = x[i]! + correction;
+        if (
+          Math.abs(correction) >
+          RELATIVE_STEP * Math.max(Math.abs(x[i]!), 1)
+        ) {
+          negligible = false;
+        }
+      }
+      if (negligible) {
+        break;
+      }
+    }
+    // forward's output is (longitude, latitude) in degrees and height in metres.
+    const check = forward(x);
+    let dLon = check[0]! - target[0]!;
+    dLon -= 360 * Math.round(dLon / 360);
+    const residual = Math.hypot(
+      dLon * Math.cos((target[1]! * Math.PI) / 180) * METERS_PER_DEGREE,
+      (check[1]! - target[1]!) * METERS_PER_DEGREE,
+      check[2]! - target[2]!,
+    );
+    if (!(residual <= MAX_RESIDUAL_METERS)) {
+      throw new Error(
+        `The inverse of operation "${pipeline}" does not reproduce its forward: residual ${residual} m after ${MAX_REFINEMENTS} refinements (limit ${MAX_RESIDUAL_METERS} m)`,
+      );
+    }
+    out.set(x);
+    return out;
   };
 }
 
