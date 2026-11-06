@@ -1228,8 +1228,9 @@ export function run(context: ExampleContext): ExampleRun {
 
   // --------------------------------------------------------- the walk's path
   /**
-   * The selected frame's path on the globe (DESIGN.md "A selection"): its
-   * triads' origins joined root first by a dotted 1 px line, revealed one
+   * The selected frame's path on the globe (DESIGN.md "A selection"): the
+   * walk's origins, from ITRF through the common ancestor to the frame,
+   * joined by a dotted 1 px line, revealed one
    * edge at a time with the walk's 90 ms stagger (at once under reduced
    * motion), and redrawn as the clock moves the origins.
    */
@@ -1239,9 +1240,15 @@ export function run(context: ExampleContext): ExampleRun {
     if (!tree || !frames || !instant) {
       return [];
     }
+    // The walk's path: from the reference (ITRF, the walk's default) up to
+    // the common ancestor, then down to the frame.
     let path: TreeNode[];
     try {
-      path = pathToRoot(tree, id).reverse();
+      const up = pathToRoot(tree, "ITRF");
+      const down = pathToRoot(tree, id);
+      const common = up.findIndex((n) => down.some((d) => d.id === n.id));
+      const at = down.findIndex((d) => d.id === up[common]!.id);
+      path = [...up.slice(0, common + 1), ...down.slice(0, at).reverse()];
     } catch {
       return [];
     }
