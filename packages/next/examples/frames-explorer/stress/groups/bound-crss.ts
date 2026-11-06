@@ -39,6 +39,7 @@ import {
   type StressResult,
   fmt,
   judgeResult,
+  withDefaults,
   messageOf,
   plainAccuracy,
 } from "../runner.ts";
@@ -563,7 +564,9 @@ export async function boundCrsChecks(
     });
     // Judged as the runner judges the catalog: a pass the checks don't bear
     // out is never shown (R18).
-    return results.map((r) => judgeResult({ ...r, userInput: true }));
+    return results.map((r) =>
+      withDefaults(judgeResult({ ...r, userInput: true })),
+    );
   } catch (error) {
     return [
       {
@@ -573,6 +576,7 @@ export async function boundCrsChecks(
         pass: false,
         error: messageOf(error),
         userInput: true,
+        accuracyNote: "not stated: the checks did not run",
       },
     ];
   }

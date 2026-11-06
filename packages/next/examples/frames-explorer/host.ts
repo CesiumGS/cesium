@@ -164,6 +164,7 @@ const yielding = (cases: readonly StressCase[]): StressCase[] =>
     group: c.group,
     title: c.title,
     needs: c.needs,
+    ...(c.cites !== undefined && { cites: c.cites }),
     async run(ctx) {
       try {
         return await c.run(ctx);
