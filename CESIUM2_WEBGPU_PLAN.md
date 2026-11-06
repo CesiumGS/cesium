@@ -6888,6 +6888,41 @@ under it start laid out flat in the design CRS and curve down onto the globe.
   The frames example's rigid-vs-exact stop and its design grid with true
   north are small versions of this picture.
 
+**The default frame tree: a catalog, and a tree in use (owner, 2026-11-06).**
+The frames example's scenarios showed the question: every scenario's tree
+started from the full built-in set, so "The Earth turns" drew HCRS, EME2000
+and the Moon's frames it never used. Two things are mixed up in "the default
+tree". Plan 5 should separate them:
+
+- **The catalog** is every frame the library knows by name, each defined by a
+  published convention: ICRF, GCRF, ITRF, EME2000, HCRS, EARTH_ICRF and
+  MOON_ICRF/ME/PA, then TEME, ecliptic frames and other bodies. It is always
+  addressable and costs nothing until something uses a frame.
+  - **Prior art:** Orekit's `FramesFactory` builds well-known frames lazily.
+    SPICE has every built-in frame but fails clearly when a frame's kernel
+    isn't loaded.
+- **The tree in use** is the frames the scene touches, plus their ancestors.
+  This is what a diagram shows, and what a scenario builds. "The Earth turns"
+  is then ICRF → GCRF → ITRF → its site frame, and nothing else.
+- **Data loads with first use, not with the catalog.** ITRF needs EOP, the
+  Earth and Moon branches need DE440, and MOON_ME needs the lunar PCK. A
+  globe-only app shouldn't fetch an ephemeris because the catalog lists the
+  Moon.
+- **A stand-in model declares its accuracy.** A frame can work before its data
+  arrives on an analytic stand-in, but the edge then states the stand-in's
+  wider accuracy and visibly changes when the real data loads. Otherwise the
+  frame is unavailable until its data loads. Choose per frame, never silently.
+  The cautionary tale: the sky Moon on Simon 1994 put the lunar pole triad
+  404 km off with nothing saying so (fixed by `setFrameData`).
+- **The renderer's own use counts as use.** A plain globe touches GCRF for the
+  sky and the sun, and MOON_ICRF/ME for the Moon disk. A diagram shows these
+  dimmed, as "used by the sky", so the tree is honest without implying the
+  scene added them.
+- **The root:** keep ICRF (barycentric), so a lunar site and a ship meet at a
+  common ancestor. Run the Earth branch on a declared stand-in until DE440
+  loads, so a globe-only app never waits for it. Orekit roots at GCRF to avoid
+  that dependency; the stand-in removes the reason.
+
 Camera rigs and render frames are one question from two sides: plan 5 is also
 where the world stops being drawn Earth-fixed (R6 of plans 2 and 3), so
 design them together. Open choices for the brainstorm: what holds still by
