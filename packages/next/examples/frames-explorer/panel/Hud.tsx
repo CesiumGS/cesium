@@ -6,7 +6,13 @@
 // (top left) and credits (bottom left). The HUD is dark in either scheme, as
 // the viewer's own widgets are (I16): panel.css points its StrataKit tokens
 // at the viewer's HUD theme.
-import { Button, IconButton, Typography } from "@mui/material";
+import {
+  Button,
+  FormControlLabel,
+  IconButton,
+  Switch,
+  Typography,
+} from "@mui/material";
 import { svgChevronDown } from "@stratakit/icons/chevron-down";
 import { svgChevronUp } from "@stratakit/icons/chevron-up";
 import { svgDismiss } from "@stratakit/icons/dismiss";
@@ -23,6 +29,7 @@ import {
 import type { Family } from "./families.ts";
 import { captionFold, focusAfter, foldReducer } from "./fold.ts";
 import type { OverlayView, PanelModel, TourStop } from "./model.ts";
+import type { TourScaleSwitch } from "./tourScale.ts";
 
 /** Each overlay's family (color) and line style on the globe and in the legend (M8). */
 const OVERLAY_LOOK: Partial<
@@ -168,6 +175,8 @@ export function TourCaption({
   onStop,
   onEnd,
   onCopyLink,
+  scaleSwitch,
+  onScaleSwitch,
 }: {
   tour: readonly TourStop[];
   stop: number;
@@ -175,6 +184,9 @@ export function TourCaption({
   onStop: (index: number) => void;
   onEnd: () => void;
   onCopyLink: (stop: TourStop) => void;
+  /** The stop's "Show true scale" switch, where it exaggerates (`tourScaleSwitch`). */
+  scaleSwitch?: TourScaleSwitch;
+  onScaleSwitch?: (kind: TourScaleSwitch["kind"], on: boolean) => void;
 }) {
   const s = tour[stop]!;
   const heading = useRef<HTMLHeadingElement>(null);
@@ -309,6 +321,19 @@ export function TourCaption({
         <Typography variant="body-sm" render={<p />}>
           {s.caption}
         </Typography>
+        {scaleSwitch && (
+          <FormControlLabel
+            className="fx-tour-scale"
+            control={
+              <Switch
+                size="small"
+                checked={scaleSwitch.checked}
+                onChange={(_, on) => onScaleSwitch?.(scaleSwitch.kind, on)}
+              />
+            }
+            label={<span className="fx-option-label">{scaleSwitch.label}</span>}
+          />
+        )}
         <div className="fx-tour-buttons">
           <IconButton
             size="small"

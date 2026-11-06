@@ -2,6 +2,7 @@
 // from the worker, the frame tree and the run. Only
 // types from the rest of the example: the main thread never bundles the
 // stress catalog, PROJ or the overlay builders (protocol.ts's rule).
+import type { TrueScaleKind } from "./tourScale.ts";
 import type { AccuracyStatement } from "../../../src/measure/accuracy.ts";
 import type { DataItem, RunSummary } from "../protocol.ts";
 import type {
@@ -155,6 +156,8 @@ export interface TourStop {
   title: string;
   caption: string;
   overlays: readonly OverlayId[];
+  /** The caption's "Show true scale" switch, where the stop exaggerates. */
+  trueScaleSwitch?: TrueScaleKind;
 }
 
 /** One line of the report's environment (R15). */
