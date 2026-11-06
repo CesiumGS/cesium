@@ -7,6 +7,8 @@ const J2000_UNIX_MS = 946_728_000_000;
 const TT_MINUS_TAI = 32.184;
 const JD_J2000 = 2_451_545.0;
 const DAY_MS = 86_400_000;
+const ISO_PATTERN =
+  /^(\d{4})-(?:(\d{2})-(\d{2})|(\d{3}))T(\d{2}):(\d{2}):(\d{2})(?:\.(\d+))?Z?$/;
 
 /**
  * A point in time on the TT scale, stored as TT seconds past J2000
@@ -66,6 +68,84 @@ export class Instant {
       }
     }
     return new Instant(best);
+  }
+
+  /**
+   * From an ISO 8601 style time tag, `YYYY-MM-DDThh:mm:ss[.f...]` or the
+   * day-of-year form `YYYY-DDDThh:mm:ss[.f...]`, with an optional trailing
+   * `Z`, read in the given time scale. Every fraction digit counts: it is
+   * parsed as a decimal, not through `Date`.
+   *
+   * For UTC the calendar is UTC, and second 60 is accepted only at the end of
+   * a day that ends with an inserted leap second per `leap`. For TAI, TT and
+   * TDB the calendar is a plain count of days and seconds from J2000 in that
+   * scale, with no leap seconds, so `2000-01-01T12:00:00` in TT is TT 0.
+   */
+  static fromIso(
+    text: string,
+    scale: "UTC" | "TAI" | "TT" | "TDB",
+    leap: LeapSeconds,
+  ): Instant {
+    const m = ISO_PATTERN.exec(text.trim());
+    if (m === null) {
+      throw new Error(`Invalid ISO time "${text}"`);
+    }
+    const year = Number(m[1]);
+    const hour = Number(m[5]);
+    const minute = Number(m[6]);
+    const second = Number(m[7]);
+    const fraction = m[8] === undefined ? 0 : Number(`0.${m[8]}`);
+    let month = 0;
+    let day: number;
+    if (m[4] === undefined) {
+      month = Number(m[2]) - 1;
+      day = Number(m[3]);
+      const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+      if (month > 11 || day < 1 || day > daysInMonth) {
+        throw new Error(`Invalid date in ISO time "${text}"`);
+      }
+    } else {
+      const doy = Number(m[4]);
+      const daysInYear = new Date(Date.UTC(year + 1, 0, 1)).getTime();
+      const yearStart = Date.UTC(year, 0, 1);
+      if (doy < 1 || doy > (daysInYear - yearStart) / DAY_MS) {
+        throw new Error(`Invalid day of year in ISO time "${text}"`);
+      }
+      day = doy; // Date.UTC rolls the day of month over into later months.
+    }
+    if (hour > 23 || minute > 59 || second > 60) {
+      throw new Error(`Invalid time of day in ISO time "${text}"`);
+    }
+    const dayMs = Date.UTC(year, month, day);
+    const wholeMs =
+      dayMs + ((hour * 60 + minute) * 60 + Math.min(second, 59)) * 1000;
+    if (scale === "UTC") {
+      let extra = fraction;
+      if (second === 60) {
+        const next = dayMs + DAY_MS;
+        const inserted =
+          hour === 23 &&
+          minute === 59 &&
+          leap.taiMinusUtc(next) - leap.taiMinusUtc(next - 1000) === 1;
+        if (!inserted) {
+          throw new Error(`No leap second at the end of the day in "${text}"`);
+        }
+        extra += 1;
+      }
+      return new Instant(Instant.fromUtc(wholeMs, leap).tt + extra);
+    }
+    if (second === 60) {
+      throw new Error(`Second 60 is only valid in UTC: "${text}"`);
+    }
+    const seconds = (wholeMs - J2000_UNIX_MS) / 1000 + fraction;
+    switch (scale) {
+      case "TT":
+        return new Instant(seconds);
+      case "TAI":
+        return new Instant(seconds + TT_MINUS_TAI);
+      case "TDB":
+        return Instant.fromTdb(seconds);
+    }
   }
 
   /**
