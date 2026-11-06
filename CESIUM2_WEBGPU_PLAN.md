@@ -6366,6 +6366,32 @@ out, because none of them changes a result.
   `src/measure/constants.ts`, so the frames layer depends on measurement.
   Move the shared constants to a neutral module.
 
+_Watch: lunar reference systems (checked 2026-11-06)._ No lunar 3D CRS or
+height system is standardized yet.
+
+- **CRS codes.** PROJ's IAU 2015 lunar codes and Esri's (for example
+  ESRI:104903, "GCS_Moon_2000") are 2D: latitude and longitude on the
+  1,737,400 m IAU sphere.
+- **Height convention.** The USGS lunar data standard measures height above
+  that sphere. The engineering frames do the same: PROJ does the horizontal
+  projection, height passes through, and `MOON`'s sphere gives body-fixed
+  coordinates.
+- **What to check before building on the Moon** (plan 5, or any lunar
+  engineering frame):
+  - **NASA's LunaNet Lunar Reference System Standard (LNIS-TBD-3011).** It was
+    scheduled for a public v1 in November 2026 (IOAG/ICG Cislunar 2026
+    workshop slides). Its release was unconfirmed on 2026-11-06.
+  - **The International Lunar Reference System** and its first realization,
+    ILuRF2026 (arXiv 2510.15484 and 2607.27762; A&A 2026, INPOP-based
+    realizations). It is built from combined lunar ephemerides, with the
+    origin at the Moon's center of mass and published as a time series from
+    1970 to 2050. When it is adopted, add it to the frame tree beside
+    MOON_ME and MOON_PA, built from that series.
+  - **The IAG/IAU Joint Working Group 1.1.3 height system** (lunar frames,
+    time and heights). A lunar geoid will most likely ship as a grid. It plugs
+    in like NAVD88 does on Earth: through an engineering frame's pinned PROJ
+    pipeline with a vertical grid step, which plan 4a supports.
+
 ### 13.15 GPU resource limits and capacities (r50, design)
 
 **What broke.** The first run on a Mac (Apple M-series, Chrome) failed at
