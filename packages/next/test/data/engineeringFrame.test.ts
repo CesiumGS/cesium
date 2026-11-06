@@ -66,7 +66,6 @@ describe("Earth: NAD83(2011) / California zone 3 ftUS + NAVD88 ftUS", () => {
       }
       worst = Math.max(worst, Math.abs(back[2]! - design[2]!) * US_FOOT);
     }
-    console.log(`California round trip worst: ${worst} m`);
     expect(worst).toBeLessThan(1e-4);
   });
 
@@ -87,6 +86,43 @@ describe("Earth: NAD83(2011) / California zone 3 ftUS + NAVD88 ftUS", () => {
     expect((g.longitude * 180) / Math.PI).toBeGreaterThan(-123);
     expect((g.latitude * 180) / Math.PI).toBeGreaterThan(35);
     expect((g.latitude * 180) / Math.PI).toBeLessThan(39);
+  });
+});
+
+describe("design height without a vertical axis, and geographic CRSs", () => {
+  it("EPSG:6420 alone passes design height through in CRS units (no geoid)", async () => {
+    const P = await loadProj({ base });
+    const frame = EngineeringFrame.create(
+      {
+        name: "2D",
+        body: EARTH,
+        crs: { format: "wkid", authority: "EPSG", wkid: 6420 },
+      },
+      P,
+    );
+    expect(frame.units.metersPerVerticalUnit).toBeUndefined();
+    const g = frame.toGeodetic([FALSE_EASTING, 1_640_416.667, 100]);
+    expect(Math.abs(g.height - 100 * 0.30480060960121924)).toBeLessThan(1e-9);
+    const back = frame.fromBodyFixed(
+      frame.toBodyFixed([FALSE_EASTING, 1_640_416.667, 100]),
+    );
+    expect(Math.abs(back[2]! - 100) * US_FOOT).toBeLessThan(1e-6);
+  });
+
+  it("rejects a geographic CRS", async () => {
+    const P = await loadProj({ base });
+    for (const wkid of [4326, 4269]) {
+      expect(() =>
+        EngineeringFrame.create(
+          {
+            name: "geo",
+            body: EARTH,
+            crs: { format: "wkid", authority: "EPSG", wkid },
+          },
+          P,
+        ),
+      ).toThrow(/needs a projected CRS/);
+    }
   });
 });
 
@@ -153,9 +189,6 @@ describe("US survey foot against the international foot (R5)", () => {
       ftFrame.toBodyFixed(origin),
     );
     const ratio = dUs / dFt;
-    console.log(
-      `2 ppm pair (EPSG:6420 ftUS vs ft axes): ratio - 1 = ${ratio - 1}`,
-    );
     expect(Math.abs(ratio - 1 - 2.0e-6)).toBeLessThan(2.0e-6 * 1e-2);
     expect(Math.abs(ratio / (1 + 2.0e-6) - 1)).toBeLessThan(1e-7);
     // 1 km: the frames' own 1000 m points are 1000 m apart (grid), each way.
@@ -199,7 +232,6 @@ describe("Moon: IAU 2015 south polar", () => {
         worst = Math.max(worst, Math.abs(back[i]! - design[i]!));
       }
     }
-    console.log(`Moon round trip worst: ${worst} m`);
     expect(worst).toBeLessThan(1e-4);
     // The pole itself.
     const pole = frame.toBodyFixed([0, 0, 0]);
@@ -227,7 +259,6 @@ describe("RigidPlacement", () => {
         worst = Math.max(worst, Math.abs(back[i]! - design[i]!) * US_FOOT);
       }
     }
-    console.log(`Rigid inverse worst: ${worst} m`);
     expect(worst).toBeLessThan(1e-9);
     // The matrix is the same map.
     const m = placement.matrix;
@@ -243,7 +274,6 @@ describe("RigidPlacement", () => {
     const placement = RigidPlacement.at(frame, anchor);
     const east = [anchor[0]! + 10_000 / US_FOOT, anchor[1]!, anchor[2]!];
     const sag = distance(placement.toBodyFixed(east), frame.toBodyFixed(east));
-    console.log(`Rigid sag at 10 km: ${sag} m`);
     expect(Math.abs(sag - 7.8)).toBeLessThan(1.5);
   });
 

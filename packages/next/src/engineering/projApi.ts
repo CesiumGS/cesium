@@ -112,6 +112,7 @@ export interface ProjApi {
   readonly PJ_FWD: PjDirection;
   readonly PJ_INV: PjDirection;
   readonly PJ_PROJ_5: PjProjStringType;
+  readonly PJ_TYPE_PROJECTED_CRS: PjType;
   readonly PJ_TYPE_COMPOUND_CRS: PjType;
   readonly PJ_WKT2_2019: PjWktType;
 }
