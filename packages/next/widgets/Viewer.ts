@@ -28,15 +28,15 @@ import {
   InspectController,
   eastNorthUpToFixedFrame,
   fromDegrees,
-  icrfToFixed,
+  createSkyState,
+  loadFrameData,
   loadIonMoonMap,
   mat4,
-  moonAxes,
-  moonPosition,
   resolveIonAsset,
-  sunDirection,
+  skyState,
   vec3,
   type EngineOptions,
+  type FrameData,
   type Exposure,
   type ImageryProvider,
   type IonAttribution,
@@ -119,6 +119,15 @@ export interface ViewerOptions {
    */
   moon?: boolean;
   /**
+   * DE440 for the sky: a base URL for `loadFrameData` (the store `npm run
+   * setup` fills, served at "/frames-data/") or data already loaded. The
+   * stars, the Moon and the sun then come from the ephemeris and the IAU
+   * 2006/2000A Earth rotation inside the data's span, and from the analytic
+   * models outside it. Default: none, the analytic sky (the data is loaded
+   * only when a scene needs it).
+   */
+  frameData?: string | FrameData;
+  /**
    * How light becomes an image (`Exposure`): default `EYE`, as a person
    * there would see it; a camera's exposure for what a camera records.
    */
@@ -142,8 +151,7 @@ export interface ViewerOptions {
 }
 
 /** 1.x's moon map (equirectangular, the near side in the middle). */
-const scratchMoon = new Float64Array(3);
-const scratchMoonAxes = new Float64Array(6);
+const scratchSky = createSkyState();
 /** The Moon map's attributions' owner (`addAttributions`). */
 const MOON_CREDIT = {};
 
@@ -234,6 +242,14 @@ export class Viewer {
   /** The scene's time: the sun follows it unless placed by `setSun`. */
   readonly clock: Clock;
   private sunFromClock_ = true;
+  /** The loaded frames data (`ViewerOptions.frameData`), once it arrives. */
+  private frameData_: FrameData | undefined;
+  /**
+   * `ViewerOptions.frameData` as it resolves: the data, or `undefined` (after
+   * one `console.warn`) when none was asked for or loading failed, in which
+   * case the sky stays analytic.
+   */
+  readonly frameData: Promise<FrameData | undefined>;
   /** The Moon is drawn (`ViewerOptions.moon`). */
   private readonly moon: boolean;
   /** Cesium Moon Terrain's map arrived (1.x's no longer wanted). */
@@ -337,12 +353,33 @@ export class Viewer {
     }
     this.clock.events.on("change", () => {
       this.applyClockSky();
-      if (this.sunFromClock_) {
-        this.applyClockSun();
-      } else {
-        this.engine.requestRender();
-      }
+      this.engine.requestRender();
     });
+    const frameData = options.frameData;
+    if (frameData === undefined) {
+      this.frameData = Promise.resolve(undefined);
+    } else {
+      this.frameData = (
+        typeof frameData === "string"
+          ? loadFrameData(frameData)
+          : Promise.resolve(frameData)
+      ).then(
+        (data) => {
+          if (!this.destroyed) {
+            this.frameData_ = data;
+            this.applyClockSky();
+            this.engine.requestRender();
+          }
+          return data;
+        },
+        (error: unknown) => {
+          console.warn(
+            `Viewer: frames data did not load, the sky stays analytic (${error instanceof Error ? error.message : String(error)})`,
+          );
+          return undefined;
+        },
+      );
+    }
     this.applyClockSky();
     if (this.moon) {
       void fetch(MOON_MAP)
@@ -764,33 +801,26 @@ export class Viewer {
     }
   }
 
-  /** The stars' turn and the Moon's place at the clock's time. */
+  /**
+   * The sky at the clock's time: one `skyState` (DE440 inside the loaded
+   * frames data's span, else the analytic models) serves the stars' turn, the
+   * Moon's place and, while the sun follows the clock, the sun.
+   */
   private applyClockSky(): void {
-    const m = icrfToFixed(this.clock.time, this.engine.icrfToFixed);
-    if (!this.moon) {
-      return;
+    const sky = skyState(this.clock.time, this.frameData_, scratchSky);
+    this.engine.icrfToFixed.set(sky.icrfToFixed);
+    if (this.sunFromClock_) {
+      this.engine.sunDirection.set(sky.sunDirection);
     }
-    const p = moonPosition(this.clock.time, scratchMoon);
-    const fixed = (this.engine.moonPosition ??= new Float64Array(3));
-    for (let i = 0; i < 3; i++) {
-      fixed[i] =
-        m[i * 3]! * p[0]! + m[i * 3 + 1]! * p[1]! + m[i * 3 + 2]! * p[2]!;
-    }
-    const a = moonAxes(this.clock.time, scratchMoonAxes);
-    const axes = (this.engine.moonAxes ??= new Float64Array(6));
-    for (let k = 0; k < 6; k += 3) {
-      for (let i = 0; i < 3; i++) {
-        axes[k + i] =
-          m[i * 3]! * a[k]! +
-          m[i * 3 + 1]! * a[k + 1]! +
-          m[i * 3 + 2]! * a[k + 2]!;
-      }
+    if (this.moon) {
+      (this.engine.moonPosition ??= new Float64Array(3)).set(sky.moonPosition);
+      (this.engine.moonAxes ??= new Float64Array(6)).set(sky.moonAxes);
     }
   }
 
   /** The sun's direction at the clock's time. */
   private applyClockSun(): void {
-    sunDirection(this.clock.time, this.engine.sunDirection);
+    this.applyClockSky();
     this.engine.requestRender();
   }
 
