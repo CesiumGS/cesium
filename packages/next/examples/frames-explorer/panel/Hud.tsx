@@ -1,37 +1,27 @@
 // The globe's HUD (R14, R17): the legend at the bottom right, listing every
 // overlay that is drawn with its accuracy (R8: accuracy is never shown only
-// in the panel), and the tour's caption at the top right (at the bottom on a
-// narrow view). Both are rendered from the panel's React tree into the
+// in the panel), and the scenario's answer at the top right. Both are rendered from the panel's React tree into the
 // viewer's container (main.ts makes the host), clear of Dyno's inspector
 // (top left) and credits (bottom left). The HUD is dark in either scheme, as
 // the viewer's own widgets are (I16): panel.css points its StrataKit tokens
 // at the viewer's HUD theme.
-import {
-  Button,
-  FormControlLabel,
-  IconButton,
-  Switch,
-  Typography,
-} from "@mui/material";
+import { IconButton, Typography } from "@mui/material";
 import { svgChevronDown } from "@stratakit/icons/chevron-down";
 import { svgChevronUp } from "@stratakit/icons/chevron-up";
-import { svgDismiss } from "@stratakit/icons/dismiss";
-import { svgLink } from "@stratakit/icons/link";
 import { svgReCenter } from "@stratakit/icons/re-center";
 import { Icon } from "@stratakit/mui";
 import {
   useEffect,
-  useId,
   useLayoutEffect,
   useReducer,
   useRef,
   useState,
 } from "react";
 import { isFrameKey } from "../orbit.ts";
-import { captionFold, focusAfter, foldReducer } from "./fold.ts";
+import { captionFold, foldReducer } from "./fold.ts";
 import { legendRows } from "./legendRows.ts";
-import type { PanelModel, TourStop } from "./model.ts";
-import type { TourScaleSwitch } from "./tourScale.ts";
+import { accuracyLine, formatAnswer } from "./answerText.ts";
+import type { PanelModel, ScenarioPanelView } from "./model.ts";
 
 /** Below this view width the HUD goes compact: legend folded, the caption at the bottom (I18). */
 export { NARROW_VIEW } from "../content.ts";
@@ -144,203 +134,103 @@ export function GlobeLegend({ model }: { model: PanelModel }) {
 }
 
 /**
- * The tour's caption (I18): focus moves to its heading at each stop; Escape
- * ends the tour (focus back to "Take the tour"); the arrow keys step. On a
- * narrow view it starts folded to one row (the stop, its title and the
- * steps), so it doesn't cover the lower half of the subject (F42); the
- * chevron unfolds the caption and the link, and the choice holds across
- * stops.
+ * The scenario's answer on the globe (spec "The headline answer"): its
+ * question, the answer and its accuracy (R8), top right, clear of Dyno's
+ * inspector (top left), the credits (bottom left) and the legend (bottom
+ * right). It says "updating" while the knobs' new answer is on its way and
+ * says the scenario's limit (the backdrop Moon). On a narrow view it folds
+ * to one row, the answer's figure, with a chevron to unfold it (F42).
  */
-export function TourCaption({
-  tour,
-  stop,
+export function ScenarioCallout({
+  scenario,
   narrow,
-  onStop,
-  onEnd,
-  onCopyLink,
-  scaleSwitch,
-  onScaleSwitch,
 }: {
-  tour: readonly TourStop[];
-  stop: number;
+  scenario: ScenarioPanelView;
   narrow: boolean;
-  onStop: (index: number) => void;
-  onEnd: () => void;
-  onCopyLink: (stop: TourStop) => void;
-  /** The stop's "Show true scale" switch, where it exaggerates (`tourScaleSwitch`). */
-  scaleSwitch?: TourScaleSwitch;
-  onScaleSwitch?: (kind: TourScaleSwitch["kind"], on: boolean) => void;
 }) {
-  const s = tour[stop]!;
-  const heading = useRef<HTMLHeadingElement>(null);
-  const toggleButton = useRef<HTMLButtonElement>(null);
-  const [foldState, dispatch] = useReducer(foldReducer, undefined, () =>
-    foldReducer(undefined, { type: "init" }),
-  );
-  const view = captionFold(narrow, foldState.unfolded);
-  const folded = view.folded;
-  const bodyId = useId();
-  useEffect(() => {
-    dispatch({ type: "stop" });
-    if (focusAfter({ type: "stop" }) === "heading") {
-      heading.current?.focus({ preventScroll: true, focusVisible: false });
-    }
-  }, [stop]);
-  // The heading moves between the row and the caption as it folds: focus
-  // stays on the toggle (F42).
-  const toggled = useRef(false);
-  useEffect(() => {
-    if (toggled.current && focusAfter({ type: "toggle" }) === "toggle") {
-      toggleButton.current?.focus();
-    }
-    toggled.current = false;
-  }, [foldState]);
-  const steps = (
-    <span className="fx-tour-steps">
-      <Button
-        size="small"
-        variant="outlined"
-        disabled={stop === 0}
-        onClick={() => onStop(stop - 1)}
-      >
-        Back
-      </Button>
-      {stop < tour.length - 1 ? (
-        <Button
-          size="small"
-          variant="contained"
-          color="primary"
-          onClick={() => onStop(stop + 1)}
-        >
-          Next
-        </Button>
-      ) : (
-        <Button
-          size="small"
-          variant="contained"
-          color="primary"
-          onClick={onEnd}
-        >
-          Finish
-        </Button>
-      )}
-    </span>
-  );
-  const fold = view.toggle && (
-    <IconButton
-      ref={toggleButton}
-      size="small"
-      aria-expanded={view.toggle.expanded}
-      aria-controls={bodyId}
-      aria-label={view.toggle.label}
-      title={view.toggle.label}
-      onClick={() => {
-        toggled.current = true;
-        dispatch({ type: "toggle" });
-      }}
-    >
-      <Icon href={view.toggle.expanded ? svgChevronDown : svgChevronUp} />
-    </IconButton>
-  );
-  const end = (
-    <IconButton
-      size="small"
-      aria-label="End the tour"
-      title="End the tour (Escape)"
-      onClick={onEnd}
-    >
-      <Icon href={svgDismiss} />
-    </IconButton>
-  );
+  const [state, dispatch] = useReducer(foldReducer, { unfolded: false });
+  const fold = captionFold(narrow, state.unfolded);
+  const a = scenario.answer;
+  const loading = scenario.status === "loading";
+  const figure =
+    a?.value !== undefined && a.unit !== undefined
+      ? `${formatAnswer(a.value, a.unit)}`
+      : undefined;
   return (
     <section
-      className={`fx-hud fx-tour${narrow ? " fx-tour-narrow" : ""}${folded ? " fx-tour-folded" : ""}`}
-      aria-label="Tour"
-      onKeyDown={(e) => {
-        if (e.key === "Escape") {
-          onEnd();
-        } else if (e.key === "ArrowRight" && stop < tour.length - 1) {
-          onStop(stop + 1);
-        } else if (e.key === "ArrowLeft" && stop > 0) {
-          onStop(stop - 1);
-        }
-      }}
+      className={`fx-hud fx-callout${fold.folded ? " fx-callout-folded" : ""}`}
+      aria-label="The scenario's answer"
+      aria-busy={loading}
     >
-      <div className="fx-tour-head">
-        {/* Colors by token class, never MUI's color prop: the HUD is dark
-            in either scheme and MUI's palette follows the page (N2). */}
-        <Typography
-          variant="caption-lg"
-          render={<span />}
-          className="fx-hud-muted fx-tour-count"
-        >
-          Stop {stop + 1} of {tour.length}
-        </Typography>
-        {view.titleInRow && (
-          <Typography
-            variant="body-sm"
-            render={<h2 ref={heading} tabIndex={-1} title={s.title} />}
-            className="fx-strong fx-tour-title"
-          >
-            {s.title}
-          </Typography>
-        )}
-        <span className="fx-tour-head-actions">
-          {folded && steps}
-          {fold}
-          {end}
-        </span>
-      </div>
-      {!view.titleInRow && (
-        <Typography
-          variant="subtitle-md"
-          render={<h2 ref={heading} tabIndex={-1} />}
-          className="fx-strong fx-tour-title"
-        >
-          {s.title}
-        </Typography>
-      )}
-      <div id={bodyId} className="fx-tour-body" hidden={view.bodyHidden}>
-        <Typography variant="body-sm" render={<p />}>
-          {s.caption}
-        </Typography>
-        {scaleSwitch && (
-          <FormControlLabel
-            className="fx-tour-scale"
-            control={
-              <Switch
-                size="small"
-                checked={scaleSwitch.checked}
-                onChange={(_, on) => onScaleSwitch?.(scaleSwitch.kind, on)}
-              />
-            }
-            label={<span className="fx-option-label">{scaleSwitch.label}</span>}
-          />
-        )}
-        <div className="fx-tour-buttons">
+      <div className="fx-callout-row">
+        <p className="fx-callout-question fx-hud-muted">
+          {scenario.title}
+          {loading && (
+            <span className="fx-callout-updating">
+              {" "}
+              · {a ? "updating" : "computing"}
+            </span>
+          )}
+        </p>
+        {fold.toggle && (
           <IconButton
             size="small"
-            aria-label="Copy a link to this stop"
-            title="Copy a link to this stop"
-            onClick={() => onCopyLink(s)}
+            aria-expanded={fold.toggle.expanded}
+            aria-label={
+              fold.toggle.expanded ? "Fold the answer" : "Unfold the answer"
+            }
+            onClick={() => dispatch({ type: "toggle" })}
           >
-            <Icon href={svgLink} />
+            <Icon href={fold.toggle.expanded ? svgChevronUp : svgChevronDown} />
           </IconButton>
-          {steps}
-        </div>
+        )}
       </div>
+      {scenario.status === "error" && scenario.problem ? (
+        <p className="fx-callout-problem">
+          {scenario.problem.missing
+            ? "Its data isn't in the frames store: run npm run setup in packages/next, then reload."
+            : `It didn't answer: ${scenario.problem.message}`}
+        </p>
+      ) : a ? (
+        <>
+          {figure !== undefined && (
+            <p className={`fx-callout-figure${loading ? " fx-stale" : ""}`}>
+              {figure}
+            </p>
+          )}
+          {!fold.bodyHidden && (
+            <>
+              <p className={`fx-callout-answer${loading ? " fx-stale" : ""}`}>
+                {a.headline}
+              </p>
+              <p
+                className={`fx-callout-acc${a.accuracy.meters === undefined ? " fx-unbounded" : ""}`}
+              >
+                {accuracyLine(a)}
+              </p>
+              {scenario.note && (
+                <p className="fx-callout-note fx-hud-muted">{scenario.note}</p>
+              )}
+            </>
+          )}
+        </>
+      ) : (
+        <p className="fx-callout-answer fx-hud-muted" role="status">
+          {scenario.queued ?? "Working out the answer…"}
+        </p>
+      )}
     </section>
   );
 }
 
 /**
- * Frame content (owner: stuck out in space): re-flies the current framing,
- * the tour stop, else the selected frame or result, else the opening view.
+ * Frame content (owner: stuck out in space): re-flies the selected frame or
+ * result, else the scenario's view, else the opening view.
  * The StrataKit re-center icon, as Dyno's Viewer page uses; the F key does
  * the same anywhere on the page but in a text field. Top left under Dyno's
- * inspector, clear of the credits (bottom left), the caption (top right, or
- * the bottom on a narrow view), the legend (bottom right) and the stop-4
- * inset (bottom left, or top right on a narrow view).
+ * inspector, clear of the credits (bottom left), the answer (top right),
+ * the legend (bottom right) and the rigid line's inset (bottom left, or top
+ * right on a narrow view).
  */
 export function FrameButton({ onFrame }: { onFrame: () => void }) {
   const latest = useRef(onFrame);

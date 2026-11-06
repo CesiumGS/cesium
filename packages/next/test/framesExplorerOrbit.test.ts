@@ -18,7 +18,6 @@ import {
   placeRig,
   rangeLimits,
   rigFraming,
-  stopRig,
   viewHeading,
   CameraFlow,
   landedLimits,
@@ -33,7 +32,7 @@ import {
 } from "../src/scene/InspectController.ts";
 import type { View } from "../src/scene/View.ts";
 import { orbitState, planOrbit } from "../widgets/orbitFocus.ts";
-import { TOUR } from "../examples/frames-explorer/content.ts";
+import { SCENES } from "../examples/frames-explorer/scenarios/scenes.ts";
 import { Camera } from "../src/scene/Camera.ts";
 
 const sub = (a: ArrayLike<number>, b: ArrayLike<number>) =>
@@ -52,26 +51,22 @@ function turnZ(angle: number, t: number[]): Float64Array {
 }
 
 describe("which views orbit (the owner: stuck out in space)", () => {
-  it("orbits at the stops framed off the Earth's surface, and keeps the globe controls at the surface stops", () => {
-    const rigs = Object.fromEntries(TOUR.map((s) => [s.id, stopRig(s.camera)]));
+  it("names each scenario's rig: off the Earth's surface each orbits its subject (the tour's stops 2, 5 and 6)", () => {
+    const rigs = Object.fromEntries(
+      Object.values(SCENES).map((s) => [s.id, s.rig]),
+    );
     expect(rigs).toEqual({
-      // Stop 1 frames the Earth from four radii: the globe controls, so
-      // the ground is a zoom away (controller's ruling, fix round 1).
-      "earth-frames": undefined,
-      "gcrf-itrf-day": "geocentric",
-      "design-grid": undefined,
-      "rigid-exact": undefined,
-      orion: "earthMoon",
-      "lunar-time": "lunarSite",
+      "one-path": "earthMoon",
+      "earth-turns": "geocentric",
+      "stand-on-moon": "lunarSite",
     });
-    expect(stopRig("opening")).toBeUndefined();
   });
 
   it("orbits a selected Moon or Orion frame, on its own origin", () => {
     for (const id of ["MOON_ICRF", "MOON_ME", "MOON_PA"]) {
       expect(frameRig(id)).toBe("moon");
     }
-    expect(frameRig("Lunar south-pole site")).toBe("lunarSite");
+    expect(frameRig("Lunar site")).toBe("lunarSite");
     expect(frameRig("orion-1", "orion-1")).toBe("earthMoon");
   });
 
@@ -328,14 +323,18 @@ describe("stop 6 from straight above the site", () => {
 describe("Frame content", () => {
   const none = { kind: "none" } as const;
 
-  it("re-flies the tour stop first", () => {
-    expect(frameTarget("orion", { kind: "frame", id: "MOON_ME" })).toEqual({
-      kind: "tour",
-      id: "orion",
+  it("re-flies the scenario's view when nothing is selected", () => {
+    expect(frameTarget("one-path", none)).toEqual({
+      kind: "scenario",
+      id: "one-path",
     });
   });
 
-  it("then the selected frame or result", () => {
+  it("frames the selected frame or result first, what the user picked last", () => {
+    expect(frameTarget("one-path", { kind: "frame", id: "MOON_ME" })).toEqual({
+      kind: "frame",
+      id: "MOON_ME",
+    });
     expect(frameTarget(undefined, { kind: "frame", id: "MOON_ME" })).toEqual({
       kind: "frame",
       id: "MOON_ME",

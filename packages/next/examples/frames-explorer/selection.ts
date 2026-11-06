@@ -1,7 +1,7 @@
-// The one selection the tree, the globe and the tests share (R14), the lens
-// and the tour stop, the scenario with its knobs and time, and their URL
-// form (R15): `select=result:<id>`, `select=frame:<id>`, `select=node:<id>`,
-// `select=edge:<id>`, `lens=<lens>`, `tour=<stop>`, `scenario=<id>`,
+// The one selection the tree, the globe and the tests share (R14), the lens,
+// the scenario with its knobs and time, and their URL form (R15):
+// `select=result:<id>`, `select=frame:<id>`, `select=node:<id>`,
+// `select=edge:<id>`, `lens=<lens>`, `scenario=<id>`,
 // `k.<knob>=<value>`, `t=<UTC ms>` and `imodel=<id>` in the example's params
 // (Dyno's URL; the example never touches `location`).
 //
@@ -60,8 +60,6 @@ export interface Known {
    * Undefined with `results`: every group ran.
    */
   ran?: ReadonlySet<string>;
-  /** The tour's stop ids. */
-  tours?: readonly string[];
 }
 
 /** The view as the URL carries it. */
@@ -70,8 +68,6 @@ export interface ViewParams {
   lens: LensChoice;
   /** The walk's reference (`against=`; ITRF, the default, is left out). */
   against: Against;
-  /** A tour stop's id. */
-  tour?: string;
   /** R18: prefills "Try your own"; never fetches by itself. */
   imodel?: string;
   /** The scenario (`scenario=`; the strip's first is left out). parseParams always sets it. */
@@ -187,17 +183,11 @@ export function parseParams(
 ): ViewParams {
   const lens = LENS_CHOICES.find((l) => l === params.lens) ?? "all";
   const against = AGAINST.find((a) => a === params.against) ?? "ITRF";
-  const tour = params.tour;
-  const tourOk =
-    tour !== undefined &&
-    ID.test(tour) &&
-    (known.tours === undefined || known.tours.includes(tour));
   const imodel = params.imodel?.trim();
   return {
     selection: parseSelection(params.select, known),
     lens,
     against,
-    ...(tourOk && { tour }),
     ...(imodel !== undefined && IMODEL.test(imodel) && { imodel }),
     ...parseScenario(params),
   };
@@ -210,7 +200,6 @@ export function parseParams(
 export function formatParams(view: {
   selection: Selection;
   lens: LensChoice;
-  tour?: string;
   against?: Against;
   scenario?: ScenarioId;
   knobs?: KnobState;
@@ -224,7 +213,8 @@ export function formatParams(view: {
         ? undefined
         : `${view.selection.kind}:${view.selection.id}`,
     lens: view.lens === "all" ? undefined : view.lens,
-    tour: view.tour,
+    // The guided tour's old param: removed from a link that still has it.
+    tour: undefined,
     against:
       view.against === undefined || view.against === "ITRF"
         ? undefined
@@ -281,8 +271,6 @@ export interface View {
   lens: LensChoice;
   /** The walk's reference, shared by the panel's walk and the globe's path. */
   against: Against;
-  /** The tour stop shown, by id; undefined when the tour isn't on. */
-  tour?: string;
 }
 
 export class ViewStore {
@@ -299,8 +287,7 @@ export class ViewStore {
     if (
       same(prev.selection, v.selection) &&
       prev.lens === v.lens &&
-      prev.against === v.against &&
-      prev.tour === v.tour
+      prev.against === v.against
     ) {
       return;
     }
@@ -325,22 +312,12 @@ export class ViewStore {
     this.set({ ...this.view, against });
   }
 
-  setTour(tour: string | undefined): void {
-    const rest: View = {
-      selection: this.view.selection,
-      lens: this.view.lens,
-      against: this.view.against,
-    };
-    this.set(tour === undefined ? rest : { ...rest, tour });
-  }
-
   /** A view from the URL (a deep link, back or forward). */
   apply(params: ViewParams): void {
     this.set({
       selection: params.selection,
       lens: params.lens,
       against: params.against,
-      ...(params.tour !== undefined && { tour: params.tour }),
     });
   }
 

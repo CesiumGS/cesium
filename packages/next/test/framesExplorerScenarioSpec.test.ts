@@ -229,7 +229,9 @@ describe("clampKnobs (Review Focus 4)", () => {
     for (const long of [`${"1".repeat(100_000)}x`, "1".repeat(33)]) {
       const start = performance.now();
       expect(clampKnobs(s, { rotation: long }).rotation).toBe(12.5);
-      expect(performance.now() - start).toBeLessThan(50);
+      // 1 s, not 50 ms: a loaded machine mustn't make it flake (P1); a
+      // backtracking regex would take minutes.
+      expect(performance.now() - start).toBeLessThan(1000);
     }
     expect(clampKnobs(s, { rotation: `-${"0".repeat(28)}1.5` }).rotation).toBe(
       -1.5,

@@ -1,8 +1,6 @@
 // The page's fixed copy: short row labels for results (UX review I14) and
-// the guided tour's stops (R16, DESIGN.md "The tour"). Plain data, imported by
-// the main thread.
-import type { OverlayId } from "./panel/model.ts";
-import type { TrueScaleKind } from "./panel/tourScale.ts";
+// what each is compared against. Plain data, imported by the main thread.
+// (The guided tour that was here gave way to the scenarios, scenarios/.)
 import type { Comparison } from "./stress/groupInfo.ts";
 
 /** Short row labels (60 characters or fewer), by result id; rows fall back to the title. */
@@ -90,6 +88,13 @@ export const RESULT_LABELS: Readonly<Record<string, string>> = {
   "time-scales.gps-utc-leap.step": "GPS − UTC steps at the 2016 leap",
   "lunar-time.moon-vs-earth.synodic": "Lunar clock gain, synodic month",
   "lunar-time.moon-vs-earth.sidereal": "Lunar clock gain, sidereal month",
+  "space.effects.moon-me-pa": "MOON_ME against MOON_PA at the south pole",
+  "frame-tree.compositions.itrf-gcrf.live":
+    "ITRF and GCRF, every route, at your time",
+  "trajectory.moon-me.distance.live": "Orion by two routes, in your frame",
+  "trajectory.moon-me.round-trip.live": "Orion through your frame and back",
+  "stand-on-moon.site-triad": "The site's axes, at your latitude",
+  "stand-on-moon.site-round-trip": "The site through ICRF and back",
 };
 
 /**
@@ -192,154 +197,5 @@ export function groupRunIds(
   return group === "reproducibility" ? [...fingerprinted] : [group];
 }
 
-/** A tour stop (R16): its caption, the overlays it turns on and where the camera goes. */
-export interface TourStopSpec {
-  id: string;
-  title: string;
-  caption: string;
-  overlays: readonly OverlayId[];
-  /** The camera: a named framing (`main.ts` places each). */
-  camera:
-    | "opening"
-    | "earthFrames"
-    | "northPole"
-    | "stay"
-    | "designGrid"
-    | "rigidVsExact"
-    | "earthMoon"
-    | "lunarSite";
-  /**
-   * Dim the imagery: exposure compensation −0.6 (`true`, under an engineering
-   * subject), or per width, as stop 2 needs (F43; see `stopExposure`).
-   */
-  dim?: true | { readonly wide: number; readonly narrow: number };
-  /** The clock: plays at this rate while the stop shows. */
-  rate?: number;
-  /**
-   * The caption's "Show true scale" switch, at a stop that exaggerates: the
-   * convergence angle (stop 3). Stop 4 draws at true scale.
-   */
-  trueScaleSwitch?: TrueScaleKind;
-  /**
-   * The clock: set to this UTC instant (ISO 8601) when the stop opens, so a
-   * site is in daylight. Stops without it keep the clock where it is.
-   */
-  time?: string;
-  /** Light the globe from the camera instead of the clock's sun (stop 2, S-I6). */
-  light?: "camera";
-  /** Orion's draw-in frame at this stop. */
-  orionFrame?: "GCRF" | "MOON_ME";
-  /**
-   * Draw only the geocentric triads: at stop 2 a site's triad, the
-   * Sacramento one at the top of the view from the pole, crosses GCRF's
-   * turning x axis; at stop 4 it stands over the line's start.
-   */
-  geocentricOnly?: boolean;
-}
-
-/** Below this view width the HUD goes compact and the caption folds (I18, F42). */
+/** Below this view width the HUD goes compact (I18, F42). */
 export const NARROW_VIEW = 560;
-
-/** 13:00 PDT on the flyby day: local midday for the California stops. */
-const CALIFORNIA_MIDDAY = "2026-04-06T20:00:00Z";
-
-/** The engineering stops' dimming (DESIGN.md "Lines"). */
-const DIM = -0.6;
-
-/** The exposure compensation (stops) while `stop` shows in a view `viewWidth` px wide. */
-export function stopExposure(
-  stop: TourStopSpec | undefined,
-  viewWidth: number,
-): number {
-  const dim = stop?.dim;
-  if (dim === undefined) {
-    return 0;
-  }
-  if (dim === true) {
-    return DIM;
-  }
-  return viewWidth < NARROW_VIEW ? dim.narrow : dim.wide;
-}
-
-/** The sites whose triads are drawn by default, beside ITRF's and GCRF's. */
-export const SITE_TRIADS = ["Sacramento ENU", "Lunar south-pole site"] as const;
-
-/**
- * The triads drawn whatever is selected: ITRF and GCRF, and the sites unless
- * the tour stop draws the geocentric pair alone. A selected frame's path and
- * a result's frames are drawn on top of these.
- */
-export function defaultTriads(stop: TourStopSpec | undefined): string[] {
-  return [
-    "ITRF",
-    "GCRF",
-    ...(stop?.geocentricOnly === true ? [] : SITE_TRIADS),
-  ];
-}
-
-export const TOUR: readonly TourStopSpec[] = [
-  {
-    id: "earth-frames",
-    title: "Earth's frames",
-    caption:
-      "ITRF turns with the Earth; GCRF doesn't. Each triad is a frame's axes at the clock's time: ITRF's with cones, GCRF's with square heads. Lit from the camera.",
-    overlays: ["triads"],
-    camera: "earthFrames",
-    light: "camera",
-  },
-  {
-    id: "gcrf-itrf-day",
-    title: "GCRF to ITRF over a day",
-    caption:
-      "Seen from above the north pole: the globe is drawn Earth-fixed, so GCRF's x and y turn once round against ITRF's, like clock hands, in a sidereal day. The clock plays at 3,600×; the globe is lit from the camera so the turn stays visible through the night.",
-    overlays: ["triads"],
-    camera: "northPole",
-    rate: 3600,
-    light: "camera",
-    // Lit from the camera, the polar globe washes out behind the axes (UX
-    // re-check 3). At desktop width the eye's auto-exposure brightens the
-    // small globe on black, so it takes −1.5 there (F43).
-    dim: { wide: -1.5, narrow: -0.6 },
-    geocentricOnly: true,
-  },
-  {
-    id: "design-grid",
-    title: "The California design grid",
-    caption:
-      "Grid north and true north part ways away from the central meridian: the convergence angle is −0° 39′ at the grid's west edge. True north is drawn with that angle 20 times larger so the lean shows; Show true scale draws it as it is.",
-    overlays: ["designGrid"],
-    camera: "designGrid",
-    dim: true,
-    // 13:00 Pacific daylight time, local midday in California.
-    time: CALIFORNIA_MIDDAY,
-    trueScaleSwitch: "convergence",
-  },
-  {
-    id: "rigid-exact",
-    title: "Rigid against exact",
-    caption:
-      "The dashed line is straight: a 400 km design line placed rigidly at its start, on the tangent plane there. The solid line follows the Earth: the same line placed exactly, on the ellipsoid. They part as distance squared, about 12.5 km at 400 km. The inset shows the gap where a site feels it, 31.4 m at 20 km: 31.32 m down and 1.48 m along the line, at right angles; the part along the line is the grid's scale factor, which rigid placement ignores, so its leader leans. All at true scale.",
-    overlays: ["rigidVsExact"],
-    camera: "rigidVsExact",
-    time: CALIFORNIA_MIDDAY,
-    // The Sacramento triad stands over the line's start, seen from the south.
-    geocentricOnly: true,
-  },
-  {
-    id: "orion",
-    title: "Orion's figure-eight",
-    caption:
-      "Drawn in GCRF, Artemis II loops the Moon in a figure-eight; switch Orion's path to MOON_ME to see it swing round the far side.",
-    overlays: ["orion"],
-    camera: "earthMoon",
-    orionFrame: "GCRF",
-  },
-  {
-    id: "lunar-time",
-    title: "The Moon's south pole and lunar time",
-    caption:
-      "A clock near the south pole, at 89.5° S, gains about 56 µs a day on one on Earth. The triad holds still as you orbit it, 384,000 km from the Earth-fixed origin. The Moon's imagery is a distant backdrop until plan 5 draws the Moon as a tileset, so it lines up with the triad only from straight above, as here.",
-    overlays: ["triads"],
-    camera: "lunarSite",
-  },
-];

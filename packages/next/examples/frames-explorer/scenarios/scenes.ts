@@ -1,0 +1,143 @@
+// Each scenario on the globe (main thread): its camera and the orbit rig it
+// hands over to, the triads it draws, how it lights and exposes the globe,
+// what drives the clock, and the limit it says plainly. Plain data with a
+// few pure functions, so the page (main.ts) applies it and the tests read
+// it (test/framesExplorerScenes.test.ts). The tour's stops 1, 2, 5 and 6
+// live on here: earth-turns is stop 2's polar view (stop 1's triads), one-path
+// is stop 5's plane, stand-on-moon is stop 6's site.
+//
+// Light imports only: the worker's evaluators import the lunar site from
+// here, and the page never bundles the catalog (protocol.ts's rule).
+import type { Frame } from "../../../src/frames/Frame.ts";
+import { eastNorthUpFrame } from "../../../src/frames/local.ts";
+import { fromDegrees } from "../../../src/math/ellipsoid.ts";
+import { MOON } from "../../../src/scene/Body.ts";
+import type { RigKind } from "../orbit.ts";
+import type { KnobState, ScenarioId } from "./spec.ts";
+import { SCENARIOS } from "./specs.ts";
+
+/** The lunar site's node id: its triad's, its camera's and the tree's. */
+export const LUNAR_SITE = "Lunar site";
+
+/** The site's position in MOON_ME at `latitude` (degrees), on the IAU sphere at 0° longitude, m. */
+export function lunarSitePosition(latitude: number): Float64Array {
+  return MOON.ellipsoid.cartographicToCartesian(
+    fromDegrees(0, latitude, 0),
+    new Float64Array(3),
+  );
+}
+
+/** The site's east-north-up frame on MOON_ME. */
+export function lunarSiteFrame(moonMe: Frame, latitude: number): Frame {
+  return eastNorthUpFrame(
+    LUNAR_SITE,
+    moonMe,
+    MOON.ellipsoid,
+    lunarSitePosition(latitude),
+  );
+}
+
+/** "89.5° S", "the equator", "12° N". */
+export function latitudeText(latitude: number): string {
+  if (latitude === 0) {
+    return "the equator";
+  }
+  return `${Math.abs(latitude)}° ${latitude < 0 ? "S" : "N"}`;
+}
+
+/** Orion's draw-in frame (one-path's knob). */
+export type DrawnFrame = "GCRF" | "ITRF" | "MOON_ME";
+
+/** A named framing; main.ts places each at the clock's instant. */
+export type SceneCamera = "northPole" | "earthMoon" | "lunarSite";
+
+export interface SceneSpec {
+  id: ScenarioId;
+  camera: SceneCamera;
+  /** The orbit the flight lands in (orbit.ts): each scenario names its rig. */
+  rig: RigKind;
+  /** The flight's length, s (the tour's: 3.0 to the plane, 3.5 to the site). */
+  flight?: number;
+  /**
+   * The base frames its answer and proof name: the docked diagram keeps
+   * them (and their ancestors) in view from the start, before the
+   * evaluation's path is in.
+   */
+  focus: readonly string[];
+  /** The triads drawn whatever is selected, at these knobs. */
+  triads(knobs: KnobState): string[];
+  /** Each geocentric axis named and kept clear of the declutter (stop 1's S-I1). */
+  pinnedAxes?: boolean;
+  /** Lit from the camera, not the clock's sun (stop 2's S-I6). */
+  light?: "camera";
+  /** The imagery's exposure compensation: at a desktop width and under `NARROW_VIEW` (F43). */
+  dim?: { wide: number; narrow: number };
+  /** The clock's rate while it shows, from the knobs; otherwise it is left. */
+  clockRate?(knobs: KnobState): number;
+  /** Orion's path, drawn in this frame. */
+  orion?(knobs: KnobState): DrawnFrame;
+  /** The lunar site at this latitude. */
+  lunarSite?(knobs: KnobState): number;
+  /** A limit the scenario says plainly, under its answer and on the globe. */
+  note?: string;
+}
+
+export const SCENES: Readonly<Partial<Record<ScenarioId, SceneSpec>>> = {
+  "one-path": {
+    id: "one-path",
+    camera: "earthMoon",
+    rig: "earthMoon",
+    flight: 3,
+    focus: ["GCRF", "ITRF", "MOON_ME"],
+    // The drawn-in frame's own triad beside the Earth's pair: the frame you
+    // look from, at the Moon when it is MOON_ME.
+    triads: (k) => [
+      "ITRF",
+      "GCRF",
+      ...(k.frame === "MOON_ME" ? ["MOON_ME"] : []),
+    ],
+    orion: (k) => (k.frame as DrawnFrame | undefined) ?? "MOON_ME",
+  },
+  "earth-turns": {
+    id: "earth-turns",
+    camera: "northPole",
+    rig: "geocentric",
+    focus: ["ITRF", "GCRF"],
+    // Only the geocentric pair: a site's triad crosses GCRF's turning x.
+    triads: () => ["ITRF", "GCRF"],
+    pinnedAxes: true,
+    light: "camera",
+    // Lit from the camera, the polar globe washes out behind the axes; at
+    // desktop width the eye brightens the small globe on black (F43).
+    dim: { wide: -1.5, narrow: -0.6 },
+    clockRate: (k) => Number(k.rate),
+  },
+  "stand-on-moon": {
+    id: "stand-on-moon",
+    camera: "lunarSite",
+    rig: "lunarSite",
+    flight: 3.5,
+    focus: ["MOON_ME", "ITRF"],
+    triads: () => [LUNAR_SITE],
+    lunarSite: (k) => Number(k.latitude),
+    note: "The Moon's imagery is the sky's distant backdrop until plan 5 draws the Moon as a tileset in MOON_ME, so it lines up with the site only from straight above, as here.",
+  },
+};
+
+/** The scenarios the page shows: those with a scene (and an evaluator), in the strip's order. */
+export const READY: readonly ScenarioId[] = SCENARIOS.filter(
+  (s) => SCENES[s.id] !== undefined,
+).map((s) => s.id);
+
+/** The exposure compensation while `scene` shows in a view `viewWidth` px wide. */
+export function sceneExposure(
+  scene: SceneSpec | undefined,
+  viewWidth: number,
+  narrowView: number,
+): number {
+  const dim = scene?.dim;
+  if (dim === undefined) {
+    return 0;
+  }
+  return viewWidth < narrowView ? dim.narrow : dim.wide;
+}

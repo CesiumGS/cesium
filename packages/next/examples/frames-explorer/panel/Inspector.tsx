@@ -26,7 +26,7 @@ import { type SheetControls, SheetHead } from "./Sheet.tsx";
 import { ToleranceBar, ofTolerance } from "./ToleranceBar.tsx";
 
 /** An http(s) URL, or undefined: a citation's link is never another scheme. */
-function webLink(url: string | undefined): URL | undefined {
+export function webLink(url: string | undefined): URL | undefined {
   try {
     const u = url === undefined ? undefined : new URL(url);
     return u && (u.protocol === "https:" || u.protocol === "http:")

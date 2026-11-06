@@ -3,11 +3,7 @@
 // walk). On a short tab the sheet fills it by default, with a way back to
 // the list; on a tall one both show. Focus goes to the sheet's heading when
 // it opens and back to what opened it when it closes (M17).
-import { IconButton } from "@mui/material";
-import { svgDismiss } from "@stratakit/icons/dismiss";
-import { svgWindowCollapse } from "@stratakit/icons/window-collapse";
-import { svgWindowExpand } from "@stratakit/icons/window-expand";
-import { Icon } from "@stratakit/mui";
+import { Button } from "@mui/material";
 import {
   type ReactNode,
   type RefObject,
@@ -122,27 +118,21 @@ export function SheetHead({
       }
     };
   }, [focusRef]);
-  const { full, setFull } = controls;
+  // One labelled Close with a full hit target, and no separate fill
+  // toggle beside it (the owner, 2026-11-06: two tiny adjacent buttons).
+  void controls;
   return (
     <div className="fx-sheet-head" ref={head} tabIndex={-1}>
       <div className="fx-sheet-title">{children}</div>
       <span className="fx-sheet-tools">
-        <IconButton
+        <Button
           size="small"
-          aria-label={full ? "Show the list too" : "Fill the tab"}
-          title={full ? "Show the list too" : "Fill the tab"}
-          onClick={() => setFull(!full)}
-        >
-          <Icon href={full ? svgWindowCollapse : svgWindowExpand} />
-        </IconButton>
-        <IconButton
-          size="small"
+          variant="outlined"
           aria-label={closeLabel}
-          title={closeLabel}
           onClick={onClose}
         >
-          <Icon href={svgDismiss} />
-        </IconButton>
+          Close
+        </Button>
       </span>
     </div>
   );

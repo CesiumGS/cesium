@@ -1,15 +1,11 @@
-// The frames explorer's tour stops (examples/frames-explorer/content.ts, R16):
-// what each stop draws and how it lights the globe; and the page's fixed
-// copy for what a result is compared against.
+// The frames explorer's fixed copy (examples/frames-explorer/content.ts):
+// what a result is compared against, which frames a selected result uses,
+// and what "Run this group" runs. (Moved here from the retired tour test;
+// the tour's stops became scenarios: test/framesExplorerScenes.test.ts.)
 import { describe, expect, it } from "vitest";
 import {
-  NARROW_VIEW,
-  SITE_TRIADS,
-  TOUR,
   comparedFor,
-  defaultTriads,
   groupRunIds,
-  stopExposure,
 } from "../examples/frames-explorer/content.ts";
 import {
   GROUP_INFO,
@@ -20,73 +16,6 @@ const GROUP_COMPARED: Comparison = {
   kind: "formula",
   text: "Design distance × site scale × metres per foot ÷ the combined factor, by hand.",
 };
-
-const stop = (id: string) => {
-  const s = TOUR.find((t) => t.id === id);
-  if (!s) {
-    throw new Error(`no stop ${id}`);
-  }
-  return s;
-};
-
-describe("tour stop 4: rigid against exact", () => {
-  it("hides the site triads: Sacramento's stands over the line's start, seen from the south", () => {
-    expect(defaultTriads(stop("rigid-exact"))).toEqual(["ITRF", "GCRF"]);
-  });
-});
-
-describe("tour stop 2: GCRF to ITRF over a day", () => {
-  it("dims the imagery by −1.5 at desktop widths, where the eye brightens the small globe (F43)", () => {
-    expect(stopExposure(stop("gcrf-itrf-day"), 728)).toBe(-1.5);
-    expect(stopExposure(stop("gcrf-itrf-day"), NARROW_VIEW)).toBe(-1.5);
-  });
-
-  it("keeps −0.6 on narrow views, where the globe fills the view", () => {
-    expect(stopExposure(stop("gcrf-itrf-day"), 520)).toBe(-0.6);
-    expect(stopExposure(stop("gcrf-itrf-day"), NARROW_VIEW - 1)).toBe(-0.6);
-  });
-
-  it("draws only the geocentric triads: a site triad would cross GCRF's turning x", () => {
-    const ids = defaultTriads(stop("gcrf-itrf-day"));
-    expect(ids).toEqual(["ITRF", "GCRF"]);
-    for (const site of SITE_TRIADS) {
-      expect(ids).not.toContain(site);
-    }
-  });
-});
-
-describe("each stop's exposure", () => {
-  it("dims the engineering stop by −0.6 at any width and leaves the others", () => {
-    for (const w of [400, 1200]) {
-      expect(stopExposure(stop("design-grid"), w)).toBe(-0.6);
-      expect(stopExposure(stop("earth-frames"), w)).toBe(0);
-      expect(stopExposure(stop("rigid-exact"), w)).toBe(0);
-    }
-  });
-
-  it("is 0 outside the tour", () => {
-    expect(stopExposure(undefined, 1200)).toBe(0);
-  });
-});
-
-describe("the default triads", () => {
-  it("are the geocentric pair and the sites outside the tour", () => {
-    expect(defaultTriads(undefined)).toEqual(["ITRF", "GCRF", ...SITE_TRIADS]);
-  });
-
-  it("keep the sites at every stop but stops 2 and 4", () => {
-    for (const s of TOUR) {
-      if (s.id === "gcrf-itrf-day" || s.id === "rigid-exact") {
-        continue;
-      }
-      expect(defaultTriads(s)).toEqual(["ITRF", "GCRF", ...SITE_TRIADS]);
-    }
-  });
-
-  it("name the Sacramento and lunar south-pole sites", () => {
-    expect(SITE_TRIADS).toEqual(["Sacramento ENU", "Lunar south-pole site"]);
-  });
-});
 
 describe("what a result is compared against (R10, R16)", () => {
   it("names the clothoid's own check, not the grid-to-ground formula", () => {
@@ -297,66 +226,6 @@ describe("what Run this group runs", () => {
   it("runs the fingerprinted results' cases for the Reproducibility card, which collects from other groups", () => {
     expect(groupRunIds("reproducibility", fingerprinted)).toEqual(
       fingerprinted,
-    );
-  });
-});
-
-describe("tour stops 3 and 4: California in daylight", () => {
-  // Local mean solar time at Sacramento (121.5° W): UTC hours − 121.5/15.
-  const solarHour = (iso: string) => {
-    const d = new Date(iso);
-    const h = d.getUTCHours() + d.getUTCMinutes() / 60 - 121.5 / 15;
-    return (h + 24) % 24;
-  };
-
-  for (const id of ["design-grid", "rigid-exact"]) {
-    it(`${id} sets the clock to around local noon`, () => {
-      const time = stop(id).time;
-      expect(time).toBeDefined();
-      const h = solarHour(time!);
-      expect(h).toBeGreaterThan(10);
-      expect(h).toBeLessThan(14);
-    });
-  }
-
-  it("says what the ×20 multiplies: the convergence angle", () => {
-    expect(stop("design-grid").caption).toMatch(/angle .*20 times/);
-  });
-
-  it("stop 4 says what's what, at true scale: straight dashed, solid on the Earth, distance squared, the inset", () => {
-    const c = stop("rigid-exact").caption;
-    expect(c).toMatch(/dashed line is straight/);
-    expect(c).toMatch(/solid line follows the Earth/);
-    expect(c).toMatch(/distance squared/);
-    expect(c).toMatch(/12\.5 km at 400 km/);
-    expect(c).toMatch(/inset/);
-    expect(c).toMatch(/31\.4 m at 20 km/);
-    expect(c).toMatch(/true scale/);
-    expect(c).not.toMatch(/50 times|×50/);
-  });
-
-  it("stop 4 says why the inset's leader leans: the drop, and the grid scale's part along the line", () => {
-    const c = stop("rigid-exact").caption;
-    // The figures test/data computes (gapParts on the drawn line).
-    expect(c).toMatch(
-      /31\.32 m down and 1\.48 m along the line, at right angles/,
-    );
-    expect(c).toMatch(/scale factor/);
-    expect(c).toMatch(/leans/);
-  });
-});
-
-describe("tour stop 6: the lunar south pole", () => {
-  const c = stop("lunar-time").caption;
-
-  it("says where the site is: near the pole, at 89.5° S", () => {
-    expect(c).toMatch(/near the south pole, at 89\.5° S/);
-    expect(c).not.toMatch(/clock at the lunar south pole/);
-  });
-
-  it("says the imagery is a distant backdrop until plan 5 draws the Moon as a tileset", () => {
-    expect(c).toMatch(
-      /distant backdrop until plan 5 draws the Moon as a tileset/,
     );
   });
 });

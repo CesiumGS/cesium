@@ -32,6 +32,7 @@ import {
   type ScenarioEvaluation,
   type ScenarioEvaluator,
 } from "../examples/frames-explorer/scenarios/evaluate.ts";
+import { evaluateEarthTurns } from "../examples/frames-explorer/scenarios/earthTurns.ts";
 import type { ScenarioId } from "../examples/frames-explorer/scenarios/spec.ts";
 import type { AddedFrameSpec } from "../examples/frames-explorer/tree.ts";
 import {
@@ -150,7 +151,8 @@ afterEach(() => {
     port.close();
   }
   vi.unstubAllGlobals();
-  unregisterScenarioForTests("earth-turns");
+  // Back to the real evaluator, which registers as host.ts imports it (P4).
+  stubScenario("earth-turns", evaluateEarthTurns);
 });
 
 /** Registers `evaluator` for `id` in place of any evaluator it has. */
