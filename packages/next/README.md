@@ -46,7 +46,10 @@ derived excerpts of them (each pack's manifest names its source file, that
 file's SHA-256 and the span). The packs are written on your machine and never
 redistributed by this repository. Credit: EOP data is "IERS, via CelesTrak";
 leap seconds are "IERS"; the Artemis II files are "NASA JSC FOD Navigation,
-via NAIF" and the station SPK "NAIF/JPL". `--frames-span y0-y1` sets the excerpted years, both
+via NAIF" and the station SPK "NAIF/JPL". The DSN Now ranges in
+`test/fixtures/frames/dsnnow.json` (written by `node scripts/dsnNowFixture.mjs`
+from Internet Archive snapshots) are credited "NASA/JPL-Caltech DSN Now, via
+the Internet Archive". `--frames-span y0-y1` sets the excerpted years, both
 included (default `2000-2050`):
 `npm run setup --workspace @cesium/next -- --frames-span 2000-2050`.
 
