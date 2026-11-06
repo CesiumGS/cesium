@@ -132,13 +132,28 @@ describe("readDaf", () => {
     );
   });
 
-  it("throws for an unrecognized file id, including the pre-1995 NAIF/DAF", () => {
+  it("throws for an unrecognized file id", () => {
     const buf = writeSpk({
+      kind: "SPK",
+      idWord: "NOT/DAF ",
+      segments: [segment()],
+    });
+    expect(() => readDaf(buf)).toThrow('DAF: unrecognized file id "NOT/DAF"');
+  });
+
+  it("reads the pre-1995 NAIF/DAF id, telling SPK from PCK by the summary size", () => {
+    const spk = writeSpk({
       kind: "SPK",
       idWord: "NAIF/DAF",
       segments: [segment()],
     });
-    expect(() => readDaf(buf)).toThrow('DAF: unrecognized file id "NAIF/DAF"');
+    expect(readDaf(spk).kind).toBe("SPK");
+    const pck = writeSpk({
+      kind: "PCK",
+      idWord: "NAIF/DAF",
+      segments: [segment()],
+    });
+    expect(readDaf(pck).kind).toBe("PCK");
   });
 });
 

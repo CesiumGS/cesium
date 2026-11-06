@@ -44,7 +44,8 @@ export function parseDaf(buffer: ArrayBuffer): DafFile {
   const bytes = new Uint8Array(buffer);
   const view = new DataView(buffer);
   const id = ascii(bytes, 0, 8);
-  if (id !== "DAF/SPK " && id !== "DAF/PCK ") {
+  // "NAIF/DAF" is the pre-1995 id; SPICE still reads it and tells SPK from PCK by the summary size.
+  if (id !== "DAF/SPK " && id !== "DAF/PCK " && id !== "NAIF/DAF") {
     throw new Error(`DAF: unrecognized file id "${id.trimEnd()}"`);
   }
   const format = ascii(bytes, 88, 96).trimEnd();
