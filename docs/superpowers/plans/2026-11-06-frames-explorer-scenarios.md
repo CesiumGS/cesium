@@ -356,6 +356,11 @@ These four scenarios are buildable on today's library.
   - `jointChain.ts` is the example app's code, not the library's. It lives under `examples/` and uses only the public API: `new Frame(name, parent, toParent, { cache: false })`. Joint angles are state beyond the instant, so they take `cache: false` (Frame.ts:27-31).
   - The diagram marks these frames as defined by the app, distinct from the library's built-in frames. Reuse or rename the "added by this scenario" treatment so it reads "defined by your app".
   - The answer area offers a short "How these frames are defined" disclosure. It shows the 5–10 lines of app code that create one joint frame, taken from the source and rendered as text.
+  - **Accuracy is the app's to state (owner, 2026-11-06).** Each joint carries its encoder's angular accuracy and each link its length tolerance, from a synthetic spec sheet, labelled. Example values: ±0.005° per encoder and ±0.2 mm per link. The base placement carries its survey accuracy.
+    - Compose them to the tool: each joint's angular error times its lever arm (the distance from that joint to the tool), plus the link and base terms. Combine them as root-sum-square, and say so.
+    - The tool's stated accuracy then grows visibly as the arm extends. Show that in the answer, for example "±1.8 mm, most of it from the shoulder encoder".
+    - Test it against a hand computation at two arm poses.
+    - Prefer stating the accuracy on the app's `Frame` through a small library addition: an optional `accuracy` in the constructor's options, reusing the example's `EdgeAccuracy` shape, which moves into the library. Implement it only if it stays small and tested, and ledger the ruling. If not, state the accuracy in the example and record the gap.
   - **Library gaps:** record any in the report and in CESIUM2_WEBGPU_PLAN.md §13.14 "Carried forward". Implement one only if it is small and the scenario can't be honest without it, and ledger the ruling. Candidates:
     - a stated accuracy on an app-defined edge (today accuracy lives in the example's tree.ts, not on `Frame`);
     - a revision or change signal, so a state-dependent frame can stay cached and the renderer knows to redraw;
