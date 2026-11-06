@@ -6854,6 +6854,40 @@ with a brainstorm first:
 - **Flights between rigs need a defined hand-off,** for example the Earth to
   a lunar site: interpolate in a common frame, then re-attach.
 
+**Design space and the global view, with a morph between them (owner,
+2026-11-06).** An engineering model, such as an iModel in its design CRS,
+needs two ways to be seen:
+
+- **In isolation, in its native design space.** The render frame is the
+  engineering frame: design E, N and up as straight axes, in design units.
+  Straight design lines draw straight. Nothing is projected, and picking
+  reports design coordinates.
+- **In the global view.** The same model is drawn Earth-fixed and reprojected
+  through its recorded operation (4b's reprojected placement). It warps to fit
+  the ellipsoid, so design lines curve and grid north leans by the
+  convergence.
+
+A camera transition between the two morphs the content. The model warps from
+flat to fitted as the camera pulls out, and the terrain and imagery tiles
+under it start laid out flat in the design CRS and curve down onto the globe.
+
+- **Prior art:** CesiumJS 1.x's scene morph between 3D, Columbus view and 2D.
+  Columbus view is a flat projected world, and the morph animates each vertex
+  between its projected and 3D positions with a blend parameter. Here the
+  "flat" projection is the model's design CRS, not a fixed map projection.
+- **Per-vertex dual positions, or a GPU-side projection.** Each vertex needs
+  a design-space and an Earth-fixed position. Content has both. Terrain and
+  imagery tiles need their design-space positions too. PROJ per vertex is
+  too slow, so fit the projection per tile (affine or low-order polynomial),
+  with a stated error bound. The accuracy display (frames example R8) says
+  what the fit costs.
+- **What the camera does:** the rig's frame (above) changes from the
+  engineering frame to the Earth-fixed one across the morph. Heading follows
+  grid north at one end and true north at the other.
+- **Links:** 4b's rigid and reprojected placements are the two end states.
+  The frames example's rigid-vs-exact stop and its design grid with true
+  north are small versions of this picture.
+
 Camera rigs and render frames are one question from two sides: plan 5 is also
 where the world stops being drawn Earth-fixed (R6 of plans 2 and 3), so
 design them together. Open choices for the brainstorm: what holds still by
