@@ -1,6 +1,7 @@
 // @ts-check
 
-import { Check, DeveloperError, defined } from "@cesium/core";
+import { Check, defined } from "@cesium/core";
+import { getElement } from "@cesium/engine";
 import { knockout } from "@cesium/widgets";
 import EditorMeshTreeProvider from "./EditorMeshTreeProvider.js";
 import EditorOutlinerViewModel from "./EditorOutlinerViewModel.js";
@@ -34,23 +35,6 @@ function callCommand(command, ...args) {
   /** @type {function(...*): void} */ (/** @type {unknown} */ (command))(
     ...args,
   );
-}
-
-/**
- * @param {Element|string} container The element or its ID.
- * @returns {Element} The element.
- * @ignore
- */
-function getContainerElement(container) {
-  if (typeof container !== "string") {
-    return container;
-  }
-
-  const element = document.getElementById(container);
-  if (!defined(element)) {
-    throw new DeveloperError(`Element with id "${container}" does not exist.`);
-  }
-  return element;
 }
 
 /**
@@ -98,7 +82,7 @@ class EditorOutliner {
     Check.typeOf.object("editor", editor);
     //>>includeEnd('debug');
 
-    this.#container = getContainerElement(container);
+    this.#container = getElement(container);
 
     let provider = options?.provider;
     if (!defined(provider)) {
