@@ -10,10 +10,12 @@ import {
   CardHeader,
   CardMedia,
   CircularProgress,
+  IconButton,
   Link,
   Typography,
 } from "@mui/material";
 import { svgArrowLeft } from "@stratakit/icons/arrow-left";
+import { svgDismiss } from "@stratakit/icons/dismiss";
 import { Icon } from "@stratakit/mui";
 import {
   getRouteApi,
@@ -138,6 +140,9 @@ export function ExamplePage() {
   const engine = shared?.value;
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string>();
+  // The last example's undoing, when it threw: a notice of its own, kept
+  // until dismissed or the next leave (the run error is this example's).
+  const [leaveError, setLeaveError] = useState<string>();
   const [reactPanel, setReactPanel] = useState<RunPanel>();
   const [showSource, setShowSource] = useState(false);
   const [source, setSource] = useState<string>();
@@ -244,6 +249,23 @@ export function ExamplePage() {
         </Button>
       }
     >
+      {leaveError && (
+        <Alert
+          severity="warning"
+          className="examples-error"
+          action={
+            <IconButton
+              label="Dismiss"
+              onClick={() => setLeaveError(undefined)}
+            >
+              <Icon href={svgDismiss} />
+            </IconButton>
+          }
+        >
+          <AlertTitle>The last example didn't undo cleanly</AlertTitle>
+          {leaveError}
+        </Alert>
+      )}
       {error && (
         <Alert severity="error" className="examples-error">
           <AlertTitle>Could not run this example</AlertTitle>
@@ -301,6 +323,7 @@ export function ExamplePage() {
         host={host}
         box={panel}
         setError={setError}
+        setLeaveError={setLeaveError}
         setRunning={setRunning}
         setReactPanel={setReactPanel}
       />
@@ -350,6 +373,7 @@ function ExampleRunner({
   host,
   box,
   setError,
+  setLeaveError,
   setRunning,
   setReactPanel,
 }: {
@@ -358,6 +382,7 @@ function ExampleRunner({
   host: RefObject<HTMLDivElement | null>;
   box: RefObject<HTMLDivElement | null>;
   setError: (error: string | undefined) => void;
+  setLeaveError: (error: string | undefined) => void;
   setRunning: (running: boolean) => void;
   setReactPanel: (panel: RunPanel | undefined) => void;
 }) {
@@ -487,19 +512,29 @@ function ExampleRunner({
         () => viewer?.destroy(),
         releaseRun,
       ]);
-      if (errors.length > 0) {
-        // Reported as the example's error, not thrown into the router's
-        // boundary, and once this commit is done: on switching, the next
-        // run's start, later in it, clears the error (leaving the page
-        // drops it; the console still has it).
-        for (const e of errors) {
-          console.error(`Dyno: leaving the ${info.id} example`, e);
-        }
-        const text = `Leaving ${info.title} failed: ${message(errors[0])}`;
-        queueMicrotask(() => setError(text));
+      // Each leave's own notice (or none), set here, in the cleanup: not
+      // the run error, which the next run's start clears and its own
+      // failure sets; never thrown into the router's boundary. Leaving the
+      // page drops it with the page (the console still has it).
+      for (const e of errors) {
+        console.error(`Dyno: leaving the ${info.id} example`, e);
       }
+      setLeaveError(
+        errors.length > 0
+          ? `Leaving ${info.title}: ${message(errors[0])}`
+          : undefined,
+      );
     };
-  }, [shared, info, navigate, router, setError, setRunning, setReactPanel]);
+  }, [
+    shared,
+    info,
+    navigate,
+    router,
+    setError,
+    setLeaveError,
+    setRunning,
+    setReactPanel,
+  ]);
 
   return null;
 }
