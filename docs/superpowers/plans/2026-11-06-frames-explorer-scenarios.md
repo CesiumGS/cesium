@@ -360,9 +360,17 @@ These four scenarios are buildable on today's library.
     - Compose them to the tool: each joint's angular error times its lever arm (the distance from that joint to the tool), plus the link and base terms. Combine them as root-sum-square, and say so.
     - The tool's stated accuracy then grows visibly as the arm extends. Show that in the answer, for example "±1.8 mm, most of it from the shoulder encoder".
     - Test it against a hand computation at two arm poses.
-    - Prefer stating the accuracy on the app's `Frame` through a small library addition: an optional `accuracy` in the constructor's options, reusing the example's `EdgeAccuracy` shape, which moves into the library. Implement it only if it stays small and tested, and ledger the ruling. If not, state the accuracy in the example and record the gap.
+    - **The library composes; the app only declares (owner, 2026-11-06: "seems easy for a user to screw up").** Task 7b adds, under `src/frames/`, with tests:
+      - an optional `accuracy` in `Frame`'s constructor options. It reuses the example's `EdgeAccuracy` shape, moved into the library: `{ radians?, meters?, byDefinition?, note }`, or "not stated". The built-in edges and the example's tree.ts take their accuracies from it, so there is one source of truth.
+      - a first-order point composer, for example `pointAccuracy(point, from, to, instant)`. It returns `{ meters | undefined, terms: { frame, meters, note }[], unboundedBy?: frameName }`.
+        - Each angular term is scaled by its lever arm: the point's distance from that edge's rotation origin.
+        - Metre terms add directly.
+        - Terms combine root-sum-square, and the result says so.
+        - An unbounded edge makes the total unbounded and names that edge. It is never dropped.
+        - This generalises the example's `accuracyOf`, which moves into it.
+      - The arm, and the scenarios already on screen, use it. The answer names the dominant term. Test it against hand computations: two arm poses, plus earth-turns' existing angular case.
+      - Confidence levels, correlated terms and per-direction error ellipsoids are plan 5 (CESIUM2_WEBGPU_PLAN.md §13.14). Don't build them here; mark every value as 1σ for now, as the example already does.
   - **Library gaps:** record any in the report and in CESIUM2_WEBGPU_PLAN.md §13.14 "Carried forward". Implement one only if it is small and the scenario can't be honest without it, and ledger the ruling. Candidates:
-    - a stated accuracy on an app-defined edge (today accuracy lives in the example's tree.ts, not on `Frame`);
     - a revision or change signal, so a state-dependent frame can stay cached and the renderer knows to redraw;
     - velocities (plan 3).
 - **robot-arm:**
