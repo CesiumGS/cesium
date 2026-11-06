@@ -5,6 +5,7 @@ import {
   redirect,
 } from "@tanstack/react-router";
 import { loadRuns } from "./data.ts";
+import { searchToParams } from "./views/exampleRun.ts";
 import { Shell, ShellError, ShellPending } from "./shell.tsx";
 
 /**
@@ -225,6 +226,9 @@ export const examplesRoute = createRoute({
 export const exampleRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/examples/$id",
+  // Free-form text, the example's own (its deep links); `/examples/$id`
+  // links carry none, so switching examples clears them.
+  validateSearch: (s: Record<string, unknown>) => searchToParams(s),
   component: lazyRouteComponent(
     () => import("./views/Examples.tsx"),
     "ExamplePage",
