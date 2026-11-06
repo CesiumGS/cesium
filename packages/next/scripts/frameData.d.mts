@@ -29,3 +29,12 @@ export function ensureFresh(
   log: (line: string) => void,
   validate: (text: string) => void,
 ): Promise<Buffer>;
+/** The wanted entries of a gzipped ustar archive, path to bytes. */
+export function extractTar(
+  gz: Uint8Array,
+  wanted: readonly string[],
+): Map<string, Uint8Array>;
+/** The previous manifest's `files`, or `[]` when absent, unreadable or file-less. */
+export function readPreviousFiles(
+  dir: string,
+): { file: string; role: string; sha256: string }[];

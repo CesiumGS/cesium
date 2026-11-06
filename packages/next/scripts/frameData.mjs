@@ -193,7 +193,8 @@ export function extractTar(gz, wanted) {
     }
     const prefix = text(at + 345, 155);
     const name = (prefix ? `${prefix}/` : "") + text(at, 100);
-    const size = parseInt(text(at + 124, 12).trim() || "0", 8);
+    const sizeField = text(at + 124, 12).trim() || "0";
+    const size = /^[0-7]+$/.test(sizeField) ? parseInt(sizeField, 8) : NaN;
     const type = String.fromCharCode(tar[at + 156] || 0x30);
     if (!Number.isFinite(size)) {
       throw new Error(`tar: bad size in the header of ${name}`);
@@ -430,6 +431,21 @@ function buildPack(source, bytes, wanted, frame, kind, span, leap) {
 }
 
 /**
+ * The previous manifest's `files` entries, or `[]` when there is no manifest,
+ * it is unreadable, or it has no `files` array: everything is fetched again.
+ */
+export function readPreviousFiles(dir) {
+  try {
+    const { files } = JSON.parse(
+      readFileSync(join(dir, "manifest.json"), "utf8"),
+    );
+    return Array.isArray(files) ? files : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
  * Download, verify and excerpt everything into the store, and write
  * `manifest.json`. `span` is `[y0, y1]`, both years included.
  */
@@ -458,14 +474,7 @@ export async function ensureFrameData({ span }, log = console.log) {
       credit: source.credit,
     });
   }
-  let previousFiles = [];
-  try {
-    previousFiles = JSON.parse(
-      readFileSync(join(dir, "manifest.json"), "utf8"),
-    ).files;
-  } catch {
-    // No manifest yet (or an unreadable one): everything is fetched again.
-  }
+  const previousFiles = readPreviousFiles(dir);
   const projEntries = await ensureProj(dir, previousFiles, log);
   const leapBytes = await ensureFresh(dir, SOURCES.leapSeconds, log, (text) =>
     LeapSeconds.fromIers(text),

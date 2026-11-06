@@ -167,6 +167,22 @@ export {
   type VerticalProfile,
 } from "./engineering/alignment.ts";
 export { fresnel } from "./engineering/fresnel.ts";
+export {
+  loadProj,
+  type LoadProjOptions,
+  type ProjApi,
+} from "./engineering/proj.ts";
+export {
+  crsDefinition,
+  crsUnits,
+  MOON_GEOGRAPHIC_CRS,
+  resolveOperation,
+  type CrsRef,
+  type CrsUnits,
+  type RecordedOperation,
+  type ResolveOptions,
+} from "./engineering/crs.ts";
+export { gridFactors, type GridFactors } from "./engineering/factors.ts";
 export { eastNorthUpToFixedFrame } from "./math/transforms.ts";
 export * as vec3 from "./math/vec3.ts";
 export * as mat4 from "./math/mat4.ts";
