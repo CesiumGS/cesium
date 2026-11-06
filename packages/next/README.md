@@ -51,8 +51,9 @@ via NAIF" and the station SPK "NAIF/JPL". The DSN Now ranges in
 from Internet Archive snapshots) are credited "NASA/JPL-Caltech DSN Now, via
 the Internet Archive". DSN Now shows one range per spacecraft, the same at
 every dish. It agrees with our per-dish light-time ranges within 5.7% and
-with no geometry better, so it is only a 30% sanity check here. `--frames-span y0-y1` sets the excerpted years, both
-included (default `2000-2050`):
+with no geometry better, so it is only a 30% sanity check here.
+
+`--frames-span y0-y1` sets the excerpted years, both included (default `2000-2050`):
 `npm run setup --workspace @cesium/next -- --frames-span 2000-2050`.
 
 The dev server serves the store at `/frames-data/`, so restart it after a
@@ -64,9 +65,9 @@ compare against the real store (they need setup to have run). Without a store,
 data loaded, `createFrames(data)` builds the frame tree. Every frame is a
 `Frame` with a name, a parent and a float64 transform that depends on the
 instant. Positions only: velocities do not transform. Every edge is a
-translation and a rotation except two: `gcrf` to `icrf` (see the next
-paragraph) and the Moon's, which stays Newtonian (the lunar relativistic
-terms are 3 cm or less at its surface and appear in the accuracy statement).
+translation and a rotation except `gcrf` to `icrf`, which also scales (eq.
+11.19, see below). The Moon's edge applies no relativistic terms: they are
+3 cm or less at its surface, and the accuracy statement lists them.
 
 | Frame       | Name         | Parent      | What it is                                                                         |
 | ----------- | ------------ | ----------- | ---------------------------------------------------------------------------------- |
@@ -147,10 +148,13 @@ guesses: the Artemis OEM has none, so pass `interpolation: { method:
 takes two `FramePoint`s and returns a `Measurement`:
 
 ```ts
+// `dss43Frame` is a frame on the station (from the station SPK, for
+// instance) and `orion` a Trajectory, as above; both are defined elsewhere.
+const leap = frames.data.leapSeconds;
 const m = measure(
   framePoint(dss43Frame, [0, 0, 0]), // the station
   framePoint(orion.frame, [0, 0, 0]), // the spacecraft
-  Instant.fromUtc("2026-04-06T23:30:00Z"),
+  Instant.fromIso("2026-04-06T23:30:00", "UTC", leap),
   frames,
   { frequency: 2216.5e6 },
 );
@@ -196,7 +200,7 @@ of `accuracy.terms`, each a 1σ in meters with a `source` (`ephemeris`,
 `undefined`, never small: a trajectory with no covariance and no
 `positionSigma` does this, and the term names it. Earth orientation is 35 µs
 of UT1 and 0.1 mas of polar motion where the EOP are measured; past
-`EOP.lastObserved` they grow by IERS Bulletin A's prediction formulas
+`eop.lastObserved` they grow by IERS Bulletin A's prediction formulas
 (`0.00068 · d^0.80` arcsec, `0.00025 · d^0.75` s, d in days) and never fall
 below the measured values. Degraded EOP gives no number. `coordinateScale`
 is OEM data's unstated TT/TDB ambiguity, 2.5e-8 of the geocentric distance.
@@ -207,7 +211,7 @@ orientation 0.014 m, the ephemeris 0.01 m and light time 0.001 m.
 **Artemis covariance units.** CCSDS says OEM covariance is in km and km².
 Orion's file writes m². Read as km², its velocity sigmas would be about
 12 m/s, which is implausible for a reconstructed trajectory. In m² they are
-0.012 m/s and the position sigma is 0.49 m at the 2026-04-06 flyby (50.35 m
+0.012 m/s and the position sigma is 0.49 m at 2026-04-06T15:08:26 UTC (50.35 m
 at the start of the flight). So pass `covarianceUnits: "m"` to
 `Trajectory.fromOem` for it. The default stays `"km"`, as the standard says.
 
