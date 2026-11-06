@@ -321,17 +321,17 @@ function candidateList(
     areaOfInterest === undefined ? undefined : checkedArea(areaOfInterest);
   const from = create(proj, source, "the source CRS");
   const to = create(proj, target, "the target CRS");
-  const context = proj.proj_create_operation_factory_context("");
-  if (area !== undefined) {
-    proj.proj_operation_factory_context_set_area_of_interest(
-      context,
-      area.west,
-      area.south,
-      area.east,
-      area.north,
-    );
-  }
   try {
+    const context = proj.proj_create_operation_factory_context("");
+    if (area !== undefined) {
+      proj.proj_operation_factory_context_set_area_of_interest(
+        context,
+        area.west,
+        area.south,
+        area.east,
+        area.north,
+      );
+    }
     return {
       candidates: proj.proj_create_operations(from, to, context),
     };

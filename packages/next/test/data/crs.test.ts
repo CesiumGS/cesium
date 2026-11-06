@@ -574,12 +574,78 @@ describe("an area of interest (ruling F8)", () => {
     }
   });
 
-  it("accepts a box across 180° (west greater than east)", async () => {
+  it("reads a box across 180° (west greater than east) as across it", async () => {
     const P = await loadProj({ base });
-    // Fiji 1986 (EPSG:4720) spans the antimeridian.
-    const candidates = listOperations(P, ref("EPSG:4720"), geographic3d, {
-      areaOfInterest: { west: 179.5, south: -17.5, east: -179.5, north: -16.5 },
+    const fiji = ref("EPSG:4720");
+    const accurate = (areaOfInterest: {
+      west: number;
+      south: number;
+      east: number;
+      north: number;
+    }) =>
+      listOperations(P, fiji, geographic3d, { areaOfInterest }).filter(
+        (c) => !c.ballpark,
+      );
+    // Fiji 1986 to WGS 84 (1) spans 180°: its area's west exceeds its east.
+    const inside = accurate({
+      west: 179.5,
+      south: -17.5,
+      east: -179.5,
+      north: -16.5,
     });
-    expect(candidates.length).toBeGreaterThan(0);
+    expect(inside.length).toBeGreaterThan(0);
+    for (const c of inside) {
+      expect(c.areaOfUse!.west).toBeGreaterThan(c.areaOfUse!.east);
+    }
+    // The same 1°-wide box across 180° at 51°N, and a box west of Fiji's
+    // area, leave only the ballpark: the box is read as 1° wide, not 359°.
+    expect(
+      accurate({ west: 179.5, south: 51, east: -179.5, north: 52 }),
+    ).toEqual([]);
+    expect(
+      accurate({ west: 170, south: -17.5, east: 175, north: -16.5 }),
+    ).toEqual([]);
+  });
+
+  it("reports a failing factory context or area setter as a listing failure, with its cause", () => {
+    const failure = new Error("context failed");
+    const stub = (overrides: Partial<Record<keyof ProjApi, unknown>>) =>
+      ({
+        proj_create: () => ({}),
+        proj_get_name: () => "CRS",
+        proj_as_proj_string: () => "+proj=noop",
+        PJ_PROJ_5: 1,
+        proj_create_operation_factory_context: () => ({}),
+        proj_operation_factory_context_set_area_of_interest: () => undefined,
+        proj_create_operations: () => ({ length: () => 0, get: () => ({}) }),
+        ...overrides,
+      }) as unknown as ProjApi;
+    const box = { west: 2.9, south: 55.9, east: 3.1, north: 56.1 };
+    for (const broken of [
+      stub({
+        proj_create_operation_factory_context: () => {
+          throw failure;
+        },
+      }),
+      stub({
+        proj_operation_factory_context_set_area_of_interest: () => {
+          throw failure;
+        },
+      }),
+    ]) {
+      let thrown: unknown;
+      try {
+        listOperations(broken, ed50, geographic3d, { areaOfInterest: box });
+      } catch (error) {
+        thrown = error;
+      }
+      expect((thrown as Error).message).toMatch(
+        /could not list the operations/,
+      );
+      expect((thrown as Error).cause).toBe(failure);
+      expect(() =>
+        resolveOperation(broken, ed50, "EPSG:4979", { areaOfInterest: box }),
+      ).toThrow(/offers no usable operation/);
+    }
   });
 });

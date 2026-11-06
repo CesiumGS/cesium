@@ -157,9 +157,9 @@ const number = (n: WktNode | undefined, index: number): number | undefined => {
   return typeof a === "number" ? a : undefined;
 };
 
-/** A node's ID["EPSG", code], when it has one. */
+/** A node's ID["EPSG", code] (WKT2) or AUTHORITY["EPSG", "code"] (WKT1), when it has one. */
 export function epsgId(n: WktNode): number | undefined {
-  for (const id of children(n, "ID")) {
+  for (const id of [...children(n, "ID"), ...children(n, "AUTHORITY")]) {
     if (text(id, 0)?.toUpperCase() === "EPSG") {
       const code = id.args[1];
       const value = typeof code === "number" ? code : Number(code);
@@ -181,9 +181,10 @@ export function sourceCrsNode(root: WktNode): WktNode {
   return root;
 }
 
-/** An ELLIPSOID node's semi-major axis (m) and flattening (a sphere has 1/f = 0). */
+/** An ELLIPSOID (WKT2) or SPHEROID (WKT1) node's semi-major axis (m) and flattening (a sphere has 1/f = 0). */
 export function ellipsoidOfNode(n: WktNode | undefined) {
-  const e = n === undefined ? undefined : find(n, "ELLIPSOID");
+  const e =
+    n === undefined ? undefined : (find(n, "ELLIPSOID") ?? find(n, "SPHEROID"));
   const a = number(e, 1);
   const rf = number(e, 2);
   if (e === undefined || a === undefined || rf === undefined) {
@@ -202,7 +203,11 @@ export function axisMetres(crs: WktNode): number | undefined {
       return unit;
     }
   }
-  return number(children(crs, "LENGTHUNIT")[0], 1);
+  // WKT2's CRS-wide LENGTHUNIT, or WKT1's UNIT.
+  return (
+    number(children(crs, "LENGTHUNIT")[0], 1) ??
+    number(children(crs, "UNIT")[0], 1)
+  );
 }
 
 /** The bound CRS's abridged transformation, read from the WKT's own numbers. */
@@ -240,13 +245,67 @@ const POSITION_VECTOR = [9606, 1033, 9603, 1031];
 const COORDINATE_FRAME = [9607, 1032];
 const GEOCENTRIC_DOMAIN = [1031, 1032, 1033];
 
+/** Within this of 1 a scale is a factor (1 + dS); below it in size, a difference dS. */
+const SCALE_FORMS = 0.01;
+
 /**
- * The TOWGS84 of a WKT2 BOUNDCRS (its ABRIDGEDTRANSFORMATION), or undefined
- * when it carries none. ISO 19162:2019 §15.5.2: an abridged transformation's
- * parameters with no unit are in metres and arc-seconds, and its scale
- * difference is then given as the scale factor itself (1 + dS); a stated
- * LENGTHUNIT, ANGLEUNIT or SCALEUNIT is honoured. Throws for a method that is
- * not a Helmert.
+ * The scale difference dS of a scale parameter in its unit (unity when none
+ * is stated). ISO 19162:2019 §15.5.2 writes an abridged transformation's
+ * scale as the factor 1 + dS (PROJ writes 0.999979511 for −20.489 ppm, and
+ * reads a unity value the same way); a difference in ppm or parts per
+ * billion is the difference itself. So the value in unity near 1 is a factor,
+ * and a small one a difference; anything else is refused.
+ */
+function scaleDifference(value: number, unit: number | undefined): number {
+  const unity = value * (unit ?? 1);
+  if (Math.abs(unity - 1) < SCALE_FORMS) {
+    return unity - 1;
+  }
+  if (Math.abs(unity) < SCALE_FORMS) {
+    return unity;
+  }
+  throw new Error(
+    `the bound CRS's scale difference ${value} (${unity} in unity) is neither a factor near 1 nor a small difference`,
+  );
+}
+
+/**
+ * WKT1's TOWGS84[dx, dy, dz(, rx, ry, rz, ds)]: OGC 01-009 and GDAL read it
+ * as EPSG 9606, the position vector convention, in metres, arc-seconds and
+ * ppm, to WGS 84.
+ */
+function wkt1Towgs84(node: WktNode): Towgs84 {
+  const v = node.args.map((a) => (typeof a === "number" ? a : Number.NaN));
+  if (!(v.length === 3 || v.length === 7) || !v.every(Number.isFinite)) {
+    throw new Error(
+      `WKT1 TOWGS84 needs 3 or 7 numbers, got ${node.args.length}`,
+    );
+  }
+  return {
+    method: "WKT1 TOWGS84 (position vector, EPSG 9606)",
+    methodCode: 9606,
+    parameters: {
+      tx: v[0]!,
+      ty: v[1]!,
+      tz: v[2]!,
+      rx: (v[3] ?? 0) * ARCSECOND,
+      ry: (v[4] ?? 0) * ARCSECOND,
+      rz: (v[5] ?? 0) * ARCSECOND,
+      ds: (v[6] ?? 0) * 1e-6,
+    },
+    convention: "position-vector",
+    keepsHeight: true,
+    printed: `TOWGS84[${v.join(", ")}]`,
+  };
+}
+
+/**
+ * The TOWGS84 of a WKT2 BOUNDCRS (its ABRIDGEDTRANSFORMATION) or of a WKT1
+ * datum's TOWGS84[...], or undefined when it carries none. ISO 19162:2019
+ * §15.5.2: an abridged transformation's parameters with no unit are in
+ * metres and arc-seconds; a stated LENGTHUNIT or ANGLEUNIT is honoured; the
+ * scale is read by `scaleDifference`. Throws for a method that is not a
+ * Helmert.
  */
 export function towgs84Of(root: WktNode): Towgs84 | undefined {
   const bound = find(root, "BOUNDCRS");
@@ -255,7 +314,8 @@ export function towgs84Of(root: WktNode): Towgs84 | undefined {
       ? undefined
       : children(bound, "ABRIDGEDTRANSFORMATION")[0];
   if (abridged === undefined) {
-    return undefined;
+    const wkt1 = bound === undefined ? find(root, "TOWGS84") : undefined;
+    return wkt1 === undefined ? undefined : wkt1Towgs84(wkt1);
   }
   const method = children(abridged, "METHOD")[0];
   const methodName = text(method, 0) ?? "";
@@ -301,7 +361,7 @@ export function towgs84Of(root: WktNode): Towgs84 | undefined {
     if (key === "tx" || key === "ty" || key === "tz") {
       values[key] = value * (length ?? 1);
     } else if (key === "ds") {
-      values.ds = scale !== undefined ? value * scale : value - 1;
+      values.ds = scaleDifference(value, scale);
     } else {
       values[key] = value * (angle ?? ARCSECOND);
     }
@@ -316,6 +376,18 @@ export function towgs84Of(root: WktNode): Towgs84 | undefined {
     ),
     printed: shown.join(", "),
   };
+}
+
+/** The name of a BOUNDCRS's transformation method, when it has one. */
+export function boundMethodName(root: WktNode): string | undefined {
+  const bound = find(root, "BOUNDCRS");
+  const abridged =
+    bound === undefined
+      ? undefined
+      : children(bound, "ABRIDGEDTRANSFORMATION")[0];
+  const method =
+    abridged === undefined ? undefined : children(abridged, "METHOD")[0];
+  return text(method, 0);
 }
 
 /** A USAGE BBOX's centre (longitude, latitude), when the WKT has one. */
@@ -341,10 +413,8 @@ export function bboxCentre(root: WktNode): [number, number] | undefined {
 
 /** The projection's origin (longitude, latitude) from its PARAMETERs, when stated. */
 export function projectionOrigin(crs: WktNode): [number, number] | undefined {
-  const conversion = find(crs, "CONVERSION");
-  if (conversion === undefined) {
-    return undefined;
-  }
+  // WKT2 keeps the parameters in a CONVERSION; WKT1 on the PROJCS itself.
+  const conversion = find(crs, "CONVERSION") ?? crs;
   let lon: number | undefined;
   let lat: number | undefined;
   for (const p of children(conversion, "PARAMETER")) {
@@ -352,13 +422,18 @@ export function projectionOrigin(crs: WktNode): [number, number] | undefined {
     const value = number(p, 1);
     if (
       name.startsWith("longitude of natural origin") ||
-      name.startsWith("longitude of false origin")
+      name.startsWith("longitude of false origin") ||
+      name === "central_meridian" ||
+      name === "longitude_of_center" ||
+      name === "longitude_of_origin"
     ) {
       lon = value;
     }
     if (
       name.startsWith("latitude of natural origin") ||
-      name.startsWith("latitude of false origin")
+      name.startsWith("latitude of false origin") ||
+      name === "latitude_of_origin" ||
+      name === "latitude_of_center"
     ) {
       lat = value;
     }

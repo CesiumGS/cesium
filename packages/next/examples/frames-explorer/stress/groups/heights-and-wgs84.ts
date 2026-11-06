@@ -111,7 +111,7 @@ const ensembleCase = stressCase(
 const heightsCase = stressCase(
   "heights-and-wgs84.three-heights",
   "heights-and-wgs84",
-  "Three heights at GU2195 through the California frame (EPSG:6420+6360 with GEOID18): the ellipsoid height to the NAVD88 height against the datasheet's h − N within 1 mm, the geoid separation against the datasheet's GEOID18 height within 2%, and the datasheet's own leveled NAVD88 height shown beside it",
+  "Three heights at GU2195 through the California frame (EPSG:6420+6360 with GEOID18): the ellipsoid height to the NAVD88 height against the datasheet's h − N within 1 mm, the geoid separation shown beside the datasheet's GEOID18 height, and the datasheet's own leveled NAVD88 height shown beside it",
   ["proj", "geoid"],
   async (ctx, base) => {
     const { mark, lat, lon, h } = gu2195();
@@ -143,10 +143,9 @@ const heightsCase = stressCase(
         ...base,
         id: `${base.id}.separation`,
         title:
-          "The geoid separation (ellipsoid height − NAVD88 height) against the datasheet's GEOID18 height, within 2%",
+          "The geoid separation (ellipsoid height − NAVD88 height) beside the datasheet's GEOID18 height (shown, not judged: the NAVD88 row above checks it to 1.1 mm)",
         pass: true,
-        value: Math.abs(separation / N.value - 1),
-        tolerance: EFFECT,
+        displayOnly: true,
         detail: `library ${fmt(separation, 6)} m, datasheet ${mark.geoidHeight} m`,
         effect: {
           value: separation,
