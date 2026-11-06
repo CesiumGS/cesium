@@ -66,7 +66,7 @@ class MeshEditorStyle {
      *
      * @type {Color}
      */
-    this.selectedEdgeColor = new Color(0.0, 0.78, 1.0, 1.0);
+    this.selectedEdgeColor = new Color(1.0, 1.0, 1.0, 1.0);
 
     /**
      * The color of unselected faces.
@@ -80,7 +80,7 @@ class MeshEditorStyle {
      *
      * @type {Color}
      */
-    this.selectedFaceColor = new Color(1.0, 0.16, 0.58, 1.0);
+    this.selectedFaceColor = new Color(0.86, 0.75, 0.56, 1.0);
 
     /**
      * The width of the outline around selected meshes, outside their
@@ -89,7 +89,7 @@ class MeshEditorStyle {
      * @type {number}
      * @default 2.0
      */
-    this.outlineWidth = 2.0;
+    this.outlineWidth = 3.0;
 
     /**
      * The color of the outline around selected meshes.
