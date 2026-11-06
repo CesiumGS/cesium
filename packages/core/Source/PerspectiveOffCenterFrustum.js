@@ -121,6 +121,13 @@ class PerspectiveOffCenterFrustum {
     return this._infinitePerspective;
   }
 
+  static #computeCullingVolumeScratch = {
+    getPlanesRight: new Cartesian3(),
+    getPlanesNearCenter: new Cartesian3(),
+    getPlanesFarCenter: new Cartesian3(),
+    getPlanesNormal: new Cartesian3(),
+  };
+
   /**
    * Creates a culling volume for this frustum.
    *
@@ -148,6 +155,13 @@ class PerspectiveOffCenterFrustum {
       throw new DeveloperError("up is required.");
     }
     //>>includeEnd('debug');
+
+    const {
+      getPlanesRight,
+      getPlanesNearCenter,
+      getPlanesFarCenter,
+      getPlanesNormal,
+    } = PerspectiveOffCenterFrustum.#computeCullingVolumeScratch;
 
     const planes = this._cullingVolume.planes;
 
@@ -507,8 +521,4 @@ function update(frustum) {
   );
 }
 
-const getPlanesRight = new Cartesian3();
-const getPlanesNearCenter = new Cartesian3();
-const getPlanesFarCenter = new Cartesian3();
-const getPlanesNormal = new Cartesian3();
 export default PerspectiveOffCenterFrustum;
