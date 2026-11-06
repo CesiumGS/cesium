@@ -300,11 +300,11 @@ Plan 4b later adds three things here:
       | Lens | Groups |
       | --- | --- |
       | Civil | Site grids, Units, Measurement, Reference values, Vertical profile, Distortion, Rigid placement budget, Below the ellipsoid, Heights and WGS84 |
-      | BIM | Site grids, IFC map conversion, Rigid placement budget, Recorded operations, Units, Reproducibility |
-      | GIS | Projections, Distortion, Axes and the antimeridian, Operation candidates, Coordinate epoch, Heights and WGS84 |
+      | BIM | Site grids, IFC map conversion, Bound CRSs, Rigid placement budget, Recorded operations, Units, Reproducibility |
+      | GIS | Projections, Distortion, Axes and the antimeridian, Operation candidates, Bound CRSs, Coordinate epoch, Heights and WGS84 |
       | Space | Frame tree, Time, Trajectory, Space, Lunar time |
       | Timing | Time, Time scales, Lunar time |
-      | Offshore | Operation candidates, Recorded operations, Projections, Reproducibility |
+      | Offshore | Operation candidates, Bound CRSs, Recorded operations, Projections, Reproducibility |
       | AV | Plate motion, Coordinate epoch, Heights and WGS84 |
 
   - **`runStress(ctx: StressContext, options?: { signal?: AbortSignal; onResult?: (r: StressResult) => void; ids?: readonly string[] }): Promise<StressResult[]>`.**
@@ -401,6 +401,22 @@ Plan 4b later adds three things here:
     - **NAD83(2011) against ITRF2014** at epoch 2026.0 at the California datasheet point: about 1–2 m. Effect size, checked against the "Coordinate epoch" group's hand-coded Helmert.
     - **"WGS84":** given as EPSG:4326, a datum ensemble, its operation accuracy shows at least 2 m, and the row says why.
     - **Three heights at the California datasheet point:** the ellipsoid height, and the NAVD88 height through GEOID18, against the datasheet. Plan 4b adds EGM96.
+  - **"Bound CRSs"** (BIM, GIS and offshore: what GDAL and iModels export when a datum carries TOWGS84, and what a 3D Tiles 2.0 `EXT_geospatial_crs_wkt2` may hold):
+    - **The inputs:** WKT2 `BOUNDCRS` strings for three projected CRSs, each with realistic TOWGS84:
+      - ED50 / UTM 31N, about 180 m;
+      - Tokyo (−146.414, 507.337, 680.507), about 860 m;
+      - OSGB 1936 with its 7-parameter Helmert.
+
+      Store them as input fixtures in `references.json`, citing what exported them: GDAL's `gdalsrsinfo -o wkt2` with its version, or a real iModel export if one is at hand. They're inputs, not expected values, so R10's no-PROJ rule doesn't apply to them.
+    - **Checks:**
+      - The engineering frame's units, type and grid factors come from the source CRS.
+      - The recorded operation is the bound Helmert, not PROJ's registry choice.
+      - The forward result matches a hand-coded position-vector Helmert (EPSG method 9606) within 1 mm. Share the hand-coded Helmert with the "Coordinate epoch" group.
+      - The round trip holds within 1e-6 m at h = 0, 100 and 1000 m.
+    - **The same check for plain EPSG codes** whose operation is a geocentric Helmert: EPSG:30169 (Tokyo) and EPSG:26741. Plan 4a's last review found these round trips off by up to 2.8 mm, from PROJ's push/pop of the height around a 2D Helmert. 4a fixes this by refining the inverse, and this group guards that fix.
+    - **Effect sizes:**
+      - the distance between the bound-Helmert result and PROJ's best registry operation for the same point. This shows why a TOWGS84 shortcut can be meters worse than the registry's grid;
+      - the bound frame's accuracy, shown as "not bounded", with its reason (R8).
   - **"Time scales"** (timing and telecom):
     - **The offsets:** GPS time = TAI − 19 s and TT = TAI + 32.184 s exactly, from `Instant.tai()`.
     - **Across 2016-12-31T23:59:60 UTC:** GPS − UTC steps from 17 s to 18 s, and GPS time stays continuous.
