@@ -49,6 +49,12 @@ export interface ExampleContext {
   watchParams(
     callback: (params: Readonly<Record<string, string>>) => void,
   ): () => void;
+  /**
+   * An absolute URL that opens this example with exactly `params`
+   * (undefined and empty ones dropped), for a "Copy link" button: the host
+   * builds it, so the example needn't know the page's address or routes.
+   */
+  link(params: Readonly<Record<string, string | undefined>>): string;
 }
 
 /** Removes what `run` added. */

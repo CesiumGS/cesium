@@ -1,6 +1,14 @@
+import {
+  createHashHistory,
+  createRootRoute,
+  createRoute,
+  createRouter,
+} from "@tanstack/react-router";
 import { describe, expect, it, vi } from "vitest";
+import { parseSearch, stringifySearch } from "../bench/suite/search.ts";
 import {
   createParamsStore,
+  exampleLink,
   mergeParams,
   normalizeRun,
   searchToParams,
@@ -102,5 +110,82 @@ describe("normalizeRun", () => {
   it("passes { dispose, panel } through", () => {
     const given = { dispose: () => {}, panel: "controls" };
     expect(normalizeRun(given)).toBe(given);
+  });
+});
+
+describe("exampleLink", () => {
+  // Dyno's own router setup: hash history (over a stand-in window, at a
+  // page under a subpath), the app's plain-string search, and the
+  // example route's validation.
+  function dynoRouter(page = "https://host.test/dyno/index.html") {
+    const url = new URL(page);
+    const win = {
+      location: {
+        pathname: url.pathname,
+        search: "",
+        hash: "#/examples/other?keep=1",
+      },
+      history: {
+        state: { __TSR_key: "k", key: "k", __TSR_index: 0 },
+        pushState() {},
+        replaceState() {},
+      },
+      addEventListener() {},
+      removeEventListener() {},
+    };
+    const root = createRootRoute();
+    const example = createRoute({
+      getParentRoute: () => root,
+      path: "/examples/$id",
+      validateSearch: (s: Record<string, unknown>) => searchToParams(s),
+    });
+    return createRouter({
+      routeTree: root.addChildren([example]),
+      parseSearch,
+      stringifySearch,
+      history: createHashHistory({ window: win as unknown as Window }),
+    });
+  }
+
+  it("builds an absolute link to the example with exactly the given params", () => {
+    const router = dynoRouter();
+    expect(
+      exampleLink(
+        router,
+        "frames-explorer",
+        { select: "result:space.lunar-time", lens: "space" },
+        "https://host.test/dyno/index.html",
+      ),
+    ).toBe(
+      "https://host.test/dyno/index.html#/examples/frames-explorer?select=result%3Aspace.lunar-time&lens=space",
+    );
+  });
+
+  it("drops undefined and empty params, and links to the bare example without any", () => {
+    const router = dynoRouter();
+    const base = "https://host.test/dyno/index.html";
+    expect(
+      exampleLink(
+        router,
+        "frames-explorer",
+        { tour: undefined, lens: "" },
+        base,
+      ),
+    ).toBe("https://host.test/dyno/index.html#/examples/frames-explorer");
+    expect(exampleLink(router, "translucency", {}, base)).toBe(
+      "https://host.test/dyno/index.html#/examples/translucency",
+    );
+  });
+
+  it("round-trips a numeric-looking value as the same text", () => {
+    const router = dynoRouter();
+    const link = exampleLink(
+      router,
+      "frames-explorer",
+      { n: "1.50" },
+      "https://host.test/dyno/index.html",
+    );
+    const query = link.split("?")[1]!;
+    expect(searchToParams(parseSearch(query))).toEqual({ n: "1.50" });
   });
 });

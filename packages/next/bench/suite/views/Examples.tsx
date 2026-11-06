@@ -15,7 +15,11 @@ import {
 } from "@mui/material";
 import { svgArrowLeft } from "@stratakit/icons/arrow-left";
 import { Icon } from "@stratakit/mui";
-import { getRouteApi, Link as RouterLink } from "@tanstack/react-router";
+import {
+  getRouteApi,
+  Link as RouterLink,
+  useRouter,
+} from "@tanstack/react-router";
 import {
   type ReactNode,
   type RefObject,
@@ -33,6 +37,7 @@ import { Empty, Page, Section } from "./common.tsx";
 import { ExampleSwitcher, ExampleThumbnail } from "./ExampleSwitcher.tsx";
 import {
   createParamsStore,
+  exampleLink,
   normalizeRun,
   type Params,
   searchToParams,
@@ -350,6 +355,7 @@ function ExampleRunner({
   setReactPanel: (panel: RunPanel | undefined) => void;
 }) {
   const navigate = exampleRoute.useNavigate();
+  const router = useRouter();
   // The URL's params for the running example: they reach it through its
   // store (the first at start, later ones as back and forward).
   const search = searchToParams(exampleRoute.useSearch());
@@ -424,6 +430,8 @@ function ExampleRunner({
             params: params.params,
             setParams: params.setParams,
             watchParams: params.watch,
+            link: (next) =>
+              exampleLink(router, info.id, next, window.location.href),
           }),
         );
         if (signal.aborted) {
@@ -462,7 +470,7 @@ function ExampleRunner({
       boxElement.replaceChildren();
       viewer?.destroy();
     };
-  }, [engine, info, navigate, setError, setRunning, setReactPanel]);
+  }, [engine, info, navigate, router, setError, setRunning, setReactPanel]);
 
   return null;
 }
