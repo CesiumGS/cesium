@@ -23,6 +23,8 @@ import {
   SceneMode,
   ShaderProgram,
   ShaderSource,
+  StencilFunction,
+  StencilOperation,
   VertexArray,
 } from "@cesium/engine";
 import { ComponentType } from "@cesium/mesh-editor";
@@ -79,6 +81,7 @@ import TopologyOverlayHooksVS from "../Shaders/TopologyOverlayHooksVS.js";
  * @property {number} verticesPerInstance The vertices in each instance.
  * @property {ShaderSources} shaderSources The component type's overlay shaders.
  * @property {Object<string, function(): *>} styleUniforms The component type's style uniforms.
+ * @property {Object<string, function(): *> | undefined} outlineUniforms The style uniforms to override to draw the outline. Undefined for faces, which aren't part of the outline.
  * @property {object} renderStateOptions The options of the component type's render state.
  * @property {RenderState} renderState The component type's render state, from the render state cache.
  * @property {"edges" | "triangles" | undefined} topologyViewName The overlay view with the component type's edges or triangles. Undefined for points.
@@ -92,6 +95,7 @@ import TopologyOverlayHooksVS from "../Shaders/TopologyOverlayHooksVS.js";
  * @property {BufferTexture} pickColorTexture The pick colors, by component index.
  * @property {ShaderProgram | undefined} shaderProgram Created with the command.
  * @property {DrawCommand | undefined} command Created on the first upload.
+ * @property {DrawCommand | undefined} outlineCommand Draws the component type's part of the outline. Created on the first upload, if it has outline uniforms.
  * @ignore
  */
 
@@ -106,6 +110,8 @@ const EDGE_COLOR = Color.BLACK;
 const EDGE_SELECTED_COLOR = new Color(0.0, 0.78, 1.0, 1.0);
 const FACE_COLOR = new Color(0.8, 0.8, 0.8, 1.0);
 const FACE_SELECTED_COLOR = new Color(1.0, 0.16, 0.58, 1.0);
+const OUTLINE_COLOR = new Color(1.0, 0.63, 0.16, 1.0);
+const OUTLINE_WIDTH = 2.0;
 
 // Points draw over edges, and edges over faces.
 const POINT_DEPTH_BIAS = 0.002;
@@ -138,6 +144,56 @@ const POINT_EDGE_RENDER_STATE = {
   blending: BlendingState.ALPHA_BLEND,
   depthTest: { enabled: true, func: DepthFunction.LESS_OR_EQUAL },
   depthMask: false,
+};
+
+// Every outlined mesh's faces mark their pixels with the same stencil value, so
+// overlapping meshes share one outline around their union.
+const OUTLINE_STENCIL_REFERENCE = 1;
+
+// The face render state, also marking the faces' pixels in the stencil.
+const STENCIL_FACE_RENDER_STATE = {
+  ...FACE_RENDER_STATE,
+  stencilTest: {
+    enabled: true,
+    frontFunction: StencilFunction.ALWAYS,
+    backFunction: StencilFunction.ALWAYS,
+    reference: OUTLINE_STENCIL_REFERENCE,
+    mask: ~0,
+    frontOperation: {
+      fail: StencilOperation.KEEP,
+      zFail: StencilOperation.KEEP,
+      zPass: StencilOperation.REPLACE,
+    },
+    backOperation: {
+      fail: StencilOperation.KEEP,
+      zFail: StencilOperation.KEEP,
+      zPass: StencilOperation.REPLACE,
+    },
+  },
+};
+
+// The point and edge render state, but drawn only where faces didn't mark the
+// stencil. Writes depth, so what's drawn later behind the outline doesn't cover it.
+const OUTLINE_RENDER_STATE = {
+  ...POINT_EDGE_RENDER_STATE,
+  depthMask: true,
+  stencilTest: {
+    enabled: true,
+    frontFunction: StencilFunction.NOT_EQUAL,
+    backFunction: StencilFunction.NOT_EQUAL,
+    reference: OUTLINE_STENCIL_REFERENCE,
+    mask: ~0,
+    frontOperation: {
+      fail: StencilOperation.KEEP,
+      zFail: StencilOperation.KEEP,
+      zPass: StencilOperation.KEEP,
+    },
+    backOperation: {
+      fail: StencilOperation.KEEP,
+      zFail: StencilOperation.KEEP,
+      zPass: StencilOperation.KEEP,
+    },
+  },
 };
 
 /**
@@ -200,6 +256,17 @@ class OverlayRenderer {
   #pixelRatio = 1.0;
 
   /**
+   * The face command's render state while outlined, which also marks the
+   * faces' pixels in the stencil, so the outline isn't drawn over them.
+   *
+   * @type {RenderState}
+   */
+  #stencilFaceRenderState = RenderState.fromCache(STENCIL_FACE_RENDER_STATE);
+
+  /** @type {RenderState} */
+  #outlineRenderState = RenderState.fromCache(OUTLINE_RENDER_STATE);
+
+  /**
    * @param {object} options
    * @param {MeshEditorModule} options.module The loaded module, for its shaders and memory.
    * @param {object} options.mesh The mesh whose overlay this draws. Pick objects return it as their primitive.
@@ -217,6 +284,11 @@ class OverlayRenderer {
     const { shaders } = this.#module;
     const { depthBias, point, edge, face } = shaders.uniforms;
 
+    // Outline edges and points are centered on the silhouette, and the mesh
+    // covers about half of each, so they're twice the outline's width.
+    const getOutlineSize = () => this.#getPixelSize(2.0 * this.outlineWidth);
+    const getOutlineColor = () => this.outlineColor;
+
     this.#pointOverlay = this.#createComponentOverlay({
       componentType: ComponentType.Vertex,
       primitiveType: PrimitiveType.TRIANGLE_STRIP,
@@ -227,6 +299,12 @@ class OverlayRenderer {
         [point.size]: () => this.#getPixelSize(POINT_SIZE),
         [point.color]: () => POINT_COLOR,
         [point.selectedColor]: () => POINT_SELECTED_COLOR,
+      },
+      // Round points fill the notches between edges at the outline's corners.
+      outlineUniforms: {
+        [point.size]: getOutlineSize,
+        [point.color]: getOutlineColor,
+        [point.selectedColor]: getOutlineColor,
       },
       renderStateOptions: POINT_EDGE_RENDER_STATE,
       topologyViewName: undefined,
@@ -244,6 +322,11 @@ class OverlayRenderer {
         [edge.color]: () => EDGE_COLOR,
         [edge.selectedColor]: () => EDGE_SELECTED_COLOR,
       },
+      outlineUniforms: {
+        [edge.width]: getOutlineSize,
+        [edge.color]: getOutlineColor,
+        [edge.selectedColor]: getOutlineColor,
+      },
       renderStateOptions: POINT_EDGE_RENDER_STATE,
       topologyViewName: "edges",
       selectionViewName: "edges",
@@ -260,6 +343,7 @@ class OverlayRenderer {
         [face.selectedColor]: () => FACE_SELECTED_COLOR,
         [face.isPickPass]: () => this.#isPickPass,
       },
+      outlineUniforms: undefined,
       renderStateOptions: FACE_RENDER_STATE,
       // Faces draw one instance per triangle, but select by face.
       topologyViewName: "triangles",
@@ -280,6 +364,30 @@ class OverlayRenderer {
      * @default true
      */
     this.show = true;
+
+    /**
+     * Whether to outline the mesh. The outline is drawn by
+     * {@link OverlayRenderer#pushOutlineCommands}.
+     *
+     * @type {boolean}
+     * @default false
+     */
+    this.outlined = false;
+
+    /**
+     * The outline's color.
+     *
+     * @type {Color}
+     */
+    this.outlineColor = Color.clone(OUTLINE_COLOR);
+
+    /**
+     * The outline's width outside the mesh's silhouette, in CSS pixels.
+     *
+     * @type {number}
+     * @default 2.0
+     */
+    this.outlineWidth = OUTLINE_WIDTH;
   }
 
   /**
@@ -349,9 +457,50 @@ class OverlayRenderer {
     this.#isPickPass = frameState.passes.pick;
     this.#pixelRatio = frameState.pixelRatio;
 
+    // While outlined, faces also mark their pixels in the stencil, so the
+    // outline isn't drawn over them.
+    const faceCommand = this.#faceOverlay.command;
+    if (defined(faceCommand)) {
+      faceCommand.renderState = this.outlined
+        ? this.#stencilFaceRenderState
+        : this.#faceOverlay.renderState;
+    }
+
     const commands = this.#isPickPass ? this.#pickCommands : this.#commands;
     for (const command of commands) {
       frameState.commandList.push(command);
+    }
+  }
+
+  /**
+   * Adds the outline's draw commands to the frame, if outlined. This has to be
+   * called after ALL mesh's have submitted regular draw commands, in {@link OverlayRenderer#update},
+   * so one mesh's outline doesn't draw over another mesh's faces or vice versa. No outline commands are
+   * added in the pick pass, while show is false, outside 3D, or while faces aren't drawn.
+   *
+   * @param {FrameState} frameState The frame state.
+   */
+  pushOutlineCommands(frameState) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.object("frameState", frameState);
+    //>>includeEnd('debug');
+
+    if (
+      !this.outlined ||
+      !this.show ||
+      frameState.mode !== SceneMode.SCENE3D ||
+      frameState.passes.pick ||
+      // Without faces, nothing marks the stencil, so the outline would cover the mesh.
+      !this.#commands.includes(this.#faceOverlay.command)
+    ) {
+      return;
+    }
+
+    for (const { outlineCommand } of this.#componentOverlays) {
+      // An instance count of zero would draw the command once, not instanced.
+      if (defined(outlineCommand) && outlineCommand.instanceCount > 0) {
+        frameState.commandList.push(outlineCommand);
+      }
     }
   }
 
@@ -408,6 +557,12 @@ class OverlayRenderer {
         componentOverlay,
       );
       componentOverlay.command.instanceCount = instanceCount;
+
+      if (defined(componentOverlay.outlineUniforms)) {
+        componentOverlay.outlineCommand ??=
+          this.#createOutlineCommand(componentOverlay);
+        componentOverlay.outlineCommand.instanceCount = instanceCount;
+      }
 
       this.#addPickIds(context, componentOverlay, selectionView.elementCount);
     }
@@ -468,6 +623,8 @@ class OverlayRenderer {
     for (const { renderStateOptions } of this.#componentOverlays) {
       RenderState.removeFromCache(renderStateOptions);
     }
+    RenderState.removeFromCache(STENCIL_FACE_RENDER_STATE);
+    RenderState.removeFromCache(OUTLINE_RENDER_STATE);
 
     return destroyObject(this);
   }
@@ -479,6 +636,7 @@ class OverlayRenderer {
    * @param {number} options.verticesPerInstance The vertices in each instance.
    * @param {ShaderSources} options.shaderSources The component type's overlay shaders.
    * @param {Object<string, function(): *>} options.styleUniforms The component type's style uniforms.
+   * @param {Object<string, function(): *> | undefined} options.outlineUniforms The style uniforms to override to draw the outline. Undefined for faces.
    * @param {object} options.renderStateOptions The options of the component type's render state.
    * @param {"edges" | "triangles" | undefined} options.topologyViewName The overlay view with the component type's edges or triangles. Undefined for points.
    * @param {"verts" | "edges" | "faces"} options.selectionViewName The component type's view in the overlay views' selection.
@@ -501,6 +659,7 @@ class OverlayRenderer {
       },
       shaderProgram: undefined,
       command: undefined,
+      outlineCommand: undefined,
     };
   }
 
@@ -511,6 +670,19 @@ class OverlayRenderer {
    */
   #getPixelSize(size) {
     return (this.#isPickPass ? PICK_SIZE : size) * this.#pixelRatio;
+  }
+
+  /**
+   * @param {ComponentOverlay} componentOverlay The component type's overlay, with its command and outline uniforms.
+   * @returns {DrawCommand} A copy of the component type's command that draws its part of the outline.
+   * @ignore
+   */
+  #createOutlineCommand(componentOverlay) {
+    const { command, outlineUniforms } = componentOverlay;
+    const outlineCommand = DrawCommand.shallowClone(command);
+    outlineCommand.renderState = this.#outlineRenderState;
+    outlineCommand.uniformMap = { ...command.uniformMap, ...outlineUniforms };
+    return outlineCommand;
   }
 
   /**
