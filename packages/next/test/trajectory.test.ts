@@ -352,17 +352,17 @@ describe("Trajectory", () => {
 
     it("picks the reference frame from the declared axes", () => {
       expect(asEme.reference).toBe(frames.eme2000);
-      expect(asIcrf.reference).toBe(frames.gcrf);
+      expect(asIcrf.reference).toBe(frames.earthIcrf);
     });
 
-    it("differs in GCRF by the frame bias of the position", () => {
+    it("differs in EARTH_ICRF by the frame bias of the position", () => {
       const t = at(100);
       const a = convertPoint(
         framePoint(asEme.reference, asEme.state(t), t),
-        frames.gcrf,
+        frames.earthIcrf,
       ).position;
       const b = asIcrf.state(t);
-      const m = frameTransform(frames.eme2000, frames.gcrf, t);
+      const m = frameTransform(frames.eme2000, frames.earthIcrf, t);
       const p = asEme.state(t);
       const expected = [
         m[0]! * p[0]! + m[4]! * p[1]! + m[8]! * p[2]!,
@@ -426,8 +426,8 @@ describe("Trajectory", () => {
     const ref = (c: string, f: string): unknown =>
       Trajectory.fromOem(oemFor(c, f), frames, OPTIONS).reference;
     expect(ref("EARTH", "EME2000")).toBe(frames.eme2000);
-    expect(ref("EARTH", "ICRF")).toBe(frames.gcrf);
-    expect(ref("EARTH", "GCRF")).toBe(frames.gcrf);
+    expect(ref("EARTH", "ICRF")).toBe(frames.earthIcrf);
+    expect(ref("EARTH", "GCRF")).toBe(frames.earthIcrf);
     expect(ref("EARTH", "ITRF93")).toBe(frames.itrf);
     expect(ref("MOON", "ICRF")).toBe(frames.moonIcrf);
     expect(ref("SUN", "ICRF")).toBe(frames.hcrs);
@@ -442,10 +442,10 @@ describe("Trajectory", () => {
     const t = at(123.456);
     const viaTree = convertPoint(
       framePoint(traj.frame, [0, 0, 0], t),
-      frames.gcrf,
+      frames.earthIcrf,
     ).position;
     const s = traj.state(t);
-    const m = frameTransform(frames.eme2000, frames.gcrf, t);
+    const m = frameTransform(frames.eme2000, frames.earthIcrf, t);
     for (let i = 0; i < 3; i++) {
       const expected =
         m[i]! * s[0]! + m[4 + i]! * s[1]! + m[8 + i]! * s[2]! + m[12 + i]!;

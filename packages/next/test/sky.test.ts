@@ -51,19 +51,25 @@ describe("skyState", () => {
     expect(Math.hypot(...out.sunDirection)).toBeCloseTo(1, 14);
     const frames = createFrames(data);
     const t = Instant.fromUtc(inside, data.leapSeconds);
-    // hcrs -> itrf: the translation is the Sun's place seen from the Earth.
-    const m = frameTransform(frames.hcrs, frames.itrf, t);
-    const d = Math.hypot(m[12]!, m[13]!, m[14]!);
-    for (let i = 0; i < 3; i++) {
-      expect(Math.abs(out.sunDirection[i]! - m[12 + i]! / d)).toBeLessThan(
-        1e-12,
-      );
-    }
-    // The Moon is the ephemeris's, turned by the same matrix.
+    // The Sun's place seen from the Earth, in the Newtonian EARTH_ICRF (the
+    // ephemeris's own differences, as skyState reads them), turned by the
+    // same matrix. skyState does not apply the TT scaling of gcrf.
+    const sunIn = frameTransform(frames.hcrs, frames.earthIcrf, t);
     const r = celestialToTerrestrial(
       t,
       data.eop.atInstant(t, data.leapSeconds),
     );
+    const sun = [0, 1, 2].map(
+      (i) =>
+        r[i * 3]! * sunIn[12]! +
+        r[i * 3 + 1]! * sunIn[13]! +
+        r[i * 3 + 2]! * sunIn[14]!,
+    );
+    const d = Math.hypot(sun[0]!, sun[1]!, sun[2]!);
+    for (let i = 0; i < 3; i++) {
+      expect(Math.abs(out.sunDirection[i]! - sun[i]! / d)).toBeLessThan(1e-12);
+    }
+    // The Moon is the ephemeris's, turned by the same matrix.
     const p = data.ephemeris.moonFromEarth(t);
     const me = data.ephemeris.moonMeanEarth(t);
     const row = (i: number, v: ArrayLike<number>, o: number) =>

@@ -239,6 +239,14 @@ export {
 } from "./ephemeris/loadFrameData.ts";
 export { Frame, frameTransform } from "./frames/Frame.ts";
 export { toParentMatrix } from "./frames/matrix.ts";
+export {
+  C,
+  GM_SUN,
+  GM_EARTH,
+  GM_MOON,
+  L_C,
+  EARTH_ROTATION_RATE,
+} from "./measure/constants.ts";
 export { EARTH, MOON, type Body } from "./scene/Body.ts";
 export { frameBias } from "./time/erfa/bias.ts";
 export { createFrames, type Frames } from "./frames/frames.ts";
