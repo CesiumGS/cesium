@@ -14,7 +14,10 @@ const DEFAULT_BODIES: readonly Body[] = [EARTH, MOON];
  * origin of the frame the points are in, with semi-axes `radii` along its
  * axes. The segment is first shortened by `inset` meters at each end (a
  * segment shorter than `2 · inset` is clear), then scaled to a unit sphere
- * for a segment–sphere test.
+ * for a segment–sphere test. An endpoint below the surface (a station whose
+ * height is negative) counts as on it: if the lower endpoint's scaled norm is
+ * under 1, the test is against the similar ellipsoid through that endpoint,
+ * which shrinks the body by at most that endpoint's depth.
  */
 export function segmentBlocked(
   p0: ArrayLike<number>,
@@ -48,7 +51,10 @@ export function segmentBlocked(
   const cx = ax + ex * t;
   const cy = ay + ey * t;
   const cz = az + ez * t;
-  return cx * cx + cy * cy + cz * cz < 1;
+  const n0 = ax * ax + ay * ay + az * az;
+  const n1 = bx * bx + by * by + bz * bz;
+  const limit = Math.min(1, n0, n1);
+  return cx * cx + cy * cy + cz * cz < limit;
 }
 
 const matrix = new Float64Array(16);
