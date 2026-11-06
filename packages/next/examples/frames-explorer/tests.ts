@@ -2069,6 +2069,12 @@ const INVERSE_RESIDUAL = 1e-6;
 const FACTOR_PATH = 1e-10;
 /** The same for the convergence, radians (about 0.0002″). */
 const CONVERGENCE_PATH = 1e-9;
+/**
+ * PROJ's numerical latitude derivative (step ~1e-5), which gridFactors' h
+ * comes from: test/data/factors.test.ts measured 2.2e-10 in Web Mercator's h
+ * at 60°.
+ */
+const NUMERICAL_LATITUDE_DERIVATIVE = 1e-9;
 /** An angle from PROJ's iterative inverses, arcseconds (0.3 mm on the ground). */
 const ANGLE_PATH = 1e-5;
 /** Alignment geometry is exact to float64 (alignment.ts): the path's own tolerance. */
@@ -2719,25 +2725,50 @@ const webMercatorScaleCase = stressCase(
     }
     const x = cited<{
       forward: { latitude: string; longitude: string };
-      distortion: { k: string };
+      distortion: { h: string; k: string; omega: string };
     }>("iogp-pseudo-mercator");
     const lat = sexagesimal(x.forward.latitude);
-    const kPrinted = printed(x.distortion.k);
-    const kIogp = gridFactors(
+    const atIogp = gridFactors(
       frame,
       frame.fromBodyFixed(
         onEarth(sexagesimal(x.forward.longitude).value, lat.value),
       ),
-    ).pointScale;
-    results.push({
-      ...base,
-      id: `${base.id}.k-iogp`,
-      title: `EPSG:3857's parallel scale at ${x.forward.latitude} against IOGP 373-7-2's printed k = ${x.distortion.k}, within half a unit of its last digit`,
-      pass: true,
-      value: Math.abs(kIogp - kPrinted.value),
-      tolerance: kPrinted.half + FACTOR_PATH,
-      detail: `k ${kIogp}`,
-    });
+    );
+    const kPrinted = printed(x.distortion.k);
+    const hPrinted = printed(x.distortion.h);
+    const omegaPrinted = sexagesimal(x.distortion.omega);
+    results.push(
+      {
+        ...base,
+        id: `${base.id}.k-iogp`,
+        title: `EPSG:3857's parallel scale at ${x.forward.latitude} against IOGP 373-7-2's printed k = ${x.distortion.k}, within half a unit of its last digit`,
+        pass: true,
+        value: Math.abs(atIogp.pointScale - kPrinted.value),
+        tolerance: kPrinted.half + FACTOR_PATH,
+        detail: `k ${atIogp.pointScale}`,
+      },
+      {
+        ...base,
+        id: `${base.id}.h-iogp`,
+        title: `EPSG:3857's meridional scale at ${x.forward.latitude} against IOGP 373-7-2's printed h = ${x.distortion.h}, within half a unit of its last digit`,
+        pass: true,
+        value: Math.abs(atIogp.meridionalScale - hPrinted.value),
+        tolerance: hPrinted.half + NUMERICAL_LATITUDE_DERIVATIVE,
+        detail: `h ${atIogp.meridionalScale}`,
+      },
+      {
+        ...base,
+        id: `${base.id}.omega-iogp`,
+        title: `EPSG:3857's maximum angular distortion at ${x.forward.latitude} against IOGP 373-7-2's printed ω = ${x.distortion.omega}, within half a unit of its last digit`,
+        pass: true,
+        value:
+          Math.abs(atIogp.angularDistortion / DEGREE - omegaPrinted.value) *
+          3600,
+        tolerance: omegaPrinted.half * 3600 + ANGLE_PATH,
+        unit: "″",
+        detail: `ω ${fmt((atIogp.angularDistortion / DEGREE) * 3600, 8)}″`,
+      },
+    );
     return results;
   },
 );
@@ -3844,6 +3875,7 @@ export const STRESS_CASES: readonly StressCase[] = [
   clothoidReferenceCase,
   verticalCurveCase,
   gradeToGradeCase,
+  webMercatorScaleCase,
   webMercatorLineCase,
   lowDistortionCase,
   rigidBudgetCase,
@@ -3860,10 +3892,6 @@ export const STRESS_CASES: readonly StressCase[] = [
  * the task 1b report gives the numbers for a ruling. They are not loosened.
  * The data test runs them and expects them to fail, so a fix shows.
  *
- *  - distortion.web-mercator-scale: gridFactors gives EPSG:3857 the sphere's
- *    parallel scale 1/cos φ (PROJ's factors for +proj=webmerc), not the
- *    ellipsoid's sqrt(1 − e² sin² φ)/cos φ of IOGP 373-7-2 §3.2.1.2: 0.25%
- *    off at 45°, 0.87% at 70°, and 6.3e-4 from IOGP's printed k.
  *  - reference-values.iogp-transverse-mercator-forward: IOGP prints
  *    E 577274.99, N 69740.50; the library gives 577274.9838, 69740.4923,
  *    7.7 mm off (half a unit is 5 mm). An independent Krüger series to n^6
@@ -3871,7 +3899,6 @@ export const STRESS_CASES: readonly StressCase[] = [
  *    example; the source's JHS figures appear rounded.
  */
 export const HELD_CASES: readonly StressCase[] = [
-  webMercatorScaleCase,
   iogpCase(
     IOGP_EXAMPLES.find((e) => e.id === "transverse-mercator")!,
     "forward",
