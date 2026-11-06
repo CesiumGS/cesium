@@ -94,7 +94,11 @@ export { Camera } from "./scene/Camera.ts";
 export { OrbitController } from "./scene/OrbitController.ts";
 export {
   InspectController,
+  enuBasis,
+  orbitBasis,
+  orbitPose,
   type InspectControllerOptions,
+  type OrbitBasis,
   type OrbitFrame,
 } from "./scene/InspectController.ts";
 export { GlobeController } from "./scene/GlobeController.ts";

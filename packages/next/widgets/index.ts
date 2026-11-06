@@ -7,11 +7,18 @@
 export {
   Viewer,
   type GlobeKind,
-  type OrbitOptions,
   type TilesetSource,
   type ViewerOptions,
   type ZoomTarget,
 } from "./Viewer.ts";
+export {
+  followZoom,
+  orbitState,
+  planOrbit,
+  type OrbitContext,
+  type OrbitOptions,
+  type OrbitPlan,
+} from "./orbitFocus.ts";
 export {
   attachTimeControls,
   type TimeControlsHandle,
