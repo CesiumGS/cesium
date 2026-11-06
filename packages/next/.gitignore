@@ -4,3 +4,6 @@ dist-lib/
 # Local secrets (ion access token for the dev-server proxy)
 .env.local
 .env.*.local
+
+# Design-review screenshots: local only (large, retaken often; never committed)
+examples/*/design-screenshots/

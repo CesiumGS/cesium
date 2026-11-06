@@ -490,7 +490,7 @@ These four scenarios are buildable on today's library.
 
 **Files:** fixes wherever the review finds them, and `DESIGN.md`.
 
-- [ ] **Step 1: Take screenshots** of all eleven scenarios, light and dark, at desktop and 380 px, plus the proof both on and off the checked setup and the Verification entry. Use Playwright with headless Google Chrome, into `design-screenshots/` as `scenario-*.png`.
+- [ ] **Step 1: Take screenshots** of all eleven scenarios, light and dark, at desktop and 380 px, plus the proof both on and off the checked setup and the Verification entry. Use Playwright with headless Google Chrome, into `design-screenshots/` as `scenario-*.png`. That folder is git-ignored: never commit screenshots (owner, 2026-11-06); describe them in the report instead.
 - [ ] **Step 2: Run the UX review.** The controller dispatches it on the most capable model, against the spec's goals and anti-goals, Nielsen's heuristics, WCAG 2.2 AA and the two audiences. Fix every Critical and Important finding, and re-check.
 - [ ] **Step 3: Run the browser checks** on 5190:
   - **Review Focus 1–5,** by hand:
