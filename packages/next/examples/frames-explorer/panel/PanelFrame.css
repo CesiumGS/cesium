@@ -1,0 +1,135 @@
+/* The panel's frame (Panel.tsx): Dyno's Controls body filled, the tabs, their scrollers and sheets. Imported in order by panel.css. */
+/* ------------------------------------------------------------ frame */
+
+/* Fills Dyno's Controls body; each tab scrolls on its own under the strip. */
+.fx-panel {
+  container: fx-panel / inline-size;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-200);
+  font-size: var(--stratakit-font-size-body-sm);
+  line-height: var(--stratakit-line-height-body-sm);
+}
+.fx-panel p {
+  margin: 0;
+  color: inherit;
+}
+.fx-panel h2,
+.fx-panel h3,
+.fx-panel h4 {
+  margin: 0;
+  color: inherit;
+}
+.fx-tabs {
+  flex: none;
+}
+.fx-tab-panel {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  border-block-start: 1px solid var(--stratakit-color-border-neutral-muted);
+  /* Room for focus rings inside the scroller. */
+  padding: 2px;
+  margin: -2px;
+}
+.fx-tab-panel[hidden] {
+  display: none;
+}
+/* Tabs whose content is a list and a sheet (Explore, Verify). */
+.fx-tab-split {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.fx-tab-split[hidden] {
+  display: none;
+}
+.fx-split {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+/* The list scrolls under a rule, so content never meets the tab line (M18). */
+.fx-split-list {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  border-block-start: 1px solid transparent;
+}
+.fx-split-list[hidden] {
+  display: none;
+}
+.fx-sheet {
+  flex: 0 0 auto;
+  max-block-size: 45%;
+  display: flex;
+  flex-direction: column;
+  border-block-start: 1px solid var(--stratakit-color-border-neutral-base);
+  box-shadow: 0 -8px 16px -12px var(--stratakit-color-border-neutral-base);
+  animation: fx-sheet 240ms var(--fx-ease) both;
+}
+.fx-sheet-full .fx-sheet {
+  flex: 1;
+  max-block-size: none;
+  border-block-start: 0;
+  box-shadow: none;
+}
+/* Focus lands on these on open; they're targets, not controls, so no ring. */
+.fx-sheet-head:focus,
+.fx-sheet-head:focus-visible,
+.fx-inspector-title:focus,
+.fx-inspector-title:focus-visible,
+.fx-detail-title:focus,
+.fx-detail-title:focus-visible {
+  outline: none;
+}
+.fx-sheet-head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-200);
+  padding-block: var(--stratakit-space-150);
+  outline: none;
+}
+.fx-sheet-title {
+  flex: 1;
+  min-inline-size: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--stratakit-space-100) var(--stratakit-space-200);
+}
+.fx-sheet-tools {
+  display: inline-flex;
+}
+.fx-sheet-body {
+  flex: 1;
+  min-block-size: 0;
+  overflow: auto;
+  padding-block-end: var(--stratakit-space-300);
+}
+.fx-tab-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-600);
+  padding-block: var(--stratakit-space-200) var(--stratakit-space-400);
+}
+
+.fx-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-200);
+}
+.fx-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--stratakit-space-300);
+  flex-wrap: wrap;
+}
+.fx-section-head > h2 {
+  font-weight: 600;
+}

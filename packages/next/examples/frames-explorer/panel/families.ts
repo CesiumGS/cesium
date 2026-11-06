@@ -1,8 +1,8 @@
 // Frame families (R16, DESIGN.md "Frame families"): one categorical palette,
 // used the same way in the tree, the triads, the labels and the legend. The
-// colors are CSS custom properties (panel.css, `--fx-family-*`), each with a
+// colors are CSS custom properties (tokens.css, `--fx-family-*`), each with a
 // tone for light surfaces and one for dark ones and the globe; the globe's
-// geometry takes the `onDark` values here, which match panel.css.
+// geometry takes the `onDark` values here, which match tokens.css.
 import type { EdgeAccuracy, EdgeKind, TreeNode } from "../tree.ts";
 import { length, radians } from "./format.ts";
 

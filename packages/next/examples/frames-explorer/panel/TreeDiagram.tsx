@@ -8,7 +8,7 @@
 // they change. The answer's path (`branchPath`) lights edge by edge, up to
 // the common ancestor and down. On a scenario switch the shared nodes glide
 // to their new places and the added ones grow out of their parents; reduced
-// motion cuts straight to the new shape (panel.css).
+// motion cuts straight to the new shape (TreeDiagram.css, motion.css).
 //
 // Fix round 1, the owner's tree design: the tree holds only frames. Data
 // (Orion's) is a dashed card pinned below the frame its numbers are in, on

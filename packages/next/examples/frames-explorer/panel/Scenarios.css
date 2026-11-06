@@ -1,0 +1,129 @@
+/* The Scenarios tab (Scenarios.tsx, ScenarioStrip.tsx): the picker, the question and the tab's scroller. Imported in order by panel.css. */
+/* -------------------------------------------------------- scenarios */
+
+/*
+ * The scenarios' tab (DESIGN.md "Scenarios"): the strip, the question, the
+ * frame tree as the panel's one bold thing, then the answer, the knobs and
+ * the proof, each a heading and its content, no cards.
+ */
+.fx-scenarios {
+  gap: var(--stratakit-space-500);
+}
+/*
+ * The picker and the question, sticky at the top of the tab's scroller: the
+ * picker is StrataKit's select, the question the scenario's lead line,
+ * beside a chip for the checked setup.
+ */
+.fx-scenario-top {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-150);
+  /* Room above the field for its floated "Scenario" label, solid behind it. */
+  margin-block-start: calc(-1 * var(--stratakit-space-200) - 2px);
+  padding-block: calc(var(--stratakit-space-300) + 4px)
+    var(--stratakit-space-200);
+  background: var(--stratakit-color-bg-page-base);
+  box-shadow: 0 -2px 0 var(--stratakit-color-bg-page-base);
+  border-block-end: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+/* The scenario picker's list: wide enough for each title and its question. */
+.fx-scenario-menu .MuiMenuItem-root {
+  align-items: flex-start;
+}
+.fx-scenario-menu .MuiListItemText-primary {
+  font-weight: 600;
+  color: var(--stratakit-color-text-neutral-primary);
+}
+.fx-scenario-menu .MuiListItemText-secondary {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.fx-scenario-menu {
+  max-inline-size: min(480px, calc(100vw - 32px));
+  max-block-size: min(70vh, 560px);
+}
+.fx-scenario-menu .MuiListItemText-secondary {
+  white-space: normal;
+}
+.fx-scenario-lead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--stratakit-space-200);
+}
+.fx-checked-chip {
+  all: unset;
+  box-sizing: border-box;
+  flex: none;
+  min-block-size: 24px;
+  padding: 2px var(--stratakit-space-200);
+  border-radius: var(--stratakit-radius-round);
+  border: 1px solid var(--stratakit-color-border-positive-muted);
+  color: var(--stratakit-color-text-positive-base);
+  font-size: var(--stratakit-font-size-caption-lg);
+  font-weight: 600;
+  cursor: pointer;
+}
+.fx-off-checked-chip {
+  border-color: var(--stratakit-color-border-attention-base);
+  color: var(--stratakit-color-text-attention-base);
+}
+.fx-checked-chip:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: 1px;
+}
+/* A section scrolled to sits below the sticky picker and question. */
+.fx-scenario-body > .fx-section {
+  scroll-margin-block-start: 112px;
+}
+.fx-scenario-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-500);
+}
+/*
+ * The scenarios' own scroller, and under it (not over it) a strip with the
+ * "Knobs and proof" button while there's more below (fix 2: the pill
+ * covered content).
+ */
+.fx-scenarios-frame {
+  flex: 1;
+  min-block-size: 0;
+  display: flex;
+  flex-direction: column;
+}
+.fx-scenarios-scroll {
+  flex: 1;
+  min-block-size: 0;
+  overflow: auto;
+  /* Room for focus rings inside the scroller. */
+  padding: 2px;
+  margin: -2px;
+}
+.fx-more-below {
+  flex: none;
+  display: flex;
+  justify-content: center;
+  padding-block: var(--stratakit-space-150);
+  border-block-start: 1px solid var(--stratakit-color-border-neutral-muted);
+  box-shadow: 0 -10px 12px -10px var(--stratakit-color-border-neutral-base);
+  background: var(--stratakit-color-bg-page-base);
+}
+.fx-more-button {
+  pointer-events: auto;
+  background: var(--stratakit-color-bg-page-base);
+}
+.fx-key-card {
+  inline-size: 14px;
+  block-size: 9px;
+  border-radius: 2px;
+  border: 1.5px dashed var(--fx-trajectory);
+}
+.fx-key-drawing {
+  inline-size: 14px;
+  block-size: 9px;
+  border-radius: var(--stratakit-radius-round);
+  border: 1.5px solid var(--stratakit-color-border-accent-strong);
+}

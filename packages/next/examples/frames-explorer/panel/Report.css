@@ -1,0 +1,39 @@
+/* The Report tab (Report.tsx). Imported in order by panel.css. */
+/* ---------------------------------------------------------- report */
+
+.fx-report-counts {
+  margin-block: var(--stratakit-space-200);
+}
+.fx-report-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--stratakit-space-200);
+}
+.fx-report-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-200);
+}
+.fx-report-list li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--stratakit-space-50) var(--stratakit-space-200);
+  align-items: start;
+}
+.fx-report-list li > :last-child {
+  grid-column: 2;
+}
+.fx-env {
+  grid-template-columns: 1fr;
+  gap: 0;
+}
+.fx-env-row {
+  display: grid;
+  grid-template-columns: 9em minmax(0, 1fr);
+  gap: var(--stratakit-space-300);
+  padding-block: var(--stratakit-space-100);
+  border-block-start: 1px solid var(--stratakit-color-border-neutral-muted);
+}

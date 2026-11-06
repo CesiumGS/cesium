@@ -1,0 +1,139 @@
+/* The inspector (Inspector.tsx, Sheet.tsx): a result's trace and comparison. Imported in order by panel.css. */
+/* The inspector: the sheet's content (Sheet.tsx lays it out). */
+.fx-inspector {
+  flex: 1;
+  min-block-size: 0;
+  display: flex;
+  flex-direction: column;
+}
+.fx-inspector-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-500);
+}
+.fx-inspector-title {
+  font-weight: 600;
+}
+.fx-inspector-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--stratakit-space-200);
+  margin-block-start: calc(-1 * var(--stratakit-space-300));
+}
+.fx-part {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-200);
+}
+.fx-part-title {
+  font-weight: 600;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.fx-measured {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-300);
+}
+.fx-detail {
+  overflow-wrap: anywhere;
+}
+/* The trace is a sequence: numbered, input to output. */
+.fx-trace {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: fx-step;
+  display: flex;
+  flex-direction: column;
+}
+.fx-trace-step {
+  counter-increment: fx-step;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-50);
+  padding: var(--stratakit-space-150) 0 var(--stratakit-space-150) 28px;
+  border-block-start: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.fx-trace-step::before {
+  content: counter(fx-step);
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block-start: var(--stratakit-space-150);
+  inline-size: 18px;
+  block-size: 18px;
+  border-radius: var(--stratakit-radius-round);
+  display: grid;
+  place-items: center;
+  font-size: var(--stratakit-font-size-caption-md);
+  font-variant-numeric: tabular-nums;
+  color: var(--stratakit-color-text-neutral-secondary);
+  border: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.fx-trace-output::before {
+  color: var(--stratakit-color-text-neutral-primary);
+  border-color: var(--stratakit-color-text-neutral-primary);
+}
+/* The expected value isn't a step: it sits against the output. */
+.fx-trace-expected {
+  counter-increment: none;
+  border-block-start-style: dashed;
+}
+.fx-trace-expected::before {
+  content: "=";
+  border-style: dashed;
+}
+.fx-trace-label {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.fx-trace-output .fx-trace-label,
+.fx-trace-expected .fx-trace-label {
+  color: var(--stratakit-color-text-neutral-primary);
+  font-weight: 500;
+}
+.fx-trace-value {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--stratakit-space-100);
+}
+.fx-trace-value > :first-child {
+  flex: 1;
+  min-inline-size: 0;
+}
+.fx-trace-value .fx-num {
+  font-size: var(--stratakit-font-size-body-md);
+  padding-block-start: 4px;
+}
+.fx-citation {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-50);
+}
+.fx-formula .fx-code {
+  display: block;
+  padding: var(--stratakit-space-150) var(--stratakit-space-200);
+  border-radius: var(--stratakit-radius-sm);
+  background: var(--stratakit-color-bg-mono-muted);
+  font-size: var(--stratakit-font-size-mono-sm);
+}
+.fx-fp-line {
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-200);
+  flex-wrap: wrap;
+}
+.fx-fp-pipeline {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--stratakit-space-100);
+}
+.fx-fp-pipeline > code {
+  flex: 1;
+  min-inline-size: 0;
+}
+.fx-grid {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+  flex-wrap: wrap;
+}

@@ -1,0 +1,29 @@
+/* "Try your own" (TryYourOwn.tsx, R18). Imported in order by panel.css. */
+/* "Try your own" (R18): a well inside the Bound CRSs card. */
+.fx-try {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-200);
+  padding: var(--stratakit-space-300);
+  border-radius: var(--stratakit-radius-md);
+  background: var(--stratakit-color-bg-page-depth);
+}
+.fx-wkt {
+  font-family: var(--stratakit-font-family-mono);
+  font-size: var(--stratakit-font-size-mono-sm);
+}
+.fx-try-buttons,
+.fx-try-row {
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-200);
+  flex-wrap: wrap;
+}
+.fx-try-ion {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-200);
+  margin-block-start: var(--stratakit-space-200);
+  padding-block-start: var(--stratakit-space-300);
+  border-block-start: 1px solid var(--stratakit-color-border-neutral-muted);
+}

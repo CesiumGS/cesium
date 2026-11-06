@@ -1,0 +1,465 @@
+/* The HUD over the globe (Hud.tsx): the legend, the callout, the inset, the pivot marker. Imported in order by panel.css. */
+/* ------------------------------------------------------------- HUD */
+
+/*
+ * Over the canvas, clear of Dyno's inspector (top left) and credits (bottom
+ * left), and above the viewer's time controls (bottom centre).
+ */
+.fx-hud-host {
+  color-scheme: dark;
+  --stratakit-color-bg-page-depth: oklch(21.2% 0.006 268.32);
+  --stratakit-color-bg-elevation-base: var(
+    --cesium-ui-surface,
+    oklch(26.92% 0.008 268.32)
+  );
+  --stratakit-color-bg-page-base: oklch(24.37% 0.006 268.32);
+  --stratakit-color-text-neutral-primary: var(
+    --cesium-ui-text,
+    oklch(99.06% 0.002 247.84)
+  );
+  --stratakit-color-text-neutral-secondary: var(
+    --cesium-ui-text-muted,
+    oklch(79.56% 0.008 241.69)
+  );
+  --stratakit-color-text-neutral-tertiary: oklch(69.04% 0.014 255.53);
+  --stratakit-color-text-attention-base: oklch(69.31% 0.129 79.75);
+  --stratakit-color-icon-neutral-base: var(
+    --cesium-ui-icon,
+    oklch(85.95% 0.006 255.48)
+  );
+  --stratakit-color-icon-neutral-secondary: oklch(75.82% 0.01 252.83);
+  --stratakit-color-icon-neutral-primary: oklch(99.06% 0.002 247.84);
+  --stratakit-color-border-neutral-base: oklch(55.22% 0.018 253.99);
+  --stratakit-color-border-neutral-muted: oklch(41.45% 0.013 256.75);
+  /* The focus ring's color, the dark theme's: the page's light-theme ring
+     (oklch 47%) is about 2:1 on the dark HUD (focus-ring pass, 6c-2). */
+  --stratakit-color-border-accent-strong: oklch(87.59% 0.175 168.9);
+  --stratakit-color-bg-glow-on-surface-neutral-hover: var(
+    --cesium-ui-hover,
+    oklch(100% 0 0 / 0.04)
+  );
+  --stratakit-color-bg-glow-on-surface-neutral-pressed: var(
+    --cesium-ui-pressed,
+    oklch(100% 0 0 / 0.08)
+  );
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+.fx-hud {
+  position: absolute;
+  pointer-events: auto;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-150);
+  padding: var(--stratakit-space-200) var(--stratakit-space-300);
+  border-radius: var(--stratakit-radius-md);
+  background: color-mix(
+    in oklab,
+    var(--stratakit-color-bg-elevation-base) 92%,
+    transparent
+  );
+  color: var(--stratakit-color-text-neutral-primary);
+  box-shadow: var(--stratakit-shadow-surface-md);
+  backdrop-filter: blur(6px);
+  font-size: var(--stratakit-font-size-body-sm);
+  line-height: var(--stratakit-line-height-body-sm);
+}
+.fx-hud p,
+.fx-hud h2 {
+  margin: 0;
+}
+/* StrataKit resolves its focus outline where the page's theme is set, so the
+   HUD restates it with the dark ring above (WCAG 2.4.13: 3:1 on the HUD). */
+.fx-hud :focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+}
+.fx-legend {
+  inset-inline-end: var(--stratakit-space-300);
+  inset-block-end: var(--fx-hud-bottom, 64px);
+  inline-size: min(240px, calc(100% - 2 * var(--stratakit-space-300)));
+  max-block-size: calc(100% - var(--fx-hud-bottom, 64px) - 60px);
+  overflow: auto;
+}
+/*
+ * The picture-in-picture view of the rigid line's gap (stop 4): a thin
+ * border round the engine's inset view, a caption strip over it, and its
+ * labels, placed by main.ts from inset.ts. Not interactive.
+ */
+.fx-inset {
+  position: absolute;
+  box-sizing: border-box;
+  pointer-events: none;
+  border: 1px solid oklch(100% 0 0 / 0.7);
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px oklch(0% 0 0 / 0.5);
+  color: var(--stratakit-color-text-neutral-primary);
+  font-size: var(--stratakit-font-size-caption-lg);
+  line-height: var(--stratakit-line-height-caption-lg);
+  font-variant-numeric: tabular-nums;
+}
+.fx-inset-caption {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-start: 0;
+  box-sizing: border-box;
+  block-size: 24px;
+  padding-inline: var(--stratakit-space-200);
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-weight: 600;
+  background: color-mix(
+    in oklab,
+    var(--stratakit-color-bg-elevation-base) 92%,
+    transparent
+  );
+}
+.fx-inset-label {
+  position: absolute;
+  white-space: nowrap;
+  font-weight: 600;
+  paint-order: stroke;
+  -webkit-text-stroke: 3px oklch(0% 0 0 / 0.75);
+  transform: translateY(-50%);
+}
+.fx-inset-label-muted {
+  font-weight: 500;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+/* The gap's drop, left of the leader: its right end at the point given. */
+.fx-inset-label-end {
+  transform: translate(-100%, -50%);
+}
+/* The part along the line, at the leader's top by the frame's right edge;
+   clear of "rigid" on the narrowest inset (the full text is the caption's). */
+.fx-inset-label-along {
+  max-inline-size: calc(100% - 52px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fx-inset-leader {
+  position: absolute;
+  block-size: 1px;
+  background: oklch(100% 0 0);
+}
+/*
+ * Frame content (re-center): top left under Dyno's inspector (8 px down,
+ * about 29 px tall), clear of the credits, the answer, the legend and the
+ * rigid line's inset in every layout.
+ */
+.fx-frame {
+  inset-inline-start: var(--stratakit-space-200);
+  inset-block-start: 48px;
+  padding: var(--stratakit-space-50);
+}
+/*
+ * The scenario's answer on the globe: top right, clear of Dyno's inspector
+ * (top left), the credits (bottom left) and the legend (bottom right).
+ */
+.fx-callout {
+  inset-inline-end: var(--stratakit-space-300);
+  /* Level with Frame content, under Dyno's inspector strip. */
+  inset-block-start: 48px;
+  inline-size: min(320px, calc(100% - 2 * var(--stratakit-space-300) - 48px));
+  gap: var(--stratakit-space-100);
+  animation: fx-in 320ms var(--fx-ease) both;
+}
+.fx-callout-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--stratakit-space-200);
+  margin-block: calc(-1 * var(--stratakit-space-50));
+}
+.fx-callout-question {
+  font-size: var(--stratakit-font-size-caption-lg);
+  line-height: var(--stratakit-line-height-caption-lg);
+  font-weight: 600;
+}
+.fx-callout-figure {
+  text-wrap: balance;
+  font-size: var(--stratakit-font-size-headline-sm);
+  line-height: var(--stratakit-line-height-headline-sm);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.fx-callout-aside {
+  font-size: var(--stratakit-font-size-caption-lg);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.fx-callout-acc {
+  font-size: var(--stratakit-font-size-caption-lg);
+  line-height: var(--stratakit-line-height-caption-lg);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.fx-callout-acc.fx-unbounded {
+  color: var(--stratakit-color-text-attention-base);
+}
+.fx-callout-note {
+  font-size: var(--stratakit-font-size-caption-lg);
+  line-height: var(--stratakit-line-height-caption-lg);
+  padding-inline-start: var(--stratakit-space-150);
+  border-inline-start: 2px solid var(--stratakit-color-text-attention-base);
+}
+/* The callout keeps to a glance: the sentence in two lines, the rest in the panel. */
+.fx-callout .fx-callout-answer,
+.fx-callout .fx-callout-acc {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.fx-callout-frame {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-100);
+}
+/* The HUD is dark in either scheme: its toggles take the HUD's ink. */
+.fx-callout .MuiToggleButton-root {
+  color: var(--stratakit-color-text-neutral-secondary);
+  border-color: var(--stratakit-color-border-neutral-base);
+}
+.fx-callout .MuiToggleButton-root.Mui-selected {
+  color: var(--stratakit-color-text-neutral-primary);
+  background: color-mix(in oklab, var(--fx-trajectory) 28%, transparent);
+  border-color: var(--fx-trajectory);
+}
+.fx-callout-drawn {
+  font-size: var(--stratakit-font-size-caption-lg);
+  line-height: var(--stratakit-line-height-caption-lg);
+  font-weight: 600;
+  color: var(--fx-trajectory);
+}
+.fx-callout-folded {
+  padding-block: var(--stratakit-space-150);
+}
+/*
+ * The whole tree over the globe (the diagram's Expand): a dialog in the
+ * HUD, which Escape and its Close button dismiss.
+ */
+.fx-tree-dialog-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 1300;
+  display: grid;
+  place-items: center;
+  padding: var(--stratakit-space-500);
+  background: oklch(0% 0 0 / 0.5);
+}
+.fx-tree-dialog {
+  /* As wide as the window allows and as tall as the tree (fix 2). */
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-300);
+  inline-size: fit-content;
+  min-inline-size: min(480px, 100%);
+  max-inline-size: 100%;
+  max-block-size: 100%;
+  overflow: auto;
+  padding: var(--stratakit-space-400);
+  border-radius: var(--stratakit-radius-md);
+  background: var(--stratakit-color-bg-elevation-base);
+  color: var(--stratakit-color-text-neutral-primary);
+  box-shadow: var(--stratakit-shadow-surface-md);
+  animation: fx-in 240ms var(--fx-ease) both;
+}
+.fx-tree-dialog .fx-diagram {
+  overflow-x: auto;
+}
+.fx-tree-dialog-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--stratakit-space-300);
+}
+.fx-tree-dialog-title {
+  font-size: var(--stratakit-font-size-body-md);
+  line-height: var(--stratakit-line-height-body-md);
+  font-weight: 600;
+}
+/*
+ * The orbit's pivot while it is dragged: a white ring with crosshair ticks
+ * and a dark outline (it sits over the sky and the ground alike), fading
+ * out once the drag ends. Placed by pivot.ts; never takes the pointer.
+ */
+.fx-pivot {
+  position: absolute;
+  left: 0;
+  top: 0;
+  box-sizing: border-box;
+  inline-size: 20px;
+  block-size: 20px;
+  margin: -10px 0 0 -10px;
+  border: 1.5px solid oklch(100% 0 0);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 1px oklch(0% 0 0 / 0.6),
+    inset 0 0 0 1px oklch(0% 0 0 / 0.6);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 500ms cubic-bezier(0.2, 0, 0, 1) 400ms;
+}
+.fx-pivot::before,
+.fx-pivot::after {
+  content: "";
+  position: absolute;
+  background: oklch(100% 0 0);
+  box-shadow: 0 0 0 1px oklch(0% 0 0 / 0.5);
+}
+/* A dot at the pivot itself. */
+.fx-pivot::before {
+  inset: 50% auto auto 50%;
+  inline-size: 3px;
+  block-size: 3px;
+  margin: -1.5px 0 0 -1.5px;
+  border-radius: 50%;
+}
+/* Ticks out of the ring, left and right, top and bottom (one element: a
+   cross clipped to its arms). */
+.fx-pivot::after {
+  inset: -7px;
+  background:
+    linear-gradient(oklch(100% 0 0), oklch(100% 0 0)) center top / 1.5px 6px
+      no-repeat,
+    linear-gradient(oklch(100% 0 0), oklch(100% 0 0)) center bottom / 1.5px 6px
+      no-repeat,
+    linear-gradient(oklch(100% 0 0), oklch(100% 0 0)) left center / 6px 1.5px
+      no-repeat,
+    linear-gradient(oklch(100% 0 0), oklch(100% 0 0)) right center / 6px 1.5px
+      no-repeat;
+  box-shadow: none;
+  filter: drop-shadow(0 0 1px oklch(0% 0 0 / 0.8));
+}
+.fx-pivot-on {
+  opacity: 1;
+  transition: opacity 120ms cubic-bezier(0.2, 0, 0, 1);
+}
+.fx-pivot-gone {
+  opacity: 0;
+  transition: none;
+}
+.fx-legend-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-block: calc(-1 * var(--stratakit-space-100));
+}
+.fx-legend-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-200);
+}
+.fx-legend-list li {
+  display: flex;
+  gap: var(--stratakit-space-200);
+  align-items: flex-start;
+}
+.fx-legend-text {
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+}
+/* Compact (I17): one line each, ellipsized; the full line on hover and focus. */
+.fx-legend:not(.fx-legend-open) .fx-legend-list {
+  gap: var(--stratakit-space-100);
+}
+.fx-legend:not(.fx-legend-open) .fx-legend-text {
+  flex-direction: row;
+  gap: var(--stratakit-space-150);
+}
+.fx-legend:not(.fx-legend-open) .fx-legend-name {
+  flex: none;
+  white-space: nowrap;
+}
+.fx-legend:not(.fx-legend-open) .fx-legend-acc {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fx-legend:not(.fx-legend-open) li:hover .fx-legend-acc,
+.fx-legend:not(.fx-legend-open) li:focus-visible .fx-legend-acc {
+  white-space: normal;
+}
+.fx-legend li:focus-visible {
+  outline: 2px solid var(--cesium-ui-focus, #8cc4ff);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+/* A line's style as drawn on the globe (M8). */
+.fx-line-key {
+  flex: none;
+  inline-size: 16px;
+  margin-block-start: 0.55em;
+  border-block-start: 2px solid var(--fx-family);
+}
+.fx-line-dashed {
+  border-block-start-style: dashed;
+}
+/* The rigid line is white on the globe (stop 4). */
+.fx-line-white {
+  --fx-family: oklch(100% 0 0);
+}
+.fx-line-dotted {
+  border-block-start-style: dotted;
+}
+.fx-legend-name {
+  font-weight: 500;
+}
+.fx-legend-acc {
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-size: var(--stratakit-font-size-caption-lg);
+  line-height: var(--stratakit-line-height-caption-lg);
+  font-variant-numeric: tabular-nums;
+}
+.fx-legend-acc.fx-unbounded {
+  color: var(--stratakit-color-text-attention-base);
+}
+.fx-legend-note {
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-size: var(--stratakit-font-size-caption-lg);
+  line-height: var(--stratakit-line-height-caption-lg);
+  padding-block-start: var(--stratakit-space-150);
+  border-block-start: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.fx-axes {
+  flex: none;
+  display: inline-grid;
+  grid-auto-flow: column;
+  gap: 2px;
+  margin-block-start: 0.45em;
+}
+.fx-axes > span {
+  inline-size: 6px;
+  block-size: 6px;
+  border-radius: 1px;
+}
+.fx-axis-x {
+  background: var(--fx-axis-x);
+}
+.fx-axis-y {
+  background: var(--fx-axis-y);
+}
+.fx-axis-z {
+  background: var(--fx-axis-z);
+}
+.fx-axis-word {
+  font-weight: 600;
+}
+.fx-axis-word-x {
+  color: var(--fx-axis-x);
+}
+.fx-axis-word-y {
+  color: var(--fx-axis-y);
+}
+.fx-axis-word-z {
+  color: var(--fx-axis-z);
+}

@@ -1,0 +1,317 @@
+/* The tree diagram (TreeDiagram.tsx): pills, elbows, data cards, the route's dot, tips and the detail under it. Imported in order by panel.css. */
+/*
+ * The diagram: pills over an SVG of elbows. As tall as the scenario's
+ * focused tree (data cards included), never a scroll box of its own
+ * vertically: the wheel scrolls the tab (fix 2). Too wide, it pans
+ * sideways.
+ */
+.fx-diagram {
+  position: relative;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border-radius: var(--stratakit-radius-md);
+  background: var(--stratakit-color-bg-page-depth);
+  border: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.fx-diagram-pans {
+  /* A soft edge says there's more to pan to. */
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 14px,
+    #000 calc(100% - 14px),
+    transparent 100%
+  );
+}
+.fx-diagram-canvas {
+  position: relative;
+}
+.fx-diagram-edges {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+}
+.fx-diagram-edge {
+  fill: none;
+  stroke: var(--stratakit-color-border-neutral-base);
+  stroke-width: 1.25;
+  stroke-linejoin: round;
+  transition:
+    d 460ms var(--fx-ease),
+    stroke 240ms var(--fx-ease) calc(var(--i, 0) * 90ms),
+    stroke-width 240ms var(--fx-ease) calc(var(--i, 0) * 90ms);
+}
+@starting-style {
+  .fx-diagram-edge {
+    d: var(--fx-from-d);
+  }
+}
+.fx-diagram-edge.fx-lit {
+  stroke: var(--stratakit-color-border-accent-strong);
+  stroke-width: 3;
+}
+.fx-diagram-edge.fx-selected {
+  stroke: var(--stratakit-color-border-accent-strong);
+  stroke-width: 2.5;
+}
+.fx-chip-edge {
+  stroke-dasharray: 3 3;
+}
+/* An edge's hit area: 12 px wide, focusable, its own focus ring. */
+.fx-diagram-hit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 12;
+  pointer-events: stroke;
+  cursor: pointer;
+  outline: none;
+  transition: d 460ms var(--fx-ease);
+}
+.fx-diagram-hit:focus-visible {
+  stroke: color-mix(
+    in oklab,
+    var(--stratakit-color-border-accent-strong) 45%,
+    transparent
+  );
+}
+.fx-node {
+  all: unset;
+  box-sizing: border-box;
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  block-size: 32px;
+  padding-inline: 10px 12px;
+  border-radius: var(--stratakit-radius-round);
+  border: 1px solid
+    color-mix(
+      in oklab,
+      var(--fx-family) 40%,
+      var(--stratakit-color-border-neutral-muted)
+    );
+  background: var(--stratakit-color-bg-page-base);
+  color: var(--stratakit-color-text-neutral-primary);
+  font-size: var(--stratakit-font-size-body-sm);
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    transform 460ms var(--fx-ease),
+    opacity 300ms var(--fx-ease),
+    background-color 160ms var(--fx-ease),
+    box-shadow 240ms var(--fx-ease) calc(var(--i, 0) * 90ms),
+    border-color 240ms var(--fx-ease) calc(var(--i, 0) * 90ms);
+}
+/* An added frame grows out of its parent (`--fx-from`, the parent's place). */
+@starting-style {
+  .fx-node {
+    opacity: 0;
+    transform: var(--fx-from);
+  }
+}
+.fx-node:hover {
+  background: color-mix(
+    in oklab,
+    var(--fx-family, var(--stratakit-color-text-neutral-secondary)) 10%,
+    var(--stratakit-color-bg-page-base)
+  );
+}
+.fx-node:focus-visible,
+.fx-node[aria-pressed="true"] {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: 2px;
+}
+.fx-node-glyph {
+  flex: none;
+  inline-size: 8px;
+  block-size: 8px;
+  border-radius: var(--stratakit-radius-round);
+  background: var(--fx-family);
+}
+.fx-node-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* A frame the scenario added: a diamond, a family edge and a tint of it. */
+.fx-node.fx-added {
+  border: 1.5px solid var(--fx-family);
+  background: color-mix(
+    in oklab,
+    var(--fx-family) 16%,
+    var(--stratakit-color-bg-page-base)
+  );
+}
+.fx-node.fx-added .fx-node-glyph {
+  border-radius: 1px;
+  transform: rotate(45deg) scale(0.95);
+}
+.fx-node.fx-on-path {
+  border-color: var(--stratakit-color-border-accent-strong);
+}
+/*
+ * A pill's tag sits inside it ("from", "meet", "to"), so nothing in the
+ * edge-label lane above can cover it (fix round 1).
+ */
+.fx-node-tag {
+  flex: none;
+  padding: 0 5px;
+  border-radius: var(--stratakit-radius-round);
+  background: var(--fx-family);
+  color: var(--stratakit-color-bg-page-base);
+  font-size: 10px;
+  line-height: 15px;
+  font-weight: 600;
+}
+.fx-tag-meet {
+  background: var(--stratakit-color-text-neutral-primary);
+}
+/*
+ * The tree as a control (one-path): the frames you can draw in, dashed; the
+ * one in use takes StrataKit's accent (teal), with its "Drawing in" tag.
+ */
+.fx-node.fx-target {
+  border-style: dashed;
+  border-color: var(--fx-family);
+}
+.fx-node.fx-target.fx-drawing {
+  border: 1.5px solid var(--stratakit-color-border-accent-strong);
+  background: color-mix(
+    in oklab,
+    var(--stratakit-color-border-accent-strong) 18%,
+    var(--stratakit-color-bg-page-base)
+  );
+}
+.fx-node.fx-drawing .fx-node-tag {
+  background: var(--stratakit-color-border-accent-strong);
+  color: var(--stratakit-color-bg-page-base);
+}
+/* Data, pinned below the frame its numbers are in: not a frame. */
+.fx-data-card {
+  box-sizing: border-box;
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  block-size: 40px;
+  padding-inline: 12px;
+  margin-block-start: -4px;
+  border-radius: var(--stratakit-radius-md);
+  border: 1.5px dashed var(--fx-trajectory);
+  background: color-mix(
+    in oklab,
+    var(--fx-trajectory) 10%,
+    var(--stratakit-color-bg-page-base)
+  );
+  white-space: nowrap;
+  transition:
+    transform 460ms var(--fx-ease),
+    opacity 300ms var(--fx-ease);
+}
+@starting-style {
+  .fx-data-card {
+    opacity: 0;
+    transform: var(--fx-from);
+  }
+}
+.fx-data-name {
+  font-size: var(--stratakit-font-size-body-sm);
+  font-weight: 600;
+  color: var(--fx-trajectory);
+}
+.fx-data-line {
+  font-size: var(--stratakit-font-size-caption-md);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.fx-diagram-edge.fx-data-tether {
+  stroke: var(--fx-trajectory);
+  stroke-dasharray: 3 3;
+}
+/* The route's travelling dot (static at the destination under reduced motion). */
+.fx-route-dot {
+  fill: var(--stratakit-color-border-accent-strong);
+  stroke: var(--stratakit-color-bg-page-base);
+  stroke-width: 2;
+}
+.fx-chip {
+  --fx-family: var(--stratakit-color-text-neutral-secondary);
+  justify-content: center;
+  padding-inline: 8px;
+  border: 1px dashed var(--stratakit-color-border-neutral-base);
+  background: transparent;
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-weight: 600;
+}
+.fx-edge-tag {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  white-space: nowrap;
+  padding: 0 4px;
+  border-radius: var(--stratakit-radius-sm);
+  background: var(--stratakit-color-bg-page-depth);
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-size: var(--stratakit-font-size-caption-md);
+  line-height: 16px;
+  pointer-events: none;
+  transition: opacity 240ms var(--fx-ease) calc(var(--i, 0) * 90ms + 120ms);
+}
+@starting-style {
+  .fx-edge-tag {
+    opacity: 0;
+  }
+}
+/* The tip: fixed to the viewport, so the diagram's box never clips it. */
+.fx-edge-tip {
+  position: fixed;
+  z-index: 1400;
+  max-inline-size: 240px;
+  padding: var(--stratakit-space-100) var(--stratakit-space-200);
+  border-radius: var(--stratakit-radius-sm);
+  background: var(--stratakit-color-bg-elevation-base);
+  box-shadow: var(--stratakit-shadow-surface-md);
+  color: var(--stratakit-color-text-neutral-primary);
+  font-size: var(--stratakit-font-size-caption-lg);
+  line-height: var(--stratakit-line-height-caption-lg);
+  pointer-events: none;
+}
+
+/* The selected frame or edge, in place under the diagram (no sheet). */
+.fx-detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-200);
+  padding: var(--stratakit-space-300);
+  border-radius: var(--stratakit-radius-md);
+  border: 1px solid var(--stratakit-color-border-neutral-muted);
+  animation: fx-in 240ms var(--fx-ease) both;
+}
+.fx-detail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--stratakit-space-200);
+}
+.fx-detail-title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-150);
+  font-size: var(--stratakit-font-size-body-md);
+  line-height: var(--stratakit-line-height-body-md);
+  font-weight: 600;
+}
+.fx-detail-edge {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-50);
+}
+.fx-detail-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--stratakit-space-200);
+}

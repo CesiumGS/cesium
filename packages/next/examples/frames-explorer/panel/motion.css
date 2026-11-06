@@ -1,0 +1,53 @@
+/* Keyframes and reduced motion, for every part. Imported in order by panel.css. */
+/* ---------------------------------------------------------- motion */
+
+@keyframes fx-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+@keyframes fx-grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+@keyframes fx-grow-down {
+  from {
+    transform: scaleY(0);
+  }
+}
+@keyframes fx-sheet {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fx-walk-edge,
+  .fx-walk-node,
+  .fx-budget-seg,
+  .fx-sheet,
+  .fx-tree-item.fx-on-path::before,
+  .fx-callout {
+    animation: none;
+  }
+  /* The tree cuts straight to its new shape and lights its path at once. */
+  .fx-node,
+  .fx-node-tag,
+  .fx-diagram-edge,
+  .fx-diagram-hit,
+  .fx-edge-tag,
+  .fx-proof-chevron,
+  .fx-answer-main {
+    transition: none;
+  }
+  .fx-detail,
+  .fx-tree-dialog {
+    animation: none;
+  }
+  .fx-pivot,
+  .fx-pivot-on {
+    transition: none;
+  }
+}

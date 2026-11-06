@@ -1,0 +1,104 @@
+/* The status strip (StatusStrip.tsx), always on top. Imported in order by panel.css. */
+/* ------------------------------------------------------- status strip */
+
+.fx-strip {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-150);
+  padding-block-end: var(--stratakit-space-200);
+  border-block-end: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.fx-strip-row {
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+}
+.fx-strip-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--stratakit-space-100);
+  flex: 1;
+  min-inline-size: 0;
+}
+.fx-pill-idle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+  padding: 0 var(--stratakit-space-150);
+  border: 1px dashed var(--stratakit-color-border-neutral-muted);
+  border-radius: var(--stratakit-radius-sm);
+  font-size: var(--stratakit-font-size-caption-lg);
+  line-height: 18px;
+  white-space: nowrap;
+}
+.fx-strip-counts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--stratakit-space-100) var(--stratakit-space-300);
+  font-variant-numeric: tabular-nums;
+}
+.fx-count {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.fx-count-pass {
+  color: var(--stratakit-color-text-positive-base);
+}
+.fx-count-fail {
+  font-weight: 600;
+}
+.fx-all-ready {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.fx-count-wait {
+  color: var(--stratakit-color-text-info-base);
+}
+.fx-fetch {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-50);
+  font-variant-numeric: tabular-nums;
+}
+.fx-strip-alert {
+  font-size: var(--stratakit-font-size-body-sm);
+}
+.fx-item-details {
+  border-collapse: collapse;
+  margin: var(--stratakit-space-200);
+  font-size: var(--stratakit-font-size-body-sm);
+}
+.fx-item-details caption {
+  text-align: start;
+  font-weight: 600;
+  padding-block-end: var(--stratakit-space-150);
+}
+.fx-item-details th,
+.fx-item-details td {
+  text-align: start;
+  padding: var(--stratakit-space-100) var(--stratakit-space-200);
+  border-block-start: 1px solid var(--stratakit-color-border-neutral-muted);
+  vertical-align: top;
+}
+.fx-item-details thead th {
+  border-block-start: 0;
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-weight: 400;
+}
+.fx-item-details tbody th {
+  font-weight: 500;
+}
+.fx-item-details tbody th > .fx-muted {
+  display: block;
+  font-weight: 400;
+}
