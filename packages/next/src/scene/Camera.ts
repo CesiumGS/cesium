@@ -71,6 +71,36 @@ export class Camera {
     return this.orient(localUp);
   }
 
+  /**
+   * `lookAt` in a given frame instead of the ellipsoid's east-north-up:
+   * `up` and `north` are perpendicular unit vectors (Earth-fixed), and east
+   * is `north × up`. Heading turns about `up`, clockwise from `north` seen
+   * from above (from +up); pitch is from the plane perpendicular to `up`
+   * (negative looks toward -up). The camera stays unrolled about `up`.
+   */
+  lookAtInFrame(
+    target: Vec3,
+    heading: number,
+    pitch: number,
+    range: number,
+    north: Vec3,
+    up: Vec3,
+  ): this {
+    const east = v3.cross(scratchA, north, up);
+    const p = Math.min(Math.max(pitch, -Math.PI / 2), Math.PI / 2);
+    const h = heading - Math.PI / 2;
+    // The same offset as `lookAt`, in (east, north, up).
+    const ox = -range * Math.cos(p) * Math.cos(h);
+    const oy = range * Math.cos(p) * Math.sin(h);
+    const oz = -range * Math.sin(p);
+    for (let i = 0; i < 3; i++) {
+      this.position[i] =
+        target[i]! + east[i]! * ox + north[i]! * oy + up[i]! * oz;
+    }
+    v3.normalize(this.direction, v3.sub(this.direction, target, this.position));
+    return this.orient(up);
+  }
+
   /** Re-derives right/up from `direction` and a reference up vector. */
   orient(referenceUp: Vec3): this {
     v3.cross(this.right, this.direction, referenceUp);

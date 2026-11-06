@@ -43,6 +43,7 @@ import {
   ModelPlacement,
   type ModelResource,
   type ModelResourceOptions,
+  type OrbitFrame,
   type PickResult,
   type Tileset3D,
   type TilesetOptions,
@@ -198,6 +199,25 @@ export type ZoomTarget =
   | ModelPlacement
   | { center: ArrayLike<number>; radius: number }
   | { longitude: number; latitude: number; range?: number };
+
+/**
+ * Where `setControls("orbit", options)` orbits. Each is optional: the
+ * target defaults to what was last framed (`zoomTo`), the range to the
+ * camera's distance from the target. Without a frame, heading and pitch
+ * are in east-north-up at the target and default to the globe controls'
+ * heading and -0.4 rad; in a frame (`OrbitFrame`), they default to where
+ * the camera is, so it only turns to face the target. Range limits apply
+ * to the wheel (default 0.01 m to unlimited).
+ */
+export interface OrbitOptions {
+  target?: ArrayLike<number>;
+  frame?: OrbitFrame;
+  heading?: number;
+  pitch?: number;
+  range?: number;
+  minRange?: number;
+  maxRange?: number;
+}
 
 const ellipsoid = Ellipsoid.WGS84;
 const deg = Math.PI / 180;
@@ -744,7 +764,13 @@ export class Viewer {
     this.view.camera.near = Math.min(0.1, Math.max(0.001, radius * 0.002));
     vec3.copy(this.focusCenter, center);
     this.controller.focus(center, heading, pitch, range);
-    this.orbit_?.focus(center, heading, pitch, range);
+    if (this.orbit_?.frame) {
+      // The orbit keeps its frame: placed as `zoomTo` places it, then read.
+      this.view.camera.lookAt(center, heading, pitch, range, ellipsoid);
+      this.orbit_.syncFromCamera(center);
+    } else {
+      this.orbit_?.focus(center, heading, pitch, range);
+    }
     if (this.second && this.secondController) {
       this.second.camera.near = this.view.camera.near;
       this.secondController.focus(
@@ -1017,25 +1043,88 @@ export class Viewer {
    * looking at a model (drag orbits, right- or shift-drag pans, wheel
    * zooms; `InspectController`), the globe controls paused meanwhile.
    * `zoomTo` frames in either.
+   *
+   * `options` (`OrbitOptions`) say where to orbit: around a point in
+   * space in a frame of its own, for one. Called again while orbiting, with
+   * options, it re-focuses the same controller (frame and range limits
+   * replaced by the new options'); without options it leaves the orbit as
+   * it is. `zoomTo` while orbiting re-focuses the orbit on what it frames,
+   * keeping the frame (the camera placed as `zoomTo` places it, then the
+   * orbit read from it); in a frame, a camera moved by other code is
+   * re-read at the next drag or wheel instead of snapped back.
    */
-  setControls(mode: "globe" | "orbit"): void {
-    if (mode === "orbit" && !this.orbit_) {
-      const orbit = new InspectController(this.view, this.canvas);
-      orbit.ignore = this.controller.ignore;
+  setControls(mode: "globe" | "orbit", options?: OrbitOptions): void {
+    if (mode === "orbit") {
+      let orbit = this.orbit_;
+      if (orbit && !options) {
+        return;
+      }
+      const o = options ?? {};
+      // A degenerate frame throws before anything changes.
+      const settings = {
+        frame: o.frame,
+        minRange: o.minRange ?? 0.01,
+        maxRange: o.maxRange ?? Infinity,
+      };
+      const target = vec3.copy(vec3.vec3(), o.target ?? this.focusCenter);
+      if (!orbit) {
+        orbit = new InspectController(this.view, this.canvas, settings);
+        orbit.ignore = this.controller.ignore;
+        orbit.onChange = () => this.onOrbitChange?.();
+        this.orbit_ = orbit;
+        this.controller.enabled = false;
+      } else {
+        orbit.frame = settings.frame;
+        orbit.minRange = settings.minRange;
+        orbit.maxRange = settings.maxRange;
+      }
       const camera = this.view.camera;
-      const range = Math.max(
-        vec3.distance(camera.position, this.focusCenter),
-        0.01,
-      );
-      orbit.focus(this.focusCenter, this.controller.heading, -0.4, range);
-      this.orbit_ = orbit;
-      this.controller.enabled = false;
+      const range =
+        o.range ?? Math.max(vec3.distance(camera.position, target), 0.01);
+      if (o.frame) {
+        // Heading and pitch default to where the camera is in the frame.
+        orbit.syncFromCamera(target);
+        orbit.focus(
+          target,
+          o.heading ?? orbit.heading,
+          o.pitch ?? orbit.pitch,
+          range,
+        );
+      } else {
+        orbit.focus(
+          target,
+          o.heading ?? this.controller.heading,
+          o.pitch ?? -0.4,
+          range,
+        );
+      }
     } else if (mode === "globe" && this.orbit_) {
       this.orbit_.dispose();
       this.orbit_ = undefined;
       this.controller.enabled = true;
+      this.onOrbitChange?.();
     }
   }
+
+  /**
+   * The point the orbit controls turn about (a copy), or undefined with the
+   * globe controls: for drawing a pivot marker. `onOrbitChange` says when
+   * it, or `orbitDragging`, may have changed.
+   */
+  get orbitPivot(): Float64Array | undefined {
+    return this.orbit_ && vec3.copy(vec3.vec3(), this.orbit_.target);
+  }
+
+  /** Whether the orbit controls are being dragged (rotating or panning). */
+  get orbitDragging(): boolean {
+    return this.orbit_?.dragging ?? false;
+  }
+
+  /**
+   * Called when the orbit controls move the camera, start or end a drag,
+   * or are turned off.
+   */
+  onOrbitChange?: () => void;
 
   /**
    * Suspends presentation while a scene is set up in steps (load, place,

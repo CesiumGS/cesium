@@ -92,7 +92,11 @@ export {
 } from "./scene/ViewLink.ts";
 export { Camera } from "./scene/Camera.ts";
 export { OrbitController } from "./scene/OrbitController.ts";
-export { InspectController } from "./scene/InspectController.ts";
+export {
+  InspectController,
+  type InspectControllerOptions,
+  type OrbitFrame,
+} from "./scene/InspectController.ts";
 export { GlobeController } from "./scene/GlobeController.ts";
 export {
   collectFullDetailContents,

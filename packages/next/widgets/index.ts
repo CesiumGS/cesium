@@ -7,6 +7,7 @@
 export {
   Viewer,
   type GlobeKind,
+  type OrbitOptions,
   type TilesetSource,
   type ViewerOptions,
   type ZoomTarget,
