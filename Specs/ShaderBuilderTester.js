@@ -6,9 +6,41 @@ function expectHasLine(linesArray, line) {
 
 // In practice, most of the dynamically generated GLSL code is generated
 // in an arbitrary order, so check only that they have the same set of lines.
+// For shaders, the elements will usually be unique. But this is not assumed
+// to be the case here.
 function expectEqualUnordered(array1, array2) {
-  // slice in case other tests do expect lines in a particular order.
-  expect(array1.slice().sort()).toEqual(array2.slice().sort());
+  const getFrequencies = (array) => {
+    const map = new Map();
+    for (const element of array) {
+      map.set(element, (map.get(element) || 0) + 1);
+    }
+    return map;
+  };
+  const counts1 = getFrequencies(array1);
+  const counts2 = getFrequencies(array2);
+
+  for (const [element, count2] of counts2.entries()) {
+    const actualCount = counts1.get(element) || 0;
+    if (actualCount !== count2) {
+      fail(
+        `Expected element '${element}' to appear ${count2} time(s), ` +
+          `but it appeared ${actualCount} time(s).\n` +
+          `array1: [${array1}]\n` +
+          `array2: [${array2}]`,
+      );
+      return;
+    }
+  }
+  for (const [element, count1] of counts1.entries()) {
+    if (!counts2.has(element)) {
+      fail(
+        `Found unexpected element '${element}' appearing ${count1} time(s) in array1.\n` +
+          `array1: [${array1}]\n` +
+          `array2: [${array2}]`,
+      );
+      return;
+    }
+  }
 }
 
 ShaderBuilderTester.expectHasAttributes = function (
