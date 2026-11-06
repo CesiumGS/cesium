@@ -244,6 +244,93 @@ describe(
         expect(() => editor.addMesh(source)).toThrowError(RuntimeError);
         expect(source.show).toBe(true);
       });
+
+      it("raises meshAdded after adding the mesh", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const listener = jasmine.createSpy("meshAdded").and.callFake((mesh) => {
+          expect(editor.hasMesh(mesh)).toBe(true);
+        });
+        editor.meshAdded.addEventListener(listener);
+
+        const mesh = editor.addMesh(createSource(square));
+
+        expect(listener).toHaveBeenCalledOnceWith(mesh);
+      });
+
+      it("does not raise meshAdded if the geometry can't be edited", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const listener = jasmine.createSpy("meshAdded");
+        editor.meshAdded.addEventListener(listener);
+
+        expect(() => editor.addMesh(createSource(lines))).toThrowError(
+          RuntimeError,
+        );
+        expect(listener).not.toHaveBeenCalled();
+      });
+    });
+
+    describe("meshes", function () {
+      it("is empty for a new editor", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+
+        expect(editor.meshes).toEqual([]);
+      });
+
+      it("lists the meshes in the order they were added", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const first = editor.addMesh(createSource(square));
+        const second = editor.addMesh(createSource(square));
+        const third = editor.addMesh(createSource(square));
+        editor.removeMesh(second);
+
+        expect(editor.meshes).toEqual([first, third]);
+      });
+
+      it("returns a copy", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const mesh = editor.addMesh(createSource(square));
+
+        editor.meshes.length = 0;
+
+        expect(editor.meshes).toEqual([mesh]);
+      });
+    });
+
+    describe("getMesh", function () {
+      it("returns the mesh that edits the source", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const source = createSource(square);
+        const mesh = editor.addMesh(source);
+
+        expect(editor.getMesh(source)).toBe(mesh);
+      });
+
+      it("returns undefined for a source that isn't in the editor", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const otherEditor = await MeshEditor.addToScene(scene);
+        const source = createSource(square);
+        otherEditor.addMesh(source);
+
+        expect(editor.getMesh(source)).toBeUndefined();
+      });
+
+      it("returns undefined once the mesh is removed", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const source = createSource(square);
+        editor.removeMesh(editor.addMesh(source));
+
+        expect(editor.getMesh(source)).toBeUndefined();
+      });
+
+      it("allows a removed source to be added again", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const source = createSource(square);
+        editor.removeMesh(editor.addMesh(source));
+
+        const mesh = editor.addMesh(source);
+
+        expect(editor.getMesh(source)).toBe(mesh);
+      });
     });
 
     describe("removeMesh", function () {
@@ -291,6 +378,38 @@ describe(
         editor.removeMesh(mesh);
 
         expect(renderCommands(mesh)).toEqual([]);
+      });
+
+      it("raises meshRemoved after removing the mesh and before destroying it", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const source = createSource(square);
+        const mesh = editor.addMesh(source);
+        const listener = jasmine
+          .createSpy("meshRemoved")
+          .and.callFake((removedMesh) => {
+            expect(editor.hasMesh(removedMesh)).toBe(false);
+            expect(editor.getMesh(source)).toBeUndefined();
+            expect(removedMesh.isDestroyed()).toBe(false);
+            expect(removedMesh.source).toBe(source);
+          });
+        editor.meshRemoved.addEventListener(listener);
+
+        editor.removeMesh(mesh);
+
+        expect(listener).toHaveBeenCalledOnceWith(mesh);
+        expect(mesh.isDestroyed()).toBe(true);
+      });
+
+      it("does not raise meshRemoved for a mesh that isn't in the editor", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const otherEditor = await MeshEditor.addToScene(scene);
+        const mesh = otherEditor.addMesh(createSource(square));
+        const listener = jasmine.createSpy("meshRemoved");
+        editor.meshRemoved.addEventListener(listener);
+
+        editor.removeMesh(mesh);
+
+        expect(listener).not.toHaveBeenCalled();
       });
     });
 
@@ -672,6 +791,17 @@ describe(
         for (const source of sources) {
           expect(source.show).toBe(true);
         }
+      });
+
+      it("does not raise meshRemoved", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        editor.addMesh(createSource(square));
+        const listener = jasmine.createSpy("meshRemoved");
+        editor.meshRemoved.addEventListener(listener);
+
+        scene.primitives.remove(editor);
+
+        expect(listener).not.toHaveBeenCalled();
       });
 
       it("is called when the editor is removed from the scene", async function () {
