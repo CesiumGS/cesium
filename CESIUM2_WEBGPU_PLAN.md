@@ -6191,6 +6191,80 @@ in SSB-relative positions (the Earth's 30 km/s), and about 0.2 mm Earth to
 Moon: all far inside the meter goal. A two-part `Instant` is the fix if a
 later plan needs more.
 
+_Frames 2 results (r62): the frame tree and trajectories._ The second of
+five plans (`docs/superpowers/plans/2026-11-05-frames-2-frame-tree-trajectories.md`)
+landed in `src/frames/`, `src/ephemeris/spk.ts` and `src/trajectory/`. Worst
+agreement the tests measured, 2026-11-05:
+
+- **The tree** (`createFrames`): ICRF, HCRS, GCRF, EME2000, ITRF, MOON_ICRF,
+  MOON_ME, MOON_PA and `bodyFixed(body)`, with `Frame`, `frameTransform`,
+  `FramePoint`/`convertPoint`, `eastNorthUpFrame` and `worldTransformFrame`.
+  - The frame bias is within 1e-15 of pyerfa `bp06`.
+  - GCRF→ITRF is within 1e-11 of plan 1's fixtures (worst 7.4e-12, the
+    float64 TT spacing); Moon ME and PA are within 1e-12.
+  - ITRF→MOON_ME translation is within 1 mm.
+- **SPK and trajectories**: `readSpk` reads types 2, 8, 9, 12 and 13 and
+  NAIF's old "NAIF/DAF" file id; `Trajectory.fromSpk` and `fromOem`;
+  `parseOem` and `Instant.fromIso`.
+  - Artemis II SPK against SPICE `spkgeo`, over 40 instants (segment edges
+    and the shared main and gap-fill endpoints included): positions within
+    1.2e-7 m, velocities within 6.0e-9 m/s.
+  - DSN stations (DSS-14, DSS-43): within 9.3e-10 m.
+  - Orion in MOON_ME against `spkpos`: within 8.7e-5 m.
+- **OEM against SPK** (R9), both read as EME2000 with Hermite degree 11:
+  at most 0.26 m over 1,286 instants. NAIF's conversion used SPICE's
+  approximate TDB.
+- **The frame bias at the flyby**: reading EME2000 as ICRF moves Orion by
+  28.4 m in MOON_ME at the 2026-04-06T23:00 UTC flyby (R1).
+- **The sky from DE440** (`skyState`) against the analytic models: the sun
+  within 0.0042°; the Moon within 0.056° at 2026-04-06 and 0.14° at
+  2000-06-21 (the analytic Moon's own error), its distance within 0.017%;
+  the Moon's pole within 0.0046°.
+- **Cost**: `skyState` with data takes 0.43 ms per call, mostly the IAU
+  2006/2000A X, Y and s series. It runs once per clock change, so every
+  frame while the clock plays. A cache over a short interval would cut it
+  if it matters.
+- **Earth-only rendering is unchanged without data.** The analytic path is
+  tested bit for bit, the Viewer's `frameData` option is off by default,
+  and only the bench Explorer opts in.
+- **Setup** now also stores the Artemis II OEM, SPK and gap-fill SPK and
+  NAIF's DSN station SPK (about 12 MB, SHA-256 pinned, credited to "NASA JSC
+  FOD Navigation, via NAIF" and "NAIF/JPL").
+- **Gates**: `npm test` 369 passing; `npm run test:data` 34 passing.
+
+Rulings:
+
+- **R1**: the axes behind an SPK's J2000 label are declared (`j2000:
+"icrf" | "eme2000"`), not assumed.
+- **R2**: frame edges are Newtonian until plan 3, which changes the one
+  GCRF→ICRF edge and its tolerances.
+- **R3**: rendering falls back (the sky uses the analytic models outside the
+  data); frames and trajectories throw.
+- **R4**: overlapping SPK data follows SPICE's precedence (later files, then
+  later segments, win); OEM segments follow the same rule.
+- **R5**: the OEM reader never guesses an interpolation; the Artemis OEM
+  needs `interpolation` (Hermite, degree 11).
+- **R6**: the world is not re-rooted; content stays Earth-fixed until plan 5.
+- **R7**: plan 1's rotations stay row-major 3×3, parent to child; frame
+  transforms are column-major float64 4×4; only `matrix.ts` converts.
+- **R8**: trajectory files join the setup store by default.
+- **R9**: the OEM is the primary Artemis source; the OEM and SPK may differ
+  by up to 0.5 m (measured 0.26 m).
+- **R10**: the Viewer keeps the analytic sky by default; `frameData` is
+  opt-in.
+- **R11**: frames carry positions only; velocity transforms are plan 3.
+
+Controller rulings made while building it:
+
+- The GCRF→ITRF rotation bound is 1e-11, plan 1's bound.
+- `frameBias` uses ERFA `bp06`'s IAU 2006 construction.
+- Sub-microsecond ISO fractions hold to float64 TT's 1.2e-7 s.
+- OEM spans honor `USEABLE_START_TIME` and `USEABLE_STOP_TIME`.
+- SPK spans clamp to the stored epochs.
+- A half-specified OEM interpolation header throws.
+- The old "NAIF/DAF" file id is read (the DSN station SPK uses it).
+- SPK window sizes are capped at SPICE's limits.
+
 ### 13.15 GPU resource limits and capacities (r50, design)
 
 **What broke.** The first run on a Mac (Apple M-series, Chrome) failed at
