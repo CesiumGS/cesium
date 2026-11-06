@@ -106,8 +106,13 @@ export default async (moduleArg) => ({
       expect(list.at(-1)).toEqual([name, size, size]);
     }
     // The glue gets the fetched WebAssembly instead of fetching it itself.
-    const arg = (globalThis as { __glueArg?: { wasmBinary?: Uint8Array } })
+    // An ArrayBuffer, which the glue views rather than copies, holding the
+    // whole body.
+    const arg = (globalThis as { __glueArg?: { wasmBinary?: unknown } })
       .__glueArg;
-    expect(arg?.wasmBinary?.byteLength).toBe(sizes["proj_capi.wasm"]);
+    expect(arg?.wasmBinary).toBeInstanceOf(ArrayBuffer);
+    expect((arg!.wasmBinary as ArrayBuffer).byteLength).toBe(
+      sizes["proj_capi.wasm"],
+    );
   });
 });

@@ -272,6 +272,7 @@ export { celestialToTerrestrial } from "./time/earthOrientation.ts";
 export { tdbMinusTt } from "./time/erfa/dtdb.ts";
 export { Ephemeris } from "./ephemeris/Ephemeris.ts";
 export {
+  FRAME_DATA_ROLES,
   loadFrameData,
   type FrameData,
   type FrameDataWarning,

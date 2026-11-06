@@ -1,4 +1,5 @@
-// The frames explorer's worker protocol (examples/frames-explorer/protocol.ts)
+// The frames explorer's worker protocol (examples/frames-explorer/protocol.ts
+// and host.ts)
 // on the real catalog and data: the host over a Node MessageChannel against
 // the frames data store, compared with direct calls (Review Focus 7). The
 // stub-catalog tests are in test/framesExplorerProtocol.test.ts.
@@ -9,12 +10,14 @@ import { afterAll, describe, expect, it } from "vitest";
 import { framesDataDirectory } from "../../scripts/frameData.mjs";
 import references from "../../examples/frames-explorer/references.json";
 import {
-  createClient,
   createHost,
-  type ClientWorker,
-  type FrameParams,
   type HostPort,
   type MakeContext,
+} from "../../examples/frames-explorer/host.ts";
+import {
+  createClient,
+  type ClientWorker,
+  type FrameParams,
   type OverlayGeometry,
 } from "../../examples/frames-explorer/protocol.ts";
 import {
@@ -128,6 +131,8 @@ function connect(cases?: readonly StressCase[]) {
     set onmessage(handler) {
       port2.onmessage = handler as never;
     },
+    onerror: null,
+    onmessageerror: null,
     terminate: () => port2.close(),
   };
   return createClient(worker, new AbortController().signal);

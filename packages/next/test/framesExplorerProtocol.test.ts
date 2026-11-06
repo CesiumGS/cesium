@@ -1,20 +1,24 @@
-// The frames explorer's worker protocol (examples/frames-explorer/protocol.ts):
-// the host and the client joined by a Node MessageChannel, with a stub catalog
+// The frames explorer's worker protocol (examples/frames-explorer/protocol.ts,
+// the client and messages, and host.ts, the worker's side): the host and the
+// client joined by a Node MessageChannel, with a stub catalog
 // and synthetic frames. Messages cross a real structured clone, and transfers
 // really detach. The real catalog runs through the host against the frames
 // data store in test/data/framesExplorerProtocol.test.ts; a browser run is
 // Task 6's.
+import { readFileSync } from "node:fs";
 import { MessageChannel, type MessagePort } from "node:worker_threads";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   MissingDataError,
   browserContext,
-  createClient,
   createHost,
-  type ClientWorker,
   type HostOptions,
   type HostPort,
   type MakeContext,
+} from "../examples/frames-explorer/host.ts";
+import {
+  createClient,
+  type ClientWorker,
   type ProgressReply,
   type Reply,
   type Request,
@@ -180,6 +184,8 @@ function connect(
     set onmessage(handler) {
       port2.onmessage = handler as never;
     },
+    onerror: null,
+    onmessageerror: null,
     terminate,
   };
   const client = createClient(worker, signal);
@@ -657,5 +663,123 @@ describe("the client's signal (R13, Review Focus 9)", () => {
       AbortSignal.abort(),
     );
     expect(terminate).toHaveBeenCalledOnce();
+  });
+});
+
+describe("a worker that fails (Review Focus 5)", () => {
+  /** A worker with no host behind it, as one whose script didn't load. */
+  function dead() {
+    const posted: Request[] = [];
+    const worker: ClientWorker = {
+      postMessage: (message) => posted.push(message),
+      onmessage: null,
+      onerror: null,
+      onmessageerror: null,
+      terminate: vi.fn(),
+    };
+    const client = createClient(worker, new AbortController().signal);
+    const events: StateReply[] = [];
+    client.onProgress((e) => {
+      if (e.type === "state") {
+        events.push(e);
+      }
+    });
+    const reply = (data: Reply) =>
+      worker.onmessage!({ data } as MessageEvent<Reply>);
+    return { worker, client, posted, events, reply };
+  }
+
+  it("onerror rejects every pending promise and ends every unfinished item in error", async () => {
+    const { worker, client, posted, events, reply } = dead();
+    // frames finished; proj is fetching (a run asked for it); orion has a
+    // pending load and no state yet.
+    reply({ type: "state", item: "frames", state: "ready" });
+    reply({ type: "state", item: "proj", state: "fetching" });
+    const run = client.run();
+    const orion = client.load("orion");
+    worker.onerror!({ message: "" } as ErrorEvent);
+    for (const pending of [run, orion]) {
+      await expect(pending).rejects.toMatchObject({
+        name: "WorkerError",
+        message: expect.stringMatching(
+          /worker failed: its script did not load/,
+        ),
+      });
+    }
+    expect(events.map((e) => `${e.item}:${e.state}`)).toEqual([
+      "frames:ready",
+      "proj:fetching",
+      "proj:error",
+      "orion:error",
+    ]);
+    expect(events.at(-1)!.detail).toMatch(/worker failed/);
+    // The worker is gone: later calls reject at once and post nothing.
+    const count = posted.length;
+    await expect(client.load("frames")).rejects.toMatchObject({
+      name: "WorkerError",
+    });
+    client.cancel();
+    expect(posted).toHaveLength(count);
+  });
+
+  it("onerror carries the worker's own message when it has one", async () => {
+    const { worker, client } = dead();
+    const load = client.load("frames");
+    worker.onerror!({ message: "SyntaxError: bad token" } as ErrorEvent);
+    await expect(load).rejects.toThrow(/worker failed: SyntaxError: bad token/);
+  });
+
+  it("onmessageerror rejects pending promises and ends unfinished items, and the worker goes on", async () => {
+    const { worker, client, posted, events } = dead();
+    const load = client.load("geoid");
+    const overlay = client.overlay("trajectoryPath", {
+      drawIn: "gcrf",
+      t0: 0,
+      t1: 600,
+      step: 60,
+      at: 0,
+    });
+    worker.onmessageerror!({} as MessageEvent);
+    await expect(load).rejects.toMatchObject({
+      name: "WorkerError",
+      message: expect.stringMatching(/could not be read/),
+    });
+    await expect(overlay).rejects.toMatchObject({ name: "WorkerError" });
+    expect(events.map((e) => `${e.item}:${e.state}`)).toEqual(["geoid:error"]);
+    // Still running: a later call is posted.
+    void client.load("frames");
+    expect(posted.at(-1)).toMatchObject({ type: "load", item: "frames" });
+  });
+
+  it("an aborted client leaves the handlers cleared", () => {
+    const controller = new AbortController();
+    const worker: ClientWorker = {
+      postMessage: () => {},
+      onmessage: null,
+      onerror: null,
+      onmessageerror: null,
+      terminate: () => {},
+    };
+    createClient(worker, controller.signal);
+    expect(worker.onerror).not.toBeNull();
+    controller.abort();
+    expect(worker.onmessage).toBeNull();
+    expect(worker.onerror).toBeNull();
+    expect(worker.onmessageerror).toBeNull();
+  });
+});
+
+describe("the main thread's module", () => {
+  it("protocol.ts imports types only, so the page doesn't bundle the catalog or PROJ", () => {
+    const source = readFileSync(
+      new URL("../examples/frames-explorer/protocol.ts", import.meta.url),
+      "utf8",
+    );
+    const imports = [...source.matchAll(/^import\b[^;]*;/gm)].map((m) => m[0]);
+    expect(imports.length).toBeGreaterThan(0);
+    for (const statement of imports) {
+      expect(statement, statement).toMatch(/^import type\b/);
+    }
+    expect(source).not.toMatch(/\bimport\(/);
   });
 });
