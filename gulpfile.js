@@ -181,7 +181,9 @@ export async function build() {
 }
 export default build;
 
-export const buildWatch = gulp.series(build, async function buildWatch() {
+export async function buildWatch() {
+  await build();
+
   const minify = argv.minify ? argv.minify : false;
   const removePragmas = argv.pragmas ? argv.pragmas : false;
   const sourcemap = argv.sourcemap ? argv.sourcemap : true;
@@ -278,7 +280,7 @@ export const buildWatch = gulp.series(build, async function buildWatch() {
 
     process.exit(0);
   });
-});
+}
 
 export async function buildTs() {
   /** @type {string[]} */
@@ -460,7 +462,10 @@ export async function prepare() {
   return stream;
 }
 
-export const cloc = gulp.series(clean, clocSource);
+export async function cloc() {
+  await clean();
+  await clocSource();
+}
 
 //Builds the documentation
 export async function buildDocs() {
@@ -498,68 +503,58 @@ export async function buildDocsWatch() {
   return gulp.watch(sourceFiles, buildDocs);
 }
 
-export const websiteRelease = gulp.series(
-  // @ts-expect-error gulp passes its done callback as `options`; package builds only read optional properties from it.
-  buildCore,
-  buildGltf,
-  buildEngine,
-  buildWidgets,
-  function websiteReleaseBuild() {
-    return buildCesium({
-      minify: false,
-      removePragmas: false,
-      node: false,
-    });
-  },
-  function websiteReleaseBuildMinified() {
-    return buildCesium({
-      minify: true,
-      removePragmas: true,
-      node: false,
-    });
-  },
-  function combineForSandcastle() {
-    const outputDirectory = join("Build", "Sandcastle", "CesiumUnminified");
-    return buildCesium({
-      minify: false,
-      removePragmas: false,
-      node: false,
-      outputDirectory: outputDirectory,
-    });
-  },
-  buildDocs,
-);
-
-export const buildRelease = gulp.series(
-  // @ts-expect-error gulp passes its done callback as `options`; package builds only read optional properties from it.
-  buildCore,
-  buildGltf,
-  buildEngine,
-  buildWidgets,
+export async function websiteRelease() {
+  await buildCore({});
+  await buildGltf({});
+  await buildEngine({});
+  await buildWidgets({});
   // Generate Build/CesiumUnminified
-  function buildCesiumForNode() {
-    return buildCesium({
-      minify: false,
-      removePragmas: false,
-      node: true,
-      sourcemap: false,
-    });
-  },
+  await buildCesium({
+    minify: false,
+    removePragmas: false,
+    node: false,
+  });
   // Generate Build/Cesium
-  function buildMinifiedCesiumForNode() {
-    return buildCesium({
-      minify: true,
-      removePragmas: true,
-      node: true,
-      sourcemap: false,
-    });
-  },
-);
+  await buildCesium({
+    minify: true,
+    removePragmas: true,
+    node: false,
+  });
+  // Generate Build/Sandcastle/CesiumUnminified
+  await buildCesium({
+    minify: false,
+    removePragmas: false,
+    node: false,
+    outputDirectory: join("Build", "Sandcastle", "CesiumUnminified"),
+  });
+  await buildDocs();
+}
 
-export const release = gulp.series(
-  buildRelease,
-  gulp.parallel(buildTs, buildDocs),
-);
+export async function buildRelease() {
+  await buildCore({});
+  await buildGltf({});
+  await buildEngine({});
+  await buildWidgets({});
+  // Generate Build/CesiumUnminified
+  await buildCesium({
+    minify: false,
+    removePragmas: false,
+    node: true,
+    sourcemap: false,
+  });
+  // Generate Build/Cesium
+  await buildCesium({
+    minify: true,
+    removePragmas: true,
+    node: true,
+    sourcemap: false,
+  });
+}
+
+export async function release() {
+  await buildRelease();
+  await Promise.all([buildTs(), buildDocs()]);
+}
 
 export const postversion = async function () {
   const workspace = argv.workspace;
