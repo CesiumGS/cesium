@@ -6532,55 +6532,64 @@ Controller rulings made while building it:
   grid names are validated as plain file names). `src/measure` has 0 issues.
   `@emnapi/runtime` 1.8.1 is Healthy with 0 vulnerabilities.
 
+_Frames 4a final review._ No silent wrong answers. The reviewer checked
+convergence against RigidPlacement's north (8e-9 rad, the sign right in both
+hemispheres), and WebAssembly against native PROJ (body-fixed within 9e-10 m,
+scale factor within 1.8e-13). The single fix wave did five things:
+
+- exported the 4a API from `src/index.ts`, with `@emnapi/runtime` now a
+  dynamic import;
+- removed a false end-of-alignment throw near the centre of curvature;
+- added WKT2 `BOUNDCRS` support, for the TOWGS84 CRSs GDAL and iModels
+  export. Units and factors come from the source CRS, and the operation from
+  the bound CRS;
+- fixed five setup and loader robustness defects;
+- corrected the README.
+
+The re-review then found that every 2D projected CRS with a geocentric
+Helmert round-tripped off by millimetres: EPSG:30169 by 2.8 mm, EPSG:26741 by
+0.76 mm. The cause is PROJ pushing the height around the Helmert. The inverse
+is now refined against the forward, so these round trips are under 1e-8 m, and
+an inverse that can't reproduce its forward within 1e-6 m throws. Final
+counts: `npm test` 533 passed, `npm run test:data` 121 passed.
+
 _Carried forward from frames plan 4a._ These are deferred items that are real
 work. The test-strength and wording nits the reviews raised are left out,
 because none of them changes a result.
 
-- **Plan 4b:** export `loadProj`, `gridFactors`, `resolveOperation`,
-  `crsUnits`, `crsDefinition`, `MOON_GEOGRAPHIC_CRS` and the types `CrsRef`,
-  `RecordedOperation`, `GridFactors` and `ProjApi` from `src/index.ts`.
-  Today they are imported from their modules, and the README says so. The 4b
-  reader needs them as public names.
 - **Plan 4b:** tests for design points on the Moon, across two frames and with
   `signal: false`. Today's design-measurement tests cover the Earth, one frame
   and the signal path.
-- **Plan 4b:** grid names in a pinned pipeline are read from `+grids=` only.
-  A pinned pipeline using `+nadgrids` or `+geoidgrids` reports an empty grid
-  list, so the missing-grid check and the accuracy note do not name its files.
-  Parse those keys as well, in the same step that fetches grids.
+- **Plan 4b: grid names in pinned pipelines.** They are read from `+grids=`
+  only. A pinned pipeline using `+nadgrids` or `+geoidgrids`, or an optional
+  `@` grid, reports an empty or partial grid list. The missing-grid check and
+  the accuracy note then don't name its files. Parse those keys as well, in the
+  same step that fetches grids.
+- **Plan 4b: a coarser operation taken silently.** Without its NADCON grid,
+  PROJ ranks EPSG:26741's 7 m Helmert first, and the 5 m and 2.15 m candidates
+  are never reported. The stated accuracy is honest, but R2 and Review Focus 1
+  disagree here. Record the better candidates and the grids they need.
+- **Plan 4b: grids differ by platform.** Node sees every grid in `base`; the
+  browser sees only the listed ones. Make both see the same set.
 - **Plan 4b:** after a PROJ upgrade, regenerate `test/fixtures/frames/proj.json`
   with `scripts/frameFixtures.py`. The 1e-12 factor tolerance against pyproj
   holds because both sides see bit-identical inputs, and sits at PROJ's
   numerical-differentiation noise floor.
+- **Plan 4b: the native loader.** In `loadNode` (`src/engineering/proj.ts`),
+  the native `.node` is not re-hashed at load, and `PROJ_DATA` is set
+  process-wide.
 - **Plan 5:** `measureSpan` runs `gridFactors` twice per sample, a `proj_factors`
   call at each end. Cache the factors by design point, or compute them once for
   a span's fixed ends.
-- **Plan 5:** `proj.ts` imports `@emnapi/runtime` statically, so every importer
-  of the module pays for it, and the browser load imports `proj_capi.mjs` by a
-  runtime URL (`@vite-ignore`). It was checked in the dev server only. Import
-  the runtime dynamically inside the browser path, and check `loadProj` in a
-  production build and in `build:lib`'s output.
-- **Plan 4b: setup and loader robustness.** Each is a small defect found in
-  review. Some may be fixed in the final review's fix wave.
-  - `ensureProj` in `scripts/frameData.mjs`: a previous manifest without
-    `files` throws a TypeError (an upgrade path). Default it to `[]`.
-  - `loadProj` in `src/engineering/proj.ts`: a `base` without a trailing slash
-    builds a wrong URL and a separate cache key. Normalize it.
-  - `extractTar` in `scripts/frameData.mjs`: accepts a negative parsed size,
-    which moves the cursor backwards. It is unreachable behind the hash check;
-    refuse it anyway.
-  - `loadNode` in `src/engineering/proj.ts`: the native `.node` is not
-    re-hashed at load, and `PROJ_DATA` is set process-wide.
-- **Plan 4b: operation-resolution errors.** In `resolveOperation`
-  (`src/engineering/crs.ts`):
-  - a candidate with no PROJ string is skipped silently, so the final error
-    never names it;
-  - the `catch {}` around `proj_create_operations` drops the binding's
-    original error. Attach it as `cause`.
-- **Frames example (the entry above):** the PROJ objects an `EngineeringFrame`,
-  `gridFactors` and `resolveOperation` create are never destroyed
-  (`proj_destroy`). One frame is cheap, but the stress tests make many. Release
-  them when a frame is dropped.
+- **Frames example (the entry above): `loadProj` in a production build.** The
+  browser path now imports `@emnapi/runtime` dynamically and `proj_capi.mjs` by
+  a runtime URL (`@vite-ignore`). It was checked in the dev server only. The
+  example's production-build check covers it; also check `build:lib`'s output.
+- **Frames example: PROJ object lifetimes.** Neither build exposes
+  `proj_destroy`, and the binding's glue uses a `FinalizationRegistry`. PROJ
+  objects are probably freed on garbage collection. Verify this under the
+  stress tests, which make many frames, rather than planning explicit destroy
+  calls.
 
 _Carried forward from the stress-test example's industry review (owner,
 2026-11-06)._ These library gaps came up while planning the frames example's
