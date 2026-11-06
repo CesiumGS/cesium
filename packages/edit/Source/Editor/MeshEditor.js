@@ -586,6 +586,31 @@ class MeshEditor {
   }
 
   /**
+   * Brings meshes up to date with the active state changes wasm reports since
+   * the previous update, including those a tool made. Wasm has already
+   * applied them, so setMeshActive and setMeshInactive only update the JS side.
+   *
+   * @param {BigUint64Array} activatedMeshes The keys of the meshes that became active.
+   * @param {BigUint64Array} deactivatedMeshes The keys of the meshes that became inactive, including removed ones.
+   * @ignore
+   */
+  #syncActiveMeshes(activatedMeshes, deactivatedMeshes) {
+    if (activatedMeshes.length === 0 && deactivatedMeshes.length === 0) {
+      return;
+    }
+
+    const activatedKeys = new Set(activatedMeshes);
+    const deactivatedKeys = new Set(deactivatedMeshes);
+    for (const mesh of this.#meshes) {
+      if (activatedKeys.has(mesh._key)) {
+        this.setMeshActive(mesh);
+      } else if (deactivatedKeys.has(mesh._key)) {
+        this.setMeshInactive(mesh);
+      }
+    }
+  }
+
+  /**
    * Sets which of a mesh's components to draw and pick. Components that are
    * drawn but can't be selected, like edges in Face mode, aren't pickable, so
    * they don't interfere with picking the selectable components (like vertices) around them.
@@ -708,9 +733,10 @@ class MeshEditor {
   }
 
   /**
-   * Called when rendering the scene. On render passes, runs the wasm update.
-   * Then updates each mesh, passing the bounds and overlay views of meshes
-   * whose overlays changed, and adds the outlines.
+   * Called when rendering the scene. On render passes, runs the wasm update
+   * and syncs the meshes that became active or inactive.
+   * Then updates each mesh's renderer, passing overlay views for meshes whose
+   * overlays changed, and adds the outlines.
    * <p>
    * Do not call this function directly.
    * </p>
@@ -723,7 +749,10 @@ class MeshEditor {
     if (frameState.passes.render) {
       // TODO: pass in real timestep. Currently unused by wasm update, but may be needed in the future.
       this.#wasmEditor.update(0.0, this.#updateResult);
-      changedKeys = new Set(this.#updateResult.changedOverlays);
+      const { changedOverlays, activatedMeshes, deactivatedMeshes } =
+        this.#updateResult;
+      changedKeys = new Set(changedOverlays);
+      this.#syncActiveMeshes(activatedMeshes, deactivatedMeshes);
     }
 
     for (const mesh of this.#meshes) {

@@ -1064,6 +1064,48 @@ describe(
         expect(editor.isMeshActive(mesh)).toBe(false);
         expect(editor.isMeshActive(other)).toBe(false);
       });
+
+      // In EditMode.NONE, active and inactive meshes draw and pick the same
+      // components, so these spy on the masks rather than render.
+      const faceMask = 1 << ComponentType.Face;
+
+      it("applies the mode's components to a mesh the select tool activates", async function () {
+        const { editor, mesh } = await createEditorWithSquare(EditMode.NONE);
+        editor.activeTool = SelectTool.addTo(editor);
+        editor.setMeshInactive(mesh);
+        scene.renderForSpecs();
+        const setShownComponents = spyOn(
+          mesh._renderer,
+          "setShownComponents",
+        ).and.callThrough();
+
+        click(getWindowPosition(facePosition));
+        expect(setShownComponents).not.toHaveBeenCalled();
+        scene.renderForSpecs();
+
+        if (!window.webglStub) {
+          expect(setShownComponents).toHaveBeenCalledOnceWith(faceMask);
+        }
+      });
+
+      it("applies the inactive components to meshes the select tool deactivates", async function () {
+        const { editor, mesh } = await createEditorWithSquare(EditMode.NONE);
+        editor.activeTool = SelectTool.addTo(editor);
+        const setShownComponents = spyOn(
+          mesh._renderer,
+          "setShownComponents",
+        ).and.callThrough();
+        const setPickableComponents = spyOn(
+          mesh._renderer,
+          "setPickableComponents",
+        ).and.callThrough();
+
+        click(emptyWindowPosition);
+        scene.renderForSpecs();
+
+        expect(setShownComponents).toHaveBeenCalledOnceWith(faceMask);
+        expect(setPickableComponents).toHaveBeenCalledOnceWith(faceMask);
+      });
     });
 
     describe("mode", function () {
