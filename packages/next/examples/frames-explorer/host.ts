@@ -518,7 +518,15 @@ export function createHost(
           layers: [
             layer(
               "trueNorth",
-              trueNorthLines(frame, p.extent, p.step, p.segment),
+              trueNorthLines(
+                frame,
+                p.extent,
+                p.step,
+                p.segment,
+                p.exaggeration !== undefined
+                  ? { exaggeration: p.exaggeration }
+                  : {},
+              ),
             ),
           ],
           operation: operationOf(frame),

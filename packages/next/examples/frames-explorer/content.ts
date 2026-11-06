@@ -1,10 +1,10 @@
-// The stub's stand-ins for what 6b adds to each case (rulings F27, F28; UX
-// review I14, I15): a short row label, the accuracy note that applies when a
-// result states no position, and what its expected value is.
-import type { Comparison } from "./model.ts";
+// The page's fixed copy: short row labels for results (UX review I14) and
+// the guided tour's stops (R16, DESIGN.md "The tour"). Plain data, imported by
+// the main thread.
+import type { OverlayId } from "./panel/model.ts";
 
-/** Short row labels (60 characters or fewer), by result id. */
-export const STUB_LABELS: Readonly<Record<string, string>> = {
+/** Short row labels (60 characters or fewer), by result id; rows fall back to the title. */
+export const RESULT_LABELS: Readonly<Record<string, string>> = {
   "projections.epsg-32610": "UTM 10N round trip, five points",
   "projections.epsg-32611": "UTM 11N round trip, five points",
   "projections.epsg-32612": "UTM 12N round trip, five points",
@@ -90,125 +90,79 @@ export const STUB_LABELS: Readonly<Record<string, string>> = {
   "lunar-time.moon-vs-earth.sidereal": "Lunar clock gain, sidereal month",
 };
 
-/** F27's accuracy note, per group, for results with no position statement. */
-export const GROUP_ACCURACY_NOTE: Readonly<Record<string, string>> = {
-  projections: "exact arithmetic: a round trip",
-  units: "exact arithmetic: unit definitions",
-  "site-grids": "exact arithmetic: the site formula",
-  "recorded-operations": "the recorded operation itself",
-  "frame-tree": "exact arithmetic: compositions",
-  time: "exact arithmetic: time scales",
-  trajectory: "the OEM's own coverage",
-  measurement: "exact arithmetic: the design geometry",
-  "reference-values": "published value ± half its last digit",
-  "vertical-profile": "exact arithmetic: the design manual's formulas",
-  distortion: "hand formula, exact to 10⁻⁹",
-  "rigid-placement-budget": "hand formula √(2Rε), within 10%",
-  "coordinate-epoch": "published example ± its rounding",
-  "axes-and-the-antimeridian": "published value ± half its last digit",
-  space: "SPICE fixture, plan 3's tolerances",
-  "operation-candidates": "the EPSG registry's stated accuracies",
-  "ifc-map-conversion": "published IfcSite ± half its last digit",
-  "plate-motion": "published manual values ± rounding",
-  "below-the-ellipsoid": "hand formula R/(R + h), exact to 10⁻¹²",
-  "heights-and-wgs84": "datasheet values ± half the last digit",
-  "bound-crss": "the WKT's own parameters, hand Helmert",
-  "time-scales": "exact by definition: IERS and IS-GPS-200",
-  "lunar-time": "Ashby & Patla (2024), within 2%",
-};
+/** A tour stop (R16): its caption, the overlays it turns on and where the camera goes. */
+export interface TourStopSpec {
+  id: string;
+  title: string;
+  caption: string;
+  overlays: readonly OverlayId[];
+  /** The camera: a named framing (`main.ts` places each). */
+  camera:
+    | "opening"
+    | "stay"
+    | "designGrid"
+    | "rigidVsExact"
+    | "earthMoon"
+    | "lunarSite";
+  /** Dim the imagery under an engineering subject (exposure compensation −0.6). */
+  dim?: boolean;
+  /** The clock: plays at this rate while the stop shows. */
+  rate?: number;
+  /** Orion's draw-in frame at this stop. */
+  orionFrame?: "GCRF" | "MOON_ME";
+}
 
-/** What each group's expected values are, for the inspector's "Compared against". */
-export const GROUP_COMPARED: Readonly<Record<string, Comparison>> = {
-  projections: {
-    kind: "roundTrip",
-    text: "The input itself, after forward and inverse: this proves the library agrees with itself, not that it's right (Reference values does that).",
+export const TOUR: readonly TourStopSpec[] = [
+  {
+    id: "earth-frames",
+    title: "Earth's frames",
+    caption:
+      "ITRF turns with the Earth; GCRF doesn't. Each triad is a frame's axes at the clock's time.",
+    overlays: ["triads"],
+    camera: "opening",
   },
-  units: {
-    kind: "formula",
-    text: "The foot definitions' ratio, (1200/3937)/0.3048, by hand.",
+  {
+    id: "gcrf-itrf-day",
+    title: "GCRF to ITRF over a day",
+    caption:
+      "The globe is drawn Earth-fixed, so GCRF's triad turns once against ITRF's in a sidereal day. The clock plays at 3,600×.",
+    overlays: ["triads"],
+    camera: "stay",
+    rate: 3600,
   },
-  "site-grids": {
-    kind: "formula",
-    text: "The site formula (rotate by θ, scale by s) by hand, then a round trip.",
+  {
+    id: "design-grid",
+    title: "The California design grid",
+    caption:
+      "Grid north and true north part ways away from the central meridian: the convergence angle, −0° 39′ at the grid's west edge, drawn ×20 so it shows.",
+    overlays: ["designGrid"],
+    camera: "designGrid",
+    dim: true,
   },
-  "recorded-operations": {
-    kind: "independent",
-    text: "The pipeline PROJ records, against the grid the CRS names.",
+  {
+    id: "rigid-exact",
+    title: "Rigid against exact",
+    caption:
+      "A 20 km design line placed rigidly sags about 31 m below the exact one at its far end.",
+    overlays: ["rigidVsExact"],
+    camera: "rigidVsExact",
+    dim: true,
   },
-  "frame-tree": {
-    kind: "roundTrip",
-    text: "The same transform by every route through the tree: self-consistency.",
+  {
+    id: "orion",
+    title: "Orion's figure-eight",
+    caption:
+      "Drawn in GCRF, Artemis II loops the Moon in a figure-eight; switch Orion's path to MOON_ME to see it swing round the far side.",
+    overlays: ["orion"],
+    camera: "earthMoon",
+    orionFrame: "GCRF",
   },
-  time: {
-    kind: "formula",
-    text: "UTC's leap-second rule by hand (Bulletin C 52).",
+  {
+    id: "lunar-time",
+    title: "The Moon's south pole and lunar time",
+    caption:
+      "A clock at the lunar south pole gains about 56 µs a day on one on Earth. The triad holds still as you orbit it, 384,000 km from the Earth-fixed origin.",
+    overlays: ["triads"],
+    camera: "lunarSite",
   },
-  trajectory: {
-    kind: "error",
-    text: "The OEM's covered spans, and a round trip through MOON_ME.",
-  },
-  measurement: {
-    kind: "formula",
-    text: "Design distance × site scale × metres per foot ÷ the combined factor, by hand.",
-  },
-  "reference-values": {
-    kind: "published",
-    text: "NGS datasheets and IOGP 373-7-2 worked examples, copied verbatim.",
-  },
-  "vertical-profile": {
-    kind: "published",
-    text: "The design manual's worked vertical curve.",
-  },
-  distortion: {
-    kind: "formula",
-    text: "√(1 − e² sin² φ) / cos φ and the handbook's target band, by hand.",
-  },
-  "rigid-placement-budget": {
-    kind: "formula",
-    text: "√(2Rε): the extent where a flat site leaves the ellipsoid by ε.",
-  },
-  "coordinate-epoch": {
-    kind: "published",
-    text: "IOGP 373-7-2's Helmert examples and EPSG 8970's parameters.",
-  },
-  "axes-and-the-antimeridian": {
-    kind: "published",
-    text: "GU2195's published UTM coordinates, and a round trip at ±180°.",
-  },
-  space: {
-    kind: "independent",
-    text: "Plan 3's SPICE fixture (spkpos, CN) and hand geometry.",
-  },
-  "operation-candidates": {
-    kind: "published",
-    text: "The EPSG registry's transformations 1311, 1133 and 1134.",
-  },
-  "ifc-map-conversion": {
-    kind: "published",
-    text: "IFC 4.3 Annex E's example: IfcSite latitude, longitude and height.",
-  },
-  "plate-motion": {
-    kind: "published",
-    text: "The GDA2020 technical manual's ALIC example (Table 3.2, Eq. 18).",
-  },
-  "below-the-ellipsoid": {
-    kind: "formula",
-    text: "R/(R + h) with R = √(MN), by hand.",
-  },
-  "heights-and-wgs84": {
-    kind: "published",
-    text: "GU2195's datasheet heights and the EPSG WGS 84 ensemble's 2 m.",
-  },
-  "bound-crss": {
-    kind: "formula",
-    text: "The WKT's TOWGS84 Helmert coded by hand (EPSG 9606).",
-  },
-  "time-scales": {
-    kind: "published",
-    text: "IERS Bulletin C 52 and IS-GPS-200N's GPS time.",
-  },
-  "lunar-time": {
-    kind: "published",
-    text: "Ashby & Patla (2024): 56.02 µs/day.",
-  },
-};
+];

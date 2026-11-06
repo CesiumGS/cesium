@@ -4,6 +4,7 @@ import {
   Button,
   CircularProgress,
   FormControl,
+  FormControlLabel,
   InputLabel,
   MenuItem,
   Select,
@@ -512,6 +513,30 @@ function OverlayOptions({
             value={model.distortionHeight}
             onChange={(e) =>
               actions.setDistortionHeight(Number(e.target.value))
+            }
+          />
+        </div>
+      );
+    case "designGrid":
+      // F32: the convergence is about a pixel at the tour's framing, so the
+      // true-north lines lean ×20 by default, labelled; this shows them true.
+      return (
+        <div className="fx-overlay-options">
+          <FormControlLabel
+            control={
+              <Switch
+                size="small"
+                checked={model.trueScale}
+                onChange={(_, on) => actions.setTrueScale(on)}
+              />
+            }
+            label={
+              <span className="fx-option-label">
+                Show true scale
+                {model.trueScale
+                  ? ""
+                  : ` (convergence drawn ×${model.convergenceFactor})`}
+              </span>
             }
           />
         </div>

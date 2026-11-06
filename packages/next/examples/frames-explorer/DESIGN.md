@@ -249,6 +249,21 @@ The caption sits top right (bottom, above the time controls, on views
 under 560 px), takes focus at each stop, and steps with the arrow keys;
 Escape ends the tour (I18). Each stop's link opens it (R15).
 
+### The convergence exaggeration (stop 3, ruling F32)
+
+At stop 3's framing the real convergence, −0° 39′ at the grid's west edge,
+leans a true-north line about one pixel over the view's height: the caption
+would describe something nobody can see. So the design grid's true-north
+lines are drawn with their convergence **×20** by default, as R4 draws the
+frame bias: each line is leaned from the grid line through the same E by 20
+times its true offset (display only; the geometry builder's
+`exaggeration`). It is never silent: the globe labels the line "true north,
+convergence ×20", the legend's and the overlay's accuracy line says "true
+north with its convergence drawn ×20", and the caption keeps the real angle
+(−0° 39′). The design grid's options hold a **Show true scale** switch that
+redraws the lines at ×1 (the label then reads "true north"). The grid lines
+themselves are never exaggerated.
+
 ## Layout
 
 ### Where it sits (R17)
@@ -567,7 +582,8 @@ definition (IAU 2006 adopted constants)". An overlay's own controls appear
 only once it is on: Orion's draw-in frame (an exclusive
 `ToggleButtonGroup`: GCRF, ITRF, MOON_ME), distortion's CRS (`Select` with
 a visible label) and height (`TextField`), the bias exaggeration
-(`Slider`, 10⁰ to 10⁷, its factor in its label).
+(`Slider`, 10⁰ to 10⁷, its factor in its label), and the design grid's
+"Show true scale" switch (F32, above).
 
 States: off; waiting ("fetching PROJ…" with a spinner on the row until it
 draws, R9); drawn; missing (switch disabled, the line says what to run);
@@ -860,30 +876,27 @@ Every term below has a popover wherever it appears (`panel/glossary.ts`,
 - **Missing data uses MUI `Alert`**, the table's first choice; `Banner`
   is deprecated in favor of it.
 
-## Open for 6b
+## Built in 6b, and where it differs
 
-Rulings F27 and F28 cover most of these; listed so 6b builds to the
-design.
-
-- **Group metadata on the main thread** (F28): a dependency-free module
-  of the groups' plain data. The stub copies it.
-- **Per-case fields** (F27, F28, I14, I15): `label` (60 characters or
-  fewer), `accuracyNote`, `trace`, `source`, what the expected value is
-  (published, hand formula, round trip, expected error, independent) and,
-  for relative checks beside a placement, that sentence. The stub writes
-  them out (`panel/stubLabels.ts`, `panel/stub.ts`), as `ResultExtras` in
-  `panel/model.ts`.
-- **Composed statements with their edges** (C2): `accuracyOf` gives the
-  terms; 6b ties each to the edges it comes from and lists the edges that
-  add nothing at the origin, as `ComposedView` does, for each reference
-  (ITRF, GCRF, ICRF). The stub's rule engine (`composedFor` in stub.ts)
-  shows the intended result.
-- **The globe** (C1): everything in "On the globe", then a second UX
-  review on real screenshots. Lines are 1 px (F30): hierarchy by color
-  strength and alpha, dashes as world-space segments, the imagery dimmed
-  by exposure compensation under an engineering subject, triad shafts as
-  meshes; labels are HTML in the HUD host with the declutter rule.
-- **The clock binding** (I13): a test that the walk's instant equals the
-  viewer's clock.
-- **Links** (F28): through `context.params`, `setParams` and
-  `watchParams`, not `location.href`.
+- **Group metadata** is `stress/groupInfo.ts` (F28), with each group's
+  accuracy note, what it is compared against and its needs. Results carry
+  `accuracyNote`, `trace` and `source` from the catalog (F27, F28); short
+  row labels are `content.ts`, the tour too.
+- **Composed statements come from the library** (`composed.ts`, through
+  `measure`): the accuracy of the separation of the frame's origin from the
+  reference's. That differs from the 6a stub's rule engine: a rotation
+  doesn't change a separation, so Earth orientation adds nothing for
+  MOON_PA against ITRF, and the walk's total there is DE440's 10 mm with the
+  Moon's 30 mm relativity term (±32 mm), not the stub's ±1.0 m. The library
+  wins, as 6a's report said it would; the walk says why each edge adds
+  nothing.
+- **Dimming at 1 px.** Lines are opaque in the engine (a blended pass is
+  for triangles only), so "alpha 0.35" is a 0.35 tint (darker, on a dark
+  ground) and "alpha 0.6" a 0.6 tint. The selected overlay keeps full
+  strength; the lighter tint (50% white) for it is not built.
+- **Not built yet** (6c or later): the geocentric triads' x-ray dashes
+  inside the globe, the 2 km minor grid lines under 60 km range, the walk's
+  animated dotted path between triad origins on the globe, the label fade
+  under 24 px (labels only hide on collision), and Orion and engineering
+  nodes for the frames the worker alone holds (the tree gains one
+  engineering node once the design grid's operation is known).

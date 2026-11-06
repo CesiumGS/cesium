@@ -242,6 +242,13 @@ describe("runStress", () => {
     expect(results[0]!.id.startsWith(b.id)).toBe(true);
   });
 
+  it("runs a group's cases when ids names the group", async () => {
+    const a = stub([{}]);
+    const b = { ...stub([{}]), group: "units" };
+    const results = await run([a, b], { ids: ["units"] });
+    expect(results.map((r) => r.id)).toEqual([`${b.id}.0`]);
+  });
+
   it("gives plain, structured-clone data (R13)", async () => {
     const results = await run([
       stub([
@@ -605,6 +612,15 @@ describe("what the inspector needs, filled by the catalog (F27, F28)", () => {
       expect(g.compared.text.length, g.id).toBeGreaterThan(0);
     }
     expect(GROUP_INFO.map((g) => g.id)).toEqual(STRESS_GROUPS.map((g) => g.id));
+  });
+
+  it("states each group's needs as the union of its cases' (R9's waiting)", () => {
+    for (const g of GROUP_INFO.filter((g) => g.virtual !== true)) {
+      const union = new Set(
+        STRESS_CASES.filter((c) => c.group === g.id).flatMap((c) => c.needs),
+      );
+      expect([...g.needs].sort(), g.id).toEqual([...union].sort());
+    }
   });
 
   it("builds a trace from input to output when the case wrote none", async () => {

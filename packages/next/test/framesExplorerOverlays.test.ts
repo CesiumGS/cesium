@@ -309,6 +309,49 @@ describe("trueNorthLines", () => {
   });
 });
 
+describe("trueNorthLines' convergence exaggeration (F32)", () => {
+  const extent = {
+    min: [100, 200] as [number, number],
+    max: [400, 5200] as [number, number],
+  };
+
+  it("draws the true line at 1, the default", () => {
+    const a = trueNorthLines(stub, extent, 100, 500);
+    const b = trueNorthLines(stub, extent, 100, 500, { exaggeration: 1 });
+    expect(Array.from(b.positions)).toEqual(Array.from(a.positions));
+  });
+
+  it("leans each vertex from the grid line k times its true offset", () => {
+    const k = 20;
+    const truth = trueNorthLines(stub, extent, 100, 500);
+    const leaned = trueNorthLines(stub, extent, 100, 500, { exaggeration: k });
+    expect(leaned.positions.length).toBe(truth.positions.length);
+    // Line 0 (E 100), 10 segments: vertex 2s + 1 is sample s + 1.
+    for (let s = 0; s < 10; s++) {
+      const i = 2 * s + 1;
+      const grid = stub.toBodyFixed([100, 200 + 500 * (s + 1), 0]);
+      const t = vertex(truth, i);
+      const l = vertex(leaned, i);
+      for (let c = 0; c < 3; c++) {
+        const want = grid[c]! + k * (t[c]! - grid[c]!);
+        expect(Math.abs(l[c]! - want)).toBeLessThan(1e-6);
+      }
+    }
+    // It starts where the grid line does: the lean is zero at min N.
+    const start = stub.toBodyFixed([100, 200, 0]);
+    const first = vertex(leaned, 0);
+    for (let c = 0; c < 3; c++) {
+      expect(Math.abs(first[c]! - start[c]!)).toBeLessThan(1e-6);
+    }
+  });
+
+  it("rejects a factor that is not positive", () => {
+    expect(() =>
+      trueNorthLines(stub, extent, 100, 500, { exaggeration: 0 }),
+    ).toThrow(/exaggeration/);
+  });
+});
+
 describe("roundTripMarkers", () => {
   it("colors a result green at 0.05 x tolerance, amber at 0.5 x and red at 2 x", () => {
     const tolerance = 1e-4;

@@ -1,8 +1,8 @@
 // "Try your own" (R18), in the Bound CRSs card: paste a WKT2, the path that
-// always works, or read what Cesium ion has for an asset. ion exposes no CRS
-// for an asset today (DESIGN.md, "Cesium ion and an iModel's CRS"), so the
-// fetch says so plainly and points back to the paste box. The token is never
-// shown, stored or put in a URL: only where it came from.
+// always works, and show an ion asset on the globe for context (ruling F33).
+// ion exposes no CRS for an asset (DESIGN.md, "Cesium ion and an iModel's
+// CRS"), so the area says so plainly: the checks run on the pasted WKT2. The
+// token is never shown, stored or put in a URL.
 import {
   Alert,
   Button,
@@ -89,7 +89,12 @@ export function TryYourOwn({
 
       <div className="fx-try-ion">
         <Typography variant="body-sm" render={<p />} className="fx-strong">
-          Or read it from Cesium ion
+          Show its ion asset on the globe
+        </Typography>
+        <Typography variant="body-sm" color="textSecondary" render={<p />}>
+          Cesium ion doesn&rsquo;t carry an asset&rsquo;s CRS: its tiler uses
+          the CRS and keeps none. The asset loads here for context; the checks
+          run on the WKT2 you paste above.
         </Typography>
         {token === undefined ? (
           <Alert severity="info">
@@ -123,7 +128,7 @@ export function TryYourOwn({
                 disabled={trimmed === "" || isGuid || busy}
                 onClick={() => onFetch(trimmed)}
               >
-                {state.state === "fetching" ? "Fetching…" : "Fetch"}
+                {state.state === "fetching" ? "Loading…" : "Show on globe"}
               </Button>
             </div>
             <Typography
@@ -142,7 +147,7 @@ export function TryYourOwn({
             )}
             {state.state === "noCrs" && (
               <Alert severity="info">
-                {state.message} Paste its WKT2 above to check it.
+                {state.message} Paste its WKT2 above to check its CRS.
               </Alert>
             )}
             {state.state === "error" && (
