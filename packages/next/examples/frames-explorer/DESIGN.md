@@ -4,9 +4,9 @@ How the frames explorer's page looks, reads and behaves. It applies
 [Dyno's design guide](../../bench/suite/DESIGN.md) and StrataKit; it adds
 no visual language of its own beyond the 3D viewport's HUD, which Dyno's
 guide exempts. The plan's R14 fixes the structure, R16 the quality bar,
-R17 the frame it sits in. Screenshots of the prototype (stub data, part 6a)
-are in [design-screenshots/](design-screenshots/); the globe's mocks in
-[design-mocks/](design-mocks/).
+R17 the frame it sits in. Design-review screenshots are taken locally into
+`design-screenshots/`, which git ignores (they are large and retaken often);
+the globe's mocks are in [design-mocks/](design-mocks/).
 
 ## Who it is for
 
