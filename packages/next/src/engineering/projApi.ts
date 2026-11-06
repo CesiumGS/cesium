@@ -26,6 +26,7 @@ export type PjType = number & { readonly [handle]: "PJ_TYPE" };
 export type PjProjStringType = number & {
   readonly [handle]: "PJ_PROJ_STRING_TYPE";
 };
+export type PjWktType = number & { readonly [handle]: "PJ_WKT_TYPE" };
 
 /** A PJ_COORD: read it through its accessors (it is not a plain object). */
 export interface PjCoord {
@@ -84,11 +85,12 @@ export interface ProjApi {
   proj_coordoperation_get_grid_used(operation: PJ, index: number): PjGridUsed;
   /** Metres; negative when PROJ reports none. */
   proj_coordoperation_get_accuracy(operation: PJ): number;
+  /** Null when the object has no PROJ string (or could not be created). */
   proj_as_proj_string(
     object: PJ,
     type: PjProjStringType,
     options?: Record<string, string | boolean | number>,
-  ): string;
+  ): string | null;
 
   proj_trans(operation: PJ, direction: PjDirection, coord: PjCoord): PjCoord;
   proj_coord(x: number, y: number, z: number, t: number): PjCoord;
@@ -99,8 +101,17 @@ export interface ProjApi {
   proj_cs_get_axis_info(cs: PJ, index: number): PjAxisInfo;
   proj_crs_get_sub_crs(crs: PJ, index: number): PJ;
   proj_get_type(object: PJ): PjType;
+  /** Null for an object PROJ could not create (proj_create does not throw). */
+  proj_get_name(object: PJ): string | null;
+  proj_as_wkt(
+    object: PJ,
+    type: PjWktType,
+    options?: Record<string, string | boolean | number>,
+  ): string;
 
   readonly PJ_FWD: PjDirection;
   readonly PJ_INV: PjDirection;
   readonly PJ_PROJ_5: PjProjStringType;
+  readonly PJ_TYPE_COMPOUND_CRS: PjType;
+  readonly PJ_WKT2_2019: PjWktType;
 }
