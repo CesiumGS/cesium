@@ -38,6 +38,7 @@ import {
   type StressContext,
   type StressResult,
   fmt,
+  judgeResult,
   messageOf,
   plainAccuracy,
 } from "../runner.ts";
@@ -56,6 +57,7 @@ import {
   type WktNode,
   axisMetres,
   bboxCentre,
+  boundMethodName,
   ellipsoidOfNode,
   epsgId,
   find,
@@ -276,15 +278,11 @@ async function boundChecks(
 
   // 2. The recorded operation is the bound Helmert.
   let towgs84;
+  let notHelmert: string | undefined;
   try {
     towgs84 = towgs84Of(root);
   } catch (error) {
-    results.push({
-      ...base("recorded-operation", "the recorded operation"),
-      pass: false,
-      error: messageOf(error),
-      userInput: options.userInput,
-    });
+    notHelmert = messageOf(error);
   }
   const op = frame.operation;
   const registryCrs: CrsRef | undefined =
@@ -311,7 +309,18 @@ async function boundChecks(
       registryError = messageOf(error);
     }
   }
-  if (towgs84 === undefined) {
+  if (notHelmert !== undefined) {
+    results.push({
+      ...base(
+        "recorded-operation",
+        "the recorded operation is the bound CRS's own Helmert",
+      ),
+      pass: false,
+      error: notHelmert,
+      detail: `recorded: ${op.pipeline}`,
+      userInput: options.userInput,
+    });
+  } else if (towgs84 === undefined) {
     results.push({
       ...base(
         "recorded-operation",
@@ -349,7 +358,11 @@ async function boundChecks(
   // 3. The forward against a hand-coded Helmert from the WKT's own numbers.
   const sourceEllipsoid = ellipsoidOfNode(sourceNode);
   const targetNode = find(root, "TARGETCRS");
-  const targetEllipsoid = ellipsoidOfNode(targetNode);
+  // WKT1's TOWGS84 is to WGS 84 by definition; a WKT2 BOUNDCRS names its target.
+  const targetEllipsoid =
+    targetNode === undefined && towgs84 !== undefined
+      ? { name: "WGS 84", ...wgs84 }
+      : ellipsoidOfNode(targetNode);
   const toWgs84 =
     targetEllipsoid !== undefined &&
     Math.abs(targetEllipsoid.a - wgs84.a) < 1e-6 &&
@@ -366,13 +379,15 @@ async function boundChecks(
     !pure
   ) {
     const why =
-      towgs84 === undefined
-        ? "the WKT carries no TOWGS84 parameters, so there is no bound Helmert to compare with"
-        : sourceEllipsoid === undefined
-          ? "the WKT's source CRS states no ellipsoid"
-          : !toWgs84
-            ? "the bound CRS's target is not on the WGS 84 ellipsoid"
-            : "the source CRS's conversion to its geographic CRS is not a conversion alone";
+      notHelmert !== undefined
+        ? `the bound transformation isn't a Helmert (${boundMethodName(root) ?? "unnamed"}), so there's no hand comparison`
+        : towgs84 === undefined
+          ? "the WKT carries no TOWGS84 parameters, so there is no bound Helmert to compare with"
+          : sourceEllipsoid === undefined
+            ? "the WKT's source CRS states no ellipsoid"
+            : !toWgs84
+              ? "the bound CRS's target is not on the WGS 84 ellipsoid"
+              : "the source CRS's conversion to its geographic CRS is not a conversion alone";
     results.push({
       ...base("helmert", "the forward against a hand-coded Helmert (skipped)"),
       pass: true,
@@ -546,7 +561,9 @@ export async function boundCrsChecks(
       idBase,
       userInput: true,
     });
-    return results.map((r) => ({ ...r, userInput: true }));
+    // Judged as the runner judges the catalog: a pass the checks don't bear
+    // out is never shown (R18).
+    return results.map((r) => judgeResult({ ...r, userInput: true }));
   } catch (error) {
     return [
       {

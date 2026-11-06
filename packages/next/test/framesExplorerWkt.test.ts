@@ -9,12 +9,25 @@ import {
   siteFromIfcMapConversion,
 } from "../examples/frames-explorer/tests.ts";
 import {
+  axisMetres,
   bboxCentre,
   ellipsoidOfNode,
+  epsgId,
   parseWkt,
+  projectionOrigin,
   sourceCrsNode,
   towgs84Of,
 } from "../examples/frames-explorer/stress/wkt.ts";
+
+/** A BOUNDCRS whose only parameter is the scale difference, as given. */
+const scaled = (parameter: string) =>
+  parseWkt(`BOUNDCRS[SOURCECRS[GEOGCRS["x"]],TARGETCRS[GEOGCRS["WGS 84"]],
+    ABRIDGEDTRANSFORMATION["t",METHOD["Position Vector transformation (geog2D domain)",ID["EPSG",9606]],
+      PARAMETER["X-axis translation",0],PARAMETER["Y-axis translation",0],PARAMETER["Z-axis translation",0],
+      ${parameter}]]`);
+
+/** GDAL's WKT1 for ED50 / UTM 31N and OSGB 1936 / BNG with TOWGS84 (as PROJ 9.7.1's PJ_WKT1_GDAL writes them). */
+const WKT1_ED50 = `PROJCS["unknown",GEOGCS["unknown",DATUM["Unknown based on International 1924 (Hayford 1909, 1910) ellipsoid using towgs84=-87,-98,-121,0,0,0,0",SPHEROID["International 1924 (Hayford 1909, 1910)",6378388,297],TOWGS84[-87,-98,-121,0,0,0,0]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",3],PARAMETER["scale_factor",0.9996],PARAMETER["false_easting",500000],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],AXIS["Northing",NORTH]]`;
 
 const ARCSECOND = Math.PI / 648_000;
 const entries = references.entries as unknown as Record<
@@ -79,6 +92,73 @@ describe("the WKT reader", () => {
       0.0015,
       "east",
     ]);
+  });
+});
+
+describe("the scale difference's units", () => {
+  it("reads a unity, ppm or parts-per-billion scale difference, and a bare scale factor, as dS", () => {
+    for (const parameter of [
+      'PARAMETER["Scale difference",0.99998,SCALEUNIT["unity",1]]',
+      'PARAMETER["Scale difference",-20,SCALEUNIT["parts per million",1E-06]]',
+      'PARAMETER["Scale difference",-20000,SCALEUNIT["parts per billion",1E-09]]',
+      'PARAMETER["Scale difference",-0.00002,SCALEUNIT["unity",1]]',
+      'PARAMETER["Scale difference",0.99998]',
+    ]) {
+      expect(
+        towgs84Of(scaled(parameter))!.parameters.ds,
+        parameter,
+      ).toBeCloseTo(-2e-5, 15);
+    }
+  });
+
+  it("refuses a scale that is neither a factor near 1 nor a small difference", () => {
+    expect(() =>
+      towgs84Of(scaled('PARAMETER["Scale difference",3,SCALEUNIT["unity",1]]')),
+    ).toThrow(/scale difference/);
+  });
+});
+
+describe("WKT1 (GDAL's TOWGS84)", () => {
+  it("reads TOWGS84 as a position-vector Helmert in metres, arc-seconds and ppm", () => {
+    const seven = parseWkt(
+      WKT1_ED50.replace(
+        "TOWGS84[-87,-98,-121,0,0,0,0]",
+        "TOWGS84[446.448,-125.157,542.06,0.15,0.247,0.842,-20.489]",
+      ),
+    );
+    const t = towgs84Of(seven)!;
+    expect(t.convention).toBe("position-vector");
+    expect(t.keepsHeight).toBe(true);
+    expect(t.parameters.tx).toBe(446.448);
+    expect(t.parameters.ry).toBeCloseTo(0.247 * ARCSECOND, 18);
+    expect(t.parameters.ds).toBeCloseTo(-20.489e-6, 15);
+    const three = towgs84Of(
+      parseWkt(
+        WKT1_ED50.replace(
+          "TOWGS84[-87,-98,-121,0,0,0,0]",
+          "TOWGS84[-87,-98,-121]",
+        ),
+      ),
+    )!;
+    expect(three.parameters.tz).toBe(-121);
+    expect(three.parameters.ds).toBe(0);
+  });
+
+  it("reads WKT1's spheroid, unit, origin and authority", () => {
+    const root = parseWkt(WKT1_ED50);
+    const crs = sourceCrsNode(root);
+    expect(ellipsoidOfNode(crs)).toEqual({
+      name: "International 1924 (Hayford 1909, 1910)",
+      a: 6378388,
+      f: 1 / 297,
+    });
+    expect(axisMetres(crs)).toBe(1);
+    expect(projectionOrigin(crs)).toEqual([3, 0]);
+    expect(
+      epsgId(
+        parseWkt(`PROJCS["ED50 / UTM zone 31N",AUTHORITY["EPSG","23031"]]`),
+      ),
+    ).toBe(23031);
   });
 });
 

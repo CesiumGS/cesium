@@ -24,7 +24,7 @@ import {
   type StressContext,
   type StressResult,
 } from "../../examples/frames-explorer/tests.ts";
-import { loadProj } from "../../src/engineering/proj.ts";
+import { loadProj, type ProjApi } from "../../src/engineering/proj.ts";
 import { Ephemeris } from "../../src/ephemeris/Ephemeris.ts";
 import type { FrameData } from "../../src/ephemeris/loadFrameData.ts";
 import { createFrames } from "../../src/frames/frames.ts";
@@ -253,6 +253,106 @@ describe('boundCrsChecks, R18\'s "Try your own"', () => {
     expect(user[0]!.pass).toBe(false);
     expect(user[0]!.userInput).toBe(true);
     expect(user[0]!.error).toMatch(/WKT/);
+  });
+
+  // A PROJ whose created operations use a Helmert 10 m off in X: what the
+  // WKT says is unchanged, so the hand Helmert disagrees with the frame.
+  const tampered = async (): Promise<ProjApi> => {
+    const P = await loadProj({ base });
+    return new Proxy(P, {
+      get(target, key, receiver) {
+        if (key === "proj_create") {
+          return (definition: string) =>
+            target.proj_create(definition.replace("+x=-87 ", "+x=-77 "));
+        }
+        const value: unknown = Reflect.get(target, key, receiver);
+        return typeof value === "function"
+          ? (value as (...a: unknown[]) => unknown).bind(target)
+          : value;
+      },
+    });
+  };
+
+  it("judges its results: a frame 10 m off the WKT's Helmert fails", async () => {
+    const user = await boundCrsChecks(
+      { ...context, proj: await tampered() },
+      wkt("ed50-utm31n"),
+      "Tampered",
+    );
+    const helmert = user.find((r) => r.id.endsWith(".helmert"))!;
+    // At the projection's origin (0°, 3°E) 10 m in X is mostly up, which
+    // the geog2D Helmert drops: 0.52 m of it is horizontal.
+    expect(helmert.value).toBeGreaterThan(0.5);
+    expect(helmert.pass).toBe(false);
+    expect(helmert.detail).toMatch(/beyond its tolerance/);
+  });
+
+  it("names a non-Helmert bound transformation once, and says why it skips the hand comparison", async () => {
+    // A BOUNDCRS whose transformation is EPSG 9619 (Geographic2D offsets).
+    const offsets = wkt("ed50-utm31n").replace(
+      /ABRIDGEDTRANSFORMATION\[[\s\S]*\]\]\s*$/,
+      'ABRIDGEDTRANSFORMATION["offsets",METHOD["Geographic2D offsets",ID["EPSG",9619]],PARAMETER["Latitude offset",-3.5,ANGLEUNIT["arc-second",4.84813681109536E-06],ID["EPSG",8601]],PARAMETER["Longitude offset",-4.5,ANGLEUNIT["arc-second",4.84813681109536E-06],ID["EPSG",8602]]]]',
+    );
+    const user = await boundCrsChecks(context, offsets, "Offsets");
+    const ids = user.map((r) => r.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    const recorded = user.filter((r) => r.id.endsWith(".recorded-operation"));
+    expect(recorded).toHaveLength(1);
+    expect(recorded[0]!.pass).toBe(false);
+    expect(recorded[0]!.error).toMatch(/Geographic2D offsets/);
+    const helmert = user.find((r) => r.id.endsWith(".helmert"))!;
+    expect(helmert.detail).toMatch(
+      /the bound transformation isn't a Helmert \(Geographic2D offsets\)/,
+    );
+    expect(helmert.detail).not.toMatch(/no TOWGS84/);
+  });
+
+  it("reads WKT1's TOWGS84 and checks it by hand", async () => {
+    const P = await loadProj({ base });
+    for (const definition of [
+      "+proj=utm +zone=31 +ellps=intl +towgs84=-87,-98,-121,0,0,0,0 +units=m +no_defs +type=crs",
+      "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +towgs84=446.448,-125.157,542.06,0.15,0.247,0.842,-20.489 +units=m +no_defs +type=crs",
+    ]) {
+      const wkt1 = P.proj_as_wkt(
+        P.proj_create(definition),
+        (P as unknown as { PJ_WKT1_GDAL: ProjApi["PJ_WKT2_2019"] })
+          .PJ_WKT1_GDAL,
+      );
+      expect(wkt1).toMatch(/^PROJCS\[/);
+      const user = await boundCrsChecks(context, wkt1, "WKT1");
+      const helmert = user.find((r) => r.id.endsWith(".helmert"))!;
+      expect(helmert.displayOnly, helmert.detail).toBeUndefined();
+      expect(helmert.pass, helmert.detail).toBe(true);
+      expect(helmert.value!).toBeLessThan(1e-3);
+      const recorded = user.find((r) => r.id.endsWith(".recorded-operation"))!;
+      expect(recorded.pass, recorded.detail).toBe(true);
+    }
+  });
+});
+
+describe("every verdict is judged", () => {
+  const holds = (r: StressResult) =>
+    !r.pass ||
+    r.tolerance === undefined ||
+    (r.value !== undefined && Math.abs(r.value) <= r.tolerance);
+
+  it("has no passing result beyond its tolerance, in the catalog or boundCrsChecks", async () => {
+    const all = await runStress(context);
+    for (const r of all) {
+      expect(holds(r), r.id).toBe(true);
+    }
+    const entries = references.entries as unknown as Record<
+      string,
+      { kind?: string; wkt2?: string }
+    >;
+    for (const [id, entry] of Object.entries(entries)) {
+      if (entry.kind !== "input" || entry.wkt2 === undefined) {
+        continue;
+      }
+      for (const r of await boundCrsChecks(context, entry.wkt2, id)) {
+        expect(holds(r), r.id).toBe(true);
+      }
+    }
   });
 });
 

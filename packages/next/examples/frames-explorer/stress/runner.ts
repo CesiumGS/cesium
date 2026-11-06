@@ -237,10 +237,15 @@ export function compareFingerprint(
     : undefined;
 }
 
-/** The runner's verdict on a case's result: every check, not the case's word alone. */
-function judge(
+/**
+ * The runner's verdict on a result: every check, not the case's word alone
+ * (its value against its tolerance, its expected error, R7, and its
+ * fingerprint against `recorded`, R12, when given). Exported so a result made
+ * outside the runner (R18's boundCrsChecks) is judged the same way.
+ */
+export function judgeResult(
   result: StressResult,
-  recorded: Readonly<Record<string, Fingerprint>> | undefined,
+  recorded?: Readonly<Record<string, Fingerprint>>,
 ): StressResult {
   const reasons: string[] = [];
   let pass = result.displayOnly === true || result.pass === true;
@@ -516,7 +521,7 @@ export async function runCases(
       }
     }
     for (const raw of produced) {
-      const judged = judge(raw, fingerprints);
+      const judged = judgeResult(raw, fingerprints);
       results.push(judged);
       onResult?.(judged);
     }
