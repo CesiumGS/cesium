@@ -156,6 +156,17 @@ export {
   type EngineeringFrameDefinition,
   type SiteTransform,
 } from "./engineering/EngineeringFrame.ts";
+export {
+  Alignment,
+  type AlignmentDefinition,
+  type HorizontalElement,
+  type ProfileGrade,
+  type ProfileParabola,
+  type ProfileSegment,
+  type StationOffset,
+  type VerticalProfile,
+} from "./engineering/alignment.ts";
+export { fresnel } from "./engineering/fresnel.ts";
 export { eastNorthUpToFixedFrame } from "./math/transforms.ts";
 export * as vec3 from "./math/vec3.ts";
 export * as mat4 from "./math/mat4.ts";
