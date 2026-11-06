@@ -49,7 +49,9 @@ leap seconds are "IERS"; the Artemis II files are "NASA JSC FOD Navigation,
 via NAIF" and the station SPK "NAIF/JPL". The DSN Now ranges in
 `test/fixtures/frames/dsnnow.json` (written by `node scripts/dsnNowFixture.mjs`
 from Internet Archive snapshots) are credited "NASA/JPL-Caltech DSN Now, via
-the Internet Archive". `--frames-span y0-y1` sets the excerpted years, both
+the Internet Archive". DSN Now shows one range per spacecraft, the same at
+every dish. It agrees with our per-dish light-time ranges within 5.7% and
+with no geometry better, so it is only a 30% sanity check here. `--frames-span y0-y1` sets the excerpted years, both
 included (default `2000-2050`):
 `npm run setup --workspace @cesium/next -- --frames-span 2000-2050`.
 
@@ -61,19 +63,22 @@ compare against the real store (they need setup to have run). Without a store,
 **Frames and trajectories** (`src/frames`, `src/trajectory`). With the frames
 data loaded, `createFrames(data)` builds the frame tree. Every frame is a
 `Frame` with a name, a parent and a float64 transform that depends on the
-instant. Positions only: velocities do not transform yet. Edges are
-Newtonian (no TT/TDB scaling, no Lorentz term) until plan 3.
+instant. Positions only: velocities do not transform. Every edge is a
+translation and a rotation except two: `gcrf` to `icrf` (see the next
+paragraph) and the Moon's, which stays Newtonian (the lunar relativistic
+terms are 3 cm or less at its surface and appear in the accuracy statement).
 
-| Frame      | Name        | Parent     | What it is                                                                         |
-| ---------- | ----------- | ---------- | ---------------------------------------------------------------------------------- |
-| `icrf`     | `ICRF`      | none       | The root: the solar system barycenter, ICRF axes                                   |
-| `hcrs`     | `HCRS`      | `icrf`     | The Sun's center, ICRF axes                                                        |
-| `gcrf`     | `GCRF`      | `icrf`     | The Earth's center, ICRF axes                                                      |
-| `eme2000`  | `EME2000`   | `gcrf`     | The Earth's center, J2000 mean equator and equinox (GCRF turned by the frame bias) |
-| `itrf`     | `ITRF`      | `gcrf`     | Earth-fixed (IAU 2006/2000A and the EOP)                                           |
-| `moonIcrf` | `MOON_ICRF` | `icrf`     | The Moon's center, ICRF axes                                                       |
-| `moonMe`   | `MOON_ME`   | `moonIcrf` | Moon-fixed, mean Earth / polar axes                                                |
-| `moonPa`   | `MOON_PA`   | `moonMe`   | Moon-fixed, principal axes                                                         |
+| Frame       | Name         | Parent      | What it is                                                                         |
+| ----------- | ------------ | ----------- | ---------------------------------------------------------------------------------- |
+| `icrf`      | `ICRF`       | none        | The root: the solar system barycenter, ICRF axes                                   |
+| `hcrs`      | `HCRS`       | `icrf`      | The Sun's center, ICRF axes                                                        |
+| `gcrf`      | `GCRF`       | `icrf`      | The Earth's center, ICRF axes, TT-compatible (the true GCRS)                       |
+| `earthIcrf` | `EARTH_ICRF` | `icrf`      | The Earth's center, ICRF axes, TDB-compatible (SPK and OEM data)                   |
+| `eme2000`   | `EME2000`    | `earthIcrf` | The Earth's center, J2000 mean equator and equinox (ICRF turned by the frame bias) |
+| `itrf`      | `ITRF`       | `gcrf`      | Earth-fixed (IAU 2006/2000A and the EOP)                                           |
+| `moonIcrf`  | `MOON_ICRF`  | `icrf`      | The Moon's center, ICRF axes                                                       |
+| `moonMe`    | `MOON_ME`    | `moonIcrf`  | Moon-fixed, mean Earth / polar axes                                                |
+| `moonPa`    | `MOON_PA`    | `moonMe`    | Moon-fixed, principal axes                                                         |
 
 `frames.bodyFixed(EARTH)` is `itrf` and `bodyFixed(MOON)` is `moonMe`; any
 other body throws. `frameTransform(from, to, instant, out?)` writes the
@@ -111,6 +116,23 @@ convertPoint(framePoint(orion.frame, [0, 0, 0], instant), frames.moonMe);
 Artemis OEM's segments) and names the covered spans; it never extrapolates.
 `orion.frame` is a child of `orion.reference` that sits on the object.
 
+**Two Earth-centred frames.** Time scales make the Earth's center two
+frames. ITRF coordinates (stations, terrain) are TT-compatible. SPK and OEM
+data are TDB-compatible: SPICE subtracts barycentric positions and never
+scales them. IERS Conventions 2010 eq. 11.19 joins the two:
+`r_TDB = r_TT (1 - U/c² - L_C) - ½ (V · r_TT) V / c²`, where `U` is the
+potential at the geocenter without the Earth and `V` the Earth's barycentric
+velocity. The scale is 2.5e-8 of the distance: 9.5 m at the Moon, plus up to
+1.9 m of Lorentz term.
+
+- Put ITRF-derived points (stations, picks, terrain) in `frames.itrf` or
+  `frames.gcrf`. They are TT-compatible.
+- Put SPK and OEM data (Orion, the planets) in `frames.earthIcrf` or
+  `frames.eme2000`. `Trajectory` already does: its `reference` is one of these.
+- Converting between the two groups applies eq. 11.19. At the Moon's
+  distance that is 9.48 m (tested: perpendicular to V on 2026-04-06T23:00
+  UTC).
+
 **Warning: an SPK's J2000 label does not say which axes it holds.** NAIF made
 the Artemis II SPK from the OEM, which is in EME2000, and labeled it J2000.
 DE440's J2000 is ICRF. The two differ by the frame bias, about 45 m at the
@@ -120,6 +142,74 @@ Moon's distance (28 m at the 2026-04-06 flyby, seen in MOON_ME). So
 `Trajectory.fromOem` takes the interpolation from the OEM header and never
 guesses: the Artemis OEM has none, so pass `interpolation: { method:
 "hermite", degree: 11 }`, the setting NAIF's conversion used.
+
+**Measuring** (`src/measure`). `measure(a, b, instant, frames, options?)`
+takes two `FramePoint`s and returns a `Measurement`:
+
+```ts
+const m = measure(
+  framePoint(dss43Frame, [0, 0, 0]), // the station
+  framePoint(orion.frame, [0, 0, 0]), // the spacecraft
+  Instant.fromUtc("2026-04-06T23:30:00Z"),
+  frames,
+  { frequency: 2216.5e6 },
+);
+m.signal.downlink.rangeRate; // 236.93 m/s
+m.signal.downlink.dopplerShift; // -1750.15 Hz
+m.accuracy.meters; // undefined, or 1σ in meters
+```
+
+| Field         | Meaning                                                                                                 |
+| ------------- | ------------------------------------------------------------------------------------------------------- |
+| `distance`    | Straight-line distance at `instant`, m, in `a`'s frame                                                  |
+| `delta`       | b − a in the axes of `options.deltaFrame` (default `a.frame`), m                                        |
+| `overBody`    | Only for two points on one body: geodesic `distance` over its ellipsoid, and `heightDifference`, both m |
+| `signal`      | `downlink` (b to a, received at `instant`) and `uplink` (a to b, sent at `instant`), each a `Leg`       |
+| `lineOfSight` | `clear`, and `blockedBy` (a `Body`) if not, for the downlink path                                       |
+| `accuracy`    | An `AccuracyStatement`                                                                                  |
+
+A `Leg` has `lightTime` (s), `range` (m), `rangeRate` (m/s), `dopplerRatio`,
+`dopplerShift` (Hz, with `frequency`), and the directions `transmitterDirection`
+and `receiverDirection`. Light time follows IERS eq. 11.17 in the barycentric
+frame with the Shapiro delay of the Sun, Earth and Moon (`shapiro: []` turns
+it off; the delay on the Artemis links is 0.46 to 27 ns). Directions include
+stellar aberration. The Doppler ratio includes both ends' proper-time rates.
+`rangeRate` is a central difference over ±0.5 s, one-sided within 0.5 s of a
+trajectory's data edge, and is good to a few mm/s (float64 TDB quantization).
+Light time that would need data outside a trajectory throws; nothing is
+extrapolated.
+
+Special cases: two points closer than 1 mm give distance 0 and no `signal`,
+with a warning. A `FramePoint` that carries its own instant gets geometry
+only, with a warning, because it can't be placed at the emission and
+reception times. `signal: false` skips both legs and the line of sight.
+
+`measureSpan(a, b, start, stop, step, frames, options?)` runs `measure` every
+`step` seconds of TDB, inclusive of both ends, and returns
+`{ instant, measurement?, error? }` per sample. A sample that throws (a light
+path outside the data, say) records its message and the span continues.
+
+**Reading an accuracy statement.** `accuracy.meters` is the root sum square
+of `accuracy.terms`, each a 1σ in meters with a `source` (`ephemeris`,
+`earthOrientation`, `trajectory`, `coordinateScale`, `relativity`,
+`lightTime`) and a `note`. If any term's size is unknown, `meters` is
+`undefined`, never small: a trajectory with no covariance and no
+`positionSigma` does this, and the term names it. Earth orientation is 35 µs
+of UT1 and 0.1 mas of polar motion where the EOP are measured; past
+`EOP.lastObserved` they grow by IERS Bulletin A's prediction formulas
+(`0.00068 · d^0.80` arcsec, `0.00025 · d^0.75` s, d in days) and never fall
+below the measured values. Degraded EOP gives no number. `coordinateScale`
+is OEM data's unstated TT/TDB ambiguity, 2.5e-8 of the geocentric distance.
+Example: DSS-26 ← Orion at 2026-04-06T15:08:26 UTC is 10.05 m, of which
+`coordinateScale` is 10.04 m, Orion's position sigma 0.49 m, Earth
+orientation 0.014 m, the ephemeris 0.01 m and light time 0.001 m.
+
+**Artemis covariance units.** CCSDS says OEM covariance is in km and km².
+Orion's file writes m². Read as km², its velocity sigmas would be about
+12 m/s, which is implausible for a reconstructed trajectory. In m² they are
+0.012 m/s and the position sigma is 0.49 m at the 2026-04-06 flyby (50.35 m
+at the start of the flight). So pass `covarianceUnits: "m"` to
+`Trajectory.fromOem` for it. The default stays `"km"`, as the standard says.
 
 The Viewer loads none of this by default. `new Viewer({ frameData:
 "/frames-data/" })` (or a `FrameData` already loaded) draws the sun, stars and

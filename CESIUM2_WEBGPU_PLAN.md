@@ -6265,6 +6265,79 @@ Controller rulings made while building it:
 - The old "NAIF/DAF" file id is read (the DSN station SPK uses it).
 - SPK window sizes are capped at SPICE's limits.
 
+_Frames 3 results (r63): measurement._ The third of five plans
+(`docs/superpowers/plans/2026-11-05-frames-3-measurement.md`) landed in
+`src/measure/`, with the eq. 11.19 edge in `src/frames/frames.ts` and the
+accuracy inputs on `Trajectory` and the EOP table. Rendering is unchanged.
+Worst agreement the tests measured, 2026-11-05:
+
+- **Two Earth-centred frames** (R1): `gcrf` is the true GCRS (TT-compatible,
+  joined to ICRF by IERS eq. 11.19) and `earthIcrf` carries SPK and OEM data.
+  At 3.844e8 m perpendicular to V on 2026-04-06T23:00 UTC the two differ by
+  9.48 m.
+- **Light time and apparent directions** against SPICE (`shapiro: []`):
+  - Earth to Orion: 2.1e-5 m (CN) and 3.1e-5 m (XCN); 1.4e-12 rad (CN+S)
+    and 1.7e-12 rad (XCN+S).
+  - Earth to the Moon: 1.5e-5 m, 1.4e-13 rad.
+  - DSS-43 to Orion: 0.263 m, worst angle times range 0.30 m. This is a
+    constant offset of about 8 mas between our ITRF and NAIF's ITRF93 file.
+- **Shapiro delay** on the Artemis links: 0.46 to 27 ns.
+- **Geodesic distance** against Python geographiclib: 6e-9 m on WGS84,
+  1.6e-8 m on the Moon's sphere.
+- **Doppler**, DSS-43 from Orion at 2026-04-06T23:30 UTC: range rate
+  236.93 m/s, shift -1750.15 Hz at 2216.5 MHz. The worst difference from
+  1 − rr/c is 2.45e-9 (the proper-time terms). Range-rate noise is 1.8 mm/s
+  rms and 2.9 mm/s at most, from float64 TDB quantization.
+- **Occultation**, Canberra DSS-43 (Orion 25.5° up at 22:44 UTC, April 6):
+  first blocked by the Moon at 22:43:00 (60 s before the published 22:44),
+  first clear at 23:23:20 (100 s before 23:25). Goldstone and Madrid had
+  Orion below their horizons.
+- **DSN Now**: 22 rows from 8 archived snapshots. The displayed range is
+  one figure per spacecraft, identical at every dish (upleg equals downleg).
+  It agrees with our per-dish light-time ranges within 5.7% (round trip
+  4.9%) and with no geometry better (the geocentric range misses by up to
+  27%), with no consistent lag. So it can't validate to its rounding as the
+  spec hoped; it stays as a 30% sanity check.
+- **An accuracy statement**, DSS-26 from Orion at 2026-04-06T15:08:26 UTC:
+  10.05 m. Terms: `coordinateScale` 10.04 m (the OEM's unstated TT/TDB
+  scale), Orion's position sigma 0.49 m, Earth orientation 0.014 m,
+  ephemeris 0.01 m, light time 0.001 m. At the flight's start Orion's sigma
+  is 50.35 m.
+- **Orion's OEM covariance is in m²**, not CCSDS's km²: in km² its velocity
+  sigmas would be about 12 m/s.
+- **Gates**: `npm test` 453 passing; `npm run test:data` 48 passing.
+
+Rulings:
+
+- **R1**: two Earth-centred frames; SPK and OEM data sit under `EARTH_ICRF`.
+- **R2**: the Moon's edge stays Newtonian (3 cm or less, stated, not applied).
+- **R3**: velocities are central differences over 0.5 s, one-sided at data edges.
+- **R4**: Doppler includes both ends' proper-time rates.
+- **R5**: light time follows eq. 11.17 with Sun, Earth and Moon Shapiro terms.
+- **R6**: apparent directions are light time plus stellar aberration (`CN+S`, `XCN+S`).
+- **R7**: accuracy never claims more than the inputs support; an unknown term makes `meters` undefined.
+- **R8**: snapping goes to plan 4 and frame-tagged picking to plan 5.
+- **R9**: a point carrying its own instant gets geometry only.
+- **R10**: the published occultation is checked to ±2 min.
+
+Controller rulings made while building it:
+
+- SPK and OEM data are read under `EARTH_ICRF` (R1's second frame).
+- Task 4's tolerances: DSS-43 directions 0.5 m per range; the Shapiro bound
+  is 0.1 to 50 ns.
+- Derivatives at data edges are 3-point one-sided; range rate is good to mm/s
+  (quantization-limited), not R3's 1e-7 m/s.
+- `properTimeRate` leaves out a body's own potential at its center.
+- Line of sight treats an endpoint below the ellipsoid as on it.
+- Predicted EOP is floored at the measured sigmas, and degraded EOP gives no
+  number.
+- The trajectory term comes from the nearest trajectory ancestor of a frame.
+- `signal: false` also omits line of sight.
+- DSN Now is a 30% sanity check (above).
+- `geographiclib-geodesic` was checked with Snyk's package health (Healthy,
+  0 vulnerabilities, no dependencies). The whole-project SCA scan needs the
+  folder trusted in Snyk, which awaits the owner's go-ahead.
+
 ### 13.15 GPU resource limits and capacities (r50, design)
 
 **What broke.** The first run on a Mac (Apple M-series, Chrome) failed at
