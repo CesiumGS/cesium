@@ -169,3 +169,21 @@ export function share<T>(
     release: letGo(),
   };
 }
+
+/**
+ * Leaving an example: every step, in order, each even if an earlier one
+ * threw (an example's `dispose` that throws must not leave its scope, its
+ * viewer and the engine's hold behind), and what they threw, for the page
+ * to report.
+ */
+export function undoAll(steps: ReadonlyArray<() => unknown>): unknown[] {
+  const errors: unknown[] = [];
+  for (const step of steps) {
+    try {
+      step();
+    } catch (e) {
+      errors.push(e);
+    }
+  }
+  return errors;
+}

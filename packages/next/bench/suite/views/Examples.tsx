@@ -43,6 +43,7 @@ import {
   searchToParams,
   type Shared,
   share,
+  undoAll,
 } from "./exampleRun.ts";
 import { captureThumbnail } from "./thumbnails.ts";
 
@@ -382,14 +383,13 @@ function ExampleRunner({
   // React ignores it mid-commit.) The new canvas shows once its first frame
   // is drawn (created with `suspendPresentation`). The run holds the engine
   // until it's undone, and so does its start until it settles (one left
-  // mid-start finishes, then disposes, after this cleanup).
+  // mid-start finishes, then disposes, after this cleanup); both holds are
+  // taken once nothing before the cleanup's return can throw.
   useEffect(() => {
     if (!shared || !box.current || !host.current) {
       return;
     }
     const engine = shared.value;
-    const releaseRun = shared.hold();
-    const releaseStart = shared.hold();
     const controller = new AbortController();
     const { signal } = controller;
     const scope = new DisposableStack();
@@ -406,6 +406,8 @@ function ExampleRunner({
     );
     paramsRef.current = params;
     const token = ionToken();
+    const releaseRun = shared.hold();
+    const releaseStart = shared.hold();
     void (async () => {
       try {
         const v = await Viewer.create(stage, {
@@ -472,16 +474,30 @@ function ExampleRunner({
       }
     })();
     return () => {
-      controller.abort();
-      clearTimeout(thumbnail);
-      params.close();
-      paramsRef.current = undefined;
-      setReactPanel(undefined);
-      dispose?.();
-      scope.dispose();
-      boxElement.replaceChildren();
-      viewer?.destroy();
-      releaseRun();
+      // Every step, even after one throws; the engine's hold last.
+      const errors = undoAll([
+        () => controller.abort(),
+        () => clearTimeout(thumbnail),
+        () => params.close(),
+        () => (paramsRef.current = undefined),
+        () => setReactPanel(undefined),
+        () => dispose?.(),
+        () => scope.dispose(),
+        () => boxElement.replaceChildren(),
+        () => viewer?.destroy(),
+        releaseRun,
+      ]);
+      if (errors.length > 0) {
+        // Reported as the example's error, not thrown into the router's
+        // boundary, and once this commit is done: on switching, the next
+        // run's start, later in it, clears the error (leaving the page
+        // drops it; the console still has it).
+        for (const e of errors) {
+          console.error(`Dyno: leaving the ${info.id} example`, e);
+        }
+        const text = `Leaving ${info.title} failed: ${message(errors[0])}`;
+        queueMicrotask(() => setError(text));
+      }
     };
   }, [shared, info, navigate, router, setError, setRunning, setReactPanel]);
 

@@ -13,6 +13,7 @@ import {
   normalizeRun,
   searchToParams,
   share,
+  undoAll,
 } from "../bench/suite/views/exampleRun.ts";
 
 describe("searchToParams", () => {
@@ -239,5 +240,55 @@ describe("share", () => {
     const { shared, release } = share("engine", () => {});
     release();
     expect(() => shared.hold()).toThrow(/destroyed/);
+  });
+});
+
+describe("undoAll", () => {
+  it("runs every step in order and returns no errors when none throw", () => {
+    const order: string[] = [];
+    expect(
+      undoAll([
+        () => order.push("dispose"),
+        () => order.push("scope"),
+        () => order.push("viewer"),
+      ]),
+    ).toEqual([]);
+    expect(order).toEqual(["dispose", "scope", "viewer"]);
+  });
+
+  it("runs the steps after one that throws, and returns what each threw", () => {
+    const order: string[] = [];
+    const first = new Error("World: no slab 0");
+    const second = new Error("scope");
+    const errors = undoAll([
+      () => {
+        order.push("dispose");
+        throw first;
+      },
+      () => {
+        order.push("scope");
+        throw second;
+      },
+      () => order.push("viewer"),
+    ]);
+    expect(order).toEqual(["dispose", "scope", "viewer"]);
+    expect(errors).toEqual([first, second]);
+  });
+
+  it("releases the engine when the example's dispose throws", () => {
+    // The runner's cleanup: the page has let go already (parent first).
+    const destroy = vi.fn();
+    const { shared, release } = share("engine", destroy);
+    const releaseRun = shared.hold();
+    release();
+    const errors = undoAll([
+      () => {
+        throw new Error("dispose");
+      },
+      () => {}, // scope, viewer
+      releaseRun,
+    ]);
+    expect(errors).toHaveLength(1);
+    expect(destroy).toHaveBeenCalledOnce();
   });
 });
