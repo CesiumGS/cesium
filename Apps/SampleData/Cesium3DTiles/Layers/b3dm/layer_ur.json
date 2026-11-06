@@ -1,0 +1,23 @@
+{
+  "asset": {
+    "version": "1.1"
+  },
+  "geometricError": 70,
+  "root": {
+    "boundingVolume": {
+      "region": [
+        -1.31968,
+        0.698874,
+        -1.3196390408203893,
+        0.6989055782,
+        0,
+        20
+      ]
+    },
+    "geometricError": 0,
+    "refine": "ADD",
+    "content": {
+      "uri": "../../Tilesets/Tileset/ur.b3dm"
+    }
+  }
+}

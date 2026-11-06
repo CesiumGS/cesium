@@ -8,6 +8,7 @@
 
 - Added experimental `Cesium3DTileset` option `vectorGeoJson`, which loads `MAXAR_content_geojson` tile content as vector primitives with filled polygons, instead of as a model. [#14007](https://github.com/CesiumGS/cesium/pull/14007)
 - Added support for Custom Shaders in Gaussian Splat tilesets. [#13418](https://github.com/CesiumGS/cesium/pull/13418)
+- Added experimental feature layers for showing and hiding named sets of features: `Cesium3DTileset.featureLayers` for tilesets (using 3D Tiles 1.1 groups), `GeoJsonFeatureLoader` for standalone GeoJSON layers. [#13921](https://github.com/CesiumGS/cesium/pull/13921)
 
 #### Fixes :wrench:
 
