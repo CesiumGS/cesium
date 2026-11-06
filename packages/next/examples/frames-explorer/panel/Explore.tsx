@@ -281,7 +281,7 @@ export function Walk({
           render={<p />}
           className="fx-walk-why"
         >
-          Not bounded: {unknownTerms(view.statement)[0] ?? "a term has no size"}
+          {sentence(unknownTerms(view.statement)[0] ?? "a term has no size")}
         </Typography>
       )}
       <ol
@@ -356,6 +356,10 @@ export function Walk({
     </div>
   );
 }
+
+/** `text` as a sentence: its first letter capitalized (the headline already says "Not bounded"). */
+const sentence = (text: string): string =>
+  text.charAt(0).toUpperCase() + text.slice(1);
 
 /** A term as the walk's "Adds …" line names it, in plain words. */
 const ADDS: Record<AccuracyTerm["source"], string> = {
