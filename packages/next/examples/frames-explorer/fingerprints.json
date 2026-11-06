@@ -322,6 +322,62 @@
         -2708954.915437575, -4261602.286444082, 3883205.7750612297,
         -2533349.887045053, -4323797.159865822, 3932793.805803967
       ]
+    },
+    "reference-values.ngs-gu2195.grid": {
+      "pipeline": "+proj=pipeline +step +inv +proj=lcc +lat_0=36.5 +lon_0=-120.5 +lat_1=38.4333333333333 +lat_2=37.0666666666667 +x_0=2000000 +y_0=500000 +ellps=GRS80 +step +proj=vgridshift +grids=us_noaa_g2018u0.tif +multiplier=1 +step +proj=unitconvert +xy_in=rad +xy_out=deg",
+      "grids": [
+        {
+          "name": "us_noaa_g2018u0.tif",
+          "sha256": "fa9a407ac7ee3f5a3694008e4bcd09ce9cc250452f0c3b11700a4960340abce2"
+        }
+      ],
+      "coordinates": [
+        -2669623.2348006126, -4345820.745939748, 3817029.9170203456
+      ]
+    },
+    "reference-values.ngs-ak7130.grid": {
+      "pipeline": "+proj=pipeline +step +inv +proj=tmerc +lat_0=24.3333333333333 +lon_0=-81 +k=0.999941177 +x_0=200000 +y_0=0 +ellps=GRS80 +step +proj=vgridshift +grids=us_noaa_g2018u0.tif +multiplier=1 +step +proj=unitconvert +xy_in=rad +xy_out=deg",
+      "grids": [
+        {
+          "name": "us_noaa_g2018u0.tif",
+          "sha256": "fa9a407ac7ee3f5a3694008e4bcd09ce9cc250452f0c3b11700a4960340abce2"
+        }
+      ],
+      "coordinates": [843288.6976178947, -5544461.68256802, 3027654.3317784853]
+    },
+    "reference-values.ngs-aa5394.grid": {
+      "pipeline": "+proj=pipeline +step +inv +proj=lcc +lat_0=39.3333333333333 +lon_0=-77.75 +lat_1=40.9666666666667 +lat_2=39.9333333333333 +x_0=600000 +y_0=0 +ellps=GRS80 +step +proj=vgridshift +grids=us_noaa_g2018u0.tif +multiplier=1 +step +proj=unitconvert +xy_in=rad +xy_out=deg",
+      "grids": [
+        {
+          "name": "us_noaa_g2018u0.tif",
+          "sha256": "fa9a407ac7ee3f5a3694008e4bcd09ce9cc250452f0c3b11700a4960340abce2"
+        }
+      ],
+      "coordinates": [1108939.4362844098, -4749616.094112043, 4096316.73479157]
+    },
+    "reference-values.ngs-kk1284.grid": {
+      "pipeline": "+proj=pipeline +step +inv +proj=lcc +lat_0=37.8333333333333 +lon_0=-105.5 +lat_1=39.75 +lat_2=38.45 +x_0=914401.8289 +y_0=304800.6096 +ellps=GRS80 +step +proj=vgridshift +grids=us_noaa_g2018u0.tif +multiplier=1 +step +proj=unitconvert +xy_in=rad +xy_out=deg",
+      "grids": [
+        {
+          "name": "us_noaa_g2018u0.tif",
+          "sha256": "fa9a407ac7ee3f5a3694008e4bcd09ce9cc250452f0c3b11700a4960340abce2"
+        }
+      ],
+      "coordinates": [
+        -1264627.2723653216, -4748485.405902878, 4055021.1190060563
+      ]
+    },
+    "reference-values.ngs-aj3674.grid": {
+      "pipeline": "+proj=pipeline +step +inv +proj=tmerc +lat_0=31 +lon_0=-111.916666666667 +k=0.9999 +x_0=213360 +y_0=0 +ellps=GRS80 +step +proj=vgridshift +grids=us_noaa_g2018u0.tif +multiplier=1 +step +proj=unitconvert +xy_in=rad +xy_out=deg",
+      "grids": [
+        {
+          "name": "us_noaa_g2018u0.tif",
+          "sha256": "fa9a407ac7ee3f5a3694008e4bcd09ce9cc250452f0c3b11700a4960340abce2"
+        }
+      ],
+      "coordinates": [
+        -1995284.6217023332, -4938737.460620518, 3497146.0608041673
+      ]
     }
   }
 }
