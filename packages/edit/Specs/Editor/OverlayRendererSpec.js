@@ -7,7 +7,11 @@ import {
 } from "@cesium/core";
 import { DepthFunction, SceneTransforms } from "@cesium/engine";
 import { ComponentType } from "@cesium/mesh-editor";
-import { MeshEditorModule, OverlayRenderer } from "../../index.js";
+import {
+  MeshEditorModule,
+  MeshEditorStyle,
+  OverlayRenderer,
+} from "../../index.js";
 import createCanvas from "../../../../Specs/createCanvas.js";
 import createScene from "../../../../Specs/createScene.js";
 
@@ -216,9 +220,11 @@ class OverlayTestPrimitive {
     this._memory = { buffer: new ArrayBuffer(0) };
     this._overlayViews = undefined;
     this.mesh = {};
+    this.style = new MeshEditorStyle();
     this.renderer = new OverlayRenderer({
       module: { memory: this._memory, shaders },
       mesh: this.mesh,
+      style: this.style,
     });
   }
 
@@ -566,6 +572,17 @@ describe(
         expectPixel(overlay, [0.5, -0.5, 0.0], selectedFaceColor);
         expectPixel(overlay, [-0.5, 0.5, 0.0], faceColor);
       });
+
+      it("draws with its style's changes on the next frame", function () {
+        const overlay = addSquare();
+        expectPixel(overlay, [0.0, -1.0, 0.0], black);
+
+        overlay.style.edgeColor = Color.RED;
+        overlay.style.faceColor = Color.BLUE;
+
+        expectPixel(overlay, [0.0, -1.0, 0.0], [255, 0, 0, 255]);
+        expectPixel(overlay, [0.5, -0.5, 0.0], [0, 0, 255, 255]);
+      });
     });
 
     describe("outline", function () {
@@ -574,9 +591,9 @@ describe(
       function addOutlinedSquare() {
         const overlay = addSquare();
         overlay.renderer.outlined = true;
-        overlay.renderer.outlineColor = Color.RED;
+        overlay.style.outlineColor = Color.RED;
         // Wide enough that the antialiased borders don't reach the sampled pixel.
-        overlay.renderer.outlineWidth = 4.0;
+        overlay.style.outlineWidth = 4.0;
         return overlay;
       }
 
