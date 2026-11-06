@@ -222,21 +222,26 @@ export function rangeLimits(
 }
 
 /**
- * The wheel's limits while the camera is at `range` from the pivot: the
- * destination's `limits`, widened to take `range` (fix round 2). A flight
- * interrupted far out (about 200,000 km on the way to stop 6, whose orbit
- * zooms to 25,000 km) lands where it is, and its first wheel tick moves one
- * notch instead of jumping to the limit; set again after each of the user's
- * changes, the limits narrow back to the destination's as the user zooms
- * in, and never let the camera out past where it landed.
+ * The wheel's limits for an orbit landed `landed` from its pivot, the camera
+ * now `range` from it (fix rounds 2 and 3). A flight interrupted outside the
+ * destination's `limits` (a wheel about 140,000 km out on the way to stop 6,
+ * whose orbit zooms to 25,000 km) lands where it is: the limits widen to take
+ * the landing range, so the first tick moves one notch instead of jumping to
+ * the limit, and hold so until the camera is inside the destination's own
+ * limits, which apply from then on. The user can zoom back out to where the
+ * flight landed, never past it.
  */
-export function limitsAround(
+export function landedLimits(
   limits: { minRange: number; maxRange: number },
+  landed: number,
   range: number,
 ): { minRange: number; maxRange: number } {
+  if (range >= limits.minRange && range <= limits.maxRange) {
+    return { minRange: limits.minRange, maxRange: limits.maxRange };
+  }
   return {
-    minRange: Math.min(limits.minRange, range),
-    maxRange: Math.max(limits.maxRange, range),
+    minRange: Math.min(limits.minRange, landed),
+    maxRange: Math.max(limits.maxRange, landed),
   };
 }
 

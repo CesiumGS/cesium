@@ -115,7 +115,7 @@ import {
   stopRig,
   viewHeading,
   CameraFlow,
-  limitsAround,
+  landedLimits,
   moonOrbitNormal,
   type Rig,
   type RigKind,
@@ -2123,8 +2123,9 @@ export function run(context: ExampleContext): ExampleRun {
         placed: Rig;
         heading: number;
         at: number;
-        /** The destination's wheel limits, and the ones set now (`limitsAround`). */
+        /** The destination's wheel limits, the range it landed at, and the limits set now (`landedLimits`). */
         limits: { minRange: number; maxRange: number };
+        landed: number;
         applied: { minRange: number; maxRange: number };
       }
     | undefined;
@@ -2212,7 +2213,8 @@ export function run(context: ExampleContext): ExampleRun {
       rig.kind,
       moon ? Math.hypot(moon[0]!, moon[1]!, moon[2]!) : 3.844e8,
     );
-    const applied = limitsAround(limits, cameraRange(at.target));
+    const landed = cameraRange(at.target);
+    const applied = landedLimits(limits, landed, landed);
     setOrbit({
       target: at.target,
       frame: { up: at.up, headingRef: at.headingRef },
@@ -2225,6 +2227,7 @@ export function run(context: ExampleContext): ExampleRun {
       heading,
       at: viewer.clock.time,
       limits,
+      landed,
       applied,
     };
   }
@@ -2234,13 +2237,13 @@ export function run(context: ExampleContext): ExampleRun {
       ...[0, 1, 2].map((i) => viewer.view.camera.position[i]! - pivot[i]!),
     );
 
-  /** After the user's change: widened limits narrow back toward the destination's. */
+  /** After the user's change: the widened limits hold until the camera is inside the destination's. */
   function narrowLimits(): void {
     const pivot = viewer.orbitPivot;
     if (!orbit || !pivot) {
       return;
     }
-    const next = limitsAround(orbit.limits, cameraRange(pivot));
+    const next = landedLimits(orbit.limits, orbit.landed, cameraRange(pivot));
     if (
       next.minRange !== orbit.applied.minRange ||
       next.maxRange !== orbit.applied.maxRange
