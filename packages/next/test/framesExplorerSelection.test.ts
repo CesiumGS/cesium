@@ -455,6 +455,17 @@ describe("scenario, knob and time params (R15, Review Focus 4)", () => {
         Date.parse(dish.checked.epochUtc),
       );
     }
+    // A hostile long knob value parses quickly, to the checked value (ReDoS).
+    const start = performance.now();
+    expect(
+      parseParams({
+        scenario: "bim-site",
+        "k.rotation": `${"1".repeat(100_000)}x`,
+      }).knobs?.rotation,
+    ).toBe(bim.checked.knobs.rotation);
+    expect(performance.now() - start).toBeLessThan(50);
+    // Minus zero is the epoch, not −0.
+    expect(Object.is(parseParams({ t: "-0" }).time, 0)).toBe(true);
     const tilt = drone.knobs.find((k) => k.id === "tilt")!;
     expect(
       parseParams({ scenario: "drone", "k.tilt": "1e9" }).knobs?.tilt,

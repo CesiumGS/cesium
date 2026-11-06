@@ -254,12 +254,15 @@ describe("the frames explorer's stress tests, headless", () => {
     }
   });
 
-  it("has every scenario's proof among its results, each passing (ruling S1: non-empty lists)", () => {
+  it("has every scenario's proof among its results, each judged and passing (ruling S1: non-empty lists)", () => {
     const byId = new Map(results.map((r) => [r.id, r]));
     const proof = SCENARIOS.flatMap((s) => s.proof);
     expect(proof.length).toBeGreaterThan(0);
     for (const id of proof) {
-      expect(byId.get(id)?.pass, id).toBe(true);
+      const r = byId.get(id);
+      expect(r?.pass, id).toBe(true);
+      // A display-only result is shown, not judged: it proves nothing.
+      expect(r?.displayOnly, id).not.toBe(true);
     }
   });
 

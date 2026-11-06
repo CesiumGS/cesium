@@ -137,7 +137,8 @@ function parseScenario(params: Readonly<Record<string, string>>): {
     raw[knob.id] = Object.hasOwn(params, key) ? params[key] : undefined;
   }
   const t = params.t;
-  const ms = t !== undefined && TIME.test(t) ? Number(t) : Number.NaN;
+  // + 0 makes "-0" the epoch, 0, not −0.
+  const ms = t !== undefined && TIME.test(t) ? Number(t) + 0 : Number.NaN;
   return {
     scenario: spec.id,
     knobs: clampKnobs(spec, raw),
