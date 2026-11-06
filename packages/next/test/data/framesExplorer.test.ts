@@ -479,24 +479,32 @@ describe("every verdict is judged", () => {
     r.tolerance === undefined ||
     (r.value !== undefined && Math.abs(r.value) <= r.tolerance);
 
-  it("has no passing result beyond its tolerance, in the catalog or boundCrsChecks", async () => {
-    const all = await runStress(context);
-    for (const r of all) {
-      expect(holds(r), r.id).toBe(true);
-    }
-    const entries = references.entries as unknown as Record<
-      string,
-      { kind?: string; wkt2?: string }
-    >;
-    for (const [id, entry] of Object.entries(entries)) {
-      if (entry.kind !== "input" || entry.wkt2 === undefined) {
-        continue;
-      }
-      for (const r of await boundCrsChecks(context, entry.wkt2, id)) {
+  // Reruns the whole catalog (about 5 s, 8 s on a loaded machine): the
+  // same timeout as the first run, so load can't fail it.
+  it(
+    "has no passing result beyond its tolerance, in the catalog or boundCrsChecks",
+    {
+      timeout: 120_000,
+    },
+    async () => {
+      const all = await runStress(context);
+      for (const r of all) {
         expect(holds(r), r.id).toBe(true);
       }
-    }
-  });
+      const entries = references.entries as unknown as Record<
+        string,
+        { kind?: string; wkt2?: string }
+      >;
+      for (const [id, entry] of Object.entries(entries)) {
+        if (entry.kind !== "input" || entry.wkt2 === undefined) {
+          continue;
+        }
+        for (const r of await boundCrsChecks(context, entry.wkt2, id)) {
+          expect(holds(r), r.id).toBe(true);
+        }
+      }
+    },
+  );
 });
 
 describe("references.json (R10, Review Focus 6)", () => {

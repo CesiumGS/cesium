@@ -303,6 +303,7 @@ export {
   type AccuracyStatement,
   type AccuracyTerm,
   type EarthOrientationSigma,
+  type WarningCode,
 } from "./measure/accuracy.ts";
 export { surfaceDistance, type SurfaceDistance } from "./measure/surface.ts";
 export type { ShapiroBody } from "./measure/lightTime.ts";

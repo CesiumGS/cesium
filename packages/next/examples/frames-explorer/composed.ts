@@ -23,6 +23,7 @@ import {
   type Reference,
 } from "./panel/model.ts";
 import type { TreeNode } from "./tree.ts";
+import { aboutSeparation } from "./warnings.ts";
 
 /** A node the main thread can't hand to `accuracyOf` itself: an engineering frame known only from the worker. */
 export interface PlacedNode {
@@ -132,6 +133,8 @@ export function composedView(
   };
   let statement: AccuracyStatement;
   const extra = placed.get(target);
+  // Only warnings about the separation stay: measure's signal, footprint
+  // and alignment notes say nothing of where the origin is (S-I4).
   if (node.frame !== undefined) {
     statement = accuracyOf(framePoint(node.frame, [0, 0, 0], instant));
   } else if (extra !== undefined) {
@@ -148,6 +151,7 @@ export function composedView(
   } else {
     return undefined;
   }
+  statement = aboutSeparation(statement);
   const edges = pathEdges(chain, reference, target);
   const kindOf = (id: string) => byId.get(id)?.edge.kind;
   const termEdges = statement.terms.map((t): string[] => {

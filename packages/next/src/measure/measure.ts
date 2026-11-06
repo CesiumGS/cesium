@@ -13,7 +13,11 @@ import { vec3 } from "../math/vec3.ts";
 import type { Body } from "../scene/Body.ts";
 import { Instant } from "../time/Instant.ts";
 import type { StationOffset } from "../engineering/alignment.ts";
-import { accuracyOf, type AccuracyStatement } from "./accuracy.ts";
+import {
+  accuracyOf,
+  type AccuracyStatement,
+  type WarningCode,
+} from "./accuracy.ts";
 import { downlink, uplink, type Leg } from "./doppler.ts";
 import { lineOfSight } from "./lineOfSight.ts";
 import { solveLightTime, type ShapiroBody } from "./lightTime.ts";
@@ -261,6 +265,11 @@ export function measure(
       ]);
 
   const warnings: string[] = [];
+  const warningCodes: WarningCode[] = [];
+  const warn = (code: WarningCode, text: string) => {
+    warnings.push(text);
+    warningCodes.push(code);
+  };
   let overBody: Measurement["overBody"];
   const body = frames.bodyOf(a.frame);
   if (body !== undefined && body === frames.bodyOf(b.frame)) {
@@ -276,7 +285,8 @@ export function measure(
           cartographic(),
         );
       if (footprint(fa) === undefined || footprint(fb) === undefined) {
-        warnings.push(
+        warn(
+          "no-footprint",
           "a point is at the body's center, which has no geodetic footprint, so overBody is left out",
         );
       } else {
@@ -293,7 +303,8 @@ export function measure(
   let signal: Measurement["signal"];
   let sight: Measurement["lineOfSight"];
   if (coincident) {
-    warnings.push(
+    warn(
+      "coincident",
       "the points coincide (closer than 1 mm), so the signal and line of sight are undefined",
     );
   } else if (a.instant || b.instant) {
@@ -302,7 +313,8 @@ export function measure(
       ["b", b],
     ] as const) {
       if (point.instant) {
-        warnings.push(
+        warn(
+          "own-instant-no-signal",
           `${name} carries its own instant, so it can't be placed at the signal's emission or reception times: geometry only, no signal`,
         );
       }
@@ -330,7 +342,8 @@ export function measure(
       ? designResult(pointA, pointB, options)
       : undefined;
   if (options.alignment !== undefined && !designs) {
-    warnings.push(
+    warn(
+      "alignment-unused",
       `alignment "${options.alignment}" was not used: it needs two design points in the same engineering frame`,
     );
   }
@@ -342,6 +355,7 @@ export function measure(
     },
   });
   accuracy.warnings.push(...warnings);
+  accuracy.warningCodes = [...(accuracy.warningCodes ?? []), ...warningCodes];
   return {
     instant,
     distance: coincident ? 0 : separation,

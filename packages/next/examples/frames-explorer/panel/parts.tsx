@@ -13,6 +13,7 @@ import { type ReactNode, useState } from "react";
 import type { AccuracyStatement } from "../../../src/measure/accuracy.ts";
 import type { DataItem } from "../protocol.ts";
 import type { StressResult } from "../tests.ts";
+import { cautionOf } from "../warnings.ts";
 import { length } from "./format.ts";
 import { GLOSSARY, type GlossaryKey } from "./glossary.ts";
 
@@ -214,7 +215,7 @@ export function AccuracyText({
       </span>
     );
   }
-  const caution = accuracy.warnings.length > 0;
+  const caution = cautionOf(accuracy);
   return (
     <span className={`fx-accuracy${caution ? " fx-unbounded" : ""}`}>
       ±{length(accuracy.meters)}

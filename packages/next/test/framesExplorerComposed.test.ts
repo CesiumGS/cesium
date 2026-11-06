@@ -8,6 +8,7 @@ import {
   composedView,
 } from "../examples/frames-explorer/composed.ts";
 import { buildTree } from "../examples/frames-explorer/tree.ts";
+import { cautionOf } from "../examples/frames-explorer/warnings.ts";
 import { Frame } from "../src/frames/Frame.ts";
 import { createFrames } from "../src/frames/frames.ts";
 import { framePoint } from "../src/frames/local.ts";
@@ -28,7 +29,18 @@ describe("composedView", () => {
       instant,
       frames,
     ).accuracy;
-    expect(v.statement).toEqual(direct);
+    // measure's statement, less its signal-only warnings (S-I4).
+    expect(v.statement.meters).toBe(direct.meters);
+    expect(v.statement.terms).toEqual(direct.terms);
+  });
+
+  it("drops measure's signal-only warnings: they say nothing of the separation (S-I4)", () => {
+    const v = composedView(tree, frames, instant, "ITRF", "MOON_PA")!;
+    // The two origins carry their own instant, so measure notes "no signal".
+    expect(v.statement.warnings).toEqual([]);
+    expect(v.statement.warningCodes ?? []).toEqual([]);
+    expect(v.note ?? "").not.toMatch(/signal/);
+    expect(v.statement.meters).toBeGreaterThan(0);
   });
 
   it("includes the Moon's relativity term, from no edge", () => {
@@ -85,5 +97,33 @@ describe("a statement that can't be composed (R8, F35)", () => {
     expect(v.statement.meters).toBeUndefined();
     expect(v.statement.warnings.join(" ")).toMatch(/boom: no data here/);
     expect(v.note).toMatch(/boom: no data here/);
+  });
+});
+
+describe("the attention color (S-I4)", () => {
+  it("is not raised by a signal-only warning, and is by an assumption or a separation warning", () => {
+    const base = { meters: 0.032, terms: [], warnings: [] };
+    expect(
+      cautionOf({
+        ...base,
+        warnings: ["a carries its own instant … no signal"],
+        warningCodes: ["own-instant-no-signal"],
+      }),
+    ).toBe(false);
+    expect(
+      cautionOf({
+        ...base,
+        warnings: ["The leap-second table has expired"],
+        warningCodes: ["leap-seconds-expired"],
+      }),
+    ).toBe(true);
+    expect(
+      cautionOf({
+        ...base,
+        terms: [{ source: "coordinateScale", meters: 10, note: "TDB or TT" }],
+      }),
+    ).toBe(true);
+    // Warnings without codes stay as they were: shown.
+    expect(cautionOf({ ...base, warnings: ["something"] })).toBe(true);
   });
 });
