@@ -41,6 +41,8 @@ import {
   normalizeRun,
   type Params,
   searchToParams,
+  type Shared,
+  share,
 } from "./exampleRun.ts";
 import { captureThumbnail } from "./thumbnails.ts";
 
@@ -131,7 +133,8 @@ export function ExamplePage() {
   const info = EXAMPLES.find((x) => x.id === id);
   const host = useRef<HTMLDivElement>(null);
   const panel = useRef<HTMLDivElement>(null);
-  const [engine, setEngine] = useState<Engine>();
+  const [shared, setShared] = useState<Shared<Engine>>();
+  const engine = shared?.value;
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string>();
   const [reactPanel, setReactPanel] = useState<RunPanel>();
@@ -160,28 +163,31 @@ export function ExamplePage() {
   // One engine while the page is open (the device, pipelines and
   // workers, the costly part); each example gets a viewer of its own on
   // it, destroyed when the example is left, so nothing one example changed
-  // reaches the next (Sandcastle gets the same from a fresh iframe).
+  // reaches the next (Sandcastle gets the same from a fresh iframe). Shared:
+  // on leaving, React runs this cleanup before the runner's (parent first),
+  // so the engine goes when the example on it has been disposed, not before.
   useEffect(() => {
     if (!exists) {
       return;
     }
     let cancelled = false;
-    let made: Engine | undefined;
+    let release: (() => void) | undefined;
     Engine.create({ limits: limitsTier() }).then(
       (e) => {
         if (cancelled) {
           e.destroy();
         } else {
-          made = e;
-          setEngine(e);
+          const made = share(e, (x) => x.destroy());
+          release = made.release;
+          setShared(made.shared);
         }
       },
       (e) => !cancelled && setError(message(e)),
     );
     return () => {
       cancelled = true;
-      made?.destroy();
-      setEngine(undefined);
+      release?.();
+      setShared(undefined);
     };
   }, [exists]);
 
@@ -290,7 +296,7 @@ export function ExamplePage() {
       />
       <ExampleRunner
         info={info}
-        engine={engine}
+        shared={shared}
         host={host}
         box={panel}
         setError={setError}
@@ -339,7 +345,7 @@ function ExamplePanel({
 /** Runs the current example in a viewer of its own; renders nothing. */
 function ExampleRunner({
   info,
-  engine,
+  shared,
   host,
   box,
   setError,
@@ -347,7 +353,7 @@ function ExampleRunner({
   setReactPanel,
 }: {
   info: ExampleInfo;
-  engine: Engine | undefined;
+  shared: Shared<Engine> | undefined;
   host: RefObject<HTMLDivElement | null>;
   box: RefObject<HTMLDivElement | null>;
   setError: (error: string | undefined) => void;
@@ -374,11 +380,16 @@ function ExampleRunner({
   // before this one, so they precede `dispose`; a layout cleanup here would
   // run before them. (`flushSync` can't unmount the panel from a cleanup:
   // React ignores it mid-commit.) The new canvas shows once its first frame
-  // is drawn (created with `suspendPresentation`).
+  // is drawn (created with `suspendPresentation`). The run holds the engine
+  // until it's undone, and so does its start until it settles (one left
+  // mid-start finishes, then disposes, after this cleanup).
   useEffect(() => {
-    if (!engine || !box.current || !host.current) {
+    if (!shared || !box.current || !host.current) {
       return;
     }
+    const engine = shared.value;
+    const releaseRun = shared.hold();
+    const releaseStart = shared.hold();
     const controller = new AbortController();
     const { signal } = controller;
     const scope = new DisposableStack();
@@ -457,6 +468,7 @@ function ExampleRunner({
         if (!signal.aborted) {
           setRunning(false);
         }
+        releaseStart();
       }
     })();
     return () => {
@@ -469,8 +481,9 @@ function ExampleRunner({
       scope.dispose();
       boxElement.replaceChildren();
       viewer?.destroy();
+      releaseRun();
     };
-  }, [engine, info, navigate, router, setError, setRunning, setReactPanel]);
+  }, [shared, info, navigate, router, setError, setRunning, setReactPanel]);
 
   return null;
 }

@@ -121,3 +121,51 @@ export function exampleLink(
   });
   return new URL(router.history.createHref(href), base).href;
 }
+
+/** Something its owner shares, kept while anything holds it. */
+export interface Shared<T> {
+  readonly value: T;
+  /**
+   * Keeps it until the returned function lets go (counted once, however
+   * often it's called). Throws once it's destroyed.
+   */
+  hold(): () => void;
+}
+
+/**
+ * `value`, destroyed once its owner (`release`) and every holder have let
+ * go, in whichever order they do. The Examples page's engine: React runs a
+ * removed tree's passive cleanups parent first, so the page's own cleanup
+ * would destroy the engine, and every world on it, before the runner's
+ * disposes the example running there.
+ */
+export function share<T>(
+  value: T,
+  destroy: (value: T) => void,
+): { shared: Shared<T>; release: () => void } {
+  let holds = 1; // the owner's
+  const letGo = () => {
+    let done = false;
+    return () => {
+      if (!done) {
+        done = true;
+        if (--holds === 0) {
+          destroy(value);
+        }
+      }
+    };
+  };
+  return {
+    shared: {
+      value,
+      hold() {
+        if (holds === 0) {
+          throw new Error("share: already destroyed");
+        }
+        holds++;
+        return letGo();
+      },
+    },
+    release: letGo(),
+  };
+}

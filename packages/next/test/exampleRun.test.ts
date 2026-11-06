@@ -12,6 +12,7 @@ import {
   mergeParams,
   normalizeRun,
   searchToParams,
+  share,
 } from "../bench/suite/views/exampleRun.ts";
 
 describe("searchToParams", () => {
@@ -187,5 +188,56 @@ describe("exampleLink", () => {
     );
     const query = link.split("?")[1]!;
     expect(searchToParams(parseSearch(query))).toEqual({ n: "1.50" });
+  });
+});
+
+describe("share", () => {
+  it("destroys once the owner and every holder let go, owner first", () => {
+    // Leaving the Examples page: React runs the page's passive cleanup (the
+    // engine's owner) before the runner's (the example on it).
+    const destroy = vi.fn();
+    const { shared, release } = share("engine", destroy);
+    const letGo = shared.hold();
+    release();
+    expect(destroy).not.toHaveBeenCalled();
+    letGo();
+    expect(destroy).toHaveBeenCalledOnce();
+    expect(destroy).toHaveBeenCalledWith("engine");
+  });
+
+  it("destroys once the owner and every holder let go, holders first", () => {
+    const destroy = vi.fn();
+    const { shared, release } = share("engine", destroy);
+    const a = shared.hold();
+    const b = shared.hold();
+    a();
+    b();
+    expect(destroy).not.toHaveBeenCalled();
+    release();
+    expect(destroy).toHaveBeenCalledOnce();
+  });
+
+  it("destroys with no holders when the owner lets go", () => {
+    const destroy = vi.fn();
+    share("engine", destroy).release();
+    expect(destroy).toHaveBeenCalledOnce();
+  });
+
+  it("counts each release once, however often it is called", () => {
+    const destroy = vi.fn();
+    const { shared, release } = share("engine", destroy);
+    const a = shared.hold();
+    shared.hold(); // still held
+    a();
+    a();
+    release();
+    release();
+    expect(destroy).not.toHaveBeenCalled();
+  });
+
+  it("can't be held once destroyed", () => {
+    const { shared, release } = share("engine", () => {});
+    release();
+    expect(() => shared.hold()).toThrow(/destroyed/);
   });
 });
