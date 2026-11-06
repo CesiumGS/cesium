@@ -59,6 +59,17 @@ function commonAncestor(a: Frame, b: Frame): Frame | undefined {
   return chain(b).find((f) => above.has(f));
 }
 
+/** The trajectory whose frame is `frame` or its nearest ancestor (a local frame on an object). */
+function trajectoryOf(frame: Frame): Trajectory | undefined {
+  for (const f of chain(frame)) {
+    const t = Trajectory.of(f);
+    if (t) {
+      return t;
+    }
+  }
+  return undefined;
+}
+
 const rss = (...v: number[]): number => Math.hypot(...v);
 
 /**
@@ -77,6 +88,14 @@ function earthOrientationTerm(
 ): AccuracyTerm {
   const { eop, leapSeconds } = frames.data;
   const sample = eop.atInstant(instant, leapSeconds);
+  if (sample.degraded) {
+    const iso = (ms: number): string => new Date(ms).toISOString();
+    return {
+      source: "earthOrientation",
+      meters: undefined,
+      note: `End ${end}: the instant is outside the EOP table (${iso(eop.first)} to ${iso(eop.last)}), so Earth orientation is not known`,
+    };
+  }
   const p = convertPoint(point, frames.itrf, instant).position;
   const rho = Math.hypot(p[0]!, p[1]!);
   const norm = Math.hypot(p[0]!, p[1]!, p[2]!);
@@ -88,8 +107,10 @@ function earthOrientationTerm(
       0,
       (instant.toUtc(leapSeconds) - eop.lastObserved) / MS_PER_DAY,
     );
-    sigmaT = 0.00025 * days ** 0.75;
-    sigmaP = 0.00068 * days ** 0.8 * ARCSEC_TO_RAD;
+    // A predicted sample is never better than a measured one: its window
+    // can reach back before the last observed row, where d is 0.
+    sigmaT = Math.max(sigmaT, 0.00025 * days ** 0.75);
+    sigmaP = Math.max(sigmaP, 0.00068 * days ** 0.8 * ARCSEC_TO_RAD);
     note = `End ${end}: predicted Earth orientation, ${days.toFixed(1)} days past the last observed row (IERS Bulletin A)`;
   }
   return {
@@ -132,7 +153,7 @@ export function accuracyOf(
         earthOrientationTerm(end as "a" | "b", point, instant, frames),
       );
     }
-    const trajectory = Trajectory.of(point.frame);
+    const trajectory = trajectoryOf(point.frame);
     if (trajectory) {
       const sigma = trajectory.positionSigma(instant);
       terms.push({
