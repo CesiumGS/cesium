@@ -6,6 +6,7 @@ import {
   ToggleButtonGroup,
   Typography,
 } from "@mui/material";
+import { svgChevronRight } from "@stratakit/icons/chevron-right";
 import { svgDismiss } from "@stratakit/icons/dismiss";
 import { svgPlay } from "@stratakit/icons/play";
 import { Icon } from "@stratakit/mui";
@@ -197,8 +198,9 @@ export function Verify({
           <Button
             size="small"
             variant="text"
-            className="fx-link-button"
+            className="fx-link-button fx-link-accent"
             onClick={showTryYourOwn}
+            endIcon={<Icon href={svgChevronRight} />}
           >
             Try your own CRS
           </Button>

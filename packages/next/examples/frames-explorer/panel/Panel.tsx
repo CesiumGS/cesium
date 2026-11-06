@@ -173,6 +173,8 @@ export function Panel({ source, view, actions, hud, initialTab }: PanelProps) {
             onBackToResult={() => setTab("verify")}
             onStartTour={() => setTour(0)}
             tourButton={tourButton}
+            reference={shared.against}
+            setReference={(r) => view.setAgainst(r)}
           />
         </Tabs.TabPanel>
         <Tabs.TabPanel

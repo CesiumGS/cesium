@@ -18,13 +18,7 @@ import {
 import { svgFitToView } from "@stratakit/icons/fit-to-view";
 import { svgPathAnimationSingle } from "@stratakit/icons/path-animation-single";
 import { Icon } from "@stratakit/mui";
-import {
-  type ReactNode,
-  type RefObject,
-  useId,
-  useMemo,
-  useState,
-} from "react";
+import { type ReactNode, type RefObject, useId, useMemo } from "react";
 import type { TreeNode } from "../tree.ts";
 import type { AccuracyTerm } from "../../../src/measure/accuracy.ts";
 import { BudgetBar } from "./BudgetBar.tsx";
@@ -184,6 +178,8 @@ export function Walk({
   ) => {
     const acc = edgeAccuracyText(child.edge.kind, child.edge.accuracy);
     const terms = termsOn.get(child.id) ?? [];
+    // A term of 0 m here adds nothing; it is said as the rotations are (minor 7).
+    const nonzero = terms.filter((t) => view?.statement.terms[t]?.meters !== 0);
     const i = step++;
     return (
       <li
@@ -218,8 +214,8 @@ export function Walk({
           </Typography>
           {view && (
             <p className="fx-walk-adds">
-              {terms.length > 0
-                ? terms.map((t) => {
+              {nonzero.length > 0
+                ? nonzero.map((t) => {
                     const term = view.statement.terms[t]!;
                     const shared = view.termEdges[t]!.filter(
                       (e) => e !== child.id,
@@ -246,9 +242,13 @@ export function Walk({
                   })
                 : zero.has(child.id)
                   ? `Adds nothing at the origin: ${zero.get(child.id)}.`
-                  : child.edge.accuracy.byDefinition
-                    ? "Adds nothing: exact by definition."
-                    : "Adds nothing at the origin."}
+                  : terms.length > 0 && child.edge.kind === "rotation"
+                    ? // A term that is 0 m here (Earth orientation at the
+                      // geocentre): the same words as the other rotations.
+                      "Adds nothing at the origin: a rotation turns the frame's axes about its own origin, so it doesn't move that origin."
+                    : child.edge.accuracy.byDefinition
+                      ? "Adds nothing: exact by definition."
+                      : "Adds nothing at the origin."}
             </p>
           )}
         </div>
@@ -434,8 +434,31 @@ function OverlayRow({
       >
         {problem ? overlay.problem : overlay.accuracy}
       </Typography>
+      {/* One line each (S-I7): what the figure means is one click away. */}
+      {!problem && overlay.detail && (
+        <details className="fx-overlay-detail">
+          <summary>
+            <Typography variant="caption-lg" render={<span />}>
+              About this figure
+            </Typography>
+          </summary>
+          <Typography variant="caption-lg" color="textSecondary" render={<p />}>
+            {overlay.detail}
+          </Typography>
+        </details>
+      )}
       {overlay.on && !problem && (
         <OverlayOptions overlay={overlay} model={model} actions={actions} />
+      )}
+      {overlay.on && !problem && overlay.drawing && (
+        <Typography
+          variant="caption-lg"
+          color="textSecondary"
+          render={<p />}
+          className="fx-overlay-drawing"
+        >
+          {overlay.drawing}
+        </Typography>
       )}
     </li>
   );
@@ -542,6 +565,28 @@ function OverlayOptions({
           />
         </div>
       );
+    case "rigidVsExact":
+      // S-C1: the sag is 0.16% of the line, about 3 px at the tour's
+      // framing, so the separation is drawn ×50 by default, labelled.
+      return (
+        <div className="fx-overlay-options">
+          <FormControlLabel
+            control={
+              <Switch
+                size="small"
+                checked={model.sagTrueScale}
+                onChange={(_, on) => actions.setSagTrueScale(on)}
+              />
+            }
+            label={
+              <span className="fx-option-label">
+                Show true scale
+                {model.sagTrueScale ? "" : ` (sag drawn ×${model.sagFactor})`}
+              </span>
+            }
+          />
+        </div>
+      );
     case "bias":
       return (
         <div className="fx-overlay-options">
@@ -575,6 +620,8 @@ export function Explore({
   onBackToResult,
   onStartTour,
   tourButton,
+  reference,
+  setReference,
 }: {
   model: PanelModel;
   actions: PanelActions;
@@ -585,8 +632,10 @@ export function Explore({
   onBackToResult: () => void;
   onStartTour: () => void;
   tourButton: RefObject<HTMLButtonElement | null>;
+  /** The walk's reference, shared with the globe and the URL (S-I5). */
+  reference: Reference;
+  setReference: (r: Reference) => void;
 }) {
-  const [reference, setReference] = useState<Reference>("ITRF");
   const tree = model.tree;
   const onPath = useMemo(() => {
     if (!tree) {

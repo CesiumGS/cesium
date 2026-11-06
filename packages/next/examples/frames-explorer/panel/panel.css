@@ -230,6 +230,10 @@
   white-space: nowrap;
 }
 /* Text buttons that read as links (N-minor): underlined on hover and focus. */
+/* A link-like action that reads as one at rest (minor 10). */
+.fx-panel .fx-link-accent {
+  color: var(--stratakit-color-text-accent-strong);
+}
 .fx-panel .fx-link-button:hover,
 .fx-panel .fx-link-button:focus-visible {
   text-decoration: underline;
@@ -746,8 +750,29 @@
 }
 /* Under the label, past the switch. */
 .fx-overlay-acc,
-.fx-overlay-options {
+.fx-overlay-options,
+.fx-overlay-detail,
+.fx-overlay-drawing {
   padding-inline-start: 44px;
+}
+.fx-overlay-detail > summary {
+  cursor: pointer;
+  color: var(--stratakit-color-text-accent-strong);
+  width: fit-content;
+}
+.fx-overlay-detail > summary:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: 2px;
+}
+.fx-overlay-detail > p {
+  margin-block: var(--stratakit-space-100) 0;
+}
+.fx-overlay-drawing {
+  margin: 0;
+}
+/* A switch's label wraps at a 380 px panel rather than clipping (minor 4). */
+.fx-overlay-options .fx-option-label {
+  white-space: normal;
 }
 .fx-overlay-acc {
   color: var(--stratakit-color-text-neutral-secondary);
@@ -1650,6 +1675,16 @@
 }
 .fx-globe-label-dim {
   opacity: 0;
+}
+/* A callout: the text 48 px right of its point, a 1 px leader between
+   (DESIGN.md "Labels"; S-C1's sag, S-I8's lunar clock, Orion now). */
+.fx-globe-label-callout::before {
+  content: "";
+  position: absolute;
+  right: calc(100% + 2px);
+  top: 50%;
+  width: 46px;
+  border-top: 1px solid currentColor;
 }
 /* The selected frame's label in white (DESIGN.md "A selection on the globe"). */
 .fx-globe-label.fx-globe-label-selected {
