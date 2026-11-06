@@ -633,6 +633,11 @@
   justify-content: space-between;
   gap: var(--stratakit-space-200);
 }
+/* A not-bounded total's reason, on its own line under the headline (S-I9). */
+.fx-walk-why {
+  margin: 0 0 var(--stratakit-space-200);
+  overflow-wrap: anywhere;
+}
 
 .fx-budget {
   margin: 0;

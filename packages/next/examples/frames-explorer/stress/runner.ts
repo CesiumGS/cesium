@@ -164,6 +164,7 @@ export function plainAccuracy(a: AccuracyStatement): AccuracyStatement {
       note: t.note,
     })),
     warnings: [...a.warnings],
+    ...(a.warningCodes && { warningCodes: [...a.warningCodes] }),
   };
 }
 

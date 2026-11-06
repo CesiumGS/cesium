@@ -99,6 +99,7 @@ export interface TourStopSpec {
   /** The camera: a named framing (`main.ts` places each). */
   camera:
     | "opening"
+    | "earthFrames"
     | "stay"
     | "designGrid"
     | "rigidVsExact"
@@ -119,9 +120,10 @@ export const TOUR: readonly TourStopSpec[] = [
     id: "earth-frames",
     title: "Earth's frames",
     caption:
-      "ITRF turns with the Earth; GCRF doesn't. Each triad is a frame's axes at the clock's time.",
+      "ITRF turns with the Earth; GCRF doesn't. Each triad is a frame's axes at the clock's time: ITRF's with cones, GCRF's with square heads. Lit from the camera.",
     overlays: ["triads"],
-    camera: "opening",
+    camera: "earthFrames",
+    light: "camera",
   },
   {
     id: "gcrf-itrf-day",

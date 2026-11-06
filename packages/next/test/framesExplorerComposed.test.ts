@@ -127,3 +127,49 @@ describe("the attention color (S-I4)", () => {
     expect(cautionOf({ ...base, warnings: ["something"] })).toBe(true);
   });
 });
+
+describe("a placed engineering-frame node (worker-held, S-I4)", () => {
+  // An engineering node the main thread knows only from the worker: no
+  // frame, its origin in ITRF and its PROJ operation's term.
+  const node = {
+    id: "engineering:Test zone",
+    label: "Test zone",
+    edge: {
+      kind: "proj-operation" as const,
+      detail: "PROJ operation",
+      accuracy: { meters: 2, note: "PROJ's stated accuracy" },
+    },
+    children: [],
+  };
+  const withEngineering = buildTree(frames, {}, instant);
+  const itrf = (function find(
+    n: typeof withEngineering,
+  ): typeof withEngineering | undefined {
+    return n.id === "ITRF" ? n : n.children.map(find).find((x) => x);
+  })(withEngineering)!;
+  itrf.children.push(node);
+  const placed = new Map([
+    [
+      node.id,
+      {
+        itrf: [6_378_137, 0, 0],
+        projection: { source: "projection" as const, meters: 2, note: "PROJ" },
+      },
+    ],
+  ]);
+
+  it("keeps the warning codes, so signal-only warnings are dropped and don't raise the attention color", () => {
+    const v = composedView(
+      withEngineering,
+      frames,
+      instant,
+      "ITRF",
+      node.id,
+      placed,
+    )!;
+    expect(v.statement.meters).toBeGreaterThan(1.9);
+    expect(v.statement.warnings).toEqual([]);
+    expect(v.statement.warningCodes).toEqual([]);
+    expect(cautionOf(v.statement)).toBe(false);
+  });
+});
