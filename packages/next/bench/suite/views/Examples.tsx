@@ -16,14 +16,28 @@ import {
 import { svgArrowLeft } from "@stratakit/icons/arrow-left";
 import { Icon } from "@stratakit/mui";
 import { getRouteApi, Link as RouterLink } from "@tanstack/react-router";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { EXAMPLES } from "../../../examples/index.ts";
+import {
+  type ReactNode,
+  type RefObject,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
+import { createPortal } from "react-dom";
+import { EXAMPLES, type ExampleInfo } from "../../../examples/index.ts";
 import { Engine } from "../../../src/index.ts";
 import { Viewer } from "../../../widgets/index.ts";
 import { ionToken } from "../ionToken.ts";
 import { limitsTier } from "../limitsTier.ts";
 import { Empty, Page, Section } from "./common.tsx";
 import { ExampleSwitcher, ExampleThumbnail } from "./ExampleSwitcher.tsx";
+import {
+  createParamsStore,
+  normalizeRun,
+  type Params,
+  searchToParams,
+} from "./exampleRun.ts";
 import { captureThumbnail } from "./thumbnails.ts";
 
 /**
@@ -116,6 +130,7 @@ export function ExamplePage() {
   const [engine, setEngine] = useState<Engine>();
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string>();
+  const [reactPanel, setReactPanel] = useState<RunPanel>();
   const [showSource, setShowSource] = useState(false);
   const [source, setSource] = useState<string>();
   // The controls panel collapses to its header, as the inspector does (kept
@@ -165,90 +180,6 @@ export function ExamplePage() {
       setEngine(undefined);
     };
   }, [exists]);
-
-  // The example: a viewer of its own, run in it, and everything undone
-  // when left (its undo, its scope, then the viewer with its world). A
-  // layout effect, so the last example's canvas is gone before the browser
-  // paints the new route; the new canvas shows once its first frame is
-  // drawn (created with `suspendPresentation`).
-  useLayoutEffect(() => {
-    if (!engine || !info || !panel.current || !host.current) {
-      return;
-    }
-    const controller = new AbortController();
-    const { signal } = controller;
-    const scope = new DisposableStack();
-    let viewer: Viewer | undefined;
-    let dispose: (() => void) | undefined;
-    let thumbnail: ReturnType<typeof setTimeout> | undefined;
-    setError(undefined);
-    setRunning(true);
-    const box = panel.current;
-    const stage = host.current;
-    const token = ionToken();
-    void (async () => {
-      try {
-        const v = await Viewer.create(stage, {
-          engine,
-          suspendPresentation: true,
-          globe: info.globe,
-          maxInstances: MAX_INSTANCES,
-          // Frame rate, timings, memory; top left (panels are top right).
-          inspector: {
-            storageKey: "dyno.examples.inspector",
-            placement: "top-left",
-          },
-          ...(token ? { accessToken: token } : {}),
-        });
-        if (signal.aborted) {
-          v.destroy();
-          return;
-        }
-        viewer = v;
-        // For the console, as the Viewer page's `dynoViewer`.
-        Object.assign(globalThis, { dynoExamplesViewer: v });
-        const module = await info.load();
-        if (signal.aborted) {
-          return;
-        }
-        const undo = await module.run({
-          viewer: v,
-          panel: box,
-          accessToken: token,
-          signal,
-          scope,
-        });
-        if (signal.aborted) {
-          undo();
-        } else {
-          dispose = undo;
-          // The switcher's picture of it, once its scene has had a moment.
-          thumbnail = setTimeout(() => {
-            if (!signal.aborted) {
-              captureThumbnail(info.id, v.canvas, () => engine.renderFrame());
-            }
-          }, 2500);
-        }
-      } catch (e) {
-        if (!signal.aborted) {
-          setError(message(e));
-        }
-      } finally {
-        viewer?.resumePresentation();
-        if (!signal.aborted) {
-          setRunning(false);
-        }
-      }
-    })();
-    return () => {
-      controller.abort();
-      clearTimeout(thumbnail);
-      dispose?.();
-      scope.dispose();
-      box.replaceChildren();
-      viewer?.destroy();
-    };
-  }, [engine, info]);
 
   useEffect(() => {
     if (!showSource || !info) {
@@ -340,6 +271,24 @@ export function ExamplePage() {
           />
         </div>
       </div>
+      {/* Order matters: on leaving, React tears siblings down in order, so
+          the panel is removed before the runner's cleanup disposes the
+          example (and, on switching, the panel is no longer rendered). */}
+      <ExamplePanel
+        shown={reactPanel}
+        info={info}
+        engine={engine}
+        box={panel}
+      />
+      <ExampleRunner
+        info={info}
+        engine={engine}
+        host={host}
+        box={panel}
+        setError={setError}
+        setRunning={setRunning}
+        setReactPanel={setReactPanel}
+      />
       {showSource && (
         <Section title="Source" description={`examples/${info.id}/main.ts`}>
           <pre id="example-source" className="examples-source">
@@ -349,4 +298,165 @@ export function ExamplePage() {
       )}
     </Page>
   );
+}
+
+/** The React panel an example returned, and the run it belongs to. */
+interface RunPanel {
+  info: ExampleInfo;
+  engine: Engine;
+  node: ReactNode;
+}
+
+/**
+ * An example's React panel, rendered in the Controls body from this tree
+ * (so under StrataKit's `Root`, with its theme, portals and focus), while
+ * the run it came from is the current one.
+ */
+function ExamplePanel({
+  shown,
+  info,
+  engine,
+  box,
+}: {
+  shown: RunPanel | undefined;
+  info: ExampleInfo;
+  engine: Engine | undefined;
+  box: RefObject<HTMLDivElement | null>;
+}) {
+  return shown && shown.info === info && shown.engine === engine && box.current
+    ? createPortal(shown.node, box.current)
+    : null;
+}
+
+/** Runs the current example in a viewer of its own; renders nothing. */
+function ExampleRunner({
+  info,
+  engine,
+  host,
+  box,
+  setError,
+  setRunning,
+  setReactPanel,
+}: {
+  info: ExampleInfo;
+  engine: Engine | undefined;
+  host: RefObject<HTMLDivElement | null>;
+  box: RefObject<HTMLDivElement | null>;
+  setError: (error: string | undefined) => void;
+  setRunning: (running: boolean) => void;
+  setReactPanel: (panel: RunPanel | undefined) => void;
+}) {
+  const navigate = exampleRoute.useNavigate();
+  // The URL's params for the running example: they reach it through its
+  // store (the first at start, later ones as back and forward).
+  const search = searchToParams(exampleRoute.useSearch());
+  const searchRef = useRef(search);
+  searchRef.current = search;
+  const paramsRef = useRef<ReturnType<typeof createParamsStore>>(undefined);
+  const searchKey = JSON.stringify(search);
+  useEffect(() => {
+    paramsRef.current?.sync(JSON.parse(searchKey) as Params);
+  }, [searchKey]);
+
+  // The example: a viewer of its own, run in it, and everything undone
+  // when left (its undo, its scope, then the viewer with its world). A
+  // layout effect, so the last example's canvas is gone before the browser
+  // paints the new route; the new canvas shows once its first frame is
+  // drawn (created with `suspendPresentation`).
+  useLayoutEffect(() => {
+    if (!engine || !box.current || !host.current) {
+      return;
+    }
+    const controller = new AbortController();
+    const { signal } = controller;
+    const scope = new DisposableStack();
+    let viewer: Viewer | undefined;
+    let dispose: (() => void) | undefined;
+    let thumbnail: ReturnType<typeof setTimeout> | undefined;
+    setError(undefined);
+    setRunning(true);
+    const boxElement = box.current;
+    const stage = host.current;
+    const params = createParamsStore(
+      searchToParams(searchRef.current),
+      (next) => void navigate({ search: next, replace: true }),
+    );
+    paramsRef.current = params;
+    const token = ionToken();
+    void (async () => {
+      try {
+        const v = await Viewer.create(stage, {
+          engine,
+          suspendPresentation: true,
+          globe: info.globe,
+          maxInstances: MAX_INSTANCES,
+          // Frame rate, timings, memory; top left (panels are top right).
+          inspector: {
+            storageKey: "dyno.examples.inspector",
+            placement: "top-left",
+          },
+          ...(token ? { accessToken: token } : {}),
+        });
+        if (signal.aborted) {
+          v.destroy();
+          return;
+        }
+        viewer = v;
+        // For the console, as the Viewer page's `dynoViewer`.
+        Object.assign(globalThis, { dynoExamplesViewer: v });
+        const module = await info.load();
+        if (signal.aborted) {
+          return;
+        }
+        const run = normalizeRun(
+          await module.run({
+            viewer: v,
+            panel: boxElement,
+            accessToken: token,
+            signal,
+            scope,
+            params: params.params,
+            setParams: params.setParams,
+            watchParams: params.watch,
+          }),
+        );
+        if (signal.aborted) {
+          run.dispose();
+        } else {
+          dispose = run.dispose;
+          if (run.panel !== undefined) {
+            setReactPanel({ info, engine, node: run.panel });
+          }
+          // The switcher's picture of it, once its scene has had a moment.
+          thumbnail = setTimeout(() => {
+            if (!signal.aborted) {
+              captureThumbnail(info.id, v.canvas, () => engine.renderFrame());
+            }
+          }, 2500);
+        }
+      } catch (e) {
+        if (!signal.aborted) {
+          setError(message(e));
+        }
+      } finally {
+        viewer?.resumePresentation();
+        if (!signal.aborted) {
+          setRunning(false);
+        }
+      }
+    })();
+    return () => {
+      controller.abort();
+      clearTimeout(thumbnail);
+      params.close();
+      paramsRef.current = undefined;
+      setReactPanel(undefined);
+      dispose?.();
+      scope.dispose();
+      boxElement.replaceChildren();
+      viewer?.destroy();
+    };
+  }, [engine, info, navigate, setError, setRunning, setReactPanel]);
+
+  return null;
 }

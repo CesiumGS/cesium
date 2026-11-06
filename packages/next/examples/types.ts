@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { GlobeKind, Viewer } from "../widgets/index.ts";
 
 /**
@@ -27,13 +28,45 @@ export interface ExampleContext {
   accessToken: string | undefined;
   /** Aborted when the example is left, before its disposer runs. */
   signal: AbortSignal;
+  /**
+   * The example's URL parameters when it started (a deep link's), as
+   * free-form text. Each example's own: switching examples clears them.
+   */
+  params: Readonly<Record<string, string>>;
+  /**
+   * Sets some of the parameters, replacing the URL's rather than adding a
+   * history entry; `undefined` removes one.
+   */
+  setParams(next: Readonly<Record<string, string | undefined>>): void;
+  /**
+   * Calls `callback` with all the parameters when navigation (back,
+   * forward) changes them, not for the example's own `setParams`. Returns
+   * what stops it.
+   */
+  watchParams(
+    callback: (params: Readonly<Record<string, string>>) => void,
+  ): () => void;
 }
 
 /** Removes what `run` added. */
 export type Dispose = () => void;
 
+/**
+ * What `run` may return instead of a bare `Dispose`: the same, with a
+ * React panel the gallery renders in its own tree (so it has the gallery's
+ * theme, portals and focus handling) in the controls, in place of
+ * `context.panel`. It is removed before `dispose` runs. An example that
+ * returns a `Dispose` fills `context.panel` itself, as before.
+ */
+export interface ExampleRun {
+  dispose: Dispose;
+  panel?: ReactNode;
+}
+
 export interface ExampleModule {
-  run(context: ExampleContext): Promise<Dispose> | Dispose;
+  run(
+    context: ExampleContext,
+  ): Promise<Dispose | ExampleRun> | Dispose | ExampleRun;
 }
 
 /** An example as the gallery lists it. */

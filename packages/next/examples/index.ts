@@ -1,6 +1,11 @@
 import type { ExampleInfo } from "./types.ts";
 
-export type { ExampleContext, ExampleInfo, ExampleModule } from "./types.ts";
+export type {
+  ExampleContext,
+  ExampleInfo,
+  ExampleModule,
+  ExampleRun,
+} from "./types.ts";
 
 /** The gallery's examples, in the order it lists them. */
 export const EXAMPLES: ExampleInfo[] = [
