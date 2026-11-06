@@ -518,6 +518,9 @@ describe("the catalog uses only the package's public API (F7)", () => {
       .filter((f) => f.endsWith(".ts"))
       .sort();
     expect(files).toContain("tests.ts");
+    // The overlay builders and their adapter (Task 3) use library names too.
+    expect(files).toContain("overlays.ts");
+    expect(files).toContain("tree.ts");
     expect(files.some((f) => f.startsWith("stress"))).toBe(true);
     const tests = files
       .map((f) => readFileSync(new URL(f, root), "utf8"))
