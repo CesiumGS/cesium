@@ -249,3 +249,9 @@ export {
   worldTransformFrame,
   type FramePoint,
 } from "./frames/local.ts";
+export {
+  Trajectory,
+  type TrajectoryAccuracy,
+} from "./trajectory/Trajectory.ts";
+export { parseOem, type OemSegment } from "./trajectory/oem.ts";
+export { readSpk, type StateSegment } from "./ephemeris/spk.ts";

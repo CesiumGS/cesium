@@ -70,6 +70,9 @@ export class Frame<N extends string = string> {
       return out;
     }
     if (this.entryTt !== instant.tt) {
+      // Invalidate first: a compute that throws after writing part of the
+      // matrix must not leave garbage keyed to the previous instant.
+      this.entryTt = NaN;
       this.compute(instant, this.entry);
       this.entryTt = instant.tt;
     }
