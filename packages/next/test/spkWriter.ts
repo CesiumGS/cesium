@@ -16,13 +16,32 @@ export interface SpkWriterSegment {
   records: Float64Array;
 }
 
+/**
+ * A discrete-state segment (types 8, 9, 12, 13) in SPK Required Reading's
+ * layout: states, then epochs and a directory (9 and 13 only), then a trailer.
+ */
+export interface SpkStateWriterSegment {
+  target: number;
+  center?: number;
+  frame: number;
+  type: 8 | 9 | 12 | 13;
+  /** TDB s per epoch. Types 8 and 12 write only the first epoch and `step`. */
+  epochs: Float64Array;
+  /** Types 8 and 12: the equal spacing, TDB s. */
+  step?: number;
+  /** Flat [x, y, z, vx, vy, vz] per epoch, km and km/s. */
+  states: Float64Array;
+  /** The stored trailer value: the degree (8, 9) or window size - 1 (12, 13). */
+  degree: number;
+}
+
 export interface SpkWriterOptions {
   kind: "SPK" | "PCK";
   /** File-record format string, default "LTL-IEEE". The data is still written little-endian. */
   format?: string;
   /** Overrides the file record's ID word, default from `kind`. */
   idWord?: string;
-  segments: SpkWriterSegment[];
+  segments: (SpkWriterSegment | SpkStateWriterSegment)[];
 }
 
 const RECORD = 1024;
@@ -41,11 +60,11 @@ export function writeSpk(options: SpkWriterOptions): ArrayBuffer {
   const dataStartRecord = 1 + groups * 2 + 1;
   let nextAddress = (dataStartRecord - 1) * DOUBLES + 1; // 1-based, in doubles
   const placed = options.segments.map((s) => {
-    const count = s.records.length / s.recordSize;
+    const body = bodyOf(s);
     const initial = nextAddress;
-    const final = initial + s.records.length + 4 - 1;
+    const final = initial + body.length - 1;
     nextAddress = final + 1;
-    return { s, count, initial, final };
+    return { s, body, initial, final };
   });
 
   const totalDoubles = nextAddress - 1;
@@ -77,10 +96,11 @@ export function writeSpk(options: SpkWriterOptions): ArrayBuffer {
     view.setFloat64(base + 8, g > 0 ? summaryRecord - 2 : 0, true);
     view.setFloat64(base + 16, members.length, true);
     const nameBase = summaryRecord * RECORD; // the following record
-    members.forEach(({ s, count, initial, final }, i) => {
+    members.forEach(({ s, initial, final }, i) => {
       const at = base + (3 + i * ss) * 8;
-      view.setFloat64(at, s.init, true);
-      view.setFloat64(at + 8, s.init + count * s.intervalLength, true);
+      const [start, end] = span(s);
+      view.setFloat64(at, start, true);
+      view.setFloat64(at + 8, end, true);
       const ints = spk
         ? [s.target, s.center ?? 0, s.frame, s.type ?? 2, initial, final]
         : [s.target, s.frame, s.type ?? 2, initial, final];
@@ -92,13 +112,53 @@ export function writeSpk(options: SpkWriterOptions): ArrayBuffer {
     });
   }
 
-  for (const { s, count, initial } of placed) {
+  for (const { body, initial } of placed) {
     const at = (initial - 1) * 8;
-    s.records.forEach((v, i) => view.setFloat64(at + i * 8, v, true));
-    const trailer = at + s.records.length * 8;
-    [s.init, s.intervalLength, s.recordSize, count].forEach((v, i) =>
-      view.setFloat64(trailer + i * 8, v, true),
-    );
+    body.forEach((v, i) => view.setFloat64(at + i * 8, v, true));
   }
   return buffer;
+}
+
+function isStates(
+  s: SpkWriterSegment | SpkStateWriterSegment,
+): s is SpkStateWriterSegment {
+  return "states" in s;
+}
+
+/** The segment's first and last covered instants for its summary. */
+function span(s: SpkWriterSegment | SpkStateWriterSegment): [number, number] {
+  if (isStates(s)) {
+    return [s.epochs[0]!, s.epochs[s.epochs.length - 1]!];
+  }
+  return [
+    s.init,
+    s.init + (s.records.length / s.recordSize) * s.intervalLength,
+  ];
+}
+
+/** The segment's data doubles, trailer included. */
+function bodyOf(s: SpkWriterSegment | SpkStateWriterSegment): Float64Array {
+  if (!isStates(s)) {
+    const count = s.records.length / s.recordSize;
+    return Float64Array.of(
+      ...s.records,
+      s.init,
+      s.intervalLength,
+      s.recordSize,
+      count,
+    );
+  }
+  const n = s.epochs.length;
+  const out: number[] = Array.from(s.states);
+  if (s.type === 8 || s.type === 12) {
+    out.push(s.epochs[0]!, s.step!, s.degree, n);
+  } else {
+    out.push(...s.epochs);
+    // Every 100th epoch (the 100th, 200th, ...), (n - 1) / 100 of them, as spkw09 writes.
+    for (let k = 1; k <= Math.floor((n - 1) / 100); k++) {
+      out.push(s.epochs[k * 100 - 1]!);
+    }
+    out.push(s.degree, n);
+  }
+  return Float64Array.from(out);
 }
