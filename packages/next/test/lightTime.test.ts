@@ -28,20 +28,25 @@ const movingFrame = (
     toParentMatrix(IDENTITY, origin(instant.tdb()), out),
   );
 
-/** An SSB-centred SPK (ICRF axes) moving at `velocity` km/s from `start` km, epochs TDB [from, to]. */
+/**
+ * An SSB-centred SPK (ICRF axes) from `start` km at `velocity` km/s and
+ * constant `acceleration` km/s² (t in TDB seconds), epochs TDB [from, to].
+ */
 function constantVelocity(
   from: number,
   to: number,
   start: readonly number[],
   velocity: readonly number[],
+  acceleration: readonly number[] = [0, 0, 0],
 ): Trajectory<"probe"> {
   const n = Math.round((to - from) / 10) + 1;
   const epochs = Float64Array.from({ length: n }, (_, i) => from + i * 10);
   const states = new Float64Array(n * 6);
   epochs.forEach((t, i) => {
     for (let k = 0; k < 3; k++) {
-      states[i * 6 + k] = start[k]! + velocity[k]! * t;
-      states[i * 6 + 3 + k] = velocity[k]!;
+      states[i * 6 + k] =
+        start[k]! + velocity[k]! * t + 0.5 * acceleration[k]! * t * t;
+      states[i * 6 + 3 + k] = velocity[k]! + acceleration[k]! * t;
     }
   });
   const spk = writeSpk({
@@ -198,6 +203,43 @@ describe("velocityIn", () => {
     expect(() => velocityIn(point, frames.icrf, at(150))).toThrow(
       /outside its data/,
     );
+  });
+
+  it("is second order at a data edge: exact for constant acceleration", () => {
+    // 9.4 m/s², Orion's order near the Earth: a two-point one-sided
+    // difference would miss by a·h/2 = 2.35 m/s.
+    const a = [0.0094, -0.003, 0.001];
+    const accelerating = constantVelocity(
+      -100,
+      100,
+      [1000, -2000, 500],
+      velocity,
+      a,
+    );
+    const p = framePoint(accelerating.frame, [1, 0, 0]);
+    for (const t of [100, -100, 20]) {
+      const got = velocityIn(p, frames.icrf, at(t));
+      for (let k = 0; k < 3; k++) {
+        const analytic = (velocity[k]! + a[k]! * t) * 1000;
+        expect(Math.abs(got[k]! - analytic), `${t} s, axis ${k}`).toBeLessThan(
+          1e-6,
+        );
+      }
+    }
+  });
+
+  it("lets a programming error through instead of taking one side", () => {
+    // Throws a TypeError past 10 s: only t + h fails, so a catch-all would
+    // quietly take the one-sided difference.
+    const broken = new Frame("BROKEN", frames.icrf, (instant, out) => {
+      if (instant.tdb() > 10) {
+        throw new TypeError("a bug in a frame");
+      }
+      return toParentMatrix(IDENTITY, [instant.tdb(), 0, 0], out);
+    });
+    expect(() =>
+      velocityIn(framePoint(broken, [0, 0, 0]), frames.icrf, at(10)),
+    ).toThrow(TypeError);
   });
 });
 

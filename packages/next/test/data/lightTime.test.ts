@@ -4,9 +4,10 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { Ephemeris } from "../../src/ephemeris/Ephemeris.ts";
 import type { FrameData } from "../../src/ephemeris/loadFrameData.ts";
-import { frameTransform, type Frame } from "../../src/frames/Frame.ts";
+import { frameTransform } from "../../src/frames/Frame.ts";
 import { createFrames } from "../../src/frames/frames.ts";
 import { framePoint, type FramePoint } from "../../src/frames/local.ts";
+import { rotationPart } from "../../src/frames/matrix.ts";
 import { C } from "../../src/measure/constants.ts";
 import {
   apparentDirection,
@@ -84,44 +85,6 @@ const apply = (r: ArrayLike<number>, v: ArrayLike<number>): number[] =>
     (i) => r[3 * i]! * v[0]! + r[3 * i + 1]! * v[1]! + r[3 * i + 2]! * v[2]!,
   );
 
-/**
- * The rotation part (row-major) of the transform from `frame` to ICRF: the
- * polar factor of its linear part, which eq. 11.19 scales and shears by
- * up to 2.5e-8. Newton's iteration R ← ½(R + R⁻ᵀ).
- */
-function rotationToIcrf(frame: Frame, instant: Instant): number[] {
-  const m = frameTransform(frame, frames.icrf, instant);
-  let r = [0, 1, 2].flatMap((i) => [0, 1, 2].map((j) => m[4 * j + i]!));
-  for (let k = 0; k < 3; k++) {
-    const [a, b, c, d, e, f, g, h, i] = r as [
-      number,
-      number,
-      number,
-      number,
-      number,
-      number,
-      number,
-      number,
-      number,
-    ];
-    const det = a * (e * i - f * h) - b * (d * i - f * g) + c * (d * h - e * g);
-    // R⁻ᵀ is the cofactor matrix over the determinant.
-    const cof = [
-      e * i - f * h,
-      f * g - d * i,
-      d * h - e * g,
-      c * h - b * i,
-      a * i - c * g,
-      b * g - a * h,
-      b * f - c * e,
-      c * d - a * f,
-      a * e - b * d,
-    ];
-    r = r.map((x, n) => 0.5 * (x + cof[n]! / det));
-  }
-  return r;
-}
-
 interface Case {
   name: string;
   observer: FramePoint;
@@ -193,7 +156,11 @@ describe("light time and apparent directions against SPICE (spkpos, shapiro: [])
       );
       const cn = Math.abs(received.lightTime - want.CN.lt) * C;
       const xcn = Math.abs(sent.lightTime - want.XCN.lt) * C;
-      const toIcrf = rotationToIcrf(c.observer.frame, t);
+      // Back to ICRF axes by the same rotation part, without eq. 11.19's
+      // scale and shear.
+      const toIcrf = rotationPart(
+        frameTransform(c.observer.frame, frames.icrf, t),
+      );
       const cns = angle(
         apply(
           toIcrf,
