@@ -186,9 +186,9 @@
     }
   },
   "allowScripts": {
-    "@ast-grep/cli@0.45.3": true,
     "esbuild@0.28.2": true,
     "onnxruntime-node@1.30.0": true,
-    "protobufjs@7.6.6": true
+    "protobufjs@7.6.6": true,
+    "@ast-grep/cli@0.51.1": true
   }
 }
