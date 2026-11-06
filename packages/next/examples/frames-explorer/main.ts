@@ -17,7 +17,7 @@ import type { SiteTransform } from "../../src/engineering/EngineeringFrame.ts";
 import { loadFrameData } from "../../src/ephemeris/loadFrameData.ts";
 import { frameTransform, type Frame } from "../../src/frames/Frame.ts";
 import { createFrames, type Frames } from "../../src/frames/frames.ts";
-import { Ellipsoid, fromDegrees } from "../../src/math/ellipsoid.ts";
+import { fromDegrees } from "../../src/math/ellipsoid.ts";
 import { earthOrientationSigma } from "../../src/measure/accuracy.ts";
 import { Instant } from "../../src/time/Instant.ts";
 import type { ExampleContext, ExampleRun } from "../types.ts";
@@ -30,6 +30,36 @@ import {
   groupRunIds,
 } from "./content.ts";
 import { createScenarioHost } from "./scenarioHost.ts";
+import {
+  CALIFORNIA,
+  CONVERGENCE_FACTOR,
+  DISTORTION,
+  FT,
+  GRID_EXTENT,
+  GRID_STEP,
+  OVERLAYS,
+  OVERLAY_LABEL,
+  OVERLAY_NEEDS,
+  RIGID_FRAMING,
+  SITE,
+  defaultAccuracy,
+  defaultDetail,
+  type OverlayState,
+} from "./overlayConfig.ts";
+import {
+  DRAW_IN,
+  EARTH_RADIUS,
+  FLYBY,
+  IDENTITY,
+  WGS84,
+  createModelSource,
+  deg,
+  isAbort,
+  isFrame,
+  messageOf,
+  meters,
+  missingText,
+} from "./page.ts";
 import { routeSteps } from "./panel/routeSteps.ts";
 import { proofRows, type ProofRow } from "./scenarios/proof.ts";
 import {
@@ -61,7 +91,6 @@ import {
   overlayMesh,
   roundTripMarkers,
   triad,
-  type Extent,
   type OverlayChunk,
   type Sampling,
 } from "./overlays.ts";
@@ -73,7 +102,7 @@ import {
   planeFraming,
 } from "./orion.ts";
 import { familyMap } from "./panel/families.ts";
-import { length, radians, sig } from "./panel/format.ts";
+import { radians, sig } from "./panel/format.ts";
 import type {
   ClockView,
   ComposedAccuracy,
@@ -89,15 +118,13 @@ import type {
   ResultExtras,
   RunView,
   ScenarioPanelView,
-  Selection,
   UserCrsView,
 } from "./panel/model.ts";
-import { Panel, type ModelSource } from "./panel/Panel.tsx";
+import { Panel } from "./panel/Panel.tsx";
 import {
   createClient,
   type ClientWorker,
   type DataItem,
-  type FrameName,
   type FrameParams,
   type OverlayGeometry,
   type RunSummary,
@@ -154,12 +181,7 @@ import { gapParts } from "./inset.ts";
 import fingerprintFile from "./fingerprints.json";
 
 const DATA = "/frames-data/";
-const deg = Math.PI / 180;
-const WGS84 = Ellipsoid.WGS84;
-const EARTH_RADIUS = 6_371_000;
 
-/** The Artemis II flyby (R4's clock preset), and the instant the page opens at. */
-const FLYBY = Date.parse("2026-04-06T23:00:00Z");
 /** "Orion now" shows only for a statement within this much clock time of the clock, ms. */
 const ORION_NOW_SLACK_MS = 120_000;
 /** The OEM's span, generously: samples it doesn't cover are skipped. */
@@ -180,149 +202,16 @@ const ORION_ADAPTIVE = {
   budgetMs: 2000,
 } as const;
 
-/** US survey feet per metre: EPSG:6420 is in ftUS. */
-const FT = 3937 / 1200;
-const CALIFORNIA: CrsRef = { format: "wkid", authority: "EPSG", wkid: 6420 };
-/** The design grid: ±90 km about the central meridian (120.5°W), 37.0° to 38.7°N, 10 km lines. */
-const GRID_EXTENT: Extent = {
-  min: [1_910_000 * FT, 560_000 * FT],
-  max: [2_090_000 * FT, 740_000 * FT],
-};
-const GRID_STEP = 10_000 * FT;
-/** The catalog's California site (stress/shared.ts SITE_ORIGIN), θ = 12.5°, s = 1.0000375. */
-const SITE: SiteTransform = {
-  origin: [6_000_000, 2_100_000, 0],
-  rotation: 12.5 * deg,
-  scale: 1.0000375,
-};
-/** F32: the true-north lines' convergence, drawn this many times while not at true scale. */
-const CONVERGENCE_FACTOR = 20;
-
-/**
- * Stop 4's camera: centred this share of the way along the line and this
- * many degrees south of it, at this range (m) and pitch (degrees).
- */
-const RIGID_FRAMING = { along: 0.53, south: 0, range: 400_000, pitch: -5 };
-
-const ITEM_NAME: Record<DataItem, string> = {
-  frames: "frame data",
-  proj: "PROJ",
-  geoid: "GEOID18",
-  orion: "Orion's OEM",
-};
-
-const OVERLAY_LABEL: Record<OverlayId, [label: string, short: string]> = {
-  triads: ["Triads", "Triads"],
-  designGrid: ["California design grid, with true north", "Design grid"],
-  siteGrid: ["Site grid (θ = 12.5°, s = 1.0000375)", "Site grid"],
-  rigidVsExact: ["Rigid and exact 400 km line", "Rigid vs exact"],
-  roundTrip: ["Round-trip markers from the last run", "Round trips"],
-  orion: ["Orion's path", "Orion"],
-  distortion: ["Distortion", "Distortion"],
-  bias: ["Frame bias exaggeration", "Frame bias"],
-};
-const OVERLAYS = Object.keys(OVERLAY_LABEL) as OverlayId[];
-
-/** The data an overlay waits for (R9). */
-const OVERLAY_NEEDS: Partial<Record<OverlayId, DataItem>> = {
-  designGrid: "proj",
-  siteGrid: "proj",
-  rigidVsExact: "proj",
-  distortion: "proj",
-  orion: "orion",
-};
-
-const DRAW_IN: Record<OrionFrame, FrameName> = {
-  GCRF: "gcrf",
-  ITRF: "itrf",
-  MOON_ME: "moonMe",
-};
-
-const DISTORTION: Record<
-  DistortionCrs,
-  {
-    crs: CrsRef;
-    extent: Extent;
-    step: number;
-    radius: number;
-    height?: number;
-    look: [lon: number, lat: number, range: number];
-  }
-> = {
-  "6420": {
-    crs: CALIFORNIA,
-    extent: GRID_EXTENT,
-    step: 30_000 * FT,
-    radius: 4000,
-    look: [-120.5, 37.8, 400_000],
-  },
-  "32610": {
-    crs: { format: "wkid", authority: "EPSG", wkid: 32610 },
-    extent: { min: [200_000, 3_600_000], max: [800_000, 4_600_000] },
-    step: 100_000,
-    radius: 15_000,
-    look: [-123, 37, 1_600_000],
-  },
-  "3857": {
-    crs: { format: "wkid", authority: "EPSG", wkid: 3857 },
-    extent: { min: [-14_500_000, 0], max: [-12_500_000, 11_000_000] },
-    step: 1_000_000,
-    radius: 120_000,
-    look: [-125, 40, 12_000_000],
-  },
-  ldp: {
-    crs: { format: "wkid", authority: "EPSG", wkid: 6854 },
-    extent: { min: [70_000, 20_000], max: [130_000, 80_000] },
-    step: 5000,
-    radius: 1000,
-    height: 13,
-    look: [-122.75, 45.5, 90_000],
-  },
-};
-
-interface OverlayState {
-  on: boolean;
-  state: OverlayView["state"];
-  problem?: string;
-  accuracy?: string;
-  /** What the figure means (S-I7); the default detail otherwise. */
-  detail?: string;
-  caution?: boolean;
-  unbounded?: boolean;
-  /** Lines keyed apart in the legend (the rigid and the exact line). */
-  parts?: readonly OverlayPart[];
-  /** Bumped per request, so a late answer for an old one is dropped. */
-  token: number;
-}
-
-const IDENTITY = Float64Array.from([
-  1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,
-]);
-
 /** An origin farther than this from the geocentre is off the scene (the barycentre, the Sun), m. */
 const FAR_ORIGIN = 1e10;
 /** The walk's stub toward an off-scene origin, m (past the Moon). */
 const WALK_STUB = 5e8;
 const AU = 1.495978707e11;
 
-/** Meters as the panel writes them (SI prefixes, powers of ten written out). */
-const meters = (x: number): string => length(x, 3);
-
 /** The fingerprinted results' ids (R12), which the Reproducibility card runs. */
 const FINGERPRINTED = Object.keys(
   (fingerprintFile as { fingerprints: Record<string, unknown> }).fingerprints,
 );
-
-/** A selection of a frame: a frame, a tree diagram's node, or an edge (by its child node). */
-const isFrame = (
-  s: Selection,
-): s is Extract<Selection, { kind: "frame" | "node" | "edge" }> =>
-  s.kind === "frame" || s.kind === "node" || s.kind === "edge";
-
-const messageOf = (e: unknown): string =>
-  e instanceof Error ? e.message : String(e);
-const isAbort = (e: unknown): boolean =>
-  e instanceof DOMException && e.name === "AbortError";
 
 export function run(context: ExampleContext): ExampleRun {
   const { viewer, scope, signal, params } = context;
@@ -462,30 +351,13 @@ export function run(context: ExampleContext): ExampleRun {
   });
 
   // -------------------------------------------------------- the model
-  let model: PanelModel | undefined;
-  const listeners = new Set<() => void>();
-  let notifyQueued = 0;
-  /** The model is stale: rebuilt on the next read, listeners told once per frame (R13: a run streams 225 results). */
-  const invalidate = () => {
-    model = undefined;
-    if (notifyQueued === 0 && !disposed) {
-      notifyQueued = requestAnimationFrame(() => {
-        notifyQueued = 0;
-        for (const l of [...listeners]) {
-          l();
-        }
-      });
-    }
-  };
-  scope.defer(() => cancelAnimationFrame(notifyQueued));
+  const modelSource = createModelSource({
+    build: () => buildModel(),
+    disposed: () => disposed,
+  });
+  const { source, invalidate } = modelSource;
+  scope.defer(() => modelSource.dispose());
   loading.subscribe(invalidate);
-  const source: ModelSource = {
-    subscribe: (l) => {
-      listeners.add(l);
-      return () => listeners.delete(l);
-    },
-    get: () => (model ??= buildModel()),
-  };
 
   const instantNow = (): Instant | undefined =>
     frames
@@ -540,7 +412,7 @@ export function run(context: ExampleContext): ExampleRun {
     "accuracy" | "detail" | "drawing" | "caution" | "unbounded"
   > {
     if (orionInfo === undefined && loading.get("orion").state !== "ready") {
-      return { accuracy: defaultAccuracy("orion") };
+      return { accuracy: defaultAccuracy("orion", biasFactor) };
     }
     const l = orionLegend(orionInfo?.info.composed.ITRF, {
       drawIn: orionBuilt?.frame ?? orionFrame,
@@ -570,9 +442,9 @@ export function run(context: ExampleContext): ExampleRun {
         short,
         on: s.on,
         state: s.on ? s.state : "off",
-        accuracy: s.accuracy ?? defaultAccuracy(id),
-        ...((s.detail ?? defaultDetail(id)) !== undefined && {
-          detail: s.detail ?? defaultDetail(id)!,
+        accuracy: s.accuracy ?? defaultAccuracy(id, biasFactor),
+        ...((s.detail ?? defaultDetail(id, trueScale)) !== undefined && {
+          detail: s.detail ?? defaultDetail(id, trueScale)!,
         }),
         ...(need !== undefined && { waitingFor: need }),
         ...(s.problem !== undefined && { problem: s.problem }),
@@ -590,49 +462,10 @@ export function run(context: ExampleContext): ExampleRun {
       const item = need && loading.get(need);
       if (item?.state === "missing" && s.state !== "drawn") {
         base.state = "missing";
-        base.problem = `${ITEM_NAME[need!]} isn't in the frames store: run npm run setup in packages/next, then reload.`;
+        base.problem = missingText(need!);
       }
       return base;
     });
-  }
-
-  /** An overlay's one line before it draws (S-I7: the figure it will carry, briefly). */
-  function defaultAccuracy(id: OverlayId): string {
-    switch (id) {
-      case "designGrid":
-      case "siteGrid":
-        return "the recorded PROJ operation's accuracy, once PROJ loads";
-      case "rigidVsExact":
-        return "how far the two lines part at 20 km and 400 km, once PROJ loads";
-      case "roundTrip":
-        return "run the tests to place the markers";
-      case "orion":
-        return "Orion's 1σ at the clock's instant, once its OEM loads";
-      case "distortion":
-        return "the recorded PROJ operation's accuracy and PROJ's scale factors, once PROJ loads";
-      case "bias":
-        return `exact by definition; drawn ×${sig(biasFactor, 1)}`;
-      default:
-        return "";
-    }
-  }
-
-  /** What an overlay's figure means, behind "About this figure" (S-I7). */
-  function defaultDetail(id: OverlayId): string | undefined {
-    switch (id) {
-      case "designGrid":
-        return `The 10 km grid lines placed through the recorded PROJ operation to WGS 84; true north ${trueScale ? "at true scale" : `with its convergence angle drawn ${CONVERGENCE_FACTOR} times larger`}. The 2 km lines appear below 60 km.`;
-      case "siteGrid":
-        return "The site grid through the same operation; the site formula (rotation and scale) is exact to 1 nm.";
-      case "rigidVsExact":
-        return "A 400 km design line placed rigidly at its start (dashed: straight, on the tangent plane there) and exactly (solid: on the ellipsoid), drawn at true scale. They part as distance squared; an inset shows the gap at 20 km.";
-      case "distortion":
-        return "Tissot ellipses in true-north axes (convergence not applied); combined-factor contours from PROJ's factors, in ppm.";
-      case "bias":
-        return "The frame bias, 23 mas between EME2000 and GCRF: exact by definition (IAU 2006 adopted constants), drawn exaggerated so it shows.";
-      default:
-        return undefined;
-    }
   }
 
   function extrasOf(r: StressResult): ResultExtras {
@@ -1019,7 +852,7 @@ export function run(context: ExampleContext): ExampleRun {
       s.state = item?.state === "missing" ? "missing" : "error";
       s.problem =
         item?.state === "missing"
-          ? `${ITEM_NAME[need!]} isn't in the frames store: run npm run setup in packages/next, then reload.`
+          ? missingText(need!)
           : `It didn't draw: ${scrub(messageOf(error))}`;
     }
     invalidate();
@@ -1743,7 +1576,7 @@ export function run(context: ExampleContext): ExampleRun {
       const missing = loading.get("orion").state === "missing";
       s.state = missing ? "missing" : "error";
       s.problem = missing
-        ? `${ITEM_NAME.orion} isn't in the frames store: run npm run setup in packages/next, then reload.`
+        ? missingText("orion")
         : `It didn't draw: ${scrub(messageOf(error))}`;
       invalidate();
     },

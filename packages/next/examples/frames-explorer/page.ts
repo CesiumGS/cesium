@@ -1,0 +1,113 @@
+// What every part of the page shares (main.ts builds it): the viewer and
+// the globe, the loading model, the view store and the worker client, the
+// frame data once it's in, and the panel's model, rebuilt on its next read
+// after `invalidate`. The page's parts take this as their first dependency;
+// state of their own stays in their module, behind its API.
+import type { Frames } from "../../src/frames/frames.ts";
+import { Ellipsoid } from "../../src/math/ellipsoid.ts";
+import type { Instant } from "../../src/time/Instant.ts";
+import type { Viewer } from "../../widgets/index.ts";
+import type { Globe } from "./globe.ts";
+import type { LoadingModel } from "./loading.ts";
+import { length } from "./panel/format.ts";
+import type { OrionFrame, PanelModel, Selection } from "./panel/model.ts";
+import type { ModelSource } from "./panel/Panel.tsx";
+import type { Client, DataItem, FrameName } from "./protocol.ts";
+import type { ViewStore } from "./selection.ts";
+
+export const deg = Math.PI / 180;
+export const WGS84 = Ellipsoid.WGS84;
+export const EARTH_RADIUS = 6_371_000;
+
+/** The Artemis II flyby (R4's clock preset), and the instant the page opens at. */
+export const FLYBY = Date.parse("2026-04-06T23:00:00Z");
+
+export const IDENTITY = Float64Array.from([
+  1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,
+]);
+
+export const ITEM_NAME: Record<DataItem, string> = {
+  frames: "frame data",
+  proj: "PROJ",
+  geoid: "GEOID18",
+  orion: "Orion's OEM",
+};
+
+/** An item the frames store doesn't have (R5). */
+export const missingText = (item: DataItem): string =>
+  `${ITEM_NAME[item]} isn't in the frames store: run npm run setup in packages/next, then reload.`;
+
+/** The frame Orion's path is drawn in, by the worker's name for it. */
+export const DRAW_IN: Record<OrionFrame, FrameName> = {
+  GCRF: "gcrf",
+  ITRF: "itrf",
+  MOON_ME: "moonMe",
+};
+
+/** Meters as the panel writes them (SI prefixes, powers of ten written out). */
+export const meters = (x: number): string => length(x, 3);
+
+/** A selection of a frame: a frame, a tree diagram's node, or an edge (by its child node). */
+export const isFrame = (
+  s: Selection,
+): s is Extract<Selection, { kind: "frame" | "node" | "edge" }> =>
+  s.kind === "frame" || s.kind === "node" || s.kind === "edge";
+
+export const messageOf = (e: unknown): string =>
+  e instanceof Error ? e.message : String(e);
+export const isAbort = (e: unknown): boolean =>
+  e instanceof DOMException && e.name === "AbortError";
+
+/** What every part of the page is given. */
+export interface PageCore {
+  readonly viewer: Viewer;
+  readonly globe: Globe;
+  readonly loading: LoadingModel;
+  readonly view: ViewStore;
+  readonly client: Client;
+  /** The frame data, once it's in (frameData.ts). */
+  frames(): Frames | undefined;
+  /** The clock's instant, once the frame data (its leap seconds) is in. */
+  instantNow(): Instant | undefined;
+  /** The panel's model is stale (`createModelSource`). */
+  invalidate(): void;
+  /** The example was left. */
+  disposed(): boolean;
+  /** The ion token never enters a message the page shows (R18). */
+  scrub(text: string): string;
+}
+
+/**
+ * The panel's model: rebuilt on the next read after `invalidate`, its
+ * listeners told once per frame (R13: a run streams 225 results).
+ */
+export function createModelSource(deps: {
+  build(): PanelModel;
+  disposed(): boolean;
+}): { source: ModelSource; invalidate(): void; dispose(): void } {
+  let model: PanelModel | undefined;
+  const listeners = new Set<() => void>();
+  let notifyQueued = 0;
+  const invalidate = () => {
+    model = undefined;
+    if (notifyQueued === 0 && !deps.disposed()) {
+      notifyQueued = requestAnimationFrame(() => {
+        notifyQueued = 0;
+        for (const l of [...listeners]) {
+          l();
+        }
+      });
+    }
+  };
+  return {
+    source: {
+      subscribe: (l) => {
+        listeners.add(l);
+        return () => listeners.delete(l);
+      },
+      get: () => (model ??= deps.build()),
+    },
+    invalidate,
+    dispose: () => cancelAnimationFrame(notifyQueued),
+  };
+}
