@@ -126,17 +126,20 @@ class EditorOutlinerViewModel {
      * @type {EditorOutlinerRow[]}
      */
     this.rows = [];
-    knockout.track(this, ["rows"]);
+
+    /**
+     * The row keyboard navigation starts from, if any. Cleared when the row
+     * is hidden. Observable.
+     *
+     * @type {EditorOutlinerRow|undefined}
+     */
+    this.focusedRow = undefined;
+    knockout.track(this, ["rows", "focusedRow"]);
 
     this.#toggleExpanded = createCommand(
       /** @param {EditorOutlinerRow} row */
       (row) => {
-        if (!row.expandable) {
-          return;
-        }
-
-        row.expanded = !row.expanded;
-        this.#updateRows();
+        this.#setExpanded(row, !row.expanded);
       },
     );
 
@@ -203,6 +206,86 @@ class EditorOutlinerViewModel {
    */
   get select() {
     return this.#select;
+  }
+
+  /**
+   * Focuses a row and acts on it, as clicking it does: selects it if it can
+   * be selected, and otherwise expands or collapses it.
+   *
+   * @param {EditorOutlinerRow} row The row.
+   * @param {EditorOutlinerSelectOptions} [options] How to change the active meshes.
+   */
+  activate(row, options) {
+    this.focusedRow = row;
+    if (row.selectable) {
+      this.#selectRow(row, options);
+    } else {
+      this.#setExpanded(row, !row.expanded);
+    }
+  }
+
+  /**
+   * Focuses the row after the focused one, or the first row if none is
+   * focused.
+   */
+  focusNext() {
+    this.#moveFocus(1);
+  }
+
+  /**
+   * Focuses the row before the focused one, or the first row if none is
+   * focused.
+   */
+  focusPrevious() {
+    this.#moveFocus(-1);
+  }
+
+  /**
+   * Focuses the first row.
+   */
+  focusFirst() {
+    this.focusedRow = this.rows[0];
+  }
+
+  /**
+   * Focuses the last row.
+   */
+  focusLast() {
+    this.focusedRow = this.rows[this.rows.length - 1];
+  }
+
+  /**
+   * Expands the focused row if it's collapsed, and otherwise focuses its
+   * first child.
+   */
+  expandOrFocusChild() {
+    const row = this.focusedRow;
+    if (!defined(row) || !row.expandable) {
+      return;
+    }
+
+    if (row.expanded) {
+      this.#moveFocus(1);
+    } else {
+      this.#setExpanded(row, true);
+    }
+  }
+
+  /**
+   * Collapses the focused row if it's expanded, and otherwise focuses its
+   * parent.
+   */
+  collapseOrFocusParent() {
+    const row = this.focusedRow;
+    if (!defined(row)) {
+      return;
+    }
+
+    if (row.expandable && row.expanded) {
+      this.#setExpanded(row, false);
+    } else {
+      this.focusedRow = this.#getParentRow(row) ?? row;
+    }
   }
 
   /**
@@ -436,6 +519,54 @@ class EditorOutlinerViewModel {
   }
 
   /**
+   * Expands or collapses a row, if it has children.
+   *
+   * @param {EditorOutlinerRow} row The row.
+   * @param {boolean} expanded Whether to expand it.
+   * @ignore
+   */
+  #setExpanded(row, expanded) {
+    if (!row.expandable) {
+      return;
+    }
+
+    row.expanded = expanded;
+    this.#updateRows();
+  }
+
+  /**
+   * Moves the focus by a number of rows, staying on the first or last row
+   * rather than going past it. Focuses the first row if none is focused.
+   *
+   * @param {number} offset The number of rows to move, negative to move up.
+   * @ignore
+   */
+  #moveFocus(offset) {
+    const index = this.rows.indexOf(this.focusedRow);
+    if (index === -1) {
+      this.focusFirst();
+      return;
+    }
+
+    this.focusedRow = this.rows[index + offset] ?? this.focusedRow;
+  }
+
+  /**
+   * @param {EditorOutlinerRow} row A visible row.
+   * @returns {EditorOutlinerRow|undefined} The row's parent, or <code>undefined</code> for a root item's row.
+   * @ignore
+   */
+  #getParentRow(row) {
+    // The parent is the closest row above at a lower depth.
+    for (let index = this.rows.indexOf(row) - 1; index >= 0; index--) {
+      if (this.rows[index].depth < row.depth) {
+        return this.rows[index];
+      }
+    }
+    return undefined;
+  }
+
+  /**
    * Makes the given meshes the only active meshes in the editor.
    *
    * @param {Mesh[]} meshes The meshes.
@@ -499,7 +630,8 @@ class EditorOutlinerViewModel {
   }
 
   /**
-   * Flattens the expanded parts of the tree into the rows.
+   * Flattens the expanded parts of the tree into the rows, and clears the
+   * focus if the focused row is no longer visible.
    *
    * @ignore
    */
@@ -523,6 +655,10 @@ class EditorOutlinerViewModel {
     };
     addRows(this.#roots, 0);
     this.rows = rows;
+
+    if (defined(this.focusedRow) && !rows.includes(this.focusedRow)) {
+      this.focusedRow = undefined;
+    }
   }
 
   /**

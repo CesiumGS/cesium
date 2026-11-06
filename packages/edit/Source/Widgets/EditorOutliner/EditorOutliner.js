@@ -9,7 +9,7 @@ import EditorOutlinerViewModel from "./EditorOutlinerViewModel.js";
 /** @import { Command } from "@cesium/widgets"; */
 /** @import MeshEditor from "../../Editor/MeshEditor.js"; */
 /** @import MeshTreeProvider from "./MeshTreeProvider.js"; */
-/** @import { EditorOutlinerRow } from "./EditorOutlinerViewModel.js"; */
+/** @import { EditorOutlinerRow, EditorOutlinerSelectOptions } from "./EditorOutlinerViewModel.js"; */
 
 /**
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
@@ -38,12 +38,69 @@ function callCommand(command, ...args) {
 }
 
 /**
+ * The view model method each navigation key calls.
+ *
+ * @type {Object<string, function(EditorOutlinerViewModel): void>}
+ * @ignore
+ */
+const NAVIGATION_KEYS = {
+  ArrowDown: (viewModel) => viewModel.focusNext(),
+  ArrowUp: (viewModel) => viewModel.focusPrevious(),
+  Home: (viewModel) => viewModel.focusFirst(),
+  End: (viewModel) => viewModel.focusLast(),
+  ArrowRight: (viewModel) => viewModel.expandOrFocusChild(),
+  ArrowLeft: (viewModel) => viewModel.collapseOrFocusParent(),
+};
+
+/**
+ * The keys that act on the focused row, as clicking it does.
+ *
+ * @ignore
+ */
+const ACTIVATE_KEYS = ["Enter", " "];
+
+/**
+ * Gives each outliner's row IDs a unique prefix.
+ *
+ * @ignore
+ */
+let nextOutlinerNumber = 0;
+
+/**
+ * @param {MouseEvent|KeyboardEvent} event A click or key press.
+ * @returns {EditorOutlinerSelectOptions} The selection the event's modifier keys ask for.
+ * @ignore
+ */
+function getSelectOptions(event) {
+  return {
+    toggle: event.ctrlKey || event.metaKey,
+    range: event.shiftKey,
+  };
+}
+
+/**
+ * @param {EditorOutlinerRow} row The row.
+ * @returns {boolean} Whether the row can be neither selected nor expanded.
+ * @ignore
+ */
+function isDisabled(row) {
+  return !row.selectable && !row.expandable;
+}
+
+/**
  * A collapsible tree of a {@link MeshEditor}'s meshes. Clicking a row makes its
  * mesh the only active mesh; Ctrl- or Cmd-clicking toggles it, and
  * Shift-clicking selects a range. Clicking a row without a mesh expands or
  * collapses it. Rows whose meshes are active are highlighted, and rows that
  * can't be selected or expanded are dimmed. Requires
  * <code>EditorOutliner.css</code>.
+ * <p>
+ * The outliner is a single tab stop. The up and down arrow keys, Home and End
+ * move between rows, the right arrow key expands a row or moves to its first
+ * child, and the left arrow key collapses a row or moves to its parent. Enter
+ * and Space act on the focused row as clicking it does, with the same
+ * modifier keys.
+ * </p>
  *
  * @alias EditorOutliner
  * @constructor
@@ -72,6 +129,16 @@ class EditorOutliner {
   #wrapper;
 
   /**
+   * The prefix of the rows' element IDs, unique to this outliner.
+   *
+   * @type {string}
+   */
+  #rowIdPrefix = `cesium-editor-outliner-${nextOutlinerNumber++}-row-`;
+
+  /** @type {{ dispose: function(): void }} */
+  #focusSubscription;
+
+  /**
    * @param {Element|string} container The element or ID that hosts the outliner.
    * @param {MeshEditor} editor The editor whose meshes are listed.
    * @param {EditorOutlinerOptions} [options] The outliner's options.
@@ -98,6 +165,7 @@ class EditorOutliner {
       this.destroy();
       throw error;
     }
+    this.#listenForKeyboard();
   }
 
   /**
@@ -131,23 +199,40 @@ class EditorOutliner {
 
     const wrapper = document.createElement("div");
     wrapper.className = "cesium-editor-outliner";
+    wrapper.tabIndex = 0;
+    wrapper.setAttribute("role", "tree");
     wrapper.setAttribute("aria-label", "Meshes");
-    wrapper.setAttribute("data-bind", "foreach: viewModel.rows");
+    wrapper.setAttribute("aria-multiselectable", "true");
+    wrapper.setAttribute(
+      "data-bind",
+      `attr: { 'aria-activedescendant': focusedRowId() },
+       foreach: viewModel.rows`,
+    );
 
     const row = document.createElement("div");
     row.className = "cesium-editor-outliner-row";
+    row.setAttribute("role", "treeitem");
     row.setAttribute(
       "data-bind",
-      `click: $parent.onRowClick,
+      `attr: {
+         id: $parent.rowId($index()),
+         'aria-level': depth + 1,
+         'aria-expanded': expandable ? String(expanded) : undefined,
+         'aria-selected': selectable ? String(active) : undefined,
+         'aria-disabled': $parent.isDisabled($data) ? 'true' : undefined
+       },
+       click: $parent.onRowClick,
        css: {
          'cesium-editor-outliner-row-active': active,
-         'cesium-editor-outliner-row-disabled': !selectable && !expandable
+         'cesium-editor-outliner-row-disabled': $parent.isDisabled($data),
+         'cesium-editor-outliner-row-focused': $data === $parent.viewModel.focusedRow
        },
        style: { paddingLeft: $parent.indent(depth) }`,
     );
 
     const expander = document.createElement("span");
     expander.className = "cesium-editor-outliner-expander";
+    expander.setAttribute("aria-hidden", "true");
     expander.setAttribute(
       "data-bind",
       `click: $parent.onExpanderClick, clickBubble: false,
@@ -178,24 +263,25 @@ class EditorOutliner {
     knockout.applyBindings(
       {
         viewModel,
+        isDisabled,
         /** @param {number} depth */
         indent: (depth) => `${depth * INDENT_WIDTH}px`,
+        /** @param {number} index */
+        rowId: (index) => this.#getRowId(index),
+        focusedRowId: () => {
+          const index = viewModel.rows.indexOf(viewModel.focusedRow);
+          return index === -1 ? undefined : this.#getRowId(index);
+        },
         /**
          * @param {EditorOutlinerRow} row
          * @param {MouseEvent} event
          */
         onRowClick: (row, event) => {
-          if (row.selectable) {
-            callCommand(viewModel.select, row, {
-              toggle: event.ctrlKey || event.metaKey,
-              range: event.shiftKey,
-            });
-          } else {
-            callCommand(viewModel.toggleExpanded, row);
-          }
+          viewModel.activate(row, getSelectOptions(event));
         },
         /** @param {EditorOutlinerRow} row */
         onExpanderClick: (row) => {
+          viewModel.focusedRow = row;
           callCommand(viewModel.toggleExpanded, row);
         },
       },
@@ -204,10 +290,76 @@ class EditorOutliner {
   }
 
   /**
+   * @param {number} index The index of a visible row.
+   * @returns {string} The row's element ID.
+   * @ignore
+   */
+  #getRowId(index) {
+    return `${this.#rowIdPrefix}${index}`;
+  }
+
+  /**
+   * Handles key presses, focuses the first row when the outliner gains focus
+   * without a focused row, and scrolls the focused row into view.
+   *
+   * @ignore
+   */
+  #listenForKeyboard() {
+    const wrapper = this.#wrapper;
+    const viewModel = this.#viewModel;
+
+    wrapper.addEventListener("keydown", (event) => {
+      const action = this.#getKeyAction(event);
+      if (defined(action)) {
+        event.preventDefault();
+        action();
+      }
+    });
+
+    wrapper.addEventListener("focus", () => {
+      if (!defined(viewModel.focusedRow)) {
+        viewModel.focusFirst();
+      }
+    });
+
+    this.#focusSubscription = knockout
+      .getObservable(viewModel, "focusedRow")
+      .subscribe(
+        /** @param {EditorOutlinerRow|undefined} row */
+        (row) => {
+          // Rows are the wrapper's only children, in order.
+          const index = viewModel.rows.indexOf(row);
+          wrapper.children[index]?.scrollIntoView({ block: "nearest" });
+        },
+      );
+  }
+
+  /**
+   * @param {KeyboardEvent} event The key press.
+   * @returns {function(): void|undefined} What the key does, or <code>undefined</code> if it does nothing.
+   * @ignore
+   */
+  #getKeyAction(event) {
+    const viewModel = this.#viewModel;
+    const navigate = NAVIGATION_KEYS[event.key];
+    if (defined(navigate)) {
+      return () => navigate(viewModel);
+    }
+
+    const row = viewModel.focusedRow;
+    if (ACTIVATE_KEYS.includes(event.key) && defined(row)) {
+      return () => viewModel.activate(row, getSelectOptions(event));
+    }
+
+    return undefined;
+  }
+
+  /**
    * Removes the outliner from the DOM and destroys its view model, and the
    * provider it created, if it created one.
    */
   destroy() {
+    this.#focusSubscription?.dispose();
     knockout.cleanNode(this.#wrapper);
     this.#wrapper.remove();
     this.#viewModel.destroy();

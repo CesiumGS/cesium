@@ -298,7 +298,198 @@ describe("Widgets/EditorOutliner/EditorOutliner", function () {
     });
   });
 
+  describe("accessibility", function () {
+    function getTree() {
+      return container.querySelector(".cesium-editor-outliner");
+    }
+
+    it("is a multiselectable tree in the tab order", function () {
+      outliner = new EditorOutliner(container, editor, { provider });
+      const tree = getTree();
+
+      expect(tree.getAttribute("role")).toBe("tree");
+      expect(tree.getAttribute("aria-multiselectable")).toBe("true");
+      expect(tree.tabIndex).toBe(0);
+    });
+
+    it("describes each row's level and state", function () {
+      outliner = new EditorOutliner(container, editor, { provider });
+      editor.setMeshActive(m1);
+      editor.meshActiveChanged.raiseEvent(m1, true);
+
+      const group = getRow("group");
+      expect(group.getAttribute("role")).toBe("treeitem");
+      expect(group.getAttribute("aria-level")).toBe("1");
+      expect(group.getAttribute("aria-expanded")).toBe("true");
+      expect(group.hasAttribute("aria-selected")).toBe(false);
+      expect(group.hasAttribute("aria-disabled")).toBe(false);
+
+      const i1 = getRow("i1");
+      expect(i1.getAttribute("aria-level")).toBe("2");
+      expect(i1.hasAttribute("aria-expanded")).toBe(false);
+      expect(i1.getAttribute("aria-selected")).toBe("true");
+      expect(getRow("i2").getAttribute("aria-selected")).toBe("false");
+
+      expect(getRow("unused").getAttribute("aria-disabled")).toBe("true");
+    });
+
+    it("gives rows IDs unique to each outliner", function () {
+      outliner = new EditorOutliner(container, editor, { provider });
+      const other = new EditorOutliner(container, editor, { provider });
+
+      const ids = getRows().map((row) => row.id);
+      other.destroy();
+
+      expect(new Set(ids).size).toBe(ids.length);
+    });
+
+    it("points to the focused row", function () {
+      outliner = new EditorOutliner(container, editor, { provider });
+      const tree = getTree();
+      expect(tree.hasAttribute("aria-activedescendant")).toBe(false);
+
+      outliner.viewModel.focusedRow = outliner.viewModel.rows[1];
+
+      expect(tree.getAttribute("aria-activedescendant")).toBe(getRow("i1").id);
+      expect(getRow("i1").classList).toContain(
+        "cesium-editor-outliner-row-focused",
+      );
+    });
+  });
+
+  describe("keyboard", function () {
+    function pressKey(key, options = {}) {
+      const event = new KeyboardEvent("keydown", {
+        key,
+        bubbles: true,
+        cancelable: true,
+        ...options,
+      });
+      container.querySelector(".cesium-editor-outliner").dispatchEvent(event);
+      return event;
+    }
+
+    function focusedLabel() {
+      return outliner.viewModel.focusedRow?.label;
+    }
+
+    it("focuses the first row when the outliner gains focus", function () {
+      outliner = new EditorOutliner(container, editor, { provider });
+
+      container.querySelector(".cesium-editor-outliner").focus();
+
+      expect(focusedLabel()).toBe("group");
+    });
+
+    it("keeps the focused row when the outliner gains focus", function () {
+      outliner = new EditorOutliner(container, editor, { provider });
+      click(getRow("i3"));
+
+      container.querySelector(".cesium-editor-outliner").focus();
+
+      expect(focusedLabel()).toBe("i3");
+    });
+
+    it("moves the focus with the arrow keys, Home and End", function () {
+      outliner = new EditorOutliner(container, editor, { provider });
+
+      pressKey("ArrowDown");
+      expect(focusedLabel()).toBe("group");
+      pressKey("ArrowDown");
+      expect(focusedLabel()).toBe("i1");
+      pressKey("ArrowUp");
+      expect(focusedLabel()).toBe("group");
+      pressKey("End");
+      expect(focusedLabel()).toBe("i3");
+      pressKey("Home");
+      expect(focusedLabel()).toBe("group");
+    });
+
+    it("collapses and expands with the left and right arrow keys", function () {
+      outliner = new EditorOutliner(container, editor, { provider });
+      pressKey("ArrowDown");
+
+      pressKey("ArrowLeft");
+      expect(getLabels()).toEqual(["group", "i3"]);
+
+      pressKey("ArrowRight");
+      expect(getLabels()).toEqual(["group", "i1", "i2", "unused", "i3"]);
+
+      pressKey("ArrowRight");
+      expect(focusedLabel()).toBe("i1");
+
+      pressKey("ArrowLeft");
+      expect(focusedLabel()).toBe("group");
+    });
+
+    it("acts on the focused row with Enter and Space, as clicking does", function () {
+      outliner = new EditorOutliner(container, editor, { provider });
+      outliner.viewModel.focusedRow = outliner.viewModel.rows[1];
+
+      pressKey("Enter");
+      expect(editor.isMeshActive(m1)).toBe(true);
+
+      pressKey("End");
+      pressKey(" ", { ctrlKey: true });
+      expect(editor.isMeshActive(m1)).toBe(true);
+      expect(editor.isMeshActive(m3)).toBe(true);
+
+      pressKey("Home");
+      pressKey("Enter");
+      expect(getLabels()).toEqual(["group", "i3"]);
+    });
+
+    it("ignores Enter and Space without a focused row", function () {
+      outliner = new EditorOutliner(container, editor, { provider });
+
+      const event = pressKey("Enter");
+
+      expect(event.defaultPrevented).toBe(false);
+      expect(getLabels()).toEqual(["group", "i1", "i2", "unused", "i3"]);
+    });
+
+    it("prevents the default action only for the keys it handles", function () {
+      outliner = new EditorOutliner(container, editor, { provider });
+
+      expect(pressKey("ArrowDown").defaultPrevented).toBe(true);
+      expect(pressKey(" ").defaultPrevented).toBe(true);
+      expect(pressKey("Tab").defaultPrevented).toBe(false);
+      expect(pressKey("1").defaultPrevented).toBe(false);
+    });
+
+    it("focuses a clicked row", function () {
+      outliner = new EditorOutliner(container, editor, { provider });
+
+      click(getRow("i2"));
+      expect(focusedLabel()).toBe("i2");
+
+      clickExpander("group");
+      expect(focusedLabel()).toBe("group");
+    });
+
+    it("scrolls the focused row into view", function () {
+      outliner = new EditorOutliner(container, editor, { provider });
+      const scrollIntoView = spyOn(Element.prototype, "scrollIntoView");
+
+      pressKey("End");
+
+      expect(scrollIntoView).toHaveBeenCalledOnceWith({ block: "nearest" });
+      expect(scrollIntoView.calls.mostRecent().object).toBe(getRow("i3"));
+    });
+  });
+
   describe("destroy", function () {
+    it("stops scrolling rows into view", function () {
+      outliner = new EditorOutliner(container, editor, { provider });
+      const viewModel = outliner.viewModel;
+      const scrollIntoView = spyOn(Element.prototype, "scrollIntoView");
+
+      outliner.destroy();
+      outliner = undefined;
+      viewModel.focusFirst();
+
+      expect(scrollIntoView).not.toHaveBeenCalled();
+    });
     it("removes the outliner from the container", function () {
       outliner = new EditorOutliner(container, editor, { provider });
 
