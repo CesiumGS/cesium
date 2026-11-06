@@ -6471,13 +6471,14 @@ measured, 2026-11-05:
 - **Alignment recovery.** `stationOffset(pointAt(s, o))` returns `(s, o)`
   within 4.6e-13 design units at a start of (1000, 2000), over 20,000 random
   points plus every join and end, left and right. At State Plane magnitudes
-  (start (6,000,000, 2,000,000)) it is 4.4e-10 for station and 4.8e-10 for
+  (start (6,000,000, 2,000,000)) it is 2.6e-10 for station and 4.8e-10 for
   offset, which is the ulp of the coordinate itself (9.3e-10). A point on the
-  centerline has offset within 3.2e-13. Near the centre of curvature the
+  centerline has offset within 2.1e-13. Near the centre of curvature the
   station is known only to about 3.5e-9 (offset -90, radius 100, at E =
   6,000,000), the input's rounding times R/(R - |offset|). That is irreducible
-  and an independent exact foot agrees to 2.3e-13. Spirals within 1e-11 of
-  constant curvature use quadrature (6.3e-13 or better).
+  and an independent exact foot agrees to 2.3e-13. A spiral whose
+  estimated Fresnel cancellation error exceeds 1e-11 design units (radii
+  nearly equal) is evaluated by quadrature instead (6.3e-13 or better).
 - **Fresnel integrals** against SciPy 1.16.2 over 6,500 points: 9.9e-16
   relative below t = 1.5, 1.9e-15 up to t = 6 and 5.8e-15 up to t = 100.
   At large t the phase is reduced exactly, and the values match an exact
@@ -6559,6 +6560,23 @@ because none of them changes a result.
   runtime URL (`@vite-ignore`). It was checked in the dev server only. Import
   the runtime dynamically inside the browser path, and check `loadProj` in a
   production build and in `build:lib`'s output.
+- **Plan 4b: setup and loader robustness.** Each is a small defect found in
+  review. Some may be fixed in the final review's fix wave.
+  - `ensureProj` in `scripts/frameData.mjs`: a previous manifest without
+    `files` throws a TypeError (an upgrade path). Default it to `[]`.
+  - `loadProj` in `src/engineering/proj.ts`: a `base` without a trailing slash
+    builds a wrong URL and a separate cache key. Normalize it.
+  - `extractTar` in `scripts/frameData.mjs`: accepts a negative parsed size,
+    which moves the cursor backwards. It is unreachable behind the hash check;
+    refuse it anyway.
+  - `loadNode` in `src/engineering/proj.ts`: the native `.node` is not
+    re-hashed at load, and `PROJ_DATA` is set process-wide.
+- **Plan 4b: operation-resolution errors.** In `resolveOperation`
+  (`src/engineering/crs.ts`):
+  - a candidate with no PROJ string is skipped silently, so the final error
+    never names it;
+  - the `catch {}` around `proj_create_operations` drops the binding's
+    original error. Attach it as `cause`.
 - **Frames example (the entry above):** the PROJ objects an `EngineeringFrame`,
   `gridFactors` and `resolveOperation` create are never destroyed
   (`proj_destroy`). One frame is cheap, but the stress tests make many. Release

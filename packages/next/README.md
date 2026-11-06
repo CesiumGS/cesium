@@ -254,7 +254,9 @@ modules (`src/engineering/proj.ts`, `crs.ts`, `factors.ts`). `src/index.ts`
 exports the frame, placement, alignment and measure types.
 
 ```ts
+import { EARTH, EngineeringFrame, designPoint } from "./src/index.ts";
 import { loadProj } from "./src/engineering/proj.ts";
+import { gridFactors } from "./src/engineering/factors.ts";
 
 // Browser: base is where the dev server serves the store's `proj/`. Name the
 // grid files the frame will need. Node: base is the store's `proj/` path.
@@ -273,9 +275,10 @@ const site = EngineeringFrame.create(
   proj,
 );
 const p = designPoint(site, [1200, 800, 35]); // e, n, u in design units
-site.toBodyFixed(p.design); // ITRF meters
+const xyz = site.toBodyFixed(p.design); // ITRF meters
 site.fromBodyFixed(xyz); // back to design coordinates
 site.operation.accuracy; // 2.015 m: PROJ's stated accuracy, undefined if none
+gridFactors(site, p.design).combinedFactor; // grid = ground x this
 ```
 
 - **CRS references** (`CrsRef`) follow the 3D Tiles 2.0 draft's
