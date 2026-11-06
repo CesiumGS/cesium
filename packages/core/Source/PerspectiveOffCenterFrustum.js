@@ -458,7 +458,10 @@ class PerspectiveOffCenterFrustum {
   }
 }
 
-/** @param {PerspectiveOffCenterFrustum} frustum */
+/**
+ * @param {PerspectiveOffCenterFrustum} frustum
+ * @ignore
+ */
 function update(frustum) {
   //>>includeStart('debug', pragmas.debug);
   if (

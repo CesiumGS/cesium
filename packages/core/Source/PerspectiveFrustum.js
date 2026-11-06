@@ -371,7 +371,10 @@ class PerspectiveFrustum {
  */
 PerspectiveFrustum.packedLength = 6;
 
-/** @param {PerspectiveFrustum} frustum */
+/**
+ * @param {PerspectiveFrustum} frustum
+ * @ignore
+ */
 function update(frustum) {
   //>>includeStart('debug', pragmas.debug);
   if (

@@ -293,7 +293,10 @@ class OrthographicFrustum {
  */
 OrthographicFrustum.packedLength = 4;
 
-/** @param {OrthographicFrustum} frustum */
+/**
+ * @param {OrthographicFrustum} frustum
+ * @ignore
+ */
 function update(frustum) {
   //>>includeStart('debug', pragmas.debug);
   if (
