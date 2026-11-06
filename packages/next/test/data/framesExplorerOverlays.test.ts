@@ -1,6 +1,7 @@
 // The frames explorer's overlay geometry (examples/frames-explorer/overlays.ts)
 // over real PROJ-backed engineering frames. `npm run test:data` runs it; the
 // pure cases are in test/framesExplorerOverlays.test.ts.
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";
 import { framesDataDirectory } from "../../scripts/frameData.mjs";
@@ -9,6 +10,7 @@ import {
   distortion,
   rigidSeparation,
   rigidVsExact,
+  triad,
   trueNorthLines,
 } from "../../examples/frames-explorer/overlays.ts";
 import type { CrsRef } from "../../src/engineering/crs.ts";
@@ -18,7 +20,12 @@ import {
 } from "../../src/engineering/EngineeringFrame.ts";
 import { gridFactors } from "../../src/engineering/factors.ts";
 import { loadProj, type ProjApi } from "../../src/engineering/proj.ts";
+import { Ephemeris } from "../../src/ephemeris/Ephemeris.ts";
+import { createFrames } from "../../src/frames/frames.ts";
 import { EARTH } from "../../src/scene/Body.ts";
+import { EarthOrientationParameters } from "../../src/time/eop.ts";
+import { Instant } from "../../src/time/Instant.ts";
+import { LeapSeconds } from "../../src/time/leapSeconds.ts";
 
 const base = `${join(framesDataDirectory(), "proj")}/`;
 let proj: ProjApi;
@@ -304,6 +311,7 @@ describe("distortion", () => {
       expect(Math.abs(design[0]! - 500_000)).toBeGreaterThan(50_000);
     }
     // Labels carry the ppm of the levels that drew something.
+    expect(d.skipped).toBe(0);
     expect(d.labels.positions.length).toBe(3 * d.labels.ppm.length);
     expect(new Set(d.labels.ppm)).toEqual(new Set([-200, 0, 200]));
   });
@@ -329,5 +337,60 @@ describe("distortion", () => {
     ]) {
       expect(buffer.buffer).toBeInstanceOf(ArrayBuffer);
     }
+  });
+});
+
+describe("triad against the real frames, a physical check", () => {
+  const dir = framesDataDirectory();
+  const bytes = (file: string): ArrayBuffer => {
+    const b = readFileSync(join(dir, file));
+    return b.buffer.slice(
+      b.byteOffset,
+      b.byteOffset + b.byteLength,
+    ) as ArrayBuffer;
+  };
+  const leapSeconds = LeapSeconds.builtIn();
+  const frames = createFrames({
+    leapSeconds,
+    eop: EarthOrientationParameters.fromCelestrakCsv(
+      readFileSync(join(dir, "EOP-All.csv"), "utf8"),
+    ),
+    ephemeris: Ephemeris.fromPacks(
+      bytes("planets-de440-2000-2050.pack"),
+      bytes("moon-pa-de440-2000-2050.pack"),
+    ),
+    warnings: [],
+  });
+
+  it("GCRF's z axis lands within 0.5 degrees of ITRF's z axis in 2026 (the pole has moved about 0.1 degrees since J2000)", () => {
+    const instant = Instant.fromUtc(Date.UTC(2026, 5, 1, 12), leapSeconds);
+    const L = 1000;
+    const g = triad(frames, frames.gcrf, instant, L);
+    const tip = vertex(g, 5);
+    const z = sub(tip, vertex(g, 4)).map((x) => x / L);
+    // Precession (about 20 arcsec a year) plus nutation and polar motion.
+    const degrees = (angle(z, [0, 0, 1]) * 180) / Math.PI;
+    expect(degrees).toBeLessThan(0.5);
+    expect(degrees).toBeGreaterThan(0.05);
+    // x and y lie near the equatorial plane, rotated by the Earth's spin
+    // (any angle), so their z components are small.
+    for (const axis of [1, 3]) {
+      const v = sub(vertex(g, axis), vertex(g, axis - 1));
+      expect(Math.abs(v[2]! / L)).toBeLessThan(0.01);
+    }
+  });
+});
+
+describe("distortion at a pole", () => {
+  it("counts the nodes PROJ has no scale at, instead of swallowing every RangeError", () => {
+    const f = frameOf(3413); // NSIDC polar stereographic: the pole is at (0, 0)
+    const d = distortion(
+      f,
+      { min: [-100_000, -100_000], max: [100_000, 100_000] },
+      100_000,
+      { height: 0, contoursPpm: [], tissotRadius: 1000 },
+    );
+    // 9 nodes, and every one not skipped has an ellipse of 64 vertices.
+    expect(d.tissot.positions.length / 3).toBe((9 - d.skipped) * 64);
   });
 });
