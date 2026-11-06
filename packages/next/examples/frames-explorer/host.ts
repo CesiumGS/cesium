@@ -566,7 +566,13 @@ export function createHost(
       case "rigidVsExact": {
         const p = request.params;
         const frame = await frameFor(loaded, p.frame);
-        const r = rigidVsExact(frame, p.from, p.to, p.samples);
+        const r = rigidVsExact(
+          frame,
+          p.from,
+          p.to,
+          p.samples,
+          p.exaggeration !== undefined ? { exaggeration: p.exaggeration } : {},
+        );
         return {
           kind: request.kind,
           layers: [

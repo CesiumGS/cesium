@@ -353,17 +353,26 @@ export function rigidSeparation(
  * long, through the frame's exact `toBodyFixed` and through the rigid
  * placement anchored at `from` (`RigidPlacement.at`), as polylines of
  * `samples + 1` points (x, y, z each, meters), and the distance between them at
- * `to`, `sagAtEnd` (meters). They coincide at `from` by construction.
+ * `to`, `sagAtEnd` (meters). They coincide at `from` by construction. With
+ * `exaggeration` k (display only, like `trueNorthLines`' convergence), each
+ * rigid point is drawn at exact + k (rigid − exact); `sagAtEnd` stays true.
  */
 export function rigidVsExact(
   frame: EngineeringFrame,
   from: readonly [number, number],
   to: readonly [number, number],
   samples: number,
+  options: { exaggeration?: number } = {},
 ): { exact: Float64Array; rigid: Float64Array; sagAtEnd: number } {
   if (!(Number.isInteger(samples) && samples >= 1)) {
     throw new RangeError(
       `rigidVsExact: samples must be a whole number of segments, 1 or more, got ${samples}`,
+    );
+  }
+  const k = options.exaggeration ?? 1;
+  if (!(Number.isFinite(k) && k > 0)) {
+    throw new RangeError(
+      `rigidVsExact: exaggeration must be a positive number, got ${k}`,
     );
   }
   const placement = RigidPlacement.at(frame, [from[0], from[1], 0]);
@@ -375,8 +384,13 @@ export function rigidVsExact(
       from[1] + ((to[1] - from[1]) * i) / samples,
       0,
     ];
-    exact.set(frame.toBodyFixed(design), 3 * i);
-    rigid.set(placement.toBodyFixed(design), 3 * i);
+    const e = frame.toBodyFixed(design);
+    const r = placement.toBodyFixed(design);
+    exact.set(e, 3 * i);
+    rigid.set(
+      k === 1 ? r : [0, 1, 2].map((c) => e[c]! + k * (r[c]! - e[c]!)),
+      3 * i,
+    );
   }
   return {
     exact,
