@@ -35,6 +35,7 @@ import Cesium3DTileVectorFeature from "../Cesium3DTileVectorFeature.js";
  */
 
 const scratchPosition = new Cartesian3();
+const scratchNormal = new Cartesian3();
 const scratchPoint = new BufferPoint();
 const scratchPolyline = new BufferPolyline();
 const scratchPolygon = new BufferPolygon();
@@ -192,6 +193,16 @@ function appendPrimitiveToBuffers(
     ? ModelReader.readIndicesAsTypedArray(primitive.indices)
     : undefined;
 
+  /** @type {TypedArray} */
+  const normals = collection.hasNormals
+    ? ModelReader.readAttributeAsTypedArray(
+        ModelUtility.getAttributeBySemantic(
+          primitive,
+          VertexAttributeSemantic.NORMAL,
+        ),
+      )
+    : undefined;
+
   const getFeature = createFeatureFactoryFn(content, primitive, features);
 
   if (collection instanceof BufferPointCollection) {
@@ -199,6 +210,7 @@ function appendPrimitiveToBuffers(
       collection,
       collectionIndex,
       collectionPositions,
+      normals,
       indices,
       getFeature,
     );
@@ -207,6 +219,7 @@ function appendPrimitiveToBuffers(
       collection,
       collectionIndex,
       collectionPositions,
+      normals,
       indices,
       getFeature,
     );
@@ -216,6 +229,7 @@ function appendPrimitiveToBuffers(
         collection,
         collectionIndex,
         collectionPositions,
+        normals,
         indices,
         getFeature,
         primitive.vector,
@@ -225,6 +239,7 @@ function appendPrimitiveToBuffers(
         collection,
         collectionIndex,
         collectionPositions,
+        normals,
         getFeature,
         primitive.polygon,
       );
@@ -297,6 +312,7 @@ function createFeatureFactoryFn(content, primitive, features) {
  * @param {BufferPointCollection} collection
  * @param {number} collectionIndex
  * @param {TypedArray} collectionPositions
+ * @param {TypedArray|undefined} collectionNormals
  * @param {TypedArray} indices
  * @param {FeatureFactoryFn} getFeature
  * @ignore
@@ -305,6 +321,7 @@ function appendBufferPoints(
   collection,
   collectionIndex,
   collectionPositions,
+  collectionNormals,
   indices,
   getFeature,
 ) {
@@ -319,6 +336,15 @@ function appendBufferPoints(
       scratchPosition,
     );
 
+    const normal = collectionNormals
+      ? Cartesian3.fromArray(
+          // @ts-expect-error https://github.com/CesiumGS/cesium/pull/13302
+          collectionNormals,
+          vertexOffset * 3,
+          scratchNormal,
+        )
+      : undefined;
+
     const feature = getFeature(vertexOffset);
     if (feature) {
       feature.addPrimitiveByCollection(collectionIndex, i);
@@ -327,6 +353,7 @@ function appendBufferPoints(
     collection.add(
       {
         position: scratchPosition,
+        normal,
         pickObject: feature,
         featureId: feature?.featureId,
       },
@@ -339,6 +366,7 @@ function appendBufferPoints(
  * @param {BufferPolylineCollection} collection
  * @param {number} collectionIndex
  * @param {TypedArray} collectionPositions
+ * @param {TypedArray|undefined} collectionNormals
  * @param {TypedArray} indices
  * @param {FeatureFactoryFn} getFeature
  * @ignore
@@ -347,6 +375,7 @@ function appendBufferPolylines(
   collection,
   collectionIndex,
   collectionPositions,
+  collectionNormals,
   indices,
   getFeature,
 ) {
@@ -373,6 +402,9 @@ function appendBufferPolylines(
     const lineIndexEnd = lineIndexStart + lineIndexCount;
     const lineIndices = indices.subarray(lineIndexStart, lineIndexEnd);
     const positions = copyArrayByIndices(collectionPositions, lineIndices, 3);
+    const normals = collectionNormals
+      ? copyArrayByIndices(collectionNormals, lineIndices, 3)
+      : undefined;
 
     const feature = getFeature(indices[lineIndexStart]);
     if (feature) {
@@ -380,7 +412,12 @@ function appendBufferPolylines(
     }
 
     collection.add(
-      { positions, pickObject: feature, featureId: feature?.featureId },
+      {
+        positions,
+        normals,
+        pickObject: feature,
+        featureId: feature?.featureId,
+      },
       scratchPolyline,
     );
 
@@ -394,6 +431,7 @@ function appendBufferPolylines(
  * @param {BufferPolygonCollection} collection
  * @param {number} collectionIndex
  * @param {TypedArray} collectionPositions
+ * @param {TypedArray|undefined} collectionNormals
  * @param {TypedArray} indices
  * @param {FeatureFactoryFn} getFeature
  * @param {Vector} vector
@@ -404,6 +442,7 @@ function appendBufferPolygonsDeprecated(
   collection,
   collectionIndex,
   collectionPositions,
+  collectionNormals,
   indices,
   getFeature,
   vector,
@@ -421,6 +460,10 @@ function appendBufferPolygonsDeprecated(
       i + 1 < polygonCount ? polygonAttributeOffsets[i + 1] : vertexCount;
 
     const positions = collectionPositions.subarray(
+      polygonVertexStart * 3,
+      polygonVertexEnd * 3,
+    );
+    const normals = collectionNormals?.subarray(
       polygonVertexStart * 3,
       polygonVertexEnd * 3,
     );
@@ -452,6 +495,7 @@ function appendBufferPolygonsDeprecated(
         positions,
         triangles,
         holes,
+        normals,
         pickObject: feature,
         featureId: feature?.featureId,
       },
@@ -464,6 +508,7 @@ function appendBufferPolygonsDeprecated(
  * @param {BufferPolygonCollection} collection
  * @param {number} collectionIndex
  * @param {TypedArray} collectionPositions
+ * @param {TypedArray|undefined} collectionNormals
  * @param {FeatureFactoryFn} getFeature
  * @param {Polygon} polygon
  * @ignore
@@ -472,6 +517,7 @@ function appendBufferPolygons(
   collection,
   collectionIndex,
   collectionPositions,
+  collectionNormals,
   getFeature,
   polygon,
 ) {
@@ -502,6 +548,9 @@ function appendBufferPolygons(
       3,
       resultLoopIndices,
     );
+    const normals = collectionNormals
+      ? copyArrayByIndices(collectionNormals, loopIndices, 3)
+      : undefined;
 
     // List start indices of interior loops ("holes").
     const holesArray = [];
@@ -542,6 +591,7 @@ function appendBufferPolygons(
         positions,
         triangles,
         holes,
+        normals,
         pickObject: feature,
         featureId: feature?.featureId,
       },
@@ -581,6 +631,12 @@ function appendNodeToBuffers(content, node, parentTransform, result) {
     );
     const positionNormalized = positionAttribute.normalized ?? false;
     const positionDatatype = positionAttribute.componentDatatype;
+    const hasNormals = defined(
+      ModelUtility.getAttributeBySemantic(
+        primitive,
+        VertexAttributeSemantic.NORMAL,
+      ),
+    );
 
     if (primitiveType === PrimitiveType.POINTS) {
       collection = new BufferPointCollection({
@@ -588,6 +644,7 @@ function appendNodeToBuffers(content, node, parentTransform, result) {
         allowPicking: true,
         positionNormalized,
         positionDatatype,
+        hasNormals,
       });
     } else if (primitiveType === PrimitiveType.LINE_STRIP) {
       collection = new BufferPolylineCollection({
@@ -596,6 +653,7 @@ function appendNodeToBuffers(content, node, parentTransform, result) {
         allowPicking: true,
         positionNormalized,
         positionDatatype,
+        hasNormals,
       });
     } else if (
       primitiveType === PrimitiveType.TRIANGLES ||
@@ -609,6 +667,7 @@ function appendNodeToBuffers(content, node, parentTransform, result) {
         allowPicking: true,
         positionNormalized,
         positionDatatype,
+        hasNormals,
       });
     }
 

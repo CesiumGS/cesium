@@ -1,6 +1,9 @@
 import {
+  AttributeType,
   Cartesian3,
+  ComponentDatatype,
   IndexDatatype,
+  Math as CesiumMath,
   Matrix4,
   PrimitiveType,
 } from "@cesium/core";
@@ -60,6 +63,16 @@ function createPrimitive(options) {
   primitive.vector = options.vector;
   primitive.polygon = options.polygon;
   primitive.attributes.push(createPositionAttribute(options.positions));
+
+  if (options.normals) {
+    const attribute = new ModelComponents.Attribute();
+    attribute.semantic = VertexAttributeSemantic.NORMAL;
+    attribute.type = AttributeType.VEC3;
+    attribute.componentDatatype = ComponentDatatype.FLOAT;
+    attribute.count = options.normals.length / 3;
+    attribute.typedArray = options.normals;
+    primitive.attributes.push(attribute);
+  }
 
   if (options.featureIds) {
     primitive.attributes.push(createFeatureIdAttribute(options.featureIds));
@@ -190,6 +203,113 @@ describe("Scene/Model/createVectorTileBuffersFromModelComponents", function () {
       2.0, 0.0, 0.0, 3.0, 0.0, 0.0, 4.0, 0.0, 0.0,
     ]);
     expect(polyline.featureId).toBe(12);
+  });
+
+  it("reads point normals", function () {
+    const primitive = createPrimitive({
+      primitiveType: PrimitiveType.POINTS,
+      positions: new Float32Array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0]),
+      normals: new Float32Array([0.0, 0.0, 1.0, 1.0, 0.0, 0.0]),
+      indices: new Uint16Array([1, 0]),
+    });
+
+    const node = new ModelComponents.Node();
+    node.primitives.push(primitive);
+
+    const { collections } = createVectorTileBuffersFromModelComponents(
+      mockTileContent,
+      createComponents(node),
+    );
+
+    const collection = collections[0];
+    expect(collection.hasNormals).toBe(true);
+
+    const point = new BufferPoint();
+    collection.get(0, point);
+    expect(point.getNormal()).toEqualEpsilon(
+      Cartesian3.UNIT_X,
+      CesiumMath.EPSILON4,
+    );
+
+    collection.get(1, point);
+    expect(point.getNormal()).toEqualEpsilon(
+      Cartesian3.UNIT_Z,
+      CesiumMath.EPSILON4,
+    );
+  });
+
+  it("reads polyline normals", function () {
+    const primitive = createPrimitive({
+      primitiveType: PrimitiveType.LINE_STRIP,
+      positions: new Float32Array([
+        0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 2.0, 0.0, 0.0, 3.0, 0.0, 0.0,
+      ]),
+      normals: new Float32Array([
+        0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, -1.0,
+      ]),
+      indices: new Uint32Array([0, 1, 0xffffffff, 2, 3]),
+    });
+
+    const node = new ModelComponents.Node();
+    node.primitives.push(primitive);
+
+    const { collections } = createVectorTileBuffersFromModelComponents(
+      mockTileContent,
+      createComponents(node),
+    );
+
+    const collection = collections[0];
+    expect(collection.hasNormals).toBe(true);
+
+    const polyline = new BufferPolyline();
+    collection.get(0, polyline);
+    expect(Array.from(polyline.getNormals())).toEqualEpsilon(
+      [0.0, 0.0, 1.0, 0.0, 1.0, 0.0],
+      CesiumMath.EPSILON4,
+    );
+
+    collection.get(1, polyline);
+    expect(Array.from(polyline.getNormals())).toEqualEpsilon(
+      [1.0, 0.0, 0.0, 0.0, 0.0, -1.0],
+      CesiumMath.EPSILON4,
+    );
+  });
+
+  it("reads polygon normals in loop order", function () {
+    const loopIndices = new Uint32Array([2, 0, 1]);
+    const primitive = createPrimitive({
+      primitiveType: PrimitiveType.LINE_LOOP,
+      positions: new Float32Array([
+        0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0,
+      ]),
+      normals: new Float32Array([1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]),
+      indices: loopIndices,
+      polygon: {
+        count: 1,
+        loopIndices,
+        loopIndicesOffsets: new Uint32Array([0]),
+        triangleIndices: new Uint32Array([0, 1, 2]),
+        triangleIndicesOffsets: new Uint32Array([0]),
+      },
+    });
+
+    const node = new ModelComponents.Node();
+    node.primitives.push(primitive);
+
+    const { collections } = createVectorTileBuffersFromModelComponents(
+      mockTileContent,
+      createComponents(node),
+    );
+
+    const collection = collections[0];
+    expect(collection.hasNormals).toBe(true);
+
+    const polygon = new BufferPolygon();
+    collection.get(0, polygon);
+    expect(Array.from(polygon.getNormals())).toEqualEpsilon(
+      [0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0],
+      CesiumMath.EPSILON4,
+    );
   });
 
   it("creates polygon collections from CESIUM_mesh_vector", function () {

@@ -65,6 +65,9 @@ class BufferPoint extends BufferPrimitive {
   static clone(point, result) {
     super.clone(point, result);
     result.setPosition(point.getPosition(scratchCartesian));
+    if (point._collection.hasNormals && result._collection.hasNormals) {
+      result.setNormal(point.getNormal(scratchCartesian));
+    }
     return result;
   }
 
@@ -124,6 +127,29 @@ class BufferPoint extends BufferPrimitive {
 
     collection._makeDirty(DirtyFlags.GEOMETRY, this._index);
     collection._makeDirtyBoundingVolume();
+  }
+
+  /**
+   * Gets the unit normal vector of this point, in model coordinates. Requires
+   * a collection constructed with <code>hasNormals: true</code>.
+   *
+   * @param {Cartesian3} [result]
+   * @returns {Cartesian3}
+   */
+  getNormal(result) {
+    return this._collection._getNormal(this.vertexOffset, result);
+  }
+
+  /**
+   * Sets the normal vector of this point, in model coordinates. Requires a
+   * collection constructed with <code>hasNormals: true</code>.
+   *
+   * @param {Cartesian3} normal
+   */
+  setNormal(normal) {
+    const collection = this._collection;
+    collection._setNormal(this.vertexOffset, normal);
+    collection._makeDirty(DirtyFlags.GEOMETRY, this._index);
   }
 
   /////////////////////////////////////////////////////////////////////////////
