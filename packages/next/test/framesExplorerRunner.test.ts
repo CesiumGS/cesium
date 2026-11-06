@@ -7,6 +7,7 @@ import {
   GROUP_INFO,
   LENSES,
   STRESS_CASES,
+  citation,
   cited,
   STRESS_GROUPS,
   compareFingerprint,
@@ -371,13 +372,11 @@ describe("effect sizes and fingerprints (R11, R12)", () => {
     coordinates: [-2_700_000.123, -4_290_000.456, 3_860_000.789],
   };
 
-  it("compares the pipeline and grids exactly and coordinates within 1e-9 m", () => {
+  /** One unit in the last place of |x| (a double). */
+  const ulp = (x: number) => 2 ** (Math.floor(Math.log2(Math.abs(x))) - 52);
+
+  it("compares the pipeline, grids and coordinate count exactly", () => {
     expect(compareFingerprint(fingerprint, fingerprint)).toBeUndefined();
-    const near = {
-      ...fingerprint,
-      coordinates: fingerprint.coordinates.map((c) => c + 4e-10),
-    };
-    expect(compareFingerprint(fingerprint, near)).toBeUndefined();
     expect(
       compareFingerprint(fingerprint, {
         ...fingerprint,
@@ -402,6 +401,43 @@ describe("effect sizes and fingerprints (R11, R12)", () => {
         coordinates: fingerprint.coordinates.slice(0, 2),
       }),
     ).toMatch(/coordinate/);
+  });
+
+  // F34, F34a: 4 ULP of the point's magnitude (its largest |coordinate|).
+  const point = (x: number, y: number, z: number): Fingerprint => ({
+    ...fingerprint,
+    coordinates: [x, y, z],
+  });
+
+  it("passes coordinates 3 ULP apart at 6.4e6 m, and fails them 5 ULP apart", () => {
+    const m = 6.4e6;
+    const u = ulp(m);
+    expect(u).toBeCloseTo(9.3e-10, 11);
+    const at = point(m, 1000, 2000);
+    expect(
+      compareFingerprint(at, point(m + 3 * u, 1000, 2000)),
+    ).toBeUndefined();
+    expect(compareFingerprint(at, point(m + 5 * u, 1000, 2000))).toMatch(
+      /coordinates differ .* 4 ULP/,
+    );
+  });
+
+  it("holds a near-zero component to the point's ULP, not its own", () => {
+    const m = 6.4e6;
+    const u = ulp(m);
+    // 3 ULP of 6.4e6 m on a component near 0 m: far beyond that component's
+    // own ULP (about 1e-26 m), within the point's.
+    const at = point(m, 1e-10, 0);
+    expect(compareFingerprint(at, point(m, 1e-10 + 3 * u, 0))).toBeUndefined();
+    expect(compareFingerprint(at, point(m, 1e-10 + 5 * u, 0))).toMatch(
+      /coordinate/,
+    );
+  });
+
+  it("fails a coordinate that is not a number", () => {
+    expect(compareFingerprint(point(1, 2, 3), point(1, NaN, 3))).toMatch(
+      /coordinate/,
+    );
   });
 
   it("fails a mismatched or unrecorded fingerprint and passes a match", async () => {
@@ -663,6 +699,38 @@ describe("what the inspector needs, filled by the catalog (F27, F28)", () => {
       reference: "input-wkt2-tokyo-jprcs-ix",
       input: true,
     });
+  });
+
+  it("gives no default source when a case cites more than one value: each result names its own", async () => {
+    const c = stub(async () => {
+      cited("iogp-helmert-position-vector");
+      cited("iogp-helmert-time-dependent");
+      return [
+        { id: "stub.two.a", group: "coordinate-epoch", title: "a", pass: true },
+        {
+          id: "stub.two.b",
+          group: "coordinate-epoch",
+          title: "b",
+          pass: true,
+          source: citation("iogp-helmert-time-dependent"),
+        },
+      ];
+    });
+    const [a, b] = await run([c]);
+    expect(a!.source).toBeUndefined();
+    expect(b!.source!.reference).toBe("iogp-helmert-time-dependent");
+  });
+
+  it("doesn't let an ellipsoid's constants take the source from the value compared with", async () => {
+    const c = stub(async () => {
+      cited("epsg-ellipsoid-grs80");
+      cited("ngs-GU2195");
+      return [
+        { id: "stub.e", group: "reference-values", title: "e", pass: true },
+      ];
+    });
+    const [r] = await run([c]);
+    expect(r!.source!.reference).toBe("ngs-GU2195");
   });
 
   it("gives no source to a case that cites nothing", async () => {

@@ -168,7 +168,11 @@ export function CopyButton({ text, label }: { text: string; label: string }) {
 
 /** The unknown terms of a statement, by their notes. */
 export function unknownTerms(a: AccuracyStatement): string[] {
-  return a.terms.filter((t) => t.meters === undefined).map((t) => t.note);
+  const terms = a.terms
+    .filter((t) => t.meters === undefined)
+    .map((t) => t.note);
+  // A statement that couldn't be composed has no terms, only why.
+  return terms.length === 0 && a.meters === undefined ? a.warnings : terms;
 }
 
 /**

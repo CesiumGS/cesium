@@ -1,6 +1,7 @@
 // Operation candidates: ED50 to WGS 84 at a North Sea point, PROJ's list of
 // candidates against the EPSG registry (offshore energy, where the registry
 // began).
+import { citation } from "../references.ts";
 import {
   type AreaOfInterest,
   type OperationCandidate,
@@ -72,6 +73,7 @@ const candidatesCase = stressCase(
     results.push({
       ...base,
       id: `${base.id}.candidates`,
+      source: citation("epsg-1311"),
       title:
         "PROJ's candidates for ED50 to WGS 84 within 0.1° of 56°N 3°E include at least two accurate (non-ballpark) operations; without the area of interest it offers only the ballpark",
       pass: accurate.length >= 2 && everything.filter(usable).length === 0,
@@ -91,6 +93,7 @@ const candidatesCase = stressCase(
     results.push({
       ...base,
       id: `${base.id}.recorded`,
+      source: citation("epsg-1311"),
       title:
         "resolveOperation with the same area records the candidate its documented rule picks from listOperations' list (pipeline and accuracy)",
       pass:
@@ -129,6 +132,7 @@ const candidatesCase = stressCase(
       results.push({
         ...base,
         id: `${base.id}.${id}`,
+        source: citation(id),
         title: `${record.name} (EPSG transformation ${id.slice(5)}): PROJ's candidate states the registry's accuracy (${record.accuracy} m) and area of use (${record.extent?.name ?? "?"}), the box within half of its last 0.01°`,
         pass: accuracyMatches,
         value: worst,
@@ -167,6 +171,7 @@ const candidatesCase = stressCase(
     results.push({
       ...base,
       id: `${base.id}.spread`,
+      source: citation("epsg-1311"),
       title:
         "The largest distance between the accurate candidates' WGS 84 positions of the point, against the same from the EPSG records' parameters by hand (IOGP 373-7-2 §4.2), within 2%",
       pass: handPoints.length === libraryPoints.length,

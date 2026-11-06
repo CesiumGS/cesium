@@ -399,7 +399,8 @@ export const GROUP_INFO: readonly GroupInfo[] = [
     question: "Does the same file land the same in browser and Node?",
     lenses: ["bim", "offshore"],
     virtual: true,
-    accuracyNote: "pipeline and grids exact; coordinates within 10⁻⁹ m",
+    accuracyNote:
+      "pipeline and grids exact; coordinates within 4 ULP of the point (about 4 nm at the Earth's radius)",
     compared: {
       kind: "independent",
       text: "The fingerprint the Node data test recorded (fingerprints.json).",

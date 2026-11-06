@@ -30,6 +30,7 @@ import {
   CONVERGENCE_PATH,
   FACTOR_PATH,
   INVERSE_RESIDUAL,
+  citation,
   cited,
 } from "../references.ts";
 import {
@@ -144,6 +145,11 @@ export interface BoundCheckOptions {
    * for a hand-checked effect.
    */
   readonly registry?: { readonly crs: CrsRef; readonly record?: string };
+  /**
+   * The references.json entry the WKT2 came from (ruling F6): every result's
+   * source, but the registry effect's, which is its EPSG record (F28).
+   */
+  readonly input?: string;
 }
 
 interface Located {
@@ -528,7 +534,14 @@ async function boundChecks(
       userInput: options.userInput,
     });
   }
-  return results;
+  const record = options.registry?.record;
+  return results.map((r) =>
+    r.id === `${options.idBase}.registry` && record !== undefined
+      ? { ...r, source: citation(record) }
+      : options.input !== undefined
+        ? { ...r, source: citation(options.input) }
+        : r,
+  );
 }
 
 /** Lowercase letters, digits and dashes, for an id from a label. */
@@ -603,6 +616,7 @@ const boundCase = (
       return boundChecks(ctx, entry.wkt2, label, {
         idBase: `bound-crss.${key}`,
         userInput: false,
+        input: `input-wkt2-${key}`,
         ...(at && { at }),
         ...(registry && { registry }),
       });

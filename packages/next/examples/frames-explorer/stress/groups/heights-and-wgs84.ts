@@ -7,6 +7,7 @@ import { epsgTimeDependentHelmert, type EpsgParameter } from "../datum.ts";
 import { geodeticToGeocentric, helmert, reversedHelmert } from "../geodesy.ts";
 import {
   type NgsMark,
+  citation,
   cited,
   ellipsoidOf,
   onEarth,
@@ -67,6 +68,7 @@ const itrfCase = stressCase(
         pass: true,
         value: Math.abs(size / handSize - 1),
         tolerance: EFFECT,
+        source: citation("epsg-8970"),
         detail: `library ${fmt(size, 6)} m, hand ${fmt(handSize, 6)} m; operation accuracy ${op.accuracy ?? "not stated"} m`,
         effect: {
           value: size,

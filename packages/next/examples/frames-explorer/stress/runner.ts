@@ -216,12 +216,26 @@ export async function expectThrow(
   }
 }
 
-const COORDINATE_LIMIT = 1e-9;
+/** How many units in the last place two coordinates may differ by (ruling F34). */
+const COORDINATE_ULPS = 4;
+
+/** One unit in the last place of |x| as a double (0 for 0). */
+function ulp(x: number): number {
+  const a = Math.abs(x);
+  return a === 0 || !Number.isFinite(a)
+    ? 0
+    : 2 ** (Math.floor(Math.log2(a)) - 52);
+}
 
 /**
  * The difference between a recorded fingerprint and this run's, or undefined
- * when they agree: the pipeline and grids exactly, the coordinates within
- * 1e-9 m (R12).
+ * when they agree (R12): the pipeline and grids exactly, and each coordinate
+ * within 4 ULP of its point's magnitude (rulings F34, F34a). The magnitude is
+ * the largest |coordinate| of the point's expected or actual triple, so a
+ * component near 0 is held to the point's precision, not to a sub-picometre
+ * one of its own. WebAssembly PROJ (musl libm) and native PROJ differ in the
+ * last bits; a flat 1e-9 m is about 1 ULP at the Earth's radius, which no two
+ * builds can promise.
  */
 export function compareFingerprint(
   expected: Fingerprint,
@@ -235,16 +249,38 @@ export function compareFingerprint(
   if (grids(expected) !== grids(actual)) {
     return `the grids differ: expected [${grids(expected)}], got [${grids(actual)}]`;
   }
-  if (expected.coordinates.length !== actual.coordinates.length) {
-    return `the coordinate count differs: expected ${expected.coordinates.length}, got ${actual.coordinates.length}`;
+  const e = expected.coordinates;
+  const a = actual.coordinates;
+  if (e.length !== a.length) {
+    return `the coordinate count differs: expected ${e.length}, got ${a.length}`;
   }
+  // The worst difference as a share of its limit, and that difference.
+  let worstRatio = 0;
   let worst = 0;
-  for (let i = 0; i < expected.coordinates.length; i++) {
-    const d = Math.abs(expected.coordinates[i]! - actual.coordinates[i]!);
-    worst = Number.isNaN(d) ? Infinity : Math.max(worst, d);
+  for (let p = 0; p < e.length; p += 3) {
+    const end = Math.min(p + 3, e.length);
+    let magnitude = 0;
+    for (let i = p; i < end; i++) {
+      magnitude = Math.max(magnitude, Math.abs(e[i]!), Math.abs(a[i]!));
+    }
+    const limit = COORDINATE_ULPS * ulp(magnitude);
+    for (let i = p; i < end; i++) {
+      const d = Math.abs(e[i]! - a[i]!);
+      const ratio = Number.isNaN(d)
+        ? Infinity
+        : d === 0
+          ? 0
+          : limit === 0
+            ? Infinity
+            : d / limit;
+      if (ratio > worstRatio) {
+        worstRatio = ratio;
+        worst = Number.isNaN(d) ? NaN : d;
+      }
+    }
   }
-  return worst > COORDINATE_LIMIT
-    ? `the coordinates differ by up to ${fmt(worst)} m (limit ${COORDINATE_LIMIT} m)`
+  return worstRatio > 1
+    ? `the coordinates differ by up to ${fmt(worst)} m, ${fmt(worstRatio)}× the limit of ${COORDINATE_ULPS} ULP of the point's magnitude`
     : undefined;
 }
 
@@ -411,15 +447,24 @@ export function defaultTrace(result: StressResult): TraceStep[] {
   return steps;
 }
 
+/** references.json entries that are constants a case computes with (an ellipsoid's), not values it is compared with. */
+const CONSTANTS = "epsg-ellipsoid-";
+
 /**
  * Fills what the inspector needs and the case left out (rulings F27, F28):
  * the group's accuracy note when the result states no position accuracy,
- * the first of `cites` as its source, and a trace from its fields.
+ * its case's citation as its source when the case cites just one, and a
+ * trace from its fields.
  */
 export function withDefaults(
   result: StressResult,
   cites: readonly string[] = [],
 ): StressResult {
+  // The case's one citation is its results' source. A case citing more than
+  // one entry names each result's own (F28): a default would cite one
+  // example for another's value. An ellipsoid's constants count only alone.
+  const values = cites.filter((id) => !id.startsWith(CONSTANTS));
+  const primary = values.length > 0 ? values : cites.slice(0, 1);
   const note =
     result.accuracy === undefined && result.accuracyNote === undefined
       ? groupInfo(result.group)?.accuracyNote
@@ -428,7 +473,7 @@ export function withDefaults(
     ...result,
     ...(note !== undefined && { accuracyNote: note }),
     ...(result.source === undefined &&
-      cites.length > 0 && { source: citation(cites[0]!) }),
+      primary.length === 1 && { source: citation(primary[0]!) }),
     ...(result.trace === undefined && { trace: defaultTrace(result) }),
   };
 }

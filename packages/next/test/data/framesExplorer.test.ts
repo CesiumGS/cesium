@@ -113,6 +113,72 @@ const describeResult = (r: StressResult): string =>
     .filter((s) => s !== "")
     .join(" | ");
 
+/**
+ * The source each result of a case that cites more than one value compares
+ * against (F28, R10), checked one by one: a case's first citation is no
+ * stand-in for another result's (the time-dependent Helmert is not the
+ * position-vector example). Reviewed against each case's code.
+ */
+const SOURCES: Readonly<Record<string, string>> = {
+  "distortion.low-distortion.test-points": "ocrs-handbook",
+  "distortion.low-distortion.portland": "ocrs-handbook",
+  "distortion.low-distortion.state-plane": "epsg-oregon-north",
+  "coordinate-epoch.nad83-itrf2014.helmert-iogp-position-vector":
+    "iogp-helmert-position-vector",
+  "coordinate-epoch.nad83-itrf2014.helmert-iogp-time-dependent":
+    "iogp-helmert-time-dependent",
+  "coordinate-epoch.nad83-itrf2014.epoch-2010": "epsg-8970",
+  "coordinate-epoch.nad83-itrf2014.epoch-2026": "epsg-8970",
+  "coordinate-epoch.nad83-itrf2014.difference": "epsg-8970",
+  "coordinate-epoch.nad83-itrf2014.no-epoch": "epsg-8970",
+  "space.dss43-orion.light-time": "dsn-dss43",
+  "space.dss43-orion.doppler": "dsn-dss43",
+  "space.line-of-sight.behind-moon": "naif-moon-radius",
+  "space.line-of-sight.clear": "naif-moon-radius",
+  "space.effects.frame-bias": "iers-frame-bias",
+  "space.effects.gcrf-scale": "iers-numerical-standards",
+  "space.effects.moon-me-pa": "naif-moon-me-de440",
+  "space.effects.earth-orientation": "dsn-dss43",
+  "space.effects.earth-orientation-angle": "dsn-dss43",
+  "operation-candidates.ed50-north-sea.candidates": "epsg-1311",
+  "operation-candidates.ed50-north-sea.recorded": "epsg-1311",
+  "operation-candidates.ed50-north-sea.epsg-1311": "epsg-1311",
+  "operation-candidates.ed50-north-sea.epsg-1133": "epsg-1133",
+  "operation-candidates.ed50-north-sea.epsg-1134": "epsg-1134",
+  "operation-candidates.ed50-north-sea.spread": "epsg-1311",
+  "ifc-map-conversion.ifc43-utm.origin": "ifc43-geographic-referencing-utm",
+  "ifc-map-conversion.ifc43-utm.elevation": "ifc43-geographic-referencing-utm",
+  "ifc-map-conversion.ifc43-utm.x-axis": "ifc43-geographic-referencing-utm",
+  "ifc-map-conversion.ifc43-utm.round-trip": "ifc43-geographic-referencing-utm",
+  "ifc-map-conversion.ifc43-utm.gauss-kruger":
+    "ifc43-geographic-referencing-gk",
+  "heights-and-wgs84.nad83-itrf2014": "epsg-8970",
+  "bound-crss.ed50-utm31n.source-crs": "input-wkt2-ed50-utm31n",
+  "bound-crss.ed50-utm31n.recorded-operation": "input-wkt2-ed50-utm31n",
+  "bound-crss.ed50-utm31n.helmert": "input-wkt2-ed50-utm31n",
+  "bound-crss.ed50-utm31n.round-trip": "input-wkt2-ed50-utm31n",
+  "bound-crss.ed50-utm31n.registry": "epsg-1311",
+  "bound-crss.ed50-utm31n.accuracy": "input-wkt2-ed50-utm31n",
+  "bound-crss.tokyo-jprcs-ix.source-crs": "input-wkt2-tokyo-jprcs-ix",
+  "bound-crss.tokyo-jprcs-ix.recorded-operation": "input-wkt2-tokyo-jprcs-ix",
+  "bound-crss.tokyo-jprcs-ix.helmert": "input-wkt2-tokyo-jprcs-ix",
+  "bound-crss.tokyo-jprcs-ix.round-trip": "input-wkt2-tokyo-jprcs-ix",
+  "bound-crss.tokyo-jprcs-ix.registry": "epsg-15484",
+  "bound-crss.tokyo-jprcs-ix.accuracy": "input-wkt2-tokyo-jprcs-ix",
+  "bound-crss.osgb36-bng.source-crs": "input-wkt2-osgb36-bng",
+  "bound-crss.osgb36-bng.recorded-operation": "input-wkt2-osgb36-bng",
+  "bound-crss.osgb36-bng.helmert": "input-wkt2-osgb36-bng",
+  "bound-crss.osgb36-bng.round-trip": "input-wkt2-osgb36-bng",
+  "bound-crss.osgb36-bng.registry": "epsg-1314",
+  "bound-crss.osgb36-bng.accuracy": "input-wkt2-osgb36-bng",
+  "time-scales.offsets.tt-tai": "iers-tt-tai",
+  "time-scales.offsets.gps-zero": "iers-leap-second-1980",
+  "time-scales.gps-utc-leap.step": "iers-bulletin-c-52",
+  "time-scales.gps-utc-leap.continuous": "iers-bulletin-c-52",
+  "lunar-time.moon-vs-earth.synodic": "ashby-patla-2024",
+  "lunar-time.moon-vs-earth.sidereal": "ashby-patla-2024",
+};
+
 describe("the frames explorer's stress tests, headless", () => {
   let results: StressResult[] = [];
   /** The references.json entries each case cited while it ran, collected here independently of the runner. */
@@ -224,6 +290,28 @@ describe("the frames explorer's stress tests, headless", () => {
       }
     }
     expect(cited).toBeGreaterThan(50);
+  });
+
+  it("names, for each result of a case citing several values, the one it compares against (F28)", () => {
+    const value = (id: string) => !id.startsWith("epsg-ellipsoid-");
+    let checked = 0;
+    for (const c of STRESS_CASES) {
+      const cites = new Set([
+        ...(c.cites ?? []),
+        ...(ranCites.get(c.id) ?? []),
+      ]);
+      if ([...cites].filter(value).length < 2) {
+        continue;
+      }
+      for (const r of results.filter(
+        (x) => x.id === c.id || x.id.startsWith(`${c.id}.`),
+      )) {
+        expect(SOURCES[r.id], `${r.id} is in SOURCES`).toBeDefined();
+        expect(r.source?.reference, r.id).toBe(SOURCES[r.id]);
+        checked++;
+      }
+    }
+    expect(checked).toBe(Object.keys(SOURCES).length);
   });
 
   it("traces every result from its input to its output (F28, R16)", () => {

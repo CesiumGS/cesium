@@ -116,9 +116,18 @@ export function composedView(
   const accuracyOf = (a: ReturnType<typeof framePoint>): AccuracyStatement => {
     try {
       return measure(a, b, instant, frames).accuracy;
-    } catch {
-      // The same point (a frame against itself): nothing to compose.
-      return { meters: 0, terms: [], warnings: [] };
+    } catch (error) {
+      // A frame against itself has nothing to compose; anything else that
+      // fails is not bounded, with why, never exact (R8, F35).
+      if (target === reference) {
+        return { meters: 0, terms: [], warnings: [] };
+      }
+      const message = error instanceof Error ? error.message : String(error);
+      return {
+        meters: undefined,
+        terms: [],
+        warnings: [`the statement could not be composed: ${message}`],
+      };
     }
   };
   let statement: AccuracyStatement;

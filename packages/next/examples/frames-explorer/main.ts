@@ -69,6 +69,7 @@ import { buildReport, type ReportEnvironment } from "./report.ts";
 import {
   ViewStore,
   formatParams,
+  loadLinkedResult,
   parseParams,
   type Known,
   type Tab,
@@ -271,6 +272,12 @@ export function run(context: ExampleContext): ExampleRun {
   let results: StressResult[] = [];
   let userResults: StressResult[] = [];
   let runView: RunView = { state: "idle", done: 0, total: 0 };
+  /** The run going on, settled either way (runs go one at a time). */
+  let running: Promise<void> = Promise.resolve();
+  /** The deep-linked result being loaded (`loadLinkedResult`). */
+  let linking: string | undefined;
+  /** A message for the panel's snackbar (a deep link that didn't resolve). */
+  let notice: { id: number; text: string } | undefined;
   let lastRun: { startedAt: string; summary: RunSummary } | undefined;
   let userCrs: UserCrsView =
     initial.imodel !== undefined
@@ -510,6 +517,7 @@ export function run(context: ExampleContext): ExampleRun {
       )["input-wkt2-tokyo-jprcs-ix"]!.wkt2!,
       tour: TOUR,
       environment: environmentLines(),
+      ...(notice !== undefined && { notice }),
     };
   }
 
@@ -1326,19 +1334,38 @@ export function run(context: ExampleContext): ExampleRun {
       globe.emphasize({ frames: emphasisFrames() });
       return;
     }
-    // A result not in hand (a deep link, back or forward): run its group,
-    // then show it (R15).
-    if (
-      !results.some((r) => r.id === s.id) &&
-      !userResults.some((r) => r.id === s.id)
-    ) {
-      const group = GROUP_INFO.find((g) => s.id.startsWith(`${g.id}.`))?.id;
-      if (group !== undefined && runView.state !== "running") {
-        void runCatalog([group]).then(() => {
-          if (!disposed && view.get().selection === s) {
-            applySelection();
-          }
-        });
+    // A result not in hand (a deep link, back or forward): run its group
+    // (retrying once), then show it, or clear it and say why (R15).
+    const has = (id: string) =>
+      results.some((r) => r.id === id) || userResults.some((r) => r.id === id);
+    if (!has(s.id)) {
+      if (linking !== s.id) {
+        linking = s.id;
+        void loadLinkedResult(view, s.id, {
+          has,
+          run: async (group) => {
+            const outcome = await runCatalog([group]);
+            if (outcome !== undefined) {
+              throw new Error(outcome);
+            }
+          },
+          notice: (text) => {
+            notice = { id: (notice?.id ?? 0) + 1, text };
+            invalidate();
+          },
+        })
+          .then((outcome) => {
+            if (
+              outcome === "shown" &&
+              !disposed &&
+              view.get().selection === s
+            ) {
+              applySelection();
+            }
+          })
+          .finally(() => {
+            linking = undefined;
+          });
       }
       return;
     }
@@ -1403,10 +1430,28 @@ export function run(context: ExampleContext): ExampleRun {
 
   // ------------------------------------------------------------------ runs
   const startedAt = { iso: "", ms: 0 };
-  async function runCatalog(ids?: readonly string[]): Promise<void> {
+  /** Runs the catalog (or groups of it). Resolves with why it failed, or undefined. */
+  async function runCatalog(
+    ids?: readonly string[],
+  ): Promise<string | undefined> {
     if (runView.state === "running") {
-      return;
+      // One run at a time: wait for the one going on, then run.
+      await running;
+      if (disposed) {
+        return "the example was left";
+      }
     }
+    const done = runCatalogNow(ids);
+    running = done.then(
+      () => undefined,
+      () => undefined,
+    );
+    return done;
+  }
+
+  async function runCatalogNow(
+    ids?: readonly string[],
+  ): Promise<string | undefined> {
     const groups = ids && new Set(ids);
     results = groups ? results.filter((r) => !groups.has(r.group)) : [];
     const before = results.length;
@@ -1436,7 +1481,7 @@ export function run(context: ExampleContext): ExampleRun {
         invalidate();
       });
       if (disposed) {
-        return;
+        return "the example was left";
       }
       lastRun = { startedAt: startedAt.iso, summary };
       runView = {
@@ -1451,7 +1496,7 @@ export function run(context: ExampleContext): ExampleRun {
       }
     } catch (error) {
       if (isAbort(error) || disposed) {
-        return;
+        return "the example was left";
       }
       runView = {
         state: "cancelled",
@@ -1465,8 +1510,13 @@ export function run(context: ExampleContext): ExampleRun {
           cancelled: true,
         },
       };
+      invalidate();
+      // Every count and the "known" results reflect what did come back.
+      updateKnown();
+      return scrub(messageOf(error));
     }
     invalidate();
+    return undefined;
   }
 
   /** The counts over every result the page holds (a group's run joins the rest). */
@@ -1739,7 +1789,7 @@ export function run(context: ExampleContext): ExampleRun {
       { received: number; total: number | undefined }
     >();
     try {
-      const manifestResponse = fetch(`${DATA}manifest.json`)
+      const manifestResponse = fetch(`${DATA}manifest.json`, { signal })
         .then((r) => (r.ok ? r.json() : undefined))
         .catch(() => undefined);
       const data = await loadFrameData(DATA, (file, received, total) => {
@@ -1811,6 +1861,11 @@ export function run(context: ExampleContext): ExampleRun {
   function startFrameLoop(): void {
     let raf = 0;
     let lastTree = viewer.clock.time;
+    // Real time too: at the tour's 3,600× the clock passes a minute every
+    // frame, and rebuilding the walk's statements each frame cost frames
+    // (R13). Once a second at most.
+    let lastTreeReal = performance.now();
+    let lastBiasReal = performance.now();
     const tick = () => {
       if (disposed) {
         return;
@@ -1819,9 +1874,11 @@ export function run(context: ExampleContext): ExampleRun {
       if (frames && instant) {
         globe.update(frames.itrf, instant);
         const now = viewer.clock.time;
-        if (Math.abs(now - lastTree) > 60_000) {
+        const real = performance.now();
+        if (Math.abs(now - lastTree) > 60_000 && real - lastTreeReal > 1000) {
           // The tree's Earth-orientation sigma and the walk's statements (R8).
           lastTree = now;
+          lastTreeReal = real;
           rebuildTree();
         }
         if (
@@ -1832,7 +1889,12 @@ export function run(context: ExampleContext): ExampleRun {
           orionAt = now;
           drawOverlay("orion");
         }
-        if (overlays.get("bias")!.on && Math.abs(now - biasAt) > 60_000) {
+        if (
+          overlays.get("bias")!.on &&
+          Math.abs(now - biasAt) > 60_000 &&
+          real - lastBiasReal > 250
+        ) {
+          lastBiasReal = real;
           drawOverlay("bias");
         }
       }
