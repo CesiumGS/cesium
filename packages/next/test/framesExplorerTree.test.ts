@@ -3,8 +3,11 @@
 // The real frames store is exercised by the page and by Task 1's data test.
 import { describe, expect, it } from "vitest";
 import {
+  branchPath,
+  buildScenarioTree,
   buildTree,
   pathToRoot,
+  type AddedFrameSpec,
   type TreeNode,
 } from "../examples/frames-explorer/tree.ts";
 import { Frame } from "../src/frames/Frame.ts";
@@ -434,5 +437,162 @@ describe("plain data", () => {
     const plain = strip(tree);
     expect(structuredClone(plain)).toEqual(plain);
     expect(JSON.parse(JSON.stringify(plain))).toEqual(plain);
+  });
+});
+
+describe("buildScenarioTree", () => {
+  const edge: TreeNode["edge"] = {
+    kind: "constant",
+    detail: "a fixed placement",
+    accuracy: { note: "not known: test" },
+  };
+  const spec = (id: string, parentId: string): AddedFrameSpec => ({
+    id,
+    label: id,
+    parentId,
+    edge,
+  });
+
+  it("adds a site grid under ITRF, marked added, and leaves the base alone", () => {
+    const base = buildTree(frames);
+    const before = JSON.stringify(
+      (function strip(n: TreeNode): unknown {
+        return { id: n.id, added: n.added, kids: n.children.map(strip) };
+      })(base),
+    );
+    const tree = buildScenarioTree(base, [spec("Site grid", "ITRF")]);
+    const grid = find(tree, "Site grid")!;
+    expect(grid.added).toBe(true);
+    expect(grid.edge).toBe(edge);
+    expect(parentOf(tree, "Site grid")).toBe("ITRF");
+    expect(find(tree, "ITRF")!.added).toBeUndefined();
+    expect(find(base, "Site grid")).toBeUndefined();
+    expect(find(base, "ITRF")!.children.map((c) => c.id)).not.toContain(
+      "Site grid",
+    );
+    expect(
+      JSON.stringify(
+        (function strip(n: TreeNode): unknown {
+          return { id: n.id, added: n.added, kids: n.children.map(strip) };
+        })(base),
+      ),
+    ).toBe(before);
+    expect(tree).not.toBe(base);
+  });
+
+  it("hangs an added frame under another added frame, in any order", () => {
+    const tree = buildScenarioTree(buildTree(frames), [
+      spec("Mast", "Ship"),
+      spec("Ship", "ITRF"),
+    ]);
+    expect(parentOf(tree, "Mast")).toBe("Ship");
+    expect(parentOf(tree, "Ship")).toBe("ITRF");
+  });
+
+  it("throws, naming the id, on a duplicate id", () => {
+    const base = buildTree(frames);
+    expect(() => buildScenarioTree(base, [spec("ITRF", "GCRF")])).toThrow(
+      /ITRF/,
+    );
+    expect(() =>
+      buildScenarioTree(base, [spec("X", "ITRF"), spec("X", "GCRF")]),
+    ).toThrow(/"X"/);
+  });
+
+  it("throws, naming the id, on a missing parent", () => {
+    expect(() =>
+      buildScenarioTree(buildTree(frames), [spec("Lost", "NOWHERE")]),
+    ).toThrow(/Lost.*NOWHERE/);
+  });
+});
+
+describe("branchPath (Review Focus 5)", () => {
+  const edge: TreeNode["edge"] = {
+    kind: "constant",
+    detail: "a fixed placement",
+    accuracy: { note: "not known: test" },
+  };
+  const capstone = buildScenarioTree(buildTree(frames), [
+    { id: "DSS-43 ENU", label: "DSS-43 ENU", parentId: "ITRF", edge },
+    { id: "Orion", label: "Orion", parentId: "GCRF", edge },
+    { id: "Lunar site", label: "Lunar site", parentId: "MOON_ME", edge },
+    { id: "Ship", label: "Ship", parentId: "ITRF", edge },
+  ]);
+  const ids = (nodes: TreeNode[]) => nodes.map((n) => n.id);
+
+  it("meets DSS-43 ENU and Orion at GCRF", () => {
+    const path = branchPath(capstone, "DSS-43 ENU", "Orion");
+    expect(path.ancestor.id).toBe("GCRF");
+    expect(ids(path.up)).toEqual(["DSS-43 ENU", "ITRF"]);
+    expect(ids(path.down)).toEqual(["Orion"]);
+  });
+
+  it("meets a lunar site and a ship at ICRF", () => {
+    const path = branchPath(capstone, "Lunar site", "Ship");
+    expect(path.ancestor.id).toBe("ICRF");
+    expect(ids(path.up)).toEqual(["Lunar site", "MOON_ME", "MOON_ICRF"]);
+    expect(ids(path.down)).toEqual(["GCRF", "ITRF", "Ship"]);
+  });
+
+  it("gives an empty side when one node is the other's ancestor", () => {
+    const toAncestor = branchPath(capstone, "DSS-43 ENU", "GCRF");
+    expect(toAncestor.ancestor.id).toBe("GCRF");
+    expect(ids(toAncestor.up)).toEqual(["DSS-43 ENU", "ITRF"]);
+    expect(toAncestor.down).toEqual([]);
+    const fromAncestor = branchPath(capstone, "GCRF", "DSS-43 ENU");
+    expect(fromAncestor.up).toEqual([]);
+    expect(ids(fromAncestor.down)).toEqual(["ITRF", "DSS-43 ENU"]);
+    const same = branchPath(capstone, "Ship", "Ship");
+    expect(same.ancestor.id).toBe("Ship");
+    expect(same.up).toEqual([]);
+    expect(same.down).toEqual([]);
+  });
+
+  it("meets siblings at their parent", () => {
+    const path = branchPath(capstone, "DSS-43 ENU", "Ship");
+    expect(path.ancestor.id).toBe("ITRF");
+    expect(ids(path.up)).toEqual(["DSS-43 ENU"]);
+    expect(ids(path.down)).toEqual(["Ship"]);
+  });
+
+  it("is right for every pair of the capstone's four objects", () => {
+    // Hand-written: each object's chain to the root, nearest first.
+    const chain: Record<string, string[]> = {
+      "DSS-43 ENU": ["ITRF", "GCRF", "ICRF"],
+      Ship: ["ITRF", "GCRF", "ICRF"],
+      Orion: ["GCRF", "ICRF"],
+      "Lunar site": ["MOON_ME", "MOON_ICRF", "ICRF"],
+    };
+    const expected: [string, string, string][] = [
+      ["DSS-43 ENU", "Ship", "ITRF"],
+      ["DSS-43 ENU", "Orion", "GCRF"],
+      ["DSS-43 ENU", "Lunar site", "ICRF"],
+      ["Ship", "Orion", "GCRF"],
+      ["Ship", "Lunar site", "ICRF"],
+      ["Orion", "Lunar site", "ICRF"],
+    ];
+    for (const [a, b, meet] of expected) {
+      for (const [from, to] of [
+        [a, b],
+        [b, a],
+      ] as const) {
+        const path = branchPath(capstone, from, to);
+        expect(path.ancestor.id, `${from} to ${to}`).toBe(meet);
+        const upTo = chain[from]!.indexOf(meet);
+        const downTo = chain[to]!.indexOf(meet);
+        expect(ids(path.up), `${from} to ${to} up`).toEqual([
+          from,
+          ...chain[from]!.slice(0, upTo),
+        ]);
+        expect(ids(path.down), `${from} to ${to} down`).toEqual([
+          ...chain[to]!.slice(0, downTo).reverse(),
+          to,
+        ]);
+      }
+    }
+  });
+
+  it("throws, naming the id, for a node that is not in the tree", () => {
+    expect(() => branchPath(capstone, "Ship", "NOPE")).toThrow(/NOPE/);
   });
 });

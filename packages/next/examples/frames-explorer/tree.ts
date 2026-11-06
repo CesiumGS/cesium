@@ -53,6 +53,8 @@ export interface TreeNode {
   /** How this node is joined to its parent. The root's edge is `root`. */
   edge: { kind: EdgeKind; detail: string; accuracy: EdgeAccuracy };
   children: TreeNode[];
+  /** Set on a node a scenario added to the base tree (`buildScenarioTree`). */
+  added?: true;
 }
 
 /** DE440's stated accuracy for the positions it gives, m (R8). */
@@ -377,4 +379,98 @@ export function pathToRoot(tree: TreeNode, id: string): TreeNode[] {
     throw new Error(`frames tree: no node "${id}"`);
   }
   return path;
+}
+
+/** A frame a scenario adds to the base tree. Plain data, so it can come from the worker. */
+export interface AddedFrameSpec {
+  id: string;
+  label: string;
+  parentId: string;
+  edge: TreeNode["edge"];
+}
+
+/**
+ * A new tree: `base` plus the `added` frames, each marked `added`. `base` is
+ * not changed (its nodes are copied; the `frame`, `engineering` and
+ * `trajectory` references are shared). An added frame may hang under another
+ * added frame, in any order.
+ *
+ * Throws, naming the id, if an id repeats (in `base` or among `added`) or a
+ * parent isn't in the resulting tree.
+ */
+export function buildScenarioTree(
+  base: TreeNode,
+  added: readonly AddedFrameSpec[],
+): TreeNode {
+  const byId = new Map<string, TreeNode>();
+  const copy = (node: TreeNode): TreeNode => {
+    const out: TreeNode = { ...node, children: node.children.map(copy) };
+    byId.set(out.id, out);
+    return out;
+  };
+  const root = copy(base);
+  const fresh = new Map<string, AddedFrameSpec>();
+  for (const spec of added) {
+    if (byId.has(spec.id) || fresh.has(spec.id)) {
+      throw new Error(`frames tree: two nodes are named "${spec.id}"`);
+    }
+    fresh.set(spec.id, spec);
+  }
+  const nodes = new Map<string, TreeNode>();
+  for (const spec of added) {
+    const node: TreeNode = {
+      id: spec.id,
+      label: spec.label,
+      edge: spec.edge,
+      children: [],
+      added: true,
+    };
+    nodes.set(spec.id, node);
+  }
+  for (const spec of added) {
+    const parent = byId.get(spec.parentId) ?? nodes.get(spec.parentId);
+    if (!parent) {
+      throw new Error(
+        `frames tree: "${spec.id}" hangs under "${spec.parentId}", which is not in the tree`,
+      );
+    }
+    parent.children.push(nodes.get(spec.id)!);
+  }
+  // An added frame whose parents lead only to each other never reaches the root.
+  const reachable = new Set<string>();
+  const mark = (n: TreeNode): void => {
+    reachable.add(n.id);
+    n.children.forEach(mark);
+  };
+  mark(root);
+  for (const id of fresh.keys()) {
+    if (!reachable.has(id)) {
+      throw new Error(`frames tree: "${id}" is not connected to the root`);
+    }
+  }
+  return root;
+}
+
+/**
+ * The route between `a` and `b` through their nearest common ancestor.
+ * `up` runs from `a` to just below the ancestor, and `down` from just below
+ * the ancestor to `b`; each is empty when that node is the ancestor itself.
+ * Throws, naming the id, if either is not in `tree`.
+ */
+export function branchPath(
+  tree: TreeNode,
+  a: string,
+  b: string,
+): { up: TreeNode[]; ancestor: TreeNode; down: TreeNode[] } {
+  const fromA = pathToRoot(tree, a);
+  const fromB = pathToRoot(tree, b);
+  const inB = new Set(fromB.map((n) => n.id));
+  const meet = fromA.findIndex((n) => inB.has(n.id));
+  const ancestor = fromA[meet]!;
+  const downTo = fromB.findIndex((n) => n.id === ancestor.id);
+  return {
+    up: fromA.slice(0, meet),
+    ancestor,
+    down: fromB.slice(0, downTo).reverse(),
+  };
 }
