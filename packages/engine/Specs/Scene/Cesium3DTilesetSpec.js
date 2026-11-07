@@ -30,6 +30,7 @@ import {
   Cesium3DTileContentState,
   Cesium3DTilePass,
   Cesium3DTilePassState,
+  Cesium3DTileOptimizationHint,
   Cesium3DTileRefine,
   Cesium3DTileset,
   Cesium3DTileStyle,
@@ -1705,6 +1706,38 @@ describe(
           ),
         ).not.toEqual(CullingVolume.MASK_OUTSIDE);
         expect(isSelected(tileset_1, childRoot)).toBe(true);
+      });
+
+      it("checks children within parent when a tile is first traversed", async function () {
+        viewRootOnly();
+        const tileset = await Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetReplacement1Url,
+        );
+        const root = tileset.root;
+        expect(root._optimChildrenWithinParent).not.toEqual(
+          Cesium3DTileOptimizationHint.NOT_COMPUTED,
+        );
+        // The children refine additively: never checked
+        viewAllTiles();
+        scene.renderForSpecs();
+        expect(root.children[0]._optimChildrenWithinParent).toEqual(
+          Cesium3DTileOptimizationHint.NOT_COMPUTED,
+        );
+      });
+
+      it("does not check children within parent when cullWithChildrenBounds is false", async function () {
+        viewRootOnly();
+        const tileset = await Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetReplacement1Url,
+          {
+            cullWithChildrenBounds: false,
+          },
+        );
+        expect(tileset.root._optimChildrenWithinParent).toEqual(
+          Cesium3DTileOptimizationHint.NOT_COMPUTED,
+        );
       });
 
       it("does select visible tiles with visible children failing request volumes", async function () {
