@@ -370,6 +370,48 @@ describe("Tileset3D: the declaration, placement and tileOfDraw", () => {
       }
     });
 
+    it("refuses, and warns, a rigid placement whose frame gives non-finite numbers", async () => {
+      const rigidDeclaration = () =>
+        tilesetJson({
+          [ENGINEERING_FRAME_EXTENSION]: {
+            ...reprojected,
+            placement: { mode: "rigid", anchor: [0, 0, 0] },
+          },
+        });
+      const frames = [
+        // A Helmert of absurd values: PROJ answers NaN.
+        () => Float64Array.of(Number.NaN, Number.NaN, Number.NaN),
+        // The transformer's own refusal of a non-finite result.
+        () => {
+          throw new RangeError("PROJ cannot transform (0, 0, 0)");
+        },
+      ].map(
+        (toBodyFixed) =>
+          ({
+            definition: { name: "stub" },
+            units: { metersPerUnit: 1, verticalDirection: "up" },
+            metersPerHeightUnit: 1,
+            body: EARTH,
+            toBodyFixed,
+          }) as unknown as EngineeringFrame,
+      );
+      for (const stub of frames) {
+        const tileset = await load(rigidDeclaration());
+        const spy = vi.spyOn(EngineeringFrame, "load").mockResolvedValue(stub);
+        try {
+          await expect(
+            georeferenceTileset(tileset, { proj: {} as ProjApi }),
+          ).rejects.toThrow(/placement\.anchor/);
+          expect([...tileset.warnings].join("\n")).toContain(
+            "placement.anchor",
+          );
+          expect(tileset.placement).toBeUndefined();
+        } finally {
+          spy.mockRestore();
+        }
+      }
+    });
+
     it("refuses, and warns, when the frame doesn't load", async () => {
       const tileset = await load(declared());
       const spy = vi

@@ -649,3 +649,115 @@ describe("the declared operation: pipeline, geoidFallback, fallbackSigma", () =>
     });
   });
 });
+
+describe("untrusted WKT2 that names files, numeric bounds and empty grid lists", () => {
+  /** A vertical BOUNDCRS whose geoid file is `file` (the S1 payload's shape). */
+  const boundCrs = (file: string) =>
+    `BOUNDCRS[SOURCECRS[VERTCRS["NAVD88 height",VDATUM["North American Vertical Datum 1988"],CS[vertical,1],AXIS["gravity-related height (H)",up,LENGTHUNIT["metre",1]]]],TARGETCRS[GEOGCRS["NAD83(2011)",DATUM["NAD83 (National Spatial Reference System 2011)",ELLIPSOID["GRS 1980",6378137,298.257222101,LENGTHUNIT["metre",1]]],CS[ellipsoidal,3],AXIS["geodetic latitude (Lat)",north,ANGLEUNIT["degree",0.0174532925199433]],AXIS["geodetic longitude (Lon)",east,ANGLEUNIT["degree",0.0174532925199433]],AXIS["ellipsoidal height (h)",up,LENGTHUNIT["metre",1]]]],ABRIDGEDTRANSFORMATION["NAVD88 height to NAD83(2011) height",METHOD["Geographic3D to GravityRelatedHeight (gtx)",ID["EPSG",9665]],PARAMETERFILE["Geoid (height correction) model file","${file}"]]]`;
+  const withWkt2 = (wkt2: string) => ({
+    ...rigid(),
+    crs: { format: "wkt2", extensions: { EXT_geospatial_crs_wkt2: { wkt2 } } },
+  });
+  const WKT2_PATH = `${ROOT}.crs.extensions.EXT_geospatial_crs_wkt2.wkt2`;
+  const catalog = GridCatalog.parse(
+    JSON.stringify({
+      type: "FeatureCollection",
+      features: [
+        {
+          type: "Feature",
+          properties: {
+            name: "us_noaa_g2018u0.tif",
+            url: "https://cdn.proj.org/us_noaa_g2018u0.tif",
+            sha256sum: "a".repeat(64),
+            file_size: 1,
+          },
+        },
+      ],
+    }),
+  );
+
+  it("refuses a PARAMETERFILE that names a path (the S1 payload), naming the WKT2", () => {
+    for (const file of [
+      "/etc/hosts",
+      "../../us_noaa_g2018u0.tif",
+      "C:\\x.tif",
+      "https://example.com/a.tif",
+      "",
+    ]) {
+      const error = failure(withWkt2(boundCrs(file)));
+      expect(error.path, file).toBe(WKT2_PATH);
+      expect(error.message, file).toMatch(/PARAMETERFILE/);
+    }
+  });
+
+  it("holds a PARAMETERFILE's plain name to the catalog", () => {
+    const known = readGeoreference(
+      tileset(withWkt2(boundCrs("us_noaa_g2018u0.tif"))),
+    )!;
+    expect(() => checkDeclaredGrids(known, catalog)).not.toThrow();
+    const unknown = readGeoreference(
+      tileset(withWkt2(boundCrs("us_noaa_g2012bu0.tif"))),
+    )!;
+    expect(() => checkDeclaredGrids(unknown, catalog)).toThrow(/catalog/);
+    expect(() => checkDeclaredGrids(known, undefined)).toThrow(
+      GeoreferenceError,
+    );
+  });
+
+  it("refuses a WKT EXTENSION and a PARAMETERFILE it can't read", () => {
+    const extension = boundCrs("us_noaa_g2018u0.tif").replace(
+      'ID["EPSG",9665]]',
+      'ID["EPSG",9665]],EXTENSION["PROJ4_GRIDS","x.tif"]',
+    );
+    expect(failure(withWkt2(extension)).path).toBe(WKT2_PATH);
+    const unreadable = boundCrs("us_noaa_g2018u0.tif").replace(
+      'PARAMETERFILE["Geoid (height correction) model file",',
+      "PARAMETERFILE[1,",
+    );
+    expect(failure(withWkt2(unreadable)).path).toBe(WKT2_PATH);
+  });
+
+  it("refuses non-finite or out-of-bounds numbers in a declared pipeline", () => {
+    for (const step of [
+      "+proj=helmert +x=1e999",
+      "+proj=helmert +x=NaN",
+      "+proj=helmert +x=2e9",
+      "+proj=helmert +rx=2e6",
+      "+proj=helmert +s=-2e6",
+      "+proj=lcc +lat_0=9e999 +ellps=GRS80",
+      "+proj=helmert +x=1,2",
+      "+proj=tmerc +towgs84=1,2,3,NaN",
+    ]) {
+      const error = failure({
+        ...rigid(),
+        pipeline: `+proj=pipeline +step ${step}`,
+      });
+      expect(error.path, step).toBe(`${ROOT}.pipeline`);
+    }
+    // Sane values pass.
+    expect(
+      readGeoreference(
+        tileset({
+          ...rigid(),
+          pipeline:
+            "+proj=pipeline +step +proj=helmert +x=-0.991 +y=1.9072 +z=0.5129 +rx=-0.02579 +s=0.0015 +convention=coordinate_frame",
+        }),
+      )!.pipeline,
+    ).toContain("helmert");
+  });
+
+  it("refuses a grid list naming nothing", () => {
+    for (const grids of [
+      "@",
+      ",us_noaa_g2018u0.tif",
+      "us_noaa_g2018u0.tif,",
+      "a,,b",
+    ]) {
+      const error = failure({
+        ...rigid(),
+        pipeline: `+proj=pipeline +step +proj=vgridshift +grids=${grids} +multiplier=1`,
+      });
+      expect(error.path, grids).toBe(`${ROOT}.pipeline`);
+    }
+  });
+});

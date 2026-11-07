@@ -163,7 +163,8 @@ const isIdentity = (m: ArrayLike<number>) => {
  *    placement no longer what is drawn);
  *  - a frame that doesn't load (`EngineeringFrame.load`'s error, shortened);
  *  - a tileset destroyed while its frame loaded (an error only: no warning);
- *  - a rigid anchor the root transform disagrees with.
+ *  - a rigid anchor the frame can't place (a non-finite result), or that
+ *    the root transform disagrees with.
  */
 export async function georeferenceTileset(
   tileset: Tileset3D,
@@ -246,16 +247,26 @@ export async function georeferenceTileset(
   if (!isIdentity(tileset.modelMatrix)) {
     return refuse(moved());
   }
-  const placement =
-    declared.placement.mode === "rigid"
-      ? placeRigid(frame, declared.placement.anchor)
-      : placeReprojected(frame);
-  if (placement.mode === "rigid") {
-    try {
+  // A frame that can't place the anchor (PROJ gives a non-finite number,
+  // which the transformer refuses) or places it at non-finite numbers
+  // (which checkRigidTransform's comparisons refuse) places nothing.
+  let placement: TilesetPlacement;
+  try {
+    if (declared.placement.mode === "rigid") {
+      placement = placeRigid(frame, declared.placement.anchor);
       checkRigidTransform(placement, tileset.root.transform);
-    } catch (error) {
-      return refuse(error as Error);
+    } else {
+      placement = placeReprojected(frame);
     }
+  } catch (error) {
+    return refuse(
+      error instanceof GeoreferenceError
+        ? error
+        : new GeoreferenceError(
+            `${GEOREFERENCE_PATH}.placement.anchor`,
+            `the frame can't place the anchor (${(error as Error).message.slice(0, MAX_SHOWN)})`,
+          ),
+    );
   }
   tileset.placement = placement;
   return placement;

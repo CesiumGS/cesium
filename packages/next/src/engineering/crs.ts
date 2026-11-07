@@ -433,6 +433,37 @@ function transformer(
   };
 }
 
+/** A grid's file name as PROJ-data's catalog writes them: no path, no scheme. */
+const PLAIN_GRID = /^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$/;
+
+/**
+ * The invariant every recorded operation keeps, whatever made it (a pinned
+ * or declared pipeline, PROJ's chosen candidate, a fallback; from EPSG
+ * codes, WKT, PROJJSON or a URN): each grid its PROJ string reads is a
+ * plain file name that `loadGrids` verified and staged. A required grid
+ * must be loaded; an optional one (`@name`, which PROJ skips when it can't
+ * find it) must at least be a plain name, so its lookup stays in PROJ's own
+ * search path. Throws, naming the grid, before PROJ creates the operation.
+ */
+function checkUsedGrids(proj: ProjApi, pipeline: string): void {
+  const loaded = loadedGrids(proj);
+  for (const grid of pipelineGrids(parsePipeline(pipeline))) {
+    const shown = JSON.stringify(
+      grid.name.length > 80 ? `${grid.name.slice(0, 77)}...` : grid.name,
+    );
+    if (!PLAIN_GRID.test(grid.name)) {
+      throw new Error(
+        `The PROJ operation reads the grid ${shown} by a path or an unusual name; only grids loaded through loadGrids, by their plain names, are used`,
+      );
+    }
+    if (!grid.optional && !loaded.has(grid.name)) {
+      throw new Error(
+        `The PROJ operation reads the grid ${shown}, which loadGrids hasn't verified and loaded`,
+      );
+    }
+  }
+}
+
 function record(
   proj: ProjApi,
   pipeline: string,
@@ -444,6 +475,7 @@ function record(
   epoch: number,
   matchedCandidate?: string,
 ): RecordedOperation {
+  checkUsedGrids(proj, pipeline);
   const operation = fixed(proj, pipeline);
   const forward = transformer(proj, operation, proj.PJ_FWD, epoch);
   const loaded = loadedGrids(proj);

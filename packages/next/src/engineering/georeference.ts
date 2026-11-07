@@ -233,6 +233,74 @@ const DECLARED_KEYS = new Set([
   "multiplier",
   "grid_ref",
 ]);
+/** Keys whose values are names, not numbers. */
+const NAMED_KEYS = new Set([
+  "ellps",
+  "units",
+  "xy_in",
+  "xy_out",
+  "z_in",
+  "z_out",
+  "t_in",
+  "t_out",
+  "convention",
+  "grid_ref",
+  "pm",
+]);
+const GRID_VALUED = new Set([
+  "grids",
+  "nadgrids",
+  "geoidgrids",
+  "xy_grids",
+  "z_grids",
+]);
+/** Keys whose values are comma-separated numbers. */
+const LIST_KEYS = new Set(["towgs84", "order"]);
+/** Helmert rotations and their rates: arc-seconds (per year). */
+const ANGLE_KEYS = new Set(["rx", "ry", "rz", "drx", "dry", "drz"]);
+/** Helmert scale and its rate: parts per million (per year). */
+const SCALE_KEYS = new Set(["s", "ds"]);
+/** A decimal number, as PROJ's parameters write them. */
+const DECIMAL = /^-?(\d+\.?\d*|\.\d+)([eE][-+]?\d+)?$/;
+
+/**
+ * A declared parameter's value is what its key takes: a grid list naming a
+ * grid in every item (no empty item, no bare "@"); a name; or finite
+ * decimal numbers within sane bounds (rotations and scale within ±1e6
+ * arc-seconds and ppm, everything else within ±1e9), a list only for
+ * `towgs84` and `order`.
+ */
+function checkDeclaredValue(key: string, value: string, path: string): void {
+  if (GRID_VALUED.has(key)) {
+    for (const item of value.split(",")) {
+      if ((item.startsWith("@") ? item.slice(1) : item) === "") {
+        throw new GeoreferenceError(
+          path,
+          `+${key} lists an item that names no grid`,
+        );
+      }
+    }
+    return;
+  }
+  if (NAMED_KEYS.has(key)) {
+    return;
+  }
+  const items = value.split(",");
+  if (items.length > 1 && !LIST_KEYS.has(key)) {
+    throw new GeoreferenceError(path, `+${key} takes one number, not a list`);
+  }
+  const bound = ANGLE_KEYS.has(key) || SCALE_KEYS.has(key) ? 1e6 : 1e9;
+  for (const item of items) {
+    const n = DECIMAL.test(item) ? Number(item) : Number.NaN;
+    if (!(Number.isFinite(n) && Math.abs(n) <= bound)) {
+      throw new GeoreferenceError(
+        path,
+        `+${key} needs a finite number within ±${bound.toExponential(0)}; got ${shown(item)}`,
+      );
+    }
+  }
+}
+
 /** A path, a parent directory, a drive or a scheme, in any value. */
 const PATH_LIKE = /[/\\:]|\.\./;
 const GEOID_MODELS: readonly GeoidModel[] = ["EGM96", "EGM2008"];
@@ -402,6 +470,49 @@ function oneOf<T extends string>(
   return value as T;
 }
 
+/** WKT's quoted text: doubled quotes escape a quote. */
+const WKT_TEXT = '"((?:[^"]|"")*)"';
+/** `PARAMETERFILE[name, file …]`, with WKT's [ or ( brackets. */
+const PARAMETER_FILE = new RegExp(
+  `PARAMETERFILE\\s*[[(]\\s*${WKT_TEXT}\\s*,\\s*${WKT_TEXT}`,
+  "gi",
+);
+
+/**
+ * The files an untrusted WKT2 names, checked before PROJ parses it: every
+ * `PARAMETERFILE`'s file must be a plain file name (a catalog key, held to
+ * the catalog by `checkDeclaredGrids`), never a path or URL that PROJ's
+ * file lookup would follow; one it can't read is refused, and so is any
+ * `EXTENSION` (WKT1's way to hand PROJ a string or grids). Returns the names.
+ */
+function wkt2Files(wkt2: string, path: string): string[] {
+  if (/\bEXTENSION\s*[[(]/i.test(wkt2)) {
+    throw new GeoreferenceError(
+      path,
+      "holds an EXTENSION, which a declared WKT2 may not use",
+    );
+  }
+  const keywords = wkt2.match(/\bPARAMETERFILE\b/gi)?.length ?? 0;
+  const files = [...wkt2.matchAll(PARAMETER_FILE)].map((m) =>
+    m[2]!.replaceAll('""', '"'),
+  );
+  if (files.length !== keywords) {
+    throw new GeoreferenceError(
+      path,
+      "holds a PARAMETERFILE whose name and file aren't two quoted texts",
+    );
+  }
+  for (const file of files) {
+    if (!PLAIN_FILE.test(file)) {
+      throw new GeoreferenceError(
+        path,
+        `holds a PARAMETERFILE naming ${shown(file)}, which isn't a plain file name (a grid of the catalog)`,
+      );
+    }
+  }
+  return files;
+}
+
 function readCrs(value: unknown, path: string): CrsRef {
   const crs = object(value, path);
   const format = oneOf(
@@ -477,6 +588,7 @@ function readCrs(value: unknown, path: string): CrsRef {
   if (problem !== undefined) {
     throw new GeoreferenceError(`${at}.wkt2`, problem);
   }
+  wkt2Files(wkt2, `${at}.wkt2`);
   return { format, wkt2 };
 }
 
@@ -663,6 +775,9 @@ function readPipeline(value: unknown, path: string): string {
             `+${key} has a value with a path, a parent directory or a scheme ("/", "\\", ".." or ":")`,
           );
         }
+        if (typeof value === "string") {
+          checkDeclaredValue(key, value, path);
+        }
       }
     }
     text = formatPipeline(pipeline);
@@ -688,15 +803,35 @@ function readPipeline(value: unknown, path: string): string {
 }
 
 /**
- * Throws a `GeoreferenceError` naming `pipeline` unless every grid a
- * declared pipeline names is a current entry of `catalog` (not removed).
- * Without a catalog, a declared pipeline's grids can't be checked, so it is
- * refused. A declaration without a pipeline passes.
+ * Throws a `GeoreferenceError` naming the field unless every grid a
+ * declared pipeline names, and every file a declared WKT2's PARAMETERFILEs
+ * name, is a current entry of `catalog` (not removed). Without a catalog,
+ * such names can't be checked, so they are refused. A declaration that
+ * names no grid passes.
  */
 export function checkDeclaredGrids(
   georeference: TilesetGeoreference,
   catalog: GridCatalog | undefined,
 ): void {
+  if (georeference.crs.format === "wkt2") {
+    const path = `${ROOT}.crs.extensions.${WKT2_EXTENSION}.wkt2`;
+    const files = wkt2Files(georeference.crs.wkt2, path);
+    if (files.length > 0 && catalog === undefined) {
+      throw new GeoreferenceError(
+        path,
+        "names grid files that can't be checked without a grid catalog (place it with a GridSource)",
+      );
+    }
+    for (const file of files) {
+      const entry = catalog!.get(file);
+      if (entry === undefined || entry.removed) {
+        throw new GeoreferenceError(
+          path,
+          `holds a PARAMETERFILE naming ${shown(file)}, which isn't a current entry of the grid catalog`,
+        );
+      }
+    }
+  }
   if (georeference.pipeline === undefined) {
     return;
   }
